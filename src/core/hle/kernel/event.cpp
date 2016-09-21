@@ -2,14 +2,12 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <map>
 #include <algorithm>
+#include <map>
 #include <vector>
-
 #include "common/assert.h"
-
-#include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/event.h"
+#include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/thread.h"
 
 namespace Kernel {

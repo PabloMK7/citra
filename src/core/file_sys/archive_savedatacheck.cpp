@@ -5,12 +5,10 @@
 #include <algorithm>
 #include <memory>
 #include <vector>
-
 #include "common/common_types.h"
 #include "common/file_util.h"
 #include "common/logging/log.h"
 #include "common/string_util.h"
-
 #include "core/file_sys/archive_savedatacheck.h"
 #include "core/file_sys/ivfc_archive.h"
 #include "core/hle/service/fs/archive.h"
@@ -25,13 +23,12 @@ static std::string GetSaveDataCheckContainerPath(const std::string& nand_directo
 }
 
 static std::string GetSaveDataCheckPath(const std::string& mount_point, u32 high, u32 low) {
-    return Common::StringFromFormat("%s%08x/%08x/content/00000000.app.romfs",
-            mount_point.c_str(), high, low);
+    return Common::StringFromFormat("%s%08x/%08x/content/00000000.app.romfs", mount_point.c_str(),
+                                    high, low);
 }
 
-ArchiveFactory_SaveDataCheck::ArchiveFactory_SaveDataCheck(const std::string& nand_directory) :
-        mount_point(GetSaveDataCheckContainerPath(nand_directory)) {
-}
+ArchiveFactory_SaveDataCheck::ArchiveFactory_SaveDataCheck(const std::string& nand_directory)
+    : mount_point(GetSaveDataCheckContainerPath(nand_directory)) {}
 
 ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_SaveDataCheck::Open(const Path& path) {
     auto vec = path.AsBinary();
@@ -48,11 +45,12 @@ ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_SaveDataCheck::Open(co
     return MakeResult<std::unique_ptr<ArchiveBackend>>(std::move(archive));
 }
 
-ResultCode ArchiveFactory_SaveDataCheck::Format(const Path& path, const FileSys::ArchiveFormatInfo& format_info) {
+ResultCode ArchiveFactory_SaveDataCheck::Format(const Path& path,
+                                                const FileSys::ArchiveFormatInfo& format_info) {
     LOG_ERROR(Service_FS, "Attempted to format a SaveDataCheck archive.");
     // TODO: Verify error code
-    return ResultCode(ErrorDescription::NotAuthorized, ErrorModule::FS,
-        ErrorSummary::NotSupported, ErrorLevel::Permanent);
+    return ResultCode(ErrorDescription::NotAuthorized, ErrorModule::FS, ErrorSummary::NotSupported,
+                      ErrorLevel::Permanent);
 }
 
 ResultVal<ArchiveFormatInfo> ArchiveFactory_SaveDataCheck::GetFormatInfo(const Path& path) const {

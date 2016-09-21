@@ -5,9 +5,7 @@
 #pragma once
 
 #include <memory>
-
 #include "common/common_types.h"
-
 #include "core/hle/kernel/process.h"
 
 namespace Kernel {
@@ -25,7 +23,6 @@ struct MemoryRegionInfo {
 void MemoryInit(u32 mem_type);
 void MemoryShutdown();
 MemoryRegionInfo* GetMemoryRegion(MemoryRegion region);
-
 }
 
 namespace Memory {

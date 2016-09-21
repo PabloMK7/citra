@@ -6,15 +6,12 @@
 
 #include <array>
 #include <cstddef>
-
 #include <glad/glad.h>
-
 #include "common/assert.h"
 #include "common/bit_field.h"
 #include "common/common_funcs.h"
 #include "common/common_types.h"
 #include "common/logging/log.h"
-
 #include "video_core/pica.h"
 
 using GLvec2 = std::array<GLfloat, 2>;
@@ -25,8 +22,8 @@ namespace PicaToGL {
 
 inline GLenum TextureFilterMode(Pica::Regs::TextureConfig::TextureFilter mode) {
     static const GLenum filter_mode_table[] = {
-        GL_NEAREST,  // TextureFilter::Nearest
-        GL_LINEAR    // TextureFilter::Linear
+        GL_NEAREST, // TextureFilter::Nearest
+        GL_LINEAR,  // TextureFilter::Linear
     };
 
     // Range check table for input
@@ -52,10 +49,10 @@ inline GLenum TextureFilterMode(Pica::Regs::TextureConfig::TextureFilter mode) {
 
 inline GLenum WrapMode(Pica::Regs::TextureConfig::WrapMode mode) {
     static const GLenum wrap_mode_table[] = {
-        GL_CLAMP_TO_EDGE,  // WrapMode::ClampToEdge
-        GL_CLAMP_TO_BORDER,// WrapMode::ClampToBorder
-        GL_REPEAT,         // WrapMode::Repeat
-        GL_MIRRORED_REPEAT // WrapMode::MirroredRepeat
+        GL_CLAMP_TO_EDGE,   // WrapMode::ClampToEdge
+        GL_CLAMP_TO_BORDER, // WrapMode::ClampToBorder
+        GL_REPEAT,          // WrapMode::Repeat
+        GL_MIRRORED_REPEAT, // WrapMode::MirroredRepeat
     };
 
     // Range check table for input
@@ -131,22 +128,22 @@ inline GLenum BlendFunc(Pica::Regs::BlendFactor factor) {
 
 inline GLenum LogicOp(Pica::Regs::LogicOp op) {
     static const GLenum logic_op_table[] = {
-        GL_CLEAR,           // Clear
-        GL_AND,             // And
-        GL_AND_REVERSE,     // AndReverse
-        GL_COPY,            // Copy
-        GL_SET,             // Set
-        GL_COPY_INVERTED,   // CopyInverted
-        GL_NOOP,            // NoOp
-        GL_INVERT,          // Invert
-        GL_NAND,            // Nand
-        GL_OR,              // Or
-        GL_NOR,             // Nor
-        GL_XOR,             // Xor
-        GL_EQUIV,           // Equiv
-        GL_AND_INVERTED,    // AndInverted
-        GL_OR_REVERSE,      // OrReverse
-        GL_OR_INVERTED,     // OrInverted
+        GL_CLEAR,         // Clear
+        GL_AND,           // And
+        GL_AND_REVERSE,   // AndReverse
+        GL_COPY,          // Copy
+        GL_SET,           // Set
+        GL_COPY_INVERTED, // CopyInverted
+        GL_NOOP,          // NoOp
+        GL_INVERT,        // Invert
+        GL_NAND,          // Nand
+        GL_OR,            // Or
+        GL_NOR,           // Nor
+        GL_XOR,           // Xor
+        GL_EQUIV,         // Equiv
+        GL_AND_INVERTED,  // AndInverted
+        GL_OR_REVERSE,    // OrReverse
+        GL_OR_INVERTED,   // OrInverted
     };
 
     // Range check table for input
@@ -185,14 +182,14 @@ inline GLenum CompareFunc(Pica::Regs::CompareFunc func) {
 
 inline GLenum StencilOp(Pica::Regs::StencilAction action) {
     static const GLenum stencil_op_table[] = {
-        GL_KEEP,        // StencilAction::Keep
-        GL_ZERO,        // StencilAction::Zero
-        GL_REPLACE,     // StencilAction::Replace
-        GL_INCR,        // StencilAction::Increment
-        GL_DECR,        // StencilAction::Decrement
-        GL_INVERT,      // StencilAction::Invert
-        GL_INCR_WRAP,   // StencilAction::IncrementWrap
-        GL_DECR_WRAP    // StencilAction::DecrementWrap
+        GL_KEEP,      // StencilAction::Keep
+        GL_ZERO,      // StencilAction::Zero
+        GL_REPLACE,   // StencilAction::Replace
+        GL_INCR,      // StencilAction::Increment
+        GL_DECR,      // StencilAction::Decrement
+        GL_INVERT,    // StencilAction::Invert
+        GL_INCR_WRAP, // StencilAction::IncrementWrap
+        GL_DECR_WRAP, // StencilAction::DecrementWrap
     };
 
     // Range check table for input
@@ -207,18 +204,16 @@ inline GLenum StencilOp(Pica::Regs::StencilAction action) {
 }
 
 inline GLvec4 ColorRGBA8(const u32 color) {
-    return { { (color >>  0 & 0xFF) / 255.0f,
-               (color >>  8 & 0xFF) / 255.0f,
-               (color >> 16 & 0xFF) / 255.0f,
-               (color >> 24 & 0xFF) / 255.0f
-           } };
+    return {{
+        (color >> 0 & 0xFF) / 255.0f, (color >> 8 & 0xFF) / 255.0f, (color >> 16 & 0xFF) / 255.0f,
+        (color >> 24 & 0xFF) / 255.0f,
+    }};
 }
 
 inline std::array<GLfloat, 3> LightColor(const Pica::Regs::LightColor& color) {
-    return { { color.r / 255.0f,
-               color.g / 255.0f,
-               color.b / 255.0f
-           } };
+    return {{
+        color.r / 255.0f, color.g / 255.0f, color.b / 255.0f,
+    }};
 }
 
 } // namespace

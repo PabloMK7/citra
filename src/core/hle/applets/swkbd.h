@@ -4,9 +4,8 @@
 
 #pragma once
 
-#include "common/common_types.h"
 #include "common/common_funcs.h"
-
+#include "common/common_types.h"
 #include "core/hle/applets/applet.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/shared_memory.h"
@@ -53,12 +52,14 @@ static_assert(sizeof(SoftwareKeyboardConfig) == 0x400, "Software Keyboard Config
 
 class SoftwareKeyboard final : public Applet {
 public:
-    SoftwareKeyboard(Service::APT::AppletId id) : Applet(id), started(false) { }
+    SoftwareKeyboard(Service::APT::AppletId id) : Applet(id), started(false) {}
 
     ResultCode ReceiveParameter(const Service::APT::MessageParameter& parameter) override;
     ResultCode StartImpl(const Service::APT::AppletStartupParameter& parameter) override;
     void Update() override;
-    bool IsRunning() const override { return started; }
+    bool IsRunning() const override {
+        return started;
+    }
 
     /**
      * Draws a keyboard to the current bottom screen framebuffer.
@@ -72,7 +73,8 @@ public:
     void Finalize();
 
     /// This SharedMemory will be created when we receive the LibAppJustStarted message.
-    /// It holds the framebuffer info retrieved by the application with GSPGPU::ImportDisplayCaptureInfo
+    /// It holds the framebuffer info retrieved by the application with
+    /// GSPGPU::ImportDisplayCaptureInfo
     Kernel::SharedPtr<Kernel::SharedMemory> framebuffer_memory;
 
     /// SharedMemory where the output text will be stored
@@ -84,6 +86,5 @@ public:
     /// Whether this applet is currently running instead of the host application or not.
     bool started;
 };
-
 }
 } // namespace

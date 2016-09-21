@@ -6,7 +6,6 @@
 
 #include <new>
 #include <utility>
-
 #include "common/assert.h"
 #include "common/bit_field.h"
 #include "common/common_funcs.h"
@@ -26,7 +25,8 @@ enum class ErrorDescription : u32 {
     FS_InvalidOpenFlags = 230,
     FS_NotAFile = 250,
     FS_NotFormatted = 340, ///< This is used by the FS service when creating a SaveData archive
-    OutofRangeOrMisalignedAddress = 513, // TODO(purpasmart): Check if this name fits its actual usage
+    OutofRangeOrMisalignedAddress =
+        513, // TODO(purpasmart): Check if this name fits its actual usage
     GPU_FirstInitialization = 519,
     FS_InvalidPath = 702,
     InvalidSection = 1000,
@@ -168,15 +168,15 @@ enum class ErrorSummary : u32 {
     Success = 0,
     NothingHappened = 1,
     WouldBlock = 2,
-    OutOfResource = 3,      ///< There are no more kernel resources (memory, table slots) to
-                            ///< execute the operation.
-    NotFound = 4,           ///< A file or resource was not found.
+    OutOfResource = 3, ///< There are no more kernel resources (memory, table slots) to
+                       ///< execute the operation.
+    NotFound = 4,      ///< A file or resource was not found.
     InvalidState = 5,
-    NotSupported = 6,       ///< The operation is not supported or not implemented.
-    InvalidArgument = 7,    ///< Returned when a passed argument is invalid in the current runtime
-                            ///< context. (Invalid handle, out-of-bounds pointer or size, etc.)
-    WrongArgument = 8,      ///< Returned when a passed argument is in an incorrect format for use
-                            ///< with the function. (E.g. Invalid enum value)
+    NotSupported = 6,    ///< The operation is not supported or not implemented.
+    InvalidArgument = 7, ///< Returned when a passed argument is invalid in the current runtime
+                         ///< context. (Invalid handle, out-of-bounds pointer or size, etc.)
+    WrongArgument = 8,   ///< Returned when a passed argument is in an incorrect format for use
+                         ///< with the function. (E.g. Invalid enum value)
     Canceled = 9,
     StatusChanged = 10,
     Internal = 11,
@@ -208,19 +208,24 @@ union ResultCode {
     BitField<21, 6, ErrorSummary> summary;
     BitField<27, 5, ErrorLevel> level;
 
-    // The last bit of `level` is checked by apps and the kernel to determine if a result code is an error
+    // The last bit of `level` is checked by apps and the kernel to determine if a result code is an
+    // error
     BitField<31, 1, u32> is_error;
 
     explicit ResultCode(u32 raw) : raw(raw) {}
-    ResultCode(ErrorDescription description_, ErrorModule module_,
-            ErrorSummary summary_, ErrorLevel level_) : raw(0) {
+    ResultCode(ErrorDescription description_, ErrorModule module_, ErrorSummary summary_,
+               ErrorLevel level_)
+        : raw(0) {
         description.Assign(description_);
         module.Assign(module_);
         summary.Assign(summary_);
         level.Assign(level_);
     }
 
-    ResultCode& operator=(const ResultCode& o) { raw = o.raw; return *this; }
+    ResultCode& operator=(const ResultCode& o) {
+        raw = o.raw;
+        return *this;
+    }
 
     bool IsSuccess() const {
         return is_error == 0;
@@ -246,8 +251,8 @@ const ResultCode RESULT_SUCCESS(0);
 
 /// Might be returned instead of a dummy success for unimplemented APIs.
 inline ResultCode UnimplementedFunction(ErrorModule module) {
-    return ResultCode(ErrorDescription::NotImplemented, module,
-            ErrorSummary::NotSupported, ErrorLevel::Permanent);
+    return ResultCode(ErrorDescription::NotImplemented, module, ErrorSummary::NotSupported,
+                      ErrorLevel::Permanent);
 }
 
 /**
@@ -285,10 +290,9 @@ inline ResultCode UnimplementedFunction(ErrorModule module) {
 template <typename T>
 class ResultVal {
 public:
-    /// Constructs an empty `ResultVal` with the given error code. The code must not be a success code.
-    ResultVal(ResultCode error_code = ResultCode(-1))
-        : result_code(error_code)
-    {
+    /// Constructs an empty `ResultVal` with the given error code. The code must not be a success
+    /// code.
+    ResultVal(ResultCode error_code = ResultCode(-1)) : result_code(error_code) {
         ASSERT(error_code.IsError());
     }
 
@@ -303,17 +307,13 @@ public:
         return result;
     }
 
-    ResultVal(const ResultVal& o)
-        : result_code(o.result_code)
-    {
+    ResultVal(const ResultVal& o) : result_code(o.result_code) {
         if (!o.empty()) {
             new (&object) T(o.object);
         }
     }
 
-    ResultVal(ResultVal&& o)
-        : result_code(o.result_code)
-    {
+    ResultVal(ResultVal&& o) : result_code(o.result_code) {
         if (!o.empty()) {
             new (&object) T(std::move(o.object));
         }
@@ -357,19 +357,35 @@ public:
     }
 
     /// Returns true if the `ResultVal` contains an error code and no value.
-    bool empty() const { return result_code.IsError(); }
+    bool empty() const {
+        return result_code.IsError();
+    }
 
     /// Returns true if the `ResultVal` contains a return value.
-    bool Succeeded() const { return result_code.IsSuccess(); }
+    bool Succeeded() const {
+        return result_code.IsSuccess();
+    }
     /// Returns true if the `ResultVal` contains an error code and no value.
-    bool Failed() const { return empty(); }
+    bool Failed() const {
+        return empty();
+    }
 
-    ResultCode Code() const { return result_code; }
+    ResultCode Code() const {
+        return result_code;
+    }
 
-    const T& operator* () const { return object; }
-          T& operator* ()       { return object; }
-    const T* operator->() const { return &object; }
-          T* operator->()       { return &object; }
+    const T& operator*() const {
+        return object;
+    }
+    T& operator*() {
+        return object;
+    }
+    const T* operator->() const {
+        return &object;
+    }
+    T* operator->() {
+        return &object;
+    }
 
     /// Returns the value contained in this `ResultVal`, or the supplied default if it is missing.
     template <typename U>
@@ -390,7 +406,9 @@ public:
 private:
     // A union is used to allocate the storage for the value, while allowing us to construct and
     // destruct it at will.
-    union { T object; };
+    union {
+        T object;
+    };
     ResultCode result_code;
 };
 
@@ -409,8 +427,8 @@ ResultVal<T> MakeResult(Args&&... args) {
  * variable declaration. If it fails the return code is returned from the current function. Thus it
  * can be used to cascade errors out, achieving something akin to exception handling.
  */
-#define CASCADE_RESULT(target, source) \
-        auto CONCAT2(check_result_L, __LINE__) = source; \
-        if (CONCAT2(check_result_L, __LINE__).Failed()) \
-            return CONCAT2(check_result_L, __LINE__).Code(); \
-        target = std::move(*CONCAT2(check_result_L, __LINE__))
+#define CASCADE_RESULT(target, source)                                                             \
+    auto CONCAT2(check_result_L, __LINE__) = source;                                               \
+    if (CONCAT2(check_result_L, __LINE__).Failed())                                                \
+        return CONCAT2(check_result_L, __LINE__).Code();                                           \
+    target = std::move(*CONCAT2(check_result_L, __LINE__))

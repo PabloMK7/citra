@@ -8,9 +8,8 @@
 namespace VideoCore {
 
 void SWRasterizer::AddTriangle(const Pica::Shader::OutputVertex& v0,
-        const Pica::Shader::OutputVertex& v1,
-        const Pica::Shader::OutputVertex& v2) {
+                               const Pica::Shader::OutputVertex& v1,
+                               const Pica::Shader::OutputVertex& v2) {
     Pica::Clipper::ProcessTriangle(v0, v1, v2);
 }
-
 }

@@ -3,19 +3,15 @@
 // Refer to the license.txt file included.
 
 #include <cmath>
-
-#include "common/logging/log.h"
 #include "common/emu_window.h"
-
-#include "core/hle/service/service.h"
-#include "core/hle/service/hid/hid.h"
-#include "core/hle/service/hid/hid_spvr.h"
-#include "core/hle/service/hid/hid_user.h"
-
+#include "common/logging/log.h"
 #include "core/core_timing.h"
 #include "core/hle/kernel/event.h"
 #include "core/hle/kernel/shared_memory.h"
-
+#include "core/hle/service/hid/hid.h"
+#include "core/hle/service/hid/hid_spvr.h"
+#include "core/hle/service/hid/hid_user.h"
+#include "core/hle/service/service.h"
 #include "video_core/video_core.h"
 
 namespace Service {
@@ -37,11 +33,13 @@ static u32 next_accelerometer_index;
 static u32 next_gyroscope_index;
 
 static int enable_accelerometer_count = 0; // positive means enabled
-static int enable_gyroscope_count = 0; // positive means enabled
+static int enable_gyroscope_count = 0;     // positive means enabled
 
 static PadState GetCirclePadDirectionState(s16 circle_pad_x, s16 circle_pad_y) {
-    constexpr float TAN30 = 0.577350269, TAN60 = 1 / TAN30; // 30 degree and 60 degree are angular thresholds for directions
-    constexpr int CIRCLE_PAD_THRESHOLD_SQUARE = 40 * 40; // a circle pad radius greater than 40 will trigger circle pad direction
+    // 30 degree and 60 degree are angular thresholds for directions
+    constexpr float TAN30 = 0.577350269, TAN60 = 1 / TAN30;
+    // a circle pad radius greater than 40 will trigger circle pad direction
+    constexpr int CIRCLE_PAD_THRESHOLD_SQUARE = 40 * 40;
     PadState state;
     state.hex = 0;
 
@@ -90,7 +88,7 @@ void Update() {
     PadState old_state = mem->pad.entries[last_entry_index].current_state;
 
     // Compute bitmask with 1s for bits different from the old state
-    PadState changed = { { (state.hex ^ old_state.hex) } };
+    PadState changed = {{(state.hex ^ old_state.hex)}};
 
     // Get the current Pad entry
     PadDataEntry& pad_entry = mem->pad.entries[mem->pad.index];
@@ -135,11 +133,13 @@ void Update() {
     // Update accelerometer
     if (enable_accelerometer_count > 0) {
         mem->accelerometer.index = next_accelerometer_index;
-        next_accelerometer_index = (next_accelerometer_index + 1) % mem->accelerometer.entries.size();
+        next_accelerometer_index =
+            (next_accelerometer_index + 1) % mem->accelerometer.entries.size();
 
-        AccelerometerDataEntry& accelerometer_entry = mem->accelerometer.entries[mem->accelerometer.index];
-        std::tie(accelerometer_entry.x, accelerometer_entry.y, accelerometer_entry.z)
-            = VideoCore::g_emu_window->GetAccelerometerState();
+        AccelerometerDataEntry& accelerometer_entry =
+            mem->accelerometer.entries[mem->accelerometer.index];
+        std::tie(accelerometer_entry.x, accelerometer_entry.y, accelerometer_entry.z) =
+            VideoCore::g_emu_window->GetAccelerometerState();
 
         // Make up "raw" entry
         // TODO(wwylele):
@@ -167,8 +167,8 @@ void Update() {
         next_gyroscope_index = (next_gyroscope_index + 1) % mem->gyroscope.entries.size();
 
         GyroscopeDataEntry& gyroscope_entry = mem->gyroscope.entries[mem->gyroscope.index];
-        std::tie(gyroscope_entry.x, gyroscope_entry.y, gyroscope_entry.z)
-            = VideoCore::g_emu_window->GetGyroscopeState();
+        std::tie(gyroscope_entry.x, gyroscope_entry.y, gyroscope_entry.z) =
+            VideoCore::g_emu_window->GetGyroscopeState();
 
         // Make up "raw" entry
         mem->gyroscope.raw_entry.x = gyroscope_entry.x;
@@ -188,7 +188,7 @@ void Update() {
 void GetIPCHandles(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
-    cmd_buff[1] = 0; // No error
+    cmd_buff[1] = 0;          // No error
     cmd_buff[2] = 0x14000000; // IPC Command Structure translate-header
     // TODO(yuriks): Return error from SendSyncRequest is this fails (part of IPC marshalling)
     cmd_buff[3] = Kernel::g_handle_table.Create(Service::HID::shared_mem).MoveFrom();
@@ -259,9 +259,7 @@ void GetGyroscopeLowCalibrateParam(Service::Interface* self) {
 
     const s16 param_unit = 6700; // an approximate value taken from hw
     GyroscopeCalibrateParam param = {
-        { 0, param_unit, -param_unit },
-        { 0, param_unit, -param_unit },
-        { 0, param_unit, -param_unit },
+        {0, param_unit, -param_unit}, {0, param_unit, -param_unit}, {0, param_unit, -param_unit},
     };
     memcpy(&cmd_buff[2], &param, sizeof(param));
 
@@ -286,9 +284,9 @@ void Init() {
     AddService(new HID_SPVR_Interface);
 
     using Kernel::MemoryPermission;
-    shared_mem = SharedMemory::Create(nullptr, 0x1000,
-                                      MemoryPermission::ReadWrite, MemoryPermission::Read,
-                                      0, Kernel::MemoryRegion::BASE, "HID:SharedMemory");
+    shared_mem =
+        SharedMemory::Create(nullptr, 0x1000, MemoryPermission::ReadWrite, MemoryPermission::Read,
+                             0, Kernel::MemoryRegion::BASE, "HID:SharedMemory");
 
     next_pad_index = 0;
     next_touch_index = 0;
@@ -296,9 +294,9 @@ void Init() {
     // Create event handles
     event_pad_or_touch_1 = Event::Create(ResetType::OneShot, "HID:EventPadOrTouch1");
     event_pad_or_touch_2 = Event::Create(ResetType::OneShot, "HID:EventPadOrTouch2");
-    event_accelerometer  = Event::Create(ResetType::OneShot, "HID:EventAccelerometer");
-    event_gyroscope      = Event::Create(ResetType::OneShot, "HID:EventGyroscope");
-    event_debug_pad      = Event::Create(ResetType::OneShot, "HID:EventDebugPad");
+    event_accelerometer = Event::Create(ResetType::OneShot, "HID:EventAccelerometer");
+    event_gyroscope = Event::Create(ResetType::OneShot, "HID:EventGyroscope");
+    event_debug_pad = Event::Create(ResetType::OneShot, "HID:EventDebugPad");
 }
 
 void Shutdown() {

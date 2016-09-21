@@ -5,12 +5,10 @@
 #include <algorithm>
 #include <memory>
 #include <vector>
-
 #include "common/common_types.h"
 #include "common/file_util.h"
 #include "common/logging/log.h"
 #include "common/string_util.h"
-
 #include "core/file_sys/archive_extsavedata.h"
 #include "core/file_sys/disk_archive.h"
 #include "core/hle/service/fs/archive.h"
@@ -30,10 +28,11 @@ std::string GetExtSaveDataPath(const std::string& mount_point, const Path& path)
 
 std::string GetExtDataContainerPath(const std::string& mount_point, bool shared) {
     if (shared)
-        return Common::StringFromFormat("%sdata/%s/extdata/", mount_point.c_str(), SYSTEM_ID.c_str());
+        return Common::StringFromFormat("%sdata/%s/extdata/", mount_point.c_str(),
+                                        SYSTEM_ID.c_str());
 
     return Common::StringFromFormat("%sNintendo 3DS/%s/%s/extdata/", mount_point.c_str(),
-            SYSTEM_ID.c_str(), SDCARD_ID.c_str());
+                                    SYSTEM_ID.c_str(), SDCARD_ID.c_str());
 }
 
 Path ConstructExtDataBinaryPath(u32 media_type, u32 high, u32 low) {
@@ -54,11 +53,12 @@ Path ConstructExtDataBinaryPath(u32 media_type, u32 high, u32 low) {
     for (unsigned i = 0; i < 4; ++i)
         binary_path.push_back((high >> (8 * i)) & 0xFF);
 
-    return { binary_path };
+    return {binary_path};
 }
 
-ArchiveFactory_ExtSaveData::ArchiveFactory_ExtSaveData(const std::string& mount_location, bool shared)
-        : shared(shared), mount_point(GetExtDataContainerPath(mount_location, shared)) {
+ArchiveFactory_ExtSaveData::ArchiveFactory_ExtSaveData(const std::string& mount_location,
+                                                       bool shared)
+    : shared(shared), mount_point(GetExtDataContainerPath(mount_location, shared)) {
     LOG_INFO(Service_FS, "Directory %s set as base for ExtSaveData.", mount_point.c_str());
 }
 
@@ -88,7 +88,8 @@ ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_ExtSaveData::Open(cons
     return MakeResult<std::unique_ptr<ArchiveBackend>>(std::move(archive));
 }
 
-ResultCode ArchiveFactory_ExtSaveData::Format(const Path& path, const FileSys::ArchiveFormatInfo& format_info) {
+ResultCode ArchiveFactory_ExtSaveData::Format(const Path& path,
+                                              const FileSys::ArchiveFormatInfo& format_info) {
     // These folders are always created with the ExtSaveData
     std::string user_path = GetExtSaveDataPath(mount_point, path) + "user/";
     std::string boss_path = GetExtSaveDataPath(mount_point, path) + "boss/";
@@ -115,7 +116,8 @@ ResultVal<ArchiveFormatInfo> ArchiveFactory_ExtSaveData::GetFormatInfo(const Pat
     if (!file.IsOpen()) {
         LOG_ERROR(Service_FS, "Could not open metadata information for archive");
         // TODO(Subv): Verify error code
-        return ResultCode(ErrorDescription::FS_NotFormatted, ErrorModule::FS, ErrorSummary::InvalidState, ErrorLevel::Status);
+        return ResultCode(ErrorDescription::FS_NotFormatted, ErrorModule::FS,
+                          ErrorSummary::InvalidState, ErrorLevel::Status);
     }
 
     ArchiveFormatInfo info = {};
@@ -123,7 +125,8 @@ ResultVal<ArchiveFormatInfo> ArchiveFactory_ExtSaveData::GetFormatInfo(const Pat
     return MakeResult<ArchiveFormatInfo>(info);
 }
 
-void ArchiveFactory_ExtSaveData::WriteIcon(const Path& path, const u8* icon_data, size_t icon_size) {
+void ArchiveFactory_ExtSaveData::WriteIcon(const Path& path, const u8* icon_data,
+                                           size_t icon_size) {
     std::string game_path = FileSys::GetExtSaveDataPath(GetMountPoint(), path);
     FileUtil::IOFile icon_file(game_path + "icon", "wb");
     icon_file.WriteBytes(icon_data, icon_size);

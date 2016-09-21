@@ -3,9 +3,8 @@
 // Refer to the license.txt file included.
 
 #include <algorithm>
-
-#include "common/logging/filter.h"
 #include "common/logging/backend.h"
+#include "common/logging/filter.h"
 #include "common/string_util.h"
 
 namespace Log {
@@ -63,11 +62,11 @@ static Class GetClassByName(const It begin, const It end) {
 }
 
 bool Filter::ParseFilterRule(const std::string::const_iterator begin,
-        const std::string::const_iterator end) {
+                             const std::string::const_iterator end) {
     auto level_separator = std::find(begin, end, ':');
     if (level_separator == end) {
         LOG_ERROR(Log, "Invalid log filter. Must specify a log level after `:`: %s",
-                std::string(begin, end).c_str());
+                  std::string(begin, end).c_str());
         return false;
     }
 
@@ -95,5 +94,4 @@ bool Filter::ParseFilterRule(const std::string::const_iterator begin,
 bool Filter::CheckMessage(Class log_class, Level level) const {
     return static_cast<u8>(level) >= static_cast<u8>(class_levels[static_cast<size_t>(log_class)]);
 }
-
 }

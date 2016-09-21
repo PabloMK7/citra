@@ -4,28 +4,27 @@
 
 #pragma once
 
-#include <vector>
 #include <string>
-
+#include <vector>
 #include "common/common_types.h"
 
 class DebugInterface;
 
-struct TBreakPoint
-{
-    u32  iAddress;
+struct TBreakPoint {
+    u32 iAddress;
     bool bOn;
     bool bTemporary;
 };
 
 // Code breakpoints.
-class BreakPoints
-{
+class BreakPoints {
 public:
     typedef std::vector<TBreakPoint> TBreakPoints;
     typedef std::vector<std::string> TBreakPointsStr;
 
-    const TBreakPoints& GetBreakPoints() { return m_BreakPoints; }
+    const TBreakPoints& GetBreakPoints() {
+        return m_BreakPoints;
+    }
 
     TBreakPointsStr GetStrings() const;
     void AddFromStrings(const TBreakPointsStr& bps);
@@ -35,7 +34,7 @@ public:
     bool IsTempBreakPoint(u32 iAddress) const;
 
     // Add BreakPoint
-    void Add(u32 em_address, bool temp=false);
+    void Add(u32 em_address, bool temp = false);
     void Add(const TBreakPoint& bp);
 
     // Remove Breakpoint
@@ -46,5 +45,5 @@ public:
 
 private:
     TBreakPoints m_BreakPoints;
-    u32          m_iBreakOnCount;
+    u32 m_iBreakOnCount;
 };

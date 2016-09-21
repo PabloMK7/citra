@@ -4,10 +4,8 @@
 
 #include <algorithm>
 #include <memory>
-
 #include "common/file_util.h"
 #include "common/logging/log.h"
-
 #include "core/file_sys/archive_sdmc.h"
 #include "core/file_sys/disk_archive.h"
 #include "core/settings.h"
@@ -17,7 +15,8 @@
 
 namespace FileSys {
 
-ArchiveFactory_SDMC::ArchiveFactory_SDMC(const std::string& sdmc_directory) : sdmc_directory(sdmc_directory) {
+ArchiveFactory_SDMC::ArchiveFactory_SDMC(const std::string& sdmc_directory)
+    : sdmc_directory(sdmc_directory) {
     LOG_INFO(Service_FS, "Directory %s set as SDMC.", sdmc_directory.c_str());
 }
 
@@ -40,7 +39,8 @@ ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_SDMC::Open(const Path&
     return MakeResult<std::unique_ptr<ArchiveBackend>>(std::move(archive));
 }
 
-ResultCode ArchiveFactory_SDMC::Format(const Path& path, const FileSys::ArchiveFormatInfo& format_info) {
+ResultCode ArchiveFactory_SDMC::Format(const Path& path,
+                                       const FileSys::ArchiveFormatInfo& format_info) {
     // This is kind of an undesirable operation, so let's just ignore it. :)
     return RESULT_SUCCESS;
 }

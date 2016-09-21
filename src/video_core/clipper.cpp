@@ -5,15 +5,12 @@
 #include <algorithm>
 #include <array>
 #include <cstddef>
-
 #include <boost/container/static_vector.hpp>
 #include <boost/container/vector.hpp>
-
 #include "common/bit_field.h"
 #include "common/common_types.h"
 #include "common/logging/log.h"
 #include "common/vector_math.h"
-
 #include "video_core/clipper.h"
 #include "video_core/pica.h"
 #include "video_core/pica_state.h"
@@ -27,15 +24,10 @@ namespace Clipper {
 
 struct ClippingEdge {
 public:
-    ClippingEdge(Math::Vec4<float24> coeffs,
-                 Math::Vec4<float24> bias = Math::Vec4<float24>(float24::FromFloat32(0),
-                                                                float24::FromFloat32(0),
-                                                                float24::FromFloat32(0),
-                                                                float24::FromFloat32(0)))
-        : coeffs(coeffs),
-          bias(bias)
-    {
-    }
+    ClippingEdge(Math::Vec4<float24> coeffs, Math::Vec4<float24> bias = Math::Vec4<float24>(
+                                                 float24::FromFloat32(0), float24::FromFloat32(0),
+                                                 float24::FromFloat32(0), float24::FromFloat32(0)))
+        : coeffs(coeffs), bias(bias) {}
 
     bool IsInside(const OutputVertex& vertex) const {
         return Math::Dot(vertex.pos + bias, coeffs) <= float24::FromFloat32(0);
@@ -59,8 +51,7 @@ private:
     Math::Vec4<float24> bias;
 };
 
-static void InitScreenCoordinates(OutputVertex& vtx)
-{
+static void InitScreenCoordinates(OutputVertex& vtx) {
     struct {
         float24 halfsize_x;
         float24 offset_x;
@@ -73,8 +64,8 @@ static void InitScreenCoordinates(OutputVertex& vtx)
     const auto& regs = g_state.regs;
     viewport.halfsize_x = float24::FromRaw(regs.viewport_size_x);
     viewport.halfsize_y = float24::FromRaw(regs.viewport_size_y);
-    viewport.offset_x   = float24::FromFloat32(static_cast<float>(regs.viewport_corner.x));
-    viewport.offset_y   = float24::FromFloat32(static_cast<float>(regs.viewport_corner.y));
+    viewport.offset_x = float24::FromFloat32(static_cast<float>(regs.viewport_corner.x));
+    viewport.offset_y = float24::FromFloat32(static_cast<float>(regs.viewport_corner.y));
 
     float24 inv_w = float24::FromFloat32(1.f) / vtx.pos.w;
     vtx.color *= inv_w;
@@ -85,12 +76,14 @@ static void InitScreenCoordinates(OutputVertex& vtx)
     vtx.tc2 *= inv_w;
     vtx.pos.w = inv_w;
 
-    vtx.screenpos[0] = (vtx.pos.x * inv_w + float24::FromFloat32(1.0)) * viewport.halfsize_x + viewport.offset_x;
-    vtx.screenpos[1] = (vtx.pos.y * inv_w + float24::FromFloat32(1.0)) * viewport.halfsize_y + viewport.offset_y;
+    vtx.screenpos[0] =
+        (vtx.pos.x * inv_w + float24::FromFloat32(1.0)) * viewport.halfsize_x + viewport.offset_x;
+    vtx.screenpos[1] =
+        (vtx.pos.y * inv_w + float24::FromFloat32(1.0)) * viewport.halfsize_y + viewport.offset_y;
     vtx.screenpos[2] = vtx.pos.z * inv_w;
 }
 
-void ProcessTriangle(const OutputVertex &v0, const OutputVertex &v1, const OutputVertex &v2) {
+void ProcessTriangle(const OutputVertex& v0, const OutputVertex& v1, const OutputVertex& v2) {
     using boost::container::static_vector;
 
     // Clipping a planar n-gon against a plane will remove at least 1 vertex and introduces 2 at
@@ -98,10 +91,10 @@ void ProcessTriangle(const OutputVertex &v0, const OutputVertex &v1, const Outpu
     // introduces at most 1 new vertex to the polygon. Since we start with a triangle and have a
     // fixed 6 clipping planes, the maximum number of vertices of the clipped polygon is 3 + 6 = 9.
     static const size_t MAX_VERTICES = 9;
-    static_vector<OutputVertex, MAX_VERTICES> buffer_a = { v0, v1, v2 };
+    static_vector<OutputVertex, MAX_VERTICES> buffer_a = {v0, v1, v2};
     static_vector<OutputVertex, MAX_VERTICES> buffer_b;
     auto* output_list = &buffer_a;
-    auto* input_list  = &buffer_b;
+    auto* input_list = &buffer_b;
 
     // NOTE: We clip against a w=epsilon plane to guarantee that the output has a positive w value.
     // TODO: Not sure if this is a valid approach. Also should probably instead use the smallest
@@ -110,13 +103,13 @@ void ProcessTriangle(const OutputVertex &v0, const OutputVertex &v1, const Outpu
     static const float24 f0 = float24::FromFloat32(0.0);
     static const float24 f1 = float24::FromFloat32(1.0);
     static const std::array<ClippingEdge, 7> clipping_edges = {{
-        { Math::MakeVec( f1,  f0,  f0, -f1) },  // x = +w
-        { Math::MakeVec(-f1,  f0,  f0, -f1) },  // x = -w
-        { Math::MakeVec( f0,  f1,  f0, -f1) },  // y = +w
-        { Math::MakeVec( f0, -f1,  f0, -f1) },  // y = -w
-        { Math::MakeVec( f0,  f0,  f1,  f0) },  // z =  0
-        { Math::MakeVec( f0,  f0, -f1, -f1) },  // z = -w
-        { Math::MakeVec( f0,  f0,  f0, -f1), Math::Vec4<float24>(f0, f0, f0, EPSILON) }, // w = EPSILON
+        {Math::MakeVec(f1, f0, f0, -f1)},                                           // x = +w
+        {Math::MakeVec(-f1, f0, f0, -f1)},                                          // x = -w
+        {Math::MakeVec(f0, f1, f0, -f1)},                                           // y = +w
+        {Math::MakeVec(f0, -f1, f0, -f1)},                                          // y = -w
+        {Math::MakeVec(f0, f0, f1, f0)},                                            // z =  0
+        {Math::MakeVec(f0, f0, -f1, -f1)},                                          // z = -w
+        {Math::MakeVec(f0, f0, f0, -f1), Math::Vec4<float24>(f0, f0, f0, EPSILON)}, // w = EPSILON
     }};
 
     // TODO: If one vertex lies outside one of the depth clipping planes, some platforms (e.g. Wii)
@@ -154,10 +147,10 @@ void ProcessTriangle(const OutputVertex &v0, const OutputVertex &v1, const Outpu
     InitScreenCoordinates((*output_list)[0]);
     InitScreenCoordinates((*output_list)[1]);
 
-    for (size_t i = 0; i < output_list->size() - 2; i ++) {
+    for (size_t i = 0; i < output_list->size() - 2; i++) {
         OutputVertex& vtx0 = (*output_list)[0];
-        OutputVertex& vtx1 = (*output_list)[i+1];
-        OutputVertex& vtx2 = (*output_list)[i+2];
+        OutputVertex& vtx1 = (*output_list)[i + 1];
+        OutputVertex& vtx2 = (*output_list)[i + 2];
 
         InitScreenCoordinates(vtx2);
 
@@ -165,18 +158,19 @@ void ProcessTriangle(const OutputVertex &v0, const OutputVertex &v1, const Outpu
                   "Triangle %lu/%lu at position (%.3f, %.3f, %.3f, %.3f), "
                   "(%.3f, %.3f, %.3f, %.3f), (%.3f, %.3f, %.3f, %.3f) and "
                   "screen position (%.2f, %.2f, %.2f), (%.2f, %.2f, %.2f), (%.2f, %.2f, %.2f)",
-                  i + 1, output_list->size() - 2,
-                  vtx0.pos.x.ToFloat32(), vtx0.pos.y.ToFloat32(), vtx0.pos.z.ToFloat32(), vtx0.pos.w.ToFloat32(),
-                  vtx1.pos.x.ToFloat32(), vtx1.pos.y.ToFloat32(), vtx1.pos.z.ToFloat32(), vtx1.pos.w.ToFloat32(),
-                  vtx2.pos.x.ToFloat32(), vtx2.pos.y.ToFloat32(), vtx2.pos.z.ToFloat32(), vtx2.pos.w.ToFloat32(),
-                  vtx0.screenpos.x.ToFloat32(), vtx0.screenpos.y.ToFloat32(), vtx0.screenpos.z.ToFloat32(),
-                  vtx1.screenpos.x.ToFloat32(), vtx1.screenpos.y.ToFloat32(), vtx1.screenpos.z.ToFloat32(),
-                  vtx2.screenpos.x.ToFloat32(), vtx2.screenpos.y.ToFloat32(), vtx2.screenpos.z.ToFloat32());
+                  i + 1, output_list->size() - 2, vtx0.pos.x.ToFloat32(), vtx0.pos.y.ToFloat32(),
+                  vtx0.pos.z.ToFloat32(), vtx0.pos.w.ToFloat32(), vtx1.pos.x.ToFloat32(),
+                  vtx1.pos.y.ToFloat32(), vtx1.pos.z.ToFloat32(), vtx1.pos.w.ToFloat32(),
+                  vtx2.pos.x.ToFloat32(), vtx2.pos.y.ToFloat32(), vtx2.pos.z.ToFloat32(),
+                  vtx2.pos.w.ToFloat32(), vtx0.screenpos.x.ToFloat32(),
+                  vtx0.screenpos.y.ToFloat32(), vtx0.screenpos.z.ToFloat32(),
+                  vtx1.screenpos.x.ToFloat32(), vtx1.screenpos.y.ToFloat32(),
+                  vtx1.screenpos.z.ToFloat32(), vtx2.screenpos.x.ToFloat32(),
+                  vtx2.screenpos.y.ToFloat32(), vtx2.screenpos.z.ToFloat32());
 
         Rasterizer::ProcessTriangle(vtx0, vtx1, vtx2);
     }
 }
-
 
 } // namespace
 

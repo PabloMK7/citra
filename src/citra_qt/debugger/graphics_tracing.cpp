@@ -6,25 +6,18 @@
 #include <array>
 #include <iterator>
 #include <memory>
-
-#include <boost/range/algorithm/copy.hpp>
-
 #include <QBoxLayout>
 #include <QComboBox>
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QPushButton>
-
+#include <boost/range/algorithm/copy.hpp>
 #include "citra_qt/debugger/graphics_tracing.h"
-
 #include "common/common_types.h"
-
 #include "core/hw/gpu.h"
 #include "core/hw/lcd.h"
 #include "core/tracer/recorder.h"
-
 #include "nihstro/float24.h"
-
 #include "video_core/pica.h"
 #include "video_core/pica_state.h"
 
@@ -35,12 +28,16 @@ GraphicsTracingWidget::GraphicsTracingWidget(std::shared_ptr<Pica::DebugContext>
     setObjectName("CiTracing");
 
     QPushButton* start_recording = new QPushButton(tr("Start Recording"));
-    QPushButton* stop_recording = new QPushButton(QIcon::fromTheme("document-save"), tr("Stop and Save"));
+    QPushButton* stop_recording =
+        new QPushButton(QIcon::fromTheme("document-save"), tr("Stop and Save"));
     QPushButton* abort_recording = new QPushButton(tr("Abort Recording"));
 
-    connect(this, SIGNAL(SetStartTracingButtonEnabled(bool)), start_recording, SLOT(setVisible(bool)));
-    connect(this, SIGNAL(SetStopTracingButtonEnabled(bool)), stop_recording, SLOT(setVisible(bool)));
-    connect(this, SIGNAL(SetAbortTracingButtonEnabled(bool)), abort_recording, SLOT(setVisible(bool)));
+    connect(this, SIGNAL(SetStartTracingButtonEnabled(bool)), start_recording,
+            SLOT(setVisible(bool)));
+    connect(this, SIGNAL(SetStopTracingButtonEnabled(bool)), stop_recording,
+            SLOT(setVisible(bool)));
+    connect(this, SIGNAL(SetAbortTracingButtonEnabled(bool)), abort_recording,
+            SLOT(setVisible(bool)));
     connect(start_recording, SIGNAL(clicked()), this, SLOT(StartRecording()));
     connect(stop_recording, SIGNAL(clicked()), this, SLOT(StopRecording()));
     connect(abort_recording, SIGNAL(clicked()), this, SLOT(AbortRecording()));
@@ -74,26 +71,31 @@ void GraphicsTracingWidget::StartRecording() {
     std::array<u32, 4 * 16> default_attributes;
     for (unsigned i = 0; i < 16; ++i) {
         for (unsigned comp = 0; comp < 3; ++comp) {
-            default_attributes[4 * i + comp] = nihstro::to_float24(Pica::g_state.vs_default_attributes[i][comp].ToFloat32());
+            default_attributes[4 * i + comp] =
+                nihstro::to_float24(Pica::g_state.vs_default_attributes[i][comp].ToFloat32());
         }
     }
 
     std::array<u32, 4 * 96> vs_float_uniforms;
     for (unsigned i = 0; i < 96; ++i)
         for (unsigned comp = 0; comp < 3; ++comp)
-            vs_float_uniforms[4 * i + comp] = nihstro::to_float24(Pica::g_state.vs.uniforms.f[i][comp].ToFloat32());
+            vs_float_uniforms[4 * i + comp] =
+                nihstro::to_float24(Pica::g_state.vs.uniforms.f[i][comp].ToFloat32());
 
     CiTrace::Recorder::InitialState state;
-    std::copy_n((u32*)&GPU::g_regs, sizeof(GPU::g_regs) / sizeof(u32), std::back_inserter(state.gpu_registers));
-    std::copy_n((u32*)&LCD::g_regs, sizeof(LCD::g_regs) / sizeof(u32), std::back_inserter(state.lcd_registers));
-    std::copy_n((u32*)&Pica::g_state.regs, sizeof(Pica::g_state.regs) / sizeof(u32), std::back_inserter(state.pica_registers));
+    std::copy_n((u32*)&GPU::g_regs, sizeof(GPU::g_regs) / sizeof(u32),
+                std::back_inserter(state.gpu_registers));
+    std::copy_n((u32*)&LCD::g_regs, sizeof(LCD::g_regs) / sizeof(u32),
+                std::back_inserter(state.lcd_registers));
+    std::copy_n((u32*)&Pica::g_state.regs, sizeof(Pica::g_state.regs) / sizeof(u32),
+                std::back_inserter(state.pica_registers));
     boost::copy(default_attributes, std::back_inserter(state.default_attributes));
     boost::copy(shader_binary, std::back_inserter(state.vs_program_binary));
     boost::copy(swizzle_data, std::back_inserter(state.vs_swizzle_data));
     boost::copy(vs_float_uniforms, std::back_inserter(state.vs_float_uniforms));
-    //boost::copy(TODO: Not implemented, std::back_inserter(state.gs_program_binary));
-    //boost::copy(TODO: Not implemented, std::back_inserter(state.gs_swizzle_data));
-    //boost::copy(TODO: Not implemented, std::back_inserter(state.gs_float_uniforms));
+    // boost::copy(TODO: Not implemented, std::back_inserter(state.gs_program_binary));
+    // boost::copy(TODO: Not implemented, std::back_inserter(state.gs_swizzle_data));
+    // boost::copy(TODO: Not implemented, std::back_inserter(state.gs_float_uniforms));
 
     auto recorder = new CiTrace::Recorder(state);
     context->recorder = std::shared_ptr<CiTrace::Recorder>(recorder);
@@ -156,11 +158,12 @@ void GraphicsTracingWidget::OnEmulationStopping() {
     if (!context)
         return;
 
-
     if (context->recorder) {
-        auto reply = QMessageBox::question(this, tr("CiTracing still active"),
-                tr("A CiTrace is still being recorded. Do you want to save it? If not, all recorded data will be discarded."),
-                QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes);
+        auto reply =
+            QMessageBox::question(this, tr("CiTracing still active"),
+                                  tr("A CiTrace is still being recorded. Do you want to save it? "
+                                     "If not, all recorded data will be discarded."),
+                                  QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes);
 
         if (reply == QMessageBox::Yes) {
             StopRecording();

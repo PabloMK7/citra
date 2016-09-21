@@ -5,7 +5,6 @@
 #include "common/alignment.h"
 #include "common/common_types.h"
 #include "common/logging/log.h"
-
 #include "core/arm/arm_interface.h"
 #include "core/hle/kernel/process.h"
 #include "core/hle/kernel/vm_manager.h"
@@ -18,24 +17,33 @@
 
 namespace LDR_RO {
 
-static const ResultCode ERROR_ALREADY_INITIALIZED =   // 0xD9612FF9
-    ResultCode(ErrorDescription::AlreadyInitialized,         ErrorModule::RO, ErrorSummary::Internal,        ErrorLevel::Permanent);
-static const ResultCode ERROR_NOT_INITIALIZED =       // 0xD9612FF8
-    ResultCode(ErrorDescription::NotInitialized,             ErrorModule::RO, ErrorSummary::Internal,        ErrorLevel::Permanent);
-static const ResultCode ERROR_BUFFER_TOO_SMALL =      // 0xE0E12C1F
-    ResultCode(static_cast<ErrorDescription>(31),            ErrorModule::RO, ErrorSummary::InvalidArgument, ErrorLevel::Usage);
-static const ResultCode ERROR_MISALIGNED_ADDRESS =    // 0xD9012FF1
-    ResultCode(ErrorDescription::MisalignedAddress,          ErrorModule::RO, ErrorSummary::WrongArgument,   ErrorLevel::Permanent);
-static const ResultCode ERROR_MISALIGNED_SIZE =       // 0xD9012FF2
-    ResultCode(ErrorDescription::MisalignedSize,             ErrorModule::RO, ErrorSummary::WrongArgument,   ErrorLevel::Permanent);
-static const ResultCode ERROR_ILLEGAL_ADDRESS =       // 0xE1612C0F
-    ResultCode(static_cast<ErrorDescription>(15),            ErrorModule::RO, ErrorSummary::Internal,        ErrorLevel::Usage);
-static const ResultCode ERROR_INVALID_MEMORY_STATE =  // 0xD8A12C08
-    ResultCode(static_cast<ErrorDescription>(8),             ErrorModule::RO, ErrorSummary::InvalidState,    ErrorLevel::Permanent);
-static const ResultCode ERROR_NOT_LOADED =            // 0xD8A12C0D
-    ResultCode(static_cast<ErrorDescription>(13),            ErrorModule::RO, ErrorSummary::InvalidState,    ErrorLevel::Permanent);
-static const ResultCode ERROR_INVALID_DESCRIPTOR =    // 0xD9001830
-    ResultCode(ErrorDescription::OS_InvalidBufferDescriptor, ErrorModule::OS, ErrorSummary::WrongArgument,   ErrorLevel::Permanent);
+static const ResultCode ERROR_ALREADY_INITIALIZED = // 0xD9612FF9
+    ResultCode(ErrorDescription::AlreadyInitialized, ErrorModule::RO, ErrorSummary::Internal,
+               ErrorLevel::Permanent);
+static const ResultCode ERROR_NOT_INITIALIZED = // 0xD9612FF8
+    ResultCode(ErrorDescription::NotInitialized, ErrorModule::RO, ErrorSummary::Internal,
+               ErrorLevel::Permanent);
+static const ResultCode ERROR_BUFFER_TOO_SMALL = // 0xE0E12C1F
+    ResultCode(static_cast<ErrorDescription>(31), ErrorModule::RO, ErrorSummary::InvalidArgument,
+               ErrorLevel::Usage);
+static const ResultCode ERROR_MISALIGNED_ADDRESS = // 0xD9012FF1
+    ResultCode(ErrorDescription::MisalignedAddress, ErrorModule::RO, ErrorSummary::WrongArgument,
+               ErrorLevel::Permanent);
+static const ResultCode ERROR_MISALIGNED_SIZE = // 0xD9012FF2
+    ResultCode(ErrorDescription::MisalignedSize, ErrorModule::RO, ErrorSummary::WrongArgument,
+               ErrorLevel::Permanent);
+static const ResultCode ERROR_ILLEGAL_ADDRESS = // 0xE1612C0F
+    ResultCode(static_cast<ErrorDescription>(15), ErrorModule::RO, ErrorSummary::Internal,
+               ErrorLevel::Usage);
+static const ResultCode ERROR_INVALID_MEMORY_STATE = // 0xD8A12C08
+    ResultCode(static_cast<ErrorDescription>(8), ErrorModule::RO, ErrorSummary::InvalidState,
+               ErrorLevel::Permanent);
+static const ResultCode ERROR_NOT_LOADED = // 0xD8A12C0D
+    ResultCode(static_cast<ErrorDescription>(13), ErrorModule::RO, ErrorSummary::InvalidState,
+               ErrorLevel::Permanent);
+static const ResultCode ERROR_INVALID_DESCRIPTOR = // 0xD9001830
+    ResultCode(ErrorDescription::OS_InvalidBufferDescriptor, ErrorModule::OS,
+               ErrorSummary::WrongArgument, ErrorLevel::Permanent);
 
 static MemorySynchronizer memory_synchronizer;
 
@@ -44,10 +52,10 @@ static VAddr loaded_crs; ///< the virtual address of the static module
 
 static bool VerifyBufferState(VAddr buffer_ptr, u32 size) {
     auto vma = Kernel::g_current_process->vm_manager.FindVMA(buffer_ptr);
-    return vma != Kernel::g_current_process->vm_manager.vma_map.end()
-        && vma->second.base + vma->second.size >= buffer_ptr + size
-        && vma->second.permissions == Kernel::VMAPermission::ReadWrite
-        && vma->second.meminfo_state == Kernel::MemoryState::Private;
+    return vma != Kernel::g_current_process->vm_manager.vma_map.end() &&
+           vma->second.base + vma->second.size >= buffer_ptr + size &&
+           vma->second.permissions == Kernel::VMAPermission::ReadWrite &&
+           vma->second.meminfo_state == Kernel::MemoryState::Private;
 }
 
 /**
@@ -66,13 +74,14 @@ static bool VerifyBufferState(VAddr buffer_ptr, u32 size) {
 static void Initialize(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
     VAddr crs_buffer_ptr = cmd_buff[1];
-    u32 crs_size         = cmd_buff[2];
-    VAddr crs_address    = cmd_buff[3];
-    u32 descriptor       = cmd_buff[4];
-    u32 process          = cmd_buff[5];
+    u32 crs_size = cmd_buff[2];
+    VAddr crs_address = cmd_buff[3];
+    u32 descriptor = cmd_buff[4];
+    u32 process = cmd_buff[5];
 
-    LOG_DEBUG(Service_LDR, "called, crs_buffer_ptr=0x%08X, crs_address=0x%08X, crs_size=0x%X, descriptor=0x%08X, process=0x%08X",
-                crs_buffer_ptr, crs_address, crs_size, descriptor, process);
+    LOG_DEBUG(Service_LDR, "called, crs_buffer_ptr=0x%08X, crs_address=0x%08X, crs_size=0x%X, "
+                           "descriptor=0x%08X, process=0x%08X",
+              crs_buffer_ptr, crs_address, crs_size, descriptor, process);
 
     if (descriptor != 0) {
         LOG_ERROR(Service_LDR, "IPC handle descriptor failed validation (0x%X)", descriptor);
@@ -119,7 +128,8 @@ static void Initialize(Service::Interface* self) {
         return;
     }
 
-    if (crs_address < Memory::PROCESS_IMAGE_VADDR || crs_address + crs_size > Memory::PROCESS_IMAGE_VADDR_END) {
+    if (crs_address < Memory::PROCESS_IMAGE_VADDR ||
+        crs_address + crs_size > Memory::PROCESS_IMAGE_VADDR_END) {
         LOG_ERROR(Service_LDR, "CRS mapping address is not in the process image region");
         cmd_buff[1] = ERROR_ILLEGAL_ADDRESS.raw;
         return;
@@ -131,14 +141,17 @@ static void Initialize(Service::Interface* self) {
         // TODO(wwylele): should be memory aliasing
         std::shared_ptr<std::vector<u8>> crs_mem = std::make_shared<std::vector<u8>>(crs_size);
         Memory::ReadBlock(crs_buffer_ptr, crs_mem->data(), crs_size);
-        result = Kernel::g_current_process->vm_manager.MapMemoryBlock(crs_address, crs_mem, 0, crs_size, Kernel::MemoryState::Code).Code();
+        result = Kernel::g_current_process->vm_manager
+                     .MapMemoryBlock(crs_address, crs_mem, 0, crs_size, Kernel::MemoryState::Code)
+                     .Code();
         if (result.IsError()) {
             LOG_ERROR(Service_LDR, "Error mapping memory block %08X", result.raw);
             cmd_buff[1] = result.raw;
             return;
         }
 
-        result = Kernel::g_current_process->vm_manager.ReprotectRange(crs_address, crs_size, Kernel::VMAPermission::Read);
+        result = Kernel::g_current_process->vm_manager.ReprotectRange(crs_address, crs_size,
+                                                                      Kernel::VMAPermission::Read);
         if (result.IsError()) {
             LOG_ERROR(Service_LDR, "Error reprotecting memory block %08X", result.raw);
             cmd_buff[1] = result.raw;
@@ -186,9 +199,9 @@ static void Initialize(Service::Interface* self) {
 static void LoadCRR(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
     u32 crr_buffer_ptr = cmd_buff[1];
-    u32 crr_size       = cmd_buff[2];
-    u32 descriptor     = cmd_buff[3];
-    u32 process        = cmd_buff[4];
+    u32 crr_size = cmd_buff[2];
+    u32 descriptor = cmd_buff[3];
+    u32 process = cmd_buff[4];
 
     if (descriptor != 0) {
         LOG_ERROR(Service_LDR, "IPC handle descriptor failed validation (0x%X)", descriptor);
@@ -200,7 +213,8 @@ static void LoadCRR(Service::Interface* self) {
     cmd_buff[0] = IPC::MakeHeader(2, 1, 0);
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
 
-    LOG_WARNING(Service_LDR, "(STUBBED) called, crr_buffer_ptr=0x%08X, crr_size=0x%08X, descriptor=0x%08X, process=0x%08X",
+    LOG_WARNING(Service_LDR, "(STUBBED) called, crr_buffer_ptr=0x%08X, crr_size=0x%08X, "
+                             "descriptor=0x%08X, process=0x%08X",
                 crr_buffer_ptr, crr_size, descriptor, process);
 }
 
@@ -218,8 +232,8 @@ static void LoadCRR(Service::Interface* self) {
 static void UnloadCRR(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
     u32 crr_buffer_ptr = cmd_buff[1];
-    u32 descriptor     = cmd_buff[2];
-    u32 process        = cmd_buff[3];
+    u32 descriptor = cmd_buff[2];
+    u32 process = cmd_buff[3];
 
     if (descriptor != 0) {
         LOG_ERROR(Service_LDR, "IPC handle descriptor failed validation (0x%X)", descriptor);
@@ -231,7 +245,8 @@ static void UnloadCRR(Service::Interface* self) {
     cmd_buff[0] = IPC::MakeHeader(3, 1, 0);
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
 
-    LOG_WARNING(Service_LDR, "(STUBBED) called, crr_buffer_ptr=0x%08X, descriptor=0x%08X, process=0x%08X",
+    LOG_WARNING(Service_LDR,
+                "(STUBBED) called, crr_buffer_ptr=0x%08X, descriptor=0x%08X, process=0x%08X",
                 crr_buffer_ptr, descriptor, process);
 }
 
@@ -263,27 +278,28 @@ static void UnloadCRR(Service::Interface* self) {
  */
 static void LoadCRO(Service::Interface* self, bool link_on_load_bug_fix) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
-    VAddr cro_buffer_ptr       = cmd_buff[1];
-    VAddr cro_address          = cmd_buff[2];
-    u32 cro_size               = cmd_buff[3];
+    VAddr cro_buffer_ptr = cmd_buff[1];
+    VAddr cro_address = cmd_buff[2];
+    u32 cro_size = cmd_buff[3];
     VAddr data_segment_address = cmd_buff[4];
-    u32 zero                   = cmd_buff[5];
-    u32 data_segment_size      = cmd_buff[6];
-    u32 bss_segment_address    = cmd_buff[7];
-    u32 bss_segment_size       = cmd_buff[8];
-    bool auto_link             = (cmd_buff[9] & 0xFF) != 0;
-    u32 fix_level              = cmd_buff[10];
-    VAddr crr_address          = cmd_buff[11];
-    u32 descriptor             = cmd_buff[12];
-    u32 process                = cmd_buff[13];
+    u32 zero = cmd_buff[5];
+    u32 data_segment_size = cmd_buff[6];
+    u32 bss_segment_address = cmd_buff[7];
+    u32 bss_segment_size = cmd_buff[8];
+    bool auto_link = (cmd_buff[9] & 0xFF) != 0;
+    u32 fix_level = cmd_buff[10];
+    VAddr crr_address = cmd_buff[11];
+    u32 descriptor = cmd_buff[12];
+    u32 process = cmd_buff[13];
 
-    LOG_DEBUG(Service_LDR, "called (%s), cro_buffer_ptr=0x%08X, cro_address=0x%08X, cro_size=0x%X, "
-        "data_segment_address=0x%08X, zero=%d, data_segment_size=0x%X, bss_segment_address=0x%08X, bss_segment_size=0x%X, "
-        "auto_link=%s, fix_level=%d, crr_address=0x%08X, descriptor=0x%08X, process=0x%08X",
-        link_on_load_bug_fix ? "new" : "old", cro_buffer_ptr, cro_address, cro_size,
-        data_segment_address, zero, data_segment_size, bss_segment_address, bss_segment_size,
-        auto_link ? "true" : "false", fix_level, crr_address, descriptor, process
-        );
+    LOG_DEBUG(Service_LDR,
+              "called (%s), cro_buffer_ptr=0x%08X, cro_address=0x%08X, cro_size=0x%X, "
+              "data_segment_address=0x%08X, zero=%d, data_segment_size=0x%X, "
+              "bss_segment_address=0x%08X, bss_segment_size=0x%X, "
+              "auto_link=%s, fix_level=%d, crr_address=0x%08X, descriptor=0x%08X, process=0x%08X",
+              link_on_load_bug_fix ? "new" : "old", cro_buffer_ptr, cro_address, cro_size,
+              data_segment_address, zero, data_segment_size, bss_segment_address, bss_segment_size,
+              auto_link ? "true" : "false", fix_level, crr_address, descriptor, process);
 
     if (descriptor != 0) {
         LOG_ERROR(Service_LDR, "IPC handle descriptor failed validation (0x%X)", descriptor);
@@ -330,8 +346,8 @@ static void LoadCRO(Service::Interface* self, bool link_on_load_bug_fix) {
         return;
     }
 
-    if (cro_address < Memory::PROCESS_IMAGE_VADDR
-        || cro_address + cro_size > Memory::PROCESS_IMAGE_VADDR_END) {
+    if (cro_address < Memory::PROCESS_IMAGE_VADDR ||
+        cro_address + cro_size > Memory::PROCESS_IMAGE_VADDR_END) {
         LOG_ERROR(Service_LDR, "CRO mapping address is not in the process image region");
         cmd_buff[1] = ERROR_ILLEGAL_ADDRESS.raw;
         return;
@@ -339,7 +355,9 @@ static void LoadCRO(Service::Interface* self, bool link_on_load_bug_fix) {
 
     if (zero) {
         LOG_ERROR(Service_LDR, "Zero is not zero %d", zero);
-        cmd_buff[1] = ResultCode(static_cast<ErrorDescription>(29), ErrorModule::RO, ErrorSummary::Internal, ErrorLevel::Usage).raw;
+        cmd_buff[1] = ResultCode(static_cast<ErrorDescription>(29), ErrorModule::RO,
+                                 ErrorSummary::Internal, ErrorLevel::Usage)
+                          .raw;
         return;
     }
 
@@ -349,14 +367,17 @@ static void LoadCRO(Service::Interface* self, bool link_on_load_bug_fix) {
         // TODO(wwylele): should be memory aliasing
         std::shared_ptr<std::vector<u8>> cro_mem = std::make_shared<std::vector<u8>>(cro_size);
         Memory::ReadBlock(cro_buffer_ptr, cro_mem->data(), cro_size);
-        result = Kernel::g_current_process->vm_manager.MapMemoryBlock(cro_address, cro_mem, 0, cro_size, Kernel::MemoryState::Code).Code();
+        result = Kernel::g_current_process->vm_manager
+                     .MapMemoryBlock(cro_address, cro_mem, 0, cro_size, Kernel::MemoryState::Code)
+                     .Code();
         if (result.IsError()) {
             LOG_ERROR(Service_LDR, "Error mapping memory block %08X", result.raw);
             cmd_buff[1] = result.raw;
             return;
         }
 
-        result = Kernel::g_current_process->vm_manager.ReprotectRange(cro_address, cro_size, Kernel::VMAPermission::Read);
+        result = Kernel::g_current_process->vm_manager.ReprotectRange(cro_address, cro_size,
+                                                                      Kernel::VMAPermission::Read);
         if (result.IsError()) {
             LOG_ERROR(Service_LDR, "Error reprotecting memory block %08X", result.raw);
             Kernel::g_current_process->vm_manager.UnmapRange(cro_address, cro_size);
@@ -384,7 +405,8 @@ static void LoadCRO(Service::Interface* self, bool link_on_load_bug_fix) {
         return;
     }
 
-    result = cro.Rebase(loaded_crs, cro_size, data_segment_address, data_segment_size, bss_segment_address, bss_segment_size, false);
+    result = cro.Rebase(loaded_crs, cro_size, data_segment_address, data_segment_size,
+                        bss_segment_address, bss_segment_size, false);
     if (result.IsError()) {
         LOG_ERROR(Service_LDR, "Error rebasing CRO %08X", result.raw);
         Kernel::g_current_process->vm_manager.UnmapRange(cro_address, cro_size);
@@ -409,7 +431,8 @@ static void LoadCRO(Service::Interface* self, bool link_on_load_bug_fix) {
     // TODO(wwylele): verify the behaviour when buffer_ptr == address
     if (cro_buffer_ptr != cro_address) {
         if (fix_size != cro_size) {
-            result = Kernel::g_current_process->vm_manager.UnmapRange(cro_address + fix_size, cro_size - fix_size);
+            result = Kernel::g_current_process->vm_manager.UnmapRange(cro_address + fix_size,
+                                                                      cro_size - fix_size);
             if (result.IsError()) {
                 LOG_ERROR(Service_LDR, "Error unmapping memory block %08X", result.raw);
                 Kernel::g_current_process->vm_manager.UnmapRange(cro_address, cro_size);
@@ -426,7 +449,8 @@ static void LoadCRO(Service::Interface* self, bool link_on_load_bug_fix) {
     u32 exe_size;
     std::tie(exe_begin, exe_size) = cro.GetExecutablePages();
     if (exe_begin) {
-        result = Kernel::g_current_process->vm_manager.ReprotectRange(exe_begin, exe_size, Kernel::VMAPermission::ReadExecute);
+        result = Kernel::g_current_process->vm_manager.ReprotectRange(
+            exe_begin, exe_size, Kernel::VMAPermission::ReadExecute);
         if (result.IsError()) {
             LOG_ERROR(Service_LDR, "Error reprotecting memory block %08X", result.raw);
             Kernel::g_current_process->vm_manager.UnmapRange(cro_address, fix_size);
@@ -437,8 +461,8 @@ static void LoadCRO(Service::Interface* self, bool link_on_load_bug_fix) {
 
     Core::g_app_core->ClearInstructionCache();
 
-    LOG_INFO(Service_LDR, "CRO \"%s\" loaded at 0x%08X, fixed_end=0x%08X",
-        cro.ModuleName().data(), cro_address, cro_address+fix_size);
+    LOG_INFO(Service_LDR, "CRO \"%s\" loaded at 0x%08X, fixed_end=0x%08X", cro.ModuleName().data(),
+             cro_address, cro_address + fix_size);
 
     cmd_buff[1] = RESULT_SUCCESS.raw;
     cmd_buff[2] = fix_size;
@@ -464,14 +488,15 @@ static void LoadCRO(Service::Interface* self) {
  */
 static void UnloadCRO(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
-    VAddr cro_address      = cmd_buff[1];
-    u32 zero               = cmd_buff[2];
-    VAddr cro_buffer_ptr   = cmd_buff[3];
-    u32 descriptor         = cmd_buff[4];
-    u32 process            = cmd_buff[5];
+    VAddr cro_address = cmd_buff[1];
+    u32 zero = cmd_buff[2];
+    VAddr cro_buffer_ptr = cmd_buff[3];
+    u32 descriptor = cmd_buff[4];
+    u32 process = cmd_buff[5];
 
-    LOG_DEBUG(Service_LDR, "called, cro_address=0x%08X, zero=%d, cro_buffer_ptr=0x%08X, descriptor=0x%08X, process=0x%08X",
-        cro_address, zero, cro_buffer_ptr, descriptor, process);
+    LOG_DEBUG(Service_LDR, "called, cro_address=0x%08X, zero=%d, cro_buffer_ptr=0x%08X, "
+                           "descriptor=0x%08X, process=0x%08X",
+              cro_address, zero, cro_buffer_ptr, descriptor, process);
 
     if (descriptor != 0) {
         LOG_ERROR(Service_LDR, "IPC handle descriptor failed validation (0x%X)", descriptor);
@@ -558,11 +583,11 @@ static void UnloadCRO(Service::Interface* self) {
 static void LinkCRO(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
     VAddr cro_address = cmd_buff[1];
-    u32 descriptor    = cmd_buff[2];
-    u32 process       = cmd_buff[3];
+    u32 descriptor = cmd_buff[2];
+    u32 process = cmd_buff[3];
 
     LOG_DEBUG(Service_LDR, "called, cro_address=0x%08X, descriptor=0x%08X, process=0x%08X",
-        cro_address, descriptor, process);
+              cro_address, descriptor, process);
 
     if (descriptor != 0) {
         LOG_ERROR(Service_LDR, "IPC handle descriptor failed validation (0x%X)", descriptor);
@@ -620,11 +645,11 @@ static void LinkCRO(Service::Interface* self) {
 static void UnlinkCRO(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
     VAddr cro_address = cmd_buff[1];
-    u32 descriptor    = cmd_buff[2];
-    u32 process       = cmd_buff[3];
+    u32 descriptor = cmd_buff[2];
+    u32 process = cmd_buff[3];
 
     LOG_DEBUG(Service_LDR, "called, cro_address=0x%08X, descriptor=0x%08X, process=0x%08X",
-        cro_address, descriptor, process);
+              cro_address, descriptor, process);
 
     if (descriptor != 0) {
         LOG_ERROR(Service_LDR, "IPC handle descriptor failed validation (0x%X)", descriptor);
@@ -682,11 +707,11 @@ static void UnlinkCRO(Service::Interface* self) {
 static void Shutdown(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
     VAddr crs_buffer_ptr = cmd_buff[1];
-    u32 descriptor       = cmd_buff[2];
-    u32 process          = cmd_buff[3];
+    u32 descriptor = cmd_buff[2];
+    u32 process = cmd_buff[3];
 
     LOG_DEBUG(Service_LDR, "called, crs_buffer_ptr=0x%08X, descriptor=0x%08X, process=0x%08X",
-        crs_buffer_ptr, descriptor, process);
+              crs_buffer_ptr, descriptor, process);
 
     if (descriptor != 0) {
         LOG_ERROR(Service_LDR, "IPC handle descriptor failed validation (0x%X)", descriptor);
@@ -724,15 +749,17 @@ static void Shutdown(Service::Interface* self) {
 }
 
 const Interface::FunctionInfo FunctionTable[] = {
-    {0x000100C2, Initialize,            "Initialize"},
-    {0x00020082, LoadCRR,               "LoadCRR"},
-    {0x00030042, UnloadCRR,             "UnloadCRR"},
-    {0x000402C2, LoadCRO<false>,        "LoadCRO"},
-    {0x000500C2, UnloadCRO,             "UnloadCRO"},
-    {0x00060042, LinkCRO,               "LinkCRO"},
-    {0x00070042, UnlinkCRO,             "UnlinkCRO"},
-    {0x00080042, Shutdown,              "Shutdown"},
-    {0x000902C2, LoadCRO<true>,         "LoadCRO_New"},
+    // clang-format off
+    {0x000100C2, Initialize, "Initialize"},
+    {0x00020082, LoadCRR, "LoadCRR"},
+    {0x00030042, UnloadCRR, "UnloadCRR"},
+    {0x000402C2, LoadCRO<false>, "LoadCRO"},
+    {0x000500C2, UnloadCRO, "UnloadCRO"},
+    {0x00060042, LinkCRO, "LinkCRO"},
+    {0x00070042, UnlinkCRO, "UnlinkCRO"},
+    {0x00080042, Shutdown, "Shutdown"},
+    {0x000902C2, LoadCRO<true>, "LoadCRO_New"},
+    // clang-format on
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

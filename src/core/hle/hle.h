@@ -13,7 +13,7 @@ const Handle INVALID_HANDLE = 0;
 
 namespace HLE {
 
-void Reschedule(const char *reason);
+void Reschedule(const char* reason);
 bool IsReschedulePending();
 void DoneRescheduling();
 

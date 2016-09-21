@@ -5,7 +5,6 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
-
 #include "common/assert.h"
 #include "common/bit_field.h"
 #include "common/color.h"
@@ -14,17 +13,15 @@
 #include "common/math_util.h"
 #include "common/microprofile.h"
 #include "common/vector_math.h"
-
-#include "core/memory.h"
 #include "core/hw/gpu.h"
-
+#include "core/memory.h"
 #include "video_core/debug_utils/debug_utils.h"
 #include "video_core/pica.h"
 #include "video_core/pica_state.h"
 #include "video_core/pica_types.h"
 #include "video_core/rasterizer.h"
-#include "video_core/utils.h"
 #include "video_core/shader/shader.h"
+#include "video_core/utils.h"
 
 namespace Pica {
 
@@ -39,8 +36,10 @@ static void DrawPixel(int x, int y, const Math::Vec4<u8>& color) {
     y = framebuffer.height - y;
 
     const u32 coarse_y = y & ~7;
-    u32 bytes_per_pixel = GPU::Regs::BytesPerPixel(GPU::Regs::PixelFormat(framebuffer.color_format.Value()));
-    u32 dst_offset = VideoCore::GetMortonOffset(x, y, bytes_per_pixel) + coarse_y * framebuffer.width * bytes_per_pixel;
+    u32 bytes_per_pixel =
+        GPU::Regs::BytesPerPixel(GPU::Regs::PixelFormat(framebuffer.color_format.Value()));
+    u32 dst_offset = VideoCore::GetMortonOffset(x, y, bytes_per_pixel) +
+                     coarse_y * framebuffer.width * bytes_per_pixel;
     u8* dst_pixel = Memory::GetPhysicalPointer(addr) + dst_offset;
 
     switch (framebuffer.color_format) {
@@ -65,7 +64,8 @@ static void DrawPixel(int x, int y, const Math::Vec4<u8>& color) {
         break;
 
     default:
-        LOG_CRITICAL(Render_Software, "Unknown framebuffer color format %x", framebuffer.color_format.Value());
+        LOG_CRITICAL(Render_Software, "Unknown framebuffer color format %x",
+                     framebuffer.color_format.Value());
         UNIMPLEMENTED();
     }
 }
@@ -77,8 +77,10 @@ static const Math::Vec4<u8> GetPixel(int x, int y) {
     y = framebuffer.height - y;
 
     const u32 coarse_y = y & ~7;
-    u32 bytes_per_pixel = GPU::Regs::BytesPerPixel(GPU::Regs::PixelFormat(framebuffer.color_format.Value()));
-    u32 src_offset = VideoCore::GetMortonOffset(x, y, bytes_per_pixel) + coarse_y * framebuffer.width * bytes_per_pixel;
+    u32 bytes_per_pixel =
+        GPU::Regs::BytesPerPixel(GPU::Regs::PixelFormat(framebuffer.color_format.Value()));
+    u32 src_offset = VideoCore::GetMortonOffset(x, y, bytes_per_pixel) +
+                     coarse_y * framebuffer.width * bytes_per_pixel;
     u8* src_pixel = Memory::GetPhysicalPointer(addr) + src_offset;
 
     switch (framebuffer.color_format) {
@@ -98,7 +100,8 @@ static const Math::Vec4<u8> GetPixel(int x, int y) {
         return Color::DecodeRGBA4(src_pixel);
 
     default:
-        LOG_CRITICAL(Render_Software, "Unknown framebuffer color format %x", framebuffer.color_format.Value());
+        LOG_CRITICAL(Render_Software, "Unknown framebuffer color format %x",
+                     framebuffer.color_format.Value());
         UNIMPLEMENTED();
     }
 
@@ -120,16 +123,16 @@ static u32 GetDepth(int x, int y) {
     u8* src_pixel = depth_buffer + src_offset;
 
     switch (framebuffer.depth_format) {
-        case Regs::DepthFormat::D16:
-            return Color::DecodeD16(src_pixel);
-        case Regs::DepthFormat::D24:
-            return Color::DecodeD24(src_pixel);
-        case Regs::DepthFormat::D24S8:
-            return Color::DecodeD24S8(src_pixel).x;
-        default:
-            LOG_CRITICAL(HW_GPU, "Unimplemented depth format %u", framebuffer.depth_format);
-            UNIMPLEMENTED();
-            return 0;
+    case Regs::DepthFormat::D16:
+        return Color::DecodeD16(src_pixel);
+    case Regs::DepthFormat::D24:
+        return Color::DecodeD24(src_pixel);
+    case Regs::DepthFormat::D24S8:
+        return Color::DecodeD24S8(src_pixel).x;
+    default:
+        LOG_CRITICAL(HW_GPU, "Unimplemented depth format %u", framebuffer.depth_format);
+        UNIMPLEMENTED();
+        return 0;
     }
 }
 
@@ -148,12 +151,15 @@ static u8 GetStencil(int x, int y) {
     u8* src_pixel = depth_buffer + src_offset;
 
     switch (framebuffer.depth_format) {
-        case Regs::DepthFormat::D24S8:
-            return Color::DecodeD24S8(src_pixel).y;
+    case Regs::DepthFormat::D24S8:
+        return Color::DecodeD24S8(src_pixel).y;
 
-        default:
-            LOG_WARNING(HW_GPU, "GetStencil called for function which doesn't have a stencil component (format %u)", framebuffer.depth_format);
-            return 0;
+    default:
+        LOG_WARNING(
+            HW_GPU,
+            "GetStencil called for function which doesn't have a stencil component (format %u)",
+            framebuffer.depth_format);
+        return 0;
     }
 }
 
@@ -172,22 +178,22 @@ static void SetDepth(int x, int y, u32 value) {
     u8* dst_pixel = depth_buffer + dst_offset;
 
     switch (framebuffer.depth_format) {
-        case Regs::DepthFormat::D16:
-            Color::EncodeD16(value, dst_pixel);
-            break;
+    case Regs::DepthFormat::D16:
+        Color::EncodeD16(value, dst_pixel);
+        break;
 
-        case Regs::DepthFormat::D24:
-            Color::EncodeD24(value, dst_pixel);
-            break;
+    case Regs::DepthFormat::D24:
+        Color::EncodeD24(value, dst_pixel);
+        break;
 
-        case Regs::DepthFormat::D24S8:
-            Color::EncodeD24X8(value, dst_pixel);
-            break;
+    case Regs::DepthFormat::D24S8:
+        Color::EncodeD24X8(value, dst_pixel);
+        break;
 
-        default:
-            LOG_CRITICAL(HW_GPU, "Unimplemented depth format %u", framebuffer.depth_format);
-            UNIMPLEMENTED();
-            break;
+    default:
+        LOG_CRITICAL(HW_GPU, "Unimplemented depth format %u", framebuffer.depth_format);
+        UNIMPLEMENTED();
+        break;
     }
 }
 
@@ -206,19 +212,19 @@ static void SetStencil(int x, int y, u8 value) {
     u8* dst_pixel = depth_buffer + dst_offset;
 
     switch (framebuffer.depth_format) {
-        case Pica::Regs::DepthFormat::D16:
-        case Pica::Regs::DepthFormat::D24:
-            // Nothing to do
-            break;
+    case Pica::Regs::DepthFormat::D16:
+    case Pica::Regs::DepthFormat::D24:
+        // Nothing to do
+        break;
 
-        case Pica::Regs::DepthFormat::D24S8:
-            Color::EncodeX24S8(value, dst_pixel);
-            break;
+    case Pica::Regs::DepthFormat::D24S8:
+        Color::EncodeX24S8(value, dst_pixel);
+        break;
 
-        default:
-            LOG_CRITICAL(HW_GPU, "Unimplemented depth format %u", framebuffer.depth_format);
-            UNIMPLEMENTED();
-            break;
+    default:
+        LOG_CRITICAL(HW_GPU, "Unimplemented depth format %u", framebuffer.depth_format);
+        UNIMPLEMENTED();
+        break;
     }
 }
 
@@ -262,15 +268,19 @@ struct Fix12P4 {
     Fix12P4() {}
     Fix12P4(u16 val) : val(val) {}
 
-    static u16 FracMask() { return 0xF; }
-    static u16 IntMask() { return (u16)~0xF; }
+    static u16 FracMask() {
+        return 0xF;
+    }
+    static u16 IntMask() {
+        return (u16)~0xF;
+    }
 
     operator u16() const {
         return val;
     }
 
-    bool operator < (const Fix12P4& oth) const {
-        return (u16)*this < (u16)oth;
+    bool operator<(const Fix12P4& oth) const {
+        return (u16) * this < (u16)oth;
     }
 
 private:
@@ -283,9 +293,8 @@ private:
  *
  * @todo define orientation concretely.
  */
-static int SignedArea (const Math::Vec2<Fix12P4>& vtx1,
-                       const Math::Vec2<Fix12P4>& vtx2,
-                       const Math::Vec2<Fix12P4>& vtx3) {
+static int SignedArea(const Math::Vec2<Fix12P4>& vtx1, const Math::Vec2<Fix12P4>& vtx2,
+                      const Math::Vec2<Fix12P4>& vtx3) {
     const auto vec1 = Math::MakeVec(vtx2 - vtx1, 0);
     const auto vec2 = Math::MakeVec(vtx3 - vtx1, 0);
     // TODO: There is a very small chance this will overflow for sizeof(int) == 4
@@ -298,11 +307,8 @@ MICROPROFILE_DEFINE(GPU_Rasterization, "GPU", "Rasterization", MP_RGB(50, 50, 24
  * Helper function for ProcessTriangle with the "reversed" flag to allow for implementing
  * culling via recursion.
  */
-static void ProcessTriangleInternal(const Shader::OutputVertex& v0,
-                                    const Shader::OutputVertex& v1,
-                                    const Shader::OutputVertex& v2,
-                                    bool reversed = false)
-{
+static void ProcessTriangleInternal(const Shader::OutputVertex& v0, const Shader::OutputVertex& v1,
+                                    const Shader::OutputVertex& v2, bool reversed = false) {
     const auto& regs = g_state.regs;
     MICROPROFILE_SCOPE(GPU_Rasterization);
 
@@ -316,9 +322,9 @@ static void ProcessTriangleInternal(const Shader::OutputVertex& v0,
         return Math::Vec3<Fix12P4>{FloatToFix(vec.x), FloatToFix(vec.y), FloatToFix(vec.z)};
     };
 
-    Math::Vec3<Fix12P4> vtxpos[3]{ ScreenToRasterizerCoordinates(v0.screenpos),
-                                   ScreenToRasterizerCoordinates(v1.screenpos),
-                                   ScreenToRasterizerCoordinates(v2.screenpos) };
+    Math::Vec3<Fix12P4> vtxpos[3]{ScreenToRasterizerCoordinates(v0.screenpos),
+                                  ScreenToRasterizerCoordinates(v1.screenpos),
+                                  ScreenToRasterizerCoordinates(v2.screenpos)};
 
     if (regs.cull_mode == Regs::CullMode::KeepAll) {
         // Make sure we always end up with a triangle wound counter-clockwise
@@ -344,8 +350,8 @@ static void ProcessTriangleInternal(const Shader::OutputVertex& v0,
     u16 max_y = std::max({vtxpos[0].y, vtxpos[1].y, vtxpos[2].y});
 
     // Convert the scissor box coordinates to 12.4 fixed point
-    u16 scissor_x1 = (u16)( regs.scissor_test.x1      << 4);
-    u16 scissor_y1 = (u16)( regs.scissor_test.y1      << 4);
+    u16 scissor_x1 = (u16)(regs.scissor_test.x1 << 4);
+    u16 scissor_y1 = (u16)(regs.scissor_test.y1 << 4);
     // x2,y2 have +1 added to cover the entire sub-pixel area
     u16 scissor_x2 = (u16)((regs.scissor_test.x2 + 1) << 4);
     u16 scissor_y2 = (u16)((regs.scissor_test.y2 + 1) << 4);
@@ -369,27 +375,32 @@ static void ProcessTriangleInternal(const Shader::OutputVertex& v0,
     // NOTE: These are the PSP filling rules. Not sure if the 3DS uses the same ones...
     auto IsRightSideOrFlatBottomEdge = [](const Math::Vec2<Fix12P4>& vtx,
                                           const Math::Vec2<Fix12P4>& line1,
-                                          const Math::Vec2<Fix12P4>& line2)
-    {
+                                          const Math::Vec2<Fix12P4>& line2) {
         if (line1.y == line2.y) {
             // just check if vertex is above us => bottom line parallel to x-axis
             return vtx.y < line1.y;
         } else {
             // check if vertex is on our left => right side
             // TODO: Not sure how likely this is to overflow
-            return (int)vtx.x < (int)line1.x + ((int)line2.x - (int)line1.x) * ((int)vtx.y - (int)line1.y) / ((int)line2.y - (int)line1.y);
+            return (int)vtx.x < (int)line1.x +
+                                    ((int)line2.x - (int)line1.x) * ((int)vtx.y - (int)line1.y) /
+                                        ((int)line2.y - (int)line1.y);
         }
     };
-    int bias0 = IsRightSideOrFlatBottomEdge(vtxpos[0].xy(), vtxpos[1].xy(), vtxpos[2].xy()) ? -1 : 0;
-    int bias1 = IsRightSideOrFlatBottomEdge(vtxpos[1].xy(), vtxpos[2].xy(), vtxpos[0].xy()) ? -1 : 0;
-    int bias2 = IsRightSideOrFlatBottomEdge(vtxpos[2].xy(), vtxpos[0].xy(), vtxpos[1].xy()) ? -1 : 0;
+    int bias0 =
+        IsRightSideOrFlatBottomEdge(vtxpos[0].xy(), vtxpos[1].xy(), vtxpos[2].xy()) ? -1 : 0;
+    int bias1 =
+        IsRightSideOrFlatBottomEdge(vtxpos[1].xy(), vtxpos[2].xy(), vtxpos[0].xy()) ? -1 : 0;
+    int bias2 =
+        IsRightSideOrFlatBottomEdge(vtxpos[2].xy(), vtxpos[0].xy(), vtxpos[1].xy()) ? -1 : 0;
 
     auto w_inverse = Math::MakeVec(v0.pos.w, v1.pos.w, v2.pos.w);
 
     auto textures = regs.GetTextures();
     auto tev_stages = regs.GetTevStages();
 
-    bool stencil_action_enable = g_state.regs.output_merger.stencil_test.enable && g_state.regs.framebuffer.depth_format == Regs::DepthFormat::D24S8;
+    bool stencil_action_enable = g_state.regs.output_merger.stencil_test.enable &&
+                                 g_state.regs.framebuffer.depth_format == Regs::DepthFormat::D24S8;
     const auto stencil_test = g_state.regs.output_merger.stencil_test;
 
     // Enter rasterization loop, starting at the center of the topleft bounding box corner.
@@ -397,10 +408,10 @@ static void ProcessTriangleInternal(const Shader::OutputVertex& v0,
     for (u16 y = min_y + 8; y < max_y; y += 0x10) {
         for (u16 x = min_x + 8; x < max_x; x += 0x10) {
 
-            // Do not process the pixel if it's inside the scissor box and the scissor mode is set to Exclude
+            // Do not process the pixel if it's inside the scissor box and the scissor mode is set
+            // to Exclude
             if (regs.scissor_test.mode == Regs::ScissorMode::Exclude) {
-                if (x >= scissor_x1 && x < scissor_x2 &&
-                    y >= scissor_y1 && y < scissor_y2)
+                if (x >= scissor_x1 && x < scissor_x2 && y >= scissor_y1 && y < scissor_y2)
                     continue;
             }
 
@@ -414,15 +425,18 @@ static void ProcessTriangleInternal(const Shader::OutputVertex& v0,
             if (w0 < 0 || w1 < 0 || w2 < 0)
                 continue;
 
-            auto baricentric_coordinates = Math::MakeVec(float24::FromFloat32(static_cast<float>(w0)),
-                                                float24::FromFloat32(static_cast<float>(w1)),
-                                                float24::FromFloat32(static_cast<float>(w2)));
-            float24 interpolated_w_inverse = float24::FromFloat32(1.0f) / Math::Dot(w_inverse, baricentric_coordinates);
+            auto baricentric_coordinates =
+                Math::MakeVec(float24::FromFloat32(static_cast<float>(w0)),
+                              float24::FromFloat32(static_cast<float>(w1)),
+                              float24::FromFloat32(static_cast<float>(w2)));
+            float24 interpolated_w_inverse =
+                float24::FromFloat32(1.0f) / Math::Dot(w_inverse, baricentric_coordinates);
 
             // interpolated_z = z / w
-            float interpolated_z_over_w = (v0.screenpos[2].ToFloat32() * w0 +
-                                           v1.screenpos[2].ToFloat32() * w1 +
-                                           v2.screenpos[2].ToFloat32() * w2) / wsum;
+            float interpolated_z_over_w =
+                (v0.screenpos[2].ToFloat32() * w0 + v1.screenpos[2].ToFloat32() * w1 +
+                 v2.screenpos[2].ToFloat32() * w2) /
+                wsum;
 
             // Not fully accurate. About 3 bits in precision are missing.
             // Z-Buffer (z / w * scale + offset)
@@ -461,10 +475,18 @@ static void ProcessTriangleInternal(const Shader::OutputVertex& v0,
             };
 
             Math::Vec4<u8> primary_color{
-                (u8)(GetInterpolatedAttribute(v0.color.r(), v1.color.r(), v2.color.r()).ToFloat32() * 255),
-                (u8)(GetInterpolatedAttribute(v0.color.g(), v1.color.g(), v2.color.g()).ToFloat32() * 255),
-                (u8)(GetInterpolatedAttribute(v0.color.b(), v1.color.b(), v2.color.b()).ToFloat32() * 255),
-                (u8)(GetInterpolatedAttribute(v0.color.a(), v1.color.a(), v2.color.a()).ToFloat32() * 255)
+                (u8)(
+                    GetInterpolatedAttribute(v0.color.r(), v1.color.r(), v2.color.r()).ToFloat32() *
+                    255),
+                (u8)(
+                    GetInterpolatedAttribute(v0.color.g(), v1.color.g(), v2.color.g()).ToFloat32() *
+                    255),
+                (u8)(
+                    GetInterpolatedAttribute(v0.color.b(), v1.color.b(), v2.color.b()).ToFloat32() *
+                    255),
+                (u8)(
+                    GetInterpolatedAttribute(v0.color.a(), v1.color.a(), v2.color.a()).ToFloat32() *
+                    255),
             };
 
             Math::Vec2<float24> uv[3];
@@ -489,7 +511,7 @@ static void ProcessTriangleInternal(const Shader::OutputVertex& v0,
                 // Only unit 0 respects the texturing type (according to 3DBrew)
                 // TODO: Refactor so cubemaps and shadowmaps can be handled
                 if (i == 0) {
-                    switch(texture.config.type) {
+                    switch (texture.config.type) {
                     case Regs::TextureConfig::Texture2D:
                         break;
                     case Regs::TextureConfig::Projection2D: {
@@ -506,51 +528,58 @@ static void ProcessTriangleInternal(const Shader::OutputVertex& v0,
                     }
                 }
 
-                int s = (int)(u * float24::FromFloat32(static_cast<float>(texture.config.width))).ToFloat32();
-                int t = (int)(v * float24::FromFloat32(static_cast<float>(texture.config.height))).ToFloat32();
+                int s = (int)(u * float24::FromFloat32(static_cast<float>(texture.config.width)))
+                            .ToFloat32();
+                int t = (int)(v * float24::FromFloat32(static_cast<float>(texture.config.height)))
+                            .ToFloat32();
 
-
-                static auto GetWrappedTexCoord = [](Regs::TextureConfig::WrapMode mode, int val, unsigned size) {
+                static auto GetWrappedTexCoord = [](Regs::TextureConfig::WrapMode mode, int val,
+                                                    unsigned size) {
                     switch (mode) {
-                        case Regs::TextureConfig::ClampToEdge:
-                            val = std::max(val, 0);
-                            val = std::min(val, (int)size - 1);
-                            return val;
+                    case Regs::TextureConfig::ClampToEdge:
+                        val = std::max(val, 0);
+                        val = std::min(val, (int)size - 1);
+                        return val;
 
-                        case Regs::TextureConfig::ClampToBorder:
-                            return val;
+                    case Regs::TextureConfig::ClampToBorder:
+                        return val;
 
-                        case Regs::TextureConfig::Repeat:
-                            return (int)((unsigned)val % size);
+                    case Regs::TextureConfig::Repeat:
+                        return (int)((unsigned)val % size);
 
-                        case Regs::TextureConfig::MirroredRepeat:
-                        {
-                            unsigned int coord = ((unsigned)val % (2 * size));
-                            if (coord >= size)
-                                coord = 2 * size - 1 - coord;
-                            return (int)coord;
-                        }
+                    case Regs::TextureConfig::MirroredRepeat: {
+                        unsigned int coord = ((unsigned)val % (2 * size));
+                        if (coord >= size)
+                            coord = 2 * size - 1 - coord;
+                        return (int)coord;
+                    }
 
-                        default:
-                            LOG_ERROR(HW_GPU, "Unknown texture coordinate wrapping mode %x", (int)mode);
-                            UNIMPLEMENTED();
-                            return 0;
+                    default:
+                        LOG_ERROR(HW_GPU, "Unknown texture coordinate wrapping mode %x", (int)mode);
+                        UNIMPLEMENTED();
+                        return 0;
                     }
                 };
 
-                if ((texture.config.wrap_s == Regs::TextureConfig::ClampToBorder && (s < 0 || s >= texture.config.width))
-                    || (texture.config.wrap_t == Regs::TextureConfig::ClampToBorder && (t < 0 || t >= texture.config.height))) {
+                if ((texture.config.wrap_s == Regs::TextureConfig::ClampToBorder &&
+                     (s < 0 || s >= texture.config.width)) ||
+                    (texture.config.wrap_t == Regs::TextureConfig::ClampToBorder &&
+                     (t < 0 || t >= texture.config.height))) {
                     auto border_color = texture.config.border_color;
-                    texture_color[i] = { border_color.r, border_color.g, border_color.b, border_color.a };
+                    texture_color[i] = {border_color.r, border_color.g, border_color.b,
+                                        border_color.a};
                 } else {
                     // Textures are laid out from bottom to top, hence we invert the t coordinate.
                     // NOTE: This may not be the right place for the inversion.
                     // TODO: Check if this applies to ETC textures, too.
                     s = GetWrappedTexCoord(texture.config.wrap_s, s, texture.config.width);
-                    t = texture.config.height - 1 - GetWrappedTexCoord(texture.config.wrap_t, t, texture.config.height);
+                    t = texture.config.height - 1 -
+                        GetWrappedTexCoord(texture.config.wrap_t, t, texture.config.height);
 
-                    u8* texture_data = Memory::GetPhysicalPointer(texture.config.GetPhysicalAddress());
-                    auto info = DebugUtils::TextureInfo::FromPicaRegister(texture.config, texture.format);
+                    u8* texture_data =
+                        Memory::GetPhysicalPointer(texture.config.GetPhysicalAddress());
+                    auto info =
+                        DebugUtils::TextureInfo::FromPicaRegister(texture.config, texture.format);
 
                     // TODO: Apply the min and mag filters to the texture
                     texture_color[i] = DebugUtils::LookupTexture(texture_data, s, t, info);
@@ -571,10 +600,11 @@ static void ProcessTriangleInternal(const Shader::OutputVertex& v0,
             Math::Vec4<u8> combiner_buffer = {0, 0, 0, 0};
             Math::Vec4<u8> next_combiner_buffer = {
                 regs.tev_combiner_buffer_color.r, regs.tev_combiner_buffer_color.g,
-                regs.tev_combiner_buffer_color.b, regs.tev_combiner_buffer_color.a
+                regs.tev_combiner_buffer_color.b, regs.tev_combiner_buffer_color.a,
             };
 
-            for (unsigned tev_stage_index = 0; tev_stage_index < tev_stages.size(); ++tev_stage_index) {
+            for (unsigned tev_stage_index = 0; tev_stage_index < tev_stages.size();
+                 ++tev_stage_index) {
                 const auto& tev_stage = tev_stages[tev_stage_index];
                 using Source = Regs::TevStageConfig::Source;
                 using ColorModifier = Regs::TevStageConfig::ColorModifier;
@@ -606,7 +636,8 @@ static void ProcessTriangleInternal(const Shader::OutputVertex& v0,
                         return combiner_buffer;
 
                     case Source::Constant:
-                        return {tev_stage.const_r, tev_stage.const_g, tev_stage.const_b, tev_stage.const_a};
+                        return {tev_stage.const_r, tev_stage.const_g, tev_stage.const_b,
+                                tev_stage.const_a};
 
                     case Source::Previous:
                         return combiner_output;
@@ -618,7 +649,8 @@ static void ProcessTriangleInternal(const Shader::OutputVertex& v0,
                     }
                 };
 
-                static auto GetColorModifier = [](ColorModifier factor, const Math::Vec4<u8>& values) -> Math::Vec3<u8> {
+                static auto GetColorModifier = [](ColorModifier factor,
+                                                  const Math::Vec4<u8>& values) -> Math::Vec3<u8> {
                     switch (factor) {
                     case ColorModifier::SourceColor:
                         return values.rgb();
@@ -652,7 +684,8 @@ static void ProcessTriangleInternal(const Shader::OutputVertex& v0,
                     }
                 };
 
-                static auto GetAlphaModifier = [](AlphaModifier factor, const Math::Vec4<u8>& values) -> u8 {
+                static auto GetAlphaModifier = [](AlphaModifier factor,
+                                                  const Math::Vec4<u8>& values) -> u8 {
                     switch (factor) {
                     case AlphaModifier::SourceAlpha:
                         return values.a();
@@ -680,7 +713,8 @@ static void ProcessTriangleInternal(const Shader::OutputVertex& v0,
                     }
                 };
 
-                static auto ColorCombine = [](Operation op, const Math::Vec3<u8> input[3]) -> Math::Vec3<u8> {
+                static auto ColorCombine = [](Operation op,
+                                              const Math::Vec3<u8> input[3]) -> Math::Vec3<u8> {
                     switch (op) {
                     case Operation::Replace:
                         return input[0];
@@ -688,8 +722,7 @@ static void ProcessTriangleInternal(const Shader::OutputVertex& v0,
                     case Operation::Modulate:
                         return ((input[0] * input[1]) / 255).Cast<u8>();
 
-                    case Operation::Add:
-                    {
+                    case Operation::Add: {
                         auto result = input[0] + input[1];
                         result.r() = std::min(255, result.r());
                         result.g() = std::min(255, result.g());
@@ -697,10 +730,11 @@ static void ProcessTriangleInternal(const Shader::OutputVertex& v0,
                         return result.Cast<u8>();
                     }
 
-                    case Operation::AddSigned:
-                    {
-                        // TODO(bunnei): Verify that the color conversion from (float) 0.5f to (byte) 128 is correct
-                        auto result = input[0].Cast<int>() + input[1].Cast<int>() - Math::MakeVec<int>(128, 128, 128);
+                    case Operation::AddSigned: {
+                        // TODO(bunnei): Verify that the color conversion from (float) 0.5f to
+                        // (byte) 128 is correct
+                        auto result = input[0].Cast<int>() + input[1].Cast<int>() -
+                                      Math::MakeVec<int>(128, 128, 128);
                         result.r() = MathUtil::Clamp<int>(result.r(), 0, 255);
                         result.g() = MathUtil::Clamp<int>(result.g(), 0, 255);
                         result.b() = MathUtil::Clamp<int>(result.b(), 0, 255);
@@ -708,10 +742,13 @@ static void ProcessTriangleInternal(const Shader::OutputVertex& v0,
                     }
 
                     case Operation::Lerp:
-                        return ((input[0] * input[2] + input[1] * (Math::MakeVec<u8>(255, 255, 255) - input[2]).Cast<u8>()) / 255).Cast<u8>();
+                        return ((input[0] * input[2] +
+                                 input[1] *
+                                     (Math::MakeVec<u8>(255, 255, 255) - input[2]).Cast<u8>()) /
+                                255)
+                            .Cast<u8>();
 
-                    case Operation::Subtract:
-                    {
+                    case Operation::Subtract: {
                         auto result = input[0].Cast<int>() - input[1].Cast<int>();
                         result.r() = std::max(0, result.r());
                         result.g() = std::max(0, result.g());
@@ -719,8 +756,7 @@ static void ProcessTriangleInternal(const Shader::OutputVertex& v0,
                         return result.Cast<u8>();
                     }
 
-                    case Operation::MultiplyThenAdd:
-                    {
+                    case Operation::MultiplyThenAdd: {
                         auto result = (input[0] * input[1] + 255 * input[2].Cast<int>()) / 255;
                         result.r() = std::min(255, result.r());
                         result.g() = std::min(255, result.g());
@@ -728,8 +764,7 @@ static void ProcessTriangleInternal(const Shader::OutputVertex& v0,
                         return result.Cast<u8>();
                     }
 
-                    case Operation::AddThenMultiply:
-                    {
+                    case Operation::AddThenMultiply: {
                         auto result = input[0] + input[1];
                         result.r() = std::min(255, result.r());
                         result.g() = std::min(255, result.g());
@@ -737,17 +772,19 @@ static void ProcessTriangleInternal(const Shader::OutputVertex& v0,
                         result = (result * input[2].Cast<int>()) / 255;
                         return result.Cast<u8>();
                     }
-                    case Operation::Dot3_RGB:
-                    {
+                    case Operation::Dot3_RGB: {
                         // Not fully accurate.
                         // Worst case scenario seems to yield a +/-3 error
-                        // Some HW results indicate that the per-component computation can't have a higher precision than 1/256,
-                        // while dot3_rgb( (0x80,g0,b0),(0x7F,g1,b1) ) and dot3_rgb( (0x80,g0,b0),(0x80,g1,b1) ) give different results
-                        int result = ((input[0].r() * 2 - 255) * (input[1].r() * 2 - 255) + 128) / 256 +
-                                     ((input[0].g() * 2 - 255) * (input[1].g() * 2 - 255) + 128) / 256 +
-                                     ((input[0].b() * 2 - 255) * (input[1].b() * 2 - 255) + 128) / 256;
+                        // Some HW results indicate that the per-component computation can't have a
+                        // higher precision than 1/256,
+                        // while dot3_rgb( (0x80,g0,b0),(0x7F,g1,b1) ) and dot3_rgb(
+                        // (0x80,g0,b0),(0x80,g1,b1) ) give different results
+                        int result =
+                            ((input[0].r() * 2 - 255) * (input[1].r() * 2 - 255) + 128) / 256 +
+                            ((input[0].g() * 2 - 255) * (input[1].g() * 2 - 255) + 128) / 256 +
+                            ((input[0].b() * 2 - 255) * (input[1].b() * 2 - 255) + 128) / 256;
                         result = std::max(0, std::min(255, result));
-                        return { (u8)result, (u8)result, (u8)result };
+                        return {(u8)result, (u8)result, (u8)result};
                     }
                     default:
                         LOG_ERROR(HW_GPU, "Unknown color combiner operation %d", (int)op);
@@ -756,7 +793,7 @@ static void ProcessTriangleInternal(const Shader::OutputVertex& v0,
                     }
                 };
 
-                static auto AlphaCombine = [](Operation op, const std::array<u8,3>& input) -> u8 {
+                static auto AlphaCombine = [](Operation op, const std::array<u8, 3>& input) -> u8 {
                     switch (op) {
                     case Operation::Replace:
                         return input[0];
@@ -767,9 +804,9 @@ static void ProcessTriangleInternal(const Shader::OutputVertex& v0,
                     case Operation::Add:
                         return std::min(255, input[0] + input[1]);
 
-                    case Operation::AddSigned:
-                    {
-                        // TODO(bunnei): Verify that the color conversion from (float) 0.5f to (byte) 128 is correct
+                    case Operation::AddSigned: {
+                        // TODO(bunnei): Verify that the color conversion from (float) 0.5f to
+                        // (byte) 128 is correct
                         auto result = static_cast<int>(input[0]) + static_cast<int>(input[1]) - 128;
                         return static_cast<u8>(MathUtil::Clamp<int>(result, 0, 255));
                     }
@@ -801,32 +838,38 @@ static void ProcessTriangleInternal(const Shader::OutputVertex& v0,
                 Math::Vec3<u8> color_result[3] = {
                     GetColorModifier(tev_stage.color_modifier1, GetSource(tev_stage.color_source1)),
                     GetColorModifier(tev_stage.color_modifier2, GetSource(tev_stage.color_source2)),
-                    GetColorModifier(tev_stage.color_modifier3, GetSource(tev_stage.color_source3))
+                    GetColorModifier(tev_stage.color_modifier3, GetSource(tev_stage.color_source3)),
                 };
                 auto color_output = ColorCombine(tev_stage.color_op, color_result);
 
                 // alpha combiner
-                std::array<u8,3> alpha_result = {{
+                std::array<u8, 3> alpha_result = {{
                     GetAlphaModifier(tev_stage.alpha_modifier1, GetSource(tev_stage.alpha_source1)),
                     GetAlphaModifier(tev_stage.alpha_modifier2, GetSource(tev_stage.alpha_source2)),
-                    GetAlphaModifier(tev_stage.alpha_modifier3, GetSource(tev_stage.alpha_source3))
+                    GetAlphaModifier(tev_stage.alpha_modifier3, GetSource(tev_stage.alpha_source3)),
                 }};
                 auto alpha_output = AlphaCombine(tev_stage.alpha_op, alpha_result);
 
-                combiner_output[0] = std::min((unsigned)255, color_output.r() * tev_stage.GetColorMultiplier());
-                combiner_output[1] = std::min((unsigned)255, color_output.g() * tev_stage.GetColorMultiplier());
-                combiner_output[2] = std::min((unsigned)255, color_output.b() * tev_stage.GetColorMultiplier());
-                combiner_output[3] = std::min((unsigned)255, alpha_output * tev_stage.GetAlphaMultiplier());
+                combiner_output[0] =
+                    std::min((unsigned)255, color_output.r() * tev_stage.GetColorMultiplier());
+                combiner_output[1] =
+                    std::min((unsigned)255, color_output.g() * tev_stage.GetColorMultiplier());
+                combiner_output[2] =
+                    std::min((unsigned)255, color_output.b() * tev_stage.GetColorMultiplier());
+                combiner_output[3] =
+                    std::min((unsigned)255, alpha_output * tev_stage.GetAlphaMultiplier());
 
                 combiner_buffer = next_combiner_buffer;
 
-                if (regs.tev_combiner_buffer_input.TevStageUpdatesCombinerBufferColor(tev_stage_index)) {
+                if (regs.tev_combiner_buffer_input.TevStageUpdatesCombinerBufferColor(
+                        tev_stage_index)) {
                     next_combiner_buffer.r() = combiner_output.r();
                     next_combiner_buffer.g() = combiner_output.g();
                     next_combiner_buffer.b() = combiner_output.b();
                 }
 
-                if (regs.tev_combiner_buffer_input.TevStageUpdatesCombinerBufferAlpha(tev_stage_index)) {
+                if (regs.tev_combiner_buffer_input.TevStageUpdatesCombinerBufferAlpha(
+                        tev_stage_index)) {
                     next_combiner_buffer.a() = combiner_output.a();
                 }
             }
@@ -897,21 +940,26 @@ static void ProcessTriangleInternal(const Shader::OutputVertex& v0,
                 float fog_i = MathUtil::Clamp(floorf(fog_index), 0.0f, 127.0f);
                 float fog_f = fog_index - fog_i;
                 const auto& fog_lut_entry = g_state.fog.lut[static_cast<unsigned int>(fog_i)];
-                float fog_factor = (fog_lut_entry.value + fog_lut_entry.difference * fog_f) / 2047.0f; // This is signed fixed point 1.11
+                float fog_factor = (fog_lut_entry.value + fog_lut_entry.difference * fog_f) /
+                                   2047.0f; // This is signed fixed point 1.11
                 fog_factor = MathUtil::Clamp(fog_factor, 0.0f, 1.0f);
 
                 // Blend the fog
                 for (unsigned i = 0; i < 3; i++) {
-                    combiner_output[i] = fog_factor * combiner_output[i] + (1.0f - fog_factor) * fog_color[i];
+                    combiner_output[i] =
+                        fog_factor * combiner_output[i] + (1.0f - fog_factor) * fog_color[i];
                 }
             }
 
             u8 old_stencil = 0;
 
-            auto UpdateStencil = [stencil_test, x, y, &old_stencil](Pica::Regs::StencilAction action) {
-                u8 new_stencil = PerformStencilAction(action, old_stencil, stencil_test.reference_value);
+            auto UpdateStencil = [stencil_test, x, y,
+                                  &old_stencil](Pica::Regs::StencilAction action) {
+                u8 new_stencil =
+                    PerformStencilAction(action, old_stencil, stencil_test.reference_value);
                 if (g_state.regs.framebuffer.allow_depth_stencil_write != 0)
-                    SetStencil(x >> 4, y >> 4, (new_stencil & stencil_test.write_mask) | (old_stencil & ~stencil_test.write_mask));
+                    SetStencil(x >> 4, y >> 4, (new_stencil & stencil_test.write_mask) |
+                                                   (old_stencil & ~stencil_test.write_mask));
             };
 
             if (stencil_action_enable) {
@@ -1030,7 +1078,7 @@ static void ProcessTriangleInternal(const Shader::OutputVertex& v0,
                         static_cast<u8>(output_merger.blend_const.r),
                         static_cast<u8>(output_merger.blend_const.g),
                         static_cast<u8>(output_merger.blend_const.b),
-                        static_cast<u8>(output_merger.blend_const.a)
+                        static_cast<u8>(output_merger.blend_const.a),
                     };
 
                     switch (factor) {
@@ -1091,12 +1139,13 @@ static void ProcessTriangleInternal(const Shader::OutputVertex& v0,
                     return combiner_output[channel];
                 };
 
-                static auto EvaluateBlendEquation = [](const Math::Vec4<u8>& src, const Math::Vec4<u8>& srcfactor,
-                                                       const Math::Vec4<u8>& dest, const Math::Vec4<u8>& destfactor,
-                                                       Regs::BlendEquation equation) {
+                static auto EvaluateBlendEquation = [](
+                    const Math::Vec4<u8>& src, const Math::Vec4<u8>& srcfactor,
+                    const Math::Vec4<u8>& dest, const Math::Vec4<u8>& destfactor,
+                    Regs::BlendEquation equation) {
                     Math::Vec4<int> result;
 
-                    auto src_result = (src  *  srcfactor).Cast<int>();
+                    auto src_result = (src * srcfactor).Cast<int>();
                     auto dst_result = (dest * destfactor).Cast<int>();
 
                     switch (equation) {
@@ -1134,10 +1183,9 @@ static void ProcessTriangleInternal(const Shader::OutputVertex& v0,
                         UNIMPLEMENTED();
                     }
 
-                    return Math::Vec4<u8>(MathUtil::Clamp(result.r(), 0, 255),
-                                    MathUtil::Clamp(result.g(), 0, 255),
-                                    MathUtil::Clamp(result.b(), 0, 255),
-                                    MathUtil::Clamp(result.a(), 0, 255));
+                    return Math::Vec4<u8>(
+                        MathUtil::Clamp(result.r(), 0, 255), MathUtil::Clamp(result.g(), 0, 255),
+                        MathUtil::Clamp(result.b(), 0, 255), MathUtil::Clamp(result.a(), 0, 255));
                 };
 
                 auto srcfactor = Math::MakeVec(LookupFactor(0, params.factor_source_rgb),
@@ -1150,8 +1198,11 @@ static void ProcessTriangleInternal(const Shader::OutputVertex& v0,
                                                LookupFactor(2, params.factor_dest_rgb),
                                                LookupFactor(3, params.factor_dest_a));
 
-                blend_output     = EvaluateBlendEquation(combiner_output, srcfactor, dest, dstfactor, params.blend_equation_rgb);
-                blend_output.a() = EvaluateBlendEquation(combiner_output, srcfactor, dest, dstfactor, params.blend_equation_a).a();
+                blend_output = EvaluateBlendEquation(combiner_output, srcfactor, dest, dstfactor,
+                                                     params.blend_equation_rgb);
+                blend_output.a() = EvaluateBlendEquation(combiner_output, srcfactor, dest,
+                                                         dstfactor, params.blend_equation_a)
+                                       .a();
             } else {
                 static auto LogicOp = [](u8 src, u8 dest, Regs::LogicOp op) -> u8 {
                     switch (op) {
@@ -1205,18 +1256,18 @@ static void ProcessTriangleInternal(const Shader::OutputVertex& v0,
                     }
                 };
 
-                blend_output = Math::MakeVec(
-                    LogicOp(combiner_output.r(), dest.r(), output_merger.logic_op),
-                    LogicOp(combiner_output.g(), dest.g(), output_merger.logic_op),
-                    LogicOp(combiner_output.b(), dest.b(), output_merger.logic_op),
-                    LogicOp(combiner_output.a(), dest.a(), output_merger.logic_op));
+                blend_output =
+                    Math::MakeVec(LogicOp(combiner_output.r(), dest.r(), output_merger.logic_op),
+                                  LogicOp(combiner_output.g(), dest.g(), output_merger.logic_op),
+                                  LogicOp(combiner_output.b(), dest.b(), output_merger.logic_op),
+                                  LogicOp(combiner_output.a(), dest.a(), output_merger.logic_op));
             }
 
             const Math::Vec4<u8> result = {
-                output_merger.red_enable   ? blend_output.r() : dest.r(),
+                output_merger.red_enable ? blend_output.r() : dest.r(),
                 output_merger.green_enable ? blend_output.g() : dest.g(),
-                output_merger.blue_enable  ? blend_output.b() : dest.b(),
-                output_merger.alpha_enable ? blend_output.a() : dest.a()
+                output_merger.blue_enable ? blend_output.b() : dest.b(),
+                output_merger.alpha_enable ? blend_output.a() : dest.a(),
             };
 
             if (regs.framebuffer.allow_color_write != 0)
@@ -1225,8 +1276,7 @@ static void ProcessTriangleInternal(const Shader::OutputVertex& v0,
     }
 }
 
-void ProcessTriangle(const Shader::OutputVertex& v0,
-                     const Shader::OutputVertex& v1,
+void ProcessTriangle(const Shader::OutputVertex& v0, const Shader::OutputVertex& v1,
                      const Shader::OutputVertex& v2) {
     ProcessTriangleInternal(v0, v1, v2);
 }

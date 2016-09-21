@@ -5,7 +5,6 @@
 #pragma once
 
 #include <cstddef>
-
 #include "common/common_types.h"
 #include "core/hle/result.h"
 
@@ -16,8 +15,8 @@ namespace FileSys {
 
 class FileBackend : NonCopyable {
 public:
-    FileBackend() { }
-    virtual ~FileBackend() { }
+    FileBackend() {}
+    virtual ~FileBackend() {}
 
     /**
      * Open the file
@@ -42,7 +41,8 @@ public:
      * @param buffer Buffer to read data from
      * @return Number of bytes written, or error code
      */
-    virtual ResultVal<size_t> Write(u64 offset, size_t length, bool flush, const u8* buffer) const = 0;
+    virtual ResultVal<size_t> Write(u64 offset, size_t length, bool flush,
+                                    const u8* buffer) const = 0;
 
     /**
      * Get the size of the file in bytes

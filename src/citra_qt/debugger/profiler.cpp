@@ -5,10 +5,8 @@
 #include <QMouseEvent>
 #include <QPainter>
 #include <QString>
-
 #include "citra_qt/debugger/profiler.h"
 #include "citra_qt/util/util.h"
-
 #include "common/common_types.h"
 #include "common/microprofile.h"
 #include "common/profiler_reporting.h"
@@ -22,57 +20,58 @@
 
 using namespace Common::Profiling;
 
-static QVariant GetDataForColumn(int col, const AggregatedDuration& duration)
-{
+static QVariant GetDataForColumn(int col, const AggregatedDuration& duration) {
     static auto duration_to_float = [](Duration dur) -> float {
         using FloatMs = std::chrono::duration<float, std::chrono::milliseconds::period>;
         return std::chrono::duration_cast<FloatMs>(dur).count();
     };
 
     switch (col) {
-    case 1: return duration_to_float(duration.avg);
-    case 2: return duration_to_float(duration.min);
-    case 3: return duration_to_float(duration.max);
-    default: return QVariant();
+    case 1:
+        return duration_to_float(duration.avg);
+    case 2:
+        return duration_to_float(duration.min);
+    case 3:
+        return duration_to_float(duration.max);
+    default:
+        return QVariant();
     }
 }
 
-ProfilerModel::ProfilerModel(QObject* parent) : QAbstractItemModel(parent)
-{
+ProfilerModel::ProfilerModel(QObject* parent) : QAbstractItemModel(parent) {
     updateProfilingInfo();
 }
 
-QVariant ProfilerModel::headerData(int section, Qt::Orientation orientation, int role) const
-{
+QVariant ProfilerModel::headerData(int section, Qt::Orientation orientation, int role) const {
     if (orientation == Qt::Horizontal && role == Qt::DisplayRole) {
         switch (section) {
-        case 0: return tr("Category");
-        case 1: return tr("Avg");
-        case 2: return tr("Min");
-        case 3: return tr("Max");
+        case 0:
+            return tr("Category");
+        case 1:
+            return tr("Avg");
+        case 2:
+            return tr("Min");
+        case 3:
+            return tr("Max");
         }
     }
 
     return QVariant();
 }
 
-QModelIndex ProfilerModel::index(int row, int column, const QModelIndex& parent) const
-{
+QModelIndex ProfilerModel::index(int row, int column, const QModelIndex& parent) const {
     return createIndex(row, column);
 }
 
-QModelIndex ProfilerModel::parent(const QModelIndex& child) const
-{
+QModelIndex ProfilerModel::parent(const QModelIndex& child) const {
     return QModelIndex();
 }
 
-int ProfilerModel::columnCount(const QModelIndex& parent) const
-{
+int ProfilerModel::columnCount(const QModelIndex& parent) const {
     return 4;
 }
 
-int ProfilerModel::rowCount(const QModelIndex& parent) const
-{
+int ProfilerModel::rowCount(const QModelIndex& parent) const {
     if (parent.isValid()) {
         return 0;
     } else {
@@ -80,8 +79,7 @@ int ProfilerModel::rowCount(const QModelIndex& parent) const
     }
 }
 
-QVariant ProfilerModel::data(const QModelIndex& index, int role) const
-{
+QVariant ProfilerModel::data(const QModelIndex& index, int role) const {
     if (role == Qt::DisplayRole) {
         if (index.row() == 0) {
             if (index.column() == 0) {
@@ -101,14 +99,12 @@ QVariant ProfilerModel::data(const QModelIndex& index, int role) const
     return QVariant();
 }
 
-void ProfilerModel::updateProfilingInfo()
-{
+void ProfilerModel::updateProfilingInfo() {
     results = GetTimingResultsAggregator()->GetAggregatedResults();
     emit dataChanged(createIndex(0, 1), createIndex(rowCount() - 1, 3));
 }
 
-ProfilerWidget::ProfilerWidget(QWidget* parent) : QDockWidget(parent)
-{
+ProfilerWidget::ProfilerWidget(QWidget* parent) : QDockWidget(parent) {
     ui.setupUi(this);
 
     model = new ProfilerModel(this);
@@ -118,8 +114,7 @@ ProfilerWidget::ProfilerWidget(QWidget* parent) : QDockWidget(parent)
     connect(&update_timer, SIGNAL(timeout()), model, SLOT(updateProfilingInfo()));
 }
 
-void ProfilerWidget::setProfilingInfoUpdateEnabled(bool enable)
-{
+void ProfilerWidget::setProfilingInfoUpdateEnabled(bool enable) {
     if (enable) {
         update_timer.start(100);
         model->updateProfilingInfo();
@@ -157,9 +152,7 @@ private:
 
 #endif
 
-MicroProfileDialog::MicroProfileDialog(QWidget* parent)
-    : QWidget(parent, Qt::Dialog)
-{
+MicroProfileDialog::MicroProfileDialog(QWidget* parent) : QWidget(parent, Qt::Dialog) {
     setObjectName("MicroProfile");
     setWindowTitle(tr("MicroProfile"));
     resize(1000, 600);
@@ -175,7 +168,8 @@ MicroProfileDialog::MicroProfileDialog(QWidget* parent)
     layout->addWidget(widget);
     setLayout(layout);
 
-    // Configure focus so that widget is focusable and the dialog automatically forwards focus to it.
+    // Configure focus so that widget is focusable and the dialog automatically forwards focus to
+    // it.
     setFocusProxy(widget);
     widget->setFocusPolicy(Qt::StrongFocus);
     widget->setFocus();
@@ -206,7 +200,6 @@ void MicroProfileDialog::hideEvent(QHideEvent* ev) {
     }
     QWidget::hideEvent(ev);
 }
-
 
 #if MICROPROFILE_ENABLED
 
@@ -308,7 +301,8 @@ void MicroProfileDrawText(int x, int y, u32 hex_color, const char* text, u32 tex
     }
 }
 
-void MicroProfileDrawBox(int left, int top, int right, int bottom, u32 hex_color, MicroProfileBoxType type) {
+void MicroProfileDrawBox(int left, int top, int right, int bottom, u32 hex_color,
+                         MicroProfileBoxType type) {
     QColor color = QColor::fromRgba(hex_color);
     QBrush brush = color;
     if (type == MicroProfileBoxTypeBar) {
@@ -326,7 +320,7 @@ void MicroProfileDrawLine2D(u32 vertices_length, float* vertices, u32 hex_color)
     static std::vector<QPointF> point_buf;
 
     for (u32 i = 0; i < vertices_length; ++i) {
-        point_buf.emplace_back(vertices[i*2 + 0], vertices[i*2 + 1]);
+        point_buf.emplace_back(vertices[i * 2 + 0], vertices[i * 2 + 1]);
     }
 
     // hex_color does not include an alpha, so it must be assumed to be 255

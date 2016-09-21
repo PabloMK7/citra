@@ -5,20 +5,21 @@
 #pragma once
 
 #include <vector>
-
 #include "common/common_types.h"
 
 namespace AudioCore {
 
 /**
- * This class is an interface for an audio sink. An audio sink accepts samples in stereo signed PCM16 format to be output.
- * Sinks *do not* handle resampling and expect the correct sample rate. They are dumb outputs.
+ * This class is an interface for an audio sink. An audio sink accepts samples in stereo signed
+ * PCM16 format to be output. Sinks *do not* handle resampling and expect the correct sample rate.
+ * They are dumb outputs.
  */
 class Sink {
 public:
     virtual ~Sink() = default;
 
-    /// The native rate of this sink. The sink expects to be fed samples that respect this. (Units: samples/sec)
+    /// The native rate of this sink. The sink expects to be fed samples that respect this. (Units:
+    /// samples/sec)
     virtual unsigned int GetNativeSampleRate() const = 0;
 
     /**

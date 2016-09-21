@@ -29,9 +29,9 @@
 #include "common/common_types.h"
 
 enum class ThumbDecodeStatus {
-    UNDEFINED,    // Undefined Thumb instruction
-    DECODED,      // Instruction decoded to ARM equivalent
-    BRANCH,       // Thumb branch (already processed)
+    UNDEFINED, // Undefined Thumb instruction
+    DECODED,   // Instruction decoded to ARM equivalent
+    BRANCH,    // Thumb branch (already processed)
     UNINITIALIZED,
 };
 

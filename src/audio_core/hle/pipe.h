@@ -6,7 +6,6 @@
 
 #include <cstddef>
 #include <vector>
-
 #include "common/common_types.h"
 
 namespace DSP {
@@ -19,16 +18,18 @@ enum class DspPipe {
     Debug = 0,
     Dma = 1,
     Audio = 2,
-    Binary = 3
+    Binary = 3,
 };
 constexpr size_t NUM_DSP_PIPE = 8;
 
 /**
  * Reads `length` bytes from the DSP pipe identified with `pipe_number`.
  * @note Can read up to the maximum value of a u16 in bytes (65,535).
- * @note IF an error is encoutered with either an invalid `pipe_number` or `length` value, an empty vector will be returned.
+ * @note IF an error is encoutered with either an invalid `pipe_number` or `length` value, an empty
+ * vector will be returned.
  * @note IF `length` is set to 0, an empty vector will be returned.
- * @note IF `length` is greater than the amount of data available, this function will only read the available amount.
+ * @note IF `length` is greater than the amount of data available, this function will only read the
+ * available amount.
  * @param pipe_number a `DspPipe`
  * @param length the number of bytes to read. The max is 65,535 (max of u16).
  * @returns a vector of bytes from the specified pipe. On error, will be empty.
@@ -52,8 +53,9 @@ void PipeWrite(DspPipe pipe_number, const std::vector<u8>& buffer);
 enum class DspState {
     Off,
     On,
-    Sleeping
+    Sleeping,
 };
+
 /// Get the state of the DSP
 DspState GetDspState();
 

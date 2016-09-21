@@ -13,16 +13,13 @@
 #include <QSpinBox>
 #include <QTreeView>
 #include <QVBoxLayout>
-
 #include "citra_qt/debugger/graphics_cmdlists.h"
 #include "citra_qt/util/spinbox.h"
 #include "citra_qt/util/util.h"
-
 #include "common/vector_math.h"
-
+#include "video_core/debug_utils/debug_utils.h"
 #include "video_core/pica.h"
 #include "video_core/pica_state.h"
-#include "video_core/debug_utils/debug_utils.h"
 
 QImage LoadTexture(u8* src, const Pica::DebugUtils::TextureInfo& info) {
     QImage decoded_image(info.width, info.height, QImage::Format_ARGB32);
@@ -38,7 +35,8 @@ QImage LoadTexture(u8* src, const Pica::DebugUtils::TextureInfo& info) {
 
 class TextureInfoWidget : public QWidget {
 public:
-    TextureInfoWidget(u8* src, const Pica::DebugUtils::TextureInfo& info, QWidget* parent = nullptr) : QWidget(parent) {
+    TextureInfoWidget(u8* src, const Pica::DebugUtils::TextureInfo& info, QWidget* parent = nullptr)
+        : QWidget(parent) {
         QLabel* image_widget = new QLabel;
         QPixmap image_pixmap = QPixmap::fromImage(LoadTexture(src, info));
         image_pixmap = image_pixmap.scaled(200, 100, Qt::KeepAspectRatio, Qt::SmoothTransformation);
@@ -50,9 +48,7 @@ public:
     }
 };
 
-GPUCommandListModel::GPUCommandListModel(QObject* parent) : QAbstractListModel(parent) {
-
-}
+GPUCommandListModel::GPUCommandListModel(QObject* parent) : QAbstractListModel(parent) {}
 
 int GPUCommandListModel::rowCount(const QModelIndex& parent) const {
     return static_cast<int>(pica_trace.writes.size());
@@ -70,7 +66,7 @@ QVariant GPUCommandListModel::data(const QModelIndex& index, int role) const {
 
     if (role == Qt::DisplayRole) {
         QString content;
-        switch ( index.column() ) {
+        switch (index.column()) {
         case 0:
             return QString::fromLatin1(Pica::Regs::GetCommandName(write.cmd_id).c_str());
         case 1:
@@ -88,9 +84,8 @@ QVariant GPUCommandListModel::data(const QModelIndex& index, int role) const {
 }
 
 QVariant GPUCommandListModel::headerData(int section, Qt::Orientation orientation, int role) const {
-    switch(role) {
-    case Qt::DisplayRole:
-    {
+    switch (role) {
+    case Qt::DisplayRole: {
         switch (section) {
         case 0:
             return tr("Command Name");
@@ -117,14 +112,14 @@ void GPUCommandListModel::OnPicaTraceFinished(const Pica::DebugUtils::PicaTrace&
     endResetModel();
 }
 
-#define COMMAND_IN_RANGE(cmd_id, reg_name)   \
-    (cmd_id >= PICA_REG_INDEX(reg_name) &&   \
+#define COMMAND_IN_RANGE(cmd_id, reg_name)                                                         \
+    (cmd_id >= PICA_REG_INDEX(reg_name) &&                                                         \
      cmd_id < PICA_REG_INDEX(reg_name) + sizeof(decltype(Pica::g_state.regs.reg_name)) / 4)
 
 void GPUCommandListWidget::OnCommandDoubleClicked(const QModelIndex& index) {
-    const unsigned int command_id = list_widget->model()->data(index, GPUCommandListModel::CommandIdRole).toUInt();
-    if (COMMAND_IN_RANGE(command_id, texture0) ||
-        COMMAND_IN_RANGE(command_id, texture1) ||
+    const unsigned int command_id =
+        list_widget->model()->data(index, GPUCommandListModel::CommandIdRole).toUInt();
+    if (COMMAND_IN_RANGE(command_id, texture0) || COMMAND_IN_RANGE(command_id, texture1) ||
         COMMAND_IN_RANGE(command_id, texture2)) {
 
         unsigned index;
@@ -148,9 +143,9 @@ void GPUCommandListWidget::OnCommandDoubleClicked(const QModelIndex& index) {
 void GPUCommandListWidget::SetCommandInfo(const QModelIndex& index) {
     QWidget* new_info_widget = nullptr;
 
-    const unsigned int command_id = list_widget->model()->data(index, GPUCommandListModel::CommandIdRole).toUInt();
-    if (COMMAND_IN_RANGE(command_id, texture0) ||
-        COMMAND_IN_RANGE(command_id, texture1) ||
+    const unsigned int command_id =
+        list_widget->model()->data(index, GPUCommandListModel::CommandIdRole).toUInt();
+    if (COMMAND_IN_RANGE(command_id, texture0) || COMMAND_IN_RANGE(command_id, texture1) ||
         COMMAND_IN_RANGE(command_id, texture2)) {
 
         unsigned index;
@@ -179,7 +174,8 @@ void GPUCommandListWidget::SetCommandInfo(const QModelIndex& index) {
 }
 #undef COMMAND_IN_RANGE
 
-GPUCommandListWidget::GPUCommandListWidget(QWidget* parent) : QDockWidget(tr("Pica Command List"), parent) {
+GPUCommandListWidget::GPUCommandListWidget(QWidget* parent)
+    : QDockWidget(tr("Pica Command List"), parent) {
     setObjectName("Pica Command List");
     GPUCommandListModel* model = new GPUCommandListModel(this);
 
@@ -191,23 +187,24 @@ GPUCommandListWidget::GPUCommandListWidget(QWidget* parent) : QDockWidget(tr("Pi
     list_widget->setRootIsDecorated(false);
     list_widget->setUniformRowHeights(true);
 
-#if QT_VERSION >= QT_VERSION_CHECK(5,0,0)
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     list_widget->header()->setSectionResizeMode(QHeaderView::ResizeToContents);
 #else
     list_widget->header()->setResizeMode(QHeaderView::ResizeToContents);
 #endif
 
-    connect(list_widget->selectionModel(), SIGNAL(currentChanged(const QModelIndex&,const QModelIndex&)),
-            this, SLOT(SetCommandInfo(const QModelIndex&)));
-    connect(list_widget, SIGNAL(doubleClicked(const QModelIndex&)),
-            this, SLOT(OnCommandDoubleClicked(const QModelIndex&)));
+    connect(list_widget->selectionModel(),
+            SIGNAL(currentChanged(const QModelIndex&, const QModelIndex&)), this,
+            SLOT(SetCommandInfo(const QModelIndex&)));
+    connect(list_widget, SIGNAL(doubleClicked(const QModelIndex&)), this,
+            SLOT(OnCommandDoubleClicked(const QModelIndex&)));
 
     toggle_tracing = new QPushButton(tr("Start Tracing"));
     QPushButton* copy_all = new QPushButton(tr("Copy All"));
 
     connect(toggle_tracing, SIGNAL(clicked()), this, SLOT(OnToggleTracing()));
-    connect(this, SIGNAL(TracingFinished(const Pica::DebugUtils::PicaTrace&)),
-            model, SLOT(OnPicaTraceFinished(const Pica::DebugUtils::PicaTrace&)));
+    connect(this, SIGNAL(TracingFinished(const Pica::DebugUtils::PicaTrace&)), model,
+            SLOT(OnPicaTraceFinished(const Pica::DebugUtils::PicaTrace&)));
 
     connect(copy_all, SIGNAL(clicked()), this, SLOT(CopyAllToClipboard()));
 

@@ -6,7 +6,6 @@
 
 #include "common/common_types.h"
 #include "common/swap.h"
-
 #include "core/hle/kernel/kernel.h"
 
 namespace Service {
@@ -46,58 +45,58 @@ static_assert(sizeof(CaptureBufferInfo) == 0x20, "CaptureBufferInfo struct has i
 
 /// Signals used by APT functions
 enum class SignalType : u32 {
-    None              = 0x0,
-    AppJustStarted    = 0x1,
+    None = 0x0,
+    AppJustStarted = 0x1,
     LibAppJustStarted = 0x2,
-    LibAppFinished    = 0x3,
-    LibAppClosed      = 0xA,
-    ReturningToApp    = 0xB,
-    ExitingApp        = 0xC,
+    LibAppFinished = 0x3,
+    LibAppClosed = 0xA,
+    ReturningToApp = 0xB,
+    ExitingApp = 0xC,
 };
 
 /// App Id's used by APT functions
 enum class AppletId : u32 {
-    HomeMenu           = 0x101,
-    AlternateMenu      = 0x103,
-    Camera             = 0x110,
-    FriendsList        = 0x112,
-    GameNotes          = 0x113,
-    InternetBrowser    = 0x114,
-    InstructionManual  = 0x115,
-    Notifications      = 0x116,
-    Miiverse           = 0x117,
-    MiiversePost       = 0x118,
-    AmiiboSettings     = 0x119,
-    SoftwareKeyboard1  = 0x201,
-    Ed1                = 0x202,
-    PnoteApp           = 0x204,
-    SnoteApp           = 0x205,
-    Error              = 0x206,
-    Mint               = 0x207,
-    Extrapad           = 0x208,
-    Memolib            = 0x209,
-    Application        = 0x300,
-    AnyLibraryApplet   = 0x400,
-    SoftwareKeyboard2  = 0x401,
-    Ed2                = 0x402,
-    PnoteApp2          = 0x404,
-    SnoteApp2          = 0x405,
-    Error2             = 0x406,
-    Mint2              = 0x407,
-    Extrapad2          = 0x408,
-    Memolib2           = 0x409,
+    HomeMenu = 0x101,
+    AlternateMenu = 0x103,
+    Camera = 0x110,
+    FriendsList = 0x112,
+    GameNotes = 0x113,
+    InternetBrowser = 0x114,
+    InstructionManual = 0x115,
+    Notifications = 0x116,
+    Miiverse = 0x117,
+    MiiversePost = 0x118,
+    AmiiboSettings = 0x119,
+    SoftwareKeyboard1 = 0x201,
+    Ed1 = 0x202,
+    PnoteApp = 0x204,
+    SnoteApp = 0x205,
+    Error = 0x206,
+    Mint = 0x207,
+    Extrapad = 0x208,
+    Memolib = 0x209,
+    Application = 0x300,
+    AnyLibraryApplet = 0x400,
+    SoftwareKeyboard2 = 0x401,
+    Ed2 = 0x402,
+    PnoteApp2 = 0x404,
+    SnoteApp2 = 0x405,
+    Error2 = 0x406,
+    Mint2 = 0x407,
+    Extrapad2 = 0x408,
+    Memolib2 = 0x409,
 };
 
 enum class StartupArgumentType : u32 {
-    OtherApp   = 0,
-    Restart    = 1,
+    OtherApp = 0,
+    Restart = 1,
     OtherMedia = 2,
 };
 
 enum class ScreencapPostPermission : u32 {
-    CleanThePermission                 = 0, //TODO(JamePeng): verify what "zero" means
-    NoExplicitSetting                  = 1,
-    EnableScreenshotPostingToMiiverse  = 2,
+    CleanThePermission = 0, // TODO(JamePeng): verify what "zero" means
+    NoExplicitSetting = 1,
+    EnableScreenshotPostingToMiiverse = 2,
     DisableScreenshotPostingToMiiverse = 3
 };
 
@@ -182,10 +181,11 @@ void GetAppletManInfo(Service::Interface* self);
 void GetAppletInfo(Service::Interface* self);
 
 /**
- * APT::IsRegistered service function. This returns whether the specified AppID is registered with NS yet.
- * An AppID is "registered" once the process associated with the AppID uses APT:Enable. Home Menu uses this
- * command to determine when the launched process is running and to determine when to stop using GSP etc,
- * while displaying the "Nintendo 3DS" loading screen.
+ * APT::IsRegistered service function. This returns whether the specified AppID is registered with
+ * NS yet. An AppID is "registered" once the process associated with the AppID uses APT:Enable. Home
+ * Menu uses this command to determine when the launched process is running and to determine when to
+ * stop using GSP, etc., while displaying the "Nintendo 3DS" loading screen.
+ *
  *  Inputs:
  *      1 : AppID
  *  Outputs:
@@ -260,9 +260,11 @@ void GlanceParameter(Service::Interface* self);
  * clears the flag which indicates that parameter data is available
  * (same flag cleared by APT:ReceiveParameter).
  *  Inputs:
- *      1 : Flag, when non-zero NS will compare the word after this one with a field in the NS state.
+ *      1 : Flag, when non-zero NS will compare the word after this one with a field in the NS
+ *          state.
  *      2 : Unknown, this is the same as the first unknown field returned by APT:ReceiveParameter.
- *      3 : Flag, when non-zero NS will compare the word after this one with a field in the NS state.
+ *      3 : Flag, when non-zero NS will compare the word after this one with a field in the NS
+ *          state.
  *      4 : AppID
  *  Outputs:
  *      0 : Return header

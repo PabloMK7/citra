@@ -18,11 +18,10 @@
 #pragma once
 
 #include <cstddef>
-
 #include "common/assert.h"
 #include "common/bit_set.h"
-#include "common/common_types.h"
 #include "common/code_block.h"
+#include "common/common_types.h"
 
 #if defined(ARCHITECTURE_x86_64) && !defined(_ARCH_64)
 #define _ARCH_64
@@ -34,75 +33,145 @@
 #define PTRBITS 32
 #endif
 
-namespace Gen
-{
+namespace Gen {
 
-enum X64Reg
-{
-    EAX = 0, EBX = 3, ECX = 1, EDX = 2,
-    ESI = 6, EDI = 7, EBP = 5, ESP = 4,
+enum X64Reg {
+    EAX = 0,
+    EBX = 3,
+    ECX = 1,
+    EDX = 2,
+    ESI = 6,
+    EDI = 7,
+    EBP = 5,
+    ESP = 4,
 
-    RAX = 0, RBX = 3, RCX = 1, RDX = 2,
-    RSI = 6, RDI = 7, RBP = 5, RSP = 4,
-    R8  = 8, R9  = 9, R10 = 10,R11 = 11,
-    R12 = 12,R13 = 13,R14 = 14,R15 = 15,
+    RAX = 0,
+    RBX = 3,
+    RCX = 1,
+    RDX = 2,
+    RSI = 6,
+    RDI = 7,
+    RBP = 5,
+    RSP = 4,
+    R8 = 8,
+    R9 = 9,
+    R10 = 10,
+    R11 = 11,
+    R12 = 12,
+    R13 = 13,
+    R14 = 14,
+    R15 = 15,
 
-    AL = 0, BL = 3, CL = 1, DL = 2,
-    SIL = 6, DIL = 7, BPL = 5, SPL = 4,
-    AH = 0x104, BH = 0x107, CH = 0x105, DH = 0x106,
+    AL = 0,
+    BL = 3,
+    CL = 1,
+    DL = 2,
+    SIL = 6,
+    DIL = 7,
+    BPL = 5,
+    SPL = 4,
+    AH = 0x104,
+    BH = 0x107,
+    CH = 0x105,
+    DH = 0x106,
 
-    AX = 0, BX = 3, CX = 1, DX = 2,
-    SI = 6, DI = 7, BP = 5, SP = 4,
+    AX = 0,
+    BX = 3,
+    CX = 1,
+    DX = 2,
+    SI = 6,
+    DI = 7,
+    BP = 5,
+    SP = 4,
 
-    XMM0=0, XMM1, XMM2, XMM3, XMM4, XMM5, XMM6, XMM7,
-    XMM8, XMM9, XMM10, XMM11, XMM12, XMM13, XMM14, XMM15,
+    XMM0 = 0,
+    XMM1,
+    XMM2,
+    XMM3,
+    XMM4,
+    XMM5,
+    XMM6,
+    XMM7,
+    XMM8,
+    XMM9,
+    XMM10,
+    XMM11,
+    XMM12,
+    XMM13,
+    XMM14,
+    XMM15,
 
-    YMM0=0, YMM1, YMM2, YMM3, YMM4, YMM5, YMM6, YMM7,
-    YMM8, YMM9, YMM10, YMM11, YMM12, YMM13, YMM14, YMM15,
+    YMM0 = 0,
+    YMM1,
+    YMM2,
+    YMM3,
+    YMM4,
+    YMM5,
+    YMM6,
+    YMM7,
+    YMM8,
+    YMM9,
+    YMM10,
+    YMM11,
+    YMM12,
+    YMM13,
+    YMM14,
+    YMM15,
 
     INVALID_REG = 0xFFFFFFFF
 };
 
-enum CCFlags
-{
-    CC_O   = 0,
-    CC_NO  = 1,
-    CC_B   = 2, CC_C   = 2, CC_NAE = 2,
-    CC_NB  = 3, CC_NC  = 3, CC_AE  = 3,
-    CC_Z   = 4, CC_E   = 4,
-    CC_NZ  = 5, CC_NE  = 5,
-    CC_BE  = 6, CC_NA  = 6,
-    CC_NBE = 7, CC_A   = 7,
-    CC_S   = 8,
-    CC_NS  = 9,
-    CC_P   = 0xA, CC_PE  = 0xA,
-    CC_NP  = 0xB, CC_PO  = 0xB,
-    CC_L   = 0xC, CC_NGE = 0xC,
-    CC_NL  = 0xD, CC_GE  = 0xD,
-    CC_LE  = 0xE, CC_NG  = 0xE,
-    CC_NLE = 0xF, CC_G   = 0xF
+enum CCFlags {
+    CC_O = 0,
+    CC_NO = 1,
+    CC_B = 2,
+    CC_C = 2,
+    CC_NAE = 2,
+    CC_NB = 3,
+    CC_NC = 3,
+    CC_AE = 3,
+    CC_Z = 4,
+    CC_E = 4,
+    CC_NZ = 5,
+    CC_NE = 5,
+    CC_BE = 6,
+    CC_NA = 6,
+    CC_NBE = 7,
+    CC_A = 7,
+    CC_S = 8,
+    CC_NS = 9,
+    CC_P = 0xA,
+    CC_PE = 0xA,
+    CC_NP = 0xB,
+    CC_PO = 0xB,
+    CC_L = 0xC,
+    CC_NGE = 0xC,
+    CC_NL = 0xD,
+    CC_GE = 0xD,
+    CC_LE = 0xE,
+    CC_NG = 0xE,
+    CC_NLE = 0xF,
+    CC_G = 0xF
 };
 
-enum
-{
+enum {
     NUMGPRs = 16,
     NUMXMMs = 16,
 };
 
-enum
-{
+enum {
     SCALE_NONE = 0,
     SCALE_1 = 1,
     SCALE_2 = 2,
     SCALE_4 = 4,
     SCALE_8 = 8,
     SCALE_ATREG = 16,
-    //SCALE_NOBASE_1 is not supported and can be replaced with SCALE_ATREG
+    // SCALE_NOBASE_1 is not supported and can be replaced with SCALE_ATREG
     SCALE_NOBASE_2 = 34,
     SCALE_NOBASE_4 = 36,
     SCALE_NOBASE_8 = 40,
     SCALE_RIP = 0xFF,
-    SCALE_IMM8  = 0xF0,
+    SCALE_IMM8 = 0xF0,
     SCALE_IMM16 = 0xF1,
     SCALE_IMM32 = 0xF2,
     SCALE_IMM64 = 0xF3,
@@ -114,7 +183,7 @@ enum NormalOp {
     nrmSUB,
     nrmSBB,
     nrmAND,
-    nrmOR ,
+    nrmOR,
     nrmXOR,
     nrmMOV,
     nrmTEST,
@@ -157,68 +226,73 @@ enum FloatRound {
 class XEmitter;
 
 // RIP addressing does not benefit from micro op fusion on Core arch
-struct OpArg
-{
+struct OpArg {
     friend class XEmitter;
 
-    constexpr OpArg() = default;  // dummy op arg, used for storage
+    constexpr OpArg() = default; // dummy op arg, used for storage
     constexpr OpArg(u64 offset_, int scale_, X64Reg rmReg = RAX, X64Reg scaledReg = RAX)
-        : scale(static_cast<u8>(scale_))
-        , offsetOrBaseReg(static_cast<u16>(rmReg))
-        , indexReg(static_cast<u16>(scaledReg))
-        , offset(offset_)
-    {
+        : scale(static_cast<u8>(scale_)), offsetOrBaseReg(static_cast<u16>(rmReg)),
+          indexReg(static_cast<u16>(scaledReg)), offset(offset_) {}
+
+    constexpr bool operator==(const OpArg& b) const {
+        return operandReg == b.operandReg && scale == b.scale &&
+               offsetOrBaseReg == b.offsetOrBaseReg && indexReg == b.indexReg && offset == b.offset;
     }
 
-    constexpr bool operator==(const OpArg &b) const
-    {
-        return operandReg      == b.operandReg      &&
-               scale           == b.scale           &&
-               offsetOrBaseReg == b.offsetOrBaseReg &&
-               indexReg        == b.indexReg        &&
-               offset          == b.offset;
+    void WriteRex(XEmitter* emit, int opBits, int bits, int customOp = -1) const;
+    void WriteVex(XEmitter* emit, X64Reg regOp1, X64Reg regOp2, int L, int pp, int mmmmm,
+                  int W = 0) const;
+    void WriteRest(XEmitter* emit, int extraBytes = 0, X64Reg operandReg = INVALID_REG,
+                   bool warn_64bit_offset = true) const;
+    void WriteSingleByteOp(XEmitter* emit, u8 op, X64Reg operandReg, int bits);
+    void WriteNormalOp(XEmitter* emit, bool toRM, NormalOp op, const OpArg& operand,
+                       int bits) const;
+
+    constexpr bool IsImm() const {
+        return scale == SCALE_IMM8 || scale == SCALE_IMM16 || scale == SCALE_IMM32 ||
+               scale == SCALE_IMM64;
     }
-
-    void WriteRex(XEmitter *emit, int opBits, int bits, int customOp = -1) const;
-    void WriteVex(XEmitter* emit, X64Reg regOp1, X64Reg regOp2, int L, int pp, int mmmmm, int W = 0) const;
-    void WriteRest(XEmitter *emit, int extraBytes=0, X64Reg operandReg=INVALID_REG, bool warn_64bit_offset = true) const;
-    void WriteSingleByteOp(XEmitter *emit, u8 op, X64Reg operandReg, int bits);
-    void WriteNormalOp(XEmitter *emit, bool toRM, NormalOp op, const OpArg &operand, int bits) const;
-
-    constexpr bool IsImm() const { return scale == SCALE_IMM8 || scale == SCALE_IMM16 || scale == SCALE_IMM32 || scale == SCALE_IMM64; }
-    constexpr bool IsSimpleReg() const { return scale == SCALE_NONE; }
-    constexpr bool IsSimpleReg(X64Reg reg) const
-    {
+    constexpr bool IsSimpleReg() const {
+        return scale == SCALE_NONE;
+    }
+    constexpr bool IsSimpleReg(X64Reg reg) const {
         return IsSimpleReg() && GetSimpleReg() == reg;
     }
 
-    int GetImmBits() const
-    {
-        switch (scale)
-        {
-        case SCALE_IMM8: return 8;
-        case SCALE_IMM16: return 16;
-        case SCALE_IMM32: return 32;
-        case SCALE_IMM64: return 64;
-        default: return -1;
+    int GetImmBits() const {
+        switch (scale) {
+        case SCALE_IMM8:
+            return 8;
+        case SCALE_IMM16:
+            return 16;
+        case SCALE_IMM32:
+            return 32;
+        case SCALE_IMM64:
+            return 64;
+        default:
+            return -1;
         }
     }
 
     void SetImmBits(int bits) {
-        switch (bits)
-        {
-            case 8: scale = SCALE_IMM8; break;
-            case 16: scale = SCALE_IMM16; break;
-            case 32: scale = SCALE_IMM32; break;
-            case 64: scale = SCALE_IMM64; break;
+        switch (bits) {
+        case 8:
+            scale = SCALE_IMM8;
+            break;
+        case 16:
+            scale = SCALE_IMM16;
+            break;
+        case 32:
+            scale = SCALE_IMM32;
+            break;
+        case 64:
+            scale = SCALE_IMM64;
+            break;
         }
     }
 
-    constexpr X64Reg GetSimpleReg() const
-    {
-        return scale == SCALE_NONE
-               ? static_cast<X64Reg>(offsetOrBaseReg)
-               : INVALID_REG;
+    constexpr X64Reg GetSimpleReg() const {
+        return scale == SCALE_NONE ? static_cast<X64Reg>(offsetOrBaseReg) : INVALID_REG;
     }
 
     constexpr u32 GetImmValue() const {
@@ -234,41 +308,50 @@ private:
     u8 scale = 0;
     u16 offsetOrBaseReg = 0;
     u16 indexReg = 0;
-    u64 offset = 0;  // use RIP-relative as much as possible - 64-bit immediates are not available.
+    u64 offset = 0; // use RIP-relative as much as possible - 64-bit immediates are not available.
     u16 operandReg = 0;
 };
 
 template <typename T>
-inline OpArg M(const T *ptr)       { return OpArg(reinterpret_cast<u64>(ptr), static_cast<int>(SCALE_RIP)); }
-constexpr OpArg R(X64Reg value)    { return OpArg(0, SCALE_NONE, value); }
-constexpr OpArg MatR(X64Reg value) { return OpArg(0, SCALE_ATREG, value); }
+inline OpArg M(const T* ptr) {
+    return OpArg(reinterpret_cast<u64>(ptr), static_cast<int>(SCALE_RIP));
+}
+constexpr OpArg R(X64Reg value) {
+    return OpArg(0, SCALE_NONE, value);
+}
+constexpr OpArg MatR(X64Reg value) {
+    return OpArg(0, SCALE_ATREG, value);
+}
 
-constexpr OpArg MDisp(X64Reg value, int offset)
-{
+constexpr OpArg MDisp(X64Reg value, int offset) {
     return OpArg(static_cast<u32>(offset), SCALE_ATREG, value);
 }
 
-constexpr OpArg MComplex(X64Reg base, X64Reg scaled, int scale, int offset)
-{
+constexpr OpArg MComplex(X64Reg base, X64Reg scaled, int scale, int offset) {
     return OpArg(offset, scale, base, scaled);
 }
 
-constexpr OpArg MScaled(X64Reg scaled, int scale, int offset)
-{
-    return scale == SCALE_1
-           ? OpArg(offset, SCALE_ATREG, scaled)
-           : OpArg(offset, scale | 0x20, RAX, scaled);
+constexpr OpArg MScaled(X64Reg scaled, int scale, int offset) {
+    return scale == SCALE_1 ? OpArg(offset, SCALE_ATREG, scaled)
+                            : OpArg(offset, scale | 0x20, RAX, scaled);
 }
 
-constexpr OpArg MRegSum(X64Reg base, X64Reg offset)
-{
+constexpr OpArg MRegSum(X64Reg base, X64Reg offset) {
     return MComplex(base, offset, 1, 0);
 }
 
-constexpr OpArg Imm8 (u8 imm)  { return OpArg(imm, SCALE_IMM8);  }
-constexpr OpArg Imm16(u16 imm) { return OpArg(imm, SCALE_IMM16); } //rarely used
-constexpr OpArg Imm32(u32 imm) { return OpArg(imm, SCALE_IMM32); }
-constexpr OpArg Imm64(u64 imm) { return OpArg(imm, SCALE_IMM64); }
+constexpr OpArg Imm8(u8 imm) {
+    return OpArg(imm, SCALE_IMM8);
+}
+constexpr OpArg Imm16(u16 imm) {
+    return OpArg(imm, SCALE_IMM16);
+} // rarely used
+constexpr OpArg Imm32(u32 imm) {
+    return OpArg(imm, SCALE_IMM32);
+}
+constexpr OpArg Imm64(u64 imm) {
+    return OpArg(imm, SCALE_IMM64);
+}
 constexpr OpArg UImmAuto(u32 imm) {
     return OpArg(imm, imm >= 128 ? SCALE_IMM32 : SCALE_IMM8);
 }
@@ -277,8 +360,7 @@ constexpr OpArg SImmAuto(s32 imm) {
 }
 
 template <typename T>
-OpArg ImmPtr(const T* imm)
-{
+OpArg ImmPtr(const T* imm) {
 #ifdef _ARCH_64
     return Imm64(reinterpret_cast<u64>(imm));
 #else
@@ -286,36 +368,31 @@ OpArg ImmPtr(const T* imm)
 #endif
 }
 
-inline u32 PtrOffset(const void* ptr, const void* base)
-{
+inline u32 PtrOffset(const void* ptr, const void* base) {
 #ifdef _ARCH_64
-    s64 distance = (s64)ptr-(s64)base;
-    if (distance >= 0x80000000LL ||
-        distance < -0x80000000LL)
-    {
+    s64 distance = (s64)ptr - (s64)base;
+    if (distance >= 0x80000000LL || distance < -0x80000000LL) {
         ASSERT_MSG(0, "pointer offset out of range");
         return 0;
     }
 
     return (u32)distance;
 #else
-    return (u32)ptr-(u32)base;
+    return (u32)ptr - (u32)base;
 #endif
 }
 
-//usage: int a[]; ARRAY_OFFSET(a,10)
-#define ARRAY_OFFSET(array,index) ((u32)((u64)&(array)[index]-(u64)&(array)[0]))
-//usage: struct {int e;} s; STRUCT_OFFSET(s,e)
-#define STRUCT_OFFSET(str,elem) ((u32)((u64)&(str).elem-(u64)&(str)))
+// usage: int a[]; ARRAY_OFFSET(a,10)
+#define ARRAY_OFFSET(array, index) ((u32)((u64) & (array)[index] - (u64) & (array)[0]))
+// usage: struct {int e;} s; STRUCT_OFFSET(s,e)
+#define STRUCT_OFFSET(str, elem) ((u32)((u64) & (str).elem - (u64) & (str)))
 
-struct FixupBranch
-{
-    u8 *ptr;
-    int type; //0 = 8bit 1 = 32bit
+struct FixupBranch {
+    u8* ptr;
+    int type; // 0 = 8bit 1 = 32bit
 };
 
-enum SSECompare
-{
+enum SSECompare {
     EQ = 0,
     LT,
     LE,
@@ -326,11 +403,10 @@ enum SSECompare
     ORD,
 };
 
-class XEmitter
-{
-    friend struct OpArg;  // for Write8 etc
+class XEmitter {
+    friend struct OpArg; // for Write8 etc
 private:
-    u8 *code;
+    u8* code;
     bool flags_locked;
 
     void CheckFlags();
@@ -347,14 +423,19 @@ private:
     void WriteSSSE3Op(u8 opPrefix, u16 op, X64Reg regOp, const OpArg& arg, int extrabytes = 0);
     void WriteSSE41Op(u8 opPrefix, u16 op, X64Reg regOp, const OpArg& arg, int extrabytes = 0);
     void WriteAVXOp(u8 opPrefix, u16 op, X64Reg regOp, const OpArg& arg, int extrabytes = 0);
-    void WriteAVXOp(u8 opPrefix, u16 op, X64Reg regOp1, X64Reg regOp2, const OpArg& arg, int extrabytes = 0);
-    void WriteVEXOp(int size, u8 opPrefix, u16 op, X64Reg regOp1, X64Reg regOp2, const OpArg& arg, int extrabytes = 0);
-    void WriteBMI1Op(int size, u8 opPrefix, u16 op, X64Reg regOp1, X64Reg regOp2, const OpArg& arg, int extrabytes = 0);
-    void WriteBMI2Op(int size, u8 opPrefix, u16 op, X64Reg regOp1, X64Reg regOp2, const OpArg& arg, int extrabytes = 0);
+    void WriteAVXOp(u8 opPrefix, u16 op, X64Reg regOp1, X64Reg regOp2, const OpArg& arg,
+                    int extrabytes = 0);
+    void WriteVEXOp(int size, u8 opPrefix, u16 op, X64Reg regOp1, X64Reg regOp2, const OpArg& arg,
+                    int extrabytes = 0);
+    void WriteBMI1Op(int size, u8 opPrefix, u16 op, X64Reg regOp1, X64Reg regOp2, const OpArg& arg,
+                     int extrabytes = 0);
+    void WriteBMI2Op(int size, u8 opPrefix, u16 op, X64Reg regOp1, X64Reg regOp2, const OpArg& arg,
+                     int extrabytes = 0);
     void WriteFloatLoadStore(int bits, FloatOp op, FloatOp op_80b, const OpArg& arg);
-    void WriteNormalOp(XEmitter *emit, int bits, NormalOp op, const OpArg& a1, const OpArg& a2);
+    void WriteNormalOp(XEmitter* emit, int bits, NormalOp op, const OpArg& a1, const OpArg& a2);
 
-    void ABI_CalculateFrameSize(BitSet32 mask, size_t rsp_alignment, size_t needed_frame_size, size_t* shadowp, size_t* subtractionp, size_t* xmm_offsetp);
+    void ABI_CalculateFrameSize(BitSet32 mask, size_t rsp_alignment, size_t needed_frame_size,
+                                size_t* shadowp, size_t* subtractionp, size_t* xmm_offsetp);
 
 protected:
     void Write8(u8 value);
@@ -363,26 +444,37 @@ protected:
     void Write64(u64 value);
 
 public:
-    XEmitter() { code = nullptr; flags_locked = false; }
-    XEmitter(u8 *code_ptr) { code = code_ptr; flags_locked = false; }
+    XEmitter() {
+        code = nullptr;
+        flags_locked = false;
+    }
+    XEmitter(u8* code_ptr) {
+        code = code_ptr;
+        flags_locked = false;
+    }
     virtual ~XEmitter() {}
 
     void WriteModRM(int mod, int rm, int reg);
     void WriteSIB(int scale, int index, int base);
 
-    void SetCodePtr(u8 *ptr);
+    void SetCodePtr(u8* ptr);
     void ReserveCodeSpace(int bytes);
-    const u8 *AlignCode4();
-    const u8 *AlignCode16();
-    const u8 *AlignCodePage();
-    const u8 *GetCodePtr() const;
-    u8 *GetWritableCodePtr();
+    const u8* AlignCode4();
+    const u8* AlignCode16();
+    const u8* AlignCodePage();
+    const u8* GetCodePtr() const;
+    u8* GetWritableCodePtr();
 
-    void LockFlags() { flags_locked = true; }
-    void UnlockFlags() { flags_locked = false; }
+    void LockFlags() {
+        flags_locked = true;
+    }
+    void UnlockFlags() {
+        flags_locked = false;
+    }
 
     // Looking for one of these? It's BANNED!! Some instructions are slow on modern CPU
-    // INC, DEC, LOOP, LOOPNE, LOOPE, ENTER, LEAVE, XCHG, XLAT, REP MOVSB/MOVSD, REP SCASD + other string instr.,
+    // INC, DEC, LOOP, LOOPNE, LOOPE, ENTER, LEAVE, XCHG, XLAT, REP MOVSB/MOVSD, REP SCASD + other
+    // string instr.,
     // INC and DEC are slow on Intel Core, but not on AMD. They create a
     // false flag dependency because they only update a subset of the flags.
     // XCHG is SLOW and should be avoided.
@@ -401,10 +493,10 @@ public:
     void CLC();
     void CMC();
 
-    // These two can not be executed in 64-bit mode on early Intel 64-bit CPU:s, only on Core2 and AMD!
+    // These two can not be executed in 64-bit mode on early Intel 64-bit CPU:s, only on Core2 and
+    // AMD!
     void LAHF(); // 3 cycle vector path
     void SAHF(); // direct path fast
-
 
     // Stack control
     void PUSH(X64Reg reg);
@@ -422,7 +514,7 @@ public:
 
     void JMP(const u8* addr, bool force5Bytes = false);
     void JMPptr(const OpArg& arg);
-    void JMPself(); //infinite loop!
+    void JMPself(); // infinite loop!
 #ifdef CALL
 #undef CALL
 #endif
@@ -450,12 +542,11 @@ public:
     void BSR(int bits, X64Reg dest, const OpArg& src); // Top bit to bottom bit
 
     // Cache control
-    enum PrefetchLevel
-    {
-        PF_NTA, //Non-temporal (data used once and only once)
-        PF_T0,  //All cache levels
-        PF_T1,  //Levels 2+ (aliased to T0 on AMD)
-        PF_T2,  //Levels 3+ (aliased to T0 on AMD)
+    enum PrefetchLevel {
+        PF_NTA, // Non-temporal (data used once and only once)
+        PF_T0,  // All cache levels
+        PF_T1,  // Levels 2+ (aliased to T0 on AMD)
+        PF_T2,  // Levels 3+ (aliased to T0 on AMD)
     };
     void PREFETCH(PrefetchLevel level, OpArg arg);
     void MOVNTI(int bits, const OpArg& dest, X64Reg src);
@@ -464,8 +555,8 @@ public:
     void MOVNTPD(const OpArg& arg, X64Reg regOp);
 
     // Multiplication / division
-    void MUL(int bits, const OpArg& src); //UNSIGNED
-    void IMUL(int bits, const OpArg& src); //SIGNED
+    void MUL(int bits, const OpArg& src);  // UNSIGNED
+    void IMUL(int bits, const OpArg& src); // SIGNED
     void IMUL(int bits, X64Reg regOp, const OpArg& src);
     void IMUL(int bits, X64Reg regOp, const OpArg& src, const OpArg& imm);
     void DIV(int bits, const OpArg& src);
@@ -492,11 +583,19 @@ public:
 
     // Extend EAX into EDX in various ways
     void CWD(int bits = 16);
-    void CDQ() {CWD(32);}
-    void CQO() {CWD(64);}
+    void CDQ() {
+        CWD(32);
+    }
+    void CQO() {
+        CWD(64);
+    }
     void CBW(int bits = 8);
-    void CWDE() {CBW(16);}
-    void CDQE() {CBW(32);}
+    void CWDE() {
+        CBW(16);
+    }
+    void CDQE() {
+        CBW(32);
+    }
 
     // Load effective address
     void LEA(int bits, X64Reg dest, OpArg src);
@@ -511,7 +610,7 @@ public:
     void CMP(int bits, const OpArg& a1, const OpArg& a2);
 
     // Bit operations
-    void NOT (int bits, const OpArg& src);
+    void NOT(int bits, const OpArg& src);
     void OR(int bits, const OpArg& a1, const OpArg& a2);
     void XOR(int bits, const OpArg& a1, const OpArg& a2);
     void MOV(int bits, const OpArg& a1, const OpArg& a2);
@@ -525,7 +624,8 @@ public:
     void BSWAP(int bits, X64Reg reg);
 
     // Sign/zero extension
-    void MOVSX(int dbits, int sbits, X64Reg dest, OpArg src); //automatically uses MOVSXD if necessary
+    void MOVSX(int dbits, int sbits, X64Reg dest,
+               OpArg src); // automatically uses MOVSXD if necessary
     void MOVZX(int dbits, int sbits, X64Reg dest, OpArg src);
 
     // Available only on Atom or >= Haswell so far. Test with GetCPUCaps().movbe.
@@ -593,13 +693,27 @@ public:
     void CMPSS(X64Reg regOp, const OpArg& arg, u8 compare);
     void CMPSD(X64Reg regOp, const OpArg& arg, u8 compare);
 
-    void CMPEQSS(X64Reg regOp, const OpArg& arg) { CMPSS(regOp, arg, CMP_EQ); }
-    void CMPLTSS(X64Reg regOp, const OpArg& arg) { CMPSS(regOp, arg, CMP_LT); }
-    void CMPLESS(X64Reg regOp, const OpArg& arg) { CMPSS(regOp, arg, CMP_LE); }
-    void CMPUNORDSS(X64Reg regOp, const OpArg& arg) { CMPSS(regOp, arg, CMP_UNORD); }
-    void CMPNEQSS(X64Reg regOp, const OpArg& arg) { CMPSS(regOp, arg, CMP_NEQ); }
-    void CMPNLTSS(X64Reg regOp, const OpArg& arg) { CMPSS(regOp, arg, CMP_NLT); }
-    void CMPORDSS(X64Reg regOp, const OpArg& arg) { CMPSS(regOp, arg, CMP_ORD); }
+    void CMPEQSS(X64Reg regOp, const OpArg& arg) {
+        CMPSS(regOp, arg, CMP_EQ);
+    }
+    void CMPLTSS(X64Reg regOp, const OpArg& arg) {
+        CMPSS(regOp, arg, CMP_LT);
+    }
+    void CMPLESS(X64Reg regOp, const OpArg& arg) {
+        CMPSS(regOp, arg, CMP_LE);
+    }
+    void CMPUNORDSS(X64Reg regOp, const OpArg& arg) {
+        CMPSS(regOp, arg, CMP_UNORD);
+    }
+    void CMPNEQSS(X64Reg regOp, const OpArg& arg) {
+        CMPSS(regOp, arg, CMP_NEQ);
+    }
+    void CMPNLTSS(X64Reg regOp, const OpArg& arg) {
+        CMPSS(regOp, arg, CMP_NLT);
+    }
+    void CMPORDSS(X64Reg regOp, const OpArg& arg) {
+        CMPSS(regOp, arg, CMP_ORD);
+    }
 
     // SSE/SSE2: Floating point packed arithmetic (x4 for float, x2 for double)
     void ADDPS(X64Reg regOp, const OpArg& arg);
@@ -638,10 +752,12 @@ public:
     // SSE/SSE2: Useful alternative to shuffle in some cases.
     void MOVDDUP(X64Reg regOp, const OpArg& arg);
 
-    // SSE3: Horizontal operations in SIMD registers. Very slow! shufps-based code beats it handily on Ivy.
+    // SSE3: Horizontal operations in SIMD registers. Very slow! shufps-based code beats it handily
+    // on Ivy.
     void HADDPS(X64Reg dest, const OpArg& src);
 
-    // SSE4: Further horizontal operations - dot products. These are weirdly flexible, the arg contains both a read mask and a write "mask".
+    // SSE4: Further horizontal operations - dot products. These are weirdly flexible, the arg
+    // contains both a read mask and a write "mask".
     void DPPS(X64Reg dest, const OpArg& src, u8 arg);
 
     void UNPCKLPS(X64Reg dest, const OpArg& src);
@@ -694,11 +810,13 @@ public:
     void MOVD_xmm(const OpArg& arg, X64Reg src);
     void MOVQ_xmm(OpArg arg, X64Reg src);
 
-    // SSE/SSE2: Generates a mask from the high bits of the components of the packed register in question.
+    // SSE/SSE2: Generates a mask from the high bits of the components of the packed register in
+    // question.
     void MOVMSKPS(X64Reg dest, const OpArg& arg);
     void MOVMSKPD(X64Reg dest, const OpArg& arg);
 
-    // SSE2: Selective byte store, mask in src register. EDI/RDI specifies store address. This is a weird one.
+    // SSE2: Selective byte store, mask in src register. EDI/RDI specifies store address. This is a
+    // weird one.
     void MASKMOVDQU(X64Reg dest, X64Reg src);
     void LDDQU(X64Reg dest, const OpArg& src);
 
@@ -729,10 +847,10 @@ public:
     void PACKUSDW(X64Reg dest, const OpArg& arg);
     void PACKUSWB(X64Reg dest, const OpArg& arg);
 
-    void PUNPCKLBW(X64Reg dest, const OpArg &arg);
-    void PUNPCKLWD(X64Reg dest, const OpArg &arg);
-    void PUNPCKLDQ(X64Reg dest, const OpArg &arg);
-    void PUNPCKLQDQ(X64Reg dest, const OpArg &arg);
+    void PUNPCKLBW(X64Reg dest, const OpArg& arg);
+    void PUNPCKLWD(X64Reg dest, const OpArg& arg);
+    void PUNPCKLDQ(X64Reg dest, const OpArg& arg);
+    void PUNPCKLQDQ(X64Reg dest, const OpArg& arg);
 
     void PTEST(X64Reg dest, const OpArg& arg);
     void PAND(X64Reg dest, const OpArg& arg);
@@ -839,25 +957,57 @@ public:
     void ROUNDPS(X64Reg dest, const OpArg& arg, u8 mode);
     void ROUNDPD(X64Reg dest, const OpArg& arg, u8 mode);
 
-    void ROUNDNEARSS(X64Reg dest, const OpArg& arg) { ROUNDSS(dest, arg, FROUND_NEAREST); }
-    void ROUNDFLOORSS(X64Reg dest, const OpArg& arg) { ROUNDSS(dest, arg, FROUND_FLOOR); }
-    void ROUNDCEILSS(X64Reg dest, const OpArg& arg) { ROUNDSS(dest, arg, FROUND_CEIL); }
-    void ROUNDZEROSS(X64Reg dest, const OpArg& arg) { ROUNDSS(dest, arg, FROUND_ZERO); }
+    void ROUNDNEARSS(X64Reg dest, const OpArg& arg) {
+        ROUNDSS(dest, arg, FROUND_NEAREST);
+    }
+    void ROUNDFLOORSS(X64Reg dest, const OpArg& arg) {
+        ROUNDSS(dest, arg, FROUND_FLOOR);
+    }
+    void ROUNDCEILSS(X64Reg dest, const OpArg& arg) {
+        ROUNDSS(dest, arg, FROUND_CEIL);
+    }
+    void ROUNDZEROSS(X64Reg dest, const OpArg& arg) {
+        ROUNDSS(dest, arg, FROUND_ZERO);
+    }
 
-    void ROUNDNEARSD(X64Reg dest, const OpArg& arg) { ROUNDSD(dest, arg, FROUND_NEAREST); }
-    void ROUNDFLOORSD(X64Reg dest, const OpArg& arg) { ROUNDSD(dest, arg, FROUND_FLOOR); }
-    void ROUNDCEILSD(X64Reg dest, const OpArg& arg) { ROUNDSD(dest, arg, FROUND_CEIL); }
-    void ROUNDZEROSD(X64Reg dest, const OpArg& arg) { ROUNDSD(dest, arg, FROUND_ZERO); }
+    void ROUNDNEARSD(X64Reg dest, const OpArg& arg) {
+        ROUNDSD(dest, arg, FROUND_NEAREST);
+    }
+    void ROUNDFLOORSD(X64Reg dest, const OpArg& arg) {
+        ROUNDSD(dest, arg, FROUND_FLOOR);
+    }
+    void ROUNDCEILSD(X64Reg dest, const OpArg& arg) {
+        ROUNDSD(dest, arg, FROUND_CEIL);
+    }
+    void ROUNDZEROSD(X64Reg dest, const OpArg& arg) {
+        ROUNDSD(dest, arg, FROUND_ZERO);
+    }
 
-    void ROUNDNEARPS(X64Reg dest, const OpArg& arg) { ROUNDPS(dest, arg, FROUND_NEAREST); }
-    void ROUNDFLOORPS(X64Reg dest, const OpArg& arg) { ROUNDPS(dest, arg, FROUND_FLOOR); }
-    void ROUNDCEILPS(X64Reg dest, const OpArg& arg) { ROUNDPS(dest, arg, FROUND_CEIL); }
-    void ROUNDZEROPS(X64Reg dest, const OpArg& arg) { ROUNDPS(dest, arg, FROUND_ZERO); }
+    void ROUNDNEARPS(X64Reg dest, const OpArg& arg) {
+        ROUNDPS(dest, arg, FROUND_NEAREST);
+    }
+    void ROUNDFLOORPS(X64Reg dest, const OpArg& arg) {
+        ROUNDPS(dest, arg, FROUND_FLOOR);
+    }
+    void ROUNDCEILPS(X64Reg dest, const OpArg& arg) {
+        ROUNDPS(dest, arg, FROUND_CEIL);
+    }
+    void ROUNDZEROPS(X64Reg dest, const OpArg& arg) {
+        ROUNDPS(dest, arg, FROUND_ZERO);
+    }
 
-    void ROUNDNEARPD(X64Reg dest, const OpArg& arg) { ROUNDPD(dest, arg, FROUND_NEAREST); }
-    void ROUNDFLOORPD(X64Reg dest, const OpArg& arg) { ROUNDPD(dest, arg, FROUND_FLOOR); }
-    void ROUNDCEILPD(X64Reg dest, const OpArg& arg) { ROUNDPD(dest, arg, FROUND_CEIL); }
-    void ROUNDZEROPD(X64Reg dest, const OpArg& arg) { ROUNDPD(dest, arg, FROUND_ZERO); }
+    void ROUNDNEARPD(X64Reg dest, const OpArg& arg) {
+        ROUNDPD(dest, arg, FROUND_NEAREST);
+    }
+    void ROUNDFLOORPD(X64Reg dest, const OpArg& arg) {
+        ROUNDPD(dest, arg, FROUND_FLOOR);
+    }
+    void ROUNDCEILPD(X64Reg dest, const OpArg& arg) {
+        ROUNDPD(dest, arg, FROUND_CEIL);
+    }
+    void ROUNDZEROPD(X64Reg dest, const OpArg& arg) {
+        ROUNDPD(dest, arg, FROUND_ZERO);
+    }
 
     // AVX
     void VADDSD(X64Reg regOp1, X64Reg regOp2, const OpArg& arg);
@@ -981,7 +1131,6 @@ public:
     void ABI_CallFunctionC16(const void* func, u16 param1);
     void ABI_CallFunctionCC16(const void* func, u32 param1, u16 param2);
 
-
     // These only support u32 parameters, but that's enough for a lot of uses.
     // These will destroy the 1 or 2 first "parameter regs".
     void ABI_CallFunctionC(const void* func, u32 param1);
@@ -1012,29 +1161,38 @@ public:
      *
      * @param mask Registers to push on the stack (high 16 bits are XMMs, low 16 bits are GPRs)
      * @param rsp_alignment Current alignment of the stack pointer, must be 0 or 8
-     * @param needed_frame_size Additional space needed, e.g., for function arguments passed on the stack
+     * @param needed_frame_size Additional space needed, e.g., for function arguments passed on the
+     * stack
      * @return Size of the shadow space, i.e., offset of the frame
      */
-    size_t ABI_PushRegistersAndAdjustStack(BitSet32 mask, size_t rsp_alignment, size_t needed_frame_size = 0);
+    size_t ABI_PushRegistersAndAdjustStack(BitSet32 mask, size_t rsp_alignment,
+                                           size_t needed_frame_size = 0);
 
     /**
-     * Restores specified registers and adjusts the stack to its original alignment, i.e., the alignment before
+     * Restores specified registers and adjusts the stack to its original alignment, i.e., the
+     * alignment before
      * the matching PushRegistersAndAdjustStack.
      *
-     * @param mask Registers to restores from the stack (high 16 bits are XMMs, low 16 bits are GPRs)
-     * @param rsp_alignment Original alignment before the matching PushRegistersAndAdjustStack, must be 0 or 8
+     * @param mask Registers to restores from the stack (high 16 bits are XMMs, low 16 bits are
+     * GPRs)
+     * @param rsp_alignment Original alignment before the matching PushRegistersAndAdjustStack, must
+     * be 0 or 8
      * @param needed_frame_size Additional space that was needed
      * @warning Stack must be currently 16-byte aligned
      */
-    void ABI_PopRegistersAndAdjustStack(BitSet32 mask, size_t rsp_alignment, size_t needed_frame_size = 0);
+    void ABI_PopRegistersAndAdjustStack(BitSet32 mask, size_t rsp_alignment,
+                                        size_t needed_frame_size = 0);
 
-    #ifdef _M_IX86
-    static int ABI_GetNumXMMRegs() { return 8; }
-    #else
-    static int ABI_GetNumXMMRegs() { return 16; }
-    #endif
-};  // class XEmitter
-
+#ifdef _M_IX86
+    static int ABI_GetNumXMMRegs() {
+        return 8;
+    }
+#else
+    static int ABI_GetNumXMMRegs() {
+        return 16;
+    }
+#endif
+}; // class XEmitter
 
 // Everything that needs to generate X86 code should inherit from this.
 // You get memory management for free, plus, you can use all the MOV etc functions without
@@ -1045,4 +1203,4 @@ public:
     void PoisonMemory() override;
 };
 
-}  // namespace
+} // namespace

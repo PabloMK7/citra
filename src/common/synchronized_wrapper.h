@@ -12,15 +12,14 @@ namespace Common {
 /**
  * Wraps an object, only allowing access to it via a locking reference wrapper. Good to ensure no
  * one forgets to lock a mutex before acessing an object. To access the wrapped object construct a
- * SyncronizedRef on this wrapper. Inspired by Rust's Mutex type (http://doc.rust-lang.org/std/sync/struct.Mutex.html).
+ * SyncronizedRef on this wrapper. Inspired by Rust's Mutex type
+ * (http://doc.rust-lang.org/std/sync/struct.Mutex.html).
  */
 template <typename T>
 class SynchronizedWrapper {
 public:
     template <typename... Args>
-    SynchronizedWrapper(Args&&... args) :
-        data(std::forward<Args>(args)...) {
-    }
+    SynchronizedWrapper(Args&&... args) : data(std::forward<Args>(args)...) {}
 
 private:
     template <typename U>
@@ -58,11 +57,19 @@ public:
         return *this;
     }
 
-    T& operator*() { return wrapper->data; }
-    const T& operator*() const { return wrapper->data; }
+    T& operator*() {
+        return wrapper->data;
+    }
+    const T& operator*() const {
+        return wrapper->data;
+    }
 
-    T* operator->() { return &wrapper->data; }
-    const T* operator->() const { return &wrapper->data; }
+    T* operator->() {
+        return &wrapper->data;
+    }
+    const T* operator->() const {
+        return &wrapper->data;
+    }
 
 private:
     SynchronizedWrapper<T>* wrapper;

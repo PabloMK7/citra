@@ -5,25 +5,15 @@
 #include <clocale>
 #include <memory>
 #include <thread>
-
 #include <glad/glad.h>
-
 #define QT_NO_OPENGL
 #include <QDesktopWidget>
-#include <QtGui>
 #include <QFileDialog>
 #include <QMessageBox>
-#include "qhexedit.h"
-
+#include <QtGui>
 #include "citra_qt/bootmanager.h"
 #include "citra_qt/config.h"
 #include "citra_qt/configure_dialog.h"
-#include "citra_qt/game_list.h"
-#include "citra_qt/hotkeys.h"
-#include "citra_qt/main.h"
-#include "citra_qt/ui_settings.h"
-
-// Debugger
 #include "citra_qt/debugger/callstack.h"
 #include "citra_qt/debugger/disassembler.h"
 #include "citra_qt/debugger/graphics.h"
@@ -35,28 +25,29 @@
 #include "citra_qt/debugger/profiler.h"
 #include "citra_qt/debugger/ramview.h"
 #include "citra_qt/debugger/registers.h"
-
+#include "citra_qt/game_list.h"
+#include "citra_qt/hotkeys.h"
+#include "citra_qt/main.h"
+#include "citra_qt/ui_settings.h"
+#include "common/logging/backend.h"
+#include "common/logging/filter.h"
+#include "common/logging/log.h"
+#include "common/logging/text_formatter.h"
 #include "common/microprofile.h"
 #include "common/platform.h"
 #include "common/scm_rev.h"
 #include "common/scope_exit.h"
 #include "common/string_util.h"
-#include "common/logging/backend.h"
-#include "common/logging/filter.h"
-#include "common/logging/log.h"
-#include "common/logging/text_formatter.h"
-
-#include "core/core.h"
-#include "core/settings.h"
-#include "core/system.h"
 #include "core/arm/disassembler/load_symbol_map.h"
+#include "core/core.h"
 #include "core/gdbstub/gdbstub.h"
 #include "core/loader/loader.h"
-
+#include "core/settings.h"
+#include "core/system.h"
+#include "qhexedit.h"
 #include "video_core/video_core.h"
 
-GMainWindow::GMainWindow() : config(new Config()), emu_thread(nullptr)
-{
+GMainWindow::GMainWindow() : config(new Config()), emu_thread(nullptr) {
     Pica::g_debug_context = Pica::DebugContext::Construct();
 
     ui.setupUi(this);
@@ -91,7 +82,7 @@ GMainWindow::GMainWindow() : config(new Config()), emu_thread(nullptr)
 
     graphicsWidget = new GPUCommandStreamWidget(this);
     addDockWidget(Qt::RightDockWidgetArea, graphicsWidget);
-    graphicsWidget ->hide();
+    graphicsWidget->hide();
 
     graphicsCommandsWidget = new GPUCommandListWidget(this);
     addDockWidget(Qt::RightDockWidgetArea, graphicsCommandsWidget);
@@ -110,7 +101,8 @@ GMainWindow::GMainWindow() : config(new Config()), emu_thread(nullptr)
     graphicsTracingWidget->hide();
 
     auto graphicsSurfaceViewerAction = new QAction(tr("Create Pica surface viewer"), this);
-    connect(graphicsSurfaceViewerAction, SIGNAL(triggered()), this, SLOT(OnCreateGraphicsSurfaceViewer()));
+    connect(graphicsSurfaceViewerAction, SIGNAL(triggered()), this,
+            SLOT(OnCreateGraphicsSurfaceViewer()));
 
     QMenu* debug_menu = ui.menu_View->addMenu(tr("Debugging"));
     debug_menu->addAction(graphicsSurfaceViewerAction);
@@ -167,35 +159,44 @@ GMainWindow::GMainWindow() : config(new Config()), emu_thread(nullptr)
     UpdateRecentFiles();
 
     // Setup connections
-    connect(game_list, SIGNAL(GameChosen(QString)), this, SLOT(OnGameListLoadFile(QString)), Qt::DirectConnection);
+    connect(game_list, SIGNAL(GameChosen(QString)), this, SLOT(OnGameListLoadFile(QString)),
+            Qt::DirectConnection);
     connect(ui.action_Configure, SIGNAL(triggered()), this, SLOT(OnConfigure()));
-    connect(ui.action_Load_File, SIGNAL(triggered()), this, SLOT(OnMenuLoadFile()),Qt::DirectConnection);
+    connect(ui.action_Load_File, SIGNAL(triggered()), this, SLOT(OnMenuLoadFile()),
+            Qt::DirectConnection);
     connect(ui.action_Load_Symbol_Map, SIGNAL(triggered()), this, SLOT(OnMenuLoadSymbolMap()));
-    connect(ui.action_Select_Game_List_Root, SIGNAL(triggered()), this, SLOT(OnMenuSelectGameListRoot()));
+    connect(ui.action_Select_Game_List_Root, SIGNAL(triggered()), this,
+            SLOT(OnMenuSelectGameListRoot()));
     connect(ui.action_Start, SIGNAL(triggered()), this, SLOT(OnStartGame()));
     connect(ui.action_Pause, SIGNAL(triggered()), this, SLOT(OnPauseGame()));
     connect(ui.action_Stop, SIGNAL(triggered()), this, SLOT(OnStopGame()));
     connect(ui.action_Single_Window_Mode, SIGNAL(triggered(bool)), this, SLOT(ToggleWindowMode()));
 
-    connect(this, SIGNAL(EmulationStarting(EmuThread*)), disasmWidget, SLOT(OnEmulationStarting(EmuThread*)));
+    connect(this, SIGNAL(EmulationStarting(EmuThread*)), disasmWidget,
+            SLOT(OnEmulationStarting(EmuThread*)));
     connect(this, SIGNAL(EmulationStopping()), disasmWidget, SLOT(OnEmulationStopping()));
-    connect(this, SIGNAL(EmulationStarting(EmuThread*)), registersWidget, SLOT(OnEmulationStarting(EmuThread*)));
+    connect(this, SIGNAL(EmulationStarting(EmuThread*)), registersWidget,
+            SLOT(OnEmulationStarting(EmuThread*)));
     connect(this, SIGNAL(EmulationStopping()), registersWidget, SLOT(OnEmulationStopping()));
-    connect(this, SIGNAL(EmulationStarting(EmuThread*)), render_window, SLOT(OnEmulationStarting(EmuThread*)));
+    connect(this, SIGNAL(EmulationStarting(EmuThread*)), render_window,
+            SLOT(OnEmulationStarting(EmuThread*)));
     connect(this, SIGNAL(EmulationStopping()), render_window, SLOT(OnEmulationStopping()));
-    connect(this, SIGNAL(EmulationStarting(EmuThread*)), graphicsTracingWidget, SLOT(OnEmulationStarting(EmuThread*)));
+    connect(this, SIGNAL(EmulationStarting(EmuThread*)), graphicsTracingWidget,
+            SLOT(OnEmulationStarting(EmuThread*)));
     connect(this, SIGNAL(EmulationStopping()), graphicsTracingWidget, SLOT(OnEmulationStopping()));
-
 
     // Setup hotkeys
     RegisterHotkey("Main Window", "Load File", QKeySequence::Open);
     RegisterHotkey("Main Window", "Start Emulation");
     LoadHotkeys();
 
-    connect(GetHotkey("Main Window", "Load File", this), SIGNAL(activated()), this, SLOT(OnMenuLoadFile()));
-    connect(GetHotkey("Main Window", "Start Emulation", this), SIGNAL(activated()), this, SLOT(OnStartGame()));
+    connect(GetHotkey("Main Window", "Load File", this), SIGNAL(activated()), this,
+            SLOT(OnMenuLoadFile()));
+    connect(GetHotkey("Main Window", "Start Emulation", this), SIGNAL(activated()), this,
+            SLOT(OnStartGame()));
 
-    std::string window_title = Common::StringFromFormat("Citra | %s-%s", Common::g_scm_branch, Common::g_scm_desc);
+    std::string window_title =
+        Common::StringFromFormat("Citra | %s-%s", Common::g_scm_branch, Common::g_scm_desc);
     setWindowTitle(window_title.c_str());
 
     show();
@@ -208,8 +209,7 @@ GMainWindow::GMainWindow() : config(new Config()), emu_thread(nullptr)
     }
 }
 
-GMainWindow::~GMainWindow()
-{
+GMainWindow::~GMainWindow() {
     // will get automatically deleted otherwise
     if (render_window->parent() == nullptr)
         delete render_window;
@@ -217,19 +217,18 @@ GMainWindow::~GMainWindow()
     Pica::g_debug_context.reset();
 }
 
-void GMainWindow::OnDisplayTitleBars(bool show)
-{
+void GMainWindow::OnDisplayTitleBars(bool show) {
     QList<QDockWidget*> widgets = findChildren<QDockWidget*>();
 
     if (show) {
-        for (QDockWidget* widget: widgets) {
+        for (QDockWidget* widget : widgets) {
             QWidget* old = widget->titleBarWidget();
             widget->setTitleBarWidget(nullptr);
             if (old != nullptr)
                 delete old;
         }
     } else {
-        for (QDockWidget* widget: widgets) {
+        for (QDockWidget* widget : widgets) {
             QWidget* old = widget->titleBarWidget();
             widget->setTitleBarWidget(new QWidget());
             if (old != nullptr)
@@ -249,7 +248,8 @@ bool GMainWindow::InitializeSystem() {
     if (!gladLoadGL()) {
         QMessageBox::critical(this, tr("Error while starting Citra!"),
                               tr("Failed to initialize the video core!\n\n"
-                                 "Please ensure that your GPU supports OpenGL 3.3 and that you have the latest graphics driver."));
+                                 "Please ensure that your GPU supports OpenGL 3.3 and that you "
+                                 "have the latest graphics driver."));
         return false;
     }
 
@@ -260,7 +260,8 @@ bool GMainWindow::InitializeSystem() {
         case System::Result::ErrorInitVideoCore:
             QMessageBox::critical(this, tr("Error while starting Citra!"),
                                   tr("Failed to initialize the video core!\n\n"
-                                     "Please ensure that your GPU supports OpenGL 3.3 and that you have the latest graphics driver."));
+                                     "Please ensure that your GPU supports OpenGL 3.3 and that you "
+                                     "have the latest graphics driver."));
             break;
 
         default:
@@ -293,8 +294,12 @@ bool GMainWindow::LoadROM(const std::string& filename) {
             QMessageBox popup_error;
             popup_error.setTextFormat(Qt::RichText);
             popup_error.setWindowTitle(tr("Error while loading ROM!"));
-            popup_error.setText(tr("The game that you are trying to load must be decrypted before being used with Citra.<br/><br/>"
-                                  "For more information on dumping and decrypting games, please see: <a href='https://citra-emu.org/wiki/Dumping-Game-Cartridges'>https://citra-emu.org/wiki/Dumping-Game-Cartridges</a>"));
+            popup_error.setText(
+                tr("The game that you are trying to load must be decrypted before being used with "
+                   "Citra.<br/><br/>"
+                   "For more information on dumping and decrypting games, please see: <a "
+                   "href='https://citra-emu.org/wiki/Dumping-Game-Cartridges'>https://"
+                   "citra-emu.org/wiki/Dumping-Game-Cartridges</a>"));
             popup_error.setIcon(QMessageBox::Critical);
             popup_error.exec();
             break;
@@ -306,8 +311,7 @@ bool GMainWindow::LoadROM(const std::string& filename) {
         case Loader::ResultStatus::Error:
 
         default:
-            QMessageBox::critical(this, tr("Error while loading ROM!"),
-                                  tr("Unknown error!"));
+            QMessageBox::critical(this, tr("Error while loading ROM!"), tr("Unknown error!"));
             break;
         }
         return false;
@@ -332,13 +336,20 @@ void GMainWindow::BootGame(const std::string& filename) {
     emu_thread->start();
 
     connect(render_window, SIGNAL(Closed()), this, SLOT(OnStopGame()));
-    // BlockingQueuedConnection is important here, it makes sure we've finished refreshing our views before the CPU continues
-    connect(emu_thread.get(), SIGNAL(DebugModeEntered()), disasmWidget, SLOT(OnDebugModeEntered()), Qt::BlockingQueuedConnection);
-    connect(emu_thread.get(), SIGNAL(DebugModeEntered()), registersWidget, SLOT(OnDebugModeEntered()), Qt::BlockingQueuedConnection);
-    connect(emu_thread.get(), SIGNAL(DebugModeEntered()), callstackWidget, SLOT(OnDebugModeEntered()), Qt::BlockingQueuedConnection);
-    connect(emu_thread.get(), SIGNAL(DebugModeLeft()), disasmWidget, SLOT(OnDebugModeLeft()), Qt::BlockingQueuedConnection);
-    connect(emu_thread.get(), SIGNAL(DebugModeLeft()), registersWidget, SLOT(OnDebugModeLeft()), Qt::BlockingQueuedConnection);
-    connect(emu_thread.get(), SIGNAL(DebugModeLeft()), callstackWidget, SLOT(OnDebugModeLeft()), Qt::BlockingQueuedConnection);
+    // BlockingQueuedConnection is important here, it makes sure we've finished refreshing our views
+    // before the CPU continues
+    connect(emu_thread.get(), SIGNAL(DebugModeEntered()), disasmWidget, SLOT(OnDebugModeEntered()),
+            Qt::BlockingQueuedConnection);
+    connect(emu_thread.get(), SIGNAL(DebugModeEntered()), registersWidget,
+            SLOT(OnDebugModeEntered()), Qt::BlockingQueuedConnection);
+    connect(emu_thread.get(), SIGNAL(DebugModeEntered()), callstackWidget,
+            SLOT(OnDebugModeEntered()), Qt::BlockingQueuedConnection);
+    connect(emu_thread.get(), SIGNAL(DebugModeLeft()), disasmWidget, SLOT(OnDebugModeLeft()),
+            Qt::BlockingQueuedConnection);
+    connect(emu_thread.get(), SIGNAL(DebugModeLeft()), registersWidget, SLOT(OnDebugModeLeft()),
+            Qt::BlockingQueuedConnection);
+    connect(emu_thread.get(), SIGNAL(DebugModeLeft()), callstackWidget, SLOT(OnDebugModeLeft()),
+            Qt::BlockingQueuedConnection);
 
     // Update the GUI
     registersWidget->OnDebugModeEntered();
@@ -393,10 +404,12 @@ void GMainWindow::StoreRecentFile(const std::string& filename) {
 }
 
 void GMainWindow::UpdateRecentFiles() {
-    unsigned int num_recent_files = std::min(UISettings::values.recent_files.size(), static_cast<int>(max_recent_files_item));
+    unsigned int num_recent_files =
+        std::min(UISettings::values.recent_files.size(), static_cast<int>(max_recent_files_item));
 
     for (unsigned int i = 0; i < num_recent_files; i++) {
-        QString text = QString("&%1. %2").arg(i + 1).arg(QFileInfo(UISettings::values.recent_files[i]).fileName());
+        QString text = QString("&%1. %2").arg(i + 1).arg(
+            QFileInfo(UISettings::values.recent_files[i]).fileName());
         actions_recent_files[i]->setText(text);
         actions_recent_files[i]->setData(UISettings::values.recent_files[i]);
         actions_recent_files[i]->setToolTip(UISettings::values.recent_files[i]);
@@ -420,7 +433,9 @@ void GMainWindow::OnGameListLoadFile(QString game_path) {
 }
 
 void GMainWindow::OnMenuLoadFile() {
-    QString filename = QFileDialog::getOpenFileName(this, tr("Load File"), UISettings::values.roms_path, tr("3DS executable (*.3ds *.3dsx *.elf *.axf *.cci *.cxi)"));
+    QString filename =
+        QFileDialog::getOpenFileName(this, tr("Load File"), UISettings::values.roms_path,
+                                     tr("3DS executable (*.3ds *.3dsx *.elf *.axf *.cci *.cxi)"));
     if (!filename.isEmpty()) {
         UISettings::values.roms_path = QFileInfo(filename).path();
 
@@ -429,7 +444,8 @@ void GMainWindow::OnMenuLoadFile() {
 }
 
 void GMainWindow::OnMenuLoadSymbolMap() {
-    QString filename = QFileDialog::getOpenFileName(this, tr("Load Symbol Map"), UISettings::values.symbols_path, tr("Symbol map (*)"));
+    QString filename = QFileDialog::getOpenFileName(
+        this, tr("Load Symbol Map"), UISettings::values.symbols_path, tr("Symbol map (*)"));
     if (!filename.isEmpty()) {
         UISettings::values.symbols_path = QFileInfo(filename).path();
 
@@ -455,7 +471,8 @@ void GMainWindow::OnMenuRecentFile() {
         BootGame(filename.toStdString());
     } else {
         // Display an error message and remove the file from the list.
-        QMessageBox::information(this, tr("File not found"), tr("File \"%1\" not found").arg(filename));
+        QMessageBox::information(this, tr("File not found"),
+                                 tr("File \"%1\" not found").arg(filename));
 
         UISettings::values.recent_files.removeOne(filename);
         UpdateRecentFiles();
@@ -512,8 +529,7 @@ void GMainWindow::ToggleWindowMode() {
 void GMainWindow::OnConfigure() {
     ConfigureDialog configureDialog(this);
     auto result = configureDialog.exec();
-    if (result == QDialog::Accepted)
-    {
+    if (result == QDialog::Accepted) {
         configureDialog.applyConfiguration();
         render_window->ReloadSetKeymaps();
         config->Save();
@@ -531,9 +547,9 @@ bool GMainWindow::ConfirmClose() {
     if (emu_thread == nullptr || !UISettings::values.confirm_before_closing)
         return true;
 
-    auto answer = QMessageBox::question(this, tr("Citra"),
-                                        tr("Are you sure you want to close Citra?"),
-                                        QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
+    auto answer =
+        QMessageBox::question(this, tr("Citra"), tr("Are you sure you want to close Citra?"),
+                              QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
     return answer != QMessageBox::No;
 }
 
@@ -575,9 +591,7 @@ int main(int argc, char* argv[]) {
     Log::SetFilter(&log_filter);
 
     MicroProfileOnThreadCreate("Frontend");
-    SCOPE_EXIT({
-        MicroProfileShutdown();
-    });
+    SCOPE_EXIT({ MicroProfileShutdown(); });
 
     // Init settings params
     QCoreApplication::setOrganizationName("Citra team");
@@ -586,7 +600,8 @@ int main(int argc, char* argv[]) {
     QApplication::setAttribute(Qt::AA_X11InitThreads);
     QApplication app(argc, argv);
 
-    // Qt changes the locale and causes issues in float conversion using std::to_string() when generating shaders
+    // Qt changes the locale and causes issues in float conversion using std::to_string() when
+    // generating shaders
     setlocale(LC_ALL, "C");
 
     GMainWindow main_window;

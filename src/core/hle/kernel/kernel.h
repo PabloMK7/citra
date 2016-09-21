@@ -4,16 +4,13 @@
 
 #pragma once
 
-#include <boost/smart_ptr/intrusive_ptr.hpp>
-
 #include <algorithm>
 #include <array>
 #include <cstddef>
 #include <string>
 #include <vector>
-
+#include <boost/smart_ptr/intrusive_ptr.hpp>
 #include "common/common_types.h"
-
 #include "core/hle/hle.h"
 #include "core/hle/result.h"
 
@@ -23,37 +20,37 @@ class Thread;
 
 // TODO: Verify code
 const ResultCode ERR_OUT_OF_HANDLES(ErrorDescription::OutOfMemory, ErrorModule::Kernel,
-        ErrorSummary::OutOfResource, ErrorLevel::Temporary);
+                                    ErrorSummary::OutOfResource, ErrorLevel::Temporary);
 // TOOD: Verify code
 const ResultCode ERR_INVALID_HANDLE(ErrorDescription::InvalidHandle, ErrorModule::Kernel,
-        ErrorSummary::InvalidArgument, ErrorLevel::Permanent);
+                                    ErrorSummary::InvalidArgument, ErrorLevel::Permanent);
 
 enum KernelHandle : Handle {
-    CurrentThread   = 0xFFFF8000,
-    CurrentProcess  = 0xFFFF8001,
+    CurrentThread = 0xFFFF8000,
+    CurrentProcess = 0xFFFF8001,
 };
 
 enum class HandleType : u32 {
-    Unknown         = 0,
+    Unknown = 0,
 
-    Session         = 2,
-    Event           = 3,
-    Mutex           = 4,
-    SharedMemory    = 5,
-    Redirection     = 6,
-    Thread          = 7,
-    Process         = 8,
-    AddressArbiter  = 9,
-    Semaphore       = 10,
-    Timer           = 11,
-    ResourceLimit   = 12,
-    CodeSet         = 13,
-    ClientPort      = 14,
-    ServerPort      = 15,
+    Session = 2,
+    Event = 3,
+    Mutex = 4,
+    SharedMemory = 5,
+    Redirection = 6,
+    Thread = 7,
+    Process = 8,
+    AddressArbiter = 9,
+    Semaphore = 10,
+    Timer = 11,
+    ResourceLimit = 12,
+    CodeSet = 13,
+    ClientPort = 14,
+    ServerPort = 15,
 };
 
 enum {
-    DEFAULT_STACK_SIZE  = 0x4000,
+    DEFAULT_STACK_SIZE = 0x4000,
 };
 
 class Object : NonCopyable {
@@ -61,10 +58,16 @@ public:
     virtual ~Object() {}
 
     /// Returns a unique identifier for the object. For debugging purposes only.
-    unsigned int GetObjectId() const { return object_id; }
+    unsigned int GetObjectId() const {
+        return object_id;
+    }
 
-    virtual std::string GetTypeName() const { return "[BAD KERNEL OBJECT TYPE]"; }
-    virtual std::string GetName() const { return "[UNKNOWN KERNEL OBJECT]"; }
+    virtual std::string GetTypeName() const {
+        return "[BAD KERNEL OBJECT TYPE]";
+    }
+    virtual std::string GetName() const {
+        return "[UNKNOWN KERNEL OBJECT]";
+    }
     virtual Kernel::HandleType GetHandleType() const = 0;
 
     /**
@@ -122,7 +125,6 @@ using SharedPtr = boost::intrusive_ptr<T>;
 /// Class that represents a Kernel object that a thread can be waiting on
 class WaitObject : public Object {
 public:
-
     /**
      * Check if the current thread should wait until the object is available
      * @return True if the current thread should wait due to this object being unavailable
@@ -247,8 +249,12 @@ private:
      */
     static const size_t MAX_COUNT = 4096;
 
-    static u16 GetSlot(Handle handle)    { return handle >> 15; }
-    static u16 GetGeneration(Handle handle) { return handle & 0x7FFF; }
+    static u16 GetSlot(Handle handle) {
+        return handle >> 15;
+    }
+    static u16 GetGeneration(Handle handle) {
+        return handle & 0x7FFF;
+    }
 
     /// Stores the Object referenced by the handle or null if the slot is empty.
     std::array<SharedPtr<Object>, MAX_COUNT> objects;

@@ -11,24 +11,20 @@
 #include <QPushButton>
 #include <QScrollArea>
 #include <QSpinBox>
-
 #include "citra_qt/debugger/graphics_surface.h"
 #include "citra_qt/util/spinbox.h"
-
 #include "common/color.h"
-
-#include "core/memory.h"
 #include "core/hw/gpu.h"
-
+#include "core/memory.h"
 #include "video_core/pica.h"
 #include "video_core/pica_state.h"
 #include "video_core/utils.h"
 
-SurfacePicture::SurfacePicture(QWidget* parent, GraphicsSurfaceWidget* surface_widget_) : QLabel(parent), surface_widget(surface_widget_) {}
+SurfacePicture::SurfacePicture(QWidget* parent, GraphicsSurfaceWidget* surface_widget_)
+    : QLabel(parent), surface_widget(surface_widget_) {}
 SurfacePicture::~SurfacePicture() {}
 
-void SurfacePicture::mousePressEvent(QMouseEvent* event)
-{
+void SurfacePicture::mousePressEvent(QMouseEvent* event) {
     // Only do something while the left mouse button is held down
     if (!(event->buttons() & Qt::LeftButton))
         return;
@@ -41,18 +37,15 @@ void SurfacePicture::mousePressEvent(QMouseEvent* event)
                              event->y() * pixmap()->height() / height());
 }
 
-void SurfacePicture::mouseMoveEvent(QMouseEvent* event)
-{
+void SurfacePicture::mouseMoveEvent(QMouseEvent* event) {
     // We also want to handle the event if the user moves the mouse while holding down the LMB
     mousePressEvent(event);
 }
 
-
 GraphicsSurfaceWidget::GraphicsSurfaceWidget(std::shared_ptr<Pica::DebugContext> debug_context,
-                                                     QWidget* parent)
+                                             QWidget* parent)
     : BreakPointObserverDock(debug_context, tr("Pica Surface Viewer"), parent),
-      surface_source(Source::ColorBuffer)
-{
+      surface_source(Source::ColorBuffer) {
     setObjectName("PicaSurface");
 
     surface_source_list = new QComboBox;
@@ -124,13 +117,20 @@ GraphicsSurfaceWidget::GraphicsSurfaceWidget(std::shared_ptr<Pica::DebugContext>
 
     // Connections
     connect(this, SIGNAL(Update()), this, SLOT(OnUpdate()));
-    connect(surface_source_list, SIGNAL(currentIndexChanged(int)), this, SLOT(OnSurfaceSourceChanged(int)));
-    connect(surface_address_control, SIGNAL(ValueChanged(qint64)), this, SLOT(OnSurfaceAddressChanged(qint64)));
-    connect(surface_width_control, SIGNAL(valueChanged(int)), this, SLOT(OnSurfaceWidthChanged(int)));
-    connect(surface_height_control, SIGNAL(valueChanged(int)), this, SLOT(OnSurfaceHeightChanged(int)));
-    connect(surface_format_control, SIGNAL(currentIndexChanged(int)), this, SLOT(OnSurfaceFormatChanged(int)));
-    connect(surface_picker_x_control, SIGNAL(valueChanged(int)), this, SLOT(OnSurfacePickerXChanged(int)));
-    connect(surface_picker_y_control, SIGNAL(valueChanged(int)), this, SLOT(OnSurfacePickerYChanged(int)));
+    connect(surface_source_list, SIGNAL(currentIndexChanged(int)), this,
+            SLOT(OnSurfaceSourceChanged(int)));
+    connect(surface_address_control, SIGNAL(ValueChanged(qint64)), this,
+            SLOT(OnSurfaceAddressChanged(qint64)));
+    connect(surface_width_control, SIGNAL(valueChanged(int)), this,
+            SLOT(OnSurfaceWidthChanged(int)));
+    connect(surface_height_control, SIGNAL(valueChanged(int)), this,
+            SLOT(OnSurfaceHeightChanged(int)));
+    connect(surface_format_control, SIGNAL(currentIndexChanged(int)), this,
+            SLOT(OnSurfaceFormatChanged(int)));
+    connect(surface_picker_x_control, SIGNAL(valueChanged(int)), this,
+            SLOT(OnSurfacePickerXChanged(int)));
+    connect(surface_picker_y_control, SIGNAL(valueChanged(int)), this,
+            SLOT(OnSurfacePickerYChanged(int)));
     connect(save_surface, SIGNAL(clicked()), this, SLOT(SaveSurface()));
 
     auto main_widget = new QWidget;
@@ -203,25 +203,21 @@ GraphicsSurfaceWidget::GraphicsSurfaceWidget(std::shared_ptr<Pica::DebugContext>
     }
 }
 
-void GraphicsSurfaceWidget::OnBreakPointHit(Pica::DebugContext::Event event, void* data)
-{
+void GraphicsSurfaceWidget::OnBreakPointHit(Pica::DebugContext::Event event, void* data) {
     emit Update();
     widget()->setEnabled(true);
 }
 
-void GraphicsSurfaceWidget::OnResumed()
-{
+void GraphicsSurfaceWidget::OnResumed() {
     widget()->setEnabled(false);
 }
 
-void GraphicsSurfaceWidget::OnSurfaceSourceChanged(int new_value)
-{
+void GraphicsSurfaceWidget::OnSurfaceSourceChanged(int new_value) {
     surface_source = static_cast<Source>(new_value);
     emit Update();
 }
 
-void GraphicsSurfaceWidget::OnSurfaceAddressChanged(qint64 new_value)
-{
+void GraphicsSurfaceWidget::OnSurfaceAddressChanged(qint64 new_value) {
     if (surface_address != new_value) {
         surface_address = static_cast<unsigned>(new_value);
 
@@ -230,8 +226,7 @@ void GraphicsSurfaceWidget::OnSurfaceAddressChanged(qint64 new_value)
     }
 }
 
-void GraphicsSurfaceWidget::OnSurfaceWidthChanged(int new_value)
-{
+void GraphicsSurfaceWidget::OnSurfaceWidthChanged(int new_value) {
     if (surface_width != static_cast<unsigned>(new_value)) {
         surface_width = static_cast<unsigned>(new_value);
 
@@ -240,8 +235,7 @@ void GraphicsSurfaceWidget::OnSurfaceWidthChanged(int new_value)
     }
 }
 
-void GraphicsSurfaceWidget::OnSurfaceHeightChanged(int new_value)
-{
+void GraphicsSurfaceWidget::OnSurfaceHeightChanged(int new_value) {
     if (surface_height != static_cast<unsigned>(new_value)) {
         surface_height = static_cast<unsigned>(new_value);
 
@@ -250,8 +244,7 @@ void GraphicsSurfaceWidget::OnSurfaceHeightChanged(int new_value)
     }
 }
 
-void GraphicsSurfaceWidget::OnSurfaceFormatChanged(int new_value)
-{
+void GraphicsSurfaceWidget::OnSurfaceFormatChanged(int new_value) {
     if (surface_format != static_cast<Format>(new_value)) {
         surface_format = static_cast<Format>(new_value);
 
@@ -260,24 +253,21 @@ void GraphicsSurfaceWidget::OnSurfaceFormatChanged(int new_value)
     }
 }
 
-void GraphicsSurfaceWidget::OnSurfacePickerXChanged(int new_value)
-{
+void GraphicsSurfaceWidget::OnSurfacePickerXChanged(int new_value) {
     if (surface_picker_x != new_value) {
         surface_picker_x = new_value;
         Pick(surface_picker_x, surface_picker_y);
     }
 }
 
-void GraphicsSurfaceWidget::OnSurfacePickerYChanged(int new_value)
-{
+void GraphicsSurfaceWidget::OnSurfacePickerYChanged(int new_value) {
     if (surface_picker_y != new_value) {
         surface_picker_y = new_value;
         Pick(surface_picker_x, surface_picker_y);
     }
 }
 
-void GraphicsSurfaceWidget::Pick(int x, int y)
-{
+void GraphicsSurfaceWidget::Pick(int x, int y) {
     surface_picker_x_control->setValue(x);
     surface_picker_y_control->setValue(y);
 
@@ -312,74 +302,63 @@ void GraphicsSurfaceWidget::Pick(int x, int y)
 
     auto GetText = [offset](Format format, const u8* pixel) {
         switch (format) {
-        case Format::RGBA8:
-        {
+        case Format::RGBA8: {
             auto value = Color::DecodeRGBA8(pixel) / 255.0f;
             return QString("Red: %1, Green: %2, Blue: %3, Alpha: %4")
-                      .arg(QString::number(value.r(), 'f', 2))
-                      .arg(QString::number(value.g(), 'f', 2))
-                      .arg(QString::number(value.b(), 'f', 2))
-                      .arg(QString::number(value.a(), 'f', 2));
+                .arg(QString::number(value.r(), 'f', 2))
+                .arg(QString::number(value.g(), 'f', 2))
+                .arg(QString::number(value.b(), 'f', 2))
+                .arg(QString::number(value.a(), 'f', 2));
         }
-        case Format::RGB8:
-        {
+        case Format::RGB8: {
             auto value = Color::DecodeRGB8(pixel) / 255.0f;
             return QString("Red: %1, Green: %2, Blue: %3")
-                      .arg(QString::number(value.r(), 'f', 2))
-                      .arg(QString::number(value.g(), 'f', 2))
-                      .arg(QString::number(value.b(), 'f', 2));
+                .arg(QString::number(value.r(), 'f', 2))
+                .arg(QString::number(value.g(), 'f', 2))
+                .arg(QString::number(value.b(), 'f', 2));
         }
-        case Format::RGB5A1:
-        {
+        case Format::RGB5A1: {
             auto value = Color::DecodeRGB5A1(pixel) / 255.0f;
             return QString("Red: %1, Green: %2, Blue: %3, Alpha: %4")
-                      .arg(QString::number(value.r(), 'f', 2))
-                      .arg(QString::number(value.g(), 'f', 2))
-                      .arg(QString::number(value.b(), 'f', 2))
-                      .arg(QString::number(value.a(), 'f', 2));
+                .arg(QString::number(value.r(), 'f', 2))
+                .arg(QString::number(value.g(), 'f', 2))
+                .arg(QString::number(value.b(), 'f', 2))
+                .arg(QString::number(value.a(), 'f', 2));
         }
-        case Format::RGB565:
-        {
+        case Format::RGB565: {
             auto value = Color::DecodeRGB565(pixel) / 255.0f;
             return QString("Red: %1, Green: %2, Blue: %3")
-                      .arg(QString::number(value.r(), 'f', 2))
-                      .arg(QString::number(value.g(), 'f', 2))
-                      .arg(QString::number(value.b(), 'f', 2));
+                .arg(QString::number(value.r(), 'f', 2))
+                .arg(QString::number(value.g(), 'f', 2))
+                .arg(QString::number(value.b(), 'f', 2));
         }
-        case Format::RGBA4:
-        {
+        case Format::RGBA4: {
             auto value = Color::DecodeRGBA4(pixel) / 255.0f;
             return QString("Red: %1, Green: %2, Blue: %3, Alpha: %4")
-                      .arg(QString::number(value.r(), 'f', 2))
-                      .arg(QString::number(value.g(), 'f', 2))
-                      .arg(QString::number(value.b(), 'f', 2))
-                      .arg(QString::number(value.a(), 'f', 2));
+                .arg(QString::number(value.r(), 'f', 2))
+                .arg(QString::number(value.g(), 'f', 2))
+                .arg(QString::number(value.b(), 'f', 2))
+                .arg(QString::number(value.a(), 'f', 2));
         }
         case Format::IA8:
-            return QString("Index: %1, Alpha: %2")
-                      .arg(pixel[0])
-                      .arg(pixel[1]);
+            return QString("Index: %1, Alpha: %2").arg(pixel[0]).arg(pixel[1]);
         case Format::RG8: {
             auto value = Color::DecodeRG8(pixel) / 255.0f;
             return QString("Red: %1, Green: %2")
-                      .arg(QString::number(value.r(), 'f', 2))
-                      .arg(QString::number(value.g(), 'f', 2));
+                .arg(QString::number(value.r(), 'f', 2))
+                .arg(QString::number(value.g(), 'f', 2));
         }
         case Format::I8:
             return QString("Index: %1").arg(*pixel);
         case Format::A8:
             return QString("Alpha: %1").arg(QString::number(*pixel / 255.0f, 'f', 2));
         case Format::IA4:
-            return QString("Index: %1, Alpha: %2")
-                      .arg(*pixel & 0xF)
-                      .arg((*pixel & 0xF0) >> 4);
-        case Format::I4:
-        {
+            return QString("Index: %1, Alpha: %2").arg(*pixel & 0xF).arg((*pixel & 0xF0) >> 4);
+        case Format::I4: {
             u8 i = (*pixel >> ((offset % 2) ? 4 : 0)) & 0xF;
             return QString("Index: %1").arg(i);
         }
-        case Format::A4:
-        {
+        case Format::A4: {
             u8 a = (*pixel >> ((offset % 2) ? 4 : 0)) & 0xF;
             return QString("Alpha: %1").arg(QString::number(a / 15.0f, 'f', 2));
         }
@@ -387,21 +366,20 @@ void GraphicsSurfaceWidget::Pick(int x, int y)
         case Format::ETC1A4:
             // TODO: Display block information or channel values?
             return QString("Compressed data");
-        case Format::D16:
-        {
+        case Format::D16: {
             auto value = Color::DecodeD16(pixel);
             return QString("Depth: %1").arg(QString::number(value / (float)0xFFFF, 'f', 4));
         }
-        case Format::D24:
-        {
+        case Format::D24: {
             auto value = Color::DecodeD24(pixel);
             return QString("Depth: %1").arg(QString::number(value / (float)0xFFFFFF, 'f', 4));
         }
         case Format::D24X8:
-        case Format::X24S8:
-        {
+        case Format::X24S8: {
             auto values = Color::DecodeD24S8(pixel);
-            return QString("Depth: %1, Stencil: %2").arg(QString::number(values[0] / (float)0xFFFFFF, 'f', 4)).arg(values[1]);
+            return QString("Depth: %1, Stencil: %2")
+                .arg(QString::number(values[0] / (float)0xFFFFFF, 'f', 4))
+                .arg(values[1]);
         }
         case Format::Unknown:
             return QString("Unknown format");
@@ -422,18 +400,18 @@ void GraphicsSurfaceWidget::Pick(int x, int y)
         nibbles.append(QString::number(nibble, 16).toUpper());
     }
 
-    surface_info_label->setText(QString("Raw: 0x%3\n(%4)").arg(nibbles).arg(GetText(surface_format, pixel)));
+    surface_info_label->setText(
+        QString("Raw: 0x%3\n(%4)").arg(nibbles).arg(GetText(surface_format, pixel)));
     surface_info_label->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
 }
 
-void GraphicsSurfaceWidget::OnUpdate()
-{
+void GraphicsSurfaceWidget::OnUpdate() {
     QPixmap pixmap;
 
     switch (surface_source) {
-    case Source::ColorBuffer:
-    {
-        // TODO: Store a reference to the registers in the debug context instead of accessing them directly...
+    case Source::ColorBuffer: {
+        // TODO: Store a reference to the registers in the debug context instead of accessing them
+        // directly...
 
         const auto& framebuffer = Pica::g_state.regs.framebuffer;
 
@@ -470,8 +448,7 @@ void GraphicsSurfaceWidget::OnUpdate()
         break;
     }
 
-    case Source::DepthBuffer:
-    {
+    case Source::DepthBuffer: {
         const auto& framebuffer = Pica::g_state.regs.framebuffer;
 
         surface_address = framebuffer.GetDepthBufferPhysicalAddress();
@@ -499,8 +476,7 @@ void GraphicsSurfaceWidget::OnUpdate()
         break;
     }
 
-    case Source::StencilBuffer:
-    {
+    case Source::StencilBuffer: {
         const auto& framebuffer = Pica::g_state.regs.framebuffer;
 
         surface_address = framebuffer.GetDepthBufferPhysicalAddress();
@@ -522,12 +498,14 @@ void GraphicsSurfaceWidget::OnUpdate()
 
     case Source::Texture0:
     case Source::Texture1:
-    case Source::Texture2:
-    {
+    case Source::Texture2: {
         unsigned texture_index;
-        if (surface_source == Source::Texture0) texture_index = 0;
-        else if (surface_source == Source::Texture1) texture_index = 1;
-        else if (surface_source == Source::Texture2) texture_index = 2;
+        if (surface_source == Source::Texture0)
+            texture_index = 0;
+        else if (surface_source == Source::Texture1)
+            texture_index = 1;
+        else if (surface_source == Source::Texture2)
+            texture_index = 2;
         else {
             qDebug() << "Unknown texture source " << static_cast<int>(surface_source);
             break;
@@ -547,8 +525,7 @@ void GraphicsSurfaceWidget::OnUpdate()
         break;
     }
 
-    case Source::Custom:
-    {
+    case Source::Custom: {
         // Keep user-specified values
         break;
     }
@@ -613,7 +590,8 @@ void GraphicsSurfaceWidget::OnUpdate()
 
     } else {
 
-        ASSERT_MSG(nibbles_per_pixel >= 2, "Depth decoder only supports formats with at least one byte per pixel");
+        ASSERT_MSG(nibbles_per_pixel >= 2,
+                   "Depth decoder only supports formats with at least one byte per pixel");
         unsigned bytes_per_pixel = nibbles_per_pixel / 2;
 
         for (unsigned int y = 0; y < surface_height; ++y) {
@@ -621,34 +599,30 @@ void GraphicsSurfaceWidget::OnUpdate()
                 const u32 coarse_y = y & ~7;
                 u32 offset = VideoCore::GetMortonOffset(x, y, bytes_per_pixel) + coarse_y * stride;
                 const u8* pixel = buffer + offset;
-                Math::Vec4<u8> color = { 0, 0, 0, 0 };
+                Math::Vec4<u8> color = {0, 0, 0, 0};
 
-                switch(surface_format) {
-                case Format::D16:
-                {
+                switch (surface_format) {
+                case Format::D16: {
                     u32 data = Color::DecodeD16(pixel);
                     color.r() = data & 0xFF;
                     color.g() = (data >> 8) & 0xFF;
                     break;
                 }
-                case Format::D24:
-                {
+                case Format::D24: {
                     u32 data = Color::DecodeD24(pixel);
                     color.r() = data & 0xFF;
                     color.g() = (data >> 8) & 0xFF;
                     color.b() = (data >> 16) & 0xFF;
                     break;
                 }
-                case Format::D24X8:
-                {
+                case Format::D24X8: {
                     Math::Vec2<u32> data = Color::DecodeD24S8(pixel);
                     color.r() = data.x & 0xFF;
                     color.g() = (data.x >> 8) & 0xFF;
                     color.b() = (data.x >> 16) & 0xFF;
                     break;
                 }
-                case Format::X24S8:
-                {
+                case Format::X24S8: {
                     Math::Vec2<u32> data = Color::DecodeD24S8(pixel);
                     color.r() = color.g() = color.b() = data.y;
                     break;
@@ -661,7 +635,6 @@ void GraphicsSurfaceWidget::OnUpdate()
                 decoded_image.setPixel(x, y, qRgba(color.r(), color.g(), color.b(), 255));
             }
         }
-
     }
 
     pixmap = QPixmap::fromImage(decoded_image);
@@ -682,8 +655,10 @@ void GraphicsSurfaceWidget::SaveSurface() {
     QString bin_filter = tr("Binary data (*.bin)");
 
     QString selectedFilter;
-    QString filename = QFileDialog::getSaveFileName(this, tr("Save Surface"), QString("texture-0x%1.png").arg(QString::number(surface_address, 16)),
-                                                    QString("%1;;%2").arg(png_filter, bin_filter), &selectedFilter);
+    QString filename = QFileDialog::getSaveFileName(
+        this, tr("Save Surface"),
+        QString("texture-0x%1.png").arg(QString::number(surface_address, 16)),
+        QString("%1;;%2").arg(png_filter, bin_filter), &selectedFilter);
 
     if (filename.isEmpty()) {
         // If the user canceled the dialog, don't save anything.
@@ -718,19 +693,18 @@ unsigned int GraphicsSurfaceWidget::NibblesPerPixel(GraphicsSurfaceWidget::Forma
     }
 
     switch (format) {
-        case Format::D24X8:
-        case Format::X24S8:
-            return 4 * 2;
-        case Format::D24:
-            return 3 * 2;
-        case Format::D16:
-            return 2 * 2;
-        default:
-            UNREACHABLE_MSG("GraphicsSurfaceWidget::BytesPerPixel: this "
-                            "should not be reached as this function should "
-                            "be given a format which is in "
-                            "GraphicsSurfaceWidget::Format. Instead got %i",
-                            static_cast<int>(format));
-            return 0;
+    case Format::D24X8:
+    case Format::X24S8:
+        return 4 * 2;
+    case Format::D24:
+        return 3 * 2;
+    case Format::D16:
+        return 2 * 2;
+    default:
+        UNREACHABLE_MSG("GraphicsSurfaceWidget::BytesPerPixel: this should not be reached as this "
+                        "function should be given a format which is in "
+                        "GraphicsSurfaceWidget::Format. Instead got %i",
+                        static_cast<int>(format));
+        return 0;
     }
 }

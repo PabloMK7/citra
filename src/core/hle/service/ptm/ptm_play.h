@@ -13,9 +13,9 @@ class PTM_Play_Interface : public Service::Interface {
 public:
     PTM_Play_Interface();
 
-std::string GetPortName() const override {
-    return "ptm:play";
-}
+    std::string GetPortName() const override {
+        return "ptm:play";
+    }
 };
 
 } // namespace PTM

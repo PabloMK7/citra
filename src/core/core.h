@@ -40,13 +40,13 @@ void Start();
  * is not guaranteed to run, as this will be interrupted preemptively if a hardware update is
  * requested (e.g. on a thread switch).
  */
-void RunLoop(int tight_loop=1000);
+void RunLoop(int tight_loop = 1000);
 
 /// Step the CPU one instruction
 void SingleStep();
 
 /// Halt the core
-void Halt(const char *msg);
+void Halt(const char* msg);
 
 /// Kill the core
 void Stop();

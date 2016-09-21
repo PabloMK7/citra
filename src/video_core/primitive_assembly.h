@@ -5,7 +5,6 @@
 #pragma once
 
 #include <functional>
-
 #include "video_core/pica.h"
 
 namespace Pica {
@@ -14,11 +13,9 @@ namespace Pica {
  * Utility class to build triangles from a series of vertices,
  * according to a given triangle topology.
  */
-template<typename VertexType>
+template <typename VertexType>
 struct PrimitiveAssembler {
-    using TriangleHandler = std::function<void(VertexType& v0,
-                                               VertexType& v1,
-                                               VertexType& v2)>;
+    using TriangleHandler = std::function<void(VertexType& v0, VertexType& v1, VertexType& v2)>;
 
     PrimitiveAssembler(Regs::TriangleTopology topology = Regs::TriangleTopology::List);
 
@@ -47,6 +44,5 @@ private:
     VertexType buffer[2];
     bool strip_ready = false;
 };
-
 
 } // namespace

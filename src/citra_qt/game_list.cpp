@@ -5,19 +5,15 @@
 #include <QHeaderView>
 #include <QThreadPool>
 #include <QVBoxLayout>
-
+#include "common/common_paths.h"
+#include "common/logging/log.h"
+#include "common/string_util.h"
+#include "core/loader/loader.h"
 #include "game_list.h"
 #include "game_list_p.h"
 #include "ui_settings.h"
 
-#include "core/loader/loader.h"
-
-#include "common/common_paths.h"
-#include "common/logging/log.h"
-#include "common/string_util.h"
-
-GameList::GameList(QWidget* parent)
-{
+GameList::GameList(QWidget* parent) {
     QVBoxLayout* layout = new QVBoxLayout;
 
     tree_view = new QTreeView;
@@ -38,9 +34,11 @@ GameList::GameList(QWidget* parent)
     item_model->setHeaderData(COLUMN_FILE_TYPE, Qt::Horizontal, "File type");
     item_model->setHeaderData(COLUMN_SIZE, Qt::Horizontal, "Size");
 
-    connect(tree_view, SIGNAL(activated(const QModelIndex&)), this, SLOT(ValidateEntry(const QModelIndex&)));
+    connect(tree_view, SIGNAL(activated(const QModelIndex&)), this,
+            SLOT(ValidateEntry(const QModelIndex&)));
 
-    // We must register all custom types with the Qt Automoc system so that we are able to use it with
+    // We must register all custom types with the Qt Automoc system so that we are able to use it
+    // with
     // signals/slots. In this case, QList falls under the umbrells of custom types.
     qRegisterMetaType<QList<QStandardItem*>>("QList<QStandardItem*>");
 
@@ -48,18 +46,15 @@ GameList::GameList(QWidget* parent)
     setLayout(layout);
 }
 
-GameList::~GameList()
-{
+GameList::~GameList() {
     emit ShouldCancelWorker();
 }
 
-void GameList::AddEntry(QList<QStandardItem*> entry_items)
-{
+void GameList::AddEntry(QList<QStandardItem*> entry_items) {
     item_model->invisibleRootItem()->appendRow(entry_items);
 }
 
-void GameList::ValidateEntry(const QModelIndex& item)
-{
+void GameList::ValidateEntry(const QModelIndex& item) {
     // We don't care about the individual QStandardItem that was selected, but its row.
     int row = item_model->itemFromIndex(item)->row();
     QStandardItem* child_file = item_model->invisibleRootItem()->child(row, COLUMN_NAME);
@@ -73,14 +68,13 @@ void GameList::ValidateEntry(const QModelIndex& item)
     emit GameChosen(file_path);
 }
 
-void GameList::DonePopulating()
-{
+void GameList::DonePopulating() {
     tree_view->setEnabled(true);
 }
 
-void GameList::PopulateAsync(const QString& dir_path, bool deep_scan)
-{
-    if (!FileUtil::Exists(dir_path.toStdString()) || !FileUtil::IsDirectory(dir_path.toStdString())) {
+void GameList::PopulateAsync(const QString& dir_path, bool deep_scan) {
+    if (!FileUtil::Exists(dir_path.toStdString()) ||
+        !FileUtil::IsDirectory(dir_path.toStdString())) {
         LOG_ERROR(Frontend, "Could not find game list folder at %s", dir_path.toLocal8Bit().data());
         return;
     }
@@ -92,22 +86,22 @@ void GameList::PopulateAsync(const QString& dir_path, bool deep_scan)
     emit ShouldCancelWorker();
     GameListWorker* worker = new GameListWorker(dir_path, deep_scan);
 
-    connect(worker, SIGNAL(EntryReady(QList<QStandardItem*>)), this, SLOT(AddEntry(QList<QStandardItem*>)), Qt::QueuedConnection);
+    connect(worker, SIGNAL(EntryReady(QList<QStandardItem*>)), this,
+            SLOT(AddEntry(QList<QStandardItem*>)), Qt::QueuedConnection);
     connect(worker, SIGNAL(Finished()), this, SLOT(DonePopulating()), Qt::QueuedConnection);
-    // Use DirectConnection here because worker->Cancel() is thread-safe and we want it to cancel without delay.
+    // Use DirectConnection here because worker->Cancel() is thread-safe and we want it to cancel
+    // without delay.
     connect(this, SIGNAL(ShouldCancelWorker()), worker, SLOT(Cancel()), Qt::DirectConnection);
 
     QThreadPool::globalInstance()->start(worker);
     current_worker = std::move(worker);
 }
 
-void GameList::SaveInterfaceLayout()
-{
+void GameList::SaveInterfaceLayout() {
     UISettings::values.gamelist_header_state = tree_view->header()->saveState();
 }
 
-void GameList::LoadInterfaceLayout()
-{
+void GameList::LoadInterfaceLayout() {
     auto header = tree_view->header();
     if (!header->restoreState(UISettings::values.gamelist_header_state)) {
         // We are using the name column to display icons and titles
@@ -118,10 +112,8 @@ void GameList::LoadInterfaceLayout()
     item_model->sort(header->sortIndicatorSection(), header->sortIndicatorOrder());
 }
 
-void GameListWorker::AddFstEntriesToGameList(const std::string& dir_path, unsigned int recursion)
-{
-    const auto callback = [this, recursion](unsigned* num_entries_out,
-                                            const std::string& directory,
+void GameListWorker::AddFstEntriesToGameList(const std::string& dir_path, unsigned int recursion) {
+    const auto callback = [this, recursion](unsigned* num_entries_out, const std::string& directory,
                                             const std::string& virtual_name) -> bool {
         std::string physical_name = directory + DIR_SEP + virtual_name;
 
@@ -138,7 +130,8 @@ void GameListWorker::AddFstEntriesToGameList(const std::string& dir_path, unsign
 
             emit EntryReady({
                 new GameListItemPath(QString::fromStdString(physical_name), smdh),
-                new GameListItem(QString::fromStdString(Loader::GetFileTypeString(loader->GetFileType()))),
+                new GameListItem(
+                    QString::fromStdString(Loader::GetFileTypeString(loader->GetFileType()))),
                 new GameListItemSize(FileUtil::GetSize(physical_name)),
             });
         } else if (recursion > 0) {
@@ -151,15 +144,13 @@ void GameListWorker::AddFstEntriesToGameList(const std::string& dir_path, unsign
     FileUtil::ForeachDirectoryEntry(nullptr, dir_path, callback);
 }
 
-void GameListWorker::run()
-{
+void GameListWorker::run() {
     stop_processing = false;
     AddFstEntriesToGameList(dir_path.toStdString(), deep_scan ? 256 : 0);
     emit Finished();
 }
 
-void GameListWorker::Cancel()
-{
+void GameListWorker::Cancel() {
     disconnect(this, 0, 0, 0);
     stop_processing = true;
 }

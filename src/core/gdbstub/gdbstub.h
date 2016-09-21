@@ -6,18 +6,17 @@
 
 #pragma once
 #include <atomic>
-
 #include "common/common_types.h"
 
 namespace GDBStub {
 
 /// Breakpoint Method
 enum class BreakpointType {
-    None,     ///< None
-    Execute,  ///< Execution Breakpoint
-    Read,     ///< Read Breakpoint
-    Write,    ///< Write Breakpoint
-    Access    ///< Access (R/W) Breakpoint
+    None,    ///< None
+    Execute, ///< Execution Breakpoint
+    Read,    ///< Read Breakpoint
+    Write,   ///< Write Breakpoint
+    Access   ///< Access (R/W) Breakpoint
 };
 
 struct BreakpointAddress {
@@ -25,7 +24,8 @@ struct BreakpointAddress {
     BreakpointType type;
 };
 
-/// If set to false, the server will never be started and no gdbstub-related functions will be executed.
+/// If set to false, the server will never be started and no gdbstub-related functions will be
+/// executed.
 extern std::atomic<bool> g_server_enabled;
 
 /**
@@ -92,5 +92,4 @@ bool GetCpuStepFlag();
  * @param is_step
  */
 void SetCpuStepFlag(bool is_step);
-
 }

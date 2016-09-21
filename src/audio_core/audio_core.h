@@ -12,7 +12,7 @@ class VMManager;
 
 namespace AudioCore {
 
-constexpr int native_sample_rate = 32728;  ///< 32kHz
+constexpr int native_sample_rate = 32728; ///< 32kHz
 
 /// Initialise Audio Core
 void Init();

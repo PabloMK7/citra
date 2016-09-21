@@ -6,7 +6,6 @@
 
 #include <cmath>
 #include <cstring>
-
 #include "common/common_types.h"
 
 namespace Pica {
@@ -22,7 +21,7 @@ namespace Pica {
  *
  * @todo Verify on HW if this conversion is sufficiently accurate.
  */
-template<unsigned M, unsigned E>
+template <unsigned M, unsigned E>
 struct Float {
 public:
     static Float<M, E> FromFloat32(float val) {
@@ -58,7 +57,7 @@ public:
         return value;
     }
 
-    Float<M, E> operator * (const Float<M, E>& flt) const {
+    Float<M, E> operator*(const Float<M, E>& flt) const {
         if ((this->value == 0.f && !std::isnan(flt.value)) ||
             (flt.value == 0.f && !std::isnan(this->value)))
             // PICA gives 0 instead of NaN when multiplying by inf
@@ -66,67 +65,68 @@ public:
         return Float<M, E>::FromFloat32(ToFloat32() * flt.ToFloat32());
     }
 
-    Float<M, E> operator / (const Float<M, E>& flt) const {
+    Float<M, E> operator/(const Float<M, E>& flt) const {
         return Float<M, E>::FromFloat32(ToFloat32() / flt.ToFloat32());
     }
 
-    Float<M, E> operator + (const Float<M, E>& flt) const {
+    Float<M, E> operator+(const Float<M, E>& flt) const {
         return Float<M, E>::FromFloat32(ToFloat32() + flt.ToFloat32());
     }
 
-    Float<M, E> operator - (const Float<M, E>& flt) const {
+    Float<M, E> operator-(const Float<M, E>& flt) const {
         return Float<M, E>::FromFloat32(ToFloat32() - flt.ToFloat32());
     }
 
-    Float<M, E>& operator *= (const Float<M, E>& flt) {
+    Float<M, E>& operator*=(const Float<M, E>& flt) {
         if ((this->value == 0.f && !std::isnan(flt.value)) ||
             (flt.value == 0.f && !std::isnan(this->value)))
             // PICA gives 0 instead of NaN when multiplying by inf
             *this = Zero();
-        else value *= flt.ToFloat32();
+        else
+            value *= flt.ToFloat32();
         return *this;
     }
 
-    Float<M, E>& operator /= (const Float<M, E>& flt) {
+    Float<M, E>& operator/=(const Float<M, E>& flt) {
         value /= flt.ToFloat32();
         return *this;
     }
 
-    Float<M, E>& operator += (const Float<M, E>& flt) {
+    Float<M, E>& operator+=(const Float<M, E>& flt) {
         value += flt.ToFloat32();
         return *this;
     }
 
-    Float<M, E>& operator -= (const Float<M, E>& flt) {
+    Float<M, E>& operator-=(const Float<M, E>& flt) {
         value -= flt.ToFloat32();
         return *this;
     }
 
-    Float<M, E> operator - () const {
+    Float<M, E> operator-() const {
         return Float<M, E>::FromFloat32(-ToFloat32());
     }
 
-    bool operator < (const Float<M, E>& flt) const {
+    bool operator<(const Float<M, E>& flt) const {
         return ToFloat32() < flt.ToFloat32();
     }
 
-    bool operator > (const Float<M, E>& flt) const {
+    bool operator>(const Float<M, E>& flt) const {
         return ToFloat32() > flt.ToFloat32();
     }
 
-    bool operator >= (const Float<M, E>& flt) const {
+    bool operator>=(const Float<M, E>& flt) const {
         return ToFloat32() >= flt.ToFloat32();
     }
 
-    bool operator <= (const Float<M, E>& flt) const {
+    bool operator<=(const Float<M, E>& flt) const {
         return ToFloat32() <= flt.ToFloat32();
     }
 
-    bool operator == (const Float<M, E>& flt) const {
+    bool operator==(const Float<M, E>& flt) const {
         return ToFloat32() == flt.ToFloat32();
     }
 
-    bool operator != (const Float<M, E>& flt) const {
+    bool operator!=(const Float<M, E>& flt) const {
         return ToFloat32() != flt.ToFloat32();
     }
 

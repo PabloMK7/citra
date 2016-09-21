@@ -19,80 +19,74 @@
 
 #include <array>
 #include <unordered_map>
-
 #include "common/common_types.h"
 #include "core/arm/skyeye_common/arm_regformat.h"
 
 // Signal levels
-enum {
-    LOW     = 0,
-    HIGH    = 1,
-    LOWHIGH = 1,
-    HIGHLOW = 2
-};
+enum { LOW = 0, HIGH = 1, LOWHIGH = 1, HIGHLOW = 2 };
 
 // Cache types
 enum {
-    NONCACHE  = 0,
+    NONCACHE = 0,
     DATACACHE = 1,
     INSTCACHE = 2,
 };
 
 // ARM privilege modes
 enum PrivilegeMode {
-    USER32MODE   = 16,
-    FIQ32MODE    = 17,
-    IRQ32MODE    = 18,
-    SVC32MODE    = 19,
-    ABORT32MODE  = 23,
-    UNDEF32MODE  = 27,
+    USER32MODE = 16,
+    FIQ32MODE = 17,
+    IRQ32MODE = 18,
+    SVC32MODE = 19,
+    ABORT32MODE = 23,
+    UNDEF32MODE = 27,
     SYSTEM32MODE = 31
 };
 
 // ARM privilege mode register banks
 enum {
-    USERBANK   = 0,
-    FIQBANK    = 1,
-    IRQBANK    = 2,
-    SVCBANK    = 3,
-    ABORTBANK  = 4,
-    UNDEFBANK  = 5,
-    DUMMYBANK  = 6,
+    USERBANK = 0,
+    FIQBANK = 1,
+    IRQBANK = 2,
+    SVCBANK = 3,
+    ABORTBANK = 4,
+    UNDEFBANK = 5,
+    DUMMYBANK = 6,
     SYSTEMBANK = 7
 };
 
 // Hardware vector addresses
 enum {
-    ARMResetV          = 0,
+    ARMResetV = 0,
     ARMUndefinedInstrV = 4,
-    ARMSWIV            = 8,
-    ARMPrefetchAbortV  = 12,
-    ARMDataAbortV      = 16,
-    ARMAddrExceptnV    = 20,
-    ARMIRQV            = 24,
-    ARMFIQV            = 28,
-    ARMErrorV          = 32, // This is an offset, not an address!
+    ARMSWIV = 8,
+    ARMPrefetchAbortV = 12,
+    ARMDataAbortV = 16,
+    ARMAddrExceptnV = 20,
+    ARMIRQV = 24,
+    ARMFIQV = 28,
+    ARMErrorV = 32, // This is an offset, not an address!
 
-    ARMul_ResetV          = ARMResetV,
+    ARMul_ResetV = ARMResetV,
     ARMul_UndefinedInstrV = ARMUndefinedInstrV,
-    ARMul_SWIV            = ARMSWIV,
-    ARMul_PrefetchAbortV  = ARMPrefetchAbortV,
-    ARMul_DataAbortV      = ARMDataAbortV,
-    ARMul_AddrExceptnV    = ARMAddrExceptnV,
-    ARMul_IRQV            = ARMIRQV,
-    ARMul_FIQV            = ARMFIQV
+    ARMul_SWIV = ARMSWIV,
+    ARMul_PrefetchAbortV = ARMPrefetchAbortV,
+    ARMul_DataAbortV = ARMDataAbortV,
+    ARMul_AddrExceptnV = ARMAddrExceptnV,
+    ARMul_IRQV = ARMIRQV,
+    ARMul_FIQV = ARMFIQV
 };
 
 // Coprocessor status values
 enum {
-    ARMul_FIRST     = 0,
-    ARMul_TRANSFER  = 1,
-    ARMul_BUSY      = 2,
-    ARMul_DATA      = 3,
+    ARMul_FIRST = 0,
+    ARMul_TRANSFER = 1,
+    ARMul_BUSY = 2,
+    ARMul_DATA = 3,
     ARMul_INTERRUPT = 4,
-    ARMul_DONE      = 0,
-    ARMul_CANT      = 1,
-    ARMul_INC       = 3
+    ARMul_DONE = 0,
+    ARMul_CANT = 1,
+    ARMul_INC = 3
 };
 
 // Instruction condition codes
@@ -136,15 +130,13 @@ enum : u32 {
 
 // Values for Emulate.
 enum {
-    STOP       = 0, // Stop
+    STOP = 0,       // Stop
     CHANGEMODE = 1, // Change mode
-    ONCE       = 2, // Execute just one iteration
-    RUN        = 3  // Continuous execution
+    ONCE = 2,       // Execute just one iteration
+    RUN = 3         // Continuous execution
 };
 
-
-struct ARMul_State final
-{
+struct ARMul_State final {
 public:
     explicit ARMul_State(PrivilegeMode initial_mode);
 
@@ -193,7 +185,7 @@ public:
         return TFlag ? 2 : 4;
     }
 
-    std::array<u32, 16> Reg{};      // The current register file
+    std::array<u32, 16> Reg{}; // The current register file
     std::array<u32, 2> Reg_usr{};
     std::array<u32, 2> Reg_svc{};   // R13_SVC R14_SVC
     std::array<u32, 2> Reg_abort{}; // R13_ABORT R14_ABORT
@@ -216,8 +208,8 @@ public:
     u32 Spsr_copy;
     u32 phys_pc;
 
-    u32 Mode;          // The current mode
-    u32 Bank;          // The current register bank
+    u32 Mode; // The current mode
+    u32 Bank; // The current register bank
 
     u32 NFlag, ZFlag, CFlag, VFlag, IFFlags; // Dummy flags for speed
     unsigned int shifter_carry_out;
@@ -243,9 +235,9 @@ public:
 private:
     void ResetMPCoreCP15Registers();
 
-    // Defines a reservation granule of 2 words, which protects the first 2 words starting at the tag.
-    // This is the smallest granule allowed by the v7 spec, and is coincidentally just large enough to
-    // support LDR/STREXD.
+    // Defines a reservation granule of 2 words, which protects the first 2 words starting at the
+    // tag. This is the smallest granule allowed by the v7 spec, and is coincidentally just large
+    // enough to support LDR/STREXD.
     static const u32 RESERVATION_GRANULE_MASK = 0xFFFFFFF8;
 
     u32 exclusive_tag; // The address for which the local monitor is in exclusive access mode

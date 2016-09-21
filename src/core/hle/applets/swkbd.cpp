@@ -4,19 +4,16 @@
 
 #include <cstring>
 #include <string>
-
 #include "common/assert.h"
 #include "common/logging/log.h"
 #include "common/string_util.h"
-
 #include "core/hle/applets/swkbd.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/shared_memory.h"
-#include "core/hle/service/hid/hid.h"
-#include "core/hle/service/gsp_gpu.h"
 #include "core/hle/result.h"
+#include "core/hle/service/gsp_gpu.h"
+#include "core/hle/service/hid/hid.h"
 #include "core/memory.h"
-
 #include "video_core/video_core.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -32,7 +29,8 @@ ResultCode SoftwareKeyboard::ReceiveParameter(Service::APT::MessageParameter con
         return ResultCode(-1);
     }
 
-    // The LibAppJustStarted message contains a buffer with the size of the framebuffer shared memory.
+    // The LibAppJustStarted message contains a buffer with the size of the framebuffer shared
+    // memory.
     // Create the SharedMemory that will hold the framebuffer data
     Service::APT::CaptureBufferInfo capture_info;
     ASSERT(sizeof(capture_info) == parameter.buffer.size());
@@ -43,9 +41,9 @@ ResultCode SoftwareKeyboard::ReceiveParameter(Service::APT::MessageParameter con
     // Allocate a heap block of the required size for this applet.
     heap_memory = std::make_shared<std::vector<u8>>(capture_info.size);
     // Create a SharedMemory that directly points to this heap block.
-    framebuffer_memory = Kernel::SharedMemory::CreateForApplet(heap_memory, 0, heap_memory->size(),
-                                                               MemoryPermission::ReadWrite, MemoryPermission::ReadWrite,
-                                                               "SoftwareKeyboard Memory");
+    framebuffer_memory = Kernel::SharedMemory::CreateForApplet(
+        heap_memory, 0, heap_memory->size(), MemoryPermission::ReadWrite,
+        MemoryPermission::ReadWrite, "SoftwareKeyboard Memory");
 
     // Send the response message with the newly created SharedMemory
     Service::APT::MessageParameter result;
@@ -60,10 +58,12 @@ ResultCode SoftwareKeyboard::ReceiveParameter(Service::APT::MessageParameter con
 }
 
 ResultCode SoftwareKeyboard::StartImpl(Service::APT::AppletStartupParameter const& parameter) {
-    ASSERT_MSG(parameter.buffer.size() == sizeof(config), "The size of the parameter (SoftwareKeyboardConfig) is wrong");
+    ASSERT_MSG(parameter.buffer.size() == sizeof(config),
+               "The size of the parameter (SoftwareKeyboardConfig) is wrong");
 
     memcpy(&config, parameter.buffer.data(), parameter.buffer.size());
-    text_memory = boost::static_pointer_cast<Kernel::SharedMemory, Kernel::Object>(parameter.object);
+    text_memory =
+        boost::static_pointer_cast<Kernel::SharedMemory, Kernel::Object>(parameter.object);
 
     // TODO(Subv): Verify if this is the correct behavior
     memset(text_memory->GetPointer(), 0, text_memory->size);
@@ -115,6 +115,5 @@ void SoftwareKeyboard::Finalize() {
 
     started = false;
 }
-
 }
 } // namespace

@@ -6,9 +6,7 @@
 
 #include <memory>
 #include <string>
-
 #include "common/common_types.h"
-
 #include "core/file_sys/archive_backend.h"
 #include "core/hle/kernel/session.h"
 #include "core/hle/result.h"
@@ -28,21 +26,18 @@ namespace FS {
 
 /// Supported archive types
 enum class ArchiveIdCode : u32 {
-    RomFS               = 0x00000003,
-    SaveData            = 0x00000004,
-    ExtSaveData         = 0x00000006,
-    SharedExtSaveData   = 0x00000007,
-    SystemSaveData      = 0x00000008,
-    SDMC                = 0x00000009,
-    SDMCWriteOnly       = 0x0000000A,
-    SaveDataCheck       = 0x2345678A,
+    RomFS = 0x00000003,
+    SaveData = 0x00000004,
+    ExtSaveData = 0x00000006,
+    SharedExtSaveData = 0x00000007,
+    SystemSaveData = 0x00000008,
+    SDMC = 0x00000009,
+    SDMCWriteOnly = 0x0000000A,
+    SaveDataCheck = 0x2345678A,
 };
 
 /// Media types for the archives
-enum class MediaType : u32 {
-    NAND     = 0,
-    SDMC     = 1
-};
+enum class MediaType : u32 { NAND = 0, SDMC = 1 };
 
 typedef u64 ArchiveHandle;
 
@@ -51,11 +46,13 @@ public:
     File(std::unique_ptr<FileSys::FileBackend>&& backend, const FileSys::Path& path);
     ~File();
 
-    std::string GetName() const override { return "Path: " + path.DebugStr(); }
+    std::string GetName() const override {
+        return "Path: " + path.DebugStr();
+    }
     ResultVal<bool> SyncRequest() override;
 
     FileSys::Path path; ///< Path of the file
-    u32 priority; ///< Priority of the file. TODO(Subv): Find out what this means
+    u32 priority;       ///< Priority of the file. TODO(Subv): Find out what this means
     std::unique_ptr<FileSys::FileBackend> backend; ///< File backend interface
 };
 
@@ -64,10 +61,12 @@ public:
     Directory(std::unique_ptr<FileSys::DirectoryBackend>&& backend, const FileSys::Path& path);
     ~Directory();
 
-    std::string GetName() const override { return "Directory: " + path.DebugStr(); }
+    std::string GetName() const override {
+        return "Directory: " + path.DebugStr();
+    }
     ResultVal<bool> SyncRequest() override;
 
-    FileSys::Path path; ///< Path of the directory
+    FileSys::Path path;                                 ///< Path of the directory
     std::unique_ptr<FileSys::DirectoryBackend> backend; ///< File backend interface
 };
 
@@ -90,7 +89,8 @@ ResultCode CloseArchive(ArchiveHandle handle);
  * @param factory File system backend interface to the archive
  * @param id_code Id code used to access this type of archive
  */
-ResultCode RegisterArchiveType(std::unique_ptr<FileSys::ArchiveFactory>&& factory, ArchiveIdCode id_code);
+ResultCode RegisterArchiveType(std::unique_ptr<FileSys::ArchiveFactory>&& factory,
+                               ArchiveIdCode id_code);
 
 /**
  * Open a File from an Archive
@@ -100,7 +100,8 @@ ResultCode RegisterArchiveType(std::unique_ptr<FileSys::ArchiveFactory>&& factor
  * @return The opened File object as a Session
  */
 ResultVal<Kernel::SharedPtr<File>> OpenFileFromArchive(ArchiveHandle archive_handle,
-        const FileSys::Path& path, const FileSys::Mode mode);
+                                                       const FileSys::Path& path,
+                                                       const FileSys::Mode mode);
 
 /**
  * Delete a File from an Archive
@@ -118,8 +119,10 @@ ResultCode DeleteFileFromArchive(ArchiveHandle archive_handle, const FileSys::Pa
  * @param dest_path Path to the File inside of the destination Archive
  * @return Whether rename succeeded
  */
-ResultCode RenameFileBetweenArchives(ArchiveHandle src_archive_handle, const FileSys::Path& src_path,
-                                     ArchiveHandle dest_archive_handle, const FileSys::Path& dest_path);
+ResultCode RenameFileBetweenArchives(ArchiveHandle src_archive_handle,
+                                     const FileSys::Path& src_path,
+                                     ArchiveHandle dest_archive_handle,
+                                     const FileSys::Path& dest_path);
 
 /**
  * Delete a Directory from an Archive
@@ -136,7 +139,8 @@ ResultCode DeleteDirectoryFromArchive(ArchiveHandle archive_handle, const FileSy
  * @param file_size The size of the new file, filled with zeroes
  * @return File creation result code
  */
-ResultCode CreateFileInArchive(ArchiveHandle archive_handle, const FileSys::Path& path, u64 file_size);
+ResultCode CreateFileInArchive(ArchiveHandle archive_handle, const FileSys::Path& path,
+                               u64 file_size);
 
 /**
  * Create a Directory from an Archive
@@ -154,8 +158,10 @@ ResultCode CreateDirectoryFromArchive(ArchiveHandle archive_handle, const FileSy
  * @param dest_path Path to the Directory inside of the destination Archive
  * @return Whether rename succeeded
  */
-ResultCode RenameDirectoryBetweenArchives(ArchiveHandle src_archive_handle, const FileSys::Path& src_path,
-                                          ArchiveHandle dest_archive_handle, const FileSys::Path& dest_path);
+ResultCode RenameDirectoryBetweenArchives(ArchiveHandle src_archive_handle,
+                                          const FileSys::Path& src_path,
+                                          ArchiveHandle dest_archive_handle,
+                                          const FileSys::Path& dest_path);
 
 /**
  * Open a Directory from an Archive
@@ -164,7 +170,7 @@ ResultCode RenameDirectoryBetweenArchives(ArchiveHandle src_archive_handle, cons
  * @return The opened Directory object as a Session
  */
 ResultVal<Kernel::SharedPtr<Directory>> OpenDirectoryFromArchive(ArchiveHandle archive_handle,
-        const FileSys::Path& path);
+                                                                 const FileSys::Path& path);
 
 /**
  * Get the free space in an Archive
@@ -181,7 +187,8 @@ ResultVal<u64> GetFreeBytesInArchive(ArchiveHandle archive_handle);
  * @param path The path to the archive, if relevant.
  * @return ResultCode 0 on success or the corresponding code on error
  */
-ResultCode FormatArchive(ArchiveIdCode id_code, const FileSys::ArchiveFormatInfo& format_info, const FileSys::Path& path = FileSys::Path());
+ResultCode FormatArchive(ArchiveIdCode id_code, const FileSys::ArchiveFormatInfo& format_info,
+                         const FileSys::Path& path = FileSys::Path());
 
 /**
  * Retrieves the format info about the archive of the specified type and path.
@@ -190,7 +197,8 @@ ResultCode FormatArchive(ArchiveIdCode id_code, const FileSys::ArchiveFormatInfo
  * @param archive_path The path of the archive, if relevant
  * @return The format info of the archive, or the corresponding error code if failed.
  */
-ResultVal<FileSys::ArchiveFormatInfo> GetArchiveFormatInfo(ArchiveIdCode id_code, FileSys::Path& archive_path);
+ResultVal<FileSys::ArchiveFormatInfo> GetArchiveFormatInfo(ArchiveIdCode id_code,
+                                                           FileSys::Path& archive_path);
 
 /**
  * Creates a blank SharedExtSaveData archive for the specified extdata ID
@@ -202,7 +210,8 @@ ResultVal<FileSys::ArchiveFormatInfo> GetArchiveFormatInfo(ArchiveIdCode id_code
  * @param format_info Format information about the new archive
  * @return ResultCode 0 on success or the corresponding code on error
  */
-ResultCode CreateExtSaveData(MediaType media_type, u32 high, u32 low, VAddr icon_buffer, u32 icon_size, const FileSys::ArchiveFormatInfo& format_info);
+ResultCode CreateExtSaveData(MediaType media_type, u32 high, u32 low, VAddr icon_buffer,
+                             u32 icon_size, const FileSys::ArchiveFormatInfo& format_info);
 
 /**
  * Deletes the SharedExtSaveData archive for the specified extdata ID

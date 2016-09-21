@@ -8,18 +8,14 @@
 #include <cstddef>
 #include <cstring>
 #include <memory>
-#include <vector>
 #include <unordered_map>
-
+#include <vector>
 #include <glad/glad.h>
-
 #include "common/bit_field.h"
 #include "common/common_types.h"
 #include "common/hash.h"
 #include "common/vector_math.h"
-
 #include "core/hw/gpu.h"
-
 #include "video_core/pica.h"
 #include "video_core/pica_state.h"
 #include "video_core/pica_types.h"
@@ -40,10 +36,10 @@ struct ScreenInfo;
  * Pica state is not being captured in the shader cache key, thereby resulting in (what should be)
  * two separate shaders sharing the same key.
  *
- * We use a union because "implicitly-defined copy/move constructor for a union X copies the object representation of X."
- * and "implicitly-defined copy assignment operator for a union X copies the object representation (3.9) of X."
- * = Bytewise copy instead of memberwise copy.
- * This is important because the padding bytes are included in the hash and comparison between objects.
+ * We use a union because "implicitly-defined copy/move constructor for a union X copies the object
+ * representation of X." and "implicitly-defined copy assignment operator for a union X copies the
+ * object representation (3.9) of X." = Bytewise copy instead of memberwise copy. This is important
+ * because the padding bytes are included in the hash and comparison between objects.
  */
 union PicaShaderConfig {
 
@@ -60,8 +56,9 @@ union PicaShaderConfig {
 
         state.depthmap_enable = regs.depthmap_enable;
 
-        state.alpha_test_func = regs.output_merger.alpha_test.enable ?
-            regs.output_merger.alpha_test.func.Value() : Pica::Regs::CompareFunc::Always;
+        state.alpha_test_func = regs.output_merger.alpha_test.enable
+                                    ? regs.output_merger.alpha_test.func.Value()
+                                    : Pica::Regs::CompareFunc::Always;
 
         state.texture0_type = regs.texture0.type;
 
@@ -81,9 +78,8 @@ union PicaShaderConfig {
         state.fog_mode = regs.fog_mode;
         state.fog_flip = regs.fog_flip;
 
-        state.combiner_buffer_input =
-            regs.tev_combiner_buffer_input.update_mask_rgb.Value() |
-            regs.tev_combiner_buffer_input.update_mask_a.Value() << 4;
+        state.combiner_buffer_input = regs.tev_combiner_buffer_input.update_mask_rgb.Value() |
+                                      regs.tev_combiner_buffer_input.update_mask_a.Value() << 4;
 
         // Fragment lighting
 
@@ -95,8 +91,10 @@ union PicaShaderConfig {
             const auto& light = regs.lighting.light[num];
             state.lighting.light[light_index].num = num;
             state.lighting.light[light_index].directional = light.config.directional != 0;
-            state.lighting.light[light_index].two_sided_diffuse = light.config.two_sided_diffuse != 0;
-            state.lighting.light[light_index].dist_atten_enable = !regs.lighting.IsDistAttenDisabled(num);
+            state.lighting.light[light_index].two_sided_diffuse =
+                light.config.two_sided_diffuse != 0;
+            state.lighting.light[light_index].dist_atten_enable =
+                !regs.lighting.IsDistAttenDisabled(num);
         }
 
         state.lighting.lut_d0.enable = regs.lighting.config1.disable_lut_d0 == 0;
@@ -147,7 +145,7 @@ union PicaShaderConfig {
         return (stage_index < 4) && ((state.combiner_buffer_input >> 4) & (1 << stage_index));
     }
 
-    bool operator ==(const PicaShaderConfig& o) const {
+    bool operator==(const PicaShaderConfig& o) const {
         return std::memcmp(&state, &o.state, sizeof(PicaShaderConfig::State)) == 0;
     };
 
@@ -212,7 +210,8 @@ union PicaShaderConfig {
     } state;
 };
 #if (__GNUC__ >= 5) || defined(__clang__) || defined(_MSC_VER)
-static_assert(std::is_trivially_copyable<PicaShaderConfig::State>::value, "PicaShaderConfig::State must be trivially copyable");
+static_assert(std::is_trivially_copyable<PicaShaderConfig::State>::value,
+              "PicaShaderConfig::State must be trivially copyable");
 #endif
 
 namespace std {
@@ -228,12 +227,10 @@ struct hash<PicaShaderConfig> {
 
 class RasterizerOpenGL : public VideoCore::RasterizerInterface {
 public:
-
     RasterizerOpenGL();
     ~RasterizerOpenGL() override;
 
-    void AddTriangle(const Pica::Shader::OutputVertex& v0,
-                     const Pica::Shader::OutputVertex& v1,
+    void AddTriangle(const Pica::Shader::OutputVertex& v0, const Pica::Shader::OutputVertex& v1,
                      const Pica::Shader::OutputVertex& v2) override;
     void DrawTriangles() override;
     void NotifyPicaRegisterChanged(u32 id) override;
@@ -242,7 +239,8 @@ public:
     void FlushAndInvalidateRegion(PAddr addr, u32 size) override;
     bool AccelerateDisplayTransfer(const GPU::Regs::DisplayTransferConfig& config) override;
     bool AccelerateFill(const GPU::Regs::MemoryFillConfig& config) override;
-    bool AccelerateDisplay(const GPU::Regs::FramebufferConfig& config, PAddr framebuffer_addr, u32 pixel_stride, ScreenInfo& screen_info) override;
+    bool AccelerateDisplay(const GPU::Regs::FramebufferConfig& config, PAddr framebuffer_addr,
+                           u32 pixel_stride, ScreenInfo& screen_info) override;
 
     /// OpenGL shader generated for a given Pica register state
     struct PicaShader {
@@ -251,13 +249,13 @@ public:
     };
 
 private:
-
     struct SamplerInfo {
         using TextureConfig = Pica::Regs::TextureConfig;
 
         OGLSampler sampler;
 
-        /// Creates the sampler object, initializing its state so that it's in sync with the SamplerInfo struct.
+        /// Creates the sampler object, initializing its state so that it's in sync with the
+        /// SamplerInfo struct.
         void Create();
         /// Syncs the sampler object with the config, updating any necessary state.
         void SyncWithConfig(const TextureConfig& config);
@@ -343,8 +341,11 @@ private:
         alignas(16) GLvec4 tev_combiner_buffer_color;
     };
 
-    static_assert(sizeof(UniformData) == 0x3C0, "The size of the UniformData structure has changed, update the structure in the shader");
-    static_assert(sizeof(UniformData) < 16384, "UniformData structure must be less than 16kb as per the OpenGL spec");
+    static_assert(
+        sizeof(UniformData) == 0x3C0,
+        "The size of the UniformData structure has changed, update the structure in the shader");
+    static_assert(sizeof(UniformData) < 16384,
+                  "UniformData structure must be less than 16kb as per the OpenGL spec");
 
     /// Sets the OpenGL shader in accordance with the current PICA register state
     void SetShader();

@@ -28,5 +28,4 @@ void FormatLogMessage(const Entry& entry, char* out_text, size_t text_len);
 void PrintMessage(const Entry& entry);
 /// Prints the same message as `PrintMessage`, but colored acoording to the severity level.
 void PrintColoredMessage(const Entry& entry);
-
 }

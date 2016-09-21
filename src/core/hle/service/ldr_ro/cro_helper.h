@@ -6,12 +6,10 @@
 
 #include <array>
 #include <tuple>
-
 #include "common/common_types.h"
 #include "common/swap.h"
-
-#include "core/memory.h"
 #include "core/hle/result.h"
+#include "core/memory.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Namespace LDR_RO
@@ -21,14 +19,17 @@ namespace LDR_RO {
 // GCC versions < 5.0 do not implement std::is_trivially_copyable.
 // Excluding MSVC because it has weird behaviour for std::is_trivially_copyable.
 #if (__GNUC__ >= 5) || defined(__clang__)
-    #define ASSERT_CRO_STRUCT(name, size) \
-        static_assert(std::is_standard_layout<name>::value, "CRO structure " #name " doesn't use standard layout"); \
-        static_assert(std::is_trivially_copyable<name>::value, "CRO structure " #name " isn't trivially copyable"); \
-        static_assert(sizeof(name) == (size), "Unexpected struct size for CRO structure " #name)
+#define ASSERT_CRO_STRUCT(name, size)                                                              \
+    static_assert(std::is_standard_layout<name>::value,                                            \
+                  "CRO structure " #name " doesn't use standard layout");                          \
+    static_assert(std::is_trivially_copyable<name>::value,                                         \
+                  "CRO structure " #name " isn't trivially copyable");                             \
+    static_assert(sizeof(name) == (size), "Unexpected struct size for CRO structure " #name)
 #else
-    #define ASSERT_CRO_STRUCT(name, size) \
-        static_assert(std::is_standard_layout<name>::value, "CRO structure " #name " doesn't use standard layout"); \
-        static_assert(sizeof(name) == (size), "Unexpected struct size for CRO structure " #name)
+#define ASSERT_CRO_STRUCT(name, size)                                                              \
+    static_assert(std::is_standard_layout<name>::value,                                            \
+                  "CRO structure " #name " doesn't use standard layout");                          \
+    static_assert(sizeof(name) == (size), "Unexpected struct size for CRO structure " #name)
 #endif
 
 static constexpr u32 CRO_HEADER_SIZE = 0x138;
@@ -37,8 +38,7 @@ static constexpr u32 CRO_HASH_SIZE = 0x80;
 /// Represents a loaded module (CRO) with interfaces manipulating it.
 class CROHelper final {
 public:
-    explicit CROHelper(VAddr cro_address) : module_address(cro_address) {
-    }
+    explicit CROHelper(VAddr cro_address) : module_address(cro_address) {}
 
     std::string ModuleName() const {
         return Memory::ReadCString(GetField(ModuleNameOffset), GetField(ModuleNameSize));
@@ -59,9 +59,9 @@ public:
      * @param is_crs true if the module itself is the static module
      * @returns ResultCode RESULT_SUCCESS on success, otherwise error code.
      */
-    ResultCode Rebase(VAddr crs_address, u32 cro_size,
-        VAddr data_segment_addresss, u32 data_segment_size,
-        VAddr bss_segment_address, u32 bss_segment_size, bool is_crs);
+    ResultCode Rebase(VAddr crs_address, u32 cro_size, VAddr data_segment_addresss,
+                      u32 data_segment_size, VAddr bss_segment_address, u32 bss_segment_size,
+                      bool is_crs);
 
     /**
      * Unrebases the module.
@@ -148,8 +148,9 @@ private:
     const VAddr module_address; ///< the virtual address of this module
 
     /**
-     * Each item in this enum represents a u32 field in the header begin from address+0x80, successively.
-     * We don't directly use a struct here, to avoid GetPointer, reinterpret_cast, or Read/WriteBlock repeatedly.
+     * Each item in this enum represents a u32 field in the header begin from address+0x80,
+     * successively. We don't directly use a struct here, to avoid GetPointer, reinterpret_cast, or
+     * Read/WriteBlock repeatedly.
      */
     enum HeaderField {
         Magic = 0,
@@ -208,18 +209,20 @@ private:
         Fix2Barrier = ImportModuleTableOffset,
         Fix1Barrier = StaticAnonymousSymbolTableOffset,
     };
-    static_assert(Fix0Barrier == (CRO_HEADER_SIZE - CRO_HASH_SIZE) / 4, "CRO Header fields are wrong!");
+    static_assert(Fix0Barrier == (CRO_HEADER_SIZE - CRO_HASH_SIZE) / 4,
+                  "CRO Header fields are wrong!");
 
     enum class SegmentType : u32 {
-        Code   = 0,
+        Code = 0,
         ROData = 1,
-        Data   = 2,
-        BSS    = 3,
+        Data = 2,
+        BSS = 3,
     };
 
     /**
      * Identifies a program location inside of a segment.
-     * Required to refer to program locations because individual segments may be relocated independently of each other.
+     * Required to refer to program locations because individual segments may be relocated
+     * independently of each other.
      */
     union SegmentTag {
         u32_le raw;
@@ -282,7 +285,7 @@ private:
 
     /// Identifies an indexed symbol imported from another module.
     struct ImportIndexedSymbolEntry {
-        u32_le index;                   // index of an ExportIndexedSymbolEntry in the exporting module
+        u32_le index; // index of an ExportIndexedSymbolEntry in the exporting module
         u32_le relocation_batch_offset; // pointing to a relocation batch in ExternalRelocationTable
 
         static constexpr HeaderField TABLE_OFFSET_FIELD = ImportIndexedSymbolTableOffset;
@@ -291,8 +294,8 @@ private:
 
     /// Identifies an anonymous symbol imported from another module.
     struct ImportAnonymousSymbolEntry {
-        SegmentTag symbol_position;      // in the exporting segment
-        u32_le relocation_batch_offset;  // pointing to a relocation batch in ExternalRelocationTable
+        SegmentTag symbol_position;     // in the exporting segment
+        u32_le relocation_batch_offset; // pointing to a relocation batch in ExternalRelocationTable
 
         static constexpr HeaderField TABLE_OFFSET_FIELD = ImportAnonymousSymbolTableOffset;
     };
@@ -300,42 +303,47 @@ private:
 
     /// Information of a imported module and symbols imported from it.
     struct ImportModuleEntry {
-        u32_le name_offset;                          // pointing to a substring in ImportStrings
-        u32_le import_indexed_symbol_table_offset;   // pointing to a subtable in ImportIndexedSymbolTable
+        u32_le name_offset;                        // pointing to a substring in ImportStrings
+        u32_le import_indexed_symbol_table_offset; // pointing to a subtable in
+                                                   // ImportIndexedSymbolTable
         u32_le import_indexed_symbol_num;
-        u32_le import_anonymous_symbol_table_offset; // pointing to a subtable in ImportAnonymousSymbolTable
+        u32_le import_anonymous_symbol_table_offset; // pointing to a subtable in
+                                                     // ImportAnonymousSymbolTable
         u32_le import_anonymous_symbol_num;
 
         static constexpr HeaderField TABLE_OFFSET_FIELD = ImportModuleTableOffset;
 
         void GetImportIndexedSymbolEntry(u32 index, ImportIndexedSymbolEntry& entry) {
-            Memory::ReadBlock(import_indexed_symbol_table_offset + index * sizeof(ImportIndexedSymbolEntry),
-                &entry, sizeof(ImportIndexedSymbolEntry));
+            Memory::ReadBlock(import_indexed_symbol_table_offset +
+                                  index * sizeof(ImportIndexedSymbolEntry),
+                              &entry, sizeof(ImportIndexedSymbolEntry));
         }
 
         void GetImportAnonymousSymbolEntry(u32 index, ImportAnonymousSymbolEntry& entry) {
-            Memory::ReadBlock(import_anonymous_symbol_table_offset + index * sizeof(ImportAnonymousSymbolEntry),
-                &entry, sizeof(ImportAnonymousSymbolEntry));
+            Memory::ReadBlock(import_anonymous_symbol_table_offset +
+                                  index * sizeof(ImportAnonymousSymbolEntry),
+                              &entry, sizeof(ImportAnonymousSymbolEntry));
         }
     };
     ASSERT_CRO_STRUCT(ImportModuleEntry, 20);
 
     enum class RelocationType : u8 {
-        Nothing                = 0,
-        AbsoluteAddress        = 2,
-        RelativeAddress        = 3,
-        ThumbBranch            = 10,
-        ArmBranch              = 28,
-        ModifyArmBranch        = 29,
-        AbsoluteAddress2       = 38,
+        Nothing = 0,
+        AbsoluteAddress = 2,
+        RelativeAddress = 3,
+        ThumbBranch = 10,
+        ArmBranch = 28,
+        ModifyArmBranch = 29,
+        AbsoluteAddress2 = 38,
         AlignedRelativeAddress = 42,
     };
 
     struct RelocationEntry {
-        SegmentTag target_position; // to self's segment as an ExternalRelocationEntry; to static module segment as a StaticRelocationEntry
+        SegmentTag target_position; // to self's segment as an ExternalRelocationEntry; to static
+                                    // module segment as a StaticRelocationEntry
         RelocationType type;
         u8 is_batch_end;
-        u8 is_batch_resolved;       // set at a batch beginning if the batch is resolved
+        u8 is_batch_resolved; // set at a batch beginning if the batch is resolved
         INSERT_PADDING_BYTES(1);
         u32_le addend;
     };
@@ -366,8 +374,8 @@ private:
 
     /// Identifies a special static anonymous symbol (no game is known using this).
     struct StaticAnonymousSymbolEntry {
-        SegmentTag symbol_position;      // to self's segment
-        u32_le relocation_batch_offset;  // pointing to a relocation batch in StaticRelocationTable
+        SegmentTag symbol_position;     // to self's segment
+        u32_le relocation_batch_offset; // pointing to a relocation batch in StaticRelocationTable
 
         static constexpr HeaderField TABLE_OFFSET_FIELD = StaticAnonymousSymbolTableOffset;
     };
@@ -446,12 +454,15 @@ private:
     }
 
     /**
-     * A helper function iterating over all registered auto-link modules, including the static module.
+     * A helper function iterating over all registered auto-link modules, including the static
+     * module.
      * @param crs_address the virtual address of the static module
      * @param func a function object to operate on a module. It accepts one parameter
-     *        CROHelper and returns ResultVal<bool>. It should return true to continue the iteration,
+     *        CROHelper and returns ResultVal<bool>. It should return true to continue the
+     * iteration,
      *        false to stop the iteration, or an error code (which will also stop the iteration).
-     * @returns ResultCode indicating the result of the operation, RESULT_SUCCESS if all iteration success,
+     * @returns ResultCode indicating the result of the operation, RESULT_SUCCESS if all iteration
+     * success,
      *         otherwise error code of the last iteration.
      */
     template <typename FunctionObject>
@@ -477,8 +488,8 @@ private:
      *        Usually equals to target_address, but will be different for a target in .data segment
      * @returns ResultCode RESULT_SUCCESS on success, otherwise error code.
      */
-    ResultCode ApplyRelocation(VAddr target_address, RelocationType relocation_type,
-        u32 addend, u32 symbol_address, u32 target_future_address);
+    ResultCode ApplyRelocation(VAddr target_address, RelocationType relocation_type, u32 addend,
+                               u32 symbol_address, u32 target_future_address);
 
     /**
      * Clears a relocation to zero
@@ -492,7 +503,8 @@ private:
      * Applies or resets a batch of relocations
      * @param batch the virtual address of the first relocation in the batch
      * @param symbol_address the symbol address to be relocated with
-     * @param reset false to set the batch to resolved state, true to reset the batch to unresolved state
+     * @param reset false to set the batch to resolved state, true to reset the batch to unresolved
+     * state
      * @returns ResultCode RESULT_SUCCESS on success, otherwise error code.
      */
     ResultCode ApplyRelocationBatch(VAddr batch, u32 symbol_address, bool reset = false);
@@ -507,7 +519,8 @@ private:
     /**
      * Rebases offsets in module header according to module address.
      * @param cro_size the size of the CRO file
-     * @returns ResultCode RESULT_SUCCESS if all offsets are verified as valid, otherwise error code.
+     * @returns ResultCode RESULT_SUCCESS if all offsets are verified as valid, otherwise error
+     * code.
      */
     ResultCode RebaseHeader(u32 cro_size);
 
@@ -520,43 +533,49 @@ private:
      * @param bss_segment_size the buffer size for .bss segment
      * @returns ResultVal<VAddr> with the virtual address of .data segment in CRO.
      */
-    ResultVal<VAddr> RebaseSegmentTable(u32 cro_size,
-        VAddr data_segment_address, u32 data_segment_size,
-        VAddr bss_segment_address, u32 bss_segment_size);
+    ResultVal<VAddr> RebaseSegmentTable(u32 cro_size, VAddr data_segment_address,
+                                        u32 data_segment_size, VAddr bss_segment_address,
+                                        u32 bss_segment_size);
 
     /**
      * Rebases offsets in exported named symbol table according to module address.
-     * @returns ResultCode RESULT_SUCCESS if all offsets are verified as valid, otherwise error code.
+     * @returns ResultCode RESULT_SUCCESS if all offsets are verified as valid, otherwise error
+     * code.
      */
     ResultCode RebaseExportNamedSymbolTable();
 
     /**
      * Verifies indices in export tree table.
-     * @returns ResultCode RESULT_SUCCESS if all indices are verified as valid, otherwise error code.
+     * @returns ResultCode RESULT_SUCCESS if all indices are verified as valid, otherwise error
+     * code.
      */
     ResultCode VerifyExportTreeTable() const;
 
     /**
      * Rebases offsets in exported module table according to module address.
-     * @returns ResultCode RESULT_SUCCESS if all offsets are verified as valid, otherwise error code.
+     * @returns ResultCode RESULT_SUCCESS if all offsets are verified as valid, otherwise error
+     * code.
      */
     ResultCode RebaseImportModuleTable();
 
     /**
      * Rebases offsets in imported named symbol table according to module address.
-     * @returns ResultCode RESULT_SUCCESS if all offsets are verified as valid, otherwise error code.
+     * @returns ResultCode RESULT_SUCCESS if all offsets are verified as valid, otherwise error
+     * code.
      */
     ResultCode RebaseImportNamedSymbolTable();
 
     /**
      * Rebases offsets in imported indexed symbol table according to module address.
-     * @returns ResultCode RESULT_SUCCESS if all offsets are verified as valid, otherwise error code.
+     * @returns ResultCode RESULT_SUCCESS if all offsets are verified as valid, otherwise error
+     * code.
      */
     ResultCode RebaseImportIndexedSymbolTable();
 
     /**
      * Rebases offsets in imported anonymous symbol table according to module address.
-     * @returns ResultCode RESULT_SUCCESS if all offsets are verified as valid, otherwise error code.
+     * @returns ResultCode RESULT_SUCCESS if all offsets are verified as valid, otherwise error
+     * code.
      */
     ResultCode RebaseImportAnonymousSymbolTable();
 
@@ -621,7 +640,8 @@ private:
     void UnrebaseHeader();
 
     /**
-     * Looks up all imported named symbols of this module in all registered auto-link modules, and resolves them if found.
+     * Looks up all imported named symbols of this module in all registered auto-link modules, and
+     * resolves them if found.
      * @param crs_address the virtual address of the static module
      * @returns ResultCode RESULT_SUCCESS on success, otherwise error code.
      */
@@ -646,7 +666,8 @@ private:
     ResultCode ResetImportAnonymousSymbol();
 
     /**
-     * Finds registered auto-link modules that this module imports, and resolves indexed and anonymous symbols exported by them.
+     * Finds registered auto-link modules that this module imports, and resolves indexed and
+     * anonymous symbols exported by them.
      * @param crs_address the virtual address of the static module
      * @returns ResultCode RESULT_SUCCESS on success, otherwise error code.
      */
@@ -667,7 +688,8 @@ private:
     ResultCode ResetExportNamedSymbol(CROHelper target);
 
     /**
-     * Resolves imported indexed and anonymous symbols in the target module which imports this module.
+     * Resolves imported indexed and anonymous symbols in the target module which imports this
+     * module.
      * @param target the module to resolve.
      * @returns ResultCode RESULT_SUCCESS on success, otherwise error code.
      */

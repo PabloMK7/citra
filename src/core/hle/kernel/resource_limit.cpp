@@ -3,9 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <cstring>
-
 #include "common/logging/log.h"
-
 #include "core/hle/kernel/resource_limit.h"
 
 namespace Kernel {
@@ -23,70 +21,69 @@ SharedPtr<ResourceLimit> ResourceLimit::Create(std::string name) {
 }
 
 SharedPtr<ResourceLimit> ResourceLimit::GetForCategory(ResourceLimitCategory category) {
-    switch (category)
-    {
-        case ResourceLimitCategory::APPLICATION:
-        case ResourceLimitCategory::SYS_APPLET:
-        case ResourceLimitCategory::LIB_APPLET:
-        case ResourceLimitCategory::OTHER:
-            return resource_limits[static_cast<u8>(category)];
-        default:
-            LOG_CRITICAL(Kernel, "Unknown resource limit category");
-            UNREACHABLE();
+    switch (category) {
+    case ResourceLimitCategory::APPLICATION:
+    case ResourceLimitCategory::SYS_APPLET:
+    case ResourceLimitCategory::LIB_APPLET:
+    case ResourceLimitCategory::OTHER:
+        return resource_limits[static_cast<u8>(category)];
+    default:
+        LOG_CRITICAL(Kernel, "Unknown resource limit category");
+        UNREACHABLE();
     }
 }
 
 s32 ResourceLimit::GetCurrentResourceValue(u32 resource) const {
     switch (resource) {
-        case COMMIT:
-            return current_commit;
-        case THREAD:
-            return current_threads;
-        case EVENT:
-            return current_events;
-        case MUTEX:
-            return current_mutexes;
-        case SEMAPHORE:
-            return current_semaphores;
-        case TIMER:
-            return current_timers;
-        case SHARED_MEMORY:
-            return current_shared_mems;
-        case ADDRESS_ARBITER:
-            return current_address_arbiters;
-        case CPU_TIME:
-            return current_cpu_time;
-        default:
-            LOG_ERROR(Kernel, "Unknown resource type=%08X", resource);
-            UNIMPLEMENTED();
-            return 0;
+    case COMMIT:
+        return current_commit;
+    case THREAD:
+        return current_threads;
+    case EVENT:
+        return current_events;
+    case MUTEX:
+        return current_mutexes;
+    case SEMAPHORE:
+        return current_semaphores;
+    case TIMER:
+        return current_timers;
+    case SHARED_MEMORY:
+        return current_shared_mems;
+    case ADDRESS_ARBITER:
+        return current_address_arbiters;
+    case CPU_TIME:
+        return current_cpu_time;
+    default:
+        LOG_ERROR(Kernel, "Unknown resource type=%08X", resource);
+        UNIMPLEMENTED();
+        return 0;
     }
 }
 
 s32 ResourceLimit::GetMaxResourceValue(u32 resource) const {
     switch (resource) {
-        case COMMIT:
-            return max_commit;
-        case THREAD:
-            return max_threads;
-        case EVENT:
-            return max_events;
-        case MUTEX:
-            return max_mutexes;
-        case SEMAPHORE:
-            return max_semaphores;
-        case TIMER:
-            return max_timers;
-        case SHARED_MEMORY:
-            return max_shared_mems;
-        case ADDRESS_ARBITER:
-            return max_address_arbiters;
-        case CPU_TIME:
-            return max_cpu_time;
-        default:
-            LOG_ERROR(Kernel, "Unknown resource type=%08X", resource);
-            UNIMPLEMENTED();
-            return 0;
+    case COMMIT:
+        return max_commit;
+    case THREAD:
+        return max_threads;
+    case EVENT:
+        return max_events;
+    case MUTEX:
+        return max_mutexes;
+    case SEMAPHORE:
+        return max_semaphores;
+    case TIMER:
+        return max_timers;
+    case SHARED_MEMORY:
+        return max_shared_mems;
+    case ADDRESS_ARBITER:
+        return max_address_arbiters;
+    case CPU_TIME:
+        return max_cpu_time;
+    default:
+        LOG_ERROR(Kernel, "Unknown resource type=%08X", resource);
+        UNIMPLEMENTED();
+        return 0;
     }
 }
 
@@ -149,8 +146,6 @@ void ResourceLimitsInit() {
     resource_limits[static_cast<u8>(ResourceLimitCategory::OTHER)] = resource_limit;
 }
 
-void ResourceLimitsShutdown() {
-
-}
+void ResourceLimitsShutdown() {}
 
 } // namespace

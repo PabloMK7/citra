@@ -16,15 +16,16 @@
 #include "common/bit_field.h"
 #include "common/common_funcs.h"
 #include "common/common_types.h"
-#include "common/vector_math.h"
 #include "common/logging/log.h"
+#include "common/vector_math.h"
 
 namespace Pica {
 
 // Returns index corresponding to the Regs member labeled by field_name
 // TODO: Due to Visual studio bug 209229, offsetof does not return constant expressions
 //       when used with array elements (e.g. PICA_REG_INDEX(vs_uniform_setup.set_value[1])).
-//       For details cf. https://connect.microsoft.com/VisualStudio/feedback/details/209229/offsetof-does-not-produce-a-constant-expression-for-array-members
+//       For details cf.
+//       https://connect.microsoft.com/VisualStudio/feedback/details/209229/offsetof-does-not-produce-a-constant-expression-for-array-members
 //       Hopefully, this will be fixed sometime in the future.
 //       For lack of better alternatives, we currently hardcode the offsets when constant
 //       expressions are needed via PICA_REG_INDEX_WORKAROUND (on sane compilers, static_asserts
@@ -37,8 +38,9 @@ namespace Pica {
 //       really is this annoying. This macro just forwards its first argument to PICA_REG_INDEX
 //       and then performs a (no-op) cast to size_t iff the second argument matches the expected
 //       field offset. Otherwise, the compiler will fail to compile this code.
-#define PICA_REG_INDEX_WORKAROUND(field_name, backup_workaround_index) \
-    ((typename std::enable_if<backup_workaround_index == PICA_REG_INDEX(field_name), size_t>::type)PICA_REG_INDEX(field_name))
+#define PICA_REG_INDEX_WORKAROUND(field_name, backup_workaround_index)                             \
+    ((typename std::enable_if<backup_workaround_index == PICA_REG_INDEX(field_name),               \
+                              size_t>::type)PICA_REG_INDEX(field_name))
 #endif // _MSC_VER
 
 struct Regs {
@@ -51,8 +53,8 @@ struct Regs {
 
     enum class CullMode : u32 {
         // Select which polygons are considered to be "frontfacing".
-        KeepAll              = 0,
-        KeepClockWise        = 1,
+        KeepAll = 0,
+        KeepClockWise = 1,
         KeepCounterClockWise = 2,
         // TODO: What does the third value imply?
     };
@@ -69,48 +71,47 @@ struct Regs {
 
     INSERT_PADDING_WORDS(0x9);
 
-    BitField<0, 24, u32> viewport_depth_range; // float24
+    BitField<0, 24, u32> viewport_depth_range;      // float24
     BitField<0, 24, u32> viewport_depth_near_plane; // float24
 
     BitField<0, 3, u32> vs_output_total;
 
     union VSOutputAttributes {
         // Maps components of output vertex attributes to semantics
-        enum Semantic : u32
-        {
-            POSITION_X   =  0,
-            POSITION_Y   =  1,
-            POSITION_Z   =  2,
-            POSITION_W   =  3,
+        enum Semantic : u32 {
+            POSITION_X = 0,
+            POSITION_Y = 1,
+            POSITION_Z = 2,
+            POSITION_W = 3,
 
-            QUATERNION_X =  4,
-            QUATERNION_Y =  5,
-            QUATERNION_Z =  6,
-            QUATERNION_W =  7,
+            QUATERNION_X = 4,
+            QUATERNION_Y = 5,
+            QUATERNION_Z = 6,
+            QUATERNION_W = 7,
 
-            COLOR_R      =  8,
-            COLOR_G      =  9,
-            COLOR_B      = 10,
-            COLOR_A      = 11,
+            COLOR_R = 8,
+            COLOR_G = 9,
+            COLOR_B = 10,
+            COLOR_A = 11,
 
-            TEXCOORD0_U  = 12,
-            TEXCOORD0_V  = 13,
-            TEXCOORD1_U  = 14,
-            TEXCOORD1_V  = 15,
+            TEXCOORD0_U = 12,
+            TEXCOORD0_V = 13,
+            TEXCOORD1_U = 14,
+            TEXCOORD1_V = 15,
 
             // TODO: Not verified
-            VIEW_X       = 18,
-            VIEW_Y       = 19,
-            VIEW_Z       = 20,
+            VIEW_X = 18,
+            VIEW_Y = 19,
+            VIEW_Z = 20,
 
-            TEXCOORD2_U  = 22,
-            TEXCOORD2_V  = 23,
+            TEXCOORD2_U = 22,
+            TEXCOORD2_V = 23,
 
-            INVALID      = 31,
+            INVALID = 31,
         };
 
-        BitField< 0, 5, Semantic> map_x;
-        BitField< 8, 5, Semantic> map_y;
+        BitField<0, 5, Semantic> map_x;
+        BitField<8, 5, Semantic> map_y;
         BitField<16, 5, Semantic> map_z;
         BitField<24, 5, Semantic> map_w;
     } vs_output_attributes[7];
@@ -128,77 +129,78 @@ struct Regs {
         BitField<0, 2, ScissorMode> mode;
 
         union {
-            BitField< 0, 16, u32> x1;
+            BitField<0, 16, u32> x1;
             BitField<16, 16, u32> y1;
         };
 
         union {
-            BitField< 0, 16, u32> x2;
+            BitField<0, 16, u32> x2;
             BitField<16, 16, u32> y2;
         };
     } scissor_test;
 
     union {
-        BitField< 0, 10, s32> x;
+        BitField<0, 10, s32> x;
         BitField<16, 10, s32> y;
     } viewport_corner;
 
     INSERT_PADDING_WORDS(0x1);
 
-    //TODO: early depth
+    // TODO: early depth
     INSERT_PADDING_WORDS(0x1);
 
     INSERT_PADDING_WORDS(0x2);
 
     enum DepthBuffering : u32 {
-        WBuffering  = 0,
-        ZBuffering  = 1,
+        WBuffering = 0,
+        ZBuffering = 1,
     };
-    BitField< 0, 1, DepthBuffering> depthmap_enable;
+    BitField<0, 1, DepthBuffering> depthmap_enable;
 
     INSERT_PADDING_WORDS(0x12);
 
     struct TextureConfig {
         enum TextureType : u32 {
-            Texture2D    = 0,
-            TextureCube  = 1,
-            Shadow2D     = 2,
+            Texture2D = 0,
+            TextureCube = 1,
+            Shadow2D = 2,
             Projection2D = 3,
-            ShadowCube   = 4,
-            Disabled     = 5,
+            ShadowCube = 4,
+            Disabled = 5,
         };
 
         enum WrapMode : u32 {
-            ClampToEdge    = 0,
-            ClampToBorder  = 1,
-            Repeat         = 2,
+            ClampToEdge = 0,
+            ClampToBorder = 1,
+            Repeat = 2,
             MirroredRepeat = 3,
         };
 
         enum TextureFilter : u32 {
             Nearest = 0,
-            Linear  = 1
+            Linear = 1,
         };
 
         union {
             u32 raw;
-            BitField< 0, 8, u32> r;
-            BitField< 8, 8, u32> g;
+            BitField<0, 8, u32> r;
+            BitField<8, 8, u32> g;
             BitField<16, 8, u32> b;
             BitField<24, 8, u32> a;
         } border_color;
 
         union {
-            BitField< 0, 16, u32> height;
+            BitField<0, 16, u32> height;
             BitField<16, 16, u32> width;
         };
 
         union {
-            BitField< 1, 1, TextureFilter> mag_filter;
-            BitField< 2, 1, TextureFilter> min_filter;
-            BitField< 8, 2, WrapMode> wrap_t;
+            BitField<1, 1, TextureFilter> mag_filter;
+            BitField<2, 1, TextureFilter> min_filter;
+            BitField<8, 2, WrapMode> wrap_t;
             BitField<12, 2, WrapMode> wrap_s;
-            BitField<28, 2, TextureType> type; ///< @note Only valid for texture 0 according to 3DBrew.
+            BitField<28, 2, TextureType>
+                type; ///< @note Only valid for texture 0 according to 3DBrew.
         };
 
         INSERT_PADDING_WORDS(0x1);
@@ -216,39 +218,39 @@ struct Regs {
     };
 
     enum class TextureFormat : u32 {
-        RGBA8        =  0,
-        RGB8         =  1,
-        RGB5A1       =  2,
-        RGB565       =  3,
-        RGBA4        =  4,
-        IA8          =  5,
-        RG8          =  6,  ///< @note Also called HILO8 in 3DBrew.
-        I8           =  7,
-        A8           =  8,
-        IA4          =  9,
-        I4           = 10,
-        A4           = 11,
-        ETC1         = 12,  // compressed
-        ETC1A4       = 13,  // compressed
+        RGBA8 = 0,
+        RGB8 = 1,
+        RGB5A1 = 2,
+        RGB565 = 3,
+        RGBA4 = 4,
+        IA8 = 5,
+        RG8 = 6, ///< @note Also called HILO8 in 3DBrew.
+        I8 = 7,
+        A8 = 8,
+        IA4 = 9,
+        I4 = 10,
+        A4 = 11,
+        ETC1 = 12,   // compressed
+        ETC1A4 = 13, // compressed
     };
 
     enum class LogicOp : u32 {
-        Clear        =  0,
-        And          =  1,
-        AndReverse   =  2,
-        Copy         =  3,
-        Set          =  4,
-        CopyInverted =  5,
-        NoOp         =  6,
-        Invert       =  7,
-        Nand         =  8,
-        Or           =  9,
-        Nor          = 10,
-        Xor          = 11,
-        Equiv        = 12,
-        AndInverted  = 13,
-        OrReverse    = 14,
-        OrInverted   = 15,
+        Clear = 0,
+        And = 1,
+        AndReverse = 2,
+        Copy = 3,
+        Set = 4,
+        CopyInverted = 5,
+        NoOp = 6,
+        Invert = 7,
+        Nand = 8,
+        Or = 9,
+        Nor = 10,
+        Xor = 11,
+        Equiv = 12,
+        AndInverted = 13,
+        OrReverse = 14,
+        OrInverted = 15,
     };
 
     static unsigned NibblesPerPixel(TextureFormat format) {
@@ -273,15 +275,15 @@ struct Regs {
         case TextureFormat::I8:
         case TextureFormat::A8:
         case TextureFormat::IA4:
-        default:  // placeholder for yet unknown formats
+        default: // placeholder for yet unknown formats
             return 2;
         }
     }
 
     union {
-        BitField< 0, 1, u32> texture0_enable;
-        BitField< 1, 1, u32> texture1_enable;
-        BitField< 2, 1, u32> texture2_enable;
+        BitField<0, 1, u32> texture0_enable;
+        BitField<1, 1, u32> texture1_enable;
+        BitField<2, 1, u32> texture2_enable;
     };
     TextureConfig texture0;
     INSERT_PADDING_WORDS(0x8);
@@ -302,63 +304,63 @@ struct Regs {
     };
     const std::array<FullTextureConfig, 3> GetTextures() const {
         return {{
-                   { texture0_enable.ToBool(), texture0, texture0_format },
-                   { texture1_enable.ToBool(), texture1, texture1_format },
-                   { texture2_enable.ToBool(), texture2, texture2_format }
-               }};
+            {texture0_enable.ToBool(), texture0, texture0_format},
+            {texture1_enable.ToBool(), texture1, texture1_format},
+            {texture2_enable.ToBool(), texture2, texture2_format},
+        }};
     }
 
     // 0xc0-0xff: Texture Combiner (akin to glTexEnv)
     struct TevStageConfig {
         enum class Source : u32 {
-            PrimaryColor           = 0x0,
-            PrimaryFragmentColor   = 0x1,
+            PrimaryColor = 0x0,
+            PrimaryFragmentColor = 0x1,
             SecondaryFragmentColor = 0x2,
 
-            Texture0               = 0x3,
-            Texture1               = 0x4,
-            Texture2               = 0x5,
-            Texture3               = 0x6,
+            Texture0 = 0x3,
+            Texture1 = 0x4,
+            Texture2 = 0x5,
+            Texture3 = 0x6,
 
-            PreviousBuffer         = 0xd,
-            Constant               = 0xe,
-            Previous               = 0xf,
+            PreviousBuffer = 0xd,
+            Constant = 0xe,
+            Previous = 0xf,
         };
 
         enum class ColorModifier : u32 {
-            SourceColor         = 0x0,
+            SourceColor = 0x0,
             OneMinusSourceColor = 0x1,
-            SourceAlpha         = 0x2,
+            SourceAlpha = 0x2,
             OneMinusSourceAlpha = 0x3,
-            SourceRed           = 0x4,
-            OneMinusSourceRed   = 0x5,
+            SourceRed = 0x4,
+            OneMinusSourceRed = 0x5,
 
-            SourceGreen         = 0x8,
+            SourceGreen = 0x8,
             OneMinusSourceGreen = 0x9,
 
-            SourceBlue          = 0xc,
-            OneMinusSourceBlue  = 0xd,
+            SourceBlue = 0xc,
+            OneMinusSourceBlue = 0xd,
         };
 
         enum class AlphaModifier : u32 {
-            SourceAlpha         = 0x0,
+            SourceAlpha = 0x0,
             OneMinusSourceAlpha = 0x1,
-            SourceRed           = 0x2,
-            OneMinusSourceRed   = 0x3,
-            SourceGreen         = 0x4,
+            SourceRed = 0x2,
+            OneMinusSourceRed = 0x3,
+            SourceGreen = 0x4,
             OneMinusSourceGreen = 0x5,
-            SourceBlue          = 0x6,
-            OneMinusSourceBlue  = 0x7,
+            SourceBlue = 0x6,
+            OneMinusSourceBlue = 0x7,
         };
 
         enum class Operation : u32 {
-            Replace         = 0,
-            Modulate        = 1,
-            Add             = 2,
-            AddSigned       = 3,
-            Lerp            = 4,
-            Subtract        = 5,
-            Dot3_RGB        = 6,
+            Replace = 0,
+            Modulate = 1,
+            Add = 2,
+            AddSigned = 3,
+            Lerp = 4,
+            Subtract = 5,
+            Dot3_RGB = 6,
 
             MultiplyThenAdd = 8,
             AddThenMultiply = 9,
@@ -366,9 +368,9 @@ struct Regs {
 
         union {
             u32 sources_raw;
-            BitField< 0, 4, Source> color_source1;
-            BitField< 4, 4, Source> color_source2;
-            BitField< 8, 4, Source> color_source3;
+            BitField<0, 4, Source> color_source1;
+            BitField<4, 4, Source> color_source2;
+            BitField<8, 4, Source> color_source3;
             BitField<16, 4, Source> alpha_source1;
             BitField<20, 4, Source> alpha_source2;
             BitField<24, 4, Source> alpha_source3;
@@ -376,9 +378,9 @@ struct Regs {
 
         union {
             u32 modifiers_raw;
-            BitField< 0, 4, ColorModifier> color_modifier1;
-            BitField< 4, 4, ColorModifier> color_modifier2;
-            BitField< 8, 4, ColorModifier> color_modifier3;
+            BitField<0, 4, ColorModifier> color_modifier1;
+            BitField<4, 4, ColorModifier> color_modifier2;
+            BitField<8, 4, ColorModifier> color_modifier3;
             BitField<12, 3, AlphaModifier> alpha_modifier1;
             BitField<16, 3, AlphaModifier> alpha_modifier2;
             BitField<20, 3, AlphaModifier> alpha_modifier3;
@@ -386,21 +388,21 @@ struct Regs {
 
         union {
             u32 ops_raw;
-            BitField< 0, 4, Operation> color_op;
+            BitField<0, 4, Operation> color_op;
             BitField<16, 4, Operation> alpha_op;
         };
 
         union {
             u32 const_color;
-            BitField< 0, 8, u32> const_r;
-            BitField< 8, 8, u32> const_g;
+            BitField<0, 8, u32> const_r;
+            BitField<8, 8, u32> const_g;
             BitField<16, 8, u32> const_b;
             BitField<24, 8, u32> const_a;
         };
 
         union {
             u32 scales_raw;
-            BitField< 0, 2, u32> color_scale;
+            BitField<0, 2, u32> color_scale;
             BitField<16, 2, u32> alpha_scale;
         };
 
@@ -424,8 +426,8 @@ struct Regs {
 
     enum class FogMode : u32 {
         None = 0,
-        Fog  = 5,
-        Gas  = 7,
+        Fog = 5,
+        Gas = 7,
     };
 
     union {
@@ -435,7 +437,7 @@ struct Regs {
         union {
             // Tev stages 0-3 write their output to the combiner buffer if the corresponding bit in
             // these masks are set
-            BitField< 8, 4, u32> update_mask_rgb;
+            BitField<8, 4, u32> update_mask_rgb;
             BitField<12, 4, u32> update_mask_a;
 
             bool TevStageUpdatesCombinerBufferColor(unsigned stage_index) const {
@@ -450,8 +452,8 @@ struct Regs {
 
     union {
         u32 raw;
-        BitField< 0, 8, u32> r;
-        BitField< 8, 8, u32> g;
+        BitField<0, 8, u32> r;
+        BitField<8, 8, u32> g;
         BitField<16, 8, u32> b;
     } fog_color;
 
@@ -469,66 +471,64 @@ struct Regs {
 
     union {
         u32 raw;
-        BitField< 0, 8, u32> r;
-        BitField< 8, 8, u32> g;
+        BitField<0, 8, u32> r;
+        BitField<8, 8, u32> g;
         BitField<16, 8, u32> b;
         BitField<24, 8, u32> a;
     } tev_combiner_buffer_color;
 
     INSERT_PADDING_WORDS(0x2);
 
-    const std::array<Regs::TevStageConfig,6> GetTevStages() const {
-        return {{ tev_stage0, tev_stage1,
-                  tev_stage2, tev_stage3,
-                  tev_stage4, tev_stage5 }};
+    const std::array<Regs::TevStageConfig, 6> GetTevStages() const {
+        return {{tev_stage0, tev_stage1, tev_stage2, tev_stage3, tev_stage4, tev_stage5}};
     };
 
     enum class BlendEquation : u32 {
-        Add             = 0,
-        Subtract        = 1,
+        Add = 0,
+        Subtract = 1,
         ReverseSubtract = 2,
-        Min             = 3,
-        Max             = 4,
+        Min = 3,
+        Max = 4,
     };
 
     enum class BlendFactor : u32 {
-        Zero                    = 0,
-        One                     = 1,
-        SourceColor             = 2,
-        OneMinusSourceColor     = 3,
-        DestColor               = 4,
-        OneMinusDestColor       = 5,
-        SourceAlpha             = 6,
-        OneMinusSourceAlpha     = 7,
-        DestAlpha               = 8,
-        OneMinusDestAlpha       = 9,
-        ConstantColor           = 10,
-        OneMinusConstantColor   = 11,
-        ConstantAlpha           = 12,
-        OneMinusConstantAlpha   = 13,
-        SourceAlphaSaturate     = 14,
+        Zero = 0,
+        One = 1,
+        SourceColor = 2,
+        OneMinusSourceColor = 3,
+        DestColor = 4,
+        OneMinusDestColor = 5,
+        SourceAlpha = 6,
+        OneMinusSourceAlpha = 7,
+        DestAlpha = 8,
+        OneMinusDestAlpha = 9,
+        ConstantColor = 10,
+        OneMinusConstantColor = 11,
+        ConstantAlpha = 12,
+        OneMinusConstantAlpha = 13,
+        SourceAlphaSaturate = 14,
     };
 
     enum class CompareFunc : u32 {
-        Never              = 0,
-        Always             = 1,
-        Equal              = 2,
-        NotEqual           = 3,
-        LessThan           = 4,
-        LessThanOrEqual    = 5,
-        GreaterThan        = 6,
+        Never = 0,
+        Always = 1,
+        Equal = 2,
+        NotEqual = 3,
+        LessThan = 4,
+        LessThanOrEqual = 5,
+        GreaterThan = 6,
         GreaterThanOrEqual = 7,
     };
 
     enum class StencilAction : u32 {
-        Keep           = 0,
-        Zero           = 1,
-        Replace        = 2,
-        Increment      = 3,
-        Decrement      = 4,
-        Invert         = 5,
-        IncrementWrap  = 6,
-        DecrementWrap  = 7
+        Keep = 0,
+        Zero = 1,
+        Replace = 2,
+        Increment = 3,
+        Decrement = 4,
+        Invert = 5,
+        IncrementWrap = 6,
+        DecrementWrap = 7,
     };
 
     struct {
@@ -538,8 +538,8 @@ struct Regs {
         };
 
         union {
-            BitField< 0, 8, BlendEquation> blend_equation_rgb;
-            BitField< 8, 8, BlendEquation> blend_equation_a;
+            BitField<0, 8, BlendEquation> blend_equation_rgb;
+            BitField<8, 8, BlendEquation> blend_equation_a;
 
             BitField<16, 4, BlendFactor> factor_source_rgb;
             BitField<20, 4, BlendFactor> factor_dest_rgb;
@@ -554,16 +554,16 @@ struct Regs {
 
         union {
             u32 raw;
-            BitField< 0, 8, u32> r;
-            BitField< 8, 8, u32> g;
+            BitField<0, 8, u32> r;
+            BitField<8, 8, u32> g;
             BitField<16, 8, u32> b;
             BitField<24, 8, u32> a;
         } blend_const;
 
         union {
-            BitField< 0, 1, u32> enable;
-            BitField< 4, 3, CompareFunc> func;
-            BitField< 8, 8, u32> ref;
+            BitField<0, 1, u32> enable;
+            BitField<4, 3, CompareFunc> func;
+            BitField<8, 8, u32> ref;
         } alpha_test;
 
         struct {
@@ -572,13 +572,13 @@ struct Regs {
                 u32 raw_func;
 
                 // If true, enable stencil testing
-                BitField< 0, 1, u32> enable;
+                BitField<0, 1, u32> enable;
 
                 // Comparison operation for stencil testing
-                BitField< 4, 3, CompareFunc> func;
+                BitField<4, 3, CompareFunc> func;
 
                 // Mask used to control writing to the stencil buffer
-                BitField< 8, 8, u32> write_mask;
+                BitField<8, 8, u32> write_mask;
 
                 // Value to compare against for stencil testing
                 BitField<16, 8, u32> reference_value;
@@ -592,21 +592,21 @@ struct Regs {
                 u32 raw_op;
 
                 // Action to perform when the stencil test fails
-                BitField< 0, 3, StencilAction> action_stencil_fail;
+                BitField<0, 3, StencilAction> action_stencil_fail;
 
                 // Action to perform when stencil testing passed but depth testing fails
-                BitField< 4, 3, StencilAction> action_depth_fail;
+                BitField<4, 3, StencilAction> action_depth_fail;
 
                 // Action to perform when both stencil and depth testing pass
-                BitField< 8, 3, StencilAction> action_depth_pass;
+                BitField<8, 3, StencilAction> action_depth_pass;
             };
         } stencil_test;
 
         union {
-            BitField< 0, 1, u32> depth_test_enable;
-            BitField< 4, 3, CompareFunc> depth_test_func;
-            BitField< 8, 1, u32> red_enable;
-            BitField< 9, 1, u32> green_enable;
+            BitField<0, 1, u32> depth_test_enable;
+            BitField<4, 3, CompareFunc> depth_test_func;
+            BitField<8, 1, u32> red_enable;
+            BitField<9, 1, u32> green_enable;
             BitField<10, 1, u32> blue_enable;
             BitField<11, 1, u32> alpha_enable;
             BitField<12, 1, u32> depth_write_enable;
@@ -617,16 +617,16 @@ struct Regs {
 
     // Components are laid out in reverse byte order, most significant bits first.
     enum class ColorFormat : u32 {
-        RGBA8  = 0,
-        RGB8   = 1,
+        RGBA8 = 0,
+        RGB8 = 1,
         RGB5A1 = 2,
         RGB565 = 3,
-        RGBA4  = 4,
+        RGBA4 = 4,
     };
 
     enum class DepthFormat : u32 {
-        D16   = 0,
-        D24   = 2,
+        D16 = 0,
+        D24 = 2,
         D24S8 = 3,
     };
 
@@ -673,7 +673,7 @@ struct Regs {
             // while the height is stored as the actual height minus one.
             // Hence, don't access these fields directly but use the accessors
             // GetWidth() and GetHeight() instead.
-            BitField< 0, 11, u32> width;
+            BitField<0, 11, u32> width;
             BitField<12, 10, u32> height;
         };
 
@@ -759,10 +759,12 @@ struct Regs {
 
     /// Selects which lighting components are affected by fresnel
     enum class LightingFresnelSelector {
-        None = 0,                             ///< Fresnel is disabled
-        PrimaryAlpha = 1,                     ///< Primary (diffuse) lighting alpha is affected by fresnel
-        SecondaryAlpha = 2,                   ///< Secondary (specular) lighting alpha is affected by fresnel
-        Both = PrimaryAlpha | SecondaryAlpha, ///< Both primary and secondary lighting alphas are affected by fresnel
+        None = 0,           ///< Fresnel is disabled
+        PrimaryAlpha = 1,   ///< Primary (diffuse) lighting alpha is affected by fresnel
+        SecondaryAlpha = 2, ///< Secondary (specular) lighting alpha is affected by fresnel
+        Both =
+            PrimaryAlpha |
+            SecondaryAlpha, ///< Both primary and secondary lighting alphas are affected by fresnel
     };
 
     /// Factor used to scale the output of a lighting LUT
@@ -789,57 +791,63 @@ struct Regs {
     };
 
     union LightColor {
-        BitField< 0, 10, u32> b;
+        BitField<0, 10, u32> b;
         BitField<10, 10, u32> g;
         BitField<20, 10, u32> r;
 
         Math::Vec3f ToVec3f() const {
-            // These fields are 10 bits wide, however 255 corresponds to 1.0f for each color component
+            // These fields are 10 bits wide, however 255 corresponds to 1.0f for each color
+            // component
             return Math::MakeVec((f32)r / 255.f, (f32)g / 255.f, (f32)b / 255.f);
         }
     };
 
-    /// Returns true if the specified lighting sampler is supported by the current Pica lighting configuration
+    /// Returns true if the specified lighting sampler is supported by the current Pica lighting
+    /// configuration
     static bool IsLightingSamplerSupported(LightingConfig config, LightingSampler sampler) {
         switch (sampler) {
         case LightingSampler::Distribution0:
             return (config != LightingConfig::Config1);
 
         case LightingSampler::Distribution1:
-            return (config != LightingConfig::Config0) && (config != LightingConfig::Config1) && (config != LightingConfig::Config5);
+            return (config != LightingConfig::Config0) && (config != LightingConfig::Config1) &&
+                   (config != LightingConfig::Config5);
 
         case LightingSampler::Fresnel:
-            return (config != LightingConfig::Config0) && (config != LightingConfig::Config2) && (config != LightingConfig::Config4);
+            return (config != LightingConfig::Config0) && (config != LightingConfig::Config2) &&
+                   (config != LightingConfig::Config4);
 
         case LightingSampler::ReflectRed:
             return (config != LightingConfig::Config3);
 
         case LightingSampler::ReflectGreen:
         case LightingSampler::ReflectBlue:
-            return (config == LightingConfig::Config4) || (config == LightingConfig::Config5) || (config == LightingConfig::Config7);
+            return (config == LightingConfig::Config4) || (config == LightingConfig::Config5) ||
+                   (config == LightingConfig::Config7);
         default:
             UNREACHABLE_MSG("Regs::IsLightingSamplerSupported: Reached "
                             "unreachable section, sampler should be one "
                             "of Distribution0, Distribution1, Fresnel, "
                             "ReflectRed, ReflectGreen or ReflectBlue, instead "
-                            "got %i", static_cast<int>(config));
+                            "got %i",
+                            static_cast<int>(config));
         }
     }
 
     struct {
         struct LightSrc {
-            LightColor specular_0;  // material.specular_0 * light.specular_0
-            LightColor specular_1;  // material.specular_1 * light.specular_1
-            LightColor diffuse;     // material.diffuse * light.diffuse
-            LightColor ambient;     // material.ambient * light.ambient
+            LightColor specular_0; // material.specular_0 * light.specular_0
+            LightColor specular_1; // material.specular_1 * light.specular_1
+            LightColor diffuse;    // material.diffuse * light.diffuse
+            LightColor ambient;    // material.ambient * light.ambient
 
             // Encoded as 16-bit floating point
             union {
-                BitField< 0, 16, u32> x;
+                BitField<0, 16, u32> x;
                 BitField<16, 16, u32> y;
             };
             union {
-                BitField< 0, 16, u32> z;
+                BitField<0, 16, u32> z;
             };
 
             INSERT_PADDING_WORDS(0x3);
@@ -854,7 +862,8 @@ struct Regs {
 
             INSERT_PADDING_WORDS(0x4);
         };
-        static_assert(sizeof(LightSrc) == 0x10 * sizeof(u32), "LightSrc structure must be 0x10 words");
+        static_assert(sizeof(LightSrc) == 0x10 * sizeof(u32),
+                      "LightSrc structure must be 0x10 words");
 
         LightSrc light[8];
         LightColor global_ambient; // Emission + (material.ambient * lighting.ambient)
@@ -862,8 +871,8 @@ struct Regs {
         BitField<0, 3, u32> num_lights; // Number of enabled lights - 1
 
         union {
-            BitField< 2, 2, LightingFresnelSelector> fresnel_selector;
-            BitField< 4, 4, LightingConfig> config;
+            BitField<2, 2, LightingFresnelSelector> fresnel_selector;
+            BitField<4, 4, LightingConfig> config;
             BitField<22, 2, u32> bump_selector; // 0: Texture 0, 1: Texture 1, 2: Texture 2
             BitField<27, 1, u32> clamp_highlights;
             BitField<28, 2, LightingBumpMode> bump_mode;
@@ -892,16 +901,17 @@ struct Regs {
         } config1;
 
         bool IsDistAttenDisabled(unsigned index) const {
-            const unsigned disable[] = { config1.disable_dist_atten_light_0, config1.disable_dist_atten_light_1,
-                                         config1.disable_dist_atten_light_2, config1.disable_dist_atten_light_3,
-                                         config1.disable_dist_atten_light_4, config1.disable_dist_atten_light_5,
-                                         config1.disable_dist_atten_light_6, config1.disable_dist_atten_light_7 };
+            const unsigned disable[] = {
+                config1.disable_dist_atten_light_0, config1.disable_dist_atten_light_1,
+                config1.disable_dist_atten_light_2, config1.disable_dist_atten_light_3,
+                config1.disable_dist_atten_light_4, config1.disable_dist_atten_light_5,
+                config1.disable_dist_atten_light_6, config1.disable_dist_atten_light_7};
             return disable[index] != 0;
         }
 
         union {
-            BitField<0, 8, u32> index;      ///< Index at which to set data in the LUT
-            BitField<8, 5, u32> type;       ///< Type of LUT for which to set data
+            BitField<0, 8, u32> index; ///< Index at which to set data in the LUT
+            BitField<8, 5, u32> type;  ///< Type of LUT for which to set data
         } lut_config;
 
         BitField<0, 1, u32> disable;
@@ -917,9 +927,9 @@ struct Regs {
         // abs mode is disabled, LUT indexes are in the range of (-1.0, 1.0). Otherwise, they are in
         // the range of (0.0, 1.0).
         union {
-            BitField< 1, 1, u32> disable_d0;
-            BitField< 5, 1, u32> disable_d1;
-            BitField< 9, 1, u32> disable_sp;
+            BitField<1, 1, u32> disable_d0;
+            BitField<5, 1, u32> disable_d1;
+            BitField<9, 1, u32> disable_sp;
             BitField<13, 1, u32> disable_fr;
             BitField<17, 1, u32> disable_rb;
             BitField<21, 1, u32> disable_rg;
@@ -927,9 +937,9 @@ struct Regs {
         } abs_lut_input;
 
         union {
-            BitField< 0, 3, LightingLutInput> d0;
-            BitField< 4, 3, LightingLutInput> d1;
-            BitField< 8, 3, LightingLutInput> sp;
+            BitField<0, 3, LightingLutInput> d0;
+            BitField<4, 3, LightingLutInput> d1;
+            BitField<8, 3, LightingLutInput> sp;
             BitField<12, 3, LightingLutInput> fr;
             BitField<16, 3, LightingLutInput> rb;
             BitField<20, 3, LightingLutInput> rg;
@@ -937,9 +947,9 @@ struct Regs {
         } lut_input;
 
         union {
-            BitField< 0, 3, LightingScale> d0;
-            BitField< 4, 3, LightingScale> d1;
-            BitField< 8, 3, LightingScale> sp;
+            BitField<0, 3, LightingScale> d0;
+            BitField<4, 3, LightingScale> d1;
+            BitField<8, 3, LightingScale> sp;
             BitField<12, 3, LightingScale> fr;
             BitField<16, 3, LightingScale> rb;
             BitField<20, 3, LightingScale> rg;
@@ -972,9 +982,9 @@ struct Regs {
             // above), the first N slots below will be set to integers within the range of 0-7,
             // corresponding to the actual light that is enabled for each slot.
 
-            BitField< 0, 3, u32> slot_0;
-            BitField< 4, 3, u32> slot_1;
-            BitField< 8, 3, u32> slot_2;
+            BitField<0, 3, u32> slot_0;
+            BitField<4, 3, u32> slot_1;
+            BitField<8, 3, u32> slot_2;
             BitField<12, 3, u32> slot_3;
             BitField<16, 3, u32> slot_4;
             BitField<20, 3, u32> slot_5;
@@ -982,7 +992,8 @@ struct Regs {
             BitField<28, 3, u32> slot_7;
 
             unsigned GetNum(unsigned index) const {
-                const unsigned enable_slots[] = { slot_0, slot_1, slot_2, slot_3, slot_4, slot_5, slot_6, slot_7 };
+                const unsigned enable_slots[] = {slot_0, slot_1, slot_2, slot_3,
+                                                 slot_4, slot_5, slot_6, slot_7};
                 return enable_slots[index];
             }
         } light_enable;
@@ -1006,58 +1017,54 @@ struct Regs {
 
         // Descriptor for internal vertex attributes
         union {
-            BitField< 0,  2, VertexAttributeFormat> format0; // size of one element
-            BitField< 2,  2, u64> size0;      // number of elements minus 1
-            BitField< 4,  2, VertexAttributeFormat> format1;
-            BitField< 6,  2, u64> size1;
-            BitField< 8,  2, VertexAttributeFormat> format2;
-            BitField<10,  2, u64> size2;
-            BitField<12,  2, VertexAttributeFormat> format3;
-            BitField<14,  2, u64> size3;
-            BitField<16,  2, VertexAttributeFormat> format4;
-            BitField<18,  2, u64> size4;
-            BitField<20,  2, VertexAttributeFormat> format5;
-            BitField<22,  2, u64> size5;
-            BitField<24,  2, VertexAttributeFormat> format6;
-            BitField<26,  2, u64> size6;
-            BitField<28,  2, VertexAttributeFormat> format7;
-            BitField<30,  2, u64> size7;
-            BitField<32,  2, VertexAttributeFormat> format8;
-            BitField<34,  2, u64> size8;
-            BitField<36,  2, VertexAttributeFormat> format9;
-            BitField<38,  2, u64> size9;
-            BitField<40,  2, VertexAttributeFormat> format10;
-            BitField<42,  2, u64> size10;
-            BitField<44,  2, VertexAttributeFormat> format11;
-            BitField<46,  2, u64> size11;
+            BitField<0, 2, VertexAttributeFormat> format0; // size of one element
+            BitField<2, 2, u64> size0;                     // number of elements minus 1
+            BitField<4, 2, VertexAttributeFormat> format1;
+            BitField<6, 2, u64> size1;
+            BitField<8, 2, VertexAttributeFormat> format2;
+            BitField<10, 2, u64> size2;
+            BitField<12, 2, VertexAttributeFormat> format3;
+            BitField<14, 2, u64> size3;
+            BitField<16, 2, VertexAttributeFormat> format4;
+            BitField<18, 2, u64> size4;
+            BitField<20, 2, VertexAttributeFormat> format5;
+            BitField<22, 2, u64> size5;
+            BitField<24, 2, VertexAttributeFormat> format6;
+            BitField<26, 2, u64> size6;
+            BitField<28, 2, VertexAttributeFormat> format7;
+            BitField<30, 2, u64> size7;
+            BitField<32, 2, VertexAttributeFormat> format8;
+            BitField<34, 2, u64> size8;
+            BitField<36, 2, VertexAttributeFormat> format9;
+            BitField<38, 2, u64> size9;
+            BitField<40, 2, VertexAttributeFormat> format10;
+            BitField<42, 2, u64> size10;
+            BitField<44, 2, VertexAttributeFormat> format11;
+            BitField<46, 2, u64> size11;
 
             BitField<48, 12, u64> attribute_mask;
 
             // number of total attributes minus 1
-            BitField<60,  4, u64> num_extra_attributes;
+            BitField<60, 4, u64> num_extra_attributes;
         };
 
         inline VertexAttributeFormat GetFormat(int n) const {
-            VertexAttributeFormat formats[] = {
-                format0, format1, format2, format3,
-                format4, format5, format6, format7,
-                format8, format9, format10, format11
-            };
+            VertexAttributeFormat formats[] = {format0, format1, format2,  format3,
+                                               format4, format5, format6,  format7,
+                                               format8, format9, format10, format11};
             return formats[n];
         }
 
         inline int GetNumElements(int n) const {
-            u64 sizes[] = {
-                size0, size1, size2, size3,
-                size4, size5, size6, size7,
-                size8, size9, size10, size11
-            };
-            return (int)sizes[n]+1;
+            u64 sizes[] = {size0, size1, size2, size3, size4,  size5,
+                           size6, size7, size8, size9, size10, size11};
+            return (int)sizes[n] + 1;
         }
 
         inline int GetElementSizeInBytes(int n) const {
-            return (GetFormat(n) == VertexAttributeFormat::FLOAT) ? 4 :
-                (GetFormat(n) == VertexAttributeFormat::SHORT) ? 2 : 1;
+            return (GetFormat(n) == VertexAttributeFormat::FLOAT)
+                       ? 4
+                       : (GetFormat(n) == VertexAttributeFormat::SHORT) ? 2 : 1;
         }
 
         inline int GetStride(int n) const {
@@ -1069,7 +1076,7 @@ struct Regs {
         }
 
         inline int GetNumTotalAttributes() const {
-            return (int)num_extra_attributes+1;
+            return (int)num_extra_attributes + 1;
         }
 
         // Attribute loaders map the source vertex data to input attributes
@@ -1079,9 +1086,9 @@ struct Regs {
             u32 data_offset;
 
             union {
-                BitField< 0, 4, u64> comp0;
-                BitField< 4, 4, u64> comp1;
-                BitField< 8, 4, u64> comp2;
+                BitField<0, 4, u64> comp0;
+                BitField<4, 4, u64> comp1;
+                BitField<8, 4, u64> comp2;
                 BitField<12, 4, u64> comp3;
                 BitField<16, 4, u64> comp4;
                 BitField<20, 4, u64> comp5;
@@ -1099,11 +1106,8 @@ struct Regs {
             };
 
             inline int GetComponent(int n) const {
-                u64 components[] = {
-                    comp0, comp1, comp2, comp3,
-                    comp4, comp5, comp6, comp7,
-                    comp8, comp9, comp10, comp11
-                };
+                u64 components[] = {comp0, comp1, comp2, comp3, comp4,  comp5,
+                                    comp6, comp7, comp8, comp9, comp10, comp11};
                 return (int)components[n];
             }
         } attribute_loaders[12];
@@ -1157,8 +1161,8 @@ struct Regs {
         //     kicked off.
         //  2) Games can configure these registers to provide a command list subroutine mechanism.
 
-        BitField< 0, 20, u32> size[2]; ///< Size (in bytes / 8) of each channel's command buffer
-        BitField< 0, 28, u32> addr[2]; ///< Physical address / 8 of each channel's command buffer
+        BitField<0, 20, u32> size[2]; ///< Size (in bytes / 8) of each channel's command buffer
+        BitField<0, 28, u32> addr[2]; ///< Physical address / 8 of each channel's command buffer
         u32 trigger[2]; ///< Triggers execution of the channel's command buffer when written to
 
         unsigned GetSize(unsigned index) const {
@@ -1176,7 +1180,7 @@ struct Regs {
 
     enum class GPUMode : u32 {
         Drawing = 0,
-        Configuring = 1
+        Configuring = 1,
     };
 
     GPUMode gpu_mode;
@@ -1184,9 +1188,9 @@ struct Regs {
     INSERT_PADDING_WORDS(0x18);
 
     enum class TriangleTopology : u32 {
-        List   = 0,
-        Strip  = 1,
-        Fan    = 2,
+        List = 0,
+        Strip = 1,
+        Fan = 2,
         Shader = 3, // Programmable setup unit implemented in a geometry shader
     };
 
@@ -1200,8 +1204,8 @@ struct Regs {
         BitField<0, 16, u32> bool_uniforms;
 
         union {
-            BitField< 0, 8, u32> x;
-            BitField< 8, 8, u32> y;
+            BitField<0, 8, u32> x;
+            BitField<8, 8, u32> y;
             BitField<16, 8, u32> z;
             BitField<24, 8, u32> w;
         } int_uniforms[4];
@@ -1217,9 +1221,9 @@ struct Regs {
         BitField<0, 16, u32> main_offset;
 
         union {
-            BitField< 0, 4, u64> attribute0_register;
-            BitField< 4, 4, u64> attribute1_register;
-            BitField< 8, 4, u64> attribute2_register;
+            BitField<0, 4, u64> attribute0_register;
+            BitField<4, 4, u64> attribute1_register;
+            BitField<8, 4, u64> attribute2_register;
             BitField<12, 4, u64> attribute3_register;
             BitField<16, 4, u64> attribute4_register;
             BitField<20, 4, u64> attribute5_register;
@@ -1236,10 +1240,12 @@ struct Regs {
 
             int GetRegisterForAttribute(int attribute_index) const {
                 u64 fields[] = {
-                    attribute0_register,  attribute1_register,  attribute2_register,  attribute3_register,
-                    attribute4_register,  attribute5_register,  attribute6_register,  attribute7_register,
-                    attribute8_register,  attribute9_register,  attribute10_register, attribute11_register,
-                    attribute12_register, attribute13_register, attribute14_register, attribute15_register,
+                    attribute0_register,  attribute1_register,  attribute2_register,
+                    attribute3_register,  attribute4_register,  attribute5_register,
+                    attribute6_register,  attribute7_register,  attribute8_register,
+                    attribute9_register,  attribute10_register, attribute11_register,
+                    attribute12_register, attribute13_register, attribute14_register,
+                    attribute15_register,
                 };
                 return (int)fields[attribute_index];
             }
@@ -1251,10 +1257,9 @@ struct Regs {
         INSERT_PADDING_WORDS(0x2);
 
         struct {
-            enum Format : u32
-            {
+            enum Format : u32 {
                 FLOAT24 = 0,
-                FLOAT32 = 1
+                FLOAT32 = 1,
             };
 
             bool IsFloat32() const {
@@ -1263,7 +1268,8 @@ struct Regs {
 
             union {
                 // Index of the next uniform to write to
-                // TODO: ctrulib uses 8 bits for this, however that seems to yield lots of invalid indices
+                // TODO: ctrulib uses 8 bits for this, however that seems to yield lots of invalid
+                // indices
                 // TODO: Maybe the uppermost index is for the geometry shader? Investigate!
                 BitField<0, 7, u32> index;
 
@@ -1315,12 +1321,12 @@ struct Regs {
         return sizeof(Regs) / sizeof(u32);
     }
 
-    const u32& operator [] (int index) const {
+    const u32& operator[](int index) const {
         const u32* content = reinterpret_cast<const u32*>(this);
         return content[index];
     }
 
-    u32& operator [] (int index) {
+    u32& operator[](int index) {
         u32* content = reinterpret_cast<u32*>(this);
         return content[index];
     }
@@ -1339,7 +1345,9 @@ private:
 //       is technically allowed since C++11. This macro should be enabled once MSVC adds
 //       support for that.
 #ifndef _MSC_VER
-#define ASSERT_REG_POSITION(field_name, position) static_assert(offsetof(Regs, field_name) == position * 4, "Field "#field_name" has invalid position")
+#define ASSERT_REG_POSITION(field_name, position)                                                  \
+    static_assert(offsetof(Regs, field_name) == position * 4,                                      \
+                  "Field " #field_name " has invalid position")
 
 ASSERT_REG_POSITION(trigger_irq, 0x10);
 ASSERT_REG_POSITION(cull_mode, 0x40);
@@ -1392,11 +1400,15 @@ ASSERT_REG_POSITION(vs, 0x2b0);
 #undef ASSERT_REG_POSITION
 #endif // !defined(_MSC_VER)
 
-static_assert(sizeof(Regs::ShaderConfig) == 0x30 * sizeof(u32), "ShaderConfig structure has incorrect size");
+static_assert(sizeof(Regs::ShaderConfig) == 0x30 * sizeof(u32),
+              "ShaderConfig structure has incorrect size");
 
-// The total number of registers is chosen arbitrarily, but let's make sure it's not some odd value anyway.
-static_assert(sizeof(Regs) <= 0x300 * sizeof(u32), "Register set structure larger than it should be");
-static_assert(sizeof(Regs) >= 0x300 * sizeof(u32), "Register set structure smaller than it should be");
+// The total number of registers is chosen arbitrarily, but let's make sure it's not some odd value
+// anyway.
+static_assert(sizeof(Regs) <= 0x300 * sizeof(u32),
+              "Register set structure larger than it should be");
+static_assert(sizeof(Regs) >= 0x300 * sizeof(u32),
+              "Register set structure smaller than it should be");
 
 /// Initialize Pica state
 void Init();

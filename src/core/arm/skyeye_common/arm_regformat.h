@@ -16,7 +16,7 @@ enum {
     R12,
     R13,
     LR,
-    R15, //PC,
+    R15, // PC,
     CPSR_REG,
     SPSR_REG,
 

@@ -6,7 +6,6 @@
 
 #include <array>
 #include <cstddef>
-
 #include "common/common_types.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -19,15 +18,16 @@ const size_t FILENAME_LENGTH = 0x20C / 2;
 struct Entry {
     char16_t filename[FILENAME_LENGTH]; // Entry name (UTF-16, null-terminated)
     std::array<char, 9> short_name; // 8.3 file name ('longfilename' -> 'LONGFI~1', null-terminated)
-    char unknown1; // unknown (observed values: 0x0A, 0x70, 0xFD)
-    std::array<char, 4> extension; // 8.3 file extension (set to spaces for directories, null-terminated)
-    char unknown2; // unknown (always 0x01)
-    char unknown3; // unknown (0x00 or 0x08)
+    char unknown1;                  // unknown (observed values: 0x0A, 0x70, 0xFD)
+    std::array<char, 4>
+        extension;     // 8.3 file extension (set to spaces for directories, null-terminated)
+    char unknown2;     // unknown (always 0x01)
+    char unknown3;     // unknown (0x00 or 0x08)
     char is_directory; // directory flag
-    char is_hidden; // hidden flag
-    char is_archive; // archive flag
+    char is_hidden;    // hidden flag
+    char is_archive;   // archive flag
     char is_read_only; // read-only flag
-    u64 file_size; // file size (for files only)
+    u64 file_size;     // file size (for files only)
 };
 static_assert(sizeof(Entry) == 0x228, "Directory Entry struct isn't exactly 0x228 bytes long!");
 static_assert(offsetof(Entry, short_name) == 0x20C, "Wrong offset for short_name in Entry.");
@@ -37,8 +37,8 @@ static_assert(offsetof(Entry, file_size) == 0x220, "Wrong offset for file_size i
 
 class DirectoryBackend : NonCopyable {
 public:
-    DirectoryBackend() { }
-    virtual ~DirectoryBackend() { }
+    DirectoryBackend() {}
+    virtual ~DirectoryBackend() {}
 
     /**
     * Open the directory

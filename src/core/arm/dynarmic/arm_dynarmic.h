@@ -5,11 +5,8 @@
 #pragma once
 
 #include <memory>
-
 #include <dynarmic/dynarmic.h>
-
 #include "common/common_types.h"
-
 #include "core/arm/arm_interface.h"
 #include "core/arm/skyeye_common/armstate.h"
 

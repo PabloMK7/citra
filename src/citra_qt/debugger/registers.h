@@ -2,16 +2,14 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "ui_registers.h"
-
 #include <QDockWidget>
+#include "ui_registers.h"
 
 class QTreeWidget;
 class QTreeWidgetItem;
 class EmuThread;
 
-class RegistersWidget : public QDockWidget
-{
+class RegistersWidget : public QDockWidget {
     Q_OBJECT
 
 public:

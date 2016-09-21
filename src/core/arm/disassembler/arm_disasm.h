@@ -3,7 +3,6 @@
 #pragma once
 
 #include <string>
-
 #include "common/common_types.h"
 
 // Note: this list of opcodes must match the list used to initialize
@@ -187,53 +186,53 @@ enum Opcode {
     OP_THUMB_SWI,
     OP_THUMB_TST,
 
-    OP_END                // must be last
+    OP_END // must be last
 };
 
 class ARM_Disasm {
- public:
-  static std::string Disassemble(u32 addr, u32 insn);
-  static Opcode Decode(u32 insn);
+public:
+    static std::string Disassemble(u32 addr, u32 insn);
+    static Opcode Decode(u32 insn);
 
- private:
-  static Opcode Decode00(u32 insn);
-  static Opcode Decode01(u32 insn);
-  static Opcode Decode10(u32 insn);
-  static Opcode Decode11(u32 insn);
-  static Opcode DecodeSyncPrimitive(u32 insn);
-  static Opcode DecodeParallelAddSub(u32 insn);
-  static Opcode DecodePackingSaturationReversal(u32 insn);
-  static Opcode DecodeMUL(u32 insn);
-  static Opcode DecodeMSRImmAndHints(u32 insn);
-  static Opcode DecodeMediaMulDiv(u32 insn);
-  static Opcode DecodeMedia(u32 insn);
-  static Opcode DecodeLDRH(u32 insn);
-  static Opcode DecodeALU(u32 insn);
+private:
+    static Opcode Decode00(u32 insn);
+    static Opcode Decode01(u32 insn);
+    static Opcode Decode10(u32 insn);
+    static Opcode Decode11(u32 insn);
+    static Opcode DecodeSyncPrimitive(u32 insn);
+    static Opcode DecodeParallelAddSub(u32 insn);
+    static Opcode DecodePackingSaturationReversal(u32 insn);
+    static Opcode DecodeMUL(u32 insn);
+    static Opcode DecodeMSRImmAndHints(u32 insn);
+    static Opcode DecodeMediaMulDiv(u32 insn);
+    static Opcode DecodeMedia(u32 insn);
+    static Opcode DecodeLDRH(u32 insn);
+    static Opcode DecodeALU(u32 insn);
 
-  static std::string DisassembleALU(Opcode opcode, u32 insn);
-  static std::string DisassembleBranch(u32 addr, Opcode opcode, u32 insn);
-  static std::string DisassembleBX(u32 insn);
-  static std::string DisassembleBKPT(u32 insn);
-  static std::string DisassembleCLZ(u32 insn);
-  static std::string DisassembleMediaMulDiv(Opcode opcode, u32 insn);
-  static std::string DisassembleMemblock(Opcode opcode, u32 insn);
-  static std::string DisassembleMem(u32 insn);
-  static std::string DisassembleMemHalf(u32 insn);
-  static std::string DisassembleMCR(Opcode opcode, u32 insn);
-  static std::string DisassembleMLA(Opcode opcode, u32 insn);
-  static std::string DisassembleUMLAL(Opcode opcode, u32 insn);
-  static std::string DisassembleMUL(Opcode opcode, u32 insn);
-  static std::string DisassembleMRS(u32 insn);
-  static std::string DisassembleMSR(u32 insn);
-  static std::string DisassembleNoOperands(Opcode opcode, u32 insn);
-  static std::string DisassembleParallelAddSub(Opcode opcode, u32 insn);
-  static std::string DisassemblePKH(u32 insn);
-  static std::string DisassemblePLD(u32 insn);
-  static std::string DisassembleREV(Opcode opcode, u32 insn);
-  static std::string DisassembleREX(Opcode opcode, u32 insn);
-  static std::string DisassembleSAT(Opcode opcode, u32 insn);
-  static std::string DisassembleSEL(u32 insn);
-  static std::string DisassembleSWI(u32 insn);
-  static std::string DisassembleSWP(Opcode opcode, u32 insn);
-  static std::string DisassembleXT(Opcode opcode, u32 insn);
+    static std::string DisassembleALU(Opcode opcode, u32 insn);
+    static std::string DisassembleBranch(u32 addr, Opcode opcode, u32 insn);
+    static std::string DisassembleBX(u32 insn);
+    static std::string DisassembleBKPT(u32 insn);
+    static std::string DisassembleCLZ(u32 insn);
+    static std::string DisassembleMediaMulDiv(Opcode opcode, u32 insn);
+    static std::string DisassembleMemblock(Opcode opcode, u32 insn);
+    static std::string DisassembleMem(u32 insn);
+    static std::string DisassembleMemHalf(u32 insn);
+    static std::string DisassembleMCR(Opcode opcode, u32 insn);
+    static std::string DisassembleMLA(Opcode opcode, u32 insn);
+    static std::string DisassembleUMLAL(Opcode opcode, u32 insn);
+    static std::string DisassembleMUL(Opcode opcode, u32 insn);
+    static std::string DisassembleMRS(u32 insn);
+    static std::string DisassembleMSR(u32 insn);
+    static std::string DisassembleNoOperands(Opcode opcode, u32 insn);
+    static std::string DisassembleParallelAddSub(Opcode opcode, u32 insn);
+    static std::string DisassemblePKH(u32 insn);
+    static std::string DisassemblePLD(u32 insn);
+    static std::string DisassembleREV(Opcode opcode, u32 insn);
+    static std::string DisassembleREX(Opcode opcode, u32 insn);
+    static std::string DisassembleSAT(Opcode opcode, u32 insn);
+    static std::string DisassembleSEL(u32 insn);
+    static std::string DisassembleSWI(u32 insn);
+    static std::string DisassembleSWP(Opcode opcode, u32 insn);
+    static std::string DisassembleXT(Opcode opcode, u32 insn);
 };

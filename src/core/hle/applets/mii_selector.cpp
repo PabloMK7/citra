@@ -4,16 +4,13 @@
 
 #include <cstring>
 #include <string>
-
 #include "common/assert.h"
 #include "common/logging/log.h"
 #include "common/string_util.h"
-
 #include "core/hle/applets/mii_selector.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/shared_memory.h"
 #include "core/hle/result.h"
-
 #include "video_core/video_core.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -29,7 +26,8 @@ ResultCode MiiSelector::ReceiveParameter(const Service::APT::MessageParameter& p
         return ResultCode(-1);
     }
 
-    // The LibAppJustStarted message contains a buffer with the size of the framebuffer shared memory.
+    // The LibAppJustStarted message contains a buffer with the size of the framebuffer shared
+    // memory.
     // Create the SharedMemory that will hold the framebuffer data
     Service::APT::CaptureBufferInfo capture_info;
     ASSERT(sizeof(capture_info) == parameter.buffer.size());
@@ -40,9 +38,9 @@ ResultCode MiiSelector::ReceiveParameter(const Service::APT::MessageParameter& p
     // Allocate a heap block of the required size for this applet.
     heap_memory = std::make_shared<std::vector<u8>>(capture_info.size);
     // Create a SharedMemory that directly points to this heap block.
-    framebuffer_memory = Kernel::SharedMemory::CreateForApplet(heap_memory, 0, heap_memory->size(),
-                                                               MemoryPermission::ReadWrite, MemoryPermission::ReadWrite,
-                                                               "MiiSelector Memory");
+    framebuffer_memory = Kernel::SharedMemory::CreateForApplet(
+        heap_memory, 0, heap_memory->size(), MemoryPermission::ReadWrite,
+        MemoryPermission::ReadWrite, "MiiSelector Memory");
 
     // Send the response message with the newly created SharedMemory
     Service::APT::MessageParameter result;
@@ -59,12 +57,14 @@ ResultCode MiiSelector::ReceiveParameter(const Service::APT::MessageParameter& p
 ResultCode MiiSelector::StartImpl(const Service::APT::AppletStartupParameter& parameter) {
     started = true;
 
-    // TODO(Subv): Set the expected fields in the response buffer before resending it to the application.
+    // TODO(Subv): Set the expected fields in the response buffer before resending it to the
+    // application.
     // TODO(Subv): Reverse the parameter format for the Mii Selector
 
     memcpy(&config, parameter.buffer.data(), parameter.buffer.size());
 
-    // TODO(Subv): Find more about this structure, result code 0 is enough to let most games continue.
+    // TODO(Subv): Find more about this structure, result code 0 is enough to let most games
+    // continue.
     MiiResult result;
     memset(&result, 0, sizeof(result));
     result.result_code = 0;
@@ -82,8 +82,6 @@ ResultCode MiiSelector::StartImpl(const Service::APT::AppletStartupParameter& pa
     return RESULT_SUCCESS;
 }
 
-void MiiSelector::Update() {
-}
-
+void MiiSelector::Update() {}
 }
 } // namespace

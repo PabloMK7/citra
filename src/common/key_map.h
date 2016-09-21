@@ -55,14 +55,12 @@ struct HostDeviceKey {
     int key_code;
     int device_id; ///< Uniquely identifies a host device
 
-    bool operator<(const HostDeviceKey &other) const {
-        return std::tie(key_code, device_id) <
-               std::tie(other.key_code, other.device_id);
+    bool operator<(const HostDeviceKey& other) const {
+        return std::tie(key_code, device_id) < std::tie(other.key_code, other.device_id);
     }
 
-    bool operator==(const HostDeviceKey &other) const {
-        return std::tie(key_code, device_id) ==
-               std::tie(other.key_code, other.device_id);
+    bool operator==(const HostDeviceKey& other) const {
+        return std::tie(key_code, device_id) == std::tie(other.key_code, other.device_id);
     }
 };
 
@@ -92,5 +90,4 @@ void PressKey(EmuWindow& emu_window, HostDeviceKey key);
  * Maps a key release action and call the corresponding function in EmuWindow
  */
 void ReleaseKey(EmuWindow& emu_window, HostDeviceKey key);
-
 }

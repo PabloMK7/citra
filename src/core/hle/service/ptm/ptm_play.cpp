@@ -8,10 +8,10 @@ namespace Service {
 namespace PTM {
 
 const Interface::FunctionInfo FunctionTable[] = {
-    {0x08070082, nullptr,               "GetPlayHistory"},
-    {0x08080000, nullptr,               "GetPlayHistoryStart"},
-    {0x08090000, nullptr,               "GetPlayHistoryLength"},
-    {0x080B0080, nullptr,               "CalcPlayHistoryStart"},
+    {0x08070082, nullptr, "GetPlayHistory"},
+    {0x08080000, nullptr, "GetPlayHistoryStart"},
+    {0x08090000, nullptr, "GetPlayHistoryLength"},
+    {0x080B0080, nullptr, "CalcPlayHistoryStart"},
 };
 
 PTM_Play_Interface::PTM_Play_Interface() {

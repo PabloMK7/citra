@@ -5,7 +5,6 @@
 #pragma once
 
 #include <cstddef>
-
 #include "common/common_types.h"
 #include "common/memory_util.h"
 
@@ -14,24 +13,27 @@
 // having to prefix them with gen-> or something similar.
 // Example implementation:
 // class JIT : public CodeBlock<ARMXEmitter> {}
-template<class T> class CodeBlock : public T, NonCopyable
-{
+template <class T>
+class CodeBlock : public T, NonCopyable {
 private:
     // A privately used function to set the executable RAM space to something invalid.
-    // For debugging usefulness it should be used to set the RAM to a host specific breakpoint instruction
+    // For debugging usefulness it should be used to set the RAM to a host specific breakpoint
+    // instruction
     virtual void PoisonMemory() = 0;
 
 protected:
-    u8 *region;
+    u8* region;
     size_t region_size;
 
 public:
     CodeBlock() : region(nullptr), region_size(0) {}
-    virtual ~CodeBlock() { if (region) FreeCodeSpace(); }
+    virtual ~CodeBlock() {
+        if (region)
+            FreeCodeSpace();
+    }
 
     // Call this before you generate any code.
-    void AllocCodeSpace(int size)
-    {
+    void AllocCodeSpace(int size) {
         region_size = size;
         region = (u8*)AllocateExecutableMemory(region_size);
         T::SetCodePtr(region);
@@ -39,15 +41,13 @@ public:
 
     // Always clear code space with breakpoints, so that if someone accidentally executes
     // uninitialized, it just breaks into the debugger.
-    void ClearCodeSpace()
-    {
+    void ClearCodeSpace() {
         PoisonMemory();
         ResetCodePtr();
     }
 
     // Call this when shutting down. Don't rely on the destructor, even though it'll do the job.
-    void FreeCodeSpace()
-    {
+    void FreeCodeSpace() {
 #ifdef __SYMBIAN32__
         ResetExecutableMemory(region);
 #else
@@ -57,33 +57,29 @@ public:
         region_size = 0;
     }
 
-    bool IsInSpace(const u8 *ptr)
-    {
+    bool IsInSpace(const u8* ptr) {
         return (ptr >= region) && (ptr < (region + region_size));
     }
 
     // Cannot currently be undone. Will write protect the entire code region.
     // Start over if you need to change the code (call FreeCodeSpace(), AllocCodeSpace()).
-    void WriteProtect()
-    {
+    void WriteProtect() {
         WriteProtectMemory(region, region_size, true);
     }
 
-    void ResetCodePtr()
-    {
+    void ResetCodePtr() {
         T::SetCodePtr(region);
     }
 
-    size_t GetSpaceLeft() const
-    {
+    size_t GetSpaceLeft() const {
         return region_size - (T::GetCodePtr() - region);
     }
 
-    u8 *GetBasePtr() {
+    u8* GetBasePtr() {
         return region;
     }
 
-    size_t GetOffset(const u8 *ptr) const {
+    size_t GetOffset(const u8* ptr) const {
         return ptr - region;
     }
 };

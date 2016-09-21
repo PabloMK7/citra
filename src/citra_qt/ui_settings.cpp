@@ -7,5 +7,4 @@
 namespace UISettings {
 
 Values values = {};
-
 }

@@ -5,9 +5,7 @@
 #include <cstring>
 #include <string>
 #include <thread>
-
 #include "common/common_types.h"
-
 #include "cpu_detect.h"
 
 namespace Common {
@@ -15,8 +13,8 @@ namespace Common {
 #ifndef _MSC_VER
 
 #ifdef __FreeBSD__
-#include <sys/types.h>
 #include <machine/cpufunc.h>
+#include <sys/types.h>
 #endif
 
 static inline void __cpuidex(int info[4], int function_id, int subfunction_id) {
@@ -26,15 +24,9 @@ static inline void __cpuidex(int info[4], int function_id, int subfunction_id) {
 #else
     info[0] = function_id;    // eax
     info[2] = subfunction_id; // ecx
-    __asm__(
-        "cpuid"
-        : "=a" (info[0]),
-        "=b" (info[1]),
-        "=c" (info[2]),
-        "=d" (info[3])
-        : "a" (function_id),
-        "c" (subfunction_id)
-        );
+    __asm__("cpuid"
+            : "=a"(info[0]), "=b"(info[1]), "=c"(info[2]), "=d"(info[3])
+            : "a"(function_id), "c"(subfunction_id));
 #endif
 }
 
@@ -88,14 +80,22 @@ static CPUCaps Detect() {
     if (max_std_fn >= 1) {
         __cpuid(cpu_id, 0x00000001);
 
-        if ((cpu_id[3] >> 25) & 1) caps.sse = true;
-        if ((cpu_id[3] >> 26) & 1) caps.sse2 = true;
-        if ((cpu_id[2]) & 1) caps.sse3 = true;
-        if ((cpu_id[2] >> 9) & 1) caps.ssse3 = true;
-        if ((cpu_id[2] >> 19) & 1) caps.sse4_1 = true;
-        if ((cpu_id[2] >> 20) & 1) caps.sse4_2 = true;
-        if ((cpu_id[2] >> 22) & 1) caps.movbe = true;
-        if ((cpu_id[2] >> 25) & 1) caps.aes = true;
+        if ((cpu_id[3] >> 25) & 1)
+            caps.sse = true;
+        if ((cpu_id[3] >> 26) & 1)
+            caps.sse2 = true;
+        if ((cpu_id[2]) & 1)
+            caps.sse3 = true;
+        if ((cpu_id[2] >> 9) & 1)
+            caps.ssse3 = true;
+        if ((cpu_id[2] >> 19) & 1)
+            caps.sse4_1 = true;
+        if ((cpu_id[2] >> 20) & 1)
+            caps.sse4_2 = true;
+        if ((cpu_id[2] >> 22) & 1)
+            caps.movbe = true;
+        if ((cpu_id[2] >> 25) & 1)
+            caps.aes = true;
 
         if ((cpu_id[3] >> 24) & 1) {
             caps.fxsave_fxrstor = true;
@@ -140,10 +140,14 @@ static CPUCaps Detect() {
     if (max_ex_fn >= 0x80000001) {
         // Check for more features
         __cpuid(cpu_id, 0x80000001);
-        if (cpu_id[2] & 1) caps.lahf_sahf_64 = true;
-        if ((cpu_id[2] >> 5) & 1) caps.lzcnt = true;
-        if ((cpu_id[2] >> 16) & 1) caps.fma4 = true;
-        if ((cpu_id[3] >> 29) & 1) caps.long_mode = true;
+        if (cpu_id[2] & 1)
+            caps.lahf_sahf_64 = true;
+        if ((cpu_id[2] >> 5) & 1)
+            caps.lzcnt = true;
+        if ((cpu_id[2] >> 16) & 1)
+            caps.fma4 = true;
+        if ((cpu_id[3] >> 29) & 1)
+            caps.long_mode = true;
     }
 
     return caps;
@@ -162,24 +166,38 @@ std::string GetCPUCapsString() {
     sum += caps.brand_string;
     sum += ")";
 
-    if (caps.sse) sum += ", SSE";
+    if (caps.sse)
+        sum += ", SSE";
     if (caps.sse2) {
         sum += ", SSE2";
-        if (!caps.flush_to_zero) sum += " (without DAZ)";
+        if (!caps.flush_to_zero)
+            sum += " (without DAZ)";
     }
 
-    if (caps.sse3) sum += ", SSE3";
-    if (caps.ssse3) sum += ", SSSE3";
-    if (caps.sse4_1) sum += ", SSE4.1";
-    if (caps.sse4_2) sum += ", SSE4.2";
-    if (caps.avx) sum += ", AVX";
-    if (caps.avx2) sum += ", AVX2";
-    if (caps.bmi1) sum += ", BMI1";
-    if (caps.bmi2) sum += ", BMI2";
-    if (caps.fma) sum += ", FMA";
-    if (caps.aes) sum += ", AES";
-    if (caps.movbe) sum += ", MOVBE";
-    if (caps.long_mode) sum += ", 64-bit support";
+    if (caps.sse3)
+        sum += ", SSE3";
+    if (caps.ssse3)
+        sum += ", SSSE3";
+    if (caps.sse4_1)
+        sum += ", SSE4.1";
+    if (caps.sse4_2)
+        sum += ", SSE4.2";
+    if (caps.avx)
+        sum += ", AVX";
+    if (caps.avx2)
+        sum += ", AVX2";
+    if (caps.bmi1)
+        sum += ", BMI1";
+    if (caps.bmi2)
+        sum += ", BMI2";
+    if (caps.fma)
+        sum += ", FMA";
+    if (caps.aes)
+        sum += ", AES";
+    if (caps.movbe)
+        sum += ", MOVBE";
+    if (caps.long_mode)
+        sum += ", 64-bit support";
 
     return sum;
 }

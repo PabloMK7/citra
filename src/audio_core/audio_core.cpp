@@ -4,14 +4,12 @@
 
 #include <memory>
 #include <string>
-
 #include "audio_core/audio_core.h"
 #include "audio_core/hle/dsp.h"
 #include "audio_core/hle/pipe.h"
 #include "audio_core/null_sink.h"
 #include "audio_core/sink.h"
 #include "audio_core/sink_details.h"
-
 #include "core/core_timing.h"
 #include "core/hle/kernel/vm_manager.h"
 #include "core/hle/service/dsp_dsp.h"
@@ -42,10 +40,18 @@ void Init() {
 }
 
 void AddAddressSpace(Kernel::VMManager& address_space) {
-    auto r0_vma = address_space.MapBackingMemory(DSP::HLE::region0_base, reinterpret_cast<u8*>(&DSP::HLE::g_regions[0]), sizeof(DSP::HLE::SharedMemory), Kernel::MemoryState::IO).MoveFrom();
+    auto r0_vma = address_space
+                      .MapBackingMemory(DSP::HLE::region0_base,
+                                        reinterpret_cast<u8*>(&DSP::HLE::g_regions[0]),
+                                        sizeof(DSP::HLE::SharedMemory), Kernel::MemoryState::IO)
+                      .MoveFrom();
     address_space.Reprotect(r0_vma, Kernel::VMAPermission::ReadWrite);
 
-    auto r1_vma = address_space.MapBackingMemory(DSP::HLE::region1_base, reinterpret_cast<u8*>(&DSP::HLE::g_regions[1]), sizeof(DSP::HLE::SharedMemory), Kernel::MemoryState::IO).MoveFrom();
+    auto r1_vma = address_space
+                      .MapBackingMemory(DSP::HLE::region1_base,
+                                        reinterpret_cast<u8*>(&DSP::HLE::g_regions[1]),
+                                        sizeof(DSP::HLE::SharedMemory), Kernel::MemoryState::IO)
+                      .MoveFrom();
     address_space.Reprotect(r1_vma, Kernel::VMAPermission::ReadWrite);
 }
 
@@ -58,9 +64,9 @@ void SelectSink(std::string sink_id) {
         return;
     }
 
-    auto iter = std::find_if(g_sink_details.begin(), g_sink_details.end(), [sink_id](const auto& sink_detail) {
-        return sink_detail.id == sink_id;
-    });
+    auto iter =
+        std::find_if(g_sink_details.begin(), g_sink_details.end(),
+                     [sink_id](const auto& sink_detail) { return sink_detail.id == sink_id; });
 
     if (iter == g_sink_details.end()) {
         LOG_ERROR(Audio, "AudioCore::SelectSink given invalid sink_id");

@@ -6,15 +6,15 @@
 
 #include <memory>
 #include <string>
-
 #include <inih/cpp/INIReader.h>
 
 class Config {
     std::unique_ptr<INIReader> sdl2_config;
     std::string sdl2_config_loc;
 
-    bool LoadINI(const std::string& default_contents="", bool retry=true);
+    bool LoadINI(const std::string& default_contents = "", bool retry = true);
     void ReadValues();
+
 public:
     Config();
 

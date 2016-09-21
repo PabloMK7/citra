@@ -4,10 +4,8 @@
 
 #include <algorithm>
 #include <memory>
-
 #include "common/common_types.h"
 #include "common/logging/log.h"
-
 #include "core/file_sys/archive_romfs.h"
 #include "core/file_sys/ivfc_archive.h"
 
@@ -28,11 +26,12 @@ ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_RomFS::Open(const Path
     return MakeResult<std::unique_ptr<ArchiveBackend>>(std::move(archive));
 }
 
-ResultCode ArchiveFactory_RomFS::Format(const Path& path, const FileSys::ArchiveFormatInfo& format_info) {
+ResultCode ArchiveFactory_RomFS::Format(const Path& path,
+                                        const FileSys::ArchiveFormatInfo& format_info) {
     LOG_ERROR(Service_FS, "Attempted to format a RomFS archive.");
     // TODO: Verify error code
-    return ResultCode(ErrorDescription::NotAuthorized, ErrorModule::FS,
-            ErrorSummary::NotSupported, ErrorLevel::Permanent);
+    return ResultCode(ErrorDescription::NotAuthorized, ErrorModule::FS, ErrorSummary::NotSupported,
+                      ErrorLevel::Permanent);
 }
 
 ResultVal<ArchiveFormatInfo> ArchiveFactory_RomFS::GetFormatInfo(const Path& path) const {

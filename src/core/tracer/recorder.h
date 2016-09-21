@@ -7,12 +7,9 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
-
 #include <boost/crc.hpp>
-
-#include "common/common_types.h"
-
 #include "citrace.h"
+#include "common/common_types.h"
 
 namespace CiTrace {
 
@@ -54,7 +51,7 @@ public:
      * Record a register write.
      * @note Use this whenever a GPU-related MMIO register has been written to.
      */
-    template<typename T>
+    template <typename T>
     void RegisterWritten(u32 physical_address, T value);
 
 private:

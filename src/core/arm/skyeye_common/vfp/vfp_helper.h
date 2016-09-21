@@ -37,56 +37,56 @@
 #include "core/arm/skyeye_common/armstate.h"
 #include "core/arm/skyeye_common/vfp/asm_vfp.h"
 
-#define do_div(n, base) {n/=base;}
+#define do_div(n, base)                                                                            \
+    { n /= base; }
 
 enum : u32 {
-    FOP_MASK  = 0x00b00040,
-    FOP_FMAC  = 0x00000000,
+    FOP_MASK = 0x00b00040,
+    FOP_FMAC = 0x00000000,
     FOP_FNMAC = 0x00000040,
-    FOP_FMSC  = 0x00100000,
+    FOP_FMSC = 0x00100000,
     FOP_FNMSC = 0x00100040,
-    FOP_FMUL  = 0x00200000,
+    FOP_FMUL = 0x00200000,
     FOP_FNMUL = 0x00200040,
-    FOP_FADD  = 0x00300000,
-    FOP_FSUB  = 0x00300040,
-    FOP_FDIV  = 0x00800000,
-    FOP_EXT   = 0x00b00040
+    FOP_FADD = 0x00300000,
+    FOP_FSUB = 0x00300040,
+    FOP_FDIV = 0x00800000,
+    FOP_EXT = 0x00b00040
 };
 
 #define FOP_TO_IDX(inst) ((inst & 0x00b00000) >> 20 | (inst & (1 << 6)) >> 4)
 
 enum : u32 {
-    FEXT_MASK   = 0x000f0080,
-    FEXT_FCPY   = 0x00000000,
-    FEXT_FABS   = 0x00000080,
-    FEXT_FNEG   = 0x00010000,
-    FEXT_FSQRT  = 0x00010080,
-    FEXT_FCMP   = 0x00040000,
-    FEXT_FCMPE  = 0x00040080,
-    FEXT_FCMPZ  = 0x00050000,
+    FEXT_MASK = 0x000f0080,
+    FEXT_FCPY = 0x00000000,
+    FEXT_FABS = 0x00000080,
+    FEXT_FNEG = 0x00010000,
+    FEXT_FSQRT = 0x00010080,
+    FEXT_FCMP = 0x00040000,
+    FEXT_FCMPE = 0x00040080,
+    FEXT_FCMPZ = 0x00050000,
     FEXT_FCMPEZ = 0x00050080,
-    FEXT_FCVT   = 0x00070080,
-    FEXT_FUITO  = 0x00080000,
-    FEXT_FSITO  = 0x00080080,
-    FEXT_FTOUI  = 0x000c0000,
+    FEXT_FCVT = 0x00070080,
+    FEXT_FUITO = 0x00080000,
+    FEXT_FSITO = 0x00080080,
+    FEXT_FTOUI = 0x000c0000,
     FEXT_FTOUIZ = 0x000c0080,
-    FEXT_FTOSI  = 0x000d0000,
+    FEXT_FTOSI = 0x000d0000,
     FEXT_FTOSIZ = 0x000d0080
 };
 
 #define FEXT_TO_IDX(inst) ((inst & 0x000f0000) >> 15 | (inst & (1 << 7)) >> 7)
 
-#define vfp_get_sd(inst)  ((inst & 0x0000f000) >> 11 | (inst & (1 << 22)) >> 22)
-#define vfp_get_dd(inst)  ((inst & 0x0000f000) >> 12 | (inst & (1 << 22)) >> 18)
-#define vfp_get_sm(inst)  ((inst & 0x0000000f) << 1 | (inst & (1 << 5)) >> 5)
-#define vfp_get_dm(inst)  ((inst & 0x0000000f) | (inst & (1 << 5)) >> 1)
-#define vfp_get_sn(inst)  ((inst & 0x000f0000) >> 15 | (inst & (1 << 7)) >> 7)
-#define vfp_get_dn(inst)  ((inst & 0x000f0000) >> 16 | (inst & (1 << 7)) >> 3)
+#define vfp_get_sd(inst) ((inst & 0x0000f000) >> 11 | (inst & (1 << 22)) >> 22)
+#define vfp_get_dd(inst) ((inst & 0x0000f000) >> 12 | (inst & (1 << 22)) >> 18)
+#define vfp_get_sm(inst) ((inst & 0x0000000f) << 1 | (inst & (1 << 5)) >> 5)
+#define vfp_get_dm(inst) ((inst & 0x0000000f) | (inst & (1 << 5)) >> 1)
+#define vfp_get_sn(inst) ((inst & 0x000f0000) >> 15 | (inst & (1 << 7)) >> 7)
+#define vfp_get_dn(inst) ((inst & 0x000f0000) >> 16 | (inst & (1 << 7)) >> 3)
 
-#define vfp_single(inst)  (((inst) & 0x0000f00) == 0xa00)
+#define vfp_single(inst) (((inst)&0x0000f00) == 0xa00)
 
-inline u32 vfp_shiftright32jamming(u32 val, unsigned int shift)
-{
+inline u32 vfp_shiftright32jamming(u32 val, unsigned int shift) {
     if (shift) {
         if (shift < 32)
             val = val >> shift | ((val << (32 - shift)) != 0);
@@ -96,8 +96,7 @@ inline u32 vfp_shiftright32jamming(u32 val, unsigned int shift)
     return val;
 }
 
-inline u64 vfp_shiftright64jamming(u64 val, unsigned int shift)
-{
+inline u64 vfp_shiftright64jamming(u64 val, unsigned int shift) {
     if (shift) {
         if (shift < 64)
             val = val >> shift | ((val << (64 - shift)) != 0);
@@ -107,8 +106,7 @@ inline u64 vfp_shiftright64jamming(u64 val, unsigned int shift)
     return val;
 }
 
-inline u32 vfp_hi64to32jamming(u64 val)
-{
+inline u32 vfp_hi64to32jamming(u64 val) {
     u32 v;
     u32 highval = val >> 32;
     u32 lowval = val & 0xffffffff;
@@ -121,24 +119,21 @@ inline u32 vfp_hi64to32jamming(u64 val)
     return v;
 }
 
-inline void add128(u64* resh, u64* resl, u64 nh, u64 nl, u64 mh, u64 ml)
-{
+inline void add128(u64* resh, u64* resl, u64 nh, u64 nl, u64 mh, u64 ml) {
     *resl = nl + ml;
     *resh = nh + mh;
     if (*resl < nl)
         *resh += 1;
 }
 
-inline void sub128(u64* resh, u64* resl, u64 nh, u64 nl, u64 mh, u64 ml)
-{
+inline void sub128(u64* resh, u64* resl, u64 nh, u64 nl, u64 mh, u64 ml) {
     *resl = nl - ml;
     *resh = nh - mh;
     if (*resl > nl)
         *resh -= 1;
 }
 
-inline void mul64to128(u64* resh, u64* resl, u64 n, u64 m)
-{
+inline void mul64to128(u64* resh, u64* resl, u64 n, u64 m) {
     u32 nh, nl, mh, ml;
     u64 rh, rma, rmb, rl;
 
@@ -164,21 +159,18 @@ inline void mul64to128(u64* resh, u64* resl, u64 n, u64 m)
     *resh = rh;
 }
 
-inline void shift64left(u64* resh, u64* resl, u64 n)
-{
+inline void shift64left(u64* resh, u64* resl, u64 n) {
     *resh = n >> 63;
     *resl = n << 1;
 }
 
-inline u64 vfp_hi64multiply64(u64 n, u64 m)
-{
+inline u64 vfp_hi64multiply64(u64 n, u64 m) {
     u64 rh, rl;
     mul64to128(&rh, &rl, n, m);
     return rh | (rl != 0);
 }
 
-inline u64 vfp_estimate_div128to64(u64 nh, u64 nl, u64 m)
-{
+inline u64 vfp_estimate_div128to64(u64 nh, u64 nl, u64 m) {
     u64 mh, ml, remh, reml, termh, terml, z;
 
     if (nh >= m)
@@ -213,9 +205,9 @@ inline u64 vfp_estimate_div128to64(u64 nh, u64 nl, u64 m)
 
 // Single-precision
 struct vfp_single {
-    s16	exponent;
-    u16	sign;
-    u32	significand;
+    s16 exponent;
+    u16 sign;
+    u32 significand;
 };
 
 // VFP_SINGLE_MANTISSA_BITS - number of bits in the mantissa
@@ -224,33 +216,33 @@ struct vfp_single {
 // which are not propagated to the float upon packing.
 #define VFP_SINGLE_MANTISSA_BITS (23)
 #define VFP_SINGLE_EXPONENT_BITS (8)
-#define VFP_SINGLE_LOW_BITS      (32 - VFP_SINGLE_MANTISSA_BITS - 2)
+#define VFP_SINGLE_LOW_BITS (32 - VFP_SINGLE_MANTISSA_BITS - 2)
 #define VFP_SINGLE_LOW_BITS_MASK ((1 << VFP_SINGLE_LOW_BITS) - 1)
 
 // The bit in an unpacked float which indicates that it is a quiet NaN
-#define VFP_SINGLE_SIGNIFICAND_QNAN	(1 << (VFP_SINGLE_MANTISSA_BITS - 1 + VFP_SINGLE_LOW_BITS))
+#define VFP_SINGLE_SIGNIFICAND_QNAN (1 << (VFP_SINGLE_MANTISSA_BITS - 1 + VFP_SINGLE_LOW_BITS))
 
 // Operations on packed single-precision numbers
-#define vfp_single_packed_sign(v)     ((v) & 0x80000000)
-#define vfp_single_packed_negate(v)   ((v) ^ 0x80000000)
-#define vfp_single_packed_abs(v)      ((v) & ~0x80000000)
-#define vfp_single_packed_exponent(v) (((v) >> VFP_SINGLE_MANTISSA_BITS) & ((1 << VFP_SINGLE_EXPONENT_BITS) - 1))
+#define vfp_single_packed_sign(v) ((v)&0x80000000)
+#define vfp_single_packed_negate(v) ((v) ^ 0x80000000)
+#define vfp_single_packed_abs(v) ((v) & ~0x80000000)
+#define vfp_single_packed_exponent(v)                                                              \
+    (((v) >> VFP_SINGLE_MANTISSA_BITS) & ((1 << VFP_SINGLE_EXPONENT_BITS) - 1))
 #define vfp_single_packed_mantissa(v) ((v) & ((1 << VFP_SINGLE_MANTISSA_BITS) - 1))
 
 enum : u32 {
-    VFP_NUMBER     = (1 << 0),
-    VFP_ZERO       = (1 << 1),
-    VFP_DENORMAL   = (1 << 2),
-    VFP_INFINITY   = (1 << 3),
-    VFP_NAN        = (1 << 4),
+    VFP_NUMBER = (1 << 0),
+    VFP_ZERO = (1 << 1),
+    VFP_DENORMAL = (1 << 2),
+    VFP_INFINITY = (1 << 3),
+    VFP_NAN = (1 << 4),
     VFP_NAN_SIGNAL = (1 << 5),
 
-    VFP_QNAN       = (VFP_NAN),
-    VFP_SNAN       = (VFP_NAN|VFP_NAN_SIGNAL)
+    VFP_QNAN = (VFP_NAN),
+    VFP_SNAN = (VFP_NAN | VFP_NAN_SIGNAL)
 };
 
-inline int vfp_single_type(const vfp_single* s)
-{
+inline int vfp_single_type(const vfp_single* s) {
     int type = VFP_NUMBER;
     if (s->exponent == 255) {
         if (s->significand == 0)
@@ -271,11 +263,9 @@ inline int vfp_single_type(const vfp_single* s)
 // Unpack a single-precision float.  Note that this returns the magnitude
 // of the single-precision float mantissa with the 1. if necessary,
 // aligned to bit 30.
-inline u32 vfp_single_unpack(vfp_single* s, s32 val, u32 fpscr)
-{
+inline u32 vfp_single_unpack(vfp_single* s, s32 val, u32 fpscr) {
     u32 exceptions = 0;
-    s->sign = vfp_single_packed_sign(val) >> 16,
-    s->exponent = vfp_single_packed_exponent(val);
+    s->sign = vfp_single_packed_sign(val) >> 16, s->exponent = vfp_single_packed_exponent(val);
 
     u32 significand = ((u32)val << (32 - VFP_SINGLE_MANTISSA_BITS)) >> 2;
     if (s->exponent && s->exponent != 255)
@@ -295,22 +285,20 @@ inline u32 vfp_single_unpack(vfp_single* s, s32 val, u32 fpscr)
 
 // Re-pack a single-precision float. This assumes that the float is
 // already normalised such that the MSB is bit 30, _not_ bit 31.
-inline s32 vfp_single_pack(const vfp_single* s)
-{
-    u32 val = (s->sign << 16) +
-              (s->exponent << VFP_SINGLE_MANTISSA_BITS) +
+inline s32 vfp_single_pack(const vfp_single* s) {
+    u32 val = (s->sign << 16) + (s->exponent << VFP_SINGLE_MANTISSA_BITS) +
               (s->significand >> VFP_SINGLE_LOW_BITS);
     return (s32)val;
 }
 
-
-u32 vfp_single_normaliseround(ARMul_State* state, int sd, vfp_single* vs, u32 fpscr, const char* func);
+u32 vfp_single_normaliseround(ARMul_State* state, int sd, vfp_single* vs, u32 fpscr,
+                              const char* func);
 
 // Double-precision
 struct vfp_double {
-    s16	exponent;
-    u16	sign;
-    u64	significand;
+    s16 exponent;
+    u16 sign;
+    u64 significand;
 };
 
 // VFP_REG_ZERO is a special register number for vfp_get_double
@@ -324,21 +312,21 @@ struct vfp_double {
 
 #define VFP_DOUBLE_MANTISSA_BITS (52)
 #define VFP_DOUBLE_EXPONENT_BITS (11)
-#define VFP_DOUBLE_LOW_BITS      (64 - VFP_DOUBLE_MANTISSA_BITS - 2)
+#define VFP_DOUBLE_LOW_BITS (64 - VFP_DOUBLE_MANTISSA_BITS - 2)
 #define VFP_DOUBLE_LOW_BITS_MASK ((1 << VFP_DOUBLE_LOW_BITS) - 1)
 
 // The bit in an unpacked double which indicates that it is a quiet NaN
 #define VFP_DOUBLE_SIGNIFICAND_QNAN (1ULL << (VFP_DOUBLE_MANTISSA_BITS - 1 + VFP_DOUBLE_LOW_BITS))
 
 // Operations on packed single-precision numbers
-#define vfp_double_packed_sign(v)     ((v) & (1ULL << 63))
-#define vfp_double_packed_negate(v)   ((v) ^ (1ULL << 63))
-#define vfp_double_packed_abs(v)      ((v) & ~(1ULL << 63))
-#define vfp_double_packed_exponent(v) (((v) >> VFP_DOUBLE_MANTISSA_BITS) & ((1 << VFP_DOUBLE_EXPONENT_BITS) - 1))
+#define vfp_double_packed_sign(v) ((v) & (1ULL << 63))
+#define vfp_double_packed_negate(v) ((v) ^ (1ULL << 63))
+#define vfp_double_packed_abs(v) ((v) & ~(1ULL << 63))
+#define vfp_double_packed_exponent(v)                                                              \
+    (((v) >> VFP_DOUBLE_MANTISSA_BITS) & ((1 << VFP_DOUBLE_EXPONENT_BITS) - 1))
 #define vfp_double_packed_mantissa(v) ((v) & ((1ULL << VFP_DOUBLE_MANTISSA_BITS) - 1))
 
-inline int vfp_double_type(const vfp_double* s)
-{
+inline int vfp_double_type(const vfp_double* s) {
     int type = VFP_NUMBER;
     if (s->exponent == 2047) {
         if (s->significand == 0)
@@ -359,8 +347,7 @@ inline int vfp_double_type(const vfp_double* s)
 // Unpack a double-precision float.  Note that this returns the magnitude
 // of the double-precision float mantissa with the 1. if necessary,
 // aligned to bit 62.
-inline u32 vfp_double_unpack(vfp_double* s, s64 val, u32 fpscr)
-{
+inline u32 vfp_double_unpack(vfp_double* s, s64 val, u32 fpscr) {
     u32 exceptions = 0;
     s->sign = vfp_double_packed_sign(val) >> 48;
     s->exponent = vfp_double_packed_exponent(val);
@@ -383,10 +370,8 @@ inline u32 vfp_double_unpack(vfp_double* s, s64 val, u32 fpscr)
 
 // Re-pack a double-precision float. This assumes that the float is
 // already normalised such that the MSB is bit 30, _not_ bit 31.
-inline s64 vfp_double_pack(const vfp_double* s)
-{
-    u64 val = ((u64)s->sign << 48) +
-              ((u64)s->exponent << VFP_DOUBLE_MANTISSA_BITS) +
+inline s64 vfp_double_pack(const vfp_double* s) {
+    u64 val = ((u64)s->sign << 48) + ((u64)s->exponent << VFP_DOUBLE_MANTISSA_BITS) +
               (s->significand >> VFP_DOUBLE_LOW_BITS);
     return (s64)val;
 }
@@ -407,20 +392,14 @@ u32 vfp_estimate_sqrt_significand(u32 exponent, u32 significand);
 //  OP_SD     - The instruction exceptionally writes to a single precision result.
 //  OP_DD     - The instruction exceptionally writes to a double precision result.
 //  OP_SM     - The instruction exceptionally reads from a single precision operand.
-enum : u32 {
-    OP_SCALAR = (1 << 0),
-    OP_SD     = (1 << 1),
-    OP_DD     = (1 << 1),
-    OP_SM     = (1 << 2)
-};
+enum : u32 { OP_SCALAR = (1 << 0), OP_SD = (1 << 1), OP_DD = (1 << 1), OP_SM = (1 << 2) };
 
 struct op {
-    u32 (* const fn)(ARMul_State* state, int dd, int dn, int dm, u32 fpscr);
+    u32 (*const fn)(ARMul_State* state, int dd, int dn, int dm, u32 fpscr);
     u32 flags;
 };
 
-inline u32 fls(u32 x)
-{
+inline u32 fls(u32 x) {
     int r = 32;
 
     if (!x)
@@ -446,9 +425,9 @@ inline u32 fls(u32 x)
         r -= 1;
     }
     return r;
-
 }
 
 u32 vfp_double_multiply(vfp_double* vdd, vfp_double* vdn, vfp_double* vdm, u32 fpscr);
-u32 vfp_double_add(vfp_double* vdd, vfp_double* vdn, vfp_double *vdm, u32 fpscr);
-u32 vfp_double_normaliseround(ARMul_State* state, int dd, vfp_double* vd, u32 fpscr, const char* func);
+u32 vfp_double_add(vfp_double* vdd, vfp_double* vdn, vfp_double* vdm, u32 fpscr);
+u32 vfp_double_normaliseround(ARMul_State* state, int dd, vfp_double* vd, u32 fpscr,
+                              const char* func);

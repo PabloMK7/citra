@@ -3,7 +3,6 @@
 // Refer to the license.txt file included.
 
 #include "common/logging/log.h"
-#include "core/settings.h"
 #include "core/file_sys/file_backend.h"
 #include "core/hle/service/fs/archive.h"
 #include "core/hle/service/ptm/ptm.h"
@@ -11,12 +10,13 @@
 #include "core/hle/service/ptm/ptm_sysm.h"
 #include "core/hle/service/ptm/ptm_u.h"
 #include "core/hle/service/service.h"
+#include "core/settings.h"
 
 namespace Service {
 namespace PTM {
 
 /// Values for the default gamecoin.dat file
-static const GameCoin default_game_coin = { 0x4F00, 42, 0, 0, 0, 2014, 12, 29 };
+static const GameCoin default_game_coin = {0x4F00, 42, 0, 0, 0, 2014, 12, 29};
 
 /// Id of the SharedExtData archive used by the PTM process
 static const std::vector<u8> ptm_shared_extdata_id = {0, 0, 0, 0, 0x0B, 0, 0, 0xF0, 0, 0, 0, 0};
@@ -51,7 +51,8 @@ void GetBatteryLevel(Service::Interface* self) {
     // it returns a valid result without implementing full functionality.
 
     cmd_buff[1] = RESULT_SUCCESS.raw;
-    cmd_buff[2] = static_cast<u32>(ChargeLevels::CompletelyFull); // Set to a completely full battery
+    cmd_buff[2] =
+        static_cast<u32>(ChargeLevels::CompletelyFull); // Set to a completely full battery
 
     LOG_WARNING(Service_PTM, "(STUBBED) called");
 }
@@ -94,7 +95,8 @@ void CheckNew3DS(Service::Interface* self) {
     const bool is_new_3ds = Settings::values.is_new_3ds;
 
     if (is_new_3ds) {
-        LOG_CRITICAL(Service_PTM, "The option 'is_new_3ds' is enabled as part of the 'System' settings. Citra does not fully support New 3DS emulation yet!");
+        LOG_CRITICAL(Service_PTM, "The option 'is_new_3ds' is enabled as part of the 'System' "
+                                  "settings. Citra does not fully support New 3DS emulation yet!");
     }
 
     cmd_buff[1] = RESULT_SUCCESS.raw;
@@ -111,15 +113,19 @@ void Init() {
     shell_open = true;
     battery_is_charging = true;
 
-    // Open the SharedExtSaveData archive 0xF000000B and create the gamecoin.dat file if it doesn't exist
+    // Open the SharedExtSaveData archive 0xF000000B and create the gamecoin.dat file if it doesn't
+    // exist
     FileSys::Path archive_path(ptm_shared_extdata_id);
-    auto archive_result = Service::FS::OpenArchive(Service::FS::ArchiveIdCode::SharedExtSaveData, archive_path);
+    auto archive_result =
+        Service::FS::OpenArchive(Service::FS::ArchiveIdCode::SharedExtSaveData, archive_path);
     // If the archive didn't exist, create the files inside
     if (archive_result.Code().description == ErrorDescription::FS_NotFormatted) {
         // Format the archive to create the directories
-        Service::FS::FormatArchive(Service::FS::ArchiveIdCode::SharedExtSaveData, FileSys::ArchiveFormatInfo(), archive_path);
+        Service::FS::FormatArchive(Service::FS::ArchiveIdCode::SharedExtSaveData,
+                                   FileSys::ArchiveFormatInfo(), archive_path);
         // Open it again to get a valid archive now that the folder exists
-        archive_result = Service::FS::OpenArchive(Service::FS::ArchiveIdCode::SharedExtSaveData, archive_path);
+        archive_result =
+            Service::FS::OpenArchive(Service::FS::ArchiveIdCode::SharedExtSaveData, archive_path);
         ASSERT_MSG(archive_result.Succeeded(), "Could not open the PTM SharedExtSaveData archive!");
 
         FileSys::Path gamecoin_path("gamecoin.dat");
@@ -127,18 +133,18 @@ void Init() {
         open_mode.write_flag.Assign(1);
         open_mode.create_flag.Assign(1);
         // Open the file and write the default gamecoin information
-        auto gamecoin_result = Service::FS::OpenFileFromArchive(*archive_result, gamecoin_path, open_mode);
+        auto gamecoin_result =
+            Service::FS::OpenFileFromArchive(*archive_result, gamecoin_path, open_mode);
         if (gamecoin_result.Succeeded()) {
             auto gamecoin = gamecoin_result.MoveFrom();
-            gamecoin->backend->Write(0, sizeof(GameCoin), 1, reinterpret_cast<const u8*>(&default_game_coin));
+            gamecoin->backend->Write(0, sizeof(GameCoin), 1,
+                                     reinterpret_cast<const u8*>(&default_game_coin));
             gamecoin->backend->Close();
         }
     }
 }
 
-void Shutdown() {
-
-}
+void Shutdown() {}
 
 } // namespace PTM
 } // namespace Service

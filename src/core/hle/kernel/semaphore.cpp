@@ -3,7 +3,6 @@
 // Refer to the license.txt file included.
 
 #include "common/assert.h"
-
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/semaphore.h"
 #include "core/hle/kernel/thread.h"
@@ -14,7 +13,7 @@ Semaphore::Semaphore() {}
 Semaphore::~Semaphore() {}
 
 ResultVal<SharedPtr<Semaphore>> Semaphore::Create(s32 initial_count, s32 max_count,
-        std::string name) {
+                                                  std::string name) {
 
     if (initial_count > max_count)
         return ResultCode(ErrorDescription::InvalidCombination, ErrorModule::Kernel,

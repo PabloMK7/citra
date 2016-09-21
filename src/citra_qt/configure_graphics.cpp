@@ -3,23 +3,20 @@
 // Refer to the license.txt file included.
 
 #include "citra_qt/configure_graphics.h"
-#include "ui_configure_graphics.h"
-
 #include "core/settings.h"
 #include "core/system.h"
+#include "ui_configure_graphics.h"
 
-ConfigureGraphics::ConfigureGraphics(QWidget *parent) :
-    QWidget(parent),
-    ui(new Ui::ConfigureGraphics)
-{
+ConfigureGraphics::ConfigureGraphics(QWidget* parent)
+    : QWidget(parent), ui(new Ui::ConfigureGraphics) {
+
     ui->setupUi(this);
     this->setConfiguration();
 
     ui->toggle_vsync->setEnabled(!System::IsPoweredOn());
 }
 
-ConfigureGraphics::~ConfigureGraphics() {
-}
+ConfigureGraphics::~ConfigureGraphics() {}
 
 void ConfigureGraphics::setConfiguration() {
     ui->toggle_hw_renderer->setChecked(Settings::values.use_hw_renderer);

@@ -6,7 +6,6 @@
 
 #include <array>
 #include <vector>
-
 #include "common/common_types.h"
 
 namespace AudioInterp {
@@ -24,7 +23,8 @@ struct State {
  * No interpolation. This is equivalent to a zero-order hold. There is a two-sample predelay.
  * @param input Input buffer.
  * @param rate_multiplier Stretch factor. Must be a positive non-zero value.
- *                        rate_multiplier > 1.0 performs decimation and rate_multipler < 1.0 performs upsampling.
+ *                        rate_multiplier > 1.0 performs decimation and rate_multipler < 1.0
+ *                        performs upsampling.
  * @return The resampled audio buffer.
  */
 StereoBuffer16 None(State& state, const StereoBuffer16& input, float rate_multiplier);
@@ -33,7 +33,8 @@ StereoBuffer16 None(State& state, const StereoBuffer16& input, float rate_multip
  * Linear interpolation. This is equivalent to a first-order hold. There is a two-sample predelay.
  * @param input Input buffer.
  * @param rate_multiplier Stretch factor. Must be a positive non-zero value.
- *                        rate_multiplier > 1.0 performs decimation and rate_multipler < 1.0 performs upsampling.
+ *                        rate_multiplier > 1.0 performs decimation and rate_multipler < 1.0
+ *                        performs upsampling.
  * @return The resampled audio buffer.
  */
 StereoBuffer16 Linear(State& state, const StereoBuffer16& input, float rate_multiplier);

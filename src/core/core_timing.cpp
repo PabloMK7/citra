@@ -6,11 +6,9 @@
 #include <cinttypes>
 #include <mutex>
 #include <vector>
-
 #include "common/chunk_file.h"
 #include "common/logging/log.h"
 #include "common/string_util.h"
-
 #include "core/arm/arm_interface.h"
 #include "core/core.h"
 #include "core/core_timing.h"
@@ -21,14 +19,11 @@ int g_clock_rate_arm11 = 268123480;
 #define INITIAL_SLICE_LENGTH 20000
 #define MAX_SLICE_LENGTH 100000000
 
-namespace CoreTiming
-{
-struct EventType
-{
+namespace CoreTiming {
+struct EventType {
     EventType() {}
 
-    EventType(TimedCallback cb, const char* n)
-        : callback(cb), name(n) {}
+    EventType(TimedCallback cb, const char* n) : callback(cb), name(n) {}
 
     TimedCallback callback;
     const char* name;
@@ -36,8 +31,7 @@ struct EventType
 
 static std::vector<EventType> event_types;
 
-struct BaseEvent
-{
+struct BaseEvent {
     s64 time;
     u64 userdata;
     int type;
@@ -200,7 +194,6 @@ u64 GetIdleTicks() {
     return (u64)idled_cycles;
 }
 
-
 // This is to be called when outside threads, such as the graphics thread, wants to
 // schedule things to be executed on the main thread.
 void ScheduleEvent_Threadsafe(s64 cycles_into_future, int event_type, u64 userdata) {
@@ -222,12 +215,11 @@ void ScheduleEvent_Threadsafe(s64 cycles_into_future, int event_type, u64 userda
 // Same as ScheduleEvent_Threadsafe(0, ...) EXCEPT if we are already on the CPU thread
 // in which case the event will get handled immediately, before returning.
 void ScheduleEvent_Threadsafe_Immediate(int event_type, u64 userdata) {
-    if (false) //Core::IsCPUThread())
+    if (false) // Core::IsCPUThread())
     {
         std::lock_guard<std::recursive_mutex> lock(external_event_section);
         event_types[event_type].callback(userdata, 0);
-    }
-    else
+    } else
         ScheduleEvent_Threadsafe(0, event_type, userdata);
 }
 
@@ -317,8 +309,7 @@ s64 UnscheduleThreadsafeEvent(int event_type, u64 userdata) {
         }
     }
 
-    if (!ts_first)
-    {
+    if (!ts_first) {
         ts_last = nullptr;
         return result;
     }
@@ -369,7 +360,7 @@ void RemoveEvent(int event_type) {
         return;
     while (first) {
         if (first->type == event_type) {
-            Event *next = first->next;
+            Event* next = first->next;
             FreeEvent(first);
             first = next;
         } else {
@@ -509,7 +500,8 @@ void Advance() {
 void LogPendingEvents() {
     Event* event = first;
     while (event) {
-        //LOG_TRACE(Core_Timing, "PENDING: Now: %lld Pending: %lld Type: %d", globalTimer, next->time, next->type);
+        // LOG_TRACE(Core_Timing, "PENDING: Now: %lld Pending: %lld Type: %d", globalTimer,
+        // next->time, next->type);
         event = event->next;
     }
 }
@@ -531,7 +523,8 @@ void Idle(int max_idle) {
         }
     }
 
-    LOG_TRACE(Core_Timing, "Idle for %" PRId64 " cycles! (%f ms)", cycles_down, cycles_down / (float)(g_clock_rate_arm11 * 0.001f));
+    LOG_TRACE(Core_Timing, "Idle for %" PRId64 " cycles! (%f ms)", cycles_down,
+              cycles_down / (float)(g_clock_rate_arm11 * 0.001f));
 
     idled_cycles += cycles_down;
     Core::g_app_core->down_count -= cycles_down;
@@ -551,7 +544,7 @@ std::string GetScheduledEventsSummary() {
         if (!name)
             name = "[unknown]";
         text += Common::StringFromFormat("%s : %i %08x%08x\n", name, (int)event->time,
-                (u32)(event->userdata >> 32), (u32)(event->userdata));
+                                         (u32)(event->userdata >> 32), (u32)(event->userdata));
         event = event->next;
     }
     return text;

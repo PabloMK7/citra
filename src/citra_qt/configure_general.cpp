@@ -4,23 +4,20 @@
 
 #include "citra_qt/configure_general.h"
 #include "citra_qt/ui_settings.h"
-#include "ui_configure_general.h"
-
 #include "core/settings.h"
 #include "core/system.h"
+#include "ui_configure_general.h"
 
-ConfigureGeneral::ConfigureGeneral(QWidget *parent) :
-    QWidget(parent),
-    ui(new Ui::ConfigureGeneral)
-{
+ConfigureGeneral::ConfigureGeneral(QWidget* parent)
+    : QWidget(parent), ui(new Ui::ConfigureGeneral) {
+
     ui->setupUi(this);
     this->setConfiguration();
 
     ui->toggle_cpu_jit->setEnabled(!System::IsPoweredOn());
 }
 
-ConfigureGeneral::~ConfigureGeneral() {
-}
+ConfigureGeneral::~ConfigureGeneral() {}
 
 void ConfigureGeneral::setConfiguration() {
     ui->toggle_deepscan->setChecked(UISettings::values.gamedir_deepscan);

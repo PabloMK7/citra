@@ -4,10 +4,8 @@
 
 #include <algorithm>
 #include <cmath>
-
 #include "common/assert.h"
 #include "common/key_map.h"
-
 #include "emu_window.h"
 #include "video_core/video_core.h"
 
@@ -44,18 +42,17 @@ void EmuWindow::CirclePadUpdated(float x, float y) {
  */
 static bool IsWithinTouchscreen(const EmuWindow::FramebufferLayout& layout, unsigned framebuffer_x,
                                 unsigned framebuffer_y) {
-    return (framebuffer_y >= layout.bottom_screen.top    &&
-            framebuffer_y <  layout.bottom_screen.bottom &&
-            framebuffer_x >= layout.bottom_screen.left   &&
-            framebuffer_x <  layout.bottom_screen.right);
+    return (
+        framebuffer_y >= layout.bottom_screen.top && framebuffer_y < layout.bottom_screen.bottom &&
+        framebuffer_x >= layout.bottom_screen.left && framebuffer_x < layout.bottom_screen.right);
 }
 
-std::tuple<unsigned,unsigned> EmuWindow::ClipToTouchScreen(unsigned new_x, unsigned new_y) {
+std::tuple<unsigned, unsigned> EmuWindow::ClipToTouchScreen(unsigned new_x, unsigned new_y) {
     new_x = std::max(new_x, framebuffer_layout.bottom_screen.left);
-    new_x = std::min(new_x, framebuffer_layout.bottom_screen.right-1);
+    new_x = std::min(new_x, framebuffer_layout.bottom_screen.right - 1);
 
     new_y = std::max(new_y, framebuffer_layout.bottom_screen.top);
-    new_y = std::min(new_y, framebuffer_layout.bottom_screen.bottom-1);
+    new_y = std::min(new_y, framebuffer_layout.bottom_screen.bottom - 1);
 
     return std::make_tuple(new_x, new_y);
 }
@@ -64,10 +61,12 @@ void EmuWindow::TouchPressed(unsigned framebuffer_x, unsigned framebuffer_y) {
     if (!IsWithinTouchscreen(framebuffer_layout, framebuffer_x, framebuffer_y))
         return;
 
-    touch_x = VideoCore::kScreenBottomWidth * (framebuffer_x - framebuffer_layout.bottom_screen.left) /
-        (framebuffer_layout.bottom_screen.right - framebuffer_layout.bottom_screen.left);
-    touch_y = VideoCore::kScreenBottomHeight * (framebuffer_y - framebuffer_layout.bottom_screen.top) /
-        (framebuffer_layout.bottom_screen.bottom - framebuffer_layout.bottom_screen.top);
+    touch_x = VideoCore::kScreenBottomWidth *
+              (framebuffer_x - framebuffer_layout.bottom_screen.left) /
+              (framebuffer_layout.bottom_screen.right - framebuffer_layout.bottom_screen.left);
+    touch_y = VideoCore::kScreenBottomHeight *
+              (framebuffer_y - framebuffer_layout.bottom_screen.top) /
+              (framebuffer_layout.bottom_screen.bottom - framebuffer_layout.bottom_screen.top);
 
     touch_pressed = true;
     pad_state.touch.Assign(1);
@@ -90,16 +89,19 @@ void EmuWindow::TouchMoved(unsigned framebuffer_x, unsigned framebuffer_y) {
     TouchPressed(framebuffer_x, framebuffer_y);
 }
 
-EmuWindow::FramebufferLayout EmuWindow::FramebufferLayout::DefaultScreenLayout(unsigned width, unsigned height) {
+EmuWindow::FramebufferLayout EmuWindow::FramebufferLayout::DefaultScreenLayout(unsigned width,
+                                                                               unsigned height) {
     // When hiding the widget, the function receives a size of 0
-    if (width == 0) width = 1;
-    if (height == 0) height = 1;
+    if (width == 0)
+        width = 1;
+    if (height == 0)
+        height = 1;
 
-    EmuWindow::FramebufferLayout res = { width, height, {}, {} };
+    EmuWindow::FramebufferLayout res = {width, height, {}, {}};
 
     float window_aspect_ratio = static_cast<float>(height) / width;
-    float emulation_aspect_ratio = static_cast<float>(VideoCore::kScreenTopHeight * 2) /
-        VideoCore::kScreenTopWidth;
+    float emulation_aspect_ratio =
+        static_cast<float>(VideoCore::kScreenTopHeight * 2) / VideoCore::kScreenTopWidth;
 
     if (window_aspect_ratio > emulation_aspect_ratio) {
         // Window is narrower than the emulation content => apply borders to the top and bottom
@@ -110,8 +112,9 @@ EmuWindow::FramebufferLayout EmuWindow::FramebufferLayout::DefaultScreenLayout(u
         res.top_screen.top = (height - viewport_height) / 2;
         res.top_screen.bottom = res.top_screen.top + viewport_height / 2;
 
-        int bottom_width = static_cast<int>((static_cast<float>(VideoCore::kScreenBottomWidth) /
-            VideoCore::kScreenTopWidth) * (res.top_screen.right - res.top_screen.left));
+        int bottom_width = static_cast<int>(
+            (static_cast<float>(VideoCore::kScreenBottomWidth) / VideoCore::kScreenTopWidth) *
+            (res.top_screen.right - res.top_screen.left));
         int bottom_border = ((res.top_screen.right - res.top_screen.left) - bottom_width) / 2;
 
         res.bottom_screen.left = bottom_border;
@@ -127,8 +130,9 @@ EmuWindow::FramebufferLayout EmuWindow::FramebufferLayout::DefaultScreenLayout(u
         res.top_screen.top = 0;
         res.top_screen.bottom = res.top_screen.top + height / 2;
 
-        int bottom_width = static_cast<int>((static_cast<float>(VideoCore::kScreenBottomWidth) /
-            VideoCore::kScreenTopWidth) * (res.top_screen.right - res.top_screen.left));
+        int bottom_width = static_cast<int>(
+            (static_cast<float>(VideoCore::kScreenBottomWidth) / VideoCore::kScreenTopWidth) *
+            (res.top_screen.right - res.top_screen.left));
         int bottom_border = ((res.top_screen.right - res.top_screen.left) - bottom_width) / 2;
 
         res.bottom_screen.left = res.top_screen.left + bottom_border;

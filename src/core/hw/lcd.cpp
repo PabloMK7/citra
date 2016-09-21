@@ -3,13 +3,10 @@
 // Refer to the license.txt file included.
 
 #include <cstring>
-
 #include "common/common_types.h"
 #include "common/logging/log.h"
-
 #include "core/hw/hw.h"
 #include "core/hw/lcd.h"
-
 #include "core/tracer/recorder.h"
 #include "video_core/debug_utils/debug_utils.h"
 
@@ -18,7 +15,7 @@ namespace LCD {
 Regs g_regs;
 
 template <typename T>
-inline void Read(T &var, const u32 raw_addr) {
+inline void Read(T& var, const u32 raw_addr) {
     u32 addr = raw_addr - HW::VADDR_LCD;
     u32 index = addr / 4;
 
@@ -48,16 +45,17 @@ inline void Write(u32 addr, const T data) {
     // This is happening *after* handling the write to make sure we properly catch all memory reads.
     if (Pica::g_debug_context && Pica::g_debug_context->recorder) {
         // addr + GPU VBase - IO VBase + IO PBase
-        Pica::g_debug_context->recorder->RegisterWritten<T>(addr + HW::VADDR_LCD - 0x1EC00000 + 0x10100000, data);
+        Pica::g_debug_context->recorder->RegisterWritten<T>(
+            addr + HW::VADDR_LCD - 0x1EC00000 + 0x10100000, data);
     }
 }
 
 // Explicitly instantiate template functions because we aren't defining this in the header:
 
-template void Read<u64>(u64 &var, const u32 addr);
-template void Read<u32>(u32 &var, const u32 addr);
-template void Read<u16>(u16 &var, const u32 addr);
-template void Read<u8>(u8 &var, const u32 addr);
+template void Read<u64>(u64& var, const u32 addr);
+template void Read<u32>(u32& var, const u32 addr);
+template void Read<u16>(u16& var, const u32 addr);
+template void Read<u8>(u8& var, const u32 addr);
 
 template void Write<u64>(u32 addr, const u64 data);
 template void Write<u32>(u32 addr, const u32 data);

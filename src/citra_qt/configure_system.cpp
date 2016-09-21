@@ -4,27 +4,24 @@
 
 #include "citra_qt/configure_system.h"
 #include "citra_qt/ui_settings.h"
+#include "core/hle/service/cfg/cfg.h"
+#include "core/hle/service/fs/archive.h"
+#include "core/system.h"
 #include "ui_configure_system.h"
 
-#include "core/hle/service/fs/archive.h"
-#include "core/hle/service/cfg/cfg.h"
-#include "core/system.h"
-
 static const std::array<int, 12> days_in_month = {{
-    31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31
+    31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31,
 }};
 
-ConfigureSystem::ConfigureSystem(QWidget *parent) :
-    QWidget(parent),
-    ui(new Ui::ConfigureSystem) {
+ConfigureSystem::ConfigureSystem(QWidget* parent) : QWidget(parent), ui(new Ui::ConfigureSystem) {
     ui->setupUi(this);
-    connect(ui->combo_birthmonth, SIGNAL(currentIndexChanged(int)), SLOT(updateBirthdayComboBox(int)));
+    connect(ui->combo_birthmonth, SIGNAL(currentIndexChanged(int)),
+            SLOT(updateBirthdayComboBox(int)));
 
     this->setConfiguration();
 }
 
-ConfigureSystem::~ConfigureSystem() {
-}
+ConfigureSystem::~ConfigureSystem() {}
 
 void ConfigureSystem::setConfiguration() {
     enabled = !System::IsPoweredOn();
@@ -54,13 +51,17 @@ void ConfigureSystem::setConfiguration() {
 void ConfigureSystem::ReadSystemSettings() {
     // set username
     username = Service::CFG::GetUsername();
-    // ui->edit_username->setText(QString::fromStdU16String(username)); // TODO(wwylele): Use this when we move to Qt 5.5
-    ui->edit_username->setText(QString::fromUtf16(reinterpret_cast<const ushort*>(username.data())));
+    // TODO(wwylele): Use this when we move to Qt 5.5
+    // ui->edit_username->setText(QString::fromStdU16String(username));
+    ui->edit_username->setText(
+        QString::fromUtf16(reinterpret_cast<const ushort*>(username.data())));
 
     // set birthday
     std::tie(birthmonth, birthday) = Service::CFG::GetBirthday();
     ui->combo_birthmonth->setCurrentIndex(birthmonth - 1);
-    updateBirthdayComboBox(birthmonth - 1); // explicitly update it because the signal from setCurrentIndex is not reliable
+    updateBirthdayComboBox(
+        birthmonth -
+        1); // explicitly update it because the signal from setCurrentIndex is not reliable
     ui->combo_birthday->setCurrentIndex(birthday - 1);
 
     // set system language
@@ -79,8 +80,10 @@ void ConfigureSystem::applyConfiguration() {
     bool modified = false;
 
     // apply username
-    // std::u16string new_username = ui->edit_username->text().toStdU16String(); // TODO(wwylele): Use this when we move to Qt 5.5
-    std::u16string new_username(reinterpret_cast<const char16_t*>(ui->edit_username->text().utf16()));
+    // TODO(wwylele): Use this when we move to Qt 5.5
+    // std::u16string new_username = ui->edit_username->text().toStdU16String();
+    std::u16string new_username(
+        reinterpret_cast<const char16_t*>(ui->edit_username->text().utf16()));
     if (new_username != username) {
         Service::CFG::SetUsername(new_username);
         modified = true;

@@ -5,7 +5,6 @@
 #pragma once
 
 #include <memory>
-
 #include "common/common_types.h"
 
 namespace Memory {
@@ -36,5 +35,4 @@ public:
 };
 
 using MMIORegionPointer = std::shared_ptr<MMIORegion>;
-
 };

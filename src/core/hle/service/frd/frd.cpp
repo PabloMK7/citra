@@ -3,11 +3,10 @@
 // Refer to the license.txt file included.
 
 #include "common/string_util.h"
-
-#include "core/hle/service/service.h"
 #include "core/hle/service/frd/frd.h"
 #include "core/hle/service/frd/frd_a.h"
 #include "core/hle/service/frd/frd_u.h"
+#include "core/hle/service/service.h"
 
 namespace Service {
 namespace FRD {
@@ -43,7 +42,7 @@ void GetFriendKeyList(Service::Interface* self) {
     }
 
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
-    cmd_buff[2] = 0; // 0 friends
+    cmd_buff[2] = 0;                  // 0 friends
     LOG_WARNING(Service_FRD, "(STUBBED) called, unknown=%d, frd_count=%d, frd_key_addr=0x%08X",
                 unknown, frd_count, frd_key_addr);
 }
@@ -61,25 +60,27 @@ void GetFriendProfile(Service::Interface* self) {
     }
 
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
-    LOG_WARNING(Service_FRD, "(STUBBED) called, count=%d, frd_key_addr=0x%08X, profiles_addr=0x%08X",
-                count, frd_key_addr, profiles_addr);
+    LOG_WARNING(Service_FRD,
+                "(STUBBED) called, count=%d, frd_key_addr=0x%08X, profiles_addr=0x%08X", count,
+                frd_key_addr, profiles_addr);
 }
 
 void GetFriendAttributeFlags(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
-    u32 count           = cmd_buff[1];
-    u32 frd_key_addr    = cmd_buff[3];
+    u32 count = cmd_buff[1];
+    u32 frd_key_addr = cmd_buff[3];
     u32 attr_flags_addr = cmd_buff[65];
 
     for (u32 i = 0; i < count; ++i) {
-        //TODO:(mailwl) figure out AttributeFlag size and zero all buffer. Assume 1 byte
+        // TODO:(mailwl) figure out AttributeFlag size and zero all buffer. Assume 1 byte
         Memory::Write8(attr_flags_addr + i, 0);
     }
 
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
-    LOG_WARNING(Service_FRD, "(STUBBED) called, count=%d, frd_key_addr=0x%08X, attr_flags_addr=0x%08X",
-                count, frd_key_addr, attr_flags_addr);
+    LOG_WARNING(Service_FRD,
+                "(STUBBED) called, count=%d, frd_key_addr=0x%08X, attr_flags_addr=0x%08X", count,
+                frd_key_addr, attr_flags_addr);
 }
 
 void GetMyFriendKey(Service::Interface* self) {
@@ -106,8 +107,7 @@ void Init() {
     AddService(new FRD_U_Interface);
 }
 
-void Shutdown() {
-}
+void Shutdown() {}
 
 } // namespace FRD
 

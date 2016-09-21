@@ -5,11 +5,9 @@
 #include <algorithm>
 #include <cstring>
 #include <memory>
-
 #include "common/logging/log.h"
 #include "common/string_util.h"
 #include "common/swap.h"
-
 #include "core/file_sys/archive_romfs.h"
 #include "core/hle/kernel/process.h"
 #include "core/hle/kernel/resource_limit.h"
@@ -22,8 +20,8 @@
 
 namespace Loader {
 
-static const int kMaxSections = 8;        ///< Maximum number of sections (files) in an ExeFs
-static const int kBlockSize   = 0x200;    ///< Size of ExeFS blocks (in bytes)
+static const int kMaxSections = 8;   ///< Maximum number of sections (files) in an ExeFs
+static const int kBlockSize = 0x200; ///< Size of ExeFS blocks (in bytes)
 
 /**
  * Get the decompressed size of an LZSS compressed ExeFS file
@@ -44,7 +42,8 @@ static u32 LZSS_GetDecompressedSize(const u8* buffer, u32 size) {
  * @param decompressed_size Size of decompressed buffer
  * @return True on success, otherwise false
  */
-static bool LZSS_Decompress(const u8* compressed, u32 compressed_size, u8* decompressed, u32 decompressed_size) {
+static bool LZSS_Decompress(const u8* compressed, u32 compressed_size, u8* decompressed,
+                            u32 decompressed_size) {
     const u8* footer = compressed + compressed_size - 8;
     u32 buffer_top_and_bottom = *reinterpret_cast<const u32*>(footer);
     u32 out = decompressed_size;
@@ -55,7 +54,7 @@ static bool LZSS_Decompress(const u8* compressed, u32 compressed_size, u8* decom
     memcpy(decompressed, compressed, compressed_size);
 
     while (index > stop_index) {
-       u8 control = compressed[--index];
+        u8 control = compressed[--index];
 
         for (unsigned i = 0; i < 8; i++) {
             if (index <= stop_index)
@@ -128,7 +127,7 @@ ResultStatus AppLoader_NCCH::LoadExec() {
     std::vector<u8> code;
     if (ResultStatus::Success == ReadCode(code)) {
         std::string process_name = Common::StringFromFixedZeroTerminatedBuffer(
-                (const char*)exheader_header.codeset_info.name, 8);
+            (const char*)exheader_header.codeset_info.name, 8);
 
         SharedPtr<CodeSet> codeset = CodeSet::Create(process_name, ncch_header.program_id);
 
@@ -147,7 +146,8 @@ ResultStatus AppLoader_NCCH::LoadExec() {
 
         codeset->data.offset = codeset->rodata.offset + codeset->rodata.size;
         codeset->data.addr = exheader_header.codeset_info.data.address;
-        codeset->data.size = exheader_header.codeset_info.data.num_max_pages * Memory::PAGE_SIZE + bss_page_size;
+        codeset->data.size =
+            exheader_header.codeset_info.data.num_max_pages * Memory::PAGE_SIZE + bss_page_size;
 
         codeset->entrypoint = codeset->code.addr;
         codeset->memory = std::make_shared<std::vector<u8>>(std::move(code));
@@ -155,15 +155,18 @@ ResultStatus AppLoader_NCCH::LoadExec() {
         Kernel::g_current_process = Kernel::Process::Create(std::move(codeset));
 
         // Attach a resource limit to the process based on the resource limit category
-        Kernel::g_current_process->resource_limit = Kernel::ResourceLimit::GetForCategory(
-            static_cast<Kernel::ResourceLimitCategory>(exheader_header.arm11_system_local_caps.resource_limit_category));
+        Kernel::g_current_process->resource_limit =
+            Kernel::ResourceLimit::GetForCategory(static_cast<Kernel::ResourceLimitCategory>(
+                exheader_header.arm11_system_local_caps.resource_limit_category));
 
         // Set the default CPU core for this process
-        Kernel::g_current_process->ideal_processor = exheader_header.arm11_system_local_caps.ideal_processor;
+        Kernel::g_current_process->ideal_processor =
+            exheader_header.arm11_system_local_caps.ideal_processor;
 
         // Copy data while converting endianess
         std::array<u32, ARRAY_SIZE(exheader_header.arm11_kernel_caps.descriptors)> kernel_caps;
-        std::copy_n(exheader_header.arm11_kernel_caps.descriptors, kernel_caps.size(), begin(kernel_caps));
+        std::copy_n(exheader_header.arm11_kernel_caps.descriptors, kernel_caps.size(),
+                    begin(kernel_caps));
         Kernel::g_current_process->ParseKernelCaps(kernel_caps.data(), kernel_caps.size());
 
         s32 priority = exheader_header.arm11_system_local_caps.priority;
@@ -192,7 +195,8 @@ ResultStatus AppLoader_NCCH::LoadSectionExeFS(const char* name, std::vector<u8>&
             LOG_DEBUG(Loader, "%d - offset: 0x%08X, size: 0x%08X, name: %s", section_number,
                       section.offset, section.size, section.name);
 
-            s64 section_offset = (section.offset + exefs_offset + sizeof(ExeFs_Header) + ncch_offset);
+            s64 section_offset =
+                (section.offset + exefs_offset + sizeof(ExeFs_Header) + ncch_offset);
             file.Seek(section_offset, SEEK_SET);
 
             if (strcmp(section.name, ".code") == 0 && is_compressed) {
@@ -254,25 +258,25 @@ ResultStatus AppLoader_NCCH::LoadExeFS() {
     if (file.ReadBytes(&exheader_header, sizeof(ExHeader_Header)) != sizeof(ExHeader_Header))
         return ResultStatus::Error;
 
-    is_compressed           = (exheader_header.codeset_info.flags.flag & 1) == 1;
-    entry_point             = exheader_header.codeset_info.text.address;
-    code_size               = exheader_header.codeset_info.text.code_size;
-    stack_size              = exheader_header.codeset_info.stack_size;
-    bss_size                = exheader_header.codeset_info.bss_size;
-    core_version            = exheader_header.arm11_system_local_caps.core_version;
-    priority                = exheader_header.arm11_system_local_caps.priority;
+    is_compressed = (exheader_header.codeset_info.flags.flag & 1) == 1;
+    entry_point = exheader_header.codeset_info.text.address;
+    code_size = exheader_header.codeset_info.text.code_size;
+    stack_size = exheader_header.codeset_info.stack_size;
+    bss_size = exheader_header.codeset_info.bss_size;
+    core_version = exheader_header.arm11_system_local_caps.core_version;
+    priority = exheader_header.arm11_system_local_caps.priority;
     resource_limit_category = exheader_header.arm11_system_local_caps.resource_limit_category;
 
-    LOG_INFO(Loader,  "Name:                        %s"    , exheader_header.codeset_info.name);
-    LOG_INFO(Loader,  "Program ID:                  %016llX" , ncch_header.program_id);
-    LOG_DEBUG(Loader, "Code compressed:             %s"    , is_compressed ? "yes" : "no");
+    LOG_INFO(Loader, "Name:                        %s", exheader_header.codeset_info.name);
+    LOG_INFO(Loader, "Program ID:                  %016llX", ncch_header.program_id);
+    LOG_DEBUG(Loader, "Code compressed:             %s", is_compressed ? "yes" : "no");
     LOG_DEBUG(Loader, "Entry point:                 0x%08X", entry_point);
     LOG_DEBUG(Loader, "Code size:                   0x%08X", code_size);
     LOG_DEBUG(Loader, "Stack size:                  0x%08X", stack_size);
     LOG_DEBUG(Loader, "Bss size:                    0x%08X", bss_size);
-    LOG_DEBUG(Loader, "Core version:                %d"    , core_version);
-    LOG_DEBUG(Loader, "Thread priority:             0x%X"  , priority);
-    LOG_DEBUG(Loader, "Resource limit category:     %d"    , resource_limit_category);
+    LOG_DEBUG(Loader, "Core version:                %d", core_version);
+    LOG_DEBUG(Loader, "Thread priority:             0x%X", priority);
+    LOG_DEBUG(Loader, "Resource limit category:     %d", resource_limit_category);
 
     if (exheader_header.arm11_system_local_caps.program_id != ncch_header.program_id) {
         LOG_ERROR(Loader, "ExHeader Program ID mismatch: the ROM is probably encrypted.");
@@ -309,7 +313,8 @@ ResultStatus AppLoader_NCCH::Load() {
     if (ResultStatus::Success != result)
         return result;
 
-    Service::FS::RegisterArchiveType(std::make_unique<FileSys::ArchiveFactory_RomFS>(*this), Service::FS::ArchiveIdCode::RomFS);
+    Service::FS::RegisterArchiveType(std::make_unique<FileSys::ArchiveFactory_RomFS>(*this),
+                                     Service::FS::ArchiveIdCode::RomFS);
     return ResultStatus::Success;
 }
 
@@ -329,7 +334,8 @@ ResultStatus AppLoader_NCCH::ReadLogo(std::vector<u8>& buffer) {
     return LoadSectionExeFS("logo", buffer);
 }
 
-ResultStatus AppLoader_NCCH::ReadRomFS(std::shared_ptr<FileUtil::IOFile>& romfs_file, u64& offset, u64& size) {
+ResultStatus AppLoader_NCCH::ReadRomFS(std::shared_ptr<FileUtil::IOFile>& romfs_file, u64& offset,
+                                       u64& size) {
     if (!file.IsOpen())
         return ResultStatus::Error;
 
@@ -341,7 +347,7 @@ ResultStatus AppLoader_NCCH::ReadRomFS(std::shared_ptr<FileUtil::IOFile>& romfs_
         LOG_DEBUG(Loader, "RomFS offset:           0x%08X", romfs_offset);
         LOG_DEBUG(Loader, "RomFS size:             0x%08X", romfs_size);
 
-        if (file.GetSize () < romfs_offset + romfs_size)
+        if (file.GetSize() < romfs_offset + romfs_size)
             return ResultStatus::Error;
 
         // We reopen the file, to allow its position to be independent from file's

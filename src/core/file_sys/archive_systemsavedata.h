@@ -6,9 +6,7 @@
 
 #include <memory>
 #include <string>
-
 #include "common/common_types.h"
-
 #include "core/file_sys/archive_backend.h"
 #include "core/hle/result.h"
 
@@ -26,7 +24,9 @@ public:
     ResultCode Format(const Path& path, const FileSys::ArchiveFormatInfo& format_info) override;
     ResultVal<ArchiveFormatInfo> GetFormatInfo(const Path& path) const override;
 
-    std::string GetName() const override { return "SystemSaveData"; }
+    std::string GetName() const override {
+        return "SystemSaveData";
+    }
 
 private:
     std::string base_path;
@@ -42,7 +42,8 @@ private:
 std::string GetSystemSaveDataPath(const std::string& mount_point, const Path& path);
 
 /**
- * Constructs a path to the base folder to hold concrete SystemSaveData archives in the host file system.
+ * Constructs a path to the base folder to hold concrete SystemSaveData archives in the host file
+ * system.
  * @param mount_point The base folder where this folder resides, ie. SDMC or NAND.
  * @returns The path to the base SystemSaveData archives' folder in the host file system
  */

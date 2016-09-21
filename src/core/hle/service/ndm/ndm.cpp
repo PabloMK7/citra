@@ -4,21 +4,23 @@
 
 #include "common/common_types.h"
 #include "common/logging/log.h"
-#include "core/hle/service/service.h"
 #include "core/hle/service/ndm/ndm.h"
 #include "core/hle/service/ndm/ndm_u.h"
+#include "core/hle/service/service.h"
 
 namespace Service {
 namespace NDM {
 
 enum : u32 {
     DEFAULT_RETRY_INTERVAL = 10,
-    DEFAULT_SCAN_INTERVAL  = 30
+    DEFAULT_SCAN_INTERVAL = 30,
 };
 
 static DaemonMask daemon_bit_mask = DaemonMask::Default;
 static DaemonMask default_daemon_bit_mask = DaemonMask::Default;
-static std::array<DaemonStatus, 4> daemon_status = { DaemonStatus::Idle, DaemonStatus::Idle, DaemonStatus::Idle, DaemonStatus::Idle };
+static std::array<DaemonStatus, 4> daemon_status = {
+    DaemonStatus::Idle, DaemonStatus::Idle, DaemonStatus::Idle, DaemonStatus::Idle,
+};
 static ExclusiveState exclusive_state = ExclusiveState::None;
 static u32 scan_interval = DEFAULT_SCAN_INTERVAL;
 static u32 retry_interval = DEFAULT_RETRY_INTERVAL;
@@ -72,7 +74,8 @@ void UnlockState(Service::Interface* self) {
 void SuspendDaemons(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
     u32 bit_mask = cmd_buff[1] & 0xF;
-    daemon_bit_mask = static_cast<DaemonMask>(static_cast<u32>(default_daemon_bit_mask) & ~bit_mask);
+    daemon_bit_mask =
+        static_cast<DaemonMask>(static_cast<u32>(default_daemon_bit_mask) & ~bit_mask);
     for (size_t index = 0; index < daemon_status.size(); ++index) {
         if (bit_mask & (1 << index)) {
             daemon_status[index] = DaemonStatus::Suspended;
@@ -228,9 +231,7 @@ void Init() {
     AddService(new NDM_U_Interface);
 }
 
-void Shutdown() {
+void Shutdown() {}
 
-}
-
-}// namespace NDM
-}// namespace Service
+} // namespace NDM
+} // namespace Service

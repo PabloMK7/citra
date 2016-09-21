@@ -6,17 +6,14 @@
 
 #include <QAbstractListModel>
 #include <QDockWidget>
-
-#include "ui_disassembler.h"
-
 #include "common/break_points.h"
 #include "common/common_types.h"
+#include "ui_disassembler.h"
 
 class QAction;
 class EmuThread;
 
-class DisassemblerModel : public QAbstractListModel
-{
+class DisassemblerModel : public QAbstractListModel {
     Q_OBJECT
 
 public:
@@ -46,8 +43,7 @@ private:
     mutable BreakPoints breakpoints;
 };
 
-class DisassemblerWidget : public QDockWidget
-{
+class DisassemblerWidget : public QDockWidget {
     Q_OBJECT
 
 public:

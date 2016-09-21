@@ -7,47 +7,39 @@
 #include <QPushButton>
 #include <QTreeView>
 #include <QVBoxLayout>
-
 #include "citra_qt/debugger/graphics_breakpoints.h"
 #include "citra_qt/debugger/graphics_breakpoints_p.h"
-
 #include "common/assert.h"
 
 BreakPointModel::BreakPointModel(std::shared_ptr<Pica::DebugContext> debug_context, QObject* parent)
     : QAbstractListModel(parent), context_weak(debug_context),
       at_breakpoint(debug_context->at_breakpoint),
-      active_breakpoint(debug_context->active_breakpoint)
-{
+      active_breakpoint(debug_context->active_breakpoint) {}
 
-}
-
-int BreakPointModel::columnCount(const QModelIndex& parent) const
-{
+int BreakPointModel::columnCount(const QModelIndex& parent) const {
     return 1;
 }
 
-int BreakPointModel::rowCount(const QModelIndex& parent) const
-{
+int BreakPointModel::rowCount(const QModelIndex& parent) const {
     return static_cast<int>(Pica::DebugContext::Event::NumEvents);
 }
 
-QVariant BreakPointModel::data(const QModelIndex& index, int role) const
-{
+QVariant BreakPointModel::data(const QModelIndex& index, int role) const {
     const auto event = static_cast<Pica::DebugContext::Event>(index.row());
 
     switch (role) {
-    case Qt::DisplayRole:
-    {
+    case Qt::DisplayRole: {
         if (index.column() == 0) {
             static const std::map<Pica::DebugContext::Event, QString> map = {
-                { Pica::DebugContext::Event::PicaCommandLoaded, tr("Pica command loaded") },
-                { Pica::DebugContext::Event::PicaCommandProcessed, tr("Pica command processed") },
-                { Pica::DebugContext::Event::IncomingPrimitiveBatch, tr("Incoming primitive batch") },
-                { Pica::DebugContext::Event::FinishedPrimitiveBatch, tr("Finished primitive batch") },
-                { Pica::DebugContext::Event::VertexShaderInvocation, tr("Vertex shader invocation") },
-                { Pica::DebugContext::Event::IncomingDisplayTransfer, tr("Incoming display transfer") },
-                { Pica::DebugContext::Event::GSPCommandProcessed, tr("GSP command processed") },
-                { Pica::DebugContext::Event::BufferSwapped, tr("Buffers swapped") }
+                {Pica::DebugContext::Event::PicaCommandLoaded, tr("Pica command loaded")},
+                {Pica::DebugContext::Event::PicaCommandProcessed, tr("Pica command processed")},
+                {Pica::DebugContext::Event::IncomingPrimitiveBatch, tr("Incoming primitive batch")},
+                {Pica::DebugContext::Event::FinishedPrimitiveBatch, tr("Finished primitive batch")},
+                {Pica::DebugContext::Event::VertexShaderInvocation, tr("Vertex shader invocation")},
+                {Pica::DebugContext::Event::IncomingDisplayTransfer,
+                 tr("Incoming display transfer")},
+                {Pica::DebugContext::Event::GSPCommandProcessed, tr("GSP command processed")},
+                {Pica::DebugContext::Event::BufferSwapped, tr("Buffers swapped")},
             };
 
             DEBUG_ASSERT(map.size() == static_cast<size_t>(Pica::DebugContext::Event::NumEvents));
@@ -57,23 +49,20 @@ QVariant BreakPointModel::data(const QModelIndex& index, int role) const
         break;
     }
 
-    case Qt::CheckStateRole:
-    {
+    case Qt::CheckStateRole: {
         if (index.column() == 0)
             return data(index, Role_IsEnabled).toBool() ? Qt::Checked : Qt::Unchecked;
         break;
     }
 
-    case Qt::BackgroundRole:
-    {
+    case Qt::BackgroundRole: {
         if (at_breakpoint && index.row() == static_cast<int>(active_breakpoint)) {
             return QBrush(QColor(0xE0, 0xE0, 0x10));
         }
         break;
     }
 
-    case Role_IsEnabled:
-    {
+    case Role_IsEnabled: {
         auto context = context_weak.lock();
         return context && context->breakpoints[(int)event].enabled;
     }
@@ -84,8 +73,7 @@ QVariant BreakPointModel::data(const QModelIndex& index, int role) const
     return QVariant();
 }
 
-Qt::ItemFlags BreakPointModel::flags(const QModelIndex &index) const
-{
+Qt::ItemFlags BreakPointModel::flags(const QModelIndex& index) const {
     if (!index.isValid())
         return 0;
 
@@ -95,14 +83,11 @@ Qt::ItemFlags BreakPointModel::flags(const QModelIndex &index) const
     return flags;
 }
 
-
-bool BreakPointModel::setData(const QModelIndex& index, const QVariant& value, int role)
-{
+bool BreakPointModel::setData(const QModelIndex& index, const QVariant& value, int role) {
     const auto event = static_cast<Pica::DebugContext::Event>(index.row());
 
     switch (role) {
-    case Qt::CheckStateRole:
-    {
+    case Qt::CheckStateRole: {
         if (index.column() != 0)
             return false;
 
@@ -120,9 +105,7 @@ bool BreakPointModel::setData(const QModelIndex& index, const QVariant& value, i
     return false;
 }
 
-
-void BreakPointModel::OnBreakPointHit(Pica::DebugContext::Event event)
-{
+void BreakPointModel::OnBreakPointHit(Pica::DebugContext::Event event) {
     auto context = context_weak.lock();
     if (!context)
         return;
@@ -133,8 +116,7 @@ void BreakPointModel::OnBreakPointHit(Pica::DebugContext::Event event)
                      createIndex(static_cast<int>(event), 0));
 }
 
-void BreakPointModel::OnResumed()
-{
+void BreakPointModel::OnResumed() {
     auto context = context_weak.lock();
     if (!context)
         return;
@@ -145,12 +127,10 @@ void BreakPointModel::OnResumed()
     active_breakpoint = context->active_breakpoint;
 }
 
-
-GraphicsBreakPointsWidget::GraphicsBreakPointsWidget(std::shared_ptr<Pica::DebugContext> debug_context,
-                                                     QWidget* parent)
+GraphicsBreakPointsWidget::GraphicsBreakPointsWidget(
+    std::shared_ptr<Pica::DebugContext> debug_context, QWidget* parent)
     : QDockWidget(tr("Pica Breakpoints"), parent),
-      Pica::DebugContext::BreakPointObserver(debug_context)
-{
+      Pica::DebugContext::BreakPointObserver(debug_context) {
     setObjectName("PicaBreakPointsWidget");
 
     status_text = new QLabel(tr("Emulation running"));
@@ -165,23 +145,21 @@ GraphicsBreakPointsWidget::GraphicsBreakPointsWidget(std::shared_ptr<Pica::Debug
 
     qRegisterMetaType<Pica::DebugContext::Event>("Pica::DebugContext::Event");
 
-    connect(breakpoint_list, SIGNAL(doubleClicked(const QModelIndex&)),
-            this, SLOT(OnItemDoubleClicked(const QModelIndex&)));
+    connect(breakpoint_list, SIGNAL(doubleClicked(const QModelIndex&)), this,
+            SLOT(OnItemDoubleClicked(const QModelIndex&)));
 
     connect(resume_button, SIGNAL(clicked()), this, SLOT(OnResumeRequested()));
 
-    connect(this, SIGNAL(BreakPointHit(Pica::DebugContext::Event,void*)),
-            this, SLOT(OnBreakPointHit(Pica::DebugContext::Event,void*)),
-            Qt::BlockingQueuedConnection);
+    connect(this, SIGNAL(BreakPointHit(Pica::DebugContext::Event, void*)), this,
+            SLOT(OnBreakPointHit(Pica::DebugContext::Event, void*)), Qt::BlockingQueuedConnection);
     connect(this, SIGNAL(Resumed()), this, SLOT(OnResumed()));
 
-    connect(this, SIGNAL(BreakPointHit(Pica::DebugContext::Event,void*)),
-            breakpoint_model, SLOT(OnBreakPointHit(Pica::DebugContext::Event)),
-            Qt::BlockingQueuedConnection);
+    connect(this, SIGNAL(BreakPointHit(Pica::DebugContext::Event, void*)), breakpoint_model,
+            SLOT(OnBreakPointHit(Pica::DebugContext::Event)), Qt::BlockingQueuedConnection);
     connect(this, SIGNAL(Resumed()), breakpoint_model, SLOT(OnResumed()));
 
-    connect(this, SIGNAL(BreakPointsChanged(const QModelIndex&,const QModelIndex&)),
-            breakpoint_model, SIGNAL(dataChanged(const QModelIndex&,const QModelIndex&)));
+    connect(this, SIGNAL(BreakPointsChanged(const QModelIndex&, const QModelIndex&)),
+            breakpoint_model, SIGNAL(dataChanged(const QModelIndex&, const QModelIndex&)));
 
     QWidget* main_widget = new QWidget;
     auto main_layout = new QVBoxLayout;
@@ -197,38 +175,32 @@ GraphicsBreakPointsWidget::GraphicsBreakPointsWidget(std::shared_ptr<Pica::Debug
     setWidget(main_widget);
 }
 
-void GraphicsBreakPointsWidget::OnPicaBreakPointHit(Event event, void* data)
-{
+void GraphicsBreakPointsWidget::OnPicaBreakPointHit(Event event, void* data) {
     // Process in GUI thread
     emit BreakPointHit(event, data);
 }
 
-void GraphicsBreakPointsWidget::OnBreakPointHit(Pica::DebugContext::Event event, void* data)
-{
+void GraphicsBreakPointsWidget::OnBreakPointHit(Pica::DebugContext::Event event, void* data) {
     status_text->setText(tr("Emulation halted at breakpoint"));
     resume_button->setEnabled(true);
 }
 
-void GraphicsBreakPointsWidget::OnPicaResume()
-{
+void GraphicsBreakPointsWidget::OnPicaResume() {
     // Process in GUI thread
     emit Resumed();
 }
 
-void GraphicsBreakPointsWidget::OnResumed()
-{
+void GraphicsBreakPointsWidget::OnResumed() {
     status_text->setText(tr("Emulation running"));
     resume_button->setEnabled(false);
 }
 
-void GraphicsBreakPointsWidget::OnResumeRequested()
-{
+void GraphicsBreakPointsWidget::OnResumeRequested() {
     if (auto context = context_weak.lock())
         context->Resume();
 }
 
-void GraphicsBreakPointsWidget::OnItemDoubleClicked(const QModelIndex& index)
-{
+void GraphicsBreakPointsWidget::OnItemDoubleClicked(const QModelIndex& index) {
     if (!index.isValid())
         return;
 

@@ -4,12 +4,11 @@
 
 #include "common/common_types.h"
 #include "common/logging/log.h"
-
-#include "core/hle/service/service.h"
 #include "core/hle/service/nim/nim.h"
 #include "core/hle/service/nim/nim_aoc.h"
 #include "core/hle/service/nim/nim_s.h"
 #include "core/hle/service/nim/nim_u.h"
+#include "core/hle/service/service.h"
 
 namespace Service {
 namespace NIM {
@@ -31,8 +30,7 @@ void Init() {
     AddService(new NIM_U_Interface);
 }
 
-void Shutdown() {
-}
+void Shutdown() {}
 
 } // namespace NIM
 

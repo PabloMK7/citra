@@ -5,7 +5,6 @@
 #pragma once
 
 #include "common/common_types.h"
-
 #include "core/hle/kernel/kernel.h"
 
 // Address arbiters are an underlying kernel synchronization object that can be created/used via
@@ -36,13 +35,19 @@ public:
      */
     static SharedPtr<AddressArbiter> Create(std::string name = "Unknown");
 
-    std::string GetTypeName() const override { return "Arbiter"; }
-    std::string GetName() const override { return name; }
+    std::string GetTypeName() const override {
+        return "Arbiter";
+    }
+    std::string GetName() const override {
+        return name;
+    }
 
     static const HandleType HANDLE_TYPE = HandleType::AddressArbiter;
-    HandleType GetHandleType() const override { return HANDLE_TYPE; }
+    HandleType GetHandleType() const override {
+        return HANDLE_TYPE;
+    }
 
-    std::string name;   ///< Name of address arbiter object (optional)
+    std::string name; ///< Name of address arbiter object (optional)
 
     ResultCode ArbitrateAddress(ArbitrationType type, VAddr address, s32 value, u64 nanoseconds);
 

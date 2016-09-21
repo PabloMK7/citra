@@ -5,22 +5,16 @@
 #include <algorithm>
 #include <cstdlib>
 #include <string>
-
 #define SDL_MAIN_HANDLED
 #include <SDL.h>
-
 #include <glad/glad.h>
-
+#include "citra/emu_window/emu_window_sdl2.h"
 #include "common/key_map.h"
 #include "common/logging/log.h"
 #include "common/scm_rev.h"
 #include "common/string_util.h"
-
-#include "core/settings.h"
 #include "core/hle/service/hid/hid.h"
-
-#include "citra/emu_window/emu_window_sdl2.h"
-
+#include "core/settings.h"
 #include "video_core/video_core.h"
 
 void EmuWindow_SDL2::OnMouseMotion(s32 x, s32 y) {
@@ -40,9 +34,9 @@ void EmuWindow_SDL2::OnMouseButton(u32 button, u8 state, s32 x, s32 y) {
 
 void EmuWindow_SDL2::OnKeyEvent(int key, u8 state) {
     if (state == SDL_PRESSED) {
-        KeyMap::PressKey(*this, { key, keyboard_id });
+        KeyMap::PressKey(*this, {key, keyboard_id});
     } else if (state == SDL_RELEASED) {
-        KeyMap::ReleaseKey(*this, { key, keyboard_id });
+        KeyMap::ReleaseKey(*this, {key, keyboard_id});
     }
 }
 
@@ -55,7 +49,8 @@ void EmuWindow_SDL2::OnResize() {
 
     SDL_GetWindowSize(render_window, &width, &height);
 
-    NotifyFramebufferLayoutChanged(EmuWindow::FramebufferLayout::DefaultScreenLayout(width, height));
+    NotifyFramebufferLayoutChanged(
+        EmuWindow::FramebufferLayout::DefaultScreenLayout(width, height));
 }
 
 EmuWindow_SDL2::EmuWindow_SDL2() {
@@ -80,12 +75,13 @@ EmuWindow_SDL2::EmuWindow_SDL2() {
     SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 0);
 
-    std::string window_title = Common::StringFromFormat("Citra | %s-%s", Common::g_scm_branch, Common::g_scm_desc);
-    render_window = SDL_CreateWindow(window_title.c_str(),
+    std::string window_title =
+        Common::StringFromFormat("Citra | %s-%s", Common::g_scm_branch, Common::g_scm_desc);
+    render_window = SDL_CreateWindow(
+        window_title.c_str(),
         SDL_WINDOWPOS_UNDEFINED, // x position
         SDL_WINDOWPOS_UNDEFINED, // y position
-        VideoCore::kScreenTopWidth,
-        VideoCore::kScreenTopHeight + VideoCore::kScreenBottomHeight,
+        VideoCore::kScreenTopWidth, VideoCore::kScreenTopHeight + VideoCore::kScreenBottomHeight,
         SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
 
     if (render_window == nullptr) {
@@ -171,10 +167,14 @@ void EmuWindow_SDL2::DoneCurrent() {
 void EmuWindow_SDL2::ReloadSetKeymaps() {
     KeyMap::ClearKeyMapping(keyboard_id);
     for (int i = 0; i < Settings::NativeInput::NUM_INPUTS; ++i) {
-        KeyMap::SetKeyMapping({ Settings::values.input_mappings[Settings::NativeInput::All[i]], keyboard_id }, KeyMap::mapping_targets[i]);
+        KeyMap::SetKeyMapping(
+            {Settings::values.input_mappings[Settings::NativeInput::All[i]], keyboard_id},
+            KeyMap::mapping_targets[i]);
     }
 }
 
-void EmuWindow_SDL2::OnMinimalClientAreaChangeRequest(const std::pair<unsigned, unsigned>& minimal_size) {
+void EmuWindow_SDL2::OnMinimalClientAreaChangeRequest(
+    const std::pair<unsigned, unsigned>& minimal_size) {
+
     SDL_SetWindowMinimumSize(render_window, minimal_size.first, minimal_size.second);
 }

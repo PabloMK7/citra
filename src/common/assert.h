@@ -5,7 +5,6 @@
 #pragma once
 
 #include <cstdlib>
-
 #include "common/common_funcs.h"
 #include "common/logging/log.h"
 
@@ -18,25 +17,29 @@
 // enough for our purposes.
 template <typename Fn>
 #if defined(_MSC_VER)
-    __declspec(noinline, noreturn)
+__declspec(noinline, noreturn)
 #elif defined(__GNUC__)
     __attribute__((noinline, noreturn, cold))
 #endif
-static void assert_noinline_call(const Fn& fn) {
+    static void assert_noinline_call(const Fn& fn) {
     fn();
     Crash();
     exit(1); // Keeps GCC's mouth shut about this actually returning
 }
 
-#define ASSERT(_a_) \
-    do if (!(_a_)) { assert_noinline_call([] { \
-        LOG_CRITICAL(Debug, "Assertion Failed!"); \
-    }); } while (0)
+#define ASSERT(_a_)                                                                                \
+    do                                                                                             \
+        if (!(_a_)) {                                                                              \
+            assert_noinline_call([] { LOG_CRITICAL(Debug, "Assertion Failed!"); });                \
+        }                                                                                          \
+    while (0)
 
-#define ASSERT_MSG(_a_, ...) \
-    do if (!(_a_)) { assert_noinline_call([&] { \
-        LOG_CRITICAL(Debug, "Assertion Failed!\n" __VA_ARGS__); \
-    }); } while (0)
+#define ASSERT_MSG(_a_, ...)                                                                       \
+    do                                                                                             \
+        if (!(_a_)) {                                                                              \
+            assert_noinline_call([&] { LOG_CRITICAL(Debug, "Assertion Failed!\n" __VA_ARGS__); }); \
+        }                                                                                          \
+    while (0)
 
 #define UNREACHABLE() ASSERT_MSG(false, "Unreachable code!")
 #define UNREACHABLE_MSG(...) ASSERT_MSG(false, __VA_ARGS__)

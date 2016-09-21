@@ -5,23 +5,21 @@
 #include <algorithm>
 #include <list>
 #include <vector>
-
 #include "common/assert.h"
 #include "common/common_types.h"
 #include "common/logging/log.h"
 #include "common/math_util.h"
 #include "common/thread_queue_list.h"
-
 #include "core/arm/arm_interface.h"
 #include "core/arm/skyeye_common/armstate.h"
 #include "core/core.h"
 #include "core/core_timing.h"
 #include "core/hle/hle.h"
 #include "core/hle/kernel/kernel.h"
-#include "core/hle/kernel/process.h"
-#include "core/hle/kernel/thread.h"
 #include "core/hle/kernel/memory.h"
 #include "core/hle/kernel/mutex.h"
+#include "core/hle/kernel/process.h"
+#include "core/hle/kernel/thread.h"
 #include "core/hle/result.h"
 #include "core/memory.h"
 
@@ -46,7 +44,7 @@ static Kernel::HandleTable wakeup_callback_handle_table;
 static std::vector<SharedPtr<Thread>> thread_list;
 
 // Lists only ready thread ids.
-static Common::ThreadQueueList<Thread*, THREADPRIO_LOWEST+1> ready_queue;
+static Common::ThreadQueueList<Thread*, THREADPRIO_LOWEST + 1> ready_queue;
 
 static Thread* current_thread;
 
@@ -103,7 +101,7 @@ void Thread::Stop() {
 
     // Clean up thread from ready queue
     // This is only needed when the thread is termintated forcefully (SVC TerminateProcess)
-    if (status == THREADSTATUS_READY){
+    if (status == THREADSTATUS_READY) {
         ready_queue.remove(current_priority, this);
     }
 
@@ -119,7 +117,8 @@ void Thread::Stop() {
 
     // Mark the TLS slot in the thread's page as free.
     u32 tls_page = (tls_address - Memory::TLS_AREA_VADDR) / Memory::PAGE_SIZE;
-    u32 tls_slot = ((tls_address - Memory::TLS_AREA_VADDR) % Memory::PAGE_SIZE) / Memory::TLS_ENTRY_SIZE;
+    u32 tls_slot =
+        ((tls_address - Memory::TLS_AREA_VADDR) % Memory::PAGE_SIZE) / Memory::TLS_ENTRY_SIZE;
     Kernel::g_current_process->tls_slots[tls_page].reset(tls_slot);
 
     HLE::Reschedule(__func__);
@@ -137,7 +136,7 @@ Thread* ArbitrateHighestPriorityThread(u32 address) {
         if (thread == nullptr)
             continue;
 
-        if(thread->current_priority <= priority) {
+        if (thread->current_priority <= priority) {
             highest_priority_thread = thread.get();
             priority = thread->current_priority;
         }
@@ -170,7 +169,7 @@ static void PriorityBoostStarvedThreads() {
         // on hardware. However, this is almost certainly not perfect, and the real CTR OS scheduler
         // should probably be reversed to verify this.
 
-        const u64 boost_timeout = 2000000;  // Boost threads that have been ready for > this long
+        const u64 boost_timeout = 2000000; // Boost threads that have been ready for > this long
 
         u64 delta = current_ticks - thread->last_running_ticks;
 
@@ -193,10 +192,12 @@ static std::tuple<u32*, u32*> GetWaitSynchTimeoutParameterRegister(Thread* threa
 
     if ((thumb_mode && thumb_inst == 0xDF24) || (!thumb_mode && inst == 0x0F000024)) {
         // svc #0x24 (WaitSynchronization1)
-        return std::make_tuple(&thread->context.cpu_registers[2], &thread->context.cpu_registers[3]);
+        return std::make_tuple(&thread->context.cpu_registers[2],
+                               &thread->context.cpu_registers[3]);
     } else if ((thumb_mode && thumb_inst == 0xDF25) || (!thumb_mode && inst == 0x0F000025)) {
         // svc #0x25 (WaitSynchronizationN)
-        return std::make_tuple(&thread->context.cpu_registers[0], &thread->context.cpu_registers[4]);
+        return std::make_tuple(&thread->context.cpu_registers[0],
+                               &thread->context.cpu_registers[4]);
     }
 
     UNREACHABLE();
@@ -245,7 +246,8 @@ static void SwitchContext(Thread* new_thread) {
 
     // Load context of new thread
     if (new_thread) {
-        DEBUG_ASSERT_MSG(new_thread->status == THREADSTATUS_READY, "Thread must be ready to become running.");
+        DEBUG_ASSERT_MSG(new_thread->status == THREADSTATUS_READY,
+                         "Thread must be ready to become running.");
 
         // Cancel any outstanding wakeup events for this thread
         CoreTiming::UnscheduleEvent(ThreadWakeupEventType, new_thread->callback_handle);
@@ -263,7 +265,7 @@ static void SwitchContext(Thread* new_thread) {
             new_thread->context.pc -= thumb_mode ? 2 : 4;
 
             // Get the register for timeout parameter
-            u32* timeout_low, *timeout_high;
+            u32 *timeout_low, *timeout_high;
             std::tie(timeout_low, timeout_high) = GetWaitSynchTimeoutParameterRegister(new_thread);
 
             // Update the timeout parameter
@@ -307,7 +309,7 @@ static Thread* PopNextReadyThread() {
             // Otherwise just keep going with the current thread
             next = thread;
         }
-    } else  {
+    } else {
         next = ready_queue.pop_first();
     }
 
@@ -321,7 +323,8 @@ void WaitCurrentThread_Sleep() {
     HLE::Reschedule(__func__);
 }
 
-void WaitCurrentThread_WaitSynchronization(std::vector<SharedPtr<WaitObject>> wait_objects, bool wait_set_output, bool wait_all) {
+void WaitCurrentThread_WaitSynchronization(std::vector<SharedPtr<WaitObject>> wait_objects,
+                                           bool wait_set_output, bool wait_all) {
     Thread* thread = GetCurrentThread();
     thread->wait_set_output = wait_set_output;
     thread->wait_all = wait_all;
@@ -352,7 +355,8 @@ static void ThreadWakeupCallback(u64 thread_handle, int cycles_late) {
 
     if (thread->status == THREADSTATUS_WAIT_SYNCH || thread->status == THREADSTATUS_WAIT_ARB) {
         thread->SetWaitSynchronizationResult(ResultCode(ErrorDescription::Timeout, ErrorModule::OS,
-                                                        ErrorSummary::StatusChanged, ErrorLevel::Info));
+                                                        ErrorSummary::StatusChanged,
+                                                        ErrorLevel::Info));
 
         if (thread->wait_set_output)
             thread->SetWaitSynchronizationOutput(-1);
@@ -372,25 +376,25 @@ void Thread::WakeAfterDelay(s64 nanoseconds) {
 
 void Thread::ResumeFromWait() {
     switch (status) {
-        case THREADSTATUS_WAIT_SYNCH:
-        case THREADSTATUS_WAIT_ARB:
-        case THREADSTATUS_WAIT_SLEEP:
-            break;
+    case THREADSTATUS_WAIT_SYNCH:
+    case THREADSTATUS_WAIT_ARB:
+    case THREADSTATUS_WAIT_SLEEP:
+        break;
 
-        case THREADSTATUS_READY:
-            // If the thread is waiting on multiple wait objects, it might be awoken more than once
-            // before actually resuming. We can ignore subsequent wakeups if the thread status has
-            // already been set to THREADSTATUS_READY.
-            return;
+    case THREADSTATUS_READY:
+        // If the thread is waiting on multiple wait objects, it might be awoken more than once
+        // before actually resuming. We can ignore subsequent wakeups if the thread status has
+        // already been set to THREADSTATUS_READY.
+        return;
 
-        case THREADSTATUS_RUNNING:
-            DEBUG_ASSERT_MSG(false, "Thread with object id %u has already resumed.", GetObjectId());
-            return;
-        case THREADSTATUS_DEAD:
-            // This should never happen, as threads must complete before being stopped.
-            DEBUG_ASSERT_MSG(false, "Thread with object id %u cannot be resumed because it's DEAD.",
-                GetObjectId());
-            return;
+    case THREADSTATUS_RUNNING:
+        DEBUG_ASSERT_MSG(false, "Thread with object id %u has already resumed.", GetObjectId());
+        return;
+    case THREADSTATUS_DEAD:
+        // This should never happen, as threads must complete before being stopped.
+        DEBUG_ASSERT_MSG(false, "Thread with object id %u cannot be resumed because it's DEAD.",
+                         GetObjectId());
+        return;
     }
 
     ready_queue.push_back(current_priority, this);
@@ -405,7 +409,8 @@ static void DebugThreadQueue() {
     if (!thread) {
         LOG_DEBUG(Kernel, "Current: NO CURRENT THREAD");
     } else {
-        LOG_DEBUG(Kernel, "0x%02X %u (current)", thread->current_priority, GetCurrentThread()->GetObjectId());
+        LOG_DEBUG(Kernel, "0x%02X %u (current)", thread->current_priority,
+                  GetCurrentThread()->GetObjectId());
     }
 
     for (auto& t : thread_list) {
@@ -448,7 +453,8 @@ std::tuple<u32, u32, bool> GetFreeThreadLocalSlot(std::vector<std::bitset<8>>& t
  * @param entry_point Address of entry point for execution
  * @param arg User argument for thread
  */
-static void ResetThreadContext(Core::ThreadContext& context, u32 stack_top, u32 entry_point, u32 arg) {
+static void ResetThreadContext(Core::ThreadContext& context, u32 stack_top, u32 entry_point,
+                               u32 arg) {
     memset(&context, 0, sizeof(Core::ThreadContext));
 
     context.cpu_registers[0] = arg;
@@ -458,11 +464,11 @@ static void ResetThreadContext(Core::ThreadContext& context, u32 stack_top, u32 
 }
 
 ResultVal<SharedPtr<Thread>> Thread::Create(std::string name, VAddr entry_point, s32 priority,
-        u32 arg, s32 processor_id, VAddr stack_top) {
+                                            u32 arg, s32 processor_id, VAddr stack_top) {
     if (priority < THREADPRIO_HIGHEST || priority > THREADPRIO_LOWEST) {
         s32 new_priority = MathUtil::Clamp<s32>(priority, THREADPRIO_HIGHEST, THREADPRIO_LOWEST);
-        LOG_WARNING(Kernel_SVC, "(name=%s): invalid priority=%d, clamping to %d",
-            name.c_str(), priority, new_priority);
+        LOG_WARNING(Kernel_SVC, "(name=%s): invalid priority=%d, clamping to %d", name.c_str(),
+                    priority, new_priority);
         // TODO(bunnei): Clamping to a valid priority is not necessarily correct behavior... Confirm
         // validity of this
         priority = new_priority;
@@ -472,7 +478,7 @@ ResultVal<SharedPtr<Thread>> Thread::Create(std::string name, VAddr entry_point,
         LOG_ERROR(Kernel_SVC, "(name=%s): invalid entry %08x", name.c_str(), entry_point);
         // TODO: Verify error
         return ResultCode(ErrorDescription::InvalidAddress, ErrorModule::Kernel,
-                ErrorSummary::InvalidArgument, ErrorLevel::Permanent);
+                          ErrorSummary::InvalidArgument, ErrorLevel::Permanent);
     }
 
     SharedPtr<Thread> thread(new Thread);
@@ -511,8 +517,10 @@ ResultVal<SharedPtr<Thread>> Thread::Create(std::string name, VAddr entry_point,
         auto& linheap_memory = memory_region->linear_heap_memory;
 
         if (linheap_memory->size() + Memory::PAGE_SIZE > memory_region->size) {
-            LOG_ERROR(Kernel_SVC, "Not enough space in region to allocate a new TLS page for thread");
-            return ResultCode(ErrorDescription::OutOfMemory, ErrorModule::Kernel, ErrorSummary::OutOfResource, ErrorLevel::Permanent);
+            LOG_ERROR(Kernel_SVC,
+                      "Not enough space in region to allocate a new TLS page for thread");
+            return ResultCode(ErrorDescription::OutOfMemory, ErrorModule::Kernel,
+                              ErrorSummary::OutOfResource, ErrorLevel::Permanent);
         }
 
         u32 offset = linheap_memory->size();
@@ -537,7 +545,8 @@ ResultVal<SharedPtr<Thread>> Thread::Create(std::string name, VAddr entry_point,
 
     // Mark the slot as used
     tls_slots[available_page].set(available_slot);
-    thread->tls_address = Memory::TLS_AREA_VADDR + available_page * Memory::PAGE_SIZE + available_slot * Memory::TLS_ENTRY_SIZE;
+    thread->tls_address = Memory::TLS_AREA_VADDR + available_page * Memory::PAGE_SIZE +
+                          available_slot * Memory::TLS_ENTRY_SIZE;
 
     // TODO(peachum): move to ScheduleThread() when scheduler is added so selected core is used
     // to initialize the context
@@ -551,10 +560,12 @@ ResultVal<SharedPtr<Thread>> Thread::Create(std::string name, VAddr entry_point,
     return MakeResult<SharedPtr<Thread>>(std::move(thread));
 }
 
-// TODO(peachum): Remove this. Range checking should be done, and an appropriate error should be returned.
+// TODO(peachum): Remove this. Range checking should be done, and an appropriate error should be
+// returned.
 static void ClampPriority(const Thread* thread, s32* priority) {
     if (*priority < THREADPRIO_HIGHEST || *priority > THREADPRIO_LOWEST) {
-        DEBUG_ASSERT_MSG(false, "Application passed an out of range priority. An error should be returned.");
+        DEBUG_ASSERT_MSG(
+            false, "Application passed an out of range priority. An error should be returned.");
 
         s32 new_priority = MathUtil::Clamp<s32>(*priority, THREADPRIO_HIGHEST, THREADPRIO_LOWEST);
         LOG_WARNING(Kernel_SVC, "(name=%s): invalid priority=%d, clamping to %d",
@@ -586,12 +597,13 @@ SharedPtr<Thread> SetupMainThread(u32 entry_point, s32 priority) {
     DEBUG_ASSERT(!GetCurrentThread());
 
     // Initialize new "main" thread
-    auto thread_res = Thread::Create("main", entry_point, priority, 0,
-            THREADPROCESSORID_0, Memory::HEAP_VADDR_END);
+    auto thread_res = Thread::Create("main", entry_point, priority, 0, THREADPROCESSORID_0,
+                                     Memory::HEAP_VADDR_END);
 
     SharedPtr<Thread> thread = thread_res.MoveFrom();
 
-    thread->context.fpscr = FPSCR_DEFAULT_NAN | FPSCR_FLUSH_TO_ZERO | FPSCR_ROUND_TOZERO | FPSCR_IXC; // 0x03C00010
+    thread->context.fpscr =
+        FPSCR_DEFAULT_NAN | FPSCR_FLUSH_TO_ZERO | FPSCR_ROUND_TOZERO | FPSCR_IXC; // 0x03C00010
 
     // Run new "main" thread
     SwitchContext(thread.get());

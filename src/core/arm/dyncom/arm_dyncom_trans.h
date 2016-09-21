@@ -1,16 +1,19 @@
+#include <cstddef>
+#include "common/common_types.h"
+
 struct ARMul_State;
 typedef unsigned int (*shtop_fp_t)(ARMul_State* cpu, unsigned int sht_oper);
 
 enum class TransExtData {
-    COND            = (1 << 0),
-    NON_BRANCH      = (1 << 1),
-    DIRECT_BRANCH   = (1 << 2),
+    COND = (1 << 0),
+    NON_BRANCH = (1 << 1),
+    DIRECT_BRANCH = (1 << 2),
     INDIRECT_BRANCH = (1 << 3),
-    CALL            = (1 << 4),
-    RET             = (1 << 5),
-    END_OF_PAGE     = (1 << 6),
-    THUMB           = (1 << 7),
-    SINGLE_STEP     = (1 << 8)
+    CALL = (1 << 4),
+    RET = (1 << 5),
+    END_OF_PAGE = (1 << 6),
+    THUMB = (1 << 7),
+    SINGLE_STEP = (1 << 8)
 };
 
 struct arm_inst {
@@ -106,8 +109,7 @@ struct cps_inst {
     unsigned int mode;
 };
 
-struct clrex_inst {
-};
+struct clrex_inst {};
 
 struct cpy_inst {
     unsigned int Rm;
@@ -163,11 +165,9 @@ struct bkpt_inst {
     u32 imm;
 };
 
-struct stc_inst {
-};
+struct stc_inst {};
 
-struct ldc_inst {
-};
+struct ldc_inst {};
 
 struct swi_inst {
     unsigned int num;
@@ -369,8 +369,7 @@ struct msr_inst {
     unsigned int inst;
 };
 
-struct pld_inst {
-};
+struct pld_inst {};
 
 struct sxtb_inst {
     unsigned int Rd;
@@ -475,7 +474,7 @@ struct pkh_inst {
 #include "core/arm/skyeye_common/vfp/vfpinstr.cpp"
 #undef VFP_INTERPRETER_STRUCT
 
-typedef void (*get_addr_fp_t)(ARMul_State *cpu, unsigned int inst, unsigned int &virt_addr);
+typedef void (*get_addr_fp_t)(ARMul_State* cpu, unsigned int inst, unsigned int& virt_addr);
 
 struct ldst_inst {
     unsigned int inst;

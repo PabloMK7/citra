@@ -9,8 +9,8 @@
 #define BITS(s, a, b) ((s << ((sizeof(s) * 8 - 1) - b)) >> (sizeof(s) * 8 - b + a - 1))
 #define BIT(s, n) ((s >> (n)) & 1)
 
-#define POS(i) ( (~(i)) >> 31 )
-#define NEG(i) ( (i) >> 31 )
+#define POS(i) ((~(i)) >> 31)
+#define NEG(i) ((i) >> 31)
 
 bool AddOverflow(u32, u32, u32);
 bool SubOverflow(u32, u32, u32);

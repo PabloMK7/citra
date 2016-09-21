@@ -4,9 +4,8 @@
 
 #include "common/common_types.h"
 #include "common/logging/log.h"
-
-#include "core/hle/service/srv.h"
 #include "core/hle/kernel/event.h"
+#include "core/hle/service/srv.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Namespace SRV
@@ -28,13 +27,14 @@ static void RegisterClient(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
     if (cmd_buff[1] != IPC::CallingPidDesc()) {
-        cmd_buff[0] = IPC::MakeHeader(0x0, 0x1, 0); //0x40
+        cmd_buff[0] = IPC::MakeHeader(0x0, 0x1, 0); // 0x40
         cmd_buff[1] = ResultCode(ErrorDescription::OS_InvalidBufferDescriptor, ErrorModule::OS,
-                                 ErrorSummary::WrongArgument, ErrorLevel::Permanent).raw;
+                                 ErrorSummary::WrongArgument, ErrorLevel::Permanent)
+                          .raw;
         return;
     }
-    cmd_buff[0] = IPC::MakeHeader(0x1, 0x1, 0); //0x10040
-    cmd_buff[1] = RESULT_SUCCESS.raw; // No error
+    cmd_buff[0] = IPC::MakeHeader(0x1, 0x1, 0); // 0x10040
+    cmd_buff[1] = RESULT_SUCCESS.raw;           // No error
     LOG_WARNING(Service_SRV, "(STUBBED) called");
 }
 
@@ -56,7 +56,7 @@ static void EnableNotification(Service::Interface* self) {
     event_handle->Clear();
 
     cmd_buff[0] = IPC::MakeHeader(0x2, 0x1, 0x2); // 0x20042
-    cmd_buff[1] = RESULT_SUCCESS.raw; // No error
+    cmd_buff[1] = RESULT_SUCCESS.raw;             // No error
     cmd_buff[2] = IPC::CopyHandleDesc(1);
     cmd_buff[3] = Kernel::g_handle_table.Create(event_handle).MoveFrom();
     LOG_WARNING(Service_SRV, "(STUBBED) called");
@@ -105,7 +105,7 @@ static void Subscribe(Service::Interface* self) {
     u32 notification_id = cmd_buff[1];
 
     cmd_buff[0] = IPC::MakeHeader(0x9, 0x1, 0); // 0x90040
-    cmd_buff[1] = RESULT_SUCCESS.raw; // No error
+    cmd_buff[1] = RESULT_SUCCESS.raw;           // No error
     LOG_WARNING(Service_SRV, "(STUBBED) called, notification_id=0x%X", notification_id);
 }
 
@@ -124,7 +124,7 @@ static void Unsubscribe(Service::Interface* self) {
     u32 notification_id = cmd_buff[1];
 
     cmd_buff[0] = IPC::MakeHeader(0xA, 0x1, 0); // 0xA0040
-    cmd_buff[1] = RESULT_SUCCESS.raw; // No error
+    cmd_buff[1] = RESULT_SUCCESS.raw;           // No error
     LOG_WARNING(Service_SRV, "(STUBBED) called, notification_id=0x%X", notification_id);
 }
 
@@ -145,25 +145,26 @@ static void PublishToSubscriber(Service::Interface* self) {
     u8 flags = cmd_buff[2] & 0xFF;
 
     cmd_buff[0] = IPC::MakeHeader(0xC, 0x1, 0); // 0xC0040
-    cmd_buff[1] = RESULT_SUCCESS.raw; // No error
-    LOG_WARNING(Service_SRV, "(STUBBED) called, notification_id=0x%X, flags=%u", notification_id, flags);
+    cmd_buff[1] = RESULT_SUCCESS.raw;           // No error
+    LOG_WARNING(Service_SRV, "(STUBBED) called, notification_id=0x%X, flags=%u", notification_id,
+                flags);
 }
 
 const Interface::FunctionInfo FunctionTable[] = {
-    {0x00010002, RegisterClient,          "RegisterClient"},
-    {0x00020000, EnableNotification,      "EnableNotification"},
-    {0x00030100, nullptr,                 "RegisterService"},
-    {0x000400C0, nullptr,                 "UnregisterService"},
-    {0x00050100, GetServiceHandle,        "GetServiceHandle"},
-    {0x000600C2, nullptr,                 "RegisterPort"},
-    {0x000700C0, nullptr,                 "UnregisterPort"},
-    {0x00080100, nullptr,                 "GetPort"},
-    {0x00090040, Subscribe,               "Subscribe"},
-    {0x000A0040, Unsubscribe,             "Unsubscribe"},
-    {0x000B0000, nullptr,                 "ReceiveNotification"},
-    {0x000C0080, PublishToSubscriber,     "PublishToSubscriber"},
-    {0x000D0040, nullptr,                 "PublishAndGetSubscriber"},
-    {0x000E00C0, nullptr,                 "IsServiceRegistered"},
+    {0x00010002, RegisterClient, "RegisterClient"},
+    {0x00020000, EnableNotification, "EnableNotification"},
+    {0x00030100, nullptr, "RegisterService"},
+    {0x000400C0, nullptr, "UnregisterService"},
+    {0x00050100, GetServiceHandle, "GetServiceHandle"},
+    {0x000600C2, nullptr, "RegisterPort"},
+    {0x000700C0, nullptr, "UnregisterPort"},
+    {0x00080100, nullptr, "GetPort"},
+    {0x00090040, Subscribe, "Subscribe"},
+    {0x000A0040, Unsubscribe, "Unsubscribe"},
+    {0x000B0000, nullptr, "ReceiveNotification"},
+    {0x000C0080, PublishToSubscriber, "PublishToSubscriber"},
+    {0x000D0040, nullptr, "PublishAndGetSubscriber"},
+    {0x000E00C0, nullptr, "IsServiceRegistered"},
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -3,10 +3,8 @@
 // Refer to the license.txt file included.
 
 #include <QSettings>
-
 #include "citra_qt/config.h"
 #include "citra_qt/ui_settings.h"
-
 #include "common/file_util.h"
 
 Config::Config() {
@@ -20,24 +18,23 @@ Config::Config() {
 
 const std::array<QVariant, Settings::NativeInput::NUM_INPUTS> Config::defaults = {
     // directly mapped keys
-    Qt::Key_A, Qt::Key_S, Qt::Key_Z, Qt::Key_X,
-    Qt::Key_Q, Qt::Key_W, Qt::Key_1, Qt::Key_2,
-    Qt::Key_M, Qt::Key_N, Qt::Key_B,
-    Qt::Key_T, Qt::Key_G, Qt::Key_F, Qt::Key_H,
-    Qt::Key_I, Qt::Key_K, Qt::Key_J, Qt::Key_L,
+    Qt::Key_A, Qt::Key_S, Qt::Key_Z, Qt::Key_X, Qt::Key_Q, Qt::Key_W, Qt::Key_1, Qt::Key_2,
+    Qt::Key_M, Qt::Key_N, Qt::Key_B, Qt::Key_T, Qt::Key_G, Qt::Key_F, Qt::Key_H, Qt::Key_I,
+    Qt::Key_K, Qt::Key_J, Qt::Key_L,
 
     // indirectly mapped keys
-    Qt::Key_Up, Qt::Key_Down, Qt::Key_Left, Qt::Key_Right,
-    Qt::Key_D,
+    Qt::Key_Up, Qt::Key_Down, Qt::Key_Left, Qt::Key_Right, Qt::Key_D,
 };
 
 void Config::ReadValues() {
     qt_config->beginGroup("Controls");
     for (int i = 0; i < Settings::NativeInput::NUM_INPUTS; ++i) {
         Settings::values.input_mappings[Settings::NativeInput::All[i]] =
-            qt_config->value(QString::fromStdString(Settings::NativeInput::Mapping[i]), defaults[i]).toInt();
+            qt_config->value(QString::fromStdString(Settings::NativeInput::Mapping[i]), defaults[i])
+                .toInt();
     }
-    Settings::values.pad_circle_modifier_scale = qt_config->value("pad_circle_modifier_scale", 0.5).toFloat();
+    Settings::values.pad_circle_modifier_scale =
+        qt_config->value("pad_circle_modifier_scale", 0.5).toFloat();
     qt_config->endGroup();
 
     qt_config->beginGroup("Core");
@@ -48,17 +45,19 @@ void Config::ReadValues() {
     qt_config->beginGroup("Renderer");
     Settings::values.use_hw_renderer = qt_config->value("use_hw_renderer", true).toBool();
     Settings::values.use_shader_jit = qt_config->value("use_shader_jit", true).toBool();
-    Settings::values.use_scaled_resolution = qt_config->value("use_scaled_resolution", false).toBool();
+    Settings::values.use_scaled_resolution =
+        qt_config->value("use_scaled_resolution", false).toBool();
     Settings::values.use_vsync = qt_config->value("use_vsync", false).toBool();
 
-    Settings::values.bg_red   = qt_config->value("bg_red",   1.0).toFloat();
+    Settings::values.bg_red = qt_config->value("bg_red", 1.0).toFloat();
     Settings::values.bg_green = qt_config->value("bg_green", 1.0).toFloat();
-    Settings::values.bg_blue  = qt_config->value("bg_blue",  1.0).toFloat();
+    Settings::values.bg_blue = qt_config->value("bg_blue", 1.0).toFloat();
     qt_config->endGroup();
 
     qt_config->beginGroup("Audio");
     Settings::values.sink_id = qt_config->value("output_engine", "auto").toString().toStdString();
-    Settings::values.enable_audio_stretching = qt_config->value("enable_audio_stretching", true).toBool();
+    Settings::values.enable_audio_stretching =
+        qt_config->value("enable_audio_stretching", true).toBool();
     qt_config->endGroup();
 
     qt_config->beginGroup("Data Storage");
@@ -84,10 +83,14 @@ void Config::ReadValues() {
     qt_config->beginGroup("UILayout");
     UISettings::values.geometry = qt_config->value("geometry").toByteArray();
     UISettings::values.state = qt_config->value("state").toByteArray();
-    UISettings::values.renderwindow_geometry = qt_config->value("geometryRenderWindow").toByteArray();
-    UISettings::values.gamelist_header_state = qt_config->value("gameListHeaderState").toByteArray();
-    UISettings::values.microprofile_geometry = qt_config->value("microProfileDialogGeometry").toByteArray();
-    UISettings::values.microprofile_visible = qt_config->value("microProfileDialogVisible", false).toBool();
+    UISettings::values.renderwindow_geometry =
+        qt_config->value("geometryRenderWindow").toByteArray();
+    UISettings::values.gamelist_header_state =
+        qt_config->value("gameListHeaderState").toByteArray();
+    UISettings::values.microprofile_geometry =
+        qt_config->value("microProfileDialogGeometry").toByteArray();
+    UISettings::values.microprofile_visible =
+        qt_config->value("microProfileDialogVisible", false).toBool();
     qt_config->endGroup();
 
     qt_config->beginGroup("Paths");
@@ -106,10 +109,10 @@ void Config::ReadValues() {
         QStringList hotkeys = qt_config->childGroups();
         for (auto hotkey : hotkeys) {
             qt_config->beginGroup(hotkey);
-            UISettings::values.shortcuts.emplace_back(
-                        UISettings::Shortcut(group + "/" + hotkey,
-                                             UISettings::ContextualShortcut(qt_config->value("KeySeq").toString(),
-                                                                            qt_config->value("Context").toInt())));
+            UISettings::values.shortcuts.emplace_back(UISettings::Shortcut(
+                group + "/" + hotkey,
+                UISettings::ContextualShortcut(qt_config->value("KeySeq").toString(),
+                                               qt_config->value("Context").toInt())));
             qt_config->endGroup();
         }
 
@@ -119,7 +122,7 @@ void Config::ReadValues() {
 
     UISettings::values.single_window_mode = qt_config->value("singleWindowMode", true).toBool();
     UISettings::values.display_titlebar = qt_config->value("displayTitleBars", true).toBool();
-    UISettings::values.confirm_before_closing = qt_config->value("confirmClose",true).toBool();
+    UISettings::values.confirm_before_closing = qt_config->value("confirmClose", true).toBool();
     UISettings::values.first_start = qt_config->value("firstStart", true).toBool();
 
     qt_config->endGroup();
@@ -129,9 +132,10 @@ void Config::SaveValues() {
     qt_config->beginGroup("Controls");
     for (int i = 0; i < Settings::NativeInput::NUM_INPUTS; ++i) {
         qt_config->setValue(QString::fromStdString(Settings::NativeInput::Mapping[i]),
-            Settings::values.input_mappings[Settings::NativeInput::All[i]]);
+                            Settings::values.input_mappings[Settings::NativeInput::All[i]]);
     }
-    qt_config->setValue("pad_circle_modifier_scale", (double)Settings::values.pad_circle_modifier_scale);
+    qt_config->setValue("pad_circle_modifier_scale",
+                        (double)Settings::values.pad_circle_modifier_scale);
     qt_config->endGroup();
 
     qt_config->beginGroup("Core");
@@ -146,9 +150,9 @@ void Config::SaveValues() {
     qt_config->setValue("use_vsync", Settings::values.use_vsync);
 
     // Cast to double because Qt's written float values are not human-readable
-    qt_config->setValue("bg_red",   (double)Settings::values.bg_red);
+    qt_config->setValue("bg_red", (double)Settings::values.bg_red);
     qt_config->setValue("bg_green", (double)Settings::values.bg_green);
-    qt_config->setValue("bg_blue",  (double)Settings::values.bg_blue);
+    qt_config->setValue("bg_blue", (double)Settings::values.bg_blue);
     qt_config->endGroup();
 
     qt_config->beginGroup("Audio");

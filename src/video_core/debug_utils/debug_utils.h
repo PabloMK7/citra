@@ -15,10 +15,8 @@
 #include <string>
 #include <utility>
 #include <vector>
-
 #include "common/common_types.h"
 #include "common/vector_math.h"
-
 #include "video_core/pica.h"
 
 namespace CiTrace {
@@ -53,13 +51,16 @@ public:
      * Most importantly this is used for our debugger GUI.
      *
      * To implement event handling, override the OnPicaBreakPointHit and OnPicaResume methods.
-     * @warning All BreakPointObservers need to be on the same thread to guarantee thread-safe state access
-     * @todo Evaluate an alternative interface, in which there is only one managing observer and multiple child observers running (by design) on the same thread.
+     * @warning All BreakPointObservers need to be on the same thread to guarantee thread-safe state
+     * access
+     * @todo Evaluate an alternative interface, in which there is only one managing observer and
+     * multiple child observers running (by design) on the same thread.
      */
     class BreakPointObserver {
     public:
         /// Constructs the object such that it observes events of the given DebugContext.
-        BreakPointObserver(std::shared_ptr<DebugContext> debug_context) : context_weak(debug_context) {
+        BreakPointObserver(std::shared_ptr<DebugContext> debug_context)
+            : context_weak(debug_context) {
             std::unique_lock<std::mutex> lock(debug_context->breakpoint_mutex);
             debug_context->breakpoint_observers.push_back(this);
         }
@@ -84,15 +85,13 @@ public:
          * @param data Optional data pointer (if unused, this is a nullptr)
          * @note This function will perform nothing unless it is overridden in the child class.
          */
-        virtual void OnPicaBreakPointHit(Event, void*) {
-        }
+        virtual void OnPicaBreakPointHit(Event, void*) {}
 
         /**
          * Action to perform when emulation is resumed from a breakpoint.
          * @note This function will perform nothing unless it is overridden in the child class.
          */
-        virtual void OnPicaResume() {
-        }
+        virtual void OnPicaResume() {}
 
     protected:
         /**
@@ -122,7 +121,8 @@ public:
      * The current thread then is halted until Resume() is called from another thread (or until
      * emulation is stopped).
      * @param event Event which has happened
-     * @param data Optional data pointer (pass nullptr if unused). Needs to remain valid until Resume() is called.
+     * @param data Optional data pointer (pass nullptr if unused). Needs to remain valid until
+     * Resume() is called.
      */
     void OnEvent(Event event, void* data) {
         // This check is left in the header to allow the compiler to inline it.
@@ -132,11 +132,12 @@ public:
         DoOnEvent(event, data);
     }
 
-    void DoOnEvent(Event event, void *data);
+    void DoOnEvent(Event event, void* data);
 
     /**
      * Resume from the current breakpoint.
-     * @warning Calling this from the same thread that OnEvent was called in will cause a deadlock. Calling from any other thread is safe.
+     * @warning Calling this from the same thread that OnEvent was called in will cause a deadlock.
+     * Calling from any other thread is safe.
      */
     void Resume();
 
@@ -144,7 +145,7 @@ public:
      * Delete all set breakpoints and resume emulation.
      */
     void ClearBreakpoints() {
-        for (auto &bp : breakpoints) {
+        for (auto& bp : breakpoints) {
             bp.enabled = false;
         }
         Resume();
@@ -182,8 +183,8 @@ namespace DebugUtils {
 #define PICA_LOG_TEV 0
 
 void DumpShader(const std::string& filename, const Regs::ShaderConfig& config,
-                const Shader::ShaderSetup& setup, const Regs::VSOutputAttributes* output_attributes);
-
+                const Shader::ShaderSetup& setup,
+                const Regs::VSOutputAttributes* output_attributes);
 
 // Utility class to log Pica commands.
 struct PicaTrace {
@@ -216,7 +217,10 @@ struct TextureInfo {
  * @param source Source pointer to read data from
  * @param s,t Texture coordinates to read from
  * @param info TextureInfo object describing the texture setup
- * @param disable_alpha This is used for debug widgets which use this method to display textures without providing a good way to visualize alpha by themselves. If true, this will return 255 for the alpha component, and either drop the information entirely or store it in an "unused" color channel.
+ * @param disable_alpha This is used for debug widgets which use this method to display textures
+ * without providing a good way to visualize alpha by themselves. If true, this will return 255 for
+ * the alpha component, and either drop the information entirely or store it in an "unused" color
+ * channel.
  * @todo Eventually we should get rid of the disable_alpha parameter.
  */
 const Math::Vec4<u8> LookupTexture(const u8* source, int s, int t, const TextureInfo& info,
@@ -237,7 +241,8 @@ class MemoryAccessTracker {
     /// Combine overlapping and close ranges
     void SimplifyRanges() {
         for (auto it = ranges.begin(); it != ranges.end(); ++it) {
-            // NOTE: We add 32 to the range end address to make sure "close" ranges are combined, too
+            // NOTE: We add 32 to the range end address to make sure "close" ranges are combined,
+            // too
             auto it2 = std::next(it);
             while (it2 != ranges.end() && it->first + it->second + 32 >= it2->first) {
                 it->second = std::max(it->second, it2->first + it2->second - it->first);

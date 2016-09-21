@@ -5,7 +5,6 @@
 #pragma once
 
 #include "common/common_types.h"
-
 #include "core/mmio.h"
 
 namespace Memory {
@@ -30,5 +29,4 @@ void MapMemoryRegion(VAddr base, u32 size, u8* target);
 void MapIoRegion(VAddr base, u32 size, MMIORegionPointer mmio_handler);
 
 void UnmapRegion(VAddr base, u32 size);
-
 }

@@ -3,12 +3,10 @@
 // Refer to the license.txt file included.
 
 #include <QTreeWidgetItem>
-
 #include "citra_qt/debugger/registers.h"
 #include "citra_qt/util/util.h"
-
-#include "core/core.h"
 #include "core/arm/arm_interface.h"
+#include "core/core.h"
 
 RegistersWidget::RegistersWidget(QWidget* parent) : QDockWidget(parent) {
     cpu_regs_ui.setupUi(this);
@@ -16,7 +14,8 @@ RegistersWidget::RegistersWidget(QWidget* parent) : QDockWidget(parent) {
     tree = cpu_regs_ui.treeWidget;
     tree->addTopLevelItem(core_registers = new QTreeWidgetItem(QStringList(tr("Registers"))));
     tree->addTopLevelItem(vfp_registers = new QTreeWidgetItem(QStringList(tr("VFP Registers"))));
-    tree->addTopLevelItem(vfp_system_registers = new QTreeWidgetItem(QStringList(tr("VFP System Registers"))));
+    tree->addTopLevelItem(vfp_system_registers =
+                              new QTreeWidgetItem(QStringList(tr("VFP System Registers"))));
     tree->addTopLevelItem(cpsr = new QTreeWidgetItem(QStringList("CPSR")));
 
     for (int i = 0; i < 16; ++i) {
@@ -63,17 +62,18 @@ void RegistersWidget::OnDebugModeEntered() {
         return;
 
     for (int i = 0; i < core_registers->childCount(); ++i)
-        core_registers->child(i)->setText(1, QString("0x%1").arg(Core::g_app_core->GetReg(i), 8, 16, QLatin1Char('0')));
+        core_registers->child(i)->setText(
+            1, QString("0x%1").arg(Core::g_app_core->GetReg(i), 8, 16, QLatin1Char('0')));
 
     for (int i = 0; i < vfp_registers->childCount(); ++i)
-        vfp_registers->child(i)->setText(1, QString("0x%1").arg(Core::g_app_core->GetVFPReg(i), 8, 16, QLatin1Char('0')));
+        vfp_registers->child(i)->setText(
+            1, QString("0x%1").arg(Core::g_app_core->GetVFPReg(i), 8, 16, QLatin1Char('0')));
 
     UpdateCPSRValues();
     UpdateVFPSystemRegisterValues();
 }
 
-void RegistersWidget::OnDebugModeLeft() {
-}
+void RegistersWidget::OnDebugModeLeft() {}
 
 void RegistersWidget::OnEmulationStarting(EmuThread* emu_thread) {
     setEnabled(true);
@@ -130,21 +130,24 @@ void RegistersWidget::UpdateCPSRValues() {
     const u32 cpsr_val = Core::g_app_core->GetCPSR();
 
     cpsr->setText(1, QString("0x%1").arg(cpsr_val, 8, 16, QLatin1Char('0')));
-    cpsr->child(0)->setText(1, QString("b%1").arg(cpsr_val & 0x1F, 5, 2, QLatin1Char('0'))); // M - Mode
-    cpsr->child(1)->setText(1, QString::number((cpsr_val >> 5) & 1));     // T - State
-    cpsr->child(2)->setText(1, QString::number((cpsr_val >> 6) & 1));     // F - FIQ disable
-    cpsr->child(3)->setText(1, QString::number((cpsr_val >> 7) & 1));     // I - IRQ disable
-    cpsr->child(4)->setText(1, QString::number((cpsr_val >> 8) & 1));     // A - Imprecise abort
-    cpsr->child(5)->setText(1, QString::number((cpsr_val >> 9) & 1));     // E - Data endianess
-    cpsr->child(6)->setText(1, QString::number((cpsr_val >> 10) & 0x3F)); // IT - If-Then state (DNM)
-    cpsr->child(7)->setText(1, QString::number((cpsr_val >> 16) & 0xF));  // GE - Greater-than-or-Equal
-    cpsr->child(8)->setText(1, QString::number((cpsr_val >> 20) & 0xF));  // DNM - Do not modify
-    cpsr->child(9)->setText(1, QString::number((cpsr_val >> 24) & 1));    // J - Jazelle
-    cpsr->child(10)->setText(1, QString::number((cpsr_val >> 27) & 1));   // Q - Saturation
-    cpsr->child(11)->setText(1, QString::number((cpsr_val >> 28) & 1));   // V - Overflow
-    cpsr->child(12)->setText(1, QString::number((cpsr_val >> 29) & 1));   // C - Carry/Borrow/Extend
-    cpsr->child(13)->setText(1, QString::number((cpsr_val >> 30) & 1));   // Z - Zero
-    cpsr->child(14)->setText(1, QString::number((cpsr_val >> 31) & 1));   // N - Negative/Less than
+    cpsr->child(0)->setText(
+        1, QString("b%1").arg(cpsr_val & 0x1F, 5, 2, QLatin1Char('0'))); // M - Mode
+    cpsr->child(1)->setText(1, QString::number((cpsr_val >> 5) & 1));    // T - State
+    cpsr->child(2)->setText(1, QString::number((cpsr_val >> 6) & 1));    // F - FIQ disable
+    cpsr->child(3)->setText(1, QString::number((cpsr_val >> 7) & 1));    // I - IRQ disable
+    cpsr->child(4)->setText(1, QString::number((cpsr_val >> 8) & 1));    // A - Imprecise abort
+    cpsr->child(5)->setText(1, QString::number((cpsr_val >> 9) & 1));    // E - Data endianess
+    cpsr->child(6)->setText(1,
+                            QString::number((cpsr_val >> 10) & 0x3F)); // IT - If-Then state (DNM)
+    cpsr->child(7)->setText(1,
+                            QString::number((cpsr_val >> 16) & 0xF)); // GE - Greater-than-or-Equal
+    cpsr->child(8)->setText(1, QString::number((cpsr_val >> 20) & 0xF)); // DNM - Do not modify
+    cpsr->child(9)->setText(1, QString::number((cpsr_val >> 24) & 1));   // J - Jazelle
+    cpsr->child(10)->setText(1, QString::number((cpsr_val >> 27) & 1));  // Q - Saturation
+    cpsr->child(11)->setText(1, QString::number((cpsr_val >> 28) & 1));  // V - Overflow
+    cpsr->child(12)->setText(1, QString::number((cpsr_val >> 29) & 1));  // C - Carry/Borrow/Extend
+    cpsr->child(13)->setText(1, QString::number((cpsr_val >> 30) & 1));  // Z - Zero
+    cpsr->child(14)->setText(1, QString::number((cpsr_val >> 31) & 1));  // N - Negative/Less than
 }
 
 void RegistersWidget::CreateVFPSystemRegisterChildren() {
@@ -188,9 +191,9 @@ void RegistersWidget::CreateVFPSystemRegisterChildren() {
 }
 
 void RegistersWidget::UpdateVFPSystemRegisterValues() {
-    const u32 fpscr_val   = Core::g_app_core->GetVFPSystemReg(VFP_FPSCR);
-    const u32 fpexc_val   = Core::g_app_core->GetVFPSystemReg(VFP_FPEXC);
-    const u32 fpinst_val  = Core::g_app_core->GetVFPSystemReg(VFP_FPINST);
+    const u32 fpscr_val = Core::g_app_core->GetVFPSystemReg(VFP_FPSCR);
+    const u32 fpexc_val = Core::g_app_core->GetVFPSystemReg(VFP_FPEXC);
+    const u32 fpinst_val = Core::g_app_core->GetVFPSystemReg(VFP_FPINST);
     const u32 fpinst2_val = Core::g_app_core->GetVFPSystemReg(VFP_FPINST2);
 
     QTreeWidgetItem* const fpscr = vfp_system_registers->child(0);
@@ -228,6 +231,8 @@ void RegistersWidget::UpdateVFPSystemRegisterValues() {
     fpexc->child(6)->setText(1, QString::number((fpexc_val >> 30) & 1));
     fpexc->child(7)->setText(1, QString::number((fpexc_val >> 31) & 1));
 
-    vfp_system_registers->child(2)->setText(1, QString("0x%1").arg(fpinst_val, 8, 16, QLatin1Char('0')));
-    vfp_system_registers->child(3)->setText(1, QString("0x%1").arg(fpinst2_val, 8, 16, QLatin1Char('0')));
+    vfp_system_registers->child(2)->setText(
+        1, QString("0x%1").arg(fpinst_val, 8, 16, QLatin1Char('0')));
+    vfp_system_registers->child(3)->setText(
+        1, QString("0x%1").arg(fpinst2_val, 8, 16, QLatin1Char('0')));
 }

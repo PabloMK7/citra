@@ -15,18 +15,18 @@
 namespace CSND_SND {
 
 const Interface::FunctionInfo FunctionTable[] = {
-    {0x00010140, Initialize,            "Initialize"},
-    {0x00020000, Shutdown,              "Shutdown"},
-    {0x00030040, ExecuteType0Commands,  "ExecuteType0Commands"},
-    {0x00040080, nullptr,               "ExecuteType1Commands"},
-    {0x00050000, AcquireSoundChannels,  "AcquireSoundChannels"},
-    {0x00060000, nullptr,               "ReleaseSoundChannels"},
-    {0x00070000, nullptr,               "AcquireCaptureDevice"},
-    {0x00080040, nullptr,               "ReleaseCaptureDevice"},
-    {0x00090082, nullptr,               "FlushDataCache"},
-    {0x000A0082, nullptr,               "StoreDataCache"},
-    {0x000B0082, nullptr,               "InvalidateDataCache"},
-    {0x000C0000, nullptr,               "Reset"},
+    {0x00010140, Initialize, "Initialize"},
+    {0x00020000, Shutdown, "Shutdown"},
+    {0x00030040, ExecuteType0Commands, "ExecuteType0Commands"},
+    {0x00040080, nullptr, "ExecuteType1Commands"},
+    {0x00050000, AcquireSoundChannels, "AcquireSoundChannels"},
+    {0x00060000, nullptr, "ReleaseSoundChannels"},
+    {0x00070000, nullptr, "AcquireCaptureDevice"},
+    {0x00080040, nullptr, "ReleaseCaptureDevice"},
+    {0x00090082, nullptr, "FlushDataCache"},
+    {0x000A0082, nullptr, "StoreDataCache"},
+    {0x000B0082, nullptr, "InvalidateDataCache"},
+    {0x000C0000, nullptr, "Reset"},
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -44,9 +44,9 @@ void Initialize(Service::Interface* self) {
 
     u32 size = Common::AlignUp(cmd_buff[1], Memory::PAGE_SIZE);
     using Kernel::MemoryPermission;
-    shared_memory = Kernel::SharedMemory::Create(nullptr, size,
-                                                 MemoryPermission::ReadWrite, MemoryPermission::ReadWrite,
-                                                 0, Kernel::MemoryRegion::BASE, "CSND:SharedMemory");
+    shared_memory = Kernel::SharedMemory::Create(nullptr, size, MemoryPermission::ReadWrite,
+                                                 MemoryPermission::ReadWrite, 0,
+                                                 Kernel::MemoryRegion::BASE, "CSND:SharedMemory");
 
     mutex = Kernel::Mutex::Create(false);
 
@@ -58,7 +58,7 @@ void Initialize(Service::Interface* self) {
 
 void ExecuteType0Commands(Service::Interface* self) {
     u32* const cmd_buff = Kernel::GetCommandBuffer();
-    u8*  const ptr = shared_memory->GetPointer(cmd_buff[1]);
+    u8* const ptr = shared_memory->GetPointer(cmd_buff[1]);
 
     if (shared_memory != nullptr && ptr != nullptr) {
         Type0Command command;

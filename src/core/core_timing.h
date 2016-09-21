@@ -4,7 +4,9 @@
 
 #pragma once
 
+#include <functional>
 #include <string>
+#include "common/common_types.h"
 
 // This is a system to schedule events into the emulated machine's future. Time is measured
 // in main CPU clock cycles.
@@ -18,10 +20,6 @@
 // So to schedule a new event on a regular basis:
 // inside callback:
 //   ScheduleEvent(periodInCycles - cycles_late, callback, "whatever")
-
-#include <functional>
-
-#include "common/common_types.h"
 
 extern int g_clock_rate_arm11;
 
@@ -61,12 +59,11 @@ inline u64 cyclesToMs(s64 cycles) {
     return cycles / (g_clock_rate_arm11 / 1000);
 }
 
-namespace CoreTiming
-{
+namespace CoreTiming {
 void Init();
 void Shutdown();
 
-typedef void(*MHzChangeCallback)();
+typedef void (*MHzChangeCallback)();
 typedef std::function<void(u64 userdata, int cycles_late)> TimedCallback;
 
 u64 GetTicks();
@@ -81,7 +78,7 @@ u64 GetGlobalTimeUs();
  */
 int RegisterEvent(const char* name, TimedCallback callback);
 /// For save states.
-void RestoreRegisterEvent(int event_type, const char *name, TimedCallback callback);
+void RestoreRegisterEvent(int event_type, const char* name, TimedCallback callback);
 void UnregisterAllEvents();
 
 /// userdata MAY NOT CONTAIN POINTERS. userdata might get written and reloaded from disk,
@@ -128,7 +125,7 @@ void ClearPendingEvents();
 void LogPendingEvents();
 
 /// Warning: not included in save states.
-void RegisterAdvanceCallback(void(*callback)(int cycles_executed));
+void RegisterAdvanceCallback(void (*callback)(int cycles_executed));
 void RegisterMHzChangeCallback(MHzChangeCallback callback);
 
 std::string GetScheduledEventsSummary();

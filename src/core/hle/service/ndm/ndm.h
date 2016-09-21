@@ -13,35 +13,30 @@ class Interface;
 namespace NDM {
 
 enum class Daemon : u32 {
-    Cec    = 0,
-    Boss   = 1,
-    Nim    = 2,
-    Friend = 3
+    Cec = 0,
+    Boss = 1,
+    Nim = 2,
+    Friend = 3,
 };
 
 enum class DaemonMask : u32 {
-    None    =  0,
-    Cec     = (1 << static_cast<u32>(Daemon::Cec)),
-    Boss    = (1 << static_cast<u32>(Daemon::Boss)),
-    Nim     = (1 << static_cast<u32>(Daemon::Nim)),
-    Friend  = (1 << static_cast<u32>(Daemon::Friend)),
+    None = 0,
+    Cec = (1 << static_cast<u32>(Daemon::Cec)),
+    Boss = (1 << static_cast<u32>(Daemon::Boss)),
+    Nim = (1 << static_cast<u32>(Daemon::Nim)),
+    Friend = (1 << static_cast<u32>(Daemon::Friend)),
     Default = Cec | Friend,
-    All     = Cec | Boss | Nim | Friend
+    All = Cec | Boss | Nim | Friend,
 };
 
-enum class DaemonStatus : u32 {
-    Busy       = 0,
-    Idle       = 1,
-    Suspending = 2,
-    Suspended  = 3
-};
+enum class DaemonStatus : u32 { Busy = 0, Idle = 1, Suspending = 2, Suspended = 3 };
 
 enum class ExclusiveState : u32 {
-    None                = 0,
-    Infrastructure      = 1,
+    None = 0,
+    Infrastructure = 1,
     LocalCommunications = 2,
-    Streetpass          = 3,
-    StreetpassData      = 4,
+    Streetpass = 3,
+    StreetpassData = 4,
 };
 
 /**
@@ -205,7 +200,6 @@ void SetRetryInterval(Service::Interface* self);
  */
 void GetRetryInterval(Service::Interface* self);
 
-
 /**
  *  NDM::OverrideDefaultDaemons service function
  *  Inputs:
@@ -233,7 +227,8 @@ void ResetDefaultDaemons(Service::Interface* self);
  *      1 : Result, 0 on success, otherwise error code
  *      2 : Daemon bit mask
  *  Note:
- *      Gets the current default daemon bit mask. The default value is (DAEMONMASK_CEC | DAEMONMASK_FRIENDS)
+ *      Gets the current default daemon bit mask. The default value is (DAEMONMASK_CEC |
+ * DAEMONMASK_FRIENDS)
  */
 void GetDefaultDaemons(Service::Interface* self);
 
@@ -252,5 +247,5 @@ void Init();
 /// Shutdown NDM service
 void Shutdown();
 
-}// namespace NDM
-}// namespace Service
+} // namespace NDM
+} // namespace Service

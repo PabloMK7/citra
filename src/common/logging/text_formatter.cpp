@@ -6,16 +6,15 @@
 #include <cstdio>
 
 #ifdef _WIN32
-#   define WIN32_LEAN_AND_MEAN
-#   include <Windows.h>
+#define WIN32_LEAN_AND_MEAN
+#include <Windows.h>
 #endif
-
-#include "common/logging/backend.h"
-#include "common/logging/log.h"
-#include "common/logging/text_formatter.h"
 
 #include "common/assert.h"
 #include "common/common_funcs.h"
+#include "common/logging/backend.h"
+#include "common/logging/log.h"
+#include "common/logging/text_formatter.h"
 #include "common/string_util.h"
 
 namespace Log {
@@ -44,15 +43,14 @@ const char* TrimSourcePath(const char* path, const char* root) {
 }
 
 void FormatLogMessage(const Entry& entry, char* out_text, size_t text_len) {
-    unsigned int time_seconds    = static_cast<unsigned int>(entry.timestamp.count() / 1000000);
+    unsigned int time_seconds = static_cast<unsigned int>(entry.timestamp.count() / 1000000);
     unsigned int time_fractional = static_cast<unsigned int>(entry.timestamp.count() % 1000000);
 
     const char* class_name = GetLogClassName(entry.log_class);
     const char* level_name = GetLevelName(entry.log_level);
 
-    snprintf(out_text, text_len, "[%4u.%06u] %s <%s> %s: %s",
-        time_seconds, time_fractional, class_name, level_name,
-        TrimSourcePath(entry.location.c_str()), entry.message.c_str());
+    snprintf(out_text, text_len, "[%4u.%06u] %s <%s> %s: %s", time_seconds, time_fractional,
+             class_name, level_name, TrimSourcePath(entry.location.c_str()), entry.message.c_str());
 }
 
 void PrintMessage(const Entry& entry) {
@@ -72,38 +70,50 @@ void PrintColoredMessage(const Entry& entry) {
     WORD color = 0;
     switch (entry.log_level) {
     case Level::Trace: // Grey
-        color = FOREGROUND_INTENSITY; break;
+        color = FOREGROUND_INTENSITY;
+        break;
     case Level::Debug: // Cyan
-        color = FOREGROUND_GREEN | FOREGROUND_BLUE; break;
+        color = FOREGROUND_GREEN | FOREGROUND_BLUE;
+        break;
     case Level::Info: // Bright gray
-        color = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE; break;
+        color = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE;
+        break;
     case Level::Warning: // Bright yellow
-        color = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_INTENSITY; break;
+        color = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_INTENSITY;
+        break;
     case Level::Error: // Bright red
-        color = FOREGROUND_RED | FOREGROUND_INTENSITY; break;
+        color = FOREGROUND_RED | FOREGROUND_INTENSITY;
+        break;
     case Level::Critical: // Bright magenta
-        color = FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_INTENSITY; break;
+        color = FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_INTENSITY;
+        break;
     case Level::Count:
         UNREACHABLE();
     }
 
     SetConsoleTextAttribute(console_handle, color);
 #else
-#   define ESC "\x1b"
+#define ESC "\x1b"
     const char* color = "";
     switch (entry.log_level) {
     case Level::Trace: // Grey
-        color = ESC "[1;30m"; break;
+        color = ESC "[1;30m";
+        break;
     case Level::Debug: // Cyan
-        color = ESC "[0;36m"; break;
+        color = ESC "[0;36m";
+        break;
     case Level::Info: // Bright gray
-        color = ESC "[0;37m"; break;
+        color = ESC "[0;37m";
+        break;
     case Level::Warning: // Bright yellow
-        color = ESC "[1;33m"; break;
+        color = ESC "[1;33m";
+        break;
     case Level::Error: // Bright red
-        color = ESC "[1;31m"; break;
+        color = ESC "[1;31m";
+        break;
     case Level::Critical: // Bright magenta
-        color = ESC "[1;35m"; break;
+        color = ESC "[1;35m";
+        break;
     case Level::Count:
         UNREACHABLE();
     }
@@ -117,8 +127,7 @@ void PrintColoredMessage(const Entry& entry) {
     SetConsoleTextAttribute(console_handle, original_info.wAttributes);
 #else
     fputs(ESC "[0m", stderr);
-#   undef ESC
+#undef ESC
 #endif
 }
-
 }

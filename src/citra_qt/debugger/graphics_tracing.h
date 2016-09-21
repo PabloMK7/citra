@@ -12,7 +12,8 @@ class GraphicsTracingWidget : public BreakPointObserverDock {
     Q_OBJECT
 
 public:
-    GraphicsTracingWidget(std::shared_ptr<Pica::DebugContext> debug_context, QWidget* parent = nullptr);
+    GraphicsTracingWidget(std::shared_ptr<Pica::DebugContext> debug_context,
+                          QWidget* parent = nullptr);
 
 private slots:
     void StartRecording();

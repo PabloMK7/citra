@@ -9,10 +9,10 @@ namespace Service {
 namespace CECD {
 
 static const Interface::FunctionInfo FunctionTable[] = {
-    {0x000E0000, GetCecStateAbbreviated,    "GetCecStateAbbreviated"},
-    {0x000F0000, GetCecInfoEventHandle,     "GetCecInfoEventHandle"},
+    {0x000E0000, GetCecStateAbbreviated, "GetCecStateAbbreviated"},
+    {0x000F0000, GetCecInfoEventHandle, "GetCecInfoEventHandle"},
     {0x00100000, GetChangeStateEventHandle, "GetChangeStateEventHandle"},
-    {0x00120104, nullptr,                   "ReadSavedData"},
+    {0x00120104, nullptr, "ReadSavedData"},
 };
 
 CECD_U_Interface::CECD_U_Interface() {

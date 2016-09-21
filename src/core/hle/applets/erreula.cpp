@@ -3,7 +3,6 @@
 // Refer to the license.txt file included.
 
 #include "common/string_util.h"
-
 #include "core/hle/applets/erreula.h"
 #include "core/hle/service/apt/apt.h"
 
@@ -18,7 +17,8 @@ ResultCode ErrEula::ReceiveParameter(const Service::APT::MessageParameter& param
         return ResultCode(-1);
     }
 
-    // The LibAppJustStarted message contains a buffer with the size of the framebuffer shared memory.
+    // The LibAppJustStarted message contains a buffer with the size of the framebuffer shared
+    // memory.
     // Create the SharedMemory that will hold the framebuffer data
     Service::APT::CaptureBufferInfo capture_info;
     ASSERT(sizeof(capture_info) == parameter.buffer.size());
@@ -30,9 +30,9 @@ ResultCode ErrEula::ReceiveParameter(const Service::APT::MessageParameter& param
     // Allocate a heap block of the required size for this applet.
     heap_memory = std::make_shared<std::vector<u8>>(capture_info.size);
     // Create a SharedMemory that directly points to this heap block.
-    framebuffer_memory = Kernel::SharedMemory::CreateForApplet(heap_memory, 0, heap_memory->size(),
-                                                               MemoryPermission::ReadWrite, MemoryPermission::ReadWrite,
-                                                               "ErrEula Memory");
+    framebuffer_memory = Kernel::SharedMemory::CreateForApplet(
+        heap_memory, 0, heap_memory->size(), MemoryPermission::ReadWrite,
+        MemoryPermission::ReadWrite, "ErrEula Memory");
 
     // Send the response message with the newly created SharedMemory
     Service::APT::MessageParameter result;
@@ -49,7 +49,8 @@ ResultCode ErrEula::ReceiveParameter(const Service::APT::MessageParameter& param
 ResultCode ErrEula::StartImpl(const Service::APT::AppletStartupParameter& parameter) {
     started = true;
 
-    // TODO(Subv): Set the expected fields in the response buffer before resending it to the application.
+    // TODO(Subv): Set the expected fields in the response buffer before resending it to the
+    // application.
     // TODO(Subv): Reverse the parameter format for the ErrEula applet
 
     // Let the application know that we're closing
@@ -65,8 +66,7 @@ ResultCode ErrEula::StartImpl(const Service::APT::AppletStartupParameter& parame
     return RESULT_SUCCESS;
 }
 
-void ErrEula::Update() {
-}
+void ErrEula::Update() {}
 
 } // namespace Applets
 } // namespace HLE

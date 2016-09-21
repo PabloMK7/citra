@@ -25,7 +25,7 @@ struct Type0Command {
     u32 command_id;
     u32 finished;
     u32 flags;
-    u8  parameters[20];
+    u8 parameters[20];
 };
 
 void Initialize(Service::Interface* self);

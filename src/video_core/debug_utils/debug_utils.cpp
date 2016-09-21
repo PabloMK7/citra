@@ -20,7 +20,6 @@
 #include <nihstro/bit_field.h>
 #include <nihstro/float24.h>
 #include <nihstro/shader_binary.h>
-
 #include "common/assert.h"
 #include "common/bit_field.h"
 #include "common/color.h"
@@ -29,7 +28,6 @@
 #include "common/logging/log.h"
 #include "common/math_util.h"
 #include "common/vector_math.h"
-
 #include "video_core/debug_utils/debug_utils.h"
 #include "video_core/pica.h"
 #include "video_core/pica_state.h"
@@ -50,7 +48,8 @@ void DebugContext::DoOnEvent(Event event, void* data) {
     {
         std::unique_lock<std::mutex> lock(breakpoint_mutex);
 
-        // Commit the rasterizer's caches so framebuffers, render targets, etc. will show on debug widgets
+        // Commit the rasterizer's caches so framebuffers, render targets, etc. will show on debug
+        // widgets
         VideoCore::g_renderer->Rasterizer()->FlushAll();
 
         // TODO: Should stop the CPU thread here once we multithread emulation.
@@ -64,7 +63,7 @@ void DebugContext::DoOnEvent(Event event, void* data) {
         }
 
         // Wait until another thread tells us to Resume()
-        resume_from_breakpoint.wait(lock, [&]{ return !at_breakpoint; });
+        resume_from_breakpoint.wait(lock, [&] { return !at_breakpoint; });
     }
 }
 
@@ -88,8 +87,9 @@ std::shared_ptr<DebugContext> g_debug_context; // TODO: Get rid of this global
 
 namespace DebugUtils {
 
-void DumpShader(const std::string& filename, const Regs::ShaderConfig& config, const Shader::ShaderSetup& setup, const Regs::VSOutputAttributes* output_attributes)
-{
+void DumpShader(const std::string& filename, const Regs::ShaderConfig& config,
+                const Shader::ShaderSetup& setup,
+                const Regs::VSOutputAttributes* output_attributes) {
     struct StuffToWrite {
         const u8* pointer;
         u32 size;
@@ -97,7 +97,7 @@ void DumpShader(const std::string& filename, const Regs::ShaderConfig& config, c
     std::vector<StuffToWrite> writing_queue;
     u32 write_offset = 0;
 
-    auto QueueForWriting = [&writing_queue,&write_offset](const u8* pointer, u32 size) {
+    auto QueueForWriting = [&writing_queue, &write_offset](const u8* pointer, u32 size) {
         writing_queue.push_back({pointer, size});
         u32 old_write_offset = write_offset;
         write_offset += size;
@@ -108,99 +108,95 @@ void DumpShader(const std::string& filename, const Regs::ShaderConfig& config, c
     // into shbin format (separate type and component mask).
     union OutputRegisterInfo {
         enum Type : u64 {
-            POSITION   = 0,
+            POSITION = 0,
             QUATERNION = 1,
-            COLOR      = 2,
-            TEXCOORD0  = 3,
-            TEXCOORD1  = 5,
-            TEXCOORD2  = 6,
+            COLOR = 2,
+            TEXCOORD0 = 3,
+            TEXCOORD1 = 5,
+            TEXCOORD2 = 6,
 
-            VIEW       = 8,
+            VIEW = 8,
         };
 
-        BitField< 0, 64, u64> hex;
+        BitField<0, 64, u64> hex;
 
-        BitField< 0, 16, Type> type;
+        BitField<0, 16, Type> type;
         BitField<16, 16, u64> id;
-        BitField<32,  4, u64> component_mask;
+        BitField<32, 4, u64> component_mask;
     };
 
     // This is put into a try-catch block to make sure we notice unknown configurations.
     std::vector<OutputRegisterInfo> output_info_table;
-        for (unsigned i = 0; i < 7; ++i) {
-            using OutputAttributes = Pica::Regs::VSOutputAttributes;
+    for (unsigned i = 0; i < 7; ++i) {
+        using OutputAttributes = Pica::Regs::VSOutputAttributes;
 
-            // TODO: It's still unclear how the attribute components map to the register!
-            //       Once we know that, this code probably will not make much sense anymore.
-            std::map<OutputAttributes::Semantic, std::pair<OutputRegisterInfo::Type, u32> > map = {
-                { OutputAttributes::POSITION_X, { OutputRegisterInfo::POSITION, 1} },
-                { OutputAttributes::POSITION_Y, { OutputRegisterInfo::POSITION, 2} },
-                { OutputAttributes::POSITION_Z, { OutputRegisterInfo::POSITION, 4} },
-                { OutputAttributes::POSITION_W, { OutputRegisterInfo::POSITION, 8} },
-                { OutputAttributes::QUATERNION_X, { OutputRegisterInfo::QUATERNION, 1} },
-                { OutputAttributes::QUATERNION_Y, { OutputRegisterInfo::QUATERNION, 2} },
-                { OutputAttributes::QUATERNION_Z, { OutputRegisterInfo::QUATERNION, 4} },
-                { OutputAttributes::QUATERNION_W, { OutputRegisterInfo::QUATERNION, 8} },
-                { OutputAttributes::COLOR_R, { OutputRegisterInfo::COLOR, 1} },
-                { OutputAttributes::COLOR_G, { OutputRegisterInfo::COLOR, 2} },
-                { OutputAttributes::COLOR_B, { OutputRegisterInfo::COLOR, 4} },
-                { OutputAttributes::COLOR_A, { OutputRegisterInfo::COLOR, 8} },
-                { OutputAttributes::TEXCOORD0_U, { OutputRegisterInfo::TEXCOORD0, 1} },
-                { OutputAttributes::TEXCOORD0_V, { OutputRegisterInfo::TEXCOORD0, 2} },
-                { OutputAttributes::TEXCOORD1_U, { OutputRegisterInfo::TEXCOORD1, 1} },
-                { OutputAttributes::TEXCOORD1_V, { OutputRegisterInfo::TEXCOORD1, 2} },
-                { OutputAttributes::TEXCOORD2_U, { OutputRegisterInfo::TEXCOORD2, 1} },
-                { OutputAttributes::TEXCOORD2_V, { OutputRegisterInfo::TEXCOORD2, 2} },
-                { OutputAttributes::VIEW_X, { OutputRegisterInfo::VIEW, 1} },
-                { OutputAttributes::VIEW_Y, { OutputRegisterInfo::VIEW, 2} },
-                { OutputAttributes::VIEW_Z, { OutputRegisterInfo::VIEW, 4} }
-            };
+        // TODO: It's still unclear how the attribute components map to the register!
+        //       Once we know that, this code probably will not make much sense anymore.
+        std::map<OutputAttributes::Semantic, std::pair<OutputRegisterInfo::Type, u32>> map = {
+            {OutputAttributes::POSITION_X, {OutputRegisterInfo::POSITION, 1}},
+            {OutputAttributes::POSITION_Y, {OutputRegisterInfo::POSITION, 2}},
+            {OutputAttributes::POSITION_Z, {OutputRegisterInfo::POSITION, 4}},
+            {OutputAttributes::POSITION_W, {OutputRegisterInfo::POSITION, 8}},
+            {OutputAttributes::QUATERNION_X, {OutputRegisterInfo::QUATERNION, 1}},
+            {OutputAttributes::QUATERNION_Y, {OutputRegisterInfo::QUATERNION, 2}},
+            {OutputAttributes::QUATERNION_Z, {OutputRegisterInfo::QUATERNION, 4}},
+            {OutputAttributes::QUATERNION_W, {OutputRegisterInfo::QUATERNION, 8}},
+            {OutputAttributes::COLOR_R, {OutputRegisterInfo::COLOR, 1}},
+            {OutputAttributes::COLOR_G, {OutputRegisterInfo::COLOR, 2}},
+            {OutputAttributes::COLOR_B, {OutputRegisterInfo::COLOR, 4}},
+            {OutputAttributes::COLOR_A, {OutputRegisterInfo::COLOR, 8}},
+            {OutputAttributes::TEXCOORD0_U, {OutputRegisterInfo::TEXCOORD0, 1}},
+            {OutputAttributes::TEXCOORD0_V, {OutputRegisterInfo::TEXCOORD0, 2}},
+            {OutputAttributes::TEXCOORD1_U, {OutputRegisterInfo::TEXCOORD1, 1}},
+            {OutputAttributes::TEXCOORD1_V, {OutputRegisterInfo::TEXCOORD1, 2}},
+            {OutputAttributes::TEXCOORD2_U, {OutputRegisterInfo::TEXCOORD2, 1}},
+            {OutputAttributes::TEXCOORD2_V, {OutputRegisterInfo::TEXCOORD2, 2}},
+            {OutputAttributes::VIEW_X, {OutputRegisterInfo::VIEW, 1}},
+            {OutputAttributes::VIEW_Y, {OutputRegisterInfo::VIEW, 2}},
+            {OutputAttributes::VIEW_Z, {OutputRegisterInfo::VIEW, 4}},
+        };
 
-            for (const auto& semantic : std::vector<OutputAttributes::Semantic>{
-                                                output_attributes[i].map_x,
-                                                output_attributes[i].map_y,
-                                                output_attributes[i].map_z,
-                                                output_attributes[i].map_w     }) {
-                if (semantic == OutputAttributes::INVALID)
-                    continue;
+        for (const auto& semantic : std::vector<OutputAttributes::Semantic>{
+                 output_attributes[i].map_x, output_attributes[i].map_y, output_attributes[i].map_z,
+                 output_attributes[i].map_w}) {
+            if (semantic == OutputAttributes::INVALID)
+                continue;
 
-                try {
-                    OutputRegisterInfo::Type type = map.at(semantic).first;
-                    u32 component_mask = map.at(semantic).second;
+            try {
+                OutputRegisterInfo::Type type = map.at(semantic).first;
+                u32 component_mask = map.at(semantic).second;
 
-                    auto it = std::find_if(output_info_table.begin(), output_info_table.end(),
-                                        [&i, &type](const OutputRegisterInfo& info) {
-                                            return info.id == i && info.type == type;
-                                        }
-                                        );
+                auto it = std::find_if(output_info_table.begin(), output_info_table.end(),
+                                       [&i, &type](const OutputRegisterInfo& info) {
+                                           return info.id == i && info.type == type;
+                                       });
 
-                    if (it == output_info_table.end()) {
-                        output_info_table.emplace_back();
-                        output_info_table.back().type.Assign(type);
-                        output_info_table.back().component_mask.Assign(component_mask);
-                        output_info_table.back().id.Assign(i);
-                    } else {
-                        it->component_mask.Assign(it->component_mask | component_mask);
-                    }
-                } catch (const std::out_of_range& ) {
-                    DEBUG_ASSERT_MSG(false, "Unknown output attribute mapping");
-                    LOG_ERROR(HW_GPU, "Unknown output attribute mapping: %03x, %03x, %03x, %03x",
-                              (int)output_attributes[i].map_x.Value(),
-                              (int)output_attributes[i].map_y.Value(),
-                              (int)output_attributes[i].map_z.Value(),
-                              (int)output_attributes[i].map_w.Value());
+                if (it == output_info_table.end()) {
+                    output_info_table.emplace_back();
+                    output_info_table.back().type.Assign(type);
+                    output_info_table.back().component_mask.Assign(component_mask);
+                    output_info_table.back().id.Assign(i);
+                } else {
+                    it->component_mask.Assign(it->component_mask | component_mask);
                 }
+            } catch (const std::out_of_range&) {
+                DEBUG_ASSERT_MSG(false, "Unknown output attribute mapping");
+                LOG_ERROR(HW_GPU, "Unknown output attribute mapping: %03x, %03x, %03x, %03x",
+                          (int)output_attributes[i].map_x.Value(),
+                          (int)output_attributes[i].map_y.Value(),
+                          (int)output_attributes[i].map_z.Value(),
+                          (int)output_attributes[i].map_w.Value());
             }
         }
-
+    }
 
     struct {
         DVLBHeader header;
         u32 dvle_offset;
-    } dvlb{ {DVLBHeader::MAGIC_WORD, 1 } }; // 1 DVLE
+    } dvlb{{DVLBHeader::MAGIC_WORD, 1}}; // 1 DVLE
 
-    DVLPHeader dvlp{ DVLPHeader::MAGIC_WORD };
-    DVLEHeader dvle{ DVLEHeader::MAGIC_WORD };
+    DVLPHeader dvlp{DVLPHeader::MAGIC_WORD};
+    DVLEHeader dvle{DVLEHeader::MAGIC_WORD};
 
     QueueForWriting(reinterpret_cast<const u8*>(&dvlb), sizeof(dvlb));
     u32 dvlp_offset = QueueForWriting(reinterpret_cast<const u8*>(&dvlp), sizeof(dvlp));
@@ -216,14 +212,16 @@ void DumpShader(const std::string& filename, const Regs::ShaderConfig& config, c
     dvlp.swizzle_info_num_entries = static_cast<uint32_t>(setup.swizzle_data.size());
     u32 dummy = 0;
     for (unsigned int i = 0; i < setup.swizzle_data.size(); ++i) {
-        QueueForWriting(reinterpret_cast<const u8*>(&setup.swizzle_data[i]), sizeof(setup.swizzle_data[i]));
+        QueueForWriting(reinterpret_cast<const u8*>(&setup.swizzle_data[i]),
+                        sizeof(setup.swizzle_data[i]));
         QueueForWriting(reinterpret_cast<const u8*>(&dummy), sizeof(dummy));
     }
 
     dvle.main_offset_words = config.main_offset;
     dvle.output_register_table_offset = write_offset - dvlb.dvle_offset;
     dvle.output_register_table_size = static_cast<u32>(output_info_table.size());
-    QueueForWriting(reinterpret_cast<const u8*>(output_info_table.data()), static_cast<u32>(output_info_table.size() * sizeof(OutputRegisterInfo)));
+    QueueForWriting(reinterpret_cast<const u8*>(output_info_table.data()),
+                    static_cast<u32>(output_info_table.size() * sizeof(OutputRegisterInfo)));
 
     // TODO: Create a label table for "main"
 
@@ -258,10 +256,8 @@ void DumpShader(const std::string& filename, const Regs::ShaderConfig& config, c
         constant.f.w = nihstro::to_float24(setup.uniforms.f[i].w.ToFloat32());
 
         // Store constant if it's different from zero..
-        if (setup.uniforms.f[i].x.ToFloat32() != 0.0 ||
-            setup.uniforms.f[i].y.ToFloat32() != 0.0 ||
-            setup.uniforms.f[i].z.ToFloat32() != 0.0 ||
-            setup.uniforms.f[i].w.ToFloat32() != 0.0)
+        if (setup.uniforms.f[i].x.ToFloat32() != 0.0 || setup.uniforms.f[i].y.ToFloat32() != 0.0 ||
+            setup.uniforms.f[i].z.ToFloat32() != 0.0 || setup.uniforms.f[i].w.ToFloat32() != 0.0)
             constant_table.emplace_back(constant);
     }
     dvle.constant_table_offset = write_offset - dvlb.dvle_offset;
@@ -282,8 +278,7 @@ static std::unique_ptr<PicaTrace> pica_trace;
 static std::mutex pica_trace_mutex;
 static int is_pica_tracing = false;
 
-void StartPicaTracing()
-{
+void StartPicaTracing() {
     if (is_pica_tracing) {
         LOG_WARNING(HW_GPU, "StartPicaTracing called even though tracing already running!");
         return;
@@ -295,13 +290,11 @@ void StartPicaTracing()
     is_pica_tracing = true;
 }
 
-bool IsPicaTracing()
-{
+bool IsPicaTracing() {
     return is_pica_tracing != 0;
 }
 
-void OnPicaRegWrite(PicaTrace::Write write)
-{
+void OnPicaRegWrite(PicaTrace::Write write) {
     // Double check for is_pica_tracing to avoid pointless locking overhead
     if (!is_pica_tracing)
         return;
@@ -314,8 +307,7 @@ void OnPicaRegWrite(PicaTrace::Write write)
     pica_trace->writes.push_back(write);
 }
 
-std::unique_ptr<PicaTrace> FinishPicaTracing()
-{
+std::unique_ptr<PicaTrace> FinishPicaTracing() {
     if (!is_pica_tracing) {
         LOG_WARNING(HW_GPU, "FinishPicaTracing called even though tracing isn't running!");
         return {};
@@ -331,12 +323,12 @@ std::unique_ptr<PicaTrace> FinishPicaTracing()
     return ret;
 }
 
-const Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const TextureInfo& info, bool disable_alpha) {
+const Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const TextureInfo& info,
+                                   bool disable_alpha) {
     const unsigned int coarse_x = x & ~7;
     const unsigned int coarse_y = y & ~7;
 
-    if (info.format != Regs::TextureFormat::ETC1 &&
-        info.format != Regs::TextureFormat::ETC1A4) {
+    if (info.format != Regs::TextureFormat::ETC1 && info.format != Regs::TextureFormat::ETC1A4) {
         // TODO(neobrain): Fix code design to unify vertical block offsets!
         source += coarse_y * info.stride;
     }
@@ -344,73 +336,63 @@ const Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const Texture
     // TODO: Assert that width/height are multiples of block dimensions
 
     switch (info.format) {
-    case Regs::TextureFormat::RGBA8:
-    {
+    case Regs::TextureFormat::RGBA8: {
         auto res = Color::DecodeRGBA8(source + VideoCore::GetMortonOffset(x, y, 4));
-        return { res.r(), res.g(), res.b(), static_cast<u8>(disable_alpha ? 255 : res.a()) };
+        return {res.r(), res.g(), res.b(), static_cast<u8>(disable_alpha ? 255 : res.a())};
     }
 
-    case Regs::TextureFormat::RGB8:
-    {
+    case Regs::TextureFormat::RGB8: {
         auto res = Color::DecodeRGB8(source + VideoCore::GetMortonOffset(x, y, 3));
-        return { res.r(), res.g(), res.b(), 255 };
+        return {res.r(), res.g(), res.b(), 255};
     }
 
-    case Regs::TextureFormat::RGB5A1:
-    {
+    case Regs::TextureFormat::RGB5A1: {
         auto res = Color::DecodeRGB5A1(source + VideoCore::GetMortonOffset(x, y, 2));
-        return { res.r(), res.g(), res.b(), static_cast<u8>(disable_alpha ? 255 : res.a()) };
+        return {res.r(), res.g(), res.b(), static_cast<u8>(disable_alpha ? 255 : res.a())};
     }
 
-    case Regs::TextureFormat::RGB565:
-    {
+    case Regs::TextureFormat::RGB565: {
         auto res = Color::DecodeRGB565(source + VideoCore::GetMortonOffset(x, y, 2));
-        return { res.r(), res.g(), res.b(), 255 };
+        return {res.r(), res.g(), res.b(), 255};
     }
 
-    case Regs::TextureFormat::RGBA4:
-    {
+    case Regs::TextureFormat::RGBA4: {
         auto res = Color::DecodeRGBA4(source + VideoCore::GetMortonOffset(x, y, 2));
-        return { res.r(), res.g(), res.b(), static_cast<u8>(disable_alpha ? 255 : res.a()) };
+        return {res.r(), res.g(), res.b(), static_cast<u8>(disable_alpha ? 255 : res.a())};
     }
 
-    case Regs::TextureFormat::IA8:
-    {
+    case Regs::TextureFormat::IA8: {
         const u8* source_ptr = source + VideoCore::GetMortonOffset(x, y, 2);
 
         if (disable_alpha) {
             // Show intensity as red, alpha as green
-            return { source_ptr[1], source_ptr[0], 0, 255 };
+            return {source_ptr[1], source_ptr[0], 0, 255};
         } else {
-            return { source_ptr[1], source_ptr[1], source_ptr[1], source_ptr[0] };
+            return {source_ptr[1], source_ptr[1], source_ptr[1], source_ptr[0]};
         }
     }
 
-    case Regs::TextureFormat::RG8:
-    {
+    case Regs::TextureFormat::RG8: {
         auto res = Color::DecodeRG8(source + VideoCore::GetMortonOffset(x, y, 2));
-        return { res.r(), res.g(), 0, 255 };
+        return {res.r(), res.g(), 0, 255};
     }
 
-    case Regs::TextureFormat::I8:
-    {
+    case Regs::TextureFormat::I8: {
         const u8* source_ptr = source + VideoCore::GetMortonOffset(x, y, 1);
-        return { *source_ptr, *source_ptr, *source_ptr, 255 };
+        return {*source_ptr, *source_ptr, *source_ptr, 255};
     }
 
-    case Regs::TextureFormat::A8:
-    {
+    case Regs::TextureFormat::A8: {
         const u8* source_ptr = source + VideoCore::GetMortonOffset(x, y, 1);
 
         if (disable_alpha) {
-            return { *source_ptr, *source_ptr, *source_ptr, 255 };
+            return {*source_ptr, *source_ptr, *source_ptr, 255};
         } else {
-            return { 0, 0, 0, *source_ptr };
+            return {0, 0, 0, *source_ptr};
         }
     }
 
-    case Regs::TextureFormat::IA4:
-    {
+    case Regs::TextureFormat::IA4: {
         const u8* source_ptr = source + VideoCore::GetMortonOffset(x, y, 1);
 
         u8 i = Color::Convert4To8(((*source_ptr) & 0xF0) >> 4);
@@ -418,25 +400,23 @@ const Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const Texture
 
         if (disable_alpha) {
             // Show intensity as red, alpha as green
-            return { i, a, 0, 255 };
+            return {i, a, 0, 255};
         } else {
-            return { i, i, i, a };
+            return {i, i, i, a};
         }
     }
 
-    case Regs::TextureFormat::I4:
-    {
+    case Regs::TextureFormat::I4: {
         u32 morton_offset = VideoCore::GetMortonOffset(x, y, 1);
         const u8* source_ptr = source + morton_offset / 2;
 
         u8 i = (morton_offset % 2) ? ((*source_ptr & 0xF0) >> 4) : (*source_ptr & 0xF);
         i = Color::Convert4To8(i);
 
-        return { i, i, i, 255 };
+        return {i, i, i, 255};
     }
 
-    case Regs::TextureFormat::A4:
-    {
+    case Regs::TextureFormat::A4: {
         u32 morton_offset = VideoCore::GetMortonOffset(x, y, 1);
         const u8* source_ptr = source + morton_offset / 2;
 
@@ -444,15 +424,14 @@ const Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const Texture
         a = Color::Convert4To8(a);
 
         if (disable_alpha) {
-            return { a, a, a, 255 };
+            return {a, a, a, 255};
         } else {
-            return { 0, 0, 0, a };
+            return {0, 0, 0, a};
         }
     }
 
     case Regs::TextureFormat::ETC1:
-    case Regs::TextureFormat::ETC1A4:
-    {
+    case Regs::TextureFormat::ETC1A4: {
         bool has_alpha = (info.format == Regs::TextureFormat::ETC1A4);
 
         // ETC1 further subdivides each 8x8 tile into four 4x4 subtiles
@@ -462,10 +441,9 @@ const Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const Texture
         int subtile_index = ((x / subtile_width) & 1) + 2 * ((y / subtile_height) & 1);
         unsigned subtile_bytes = has_alpha ? 2 : 1; // TODO: Name...
 
-        const u64* source_ptr = (const u64*)(source
-                                             + coarse_x * subtile_bytes * 4
-                                             + coarse_y * subtile_bytes * 4 * (info.width / 8)
-                                             + subtile_index * subtile_bytes * 8);
+        const u64* source_ptr = (const u64*)(source + coarse_x * subtile_bytes * 4 +
+                                             coarse_y * subtile_bytes * 4 * (info.width / 8) +
+                                             subtile_index * subtile_bytes * 8);
         u64 alpha = 0xFFFFFFFFFFFFFFFF;
         if (has_alpha) {
             alpha = *source_ptr;
@@ -474,7 +452,7 @@ const Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const Texture
 
         union ETC1Tile {
             // Each of these two is a collection of 16 bits (one per lookup value)
-            BitField< 0, 16, u64> table_subindexes;
+            BitField<0, 16, u64> table_subindexes;
             BitField<16, 16, u64> negation_flags;
 
             unsigned GetTableSubIndex(unsigned index) const {
@@ -547,11 +525,18 @@ const Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const Texture
                 }
 
                 // Add modifier
-                unsigned table_index = static_cast<int>((x < 2) ? table_index_1.Value() : table_index_2.Value());
+                unsigned table_index =
+                    static_cast<int>((x < 2) ? table_index_1.Value() : table_index_2.Value());
 
                 static const std::array<std::array<u8, 2>, 8> etc1_modifier_table = {{
-                    {{  2,  8 }}, {{  5, 17 }}, {{  9,  29 }}, {{ 13,  42 }},
-                    {{ 18, 60 }}, {{ 24, 80 }}, {{ 33, 106 }}, {{ 47, 183 }}
+                    {{2, 8}},
+                    {{5, 17}},
+                    {{9, 29}},
+                    {{13, 42}},
+                    {{18, 60}},
+                    {{24, 80}},
+                    {{33, 106}},
+                    {{47, 183}},
                 }};
 
                 int modifier = etc1_modifier_table.at(table_index).at(GetTableSubIndex(texel));
@@ -564,7 +549,7 @@ const Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const Texture
 
                 return ret.Cast<u8>();
             }
-        } const *etc1_tile = reinterpret_cast<const ETC1Tile*>(source_ptr);
+        } const* etc1_tile = reinterpret_cast<const ETC1Tile*>(source_ptr);
 
         alpha >>= 4 * ((x & 3) * 4 + (y & 3));
         return Math::MakeVec(etc1_tile->GetRGB(x & 3, y & 3),
@@ -579,8 +564,7 @@ const Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const Texture
 }
 
 TextureInfo TextureInfo::FromPicaRegister(const Regs::TextureConfig& config,
-                                          const Regs::TextureFormat& format)
-{
+                                          const Regs::TextureFormat& format) {
     TextureInfo info;
     info.physical_address = config.GetPhysicalAddress();
     info.width = config.width;
@@ -595,13 +579,13 @@ TextureInfo TextureInfo::FromPicaRegister(const Regs::TextureConfig& config,
 static void WriteIOFile(png_structp png_ptr, png_bytep data, png_size_t length) {
     auto* fp = static_cast<FileUtil::IOFile*>(png_get_io_ptr(png_ptr));
     if (!fp->WriteBytes(data, length))
-         png_error(png_ptr, "Failed to write to output PNG file.");
+        png_error(png_ptr, "Failed to write to output PNG file.");
 }
 
 static void FlushIOFile(png_structp png_ptr) {
     auto* fp = static_cast<FileUtil::IOFile*>(png_get_io_ptr(png_ptr));
     if (!fp->Flush())
-         png_error(png_ptr, "Failed to flush to output PNG file.");
+        png_error(png_ptr, "Failed to flush to output PNG file.");
 }
 #endif
 
@@ -614,7 +598,8 @@ void DumpTexture(const Pica::Regs::TextureConfig& texture_config, u8* data) {
 
     // Write data to file
     static int dump_index = 0;
-    std::string filename = std::string("texture_dump") + std::to_string(++dump_index) + std::string(".png");
+    std::string filename =
+        std::string("texture_dump") + std::to_string(++dump_index) + std::string(".png");
     u32 row_stride = texture_config.width * 3;
 
     u8* buf;
@@ -632,7 +617,6 @@ void DumpTexture(const Pica::Regs::TextureConfig& texture_config, u8* data) {
     if (png_ptr == nullptr) {
         LOG_ERROR(Debug_GPU, "Could not allocate write struct");
         goto finalise;
-
     }
 
     // Initialize info structure
@@ -651,9 +635,9 @@ void DumpTexture(const Pica::Regs::TextureConfig& texture_config, u8* data) {
     png_set_write_fn(png_ptr, static_cast<void*>(&fp), WriteIOFile, FlushIOFile);
 
     // Write header (8 bit color depth)
-    png_set_IHDR(png_ptr, info_ptr, texture_config.width, texture_config.height,
-        8, PNG_COLOR_TYPE_RGB /*_ALPHA*/, PNG_INTERLACE_NONE,
-        PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
+    png_set_IHDR(png_ptr, info_ptr, texture_config.width, texture_config.height, 8,
+                 PNG_COLOR_TYPE_RGB /*_ALPHA*/, PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_BASE,
+                 PNG_FILTER_TYPE_BASE);
 
     png_text title_text;
     title_text.compression = PNG_TEXT_COMPRESSION_NONE;
@@ -672,15 +656,14 @@ void DumpTexture(const Pica::Regs::TextureConfig& texture_config, u8* data) {
             info.stride = row_stride;
             info.format = g_state.regs.texture0_format;
             Math::Vec4<u8> texture_color = LookupTexture(data, x, y, info);
-            buf[3 * x + y * row_stride    ] = texture_color.r();
+            buf[3 * x + y * row_stride] = texture_color.r();
             buf[3 * x + y * row_stride + 1] = texture_color.g();
             buf[3 * x + y * row_stride + 2] = texture_color.b();
         }
     }
 
     // Write image data
-    for (unsigned y = 0; y < texture_config.height; ++y)
-    {
+    for (unsigned y = 0; y < texture_config.height; ++y) {
         u8* row_ptr = (u8*)buf + y * row_stride;
         png_write_row(png_ptr, row_ptr);
     }
@@ -691,12 +674,15 @@ void DumpTexture(const Pica::Regs::TextureConfig& texture_config, u8* data) {
     png_write_end(png_ptr, nullptr);
 
 finalise:
-    if (info_ptr != nullptr) png_free_data(png_ptr, info_ptr, PNG_FREE_ALL, -1);
-    if (png_ptr != nullptr) png_destroy_write_struct(&png_ptr, (png_infopp)nullptr);
+    if (info_ptr != nullptr)
+        png_free_data(png_ptr, info_ptr, PNG_FREE_ALL, -1);
+    if (png_ptr != nullptr)
+        png_destroy_write_struct(&png_ptr, (png_infopp) nullptr);
 #endif
 }
 
-static std::string ReplacePattern(const std::string& input, const std::string& pattern, const std::string& replacement) {
+static std::string ReplacePattern(const std::string& input, const std::string& pattern,
+                                  const std::string& replacement) {
     size_t start = input.find(pattern);
     if (start == std::string::npos)
         return input;
@@ -709,16 +695,16 @@ static std::string ReplacePattern(const std::string& input, const std::string& p
 static std::string GetTevStageConfigSourceString(const Pica::Regs::TevStageConfig::Source& source) {
     using Source = Pica::Regs::TevStageConfig::Source;
     static const std::map<Source, std::string> source_map = {
-        { Source::PrimaryColor,           "PrimaryColor" },
-        { Source::PrimaryFragmentColor,   "PrimaryFragmentColor" },
-        { Source::SecondaryFragmentColor, "SecondaryFragmentColor" },
-        { Source::Texture0,               "Texture0" },
-        { Source::Texture1,               "Texture1" },
-        { Source::Texture2,               "Texture2" },
-        { Source::Texture3,               "Texture3" },
-        { Source::PreviousBuffer,         "PreviousBuffer" },
-        { Source::Constant,               "Constant" },
-        { Source::Previous,               "Previous" },
+        {Source::PrimaryColor, "PrimaryColor"},
+        {Source::PrimaryFragmentColor, "PrimaryFragmentColor"},
+        {Source::SecondaryFragmentColor, "SecondaryFragmentColor"},
+        {Source::Texture0, "Texture0"},
+        {Source::Texture1, "Texture1"},
+        {Source::Texture2, "Texture2"},
+        {Source::Texture3, "Texture3"},
+        {Source::PreviousBuffer, "PreviousBuffer"},
+        {Source::Constant, "Constant"},
+        {Source::Previous, "Previous"},
     };
 
     const auto src_it = source_map.find(source);
@@ -728,19 +714,21 @@ static std::string GetTevStageConfigSourceString(const Pica::Regs::TevStageConfi
     return src_it->second;
 }
 
-static std::string GetTevStageConfigColorSourceString(const Pica::Regs::TevStageConfig::Source& source, const Pica::Regs::TevStageConfig::ColorModifier modifier) {
+static std::string GetTevStageConfigColorSourceString(
+    const Pica::Regs::TevStageConfig::Source& source,
+    const Pica::Regs::TevStageConfig::ColorModifier modifier) {
     using ColorModifier = Pica::Regs::TevStageConfig::ColorModifier;
     static const std::map<ColorModifier, std::string> color_modifier_map = {
-        { ColorModifier::SourceColor,         "%source.rgb" },
-        { ColorModifier::OneMinusSourceColor, "(1.0 - %source.rgb)" },
-        { ColorModifier::SourceAlpha,         "%source.aaa" },
-        { ColorModifier::OneMinusSourceAlpha, "(1.0 - %source.aaa)" },
-        { ColorModifier::SourceRed,           "%source.rrr" },
-        { ColorModifier::OneMinusSourceRed,   "(1.0 - %source.rrr)" },
-        { ColorModifier::SourceGreen,         "%source.ggg" },
-        { ColorModifier::OneMinusSourceGreen, "(1.0 - %source.ggg)" },
-        { ColorModifier::SourceBlue,          "%source.bbb" },
-        { ColorModifier::OneMinusSourceBlue,  "(1.0 - %source.bbb)" },
+        {ColorModifier::SourceColor, "%source.rgb"},
+        {ColorModifier::OneMinusSourceColor, "(1.0 - %source.rgb)"},
+        {ColorModifier::SourceAlpha, "%source.aaa"},
+        {ColorModifier::OneMinusSourceAlpha, "(1.0 - %source.aaa)"},
+        {ColorModifier::SourceRed, "%source.rrr"},
+        {ColorModifier::OneMinusSourceRed, "(1.0 - %source.rrr)"},
+        {ColorModifier::SourceGreen, "%source.ggg"},
+        {ColorModifier::OneMinusSourceGreen, "(1.0 - %source.ggg)"},
+        {ColorModifier::SourceBlue, "%source.bbb"},
+        {ColorModifier::OneMinusSourceBlue, "(1.0 - %source.bbb)"},
     };
 
     auto src_str = GetTevStageConfigSourceString(source);
@@ -752,17 +740,19 @@ static std::string GetTevStageConfigColorSourceString(const Pica::Regs::TevStage
     return ReplacePattern(modifier_str, "%source", src_str);
 }
 
-static std::string GetTevStageConfigAlphaSourceString(const Pica::Regs::TevStageConfig::Source& source, const Pica::Regs::TevStageConfig::AlphaModifier modifier) {
+static std::string GetTevStageConfigAlphaSourceString(
+    const Pica::Regs::TevStageConfig::Source& source,
+    const Pica::Regs::TevStageConfig::AlphaModifier modifier) {
     using AlphaModifier = Pica::Regs::TevStageConfig::AlphaModifier;
     static const std::map<AlphaModifier, std::string> alpha_modifier_map = {
-        { AlphaModifier::SourceAlpha,         "%source.a" },
-        { AlphaModifier::OneMinusSourceAlpha, "(1.0 - %source.a)" },
-        { AlphaModifier::SourceRed,           "%source.r" },
-        { AlphaModifier::OneMinusSourceRed,   "(1.0 - %source.r)" },
-        { AlphaModifier::SourceGreen,         "%source.g" },
-        { AlphaModifier::OneMinusSourceGreen, "(1.0 - %source.g)" },
-        { AlphaModifier::SourceBlue,          "%source.b" },
-        { AlphaModifier::OneMinusSourceBlue,  "(1.0 - %source.b)" },
+        {AlphaModifier::SourceAlpha, "%source.a"},
+        {AlphaModifier::OneMinusSourceAlpha, "(1.0 - %source.a)"},
+        {AlphaModifier::SourceRed, "%source.r"},
+        {AlphaModifier::OneMinusSourceRed, "(1.0 - %source.r)"},
+        {AlphaModifier::SourceGreen, "%source.g"},
+        {AlphaModifier::OneMinusSourceGreen, "(1.0 - %source.g)"},
+        {AlphaModifier::SourceBlue, "%source.b"},
+        {AlphaModifier::OneMinusSourceBlue, "(1.0 - %source.b)"},
     };
 
     auto src_str = GetTevStageConfigSourceString(source);
@@ -774,18 +764,19 @@ static std::string GetTevStageConfigAlphaSourceString(const Pica::Regs::TevStage
     return ReplacePattern(modifier_str, "%source", src_str);
 }
 
-static std::string GetTevStageConfigOperationString(const Pica::Regs::TevStageConfig::Operation& operation) {
+static std::string GetTevStageConfigOperationString(
+    const Pica::Regs::TevStageConfig::Operation& operation) {
     using Operation = Pica::Regs::TevStageConfig::Operation;
     static const std::map<Operation, std::string> combiner_map = {
-        { Operation::Replace,         "%source1" },
-        { Operation::Modulate,        "(%source1 * %source2)" },
-        { Operation::Add,             "(%source1 + %source2)" },
-        { Operation::AddSigned,       "(%source1 + %source2) - 0.5" },
-        { Operation::Lerp,            "lerp(%source1, %source2, %source3)" },
-        { Operation::Subtract,        "(%source1 - %source2)" },
-        { Operation::Dot3_RGB,        "dot(%source1, %source2)" },
-        { Operation::MultiplyThenAdd, "((%source1 * %source2) + %source3)" },
-        { Operation::AddThenMultiply, "((%source1 + %source2) * %source3)" },
+        {Operation::Replace, "%source1"},
+        {Operation::Modulate, "(%source1 * %source2)"},
+        {Operation::Add, "(%source1 + %source2)"},
+        {Operation::AddSigned, "(%source1 + %source2) - 0.5"},
+        {Operation::Lerp, "lerp(%source1, %source2, %source3)"},
+        {Operation::Subtract, "(%source1 - %source2)"},
+        {Operation::Dot3_RGB, "dot(%source1, %source2)"},
+        {Operation::MultiplyThenAdd, "((%source1 * %source2) + %source3)"},
+        {Operation::AddThenMultiply, "((%source1 + %source2) * %source3)"},
     };
 
     const auto op_it = combiner_map.find(operation);
@@ -797,23 +788,37 @@ static std::string GetTevStageConfigOperationString(const Pica::Regs::TevStageCo
 
 std::string GetTevStageConfigColorCombinerString(const Pica::Regs::TevStageConfig& tev_stage) {
     auto op_str = GetTevStageConfigOperationString(tev_stage.color_op);
-    op_str = ReplacePattern(op_str, "%source1", GetTevStageConfigColorSourceString(tev_stage.color_source1, tev_stage.color_modifier1));
-    op_str = ReplacePattern(op_str, "%source2", GetTevStageConfigColorSourceString(tev_stage.color_source2, tev_stage.color_modifier2));
-    return   ReplacePattern(op_str, "%source3", GetTevStageConfigColorSourceString(tev_stage.color_source3, tev_stage.color_modifier3));
+    op_str = ReplacePattern(
+        op_str, "%source1",
+        GetTevStageConfigColorSourceString(tev_stage.color_source1, tev_stage.color_modifier1));
+    op_str = ReplacePattern(
+        op_str, "%source2",
+        GetTevStageConfigColorSourceString(tev_stage.color_source2, tev_stage.color_modifier2));
+    return ReplacePattern(
+        op_str, "%source3",
+        GetTevStageConfigColorSourceString(tev_stage.color_source3, tev_stage.color_modifier3));
 }
 
 std::string GetTevStageConfigAlphaCombinerString(const Pica::Regs::TevStageConfig& tev_stage) {
     auto op_str = GetTevStageConfigOperationString(tev_stage.alpha_op);
-    op_str = ReplacePattern(op_str, "%source1", GetTevStageConfigAlphaSourceString(tev_stage.alpha_source1, tev_stage.alpha_modifier1));
-    op_str = ReplacePattern(op_str, "%source2", GetTevStageConfigAlphaSourceString(tev_stage.alpha_source2, tev_stage.alpha_modifier2));
-    return   ReplacePattern(op_str, "%source3", GetTevStageConfigAlphaSourceString(tev_stage.alpha_source3, tev_stage.alpha_modifier3));
+    op_str = ReplacePattern(
+        op_str, "%source1",
+        GetTevStageConfigAlphaSourceString(tev_stage.alpha_source1, tev_stage.alpha_modifier1));
+    op_str = ReplacePattern(
+        op_str, "%source2",
+        GetTevStageConfigAlphaSourceString(tev_stage.alpha_source2, tev_stage.alpha_modifier2));
+    return ReplacePattern(
+        op_str, "%source3",
+        GetTevStageConfigAlphaSourceString(tev_stage.alpha_source3, tev_stage.alpha_modifier3));
 }
 
 void DumpTevStageConfig(const std::array<Pica::Regs::TevStageConfig, 6>& stages) {
     std::string stage_info = "Tev setup:\n";
     for (size_t index = 0; index < stages.size(); ++index) {
         const auto& tev_stage = stages[index];
-        stage_info += "Stage " + std::to_string(index) + ": " + GetTevStageConfigColorCombinerString(tev_stage) + "   " + GetTevStageConfigAlphaCombinerString(tev_stage) + "\n";
+        stage_info += "Stage " + std::to_string(index) + ": " +
+                      GetTevStageConfigColorCombinerString(tev_stage) + "   " +
+                      GetTevStageConfigAlphaCombinerString(tev_stage) + "\n";
     }
     LOG_TRACE(HW_GPU, "%s", stage_info.c_str());
 }

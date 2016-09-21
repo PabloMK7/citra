@@ -3,9 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <iterator>
-
 #include "common/assert.h"
-
 #include "core/hle/kernel/vm_manager.h"
 #include "core/memory.h"
 #include "core/memory_setup.h"
@@ -15,8 +13,8 @@ namespace Kernel {
 
 static const char* GetMemoryStateName(MemoryState state) {
     static const char* names[] = {
-        "Free", "Reserved", "IO", "Static", "Code", "Private", "Shared", "Continuous", "Aliased",
-        "Alias", "AliasCode", "Locked",
+        "Free",   "Reserved",   "IO",      "Static", "Code",      "Private",
+        "Shared", "Continuous", "Aliased", "Alias",  "AliasCode", "Locked",
     };
 
     return names[(int)state];
@@ -24,13 +22,12 @@ static const char* GetMemoryStateName(MemoryState state) {
 
 bool VirtualMemoryArea::CanBeMergedWith(const VirtualMemoryArea& next) const {
     ASSERT(base + size == next.base);
-    if (permissions != next.permissions ||
-            meminfo_state != next.meminfo_state ||
-            type != next.type) {
+    if (permissions != next.permissions || meminfo_state != next.meminfo_state ||
+        type != next.type) {
         return false;
     }
     if (type == VMAType::AllocatedMemoryBlock &&
-            (backing_block != next.backing_block || offset + size != next.offset)) {
+        (backing_block != next.backing_block || offset + size != next.offset)) {
         return false;
     }
     if (type == VMAType::BackingMemory && backing_memory + size != next.backing_memory) {
@@ -70,7 +67,9 @@ VMManager::VMAHandle VMManager::FindVMA(VAddr target) const {
 }
 
 ResultVal<VMManager::VMAHandle> VMManager::MapMemoryBlock(VAddr target,
-        std::shared_ptr<std::vector<u8>> block, size_t offset, u32 size, MemoryState state) {
+                                                          std::shared_ptr<std::vector<u8>> block,
+                                                          size_t offset, u32 size,
+                                                          MemoryState state) {
     ASSERT(block != nullptr);
     ASSERT(offset + size <= block->size());
 
@@ -89,7 +88,8 @@ ResultVal<VMManager::VMAHandle> VMManager::MapMemoryBlock(VAddr target,
     return MakeResult<VMAHandle>(MergeAdjacent(vma_handle));
 }
 
-ResultVal<VMManager::VMAHandle> VMManager::MapBackingMemory(VAddr target, u8 * memory, u32 size, MemoryState state) {
+ResultVal<VMManager::VMAHandle> VMManager::MapBackingMemory(VAddr target, u8* memory, u32 size,
+                                                            MemoryState state) {
     ASSERT(memory != nullptr);
 
     // This is the appropriately sized VMA that will turn into our allocation.
@@ -106,7 +106,9 @@ ResultVal<VMManager::VMAHandle> VMManager::MapBackingMemory(VAddr target, u8 * m
     return MakeResult<VMAHandle>(MergeAdjacent(vma_handle));
 }
 
-ResultVal<VMManager::VMAHandle> VMManager::MapMMIO(VAddr target, PAddr paddr, u32 size, MemoryState state, Memory::MMIORegionPointer mmio_handler) {
+ResultVal<VMManager::VMAHandle> VMManager::MapMMIO(VAddr target, PAddr paddr, u32 size,
+                                                   MemoryState state,
+                                                   Memory::MMIORegionPointer mmio_handler) {
     // This is the appropriately sized VMA that will turn into our allocation.
     CASCADE_RESULT(VMAIter vma_handle, CarveVMA(target, size));
     VirtualMemoryArea& final_vma = vma_handle->second;
@@ -191,15 +193,16 @@ void VMManager::RefreshMemoryBlockMappings(const std::vector<u8>* block) {
 void VMManager::LogLayout(Log::Level log_level) const {
     for (const auto& p : vma_map) {
         const VirtualMemoryArea& vma = p.second;
-        LOG_GENERIC(Log::Class::Kernel, log_level, "%08X - %08X  size: %8X %c%c%c %s",
-            vma.base, vma.base + vma.size, vma.size,
-            (u8)vma.permissions & (u8)VMAPermission::Read    ? 'R' : '-',
-            (u8)vma.permissions & (u8)VMAPermission::Write   ? 'W' : '-',
-            (u8)vma.permissions & (u8)VMAPermission::Execute ? 'X' : '-', GetMemoryStateName(vma.meminfo_state));
+        LOG_GENERIC(Log::Class::Kernel, log_level, "%08X - %08X  size: %8X %c%c%c %s", vma.base,
+                    vma.base + vma.size, vma.size,
+                    (u8)vma.permissions & (u8)VMAPermission::Read ? 'R' : '-',
+                    (u8)vma.permissions & (u8)VMAPermission::Write ? 'W' : '-',
+                    (u8)vma.permissions & (u8)VMAPermission::Execute ? 'X' : '-',
+                    GetMemoryStateName(vma.meminfo_state));
     }
 }
 
-VMManager::VMAIter VMManager::StripIterConstness(const VMAHandle & iter) {
+VMManager::VMAIter VMManager::StripIterConstness(const VMAHandle& iter) {
     // This uses a neat C++ trick to convert a const_iterator to a regular iterator, given
     // non-const access to its container.
     return vma_map.erase(iter, iter); // Erases an empty range of elements
@@ -337,5 +340,4 @@ void VMManager::UpdatePageTableForVMA(const VirtualMemoryArea& vma) {
         break;
     }
 }
-
 }

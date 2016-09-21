@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Enforce citra's whitespace policy
 git config --local core.whitespace tab-in-indent,trailing-space
@@ -7,7 +7,7 @@ paths_to_check="src/ CMakeLists.txt"
 
 # If there are whitespace errors, print the offending file names and fail.
 if ! git diff --cached --check -- $paths_to_check ; then
-    cat<<END;
+    cat<<END
 
 Error: This commit would contain trailing spaces or tabs, which is against this repo's policy.
 Please correct those issues before commiting. (Use 'git diff --check' for more details)
@@ -18,9 +18,26 @@ fi
 
 # Check for tabs, since tab-in-indent catches only those at the beginning of a line
 if git diff --cached -- $paths_to_check | egrep '^\+.*	'; then
-    cat<<END;
+    cat<<END
 Error: This commit would contain a tab, which is against this repo's policy.
 If you know what you are doing, you can try 'git commit --no-verify' to bypass the check.
 END
     exit 1
 fi
+
+for f in $(git diff --name-only --diff-filter=ACMRTUXB --cached); do
+    if ! echo "$f" | egrep -q "[.](cpp|h)$"; then
+        continue
+    fi
+    if ! echo "$f" | egrep -q "^src/"; then
+        continue
+    fi
+    d=$(diff -u "$f" <(clang-format "$f"))
+    if ! [ -z "$d" ]; then
+        echo "!!! $f not compliant to coding style, here is the fix:"
+        echo "$d"
+        fail=1
+    fi
+done
+
+exit "$fail"

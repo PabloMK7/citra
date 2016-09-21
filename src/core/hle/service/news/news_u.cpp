@@ -8,7 +8,7 @@ namespace Service {
 namespace NEWS {
 
 const Interface::FunctionInfo FunctionTable[] = {
-    {0x000100C6, nullptr,               "AddNotification"},
+    {0x000100C6, nullptr, "AddNotification"},
 };
 
 NEWS_U_Interface::NEWS_U_Interface() {

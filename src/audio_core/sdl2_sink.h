@@ -6,7 +6,6 @@
 
 #include <cstddef>
 #include <memory>
-
 #include "audio_core/sink.h"
 
 namespace AudioCore {

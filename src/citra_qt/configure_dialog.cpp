@@ -4,24 +4,17 @@
 
 #include "citra_qt/config.h"
 #include "citra_qt/configure_dialog.h"
+#include "core/settings.h"
 #include "ui_configure.h"
 
-
-#include "core/settings.h"
-
-ConfigureDialog::ConfigureDialog(QWidget *parent) :
-    QDialog(parent),
-    ui(new Ui::ConfigureDialog)
-{
+ConfigureDialog::ConfigureDialog(QWidget* parent) : QDialog(parent), ui(new Ui::ConfigureDialog) {
     ui->setupUi(this);
     this->setConfiguration();
 }
 
-ConfigureDialog::~ConfigureDialog() {
-}
+ConfigureDialog::~ConfigureDialog() {}
 
-void ConfigureDialog::setConfiguration() {
-}
+void ConfigureDialog::setConfiguration() {}
 
 void ConfigureDialog::applyConfiguration() {
     ui->generalTab->applyConfiguration();

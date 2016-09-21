@@ -6,9 +6,7 @@
 
 #include <queue>
 #include <string>
-
 #include "common/common_types.h"
-
 #include "core/hle/kernel/kernel.h"
 
 namespace Kernel {
@@ -23,17 +21,23 @@ public:
      * @return The created semaphore
      */
     static ResultVal<SharedPtr<Semaphore>> Create(s32 initial_count, s32 max_count,
-            std::string name = "Unknown");
+                                                  std::string name = "Unknown");
 
-    std::string GetTypeName() const override { return "Semaphore"; }
-    std::string GetName() const override { return name; }
+    std::string GetTypeName() const override {
+        return "Semaphore";
+    }
+    std::string GetName() const override {
+        return name;
+    }
 
     static const HandleType HANDLE_TYPE = HandleType::Semaphore;
-    HandleType GetHandleType() const override { return HANDLE_TYPE; }
+    HandleType GetHandleType() const override {
+        return HANDLE_TYPE;
+    }
 
-    s32 max_count;                              ///< Maximum number of simultaneous holders the semaphore can have
-    s32 available_count;                        ///< Number of free slots left in the semaphore
-    std::string name;                           ///< Name of semaphore (optional)
+    s32 max_count;       ///< Maximum number of simultaneous holders the semaphore can have
+    s32 available_count; ///< Number of free slots left in the semaphore
+    std::string name;    ///< Name of semaphore (optional)
 
     bool ShouldWait() override;
     void Acquire() override;

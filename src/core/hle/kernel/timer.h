@@ -5,7 +5,6 @@
 #pragma once
 
 #include "common/common_types.h"
-
 #include "core/hle/kernel/event.h"
 #include "core/hle/kernel/kernel.h"
 
@@ -21,19 +20,25 @@ public:
      */
     static SharedPtr<Timer> Create(ResetType reset_type, std::string name = "Unknown");
 
-    std::string GetTypeName() const override { return "Timer"; }
-    std::string GetName() const override { return name; }
+    std::string GetTypeName() const override {
+        return "Timer";
+    }
+    std::string GetName() const override {
+        return name;
+    }
 
     static const HandleType HANDLE_TYPE = HandleType::Timer;
-    HandleType GetHandleType() const override { return HANDLE_TYPE; }
+    HandleType GetHandleType() const override {
+        return HANDLE_TYPE;
+    }
 
-    ResetType reset_type;                   ///< The ResetType of this timer
+    ResetType reset_type; ///< The ResetType of this timer
 
-    bool signaled;                          ///< Whether the timer has been signaled or not
-    std::string name;                       ///< Name of timer (optional)
+    bool signaled;    ///< Whether the timer has been signaled or not
+    std::string name; ///< Name of timer (optional)
 
-    u64 initial_delay;                      ///< The delay until the timer fires for the first time
-    u64 interval_delay;                     ///< The delay until the timer fires after the first time
+    u64 initial_delay;  ///< The delay until the timer fires for the first time
+    u64 interval_delay; ///< The delay until the timer fires after the first time
 
     bool ShouldWait() override;
     void Acquire() override;

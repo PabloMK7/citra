@@ -4,15 +4,14 @@
 
 #include "common/common_types.h"
 #include "common/logging/log.h"
-
-#include "core/hw/hw.h"
 #include "core/hw/gpu.h"
+#include "core/hw/hw.h"
 #include "core/hw/lcd.h"
 
 namespace HW {
 
 template <typename T>
-inline void Read(T &var, const u32 addr) {
+inline void Read(T& var, const u32 addr) {
     switch (addr & 0xFFFFF000) {
     case VADDR_GPU:
     case VADDR_GPU + 0x1000:
@@ -71,10 +70,10 @@ inline void Write(u32 addr, const T data) {
 
 // Explicitly instantiate template functions because we aren't defining this in the header:
 
-template void Read<u64>(u64 &var, const u32 addr);
-template void Read<u32>(u32 &var, const u32 addr);
-template void Read<u16>(u16 &var, const u32 addr);
-template void Read<u8>(u8 &var, const u32 addr);
+template void Read<u64>(u64& var, const u32 addr);
+template void Read<u32>(u32& var, const u32 addr);
+template void Read<u16>(u16& var, const u32 addr);
+template void Read<u8>(u8& var, const u32 addr);
 
 template void Write<u64>(u32 addr, const u64 data);
 template void Write<u32>(u32 addr, const u32 data);
@@ -82,8 +81,7 @@ template void Write<u16>(u32 addr, const u16 data);
 template void Write<u8>(u32 addr, const u8 data);
 
 /// Update hardware
-void Update() {
-}
+void Update() {}
 
 /// Initialize hardware
 void Init() {
@@ -98,5 +96,4 @@ void Shutdown() {
     LCD::Shutdown();
     LOG_DEBUG(HW, "shutdown OK");
 }
-
 }

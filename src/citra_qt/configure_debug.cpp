@@ -3,20 +3,15 @@
 // Refer to the license.txt file included.
 
 #include "citra_qt/configure_debug.h"
+#include "core/settings.h"
 #include "ui_configure_debug.h"
 
-#include "core/settings.h"
-
-ConfigureDebug::ConfigureDebug(QWidget *parent) :
-    QWidget(parent),
-    ui(new Ui::ConfigureDebug)
-{
+ConfigureDebug::ConfigureDebug(QWidget* parent) : QWidget(parent), ui(new Ui::ConfigureDebug) {
     ui->setupUi(this);
     this->setConfiguration();
 }
 
-ConfigureDebug::~ConfigureDebug() {
-}
+ConfigureDebug::~ConfigureDebug() {}
 
 void ConfigureDebug::setConfiguration() {
     ui->toggle_gdbstub->setChecked(Settings::values.use_gdbstub);

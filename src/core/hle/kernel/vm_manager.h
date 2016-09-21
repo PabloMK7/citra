@@ -7,21 +7,19 @@
 #include <map>
 #include <memory>
 #include <vector>
-
 #include "common/common_types.h"
-
 #include "core/hle/result.h"
 #include "core/mmio.h"
 
 namespace Kernel {
 
-const ResultCode ERR_INVALID_ADDRESS{ // 0xE0E01BF5
-        ErrorDescription::InvalidAddress, ErrorModule::OS,
-        ErrorSummary::InvalidArgument, ErrorLevel::Usage};
+const ResultCode ERR_INVALID_ADDRESS{// 0xE0E01BF5
+                                     ErrorDescription::InvalidAddress, ErrorModule::OS,
+                                     ErrorSummary::InvalidArgument, ErrorLevel::Usage};
 
-const ResultCode ERR_INVALID_ADDRESS_STATE{ // 0xE0A01BF5
-        ErrorDescription::InvalidAddress, ErrorModule::OS,
-        ErrorSummary::InvalidState, ErrorLevel::Usage};
+const ResultCode ERR_INVALID_ADDRESS_STATE{// 0xE0A01BF5
+                                           ErrorDescription::InvalidAddress, ErrorModule::OS,
+                                           ErrorSummary::InvalidState, ErrorLevel::Usage};
 
 enum class VMAType : u8 {
     /// VMA represents an unmapped region of the address space.
@@ -115,7 +113,8 @@ class VMManager final {
     // TODO(yuriks): Make page tables switchable to support multiple VMManagers
 public:
     /**
-     * The maximum amount of address space managed by the kernel. Addresses above this are never used.
+     * The maximum amount of address space managed by the kernel. Addresses above this are never
+     * used.
      * @note This is the limit used by the New 3DS kernel. Old 3DS used 0x20000000.
      */
     static const u32 MAX_ADDRESS = 0x40000000;
@@ -151,7 +150,7 @@ public:
      * @param state MemoryState tag to attach to the VMA.
      */
     ResultVal<VMAHandle> MapMemoryBlock(VAddr target, std::shared_ptr<std::vector<u8>> block,
-            size_t offset, u32 size, MemoryState state);
+                                        size_t offset, u32 size, MemoryState state);
 
     /**
      * Maps an unmanaged host memory pointer at a given address.
@@ -172,7 +171,8 @@ public:
      * @param state MemoryState tag to attach to the VMA.
      * @param mmio_handler The handler that will implement read and write for this MMIO region.
      */
-    ResultVal<VMAHandle> MapMMIO(VAddr target, PAddr paddr, u32 size, MemoryState state, Memory::MMIORegionPointer mmio_handler);
+    ResultVal<VMAHandle> MapMMIO(VAddr target, PAddr paddr, u32 size, MemoryState state,
+                                 Memory::MMIORegionPointer mmio_handler);
 
     /// Unmaps a range of addresses, splitting VMAs as necessary.
     ResultCode UnmapRange(VAddr target, u32 size);
@@ -228,5 +228,4 @@ private:
     /// Updates the pages corresponding to this VMA so they match the VMA's attributes.
     void UpdatePageTableForVMA(const VirtualMemoryArea& vma);
 };
-
 }

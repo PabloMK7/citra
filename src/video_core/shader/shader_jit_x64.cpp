@@ -5,20 +5,16 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
-#include <xmmintrin.h>
-
 #include <nihstro/shader_bytecode.h>
-
+#include <xmmintrin.h>
 #include "common/assert.h"
 #include "common/logging/log.h"
 #include "common/vector_math.h"
 #include "common/x64/abi.h"
 #include "common/x64/cpu_detect.h"
 #include "common/x64/emitter.h"
-
 #include "shader.h"
 #include "shader_jit_x64.h"
-
 #include "video_core/pica_state.h"
 #include "video_core/pica_types.h"
 
@@ -31,70 +27,70 @@ using namespace Gen;
 typedef void (JitShader::*JitFunction)(Instruction instr);
 
 const JitFunction instr_table[64] = {
-    &JitShader::Compile_ADD,        // add
-    &JitShader::Compile_DP3,        // dp3
-    &JitShader::Compile_DP4,        // dp4
-    &JitShader::Compile_DPH,        // dph
-    nullptr,                        // unknown
-    &JitShader::Compile_EX2,        // ex2
-    &JitShader::Compile_LG2,        // lg2
-    nullptr,                        // unknown
-    &JitShader::Compile_MUL,        // mul
-    &JitShader::Compile_SGE,        // sge
-    &JitShader::Compile_SLT,        // slt
-    &JitShader::Compile_FLR,        // flr
-    &JitShader::Compile_MAX,        // max
-    &JitShader::Compile_MIN,        // min
-    &JitShader::Compile_RCP,        // rcp
-    &JitShader::Compile_RSQ,        // rsq
-    nullptr,                        // unknown
-    nullptr,                        // unknown
-    &JitShader::Compile_MOVA,       // mova
-    &JitShader::Compile_MOV,        // mov
-    nullptr,                        // unknown
-    nullptr,                        // unknown
-    nullptr,                        // unknown
-    nullptr,                        // unknown
-    &JitShader::Compile_DPH,        // dphi
-    nullptr,                        // unknown
-    &JitShader::Compile_SGE,        // sgei
-    &JitShader::Compile_SLT,        // slti
-    nullptr,                        // unknown
-    nullptr,                        // unknown
-    nullptr,                        // unknown
-    nullptr,                        // unknown
-    nullptr,                        // unknown
-    &JitShader::Compile_NOP,        // nop
-    &JitShader::Compile_END,        // end
-    nullptr,                        // break
-    &JitShader::Compile_CALL,       // call
-    &JitShader::Compile_CALLC,      // callc
-    &JitShader::Compile_CALLU,      // callu
-    &JitShader::Compile_IF,         // ifu
-    &JitShader::Compile_IF,         // ifc
-    &JitShader::Compile_LOOP,       // loop
-    nullptr,                        // emit
-    nullptr,                        // sete
-    &JitShader::Compile_JMP,        // jmpc
-    &JitShader::Compile_JMP,        // jmpu
-    &JitShader::Compile_CMP,        // cmp
-    &JitShader::Compile_CMP,        // cmp
-    &JitShader::Compile_MAD,        // madi
-    &JitShader::Compile_MAD,        // madi
-    &JitShader::Compile_MAD,        // madi
-    &JitShader::Compile_MAD,        // madi
-    &JitShader::Compile_MAD,        // madi
-    &JitShader::Compile_MAD,        // madi
-    &JitShader::Compile_MAD,        // madi
-    &JitShader::Compile_MAD,        // madi
-    &JitShader::Compile_MAD,        // mad
-    &JitShader::Compile_MAD,        // mad
-    &JitShader::Compile_MAD,        // mad
-    &JitShader::Compile_MAD,        // mad
-    &JitShader::Compile_MAD,        // mad
-    &JitShader::Compile_MAD,        // mad
-    &JitShader::Compile_MAD,        // mad
-    &JitShader::Compile_MAD,        // mad
+    &JitShader::Compile_ADD,   // add
+    &JitShader::Compile_DP3,   // dp3
+    &JitShader::Compile_DP4,   // dp4
+    &JitShader::Compile_DPH,   // dph
+    nullptr,                   // unknown
+    &JitShader::Compile_EX2,   // ex2
+    &JitShader::Compile_LG2,   // lg2
+    nullptr,                   // unknown
+    &JitShader::Compile_MUL,   // mul
+    &JitShader::Compile_SGE,   // sge
+    &JitShader::Compile_SLT,   // slt
+    &JitShader::Compile_FLR,   // flr
+    &JitShader::Compile_MAX,   // max
+    &JitShader::Compile_MIN,   // min
+    &JitShader::Compile_RCP,   // rcp
+    &JitShader::Compile_RSQ,   // rsq
+    nullptr,                   // unknown
+    nullptr,                   // unknown
+    &JitShader::Compile_MOVA,  // mova
+    &JitShader::Compile_MOV,   // mov
+    nullptr,                   // unknown
+    nullptr,                   // unknown
+    nullptr,                   // unknown
+    nullptr,                   // unknown
+    &JitShader::Compile_DPH,   // dphi
+    nullptr,                   // unknown
+    &JitShader::Compile_SGE,   // sgei
+    &JitShader::Compile_SLT,   // slti
+    nullptr,                   // unknown
+    nullptr,                   // unknown
+    nullptr,                   // unknown
+    nullptr,                   // unknown
+    nullptr,                   // unknown
+    &JitShader::Compile_NOP,   // nop
+    &JitShader::Compile_END,   // end
+    nullptr,                   // break
+    &JitShader::Compile_CALL,  // call
+    &JitShader::Compile_CALLC, // callc
+    &JitShader::Compile_CALLU, // callu
+    &JitShader::Compile_IF,    // ifu
+    &JitShader::Compile_IF,    // ifc
+    &JitShader::Compile_LOOP,  // loop
+    nullptr,                   // emit
+    nullptr,                   // sete
+    &JitShader::Compile_JMP,   // jmpc
+    &JitShader::Compile_JMP,   // jmpu
+    &JitShader::Compile_CMP,   // cmp
+    &JitShader::Compile_CMP,   // cmp
+    &JitShader::Compile_MAD,   // madi
+    &JitShader::Compile_MAD,   // madi
+    &JitShader::Compile_MAD,   // madi
+    &JitShader::Compile_MAD,   // madi
+    &JitShader::Compile_MAD,   // madi
+    &JitShader::Compile_MAD,   // madi
+    &JitShader::Compile_MAD,   // madi
+    &JitShader::Compile_MAD,   // madi
+    &JitShader::Compile_MAD,   // mad
+    &JitShader::Compile_MAD,   // mad
+    &JitShader::Compile_MAD,   // mad
+    &JitShader::Compile_MAD,   // mad
+    &JitShader::Compile_MAD,   // mad
+    &JitShader::Compile_MAD,   // mad
+    &JitShader::Compile_MAD,   // mad
+    &JitShader::Compile_MAD,   // mad
 };
 
 // The following is used to alias some commonly used registers. Generally, RAX-RDX and XMM0-XMM3 can
@@ -136,9 +132,9 @@ static const X64Reg NEGBIT = XMM15;
 // State registers that must not be modified by external functions calls
 // Scratch registers, e.g., SRC1 and SCRATCH, have to be saved on the side if needed
 static const BitSet32 persistent_regs = {
-    SETUP, STATE, // Pointers to register blocks
+    SETUP,          STATE,                                       // Pointers to register blocks
     ADDROFFS_REG_0, ADDROFFS_REG_1, LOOPCOUNT_REG, COND0, COND1, // Cached registers
-    ONE+16, NEGBIT+16, // Constants
+    ONE + 16,       NEGBIT + 16,                                 // Constants
 };
 
 /// Raw constant for the source register selector that indicates no swizzling is performed
@@ -152,7 +148,7 @@ static const u8 NO_DEST_REG_MASK = 0xf;
  * @return Instruction at the specified offset
  */
 static Instruction GetVertexShaderInstruction(size_t offset) {
-    return { g_state.vs.program_code[offset] };
+    return {g_state.vs.program_code[offset]};
 }
 
 static void LogCritical(const char* msg) {
@@ -172,7 +168,8 @@ void JitShader::Compile_Assert(bool condition, const char* msg) {
  * @param src_reg SourceRegister object corresponding to the source register to load
  * @param dest Destination XMM register to store the loaded, swizzled source register
  */
-void JitShader::Compile_SwizzleSrc(Instruction instr, unsigned src_num, SourceRegister src_reg, X64Reg dest) {
+void JitShader::Compile_SwizzleSrc(Instruction instr, unsigned src_num, SourceRegister src_reg,
+                                   X64Reg dest) {
     X64Reg src_ptr;
     size_t src_offset;
 
@@ -189,7 +186,8 @@ void JitShader::Compile_SwizzleSrc(Instruction instr, unsigned src_num, SourceRe
 
     unsigned operand_desc_id;
 
-    const bool is_inverted = (0 != (instr.opcode.Value().GetInfo().subtype & OpCode::Info::SrcInversed));
+    const bool is_inverted =
+        (0 != (instr.opcode.Value().GetInfo().subtype & OpCode::Info::SrcInversed));
 
     unsigned address_register_index;
     unsigned offset_src;
@@ -225,7 +223,7 @@ void JitShader::Compile_SwizzleSrc(Instruction instr, unsigned src_num, SourceRe
         MOVAPS(dest, MDisp(src_ptr, src_offset_disp));
     }
 
-    SwizzlePattern swiz = { g_state.vs.swizzle_data[operand_desc_id] };
+    SwizzlePattern swiz = {g_state.vs.swizzle_data[operand_desc_id]};
 
     // Generate instructions for source register swizzling as needed
     u8 sel = swiz.GetRawSelector(src_num);
@@ -238,13 +236,13 @@ void JitShader::Compile_SwizzleSrc(Instruction instr, unsigned src_num, SourceRe
     }
 
     // If the source register should be negated, flip the negative bit using XOR
-    const bool negate[] = { swiz.negate_src1, swiz.negate_src2, swiz.negate_src3 };
+    const bool negate[] = {swiz.negate_src1, swiz.negate_src2, swiz.negate_src3};
     if (negate[src_num - 1]) {
         XORPS(dest, R(NEGBIT));
     }
 }
 
-void JitShader::Compile_DestEnable(Instruction instr,X64Reg src) {
+void JitShader::Compile_DestEnable(Instruction instr, X64Reg src) {
     DestRegister dest;
     unsigned operand_desc_id;
     if (instr.opcode.Value().EffectiveOpCode() == OpCode::Id::MAD ||
@@ -256,10 +254,11 @@ void JitShader::Compile_DestEnable(Instruction instr,X64Reg src) {
         dest = instr.common.dest.Value();
     }
 
-    SwizzlePattern swiz = { g_state.vs.swizzle_data[operand_desc_id] };
+    SwizzlePattern swiz = {g_state.vs.swizzle_data[operand_desc_id]};
 
     int dest_offset_disp = (int)UnitState<false>::OutputOffset(dest);
-    ASSERT_MSG(dest_offset_disp == UnitState<false>::OutputOffset(dest), "Destinaton offset too large for int type");
+    ASSERT_MSG(dest_offset_disp == UnitState<false>::OutputOffset(dest),
+               "Destinaton offset too large for int type");
 
     // If all components are enabled, write the result to the destination register
     if (swiz.dest_mask == NO_DEST_REG_MASK) {
@@ -267,18 +266,21 @@ void JitShader::Compile_DestEnable(Instruction instr,X64Reg src) {
         MOVAPS(MDisp(STATE, dest_offset_disp), src);
 
     } else {
-        // Not all components are enabled, so mask the result when storing to the destination register...
+        // Not all components are enabled, so mask the result when storing to the destination
+        // register...
         MOVAPS(SCRATCH, MDisp(STATE, dest_offset_disp));
 
         if (Common::GetCPUCaps().sse4_1) {
-            u8 mask = ((swiz.dest_mask & 1) << 3) | ((swiz.dest_mask & 8) >> 3) | ((swiz.dest_mask & 2) << 1) | ((swiz.dest_mask & 4) >> 1);
+            u8 mask = ((swiz.dest_mask & 1) << 3) | ((swiz.dest_mask & 8) >> 3) |
+                      ((swiz.dest_mask & 2) << 1) | ((swiz.dest_mask & 4) >> 1);
             BLENDPS(SCRATCH, R(src), mask);
         } else {
             MOVAPS(SCRATCH2, R(src));
             UNPCKHPS(SCRATCH2, R(SCRATCH)); // Unpack X/Y components of source and destination
-            UNPCKLPS(SCRATCH, R(src)); // Unpack Z/W components of source and destination
+            UNPCKLPS(SCRATCH, R(src));      // Unpack Z/W components of source and destination
 
-            // Compute selector to selectively copy source components to destination for SHUFPS instruction
+            // Compute selector to selectively copy source components to destination for SHUFPS
+            // instruction
             u8 sel = ((swiz.DestComponentEnabled(0) ? 1 : 0) << 0) |
                      ((swiz.DestComponentEnabled(1) ? 3 : 2) << 2) |
                      ((swiz.DestComponentEnabled(2) ? 0 : 1) << 4) |
@@ -336,7 +338,8 @@ void JitShader::Compile_EvaluateCondition(Instruction instr) {
 }
 
 void JitShader::Compile_UniformCondition(Instruction instr) {
-    int offset = ShaderSetup::UniformOffset(RegisterType::BoolUniform, instr.flow_control.bool_uniform_id);
+    int offset =
+        ShaderSetup::UniformOffset(RegisterType::BoolUniform, instr.flow_control.bool_uniform_id);
     CMP(sizeof(bool) * 8, MDisp(SETUP, offset), Imm8(0));
 }
 
@@ -512,7 +515,7 @@ void JitShader::Compile_MIN(Instruction instr) {
 }
 
 void JitShader::Compile_MOVA(Instruction instr) {
-    SwizzlePattern swiz = { g_state.vs.swizzle_data[instr.common.operand_desc_id] };
+    SwizzlePattern swiz = {g_state.vs.swizzle_data[instr.common.operand_desc_id]};
 
     if (!swiz.DestComponentEnabled(0) && !swiz.DestComponentEnabled(1)) {
         return; // NoOp
@@ -583,8 +586,7 @@ void JitShader::Compile_RSQ(Instruction instr) {
     Compile_DestEnable(instr, SRC1);
 }
 
-void JitShader::Compile_NOP(Instruction instr) {
-}
+void JitShader::Compile_NOP(Instruction instr) {}
 
 void JitShader::Compile_END(Instruction instr) {
     ABI_PopRegistersAndAdjustStack(ABI_ALL_CALLEE_SAVED, 8);
@@ -597,7 +599,7 @@ void JitShader::Compile_CALL(Instruction instr) {
 
     // Call the subroutine
     FixupBranch b = CALL();
-    fixup_branches.push_back({ b, instr.flow_control.dest_offset });
+    fixup_branches.push_back({b, instr.flow_control.dest_offset});
 
     // Skip over the return offset that's on the stack
     ADD(64, R(RSP), Imm32(8));
@@ -628,7 +630,7 @@ void JitShader::Compile_CMP(Instruction instr) {
     // SSE doesn't have greater-than (GT) or greater-equal (GE) comparison operators. You need to
     // emulate them by swapping the lhs and rhs and using LT and LE. NLT and NLE can't be used here
     // because they don't match when used with NaNs.
-    static const u8 cmp[] = { CMP_EQ, CMP_NEQ, CMP_LT, CMP_LE, CMP_LT, CMP_LE };
+    static const u8 cmp[] = {CMP_EQ, CMP_NEQ, CMP_LT, CMP_LE, CMP_LT, CMP_LE};
 
     bool invert_op_x = (op_x == Op::GreaterThan || op_x == Op::GreaterEqual);
     Gen::X64Reg lhs_x = invert_op_x ? SRC2 : SRC1;
@@ -678,7 +680,8 @@ void JitShader::Compile_MAD(Instruction instr) {
 }
 
 void JitShader::Compile_IF(Instruction instr) {
-    Compile_Assert(instr.flow_control.dest_offset >= program_counter, "Backwards if-statements not supported");
+    Compile_Assert(instr.flow_control.dest_offset >= program_counter,
+                   "Backwards if-statements not supported");
 
     // Evaluate the "IF" condition
     if (instr.opcode.Value() == OpCode::Id::IFU) {
@@ -709,29 +712,31 @@ void JitShader::Compile_IF(Instruction instr) {
 }
 
 void JitShader::Compile_LOOP(Instruction instr) {
-    Compile_Assert(instr.flow_control.dest_offset >= program_counter, "Backwards loops not supported");
+    Compile_Assert(instr.flow_control.dest_offset >= program_counter,
+                   "Backwards loops not supported");
     Compile_Assert(!looping, "Nested loops not supported");
 
     looping = true;
 
-    int offset = ShaderSetup::UniformOffset(RegisterType::IntUniform, instr.flow_control.int_uniform_id);
+    int offset =
+        ShaderSetup::UniformOffset(RegisterType::IntUniform, instr.flow_control.int_uniform_id);
     MOV(32, R(LOOPCOUNT), MDisp(SETUP, offset));
     MOV(32, R(LOOPCOUNT_REG), R(LOOPCOUNT));
     SHR(32, R(LOOPCOUNT_REG), Imm8(8));
     AND(32, R(LOOPCOUNT_REG), Imm32(0xff)); // Y-component is the start
     MOV(32, R(LOOPINC), R(LOOPCOUNT));
     SHR(32, R(LOOPINC), Imm8(16));
-    MOVZX(32, 8, LOOPINC, R(LOOPINC)); // Z-component is the incrementer
+    MOVZX(32, 8, LOOPINC, R(LOOPINC));     // Z-component is the incrementer
     MOVZX(32, 8, LOOPCOUNT, R(LOOPCOUNT)); // X-component is iteration count
-    ADD(32, R(LOOPCOUNT), Imm8(1)); // Iteration count is X-component + 1
+    ADD(32, R(LOOPCOUNT), Imm8(1));        // Iteration count is X-component + 1
 
     auto loop_start = GetCodePtr();
 
     Compile_Block(instr.flow_control.dest_offset + 1);
 
     ADD(32, R(LOOPCOUNT_REG), R(LOOPINC)); // Increment LOOPCOUNT_REG by Z-component
-    SUB(32, R(LOOPCOUNT), Imm8(1)); // Increment loop count by 1
-    J_CC(CC_NZ, loop_start); // Loop if not equal
+    SUB(32, R(LOOPCOUNT), Imm8(1));        // Increment loop count by 1
+    J_CC(CC_NZ, loop_start);               // Loop if not equal
 
     looping = false;
 }
@@ -744,11 +749,11 @@ void JitShader::Compile_JMP(Instruction instr) {
     else
         UNREACHABLE();
 
-    bool inverted_condition = (instr.opcode.Value() == OpCode::Id::JMPU) &&
-        (instr.flow_control.num_instructions & 1);
+    bool inverted_condition =
+        (instr.opcode.Value() == OpCode::Id::JMPU) && (instr.flow_control.num_instructions & 1);
 
     FixupBranch b = J_CC(inverted_condition ? CC_Z : CC_NZ, true);
-    fixup_branches.push_back({ b, instr.flow_control.dest_offset });
+    fixup_branches.push_back({b, instr.flow_control.dest_offset});
 }
 
 void JitShader::Compile_Block(unsigned end) {
@@ -773,7 +778,8 @@ void JitShader::Compile_NextInstr() {
         Compile_Return();
     }
 
-    ASSERT_MSG(code_ptr[program_counter] == nullptr, "Tried to compile already compiled shader location!");
+    ASSERT_MSG(code_ptr[program_counter] == nullptr,
+               "Tried to compile already compiled shader location!");
     code_ptr[program_counter] = GetCodePtr();
 
     Instruction instr = GetVertexShaderInstruction(program_counter++);
@@ -787,7 +793,7 @@ void JitShader::Compile_NextInstr() {
     } else {
         // Unhandled instruction
         LOG_CRITICAL(HW_GPU, "Unhandled instruction: 0x%02x (0x%08x)",
-                instr.opcode.Value().EffectiveOpCode(), instr.hex);
+                     instr.opcode.Value().EffectiveOpCode(), instr.hex);
     }
 }
 
@@ -801,7 +807,8 @@ void JitShader::FindReturnOffsets() {
         case OpCode::Id::CALL:
         case OpCode::Id::CALLC:
         case OpCode::Id::CALLU:
-            return_offsets.push_back(instr.flow_control.dest_offset + instr.flow_control.num_instructions);
+            return_offsets.push_back(instr.flow_control.dest_offset +
+                                     instr.flow_control.num_instructions);
             break;
         default:
             break;
@@ -835,12 +842,12 @@ void JitShader::Compile() {
     XOR(64, R(LOOPCOUNT_REG), R(LOOPCOUNT_REG));
 
     // Used to set a register to one
-    static const __m128 one = { 1.f, 1.f, 1.f, 1.f };
+    static const __m128 one = {1.f, 1.f, 1.f, 1.f};
     MOV(PTRBITS, R(RAX), ImmPtr(&one));
     MOVAPS(ONE, MatR(RAX));
 
     // Used to negate registers
-    static const __m128 neg = { -0.f, -0.f, -0.f, -0.f };
+    static const __m128 neg = {-0.f, -0.f, -0.f, -0.f};
     MOV(PTRBITS, R(RAX), ImmPtr(&neg));
     MOVAPS(NEGBIT, MatR(RAX));
 
@@ -850,7 +857,8 @@ void JitShader::Compile() {
     // Compile entire program
     Compile_Block(static_cast<unsigned>(g_state.vs.program_code.size()));
 
-    // Set the target for any incomplete branches now that the entire shader program has been emitted
+    // Set the target for any incomplete branches now that the entire shader program has been
+    // emitted
     for (const auto& branch : fixup_branches) {
         SetJumpTarget(branch.first, code_ptr[branch.second]);
     }
@@ -861,7 +869,8 @@ void JitShader::Compile() {
     fixup_branches.clear();
     fixup_branches.shrink_to_fit();
 
-    uintptr_t size = reinterpret_cast<uintptr_t>(GetCodePtr()) - reinterpret_cast<uintptr_t>(program);
+    uintptr_t size =
+        reinterpret_cast<uintptr_t>(GetCodePtr()) - reinterpret_cast<uintptr_t>(program);
     ASSERT_MSG(size <= MAX_SHADER_SIZE, "Compiled a shader that exceeds the allocated size!");
 
     LOG_DEBUG(HW_GPU, "Compiled shader size=%lu", size);

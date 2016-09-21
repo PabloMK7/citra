@@ -6,13 +6,11 @@
 #include <array>
 #include <cstddef>
 #include <memory>
-
 #include "common/assert.h"
 #include "common/color.h"
 #include "common/common_types.h"
 #include "common/math_util.h"
 #include "common/vector_math.h"
-
 #include "core/hle/service/y2r_u.h"
 #include "core/hw/y2r.h"
 #include "core/memory.h"
@@ -27,9 +25,9 @@ static const size_t TILE_SIZE = 8 * 8;
 using ImageTile = std::array<u32, TILE_SIZE>;
 
 /// Converts a image strip from the source YUV format into individual 8x8 RGB32 tiles.
-static void ConvertYUVToRGB(InputFormat input_format,
-        const u8* input_Y, const u8* input_U, const u8* input_V, ImageTile output[],
-        unsigned int width, unsigned int height, const CoefficientSet& coefficients) {
+static void ConvertYUVToRGB(InputFormat input_format, const u8* input_Y, const u8* input_U,
+                            const u8* input_V, ImageTile output[], unsigned int width,
+                            unsigned int height, const CoefficientSet& coefficients) {
 
     for (unsigned int y = 0; y < height; ++y) {
         for (unsigned int x = 0; x < width; ++x) {
@@ -58,11 +56,11 @@ static void ConvertYUVToRGB(InputFormat input_format,
 
             // This conversion process is bit-exact with hardware, as far as could be tested.
             auto& c = coefficients;
-            s32 cY = c[0]*Y;
+            s32 cY = c[0] * Y;
 
-            s32 r = cY          + c[1]*V;
-            s32 g = cY - c[3]*U - c[2]*V;
-            s32 b = cY + c[4]*U;
+            s32 r = cY + c[1] * V;
+            s32 g = cY - c[2] * V - c[3] * U;
+            s32 b = cY + c[4] * U;
 
             const s32 rounding_offset = 0x18;
             r = (r >> 3) + c[5] + rounding_offset;
@@ -74,14 +72,14 @@ static void ConvertYUVToRGB(InputFormat input_format,
             u32* out = &output[tile][y * 8 + tile_x];
 
             using MathUtil::Clamp;
-            *out = ((u32)Clamp(r >> 5, 0, 0xFF) << 24) |
-                   ((u32)Clamp(g >> 5, 0, 0xFF) << 16) |
+            *out = ((u32)Clamp(r >> 5, 0, 0xFF) << 24) | ((u32)Clamp(g >> 5, 0, 0xFF) << 16) |
                    ((u32)Clamp(b >> 5, 0, 0xFF) << 8);
         }
     }
 }
 
-/// Simulates an incoming CDMA transfer. The N parameter is used to automatically convert 16-bit formats to 8-bit.
+/// Simulates an incoming CDMA transfer. The N parameter is used to automatically convert 16-bit
+/// formats to 8-bit.
 template <size_t N>
 static void ReceiveData(u8* output, ConversionBuffer& buf, size_t amount_of_data) {
     const u8* input = Memory::GetPointer(buf.address);
@@ -103,9 +101,10 @@ static void ReceiveData(u8* output, ConversionBuffer& buf, size_t amount_of_data
     }
 }
 
-/// Convert intermediate RGB32 format to the final output format while simulating an outgoing CDMA transfer.
+/// Convert intermediate RGB32 format to the final output format while simulating an outgoing CDMA
+/// transfer.
 static void SendData(const u32* input, ConversionBuffer& buf, int amount_of_data,
-        OutputFormat output_format, u8 alpha) {
+                     OutputFormat output_format, u8 alpha) {
 
     u8* output = Memory::GetPointer(buf.address);
 
@@ -113,9 +112,7 @@ static void SendData(const u32* input, ConversionBuffer& buf, int amount_of_data
         u8* unit_end = output + buf.transfer_unit;
         while (output < unit_end) {
             u32 color = *input++;
-            Math::Vec4<u8> col_vec{
-                (u8)(color >> 24), (u8)(color >> 16), (u8)(color >> 8), alpha
-            };
+            Math::Vec4<u8> col_vec{(u8)(color >> 24), (u8)(color >> 16), (u8)(color >> 8), alpha};
 
             switch (output_format) {
             case OutputFormat::RGBA8:
@@ -145,7 +142,8 @@ static void SendData(const u32* input, ConversionBuffer& buf, int amount_of_data
     }
 }
 
-static const u8 linear_lut[64] = {
+static const u8 linear_lut[TILE_SIZE] = {
+    // clang-format off
      0,  1,  2,  3,  4,  5,  6,  7,
      8,  9, 10, 11, 12, 13, 14, 15,
     16, 17, 18, 19, 20, 21, 22, 23,
@@ -154,9 +152,11 @@ static const u8 linear_lut[64] = {
     40, 41, 42, 43, 44, 45, 46, 47,
     48, 49, 50, 51, 52, 53, 54, 55,
     56, 57, 58, 59, 60, 61, 62, 63,
+    // clang-format on
 };
 
-static const u8 morton_lut[64] = {
+static const u8 morton_lut[TILE_SIZE] = {
+    // clang-format off
      0,  1,  4,  5, 16, 17, 20, 21,
      2,  3,  6,  7, 18, 19, 22, 23,
      8,  9, 12, 13, 24, 25, 28, 29,
@@ -165,15 +165,18 @@ static const u8 morton_lut[64] = {
     34, 35, 38, 39, 50, 51, 54, 55,
     40, 41, 44, 45, 56, 57, 60, 61,
     42, 43, 46, 47, 58, 59, 62, 63,
+    // clang-format on
 };
 
-static void RotateTile0(const ImageTile& input, ImageTile& output, int height, const u8 out_map[64]) {
+static void RotateTile0(const ImageTile& input, ImageTile& output, int height,
+                        const u8 out_map[64]) {
     for (int i = 0; i < height * 8; ++i) {
         output[out_map[i]] = input[i];
     }
 }
 
-static void RotateTile90(const ImageTile& input, ImageTile& output, int height, const u8 out_map[64]) {
+static void RotateTile90(const ImageTile& input, ImageTile& output, int height,
+                         const u8 out_map[64]) {
     int out_i = 0;
     for (int x = 0; x < 8; ++x) {
         for (int y = height - 1; y >= 0; --y) {
@@ -182,16 +185,18 @@ static void RotateTile90(const ImageTile& input, ImageTile& output, int height, 
     }
 }
 
-static void RotateTile180(const ImageTile& input, ImageTile& output, int height, const u8 out_map[64]) {
+static void RotateTile180(const ImageTile& input, ImageTile& output, int height,
+                          const u8 out_map[64]) {
     int out_i = 0;
     for (int i = height * 8 - 1; i >= 0; --i) {
         output[out_map[out_i++]] = input[i];
     }
 }
 
-static void RotateTile270(const ImageTile& input, ImageTile& output, int height, const u8 out_map[64]) {
+static void RotateTile270(const ImageTile& input, ImageTile& output, int height,
+                          const u8 out_map[64]) {
     int out_i = 0;
-    for (int x = 8-1; x >= 0; --x) {
+    for (int x = 8 - 1; x >= 0; --x) {
         for (int y = 0; y < height; ++y) {
             output[out_map[out_i++]] = input[y * 8 + x];
         }
@@ -274,9 +279,11 @@ void PerformConversion(ConversionConfiguration& cvt) {
     const u8* tile_remap = nullptr;
     switch (cvt.block_alignment) {
     case BlockAlignment::Linear:
-        tile_remap = linear_lut; break;
+        tile_remap = linear_lut;
+        break;
     case BlockAlignment::Block8x8:
-        tile_remap = morton_lut; break;
+        tile_remap = morton_lut;
+        break;
     }
 
     for (unsigned int y = 0; y < cvt.input_lines; y += 8) {
@@ -320,7 +327,7 @@ void PerformConversion(ConversionConfiguration& cvt) {
         // Note(yuriks): If additional optimization is required, input_format can be moved to a
         // template parameter, so that its dispatch can be moved to outside the inner loop.
         ConvertYUVToRGB(cvt.input_format, input_Y, input_U, input_V, tiles.get(),
-                cvt.input_line_width, row_height, cvt.coefficients);
+                        cvt.input_line_width, row_height, cvt.coefficients);
 
         u32* output_buffer = reinterpret_cast<u32*>(data_buffer.get());
 
@@ -367,9 +374,9 @@ void PerformConversion(ConversionConfiguration& cvt) {
 
         // Note(yuriks): If additional optimization is required, output_format can be moved to a
         // template parameter, so that its dispatch can be moved to outside the inner loop.
-        SendData(reinterpret_cast<u32*>(data_buffer.get()), cvt.dst, (int)row_data_size, cvt.output_format, (u8)cvt.alpha);
+        SendData(reinterpret_cast<u32*>(data_buffer.get()), cvt.dst, (int)row_data_size,
+                 cvt.output_format, (u8)cvt.alpha);
     }
 }
-
 }
 }

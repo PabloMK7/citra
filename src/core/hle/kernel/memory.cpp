@@ -6,12 +6,9 @@
 #include <memory>
 #include <utility>
 #include <vector>
-
 #include "audio_core/audio_core.h"
-
 #include "common/common_types.h"
 #include "common/logging/log.h"
-
 #include "core/hle/config_mem.h"
 #include "core/hle/kernel/memory.h"
 #include "core/hle/kernel/vm_manager.h"
@@ -31,7 +28,7 @@ static MemoryRegionInfo memory_regions[3];
 static const u32 memory_region_sizes[8][3] = {
     // Old 3DS layouts
     {0x04000000, 0x02C00000, 0x01400000}, // 0
-    { /* This appears to be unused. */ }, // 1
+    {/* This appears to be unused. */},   // 1
     {0x06000000, 0x00C00000, 0x01400000}, // 2
     {0x05000000, 0x01C00000, 0x01400000}, // 3
     {0x04800000, 0x02400000, 0x01400000}, // 4
@@ -95,7 +92,6 @@ MemoryRegionInfo* GetMemoryRegion(MemoryRegion region) {
         UNREACHABLE();
     }
 }
-
 }
 
 namespace Memory {
@@ -110,9 +106,8 @@ struct MemoryArea {
 
 // We don't declare the IO regions in here since its handled by other means.
 static MemoryArea memory_areas[] = {
-    {VRAM_VADDR,          VRAM_SIZE,              "VRAM"},          // Video memory (VRAM)
+    {VRAM_VADDR, VRAM_SIZE, "VRAM"}, // Video memory (VRAM)
 };
-
 }
 
 void Init() {
@@ -125,15 +120,21 @@ void InitLegacyAddressSpace(Kernel::VMManager& address_space) {
 
     for (MemoryArea& area : memory_areas) {
         auto block = std::make_shared<std::vector<u8>>(area.size);
-        address_space.MapMemoryBlock(area.base, std::move(block), 0, area.size, MemoryState::Private).Unwrap();
+        address_space
+            .MapMemoryBlock(area.base, std::move(block), 0, area.size, MemoryState::Private)
+            .Unwrap();
     }
 
-    auto cfg_mem_vma = address_space.MapBackingMemory(CONFIG_MEMORY_VADDR,
-            (u8*)&ConfigMem::config_mem, CONFIG_MEMORY_SIZE, MemoryState::Shared).MoveFrom();
+    auto cfg_mem_vma = address_space
+                           .MapBackingMemory(CONFIG_MEMORY_VADDR, (u8*)&ConfigMem::config_mem,
+                                             CONFIG_MEMORY_SIZE, MemoryState::Shared)
+                           .MoveFrom();
     address_space.Reprotect(cfg_mem_vma, VMAPermission::Read);
 
-    auto shared_page_vma = address_space.MapBackingMemory(SHARED_PAGE_VADDR,
-            (u8*)&SharedPage::shared_page, SHARED_PAGE_SIZE, MemoryState::Shared).MoveFrom();
+    auto shared_page_vma = address_space
+                               .MapBackingMemory(SHARED_PAGE_VADDR, (u8*)&SharedPage::shared_page,
+                                                 SHARED_PAGE_SIZE, MemoryState::Shared)
+                               .MoveFrom();
     address_space.Reprotect(shared_page_vma, VMAPermission::Read);
 
     AudioCore::AddAddressSpace(address_space);

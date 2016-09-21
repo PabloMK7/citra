@@ -5,6 +5,7 @@
 #include "core/arm/dyncom/arm_dyncom_dec.h"
 #include "core/arm/skyeye_common/armsupp.h"
 
+// clang-format off
 const InstructionSetEncodingItem arm_instruction[] = {
     { "vmla", 5, ARMVFP2,      { 23, 27, 0x1C, 20, 21, 0x0, 9, 11, 0x5, 6, 6, 0, 4, 4, 0 }},
     { "vmls", 5, ARMVFP2,      { 23, 27, 0x1C, 20, 21, 0x0, 9, 11, 0x5, 6, 6, 1, 4, 4, 0 }},
@@ -205,6 +206,7 @@ const InstructionSetEncodingItem arm_instruction[] = {
     { "swi", 1, 0,         { 24, 27, 0x0000000f }},
     { "bbl", 1, 0,         { 25, 27, 0x00000005 }},
 };
+
 
 const InstructionSetEncodingItem arm_exclusion_code[] = {
     { "vmla", 0, ARMVFP2,      { 0 }},
@@ -411,6 +413,7 @@ const InstructionSetEncodingItem arm_exclusion_code[] = {
     { "blx_1_thumb", 0, INVALID, { 0 }}, // Should be located at table[-2]
     { "invalid", 0, INVALID,     { 0 }}
 };
+// clang-format on
 
 ARMDecodeStatus DecodeARMInstruction(u32 instr, s32* idx) {
     int n = 0;
@@ -427,12 +430,15 @@ ARMDecodeStatus DecodeARMInstruction(u32 instr, s32* idx) {
             continue;
 
         while (n) {
-            if (arm_instruction[i].content[base + 1] == 31 && arm_instruction[i].content[base] == 0) {
+            if (arm_instruction[i].content[base + 1] == 31 &&
+                arm_instruction[i].content[base] == 0) {
                 // clrex
                 if (instr != arm_instruction[i].content[base + 2]) {
                     break;
                 }
-            } else if (BITS(instr, arm_instruction[i].content[base], arm_instruction[i].content[base + 1]) != arm_instruction[i].content[base + 2]) {
+            } else if (BITS(instr, arm_instruction[i].content[base],
+                            arm_instruction[i].content[base + 1]) !=
+                       arm_instruction[i].content[base + 2]) {
                 break;
             }
             base += 3;
@@ -448,7 +454,9 @@ ARMDecodeStatus DecodeARMInstruction(u32 instr, s32* idx) {
             if (n != 0) {
                 base = 0;
                 while (n) {
-                    if (BITS(instr, arm_exclusion_code[i].content[base], arm_exclusion_code[i].content[base + 1]) != arm_exclusion_code[i].content[base + 2]) {
+                    if (BITS(instr, arm_exclusion_code[i].content[base],
+                             arm_exclusion_code[i].content[base + 1]) !=
+                        arm_exclusion_code[i].content[base + 2]) {
                         break;
                     }
                     base += 3;

@@ -4,11 +4,8 @@
 
 #include <map>
 #include <vector>
-
 #include <boost/range/algorithm_ext/erase.hpp>
-
 #include "common/assert.h"
-
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/mutex.h"
 #include "core/hle/kernel/thread.h"

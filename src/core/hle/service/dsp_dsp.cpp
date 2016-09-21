@@ -4,12 +4,9 @@
 
 #include <algorithm>
 #include <cinttypes>
-
 #include "audio_core/hle/pipe.h"
-
 #include "common/hash.h"
 #include "common/logging/log.h"
-
 #include "core/hle/kernel/event.h"
 #include "core/hle/service/dsp_dsp.h"
 
@@ -23,9 +20,7 @@ namespace DSP_DSP {
 static Kernel::SharedPtr<Kernel::Event> semaphore_event;
 
 /// There are three types of interrupts
-enum class InterruptType {
-    Zero, One, Pipe
-};
+enum class InterruptType { Zero, One, Pipe };
 constexpr size_t NUM_INTERRUPT_TYPE = 3;
 
 class InterruptEvents final {
@@ -57,9 +52,8 @@ public:
         // Actual service implementation only has 6 'slots' for interrupts.
         constexpr size_t max_number_of_interrupt_events = 6;
 
-        size_t number = std::count_if(pipe.begin(), pipe.end(), [](const auto& evt) {
-            return evt != nullptr;
-        });
+        size_t number =
+            std::count_if(pipe.begin(), pipe.end(), [](const auto& evt) { return evt != nullptr; });
 
         if (zero != nullptr)
             number++;
@@ -105,7 +99,8 @@ static void ConvertProcessAddressFromDspDram(Service::Interface* self) {
     cmd_buff[0] = IPC::MakeHeader(0xC, 2, 0);
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
 
-    // TODO(merry): There is a per-region offset missing in this calculation (that seems to be always zero).
+    // TODO(merry): There is a per-region offset missing in this calculation (that seems to be
+    // always zero).
     cmd_buff[2] = (addr << 1) + (Memory::DSP_RAM_VADDR + 0x40000);
 
     LOG_DEBUG(Service_DSP, "addr=0x%08X", addr);
@@ -126,15 +121,15 @@ static void ConvertProcessAddressFromDspDram(Service::Interface* self) {
 static void LoadComponent(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
-    u32 size       = cmd_buff[1];
-    u32 prog_mask  = cmd_buff[2];
-    u32 data_mask  = cmd_buff[3];
-    u32 desc       = cmd_buff[4];
-    u32 buffer     = cmd_buff[5];
+    u32 size = cmd_buff[1];
+    u32 prog_mask = cmd_buff[2];
+    u32 data_mask = cmd_buff[3];
+    u32 desc = cmd_buff[4];
+    u32 buffer = cmd_buff[5];
 
     cmd_buff[0] = IPC::MakeHeader(0x11, 2, 2);
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
-    cmd_buff[2] = 1; // Pretend that we actually loaded the DSP firmware
+    cmd_buff[2] = 1;                  // Pretend that we actually loaded the DSP firmware
     cmd_buff[3] = desc;
     cmd_buff[4] = buffer;
 
@@ -145,12 +140,15 @@ static void LoadComponent(Service::Interface* self) {
     std::vector<u8> component_data(size);
     Memory::ReadBlock(buffer, component_data.data(), component_data.size());
 
-    LOG_INFO(Service_DSP, "Firmware hash: %#" PRIx64, Common::ComputeHash64(component_data.data(), component_data.size()));
+    LOG_INFO(Service_DSP, "Firmware hash: %#" PRIx64,
+             Common::ComputeHash64(component_data.data(), component_data.size()));
     // Some versions of the firmware have the location of DSP structures listed here.
     ASSERT(size > 0x37C);
-    LOG_INFO(Service_DSP, "Structures hash: %#" PRIx64, Common::ComputeHash64(component_data.data() + 0x340, 60));
+    LOG_INFO(Service_DSP, "Structures hash: %#" PRIx64,
+             Common::ComputeHash64(component_data.data() + 0x340, 60));
 
-    LOG_WARNING(Service_DSP, "(STUBBED) called size=0x%X, prog_mask=0x%08X, data_mask=0x%08X, buffer=0x%08X",
+    LOG_WARNING(Service_DSP,
+                "(STUBBED) called size=0x%X, prog_mask=0x%08X, data_mask=0x%08X, buffer=0x%08X",
                 size, prog_mask, data_mask, buffer);
 }
 
@@ -187,13 +185,14 @@ static void GetSemaphoreEventHandle(Service::Interface* self) {
 static void FlushDataCache(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
     u32 address = cmd_buff[1];
-    u32 size    = cmd_buff[2];
+    u32 size = cmd_buff[2];
     u32 process = cmd_buff[4];
 
     cmd_buff[0] = IPC::MakeHeader(0x13, 1, 0);
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
 
-    LOG_TRACE(Service_DSP, "called address=0x%08X, size=0x%X, process=0x%08X", address, size, process);
+    LOG_TRACE(Service_DSP, "called address=0x%08X, size=0x%X, process=0x%08X", address, size,
+              process);
 }
 
 /**
@@ -224,23 +223,29 @@ static void RegisterInterruptEvents(Service::Interface* self) {
         auto evt = Kernel::g_handle_table.Get<Kernel::Event>(cmd_buff[4]);
 
         if (!evt) {
-            LOG_INFO(Service_DSP, "Invalid event handle! type=%u, pipe=%u, event_handle=0x%08X", type_index, pipe_index, event_handle);
+            LOG_INFO(Service_DSP, "Invalid event handle! type=%u, pipe=%u, event_handle=0x%08X",
+                     type_index, pipe_index, event_handle);
             ASSERT(false); // TODO: This should really be handled at an IPC translation layer.
         }
 
         if (interrupt_events.HasTooManyEventsRegistered()) {
-            LOG_INFO(Service_DSP, "Ran out of space to register interrupts (Attempted to register type=%u, pipe=%u, event_handle=0x%08X)",
+            LOG_INFO(Service_DSP, "Ran out of space to register interrupts (Attempted to register "
+                                  "type=%u, pipe=%u, event_handle=0x%08X)",
                      type_index, pipe_index, event_handle);
-            cmd_buff[1] = ResultCode(ErrorDescription::InvalidResultValue, ErrorModule::DSP, ErrorSummary::OutOfResource, ErrorLevel::Status).raw;
+            cmd_buff[1] = ResultCode(ErrorDescription::InvalidResultValue, ErrorModule::DSP,
+                                     ErrorSummary::OutOfResource, ErrorLevel::Status)
+                              .raw;
             return;
         }
 
         interrupt_events.Get(type, pipe) = evt;
-        LOG_INFO(Service_DSP, "Registered type=%u, pipe=%u, event_handle=0x%08X", type_index, pipe_index, event_handle);
+        LOG_INFO(Service_DSP, "Registered type=%u, pipe=%u, event_handle=0x%08X", type_index,
+                 pipe_index, event_handle);
         cmd_buff[1] = RESULT_SUCCESS.raw;
     } else {
         interrupt_events.Get(type, pipe) = nullptr;
-        LOG_INFO(Service_DSP, "Unregistered interrupt=%u, channel=%u, event_handle=0x%08X", type_index, pipe_index, event_handle);
+        LOG_INFO(Service_DSP, "Unregistered interrupt=%u, channel=%u, event_handle=0x%08X",
+                 type_index, pipe_index, event_handle);
         cmd_buff[1] = RESULT_SUCCESS.raw;
     }
 }
@@ -282,13 +287,18 @@ static void WriteProcessPipe(Service::Interface* self) {
     DSP::HLE::DspPipe pipe = static_cast<DSP::HLE::DspPipe>(pipe_index);
 
     if (IPC::StaticBufferDesc(size, 1) != cmd_buff[3]) {
-        LOG_ERROR(Service_DSP, "IPC static buffer descriptor failed validation (0x%X). pipe=%u, size=0x%X, buffer=0x%08X", cmd_buff[3], pipe_index, size, buffer);
+        LOG_ERROR(Service_DSP, "IPC static buffer descriptor failed validation (0x%X). pipe=%u, "
+                               "size=0x%X, buffer=0x%08X",
+                  cmd_buff[3], pipe_index, size, buffer);
         cmd_buff[0] = IPC::MakeHeader(0, 1, 0);
-        cmd_buff[1] = ResultCode(ErrorDescription::OS_InvalidBufferDescriptor, ErrorModule::OS, ErrorSummary::WrongArgument, ErrorLevel::Permanent).raw;
+        cmd_buff[1] = ResultCode(ErrorDescription::OS_InvalidBufferDescriptor, ErrorModule::OS,
+                                 ErrorSummary::WrongArgument, ErrorLevel::Permanent)
+                          .raw;
         return;
     }
 
-    ASSERT_MSG(Memory::IsValidVirtualAddress(buffer), "Invalid Buffer: pipe=%u, size=0x%X, buffer=0x%08X", pipe, size, buffer);
+    ASSERT_MSG(Memory::IsValidVirtualAddress(buffer),
+               "Invalid Buffer: pipe=%u, size=0x%X, buffer=0x%08X", pipe, size, buffer);
 
     std::vector<u8> message(size);
     for (u32 i = 0; i < size; i++) {
@@ -327,7 +337,9 @@ static void ReadPipeIfPossible(Service::Interface* self) {
 
     DSP::HLE::DspPipe pipe = static_cast<DSP::HLE::DspPipe>(pipe_index);
 
-    ASSERT_MSG(Memory::IsValidVirtualAddress(addr), "Invalid addr: pipe=0x%08X, unknown=0x%08X, size=0x%X, buffer=0x%08X", pipe, unknown, size, addr);
+    ASSERT_MSG(Memory::IsValidVirtualAddress(addr),
+               "Invalid addr: pipe=0x%08X, unknown=0x%08X, size=0x%X, buffer=0x%08X", pipe, unknown,
+               size, addr);
 
     cmd_buff[0] = IPC::MakeHeader(0x10, 1, 2);
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
@@ -343,7 +355,9 @@ static void ReadPipeIfPossible(Service::Interface* self) {
     cmd_buff[3] = IPC::StaticBufferDesc(size, 0);
     cmd_buff[4] = addr;
 
-    LOG_DEBUG(Service_DSP, "pipe=%u, unknown=0x%08X, size=0x%X, buffer=0x%08X, return cmd_buff[2]=0x%08X", pipe_index, unknown, size, addr, cmd_buff[2]);
+    LOG_DEBUG(Service_DSP,
+              "pipe=%u, unknown=0x%08X, size=0x%X, buffer=0x%08X, return cmd_buff[2]=0x%08X",
+              pipe_index, unknown, size, addr, cmd_buff[2]);
 }
 
 /**
@@ -367,7 +381,9 @@ static void ReadPipe(Service::Interface* self) {
 
     DSP::HLE::DspPipe pipe = static_cast<DSP::HLE::DspPipe>(pipe_index);
 
-    ASSERT_MSG(Memory::IsValidVirtualAddress(addr), "Invalid addr: pipe=0x%08X, unknown=0x%08X, size=0x%X, buffer=0x%08X", pipe, unknown, size, addr);
+    ASSERT_MSG(Memory::IsValidVirtualAddress(addr),
+               "Invalid addr: pipe=0x%08X, unknown=0x%08X, size=0x%X, buffer=0x%08X", pipe, unknown,
+               size, addr);
 
     if (DSP::HLE::GetPipeReadableSize(pipe) >= size) {
         std::vector<u8> response = DSP::HLE::PipeRead(pipe, size);
@@ -384,7 +400,9 @@ static void ReadPipe(Service::Interface* self) {
         UNREACHABLE();
     }
 
-    LOG_DEBUG(Service_DSP, "pipe=%u, unknown=0x%08X, size=0x%X, buffer=0x%08X, return cmd_buff[2]=0x%08X", pipe_index, unknown, size, addr, cmd_buff[2]);
+    LOG_DEBUG(Service_DSP,
+              "pipe=%u, unknown=0x%08X, size=0x%X, buffer=0x%08X, return cmd_buff[2]=0x%08X",
+              pipe_index, unknown, size, addr, cmd_buff[2]);
 }
 
 /**
@@ -408,7 +426,8 @@ static void GetPipeReadableSize(Service::Interface* self) {
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
     cmd_buff[2] = static_cast<u32>(DSP::HLE::GetPipeReadableSize(pipe));
 
-    LOG_DEBUG(Service_DSP, "pipe=%u, unknown=0x%08X, return cmd_buff[2]=0x%08X", pipe_index, unknown, cmd_buff[2]);
+    LOG_DEBUG(Service_DSP, "pipe=%u, unknown=0x%08X, return cmd_buff[2]=0x%08X", pipe_index,
+              unknown, cmd_buff[2]);
 }
 
 /**
@@ -443,7 +462,7 @@ static void GetHeadphoneStatus(Service::Interface* self) {
 
     cmd_buff[0] = IPC::MakeHeader(0x1F, 2, 0);
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
-    cmd_buff[2] = 0; // Not using headphones
+    cmd_buff[2] = 0;                  // Not using headphones
 
     LOG_DEBUG(Service_DSP, "called");
 }
@@ -466,7 +485,8 @@ static void RecvData(Service::Interface* self) {
 
     ASSERT_MSG(register_number == 0, "Unknown register_number %u", register_number);
 
-    // Application reads this after requesting DSP shutdown, to verify the DSP has indeed shutdown or slept.
+    // Application reads this after requesting DSP shutdown, to verify the DSP has indeed shutdown
+    // or slept.
 
     cmd_buff[0] = IPC::MakeHeader(0x1, 2, 0);
     cmd_buff[1] = RESULT_SUCCESS.raw;
@@ -512,39 +532,39 @@ static void RecvDataIsReady(Service::Interface* self) {
 }
 
 const Interface::FunctionInfo FunctionTable[] = {
-    {0x00010040, RecvData,                         "RecvData"},
-    {0x00020040, RecvDataIsReady,                  "RecvDataIsReady"},
-    {0x00030080, nullptr,                          "SendData"},
-    {0x00040040, nullptr,                          "SendDataIsEmpty"},
-    {0x000500C2, nullptr,                          "SendFifoEx"},
-    {0x000600C0, nullptr,                          "RecvFifoEx"},
-    {0x00070040, SetSemaphore,                     "SetSemaphore"},
-    {0x00080000, nullptr,                          "GetSemaphore"},
-    {0x00090040, nullptr,                          "ClearSemaphore"},
-    {0x000A0040, nullptr,                          "MaskSemaphore"},
-    {0x000B0000, nullptr,                          "CheckSemaphoreRequest"},
+    {0x00010040, RecvData, "RecvData"},
+    {0x00020040, RecvDataIsReady, "RecvDataIsReady"},
+    {0x00030080, nullptr, "SendData"},
+    {0x00040040, nullptr, "SendDataIsEmpty"},
+    {0x000500C2, nullptr, "SendFifoEx"},
+    {0x000600C0, nullptr, "RecvFifoEx"},
+    {0x00070040, SetSemaphore, "SetSemaphore"},
+    {0x00080000, nullptr, "GetSemaphore"},
+    {0x00090040, nullptr, "ClearSemaphore"},
+    {0x000A0040, nullptr, "MaskSemaphore"},
+    {0x000B0000, nullptr, "CheckSemaphoreRequest"},
     {0x000C0040, ConvertProcessAddressFromDspDram, "ConvertProcessAddressFromDspDram"},
-    {0x000D0082, WriteProcessPipe,                 "WriteProcessPipe"},
-    {0x000E00C0, ReadPipe,                         "ReadPipe"},
-    {0x000F0080, GetPipeReadableSize,              "GetPipeReadableSize"},
-    {0x001000C0, ReadPipeIfPossible,               "ReadPipeIfPossible"},
-    {0x001100C2, LoadComponent,                    "LoadComponent"},
-    {0x00120000, nullptr,                          "UnloadComponent"},
-    {0x00130082, FlushDataCache,                   "FlushDataCache"},
-    {0x00140082, nullptr,                          "InvalidateDCache"},
-    {0x00150082, RegisterInterruptEvents,          "RegisterInterruptEvents"},
-    {0x00160000, GetSemaphoreEventHandle,          "GetSemaphoreEventHandle"},
-    {0x00170040, SetSemaphoreMask,                 "SetSemaphoreMask"},
-    {0x00180040, nullptr,                          "GetPhysicalAddress"},
-    {0x00190040, nullptr,                          "GetVirtualAddress"},
-    {0x001A0042, nullptr,                          "SetIirFilterI2S1_cmd1"},
-    {0x001B0042, nullptr,                          "SetIirFilterI2S1_cmd2"},
-    {0x001C0082, nullptr,                          "SetIirFilterEQ"},
-    {0x001D00C0, nullptr,                          "ReadMultiEx_SPI2"},
-    {0x001E00C2, nullptr,                          "WriteMultiEx_SPI2"},
-    {0x001F0000, GetHeadphoneStatus,               "GetHeadphoneStatus"},
-    {0x00200040, nullptr,                          "ForceHeadphoneOut"},
-    {0x00210000, nullptr,                          "GetIsDspOccupied"},
+    {0x000D0082, WriteProcessPipe, "WriteProcessPipe"},
+    {0x000E00C0, ReadPipe, "ReadPipe"},
+    {0x000F0080, GetPipeReadableSize, "GetPipeReadableSize"},
+    {0x001000C0, ReadPipeIfPossible, "ReadPipeIfPossible"},
+    {0x001100C2, LoadComponent, "LoadComponent"},
+    {0x00120000, nullptr, "UnloadComponent"},
+    {0x00130082, FlushDataCache, "FlushDataCache"},
+    {0x00140082, nullptr, "InvalidateDCache"},
+    {0x00150082, RegisterInterruptEvents, "RegisterInterruptEvents"},
+    {0x00160000, GetSemaphoreEventHandle, "GetSemaphoreEventHandle"},
+    {0x00170040, SetSemaphoreMask, "SetSemaphoreMask"},
+    {0x00180040, nullptr, "GetPhysicalAddress"},
+    {0x00190040, nullptr, "GetVirtualAddress"},
+    {0x001A0042, nullptr, "SetIirFilterI2S1_cmd1"},
+    {0x001B0042, nullptr, "SetIirFilterI2S1_cmd2"},
+    {0x001C0082, nullptr, "SetIirFilterEQ"},
+    {0x001D00C0, nullptr, "ReadMultiEx_SPI2"},
+    {0x001E00C2, nullptr, "WriteMultiEx_SPI2"},
+    {0x001F0000, GetHeadphoneStatus, "GetHeadphoneStatus"},
+    {0x00200040, nullptr, "ForceHeadphoneOut"},
+    {0x00210000, nullptr, "GetIsDspOccupied"},
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

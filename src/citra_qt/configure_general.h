@@ -11,12 +11,11 @@ namespace Ui {
 class ConfigureGeneral;
 }
 
-class ConfigureGeneral : public QWidget
-{
+class ConfigureGeneral : public QWidget {
     Q_OBJECT
 
 public:
-    explicit ConfigureGeneral(QWidget *parent = nullptr);
+    explicit ConfigureGeneral(QWidget* parent = nullptr);
     ~ConfigureGeneral();
 
     void applyConfiguration();

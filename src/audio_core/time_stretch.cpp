@@ -5,12 +5,9 @@
 #include <chrono>
 #include <cmath>
 #include <vector>
-
 #include <SoundTouch.h>
-
 #include "audio_core/audio_core.h"
 #include "audio_core/time_stretch.h"
-
 #include "common/common_types.h"
 #include "common/logging/log.h"
 #include "common/math_util.h"
@@ -26,8 +23,8 @@ static double ClampRatio(double ratio) {
     return MathUtil::Clamp(ratio, MIN_RATIO, MAX_RATIO);
 }
 
-constexpr double MIN_DELAY_TIME = 0.05; // Units: seconds
-constexpr double MAX_DELAY_TIME = 0.25; // Units: seconds
+constexpr double MIN_DELAY_TIME = 0.05;            // Units: seconds
+constexpr double MAX_DELAY_TIME = 0.25;            // Units: seconds
 constexpr size_t DROP_FRAMES_SAMPLE_DELAY = 16000; // Units: samples
 
 constexpr double SMOOTHING_FACTOR = 0.007;
@@ -48,7 +45,8 @@ std::vector<s16> TimeStretcher::Process(size_t samples_in_queue) {
 
     double ratio = CalculateCurrentRatio();
     ratio = CorrectForUnderAndOverflow(ratio, samples_in_queue);
-    impl->smoothed_ratio = (1.0 - SMOOTHING_FACTOR) * impl->smoothed_ratio + SMOOTHING_FACTOR * ratio;
+    impl->smoothed_ratio =
+        (1.0 - SMOOTHING_FACTOR) * impl->smoothed_ratio + SMOOTHING_FACTOR * ratio;
     impl->smoothed_ratio = ClampRatio(impl->smoothed_ratio);
 
     // SoundTouch's tempo definition the inverse of our ratio definition.
@@ -100,7 +98,8 @@ double TimeStretcher::CalculateCurrentRatio() {
     const steady_clock::time_point now = steady_clock::now();
     const std::chrono::duration<double> duration = now - impl->frame_timer;
 
-    const double expected_time = static_cast<double>(impl->samples_queued) / static_cast<double>(native_sample_rate);
+    const double expected_time =
+        static_cast<double>(impl->samples_queued) / static_cast<double>(native_sample_rate);
     const double actual_time = duration.count();
 
     double ratio;

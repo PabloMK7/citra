@@ -7,23 +7,18 @@
 #include <cstring>
 #include <unordered_map>
 #include <utility>
-
 #include <boost/range/algorithm/fill.hpp>
-
 #include "common/bit_field.h"
 #include "common/hash.h"
 #include "common/logging/log.h"
 #include "common/microprofile.h"
-
 #include "video_core/pica.h"
 #include "video_core/pica_state.h"
 #include "video_core/shader/shader.h"
 #include "video_core/shader/shader_interpreter.h"
-
 #ifdef ARCHITECTURE_x86_64
 #include "video_core/shader/shader_jit_x64.h"
 #endif // ARCHITECTURE_x86_64
-
 #include "video_core/video_core.h"
 
 namespace Pica {
@@ -46,10 +41,8 @@ OutputVertex OutputRegisters::ToVertex(const Regs::ShaderConfig& config) {
 
         const auto& output_register_map = g_state.regs.vs_output_attributes[index];
 
-        u32 semantics[4] = {
-            output_register_map.map_x, output_register_map.map_y,
-            output_register_map.map_z, output_register_map.map_w
-        };
+        u32 semantics[4] = {output_register_map.map_x, output_register_map.map_y,
+                            output_register_map.map_z, output_register_map.map_w};
 
         for (unsigned comp = 0; comp < 4; ++comp) {
             float24* out = ((float24*)&ret) + semantics[comp];
@@ -65,19 +58,20 @@ OutputVertex OutputRegisters::ToVertex(const Regs::ShaderConfig& config) {
         index++;
     }
 
-    // The hardware takes the absolute and saturates vertex colors like this, *before* doing interpolation
+    // The hardware takes the absolute and saturates vertex colors like this, *before* doing
+    // interpolation
     for (unsigned i = 0; i < 4; ++i) {
-        ret.color[i] = float24::FromFloat32(
-            std::fmin(std::fabs(ret.color[i].ToFloat32()), 1.0f));
+        ret.color[i] = float24::FromFloat32(std::fmin(std::fabs(ret.color[i].ToFloat32()), 1.0f));
     }
 
     LOG_TRACE(HW_GPU, "Output vertex: pos(%.2f, %.2f, %.2f, %.2f), quat(%.2f, %.2f, %.2f, %.2f), "
-        "col(%.2f, %.2f, %.2f, %.2f), tc0(%.2f, %.2f), view(%.2f, %.2f, %.2f)",
-        ret.pos.x.ToFloat32(), ret.pos.y.ToFloat32(), ret.pos.z.ToFloat32(), ret.pos.w.ToFloat32(),
-        ret.quat.x.ToFloat32(), ret.quat.y.ToFloat32(), ret.quat.z.ToFloat32(), ret.quat.w.ToFloat32(),
-        ret.color.x.ToFloat32(), ret.color.y.ToFloat32(), ret.color.z.ToFloat32(), ret.color.w.ToFloat32(),
-        ret.tc0.u().ToFloat32(), ret.tc0.v().ToFloat32(),
-        ret.view.x.ToFloat32(), ret.view.y.ToFloat32(), ret.view.z.ToFloat32());
+                      "col(%.2f, %.2f, %.2f, %.2f), tc0(%.2f, %.2f), view(%.2f, %.2f, %.2f)",
+              ret.pos.x.ToFloat32(), ret.pos.y.ToFloat32(), ret.pos.z.ToFloat32(),
+              ret.pos.w.ToFloat32(), ret.quat.x.ToFloat32(), ret.quat.y.ToFloat32(),
+              ret.quat.z.ToFloat32(), ret.quat.w.ToFloat32(), ret.color.x.ToFloat32(),
+              ret.color.y.ToFloat32(), ret.color.z.ToFloat32(), ret.color.w.ToFloat32(),
+              ret.tc0.u().ToFloat32(), ret.tc0.v().ToFloat32(), ret.view.x.ToFloat32(),
+              ret.view.y.ToFloat32(), ret.view.z.ToFloat32());
 
     return ret;
 }
@@ -96,8 +90,9 @@ void ClearCache() {
 void ShaderSetup::Setup() {
 #ifdef ARCHITECTURE_x86_64
     if (VideoCore::g_shader_jit_enabled) {
-        u64 cache_key = (Common::ComputeHash64(&g_state.vs.program_code, sizeof(g_state.vs.program_code)) ^
-            Common::ComputeHash64(&g_state.vs.swizzle_data, sizeof(g_state.vs.swizzle_data)));
+        u64 cache_key =
+            Common::ComputeHash64(&g_state.vs.program_code, sizeof(g_state.vs.program_code)) ^
+            Common::ComputeHash64(&g_state.vs.swizzle_data, sizeof(g_state.vs.swizzle_data));
 
         auto iter = shader_map.find(cache_key);
         if (iter != shader_map.end()) {
@@ -127,7 +122,7 @@ void ShaderSetup::Run(UnitState<false>& state, const InputVertex& input, int num
     const auto& attribute_register_map = config.input_register_map;
 
     for (unsigned i = 0; i < num_attributes; i++)
-         state.registers.input[attribute_register_map.GetRegisterForAttribute(i)] = input.attr[i];
+        state.registers.input[attribute_register_map.GetRegisterForAttribute(i)] = input.attr[i];
 
     state.conditional_code[0] = false;
     state.conditional_code[1] = false;
@@ -140,10 +135,11 @@ void ShaderSetup::Run(UnitState<false>& state, const InputVertex& input, int num
 #else
     RunInterpreter(setup, state, config.main_offset);
 #endif // ARCHITECTURE_x86_64
-
 }
 
-DebugData<true> ShaderSetup::ProduceDebugInfo(const InputVertex& input, int num_attributes, const Regs::ShaderConfig& config, const ShaderSetup& setup) {
+DebugData<true> ShaderSetup::ProduceDebugInfo(const InputVertex& input, int num_attributes,
+                                              const Regs::ShaderConfig& config,
+                                              const ShaderSetup& setup) {
     UnitState<true> state;
 
     state.debug.max_offset = 0;
@@ -155,7 +151,7 @@ DebugData<true> ShaderSetup::ProduceDebugInfo(const InputVertex& input, int num_
     boost::fill(state.registers.input, &dummy_register);
 
     for (unsigned i = 0; i < num_attributes; i++)
-         state.registers.input[attribute_register_map.GetRegisterForAttribute(i)] = input.attr[i];
+        state.registers.input[attribute_register_map.GetRegisterForAttribute(i)] = input.attr[i];
 
     state.conditional_code[0] = false;
     state.conditional_code[1] = false;

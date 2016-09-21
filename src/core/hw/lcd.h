@@ -6,7 +6,6 @@
 
 #include <cstddef>
 #include <type_traits>
-
 #include "common/bit_field.h"
 #include "common/common_funcs.h"
 #include "common/common_types.h"
@@ -42,16 +41,15 @@ struct Regs {
         return sizeof(Regs) / sizeof(u32);
     }
 
-    const u32& operator [] (int index) const {
+    const u32& operator[](int index) const {
         const u32* content = reinterpret_cast<const u32*>(this);
         return content[index];
     }
 
-    u32& operator [] (int index) {
+    u32& operator[](int index) {
         u32* content = reinterpret_cast<u32*>(this);
         return content[index];
     }
-
 };
 static_assert(std::is_standard_layout<Regs>::value, "Structure does not use standard layout");
 
@@ -59,14 +57,14 @@ static_assert(std::is_standard_layout<Regs>::value, "Structure does not use stan
 //       is technically allowed since C++11. This macro should be enabled once MSVC adds
 //       support for that.
 #ifndef _MSC_VER
-#define ASSERT_REG_POSITION(field_name, position) \
-    static_assert(offsetof(Regs, field_name) == position * 4, \
-              "Field "#field_name" has invalid position")
+#define ASSERT_REG_POSITION(field_name, position)                                                  \
+    static_assert(offsetof(Regs, field_name) == position * 4,                                      \
+                  "Field " #field_name " has invalid position")
 
-ASSERT_REG_POSITION(color_fill_top,    0x81);
-ASSERT_REG_POSITION(backlight_top,     0x90);
+ASSERT_REG_POSITION(color_fill_top, 0x81);
+ASSERT_REG_POSITION(backlight_top, 0x90);
 ASSERT_REG_POSITION(color_fill_bottom, 0x281);
-ASSERT_REG_POSITION(backlight_bottom,  0x290);
+ASSERT_REG_POSITION(backlight_bottom, 0x290);
 
 #undef ASSERT_REG_POSITION
 #endif // !defined(_MSC_VER)
@@ -74,7 +72,7 @@ ASSERT_REG_POSITION(backlight_bottom,  0x290);
 extern Regs g_regs;
 
 template <typename T>
-void Read(T &var, const u32 addr);
+void Read(T& var, const u32 addr);
 
 template <typename T>
 void Write(u32 addr, const T data);

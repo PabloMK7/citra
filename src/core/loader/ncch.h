@@ -5,11 +5,9 @@
 #pragma once
 
 #include <memory>
-
 #include "common/bit_field.h"
 #include "common/common_types.h"
 #include "common/swap.h"
-
 #include "core/loader/loader.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -164,7 +162,7 @@ namespace Loader {
 class AppLoader_NCCH final : public AppLoader {
 public:
     AppLoader_NCCH(FileUtil::IOFile&& file, const std::string& filepath)
-        : AppLoader(std::move(file)), filepath(filepath) { }
+        : AppLoader(std::move(file)), filepath(filepath) {}
 
     /**
      * Returns the type of the file
@@ -222,10 +220,10 @@ public:
      * @param size       Size of the RomFS in bytes
      * @return ResultStatus result of function
      */
-    ResultStatus ReadRomFS(std::shared_ptr<FileUtil::IOFile>& romfs_file, u64& offset, u64& size) override;
+    ResultStatus ReadRomFS(std::shared_ptr<FileUtil::IOFile>& romfs_file, u64& offset,
+                           u64& size) override;
 
 private:
-
     /**
      * Reads an application ExeFS section of an NCCH file into AppLoader (e.g. .code, .logo, etc.)
      * @param name Name of section to read out of NCCH file
@@ -246,24 +244,24 @@ private:
      */
     ResultStatus LoadExeFS();
 
-    bool            is_exefs_loaded = false;
-    bool            is_compressed = false;
+    bool is_exefs_loaded = false;
+    bool is_compressed = false;
 
-    u32             entry_point = 0;
-    u32             code_size = 0;
-    u32             stack_size = 0;
-    u32             bss_size = 0;
-    u32             core_version = 0;
-    u8              priority = 0;
-    u8              resource_limit_category = 0;
-    u32             ncch_offset = 0; // Offset to NCCH header, can be 0 or after NCSD header
-    u32             exefs_offset = 0;
+    u32 entry_point = 0;
+    u32 code_size = 0;
+    u32 stack_size = 0;
+    u32 bss_size = 0;
+    u32 core_version = 0;
+    u8 priority = 0;
+    u8 resource_limit_category = 0;
+    u32 ncch_offset = 0; // Offset to NCCH header, can be 0 or after NCSD header
+    u32 exefs_offset = 0;
 
-    NCCH_Header     ncch_header;
-    ExeFs_Header    exefs_header;
+    NCCH_Header ncch_header;
+    ExeFs_Header exefs_header;
     ExHeader_Header exheader_header;
 
-    std::string     filepath;
+    std::string filepath;
 };
 
 } // namespace Loader

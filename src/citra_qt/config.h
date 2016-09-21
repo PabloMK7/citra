@@ -6,7 +6,6 @@
 
 #include <string>
 #include <QVariant>
-
 #include "core/settings.h"
 
 class QSettings;
@@ -17,6 +16,7 @@ class Config {
 
     void ReadValues();
     void SaveValues();
+
 public:
     Config();
     ~Config();

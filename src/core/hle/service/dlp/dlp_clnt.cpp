@@ -8,8 +8,7 @@ namespace Service {
 namespace DLP {
 
 const Interface::FunctionInfo FunctionTable[] = {
-    {0x000100C3, nullptr, "Initialize"},
-    {0x00110000, nullptr, "GetWirelessRebootPassphrase"},
+    {0x000100C3, nullptr, "Initialize"}, {0x00110000, nullptr, "GetWirelessRebootPassphrase"},
 };
 
 DLP_CLNT_Interface::DLP_CLNT_Interface() {

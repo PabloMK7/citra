@@ -4,20 +4,24 @@
 
 #pragma once
 
-#include "common/common_funcs.h"
 #include <utility>
+#include "common/common_funcs.h"
 
 namespace detail {
-    template <typename Func>
-    struct ScopeExitHelper {
-        explicit ScopeExitHelper(Func&& func) : func(std::move(func)) {}
-        ~ScopeExitHelper() { func(); }
+template <typename Func>
+struct ScopeExitHelper {
+    explicit ScopeExitHelper(Func&& func) : func(std::move(func)) {}
+    ~ScopeExitHelper() {
+        func();
+    }
 
-        Func func;
-    };
+    Func func;
+};
 
-    template <typename Func>
-    ScopeExitHelper<Func> ScopeExit(Func&& func) { return ScopeExitHelper<Func>(std::move(func)); }
+template <typename Func>
+ScopeExitHelper<Func> ScopeExit(Func&& func) {
+    return ScopeExitHelper<Func>(std::move(func));
+}
 }
 
 /**

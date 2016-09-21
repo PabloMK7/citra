@@ -5,7 +5,6 @@
 #pragma once
 
 #include <string>
-
 #include "common/common_types.h"
 #include "core/loader/loader.h"
 
@@ -18,7 +17,7 @@ namespace Loader {
 class AppLoader_ELF final : public AppLoader {
 public:
     AppLoader_ELF(FileUtil::IOFile&& file, std::string filename)
-        : AppLoader(std::move(file)), filename(std::move(filename)) { }
+        : AppLoader(std::move(file)), filename(std::move(filename)) {}
 
     /**
      * Returns the type of the file

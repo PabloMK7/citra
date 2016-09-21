@@ -7,7 +7,6 @@
 #include <array>
 #include <cstddef>
 #include <string>
-
 #include "common/logging/log.h"
 
 namespace Log {
@@ -42,7 +41,8 @@ public:
      *  - `Service.FS:Trace` -- Sets the level of the Service.FS class to Trace.
      */
     void ParseFilterString(const std::string& filter_str);
-    bool ParseFilterRule(const std::string::const_iterator start, const std::string::const_iterator end);
+    bool ParseFilterRule(const std::string::const_iterator start,
+                         const std::string::const_iterator end);
 
     /// Matches class/level combination against the filter, returning true if it passed.
     bool CheckMessage(Class log_class, Level level) const;
@@ -50,5 +50,4 @@ public:
 private:
     std::array<Level, (size_t)Class::Count> class_levels;
 };
-
 }

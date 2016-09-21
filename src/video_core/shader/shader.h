@@ -9,16 +9,12 @@
 #include <memory>
 #include <type_traits>
 #include <vector>
-
 #include <boost/container/static_vector.hpp>
-
 #include <nihstro/shader_bytecode.h>
-
 #include "common/assert.h"
 #include "common/common_funcs.h"
 #include "common/common_types.h"
 #include "common/vector_math.h"
-
 #include "video_core/pica.h"
 #include "video_core/pica_types.h"
 
@@ -94,46 +90,46 @@ struct OutputRegisters {
 static_assert(std::is_pod<OutputRegisters>::value, "Structure is not POD");
 
 // Helper structure used to keep track of data useful for inspection of shader emulation
-template<bool full_debugging>
+template <bool full_debugging>
 struct DebugData;
 
-template<>
+template <>
 struct DebugData<false> {
     // TODO: Hide these behind and interface and move them to DebugData<true>
-    u32 max_offset; // maximum program counter ever reached
+    u32 max_offset;    // maximum program counter ever reached
     u32 max_opdesc_id; // maximum swizzle pattern index ever used
 };
 
-template<>
+template <>
 struct DebugData<true> {
     // Records store the input and output operands of a particular instruction.
     struct Record {
         enum Type {
             // Floating point arithmetic operands
-            SRC1         = 0x1,
-            SRC2         = 0x2,
-            SRC3         = 0x4,
+            SRC1 = 0x1,
+            SRC2 = 0x2,
+            SRC3 = 0x4,
 
             // Initial and final output operand value
-            DEST_IN      = 0x8,
-            DEST_OUT     = 0x10,
+            DEST_IN = 0x8,
+            DEST_OUT = 0x10,
 
             // Current and next instruction offset (in words)
-            CUR_INSTR    = 0x20,
-            NEXT_INSTR   = 0x40,
+            CUR_INSTR = 0x20,
+            NEXT_INSTR = 0x40,
 
             // Output address register value
             ADDR_REG_OUT = 0x80,
 
             // Result of a comparison instruction
-            CMP_RESULT   = 0x100,
+            CMP_RESULT = 0x100,
 
             // Input values for conditional flow control instructions
             COND_BOOL_IN = 0x200,
-            COND_CMP_IN  = 0x400,
+            COND_CMP_IN = 0x400,
 
             // Input values for a loop
-            LOOP_INT_IN  = 0x800,
+            LOOP_INT_IN = 0x800,
         };
 
         Math::Vec4<float24> src1;
@@ -156,7 +152,7 @@ struct DebugData<true> {
         unsigned mask = 0;
     };
 
-    u32 max_offset; // maximum program counter ever reached
+    u32 max_offset;    // maximum program counter ever reached
     u32 max_opdesc_id; // maximum swizzle pattern index ever used
 
     // List of records for each executed shader instruction
@@ -167,10 +163,10 @@ struct DebugData<true> {
 using DebugDataRecord = DebugData<true>::Record;
 
 // Helper function to set a DebugData<true>::Record field based on the template enum parameter.
-template<DebugDataRecord::Type type, typename ValueType>
+template <DebugDataRecord::Type type, typename ValueType>
 inline void SetField(DebugDataRecord& record, ValueType value);
 
-template<>
+template <>
 inline void SetField<DebugDataRecord::SRC1>(DebugDataRecord& record, float24* value) {
     record.src1.x = value[0];
     record.src1.y = value[1];
@@ -178,7 +174,7 @@ inline void SetField<DebugDataRecord::SRC1>(DebugDataRecord& record, float24* va
     record.src1.w = value[3];
 }
 
-template<>
+template <>
 inline void SetField<DebugDataRecord::SRC2>(DebugDataRecord& record, float24* value) {
     record.src2.x = value[0];
     record.src2.y = value[1];
@@ -186,7 +182,7 @@ inline void SetField<DebugDataRecord::SRC2>(DebugDataRecord& record, float24* va
     record.src2.w = value[3];
 }
 
-template<>
+template <>
 inline void SetField<DebugDataRecord::SRC3>(DebugDataRecord& record, float24* value) {
     record.src3.x = value[0];
     record.src3.y = value[1];
@@ -194,7 +190,7 @@ inline void SetField<DebugDataRecord::SRC3>(DebugDataRecord& record, float24* va
     record.src3.w = value[3];
 }
 
-template<>
+template <>
 inline void SetField<DebugDataRecord::DEST_IN>(DebugDataRecord& record, float24* value) {
     record.dest_in.x = value[0];
     record.dest_in.y = value[1];
@@ -202,7 +198,7 @@ inline void SetField<DebugDataRecord::DEST_IN>(DebugDataRecord& record, float24*
     record.dest_in.w = value[3];
 }
 
-template<>
+template <>
 inline void SetField<DebugDataRecord::DEST_OUT>(DebugDataRecord& record, float24* value) {
     record.dest_out.x = value[0];
     record.dest_out.y = value[1];
@@ -210,59 +206,58 @@ inline void SetField<DebugDataRecord::DEST_OUT>(DebugDataRecord& record, float24
     record.dest_out.w = value[3];
 }
 
-template<>
+template <>
 inline void SetField<DebugDataRecord::ADDR_REG_OUT>(DebugDataRecord& record, s32* value) {
     record.address_registers[0] = value[0];
     record.address_registers[1] = value[1];
 }
 
-template<>
+template <>
 inline void SetField<DebugDataRecord::CMP_RESULT>(DebugDataRecord& record, bool* value) {
     record.conditional_code[0] = value[0];
     record.conditional_code[1] = value[1];
 }
 
-template<>
+template <>
 inline void SetField<DebugDataRecord::COND_BOOL_IN>(DebugDataRecord& record, bool value) {
     record.cond_bool = value;
 }
 
-template<>
+template <>
 inline void SetField<DebugDataRecord::COND_CMP_IN>(DebugDataRecord& record, bool* value) {
     record.cond_cmp[0] = value[0];
     record.cond_cmp[1] = value[1];
 }
 
-template<>
+template <>
 inline void SetField<DebugDataRecord::LOOP_INT_IN>(DebugDataRecord& record, Math::Vec4<u8> value) {
     record.loop_int = value;
 }
 
-template<>
+template <>
 inline void SetField<DebugDataRecord::CUR_INSTR>(DebugDataRecord& record, u32 value) {
     record.instruction_offset = value;
 }
 
-template<>
+template <>
 inline void SetField<DebugDataRecord::NEXT_INSTR>(DebugDataRecord& record, u32 value) {
     record.next_instruction = value;
 }
 
 // Helper function to set debug information on the current shader iteration.
-template<DebugDataRecord::Type type, typename ValueType>
+template <DebugDataRecord::Type type, typename ValueType>
 inline void Record(DebugData<false>& debug_data, u32 offset, ValueType value) {
     // Debugging disabled => nothing to do
 }
 
-template<DebugDataRecord::Type type, typename ValueType>
+template <DebugDataRecord::Type type, typename ValueType>
 inline void Record(DebugData<true>& debug_data, u32 offset, ValueType value) {
     if (offset >= debug_data.records.size())
         debug_data.records.resize(offset + 1);
 
-   SetField<type, ValueType>(debug_data.records[offset], value);
-   debug_data.records[offset].mask |= type;
+    SetField<type, ValueType>(debug_data.records[offset], value);
+    debug_data.records[offset].mask |= type;
 }
-
 
 /**
  * This structure contains the state information that needs to be unique for a shader unit. The 3DS
@@ -270,7 +265,7 @@ inline void Record(DebugData<true>& debug_data, u32 offset, ValueType value) {
  * single shader unit that processes all shaders serially. Putting the state information in a struct
  * here will make it easier for us to parallelize the shader processing later.
  */
-template<bool Debug>
+template <bool Debug>
 struct UnitState {
     struct Registers {
         // The registers are accessed by the shader JIT using SSE instructions, and are therefore
@@ -293,10 +288,12 @@ struct UnitState {
     static size_t InputOffset(const SourceRegister& reg) {
         switch (reg.GetRegisterType()) {
         case RegisterType::Input:
-            return offsetof(UnitState, registers.input) + reg.GetIndex()*sizeof(Math::Vec4<float24>);
+            return offsetof(UnitState, registers.input) +
+                   reg.GetIndex() * sizeof(Math::Vec4<float24>);
 
         case RegisterType::Temporary:
-            return offsetof(UnitState, registers.temporary) + reg.GetIndex()*sizeof(Math::Vec4<float24>);
+            return offsetof(UnitState, registers.temporary) +
+                   reg.GetIndex() * sizeof(Math::Vec4<float24>);
 
         default:
             UNREACHABLE();
@@ -307,10 +304,12 @@ struct UnitState {
     static size_t OutputOffset(const DestRegister& reg) {
         switch (reg.GetRegisterType()) {
         case RegisterType::Output:
-            return offsetof(UnitState, output_registers.value) + reg.GetIndex()*sizeof(Math::Vec4<float24>);
+            return offsetof(UnitState, output_registers.value) +
+                   reg.GetIndex() * sizeof(Math::Vec4<float24>);
 
         case RegisterType::Temporary:
-            return offsetof(UnitState, registers.temporary) + reg.GetIndex()*sizeof(Math::Vec4<float24>);
+            return offsetof(UnitState, registers.temporary) +
+                   reg.GetIndex() * sizeof(Math::Vec4<float24>);
 
         default:
             UNREACHABLE();
@@ -336,13 +335,13 @@ struct ShaderSetup {
     static size_t UniformOffset(RegisterType type, unsigned index) {
         switch (type) {
         case RegisterType::FloatUniform:
-            return offsetof(ShaderSetup, uniforms.f) + index*sizeof(Math::Vec4<float24>);
+            return offsetof(ShaderSetup, uniforms.f) + index * sizeof(Math::Vec4<float24>);
 
         case RegisterType::BoolUniform:
-            return offsetof(ShaderSetup, uniforms.b) + index*sizeof(bool);
+            return offsetof(ShaderSetup, uniforms.b) + index * sizeof(bool);
 
         case RegisterType::IntUniform:
-            return offsetof(ShaderSetup, uniforms.i) + index*sizeof(Math::Vec4<u8>);
+            return offsetof(ShaderSetup, uniforms.i) + index * sizeof(Math::Vec4<u8>);
 
         default:
             UNREACHABLE();
@@ -354,8 +353,8 @@ struct ShaderSetup {
     std::array<u32, 1024> swizzle_data;
 
     /**
-     * Performs any shader unit setup that only needs to happen once per shader (as opposed to once per
-     * vertex, which would happen within the `Run` function).
+     * Performs any shader unit setup that only needs to happen once per shader (as opposed to once
+     * per vertex, which would happen within the `Run` function).
      */
     void Setup();
 
@@ -375,8 +374,8 @@ struct ShaderSetup {
      * @param setup Setup object for the shader pipeline
      * @return Debug information for this shader with regards to the given vertex
      */
-    DebugData<true> ProduceDebugInfo(const InputVertex& input, int num_attributes, const Regs::ShaderConfig& config, const ShaderSetup& setup);
-
+    DebugData<true> ProduceDebugInfo(const InputVertex& input, int num_attributes,
+                                     const Regs::ShaderConfig& config, const ShaderSetup& setup);
 };
 
 } // namespace Shader

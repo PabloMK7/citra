@@ -4,16 +4,13 @@
 
 #include <cstring>
 #include <memory>
-
-#include "core/arm/skyeye_common/armstate.h"
-#include "core/arm/skyeye_common/armsupp.h"
-#include "core/arm/skyeye_common/vfp/vfp.h"
-
 #include "core/arm/dyncom/arm_dyncom.h"
 #include "core/arm/dyncom/arm_dyncom_interpreter.h"
 #include "core/arm/dyncom/arm_dyncom_run.h"
 #include "core/arm/dyncom/arm_dyncom_trans.h"
-
+#include "core/arm/skyeye_common/armstate.h"
+#include "core/arm/skyeye_common/armsupp.h"
+#include "core/arm/skyeye_common/vfp/vfp.h"
 #include "core/core.h"
 #include "core/core_timing.h"
 
@@ -21,8 +18,7 @@ ARM_DynCom::ARM_DynCom(PrivilegeMode initial_mode) {
     state = std::make_unique<ARMul_State>(initial_mode);
 }
 
-ARM_DynCom::~ARM_DynCom() {
-}
+ARM_DynCom::~ARM_DynCom() {}
 
 void ARM_DynCom::ClearInstructionCache() {
     state->instruction_cache.clear();

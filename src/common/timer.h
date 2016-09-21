@@ -4,13 +4,11 @@
 
 #pragma once
 
-#include "common/common_types.h"
 #include <string>
+#include "common/common_types.h"
 
-namespace Common
-{
-class Timer
-{
+namespace Common {
+class Timer {
 public:
     Timer();
 
@@ -18,7 +16,8 @@ public:
     void Stop();
     void Update();
 
-    // The time difference is always returned in milliseconds, regardless of alternative internal representation
+    // The time difference is always returned in milliseconds, regardless of alternative internal
+    // representation
     u64 GetTimeDifference();
     void AddTimeDifference();
 

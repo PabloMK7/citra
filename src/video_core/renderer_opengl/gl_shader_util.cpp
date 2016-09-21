@@ -3,9 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <vector>
-
 #include <glad/glad.h>
-
 #include "common/logging/log.h"
 #include "video_core/renderer_opengl/gl_shader_util.h"
 
@@ -56,7 +54,8 @@ GLuint LoadProgram(const char* vertex_shader, const char* fragment_shader) {
         if (result) {
             LOG_DEBUG(Render_OpenGL, "%s", &fragment_shader_error[0]);
         } else {
-            LOG_ERROR(Render_OpenGL, "Error compiling fragment shader:\n%s", &fragment_shader_error[0]);
+            LOG_ERROR(Render_OpenGL, "Error compiling fragment shader:\n%s",
+                      &fragment_shader_error[0]);
         }
     }
 

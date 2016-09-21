@@ -3,9 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <tuple>
-
 #include "common/assert.h"
-
 #include "core/hle/kernel/client_port.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/server_port.h"
@@ -25,7 +23,9 @@ void ServerPort::Acquire() {
     ASSERT_MSG(!ShouldWait(), "object unavailable!");
 }
 
-std::tuple<SharedPtr<ServerPort>, SharedPtr<ClientPort>> ServerPort::CreatePortPair(u32 max_sessions, std::string name) {
+std::tuple<SharedPtr<ServerPort>, SharedPtr<ClientPort>> ServerPort::CreatePortPair(
+    u32 max_sessions, std::string name) {
+
     SharedPtr<ServerPort> server_port(new ServerPort);
     SharedPtr<ClientPort> client_port(new ClientPort);
 

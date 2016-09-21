@@ -4,7 +4,6 @@
 
 #include <array>
 #include <memory>
-
 #include "audio_core/hle/dsp.h"
 #include "audio_core/hle/mixers.h"
 #include "audio_core/hle/pipe.h"
@@ -47,10 +46,9 @@ static SharedMemory& WriteRegion() {
 // Audio processing and mixing
 
 static std::array<Source, num_sources> sources = {
-    Source(0), Source(1), Source(2), Source(3), Source(4), Source(5),
-    Source(6), Source(7), Source(8), Source(9), Source(10), Source(11),
-    Source(12), Source(13), Source(14), Source(15), Source(16), Source(17),
-    Source(18), Source(19), Source(20), Source(21), Source(22), Source(23)
+    Source(0),  Source(1),  Source(2),  Source(3),  Source(4),  Source(5),  Source(6),  Source(7),
+    Source(8),  Source(9),  Source(10), Source(11), Source(12), Source(13), Source(14), Source(15),
+    Source(16), Source(17), Source(18), Source(19), Source(20), Source(21), Source(22), Source(23),
 };
 static Mixers mixers;
 
@@ -62,14 +60,16 @@ static StereoFrame16 GenerateCurrentFrame() {
 
     // Generate intermediate mixes
     for (size_t i = 0; i < num_sources; i++) {
-        write.source_statuses.status[i] = sources[i].Tick(read.source_configurations.config[i], read.adpcm_coefficients.coeff[i]);
+        write.source_statuses.status[i] =
+            sources[i].Tick(read.source_configurations.config[i], read.adpcm_coefficients.coeff[i]);
         for (size_t mix = 0; mix < 3; mix++) {
             sources[i].MixInto(intermediate_mixes[mix], mix);
         }
     }
 
     // Generate final mix
-    write.dsp_status = mixers.Tick(read.dsp_configuration, read.intermediate_mix_samples, write.intermediate_mix_samples, intermediate_mixes);
+    write.dsp_status = mixers.Tick(read.dsp_configuration, read.intermediate_mix_samples,
+                                   write.intermediate_mix_samples, intermediate_mixes);
 
     StereoFrame16 output_frame = mixers.GetOutput();
 
@@ -152,7 +152,8 @@ void Shutdown() {
 bool Tick() {
     StereoFrame16 current_frame = {};
 
-    // TODO: Check dsp::DSP semaphore (which indicates emulated application has finished writing to shared memory region)
+    // TODO: Check dsp::DSP semaphore (which indicates emulated application has finished writing to
+    // shared memory region)
     current_frame = GenerateCurrentFrame();
 
     OutputCurrentFrame(current_frame);

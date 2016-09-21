@@ -5,7 +5,6 @@
 #pragma once
 
 #include "common/common_types.h"
-
 #include "core/hle/kernel/kernel.h"
 
 namespace Kernel {
@@ -16,7 +15,6 @@ enum class ResetType {
     Pulse,
 };
 
-
 class Event final : public WaitObject {
 public:
     /**
@@ -26,16 +24,22 @@ public:
      */
     static SharedPtr<Event> Create(ResetType reset_type, std::string name = "Unknown");
 
-    std::string GetTypeName() const override { return "Event"; }
-    std::string GetName() const override { return name; }
+    std::string GetTypeName() const override {
+        return "Event";
+    }
+    std::string GetName() const override {
+        return name;
+    }
 
     static const HandleType HANDLE_TYPE = HandleType::Event;
-    HandleType GetHandleType() const override { return HANDLE_TYPE; }
+    HandleType GetHandleType() const override {
+        return HANDLE_TYPE;
+    }
 
-    ResetType reset_type;                   ///< Current ResetType
+    ResetType reset_type; ///< Current ResetType
 
-    bool signaled;                          ///< Whether the event has already been signaled
-    std::string name;                       ///< Name of event (optional)
+    bool signaled;    ///< Whether the event has already been signaled
+    std::string name; ///< Name of event (optional)
 
     bool ShouldWait() override;
     void Acquire() override;

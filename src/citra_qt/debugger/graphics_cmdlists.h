@@ -6,15 +6,13 @@
 
 #include <QAbstractListModel>
 #include <QDockWidget>
-
-#include "video_core/gpu_debugger.h"
 #include "video_core/debug_utils/debug_utils.h"
+#include "video_core/gpu_debugger.h"
 
 class QPushButton;
 class QTreeView;
 
-class GPUCommandListModel : public QAbstractListModel
-{
+class GPUCommandListModel : public QAbstractListModel {
     Q_OBJECT
 
 public:
@@ -27,7 +25,8 @@ public:
     int columnCount(const QModelIndex& parent = QModelIndex()) const override;
     int rowCount(const QModelIndex& parent = QModelIndex()) const override;
     QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const override;
-    QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
+    QVariant headerData(int section, Qt::Orientation orientation,
+                        int role = Qt::DisplayRole) const override;
 
 public slots:
     void OnPicaTraceFinished(const Pica::DebugUtils::PicaTrace& trace);
@@ -36,8 +35,7 @@ private:
     Pica::DebugUtils::PicaTrace pica_trace;
 };
 
-class GPUCommandListWidget : public QDockWidget
-{
+class GPUCommandListWidget : public QDockWidget {
     Q_OBJECT
 
 public:

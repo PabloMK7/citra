@@ -6,9 +6,7 @@
 
 #include <memory>
 #include <string>
-
 #include "common/common_types.h"
-
 #include "core/file_sys/archive_backend.h"
 #include "core/hle/result.h"
 
@@ -28,13 +26,17 @@ public:
      */
     bool Initialize();
 
-    std::string GetName() const override { return "ExtSaveData"; }
+    std::string GetName() const override {
+        return "ExtSaveData";
+    }
 
     ResultVal<std::unique_ptr<ArchiveBackend>> Open(const Path& path) override;
     ResultCode Format(const Path& path, const FileSys::ArchiveFormatInfo& format_info) override;
     ResultVal<ArchiveFormatInfo> GetFormatInfo(const Path& path) const override;
 
-    const std::string& GetMountPoint() const { return mount_point; }
+    const std::string& GetMountPoint() const {
+        return mount_point;
+    }
 
     /**
      * Writes the SMDH icon of the ExtSaveData to file
@@ -45,7 +47,8 @@ public:
     void WriteIcon(const Path& path, const u8* icon_data, size_t icon_size);
 
 private:
-    bool shared; ///< Whether this archive represents an ExtSaveData archive or a SharedExtSaveData archive
+    bool shared; ///< Whether this archive represents an ExtSaveData archive or a SharedExtSaveData
+                 /// archive
 
     /**
      * This holds the full directory path for this archive, it is only set after a successful call
@@ -65,7 +68,8 @@ private:
 std::string GetExtSaveDataPath(const std::string& mount_point, const Path& path);
 
 /**
- * Constructs a path to the base folder to hold concrete ExtSaveData archives in the host file system.
+ * Constructs a path to the base folder to hold concrete ExtSaveData archives in the host file
+ * system.
  * @param mount_point The base folder where this folder resides, ie. SDMC or NAND.
  * @param shared Whether this ExtSaveData container is for SharedExtSaveDatas or not.
  * @returns The path to the base ExtSaveData archives' folder in the host file system

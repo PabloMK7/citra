@@ -5,29 +5,28 @@
 #pragma once
 
 #include "common/common_types.h"
-
 #include "core/hle/kernel/kernel.h"
 
 namespace Kernel {
 
 enum class ResourceLimitCategory : u8 {
     APPLICATION = 0,
-    SYS_APPLET  = 1,
-    LIB_APPLET  = 2,
-    OTHER       = 3
+    SYS_APPLET = 1,
+    LIB_APPLET = 2,
+    OTHER = 3
 };
 
 enum ResourceTypes {
-    PRIORITY            = 0,
-    COMMIT              = 1,
-    THREAD              = 2,
-    EVENT               = 3,
-    MUTEX               = 4,
-    SEMAPHORE           = 5,
-    TIMER               = 6,
-    SHARED_MEMORY       = 7,
-    ADDRESS_ARBITER     = 8,
-    CPU_TIME            = 9,
+    PRIORITY = 0,
+    COMMIT = 1,
+    THREAD = 2,
+    EVENT = 3,
+    MUTEX = 4,
+    SEMAPHORE = 5,
+    TIMER = 6,
+    SHARED_MEMORY = 7,
+    ADDRESS_ARBITER = 8,
+    CPU_TIME = 9,
 };
 
 class ResourceLimit final : public Object {
@@ -44,11 +43,17 @@ public:
      */
     static SharedPtr<ResourceLimit> GetForCategory(ResourceLimitCategory category);
 
-    std::string GetTypeName() const override { return "ResourceLimit"; }
-    std::string GetName() const override { return name; }
+    std::string GetTypeName() const override {
+        return "ResourceLimit";
+    }
+    std::string GetName() const override {
+        return name;
+    }
 
     static const HandleType HANDLE_TYPE = HandleType::ResourceLimit;
-    HandleType GetHandleType() const override { return HANDLE_TYPE; }
+    HandleType GetHandleType() const override {
+        return HANDLE_TYPE;
+    }
 
     /**
      * Gets the current value for the specified resource.
@@ -85,10 +90,12 @@ public:
     /// Max CPU time that the processes in this category can utilize
     s32 max_cpu_time = 0;
 
-    // TODO(Subv): Increment these in their respective Kernel::T::Create functions, keeping in mind that
-    // APPLICATION resource limits should not be affected by the objects created by service modules.
+    // TODO(Subv): Increment these in their respective Kernel::T::Create functions, keeping in mind
+    // that APPLICATION resource limits should not be affected by the objects created by service
+    // modules.
     // Currently we have no way of distinguishing if a Create was called by the running application,
-    // or by a service module. Approach this once we have separated the service modules into their own processes
+    // or by a service module. Approach this once we have separated the service modules into their
+    // own processes
 
     /// Current memory that the processes in this category are using
     s32 current_commit = 0;

@@ -7,21 +7,20 @@
 #include <QAbstractItemModel>
 #include <QDockWidget>
 #include <QTimer>
-
-#include "ui_profiler.h"
-
 #include "common/microprofile.h"
 #include "common/profiler_reporting.h"
+#include "ui_profiler.h"
 
-class ProfilerModel : public QAbstractItemModel
-{
+class ProfilerModel : public QAbstractItemModel {
     Q_OBJECT
 
 public:
     ProfilerModel(QObject* parent);
 
-    QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
-    QModelIndex index(int row, int column, const QModelIndex& parent = QModelIndex()) const override;
+    QVariant headerData(int section, Qt::Orientation orientation,
+                        int role = Qt::DisplayRole) const override;
+    QModelIndex index(int row, int column,
+                      const QModelIndex& parent = QModelIndex()) const override;
     QModelIndex parent(const QModelIndex& child) const override;
     int columnCount(const QModelIndex& parent = QModelIndex()) const override;
     int rowCount(const QModelIndex& parent = QModelIndex()) const override;
@@ -34,8 +33,7 @@ private:
     Common::Profiling::AggregatedFrameResult results;
 };
 
-class ProfilerWidget : public QDockWidget
-{
+class ProfilerWidget : public QDockWidget {
     Q_OBJECT
 
 public:
@@ -50,7 +48,6 @@ private:
 
     QTimer update_timer;
 };
-
 
 class MicroProfileDialog : public QWidget {
     Q_OBJECT

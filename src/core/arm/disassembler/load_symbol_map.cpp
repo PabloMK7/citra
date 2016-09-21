@@ -5,10 +5,8 @@
 #include <sstream>
 #include <string>
 #include <vector>
-
-#include "common/symbols.h"
 #include "common/file_util.h"
-
+#include "common/symbols.h"
 #include "core/arm/disassembler/load_symbol_map.h"
 
 /*

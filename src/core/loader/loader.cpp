@@ -4,10 +4,8 @@
 
 #include <memory>
 #include <string>
-
 #include "common/logging/log.h"
 #include "common/string_util.h"
-
 #include "core/hle/kernel/process.h"
 #include "core/loader/3dsx.h"
 #include "core/loader/elf.h"
@@ -18,17 +16,17 @@
 namespace Loader {
 
 const std::initializer_list<Kernel::AddressMapping> default_address_mappings = {
-    { 0x1FF50000,   0x8000, true  }, // part of DSP RAM
-    { 0x1FF70000,   0x8000, true  }, // part of DSP RAM
-    { 0x1F000000, 0x600000, false }, // entire VRAM
+    {0x1FF50000, 0x8000, true},    // part of DSP RAM
+    {0x1FF70000, 0x8000, true},    // part of DSP RAM
+    {0x1F000000, 0x600000, false}, // entire VRAM
 };
 
 FileType IdentifyFile(FileUtil::IOFile& file) {
     FileType type;
 
-#define CHECK_TYPE(loader) \
-    type = AppLoader_##loader::IdentifyType(file); \
-    if (FileType::Error != type) \
+#define CHECK_TYPE(loader)                                                                         \
+    type = AppLoader_##loader::IdentifyType(file);                                                 \
+    if (FileType::Error != type)                                                                   \
         return type;
 
     CHECK_TYPE(THREEDSX)
@@ -100,7 +98,8 @@ const char* GetFileTypeString(FileType type) {
  * @return std::unique_ptr<AppLoader> a pointer to a loader object;  nullptr for unsupported type
  */
 static std::unique_ptr<AppLoader> GetFileLoader(FileUtil::IOFile&& file, FileType type,
-    const std::string& filename, const std::string& filepath) {
+                                                const std::string& filename,
+                                                const std::string& filepath) {
     switch (type) {
 
     // 3DSX file format.

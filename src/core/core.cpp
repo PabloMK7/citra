@@ -3,9 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <memory>
-
 #include "common/logging/log.h"
-
 #include "core/arm/arm_interface.h"
 #include "core/arm/dynarmic/arm_dynarmic.h"
 #include "core/arm/dyncom/arm_dyncom.h"
@@ -27,8 +25,8 @@ void RunLoop(int tight_loop) {
     if (GDBStub::g_server_enabled) {
         GDBStub::HandlePacket();
 
-        // If the loop is halted and we want to step, use a tiny (1) number of instructions to execute.
-        // Otherwise get out of the loop function.
+        // If the loop is halted and we want to step, use a tiny (1) number of instructions to
+        // execute. Otherwise, get out of the loop function.
         if (GDBStub::GetCpuHaltFlag()) {
             if (GDBStub::GetCpuStepFlag()) {
                 GDBStub::SetCpuStepFlag(false);
@@ -62,7 +60,7 @@ void SingleStep() {
 }
 
 /// Halt the core
-void Halt(const char *msg) {
+void Halt(const char* msg) {
     // TODO(ShizZy): ImplementMe
 }
 

@@ -10,11 +10,13 @@
 namespace GSP_LCD {
 
 const Interface::FunctionInfo FunctionTable[] = {
+    // clang-format off
     {0x000F0000, nullptr, "PowerOnAllBacklights"},
     {0x00100000, nullptr, "PowerOffAllBacklights"},
     {0x00110040, nullptr, "PowerOnBacklight"},
     {0x00120040, nullptr, "PowerOffBacklight"},
-    {0x00130040, nullptr, "SetLedForceOff"}
+    {0x00130040, nullptr, "SetLedForceOff"},
+    // clang-format on
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -10,31 +10,31 @@
 #include <cstdarg>
 #include <cstdio>
 #include <cstring>
-#include <fcntl.h>
 #include <map>
 #include <numeric>
+#include <fcntl.h>
 
 #ifdef _MSC_VER
 #include <WinSock2.h>
-#include <ws2tcpip.h>
 #include <common/x64/abi.h>
 #include <io.h>
 #include <iphlpapi.h>
+#include <ws2tcpip.h>
 #define SHUT_RDWR 2
 #else
-#include <unistd.h>
+#include <netinet/in.h>
 #include <sys/select.h>
 #include <sys/socket.h>
 #include <sys/un.h>
-#include <netinet/in.h>
+#include <unistd.h>
 #endif
 
 #include "common/logging/log.h"
 #include "common/string_util.h"
-#include "core/core.h"
-#include "core/memory.h"
 #include "core/arm/arm_interface.h"
+#include "core/core.h"
 #include "core/gdbstub/gdbstub.h"
+#include "core/memory.h"
 
 const int GDB_BUFFER_SIZE = 10000;
 
@@ -64,7 +64,7 @@ const u32 FPSCR_REGISTER = 58;
 // GDB also wants the l character at the start
 // This XML defines what the registers are for this specific ARM device
 static const char* target_xml =
-R"(l<?xml version="1.0"?>
+    R"(l<?xml version="1.0"?>
 <!DOCTYPE target SYSTEM "gdb-target.dtd">
 <target version="1.0">
   <feature name="org.gnu.gdb.arm.core">
@@ -297,7 +297,8 @@ static void RemoveBreakpoint(BreakpointType type, PAddr addr) {
 
     auto bp = p.find(addr);
     if (bp != p.end()) {
-        LOG_DEBUG(Debug_GDBStub, "gdb: removed a breakpoint: %08x bytes at %08x of type %d\n", bp->second.len, bp->second.addr, type);
+        LOG_DEBUG(Debug_GDBStub, "gdb: removed a breakpoint: %08x bytes at %08x of type %d\n",
+                  bp->second.len, bp->second.addr, type);
         p.erase(addr);
     }
 }
@@ -342,7 +343,9 @@ bool CheckBreakpoint(PAddr addr, BreakpointType type) {
         }
 
         if (bp->second.active && (addr >= bp->second.addr && addr < bp->second.addr + len)) {
-            LOG_DEBUG(Debug_GDBStub, "Found breakpoint type %d @ %08x, range: %08x - %08x (%d bytes)\n", type, addr, bp->second.addr, bp->second.addr + len, len);
+            LOG_DEBUG(Debug_GDBStub,
+                      "Found breakpoint type %d @ %08x, range: %08x - %08x (%d bytes)\n", type,
+                      addr, bp->second.addr, bp->second.addr + len, len);
             return true;
         }
     }
@@ -408,12 +411,13 @@ static void HandleQuery() {
 
     const char* query = reinterpret_cast<const char*>(command_buffer + 1);
 
-    if (strcmp(query, "TStatus") == 0 ) {
+    if (strcmp(query, "TStatus") == 0) {
         SendReply("T0");
     } else if (strncmp(query, "Supported:", strlen("Supported:")) == 0) {
         // PacketSize needs to be large enough for target xml
         SendReply("PacketSize=800;qXfer:features:read+");
-    } else if (strncmp(query, "Xfer:features:read:target.xml:", strlen("Xfer:features:read:target.xml:")) == 0) {
+    } else if (strncmp(query, "Xfer:features:read:target.xml:",
+                       strlen("Xfer:features:read:target.xml:")) == 0) {
         SendReply(target_xml);
     } else {
         SendReply("");
@@ -422,10 +426,8 @@ static void HandleQuery() {
 
 /// Handle set thread command from gdb client.
 static void HandleSetThread() {
-    if (memcmp(command_buffer, "Hg0", 3) == 0 ||
-        memcmp(command_buffer, "Hc-1", 4) == 0 ||
-        memcmp(command_buffer, "Hc0", 4) == 0 ||
-        memcmp(command_buffer, "Hc1", 4) == 0) {
+    if (memcmp(command_buffer, "Hg0", 3) == 0 || memcmp(command_buffer, "Hc-1", 4) == 0 ||
+        memcmp(command_buffer, "Hc0", 4) == 0 || memcmp(command_buffer, "Hc1", 4) == 0) {
         return SendReply("OK");
     }
 
@@ -444,7 +446,9 @@ static void SendSignal(u32 signal) {
 
     latest_signal = signal;
 
-    std::string buffer = Common::StringFromFormat("T%02x%02x:%08x;%02x:%08x;", latest_signal, 15, htonl(Core::g_app_core->GetPC()), 13, htonl(Core::g_app_core->GetReg(13)));
+    std::string buffer = Common::StringFromFormat("T%02x%02x:%08x;%02x:%08x;", latest_signal, 15,
+                                                  htonl(Core::g_app_core->GetPC()), 13,
+                                                  htonl(Core::g_app_core->GetReg(13)));
     LOG_DEBUG(Debug_GDBStub, "Response: %s", buffer.c_str());
     SendReply(buffer.c_str());
 }
@@ -456,7 +460,7 @@ static void ReadCommand() {
 
     u8 c = ReadByte();
     if (c == '+') {
-        //ignore ack
+        // ignore ack
         return;
     } else if (c == 0x03) {
         LOG_INFO(Debug_GDBStub, "gdb: found break command\n");
@@ -483,8 +487,9 @@ static void ReadCommand() {
     u8 checksum_calculated = CalculateChecksum(command_buffer, command_length);
 
     if (checksum_received != checksum_calculated) {
-        LOG_ERROR(Debug_GDBStub, "gdb: invalid checksum: calculated %02x and read %02x for $%s# (length: %d)\n",
-            checksum_calculated, checksum_received, command_buffer, command_length);
+        LOG_ERROR(Debug_GDBStub,
+                  "gdb: invalid checksum: calculated %02x and read %02x for $%s# (length: %d)\n",
+                  checksum_calculated, checksum_received, command_buffer, command_length);
 
         command_length = 0;
 
@@ -534,7 +539,9 @@ static void ReadRegister() {
     } else if (id == CPSR_REGISTER) {
         IntToGdbHex(reply, Core::g_app_core->GetCPSR());
     } else if (id > CPSR_REGISTER && id < FPSCR_REGISTER) {
-        IntToGdbHex(reply, Core::g_app_core->GetVFPReg(id - CPSR_REGISTER - 1)); // VFP registers should start at 26, so one after CSPR_REGISTER
+        IntToGdbHex(reply, Core::g_app_core->GetVFPReg(
+                               id - CPSR_REGISTER -
+                               1)); // VFP registers should start at 26, so one after CSPR_REGISTER
     } else if (id == FPSCR_REGISTER) {
         IntToGdbHex(reply, Core::g_app_core->GetVFPSystemReg(VFP_FPSCR)); // Get FPSCR
         IntToGdbHex(reply + 8, 0);
@@ -617,7 +624,8 @@ static void WriteRegisters() {
             // Dummy FPA registers, ignore
             i += 2;
         } else if (reg > CPSR_REGISTER && reg < FPSCR_REGISTER) {
-            Core::g_app_core->SetVFPReg(reg - CPSR_REGISTER - 1, GdbHexToInt(buffer_ptr + i * CHAR_BIT));
+            Core::g_app_core->SetVFPReg(reg - CPSR_REGISTER - 1,
+                                        GdbHexToInt(buffer_ptr + i * CHAR_BIT));
             i++; // Skip padding
         } else if (reg == FPSCR_REGISTER) {
             Core::g_app_core->SetVFPSystemReg(VFP_FPSCR, GdbHexToInt(buffer_ptr + i * CHAR_BIT));
@@ -631,12 +639,13 @@ static void WriteRegisters() {
 static void ReadMemory() {
     static u8 reply[GDB_BUFFER_SIZE - 4];
 
-    auto start_offset = command_buffer+1;
-    auto addr_pos = std::find(start_offset, command_buffer+command_length, ',');
+    auto start_offset = command_buffer + 1;
+    auto addr_pos = std::find(start_offset, command_buffer + command_length, ',');
     PAddr addr = HexToInt(start_offset, static_cast<u32>(addr_pos - start_offset));
 
-    start_offset = addr_pos+1;
-    u32 len = HexToInt(start_offset, static_cast<u32>((command_buffer + command_length) - start_offset));
+    start_offset = addr_pos + 1;
+    u32 len =
+        HexToInt(start_offset, static_cast<u32>((command_buffer + command_length) - start_offset));
 
     LOG_DEBUG(Debug_GDBStub, "gdb: addr: %08x len: %08x\n", addr, len);
 
@@ -656,12 +665,12 @@ static void ReadMemory() {
 
 /// Modify location in memory with data received from the gdb client.
 static void WriteMemory() {
-    auto start_offset = command_buffer+1;
-    auto addr_pos = std::find(start_offset, command_buffer+command_length, ',');
+    auto start_offset = command_buffer + 1;
+    auto addr_pos = std::find(start_offset, command_buffer + command_length, ',');
     PAddr addr = HexToInt(start_offset, static_cast<u32>(addr_pos - start_offset));
 
-    start_offset = addr_pos+1;
-    auto len_pos = std::find(start_offset, command_buffer+command_length, ':');
+    start_offset = addr_pos + 1;
+    auto len_pos = std::find(start_offset, command_buffer + command_length, ':');
     u32 len = HexToInt(start_offset, static_cast<u32>(len_pos - start_offset));
 
     u8* dst = Memory::GetPointer(addr);
@@ -720,9 +729,10 @@ static bool CommitBreakpoint(BreakpointType type, PAddr addr, u32 len) {
     breakpoint.active = true;
     breakpoint.addr = addr;
     breakpoint.len = len;
-    p.insert({ addr, breakpoint });
+    p.insert({addr, breakpoint});
 
-    LOG_DEBUG(Debug_GDBStub, "gdb: added %d breakpoint: %08x bytes at %08x\n", type, breakpoint.len, breakpoint.addr);
+    LOG_DEBUG(Debug_GDBStub, "gdb: added %d breakpoint: %08x bytes at %08x\n", type, breakpoint.len,
+              breakpoint.addr);
 
     return true;
 }
@@ -750,12 +760,13 @@ static void AddBreakpoint() {
         return SendReply("E01");
     }
 
-    auto start_offset = command_buffer+3;
-    auto addr_pos = std::find(start_offset, command_buffer+command_length, ',');
+    auto start_offset = command_buffer + 3;
+    auto addr_pos = std::find(start_offset, command_buffer + command_length, ',');
     PAddr addr = HexToInt(start_offset, static_cast<u32>(addr_pos - start_offset));
 
-    start_offset = addr_pos+1;
-    u32 len = HexToInt(start_offset, static_cast<u32>((command_buffer + command_length) - start_offset));
+    start_offset = addr_pos + 1;
+    u32 len =
+        HexToInt(start_offset, static_cast<u32>((command_buffer + command_length) - start_offset));
 
     if (type == BreakpointType::Access) {
         // Access is made up of Read and Write types, so add both breakpoints
@@ -798,12 +809,13 @@ static void RemoveBreakpoint() {
         return SendReply("E01");
     }
 
-    auto start_offset = command_buffer+3;
-    auto addr_pos = std::find(start_offset, command_buffer+command_length, ',');
+    auto start_offset = command_buffer + 3;
+    auto addr_pos = std::find(start_offset, command_buffer + command_length, ',');
     PAddr addr = HexToInt(start_offset, static_cast<u32>(addr_pos - start_offset));
 
-    start_offset = addr_pos+1;
-    u32 len = HexToInt(start_offset, static_cast<u32>((command_buffer + command_length) - start_offset));
+    start_offset = addr_pos + 1;
+    u32 len =
+        HexToInt(start_offset, static_cast<u32>((command_buffer + command_length) - start_offset));
 
     if (type == BreakpointType::Access) {
         // Access is made up of Read and Write types, so add both breakpoints
@@ -896,8 +908,7 @@ void ToggleServer(bool status) {
         if (!IsConnected() && Core::g_sys_core != nullptr) {
             Init();
         }
-    }
-    else {
+    } else {
         // Stop server
         if (IsConnected()) {
             Shutdown();
@@ -943,7 +954,8 @@ static void Init(u16 port) {
 
     // Set socket to SO_REUSEADDR so it can always bind on the same port
     int reuse_enabled = 1;
-    if (setsockopt(tmpsock, SOL_SOCKET, SO_REUSEADDR, (const char*)&reuse_enabled, sizeof(reuse_enabled)) < 0) {
+    if (setsockopt(tmpsock, SOL_SOCKET, SO_REUSEADDR, (const char*)&reuse_enabled,
+                   sizeof(reuse_enabled)) < 0) {
         LOG_ERROR(Debug_GDBStub, "Failed to set gdb socket option");
     }
 
@@ -964,13 +976,13 @@ static void Init(u16 port) {
     socklen_t client_addrlen = sizeof(saddr_client);
     gdbserver_socket = accept(tmpsock, client_addr, &client_addrlen);
     if (gdbserver_socket < 0) {
-        // In the case that we couldn't start the server for whatever reason, just start CPU execution like normal.
+        // In the case that we couldn't start the server for whatever reason, just start CPU
+        // execution like normal.
         halt_loop = false;
         step_loop = false;
 
         LOG_ERROR(Debug_GDBStub, "Failed to accept gdb client");
-    }
-    else {
+    } else {
         LOG_INFO(Debug_GDBStub, "Client connected.\n");
         saddr_client.sin_addr.s_addr = ntohl(saddr_client.sin_addr.s_addr);
     }
@@ -1018,5 +1030,4 @@ bool GetCpuStepFlag() {
 void SetCpuStepFlag(bool is_step) {
     step_loop = is_step;
 }
-
 };

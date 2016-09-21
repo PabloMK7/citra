@@ -5,11 +5,9 @@
 #include <algorithm>
 #include <memory>
 #include <vector>
-
 #include "common/common_types.h"
 #include "common/file_util.h"
 #include "common/string_util.h"
-
 #include "core/file_sys/archive_systemsavedata.h"
 #include "core/file_sys/disk_archive.h"
 #include "core/hle/service/fs/archive.h"
@@ -45,25 +43,25 @@ Path ConstructSystemSaveDataBinaryPath(u32 high, u32 low) {
     for (unsigned i = 0; i < 4; ++i)
         binary_path.push_back((low >> (8 * i)) & 0xFF);
 
-    return { binary_path };
+    return {binary_path};
 }
 
 ArchiveFactory_SystemSaveData::ArchiveFactory_SystemSaveData(const std::string& nand_path)
-        : base_path(GetSystemSaveDataContainerPath(nand_path)) {
-}
+    : base_path(GetSystemSaveDataContainerPath(nand_path)) {}
 
 ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_SystemSaveData::Open(const Path& path) {
     std::string fullpath = GetSystemSaveDataPath(base_path, path);
     if (!FileUtil::Exists(fullpath)) {
         // TODO(Subv): Check error code, this one is probably wrong
         return ResultCode(ErrorDescription::FS_NotFormatted, ErrorModule::FS,
-            ErrorSummary::InvalidState, ErrorLevel::Status);
+                          ErrorSummary::InvalidState, ErrorLevel::Status);
     }
     auto archive = std::make_unique<DiskArchive>(fullpath);
     return MakeResult<std::unique_ptr<ArchiveBackend>>(std::move(archive));
 }
 
-ResultCode ArchiveFactory_SystemSaveData::Format(const Path& path, const FileSys::ArchiveFormatInfo& format_info) {
+ResultCode ArchiveFactory_SystemSaveData::Format(const Path& path,
+                                                 const FileSys::ArchiveFormatInfo& format_info) {
     std::string fullpath = GetSystemSaveDataPath(base_path, path);
     FileUtil::DeleteDirRecursively(fullpath);
     FileUtil::CreateFullPath(fullpath);

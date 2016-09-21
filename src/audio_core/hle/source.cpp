@@ -4,21 +4,19 @@
 
 #include <algorithm>
 #include <array>
-
 #include "audio_core/codec.h"
 #include "audio_core/hle/common.h"
 #include "audio_core/hle/source.h"
 #include "audio_core/interpolate.h"
-
 #include "common/assert.h"
 #include "common/logging/log.h"
-
 #include "core/memory.h"
 
 namespace DSP {
 namespace HLE {
 
-SourceStatus::Status Source::Tick(SourceConfiguration::Configuration& config, const s16_le (&adpcm_coeffs)[16]) {
+SourceStatus::Status Source::Tick(SourceConfiguration::Configuration& config,
+                                  const s16_le (&adpcm_coeffs)[16]) {
     ParseConfig(config, adpcm_coeffs);
 
     if (state.enabled) {
@@ -47,7 +45,8 @@ void Source::Reset() {
     state = {};
 }
 
-void Source::ParseConfig(SourceConfiguration::Configuration& config, const s16_le (&adpcm_coeffs)[16]) {
+void Source::ParseConfig(SourceConfiguration::Configuration& config,
+                         const s16_le (&adpcm_coeffs)[16]) {
     if (!config.dirty_raw) {
         return;
     }
@@ -82,7 +81,8 @@ void Source::ParseConfig(SourceConfiguration::Configuration& config, const s16_l
         LOG_TRACE(Audio_DSP, "source_id=%zu rate=%f", source_id, state.rate_multiplier);
 
         if (state.rate_multiplier <= 0) {
-            LOG_ERROR(Audio_DSP, "Was given an invalid rate multiplier: source_id=%zu rate=%f", source_id, state.rate_multiplier);
+            LOG_ERROR(Audio_DSP, "Was given an invalid rate multiplier: source_id=%zu rate=%f",
+                      source_id, state.rate_multiplier);
             state.rate_multiplier = 1.0f;
             // Note: Actual firmware starts producing garbage if this occurs.
         }
@@ -90,37 +90,39 @@ void Source::ParseConfig(SourceConfiguration::Configuration& config, const s16_l
 
     if (config.adpcm_coefficients_dirty) {
         config.adpcm_coefficients_dirty.Assign(0);
-        std::transform(adpcm_coeffs, adpcm_coeffs + state.adpcm_coeffs.size(), state.adpcm_coeffs.begin(),
-            [](const auto& coeff) { return static_cast<s16>(coeff); });
+        std::transform(adpcm_coeffs, adpcm_coeffs + state.adpcm_coeffs.size(),
+                       state.adpcm_coeffs.begin(),
+                       [](const auto& coeff) { return static_cast<s16>(coeff); });
         LOG_TRACE(Audio_DSP, "source_id=%zu adpcm update", source_id);
     }
 
     if (config.gain_0_dirty) {
         config.gain_0_dirty.Assign(0);
         std::transform(config.gain[0], config.gain[0] + state.gain[0].size(), state.gain[0].begin(),
-            [](const auto& coeff) { return static_cast<float>(coeff); });
+                       [](const auto& coeff) { return static_cast<float>(coeff); });
         LOG_TRACE(Audio_DSP, "source_id=%zu gain 0 update", source_id);
     }
 
     if (config.gain_1_dirty) {
         config.gain_1_dirty.Assign(0);
         std::transform(config.gain[1], config.gain[1] + state.gain[1].size(), state.gain[1].begin(),
-            [](const auto& coeff) { return static_cast<float>(coeff); });
+                       [](const auto& coeff) { return static_cast<float>(coeff); });
         LOG_TRACE(Audio_DSP, "source_id=%zu gain 1 update", source_id);
     }
 
     if (config.gain_2_dirty) {
         config.gain_2_dirty.Assign(0);
         std::transform(config.gain[2], config.gain[2] + state.gain[2].size(), state.gain[2].begin(),
-            [](const auto& coeff) { return static_cast<float>(coeff); });
+                       [](const auto& coeff) { return static_cast<float>(coeff); });
         LOG_TRACE(Audio_DSP, "source_id=%zu gain 2 update", source_id);
     }
 
     if (config.filters_enabled_dirty) {
         config.filters_enabled_dirty.Assign(0);
-        state.filters.Enable(config.simple_filter_enabled.ToBool(), config.biquad_filter_enabled.ToBool());
-        LOG_TRACE(Audio_DSP, "source_id=%zu enable_simple=%hu enable_biquad=%hu",
-                  source_id, config.simple_filter_enabled.Value(), config.biquad_filter_enabled.Value());
+        state.filters.Enable(config.simple_filter_enabled.ToBool(),
+                             config.biquad_filter_enabled.ToBool());
+        LOG_TRACE(Audio_DSP, "source_id=%zu enable_simple=%hu enable_biquad=%hu", source_id,
+                  config.simple_filter_enabled.Value(), config.biquad_filter_enabled.Value());
     }
 
     if (config.simple_filter_dirty) {
@@ -138,19 +140,22 @@ void Source::ParseConfig(SourceConfiguration::Configuration& config, const s16_l
     if (config.interpolation_dirty) {
         config.interpolation_dirty.Assign(0);
         state.interpolation_mode = config.interpolation_mode;
-        LOG_TRACE(Audio_DSP, "source_id=%zu interpolation_mode=%zu", source_id, static_cast<size_t>(state.interpolation_mode));
+        LOG_TRACE(Audio_DSP, "source_id=%zu interpolation_mode=%zu", source_id,
+                  static_cast<size_t>(state.interpolation_mode));
     }
 
     if (config.format_dirty || config.embedded_buffer_dirty) {
         config.format_dirty.Assign(0);
         state.format = config.format;
-        LOG_TRACE(Audio_DSP, "source_id=%zu format=%zu", source_id, static_cast<size_t>(state.format));
+        LOG_TRACE(Audio_DSP, "source_id=%zu format=%zu", source_id,
+                  static_cast<size_t>(state.format));
     }
 
     if (config.mono_or_stereo_dirty || config.embedded_buffer_dirty) {
         config.mono_or_stereo_dirty.Assign(0);
         state.mono_or_stereo = config.mono_or_stereo;
-        LOG_TRACE(Audio_DSP, "source_id=%zu mono_or_stereo=%zu", source_id, static_cast<size_t>(state.mono_or_stereo));
+        LOG_TRACE(Audio_DSP, "source_id=%zu mono_or_stereo=%zu", source_id,
+                  static_cast<size_t>(state.mono_or_stereo));
     }
 
     if (config.embedded_buffer_dirty) {
@@ -159,15 +164,16 @@ void Source::ParseConfig(SourceConfiguration::Configuration& config, const s16_l
             config.physical_address,
             config.length,
             static_cast<u8>(config.adpcm_ps),
-            { config.adpcm_yn[0], config.adpcm_yn[1] },
+            {config.adpcm_yn[0], config.adpcm_yn[1]},
             config.adpcm_dirty.ToBool(),
             config.is_looping.ToBool(),
             config.buffer_id,
             state.mono_or_stereo,
             state.format,
-            false
+            false,
         });
-        LOG_TRACE(Audio_DSP, "enqueuing embedded addr=0x%08x len=%u id=%hu", config.physical_address, config.length, config.buffer_id);
+        LOG_TRACE(Audio_DSP, "enqueuing embedded addr=0x%08x len=%u id=%hu",
+                  config.physical_address, config.length, config.buffer_id);
     }
 
     if (config.buffer_queue_dirty) {
@@ -179,15 +185,16 @@ void Source::ParseConfig(SourceConfiguration::Configuration& config, const s16_l
                     b.physical_address,
                     b.length,
                     static_cast<u8>(b.adpcm_ps),
-                    { b.adpcm_yn[0], b.adpcm_yn[1] },
+                    {b.adpcm_yn[0], b.adpcm_yn[1]},
                     b.adpcm_dirty != 0,
                     b.is_looping != 0,
                     b.buffer_id,
                     state.mono_or_stereo,
                     state.format,
-                    true
+                    true,
                 });
-                LOG_TRACE(Audio_DSP, "enqueuing queued %zu addr=0x%08x len=%u id=%hu", i, b.physical_address, b.length, b.buffer_id);
+                LOG_TRACE(Audio_DSP, "enqueuing queued %zu addr=0x%08x len=%u id=%hu", i,
+                          b.physical_address, b.length, b.buffer_id);
             }
         }
         config.buffers_dirty = 0;
@@ -218,10 +225,13 @@ void Source::GenerateFrame() {
             break;
         }
 
-        const size_t size_to_copy = std::min(state.current_buffer.size(), current_frame.size() - frame_position);
+        const size_t size_to_copy =
+            std::min(state.current_buffer.size(), current_frame.size() - frame_position);
 
-        std::copy(state.current_buffer.begin(), state.current_buffer.begin() + size_to_copy, current_frame.begin() + frame_position);
-        state.current_buffer.erase(state.current_buffer.begin(), state.current_buffer.begin() + size_to_copy);
+        std::copy(state.current_buffer.begin(), state.current_buffer.begin() + size_to_copy,
+                  current_frame.begin() + frame_position);
+        state.current_buffer.erase(state.current_buffer.begin(),
+                                   state.current_buffer.begin() + size_to_copy);
 
         frame_position += size_to_copy;
         state.next_sample_number += static_cast<u32>(size_to_copy);
@@ -230,9 +240,9 @@ void Source::GenerateFrame() {
     state.filters.ProcessFrame(current_frame);
 }
 
-
 bool Source::DequeueBuffer() {
-    ASSERT_MSG(state.current_buffer.empty(), "Shouldn't dequeue; we still have data in current_buffer");
+    ASSERT_MSG(state.current_buffer.empty(),
+               "Shouldn't dequeue; we still have data in current_buffer");
 
     if (state.input_queue.empty())
         return false;
@@ -261,29 +271,34 @@ bool Source::DequeueBuffer() {
             break;
         case Format::ADPCM:
             DEBUG_ASSERT(num_channels == 1);
-            state.current_buffer = Codec::DecodeADPCM(memory, buf.length, state.adpcm_coeffs, state.adpcm_state);
+            state.current_buffer =
+                Codec::DecodeADPCM(memory, buf.length, state.adpcm_coeffs, state.adpcm_state);
             break;
         default:
             UNIMPLEMENTED();
             break;
         }
     } else {
-        LOG_WARNING(Audio_DSP, "source_id=%zu buffer_id=%hu length=%u: Invalid physical address 0x%08X",
-                               source_id, buf.buffer_id, buf.length, buf.physical_address);
+        LOG_WARNING(Audio_DSP,
+                    "source_id=%zu buffer_id=%hu length=%u: Invalid physical address 0x%08X",
+                    source_id, buf.buffer_id, buf.length, buf.physical_address);
         state.current_buffer.clear();
         return true;
     }
 
     switch (state.interpolation_mode) {
     case InterpolationMode::None:
-        state.current_buffer = AudioInterp::None(state.interp_state, state.current_buffer, state.rate_multiplier);
+        state.current_buffer =
+            AudioInterp::None(state.interp_state, state.current_buffer, state.rate_multiplier);
         break;
     case InterpolationMode::Linear:
-        state.current_buffer = AudioInterp::Linear(state.interp_state, state.current_buffer, state.rate_multiplier);
+        state.current_buffer =
+            AudioInterp::Linear(state.interp_state, state.current_buffer, state.rate_multiplier);
         break;
     case InterpolationMode::Polyphase:
         // TODO(merry): Implement polyphase interpolation
-        state.current_buffer = AudioInterp::Linear(state.interp_state, state.current_buffer, state.rate_multiplier);
+        state.current_buffer =
+            AudioInterp::Linear(state.interp_state, state.current_buffer, state.rate_multiplier);
         break;
     default:
         UNIMPLEMENTED();
@@ -296,7 +311,8 @@ bool Source::DequeueBuffer() {
     state.buffer_update = buf.from_queue;
 
     LOG_TRACE(Audio_DSP, "source_id=%zu buffer_id=%hu from_queue=%s current_buffer.size()=%zu",
-                         source_id, buf.buffer_id, buf.from_queue ? "true" : "false", state.current_buffer.size());
+              source_id, buf.buffer_id, buf.from_queue ? "true" : "false",
+              state.current_buffer.size());
     return true;
 }
 

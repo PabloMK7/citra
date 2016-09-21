@@ -12,16 +12,20 @@ namespace Applets {
 
 class ErrEula final : public Applet {
 public:
-    explicit ErrEula(Service::APT::AppletId id): Applet(id) { }
+    explicit ErrEula(Service::APT::AppletId id) : Applet(id) {}
 
     ResultCode ReceiveParameter(const Service::APT::MessageParameter& parameter) override;
     ResultCode StartImpl(const Service::APT::AppletStartupParameter& parameter) override;
     void Update() override;
-    bool IsRunning() const override { return started; }
+    bool IsRunning() const override {
+        return started;
+    }
 
     /// This SharedMemory will be created when we receive the LibAppJustStarted message.
-    /// It holds the framebuffer info retrieved by the application with GSPGPU::ImportDisplayCaptureInfo
+    /// It holds the framebuffer info retrieved by the application with
+    /// GSPGPU::ImportDisplayCaptureInfo
     Kernel::SharedPtr<Kernel::SharedMemory> framebuffer_memory;
+
 private:
     /// Whether this applet is currently running instead of the host application or not.
     bool started = false;

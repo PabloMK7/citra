@@ -3,10 +3,8 @@
 // Refer to the license.txt file included.
 
 #include <glad/glad.h>
-
 #include "common/common_funcs.h"
 #include "common/logging/log.h"
-
 #include "video_core/renderer_opengl/gl_state.h"
 
 OpenGLState OpenGLState::cur_state;
@@ -106,11 +104,11 @@ void OpenGLState::Apply() const {
 
     // Color mask
     if (color_mask.red_enabled != cur_state.color_mask.red_enabled ||
-            color_mask.green_enabled != cur_state.color_mask.green_enabled ||
-            color_mask.blue_enabled != cur_state.color_mask.blue_enabled ||
-            color_mask.alpha_enabled != cur_state.color_mask.alpha_enabled) {
-        glColorMask(color_mask.red_enabled, color_mask.green_enabled,
-                    color_mask.blue_enabled, color_mask.alpha_enabled);
+        color_mask.green_enabled != cur_state.color_mask.green_enabled ||
+        color_mask.blue_enabled != cur_state.color_mask.blue_enabled ||
+        color_mask.alpha_enabled != cur_state.color_mask.alpha_enabled) {
+        glColorMask(color_mask.red_enabled, color_mask.green_enabled, color_mask.blue_enabled,
+                    color_mask.alpha_enabled);
     }
 
     // Stencil test
@@ -123,15 +121,16 @@ void OpenGLState::Apply() const {
     }
 
     if (stencil.test_func != cur_state.stencil.test_func ||
-            stencil.test_ref != cur_state.stencil.test_ref ||
-            stencil.test_mask != cur_state.stencil.test_mask) {
+        stencil.test_ref != cur_state.stencil.test_ref ||
+        stencil.test_mask != cur_state.stencil.test_mask) {
         glStencilFunc(stencil.test_func, stencil.test_ref, stencil.test_mask);
     }
 
     if (stencil.action_depth_fail != cur_state.stencil.action_depth_fail ||
-            stencil.action_depth_pass != cur_state.stencil.action_depth_pass ||
-            stencil.action_stencil_fail != cur_state.stencil.action_stencil_fail) {
-        glStencilOp(stencil.action_stencil_fail, stencil.action_depth_fail, stencil.action_depth_pass);
+        stencil.action_depth_pass != cur_state.stencil.action_depth_pass ||
+        stencil.action_stencil_fail != cur_state.stencil.action_stencil_fail) {
+        glStencilOp(stencil.action_stencil_fail, stencil.action_depth_fail,
+                    stencil.action_depth_pass);
     }
 
     // Stencil mask
@@ -154,23 +153,22 @@ void OpenGLState::Apply() const {
     }
 
     if (blend.color.red != cur_state.blend.color.red ||
-            blend.color.green != cur_state.blend.color.green ||
-            blend.color.blue != cur_state.blend.color.blue ||
-            blend.color.alpha != cur_state.blend.color.alpha) {
-        glBlendColor(blend.color.red, blend.color.green,
-                     blend.color.blue, blend.color.alpha);
+        blend.color.green != cur_state.blend.color.green ||
+        blend.color.blue != cur_state.blend.color.blue ||
+        blend.color.alpha != cur_state.blend.color.alpha) {
+        glBlendColor(blend.color.red, blend.color.green, blend.color.blue, blend.color.alpha);
     }
 
     if (blend.src_rgb_func != cur_state.blend.src_rgb_func ||
-            blend.dst_rgb_func != cur_state.blend.dst_rgb_func ||
-            blend.src_a_func != cur_state.blend.src_a_func ||
-            blend.dst_a_func != cur_state.blend.dst_a_func) {
-        glBlendFuncSeparate(blend.src_rgb_func, blend.dst_rgb_func,
-                            blend.src_a_func, blend.dst_a_func);
+        blend.dst_rgb_func != cur_state.blend.dst_rgb_func ||
+        blend.src_a_func != cur_state.blend.src_a_func ||
+        blend.dst_a_func != cur_state.blend.dst_a_func) {
+        glBlendFuncSeparate(blend.src_rgb_func, blend.dst_rgb_func, blend.src_a_func,
+                            blend.dst_a_func);
     }
 
     if (blend.rgb_equation != cur_state.blend.rgb_equation ||
-            blend.a_equation != cur_state.blend.a_equation) {
+        blend.a_equation != cur_state.blend.a_equation) {
         glBlendEquationSeparate(blend.rgb_equation, blend.a_equation);
     }
 
@@ -237,8 +235,11 @@ void OpenGLState::Apply() const {
 GLenum OpenGLState::CheckFBStatus(GLenum target) {
     GLenum fb_status = glCheckFramebufferStatus(target);
     if (fb_status != GL_FRAMEBUFFER_COMPLETE) {
-        const char* fb_description = (target == GL_READ_FRAMEBUFFER ? "READ" : (target == GL_DRAW_FRAMEBUFFER ? "DRAW" : "UNK"));
-        LOG_CRITICAL(Render_OpenGL, "OpenGL %s framebuffer check failed, status %X", fb_description, fb_status);
+        const char* fb_description =
+            (target == GL_READ_FRAMEBUFFER ? "READ"
+                                           : (target == GL_DRAW_FRAMEBUFFER ? "DRAW" : "UNK"));
+        LOG_CRITICAL(Render_OpenGL, "OpenGL %s framebuffer check failed, status %X", fb_description,
+                     fb_status);
     }
 
     return fb_status;

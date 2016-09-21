@@ -5,7 +5,6 @@
 #pragma once
 
 #include <string>
-
 #include "common/common_types.h"
 #include "core/loader/loader.h"
 
@@ -17,7 +16,8 @@ namespace Loader {
 /// Loads an 3DSX file
 class AppLoader_THREEDSX final : public AppLoader {
 public:
-    AppLoader_THREEDSX(FileUtil::IOFile&& file, const std::string& filename, const std::string& filepath)
+    AppLoader_THREEDSX(FileUtil::IOFile&& file, const std::string& filename,
+                       const std::string& filepath)
         : AppLoader(std::move(file)), filename(std::move(filename)), filepath(filepath) {}
 
     /**
@@ -55,7 +55,8 @@ public:
      * @param size       Size of the RomFS in bytes
      * @return ResultStatus result of function
      */
-    ResultStatus ReadRomFS(std::shared_ptr<FileUtil::IOFile>& romfs_file, u64& offset, u64& size) override;
+    ResultStatus ReadRomFS(std::shared_ptr<FileUtil::IOFile>& romfs_file, u64& offset,
+                           u64& size) override;
 
 private:
     std::string filename;

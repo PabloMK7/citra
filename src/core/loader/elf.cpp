@@ -3,14 +3,12 @@
 // Refer to the license.txt file included.
 
 #include <cstring>
-#include <string>
 #include <memory>
-
+#include <string>
 #include "common/common_types.h"
 #include "common/file_util.h"
 #include "common/logging/log.h"
 #include "common/symbols.h"
-
 #include "core/hle/kernel/process.h"
 #include "core/hle/kernel/resource_limit.h"
 #include "core/loader/elf.h"
@@ -24,112 +22,111 @@ using Kernel::CodeSet;
 
 // File type
 enum ElfType {
-    ET_NONE   = 0,
-    ET_REL    = 1,
-    ET_EXEC   = 2,
-    ET_DYN    = 3,
-    ET_CORE   = 4,
+    ET_NONE = 0,
+    ET_REL = 1,
+    ET_EXEC = 2,
+    ET_DYN = 3,
+    ET_CORE = 4,
     ET_LOPROC = 0xFF00,
     ET_HIPROC = 0xFFFF,
 };
 
 // Machine/Architecture
 enum ElfMachine {
-    EM_NONE  = 0,
-    EM_M32   = 1,
+    EM_NONE = 0,
+    EM_M32 = 1,
     EM_SPARC = 2,
-    EM_386   = 3,
-    EM_68K   = 4,
-    EM_88K   = 5,
-    EM_860   = 7,
-    EM_MIPS  = 8
+    EM_386 = 3,
+    EM_68K = 4,
+    EM_88K = 5,
+    EM_860 = 7,
+    EM_MIPS = 8
 };
 
 // File version
-#define EV_NONE    0
+#define EV_NONE 0
 #define EV_CURRENT 1
 
 // Identification index
-#define EI_MAG0    0
-#define EI_MAG1    1
-#define EI_MAG2    2
-#define EI_MAG3    3
-#define EI_CLASS   4
-#define EI_DATA    5
+#define EI_MAG0 0
+#define EI_MAG1 1
+#define EI_MAG2 2
+#define EI_MAG3 3
+#define EI_CLASS 4
+#define EI_DATA 5
 #define EI_VERSION 6
-#define EI_PAD     7
+#define EI_PAD 7
 #define EI_NIDENT 16
 
 // Sections constants
 
 // Section types
-#define SHT_NULL            0
-#define SHT_PROGBITS        1
-#define SHT_SYMTAB          2
-#define SHT_STRTAB          3
-#define SHT_RELA            4
-#define SHT_HASH            5
-#define SHT_DYNAMIC         6
-#define SHT_NOTE            7
-#define SHT_NOBITS          8
-#define SHT_REL             9
-#define SHT_SHLIB          10
-#define SHT_DYNSYM         11
+#define SHT_NULL 0
+#define SHT_PROGBITS 1
+#define SHT_SYMTAB 2
+#define SHT_STRTAB 3
+#define SHT_RELA 4
+#define SHT_HASH 5
+#define SHT_DYNAMIC 6
+#define SHT_NOTE 7
+#define SHT_NOBITS 8
+#define SHT_REL 9
+#define SHT_SHLIB 10
+#define SHT_DYNSYM 11
 #define SHT_LOPROC 0x70000000
 #define SHT_HIPROC 0x7FFFFFFF
 #define SHT_LOUSER 0x80000000
 #define SHT_HIUSER 0xFFFFFFFF
 
 // Section flags
-enum ElfSectionFlags
-{
-    SHF_WRITE     = 0x1,
-    SHF_ALLOC     = 0x2,
+enum ElfSectionFlags {
+    SHF_WRITE = 0x1,
+    SHF_ALLOC = 0x2,
     SHF_EXECINSTR = 0x4,
-    SHF_MASKPROC  = 0xF0000000,
+    SHF_MASKPROC = 0xF0000000,
 };
 
 // Segment types
-#define PT_NULL             0
-#define PT_LOAD             1
-#define PT_DYNAMIC          2
-#define PT_INTERP           3
-#define PT_NOTE             4
-#define PT_SHLIB            5
-#define PT_PHDR             6
-#define PT_LOPROC  0x70000000
-#define PT_HIPROC  0x7FFFFFFF
+#define PT_NULL 0
+#define PT_LOAD 1
+#define PT_DYNAMIC 2
+#define PT_INTERP 3
+#define PT_NOTE 4
+#define PT_SHLIB 5
+#define PT_PHDR 6
+#define PT_LOPROC 0x70000000
+#define PT_HIPROC 0x7FFFFFFF
 
 // Segment flags
-#define PF_X               0x1
-#define PF_W               0x2
-#define PF_R               0x4
+#define PF_X 0x1
+#define PF_W 0x2
+#define PF_R 0x4
 #define PF_MASKPROC 0xF0000000
 
-typedef unsigned int   Elf32_Addr;
+typedef unsigned int Elf32_Addr;
 typedef unsigned short Elf32_Half;
-typedef unsigned int   Elf32_Off;
-typedef signed   int   Elf32_Sword;
-typedef unsigned int   Elf32_Word;
+typedef unsigned int Elf32_Off;
+typedef signed int Elf32_Sword;
+typedef unsigned int Elf32_Word;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // ELF file header
 
 struct Elf32_Ehdr {
     unsigned char e_ident[EI_NIDENT];
-    Elf32_Half    e_type;
-    Elf32_Half    e_machine;
-    Elf32_Word    e_version;
-    Elf32_Addr    e_entry;
-    Elf32_Off     e_phoff;
-    Elf32_Off     e_shoff;
-    Elf32_Word    e_flags;
-    Elf32_Half    e_ehsize;
-    Elf32_Half    e_phentsize;
-    Elf32_Half    e_phnum;
-    Elf32_Half    e_shentsize;
-    Elf32_Half    e_shnum;
-    Elf32_Half    e_shstrndx;
+    Elf32_Half e_type;
+    Elf32_Half e_machine;
+    Elf32_Word e_version;
+    Elf32_Addr e_entry;
+    Elf32_Off e_phoff;
+    Elf32_Off e_shoff;
+    Elf32_Word e_flags;
+    Elf32_Half e_ehsize;
+    Elf32_Half e_phentsize;
+    Elf32_Half e_phnum;
+    Elf32_Half e_shentsize;
+    Elf32_Half e_shnum;
+    Elf32_Half e_shstrndx;
 };
 
 // Section header
@@ -138,7 +135,7 @@ struct Elf32_Shdr {
     Elf32_Word sh_type;
     Elf32_Word sh_flags;
     Elf32_Addr sh_addr;
-    Elf32_Off  sh_offset;
+    Elf32_Off sh_offset;
     Elf32_Word sh_size;
     Elf32_Word sh_link;
     Elf32_Word sh_info;
@@ -149,7 +146,7 @@ struct Elf32_Shdr {
 // Segment header
 struct Elf32_Phdr {
     Elf32_Word p_type;
-    Elf32_Off  p_offset;
+    Elf32_Off p_offset;
     Elf32_Addr p_vaddr;
     Elf32_Addr p_paddr;
     Elf32_Word p_filesz;
@@ -160,12 +157,12 @@ struct Elf32_Phdr {
 
 // Symbol table entry
 struct Elf32_Sym {
-    Elf32_Word    st_name;
-    Elf32_Addr    st_value;
-    Elf32_Word    st_size;
+    Elf32_Word st_name;
+    Elf32_Addr st_value;
+    Elf32_Word st_size;
     unsigned char st_info;
     unsigned char st_other;
-    Elf32_Half    st_shndx;
+    Elf32_Half st_shndx;
 };
 
 // Relocation entries
@@ -181,35 +178,51 @@ typedef int SectionID;
 
 class ElfReader {
 private:
-    char *base;
-    u32 *base32;
+    char* base;
+    u32* base32;
 
-    Elf32_Ehdr *header;
-    Elf32_Phdr *segments;
-    Elf32_Shdr *sections;
+    Elf32_Ehdr* header;
+    Elf32_Phdr* segments;
+    Elf32_Shdr* sections;
 
-    u32 *sectionAddrs;
+    u32* sectionAddrs;
     bool relocate;
     u32 entryPoint;
 
 public:
-    ElfReader(void *ptr);
+    ElfReader(void* ptr);
 
-    u32 Read32(int off) const { return base32[off >> 2]; }
+    u32 Read32(int off) const {
+        return base32[off >> 2];
+    }
 
     // Quick accessors
-    ElfType GetType() const { return (ElfType)(header->e_type); }
-    ElfMachine GetMachine() const { return (ElfMachine)(header->e_machine); }
-    u32 GetEntryPoint() const { return entryPoint; }
-    u32 GetFlags() const { return (u32)(header->e_flags); }
+    ElfType GetType() const {
+        return (ElfType)(header->e_type);
+    }
+    ElfMachine GetMachine() const {
+        return (ElfMachine)(header->e_machine);
+    }
+    u32 GetEntryPoint() const {
+        return entryPoint;
+    }
+    u32 GetFlags() const {
+        return (u32)(header->e_flags);
+    }
     SharedPtr<CodeSet> LoadInto(u32 vaddr);
     bool LoadSymbols();
 
-    int GetNumSegments() const { return (int)(header->e_phnum); }
-    int GetNumSections() const { return (int)(header->e_shnum); }
-    const u8 *GetPtr(int offset) const { return (u8*)base + offset; }
-    const char *GetSectionName(int section) const;
-    const u8 *GetSectionDataPtr(int section) const {
+    int GetNumSegments() const {
+        return (int)(header->e_phnum);
+    }
+    int GetNumSections() const {
+        return (int)(header->e_shnum);
+    }
+    const u8* GetPtr(int offset) const {
+        return (u8*)base + offset;
+    }
+    const char* GetSectionName(int section) const;
+    const u8* GetSectionDataPtr(int section) const {
         if (section < 0 || section >= header->e_shnum)
             return nullptr;
         if (sections[section].sh_type != SHT_NOBITS)
@@ -220,19 +233,23 @@ public:
     bool IsCodeSection(int section) const {
         return sections[section].sh_type == SHT_PROGBITS;
     }
-    const u8 *GetSegmentPtr(int segment) {
+    const u8* GetSegmentPtr(int segment) {
         return GetPtr(segments[segment].p_offset);
     }
-    u32 GetSectionAddr(SectionID section) const { return sectionAddrs[section]; }
-    unsigned int GetSectionSize(SectionID section) const { return sections[section].sh_size; }
-    SectionID GetSectionByName(const char *name, int firstSection = 0) const; //-1 for not found
+    u32 GetSectionAddr(SectionID section) const {
+        return sectionAddrs[section];
+    }
+    unsigned int GetSectionSize(SectionID section) const {
+        return sections[section].sh_size;
+    }
+    SectionID GetSectionByName(const char* name, int firstSection = 0) const; //-1 for not found
 
     bool DidRelocate() const {
         return relocate;
     }
 };
 
-ElfReader::ElfReader(void *ptr) {
+ElfReader::ElfReader(void* ptr) {
     base = (char*)ptr;
     base32 = (u32*)ptr;
     header = (Elf32_Ehdr*)ptr;
@@ -245,7 +262,7 @@ ElfReader::ElfReader(void *ptr) {
     LoadSymbols();
 }
 
-const char *ElfReader::GetSectionName(int section) const {
+const char* ElfReader::GetSectionName(int section) const {
     if (sections[section].sh_type == SHT_NULL)
         return nullptr;
 
@@ -303,12 +320,15 @@ SharedPtr<CodeSet> ElfReader::LoadInto(u32 vaddr) {
             } else if (permission_flags == (PF_R | PF_W)) {
                 codeset_segment = &codeset->data;
             } else {
-                LOG_ERROR(Loader, "Unexpected ELF PT_LOAD segment id %u with flags %X", i, p->p_flags);
+                LOG_ERROR(Loader, "Unexpected ELF PT_LOAD segment id %u with flags %X", i,
+                          p->p_flags);
                 continue;
             }
 
             if (codeset_segment->size != 0) {
-                LOG_ERROR(Loader, "ELF has more than one segment of the same type. Skipping extra segment (id %i)", i);
+                LOG_ERROR(Loader, "ELF has more than one segment of the same type. Skipping extra "
+                                  "segment (id %i)",
+                          i);
                 continue;
             }
 
@@ -332,9 +352,9 @@ SharedPtr<CodeSet> ElfReader::LoadInto(u32 vaddr) {
     return codeset;
 }
 
-SectionID ElfReader::GetSectionByName(const char *name, int firstSection) const {
+SectionID ElfReader::GetSectionByName(const char* name, int firstSection) const {
     for (int i = firstSection; i < header->e_shnum; i++) {
-        const char *secname = GetSectionName(i);
+        const char* secname = GetSectionName(i);
 
         if (secname != nullptr && strcmp(name, secname) == 0)
             return i;
@@ -347,9 +367,9 @@ bool ElfReader::LoadSymbols() {
     SectionID sec = GetSectionByName(".symtab");
     if (sec != -1) {
         int stringSection = sections[sec].sh_link;
-        const char *stringBase = reinterpret_cast<const char*>(GetSectionDataPtr(stringSection));
+        const char* stringBase = reinterpret_cast<const char*>(GetSectionDataPtr(stringSection));
 
-        //We have a symbol table!
+        // We have a symbol table!
         const Elf32_Sym* symtab = reinterpret_cast<const Elf32_Sym*>(GetSectionDataPtr(sec));
         unsigned int numSymbols = sections[sec].sh_size / sizeof(Elf32_Sym);
         for (unsigned sym = 0; sym < numSymbols; sym++) {
@@ -359,7 +379,7 @@ bool ElfReader::LoadSymbols() {
 
             int type = symtab[sym].st_info & 0xF;
 
-            const char *name = stringBase + symtab[sym].st_name;
+            const char* name = stringBase + symtab[sym].st_name;
 
             Symbols::Add(symtab[sym].st_value, name, size, type);
 
@@ -411,7 +431,8 @@ ResultStatus AppLoader_ELF::Load() {
     Kernel::g_current_process->address_mappings = default_address_mappings;
 
     // Attach the default resource limit (APPLICATION) to the process
-    Kernel::g_current_process->resource_limit = Kernel::ResourceLimit::GetForCategory(Kernel::ResourceLimitCategory::APPLICATION);
+    Kernel::g_current_process->resource_limit =
+        Kernel::ResourceLimit::GetForCategory(Kernel::ResourceLimitCategory::APPLICATION);
 
     Kernel::g_current_process->Run(48, Kernel::DEFAULT_STACK_SIZE);
 

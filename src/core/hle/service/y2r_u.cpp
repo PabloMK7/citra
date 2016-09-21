@@ -3,11 +3,9 @@
 // Refer to the license.txt file included.
 
 #include <cstring>
-
 #include "common/common_funcs.h"
 #include "common/common_types.h"
 #include "common/logging/log.h"
-
 #include "core/hle/kernel/event.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/service/y2r_u.h"
@@ -39,16 +37,16 @@ static u32 transfer_end_interrupt_enabled = 0;
 static u32 spacial_dithering_enabled = 0;
 
 static const CoefficientSet standard_coefficients[4] = {
-    {{ 0x100, 0x166, 0xB6, 0x58, 0x1C5, -0x166F, 0x10EE, -0x1C5B }}, // ITU_Rec601
-    {{ 0x100, 0x193, 0x77, 0x2F, 0x1DB, -0x1933,  0xA7C, -0x1D51 }}, // ITU_Rec709
-    {{ 0x12A, 0x198, 0xD0, 0x64, 0x204, -0x1BDE, 0x10F2, -0x229B }}, // ITU_Rec601_Scaling
-    {{ 0x12A, 0x1CA, 0x88, 0x36, 0x21C, -0x1F04,  0x99C, -0x2421 }}, // ITU_Rec709_Scaling
+    {{0x100, 0x166, 0xB6, 0x58, 0x1C5, -0x166F, 0x10EE, -0x1C5B}}, // ITU_Rec601
+    {{0x100, 0x193, 0x77, 0x2F, 0x1DB, -0x1933, 0xA7C, -0x1D51}},  // ITU_Rec709
+    {{0x12A, 0x198, 0xD0, 0x64, 0x204, -0x1BDE, 0x10F2, -0x229B}}, // ITU_Rec601_Scaling
+    {{0x12A, 0x1CA, 0x88, 0x36, 0x21C, -0x1F04, 0x99C, -0x2421}},  // ITU_Rec709_Scaling
 };
 
 ResultCode ConversionConfiguration::SetInputLineWidth(u16 width) {
     if (width == 0 || width > 1024 || width % 8 != 0) {
         return ResultCode(ErrorDescription::OutOfRange, ErrorModule::CAM,
-            ErrorSummary::InvalidArgument, ErrorLevel::Usage); // 0xE0E053FD
+                          ErrorSummary::InvalidArgument, ErrorLevel::Usage); // 0xE0E053FD
     }
 
     // Note: The hardware uses the register value 0 to represent a width of 1024, so for a width of
@@ -61,7 +59,7 @@ ResultCode ConversionConfiguration::SetInputLineWidth(u16 width) {
 ResultCode ConversionConfiguration::SetInputLines(u16 lines) {
     if (lines == 0 || lines > 1024) {
         return ResultCode(ErrorDescription::OutOfRange, ErrorModule::CAM,
-            ErrorSummary::InvalidArgument, ErrorLevel::Usage); // 0xE0E053FD
+                          ErrorSummary::InvalidArgument, ErrorLevel::Usage); // 0xE0E053FD
     }
 
     // Note: In what appears to be a bug, the `camera` module does not set the hardware register at
@@ -73,11 +71,12 @@ ResultCode ConversionConfiguration::SetInputLines(u16 lines) {
     return RESULT_SUCCESS;
 }
 
-ResultCode ConversionConfiguration::SetStandardCoefficient(StandardCoefficient standard_coefficient) {
+ResultCode ConversionConfiguration::SetStandardCoefficient(
+    StandardCoefficient standard_coefficient) {
     size_t index = static_cast<size_t>(standard_coefficient);
     if (index >= ARRAY_SIZE(standard_coefficients)) {
         return ResultCode(ErrorDescription::InvalidEnumValue, ErrorModule::CAM,
-            ErrorSummary::InvalidArgument, ErrorLevel::Usage); // 0xE0E053ED
+                          ErrorSummary::InvalidArgument, ErrorLevel::Usage); // 0xE0E053ED
     }
 
     std::memcpy(coefficients.data(), standard_coefficients[index].data(), sizeof(coefficients));
@@ -294,8 +293,10 @@ static void SetSendingY(Service::Interface* self) {
     cmd_buff[0] = IPC::MakeHeader(0x10, 1, 0);
     cmd_buff[1] = RESULT_SUCCESS.raw;
 
-    LOG_DEBUG(Service_Y2R, "called image_size=0x%08X, transfer_unit=%hu, transfer_stride=%hu, src_process_handle=0x%08X",
-            conversion.src_Y.image_size, conversion.src_Y.transfer_unit, conversion.src_Y.gap, cmd_buff[6]);
+    LOG_DEBUG(Service_Y2R, "called image_size=0x%08X, transfer_unit=%hu, transfer_stride=%hu, "
+                           "src_process_handle=0x%08X",
+              conversion.src_Y.image_size, conversion.src_Y.transfer_unit, conversion.src_Y.gap,
+              cmd_buff[6]);
 }
 
 static void SetSendingU(Service::Interface* self) {
@@ -309,8 +310,10 @@ static void SetSendingU(Service::Interface* self) {
     cmd_buff[0] = IPC::MakeHeader(0x11, 1, 0);
     cmd_buff[1] = RESULT_SUCCESS.raw;
 
-    LOG_DEBUG(Service_Y2R, "called image_size=0x%08X, transfer_unit=%hu, transfer_stride=%hu, src_process_handle=0x%08X",
-            conversion.src_U.image_size, conversion.src_U.transfer_unit, conversion.src_U.gap, cmd_buff[6]);
+    LOG_DEBUG(Service_Y2R, "called image_size=0x%08X, transfer_unit=%hu, transfer_stride=%hu, "
+                           "src_process_handle=0x%08X",
+              conversion.src_U.image_size, conversion.src_U.transfer_unit, conversion.src_U.gap,
+              cmd_buff[6]);
 }
 
 static void SetSendingV(Service::Interface* self) {
@@ -324,8 +327,10 @@ static void SetSendingV(Service::Interface* self) {
     cmd_buff[0] = IPC::MakeHeader(0x12, 1, 0);
     cmd_buff[1] = RESULT_SUCCESS.raw;
 
-    LOG_DEBUG(Service_Y2R, "called image_size=0x%08X, transfer_unit=%hu, transfer_stride=%hu, src_process_handle=0x%08X",
-            conversion.src_V.image_size, conversion.src_V.transfer_unit, conversion.src_V.gap, cmd_buff[6]);
+    LOG_DEBUG(Service_Y2R, "called image_size=0x%08X, transfer_unit=%hu, transfer_stride=%hu, "
+                           "src_process_handle=0x%08X",
+              conversion.src_V.image_size, conversion.src_V.transfer_unit, conversion.src_V.gap,
+              cmd_buff[6]);
 }
 
 static void SetSendingYUYV(Service::Interface* self) {
@@ -339,8 +344,10 @@ static void SetSendingYUYV(Service::Interface* self) {
     cmd_buff[0] = IPC::MakeHeader(0x13, 1, 0);
     cmd_buff[1] = RESULT_SUCCESS.raw;
 
-    LOG_DEBUG(Service_Y2R, "called image_size=0x%08X, transfer_unit=%hu, transfer_stride=%hu, src_process_handle=0x%08X",
-            conversion.src_YUYV.image_size, conversion.src_YUYV.transfer_unit, conversion.src_YUYV.gap, cmd_buff[6]);
+    LOG_DEBUG(Service_Y2R, "called image_size=0x%08X, transfer_unit=%hu, transfer_stride=%hu, "
+                           "src_process_handle=0x%08X",
+              conversion.src_YUYV.image_size, conversion.src_YUYV.transfer_unit,
+              conversion.src_YUYV.gap, cmd_buff[6]);
 }
 
 /**
@@ -418,8 +425,10 @@ static void SetReceiving(Service::Interface* self) {
     cmd_buff[0] = IPC::MakeHeader(0x18, 1, 0);
     cmd_buff[1] = RESULT_SUCCESS.raw;
 
-    LOG_DEBUG(Service_Y2R, "called image_size=0x%08X, transfer_unit=%hu, transfer_stride=%hu, dst_process_handle=0x%08X",
-            conversion.dst.image_size, conversion.dst.transfer_unit, conversion.dst.gap, cmd_buff[6]);
+    LOG_DEBUG(Service_Y2R, "called image_size=0x%08X, transfer_unit=%hu, transfer_stride=%hu, "
+                           "dst_process_handle=0x%08X",
+              conversion.dst.image_size, conversion.dst.transfer_unit, conversion.dst.gap,
+              cmd_buff[6]);
 }
 
 /**
@@ -486,8 +495,8 @@ static void SetCoefficient(Service::Interface* self) {
     cmd_buff[1] = RESULT_SUCCESS.raw;
 
     LOG_DEBUG(Service_Y2R, "called coefficients=[%hX, %hX, %hX, %hX, %hX, %hX, %hX, %hX]",
-            coefficients[0], coefficients[1], coefficients[2], coefficients[3],
-            coefficients[4], coefficients[5], coefficients[6], coefficients[7]);
+              coefficients[0], coefficients[1], coefficients[2], coefficients[3], coefficients[4],
+              coefficients[5], coefficients[6], coefficients[7]);
 }
 
 static void GetCoefficient(Service::Interface* self) {
@@ -575,8 +584,10 @@ static void StartConversion(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
     // dst_image_size would seem to be perfect for this, but it doesn't include the gap :(
-    u32 total_output_size = conversion.input_lines * (conversion.dst.transfer_unit + conversion.dst.gap);
-    Memory::RasterizerFlushAndInvalidateRegion(Memory::VirtualToPhysicalAddress(conversion.dst.address), total_output_size);
+    u32 total_output_size =
+        conversion.input_lines * (conversion.dst.transfer_unit + conversion.dst.gap);
+    Memory::RasterizerFlushAndInvalidateRegion(
+        Memory::VirtualToPhysicalAddress(conversion.dst.address), total_output_size);
 
     HW::Y2R::PerformConversion(conversion);
 
@@ -648,10 +659,13 @@ cleanup:
     cmd_buff[0] = IPC::MakeHeader(0x29, 1, 0);
     cmd_buff[1] = result.raw;
 
-    LOG_DEBUG(Service_Y2R, "called input_format=%hhu output_format=%hhu rotation=%hhu block_alignment=%hhu "
-            "input_line_width=%hu input_lines=%hu standard_coefficient=%hhu reserved=%hhu alpha=%hX",
-            params->input_format, params->output_format, params->rotation, params->block_alignment,
-            params->input_line_width, params->input_lines, params->standard_coefficient, params->padding, params->alpha);
+    LOG_DEBUG(
+        Service_Y2R,
+        "called input_format=%hhu output_format=%hhu rotation=%hhu block_alignment=%hhu "
+        "input_line_width=%hu input_lines=%hu standard_coefficient=%hhu reserved=%hhu alpha=%hX",
+        params->input_format, params->output_format, params->rotation, params->block_alignment,
+        params->input_line_width, params->input_lines, params->standard_coefficient,
+        params->padding, params->alpha);
 }
 
 static void PingProcess(Service::Interface* self) {
@@ -699,7 +713,6 @@ static void DriverFinalize(Service::Interface* self) {
     LOG_DEBUG(Service_Y2R, "called");
 }
 
-
 static void GetPackageParameter(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
@@ -711,51 +724,51 @@ static void GetPackageParameter(Service::Interface* self) {
 }
 
 const Interface::FunctionInfo FunctionTable[] = {
-    {0x00010040, SetInputFormat,          "SetInputFormat"},
-    {0x00020000, GetInputFormat,          "GetInputFormat"},
-    {0x00030040, SetOutputFormat,         "SetOutputFormat"},
-    {0x00040000, GetOutputFormat,         "GetOutputFormat"},
-    {0x00050040, SetRotation,             "SetRotation"},
-    {0x00060000, GetRotation,             "GetRotation"},
-    {0x00070040, SetBlockAlignment,       "SetBlockAlignment"},
-    {0x00080000, GetBlockAlignment,       "GetBlockAlignment"},
-    {0x00090040, SetSpacialDithering,     "SetSpacialDithering"},
-    {0x000A0000, GetSpacialDithering,     "GetSpacialDithering"},
-    {0x000B0040, SetTemporalDithering,    "SetTemporalDithering"},
-    {0x000C0000, GetTemporalDithering,    "GetTemporalDithering"},
+    {0x00010040, SetInputFormat, "SetInputFormat"},
+    {0x00020000, GetInputFormat, "GetInputFormat"},
+    {0x00030040, SetOutputFormat, "SetOutputFormat"},
+    {0x00040000, GetOutputFormat, "GetOutputFormat"},
+    {0x00050040, SetRotation, "SetRotation"},
+    {0x00060000, GetRotation, "GetRotation"},
+    {0x00070040, SetBlockAlignment, "SetBlockAlignment"},
+    {0x00080000, GetBlockAlignment, "GetBlockAlignment"},
+    {0x00090040, SetSpacialDithering, "SetSpacialDithering"},
+    {0x000A0000, GetSpacialDithering, "GetSpacialDithering"},
+    {0x000B0040, SetTemporalDithering, "SetTemporalDithering"},
+    {0x000C0000, GetTemporalDithering, "GetTemporalDithering"},
     {0x000D0040, SetTransferEndInterrupt, "SetTransferEndInterrupt"},
     {0x000E0000, GetTransferEndInterrupt, "GetTransferEndInterrupt"},
-    {0x000F0000, GetTransferEndEvent,     "GetTransferEndEvent"},
-    {0x00100102, SetSendingY,             "SetSendingY"},
-    {0x00110102, SetSendingU,             "SetSendingU"},
-    {0x00120102, SetSendingV,             "SetSendingV"},
-    {0x00130102, SetSendingYUYV,          "SetSendingYUYV"},
-    {0x00140000, IsFinishedSendingYuv,    "IsFinishedSendingYuv"},
-    {0x00150000, IsFinishedSendingY,      "IsFinishedSendingY"},
-    {0x00160000, IsFinishedSendingU,      "IsFinishedSendingU"},
-    {0x00170000, IsFinishedSendingV,      "IsFinishedSendingV"},
-    {0x00180102, SetReceiving,            "SetReceiving"},
-    {0x00190000, IsFinishedReceiving,     "IsFinishedReceiving"},
-    {0x001A0040, SetInputLineWidth,       "SetInputLineWidth"},
-    {0x001B0000, GetInputLineWidth,       "GetInputLineWidth"},
-    {0x001C0040, SetInputLines,           "SetInputLines"},
-    {0x001D0000, GetInputLines,           "GetInputLines"},
-    {0x001E0100, SetCoefficient,          "SetCoefficient"},
-    {0x001F0000, GetCoefficient,          "GetCoefficient"},
-    {0x00200040, SetStandardCoefficient,  "SetStandardCoefficient"},
-    {0x00210040, GetStandardCoefficient,  "GetStandardCoefficient"},
-    {0x00220040, SetAlpha,                "SetAlpha"},
-    {0x00230000, GetAlpha,                "GetAlpha"},
-    {0x00240200, SetDitheringWeightParams,"SetDitheringWeightParams"},
-    {0x00250000, GetDitheringWeightParams,"GetDitheringWeightParams"},
-    {0x00260000, StartConversion,         "StartConversion"},
-    {0x00270000, StopConversion,          "StopConversion"},
-    {0x00280000, IsBusyConversion,        "IsBusyConversion"},
-    {0x002901C0, SetPackageParameter,     "SetPackageParameter"},
-    {0x002A0000, PingProcess,             "PingProcess"},
-    {0x002B0000, DriverInitialize,        "DriverInitialize"},
-    {0x002C0000, DriverFinalize,          "DriverFinalize"},
-    {0x002D0000, GetPackageParameter,     "GetPackageParameter"},
+    {0x000F0000, GetTransferEndEvent, "GetTransferEndEvent"},
+    {0x00100102, SetSendingY, "SetSendingY"},
+    {0x00110102, SetSendingU, "SetSendingU"},
+    {0x00120102, SetSendingV, "SetSendingV"},
+    {0x00130102, SetSendingYUYV, "SetSendingYUYV"},
+    {0x00140000, IsFinishedSendingYuv, "IsFinishedSendingYuv"},
+    {0x00150000, IsFinishedSendingY, "IsFinishedSendingY"},
+    {0x00160000, IsFinishedSendingU, "IsFinishedSendingU"},
+    {0x00170000, IsFinishedSendingV, "IsFinishedSendingV"},
+    {0x00180102, SetReceiving, "SetReceiving"},
+    {0x00190000, IsFinishedReceiving, "IsFinishedReceiving"},
+    {0x001A0040, SetInputLineWidth, "SetInputLineWidth"},
+    {0x001B0000, GetInputLineWidth, "GetInputLineWidth"},
+    {0x001C0040, SetInputLines, "SetInputLines"},
+    {0x001D0000, GetInputLines, "GetInputLines"},
+    {0x001E0100, SetCoefficient, "SetCoefficient"},
+    {0x001F0000, GetCoefficient, "GetCoefficient"},
+    {0x00200040, SetStandardCoefficient, "SetStandardCoefficient"},
+    {0x00210040, GetStandardCoefficient, "GetStandardCoefficient"},
+    {0x00220040, SetAlpha, "SetAlpha"},
+    {0x00230000, GetAlpha, "GetAlpha"},
+    {0x00240200, SetDitheringWeightParams, "SetDitheringWeightParams"},
+    {0x00250000, GetDitheringWeightParams, "GetDitheringWeightParams"},
+    {0x00260000, StartConversion, "StartConversion"},
+    {0x00270000, StopConversion, "StopConversion"},
+    {0x00280000, IsBusyConversion, "IsBusyConversion"},
+    {0x002901C0, SetPackageParameter, "SetPackageParameter"},
+    {0x002A0000, PingProcess, "PingProcess"},
+    {0x002B0000, DriverInitialize, "DriverInitialize"},
+    {0x002C0000, DriverFinalize, "DriverFinalize"},
+    {0x002D0000, GetPackageParameter, "GetPackageParameter"},
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -6,10 +6,8 @@
 
 #include <tuple>
 #include <utility>
-
 #include "common/common_types.h"
 #include "common/math_util.h"
-
 #include "core/hle/service/hid/hid.h"
 
 /**
@@ -30,15 +28,14 @@
  * - DO NOT TREAT THIS CLASS AS A GUI TOOLKIT ABSTRACTION LAYER. That's not what it is. Please
  *   re-read the upper points again and think about it if you don't see this.
  */
-class EmuWindow
-{
+class EmuWindow {
 public:
     /// Data structure to store emuwindow configuration
     struct WindowConfig {
-        bool    fullscreen;
-        int     res_width;
-        int     res_height;
-        std::pair<unsigned,unsigned> min_client_area_size;
+        bool fullscreen;
+        int res_width;
+        int res_height;
+        std::pair<unsigned, unsigned> min_client_area_size;
     };
 
     /// Describes the layout of the window framebuffer (size and top/bottom screen positions)
@@ -193,15 +190,18 @@ public:
 
     /**
      * Returns currently active configuration.
-     * @note Accesses to the returned object need not be consistent because it may be modified in another thread
+     * @note Accesses to the returned object need not be consistent because it may be modified in
+     * another thread
      */
     const WindowConfig& GetActiveConfig() const {
         return active_config;
     }
 
     /**
-     * Requests the internal configuration to be replaced by the specified argument at some point in the future.
-     * @note This method is thread-safe, because it delays configuration changes to the GUI event loop. Hence there is no guarantee on when the requested configuration will be active.
+     * Requests the internal configuration to be replaced by the specified argument at some point in
+     * the future.
+     * @note This method is thread-safe, because it delays configuration changes to the GUI event
+     * loop. Hence there is no guarantee on when the requested configuration will be active.
      */
     void SetConfig(const WindowConfig& val) {
         config = val;
@@ -258,7 +258,7 @@ protected:
      * Update internal client area size with the given parameter.
      * @note EmuWindow implementations will usually use this in window resize event handlers.
      */
-    void NotifyClientAreaSizeChanged(const std::pair<unsigned,unsigned>& size) {
+    void NotifyClientAreaSizeChanged(const std::pair<unsigned, unsigned>& size) {
         client_area_width = size.first;
         client_area_height = size.second;
     }
@@ -266,32 +266,35 @@ protected:
 private:
     /**
      * Handler called when the minimal client area was requested to be changed via SetConfig.
-     * For the request to be honored, EmuWindow implementations will usually reimplement this function.
+     * For the request to be honored, EmuWindow implementations will usually reimplement this
+     * function.
      */
-    virtual void OnMinimalClientAreaChangeRequest(const std::pair<unsigned,unsigned>& minimal_size) {
+    virtual void OnMinimalClientAreaChangeRequest(
+        const std::pair<unsigned, unsigned>& minimal_size) {
         // By default, ignore this request and do nothing.
     }
 
     FramebufferLayout framebuffer_layout; ///< Current framebuffer layout
 
-    unsigned client_area_width;    ///< Current client width, should be set by window impl.
-    unsigned client_area_height;   ///< Current client height, should be set by window impl.
+    unsigned client_area_width;  ///< Current client width, should be set by window impl.
+    unsigned client_area_height; ///< Current client height, should be set by window impl.
 
-    WindowConfig config;         ///< Internal configuration (changes pending for being applied in ProcessConfigurationChanges)
-    WindowConfig active_config;  ///< Internal active configuration
+    WindowConfig config;        ///< Internal configuration (changes pending for being applied in
+                                /// ProcessConfigurationChanges)
+    WindowConfig active_config; ///< Internal active configuration
 
-    bool touch_pressed;          ///< True if touchpad area is currently pressed, otherwise false
+    bool touch_pressed; ///< True if touchpad area is currently pressed, otherwise false
 
-    u16 touch_x;    ///< Touchpad X-position in native 3DS pixel coordinates (0-320)
-    u16 touch_y;    ///< Touchpad Y-position in native 3DS pixel coordinates (0-240)
+    u16 touch_x; ///< Touchpad X-position in native 3DS pixel coordinates (0-320)
+    u16 touch_y; ///< Touchpad Y-position in native 3DS pixel coordinates (0-240)
 
     s16 circle_pad_x; ///< Circle pad X-position in native 3DS pixel coordinates (-156 - 156)
     s16 circle_pad_y; ///< Circle pad Y-position in native 3DS pixel coordinates (-156 - 156)
 
-   /**
-    * Clip the provided coordinates to be inside the touchscreen area.
-    */
-    std::tuple<unsigned,unsigned> ClipToTouchScreen(unsigned new_x, unsigned new_y);
+    /**
+     * Clip the provided coordinates to be inside the touchscreen area.
+     */
+    std::tuple<unsigned, unsigned> ClipToTouchScreen(unsigned new_x, unsigned new_y);
 
     Service::HID::PadState pad_state;
 };

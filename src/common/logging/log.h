@@ -28,71 +28,73 @@ typedef u8 ClassType;
 /**
  * Specifies the sub-system that generated the log message.
  *
- * @note If you add a new entry here, also add a corresponding one to `ALL_LOG_CLASSES` in backend.cpp.
+ * @note If you add a new entry here, also add a corresponding one to `ALL_LOG_CLASSES` in
+ * backend.cpp.
  */
 enum class Class : ClassType {
-    Log,                        ///< Messages about the log system itself
-    Common,                     ///< Library routines
-    Common_Filesystem,          ///< Filesystem interface library
-    Common_Memory,              ///< Memory mapping and management functions
-    Core,                       ///< LLE emulation core
-    Core_ARM11,                 ///< ARM11 CPU core
-    Core_Timing,                ///< CoreTiming functions
-    Config,                     ///< Emulator configuration (including commandline)
-    Debug,                      ///< Debugging tools
-    Debug_Emulated,             ///< Debug messages from the emulated programs
-    Debug_GPU,                  ///< GPU debugging tools
-    Debug_Breakpoint,           ///< Logging breakpoints and watchpoints
-    Debug_GDBStub,              ///< GDB Stub
-    Kernel,                     ///< The HLE implementation of the CTR kernel
-    Kernel_SVC,                 ///< Kernel system calls
-    Service,                    ///< HLE implementation of system services. Each major service
-                                ///  should have its own subclass.
-    Service_SRV,                ///< The SRV (Service Directory) implementation
-    Service_FRD,                ///< The FRD (Friends) service
-    Service_FS,                 ///< The FS (Filesystem) service implementation
-    Service_ERR,                ///< The ERR (Error) port implementation
-    Service_APT,                ///< The APT (Applets) service
-    Service_GSP,                ///< The GSP (GPU control) service
-    Service_AC,                 ///< The AC (WiFi status) service
-    Service_AM,                 ///< The AM (Application manager) service
-    Service_PTM,                ///< The PTM (Power status & misc.) service
-    Service_LDR,                ///< The LDR (3ds dll loader) service
-    Service_NDM,                ///< The NDM (Network daemon manager) service
-    Service_NIM,                ///< The NIM (Network interface manager) service
-    Service_NWM,                ///< The NWM (Network wlan manager) service
-    Service_CAM,                ///< The CAM (Camera) service
-    Service_CECD,               ///< The CECD (StreetPass) service
-    Service_CFG,                ///< The CFG (Configuration) service
-    Service_DSP,                ///< The DSP (DSP control) service
-    Service_DLP,                ///< The DLP (Download Play) service
-    Service_HID,                ///< The HID (Human interface device) service
-    Service_SOC,                ///< The SOC (Socket) service
-    Service_IR,                 ///< The IR service
-    Service_Y2R,                ///< The Y2R (YUV to RGB conversion) service
-    HW,                         ///< Low-level hardware emulation
-    HW_Memory,                  ///< Memory-map and address translation
-    HW_LCD,                     ///< LCD register emulation
-    HW_GPU,                     ///< GPU control emulation
-    Frontend,                   ///< Emulator UI
-    Render,                     ///< Emulator video output and hardware acceleration
-    Render_Software,            ///< Software renderer backend
-    Render_OpenGL,              ///< OpenGL backend
-    Audio,                      ///< Audio emulation
-    Audio_DSP,                  ///< The HLE implementation of the DSP
-    Audio_Sink,                 ///< Emulator audio output backend
-    Loader,                     ///< ROM loader
+    Log,               ///< Messages about the log system itself
+    Common,            ///< Library routines
+    Common_Filesystem, ///< Filesystem interface library
+    Common_Memory,     ///< Memory mapping and management functions
+    Core,              ///< LLE emulation core
+    Core_ARM11,        ///< ARM11 CPU core
+    Core_Timing,       ///< CoreTiming functions
+    Config,            ///< Emulator configuration (including commandline)
+    Debug,             ///< Debugging tools
+    Debug_Emulated,    ///< Debug messages from the emulated programs
+    Debug_GPU,         ///< GPU debugging tools
+    Debug_Breakpoint,  ///< Logging breakpoints and watchpoints
+    Debug_GDBStub,     ///< GDB Stub
+    Kernel,            ///< The HLE implementation of the CTR kernel
+    Kernel_SVC,        ///< Kernel system calls
+    Service,           ///< HLE implementation of system services. Each major service
+                       ///  should have its own subclass.
+    Service_SRV,       ///< The SRV (Service Directory) implementation
+    Service_FRD,       ///< The FRD (Friends) service
+    Service_FS,        ///< The FS (Filesystem) service implementation
+    Service_ERR,       ///< The ERR (Error) port implementation
+    Service_APT,       ///< The APT (Applets) service
+    Service_GSP,       ///< The GSP (GPU control) service
+    Service_AC,        ///< The AC (WiFi status) service
+    Service_AM,        ///< The AM (Application manager) service
+    Service_PTM,       ///< The PTM (Power status & misc.) service
+    Service_LDR,       ///< The LDR (3ds dll loader) service
+    Service_NDM,       ///< The NDM (Network daemon manager) service
+    Service_NIM,       ///< The NIM (Network interface manager) service
+    Service_NWM,       ///< The NWM (Network wlan manager) service
+    Service_CAM,       ///< The CAM (Camera) service
+    Service_CECD,      ///< The CECD (StreetPass) service
+    Service_CFG,       ///< The CFG (Configuration) service
+    Service_DSP,       ///< The DSP (DSP control) service
+    Service_DLP,       ///< The DLP (Download Play) service
+    Service_HID,       ///< The HID (Human interface device) service
+    Service_SOC,       ///< The SOC (Socket) service
+    Service_IR,        ///< The IR service
+    Service_Y2R,       ///< The Y2R (YUV to RGB conversion) service
+    HW,                ///< Low-level hardware emulation
+    HW_Memory,         ///< Memory-map and address translation
+    HW_LCD,            ///< LCD register emulation
+    HW_GPU,            ///< GPU control emulation
+    Frontend,          ///< Emulator UI
+    Render,            ///< Emulator video output and hardware acceleration
+    Render_Software,   ///< Software renderer backend
+    Render_OpenGL,     ///< OpenGL backend
+    Audio,             ///< Audio emulation
+    Audio_DSP,         ///< The HLE implementation of the DSP
+    Audio_Sink,        ///< Emulator audio output backend
+    Loader,            ///< ROM loader
 
     Count ///< Total number of logging classes
 };
 
 /// Logs a message to the global logger.
-void LogMessage(Class log_class, Level log_level,
-    const char* filename, unsigned int line_nr, const char* function,
+void LogMessage(Class log_class, Level log_level, const char* filename, unsigned int line_nr,
+                const char* function,
 #ifdef _MSC_VER
-    _Printf_format_string_
+                _Printf_format_string_
 #endif
-    const char* format, ...)
+                const char* format,
+                ...)
 #ifdef __GNUC__
     __attribute__((format(printf, 6, 7)))
 #endif
@@ -100,17 +102,23 @@ void LogMessage(Class log_class, Level log_level,
 
 } // namespace Log
 
-#define LOG_GENERIC(log_class, log_level, ...) \
+#define LOG_GENERIC(log_class, log_level, ...)                                                     \
     ::Log::LogMessage(log_class, log_level, __FILE__, __LINE__, __func__, __VA_ARGS__)
 
 #ifdef _DEBUG
-#define LOG_TRACE(   log_class, ...) LOG_GENERIC(::Log::Class::log_class, ::Log::Level::Trace,    __VA_ARGS__)
+#define LOG_TRACE(log_class, ...)                                                                  \
+    LOG_GENERIC(::Log::Class::log_class, ::Log::Level::Trace, __VA_ARGS__)
 #else
-#define LOG_TRACE(   log_class, ...) (void(0))
+#define LOG_TRACE(log_class, ...) (void(0))
 #endif
 
-#define LOG_DEBUG(   log_class, ...) LOG_GENERIC(::Log::Class::log_class, ::Log::Level::Debug,    __VA_ARGS__)
-#define LOG_INFO(    log_class, ...) LOG_GENERIC(::Log::Class::log_class, ::Log::Level::Info,     __VA_ARGS__)
-#define LOG_WARNING( log_class, ...) LOG_GENERIC(::Log::Class::log_class, ::Log::Level::Warning,  __VA_ARGS__)
-#define LOG_ERROR(   log_class, ...) LOG_GENERIC(::Log::Class::log_class, ::Log::Level::Error,    __VA_ARGS__)
-#define LOG_CRITICAL(log_class, ...) LOG_GENERIC(::Log::Class::log_class, ::Log::Level::Critical, __VA_ARGS__)
+#define LOG_DEBUG(log_class, ...)                                                                  \
+    LOG_GENERIC(::Log::Class::log_class, ::Log::Level::Debug, __VA_ARGS__)
+#define LOG_INFO(log_class, ...)                                                                   \
+    LOG_GENERIC(::Log::Class::log_class, ::Log::Level::Info, __VA_ARGS__)
+#define LOG_WARNING(log_class, ...)                                                                \
+    LOG_GENERIC(::Log::Class::log_class, ::Log::Level::Warning, __VA_ARGS__)
+#define LOG_ERROR(log_class, ...)                                                                  \
+    LOG_GENERIC(::Log::Class::log_class, ::Log::Level::Error, __VA_ARGS__)
+#define LOG_CRITICAL(log_class, ...)                                                               \
+    LOG_GENERIC(::Log::Class::log_class, ::Log::Level::Critical, __VA_ARGS__)

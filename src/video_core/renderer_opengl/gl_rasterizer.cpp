@@ -6,17 +6,13 @@
 #include <string>
 #include <tuple>
 #include <utility>
-
 #include <glad/glad.h>
-
 #include "common/assert.h"
 #include "common/color.h"
 #include "common/logging/log.h"
 #include "common/math_util.h"
 #include "common/vector_math.h"
-
 #include "core/hw/gpu.h"
-
 #include "video_core/pica.h"
 #include "video_core/pica_state.h"
 #include "video_core/renderer_opengl/gl_rasterizer.h"
@@ -32,8 +28,7 @@ static bool IsPassThroughTevStage(const Pica::Regs::TevStageConfig& stage) {
             stage.alpha_source1 == Pica::Regs::TevStageConfig::Source::Previous &&
             stage.color_modifier1 == Pica::Regs::TevStageConfig::ColorModifier::SourceColor &&
             stage.alpha_modifier1 == Pica::Regs::TevStageConfig::AlphaModifier::SourceAlpha &&
-            stage.GetColorMultiplier() == 1 &&
-            stage.GetAlphaMultiplier() == 1);
+            stage.GetColorMultiplier() == 1 && stage.GetAlphaMultiplier() == 1);
 }
 
 RasterizerOpenGL::RasterizerOpenGL() : shader_dirty(true) {
@@ -65,26 +60,34 @@ RasterizerOpenGL::RasterizerOpenGL() : shader_dirty(true) {
     uniform_block_data.fog_lut_dirty = true;
 
     // Set vertex attributes
-    glVertexAttribPointer(GLShader::ATTRIBUTE_POSITION, 4, GL_FLOAT, GL_FALSE, sizeof(HardwareVertex), (GLvoid*)offsetof(HardwareVertex, position));
+    glVertexAttribPointer(GLShader::ATTRIBUTE_POSITION, 4, GL_FLOAT, GL_FALSE,
+                          sizeof(HardwareVertex), (GLvoid*)offsetof(HardwareVertex, position));
     glEnableVertexAttribArray(GLShader::ATTRIBUTE_POSITION);
 
-    glVertexAttribPointer(GLShader::ATTRIBUTE_COLOR, 4, GL_FLOAT, GL_FALSE, sizeof(HardwareVertex), (GLvoid*)offsetof(HardwareVertex, color));
+    glVertexAttribPointer(GLShader::ATTRIBUTE_COLOR, 4, GL_FLOAT, GL_FALSE, sizeof(HardwareVertex),
+                          (GLvoid*)offsetof(HardwareVertex, color));
     glEnableVertexAttribArray(GLShader::ATTRIBUTE_COLOR);
 
-    glVertexAttribPointer(GLShader::ATTRIBUTE_TEXCOORD0, 2, GL_FLOAT, GL_FALSE, sizeof(HardwareVertex), (GLvoid*)offsetof(HardwareVertex, tex_coord0));
-    glVertexAttribPointer(GLShader::ATTRIBUTE_TEXCOORD1, 2, GL_FLOAT, GL_FALSE, sizeof(HardwareVertex), (GLvoid*)offsetof(HardwareVertex, tex_coord1));
-    glVertexAttribPointer(GLShader::ATTRIBUTE_TEXCOORD2, 2, GL_FLOAT, GL_FALSE, sizeof(HardwareVertex), (GLvoid*)offsetof(HardwareVertex, tex_coord2));
+    glVertexAttribPointer(GLShader::ATTRIBUTE_TEXCOORD0, 2, GL_FLOAT, GL_FALSE,
+                          sizeof(HardwareVertex), (GLvoid*)offsetof(HardwareVertex, tex_coord0));
+    glVertexAttribPointer(GLShader::ATTRIBUTE_TEXCOORD1, 2, GL_FLOAT, GL_FALSE,
+                          sizeof(HardwareVertex), (GLvoid*)offsetof(HardwareVertex, tex_coord1));
+    glVertexAttribPointer(GLShader::ATTRIBUTE_TEXCOORD2, 2, GL_FLOAT, GL_FALSE,
+                          sizeof(HardwareVertex), (GLvoid*)offsetof(HardwareVertex, tex_coord2));
     glEnableVertexAttribArray(GLShader::ATTRIBUTE_TEXCOORD0);
     glEnableVertexAttribArray(GLShader::ATTRIBUTE_TEXCOORD1);
     glEnableVertexAttribArray(GLShader::ATTRIBUTE_TEXCOORD2);
 
-    glVertexAttribPointer(GLShader::ATTRIBUTE_TEXCOORD0_W, 1, GL_FLOAT, GL_FALSE, sizeof(HardwareVertex), (GLvoid*)offsetof(HardwareVertex, tex_coord0_w));
+    glVertexAttribPointer(GLShader::ATTRIBUTE_TEXCOORD0_W, 1, GL_FLOAT, GL_FALSE,
+                          sizeof(HardwareVertex), (GLvoid*)offsetof(HardwareVertex, tex_coord0_w));
     glEnableVertexAttribArray(GLShader::ATTRIBUTE_TEXCOORD0_W);
 
-    glVertexAttribPointer(GLShader::ATTRIBUTE_NORMQUAT, 4, GL_FLOAT, GL_FALSE, sizeof(HardwareVertex), (GLvoid*)offsetof(HardwareVertex, normquat));
+    glVertexAttribPointer(GLShader::ATTRIBUTE_NORMQUAT, 4, GL_FLOAT, GL_FALSE,
+                          sizeof(HardwareVertex), (GLvoid*)offsetof(HardwareVertex, normquat));
     glEnableVertexAttribArray(GLShader::ATTRIBUTE_NORMQUAT);
 
-    glVertexAttribPointer(GLShader::ATTRIBUTE_VIEW, 3, GL_FLOAT, GL_FALSE, sizeof(HardwareVertex), (GLvoid*)offsetof(HardwareVertex, view));
+    glVertexAttribPointer(GLShader::ATTRIBUTE_VIEW, 3, GL_FLOAT, GL_FALSE, sizeof(HardwareVertex),
+                          (GLvoid*)offsetof(HardwareVertex, view));
     glEnableVertexAttribArray(GLShader::ATTRIBUTE_VIEW);
 
     // Create render framebuffer
@@ -129,9 +132,7 @@ RasterizerOpenGL::RasterizerOpenGL() : shader_dirty(true) {
     SyncDepthWriteMask();
 }
 
-RasterizerOpenGL::~RasterizerOpenGL() {
-
-}
+RasterizerOpenGL::~RasterizerOpenGL() {}
 
 /**
  * This is a helper function to resolve an issue with opposite quaternions being interpolated by
@@ -149,8 +150,8 @@ RasterizerOpenGL::~RasterizerOpenGL() {
  * manually using two Lerps, and doing this correction before each Lerp.
  */
 static bool AreQuaternionsOpposite(Math::Vec4<Pica::float24> qa, Math::Vec4<Pica::float24> qb) {
-    Math::Vec4f a{ qa.x.ToFloat32(), qa.y.ToFloat32(), qa.z.ToFloat32(), qa.w.ToFloat32() };
-    Math::Vec4f b{ qb.x.ToFloat32(), qb.y.ToFloat32(), qb.z.ToFloat32(), qb.w.ToFloat32() };
+    Math::Vec4f a{qa.x.ToFloat32(), qa.y.ToFloat32(), qa.z.ToFloat32(), qa.w.ToFloat32()};
+    Math::Vec4f b{qb.x.ToFloat32(), qb.y.ToFloat32(), qb.z.ToFloat32(), qb.w.ToFloat32()};
 
     return (Math::Dot(a, b) < 0.f);
 }
@@ -173,15 +174,20 @@ void RasterizerOpenGL::DrawTriangles() {
     CachedSurface* color_surface;
     CachedSurface* depth_surface;
     MathUtil::Rectangle<int> rect;
-    std::tie(color_surface, depth_surface, rect) = res_cache.GetFramebufferSurfaces(regs.framebuffer);
+    std::tie(color_surface, depth_surface, rect) =
+        res_cache.GetFramebufferSurfaces(regs.framebuffer);
 
     state.draw.draw_framebuffer = framebuffer.handle;
     state.Apply();
 
-    glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, color_surface != nullptr ? color_surface->texture.handle : 0, 0);
-    glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depth_surface != nullptr ? depth_surface->texture.handle : 0, 0);
+    glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
+                           color_surface != nullptr ? color_surface->texture.handle : 0, 0);
+    glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D,
+                           depth_surface != nullptr ? depth_surface->texture.handle : 0, 0);
     bool has_stencil = regs.framebuffer.depth_format == Pica::Regs::DepthFormat::D24S8;
-    glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D, (has_stencil && depth_surface != nullptr) ? depth_surface->texture.handle : 0, 0);
+    glFramebufferTexture2D(
+        GL_DRAW_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D,
+        (has_stencil && depth_surface != nullptr) ? depth_surface->texture.handle : 0, 0);
 
     if (OpenGLState::CheckFBStatus(GL_DRAW_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
         return;
@@ -194,7 +200,8 @@ void RasterizerOpenGL::DrawTriangles() {
 
     glViewport((GLint)(rect.left + regs.viewport_corner.x * color_surface->res_scale_width),
                (GLint)(rect.bottom + regs.viewport_corner.y * color_surface->res_scale_height),
-               (GLsizei)(viewport_width * color_surface->res_scale_width), (GLsizei)(viewport_height * color_surface->res_scale_height));
+               (GLsizei)(viewport_width * color_surface->res_scale_width),
+               (GLsizei)(viewport_height * color_surface->res_scale_height));
 
     if (uniform_block_data.data.framebuffer_scale[0] != color_surface->res_scale_width ||
         uniform_block_data.data.framebuffer_scale[1] != color_surface->res_scale_height) {
@@ -245,14 +252,16 @@ void RasterizerOpenGL::DrawTriangles() {
 
     // Sync the uniform data
     if (uniform_block_data.dirty) {
-        glBufferData(GL_UNIFORM_BUFFER, sizeof(UniformData), &uniform_block_data.data, GL_STATIC_DRAW);
+        glBufferData(GL_UNIFORM_BUFFER, sizeof(UniformData), &uniform_block_data.data,
+                     GL_STATIC_DRAW);
         uniform_block_data.dirty = false;
     }
 
     state.Apply();
 
     // Draw the vertex batch
-    glBufferData(GL_ARRAY_BUFFER, vertex_batch.size() * sizeof(HardwareVertex), vertex_batch.data(), GL_STREAM_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, vertex_batch.size() * sizeof(HardwareVertex), vertex_batch.data(),
+                 GL_STREAM_DRAW);
     glDrawArrays(GL_TRIANGLES, 0, (GLsizei)vertex_batch.size());
 
     // Mark framebuffer surfaces as dirty
@@ -278,7 +287,7 @@ void RasterizerOpenGL::DrawTriangles() {
 void RasterizerOpenGL::NotifyPicaRegisterChanged(u32 id) {
     const auto& regs = Pica::g_state.regs;
 
-    switch(id) {
+    switch (id) {
     // Culling
     case PICA_REG_INDEX(cull_mode):
         SyncCullMode();
@@ -548,7 +557,7 @@ void RasterizerOpenGL::NotifyPicaRegisterChanged(u32 id) {
         SyncLightAmbient(7);
         break;
 
-     // Fragment lighting position
+    // Fragment lighting position
     case PICA_REG_INDEX_WORKAROUND(lighting.light[0].x, 0x144 + 0 * 0x10):
     case PICA_REG_INDEX_WORKAROUND(lighting.light[0].z, 0x145 + 0 * 0x10):
         SyncLightPosition(0);
@@ -659,13 +668,11 @@ void RasterizerOpenGL::NotifyPicaRegisterChanged(u32 id) {
     case PICA_REG_INDEX_WORKAROUND(lighting.lut_data[4], 0x1cc):
     case PICA_REG_INDEX_WORKAROUND(lighting.lut_data[5], 0x1cd):
     case PICA_REG_INDEX_WORKAROUND(lighting.lut_data[6], 0x1ce):
-    case PICA_REG_INDEX_WORKAROUND(lighting.lut_data[7], 0x1cf):
-    {
+    case PICA_REG_INDEX_WORKAROUND(lighting.lut_data[7], 0x1cf): {
         auto& lut_config = regs.lighting.lut_config;
         uniform_block_data.lut_dirty[lut_config.type / 4] = true;
         break;
     }
-
     }
 }
 
@@ -699,8 +706,10 @@ bool RasterizerOpenGL::AccelerateDisplayTransfer(const GPU::Regs::DisplayTransfe
 
     CachedSurface dst_params;
     dst_params.addr = config.GetPhysicalOutputAddress();
-    dst_params.width = config.scaling != config.NoScale ? config.output_width / 2 : config.output_width.Value();
-    dst_params.height = config.scaling == config.ScaleXY ? config.output_height / 2 : config.output_height.Value();
+    dst_params.width =
+        config.scaling != config.NoScale ? config.output_width / 2 : config.output_width.Value();
+    dst_params.height =
+        config.scaling == config.ScaleXY ? config.output_height / 2 : config.output_height.Value();
     dst_params.is_tiled = config.input_linear != config.dont_swizzle;
     dst_params.pixel_format = CachedSurface::PixelFormatFromGPUPixelFormat(config.output_format);
 
@@ -735,7 +744,8 @@ bool RasterizerOpenGL::AccelerateDisplayTransfer(const GPU::Regs::DisplayTransfe
         return false;
     }
 
-    u32 dst_size = dst_params.width * dst_params.height * CachedSurface::GetFormatBpp(dst_params.pixel_format) / 8;
+    u32 dst_size = dst_params.width * dst_params.height *
+                   CachedSurface::GetFormatBpp(dst_params.pixel_format) / 8;
     dst_surface->dirty = true;
     res_cache.FlushRegion(config.GetPhysicalOutputAddress(), dst_size, dst_surface, true);
     return true;
@@ -757,12 +767,15 @@ bool RasterizerOpenGL::AccelerateFill(const GPU::Regs::MemoryFillConfig& config)
 
     GLuint old_fb = cur_state.draw.draw_framebuffer;
     cur_state.draw.draw_framebuffer = framebuffer.handle;
-    // TODO: When scissor test is implemented, need to disable scissor test in cur_state here so Clear call isn't affected
+    // TODO: When scissor test is implemented, need to disable scissor test in cur_state here so
+    // Clear call isn't affected
     cur_state.Apply();
 
     if (dst_type == SurfaceType::Color || dst_type == SurfaceType::Texture) {
-        glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, dst_surface->texture.handle, 0);
-        glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, 0, 0);
+        glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
+                               dst_surface->texture.handle, 0);
+        glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, 0,
+                               0);
 
         if (OpenGLState::CheckFBStatus(GL_DRAW_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
             return false;
@@ -770,8 +783,10 @@ bool RasterizerOpenGL::AccelerateFill(const GPU::Regs::MemoryFillConfig& config)
 
         GLfloat color_values[4] = {0.0f, 0.0f, 0.0f, 0.0f};
 
-        // TODO: Handle additional pixel format and fill value size combinations to accelerate more cases
-        //       For instance, checking if fill value's bytes/bits repeat to allow filling I8/A8/I4/A4/...
+        // TODO: Handle additional pixel format and fill value size combinations to accelerate more
+        // cases
+        //       For instance, checking if fill value's bytes/bits repeat to allow filling
+        //       I8/A8/I4/A4/...
         //       Currently only handles formats that are multiples of the fill value size
 
         if (config.fill_24bit) {
@@ -846,7 +861,8 @@ bool RasterizerOpenGL::AccelerateFill(const GPU::Regs::MemoryFillConfig& config)
         glClearBufferfv(GL_COLOR, 0, color_values);
     } else if (dst_type == SurfaceType::Depth) {
         glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, 0, 0);
-        glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, dst_surface->texture.handle, 0);
+        glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D,
+                               dst_surface->texture.handle, 0);
         glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D, 0, 0);
 
         if (OpenGLState::CheckFBStatus(GL_DRAW_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
@@ -865,7 +881,8 @@ bool RasterizerOpenGL::AccelerateFill(const GPU::Regs::MemoryFillConfig& config)
         glClearBufferfv(GL_DEPTH, 0, &value_float);
     } else if (dst_type == SurfaceType::DepthStencil) {
         glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, 0, 0);
-        glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, dst_surface->texture.handle, 0);
+        glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D,
+                               dst_surface->texture.handle, 0);
 
         if (OpenGLState::CheckFBStatus(GL_DRAW_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
             return false;
@@ -889,7 +906,9 @@ bool RasterizerOpenGL::AccelerateFill(const GPU::Regs::MemoryFillConfig& config)
     return true;
 }
 
-bool RasterizerOpenGL::AccelerateDisplay(const GPU::Regs::FramebufferConfig& config, PAddr framebuffer_addr, u32 pixel_stride, ScreenInfo& screen_info) {
+bool RasterizerOpenGL::AccelerateDisplay(const GPU::Regs::FramebufferConfig& config,
+                                         PAddr framebuffer_addr, u32 pixel_stride,
+                                         ScreenInfo& screen_info) {
     if (framebuffer_addr == 0) {
         return false;
     }
@@ -912,10 +931,9 @@ bool RasterizerOpenGL::AccelerateDisplay(const GPU::Regs::FramebufferConfig& con
     u32 scaled_width = src_surface->GetScaledWidth();
     u32 scaled_height = src_surface->GetScaledHeight();
 
-    screen_info.display_texcoords = MathUtil::Rectangle<float>((float)src_rect.top / (float)scaled_height,
-                                                               (float)src_rect.left / (float)scaled_width,
-                                                               (float)src_rect.bottom / (float)scaled_height,
-                                                               (float)src_rect.right / (float)scaled_width);
+    screen_info.display_texcoords = MathUtil::Rectangle<float>(
+        (float)src_rect.top / (float)scaled_height, (float)src_rect.left / (float)scaled_width,
+        (float)src_rect.bottom / (float)scaled_height, (float)src_rect.right / (float)scaled_width);
 
     screen_info.display_texture = src_surface->texture.handle;
 
@@ -928,7 +946,8 @@ void RasterizerOpenGL::SamplerInfo::Create() {
     wrap_s = wrap_t = TextureConfig::Repeat;
     border_color = 0;
 
-    glSamplerParameteri(sampler.handle, GL_TEXTURE_MIN_FILTER, GL_LINEAR); // default is GL_LINEAR_MIPMAP_LINEAR
+    glSamplerParameteri(sampler.handle, GL_TEXTURE_MIN_FILTER,
+                        GL_LINEAR); // default is GL_LINEAR_MIPMAP_LINEAR
     // Other attributes have correct defaults
 }
 
@@ -976,41 +995,64 @@ void RasterizerOpenGL::SetShader() {
     } else {
         LOG_DEBUG(Render_OpenGL, "Creating new shader");
 
-        shader->shader.Create(GLShader::GenerateVertexShader().c_str(), GLShader::GenerateFragmentShader(config).c_str());
+        shader->shader.Create(GLShader::GenerateVertexShader().c_str(),
+                              GLShader::GenerateFragmentShader(config).c_str());
 
         state.draw.shader_program = shader->shader.handle;
         state.Apply();
 
         // Set the texture samplers to correspond to different texture units
         GLuint uniform_tex = glGetUniformLocation(shader->shader.handle, "tex[0]");
-        if (uniform_tex != -1) { glUniform1i(uniform_tex, 0); }
+        if (uniform_tex != -1) {
+            glUniform1i(uniform_tex, 0);
+        }
         uniform_tex = glGetUniformLocation(shader->shader.handle, "tex[1]");
-        if (uniform_tex != -1) { glUniform1i(uniform_tex, 1); }
+        if (uniform_tex != -1) {
+            glUniform1i(uniform_tex, 1);
+        }
         uniform_tex = glGetUniformLocation(shader->shader.handle, "tex[2]");
-        if (uniform_tex != -1) { glUniform1i(uniform_tex, 2); }
+        if (uniform_tex != -1) {
+            glUniform1i(uniform_tex, 2);
+        }
 
         // Set the texture samplers to correspond to different lookup table texture units
         GLuint uniform_lut = glGetUniformLocation(shader->shader.handle, "lut[0]");
-        if (uniform_lut != -1) { glUniform1i(uniform_lut, 3); }
+        if (uniform_lut != -1) {
+            glUniform1i(uniform_lut, 3);
+        }
         uniform_lut = glGetUniformLocation(shader->shader.handle, "lut[1]");
-        if (uniform_lut != -1) { glUniform1i(uniform_lut, 4); }
+        if (uniform_lut != -1) {
+            glUniform1i(uniform_lut, 4);
+        }
         uniform_lut = glGetUniformLocation(shader->shader.handle, "lut[2]");
-        if (uniform_lut != -1) { glUniform1i(uniform_lut, 5); }
+        if (uniform_lut != -1) {
+            glUniform1i(uniform_lut, 5);
+        }
         uniform_lut = glGetUniformLocation(shader->shader.handle, "lut[3]");
-        if (uniform_lut != -1) { glUniform1i(uniform_lut, 6); }
+        if (uniform_lut != -1) {
+            glUniform1i(uniform_lut, 6);
+        }
         uniform_lut = glGetUniformLocation(shader->shader.handle, "lut[4]");
-        if (uniform_lut != -1) { glUniform1i(uniform_lut, 7); }
+        if (uniform_lut != -1) {
+            glUniform1i(uniform_lut, 7);
+        }
         uniform_lut = glGetUniformLocation(shader->shader.handle, "lut[5]");
-        if (uniform_lut != -1) { glUniform1i(uniform_lut, 8); }
+        if (uniform_lut != -1) {
+            glUniform1i(uniform_lut, 8);
+        }
 
         GLuint uniform_fog_lut = glGetUniformLocation(shader->shader.handle, "fog_lut");
-        if (uniform_fog_lut != -1) { glUniform1i(uniform_fog_lut, 9); }
+        if (uniform_fog_lut != -1) {
+            glUniform1i(uniform_fog_lut, 9);
+        }
 
         current_shader = shader_cache.emplace(config, std::move(shader)).first->second.get();
 
-        unsigned int block_index = glGetUniformBlockIndex(current_shader->shader.handle, "shader_data");
+        unsigned int block_index =
+            glGetUniformBlockIndex(current_shader->shader.handle, "shader_data");
         GLint block_size;
-        glGetActiveUniformBlockiv(current_shader->shader.handle, block_index, GL_UNIFORM_BLOCK_DATA_SIZE, &block_size);
+        glGetActiveUniformBlockiv(current_shader->shader.handle, block_index,
+                                  GL_UNIFORM_BLOCK_DATA_SIZE, &block_size);
         ASSERT_MSG(block_size == sizeof(UniformData), "Uniform block size did not match!");
         glUniformBlockBinding(current_shader->shader.handle, block_index, 0);
 
@@ -1073,7 +1115,8 @@ void RasterizerOpenGL::SyncDepthScale() {
 }
 
 void RasterizerOpenGL::SyncDepthOffset() {
-    float depth_offset = Pica::float24::FromRaw(Pica::g_state.regs.viewport_depth_near_plane).ToFloat32();
+    float depth_offset =
+        Pica::float24::FromRaw(Pica::g_state.regs.viewport_depth_near_plane).ToFloat32();
     if (depth_offset != uniform_block_data.data.depth_offset) {
         uniform_block_data.data.depth_offset = depth_offset;
         uniform_block_data.dirty = true;
@@ -1086,10 +1129,14 @@ void RasterizerOpenGL::SyncBlendEnabled() {
 
 void RasterizerOpenGL::SyncBlendFuncs() {
     const auto& regs = Pica::g_state.regs;
-    state.blend.rgb_equation = PicaToGL::BlendEquation(regs.output_merger.alpha_blending.blend_equation_rgb);
-    state.blend.a_equation = PicaToGL::BlendEquation(regs.output_merger.alpha_blending.blend_equation_a);
-    state.blend.src_rgb_func = PicaToGL::BlendFunc(regs.output_merger.alpha_blending.factor_source_rgb);
-    state.blend.dst_rgb_func = PicaToGL::BlendFunc(regs.output_merger.alpha_blending.factor_dest_rgb);
+    state.blend.rgb_equation =
+        PicaToGL::BlendEquation(regs.output_merger.alpha_blending.blend_equation_rgb);
+    state.blend.a_equation =
+        PicaToGL::BlendEquation(regs.output_merger.alpha_blending.blend_equation_a);
+    state.blend.src_rgb_func =
+        PicaToGL::BlendFunc(regs.output_merger.alpha_blending.factor_source_rgb);
+    state.blend.dst_rgb_func =
+        PicaToGL::BlendFunc(regs.output_merger.alpha_blending.factor_dest_rgb);
     state.blend.src_a_func = PicaToGL::BlendFunc(regs.output_merger.alpha_blending.factor_source_a);
     state.blend.dst_a_func = PicaToGL::BlendFunc(regs.output_merger.alpha_blending.factor_dest_a);
 }
@@ -1105,9 +1152,8 @@ void RasterizerOpenGL::SyncBlendColor() {
 void RasterizerOpenGL::SyncFogColor() {
     const auto& regs = Pica::g_state.regs;
     uniform_block_data.data.fog_color = {
-      regs.fog_color.r.Value() / 255.0f,
-      regs.fog_color.g.Value() / 255.0f,
-      regs.fog_color.b.Value() / 255.0f
+        regs.fog_color.r.Value() / 255.0f, regs.fog_color.g.Value() / 255.0f,
+        regs.fog_color.b.Value() / 255.0f,
     };
     uniform_block_data.dirty = true;
 }
@@ -1115,14 +1161,14 @@ void RasterizerOpenGL::SyncFogColor() {
 void RasterizerOpenGL::SyncFogLUT() {
     std::array<GLuint, 128> new_data;
 
-    std::transform(Pica::g_state.fog.lut.begin(), Pica::g_state.fog.lut.end(), new_data.begin(), [](const auto& entry) {
-        return entry.raw;
-    });
+    std::transform(Pica::g_state.fog.lut.begin(), Pica::g_state.fog.lut.end(), new_data.begin(),
+                   [](const auto& entry) { return entry.raw; });
 
     if (new_data != fog_lut_data) {
         fog_lut_data = new_data;
         glActiveTexture(GL_TEXTURE9);
-        glTexSubImage1D(GL_TEXTURE_1D, 0, 0, 128, GL_RED_INTEGER, GL_UNSIGNED_INT, fog_lut_data.data());
+        glTexSubImage1D(GL_TEXTURE_1D, 0, 0, 128, GL_RED_INTEGER, GL_UNSIGNED_INT,
+                        fog_lut_data.data());
     }
 }
 
@@ -1154,34 +1200,40 @@ void RasterizerOpenGL::SyncColorWriteMask() {
 void RasterizerOpenGL::SyncStencilWriteMask() {
     const auto& regs = Pica::g_state.regs;
     state.stencil.write_mask = (regs.framebuffer.allow_depth_stencil_write != 0)
-                             ? static_cast<GLuint>(regs.output_merger.stencil_test.write_mask)
-                             : 0;
+                                   ? static_cast<GLuint>(regs.output_merger.stencil_test.write_mask)
+                                   : 0;
 }
 
 void RasterizerOpenGL::SyncDepthWriteMask() {
     const auto& regs = Pica::g_state.regs;
-    state.depth.write_mask = (regs.framebuffer.allow_depth_stencil_write != 0 && regs.output_merger.depth_write_enable)
-                           ? GL_TRUE
-                           : GL_FALSE;
+    state.depth.write_mask =
+        (regs.framebuffer.allow_depth_stencil_write != 0 && regs.output_merger.depth_write_enable)
+            ? GL_TRUE
+            : GL_FALSE;
 }
 
 void RasterizerOpenGL::SyncStencilTest() {
     const auto& regs = Pica::g_state.regs;
-    state.stencil.test_enabled = regs.output_merger.stencil_test.enable && regs.framebuffer.depth_format == Pica::Regs::DepthFormat::D24S8;
+    state.stencil.test_enabled = regs.output_merger.stencil_test.enable &&
+                                 regs.framebuffer.depth_format == Pica::Regs::DepthFormat::D24S8;
     state.stencil.test_func = PicaToGL::CompareFunc(regs.output_merger.stencil_test.func);
     state.stencil.test_ref = regs.output_merger.stencil_test.reference_value;
     state.stencil.test_mask = regs.output_merger.stencil_test.input_mask;
-    state.stencil.action_stencil_fail = PicaToGL::StencilOp(regs.output_merger.stencil_test.action_stencil_fail);
-    state.stencil.action_depth_fail = PicaToGL::StencilOp(regs.output_merger.stencil_test.action_depth_fail);
-    state.stencil.action_depth_pass = PicaToGL::StencilOp(regs.output_merger.stencil_test.action_depth_pass);
+    state.stencil.action_stencil_fail =
+        PicaToGL::StencilOp(regs.output_merger.stencil_test.action_stencil_fail);
+    state.stencil.action_depth_fail =
+        PicaToGL::StencilOp(regs.output_merger.stencil_test.action_depth_fail);
+    state.stencil.action_depth_pass =
+        PicaToGL::StencilOp(regs.output_merger.stencil_test.action_depth_pass);
 }
 
 void RasterizerOpenGL::SyncDepthTest() {
     const auto& regs = Pica::g_state.regs;
-    state.depth.test_enabled = regs.output_merger.depth_test_enable  == 1 ||
-                               regs.output_merger.depth_write_enable == 1;
-    state.depth.test_func = regs.output_merger.depth_test_enable == 1 ?
-                            PicaToGL::CompareFunc(regs.output_merger.depth_test_func) : GL_ALWAYS;
+    state.depth.test_enabled =
+        regs.output_merger.depth_test_enable == 1 || regs.output_merger.depth_write_enable == 1;
+    state.depth.test_func = regs.output_merger.depth_test_enable == 1
+                                ? PicaToGL::CompareFunc(regs.output_merger.depth_test_func)
+                                : GL_ALWAYS;
 }
 
 void RasterizerOpenGL::SyncScissorTest() {
@@ -1208,7 +1260,8 @@ void RasterizerOpenGL::SyncCombinerColor() {
     }
 }
 
-void RasterizerOpenGL::SyncTevConstColor(int stage_index, const Pica::Regs::TevStageConfig& tev_stage) {
+void RasterizerOpenGL::SyncTevConstColor(int stage_index,
+                                         const Pica::Regs::TevStageConfig& tev_stage) {
     auto const_color = PicaToGL::ColorRGBA8(tev_stage.const_color);
     if (const_color != uniform_block_data.data.const_color[stage_index]) {
         uniform_block_data.data.const_color[stage_index] = const_color;
@@ -1237,7 +1290,8 @@ void RasterizerOpenGL::SyncLightingLUT(unsigned lut_index) {
     if (new_data != lighting_lut_data[lut_index]) {
         lighting_lut_data[lut_index] = new_data;
         glActiveTexture(GL_TEXTURE3 + lut_index);
-        glTexSubImage1D(GL_TEXTURE_1D, 0, 0, 256, GL_RGBA, GL_FLOAT, lighting_lut_data[lut_index].data());
+        glTexSubImage1D(GL_TEXTURE_1D, 0, 0, 256, GL_RGBA, GL_FLOAT,
+                        lighting_lut_data[lut_index].data());
     }
 }
 
@@ -1277,7 +1331,7 @@ void RasterizerOpenGL::SyncLightPosition(int light_index) {
     GLvec3 position = {
         Pica::float16::FromRaw(Pica::g_state.regs.lighting.light[light_index].x).ToFloat32(),
         Pica::float16::FromRaw(Pica::g_state.regs.lighting.light[light_index].y).ToFloat32(),
-        Pica::float16::FromRaw(Pica::g_state.regs.lighting.light[light_index].z).ToFloat32() };
+        Pica::float16::FromRaw(Pica::g_state.regs.lighting.light[light_index].z).ToFloat32()};
 
     if (position != uniform_block_data.data.light_src[light_index].position) {
         uniform_block_data.data.light_src[light_index].position = position;
@@ -1286,7 +1340,9 @@ void RasterizerOpenGL::SyncLightPosition(int light_index) {
 }
 
 void RasterizerOpenGL::SyncLightDistanceAttenuationBias(int light_index) {
-    GLfloat dist_atten_bias = Pica::float20::FromRaw(Pica::g_state.regs.lighting.light[light_index].dist_atten_bias).ToFloat32();
+    GLfloat dist_atten_bias =
+        Pica::float20::FromRaw(Pica::g_state.regs.lighting.light[light_index].dist_atten_bias)
+            .ToFloat32();
 
     if (dist_atten_bias != uniform_block_data.data.light_src[light_index].dist_atten_bias) {
         uniform_block_data.data.light_src[light_index].dist_atten_bias = dist_atten_bias;
@@ -1295,7 +1351,9 @@ void RasterizerOpenGL::SyncLightDistanceAttenuationBias(int light_index) {
 }
 
 void RasterizerOpenGL::SyncLightDistanceAttenuationScale(int light_index) {
-    GLfloat dist_atten_scale = Pica::float20::FromRaw(Pica::g_state.regs.lighting.light[light_index].dist_atten_scale).ToFloat32();
+    GLfloat dist_atten_scale =
+        Pica::float20::FromRaw(Pica::g_state.regs.lighting.light[light_index].dist_atten_scale)
+            .ToFloat32();
 
     if (dist_atten_scale != uniform_block_data.data.light_src[light_index].dist_atten_scale) {
         uniform_block_data.data.light_src[light_index].dist_atten_scale = dist_atten_scale;
