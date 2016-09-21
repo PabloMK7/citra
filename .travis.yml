@@ -17,6 +17,7 @@ addons:
   apt:
     sources:
       - ubuntu-toolchain-r-test
+      - llvm-toolchain-precise
     packages:
       - gcc-6
       - g++-6
@@ -25,6 +26,7 @@ addons:
       - xorg-dev
       - lib32stdc++6 # For CMake
       - lftp # To upload builds
+      - clang-format-4.0
 
 cache:
   directories:
