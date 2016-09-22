@@ -422,6 +422,58 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
         break;
     }
 
+    case PICA_REG_INDEX(gs.bool_uniforms):
+        WriteUniformBoolReg(g_state.gs, value);
+        break;
+
+    case PICA_REG_INDEX_WORKAROUND(gs.int_uniforms[0], 0x281):
+    case PICA_REG_INDEX_WORKAROUND(gs.int_uniforms[1], 0x282):
+    case PICA_REG_INDEX_WORKAROUND(gs.int_uniforms[2], 0x283):
+    case PICA_REG_INDEX_WORKAROUND(gs.int_uniforms[3], 0x284): {
+        unsigned index = (id - PICA_REG_INDEX_WORKAROUND(gs.int_uniforms[0], 0x281));
+        auto values = regs.gs.int_uniforms[index];
+        WriteUniformIntReg(g_state.gs, index,
+                           Math::Vec4<u8>(values.x, values.y, values.z, values.w));
+        break;
+    }
+
+    case PICA_REG_INDEX_WORKAROUND(gs.uniform_setup.set_value[0], 0x291):
+    case PICA_REG_INDEX_WORKAROUND(gs.uniform_setup.set_value[1], 0x292):
+    case PICA_REG_INDEX_WORKAROUND(gs.uniform_setup.set_value[2], 0x293):
+    case PICA_REG_INDEX_WORKAROUND(gs.uniform_setup.set_value[3], 0x294):
+    case PICA_REG_INDEX_WORKAROUND(gs.uniform_setup.set_value[4], 0x295):
+    case PICA_REG_INDEX_WORKAROUND(gs.uniform_setup.set_value[5], 0x296):
+    case PICA_REG_INDEX_WORKAROUND(gs.uniform_setup.set_value[6], 0x297):
+    case PICA_REG_INDEX_WORKAROUND(gs.uniform_setup.set_value[7], 0x298): {
+        WriteUniformFloatReg(g_state.regs.gs, g_state.gs, gs_float_regs_counter,
+                             gs_uniform_write_buffer, value);
+        break;
+    }
+
+    case PICA_REG_INDEX_WORKAROUND(gs.program.set_word[0], 0x29c):
+    case PICA_REG_INDEX_WORKAROUND(gs.program.set_word[1], 0x29d):
+    case PICA_REG_INDEX_WORKAROUND(gs.program.set_word[2], 0x29e):
+    case PICA_REG_INDEX_WORKAROUND(gs.program.set_word[3], 0x29f):
+    case PICA_REG_INDEX_WORKAROUND(gs.program.set_word[4], 0x2a0):
+    case PICA_REG_INDEX_WORKAROUND(gs.program.set_word[5], 0x2a1):
+    case PICA_REG_INDEX_WORKAROUND(gs.program.set_word[6], 0x2a2):
+    case PICA_REG_INDEX_WORKAROUND(gs.program.set_word[7], 0x2a3): {
+        WriteProgramCode(g_state.regs.gs, g_state.gs, 4096, value);
+        break;
+    }
+
+    case PICA_REG_INDEX_WORKAROUND(gs.swizzle_patterns.set_word[0], 0x2a6):
+    case PICA_REG_INDEX_WORKAROUND(gs.swizzle_patterns.set_word[1], 0x2a7):
+    case PICA_REG_INDEX_WORKAROUND(gs.swizzle_patterns.set_word[2], 0x2a8):
+    case PICA_REG_INDEX_WORKAROUND(gs.swizzle_patterns.set_word[3], 0x2a9):
+    case PICA_REG_INDEX_WORKAROUND(gs.swizzle_patterns.set_word[4], 0x2aa):
+    case PICA_REG_INDEX_WORKAROUND(gs.swizzle_patterns.set_word[5], 0x2ab):
+    case PICA_REG_INDEX_WORKAROUND(gs.swizzle_patterns.set_word[6], 0x2ac):
+    case PICA_REG_INDEX_WORKAROUND(gs.swizzle_patterns.set_word[7], 0x2ad): {
+        WriteSwizzlePatterns(g_state.regs.gs, g_state.gs, value);
+        break;
+    }
+
     case PICA_REG_INDEX(vs.bool_uniforms):
         WriteUniformBoolReg(g_state.vs, value);
         break;
