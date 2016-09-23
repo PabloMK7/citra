@@ -286,7 +286,6 @@ bool GMainWindow::LoadROM(const std::string& filename) {
     Loader::ResultStatus result = app_loader->Load();
     if (Loader::ResultStatus::Success != result) {
         LOG_CRITICAL(Frontend, "Failed to load ROM!");
-        System::Shutdown();
 
         switch (result) {
         case Loader::ResultStatus::ErrorEncrypted: {
@@ -326,8 +325,10 @@ void GMainWindow::BootGame(const std::string& filename) {
     if (!InitializeSystem())
         return;
 
-    if (!LoadROM(filename))
+    if (!LoadROM(filename)) {
+        System::Shutdown();
         return;
+    }
 
     // Create and start the emulation thread
     emu_thread = std::make_unique<EmuThread>(render_window);
