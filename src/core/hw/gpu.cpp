@@ -217,11 +217,14 @@ static void DisplayTransfer(const Regs::DisplayTransferConfig& config) {
             u32 input_x = x << horizontal_scale;
             u32 input_y = y << vertical_scale;
 
+            u32 output_y;
             if (config.flip_vertically) {
                 // Flip the y value of the output data,
                 // we do this after calculating the [x,y] position of the input image
                 // to account for the scaling options.
-                y = output_height - y - 1;
+                output_y = output_height - y - 1;
+            } else {
+                output_y = y;
             }
 
             u32 dst_bytes_per_pixel = GPU::Regs::BytesPerPixel(config.output_format);
@@ -232,16 +235,16 @@ static void DisplayTransfer(const Regs::DisplayTransferConfig& config) {
             if (config.input_linear) {
                 if (!config.dont_swizzle) {
                     // Interpret the input as linear and the output as tiled
-                    u32 coarse_y = y & ~7;
+                    u32 coarse_y = output_y & ~7;
                     u32 stride = output_width * dst_bytes_per_pixel;
 
                     src_offset = (input_x + input_y * config.input_width) * src_bytes_per_pixel;
-                    dst_offset =
-                        VideoCore::GetMortonOffset(x, y, dst_bytes_per_pixel) + coarse_y * stride;
+                    dst_offset = VideoCore::GetMortonOffset(x, output_y, dst_bytes_per_pixel) +
+                                 coarse_y * stride;
                 } else {
                     // Both input and output are linear
                     src_offset = (input_x + input_y * config.input_width) * src_bytes_per_pixel;
-                    dst_offset = (x + y * output_width) * dst_bytes_per_pixel;
+                    dst_offset = (x + output_y * output_width) * dst_bytes_per_pixel;
                 }
             } else {
                 if (!config.dont_swizzle) {
@@ -251,10 +254,10 @@ static void DisplayTransfer(const Regs::DisplayTransferConfig& config) {
 
                     src_offset = VideoCore::GetMortonOffset(input_x, input_y, src_bytes_per_pixel) +
                                  coarse_y * stride;
-                    dst_offset = (x + y * output_width) * dst_bytes_per_pixel;
+                    dst_offset = (x + output_y * output_width) * dst_bytes_per_pixel;
                 } else {
                     // Both input and output are tiled
-                    u32 out_coarse_y = y & ~7;
+                    u32 out_coarse_y = output_y & ~7;
                     u32 out_stride = output_width * dst_bytes_per_pixel;
 
                     u32 in_coarse_y = input_y & ~7;
@@ -262,7 +265,7 @@ static void DisplayTransfer(const Regs::DisplayTransferConfig& config) {
 
                     src_offset = VideoCore::GetMortonOffset(input_x, input_y, src_bytes_per_pixel) +
                                  in_coarse_y * in_stride;
-                    dst_offset = VideoCore::GetMortonOffset(x, y, dst_bytes_per_pixel) +
+                    dst_offset = VideoCore::GetMortonOffset(x, output_y, dst_bytes_per_pixel) +
                                  out_coarse_y * out_stride;
                 }
             }
