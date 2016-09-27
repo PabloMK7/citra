@@ -416,10 +416,14 @@ inline void Write(u32 addr, const T data) {
             LOG_TRACE(HW_GPU, "MemoryFill from 0x%08x to 0x%08x", config.GetStartAddress(),
                       config.GetEndAddress());
 
-            if (!is_second_filler) {
-                GSP_GPU::SignalInterrupt(GSP_GPU::InterruptId::PSC0);
-            } else {
-                GSP_GPU::SignalInterrupt(GSP_GPU::InterruptId::PSC1);
+            // It seems that it won't signal interrupt if "address_start" is zero.
+            // TODO: hwtest this
+            if (config.GetStartAddress() != 0) {
+                if (!is_second_filler) {
+                    GSP_GPU::SignalInterrupt(GSP_GPU::InterruptId::PSC0);
+                } else {
+                    GSP_GPU::SignalInterrupt(GSP_GPU::InterruptId::PSC1);
+                }
             }
 
             // Reset "trigger" flag and set the "finish" flag
