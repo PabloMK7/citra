@@ -251,6 +251,9 @@ bool IsValidVirtualAddress(const VAddr vaddr) {
     if (page_pointer)
         return true;
 
+    if (current_page_table->attributes[vaddr >> PAGE_BITS] == PageType::RasterizerCachedMemory)
+        return true;
+
     if (current_page_table->attributes[vaddr >> PAGE_BITS] != PageType::Special)
         return false;
 
