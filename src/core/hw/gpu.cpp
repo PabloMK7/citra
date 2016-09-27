@@ -81,8 +81,27 @@ MICROPROFILE_DEFINE(GPU_DisplayTransfer, "GPU", "DisplayTransfer", MP_RGB(100, 1
 MICROPROFILE_DEFINE(GPU_CmdlistProcessing, "GPU", "Cmdlist Processing", MP_RGB(100, 255, 100));
 
 static void MemoryFill(const Regs::MemoryFillConfig& config) {
-    u8* start = Memory::GetPhysicalPointer(config.GetStartAddress());
-    u8* end = Memory::GetPhysicalPointer(config.GetEndAddress());
+    const PAddr start_addr = config.GetStartAddress();
+    const PAddr end_addr = config.GetEndAddress();
+
+    // TODO: do hwtest with these cases
+    if (!Memory::IsValidPhysicalAddress(start_addr)) {
+        LOG_CRITICAL(HW_GPU, "invalid start address 0x%08X", start_addr);
+        return;
+    }
+
+    if (!Memory::IsValidPhysicalAddress(end_addr)) {
+        LOG_CRITICAL(HW_GPU, "invalid end address 0x%08X", end_addr);
+        return;
+    }
+
+    if (end_addr <= start_addr) {
+        LOG_CRITICAL(HW_GPU, "invalid memory range from 0x%08X to 0x%08X", start_addr, end_addr);
+        return;
+    }
+
+    u8* start = Memory::GetPhysicalPointer(start_addr);
+    u8* end = Memory::GetPhysicalPointer(end_addr);
 
     // TODO: Consider always accelerating and returning vector of
     //       regions that the accelerated fill did not cover to
@@ -123,11 +142,45 @@ static void MemoryFill(const Regs::MemoryFillConfig& config) {
 }
 
 static void DisplayTransfer(const Regs::DisplayTransferConfig& config) {
+    const PAddr src_addr = config.GetPhysicalInputAddress();
+    const PAddr dst_addr = config.GetPhysicalOutputAddress();
+
+    // TODO: do hwtest with these cases
+    if (!Memory::IsValidPhysicalAddress(src_addr)) {
+        LOG_CRITICAL(HW_GPU, "invalid input address 0x%08X", src_addr);
+        return;
+    }
+
+    if (!Memory::IsValidPhysicalAddress(dst_addr)) {
+        LOG_CRITICAL(HW_GPU, "invalid output address 0x%08X", dst_addr);
+        return;
+    }
+
+    if (config.input_width == 0) {
+        LOG_CRITICAL(HW_GPU, "zero input width");
+        return;
+    }
+
+    if (config.input_height == 0) {
+        LOG_CRITICAL(HW_GPU, "zero input height");
+        return;
+    }
+
+    if (config.output_width == 0) {
+        LOG_CRITICAL(HW_GPU, "zero output width");
+        return;
+    }
+
+    if (config.output_height == 0) {
+        LOG_CRITICAL(HW_GPU, "zero output height");
+        return;
+    }
+
     if (VideoCore::g_renderer->Rasterizer()->AccelerateDisplayTransfer(config))
         return;
 
-    u8* src_pointer = Memory::GetPhysicalPointer(config.GetPhysicalInputAddress());
-    u8* dst_pointer = Memory::GetPhysicalPointer(config.GetPhysicalOutputAddress());
+    u8* src_pointer = Memory::GetPhysicalPointer(src_addr);
+    u8* dst_pointer = Memory::GetPhysicalPointer(dst_addr);
 
     if (config.scaling > config.ScaleXY) {
         LOG_CRITICAL(HW_GPU, "Unimplemented display transfer scaling mode %u",
@@ -262,11 +315,40 @@ static void DisplayTransfer(const Regs::DisplayTransferConfig& config) {
 }
 
 static void TextureCopy(const Regs::DisplayTransferConfig& config) {
+    const PAddr src_addr = config.GetPhysicalInputAddress();
+    const PAddr dst_addr = config.GetPhysicalOutputAddress();
+
+    // TODO: do hwtest with these cases
+    if (!Memory::IsValidPhysicalAddress(src_addr)) {
+        LOG_CRITICAL(HW_GPU, "invalid input address 0x%08X", src_addr);
+        return;
+    }
+
+    if (!Memory::IsValidPhysicalAddress(dst_addr)) {
+        LOG_CRITICAL(HW_GPU, "invalid output address 0x%08X", dst_addr);
+        return;
+    }
+
+    if (config.texture_copy.input_width == 0) {
+        LOG_CRITICAL(HW_GPU, "zero input width");
+        return;
+    }
+
+    if (config.texture_copy.output_width == 0) {
+        LOG_CRITICAL(HW_GPU, "zero output width");
+        return;
+    }
+
+    if (config.texture_copy.size == 0) {
+        LOG_CRITICAL(HW_GPU, "zero size");
+        return;
+    }
+
     if (VideoCore::g_renderer->Rasterizer()->AccelerateTextureCopy(config))
         return;
 
-    u8* src_pointer = Memory::GetPhysicalPointer(config.GetPhysicalInputAddress());
-    u8* dst_pointer = Memory::GetPhysicalPointer(config.GetPhysicalOutputAddress());
+    u8* src_pointer = Memory::GetPhysicalPointer(src_addr);
+    u8* dst_pointer = Memory::GetPhysicalPointer(dst_addr);
 
     u32 input_width = config.texture_copy.input_width * 16;
     u32 input_gap = config.texture_copy.input_gap * 16;
