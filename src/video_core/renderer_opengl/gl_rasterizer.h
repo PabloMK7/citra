@@ -393,9 +393,6 @@ private:
     /// Syncs the depth test states to match the PICA register
     void SyncDepthTest();
 
-    /// Syncs the scissor test state to match the PICA register
-    void SyncScissorTest();
-
     /// Syncs the TEV combiner color buffer to match the PICA register
     void SyncCombinerColor();
 
