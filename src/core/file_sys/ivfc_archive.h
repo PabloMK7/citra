@@ -37,6 +37,7 @@ public:
     ResultCode DeleteFile(const Path& path) const override;
     bool RenameFile(const Path& src_path, const Path& dest_path) const override;
     bool DeleteDirectory(const Path& path) const override;
+    bool DeleteDirectoryRecursively(const Path& path) const override;
     ResultCode CreateFile(const Path& path, u64 size) const override;
     bool CreateDirectory(const Path& path) const override;
     bool RenameDirectory(const Path& src_path, const Path& dest_path) const override;

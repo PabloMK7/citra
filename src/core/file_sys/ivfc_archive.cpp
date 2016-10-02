@@ -43,6 +43,12 @@ bool IVFCArchive::DeleteDirectory(const Path& path) const {
     return false;
 }
 
+bool IVFCArchive::DeleteDirectoryRecursively(const Path& path) const {
+    LOG_CRITICAL(Service_FS, "Attempted to delete a directory from an IVFC archive (%s).",
+                 GetName().c_str());
+    return false;
+}
+
 ResultCode IVFCArchive::CreateFile(const Path& path, u64 size) const {
     LOG_CRITICAL(Service_FS, "Attempted to create a file in an IVFC archive (%s).",
                  GetName().c_str());

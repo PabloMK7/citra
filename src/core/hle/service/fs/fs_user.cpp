@@ -235,6 +235,35 @@ static void DeleteDirectory(Service::Interface* self) {
 }
 
 /*
+ * FS_User::DeleteDirectoryRecursively service function
+ *  Inputs:
+ *      0 : Command header 0x08070142
+ *      1 : Transaction
+ *      2 : Archive handle lower word
+ *      3 : Archive handle upper word
+ *      4 : Directory path string type
+ *      5 : Directory path string size
+ *      7 : Directory path string data
+ *  Outputs:
+ *      1 : Result of function, 0 on success, otherwise error code
+ */
+static void DeleteDirectoryRecursively(Service::Interface* self) {
+    u32* cmd_buff = Kernel::GetCommandBuffer();
+
+    ArchiveHandle archive_handle = MakeArchiveHandle(cmd_buff[2], cmd_buff[3]);
+    auto dirname_type = static_cast<FileSys::LowPathType>(cmd_buff[4]);
+    u32 dirname_size = cmd_buff[5];
+    u32 dirname_ptr = cmd_buff[7];
+
+    FileSys::Path dir_path(dirname_type, dirname_size, dirname_ptr);
+
+    LOG_DEBUG(Service_FS, "type=%d size=%d data=%s", dirname_type, dirname_size,
+              dir_path.DebugStr().c_str());
+
+    cmd_buff[1] = DeleteDirectoryRecursivelyFromArchive(archive_handle, dir_path).raw;
+}
+
+/*
  * FS_User::CreateFile service function
  *  Inputs:
  *      0 : Command header 0x08080202
@@ -868,7 +897,7 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x08040142, DeleteFile, "DeleteFile"},
     {0x08050244, RenameFile, "RenameFile"},
     {0x08060142, DeleteDirectory, "DeleteDirectory"},
-    {0x08070142, nullptr, "DeleteDirectoryRecursively"},
+    {0x08070142, DeleteDirectoryRecursively, "DeleteDirectoryRecursively"},
     {0x08080202, CreateFile, "CreateFile"},
     {0x08090182, CreateDirectory, "CreateDirectory"},
     {0x080A0244, RenameDirectory, "RenameDirectory"},
