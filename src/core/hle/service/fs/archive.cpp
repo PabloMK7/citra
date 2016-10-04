@@ -362,6 +362,18 @@ ResultCode DeleteDirectoryFromArchive(ArchiveHandle archive_handle, const FileSy
                       ErrorSummary::Canceled, ErrorLevel::Status);
 }
 
+ResultCode DeleteDirectoryRecursivelyFromArchive(ArchiveHandle archive_handle,
+                                                 const FileSys::Path& path) {
+    ArchiveBackend* archive = GetArchive(archive_handle);
+    if (archive == nullptr)
+        return ERR_INVALID_ARCHIVE_HANDLE;
+
+    if (archive->DeleteDirectoryRecursively(path))
+        return RESULT_SUCCESS;
+    return ResultCode(ErrorDescription::NoData, ErrorModule::FS, // TODO: verify description
+                      ErrorSummary::Canceled, ErrorLevel::Status);
+}
+
 ResultCode CreateFileInArchive(ArchiveHandle archive_handle, const FileSys::Path& path,
                                u64 file_size) {
     ArchiveBackend* archive = GetArchive(archive_handle);
