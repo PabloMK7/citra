@@ -40,6 +40,10 @@ void WaitObject::WakeupAllWaitingThreads() {
     HLE::Reschedule(__func__);
 }
 
+const std::vector<SharedPtr<Thread>>& WaitObject::GetWaitingThreads() const {
+    return waiting_threads;
+}
+
 HandleTable::HandleTable() {
     next_generation = 1;
     Clear();

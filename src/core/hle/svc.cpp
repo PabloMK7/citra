@@ -576,6 +576,7 @@ static ResultCode CreateMutex(Handle* out_handle, u32 initial_locked) {
     using Kernel::Mutex;
 
     SharedPtr<Mutex> mutex = Mutex::Create(initial_locked != 0);
+    mutex->name = Common::StringFromFormat("mutex-%08x", Core::g_app_core->GetReg(14));
     CASCADE_RESULT(*out_handle, Kernel::g_handle_table.Create(std::move(mutex)));
 
     LOG_TRACE(Kernel_SVC, "called initial_locked=%s : created handle=0x%08X",
@@ -646,6 +647,7 @@ static ResultCode CreateSemaphore(Handle* out_handle, s32 initial_count, s32 max
     using Kernel::Semaphore;
 
     CASCADE_RESULT(SharedPtr<Semaphore> semaphore, Semaphore::Create(initial_count, max_count));
+    semaphore->name = Common::StringFromFormat("semaphore-%08x", Core::g_app_core->GetReg(14));
     CASCADE_RESULT(*out_handle, Kernel::g_handle_table.Create(std::move(semaphore)));
 
     LOG_TRACE(Kernel_SVC, "called initial_count=%d, max_count=%d, created handle=0x%08X",
@@ -702,6 +704,7 @@ static ResultCode CreateEvent(Handle* out_handle, u32 reset_type) {
     using Kernel::Event;
 
     SharedPtr<Event> evt = Event::Create(static_cast<Kernel::ResetType>(reset_type));
+    evt->name = Common::StringFromFormat("event-%08x", Core::g_app_core->GetReg(14));
     CASCADE_RESULT(*out_handle, Kernel::g_handle_table.Create(std::move(evt)));
 
     LOG_TRACE(Kernel_SVC, "called reset_type=0x%08X : created handle=0x%08X", reset_type,
@@ -748,6 +751,7 @@ static ResultCode CreateTimer(Handle* out_handle, u32 reset_type) {
     using Kernel::Timer;
 
     SharedPtr<Timer> timer = Timer::Create(static_cast<Kernel::ResetType>(reset_type));
+    timer->name = Common::StringFromFormat("timer-%08x", Core::g_app_core->GetReg(14));
     CASCADE_RESULT(*out_handle, Kernel::g_handle_table.Create(std::move(timer)));
 
     LOG_TRACE(Kernel_SVC, "called reset_type=0x%08X : created handle=0x%08X", reset_type,
