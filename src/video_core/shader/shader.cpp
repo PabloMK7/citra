@@ -146,10 +146,8 @@ DebugData<true> ShaderSetup::ProduceDebugInfo(const InputVertex& input, int num_
     state.debug.max_opdesc_id = 0;
 
     // Setup input register table
+    boost::fill(state.registers.input, Math::Vec4<float24>::AssignToAll(float24::Zero()));
     const auto& attribute_register_map = config.input_register_map;
-    float24 dummy_register;
-    boost::fill(state.registers.input, &dummy_register);
-
     for (unsigned i = 0; i < num_attributes; i++)
         state.registers.input[attribute_register_map.GetRegisterForAttribute(i)] = input.attr[i];
 
