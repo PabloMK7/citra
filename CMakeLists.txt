@@ -169,14 +169,13 @@ endif()
 
 IF (APPLE)
     FIND_LIBRARY(COCOA_LIBRARY Cocoa)           # Umbrella framework for everything GUI-related
-    set(PLATFORM_LIBRARIES iconv ${COCOA_LIBRARY} ${IOKIT_LIBRARY} ${COREVIDEO_LIBRARY})
+    set(PLATFORM_LIBRARIES ${COCOA_LIBRARY} ${IOKIT_LIBRARY} ${COREVIDEO_LIBRARY})
 
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -stdlib=libc++")
 ELSEIF(MINGW)
-    # GCC does not support codecvt, so use iconv instead
     # PSAPI is the Process Status API
-    set(PLATFORM_LIBRARIES winmm ws2_32 psapi iconv)
+    set(PLATFORM_LIBRARIES winmm ws2_32 psapi)
 
     # WSAPoll functionality doesn't exist before WinNT 6.x (Vista and up)
     add_definitions(-D_WIN32_WINNT=0x0600)
@@ -185,6 +184,14 @@ ELSEIF(WIN32)
 ELSE()
     set(PLATFORM_LIBRARIES rt)
 ENDIF (APPLE)
+
+# MINGW: GCC does not support codecvt, so use iconv instead
+if (UNIX OR MINGW)
+    find_library(ICONV_LIBRARY NAMES iconv)
+    if (ICONV_LIBRARY)
+        list(APPEND PLATFORM_LIBRARIES ${ICONV_LIBRARY})
+    endif()
+endif()
 
 if (ENABLE_QT)
     if (CITRA_USE_BUNDLED_QT)
