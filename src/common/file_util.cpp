@@ -52,7 +52,7 @@
 #define S_ISDIR(m) (((m)&S_IFMT) == S_IFDIR)
 #endif
 
-#ifdef BSD4_4
+#if !defined(_WIN32) && !defined(__APPLE__) && !defined(__GLIBC__) && !defined(__UCLIBC__)
 #define stat64 stat
 #define fstat64 fstat
 #endif
