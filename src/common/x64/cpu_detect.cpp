@@ -12,7 +12,7 @@ namespace Common {
 
 #ifndef _MSC_VER
 
-#ifdef __FreeBSD__
+#if defined(__DragonFly__) || defined(__FreeBSD__)
 // clang-format off
 #include <sys/types.h>
 #include <machine/cpufunc.h>
@@ -20,7 +20,7 @@ namespace Common {
 #endif
 
 static inline void __cpuidex(int info[4], int function_id, int subfunction_id) {
-#ifdef __FreeBSD__
+#if defined(__DragonFly__) || defined(__FreeBSD__)
     // Despite the name, this is just do_cpuid() with ECX as second input.
     cpuid_count((u_int)function_id, (u_int)subfunction_id, (u_int*)info);
 #else
