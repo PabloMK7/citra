@@ -269,7 +269,7 @@ add_subdirectory(src)
 # http://standards.freedesktop.org/desktop-entry-spec/desktop-entry-spec-latest.html
 # http://standards.freedesktop.org/icon-theme-spec/icon-theme-spec-latest.html
 # http://standards.freedesktop.org/shared-mime-info-spec/shared-mime-info-spec-latest.html
-if(UNIX AND NOT APPLE)
+if(ENABLE_QT AND UNIX AND NOT APPLE)
     install(FILES "${CMAKE_SOURCE_DIR}/dist/citra.desktop"
             DESTINATION "${CMAKE_INSTALL_PREFIX}/share/applications")
     install(FILES "${CMAKE_SOURCE_DIR}/dist/citra.svg"
