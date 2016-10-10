@@ -8,7 +8,7 @@
 #elif defined(_WIN32)
 #include <Windows.h>
 #else
-#if defined(BSD4_4) || defined(__OpenBSD__)
+#if defined(__Bitrig__) || defined(__DragonFly__) || defined(__FreeBSD__) || defined(__OpenBSD__)
 #include <pthread_np.h>
 #else
 #include <pthread.h>
@@ -117,8 +117,10 @@ void SwitchCurrentThread() {
 void SetCurrentThreadName(const char* szThreadName) {
 #ifdef __APPLE__
     pthread_setname_np(szThreadName);
-#elif defined(__OpenBSD__)
+#elif defined(__Bitrig__) || defined(__DragonFly__) || defined(__FreeBSD__) || defined(__OpenBSD__)
     pthread_set_name_np(pthread_self(), szThreadName);
+#elif defined(__NetBSD__)
+    pthread_setname_np(pthread_self(), "%s", (void*)szThreadName);
 #else
     pthread_setname_np(pthread_self(), szThreadName);
 #endif
