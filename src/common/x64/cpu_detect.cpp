@@ -13,8 +13,10 @@ namespace Common {
 #ifndef _MSC_VER
 
 #ifdef __FreeBSD__
-#include <machine/cpufunc.h>
+// clang-format off
 #include <sys/types.h>
+#include <machine/cpufunc.h>
+// clang-format on
 #endif
 
 static inline void __cpuidex(int info[4], int function_id, int subfunction_id) {
