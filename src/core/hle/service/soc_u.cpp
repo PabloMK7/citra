@@ -104,7 +104,9 @@ static const std::unordered_map<int, int> error_map = {{
     {ERRNO(ENETUNREACH), 40},
     {ENFILE, 41},
     {ERRNO(ENOBUFS), 42},
+#ifdef ENODATA
     {ENODATA, 43},
+#endif
     {ENODEV, 44},
     {ENOENT, 45},
     {ENOEXEC, 46},
@@ -114,8 +116,12 @@ static const std::unordered_map<int, int> error_map = {{
     {ENOMSG, 50},
     {ERRNO(ENOPROTOOPT), 51},
     {ENOSPC, 52},
+#ifdef ENOSR
     {ENOSR, 53},
+#endif
+#ifdef ENOSTR
     {ENOSTR, 54},
+#endif
     {ENOSYS, 55},
     {ERRNO(ENOTCONN), 56},
     {ENOTDIR, 57},
@@ -136,7 +142,9 @@ static const std::unordered_map<int, int> error_map = {{
     {ESPIPE, 72},
     {ESRCH, 73},
     {ERRNO(ESTALE), 74},
+#ifdef ETIME
     {ETIME, 75},
+#endif
     {ERRNO(ETIMEDOUT), 76},
 }};
 
