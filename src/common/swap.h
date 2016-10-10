@@ -21,7 +21,8 @@
 #include <cstdlib>
 #elif defined(__linux__)
 #include <byteswap.h>
-#elif defined(__FreeBSD__)
+#elif defined(__Bitrig__) || defined(__DragonFly__) || defined(__FreeBSD__) ||                     \
+    defined(__NetBSD__) || defined(__OpenBSD__)
 #include <sys/endian.h>
 #endif
 #include <cstring>
@@ -101,7 +102,9 @@ inline __attribute__((always_inline)) u32 swap32(u32 _data) {
 inline __attribute__((always_inline)) u64 swap64(u64 _data) {
     return __builtin_bswap64(_data);
 }
-#elif __FreeBSD__
+#elif defined(__Bitrig__) || defined(__OpenBSD__)
+// swap16, swap32, swap64 are left as is
+#elif defined(__DragonFly__) || defined(__FreeBSD__) || defined(__NetBSD__)
 inline u16 swap16(u16 _data) {
     return bswap16(_data);
 }
