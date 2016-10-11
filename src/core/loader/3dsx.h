@@ -27,34 +27,14 @@ public:
      */
     static FileType IdentifyType(FileUtil::IOFile& file);
 
-    /**
-     * Returns the type of this file
-     * @return FileType corresponding to the loaded file
-     */
     FileType GetFileType() override {
         return IdentifyType(file);
     }
 
-    /**
-     * Load the bootable file
-     * @return ResultStatus result of function
-     */
     ResultStatus Load() override;
 
-    /**
-     * Get the icon (typically icon section) of the application
-     * @param buffer Reference to buffer to store data
-     * @return ResultStatus result of function
-     */
     ResultStatus ReadIcon(std::vector<u8>& buffer) override;
 
-    /**
-     * Get the RomFS of the application
-     * @param romfs_file Reference to buffer to store data
-     * @param offset     Offset in the file to the RomFS
-     * @param size       Size of the RomFS in bytes
-     * @return ResultStatus result of function
-     */
     ResultStatus ReadRomFS(std::shared_ptr<FileUtil::IOFile>& romfs_file, u64& offset,
                            u64& size) override;
 
