@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # Enforce citra's whitespace policy
 git config --local core.whitespace tab-in-indent,trailing-space
@@ -32,7 +32,7 @@ for f in $(git diff --name-only --diff-filter=ACMRTUXB --cached); do
     if ! echo "$f" | egrep -q "^src/"; then
         continue
     fi
-    d=$(diff -u "$f" <(clang-format "$f"))
+    d=$(clang-format "$f" | diff -u "$f" -)
     if ! [ -z "$d" ]; then
         echo "!!! $f not compliant to coding style, here is the fix:"
         echo "$d"
@@ -40,4 +40,4 @@ for f in $(git diff --name-only --diff-filter=ACMRTUXB --cached); do
     fi
 done
 
-exit "$fail"
+exit "${fail-0}"
