@@ -338,17 +338,11 @@ ResultCode RenameFileBetweenArchives(ArchiveHandle src_archive_handle,
         return ERR_INVALID_ARCHIVE_HANDLE;
 
     if (src_archive == dest_archive) {
-        if (src_archive->RenameFile(src_path, dest_path))
-            return RESULT_SUCCESS;
+        return src_archive->RenameFile(src_path, dest_path);
     } else {
         // TODO: Implement renaming across archives
         return UnimplementedFunction(ErrorModule::FS);
     }
-
-    // TODO(yuriks): This code probably isn't right, it'll return a Status even if the file didn't
-    // exist or similar. Verify.
-    return ResultCode(ErrorDescription::NoData, ErrorModule::FS, // TODO: verify description
-                      ErrorSummary::NothingHappened, ErrorLevel::Status);
 }
 
 ResultCode DeleteDirectoryFromArchive(ArchiveHandle archive_handle, const FileSys::Path& path) {
@@ -356,10 +350,7 @@ ResultCode DeleteDirectoryFromArchive(ArchiveHandle archive_handle, const FileSy
     if (archive == nullptr)
         return ERR_INVALID_ARCHIVE_HANDLE;
 
-    if (archive->DeleteDirectory(path))
-        return RESULT_SUCCESS;
-    return ResultCode(ErrorDescription::NoData, ErrorModule::FS, // TODO: verify description
-                      ErrorSummary::Canceled, ErrorLevel::Status);
+    return archive->DeleteDirectory(path);
 }
 
 ResultCode DeleteDirectoryRecursivelyFromArchive(ArchiveHandle archive_handle,
@@ -368,10 +359,7 @@ ResultCode DeleteDirectoryRecursivelyFromArchive(ArchiveHandle archive_handle,
     if (archive == nullptr)
         return ERR_INVALID_ARCHIVE_HANDLE;
 
-    if (archive->DeleteDirectoryRecursively(path))
-        return RESULT_SUCCESS;
-    return ResultCode(ErrorDescription::NoData, ErrorModule::FS, // TODO: verify description
-                      ErrorSummary::Canceled, ErrorLevel::Status);
+    return archive->DeleteDirectoryRecursively(path);
 }
 
 ResultCode CreateFileInArchive(ArchiveHandle archive_handle, const FileSys::Path& path,
@@ -388,10 +376,7 @@ ResultCode CreateDirectoryFromArchive(ArchiveHandle archive_handle, const FileSy
     if (archive == nullptr)
         return ERR_INVALID_ARCHIVE_HANDLE;
 
-    if (archive->CreateDirectory(path))
-        return RESULT_SUCCESS;
-    return ResultCode(ErrorDescription::NoData, ErrorModule::FS, // TODO: verify description
-                      ErrorSummary::Canceled, ErrorLevel::Status);
+    return archive->CreateDirectory(path);
 }
 
 ResultCode RenameDirectoryBetweenArchives(ArchiveHandle src_archive_handle,
@@ -404,17 +389,11 @@ ResultCode RenameDirectoryBetweenArchives(ArchiveHandle src_archive_handle,
         return ERR_INVALID_ARCHIVE_HANDLE;
 
     if (src_archive == dest_archive) {
-        if (src_archive->RenameDirectory(src_path, dest_path))
-            return RESULT_SUCCESS;
+        return src_archive->RenameDirectory(src_path, dest_path);
     } else {
         // TODO: Implement renaming across archives
         return UnimplementedFunction(ErrorModule::FS);
     }
-
-    // TODO(yuriks): This code probably isn't right, it'll return a Status even if the file didn't
-    // exist or similar. Verify.
-    return ResultCode(ErrorDescription::NoData, ErrorModule::FS, // TODO: verify description
-                      ErrorSummary::NothingHappened, ErrorLevel::Status);
 }
 
 ResultVal<Kernel::SharedPtr<Directory>> OpenDirectoryFromArchive(ArchiveHandle archive_handle,
@@ -423,13 +402,11 @@ ResultVal<Kernel::SharedPtr<Directory>> OpenDirectoryFromArchive(ArchiveHandle a
     if (archive == nullptr)
         return ERR_INVALID_ARCHIVE_HANDLE;
 
-    std::unique_ptr<FileSys::DirectoryBackend> backend = archive->OpenDirectory(path);
-    if (backend == nullptr) {
-        return ResultCode(ErrorDescription::FS_NotFound, ErrorModule::FS, ErrorSummary::NotFound,
-                          ErrorLevel::Permanent);
-    }
+    auto backend = archive->OpenDirectory(path);
+    if (backend.Failed())
+        return backend.Code();
 
-    auto directory = Kernel::SharedPtr<Directory>(new Directory(std::move(backend), path));
+    auto directory = Kernel::SharedPtr<Directory>(new Directory(backend.MoveFrom(), path));
     return MakeResult<Kernel::SharedPtr<Directory>>(std::move(directory));
 }
 

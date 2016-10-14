@@ -16,7 +16,7 @@
 namespace FileSys {
 
 ResultVal<std::unique_ptr<FileBackend>> DiskArchive::OpenFile(const Path& path,
-                                                              const Mode mode) const {
+                                                              const Mode& mode) const {
     LOG_DEBUG(Service_FS, "called path=%s mode=%01X", path.DebugStr().c_str(), mode.hex);
     auto file = std::make_unique<DiskFile>(*this, path, mode);
     ResultCode result = file->Open();
@@ -43,16 +43,28 @@ ResultCode DiskArchive::DeleteFile(const Path& path) const {
                       ErrorLevel::Status);
 }
 
-bool DiskArchive::RenameFile(const Path& src_path, const Path& dest_path) const {
-    return FileUtil::Rename(mount_point + src_path.AsString(), mount_point + dest_path.AsString());
+ResultCode DiskArchive::RenameFile(const Path& src_path, const Path& dest_path) const {
+    if (FileUtil::Rename(mount_point + src_path.AsString(), mount_point + dest_path.AsString()))
+        return RESULT_SUCCESS;
+
+    // TODO(yuriks): This code probably isn't right, it'll return a Status even if the file didn't
+    // exist or similar. Verify.
+    return ResultCode(ErrorDescription::NoData, ErrorModule::FS, // TODO: verify description
+                      ErrorSummary::NothingHappened, ErrorLevel::Status);
 }
 
-bool DiskArchive::DeleteDirectory(const Path& path) const {
-    return FileUtil::DeleteDir(mount_point + path.AsString());
+ResultCode DiskArchive::DeleteDirectory(const Path& path) const {
+    if (FileUtil::DeleteDir(mount_point + path.AsString()))
+        return RESULT_SUCCESS;
+    return ResultCode(ErrorDescription::NoData, ErrorModule::FS, // TODO: verify description
+                      ErrorSummary::Canceled, ErrorLevel::Status);
 }
 
-bool DiskArchive::DeleteDirectoryRecursively(const Path& path) const {
-    return FileUtil::DeleteDirRecursively(mount_point + path.AsString());
+ResultCode DiskArchive::DeleteDirectoryRecursively(const Path& path) const {
+    if (FileUtil::DeleteDirRecursively(mount_point + path.AsString()))
+        return RESULT_SUCCESS;
+    return ResultCode(ErrorDescription::NoData, ErrorModule::FS, // TODO: verify description
+                      ErrorSummary::Canceled, ErrorLevel::Status);
 }
 
 ResultCode DiskArchive::CreateFile(const FileSys::Path& path, u64 size) const {
@@ -81,20 +93,30 @@ ResultCode DiskArchive::CreateFile(const FileSys::Path& path, u64 size) const {
                       ErrorLevel::Info);
 }
 
-bool DiskArchive::CreateDirectory(const Path& path) const {
-    return FileUtil::CreateDir(mount_point + path.AsString());
+ResultCode DiskArchive::CreateDirectory(const Path& path) const {
+    if (FileUtil::CreateDir(mount_point + path.AsString()))
+        return RESULT_SUCCESS;
+    return ResultCode(ErrorDescription::NoData, ErrorModule::FS, // TODO: verify description
+                      ErrorSummary::Canceled, ErrorLevel::Status);
 }
 
-bool DiskArchive::RenameDirectory(const Path& src_path, const Path& dest_path) const {
-    return FileUtil::Rename(mount_point + src_path.AsString(), mount_point + dest_path.AsString());
+ResultCode DiskArchive::RenameDirectory(const Path& src_path, const Path& dest_path) const {
+    if (FileUtil::Rename(mount_point + src_path.AsString(), mount_point + dest_path.AsString()))
+        return RESULT_SUCCESS;
+
+    // TODO(yuriks): This code probably isn't right, it'll return a Status even if the file didn't
+    // exist or similar. Verify.
+    return ResultCode(ErrorDescription::NoData, ErrorModule::FS, // TODO: verify description
+                      ErrorSummary::NothingHappened, ErrorLevel::Status);
 }
 
-std::unique_ptr<DirectoryBackend> DiskArchive::OpenDirectory(const Path& path) const {
+ResultVal<std::unique_ptr<DirectoryBackend>> DiskArchive::OpenDirectory(const Path& path) const {
     LOG_DEBUG(Service_FS, "called path=%s", path.DebugStr().c_str());
     auto directory = std::make_unique<DiskDirectory>(*this, path);
     if (!directory->Open())
-        return nullptr;
-    return std::move(directory);
+        return ResultCode(ErrorDescription::FS_NotFound, ErrorModule::FS, ErrorSummary::NotFound,
+                          ErrorLevel::Permanent);
+    return MakeResult<std::unique_ptr<DirectoryBackend>>(std::move(directory));
 }
 
 u64 DiskArchive::GetFreeBytes() const {
