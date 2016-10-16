@@ -75,13 +75,12 @@ protected:
 
 class DiskDirectory : public DirectoryBackend {
 public:
-    DiskDirectory(const DiskArchive& archive, const Path& path);
+    DiskDirectory(const std::string& path);
 
     ~DiskDirectory() override {
         Close();
     }
 
-    bool Open() override;
     u32 Read(const u32 count, Entry* entries) override;
 
     bool Close() const override {
@@ -89,7 +88,6 @@ public:
     }
 
 protected:
-    std::string path;
     u32 total_entries_in_directory;
     FileUtil::FSTEntry directory;
 

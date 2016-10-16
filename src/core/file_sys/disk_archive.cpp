@@ -112,10 +112,11 @@ ResultCode DiskArchive::RenameDirectory(const Path& src_path, const Path& dest_p
 
 ResultVal<std::unique_ptr<DirectoryBackend>> DiskArchive::OpenDirectory(const Path& path) const {
     LOG_DEBUG(Service_FS, "called path=%s", path.DebugStr().c_str());
-    auto directory = std::make_unique<DiskDirectory>(*this, path);
-    if (!directory->Open())
+    auto full_path = mount_point + path.AsString();
+    if (!FileUtil::IsDirectory(full_path))
         return ResultCode(ErrorDescription::FS_NotFound, ErrorModule::FS, ErrorSummary::NotFound,
                           ErrorLevel::Permanent);
+    auto directory = std::make_unique<DiskDirectory>(full_path);
     return MakeResult<std::unique_ptr<DirectoryBackend>>(std::move(directory));
 }
 
@@ -211,21 +212,11 @@ bool DiskFile::Close() const {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-DiskDirectory::DiskDirectory(const DiskArchive& archive, const Path& path) : directory() {
-    // TODO(Link Mauve): normalize path into an absolute path without "..", it can currently bypass
-    // the root directory we set while opening the archive.
-    // For example, opening /../../usr/bin can give the emulated program your installed programs.
-    this->path = archive.mount_point + path.AsString();
-}
-
-bool DiskDirectory::Open() {
-    if (!FileUtil::IsDirectory(path))
-        return false;
+DiskDirectory::DiskDirectory(const std::string& path) : directory() {
     unsigned size = FileUtil::ScanDirectoryTree(path, directory);
     directory.size = size;
     directory.isDirectory = true;
     children_iterator = directory.children.begin();
-    return true;
 }
 
 u32 DiskDirectory::Read(const u32 count, Entry* entries) {
