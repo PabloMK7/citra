@@ -9,7 +9,7 @@
 #include "common/logging/log.h"
 #include "common/string_util.h"
 #include "core/file_sys/archive_savedata.h"
-#include "core/file_sys/disk_archive.h"
+#include "core/file_sys/savedata_archive.h"
 #include "core/hle/kernel/process.h"
 #include "core/hle/service/fs/archive.h"
 
@@ -54,7 +54,7 @@ ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_SaveData::Open(const P
                           ErrorSummary::InvalidState, ErrorLevel::Status);
     }
 
-    auto archive = std::make_unique<DiskArchive>(std::move(concrete_mount_point));
+    auto archive = std::make_unique<SaveDataArchive>(std::move(concrete_mount_point));
     return MakeResult<std::unique_ptr<ArchiveBackend>>(std::move(archive));
 }
 
