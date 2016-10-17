@@ -34,6 +34,7 @@ enum class ErrorDescription : u32 {
         513, // TODO(purpasmart): Check if this name fits its actual usage
     GPU_FirstInitialization = 519,
     FS_InvalidPath = 702,
+    FS_WriteBeyondEnd = 705,
     FS_UnsupportedOpenFlags = 760,
     FS_UnexpectedFileOrDirectory = 770,
     InvalidSection = 1000,
