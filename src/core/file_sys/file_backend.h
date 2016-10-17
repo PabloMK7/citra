@@ -19,12 +19,6 @@ public:
     virtual ~FileBackend() {}
 
     /**
-     * Open the file
-     * @return Result of the file operation
-     */
-    virtual ResultCode Open() = 0;
-
-    /**
      * Read data from the file
      * @param offset Offset in bytes to start reading data from
      * @param length Length in bytes of data to read from file

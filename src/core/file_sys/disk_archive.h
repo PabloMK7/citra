@@ -54,9 +54,11 @@ protected:
 
 class DiskFile : public FileBackend {
 public:
-    DiskFile(const DiskArchive& archive, const Path& path, const Mode mode);
+    DiskFile(FileUtil::IOFile&& file_, const Mode& mode_)
+        : file(new FileUtil::IOFile(std::move(file_))) {
+        mode.hex = mode_.hex;
+    }
 
-    ResultCode Open() override;
     ResultVal<size_t> Read(u64 offset, size_t length, u8* buffer) const override;
     ResultVal<size_t> Write(u64 offset, size_t length, bool flush, const u8* buffer) const override;
     u64 GetSize() const override;
@@ -68,7 +70,6 @@ public:
     }
 
 protected:
-    std::string path;
     Mode mode;
     std::unique_ptr<FileUtil::IOFile> file;
 };

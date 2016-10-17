@@ -18,11 +18,46 @@ namespace FileSys {
 ResultVal<std::unique_ptr<FileBackend>> DiskArchive::OpenFile(const Path& path,
                                                               const Mode& mode) const {
     LOG_DEBUG(Service_FS, "called path=%s mode=%01X", path.DebugStr().c_str(), mode.hex);
-    auto file = std::make_unique<DiskFile>(*this, path, mode);
-    ResultCode result = file->Open();
-    if (result.IsError())
-        return result;
-    return MakeResult<std::unique_ptr<FileBackend>>(std::move(file));
+
+    auto full_path = mount_point + path.AsString();
+    if (FileUtil::IsDirectory(full_path))
+        return ResultCode(ErrorDescription::FS_NotAFile, ErrorModule::FS, ErrorSummary::Canceled,
+                          ErrorLevel::Status);
+
+    // Specifying only the Create flag is invalid
+    if (mode.create_flag && !mode.read_flag && !mode.write_flag) {
+        return ResultCode(ErrorDescription::FS_InvalidOpenFlags, ErrorModule::FS,
+                          ErrorSummary::Canceled, ErrorLevel::Status);
+    }
+
+    if (!FileUtil::Exists(full_path)) {
+        if (!mode.create_flag) {
+            LOG_ERROR(Service_FS, "Non-existing file %s can't be open without mode create.",
+                      full_path.c_str());
+            return ResultCode(ErrorDescription::FS_NotFound, ErrorModule::FS,
+                              ErrorSummary::NotFound, ErrorLevel::Status);
+        } else {
+            // Create the file
+            FileUtil::CreateEmptyFile(full_path);
+        }
+    }
+
+    std::string mode_string = "";
+    if (mode.write_flag)
+        mode_string += "r+"; // Files opened with Write access can be read from
+    else if (mode.read_flag)
+        mode_string += "r";
+
+    // Open the file in binary mode, to avoid problems with CR/LF on Windows systems
+    mode_string += "b";
+
+    FileUtil::IOFile file(full_path, mode_string.c_str());
+    if (!file.IsOpen())
+        return ResultCode(ErrorDescription::FS_NotFound, ErrorModule::FS, ErrorSummary::NotFound,
+                          ErrorLevel::Status);
+
+    auto disk_file = std::make_unique<DiskFile>(std::move(file), mode);
+    return MakeResult<std::unique_ptr<FileBackend>>(std::move(disk_file));
 }
 
 ResultCode DiskArchive::DeleteFile(const Path& path) const {
@@ -126,53 +161,6 @@ u64 DiskArchive::GetFreeBytes() const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-
-DiskFile::DiskFile(const DiskArchive& archive, const Path& path, const Mode mode) {
-    // TODO(Link Mauve): normalize path into an absolute path without "..", it can currently bypass
-    // the root directory we set while opening the archive.
-    // For example, opening /../../etc/passwd can give the emulated program your users list.
-    this->path = archive.mount_point + path.AsString();
-    this->mode.hex = mode.hex;
-}
-
-ResultCode DiskFile::Open() {
-    if (FileUtil::IsDirectory(path))
-        return ResultCode(ErrorDescription::FS_NotAFile, ErrorModule::FS, ErrorSummary::Canceled,
-                          ErrorLevel::Status);
-
-    // Specifying only the Create flag is invalid
-    if (mode.create_flag && !mode.read_flag && !mode.write_flag) {
-        return ResultCode(ErrorDescription::FS_InvalidOpenFlags, ErrorModule::FS,
-                          ErrorSummary::Canceled, ErrorLevel::Status);
-    }
-
-    if (!FileUtil::Exists(path)) {
-        if (!mode.create_flag) {
-            LOG_ERROR(Service_FS, "Non-existing file %s can't be open without mode create.",
-                      path.c_str());
-            return ResultCode(ErrorDescription::FS_NotFound, ErrorModule::FS,
-                              ErrorSummary::NotFound, ErrorLevel::Status);
-        } else {
-            // Create the file
-            FileUtil::CreateEmptyFile(path);
-        }
-    }
-
-    std::string mode_string = "";
-    if (mode.write_flag)
-        mode_string += "r+"; // Files opened with Write access can be read from
-    else if (mode.read_flag)
-        mode_string += "r";
-
-    // Open the file in binary mode, to avoid problems with CR/LF on Windows systems
-    mode_string += "b";
-
-    file = std::make_unique<FileUtil::IOFile>(path, mode_string.c_str());
-    if (file->IsOpen())
-        return RESULT_SUCCESS;
-    return ResultCode(ErrorDescription::FS_NotFound, ErrorModule::FS, ErrorSummary::NotFound,
-                      ErrorLevel::Status);
-}
 
 ResultVal<size_t> DiskFile::Read(const u64 offset, const size_t length, u8* buffer) const {
     if (!mode.read_flag && !mode.write_flag)
