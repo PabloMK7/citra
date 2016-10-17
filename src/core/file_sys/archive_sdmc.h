@@ -14,6 +14,31 @@
 
 namespace FileSys {
 
+/// Archive backend for SDMC archive
+class SDMCArchive : public ArchiveBackend {
+public:
+    SDMCArchive(const std::string& mount_point_) : mount_point(mount_point_) {}
+
+    std::string GetName() const override {
+        return "SDMCArchive: " + mount_point;
+    }
+
+    ResultVal<std::unique_ptr<FileBackend>> OpenFile(const Path& path,
+                                                     const Mode& mode) const override;
+    ResultCode DeleteFile(const Path& path) const override;
+    ResultCode RenameFile(const Path& src_path, const Path& dest_path) const override;
+    ResultCode DeleteDirectory(const Path& path) const override;
+    ResultCode DeleteDirectoryRecursively(const Path& path) const override;
+    ResultCode CreateFile(const Path& path, u64 size) const override;
+    ResultCode CreateDirectory(const Path& path) const override;
+    ResultCode RenameDirectory(const Path& src_path, const Path& dest_path) const override;
+    ResultVal<std::unique_ptr<DirectoryBackend>> OpenDirectory(const Path& path) const override;
+    u64 GetFreeBytes() const override;
+
+protected:
+    std::string mount_point;
+};
+
 /// File system interface to the SDMC archive
 class ArchiveFactory_SDMC final : public ArchiveFactory {
 public:
