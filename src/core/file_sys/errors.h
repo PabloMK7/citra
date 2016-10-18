@@ -13,6 +13,8 @@ const ResultCode ERROR_UNSUPPORTED_OPEN_FLAGS(ErrorDescription::FS_UnsupportedOp
                                               ErrorLevel::Usage);
 const ResultCode ERROR_INVALID_OPEN_FLAGS(ErrorDescription::FS_InvalidOpenFlags, ErrorModule::FS,
                                           ErrorSummary::Canceled, ErrorLevel::Status);
+const ResultCode ERROR_INVALID_READ_FLAG(ErrorDescription::FS_InvalidReadFlag, ErrorModule::FS,
+                                         ErrorSummary::InvalidArgument, ErrorLevel::Usage);
 const ResultCode ERROR_FILE_NOT_FOUND(ErrorDescription::FS_FileNotFound, ErrorModule::FS,
                                       ErrorSummary::NotFound, ErrorLevel::Status);
 const ResultCode ERROR_PATH_NOT_FOUND(ErrorDescription::FS_PathNotFound, ErrorModule::FS,

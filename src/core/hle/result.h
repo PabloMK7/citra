@@ -33,6 +33,7 @@ enum class ErrorDescription : u32 {
     OutofRangeOrMisalignedAddress =
         513, // TODO(purpasmart): Check if this name fits its actual usage
     GPU_FirstInitialization = 519,
+    FS_InvalidReadFlag = 700,
     FS_InvalidPath = 702,
     FS_WriteBeyondEnd = 705,
     FS_UnsupportedOpenFlags = 760,

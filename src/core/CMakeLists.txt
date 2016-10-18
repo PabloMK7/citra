@@ -21,6 +21,7 @@ set(SRCS
             file_sys/archive_savedata.cpp
             file_sys/archive_savedatacheck.cpp
             file_sys/archive_sdmc.cpp
+            file_sys/archive_sdmcwriteonly.cpp
             file_sys/archive_systemsavedata.cpp
             file_sys/disk_archive.cpp
             file_sys/ivfc_archive.cpp
@@ -165,6 +166,7 @@ set(HEADERS
             file_sys/archive_savedata.h
             file_sys/archive_savedatacheck.h
             file_sys/archive_sdmc.h
+            file_sys/archive_sdmcwriteonly.h
             file_sys/archive_systemsavedata.h
             file_sys/directory_backend.h
             file_sys/disk_archive.h
