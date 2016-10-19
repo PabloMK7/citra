@@ -20,38 +20,6 @@
 
 namespace FileSys {
 
-/**
- * Helper which implements a backend accessing the host machine's filesystem.
- * This should be subclassed by concrete archive types, which will provide the
- * base directory on the host filesystem and override any required functionality.
- */
-class DiskArchive : public ArchiveBackend {
-public:
-    DiskArchive(const std::string& mount_point_) : mount_point(mount_point_) {}
-
-    virtual std::string GetName() const override {
-        return "DiskArchive: " + mount_point;
-    }
-
-    ResultVal<std::unique_ptr<FileBackend>> OpenFile(const Path& path,
-                                                     const Mode& mode) const override;
-    ResultCode DeleteFile(const Path& path) const override;
-    ResultCode RenameFile(const Path& src_path, const Path& dest_path) const override;
-    ResultCode DeleteDirectory(const Path& path) const override;
-    ResultCode DeleteDirectoryRecursively(const Path& path) const override;
-    ResultCode CreateFile(const Path& path, u64 size) const override;
-    ResultCode CreateDirectory(const Path& path) const override;
-    ResultCode RenameDirectory(const Path& src_path, const Path& dest_path) const override;
-    ResultVal<std::unique_ptr<DirectoryBackend>> OpenDirectory(const Path& path) const override;
-    u64 GetFreeBytes() const override;
-
-protected:
-    friend class DiskFile;
-    friend class DiskDirectory;
-
-    std::string mount_point;
-};
-
 class DiskFile : public FileBackend {
 public:
     DiskFile(FileUtil::IOFile&& file_, const Mode& mode_)
