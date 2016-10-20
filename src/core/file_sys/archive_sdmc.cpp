@@ -19,6 +19,17 @@ namespace FileSys {
 
 ResultVal<std::unique_ptr<FileBackend>> SDMCArchive::OpenFile(const Path& path,
                                                               const Mode& mode) const {
+    Mode modified_mode;
+    modified_mode.hex = mode.hex;
+
+    // SDMC archive always opens a file with at least read permission
+    modified_mode.read_flag.Assign(1);
+
+    return OpenFileBase(path, modified_mode);
+}
+
+ResultVal<std::unique_ptr<FileBackend>> SDMCArchive::OpenFileBase(const Path& path,
+                                                                  const Mode& mode) const {
     LOG_DEBUG(Service_FS, "called path=%s mode=%01X", path.DebugStr().c_str(), mode.hex);
 
     const PathParser path_parser(path);

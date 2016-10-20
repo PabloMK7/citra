@@ -36,6 +36,7 @@ public:
     u64 GetFreeBytes() const override;
 
 protected:
+    ResultVal<std::unique_ptr<FileBackend>> OpenFileBase(const Path& path, const Mode& mode) const;
     std::string mount_point;
 };
 
