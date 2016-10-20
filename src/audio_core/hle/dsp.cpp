@@ -23,12 +23,12 @@ static size_t CurrentRegionIndex() {
     // This function only returns a 0 or 1.
 
     if (g_regions[0].frame_counter == 0xFFFFu && g_regions[1].frame_counter != 0xFFFEu) {
-        // Wraparound has occured.
+        // Wraparound has occurred.
         return 1;
     }
 
     if (g_regions[1].frame_counter == 0xFFFFu && g_regions[0].frame_counter != 0xFFFEu) {
-        // Wraparound has occured.
+        // Wraparound has occurred.
         return 0;
     }
 

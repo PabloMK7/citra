@@ -117,7 +117,7 @@ void PipeWrite(DspPipe pipe_number, const std::vector<u8>& buffer) {
         }
 
         enum class StateChange {
-            Initalize = 0,
+            Initialize = 0,
             Shutdown = 1,
             Wakeup = 2,
             Sleep = 3,
@@ -130,7 +130,7 @@ void PipeWrite(DspPipe pipe_number, const std::vector<u8>& buffer) {
         // sleeping and reset it back after wakeup on behalf of the DSP.
 
         switch (static_cast<StateChange>(buffer[0])) {
-        case StateChange::Initalize:
+        case StateChange::Initialize:
             LOG_INFO(Audio_DSP, "Application has requested initialization of DSP hardware");
             ResetPipes();
             AudioPipeWriteStructAddresses();

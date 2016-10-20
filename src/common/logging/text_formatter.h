@@ -17,7 +17,7 @@ struct Entry;
  *
  * @param path The input file path as a null-terminated string
  * @param root The name of the root source directory as a null-terminated string. Path up to and
- *             including the last occurence of this name will be stripped
+ *             including the last occurrence of this name will be stripped
  * @return A pointer to the same string passed as `path`, but starting at the trimmed portion
  */
 const char* TrimSourcePath(const char* path, const char* root = "src");

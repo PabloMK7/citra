@@ -424,7 +424,7 @@ GraphicsVertexShaderWidget::GraphicsVertexShaderWidget(
             // Create an HBoxLayout to store the widgets used to specify a particular attribute
             // and store it in a QWidget to allow for easy hiding and unhiding.
             auto row_layout = new QHBoxLayout;
-            // Remove unecessary padding between rows
+            // Remove unnecessary padding between rows
             row_layout->setContentsMargins(0, 0, 0, 0);
 
             row_layout->addWidget(new QLabel(tr("Attribute %1").arg(i, 2)));
@@ -590,7 +590,7 @@ void GraphicsVertexShaderWidget::OnCycleIndexChanged(int index) {
                     .arg(record.dest_out.w.ToFloat32());
 
     if (record.mask & Pica::Shader::DebugDataRecord::ADDR_REG_OUT)
-        text += tr("Addres Registers: %1, %2\n")
+        text += tr("Address Registers: %1, %2\n")
                     .arg(record.address_registers[0])
                     .arg(record.address_registers[1]);
     if (record.mask & Pica::Shader::DebugDataRecord::CMP_RESULT)

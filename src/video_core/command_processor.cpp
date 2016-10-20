@@ -292,7 +292,7 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
                 }
             }
 
-            // Retreive vertex from register data
+            // Retrieve vertex from register data
             Shader::OutputVertex output_vertex = output_registers.ToVertex(regs.vs);
 
             // Send to renderer
