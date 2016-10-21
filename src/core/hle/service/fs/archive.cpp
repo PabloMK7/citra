@@ -15,8 +15,8 @@
 #include "common/logging/log.h"
 #include "core/file_sys/archive_backend.h"
 #include "core/file_sys/archive_extsavedata.h"
+#include "core/file_sys/archive_ncch.h"
 #include "core/file_sys/archive_savedata.h"
-#include "core/file_sys/archive_savedatacheck.h"
 #include "core/file_sys/archive_sdmc.h"
 #include "core/file_sys/archive_sdmcwriteonly.h"
 #include "core/file_sys/archive_systemsavedata.h"
@@ -554,10 +554,9 @@ void RegisterArchiveTypes() {
         LOG_ERROR(Service_FS, "Can't instantiate SharedExtSaveData archive with path %s",
                   sharedextsavedata_factory->GetMountPoint().c_str());
 
-    // Create the SaveDataCheck archive, basically a small variation of the RomFS archive
-    auto savedatacheck_factory =
-        std::make_unique<FileSys::ArchiveFactory_SaveDataCheck>(nand_directory);
-    RegisterArchiveType(std::move(savedatacheck_factory), ArchiveIdCode::SaveDataCheck);
+    // Create the NCCH archive, basically a small variation of the RomFS archive
+    auto savedatacheck_factory = std::make_unique<FileSys::ArchiveFactory_NCCH>(nand_directory);
+    RegisterArchiveType(std::move(savedatacheck_factory), ArchiveIdCode::NCCH);
 
     auto systemsavedata_factory =
         std::make_unique<FileSys::ArchiveFactory_SystemSaveData>(nand_directory);

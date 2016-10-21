@@ -14,13 +14,13 @@
 
 namespace FileSys {
 
-/// File system interface to the SaveDataCheck archive
-class ArchiveFactory_SaveDataCheck final : public ArchiveFactory {
+/// File system interface to the NCCH archive
+class ArchiveFactory_NCCH final : public ArchiveFactory {
 public:
-    ArchiveFactory_SaveDataCheck(const std::string& mount_point);
+    ArchiveFactory_NCCH(const std::string& mount_point);
 
     std::string GetName() const override {
-        return "SaveDataCheck";
+        return "NCCH";
     }
 
     ResultVal<std::unique_ptr<ArchiveBackend>> Open(const Path& path) override;
