@@ -31,7 +31,7 @@ static FORCE_INLINE u64 fmix64(u64 k) {
     return k;
 }
 
-// This is the 128-bit variant of the MurmurHash3 hash function that is targetted for 64-bit
+// This is the 128-bit variant of the MurmurHash3 hash function that is targeted for 64-bit
 // platforms (MurmurHash3_x64_128). It was taken from:
 // https://code.google.com/p/smhasher/source/browse/trunk/MurmurHash3.cpp
 void MurmurHash3_128(const void* key, int len, u32 seed, void* out) {

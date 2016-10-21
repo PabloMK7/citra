@@ -136,7 +136,7 @@ void RegistersWidget::UpdateCPSRValues() {
     cpsr->child(2)->setText(1, QString::number((cpsr_val >> 6) & 1));    // F - FIQ disable
     cpsr->child(3)->setText(1, QString::number((cpsr_val >> 7) & 1));    // I - IRQ disable
     cpsr->child(4)->setText(1, QString::number((cpsr_val >> 8) & 1));    // A - Imprecise abort
-    cpsr->child(5)->setText(1, QString::number((cpsr_val >> 9) & 1));    // E - Data endianess
+    cpsr->child(5)->setText(1, QString::number((cpsr_val >> 9) & 1));    // E - Data endianness
     cpsr->child(6)->setText(1,
                             QString::number((cpsr_val >> 10) & 0x3F)); // IT - If-Then state (DNM)
     cpsr->child(7)->setText(1,

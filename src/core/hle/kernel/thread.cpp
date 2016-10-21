@@ -204,7 +204,7 @@ static std::tuple<u32*, u32*> GetWaitSynchTimeoutParameterRegister(Thread* threa
 }
 
 /**
- * Updates the WaitSynchronization timeout paramter according to the difference
+ * Updates the WaitSynchronization timeout parameter according to the difference
  * between ticks of the last WaitSynchronization call and the incoming one.
  * @param timeout_low a pointer to the register for the low part of the timeout parameter
  * @param timeout_high a pointer to the register for the high part of the timeout parameter

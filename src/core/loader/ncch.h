@@ -11,7 +11,7 @@
 #include "core/loader/loader.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-/// NCCH header (Note: "NCCH" appears to be a publically unknown acronym)
+/// NCCH header (Note: "NCCH" appears to be a publicly unknown acronym)
 
 struct NCCH_Header {
     u8 signature[0x100];

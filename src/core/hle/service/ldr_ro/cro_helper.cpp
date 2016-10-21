@@ -1227,7 +1227,7 @@ ResultCode CROHelper::Link(VAddr crs_address, bool link_on_load_bug_fix) {
             // The bug itself is:
             // If a relocation target is in .data segment, it will relocate to the
             // user-specified buffer. But if this is linking during loading,
-            // the .data segment hasn't been tranfer from CRO to the buffer,
+            // the .data segment hasn't been transfer from CRO to the buffer,
             // thus the relocation will be overwritten by data transfer.
             // To fix this bug, we need temporarily restore the old .data segment
             // offset and apply imported symbols.

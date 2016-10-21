@@ -163,7 +163,7 @@ ResultStatus AppLoader_NCCH::LoadExec() {
         Kernel::g_current_process->ideal_processor =
             exheader_header.arm11_system_local_caps.ideal_processor;
 
-        // Copy data while converting endianess
+        // Copy data while converting endianness
         std::array<u32, ARRAY_SIZE(exheader_header.arm11_kernel_caps.descriptors)> kernel_caps;
         std::copy_n(exheader_header.arm11_kernel_caps.descriptors, kernel_caps.size(),
                     begin(kernel_caps));

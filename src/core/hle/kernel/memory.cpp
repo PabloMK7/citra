@@ -23,7 +23,7 @@ namespace Kernel {
 
 static MemoryRegionInfo memory_regions[3];
 
-/// Size of the APPLICATION, SYSTEM and BASE memory regions (respectively) for each sytem
+/// Size of the APPLICATION, SYSTEM and BASE memory regions (respectively) for each system
 /// memory configuration type.
 static const u32 memory_region_sizes[8][3] = {
     // Old 3DS layouts
