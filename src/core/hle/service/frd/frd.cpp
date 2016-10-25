@@ -87,7 +87,7 @@ void GetMyFriendKey(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
-    Memory::WriteBlock(cmd_buff[2], &my_friend_key, sizeof(FriendKey));
+    std::memcpy(&cmd_buff[2], &my_friend_key, sizeof(FriendKey));
     LOG_WARNING(Service_FRD, "(STUBBED) called");
 }
 
