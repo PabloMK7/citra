@@ -11,7 +11,11 @@
 
 namespace AC_U {
 
-static struct AcConfig { u8 data[0x200]; } default_config = {};
+struct ACConfig {
+    std::array<u8, 0x200> data;
+};
+
+static ACConfig default_config = {};
 
 static bool ac_connected;
 
@@ -22,8 +26,8 @@ static Kernel::SharedPtr<Kernel::Event> disconnect_event;
 /**
  * AC_U::CreateDefaultConfig service function
  *  Inputs:
- *      64 : AcConfig size << 14 | 2
- *      65 : pointer to AcConfig struct
+ *      64 : ACConfig size << 14 | 2
+ *      65 : pointer to ACConfig struct
  *  Outputs:
  *      1 : Result of function, 0 on success, otherwise error code
  */
@@ -32,10 +36,10 @@ static void CreateDefaultConfig(Service::Interface* self) {
 
     u32 ac_config_addr = cmd_buff[65];
 
-    ASSERT_MSG(cmd_buff[64] == (sizeof(AcConfig) << 14 | 2),
-               "Output buffer size not equal AcConfig size");
+    ASSERT_MSG(cmd_buff[64] == (sizeof(ACConfig) << 14 | 2),
+               "Output buffer size not equal ACConfig size");
 
-    Memory::WriteBlock(ac_config_addr, &default_config, sizeof(AcConfig));
+    Memory::WriteBlock(ac_config_addr, &default_config, sizeof(ACConfig));
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
 
     LOG_WARNING(Service_AC, "(STUBBED) called");
@@ -47,8 +51,8 @@ static void CreateDefaultConfig(Service::Interface* self) {
  *      1 : ProcessId Header
  *      3 : Copy Handle Header
  *      4 : Connection Event handle
- *      5 : AcConfig size << 14 | 2
- *      6 : pointer to AcConfig struct
+ *      5 : ACConfig size << 14 | 2
+ *      6 : pointer to ACConfig struct
  *  Outputs:
  *      1 : Result of function, 0 on success, otherwise error code
  */
@@ -145,8 +149,8 @@ static void GetWifiStatus(Service::Interface* self) {
 /**
  * AC_U::GetInfraPriority service function
  *  Inputs:
- *      1 : AcConfig size << 14 | 2
- *      2 : pointer to AcConfig struct
+ *      1 : ACConfig size << 14 | 2
+ *      2 : pointer to ACConfig struct
  *  Outputs:
  *      1 : Result of function, 0 on success, otherwise error code
  *      2 : Infra Priority
@@ -165,10 +169,10 @@ static void GetInfraPriority(Service::Interface* self) {
  *  Inputs:
  *      1 : Eula Version major
  *      2 : Eula Version minor
- *      3 : AcConfig size << 14 | 2
- *      4 : Input pointer to AcConfig struct
- *      64 : AcConfig size << 14 | 2
- *      65 : Output pointer to AcConfig struct
+ *      3 : ACConfig size << 14 | 2
+ *      4 : Input pointer to ACConfig struct
+ *      64 : ACConfig size << 14 | 2
+ *      65 : Output pointer to ACConfig struct
  *  Outputs:
  *      1 : Result of function, 0 on success, otherwise error code
  *      2 : Infra Priority
@@ -176,18 +180,18 @@ static void GetInfraPriority(Service::Interface* self) {
 static void SetRequestEulaVersion(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
-    u8 major = cmd_buff[1] & 0xFF;
-    u8 minor = cmd_buff[2] & 0xFF;
+    u32 major = cmd_buff[1] & 0xFF;
+    u32 minor = cmd_buff[2] & 0xFF;
 
-    ASSERT_MSG(cmd_buff[3] == (sizeof(AcConfig) << 14 | 2),
-               "Input buffer size not equal AcConfig size");
-    ASSERT_MSG(cmd_buff[64] == (sizeof(AcConfig) << 14 | 2),
-               "Output buffer size not equal AcConfig size");
+    ASSERT_MSG(cmd_buff[3] == (sizeof(ACConfig) << 14 | 2),
+               "Input buffer size not equal ACConfig size");
+    ASSERT_MSG(cmd_buff[64] == (sizeof(ACConfig) << 14 | 2),
+               "Output buffer size not equal ACConfig size");
 
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
     cmd_buff[2] = 0;                  // Infra Priority
 
-    LOG_WARNING(Service_AC, "(STUBBED) called, major=%d, minor=%d", major, minor);
+    LOG_WARNING(Service_AC, "(STUBBED) called, major=%u, minor=%u", major, minor);
 }
 
 /**
