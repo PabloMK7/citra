@@ -27,12 +27,12 @@ If you want to contribute please take a look at the [Contributor's Guide](CONTRI
 
 
 ### Support
-If you like, you can [donate by PayPal](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=K899FANUJ2ZXW) - any donation received will go towards things like:
+If you like, you can donate using Bitcoin at the address 1LohumuWkH1xYtpbPAG5LMmyCJjqnPfPdu or using PayPal by contacting [bunneidev@gmail.com](mailto:bunneidev@gmail.com). Any donations received will go towards things like:
 * 3DS consoles for developers to explore the hardware
 * 3DS games for testing
 * Any equipment required for homebrew
 * Infrastructure setup
 * Eventually 3D displays to get proper 3D output working
-* ... etc ...
+* Etc.
 
 We also more than gladly accept used 3DS consoles, preferably ones with firmware 4.5 or lower! If you would like to give yours away, don't hesitate to join our IRC channel #citra on [Freenode](http://webchat.freenode.net/?channels=citra) and talk to neobrain or bunnei. Mind you, IRC is slow-paced, so it might be a while until people reply. If you're in a hurry you can just leave contact details in the channel or via private message and we'll get back to you.
