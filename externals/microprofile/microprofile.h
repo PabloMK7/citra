@@ -206,7 +206,7 @@ int64_t MicroProfileGetTick();
 #define MP_GETCURRENTTHREADID() GetCurrentThreadId()
 typedef uint32_t ThreadIdType;
 
-#elif defined(__linux__)
+#elif !defined(_WIN32)
 #include <unistd.h>
 #include <time.h>
 inline int64_t MicroProfileTicksPerSecondCpu()
@@ -510,7 +510,7 @@ typedef int MpSocket;
 #endif
 
 
-#if defined(__APPLE__) || defined(__linux__)
+#ifndef _WIN32
 typedef pthread_t MicroProfileThread;
 #elif defined(_WIN32)
 typedef HANDLE MicroProfileThread;
@@ -907,7 +907,7 @@ int64_t MicroProfileGetTick()
 
 typedef void* (*MicroProfileThreadFunc)(void*);
 
-#if defined(__APPLE__) || defined(__linux__)
+#ifndef _WIN32
 typedef pthread_t MicroProfileThread;
 void MicroProfileThreadStart(MicroProfileThread* pThread, MicroProfileThreadFunc Func)
 {
@@ -959,7 +959,7 @@ inline void MicroProfileThreadJoin(MicroProfileThread* pThread)
 #define MP_INVALID_SOCKET(f) (f == INVALID_SOCKET)
 #endif
 
-#if defined(__APPLE__)
+#ifndef _WIN32
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <fcntl.h>

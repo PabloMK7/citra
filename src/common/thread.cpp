@@ -8,7 +8,7 @@
 #elif defined(_WIN32)
 #include <Windows.h>
 #else
-#if defined(BSD4_4) || defined(__OpenBSD__)
+#if defined(__Bitrig__) || defined(__DragonFly__) || defined(__FreeBSD__) || defined(__OpenBSD__)
 #include <pthread_np.h>
 #else
 #include <pthread.h>
@@ -17,6 +17,10 @@
 #endif
 #ifndef _WIN32
 #include <unistd.h>
+#endif
+
+#ifdef __FreeBSD__
+#define cpu_set_t cpuset_t
 #endif
 
 namespace Common {
@@ -86,7 +90,7 @@ void SetCurrentThreadName(const char* szThreadName) {
 void SetThreadAffinity(std::thread::native_handle_type thread, u32 mask) {
 #ifdef __APPLE__
     thread_policy_set(pthread_mach_thread_np(thread), THREAD_AFFINITY_POLICY, (integer_t*)&mask, 1);
-#elif (defined __linux__ || defined BSD4_4) && !(defined ANDROID)
+#elif (defined __linux__ || defined __FreeBSD__) && !(defined ANDROID)
     cpu_set_t cpu_set;
     CPU_ZERO(&cpu_set);
 
@@ -117,8 +121,10 @@ void SwitchCurrentThread() {
 void SetCurrentThreadName(const char* szThreadName) {
 #ifdef __APPLE__
     pthread_setname_np(szThreadName);
-#elif defined(__OpenBSD__)
+#elif defined(__Bitrig__) || defined(__DragonFly__) || defined(__FreeBSD__) || defined(__OpenBSD__)
     pthread_set_name_np(pthread_self(), szThreadName);
+#elif defined(__NetBSD__)
+    pthread_setname_np(pthread_self(), "%s", (void*)szThreadName);
 #else
     pthread_setname_np(pthread_self(), szThreadName);
 #endif

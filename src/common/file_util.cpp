@@ -23,8 +23,8 @@
 #define fseeko _fseeki64
 #define ftello _ftelli64
 #define atoll _atoi64
-#define stat64 _stat64
-#define fstat64 _fstat64
+#define stat _stat64
+#define fstat _fstat64
 #define fileno _fileno
 #else
 #ifdef __APPLE__
@@ -52,11 +52,6 @@
 #define S_ISDIR(m) (((m)&S_IFMT) == S_IFDIR)
 #endif
 
-#ifdef BSD4_4
-#define stat64 stat
-#define fstat64 fstat
-#endif
-
 // This namespace has various generic functions related to files and paths.
 // The code still needs a ton of cleanup.
 // REMEMBER: strdup considered harmful!
@@ -76,7 +71,7 @@ static void StripTailDirSlashes(std::string& fname) {
 
 // Returns true if file filename exists
 bool Exists(const std::string& filename) {
-    struct stat64 file_info;
+    struct stat file_info;
 
     std::string copy(filename);
     StripTailDirSlashes(copy);
@@ -88,7 +83,7 @@ bool Exists(const std::string& filename) {
 
     int result = _wstat64(Common::UTF8ToUTF16W(copy).c_str(), &file_info);
 #else
-    int result = stat64(copy.c_str(), &file_info);
+    int result = stat(copy.c_str(), &file_info);
 #endif
 
     return (result == 0);
@@ -96,7 +91,7 @@ bool Exists(const std::string& filename) {
 
 // Returns true if filename is a directory
 bool IsDirectory(const std::string& filename) {
-    struct stat64 file_info;
+    struct stat file_info;
 
     std::string copy(filename);
     StripTailDirSlashes(copy);
@@ -108,7 +103,7 @@ bool IsDirectory(const std::string& filename) {
 
     int result = _wstat64(Common::UTF8ToUTF16W(copy).c_str(), &file_info);
 #else
-    int result = stat64(copy.c_str(), &file_info);
+    int result = stat(copy.c_str(), &file_info);
 #endif
 
     if (result < 0) {
@@ -339,11 +334,11 @@ u64 GetSize(const std::string& filename) {
         return 0;
     }
 
-    struct stat64 buf;
+    struct stat buf;
 #ifdef _WIN32
     if (_wstat64(Common::UTF8ToUTF16W(filename).c_str(), &buf) == 0)
 #else
-    if (stat64(filename.c_str(), &buf) == 0)
+    if (stat(filename.c_str(), &buf) == 0)
 #endif
     {
         LOG_TRACE(Common_Filesystem, "%s: %lld", filename.c_str(), (long long)buf.st_size);
@@ -356,8 +351,8 @@ u64 GetSize(const std::string& filename) {
 
 // Overloaded GetSize, accepts file descriptor
 u64 GetSize(const int fd) {
-    struct stat64 buf;
-    if (fstat64(fd, &buf) != 0) {
+    struct stat buf;
+    if (fstat(fd, &buf) != 0) {
         LOG_ERROR(Common_Filesystem, "GetSize: stat failed %i: %s", fd, GetLastErrorMsg());
         return 0;
     }

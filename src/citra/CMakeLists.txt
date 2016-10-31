@@ -23,7 +23,7 @@ if (MSVC)
 endif()
 target_link_libraries(citra ${PLATFORM_LIBRARIES} Threads::Threads)
 
-if(${CMAKE_SYSTEM_NAME} MATCHES "Linux|FreeBSD|OpenBSD|NetBSD")
+if(UNIX AND NOT APPLE)
     install(TARGETS citra RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}/bin")
 endif()
 
