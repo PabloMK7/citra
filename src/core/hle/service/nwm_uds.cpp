@@ -97,10 +97,21 @@ static void Initialize(Service::Interface* self) {
     u32 value = cmd_buff[13];
     u32 handle = cmd_buff[14];
 
+    // Because NWM service is not implemented at all, we stub the Initialize function with an error
+    // code instead of success to prevent games from using the service and from causing more issues.
+    // The error code is from a real 3DS with wifi off, thus believed to be "network disabled".
+    /*
     cmd_buff[1] = RESULT_SUCCESS.raw;
     cmd_buff[2] = 0;
     cmd_buff[3] = Kernel::g_handle_table.Create(handle_event)
                       .MoveFrom(); // TODO(purpasmart): Verify if this is a event handle
+    */
+    cmd_buff[0] = IPC::MakeHeader(0x1B, 1, 2);
+    cmd_buff[1] = ResultCode(static_cast<ErrorDescription>(2), ErrorModule::UDS,
+                             ErrorSummary::StatusChanged, ErrorLevel::Status)
+                      .raw;
+    cmd_buff[2] = 0;
+    cmd_buff[3] = 0;
 
     LOG_WARNING(Service_NWM, "(STUBBED) called unk1=0x%08X, unk2=0x%08X, value=%u, handle=0x%08X",
                 unk1, unk2, value, handle);
