@@ -15,9 +15,9 @@ struct ACConfig {
     std::array<u8, 0x200> data;
 };
 
-static ACConfig default_config = {};
+static ACConfig default_config{};
 
-static bool ac_connected;
+static bool ac_connected = false;
 
 static Kernel::SharedPtr<Kernel::Event> close_event;
 static Kernel::SharedPtr<Kernel::Event> connect_event;
