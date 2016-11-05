@@ -200,7 +200,7 @@ public:
     }
 
     /**
-     * Convenience method to update the VideoCore EmuWindow
+     * Convenience method to update the current frame layout
      * Read from the current settings to determine which layout to use.
      */
     void UpdateCurrentFramebufferLayout(unsigned width, unsigned height);

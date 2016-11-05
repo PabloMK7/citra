@@ -32,7 +32,8 @@ void ConfigureGraphics::applyConfiguration() {
     Settings::values.use_shader_jit = ui->toggle_shader_jit->isChecked();
     Settings::values.use_scaled_resolution = ui->toggle_scaled_resolution->isChecked();
     Settings::values.use_vsync = ui->toggle_vsync->isChecked();
-    Settings::values.layout_option = static_cast<Settings::LayoutOption>(ui->layout_combobox->currentIndex());
+    Settings::values.layout_option =
+        static_cast<Settings::LayoutOption>(ui->layout_combobox->currentIndex());
     Settings::values.swap_screen = ui->swap_screen->isChecked();
     Settings::Apply();
 }

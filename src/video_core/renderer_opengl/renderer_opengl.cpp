@@ -406,9 +406,8 @@ void RendererOpenGL::DrawScreens() {
     glUniform1i(uniform_color_texture, 0);
 
     if (layout.top_screen_enabled) {
-        DrawSingleScreenRotated(screen_infos[0], (float)top_screen.left,
-                                (float)top_screen.top, (float)top_screen.GetWidth(),
-                                (float)top_screen.GetHeight());
+        DrawSingleScreenRotated(screen_infos[0], (float)top_screen.left, (float)top_screen.top,
+                                (float)top_screen.GetWidth(), (float)top_screen.GetHeight());
     }
     if (layout.bottom_screen_enabled) {
         DrawSingleScreenRotated(screen_infos[1], (float)bottom_screen.left,

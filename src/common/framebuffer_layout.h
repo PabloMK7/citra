@@ -33,7 +33,8 @@ FramebufferLayout DefaultFrameLayout(unsigned width, unsigned height, bool is_sw
 FramebufferLayout SingleFrameLayout(unsigned width, unsigned height, bool is_swapped);
 
 /**
- * Factory method for constructing a Frame with the a 4x size Top screen with a 1x size bottom screen on the right
+ * Factory method for constructing a Frame with the a 4x size Top screen with a 1x size bottom
+ * screen on the right
  * This is useful in particular because it matches well with a 1920x1080 resolution monitor
  * @param width Window framebuffer width in pixels
  * @param height Window framebuffer height in pixels

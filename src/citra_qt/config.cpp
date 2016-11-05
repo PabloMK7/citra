@@ -55,7 +55,8 @@ void Config::ReadValues() {
     qt_config->endGroup();
 
     qt_config->beginGroup("Layout");
-    Settings::values.layout_option = static_cast<Settings::LayoutOption>(qt_config->value("layout_option").toInt());
+    Settings::values.layout_option =
+        static_cast<Settings::LayoutOption>(qt_config->value("layout_option").toInt());
     Settings::values.swap_screen = qt_config->value("swap_screen", false).toBool();
     qt_config->endGroup();
 

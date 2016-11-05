@@ -51,11 +51,15 @@ FramebufferLayout DefaultFrameLayout(unsigned width, unsigned height, bool swapp
             bot_screen.TranslateX((screen_window_area.GetWidth() - bot_screen.GetWidth()) / 2);
     } else {
         // Window is narrower than the emulation content => apply borders to the top and bottom
-        top_screen = top_screen.TranslateY(height / 2 - top_screen.GetHeight());
         // Recalculate the bottom screen to account for the width difference between top and bottom
         screen_window_area = {0, 0, width, top_screen.GetHeight()};
         bot_screen = maxRectangle(screen_window_area, BOT_SCREEN_ASPECT_RATIO);
         bot_screen = bot_screen.TranslateX((top_screen.GetWidth() - bot_screen.GetWidth()) / 2);
+        if (swapped) {
+            bot_screen = bot_screen.TranslateY(height / 2 - bot_screen.GetHeight());
+        } else {
+            top_screen = top_screen.TranslateY(height / 2 - top_screen.GetHeight());
+        }
     }
     // Move the top screen to the bottom if we are swapped.
     res.top_screen = swapped ? top_screen.TranslateY(height / 2) : top_screen;
