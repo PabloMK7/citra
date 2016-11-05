@@ -53,7 +53,7 @@ namespace Example {
 
 // Declare globals at the top
 int g_foo{}; // {} can be used to initialize types as 0, false, or nullptr
-char* g_some_pointer; // Pointer * and reference & stick to the type name
+char* g_some_pointer{}; // Pointer * and reference & stick to the type name, and make sure to initialize as nullptr!
 
 /// A colorful enum.
 enum SomeEnum {
