@@ -13,7 +13,7 @@ ConfigureGraphics::ConfigureGraphics(QWidget* parent)
     ui->setupUi(this);
     this->setConfiguration();
 
-    ui->toggle_vsync->setEnabled(!System::IsPoweredOn());
+    ui->toggle_vsync->setEnabled(!Core::System::GetInstance().IsPoweredOn());
 }
 
 ConfigureGraphics::~ConfigureGraphics() {}

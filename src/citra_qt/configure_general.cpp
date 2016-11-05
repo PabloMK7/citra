@@ -14,7 +14,7 @@ ConfigureGeneral::ConfigureGeneral(QWidget* parent)
     ui->setupUi(this);
     this->setConfiguration();
 
-    ui->toggle_cpu_jit->setEnabled(!System::IsPoweredOn());
+    ui->toggle_cpu_jit->setEnabled(!Core::System::GetInstance().IsPoweredOn());
 }
 
 ConfigureGeneral::~ConfigureGeneral() {}

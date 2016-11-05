@@ -24,7 +24,7 @@ ConfigureSystem::ConfigureSystem(QWidget* parent) : QWidget(parent), ui(new Ui::
 ConfigureSystem::~ConfigureSystem() {}
 
 void ConfigureSystem::setConfiguration() {
-    enabled = !System::IsPoweredOn();
+    enabled = !Core::System::GetInstance().IsPoweredOn();
 
     if (!enabled) {
         ReadSystemSettings();

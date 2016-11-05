@@ -64,7 +64,7 @@ int main(int argc, char** argv) {
         return -1;
     }
 #endif
-    std::string boot_filename;
+    std::string filepath;
 
     static struct option long_options[] = {
         {"gdbport", required_argument, 0, 'g'},
@@ -97,9 +97,9 @@ int main(int argc, char** argv) {
             }
         } else {
 #ifdef _WIN32
-            boot_filename = Common::UTF16ToUTF8(argv_w[optind]);
+            filepath = Common::UTF16ToUTF8(argv_w[optind]);
 #else
-            boot_filename = argv[optind];
+            filepath = argv[optind];
 #endif
             optind++;
         }
@@ -115,7 +115,7 @@ int main(int argc, char** argv) {
     MicroProfileOnThreadCreate("EmuThread");
     SCOPE_EXIT({ MicroProfileShutdown(); });
 
-    if (boot_filename.empty()) {
+    if (filepath.empty()) {
         LOG_CRITICAL(Frontend, "Failed to load ROM: No ROM specified");
         return -1;
     }
@@ -127,27 +127,20 @@ int main(int argc, char** argv) {
     Settings::values.use_gdbstub = use_gdbstub;
     Settings::Apply();
 
-    std::unique_ptr<EmuWindow_SDL2> emu_window = std::make_unique<EmuWindow_SDL2>();
+    std::unique_ptr<EmuWindow_SDL2> emu_window{ std::make_unique<EmuWindow_SDL2>() };
 
-    std::unique_ptr<Loader::AppLoader> loader = Loader::GetLoader(boot_filename);
-    if (!loader) {
-        LOG_CRITICAL(Frontend, "Failed to obtain loader for %s!", boot_filename.c_str());
+    Core::System& system{ Core::System::GetInstance() };
+
+    SCOPE_EXIT({ system.Shutdown(); });
+
+    const Core::System::ResultStatus load_result{ system.Load(emu_window.get(), filepath) };
+
+    switch (load_result) {
+    case Core::System::ResultStatus::ErrorGetLoader:
+        LOG_CRITICAL(Frontend, "Failed to obtain loader for %s!", filepath.c_str());
         return -1;
-    }
-
-    boost::optional<u32> system_mode = loader->LoadKernelSystemMode();
-
-    if (!system_mode) {
-        LOG_CRITICAL(Frontend, "Failed to load ROM (Could not determine system mode)!");
-        return -1;
-    }
-
-    System::Init(emu_window.get(), system_mode.get());
-    SCOPE_EXIT({ System::Shutdown(); });
-
-    Loader::ResultStatus load_result = loader->Load();
-    if (Loader::ResultStatus::Success != load_result) {
-        LOG_CRITICAL(Frontend, "Failed to load ROM (Error %i)!", load_result);
+    case Core::System::ResultStatus::ErrorLoader:
+        LOG_CRITICAL(Frontend, "Failed to load ROM!");
         return -1;
     }
 
