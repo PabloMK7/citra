@@ -38,6 +38,18 @@ struct Rectangle {
     T GetHeight() const {
         return std::abs(static_cast<typename std::make_signed<T>::type>(bottom - top));
     }
+    Rectangle<T> TranslateX(const T x) const {
+        return Rectangle{left + x, top, right + x, bottom};
+    }
+    Rectangle<T> TranslateY(const T y) const {
+        return Rectangle{left, top + y, right, bottom + y};
+    }
+    Rectangle<T> Scale(const float s) const {
+        ASSERT(s > 0);
+        return Rectangle {
+            left, top, static_cast<T>((right + left) * s), static_cast<T>((top + bottom) * s)
+        };
+    }
 };
 
 } // namespace MathUtil
