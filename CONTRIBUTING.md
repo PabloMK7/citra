@@ -52,7 +52,7 @@ namespace Example {
 // Namespace contents are not indented
 
 // Declare globals at the top
-int g_foo = 0;
+int g_foo{}; // {} can be used to initialize types as 0, false, or nullptr
 char* g_some_pointer; // Pointer * and reference & stick to the type name
 
 /// A colorful enum.
@@ -73,7 +73,9 @@ struct Position {
 // Use "typename" rather than "class" here
 template <typename T>
 void FooBar() {
-    int some_array[] = {
+    std::string some_string{ "prefer uniform initialization" };
+
+    int some_array[]{
         5,
         25,
         7,
