@@ -45,8 +45,8 @@ struct Rectangle {
         return Rectangle{left, top + y, right, bottom + y};
     }
     Rectangle<T> Scale(const float s) const {
-        return Rectangle{left, top, static_cast<T>((right + left) * s),
-                         static_cast<T>((top + bottom) * s)};
+        return Rectangle{left, top, static_cast<T>(left + GetWidth() * s),
+                         static_cast<T>(top + GetHeight() * s)};
     }
 };
 

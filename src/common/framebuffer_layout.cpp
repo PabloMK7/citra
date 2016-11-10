@@ -14,8 +14,6 @@ static const float TOP_SCREEN_ASPECT_RATIO =
     static_cast<float>(VideoCore::kScreenTopHeight) / VideoCore::kScreenTopWidth;
 static const float BOT_SCREEN_ASPECT_RATIO =
     static_cast<float>(VideoCore::kScreenBottomHeight) / VideoCore::kScreenBottomWidth;
-static const float BOT_TO_TOP_SCREEN_RATIO_DIFFERENCE =
-    BOT_SCREEN_ASPECT_RATIO - TOP_SCREEN_ASPECT_RATIO;
 
 // Finds the largest size subrectangle contained in window area that is confined to the aspect ratio
 template <class T>
@@ -23,8 +21,8 @@ static MathUtil::Rectangle<T> maxRectangle(MathUtil::Rectangle<T> window_area,
                                            float screen_aspect_ratio) {
     float scale = std::min(static_cast<float>(window_area.GetWidth()),
                            window_area.GetHeight() / screen_aspect_ratio);
-    return MathUtil::Rectangle<T>{0, 0, static_cast<T>(scale),
-                                  static_cast<T>(scale * screen_aspect_ratio)};
+    return MathUtil::Rectangle<T>{0, 0, static_cast<T>(std::round(scale)),
+                                  static_cast<T>(std::round(scale * screen_aspect_ratio))};
 }
 
 FramebufferLayout DefaultFrameLayout(unsigned width, unsigned height, bool swapped) {

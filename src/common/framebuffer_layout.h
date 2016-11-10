@@ -20,14 +20,16 @@ struct FramebufferLayout {
  * Factory method for constructing a default FramebufferLayout
  * @param width Window framebuffer width in pixels
  * @param height Window framebuffer height in pixels
+ * @param is_swapped if true, the bottom screen will be displayed above the top screen
  * @return Newly created FramebufferLayout object with default screen regions initialized
  */
 FramebufferLayout DefaultFrameLayout(unsigned width, unsigned height, bool is_swapped);
 
 /**
- * Factory method for constructing a FramebufferLayout with only the top screen
+ * Factory method for constructing a FramebufferLayout with only the top or bottom screen
  * @param width Window framebuffer width in pixels
  * @param height Window framebuffer height in pixels
+ * @param is_swapped if true, the bottom screen will be displayed (and the top won't be displayed)
  * @return Newly created FramebufferLayout object with default screen regions initialized
  */
 FramebufferLayout SingleFrameLayout(unsigned width, unsigned height, bool is_swapped);
@@ -38,6 +40,7 @@ FramebufferLayout SingleFrameLayout(unsigned width, unsigned height, bool is_swa
  * This is useful in particular because it matches well with a 1920x1080 resolution monitor
  * @param width Window framebuffer width in pixels
  * @param height Window framebuffer height in pixels
+ * @param is_swapped if true, the bottom screen will be the large display
  * @return Newly created FramebufferLayout object with default screen regions initialized
  */
 FramebufferLayout LargeFrameLayout(unsigned width, unsigned height, bool is_swapped);
