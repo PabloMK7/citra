@@ -101,7 +101,7 @@ GMainWindow::GMainWindow() : config(new Config()), emu_thread(nullptr) {
     addDockWidget(Qt::RightDockWidgetArea, graphicsTracingWidget);
     graphicsTracingWidget->hide();
 
-    auto graphicsSurfaceViewerAction = new QAction(tr("Create Pica surface viewer"), this);
+    auto graphicsSurfaceViewerAction = new QAction(tr("Create Pica Surface Viewer"), this);
     connect(graphicsSurfaceViewerAction, SIGNAL(triggered()), this,
             SLOT(OnCreateGraphicsSurfaceViewer()));
 

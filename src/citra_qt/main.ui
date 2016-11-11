@@ -148,7 +148,7 @@
   </action>
   <action name="action_Configure">
    <property name="text">
-    <string>Configure ...</string>
+    <string>Configure...</string>
    </property>
   </action>
   <action name="actionDisplay_widget_title_bars">
