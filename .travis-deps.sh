@@ -29,5 +29,5 @@ if [ "$TRAVIS_OS_NAME" = "linux" -o -z "$TRAVIS_OS_NAME" ]; then
 
 elif [ "$TRAVIS_OS_NAME" = "osx" ]; then
     brew update
-    brew install cmake qt5 sdl2 dylibbundler
+    brew install qt5 sdl2 dylibbundler
 fi
