@@ -390,6 +390,8 @@ void RendererOpenGL::DrawSingleScreenRotated(const ScreenInfo& screen_info, floa
  */
 void RendererOpenGL::DrawScreens() {
     auto layout = render_window->GetFramebufferLayout();
+    const auto& top_screen = layout.top_screen;
+    const auto& bottom_screen = layout.bottom_screen;
 
     glViewport(0, 0, layout.width, layout.height);
     glClear(GL_COLOR_BUFFER_BIT);
@@ -403,12 +405,15 @@ void RendererOpenGL::DrawScreens() {
     glActiveTexture(GL_TEXTURE0);
     glUniform1i(uniform_color_texture, 0);
 
-    DrawSingleScreenRotated(screen_infos[0], (float)layout.top_screen.left,
-                            (float)layout.top_screen.top, (float)layout.top_screen.GetWidth(),
-                            (float)layout.top_screen.GetHeight());
-    DrawSingleScreenRotated(screen_infos[1], (float)layout.bottom_screen.left,
-                            (float)layout.bottom_screen.top, (float)layout.bottom_screen.GetWidth(),
-                            (float)layout.bottom_screen.GetHeight());
+    if (layout.top_screen_enabled) {
+        DrawSingleScreenRotated(screen_infos[0], (float)top_screen.left, (float)top_screen.top,
+                                (float)top_screen.GetWidth(), (float)top_screen.GetHeight());
+    }
+    if (layout.bottom_screen_enabled) {
+        DrawSingleScreenRotated(screen_infos[1], (float)bottom_screen.left,
+                                (float)bottom_screen.top, (float)bottom_screen.GetWidth(),
+                                (float)bottom_screen.GetHeight());
+    }
 
     m_current_frame++;
 }

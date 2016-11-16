@@ -10,7 +10,15 @@
 
 namespace Settings {
 
+enum class LayoutOption {
+    Default,
+    SingleScreen,
+    LargeScreen,
+    Custom,
+};
+
 namespace NativeInput {
+
 enum Values {
     // directly mapped keys
     A,
@@ -83,6 +91,9 @@ struct Values {
     bool use_shader_jit;
     bool use_scaled_resolution;
     bool use_vsync;
+
+    LayoutOption layout_option;
+    bool swap_screen;
 
     float bg_red;
     float bg_green;

@@ -63,6 +63,16 @@ use_scaled_resolution =
 # 0 (default): Off, 1: On
 use_vsync =
 
+[Layout]
+# Layout for the screen inside the render window.
+# 0 (default): Default Top Bottom Screen, 1: Single Screen Only, 2: Large Screen Small Screen
+layout_option =
+
+# Swaps the prominent screen with the other screen.
+# For example, if Single Screen is chosen, setting this to 1 will display the bottom screen instead of the top screen.
+# 0 (default): Top Screen is prominent, 1: Bottom Screen is prominent
+swap_screen =
+
 # The clear color for the renderer. What shows up on the sides of the bottom screen.
 # Must be in range of 0.0-1.0. Defaults to 1.0 for all.
 bg_red =
