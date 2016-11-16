@@ -48,6 +48,10 @@
 #include "qhexedit.h"
 #include "video_core/video_core.h"
 
+#ifdef QT_STATICPLUGIN
+Q_IMPORT_PLUGIN(QWindowsIntegrationPlugin);
+#endif
+
 GMainWindow::GMainWindow() : config(new Config()), emu_thread(nullptr) {
     Pica::g_debug_context = Pica::DebugContext::Construct();
 
