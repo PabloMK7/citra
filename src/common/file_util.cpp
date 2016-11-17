@@ -598,18 +598,12 @@ std::string& GetExeDirectory() {
     return exe_path;
 }
 
-std::string& AppDataLocalDirectory() {
-    // Windows Vista or later only
-    static std::string local_path;
-    if (local_path.empty()) {
-        PWSTR pw_local_path = 0;
-        wchar_t* wchar_local_path;
-        SHGetKnownFolderPath(FOLDERID_LocalAppData, 0, NULL, &pw_local_path);
-        wchar_local_path = pw_local_path;
-        local_path = Common::UTF16ToUTF8(wchar_local_path);
-        // Freeing memory
-        CoTaskMemFree(static_cast<void*>(pw_local_path));
-    }
+std::string AppDataLocalDirectory() {
+    PWSTR pw_local_path = nullptr;
+    // Only supported by Windows Vista or later
+    SHGetKnownFolderPath(FOLDERID_LocalAppData, 0, nullptr, &pw_local_path);
+    std::string local_path = Common::UTF16ToUTF8(pw_local_path);
+    CoTaskMemFree(pw_local_path);
     return local_path;
 }
 #else
@@ -691,7 +685,7 @@ const std::string& GetUserPath(const unsigned int DirIDX, const std::string& new
         paths[D_USER_IDX] = GetExeDirectory() + DIR_SEP USERDATA_DIR DIR_SEP;
         if (!FileUtil::IsDirectory(paths[D_USER_IDX])) {
             paths[D_USER_IDX] =
-                AppDataLocalDirectory() + DIR_SEP + EMU_DATA_DIR DIR_SEP USERDATA_DIR DIR_SEP;
+                AppDataLocalDirectory() + DIR_SEP EMU_DATA_DIR DIR_SEP USERDATA_DIR DIR_SEP;
         }
 
         paths[D_CONFIG_IDX] = paths[D_USER_IDX] + CONFIG_DIR DIR_SEP;

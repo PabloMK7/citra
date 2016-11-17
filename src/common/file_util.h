@@ -154,7 +154,7 @@ std::string GetBundleDirectory();
 
 #ifdef _WIN32
 std::string& GetExeDirectory();
-std::string& AppDataLocalDirectory();
+std::string AppDataLocalDirectory();
 #endif
 
 size_t WriteStringToFile(bool text_file, const std::string& str, const char* filename);
