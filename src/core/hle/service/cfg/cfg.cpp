@@ -45,7 +45,8 @@ static_assert(sizeof(SaveFileConfig) == 0x455C,
 enum ConfigBlockID {
     StereoCameraSettingsBlockID = 0x00050005,
     SoundOutputModeBlockID = 0x00070001,
-    ConsoleUniqueIDBlockID = 0x00090001,
+    ConsoleUniqueID1BlockID = 0x00090000,
+    ConsoleUniqueID2BlockID = 0x00090001,
     UsernameBlockID = 0x000A0000,
     BirthdayBlockID = 0x000A0001,
     LanguageBlockID = 0x000A0002,
@@ -409,7 +410,12 @@ ResultCode FormatConfig() {
     if (!res.IsSuccess())
         return res;
 
-    res = CreateConfigInfoBlk(ConsoleUniqueIDBlockID, sizeof(CONSOLE_UNIQUE_ID), 0xE,
+    res = CreateConfigInfoBlk(ConsoleUniqueID1BlockID, sizeof(CONSOLE_UNIQUE_ID), 0xE,
+                              &CONSOLE_UNIQUE_ID);
+    if (!res.IsSuccess())
+        return res;
+
+    res = CreateConfigInfoBlk(ConsoleUniqueID2BlockID, sizeof(CONSOLE_UNIQUE_ID), 0xE,
                               &CONSOLE_UNIQUE_ID);
     if (!res.IsSuccess())
         return res;
