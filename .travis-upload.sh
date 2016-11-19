@@ -1,17 +1,16 @@
 if [ "$TRAVIS_EVENT_TYPE" = "push" ]&&[ "$TRAVIS_BRANCH" = "master" ]; then
     GITDATE="`git show -s --date=short --format='%ad' | sed 's/-//g'`"
     GITREV="`git show -s --format='%h'`"
+    mkdir -p artifacts
 
     if [ "$TRAVIS_OS_NAME" = "linux" -o -z "$TRAVIS_OS_NAME" ]; then
-        REV_NAME="citra-${GITDATE}-${GITREV}-linux-amd64"
-        UPLOAD_DIR="/citra/nightly/linux-amd64"
+        REV_NAME="citra-linux-${GITDATE}-${GITREV}"
         mkdir "$REV_NAME"
 
         cp build/src/citra/citra "$REV_NAME"
         cp build/src/citra_qt/citra-qt "$REV_NAME"
     elif [ "$TRAVIS_OS_NAME" = "osx" ]; then
-        REV_NAME="citra-${GITDATE}-${GITREV}-osx-amd64"
-        UPLOAD_DIR="/citra/nightly/osx-amd64"
+        REV_NAME="citra-osx-${GITDATE}-${GITREV}"
         mkdir "$REV_NAME"
 
         cp build/src/citra/Release/citra "$REV_NAME"
@@ -121,4 +120,7 @@ EOL
 
     ARCHIVE_NAME="${REV_NAME}.tar.xz"
     tar -cJvf "$ARCHIVE_NAME" "$REV_NAME"
+
+    # move the compiled archive into the artifacts directory to be uploaded by travis releases
+    mv "$ARCHIVE_NAME" artifacts/
 fi

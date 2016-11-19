@@ -1,0 +1,23 @@
+{
+    "package": {
+        "name": "nightly",
+        "repo": "citra",
+        "subject": "citra-emu",
+        "desc": "Build created on @BUILD_DATE@",
+        "website_url": "www.citra-emu.org",
+        "public_download_numbers": false,
+        "public_stats": false
+    },
+    "version": {
+        "name": "nightly",
+        "released": "@BUILD_DATE@",
+        "gpgSign": false
+    },
+    "files": [
+        {
+            "includePattern": "artifacts/(.*\\.tar.xz)",
+            "uploadPattern": "$1"
+        }
+    ],
+    "publish": true
+}

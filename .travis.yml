@@ -1,5 +1,4 @@
 language: cpp
-
 matrix:
   include:
     - os: linux
@@ -8,10 +7,6 @@ matrix:
     - os: osx
       sudo: false
       osx_image: xcode7.3
-
-env:
-  global:
-    - secure: "AXHFIafTmbGDsHD3mUVj5a4I397DQjti/WoqAJGUp2PglxTcc04BwxZ9Z+xLuf5N2Hs5r9ojAJLT8OGxJCLBDXzneQTNSqXbFuYSLbqrEAiIRlA9eRIotWCg+wYcO+5e8MKX+cHVKwiIWasUB21AtCdq6msh6Y3pUshZp212VPg="
 
 addons:
   apt:
@@ -27,8 +22,15 @@ addons:
 
 cache:
   directories:
-    - $HOME/.local
+    - "$HOME/.local"
 
-install: ./.travis-deps.sh
-script: ./.travis-build.sh
-after_success: ./.travis-upload.sh
+install: "./.travis-deps.sh"
+script: "./.travis-build.sh"
+after_success: "./.travis-upload.sh"
+
+deploy:
+  provider: bintray
+  file: "${HOME}/build/${TRAVIS_REPO_SLUG}/.travis.descriptor.json"
+  user: citra-emu
+  key:
+    secure: "MADIMRKlcr+O2iCmavkbIvUWexopOhnzXuDHKXfGyGY93Im8NCTrbb3tDoLH+bRYQrjNCeaV36ffhpDULU+eH11L4yF5/KY4modEKW4sq3cnAJkm5DUOc/sujlRCwzfjg6NFZGhjxfSlt0ltKRdCKEB/j1vR2GD7d/eQ4diJukQ="
