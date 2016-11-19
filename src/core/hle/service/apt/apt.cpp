@@ -523,7 +523,7 @@ void Init() {
     notification_event = Kernel::Event::Create(Kernel::ResetType::OneShot, "APT_U:Notification");
     parameter_event = Kernel::Event::Create(Kernel::ResetType::OneShot, "APT_U:Start");
 
-    next_parameter.signal = static_cast<u32>(SignalType::AppJustStarted);
+    next_parameter.signal = static_cast<u32>(SignalType::Wakeup);
     next_parameter.destination_id = 0x300;
 }
 
