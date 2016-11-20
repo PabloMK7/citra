@@ -58,7 +58,7 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x002F0040, nullptr, "AllowHalfAwake"},
     {0x00300000, nullptr, "GetServerTypes"},
     {0x00310082, nullptr, "GetFriendComment"},
-    {0x00320042, nullptr, "SetClientSdkVersion"},
+    {0x00320042, SetClientSdkVersion, "SetClientSdkVersion"},
     {0x00330000, nullptr, "GetMyApproachContext"},
     {0x00340046, nullptr, "AddFriendWithApproach"},
     {0x00350082, nullptr, "DecryptApproachContext"},

@@ -287,6 +287,24 @@ static void SetAllowShellClosed(Service::Interface* self) {
     LOG_WARNING(Service_MIC, "(STUBBED) called, allow_shell_closed=%u", allow_shell_closed);
 }
 
+/**
+ * MIC_U::SetClientVersion service function
+ *  Inputs:
+ *      1 : Used SDK Version
+ *  Outputs:
+ *      1 : Result of function, 0 on success, otherwise error code
+ */
+static void SetClientVersion(Service::Interface* self) {
+    u32* cmd_buff = Kernel::GetCommandBuffer();
+
+    const u32 version = cmd_buff[1];
+    self->SetVersion(version);
+
+    LOG_WARNING(Service_MIC, "(STUBBED) called, version: 0x%08X", version);
+
+    cmd_buff[1] = RESULT_SUCCESS.raw; // No error
+}
+
 const Interface::FunctionInfo FunctionTable[] = {
     {0x00010042, MapSharedMem, "MapSharedMem"},
     {0x00020000, UnmapSharedMem, "UnmapSharedMem"},
@@ -303,7 +321,7 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x000D0040, SetClamp, "SetClamp"},
     {0x000E0000, GetClamp, "GetClamp"},
     {0x000F0040, SetAllowShellClosed, "SetAllowShellClosed"},
-    {0x00100040, nullptr, "SetClientSDKVersion"},
+    {0x00100040, SetClientVersion, "SetClientVersion"},
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -763,23 +763,27 @@ static void CreateLegacySystemSaveData(Service::Interface* self) {
  * FS_User::InitializeWithSdkVersion service function.
  *  Inputs:
  *      0 : 0x08610042
- *      1 : Unknown
- *      2 : Unknown
- *      3 : Unknown
+ *      1 : Used SDK Version
+ *      2 : ProcessId Header
+ *      3 : placeholder for ProcessId
  *  Outputs:
  *      1 : Result of function, 0 on success, otherwise error code
  */
 static void InitializeWithSdkVersion(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
-    u32 unk1 = cmd_buff[1];
-    u32 unk2 = cmd_buff[2];
-    u32 unk3 = cmd_buff[3];
+    const u32 version = cmd_buff[1];
+    self->SetVersion(version);
 
-    cmd_buff[1] = RESULT_SUCCESS.raw;
-
-    LOG_WARNING(Service_FS, "(STUBBED) called unk1=0x%08X, unk2=0x%08X, unk3=0x%08X", unk1, unk2,
-                unk3);
+    if (cmd_buff[2] == IPC::CallingPidDesc()) {
+        LOG_WARNING(Service_FS, "(STUBBED) called, version: 0x%08X", version);
+        cmd_buff[1] = RESULT_SUCCESS.raw;
+    } else {
+        LOG_ERROR(Service_FS, "ProcessId Header must be 0x20");
+        cmd_buff[1] = ResultCode(ErrorDescription::OS_InvalidBufferDescriptor, ErrorModule::OS,
+                                 ErrorSummary::WrongArgument, ErrorLevel::Permanent)
+                          .raw;
+    }
 }
 
 /**
