@@ -117,6 +117,14 @@ FileType AppLoader_NCCH::IdentifyType(FileUtil::IOFile& file) {
     return FileType::Error;
 }
 
+ResultStatus AppLoader_NCCH::LoadKernelSystemMode(u32& memory_type) {
+    ResultStatus result = LoadExeFS();
+    if (result != ResultStatus::Success)
+        return result;
+    memory_type = exheader_header.arm11_system_local_caps.system_mode;
+    return ResultStatus::Success;
+}
+
 ResultStatus AppLoader_NCCH::LoadExec() {
     using Kernel::SharedPtr;
     using Kernel::CodeSet;
@@ -277,6 +285,7 @@ ResultStatus AppLoader_NCCH::LoadExeFS() {
     LOG_DEBUG(Loader, "Core version:                %d", core_version);
     LOG_DEBUG(Loader, "Thread priority:             0x%X", priority);
     LOG_DEBUG(Loader, "Resource limit category:     %d", resource_limit_category);
+    LOG_DEBUG(Loader, "System Mode:                 %d", exheader_header.arm11_system_local_caps.system_mode);
 
     if (exheader_header.arm11_system_local_caps.program_id != ncch_header.program_id) {
         LOG_ERROR(Loader, "ExHeader Program ID mismatch: the ROM is probably encrypted.");

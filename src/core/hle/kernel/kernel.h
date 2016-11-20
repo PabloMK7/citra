@@ -286,8 +286,8 @@ private:
 
 extern HandleTable g_handle_table;
 
-/// Initialize the kernel
-void Init();
+/// Initialize the kernel with the specified system mode.
+void Init(u32 system_mode);
 
 /// Shutdown the kernel
 void Shutdown();

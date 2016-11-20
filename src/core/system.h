@@ -15,7 +15,7 @@ enum class Result {
     ErrorInitVideoCore, ///< Something went wrong during video core init
 };
 
-Result Init(EmuWindow* emu_window);
+Result Init(EmuWindow* emu_window, u32 system_mode);
 bool IsPoweredOn();
 void Shutdown();
 }

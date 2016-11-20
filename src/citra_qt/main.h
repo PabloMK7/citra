@@ -60,7 +60,12 @@ signals:
     void EmulationStopping();
 
 private:
-    bool InitializeSystem();
+    /**
+     * Initializes the emulation system.
+     * @param system_mode The system mode with which to intialize the kernel.
+     * @returns Whether the system was properly initialized.
+     */
+    bool InitializeSystem(u32 system_mode);
     bool LoadROM(const std::string& filename);
     void BootGame(const std::string& filename);
     void ShutdownGame();

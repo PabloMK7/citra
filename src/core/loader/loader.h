@@ -96,6 +96,17 @@ public:
     virtual ResultStatus Load() = 0;
 
     /**
+     * Loads the system mode that this application needs.
+     * This function defaults to 2 (96MB allocated to the application) if it can't read the information.
+     * @param system_mode Out variable where the system mode will be stored.
+     * @returns ResultStatus result of the operation
+     */
+    virtual ResultStatus LoadKernelSystemMode(u32& system_mode) {
+        system_mode = 2; // 96MB allocated to the application.
+        return ResultStatus::Success;
+    }
+
+    /**
      * Get the code (typically .code section) of the application
      * @param buffer Reference to buffer to store data
      * @return ResultStatus result of function
