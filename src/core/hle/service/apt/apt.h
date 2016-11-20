@@ -46,12 +46,23 @@ static_assert(sizeof(CaptureBufferInfo) == 0x20, "CaptureBufferInfo struct has i
 /// Signals used by APT functions
 enum class SignalType : u32 {
     None = 0x0,
-    AppJustStarted = 0x1,
-    LibAppJustStarted = 0x2,
-    LibAppFinished = 0x3,
-    LibAppClosed = 0xA,
-    ReturningToApp = 0xB,
-    ExitingApp = 0xC,
+    Wakeup = 0x1,
+    Request = 0x2,
+    Response = 0x3,
+    Exit = 0x4,
+    Message = 0x5,
+    HomeButtonSingle = 0x6,
+    HomeButtonDouble = 0x7,
+    DspSleep = 0x8,
+    DspWakeup = 0x9,
+    WakeupByExit = 0xA,
+    WakeupByPause = 0xB,
+    WakeupByCancel = 0xC,
+    WakeupByCancelAll = 0xD,
+    WakeupByPowerButtonClick = 0xE,
+    WakeupToJumpHome = 0xF,
+    RequestForSysApplet = 0x10,
+    WakeupToLaunchApplication = 0x11,
 };
 
 /// App Id's used by APT functions

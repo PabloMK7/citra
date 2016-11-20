@@ -22,7 +22,7 @@ namespace HLE {
 namespace Applets {
 
 ResultCode SoftwareKeyboard::ReceiveParameter(Service::APT::MessageParameter const& parameter) {
-    if (parameter.signal != static_cast<u32>(Service::APT::SignalType::LibAppJustStarted)) {
+    if (parameter.signal != static_cast<u32>(Service::APT::SignalType::Request)) {
         LOG_ERROR(Service_APT, "unsupported signal %u", parameter.signal);
         UNIMPLEMENTED();
         // TODO(Subv): Find the right error code
@@ -47,7 +47,7 @@ ResultCode SoftwareKeyboard::ReceiveParameter(Service::APT::MessageParameter con
 
     // Send the response message with the newly created SharedMemory
     Service::APT::MessageParameter result;
-    result.signal = static_cast<u32>(Service::APT::SignalType::LibAppFinished);
+    result.signal = static_cast<u32>(Service::APT::SignalType::Response);
     result.buffer.clear();
     result.destination_id = static_cast<u32>(Service::APT::AppletId::Application);
     result.sender_id = static_cast<u32>(id);
@@ -108,7 +108,7 @@ void SoftwareKeyboard::Finalize() {
     Service::APT::MessageParameter message;
     message.buffer.resize(sizeof(SoftwareKeyboardConfig));
     std::memcpy(message.buffer.data(), &config, message.buffer.size());
-    message.signal = static_cast<u32>(Service::APT::SignalType::LibAppClosed);
+    message.signal = static_cast<u32>(Service::APT::SignalType::WakeupByExit);
     message.destination_id = static_cast<u32>(Service::APT::AppletId::Application);
     message.sender_id = static_cast<u32>(id);
     Service::APT::SendParameter(message);
