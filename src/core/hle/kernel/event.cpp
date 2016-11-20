@@ -22,6 +22,11 @@ SharedPtr<Event> Event::Create(ResetType reset_type, std::string name) {
     evt->reset_type = reset_type;
     evt->name = std::move(name);
 
+    if (reset_type == ResetType::Pulse) {
+        LOG_ERROR(Kernel, "Unimplemented event reset type Pulse");
+        UNIMPLEMENTED();
+    }
+
     return evt;
 }
 
