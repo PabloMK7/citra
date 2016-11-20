@@ -215,18 +215,17 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
 
         PrimitiveAssembler<Shader::OutputVertex>& primitive_assembler = g_state.primitive_assembler;
 
-        if (g_debug_context) {
+        if (g_debug_context && g_debug_context->recorder) {
             for (int i = 0; i < 3; ++i) {
                 const auto texture = regs.GetTextures()[i];
                 if (!texture.enabled)
                     continue;
 
                 u8* texture_data = Memory::GetPhysicalPointer(texture.config.GetPhysicalAddress());
-                if (g_debug_context && Pica::g_debug_context->recorder)
-                    g_debug_context->recorder->MemoryAccessed(
-                        texture_data, Pica::Regs::NibblesPerPixel(texture.format) *
-                                          texture.config.width / 2 * texture.config.height,
-                        texture.config.GetPhysicalAddress());
+                g_debug_context->recorder->MemoryAccessed(
+                    texture_data, Pica::Regs::NibblesPerPixel(texture.format) *
+                    texture.config.width / 2 * texture.config.height,
+                    texture.config.GetPhysicalAddress());
             }
         }
 
