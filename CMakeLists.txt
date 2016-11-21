@@ -71,6 +71,9 @@ if (NOT MSVC)
 
     if (MINGW)
         add_definitions(-DMINGW_HAS_SECURE_API)
+        # Microprofile causes crashes when launching titles on MinGW
+        add_definitions(-DMICROPROFILE_ENABLED=0)
+
         if (MINGW_STATIC_BUILD)
             add_definitions(-DQT_STATICPLUGIN)
             set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static")
