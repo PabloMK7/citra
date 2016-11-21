@@ -156,7 +156,7 @@ if (ENABLE_SDL2)
     if (CITRA_USE_BUNDLED_SDL2)
         # Detect toolchain and platform
         if (MSVC14 AND ARCHITECTURE_x86_64)
-            set(SDL2_VER "SDL2-2.0.4")
+            set(SDL2_VER "SDL2-2.0.5")
         else()
             message(FATAL_ERROR "No bundled SDL2 binaries for your toolchain. Disable CITRA_USE_BUNDLED_SDL2 and provide your own.")
         endif()
