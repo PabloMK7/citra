@@ -25,7 +25,7 @@ struct SDL2Sink::Impl {
 
 SDL2Sink::SDL2Sink() : impl(std::make_unique<Impl>()) {
     if (SDL_Init(SDL_INIT_AUDIO) < 0) {
-        LOG_CRITICAL(Audio_Sink, "SDL_Init(SDL_INIT_AUDIO) failed");
+        LOG_CRITICAL(Audio_Sink, "SDL_Init(SDL_INIT_AUDIO) failed with: %s", SDL_GetError());
         impl->audio_device_id = 0;
         return;
     }
@@ -45,7 +45,7 @@ SDL2Sink::SDL2Sink() : impl(std::make_unique<Impl>()) {
     impl->audio_device_id =
         SDL_OpenAudioDevice(nullptr, false, &desired_audiospec, &obtained_audiospec, 0);
     if (impl->audio_device_id <= 0) {
-        LOG_CRITICAL(Audio_Sink, "SDL_OpenAudioDevice failed");
+        LOG_CRITICAL(Audio_Sink, "SDL_OpenAudioDevice failed with: %s", SDL_GetError());
         return;
     }
 
