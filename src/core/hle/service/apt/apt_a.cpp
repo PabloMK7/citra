@@ -25,7 +25,7 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x00160040, PreloadLibraryApplet, "PreloadLibraryApplet"},
     {0x00180040, PrepareToStartLibraryApplet, "PrepareToStartLibraryApplet"},
     {0x001E0084, StartLibraryApplet, "StartLibraryApplet"},
-    {0x003B0040, nullptr, "CancelLibraryApplet?"},
+    {0x003B0040, CancelLibraryApplet, "CancelLibraryApplet"},
     {0x003E0080, nullptr, "ReplySleepQuery"},
     {0x00430040, NotifyToWait, "NotifyToWait?"},
     {0x00440000, GetSharedFont, "GetSharedFont?"},

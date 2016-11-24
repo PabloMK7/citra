@@ -67,7 +67,7 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x00380040, nullptr, "PreloadResidentApplet"},
     {0x00390040, nullptr, "PrepareToStartResidentApplet"},
     {0x003A0044, nullptr, "StartResidentApplet"},
-    {0x003B0040, nullptr, "CancelLibraryApplet"},
+    {0x003B0040, CancelLibraryApplet, "CancelLibraryApplet"},
     {0x003C0042, nullptr, "SendDspSleep"},
     {0x003D0042, nullptr, "SendDspWakeUp"},
     {0x003E0080, nullptr, "ReplySleepQuery"},
