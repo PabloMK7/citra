@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <array>
 #include <cstddef>
 #include <string>
 #include "common/common_types.h"
@@ -17,6 +18,7 @@ namespace Memory {
 const u32 PAGE_SIZE = 0x1000;
 const u32 PAGE_MASK = PAGE_SIZE - 1;
 const int PAGE_BITS = 12;
+const size_t PAGE_TABLE_NUM_ENTRIES = 1 << (32 - PAGE_BITS);
 
 /// Physical memory regions as seen from the ARM11
 enum : PAddr {
@@ -166,4 +168,11 @@ void RasterizerFlushRegion(PAddr start, u32 size);
  * Flushes and invalidates any externally cached rasterizer resources touching the given region.
  */
 void RasterizerFlushAndInvalidateRegion(PAddr start, u32 size);
+
+/**
+ * Dynarmic has an optimization to memory accesses when the pointer to the page exists that
+ * can be used by setting up the current page table as a callback. This function is used to
+ * retrieve the current page table for that purpose.
+ */
+std::array<u8*, PAGE_TABLE_NUM_ENTRIES>* GetCurrentPageTablePointers();
 }

@@ -52,6 +52,7 @@ static Dynarmic::UserCallbacks GetUserCallbacks(ARMul_State* interpeter_state) {
     user_callbacks.MemoryWrite16 = &Memory::Write16;
     user_callbacks.MemoryWrite32 = &Memory::Write32;
     user_callbacks.MemoryWrite64 = &Memory::Write64;
+    user_callbacks.page_table = Memory::GetCurrentPageTablePointers();
     return user_callbacks;
 }
 
