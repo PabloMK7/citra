@@ -98,7 +98,9 @@ static void StartSampling(Service::Interface* self) {
 
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
     is_sampling = true;
-    LOG_WARNING(Service_MIC, "(STUBBED) called");
+    LOG_WARNING(Service_MIC, "(STUBBED) called, encoding=%u, sample_rate=%u, "
+                             "audio_buffer_offset=%d, audio_buffer_size=%u, audio_buffer_loop=%u",
+                encoding, sample_rate, audio_buffer_offset, audio_buffer_size, audio_buffer_loop);
 }
 
 /**
@@ -113,7 +115,7 @@ static void AdjustSampling(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
     sample_rate = static_cast<SampleRate>(cmd_buff[1] & 0xFF);
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
-    LOG_WARNING(Service_MIC, "(STUBBED) called");
+    LOG_WARNING(Service_MIC, "(STUBBED) called, sample_rate=%u", sample_rate);
 }
 
 /**
@@ -172,7 +174,7 @@ static void SetGain(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
     mic_gain = cmd_buff[1] & 0xFF;
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
-    LOG_WARNING(Service_MIC, "(STUBBED) called, gain = %d", mic_gain);
+    LOG_WARNING(Service_MIC, "(STUBBED) called, mic_gain=%u", mic_gain);
 }
 
 /**
@@ -202,7 +204,7 @@ static void SetPower(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
     mic_power = static_cast<bool>(cmd_buff[1] & 0xFF);
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
-    LOG_WARNING(Service_MIC, "(STUBBED) called, power = %u", mic_power);
+    LOG_WARNING(Service_MIC, "(STUBBED) called, mic_power=%u", mic_power);
 }
 
 /**
