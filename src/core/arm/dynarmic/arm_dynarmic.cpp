@@ -131,9 +131,9 @@ MICROPROFILE_DEFINE(ARM_Jit, "ARM JIT", "ARM JIT", MP_RGB(255, 64, 64));
 void ARM_Dynarmic::ExecuteInstructions(int num_instructions) {
     MICROPROFILE_SCOPE(ARM_Jit);
 
-    jit->Run(static_cast<unsigned>(num_instructions));
+    unsigned ticks_executed = jit->Run(static_cast<unsigned>(num_instructions));
 
-    AddTicks(num_instructions);
+    AddTicks(ticks_executed);
 }
 
 void ARM_Dynarmic::SaveContext(Core::ThreadContext& ctx) {
