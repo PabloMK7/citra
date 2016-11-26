@@ -19,7 +19,7 @@
 #define EMU_DATA_DIR USER_DIR
 #else
 #ifdef _WIN32
-#define EMU_DATA_DIR "Citra Emulator"
+#define EMU_DATA_DIR "Citra"
 #else
 #define EMU_DATA_DIR "citra-emu"
 #endif

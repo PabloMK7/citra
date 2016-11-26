@@ -26,6 +26,9 @@
 #define stat _stat64
 #define fstat _fstat64
 #define fileno _fileno
+// Windows version, at least Vista is required to obtain AppData Path
+#define WINVER 0x0600
+#define _WIN32_WINNT 0x0600
 #else
 #ifdef __APPLE__
 #include <sys/param.h>
@@ -594,6 +597,15 @@ std::string& GetExeDirectory() {
     }
     return exe_path;
 }
+
+std::string AppDataRoamingDirectory() {
+    PWSTR pw_local_path = nullptr;
+    // Only supported by Windows Vista or later
+    SHGetKnownFolderPath(FOLDERID_RoamingAppData, 0, nullptr, &pw_local_path);
+    std::string local_path = Common::UTF16ToUTF8(pw_local_path);
+    CoTaskMemFree(pw_local_path);
+    return local_path;
+}
 #else
 /**
  * @return The user’s home directory on POSIX systems
@@ -671,6 +683,10 @@ const std::string& GetUserPath(const unsigned int DirIDX, const std::string& new
     if (paths[D_USER_IDX].empty()) {
 #ifdef _WIN32
         paths[D_USER_IDX] = GetExeDirectory() + DIR_SEP USERDATA_DIR DIR_SEP;
+        if (!FileUtil::IsDirectory(paths[D_USER_IDX])) {
+            paths[D_USER_IDX] = AppDataRoamingDirectory() + DIR_SEP EMU_DATA_DIR DIR_SEP;
+        }
+
         paths[D_CONFIG_IDX] = paths[D_USER_IDX] + CONFIG_DIR DIR_SEP;
         paths[D_CACHE_IDX] = paths[D_USER_IDX] + CACHE_DIR DIR_SEP;
 #else
