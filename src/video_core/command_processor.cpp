@@ -52,10 +52,6 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
     if (id >= regs.NumIds())
         return;
 
-    // If we're skipping this frame, only allow trigger IRQ
-    if (GPU::g_skip_frame && id != PICA_REG_INDEX(trigger_irq))
-        return;
-
     // TODO: Figure out how register masking acts on e.g. vs.uniform_setup.set_value
     u32 old_value = regs[id];
 

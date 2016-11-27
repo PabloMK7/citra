@@ -78,7 +78,6 @@ struct Values {
 
     // Core
     bool use_cpu_jit;
-    int frame_skip;
 
     // Data Storage
     bool use_virtual_sd;
