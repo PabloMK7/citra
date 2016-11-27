@@ -17,13 +17,16 @@ set(SRCS
             core_timing.cpp
             file_sys/archive_backend.cpp
             file_sys/archive_extsavedata.cpp
+            file_sys/archive_ncch.cpp
             file_sys/archive_romfs.cpp
             file_sys/archive_savedata.cpp
-            file_sys/archive_savedatacheck.cpp
             file_sys/archive_sdmc.cpp
+            file_sys/archive_sdmcwriteonly.cpp
             file_sys/archive_systemsavedata.cpp
             file_sys/disk_archive.cpp
             file_sys/ivfc_archive.cpp
+            file_sys/path_parser.cpp
+            file_sys/savedata_archive.cpp
             gdbstub/gdbstub.cpp
             hle/config_mem.cpp
             hle/hle.cpp
@@ -159,15 +162,18 @@ set(HEADERS
             core_timing.h
             file_sys/archive_backend.h
             file_sys/archive_extsavedata.h
+            file_sys/archive_ncch.h
             file_sys/archive_romfs.h
             file_sys/archive_savedata.h
-            file_sys/archive_savedatacheck.h
             file_sys/archive_sdmc.h
+            file_sys/archive_sdmcwriteonly.h
             file_sys/archive_systemsavedata.h
             file_sys/directory_backend.h
             file_sys/disk_archive.h
             file_sys/file_backend.h
             file_sys/ivfc_archive.h
+            file_sys/path_parser.h
+            file_sys/savedata_archive.h
             gdbstub/gdbstub.h
             hle/config_mem.h
             hle/function_wrappers.h

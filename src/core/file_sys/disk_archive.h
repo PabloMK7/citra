@@ -20,43 +20,13 @@
 
 namespace FileSys {
 
-/**
- * Helper which implements a backend accessing the host machine's filesystem.
- * This should be subclassed by concrete archive types, which will provide the
- * base directory on the host filesystem and override any required functionality.
- */
-class DiskArchive : public ArchiveBackend {
-public:
-    DiskArchive(const std::string& mount_point_) : mount_point(mount_point_) {}
-
-    virtual std::string GetName() const override {
-        return "DiskArchive: " + mount_point;
-    }
-
-    ResultVal<std::unique_ptr<FileBackend>> OpenFile(const Path& path,
-                                                     const Mode mode) const override;
-    ResultCode DeleteFile(const Path& path) const override;
-    bool RenameFile(const Path& src_path, const Path& dest_path) const override;
-    bool DeleteDirectory(const Path& path) const override;
-    bool DeleteDirectoryRecursively(const Path& path) const override;
-    ResultCode CreateFile(const Path& path, u64 size) const override;
-    bool CreateDirectory(const Path& path) const override;
-    bool RenameDirectory(const Path& src_path, const Path& dest_path) const override;
-    std::unique_ptr<DirectoryBackend> OpenDirectory(const Path& path) const override;
-    u64 GetFreeBytes() const override;
-
-protected:
-    friend class DiskFile;
-    friend class DiskDirectory;
-
-    std::string mount_point;
-};
-
 class DiskFile : public FileBackend {
 public:
-    DiskFile(const DiskArchive& archive, const Path& path, const Mode mode);
+    DiskFile(FileUtil::IOFile&& file_, const Mode& mode_)
+        : file(new FileUtil::IOFile(std::move(file_))) {
+        mode.hex = mode_.hex;
+    }
 
-    ResultCode Open() override;
     ResultVal<size_t> Read(u64 offset, size_t length, u8* buffer) const override;
     ResultVal<size_t> Write(u64 offset, size_t length, bool flush, const u8* buffer) const override;
     u64 GetSize() const override;
@@ -68,20 +38,18 @@ public:
     }
 
 protected:
-    std::string path;
     Mode mode;
     std::unique_ptr<FileUtil::IOFile> file;
 };
 
 class DiskDirectory : public DirectoryBackend {
 public:
-    DiskDirectory(const DiskArchive& archive, const Path& path);
+    DiskDirectory(const std::string& path);
 
     ~DiskDirectory() override {
         Close();
     }
 
-    bool Open() override;
     u32 Read(const u32 count, Entry* entries) override;
 
     bool Close() const override {
@@ -89,7 +57,6 @@ public:
     }
 
 protected:
-    std::string path;
     u32 total_entries_in_directory;
     FileUtil::FSTEntry directory;
 

@@ -1,5 +1,7 @@
 set(SRCS
+            glad.cpp
             tests.cpp
+            core/file_sys/path_parser.cpp
             )
 
 set(HEADERS

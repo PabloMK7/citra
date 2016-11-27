@@ -33,15 +33,15 @@ public:
     std::string GetName() const override;
 
     ResultVal<std::unique_ptr<FileBackend>> OpenFile(const Path& path,
-                                                     const Mode mode) const override;
+                                                     const Mode& mode) const override;
     ResultCode DeleteFile(const Path& path) const override;
-    bool RenameFile(const Path& src_path, const Path& dest_path) const override;
-    bool DeleteDirectory(const Path& path) const override;
-    bool DeleteDirectoryRecursively(const Path& path) const override;
+    ResultCode RenameFile(const Path& src_path, const Path& dest_path) const override;
+    ResultCode DeleteDirectory(const Path& path) const override;
+    ResultCode DeleteDirectoryRecursively(const Path& path) const override;
     ResultCode CreateFile(const Path& path, u64 size) const override;
-    bool CreateDirectory(const Path& path) const override;
-    bool RenameDirectory(const Path& src_path, const Path& dest_path) const override;
-    std::unique_ptr<DirectoryBackend> OpenDirectory(const Path& path) const override;
+    ResultCode CreateDirectory(const Path& path) const override;
+    ResultCode RenameDirectory(const Path& src_path, const Path& dest_path) const override;
+    ResultVal<std::unique_ptr<DirectoryBackend>> OpenDirectory(const Path& path) const override;
     u64 GetFreeBytes() const override;
 
 protected:
@@ -55,9 +55,6 @@ public:
     IVFCFile(std::shared_ptr<FileUtil::IOFile> file, u64 offset, u64 size)
         : romfs_file(file), data_offset(offset), data_size(size) {}
 
-    ResultCode Open() override {
-        return RESULT_SUCCESS;
-    }
     ResultVal<size_t> Read(u64 offset, size_t length, u8* buffer) const override;
     ResultVal<size_t> Write(u64 offset, size_t length, bool flush, const u8* buffer) const override;
     u64 GetSize() const override;
@@ -75,9 +72,6 @@ private:
 
 class IVFCDirectory : public DirectoryBackend {
 public:
-    bool Open() override {
-        return false;
-    }
     u32 Read(const u32 count, Entry* entries) override {
         return 0;
     }

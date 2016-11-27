@@ -128,7 +128,7 @@ void Init() {
             Service::FS::OpenArchive(Service::FS::ArchiveIdCode::SharedExtSaveData, archive_path);
         ASSERT_MSG(archive_result.Succeeded(), "Could not open the PTM SharedExtSaveData archive!");
 
-        FileSys::Path gamecoin_path("gamecoin.dat");
+        FileSys::Path gamecoin_path("/gamecoin.dat");
         FileSys::Mode open_mode = {};
         open_mode.write_flag.Assign(1);
         open_mode.create_flag.Assign(1);
