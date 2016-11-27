@@ -60,6 +60,7 @@ enum class Class : ClassType {
     Service_AM,        ///< The AM (Application manager) service
     Service_PTM,       ///< The PTM (Power status & misc.) service
     Service_LDR,       ///< The LDR (3ds dll loader) service
+    Service_MIC,       ///< The MIC (microphone) service
     Service_NDM,       ///< The NDM (Network daemon manager) service
     Service_NIM,       ///< The NIM (Network interface manager) service
     Service_NWM,       ///< The NWM (Network wlan manager) service
