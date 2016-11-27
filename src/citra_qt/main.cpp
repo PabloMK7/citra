@@ -299,16 +299,15 @@ bool GMainWindow::LoadROM(const std::string& filename) {
         return false;
     }
 
-    u32 system_mode;
-    Loader::ResultStatus load_result = app_loader->LoadKernelSystemMode(system_mode);
-    if (Loader::ResultStatus::Success != load_result) {
-        LOG_CRITICAL(Frontend, "Failed to load ROM!", load_result);
+    boost::optional<u32> system_mode = app_loader->LoadKernelSystemMode();
+    if (!system_mode) {
+        LOG_CRITICAL(Frontend, "Failed to load ROM!");
         QMessageBox::critical(this, tr("Error while loading ROM!"),
                               tr("Could not determine the system mode."));
         return false;
     }
 
-    if (!InitializeSystem(system_mode))
+    if (!InitializeSystem(system_mode.get()))
         return false;
 
     Loader::ResultStatus result = app_loader->Load();

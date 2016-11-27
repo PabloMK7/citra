@@ -135,17 +135,17 @@ int main(int argc, char** argv) {
         return -1;
     }
 
-    u32 system_mode;
-    Loader::ResultStatus load_result = loader->LoadKernelSystemMode(system_mode);
-    if (Loader::ResultStatus::Success != load_result) {
-        LOG_CRITICAL(Frontend, "Failed to load ROM (Error %i)!", load_result);
+    boost::optional<u32> system_mode = loader->LoadKernelSystemMode();
+
+    if (!system_mode) {
+        LOG_CRITICAL(Frontend, "Failed to load ROM (Could not determine system mode)!");
         return -1;
     }
 
-    System::Init(emu_window.get(), system_mode);
+    System::Init(emu_window.get(), system_mode.get());
     SCOPE_EXIT({ System::Shutdown(); });
 
-    load_result = loader->Load();
+    Loader::ResultStatus load_result = loader->Load();
     if (Loader::ResultStatus::Success != load_result) {
         LOG_CRITICAL(Frontend, "Failed to load ROM (Error %i)!", load_result);
         return -1;

@@ -187,10 +187,9 @@ public:
 
     /**
      * Loads the Exheader and returns the system mode for this application.
-     * @param system_mode Out variable where the system mode will be stored.
-     * @return ResultStatus result of the operation
+     * @return Optional with the kernel system mode
      */
-    ResultStatus LoadKernelSystemMode(u32& system_mode);
+    boost::optional<u32> LoadKernelSystemMode();
 
     /**
      * Get the code (typically .code section) of the application

@@ -9,6 +9,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <boost/optional.hpp>
 #include "common/common_types.h"
 #include "common/file_util.h"
 
@@ -97,13 +98,13 @@ public:
 
     /**
      * Loads the system mode that this application needs.
-     * This function defaults to 2 (96MB allocated to the application) if it can't read the information.
-     * @param system_mode Out variable where the system mode will be stored.
-     * @returns ResultStatus result of the operation
+     * This function defaults to 2 (96MB allocated to the application) if it can't read the
+     * information.
+     * @returns Optional with the kernel system mode
      */
-    virtual ResultStatus LoadKernelSystemMode(u32& system_mode) {
-        system_mode = 2; // 96MB allocated to the application.
-        return ResultStatus::Success;
+    virtual boost::optional<u32> LoadKernelSystemMode() {
+        // 96MB allocated to the application.
+        return 2;
     }
 
     /**
