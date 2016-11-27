@@ -893,7 +893,7 @@ bool RasterizerOpenGL::AccelerateFill(const GPU::Regs::MemoryFillConfig& config)
             value_float = config.value_32bit / 16777215.0f; // 2^24 - 1
         }
 
-        cur_state.depth.write_mask = true;
+        cur_state.depth.write_mask = GL_TRUE;
         cur_state.Apply();
         glClearBufferfv(GL_DEPTH, 0, &value_float);
     } else if (dst_type == SurfaceType::DepthStencil) {
@@ -908,7 +908,7 @@ bool RasterizerOpenGL::AccelerateFill(const GPU::Regs::MemoryFillConfig& config)
         GLfloat value_float = (config.value_32bit & 0xFFFFFF) / 16777215.0f; // 2^24 - 1
         GLint value_int = (config.value_32bit >> 24);
 
-        cur_state.depth.write_mask = true;
+        cur_state.depth.write_mask = GL_TRUE;
         cur_state.stencil.write_mask = 0xFF;
         cur_state.Apply();
         glClearBufferfi(GL_DEPTH_STENCIL, 0, value_float, value_int);

@@ -27,8 +27,8 @@ OpenGLState::OpenGLState() {
     stencil.test_enabled = false;
     stencil.test_func = GL_ALWAYS;
     stencil.test_ref = 0;
-    stencil.test_mask = -1;
-    stencil.write_mask = -1;
+    stencil.test_mask = 0xFF;
+    stencil.write_mask = 0xFF;
     stencil.action_depth_fail = GL_KEEP;
     stencil.action_depth_pass = GL_KEEP;
     stencil.action_stencil_fail = GL_KEEP;
