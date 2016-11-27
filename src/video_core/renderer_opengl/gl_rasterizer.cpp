@@ -909,7 +909,7 @@ bool RasterizerOpenGL::AccelerateFill(const GPU::Regs::MemoryFillConfig& config)
         GLint value_int = (config.value_32bit >> 24);
 
         cur_state.depth.write_mask = true;
-        cur_state.stencil.write_mask = true;
+        cur_state.stencil.write_mask = 0xFF;
         cur_state.Apply();
         glClearBufferfi(GL_DEPTH_STENCIL, 0, value_float, value_int);
     }
