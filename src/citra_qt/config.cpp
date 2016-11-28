@@ -39,7 +39,6 @@ void Config::ReadValues() {
 
     qt_config->beginGroup("Core");
     Settings::values.use_cpu_jit = qt_config->value("use_cpu_jit", true).toBool();
-    Settings::values.frame_skip = qt_config->value("frame_skip", 0).toInt();
     qt_config->endGroup();
 
     qt_config->beginGroup("Renderer");
@@ -146,7 +145,6 @@ void Config::SaveValues() {
 
     qt_config->beginGroup("Core");
     qt_config->setValue("use_cpu_jit", Settings::values.use_cpu_jit);
-    qt_config->setValue("frame_skip", Settings::values.frame_skip);
     qt_config->endGroup();
 
     qt_config->beginGroup("Renderer");

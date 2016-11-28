@@ -316,7 +316,6 @@ ASSERT_REG_POSITION(command_processor_config, 0x00638);
 static_assert(sizeof(Regs) == 0x1000 * sizeof(u32), "Invalid total size of register set");
 
 extern Regs g_regs;
-extern bool g_skip_frame;
 
 template <typename T>
 void Read(T& var, const u32 addr);

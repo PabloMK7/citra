@@ -42,10 +42,6 @@ pad_circle_modifier_scale =
 # 0: Interpreter (slow), 1 (default): JIT (fast)
 use_cpu_jit =
 
-# The applied frameskip amount. Must be a power of two.
-# 0 (default): No frameskip, 1: x2 frameskip, 2: x4 frameskip, 3: x8 frameskip, etc.
-frame_skip =
-
 [Renderer]
 # Whether to use software or hardware rendering.
 # 0: Software, 1 (default): Hardware

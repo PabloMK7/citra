@@ -29,16 +29,12 @@ namespace GPU {
 
 Regs g_regs;
 
-/// True if the current frame was skipped
-bool g_skip_frame;
 /// 268MHz CPU clocks / 60Hz frames per second
 const u64 frame_ticks = 268123480ull / 60;
 /// Event id for CoreTiming
 static int vblank_event;
 /// Total number of frames drawn
 static u64 frame_count;
-/// True if the last frame was skipped
-static bool last_skip_frame;
 
 template <typename T>
 inline void Read(T& var, const u32 raw_addr) {
@@ -519,20 +515,7 @@ template void Write<u8>(u32 addr, const u8 data);
 /// Update hardware
 static void VBlankCallback(u64 userdata, int cycles_late) {
     frame_count++;
-    last_skip_frame = g_skip_frame;
-    g_skip_frame = (frame_count & Settings::values.frame_skip) != 0;
-
-    // Swap buffers based on the frameskip mode, which is a little bit tricky. When
-    // a frame is being skipped, nothing is being rendered to the internal framebuffer(s).
-    // So, we should only swap frames if the last frame was rendered. The rules are:
-    //  - If frameskip == 0 (disabled), always swap buffers
-    //  - If frameskip == 1, swap buffers every other frame (starting from the first frame)
-    //  - If frameskip > 1, swap buffers every frameskip^n frames (starting from the second frame)
-    if ((((Settings::values.frame_skip != 1) ^ last_skip_frame) &&
-         last_skip_frame != g_skip_frame) ||
-        Settings::values.frame_skip == 0) {
-        VideoCore::g_renderer->SwapBuffers();
-    }
+    VideoCore::g_renderer->SwapBuffers();
 
     // Signal to GSP that GPU interrupt has occurred
     // TODO(yuriks): hwtest to determine if PDC0 is for the Top screen and PDC1 for the Sub
@@ -579,8 +562,6 @@ void Init() {
     framebuffer_sub.color_format.Assign(Regs::PixelFormat::RGB8);
     framebuffer_sub.active_fb = 0;
 
-    last_skip_frame = false;
-    g_skip_frame = false;
     frame_count = 0;
 
     vblank_event = CoreTiming::RegisterEvent("GPU::VBlankCallback", VBlankCallback);
