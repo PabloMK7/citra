@@ -17,12 +17,12 @@ namespace System {
 
 static bool is_powered_on{false};
 
-Result Init(EmuWindow* emu_window) {
+Result Init(EmuWindow* emu_window, u32 system_mode) {
     Core::Init();
     CoreTiming::Init();
     Memory::Init();
     HW::Init();
-    Kernel::Init();
+    Kernel::Init(system_mode);
     HLE::Init();
     if (!VideoCore::Init(emu_window)) {
         return Result::ErrorInitVideoCore;

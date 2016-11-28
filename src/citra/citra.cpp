@@ -129,14 +129,21 @@ int main(int argc, char** argv) {
 
     std::unique_ptr<EmuWindow_SDL2> emu_window = std::make_unique<EmuWindow_SDL2>();
 
-    System::Init(emu_window.get());
-    SCOPE_EXIT({ System::Shutdown(); });
-
     std::unique_ptr<Loader::AppLoader> loader = Loader::GetLoader(boot_filename);
     if (!loader) {
         LOG_CRITICAL(Frontend, "Failed to obtain loader for %s!", boot_filename.c_str());
         return -1;
     }
+
+    boost::optional<u32> system_mode = loader->LoadKernelSystemMode();
+
+    if (!system_mode) {
+        LOG_CRITICAL(Frontend, "Failed to load ROM (Could not determine system mode)!");
+        return -1;
+    }
+
+    System::Init(emu_window.get(), system_mode.get());
+    SCOPE_EXIT({ System::Shutdown(); });
 
     Loader::ResultStatus load_result = loader->Load();
     if (Loader::ResultStatus::Success != load_result) {

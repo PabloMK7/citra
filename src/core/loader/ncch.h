@@ -186,6 +186,12 @@ public:
     ResultStatus Load() override;
 
     /**
+     * Loads the Exheader and returns the system mode for this application.
+     * @return Optional with the kernel system mode
+     */
+    boost::optional<u32> LoadKernelSystemMode();
+
+    /**
      * Get the code (typically .code section) of the application
      * @param buffer Reference to buffer to store data
      * @return ResultStatus result of function

@@ -253,7 +253,7 @@ void GMainWindow::OnDisplayTitleBars(bool show) {
     }
 }
 
-bool GMainWindow::InitializeSystem() {
+bool GMainWindow::InitializeSystem(u32 system_mode) {
     // Shutdown previous session if the emu thread is still active...
     if (emu_thread != nullptr)
         ShutdownGame();
@@ -270,7 +270,7 @@ bool GMainWindow::InitializeSystem() {
     }
 
     // Initialize the core emulation
-    System::Result system_result = System::Init(render_window);
+    System::Result system_result = System::Init(render_window, system_mode);
     if (System::Result::Success != system_result) {
         switch (system_result) {
         case System::Result::ErrorInitVideoCore:
@@ -299,8 +299,20 @@ bool GMainWindow::LoadROM(const std::string& filename) {
         return false;
     }
 
+    boost::optional<u32> system_mode = app_loader->LoadKernelSystemMode();
+    if (!system_mode) {
+        LOG_CRITICAL(Frontend, "Failed to load ROM!");
+        QMessageBox::critical(this, tr("Error while loading ROM!"),
+                              tr("Could not determine the system mode."));
+        return false;
+    }
+
+    if (!InitializeSystem(system_mode.get()))
+        return false;
+
     Loader::ResultStatus result = app_loader->Load();
     if (Loader::ResultStatus::Success != result) {
+        System::Shutdown();
         LOG_CRITICAL(Frontend, "Failed to load ROM!");
 
         switch (result) {
@@ -338,13 +350,8 @@ void GMainWindow::BootGame(const std::string& filename) {
     LOG_INFO(Frontend, "Citra starting...");
     StoreRecentFile(filename); // Put the filename on top of the list
 
-    if (!InitializeSystem())
+    if (!LoadROM(filename))
         return;
-
-    if (!LoadROM(filename)) {
-        System::Shutdown();
-        return;
-    }
 
     // Create and start the emulation thread
     emu_thread = std::make_unique<EmuThread>(render_window);
