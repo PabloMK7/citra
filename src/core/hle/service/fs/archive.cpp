@@ -535,7 +535,8 @@ void RegisterArchiveTypes() {
                   sdmc_directory.c_str());
 
     // Create the SaveData archive
-    auto savedata_factory = std::make_unique<FileSys::ArchiveFactory_SaveData>(sdmc_directory);
+    auto sd_savedata_source = std::make_shared<FileSys::ArchiveSource_SDSaveData>(sdmc_directory);
+    auto savedata_factory = std::make_unique<FileSys::ArchiveFactory_SaveData>(sd_savedata_source);
     RegisterArchiveType(std::move(savedata_factory), ArchiveIdCode::SaveData);
 
     auto extsavedata_factory =
