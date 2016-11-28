@@ -26,9 +26,6 @@
 #define stat _stat64
 #define fstat _fstat64
 #define fileno _fileno
-// Windows version, at least Vista is required to obtain AppData Path
-#define WINVER 0x0600
-#define _WIN32_WINNT 0x0600
 #else
 #ifdef __APPLE__
 #include <sys/param.h>

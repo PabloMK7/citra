@@ -182,15 +182,15 @@ IF (APPLE)
 
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -stdlib=libc++")
-ELSEIF(MINGW)
-    # PSAPI is the Process Status API
-    set(PLATFORM_LIBRARIES winmm ws2_32 psapi imm32 version)
-
-    # WSAPoll functionality doesn't exist before WinNT 6.x (Vista and up)
-    add_definitions(-D_WIN32_WINNT=0x0600)
-ELSEIF(WIN32)
+ELSEIF (WIN32)
+    #WSAPoll and other fileutil.cpp functionalities didn't exist before WinNT 6.x (Vista and up)
+    add_definitions(-D_WIN32_WINNT=0x0600 -DWINVER=0x0600)
     set(PLATFORM_LIBRARIES winmm ws2_32)
-ELSEIF(CMAKE_SYSTEM_NAME MATCHES "^(Linux|kFreeBSD|GNU|SunOS)$")
+    if (MINGW)
+        # PSAPI is the Process Status API
+        set(PLATFORM_LIBRARIES winmm ws2_32 psapi imm32 version)
+    ENDIF (MINGW)
+ELSEIF (CMAKE_SYSTEM_NAME MATCHES "^(Linux|kFreeBSD|GNU|SunOS)$")
     set(PLATFORM_LIBRARIES rt)
 ENDIF (APPLE)
 
