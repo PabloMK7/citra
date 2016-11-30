@@ -213,12 +213,16 @@ void RasterizerOpenGL::DrawTriangles() {
 
     // Scissor checks are window-, not viewport-relative, which means that if the cached texture
     // sub-rect changes, the scissor bounds also need to be updated.
-    GLint scissor_x1 = static_cast<GLint>(rect.left + regs.scissor_test.x1 * color_surface->res_scale_width);
-    GLint scissor_y1 = static_cast<GLint>(rect.bottom + regs.scissor_test.y1 * color_surface->res_scale_height);
+    GLint scissor_x1 =
+        static_cast<GLint>(rect.left + regs.scissor_test.x1 * color_surface->res_scale_width);
+    GLint scissor_y1 =
+        static_cast<GLint>(rect.bottom + regs.scissor_test.y1 * color_surface->res_scale_height);
     // x2, y2 have +1 added to cover the entire pixel area, otherwise you might get cracks when
     // scaling or doing multisampling.
-    GLint scissor_x2 = static_cast<GLint>(rect.left + (regs.scissor_test.x2 + 1) * color_surface->res_scale_width);
-    GLint scissor_y2 = static_cast<GLint>(rect.bottom + (regs.scissor_test.y2 + 1) * color_surface->res_scale_height);
+    GLint scissor_x2 =
+        static_cast<GLint>(rect.left + (regs.scissor_test.x2 + 1) * color_surface->res_scale_width);
+    GLint scissor_y2 = static_cast<GLint>(
+        rect.bottom + (regs.scissor_test.y2 + 1) * color_surface->res_scale_height);
 
     if (uniform_block_data.data.scissor_x1 != scissor_x1 ||
         uniform_block_data.data.scissor_x2 != scissor_x2 ||
