@@ -100,6 +100,18 @@ void GetMyScreenName(Service::Interface* self) {
     LOG_WARNING(Service_FRD, "(STUBBED) called");
 }
 
+void SetClientSdkVersion(Service::Interface* self) {
+    u32* cmd_buff = Kernel::GetCommandBuffer();
+
+    const u32 version = cmd_buff[1];
+
+    self->SetVersion(version);
+
+    LOG_WARNING(Service_FRD, "(STUBBED) called, version: 0x%08X", version);
+
+    cmd_buff[1] = RESULT_SUCCESS.raw; // No error
+}
+
 void Init() {
     using namespace Kernel;
 

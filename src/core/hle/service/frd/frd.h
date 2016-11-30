@@ -95,6 +95,15 @@ void GetMyFriendKey(Service::Interface* self);
  */
 void GetMyScreenName(Service::Interface* self);
 
+/**
+ * FRD::SetClientSdkVersion service function
+ *  Inputs:
+ *      1 : Used SDK Version
+ *  Outputs:
+ *      1 : Result of function, 0 on success, otherwise error code
+ */
+void SetClientSdkVersion(Service::Interface* self);
+
 /// Initialize FRD service(s)
 void Init();
 
