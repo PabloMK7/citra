@@ -11,8 +11,10 @@
 #include "core/file_sys/archive_romfs.h"
 #include "core/hle/kernel/process.h"
 #include "core/hle/kernel/resource_limit.h"
+#include "core/hle/service/cfg/cfg.h"
 #include "core/hle/service/fs/archive.h"
 #include "core/loader/ncch.h"
+#include "core/loader/smdh.h"
 #include "core/memory.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -309,6 +311,23 @@ ResultStatus AppLoader_NCCH::LoadExeFS() {
     return ResultStatus::Success;
 }
 
+void AppLoader_NCCH::ParseRegionLockoutInfo() {
+    std::vector<u8> smdh_buffer;
+    if (ReadIcon(smdh_buffer) == ResultStatus::Success && smdh_buffer.size() >= sizeof(SMDH)) {
+        SMDH smdh;
+        memcpy(&smdh, smdh_buffer.data(), sizeof(SMDH));
+        u32 region_lockout = smdh.region_lockout;
+        constexpr u32 REGION_COUNT = 7;
+        for (u32 region = 0; region < REGION_COUNT; ++region) {
+            if (region_lockout & 1) {
+                Service::CFG::SetPreferredRegionCode(region);
+                break;
+            }
+            region_lockout >>= 1;
+        }
+    }
+}
+
 ResultStatus AppLoader_NCCH::Load() {
     if (is_loaded)
         return ResultStatus::ErrorAlreadyLoaded;
@@ -325,6 +344,9 @@ ResultStatus AppLoader_NCCH::Load() {
 
     Service::FS::RegisterArchiveType(std::make_unique<FileSys::ArchiveFactory_RomFS>(*this),
                                      Service::FS::ArchiveIdCode::RomFS);
+
+    ParseRegionLockoutInfo();
+
     return ResultStatus::Success;
 }
 

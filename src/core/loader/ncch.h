@@ -250,6 +250,9 @@ private:
      */
     ResultStatus LoadExeFS();
 
+    /// Reads the region lockout info in the SMDH and send it to CFG service
+    void ParseRegionLockoutInfo();
+
     bool is_exefs_loaded = false;
     bool is_compressed = false;
 

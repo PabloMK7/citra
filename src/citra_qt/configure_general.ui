@@ -84,6 +84,11 @@
              <widget class="QComboBox" name="region_combobox">
               <item>
                <property name="text">
+                <string>Auto-select</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
                 <string notr="true">JPN</string>
                </property>
               </item>

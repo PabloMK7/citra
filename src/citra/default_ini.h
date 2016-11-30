@@ -101,7 +101,7 @@ use_virtual_sd =
 is_new_3ds =
 
 # The system region that Citra will use during emulation
-# 0: Japan, 1: USA (default), 2: Europe, 3: Australia, 4: China, 5: Korea, 6: Taiwan
+# -1: Auto-select (default), 0: Japan, 1: USA, 2: Europe, 3: Australia, 4: China, 5: Korea, 6: Taiwan
 region_value =
 
 [Miscellaneous]
