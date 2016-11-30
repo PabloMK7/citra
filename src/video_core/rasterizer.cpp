@@ -946,8 +946,8 @@ static void ProcessTriangleInternal(const Shader::OutputVertex& v0, const Shader
 
                 // Blend the fog
                 for (unsigned i = 0; i < 3; i++) {
-                    combiner_output[i] =
-                        static_cast<u8>(fog_factor * combiner_output[i] + (1.0f - fog_factor) * fog_color[i]);
+                    combiner_output[i] = static_cast<u8>(fog_factor * combiner_output[i] +
+                                                         (1.0f - fog_factor) * fog_color[i]);
                 }
             }
 
