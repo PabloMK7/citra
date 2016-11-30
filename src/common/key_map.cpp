@@ -49,7 +49,7 @@ static bool circle_pad_right = false;
 static bool circle_pad_modifier = false;
 
 static void UpdateCirclePad(EmuWindow& emu_window) {
-    constexpr float SQRT_HALF = 0.707106781;
+    constexpr float SQRT_HALF = 0.707106781f;
     int x = 0, y = 0;
 
     if (circle_pad_right)
@@ -61,9 +61,9 @@ static void UpdateCirclePad(EmuWindow& emu_window) {
     if (circle_pad_down)
         --y;
 
-    float modifier = circle_pad_modifier ? Settings::values.pad_circle_modifier_scale : 1.0;
-    emu_window.CirclePadUpdated(x * modifier * (y == 0 ? 1.0 : SQRT_HALF),
-                                y * modifier * (x == 0 ? 1.0 : SQRT_HALF));
+    float modifier = circle_pad_modifier ? Settings::values.pad_circle_modifier_scale : 1.0f;
+    emu_window.CirclePadUpdated(x * modifier * (y == 0 ? 1.0f : SQRT_HALF),
+                                y * modifier * (x == 0 ? 1.0f : SQRT_HALF));
 }
 
 int NewDeviceId() {

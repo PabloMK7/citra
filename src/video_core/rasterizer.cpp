@@ -562,9 +562,9 @@ static void ProcessTriangleInternal(const Shader::OutputVertex& v0, const Shader
                 };
 
                 if ((texture.config.wrap_s == Regs::TextureConfig::ClampToBorder &&
-                     (s < 0 || s >= texture.config.width)) ||
+                     (s < 0 || static_cast<u32>(s) >= texture.config.width)) ||
                     (texture.config.wrap_t == Regs::TextureConfig::ClampToBorder &&
-                     (t < 0 || t >= texture.config.height))) {
+                     (t < 0 || static_cast<u32>(t) >= texture.config.height))) {
                     auto border_color = texture.config.border_color;
                     texture_color[i] = {border_color.r, border_color.g, border_color.b,
                                         border_color.a};
@@ -947,7 +947,7 @@ static void ProcessTriangleInternal(const Shader::OutputVertex& v0, const Shader
                 // Blend the fog
                 for (unsigned i = 0; i < 3; i++) {
                     combiner_output[i] =
-                        fog_factor * combiner_output[i] + (1.0f - fog_factor) * fog_color[i];
+                        static_cast<u8>(fog_factor * combiner_output[i] + (1.0f - fog_factor) * fog_color[i]);
                 }
             }
 
