@@ -23,10 +23,11 @@
 #include "core/file_sys/directory_backend.h"
 #include "core/file_sys/file_backend.h"
 #include "core/hle/hle.h"
+#include "core/hle/kernel/client_session.h"
 #include "core/hle/result.h"
+#include "core/hle/service/service.h"
 #include "core/hle/service/fs/archive.h"
 #include "core/hle/service/fs/fs_user.h"
-#include "core/hle/service/service.h"
 #include "core/memory.h"
 
 // Specializes std::hash for ArchiveIdCode, so that we can use it in std::unordered_map.
@@ -92,11 +93,10 @@ File::File(std::unique_ptr<FileSys::FileBackend>&& backend, const FileSys::Path&
 
 File::~File() {}
 
-ResultCode File::HandleSyncRequest() {
+ResultCode File::HandleSyncRequest(Kernel::SharedPtr<Kernel::ServerSession> server_session) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
     FileCommand cmd = static_cast<FileCommand>(cmd_buff[0]);
     switch (cmd) {
-
     // Read from file...
     case FileCommand::Read: {
         u64 offset = cmd_buff[1] | ((u64)cmd_buff[2]) << 32;
@@ -170,9 +170,11 @@ ResultCode File::HandleSyncRequest() {
         break;
     }
 
-    case FileCommand::OpenLinkFile: {
+    case FileCommand::OpenLinkFile:
+    {
         LOG_WARNING(Service_FS, "(STUBBED) File command OpenLinkFile %s", GetName().c_str());
-        cmd_buff[3] = Kernel::g_handle_table.Create(this).ValueOr(INVALID_HANDLE);
+        auto sessions = Kernel::ServerSession::CreateSessionPair(GetName(), shared_from_this());
+        cmd_buff[3] = Kernel::g_handle_table.Create(std::get<Kernel::SharedPtr<Kernel::ClientSession>>(sessions)).ValueOr(INVALID_HANDLE);
         break;
     }
 
@@ -193,10 +195,10 @@ ResultCode File::HandleSyncRequest() {
         LOG_ERROR(Service_FS, "Unknown command=0x%08X!", cmd);
         ResultCode error = UnimplementedFunction(ErrorModule::FS);
         cmd_buff[1] = error.raw; // TODO(Link Mauve): use the correct error code for that.
-        return ServerSession::HandleSyncRequest();
+        return RESULT_SUCCESS;
     }
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
-    return ServerSession::HandleSyncRequest();
+    return RESULT_SUCCESS;
 }
 
 Directory::Directory(std::unique_ptr<FileSys::DirectoryBackend>&& backend,
@@ -205,11 +207,10 @@ Directory::Directory(std::unique_ptr<FileSys::DirectoryBackend>&& backend,
 
 Directory::~Directory() {}
 
-ResultCode Directory::HandleSyncRequest() {
+ResultCode Directory::HandleSyncRequest(Kernel::SharedPtr<Kernel::ServerSession> server_session) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
     DirectoryCommand cmd = static_cast<DirectoryCommand>(cmd_buff[0]);
     switch (cmd) {
-
     // Read from directory...
     case DirectoryCommand::Read: {
         u32 count = cmd_buff[1];
@@ -236,10 +237,10 @@ ResultCode Directory::HandleSyncRequest() {
         LOG_ERROR(Service_FS, "Unknown command=0x%08X!", cmd);
         ResultCode error = UnimplementedFunction(ErrorModule::FS);
         cmd_buff[1] = error.raw; // TODO(Link Mauve): use the correct error code for that.
-        return ServerSession::HandleSyncRequest();
+        return RESULT_SUCCESS;
     }
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
-    return ServerSession::HandleSyncRequest();
+    return RESULT_SUCCESS;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -306,7 +307,7 @@ ResultCode RegisterArchiveType(std::unique_ptr<FileSys::ArchiveFactory>&& factor
     return RESULT_SUCCESS;
 }
 
-ResultVal<Kernel::SharedPtr<File>> OpenFileFromArchive(ArchiveHandle archive_handle,
+ResultVal<std::shared_ptr<File>> OpenFileFromArchive(ArchiveHandle archive_handle,
                                                        const FileSys::Path& path,
                                                        const FileSys::Mode mode) {
     ArchiveBackend* archive = GetArchive(archive_handle);
@@ -317,8 +318,8 @@ ResultVal<Kernel::SharedPtr<File>> OpenFileFromArchive(ArchiveHandle archive_han
     if (backend.Failed())
         return backend.Code();
 
-    auto file = Kernel::SharedPtr<File>(new File(backend.MoveFrom(), path));
-    return MakeResult<Kernel::SharedPtr<File>>(std::move(file));
+    auto file = std::shared_ptr<File>(new File(backend.MoveFrom(), path));
+    return MakeResult<std::shared_ptr<File>>(std::move(file));
 }
 
 ResultCode DeleteFileFromArchive(ArchiveHandle archive_handle, const FileSys::Path& path) {
@@ -397,7 +398,7 @@ ResultCode RenameDirectoryBetweenArchives(ArchiveHandle src_archive_handle,
     }
 }
 
-ResultVal<Kernel::SharedPtr<Directory>> OpenDirectoryFromArchive(ArchiveHandle archive_handle,
+ResultVal<std::shared_ptr<Directory>> OpenDirectoryFromArchive(ArchiveHandle archive_handle,
                                                                  const FileSys::Path& path) {
     ArchiveBackend* archive = GetArchive(archive_handle);
     if (archive == nullptr)
@@ -407,8 +408,8 @@ ResultVal<Kernel::SharedPtr<Directory>> OpenDirectoryFromArchive(ArchiveHandle a
     if (backend.Failed())
         return backend.Code();
 
-    auto directory = Kernel::SharedPtr<Directory>(new Directory(backend.MoveFrom(), path));
-    return MakeResult<Kernel::SharedPtr<Directory>>(std::move(directory));
+    auto directory = std::shared_ptr<Directory>(new Directory(backend.MoveFrom(), path));
+    return MakeResult<std::shared_ptr<Directory>>(std::move(directory));
 }
 
 ResultVal<u64> GetFreeBytesInArchive(ArchiveHandle archive_handle) {

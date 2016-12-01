@@ -10,6 +10,7 @@
 #include "core/hle/kernel/client_session.h"
 #include "core/hle/kernel/event.h"
 #include "core/hle/service/srv.h"
+#include "core/hle/kernel/server_session.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Namespace SRV
@@ -85,12 +86,17 @@ static void GetServiceHandle(Service::Interface* self) {
     auto it = Service::g_srv_services.find(port_name);
 
     if (it != Service::g_srv_services.end()) {
-        auto client_port = it->second;
+        auto client_port = std::get<Kernel::SharedPtr<Kernel::ClientPort>>(it->second);
+        // The hle_handler will be nullptr if this port was registered by the emulated
+        // application by means of srv:RegisterService.
+        auto hle_handler = std::get<std::shared_ptr<Service::Interface>>(it->second);
 
         // Create a new session pair
-        auto sessions = Kernel::ServerSession::CreateSessionPair(client_port, port_name);
+        auto sessions = Kernel::ServerSession::CreateSessionPair(port_name, hle_handler);
         auto client_session = std::get<Kernel::SharedPtr<Kernel::ClientSession>>(sessions);
         auto server_session = std::get<Kernel::SharedPtr<Kernel::ServerSession>>(sessions);
+
+        // TODO(Subv): Wait the current thread until the ServerPort calls AcceptSession.
 
         // Add the server session to the port's queue
         client_port->AddWaitingSession(server_session);

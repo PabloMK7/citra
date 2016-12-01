@@ -25,11 +25,10 @@ public:
     /**
      * Creates a client session.
      * @param server_session The server session associated with this client session
-     * @param client_port The client port which this session is connected to
      * @param name Optional name of client session
      * @return The created client session
      */
-    static ResultVal<SharedPtr<ClientSession>> Create(SharedPtr<ServerSession> server_session, SharedPtr<ClientPort> client_port, std::string name = "Unknown");
+    static ResultVal<SharedPtr<ClientSession>> Create(SharedPtr<ServerSession> server_session, std::string name = "Unknown");
 
     std::string GetTypeName() const override { return "ClientSession"; }
     std::string GetName() const override { return name; }
@@ -45,8 +44,6 @@ public:
 
     std::string name;                           ///< Name of client port (optional)
     SharedPtr<ServerSession> server_session;    ///< The server session associated with this client session.
-    SharedPtr<ClientPort> client_port;          ///< The client port which this session is connected to.
-    std::shared_ptr<Service::Interface> hle_helper = nullptr; ///< HLE implementation of this port's request handler
 
 private:
     ClientSession();

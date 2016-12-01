@@ -21,6 +21,7 @@
 #include "core/hle/kernel/resource_limit.h"
 #include "core/hle/kernel/semaphore.h"
 #include "core/hle/kernel/server_port.h"
+#include "core/hle/kernel/server_session.h"
 #include "core/hle/kernel/shared_memory.h"
 #include "core/hle/kernel/thread.h"
 #include "core/hle/kernel/timer.h"
@@ -223,12 +224,17 @@ static ResultCode ConnectToPort(Handle* out_handle, const char* port_name) {
         return ERR_NOT_FOUND;
     }
 
-    auto client_port = it->second;
+    auto client_port = std::get<Kernel::SharedPtr<Kernel::ClientPort>>(it->second);
+    // The hle_handler will be nullptr if this port was registered by the emulated
+    // application by means of svcCreatePort with a defined name.
+    auto hle_handler = std::get<std::shared_ptr<Service::Interface>>(it->second);
 
     // Create a new session pair
-    auto sessions = Kernel::ServerSession::CreateSessionPair(client_port, port_name);
+    auto sessions = Kernel::ServerSession::CreateSessionPair(port_name, hle_handler);
     auto client_session = std::get<Kernel::SharedPtr<Kernel::ClientSession>>(sessions);
     auto server_session = std::get<Kernel::SharedPtr<Kernel::ServerSession>>(sessions);
+
+    // TODO(Subv): Wait the current thread until the ServerPort calls AcceptSession.
 
     // Add the server session to the port's queue
     client_port->AddWaitingSession(server_session);
@@ -247,6 +253,7 @@ static ResultCode SendSyncRequest(Handle handle) {
 
     LOG_TRACE(Kernel_SVC, "called handle=0x%08X(%s)", handle, session->GetName().c_str());
 
+    // TODO(Subv): Wait the current thread and reschedule if this request is not going to be handled by HLE code.
     return session->HandleSyncRequest();
 }
 

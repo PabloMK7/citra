@@ -14,11 +14,12 @@ namespace Kernel {
 ServerSession::ServerSession() {}
 ServerSession::~ServerSession() {}
 
-ResultVal<SharedPtr<ServerSession>> ServerSession::Create(std::string name) {
+ResultVal<SharedPtr<ServerSession>> ServerSession::Create(std::string name, std::shared_ptr<Service::SessionRequestHandler> hle_handler) {
     SharedPtr<ServerSession> server_session(new ServerSession);
 
     server_session->name = std::move(name);
     server_session->signaled = false;
+    server_session->hle_handler = hle_handler;
 
     return MakeResult<SharedPtr<ServerSession>>(std::move(server_session));
 }
@@ -34,23 +35,21 @@ void ServerSession::Acquire() {
 
 ResultCode ServerSession::HandleSyncRequest() {
     // The ServerSession received a sync request, this means that there's new data available
-    // from one of its ClientSessions, so wake up any threads that may be waiting on a svcReplyAndReceive or similar.
+    // from its ClientSession, so wake up any threads that may be waiting on a svcReplyAndReceive or similar.
+
+    // If this ServerSession has an associated HLE handler, forward the request to it.
+    if (hle_handler != nullptr)
+        return hle_handler->HandleSyncRequest(SharedPtr<ServerSession>(this));
+
+    // If this ServerSession does not have an HLE implementation, just wake up the threads waiting on it.
     signaled = true;
     WakeupAllWaitingThreads();
     return RESULT_SUCCESS;
 }
 
-SharedPtr<ClientSession> ServerSession::CreateClientSession() {
-    // In Citra, some types of ServerSessions (File and Directory sessions) are not created as a pair of Server-Client sessions,
-    // but are instead created as a single ServerSession, which then hands over a ClientSession on demand (When opening the File or Directory).
-    // The real kernel (Or more specifically, the real FS service) does create the pair of Sessions at the same time (via svcCreateSession), and simply
-    // stores the ClientSession until it is needed.
-    return ClientSession::Create(SharedPtr<ServerSession>(this), nullptr, name + "Client").MoveFrom();
-}
-
-std::tuple<SharedPtr<ServerSession>, SharedPtr<ClientSession>> ServerSession::CreateSessionPair(SharedPtr<ClientPort> client_port, const std::string& name) {
-    auto server_session = ServerSession::Create(name + "Server").MoveFrom();
-    auto client_session = ClientSession::Create(server_session, client_port, name + "Client").MoveFrom();
+std::tuple<SharedPtr<ServerSession>, SharedPtr<ClientSession>> ServerSession::CreateSessionPair(const std::string& name, std::shared_ptr<Service::SessionRequestHandler> hle_handler) {
+    auto server_session = ServerSession::Create(name + "Server", hle_handler).MoveFrom();
+    auto client_session = ClientSession::Create(server_session, name + "Client").MoveFrom();
 
     return std::make_tuple(server_session, client_session);
 }
