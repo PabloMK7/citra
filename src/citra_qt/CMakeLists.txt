@@ -65,7 +65,6 @@ set(HEADERS
             hotkeys.h
             main.h
             ui_settings.h
-            version.h
             )
 
 set(UIS
