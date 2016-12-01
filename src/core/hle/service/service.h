@@ -50,23 +50,23 @@ enum DescriptorType : u32 {
 };
 
 /**
-* @brief Creates a command header to be used for IPC
-* @param command_id            ID of the command to create a header for.
-* @param normal_params         Size of the normal parameters in words. Up to 63.
-* @param translate_params_size Size of the translate parameters in words. Up to 63.
-* @return The created IPC header.
-*
-* Normal parameters are sent directly to the process while the translate parameters might go
-* through modifications and checks by the kernel.
-* The translate parameters are described by headers generated with the IPC::*Desc functions.
-*
-* @note While #normal_params is equivalent to the number of normal parameters,
-* #translate_params_size includes the size occupied by the translate parameters headers.
-*/
+ * @brief Creates a command header to be used for IPC
+ * @param command_id            ID of the command to create a header for.
+ * @param normal_params         Size of the normal parameters in words. Up to 63.
+ * @param translate_params_size Size of the translate parameters in words. Up to 63.
+ * @return The created IPC header.
+ *
+ * Normal parameters are sent directly to the process while the translate parameters might go
+ * through modifications and checks by the kernel.
+ * The translate parameters are described by headers generated with the IPC::*Desc functions.
+ *
+ * @note While #normal_params is equivalent to the number of normal parameters,
+ * #translate_params_size includes the size occupied by the translate parameters headers.
+ */
 constexpr u32 MakeHeader(u16 command_id, unsigned int normal_params,
                          unsigned int translate_params_size) {
     return (u32(command_id) << 16) | ((u32(normal_params) & 0x3F) << 6) |
-        (u32(translate_params_size) & 0x3F);
+           (u32(translate_params_size) & 0x3F);
 }
 
 union Header {
@@ -77,7 +77,7 @@ union Header {
 };
 
 inline Header ParseHeader(u32 header) {
-    return{ header };
+    return {header};
 }
 
 constexpr u32 MoveHandleDesc(u32 num_handles = 1) {
@@ -111,19 +111,19 @@ union StaticBufferDescInfo {
 };
 
 inline StaticBufferDescInfo ParseStaticBufferDesc(const u32 desc) {
-    return{ desc };
+    return {desc};
 }
 
 /**
-* @brief Creates a header describing a buffer to be sent over PXI.
-* @param size         Size of the buffer. Max 0x00FFFFFF.
-* @param buffer_id    The Id of the buffer. Max 0xF.
-* @param is_read_only true if the buffer is read-only. If false, the buffer is considered to have
-* read-write access.
-* @return The created PXI buffer header.
-*
-* The next value is a phys-address of a table located in the BASE memregion.
-*/
+ * @brief Creates a header describing a buffer to be sent over PXI.
+ * @param size         Size of the buffer. Max 0x00FFFFFF.
+ * @param buffer_id    The Id of the buffer. Max 0xF.
+ * @param is_read_only true if the buffer is read-only. If false, the buffer is considered to have
+ * read-write access.
+ * @return The created PXI buffer header.
+ *
+ * The next value is a phys-address of a table located in the BASE memregion.
+ */
 inline u32 PXIBufferDesc(u32 size, unsigned buffer_id, bool is_read_only) {
     u32 type = PXIBuffer;
     if (is_read_only)

@@ -25,9 +25,9 @@
 #include "core/hle/hle.h"
 #include "core/hle/kernel/client_session.h"
 #include "core/hle/result.h"
-#include "core/hle/service/service.h"
 #include "core/hle/service/fs/archive.h"
 #include "core/hle/service/fs/fs_user.h"
+#include "core/hle/service/service.h"
 #include "core/memory.h"
 
 // Specializes std::hash for ArchiveIdCode, so that we can use it in std::unordered_map.
@@ -97,6 +97,7 @@ ResultCode File::HandleSyncRequest(Kernel::SharedPtr<Kernel::ServerSession> serv
     u32* cmd_buff = Kernel::GetCommandBuffer();
     FileCommand cmd = static_cast<FileCommand>(cmd_buff[0]);
     switch (cmd) {
+
     // Read from file...
     case FileCommand::Read: {
         u64 offset = cmd_buff[1] | ((u64)cmd_buff[2]) << 32;
@@ -170,8 +171,7 @@ ResultCode File::HandleSyncRequest(Kernel::SharedPtr<Kernel::ServerSession> serv
         break;
     }
 
-    case FileCommand::OpenLinkFile:
-    {
+    case FileCommand::OpenLinkFile: {
         LOG_WARNING(Service_FS, "(STUBBED) File command OpenLinkFile %s", GetName().c_str());
         auto sessions = Kernel::ServerSession::CreateSessionPair(GetName(), shared_from_this());
         cmd_buff[3] = Kernel::g_handle_table.Create(std::get<Kernel::SharedPtr<Kernel::ClientSession>>(sessions)).ValueOr(INVALID_HANDLE);
@@ -195,7 +195,7 @@ ResultCode File::HandleSyncRequest(Kernel::SharedPtr<Kernel::ServerSession> serv
         LOG_ERROR(Service_FS, "Unknown command=0x%08X!", cmd);
         ResultCode error = UnimplementedFunction(ErrorModule::FS);
         cmd_buff[1] = error.raw; // TODO(Link Mauve): use the correct error code for that.
-        return RESULT_SUCCESS;
+        return error;
     }
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
     return RESULT_SUCCESS;

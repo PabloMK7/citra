@@ -31,24 +31,22 @@ enum KernelHandle : Handle {
 };
 
 enum class HandleType : u32 {
-    Unknown         = 0,
-
-
-    Event           = 3,
-    Mutex           = 4,
-    SharedMemory    = 5,
-    Redirection     = 6,
-    Thread          = 7,
-    Process         = 8,
-    AddressArbiter  = 9,
-    Semaphore       = 10,
-    Timer           = 11,
-    ResourceLimit   = 12,
-    CodeSet         = 13,
-    ClientPort      = 14,
-    ServerPort      = 15,
-    ClientSession   = 16,
-    ServerSession   = 17,
+    Unknown,
+    Event,
+    Mutex,
+    SharedMemory,
+    Redirection,
+    Thread,
+    Process,
+    AddressArbiter,
+    Semaphore,
+    Timer,
+    ResourceLimit,
+    CodeSet,
+    ClientPort,
+    ServerPort,
+    ClientSession,
+    ServerSession,
 };
 
 enum {

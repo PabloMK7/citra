@@ -4,7 +4,6 @@
 
 #include <tuple>
 
-#include "core/hle/kernel/client_port.h"
 #include "core/hle/kernel/client_session.h"
 #include "core/hle/kernel/server_session.h"
 #include "core/hle/kernel/thread.h"

@@ -16,7 +16,6 @@
 namespace Kernel {
 
 class ClientSession;
-class ClientPort;
 
 /**
  * Kernel object representing the server endpoint of an IPC session. Sessions are the basic CTR-OS
@@ -44,10 +43,14 @@ public:
      */
     static ResultVal<SharedPtr<ServerSession>> Create(std::string name = "Unknown", std::shared_ptr<Service::SessionRequestHandler> hle_handler = nullptr);
 
-    std::string GetTypeName() const override { return "ServerSession"; }
+    std::string GetTypeName() const override {
+        return "ServerSession";
+    }
 
     static const HandleType HANDLE_TYPE = HandleType::ServerSession;
-    HandleType GetHandleType() const override { return HANDLE_TYPE; }
+    HandleType GetHandleType() const override {
+        return HANDLE_TYPE;
+    }
 
     /**
      * Creates a pair of ServerSession and an associated ClientSession.

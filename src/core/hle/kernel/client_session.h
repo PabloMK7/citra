@@ -11,13 +11,8 @@
 
 #include "core/hle/kernel/kernel.h"
 
-namespace Service {
-class Interface;
-}
-
 namespace Kernel {
 
-class ClientPort;
 class ServerSession;
 
 class ClientSession final : public Object {
@@ -30,11 +25,17 @@ public:
      */
     static ResultVal<SharedPtr<ClientSession>> Create(SharedPtr<ServerSession> server_session, std::string name = "Unknown");
 
-    std::string GetTypeName() const override { return "ClientSession"; }
-    std::string GetName() const override { return name; }
+    std::string GetTypeName() const override {
+        return "ClientSession";
+    }
+    std::string GetName() const override {
+        return name;
+    }
 
     static const HandleType HANDLE_TYPE = HandleType::ClientSession;
-    HandleType GetHandleType() const override { return HANDLE_TYPE; }
+    HandleType GetHandleType() const override {
+        return HANDLE_TYPE;
+    }
 
     /**
      * Handle a SyncRequest from the emulated application.
