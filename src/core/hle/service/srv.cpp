@@ -95,7 +95,8 @@ static void GetServiceHandle(Service::Interface* self) {
         auto client_session = std::get<Kernel::SharedPtr<Kernel::ClientSession>>(sessions);
         auto server_session = std::get<Kernel::SharedPtr<Kernel::ServerSession>>(sessions);
 
-        // TODO(Subv): Wait the current thread until the ServerPort calls AcceptSession.
+        // Note: Threads do not wait for the server endpoint to call
+        // AcceptSession before returning from this call.
 
         // Add the server session to the port's queue
         client_port->AddWaitingSession(server_session);
