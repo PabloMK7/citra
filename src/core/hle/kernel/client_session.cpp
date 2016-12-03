@@ -9,8 +9,8 @@
 
 namespace Kernel {
 
-ClientSession::ClientSession() {}
-ClientSession::~ClientSession() {}
+ClientSession::ClientSession() = default;
+ClientSession::~ClientSession() = default;
 
 ResultVal<SharedPtr<ClientSession>> ClientSession::Create(SharedPtr<ServerSession> server_session, std::string name) {
     SharedPtr<ClientSession> client_session(new ClientSession);

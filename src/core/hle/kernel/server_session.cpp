@@ -10,8 +10,8 @@
 
 namespace Kernel {
 
-ServerSession::ServerSession() {}
-ServerSession::~ServerSession() {}
+ServerSession::ServerSession() = default;
+ServerSession::~ServerSession() = default;
 
 ResultVal<SharedPtr<ServerSession>> ServerSession::Create(std::string name, std::shared_ptr<Service::SessionRequestHandler> hle_handler) {
     SharedPtr<ServerSession> server_session(new ServerSession);
