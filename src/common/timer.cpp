@@ -4,7 +4,8 @@
 
 #include <time.h>
 #ifdef _WIN32
-#include <Windows.h>
+#include <windows.h>
+// windows.h needs to be included before other windows headers
 #include <mmsystem.h>
 #include <sys/timeb.h>
 #else

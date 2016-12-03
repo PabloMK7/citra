@@ -16,7 +16,7 @@ namespace Common {
 
 // Helper functions:
 
-#ifdef _WIN32
+#ifdef _MSC_VER
 template <typename T>
 static inline int CountSetBits(T v) {
     // from https://graphics.stanford.edu/~seander/bithacks.html
