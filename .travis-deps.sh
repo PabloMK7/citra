@@ -27,6 +27,13 @@ if [ "$TRAVIS_OS_NAME" = "linux" -o -z "$TRAVIS_OS_NAME" ]; then
         echo "Using cached SDL2"
     fi
 
+    export DEBIAN_FRONTEND=noninteractive
+    # Amazing placebo security
+    curl http://apt.llvm.org/llvm-snapshot.gpg.key | sudo -E apt-key add -
+    sudo -E add-apt-repository "deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-3.9 main"
+    sudo -E apt-get -yq update
+    sudo -E apt-get -yq install clang-format-3.9
+
 elif [ "$TRAVIS_OS_NAME" = "osx" ]; then
     brew update
     brew install qt5 sdl2 dylibbundler

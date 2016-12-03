@@ -12,7 +12,7 @@ fi
 # Only run clang-format on Linux because we don't have 4.0 on OS X images
 if [ "$TRAVIS_OS_NAME" = "linux" ]; then
     # Default clang-format points to default 3.5 version one
-    CLANG_FORMAT=clang-format-4.0
+    CLANG_FORMAT=clang-format-3.9
     $CLANG_FORMAT --version
 
     if [ "$TRAVIS_EVENT_TYPE" = "pull_request" ]; then
