@@ -102,11 +102,11 @@ static const X64Reg SETUP = R9;
 /// The two 32-bit VS address offset registers set by the MOVA instruction
 static const X64Reg ADDROFFS_REG_0 = R10;
 static const X64Reg ADDROFFS_REG_1 = R11;
-/// VS loop count register
+/// VS loop count register (Multiplied by 16)
 static const X64Reg LOOPCOUNT_REG = R12;
 /// Current VS loop iteration number (we could probably use LOOPCOUNT_REG, but this quicker)
 static const X64Reg LOOPCOUNT = RSI;
-/// Number to increment LOOPCOUNT_REG by on each loop iteration
+/// Number to increment LOOPCOUNT_REG by on each loop iteration (Multiplied by 16)
 static const X64Reg LOOPINC = RDI;
 /// Result of the previous CMP instruction for the X-component comparison
 static const X64Reg COND0 = R13;
@@ -718,15 +718,18 @@ void JitShader::Compile_LOOP(Instruction instr) {
 
     looping = true;
 
+    // This decodes the fields from the integer uniform at index instr.flow_control.int_uniform_id.
+    // The Y (LOOPCOUNT_REG) and Z (LOOPINC) component are kept multiplied by 16 (Left shifted by
+    // 4 bits) to be used as an offset into the 16-byte vector registers later
     int offset =
         ShaderSetup::UniformOffset(RegisterType::IntUniform, instr.flow_control.int_uniform_id);
     MOV(32, R(LOOPCOUNT), MDisp(SETUP, offset));
     MOV(32, R(LOOPCOUNT_REG), R(LOOPCOUNT));
-    SHR(32, R(LOOPCOUNT_REG), Imm8(8));
-    AND(32, R(LOOPCOUNT_REG), Imm32(0xff)); // Y-component is the start
+    SHR(32, R(LOOPCOUNT_REG), Imm8(4));
+    AND(32, R(LOOPCOUNT_REG), Imm32(0xFF0)); // Y-component is the start
     MOV(32, R(LOOPINC), R(LOOPCOUNT));
-    SHR(32, R(LOOPINC), Imm8(16));
-    MOVZX(32, 8, LOOPINC, R(LOOPINC));     // Z-component is the incrementer
+    SHR(32, R(LOOPINC), Imm8(12));
+    AND(32, R(LOOPINC), Imm32(0xFF0));     // Z-component is the incrementer
     MOVZX(32, 8, LOOPCOUNT, R(LOOPCOUNT)); // X-component is iteration count
     ADD(32, R(LOOPCOUNT), Imm8(1));        // Iteration count is X-component + 1
 
