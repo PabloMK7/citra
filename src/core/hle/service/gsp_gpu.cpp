@@ -346,7 +346,7 @@ static void SetAxiConfigQoSMode(Service::Interface* self) {
 
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
 
-    LOG_WARNING(Service_GSP, "(STUBBED) called mode=0x%08X", mode);
+    LOG_DEBUG(Service_GSP, "(STUBBED) called mode=0x%08X", mode);
 }
 
 /**
