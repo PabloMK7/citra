@@ -491,7 +491,7 @@ void JitShader::Compile_FLR(Instruction instr) {
     if (Common::GetCPUCaps().sse4_1) {
         ROUNDFLOORPS(SRC1, R(SRC1));
     } else {
-        CVTPS2DQ(SRC1, R(SRC1));
+        CVTTPS2DQ(SRC1, R(SRC1));
         CVTDQ2PS(SRC1, R(SRC1));
     }
 
