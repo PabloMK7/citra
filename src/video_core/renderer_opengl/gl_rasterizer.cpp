@@ -947,7 +947,7 @@ bool RasterizerOpenGL::AccelerateDisplay(const GPU::Regs::FramebufferConfig& con
     src_params.addr = framebuffer_addr;
     src_params.width = config.width;
     src_params.height = config.height;
-    src_params.stride = pixel_stride;
+    src_params.pixel_stride = pixel_stride;
     src_params.is_tiled = false;
     src_params.pixel_format = CachedSurface::PixelFormatFromGPUPixelFormat(config.color_format);
 

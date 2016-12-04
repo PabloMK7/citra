@@ -171,7 +171,8 @@ struct CachedSurface {
     OGLTexture texture;
     u32 width;
     u32 height;
-    u32 stride = 0;
+    /// Stride between lines, in pixels. Only valid for images in linear format.
+    u32 pixel_stride = 0;
     float res_scale_width = 1.f;
     float res_scale_height = 1.f;
 
