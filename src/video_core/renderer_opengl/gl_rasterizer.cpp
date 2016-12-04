@@ -715,7 +715,11 @@ bool RasterizerOpenGL::AccelerateDisplayTransfer(const GPU::Regs::DisplayTransfe
 
     CachedSurface src_params;
     src_params.addr = config.GetPhysicalInputAddress();
-    src_params.width = config.output_width;
+    // It's important to use the correct source input width to properly skip over parts of the input
+    // image which will be cropped from the output but still affect the stride of the input image.
+    src_params.width = config.input_width;
+    // Using the output's height is fine because we don't read or skip over the remaining part of
+    // the image, and it allows for smaller texture cache lookup rectangles.
     src_params.height = config.output_height;
     src_params.is_tiled = !config.input_linear;
     src_params.pixel_format = CachedSurface::PixelFormatFromGPUPixelFormat(config.input_format);
@@ -734,6 +738,11 @@ bool RasterizerOpenGL::AccelerateDisplayTransfer(const GPU::Regs::DisplayTransfe
 
     if (src_surface == nullptr) {
         return false;
+    }
+
+    // Adjust the source rectangle to take into account parts of the input lines being cropped
+    if (config.input_width > config.output_width) {
+        src_rect.right -= (config.input_width - config.output_width) * src_surface->res_scale_width;
     }
 
     // Require destination surface to have same resolution scale as source to preserve scaling
