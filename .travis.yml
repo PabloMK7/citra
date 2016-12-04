@@ -3,7 +3,7 @@ language: cpp
 matrix:
   include:
     - os: linux
-      sudo: true
+      sudo: required
       dist: trusty
     - os: osx
       sudo: false
@@ -17,7 +17,6 @@ addons:
   apt:
     sources:
       - ubuntu-toolchain-r-test
-      - llvm-toolchain-precise
     packages:
       - gcc-6
       - g++-6
@@ -25,7 +24,6 @@ addons:
       - libqt5opengl5-dev
       - xorg-dev
       - lib32stdc++6 # For CMake
-      - clang-format-4.0
 
 cache:
   directories:
