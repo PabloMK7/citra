@@ -120,8 +120,6 @@ void Thread::Stop() {
     u32 tls_slot =
         ((tls_address - Memory::TLS_AREA_VADDR) % Memory::PAGE_SIZE) / Memory::TLS_ENTRY_SIZE;
     Kernel::g_current_process->tls_slots[tls_page].reset(tls_slot);
-
-    HLE::Reschedule(__func__);
 }
 
 Thread* ArbitrateHighestPriorityThread(u32 address) {
@@ -181,50 +179,6 @@ static void PriorityBoostStarvedThreads() {
 }
 
 /**
- * Gets the registers for timeout parameter of the next WaitSynchronization call.
- * @param thread a pointer to the thread that is ready to call WaitSynchronization
- * @returns a tuple of two register pointers to low and high part of the timeout parameter
- */
-static std::tuple<u32*, u32*> GetWaitSynchTimeoutParameterRegister(Thread* thread) {
-    bool thumb_mode = (thread->context.cpsr & TBIT) != 0;
-    u16 thumb_inst = Memory::Read16(thread->context.pc & 0xFFFFFFFE);
-    u32 inst = Memory::Read32(thread->context.pc & 0xFFFFFFFC) & 0x0FFFFFFF;
-
-    if ((thumb_mode && thumb_inst == 0xDF24) || (!thumb_mode && inst == 0x0F000024)) {
-        // svc #0x24 (WaitSynchronization1)
-        return std::make_tuple(&thread->context.cpu_registers[2],
-                               &thread->context.cpu_registers[3]);
-    } else if ((thumb_mode && thumb_inst == 0xDF25) || (!thumb_mode && inst == 0x0F000025)) {
-        // svc #0x25 (WaitSynchronizationN)
-        return std::make_tuple(&thread->context.cpu_registers[0],
-                               &thread->context.cpu_registers[4]);
-    }
-
-    UNREACHABLE();
-}
-
-/**
- * Updates the WaitSynchronization timeout parameter according to the difference
- * between ticks of the last WaitSynchronization call and the incoming one.
- * @param timeout_low a pointer to the register for the low part of the timeout parameter
- * @param timeout_high a pointer to the register for the high part of the timeout parameter
- * @param last_tick tick of the last WaitSynchronization call
- */
-static void UpdateTimeoutParameter(u32* timeout_low, u32* timeout_high, u64 last_tick) {
-    s64 timeout = ((s64)*timeout_high << 32) | *timeout_low;
-
-    if (timeout != -1) {
-        timeout -= cyclesToUs(CoreTiming::GetTicks() - last_tick) * 1000; // in nanoseconds
-
-        if (timeout < 0)
-            timeout = 0;
-
-        *timeout_low = timeout & 0xFFFFFFFF;
-        *timeout_high = timeout >> 32;
-    }
-}
-
-/**
  * Switches the CPU's active thread context to that of the specified thread
  * @param new_thread The thread to switch to
  */
@@ -253,32 +207,6 @@ static void SwitchContext(Thread* new_thread) {
         CoreTiming::UnscheduleEvent(ThreadWakeupEventType, new_thread->callback_handle);
 
         current_thread = new_thread;
-
-        // If the thread was waited by a svcWaitSynch call, step back PC by one instruction to rerun
-        // the SVC when the thread wakes up. This is necessary to ensure that the thread can acquire
-        // the requested wait object(s) before continuing.
-        if (new_thread->waitsynch_waited) {
-            // CPSR flag indicates CPU mode
-            bool thumb_mode = (new_thread->context.cpsr & TBIT) != 0;
-
-            // SVC instruction is 2 bytes for THUMB, 4 bytes for ARM
-            new_thread->context.pc -= thumb_mode ? 2 : 4;
-
-            // Get the register for timeout parameter
-            u32 *timeout_low, *timeout_high;
-            std::tie(timeout_low, timeout_high) = GetWaitSynchTimeoutParameterRegister(new_thread);
-
-            // Update the timeout parameter
-            UpdateTimeoutParameter(timeout_low, timeout_high, new_thread->last_running_ticks);
-        }
-
-        // Clean up the thread's wait_objects, they'll be restored if needed during
-        // the svcWaitSynchronization call
-        for (size_t i = 0; i < new_thread->wait_objects.size(); ++i) {
-            SharedPtr<WaitObject> object = new_thread->wait_objects[i];
-            object->RemoveWaitingThread(new_thread);
-        }
-        new_thread->wait_objects.clear();
 
         ready_queue.remove(new_thread->current_priority, new_thread);
         new_thread->status = THREADSTATUS_RUNNING;
@@ -319,17 +247,13 @@ static Thread* PopNextReadyThread() {
 void WaitCurrentThread_Sleep() {
     Thread* thread = GetCurrentThread();
     thread->status = THREADSTATUS_WAIT_SLEEP;
-
-    HLE::Reschedule(__func__);
 }
 
 void WaitCurrentThread_WaitSynchronization(std::vector<SharedPtr<WaitObject>> wait_objects,
-                                           bool wait_set_output, bool wait_all) {
+                                           bool wait_set_output) {
     Thread* thread = GetCurrentThread();
     thread->wait_set_output = wait_set_output;
-    thread->wait_all = wait_all;
     thread->wait_objects = std::move(wait_objects);
-    thread->waitsynch_waited = true;
     thread->status = THREADSTATUS_WAIT_SYNCH;
 }
 
@@ -351,15 +275,11 @@ static void ThreadWakeupCallback(u64 thread_handle, int cycles_late) {
         return;
     }
 
-    thread->waitsynch_waited = false;
-
     if (thread->status == THREADSTATUS_WAIT_SYNCH || thread->status == THREADSTATUS_WAIT_ARB) {
+        thread->wait_set_output = false;
         thread->SetWaitSynchronizationResult(ResultCode(ErrorDescription::Timeout, ErrorModule::OS,
                                                         ErrorSummary::StatusChanged,
                                                         ErrorLevel::Info));
-
-        if (thread->wait_set_output)
-            thread->SetWaitSynchronizationOutput(-1);
     }
 
     thread->ResumeFromWait();
@@ -399,6 +319,7 @@ void Thread::ResumeFromWait() {
 
     ready_queue.push_back(current_priority, this);
     status = THREADSTATUS_READY;
+    HLE::Reschedule(__func__);
 }
 
 /**
@@ -494,13 +415,11 @@ ResultVal<SharedPtr<Thread>> Thread::Create(std::string name, VAddr entry_point,
     thread->last_running_ticks = CoreTiming::GetTicks();
     thread->processor_id = processor_id;
     thread->wait_set_output = false;
-    thread->wait_all = false;
     thread->wait_objects.clear();
     thread->wait_address = 0;
     thread->name = std::move(name);
     thread->callback_handle = wakeup_callback_handle_table.Create(thread).MoveFrom();
     thread->owner_process = g_current_process;
-    thread->waitsynch_waited = false;
 
     // Find the next available TLS index, and mark it as used
     auto& tls_slots = Kernel::g_current_process->tls_slots;
@@ -554,8 +473,6 @@ ResultVal<SharedPtr<Thread>> Thread::Create(std::string name, VAddr entry_point,
 
     ready_queue.push_back(thread->current_priority, thread.get());
     thread->status = THREADSTATUS_READY;
-
-    HLE::Reschedule(__func__);
 
     return MakeResult<SharedPtr<Thread>>(std::move(thread));
 }
@@ -618,14 +535,6 @@ void Reschedule() {
     Thread* next = PopNextReadyThread();
 
     HLE::DoneRescheduling();
-
-    // Don't bother switching to the same thread.
-    // But if the thread was waiting on objects, we still need to switch it
-    // to perform PC modification, change state to RUNNING, etc.
-    // This occurs in the case when an object the thread is waiting on immediately wakes up
-    // the current thread before Reschedule() is called.
-    if (next == cur && (next == nullptr || next->waitsynch_waited == false))
-        return;
 
     if (cur && next) {
         LOG_TRACE(Kernel, "context switch %u -> %u", cur->GetObjectId(), next->GetObjectId());

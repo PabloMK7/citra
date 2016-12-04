@@ -60,14 +60,10 @@ void Timer::Set(s64 initial, s64 interval) {
     u64 initial_microseconds = initial / 1000;
     CoreTiming::ScheduleEvent(usToCycles(initial_microseconds), timer_callback_event_type,
                               callback_handle);
-
-    HLE::Reschedule(__func__);
 }
 
 void Timer::Cancel() {
     CoreTiming::UnscheduleEvent(timer_callback_event_type, callback_handle);
-
-    HLE::Reschedule(__func__);
 }
 
 void Timer::Clear() {

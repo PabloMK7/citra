@@ -230,7 +230,7 @@ std::vector<std::unique_ptr<WaitTreeItem>> WaitTreeThread::GetChildren() const {
         list.push_back(std::make_unique<WaitTreeMutexList>(thread.held_mutexes));
     }
     if (thread.status == THREADSTATUS_WAIT_SYNCH) {
-        list.push_back(std::make_unique<WaitTreeObjectList>(thread.wait_objects, thread.wait_all));
+        list.push_back(std::make_unique<WaitTreeObjectList>(thread.wait_objects, !thread.wait_objects.empty()));
     }
 
     return list;

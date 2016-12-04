@@ -31,13 +31,62 @@ void WaitObject::RemoveWaitingThread(Thread* thread) {
         waiting_threads.erase(itr);
 }
 
+SharedPtr<Thread> WaitObject::GetHighestPriorityReadyThread() {
+    // Remove the threads that are ready or already running from our waitlist
+    waiting_threads.erase(std::remove_if(waiting_threads.begin(), waiting_threads.end(), [](SharedPtr<Thread> thread) -> bool {
+        return thread->status == THREADSTATUS_RUNNING || thread->status == THREADSTATUS_READY;
+    }), waiting_threads.end());
+
+    if (waiting_threads.empty())
+        return nullptr;
+
+    auto candidate_threads = waiting_threads;
+
+    // Eliminate all threads that are waiting on more than one object, and not all of them are ready
+    candidate_threads.erase(std::remove_if(candidate_threads.begin(), candidate_threads.end(), [](SharedPtr<Thread> thread) -> bool {
+        for (auto object : thread->wait_objects)
+            if (object->ShouldWait())
+                return true;
+        return false;
+    }), candidate_threads.end());
+
+    // Return the thread with the lowest priority value (The one with the highest priority)
+    auto thread_itr = std::min_element(candidate_threads.begin(), candidate_threads.end(), [](const SharedPtr<Thread>& lhs, const SharedPtr<Thread>& rhs) {
+        return lhs->current_priority < rhs->current_priority;
+    });
+
+    if (thread_itr == candidate_threads.end())
+        return nullptr;
+
+    return *thread_itr;
+}
+
 void WaitObject::WakeupAllWaitingThreads() {
-    for (auto thread : waiting_threads)
+    // Wake up all threads that can be awoken, in priority order
+    while (auto thread = GetHighestPriorityReadyThread()) {
+        if (thread->wait_objects.empty()) {
+            Acquire();
+            // Set the output index of the WaitSynchronizationN call to the index of this object.
+            if (thread->wait_set_output) {
+                thread->SetWaitSynchronizationOutput(thread->GetWaitObjectIndex(this));
+                thread->wait_set_output = false;
+            }
+        } else {
+            for (auto object : thread->wait_objects) {
+                object->Acquire();
+                // Remove the thread from the object's waitlist
+                object->RemoveWaitingThread(thread.get());
+            }
+            // Note: This case doesn't update the output index of WaitSynchronizationN.
+            // Clear the thread's waitlist
+            thread->wait_objects.clear();
+        }
+
+        // Set the result of the call to WaitSynchronization to RESULT_SUCCESS
+        thread->SetWaitSynchronizationResult(RESULT_SUCCESS);
         thread->ResumeFromWait();
-
-    waiting_threads.clear();
-
-    HLE::Reschedule(__func__);
+        // Note: Removing the thread from the object's waitlist will be done by GetHighestPriorityReadyThread
+    }
 }
 
 const std::vector<SharedPtr<Thread>>& WaitObject::GetWaitingThreads() const {
