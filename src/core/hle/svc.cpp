@@ -257,18 +257,21 @@ static ResultCode WaitSynchronization1(Handle handle, s64 nano_seconds) {
 
     if (object->ShouldWait()) {
 
-        if (nano_seconds == 0)
+        if (nano_seconds == 0) {
             return ResultCode(ErrorDescription::Timeout, ErrorModule::OS,
                               ErrorSummary::StatusChanged,
                               ErrorLevel::Info);
+        }
 
         object->AddWaitingThread(thread);
+        // TODO(Subv): Perform things like update the mutex lock owner's priority to prevent priority inversion.
+        // Currently this is done in Mutex::ShouldWait, but it should be moved to a function that is called from here.
         thread->status = THREADSTATUS_WAIT_SYNCH;
 
         // Create an event to wake the thread up after the specified nanosecond delay has passed
         thread->WakeAfterDelay(nano_seconds);
 
-        // Note: The output of this SVC will be set to RESULT_SUCCESS if the thread resumes due to a signal in one of its wait objects.
+        // Note: The output of this SVC will be set to RESULT_SUCCESS if the thread resumes due to a signal in its wait objects.
         // Otherwise we retain the default value of timeout.
         return ResultCode(ErrorDescription::Timeout, ErrorModule::OS,
                                ErrorSummary::StatusChanged,
@@ -312,7 +315,9 @@ static ResultCode WaitSynchronizationN(s32* out, Handle* handles, s32 handle_cou
         objects[i] = object;
     }
 
-    // Clear the mapping of wait object indices
+    // Clear the mapping of wait object indices.
+    // We don't want any lingering state in this map.
+    // It will be repopulated later in the wait_all = false case.
     thread->wait_objects_index.clear();
 
     if (!wait_all) {
@@ -345,12 +350,13 @@ static ResultCode WaitSynchronizationN(s32* out, Handle* handles, s32 handle_cou
         thread->wait_objects.clear();
 
         // Add the thread to each of the objects' waiting threads.
-        for (int i = 0; i < objects.size(); ++i) {
+        for (size_t i = 0; i < objects.size(); ++i) {
             ObjectPtr object = objects[i];
             // Set the index of this object in the mapping of Objects -> index for this thread.
-            thread->wait_objects_index[object->GetObjectId()] = i;
+            thread->wait_objects_index[object->GetObjectId()] = static_cast<int>(i);
             object->AddWaitingThread(thread);
             // TODO(Subv): Perform things like update the mutex lock owner's priority to prevent priority inversion.
+            // Currently this is done in Mutex::ShouldWait, but it should be moved to a function that is called from here.
         }
 
         // Note: If no handles and no timeout were given, then the thread will deadlock, this is consistent with hardware behavior.
@@ -396,6 +402,7 @@ static ResultCode WaitSynchronizationN(s32* out, Handle* handles, s32 handle_cou
         for (auto object : objects) {
             object->AddWaitingThread(thread);
             // TODO(Subv): Perform things like update the mutex lock owner's priority to prevent priority inversion.
+            // Currently this is done in Mutex::ShouldWait, but it should be moved to a function that is called from here.
         }
 
         // Create an event to wake the thread up after the specified nanosecond delay has passed
@@ -1172,6 +1179,7 @@ void CallSVC(u32 immediate) {
     if (info) {
         if (info->func) {
             info->func();
+            //  TODO(Subv): Not all service functions should cause a reschedule in all cases.
             HLE::Reschedule(__func__);
         } else {
             LOG_ERROR(Kernel_SVC, "unimplemented SVC function %s(..)", info->name);

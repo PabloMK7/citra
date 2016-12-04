@@ -131,8 +131,8 @@ public:
      * It is used to set the output value of WaitSynchronizationN when the thread is awakened.
      * @param object Object to query the index of.
      */
-    s32 GetWaitObjectIndex(WaitObject* object) {
-        return wait_objects_index[object->GetObjectId()];
+    s32 GetWaitObjectIndex(const WaitObject* object) const {
+        return wait_objects_index.at(object->GetObjectId());
     }
 
     /**
@@ -146,6 +146,15 @@ public:
      */
     VAddr GetTLSAddress() const {
         return tls_address;
+    }
+
+    /**
+     * Returns whether this thread is waiting for all the objects in
+     * its wait list to become ready, as a result of a WaitSynchronizationN call
+     * with wait_all = true, or a ReplyAndReceive call.
+     */
+    bool IsWaitingAll() const {
+        return !wait_objects.empty();
     }
 
     Core::ThreadContext context;
@@ -169,7 +178,11 @@ public:
     boost::container::flat_set<SharedPtr<Mutex>> held_mutexes;
 
     SharedPtr<Process> owner_process;                ///< Process that owns this thread
-    std::vector<SharedPtr<WaitObject>> wait_objects; ///< Objects that the thread is waiting on
+
+    /// Objects that the thread is waiting on.
+    /// This is only populated when the thread should wait for all the objects to become ready.
+    std::vector<SharedPtr<WaitObject>> wait_objects;
+
     std::unordered_map<int, s32> wait_objects_index; ///< Mapping of Object ids to their position in the last waitlist that this object waited on.
 
     VAddr wait_address;   ///< If waiting on an AddressArbiter, this is the arbitration address

@@ -33,7 +33,7 @@ void WaitObject::RemoveWaitingThread(Thread* thread) {
 
 SharedPtr<Thread> WaitObject::GetHighestPriorityReadyThread() {
     // Remove the threads that are ready or already running from our waitlist
-    waiting_threads.erase(std::remove_if(waiting_threads.begin(), waiting_threads.end(), [](SharedPtr<Thread> thread) -> bool {
+    waiting_threads.erase(std::remove_if(waiting_threads.begin(), waiting_threads.end(), [](const SharedPtr<Thread>& thread) -> bool {
         return thread->status == THREADSTATUS_RUNNING || thread->status == THREADSTATUS_READY;
     }), waiting_threads.end());
 
@@ -42,12 +42,11 @@ SharedPtr<Thread> WaitObject::GetHighestPriorityReadyThread() {
 
     auto candidate_threads = waiting_threads;
 
-    // Eliminate all threads that are waiting on more than one object, and not all of them are ready
-    candidate_threads.erase(std::remove_if(candidate_threads.begin(), candidate_threads.end(), [](SharedPtr<Thread> thread) -> bool {
-        for (auto object : thread->wait_objects)
-            if (object->ShouldWait())
-                return true;
-        return false;
+    // Eliminate all threads that are waiting on more than one object, and not all of said objects are ready
+    candidate_threads.erase(std::remove_if(candidate_threads.begin(), candidate_threads.end(), [](const SharedPtr<Thread>& thread) -> bool {
+        return std::any_of(thread->wait_objects.begin(), thread->wait_objects.end(), [](const SharedPtr<WaitObject>& object) -> bool {
+            return object->ShouldWait();
+        });
     }), candidate_threads.end());
 
     // Return the thread with the lowest priority value (The one with the highest priority)
