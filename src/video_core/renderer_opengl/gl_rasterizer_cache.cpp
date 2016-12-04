@@ -158,24 +158,21 @@ bool RasterizerCacheOpenGL::BlitTextures(GLuint src_tex, GLuint dst_tex,
         buffers = GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT;
     }
 
-    if (OpenGLState::CheckFBStatus(GL_READ_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-        return false;
-    }
+    bool can_blit = OpenGLState::CheckFBStatus(GL_READ_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE &&
+                    OpenGLState::CheckFBStatus(GL_DRAW_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE;
 
-    if (OpenGLState::CheckFBStatus(GL_DRAW_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-        return false;
+    if (can_blit) {
+        glBlitFramebuffer(src_rect.left, src_rect.top, src_rect.right, src_rect.bottom,
+                          dst_rect.left, dst_rect.top, dst_rect.right, dst_rect.bottom, buffers,
+                          buffers == GL_COLOR_BUFFER_BIT ? GL_LINEAR : GL_NEAREST);
     }
-
-    glBlitFramebuffer(src_rect.left, src_rect.top, src_rect.right, src_rect.bottom, dst_rect.left,
-                      dst_rect.top, dst_rect.right, dst_rect.bottom, buffers,
-                      buffers == GL_COLOR_BUFFER_BIT ? GL_LINEAR : GL_NEAREST);
 
     // Restore previous framebuffer bindings
     cur_state.draw.read_framebuffer = old_fbs[0];
     cur_state.draw.draw_framebuffer = old_fbs[1];
     cur_state.Apply();
 
-    return true;
+    return can_blit;
 }
 
 bool RasterizerCacheOpenGL::TryBlitSurfaces(CachedSurface* src_surface,
