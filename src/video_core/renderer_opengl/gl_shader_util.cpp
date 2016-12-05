@@ -4,6 +4,7 @@
 
 #include <vector>
 #include <glad/glad.h>
+#include "common/assert.h"
 #include "common/logging/log.h"
 #include "video_core/renderer_opengl/gl_shader_util.h"
 
@@ -87,6 +88,7 @@ GLuint LoadProgram(const char* vertex_shader, const char* fragment_shader) {
         LOG_ERROR(Render_OpenGL, "Vertex shader:\n%s", vertex_shader);
         LOG_ERROR(Render_OpenGL, "Fragment shader:\n%s", fragment_shader);
     }
+    ASSERT_MSG(result == GL_TRUE, "Shader not linked");
 
     glDeleteShader(vertex_shader_id);
     glDeleteShader(fragment_shader_id);
