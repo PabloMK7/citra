@@ -29,20 +29,8 @@ class ClientSession;
  * the request, the response is marshalled back to the caller's TLS buffer and control is
  * transferred back to it.
  */
-class ServerSession : public WaitObject {
+class ServerSession final : public WaitObject {
 public:
-    ServerSession();
-    ~ServerSession() override;
-
-    /**
-     * Creates a server session. The server session can have an optional HLE handler,
-     * which will be invoked to handle the IPC requests that this session receives.
-     * @param name Optional name of the server session.
-     * @param hle_handler Optional HLE handler for this server session.
-     * @return The created server session
-     */
-    static ResultVal<SharedPtr<ServerSession>> Create(std::string name = "Unknown", std::shared_ptr<Service::SessionRequestHandler> hle_handler = nullptr);
-
     std::string GetTypeName() const override {
         return "ServerSession";
     }
@@ -61,10 +49,9 @@ public:
 
     /**
      * Handle a sync request from the emulated application.
-     * Only HLE services should override this function.
      * @returns ResultCode from the operation.
      */
-    virtual ResultCode HandleSyncRequest();
+    ResultCode HandleSyncRequest();
 
     bool ShouldWait() override;
 
@@ -73,5 +60,18 @@ public:
     std::string name; ///< The name of this session (optional)
     bool signaled;    ///< Whether there's new data available to this ServerSession
     std::shared_ptr<Service::SessionRequestHandler> hle_handler; ///< This session's HLE request handler (optional)
+
+private:
+    ServerSession();
+    ~ServerSession() override;
+
+    /**
+     * Creates a server session. The server session can have an optional HLE handler,
+     * which will be invoked to handle the IPC requests that this session receives.
+     * @param name Optional name of the server session.
+     * @param hle_handler Optional HLE handler for this server session.
+     * @return The created server session
+     */
+    static ResultVal<SharedPtr<ServerSession>> Create(std::string name = "Unknown", std::shared_ptr<Service::SessionRequestHandler> hle_handler = nullptr);
 };
 }

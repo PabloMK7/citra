@@ -85,21 +85,13 @@ static void GetServiceHandle(Service::Interface* self) {
     auto it = Service::g_srv_services.find(port_name);
 
     if (it != Service::g_srv_services.end()) {
-        auto client_port = std::get<Kernel::SharedPtr<Kernel::ClientPort>>(it->second);
-        // The hle_handler will be nullptr if this port was registered by the emulated
-        // application by means of srv:RegisterService.
-        auto hle_handler = std::get<std::shared_ptr<Service::Interface>>(it->second);
-
-        // Create a new session pair
-        auto sessions = Kernel::ServerSession::CreateSessionPair(port_name, hle_handler);
-        auto client_session = std::get<Kernel::SharedPtr<Kernel::ClientSession>>(sessions);
-        auto server_session = std::get<Kernel::SharedPtr<Kernel::ServerSession>>(sessions);
+        auto client_port = it->second;
 
         // Note: Threads do not wait for the server endpoint to call
         // AcceptSession before returning from this call.
 
-        // Add the server session to the port's queue
-        client_port->AddWaitingSession(server_session);
+        // Connect to the port and retrieve the client endpoint of the connection Session.
+        auto client_session = client_port->Connect();
 
         // Return the client session
         cmd_buff[3] = Kernel::g_handle_table.Create(client_session).MoveFrom();

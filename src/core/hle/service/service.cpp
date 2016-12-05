@@ -44,8 +44,8 @@
 
 namespace Service {
 
-std::unordered_map<std::string, std::tuple<Kernel::SharedPtr<Kernel::ClientPort>, std::shared_ptr<Interface>>> g_kernel_named_ports;
-std::unordered_map<std::string, std::tuple<Kernel::SharedPtr<Kernel::ClientPort>, std::shared_ptr<Interface>>> g_srv_services;
+std::unordered_map<std::string, Kernel::SharedPtr<Kernel::ClientPort>> g_kernel_named_ports;
+std::unordered_map<std::string, Kernel::SharedPtr<Kernel::ClientPort>> g_srv_services;
 
 /**
  * Creates a function string for logging, complete with the name (or header code, depending
@@ -102,15 +102,17 @@ void Interface::Register(const FunctionInfo* functions, size_t n) {
 // Module interface
 
 static void AddNamedPort(Interface* interface_) {
-    auto ports = Kernel::ServerPort::CreatePortPair(interface_->GetMaxSessions(), interface_->GetPortName());
+    auto ports = Kernel::ServerPort::CreatePortPair(interface_->GetMaxSessions(), interface_->GetPortName(),
+                                                    std::shared_ptr<Interface>(interface_));
     auto client_port = std::get<Kernel::SharedPtr<Kernel::ClientPort>>(ports);
-    g_kernel_named_ports.emplace(interface_->GetPortName(), std::make_tuple(client_port, std::shared_ptr<Interface>(interface_)));
+    g_kernel_named_ports.emplace(interface_->GetPortName(), client_port);
 }
 
 void AddService(Interface* interface_) {
-    auto ports = Kernel::ServerPort::CreatePortPair(interface_->GetMaxSessions(), interface_->GetPortName());
+    auto ports = Kernel::ServerPort::CreatePortPair(interface_->GetMaxSessions(), interface_->GetPortName(),
+                                                    std::shared_ptr<Interface>(interface_));
     auto client_port = std::get<Kernel::SharedPtr<Kernel::ClientPort>>(ports);
-    g_srv_services.emplace(interface_->GetPortName(), std::make_tuple(client_port, std::shared_ptr<Interface>(interface_)));
+    g_srv_services.emplace(interface_->GetPortName(), client_port);
 }
 
 /// Initialize ServiceManager

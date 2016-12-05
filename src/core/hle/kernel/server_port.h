@@ -9,6 +9,10 @@
 #include "common/common_types.h"
 #include "core/hle/kernel/kernel.h"
 
+namespace Service {
+class SessionRequestHandler;
+}
+
 namespace Kernel {
 
 class ClientPort;
@@ -19,10 +23,13 @@ public:
      * Creates a pair of ServerPort and an associated ClientPort.
      * @param max_sessions Maximum number of sessions to the port
      * @param name Optional name of the ports
+     * @param hle_handler Optional HLE handler template for the port,
+     * ServerSessions crated from this port will inherit a reference to this handler.
      * @return The created port tuple
      */
     static std::tuple<SharedPtr<ServerPort>, SharedPtr<ClientPort>> CreatePortPair(
-        u32 max_sessions, std::string name = "UnknownPort");
+        u32 max_sessions, std::string name = "UnknownPort",
+        std::shared_ptr<Service::SessionRequestHandler> hle_handler = nullptr);
 
     std::string GetTypeName() const override {
         return "ServerPort";
@@ -40,6 +47,10 @@ public:
 
     std::vector<SharedPtr<WaitObject>>
         pending_sessions; ///< ServerSessions waiting to be accepted by the port
+
+    /// This session's HLE request handler template (optional)
+    /// ServerSessions created from this port inherit a reference to this handler.
+    std::shared_ptr<Service::SessionRequestHandler> hle_handler;
 
     bool ShouldWait() override;
     void Acquire() override;

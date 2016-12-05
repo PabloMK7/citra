@@ -47,10 +47,10 @@ ResultCode ServerSession::HandleSyncRequest() {
 }
 
 std::tuple<SharedPtr<ServerSession>, SharedPtr<ClientSession>> ServerSession::CreateSessionPair(const std::string& name, std::shared_ptr<Service::SessionRequestHandler> hle_handler) {
-    auto server_session = ServerSession::Create(name + "Server", hle_handler).MoveFrom();
-    auto client_session = ClientSession::Create(server_session, name + "Client").MoveFrom();
+    auto server_session = ServerSession::Create(name + "_Server", hle_handler).MoveFrom();
+    auto client_session = ClientSession::Create(server_session, name + "_Client").MoveFrom();
 
-    return std::make_tuple(server_session, client_session);
+    return std::make_tuple(std::move(server_session), std::move(client_session));
 }
 
 }

@@ -176,7 +176,11 @@ namespace Service {
 static const int kMaxPortSize = 8; ///< Maximum size of a port name (8 characters)
 static const u32 DefaultMaxSessions = 10; ///< Arbitrary default number of maximum connections to an HLE port
 
-/// TODO(Subv): Write documentation for this class
+/**
+ * Interface implemented by HLE Session handlers.
+ * This can be provided to a ServerSession in order to hook into several relevant events (such as a new connection or a SyncRequest)
+ * so they can be implemented in the emulator.
+ */
 class SessionRequestHandler {
 public:
     /**
@@ -190,7 +194,9 @@ public:
     virtual ResultCode HandleSyncRequest(Kernel::SharedPtr<Kernel::ServerSession> server_session) = 0;
 };
 
-/// Interface to a CTROS service
+/**
+ * Framework for implementing HLE service handlers which dispatch incoming SyncRequests based on a table mapping header ids to handler functions.
+ */
 class Interface : public SessionRequestHandler {
 public:
     std::string GetName() const {
@@ -257,9 +263,9 @@ void Init();
 void Shutdown();
 
 /// Map of named ports managed by the kernel, which can be retrieved using the ConnectToPort SVC.
-extern std::unordered_map<std::string, std::tuple<Kernel::SharedPtr<Kernel::ClientPort>, std::shared_ptr<Interface>>> g_kernel_named_ports;
+extern std::unordered_map<std::string, Kernel::SharedPtr<Kernel::ClientPort>> g_kernel_named_ports;
 /// Map of services registered with the "srv:" service, retrieved using GetServiceHandle.
-extern std::unordered_map<std::string, std::tuple<Kernel::SharedPtr<Kernel::ClientPort>, std::shared_ptr<Interface>>> g_srv_services;
+extern std::unordered_map<std::string, Kernel::SharedPtr<Kernel::ClientPort>> g_srv_services;
 
 /// Adds a service to the services table
 void AddService(Interface* interface_);

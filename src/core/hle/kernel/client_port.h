@@ -11,7 +11,7 @@
 namespace Kernel {
 
 class ServerPort;
-class ServerSession;
+class ClientSession;
 
 class ClientPort final : public Object {
 public:
@@ -29,15 +29,17 @@ public:
     }
 
     /**
-     * Adds the specified server session to the queue of pending sessions of the associated ServerPort
-     * @param server_session Server session to add to the queue
+     * Creates a new Session pair, adds the created ServerSession to the associated ServerPort's list of pending sessions,
+     * and signals the ServerPort, causing any threads waiting on it to awake.
+     * @returns ClientSession The client endpoint of the created Session pair.
      */
-    void AddWaitingSession(SharedPtr<ServerSession> server_session);
+    SharedPtr<ClientSession> Connect();
 
     SharedPtr<ServerPort> server_port; ///< ServerPort associated with this client port.
     u32 max_sessions;    ///< Maximum number of simultaneous sessions the port can have
     u32 active_sessions; ///< Number of currently open sessions to this port
     std::string name;    ///< Name of client port (optional)
+
 private:
     ClientPort();
     ~ClientPort() override;

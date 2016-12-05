@@ -20,7 +20,7 @@ ResultVal<SharedPtr<ClientSession>> ClientSession::Create(SharedPtr<ServerSessio
     return MakeResult<SharedPtr<ClientSession>>(std::move(client_session));
 }
 
-ResultCode ClientSession::HandleSyncRequest() {
+ResultCode ClientSession::SendSyncRequest() {
     // Signal the server session that new data is available
     return server_session->HandleSyncRequest();
 }

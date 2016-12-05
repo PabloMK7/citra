@@ -17,17 +17,12 @@ class ServerSession;
 
 class ClientSession final : public Object {
 public:
-    /**
-     * Creates a client session.
-     * @param server_session The server session associated with this client session
-     * @param name Optional name of client session
-     * @return The created client session
-     */
-    static ResultVal<SharedPtr<ClientSession>> Create(SharedPtr<ServerSession> server_session, std::string name = "Unknown");
+    friend class ServerSession;
 
     std::string GetTypeName() const override {
         return "ClientSession";
     }
+
     std::string GetName() const override {
         return name;
     }
@@ -38,10 +33,10 @@ public:
     }
 
     /**
-     * Handle a SyncRequest from the emulated application.
+     * Sends an SyncRequest from the current emulated thread.
      * @return ResultCode of the operation.
      */
-    ResultCode HandleSyncRequest();
+    ResultCode SendSyncRequest();
 
     std::string name;                           ///< Name of client port (optional)
     SharedPtr<ServerSession> server_session;    ///< The server session associated with this client session.
@@ -49,6 +44,14 @@ public:
 private:
     ClientSession();
     ~ClientSession() override;
+
+    /**
+     * Creates a client session.
+     * @param server_session The server session associated with this client session
+     * @param name Optional name of client session
+     * @return The created client session
+     */
+    static ResultVal<SharedPtr<ClientSession>> Create(SharedPtr<ServerSession> server_session, std::string name = "Unknown");
 };
 
 } // namespace
