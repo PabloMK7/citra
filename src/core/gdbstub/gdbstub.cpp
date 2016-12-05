@@ -17,7 +17,6 @@
 #ifdef _WIN32
 #include <winsock2.h>
 // winsock2.h needs to be included first to prevent winsock.h being included by other includes
-#include <common/x64/abi.h>
 #include <io.h>
 #include <iphlpapi.h>
 #include <ws2tcpip.h>
