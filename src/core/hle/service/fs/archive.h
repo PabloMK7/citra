@@ -50,11 +50,12 @@ public:
         return "Path: " + path.DebugStr();
     }
 
-    ResultCode HandleSyncRequest(Kernel::SharedPtr<Kernel::ServerSession> server_session) override;
-
     FileSys::Path path; ///< Path of the file
     u32 priority;       ///< Priority of the file. TODO(Subv): Find out what this means
     std::unique_ptr<FileSys::FileBackend> backend; ///< File backend interface
+
+protected:
+    void HandleSyncRequestImpl(Kernel::SharedPtr<Kernel::ServerSession> server_session) override;
 };
 
 class Directory : public SessionRequestHandler {
@@ -66,10 +67,11 @@ public:
         return "Directory: " + path.DebugStr();
     }
 
-    ResultCode HandleSyncRequest(Kernel::SharedPtr<Kernel::ServerSession> server_session) override;
-
     FileSys::Path path;                                 ///< Path of the directory
     std::unique_ptr<FileSys::DirectoryBackend> backend; ///< File backend interface
+
+protected:
+    void HandleSyncRequestImpl(Kernel::SharedPtr<Kernel::ServerSession> server_session) override;
 };
 
 /**

@@ -4,6 +4,7 @@
 
 #include "common/assert.h"
 #include "core/hle/kernel/client_port.h"
+#include "core/hle/kernel/client_session.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/server_port.h"
 #include "core/hle/kernel/server_session.h"

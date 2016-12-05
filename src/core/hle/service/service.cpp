@@ -64,7 +64,27 @@ static std::string MakeFunctionString(const char* name, const char* port_name,
     return function_string;
 }
 
-ResultCode Interface::HandleSyncRequest(Kernel::SharedPtr<Kernel::ServerSession> server_session) {
+ResultCode SessionRequestHandler::HandleSyncRequest(Kernel::SharedPtr<Kernel::ServerSession> server_session) {
+    // Attempt to translate the incoming request's command buffer.
+    ResultCode result = TranslateRequest(server_session);
+
+    if (result.IsError())
+        return result;
+
+    // Actually handle the request
+    HandleSyncRequestImpl(server_session);
+
+    // TODO(Subv): Translate the response command buffer.
+
+    return RESULT_SUCCESS;
+}
+
+ResultCode SessionRequestHandler::TranslateRequest(Kernel::SharedPtr<Kernel::ServerSession> server_session) {
+    // TODO(Subv): Implement this function once multiple concurrent processes are supported.
+    return RESULT_SUCCESS;
+}
+
+void Interface::HandleSyncRequestImpl(Kernel::SharedPtr<Kernel::ServerSession> server_session) {
     // TODO(Subv): Make use of the server_session in the HLE service handlers to distinguish which session triggered each command.
 
     u32* cmd_buff = Kernel::GetCommandBuffer();
@@ -80,14 +100,12 @@ ResultCode Interface::HandleSyncRequest(Kernel::SharedPtr<Kernel::ServerSession>
 
         // TODO(bunnei): Hack - ignore error
         cmd_buff[1] = 0;
-        return RESULT_SUCCESS;
+        return;
     }
     LOG_TRACE(Service, "%s",
               MakeFunctionString(itr->second.name, GetPortName().c_str(), cmd_buff).c_str());
 
     itr->second.func(this);
-
-    return RESULT_SUCCESS; // TODO: Implement return from actual function, it should fail if the parameter translation fails
 }
 
 void Interface::Register(const FunctionInfo* functions, size_t n) {
@@ -179,4 +197,5 @@ void Shutdown() {
     g_kernel_named_ports.clear();
     LOG_DEBUG(Service, "shutdown OK");
 }
+
 }

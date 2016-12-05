@@ -187,11 +187,27 @@ public:
      * Dispatches and handles a sync request from the emulated application.
      * @param server_session The ServerSession that was triggered for this sync request,
      * it should be used to differentiate which client (As in ClientSession) we're answering to.
-     * TODO(Subv): Make a HandleSyncRequestParent function that is called from the outside and does { ReturnIfError(Translate()); HandleSyncRequest(); }
-     * The Translate() function would copy the command buffer from the ServerSession thread's TLS into a temporary buffer, and pass it to HandleSyncRequest.
-     * TODO(Subv): HandleSyncRequest's return type should be void.
+     * @returns ResultCode the result code of the translate operation.
      */
-    virtual ResultCode HandleSyncRequest(Kernel::SharedPtr<Kernel::ServerSession> server_session) = 0;
+    ResultCode HandleSyncRequest(Kernel::SharedPtr<Kernel::ServerSession> server_session);
+
+protected:
+    /**
+     * Handles a sync request from the emulated application and writes the response to the command buffer.
+     * TODO(Subv): Use a wrapper structure to hold all the information relevant to
+     * this request (ServerSession, Originator thread, Translated command buffer, etc).
+     */
+    virtual void HandleSyncRequestImpl(Kernel::SharedPtr<Kernel::ServerSession> server_session) = 0;
+
+private:
+    /**
+     * Performs command buffer translation for this request.
+     * The command buffer from the ServerSession thread's TLS is copied into a
+     * buffer and all descriptors in the buffer are processed.
+     * TODO(Subv): Implement this function, currently we do not support multiple processes running at once,
+     * but once that is implemented we'll need to properly translate all descriptors in the command buffer.
+     */
+    ResultCode TranslateRequest(Kernel::SharedPtr<Kernel::ServerSession> server_session);
 };
 
 /**
@@ -231,9 +247,9 @@ public:
         return "[UNKNOWN SERVICE PORT]";
     }
 
-    ResultCode HandleSyncRequest(Kernel::SharedPtr<Kernel::ServerSession> server_session) override;
-
 protected:
+    void HandleSyncRequestImpl(Kernel::SharedPtr<Kernel::ServerSession> server_session) override;
+
     /**
      * Registers the functions in the service
      */
