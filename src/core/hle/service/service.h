@@ -174,7 +174,7 @@ inline DescriptorType GetDescriptorType(u32 descriptor) {
 namespace Service {
 
 static const int kMaxPortSize = 8; ///< Maximum size of a port name (8 characters)
-static const u32 DefaultMaxSessions = 10; ///< Arbitrary default number of maximum connections to an HLE port
+static const u32 DefaultMaxSessions = 10; ///< Arbitrary default number of maximum connections to an HLE service
 
 /**
  * Interface implemented by HLE Session handlers.
@@ -215,6 +215,15 @@ private:
  */
 class Interface : public SessionRequestHandler {
 public:
+    /**
+     * Creates an HLE interface with the specified max sessions.
+     * @param max_sessions Maximum number of sessions that can be
+     * connected to this service at the same time.
+     */
+    Interface(u32 max_sessions = DefaultMaxSessions) : max_sessions(max_sessions) { }
+
+    virtual ~Interface() = default;
+
     std::string GetName() const {
         return GetPortName();
     }
@@ -222,14 +231,12 @@ public:
     virtual void SetVersion(u32 raw_version) {
         version.raw = raw_version;
     }
-    virtual ~Interface() {}
 
     /**
-     * Gets the maximum allowed number of sessions that can be connected to this port at the same time.
-     * It should be overwritten by each service implementation for more fine-grained control.
+     * Gets the maximum allowed number of sessions that can be connected to this service at the same time.
      * @returns The maximum number of connections allowed.
      */
-    virtual u32 GetMaxSessions() const { return DefaultMaxSessions; }
+    u32 GetMaxSessions() const { return max_sessions; }
 
     typedef void (*Function)(Interface*);
 
@@ -269,6 +276,7 @@ protected:
     } version = {};
 
 private:
+    u32 max_sessions; ///< Maximum number of concurrent sessions that this service can handle.
     boost::container::flat_map<u32, FunctionInfo> m_functions;
 };
 

@@ -99,7 +99,7 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x01020000, CheckNew3DS, "CheckNew3DS"},
 };
 
-APT_U_Interface::APT_U_Interface() {
+APT_U_Interface::APT_U_Interface() : Interface(MaxAPTSessions) {
     Register(FunctionTable);
 }
 
