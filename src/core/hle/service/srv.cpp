@@ -93,8 +93,12 @@ static void GetServiceHandle(Service::Interface* self) {
         // Connect to the port and retrieve the client endpoint of the connection Session.
         auto client_session = client_port->Connect();
 
-        // Return the client session
-        cmd_buff[3] = Kernel::g_handle_table.Create(client_session).MoveFrom();
+        res = client_session.Code();
+
+        if (client_session.Succeeded()) {
+            // Return the client session
+            cmd_buff[3] = Kernel::g_handle_table.Create(*client_session).MoveFrom();
+        }
         LOG_TRACE(Service_SRV, "called port=%s, handle=0x%08X", port_name.c_str(), cmd_buff[3]);
     } else {
         LOG_ERROR(Service_SRV, "(UNIMPLEMENTED) called port=%s", port_name.c_str());

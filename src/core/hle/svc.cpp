@@ -227,7 +227,8 @@ static ResultCode ConnectToPort(Handle* out_handle, const char* port_name) {
     auto client_port = it->second;
 
     // Connect to the port and retrieve the client endpoint of the connection Session.
-    auto client_session = client_port->Connect();
+    SharedPtr<Kernel::ClientSession> client_session;
+    CASCADE_RESULT(client_session, client_port->Connect());
 
     // Note: Threads do not wait for the server endpoint to call
     // AcceptSession before returning from this call.

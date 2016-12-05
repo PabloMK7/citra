@@ -31,9 +31,9 @@ public:
     /**
      * Creates a new Session pair, adds the created ServerSession to the associated ServerPort's list of pending sessions,
      * and signals the ServerPort, causing any threads waiting on it to awake.
-     * @returns ClientSession The client endpoint of the created Session pair.
+     * @returns ClientSession The client endpoint of the created Session pair, or error code.
      */
-    SharedPtr<ClientSession> Connect();
+    ResultVal<SharedPtr<ClientSession>> Connect();
 
     SharedPtr<ServerPort> server_port; ///< ServerPort associated with this client port.
     u32 max_sessions;    ///< Maximum number of simultaneous sessions the port can have

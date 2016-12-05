@@ -14,7 +14,14 @@ namespace Kernel {
 ClientPort::ClientPort() {}
 ClientPort::~ClientPort() {}
 
-SharedPtr<ClientSession> ClientPort::Connect() {
+ResultVal<SharedPtr<ClientSession>> ClientPort::Connect() {
+    if (active_sessions >= max_sessions) {
+        return ResultCode(ErrorDescription::MaxConnectionsReached,
+                          ErrorModule::OS, ErrorSummary::WouldBlock,
+                          ErrorLevel::Temporary);
+    }
+    active_sessions++;
+
     // Create a new session pair, let the created sessions inherit the parent port's HLE handler.
     auto sessions = ServerSession::CreateSessionPair(server_port->GetName(), server_port->hle_handler);
     auto client_session = std::get<SharedPtr<ClientSession>>(sessions);
@@ -25,7 +32,7 @@ SharedPtr<ClientSession> ClientPort::Connect() {
     // Wake the threads waiting on the ServerPort
     server_port->WakeupAllWaitingThreads();
 
-    return std::move(client_session);
+    return MakeResult<SharedPtr<ClientSession>>(std::move(client_session));
 }
 
 } // namespace
