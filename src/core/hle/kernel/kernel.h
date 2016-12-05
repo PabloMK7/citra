@@ -35,7 +35,6 @@ enum class HandleType : u32 {
     Event,
     Mutex,
     SharedMemory,
-    Redirection,
     Thread,
     Process,
     AddressArbiter,
@@ -93,7 +92,6 @@ public:
 
         case HandleType::Unknown:
         case HandleType::SharedMemory:
-        case HandleType::Redirection:
         case HandleType::Process:
         case HandleType::AddressArbiter:
         case HandleType::ResourceLimit:
