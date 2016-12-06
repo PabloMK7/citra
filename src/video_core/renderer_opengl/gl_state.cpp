@@ -232,19 +232,6 @@ void OpenGLState::Apply() const {
     cur_state = *this;
 }
 
-GLenum OpenGLState::CheckFBStatus(GLenum target) {
-    GLenum fb_status = glCheckFramebufferStatus(target);
-    if (fb_status != GL_FRAMEBUFFER_COMPLETE) {
-        const char* fb_description =
-            (target == GL_READ_FRAMEBUFFER ? "READ"
-                                           : (target == GL_DRAW_FRAMEBUFFER ? "DRAW" : "UNK"));
-        LOG_CRITICAL(Render_OpenGL, "OpenGL %s framebuffer check failed, status %X", fb_description,
-                     fb_status);
-    }
-
-    return fb_status;
-}
-
 void OpenGLState::ResetTexture(GLuint handle) {
     for (auto& unit : cur_state.texture_units) {
         if (unit.texture_2d == handle) {

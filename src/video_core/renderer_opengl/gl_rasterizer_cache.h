@@ -187,7 +187,7 @@ public:
     ~RasterizerCacheOpenGL();
 
     /// Blits one texture to another
-    bool BlitTextures(GLuint src_tex, GLuint dst_tex, CachedSurface::SurfaceType type,
+    void BlitTextures(GLuint src_tex, GLuint dst_tex, CachedSurface::SurfaceType type,
                       const MathUtil::Rectangle<int>& src_rect,
                       const MathUtil::Rectangle<int>& dst_rect);
 

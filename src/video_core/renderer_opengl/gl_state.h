@@ -90,9 +90,6 @@ public:
     /// Apply this state as the current OpenGL state
     void Apply() const;
 
-    /// Check the status of the current OpenGL read or draw framebuffer configuration
-    static GLenum CheckFBStatus(GLenum target);
-
     /// Resets and unbinds any references to the given resource in the current OpenGL state
     static void ResetTexture(GLuint handle);
     static void ResetSampler(GLuint handle);
