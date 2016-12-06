@@ -64,6 +64,10 @@ use_vsync =
 # 0 (default): Default Top Bottom Screen, 1: Single Screen Only, 2: Large Screen Small Screen
 layout_option =
 
+#Whether to toggle frame limiter on or off.
+# 0: Off , 1  (default): On
+toggle_framelimit =
+
 # Swaps the prominent screen with the other screen.
 # For example, if Single Screen is chosen, setting this to 1 will display the bottom screen instead of the top screen.
 # 0 (default): Top Screen is prominent, 1: Bottom Screen is prominent

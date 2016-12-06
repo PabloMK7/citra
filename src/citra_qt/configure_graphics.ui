@@ -50,6 +50,13 @@
           </property>
          </widget>
         </item>
+        <item>
+         <widget class="QCheckBox" name="toggle_framelimit">
+          <property name="text">
+           <string>Limit framerate</string>
+          </property>
+         </widget>
+        </item>
        </layout>
       </widget>
      </item>
