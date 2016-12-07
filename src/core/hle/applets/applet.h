@@ -47,7 +47,7 @@ public:
     /**
      * Whether the applet is currently executing instead of the host application or not.
      */
-    virtual bool IsRunning() const = 0;
+    bool IsRunning() const;
 
     /**
      * Handles an update tick for the Applet, lets it update the screen, send commands, etc.
@@ -66,6 +66,9 @@ protected:
 
     Service::APT::AppletId id;                    ///< Id of this Applet
     std::shared_ptr<std::vector<u8>> heap_memory; ///< Heap memory for this Applet
+
+    /// Whether this applet is currently running instead of the host application or not.
+    bool is_running = false;
 };
 
 /// Returns whether a library applet is currently running

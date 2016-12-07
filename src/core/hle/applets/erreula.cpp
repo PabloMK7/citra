@@ -47,7 +47,7 @@ ResultCode ErrEula::ReceiveParameter(const Service::APT::MessageParameter& param
 }
 
 ResultCode ErrEula::StartImpl(const Service::APT::AppletStartupParameter& parameter) {
-    started = true;
+    is_running = true;
 
     // TODO(Subv): Set the expected fields in the response buffer before resending it to the
     // application.
@@ -62,7 +62,7 @@ ResultCode ErrEula::StartImpl(const Service::APT::AppletStartupParameter& parame
     message.sender_id = static_cast<u32>(id);
     Service::APT::SendParameter(message);
 
-    started = false;
+    is_running = false;
     return RESULT_SUCCESS;
 }
 

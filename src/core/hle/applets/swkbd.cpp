@@ -70,7 +70,7 @@ ResultCode SoftwareKeyboard::StartImpl(Service::APT::AppletStartupParameter cons
 
     DrawScreenKeyboard();
 
-    started = true;
+    is_running = true;
     return RESULT_SUCCESS;
 }
 
@@ -113,7 +113,7 @@ void SoftwareKeyboard::Finalize() {
     message.sender_id = static_cast<u32>(id);
     Service::APT::SendParameter(message);
 
-    started = false;
+    is_running = false;
 }
 }
 } // namespace

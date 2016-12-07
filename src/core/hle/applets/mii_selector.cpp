@@ -55,7 +55,7 @@ ResultCode MiiSelector::ReceiveParameter(const Service::APT::MessageParameter& p
 }
 
 ResultCode MiiSelector::StartImpl(const Service::APT::AppletStartupParameter& parameter) {
-    started = true;
+    is_running = true;
 
     // TODO(Subv): Set the expected fields in the response buffer before resending it to the
     // application.
@@ -78,7 +78,7 @@ ResultCode MiiSelector::StartImpl(const Service::APT::AppletStartupParameter& pa
     message.sender_id = static_cast<u32>(id);
     Service::APT::SendParameter(message);
 
-    started = false;
+    is_running = false;
     return RESULT_SUCCESS;
 }
 
