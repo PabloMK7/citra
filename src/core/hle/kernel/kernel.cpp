@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <algorithm>
+#include <boost/range/algorithm_ext/erase.hpp>
 #include "common/assert.h"
 #include "common/logging/log.h"
 #include "core/hle/config_mem.h"
@@ -33,9 +34,9 @@ void WaitObject::RemoveWaitingThread(Thread* thread) {
 
 SharedPtr<Thread> WaitObject::GetHighestPriorityReadyThread() {
     // Remove the threads that are ready or already running from our waitlist
-    waiting_threads.erase(std::remove_if(waiting_threads.begin(), waiting_threads.end(), [](const SharedPtr<Thread>& thread) -> bool {
+    boost::range::remove_erase_if(waiting_threads, [](const SharedPtr<Thread>& thread) -> bool {
         return thread->status == THREADSTATUS_RUNNING || thread->status == THREADSTATUS_READY;
-    }), waiting_threads.end());
+    });
 
     if (waiting_threads.empty())
         return nullptr;
