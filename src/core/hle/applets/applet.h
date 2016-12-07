@@ -13,7 +13,7 @@ namespace Applets {
 
 class Applet {
 public:
-    virtual ~Applet() {}
+    virtual ~Applet() = default;
 
     /**
      * Creates an instance of the Applet subclass identified by the parameter.
