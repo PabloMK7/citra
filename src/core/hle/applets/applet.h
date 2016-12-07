@@ -14,7 +14,6 @@ namespace Applets {
 class Applet {
 public:
     virtual ~Applet() {}
-    Applet(Service::APT::AppletId id) : id(id) {}
 
     /**
      * Creates an instance of the Applet subclass identified by the parameter.
@@ -56,6 +55,8 @@ public:
     virtual void Update() = 0;
 
 protected:
+    explicit Applet(Service::APT::AppletId id) : id(id) {}
+
     /**
      * Handles the Applet start event, triggered from the application.
      * @param parameter Parameter data to handle.
