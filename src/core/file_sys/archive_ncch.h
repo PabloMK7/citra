@@ -17,7 +17,7 @@ namespace FileSys {
 /// File system interface to the NCCH archive
 class ArchiveFactory_NCCH final : public ArchiveFactory {
 public:
-    ArchiveFactory_NCCH(const std::string& mount_point);
+    explicit ArchiveFactory_NCCH(const std::string& mount_point);
 
     std::string GetName() const override {
         return "NCCH";

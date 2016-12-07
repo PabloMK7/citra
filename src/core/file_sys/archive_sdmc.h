@@ -17,7 +17,7 @@ namespace FileSys {
 /// Archive backend for SDMC archive
 class SDMCArchive : public ArchiveBackend {
 public:
-    SDMCArchive(const std::string& mount_point_) : mount_point(mount_point_) {}
+    explicit SDMCArchive(const std::string& mount_point_) : mount_point(mount_point_) {}
 
     std::string GetName() const override {
         return "SDMCArchive: " + mount_point;
@@ -43,7 +43,7 @@ protected:
 /// File system interface to the SDMC archive
 class ArchiveFactory_SDMC final : public ArchiveFactory {
 public:
-    ArchiveFactory_SDMC(const std::string& mount_point);
+    explicit ArchiveFactory_SDMC(const std::string& mount_point);
 
     /**
      * Initialize the archive.
