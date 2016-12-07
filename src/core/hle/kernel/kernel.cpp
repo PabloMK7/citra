@@ -40,24 +40,23 @@ SharedPtr<Thread> WaitObject::GetHighestPriorityReadyThread() {
     if (waiting_threads.empty())
         return nullptr;
 
-    auto candidate_threads = waiting_threads;
+    SharedPtr<Thread> candidate = nullptr;
+    s32 candidate_priority = THREADPRIO_LOWEST + 1;
 
-    // Eliminate all threads that are waiting on more than one object, and not all of said objects are ready
-    candidate_threads.erase(std::remove_if(candidate_threads.begin(), candidate_threads.end(), [](const SharedPtr<Thread>& thread) -> bool {
-        return std::any_of(thread->wait_objects.begin(), thread->wait_objects.end(), [](const SharedPtr<WaitObject>& object) -> bool {
+    for (const auto& thread : waiting_threads) {
+        if (thread->current_priority >= candidate_priority)
+            continue;
+
+        bool ready_to_run = std::none_of(thread->wait_objects.begin(), thread->wait_objects.end(), [](const SharedPtr<WaitObject>& object) {
             return object->ShouldWait();
         });
-    }), candidate_threads.end());
+        if (ready_to_run) {
+            candidate = thread;
+            candidate_priority = thread->current_priority;
+        }
+    }
 
-    // Return the thread with the lowest priority value (The one with the highest priority)
-    auto thread_itr = std::min_element(candidate_threads.begin(), candidate_threads.end(), [](const SharedPtr<Thread>& lhs, const SharedPtr<Thread>& rhs) {
-        return lhs->current_priority < rhs->current_priority;
-    });
-
-    if (thread_itr == candidate_threads.end())
-        return nullptr;
-
-    return *thread_itr;
+    return candidate;
 }
 
 void WaitObject::WakeupAllWaitingThreads() {
