@@ -18,10 +18,12 @@ set(SRCS
             file_sys/archive_backend.cpp
             file_sys/archive_extsavedata.cpp
             file_sys/archive_ncch.cpp
+            file_sys/archive_other_savedata.cpp
             file_sys/archive_romfs.cpp
             file_sys/archive_savedata.cpp
             file_sys/archive_sdmc.cpp
             file_sys/archive_sdmcwriteonly.cpp
+            file_sys/archive_source_sd_savedata.cpp
             file_sys/archive_systemsavedata.cpp
             file_sys/disk_archive.cpp
             file_sys/ivfc_archive.cpp
@@ -163,10 +165,12 @@ set(HEADERS
             file_sys/archive_backend.h
             file_sys/archive_extsavedata.h
             file_sys/archive_ncch.h
+            file_sys/archive_other_savedata.h
             file_sys/archive_romfs.h
             file_sys/archive_savedata.h
             file_sys/archive_sdmc.h
             file_sys/archive_sdmcwriteonly.h
+            file_sys/archive_source_sd_savedata.h
             file_sys/archive_systemsavedata.h
             file_sys/directory_backend.h
             file_sys/disk_archive.h

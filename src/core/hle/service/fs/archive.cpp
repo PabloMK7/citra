@@ -16,6 +16,7 @@
 #include "core/file_sys/archive_backend.h"
 #include "core/file_sys/archive_extsavedata.h"
 #include "core/file_sys/archive_ncch.h"
+#include "core/file_sys/archive_other_savedata.h"
 #include "core/file_sys/archive_savedata.h"
 #include "core/file_sys/archive_sdmc.h"
 #include "core/file_sys/archive_sdmcwriteonly.h"
@@ -535,8 +536,17 @@ void RegisterArchiveTypes() {
                   sdmc_directory.c_str());
 
     // Create the SaveData archive
-    auto savedata_factory = std::make_unique<FileSys::ArchiveFactory_SaveData>(sdmc_directory);
+    auto sd_savedata_source = std::make_shared<FileSys::ArchiveSource_SDSaveData>(sdmc_directory);
+    auto savedata_factory = std::make_unique<FileSys::ArchiveFactory_SaveData>(sd_savedata_source);
     RegisterArchiveType(std::move(savedata_factory), ArchiveIdCode::SaveData);
+    auto other_savedata_permitted_factory =
+        std::make_unique<FileSys::ArchiveFactory_OtherSaveDataPermitted>(sd_savedata_source);
+    RegisterArchiveType(std::move(other_savedata_permitted_factory),
+                        ArchiveIdCode::OtherSaveDataPermitted);
+    auto other_savedata_general_factory =
+        std::make_unique<FileSys::ArchiveFactory_OtherSaveDataGeneral>(sd_savedata_source);
+    RegisterArchiveType(std::move(other_savedata_general_factory),
+                        ArchiveIdCode::OtherSaveDataGeneral);
 
     auto extsavedata_factory =
         std::make_unique<FileSys::ArchiveFactory_ExtSaveData>(sdmc_directory, false);

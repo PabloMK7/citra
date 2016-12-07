@@ -34,10 +34,12 @@ enum class ArchiveIdCode : u32 {
     SDMC = 0x00000009,
     SDMCWriteOnly = 0x0000000A,
     NCCH = 0x2345678A,
+    OtherSaveDataGeneral = 0x567890B2,
+    OtherSaveDataPermitted = 0x567890B4,
 };
 
 /// Media types for the archives
-enum class MediaType : u32 { NAND = 0, SDMC = 1 };
+enum class MediaType : u32 { NAND = 0, SDMC = 1, GameCard = 2 };
 
 typedef u64 ArchiveHandle;
 

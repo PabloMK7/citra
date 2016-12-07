@@ -36,5 +36,8 @@ const ResultCode ERROR_ALREADY_EXISTS(ErrorDescription::FS_AlreadyExists, ErrorM
                                       ErrorSummary::NothingHappened, ErrorLevel::Status);
 const ResultCode ERROR_DIRECTORY_NOT_EMPTY(ErrorDescription::FS_DirectoryNotEmpty, ErrorModule::FS,
                                            ErrorSummary::Canceled, ErrorLevel::Status);
+const ResultCode ERROR_GAMECARD_NOT_INSERTED(ErrorDescription::FS_GameCardNotInserted,
+                                             ErrorModule::FS, ErrorSummary::NotFound,
+                                             ErrorLevel::Status);
 
 } // namespace FileSys

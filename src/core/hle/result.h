@@ -22,6 +22,7 @@ enum class ErrorDescription : u32 {
     FS_ArchiveNotMounted = 101,
     FS_FileNotFound = 112,
     FS_PathNotFound = 113,
+    FS_GameCardNotInserted = 141,
     FS_NotFound = 120,
     FS_FileAlreadyExists = 180,
     FS_DirectoryAlreadyExists = 185,

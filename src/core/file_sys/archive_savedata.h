@@ -4,10 +4,7 @@
 
 #pragma once
 
-#include <memory>
-#include <string>
-#include "core/file_sys/archive_backend.h"
-#include "core/hle/result.h"
+#include "core/file_sys/archive_source_sd_savedata.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // FileSys namespace
@@ -17,7 +14,7 @@ namespace FileSys {
 /// File system interface to the SaveData archive
 class ArchiveFactory_SaveData final : public ArchiveFactory {
 public:
-    ArchiveFactory_SaveData(const std::string& mount_point);
+    explicit ArchiveFactory_SaveData(std::shared_ptr<ArchiveSource_SDSaveData> sd_savedata_source);
 
     std::string GetName() const override {
         return "SaveData";
@@ -30,6 +27,7 @@ public:
 
 private:
     std::string mount_point;
+    std::shared_ptr<ArchiveSource_SDSaveData> sd_savedata_source;
 };
 
 } // namespace FileSys
