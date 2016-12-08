@@ -82,12 +82,13 @@ void GetBatteryChargeState(Interface* self);
 void GetTotalStepCount(Interface* self);
 
 /**
- * PTM::IsLegacyPowerOff service function
+ * PTM::GetSoftwareClosedFlag service function
  *  Outputs:
  *      1: Result code, 0 on success, otherwise error code
- *      2: Whether the system is going through a power off
+ *      2: Whether or not the "software closed" dialog was requested by the last FIRM
+ *         and should be displayed.
  */
-void IsLegacyPowerOff(Interface* self);
+void GetSoftwareClosedFlag(Interface* self);
 
 /**
  * PTM::CheckNew3DS service function

@@ -81,7 +81,7 @@ void GetTotalStepCount(Service::Interface* self) {
     LOG_WARNING(Service_PTM, "(STUBBED) called");
 }
 
-void IsLegacyPowerOff(Service::Interface* self) {
+void GetSoftwareClosedFlag(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
     cmd_buff[1] = RESULT_SUCCESS.raw;
