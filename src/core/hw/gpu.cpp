@@ -487,8 +487,8 @@ inline void Write(u32 addr, const T data) {
             u32* buffer = (u32*)Memory::GetPhysicalPointer(config.GetPhysicalAddress());
 
             if (Pica::g_debug_context && Pica::g_debug_context->recorder) {
-                Pica::g_debug_context->recorder->MemoryAccessed(
-                    (u8*)buffer, config.size * sizeof(u32), config.GetPhysicalAddress());
+                Pica::g_debug_context->recorder->MemoryAccessed((u8*)buffer, config.size,
+                                                                config.GetPhysicalAddress());
             }
 
             Pica::CommandProcessor::ProcessCommandList(buffer, config.size);
