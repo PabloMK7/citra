@@ -152,7 +152,10 @@ public:
      */
     void RemoveWaitingThread(Thread* thread);
 
-    /// Wake up all threads waiting on this object
+    /**
+     * Wake up all threads waiting on this object that can be awoken, in priority order,
+     * and set the synchronization result and output of the thread.
+     */
     void WakeupAllWaitingThreads();
 
     /// Obtains the highest priority thread that is ready to run from this object's waiting list.

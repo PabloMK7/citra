@@ -7,6 +7,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <boost/container/flat_map.hpp>
 #include <boost/container/flat_set.hpp>
 #include "common/common_types.h"
 #include "core/core.h"
@@ -153,7 +154,7 @@ public:
      * its wait list to become ready, as a result of a WaitSynchronizationN call
      * with wait_all = true, or a ReplyAndReceive call.
      */
-    bool IsWaitingAll() const {
+    bool IsSleepingOnWaitAll() const {
         return !wait_objects.empty();
     }
 
@@ -183,7 +184,7 @@ public:
     /// This is only populated when the thread should wait for all the objects to become ready.
     std::vector<SharedPtr<WaitObject>> wait_objects;
 
-    std::unordered_map<int, s32> wait_objects_index; ///< Mapping of Object ids to their position in the last waitlist that this object waited on.
+    boost::container::flat_map<int, s32> wait_objects_index; ///< Mapping of Object ids to their position in the last waitlist that this object waited on.
 
     VAddr wait_address;   ///< If waiting on an AddressArbiter, this is the arbitration address
 

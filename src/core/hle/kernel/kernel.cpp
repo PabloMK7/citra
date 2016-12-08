@@ -34,14 +34,11 @@ void WaitObject::RemoveWaitingThread(Thread* thread) {
 
 SharedPtr<Thread> WaitObject::GetHighestPriorityReadyThread() {
     // Remove the threads that are ready or already running from our waitlist
-    boost::range::remove_erase_if(waiting_threads, [](const SharedPtr<Thread>& thread) -> bool {
+    boost::range::remove_erase_if(waiting_threads, [](const SharedPtr<Thread>& thread) {
         return thread->status == THREADSTATUS_RUNNING || thread->status == THREADSTATUS_READY;
     });
 
-    if (waiting_threads.empty())
-        return nullptr;
-
-    SharedPtr<Thread> candidate = nullptr;
+    Thread* candidate = nullptr;
     s32 candidate_priority = THREADPRIO_LOWEST + 1;
 
     for (const auto& thread : waiting_threads) {
@@ -52,7 +49,7 @@ SharedPtr<Thread> WaitObject::GetHighestPriorityReadyThread() {
             return object->ShouldWait();
         });
         if (ready_to_run) {
-            candidate = thread;
+            candidate = thread.get();
             candidate_priority = thread->current_priority;
         }
     }
@@ -61,9 +58,8 @@ SharedPtr<Thread> WaitObject::GetHighestPriorityReadyThread() {
 }
 
 void WaitObject::WakeupAllWaitingThreads() {
-    // Wake up all threads that can be awoken, in priority order
     while (auto thread = GetHighestPriorityReadyThread()) {
-        if (thread->wait_objects.empty()) {
+        if (!thread->IsSleepingOnWaitAll()) {
             Acquire();
             // Set the output index of the WaitSynchronizationN call to the index of this object.
             if (thread->wait_set_output) {
@@ -73,7 +69,6 @@ void WaitObject::WakeupAllWaitingThreads() {
         } else {
             for (auto object : thread->wait_objects) {
                 object->Acquire();
-                // Remove the thread from the object's waitlist
                 object->RemoveWaitingThread(thread.get());
             }
             // Note: This case doesn't update the output index of WaitSynchronizationN.
@@ -81,7 +76,6 @@ void WaitObject::WakeupAllWaitingThreads() {
             thread->wait_objects.clear();
         }
 
-        // Set the result of the call to WaitSynchronization to RESULT_SUCCESS
         thread->SetWaitSynchronizationResult(RESULT_SUCCESS);
         thread->ResumeFromWait();
         // Note: Removing the thread from the object's waitlist will be done by GetHighestPriorityReadyThread

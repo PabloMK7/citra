@@ -41,6 +41,9 @@ const ResultCode ERR_PORT_NAME_TOO_LONG(ErrorDescription(30), ErrorModule::OS,
                                         ErrorSummary::InvalidArgument,
                                         ErrorLevel::Usage); // 0xE0E0181E
 
+const ResultCode ERR_SYNC_TIMEOUT(ErrorDescription::Timeout, ErrorModule::OS,
+                                  ErrorSummary::StatusChanged, ErrorLevel::Info);
+
 const ResultCode ERR_MISALIGNED_ADDRESS{// 0xE0E01BF1
                                         ErrorDescription::MisalignedAddress, ErrorModule::OS,
                                         ErrorSummary::InvalidArgument, ErrorLevel::Usage};
@@ -257,11 +260,8 @@ static ResultCode WaitSynchronization1(Handle handle, s64 nano_seconds) {
 
     if (object->ShouldWait()) {
 
-        if (nano_seconds == 0) {
-            return ResultCode(ErrorDescription::Timeout, ErrorModule::OS,
-                              ErrorSummary::StatusChanged,
-                              ErrorLevel::Info);
-        }
+        if (nano_seconds == 0)
+            return ERR_SYNC_TIMEOUT;
 
         object->AddWaitingThread(thread);
         // TODO(Subv): Perform things like update the mutex lock owner's priority to prevent priority inversion.
@@ -273,9 +273,7 @@ static ResultCode WaitSynchronization1(Handle handle, s64 nano_seconds) {
 
         // Note: The output of this SVC will be set to RESULT_SUCCESS if the thread resumes due to a signal in its wait objects.
         // Otherwise we retain the default value of timeout.
-        return ResultCode(ErrorDescription::Timeout, ErrorModule::OS,
-                               ErrorSummary::StatusChanged,
-                               ErrorLevel::Info);
+        return ERR_SYNC_TIMEOUT;
     }
 
     object->Acquire();
@@ -286,8 +284,6 @@ static ResultCode WaitSynchronization1(Handle handle, s64 nano_seconds) {
 /// Wait for the given handles to synchronize, timeout after the specified nanoseconds
 static ResultCode WaitSynchronizationN(s32* out, Handle* handles, s32 handle_count, bool wait_all,
                                        s64 nano_seconds) {
-    bool wait_thread = !wait_all;
-    int handle_index = 0;
     Kernel::Thread* thread = Kernel::GetCurrentThread();
 
     // Check if 'handles' is invalid
@@ -305,7 +301,6 @@ static ResultCode WaitSynchronizationN(s32* out, Handle* handles, s32 handle_cou
                           ErrorSummary::InvalidArgument, ErrorLevel::Usage);
 
     using ObjectPtr = Kernel::SharedPtr<Kernel::WaitObject>;
-
     std::vector<ObjectPtr> objects(handle_count);
 
     for (int i = 0; i < handle_count; ++i) {
@@ -320,15 +315,53 @@ static ResultCode WaitSynchronizationN(s32* out, Handle* handles, s32 handle_cou
     // It will be repopulated later in the wait_all = false case.
     thread->wait_objects_index.clear();
 
-    if (!wait_all) {
-        // Find the first object that is acquireable in the provided list of objects
+    if (wait_all) {
+        bool all_available = std::all_of(objects.begin(), objects.end(), [](const ObjectPtr& object) {
+            return !object->ShouldWait();
+        });
+        if (all_available) {
+            // We can acquire all objects right now, do so.
+            for (auto object : objects)
+                object->Acquire();
+            // Note: In this case, the `out` parameter is not set, and retains whatever value it had before.
+            return RESULT_SUCCESS;
+        }
+
+        // Not all objects were available right now, prepare to suspend the thread.
+
+        // If a timeout value of 0 was provided, just return the Timeout error code instead of suspending the thread.
+        if (nano_seconds == 0)
+            return ERR_SYNC_TIMEOUT;
+
+        // Put the thread to sleep
+        thread->status = THREADSTATUS_WAIT_SYNCH;
+
+        // Add the thread to each of the objects' waiting threads.
+        for (auto& object : objects) {
+            object->AddWaitingThread(thread);
+            // TODO(Subv): Perform things like update the mutex lock owner's priority to prevent priority inversion.
+            // Currently this is done in Mutex::ShouldWait, but it should be moved to a function that is called from here.
+        }
+
+        // Set the thread's waitlist to the list of objects passed to WaitSynchronizationN
+        thread->wait_objects = std::move(objects);
+
+        // Create an event to wake the thread up after the specified nanosecond delay has passed
+        thread->WakeAfterDelay(nano_seconds);
+
+        // This value gets set to -1 by default in this case, it is not modified after this.
+        *out = -1;
+        // Note: The output of this SVC will be set to RESULT_SUCCESS if the thread resumes due to a signal in one of its wait objects.
+        return ERR_SYNC_TIMEOUT;
+    } else {
+        // Find the first object that is acquirable in the provided list of objects
         auto itr = std::find_if(objects.begin(), objects.end(), [](const ObjectPtr& object) {
             return !object->ShouldWait();
         });
 
         if (itr != objects.end()) {
             // We found a ready object, acquire it and set the result value
-            ObjectPtr object = *itr;
+            Kernel::WaitObject* object = itr->get();
             object->Acquire();
             *out = std::distance(objects.begin(), itr);
             return RESULT_SUCCESS;
@@ -337,11 +370,8 @@ static ResultCode WaitSynchronizationN(s32* out, Handle* handles, s32 handle_cou
         // No objects were ready to be acquired, prepare to suspend the thread.
 
         // If a timeout value of 0 was provided, just return the Timeout error code instead of suspending the thread.
-        if (nano_seconds == 0) {
-            return ResultCode(ErrorDescription::Timeout, ErrorModule::OS,
-                              ErrorSummary::StatusChanged,
-                              ErrorLevel::Info);
-        }
+        if (nano_seconds == 0)
+            return ERR_SYNC_TIMEOUT;
 
         // Put the thread to sleep
         thread->status = THREADSTATUS_WAIT_SYNCH;
@@ -351,7 +381,7 @@ static ResultCode WaitSynchronizationN(s32* out, Handle* handles, s32 handle_cou
 
         // Add the thread to each of the objects' waiting threads.
         for (size_t i = 0; i < objects.size(); ++i) {
-            ObjectPtr object = objects[i];
+            Kernel::WaitObject* object = objects[i].get();
             // Set the index of this object in the mapping of Objects -> index for this thread.
             thread->wait_objects_index[object->GetObjectId()] = static_cast<int>(i);
             object->AddWaitingThread(thread);
@@ -368,52 +398,7 @@ static ResultCode WaitSynchronizationN(s32* out, Handle* handles, s32 handle_cou
         // Otherwise we retain the default value of timeout, and -1 in the out parameter
         thread->wait_set_output = true;
         *out = -1;
-        return ResultCode(ErrorDescription::Timeout, ErrorModule::OS,
-                          ErrorSummary::StatusChanged,
-                          ErrorLevel::Info);
-    } else {
-        bool all_available = std::all_of(objects.begin(), objects.end(), [](const ObjectPtr& object) {
-            return !object->ShouldWait();
-        });
-        if (all_available) {
-            // We can acquire all objects right now, do so.
-            for (auto object : objects)
-                object->Acquire();
-            // Note: In this case, the `out` parameter is not set, and retains whatever value it had before.
-            return RESULT_SUCCESS;
-        }
-
-        // Not all objects were available right now, prepare to suspend the thread.
-
-        // If a timeout value of 0 was provided, just return the Timeout error code instead of suspending the thread.
-        if (nano_seconds == 0) {
-            return ResultCode(ErrorDescription::Timeout, ErrorModule::OS,
-                              ErrorSummary::StatusChanged,
-                              ErrorLevel::Info);
-        }
-
-        // Put the thread to sleep
-        thread->status = THREADSTATUS_WAIT_SYNCH;
-
-        // Set the thread's waitlist to the list of objects passed to WaitSynchronizationN
-        thread->wait_objects = objects;
-
-        // Add the thread to each of the objects' waiting threads.
-        for (auto object : objects) {
-            object->AddWaitingThread(thread);
-            // TODO(Subv): Perform things like update the mutex lock owner's priority to prevent priority inversion.
-            // Currently this is done in Mutex::ShouldWait, but it should be moved to a function that is called from here.
-        }
-
-        // Create an event to wake the thread up after the specified nanosecond delay has passed
-        thread->WakeAfterDelay(nano_seconds);
-
-        // This value gets set to -1 by default in this case, it is not modified after this.
-        *out = -1;
-        // Note: The output of this SVC will be set to RESULT_SUCCESS if the thread resumes due to a signal in one of its wait objects.
-        return ResultCode(ErrorDescription::Timeout, ErrorModule::OS,
-                          ErrorSummary::StatusChanged,
-                          ErrorLevel::Info);
+        return ERR_SYNC_TIMEOUT;
     }
 }
 
