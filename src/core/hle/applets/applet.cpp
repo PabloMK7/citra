@@ -101,6 +101,10 @@ ResultCode Applet::Start(const Service::APT::AppletStartupParameter& parameter) 
     return result;
 }
 
+bool Applet::IsRunning() const {
+    return is_running;
+}
+
 bool IsLibraryAppletRunning() {
     // Check the applets map for instances of any applet
     for (auto itr = applets.begin(); itr != applets.end(); ++itr)
