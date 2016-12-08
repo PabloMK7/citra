@@ -11,7 +11,11 @@
 namespace Kernel {
 
 ServerSession::ServerSession() = default;
-ServerSession::~ServerSession() = default;
+ServerSession::~ServerSession() {
+    // This destructor will be called automatically when the last ServerSession handle is closed by the emulated application.
+    // TODO(Subv): Reduce the ClientPort's connection count,
+    // if the session is still open, set the connection status to 3 (Closed by server),
+}
 
 ResultVal<SharedPtr<ServerSession>> ServerSession::Create(std::string name, std::shared_ptr<Service::SessionRequestHandler> hle_handler) {
     SharedPtr<ServerSession> server_session(new ServerSession);
@@ -49,7 +53,9 @@ ResultCode ServerSession::HandleSyncRequest() {
 ServerSession::SessionPair ServerSession::CreateSessionPair(const std::string& name,
                                                             std::shared_ptr<Service::SessionRequestHandler> hle_handler) {
     auto server_session = ServerSession::Create(name + "_Server", std::move(hle_handler)).MoveFrom();
-    auto client_session = ClientSession::Create(server_session, name + "_Client").MoveFrom();
+    // We keep a non-owning pointer to the ServerSession in the ClientSession because we don't want to prevent the
+    // ServerSession's destructor from being called when the emulated application closes the last ServerSession handle.
+    auto client_session = ClientSession::Create(server_session.get(), name + "_Client").MoveFrom();
 
     return std::make_tuple(std::move(server_session), std::move(client_session));
 }

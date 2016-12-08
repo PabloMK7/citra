@@ -38,6 +38,20 @@ public:
      */
     ResultCode HandleSyncRequest(Kernel::SharedPtr<Kernel::ServerSession> server_session);
 
+    /**
+     * Signals that a client has just connected to this HLE handler and keeps the
+     * associated ServerSession alive for the duration of the connection.
+     * @param server_session Owning pointer to the ServerSession associated with the connection.
+     */
+    void ClientConnected(Kernel::SharedPtr<Kernel::ServerSession> server_session);
+
+    /**
+     * Signals that a client has just disconnected from this HLE handler and releases the
+     * associated ServerSession.
+     * @param server_session ServerSession associated with the connection.
+     */
+    void ClientDisconnected(Kernel::SharedPtr<Kernel::ServerSession> server_session);
+
 protected:
     /**
      * Handles a sync request from the emulated application and writes the response to the command buffer.
@@ -55,6 +69,10 @@ private:
      * but once that is implemented we'll need to properly translate all descriptors in the command buffer.
      */
     ResultCode TranslateRequest(Kernel::SharedPtr<Kernel::ServerSession> server_session);
+
+    /// List of sessions that are connected to this handler.
+    /// A ServerSession whose server endpoint is an HLE implementation is kept alive by this list for the duration of the connection.
+    std::vector<Kernel::SharedPtr<Kernel::ServerSession>> connected_sessions;
 };
 
 /**

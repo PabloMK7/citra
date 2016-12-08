@@ -73,6 +73,7 @@ static void OpenFile(Service::Interface* self) {
     if (file_res.Succeeded()) {
         std::shared_ptr<File> file = *file_res;
         auto sessions = ServerSession::CreateSessionPair(file->GetName(), file);
+        file->ClientConnected(std::get<Kernel::SharedPtr<Kernel::ServerSession>>(sessions));
         cmd_buff[3] = Kernel::g_handle_table.Create(std::get<Kernel::SharedPtr<Kernel::ClientSession>>(sessions)).MoveFrom();
     } else {
         cmd_buff[3] = 0;
@@ -135,6 +136,7 @@ static void OpenFileDirectly(Service::Interface* self) {
     if (file_res.Succeeded()) {
         std::shared_ptr<File> file = *file_res;
         auto sessions = ServerSession::CreateSessionPair(file->GetName(), file);
+        file->ClientConnected(std::get<Kernel::SharedPtr<Kernel::ServerSession>>(sessions));
         cmd_buff[3] = Kernel::g_handle_table.Create(std::get<Kernel::SharedPtr<Kernel::ClientSession>>(sessions)).MoveFrom();
     } else {
         cmd_buff[3] = 0;
@@ -398,6 +400,7 @@ static void OpenDirectory(Service::Interface* self) {
     if (dir_res.Succeeded()) {
         std::shared_ptr<Directory> directory = *dir_res;
         auto sessions = ServerSession::CreateSessionPair(directory->GetName(), directory);
+        directory->ClientConnected(std::get<Kernel::SharedPtr<Kernel::ServerSession>>(sessions));
         cmd_buff[3] = Kernel::g_handle_table.Create(std::get<Kernel::SharedPtr<Kernel::ClientSession>>(sessions)).MoveFrom();
     } else {
         LOG_ERROR(Service_FS, "failed to get a handle for directory type=%d size=%d data=%s",

@@ -174,6 +174,7 @@ void File::HandleSyncRequestImpl(Kernel::SharedPtr<Kernel::ServerSession> server
     case FileCommand::OpenLinkFile: {
         LOG_WARNING(Service_FS, "(STUBBED) File command OpenLinkFile %s", GetName().c_str());
         auto sessions = Kernel::ServerSession::CreateSessionPair(GetName(), shared_from_this());
+        ClientConnected(std::get<Kernel::SharedPtr<Kernel::ServerSession>>(sessions));
         cmd_buff[3] = Kernel::g_handle_table.Create(std::get<Kernel::SharedPtr<Kernel::ClientSession>>(sessions)).ValueOr(INVALID_HANDLE);
         break;
     }

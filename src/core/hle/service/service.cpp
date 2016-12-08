@@ -2,6 +2,8 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <boost/range/algorithm_ext/erase.hpp>
+
 #include "common/logging/log.h"
 #include "common/string_util.h"
 
@@ -77,6 +79,14 @@ ResultCode SessionRequestHandler::HandleSyncRequest(Kernel::SharedPtr<Kernel::Se
     // TODO(Subv): Translate the response command buffer.
 
     return RESULT_SUCCESS;
+}
+
+void SessionRequestHandler::ClientConnected(Kernel::SharedPtr<Kernel::ServerSession> server_session) {
+    connected_sessions.push_back(server_session);
+}
+
+void SessionRequestHandler::ClientDisconnected(Kernel::SharedPtr<Kernel::ServerSession> server_session) {
+    boost::range::remove_erase(connected_sessions, server_session);
 }
 
 ResultCode SessionRequestHandler::TranslateRequest(Kernel::SharedPtr<Kernel::ServerSession> server_session) {

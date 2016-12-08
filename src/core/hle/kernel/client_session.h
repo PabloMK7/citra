@@ -15,6 +15,12 @@ namespace Kernel {
 
 class ServerSession;
 
+enum class SessionStatus {
+    Open = 1,
+    ClosedByClient = 2,
+    ClosedBYServer = 3,
+};
+
 class ClientSession final : public Object {
 public:
     friend class ServerSession;
@@ -39,7 +45,8 @@ public:
     ResultCode SendSyncRequest();
 
     std::string name;                           ///< Name of client port (optional)
-    SharedPtr<ServerSession> server_session;    ///< The server session associated with this client session.
+    ServerSession* server_session;              ///< The server session associated with this client session.
+    SessionStatus session_status;               ///< The session's current status.
 
 private:
     ClientSession();
@@ -51,7 +58,7 @@ private:
      * @param name Optional name of client session
      * @return The created client session
      */
-    static ResultVal<SharedPtr<ClientSession>> Create(SharedPtr<ServerSession> server_session, std::string name = "Unknown");
+    static ResultVal<SharedPtr<ClientSession>> Create(ServerSession* server_session, std::string name = "Unknown");
 };
 
 } // namespace

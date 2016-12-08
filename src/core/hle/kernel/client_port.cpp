@@ -19,9 +19,10 @@ ResultVal<SharedPtr<ClientSession>> ClientPort::Connect() {
     // AcceptSession before returning from this call.
 
     if (active_sessions >= max_sessions) {
-        return ResultCode(ErrorDescription::MaxConnectionsReached,
+        // TODO(Subv): Return an error code in this situation after session disconnection is implemented.
+        /*return ResultCode(ErrorDescription::MaxConnectionsReached,
                           ErrorModule::OS, ErrorSummary::WouldBlock,
-                          ErrorLevel::Temporary);
+                          ErrorLevel::Temporary);*/
     }
     active_sessions++;
 
@@ -29,6 +30,9 @@ ResultVal<SharedPtr<ClientSession>> ClientPort::Connect() {
     auto sessions = ServerSession::CreateSessionPair(server_port->GetName(), server_port->hle_handler);
     auto client_session = std::get<SharedPtr<ClientSession>>(sessions);
     auto server_session = std::get<SharedPtr<ServerSession>>(sessions);
+
+    if (server_port->hle_handler)
+        server_port->hle_handler->ClientConnected(server_session);
 
     server_port->pending_sessions.push_back(std::move(server_session));
 
