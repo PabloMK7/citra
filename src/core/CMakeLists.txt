@@ -105,6 +105,8 @@ set(SRCS
             hle/service/ldr_ro/ldr_ro.cpp
             hle/service/ldr_ro/memory_synchronizer.cpp
             hle/service/mic_u.cpp
+            hle/service/mvd/mvd.cpp
+            hle/service/mvd/mvd_std.cpp
             hle/service/ndm/ndm.cpp
             hle/service/ndm/ndm_u.cpp
             hle/service/nfc/nfc.cpp
@@ -124,6 +126,10 @@ set(SRCS
             hle/service/ptm/ptm_play.cpp
             hle/service/ptm/ptm_sysm.cpp
             hle/service/ptm/ptm_u.cpp
+            hle/service/qtm/qtm.cpp
+            hle/service/qtm/qtm_s.cpp
+            hle/service/qtm/qtm_sp.cpp
+            hle/service/qtm/qtm_u.cpp
             hle/service/service.cpp
             hle/service/soc_u.cpp
             hle/service/srv.cpp
@@ -259,6 +265,8 @@ set(HEADERS
             hle/service/ldr_ro/ldr_ro.h
             hle/service/ldr_ro/memory_synchronizer.h
             hle/service/mic_u.h
+            hle/service/mvd/mvd.h
+            hle/service/mvd/mvd_std.h
             hle/service/ndm/ndm.h
             hle/service/ndm/ndm_u.h
             hle/service/nfc/nfc.h
@@ -278,6 +286,10 @@ set(HEADERS
             hle/service/ptm/ptm_play.h
             hle/service/ptm/ptm_sysm.h
             hle/service/ptm/ptm_u.h
+            hle/service/qtm/qtm.h
+            hle/service/qtm/qtm_s.h
+            hle/service/qtm/qtm_sp.h
+            hle/service/qtm/qtm_u.h
             hle/service/service.h
             hle/service/soc_u.h
             hle/service/srv.h
