@@ -64,7 +64,7 @@ private:
  */
 class ExtSaveDataArchive : public SaveDataArchive {
 public:
-    ExtSaveDataArchive(const std::string& mount_point) : SaveDataArchive(mount_point) {}
+    explicit ExtSaveDataArchive(const std::string& mount_point) : SaveDataArchive(mount_point) {}
 
     std::string GetName() const override {
         return "ExtSaveDataArchive: " + mount_point;

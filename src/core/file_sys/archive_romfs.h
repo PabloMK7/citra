@@ -20,7 +20,7 @@ namespace FileSys {
 /// File system interface to the RomFS archive
 class ArchiveFactory_RomFS final : public ArchiveFactory {
 public:
-    ArchiveFactory_RomFS(Loader::AppLoader& app_loader);
+    explicit ArchiveFactory_RomFS(Loader::AppLoader& app_loader);
 
     std::string GetName() const override {
         return "RomFS";

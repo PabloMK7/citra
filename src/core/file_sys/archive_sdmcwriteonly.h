@@ -19,7 +19,7 @@ namespace FileSys {
  */
 class SDMCWriteOnlyArchive : public SDMCArchive {
 public:
-    SDMCWriteOnlyArchive(const std::string& mount_point) : SDMCArchive(mount_point) {}
+    explicit SDMCWriteOnlyArchive(const std::string& mount_point) : SDMCArchive(mount_point) {}
 
     std::string GetName() const override {
         return "SDMCWriteOnlyArchive: " + mount_point;
@@ -34,7 +34,7 @@ public:
 /// File system interface to the SDMC write-only archive
 class ArchiveFactory_SDMCWriteOnly final : public ArchiveFactory {
 public:
-    ArchiveFactory_SDMCWriteOnly(const std::string& mount_point);
+    explicit ArchiveFactory_SDMCWriteOnly(const std::string& mount_point);
 
     /**
      * Initialize the archive.

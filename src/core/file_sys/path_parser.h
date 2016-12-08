@@ -17,7 +17,7 @@ namespace FileSys {
  */
 class PathParser {
 public:
-    PathParser(const Path& path);
+    explicit PathParser(const Path& path);
 
     /**
      * Checks if the Path is valid.
