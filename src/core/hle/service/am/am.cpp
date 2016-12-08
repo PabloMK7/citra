@@ -20,7 +20,7 @@ static std::array<u32, 3> am_titles_list_count = {0, 0, 0};
 static u32 am_ticket_count = 0;
 static u32 am_ticket_list_count = 0;
 
-void GetTitleCount(Service::Interface* self) {
+void GetNumPrograms(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
     u32 media_type = cmd_buff[1] & 0xFF;
@@ -81,7 +81,7 @@ void DeleteContents(Service::Interface* self) {
                 media_type, title_id, am_content_count[media_type], content_ids_pointer);
 }
 
-void GetTitleList(Service::Interface* self) {
+void GetProgramList(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
     u32 media_type = cmd_buff[2] & 0xFF;
@@ -97,7 +97,7 @@ void GetTitleList(Service::Interface* self) {
         media_type, am_titles_list_count[media_type], title_ids_output_pointer);
 }
 
-void GetTitleInfo(Service::Interface* self) {
+void GetProgramInfos(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
     u32 media_type = cmd_buff[1] & 0xFF;
@@ -113,7 +113,7 @@ void GetTitleInfo(Service::Interface* self) {
 }
 
 void GetDataTitleInfos(Service::Interface* self) {
-    GetTitleInfo(self);
+    GetProgramInfos(self);
 
     LOG_WARNING(Service_AM, "(STUBBED) called");
 }
@@ -151,7 +151,7 @@ void DeleteTicket(Service::Interface* self) {
     LOG_WARNING(Service_AM, "(STUBBED) called title_id=0x%016" PRIx64 "", title_id);
 }
 
-void GetTicketCount(Service::Interface* self) {
+void GetNumTickets(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
     cmd_buff[1] = RESULT_SUCCESS.raw;

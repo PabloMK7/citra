@@ -11,7 +11,7 @@ class Interface;
 namespace AM {
 
 /**
- * AM::GetTitleCount service function
+ * AM::GetNumPrograms service function
  * Gets the number of installed titles in the requested media type
  *  Inputs:
  *      0 : Command header (0x00010040)
@@ -20,7 +20,7 @@ namespace AM {
  *      1 : Result, 0 on success, otherwise error code
  *      2 : The number of titles in the requested media type
  */
-void GetTitleCount(Service::Interface* self);
+void GetNumPrograms(Service::Interface* self);
 
 /**
  * AM::FindContentInfos service function
@@ -62,7 +62,7 @@ void ListContentInfos(Service::Interface* self);
 void DeleteContents(Service::Interface* self);
 
 /**
- * AM::GetTitleList service function
+ * AM::GetProgramList service function
  * Loads information about the desired number of titles from the desired media type into an array
  *  Inputs:
  *      1 : Title count
@@ -72,10 +72,10 @@ void DeleteContents(Service::Interface* self);
  *      1 : Result, 0 on success, otherwise error code
  *      2 : The number of titles loaded from the requested media type
  */
-void GetTitleList(Service::Interface* self);
+void GetProgramList(Service::Interface* self);
 
 /**
- * AM::GetTitleInfo service function
+ * AM::GetProgramInfos service function
  *  Inputs:
  *      1 : u8 Mediatype
  *      2 : Total titles
@@ -84,11 +84,11 @@ void GetTitleList(Service::Interface* self);
  *  Outputs:
  *      1 : Result, 0 on success, otherwise error code
  */
-void GetTitleInfo(Service::Interface* self);
+void GetProgramInfos(Service::Interface* self);
 
 /**
  * AM::GetDataTitleInfos service function
- * Wrapper for AM::GetTitleInfo
+ * Wrapper for AM::GetProgramInfos
  *  Inputs:
  *      1 : u8 Mediatype
  *      2 : Total titles
@@ -135,12 +135,12 @@ void GetNumContentInfos(Service::Interface* self);
 void DeleteTicket(Service::Interface* self);
 
 /**
- * AM::GetTicketCount service function
+ * AM::GetNumTickets service function
  *  Outputs:
  *      1 : Result, 0 on success, otherwise error code
- *      2 : Total titles
+ *      2 : Number of tickets
  */
-void GetTicketCount(Service::Interface* self);
+void GetNumTickets(Service::Interface* self);
 
 /**
  * AM::GetTicketList service function
