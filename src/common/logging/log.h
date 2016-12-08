@@ -67,6 +67,7 @@ enum class Class : ClassType {
     Service_CAM,       ///< The CAM (Camera) service
     Service_CECD,      ///< The CECD (StreetPass) service
     Service_CFG,       ///< The CFG (Configuration) service
+    Service_CSND,      ///< The CSND (CWAV format process) service
     Service_DSP,       ///< The DSP (DSP control) service
     Service_DLP,       ///< The DLP (Download Play) service
     Service_HID,       ///< The HID (Human interface device) service

@@ -50,6 +50,7 @@ namespace Log {
     SUB(Service, CAM)                                                                              \
     SUB(Service, CECD)                                                                             \
     SUB(Service, CFG)                                                                              \
+    SUB(Service, CSND)                                                                             \
     SUB(Service, DSP)                                                                              \
     SUB(Service, DLP)                                                                              \
     SUB(Service, HID)                                                                              \
