@@ -15,6 +15,7 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x00050000, nullptr, "CheckForSysUpdateEvent"},
     {0x00090000, CheckSysUpdateAvailable, "CheckSysUpdateAvailable"},
     {0x000A0000, nullptr, "GetState"},
+    {0x000B0000, nullptr, "GetSystemTitleHash"},
 };
 
 NIM_U_Interface::NIM_U_Interface() {

@@ -20,6 +20,7 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x00080080, nullptr, "GoThroughTable"},
     {0x00090040, GetCountryCodeString, "GetCountryCodeString"},
     {0x000A0040, GetCountryCodeID, "GetCountryCodeID"},
+    {0x000B0000, nullptr, "IsFangateSupported"},
     // cfg:i
     {0x04010082, GetConfigInfoBlk8, "GetConfigInfoBlk8"},
     {0x04020082, SetConfigInfoBlk4, "SetConfigInfoBlk4"},

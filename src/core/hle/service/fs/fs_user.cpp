@@ -1003,6 +1003,8 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x08680000, nullptr, "GetMediaType"},
     {0x08690000, nullptr, "GetNandEraseCount"},
     {0x086A0082, nullptr, "ReadNandReport"},
+    {0x087A0180, nullptr, "AddSeed"},
+    {0x088600C0, nullptr, "CheckUpdatedDat"},
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
