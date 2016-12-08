@@ -9,9 +9,9 @@
 namespace Service {
 namespace PTM {
 
-class PTM_Play_Interface : public Service::Interface {
+class PTM_Play final : public Interface {
 public:
-    PTM_Play_Interface();
+    PTM_Play();
 
     std::string GetPortName() const override {
         return "ptm:play";

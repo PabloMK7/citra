@@ -108,11 +108,11 @@ void CheckNew3DS(Service::Interface* self) {
 }
 
 void Init() {
-    AddService(new PTM_Gets());
-    AddService(new PTM_Play_Interface);
-    AddService(new PTM_Sets());
-    AddService(new PTM_Sysm_Interface);
-    AddService(new PTM_U_Interface);
+    AddService(new PTM_Gets);
+    AddService(new PTM_Play);
+    AddService(new PTM_Sets);
+    AddService(new PTM_Sysm);
+    AddService(new PTM_U);
 
     shell_open = true;
     battery_is_charging = true;

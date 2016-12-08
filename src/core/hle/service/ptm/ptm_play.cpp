@@ -14,7 +14,7 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x080B0080, nullptr, "CalcPlayHistoryStart"},
 };
 
-PTM_Play_Interface::PTM_Play_Interface() {
+PTM_Play::PTM_Play() {
     Register(FunctionTable);
 }
 

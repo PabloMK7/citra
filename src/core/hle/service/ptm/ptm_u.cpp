@@ -26,7 +26,7 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x000F0084, nullptr, "GetStepHistoryAll"},
 };
 
-PTM_U_Interface::PTM_U_Interface() {
+PTM_U::PTM_U() {
     Register(FunctionTable);
 }
 
