@@ -59,6 +59,10 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x08180040, nullptr, "ConfigureNew3DSCPU"},
 };
 
+PTM_S::PTM_S() {
+    Register(FunctionTable);
+}
+
 PTM_Sysm::PTM_Sysm() {
     Register(FunctionTable);
 }

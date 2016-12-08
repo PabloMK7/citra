@@ -110,6 +110,7 @@ void CheckNew3DS(Service::Interface* self) {
 void Init() {
     AddService(new PTM_Gets);
     AddService(new PTM_Play);
+    AddService(new PTM_S);
     AddService(new PTM_Sets);
     AddService(new PTM_Sysm);
     AddService(new PTM_U);
