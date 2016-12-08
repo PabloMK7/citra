@@ -10,6 +10,7 @@ namespace NIM {
 const Interface::FunctionInfo FunctionTable[] = {
     {0x000A0000, nullptr, "CheckSysupdateAvailableSOAP"},
     {0x0016020A, nullptr, "ListTitles"},
+    {0x00290000, nullptr, "AccountCheckBalanceSOAP"},
     {0x002D0042, nullptr, "DownloadTickets"},
     {0x00420240, nullptr, "StartDownload"},
 };
