@@ -16,7 +16,7 @@ ResultVal<SharedPtr<ClientSession>> ClientSession::Create(SharedPtr<ServerSessio
     SharedPtr<ClientSession> client_session(new ClientSession);
 
     client_session->name = std::move(name);
-    client_session->server_session = server_session;
+    client_session->server_session = std::move(server_session);
     return MakeResult<SharedPtr<ClientSession>>(std::move(client_session));
 }
 

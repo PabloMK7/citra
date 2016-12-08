@@ -18,7 +18,7 @@ ResultVal<SharedPtr<ServerSession>> ServerSession::Create(std::string name, std:
 
     server_session->name = std::move(name);
     server_session->signaled = false;
-    server_session->hle_handler = hle_handler;
+    server_session->hle_handler = std::move(hle_handler);
 
     return MakeResult<SharedPtr<ServerSession>>(std::move(server_session));
 }
@@ -46,8 +46,9 @@ ResultCode ServerSession::HandleSyncRequest() {
     return RESULT_SUCCESS;
 }
 
-std::tuple<SharedPtr<ServerSession>, SharedPtr<ClientSession>> ServerSession::CreateSessionPair(const std::string& name, std::shared_ptr<Service::SessionRequestHandler> hle_handler) {
-    auto server_session = ServerSession::Create(name + "_Server", hle_handler).MoveFrom();
+ServerSession::SessionPair ServerSession::CreateSessionPair(const std::string& name,
+                                                            std::shared_ptr<Service::SessionRequestHandler> hle_handler) {
+    auto server_session = ServerSession::Create(name + "_Server", std::move(hle_handler)).MoveFrom();
     auto client_session = ClientSession::Create(server_session, name + "_Client").MoveFrom();
 
     return std::make_tuple(std::move(server_session), std::move(client_session));

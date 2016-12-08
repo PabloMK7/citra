@@ -84,6 +84,9 @@ ResultCode SessionRequestHandler::TranslateRequest(Kernel::SharedPtr<Kernel::Ser
     return RESULT_SUCCESS;
 }
 
+Interface::~Interface() = default;
+Interface::Interface(u32 max_sessions) : max_sessions(max_sessions) { }
+
 void Interface::HandleSyncRequestImpl(Kernel::SharedPtr<Kernel::ServerSession> server_session) {
     // TODO(Subv): Make use of the server_session in the HLE service handlers to distinguish which session triggered each command.
 
@@ -123,14 +126,14 @@ static void AddNamedPort(Interface* interface_) {
     auto ports = Kernel::ServerPort::CreatePortPair(interface_->GetMaxSessions(), interface_->GetPortName(),
                                                     std::shared_ptr<Interface>(interface_));
     auto client_port = std::get<Kernel::SharedPtr<Kernel::ClientPort>>(ports);
-    g_kernel_named_ports.emplace(interface_->GetPortName(), client_port);
+    g_kernel_named_ports.emplace(interface_->GetPortName(), std::move(client_port));
 }
 
 void AddService(Interface* interface_) {
     auto ports = Kernel::ServerPort::CreatePortPair(interface_->GetMaxSessions(), interface_->GetPortName(),
                                                     std::shared_ptr<Interface>(interface_));
     auto client_port = std::get<Kernel::SharedPtr<Kernel::ClientPort>>(ports);
-    g_srv_services.emplace(interface_->GetPortName(), client_port);
+    g_srv_services.emplace(interface_->GetPortName(), std::move(client_port));
 }
 
 /// Initialize ServiceManager

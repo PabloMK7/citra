@@ -15,6 +15,9 @@ ClientPort::ClientPort() {}
 ClientPort::~ClientPort() {}
 
 ResultVal<SharedPtr<ClientSession>> ClientPort::Connect() {
+    // Note: Threads do not wait for the server endpoint to call
+    // AcceptSession before returning from this call.
+
     if (active_sessions >= max_sessions) {
         return ResultCode(ErrorDescription::MaxConnectionsReached,
                           ErrorModule::OS, ErrorSummary::WouldBlock,
@@ -27,7 +30,7 @@ ResultVal<SharedPtr<ClientSession>> ClientPort::Connect() {
     auto client_session = std::get<SharedPtr<ClientSession>>(sessions);
     auto server_session = std::get<SharedPtr<ServerSession>>(sessions);
 
-    server_port->pending_sessions.push_back(server_session);
+    server_port->pending_sessions.push_back(std::move(server_session));
 
     // Wake the threads waiting on the ServerPort
     server_port->WakeupAllWaitingThreads();

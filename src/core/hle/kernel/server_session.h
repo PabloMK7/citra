@@ -40,12 +40,14 @@ public:
         return HANDLE_TYPE;
     }
 
+    using SessionPair = std::tuple<SharedPtr<ServerSession>, SharedPtr<ClientSession>>;
+
     /**
      * Creates a pair of ServerSession and an associated ClientSession.
      * @param name Optional name of the ports
      * @return The created session tuple
      */
-    static std::tuple<SharedPtr<ServerSession>, SharedPtr<ClientSession>> CreateSessionPair(const std::string& name = "Unknown", std::shared_ptr<Service::SessionRequestHandler> hle_handler = nullptr);
+    static SessionPair CreateSessionPair(const std::string& name = "Unknown", std::shared_ptr<Service::SessionRequestHandler> hle_handler = nullptr);
 
     /**
      * Handle a sync request from the emulated application.

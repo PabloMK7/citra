@@ -179,6 +179,7 @@ set(HEADERS
             hle/config_mem.h
             hle/function_wrappers.h
             hle/hle.h
+            hle/ipc.h
             hle/applets/applet.h
             hle/applets/erreula.h
             hle/applets/mii_selector.h

@@ -226,19 +226,15 @@ static ResultCode ConnectToPort(Handle* out_handle, const char* port_name) {
 
     auto client_port = it->second;
 
-    // Connect to the port and retrieve the client endpoint of the connection Session.
     SharedPtr<Kernel::ClientSession> client_session;
     CASCADE_RESULT(client_session, client_port->Connect());
-
-    // Note: Threads do not wait for the server endpoint to call
-    // AcceptSession before returning from this call.
 
     // Return the client session
     CASCADE_RESULT(*out_handle, Kernel::g_handle_table.Create(client_session));
     return RESULT_SUCCESS;
 }
 
-/// Synchronize to an OS service
+/// Makes a blocking IPC call to an OS service.
 static ResultCode SendSyncRequest(Handle handle) {
     SharedPtr<Kernel::ClientSession> session = Kernel::g_handle_table.Get<Kernel::ClientSession>(handle);
     if (session == nullptr) {

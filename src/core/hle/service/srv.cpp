@@ -87,12 +87,7 @@ static void GetServiceHandle(Service::Interface* self) {
     if (it != Service::g_srv_services.end()) {
         auto client_port = it->second;
 
-        // Note: Threads do not wait for the server endpoint to call
-        // AcceptSession before returning from this call.
-
-        // Connect to the port and retrieve the client endpoint of the connection Session.
         auto client_session = client_port->Connect();
-
         res = client_session.Code();
 
         if (client_session.Succeeded()) {

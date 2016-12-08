@@ -41,7 +41,7 @@ enum class MediaType : u32 { NAND = 0, SDMC = 1 };
 
 typedef u64 ArchiveHandle;
 
-class File : public SessionRequestHandler, public std::enable_shared_from_this<File> {
+class File final : public SessionRequestHandler, public std::enable_shared_from_this<File> {
 public:
     File(std::unique_ptr<FileSys::FileBackend>&& backend, const FileSys::Path& path);
     ~File();
@@ -58,7 +58,7 @@ protected:
     void HandleSyncRequestImpl(Kernel::SharedPtr<Kernel::ServerSession> server_session) override;
 };
 
-class Directory : public SessionRequestHandler {
+class Directory final : public SessionRequestHandler {
 public:
     Directory(std::unique_ptr<FileSys::DirectoryBackend>&& backend, const FileSys::Path& path);
     ~Directory();
