@@ -107,6 +107,9 @@ set(SRCS
             hle/service/mic_u.cpp
             hle/service/ndm/ndm.cpp
             hle/service/ndm/ndm_u.cpp
+            hle/service/nfc/nfc.cpp
+            hle/service/nfc/nfc_m.cpp
+            hle/service/nfc/nfc_u.cpp
             hle/service/news/news.cpp
             hle/service/news/news_s.cpp
             hle/service/news/news_u.cpp
@@ -258,6 +261,9 @@ set(HEADERS
             hle/service/mic_u.h
             hle/service/ndm/ndm.h
             hle/service/ndm/ndm_u.h
+            hle/service/nfc/nfc.h
+            hle/service/nfc/nfc_m.h
+            hle/service/nfc/nfc_u.h
             hle/service/news/news.h
             hle/service/news/news_s.h
             hle/service/news/news_u.h
