@@ -8,6 +8,7 @@ namespace Service {
 namespace PTM {
 
 const Interface::FunctionInfo FunctionTable[] = {
+    // Note that this service does not have access to ptm:u's common commands
     {0x00010080, nullptr, "SetSystemTime"},
 };
 
