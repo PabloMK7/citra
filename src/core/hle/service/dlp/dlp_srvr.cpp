@@ -22,7 +22,14 @@ static void unk_0x000E0040(Interface* self) {
 const Interface::FunctionInfo FunctionTable[] = {
     {0x00010183, nullptr, "Initialize"},
     {0x00020000, nullptr, "Finalize"},
+    {0x00030000, nullptr, "GetServerState"},
+    {0x00050080, nullptr, "StartAccepting"},
+    {0x00070000, nullptr, "StartDistribution"},
     {0x000800C0, nullptr, "SendWirelessRebootPassphrase"},
+    {0x00090040, nullptr, "AcceptClient"},
+    {0x000B0042, nullptr, "GetConnectingClients"},
+    {0x000C0040, nullptr, "GetClientInfo"},
+    {0x000D0040, nullptr, "GetClientState"},
     {0x000E0040, unk_0x000E0040, "unk_0x000E0040"},
 };
 
