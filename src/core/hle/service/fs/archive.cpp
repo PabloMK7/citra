@@ -93,7 +93,7 @@ File::File(std::unique_ptr<FileSys::FileBackend>&& backend, const FileSys::Path&
 
 File::~File() {}
 
-void File::HandleSyncRequestImpl(Kernel::SharedPtr<Kernel::ServerSession> server_session) {
+void File::HandleSyncRequest(Kernel::SharedPtr<Kernel::ServerSession> server_session) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
     FileCommand cmd = static_cast<FileCommand>(cmd_buff[0]);
     switch (cmd) {
@@ -207,7 +207,7 @@ Directory::Directory(std::unique_ptr<FileSys::DirectoryBackend>&& backend,
 
 Directory::~Directory() {}
 
-void Directory::HandleSyncRequestImpl(Kernel::SharedPtr<Kernel::ServerSession> server_session) {
+void Directory::HandleSyncRequest(Kernel::SharedPtr<Kernel::ServerSession> server_session) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
     DirectoryCommand cmd = static_cast<DirectoryCommand>(cmd_buff[0]);
     switch (cmd) {

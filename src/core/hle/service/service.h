@@ -15,6 +15,11 @@
 #include "core/hle/result.h"
 #include "core/memory.h"
 
+
+namespace Kernel {
+class ServerSession;
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Namespace Service
 
@@ -31,12 +36,14 @@ static const u32 DefaultMaxSessions = 10; ///< Arbitrary default number of maxim
 class SessionRequestHandler {
 public:
     /**
-     * Dispatches and handles a sync request from the emulated application.
+     * Handles a sync request from the emulated application.
      * @param server_session The ServerSession that was triggered for this sync request,
      * it should be used to differentiate which client (As in ClientSession) we're answering to.
+     * TODO(Subv): Use a wrapper structure to hold all the information relevant to
+     * this request (ServerSession, Originator thread, Translated command buffer, etc).
      * @returns ResultCode the result code of the translate operation.
      */
-    ResultCode HandleSyncRequest(Kernel::SharedPtr<Kernel::ServerSession> server_session);
+    virtual void HandleSyncRequest(Kernel::SharedPtr<Kernel::ServerSession> server_session) = 0;
 
     /**
      * Signals that a client has just connected to this HLE handler and keeps the
@@ -53,23 +60,6 @@ public:
     void ClientDisconnected(Kernel::SharedPtr<Kernel::ServerSession> server_session);
 
 protected:
-    /**
-     * Handles a sync request from the emulated application and writes the response to the command buffer.
-     * TODO(Subv): Use a wrapper structure to hold all the information relevant to
-     * this request (ServerSession, Originator thread, Translated command buffer, etc).
-     */
-    virtual void HandleSyncRequestImpl(Kernel::SharedPtr<Kernel::ServerSession> server_session) = 0;
-
-private:
-    /**
-     * Performs command buffer translation for this request.
-     * The command buffer from the ServerSession thread's TLS is copied into a
-     * buffer and all descriptors in the buffer are processed.
-     * TODO(Subv): Implement this function, currently we do not support multiple processes running at once,
-     * but once that is implemented we'll need to properly translate all descriptors in the command buffer.
-     */
-    ResultCode TranslateRequest(Kernel::SharedPtr<Kernel::ServerSession> server_session);
-
     /// List of sessions that are connected to this handler.
     /// A ServerSession whose server endpoint is an HLE implementation is kept alive by this list for the duration of the connection.
     std::vector<Kernel::SharedPtr<Kernel::ServerSession>> connected_sessions;
@@ -120,7 +110,7 @@ public:
     }
 
 protected:
-    void HandleSyncRequestImpl(Kernel::SharedPtr<Kernel::ServerSession> server_session) override;
+    void HandleSyncRequest(Kernel::SharedPtr<Kernel::ServerSession> server_session) override;
 
     /**
      * Registers the functions in the service

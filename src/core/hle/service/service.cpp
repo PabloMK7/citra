@@ -66,21 +66,6 @@ static std::string MakeFunctionString(const char* name, const char* port_name,
     return function_string;
 }
 
-ResultCode SessionRequestHandler::HandleSyncRequest(Kernel::SharedPtr<Kernel::ServerSession> server_session) {
-    // Attempt to translate the incoming request's command buffer.
-    ResultCode result = TranslateRequest(server_session);
-
-    if (result.IsError())
-        return result;
-
-    // Actually handle the request
-    HandleSyncRequestImpl(server_session);
-
-    // TODO(Subv): Translate the response command buffer.
-
-    return RESULT_SUCCESS;
-}
-
 void SessionRequestHandler::ClientConnected(Kernel::SharedPtr<Kernel::ServerSession> server_session) {
     connected_sessions.push_back(server_session);
 }
@@ -89,15 +74,10 @@ void SessionRequestHandler::ClientDisconnected(Kernel::SharedPtr<Kernel::ServerS
     boost::range::remove_erase(connected_sessions, server_session);
 }
 
-ResultCode SessionRequestHandler::TranslateRequest(Kernel::SharedPtr<Kernel::ServerSession> server_session) {
-    // TODO(Subv): Implement this function once multiple concurrent processes are supported.
-    return RESULT_SUCCESS;
-}
-
 Interface::Interface(u32 max_sessions) : max_sessions(max_sessions) {}
 Interface::~Interface() = default;
 
-void Interface::HandleSyncRequestImpl(Kernel::SharedPtr<Kernel::ServerSession> server_session) {
+void Interface::HandleSyncRequest(Kernel::SharedPtr<Kernel::ServerSession> server_session) {
     // TODO(Subv): Make use of the server_session in the HLE service handlers to distinguish which session triggered each command.
 
     u32* cmd_buff = Kernel::GetCommandBuffer();

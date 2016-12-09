@@ -55,7 +55,7 @@ public:
     std::unique_ptr<FileSys::FileBackend> backend; ///< File backend interface
 
 protected:
-    void HandleSyncRequestImpl(Kernel::SharedPtr<Kernel::ServerSession> server_session) override;
+    void HandleSyncRequest(Kernel::SharedPtr<Kernel::ServerSession> server_session) override;
 };
 
 class Directory final : public SessionRequestHandler {
@@ -71,7 +71,7 @@ public:
     std::unique_ptr<FileSys::DirectoryBackend> backend; ///< File backend interface
 
 protected:
-    void HandleSyncRequestImpl(Kernel::SharedPtr<Kernel::ServerSession> server_session) override;
+    void HandleSyncRequest(Kernel::SharedPtr<Kernel::ServerSession> server_session) override;
 };
 
 /**

@@ -41,8 +41,14 @@ ResultCode ServerSession::HandleSyncRequest() {
     // from its ClientSession, so wake up any threads that may be waiting on a svcReplyAndReceive or similar.
 
     // If this ServerSession has an associated HLE handler, forward the request to it.
-    if (hle_handler != nullptr)
-        return hle_handler->HandleSyncRequest(SharedPtr<ServerSession>(this));
+    if (hle_handler != nullptr) {
+        // Attempt to translate the incoming request's command buffer.
+        ResultCode result = TranslateHLERequest(this);
+        if (result.IsError())
+            return result;
+        hle_handler->HandleSyncRequest(SharedPtr<ServerSession>(this));
+        // TODO(Subv): Translate the response command buffer.
+    }
 
     // If this ServerSession does not have an HLE implementation, just wake up the threads waiting on it.
     signaled = true;
@@ -58,6 +64,11 @@ ServerSession::SessionPair ServerSession::CreateSessionPair(const std::string& n
     auto client_session = ClientSession::Create(server_session.get(), name + "_Client").MoveFrom();
 
     return std::make_tuple(std::move(server_session), std::move(client_session));
+}
+
+ResultCode TranslateHLERequest(ServerSession* server_session) {
+    // TODO(Subv): Implement this function once multiple concurrent processes are supported.
+    return RESULT_SUCCESS;
 }
 
 }
