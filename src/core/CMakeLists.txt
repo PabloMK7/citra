@@ -77,6 +77,7 @@ set(SRCS
             hle/service/cecd/cecd_u.cpp
             hle/service/cfg/cfg.cpp
             hle/service/cfg/cfg_i.cpp
+            hle/service/cfg/cfg_nor.cpp
             hle/service/cfg/cfg_s.cpp
             hle/service/cfg/cfg_u.cpp
             hle/service/csnd_snd.cpp
@@ -239,6 +240,7 @@ set(HEADERS
             hle/service/cecd/cecd_u.h
             hle/service/cfg/cfg.h
             hle/service/cfg/cfg_i.h
+            hle/service/cfg/cfg_nor.h
             hle/service/cfg/cfg_s.h
             hle/service/cfg/cfg_u.h
             hle/service/csnd_snd.h
