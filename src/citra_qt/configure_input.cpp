@@ -5,15 +5,33 @@
 #include <memory>
 #include <utility>
 #include <QTimer>
+#include "citra_qt/config.h"
 #include "citra_qt/configure_input.h"
 
+static QString getKeyName(Qt::Key key_code) {
+    switch (key_code) {
+    case Qt::Key_Shift:
+        return QObject::tr("Shift");
+    case Qt::Key_Control:
+        return QObject::tr("Ctrl");
+    case Qt::Key_Alt:
+        return QObject::tr("Alt");
+    case Qt::Key_Meta:
+    case -1:
+        return "";
+    default:
+        return QKeySequence(key_code).toString();
+    }
+}
+
 ConfigureInput::ConfigureInput(QWidget* parent)
-    : QWidget(parent), ui(std::make_unique<Ui::ConfigureInput>()) {
+    : QWidget(parent), ui(std::make_unique<Ui::ConfigureInput>()),
+      timer(std::make_unique<QTimer>()) {
 
     ui->setupUi(this);
+    setFocusPolicy(Qt::ClickFocus);
 
-    // Initialize mapping of input enum to UI button.
-    input_mapping = {
+    button_map = {
         {Settings::NativeInput::Values::A, ui->buttonA},
         {Settings::NativeInput::Values::B, ui->buttonB},
         {Settings::NativeInput::Values::X, ui->buttonX},
@@ -40,114 +58,89 @@ ConfigureInput::ConfigureInput(QWidget* parent)
         {Settings::NativeInput::Values::CIRCLE_MODIFIER, ui->buttonCircleMod},
     };
 
-    // Attach handle click method to each button click.
-    for (const auto& entry : input_mapping) {
-        connect(entry.second, SIGNAL(released()), this, SLOT(handleClick()));
+    for (const auto& entry : button_map) {
+        const Settings::NativeInput::Values input_id = entry.first;
+        connect(entry.second, &QPushButton::released,
+                [this, input_id]() { handleClick(input_id); });
     }
-    connect(ui->buttonRestoreDefaults, SIGNAL(released()), this, SLOT(restoreDefaults()));
-    setFocusPolicy(Qt::ClickFocus);
-    timer = new QTimer(this);
-    timer->setSingleShot(true);
-    connect(timer, &QTimer::timeout, this, [&]() {
-        key_pressed = Qt::Key_Escape;
-        setKey();
-    });
-    this->setConfiguration();
-}
 
-void ConfigureInput::handleClick() {
-    QPushButton* sender = qobject_cast<QPushButton*>(QObject::sender());
-    previous_mapping = sender->text();
-    sender->setText(tr("[waiting]"));
-    sender->setFocus();
-    grabKeyboard();
-    grabMouse();
-    changing_button = sender;
-    timer->start(5000); // Cancel after 5 seconds
+    connect(ui->buttonRestoreDefaults, &QPushButton::released, [this]() { restoreDefaults(); });
+
+    timer->setSingleShot(true);
+    connect(timer.get(), &QTimer::timeout, [this]() {
+        releaseKeyboard();
+        releaseMouse();
+        current_input_id = boost::none;
+        updateButtonLabels();
+    });
+
+    this->loadConfiguration();
 }
 
 void ConfigureInput::applyConfiguration() {
-    for (int i = 0; i < Settings::NativeInput::NUM_INPUTS; ++i) {
-        int value = getKeyValue(input_mapping[Settings::NativeInput::Values(i)]->text());
-        Settings::values.input_mappings[Settings::NativeInput::All[i]] = value;
+    for (const auto& input_id : Settings::NativeInput::All) {
+        const size_t index = static_cast<size_t>(input_id);
+        Settings::values.input_mappings[index] = static_cast<int>(key_map[input_id]);
     }
     Settings::Apply();
 }
 
-void ConfigureInput::setConfiguration() {
-    for (int i = 0; i < Settings::NativeInput::NUM_INPUTS; ++i) {
-        QString keyValue = getKeyName(Settings::values.input_mappings[i]);
-        input_mapping[Settings::NativeInput::Values(i)]->setText(keyValue);
+void ConfigureInput::loadConfiguration() {
+    for (const auto& input_id : Settings::NativeInput::All) {
+        const size_t index = static_cast<size_t>(input_id);
+        key_map[input_id] = static_cast<Qt::Key>(Settings::values.input_mappings[index]);
     }
-}
-
-void ConfigureInput::keyPressEvent(QKeyEvent* event) {
-    if (!changing_button)
-        return;
-    if (!event || event->key() == Qt::Key_unknown)
-        return;
-    key_pressed = event->key();
-    timer->stop();
-    setKey();
-}
-
-void ConfigureInput::setKey() {
-    const QString key_value = getKeyName(key_pressed);
-    if (key_pressed == Qt::Key_Escape)
-        changing_button->setText(previous_mapping);
-    else
-        changing_button->setText(key_value);
-    removeDuplicates(key_value);
-    key_pressed = Qt::Key_unknown;
-    releaseKeyboard();
-    releaseMouse();
-    changing_button = nullptr;
-    previous_mapping = nullptr;
-}
-
-QString ConfigureInput::getKeyName(int key_code) const {
-    if (key_code == Qt::Key_Shift)
-        return tr("Shift");
-    if (key_code == Qt::Key_Control)
-        return tr("Ctrl");
-    if (key_code == Qt::Key_Alt)
-        return tr("Alt");
-    if (key_code == Qt::Key_Meta)
-        return "";
-    if (key_code == -1)
-        return "";
-
-    return QKeySequence(key_code).toString();
-}
-
-Qt::Key ConfigureInput::getKeyValue(const QString& text) const {
-    if (text == "Shift")
-        return Qt::Key_Shift;
-    if (text == "Ctrl")
-        return Qt::Key_Control;
-    if (text == "Alt")
-        return Qt::Key_Alt;
-    if (text == "Meta")
-        return Qt::Key_unknown;
-    if (text == "")
-        return Qt::Key_unknown;
-
-    return Qt::Key(QKeySequence(text)[0]);
-}
-
-void ConfigureInput::removeDuplicates(const QString& newValue) {
-    for (int i = 0; i < Settings::NativeInput::NUM_INPUTS; ++i) {
-        if (changing_button != input_mapping[Settings::NativeInput::Values(i)]) {
-            const QString oldValue = input_mapping[Settings::NativeInput::Values(i)]->text();
-            if (newValue == oldValue)
-                input_mapping[Settings::NativeInput::Values(i)]->setText("");
-        }
-    }
+    updateButtonLabels();
 }
 
 void ConfigureInput::restoreDefaults() {
-    for (int i = 0; i < Settings::NativeInput::NUM_INPUTS; ++i) {
-        const QString keyValue = getKeyName(Config::defaults[i].toInt());
-        input_mapping[Settings::NativeInput::Values(i)]->setText(keyValue);
+    for (const auto& input_id : Settings::NativeInput::All) {
+        const size_t index = static_cast<size_t>(input_id);
+        key_map[input_id] = static_cast<Qt::Key>(Config::defaults[index].toInt());
     }
+    updateButtonLabels();
+    applyConfiguration();
+}
+
+void ConfigureInput::updateButtonLabels() {
+    for (const auto& input_id : Settings::NativeInput::All) {
+        button_map[input_id]->setText(getKeyName(key_map[input_id]));
+    }
+}
+
+void ConfigureInput::handleClick(Settings::NativeInput::Values input_id) {
+    QPushButton* button = button_map[input_id];
+    button->setText(tr("[press key]"));
+    button->setFocus();
+
+    current_input_id = input_id;
+
+    grabKeyboard();
+    grabMouse();
+    timer->start(5000); // Cancel after 5 seconds
+}
+
+void ConfigureInput::keyPressEvent(QKeyEvent* event) {
+    releaseKeyboard();
+    releaseMouse();
+
+    if (!current_input_id || !event)
+        return;
+
+    if (event->key() != Qt::Key_Escape)
+        setInput(*current_input_id, static_cast<Qt::Key>(event->key()));
+
+    updateButtonLabels();
+    current_input_id = boost::none;
+    timer->stop();
+}
+
+void ConfigureInput::setInput(Settings::NativeInput::Values input_id, Qt::Key key_pressed) {
+    // Remove duplicates
+    for (auto& pair : key_map) {
+        if (pair.second == key_pressed)
+            pair.second = Qt::Key_unknown;
+    }
+
+    key_map[input_id] = key_pressed;
 }

@@ -7,7 +7,7 @@
 #include <memory>
 #include <QKeyEvent>
 #include <QWidget>
-#include "citra_qt/config.h"
+#include <boost/optional.hpp>
 #include "core/settings.h"
 #include "ui_configure_input.h"
 
@@ -30,35 +30,28 @@ public:
 
 private:
     std::unique_ptr<Ui::ConfigureInput> ui;
-    std::map<Settings::NativeInput::Values, QPushButton*> input_mapping;
-    int key_pressed;
-    QPushButton* changing_button = nullptr; ///< button currently waiting for key press.
-    QString previous_mapping;
-    QTimer* timer;
 
-    /// Load configuration settings into button text
-    void setConfiguration();
+    /// This input is currently awaiting configuration.
+    /// (i.e.: its corresponding QPushButton has been pressed.)
+    boost::optional<Settings::NativeInput::Values> current_input_id;
+    std::unique_ptr<QTimer> timer;
 
-    /// Check all inputs for duplicate keys. Clears out any other button with the same value as this
-    /// button's new value.
-    void removeDuplicates(const QString& newValue);
+    /// Each input is represented by a QPushButton.
+    std::map<Settings::NativeInput::Values, QPushButton*> button_map;
+    /// Each input is configured to respond to the press of a Qt::Key.
+    std::map<Settings::NativeInput::Values, Qt::Key> key_map;
 
-    /// Handle key press event for input tab when a button is 'waiting'.
-    void keyPressEvent(QKeyEvent* event) override;
-
-    /// Convert key ASCII value to its' letter/name
-    QString getKeyName(int key_code) const;
-
-    /// Convert letter/name of key to its ASCII value.
-    Qt::Key getKeyValue(const QString& text) const;
-
-    /// Set button text to name of key pressed.
-    void setKey();
-
-private slots:
-    /// Event handler for all button released() event.
-    void handleClick();
-
+    /// Load configuration settings.
+    void loadConfiguration();
     /// Restore all buttons to their default values.
     void restoreDefaults();
+    /// Update UI to reflect current configuration.
+    void updateButtonLabels();
+
+    /// Called when the button corresponding to input_id was pressed.
+    void handleClick(Settings::NativeInput::Values input_id);
+    /// Handle key press events.
+    void keyPressEvent(QKeyEvent* event) override;
+    /// Configure input input_id to respond to key key_pressed.
+    void setInput(Settings::NativeInput::Values input_id, Qt::Key key_pressed);
 };
