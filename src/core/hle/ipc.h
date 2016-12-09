@@ -9,9 +9,7 @@
 #include "core/memory.h"
 
 namespace Kernel {
-class ServerSession;
 
-// TODO(Subv): Move these declarations out of here
 static const int kCommandHeaderOffset = 0x80; ///< Offset into command buffer of header
 
 /**

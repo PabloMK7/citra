@@ -94,8 +94,8 @@ ResultCode SessionRequestHandler::TranslateRequest(Kernel::SharedPtr<Kernel::Ser
     return RESULT_SUCCESS;
 }
 
+Interface::Interface(u32 max_sessions) : max_sessions(max_sessions) {}
 Interface::~Interface() = default;
-Interface::Interface(u32 max_sessions) : max_sessions(max_sessions) { }
 
 void Interface::HandleSyncRequestImpl(Kernel::SharedPtr<Kernel::ServerSession> server_session) {
     // TODO(Subv): Make use of the server_session in the HLE service handlers to distinguish which session triggered each command.
