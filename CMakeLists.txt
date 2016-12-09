@@ -289,3 +289,15 @@ if(ENABLE_QT AND UNIX AND NOT APPLE)
     install(FILES "${CMAKE_SOURCE_DIR}/dist/citra.xml"
             DESTINATION "${CMAKE_INSTALL_PREFIX}/share/mime/packages")
 endif()
+
+if(UNIX)
+    if(ENABLE_SDL2)
+        install(FILES "${CMAKE_SOURCE_DIR}/dist/citra.6"
+                DESTINATION "${CMAKE_INSTALL_PREFIX}/share/man/man6")
+    endif()
+
+    if (ENABLE_QT)
+        install(FILES "${CMAKE_SOURCE_DIR}/dist/citra-qt.6"
+                DESTINATION "${CMAKE_INSTALL_PREFIX}/share/man/man6")
+    endif()
+endif()
