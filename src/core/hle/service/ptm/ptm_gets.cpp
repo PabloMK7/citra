@@ -1,9 +1,9 @@
-// Copyright 2015 Citra Emulator Project
+// Copyright 2016 Citra Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #include "core/hle/service/ptm/ptm.h"
-#include "core/hle/service/ptm/ptm_play.h"
+#include "core/hle/service/ptm/ptm_gets.h"
 
 namespace Service {
 namespace PTM {
@@ -25,14 +25,11 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x000D0040, nullptr, "SetPedometerRecordingMode"},
     {0x000E0000, nullptr, "GetPedometerRecordingMode"},
     {0x000F0084, nullptr, "GetStepHistoryAll"},
-    // ptm:play
-    {0x08070082, nullptr, "GetPlayHistory"},
-    {0x08080000, nullptr, "GetPlayHistoryStart"},
-    {0x08090000, nullptr, "GetPlayHistoryLength"},
-    {0x080B0080, nullptr, "CalcPlayHistoryStart"},
+    // ptm:gets
+    {0x04010000, nullptr, "GetSystemTime"},
 };
 
-PTM_Play::PTM_Play() {
+PTM_Gets::PTM_Gets() {
     Register(FunctionTable);
 }
 

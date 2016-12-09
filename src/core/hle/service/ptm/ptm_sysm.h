@@ -9,9 +9,18 @@
 namespace Service {
 namespace PTM {
 
-class PTM_Sysm_Interface : public Interface {
+class PTM_S final : public Interface {
 public:
-    PTM_Sysm_Interface();
+    PTM_S();
+
+    std::string GetPortName() const override {
+        return "ptm:s";
+    }
+};
+
+class PTM_Sysm final : public Interface {
+public:
+    PTM_Sysm();
 
     std::string GetPortName() const override {
         return "ptm:sysm";

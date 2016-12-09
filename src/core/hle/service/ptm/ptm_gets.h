@@ -1,4 +1,4 @@
-// Copyright 2015 Citra Emulator Project
+// Copyright 2016 Citra Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -9,12 +9,12 @@
 namespace Service {
 namespace PTM {
 
-class PTM_Play final : public Interface {
+class PTM_Gets final : public Interface {
 public:
-    PTM_Play();
+    PTM_Gets();
 
     std::string GetPortName() const override {
-        return "ptm:play";
+        return "ptm:gets";
     }
 };
 
