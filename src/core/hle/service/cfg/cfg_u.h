@@ -9,9 +9,9 @@
 namespace Service {
 namespace CFG {
 
-class CFG_U_Interface : public Service::Interface {
+class CFG_U final : public Interface {
 public:
-    CFG_U_Interface();
+    CFG_U();
 
     std::string GetPortName() const override {
         return "cfg:u";

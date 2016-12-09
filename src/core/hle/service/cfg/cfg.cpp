@@ -12,6 +12,7 @@
 #include "core/hle/result.h"
 #include "core/hle/service/cfg/cfg.h"
 #include "core/hle/service/cfg/cfg_i.h"
+#include "core/hle/service/cfg/cfg_nor.h"
 #include "core/hle/service/cfg/cfg_s.h"
 #include "core/hle/service/cfg/cfg_u.h"
 #include "core/hle/service/fs/archive.h"
@@ -528,9 +529,10 @@ ResultCode LoadConfigNANDSaveFile() {
 }
 
 void Init() {
-    AddService(new CFG_I_Interface);
-    AddService(new CFG_S_Interface);
-    AddService(new CFG_U_Interface);
+    AddService(new CFG_I);
+    AddService(new CFG_NOR);
+    AddService(new CFG_S);
+    AddService(new CFG_U);
 
     LoadConfigNANDSaveFile();
 }

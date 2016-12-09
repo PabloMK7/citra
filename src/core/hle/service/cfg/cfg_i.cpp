@@ -56,7 +56,7 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x08180042, nullptr, "SecureInfoGetSerialNo"},
 };
 
-CFG_I_Interface::CFG_I_Interface() {
+CFG_I::CFG_I() {
     Register(FunctionTable);
 }
 
