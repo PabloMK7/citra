@@ -33,7 +33,7 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x04090000, nullptr, "UpdateConfigBlk00040003"},
 };
 
-CFG_S_Interface::CFG_S_Interface() {
+CFG_S::CFG_S() {
     Register(FunctionTable);
 }
 

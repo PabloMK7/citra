@@ -23,7 +23,7 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x000B0000, nullptr, "IsFangateSupported"},
 };
 
-CFG_U_Interface::CFG_U_Interface() {
+CFG_U::CFG_U() {
     Register(FunctionTable);
 }
 

@@ -528,9 +528,9 @@ ResultCode LoadConfigNANDSaveFile() {
 }
 
 void Init() {
-    AddService(new CFG_I_Interface);
-    AddService(new CFG_S_Interface);
-    AddService(new CFG_U_Interface);
+    AddService(new CFG_I);
+    AddService(new CFG_S);
+    AddService(new CFG_U);
 
     LoadConfigNANDSaveFile();
 }
