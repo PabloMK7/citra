@@ -277,6 +277,10 @@ static void ThreadWakeupCallback(u64 thread_handle, int cycles_late) {
 
     if (thread->status == THREADSTATUS_WAIT_SYNCH || thread->status == THREADSTATUS_WAIT_ARB) {
         thread->wait_set_output = false;
+        // Remove the thread from each of its waiting objects' waitlists
+        for (auto& object : thread->wait_objects)
+            object->RemoveWaitingThread(thread.get());
+        thread->wait_objects.clear();
         thread->SetWaitSynchronizationResult(ResultCode(ErrorDescription::Timeout, ErrorModule::OS,
                                                         ErrorSummary::StatusChanged,
                                                         ErrorLevel::Info));

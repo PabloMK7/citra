@@ -321,7 +321,7 @@ static ResultCode WaitSynchronizationN(s32* out, Handle* handles, s32 handle_cou
         });
         if (all_available) {
             // We can acquire all objects right now, do so.
-            for (auto object : objects)
+            for (auto& object : objects)
                 object->Acquire();
             // Note: In this case, the `out` parameter is not set, and retains whatever value it had before.
             return RESULT_SUCCESS;

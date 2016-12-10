@@ -38,6 +38,11 @@ SharedPtr<Thread> WaitObject::GetHighestPriorityReadyThread() {
         return thread->status == THREADSTATUS_RUNNING || thread->status == THREADSTATUS_READY;
     });
 
+    // TODO(Subv): This call should be performed inside the loop below to check if an object can be
+    // acquired by a particular thread. This is useful for things like recursive locking of Mutexes.
+    if (ShouldWait())
+        return nullptr;
+
     Thread* candidate = nullptr;
     s32 candidate_priority = THREADPRIO_LOWEST + 1;
 
@@ -67,7 +72,7 @@ void WaitObject::WakeupAllWaitingThreads() {
                 thread->wait_set_output = false;
             }
         } else {
-            for (auto object : thread->wait_objects) {
+            for (auto& object : thread->wait_objects) {
                 object->Acquire();
                 object->RemoveWaitingThread(thread.get());
             }
