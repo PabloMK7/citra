@@ -6,21 +6,18 @@
 
 #include "core/hle/service/service.h"
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Namespace MIC_U
+namespace Service {
+namespace MIC {
 
-// mic service
-
-namespace MIC_U {
-
-class Interface : public Service::Interface {
+class MIC_U final : public Interface {
 public:
-    Interface();
-    ~Interface();
+    MIC_U();
+    ~MIC_U();
 
     std::string GetPortName() const override {
         return "mic:u";
     }
 };
 
-} // namespace
+} // namespace MIC
+} // namespace Service

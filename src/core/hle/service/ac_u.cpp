@@ -2,14 +2,14 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <array>
+
 #include "common/logging/log.h"
 #include "core/hle/kernel/event.h"
 #include "core/hle/service/ac_u.h"
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Namespace AC_U
-
-namespace AC_U {
+namespace Service {
+namespace AC {
 
 struct ACConfig {
     std::array<u8, 0x200> data;
@@ -31,7 +31,7 @@ static Kernel::SharedPtr<Kernel::Event> disconnect_event;
  *  Outputs:
  *      1 : Result of function, 0 on success, otherwise error code
  */
-static void CreateDefaultConfig(Service::Interface* self) {
+static void CreateDefaultConfig(Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
     u32 ac_config_addr = cmd_buff[65];
@@ -56,7 +56,7 @@ static void CreateDefaultConfig(Service::Interface* self) {
  *  Outputs:
  *      1 : Result of function, 0 on success, otherwise error code
  */
-static void ConnectAsync(Service::Interface* self) {
+static void ConnectAsync(Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
     connect_event = Kernel::g_handle_table.Get<Kernel::Event>(cmd_buff[4]);
@@ -77,7 +77,7 @@ static void ConnectAsync(Service::Interface* self) {
  *  Outputs:
  *      1 : Result of function, 0 on success, otherwise error code
  */
-static void GetConnectResult(Service::Interface* self) {
+static void GetConnectResult(Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
@@ -94,7 +94,7 @@ static void GetConnectResult(Service::Interface* self) {
  *  Outputs:
  *      1 : Result of function, 0 on success, otherwise error code
  */
-static void CloseAsync(Service::Interface* self) {
+static void CloseAsync(Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
     if (ac_connected && disconnect_event) {
@@ -120,7 +120,7 @@ static void CloseAsync(Service::Interface* self) {
  *  Outputs:
  *      1 : Result of function, 0 on success, otherwise error code
  */
-static void GetCloseResult(Service::Interface* self) {
+static void GetCloseResult(Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
@@ -134,7 +134,7 @@ static void GetCloseResult(Service::Interface* self) {
  *      1 : Result of function, 0 on success, otherwise error code
  *      2 : Output connection type, 0 = none, 1 = Old3DS Internet, 2 = New3DS Internet.
  */
-static void GetWifiStatus(Service::Interface* self) {
+static void GetWifiStatus(Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
     // TODO(purpasmart96): This function is only a stub,
@@ -155,7 +155,7 @@ static void GetWifiStatus(Service::Interface* self) {
  *      1 : Result of function, 0 on success, otherwise error code
  *      2 : Infra Priority
  */
-static void GetInfraPriority(Service::Interface* self) {
+static void GetInfraPriority(Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
@@ -177,7 +177,7 @@ static void GetInfraPriority(Service::Interface* self) {
  *      1 : Result of function, 0 on success, otherwise error code
  *      2 : Infra Priority
  */
-static void SetRequestEulaVersion(Service::Interface* self) {
+static void SetRequestEulaVersion(Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
     u32 major = cmd_buff[1] & 0xFF;
@@ -203,7 +203,7 @@ static void SetRequestEulaVersion(Service::Interface* self) {
  *  Outputs:
  *      1 : Result of function, 0 on success, otherwise error code
  */
-static void RegisterDisconnectEvent(Service::Interface* self) {
+static void RegisterDisconnectEvent(Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
     disconnect_event = Kernel::g_handle_table.Get<Kernel::Event>(cmd_buff[4]);
@@ -221,7 +221,7 @@ static void RegisterDisconnectEvent(Service::Interface* self) {
  *      1 : Result of function, 0 on success, otherwise error code
  *      2 : bool, is connected
  */
-static void IsConnected(Service::Interface* self) {
+static void IsConnected(Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
@@ -237,7 +237,7 @@ static void IsConnected(Service::Interface* self) {
  *  Outputs:
  *      1 : Result of function, 0 on success, otherwise error code
  */
-static void SetClientVersion(Service::Interface* self) {
+static void SetClientVersion(Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
     const u32 version = cmd_buff[1];
@@ -271,10 +271,7 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x00400042, SetClientVersion, "SetClientVersion"},
 };
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Interface class
-
-Interface::Interface() {
+AC_U::AC_U() {
     Register(FunctionTable);
 
     ac_connected = false;
@@ -284,10 +281,11 @@ Interface::Interface() {
     disconnect_event = nullptr;
 }
 
-Interface::~Interface() {
+AC_U::~AC_U() {
     close_event = nullptr;
     connect_event = nullptr;
     disconnect_event = nullptr;
 }
 
-} // namespace
+} // namespace AC
+} // namespace Service

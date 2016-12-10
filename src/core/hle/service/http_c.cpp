@@ -4,10 +4,8 @@
 
 #include "core/hle/service/http_c.h"
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Namespace HTTP_C
-
-namespace HTTP_C {
+namespace Service {
+namespace HTTP {
 
 const Interface::FunctionInfo FunctionTable[] = {
     {0x00010044, nullptr, "Initialize"},
@@ -66,11 +64,9 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x00390000, nullptr, "Finalize"},
 };
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Interface class
-
-Interface::Interface() {
+HTTP_C::HTTP_C() {
     Register(FunctionTable);
 }
 
-} // namespace
+} // namespace HTTP
+} // namespace Service

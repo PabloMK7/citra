@@ -28,7 +28,8 @@ public:
         * @note All methods in this class are called from the GSP thread
         */
         virtual void GXCommandProcessed(int total_command_count) {
-            const GSP_GPU::Command& cmd = observed->ReadGXCommandHistory(total_command_count - 1);
+            const Service::GSP::Command& cmd =
+                observed->ReadGXCommandHistory(total_command_count - 1);
             LOG_TRACE(Debug_GPU, "Received command: id=%x", (int)cmd.id.Value());
         }
 
@@ -48,16 +49,16 @@ public:
             return;
 
         gx_command_history.emplace_back();
-        GSP_GPU::Command& cmd = gx_command_history.back();
+        Service::GSP::Command& cmd = gx_command_history.back();
 
-        memcpy(&cmd, command_data, sizeof(GSP_GPU::Command));
+        memcpy(&cmd, command_data, sizeof(Service::GSP::Command));
 
         ForEachObserver([this](DebuggerObserver* observer) {
             observer->GXCommandProcessed(static_cast<int>(this->gx_command_history.size()));
         });
     }
 
-    const GSP_GPU::Command& ReadGXCommandHistory(int index) const {
+    const Service::GSP::Command& ReadGXCommandHistory(int index) const {
         // TODO: Is this thread-safe?
         return gx_command_history[index];
     }
@@ -80,5 +81,5 @@ private:
 
     std::vector<DebuggerObserver*> observers;
 
-    std::vector<GSP_GPU::Command> gx_command_history;
+    std::vector<Service::GSP::Command> gx_command_history;
 };

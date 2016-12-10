@@ -4,10 +4,8 @@
 
 #include "core/hle/service/pm_app.h"
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Namespace PM_APP
-
-namespace PM_APP {
+namespace Service {
+namespace PM {
 
 const Interface::FunctionInfo FunctionTable[] = {
     // clang-format off
@@ -27,11 +25,9 @@ const Interface::FunctionInfo FunctionTable[] = {
     // clang-format on
 };
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Interface class
-
-Interface::Interface() {
+PM_APP::PM_APP() {
     Register(FunctionTable);
 }
 
-} // namespace
+} // namespace PM
+} // namespace Service

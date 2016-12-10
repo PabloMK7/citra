@@ -7,10 +7,8 @@
 #include "core/hle/kernel/shared_memory.h"
 #include "core/hle/service/mic_u.h"
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Namespace MIC_U
-
-namespace MIC_U {
+namespace Service {
+namespace MIC {
 
 enum class Encoding : u8 {
     PCM8 = 0,
@@ -49,7 +47,7 @@ static bool audio_buffer_loop;
  *  Outputs:
  *      1 : Result of function, 0 on success, otherwise error code
  */
-static void MapSharedMem(Service::Interface* self) {
+static void MapSharedMem(Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
     u32 size = cmd_buff[1];
     Handle mem_handle = cmd_buff[3];
@@ -68,7 +66,7 @@ static void MapSharedMem(Service::Interface* self) {
  *  Outputs:
  *      1 : Result of function, 0 on success, otherwise error code
  */
-static void UnmapSharedMem(Service::Interface* self) {
+static void UnmapSharedMem(Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
@@ -87,7 +85,7 @@ static void UnmapSharedMem(Service::Interface* self) {
  *  Outputs:
  *      1 : Result of function, 0 on success, otherwise error code
  */
-static void StartSampling(Service::Interface* self) {
+static void StartSampling(Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
     encoding = static_cast<Encoding>(cmd_buff[1] & 0xFF);
@@ -111,7 +109,7 @@ static void StartSampling(Service::Interface* self) {
  *  Outputs:
  *      1 : Result of function, 0 on success, otherwise error code
  */
-static void AdjustSampling(Service::Interface* self) {
+static void AdjustSampling(Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
     sample_rate = static_cast<SampleRate>(cmd_buff[1] & 0xFF);
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
@@ -125,7 +123,7 @@ static void AdjustSampling(Service::Interface* self) {
  *  Outputs:
  *      1 : Result of function, 0 on success, otherwise error code
  */
-static void StopSampling(Service::Interface* self) {
+static void StopSampling(Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
     is_sampling = false;
@@ -140,7 +138,7 @@ static void StopSampling(Service::Interface* self) {
  *      1 : Result of function, 0 on success, otherwise error code
  *      2 : 0 = sampling, non-zero = sampling
  */
-static void IsSampling(Service::Interface* self) {
+static void IsSampling(Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
     cmd_buff[2] = is_sampling;
@@ -155,7 +153,7 @@ static void IsSampling(Service::Interface* self) {
  *      1 : Result of function, 0 on success, otherwise error code
  *      3 : Event handle
  */
-static void GetBufferFullEvent(Service::Interface* self) {
+static void GetBufferFullEvent(Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
     cmd_buff[3] = Kernel::g_handle_table.Create(buffer_full_event).MoveFrom();
@@ -170,7 +168,7 @@ static void GetBufferFullEvent(Service::Interface* self) {
  *  Outputs:
  *      1 : Result of function, 0 on success, otherwise error code
  */
-static void SetGain(Service::Interface* self) {
+static void SetGain(Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
     mic_gain = cmd_buff[1] & 0xFF;
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
@@ -185,7 +183,7 @@ static void SetGain(Service::Interface* self) {
  *      1 : Result of function, 0 on success, otherwise error code
  *      2 : Gain
  */
-static void GetGain(Service::Interface* self) {
+static void GetGain(Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
     cmd_buff[2] = mic_gain;
@@ -200,7 +198,7 @@ static void GetGain(Service::Interface* self) {
  *  Outputs:
  *      1 : Result of function, 0 on success, otherwise error code
  */
-static void SetPower(Service::Interface* self) {
+static void SetPower(Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
     mic_power = static_cast<bool>(cmd_buff[1] & 0xFF);
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
@@ -215,7 +213,7 @@ static void SetPower(Service::Interface* self) {
  *      1 : Result of function, 0 on success, otherwise error code
  *      2 : Power
  */
-static void GetPower(Service::Interface* self) {
+static void GetPower(Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
     cmd_buff[2] = mic_power;
@@ -232,7 +230,7 @@ static void GetPower(Service::Interface* self) {
  *  Outputs:
  *      1 : Result of function, 0 on success, otherwise error code
  */
-static void SetIirFilterMic(Service::Interface* self) {
+static void SetIirFilterMic(Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
     u32 size = cmd_buff[1];
@@ -250,7 +248,7 @@ static void SetIirFilterMic(Service::Interface* self) {
  *  Outputs:
  *      1 : Result of function, 0 on success, otherwise error code
  */
-static void SetClamp(Service::Interface* self) {
+static void SetClamp(Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
     clamp = static_cast<bool>(cmd_buff[1] & 0xFF);
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
@@ -265,7 +263,7 @@ static void SetClamp(Service::Interface* self) {
  *      1 : Result of function, 0 on success, otherwise error code
  *      2 : Clamp (0 = don't clamp, non-zero = clamp)
  */
-static void GetClamp(Service::Interface* self) {
+static void GetClamp(Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
     cmd_buff[2] = clamp;
@@ -280,7 +278,7 @@ static void GetClamp(Service::Interface* self) {
  *  Outputs:
  *      1 : Result of function, 0 on success, otherwise error code
  */
-static void SetAllowShellClosed(Service::Interface* self) {
+static void SetAllowShellClosed(Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
     allow_shell_closed = static_cast<bool>(cmd_buff[1] & 0xFF);
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
@@ -294,7 +292,7 @@ static void SetAllowShellClosed(Service::Interface* self) {
  *  Outputs:
  *      1 : Result of function, 0 on success, otherwise error code
  */
-static void SetClientVersion(Service::Interface* self) {
+static void SetClientVersion(Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
     const u32 version = cmd_buff[1];
@@ -324,10 +322,7 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x00100040, SetClientVersion, "SetClientVersion"},
 };
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Interface class
-
-Interface::Interface() {
+MIC_U::MIC_U() {
     Register(FunctionTable);
     shared_memory = nullptr;
     buffer_full_event =
@@ -338,9 +333,10 @@ Interface::Interface() {
     clamp = false;
 }
 
-Interface::~Interface() {
+MIC_U::~MIC_U() {
     shared_memory = nullptr;
     buffer_full_event = nullptr;
 }
 
-} // namespace
+} // namespace MIC
+} // namespace Service

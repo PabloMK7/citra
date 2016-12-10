@@ -109,8 +109,8 @@ void AddService(Interface* interface_) {
 
 /// Initialize ServiceManager
 void Init() {
-    AddNamedPort(new SRV::Interface);
-    AddNamedPort(new ERR_F::Interface);
+    AddNamedPort(new SRV::SRV);
+    AddNamedPort(new ERR::ERR_F);
 
     FS::ArchiveInit();
     AM::Init();
@@ -131,22 +131,22 @@ void Init() {
     PTM::Init();
     QTM::Init();
 
-    AddService(new AC_U::Interface);
-    AddService(new ACT_A::Interface);
-    AddService(new ACT_U::Interface);
-    AddService(new CSND_SND::Interface);
+    AddService(new AC::AC_U);
+    AddService(new ACT::ACT_A);
+    AddService(new ACT::ACT_U);
+    AddService(new CSND::CSND_SND);
     AddService(new DSP_DSP::Interface);
-    AddService(new GSP_GPU::Interface);
-    AddService(new GSP_LCD::Interface);
-    AddService(new HTTP_C::Interface);
-    AddService(new LDR_RO::Interface);
-    AddService(new MIC_U::Interface);
-    AddService(new NS_S::Interface);
-    AddService(new NWM_UDS::Interface);
-    AddService(new PM_APP::Interface);
-    AddService(new SOC_U::Interface);
-    AddService(new SSL_C::Interface);
-    AddService(new Y2R_U::Interface);
+    AddService(new GSP::GSP_GPU);
+    AddService(new GSP::GSP_LCD);
+    AddService(new HTTP::HTTP_C);
+    AddService(new LDR::LDR_RO);
+    AddService(new MIC::MIC_U);
+    AddService(new NS::NS_S);
+    AddService(new NWM::NWM_UDS);
+    AddService(new PM::PM_APP);
+    AddService(new SOC::SOC_U);
+    AddService(new SSL::SSL_C);
+    AddService(new Y2R::Y2R_U);
 
     LOG_DEBUG(Service, "initialized OK");
 }

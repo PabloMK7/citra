@@ -4,10 +4,8 @@
 
 #include "core/hle/service/gsp_lcd.h"
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Namespace GSP_LCD
-
-namespace GSP_LCD {
+namespace Service {
+namespace GSP {
 
 const Interface::FunctionInfo FunctionTable[] = {
     // clang-format off
@@ -23,11 +21,9 @@ const Interface::FunctionInfo FunctionTable[] = {
     // clang-format on
 };
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Interface class
-
-Interface::Interface() {
+GSP_LCD::GSP_LCD() {
     Register(FunctionTable);
 }
 
-} // namespace
+} // namespace GSP
+} // namespace Service

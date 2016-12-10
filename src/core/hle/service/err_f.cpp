@@ -13,10 +13,8 @@
 #include "core/hle/result.h"
 #include "core/hle/service/err_f.h"
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Namespace ERR_F
-
-namespace ERR_F {
+namespace Service {
+namespace ERR {
 
 enum class FatalErrType : u32 {
     Generic = 0,
@@ -167,7 +165,7 @@ static void LogGenericInfo(const ErrInfo::ErrInfoCommon& errinfo_common) {
  *       0 : Header code
  *       1 : Result code
  */
-static void ThrowFatalError(Service::Interface* self) {
+static void ThrowFatalError(Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
     LOG_CRITICAL(Service_ERR, "Fatal error");
@@ -256,11 +254,9 @@ const Interface::FunctionInfo FunctionTable[] = {
     // clang-format on
 };
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Interface class
-
-Interface::Interface() {
+ERR_F::ERR_F() {
     Register(FunctionTable);
 }
 
-} // namespace
+} // namespace ERR
+} // namespace Service

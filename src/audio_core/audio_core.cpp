@@ -23,9 +23,9 @@ static constexpr u64 audio_frame_ticks = 1310252ull; ///< Units: ARM11 cycles
 static void AudioTickCallback(u64 /*userdata*/, int cycles_late) {
     if (DSP::HLE::Tick()) {
         // TODO(merry): Signal all the other interrupts as appropriate.
-        DSP_DSP::SignalPipeInterrupt(DSP::HLE::DspPipe::Audio);
+        Service::DSP_DSP::SignalPipeInterrupt(DSP::HLE::DspPipe::Audio);
         // HACK(merry): Added to prevent regressions. Will remove soon.
-        DSP_DSP::SignalPipeInterrupt(DSP::HLE::DspPipe::Binary);
+        Service::DSP_DSP::SignalPipeInterrupt(DSP::HLE::DspPipe::Binary);
     }
 
     // Reschedule recurrent event

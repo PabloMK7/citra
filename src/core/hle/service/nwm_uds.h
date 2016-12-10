@@ -6,21 +6,20 @@
 
 #include "core/hle/service/service.h"
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Namespace NWM_UDS
+// Local-WLAN service
 
-// local-WLAN service
+namespace Service {
+namespace NWM {
 
-namespace NWM_UDS {
-
-class Interface : public Service::Interface {
+class NWM_UDS final : public Interface {
 public:
-    Interface();
-    ~Interface() override;
+    NWM_UDS();
+    ~NWM_UDS() override;
 
     std::string GetPortName() const override {
         return "nwm::UDS";
     }
 };
 
-} // namespace
+} // namespace NWM
+} // namespace Service

@@ -13,12 +13,10 @@ enum class DspPipe;
 }
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Namespace DSP_DSP
-
+namespace Service {
 namespace DSP_DSP {
 
-class Interface : public Service::Interface {
+class Interface final : public Service::Interface {
 public:
     Interface();
     ~Interface() override;
@@ -35,3 +33,4 @@ public:
 void SignalPipeInterrupt(DSP::HLE::DspPipe pipe);
 
 } // namespace DSP_DSP
+} // namespace Service

@@ -6,14 +6,12 @@
 
 #include "core/hle/service/service.h"
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Namespace CSND_SND
+namespace Service {
+namespace CSND {
 
-namespace CSND_SND {
-
-class Interface : public Service::Interface {
+class CSND_SND final : public Interface {
 public:
-    Interface();
+    CSND_SND();
 
     std::string GetPortName() const override {
         return "csnd:SND";
@@ -28,9 +26,10 @@ struct Type0Command {
     u8 parameters[20];
 };
 
-void Initialize(Service::Interface* self);
-void ExecuteType0Commands(Service::Interface* self);
-void AcquireSoundChannels(Service::Interface* self);
-void Shutdown(Service::Interface* self);
+void Initialize(Interface* self);
+void ExecuteType0Commands(Interface* self);
+void AcquireSoundChannels(Interface* self);
+void Shutdown(Interface* self);
 
-} // namespace
+} // namespace CSND
+} // namespace Service

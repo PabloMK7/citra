@@ -6,15 +6,13 @@
 #include "common/common_types.h"
 #include "core/hle/service/ssl_c.h"
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Namespace SSL_C
-
-namespace SSL_C {
+namespace Service {
+namespace SSL {
 
 // TODO: Implement a proper CSPRNG in the future when actual security is needed
 static std::mt19937 rand_gen;
 
-static void Initialize(Service::Interface* self) {
+static void Initialize(Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
     // Seed random number generator when the SSL service is initialized
@@ -25,7 +23,7 @@ static void Initialize(Service::Interface* self) {
     cmd_buff[1] = RESULT_SUCCESS.raw;
 }
 
-static void GenerateRandomData(Service::Interface* self) {
+static void GenerateRandomData(Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
     u32 size = cmd_buff[1];
@@ -84,11 +82,9 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x001F0082, nullptr, "ContextInitSharedmem"},
 };
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Interface class
-
-Interface::Interface() {
+SSL_C::SSL_C() {
     Register(FunctionTable);
 }
 
-} // namespace
+} // namespace SSL_C
+} // namespace Service

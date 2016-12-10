@@ -104,7 +104,7 @@ static void AudioPipeWriteStructAddresses() {
         WriteU16(DspPipe::Audio, addr);
     }
     // Signal that we have data on this pipe.
-    DSP_DSP::SignalPipeInterrupt(DspPipe::Audio);
+    Service::DSP_DSP::SignalPipeInterrupt(DspPipe::Audio);
 }
 
 void PipeWrite(DspPipe pipe_number, const std::vector<u8>& buffer) {

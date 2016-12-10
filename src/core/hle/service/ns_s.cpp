@@ -4,10 +4,8 @@
 
 #include "core/hle/service/ns_s.h"
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Namespace NS_S
-
-namespace NS_S {
+namespace Service {
+namespace NS {
 
 const Interface::FunctionInfo FunctionTable[] = {
     {0x000100C0, nullptr, "LaunchFIRM"},
@@ -27,11 +25,9 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x00160000, nullptr, "RebootSystemClean"},
 };
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Interface class
-
-Interface::Interface() {
+NS_S::NS_S() {
     Register(FunctionTable);
 }
 
-} // namespace
+} // namespace NS
+} // namespace Service

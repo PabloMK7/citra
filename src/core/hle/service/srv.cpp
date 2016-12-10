@@ -7,9 +7,7 @@
 #include "core/hle/kernel/event.h"
 #include "core/hle/service/srv.h"
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Namespace SRV
-
+namespace Service {
 namespace SRV {
 
 static Kernel::SharedPtr<Kernel::Event> event_handle;
@@ -23,7 +21,7 @@ static Kernel::SharedPtr<Kernel::Event> event_handle;
  *      0: 0x00010040
  *      1: ResultCode
  */
-static void RegisterClient(Service::Interface* self) {
+static void RegisterClient(Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
     if (cmd_buff[1] != IPC::CallingPidDesc()) {
@@ -48,7 +46,7 @@ static void RegisterClient(Service::Interface* self) {
  *      2: Translation descriptor: 0x20
  *      3: Handle to semaphore signaled on process notification
  */
-static void EnableNotification(Service::Interface* self) {
+static void EnableNotification(Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
     // TODO(bunnei): Change to a semaphore once these have been implemented
@@ -73,7 +71,7 @@ static void EnableNotification(Service::Interface* self) {
  *      1: ResultCode
  *      3: Service handle
  */
-static void GetServiceHandle(Service::Interface* self) {
+static void GetServiceHandle(Interface* self) {
     ResultCode res = RESULT_SUCCESS;
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
@@ -99,7 +97,7 @@ static void GetServiceHandle(Service::Interface* self) {
  *      0: 0x00090040
  *      1: ResultCode
  */
-static void Subscribe(Service::Interface* self) {
+static void Subscribe(Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
     u32 notification_id = cmd_buff[1];
@@ -118,7 +116,7 @@ static void Subscribe(Service::Interface* self) {
  *      0: 0x000A0040
  *      1: ResultCode
  */
-static void Unsubscribe(Service::Interface* self) {
+static void Unsubscribe(Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
     u32 notification_id = cmd_buff[1];
@@ -138,7 +136,7 @@ static void Unsubscribe(Service::Interface* self) {
  *      0: 0x000C0040
  *      1: ResultCode
  */
-static void PublishToSubscriber(Service::Interface* self) {
+static void PublishToSubscriber(Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
     u32 notification_id = cmd_buff[1];
@@ -167,16 +165,14 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x000E00C0, nullptr, "IsServiceRegistered"},
 };
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Interface class
-
-Interface::Interface() {
+SRV::SRV() {
     Register(FunctionTable);
     event_handle = nullptr;
 }
 
-Interface::~Interface() {
+SRV::~SRV() {
     event_handle = nullptr;
 }
 
 } // namespace SRV
+} // namespace Service

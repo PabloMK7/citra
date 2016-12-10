@@ -11,10 +11,8 @@
 #include "core/hle/result.h"
 #include "core/memory.h"
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Namespace LDR_RO
-
-namespace LDR_RO {
+namespace Service {
+namespace LDR {
 
 // GCC versions < 5.0 do not implement std::is_trivially_copyable.
 // Excluding MSVC because it has weird behaviour for std::is_trivially_copyable.
@@ -710,4 +708,5 @@ private:
     ResultCode ApplyExitRelocations(VAddr crs_address);
 };
 
-} // namespace
+} // namespace LDR
+} // namespace Service

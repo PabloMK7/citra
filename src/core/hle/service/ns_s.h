@@ -6,19 +6,17 @@
 
 #include "core/hle/service/service.h"
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Namespace NS_S
+namespace Service {
+namespace NS {
 
-namespace NS_S {
-
-/// Interface to "NS:S" service
-class Interface : public Service::Interface {
+class NS_S final : public Interface {
 public:
-    Interface();
+    NS_S();
 
     std::string GetPortName() const override {
         return "ns:s";
     }
 };
 
-} // namespace
+} // namespace NS
+} // namespace Service

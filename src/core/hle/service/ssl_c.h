@@ -6,18 +6,17 @@
 
 #include "core/hle/service/service.h"
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Namespace SSL_C
+namespace Service {
+namespace SSL {
 
-namespace SSL_C {
-
-class Interface : public Service::Interface {
+class SSL_C final : public Interface {
 public:
-    Interface();
+    SSL_C();
 
     std::string GetPortName() const override {
         return "ssl:C";
     }
 };
 
-} // namespace
+} // namespace SSL
+} // namespace Service

@@ -18,7 +18,7 @@
 namespace HW {
 namespace Y2R {
 
-using namespace Y2R_U;
+using namespace Service::Y2R;
 
 static const size_t MAX_TILES = 1024 / 8;
 static const size_t TILE_SIZE = 8 * 8;

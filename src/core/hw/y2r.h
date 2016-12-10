@@ -2,13 +2,16 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-namespace Y2R_U {
+#pragma once
+
+namespace Service {
+namespace Y2R {
 struct ConversionConfiguration;
+}
 }
 
 namespace HW {
 namespace Y2R {
-
-void PerformConversion(Y2R_U::ConversionConfiguration& cvt);
+void PerformConversion(Service::Y2R::ConversionConfiguration& cvt);
 }
 }

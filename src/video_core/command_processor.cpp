@@ -68,7 +68,7 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
     switch (id) {
     // Trigger IRQ
     case PICA_REG_INDEX(trigger_irq):
-        GSP_GPU::SignalInterrupt(GSP_GPU::InterruptId::P3D);
+        Service::GSP::SignalInterrupt(Service::GSP::InterruptId::P3D);
         break;
 
     case PICA_REG_INDEX_WORKAROUND(triangle_topology, 0x25E):

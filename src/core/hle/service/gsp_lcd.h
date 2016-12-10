@@ -6,19 +6,17 @@
 
 #include "core/hle/service/service.h"
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Namespace GSP_LCD
+namespace Service {
+namespace GSP {
 
-namespace GSP_LCD {
-
-/// Interface to "gsp::Lcd" service
-class Interface : public Service::Interface {
+class GSP_LCD final : public Interface {
 public:
-    Interface();
+    GSP_LCD();
 
     std::string GetPortName() const override {
         return "gsp::Lcd";
     }
 };
 
-} // namespace
+} // namespace GSP
+} // namespace Service

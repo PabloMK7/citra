@@ -6,10 +6,8 @@
 #include "common/assert.h"
 #include "core/hle/service/ldr_ro/memory_synchronizer.h"
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Namespace LDR_RO
-
-namespace LDR_RO {
+namespace Service {
+namespace LDR {
 
 auto MemorySynchronizer::FindMemoryBlock(VAddr mapping, VAddr original) {
     auto block = std::find_if(memory_blocks.begin(), memory_blocks.end(),
@@ -40,4 +38,5 @@ void MemorySynchronizer::SynchronizeOriginalMemory() {
     }
 }
 
-} // namespace
+} // namespace LDR
+} // namespace Service

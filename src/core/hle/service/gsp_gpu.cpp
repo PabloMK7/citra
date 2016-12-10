@@ -18,13 +18,11 @@
 // Main graphics debugger object - TODO: Here is probably not the best place for this
 GraphicsDebugger g_debugger;
 
+namespace Service {
+namespace GSP {
+
 // Beginning address of HW regs
-const static u32 REGS_BEGIN = 0x1EB00000;
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Namespace GSP_GPU
-
-namespace GSP_GPU {
+const u32 REGS_BEGIN = 0x1EB00000;
 
 const ResultCode ERR_GSP_REGS_OUTOFRANGE_OR_MISALIGNED(
     ErrorDescription::OutofRangeOrMisalignedAddress, ErrorModule::GX, ErrorSummary::InvalidArgument,
@@ -179,7 +177,7 @@ static ResultCode WriteHWRegsWithMask(u32 base_address, u32 size_in_bytes, VAddr
  *      2 : number of registers to write sequentially
  *      4 : pointer to source data array
  */
-static void WriteHWRegs(Service::Interface* self) {
+static void WriteHWRegs(Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
     u32 reg_addr = cmd_buff[1];
     u32 size = cmd_buff[2];
@@ -199,7 +197,7 @@ static void WriteHWRegs(Service::Interface* self) {
  *      4 : pointer to source data array
  *      6 : pointer to mask array
  */
-static void WriteHWRegsWithMask(Service::Interface* self) {
+static void WriteHWRegsWithMask(Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
     u32 reg_addr = cmd_buff[1];
     u32 size = cmd_buff[2];
@@ -211,7 +209,7 @@ static void WriteHWRegsWithMask(Service::Interface* self) {
 }
 
 /// Read a GSP GPU hardware register
-static void ReadHWRegs(Service::Interface* self) {
+static void ReadHWRegs(Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
     u32 reg_addr = cmd_buff[1];
     u32 size = cmd_buff[2];
@@ -298,7 +296,7 @@ ResultCode SetBufferSwap(u32 screen_id, const FrameBufferInfo& info) {
  *  Outputs:
  *      1: Result code
  */
-static void SetBufferSwap(Service::Interface* self) {
+static void SetBufferSwap(Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
     u32 screen_id = cmd_buff[1];
     FrameBufferInfo* fb_info = (FrameBufferInfo*)&cmd_buff[2];
@@ -319,7 +317,7 @@ static void SetBufferSwap(Service::Interface* self) {
  *  Outputs:
  *      1 : Result of function, 0 on success, otherwise error code
  */
-static void FlushDataCache(Service::Interface* self) {
+static void FlushDataCache(Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
     u32 address = cmd_buff[1];
     u32 size = cmd_buff[2];
@@ -340,7 +338,7 @@ static void FlushDataCache(Service::Interface* self) {
  *  Outputs:
  *      1 : Result of function, 0 on success, otherwise error code
  */
-static void SetAxiConfigQoSMode(Service::Interface* self) {
+static void SetAxiConfigQoSMode(Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
     u32 mode = cmd_buff[1];
 
@@ -359,7 +357,7 @@ static void SetAxiConfigQoSMode(Service::Interface* self) {
  *      2 : Thread index into GSP command buffer
  *      4 : Handle to GSP shared memory
  */
-static void RegisterInterruptRelayQueue(Service::Interface* self) {
+static void RegisterInterruptRelayQueue(Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
     u32 flags = cmd_buff[1];
 
@@ -391,7 +389,7 @@ static void RegisterInterruptRelayQueue(Service::Interface* self) {
  *  Outputs:
  *      1 : Result of function, 0 on success, otherwise error code
  */
-static void UnregisterInterruptRelayQueue(Service::Interface* self) {
+static void UnregisterInterruptRelayQueue(Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
     g_thread_id = 0;
@@ -592,7 +590,7 @@ static void ExecuteCommand(const Command& command, u32 thread_id) {
  *  Outputs:
  *      1: Result code
  */
-static void SetLcdForceBlack(Service::Interface* self) {
+static void SetLcdForceBlack(Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
     bool enable_black = cmd_buff[1] != 0;
@@ -609,7 +607,7 @@ static void SetLcdForceBlack(Service::Interface* self) {
 }
 
 /// This triggers handling of the GX command written to the command buffer in shared memory.
-static void TriggerCmdReqQueue(Service::Interface* self) {
+static void TriggerCmdReqQueue(Interface* self) {
     // Iterate through each thread's command queue...
     for (unsigned thread_id = 0; thread_id < 0x4; ++thread_id) {
         CommandBuffer* command_buffer = (CommandBuffer*)GetCommandBuffer(thread_id);
@@ -648,7 +646,7 @@ static void TriggerCmdReqQueue(Service::Interface* self) {
  *      8: Bottom screen framebuffer format
  *      9: Bottom screen framebuffer width
  */
-static void ImportDisplayCaptureInfo(Service::Interface* self) {
+static void ImportDisplayCaptureInfo(Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
     // TODO(Subv): We're always returning the framebuffer structures for thread_id = 0,
@@ -680,7 +678,7 @@ static void ImportDisplayCaptureInfo(Service::Interface* self) {
  *  Outputs:
  *      1: Result code
  */
-static void AcquireRight(Service::Interface* self) {
+static void AcquireRight(Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
     gpu_right_acquired = true;
@@ -695,7 +693,7 @@ static void AcquireRight(Service::Interface* self) {
  *  Outputs:
  *      1: Result code
  */
-static void ReleaseRight(Service::Interface* self) {
+static void ReleaseRight(Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
     gpu_right_acquired = false;
@@ -739,10 +737,7 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x001F0082, nullptr, "StoreDataCache"},
 };
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Interface class
-
-Interface::Interface() {
+GSP_GPU::GSP_GPU() {
     Register(FunctionTable);
 
     g_interrupt_event = nullptr;
@@ -757,10 +752,11 @@ Interface::Interface() {
     first_initialization = true;
 }
 
-Interface::~Interface() {
+GSP_GPU::~GSP_GPU() {
     g_interrupt_event = nullptr;
     g_shared_memory = nullptr;
     gpu_right_acquired = false;
 }
 
-} // namespace
+} // namespace GSP
+} // namespace Service

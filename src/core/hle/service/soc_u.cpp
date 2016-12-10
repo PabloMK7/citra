@@ -53,12 +53,10 @@
 #define closesocket(x) close(x)
 #endif
 
-static const s32 SOCKET_ERROR_VALUE = -1;
+namespace Service {
+namespace SOC {
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Namespace SOC_U
-
-namespace SOC_U {
+const s32 SOCKET_ERROR_VALUE = -1;
 
 /// Holds the translation from system network errors to 3DS network errors
 static const std::unordered_map<int, int> error_map = {{
@@ -339,7 +337,7 @@ static void CleanupSockets() {
     open_sockets.clear();
 }
 
-static void Socket(Service::Interface* self) {
+static void Socket(Interface* self) {
     u32* cmd_buffer = Kernel::GetCommandBuffer();
     u32 domain = cmd_buffer[1]; // Address family
     u32 type = cmd_buffer[2];
@@ -378,7 +376,7 @@ static void Socket(Service::Interface* self) {
     cmd_buffer[2] = socket_handle;
 }
 
-static void Bind(Service::Interface* self) {
+static void Bind(Interface* self) {
     u32* cmd_buffer = Kernel::GetCommandBuffer();
     u32 socket_handle = cmd_buffer[1];
     u32 len = cmd_buffer[2];
@@ -406,7 +404,7 @@ static void Bind(Service::Interface* self) {
     cmd_buffer[2] = res;
 }
 
-static void Fcntl(Service::Interface* self) {
+static void Fcntl(Interface* self) {
     u32* cmd_buffer = Kernel::GetCommandBuffer();
     u32 socket_handle = cmd_buffer[1];
     u32 ctr_cmd = cmd_buffer[2];
@@ -475,7 +473,7 @@ static void Fcntl(Service::Interface* self) {
     }
 }
 
-static void Listen(Service::Interface* self) {
+static void Listen(Interface* self) {
     u32* cmd_buffer = Kernel::GetCommandBuffer();
     u32 socket_handle = cmd_buffer[1];
     u32 backlog = cmd_buffer[2];
@@ -490,7 +488,7 @@ static void Listen(Service::Interface* self) {
     cmd_buffer[2] = ret;
 }
 
-static void Accept(Service::Interface* self) {
+static void Accept(Interface* self) {
     // TODO(Subv): Calling this function on a blocking socket will block the emu thread,
     // preventing graceful shutdown when closing the emulator, this can be fixed by always
     // performing nonblocking operations and spinlock until the data is available
@@ -518,7 +516,7 @@ static void Accept(Service::Interface* self) {
     cmd_buffer[3] = IPC::StaticBufferDesc(static_cast<u32>(max_addr_len), 0);
 }
 
-static void GetHostId(Service::Interface* self) {
+static void GetHostId(Interface* self) {
     u32* cmd_buffer = Kernel::GetCommandBuffer();
 
     char name[128];
@@ -536,7 +534,7 @@ static void GetHostId(Service::Interface* self) {
     freeaddrinfo(res);
 }
 
-static void Close(Service::Interface* self) {
+static void Close(Interface* self) {
     u32* cmd_buffer = Kernel::GetCommandBuffer();
     u32 socket_handle = cmd_buffer[1];
 
@@ -553,7 +551,7 @@ static void Close(Service::Interface* self) {
     cmd_buffer[1] = result;
 }
 
-static void SendTo(Service::Interface* self) {
+static void SendTo(Interface* self) {
     u32* cmd_buffer = Kernel::GetCommandBuffer();
     u32 socket_handle = cmd_buffer[1];
     u32 len = cmd_buffer[2];
@@ -597,7 +595,7 @@ static void SendTo(Service::Interface* self) {
     cmd_buffer[1] = result;
 }
 
-static void RecvFrom(Service::Interface* self) {
+static void RecvFrom(Interface* self) {
     // TODO(Subv): Calling this function on a blocking socket will block the emu thread,
     // preventing graceful shutdown when closing the emulator, this can be fixed by always
     // performing nonblocking operations and spinlock until the data is available
@@ -654,7 +652,7 @@ static void RecvFrom(Service::Interface* self) {
     cmd_buffer[3] = total_received;
 }
 
-static void Poll(Service::Interface* self) {
+static void Poll(Interface* self) {
     u32* cmd_buffer = Kernel::GetCommandBuffer();
     u32 nfds = cmd_buffer[1];
     int timeout = cmd_buffer[2];
@@ -692,7 +690,7 @@ static void Poll(Service::Interface* self) {
     cmd_buffer[2] = ret;
 }
 
-static void GetSockName(Service::Interface* self) {
+static void GetSockName(Interface* self) {
     u32* cmd_buffer = Kernel::GetCommandBuffer();
     u32 socket_handle = cmd_buffer[1];
     socklen_t ctr_len = cmd_buffer[2];
@@ -720,7 +718,7 @@ static void GetSockName(Service::Interface* self) {
     cmd_buffer[1] = result;
 }
 
-static void Shutdown(Service::Interface* self) {
+static void Shutdown(Interface* self) {
     u32* cmd_buffer = Kernel::GetCommandBuffer();
     u32 socket_handle = cmd_buffer[1];
     int how = cmd_buffer[2];
@@ -733,7 +731,7 @@ static void Shutdown(Service::Interface* self) {
     cmd_buffer[1] = result;
 }
 
-static void GetPeerName(Service::Interface* self) {
+static void GetPeerName(Interface* self) {
     u32* cmd_buffer = Kernel::GetCommandBuffer();
     u32 socket_handle = cmd_buffer[1];
     socklen_t len = cmd_buffer[2];
@@ -761,7 +759,7 @@ static void GetPeerName(Service::Interface* self) {
     cmd_buffer[1] = result;
 }
 
-static void Connect(Service::Interface* self) {
+static void Connect(Interface* self) {
     // TODO(Subv): Calling this function on a blocking socket will block the emu thread,
     // preventing graceful shutdown when closing the emulator, this can be fixed by always
     // performing nonblocking operations and spinlock until the data is available
@@ -790,7 +788,7 @@ static void Connect(Service::Interface* self) {
     cmd_buffer[2] = ret;
 }
 
-static void InitializeSockets(Service::Interface* self) {
+static void InitializeSockets(Interface* self) {
 // TODO(Subv): Implement
 #ifdef _WIN32
     WSADATA data;
@@ -802,7 +800,7 @@ static void InitializeSockets(Service::Interface* self) {
     cmd_buffer[1] = RESULT_SUCCESS.raw;
 }
 
-static void ShutdownSockets(Service::Interface* self) {
+static void ShutdownSockets(Interface* self) {
     // TODO(Subv): Implement
     CleanupSockets();
 
@@ -814,7 +812,7 @@ static void ShutdownSockets(Service::Interface* self) {
     cmd_buffer[1] = 0;
 }
 
-static void GetSockOpt(Service::Interface* self) {
+static void GetSockOpt(Interface* self) {
     u32* cmd_buffer = Kernel::GetCommandBuffer();
     u32 socket_handle = cmd_buffer[1];
     u32 level = cmd_buffer[2];
@@ -849,7 +847,7 @@ static void GetSockOpt(Service::Interface* self) {
     cmd_buffer[3] = optlen;
 }
 
-static void SetSockOpt(Service::Interface* self) {
+static void SetSockOpt(Interface* self) {
     u32* cmd_buffer = Kernel::GetCommandBuffer();
     u32 socket_handle = cmd_buffer[1];
     u32 level = cmd_buffer[2];
@@ -916,18 +914,16 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x00230040, nullptr, "AddGlobalSocket"},
 };
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Interface class
-
-Interface::Interface() {
+SOC_U::SOC_U() {
     Register(FunctionTable);
 }
 
-Interface::~Interface() {
+SOC_U::~SOC_U() {
     CleanupSockets();
 #ifdef _WIN32
     WSACleanup();
 #endif
 }
 
-} // namespace
+} // namespace SOC
+} // namespace Service

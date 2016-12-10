@@ -6,18 +6,17 @@
 
 #include "core/hle/service/service.h"
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Namespace LDR_RO
+namespace Service {
+namespace LDR {
 
-namespace LDR_RO {
-
-class Interface : public Service::Interface {
+class LDR_RO final : public Interface {
 public:
-    Interface();
+    LDR_RO();
 
     std::string GetPortName() const override {
         return "ldr:ro";
     }
 };
 
-} // namespace
+} // namespace LDR
+} // namespace Service

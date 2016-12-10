@@ -12,10 +12,8 @@
 #include "core/hle/service/ldr_ro/ldr_ro.h"
 #include "core/hle/service/ldr_ro/memory_synchronizer.h"
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Namespace LDR_RO
-
-namespace LDR_RO {
+namespace Service {
+namespace LDR {
 
 static const ResultCode ERROR_ALREADY_INITIALIZED = // 0xD9612FF9
     ResultCode(ErrorDescription::AlreadyInitialized, ErrorModule::RO, ErrorSummary::Internal,
@@ -71,7 +69,7 @@ static bool VerifyBufferState(VAddr buffer_ptr, u32 size) {
  *      0 : Return header
  *      1 : Result of function, 0 on success, otherwise error code
  */
-static void Initialize(Service::Interface* self) {
+static void Initialize(Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
     VAddr crs_buffer_ptr = cmd_buff[1];
     u32 crs_size = cmd_buff[2];
@@ -196,7 +194,7 @@ static void Initialize(Service::Interface* self) {
  *      0 : Return header
  *      1 : Result of function, 0 on success, otherwise error code
  */
-static void LoadCRR(Service::Interface* self) {
+static void LoadCRR(Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
     u32 crr_buffer_ptr = cmd_buff[1];
     u32 crr_size = cmd_buff[2];
@@ -229,7 +227,7 @@ static void LoadCRR(Service::Interface* self) {
  *      0 : Return header
  *      1 : Result of function, 0 on success, otherwise error code
  */
-static void UnloadCRR(Service::Interface* self) {
+static void UnloadCRR(Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
     u32 crr_buffer_ptr = cmd_buff[1];
     u32 descriptor = cmd_buff[2];
@@ -276,7 +274,7 @@ static void UnloadCRR(Service::Interface* self) {
  *      unified one of two, with an additional parameter link_on_load_bug_fix.
  *      There is a dispatcher template below.
  */
-static void LoadCRO(Service::Interface* self, bool link_on_load_bug_fix) {
+static void LoadCRO(Interface* self, bool link_on_load_bug_fix) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
     VAddr cro_buffer_ptr = cmd_buff[1];
     VAddr cro_address = cmd_buff[2];
@@ -469,7 +467,7 @@ static void LoadCRO(Service::Interface* self, bool link_on_load_bug_fix) {
 }
 
 template <bool link_on_load_bug_fix>
-static void LoadCRO(Service::Interface* self) {
+static void LoadCRO(Interface* self) {
     LoadCRO(self, link_on_load_bug_fix);
 }
 
@@ -486,7 +484,7 @@ static void LoadCRO(Service::Interface* self) {
  *      0 : Return header
  *      1 : Result of function, 0 on success, otherwise error code
  */
-static void UnloadCRO(Service::Interface* self) {
+static void UnloadCRO(Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
     VAddr cro_address = cmd_buff[1];
     u32 zero = cmd_buff[2];
@@ -580,7 +578,7 @@ static void UnloadCRO(Service::Interface* self) {
  *      0 : Return header
  *      1 : Result of function, 0 on success, otherwise error code
  */
-static void LinkCRO(Service::Interface* self) {
+static void LinkCRO(Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
     VAddr cro_address = cmd_buff[1];
     u32 descriptor = cmd_buff[2];
@@ -642,7 +640,7 @@ static void LinkCRO(Service::Interface* self) {
  *      0 : Return header
  *      1 : Result of function, 0 on success, otherwise error code
  */
-static void UnlinkCRO(Service::Interface* self) {
+static void UnlinkCRO(Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
     VAddr cro_address = cmd_buff[1];
     u32 descriptor = cmd_buff[2];
@@ -704,7 +702,7 @@ static void UnlinkCRO(Service::Interface* self) {
  *      0 : Return header
  *      1 : Result of function, 0 on success, otherwise error code
  */
-static void Shutdown(Service::Interface* self) {
+static void Shutdown(Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
     VAddr crs_buffer_ptr = cmd_buff[1];
     u32 descriptor = cmd_buff[2];
@@ -762,14 +760,12 @@ const Interface::FunctionInfo FunctionTable[] = {
     // clang-format on
 };
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Interface class
-
-Interface::Interface() {
+LDR_RO::LDR_RO() {
     Register(FunctionTable);
 
     loaded_crs = 0;
     memory_synchronizer.Clear();
 }
 
-} // namespace
+} // namespace LDR
+} // namespace Service

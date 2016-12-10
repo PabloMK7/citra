@@ -430,9 +430,9 @@ inline void Write(u32 addr, const T data) {
             // TODO: hwtest this
             if (config.GetStartAddress() != 0) {
                 if (!is_second_filler) {
-                    GSP_GPU::SignalInterrupt(GSP_GPU::InterruptId::PSC0);
+                    Service::GSP::SignalInterrupt(Service::GSP::InterruptId::PSC0);
                 } else {
-                    GSP_GPU::SignalInterrupt(GSP_GPU::InterruptId::PSC1);
+                    Service::GSP::SignalInterrupt(Service::GSP::InterruptId::PSC1);
                 }
             }
 
@@ -473,7 +473,7 @@ inline void Write(u32 addr, const T data) {
             }
 
             g_regs.display_transfer_config.trigger = 0;
-            GSP_GPU::SignalInterrupt(GSP_GPU::InterruptId::PPF);
+            Service::GSP::SignalInterrupt(Service::GSP::InterruptId::PPF);
         }
         break;
     }
@@ -548,8 +548,8 @@ static void VBlankCallback(u64 userdata, int cycles_late) {
     // screen, or if both use the same interrupts and these two instead determine the
     // beginning and end of the VBlank period. If needed, split the interrupt firing into
     // two different intervals.
-    GSP_GPU::SignalInterrupt(GSP_GPU::InterruptId::PDC0);
-    GSP_GPU::SignalInterrupt(GSP_GPU::InterruptId::PDC1);
+    Service::GSP::SignalInterrupt(Service::GSP::InterruptId::PDC0);
+    Service::GSP::SignalInterrupt(Service::GSP::InterruptId::PDC1);
 
     // Check for user input updates
     Service::HID::Update();

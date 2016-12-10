@@ -7,19 +7,18 @@
 #include <string>
 #include "core/hle/service/service.h"
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Namespace SOC_U
+namespace Service {
+namespace SOC {
 
-namespace SOC_U {
-
-class Interface : public Service::Interface {
+class SOC_U final : public Interface {
 public:
-    Interface();
-    ~Interface();
+    SOC_U();
+    ~SOC_U();
 
     std::string GetPortName() const override {
         return "soc:U";
     }
 };
 
-} // namespace
+} // namespace SOC
+} // namespace Service

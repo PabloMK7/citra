@@ -6,21 +6,18 @@
 
 #include "core/hle/service/service.h"
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Namespace AC_U
+namespace Service {
+namespace AC {
 
-// socket service "ac:u"
-
-namespace AC_U {
-
-class Interface : public Service::Interface {
+class AC_U final : public Interface {
 public:
-    Interface();
-    ~Interface();
+    AC_U();
+    ~AC_U();
 
     std::string GetPortName() const override {
         return "ac:u";
     }
 };
 
-} // namespace
+} // namespace AC
+} // namespace Service

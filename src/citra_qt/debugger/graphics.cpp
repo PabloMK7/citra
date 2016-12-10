@@ -22,15 +22,15 @@ QVariant GPUCommandStreamItemModel::data(const QModelIndex& index, int role) con
         return QVariant();
 
     int command_index = index.row();
-    const GSP_GPU::Command& command = GetDebugger()->ReadGXCommandHistory(command_index);
+    const Service::GSP::Command& command = GetDebugger()->ReadGXCommandHistory(command_index);
     if (role == Qt::DisplayRole) {
-        std::map<GSP_GPU::CommandId, const char*> command_names = {
-            {GSP_GPU::CommandId::REQUEST_DMA, "REQUEST_DMA"},
-            {GSP_GPU::CommandId::SUBMIT_GPU_CMDLIST, "SUBMIT_GPU_CMDLIST"},
-            {GSP_GPU::CommandId::SET_MEMORY_FILL, "SET_MEMORY_FILL"},
-            {GSP_GPU::CommandId::SET_DISPLAY_TRANSFER, "SET_DISPLAY_TRANSFER"},
-            {GSP_GPU::CommandId::SET_TEXTURE_COPY, "SET_TEXTURE_COPY"},
-            {GSP_GPU::CommandId::CACHE_FLUSH, "CACHE_FLUSH"},
+        std::map<Service::GSP::CommandId, const char*> command_names = {
+            {Service::GSP::CommandId::REQUEST_DMA, "REQUEST_DMA"},
+            {Service::GSP::CommandId::SUBMIT_GPU_CMDLIST, "SUBMIT_GPU_CMDLIST"},
+            {Service::GSP::CommandId::SET_MEMORY_FILL, "SET_MEMORY_FILL"},
+            {Service::GSP::CommandId::SET_DISPLAY_TRANSFER, "SET_DISPLAY_TRANSFER"},
+            {Service::GSP::CommandId::SET_TEXTURE_COPY, "SET_TEXTURE_COPY"},
+            {Service::GSP::CommandId::CACHE_FLUSH, "CACHE_FLUSH"},
         };
         const u32* command_data = reinterpret_cast<const u32*>(&command);
         QString str = QString("%1 %2 %3 %4 %5 %6 %7 %8 %9")

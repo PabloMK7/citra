@@ -10,10 +10,8 @@
 #include "core/hle/result.h"
 #include "core/hle/service/service.h"
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Namespace Y2R_U
-
-namespace Y2R_U {
+namespace Service {
+namespace Y2R {
 
 enum class InputFormat : u8 {
     /// 8-bit input, with YUV components in separate planes and 4:2:2 subsampling.
@@ -127,14 +125,15 @@ struct DitheringWeightParams {
     u16 w3_xOdd_yOdd;
 };
 
-class Interface : public Service::Interface {
+class Y2R_U final : public Interface {
 public:
-    Interface();
-    ~Interface() override;
+    Y2R_U();
+    ~Y2R_U() override;
 
     std::string GetPortName() const override {
         return "y2r:u";
     }
 };
 
-} // namespace
+} // namespace Y2R
+} // namespace Service

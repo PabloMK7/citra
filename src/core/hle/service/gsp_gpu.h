@@ -11,10 +11,8 @@
 #include "core/hle/result.h"
 #include "core/hle/service/service.h"
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Namespace GSP_GPU
-
-namespace GSP_GPU {
+namespace Service {
+namespace GSP {
 
 /// GSP interrupt ID
 enum class InterruptId : u8 {
@@ -176,11 +174,10 @@ struct CommandBuffer {
 };
 static_assert(sizeof(CommandBuffer) == 0x200, "CommandBuffer struct has incorrect size");
 
-/// Interface to "srv:" service
-class Interface : public Service::Interface {
+class GSP_GPU final : public Interface {
 public:
-    Interface();
-    ~Interface() override;
+    GSP_GPU();
+    ~GSP_GPU() override;
 
     std::string GetPortName() const override {
         return "gsp::Gpu";
@@ -203,4 +200,6 @@ ResultCode SetBufferSwap(u32 screen_id, const FrameBufferInfo& info);
  * @returns FramebufferUpdate Information about the specified framebuffer.
  */
 FrameBufferUpdate* GetFrameBufferInfo(u32 thread_id, u32 screen_index);
-} // namespace
+
+} // namespace GSP
+} // namespace Service

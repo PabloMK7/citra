@@ -6,18 +6,17 @@
 
 #include "core/hle/service/service.h"
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Namespace PM_APP
+namespace Service {
+namespace PM {
 
-namespace PM_APP {
-
-class Interface : public Service::Interface {
+class PM_APP final : public Interface {
 public:
-    Interface();
+    PM_APP();
 
     std::string GetPortName() const override {
         return "pm:app";
     }
 };
 
-} // namespace
+} // namespace PM
+} // namespace Service

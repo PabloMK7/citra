@@ -94,13 +94,13 @@ void SoftwareKeyboard::Update() {
 }
 
 void SoftwareKeyboard::DrawScreenKeyboard() {
-    auto bottom_screen = GSP_GPU::GetFrameBufferInfo(0, 1);
+    auto bottom_screen = Service::GSP::GetFrameBufferInfo(0, 1);
     auto info = bottom_screen->framebuffer_info[bottom_screen->index];
 
     // TODO(Subv): Draw the HLE keyboard, for now just zero-fill the framebuffer
     Memory::ZeroBlock(info.address_left, info.stride * 320);
 
-    GSP_GPU::SetBufferSwap(1, info);
+    Service::GSP::SetBufferSwap(1, info);
 }
 
 void SoftwareKeyboard::Finalize() {

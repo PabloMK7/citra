@@ -7,10 +7,8 @@
 #include <vector>
 #include "core/memory.h"
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Namespace LDR_RO
-
-namespace LDR_RO {
+namespace Service {
+namespace LDR {
 
 /**
  * This is a work-around before we implement memory aliasing.
@@ -40,4 +38,5 @@ private:
     auto FindMemoryBlock(VAddr mapping, VAddr original);
 };
 
-} // namespace
+} // namespace LDR
+} // namespace Service

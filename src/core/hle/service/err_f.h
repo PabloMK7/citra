@@ -6,18 +6,17 @@
 
 #include "core/hle/service/service.h"
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Namespace ERR_F
+namespace Service {
+namespace ERR {
 
-namespace ERR_F {
-
-class Interface : public Service::Interface {
+class ERR_F final : public Interface {
 public:
-    Interface();
+    ERR_F();
 
     std::string GetPortName() const override {
         return "err:f";
     }
 };
 
-} // namespace
+} // namespace ERR
+} // namespace Service

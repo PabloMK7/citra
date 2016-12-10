@@ -4,10 +4,8 @@
 
 #include "core/hle/service/act_a.h"
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Namespace ACT_A
-
-namespace ACT_A {
+namespace Service {
+namespace ACT {
 
 const Interface::FunctionInfo FunctionTable[] = {
     // act:u shared commands
@@ -23,11 +21,9 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x04230082, nullptr, "ValidateMailAddress"},
 };
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Interface class
-
-Interface::Interface() {
+ACT_A::ACT_A() {
     Register(FunctionTable);
 }
 
-} // namespace
+} // namespace ACT
+} // namespace Service

@@ -7,10 +7,8 @@
 #include "common/scope_exit.h"
 #include "core/hle/service/ldr_ro/cro_helper.h"
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Namespace LDR_RO
-
-namespace LDR_RO {
+namespace Service {
+namespace LDR {
 
 static const ResultCode ERROR_BUFFER_TOO_SMALL = // 0xE0E12C1F
     ResultCode(static_cast<ErrorDescription>(31), ErrorModule::RO, ErrorSummary::InvalidArgument,
@@ -1493,4 +1491,5 @@ std::tuple<VAddr, u32> CROHelper::GetExecutablePages() const {
     return std::make_tuple(0, 0);
 }
 
-} // namespace
+} // namespace LDR
+} // namespace Service

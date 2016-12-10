@@ -12,9 +12,7 @@
 
 using DspPipe = DSP::HLE::DspPipe;
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Namespace DSP_DSP
-
+namespace Service {
 namespace DSP_DSP {
 
 static Kernel::SharedPtr<Kernel::Event> semaphore_event;
@@ -582,4 +580,5 @@ Interface::~Interface() {
     interrupt_events = {};
 }
 
-} // namespace
+} // namespace DSP_DSP
+} // namespace Service

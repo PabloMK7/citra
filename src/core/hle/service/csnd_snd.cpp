@@ -9,10 +9,8 @@
 #include "core/hle/kernel/shared_memory.h"
 #include "core/hle/service/csnd_snd.h"
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Namespace CSND_SND
-
-namespace CSND_SND {
+namespace Service {
+namespace CSND {
 
 const Interface::FunctionInfo FunctionTable[] = {
     {0x00010140, Initialize, "Initialize"},
@@ -29,17 +27,14 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x000C0000, nullptr, "Reset"},
 };
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Interface class
-
-Interface::Interface() {
+CSND_SND::CSND_SND() {
     Register(FunctionTable);
 }
 
 static Kernel::SharedPtr<Kernel::SharedMemory> shared_memory = nullptr;
 static Kernel::SharedPtr<Kernel::Mutex> mutex = nullptr;
 
-void Initialize(Service::Interface* self) {
+void Initialize(Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
     u32 size = Common::AlignUp(cmd_buff[1], Memory::PAGE_SIZE);
@@ -56,7 +51,7 @@ void Initialize(Service::Interface* self) {
     cmd_buff[4] = Kernel::g_handle_table.Create(shared_memory).MoveFrom();
 }
 
-void ExecuteType0Commands(Service::Interface* self) {
+void ExecuteType0Commands(Interface* self) {
     u32* const cmd_buff = Kernel::GetCommandBuffer();
     u8* const ptr = shared_memory->GetPointer(cmd_buff[1]);
 
@@ -74,15 +69,16 @@ void ExecuteType0Commands(Service::Interface* self) {
     }
 }
 
-void AcquireSoundChannels(Service::Interface* self) {
+void AcquireSoundChannels(Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
     cmd_buff[1] = 0;
     cmd_buff[2] = 0xFFFFFF00;
 }
 
-void Shutdown(Service::Interface* self) {
+void Shutdown(Interface* self) {
     shared_memory = nullptr;
     mutex = nullptr;
 }
 
-} // namespace
+} // namespace CSND
+} // namespace Service

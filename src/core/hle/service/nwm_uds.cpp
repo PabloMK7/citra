@@ -7,10 +7,8 @@
 #include "core/hle/kernel/event.h"
 #include "core/hle/service/nwm_uds.h"
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Namespace NWM_UDS
-
-namespace NWM_UDS {
+namespace Service {
+namespace NWM {
 
 static Kernel::SharedPtr<Kernel::Event> handle_event;
 
@@ -22,7 +20,7 @@ static Kernel::SharedPtr<Kernel::Event> handle_event;
  *      0 : Return header
  *      1 : Result of function, 0 on success, otherwise error code
  */
-static void Shutdown(Service::Interface* self) {
+static void Shutdown(Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
     // TODO(purpasmart): Verify return header on HW
@@ -50,7 +48,7 @@ static void Shutdown(Service::Interface* self) {
  *      0 : Return header
  *      1 : Result of function, 0 on success, otherwise error code
  */
-static void RecvBeaconBroadcastData(Service::Interface* self) {
+static void RecvBeaconBroadcastData(Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
     u32 out_buffer_size = cmd_buff[1];
     u32 unk1 = cmd_buff[2];
@@ -90,7 +88,7 @@ static void RecvBeaconBroadcastData(Service::Interface* self) {
  *      2 : Value 0
  *      3 : Output handle
  */
-static void InitializeWithVersion(Service::Interface* self) {
+static void InitializeWithVersion(Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
     u32 unk1 = cmd_buff[1];
     u32 unk2 = cmd_buff[12];
@@ -148,17 +146,15 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x00220402, nullptr, "ScanOnConnection"},
 };
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Interface class
-
-Interface::Interface() {
+NWM_UDS::NWM_UDS() {
     handle_event = Kernel::Event::Create(Kernel::ResetType::OneShot, "NWM_UDS::handle_event");
 
     Register(FunctionTable);
 }
 
-Interface::~Interface() {
+NWM_UDS::~NWM_UDS() {
     handle_event = nullptr;
 }
 
-} // namespace
+} // namespace NWM
+} // namespace Service

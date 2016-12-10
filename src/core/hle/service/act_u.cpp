@@ -4,10 +4,8 @@
 
 #include "core/hle/service/act_u.h"
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Namespace ACT_U
-
-namespace ACT_U {
+namespace Service {
+namespace ACT {
 
 const Interface::FunctionInfo FunctionTable[] = {
     // clang-format off
@@ -19,11 +17,9 @@ const Interface::FunctionInfo FunctionTable[] = {
     // clang-format on
 };
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Interface class
-
-Interface::Interface() {
+ACT_U::ACT_U() {
     Register(FunctionTable);
 }
 
-} // namespace
+} // namespace ACT
+} // namespace Service
