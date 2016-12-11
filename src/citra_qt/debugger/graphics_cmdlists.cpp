@@ -21,7 +21,8 @@
 #include "video_core/pica.h"
 #include "video_core/pica_state.h"
 
-QImage LoadTexture(u8* src, const Pica::DebugUtils::TextureInfo& info) {
+namespace {
+QImage LoadTexture(const u8* src, const Pica::DebugUtils::TextureInfo& info) {
     QImage decoded_image(info.width, info.height, QImage::Format_ARGB32);
     for (int y = 0; y < info.height; ++y) {
         for (int x = 0; x < info.width; ++x) {
@@ -35,7 +36,8 @@ QImage LoadTexture(u8* src, const Pica::DebugUtils::TextureInfo& info) {
 
 class TextureInfoWidget : public QWidget {
 public:
-    TextureInfoWidget(u8* src, const Pica::DebugUtils::TextureInfo& info, QWidget* parent = nullptr)
+    TextureInfoWidget(const u8* src, const Pica::DebugUtils::TextureInfo& info,
+                      QWidget* parent = nullptr)
         : QWidget(parent) {
         QLabel* image_widget = new QLabel;
         QPixmap image_pixmap = QPixmap::fromImage(LoadTexture(src, info));
@@ -47,6 +49,7 @@ public:
         setLayout(layout);
     }
 };
+} // Anonymous namespace
 
 GPUCommandListModel::GPUCommandListModel(QObject* parent) : QAbstractListModel(parent) {}
 
@@ -65,7 +68,6 @@ QVariant GPUCommandListModel::data(const QModelIndex& index, int role) const {
     const auto& write = pica_trace.writes[index.row()];
 
     if (role == Qt::DisplayRole) {
-        QString content;
         switch (index.column()) {
         case 0:
             return QString::fromLatin1(Pica::Regs::GetCommandName(write.cmd_id).c_str());
@@ -122,19 +124,21 @@ void GPUCommandListWidget::OnCommandDoubleClicked(const QModelIndex& index) {
     if (COMMAND_IN_RANGE(command_id, texture0) || COMMAND_IN_RANGE(command_id, texture1) ||
         COMMAND_IN_RANGE(command_id, texture2)) {
 
-        unsigned index;
+        unsigned texture_index;
         if (COMMAND_IN_RANGE(command_id, texture0)) {
-            index = 0;
+            texture_index = 0;
         } else if (COMMAND_IN_RANGE(command_id, texture1)) {
-            index = 1;
+            texture_index = 1;
         } else if (COMMAND_IN_RANGE(command_id, texture2)) {
-            index = 2;
+            texture_index = 2;
         } else {
             UNREACHABLE_MSG("Unknown texture command");
         }
-        auto config = Pica::g_state.regs.GetTextures()[index].config;
-        auto format = Pica::g_state.regs.GetTextures()[index].format;
-        auto info = Pica::DebugUtils::TextureInfo::FromPicaRegister(config, format);
+
+        const auto texture = Pica::g_state.regs.GetTextures()[texture_index];
+        const auto config = texture.config;
+        const auto format = texture.format;
+        const auto info = Pica::DebugUtils::TextureInfo::FromPicaRegister(config, format);
 
         // TODO: Open a surface debugger
     }
@@ -148,19 +152,21 @@ void GPUCommandListWidget::SetCommandInfo(const QModelIndex& index) {
     if (COMMAND_IN_RANGE(command_id, texture0) || COMMAND_IN_RANGE(command_id, texture1) ||
         COMMAND_IN_RANGE(command_id, texture2)) {
 
-        unsigned index;
+        unsigned texture_index;
         if (COMMAND_IN_RANGE(command_id, texture0)) {
-            index = 0;
+            texture_index = 0;
         } else if (COMMAND_IN_RANGE(command_id, texture1)) {
-            index = 1;
+            texture_index = 1;
         } else {
-            index = 2;
+            texture_index = 2;
         }
-        auto config = Pica::g_state.regs.GetTextures()[index].config;
-        auto format = Pica::g_state.regs.GetTextures()[index].format;
 
-        auto info = Pica::DebugUtils::TextureInfo::FromPicaRegister(config, format);
-        u8* src = Memory::GetPhysicalPointer(config.GetPhysicalAddress());
+        const auto texture = Pica::g_state.regs.GetTextures()[texture_index];
+        const auto config = texture.config;
+        const auto format = texture.format;
+
+        const auto info = Pica::DebugUtils::TextureInfo::FromPicaRegister(config, format);
+        const u8* src = Memory::GetPhysicalPointer(config.GetPhysicalAddress());
         new_info_widget = new TextureInfoWidget(src, info);
     }
     if (command_info_widget) {
