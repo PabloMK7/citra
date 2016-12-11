@@ -22,7 +22,7 @@
 #include "video_core/pica_state.h"
 
 namespace {
-QImage LoadTexture(u8* src, const Pica::DebugUtils::TextureInfo& info) {
+QImage LoadTexture(const u8* src, const Pica::DebugUtils::TextureInfo& info) {
     QImage decoded_image(info.width, info.height, QImage::Format_ARGB32);
     for (int y = 0; y < info.height; ++y) {
         for (int x = 0; x < info.width; ++x) {
@@ -36,7 +36,8 @@ QImage LoadTexture(u8* src, const Pica::DebugUtils::TextureInfo& info) {
 
 class TextureInfoWidget : public QWidget {
 public:
-    TextureInfoWidget(u8* src, const Pica::DebugUtils::TextureInfo& info, QWidget* parent = nullptr)
+    TextureInfoWidget(const u8* src, const Pica::DebugUtils::TextureInfo& info,
+                      QWidget* parent = nullptr)
         : QWidget(parent) {
         QLabel* image_widget = new QLabel;
         QPixmap image_pixmap = QPixmap::fromImage(LoadTexture(src, info));
@@ -162,7 +163,7 @@ void GPUCommandListWidget::SetCommandInfo(const QModelIndex& index) {
         auto format = Pica::g_state.regs.GetTextures()[index].format;
 
         auto info = Pica::DebugUtils::TextureInfo::FromPicaRegister(config, format);
-        u8* src = Memory::GetPhysicalPointer(config.GetPhysicalAddress());
+        const u8* src = Memory::GetPhysicalPointer(config.GetPhysicalAddress());
         new_info_widget = new TextureInfoWidget(src, info);
     }
     if (command_info_widget) {
