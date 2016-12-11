@@ -25,7 +25,7 @@ public:
         COLUMN_COUNT, // Number of columns
     };
 
-    GameList(QWidget* parent = nullptr);
+    explicit GameList(QWidget* parent = nullptr);
     ~GameList() override;
 
     void PopulateAsync(const QString& dir_path, bool deep_scan);
