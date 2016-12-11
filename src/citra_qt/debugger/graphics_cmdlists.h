@@ -20,7 +20,7 @@ public:
         CommandIdRole = Qt::UserRole,
     };
 
-    GPUCommandListModel(QObject* parent);
+    explicit GPUCommandListModel(QObject* parent);
 
     int columnCount(const QModelIndex& parent = QModelIndex()) const override;
     int rowCount(const QModelIndex& parent = QModelIndex()) const override;
@@ -39,7 +39,7 @@ class GPUCommandListWidget : public QDockWidget {
     Q_OBJECT
 
 public:
-    GPUCommandListWidget(QWidget* parent = nullptr);
+    explicit GPUCommandListWidget(QWidget* parent = nullptr);
 
 public slots:
     void OnToggleTracing();

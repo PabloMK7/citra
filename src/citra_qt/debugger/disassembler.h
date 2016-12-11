@@ -17,7 +17,7 @@ class DisassemblerModel : public QAbstractListModel {
     Q_OBJECT
 
 public:
-    DisassemblerModel(QObject* parent);
+    explicit DisassemblerModel(QObject* parent);
 
     int columnCount(const QModelIndex& parent = QModelIndex()) const override;
     int rowCount(const QModelIndex& parent = QModelIndex()) const override;

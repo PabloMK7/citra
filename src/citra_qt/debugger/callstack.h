@@ -13,7 +13,7 @@ class CallstackWidget : public QDockWidget {
     Q_OBJECT
 
 public:
-    CallstackWidget(QWidget* parent = nullptr);
+    explicit CallstackWidget(QWidget* parent = nullptr);
 
 public slots:
     void OnDebugModeEntered();

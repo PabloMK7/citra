@@ -23,7 +23,7 @@ class EmuThread : public QThread {
     Q_OBJECT
 
 public:
-    EmuThread(GRenderWindow* render_window);
+    explicit EmuThread(GRenderWindow* render_window);
 
     /**
      * Start emulation (on new thread)

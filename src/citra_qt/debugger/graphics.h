@@ -13,7 +13,7 @@ class GPUCommandStreamItemModel : public QAbstractListModel,
     Q_OBJECT
 
 public:
-    GPUCommandStreamItemModel(QObject* parent);
+    explicit GPUCommandStreamItemModel(QObject* parent);
 
     int rowCount(const QModelIndex& parent = QModelIndex()) const override;
     QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const override;

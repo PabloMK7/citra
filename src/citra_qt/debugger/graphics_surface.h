@@ -18,7 +18,8 @@ class SurfacePicture : public QLabel {
     Q_OBJECT
 
 public:
-    SurfacePicture(QWidget* parent = 0, GraphicsSurfaceWidget* surface_widget = nullptr);
+    explicit SurfacePicture(QWidget* parent = nullptr,
+                            GraphicsSurfaceWidget* surface_widget = nullptr);
     ~SurfacePicture();
 
 protected slots:
@@ -71,8 +72,8 @@ class GraphicsSurfaceWidget : public BreakPointObserverDock {
     static unsigned int NibblesPerPixel(Format format);
 
 public:
-    GraphicsSurfaceWidget(std::shared_ptr<Pica::DebugContext> debug_context,
-                          QWidget* parent = nullptr);
+    explicit GraphicsSurfaceWidget(std::shared_ptr<Pica::DebugContext> debug_context,
+                                   QWidget* parent = nullptr);
     void Pick(int x, int y);
 
 public slots:

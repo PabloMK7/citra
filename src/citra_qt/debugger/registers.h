@@ -15,7 +15,7 @@ class RegistersWidget : public QDockWidget {
     Q_OBJECT
 
 public:
-    RegistersWidget(QWidget* parent = nullptr);
+    explicit RegistersWidget(QWidget* parent = nullptr);
 
 public slots:
     void OnDebugModeEntered();

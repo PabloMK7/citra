@@ -15,7 +15,7 @@ class ProfilerModel : public QAbstractItemModel {
     Q_OBJECT
 
 public:
-    ProfilerModel(QObject* parent);
+    explicit ProfilerModel(QObject* parent);
 
     QVariant headerData(int section, Qt::Orientation orientation,
                         int role = Qt::DisplayRole) const override;
@@ -37,7 +37,7 @@ class ProfilerWidget : public QDockWidget {
     Q_OBJECT
 
 public:
-    ProfilerWidget(QWidget* parent = nullptr);
+    explicit ProfilerWidget(QWidget* parent = nullptr);
 
 private slots:
     void setProfilingInfoUpdateEnabled(bool enable);
@@ -53,7 +53,7 @@ class MicroProfileDialog : public QWidget {
     Q_OBJECT
 
 public:
-    MicroProfileDialog(QWidget* parent = nullptr);
+    explicit MicroProfileDialog(QWidget* parent = nullptr);
 
     /// Returns a QAction that can be used to toggle visibility of this dialog.
     QAction* toggleViewAction();

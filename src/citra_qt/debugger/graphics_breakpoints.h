@@ -20,8 +20,8 @@ class GraphicsBreakPointsWidget : public QDockWidget, Pica::DebugContext::BreakP
     using Event = Pica::DebugContext::Event;
 
 public:
-    GraphicsBreakPointsWidget(std::shared_ptr<Pica::DebugContext> debug_context,
-                              QWidget* parent = nullptr);
+    explicit GraphicsBreakPointsWidget(std::shared_ptr<Pica::DebugContext> debug_context,
+                                       QWidget* parent = nullptr);
 
     void OnPicaBreakPointHit(Pica::DebugContext::Event event, void* data) override;
     void OnPicaResume() override;

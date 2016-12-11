@@ -42,7 +42,7 @@ class CSpinBox : public QAbstractSpinBox {
     Q_OBJECT
 
 public:
-    CSpinBox(QWidget* parent = nullptr);
+    explicit CSpinBox(QWidget* parent = nullptr);
 
     void stepBy(int steps) override;
     StepEnabled stepEnabled() const override;
