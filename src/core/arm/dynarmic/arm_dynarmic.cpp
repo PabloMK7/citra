@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <cstring>
 #include <dynarmic/dynarmic.h>
 #include "common/assert.h"
 #include "common/microprofile.h"
