@@ -407,9 +407,11 @@ void CancelLibraryApplet(Service::Interface* self);
  *  Inputs:
  *      1 : Parameter Size (capped to 0x300)
  *      2 : StartupArgumentType
+ *      65 : Output buffer for startup argument
  *  Outputs:
  *      0 : Return header
- *      1 : u8, Exists (0 = does not exist, 1 = exists)
+ *      1 : Result of function, 0 on success, otherwise error code
+ *      2 : u8, Exists (0 = does not exist, 1 = exists)
  */
 void GetStartupArgument(Service::Interface* self);
 

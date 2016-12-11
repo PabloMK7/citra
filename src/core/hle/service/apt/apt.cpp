@@ -458,12 +458,16 @@ void GetStartupArgument(Service::Interface* self) {
         return;
     }
 
-    LOG_WARNING(Service_APT, "(stubbed) called startup_argument_type=%u , parameter_size=0x%08x , "
-                             "parameter_value=0x%08x",
-                startup_argument_type, parameter_size, Memory::Read32(cmd_buff[41]));
+    u32 addr = cmd_buff[65];
+    if (addr && parameter_size) {
+        Memory::ZeroBlock(addr, parameter_size);
+    }
+
+    LOG_WARNING(Service_APT, "(stubbed) called startup_argument_type=%u , parameter_size=0x%08x",
+                startup_argument_type, parameter_size);
 
     cmd_buff[1] = RESULT_SUCCESS.raw;
-    cmd_buff[2] = (parameter_size > 0) ? 1 : 0;
+    cmd_buff[2] = 0;
 }
 
 void CheckNew3DSApp(Service::Interface* self) {
