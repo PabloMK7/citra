@@ -33,18 +33,15 @@ public:
     void SaveInterfaceLayout();
     void LoadInterfaceLayout();
 
-public slots:
-    void AddEntry(const QList<QStandardItem*>& entry_items);
-
-private slots:
-    void ValidateEntry(const QModelIndex& item);
-    void DonePopulating();
-
 signals:
     void GameChosen(QString game_path);
     void ShouldCancelWorker();
 
 private:
+    void AddEntry(const QList<QStandardItem*>& entry_items);
+    void ValidateEntry(const QModelIndex& item);
+    void DonePopulating();
+
     QTreeView* tree_view = nullptr;
     QStandardItemModel* item_model = nullptr;
     GameListWorker* current_worker = nullptr;
