@@ -34,8 +34,7 @@ GameList::GameList(QWidget* parent) : QWidget{parent} {
     item_model->setHeaderData(COLUMN_FILE_TYPE, Qt::Horizontal, "File type");
     item_model->setHeaderData(COLUMN_SIZE, Qt::Horizontal, "Size");
 
-    connect(tree_view, SIGNAL(activated(const QModelIndex&)), this,
-            SLOT(ValidateEntry(const QModelIndex&)));
+    connect(tree_view, &QTreeView::activated, this, &GameList::ValidateEntry);
 
     // We must register all custom types with the Qt Automoc system so that we are able to use it
     // with
@@ -86,12 +85,13 @@ void GameList::PopulateAsync(const QString& dir_path, bool deep_scan) {
     emit ShouldCancelWorker();
     GameListWorker* worker = new GameListWorker(dir_path, deep_scan);
 
-    connect(worker, SIGNAL(EntryReady(QList<QStandardItem*>)), this,
-            SLOT(AddEntry(QList<QStandardItem*>)), Qt::QueuedConnection);
-    connect(worker, SIGNAL(Finished()), this, SLOT(DonePopulating()), Qt::QueuedConnection);
+    connect(worker, &GameListWorker::EntryReady, this, &GameList::AddEntry, Qt::QueuedConnection);
+    connect(worker, &GameListWorker::Finished, this, &GameList::DonePopulating,
+            Qt::QueuedConnection);
     // Use DirectConnection here because worker->Cancel() is thread-safe and we want it to cancel
     // without delay.
-    connect(this, SIGNAL(ShouldCancelWorker()), worker, SLOT(Cancel()), Qt::DirectConnection);
+    connect(this, &GameList::ShouldCancelWorker, worker, &GameListWorker::Cancel,
+            Qt::DirectConnection);
 
     QThreadPool::globalInstance()->start(worker);
     current_worker = std::move(worker);
