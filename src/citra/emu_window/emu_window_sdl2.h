@@ -4,8 +4,10 @@
 
 #pragma once
 
+#include <memory>
 #include <utility>
 #include "core/frontend/emu_window.h"
+#include "core/frontend/motion_emu.h"
 
 struct SDL_Window;
 
@@ -61,4 +63,7 @@ private:
 
     /// Device id of keyboard for use with KeyMap
     int keyboard_id;
+
+    /// Motion sensors emulation
+    std::unique_ptr<Motion::MotionEmu> motion_emu;
 };

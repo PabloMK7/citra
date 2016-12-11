@@ -93,6 +93,27 @@ public:
     void TouchMoved(unsigned framebuffer_x, unsigned framebuffer_y);
 
     /**
+     * Signal accelerometer state has changed.
+     * @param x X-axis accelerometer value
+     * @param y Y-axis accelerometer value
+     * @param z Z-axis accelerometer value
+     * @note all values are in unit of g (gravitational acceleration).
+     *    e.g. x = 1.0 means 9.8m/s^2 in x direction.
+     * @see GetAccelerometerState for axis explanation.
+     */
+    void AccelerometerChanged(float x, float y, float z);
+
+    /**
+     * Signal gyroscope state has changed.
+     * @param x X-axis accelerometer value
+     * @param y Y-axis accelerometer value
+     * @param z Z-axis accelerometer value
+     * @note all values are in deg/sec.
+     * @see GetGyroscopeState for axis explanation.
+     */
+    void GyroscopeChanged(float x, float y, float z);
+
+    /**
      * Gets the current pad state (which buttons are pressed).
      * @note This should be called by the core emu thread to get a state set by the window thread.
      * @note This doesn't include analog input like circle pad direction
@@ -134,12 +155,11 @@ public:
      *   1 unit of return value = 1/512 g (measured by hw test),
      *   where g is the gravitational acceleration (9.8 m/sec2).
      * @note This should be called by the core emu thread to get a state set by the window thread.
-     * @todo Implement accelerometer input in front-end.
+     * @todo Fix this function to be thread-safe.
      * @return std::tuple of (x, y, z)
      */
-    std::tuple<s16, s16, s16> GetAccelerometerState() const {
-        // stubbed
-        return std::make_tuple(0, -512, 0);
+    std::tuple<s16, s16, s16> GetAccelerometerState() {
+        return std::make_tuple(accel_x, accel_y, accel_z);
     }
 
     /**
@@ -153,12 +173,11 @@ public:
      *   1 unit of return value = (1/coef) deg/sec,
      *   where coef is the return value of GetGyroscopeRawToDpsCoefficient().
      * @note This should be called by the core emu thread to get a state set by the window thread.
-     * @todo Implement gyroscope input in front-end.
+     * @todo Fix this function to be thread-safe.
      * @return std::tuple of (x, y, z)
      */
-    std::tuple<s16, s16, s16> GetGyroscopeState() const {
-        // stubbed
-        return std::make_tuple(0, 0, 0);
+    std::tuple<s16, s16, s16> GetGyroscopeState() {
+        return std::make_tuple(gyro_x, gyro_y, gyro_z);
     }
 
     /**
@@ -216,6 +235,12 @@ protected:
         circle_pad_x = 0;
         circle_pad_y = 0;
         touch_pressed = false;
+        accel_x = 0;
+        accel_y = -512;
+        accel_z = 0;
+        gyro_x = 0;
+        gyro_y = 0;
+        gyro_z = 0;
     }
     virtual ~EmuWindow() {}
 
@@ -280,6 +305,14 @@ private:
 
     s16 circle_pad_x; ///< Circle pad X-position in native 3DS pixel coordinates (-156 - 156)
     s16 circle_pad_y; ///< Circle pad Y-position in native 3DS pixel coordinates (-156 - 156)
+
+    s16 accel_x; ///< Accelerometer X-axis value in native 3DS units
+    s16 accel_y; ///< Accelerometer Y-axis value in native 3DS units
+    s16 accel_z; ///< Accelerometer Z-axis value in native 3DS units
+
+    s16 gyro_x; ///< Gyroscope X-axis value in native 3DS units
+    s16 gyro_y; ///< Gyroscope Y-axis value in native 3DS units
+    s16 gyro_z; ///< Gyroscope Z-axis value in native 3DS units
 
     /**
      * Clip the provided coordinates to be inside the touchscreen area.
