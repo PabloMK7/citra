@@ -49,7 +49,7 @@ GameList::~GameList() {
     emit ShouldCancelWorker();
 }
 
-void GameList::AddEntry(QList<QStandardItem*> entry_items) {
+void GameList::AddEntry(const QList<QStandardItem*>& entry_items) {
     item_model->invisibleRootItem()->appendRow(entry_items);
 }
 

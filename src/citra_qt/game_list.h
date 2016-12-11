@@ -34,7 +34,7 @@ public:
     void LoadInterfaceLayout();
 
 public slots:
-    void AddEntry(QList<QStandardItem*> entry_items);
+    void AddEntry(const QList<QStandardItem*>& entry_items);
 
 private slots:
     void ValidateEntry(const QModelIndex& item);
