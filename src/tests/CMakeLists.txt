@@ -13,6 +13,6 @@ include_directories(../../externals/catch/single_include/)
 
 add_executable(tests ${SRCS} ${HEADERS})
 target_link_libraries(tests core video_core audio_core common)
-target_link_libraries(tests ${PLATFORM_LIBRARIES})
+target_link_libraries(tests ${PLATFORM_LIBRARIES} Threads::Threads)
 
 add_test(NAME tests COMMAND $<TARGET_FILE:tests>)
