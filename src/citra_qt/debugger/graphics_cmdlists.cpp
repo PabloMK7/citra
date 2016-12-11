@@ -21,6 +21,7 @@
 #include "video_core/pica.h"
 #include "video_core/pica_state.h"
 
+namespace {
 QImage LoadTexture(u8* src, const Pica::DebugUtils::TextureInfo& info) {
     QImage decoded_image(info.width, info.height, QImage::Format_ARGB32);
     for (int y = 0; y < info.height; ++y) {
@@ -47,6 +48,7 @@ public:
         setLayout(layout);
     }
 };
+} // Anonymous namespace
 
 GPUCommandListModel::GPUCommandListModel(QObject* parent) : QAbstractListModel(parent) {}
 
