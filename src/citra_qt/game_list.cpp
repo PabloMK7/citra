@@ -13,7 +13,7 @@
 #include "game_list_p.h"
 #include "ui_settings.h"
 
-GameList::GameList(QWidget* parent) {
+GameList::GameList(QWidget* parent) : QWidget{parent} {
     QVBoxLayout* layout = new QVBoxLayout;
 
     tree_view = new QTreeView;
