@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <chrono>
 #include <condition_variable>
 #include <cstddef>
 #include <mutex>
@@ -52,6 +53,15 @@ public:
         std::unique_lock<std::mutex> lk(mutex);
         condvar.wait(lk, [&] { return is_set; });
         is_set = false;
+    }
+
+    template <class Clock, class Duration>
+    bool WaitUntil(const std::chrono::time_point<Clock, Duration>& time) {
+        std::unique_lock<std::mutex> lk(mutex);
+        if (!condvar.wait_until(lk, time, [this] { return is_set; }))
+            return false;
+        is_set = false;
+        return true;
     }
 
     void Reset() {
