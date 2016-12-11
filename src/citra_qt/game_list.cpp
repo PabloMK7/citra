@@ -151,6 +151,6 @@ void GameListWorker::run() {
 }
 
 void GameListWorker::Cancel() {
-    disconnect(this, 0, 0, 0);
+    disconnect(this, nullptr, nullptr, nullptr);
     stop_processing = true;
 }
