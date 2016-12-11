@@ -6,7 +6,7 @@
 #ifdef __APPLE__
 #include <mach/mach.h>
 #elif defined(_WIN32)
-#include <Windows.h>
+#include <windows.h>
 #else
 #if defined(__Bitrig__) || defined(__DragonFly__) || defined(__FreeBSD__) || defined(__OpenBSD__)
 #include <pthread_np.h>

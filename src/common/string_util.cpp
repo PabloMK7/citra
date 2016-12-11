@@ -14,7 +14,7 @@
 
 #ifdef _WIN32
 #include <codecvt>
-#include <Windows.h>
+#include <windows.h>
 #include "common/common_funcs.h"
 #else
 #include <iconv.h>
