@@ -68,7 +68,6 @@ QVariant GPUCommandListModel::data(const QModelIndex& index, int role) const {
     const auto& write = pica_trace.writes[index.row()];
 
     if (role == Qt::DisplayRole) {
-        QString content;
         switch (index.column()) {
         case 0:
             return QString::fromLatin1(Pica::Regs::GetCommandName(write.cmd_id).c_str());
