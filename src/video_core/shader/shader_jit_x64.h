@@ -9,6 +9,7 @@
 #include <utility>
 #include <vector>
 #include <nihstro/shader_bytecode.h>
+#include <xbyak.h>
 #include "common/bit_set.h"
 #include "common/common_types.h"
 #include "common/x64/emitter.h"
@@ -29,12 +30,12 @@ constexpr size_t MAX_SHADER_SIZE = 1024 * 64;
  * This class implements the shader JIT compiler. It recompiles a Pica shader program into x86_64
  * code that can be executed on the host machine directly.
  */
-class JitShader : public Gen::XCodeBlock {
+class JitShader : public Xbyak::CodeGenerator {
 public:
     JitShader();
 
     void Run(const ShaderSetup& setup, UnitState<false>& state, unsigned offset) const {
-        program(&setup, &state, code_ptr[offset]);
+        program(&setup, &state, instruction_labels[offset].getAddress());
     }
 
     void Compile();
@@ -71,14 +72,14 @@ private:
     void Compile_NextInstr();
 
     void Compile_SwizzleSrc(Instruction instr, unsigned src_num, SourceRegister src_reg,
-                            Gen::X64Reg dest);
-    void Compile_DestEnable(Instruction instr, Gen::X64Reg dest);
+                            Xbyak::Xmm dest);
+    void Compile_DestEnable(Instruction instr, Xbyak::Xmm dest);
 
     /**
      * Compiles a `MUL src1, src2` operation, properly handling the PICA semantics when multiplying
      * zero by inf. Clobbers `src2` and `scratch`.
      */
-    void Compile_SanitizedMul(Gen::X64Reg src1, Gen::X64Reg src2, Gen::X64Reg scratch);
+    void Compile_SanitizedMul(Xbyak::Xmm src1, Xbyak::Xmm src2, Xbyak::Xmm scratch);
 
     void Compile_EvaluateCondition(Instruction instr);
     void Compile_UniformCondition(Instruction instr);
@@ -103,16 +104,13 @@ private:
     void FindReturnOffsets();
 
     /// Mapping of Pica VS instructions to pointers in the emitted code
-    std::array<const u8*, 1024> code_ptr;
+    std::array<Xbyak::Label, 1024> instruction_labels;
 
     /// Offsets in code where a return needs to be inserted
     std::vector<unsigned> return_offsets;
 
     unsigned program_counter = 0; ///< Offset of the next instruction to decode
     bool looping = false;         ///< True if compiling a loop, used to check for nested loops
-
-    /// Branches that need to be fixed up once the entire shader program is compiled
-    std::vector<std::pair<Gen::FixupBranch, unsigned>> fixup_branches;
 
     using CompiledShader = void(const void* setup, void* state, const u8* start_addr);
     CompiledShader* program = nullptr;

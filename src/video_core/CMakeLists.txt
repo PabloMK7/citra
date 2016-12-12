@@ -59,6 +59,9 @@ create_directory_groups(${SRCS} ${HEADERS})
 
 add_library(video_core STATIC ${SRCS} ${HEADERS})
 target_link_libraries(video_core glad)
+if (ARCHITECTURE_x86_64)
+    target_link_libraries(video_core xbyak)
+endif()
 
 if (PNG_FOUND)
     target_link_libraries(video_core ${PNG_LIBRARIES})

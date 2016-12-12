@@ -71,9 +71,15 @@ if(ARCHITECTURE_x86_64)
     set(HEADERS ${HEADERS}
             x64/abi.h
             x64/cpu_detect.h
-            x64/emitter.h)
+            x64/emitter.h
+            x64/xbyak_abi.h
+            x64/xbyak_util.h
+            )
 endif()
 
 create_directory_groups(${SRCS} ${HEADERS})
 
 add_library(common STATIC ${SRCS} ${HEADERS})
+if (ARCHITECTURE_x86_64)
+    target_link_libraries(common xbyak)
+endif()
