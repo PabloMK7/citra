@@ -1,3 +1,5 @@
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/CMakeModules)
+
 set(SRCS
             emu_window/emu_window_sdl2.cpp
             citra.cpp
@@ -28,11 +30,6 @@ if(UNIX AND NOT APPLE)
 endif()
 
 if (MSVC)
-    include(WindowsCopyFiles)
-
-    set(DLL_DEST "${CMAKE_BINARY_DIR}/bin/$<CONFIG>/")
-
-    windows_copy_files(citra ${SDL2_DLL_DIR} ${DLL_DEST} SDL2.dll)
-
-    unset(DLL_DEST)
+    include(CopyCitraSDLDeps)
+    copy_citra_SDL_deps(citra)
 endif()
