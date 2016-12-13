@@ -40,9 +40,20 @@
 #endif
 
 #if defined(__APPLE__)
+// CFURL contains __attribute__ directives that gcc does not know how to parse, so we need to just
+// ignore them if we're not using clang. The macro is only used to prevent linking against
+// functions that don't exist on older versions of macOS, and the worst case scenario is a linker
+// error, so this is perfectly safe, just inconvenient.
+#ifndef __clang__
+#define availability(...)
+#endif
 #include <CoreFoundation/CFBundle.h>
 #include <CoreFoundation/CFString.h>
 #include <CoreFoundation/CFURL.h>
+#ifdef availability
+#undef availability
+#endif
+
 #endif
 
 #include <algorithm>
