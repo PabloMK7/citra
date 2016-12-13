@@ -636,6 +636,7 @@ static void TriggerCmdReqQueue(Interface* self) {
  *  Inputs:
  *      0: Header 0x00180000
  *  Outputs:
+ *      0: Header Code[0x00180240]
  *      1: Result code
  *      2: Left framebuffer virtual address for the main screen
  *      3: Right framebuffer virtual address for the main screen
@@ -658,17 +659,18 @@ static void ImportDisplayCaptureInfo(Interface* self) {
     FrameBufferUpdate* top_screen = GetFrameBufferInfo(thread_id, 0);
     FrameBufferUpdate* bottom_screen = GetFrameBufferInfo(thread_id, 1);
 
+    cmd_buff[0] = IPC::MakeHeader(0x18, 0x9, 0);
+    cmd_buff[1] = RESULT_SUCCESS.raw;
+    // Top Screen
     cmd_buff[2] = top_screen->framebuffer_info[top_screen->index].address_left;
     cmd_buff[3] = top_screen->framebuffer_info[top_screen->index].address_right;
     cmd_buff[4] = top_screen->framebuffer_info[top_screen->index].format;
     cmd_buff[5] = top_screen->framebuffer_info[top_screen->index].stride;
-
+    // Bottom Screen
     cmd_buff[6] = bottom_screen->framebuffer_info[bottom_screen->index].address_left;
     cmd_buff[7] = bottom_screen->framebuffer_info[bottom_screen->index].address_right;
     cmd_buff[8] = bottom_screen->framebuffer_info[bottom_screen->index].format;
     cmd_buff[9] = bottom_screen->framebuffer_info[bottom_screen->index].stride;
-
-    cmd_buff[1] = RESULT_SUCCESS.raw;
 
     LOG_WARNING(Service_GSP, "called");
 }
