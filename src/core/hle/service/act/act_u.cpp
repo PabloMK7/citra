@@ -2,7 +2,8 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "core/hle/service/act_u.h"
+#include "core/hle/service/act/act.h"
+#include "core/hle/service/act/act_u.h"
 
 namespace Service {
 namespace ACT {

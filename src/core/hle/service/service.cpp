@@ -5,8 +5,7 @@
 #include "common/logging/log.h"
 #include "common/string_util.h"
 #include "core/hle/service/ac_u.h"
-#include "core/hle/service/act_a.h"
-#include "core/hle/service/act_u.h"
+#include "core/hle/service/act/act.h"
 #include "core/hle/service/am/am.h"
 #include "core/hle/service/apt/apt.h"
 #include "core/hle/service/boss/boss.h"
@@ -113,6 +112,7 @@ void Init() {
     AddNamedPort(new ERR::ERR_F);
 
     FS::ArchiveInit();
+    ACT::Init();
     AM::Init();
     APT::Init();
     BOSS::Init();
@@ -132,8 +132,6 @@ void Init() {
     QTM::Init();
 
     AddService(new AC::AC_U);
-    AddService(new ACT::ACT_A);
-    AddService(new ACT::ACT_U);
     AddService(new CSND::CSND_SND);
     AddService(new DSP_DSP::Interface);
     AddService(new GSP::GSP_GPU);
