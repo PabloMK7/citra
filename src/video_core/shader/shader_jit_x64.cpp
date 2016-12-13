@@ -109,11 +109,11 @@ static const Reg64 SETUP = r9;
 static const Reg64 ADDROFFS_REG_0 = r10;
 static const Reg64 ADDROFFS_REG_1 = r11;
 /// VS loop count register (Multiplied by 16)
-static const Reg64 LOOPCOUNT_REG = r12;
+static const Reg32 LOOPCOUNT_REG = r12d;
 /// Current VS loop iteration number (we could probably use LOOPCOUNT_REG, but this quicker)
-static const Reg64 LOOPCOUNT = rsi;
+static const Reg32 LOOPCOUNT = esi;
 /// Number to increment LOOPCOUNT_REG by on each loop iteration (Multiplied by 16)
-static const Reg64 LOOPINC = rdi;
+static const Reg32 LOOPINC = edi;
 /// Result of the previous CMP instruction for the X-component comparison
 static const Reg64 COND0 = r13;
 /// Result of the previous CMP instruction for the Y-component comparison
@@ -734,24 +734,24 @@ void JitShader::Compile_LOOP(Instruction instr) {
     // 4 bits) to be used as an offset into the 16-byte vector registers later
     size_t offset =
         ShaderSetup::UniformOffset(RegisterType::IntUniform, instr.flow_control.int_uniform_id);
-    mov(LOOPCOUNT.cvt32(), dword[SETUP + offset]);
-    mov(LOOPCOUNT_REG.cvt32(), LOOPCOUNT.cvt32());
-    shr(LOOPCOUNT_REG.cvt32(), 4);
-    and(LOOPCOUNT_REG.cvt32(), 0xFF0); // Y-component is the start
-    mov(LOOPINC.cvt32(), LOOPCOUNT.cvt32());
-    shr(LOOPINC.cvt32(), 12);
-    and(LOOPINC.cvt32(), 0xFF0);                // Z-component is the incrementer
-    movzx(LOOPCOUNT.cvt32(), LOOPCOUNT.cvt8()); // X-component is iteration count
-    add(LOOPCOUNT.cvt32(), 1);                  // Iteration count is X-component + 1
+    mov(LOOPCOUNT, dword[SETUP + offset]);
+    mov(LOOPCOUNT_REG, LOOPCOUNT);
+    shr(LOOPCOUNT_REG, 4);
+    and(LOOPCOUNT_REG, 0xFF0); // Y-component is the start
+    mov(LOOPINC, LOOPCOUNT);
+    shr(LOOPINC, 12);
+    and(LOOPINC, 0xFF0);                // Z-component is the incrementer
+    movzx(LOOPCOUNT, LOOPCOUNT.cvt8()); // X-component is iteration count
+    add(LOOPCOUNT, 1);                  // Iteration count is X-component + 1
 
     Label l_loop_start;
     L(l_loop_start);
 
     Compile_Block(instr.flow_control.dest_offset + 1);
 
-    add(LOOPCOUNT_REG.cvt32(), LOOPINC.cvt32()); // Increment LOOPCOUNT_REG by Z-component
-    sub(LOOPCOUNT.cvt32(), 1);                   // Increment loop count by 1
-    jnz(l_loop_start);                           // Loop if not equal
+    add(LOOPCOUNT_REG, LOOPINC); // Increment LOOPCOUNT_REG by Z-component
+    sub(LOOPCOUNT, 1);           // Increment loop count by 1
+    jnz(l_loop_start);           // Loop if not equal
 
     looping = false;
 }
@@ -856,7 +856,7 @@ void JitShader::Compile() {
     // Zero address/loop  registers
     xor(ADDROFFS_REG_0.cvt32(), ADDROFFS_REG_0.cvt32());
     xor(ADDROFFS_REG_1.cvt32(), ADDROFFS_REG_1.cvt32());
-    xor(LOOPCOUNT_REG.cvt32(), LOOPCOUNT_REG.cvt32());
+    xor(LOOPCOUNT_REG, LOOPCOUNT_REG);
 
     // Used to set a register to one
     static const __m128 one = {1.f, 1.f, 1.f, 1.f};
