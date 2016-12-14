@@ -139,7 +139,7 @@ union MappedBufferDescInfo {
 };
 
 inline MappedBufferDescInfo ParseMappedBufferDesc(const u32 desc) {
-    return{ desc };
+    return {desc};
 }
 
 inline DescriptorType GetDescriptorType(u32 descriptor) {

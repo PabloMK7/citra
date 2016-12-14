@@ -14,7 +14,8 @@ class Interface;
 
 namespace APT {
 
-static const u32 MaxAPTSessions = 2; ///< Each APT service can only have up to 2 sessions connected at the same time.
+/// Each APT service can only have up to 2 sessions connected at the same time.
+static const u32 MaxAPTSessions = 2;
 
 /// Holds information about the parameters used in Send/Glance/ReceiveParameter
 struct MessageParameter {

@@ -236,14 +236,16 @@ static ResultCode ConnectToPort(Handle* out_handle, const char* port_name) {
 
 /// Makes a blocking IPC call to an OS service.
 static ResultCode SendSyncRequest(Handle handle) {
-    SharedPtr<Kernel::ClientSession> session = Kernel::g_handle_table.Get<Kernel::ClientSession>(handle);
+    SharedPtr<Kernel::ClientSession> session =
+        Kernel::g_handle_table.Get<Kernel::ClientSession>(handle);
     if (session == nullptr) {
         return ERR_INVALID_HANDLE;
     }
 
     LOG_TRACE(Kernel_SVC, "called handle=0x%08X(%s)", handle, session->GetName().c_str());
 
-    // TODO(Subv): svcSendSyncRequest should put the caller thread to sleep while the server responds and cause a reschedule.
+    // TODO(Subv): svcSendSyncRequest should put the caller thread to sleep while the server
+    // responds and cause a reschedule.
     return session->SendSyncRequest();
 }
 

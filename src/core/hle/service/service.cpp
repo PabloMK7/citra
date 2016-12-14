@@ -8,7 +8,6 @@
 #include "common/string_util.h"
 
 #include "core/hle/kernel/server_port.h"
-#include "core/hle/service/service.h"
 #include "core/hle/service/ac_u.h"
 #include "core/hle/service/act_a.h"
 #include "core/hle/service/act_u.h"
@@ -66,11 +65,13 @@ static std::string MakeFunctionString(const char* name, const char* port_name,
     return function_string;
 }
 
-void SessionRequestHandler::ClientConnected(Kernel::SharedPtr<Kernel::ServerSession> server_session) {
+void SessionRequestHandler::ClientConnected(
+    Kernel::SharedPtr<Kernel::ServerSession> server_session) {
     connected_sessions.push_back(server_session);
 }
 
-void SessionRequestHandler::ClientDisconnected(Kernel::SharedPtr<Kernel::ServerSession> server_session) {
+void SessionRequestHandler::ClientDisconnected(
+    Kernel::SharedPtr<Kernel::ServerSession> server_session) {
     boost::range::remove_erase(connected_sessions, server_session);
 }
 
@@ -78,7 +79,8 @@ Interface::Interface(u32 max_sessions) : max_sessions(max_sessions) {}
 Interface::~Interface() = default;
 
 void Interface::HandleSyncRequest(Kernel::SharedPtr<Kernel::ServerSession> server_session) {
-    // TODO(Subv): Make use of the server_session in the HLE service handlers to distinguish which session triggered each command.
+    // TODO(Subv): Make use of the server_session in the HLE service handlers to distinguish which
+    // session triggered each command.
 
     u32* cmd_buff = Kernel::GetCommandBuffer();
     auto itr = m_functions.find(cmd_buff[0]);
@@ -113,15 +115,17 @@ void Interface::Register(const FunctionInfo* functions, size_t n) {
 // Module interface
 
 static void AddNamedPort(Interface* interface_) {
-    auto ports = Kernel::ServerPort::CreatePortPair(interface_->GetMaxSessions(), interface_->GetPortName(),
-                                                    std::shared_ptr<Interface>(interface_));
+    auto ports =
+        Kernel::ServerPort::CreatePortPair(interface_->GetMaxSessions(), interface_->GetPortName(),
+                                           std::shared_ptr<Interface>(interface_));
     auto client_port = std::get<Kernel::SharedPtr<Kernel::ClientPort>>(ports);
     g_kernel_named_ports.emplace(interface_->GetPortName(), std::move(client_port));
 }
 
 void AddService(Interface* interface_) {
-    auto ports = Kernel::ServerPort::CreatePortPair(interface_->GetMaxSessions(), interface_->GetPortName(),
-                                                    std::shared_ptr<Interface>(interface_));
+    auto ports =
+        Kernel::ServerPort::CreatePortPair(interface_->GetMaxSessions(), interface_->GetPortName(),
+                                           std::shared_ptr<Interface>(interface_));
     auto client_port = std::get<Kernel::SharedPtr<Kernel::ClientPort>>(ports);
     g_srv_services.emplace(interface_->GetPortName(), std::move(client_port));
 }
@@ -190,5 +194,4 @@ void Shutdown() {
     g_kernel_named_ports.clear();
     LOG_DEBUG(Service, "shutdown OK");
 }
-
 }

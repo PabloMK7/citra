@@ -19,7 +19,8 @@ ResultVal<SharedPtr<ClientSession>> ClientPort::Connect() {
     // AcceptSession before returning from this call.
 
     if (active_sessions >= max_sessions) {
-        // TODO(Subv): Return an error code in this situation after session disconnection is implemented.
+        // TODO(Subv): Return an error code in this situation after session disconnection is
+        // implemented.
         /*return ResultCode(ErrorDescription::MaxConnectionsReached,
                           ErrorModule::OS, ErrorSummary::WouldBlock,
                           ErrorLevel::Temporary);*/
@@ -27,7 +28,8 @@ ResultVal<SharedPtr<ClientSession>> ClientPort::Connect() {
     active_sessions++;
 
     // Create a new session pair, let the created sessions inherit the parent port's HLE handler.
-    auto sessions = ServerSession::CreateSessionPair(server_port->GetName(), server_port->hle_handler);
+    auto sessions =
+        ServerSession::CreateSessionPair(server_port->GetName(), server_port->hle_handler);
     auto client_session = std::get<SharedPtr<ClientSession>>(sessions);
     auto server_session = std::get<SharedPtr<ServerSession>>(sessions);
 

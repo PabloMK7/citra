@@ -175,7 +175,9 @@ void File::HandleSyncRequest(Kernel::SharedPtr<Kernel::ServerSession> server_ses
         LOG_WARNING(Service_FS, "(STUBBED) File command OpenLinkFile %s", GetName().c_str());
         auto sessions = Kernel::ServerSession::CreateSessionPair(GetName(), shared_from_this());
         ClientConnected(std::get<Kernel::SharedPtr<Kernel::ServerSession>>(sessions));
-        cmd_buff[3] = Kernel::g_handle_table.Create(std::get<Kernel::SharedPtr<Kernel::ClientSession>>(sessions)).ValueOr(INVALID_HANDLE);
+        cmd_buff[3] = Kernel::g_handle_table
+                          .Create(std::get<Kernel::SharedPtr<Kernel::ClientSession>>(sessions))
+                          .ValueOr(INVALID_HANDLE);
         break;
     }
 
@@ -307,8 +309,8 @@ ResultCode RegisterArchiveType(std::unique_ptr<FileSys::ArchiveFactory>&& factor
 }
 
 ResultVal<std::shared_ptr<File>> OpenFileFromArchive(ArchiveHandle archive_handle,
-                                                       const FileSys::Path& path,
-                                                       const FileSys::Mode mode) {
+                                                     const FileSys::Path& path,
+                                                     const FileSys::Mode mode) {
     ArchiveBackend* archive = GetArchive(archive_handle);
     if (archive == nullptr)
         return ERR_INVALID_ARCHIVE_HANDLE;
@@ -398,7 +400,7 @@ ResultCode RenameDirectoryBetweenArchives(ArchiveHandle src_archive_handle,
 }
 
 ResultVal<std::shared_ptr<Directory>> OpenDirectoryFromArchive(ArchiveHandle archive_handle,
-                                                                 const FileSys::Path& path) {
+                                                               const FileSys::Path& path) {
     ArchiveBackend* archive = GetArchive(archive_handle);
     if (archive == nullptr)
         return ERR_INVALID_ARCHIVE_HANDLE;

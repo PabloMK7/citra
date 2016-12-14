@@ -29,8 +29,9 @@ public:
     }
 
     /**
-     * Creates a new Session pair, adds the created ServerSession to the associated ServerPort's list of pending sessions,
-     * and signals the ServerPort, causing any threads waiting on it to awake.
+     * Creates a new Session pair, adds the created ServerSession to the associated ServerPort's
+     * list of pending sessions, and signals the ServerPort, causing any threads
+     * waiting on it to awake.
      * @returns ClientSession The client endpoint of the created Session pair, or error code.
      */
     ResultVal<SharedPtr<ClientSession>> Connect();

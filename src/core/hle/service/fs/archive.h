@@ -104,8 +104,8 @@ ResultCode RegisterArchiveType(std::unique_ptr<FileSys::ArchiveFactory>&& factor
  * @return The opened File object
  */
 ResultVal<std::shared_ptr<File>> OpenFileFromArchive(ArchiveHandle archive_handle,
-                                                       const FileSys::Path& path,
-                                                       const FileSys::Mode mode);
+                                                     const FileSys::Path& path,
+                                                     const FileSys::Mode mode);
 
 /**
  * Delete a File from an Archive
@@ -183,7 +183,7 @@ ResultCode RenameDirectoryBetweenArchives(ArchiveHandle src_archive_handle,
  * @return The opened Directory object
  */
 ResultVal<std::shared_ptr<Directory>> OpenDirectoryFromArchive(ArchiveHandle archive_handle,
-                                                                 const FileSys::Path& path);
+                                                               const FileSys::Path& path);
 
 /**
  * Get the free space in an Archive

@@ -4,8 +4,8 @@
 
 #pragma once
 
-#include <string>
 #include <memory>
+#include <string>
 
 #include "common/common_types.h"
 
@@ -44,9 +44,9 @@ public:
      */
     ResultCode SendSyncRequest();
 
-    std::string name;                           ///< Name of client port (optional)
-    ServerSession* server_session;              ///< The server session associated with this client session.
-    SessionStatus session_status;               ///< The session's current status.
+    std::string name;              ///< Name of client port (optional)
+    ServerSession* server_session; ///< The server session associated with this client session.
+    SessionStatus session_status;  ///< The session's current status.
 
 private:
     ClientSession();
@@ -58,7 +58,8 @@ private:
      * @param name Optional name of client session
      * @return The created client session
      */
-    static ResultVal<SharedPtr<ClientSession>> Create(ServerSession* server_session, std::string name = "Unknown");
+    static ResultVal<SharedPtr<ClientSession>> Create(ServerSession* server_session,
+                                                      std::string name = "Unknown");
 };
 
 } // namespace

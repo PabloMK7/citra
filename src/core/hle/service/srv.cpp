@@ -7,8 +7,8 @@
 #include "common/common_types.h"
 #include "common/logging/log.h"
 #include "core/hle/kernel/client_session.h"
-#include "core/hle/kernel/server_session.h"
 #include "core/hle/kernel/event.h"
+#include "core/hle/kernel/server_session.h"
 #include "core/hle/service/srv.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

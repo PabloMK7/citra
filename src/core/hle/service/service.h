@@ -15,7 +15,6 @@
 #include "core/hle/result.h"
 #include "core/memory.h"
 
-
 namespace Kernel {
 class ServerSession;
 }
@@ -26,12 +25,13 @@ class ServerSession;
 namespace Service {
 
 static const int kMaxPortSize = 8; ///< Maximum size of a port name (8 characters)
-static const u32 DefaultMaxSessions = 10; ///< Arbitrary default number of maximum connections to an HLE service
+/// Arbitrary default number of maximum connections to an HLE service.
+static const u32 DefaultMaxSessions = 10;
 
 /**
  * Interface implemented by HLE Session handlers.
- * This can be provided to a ServerSession in order to hook into several relevant events (such as a new connection or a SyncRequest)
- * so they can be implemented in the emulator.
+ * This can be provided to a ServerSession in order to hook into several relevant events
+ * (such as a new connection or a SyncRequest) so they can be implemented in the emulator.
  */
 class SessionRequestHandler {
 public:
@@ -61,12 +61,14 @@ public:
 
 protected:
     /// List of sessions that are connected to this handler.
-    /// A ServerSession whose server endpoint is an HLE implementation is kept alive by this list for the duration of the connection.
+    /// A ServerSession whose server endpoint is an HLE implementation is kept alive by this list
+    // for the duration of the connection.
     std::vector<Kernel::SharedPtr<Kernel::ServerSession>> connected_sessions;
 };
 
 /**
- * Framework for implementing HLE service handlers which dispatch incoming SyncRequests based on a table mapping header ids to handler functions.
+ * Framework for implementing HLE service handlers which dispatch incoming SyncRequests based on a
+ * table mapping header ids to handler functions.
  */
 class Interface : public SessionRequestHandler {
 public:
@@ -88,10 +90,13 @@ public:
     }
 
     /**
-     * Gets the maximum allowed number of sessions that can be connected to this service at the same time.
+     * Gets the maximum allowed number of sessions that can be connected to this service
+     * at the same time.
      * @returns The maximum number of connections allowed.
      */
-    u32 GetMaxSessions() const { return max_sessions; }
+    u32 GetMaxSessions() const {
+        return max_sessions;
+    }
 
     typedef void (*Function)(Interface*);
 
