@@ -178,17 +178,19 @@ public:
     /// Mutexes currently held by this thread, which will be released when it exits.
     boost::container::flat_set<SharedPtr<Mutex>> held_mutexes;
 
-    SharedPtr<Process> owner_process;                ///< Process that owns this thread
+    SharedPtr<Process> owner_process; ///< Process that owns this thread
 
     /// Objects that the thread is waiting on.
     /// This is only populated when the thread should wait for all the objects to become ready.
     std::vector<SharedPtr<WaitObject>> wait_objects;
 
-    boost::container::flat_map<int, s32> wait_objects_index; ///< Mapping of Object ids to their position in the last waitlist that this object waited on.
+    /// Mapping of Object ids to their position in the last waitlist that this object waited on.
+    boost::container::flat_map<int, s32> wait_objects_index;
 
-    VAddr wait_address;   ///< If waiting on an AddressArbiter, this is the arbitration address
+    VAddr wait_address; ///< If waiting on an AddressArbiter, this is the arbitration address
 
-    bool wait_set_output; ///< True if the WaitSynchronizationN output parameter should be set on thread wakeup
+    /// True if the WaitSynchronizationN output parameter should be set on thread wakeup.
+    bool wait_set_output;
 
     std::string name;
 

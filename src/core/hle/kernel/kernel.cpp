@@ -50,9 +50,9 @@ SharedPtr<Thread> WaitObject::GetHighestPriorityReadyThread() {
         if (thread->current_priority >= candidate_priority)
             continue;
 
-        bool ready_to_run = std::none_of(thread->wait_objects.begin(), thread->wait_objects.end(), [](const SharedPtr<WaitObject>& object) {
-            return object->ShouldWait();
-        });
+        bool ready_to_run =
+            std::none_of(thread->wait_objects.begin(), thread->wait_objects.end(),
+                         [](const SharedPtr<WaitObject>& object) { return object->ShouldWait(); });
         if (ready_to_run) {
             candidate = thread.get();
             candidate_priority = thread->current_priority;
@@ -83,7 +83,8 @@ void WaitObject::WakeupAllWaitingThreads() {
 
         thread->SetWaitSynchronizationResult(RESULT_SUCCESS);
         thread->ResumeFromWait();
-        // Note: Removing the thread from the object's waitlist will be done by GetHighestPriorityReadyThread
+        // Note: Removing the thread from the object's waitlist will be
+        // done by GetHighestPriorityReadyThread.
     }
 }
 
