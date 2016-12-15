@@ -25,7 +25,7 @@ namespace Pica {
 
 namespace Shader {
 
-OutputVertex OutputRegisters::ToVertex(const Regs::ShaderConfig& config) {
+OutputVertex OutputRegisters::ToVertex(const Regs::ShaderConfig& config) const {
     // Setup output data
     OutputVertex ret;
     // TODO(neobrain): Under some circumstances, up to 16 attributes may be output. We need to
