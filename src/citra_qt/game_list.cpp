@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <QHeaderView>
+#include <QMenu>
 #include <QThreadPool>
 #include <QVBoxLayout>
 #include "common/common_paths.h"
@@ -28,6 +29,7 @@ GameList::GameList(QWidget* parent) : QWidget{parent} {
     tree_view->setSortingEnabled(true);
     tree_view->setEditTriggers(QHeaderView::NoEditTriggers);
     tree_view->setUniformRowHeights(true);
+    tree_view->setContextMenuPolicy(Qt::CustomContextMenu);
 
     item_model->insertColumns(0, COLUMN_COUNT);
     item_model->setHeaderData(COLUMN_NAME, Qt::Horizontal, "Name");
@@ -35,10 +37,10 @@ GameList::GameList(QWidget* parent) : QWidget{parent} {
     item_model->setHeaderData(COLUMN_SIZE, Qt::Horizontal, "Size");
 
     connect(tree_view, &QTreeView::activated, this, &GameList::ValidateEntry);
+    connect(tree_view, &QTreeView::customContextMenuRequested, this, &GameList::PopupContextMenu);
 
     // We must register all custom types with the Qt Automoc system so that we are able to use it
-    // with
-    // signals/slots. In this case, QList falls under the umbrells of custom types.
+    // with signals/slots. In this case, QList falls under the umbrells of custom types.
     qRegisterMetaType<QList<QStandardItem*>>("QList<QStandardItem*>");
 
     layout->addWidget(tree_view);
@@ -69,6 +71,23 @@ void GameList::ValidateEntry(const QModelIndex& item) {
 
 void GameList::DonePopulating() {
     tree_view->setEnabled(true);
+}
+
+void GameList::PopupContextMenu(const QPoint& menu_location) {
+    QModelIndex item = tree_view->indexAt(menu_location);
+    if (!item.isValid())
+        return;
+
+    int row = item_model->itemFromIndex(item)->row();
+    QStandardItem* child_file = item_model->invisibleRootItem()->child(row, COLUMN_NAME);
+    u64 program_id = child_file->data(GameListItemPath::ProgramIdRole).toULongLong();
+
+    QMenu context_menu;
+    QAction* open_save_location = context_menu.addAction(tr("Open Save Data Location"));
+    open_save_location->setEnabled(program_id != 0);
+    connect(open_save_location, &QAction::triggered,
+            [&]() { emit OpenSaveFolderRequested(program_id); });
+    context_menu.exec(tree_view->viewport()->mapToGlobal(menu_location));
 }
 
 void GameList::PopulateAsync(const QString& dir_path, bool deep_scan) {
@@ -128,8 +147,11 @@ void GameListWorker::AddFstEntriesToGameList(const std::string& dir_path, unsign
             std::vector<u8> smdh;
             loader->ReadIcon(smdh);
 
+            u64 program_id = 0;
+            loader->ReadProgramId(program_id);
+
             emit EntryReady({
-                new GameListItemPath(QString::fromStdString(physical_name), smdh),
+                new GameListItemPath(QString::fromStdString(physical_name), smdh, program_id),
                 new GameListItem(
                     QString::fromStdString(Loader::GetFileTypeString(loader->GetFileType()))),
                 new GameListItemSize(FileUtil::GetSize(physical_name)),

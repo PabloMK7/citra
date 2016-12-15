@@ -71,10 +71,13 @@ class GameListItemPath : public GameListItem {
 public:
     static const int FullPathRole = Qt::UserRole + 1;
     static const int TitleRole = Qt::UserRole + 2;
+    static const int ProgramIdRole = Qt::UserRole + 3;
 
     GameListItemPath() : GameListItem() {}
-    GameListItemPath(const QString& game_path, const std::vector<u8>& smdh_data) : GameListItem() {
+    GameListItemPath(const QString& game_path, const std::vector<u8>& smdh_data, u64 program_id)
+        : GameListItem() {
         setData(game_path, FullPathRole);
+        setData(qulonglong(program_id), ProgramIdRole);
 
         if (!Loader::IsValidSMDH(smdh_data)) {
             // SMDH is not valid, set a default icon
