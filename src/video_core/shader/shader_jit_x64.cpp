@@ -6,23 +6,29 @@
 #include <cmath>
 #include <cstdint>
 #include <nihstro/shader_bytecode.h>
+#include <smmintrin.h>
 #include <xmmintrin.h>
 #include "common/assert.h"
 #include "common/logging/log.h"
 #include "common/vector_math.h"
-#include "common/x64/abi.h"
 #include "common/x64/cpu_detect.h"
-#include "common/x64/emitter.h"
-#include "shader.h"
-#include "shader_jit_x64.h"
+#include "common/x64/xbyak_abi.h"
+#include "common/x64/xbyak_util.h"
 #include "video_core/pica_state.h"
 #include "video_core/pica_types.h"
+#include "video_core/shader/shader.h"
+#include "video_core/shader/shader_jit_x64.h"
+
+using namespace Common::X64;
+using namespace Xbyak::util;
+using Xbyak::Label;
+using Xbyak::Reg32;
+using Xbyak::Reg64;
+using Xbyak::Xmm;
 
 namespace Pica {
 
 namespace Shader {
-
-using namespace Gen;
 
 typedef void (JitShader::*JitFunction)(Instruction instr);
 
@@ -98,44 +104,47 @@ const JitFunction instr_table[64] = {
 // purposes, as documented below:
 
 /// Pointer to the uniform memory
-static const X64Reg SETUP = R9;
+static const Reg64 SETUP = r9;
 /// The two 32-bit VS address offset registers set by the MOVA instruction
-static const X64Reg ADDROFFS_REG_0 = R10;
-static const X64Reg ADDROFFS_REG_1 = R11;
+static const Reg64 ADDROFFS_REG_0 = r10;
+static const Reg64 ADDROFFS_REG_1 = r11;
 /// VS loop count register (Multiplied by 16)
-static const X64Reg LOOPCOUNT_REG = R12;
+static const Reg32 LOOPCOUNT_REG = r12d;
 /// Current VS loop iteration number (we could probably use LOOPCOUNT_REG, but this quicker)
-static const X64Reg LOOPCOUNT = RSI;
+static const Reg32 LOOPCOUNT = esi;
 /// Number to increment LOOPCOUNT_REG by on each loop iteration (Multiplied by 16)
-static const X64Reg LOOPINC = RDI;
+static const Reg32 LOOPINC = edi;
 /// Result of the previous CMP instruction for the X-component comparison
-static const X64Reg COND0 = R13;
+static const Reg64 COND0 = r13;
 /// Result of the previous CMP instruction for the Y-component comparison
-static const X64Reg COND1 = R14;
+static const Reg64 COND1 = r14;
 /// Pointer to the UnitState instance for the current VS unit
-static const X64Reg STATE = R15;
+static const Reg64 STATE = r15;
 /// SIMD scratch register
-static const X64Reg SCRATCH = XMM0;
+static const Xmm SCRATCH = xmm0;
 /// Loaded with the first swizzled source register, otherwise can be used as a scratch register
-static const X64Reg SRC1 = XMM1;
+static const Xmm SRC1 = xmm1;
 /// Loaded with the second swizzled source register, otherwise can be used as a scratch register
-static const X64Reg SRC2 = XMM2;
+static const Xmm SRC2 = xmm2;
 /// Loaded with the third swizzled source register, otherwise can be used as a scratch register
-static const X64Reg SRC3 = XMM3;
+static const Xmm SRC3 = xmm3;
 /// Additional scratch register
-static const X64Reg SCRATCH2 = XMM4;
+static const Xmm SCRATCH2 = xmm4;
 /// Constant vector of [1.0f, 1.0f, 1.0f, 1.0f], used to efficiently set a vector to one
-static const X64Reg ONE = XMM14;
+static const Xmm ONE = xmm14;
 /// Constant vector of [-0.f, -0.f, -0.f, -0.f], used to efficiently negate a vector with XOR
-static const X64Reg NEGBIT = XMM15;
+static const Xmm NEGBIT = xmm15;
 
 // State registers that must not be modified by external functions calls
 // Scratch registers, e.g., SRC1 and SCRATCH, have to be saved on the side if needed
-static const BitSet32 persistent_regs = {
-    SETUP,          STATE,                                       // Pointers to register blocks
-    ADDROFFS_REG_0, ADDROFFS_REG_1, LOOPCOUNT_REG, COND0, COND1, // Cached registers
-    ONE + 16,       NEGBIT + 16,                                 // Constants
-};
+static const BitSet32 persistent_regs = BuildRegSet({
+    // Pointers to register blocks
+    SETUP, STATE,
+    // Cached registers
+    ADDROFFS_REG_0, ADDROFFS_REG_1, LOOPCOUNT_REG, COND0, COND1,
+    // Constants
+    ONE, NEGBIT,
+});
 
 /// Raw constant for the source register selector that indicates no swizzling is performed
 static const u8 NO_SRC_REG_SWIZZLE = 0x1b;
@@ -157,7 +166,8 @@ static void LogCritical(const char* msg) {
 
 void JitShader::Compile_Assert(bool condition, const char* msg) {
     if (!condition) {
-        ABI_CallFunctionP(reinterpret_cast<const void*>(LogCritical), const_cast<char*>(msg));
+        mov(ABI_PARAM1, reinterpret_cast<size_t>(msg));
+        CallFarFunction(*this, LogCritical);
     }
 }
 
@@ -169,8 +179,8 @@ void JitShader::Compile_Assert(bool condition, const char* msg) {
  * @param dest Destination XMM register to store the loaded, swizzled source register
  */
 void JitShader::Compile_SwizzleSrc(Instruction instr, unsigned src_num, SourceRegister src_reg,
-                                   X64Reg dest) {
-    X64Reg src_ptr;
+                                   Xmm dest) {
+    Reg64 src_ptr;
     size_t src_offset;
 
     if (src_reg.GetRegisterType() == RegisterType::FloatUniform) {
@@ -206,13 +216,13 @@ void JitShader::Compile_SwizzleSrc(Instruction instr, unsigned src_num, SourceRe
     if (src_num == offset_src && address_register_index != 0) {
         switch (address_register_index) {
         case 1: // address offset 1
-            MOVAPS(dest, MComplex(src_ptr, ADDROFFS_REG_0, SCALE_1, src_offset_disp));
+            movaps(dest, xword[src_ptr + ADDROFFS_REG_0 + src_offset_disp]);
             break;
         case 2: // address offset 2
-            MOVAPS(dest, MComplex(src_ptr, ADDROFFS_REG_1, SCALE_1, src_offset_disp));
+            movaps(dest, xword[src_ptr + ADDROFFS_REG_1 + src_offset_disp]);
             break;
         case 3: // address offset 3
-            MOVAPS(dest, MComplex(src_ptr, LOOPCOUNT_REG, SCALE_1, src_offset_disp));
+            movaps(dest, xword[src_ptr + LOOPCOUNT_REG + src_offset_disp]);
             break;
         default:
             UNREACHABLE();
@@ -220,7 +230,7 @@ void JitShader::Compile_SwizzleSrc(Instruction instr, unsigned src_num, SourceRe
         }
     } else {
         // Load the source
-        MOVAPS(dest, MDisp(src_ptr, src_offset_disp));
+        movaps(dest, xword[src_ptr + src_offset_disp]);
     }
 
     SwizzlePattern swiz = {g_state.vs.swizzle_data[operand_desc_id]};
@@ -232,17 +242,17 @@ void JitShader::Compile_SwizzleSrc(Instruction instr, unsigned src_num, SourceRe
         sel = ((sel & 0xc0) >> 6) | ((sel & 3) << 6) | ((sel & 0xc) << 2) | ((sel & 0x30) >> 2);
 
         // Shuffle inputs for swizzle
-        SHUFPS(dest, R(dest), sel);
+        shufps(dest, dest, sel);
     }
 
     // If the source register should be negated, flip the negative bit using XOR
     const bool negate[] = {swiz.negate_src1, swiz.negate_src2, swiz.negate_src3};
     if (negate[src_num - 1]) {
-        XORPS(dest, R(NEGBIT));
+        xorps(dest, NEGBIT);
     }
 }
 
-void JitShader::Compile_DestEnable(Instruction instr, X64Reg src) {
+void JitShader::Compile_DestEnable(Instruction instr, Xmm src) {
     DestRegister dest;
     unsigned operand_desc_id;
     if (instr.opcode.Value().EffectiveOpCode() == OpCode::Id::MAD ||
@@ -263,21 +273,21 @@ void JitShader::Compile_DestEnable(Instruction instr, X64Reg src) {
     // If all components are enabled, write the result to the destination register
     if (swiz.dest_mask == NO_DEST_REG_MASK) {
         // Store dest back to memory
-        MOVAPS(MDisp(STATE, dest_offset_disp), src);
+        movaps(xword[STATE + dest_offset_disp], src);
 
     } else {
         // Not all components are enabled, so mask the result when storing to the destination
         // register...
-        MOVAPS(SCRATCH, MDisp(STATE, dest_offset_disp));
+        movaps(SCRATCH, xword[STATE + dest_offset_disp]);
 
         if (Common::GetCPUCaps().sse4_1) {
             u8 mask = ((swiz.dest_mask & 1) << 3) | ((swiz.dest_mask & 8) >> 3) |
                       ((swiz.dest_mask & 2) << 1) | ((swiz.dest_mask & 4) >> 1);
-            BLENDPS(SCRATCH, R(src), mask);
+            blendps(SCRATCH, src, mask);
         } else {
-            MOVAPS(SCRATCH2, R(src));
-            UNPCKHPS(SCRATCH2, R(SCRATCH)); // Unpack X/Y components of source and destination
-            UNPCKLPS(SCRATCH, R(src));      // Unpack Z/W components of source and destination
+            movaps(SCRATCH2, src);
+            unpckhps(SCRATCH2, SCRATCH); // Unpack X/Y components of source and destination
+            unpcklps(SCRATCH, src);      // Unpack Z/W components of source and destination
 
             // Compute selector to selectively copy source components to destination for SHUFPS
             // instruction
@@ -285,62 +295,62 @@ void JitShader::Compile_DestEnable(Instruction instr, X64Reg src) {
                      ((swiz.DestComponentEnabled(1) ? 3 : 2) << 2) |
                      ((swiz.DestComponentEnabled(2) ? 0 : 1) << 4) |
                      ((swiz.DestComponentEnabled(3) ? 2 : 3) << 6);
-            SHUFPS(SCRATCH, R(SCRATCH2), sel);
+            shufps(SCRATCH, SCRATCH2, sel);
         }
 
         // Store dest back to memory
-        MOVAPS(MDisp(STATE, dest_offset_disp), SCRATCH);
+        movaps(xword[STATE + dest_offset_disp], SCRATCH);
     }
 }
 
-void JitShader::Compile_SanitizedMul(Gen::X64Reg src1, Gen::X64Reg src2, Gen::X64Reg scratch) {
-    MOVAPS(scratch, R(src1));
-    CMPPS(scratch, R(src2), CMP_ORD);
+void JitShader::Compile_SanitizedMul(Xmm src1, Xmm src2, Xmm scratch) {
+    movaps(scratch, src1);
+    cmpordps(scratch, src2);
 
-    MULPS(src1, R(src2));
+    mulps(src1, src2);
 
-    MOVAPS(src2, R(src1));
-    CMPPS(src2, R(src2), CMP_UNORD);
+    movaps(src2, src1);
+    cmpunordps(src2, src2);
 
-    XORPS(scratch, R(src2));
-    ANDPS(src1, R(scratch));
+    xorps(scratch, src2);
+    andps(src1, scratch);
 }
 
 void JitShader::Compile_EvaluateCondition(Instruction instr) {
     // Note: NXOR is used below to check for equality
     switch (instr.flow_control.op) {
     case Instruction::FlowControlType::Or:
-        MOV(32, R(RAX), R(COND0));
-        MOV(32, R(RBX), R(COND1));
-        XOR(32, R(RAX), Imm32(instr.flow_control.refx.Value() ^ 1));
-        XOR(32, R(RBX), Imm32(instr.flow_control.refy.Value() ^ 1));
-        OR(32, R(RAX), R(RBX));
+        mov(eax, COND0);
+        mov(ebx, COND1);
+        xor(eax, (instr.flow_control.refx.Value() ^ 1));
+        xor(ebx, (instr.flow_control.refy.Value() ^ 1));
+        or (eax, ebx);
         break;
 
     case Instruction::FlowControlType::And:
-        MOV(32, R(RAX), R(COND0));
-        MOV(32, R(RBX), R(COND1));
-        XOR(32, R(RAX), Imm32(instr.flow_control.refx.Value() ^ 1));
-        XOR(32, R(RBX), Imm32(instr.flow_control.refy.Value() ^ 1));
-        AND(32, R(RAX), R(RBX));
+        mov(eax, COND0);
+        mov(ebx, COND1);
+        xor(eax, (instr.flow_control.refx.Value() ^ 1));
+        xor(ebx, (instr.flow_control.refy.Value() ^ 1));
+        and(eax, ebx);
         break;
 
     case Instruction::FlowControlType::JustX:
-        MOV(32, R(RAX), R(COND0));
-        XOR(32, R(RAX), Imm32(instr.flow_control.refx.Value() ^ 1));
+        mov(eax, COND0);
+        xor(eax, (instr.flow_control.refx.Value() ^ 1));
         break;
 
     case Instruction::FlowControlType::JustY:
-        MOV(32, R(RAX), R(COND1));
-        XOR(32, R(RAX), Imm32(instr.flow_control.refy.Value() ^ 1));
+        mov(eax, COND1);
+        xor(eax, (instr.flow_control.refy.Value() ^ 1));
         break;
     }
 }
 
 void JitShader::Compile_UniformCondition(Instruction instr) {
-    int offset =
+    size_t offset =
         ShaderSetup::UniformOffset(RegisterType::BoolUniform, instr.flow_control.bool_uniform_id);
-    CMP(sizeof(bool) * 8, MDisp(SETUP, offset), Imm8(0));
+    cmp(byte[SETUP + offset], 0);
 }
 
 BitSet32 JitShader::PersistentCallerSavedRegs() {
@@ -350,7 +360,7 @@ BitSet32 JitShader::PersistentCallerSavedRegs() {
 void JitShader::Compile_ADD(Instruction instr) {
     Compile_SwizzleSrc(instr, 1, instr.common.src1, SRC1);
     Compile_SwizzleSrc(instr, 2, instr.common.src2, SRC2);
-    ADDPS(SRC1, R(SRC2));
+    addps(SRC1, SRC2);
     Compile_DestEnable(instr, SRC1);
 }
 
@@ -360,15 +370,15 @@ void JitShader::Compile_DP3(Instruction instr) {
 
     Compile_SanitizedMul(SRC1, SRC2, SCRATCH);
 
-    MOVAPS(SRC2, R(SRC1));
-    SHUFPS(SRC2, R(SRC2), _MM_SHUFFLE(1, 1, 1, 1));
+    movaps(SRC2, SRC1);
+    shufps(SRC2, SRC2, _MM_SHUFFLE(1, 1, 1, 1));
 
-    MOVAPS(SRC3, R(SRC1));
-    SHUFPS(SRC3, R(SRC3), _MM_SHUFFLE(2, 2, 2, 2));
+    movaps(SRC3, SRC1);
+    shufps(SRC3, SRC3, _MM_SHUFFLE(2, 2, 2, 2));
 
-    SHUFPS(SRC1, R(SRC1), _MM_SHUFFLE(0, 0, 0, 0));
-    ADDPS(SRC1, R(SRC2));
-    ADDPS(SRC1, R(SRC3));
+    shufps(SRC1, SRC1, _MM_SHUFFLE(0, 0, 0, 0));
+    addps(SRC1, SRC2);
+    addps(SRC1, SRC3);
 
     Compile_DestEnable(instr, SRC1);
 }
@@ -379,13 +389,13 @@ void JitShader::Compile_DP4(Instruction instr) {
 
     Compile_SanitizedMul(SRC1, SRC2, SCRATCH);
 
-    MOVAPS(SRC2, R(SRC1));
-    SHUFPS(SRC1, R(SRC1), _MM_SHUFFLE(2, 3, 0, 1)); // XYZW -> ZWXY
-    ADDPS(SRC1, R(SRC2));
+    movaps(SRC2, SRC1);
+    shufps(SRC1, SRC1, _MM_SHUFFLE(2, 3, 0, 1)); // XYZW -> ZWXY
+    addps(SRC1, SRC2);
 
-    MOVAPS(SRC2, R(SRC1));
-    SHUFPS(SRC1, R(SRC1), _MM_SHUFFLE(0, 1, 2, 3)); // XYZW -> WZYX
-    ADDPS(SRC1, R(SRC2));
+    movaps(SRC2, SRC1);
+    shufps(SRC1, SRC1, _MM_SHUFFLE(0, 1, 2, 3)); // XYZW -> WZYX
+    addps(SRC1, SRC2);
 
     Compile_DestEnable(instr, SRC1);
 }
@@ -401,50 +411,50 @@ void JitShader::Compile_DPH(Instruction instr) {
 
     if (Common::GetCPUCaps().sse4_1) {
         // Set 4th component to 1.0
-        BLENDPS(SRC1, R(ONE), 0x8); // 0b1000
+        blendps(SRC1, ONE, 0b1000);
     } else {
         // Set 4th component to 1.0
-        MOVAPS(SCRATCH, R(SRC1));
-        UNPCKHPS(SCRATCH, R(ONE));  // XYZW, 1111 -> Z1__
-        UNPCKLPD(SRC1, R(SCRATCH)); // XYZW, Z1__ -> XYZ1
+        movaps(SCRATCH, SRC1);
+        unpckhps(SCRATCH, ONE);  // XYZW, 1111 -> Z1__
+        unpcklpd(SRC1, SCRATCH); // XYZW, Z1__ -> XYZ1
     }
 
     Compile_SanitizedMul(SRC1, SRC2, SCRATCH);
 
-    MOVAPS(SRC2, R(SRC1));
-    SHUFPS(SRC1, R(SRC1), _MM_SHUFFLE(2, 3, 0, 1)); // XYZW -> ZWXY
-    ADDPS(SRC1, R(SRC2));
+    movaps(SRC2, SRC1);
+    shufps(SRC1, SRC1, _MM_SHUFFLE(2, 3, 0, 1)); // XYZW -> ZWXY
+    addps(SRC1, SRC2);
 
-    MOVAPS(SRC2, R(SRC1));
-    SHUFPS(SRC1, R(SRC1), _MM_SHUFFLE(0, 1, 2, 3)); // XYZW -> WZYX
-    ADDPS(SRC1, R(SRC2));
+    movaps(SRC2, SRC1);
+    shufps(SRC1, SRC1, _MM_SHUFFLE(0, 1, 2, 3)); // XYZW -> WZYX
+    addps(SRC1, SRC2);
 
     Compile_DestEnable(instr, SRC1);
 }
 
 void JitShader::Compile_EX2(Instruction instr) {
     Compile_SwizzleSrc(instr, 1, instr.common.src1, SRC1);
-    MOVSS(XMM0, R(SRC1));
+    movss(xmm0, SRC1); // ABI_PARAM1
 
-    ABI_PushRegistersAndAdjustStack(PersistentCallerSavedRegs(), 0);
-    ABI_CallFunction(reinterpret_cast<const void*>(exp2f));
-    ABI_PopRegistersAndAdjustStack(PersistentCallerSavedRegs(), 0);
+    ABI_PushRegistersAndAdjustStack(*this, PersistentCallerSavedRegs(), 0);
+    CallFarFunction(*this, exp2f);
+    ABI_PopRegistersAndAdjustStack(*this, PersistentCallerSavedRegs(), 0);
 
-    SHUFPS(XMM0, R(XMM0), _MM_SHUFFLE(0, 0, 0, 0));
-    MOVAPS(SRC1, R(XMM0));
+    shufps(xmm0, xmm0, _MM_SHUFFLE(0, 0, 0, 0)); // ABI_RETURN
+    movaps(SRC1, xmm0);
     Compile_DestEnable(instr, SRC1);
 }
 
 void JitShader::Compile_LG2(Instruction instr) {
     Compile_SwizzleSrc(instr, 1, instr.common.src1, SRC1);
-    MOVSS(XMM0, R(SRC1));
+    movss(xmm0, SRC1); // ABI_PARAM1
 
-    ABI_PushRegistersAndAdjustStack(PersistentCallerSavedRegs(), 0);
-    ABI_CallFunction(reinterpret_cast<const void*>(log2f));
-    ABI_PopRegistersAndAdjustStack(PersistentCallerSavedRegs(), 0);
+    ABI_PushRegistersAndAdjustStack(*this, PersistentCallerSavedRegs(), 0);
+    CallFarFunction(*this, log2f);
+    ABI_PopRegistersAndAdjustStack(*this, PersistentCallerSavedRegs(), 0);
 
-    SHUFPS(XMM0, R(XMM0), _MM_SHUFFLE(0, 0, 0, 0));
-    MOVAPS(SRC1, R(XMM0));
+    shufps(xmm0, xmm0, _MM_SHUFFLE(0, 0, 0, 0)); // ABI_RETURN
+    movaps(SRC1, xmm0);
     Compile_DestEnable(instr, SRC1);
 }
 
@@ -464,8 +474,8 @@ void JitShader::Compile_SGE(Instruction instr) {
         Compile_SwizzleSrc(instr, 2, instr.common.src2, SRC2);
     }
 
-    CMPPS(SRC2, R(SRC1), CMP_LE);
-    ANDPS(SRC2, R(ONE));
+    cmpleps(SRC2, SRC1);
+    andps(SRC2, ONE);
 
     Compile_DestEnable(instr, SRC2);
 }
@@ -479,8 +489,8 @@ void JitShader::Compile_SLT(Instruction instr) {
         Compile_SwizzleSrc(instr, 2, instr.common.src2, SRC2);
     }
 
-    CMPPS(SRC1, R(SRC2), CMP_LT);
-    ANDPS(SRC1, R(ONE));
+    cmpltps(SRC1, SRC2);
+    andps(SRC1, ONE);
 
     Compile_DestEnable(instr, SRC1);
 }
@@ -489,10 +499,10 @@ void JitShader::Compile_FLR(Instruction instr) {
     Compile_SwizzleSrc(instr, 1, instr.common.src1, SRC1);
 
     if (Common::GetCPUCaps().sse4_1) {
-        ROUNDFLOORPS(SRC1, R(SRC1));
+        roundps(SRC1, SRC1, _MM_FROUND_FLOOR);
     } else {
-        CVTTPS2DQ(SRC1, R(SRC1));
-        CVTDQ2PS(SRC1, R(SRC1));
+        cvttps2dq(SRC1, SRC1);
+        cvtdq2ps(SRC1, SRC1);
     }
 
     Compile_DestEnable(instr, SRC1);
@@ -502,7 +512,7 @@ void JitShader::Compile_MAX(Instruction instr) {
     Compile_SwizzleSrc(instr, 1, instr.common.src1, SRC1);
     Compile_SwizzleSrc(instr, 2, instr.common.src2, SRC2);
     // SSE semantics match PICA200 ones: In case of NaN, SRC2 is returned.
-    MAXPS(SRC1, R(SRC2));
+    maxps(SRC1, SRC2);
     Compile_DestEnable(instr, SRC1);
 }
 
@@ -510,7 +520,7 @@ void JitShader::Compile_MIN(Instruction instr) {
     Compile_SwizzleSrc(instr, 1, instr.common.src1, SRC1);
     Compile_SwizzleSrc(instr, 2, instr.common.src2, SRC2);
     // SSE semantics match PICA200 ones: In case of NaN, SRC2 is returned.
-    MINPS(SRC1, R(SRC2));
+    minps(SRC1, SRC2);
     Compile_DestEnable(instr, SRC1);
 }
 
@@ -524,37 +534,37 @@ void JitShader::Compile_MOVA(Instruction instr) {
     Compile_SwizzleSrc(instr, 1, instr.common.src1, SRC1);
 
     // Convert floats to integers using truncation (only care about X and Y components)
-    CVTTPS2DQ(SRC1, R(SRC1));
+    cvttps2dq(SRC1, SRC1);
 
     // Get result
-    MOVQ_xmm(R(RAX), SRC1);
+    movq(rax, SRC1);
 
     // Handle destination enable
     if (swiz.DestComponentEnabled(0) && swiz.DestComponentEnabled(1)) {
         // Move and sign-extend low 32 bits
-        MOVSX(64, 32, ADDROFFS_REG_0, R(RAX));
+        movsxd(ADDROFFS_REG_0, eax);
 
         // Move and sign-extend high 32 bits
-        SHR(64, R(RAX), Imm8(32));
-        MOVSX(64, 32, ADDROFFS_REG_1, R(RAX));
+        shr(rax, 32);
+        movsxd(ADDROFFS_REG_1, eax);
 
         // Multiply by 16 to be used as an offset later
-        SHL(64, R(ADDROFFS_REG_0), Imm8(4));
-        SHL(64, R(ADDROFFS_REG_1), Imm8(4));
+        shl(ADDROFFS_REG_0, 4);
+        shl(ADDROFFS_REG_1, 4);
     } else {
         if (swiz.DestComponentEnabled(0)) {
             // Move and sign-extend low 32 bits
-            MOVSX(64, 32, ADDROFFS_REG_0, R(RAX));
+            movsxd(ADDROFFS_REG_0, eax);
 
             // Multiply by 16 to be used as an offset later
-            SHL(64, R(ADDROFFS_REG_0), Imm8(4));
+            shl(ADDROFFS_REG_0, 4);
         } else if (swiz.DestComponentEnabled(1)) {
             // Move and sign-extend high 32 bits
-            SHR(64, R(RAX), Imm8(32));
-            MOVSX(64, 32, ADDROFFS_REG_1, R(RAX));
+            shr(rax, 32);
+            movsxd(ADDROFFS_REG_1, eax);
 
             // Multiply by 16 to be used as an offset later
-            SHL(64, R(ADDROFFS_REG_1), Imm8(4));
+            shl(ADDROFFS_REG_1, 4);
         }
     }
 }
@@ -569,8 +579,8 @@ void JitShader::Compile_RCP(Instruction instr) {
 
     // TODO(bunnei): RCPSS is a pretty rough approximation, this might cause problems if Pica
     // performs this operation more accurately. This should be checked on hardware.
-    RCPSS(SRC1, R(SRC1));
-    SHUFPS(SRC1, R(SRC1), _MM_SHUFFLE(0, 0, 0, 0)); // XYWZ -> XXXX
+    rcpss(SRC1, SRC1);
+    shufps(SRC1, SRC1, _MM_SHUFFLE(0, 0, 0, 0)); // XYWZ -> XXXX
 
     Compile_DestEnable(instr, SRC1);
 }
@@ -580,8 +590,8 @@ void JitShader::Compile_RSQ(Instruction instr) {
 
     // TODO(bunnei): RSQRTSS is a pretty rough approximation, this might cause problems if Pica
     // performs this operation more accurately. This should be checked on hardware.
-    RSQRTSS(SRC1, R(SRC1));
-    SHUFPS(SRC1, R(SRC1), _MM_SHUFFLE(0, 0, 0, 0)); // XYWZ -> XXXX
+    rsqrtss(SRC1, SRC1);
+    shufps(SRC1, SRC1, _MM_SHUFFLE(0, 0, 0, 0)); // XYWZ -> XXXX
 
     Compile_DestEnable(instr, SRC1);
 }
@@ -589,34 +599,35 @@ void JitShader::Compile_RSQ(Instruction instr) {
 void JitShader::Compile_NOP(Instruction instr) {}
 
 void JitShader::Compile_END(Instruction instr) {
-    ABI_PopRegistersAndAdjustStack(ABI_ALL_CALLEE_SAVED, 8);
-    RET();
+    ABI_PopRegistersAndAdjustStack(*this, ABI_ALL_CALLEE_SAVED, 8);
+    ret();
 }
 
 void JitShader::Compile_CALL(Instruction instr) {
     // Push offset of the return
-    PUSH(64, Imm32(instr.flow_control.dest_offset + instr.flow_control.num_instructions));
+    push(qword, (instr.flow_control.dest_offset + instr.flow_control.num_instructions));
 
     // Call the subroutine
-    FixupBranch b = CALL();
-    fixup_branches.push_back({b, instr.flow_control.dest_offset});
+    call(instruction_labels[instr.flow_control.dest_offset]);
 
     // Skip over the return offset that's on the stack
-    ADD(64, R(RSP), Imm32(8));
+    add(rsp, 8);
 }
 
 void JitShader::Compile_CALLC(Instruction instr) {
     Compile_EvaluateCondition(instr);
-    FixupBranch b = J_CC(CC_Z, true);
+    Label b;
+    jz(b);
     Compile_CALL(instr);
-    SetJumpTarget(b);
+    L(b);
 }
 
 void JitShader::Compile_CALLU(Instruction instr) {
     Compile_UniformCondition(instr);
-    FixupBranch b = J_CC(CC_Z, true);
+    Label b;
+    jz(b);
     Compile_CALL(instr);
-    SetJumpTarget(b);
+    L(b);
 }
 
 void JitShader::Compile_CMP(Instruction instr) {
@@ -633,33 +644,33 @@ void JitShader::Compile_CMP(Instruction instr) {
     static const u8 cmp[] = {CMP_EQ, CMP_NEQ, CMP_LT, CMP_LE, CMP_LT, CMP_LE};
 
     bool invert_op_x = (op_x == Op::GreaterThan || op_x == Op::GreaterEqual);
-    Gen::X64Reg lhs_x = invert_op_x ? SRC2 : SRC1;
-    Gen::X64Reg rhs_x = invert_op_x ? SRC1 : SRC2;
+    Xmm lhs_x = invert_op_x ? SRC2 : SRC1;
+    Xmm rhs_x = invert_op_x ? SRC1 : SRC2;
 
     if (op_x == op_y) {
         // Compare X-component and Y-component together
-        CMPPS(lhs_x, R(rhs_x), cmp[op_x]);
-        MOVQ_xmm(R(COND0), lhs_x);
+        cmpps(lhs_x, rhs_x, cmp[op_x]);
+        movq(COND0, lhs_x);
 
-        MOV(64, R(COND1), R(COND0));
+        mov(COND1, COND0);
     } else {
         bool invert_op_y = (op_y == Op::GreaterThan || op_y == Op::GreaterEqual);
-        Gen::X64Reg lhs_y = invert_op_y ? SRC2 : SRC1;
-        Gen::X64Reg rhs_y = invert_op_y ? SRC1 : SRC2;
+        Xmm lhs_y = invert_op_y ? SRC2 : SRC1;
+        Xmm rhs_y = invert_op_y ? SRC1 : SRC2;
 
         // Compare X-component
-        MOVAPS(SCRATCH, R(lhs_x));
-        CMPSS(SCRATCH, R(rhs_x), cmp[op_x]);
+        movaps(SCRATCH, lhs_x);
+        cmpss(SCRATCH, rhs_x, cmp[op_x]);
 
         // Compare Y-component
-        CMPPS(lhs_y, R(rhs_y), cmp[op_y]);
+        cmpps(lhs_y, rhs_y, cmp[op_y]);
 
-        MOVQ_xmm(R(COND0), SCRATCH);
-        MOVQ_xmm(R(COND1), lhs_y);
+        movq(COND0, SCRATCH);
+        movq(COND1, lhs_y);
     }
 
-    SHR(32, R(COND0), Imm8(31));
-    SHR(64, R(COND1), Imm8(63));
+    shr(COND0.cvt32(), 31); // ignores upper 32 bits in source
+    shr(COND1, 63);
 }
 
 void JitShader::Compile_MAD(Instruction instr) {
@@ -674,7 +685,7 @@ void JitShader::Compile_MAD(Instruction instr) {
     }
 
     Compile_SanitizedMul(SRC1, SRC2, SCRATCH);
-    ADDPS(SRC1, R(SRC3));
+    addps(SRC1, SRC3);
 
     Compile_DestEnable(instr, SRC1);
 }
@@ -682,6 +693,7 @@ void JitShader::Compile_MAD(Instruction instr) {
 void JitShader::Compile_IF(Instruction instr) {
     Compile_Assert(instr.flow_control.dest_offset >= program_counter,
                    "Backwards if-statements not supported");
+    Label l_else, l_endif;
 
     // Evaluate the "IF" condition
     if (instr.opcode.Value() == OpCode::Id::IFU) {
@@ -689,26 +701,25 @@ void JitShader::Compile_IF(Instruction instr) {
     } else if (instr.opcode.Value() == OpCode::Id::IFC) {
         Compile_EvaluateCondition(instr);
     }
-    FixupBranch b = J_CC(CC_Z, true);
+    jz(l_else, T_NEAR);
 
     // Compile the code that corresponds to the condition evaluating as true
     Compile_Block(instr.flow_control.dest_offset);
 
     // If there isn't an "ELSE" condition, we are done here
     if (instr.flow_control.num_instructions == 0) {
-        SetJumpTarget(b);
+        L(l_else);
         return;
     }
 
-    FixupBranch b2 = J(true);
+    jmp(l_endif, T_NEAR);
 
-    SetJumpTarget(b);
-
+    L(l_else);
     // This code corresponds to the "ELSE" condition
     // Comple the code that corresponds to the condition evaluating as false
     Compile_Block(instr.flow_control.dest_offset + instr.flow_control.num_instructions);
 
-    SetJumpTarget(b2);
+    L(l_endif);
 }
 
 void JitShader::Compile_LOOP(Instruction instr) {
@@ -721,25 +732,26 @@ void JitShader::Compile_LOOP(Instruction instr) {
     // This decodes the fields from the integer uniform at index instr.flow_control.int_uniform_id.
     // The Y (LOOPCOUNT_REG) and Z (LOOPINC) component are kept multiplied by 16 (Left shifted by
     // 4 bits) to be used as an offset into the 16-byte vector registers later
-    int offset =
+    size_t offset =
         ShaderSetup::UniformOffset(RegisterType::IntUniform, instr.flow_control.int_uniform_id);
-    MOV(32, R(LOOPCOUNT), MDisp(SETUP, offset));
-    MOV(32, R(LOOPCOUNT_REG), R(LOOPCOUNT));
-    SHR(32, R(LOOPCOUNT_REG), Imm8(4));
-    AND(32, R(LOOPCOUNT_REG), Imm32(0xFF0)); // Y-component is the start
-    MOV(32, R(LOOPINC), R(LOOPCOUNT));
-    SHR(32, R(LOOPINC), Imm8(12));
-    AND(32, R(LOOPINC), Imm32(0xFF0));     // Z-component is the incrementer
-    MOVZX(32, 8, LOOPCOUNT, R(LOOPCOUNT)); // X-component is iteration count
-    ADD(32, R(LOOPCOUNT), Imm8(1));        // Iteration count is X-component + 1
+    mov(LOOPCOUNT, dword[SETUP + offset]);
+    mov(LOOPCOUNT_REG, LOOPCOUNT);
+    shr(LOOPCOUNT_REG, 4);
+    and(LOOPCOUNT_REG, 0xFF0); // Y-component is the start
+    mov(LOOPINC, LOOPCOUNT);
+    shr(LOOPINC, 12);
+    and(LOOPINC, 0xFF0);                // Z-component is the incrementer
+    movzx(LOOPCOUNT, LOOPCOUNT.cvt8()); // X-component is iteration count
+    add(LOOPCOUNT, 1);                  // Iteration count is X-component + 1
 
-    auto loop_start = GetCodePtr();
+    Label l_loop_start;
+    L(l_loop_start);
 
     Compile_Block(instr.flow_control.dest_offset + 1);
 
-    ADD(32, R(LOOPCOUNT_REG), R(LOOPINC)); // Increment LOOPCOUNT_REG by Z-component
-    SUB(32, R(LOOPCOUNT), Imm8(1));        // Increment loop count by 1
-    J_CC(CC_NZ, loop_start);               // Loop if not equal
+    add(LOOPCOUNT_REG, LOOPINC); // Increment LOOPCOUNT_REG by Z-component
+    sub(LOOPCOUNT, 1);           // Increment loop count by 1
+    jnz(l_loop_start);           // Loop if not equal
 
     looping = false;
 }
@@ -755,8 +767,12 @@ void JitShader::Compile_JMP(Instruction instr) {
     bool inverted_condition =
         (instr.opcode.Value() == OpCode::Id::JMPU) && (instr.flow_control.num_instructions & 1);
 
-    FixupBranch b = J_CC(inverted_condition ? CC_Z : CC_NZ, true);
-    fixup_branches.push_back({b, instr.flow_control.dest_offset});
+    Label& b = instruction_labels[instr.flow_control.dest_offset];
+    if (inverted_condition) {
+        jz(b, T_NEAR);
+    } else {
+        jnz(b, T_NEAR);
+    }
 }
 
 void JitShader::Compile_Block(unsigned end) {
@@ -767,13 +783,14 @@ void JitShader::Compile_Block(unsigned end) {
 
 void JitShader::Compile_Return() {
     // Peek return offset on the stack and check if we're at that offset
-    MOV(64, R(RAX), MDisp(RSP, 8));
-    CMP(32, R(RAX), Imm32(program_counter));
+    mov(rax, qword[rsp + 8]);
+    cmp(eax, (program_counter));
 
     // If so, jump back to before CALL
-    FixupBranch b = J_CC(CC_NZ, true);
-    RET();
-    SetJumpTarget(b);
+    Label b;
+    jnz(b);
+    ret();
+    L(b);
 }
 
 void JitShader::Compile_NextInstr() {
@@ -781,9 +798,7 @@ void JitShader::Compile_NextInstr() {
         Compile_Return();
     }
 
-    ASSERT_MSG(code_ptr[program_counter] == nullptr,
-               "Tried to compile already compiled shader location!");
-    code_ptr[program_counter] = GetCodePtr();
+    L(instruction_labels[program_counter]);
 
     Instruction instr = GetVertexShaderInstruction(program_counter++);
 
@@ -824,64 +839,53 @@ void JitShader::FindReturnOffsets() {
 
 void JitShader::Compile() {
     // Reset flow control state
-    program = (CompiledShader*)GetCodePtr();
+    program = (CompiledShader*)getCurr();
     program_counter = 0;
     looping = false;
-    code_ptr.fill(nullptr);
-    fixup_branches.clear();
+    instruction_labels.fill(Xbyak::Label());
 
     // Find all `CALL` instructions and identify return locations
     FindReturnOffsets();
 
     // The stack pointer is 8 modulo 16 at the entry of a procedure
-    ABI_PushRegistersAndAdjustStack(ABI_ALL_CALLEE_SAVED, 8);
+    ABI_PushRegistersAndAdjustStack(*this, ABI_ALL_CALLEE_SAVED, 8);
 
-    MOV(PTRBITS, R(SETUP), R(ABI_PARAM1));
-    MOV(PTRBITS, R(STATE), R(ABI_PARAM2));
+    mov(SETUP, ABI_PARAM1);
+    mov(STATE, ABI_PARAM2);
 
     // Zero address/loop  registers
-    XOR(64, R(ADDROFFS_REG_0), R(ADDROFFS_REG_0));
-    XOR(64, R(ADDROFFS_REG_1), R(ADDROFFS_REG_1));
-    XOR(64, R(LOOPCOUNT_REG), R(LOOPCOUNT_REG));
+    xor(ADDROFFS_REG_0.cvt32(), ADDROFFS_REG_0.cvt32());
+    xor(ADDROFFS_REG_1.cvt32(), ADDROFFS_REG_1.cvt32());
+    xor(LOOPCOUNT_REG, LOOPCOUNT_REG);
 
     // Used to set a register to one
     static const __m128 one = {1.f, 1.f, 1.f, 1.f};
-    MOV(PTRBITS, R(RAX), ImmPtr(&one));
-    MOVAPS(ONE, MatR(RAX));
+    mov(rax, reinterpret_cast<size_t>(&one));
+    movaps(ONE, xword[rax]);
 
     // Used to negate registers
     static const __m128 neg = {-0.f, -0.f, -0.f, -0.f};
-    MOV(PTRBITS, R(RAX), ImmPtr(&neg));
-    MOVAPS(NEGBIT, MatR(RAX));
+    mov(rax, reinterpret_cast<size_t>(&neg));
+    movaps(NEGBIT, xword[rax]);
 
     // Jump to start of the shader program
-    JMPptr(R(ABI_PARAM3));
+    jmp(ABI_PARAM3);
 
     // Compile entire program
     Compile_Block(static_cast<unsigned>(g_state.vs.program_code.size()));
 
-    // Set the target for any incomplete branches now that the entire shader program has been
-    // emitted
-    for (const auto& branch : fixup_branches) {
-        SetJumpTarget(branch.first, code_ptr[branch.second]);
-    }
-
     // Free memory that's no longer needed
     return_offsets.clear();
     return_offsets.shrink_to_fit();
-    fixup_branches.clear();
-    fixup_branches.shrink_to_fit();
 
-    uintptr_t size =
-        reinterpret_cast<uintptr_t>(GetCodePtr()) - reinterpret_cast<uintptr_t>(program);
+    ready();
+
+    uintptr_t size = reinterpret_cast<uintptr_t>(getCurr()) - reinterpret_cast<uintptr_t>(program);
     ASSERT_MSG(size <= MAX_SHADER_SIZE, "Compiled a shader that exceeds the allocated size!");
-
     LOG_DEBUG(HW_GPU, "Compiled shader size=%lu", size);
 }
 
-JitShader::JitShader() {
-    AllocCodeSpace(MAX_SHADER_SIZE);
-}
+JitShader::JitShader() : Xbyak::CodeGenerator(MAX_SHADER_SIZE) {}
 
 } // namespace Shader
 
