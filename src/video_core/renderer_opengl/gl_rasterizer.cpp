@@ -11,6 +11,7 @@
 #include "common/color.h"
 #include "common/logging/log.h"
 #include "common/math_util.h"
+#include "common/microprofile.h"
 #include "common/vector_math.h"
 #include "core/hw/gpu.h"
 #include "video_core/pica.h"
@@ -20,6 +21,10 @@
 #include "video_core/renderer_opengl/gl_shader_util.h"
 #include "video_core/renderer_opengl/pica_to_gl.h"
 #include "video_core/renderer_opengl/renderer_opengl.h"
+
+MICROPROFILE_DEFINE(OpenGL_Drawing, "OpenGL", "Drawing", MP_RGB(128, 128, 192));
+MICROPROFILE_DEFINE(OpenGL_Blits, "OpenGL", "Blits", MP_RGB(100, 100, 255));
+MICROPROFILE_DEFINE(OpenGL_CacheManagement, "OpenGL", "Cache Mgmt", MP_RGB(100, 255, 100));
 
 static bool IsPassThroughTevStage(const Pica::Regs::TevStageConfig& stage) {
     return (stage.color_op == Pica::Regs::TevStageConfig::Operation::Replace &&
@@ -168,6 +173,7 @@ void RasterizerOpenGL::DrawTriangles() {
     if (vertex_batch.empty())
         return;
 
+    MICROPROFILE_SCOPE(OpenGL_Drawing);
     const auto& regs = Pica::g_state.regs;
 
     // Sync and bind the framebuffer surfaces
@@ -694,18 +700,22 @@ void RasterizerOpenGL::NotifyPicaRegisterChanged(u32 id) {
 }
 
 void RasterizerOpenGL::FlushAll() {
+    MICROPROFILE_SCOPE(OpenGL_CacheManagement);
     res_cache.FlushAll();
 }
 
 void RasterizerOpenGL::FlushRegion(PAddr addr, u32 size) {
+    MICROPROFILE_SCOPE(OpenGL_CacheManagement);
     res_cache.FlushRegion(addr, size, nullptr, false);
 }
 
 void RasterizerOpenGL::FlushAndInvalidateRegion(PAddr addr, u32 size) {
+    MICROPROFILE_SCOPE(OpenGL_CacheManagement);
     res_cache.FlushRegion(addr, size, nullptr, true);
 }
 
 bool RasterizerOpenGL::AccelerateDisplayTransfer(const GPU::Regs::DisplayTransferConfig& config) {
+    MICROPROFILE_SCOPE(OpenGL_Blits);
     using PixelFormat = CachedSurface::PixelFormat;
     using SurfaceType = CachedSurface::SurfaceType;
 
@@ -778,6 +788,7 @@ bool RasterizerOpenGL::AccelerateTextureCopy(const GPU::Regs::DisplayTransferCon
 }
 
 bool RasterizerOpenGL::AccelerateFill(const GPU::Regs::MemoryFillConfig& config) {
+    MICROPROFILE_SCOPE(OpenGL_Blits);
     using PixelFormat = CachedSurface::PixelFormat;
     using SurfaceType = CachedSurface::SurfaceType;
 
@@ -926,6 +937,7 @@ bool RasterizerOpenGL::AccelerateDisplay(const GPU::Regs::FramebufferConfig& con
     if (framebuffer_addr == 0) {
         return false;
     }
+    MICROPROFILE_SCOPE(OpenGL_CacheManagement);
 
     CachedSurface src_params;
     src_params.addr = framebuffer_addr;

@@ -136,6 +136,7 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
                 immediate_input.attr[immediate_attribute_id++] = attribute;
 
                 if (immediate_attribute_id >= regs.vs.num_input_attributes + 1) {
+                    MICROPROFILE_SCOPE(GPU_Drawing);
                     immediate_attribute_id = 0;
 
                     Shader::UnitState<false> shader_unit;
@@ -165,6 +166,8 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
 
     case PICA_REG_INDEX(gpu_mode):
         if (regs.gpu_mode == Regs::GPUMode::Configuring) {
+            MICROPROFILE_SCOPE(GPU_Drawing);
+
             // Draw immediate mode triangles when GPU Mode is set to GPUMode::Configuring
             VideoCore::g_renderer->Rasterizer()->DrawTriangles();
 
