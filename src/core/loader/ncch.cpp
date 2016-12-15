@@ -344,6 +344,18 @@ ResultStatus AppLoader_NCCH::ReadLogo(std::vector<u8>& buffer) {
     return LoadSectionExeFS("logo", buffer);
 }
 
+ResultStatus AppLoader_NCCH::ReadProgramId(u64& out_program_id) {
+    if (!file.IsOpen())
+        return ResultStatus::Error;
+
+    ResultStatus result = LoadExeFS();
+    if (result != ResultStatus::Success)
+        return result;
+
+    out_program_id = ncch_header.program_id;
+    return ResultStatus::Success;
+}
+
 ResultStatus AppLoader_NCCH::ReadRomFS(std::shared_ptr<FileUtil::IOFile>& romfs_file, u64& offset,
                                        u64& size) {
     if (!file.IsOpen())

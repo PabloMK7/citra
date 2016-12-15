@@ -144,6 +144,15 @@ public:
     }
 
     /**
+     * Get the program id of the application
+     * @param out_program_id Reference to store program id into
+     * @return ResultStatus result of function
+     */
+    virtual ResultStatus ReadProgramId(u64& out_program_id) {
+        return ResultStatus::ErrorNotImplemented;
+    }
+
+    /**
      * Get the RomFS of the application
      * Since the RomFS can be huge, we return a file reference instead of copying to a buffer
      * @param romfs_file The file containing the RomFS
