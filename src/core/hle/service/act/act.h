@@ -7,7 +7,7 @@
 namespace Service {
 namespace ACT {
 
-/// Initialize AM service
+/// Initializes all ACT services
 void Init();
 
 } // namespace ACT
