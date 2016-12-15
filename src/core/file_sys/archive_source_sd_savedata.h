@@ -23,6 +23,8 @@ public:
     ResultCode Format(u64 program_id, const FileSys::ArchiveFormatInfo& format_info);
     ResultVal<ArchiveFormatInfo> GetFormatInfo(u64 program_id) const;
 
+    static std::string GetSaveDataPathFor(const std::string& mount_point, u64 program_id);
+
 private:
     std::string mount_point;
 };
