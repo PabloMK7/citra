@@ -9,8 +9,15 @@
 #include <unordered_map>
 #include <boost/container/flat_map.hpp>
 #include "common/common_types.h"
-#include "core/hle/kernel/session.h"
+#include "core/hle/ipc.h"
+#include "core/hle/kernel/client_port.h"
+#include "core/hle/kernel/thread.h"
 #include "core/hle/result.h"
+#include "core/memory.h"
+
+namespace Kernel {
+class ServerSession;
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Namespace Service
@@ -18,19 +25,77 @@
 namespace Service {
 
 static const int kMaxPortSize = 8; ///< Maximum size of a port name (8 characters)
+/// Arbitrary default number of maximum connections to an HLE service.
+static const u32 DefaultMaxSessions = 10;
 
-/// Interface to a CTROS service
-class Interface : public Kernel::Session {
-    // TODO(yuriks): An "Interface" being a Kernel::Object is mostly non-sense. Interface should be
-    // just something that encapsulates a session and acts as a helper to implement service
-    // processes.
+/**
+ * Interface implemented by HLE Session handlers.
+ * This can be provided to a ServerSession in order to hook into several relevant events
+ * (such as a new connection or a SyncRequest) so they can be implemented in the emulator.
+ */
+class SessionRequestHandler {
 public:
-    std::string GetName() const override {
+    /**
+     * Handles a sync request from the emulated application.
+     * @param server_session The ServerSession that was triggered for this sync request,
+     * it should be used to differentiate which client (As in ClientSession) we're answering to.
+     * TODO(Subv): Use a wrapper structure to hold all the information relevant to
+     * this request (ServerSession, Originator thread, Translated command buffer, etc).
+     * @returns ResultCode the result code of the translate operation.
+     */
+    virtual void HandleSyncRequest(Kernel::SharedPtr<Kernel::ServerSession> server_session) = 0;
+
+    /**
+     * Signals that a client has just connected to this HLE handler and keeps the
+     * associated ServerSession alive for the duration of the connection.
+     * @param server_session Owning pointer to the ServerSession associated with the connection.
+     */
+    void ClientConnected(Kernel::SharedPtr<Kernel::ServerSession> server_session);
+
+    /**
+     * Signals that a client has just disconnected from this HLE handler and releases the
+     * associated ServerSession.
+     * @param server_session ServerSession associated with the connection.
+     */
+    void ClientDisconnected(Kernel::SharedPtr<Kernel::ServerSession> server_session);
+
+protected:
+    /// List of sessions that are connected to this handler.
+    /// A ServerSession whose server endpoint is an HLE implementation is kept alive by this list
+    // for the duration of the connection.
+    std::vector<Kernel::SharedPtr<Kernel::ServerSession>> connected_sessions;
+};
+
+/**
+ * Framework for implementing HLE service handlers which dispatch incoming SyncRequests based on a
+ * table mapping header ids to handler functions.
+ */
+class Interface : public SessionRequestHandler {
+public:
+    /**
+     * Creates an HLE interface with the specified max sessions.
+     * @param max_sessions Maximum number of sessions that can be
+     * connected to this service at the same time.
+     */
+    Interface(u32 max_sessions = DefaultMaxSessions);
+
+    virtual ~Interface();
+
+    std::string GetName() const {
         return GetPortName();
     }
 
     virtual void SetVersion(u32 raw_version) {
         version.raw = raw_version;
+    }
+
+    /**
+     * Gets the maximum allowed number of sessions that can be connected to this service
+     * at the same time.
+     * @returns The maximum number of connections allowed.
+     */
+    u32 GetMaxSessions() const {
+        return max_sessions;
     }
 
     typedef void (*Function)(Interface*);
@@ -49,9 +114,9 @@ public:
         return "[UNKNOWN SERVICE PORT]";
     }
 
-    ResultVal<bool> SyncRequest() override;
-
 protected:
+    void HandleSyncRequest(Kernel::SharedPtr<Kernel::ServerSession> server_session) override;
+
     /**
      * Registers the functions in the service
      */
@@ -71,6 +136,7 @@ protected:
     } version = {};
 
 private:
+    u32 max_sessions; ///< Maximum number of concurrent sessions that this service can handle.
     boost::container::flat_map<u32, FunctionInfo> m_functions;
 };
 
@@ -81,9 +147,9 @@ void Init();
 void Shutdown();
 
 /// Map of named ports managed by the kernel, which can be retrieved using the ConnectToPort SVC.
-extern std::unordered_map<std::string, Kernel::SharedPtr<Interface>> g_kernel_named_ports;
+extern std::unordered_map<std::string, Kernel::SharedPtr<Kernel::ClientPort>> g_kernel_named_ports;
 /// Map of services registered with the "srv:" service, retrieved using GetServiceHandle.
-extern std::unordered_map<std::string, Kernel::SharedPtr<Interface>> g_srv_services;
+extern std::unordered_map<std::string, Kernel::SharedPtr<Kernel::ClientPort>> g_srv_services;
 
 /// Adds a service to the services table
 void AddService(Interface* interface_);

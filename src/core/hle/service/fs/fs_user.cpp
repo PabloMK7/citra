@@ -8,6 +8,7 @@
 #include "common/logging/log.h"
 #include "common/scope_exit.h"
 #include "common/string_util.h"
+#include "core/hle/kernel/client_session.h"
 #include "core/hle/result.h"
 #include "core/hle/service/fs/archive.h"
 #include "core/hle/service/fs/fs_user.h"
@@ -17,7 +18,7 @@
 // Namespace FS_User
 
 using Kernel::SharedPtr;
-using Kernel::Session;
+using Kernel::ServerSession;
 
 namespace Service {
 namespace FS {
@@ -67,10 +68,16 @@ static void OpenFile(Service::Interface* self) {
     LOG_DEBUG(Service_FS, "path=%s, mode=%u attrs=%u", file_path.DebugStr().c_str(), mode.hex,
               attributes);
 
-    ResultVal<SharedPtr<File>> file_res = OpenFileFromArchive(archive_handle, file_path, mode);
+    ResultVal<std::shared_ptr<File>> file_res =
+        OpenFileFromArchive(archive_handle, file_path, mode);
     cmd_buff[1] = file_res.Code().raw;
     if (file_res.Succeeded()) {
-        cmd_buff[3] = Kernel::g_handle_table.Create(*file_res).MoveFrom();
+        std::shared_ptr<File> file = *file_res;
+        auto sessions = ServerSession::CreateSessionPair(file->GetName(), file);
+        file->ClientConnected(std::get<Kernel::SharedPtr<Kernel::ServerSession>>(sessions));
+        cmd_buff[3] = Kernel::g_handle_table
+                          .Create(std::get<Kernel::SharedPtr<Kernel::ClientSession>>(sessions))
+                          .MoveFrom();
     } else {
         cmd_buff[3] = 0;
         LOG_ERROR(Service_FS, "failed to get a handle for file %s", file_path.DebugStr().c_str());
@@ -127,10 +134,16 @@ static void OpenFileDirectly(Service::Interface* self) {
     }
     SCOPE_EXIT({ CloseArchive(*archive_handle); });
 
-    ResultVal<SharedPtr<File>> file_res = OpenFileFromArchive(*archive_handle, file_path, mode);
+    ResultVal<std::shared_ptr<File>> file_res =
+        OpenFileFromArchive(*archive_handle, file_path, mode);
     cmd_buff[1] = file_res.Code().raw;
     if (file_res.Succeeded()) {
-        cmd_buff[3] = Kernel::g_handle_table.Create(*file_res).MoveFrom();
+        std::shared_ptr<File> file = *file_res;
+        auto sessions = ServerSession::CreateSessionPair(file->GetName(), file);
+        file->ClientConnected(std::get<Kernel::SharedPtr<Kernel::ServerSession>>(sessions));
+        cmd_buff[3] = Kernel::g_handle_table
+                          .Create(std::get<Kernel::SharedPtr<Kernel::ClientSession>>(sessions))
+                          .MoveFrom();
     } else {
         cmd_buff[3] = 0;
         LOG_ERROR(Service_FS, "failed to get a handle for file %s mode=%u attributes=%u",
@@ -388,10 +401,16 @@ static void OpenDirectory(Service::Interface* self) {
     LOG_DEBUG(Service_FS, "type=%u size=%u data=%s", static_cast<u32>(dirname_type), dirname_size,
               dir_path.DebugStr().c_str());
 
-    ResultVal<SharedPtr<Directory>> dir_res = OpenDirectoryFromArchive(archive_handle, dir_path);
+    ResultVal<std::shared_ptr<Directory>> dir_res =
+        OpenDirectoryFromArchive(archive_handle, dir_path);
     cmd_buff[1] = dir_res.Code().raw;
     if (dir_res.Succeeded()) {
-        cmd_buff[3] = Kernel::g_handle_table.Create(*dir_res).MoveFrom();
+        std::shared_ptr<Directory> directory = *dir_res;
+        auto sessions = ServerSession::CreateSessionPair(directory->GetName(), directory);
+        directory->ClientConnected(std::get<Kernel::SharedPtr<Kernel::ServerSession>>(sessions));
+        cmd_buff[3] = Kernel::g_handle_table
+                          .Create(std::get<Kernel::SharedPtr<Kernel::ClientSession>>(sessions))
+                          .MoveFrom();
     } else {
         LOG_ERROR(Service_FS, "failed to get a handle for directory type=%d size=%d data=%s",
                   dirname_type, dirname_size, dir_path.DebugStr().c_str());

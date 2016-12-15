@@ -102,7 +102,7 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x01050100, nullptr, "IsTitleAllowed"},
 };
 
-APT_A_Interface::APT_A_Interface() {
+APT_A_Interface::APT_A_Interface() : Interface(MaxAPTSessions) {
     Register(FunctionTable);
 }
 

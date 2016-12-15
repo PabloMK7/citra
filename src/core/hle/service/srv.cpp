@@ -2,9 +2,13 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <tuple>
+
 #include "common/common_types.h"
 #include "common/logging/log.h"
+#include "core/hle/kernel/client_session.h"
 #include "core/hle/kernel/event.h"
+#include "core/hle/kernel/server_session.h"
 #include "core/hle/service/srv.h"
 
 namespace Service {
@@ -79,7 +83,15 @@ static void GetServiceHandle(Interface* self) {
     auto it = Service::g_srv_services.find(port_name);
 
     if (it != Service::g_srv_services.end()) {
-        cmd_buff[3] = Kernel::g_handle_table.Create(it->second).MoveFrom();
+        auto client_port = it->second;
+
+        auto client_session = client_port->Connect();
+        res = client_session.Code();
+
+        if (client_session.Succeeded()) {
+            // Return the client session
+            cmd_buff[3] = Kernel::g_handle_table.Create(*client_session).MoveFrom();
+        }
         LOG_TRACE(Service_SRV, "called port=%s, handle=0x%08X", port_name.c_str(), cmd_buff[3]);
     } else {
         LOG_ERROR(Service_SRV, "(UNIMPLEMENTED) called port=%s", port_name.c_str());

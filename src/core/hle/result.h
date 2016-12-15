@@ -18,6 +18,7 @@ enum class ErrorDescription : u32 {
     Success = 0,
     WrongPermission = 46,
     OS_InvalidBufferDescriptor = 48,
+    MaxConnectionsReached = 52,
     WrongAddress = 53,
     FS_ArchiveNotMounted = 101,
     FS_FileNotFound = 112,

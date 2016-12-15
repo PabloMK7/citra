@@ -11,8 +11,9 @@
 namespace Kernel {
 
 class ServerPort;
+class ClientSession;
 
-class ClientPort : public Object {
+class ClientPort final : public Object {
 public:
     friend class ServerPort;
     std::string GetTypeName() const override {
@@ -27,12 +28,20 @@ public:
         return HANDLE_TYPE;
     }
 
+    /**
+     * Creates a new Session pair, adds the created ServerSession to the associated ServerPort's
+     * list of pending sessions, and signals the ServerPort, causing any threads
+     * waiting on it to awake.
+     * @returns ClientSession The client endpoint of the created Session pair, or error code.
+     */
+    ResultVal<SharedPtr<ClientSession>> Connect();
+
     SharedPtr<ServerPort> server_port; ///< ServerPort associated with this client port.
     u32 max_sessions;    ///< Maximum number of simultaneous sessions the port can have
     u32 active_sessions; ///< Number of currently open sessions to this port
     std::string name;    ///< Name of client port (optional)
 
-protected:
+private:
     ClientPort();
     ~ClientPort() override;
 };

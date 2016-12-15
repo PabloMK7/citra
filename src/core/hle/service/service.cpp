@@ -2,8 +2,12 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <boost/range/algorithm_ext/erase.hpp>
+
 #include "common/logging/log.h"
 #include "common/string_util.h"
+
+#include "core/hle/kernel/server_port.h"
 #include "core/hle/service/ac_u.h"
 #include "core/hle/service/act_a.h"
 #include "core/hle/service/act_u.h"
@@ -44,8 +48,8 @@
 
 namespace Service {
 
-std::unordered_map<std::string, Kernel::SharedPtr<Interface>> g_kernel_named_ports;
-std::unordered_map<std::string, Kernel::SharedPtr<Interface>> g_srv_services;
+std::unordered_map<std::string, Kernel::SharedPtr<Kernel::ClientPort>> g_kernel_named_ports;
+std::unordered_map<std::string, Kernel::SharedPtr<Kernel::ClientPort>> g_srv_services;
 
 /**
  * Creates a function string for logging, complete with the name (or header code, depending
@@ -64,7 +68,23 @@ static std::string MakeFunctionString(const char* name, const char* port_name,
     return function_string;
 }
 
-ResultVal<bool> Interface::SyncRequest() {
+void SessionRequestHandler::ClientConnected(
+    Kernel::SharedPtr<Kernel::ServerSession> server_session) {
+    connected_sessions.push_back(server_session);
+}
+
+void SessionRequestHandler::ClientDisconnected(
+    Kernel::SharedPtr<Kernel::ServerSession> server_session) {
+    boost::range::remove_erase(connected_sessions, server_session);
+}
+
+Interface::Interface(u32 max_sessions) : max_sessions(max_sessions) {}
+Interface::~Interface() = default;
+
+void Interface::HandleSyncRequest(Kernel::SharedPtr<Kernel::ServerSession> server_session) {
+    // TODO(Subv): Make use of the server_session in the HLE service handlers to distinguish which
+    // session triggered each command.
+
     u32* cmd_buff = Kernel::GetCommandBuffer();
     auto itr = m_functions.find(cmd_buff[0]);
 
@@ -78,14 +98,12 @@ ResultVal<bool> Interface::SyncRequest() {
 
         // TODO(bunnei): Hack - ignore error
         cmd_buff[1] = 0;
-        return MakeResult<bool>(false);
+        return;
     }
     LOG_TRACE(Service, "%s",
               MakeFunctionString(itr->second.name, GetPortName().c_str(), cmd_buff).c_str());
 
     itr->second.func(this);
-
-    return MakeResult<bool>(false); // TODO: Implement return from actual function
 }
 
 void Interface::Register(const FunctionInfo* functions, size_t n) {
@@ -100,11 +118,19 @@ void Interface::Register(const FunctionInfo* functions, size_t n) {
 // Module interface
 
 static void AddNamedPort(Interface* interface_) {
-    g_kernel_named_ports.emplace(interface_->GetPortName(), interface_);
+    auto ports =
+        Kernel::ServerPort::CreatePortPair(interface_->GetMaxSessions(), interface_->GetPortName(),
+                                           std::shared_ptr<Interface>(interface_));
+    auto client_port = std::get<Kernel::SharedPtr<Kernel::ClientPort>>(ports);
+    g_kernel_named_ports.emplace(interface_->GetPortName(), std::move(client_port));
 }
 
 void AddService(Interface* interface_) {
-    g_srv_services.emplace(interface_->GetPortName(), interface_);
+    auto ports =
+        Kernel::ServerPort::CreatePortPair(interface_->GetMaxSessions(), interface_->GetPortName(),
+                                           std::shared_ptr<Interface>(interface_));
+    auto client_port = std::get<Kernel::SharedPtr<Kernel::ClientPort>>(ports);
+    g_srv_services.emplace(interface_->GetPortName(), std::move(client_port));
 }
 
 /// Initialize ServiceManager

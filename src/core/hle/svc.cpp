@@ -13,6 +13,7 @@
 #include "core/hle/function_wrappers.h"
 #include "core/hle/kernel/address_arbiter.h"
 #include "core/hle/kernel/client_port.h"
+#include "core/hle/kernel/client_session.h"
 #include "core/hle/kernel/event.h"
 #include "core/hle/kernel/memory.h"
 #include "core/hle/kernel/mutex.h"
@@ -20,6 +21,7 @@
 #include "core/hle/kernel/resource_limit.h"
 #include "core/hle/kernel/semaphore.h"
 #include "core/hle/kernel/server_port.h"
+#include "core/hle/kernel/server_session.h"
 #include "core/hle/kernel/shared_memory.h"
 #include "core/hle/kernel/thread.h"
 #include "core/hle/kernel/timer.h"
@@ -222,20 +224,29 @@ static ResultCode ConnectToPort(Handle* out_handle, const char* port_name) {
         return ERR_NOT_FOUND;
     }
 
-    CASCADE_RESULT(*out_handle, Kernel::g_handle_table.Create(it->second));
+    auto client_port = it->second;
+
+    SharedPtr<Kernel::ClientSession> client_session;
+    CASCADE_RESULT(client_session, client_port->Connect());
+
+    // Return the client session
+    CASCADE_RESULT(*out_handle, Kernel::g_handle_table.Create(client_session));
     return RESULT_SUCCESS;
 }
 
-/// Synchronize to an OS service
+/// Makes a blocking IPC call to an OS service.
 static ResultCode SendSyncRequest(Handle handle) {
-    SharedPtr<Kernel::Session> session = Kernel::g_handle_table.Get<Kernel::Session>(handle);
+    SharedPtr<Kernel::ClientSession> session =
+        Kernel::g_handle_table.Get<Kernel::ClientSession>(handle);
     if (session == nullptr) {
         return ERR_INVALID_HANDLE;
     }
 
     LOG_TRACE(Kernel_SVC, "called handle=0x%08X(%s)", handle, session->GetName().c_str());
 
-    return session->SyncRequest().Code();
+    // TODO(Subv): svcSendSyncRequest should put the caller thread to sleep while the server
+    // responds and cause a reschedule.
+    return session->SendSyncRequest();
 }
 
 /// Close a handle

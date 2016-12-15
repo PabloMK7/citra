@@ -8,7 +8,6 @@
 #include "core/hle/kernel/event.h"
 #include "core/hle/kernel/mutex.h"
 #include "core/hle/kernel/semaphore.h"
-#include "core/hle/kernel/session.h"
 #include "core/hle/kernel/thread.h"
 #include "core/hle/kernel/timer.h"
 
