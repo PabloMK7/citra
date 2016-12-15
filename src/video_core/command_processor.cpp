@@ -251,7 +251,6 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
             ASSERT(vertex != -1);
 
             bool vertex_cache_hit = false;
-            Shader::OutputRegisters output_registers;
 
             if (is_indexed) {
                 if (g_debug_context && Pica::g_debug_context->recorder) {
@@ -279,10 +278,9 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
                     g_debug_context->OnEvent(DebugContext::Event::VertexShaderInvocation,
                                              (void*)&input);
                 g_state.vs.Run(shader_unit, input, loader.GetNumTotalAttributes());
-                output_registers = shader_unit.output_registers;
 
                 // Retrieve vertex from register data
-                output_vertex = output_registers.ToVertex(regs.vs);
+                output_vertex = shader_unit.output_registers.ToVertex(regs.vs);
 
                 if (is_indexed) {
                     vertex_cache[vertex_cache_pos] = output_vertex;

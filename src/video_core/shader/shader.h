@@ -85,7 +85,7 @@ struct OutputRegisters {
 
     alignas(16) Math::Vec4<float24> value[16];
 
-    OutputVertex ToVertex(const Regs::ShaderConfig& config);
+    OutputVertex ToVertex(const Regs::ShaderConfig& config) const;
 };
 static_assert(std::is_pod<OutputRegisters>::value, "Structure is not POD");
 
