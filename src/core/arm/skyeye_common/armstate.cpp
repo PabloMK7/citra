@@ -182,7 +182,7 @@ void ARMul_State::ResetMPCoreCP15Registers() {
 }
 
 static void CheckMemoryBreakpoint(u32 address, GDBStub::BreakpointType type) {
-    if (GDBStub::g_server_enabled && GDBStub::CheckBreakpoint(address, type)) {
+    if (GDBStub::IsServerEnabled() && GDBStub::CheckBreakpoint(address, type)) {
         LOG_DEBUG(Debug, "Found memory breakpoint @ %08x", address);
         GDBStub::Break(true);
     }

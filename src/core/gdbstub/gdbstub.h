@@ -5,7 +5,7 @@
 // Originally written by Sven Peter <sven@fail0verflow.com> for anergistic.
 
 #pragma once
-#include <atomic>
+
 #include "common/common_types.h"
 
 namespace GDBStub {
@@ -24,10 +24,6 @@ struct BreakpointAddress {
     BreakpointType type;
 };
 
-/// If set to false, the server will never be started and no gdbstub-related functions will be
-/// executed.
-extern std::atomic<bool> g_server_enabled;
-
 /**
  * Set the port the gdbstub should use to listen for connections.
  *
@@ -36,7 +32,7 @@ extern std::atomic<bool> g_server_enabled;
 void SetServerPort(u16 port);
 
 /**
- * Set the g_server_enabled flag and start or stop the server if possible.
+ * Starts or stops the server if possible.
  *
  * @param status Set the server to enabled or disabled.
  */
@@ -47,6 +43,9 @@ void Init();
 
 /// Stop gdbstub server.
 void Shutdown();
+
+/// Checks if the gdbstub server is enabled.
+bool IsServerEnabled();
 
 /// Returns true if there is an active socket connection.
 bool IsConnected();

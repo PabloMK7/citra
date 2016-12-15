@@ -22,7 +22,7 @@ std::unique_ptr<ARM_Interface> g_sys_core; ///< ARM11 system (OS) core
 
 /// Run the core CPU loop
 void RunLoop(int tight_loop) {
-    if (GDBStub::g_server_enabled) {
+    if (GDBStub::IsServerEnabled()) {
         GDBStub::HandlePacket();
 
         // If the loop is halted and we want to step, use a tiny (1) number of instructions to
