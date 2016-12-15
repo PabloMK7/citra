@@ -59,7 +59,10 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
 
     regs[id] = (old_value & ~write_mask) | (value & write_mask);
 
-    DebugUtils::OnPicaRegWrite({(u16)id, (u16)mask, regs[id]});
+    // Double check for is_pica_tracing to avoid call overhead
+    if (DebugUtils::IsPicaTracing()) {
+        DebugUtils::OnPicaRegWrite({(u16)id, (u16)mask, regs[id]});
+    }
 
     if (g_debug_context)
         g_debug_context->OnEvent(DebugContext::Event::PicaCommandLoaded,

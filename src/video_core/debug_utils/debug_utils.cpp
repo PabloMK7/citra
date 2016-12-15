@@ -276,10 +276,10 @@ void DumpShader(const std::string& filename, const Regs::ShaderConfig& config,
 
 static std::unique_ptr<PicaTrace> pica_trace;
 static std::mutex pica_trace_mutex;
-static int is_pica_tracing = false;
+bool g_is_pica_tracing = false;
 
 void StartPicaTracing() {
-    if (is_pica_tracing) {
+    if (g_is_pica_tracing) {
         LOG_WARNING(HW_GPU, "StartPicaTracing called even though tracing already running!");
         return;
     }
@@ -287,34 +287,26 @@ void StartPicaTracing() {
     std::lock_guard<std::mutex> lock(pica_trace_mutex);
     pica_trace = std::make_unique<PicaTrace>();
 
-    is_pica_tracing = true;
-}
-
-bool IsPicaTracing() {
-    return is_pica_tracing != 0;
+    g_is_pica_tracing = true;
 }
 
 void OnPicaRegWrite(PicaTrace::Write write) {
-    // Double check for is_pica_tracing to avoid pointless locking overhead
-    if (!is_pica_tracing)
-        return;
-
     std::lock_guard<std::mutex> lock(pica_trace_mutex);
 
-    if (!is_pica_tracing)
+    if (!g_is_pica_tracing)
         return;
 
     pica_trace->writes.push_back(write);
 }
 
 std::unique_ptr<PicaTrace> FinishPicaTracing() {
-    if (!is_pica_tracing) {
+    if (!g_is_pica_tracing) {
         LOG_WARNING(HW_GPU, "FinishPicaTracing called even though tracing isn't running!");
         return {};
     }
 
     // signalize that no further tracing should be performed
-    is_pica_tracing = false;
+    g_is_pica_tracing = false;
 
     // Wait until running tracing is finished
     std::lock_guard<std::mutex> lock(pica_trace_mutex);
