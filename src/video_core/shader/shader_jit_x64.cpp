@@ -222,7 +222,7 @@ void JitShader::Compile_SwizzleSrc(Instruction instr, unsigned src_num, SourceRe
             movaps(dest, xword[src_ptr + ADDROFFS_REG_1 + src_offset_disp]);
             break;
         case 3: // address offset 3
-            movaps(dest, xword[src_ptr + LOOPCOUNT_REG + src_offset_disp]);
+            movaps(dest, xword[src_ptr + LOOPCOUNT_REG.cvt64() + src_offset_disp]);
             break;
         default:
             UNREACHABLE();
