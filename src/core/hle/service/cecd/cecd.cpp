@@ -5,6 +5,7 @@
 #include "common/logging/log.h"
 #include "core/hle/kernel/event.h"
 #include "core/hle/service/cecd/cecd.h"
+#include "core/hle/service/cecd/cecd_ndm.h"
 #include "core/hle/service/cecd/cecd_s.h"
 #include "core/hle/service/cecd/cecd_u.h"
 #include "core/hle/service/service.h"
@@ -43,12 +44,13 @@ void GetChangeStateEventHandle(Service::Interface* self) {
 }
 
 void Init() {
-    AddService(new CECD_S_Interface);
-    AddService(new CECD_U_Interface);
+    AddService(new CECD_NDM);
+    AddService(new CECD_S);
+    AddService(new CECD_U);
 
-    cecinfo_event = Kernel::Event::Create(Kernel::ResetType::OneShot, "CECD_U::cecinfo_event");
+    cecinfo_event = Kernel::Event::Create(Kernel::ResetType::OneShot, "CECD::cecinfo_event");
     change_state_event =
-        Kernel::Event::Create(Kernel::ResetType::OneShot, "CECD_U::change_state_event");
+        Kernel::Event::Create(Kernel::ResetType::OneShot, "CECD::change_state_event");
 }
 
 void Shutdown() {
