@@ -104,8 +104,8 @@ void File::HandleSyncRequest(Kernel::SharedPtr<Kernel::ServerSession> server_ses
         u64 offset = cmd_buff[1] | ((u64)cmd_buff[2]) << 32;
         u32 length = cmd_buff[3];
         u32 address = cmd_buff[5];
-        LOG_TRACE(Service_FS, "Read %s %s: offset=0x%llx length=%d address=0x%x",
-                  GetTypeName().c_str(), GetName().c_str(), offset, length, address);
+        LOG_TRACE(Service_FS, "Read %s: offset=0x%llx length=%d address=0x%x", GetName().c_str(),
+                  offset, length, address);
 
         if (offset + length > backend->GetSize()) {
             LOG_ERROR(Service_FS,
@@ -130,8 +130,8 @@ void File::HandleSyncRequest(Kernel::SharedPtr<Kernel::ServerSession> server_ses
         u32 length = cmd_buff[3];
         u32 flush = cmd_buff[4];
         u32 address = cmd_buff[6];
-        LOG_TRACE(Service_FS, "Write %s %s: offset=0x%llx length=%d address=0x%x, flush=0x%x",
-                  GetTypeName().c_str(), GetName().c_str(), offset, length, address, flush);
+        LOG_TRACE(Service_FS, "Write %s: offset=0x%llx length=%d address=0x%x, flush=0x%x",
+                  GetName().c_str(), offset, length, address, flush);
 
         std::vector<u8> data(length);
         Memory::ReadBlock(address, data.data(), data.size());
@@ -145,7 +145,7 @@ void File::HandleSyncRequest(Kernel::SharedPtr<Kernel::ServerSession> server_ses
     }
 
     case FileCommand::GetSize: {
-        LOG_TRACE(Service_FS, "GetSize %s %s", GetTypeName().c_str(), GetName().c_str());
+        LOG_TRACE(Service_FS, "GetSize %s", GetName().c_str());
         u64 size = backend->GetSize();
         cmd_buff[2] = (u32)size;
         cmd_buff[3] = size >> 32;
@@ -154,14 +154,13 @@ void File::HandleSyncRequest(Kernel::SharedPtr<Kernel::ServerSession> server_ses
 
     case FileCommand::SetSize: {
         u64 size = cmd_buff[1] | ((u64)cmd_buff[2] << 32);
-        LOG_TRACE(Service_FS, "SetSize %s %s size=%llu", GetTypeName().c_str(), GetName().c_str(),
-                  size);
+        LOG_TRACE(Service_FS, "SetSize %s size=%llu", GetName().c_str(), size);
         backend->SetSize(size);
         break;
     }
 
     case FileCommand::Close: {
-        LOG_TRACE(Service_FS, "Close %s %s", GetTypeName().c_str(), GetName().c_str());
+        LOG_TRACE(Service_FS, "Close %s", GetName().c_str());
         backend->Close();
         break;
     }
@@ -219,8 +218,7 @@ void Directory::HandleSyncRequest(Kernel::SharedPtr<Kernel::ServerSession> serve
         u32 count = cmd_buff[1];
         u32 address = cmd_buff[3];
         std::vector<FileSys::Entry> entries(count);
-        LOG_TRACE(Service_FS, "Read %s %s: count=%d", GetTypeName().c_str(), GetName().c_str(),
-                  count);
+        LOG_TRACE(Service_FS, "Read %s: count=%d", GetName().c_str(), count);
 
         // Number of entries actually read
         u32 read = backend->Read(entries.size(), entries.data());
@@ -230,7 +228,7 @@ void Directory::HandleSyncRequest(Kernel::SharedPtr<Kernel::ServerSession> serve
     }
 
     case DirectoryCommand::Close: {
-        LOG_TRACE(Service_FS, "Close %s %s", GetTypeName().c_str(), GetName().c_str());
+        LOG_TRACE(Service_FS, "Close %s", GetName().c_str());
         backend->Close();
         break;
     }
