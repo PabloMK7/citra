@@ -5,11 +5,17 @@
 #pragma once
 
 #include <memory>
-#include "common/common_types.h"
+#include <string>
 
+#include "common/common_types.h"
+#include "core/memory.h"
+
+class EmuWindow;
 class ARM_Interface;
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
+namespace Loader {
+class AppLoader;
+}
 
 namespace Core {
 
@@ -24,37 +30,97 @@ struct ThreadContext {
     u32 fpexc;
 };
 
-extern std::unique_ptr<ARM_Interface> g_app_core; ///< ARM11 application core
-extern std::unique_ptr<ARM_Interface> g_sys_core; ///< ARM11 system (OS) core
+class System {
+public:
+    /**
+     * Gets the instance of the System singleton class.
+     * @returns Reference to the instance of the System singleton class.
+     */
+    static System& GetInstance() {
+        return s_instance;
+    }
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
+    /// Enumeration representing the return values of the System Initialize and Load process.
+    enum class ResultStatus : u32 {
+        Success, ///< Succeeded
+        ErrorNotInitialized, ///< Error trying to use core prior to initialization
+        ErrorGetLoader, ///< Error finding the correct application loader
+        ErrorSystemMode, ///< Error determining the system mode
+        ErrorLoader, ///< Error loading the specified application
+        ErrorLoader_ErrorEncrypted, ///< Error loading the specified application due to encryption
+        ErrorLoader_ErrorInvalidFormat, ///< Error loading the specified application due to an invalid format
+        ErrorVideoCore, ///< Error in the video core
+    };
 
-/// Start the core
-void Start();
+    /**
+     * Initialize the emulated system.
+     * @param emu_window Pointer to the host-system window used for video output and keyboard input.
+     * @param system_mode The system mode.
+     * @return ResultStatus code, indicating if the operation succeeded.
+     */
+    ResultStatus Init(EmuWindow* emu_window, u32 system_mode);
 
-/**
- * Run the core CPU loop
- * This function runs the core for the specified number of CPU instructions before trying to update
- * hardware. This is much faster than SingleStep (and should be equivalent), as the CPU is not
- * required to do a full dispatch with each instruction. NOTE: the number of instructions requested
- * is not guaranteed to run, as this will be interrupted preemptively if a hardware update is
- * requested (e.g. on a thread switch).
- */
-void RunLoop(int tight_loop = 1000);
+    /// Start the core
+    void Start();
 
-/// Step the CPU one instruction
-void SingleStep();
+    /**
+     * Run the core CPU loop
+     * This function runs the core for the specified number of CPU instructions before trying to update
+     * hardware. This is much faster than SingleStep (and should be equivalent), as the CPU is not
+     * required to do a full dispatch with each instruction. NOTE: the number of instructions requested
+     * is not guaranteed to run, as this will be interrupted preemptively if a hardware update is
+     * requested (e.g. on a thread switch).
+     * @param tight_loop Number of instructions to execute.
+     * @return Result status, indicating whethor or not the operation succeeded.
+     */
+    ResultStatus RunLoop(int tight_loop = 1000);
 
-/// Halt the core
-void Halt(const char* msg);
+    /**
+     * Step the CPU one instruction
+     * @return Result status, indicating whethor or not the operation succeeded.
+     */
+    ResultStatus SingleStep();
 
-/// Kill the core
-void Stop();
+    /// Shutdown the emulated system.
+    void Shutdown();
 
-/// Initialize the core
-void Init();
+    /**
+     * Load an executable application.
+     * @param emu_window Pointer to the host-system window used for video output and keyboard input.
+     * @param filepath String path to the executable application to load on the host file system.
+     * @returns ResultStatus code, indicating if the operation succeeded.
+     */
+    ResultStatus Load(EmuWindow* emu_window, const std::string& filepath);
 
-/// Shutdown the core
-void Shutdown();
+    /**
+     * Indicates if the emulated system is powered on (all subsystems initialized and able to run an
+     * application).
+     * @returns True if the emulated system is powered on, otherwise false.
+     */
+    bool IsPoweredOn() const {
+        return app_core != nullptr;
+    }
 
-} // namespace
+    /**
+     * Gets a reference to the emulated AppCore CPU.
+     * @returns A reference to the emulated AppCore CPU.
+     */
+    ARM_Interface& AppCore() {
+        return *app_core;
+    }
+
+private:
+    /// AppLoader used to load the current executing application
+    std::unique_ptr<Loader::AppLoader> app_loader;
+
+    ///< ARM11 application core
+    std::unique_ptr<ARM_Interface> app_core;
+
+    static System s_instance;
+};
+
+static ARM_Interface& AppCore() {
+    return System::GetInstance().AppCore();
+}
+
+} // namespace Core

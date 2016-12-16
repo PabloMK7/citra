@@ -391,7 +391,7 @@ WaitTreeWidget::WaitTreeWidget(QWidget* parent) : QDockWidget(tr("Wait Tree"), p
 }
 
 void WaitTreeWidget::OnDebugModeEntered() {
-    if (!Core::g_app_core)
+    if (!Core::System::GetInstance().IsPoweredOn())
         return;
     model->InitItems();
     view->setModel(model);

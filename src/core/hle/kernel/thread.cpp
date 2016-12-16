@@ -188,7 +188,7 @@ static void SwitchContext(Thread* new_thread) {
     // Save context for previous thread
     if (previous_thread) {
         previous_thread->last_running_ticks = CoreTiming::GetTicks();
-        Core::g_app_core->SaveContext(previous_thread->context);
+        Core::AppCore().SaveContext(previous_thread->context);
 
         if (previous_thread->status == THREADSTATUS_RUNNING) {
             // This is only the case when a reschedule is triggered without the current thread
@@ -214,8 +214,8 @@ static void SwitchContext(Thread* new_thread) {
         // Restores thread to its nominal priority if it has been temporarily changed
         new_thread->current_priority = new_thread->nominal_priority;
 
-        Core::g_app_core->LoadContext(new_thread->context);
-        Core::g_app_core->SetCP15Register(CP15_THREAD_URO, new_thread->GetTLSAddress());
+        Core::AppCore().LoadContext(new_thread->context);
+        Core::AppCore().SetCP15Register(CP15_THREAD_URO, new_thread->GetTLSAddress());
     } else {
         current_thread = nullptr;
     }

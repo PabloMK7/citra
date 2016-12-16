@@ -33,7 +33,6 @@
 #include "core/gdbstub/gdbstub.h"
 #include "core/loader/loader.h"
 #include "core/settings.h"
-#include "core/system.h"
 #include "video_core/video_core.h"
 
 static void PrintHelp(const char* argv0) {
@@ -145,7 +144,7 @@ int main(int argc, char** argv) {
     }
 
     while (emu_window->IsOpen()) {
-        Core::RunLoop();
+        system.RunLoop();
     }
 
     return 0;

@@ -3,6 +3,8 @@
 // Refer to the license.txt file included.
 
 #include <memory>
+
+#include "audio_core/audio_core.h"
 #include "common/logging/log.h"
 #include "core/arm/arm_interface.h"
 #include "core/arm/dynarmic/arm_dynarmic.h"
@@ -11,17 +13,23 @@
 #include "core/core_timing.h"
 #include "core/gdbstub/gdbstub.h"
 #include "core/hle/hle.h"
+#include "core/hle/kernel/kernel.h"
+#include "core/hle/kernel/memory.h"
 #include "core/hle/kernel/thread.h"
 #include "core/hw/hw.h"
+#include "core/loader/loader.h"
 #include "core/settings.h"
+#include "video_core/video_core.h"
 
 namespace Core {
 
-std::unique_ptr<ARM_Interface> g_app_core; ///< ARM11 application core
-std::unique_ptr<ARM_Interface> g_sys_core; ///< ARM11 system (OS) core
+/*static*/ System System::s_instance;
 
-/// Run the core CPU loop
-void RunLoop(int tight_loop) {
+System::ResultStatus System::RunLoop(int tight_loop) {
+    if (!app_core) {
+        return ResultStatus::ErrorNotInitialized;
+    }
+
     if (GDBStub::IsServerEnabled()) {
         GDBStub::HandlePacket();
 
@@ -32,7 +40,7 @@ void RunLoop(int tight_loop) {
                 GDBStub::SetCpuStepFlag(false);
                 tight_loop = 1;
             } else {
-                return;
+                return ResultStatus::Success;
             }
         }
     }
@@ -45,46 +53,100 @@ void RunLoop(int tight_loop) {
         CoreTiming::Advance();
         HLE::Reschedule(__func__);
     } else {
-        g_app_core->Run(tight_loop);
+        app_core->Run(tight_loop);
     }
 
     HW::Update();
     if (HLE::IsReschedulePending()) {
         Kernel::Reschedule();
     }
+
+    return ResultStatus::Success;
 }
 
-/// Step the CPU one instruction
-void SingleStep() {
-    RunLoop(1);
+System::ResultStatus System::SingleStep() {
+    return RunLoop(1);
 }
 
-/// Halt the core
-void Halt(const char* msg) {
-    // TODO(ShizZy): ImplementMe
+System::ResultStatus System::Load(EmuWindow* emu_window, const std::string& filepath) {
+    if (app_loader) {
+        app_loader.reset();
+    }
+
+    app_loader = Loader::GetLoader(filepath);
+
+    if (!app_loader) {
+        LOG_CRITICAL(Core, "Failed to obtain loader for %s!", filepath.c_str());
+        return ResultStatus::ErrorGetLoader;
+    }
+
+    boost::optional<u32> system_mode{ app_loader->LoadKernelSystemMode() };
+    if (!system_mode) {
+        LOG_CRITICAL(Core, "Failed to determine system mode!");
+        return ResultStatus::ErrorSystemMode;
+    }
+
+    ResultStatus init_result{ Init(emu_window, system_mode.get()) };
+    if (init_result != ResultStatus::Success) {
+        LOG_CRITICAL(Core, "Failed to initialize system (Error %i)!", init_result);
+        System::Shutdown();
+        return init_result;
+    }
+
+    const Loader::ResultStatus load_result{ app_loader->Load() };
+    if (Loader::ResultStatus::Success != load_result) {
+        LOG_CRITICAL(Core, "Failed to load ROM (Error %i)!", load_result);
+        System::Shutdown();
+
+        switch (load_result) {
+        case Loader::ResultStatus::ErrorEncrypted:
+            return ResultStatus::ErrorLoader_ErrorEncrypted;
+        case Loader::ResultStatus::ErrorInvalidFormat:
+            return ResultStatus::ErrorLoader_ErrorInvalidFormat;
+        default:
+            return ResultStatus::ErrorLoader;
+        }
+    }
+    return ResultStatus::Success;
 }
 
-/// Kill the core
-void Stop() {
-    // TODO(ShizZy): ImplementMe
-}
+System::ResultStatus System::Init(EmuWindow* emu_window, u32 system_mode) {
+    if (app_core) {
+        app_core.reset();
+    }
 
-/// Initialize the core
-void Init() {
+    Memory::Init();
+
     if (Settings::values.use_cpu_jit) {
-        g_sys_core = std::make_unique<ARM_Dynarmic>(USER32MODE);
-        g_app_core = std::make_unique<ARM_Dynarmic>(USER32MODE);
+        app_core = std::make_unique<ARM_Dynarmic>(USER32MODE);
     } else {
-        g_sys_core = std::make_unique<ARM_DynCom>(USER32MODE);
-        g_app_core = std::make_unique<ARM_DynCom>(USER32MODE);
+        app_core = std::make_unique<ARM_DynCom>(USER32MODE);
+    }
+
+    CoreTiming::Init();
+    HW::Init();
+    Kernel::Init(system_mode);
+    HLE::Init();
+    AudioCore::Init();
+    GDBStub::Init();
+
+    if (!VideoCore::Init(emu_window)) {
+        return ResultStatus::ErrorVideoCore;
     }
 
     LOG_DEBUG(Core, "Initialized OK");
+
+    return ResultStatus::Success;
 }
 
-void Shutdown() {
-    g_app_core.reset();
-    g_sys_core.reset();
+void System::Shutdown() {
+    GDBStub::Shutdown();
+    AudioCore::Shutdown();
+    VideoCore::Shutdown();
+    HLE::Shutdown();
+    Kernel::Shutdown();
+    HW::Shutdown();
+    CoreTiming::Shutdown();
 
     LOG_DEBUG(Core, "Shutdown OK");
 }

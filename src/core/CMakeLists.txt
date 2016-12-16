@@ -155,7 +155,6 @@ set(SRCS
             tracer/recorder.cpp
             memory.cpp
             settings.cpp
-            system.cpp
             )
 
 set(HEADERS
@@ -325,7 +324,6 @@ set(HEADERS
             memory_setup.h
             mmio.h
             settings.h
-            system.h
             )
 
 include_directories(../../externals/dynarmic/include)

@@ -4,8 +4,8 @@
 
 #include "citra_qt/configure_general.h"
 #include "citra_qt/ui_settings.h"
+#include "core/core.h"
 #include "core/settings.h"
-#include "core/system.h"
 #include "ui_configure_general.h"
 
 ConfigureGeneral::ConfigureGeneral(QWidget* parent)

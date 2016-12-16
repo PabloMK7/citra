@@ -26,9 +26,9 @@ void Reschedule(const char* reason) {
     // routines. This simulates that time by artificially advancing the number of CPU "ticks".
     // The value was chosen empirically, it seems to work well enough for everything tested, but
     // is likely not ideal. We should find a more accurate way to simulate timing with HLE.
-    Core::g_app_core->AddTicks(4000);
+    Core::AppCore().AddTicks(4000);
 
-    Core::g_app_core->PrepareReschedule();
+    Core::AppCore().PrepareReschedule();
 
     reschedule = true;
 }

@@ -185,13 +185,13 @@ DisassemblerWidget::DisassemblerWidget(QWidget* parent, EmuThread* emu_thread)
 }
 
 void DisassemblerWidget::Init() {
-    model->ParseFromAddress(Core::g_app_core->GetPC());
+    model->ParseFromAddress(Core::AppCore().GetPC());
 
     disasm_ui.treeView->resizeColumnToContents(0);
     disasm_ui.treeView->resizeColumnToContents(1);
     disasm_ui.treeView->resizeColumnToContents(2);
 
-    QModelIndex model_index = model->IndexFromAbsoluteAddress(Core::g_app_core->GetPC());
+    QModelIndex model_index = model->IndexFromAbsoluteAddress(Core::AppCore().GetPC());
     disasm_ui.treeView->scrollTo(model_index);
     disasm_ui.treeView->selectionModel()->setCurrentIndex(
         model_index, QItemSelectionModel::SelectCurrent | QItemSelectionModel::Rows);
@@ -214,8 +214,8 @@ void DisassemblerWidget::OnPause() {
     emu_thread->SetRunning(false);
 
     // TODO: By now, the CPU might not have actually stopped...
-    if (Core::g_app_core) {
-        model->SetNextInstruction(Core::g_app_core->GetPC());
+    if (Core::System::GetInstance().IsPoweredOn()) {
+        model->SetNextInstruction(Core::AppCore().GetPC());
     }
 }
 
@@ -224,7 +224,7 @@ void DisassemblerWidget::OnToggleStartStop() {
 }
 
 void DisassemblerWidget::OnDebugModeEntered() {
-    u32 next_instr = Core::g_app_core->GetPC();
+    u32 next_instr = Core::AppCore().GetPC();
 
     if (model->GetBreakPoints().IsAddressBreakPoint(next_instr))
         emu_thread->SetRunning(false);

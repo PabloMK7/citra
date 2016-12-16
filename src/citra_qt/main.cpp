@@ -46,7 +46,6 @@
 #include "core/gdbstub/gdbstub.h"
 #include "core/loader/loader.h"
 #include "core/settings.h"
-#include "core/system.h"
 #include "qhexedit.h"
 #include "video_core/video_core.h"
 
