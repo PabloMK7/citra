@@ -142,10 +142,10 @@ std::string GetExtSaveDataPath(const std::string& mount_point, const Path& path)
 std::string GetExtDataContainerPath(const std::string& mount_point, bool shared) {
     if (shared)
         return Common::StringFromFormat("%sdata/%s/extdata/", mount_point.c_str(),
-                                        SYSTEM_ID.c_str());
+                                        SYSTEM_ID);
 
     return Common::StringFromFormat("%sNintendo 3DS/%s/%s/extdata/", mount_point.c_str(),
-                                    SYSTEM_ID.c_str(), SDCARD_ID.c_str());
+                                    SYSTEM_ID, SDCARD_ID);
 }
 
 Path ConstructExtDataBinaryPath(u32 media_type, u32 high, u32 low) {

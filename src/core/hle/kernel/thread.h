@@ -11,7 +11,6 @@
 #include <boost/container/flat_set.hpp>
 #include "common/common_types.h"
 #include "core/core.h"
-#include "core/hle/hle.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/result.h"
 

@@ -53,17 +53,6 @@ public:
     };
 
     /**
-     * Initialize the emulated system.
-     * @param emu_window Pointer to the host-system window used for video output and keyboard input.
-     * @param system_mode The system mode.
-     * @return ResultStatus code, indicating if the operation succeeded.
-     */
-    ResultStatus Init(EmuWindow* emu_window, u32 system_mode);
-
-    /// Start the core
-    void Start();
-
-    /**
      * Run the core CPU loop
      * This function runs the core for the specified number of CPU instructions before trying to update
      * hardware. This is much faster than SingleStep (and should be equivalent), as the CPU is not
@@ -101,6 +90,9 @@ public:
         return app_core != nullptr;
     }
 
+    /// Prepare the core emulation for a reschedule
+    void PrepareReschedule();
+
     /**
      * Gets a reference to the emulated AppCore CPU.
      * @returns A reference to the emulated AppCore CPU.
@@ -110,11 +102,25 @@ public:
     }
 
 private:
+    /**
+     * Initialize the emulated system.
+     * @param emu_window Pointer to the host-system window used for video output and keyboard input.
+     * @param system_mode The system mode.
+     * @return ResultStatus code, indicating if the operation succeeded.
+     */
+    ResultStatus Init(EmuWindow* emu_window, u32 system_mode);
+
+    /// Reschedule the core emulation
+    void Reschedule();
+
     /// AppLoader used to load the current executing application
     std::unique_ptr<Loader::AppLoader> app_loader;
 
     ///< ARM11 application core
     std::unique_ptr<ARM_Interface> app_core;
+
+    /// When true, signals that a reschedule should happen
+    bool reschedule_pending{};
 
     static System s_instance;
 };

@@ -4,7 +4,6 @@
 
 #include <cstring>
 #include "common/alignment.h"
-#include "core/hle/hle.h"
 #include "core/hle/kernel/mutex.h"
 #include "core/hle/kernel/shared_memory.h"
 #include "core/hle/service/csnd_snd.h"

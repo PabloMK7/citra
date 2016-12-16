@@ -18,7 +18,7 @@ namespace {
 
 std::string GetSaveDataContainerPath(const std::string& sdmc_directory) {
     return Common::StringFromFormat("%sNintendo 3DS/%s/%s/title/", sdmc_directory.c_str(),
-                                    SYSTEM_ID.c_str(), SDCARD_ID.c_str());
+                                    SYSTEM_ID, SDCARD_ID);
 }
 
 std::string GetSaveDataPath(const std::string& mount_location, u64 program_id) {

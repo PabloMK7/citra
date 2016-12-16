@@ -4,6 +4,7 @@
 
 #include "common/logging/log.h"
 #include "core/hle/kernel/event.h"
+#include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/shared_memory.h"
 #include "core/hle/service/mic_u.h"
 
@@ -50,7 +51,7 @@ static bool audio_buffer_loop;
 static void MapSharedMem(Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
     u32 size = cmd_buff[1];
-    Handle mem_handle = cmd_buff[3];
+    Kernel::Handle mem_handle = cmd_buff[3];
     shared_memory = Kernel::g_handle_table.Get<Kernel::SharedMemory>(mem_handle);
     if (shared_memory) {
         shared_memory->name = "MIC_U:shared_memory";

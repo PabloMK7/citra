@@ -12,10 +12,10 @@
 #include "core/core.h"
 #include "core/core_timing.h"
 #include "core/gdbstub/gdbstub.h"
-#include "core/hle/hle.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/memory.h"
 #include "core/hle/kernel/thread.h"
+#include "core/hle/service/service.h"
 #include "core/hw/hw.h"
 #include "core/loader/loader.h"
 #include "core/settings.h"
@@ -51,15 +51,13 @@ System::ResultStatus System::RunLoop(int tight_loop) {
         LOG_TRACE(Core_ARM11, "Idling");
         CoreTiming::Idle();
         CoreTiming::Advance();
-        HLE::Reschedule(__func__);
+        PrepareReschedule();
     } else {
         app_core->Run(tight_loop);
     }
 
     HW::Update();
-    if (HLE::IsReschedulePending()) {
-        Kernel::Reschedule();
-    }
+    Reschedule();
 
     return ResultStatus::Success;
 }
@@ -110,6 +108,20 @@ System::ResultStatus System::Load(EmuWindow* emu_window, const std::string& file
     return ResultStatus::Success;
 }
 
+void System::PrepareReschedule() {
+    app_core->PrepareReschedule();
+    reschedule_pending = true;
+}
+
+void System::Reschedule() {
+    if (!reschedule_pending) {
+        return;
+    }
+
+    reschedule_pending = false;
+    Kernel::Reschedule();
+}
+
 System::ResultStatus System::Init(EmuWindow* emu_window, u32 system_mode) {
     if (app_core) {
         app_core.reset();
@@ -126,7 +138,7 @@ System::ResultStatus System::Init(EmuWindow* emu_window, u32 system_mode) {
     CoreTiming::Init();
     HW::Init();
     Kernel::Init(system_mode);
-    HLE::Init();
+    Service::Init();
     AudioCore::Init();
     GDBStub::Init();
 
@@ -143,7 +155,7 @@ void System::Shutdown() {
     GDBStub::Shutdown();
     AudioCore::Shutdown();
     VideoCore::Shutdown();
-    HLE::Shutdown();
+    Service::Shutdown();
     Kernel::Shutdown();
     HW::Shutdown();
     CoreTiming::Shutdown();

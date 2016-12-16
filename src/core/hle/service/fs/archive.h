@@ -17,9 +17,9 @@ class FileBackend;
 }
 
 /// The unique system identifier hash, also known as ID0
-extern const std::string SYSTEM_ID;
+static constexpr char SYSTEM_ID[]{ "00000000000000000000000000000000" };
 /// The scrambled SD card CID, also known as ID1
-extern const std::string SDCARD_ID;
+static constexpr char SDCARD_ID[]{ "00000000000000000000000000000000" };
 
 namespace Service {
 namespace FS {

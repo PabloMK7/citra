@@ -23,7 +23,6 @@
 #include "core/file_sys/archive_systemsavedata.h"
 #include "core/file_sys/directory_backend.h"
 #include "core/file_sys/file_backend.h"
-#include "core/hle/hle.h"
 #include "core/hle/kernel/client_session.h"
 #include "core/hle/result.h"
 #include "core/hle/service/fs/archive.h"
@@ -46,9 +45,7 @@ struct hash<Service::FS::ArchiveIdCode> {
 };
 }
 
-/// TODO(Subv): Confirm length of these strings
-const std::string SYSTEM_ID = "00000000000000000000000000000000";
-const std::string SDCARD_ID = "00000000000000000000000000000000";
+static constexpr Kernel::Handle INVALID_HANDLE{};
 
 namespace Service {
 namespace FS {

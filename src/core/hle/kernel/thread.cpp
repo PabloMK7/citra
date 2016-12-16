@@ -14,7 +14,6 @@
 #include "core/arm/skyeye_common/armstate.h"
 #include "core/core.h"
 #include "core/core_timing.h"
-#include "core/hle/hle.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/memory.h"
 #include "core/hle/kernel/mutex.h"
@@ -330,7 +329,7 @@ void Thread::ResumeFromWait() {
 
     ready_queue.push_back(current_priority, this);
     status = THREADSTATUS_READY;
-    HLE::Reschedule(__func__);
+    Core::System::GetInstance().PrepareReschedule();
 }
 
 /**
@@ -544,8 +543,6 @@ void Reschedule() {
 
     Thread* cur = GetCurrentThread();
     Thread* next = PopNextReadyThread();
-
-    HLE::DoneRescheduling();
 
     if (cur && next) {
         LOG_TRACE(Kernel, "context switch %u -> %u", cur->GetObjectId(), next->GetObjectId());

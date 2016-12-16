@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include "core/hle/kernel/event.h"
+#include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/shared_memory.h"
 #include "core/hle/service/ir/ir.h"
 #include "core/hle/service/ir/ir_rst.h"
@@ -36,7 +37,7 @@ void InitializeIrNopShared(Interface* self) {
     u32 send_buff_size = cmd_buff[4];
     u32 unk2 = cmd_buff[5];
     u8 baud_rate = cmd_buff[6] & 0xFF;
-    Handle handle = cmd_buff[8];
+    Kernel::Handle handle = cmd_buff[8];
 
     if (Kernel::g_handle_table.IsValid(handle)) {
         transfer_shared_memory = Kernel::g_handle_table.Get<Kernel::SharedMemory>(handle);

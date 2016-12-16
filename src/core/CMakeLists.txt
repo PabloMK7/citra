@@ -31,7 +31,6 @@ set(SRCS
             file_sys/savedata_archive.cpp
             gdbstub/gdbstub.cpp
             hle/config_mem.cpp
-            hle/hle.cpp
             hle/applets/applet.cpp
             hle/applets/erreula.cpp
             hle/applets/mii_selector.cpp
@@ -195,7 +194,6 @@ set(HEADERS
             gdbstub/gdbstub.h
             hle/config_mem.h
             hle/function_wrappers.h
-            hle/hle.h
             hle/ipc.h
             hle/applets/applet.h
             hle/applets/erreula.h

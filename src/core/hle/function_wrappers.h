@@ -7,7 +7,7 @@
 #include "common/common_types.h"
 #include "core/arm/arm_interface.h"
 #include "core/core.h"
-#include "core/hle/hle.h"
+#include "core/hle/kernel/kernel.h"
 #include "core/hle/result.h"
 #include "core/hle/svc.h"
 #include "core/memory.h"
@@ -64,7 +64,7 @@ void Wrap() {
 template <ResultCode func(s32*, u32*, s32, bool, s64)>
 void Wrap() {
     s32 param_1 = 0;
-    s32 retval = func(&param_1, (Handle*)Memory::GetPointer(PARAM(1)), (s32)PARAM(2),
+    s32 retval = func(&param_1, (Kernel::Handle*)Memory::GetPointer(PARAM(1)), (s32)PARAM(2),
                       (PARAM(3) != 0), (((s64)PARAM(4) << 32) | PARAM(0)))
                      .raw;
 
@@ -110,7 +110,7 @@ void Wrap() {
     FuncReturn(retval);
 }
 
-template <ResultCode func(MemoryInfo*, PageInfo*, Handle, u32)>
+template <ResultCode func(MemoryInfo*, PageInfo*, Kernel::Handle, u32)>
 void Wrap() {
     MemoryInfo memory_info = {};
     PageInfo page_info = {};
@@ -205,7 +205,7 @@ void Wrap() {
     FuncReturn(func(PARAM(0), param1, param2).raw);
 }
 
-template <ResultCode func(s64*, Handle, u32)>
+template <ResultCode func(s64*, Kernel::Handle, u32)>
 void Wrap() {
     s64 param_1 = 0;
     u32 retval = func(&param_1, PARAM(1), PARAM(2)).raw;
@@ -214,15 +214,15 @@ void Wrap() {
     FuncReturn(retval);
 }
 
-template <ResultCode func(Handle, u32)>
+template <ResultCode func(Kernel::Handle, u32)>
 void Wrap() {
     FuncReturn(func(PARAM(0), PARAM(1)).raw);
 }
 
-template <ResultCode func(Handle*, Handle*, const char*, u32)>
+template <ResultCode func(Kernel::Handle*, Kernel::Handle*, const char*, u32)>
 void Wrap() {
-    Handle param_1 = 0;
-    Handle param_2 = 0;
+    Kernel::Handle param_1 = 0;
+    Kernel::Handle param_2 = 0;
     u32 retval = func(&param_1, &param_2,
                       reinterpret_cast<const char*>(Memory::GetPointer(PARAM(2))), PARAM(3))
                      .raw;
