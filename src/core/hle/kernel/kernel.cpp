@@ -35,7 +35,8 @@ void WaitObject::RemoveWaitingThread(Thread* thread) {
 SharedPtr<Thread> WaitObject::GetHighestPriorityReadyThread() {
     // Remove the threads that are ready or already running from our waitlist
     boost::range::remove_erase_if(waiting_threads, [](const SharedPtr<Thread>& thread) {
-        return thread->status == THREADSTATUS_RUNNING || thread->status == THREADSTATUS_READY;
+        return thread->status == THREADSTATUS_RUNNING || thread->status == THREADSTATUS_READY ||
+               thread->status == THREADSTATUS_DEAD;
     });
 
     // TODO(Subv): This call should be performed inside the loop below to check if an object can be
