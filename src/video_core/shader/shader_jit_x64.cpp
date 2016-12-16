@@ -266,9 +266,7 @@ void JitShader::Compile_DestEnable(Instruction instr, Xmm src) {
 
     SwizzlePattern swiz = {g_state.vs.swizzle_data[operand_desc_id]};
 
-    int dest_offset_disp = (int)UnitState<false>::OutputOffset(dest);
-    ASSERT_MSG(dest_offset_disp == UnitState<false>::OutputOffset(dest),
-               "Destinaton offset too large for int type");
+    size_t dest_offset_disp = UnitState<false>::OutputOffset(dest);
 
     // If all components are enabled, write the result to the destination register
     if (swiz.dest_mask == NO_DEST_REG_MASK) {
