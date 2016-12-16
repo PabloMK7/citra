@@ -161,21 +161,16 @@ struct ShaderSetup {
         std::array<Math::Vec4<u8>, 4> i;
     } uniforms;
 
-    static size_t UniformOffset(RegisterType type, unsigned index) {
-        switch (type) {
-        case RegisterType::FloatUniform:
-            return offsetof(ShaderSetup, uniforms.f) + index * sizeof(Math::Vec4<float24>);
+    static size_t GetFloatUniformOffset(unsigned index) {
+        return offsetof(ShaderSetup, uniforms.f) + index * sizeof(Math::Vec4<float24>);
+    }
 
-        case RegisterType::BoolUniform:
-            return offsetof(ShaderSetup, uniforms.b) + index * sizeof(bool);
+    static size_t GetBoolUniformOffset(unsigned index) {
+        return offsetof(ShaderSetup, uniforms.b) + index * sizeof(bool);
+    }
 
-        case RegisterType::IntUniform:
-            return offsetof(ShaderSetup, uniforms.i) + index * sizeof(Math::Vec4<u8>);
-
-        default:
-            UNREACHABLE();
-            return 0;
-        }
+    static size_t GetIntUniformOffset(unsigned index) {
+        return offsetof(ShaderSetup, uniforms.i) + index * sizeof(Math::Vec4<u8>);
     }
 
     std::array<u32, 1024> program_code;

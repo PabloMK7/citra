@@ -185,7 +185,7 @@ void JitShader::Compile_SwizzleSrc(Instruction instr, unsigned src_num, SourceRe
 
     if (src_reg.GetRegisterType() == RegisterType::FloatUniform) {
         src_ptr = SETUP;
-        src_offset = ShaderSetup::UniformOffset(RegisterType::FloatUniform, src_reg.GetIndex());
+        src_offset = ShaderSetup::GetFloatUniformOffset(src_reg.GetIndex());
     } else {
         src_ptr = STATE;
         src_offset = UnitState<false>::InputOffset(src_reg);
@@ -348,8 +348,7 @@ void JitShader::Compile_EvaluateCondition(Instruction instr) {
 }
 
 void JitShader::Compile_UniformCondition(Instruction instr) {
-    size_t offset =
-        ShaderSetup::UniformOffset(RegisterType::BoolUniform, instr.flow_control.bool_uniform_id);
+    size_t offset = ShaderSetup::GetBoolUniformOffset(instr.flow_control.bool_uniform_id);
     cmp(byte[SETUP + offset], 0);
 }
 
@@ -732,8 +731,7 @@ void JitShader::Compile_LOOP(Instruction instr) {
     // This decodes the fields from the integer uniform at index instr.flow_control.int_uniform_id.
     // The Y (LOOPCOUNT_REG) and Z (LOOPINC) component are kept multiplied by 16 (Left shifted by
     // 4 bits) to be used as an offset into the 16-byte vector registers later
-    size_t offset =
-        ShaderSetup::UniformOffset(RegisterType::IntUniform, instr.flow_control.int_uniform_id);
+    size_t offset = ShaderSetup::GetIntUniformOffset(instr.flow_control.int_uniform_id);
     mov(LOOPCOUNT, dword[SETUP + offset]);
     mov(LOOPCOUNT_REG, LOOPCOUNT);
     shr(LOOPCOUNT_REG, 4);
