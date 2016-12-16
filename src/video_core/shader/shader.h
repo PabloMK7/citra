@@ -94,7 +94,6 @@ static_assert(std::is_pod<OutputRegisters>::value, "Structure is not POD");
  * single shader unit that processes all shaders serially. Putting the state information in a struct
  * here will make it easier for us to parallelize the shader processing later.
  */
-template <bool Debug>
 struct UnitState {
     struct Registers {
         // The registers are accessed by the shader JIT using SSE instructions, and are therefore
@@ -111,8 +110,6 @@ struct UnitState {
     // Two Address registers and one loop counter
     // TODO: How many bits do these actually have?
     s32 address_registers[3];
-
-    DebugData<Debug> debug;
 
     static size_t InputOffset(const SourceRegister& reg) {
         switch (reg.GetRegisterType()) {
@@ -188,7 +185,7 @@ struct ShaderSetup {
      * @param input Input vertex into the shader
      * @param num_attributes The number of vertex shader attributes
      */
-    void Run(UnitState<false>& state, const InputVertex& input, int num_attributes);
+    void Run(UnitState& state, const InputVertex& input, int num_attributes);
 
     /**
      * Produce debug information based on the given shader and input vertex

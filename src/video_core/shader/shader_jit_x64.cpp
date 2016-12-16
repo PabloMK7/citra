@@ -188,7 +188,7 @@ void JitShader::Compile_SwizzleSrc(Instruction instr, unsigned src_num, SourceRe
         src_offset = ShaderSetup::GetFloatUniformOffset(src_reg.GetIndex());
     } else {
         src_ptr = STATE;
-        src_offset = UnitState<false>::InputOffset(src_reg);
+        src_offset = UnitState::InputOffset(src_reg);
     }
 
     int src_offset_disp = (int)src_offset;
@@ -266,7 +266,7 @@ void JitShader::Compile_DestEnable(Instruction instr, Xmm src) {
 
     SwizzlePattern swiz = {g_state.vs.swizzle_data[operand_desc_id]};
 
-    size_t dest_offset_disp = UnitState<false>::OutputOffset(dest);
+    size_t dest_offset_disp = UnitState::OutputOffset(dest);
 
     // If all components are enabled, write the result to the destination register
     if (swiz.dest_mask == NO_DEST_REG_MASK) {

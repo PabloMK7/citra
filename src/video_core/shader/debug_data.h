@@ -19,8 +19,8 @@ struct DebugData;
 template <>
 struct DebugData<false> {
     // TODO: Hide these behind and interface and move them to DebugData<true>
-    u32 max_offset;    ///< maximum program counter ever reached
-    u32 max_opdesc_id; ///< maximum swizzle pattern index ever used
+    u32 max_offset = 0;    ///< maximum program counter ever reached
+    u32 max_opdesc_id = 0; ///< maximum swizzle pattern index ever used
 };
 
 template <>
@@ -75,8 +75,8 @@ struct DebugData<true> {
         unsigned mask = 0;
     };
 
-    u32 max_offset;    ///< maximum program counter ever reached
-    u32 max_opdesc_id; ///< maximum swizzle pattern index ever used
+    u32 max_offset = 0;    ///< maximum program counter ever reached
+    u32 max_opdesc_id = 0; ///< maximum swizzle pattern index ever used
 
     /// List of records for each executed shader instruction
     std::vector<DebugData<true>::Record> records;

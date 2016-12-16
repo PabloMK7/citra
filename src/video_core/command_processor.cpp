@@ -138,7 +138,7 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
                 if (immediate_attribute_id >= regs.vs.num_input_attributes + 1) {
                     immediate_attribute_id = 0;
 
-                    Shader::UnitState<false> shader_unit;
+                    Shader::UnitState shader_unit;
                     g_state.vs.Setup();
 
                     // Send to vertex shader
@@ -237,7 +237,7 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
         unsigned int vertex_cache_pos = 0;
         vertex_cache_ids.fill(-1);
 
-        Shader::UnitState<false> shader_unit;
+        Shader::UnitState shader_unit;
         g_state.vs.Setup();
 
         for (unsigned int index = 0; index < regs.num_vertices; ++index) {

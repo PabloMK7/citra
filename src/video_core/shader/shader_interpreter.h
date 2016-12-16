@@ -8,11 +8,14 @@ namespace Pica {
 
 namespace Shader {
 
-template <bool Debug>
 struct UnitState;
 
 template <bool Debug>
-void RunInterpreter(const ShaderSetup& setup, UnitState<Debug>& state, unsigned offset);
+struct DebugData;
+
+template <bool Debug>
+void RunInterpreter(const ShaderSetup& setup, UnitState& state, DebugData<Debug>& debug_data,
+                    unsigned offset);
 
 } // namespace
 

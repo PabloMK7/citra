@@ -109,14 +109,11 @@ void ShaderSetup::Setup() {
 
 MICROPROFILE_DEFINE(GPU_Shader, "GPU", "Shader", MP_RGB(50, 50, 240));
 
-void ShaderSetup::Run(UnitState<false>& state, const InputVertex& input, int num_attributes) {
+void ShaderSetup::Run(UnitState& state, const InputVertex& input, int num_attributes) {
     auto& config = g_state.regs.vs;
     auto& setup = g_state.vs;
 
     MICROPROFILE_SCOPE(GPU_Shader);
-
-    state.debug.max_offset = 0;
-    state.debug.max_opdesc_id = 0;
 
     // Setup input register table
     const auto& attribute_register_map = config.input_register_map;
@@ -128,22 +125,23 @@ void ShaderSetup::Run(UnitState<false>& state, const InputVertex& input, int num
     state.conditional_code[1] = false;
 
 #ifdef ARCHITECTURE_x86_64
-    if (VideoCore::g_shader_jit_enabled)
+    if (VideoCore::g_shader_jit_enabled) {
         jit_shader->Run(setup, state, config.main_offset);
-    else
-        RunInterpreter(setup, state, config.main_offset);
+    } else {
+        DebugData<false> dummy_debug_data;
+        RunInterpreter(setup, state, dummy_debug_data, config.main_offset);
+    }
 #else
-    RunInterpreter(setup, state, config.main_offset);
+    DebugData<false> dummy_debug_data;
+    RunInterpreter(setup, state, dummy_debug_data, config.main_offset);
 #endif // ARCHITECTURE_x86_64
 }
 
 DebugData<true> ShaderSetup::ProduceDebugInfo(const InputVertex& input, int num_attributes,
                                               const Regs::ShaderConfig& config,
                                               const ShaderSetup& setup) {
-    UnitState<true> state;
-
-    state.debug.max_offset = 0;
-    state.debug.max_opdesc_id = 0;
+    UnitState state;
+    DebugData<true> debug_data;
 
     // Setup input register table
     boost::fill(state.registers.input, Math::Vec4<float24>::AssignToAll(float24::Zero()));
@@ -154,8 +152,8 @@ DebugData<true> ShaderSetup::ProduceDebugInfo(const InputVertex& input, int num_
     state.conditional_code[0] = false;
     state.conditional_code[1] = false;
 
-    RunInterpreter(setup, state, config.main_offset);
-    return state.debug;
+    RunInterpreter(setup, state, debug_data, config.main_offset);
+    return debug_data;
 }
 
 } // namespace Shader
