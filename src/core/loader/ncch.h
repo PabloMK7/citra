@@ -220,6 +220,13 @@ public:
     ResultStatus ReadLogo(std::vector<u8>& buffer) override;
 
     /**
+     * Get the program id of the application
+     * @param out_program_id Reference to store program id into
+     * @return ResultStatus result of function
+     */
+    ResultStatus ReadProgramId(u64& out_program_id) override;
+
+    /**
      * Get the RomFS of the application
      * @param romfs_file Reference to buffer to store data
      * @param offset     Offset in the file to the RomFS

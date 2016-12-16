@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <cinttypes>
 #include <clocale>
 #include <memory>
 #include <thread>
@@ -41,6 +42,7 @@
 #include "common/string_util.h"
 #include "core/arm/disassembler/load_symbol_map.h"
 #include "core/core.h"
+#include "core/file_sys/archive_source_sd_savedata.h"
 #include "core/gdbstub/gdbstub.h"
 #include "core/loader/loader.h"
 #include "core/settings.h"
@@ -171,6 +173,8 @@ GMainWindow::GMainWindow() : config(new Config()), emu_thread(nullptr) {
     // Setup connections
     connect(game_list, SIGNAL(GameChosen(QString)), this, SLOT(OnGameListLoadFile(QString)),
             Qt::DirectConnection);
+    connect(game_list, SIGNAL(OpenSaveFolderRequested(u64)), this,
+            SLOT(OnGameListOpenSaveFolder(u64)), Qt::DirectConnection);
     connect(ui.action_Configure, SIGNAL(triggered()), this, SLOT(OnConfigure()));
     connect(ui.action_Load_File, SIGNAL(triggered()), this, SLOT(OnMenuLoadFile()),
             Qt::DirectConnection);
@@ -458,6 +462,21 @@ void GMainWindow::UpdateRecentFiles() {
 
 void GMainWindow::OnGameListLoadFile(QString game_path) {
     BootGame(game_path.toStdString());
+}
+
+void GMainWindow::OnGameListOpenSaveFolder(u64 program_id) {
+    std::string sdmc_dir = FileUtil::GetUserPath(D_SDMC_IDX);
+    std::string path = FileSys::ArchiveSource_SDSaveData::GetSaveDataPathFor(sdmc_dir, program_id);
+    QString qpath = QString::fromStdString(path);
+
+    QDir dir(qpath);
+    if (!dir.exists()) {
+        QMessageBox::critical(this, tr("Error Opening Save Folder"), tr("Folder does not exist!"));
+        return;
+    }
+
+    LOG_INFO(Frontend, "Opening save data path for program_id=%" PRIu64, program_id);
+    QDesktopServices::openUrl(QUrl::fromLocalFile(qpath));
 }
 
 void GMainWindow::OnMenuLoadFile() {

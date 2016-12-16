@@ -90,4 +90,9 @@ ResultVal<ArchiveFormatInfo> ArchiveSource_SDSaveData::GetFormatInfo(u64 program
     return MakeResult<ArchiveFormatInfo>(info);
 }
 
+std::string ArchiveSource_SDSaveData::GetSaveDataPathFor(const std::string& mount_point,
+                                                         u64 program_id) {
+    return GetSaveDataPath(GetSaveDataContainerPath(mount_point), program_id);
+}
+
 } // namespace FileSys
