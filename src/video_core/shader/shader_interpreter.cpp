@@ -42,8 +42,16 @@ template <bool Debug>
 void RunInterpreter(const ShaderSetup& setup, UnitState<Debug>& state, unsigned offset) {
     // TODO: Is there a maximal size for this?
     boost::container::static_vector<CallStackElement, 16> call_stack;
-
     u32 program_counter = offset;
+
+    auto call = [&program_counter, &call_stack](u32 offset, u32 num_instructions, u32 return_offset,
+                                                u8 repeat_count, u8 loop_increment) {
+        // -1 to make sure when incrementing the PC we end up at the correct offset
+        program_counter = offset - 1;
+        ASSERT(call_stack.size() < call_stack.capacity());
+        call_stack.push_back(
+            {offset + num_instructions, return_offset, repeat_count, loop_increment, offset});
+    };
 
     const auto& uniforms = g_state.vs.uniforms;
     const auto& swizzle_data = g_state.vs.swizzle_data;
@@ -75,15 +83,6 @@ void RunInterpreter(const ShaderSetup& setup, UnitState<Debug>& state, unsigned 
         const Instruction instr = {program_code[program_counter]};
         const SwizzlePattern swizzle = {swizzle_data[instr.common.operand_desc_id]};
 
-        auto call = [&program_counter, &call_stack](UnitState<Debug>& state, u32 offset,
-                                                    u32 num_instructions, u32 return_offset,
-                                                    u8 repeat_count, u8 loop_increment) {
-            // -1 to make sure when incrementing the PC we end up at the correct offset
-            program_counter = offset - 1;
-            ASSERT(call_stack.size() < call_stack.capacity());
-            call_stack.push_back(
-                {offset + num_instructions, return_offset, repeat_count, loop_increment, offset});
-        };
         Record<DebugDataRecord::CUR_INSTR>(state.debug, iteration, program_counter);
         if (iteration > 0)
             Record<DebugDataRecord::NEXT_INSTR>(state.debug, iteration - 1, program_counter);
@@ -565,7 +564,7 @@ void RunInterpreter(const ShaderSetup& setup, UnitState<Debug>& state, unsigned 
                 break;
 
             case OpCode::Id::CALL:
-                call(state, instr.flow_control.dest_offset, instr.flow_control.num_instructions,
+                call(instr.flow_control.dest_offset, instr.flow_control.num_instructions,
                      program_counter + 1, 0, 0);
                 break;
 
@@ -573,7 +572,7 @@ void RunInterpreter(const ShaderSetup& setup, UnitState<Debug>& state, unsigned 
                 Record<DebugDataRecord::COND_BOOL_IN>(
                     state.debug, iteration, uniforms.b[instr.flow_control.bool_uniform_id]);
                 if (uniforms.b[instr.flow_control.bool_uniform_id]) {
-                    call(state, instr.flow_control.dest_offset, instr.flow_control.num_instructions,
+                    call(instr.flow_control.dest_offset, instr.flow_control.num_instructions,
                          program_counter + 1, 0, 0);
                 }
                 break;
@@ -583,7 +582,7 @@ void RunInterpreter(const ShaderSetup& setup, UnitState<Debug>& state, unsigned 
                                                      state.conditional_code);
                 if (evaluate_condition(state, instr.flow_control.refx, instr.flow_control.refy,
                                        instr.flow_control)) {
-                    call(state, instr.flow_control.dest_offset, instr.flow_control.num_instructions,
+                    call(instr.flow_control.dest_offset, instr.flow_control.num_instructions,
                          program_counter + 1, 0, 0);
                 }
                 break;
@@ -595,12 +594,11 @@ void RunInterpreter(const ShaderSetup& setup, UnitState<Debug>& state, unsigned 
                 Record<DebugDataRecord::COND_BOOL_IN>(
                     state.debug, iteration, uniforms.b[instr.flow_control.bool_uniform_id]);
                 if (uniforms.b[instr.flow_control.bool_uniform_id]) {
-                    call(state, program_counter + 1,
-                         instr.flow_control.dest_offset - program_counter - 1,
+                    call(program_counter + 1, instr.flow_control.dest_offset - program_counter - 1,
                          instr.flow_control.dest_offset + instr.flow_control.num_instructions, 0,
                          0);
                 } else {
-                    call(state, instr.flow_control.dest_offset, instr.flow_control.num_instructions,
+                    call(instr.flow_control.dest_offset, instr.flow_control.num_instructions,
                          instr.flow_control.dest_offset + instr.flow_control.num_instructions, 0,
                          0);
                 }
@@ -614,12 +612,11 @@ void RunInterpreter(const ShaderSetup& setup, UnitState<Debug>& state, unsigned 
                                                      state.conditional_code);
                 if (evaluate_condition(state, instr.flow_control.refx, instr.flow_control.refy,
                                        instr.flow_control)) {
-                    call(state, program_counter + 1,
-                         instr.flow_control.dest_offset - program_counter - 1,
+                    call(program_counter + 1, instr.flow_control.dest_offset - program_counter - 1,
                          instr.flow_control.dest_offset + instr.flow_control.num_instructions, 0,
                          0);
                 } else {
-                    call(state, instr.flow_control.dest_offset, instr.flow_control.num_instructions,
+                    call(instr.flow_control.dest_offset, instr.flow_control.num_instructions,
                          instr.flow_control.dest_offset + instr.flow_control.num_instructions, 0,
                          0);
                 }
@@ -635,8 +632,7 @@ void RunInterpreter(const ShaderSetup& setup, UnitState<Debug>& state, unsigned 
                 state.address_registers[2] = loop_param.y;
 
                 Record<DebugDataRecord::LOOP_INT_IN>(state.debug, iteration, loop_param);
-                call(state, program_counter + 1,
-                     instr.flow_control.dest_offset - program_counter + 1,
+                call(program_counter + 1, instr.flow_control.dest_offset - program_counter + 1,
                      instr.flow_control.dest_offset + 1, loop_param.x, loop_param.z);
                 break;
             }
