@@ -53,6 +53,27 @@ void RunInterpreter(const ShaderSetup& setup, UnitState<Debug>& state, unsigned 
             {offset + num_instructions, return_offset, repeat_count, loop_increment, offset});
     };
 
+    auto evaluate_condition = [&state](Instruction::FlowControlType flow_control) {
+        using Op = Instruction::FlowControlType::Op;
+
+        bool result_x = flow_control.refx.Value() == state.conditional_code[0];
+        bool result_y = flow_control.refy.Value() == state.conditional_code[1];
+
+        switch (flow_control.op) {
+        case Op::Or:
+            return result_x || result_y;
+        case Op::And:
+            return result_x && result_y;
+        case Op::JustX:
+            return result_x;
+        case Op::JustY:
+            return result_y;
+        default:
+            UNREACHABLE();
+            return false;
+        }
+    };
+
     const auto& uniforms = g_state.vs.uniforms;
     const auto& swizzle_data = g_state.vs.swizzle_data;
     const auto& program_code = g_state.vs.program_code;
@@ -518,26 +539,6 @@ void RunInterpreter(const ShaderSetup& setup, UnitState<Debug>& state, unsigned 
         }
 
         default: {
-            static auto evaluate_condition = [](const UnitState<Debug>& state, bool refx, bool refy,
-                                                Instruction::FlowControlType flow_control) {
-                bool results[2] = {refx == state.conditional_code[0],
-                                   refy == state.conditional_code[1]};
-
-                switch (flow_control.op) {
-                case flow_control.Or:
-                    return results[0] || results[1];
-
-                case flow_control.And:
-                    return results[0] && results[1];
-
-                case flow_control.JustX:
-                    return results[0];
-
-                case flow_control.JustY:
-                    return results[1];
-                }
-            };
-
             // Handle each instruction on its own
             switch (instr.opcode.Value()) {
             case OpCode::Id::END:
@@ -547,8 +548,7 @@ void RunInterpreter(const ShaderSetup& setup, UnitState<Debug>& state, unsigned 
             case OpCode::Id::JMPC:
                 Record<DebugDataRecord::COND_CMP_IN>(state.debug, iteration,
                                                      state.conditional_code);
-                if (evaluate_condition(state, instr.flow_control.refx, instr.flow_control.refy,
-                                       instr.flow_control)) {
+                if (evaluate_condition(instr.flow_control)) {
                     program_counter = instr.flow_control.dest_offset - 1;
                 }
                 break;
@@ -580,8 +580,7 @@ void RunInterpreter(const ShaderSetup& setup, UnitState<Debug>& state, unsigned 
             case OpCode::Id::CALLC:
                 Record<DebugDataRecord::COND_CMP_IN>(state.debug, iteration,
                                                      state.conditional_code);
-                if (evaluate_condition(state, instr.flow_control.refx, instr.flow_control.refy,
-                                       instr.flow_control)) {
+                if (evaluate_condition(instr.flow_control)) {
                     call(instr.flow_control.dest_offset, instr.flow_control.num_instructions,
                          program_counter + 1, 0, 0);
                 }
@@ -610,8 +609,7 @@ void RunInterpreter(const ShaderSetup& setup, UnitState<Debug>& state, unsigned 
 
                 Record<DebugDataRecord::COND_CMP_IN>(state.debug, iteration,
                                                      state.conditional_code);
-                if (evaluate_condition(state, instr.flow_control.refx, instr.flow_control.refy,
-                                       instr.flow_control)) {
+                if (evaluate_condition(instr.flow_control)) {
                     call(program_counter + 1, instr.flow_control.dest_offset - program_counter - 1,
                          instr.flow_control.dest_offset + instr.flow_control.num_instructions, 0,
                          0);
