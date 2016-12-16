@@ -185,11 +185,10 @@ static u8 NibbleToHex(u8 n) {
 /**
 * Converts input hex string characters into an array of equivalent of u8 bytes.
 *
-* @param dest Pointer to buffer to store u8 bytes.
 * @param src Pointer to array of output hex string characters.
 * @param len Length of src array.
 */
-static u32 HexToInt(u8* src, u32 len) {
+static u32 HexToInt(const u8* src, size_t len) {
     u32 output = 0;
     while (len-- > 0) {
         output = (output << 4) | HexCharToValue(src[0]);
@@ -205,7 +204,7 @@ static u32 HexToInt(u8* src, u32 len) {
  * @param src Pointer to array of u8 bytes.
  * @param len Length of src array.
  */
-static void MemToGdbHex(u8* dest, u8* src, u32 len) {
+static void MemToGdbHex(u8* dest, const u8* src, size_t len) {
     while (len-- > 0) {
         u8 tmp = *src++;
         *dest++ = NibbleToHex(tmp >> 4);
@@ -220,7 +219,7 @@ static void MemToGdbHex(u8* dest, u8* src, u32 len) {
  * @param src Pointer to array of output hex string characters.
  * @param len Length of src array.
  */
-static void GdbHexToMem(u8* dest, u8* src, u32 len) {
+static void GdbHexToMem(u8* dest, const u8* src, size_t len) {
     while (len-- > 0) {
         *dest++ = (HexCharToValue(src[0]) << 4) | HexCharToValue(src[1]);
         src += 2;
@@ -244,7 +243,7 @@ static void IntToGdbHex(u8* dest, u32 v) {
  *
  * @param src Pointer to hex string.
  */
-static u32 GdbHexToInt(u8* src) {
+static u32 GdbHexToInt(const u8* src) {
     u32 output = 0;
 
     for (int i = 0; i < 8; i += 2) {
@@ -268,7 +267,7 @@ static u8 ReadByte() {
 }
 
 /// Calculate the checksum of the current command buffer.
-static u8 CalculateChecksum(u8* buffer, u32 length) {
+static u8 CalculateChecksum(const u8* buffer, size_t length) {
     return static_cast<u8>(std::accumulate(buffer, buffer + length, 0, std::plus<u8>()));
 }
 
@@ -586,7 +585,7 @@ static void ReadRegisters() {
 
 /// Modify data of register specified by gdb client.
 static void WriteRegister() {
-    u8* buffer_ptr = command_buffer + 3;
+    const u8* buffer_ptr = command_buffer + 3;
 
     u32 id = HexCharToValue(command_buffer[1]);
     if (command_buffer[2] != '=') {
@@ -612,7 +611,7 @@ static void WriteRegister() {
 
 /// Modify all registers with data received from the client.
 static void WriteRegisters() {
-    u8* buffer_ptr = command_buffer + 1;
+    const u8* buffer_ptr = command_buffer + 1;
 
     if (command_buffer[0] != 'G')
         return SendReply("E01");
@@ -657,7 +656,7 @@ static void ReadMemory() {
         SendReply("E01");
     }
 
-    u8* data = Memory::GetPointer(addr);
+    const u8* data = Memory::GetPointer(addr);
     if (!data) {
         return SendReply("E00");
     }
