@@ -79,8 +79,6 @@ ResultCode AddressArbiter::ArbitrateAddress(ArbitrationType type, VAddr address,
                           ErrorSummary::WrongArgument, ErrorLevel::Usage);
     }
 
-    HLE::Reschedule(__func__);
-
     // The calls that use a timeout seem to always return a Timeout error even if they did not put
     // the thread to sleep
     if (type == ArbitrationType::WaitIfLessThanWithTimeout ||

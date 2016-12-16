@@ -5,7 +5,9 @@
 #pragma once
 
 #include <string>
+#include <unordered_map>
 #include <vector>
+#include <boost/container/flat_map.hpp>
 #include <boost/container/flat_set.hpp>
 #include "common/common_types.h"
 #include "core/core.h"
@@ -125,6 +127,16 @@ public:
     void SetWaitSynchronizationOutput(s32 output);
 
     /**
+     * Retrieves the index that this particular object occupies in the list of objects
+     * that the thread passed to WaitSynchronizationN.
+     * It is used to set the output value of WaitSynchronizationN when the thread is awakened.
+     * @param object Object to query the index of.
+     */
+    s32 GetWaitObjectIndex(const WaitObject* object) const {
+        return wait_objects_index.at(object->GetObjectId());
+    }
+
+    /**
      * Stops a thread, invalidating it from further use
      */
     void Stop();
@@ -135,6 +147,15 @@ public:
      */
     VAddr GetTLSAddress() const {
         return tls_address;
+    }
+
+    /**
+     * Returns whether this thread is waiting for all the objects in
+     * its wait list to become ready, as a result of a WaitSynchronizationN call
+     * with wait_all = true, or a ReplyAndReceive call.
+     */
+    bool IsSleepingOnWaitAll() const {
+        return !wait_objects.empty();
     }
 
     Core::ThreadContext context;
@@ -154,16 +175,22 @@ public:
 
     VAddr tls_address; ///< Virtual address of the Thread Local Storage of the thread
 
-    bool waitsynch_waited; ///< Set to true if the last svcWaitSynch call caused the thread to wait
-
     /// Mutexes currently held by this thread, which will be released when it exits.
     boost::container::flat_set<SharedPtr<Mutex>> held_mutexes;
 
-    SharedPtr<Process> owner_process;                ///< Process that owns this thread
-    std::vector<SharedPtr<WaitObject>> wait_objects; ///< Objects that the thread is waiting on
-    VAddr wait_address;   ///< If waiting on an AddressArbiter, this is the arbitration address
-    bool wait_all;        ///< True if the thread is waiting on all objects before resuming
-    bool wait_set_output; ///< True if the output parameter should be set on thread wakeup
+    SharedPtr<Process> owner_process; ///< Process that owns this thread
+
+    /// Objects that the thread is waiting on.
+    /// This is only populated when the thread should wait for all the objects to become ready.
+    std::vector<SharedPtr<WaitObject>> wait_objects;
+
+    /// Mapping of Object ids to their position in the last waitlist that this object waited on.
+    boost::container::flat_map<int, s32> wait_objects_index;
+
+    VAddr wait_address; ///< If waiting on an AddressArbiter, this is the arbitration address
+
+    /// True if the WaitSynchronizationN output parameter should be set on thread wakeup.
+    bool wait_set_output;
 
     std::string name;
 
@@ -215,10 +242,9 @@ void WaitCurrentThread_Sleep();
  * @param wait_objects Kernel objects that we are waiting on
  * @param wait_set_output If true, set the output parameter on thread wakeup (for
  * WaitSynchronizationN only)
- * @param wait_all If true, wait on all objects before resuming (for WaitSynchronizationN only)
  */
 void WaitCurrentThread_WaitSynchronization(std::vector<SharedPtr<WaitObject>> wait_objects,
-                                           bool wait_set_output, bool wait_all);
+                                           bool wait_set_output);
 
 /**
  * Waits the current thread from an ArbitrateAddress call
