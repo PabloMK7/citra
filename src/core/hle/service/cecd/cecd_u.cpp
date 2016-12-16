@@ -9,6 +9,7 @@ namespace Service {
 namespace CECD {
 
 static const Interface::FunctionInfo FunctionTable[] = {
+    // cecd:u shared commands
     {0x000100C2, nullptr, "OpenRawFile"},
     {0x00020042, nullptr, "ReadRawFile"},
     {0x00030104, nullptr, "ReadMessage"},
@@ -27,7 +28,7 @@ static const Interface::FunctionInfo FunctionTable[] = {
     {0x00120104, nullptr, "OpenAndRead"},
 };
 
-CECD_U_Interface::CECD_U_Interface() {
+CECD_U::CECD_U() {
     Register(FunctionTable);
 }
 

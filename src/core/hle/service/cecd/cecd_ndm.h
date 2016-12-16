@@ -1,4 +1,4 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright 2016 Citra Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -9,12 +9,12 @@
 namespace Service {
 namespace CECD {
 
-class CECD_U : public Interface {
+class CECD_NDM : public Interface {
 public:
-    CECD_U();
+    CECD_NDM();
 
     std::string GetPortName() const override {
-        return "cecd:u";
+        return "cecd:ndm";
     }
 };
 
