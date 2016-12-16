@@ -5,6 +5,7 @@
 // Originally written by Sven Peter <sven@fail0verflow.com> for anergistic.
 
 #include <algorithm>
+#include <atomic>
 #include <climits>
 #include <csignal>
 #include <cstdarg>
@@ -130,7 +131,10 @@ static u16 gdbstub_port = 24689;
 
 static bool halt_loop = true;
 static bool step_loop = false;
-std::atomic<bool> g_server_enabled(false);
+
+// If set to false, the server will never be started and no
+// gdbstub-related functions will be executed.
+static std::atomic<bool> server_enabled(false);
 
 #ifdef _WIN32
 WSADATA InitData;
@@ -902,7 +906,7 @@ void SetServerPort(u16 port) {
 
 void ToggleServer(bool status) {
     if (status) {
-        g_server_enabled = status;
+        server_enabled = status;
 
         // Start server
         if (!IsConnected() && Core::g_sys_core != nullptr) {
@@ -914,12 +918,12 @@ void ToggleServer(bool status) {
             Shutdown();
         }
 
-        g_server_enabled = status;
+        server_enabled = status;
     }
 }
 
 static void Init(u16 port) {
-    if (!g_server_enabled) {
+    if (!server_enabled) {
         // Set the halt loop to false in case the user enabled the gdbstub mid-execution.
         // This way the CPU can still execute normally.
         halt_loop = false;
@@ -998,7 +1002,7 @@ void Init() {
 }
 
 void Shutdown() {
-    if (!g_server_enabled) {
+    if (!server_enabled) {
         return;
     }
 
@@ -1015,8 +1019,12 @@ void Shutdown() {
     LOG_INFO(Debug_GDBStub, "GDB stopped.");
 }
 
+bool IsServerEnabled() {
+    return server_enabled;
+}
+
 bool IsConnected() {
-    return g_server_enabled && gdbserver_socket != -1;
+    return IsServerEnabled() && gdbserver_socket != -1;
 }
 
 bool GetCpuHaltFlag() {

@@ -953,7 +953,7 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
 #define GDB_BP_CHECK                                                                               \
     cpu->Cpsr &= ~(1 << 5);                                                                        \
     cpu->Cpsr |= cpu->TFlag << 5;                                                                  \
-    if (GDBStub::g_server_enabled) {                                                               \
+    if (GDBStub::IsServerEnabled()) {                                                              \
         if (GDBStub::IsMemoryBreak() || (breakpoint_data.type != GDBStub::BreakpointType::None &&  \
                                          PC == breakpoint_data.address)) {                         \
             GDBStub::Break();                                                                      \
@@ -1649,7 +1649,7 @@ DISPATCH : {
     }
 
     // Find breakpoint if one exists within the block
-    if (GDBStub::g_server_enabled && GDBStub::IsConnected()) {
+    if (GDBStub::IsConnected()) {
         breakpoint_data =
             GDBStub::GetNextBreakpointFromAddress(cpu->Reg[15], GDBStub::BreakpointType::Execute);
     }
