@@ -198,11 +198,10 @@ struct ShaderSetup {
      * @param input Input vertex into the shader
      * @param num_attributes The number of vertex shader attributes
      * @param config Configuration object for the shader pipeline
-     * @param setup Setup object for the shader pipeline
      * @return Debug information for this shader with regards to the given vertex
      */
     DebugData<true> ProduceDebugInfo(const InputVertex& input, int num_attributes,
-                                     const Regs::ShaderConfig& config, const ShaderSetup& setup);
+                                     const Regs::ShaderConfig& config);
 };
 
 } // namespace Shader
