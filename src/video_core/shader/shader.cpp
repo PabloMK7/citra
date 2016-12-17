@@ -2,14 +2,8 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <atomic>
 #include <cmath>
 #include <cstring>
-#include <unordered_map>
-#include <utility>
-#include <boost/range/algorithm/fill.hpp>
-#include "common/bit_field.h"
-#include "common/hash.h"
 #include "common/logging/log.h"
 #include "common/microprofile.h"
 #include "video_core/pica.h"
@@ -17,7 +11,7 @@
 #include "video_core/shader/shader.h"
 #include "video_core/shader/shader_interpreter.h"
 #ifdef ARCHITECTURE_x86_64
-#include "video_core/shader/shader_jit_x64_compiler.h"
+#include "video_core/shader/shader_jit_x64.h"
 #endif // ARCHITECTURE_x86_64
 #include "video_core/video_core.h"
 
@@ -87,91 +81,31 @@ void UnitState::LoadInputVertex(const InputVertex& input, int num_attributes) {
     conditional_code[1] = false;
 }
 
-class MergedShaderEngine : public ShaderEngine {
-public:
-    void SetupBatch(const ShaderSetup* setup) override;
-    void Run(UnitState& state, unsigned int entry_point) const override;
-    DebugData<true> ProduceDebugInfo(const InputVertex& input, int num_attributes,
-        unsigned int entry_point) const override;
-
-private:
-    const ShaderSetup* setup = nullptr;
-};
-
-#ifdef ARCHITECTURE_x86_64
-static std::unordered_map<u64, std::unique_ptr<JitShader>> shader_map;
-static const JitShader* jit_shader;
-#endif // ARCHITECTURE_x86_64
-
-void ClearCache() {
-#ifdef ARCHITECTURE_x86_64
-    shader_map.clear();
-#endif // ARCHITECTURE_x86_64
-}
-
-void MergedShaderEngine::SetupBatch(const ShaderSetup* setup_) {
-    setup = setup_;
-    if (setup == nullptr)
-        return;
-
-#ifdef ARCHITECTURE_x86_64
-    if (VideoCore::g_shader_jit_enabled) {
-        u64 code_hash = Common::ComputeHash64(&setup->program_code, sizeof(setup->program_code));
-        u64 swizzle_hash = Common::ComputeHash64(&setup->swizzle_data, sizeof(setup->swizzle_data));
-
-        u64 cache_key = code_hash ^ swizzle_hash;
-        auto iter = shader_map.find(cache_key);
-        if (iter != shader_map.end()) {
-            jit_shader = iter->second.get();
-        } else {
-            auto shader = std::make_unique<JitShader>();
-            shader->Compile();
-            jit_shader = shader.get();
-            shader_map[cache_key] = std::move(shader);
-        }
-    }
-#endif // ARCHITECTURE_x86_64
-}
-
 MICROPROFILE_DEFINE(GPU_Shader, "GPU", "Shader", MP_RGB(50, 50, 240));
 
-void MergedShaderEngine::Run(UnitState& state, unsigned int entry_point) const {
-    ASSERT(setup != nullptr);
-    ASSERT(entry_point < 1024);
-
-    MICROPROFILE_SCOPE(GPU_Shader);
-
 #ifdef ARCHITECTURE_x86_64
-    if (VideoCore::g_shader_jit_enabled) {
-        jit_shader->Run(*setup, state, entry_point);
-    } else {
-        DebugData<false> dummy_debug_data;
-        RunInterpreter(*setup, state, dummy_debug_data, entry_point);
-    }
-#else
-    DebugData<false> dummy_debug_data;
-    RunInterpreter(*setup, state, dummy_debug_data, entry_point);
+static std::unique_ptr<JitX64Engine> jit_engine;
 #endif // ARCHITECTURE_x86_64
-}
-
-DebugData<true> MergedShaderEngine::ProduceDebugInfo(const InputVertex& input, int num_attributes,
-                                                     unsigned int entry_point) const {
-    ASSERT(setup != nullptr);
-    ASSERT(entry_point < 1024);
-
-    UnitState state;
-    DebugData<true> debug_data;
-
-    // Setup input register table
-    boost::fill(state.registers.input, Math::Vec4<float24>::AssignToAll(float24::Zero()));
-    state.LoadInputVertex(input, num_attributes);
-    RunInterpreter(*setup, state, debug_data, entry_point);
-    return debug_data;
-}
+static InterpreterEngine interpreter_engine;
 
 ShaderEngine* GetEngine() {
-    static MergedShaderEngine merged_engine;
-    return &merged_engine;
+#ifdef ARCHITECTURE_x86_64
+    // TODO(yuriks): Re-initialize on each change rather than being persistent
+    if (VideoCore::g_shader_jit_enabled) {
+        if (jit_engine == nullptr) {
+            jit_engine = std::make_unique<JitX64Engine>();
+        }
+        return jit_engine.get();
+    }
+#endif // ARCHITECTURE_x86_64
+
+    return &interpreter_engine;
+}
+
+void Shutdown() {
+#ifdef ARCHITECTURE_x86_64
+    jit_engine = nullptr;
+#endif // ARCHITECTURE_x86_64
 }
 
 } // namespace Shader

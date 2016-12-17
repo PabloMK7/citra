@@ -6,7 +6,6 @@
 
 #include <array>
 #include <cstddef>
-#include <memory>
 #include <type_traits>
 #include <nihstro/shader_bytecode.h>
 #include "common/assert.h"
@@ -152,9 +151,6 @@ struct UnitState {
     void LoadInputVertex(const InputVertex& input, int num_attributes);
 };
 
-/// Clears the shader cache
-void ClearCache();
-
 struct ShaderSetup {
     struct {
         // The float uniforms are accessed by the shader JIT using SSE instructions, and are
@@ -210,6 +206,7 @@ public:
 
 // TODO(yuriks): Remove and make it non-global state somewhere
 ShaderEngine* GetEngine();
+void Shutdown();
 
 } // namespace Shader
 

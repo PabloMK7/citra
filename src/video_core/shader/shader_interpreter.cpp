@@ -7,10 +7,12 @@
 #include <cmath>
 #include <numeric>
 #include <boost/container/static_vector.hpp>
+#include <boost/range/algorithm/fill.hpp>
 #include <nihstro/shader_bytecode.h>
 #include "common/assert.h"
 #include "common/common_types.h"
 #include "common/logging/log.h"
+#include "common/microprofile.h"
 #include "common/vector_math.h"
 #include "video_core/pica_state.h"
 #include "video_core/pica_types.h"
@@ -37,8 +39,8 @@ struct CallStackElement {
 };
 
 template <bool Debug>
-void RunInterpreter(const ShaderSetup& setup, UnitState& state, DebugData<Debug>& debug_data,
-                    unsigned offset) {
+static void RunInterpreter(const ShaderSetup& setup, UnitState& state, DebugData<Debug>& debug_data,
+                           unsigned offset) {
     // TODO: Is there a maximal size for this?
     boost::container::static_vector<CallStackElement, 16> call_stack;
     u32 program_counter = offset;
@@ -647,9 +649,36 @@ void RunInterpreter(const ShaderSetup& setup, UnitState& state, DebugData<Debug>
     }
 }
 
-// Explicit instantiation
-template void RunInterpreter(const ShaderSetup&, UnitState&, DebugData<false>&, unsigned offset);
-template void RunInterpreter(const ShaderSetup&, UnitState&, DebugData<true>&, unsigned offset);
+void InterpreterEngine::SetupBatch(const ShaderSetup* setup_) {
+    setup = setup_;
+}
+
+MICROPROFILE_DECLARE(GPU_Shader);
+
+void InterpreterEngine::Run(UnitState& state, unsigned int entry_point) const {
+    ASSERT(setup != nullptr);
+    ASSERT(entry_point < 1024);
+
+    MICROPROFILE_SCOPE(GPU_Shader);
+
+    DebugData<false> dummy_debug_data;
+    RunInterpreter(*setup, state, dummy_debug_data, entry_point);
+}
+
+DebugData<true> InterpreterEngine::ProduceDebugInfo(const InputVertex& input, int num_attributes,
+                                                    unsigned int entry_point) const {
+    ASSERT(setup != nullptr);
+    ASSERT(entry_point < 1024);
+
+    UnitState state;
+    DebugData<true> debug_data;
+
+    // Setup input register table
+    boost::fill(state.registers.input, Math::Vec4<float24>::AssignToAll(float24::Zero()));
+    state.LoadInputVertex(input, num_attributes);
+    RunInterpreter(*setup, state, debug_data, entry_point);
+    return debug_data;
+}
 
 } // namespace
 
