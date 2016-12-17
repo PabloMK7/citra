@@ -47,10 +47,5 @@ void JitX64Engine::Run(UnitState& state, unsigned int entry_point) const {
     cached_shader->Run(*setup, state, entry_point);
 }
 
-DebugData<true> JitX64Engine::ProduceDebugInfo(const InputVertex& input, int num_attributes,
-                                               unsigned int entry_point) const {
-    UNIMPLEMENTED_MSG("Shader tracing/debugging is not supported by the JIT.");
-}
-
 } // namespace Shader
 } // namespace Pica

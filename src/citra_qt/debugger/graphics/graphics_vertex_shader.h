@@ -8,6 +8,7 @@
 #include <QTreeView>
 #include "citra_qt/debugger/graphics/graphics_breakpoint_observer.h"
 #include "nihstro/parser_shbin.h"
+#include "video_core/shader/debug_data.h"
 #include "video_core/shader/shader.h"
 
 class QLabel;

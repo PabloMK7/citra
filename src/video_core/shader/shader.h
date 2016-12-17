@@ -14,7 +14,6 @@
 #include "common/vector_math.h"
 #include "video_core/pica.h"
 #include "video_core/pica_types.h"
-#include "video_core/shader/debug_data.h"
 
 using nihstro::RegisterType;
 using nihstro::SourceRegister;
@@ -192,16 +191,6 @@ public:
      * @param state Shader unit state, must be setup per shader and per shader unit
      */
     virtual void Run(UnitState& state, unsigned int entry_point) const = 0;
-
-    /**
-     * Produce debug information based on the given shader and input vertex
-     * @param input Input vertex into the shader
-     * @param num_attributes The number of vertex shader attributes
-     * @param config Configuration object for the shader pipeline
-     * @return Debug information for this shader with regards to the given vertex
-     */
-    virtual DebugData<true> ProduceDebugInfo(const InputVertex& input, int num_attributes,
-                                             unsigned int entry_point) const = 0;
 };
 
 // TODO(yuriks): Remove and make it non-global state somewhere

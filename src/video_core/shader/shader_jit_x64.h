@@ -21,8 +21,6 @@ public:
 
     void SetupBatch(const ShaderSetup* setup) override;
     void Run(UnitState& state, unsigned int entry_point) const override;
-    DebugData<true> ProduceDebugInfo(const InputVertex& input, int num_attributes,
-                                     unsigned int entry_point) const override;
 
 private:
     const ShaderSetup* setup = nullptr;
