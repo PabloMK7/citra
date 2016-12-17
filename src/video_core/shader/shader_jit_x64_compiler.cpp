@@ -17,7 +17,7 @@
 #include "video_core/pica_state.h"
 #include "video_core/pica_types.h"
 #include "video_core/shader/shader.h"
-#include "video_core/shader/shader_jit_x64.h"
+#include "video_core/shader/shader_jit_x64_compiler.h"
 
 using namespace Common::X64;
 using namespace Xbyak::util;

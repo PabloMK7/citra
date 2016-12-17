@@ -17,7 +17,7 @@
 #include "video_core/shader/shader.h"
 #include "video_core/shader/shader_interpreter.h"
 #ifdef ARCHITECTURE_x86_64
-#include "video_core/shader/shader_jit_x64.h"
+#include "video_core/shader/shader_jit_x64_compiler.h"
 #endif // ARCHITECTURE_x86_64
 #include "video_core/video_core.h"
 

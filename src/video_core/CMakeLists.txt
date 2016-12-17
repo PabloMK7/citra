@@ -50,10 +50,10 @@ set(HEADERS
 
 if(ARCHITECTURE_x86_64)
     set(SRCS ${SRCS}
-            shader/shader_jit_x64.cpp)
+            shader/shader_jit_x64_compiler.cpp)
 
     set(HEADERS ${HEADERS}
-            shader/shader_jit_x64.h)
+            shader/shader_jit_x64_compiler.h)
 endif()
 
 create_directory_groups(${SRCS} ${HEADERS})
