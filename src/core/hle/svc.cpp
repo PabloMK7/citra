@@ -166,7 +166,8 @@ static ResultCode ControlMemory(u32* out_addr, u32 operation, u32 addr0, u32 add
 }
 
 /// Maps a memory block to specified address
-static ResultCode MapMemoryBlock(Kernel::Handle handle, u32 addr, u32 permissions, u32 other_permissions) {
+static ResultCode MapMemoryBlock(Kernel::Handle handle, u32 addr, u32 permissions,
+                                 u32 other_permissions) {
     using Kernel::SharedMemory;
     using Kernel::MemoryPermission;
 
@@ -295,8 +296,8 @@ static ResultCode WaitSynchronization1(Kernel::Handle handle, s64 nano_seconds) 
 }
 
 /// Wait for the given handles to synchronize, timeout after the specified nanoseconds
-static ResultCode WaitSynchronizationN(s32* out, Kernel::Handle* handles, s32 handle_count, bool wait_all,
-                                       s64 nano_seconds) {
+static ResultCode WaitSynchronizationN(s32* out, Kernel::Handle* handles, s32 handle_count,
+                                       bool wait_all, s64 nano_seconds) {
     Kernel::Thread* thread = Kernel::GetCurrentThread();
 
     // Check if 'handles' is invalid
@@ -507,8 +508,8 @@ static ResultCode GetResourceLimitCurrentValues(s64* values, Kernel::Handle reso
 }
 
 /// Get resource limit max values
-static ResultCode GetResourceLimitLimitValues(s64* values, Kernel::Handle resource_limit_handle, u32* names,
-                                              u32 name_count) {
+static ResultCode GetResourceLimitLimitValues(s64* values, Kernel::Handle resource_limit_handle,
+                                              u32* names, u32 name_count) {
     LOG_TRACE(Kernel_SVC, "called resource_limit=%08X, names=%p, name_count=%d",
               resource_limit_handle, names, name_count);
 
@@ -860,8 +861,8 @@ static s64 GetSystemTick() {
 }
 
 /// Creates a memory block at the specified address with the specified permissions and size
-static ResultCode CreateMemoryBlock(Kernel::Handle* out_handle, u32 addr, u32 size, u32 my_permission,
-                                    u32 other_permission) {
+static ResultCode CreateMemoryBlock(Kernel::Handle* out_handle, u32 addr, u32 size,
+                                    u32 my_permission, u32 other_permission) {
     using Kernel::SharedMemory;
 
     if (size % Memory::PAGE_SIZE != 0)
@@ -912,8 +913,8 @@ static ResultCode CreateMemoryBlock(Kernel::Handle* out_handle, u32 addr, u32 si
     return RESULT_SUCCESS;
 }
 
-static ResultCode CreatePort(Kernel::Handle* server_port, Kernel::Handle* client_port, const char* name,
-                             u32 max_sessions) {
+static ResultCode CreatePort(Kernel::Handle* server_port, Kernel::Handle* client_port,
+                             const char* name, u32 max_sessions) {
     // TODO(Subv): Implement named ports.
     ASSERT_MSG(name == nullptr, "Named ports are currently unimplemented");
 

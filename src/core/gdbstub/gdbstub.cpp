@@ -30,12 +30,12 @@
 #include <unistd.h>
 #endif
 
-#include "core/loader/loader.h"
 #include "common/logging/log.h"
 #include "common/string_util.h"
 #include "core/arm/arm_interface.h"
 #include "core/core.h"
 #include "core/gdbstub/gdbstub.h"
+#include "core/loader/loader.h"
 #include "core/memory.h"
 
 const int GDB_BUFFER_SIZE = 10000;
@@ -629,7 +629,7 @@ static void WriteRegisters() {
             i += 2;
         } else if (reg > CPSR_REGISTER && reg < FPSCR_REGISTER) {
             Core::AppCore().SetVFPReg(reg - CPSR_REGISTER - 1,
-                                        GdbHexToInt(buffer_ptr + i * CHAR_BIT));
+                                      GdbHexToInt(buffer_ptr + i * CHAR_BIT));
             i++; // Skip padding
         } else if (reg == FPSCR_REGISTER) {
             Core::AppCore().SetVFPSystemReg(VFP_FPSCR, GdbHexToInt(buffer_ptr + i * CHAR_BIT));

@@ -42,23 +42,24 @@ public:
 
     /// Enumeration representing the return values of the System Initialize and Load process.
     enum class ResultStatus : u32 {
-        Success, ///< Succeeded
-        ErrorNotInitialized, ///< Error trying to use core prior to initialization
-        ErrorGetLoader, ///< Error finding the correct application loader
-        ErrorSystemMode, ///< Error determining the system mode
-        ErrorLoader, ///< Error loading the specified application
+        Success,                    ///< Succeeded
+        ErrorNotInitialized,        ///< Error trying to use core prior to initialization
+        ErrorGetLoader,             ///< Error finding the correct application loader
+        ErrorSystemMode,            ///< Error determining the system mode
+        ErrorLoader,                ///< Error loading the specified application
         ErrorLoader_ErrorEncrypted, ///< Error loading the specified application due to encryption
-        ErrorLoader_ErrorInvalidFormat, ///< Error loading the specified application due to an invalid format
-        ErrorVideoCore, ///< Error in the video core
+        ErrorLoader_ErrorInvalidFormat, ///< Error loading the specified application due to an
+                                        /// invalid format
+        ErrorVideoCore,                 ///< Error in the video core
     };
 
     /**
      * Run the core CPU loop
-     * This function runs the core for the specified number of CPU instructions before trying to update
-     * hardware. This is much faster than SingleStep (and should be equivalent), as the CPU is not
-     * required to do a full dispatch with each instruction. NOTE: the number of instructions requested
-     * is not guaranteed to run, as this will be interrupted preemptively if a hardware update is
-     * requested (e.g. on a thread switch).
+     * This function runs the core for the specified number of CPU instructions before trying to
+     * update hardware. This is much faster than SingleStep (and should be equivalent), as the CPU
+     * is not required to do a full dispatch with each instruction. NOTE: the number of instructions
+     * requested is not guaranteed to run, as this will be interrupted preemptively if a hardware
+     * update is requested (e.g. on a thread switch).
      * @param tight_loop Number of instructions to execute.
      * @return Result status, indicating whethor or not the operation succeeded.
      */

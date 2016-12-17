@@ -126,13 +126,13 @@ int main(int argc, char** argv) {
     Settings::values.use_gdbstub = use_gdbstub;
     Settings::Apply();
 
-    std::unique_ptr<EmuWindow_SDL2> emu_window{ std::make_unique<EmuWindow_SDL2>() };
+    std::unique_ptr<EmuWindow_SDL2> emu_window{std::make_unique<EmuWindow_SDL2>()};
 
-    Core::System& system{ Core::System::GetInstance() };
+    Core::System& system{Core::System::GetInstance()};
 
     SCOPE_EXIT({ system.Shutdown(); });
 
-    const Core::System::ResultStatus load_result{ system.Load(emu_window.get(), filepath) };
+    const Core::System::ResultStatus load_result{system.Load(emu_window.get(), filepath)};
 
     switch (load_result) {
     case Core::System::ResultStatus::ErrorGetLoader:

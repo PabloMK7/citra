@@ -283,49 +283,48 @@ bool GMainWindow::LoadROM(const std::string& filename) {
 
     if (!gladLoadGL()) {
         QMessageBox::critical(this, tr("Error while starting Citra!"),
-            tr("Failed to initialize the video core!\n\n"
-                "Please ensure that your GPU supports OpenGL 3.3 and that you "
-                "have the latest graphics driver."));
+                              tr("Failed to initialize the video core!\n\n"
+                                 "Please ensure that your GPU supports OpenGL 3.3 and that you "
+                                 "have the latest graphics driver."));
         return false;
     }
 
-    Core::System& system{ Core::System::GetInstance() };
+    Core::System& system{Core::System::GetInstance()};
 
-    const Core::System::ResultStatus result{ system.Load(render_window, filename) };
+    const Core::System::ResultStatus result{system.Load(render_window, filename)};
 
     if (result != Core::System::ResultStatus::Success) {
         switch (result) {
         case Core::System::ResultStatus::ErrorGetLoader:
             LOG_CRITICAL(Frontend, "Failed to obtain loader for %s!", filename.c_str());
             QMessageBox::critical(this, tr("Error while loading ROM!"),
-                tr("The ROM format is not supported."));
+                                  tr("The ROM format is not supported."));
             break;
 
         case Core::System::ResultStatus::ErrorSystemMode:
             LOG_CRITICAL(Frontend, "Failed to load ROM!");
             QMessageBox::critical(this, tr("Error while loading ROM!"),
-                tr("Could not determine the system mode."));
+                                  tr("Could not determine the system mode."));
             break;
 
-        case Core::System::ResultStatus::ErrorLoader_ErrorEncrypted:
-        {
+        case Core::System::ResultStatus::ErrorLoader_ErrorEncrypted: {
             // Build the MessageBox ourselves to have clickable link
             QMessageBox popup_error;
             popup_error.setTextFormat(Qt::RichText);
             popup_error.setWindowTitle(tr("Error while loading ROM!"));
             popup_error.setText(
                 tr("The game that you are trying to load must be decrypted before being used with "
-                    "Citra.<br/><br/>"
-                    "For more information on dumping and decrypting games, please see: <a "
-                    "href='https://citra-emu.org/wiki/Dumping-Game-Cartridges'>https://"
-                    "citra-emu.org/wiki/Dumping-Game-Cartridges</a>"));
+                   "Citra.<br/><br/>"
+                   "For more information on dumping and decrypting games, please see: <a "
+                   "href='https://citra-emu.org/wiki/Dumping-Game-Cartridges'>https://"
+                   "citra-emu.org/wiki/Dumping-Game-Cartridges</a>"));
             popup_error.setIcon(QMessageBox::Critical);
             popup_error.exec();
             break;
         }
         case Core::System::ResultStatus::ErrorLoader_ErrorInvalidFormat:
             QMessageBox::critical(this, tr("Error while loading ROM!"),
-                tr("The ROM format is not supported."));
+                                  tr("The ROM format is not supported."));
             break;
 
         default:

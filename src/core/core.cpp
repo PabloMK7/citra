@@ -78,20 +78,20 @@ System::ResultStatus System::Load(EmuWindow* emu_window, const std::string& file
         return ResultStatus::ErrorGetLoader;
     }
 
-    boost::optional<u32> system_mode{ app_loader->LoadKernelSystemMode() };
+    boost::optional<u32> system_mode{app_loader->LoadKernelSystemMode()};
     if (!system_mode) {
         LOG_CRITICAL(Core, "Failed to determine system mode!");
         return ResultStatus::ErrorSystemMode;
     }
 
-    ResultStatus init_result{ Init(emu_window, system_mode.get()) };
+    ResultStatus init_result{Init(emu_window, system_mode.get())};
     if (init_result != ResultStatus::Success) {
         LOG_CRITICAL(Core, "Failed to initialize system (Error %i)!", init_result);
         System::Shutdown();
         return init_result;
     }
 
-    const Loader::ResultStatus load_result{ app_loader->Load() };
+    const Loader::ResultStatus load_result{app_loader->Load()};
     if (Loader::ResultStatus::Success != load_result) {
         LOG_CRITICAL(Core, "Failed to load ROM (Error %i)!", load_result);
         System::Shutdown();
