@@ -46,7 +46,7 @@ static std::vector<SharedPtr<Thread>> thread_list;
 // Lists only ready thread ids.
 static Common::ThreadQueueList<Thread*, THREADPRIO_LOWEST + 1> ready_queue;
 
-static Thread* current_thread;
+static SharedPtr<Thread> current_thread;
 
 // The first available thread id at startup
 static u32 next_thread_id;
@@ -63,7 +63,7 @@ Thread::Thread() {}
 Thread::~Thread() {}
 
 Thread* GetCurrentThread() {
-    return current_thread;
+    return current_thread.get();
 }
 
 /**
@@ -261,6 +261,13 @@ void WaitCurrentThread_ArbitrateAddress(VAddr wait_address) {
     Thread* thread = GetCurrentThread();
     thread->wait_address = wait_address;
     thread->status = THREADSTATUS_WAIT_ARB;
+}
+
+void ExitCurrentThread() {
+    Thread* thread = GetCurrentThread();
+    thread->Stop();
+    thread_list.erase(std::remove(thread_list.begin(), thread_list.end(), thread),
+                      thread_list.end());
 }
 
 /**
