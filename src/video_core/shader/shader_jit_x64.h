@@ -34,7 +34,7 @@ class JitShader : public Xbyak::CodeGenerator {
 public:
     JitShader();
 
-    void Run(const ShaderSetup& setup, UnitState<false>& state, unsigned offset) const {
+    void Run(const ShaderSetup& setup, UnitState& state, unsigned offset) const {
         program(&setup, &state, instruction_labels[offset].getAddress());
     }
 

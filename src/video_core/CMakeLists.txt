@@ -39,6 +39,7 @@ set(HEADERS
             rasterizer.h
             rasterizer_interface.h
             renderer_base.h
+            shader/debug_data.h
             shader/shader.h
             shader/shader_interpreter.h
             swrasterizer.h
