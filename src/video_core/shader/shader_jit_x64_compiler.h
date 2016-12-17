@@ -38,7 +38,8 @@ public:
         program(&setup, &state, instruction_labels[offset].getAddress());
     }
 
-    void Compile();
+    void Compile(const std::array<u32, 1024>* program_code,
+                 const std::array<u32, 1024>* swizzle_data);
 
     void Compile_ADD(Instruction instr);
     void Compile_DP3(Instruction instr);
@@ -102,6 +103,9 @@ private:
      * identifying the locations where a return needs to be inserted.
      */
     void FindReturnOffsets();
+
+    const std::array<u32, 1024>* program_code = nullptr;
+    const std::array<u32, 1024>* swizzle_data = nullptr;
 
     /// Mapping of Pica VS instructions to pointers in the emitted code
     std::array<Xbyak::Label, 1024> instruction_labels;

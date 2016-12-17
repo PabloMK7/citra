@@ -29,7 +29,7 @@ void JitX64Engine::SetupBatch(const ShaderSetup* setup_) {
         cached_shader = iter->second.get();
     } else {
         auto shader = std::make_unique<JitShader>();
-        shader->Compile();
+        shader->Compile(&setup->program_code, &setup->swizzle_data);
         cached_shader = shader.get();
         cache.emplace_hint(iter, cache_key, std::move(shader));
     }
