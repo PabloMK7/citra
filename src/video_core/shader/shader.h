@@ -191,7 +191,7 @@ struct ShaderSetup {
      * Runs the currently setup shader
      * @param state Shader unit state, must be setup per shader and per shader unit
      */
-    void Run(UnitState& state, unsigned int entry_point);
+    void Run(UnitState& state, unsigned int entry_point) const;
 
     /**
      * Produce debug information based on the given shader and input vertex
@@ -201,7 +201,7 @@ struct ShaderSetup {
      * @return Debug information for this shader with regards to the given vertex
      */
     DebugData<true> ProduceDebugInfo(const InputVertex& input, int num_attributes,
-                                     unsigned int entry_point);
+                                     unsigned int entry_point) const;
 };
 
 } // namespace Shader

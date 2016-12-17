@@ -120,7 +120,7 @@ void ShaderSetup::Setup() {
 
 MICROPROFILE_DEFINE(GPU_Shader, "GPU", "Shader", MP_RGB(50, 50, 240));
 
-void ShaderSetup::Run(UnitState& state, unsigned int entry_point) {
+void ShaderSetup::Run(UnitState& state, unsigned int entry_point) const {
     ASSERT(entry_point < 1024);
 
     MICROPROFILE_SCOPE(GPU_Shader);
@@ -139,7 +139,7 @@ void ShaderSetup::Run(UnitState& state, unsigned int entry_point) {
 }
 
 DebugData<true> ShaderSetup::ProduceDebugInfo(const InputVertex& input, int num_attributes,
-                                              unsigned int entry_point) {
+                                              unsigned int entry_point) const {
     ASSERT(entry_point < 1024);
 
     UnitState state;
