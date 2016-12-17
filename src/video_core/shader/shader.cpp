@@ -120,33 +120,35 @@ void ShaderSetup::Setup() {
 
 MICROPROFILE_DEFINE(GPU_Shader, "GPU", "Shader", MP_RGB(50, 50, 240));
 
-void ShaderSetup::Run(UnitState& state) {
-    auto& config = g_state.regs.vs;
+void ShaderSetup::Run(UnitState& state, unsigned int entry_point) {
+    ASSERT(entry_point < 1024);
 
     MICROPROFILE_SCOPE(GPU_Shader);
 
 #ifdef ARCHITECTURE_x86_64
     if (VideoCore::g_shader_jit_enabled) {
-        jit_shader->Run(*this, state, config.main_offset);
+        jit_shader->Run(*this, state, entry_point);
     } else {
         DebugData<false> dummy_debug_data;
-        RunInterpreter(*this, state, dummy_debug_data, config.main_offset);
+        RunInterpreter(*this, state, dummy_debug_data, entry_point);
     }
 #else
     DebugData<false> dummy_debug_data;
-    RunInterpreter(*this, state, dummy_debug_data, config.main_offset);
+    RunInterpreter(*this, state, dummy_debug_data, entry_point);
 #endif // ARCHITECTURE_x86_64
 }
 
 DebugData<true> ShaderSetup::ProduceDebugInfo(const InputVertex& input, int num_attributes,
-                                              const Regs::ShaderConfig& config) {
+                                              unsigned int entry_point) {
+    ASSERT(entry_point < 1024);
+
     UnitState state;
     DebugData<true> debug_data;
 
     // Setup input register table
     boost::fill(state.registers.input, Math::Vec4<float24>::AssignToAll(float24::Zero()));
     state.LoadInputVertex(input, num_attributes);
-    RunInterpreter(*this, state, debug_data, config.main_offset);
+    RunInterpreter(*this, state, debug_data, entry_point);
     return debug_data;
 }
 
