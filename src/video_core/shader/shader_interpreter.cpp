@@ -75,9 +75,9 @@ static void RunInterpreter(const ShaderSetup& setup, UnitState& state, DebugData
         }
     };
 
-    const auto& uniforms = g_state.vs.uniforms;
-    const auto& swizzle_data = g_state.vs.swizzle_data;
-    const auto& program_code = g_state.vs.program_code;
+    const auto& uniforms = setup.uniforms;
+    const auto& swizzle_data = setup.swizzle_data;
+    const auto& program_code = setup.program_code;
 
     // Placeholder for invalid inputs
     static float24 dummy_vec4_float24[4];
