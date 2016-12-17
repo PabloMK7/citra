@@ -76,9 +76,6 @@ void UnitState::LoadInputVertex(const InputVertex& input, int num_attributes) {
 
     for (int i = 0; i < num_attributes; i++)
         registers.input[attribute_register_map.GetRegisterForAttribute(i)] = input.attr[i];
-
-    conditional_code[0] = false;
-    conditional_code[1] = false;
 }
 
 MICROPROFILE_DEFINE(GPU_Shader, "GPU", "Shader", MP_RGB(50, 50, 240));

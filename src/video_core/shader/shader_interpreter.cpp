@@ -45,6 +45,9 @@ static void RunInterpreter(const ShaderSetup& setup, UnitState& state, DebugData
     boost::container::static_vector<CallStackElement, 16> call_stack;
     u32 program_counter = offset;
 
+    state.conditional_code[0] = false;
+    state.conditional_code[1] = false;
+
     auto call = [&program_counter, &call_stack](u32 offset, u32 num_instructions, u32 return_offset,
                                                 u8 repeat_count, u8 loop_increment) {
         // -1 to make sure when incrementing the PC we end up at the correct offset
