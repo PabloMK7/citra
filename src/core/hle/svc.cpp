@@ -584,7 +584,7 @@ static ResultCode CreateThread(Handle* out_handle, s32 priority, u32 entry_point
 static void ExitThread() {
     LOG_TRACE(Kernel_SVC, "called, pc=0x%08X", Core::g_app_core->GetPC());
 
-    Kernel::GetCurrentThread()->Stop();
+    Kernel::ExitCurrentThread();
 }
 
 /// Gets the priority for the specified thread

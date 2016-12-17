@@ -253,6 +253,11 @@ void WaitCurrentThread_WaitSynchronization(std::vector<SharedPtr<WaitObject>> wa
 void WaitCurrentThread_ArbitrateAddress(VAddr wait_address);
 
 /**
+ * Stops the current thread and removes it from the thread_list
+ */
+void ExitCurrentThread();
+
+/**
  * Initialize threading
  */
 void ThreadingInit();
