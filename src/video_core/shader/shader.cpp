@@ -87,6 +87,17 @@ void UnitState::LoadInputVertex(const InputVertex& input, int num_attributes) {
     conditional_code[1] = false;
 }
 
+class MergedShaderEngine : public ShaderEngine {
+public:
+    void SetupBatch(const ShaderSetup* setup) override;
+    void Run(UnitState& state, unsigned int entry_point) const override;
+    DebugData<true> ProduceDebugInfo(const InputVertex& input, int num_attributes,
+        unsigned int entry_point) const override;
+
+private:
+    const ShaderSetup* setup = nullptr;
+};
+
 #ifdef ARCHITECTURE_x86_64
 static std::unordered_map<u64, std::unique_ptr<JitShader>> shader_map;
 static const JitShader* jit_shader;
@@ -98,13 +109,17 @@ void ClearCache() {
 #endif // ARCHITECTURE_x86_64
 }
 
-void ShaderSetup::Setup() {
+void MergedShaderEngine::SetupBatch(const ShaderSetup* setup_) {
+    setup = setup_;
+    if (setup == nullptr)
+        return;
+
 #ifdef ARCHITECTURE_x86_64
     if (VideoCore::g_shader_jit_enabled) {
-        u64 cache_key =
-            Common::ComputeHash64(&program_code, sizeof(program_code)) ^
-            Common::ComputeHash64(&swizzle_data, sizeof(swizzle_data));
+        u64 code_hash = Common::ComputeHash64(&setup->program_code, sizeof(setup->program_code));
+        u64 swizzle_hash = Common::ComputeHash64(&setup->swizzle_data, sizeof(setup->swizzle_data));
 
+        u64 cache_key = code_hash ^ swizzle_hash;
         auto iter = shader_map.find(cache_key);
         if (iter != shader_map.end()) {
             jit_shader = iter->second.get();
@@ -120,26 +135,28 @@ void ShaderSetup::Setup() {
 
 MICROPROFILE_DEFINE(GPU_Shader, "GPU", "Shader", MP_RGB(50, 50, 240));
 
-void ShaderSetup::Run(UnitState& state, unsigned int entry_point) const {
+void MergedShaderEngine::Run(UnitState& state, unsigned int entry_point) const {
+    ASSERT(setup != nullptr);
     ASSERT(entry_point < 1024);
 
     MICROPROFILE_SCOPE(GPU_Shader);
 
 #ifdef ARCHITECTURE_x86_64
     if (VideoCore::g_shader_jit_enabled) {
-        jit_shader->Run(*this, state, entry_point);
+        jit_shader->Run(*setup, state, entry_point);
     } else {
         DebugData<false> dummy_debug_data;
-        RunInterpreter(*this, state, dummy_debug_data, entry_point);
+        RunInterpreter(*setup, state, dummy_debug_data, entry_point);
     }
 #else
     DebugData<false> dummy_debug_data;
-    RunInterpreter(*this, state, dummy_debug_data, entry_point);
+    RunInterpreter(*setup, state, dummy_debug_data, entry_point);
 #endif // ARCHITECTURE_x86_64
 }
 
-DebugData<true> ShaderSetup::ProduceDebugInfo(const InputVertex& input, int num_attributes,
-                                              unsigned int entry_point) const {
+DebugData<true> MergedShaderEngine::ProduceDebugInfo(const InputVertex& input, int num_attributes,
+                                                     unsigned int entry_point) const {
+    ASSERT(setup != nullptr);
     ASSERT(entry_point < 1024);
 
     UnitState state;
@@ -148,8 +165,13 @@ DebugData<true> ShaderSetup::ProduceDebugInfo(const InputVertex& input, int num_
     // Setup input register table
     boost::fill(state.registers.input, Math::Vec4<float24>::AssignToAll(float24::Zero()));
     state.LoadInputVertex(input, num_attributes);
-    RunInterpreter(*this, state, debug_data, entry_point);
+    RunInterpreter(*setup, state, debug_data, entry_point);
     return debug_data;
+}
+
+ShaderEngine* GetEngine() {
+    static MergedShaderEngine merged_engine;
+    return &merged_engine;
 }
 
 } // namespace Shader

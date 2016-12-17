@@ -8,6 +8,7 @@ namespace Pica {
 
 namespace Shader {
 
+struct ShaderSetup;
 struct UnitState;
 
 template <bool Debug>

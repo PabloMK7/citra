@@ -156,7 +156,6 @@ struct UnitState {
 void ClearCache();
 
 struct ShaderSetup {
-
     struct {
         // The float uniforms are accessed by the shader JIT using SSE instructions, and are
         // therefore required to be 16-byte aligned.
@@ -180,18 +179,23 @@ struct ShaderSetup {
 
     std::array<u32, 1024> program_code;
     std::array<u32, 1024> swizzle_data;
+};
+
+class ShaderEngine {
+public:
+    virtual ~ShaderEngine() = default;
 
     /**
      * Performs any shader unit setup that only needs to happen once per shader (as opposed to once
      * per vertex, which would happen within the `Run` function).
      */
-    void Setup();
+    virtual void SetupBatch(const ShaderSetup* setup) = 0;
 
     /**
      * Runs the currently setup shader
      * @param state Shader unit state, must be setup per shader and per shader unit
      */
-    void Run(UnitState& state, unsigned int entry_point) const;
+    virtual void Run(UnitState& state, unsigned int entry_point) const = 0;
 
     /**
      * Produce debug information based on the given shader and input vertex
@@ -200,9 +204,12 @@ struct ShaderSetup {
      * @param config Configuration object for the shader pipeline
      * @return Debug information for this shader with regards to the given vertex
      */
-    DebugData<true> ProduceDebugInfo(const InputVertex& input, int num_attributes,
-                                     unsigned int entry_point) const;
+    virtual DebugData<true> ProduceDebugInfo(const InputVertex& input, int num_attributes,
+                                             unsigned int entry_point) const = 0;
 };
+
+// TODO(yuriks): Remove and make it non-global state somewhere
+ShaderEngine* GetEngine();
 
 } // namespace Shader
 
