@@ -152,8 +152,8 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
                     Shader::UnitState shader_unit;
                     shader_unit.LoadInputVertex(immediate_input, regs.vs.num_input_attributes + 1);
                     shader_engine->Run(shader_unit, regs.vs.main_offset);
-                    Shader::OutputVertex output_vertex =
-                        shader_unit.output_registers.ToVertex(regs.vs);
+                    auto output_vertex = Shader::OutputVertex::FromRegisters(
+                        shader_unit.registers.output, regs, regs.vs.output_mask);
 
                     // Send to renderer
                     using Pica::Shader::OutputVertex;
@@ -291,7 +291,8 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
                 shader_engine->Run(shader_unit, regs.vs.main_offset);
 
                 // Retrieve vertex from register data
-                output_vertex = shader_unit.output_registers.ToVertex(regs.vs);
+                output_vertex = Shader::OutputVertex::FromRegisters(shader_unit.registers.output,
+                                                                    regs, regs.vs.output_mask);
 
                 if (is_indexed) {
                     vertex_cache[vertex_cache_pos] = output_vertex;

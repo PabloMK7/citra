@@ -73,18 +73,12 @@ struct OutputVertex {
         ret.Lerp(factor, v1);
         return ret;
     }
+
+    static OutputVertex FromRegisters(Math::Vec4<float24> output_regs[16], const Regs& regs,
+                                      u32 output_mask);
 };
 static_assert(std::is_pod<OutputVertex>::value, "Structure is not POD");
 static_assert(sizeof(OutputVertex) == 32 * sizeof(float), "OutputVertex has invalid size");
-
-struct OutputRegisters {
-    OutputRegisters() = default;
-
-    alignas(16) Math::Vec4<float24> value[16];
-
-    OutputVertex ToVertex(const Regs::ShaderConfig& config) const;
-};
-static_assert(std::is_pod<OutputRegisters>::value, "Structure is not POD");
 
 /**
  * This structure contains the state information that needs to be unique for a shader unit. The 3DS
@@ -98,10 +92,9 @@ struct UnitState {
         // required to be 16-byte aligned.
         alignas(16) Math::Vec4<float24> input[16];
         alignas(16) Math::Vec4<float24> temporary[16];
+        alignas(16) Math::Vec4<float24> output[16];
     } registers;
     static_assert(std::is_pod<Registers>::value, "Structure is not POD");
-
-    OutputRegisters output_registers;
 
     bool conditional_code[2];
 
@@ -128,7 +121,7 @@ struct UnitState {
     static size_t OutputOffset(const DestRegister& reg) {
         switch (reg.GetRegisterType()) {
         case RegisterType::Output:
-            return offsetof(UnitState, output_registers.value) +
+            return offsetof(UnitState, registers.output) +
                    reg.GetIndex() * sizeof(Math::Vec4<float24>);
 
         case RegisterType::Temporary:

@@ -175,7 +175,7 @@ static void RunInterpreter(const ShaderSetup& setup, UnitState& state, DebugData
 
             float24* dest =
                 (instr.common.dest.Value() < 0x10)
-                    ? &state.output_registers.value[instr.common.dest.Value().GetIndex()][0]
+                    ? &state.registers.output[instr.common.dest.Value().GetIndex()][0]
                     : (instr.common.dest.Value() < 0x20)
                           ? &state.registers.temporary[instr.common.dest.Value().GetIndex()][0]
                           : dummy_vec4_float24;
@@ -518,7 +518,7 @@ static void RunInterpreter(const ShaderSetup& setup, UnitState& state, DebugData
 
                 float24* dest =
                     (instr.mad.dest.Value() < 0x10)
-                        ? &state.output_registers.value[instr.mad.dest.Value().GetIndex()][0]
+                        ? &state.registers.output[instr.mad.dest.Value().GetIndex()][0]
                         : (instr.mad.dest.Value() < 0x20)
                               ? &state.registers.temporary[instr.mad.dest.Value().GetIndex()][0]
                               : dummy_vec4_float24;

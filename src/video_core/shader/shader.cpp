@@ -19,7 +19,8 @@ namespace Pica {
 
 namespace Shader {
 
-OutputVertex OutputRegisters::ToVertex(const Regs::ShaderConfig& config) const {
+OutputVertex OutputVertex::FromRegisters(Math::Vec4<float24> output_regs[16], const Regs& regs,
+                                         u32 output_mask) {
     // Setup output data
     OutputVertex ret;
     // TODO(neobrain): Under some circumstances, up to 16 attributes may be output. We need to
@@ -27,13 +28,13 @@ OutputVertex OutputRegisters::ToVertex(const Regs::ShaderConfig& config) const {
     unsigned index = 0;
     for (unsigned i = 0; i < 7; ++i) {
 
-        if (index >= g_state.regs.vs_output_total)
+        if (index >= regs.vs_output_total)
             break;
 
-        if ((config.output_mask & (1 << i)) == 0)
+        if ((output_mask & (1 << i)) == 0)
             continue;
 
-        const auto& output_register_map = g_state.regs.vs_output_attributes[index];
+        const auto& output_register_map = regs.vs_output_attributes[index];
 
         u32 semantics[4] = {output_register_map.map_x, output_register_map.map_y,
                             output_register_map.map_z, output_register_map.map_w};
@@ -41,7 +42,7 @@ OutputVertex OutputRegisters::ToVertex(const Regs::ShaderConfig& config) const {
         for (unsigned comp = 0; comp < 4; ++comp) {
             float24* out = ((float24*)&ret) + semantics[comp];
             if (semantics[comp] != Regs::VSOutputAttributes::INVALID) {
-                *out = value[i][comp];
+                *out = output_regs[i][comp];
             } else {
                 // Zero output so that attributes which aren't output won't have denormals in them,
                 // which would slow us down later.
