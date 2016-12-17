@@ -76,6 +76,17 @@ OutputVertex OutputRegisters::ToVertex(const Regs::ShaderConfig& config) const {
     return ret;
 }
 
+void UnitState::LoadInputVertex(const InputVertex& input, int num_attributes) {
+    // Setup input register table
+    const auto& attribute_register_map = g_state.regs.vs.input_register_map;
+
+    for (int i = 0; i < num_attributes; i++)
+        registers.input[attribute_register_map.GetRegisterForAttribute(i)] = input.attr[i];
+
+    conditional_code[0] = false;
+    conditional_code[1] = false;
+}
+
 #ifdef ARCHITECTURE_x86_64
 static std::unordered_map<u64, std::unique_ptr<JitShader>> shader_map;
 static const JitShader* jit_shader;
@@ -109,20 +120,11 @@ void ShaderSetup::Setup() {
 
 MICROPROFILE_DEFINE(GPU_Shader, "GPU", "Shader", MP_RGB(50, 50, 240));
 
-void ShaderSetup::Run(UnitState& state, const InputVertex& input, int num_attributes) {
+void ShaderSetup::Run(UnitState& state) {
     auto& config = g_state.regs.vs;
     auto& setup = g_state.vs;
 
     MICROPROFILE_SCOPE(GPU_Shader);
-
-    // Setup input register table
-    const auto& attribute_register_map = config.input_register_map;
-
-    for (int i = 0; i < num_attributes; i++)
-        state.registers.input[attribute_register_map.GetRegisterForAttribute(i)] = input.attr[i];
-
-    state.conditional_code[0] = false;
-    state.conditional_code[1] = false;
 
 #ifdef ARCHITECTURE_x86_64
     if (VideoCore::g_shader_jit_enabled) {
@@ -145,13 +147,7 @@ DebugData<true> ShaderSetup::ProduceDebugInfo(const InputVertex& input, int num_
 
     // Setup input register table
     boost::fill(state.registers.input, Math::Vec4<float24>::AssignToAll(float24::Zero()));
-    const auto& attribute_register_map = config.input_register_map;
-    for (int i = 0; i < num_attributes; i++)
-        state.registers.input[attribute_register_map.GetRegisterForAttribute(i)] = input.attr[i];
-
-    state.conditional_code[0] = false;
-    state.conditional_code[1] = false;
-
+    state.LoadInputVertex(input, num_attributes);
     RunInterpreter(setup, state, debug_data, config.main_offset);
     return debug_data;
 }

@@ -142,6 +142,14 @@ struct UnitState {
             return 0;
         }
     }
+
+    /**
+     * Loads the unit state with an input vertex.
+     *
+     * @param input Input vertex into the shader
+     * @param num_attributes The number of vertex shader attributes to load
+     */
+    void LoadInputVertex(const InputVertex& input, int num_attributes);
 };
 
 /// Clears the shader cache
@@ -182,10 +190,8 @@ struct ShaderSetup {
     /**
      * Runs the currently setup shader
      * @param state Shader unit state, must be setup per shader and per shader unit
-     * @param input Input vertex into the shader
-     * @param num_attributes The number of vertex shader attributes
      */
-    void Run(UnitState& state, const InputVertex& input, int num_attributes);
+    void Run(UnitState& state);
 
     /**
      * Produce debug information based on the given shader and input vertex
