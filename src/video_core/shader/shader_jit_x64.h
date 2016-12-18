@@ -19,14 +19,11 @@ public:
     JitX64Engine();
     ~JitX64Engine() override;
 
-    void SetupBatch(const ShaderSetup* setup) override;
-    void Run(UnitState& state, unsigned int entry_point) const override;
+    void SetupBatch(ShaderSetup& setup) override;
+    void Run(const ShaderSetup& setup, UnitState& state, unsigned int entry_point) const override;
 
 private:
-    const ShaderSetup* setup = nullptr;
-
     std::unordered_map<u64, std::unique_ptr<JitShader>> cache;
-    const JitShader* cached_shader = nullptr;
 };
 
 } // namespace Shader

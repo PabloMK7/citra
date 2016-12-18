@@ -13,8 +13,8 @@ namespace Shader {
 
 class InterpreterEngine final : public ShaderEngine {
 public:
-    void SetupBatch(const ShaderSetup* setup) override;
-    void Run(UnitState& state, unsigned int entry_point) const override;
+    void SetupBatch(ShaderSetup& setup) override;
+    void Run(const ShaderSetup& setup, UnitState& state, unsigned int entry_point) const override;
 
     /**
      * Produce debug information based on the given shader and input vertex
@@ -23,11 +23,8 @@ public:
      * @param config Configuration object for the shader pipeline
      * @return Debug information for this shader with regards to the given vertex
      */
-    DebugData<true> ProduceDebugInfo(const InputVertex& input, int num_attributes,
-                                     unsigned int entry_point) const;
-
-private:
-    const ShaderSetup* setup = nullptr;
+    DebugData<true> ProduceDebugInfo(const ShaderSetup& setup, const InputVertex& input,
+                                     int num_attributes, unsigned int entry_point) const;
 };
 
 } // namespace
