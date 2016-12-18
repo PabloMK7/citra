@@ -170,6 +170,7 @@ struct ShaderSetup {
 
     /// Data private to ShaderEngines
     struct EngineData {
+        unsigned int entry_point;
         /// Used by the JIT, points to a compiled shader object.
         const void* cached_shader = nullptr;
     } engine_data;
@@ -183,7 +184,7 @@ public:
      * Performs any shader unit setup that only needs to happen once per shader (as opposed to once
      * per vertex, which would happen within the `Run` function).
      */
-    virtual void SetupBatch(ShaderSetup& setup) = 0;
+    virtual void SetupBatch(ShaderSetup& setup, unsigned int entry_point) = 0;
 
     /**
      * Runs the currently setup shader.
@@ -191,8 +192,7 @@ public:
      * @param setup Shader engine state, must be setup with SetupBatch on each shader change.
      * @param state Shader unit state, must be setup with input data before each shader invocation.
      */
-    virtual void Run(const ShaderSetup& setup, UnitState& state,
-                     unsigned int entry_point) const = 0;
+    virtual void Run(const ShaderSetup& setup, UnitState& state) const = 0;
 };
 
 // TODO(yuriks): Remove and make it non-global state somewhere

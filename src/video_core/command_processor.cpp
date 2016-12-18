@@ -143,7 +143,7 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
                     immediate_attribute_id = 0;
 
                     auto* shader_engine = Shader::GetEngine();
-                    shader_engine->SetupBatch(g_state.vs);
+                    shader_engine->SetupBatch(g_state.vs, regs.vs.main_offset);
 
                     // Send to vertex shader
                     if (g_debug_context)
@@ -151,7 +151,7 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
                                                  static_cast<void*>(&immediate_input));
                     Shader::UnitState shader_unit;
                     shader_unit.LoadInputVertex(immediate_input, regs.vs.num_input_attributes + 1);
-                    shader_engine->Run(g_state.vs, shader_unit, regs.vs.main_offset);
+                    shader_engine->Run(g_state.vs, shader_unit);
                     auto output_vertex = Shader::OutputVertex::FromRegisters(
                         shader_unit.registers.output, regs, regs.vs.output_mask);
 
@@ -248,7 +248,7 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
         auto* shader_engine = Shader::GetEngine();
         Shader::UnitState shader_unit;
 
-        shader_engine->SetupBatch(g_state.vs);
+        shader_engine->SetupBatch(g_state.vs, regs.vs.main_offset);
 
         for (unsigned int index = 0; index < regs.num_vertices; ++index) {
             // Indexed rendering doesn't use the start offset
@@ -288,7 +288,7 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
                     g_debug_context->OnEvent(DebugContext::Event::VertexShaderInvocation,
                                              (void*)&input);
                 shader_unit.LoadInputVertex(input, loader.GetNumTotalAttributes());
-                shader_engine->Run(g_state.vs, shader_unit, regs.vs.main_offset);
+                shader_engine->Run(g_state.vs, shader_unit);
 
                 // Retrieve vertex from register data
                 output_vertex = Shader::OutputVertex::FromRegisters(shader_unit.registers.output,

@@ -652,32 +652,31 @@ static void RunInterpreter(const ShaderSetup& setup, UnitState& state, DebugData
     }
 }
 
-void InterpreterEngine::SetupBatch(ShaderSetup& setup) {}
+void InterpreterEngine::SetupBatch(ShaderSetup& setup, unsigned int entry_point) {
+    ASSERT(entry_point < 1024);
+    setup.engine_data.entry_point = entry_point;
+}
 
 MICROPROFILE_DECLARE(GPU_Shader);
 
-void InterpreterEngine::Run(const ShaderSetup& setup, UnitState& state,
-                            unsigned int entry_point) const {
-    ASSERT(entry_point < 1024);
+void InterpreterEngine::Run(const ShaderSetup& setup, UnitState& state) const {
 
     MICROPROFILE_SCOPE(GPU_Shader);
 
     DebugData<false> dummy_debug_data;
-    RunInterpreter(setup, state, dummy_debug_data, entry_point);
+    RunInterpreter(setup, state, dummy_debug_data, setup.engine_data.entry_point);
 }
 
 DebugData<true> InterpreterEngine::ProduceDebugInfo(const ShaderSetup& setup,
-                                                    const InputVertex& input, int num_attributes,
-                                                    unsigned int entry_point) const {
-    ASSERT(entry_point < 1024);
-
+                                                    const InputVertex& input,
+                                                    int num_attributes) const {
     UnitState state;
     DebugData<true> debug_data;
 
     // Setup input register table
     boost::fill(state.registers.input, Math::Vec4<float24>::AssignToAll(float24::Zero()));
     state.LoadInputVertex(input, num_attributes);
-    RunInterpreter(setup, state, debug_data, entry_point);
+    RunInterpreter(setup, state, debug_data, setup.engine_data.entry_point);
     return debug_data;
 }
 

@@ -14,7 +14,10 @@ namespace Shader {
 JitX64Engine::JitX64Engine() = default;
 JitX64Engine::~JitX64Engine() = default;
 
-void JitX64Engine::SetupBatch(ShaderSetup& setup) {
+void JitX64Engine::SetupBatch(ShaderSetup& setup, unsigned int entry_point) {
+    ASSERT(entry_point < 1024);
+    setup.engine_data.entry_point = entry_point;
+
     u64 code_hash = Common::ComputeHash64(&setup.program_code, sizeof(setup.program_code));
     u64 swizzle_hash = Common::ComputeHash64(&setup.swizzle_data, sizeof(setup.swizzle_data));
 
@@ -32,14 +35,13 @@ void JitX64Engine::SetupBatch(ShaderSetup& setup) {
 
 MICROPROFILE_DECLARE(GPU_Shader);
 
-void JitX64Engine::Run(const ShaderSetup& setup, UnitState& state, unsigned int entry_point) const {
+void JitX64Engine::Run(const ShaderSetup& setup, UnitState& state) const {
     ASSERT(setup.engine_data.cached_shader != nullptr);
-    ASSERT(entry_point < 1024);
 
     MICROPROFILE_SCOPE(GPU_Shader);
 
     const JitShader* shader = static_cast<const JitShader*>(setup.engine_data.cached_shader);
-    shader->Run(setup, state, entry_point);
+    shader->Run(setup, state, setup.engine_data.entry_point);
 }
 
 } // namespace Shader

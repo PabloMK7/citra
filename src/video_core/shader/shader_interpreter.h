@@ -13,8 +13,8 @@ namespace Shader {
 
 class InterpreterEngine final : public ShaderEngine {
 public:
-    void SetupBatch(ShaderSetup& setup) override;
-    void Run(const ShaderSetup& setup, UnitState& state, unsigned int entry_point) const override;
+    void SetupBatch(ShaderSetup& setup, unsigned int entry_point) override;
+    void Run(const ShaderSetup& setup, UnitState& state) const override;
 
     /**
      * Produce debug information based on the given shader and input vertex
@@ -24,7 +24,7 @@ public:
      * @return Debug information for this shader with regards to the given vertex
      */
     DebugData<true> ProduceDebugInfo(const ShaderSetup& setup, const InputVertex& input,
-                                     int num_attributes, unsigned int entry_point) const;
+                                     int num_attributes) const;
 };
 
 } // namespace
