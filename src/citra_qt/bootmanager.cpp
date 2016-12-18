@@ -19,7 +19,6 @@
 #include "video_core/debug_utils/debug_utils.h"
 #include "video_core/video_core.h"
 
-
 EmuThread::EmuThread(GRenderWindow* render_window)
     : exec_step(false), running(false), stop_run(false), render_window(render_window) {}
 
