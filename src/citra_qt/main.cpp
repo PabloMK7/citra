@@ -390,6 +390,7 @@ void GMainWindow::BootGame(const std::string& filename) {
         game_list->hide();
     }
     render_window->show();
+    render_window->setFocus();
 
     emulation_running = true;
     OnStartGame();
