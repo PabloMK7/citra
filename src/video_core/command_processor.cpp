@@ -138,7 +138,7 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
 
                 immediate_input.attr[immediate_attribute_id++] = attribute;
 
-                if (immediate_attribute_id >= regs.vs.num_input_attributes + 1) {
+                if (immediate_attribute_id >= regs.vs.max_input_attribute_index + 1) {
                     MICROPROFILE_SCOPE(GPU_Drawing);
                     immediate_attribute_id = 0;
 
@@ -150,7 +150,8 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
                         g_debug_context->OnEvent(DebugContext::Event::VertexShaderInvocation,
                                                  static_cast<void*>(&immediate_input));
                     Shader::UnitState shader_unit;
-                    shader_unit.LoadInputVertex(immediate_input, regs.vs.num_input_attributes + 1);
+                    shader_unit.LoadInputVertex(immediate_input,
+                                                regs.vs.max_input_attribute_index + 1);
                     shader_engine->Run(g_state.vs, shader_unit);
                     auto output_vertex = Shader::OutputVertex::FromRegisters(
                         shader_unit.registers.output, regs, regs.vs.output_mask);

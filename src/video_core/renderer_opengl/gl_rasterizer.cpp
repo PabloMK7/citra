@@ -467,7 +467,7 @@ void RasterizerOpenGL::NotifyPicaRegisterChanged(u32 id) {
 
     // Fragment lighting switches
     case PICA_REG_INDEX(lighting.disable):
-    case PICA_REG_INDEX(lighting.num_lights):
+    case PICA_REG_INDEX(lighting.max_light_index):
     case PICA_REG_INDEX(lighting.config0):
     case PICA_REG_INDEX(lighting.config1):
     case PICA_REG_INDEX(lighting.abs_lut_input):

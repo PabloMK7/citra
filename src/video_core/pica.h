@@ -868,7 +868,7 @@ struct Regs {
         LightSrc light[8];
         LightColor global_ambient; // Emission + (material.ambient * lighting.ambient)
         INSERT_PADDING_WORDS(0x1);
-        BitField<0, 3, u32> num_lights; // Number of enabled lights - 1
+        BitField<0, 3, u32> max_light_index; // Number of enabled lights - 1
 
         union {
             BitField<2, 2, LightingFresnelSelector> fresnel_selector;
@@ -1045,7 +1045,7 @@ struct Regs {
             BitField<48, 12, u64> attribute_mask;
 
             // number of total attributes minus 1
-            BitField<60, 4, u64> num_extra_attributes;
+            BitField<60, 4, u64> max_attribute_index;
         };
 
         inline VertexAttributeFormat GetFormat(int n) const {
@@ -1076,7 +1076,7 @@ struct Regs {
         }
 
         inline int GetNumTotalAttributes() const {
-            return (int)num_extra_attributes + 1;
+            return (int)max_attribute_index + 1;
         }
 
         // Attribute loaders map the source vertex data to input attributes
@@ -1214,7 +1214,7 @@ struct Regs {
 
         union {
             // Number of input attributes to shader unit - 1
-            BitField<0, 4, u32> num_input_attributes;
+            BitField<0, 4, u32> max_input_attribute_index;
         };
 
         // Offset to shader program entry point (in words)
