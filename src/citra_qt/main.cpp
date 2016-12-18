@@ -212,7 +212,7 @@ GMainWindow::GMainWindow() : config(new Config()), emu_thread(nullptr) {
             SLOT(OnMenuLoadFile()));
     connect(GetHotkey("Main Window", "Start Emulation", this), SIGNAL(activated()), this,
             SLOT(OnStartGame()));
-    connect(GetHotkey("Main Window", "Swap Screens", this), SIGNAL(activated()), this,
+    connect(GetHotkey("Main Window", "Swap Screens", render_window), SIGNAL(activated()), this,
             SLOT(OnSwapScreens()));
 
     std::string window_title =

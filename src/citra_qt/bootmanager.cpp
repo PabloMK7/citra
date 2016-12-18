@@ -19,10 +19,6 @@
 #include "video_core/debug_utils/debug_utils.h"
 #include "video_core/video_core.h"
 
-#define APP_NAME "citra"
-#define APP_VERSION "0.1-" VERSION
-#define APP_TITLE APP_NAME " " APP_VERSION
-#define COPYRIGHT "Copyright (C) 2013-2014 Citra Team"
 
 EmuThread::EmuThread(GRenderWindow* render_window)
     : exec_step(false), running(false), stop_run(false), render_window(render_window) {}
