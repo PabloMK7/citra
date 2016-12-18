@@ -357,24 +357,14 @@ void RasterizerMarkRegionCached(PAddr start, u32 size, int count_delta) {
     }
 }
 
-static void RoundToPages(PAddr& start, u32& size) {
-    PAddr start_rounded_down = start & ~PAGE_MASK;
-    PAddr end_rounded_up = ((start + size) + PAGE_MASK) & ~PAGE_MASK;
-
-    start = start_rounded_down;
-    size = end_rounded_up - start_rounded_down;
-}
-
 void RasterizerFlushRegion(PAddr start, u32 size) {
     if (VideoCore::g_renderer != nullptr) {
-        RoundToPages(start, size);
         VideoCore::g_renderer->Rasterizer()->FlushRegion(start, size);
     }
 }
 
 void RasterizerFlushAndInvalidateRegion(PAddr start, u32 size) {
     if (VideoCore::g_renderer != nullptr) {
-        RoundToPages(start, size);
         VideoCore::g_renderer->Rasterizer()->FlushAndInvalidateRegion(start, size);
     }
 }
