@@ -4,6 +4,7 @@
 
 #include <cmath>
 #include <cstring>
+#include "common/bit_set.h"
 #include "common/logging/log.h"
 #include "common/microprofile.h"
 #include "video_core/pica.h"
@@ -19,22 +20,13 @@ namespace Pica {
 
 namespace Shader {
 
-OutputVertex OutputVertex::FromRegisters(Math::Vec4<float24> output_regs[16], const Regs& regs,
-                                         u32 output_mask) {
+OutputVertex OutputVertex::FromAttributeBuffer(const Regs& regs, AttributeBuffer& input) {
     // Setup output data
     OutputVertex ret;
-    // TODO(neobrain): Under some circumstances, up to 16 attributes may be output. We need to
-    // figure out what those circumstances are and enable the remaining outputs then.
-    unsigned index = 0;
-    for (unsigned i = 0; i < 7; ++i) {
 
-        if (index >= regs.vs_output_total)
-            break;
-
-        if ((output_mask & (1 << i)) == 0)
-            continue;
-
-        const auto& output_register_map = regs.vs_output_attributes[index];
+    unsigned int num_attributes = regs.vs_output_total;
+    for (unsigned int i = 0; i < num_attributes; ++i) {
+        const auto& output_register_map = regs.vs_output_attributes[i];
 
         u32 semantics[4] = {output_register_map.map_x, output_register_map.map_y,
                             output_register_map.map_z, output_register_map.map_w};
@@ -42,15 +34,13 @@ OutputVertex OutputVertex::FromRegisters(Math::Vec4<float24> output_regs[16], co
         for (unsigned comp = 0; comp < 4; ++comp) {
             float24* out = ((float24*)&ret) + semantics[comp];
             if (semantics[comp] != Regs::VSOutputAttributes::INVALID) {
-                *out = output_regs[i][comp];
+                *out = input.attr[i][comp];
             } else {
                 // Zero output so that attributes which aren't output won't have denormals in them,
                 // which would slow us down later.
                 memset(out, 0, sizeof(*out));
             }
         }
-
-        index++;
     }
 
     // The hardware takes the absolute and saturates vertex colors like this, *before* doing
@@ -77,6 +67,13 @@ void UnitState::LoadInput(const Regs::ShaderConfig& config, const AttributeBuffe
     for (unsigned attr = 0; attr <= max_attribute; ++attr) {
         unsigned reg = config.GetRegisterForAttribute(attr);
         registers.input[reg] = input.attr[attr];
+    }
+}
+
+void UnitState::WriteOutput(const Regs::ShaderConfig& config, AttributeBuffer& output) {
+    unsigned int output_i = 0;
+    for (unsigned int reg : Common::BitSet<u32>(config.output_mask)) {
+        output.attr[output_i++] = registers.output[reg];
     }
 }
 

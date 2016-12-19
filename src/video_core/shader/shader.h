@@ -74,8 +74,7 @@ struct OutputVertex {
         return ret;
     }
 
-    static OutputVertex FromRegisters(Math::Vec4<float24> output_regs[16], const Regs& regs,
-                                      u32 output_mask);
+    static OutputVertex FromAttributeBuffer(const Regs& regs, AttributeBuffer& output);
 };
 static_assert(std::is_pod<OutputVertex>::value, "Structure is not POD");
 static_assert(sizeof(OutputVertex) == 32 * sizeof(float), "OutputVertex has invalid size");
@@ -141,6 +140,8 @@ struct UnitState {
      * @param input Attribute buffer to load into the input registers.
      */
     void LoadInput(const Regs::ShaderConfig& config, const AttributeBuffer& input);
+
+    void WriteOutput(const Regs::ShaderConfig& config, AttributeBuffer& output);
 };
 
 struct ShaderSetup {

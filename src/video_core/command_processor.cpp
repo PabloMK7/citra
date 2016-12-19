@@ -151,10 +151,11 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
                         g_debug_context->OnEvent(DebugContext::Event::VertexShaderInvocation,
                                                  static_cast<void*>(&immediate_input));
                     Shader::UnitState shader_unit;
+                    Shader::AttributeBuffer output{};
+
                     shader_unit.LoadInput(regs.vs, immediate_input);
                     shader_engine->Run(g_state.vs, shader_unit);
-                    auto output_vertex = Shader::OutputVertex::FromRegisters(
-                        shader_unit.registers.output, regs, regs.vs.output_mask);
+                    shader_unit.WriteOutput(regs.vs, output);
 
                     // Send to renderer
                     using Pica::Shader::OutputVertex;
@@ -163,7 +164,8 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
                         VideoCore::g_renderer->Rasterizer()->AddTriangle(v0, v1, v2);
                     };
 
-                    g_state.primitive_assembler.SubmitVertex(output_vertex, AddTriangle);
+                    g_state.primitive_assembler.SubmitVertex(
+                        Shader::OutputVertex::FromAttributeBuffer(regs, output), AddTriangle);
                 }
             }
         }
@@ -281,7 +283,7 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
 
             if (!vertex_cache_hit) {
                 // Initialize data for the current vertex
-                Shader::AttributeBuffer input;
+                Shader::AttributeBuffer input, output{};
                 loader.LoadVertex(base_address, index, vertex, input, memory_accesses);
 
                 // Send to vertex shader
@@ -290,10 +292,10 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
                                              (void*)&input);
                 shader_unit.LoadInput(regs.vs, input);
                 shader_engine->Run(g_state.vs, shader_unit);
+                shader_unit.WriteOutput(regs.vs, output);
 
                 // Retrieve vertex from register data
-                output_vertex = Shader::OutputVertex::FromRegisters(shader_unit.registers.output,
-                                                                    regs, regs.vs.output_mask);
+                output_vertex = Shader::OutputVertex::FromAttributeBuffer(regs, output);
 
                 if (is_indexed) {
                     vertex_cache[vertex_cache_pos] = output_vertex;
