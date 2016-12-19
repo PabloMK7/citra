@@ -875,10 +875,10 @@ bool RasterizerOpenGL::AccelerateFill(const GPU::Regs::MemoryFillConfig& config)
             }
         }
 
-        cur_state.color_mask.red_enabled = true;
-        cur_state.color_mask.green_enabled = true;
-        cur_state.color_mask.blue_enabled = true;
-        cur_state.color_mask.alpha_enabled = true;
+        cur_state.color_mask.red_enabled = GL_TRUE;
+        cur_state.color_mask.green_enabled = GL_TRUE;
+        cur_state.color_mask.blue_enabled = GL_TRUE;
+        cur_state.color_mask.alpha_enabled = GL_TRUE;
         cur_state.Apply();
         glClearBufferfv(GL_COLOR, 0, color_values);
     } else if (dst_type == SurfaceType::Depth) {
