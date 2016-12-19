@@ -137,10 +137,10 @@ struct UnitState {
     /**
      * Loads the unit state with an input vertex.
      *
-     * @param input Input vertex into the shader
-     * @param num_attributes The number of vertex shader attributes to load
+     * @param config Shader configuration registers corresponding to the unit.
+     * @param input Attribute buffer to load into the input registers.
      */
-    void LoadInput(const AttributeBuffer& input, int num_attributes);
+    void LoadInput(const Regs::ShaderConfig& config, const AttributeBuffer& input);
 };
 
 struct ShaderSetup {

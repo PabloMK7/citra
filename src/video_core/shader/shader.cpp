@@ -71,12 +71,13 @@ OutputVertex OutputVertex::FromRegisters(Math::Vec4<float24> output_regs[16], co
     return ret;
 }
 
-void UnitState::LoadInput(const AttributeBuffer& input, int num_attributes) {
-    // Setup input register table
-    const auto& attribute_register_map = g_state.regs.vs.input_register_map;
+void UnitState::LoadInput(const Regs::ShaderConfig& config, const AttributeBuffer& input) {
+    const unsigned max_attribute = config.max_input_attribute_index;
 
-    for (int i = 0; i < num_attributes; i++)
-        registers.input[attribute_register_map.GetRegisterForAttribute(i)] = input.attr[i];
+    for (unsigned attr = 0; attr <= max_attribute; ++attr) {
+        unsigned reg = config.GetRegisterForAttribute(attr);
+        registers.input[reg] = input.attr[attr];
+    }
 }
 
 MICROPROFILE_DEFINE(GPU_Shader, "GPU", "Shader", MP_RGB(50, 50, 240));

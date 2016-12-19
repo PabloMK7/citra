@@ -1225,36 +1225,15 @@ struct Regs {
         // Offset to shader program entry point (in words)
         BitField<0, 16, u32> main_offset;
 
-        union {
-            BitField<0, 4, u64> attribute0_register;
-            BitField<4, 4, u64> attribute1_register;
-            BitField<8, 4, u64> attribute2_register;
-            BitField<12, 4, u64> attribute3_register;
-            BitField<16, 4, u64> attribute4_register;
-            BitField<20, 4, u64> attribute5_register;
-            BitField<24, 4, u64> attribute6_register;
-            BitField<28, 4, u64> attribute7_register;
-            BitField<32, 4, u64> attribute8_register;
-            BitField<36, 4, u64> attribute9_register;
-            BitField<40, 4, u64> attribute10_register;
-            BitField<44, 4, u64> attribute11_register;
-            BitField<48, 4, u64> attribute12_register;
-            BitField<52, 4, u64> attribute13_register;
-            BitField<56, 4, u64> attribute14_register;
-            BitField<60, 4, u64> attribute15_register;
+        /// Maps input attributes to registers. 4-bits per attribute, specifying a register index
+        u32 input_attribute_to_register_map_low;
+        u32 input_attribute_to_register_map_high;
 
-            int GetRegisterForAttribute(int attribute_index) const {
-                u64 fields[] = {
-                    attribute0_register,  attribute1_register,  attribute2_register,
-                    attribute3_register,  attribute4_register,  attribute5_register,
-                    attribute6_register,  attribute7_register,  attribute8_register,
-                    attribute9_register,  attribute10_register, attribute11_register,
-                    attribute12_register, attribute13_register, attribute14_register,
-                    attribute15_register,
-                };
-                return (int)fields[attribute_index];
-            }
-        } input_register_map;
+        unsigned int GetRegisterForAttribute(unsigned int attribute_index) const {
+            u64 map = ((u64)input_attribute_to_register_map_high << 32) |
+                      (u64)input_attribute_to_register_map_low;
+            return (map >> (attribute_index * 4)) & 0b1111;
+        }
 
         BitField<0, 16, u32> output_mask;
 

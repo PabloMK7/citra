@@ -511,7 +511,7 @@ void GraphicsVertexShaderWidget::Reload(bool replace_vertex_data, void* vertex_d
     auto& shader_config = Pica::g_state.regs.vs;
     for (auto instr : shader_setup.program_code)
         info.code.push_back({instr});
-    int num_attributes = Pica::g_state.regs.vertex_attributes.GetNumTotalAttributes();
+    int num_attributes = shader_config.max_input_attribute_index + 1;
 
     for (auto pattern : shader_setup.swizzle_data)
         info.swizzle_info.push_back({pattern});
@@ -522,11 +522,11 @@ void GraphicsVertexShaderWidget::Reload(bool replace_vertex_data, void* vertex_d
     // Generate debug information
     Pica::Shader::InterpreterEngine shader_engine;
     shader_engine.SetupBatch(shader_setup, entry_point);
-    debug_data = shader_engine.ProduceDebugInfo(shader_setup, input_vertex, num_attributes);
+    debug_data = shader_engine.ProduceDebugInfo(shader_setup, input_vertex, shader_config);
 
     // Reload widget state
     for (int attr = 0; attr < num_attributes; ++attr) {
-        unsigned source_attr = shader_config.input_register_map.GetRegisterForAttribute(attr);
+        unsigned source_attr = shader_config.GetRegisterForAttribute(attr);
         input_data_mapping[attr]->setText(QString("-> v%1").arg(source_attr));
         input_data_container[attr]->setVisible(true);
     }

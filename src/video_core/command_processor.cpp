@@ -151,7 +151,7 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
                         g_debug_context->OnEvent(DebugContext::Event::VertexShaderInvocation,
                                                  static_cast<void*>(&immediate_input));
                     Shader::UnitState shader_unit;
-                    shader_unit.LoadInput(immediate_input, regs.vs.max_input_attribute_index + 1);
+                    shader_unit.LoadInput(regs.vs, immediate_input);
                     shader_engine->Run(g_state.vs, shader_unit);
                     auto output_vertex = Shader::OutputVertex::FromRegisters(
                         shader_unit.registers.output, regs, regs.vs.output_mask);
@@ -288,7 +288,7 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
                 if (g_debug_context)
                     g_debug_context->OnEvent(DebugContext::Event::VertexShaderInvocation,
                                              (void*)&input);
-                shader_unit.LoadInput(input, loader.GetNumTotalAttributes());
+                shader_unit.LoadInput(regs.vs, input);
                 shader_engine->Run(g_state.vs, shader_unit);
 
                 // Retrieve vertex from register data
