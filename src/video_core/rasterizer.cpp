@@ -307,8 +307,8 @@ MICROPROFILE_DEFINE(GPU_Rasterization, "GPU", "Rasterization", MP_RGB(50, 50, 24
  * Helper function for ProcessTriangle with the "reversed" flag to allow for implementing
  * culling via recursion.
  */
-static void ProcessTriangleInternal(const Shader::OutputVertex& v0, const Shader::OutputVertex& v1,
-                                    const Shader::OutputVertex& v2, bool reversed = false) {
+static void ProcessTriangleInternal(const Vertex& v0, const Vertex& v1, const Vertex& v2,
+                                    bool reversed = false) {
     const auto& regs = g_state.regs;
     MICROPROFILE_SCOPE(GPU_Rasterization);
 
@@ -1276,8 +1276,7 @@ static void ProcessTriangleInternal(const Shader::OutputVertex& v0, const Shader
     }
 }
 
-void ProcessTriangle(const Shader::OutputVertex& v0, const Shader::OutputVertex& v1,
-                     const Shader::OutputVertex& v2) {
+void ProcessTriangle(const Vertex& v0, const Vertex& v1, const Vertex& v2) {
     ProcessTriangleInternal(v0, v1, v2);
 }
 

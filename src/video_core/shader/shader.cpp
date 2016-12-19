@@ -26,7 +26,7 @@ OutputVertex OutputVertex::FromAttributeBuffer(const Regs& regs, AttributeBuffer
         OutputVertex ret{};
         std::array<float24, 24> vertex_slots;
     };
-    static_assert(sizeof(vertex_slots) <= sizeof(ret), "Struct and array have different sizes.");
+    static_assert(sizeof(vertex_slots) == sizeof(ret), "Struct and array have different sizes.");
 
     unsigned int num_attributes = regs.vs_output_total;
     ASSERT(num_attributes <= 7);

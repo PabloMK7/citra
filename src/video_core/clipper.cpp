@@ -18,6 +18,8 @@
 #include "video_core/rasterizer.h"
 #include "video_core/shader/shader.h"
 
+using Pica::Rasterizer::Vertex;
+
 namespace Pica {
 
 namespace Clipper {
@@ -29,20 +31,20 @@ public:
                                                  float24::FromFloat32(0), float24::FromFloat32(0)))
         : coeffs(coeffs), bias(bias) {}
 
-    bool IsInside(const OutputVertex& vertex) const {
+    bool IsInside(const Vertex& vertex) const {
         return Math::Dot(vertex.pos + bias, coeffs) <= float24::FromFloat32(0);
     }
 
-    bool IsOutSide(const OutputVertex& vertex) const {
+    bool IsOutSide(const Vertex& vertex) const {
         return !IsInside(vertex);
     }
 
-    OutputVertex GetIntersection(const OutputVertex& v0, const OutputVertex& v1) const {
+    Vertex GetIntersection(const Vertex& v0, const Vertex& v1) const {
         float24 dp = Math::Dot(v0.pos + bias, coeffs);
         float24 dp_prev = Math::Dot(v1.pos + bias, coeffs);
         float24 factor = dp_prev / (dp_prev - dp);
 
-        return OutputVertex::Lerp(factor, v0, v1);
+        return Vertex::Lerp(factor, v0, v1);
     }
 
 private:
@@ -51,7 +53,7 @@ private:
     Math::Vec4<float24> bias;
 };
 
-static void InitScreenCoordinates(OutputVertex& vtx) {
+static void InitScreenCoordinates(Vertex& vtx) {
     struct {
         float24 halfsize_x;
         float24 offset_x;
@@ -91,8 +93,8 @@ void ProcessTriangle(const OutputVertex& v0, const OutputVertex& v1, const Outpu
     // introduces at most 1 new vertex to the polygon. Since we start with a triangle and have a
     // fixed 6 clipping planes, the maximum number of vertices of the clipped polygon is 3 + 6 = 9.
     static const size_t MAX_VERTICES = 9;
-    static_vector<OutputVertex, MAX_VERTICES> buffer_a = {v0, v1, v2};
-    static_vector<OutputVertex, MAX_VERTICES> buffer_b;
+    static_vector<Vertex, MAX_VERTICES> buffer_a = {v0, v1, v2};
+    static_vector<Vertex, MAX_VERTICES> buffer_b;
     auto* output_list = &buffer_a;
     auto* input_list = &buffer_b;
 
@@ -123,7 +125,7 @@ void ProcessTriangle(const OutputVertex& v0, const OutputVertex& v1, const Outpu
         std::swap(input_list, output_list);
         output_list->clear();
 
-        const OutputVertex* reference_vertex = &input_list->back();
+        const Vertex* reference_vertex = &input_list->back();
 
         for (const auto& vertex : *input_list) {
             // NOTE: This algorithm changes vertex order in some cases!
@@ -148,9 +150,9 @@ void ProcessTriangle(const OutputVertex& v0, const OutputVertex& v1, const Outpu
     InitScreenCoordinates((*output_list)[1]);
 
     for (size_t i = 0; i < output_list->size() - 2; i++) {
-        OutputVertex& vtx0 = (*output_list)[0];
-        OutputVertex& vtx1 = (*output_list)[i + 1];
-        OutputVertex& vtx2 = (*output_list)[i + 2];
+        Vertex& vtx0 = (*output_list)[0];
+        Vertex& vtx1 = (*output_list)[i + 1];
+        Vertex& vtx2 = (*output_list)[i + 2];
 
         InitScreenCoordinates(vtx2);
 
