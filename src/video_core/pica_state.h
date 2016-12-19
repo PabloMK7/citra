@@ -23,7 +23,7 @@ struct State {
     Shader::ShaderSetup vs;
     Shader::ShaderSetup gs;
 
-    std::array<Math::Vec4<float24>, 16> vs_default_attributes;
+    Shader::AttributeBuffer input_default_attributes;
 
     struct {
         union LutEntry {
@@ -66,7 +66,7 @@ struct State {
     /// Struct used to describe immediate mode rendering state
     struct ImmediateModeState {
         // Used to buffer partial vertices for immediate-mode rendering.
-        Shader::InputVertex input_vertex;
+        Shader::AttributeBuffer input_vertex;
         // Index of the next attribute to be loaded into `input_vertex`.
         u32 current_attribute = 0;
     } immediate;

@@ -23,7 +23,7 @@ public:
      * @param config Configuration object for the shader pipeline
      * @return Debug information for this shader with regards to the given vertex
      */
-    DebugData<true> ProduceDebugInfo(const ShaderSetup& setup, const InputVertex& input,
+    DebugData<true> ProduceDebugInfo(const ShaderSetup& setup, const AttributeBuffer& input,
                                      int num_attributes) const;
 };
 

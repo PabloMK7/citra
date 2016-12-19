@@ -82,7 +82,7 @@ private:
 
     nihstro::ShaderInfo info;
     Pica::Shader::DebugData<true> debug_data;
-    Pica::Shader::InputVertex input_vertex;
+    Pica::Shader::AttributeBuffer input_vertex;
 
     friend class GraphicsVertexShaderModel;
 };

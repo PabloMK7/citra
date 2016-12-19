@@ -71,7 +71,7 @@ OutputVertex OutputVertex::FromRegisters(Math::Vec4<float24> output_regs[16], co
     return ret;
 }
 
-void UnitState::LoadInputVertex(const InputVertex& input, int num_attributes) {
+void UnitState::LoadInput(const AttributeBuffer& input, int num_attributes) {
     // Setup input register table
     const auto& attribute_register_map = g_state.regs.vs.input_register_map;
 

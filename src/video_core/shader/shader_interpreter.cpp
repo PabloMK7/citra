@@ -668,14 +668,14 @@ void InterpreterEngine::Run(const ShaderSetup& setup, UnitState& state) const {
 }
 
 DebugData<true> InterpreterEngine::ProduceDebugInfo(const ShaderSetup& setup,
-                                                    const InputVertex& input,
+                                                    const AttributeBuffer& input,
                                                     int num_attributes) const {
     UnitState state;
     DebugData<true> debug_data;
 
     // Setup input register table
     boost::fill(state.registers.input, Math::Vec4<float24>::AssignToAll(float24::Zero()));
-    state.LoadInputVertex(input, num_attributes);
+    state.LoadInput(input, num_attributes);
     RunInterpreter(setup, state, debug_data, setup.engine_data.entry_point);
     return debug_data;
 }

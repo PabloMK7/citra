@@ -23,7 +23,7 @@ namespace Pica {
 
 namespace Shader {
 
-struct InputVertex {
+struct AttributeBuffer {
     alignas(16) Math::Vec4<float24> attr[16];
 };
 
@@ -140,7 +140,7 @@ struct UnitState {
      * @param input Input vertex into the shader
      * @param num_attributes The number of vertex shader attributes to load
      */
-    void LoadInputVertex(const InputVertex& input, int num_attributes);
+    void LoadInput(const AttributeBuffer& input, int num_attributes);
 };
 
 struct ShaderSetup {
