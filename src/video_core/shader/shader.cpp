@@ -22,23 +22,28 @@ namespace Shader {
 
 OutputVertex OutputVertex::FromAttributeBuffer(const Regs& regs, AttributeBuffer& input) {
     // Setup output data
-    OutputVertex ret;
+    union {
+        OutputVertex ret{};
+        std::array<float24, 24> vertex_slots;
+    };
+    static_assert(sizeof(vertex_slots) <= sizeof(ret), "Struct and array have different sizes.");
 
     unsigned int num_attributes = regs.vs_output_total;
+    ASSERT(num_attributes <= 7);
     for (unsigned int i = 0; i < num_attributes; ++i) {
         const auto& output_register_map = regs.vs_output_attributes[i];
 
-        u32 semantics[4] = {output_register_map.map_x, output_register_map.map_y,
-                            output_register_map.map_z, output_register_map.map_w};
+        Regs::VSOutputAttributes::Semantic semantics[4] = {
+            output_register_map.map_x, output_register_map.map_y, output_register_map.map_z,
+            output_register_map.map_w};
 
         for (unsigned comp = 0; comp < 4; ++comp) {
-            float24* out = ((float24*)&ret) + semantics[comp];
-            if (semantics[comp] != Regs::VSOutputAttributes::INVALID) {
+            Regs::VSOutputAttributes::Semantic semantic = semantics[comp];
+            float24* out = &vertex_slots[semantic];
+            if (semantic < vertex_slots.size()) {
                 *out = input.attr[i][comp];
-            } else {
-                // Zero output so that attributes which aren't output won't have denormals in them,
-                // which would slow us down later.
-                memset(out, 0, sizeof(*out));
+            } else if (semantic != Regs::VSOutputAttributes::INVALID) {
+                LOG_ERROR(HW_GPU, "Invalid/unknown semantic id: %u", (unsigned int)semantic);
             }
         }
     }

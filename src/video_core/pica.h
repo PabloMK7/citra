@@ -99,7 +99,8 @@ struct Regs {
             TEXCOORD1_U = 14,
             TEXCOORD1_V = 15,
 
-            // TODO: Not verified
+            TEXCOORD0_W = 16,
+
             VIEW_X = 18,
             VIEW_Y = 19,
             VIEW_Z = 20,
