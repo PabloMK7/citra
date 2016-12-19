@@ -1176,7 +1176,12 @@ struct Regs {
         }
     } command_buffer;
 
-    INSERT_PADDING_WORDS(0x07);
+    INSERT_PADDING_WORDS(4);
+
+    /// Number of input attributes to the vertex shader minus 1
+    BitField<0, 4, u32> max_input_attrib_index;
+
+    INSERT_PADDING_WORDS(2);
 
     enum class GPUMode : u32 {
         Drawing = 0,

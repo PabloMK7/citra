@@ -128,17 +128,18 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
                 g_state.input_default_attributes.attr[setup.index] = attribute;
                 setup.index++;
             } else {
-                // Put each attribute into an immediate input buffer.
-                // When all specified immediate attributes are present, the Vertex Shader is invoked
-                // and everything is
-                // sent to the primitive assembler.
+                // Put each attribute into an immediate input buffer.  When all specified immediate
+                // attributes are present, the Vertex Shader is invoked and everything is sent to
+                // the primitive assembler.
 
                 auto& immediate_input = g_state.immediate.input_vertex;
                 auto& immediate_attribute_id = g_state.immediate.current_attribute;
 
-                immediate_input.attr[immediate_attribute_id++] = attribute;
+                immediate_input.attr[immediate_attribute_id] = attribute;
 
-                if (immediate_attribute_id > regs.vs.max_input_attribute_index) {
+                if (immediate_attribute_id < regs.max_input_attrib_index) {
+                    immediate_attribute_id += 1;
+                } else {
                     MICROPROFILE_SCOPE(GPU_Drawing);
                     immediate_attribute_id = 0;
 
