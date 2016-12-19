@@ -60,6 +60,36 @@ GMainWindow::GMainWindow() : config(new Config()), emu_thread(nullptr) {
     ui.setupUi(this);
     statusBar()->hide();
 
+    InitializeWidgets();
+    InitializeDebugMenuActions();
+    InitializeRecentFileMenuActions();
+    InitializeHotkeys();
+
+    SetDefaultUIGeometry();
+    RestoreUIState();
+
+    ConnectWidgetEvents();
+
+    setWindowTitle(QString("Citra | %1-%2").arg(Common::g_scm_branch, Common::g_scm_desc));
+    show();
+
+    game_list->PopulateAsync(UISettings::values.gamedir, UISettings::values.gamedir_deepscan);
+
+    QStringList args = QApplication::arguments();
+    if (args.length() >= 2) {
+        BootGame(args[1].toStdString());
+    }
+}
+
+GMainWindow::~GMainWindow() {
+    // will get automatically deleted otherwise
+    if (render_window->parent() == nullptr)
+        delete render_window;
+
+    Pica::g_debug_context.reset();
+}
+
+void GMainWindow::InitializeWidgets() {
     render_window = new GRenderWindow(this, emu_thread.get());
     render_window->hide();
 
@@ -95,25 +125,27 @@ GMainWindow::GMainWindow() : config(new Config()), emu_thread(nullptr) {
     addDockWidget(Qt::RightDockWidgetArea, graphicsCommandsWidget);
     graphicsCommandsWidget->hide();
 
-    auto graphicsBreakpointsWidget = new GraphicsBreakPointsWidget(Pica::g_debug_context, this);
+    graphicsBreakpointsWidget = new GraphicsBreakPointsWidget(Pica::g_debug_context, this);
     addDockWidget(Qt::RightDockWidgetArea, graphicsBreakpointsWidget);
     graphicsBreakpointsWidget->hide();
 
-    auto graphicsVertexShaderWidget = new GraphicsVertexShaderWidget(Pica::g_debug_context, this);
+    graphicsVertexShaderWidget = new GraphicsVertexShaderWidget(Pica::g_debug_context, this);
     addDockWidget(Qt::RightDockWidgetArea, graphicsVertexShaderWidget);
     graphicsVertexShaderWidget->hide();
 
-    auto graphicsTracingWidget = new GraphicsTracingWidget(Pica::g_debug_context, this);
+    graphicsTracingWidget = new GraphicsTracingWidget(Pica::g_debug_context, this);
     addDockWidget(Qt::RightDockWidgetArea, graphicsTracingWidget);
     graphicsTracingWidget->hide();
-
-    auto graphicsSurfaceViewerAction = new QAction(tr("Create Pica Surface Viewer"), this);
-    connect(graphicsSurfaceViewerAction, SIGNAL(triggered()), this,
-            SLOT(OnCreateGraphicsSurfaceViewer()));
 
     waitTreeWidget = new WaitTreeWidget(this);
     addDockWidget(Qt::LeftDockWidgetArea, waitTreeWidget);
     waitTreeWidget->hide();
+}
+
+void GMainWindow::InitializeDebugMenuActions() {
+    auto graphicsSurfaceViewerAction = new QAction(tr("Create Pica Surface Viewer"), this);
+    connect(graphicsSurfaceViewerAction, SIGNAL(triggered()), this,
+            SLOT(OnCreateGraphicsSurfaceViewer()));
 
     QMenu* debug_menu = ui.menu_View->addMenu(tr("Debugging"));
     debug_menu->addAction(graphicsSurfaceViewerAction);
@@ -131,19 +163,47 @@ GMainWindow::GMainWindow() : config(new Config()), emu_thread(nullptr) {
     debug_menu->addAction(graphicsVertexShaderWidget->toggleViewAction());
     debug_menu->addAction(graphicsTracingWidget->toggleViewAction());
     debug_menu->addAction(waitTreeWidget->toggleViewAction());
+}
 
-    // Set default UI state
+void GMainWindow::InitializeRecentFileMenuActions() {
+    for (int i = 0; i < max_recent_files_item; ++i) {
+        actions_recent_files[i] = new QAction(this);
+        actions_recent_files[i]->setVisible(false);
+        connect(actions_recent_files[i], SIGNAL(triggered()), this, SLOT(OnMenuRecentFile()));
+
+        ui.menu_recent_files->addAction(actions_recent_files[i]);
+    }
+
+    UpdateRecentFiles();
+}
+
+void GMainWindow::InitializeHotkeys() {
+    RegisterHotkey("Main Window", "Load File", QKeySequence::Open);
+    RegisterHotkey("Main Window", "Swap Screens", QKeySequence::NextChild);
+    RegisterHotkey("Main Window", "Start Emulation");
+    LoadHotkeys();
+
+    connect(GetHotkey("Main Window", "Load File", this), SIGNAL(activated()), this,
+            SLOT(OnMenuLoadFile()));
+    connect(GetHotkey("Main Window", "Start Emulation", this), SIGNAL(activated()), this,
+            SLOT(OnStartGame()));
+    connect(GetHotkey("Main Window", "Swap Screens", render_window), SIGNAL(activated()), this,
+            SLOT(OnSwapScreens()));
+}
+
+void GMainWindow::SetDefaultUIGeometry() {
     // geometry: 55% of the window contents are in the upper screen half, 45% in the lower half
-    QDesktopWidget* desktop = ((QApplication*)QApplication::instance())->desktop();
-    QRect screenRect = desktop->screenGeometry(this);
-    int x, y, w, h;
-    w = screenRect.width() * 2 / 3;
-    h = screenRect.height() / 2;
-    x = (screenRect.x() + screenRect.width()) / 2 - w / 2;
-    y = (screenRect.y() + screenRect.height()) / 2 - h * 55 / 100;
-    setGeometry(x, y, w, h);
+    const QRect screenRect = QApplication::desktop()->screenGeometry(this);
 
-    // Restore UI state
+    const int w = screenRect.width() * 2 / 3;
+    const int h = screenRect.height() / 2;
+    const int x = (screenRect.x() + screenRect.width()) / 2 - w / 2;
+    const int y = (screenRect.y() + screenRect.height()) / 2 - h * 55 / 100;
+
+    setGeometry(x, y, w, h);
+}
+
+void GMainWindow::RestoreUIState() {
     restoreGeometry(UISettings::values.geometry);
     restoreState(UISettings::values.state);
     render_window->restoreGeometry(UISettings::values.renderwindow_geometry);
@@ -159,18 +219,9 @@ GMainWindow::GMainWindow() : config(new Config()), emu_thread(nullptr) {
 
     ui.actionDisplay_widget_title_bars->setChecked(UISettings::values.display_titlebar);
     OnDisplayTitleBars(ui.actionDisplay_widget_title_bars->isChecked());
+}
 
-    // Prepare actions for recent files
-    for (int i = 0; i < max_recent_files_item; ++i) {
-        actions_recent_files[i] = new QAction(this);
-        actions_recent_files[i]->setVisible(false);
-        connect(actions_recent_files[i], SIGNAL(triggered()), this, SLOT(OnMenuRecentFile()));
-
-        ui.menu_recent_files->addAction(actions_recent_files[i]);
-    }
-    UpdateRecentFiles();
-
-    // Setup connections
+void GMainWindow::ConnectWidgetEvents() {
     connect(game_list, SIGNAL(GameChosen(QString)), this, SLOT(OnGameListLoadFile(QString)),
             Qt::DirectConnection);
     connect(game_list, SIGNAL(OpenSaveFolderRequested(u64)), this,
@@ -201,40 +252,6 @@ GMainWindow::GMainWindow() : config(new Config()), emu_thread(nullptr) {
     connect(this, SIGNAL(EmulationStarting(EmuThread*)), waitTreeWidget,
             SLOT(OnEmulationStarting(EmuThread*)));
     connect(this, SIGNAL(EmulationStopping()), waitTreeWidget, SLOT(OnEmulationStopping()));
-
-    // Setup hotkeys
-    RegisterHotkey("Main Window", "Load File", QKeySequence::Open);
-    RegisterHotkey("Main Window", "Swap Screens", QKeySequence::NextChild);
-    RegisterHotkey("Main Window", "Start Emulation");
-    LoadHotkeys();
-
-    connect(GetHotkey("Main Window", "Load File", this), SIGNAL(activated()), this,
-            SLOT(OnMenuLoadFile()));
-    connect(GetHotkey("Main Window", "Start Emulation", this), SIGNAL(activated()), this,
-            SLOT(OnStartGame()));
-    connect(GetHotkey("Main Window", "Swap Screens", render_window), SIGNAL(activated()), this,
-            SLOT(OnSwapScreens()));
-
-    std::string window_title =
-        Common::StringFromFormat("Citra | %s-%s", Common::g_scm_branch, Common::g_scm_desc);
-    setWindowTitle(window_title.c_str());
-
-    show();
-
-    game_list->PopulateAsync(UISettings::values.gamedir, UISettings::values.gamedir_deepscan);
-
-    QStringList args = QApplication::arguments();
-    if (args.length() >= 2) {
-        BootGame(args[1].toStdString());
-    }
-}
-
-GMainWindow::~GMainWindow() {
-    // will get automatically deleted otherwise
-    if (render_window->parent() == nullptr)
-        delete render_window;
-
-    Pica::g_debug_context.reset();
 }
 
 void GMainWindow::OnDisplayTitleBars(bool show) {
