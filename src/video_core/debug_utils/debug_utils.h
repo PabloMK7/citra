@@ -196,8 +196,12 @@ struct PicaTrace {
     std::vector<Write> writes;
 };
 
+extern bool g_is_pica_tracing;
+
 void StartPicaTracing();
-bool IsPicaTracing();
+inline bool IsPicaTracing() {
+    return g_is_pica_tracing;
+}
 void OnPicaRegWrite(PicaTrace::Write write);
 std::unique_ptr<PicaTrace> FinishPicaTracing();
 
