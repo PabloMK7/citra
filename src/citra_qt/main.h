@@ -9,18 +9,21 @@
 #include <QMainWindow>
 #include "ui_main.h"
 
+class CallstackWidget;
 class Config;
+class DisassemblerWidget;
+class EmuThread;
 class GameList;
 class GImageInfo;
-class GRenderWindow;
-class EmuThread;
-class ProfilerWidget;
-class MicroProfileDialog;
-class DisassemblerWidget;
-class RegistersWidget;
-class CallstackWidget;
 class GPUCommandStreamWidget;
 class GPUCommandListWidget;
+class GraphicsBreakPointsWidget;
+class GraphicsTracingWidget;
+class GraphicsVertexShaderWidget;
+class GRenderWindow;
+class MicroProfileDialog;
+class ProfilerWidget;
+class RegistersWidget;
 class WaitTreeWidget;
 
 class GMainWindow : public QMainWindow {
@@ -60,6 +63,16 @@ signals:
     void EmulationStopping();
 
 private:
+    void InitializeWidgets();
+    void InitializeDebugMenuActions();
+    void InitializeRecentFileMenuActions();
+    void InitializeHotkeys();
+
+    void SetDefaultUIGeometry();
+    void RestoreUIState();
+
+    void ConnectWidgetEvents();
+
     /**
      * Initializes the emulation system.
      * @param system_mode The system mode with which to intialize the kernel.
@@ -136,6 +149,9 @@ private:
     CallstackWidget* callstackWidget;
     GPUCommandStreamWidget* graphicsWidget;
     GPUCommandListWidget* graphicsCommandsWidget;
+    GraphicsBreakPointsWidget* graphicsBreakpointsWidget;
+    GraphicsVertexShaderWidget* graphicsVertexShaderWidget;
+    GraphicsTracingWidget* graphicsTracingWidget;
     WaitTreeWidget* waitTreeWidget;
 
     QAction* actions_recent_files[max_recent_files_item];
