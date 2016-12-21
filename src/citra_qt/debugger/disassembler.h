@@ -38,9 +38,7 @@ private:
     unsigned int program_counter;
 
     QModelIndex selection;
-
-    // TODO: Make BreakPoints less crappy (i.e. const-correct) so that this needn't be mutable.
-    mutable BreakPoints breakpoints;
+    BreakPoints breakpoints;
 };
 
 class DisassemblerWidget : public QDockWidget {
