@@ -7,8 +7,8 @@
 #include <QPushButton>
 #include <QTreeView>
 #include <QVBoxLayout>
-#include "citra_qt/debugger/graphics_breakpoints.h"
-#include "citra_qt/debugger/graphics_breakpoints_p.h"
+#include "citra_qt/debugger/graphics/graphics_breakpoints.h"
+#include "citra_qt/debugger/graphics/graphics_breakpoints_p.h"
 #include "common/assert.h"
 
 BreakPointModel::BreakPointModel(std::shared_ptr<Pica::DebugContext> debug_context, QObject* parent)
