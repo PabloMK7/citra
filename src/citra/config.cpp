@@ -91,6 +91,21 @@ void Config::ReadValues() {
     Settings::values.is_new_3ds = sdl2_config->GetBoolean("System", "is_new_3ds", false);
     Settings::values.region_value = sdl2_config->GetInteger("System", "region_value", 1);
 
+    // Camera
+    using namespace Service::CAM;
+    Settings::values.camera_name[OuterRightCamera] =
+        sdl2_config->Get("Camera", "camera_outer_right_name", "blank");
+    Settings::values.camera_config[OuterRightCamera] =
+        sdl2_config->Get("Camera", "camera_outer_right_config", "");
+    Settings::values.camera_name[InnerCamera] =
+        sdl2_config->Get("Camera", "camera_inner_name", "blank");
+    Settings::values.camera_config[InnerCamera] =
+        sdl2_config->Get("Camera", "camera_inner_config", "");
+    Settings::values.camera_name[OuterLeftCamera] =
+        sdl2_config->Get("Camera", "camera_outer_left_name", "blank");
+    Settings::values.camera_config[OuterLeftCamera] =
+        sdl2_config->Get("Camera", "camera_outer_left_config", "");
+
     // Miscellaneous
     Settings::values.log_filter = sdl2_config->Get("Miscellaneous", "log_filter", "*:Info");
 
