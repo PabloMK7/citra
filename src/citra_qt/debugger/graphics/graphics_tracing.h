@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "citra_qt/debugger/graphics_breakpoint_observer.h"
+#include "citra_qt/debugger/graphics/graphics_breakpoint_observer.h"
 
 class EmuThread;
 

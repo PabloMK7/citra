@@ -3,7 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <QMetaType>
-#include "citra_qt/debugger/graphics_breakpoint_observer.h"
+#include "citra_qt/debugger/graphics/graphics_breakpoint_observer.h"
 
 BreakPointObserverDock::BreakPointObserverDock(std::shared_ptr<Pica::DebugContext> debug_context,
                                                const QString& title, QWidget* parent)

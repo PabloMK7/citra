@@ -12,7 +12,7 @@
 #include <QMessageBox>
 #include <QPushButton>
 #include <boost/range/algorithm/copy.hpp>
-#include "citra_qt/debugger/graphics_tracing.h"
+#include "citra_qt/debugger/graphics/graphics_tracing.h"
 #include "common/common_types.h"
 #include "core/hw/gpu.h"
 #include "core/hw/lcd.h"

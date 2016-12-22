@@ -6,13 +6,13 @@ set(SRCS
             config.cpp
             debugger/callstack.cpp
             debugger/disassembler.cpp
-            debugger/graphics.cpp
-            debugger/graphics_breakpoint_observer.cpp
-            debugger/graphics_breakpoints.cpp
-            debugger/graphics_cmdlists.cpp
-            debugger/graphics_surface.cpp
-            debugger/graphics_tracing.cpp
-            debugger/graphics_vertex_shader.cpp
+            debugger/graphics/graphics.cpp
+            debugger/graphics/graphics_breakpoint_observer.cpp
+            debugger/graphics/graphics_breakpoints.cpp
+            debugger/graphics/graphics_cmdlists.cpp
+            debugger/graphics/graphics_surface.cpp
+            debugger/graphics/graphics_tracing.cpp
+            debugger/graphics/graphics_vertex_shader.cpp
             debugger/profiler.cpp
             debugger/ramview.cpp
             debugger/registers.cpp
@@ -39,14 +39,14 @@ set(HEADERS
             config.h
             debugger/callstack.h
             debugger/disassembler.h
-            debugger/graphics.h
-            debugger/graphics_breakpoint_observer.h
-            debugger/graphics_breakpoints.h
-            debugger/graphics_breakpoints_p.h
-            debugger/graphics_cmdlists.h
-            debugger/graphics_surface.h
-            debugger/graphics_tracing.h
-            debugger/graphics_vertex_shader.h
+            debugger/graphics/graphics.h
+            debugger/graphics/graphics_breakpoint_observer.h
+            debugger/graphics/graphics_breakpoints.h
+            debugger/graphics/graphics_breakpoints_p.h
+            debugger/graphics/graphics_cmdlists.h
+            debugger/graphics/graphics_surface.h
+            debugger/graphics/graphics_tracing.h
+            debugger/graphics/graphics_vertex_shader.h
             debugger/profiler.h
             debugger/ramview.h
             debugger/registers.h

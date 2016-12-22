@@ -11,7 +11,7 @@
 #include <QPushButton>
 #include <QScrollArea>
 #include <QSpinBox>
-#include "citra_qt/debugger/graphics_surface.h"
+#include "citra_qt/debugger/graphics/graphics_surface.h"
 #include "citra_qt/util/spinbox.h"
 #include "common/color.h"
 #include "core/hw/gpu.h"

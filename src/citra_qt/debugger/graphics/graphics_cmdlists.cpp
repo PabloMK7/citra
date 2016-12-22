@@ -13,7 +13,7 @@
 #include <QSpinBox>
 #include <QTreeView>
 #include <QVBoxLayout>
-#include "citra_qt/debugger/graphics_cmdlists.h"
+#include "citra_qt/debugger/graphics/graphics_cmdlists.h"
 #include "citra_qt/util/spinbox.h"
 #include "citra_qt/util/util.h"
 #include "common/vector_math.h"
