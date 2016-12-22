@@ -18,18 +18,5 @@ public:
     }
 };
 
-struct Type0Command {
-    // command id and next command offset
-    u32 command_id;
-    u32 finished;
-    u32 flags;
-    u8 parameters[20];
-};
-
-void Initialize(Interface* self);
-void ExecuteType0Commands(Interface* self);
-void AcquireSoundChannels(Interface* self);
-void Shutdown(Interface* self);
-
 } // namespace CSND
 } // namespace Service
