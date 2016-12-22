@@ -10,6 +10,7 @@
 #include <boost/container/flat_map.hpp>
 #include <boost/container/flat_set.hpp>
 #include "common/common_types.h"
+#include "core/arm/arm_interface.h"
 #include "core/core.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/result.h"
@@ -157,7 +158,7 @@ public:
         return !wait_objects.empty();
     }
 
-    Core::ThreadContext context;
+    ARM_Interface::ThreadContext context;
 
     u32 thread_id;
 

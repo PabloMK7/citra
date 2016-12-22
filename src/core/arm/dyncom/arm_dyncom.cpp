@@ -89,7 +89,7 @@ void ARM_DynCom::ExecuteInstructions(int num_instructions) {
     AddTicks(ticks_executed);
 }
 
-void ARM_DynCom::SaveContext(Core::ThreadContext& ctx) {
+void ARM_DynCom::SaveContext(ThreadContext& ctx) {
     memcpy(ctx.cpu_registers, state->Reg.data(), sizeof(ctx.cpu_registers));
     memcpy(ctx.fpu_registers, state->ExtReg.data(), sizeof(ctx.fpu_registers));
 
@@ -102,7 +102,7 @@ void ARM_DynCom::SaveContext(Core::ThreadContext& ctx) {
     ctx.fpexc = state->VFP[VFP_FPEXC];
 }
 
-void ARM_DynCom::LoadContext(const Core::ThreadContext& ctx) {
+void ARM_DynCom::LoadContext(const ThreadContext& ctx) {
     memcpy(state->Reg.data(), ctx.cpu_registers, sizeof(ctx.cpu_registers));
     memcpy(state->ExtReg.data(), ctx.fpu_registers, sizeof(ctx.fpu_registers));
 

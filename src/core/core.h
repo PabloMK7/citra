@@ -19,17 +19,6 @@ class AppLoader;
 
 namespace Core {
 
-struct ThreadContext {
-    u32 cpu_registers[13];
-    u32 sp;
-    u32 lr;
-    u32 pc;
-    u32 cpsr;
-    u32 fpu_registers[64];
-    u32 fpscr;
-    u32 fpexc;
-};
-
 class System {
 public:
     /**

@@ -384,9 +384,9 @@ std::tuple<u32, u32, bool> GetFreeThreadLocalSlot(std::vector<std::bitset<8>>& t
  * @param entry_point Address of entry point for execution
  * @param arg User argument for thread
  */
-static void ResetThreadContext(Core::ThreadContext& context, u32 stack_top, u32 entry_point,
-                               u32 arg) {
-    memset(&context, 0, sizeof(Core::ThreadContext));
+static void ResetThreadContext(ARM_Interface::ThreadContext& context, u32 stack_top,
+                               u32 entry_point, u32 arg) {
+    memset(&context, 0, sizeof(ARM_Interface::ThreadContext));
 
     context.cpu_registers[0] = arg;
     context.pc = entry_point;
