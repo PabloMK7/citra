@@ -14,7 +14,7 @@
 
 namespace HLE {
 
-#define PARAM(n) Core::AppCore().GetReg(n)
+#define PARAM(n) Core::CPU().GetReg(n)
 
 /// An invalid result code that is meant to be overwritten when a thread resumes from waiting
 static const ResultCode RESULT_INVALID(0xDEADC0DE);
@@ -24,7 +24,7 @@ static const ResultCode RESULT_INVALID(0xDEADC0DE);
  * @param res Result to return
  */
 static inline void FuncReturn(u32 res) {
-    Core::AppCore().SetReg(0, res);
+    Core::CPU().SetReg(0, res);
 }
 
 /**
@@ -33,8 +33,8 @@ static inline void FuncReturn(u32 res) {
  * @todo Verify that this function is correct
  */
 static inline void FuncReturn64(u64 res) {
-    Core::AppCore().SetReg(0, (u32)(res & 0xFFFFFFFF));
-    Core::AppCore().SetReg(1, (u32)((res >> 32) & 0xFFFFFFFF));
+    Core::CPU().SetReg(0, (u32)(res & 0xFFFFFFFF));
+    Core::CPU().SetReg(1, (u32)((res >> 32) & 0xFFFFFFFF));
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -49,7 +49,7 @@ template <ResultCode func(u32*, u32, u32, u32, u32, u32)>
 void Wrap() {
     u32 param_1 = 0;
     u32 retval = func(&param_1, PARAM(0), PARAM(1), PARAM(2), PARAM(3), PARAM(4)).raw;
-    Core::AppCore().SetReg(1, param_1);
+    Core::CPU().SetReg(1, param_1);
     FuncReturn(retval);
 }
 
@@ -57,7 +57,7 @@ template <ResultCode func(u32*, s32, u32, u32, u32, s32)>
 void Wrap() {
     u32 param_1 = 0;
     u32 retval = func(&param_1, PARAM(0), PARAM(1), PARAM(2), PARAM(3), PARAM(4)).raw;
-    Core::AppCore().SetReg(1, param_1);
+    Core::CPU().SetReg(1, param_1);
     FuncReturn(retval);
 }
 
@@ -69,7 +69,7 @@ void Wrap() {
                      .raw;
 
     if (retval != RESULT_INVALID.raw) {
-        Core::AppCore().SetReg(1, (u32)param_1);
+        Core::CPU().SetReg(1, (u32)param_1);
         FuncReturn(retval);
     }
 }
@@ -84,7 +84,7 @@ template <ResultCode func(u32*)>
 void Wrap() {
     u32 param_1 = 0;
     u32 retval = func(&param_1).raw;
-    Core::AppCore().SetReg(1, param_1);
+    Core::CPU().SetReg(1, param_1);
     FuncReturn(retval);
 }
 
@@ -102,11 +102,11 @@ void Wrap() {
     MemoryInfo memory_info = {};
     PageInfo page_info = {};
     u32 retval = func(&memory_info, &page_info, PARAM(2)).raw;
-    Core::AppCore().SetReg(1, memory_info.base_address);
-    Core::AppCore().SetReg(2, memory_info.size);
-    Core::AppCore().SetReg(3, memory_info.permission);
-    Core::AppCore().SetReg(4, memory_info.state);
-    Core::AppCore().SetReg(5, page_info.flags);
+    Core::CPU().SetReg(1, memory_info.base_address);
+    Core::CPU().SetReg(2, memory_info.size);
+    Core::CPU().SetReg(3, memory_info.permission);
+    Core::CPU().SetReg(4, memory_info.state);
+    Core::CPU().SetReg(5, page_info.flags);
     FuncReturn(retval);
 }
 
@@ -115,11 +115,11 @@ void Wrap() {
     MemoryInfo memory_info = {};
     PageInfo page_info = {};
     u32 retval = func(&memory_info, &page_info, PARAM(2), PARAM(3)).raw;
-    Core::AppCore().SetReg(1, memory_info.base_address);
-    Core::AppCore().SetReg(2, memory_info.size);
-    Core::AppCore().SetReg(3, memory_info.permission);
-    Core::AppCore().SetReg(4, memory_info.state);
-    Core::AppCore().SetReg(5, page_info.flags);
+    Core::CPU().SetReg(1, memory_info.base_address);
+    Core::CPU().SetReg(2, memory_info.size);
+    Core::CPU().SetReg(3, memory_info.permission);
+    Core::CPU().SetReg(4, memory_info.state);
+    Core::CPU().SetReg(5, page_info.flags);
     FuncReturn(retval);
 }
 
@@ -127,7 +127,7 @@ template <ResultCode func(s32*, u32)>
 void Wrap() {
     s32 param_1 = 0;
     u32 retval = func(&param_1, PARAM(1)).raw;
-    Core::AppCore().SetReg(1, param_1);
+    Core::CPU().SetReg(1, param_1);
     FuncReturn(retval);
 }
 
@@ -140,7 +140,7 @@ template <ResultCode func(u32*, u32)>
 void Wrap() {
     u32 param_1 = 0;
     u32 retval = func(&param_1, PARAM(1)).raw;
-    Core::AppCore().SetReg(1, param_1);
+    Core::CPU().SetReg(1, param_1);
     FuncReturn(retval);
 }
 
@@ -160,7 +160,7 @@ template <ResultCode func(u32*, const char*)>
 void Wrap() {
     u32 param_1 = 0;
     u32 retval = func(&param_1, (char*)Memory::GetPointer(PARAM(1))).raw;
-    Core::AppCore().SetReg(1, param_1);
+    Core::CPU().SetReg(1, param_1);
     FuncReturn(retval);
 }
 
@@ -168,7 +168,7 @@ template <ResultCode func(u32*, s32, s32)>
 void Wrap() {
     u32 param_1 = 0;
     u32 retval = func(&param_1, PARAM(1), PARAM(2)).raw;
-    Core::AppCore().SetReg(1, param_1);
+    Core::CPU().SetReg(1, param_1);
     FuncReturn(retval);
 }
 
@@ -176,7 +176,7 @@ template <ResultCode func(s32*, u32, s32)>
 void Wrap() {
     s32 param_1 = 0;
     u32 retval = func(&param_1, PARAM(1), PARAM(2)).raw;
-    Core::AppCore().SetReg(1, param_1);
+    Core::CPU().SetReg(1, param_1);
     FuncReturn(retval);
 }
 
@@ -184,8 +184,8 @@ template <ResultCode func(s64*, u32, s32)>
 void Wrap() {
     s64 param_1 = 0;
     u32 retval = func(&param_1, PARAM(1), PARAM(2)).raw;
-    Core::AppCore().SetReg(1, (u32)param_1);
-    Core::AppCore().SetReg(2, (u32)(param_1 >> 32));
+    Core::CPU().SetReg(1, (u32)param_1);
+    Core::CPU().SetReg(2, (u32)(param_1 >> 32));
     FuncReturn(retval);
 }
 
@@ -194,7 +194,7 @@ void Wrap() {
     u32 param_1 = 0;
     // The last parameter is passed in R0 instead of R4
     u32 retval = func(&param_1, PARAM(1), PARAM(2), PARAM(3), PARAM(0)).raw;
-    Core::AppCore().SetReg(1, param_1);
+    Core::CPU().SetReg(1, param_1);
     FuncReturn(retval);
 }
 
@@ -209,8 +209,8 @@ template <ResultCode func(s64*, Kernel::Handle, u32)>
 void Wrap() {
     s64 param_1 = 0;
     u32 retval = func(&param_1, PARAM(1), PARAM(2)).raw;
-    Core::AppCore().SetReg(1, (u32)param_1);
-    Core::AppCore().SetReg(2, (u32)(param_1 >> 32));
+    Core::CPU().SetReg(1, (u32)param_1);
+    Core::CPU().SetReg(2, (u32)(param_1 >> 32));
     FuncReturn(retval);
 }
 
@@ -227,8 +227,8 @@ void Wrap() {
                       reinterpret_cast<const char*>(Memory::GetPointer(PARAM(2))), PARAM(3))
                      .raw;
     // The first out parameter is moved into R2 and the second is moved into R1.
-    Core::AppCore().SetReg(1, param_2);
-    Core::AppCore().SetReg(2, param_1);
+    Core::CPU().SetReg(1, param_2);
+    Core::CPU().SetReg(2, param_1);
     FuncReturn(retval);
 }
 

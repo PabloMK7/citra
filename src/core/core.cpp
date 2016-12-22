@@ -26,7 +26,7 @@ namespace Core {
 /*static*/ System System::s_instance;
 
 System::ResultStatus System::RunLoop(int tight_loop) {
-    if (!app_core) {
+    if (!cpu_core) {
         return ResultStatus::ErrorNotInitialized;
     }
 
@@ -53,7 +53,7 @@ System::ResultStatus System::RunLoop(int tight_loop) {
         CoreTiming::Advance();
         PrepareReschedule();
     } else {
-        app_core->Run(tight_loop);
+        cpu_core->Run(tight_loop);
     }
 
     HW::Update();
@@ -109,7 +109,7 @@ System::ResultStatus System::Load(EmuWindow* emu_window, const std::string& file
 }
 
 void System::PrepareReschedule() {
-    app_core->PrepareReschedule();
+    cpu_core->PrepareReschedule();
     reschedule_pending = true;
 }
 
@@ -123,16 +123,16 @@ void System::Reschedule() {
 }
 
 System::ResultStatus System::Init(EmuWindow* emu_window, u32 system_mode) {
-    if (app_core) {
-        app_core.reset();
+    if (cpu_core) {
+        cpu_core.reset();
     }
 
     Memory::Init();
 
     if (Settings::values.use_cpu_jit) {
-        app_core = std::make_unique<ARM_Dynarmic>(USER32MODE);
+        cpu_core = std::make_unique<ARM_Dynarmic>(USER32MODE);
     } else {
-        app_core = std::make_unique<ARM_DynCom>(USER32MODE);
+        cpu_core = std::make_unique<ARM_DynCom>(USER32MODE);
     }
 
     CoreTiming::Init();

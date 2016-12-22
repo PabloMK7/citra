@@ -88,18 +88,18 @@ public:
      * @returns True if the emulated system is powered on, otherwise false.
      */
     bool IsPoweredOn() const {
-        return app_core != nullptr;
+        return cpu_core != nullptr;
     }
 
     /// Prepare the core emulation for a reschedule
     void PrepareReschedule();
 
     /**
-     * Gets a reference to the emulated AppCore CPU.
-     * @returns A reference to the emulated AppCore CPU.
+     * Gets a reference to the emulated CPU.
+     * @returns A reference to the emulated CPU.
      */
-    ARM_Interface& AppCore() {
-        return *app_core;
+    ARM_Interface& CPU() {
+        return *cpu_core;
     }
 
 private:
@@ -117,8 +117,8 @@ private:
     /// AppLoader used to load the current executing application
     std::unique_ptr<Loader::AppLoader> app_loader;
 
-    ///< ARM11 application core
-    std::unique_ptr<ARM_Interface> app_core;
+    ///< ARM11 CPU core
+    std::unique_ptr<ARM_Interface> cpu_core;
 
     /// When true, signals that a reschedule should happen
     bool reschedule_pending{};
@@ -126,8 +126,8 @@ private:
     static System s_instance;
 };
 
-static ARM_Interface& AppCore() {
-    return System::GetInstance().AppCore();
+static ARM_Interface& CPU() {
+    return System::GetInstance().CPU();
 }
 
 } // namespace Core

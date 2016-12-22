@@ -583,7 +583,7 @@ static ResultCode CreateThread(Kernel::Handle* out_handle, s32 priority, u32 ent
 
 /// Called when a thread exits
 static void ExitThread() {
-    LOG_TRACE(Kernel_SVC, "called, pc=0x%08X", Core::AppCore().GetPC());
+    LOG_TRACE(Kernel_SVC, "called, pc=0x%08X", Core::CPU().GetPC());
 
     Kernel::ExitCurrentThread();
 }
@@ -613,7 +613,7 @@ static ResultCode CreateMutex(Kernel::Handle* out_handle, u32 initial_locked) {
     using Kernel::Mutex;
 
     SharedPtr<Mutex> mutex = Mutex::Create(initial_locked != 0);
-    mutex->name = Common::StringFromFormat("mutex-%08x", Core::AppCore().GetReg(14));
+    mutex->name = Common::StringFromFormat("mutex-%08x", Core::CPU().GetReg(14));
     CASCADE_RESULT(*out_handle, Kernel::g_handle_table.Create(std::move(mutex)));
 
     LOG_TRACE(Kernel_SVC, "called initial_locked=%s : created handle=0x%08X",
@@ -684,7 +684,7 @@ static ResultCode CreateSemaphore(Kernel::Handle* out_handle, s32 initial_count,
     using Kernel::Semaphore;
 
     CASCADE_RESULT(SharedPtr<Semaphore> semaphore, Semaphore::Create(initial_count, max_count));
-    semaphore->name = Common::StringFromFormat("semaphore-%08x", Core::AppCore().GetReg(14));
+    semaphore->name = Common::StringFromFormat("semaphore-%08x", Core::CPU().GetReg(14));
     CASCADE_RESULT(*out_handle, Kernel::g_handle_table.Create(std::move(semaphore)));
 
     LOG_TRACE(Kernel_SVC, "called initial_count=%d, max_count=%d, created handle=0x%08X",
@@ -741,7 +741,7 @@ static ResultCode CreateEvent(Kernel::Handle* out_handle, u32 reset_type) {
     using Kernel::Event;
 
     SharedPtr<Event> evt = Event::Create(static_cast<Kernel::ResetType>(reset_type));
-    evt->name = Common::StringFromFormat("event-%08x", Core::AppCore().GetReg(14));
+    evt->name = Common::StringFromFormat("event-%08x", Core::CPU().GetReg(14));
     CASCADE_RESULT(*out_handle, Kernel::g_handle_table.Create(std::move(evt)));
 
     LOG_TRACE(Kernel_SVC, "called reset_type=0x%08X : created handle=0x%08X", reset_type,
@@ -788,7 +788,7 @@ static ResultCode CreateTimer(Kernel::Handle* out_handle, u32 reset_type) {
     using Kernel::Timer;
 
     SharedPtr<Timer> timer = Timer::Create(static_cast<Kernel::ResetType>(reset_type));
-    timer->name = Common::StringFromFormat("timer-%08x", Core::AppCore().GetReg(14));
+    timer->name = Common::StringFromFormat("timer-%08x", Core::CPU().GetReg(14));
     CASCADE_RESULT(*out_handle, Kernel::g_handle_table.Create(std::move(timer)));
 
     LOG_TRACE(Kernel_SVC, "called reset_type=0x%08X : created handle=0x%08X", reset_type,
@@ -855,8 +855,7 @@ static void SleepThread(s64 nanoseconds) {
 static s64 GetSystemTick() {
     s64 result = CoreTiming::GetTicks();
     // Advance time to defeat dumb games (like Cubic Ninja) that busy-wait for the frame to end.
-    Core::AppCore().AddTicks(
-        150); // Measured time between two calls on a 9.2 o3DS with Ninjhax 1.1b
+    Core::CPU().AddTicks(150); // Measured time between two calls on a 9.2 o3DS with Ninjhax 1.1b
     return result;
 }
 

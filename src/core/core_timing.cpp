@@ -146,7 +146,7 @@ void UnregisterAllEvents() {
 }
 
 void Init() {
-    Core::AppCore().down_count = INITIAL_SLICE_LENGTH;
+    Core::CPU().down_count = INITIAL_SLICE_LENGTH;
     g_slice_length = INITIAL_SLICE_LENGTH;
     global_timer = 0;
     idled_cycles = 0;
@@ -186,7 +186,7 @@ void Shutdown() {
 }
 
 u64 GetTicks() {
-    return (u64)global_timer + g_slice_length - Core::AppCore().down_count;
+    return (u64)global_timer + g_slice_length - Core::CPU().down_count;
 }
 
 u64 GetIdleTicks() {
@@ -460,18 +460,18 @@ void MoveEvents() {
 }
 
 void ForceCheck() {
-    s64 cycles_executed = g_slice_length - Core::AppCore().down_count;
+    s64 cycles_executed = g_slice_length - Core::CPU().down_count;
     global_timer += cycles_executed;
     // This will cause us to check for new events immediately.
-    Core::AppCore().down_count = 0;
+    Core::CPU().down_count = 0;
     // But let's not eat a bunch more time in Advance() because of this.
     g_slice_length = 0;
 }
 
 void Advance() {
-    s64 cycles_executed = g_slice_length - Core::AppCore().down_count;
+    s64 cycles_executed = g_slice_length - Core::CPU().down_count;
     global_timer += cycles_executed;
-    Core::AppCore().down_count = g_slice_length;
+    Core::CPU().down_count = g_slice_length;
 
     if (has_ts_events)
         MoveEvents();
@@ -480,7 +480,7 @@ void Advance() {
     if (!first) {
         if (g_slice_length < 10000) {
             g_slice_length += 10000;
-            Core::AppCore().down_count += g_slice_length;
+            Core::CPU().down_count += g_slice_length;
         }
     } else {
         // Note that events can eat cycles as well.
@@ -490,7 +490,7 @@ void Advance() {
 
         const int diff = target - g_slice_length;
         g_slice_length += diff;
-        Core::AppCore().down_count += diff;
+        Core::CPU().down_count += diff;
     }
     if (advance_callback)
         advance_callback(static_cast<int>(cycles_executed));
@@ -506,12 +506,12 @@ void LogPendingEvents() {
 }
 
 void Idle(int max_idle) {
-    s64 cycles_down = Core::AppCore().down_count;
+    s64 cycles_down = Core::CPU().down_count;
     if (max_idle != 0 && cycles_down > max_idle)
         cycles_down = max_idle;
 
     if (first && cycles_down > 0) {
-        s64 cycles_executed = g_slice_length - Core::AppCore().down_count;
+        s64 cycles_executed = g_slice_length - Core::CPU().down_count;
         s64 cycles_next_event = first->time - global_timer;
 
         if (cycles_next_event < cycles_executed + cycles_down) {
@@ -526,9 +526,9 @@ void Idle(int max_idle) {
               cycles_down / (float)(g_clock_rate_arm11 * 0.001f));
 
     idled_cycles += cycles_down;
-    Core::AppCore().down_count -= cycles_down;
-    if (Core::AppCore().down_count == 0)
-        Core::AppCore().down_count = -1;
+    Core::CPU().down_count -= cycles_down;
+    if (Core::CPU().down_count == 0)
+        Core::CPU().down_count = -1;
 }
 
 std::string GetScheduledEventsSummary() {

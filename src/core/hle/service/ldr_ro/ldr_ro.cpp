@@ -457,7 +457,7 @@ static void LoadCRO(Interface* self, bool link_on_load_bug_fix) {
         }
     }
 
-    Core::AppCore().ClearInstructionCache();
+    Core::CPU().ClearInstructionCache();
 
     LOG_INFO(Service_LDR, "CRO \"%s\" loaded at 0x%08X, fixed_end=0x%08X", cro.ModuleName().data(),
              cro_address, cro_address + fix_size);
@@ -562,7 +562,7 @@ static void UnloadCRO(Interface* self) {
         memory_synchronizer.RemoveMemoryBlock(cro_address, cro_buffer_ptr);
     }
 
-    Core::AppCore().ClearInstructionCache();
+    Core::CPU().ClearInstructionCache();
 
     cmd_buff[1] = result.raw;
 }
@@ -624,7 +624,7 @@ static void LinkCRO(Interface* self) {
     }
 
     memory_synchronizer.SynchronizeOriginalMemory();
-    Core::AppCore().ClearInstructionCache();
+    Core::CPU().ClearInstructionCache();
 
     cmd_buff[1] = result.raw;
 }
@@ -686,7 +686,7 @@ static void UnlinkCRO(Interface* self) {
     }
 
     memory_synchronizer.SynchronizeOriginalMemory();
-    Core::AppCore().ClearInstructionCache();
+    Core::CPU().ClearInstructionCache();
 
     cmd_buff[1] = result.raw;
 }

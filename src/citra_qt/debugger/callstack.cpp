@@ -25,7 +25,7 @@ CallstackWidget::CallstackWidget(QWidget* parent) : QDockWidget(parent) {
 
 void CallstackWidget::OnDebugModeEntered() {
     // Stack pointer
-    const u32 sp = Core::AppCore().GetReg(13);
+    const u32 sp = Core::CPU().GetReg(13);
 
     Clear();
 
