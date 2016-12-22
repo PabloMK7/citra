@@ -123,7 +123,14 @@ set(SRCS
             hle/service/nim/nim_s.cpp
             hle/service/nim/nim_u.cpp
             hle/service/ns_s.cpp
-            hle/service/nwm_uds.cpp
+            hle/service/nwm/nwm.cpp
+            hle/service/nwm/nwm_cec.cpp
+            hle/service/nwm/nwm_ext.cpp
+            hle/service/nwm/nwm_inf.cpp
+            hle/service/nwm/nwm_sap.cpp
+            hle/service/nwm/nwm_soc.cpp
+            hle/service/nwm/nwm_tst.cpp
+            hle/service/nwm/nwm_uds.cpp
             hle/service/pm_app.cpp
             hle/service/ptm/ptm.cpp
             hle/service/ptm/ptm_gets.cpp
@@ -288,7 +295,14 @@ set(HEADERS
             hle/service/nim/nim_s.h
             hle/service/nim/nim_u.h
             hle/service/ns_s.h
-            hle/service/nwm_uds.h
+            hle/service/nwm/nwm.h
+            hle/service/nwm/nwm_cec.h
+            hle/service/nwm/nwm_ext.h
+            hle/service/nwm/nwm_inf.h
+            hle/service/nwm/nwm_sap.h
+            hle/service/nwm/nwm_soc.h
+            hle/service/nwm/nwm_tst.h
+            hle/service/nwm/nwm_uds.h
             hle/service/pm_app.h
             hle/service/ptm/ptm.h
             hle/service/ptm/ptm_gets.h
