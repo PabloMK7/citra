@@ -6,7 +6,6 @@
 #include "citra_qt/ui_settings.h"
 #include "core/hle/service/cfg/cfg.h"
 #include "core/hle/service/fs/archive.h"
-#include "core/system.h"
 #include "ui_configure_system.h"
 
 static const std::array<int, 12> days_in_month = {{
@@ -24,7 +23,7 @@ ConfigureSystem::ConfigureSystem(QWidget* parent) : QWidget(parent), ui(new Ui::
 ConfigureSystem::~ConfigureSystem() {}
 
 void ConfigureSystem::setConfiguration() {
-    enabled = !System::IsPoweredOn();
+    enabled = !Core::System::GetInstance().IsPoweredOn();
 
     if (!enabled) {
         ReadSystemSettings();

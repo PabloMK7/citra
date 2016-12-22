@@ -14,8 +14,6 @@
 #include "common/scm_rev.h"
 #include "common/string_util.h"
 #include "core/core.h"
-#include "core/settings.h"
-#include "core/system.h"
 #include "video_core/debug_utils/debug_utils.h"
 #include "video_core/video_core.h"
 
@@ -38,7 +36,7 @@ void EmuThread::run() {
             if (!was_active)
                 emit DebugModeLeft();
 
-            Core::RunLoop();
+            Core::System::GetInstance().RunLoop();
 
             was_active = running || exec_step;
             if (!was_active && !stop_run)
@@ -48,7 +46,7 @@ void EmuThread::run() {
                 emit DebugModeLeft();
 
             exec_step = false;
-            Core::SingleStep();
+            Core::System::GetInstance().SingleStep();
             emit DebugModeEntered();
             yieldCurrentThread();
 
@@ -60,7 +58,7 @@ void EmuThread::run() {
     }
 
     // Shutdown the core emulation
-    System::Shutdown();
+    Core::System::GetInstance().Shutdown();
 
 #if MICROPROFILE_ENABLED
     MicroProfileOnThreadExit();

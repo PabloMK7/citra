@@ -46,7 +46,6 @@
 #include "core/gdbstub/gdbstub.h"
 #include "core/loader/loader.h"
 #include "core/settings.h"
-#include "core/system.h"
 #include "qhexedit.h"
 #include "video_core/video_core.h"
 
@@ -274,7 +273,7 @@ void GMainWindow::OnDisplayTitleBars(bool show) {
     }
 }
 
-bool GMainWindow::InitializeSystem(u32 system_mode) {
+bool GMainWindow::LoadROM(const std::string& filename) {
     // Shutdown previous session if the emu thread is still active...
     if (emu_thread != nullptr)
         ShutdownGame();
@@ -290,54 +289,25 @@ bool GMainWindow::InitializeSystem(u32 system_mode) {
         return false;
     }
 
-    // Initialize the core emulation
-    System::Result system_result = System::Init(render_window, system_mode);
-    if (System::Result::Success != system_result) {
-        switch (system_result) {
-        case System::Result::ErrorInitVideoCore:
-            QMessageBox::critical(this, tr("Error while starting Citra!"),
-                                  tr("Failed to initialize the video core!\n\n"
-                                     "Please ensure that your GPU supports OpenGL 3.3 and that you "
-                                     "have the latest graphics driver."));
-            break;
+    Core::System& system{Core::System::GetInstance()};
 
-        default:
-            QMessageBox::critical(this, tr("Error while starting Citra!"),
-                                  tr("Unknown error (please check the log)!"));
-            break;
-        }
-        return false;
-    }
-    return true;
-}
+    const Core::System::ResultStatus result{system.Load(render_window, filename)};
 
-bool GMainWindow::LoadROM(const std::string& filename) {
-    std::unique_ptr<Loader::AppLoader> app_loader = Loader::GetLoader(filename);
-    if (!app_loader) {
-        LOG_CRITICAL(Frontend, "Failed to obtain loader for %s!", filename.c_str());
-        QMessageBox::critical(this, tr("Error while loading ROM!"),
-                              tr("The ROM format is not supported."));
-        return false;
-    }
-
-    boost::optional<u32> system_mode = app_loader->LoadKernelSystemMode();
-    if (!system_mode) {
-        LOG_CRITICAL(Frontend, "Failed to load ROM!");
-        QMessageBox::critical(this, tr("Error while loading ROM!"),
-                              tr("Could not determine the system mode."));
-        return false;
-    }
-
-    if (!InitializeSystem(system_mode.get()))
-        return false;
-
-    Loader::ResultStatus result = app_loader->Load();
-    if (Loader::ResultStatus::Success != result) {
-        System::Shutdown();
-        LOG_CRITICAL(Frontend, "Failed to load ROM!");
-
+    if (result != Core::System::ResultStatus::Success) {
         switch (result) {
-        case Loader::ResultStatus::ErrorEncrypted: {
+        case Core::System::ResultStatus::ErrorGetLoader:
+            LOG_CRITICAL(Frontend, "Failed to obtain loader for %s!", filename.c_str());
+            QMessageBox::critical(this, tr("Error while loading ROM!"),
+                                  tr("The ROM format is not supported."));
+            break;
+
+        case Core::System::ResultStatus::ErrorSystemMode:
+            LOG_CRITICAL(Frontend, "Failed to load ROM!");
+            QMessageBox::critical(this, tr("Error while loading ROM!"),
+                                  tr("Could not determine the system mode."));
+            break;
+
+        case Core::System::ResultStatus::ErrorLoader_ErrorEncrypted: {
             // Build the MessageBox ourselves to have clickable link
             QMessageBox popup_error;
             popup_error.setTextFormat(Qt::RichText);
@@ -352,11 +322,10 @@ bool GMainWindow::LoadROM(const std::string& filename) {
             popup_error.exec();
             break;
         }
-        case Loader::ResultStatus::ErrorInvalidFormat:
+        case Core::System::ResultStatus::ErrorLoader_ErrorInvalidFormat:
             QMessageBox::critical(this, tr("Error while loading ROM!"),
                                   tr("The ROM format is not supported."));
             break;
-        case Loader::ResultStatus::Error:
 
         default:
             QMessageBox::critical(this, tr("Error while loading ROM!"), tr("Unknown error!"));

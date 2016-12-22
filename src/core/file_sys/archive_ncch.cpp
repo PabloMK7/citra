@@ -19,7 +19,7 @@
 namespace FileSys {
 
 static std::string GetNCCHContainerPath(const std::string& nand_directory) {
-    return Common::StringFromFormat("%s%s/title/", nand_directory.c_str(), SYSTEM_ID.c_str());
+    return Common::StringFromFormat("%s%s/title/", nand_directory.c_str(), SYSTEM_ID);
 }
 
 static std::string GetNCCHPath(const std::string& mount_point, u32 high, u32 low) {

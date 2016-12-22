@@ -8,14 +8,21 @@
 #include "core/arm/skyeye_common/arm_regformat.h"
 #include "core/arm/skyeye_common/vfp/asm_vfp.h"
 
-namespace Core {
-struct ThreadContext;
-}
-
 /// Generic ARM11 CPU interface
 class ARM_Interface : NonCopyable {
 public:
     virtual ~ARM_Interface() {}
+
+    struct ThreadContext {
+        u32 cpu_registers[13];
+        u32 sp;
+        u32 lr;
+        u32 pc;
+        u32 cpsr;
+        u32 fpu_registers[64];
+        u32 fpscr;
+        u32 fpexc;
+    };
 
     /**
      * Runs the CPU for the given number of instructions
@@ -124,13 +131,13 @@ public:
      * Saves the current CPU context
      * @param ctx Thread context to save
      */
-    virtual void SaveContext(Core::ThreadContext& ctx) = 0;
+    virtual void SaveContext(ThreadContext& ctx) = 0;
 
     /**
      * Loads a CPU context
      * @param ctx Thread context to load
      */
-    virtual void LoadContext(const Core::ThreadContext& ctx) = 0;
+    virtual void LoadContext(const ThreadContext& ctx) = 0;
 
     /// Prepare core for thread reschedule (if needed to correctly handle state)
     virtual void PrepareReschedule() = 0;

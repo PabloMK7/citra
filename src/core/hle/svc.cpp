@@ -166,7 +166,8 @@ static ResultCode ControlMemory(u32* out_addr, u32 operation, u32 addr0, u32 add
 }
 
 /// Maps a memory block to specified address
-static ResultCode MapMemoryBlock(Handle handle, u32 addr, u32 permissions, u32 other_permissions) {
+static ResultCode MapMemoryBlock(Kernel::Handle handle, u32 addr, u32 permissions,
+                                 u32 other_permissions) {
     using Kernel::SharedMemory;
     using Kernel::MemoryPermission;
 
@@ -198,7 +199,7 @@ static ResultCode MapMemoryBlock(Handle handle, u32 addr, u32 permissions, u32 o
                       ErrorSummary::InvalidArgument, ErrorLevel::Usage);
 }
 
-static ResultCode UnmapMemoryBlock(Handle handle, u32 addr) {
+static ResultCode UnmapMemoryBlock(Kernel::Handle handle, u32 addr) {
     using Kernel::SharedMemory;
 
     LOG_TRACE(Kernel_SVC, "called memblock=0x%08X, addr=0x%08X", handle, addr);
@@ -213,7 +214,7 @@ static ResultCode UnmapMemoryBlock(Handle handle, u32 addr) {
 }
 
 /// Connect to an OS service given the port name, returns the handle to the port to out
-static ResultCode ConnectToPort(Handle* out_handle, const char* port_name) {
+static ResultCode ConnectToPort(Kernel::Handle* out_handle, const char* port_name) {
     if (port_name == nullptr)
         return ERR_NOT_FOUND;
     if (std::strlen(port_name) > 11)
@@ -238,7 +239,7 @@ static ResultCode ConnectToPort(Handle* out_handle, const char* port_name) {
 }
 
 /// Makes a blocking IPC call to an OS service.
-static ResultCode SendSyncRequest(Handle handle) {
+static ResultCode SendSyncRequest(Kernel::Handle handle) {
     SharedPtr<Kernel::ClientSession> session =
         Kernel::g_handle_table.Get<Kernel::ClientSession>(handle);
     if (session == nullptr) {
@@ -253,13 +254,13 @@ static ResultCode SendSyncRequest(Handle handle) {
 }
 
 /// Close a handle
-static ResultCode CloseHandle(Handle handle) {
+static ResultCode CloseHandle(Kernel::Handle handle) {
     LOG_TRACE(Kernel_SVC, "Closing handle 0x%08X", handle);
     return Kernel::g_handle_table.Close(handle);
 }
 
 /// Wait for a handle to synchronize, timeout after the specified nanoseconds
-static ResultCode WaitSynchronization1(Handle handle, s64 nano_seconds) {
+static ResultCode WaitSynchronization1(Kernel::Handle handle, s64 nano_seconds) {
     auto object = Kernel::g_handle_table.GetWaitObject(handle);
     Kernel::Thread* thread = Kernel::GetCurrentThread();
 
@@ -295,8 +296,8 @@ static ResultCode WaitSynchronization1(Handle handle, s64 nano_seconds) {
 }
 
 /// Wait for the given handles to synchronize, timeout after the specified nanoseconds
-static ResultCode WaitSynchronizationN(s32* out, Handle* handles, s32 handle_count, bool wait_all,
-                                       s64 nano_seconds) {
+static ResultCode WaitSynchronizationN(s32* out, Kernel::Handle* handles, s32 handle_count,
+                                       bool wait_all, s64 nano_seconds) {
     Kernel::Thread* thread = Kernel::GetCurrentThread();
 
     // Check if 'handles' is invalid
@@ -423,7 +424,7 @@ static ResultCode WaitSynchronizationN(s32* out, Handle* handles, s32 handle_cou
 }
 
 /// Create an address arbiter (to allocate access to shared resources)
-static ResultCode CreateAddressArbiter(Handle* out_handle) {
+static ResultCode CreateAddressArbiter(Kernel::Handle* out_handle) {
     using Kernel::AddressArbiter;
 
     SharedPtr<AddressArbiter> arbiter = AddressArbiter::Create();
@@ -433,7 +434,7 @@ static ResultCode CreateAddressArbiter(Handle* out_handle) {
 }
 
 /// Arbitrate address
-static ResultCode ArbitrateAddress(Handle handle, u32 address, u32 type, u32 value,
+static ResultCode ArbitrateAddress(Kernel::Handle handle, u32 address, u32 type, u32 value,
                                    s64 nanoseconds) {
     using Kernel::AddressArbiter;
 
@@ -476,7 +477,7 @@ static void OutputDebugString(const char* string) {
 }
 
 /// Get resource limit
-static ResultCode GetResourceLimit(Handle* resource_limit, Handle process_handle) {
+static ResultCode GetResourceLimit(Kernel::Handle* resource_limit, Kernel::Handle process_handle) {
     LOG_TRACE(Kernel_SVC, "called process=0x%08X", process_handle);
 
     SharedPtr<Kernel::Process> process =
@@ -490,7 +491,7 @@ static ResultCode GetResourceLimit(Handle* resource_limit, Handle process_handle
 }
 
 /// Get resource limit current values
-static ResultCode GetResourceLimitCurrentValues(s64* values, Handle resource_limit_handle,
+static ResultCode GetResourceLimitCurrentValues(s64* values, Kernel::Handle resource_limit_handle,
                                                 u32* names, u32 name_count) {
     LOG_TRACE(Kernel_SVC, "called resource_limit=%08X, names=%p, name_count=%d",
               resource_limit_handle, names, name_count);
@@ -507,8 +508,8 @@ static ResultCode GetResourceLimitCurrentValues(s64* values, Handle resource_lim
 }
 
 /// Get resource limit max values
-static ResultCode GetResourceLimitLimitValues(s64* values, Handle resource_limit_handle, u32* names,
-                                              u32 name_count) {
+static ResultCode GetResourceLimitLimitValues(s64* values, Kernel::Handle resource_limit_handle,
+                                              u32* names, u32 name_count) {
     LOG_TRACE(Kernel_SVC, "called resource_limit=%08X, names=%p, name_count=%d",
               resource_limit_handle, names, name_count);
 
@@ -524,7 +525,7 @@ static ResultCode GetResourceLimitLimitValues(s64* values, Handle resource_limit
 }
 
 /// Creates a new thread
-static ResultCode CreateThread(Handle* out_handle, s32 priority, u32 entry_point, u32 arg,
+static ResultCode CreateThread(Kernel::Handle* out_handle, s32 priority, u32 entry_point, u32 arg,
                                u32 stack_top, s32 processor_id) {
     using Kernel::Thread;
 
@@ -582,13 +583,13 @@ static ResultCode CreateThread(Handle* out_handle, s32 priority, u32 entry_point
 
 /// Called when a thread exits
 static void ExitThread() {
-    LOG_TRACE(Kernel_SVC, "called, pc=0x%08X", Core::g_app_core->GetPC());
+    LOG_TRACE(Kernel_SVC, "called, pc=0x%08X", Core::CPU().GetPC());
 
     Kernel::ExitCurrentThread();
 }
 
 /// Gets the priority for the specified thread
-static ResultCode GetThreadPriority(s32* priority, Handle handle) {
+static ResultCode GetThreadPriority(s32* priority, Kernel::Handle handle) {
     const SharedPtr<Kernel::Thread> thread = Kernel::g_handle_table.Get<Kernel::Thread>(handle);
     if (thread == nullptr)
         return ERR_INVALID_HANDLE;
@@ -598,7 +599,7 @@ static ResultCode GetThreadPriority(s32* priority, Handle handle) {
 }
 
 /// Sets the priority for the specified thread
-static ResultCode SetThreadPriority(Handle handle, s32 priority) {
+static ResultCode SetThreadPriority(Kernel::Handle handle, s32 priority) {
     SharedPtr<Kernel::Thread> thread = Kernel::g_handle_table.Get<Kernel::Thread>(handle);
     if (thread == nullptr)
         return ERR_INVALID_HANDLE;
@@ -608,11 +609,11 @@ static ResultCode SetThreadPriority(Handle handle, s32 priority) {
 }
 
 /// Create a mutex
-static ResultCode CreateMutex(Handle* out_handle, u32 initial_locked) {
+static ResultCode CreateMutex(Kernel::Handle* out_handle, u32 initial_locked) {
     using Kernel::Mutex;
 
     SharedPtr<Mutex> mutex = Mutex::Create(initial_locked != 0);
-    mutex->name = Common::StringFromFormat("mutex-%08x", Core::g_app_core->GetReg(14));
+    mutex->name = Common::StringFromFormat("mutex-%08x", Core::CPU().GetReg(14));
     CASCADE_RESULT(*out_handle, Kernel::g_handle_table.Create(std::move(mutex)));
 
     LOG_TRACE(Kernel_SVC, "called initial_locked=%s : created handle=0x%08X",
@@ -622,7 +623,7 @@ static ResultCode CreateMutex(Handle* out_handle, u32 initial_locked) {
 }
 
 /// Release a mutex
-static ResultCode ReleaseMutex(Handle handle) {
+static ResultCode ReleaseMutex(Kernel::Handle handle) {
     using Kernel::Mutex;
 
     LOG_TRACE(Kernel_SVC, "called handle=0x%08X", handle);
@@ -637,7 +638,7 @@ static ResultCode ReleaseMutex(Handle handle) {
 }
 
 /// Get the ID of the specified process
-static ResultCode GetProcessId(u32* process_id, Handle process_handle) {
+static ResultCode GetProcessId(u32* process_id, Kernel::Handle process_handle) {
     LOG_TRACE(Kernel_SVC, "called process=0x%08X", process_handle);
 
     const SharedPtr<Kernel::Process> process =
@@ -650,7 +651,7 @@ static ResultCode GetProcessId(u32* process_id, Handle process_handle) {
 }
 
 /// Get the ID of the process that owns the specified thread
-static ResultCode GetProcessIdOfThread(u32* process_id, Handle thread_handle) {
+static ResultCode GetProcessIdOfThread(u32* process_id, Kernel::Handle thread_handle) {
     LOG_TRACE(Kernel_SVC, "called thread=0x%08X", thread_handle);
 
     const SharedPtr<Kernel::Thread> thread =
@@ -667,7 +668,7 @@ static ResultCode GetProcessIdOfThread(u32* process_id, Handle thread_handle) {
 }
 
 /// Get the ID for the specified thread.
-static ResultCode GetThreadId(u32* thread_id, Handle handle) {
+static ResultCode GetThreadId(u32* thread_id, Kernel::Handle handle) {
     LOG_TRACE(Kernel_SVC, "called thread=0x%08X", handle);
 
     const SharedPtr<Kernel::Thread> thread = Kernel::g_handle_table.Get<Kernel::Thread>(handle);
@@ -679,11 +680,11 @@ static ResultCode GetThreadId(u32* thread_id, Handle handle) {
 }
 
 /// Creates a semaphore
-static ResultCode CreateSemaphore(Handle* out_handle, s32 initial_count, s32 max_count) {
+static ResultCode CreateSemaphore(Kernel::Handle* out_handle, s32 initial_count, s32 max_count) {
     using Kernel::Semaphore;
 
     CASCADE_RESULT(SharedPtr<Semaphore> semaphore, Semaphore::Create(initial_count, max_count));
-    semaphore->name = Common::StringFromFormat("semaphore-%08x", Core::g_app_core->GetReg(14));
+    semaphore->name = Common::StringFromFormat("semaphore-%08x", Core::CPU().GetReg(14));
     CASCADE_RESULT(*out_handle, Kernel::g_handle_table.Create(std::move(semaphore)));
 
     LOG_TRACE(Kernel_SVC, "called initial_count=%d, max_count=%d, created handle=0x%08X",
@@ -692,7 +693,7 @@ static ResultCode CreateSemaphore(Handle* out_handle, s32 initial_count, s32 max
 }
 
 /// Releases a certain number of slots in a semaphore
-static ResultCode ReleaseSemaphore(s32* count, Handle handle, s32 release_count) {
+static ResultCode ReleaseSemaphore(s32* count, Kernel::Handle handle, s32 release_count) {
     using Kernel::Semaphore;
 
     LOG_TRACE(Kernel_SVC, "called release_count=%d, handle=0x%08X", release_count, handle);
@@ -708,7 +709,7 @@ static ResultCode ReleaseSemaphore(s32* count, Handle handle, s32 release_count)
 
 /// Query process memory
 static ResultCode QueryProcessMemory(MemoryInfo* memory_info, PageInfo* page_info,
-                                     Handle process_handle, u32 addr) {
+                                     Kernel::Handle process_handle, u32 addr) {
     using Kernel::Process;
     Kernel::SharedPtr<Process> process = Kernel::g_handle_table.Get<Process>(process_handle);
     if (process == nullptr)
@@ -736,11 +737,11 @@ static ResultCode QueryMemory(MemoryInfo* memory_info, PageInfo* page_info, u32 
 }
 
 /// Create an event
-static ResultCode CreateEvent(Handle* out_handle, u32 reset_type) {
+static ResultCode CreateEvent(Kernel::Handle* out_handle, u32 reset_type) {
     using Kernel::Event;
 
     SharedPtr<Event> evt = Event::Create(static_cast<Kernel::ResetType>(reset_type));
-    evt->name = Common::StringFromFormat("event-%08x", Core::g_app_core->GetReg(14));
+    evt->name = Common::StringFromFormat("event-%08x", Core::CPU().GetReg(14));
     CASCADE_RESULT(*out_handle, Kernel::g_handle_table.Create(std::move(evt)));
 
     LOG_TRACE(Kernel_SVC, "called reset_type=0x%08X : created handle=0x%08X", reset_type,
@@ -749,14 +750,14 @@ static ResultCode CreateEvent(Handle* out_handle, u32 reset_type) {
 }
 
 /// Duplicates a kernel handle
-static ResultCode DuplicateHandle(Handle* out, Handle handle) {
+static ResultCode DuplicateHandle(Kernel::Handle* out, Kernel::Handle handle) {
     CASCADE_RESULT(*out, Kernel::g_handle_table.Duplicate(handle));
     LOG_TRACE(Kernel_SVC, "duplicated 0x%08X to 0x%08X", handle, *out);
     return RESULT_SUCCESS;
 }
 
 /// Signals an event
-static ResultCode SignalEvent(Handle handle) {
+static ResultCode SignalEvent(Kernel::Handle handle) {
     using Kernel::Event;
     LOG_TRACE(Kernel_SVC, "called event=0x%08X", handle);
 
@@ -770,7 +771,7 @@ static ResultCode SignalEvent(Handle handle) {
 }
 
 /// Clears an event
-static ResultCode ClearEvent(Handle handle) {
+static ResultCode ClearEvent(Kernel::Handle handle) {
     using Kernel::Event;
     LOG_TRACE(Kernel_SVC, "called event=0x%08X", handle);
 
@@ -783,11 +784,11 @@ static ResultCode ClearEvent(Handle handle) {
 }
 
 /// Creates a timer
-static ResultCode CreateTimer(Handle* out_handle, u32 reset_type) {
+static ResultCode CreateTimer(Kernel::Handle* out_handle, u32 reset_type) {
     using Kernel::Timer;
 
     SharedPtr<Timer> timer = Timer::Create(static_cast<Kernel::ResetType>(reset_type));
-    timer->name = Common::StringFromFormat("timer-%08x", Core::g_app_core->GetReg(14));
+    timer->name = Common::StringFromFormat("timer-%08x", Core::CPU().GetReg(14));
     CASCADE_RESULT(*out_handle, Kernel::g_handle_table.Create(std::move(timer)));
 
     LOG_TRACE(Kernel_SVC, "called reset_type=0x%08X : created handle=0x%08X", reset_type,
@@ -796,7 +797,7 @@ static ResultCode CreateTimer(Handle* out_handle, u32 reset_type) {
 }
 
 /// Clears a timer
-static ResultCode ClearTimer(Handle handle) {
+static ResultCode ClearTimer(Kernel::Handle handle) {
     using Kernel::Timer;
 
     LOG_TRACE(Kernel_SVC, "called timer=0x%08X", handle);
@@ -810,7 +811,7 @@ static ResultCode ClearTimer(Handle handle) {
 }
 
 /// Starts a timer
-static ResultCode SetTimer(Handle handle, s64 initial, s64 interval) {
+static ResultCode SetTimer(Kernel::Handle handle, s64 initial, s64 interval) {
     using Kernel::Timer;
 
     LOG_TRACE(Kernel_SVC, "called timer=0x%08X", handle);
@@ -825,7 +826,7 @@ static ResultCode SetTimer(Handle handle, s64 initial, s64 interval) {
 }
 
 /// Cancels a timer
-static ResultCode CancelTimer(Handle handle) {
+static ResultCode CancelTimer(Kernel::Handle handle) {
     using Kernel::Timer;
 
     LOG_TRACE(Kernel_SVC, "called timer=0x%08X", handle);
@@ -854,14 +855,13 @@ static void SleepThread(s64 nanoseconds) {
 static s64 GetSystemTick() {
     s64 result = CoreTiming::GetTicks();
     // Advance time to defeat dumb games (like Cubic Ninja) that busy-wait for the frame to end.
-    Core::g_app_core->AddTicks(
-        150); // Measured time between two calls on a 9.2 o3DS with Ninjhax 1.1b
+    Core::CPU().AddTicks(150); // Measured time between two calls on a 9.2 o3DS with Ninjhax 1.1b
     return result;
 }
 
 /// Creates a memory block at the specified address with the specified permissions and size
-static ResultCode CreateMemoryBlock(Handle* out_handle, u32 addr, u32 size, u32 my_permission,
-                                    u32 other_permission) {
+static ResultCode CreateMemoryBlock(Kernel::Handle* out_handle, u32 addr, u32 size,
+                                    u32 my_permission, u32 other_permission) {
     using Kernel::SharedMemory;
 
     if (size % Memory::PAGE_SIZE != 0)
@@ -912,8 +912,8 @@ static ResultCode CreateMemoryBlock(Handle* out_handle, u32 addr, u32 size, u32 
     return RESULT_SUCCESS;
 }
 
-static ResultCode CreatePort(Handle* server_port, Handle* client_port, const char* name,
-                             u32 max_sessions) {
+static ResultCode CreatePort(Kernel::Handle* server_port, Kernel::Handle* client_port,
+                             const char* name, u32 max_sessions) {
     // TODO(Subv): Implement named ports.
     ASSERT_MSG(name == nullptr, "Named ports are currently unimplemented");
 
@@ -978,7 +978,7 @@ static ResultCode GetSystemInfo(s64* out, u32 type, s32 param) {
     return RESULT_SUCCESS;
 }
 
-static ResultCode GetProcessInfo(s64* out, Handle process_handle, u32 type) {
+static ResultCode GetProcessInfo(s64* out, Kernel::Handle process_handle, u32 type) {
     LOG_TRACE(Kernel_SVC, "called process=0x%08X type=%u", process_handle, type);
 
     using Kernel::Process;
@@ -1185,7 +1185,7 @@ void CallSVC(u32 immediate) {
         if (info->func) {
             info->func();
             //  TODO(Subv): Not all service functions should cause a reschedule in all cases.
-            HLE::Reschedule(__func__);
+            Core::System::GetInstance().PrepareReschedule();
         } else {
             LOG_ERROR(Kernel_SVC, "unimplemented SVC function %s(..)", info->name);
         }

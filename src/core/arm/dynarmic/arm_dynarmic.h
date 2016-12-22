@@ -10,10 +10,6 @@
 #include "core/arm/arm_interface.h"
 #include "core/arm/skyeye_common/armstate.h"
 
-namespace Core {
-struct ThreadContext;
-}
-
 class ARM_Dynarmic final : public ARM_Interface {
 public:
     ARM_Dynarmic(PrivilegeMode initial_mode);
@@ -33,8 +29,8 @@ public:
 
     void AddTicks(u64 ticks) override;
 
-    void SaveContext(Core::ThreadContext& ctx) override;
-    void LoadContext(const Core::ThreadContext& ctx) override;
+    void SaveContext(ThreadContext& ctx) override;
+    void LoadContext(const ThreadContext& ctx) override;
 
     void PrepareReschedule() override;
     void ExecuteInstructions(int num_instructions) override;

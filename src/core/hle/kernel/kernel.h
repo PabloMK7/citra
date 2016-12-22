@@ -11,10 +11,11 @@
 #include <vector>
 #include <boost/smart_ptr/intrusive_ptr.hpp>
 #include "common/common_types.h"
-#include "core/hle/hle.h"
 #include "core/hle/result.h"
 
 namespace Kernel {
+
+using Handle = u32;
 
 class Thread;
 
