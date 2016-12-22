@@ -3,7 +3,14 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/CMakeModules)
 
 set(SRCS
-            config.cpp
+            configuration/config.cpp
+            configuration/configure_audio.cpp
+            configuration/configure_debug.cpp
+            configuration/configure_dialog.cpp
+            configuration/configure_general.cpp
+            configuration/configure_graphics.cpp
+            configuration/configure_input.cpp
+            configuration/configure_system.cpp
             debugger/callstack.cpp
             debugger/disassembler.cpp
             debugger/graphics/graphics.cpp
@@ -19,13 +26,6 @@ set(SRCS
             util/spinbox.cpp
             util/util.cpp
             bootmanager.cpp
-            configure_audio.cpp
-            configure_debug.cpp
-            configure_dialog.cpp
-            configure_general.cpp
-            configure_graphics.cpp
-            configure_system.cpp
-            configure_input.cpp
             game_list.cpp
             hotkeys.cpp
             main.cpp
@@ -35,7 +35,14 @@ set(SRCS
             )
 
 set(HEADERS
-            config.h
+            configuration/config.h
+            configuration/configure_audio.h
+            configuration/configure_debug.h
+            configuration/configure_dialog.h
+            configuration/configure_general.h
+            configuration/configure_graphics.h
+            configuration/configure_input.h
+            configuration/configure_system.h
             debugger/callstack.h
             debugger/disassembler.h
             debugger/graphics/graphics.h
@@ -52,13 +59,6 @@ set(HEADERS
             util/spinbox.h
             util/util.h
             bootmanager.h
-            configure_audio.h
-            configure_debug.h
-            configure_dialog.h
-            configure_general.h
-            configure_graphics.h
-            configure_system.h
-            configure_input.h
             game_list.h
             game_list_p.h
             hotkeys.h
@@ -67,16 +67,16 @@ set(HEADERS
             )
 
 set(UIS
+            configuration/configure.ui
+            configuration/configure_audio.ui
+            configuration/configure_debug.ui
+            configuration/configure_general.ui
+            configuration/configure_graphics.ui
+            configuration/configure_input.ui
+            configuration/configure_system.ui
             debugger/callstack.ui
             debugger/disassembler.ui
             debugger/registers.ui
-            configure.ui
-            configure_audio.ui
-            configure_debug.ui
-            configure_general.ui
-            configure_graphics.ui
-            configure_system.ui
-            configure_input.ui
             hotkeys.ui
             main.ui
             )

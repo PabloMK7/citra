@@ -14,8 +14,8 @@
 #include <QtGui>
 #include <QtWidgets>
 #include "citra_qt/bootmanager.h"
-#include "citra_qt/config.h"
-#include "citra_qt/configure_dialog.h"
+#include "citra_qt/configuration/config.h"
+#include "citra_qt/configuration/configure_dialog.h"
 #include "citra_qt/debugger/callstack.h"
 #include "citra_qt/debugger/disassembler.h"
 #include "citra_qt/debugger/graphics/graphics.h"

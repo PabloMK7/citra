@@ -64,37 +64,37 @@
   <customwidget>
    <class>ConfigureGeneral</class>
    <extends>QWidget</extends>
-   <header>configure_general.h</header>
+   <header>configuration/configure_general.h</header>
    <container>1</container>
   </customwidget>
   <customwidget>
    <class>ConfigureSystem</class>
    <extends>QWidget</extends>
-   <header>configure_system.h</header>
+   <header>configuration/configure_system.h</header>
    <container>1</container>
   </customwidget>
   <customwidget>
    <class>ConfigureAudio</class>
    <extends>QWidget</extends>
-   <header>configure_audio.h</header>
+   <header>configuration/configure_audio.h</header>
    <container>1</container>
   </customwidget>
   <customwidget>
    <class>ConfigureDebug</class>
    <extends>QWidget</extends>
-   <header>configure_debug.h</header>
+   <header>configuration/configure_debug.h</header>
    <container>1</container>
   </customwidget>
   <customwidget>
    <class>ConfigureInput</class>
    <extends>QWidget</extends>
-   <header>configure_input.h</header>
+   <header>configuration/configure_input.h</header>
    <container>1</container>
   </customwidget>
   <customwidget>
    <class>ConfigureGraphics</class>
    <extends>QWidget</extends>
-   <header>configure_graphics.h</header>
+   <header>configuration/configure_graphics.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>
