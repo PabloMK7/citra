@@ -5,12 +5,12 @@
 #include "common/common_types.h"
 #include "common/logging/log.h"
 #include "core/hle/kernel/event.h"
-#include "core/hle/service/nwm_uds.h"
+#include "core/hle/service/nwm/nwm_uds.h"
 
 namespace Service {
 namespace NWM {
 
-static Kernel::SharedPtr<Kernel::Event> handle_event;
+static Kernel::SharedPtr<Kernel::Event> uds_handle_event;
 
 /**
  * NWM_UDS::Shutdown service function
@@ -101,7 +101,7 @@ static void InitializeWithVersion(Interface* self) {
     /*
     cmd_buff[1] = RESULT_SUCCESS.raw;
     cmd_buff[2] = 0;
-    cmd_buff[3] = Kernel::g_handle_table.Create(handle_event)
+    cmd_buff[3] = Kernel::g_handle_table.Create(uds_handle_event)
                       .MoveFrom(); // TODO(purpasmart): Verify if this is a event handle
     */
     cmd_buff[0] = IPC::MakeHeader(0x1B, 1, 2);
@@ -116,6 +116,7 @@ static void InitializeWithVersion(Interface* self) {
 }
 
 const Interface::FunctionInfo FunctionTable[] = {
+    {0x00010442, nullptr, "Initialize (deprecated)"},
     {0x00020000, nullptr, "Scrap"},
     {0x00030000, Shutdown, "Shutdown"},
     {0x00040402, nullptr, "CreateNetwork (deprecated)"},
@@ -147,13 +148,13 @@ const Interface::FunctionInfo FunctionTable[] = {
 };
 
 NWM_UDS::NWM_UDS() {
-    handle_event = Kernel::Event::Create(Kernel::ResetType::OneShot, "NWM_UDS::handle_event");
+    uds_handle_event = Kernel::Event::Create(Kernel::ResetType::OneShot, "NWM::uds_handle_event");
 
     Register(FunctionTable);
 }
 
 NWM_UDS::~NWM_UDS() {
-    handle_event = nullptr;
+    uds_handle_event = nullptr;
 }
 
 } // namespace NWM
