@@ -9,8 +9,8 @@
 #include <mutex>
 #include <QGLWidget>
 #include <QThread>
-#include "common/emu_window.h"
 #include "common/thread.h"
+#include "core/frontend/emu_window.h"
 
 class QKeyEvent;
 class QScreen;

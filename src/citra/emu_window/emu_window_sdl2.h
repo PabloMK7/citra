@@ -5,7 +5,7 @@
 #pragma once
 
 #include <utility>
-#include "common/emu_window.h"
+#include "core/frontend/emu_window.h"
 
 struct SDL_Window;
 

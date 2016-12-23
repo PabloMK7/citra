@@ -3,9 +3,9 @@
 // Refer to the license.txt file included.
 
 #include <cmath>
-#include "common/emu_window.h"
 #include "common/logging/log.h"
 #include "core/core_timing.h"
+#include "core/frontend/emu_window.h"
 #include "core/hle/kernel/event.h"
 #include "core/hle/kernel/shared_memory.h"
 #include "core/hle/service/hid/hid.h"
