@@ -7,7 +7,7 @@
 #include "settings.h"
 #include "video_core/video_core.h"
 
-#include "common/emu_window.h"
+#include "core/frontend/emu_window.h"
 
 namespace Settings {
 

@@ -5,8 +5,8 @@
 #include <algorithm>
 #include <cmath>
 #include "common/assert.h"
-#include "common/key_map.h"
-#include "emu_window.h"
+#include "core/frontend/emu_window.h"
+#include "core/frontend/key_map.h"
 #include "video_core/video_core.h"
 
 void EmuWindow::ButtonPressed(Service::HID::PadState pad) {

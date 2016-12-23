@@ -9,10 +9,10 @@
 #include <glad/glad.h>
 #include "common/assert.h"
 #include "common/bit_field.h"
-#include "common/emu_window.h"
 #include "common/logging/log.h"
 #include "common/profiler_reporting.h"
 #include "common/synchronized_wrapper.h"
+#include "core/frontend/emu_window.h"
 #include "core/hw/gpu.h"
 #include "core/hw/hw.h"
 #include "core/hw/lcd.h"

@@ -11,11 +11,11 @@
 #include <vector>
 #include <glad/glad.h>
 #include "common/bit_field.h"
-#include "common/emu_window.h"
 #include "common/logging/log.h"
 #include "common/math_util.h"
 #include "common/microprofile.h"
 #include "common/vector_math.h"
+#include "core/frontend/emu_window.h"
 #include "core/memory.h"
 #include "video_core/debug_utils/debug_utils.h"
 #include "video_core/pica_state.h"

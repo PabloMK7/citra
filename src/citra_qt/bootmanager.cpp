@@ -9,11 +9,11 @@
 #endif
 
 #include "citra_qt/bootmanager.h"
-#include "common/key_map.h"
 #include "common/microprofile.h"
 #include "common/scm_rev.h"
 #include "common/string_util.h"
 #include "core/core.h"
+#include "core/frontend/key_map.h"
 #include "video_core/debug_utils/debug_utils.h"
 #include "video_core/video_core.h"
 
