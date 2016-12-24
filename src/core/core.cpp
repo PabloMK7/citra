@@ -159,6 +159,7 @@ void System::Shutdown() {
     Kernel::Shutdown();
     HW::Shutdown();
     CoreTiming::Shutdown();
+    cpu_core.reset();
 
     LOG_DEBUG(Core, "Shutdown OK");
 }
