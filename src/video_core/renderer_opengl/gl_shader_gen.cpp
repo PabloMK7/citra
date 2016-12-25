@@ -423,15 +423,12 @@ static void WriteLighting(std::string& out, const PicaShaderConfig& config) {
             // LUT index is in the range of (0.0, 1.0)
             index = lighting.light[light_num].two_sided_diffuse ? "abs(" + index + ")"
                                                                 : "max(" + index + ", 0.f)";
-            return "(FLOAT_255 * clamp(" + index + ", 0.0, 1.0))";
         } else {
             // LUT index is in the range of (-1.0, 1.0)
-            index = "clamp(" + index + ", -1.0, 1.0)";
-            return "(FLOAT_255 * ((" + index + " < 0) ? " + index + " + 2.0 : " + index +
-                   ") / 2.0)";
+            index = "((" + index + " < 0) ? " + index + " + 2.0 : " + index + ") / 2.0";
         }
 
-        return std::string();
+        return "(OFFSET_256 + SCALE_256 * clamp(" + index + ", 0.0, 1.0))";
     };
 
     // Gets the lighting lookup table value given the specified sampler and index
@@ -462,7 +459,7 @@ static void WriteLighting(std::string& out, const PicaShaderConfig& config) {
         if (light_config.dist_atten_enable) {
             std::string index = "(" + light_src + ".dist_atten_scale * length(-view - " +
                                 light_src + ".position) + " + light_src + ".dist_atten_bias)";
-            index = "((clamp(" + index + ", 0.0, FLOAT_255)))";
+            index = "(OFFSET_256 + SCALE_256 * clamp(" + index + ", 0.0, 1.0))";
             const unsigned lut_num =
                 ((unsigned)Regs::LightingSampler::DistanceAttenuation + light_config.num);
             dist_atten = GetLutValue((Regs::LightingSampler)lut_num, index);
@@ -581,7 +578,10 @@ std::string GenerateFragmentShader(const PicaShaderConfig& config) {
 #define NUM_TEV_STAGES 6
 #define NUM_LIGHTS 8
 #define LIGHTING_LUT_SIZE 256
-#define FLOAT_255 (255.0 / 256.0)
+
+// Texture coordinate offsets and scales
+#define OFFSET_256 (0.5 / 256.0)
+#define SCALE_256 (255.0 / 256.0)
 
 in vec4 primary_color;
 in vec2 texcoord[3];
