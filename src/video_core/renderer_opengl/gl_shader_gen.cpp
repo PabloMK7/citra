@@ -293,7 +293,7 @@ static void AppendAlphaTestCondition(std::string& out, Regs::CompareFunc func) {
     case CompareFunc::GreaterThanOrEqual: {
         static const char* op[] = {"!=", "==", ">=", ">", "<=", "<"};
         unsigned index = (unsigned)func - (unsigned)CompareFunc::Equal;
-        out += "int(last_tex_env_out.a * 255.0f) " + std::string(op[index]) + " alphatest_ref";
+        out += "int(last_tex_env_out.a * 255.0) " + std::string(op[index]) + " alphatest_ref";
         break;
     }
 
@@ -422,7 +422,7 @@ static void WriteLighting(std::string& out, const PicaShaderConfig& config) {
         if (abs) {
             // LUT index is in the range of (0.0, 1.0)
             index = lighting.light[light_num].two_sided_diffuse ? "abs(" + index + ")"
-                                                                : "max(" + index + ", 0.f)";
+                                                                : "max(" + index + ", 0.0)";
         } else {
             // LUT index is in the range of (-1.0, 1.0)
             index = "((" + index + " < 0) ? " + index + " + 2.0 : " + index + ") / 2.0";
@@ -577,7 +577,6 @@ std::string GenerateFragmentShader(const PicaShaderConfig& config) {
 #version 330 core
 #define NUM_TEV_STAGES 6
 #define NUM_LIGHTS 8
-#define LIGHTING_LUT_SIZE 256
 
 // Texture coordinate offsets and scales
 #define OFFSET_256 (0.5 / 256.0)
