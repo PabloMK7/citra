@@ -50,9 +50,9 @@ public:
     template <typename T>
     void Push(T value);
 
-    template <>
-    void Push(u32);
-
+    void Push(u32 value) {
+        cmdbuf[index++] = value;
+    }
     template <typename First, class... Other>
     void Push(First first_value, const Other&... other_values) {
         Push(first_value);
@@ -86,7 +86,7 @@ public:
 
     void PushCurrentPIDHandle() {
         Push(CallingPidDesc());
-        Push<u32>(0);
+        Push(u32(0));
     }
 
     void PushStaticBuffer(VAddr buffer_vaddr, u32 size, u8 buffer_id) {
@@ -99,6 +99,24 @@ public:
         Push(buffer_vaddr);
     }
 };
+
+/// Push ///
+
+template <>
+inline void RequestBuilder::Push<u32>(u32 value) {
+    Push(value);
+}
+
+template <>
+inline void RequestBuilder::Push<u64>(u64 value) {
+    Push(static_cast<u32>(value));
+    Push(static_cast<u32>(value >> 32));
+}
+
+template <>
+inline void RequestBuilder::Push<ResultCode>(ResultCode value) {
+    Push(value.raw);
+}
 
 class RequestParser : public RequestHelperBase {
 public:
@@ -123,39 +141,16 @@ public:
     template <typename T>
     T Pop();
 
-    template <>
-    u32 Pop<u32>();
-
     template <typename T>
-    void Pop(T& value) {
-        value = Pop<T>();
-    }
+    void Pop(T& value);
 
     template <typename First, class... Other>
-    void Pop(First& first_value, Other&... other_values) {
-        first_value = Pop<First>();
-        Pop(other_values...);
-    }
+    void Pop(First& first_value, Other&... other_values);
 
-    Kernel::Handle PopHandle() {
-        const u32 handle_descriptor = Pop<u32>();
-        DEBUG_ASSERT_MSG(IsHandleDescriptor(handle_descriptor),
-                         "Tried to pop handle(s) but the descriptor is not a handle descriptor");
-        DEBUG_ASSERT_MSG(HandleNumberFromDesc(handle_descriptor) == 1,
-                         "Descriptor indicates that there isn't exactly one handle");
-        return Pop<Kernel::Handle>();
-    }
+    Kernel::Handle PopHandle();
 
     template <typename... H>
-    void PopHandles(H&... handles) {
-        const u32 handle_descriptor = Pop<u32>();
-        const int handles_number = sizeof...(H);
-        DEBUG_ASSERT_MSG(IsHandleDescriptor(handle_descriptor),
-                         "Tried to pop handle(s) but the descriptor is not a handle descriptor");
-        DEBUG_ASSERT_MSG(handles_number == HandleNumberFromDesc(handle_descriptor),
-                         "Number of handles doesn't match the descriptor");
-        Pop(static_cast<Kernel::Handle&>(handles)...);
-    }
+    void PopHandles(H&... handles);
 
     /**
      * @brief Pops the static buffer vaddr
@@ -171,22 +166,7 @@ public:
      * buffer information
      * Please note that the setup uses virtual addresses.
      */
-    VAddr PopStaticBuffer(size_t* data_size = nullptr, bool useStaticBuffersToGetVaddr = false) {
-        const u32 sbuffer_descriptor = Pop<u32>();
-        StaticBufferDescInfo bufferInfo{sbuffer_descriptor};
-        if (data_size != nullptr)
-            *data_size = bufferInfo.size;
-        if (!useStaticBuffersToGetVaddr)
-            return Pop<VAddr>();
-        else {
-            ASSERT_MSG(0, "remove the assert if multiprocess/IPC translation are implemented.");
-            // The buffer has already been copied to the static buffer by the kernel during
-            // translation
-            Pop<VAddr>(); // Pop the calling process buffer address
-                          // and get the vaddr from the static buffers
-            return cmdbuf[(0x100 >> 2) + bufferInfo.buffer_id * 2 + 1];
-        }
-    }
+    VAddr PopStaticBuffer(size_t* data_size = nullptr, bool useStaticBuffersToGetVaddr = false);
 
     /**
      * @brief Pops the mapped buffer vaddr
@@ -197,26 +177,14 @@ public:
      * buffer
      */
     VAddr PopMappedBuffer(size_t* data_size = nullptr,
-                          MappedBufferPermissions* buffer_perms = nullptr) {
-        const u32 sbuffer_descriptor = Pop<u32>();
-        MappedBufferDescInfo bufferInfo{sbuffer_descriptor};
-        if (data_size != nullptr)
-            *data_size = bufferInfo.size;
-        if (buffer_perms != nullptr)
-            *buffer_perms = bufferInfo.perms;
-        return Pop<VAddr>();
-    }
+                          MappedBufferPermissions* buffer_perms = nullptr);
 
     /**
      * @brief Reads the next normal parameters as a struct, by copying it
      * @note: The output class must be correctly packed/padded to fit hardware layout.
      */
     template <typename T>
-    void PopRaw(T& value) {
-        static_assert(std::is_trivially_copyable<T>(), "Raw types should be trivially copyable");
-        std::memcpy(&value, cmdbuf + index, sizeof(T));
-        index += (sizeof(T) + 3) / 4; // round up to word length
-    }
+    void PopRaw(T& value);
 };
 
 /// Pop ///
@@ -238,22 +206,70 @@ inline ResultCode RequestParser::Pop<ResultCode>() {
     return ResultCode{Pop<u32>()};
 }
 
-/// Push ///
-
-template <>
-inline void RequestBuilder::Push<u32>(u32 value) {
-    cmdbuf[index++] = value;
+template <typename T>
+void RequestParser::Pop(T& value) {
+    value = Pop<T>();
 }
 
-template <>
-inline void RequestBuilder::Push<u64>(u64 value) {
-    Push(static_cast<u32>(value));
-    Push(static_cast<u32>(value >> 32));
+template <typename First, class... Other>
+void RequestParser::Pop(First& first_value, Other&... other_values) {
+    first_value = Pop<First>();
+    Pop(other_values...);
 }
 
-template <>
-inline void RequestBuilder::Push<ResultCode>(ResultCode value) {
-    Push(value.raw);
+inline Kernel::Handle RequestParser::PopHandle() {
+    const u32 handle_descriptor = Pop<u32>();
+    DEBUG_ASSERT_MSG(IsHandleDescriptor(handle_descriptor),
+                     "Tried to pop handle(s) but the descriptor is not a handle descriptor");
+    DEBUG_ASSERT_MSG(HandleNumberFromDesc(handle_descriptor) == 1,
+                     "Descriptor indicates that there isn't exactly one handle");
+    return Pop<Kernel::Handle>();
+}
+
+template <typename... H>
+void RequestParser::PopHandles(H&... handles) {
+    const u32 handle_descriptor = Pop<u32>();
+    const int handles_number = sizeof...(H);
+    DEBUG_ASSERT_MSG(IsHandleDescriptor(handle_descriptor),
+                     "Tried to pop handle(s) but the descriptor is not a handle descriptor");
+    DEBUG_ASSERT_MSG(handles_number == HandleNumberFromDesc(handle_descriptor),
+                     "Number of handles doesn't match the descriptor");
+    Pop(static_cast<Kernel::Handle&>(handles)...);
+}
+
+inline VAddr RequestParser::PopStaticBuffer(size_t* data_size, bool useStaticBuffersToGetVaddr) {
+    const u32 sbuffer_descriptor = Pop<u32>();
+    StaticBufferDescInfo bufferInfo{sbuffer_descriptor};
+    if (data_size != nullptr)
+        *data_size = bufferInfo.size;
+    if (!useStaticBuffersToGetVaddr)
+        return Pop<VAddr>();
+    else {
+        ASSERT_MSG(0, "remove the assert if multiprocess/IPC translation are implemented.");
+        // The buffer has already been copied to the static buffer by the kernel during
+        // translation
+        Pop<VAddr>(); // Pop the calling process buffer address
+                      // and get the vaddr from the static buffers
+        return cmdbuf[(0x100 >> 2) + bufferInfo.buffer_id * 2 + 1];
+    }
+}
+
+inline VAddr RequestParser::PopMappedBuffer(size_t* data_size,
+                                            MappedBufferPermissions* buffer_perms) {
+    const u32 sbuffer_descriptor = Pop<u32>();
+    MappedBufferDescInfo bufferInfo{sbuffer_descriptor};
+    if (data_size != nullptr)
+        *data_size = bufferInfo.size;
+    if (buffer_perms != nullptr)
+        *buffer_perms = bufferInfo.perms;
+    return Pop<VAddr>();
+}
+
+template <typename T>
+void RequestParser::PopRaw(T& value) {
+    static_assert(std::is_trivially_copyable<T>(), "Raw types should be trivially copyable");
+    std::memcpy(&value, cmdbuf + index, sizeof(T));
+    index += (sizeof(T) + 3) / 4; // round up to word length
 }
 
 } // namespace IPC
