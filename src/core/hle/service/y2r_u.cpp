@@ -281,37 +281,39 @@ static void GetTransferEndEvent(Interface* self) {
 }
 
 static void SetSendingY(Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
+    // The helper should be passed by argument to the function
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x00100102);
+    conversion.src_Y.address = rp.Pop<u32>();
+    conversion.src_Y.image_size = rp.Pop<u32>();
+    conversion.src_Y.transfer_unit = rp.Pop<u32>();
+    conversion.src_Y.gap = rp.Pop<u32>();
+    Kernel::Handle src_process_handle = rp.PopHandle();
 
-    conversion.src_Y.address = cmd_buff[1];
-    conversion.src_Y.image_size = cmd_buff[2];
-    conversion.src_Y.transfer_unit = cmd_buff[3];
-    conversion.src_Y.gap = cmd_buff[4];
-
-    cmd_buff[0] = IPC::MakeHeader(0x10, 1, 0);
-    cmd_buff[1] = RESULT_SUCCESS.raw;
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RESULT_SUCCESS);
 
     LOG_DEBUG(Service_Y2R, "called image_size=0x%08X, transfer_unit=%hu, transfer_stride=%hu, "
                            "src_process_handle=0x%08X",
               conversion.src_Y.image_size, conversion.src_Y.transfer_unit, conversion.src_Y.gap,
-              cmd_buff[6]);
+              src_process_handle);
 }
 
 static void SetSendingU(Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
+    // The helper should be passed by argument to the function
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x00110102);
+    conversion.src_U.address = rp.Pop<u32>();
+    conversion.src_U.image_size = rp.Pop<u32>();
+    conversion.src_U.transfer_unit = rp.Pop<u32>();
+    conversion.src_U.gap = rp.Pop<u32>();
+    Kernel::Handle src_process_handle = rp.PopHandle();
 
-    conversion.src_U.address = cmd_buff[1];
-    conversion.src_U.image_size = cmd_buff[2];
-    conversion.src_U.transfer_unit = cmd_buff[3];
-    conversion.src_U.gap = cmd_buff[4];
-
-    cmd_buff[0] = IPC::MakeHeader(0x11, 1, 0);
-    cmd_buff[1] = RESULT_SUCCESS.raw;
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RESULT_SUCCESS);
 
     LOG_DEBUG(Service_Y2R, "called image_size=0x%08X, transfer_unit=%hu, transfer_stride=%hu, "
                            "src_process_handle=0x%08X",
               conversion.src_U.image_size, conversion.src_U.transfer_unit, conversion.src_U.gap,
-              cmd_buff[6]);
+              src_process_handle);
 }
 
 static void SetSendingV(Interface* self) {
@@ -559,11 +561,10 @@ static void GetAlpha(Interface* self) {
 }
 
 static void SetDitheringWeightParams(Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-    std::memcpy(&dithering_weight_params, &cmd_buff[1], sizeof(DitheringWeightParams));
-
-    cmd_buff[0] = IPC::MakeHeader(0x24, 1, 0);
-    cmd_buff[1] = RESULT_SUCCESS.raw;
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x24, 8, 0); // 0x240200
+    rp.PopRaw(dithering_weight_params);
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RESULT_SUCCESS);
 
     LOG_DEBUG(Service_Y2R, "called");
 }
