@@ -27,6 +27,18 @@ public:
         DEBUG_ASSERT_MSG(index == TotalSize(), "Operations do not match the header (cmd 0x%x)",
                          header.raw);
     }
+
+    /**
+     * @brief Retrieves the address of a static buffer, used when a buffer is needed for output
+     * @param buffer_id The index of the static buffer
+     * @param data_size If non-null, will store the size of the buffer
+     */
+    VAddr PeekStaticBuffer(u8 buffer_id, size_t* data_size = nullptr) const {
+        u32* static_buffer = cmdbuf + Kernel::kStaticBuffersOffset / 4 + buffer_id * 2;
+        if (data_size)
+            *data_size = StaticBufferDescInfo{static_buffer[0]}.size;
+        return static_buffer[1];
+    }
 };
 
 class RequestBuilder : public RequestHelperBase {
