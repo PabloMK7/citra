@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <mutex>
 #include <tuple>
 #include <utility>
 #include "common/common_types.h"
@@ -155,10 +156,10 @@ public:
      *   1 unit of return value = 1/512 g (measured by hw test),
      *   where g is the gravitational acceleration (9.8 m/sec2).
      * @note This should be called by the core emu thread to get a state set by the window thread.
-     * @todo Fix this function to be thread-safe.
      * @return std::tuple of (x, y, z)
      */
     std::tuple<s16, s16, s16> GetAccelerometerState() {
+        std::lock_guard<std::mutex> lock(accel_mutex);
         return std::make_tuple(accel_x, accel_y, accel_z);
     }
 
@@ -173,10 +174,10 @@ public:
      *   1 unit of return value = (1/coef) deg/sec,
      *   where coef is the return value of GetGyroscopeRawToDpsCoefficient().
      * @note This should be called by the core emu thread to get a state set by the window thread.
-     * @todo Fix this function to be thread-safe.
      * @return std::tuple of (x, y, z)
      */
     std::tuple<s16, s16, s16> GetGyroscopeState() {
+        std::lock_guard<std::mutex> lock(gyro_mutex);
         return std::make_tuple(gyro_x, gyro_y, gyro_z);
     }
 
@@ -306,10 +307,12 @@ private:
     s16 circle_pad_x; ///< Circle pad X-position in native 3DS pixel coordinates (-156 - 156)
     s16 circle_pad_y; ///< Circle pad Y-position in native 3DS pixel coordinates (-156 - 156)
 
+    std::mutex accel_mutex;
     s16 accel_x; ///< Accelerometer X-axis value in native 3DS units
     s16 accel_y; ///< Accelerometer Y-axis value in native 3DS units
     s16 accel_z; ///< Accelerometer Z-axis value in native 3DS units
 
+    std::mutex gyro_mutex;
     s16 gyro_x; ///< Gyroscope X-axis value in native 3DS units
     s16 gyro_y; ///< Gyroscope Y-axis value in native 3DS units
     s16 gyro_z; ///< Gyroscope Z-axis value in native 3DS units
