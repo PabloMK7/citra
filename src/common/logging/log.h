@@ -62,6 +62,7 @@ enum class Class : ClassType {
     Service_LDR,       ///< The LDR (3ds dll loader) service
     Service_MIC,       ///< The MIC (Microphone) service
     Service_NDM,       ///< The NDM (Network daemon manager) service
+    Service_NFC,       ///< The NFC service
     Service_NIM,       ///< The NIM (Network interface manager) service
     Service_NWM,       ///< The NWM (Network wlan manager) service
     Service_CAM,       ///< The CAM (Camera) service

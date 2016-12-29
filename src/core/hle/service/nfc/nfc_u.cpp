@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "core/hle/service/nfc/nfc.h"
 #include "core/hle/service/nfc/nfc_u.h"
 
 namespace Service {
@@ -18,6 +19,7 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x00070000, nullptr, "LoadAmiiboData"},
     {0x00080000, nullptr, "ResetTagScanState"},
     {0x00090002, nullptr, "UpdateStoredAmiiboData"},
+    {0x000B0000, GetTagInRangeEvent, "GetTagInRangeEvent"},
     {0x000D0000, nullptr, "GetTagState"},
     {0x000F0000, nullptr, "CommunicationGetStatus"},
     {0x00100000, nullptr, "GetTagInfo2"},
