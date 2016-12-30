@@ -62,19 +62,19 @@ union Header {
 };
 
 /**
-* @brief Creates a command header to be used for IPC
-* @param command_id            ID of the command to create a header for.
-* @param normal_params_size         Size of the normal parameters in words. Up to 63.
-* @param translate_params_size Size of the translate parameters in words. Up to 63.
-* @return The created IPC header.
-*
-* Normal parameters are sent directly to the process while the translate parameters might go
-* through modifications and checks by the kernel.
-* The translate parameters are described by headers generated with the IPC::*Desc functions.
-*
-* @note While #normal_params_size is equivalent to the number of normal parameters,
-* #translate_params_size includes the size occupied by the translate parameters headers.
-*/
+ * @brief Creates a command header to be used for IPC
+ * @param command_id            ID of the command to create a header for.
+ * @param normal_params_size         Size of the normal parameters in words. Up to 63.
+ * @param translate_params_size Size of the translate parameters in words. Up to 63.
+ * @return The created IPC header.
+ *
+ * Normal parameters are sent directly to the process while the translate parameters might go
+ * through modifications and checks by the kernel.
+ * The translate parameters are described by headers generated with the IPC::*Desc functions.
+ *
+ * @note While #normal_params_size is equivalent to the number of normal parameters,
+ * #translate_params_size includes the size occupied by the translate parameters headers.
+ */
 inline u32 MakeHeader(u16 command_id, unsigned int normal_params_size,
                       unsigned int translate_params_size) {
     Header header;
@@ -120,15 +120,15 @@ inline u32 StaticBufferDesc(u32 size, u8 buffer_id) {
 }
 
 /**
-* @brief Creates a header describing a buffer to be sent over PXI.
-* @param size         Size of the buffer. Max 0x00FFFFFF.
-* @param buffer_id    The Id of the buffer. Max 0xF.
-* @param is_read_only true if the buffer is read-only. If false, the buffer is considered to have
-* read-write access.
-* @return The created PXI buffer header.
-*
-* The next value is a phys-address of a table located in the BASE memregion.
-*/
+ * @brief Creates a header describing a buffer to be sent over PXI.
+ * @param size         Size of the buffer. Max 0x00FFFFFF.
+ * @param buffer_id    The Id of the buffer. Max 0xF.
+ * @param is_read_only true if the buffer is read-only. If false, the buffer is considered to have
+ * read-write access.
+ * @return The created PXI buffer header.
+ *
+ * The next value is a phys-address of a table located in the BASE memregion.
+ */
 inline u32 PXIBufferDesc(u32 size, unsigned buffer_id, bool is_read_only) {
     u32 type = PXIBuffer;
     if (is_read_only)
