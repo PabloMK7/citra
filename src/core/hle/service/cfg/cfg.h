@@ -282,6 +282,13 @@ void Init();
 /// Shutdown the config service
 void Shutdown();
 
+/**
+ * Set the region code preferred by the game so that CFG will adjust to it when the region setting
+ * is auto.
+ * @param region_code the preferred region code to set
+ */
+void SetPreferredRegionCode(u32 region_code);
+
 // Utilities for frontend to set config data.
 // Note: before calling these functions, LoadConfigNANDSaveFile should be called,
 // and UpdateConfigNANDSavegame should be called after making changes to config data.
