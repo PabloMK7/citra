@@ -101,7 +101,7 @@ void CheckNew3DS(IPC::RequestBuilder& rb) {
     }
 
     rb.Push(RESULT_SUCCESS);
-    rb.Push(u32(is_new_3ds ? 1 : 0));
+    rb.Push(is_new_3ds);
 
     LOG_WARNING(Service_PTM, "(STUBBED) called isNew3DS = 0x%08x", static_cast<u32>(is_new_3ds));
 }

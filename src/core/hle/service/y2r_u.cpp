@@ -189,11 +189,9 @@ static void SetSpacialDithering(Interface* self) {
  *      2 : u8, 0 = Disabled, 1 = Enabled
  */
 static void GetSpacialDithering(Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-
-    cmd_buff[0] = IPC::MakeHeader(0xA, 2, 0);
-    cmd_buff[1] = RESULT_SUCCESS.raw;
-    cmd_buff[2] = spacial_dithering_enabled;
+    IPC::RequestBuilder rb(Kernel::GetCommandBuffer(), 0xA, 2, 0);
+    rb.Push(RESULT_SUCCESS);
+    rb.Push(bool(spacial_dithering_enabled));
 
     LOG_WARNING(Service_Y2R, "(STUBBED) called");
 }
