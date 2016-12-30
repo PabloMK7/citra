@@ -556,14 +556,21 @@ RasterizerCacheOpenGL::GetFramebufferSurfaces(const Pica::Regs::FramebufferConfi
     color_params.width = depth_params.width = config.GetWidth();
     color_params.height = depth_params.height = config.GetHeight();
     color_params.is_tiled = depth_params.is_tiled = true;
-    if (VideoCore::g_scaled_resolution_enabled) {
-        auto layout = VideoCore::g_emu_window->GetFramebufferLayout();
 
-        // Assume same scaling factor for top and bottom screens
+    // Set the internal resolution, assume the same scaling factor for top and bottom screens
+    const Layout::FramebufferLayout& layout = VideoCore::g_emu_window->GetFramebufferLayout();
+    if (Settings::values.resolution_factor == 0.0f) {
+        // Auto - scale resolution to the window size
         color_params.res_scale_width = depth_params.res_scale_width =
             (float)layout.top_screen.GetWidth() / VideoCore::kScreenTopWidth;
         color_params.res_scale_height = depth_params.res_scale_height =
             (float)layout.top_screen.GetHeight() / VideoCore::kScreenTopHeight;
+    } else {
+        // Otherwise, scale the resolution by the specified factor
+        color_params.res_scale_width = Settings::values.resolution_factor;
+        depth_params.res_scale_width = Settings::values.resolution_factor;
+        color_params.res_scale_height = Settings::values.resolution_factor;
+        depth_params.res_scale_height = Settings::values.resolution_factor;
     }
 
     color_params.addr = config.GetColorBufferPhysicalAddress();
