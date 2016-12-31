@@ -39,5 +39,5 @@ public:
 
 private:
     std::unique_ptr<Dynarmic::Jit> jit;
-    std::unique_ptr<ARMul_State> interpreter_state;
+    std::shared_ptr<ARMul_State> interpreter_state;
 };

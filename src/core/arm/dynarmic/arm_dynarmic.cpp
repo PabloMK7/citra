@@ -7,6 +7,7 @@
 #include "common/assert.h"
 #include "common/microprofile.h"
 #include "core/arm/dynarmic/arm_dynarmic.h"
+#include "core/arm/dynarmic/arm_dynarmic_cp15.h"
 #include "core/arm/dyncom/arm_dyncom_interpreter.h"
 #include "core/core.h"
 #include "core/core_timing.h"
@@ -39,10 +40,11 @@ static bool IsReadOnlyMemory(u32 vaddr) {
     return false;
 }
 
-static Dynarmic::UserCallbacks GetUserCallbacks(ARMul_State* interpeter_state) {
+static Dynarmic::UserCallbacks GetUserCallbacks(
+    const std::shared_ptr<ARMul_State>& interpeter_state) {
     Dynarmic::UserCallbacks user_callbacks{};
     user_callbacks.InterpreterFallback = &InterpreterFallback;
-    user_callbacks.user_arg = static_cast<void*>(interpeter_state);
+    user_callbacks.user_arg = static_cast<void*>(interpeter_state.get());
     user_callbacks.CallSVC = &SVC::CallSVC;
     user_callbacks.IsReadOnlyMemory = &IsReadOnlyMemory;
     user_callbacks.MemoryReadCode = &Memory::Read32;
@@ -55,12 +57,13 @@ static Dynarmic::UserCallbacks GetUserCallbacks(ARMul_State* interpeter_state) {
     user_callbacks.MemoryWrite32 = &Memory::Write32;
     user_callbacks.MemoryWrite64 = &Memory::Write64;
     user_callbacks.page_table = Memory::GetCurrentPageTablePointers();
+    user_callbacks.coprocessors[15] = std::make_shared<DynarmicCP15>(interpeter_state);
     return user_callbacks;
 }
 
 ARM_Dynarmic::ARM_Dynarmic(PrivilegeMode initial_mode) {
-    interpreter_state = std::make_unique<ARMul_State>(initial_mode);
-    jit = std::make_unique<Dynarmic::Jit>(GetUserCallbacks(interpreter_state.get()));
+    interpreter_state = std::make_shared<ARMul_State>(initial_mode);
+    jit = std::make_unique<Dynarmic::Jit>(GetUserCallbacks(interpreter_state));
 }
 
 void ARM_Dynarmic::SetPC(u32 pc) {
