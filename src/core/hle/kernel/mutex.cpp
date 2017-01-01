@@ -84,6 +84,7 @@ void Mutex::Release() {
         if (lock_count == 0) {
             holding_thread->held_mutexes.erase(this);
             ResumeWaitingThread(this);
+            Core::System::GetInstance().PrepareReschedule();
         }
     }
 }

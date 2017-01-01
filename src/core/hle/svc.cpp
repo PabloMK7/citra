@@ -248,6 +248,8 @@ static ResultCode SendSyncRequest(Kernel::Handle handle) {
 
     LOG_TRACE(Kernel_SVC, "called handle=0x%08X(%s)", handle, session->GetName().c_str());
 
+    Core::System::GetInstance().PrepareReschedule();
+
     // TODO(Subv): svcSendSyncRequest should put the caller thread to sleep while the server
     // responds and cause a reschedule.
     return session->SendSyncRequest();
@@ -283,6 +285,8 @@ static ResultCode WaitSynchronization1(Kernel::Handle handle, s64 nano_seconds) 
 
         // Create an event to wake the thread up after the specified nanosecond delay has passed
         thread->WakeAfterDelay(nano_seconds);
+
+        Core::System::GetInstance().PrepareReschedule();
 
         // Note: The output of this SVC will be set to RESULT_SUCCESS if the thread
         // resumes due to a signal in its wait objects.
@@ -366,6 +370,8 @@ static ResultCode WaitSynchronizationN(s32* out, Kernel::Handle* handles, s32 ha
         // Create an event to wake the thread up after the specified nanosecond delay has passed
         thread->WakeAfterDelay(nano_seconds);
 
+        Core::System::GetInstance().PrepareReschedule();
+
         // This value gets set to -1 by default in this case, it is not modified after this.
         *out = -1;
         // Note: The output of this SVC will be set to RESULT_SUCCESS if the thread resumes due to
@@ -414,6 +420,8 @@ static ResultCode WaitSynchronizationN(s32* out, Kernel::Handle* handles, s32 ha
         // Create an event to wake the thread up after the specified nanosecond delay has passed
         thread->WakeAfterDelay(nano_seconds);
 
+        Core::System::GetInstance().PrepareReschedule();
+
         // Note: The output of this SVC will be set to RESULT_SUCCESS if the thread resumes due to a
         // signal in one of its wait objects.
         // Otherwise we retain the default value of timeout, and -1 in the out parameter
@@ -447,6 +455,9 @@ static ResultCode ArbitrateAddress(Kernel::Handle handle, u32 address, u32 type,
 
     auto res = arbiter->ArbitrateAddress(static_cast<Kernel::ArbitrationType>(type), address, value,
                                          nanoseconds);
+
+    // TODO(Subv): Identify in which specific cases this call should cause a reschedule.
+    Core::System::GetInstance().PrepareReschedule();
 
     return res;
 }
@@ -574,6 +585,8 @@ static ResultCode CreateThread(Kernel::Handle* out_handle, s32 priority, u32 ent
 
     CASCADE_RESULT(*out_handle, Kernel::g_handle_table.Create(std::move(thread)));
 
+    Core::System::GetInstance().PrepareReschedule();
+
     LOG_TRACE(Kernel_SVC, "called entrypoint=0x%08X (%s), arg=0x%08X, stacktop=0x%08X, "
                           "threadpriority=0x%08X, processorid=0x%08X : created handle=0x%08X",
               entry_point, name.c_str(), arg, stack_top, priority, processor_id, *out_handle);
@@ -586,6 +599,7 @@ static void ExitThread() {
     LOG_TRACE(Kernel_SVC, "called, pc=0x%08X", Core::CPU().GetPC());
 
     Kernel::ExitCurrentThread();
+    Core::System::GetInstance().PrepareReschedule();
 }
 
 /// Gets the priority for the specified thread
@@ -605,6 +619,7 @@ static ResultCode SetThreadPriority(Kernel::Handle handle, s32 priority) {
         return ERR_INVALID_HANDLE;
 
     thread->SetPriority(priority);
+    Core::System::GetInstance().PrepareReschedule();
     return RESULT_SUCCESS;
 }
 
@@ -849,6 +864,8 @@ static void SleepThread(s64 nanoseconds) {
 
     // Create an event to wake the thread up after the specified nanosecond delay has passed
     Kernel::GetCurrentThread()->WakeAfterDelay(nanoseconds);
+
+    Core::System::GetInstance().PrepareReschedule();
 }
 
 /// This returns the total CPU ticks elapsed since the CPU was powered-on
@@ -1184,8 +1201,6 @@ void CallSVC(u32 immediate) {
     if (info) {
         if (info->func) {
             info->func();
-            //  TODO(Subv): Not all service functions should cause a reschedule in all cases.
-            Core::System::GetInstance().PrepareReschedule();
         } else {
             LOG_ERROR(Kernel_SVC, "unimplemented SVC function %s(..)", info->name);
         }
