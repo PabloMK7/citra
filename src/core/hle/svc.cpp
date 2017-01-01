@@ -278,9 +278,6 @@ static ResultCode WaitSynchronization1(Kernel::Handle handle, s64 nano_seconds) 
             return ERR_SYNC_TIMEOUT;
 
         object->AddWaitingThread(thread);
-        // TODO(Subv): Perform things like update the mutex lock owner's priority to
-        // prevent priority inversion. Currently this is done in Mutex::ShouldWait,
-        // but it should be moved to a function that is called from here.
         thread->status = THREADSTATUS_WAIT_SYNCH;
 
         // Create an event to wake the thread up after the specified nanosecond delay has passed
@@ -359,9 +356,6 @@ static ResultCode WaitSynchronizationN(s32* out, Kernel::Handle* handles, s32 ha
         // Add the thread to each of the objects' waiting threads.
         for (auto& object : objects) {
             object->AddWaitingThread(thread);
-            // TODO(Subv): Perform things like update the mutex lock owner's priority to
-            // prevent priority inversion. Currently this is done in Mutex::ShouldWait,
-            // but it should be moved to a function that is called from here.
         }
 
         // Set the thread's waitlist to the list of objects passed to WaitSynchronizationN
@@ -409,9 +403,6 @@ static ResultCode WaitSynchronizationN(s32* out, Kernel::Handle* handles, s32 ha
             // Set the index of this object in the mapping of Objects -> index for this thread.
             thread->wait_objects_index[object->GetObjectId()] = static_cast<int>(i);
             object->AddWaitingThread(thread);
-            // TODO(Subv): Perform things like update the mutex lock owner's priority to
-            // prevent priority inversion. Currently this is done in Mutex::ShouldWait,
-            // but it should be moved to a function that is called from here.
         }
 
         // Note: If no handles and no timeout were given, then the thread will deadlock, this is

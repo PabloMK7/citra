@@ -6,6 +6,7 @@
 #include <vector>
 #include <boost/range/algorithm_ext/erase.hpp>
 #include "common/assert.h"
+#include "core/core.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/mutex.h"
 #include "core/hle/kernel/thread.h"
@@ -13,19 +14,25 @@
 namespace Kernel {
 
 /**
- * Resumes a thread waiting for the specified mutex
- * @param mutex The mutex that some thread is waiting on
+ * Boost's a thread's priority to the best priority among the thread's held mutexes.
+ * This prevents priority inversion via priority inheritance.
  */
-static void ResumeWaitingThread(Mutex* mutex) {
-    // Reset mutex lock thread handle, nothing is waiting
-    mutex->lock_count = 0;
-    mutex->holding_thread = nullptr;
-    mutex->WakeupAllWaitingThreads();
+static void UpdateThreadPriority(Thread* thread) {
+    s32 best_priority = THREADPRIO_LOWEST;
+    for (auto& mutex : thread->held_mutexes) {
+        if (mutex->priority < best_priority)
+            best_priority = mutex->priority;
+    }
+
+    best_priority = std::min(best_priority, thread->nominal_priority);
+    thread->SetPriority(best_priority);
 }
 
 void ReleaseThreadMutexes(Thread* thread) {
     for (auto& mtx : thread->held_mutexes) {
-        ResumeWaitingThread(mtx.get());
+        mtx->lock_count = 0;
+        mtx->holding_thread = nullptr;
+        mtx->WakeupAllWaitingThreads();
     }
     thread->held_mutexes.clear();
 }
@@ -54,26 +61,51 @@ bool Mutex::ShouldWait(Thread* thread) const {
 void Mutex::Acquire(Thread* thread) {
     ASSERT_MSG(!ShouldWait(thread), "object unavailable!");
 
-    // Actually "acquire" the mutex only if we don't already have it...
+    // Actually "acquire" the mutex only if we don't already have it
     if (lock_count == 0) {
+        priority = thread->current_priority;
         thread->held_mutexes.insert(this);
-        holding_thread = std::move(thread);
+        holding_thread = thread;
+
+        UpdateThreadPriority(thread);
+
+        Core::System::GetInstance().PrepareReschedule();
     }
 
     lock_count++;
 }
 
 void Mutex::Release() {
-    // Only release if the mutex is held...
+    // Only release if the mutex is held
     if (lock_count > 0) {
         lock_count--;
 
-        // Yield to the next thread only if we've fully released the mutex...
+        // Yield to the next thread only if we've fully released the mutex
         if (lock_count == 0) {
             holding_thread->held_mutexes.erase(this);
-            ResumeWaitingThread(this);
+            UpdateThreadPriority(holding_thread.get());
+            holding_thread = nullptr;
+            WakeupAllWaitingThreads();
             Core::System::GetInstance().PrepareReschedule();
         }
+    }
+}
+
+void Mutex::AddWaitingThread(SharedPtr<Thread> thread) {
+    WaitObject::AddWaitingThread(thread);
+
+    // Elevate the mutex priority to the best priority
+    // among the priorities of all its waiting threads.
+
+    s32 best_priority = THREADPRIO_LOWEST;
+    for (auto& waiter : GetWaitingThreads()) {
+        if (waiter->current_priority < best_priority)
+            best_priority = waiter->current_priority;
+    }
+
+    if (best_priority != priority) {
+        priority = best_priority;
+        UpdateThreadPriority(holding_thread.get());
     }
 }
 

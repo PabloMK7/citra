@@ -145,7 +145,7 @@ public:
      * Add a thread to wait on this object
      * @param thread Pointer to thread to add
      */
-    void AddWaitingThread(SharedPtr<Thread> thread);
+    virtual void AddWaitingThread(SharedPtr<Thread> thread);
 
     /**
      * Removes a thread from waiting on this object (e.g. if it was resumed already)

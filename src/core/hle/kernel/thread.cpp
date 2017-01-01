@@ -90,9 +90,6 @@ static bool CheckWait_AddressArbiter(const Thread* thread, VAddr wait_address) {
 }
 
 void Thread::Stop() {
-    // Release all the mutexes that this thread holds
-    ReleaseThreadMutexes(this);
-
     // Cancel any outstanding wakeup events for this thread
     CoreTiming::UnscheduleEvent(ThreadWakeupEventType, callback_handle);
     wakeup_callback_handle_table.Close(callback_handle);
@@ -107,6 +104,9 @@ void Thread::Stop() {
     status = THREADSTATUS_DEAD;
 
     WakeupAllWaitingThreads();
+
+    // Release all the mutexes that this thread holds
+    ReleaseThreadMutexes(this);
 
     // Clean up any dangling references in objects that this thread was waiting for
     for (auto& wait_object : wait_objects) {
