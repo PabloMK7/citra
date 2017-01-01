@@ -36,10 +36,12 @@ after_build:
         # Where are these spaces coming from? Regardless, let's remove them
         $MSVC_BUILD_NAME = "citra-windows-msvc-$GITDATE-$GITREV.zip" -replace " ", ""
         $MSVC_BUILD_PDB = "citra-windows-msvc-$GITDATE-$GITREV-debugsymbols.zip" -replace " ", ""
+        $BINTRAY_VERSION = "nightly-$GITREV" -replace " ", ""
 
         # set the build names as env vars so the artifacts can upload them
         $env:MSVC_BUILD_NAME = $MSVC_BUILD_NAME
         $env:MSVC_BUILD_PDB = $MSVC_BUILD_PDB
+        $env:BINTRAY_VERSION = $BINTRAY_VERSION
 
         7z a -tzip $MSVC_BUILD_PDB .\build\bin\release\*.pdb
         rm .\build\bin\release\*.pdb
@@ -64,7 +66,7 @@ deploy:
   subject: citra-emu
   repo: citra
   package: nightly
-  version: nightly
+  version: $(BINTRAY_VERSION)
   publish: true
   on:
     branch: master

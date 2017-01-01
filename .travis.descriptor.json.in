@@ -9,7 +9,7 @@
         "public_stats": false
     },
     "version": {
-        "name": "nightly",
+        "name": "nightly-@GIT_REV@",
         "released": "@BUILD_DATE@",
         "gpgSign": false
     },
