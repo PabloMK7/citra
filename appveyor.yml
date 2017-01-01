@@ -33,10 +33,11 @@ after_build:
   - ps: |
         $GITDATE = $(git show -s --date=short --format='%ad') -replace "-",""
         $GITREV = $(git show -s --format='%h')
+        $GIT_LONG_HASH = $(git rev-parse HEAD)
         # Where are these spaces coming from? Regardless, let's remove them
         $MSVC_BUILD_NAME = "citra-windows-msvc-$GITDATE-$GITREV.zip" -replace " ", ""
         $MSVC_BUILD_PDB = "citra-windows-msvc-$GITDATE-$GITREV-debugsymbols.zip" -replace " ", ""
-        $BINTRAY_VERSION = "nightly-$GITREV" -replace " ", ""
+        $BINTRAY_VERSION = "nightly-$GIT_LONG_HASH" -replace " ", ""
 
         # set the build names as env vars so the artifacts can upload them
         $env:MSVC_BUILD_NAME = $MSVC_BUILD_NAME
