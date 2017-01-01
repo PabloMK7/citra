@@ -79,6 +79,7 @@ enum class Class : ClassType {
     HW_Memory,         ///< Memory-map and address translation
     HW_LCD,            ///< LCD register emulation
     HW_GPU,            ///< GPU control emulation
+    HW_AES,            ///< AES engine emulation
     Frontend,          ///< Emulator UI
     Render,            ///< Emulator video output and hardware acceleration
     Render_Software,   ///< Software renderer backend

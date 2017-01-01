@@ -62,6 +62,7 @@ namespace Log {
     SUB(HW, Memory)                                                                                \
     SUB(HW, LCD)                                                                                   \
     SUB(HW, GPU)                                                                                   \
+    SUB(HW, AES)                                                                                   \
     CLS(Frontend)                                                                                  \
     CLS(Render)                                                                                    \
     SUB(Render, Software)                                                                          \
