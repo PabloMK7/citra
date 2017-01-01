@@ -72,8 +72,8 @@ public:
         return HANDLE_TYPE;
     }
 
-    bool ShouldWait() override;
-    void Acquire() override;
+    bool ShouldWait(Thread* thread) const override;
+    void Acquire(Thread* thread) override;
 
     /**
      * Gets the thread's current priority

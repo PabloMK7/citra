@@ -39,8 +39,8 @@ public:
     u64 initial_delay;  ///< The delay until the timer fires for the first time
     u64 interval_delay; ///< The delay until the timer fires after the first time
 
-    bool ShouldWait() override;
-    void Acquire() override;
+    bool ShouldWait(Thread* thread) const override;
+    void Acquire(Thread* thread) override;
 
     /**
      * Starts the timer, with the specified initial delay and interval.

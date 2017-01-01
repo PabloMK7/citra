@@ -39,11 +39,6 @@ SharedPtr<Thread> WaitObject::GetHighestPriorityReadyThread() {
                thread->status == THREADSTATUS_DEAD;
     });
 
-    // TODO(Subv): This call should be performed inside the loop below to check if an object can be
-    // acquired by a particular thread. This is useful for things like recursive locking of Mutexes.
-    if (ShouldWait())
-        return nullptr;
-
     Thread* candidate = nullptr;
     s32 candidate_priority = THREADPRIO_LOWEST + 1;
 
@@ -51,9 +46,12 @@ SharedPtr<Thread> WaitObject::GetHighestPriorityReadyThread() {
         if (thread->current_priority >= candidate_priority)
             continue;
 
+        if (ShouldWait(thread.get()))
+            continue;
+
         bool ready_to_run =
             std::none_of(thread->wait_objects.begin(), thread->wait_objects.end(),
-                         [](const SharedPtr<WaitObject>& object) { return object->ShouldWait(); });
+                         [&thread](const SharedPtr<WaitObject>& object) { return object->ShouldWait(thread.get()); });
         if (ready_to_run) {
             candidate = thread.get();
             candidate_priority = thread->current_priority;
@@ -66,7 +64,7 @@ SharedPtr<Thread> WaitObject::GetHighestPriorityReadyThread() {
 void WaitObject::WakeupAllWaitingThreads() {
     while (auto thread = GetHighestPriorityReadyThread()) {
         if (!thread->IsSleepingOnWaitAll()) {
-            Acquire();
+            Acquire(thread.get());
             // Set the output index of the WaitSynchronizationN call to the index of this object.
             if (thread->wait_set_output) {
                 thread->SetWaitSynchronizationOutput(thread->GetWaitObjectIndex(this));
@@ -74,7 +72,7 @@ void WaitObject::WakeupAllWaitingThreads() {
             }
         } else {
             for (auto& object : thread->wait_objects) {
-                object->Acquire();
+                object->Acquire(thread.get());
                 object->RemoveWaitingThread(thread.get());
             }
             // Note: This case doesn't update the output index of WaitSynchronizationN.

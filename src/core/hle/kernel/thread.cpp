@@ -27,12 +27,12 @@ namespace Kernel {
 /// Event type for the thread wake up event
 static int ThreadWakeupEventType;
 
-bool Thread::ShouldWait() {
+bool Thread::ShouldWait(Thread* thread) const {
     return status != THREADSTATUS_DEAD;
 }
 
-void Thread::Acquire() {
-    ASSERT_MSG(!ShouldWait(), "object unavailable!");
+void Thread::Acquire(Thread* thread) {
+    ASSERT_MSG(!ShouldWait(thread), "object unavailable!");
 }
 
 // TODO(yuriks): This can be removed if Thread objects are explicitly pooled in the future, allowing

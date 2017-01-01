@@ -30,12 +30,12 @@ ResultVal<SharedPtr<Semaphore>> Semaphore::Create(s32 initial_count, s32 max_cou
     return MakeResult<SharedPtr<Semaphore>>(std::move(semaphore));
 }
 
-bool Semaphore::ShouldWait() {
+bool Semaphore::ShouldWait(Thread* thread) const {
     return available_count <= 0;
 }
 
-void Semaphore::Acquire() {
-    ASSERT_MSG(!ShouldWait(), "object unavailable!");
+void Semaphore::Acquire(Thread* thread) {
+    ASSERT_MSG(!ShouldWait(thread), "object unavailable!");
     --available_count;
 }
 

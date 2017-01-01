@@ -39,12 +39,12 @@ SharedPtr<Timer> Timer::Create(ResetType reset_type, std::string name) {
     return timer;
 }
 
-bool Timer::ShouldWait() {
+bool Timer::ShouldWait(Thread* thread) const {
     return !signaled;
 }
 
-void Timer::Acquire() {
-    ASSERT_MSG(!ShouldWait(), "object unavailable!");
+void Timer::Acquire(Thread* thread) {
+    ASSERT_MSG(!ShouldWait(thread), "object unavailable!");
 
     if (reset_type == ResetType::OneShot)
         signaled = false;

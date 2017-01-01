@@ -272,7 +272,7 @@ static ResultCode WaitSynchronization1(Kernel::Handle handle, s64 nano_seconds) 
     LOG_TRACE(Kernel_SVC, "called handle=0x%08X(%s:%s), nanoseconds=%lld", handle,
               object->GetTypeName().c_str(), object->GetName().c_str(), nano_seconds);
 
-    if (object->ShouldWait()) {
+    if (object->ShouldWait(thread)) {
 
         if (nano_seconds == 0)
             return ERR_SYNC_TIMEOUT;
@@ -294,7 +294,7 @@ static ResultCode WaitSynchronization1(Kernel::Handle handle, s64 nano_seconds) 
         return ERR_SYNC_TIMEOUT;
     }
 
-    object->Acquire();
+    object->Acquire(thread);
 
     return RESULT_SUCCESS;
 }
@@ -336,11 +336,11 @@ static ResultCode WaitSynchronizationN(s32* out, Kernel::Handle* handles, s32 ha
     if (wait_all) {
         bool all_available =
             std::all_of(objects.begin(), objects.end(),
-                        [](const ObjectPtr& object) { return !object->ShouldWait(); });
+                        [thread](const ObjectPtr& object) { return !object->ShouldWait(thread); });
         if (all_available) {
             // We can acquire all objects right now, do so.
             for (auto& object : objects)
-                object->Acquire();
+                object->Acquire(thread);
             // Note: In this case, the `out` parameter is not set,
             // and retains whatever value it had before.
             return RESULT_SUCCESS;
@@ -380,12 +380,12 @@ static ResultCode WaitSynchronizationN(s32* out, Kernel::Handle* handles, s32 ha
     } else {
         // Find the first object that is acquirable in the provided list of objects
         auto itr = std::find_if(objects.begin(), objects.end(),
-                                [](const ObjectPtr& object) { return !object->ShouldWait(); });
+                                [thread](const ObjectPtr& object) { return !object->ShouldWait(thread); });
 
         if (itr != objects.end()) {
             // We found a ready object, acquire it and set the result value
             Kernel::WaitObject* object = itr->get();
-            object->Acquire();
+            object->Acquire(thread);
             *out = std::distance(objects.begin(), itr);
             return RESULT_SUCCESS;
         }

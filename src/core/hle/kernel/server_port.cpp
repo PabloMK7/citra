@@ -14,13 +14,13 @@ namespace Kernel {
 ServerPort::ServerPort() {}
 ServerPort::~ServerPort() {}
 
-bool ServerPort::ShouldWait() {
+bool ServerPort::ShouldWait(Thread* thread) const {
     // If there are no pending sessions, we wait until a new one is added.
     return pending_sessions.size() == 0;
 }
 
-void ServerPort::Acquire() {
-    ASSERT_MSG(!ShouldWait(), "object unavailable!");
+void ServerPort::Acquire(Thread* thread) {
+    ASSERT_MSG(!ShouldWait(thread), "object unavailable!");
 }
 
 std::tuple<SharedPtr<ServerPort>, SharedPtr<ClientPort>> ServerPort::CreatePortPair(

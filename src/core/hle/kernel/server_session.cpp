@@ -29,12 +29,12 @@ ResultVal<SharedPtr<ServerSession>> ServerSession::Create(
     return MakeResult<SharedPtr<ServerSession>>(std::move(server_session));
 }
 
-bool ServerSession::ShouldWait() {
+bool ServerSession::ShouldWait(Thread* thread) const {
     return !signaled;
 }
 
-void ServerSession::Acquire() {
-    ASSERT_MSG(!ShouldWait(), "object unavailable!");
+void ServerSession::Acquire(Thread* thread) {
+    ASSERT_MSG(!ShouldWait(thread), "object unavailable!");
     signaled = false;
 }
 

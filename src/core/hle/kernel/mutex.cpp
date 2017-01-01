@@ -40,31 +40,19 @@ SharedPtr<Mutex> Mutex::Create(bool initial_locked, std::string name) {
     mutex->name = std::move(name);
     mutex->holding_thread = nullptr;
 
-    // Acquire mutex with current thread if initialized as locked...
+    // Acquire mutex with current thread if initialized as locked
     if (initial_locked)
-        mutex->Acquire();
+        mutex->Acquire(GetCurrentThread());
 
     return mutex;
 }
 
-bool Mutex::ShouldWait() {
-    auto thread = GetCurrentThread();
-    bool wait = lock_count > 0 && holding_thread != thread;
-
-    // If the holding thread of the mutex is lower priority than this thread, that thread should
-    // temporarily inherit this thread's priority
-    if (wait && thread->current_priority < holding_thread->current_priority)
-        holding_thread->BoostPriority(thread->current_priority);
-
-    return wait;
+bool Mutex::ShouldWait(Thread* thread) const {
+    return lock_count > 0 && thread != holding_thread;
 }
 
-void Mutex::Acquire() {
-    Acquire(GetCurrentThread());
-}
-
-void Mutex::Acquire(SharedPtr<Thread> thread) {
-    ASSERT_MSG(!ShouldWait(), "object unavailable!");
+void Mutex::Acquire(Thread* thread) {
+    ASSERT_MSG(!ShouldWait(thread), "object unavailable!");
 
     // Actually "acquire" the mutex only if we don't already have it...
     if (lock_count == 0) {

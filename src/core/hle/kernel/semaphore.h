@@ -39,8 +39,8 @@ public:
     s32 available_count; ///< Number of free slots left in the semaphore
     std::string name;    ///< Name of semaphore (optional)
 
-    bool ShouldWait() override;
-    void Acquire() override;
+    bool ShouldWait(Thread* thread) const override;
+    void Acquire(Thread* thread) override;
 
     /**
      * Releases a certain number of slots from a semaphore.

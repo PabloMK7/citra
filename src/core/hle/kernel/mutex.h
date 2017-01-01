@@ -38,8 +38,9 @@ public:
     std::string name;                 ///< Name of mutex (optional)
     SharedPtr<Thread> holding_thread; ///< Thread that has acquired the mutex
 
-    bool ShouldWait() override;
-    void Acquire() override;
+    bool ShouldWait(Thread* thread) const override;
+    void Acquire(Thread* thread) override;
+
 
     /**
      * Acquires the specified mutex for the specified thread
