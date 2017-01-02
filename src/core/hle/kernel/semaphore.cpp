@@ -35,7 +35,8 @@ bool Semaphore::ShouldWait(Thread* thread) const {
 }
 
 void Semaphore::Acquire(Thread* thread) {
-    ASSERT_MSG(!ShouldWait(thread), "object unavailable!");
+    if (available_count <= 0)
+        return;
     --available_count;
 }
 
