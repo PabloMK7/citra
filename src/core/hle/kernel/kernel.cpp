@@ -3,7 +3,6 @@
 // Refer to the license.txt file included.
 
 #include <algorithm>
-#include <boost/range/algorithm_ext/erase.hpp>
 #include "common/assert.h"
 #include "common/logging/log.h"
 #include "core/hle/config_mem.h"
@@ -34,10 +33,17 @@ void WaitObject::RemoveWaitingThread(Thread* thread) {
 
 SharedPtr<Thread> WaitObject::GetHighestPriorityReadyThread() {
     // Remove the threads that are ready or already running from our waitlist
-    boost::range::remove_erase_if(waiting_threads, [](const SharedPtr<Thread>& thread) {
-        return thread->status == THREADSTATUS_RUNNING || thread->status == THREADSTATUS_READY ||
-               thread->status == THREADSTATUS_DEAD;
-    });
+    auto to_remove = waiting_threads.end();
+    do {
+        to_remove = std::find_if(waiting_threads.begin(), waiting_threads.end(),
+                                 [](const SharedPtr<Thread>& thread) {
+                                    return thread->status == THREADSTATUS_RUNNING ||
+                                           thread->status == THREADSTATUS_READY ||
+                                           thread->status == THREADSTATUS_DEAD;
+        });
+        // Call RemoveWaitingThread so that child classes can override the behavior.
+        RemoveWaitingThread(to_remove->get());
+    } while (to_remove != waiting_threads.end());
 
     Thread* candidate = nullptr;
     s32 candidate_priority = THREADPRIO_LOWEST + 1;
@@ -49,9 +55,10 @@ SharedPtr<Thread> WaitObject::GetHighestPriorityReadyThread() {
         if (ShouldWait(thread.get()))
             continue;
 
-        bool ready_to_run =
-            std::none_of(thread->wait_objects.begin(), thread->wait_objects.end(),
-                         [&thread](const SharedPtr<WaitObject>& object) { return object->ShouldWait(thread.get()); });
+        bool ready_to_run = std::none_of(thread->wait_objects.begin(), thread->wait_objects.end(),
+                                        [&thread](const SharedPtr<WaitObject>& object) {
+                                            return object->ShouldWait(thread.get());
+                                        });
         if (ready_to_run) {
             candidate = thread.get();
             candidate_priority = thread->current_priority;

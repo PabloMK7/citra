@@ -373,8 +373,9 @@ static ResultCode WaitSynchronizationN(s32* out, Kernel::Handle* handles, s32 ha
         return ERR_SYNC_TIMEOUT;
     } else {
         // Find the first object that is acquirable in the provided list of objects
-        auto itr = std::find_if(objects.begin(), objects.end(),
-                                [thread](const ObjectPtr& object) { return !object->ShouldWait(thread); });
+        auto itr = std::find_if(objects.begin(), objects.end(), [thread](const ObjectPtr& object) {
+            return !object->ShouldWait(thread);
+        });
 
         if (itr != objects.end()) {
             // We found a ready object, acquire it and set the result value

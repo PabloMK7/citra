@@ -151,7 +151,7 @@ public:
      * Removes a thread from waiting on this object (e.g. if it was resumed already)
      * @param thread Pointer to thread to remove
      */
-    void RemoveWaitingThread(Thread* thread);
+    virtual void RemoveWaitingThread(Thread* thread);
 
     /**
      * Wake up all threads waiting on this object that can be awoken, in priority order,

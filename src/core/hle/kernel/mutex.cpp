@@ -28,6 +28,23 @@ static void UpdateThreadPriority(Thread* thread) {
     thread->SetPriority(best_priority);
 }
 
+/**
+ * Elevate the mutex priority to the best priority
+ * among the priorities of all its waiting threads.
+ */
+static void UpdateMutexPriority(Mutex* mutex) {
+    s32 best_priority = THREADPRIO_LOWEST;
+    for (auto& waiter : mutex->GetWaitingThreads()) {
+        if (waiter->current_priority < best_priority)
+            best_priority = waiter->current_priority;
+    }
+
+    if (best_priority != mutex->priority) {
+        mutex->priority = best_priority;
+        UpdateThreadPriority(mutex->holding_thread.get());
+    }
+}
+
 void ReleaseThreadMutexes(Thread* thread) {
     for (auto& mtx : thread->held_mutexes) {
         mtx->lock_count = 0;
@@ -93,20 +110,12 @@ void Mutex::Release() {
 
 void Mutex::AddWaitingThread(SharedPtr<Thread> thread) {
     WaitObject::AddWaitingThread(thread);
+    UpdateMutexPriority(this);
+}
 
-    // Elevate the mutex priority to the best priority
-    // among the priorities of all its waiting threads.
-
-    s32 best_priority = THREADPRIO_LOWEST;
-    for (auto& waiter : GetWaitingThreads()) {
-        if (waiter->current_priority < best_priority)
-            best_priority = waiter->current_priority;
-    }
-
-    if (best_priority != priority) {
-        priority = best_priority;
-        UpdateThreadPriority(holding_thread.get());
-    }
+void Mutex::RemoveWaitingThread(Thread* thread) {
+    WaitObject::RemoveWaitingThread(thread);
+    UpdateMutexPriority(this);
 }
 
 } // namespace

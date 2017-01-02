@@ -43,6 +43,7 @@ public:
     void Acquire(Thread* thread) override;
 
     void AddWaitingThread(SharedPtr<Thread> thread) override;
+    void RemoveWaitingThread(Thread* thread) override;
 
     void Release();
 
