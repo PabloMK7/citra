@@ -38,6 +38,8 @@ public:
     bool ShouldWait() override;
     void Acquire() override;
 
+    void WakeupAllWaitingThreads() override;
+
     void Signal();
     void Clear();
 

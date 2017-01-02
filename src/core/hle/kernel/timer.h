@@ -42,6 +42,8 @@ public:
     bool ShouldWait() override;
     void Acquire() override;
 
+    void WakeupAllWaitingThreads() override;
+
     /**
      * Starts the timer, with the specified initial delay and interval.
      * @param initial Delay until the timer is first fired
