@@ -178,6 +178,7 @@ void Init() {
 /// Shutdown ServiceManager
 void Shutdown() {
     PTM::Shutdown();
+    NFC::Shutdown();
     NIM::Shutdown();
     NEWS::Shutdown();
     NDM::Shutdown();
