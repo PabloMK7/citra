@@ -39,6 +39,12 @@ public:
     std::string name;                 ///< Name of mutex (optional)
     SharedPtr<Thread> holding_thread; ///< Thread that has acquired the mutex
 
+    /**
+     * Elevate the mutex priority to the best priority
+     * among the priorities of all its waiting threads.
+     */
+    void UpdatePriority();
+
     bool ShouldWait(Thread* thread) const override;
     void Acquire(Thread* thread) override;
 

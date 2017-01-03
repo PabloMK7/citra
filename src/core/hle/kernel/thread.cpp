@@ -105,14 +105,14 @@ void Thread::Stop() {
 
     WakeupAllWaitingThreads();
 
-    // Release all the mutexes that this thread holds
-    ReleaseThreadMutexes(this);
-
     // Clean up any dangling references in objects that this thread was waiting for
     for (auto& wait_object : wait_objects) {
         wait_object->RemoveWaitingThread(this);
     }
     wait_objects.clear();
+
+    // Release all the mutexes that this thread holds
+    ReleaseThreadMutexes(this);
 
     // Mark the TLS slot in the thread's page as free.
     u32 tls_page = (tls_address - Memory::TLS_AREA_VADDR) / Memory::PAGE_SIZE;
@@ -515,8 +515,21 @@ void Thread::SetPriority(s32 priority) {
     nominal_priority = current_priority = priority;
 }
 
+void Thread::UpdatePriority() {
+    s32 best_priority = nominal_priority;
+    for (auto& mutex : held_mutexes) {
+        if (mutex->priority < best_priority)
+            best_priority = mutex->priority;
+    }
+    BoostPriority(best_priority);
+}
+
 void Thread::BoostPriority(s32 priority) {
-    ready_queue.move(this, current_priority, priority);
+    // If thread was ready, adjust queues
+    if (status == THREADSTATUS_READY)
+        ready_queue.move(this, current_priority, priority);
+    else
+        ready_queue.prepare(priority);
     current_priority = priority;
 }
 

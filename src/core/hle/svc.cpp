@@ -611,6 +611,12 @@ static ResultCode SetThreadPriority(Kernel::Handle handle, s32 priority) {
         return ERR_INVALID_HANDLE;
 
     thread->SetPriority(priority);
+    thread->UpdatePriority();
+
+    // Update the mutexes that this thread is waiting for
+    for (auto& mutex : thread->pending_mutexes)
+        mutex->UpdatePriority();
+
     Core::System::GetInstance().PrepareReschedule();
     return RESULT_SUCCESS;
 }

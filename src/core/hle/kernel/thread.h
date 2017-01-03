@@ -90,6 +90,12 @@ public:
     void SetPriority(s32 priority);
 
     /**
+     * Boost's a thread's priority to the best priority among the thread's held mutexes.
+     * This prevents priority inversion via priority inheritance.
+     */
+    void UpdatePriority();
+
+    /**
      * Temporarily boosts the thread's priority until the next time it is scheduled
      * @param priority The new priority
      */
@@ -177,6 +183,9 @@ public:
 
     /// Mutexes currently held by this thread, which will be released when it exits.
     boost::container::flat_set<SharedPtr<Mutex>> held_mutexes;
+
+    /// Mutexes that this thread is currently waiting for.
+    boost::container::flat_set<SharedPtr<Mutex>> pending_mutexes;
 
     SharedPtr<Process> owner_process; ///< Process that owns this thread
 
