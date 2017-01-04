@@ -33,4 +33,4 @@ deploy:
   file: "${HOME}/build/${TRAVIS_REPO_SLUG}/.travis.descriptor.json"
   user: citra-emu
   key:
-    secure: "gLwHYfbTNILaI89sB9nnM+XpDGV4oadWUJvuPuMzKWpkYdiGW1HXptLlSWmQOkfAI5v25q0JcTbFq4Afxk7C4AHp+wxgISsbFcwoUUe00r0MJWKJwiJmZTbgeeyk8abr1t14h1g2rOcwVPqwdjHXZu84X3fhnukL0KzgfDym4S8="
+    secure: "TqnAlO0AXxIsHGWcjEP2BVzSs26ErpGPRLMTShVfqaHBPCIfx1UtTcQltl5FVj3HdGKWjw3PgOui/XENVDTdYIwJZN0ziTwb59wcgC5agUmGZhaXMoWjBNxY5lEaSsKZfObgJRWUGaHUSS0KQo0Owlm1u4ORDwz7zagM3/hocKs="
