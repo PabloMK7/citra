@@ -200,8 +200,8 @@ static void SwitchContext(Thread* new_thread) {
 
     // Load context of new thread
     if (new_thread) {
-        DEBUG_ASSERT_MSG(new_thread->status == THREADSTATUS_READY,
-                         "Thread must be ready to become running.");
+        ASSERT_MSG(new_thread->status == THREADSTATUS_READY,
+                   "Thread must be ready to become running.");
 
         // Cancel any outstanding wakeup events for this thread
         CoreTiming::UnscheduleEvent(ThreadWakeupEventType, new_thread->callback_handle);
@@ -307,6 +307,8 @@ void Thread::WakeAfterDelay(s64 nanoseconds) {
 }
 
 void Thread::ResumeFromWait() {
+    ASSERT_MSG(wait_objects.empty(), "Thread is waking up while waiting for objects");
+
     switch (status) {
     case THREADSTATUS_WAIT_SYNCH_ALL:
     case THREADSTATUS_WAIT_SYNCH_ANY:
@@ -580,6 +582,7 @@ void Thread::SetWaitSynchronizationOutput(s32 output) {
 }
 
 s32 Thread::GetWaitObjectIndex(WaitObject* object) const {
+    ASSERT_MSG(!wait_objects.empty(), "Thread is not waiting for anything");
     auto match = std::find(wait_objects.rbegin(), wait_objects.rend(), object);
     return std::distance(match, wait_objects.rend()) - 1;
 }

@@ -27,6 +27,9 @@ void WaitObject::AddWaitingThread(SharedPtr<Thread> thread) {
 
 void WaitObject::RemoveWaitingThread(Thread* thread) {
     auto itr = std::find(waiting_threads.begin(), waiting_threads.end(), thread);
+    // If a thread passed multiple handles to the same object,
+    // the kernel might attempt to remove the thread from the object's
+    // waiting threads list multiple times.
     if (itr != waiting_threads.end())
         waiting_threads.erase(itr);
 }
@@ -36,6 +39,11 @@ SharedPtr<Thread> WaitObject::GetHighestPriorityReadyThread() {
     s32 candidate_priority = THREADPRIO_LOWEST + 1;
 
     for (const auto& thread : waiting_threads) {
+        // The list of waiting threads must not contain threads that are not waiting to be awakened.
+        ASSERT_MSG(thread->status == THREADSTATUS_WAIT_SYNCH_ANY ||
+                       thread->status == THREADSTATUS_WAIT_SYNCH_ALL,
+                   "Inconsistent thread statuses in waiting_threads");
+
         if (thread->current_priority >= candidate_priority)
             continue;
 
