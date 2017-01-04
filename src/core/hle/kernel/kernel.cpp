@@ -55,10 +55,16 @@ SharedPtr<Thread> WaitObject::GetHighestPriorityReadyThread() {
         if (ShouldWait(thread.get()))
             continue;
 
-        bool ready_to_run = std::none_of(thread->wait_objects.begin(), thread->wait_objects.end(),
+        // A thread is ready to run if it's either in THREADSTATUS_WAIT_SYNCH_ANY or
+        // in THREADSTATUS_WAIT_SYNCH_ALL and the rest of the objects it is waiting on are ready.
+        bool ready_to_run = true;
+        if (thread->status == THREADSTATUS_WAIT_SYNCH_ALL) {
+            ready_to_run = std::none_of(thread->wait_objects.begin(), thread->wait_objects.end(),
                                         [&thread](const SharedPtr<WaitObject>& object) {
                                             return object->ShouldWait(thread.get());
                                         });
+        }
+
         if (ready_to_run) {
             candidate = thread.get();
             candidate_priority = thread->current_priority;

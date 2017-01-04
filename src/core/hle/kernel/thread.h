@@ -135,13 +135,14 @@ public:
 
     /**
      * Retrieves the index that this particular object occupies in the list of objects
-     * that the thread passed to WaitSynchronizationN.
+     * that the thread passed to WaitSynchronizationN, starting the search from the last element.
      * It is used to set the output value of WaitSynchronizationN when the thread is awakened.
+     * When a thread wakes up due to an object signal, the kernel will use the index of the last
+     * matching object in the wait objects list in case of having multiple instances of the same
+     * object in the list.
      * @param object Object to query the index of.
      */
-    s32 GetWaitObjectIndex(const WaitObject* object) const {
-        return wait_objects_index.at(object->GetObjectId());
-    }
+    s32 GetWaitObjectIndex(WaitObject* object) const;
 
     /**
      * Stops a thread, invalidating it from further use
@@ -190,12 +191,9 @@ public:
 
     SharedPtr<Process> owner_process; ///< Process that owns this thread
 
-    /// Objects that the thread is waiting on.
-    /// This is only populated when the thread should wait for all the objects to become ready.
+    /// Objects that the thread is waiting on, in the same order as they were
+    // passed to WaitSynchronization1/N.
     std::vector<SharedPtr<WaitObject>> wait_objects;
-
-    /// Mapping of Object ids to their position in the last waitlist that this object waited on.
-    boost::container::flat_map<int, s32> wait_objects_index;
 
     VAddr wait_address; ///< If waiting on an AddressArbiter, this is the arbitration address
 

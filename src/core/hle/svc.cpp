@@ -277,6 +277,7 @@ static ResultCode WaitSynchronization1(Kernel::Handle handle, s64 nano_seconds) 
         if (nano_seconds == 0)
             return ERR_SYNC_TIMEOUT;
 
+        thread->wait_objects = {object};
         object->AddWaitingThread(thread);
         thread->status = THREADSTATUS_WAIT_SYNCH_ANY;
 
@@ -325,11 +326,6 @@ static ResultCode WaitSynchronizationN(s32* out, Kernel::Handle* handles, s32 ha
         objects[i] = object;
     }
 
-    // Clear the mapping of wait object indices.
-    // We don't want any lingering state in this map.
-    // It will be repopulated later in the wait_all = false case.
-    thread->wait_objects_index.clear();
-
     if (wait_all) {
         bool all_available =
             std::all_of(objects.begin(), objects.end(),
@@ -358,7 +354,6 @@ static ResultCode WaitSynchronizationN(s32* out, Kernel::Handle* handles, s32 ha
             object->AddWaitingThread(thread);
         }
 
-        // Set the thread's waitlist to the list of objects passed to WaitSynchronizationN
         thread->wait_objects = std::move(objects);
 
         // Create an event to wake the thread up after the specified nanosecond delay has passed
@@ -395,16 +390,13 @@ static ResultCode WaitSynchronizationN(s32* out, Kernel::Handle* handles, s32 ha
         // Put the thread to sleep
         thread->status = THREADSTATUS_WAIT_SYNCH_ANY;
 
-        // Clear the thread's waitlist, we won't use it for wait_all = false
-        thread->wait_objects.clear();
-
         // Add the thread to each of the objects' waiting threads.
         for (size_t i = 0; i < objects.size(); ++i) {
             Kernel::WaitObject* object = objects[i].get();
-            // Set the index of this object in the mapping of Objects -> index for this thread.
-            thread->wait_objects_index[object->GetObjectId()] = static_cast<int>(i);
             object->AddWaitingThread(thread);
         }
+
+        thread->wait_objects = std::move(objects);
 
         // Note: If no handles and no timeout were given, then the thread will deadlock, this is
         // consistent with hardware behavior.
