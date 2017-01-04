@@ -72,7 +72,8 @@ Thread* GetCurrentThread() {
  * @return True if the thread is waiting, false otherwise
  */
 static bool CheckWait_WaitObject(const Thread* thread, WaitObject* wait_object) {
-    if (thread->status != THREADSTATUS_WAIT_SYNCH)
+    if (thread->status != THREADSTATUS_WAIT_SYNCH_ALL &&
+        thread->status != THREADSTATUS_WAIT_SYNCH_ANY)
         return false;
 
     auto itr = std::find(thread->wait_objects.begin(), thread->wait_objects.end(), wait_object);
@@ -253,7 +254,7 @@ void WaitCurrentThread_WaitSynchronization(std::vector<SharedPtr<WaitObject>> wa
     Thread* thread = GetCurrentThread();
     thread->wait_set_output = wait_set_output;
     thread->wait_objects = std::move(wait_objects);
-    thread->status = THREADSTATUS_WAIT_SYNCH;
+    thread->status = THREADSTATUS_WAIT_SYNCH_ANY;
 }
 
 void WaitCurrentThread_ArbitrateAddress(VAddr wait_address) {
@@ -281,7 +282,8 @@ static void ThreadWakeupCallback(u64 thread_handle, int cycles_late) {
         return;
     }
 
-    if (thread->status == THREADSTATUS_WAIT_SYNCH || thread->status == THREADSTATUS_WAIT_ARB) {
+    if (thread->status == THREADSTATUS_WAIT_SYNCH_ANY ||
+        thread->status == THREADSTATUS_WAIT_SYNCH_ALL || thread->status == THREADSTATUS_WAIT_ARB) {
         thread->wait_set_output = false;
         // Remove the thread from each of its waiting objects' waitlists
         for (auto& object : thread->wait_objects)
@@ -306,7 +308,8 @@ void Thread::WakeAfterDelay(s64 nanoseconds) {
 
 void Thread::ResumeFromWait() {
     switch (status) {
-    case THREADSTATUS_WAIT_SYNCH:
+    case THREADSTATUS_WAIT_SYNCH_ALL:
+    case THREADSTATUS_WAIT_SYNCH_ANY:
     case THREADSTATUS_WAIT_ARB:
     case THREADSTATUS_WAIT_SLEEP:
         break;

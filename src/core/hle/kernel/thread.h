@@ -31,13 +31,14 @@ enum ThreadProcessorId : s32 {
 };
 
 enum ThreadStatus {
-    THREADSTATUS_RUNNING,    ///< Currently running
-    THREADSTATUS_READY,      ///< Ready to run
-    THREADSTATUS_WAIT_ARB,   ///< Waiting on an address arbiter
-    THREADSTATUS_WAIT_SLEEP, ///< Waiting due to a SleepThread SVC
-    THREADSTATUS_WAIT_SYNCH, ///< Waiting due to a WaitSynchronization SVC
-    THREADSTATUS_DORMANT,    ///< Created but not yet made ready
-    THREADSTATUS_DEAD        ///< Run to completion, or forcefully terminated
+    THREADSTATUS_RUNNING,        ///< Currently running
+    THREADSTATUS_READY,          ///< Ready to run
+    THREADSTATUS_WAIT_ARB,       ///< Waiting on an address arbiter
+    THREADSTATUS_WAIT_SLEEP,     ///< Waiting due to a SleepThread SVC
+    THREADSTATUS_WAIT_SYNCH_ANY, ///< Waiting due to WaitSynch1 or WaitSynchN with wait_all = false
+    THREADSTATUS_WAIT_SYNCH_ALL, ///< Waiting due to WaitSynchronizationN with wait_all = true
+    THREADSTATUS_DORMANT,        ///< Created but not yet made ready
+    THREADSTATUS_DEAD            ///< Run to completion, or forcefully terminated
 };
 
 namespace Kernel {
@@ -158,10 +159,10 @@ public:
     /**
      * Returns whether this thread is waiting for all the objects in
      * its wait list to become ready, as a result of a WaitSynchronizationN call
-     * with wait_all = true, or a ReplyAndReceive call.
+     * with wait_all = true.
      */
     bool IsSleepingOnWaitAll() const {
-        return !wait_objects.empty();
+        return status == THREADSTATUS_WAIT_SYNCH_ALL;
     }
 
     ARM_Interface::ThreadContext context;

@@ -278,7 +278,7 @@ static ResultCode WaitSynchronization1(Kernel::Handle handle, s64 nano_seconds) 
             return ERR_SYNC_TIMEOUT;
 
         object->AddWaitingThread(thread);
-        thread->status = THREADSTATUS_WAIT_SYNCH;
+        thread->status = THREADSTATUS_WAIT_SYNCH_ANY;
 
         // Create an event to wake the thread up after the specified nanosecond delay has passed
         thread->WakeAfterDelay(nano_seconds);
@@ -351,7 +351,7 @@ static ResultCode WaitSynchronizationN(s32* out, Kernel::Handle* handles, s32 ha
             return ERR_SYNC_TIMEOUT;
 
         // Put the thread to sleep
-        thread->status = THREADSTATUS_WAIT_SYNCH;
+        thread->status = THREADSTATUS_WAIT_SYNCH_ALL;
 
         // Add the thread to each of the objects' waiting threads.
         for (auto& object : objects) {
@@ -393,7 +393,7 @@ static ResultCode WaitSynchronizationN(s32* out, Kernel::Handle* handles, s32 ha
             return ERR_SYNC_TIMEOUT;
 
         // Put the thread to sleep
-        thread->status = THREADSTATUS_WAIT_SYNCH;
+        thread->status = THREADSTATUS_WAIT_SYNCH_ANY;
 
         // Clear the thread's waitlist, we won't use it for wait_all = false
         thread->wait_objects.clear();
