@@ -32,19 +32,6 @@ void WaitObject::RemoveWaitingThread(Thread* thread) {
 }
 
 SharedPtr<Thread> WaitObject::GetHighestPriorityReadyThread() {
-    // Remove the threads that are ready or already running from our waitlist
-    auto to_remove = waiting_threads.end();
-    do {
-        to_remove = std::find_if(waiting_threads.begin(), waiting_threads.end(),
-                                 [](const SharedPtr<Thread>& thread) {
-                                    return thread->status == THREADSTATUS_RUNNING ||
-                                           thread->status == THREADSTATUS_READY ||
-                                           thread->status == THREADSTATUS_DEAD;
-        });
-        // Call RemoveWaitingThread so that child classes can override the behavior.
-        RemoveWaitingThread(to_remove->get());
-    } while (to_remove != waiting_threads.end());
-
     Thread* candidate = nullptr;
     s32 candidate_priority = THREADPRIO_LOWEST + 1;
 
@@ -86,17 +73,16 @@ void WaitObject::WakeupAllWaitingThreads() {
         } else {
             for (auto& object : thread->wait_objects) {
                 object->Acquire(thread.get());
-                object->RemoveWaitingThread(thread.get());
             }
             // Note: This case doesn't update the output index of WaitSynchronizationN.
-            // Clear the thread's waitlist
-            thread->wait_objects.clear();
         }
+
+        for (auto& object : thread->wait_objects)
+            object->RemoveWaitingThread(thread.get());
+        thread->wait_objects.clear();
 
         thread->SetWaitSynchronizationResult(RESULT_SUCCESS);
         thread->ResumeFromWait();
-        // Note: Removing the thread from the object's waitlist will be
-        // done by GetHighestPriorityReadyThread.
     }
 }
 
