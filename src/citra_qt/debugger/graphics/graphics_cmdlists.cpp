@@ -135,11 +135,6 @@ void GPUCommandListWidget::OnCommandDoubleClicked(const QModelIndex& index) {
             UNREACHABLE_MSG("Unknown texture command");
         }
 
-        const auto texture = Pica::g_state.regs.GetTextures()[texture_index];
-        const auto config = texture.config;
-        const auto format = texture.format;
-        const auto info = Pica::DebugUtils::TextureInfo::FromPicaRegister(config, format);
-
         // TODO: Open a surface debugger
     }
 }

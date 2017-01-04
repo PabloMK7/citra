@@ -165,13 +165,6 @@ void CSpinBox::UpdateText() {
         // Uppercase digits greater than 9.
         mask += ">";
 
-        // The greatest signed 64-bit number has 19 decimal digits.
-        // TODO: Could probably make this more generic with some logarithms.
-        // For reference, unsigned 64-bit can have up to 20 decimal digits.
-        int digits = (num_digits != 0)
-                         ? num_digits
-                         : (base == 16) ? 16 : (base == 10) ? 19 : 0xFF; // fallback case...
-
         // Match num_digits digits
         // Digits irrelevant to the chosen number base are filtered in the validator
         mask += QString("H").repeated(std::max(num_digits, 1));

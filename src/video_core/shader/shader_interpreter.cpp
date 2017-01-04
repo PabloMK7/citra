@@ -27,8 +27,6 @@ namespace Pica {
 
 namespace Shader {
 
-constexpr u32 INVALID_ADDRESS = 0xFFFFFFFF;
-
 struct CallStackElement {
     u32 final_address;  // Address upon which we jump to return_address
     u32 return_address; // Where to jump when leaving scope

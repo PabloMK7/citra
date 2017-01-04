@@ -84,7 +84,6 @@ struct ConsoleCountryInfo {
 static_assert(sizeof(ConsoleCountryInfo) == 4, "ConsoleCountryInfo must be exactly 4 bytes");
 }
 
-static const u64 CFG_SAVE_ID = 0x00010017;
 static const u64 CONSOLE_UNIQUE_ID = 0xDEADC0DE;
 static const ConsoleModelInfo CONSOLE_MODEL = {NINTENDO_3DS_XL, {0, 0, 0}};
 static const u8 CONSOLE_LANGUAGE = LANGUAGE_EN;

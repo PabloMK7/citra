@@ -603,7 +603,6 @@ static void RecvFrom(Interface* self) {
     u32 socket_handle = cmd_buffer[1];
     u32 len = cmd_buffer[2];
     u32 flags = cmd_buffer[3];
-    socklen_t addr_len = static_cast<socklen_t>(cmd_buffer[4]);
 
     struct {
         u32 output_buffer_descriptor;
@@ -693,7 +692,6 @@ static void Poll(Interface* self) {
 static void GetSockName(Interface* self) {
     u32* cmd_buffer = Kernel::GetCommandBuffer();
     u32 socket_handle = cmd_buffer[1];
-    socklen_t ctr_len = cmd_buffer[2];
 
     // Memory address of the ctr_dest_addr structure
     VAddr ctr_dest_addr_addr = cmd_buffer[0x104 >> 2];
@@ -734,7 +732,6 @@ static void Shutdown(Interface* self) {
 static void GetPeerName(Interface* self) {
     u32* cmd_buffer = Kernel::GetCommandBuffer();
     u32 socket_handle = cmd_buffer[1];
-    socklen_t len = cmd_buffer[2];
 
     // Memory address of the ctr_dest_addr structure
     VAddr ctr_dest_addr_addr = cmd_buffer[0x104 >> 2];
@@ -765,7 +762,6 @@ static void Connect(Interface* self) {
     // performing nonblocking operations and spinlock until the data is available
     u32* cmd_buffer = Kernel::GetCommandBuffer();
     u32 socket_handle = cmd_buffer[1];
-    socklen_t len = cmd_buffer[2];
 
     // Memory address of the ctr_input_addr structure
     VAddr ctr_input_addr_addr = cmd_buffer[6];

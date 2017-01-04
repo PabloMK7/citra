@@ -276,9 +276,6 @@ QVariant GraphicsVertexShaderModel::data(const QModelIndex& index, int role) con
                         output << 'b' << instr.flow_control.bool_uniform_id << ' ';
                     }
 
-                    u32 target_addr = instr.flow_control.dest_offset;
-                    u32 target_addr_else = instr.flow_control.dest_offset;
-
                     if (opcode_info.subtype & OpCode::Info::HasAlternative) {
                         output << "else jump to 0x" << std::setw(4) << std::right
                                << std::setfill('0') << std::hex
@@ -473,7 +470,6 @@ GraphicsVertexShaderWidget::GraphicsVertexShaderWidget(
 }
 
 void GraphicsVertexShaderWidget::OnBreakPointHit(Pica::DebugContext::Event event, void* data) {
-    auto input = static_cast<Pica::Shader::InputVertex*>(data);
     if (event == Pica::DebugContext::Event::VertexShaderInvocation) {
         Reload(true, data);
     } else {

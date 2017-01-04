@@ -57,7 +57,6 @@ const u32 SIGTERM = 15;
 const u32 MSG_WAITALL = 8;
 #endif
 
-const u32 R0_REGISTER = 0;
 const u32 R15_REGISTER = 15;
 const u32 CPSR_REGISTER = 25;
 const u32 FPSCR_REGISTER = 58;
@@ -815,10 +814,6 @@ static void RemoveBreakpoint() {
     auto start_offset = command_buffer + 3;
     auto addr_pos = std::find(start_offset, command_buffer + command_length, ',');
     PAddr addr = HexToInt(start_offset, static_cast<u32>(addr_pos - start_offset));
-
-    start_offset = addr_pos + 1;
-    u32 len =
-        HexToInt(start_offset, static_cast<u32>((command_buffer + command_length) - start_offset));
 
     if (type == BreakpointType::Access) {
         // Access is made up of Read and Write types, so add both breakpoints

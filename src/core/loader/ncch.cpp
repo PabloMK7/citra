@@ -288,7 +288,7 @@ ResultStatus AppLoader_NCCH::LoadExeFS() {
     LOG_DEBUG(Loader, "Thread priority:             0x%X", priority);
     LOG_DEBUG(Loader, "Resource limit category:     %d", resource_limit_category);
     LOG_DEBUG(Loader, "System Mode:                 %d",
-              exheader_header.arm11_system_local_caps.system_mode);
+              static_cast<int>(exheader_header.arm11_system_local_caps.system_mode));
 
     if (exheader_header.arm11_system_local_caps.program_id != ncch_header.program_id) {
         LOG_ERROR(Loader, "ExHeader Program ID mismatch: the ROM is probably encrypted.");
