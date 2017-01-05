@@ -66,21 +66,6 @@ Thread* GetCurrentThread() {
 }
 
 /**
- * Check if a thread is waiting on the specified wait object
- * @param thread The thread to test
- * @param wait_object The object to test against
- * @return True if the thread is waiting, false otherwise
- */
-static bool CheckWait_WaitObject(const Thread* thread, WaitObject* wait_object) {
-    if (thread->status != THREADSTATUS_WAIT_SYNCH_ALL &&
-        thread->status != THREADSTATUS_WAIT_SYNCH_ANY)
-        return false;
-
-    auto itr = std::find(thread->wait_objects.begin(), thread->wait_objects.end(), wait_object);
-    return itr != thread->wait_objects.end();
-}
-
-/**
  * Check if the specified thread is waiting on the specified address to be arbitrated
  * @param thread The thread to test
  * @param wait_address The address to test against
@@ -247,14 +232,6 @@ static Thread* PopNextReadyThread() {
 void WaitCurrentThread_Sleep() {
     Thread* thread = GetCurrentThread();
     thread->status = THREADSTATUS_WAIT_SLEEP;
-}
-
-void WaitCurrentThread_WaitSynchronization(std::vector<SharedPtr<WaitObject>> wait_objects,
-                                           bool wait_set_output) {
-    Thread* thread = GetCurrentThread();
-    thread->wait_set_output = wait_set_output;
-    thread->wait_objects = std::move(wait_objects);
-    thread->status = THREADSTATUS_WAIT_SYNCH_ANY;
 }
 
 void WaitCurrentThread_ArbitrateAddress(VAddr wait_address) {

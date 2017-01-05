@@ -246,15 +246,6 @@ Thread* GetCurrentThread();
 void WaitCurrentThread_Sleep();
 
 /**
- * Waits the current thread from a WaitSynchronization call
- * @param wait_objects Kernel objects that we are waiting on
- * @param wait_set_output If true, set the output parameter on thread wakeup (for
- * WaitSynchronizationN only)
- */
-void WaitCurrentThread_WaitSynchronization(std::vector<SharedPtr<WaitObject>> wait_objects,
-                                           bool wait_set_output);
-
-/**
  * Waits the current thread from an ArbitrateAddress call
  * @param wait_address Arbitration address used to resume from wait
  */
