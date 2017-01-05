@@ -9,6 +9,7 @@
 #include "common/assert.h"
 #include "common/common_types.h"
 #include "core/hle/kernel/kernel.h"
+#include "core/hle/kernel/session.h"
 #include "core/hle/kernel/thread.h"
 #include "core/hle/result.h"
 #include "core/hle/service/service.h"
@@ -17,6 +18,8 @@
 namespace Kernel {
 
 class ClientSession;
+class ClientPort;
+class ServerSession;
 
 /**
  * Kernel object representing the server endpoint of an IPC session. Sessions are the basic CTR-OS
@@ -47,11 +50,13 @@ public:
      * Creates a pair of ServerSession and an associated ClientSession.
      * @param name        Optional name of the ports.
      * @param hle_handler Optional HLE handler for this server session.
+     * @param client_port Optional The ClientPort that spawned this session.
      * @return The created session tuple
      */
     static SessionPair CreateSessionPair(
         const std::string& name = "Unknown",
-        std::shared_ptr<Service::SessionRequestHandler> hle_handler = nullptr);
+        std::shared_ptr<Service::SessionRequestHandler> hle_handler = nullptr,
+        SharedPtr<ClientPort> client_port = nullptr);
 
     /**
      * Handle a sync request from the emulated application.
@@ -63,8 +68,9 @@ public:
 
     void Acquire(Thread* thread) override;
 
-    std::string name; ///< The name of this session (optional)
-    bool signaled;    ///< Whether there's new data available to this ServerSession
+    std::string name;                ///< The name of this session (optional)
+    bool signaled;                   ///< Whether there's new data available to this ServerSession
+    std::shared_ptr<Session> parent; ///< The parent session, which links to the client endpoint.
     std::shared_ptr<Service::SessionRequestHandler>
         hle_handler; ///< This session's HLE request handler (optional)
 

@@ -241,6 +241,7 @@ set(HEADERS
             hle/kernel/semaphore.h
             hle/kernel/server_port.h
             hle/kernel/server_session.h
+            hle/kernel/session.h
             hle/kernel/shared_memory.h
             hle/kernel/thread.h
             hle/kernel/timer.h

@@ -16,6 +16,7 @@
 /// Detailed description of the error. This listing is likely incomplete.
 enum class ErrorDescription : u32 {
     Success = 0,
+    SessionClosedByRemote = 26,
     WrongPermission = 46,
     OS_InvalidBufferDescriptor = 48,
     MaxConnectionsReached = 52,
