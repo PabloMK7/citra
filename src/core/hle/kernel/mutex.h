@@ -35,17 +35,22 @@ public:
     }
 
     int lock_count;                   ///< Number of times the mutex has been acquired
+    u32 priority;                     ///< The priority of the mutex, used for priority inheritance.
     std::string name;                 ///< Name of mutex (optional)
     SharedPtr<Thread> holding_thread; ///< Thread that has acquired the mutex
 
-    bool ShouldWait() override;
-    void Acquire() override;
-
     /**
-     * Acquires the specified mutex for the specified thread
-     * @param thread Thread that will acquire the mutex
+     * Elevate the mutex priority to the best priority
+     * among the priorities of all its waiting threads.
      */
-    void Acquire(SharedPtr<Thread> thread);
+    void UpdatePriority();
+
+    bool ShouldWait(Thread* thread) const override;
+    void Acquire(Thread* thread) override;
+
+    void AddWaitingThread(SharedPtr<Thread> thread) override;
+    void RemoveWaitingThread(Thread* thread) override;
+
     void Release();
 
 private:

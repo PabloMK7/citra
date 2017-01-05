@@ -57,9 +57,9 @@ public:
      */
     ResultCode HandleSyncRequest();
 
-    bool ShouldWait() override;
+    bool ShouldWait(Thread* thread) const override;
 
-    void Acquire() override;
+    void Acquire(Thread* thread) override;
 
     std::string name; ///< The name of this session (optional)
     bool signaled;    ///< Whether there's new data available to this ServerSession

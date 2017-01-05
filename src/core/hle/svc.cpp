@@ -248,6 +248,8 @@ static ResultCode SendSyncRequest(Kernel::Handle handle) {
 
     LOG_TRACE(Kernel_SVC, "called handle=0x%08X(%s)", handle, session->GetName().c_str());
 
+    Core::System::GetInstance().PrepareReschedule();
+
     // TODO(Subv): svcSendSyncRequest should put the caller thread to sleep while the server
     // responds and cause a reschedule.
     return session->SendSyncRequest();
@@ -270,19 +272,19 @@ static ResultCode WaitSynchronization1(Kernel::Handle handle, s64 nano_seconds) 
     LOG_TRACE(Kernel_SVC, "called handle=0x%08X(%s:%s), nanoseconds=%lld", handle,
               object->GetTypeName().c_str(), object->GetName().c_str(), nano_seconds);
 
-    if (object->ShouldWait()) {
+    if (object->ShouldWait(thread)) {
 
         if (nano_seconds == 0)
             return ERR_SYNC_TIMEOUT;
 
+        thread->wait_objects = {object};
         object->AddWaitingThread(thread);
-        // TODO(Subv): Perform things like update the mutex lock owner's priority to
-        // prevent priority inversion. Currently this is done in Mutex::ShouldWait,
-        // but it should be moved to a function that is called from here.
-        thread->status = THREADSTATUS_WAIT_SYNCH;
+        thread->status = THREADSTATUS_WAIT_SYNCH_ANY;
 
         // Create an event to wake the thread up after the specified nanosecond delay has passed
         thread->WakeAfterDelay(nano_seconds);
+
+        Core::System::GetInstance().PrepareReschedule();
 
         // Note: The output of this SVC will be set to RESULT_SUCCESS if the thread
         // resumes due to a signal in its wait objects.
@@ -290,7 +292,7 @@ static ResultCode WaitSynchronization1(Kernel::Handle handle, s64 nano_seconds) 
         return ERR_SYNC_TIMEOUT;
     }
 
-    object->Acquire();
+    object->Acquire(thread);
 
     return RESULT_SUCCESS;
 }
@@ -324,19 +326,14 @@ static ResultCode WaitSynchronizationN(s32* out, Kernel::Handle* handles, s32 ha
         objects[i] = object;
     }
 
-    // Clear the mapping of wait object indices.
-    // We don't want any lingering state in this map.
-    // It will be repopulated later in the wait_all = false case.
-    thread->wait_objects_index.clear();
-
     if (wait_all) {
         bool all_available =
             std::all_of(objects.begin(), objects.end(),
-                        [](const ObjectPtr& object) { return !object->ShouldWait(); });
+                        [thread](const ObjectPtr& object) { return !object->ShouldWait(thread); });
         if (all_available) {
             // We can acquire all objects right now, do so.
             for (auto& object : objects)
-                object->Acquire();
+                object->Acquire(thread);
             // Note: In this case, the `out` parameter is not set,
             // and retains whatever value it had before.
             return RESULT_SUCCESS;
@@ -350,21 +347,19 @@ static ResultCode WaitSynchronizationN(s32* out, Kernel::Handle* handles, s32 ha
             return ERR_SYNC_TIMEOUT;
 
         // Put the thread to sleep
-        thread->status = THREADSTATUS_WAIT_SYNCH;
+        thread->status = THREADSTATUS_WAIT_SYNCH_ALL;
 
         // Add the thread to each of the objects' waiting threads.
         for (auto& object : objects) {
             object->AddWaitingThread(thread);
-            // TODO(Subv): Perform things like update the mutex lock owner's priority to
-            // prevent priority inversion. Currently this is done in Mutex::ShouldWait,
-            // but it should be moved to a function that is called from here.
         }
 
-        // Set the thread's waitlist to the list of objects passed to WaitSynchronizationN
         thread->wait_objects = std::move(objects);
 
         // Create an event to wake the thread up after the specified nanosecond delay has passed
         thread->WakeAfterDelay(nano_seconds);
+
+        Core::System::GetInstance().PrepareReschedule();
 
         // This value gets set to -1 by default in this case, it is not modified after this.
         *out = -1;
@@ -373,13 +368,14 @@ static ResultCode WaitSynchronizationN(s32* out, Kernel::Handle* handles, s32 ha
         return ERR_SYNC_TIMEOUT;
     } else {
         // Find the first object that is acquirable in the provided list of objects
-        auto itr = std::find_if(objects.begin(), objects.end(),
-                                [](const ObjectPtr& object) { return !object->ShouldWait(); });
+        auto itr = std::find_if(objects.begin(), objects.end(), [thread](const ObjectPtr& object) {
+            return !object->ShouldWait(thread);
+        });
 
         if (itr != objects.end()) {
             // We found a ready object, acquire it and set the result value
             Kernel::WaitObject* object = itr->get();
-            object->Acquire();
+            object->Acquire(thread);
             *out = std::distance(objects.begin(), itr);
             return RESULT_SUCCESS;
         }
@@ -392,27 +388,23 @@ static ResultCode WaitSynchronizationN(s32* out, Kernel::Handle* handles, s32 ha
             return ERR_SYNC_TIMEOUT;
 
         // Put the thread to sleep
-        thread->status = THREADSTATUS_WAIT_SYNCH;
-
-        // Clear the thread's waitlist, we won't use it for wait_all = false
-        thread->wait_objects.clear();
+        thread->status = THREADSTATUS_WAIT_SYNCH_ANY;
 
         // Add the thread to each of the objects' waiting threads.
         for (size_t i = 0; i < objects.size(); ++i) {
             Kernel::WaitObject* object = objects[i].get();
-            // Set the index of this object in the mapping of Objects -> index for this thread.
-            thread->wait_objects_index[object->GetObjectId()] = static_cast<int>(i);
             object->AddWaitingThread(thread);
-            // TODO(Subv): Perform things like update the mutex lock owner's priority to
-            // prevent priority inversion. Currently this is done in Mutex::ShouldWait,
-            // but it should be moved to a function that is called from here.
         }
+
+        thread->wait_objects = std::move(objects);
 
         // Note: If no handles and no timeout were given, then the thread will deadlock, this is
         // consistent with hardware behavior.
 
         // Create an event to wake the thread up after the specified nanosecond delay has passed
         thread->WakeAfterDelay(nano_seconds);
+
+        Core::System::GetInstance().PrepareReschedule();
 
         // Note: The output of this SVC will be set to RESULT_SUCCESS if the thread resumes due to a
         // signal in one of its wait objects.
@@ -447,6 +439,9 @@ static ResultCode ArbitrateAddress(Kernel::Handle handle, u32 address, u32 type,
 
     auto res = arbiter->ArbitrateAddress(static_cast<Kernel::ArbitrationType>(type), address, value,
                                          nanoseconds);
+
+    // TODO(Subv): Identify in which specific cases this call should cause a reschedule.
+    Core::System::GetInstance().PrepareReschedule();
 
     return res;
 }
@@ -574,6 +569,8 @@ static ResultCode CreateThread(Kernel::Handle* out_handle, s32 priority, u32 ent
 
     CASCADE_RESULT(*out_handle, Kernel::g_handle_table.Create(std::move(thread)));
 
+    Core::System::GetInstance().PrepareReschedule();
+
     LOG_TRACE(Kernel_SVC, "called entrypoint=0x%08X (%s), arg=0x%08X, stacktop=0x%08X, "
                           "threadpriority=0x%08X, processorid=0x%08X : created handle=0x%08X",
               entry_point, name.c_str(), arg, stack_top, priority, processor_id, *out_handle);
@@ -586,6 +583,7 @@ static void ExitThread() {
     LOG_TRACE(Kernel_SVC, "called, pc=0x%08X", Core::CPU().GetPC());
 
     Kernel::ExitCurrentThread();
+    Core::System::GetInstance().PrepareReschedule();
 }
 
 /// Gets the priority for the specified thread
@@ -605,6 +603,13 @@ static ResultCode SetThreadPriority(Kernel::Handle handle, s32 priority) {
         return ERR_INVALID_HANDLE;
 
     thread->SetPriority(priority);
+    thread->UpdatePriority();
+
+    // Update the mutexes that this thread is waiting for
+    for (auto& mutex : thread->pending_mutexes)
+        mutex->UpdatePriority();
+
+    Core::System::GetInstance().PrepareReschedule();
     return RESULT_SUCCESS;
 }
 
@@ -849,6 +854,8 @@ static void SleepThread(s64 nanoseconds) {
 
     // Create an event to wake the thread up after the specified nanosecond delay has passed
     Kernel::GetCurrentThread()->WakeAfterDelay(nanoseconds);
+
+    Core::System::GetInstance().PrepareReschedule();
 }
 
 /// This returns the total CPU ticks elapsed since the CPU was powered-on
@@ -1184,8 +1191,6 @@ void CallSVC(u32 immediate) {
     if (info) {
         if (info->func) {
             info->func();
-            //  TODO(Subv): Not all service functions should cause a reschedule in all cases.
-            Core::System::GetInstance().PrepareReschedule();
         } else {
             LOG_ERROR(Kernel_SVC, "unimplemented SVC function %s(..)", info->name);
         }

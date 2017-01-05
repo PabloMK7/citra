@@ -3,7 +3,6 @@
 // Refer to the license.txt file included.
 
 #include <algorithm>
-#include <boost/range/algorithm_ext/erase.hpp>
 #include "common/assert.h"
 #include "common/logging/log.h"
 #include "core/hle/config_mem.h"
@@ -28,32 +27,39 @@ void WaitObject::AddWaitingThread(SharedPtr<Thread> thread) {
 
 void WaitObject::RemoveWaitingThread(Thread* thread) {
     auto itr = std::find(waiting_threads.begin(), waiting_threads.end(), thread);
+    // If a thread passed multiple handles to the same object,
+    // the kernel might attempt to remove the thread from the object's
+    // waiting threads list multiple times.
     if (itr != waiting_threads.end())
         waiting_threads.erase(itr);
 }
 
 SharedPtr<Thread> WaitObject::GetHighestPriorityReadyThread() {
-    // Remove the threads that are ready or already running from our waitlist
-    boost::range::remove_erase_if(waiting_threads, [](const SharedPtr<Thread>& thread) {
-        return thread->status == THREADSTATUS_RUNNING || thread->status == THREADSTATUS_READY ||
-               thread->status == THREADSTATUS_DEAD;
-    });
-
-    // TODO(Subv): This call should be performed inside the loop below to check if an object can be
-    // acquired by a particular thread. This is useful for things like recursive locking of Mutexes.
-    if (ShouldWait())
-        return nullptr;
-
     Thread* candidate = nullptr;
     s32 candidate_priority = THREADPRIO_LOWEST + 1;
 
     for (const auto& thread : waiting_threads) {
+        // The list of waiting threads must not contain threads that are not waiting to be awakened.
+        ASSERT_MSG(thread->status == THREADSTATUS_WAIT_SYNCH_ANY ||
+                       thread->status == THREADSTATUS_WAIT_SYNCH_ALL,
+                   "Inconsistent thread statuses in waiting_threads");
+
         if (thread->current_priority >= candidate_priority)
             continue;
 
-        bool ready_to_run =
-            std::none_of(thread->wait_objects.begin(), thread->wait_objects.end(),
-                         [](const SharedPtr<WaitObject>& object) { return object->ShouldWait(); });
+        if (ShouldWait(thread.get()))
+            continue;
+
+        // A thread is ready to run if it's either in THREADSTATUS_WAIT_SYNCH_ANY or
+        // in THREADSTATUS_WAIT_SYNCH_ALL and the rest of the objects it is waiting on are ready.
+        bool ready_to_run = true;
+        if (thread->status == THREADSTATUS_WAIT_SYNCH_ALL) {
+            ready_to_run = std::none_of(thread->wait_objects.begin(), thread->wait_objects.end(),
+                                        [&thread](const SharedPtr<WaitObject>& object) {
+                                            return object->ShouldWait(thread.get());
+                                        });
+        }
+
         if (ready_to_run) {
             candidate = thread.get();
             candidate_priority = thread->current_priority;
@@ -66,7 +72,7 @@ SharedPtr<Thread> WaitObject::GetHighestPriorityReadyThread() {
 void WaitObject::WakeupAllWaitingThreads() {
     while (auto thread = GetHighestPriorityReadyThread()) {
         if (!thread->IsSleepingOnWaitAll()) {
-            Acquire();
+            Acquire(thread.get());
             // Set the output index of the WaitSynchronizationN call to the index of this object.
             if (thread->wait_set_output) {
                 thread->SetWaitSynchronizationOutput(thread->GetWaitObjectIndex(this));
@@ -74,18 +80,17 @@ void WaitObject::WakeupAllWaitingThreads() {
             }
         } else {
             for (auto& object : thread->wait_objects) {
-                object->Acquire();
-                object->RemoveWaitingThread(thread.get());
+                object->Acquire(thread.get());
             }
             // Note: This case doesn't update the output index of WaitSynchronizationN.
-            // Clear the thread's waitlist
-            thread->wait_objects.clear();
         }
+
+        for (auto& object : thread->wait_objects)
+            object->RemoveWaitingThread(thread.get());
+        thread->wait_objects.clear();
 
         thread->SetWaitSynchronizationResult(RESULT_SUCCESS);
         thread->ResumeFromWait();
-        // Note: Removing the thread from the object's waitlist will be
-        // done by GetHighestPriorityReadyThread.
     }
 }
 

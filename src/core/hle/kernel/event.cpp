@@ -30,12 +30,12 @@ SharedPtr<Event> Event::Create(ResetType reset_type, std::string name) {
     return evt;
 }
 
-bool Event::ShouldWait() {
+bool Event::ShouldWait(Thread* thread) const {
     return !signaled;
 }
 
-void Event::Acquire() {
-    ASSERT_MSG(!ShouldWait(), "object unavailable!");
+void Event::Acquire(Thread* thread) {
+    ASSERT_MSG(!ShouldWait(thread), "object unavailable!");
 
     // Release the event if it's not sticky...
     if (reset_type != ResetType::Sticky)

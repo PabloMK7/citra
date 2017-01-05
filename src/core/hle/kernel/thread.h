@@ -31,13 +31,14 @@ enum ThreadProcessorId : s32 {
 };
 
 enum ThreadStatus {
-    THREADSTATUS_RUNNING,    ///< Currently running
-    THREADSTATUS_READY,      ///< Ready to run
-    THREADSTATUS_WAIT_ARB,   ///< Waiting on an address arbiter
-    THREADSTATUS_WAIT_SLEEP, ///< Waiting due to a SleepThread SVC
-    THREADSTATUS_WAIT_SYNCH, ///< Waiting due to a WaitSynchronization SVC
-    THREADSTATUS_DORMANT,    ///< Created but not yet made ready
-    THREADSTATUS_DEAD        ///< Run to completion, or forcefully terminated
+    THREADSTATUS_RUNNING,        ///< Currently running
+    THREADSTATUS_READY,          ///< Ready to run
+    THREADSTATUS_WAIT_ARB,       ///< Waiting on an address arbiter
+    THREADSTATUS_WAIT_SLEEP,     ///< Waiting due to a SleepThread SVC
+    THREADSTATUS_WAIT_SYNCH_ANY, ///< Waiting due to WaitSynch1 or WaitSynchN with wait_all = false
+    THREADSTATUS_WAIT_SYNCH_ALL, ///< Waiting due to WaitSynchronizationN with wait_all = true
+    THREADSTATUS_DORMANT,        ///< Created but not yet made ready
+    THREADSTATUS_DEAD            ///< Run to completion, or forcefully terminated
 };
 
 namespace Kernel {
@@ -72,8 +73,8 @@ public:
         return HANDLE_TYPE;
     }
 
-    bool ShouldWait() override;
-    void Acquire() override;
+    bool ShouldWait(Thread* thread) const override;
+    void Acquire(Thread* thread) override;
 
     /**
      * Gets the thread's current priority
@@ -88,6 +89,12 @@ public:
      * @param priority The new priority
      */
     void SetPriority(s32 priority);
+
+    /**
+     * Boost's a thread's priority to the best priority among the thread's held mutexes.
+     * This prevents priority inversion via priority inheritance.
+     */
+    void UpdatePriority();
 
     /**
      * Temporarily boosts the thread's priority until the next time it is scheduled
@@ -128,13 +135,14 @@ public:
 
     /**
      * Retrieves the index that this particular object occupies in the list of objects
-     * that the thread passed to WaitSynchronizationN.
+     * that the thread passed to WaitSynchronizationN, starting the search from the last element.
      * It is used to set the output value of WaitSynchronizationN when the thread is awakened.
+     * When a thread wakes up due to an object signal, the kernel will use the index of the last
+     * matching object in the wait objects list in case of having multiple instances of the same
+     * object in the list.
      * @param object Object to query the index of.
      */
-    s32 GetWaitObjectIndex(const WaitObject* object) const {
-        return wait_objects_index.at(object->GetObjectId());
-    }
+    s32 GetWaitObjectIndex(WaitObject* object) const;
 
     /**
      * Stops a thread, invalidating it from further use
@@ -152,10 +160,10 @@ public:
     /**
      * Returns whether this thread is waiting for all the objects in
      * its wait list to become ready, as a result of a WaitSynchronizationN call
-     * with wait_all = true, or a ReplyAndReceive call.
+     * with wait_all = true.
      */
     bool IsSleepingOnWaitAll() const {
-        return !wait_objects.empty();
+        return status == THREADSTATUS_WAIT_SYNCH_ALL;
     }
 
     ARM_Interface::ThreadContext context;
@@ -178,14 +186,14 @@ public:
     /// Mutexes currently held by this thread, which will be released when it exits.
     boost::container::flat_set<SharedPtr<Mutex>> held_mutexes;
 
+    /// Mutexes that this thread is currently waiting for.
+    boost::container::flat_set<SharedPtr<Mutex>> pending_mutexes;
+
     SharedPtr<Process> owner_process; ///< Process that owns this thread
 
-    /// Objects that the thread is waiting on.
-    /// This is only populated when the thread should wait for all the objects to become ready.
+    /// Objects that the thread is waiting on, in the same order as they were
+    // passed to WaitSynchronization1/N.
     std::vector<SharedPtr<WaitObject>> wait_objects;
-
-    /// Mapping of Object ids to their position in the last waitlist that this object waited on.
-    boost::container::flat_map<int, s32> wait_objects_index;
 
     VAddr wait_address; ///< If waiting on an AddressArbiter, this is the arbitration address
 

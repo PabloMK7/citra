@@ -132,25 +132,26 @@ using SharedPtr = boost::intrusive_ptr<T>;
 class WaitObject : public Object {
 public:
     /**
-     * Check if the current thread should wait until the object is available
+     * Check if the specified thread should wait until the object is available
+     * @param thread The thread about which we're deciding.
      * @return True if the current thread should wait due to this object being unavailable
      */
-    virtual bool ShouldWait() = 0;
+    virtual bool ShouldWait(Thread* thread) const = 0;
 
-    /// Acquire/lock the object if it is available
-    virtual void Acquire() = 0;
+    /// Acquire/lock the object for the specified thread if it is available
+    virtual void Acquire(Thread* thread) = 0;
 
     /**
      * Add a thread to wait on this object
      * @param thread Pointer to thread to add
      */
-    void AddWaitingThread(SharedPtr<Thread> thread);
+    virtual void AddWaitingThread(SharedPtr<Thread> thread);
 
     /**
      * Removes a thread from waiting on this object (e.g. if it was resumed already)
      * @param thread Pointer to thread to remove
      */
-    void RemoveWaitingThread(Thread* thread);
+    virtual void RemoveWaitingThread(Thread* thread);
 
     /**
      * Wake up all threads waiting on this object that can be awoken, in priority order,

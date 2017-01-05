@@ -27,12 +27,12 @@ namespace Kernel {
 /// Event type for the thread wake up event
 static int ThreadWakeupEventType;
 
-bool Thread::ShouldWait() {
+bool Thread::ShouldWait(Thread* thread) const {
     return status != THREADSTATUS_DEAD;
 }
 
-void Thread::Acquire() {
-    ASSERT_MSG(!ShouldWait(), "object unavailable!");
+void Thread::Acquire(Thread* thread) {
+    ASSERT_MSG(!ShouldWait(thread), "object unavailable!");
 }
 
 // TODO(yuriks): This can be removed if Thread objects are explicitly pooled in the future, allowing
@@ -72,7 +72,8 @@ Thread* GetCurrentThread() {
  * @return True if the thread is waiting, false otherwise
  */
 static bool CheckWait_WaitObject(const Thread* thread, WaitObject* wait_object) {
-    if (thread->status != THREADSTATUS_WAIT_SYNCH)
+    if (thread->status != THREADSTATUS_WAIT_SYNCH_ALL &&
+        thread->status != THREADSTATUS_WAIT_SYNCH_ANY)
         return false;
 
     auto itr = std::find(thread->wait_objects.begin(), thread->wait_objects.end(), wait_object);
@@ -90,9 +91,6 @@ static bool CheckWait_AddressArbiter(const Thread* thread, VAddr wait_address) {
 }
 
 void Thread::Stop() {
-    // Release all the mutexes that this thread holds
-    ReleaseThreadMutexes(this);
-
     // Cancel any outstanding wakeup events for this thread
     CoreTiming::UnscheduleEvent(ThreadWakeupEventType, callback_handle);
     wakeup_callback_handle_table.Close(callback_handle);
@@ -113,6 +111,9 @@ void Thread::Stop() {
         wait_object->RemoveWaitingThread(this);
     }
     wait_objects.clear();
+
+    // Release all the mutexes that this thread holds
+    ReleaseThreadMutexes(this);
 
     // Mark the TLS slot in the thread's page as free.
     u32 tls_page = (tls_address - Memory::TLS_AREA_VADDR) / Memory::PAGE_SIZE;
@@ -199,8 +200,8 @@ static void SwitchContext(Thread* new_thread) {
 
     // Load context of new thread
     if (new_thread) {
-        DEBUG_ASSERT_MSG(new_thread->status == THREADSTATUS_READY,
-                         "Thread must be ready to become running.");
+        ASSERT_MSG(new_thread->status == THREADSTATUS_READY,
+                   "Thread must be ready to become running.");
 
         // Cancel any outstanding wakeup events for this thread
         CoreTiming::UnscheduleEvent(ThreadWakeupEventType, new_thread->callback_handle);
@@ -253,7 +254,7 @@ void WaitCurrentThread_WaitSynchronization(std::vector<SharedPtr<WaitObject>> wa
     Thread* thread = GetCurrentThread();
     thread->wait_set_output = wait_set_output;
     thread->wait_objects = std::move(wait_objects);
-    thread->status = THREADSTATUS_WAIT_SYNCH;
+    thread->status = THREADSTATUS_WAIT_SYNCH_ANY;
 }
 
 void WaitCurrentThread_ArbitrateAddress(VAddr wait_address) {
@@ -281,7 +282,8 @@ static void ThreadWakeupCallback(u64 thread_handle, int cycles_late) {
         return;
     }
 
-    if (thread->status == THREADSTATUS_WAIT_SYNCH || thread->status == THREADSTATUS_WAIT_ARB) {
+    if (thread->status == THREADSTATUS_WAIT_SYNCH_ANY ||
+        thread->status == THREADSTATUS_WAIT_SYNCH_ALL || thread->status == THREADSTATUS_WAIT_ARB) {
         thread->wait_set_output = false;
         // Remove the thread from each of its waiting objects' waitlists
         for (auto& object : thread->wait_objects)
@@ -305,8 +307,11 @@ void Thread::WakeAfterDelay(s64 nanoseconds) {
 }
 
 void Thread::ResumeFromWait() {
+    ASSERT_MSG(wait_objects.empty(), "Thread is waking up while waiting for objects");
+
     switch (status) {
-    case THREADSTATUS_WAIT_SYNCH:
+    case THREADSTATUS_WAIT_SYNCH_ALL:
+    case THREADSTATUS_WAIT_SYNCH_ANY:
     case THREADSTATUS_WAIT_ARB:
     case THREADSTATUS_WAIT_SLEEP:
         break;
@@ -515,8 +520,21 @@ void Thread::SetPriority(s32 priority) {
     nominal_priority = current_priority = priority;
 }
 
+void Thread::UpdatePriority() {
+    s32 best_priority = nominal_priority;
+    for (auto& mutex : held_mutexes) {
+        if (mutex->priority < best_priority)
+            best_priority = mutex->priority;
+    }
+    BoostPriority(best_priority);
+}
+
 void Thread::BoostPriority(s32 priority) {
-    ready_queue.move(this, current_priority, priority);
+    // If thread was ready, adjust queues
+    if (status == THREADSTATUS_READY)
+        ready_queue.move(this, current_priority, priority);
+    else
+        ready_queue.prepare(priority);
     current_priority = priority;
 }
 
@@ -561,6 +579,12 @@ void Thread::SetWaitSynchronizationResult(ResultCode result) {
 
 void Thread::SetWaitSynchronizationOutput(s32 output) {
     context.cpu_registers[1] = output;
+}
+
+s32 Thread::GetWaitObjectIndex(WaitObject* object) const {
+    ASSERT_MSG(!wait_objects.empty(), "Thread is not waiting for anything");
+    auto match = std::find(wait_objects.rbegin(), wait_objects.rend(), object);
+    return std::distance(match, wait_objects.rend()) - 1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
