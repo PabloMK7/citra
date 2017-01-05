@@ -42,7 +42,7 @@ after_build:
         # set the build names as env vars so the artifacts can upload them
         $env:MSVC_BUILD_NAME = $MSVC_BUILD_NAME
         $env:MSVC_BUILD_PDB = $MSVC_BUILD_PDB
-        $env:BINTRAY_VERSION = $BINTRAY_VERSION
+        $env:GITREV = $GITREV
 
         7z a -tzip $MSVC_BUILD_PDB .\build\bin\release\*.pdb
         rm .\build\bin\release\*.pdb
@@ -61,6 +61,11 @@ artifacts:
 
 deploy:
   provider: GitHub
+  release: nightly-$(appveyor_build_number)
+  description: |
+    Citra nightly releases. Please choose the correct download for your operating system from the list below.
+
+    Short Commit Hash $(GITREV)
   auth_token:
     secure: "dbpsMC/MgPKWFNJCXpQl4cR8FYhepkPLjgNp/pRMktZ8oLKTqPYErfreaIxb/4P1"
   artifact: msvcbuild
