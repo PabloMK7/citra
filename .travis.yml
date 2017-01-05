@@ -36,4 +36,4 @@ deploy:
   file: "artifacts/*.tar.xz"
   skip_cleanup: true
   on:
-    tags: true
+    repo: citra-emu/citra-nightly
