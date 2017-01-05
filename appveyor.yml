@@ -60,14 +60,11 @@ artifacts:
     type: zip
 
 deploy:
-- provider: BinTray
-  username: citra-emu
-  api_key:
-    secure: qaZZfXp5Vv9xw5EmCxKLhGnNYhiNMDCdP84l0+h6HetfmvFlvHxyohWEVokLjl7d
-  subject: citra-emu
-  repo: citra
-  package: nightly
-  version: $(BINTRAY_VERSION)
-  publish: true
+  provider: GitHub
+  auth_token:
+    secure: "dbpsMC/MgPKWFNJCXpQl4cR8FYhepkPLjgNp/pRMktZ8oLKTqPYErfreaIxb/4P1"
+  artifact: msvcbuild
+  draft: false
+  prerelease: false
   on:
     branch: master
