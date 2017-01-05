@@ -18,6 +18,7 @@
 #include "core/memory.h"
 #include "video_core/pica.h"
 #include "video_core/pica_state.h"
+#include "video_core/texture/texture_decode.h"
 #include "video_core/utils.h"
 
 SurfacePicture::SurfacePicture(QWidget* parent, GraphicsSurfaceWidget* surface_widget_)
@@ -512,7 +513,7 @@ void GraphicsSurfaceWidget::OnUpdate() {
         }
 
         const auto texture = Pica::g_state.regs.GetTextures()[texture_index];
-        auto info = Pica::DebugUtils::TextureInfo::FromPicaRegister(texture.config, texture.format);
+        auto info = Pica::Texture::TextureInfo::FromPicaRegister(texture.config, texture.format);
 
         surface_address = info.physical_address;
         surface_width = info.width;
@@ -574,7 +575,7 @@ void GraphicsSurfaceWidget::OnUpdate() {
     if (surface_format <= Format::MaxTextureFormat) {
 
         // Generate a virtual texture
-        Pica::DebugUtils::TextureInfo info;
+        Pica::Texture::TextureInfo info;
         info.physical_address = surface_address;
         info.width = surface_width;
         info.height = surface_height;
@@ -583,7 +584,7 @@ void GraphicsSurfaceWidget::OnUpdate() {
 
         for (unsigned int y = 0; y < surface_height; ++y) {
             for (unsigned int x = 0; x < surface_width; ++x) {
-                Math::Vec4<u8> color = Pica::DebugUtils::LookupTexture(buffer, x, y, info, true);
+                Math::Vec4<u8> color = Pica::Texture::LookupTexture(buffer, x, y, info, true);
                 decoded_image.setPixel(x, y, qRgba(color.r(), color.g(), color.b(), color.a()));
             }
         }

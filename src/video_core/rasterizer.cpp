@@ -21,6 +21,7 @@
 #include "video_core/pica_types.h"
 #include "video_core/rasterizer.h"
 #include "video_core/shader/shader.h"
+#include "video_core/texture/texture_decode.h"
 #include "video_core/utils.h"
 
 namespace Pica {
@@ -579,10 +580,10 @@ static void ProcessTriangleInternal(const Shader::OutputVertex& v0, const Shader
                     u8* texture_data =
                         Memory::GetPhysicalPointer(texture.config.GetPhysicalAddress());
                     auto info =
-                        DebugUtils::TextureInfo::FromPicaRegister(texture.config, texture.format);
+                        Texture::TextureInfo::FromPicaRegister(texture.config, texture.format);
 
                     // TODO: Apply the min and mag filters to the texture
-                    texture_color[i] = DebugUtils::LookupTexture(texture_data, s, t, info);
+                    texture_color[i] = Texture::LookupTexture(texture_data, s, t, info);
 #if PICA_DUMP_TEXTURES
                     DebugUtils::DumpTexture(texture.config, texture_data);
 #endif
