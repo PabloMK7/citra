@@ -16,12 +16,6 @@ namespace Kernel {
 class ServerSession;
 class Session;
 
-enum class SessionStatus {
-    Open = 1,
-    ClosedByClient = 2,
-    ClosedBYServer = 3,
-};
-
 class ClientSession final : public Object {
 public:
     friend class ServerSession;
@@ -49,7 +43,6 @@ public:
 
     /// The parent session, which links to the server endpoint.
     std::shared_ptr<Session> parent;
-    SessionStatus session_status;  ///< The session's current status.
 
 private:
     ClientSession();

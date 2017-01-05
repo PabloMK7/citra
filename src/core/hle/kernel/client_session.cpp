@@ -30,7 +30,6 @@ ResultVal<SharedPtr<ClientSession>> ClientSession::Create(std::string name) {
 
     client_session->name = std::move(name);
     client_session->parent = nullptr;
-    client_session->session_status = SessionStatus::Open;
     return MakeResult<SharedPtr<ClientSession>>(std::move(client_session));
 }
 
