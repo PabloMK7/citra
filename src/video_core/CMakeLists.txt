@@ -15,6 +15,7 @@ set(SRCS
             shader/shader.cpp
             shader/shader_interpreter.cpp
             swrasterizer.cpp
+            texture/etc1.cpp
             texture/texture_decode.cpp
             vertex_loader.cpp
             video_core.cpp
@@ -44,6 +45,7 @@ set(HEADERS
             shader/shader.h
             shader/shader_interpreter.h
             swrasterizer.h
+            texture/etc1.h
             texture/texture_decode.h
             utils.h
             vertex_loader.h

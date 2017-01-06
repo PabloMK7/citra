@@ -8,8 +8,10 @@
 #include "common/color.h"
 #include "common/logging/log.h"
 #include "common/math_util.h"
+#include "common/swap.h"
 #include "common/vector_math.h"
 #include "video_core/pica.h"
+#include "video_core/texture/etc1.h"
 #include "video_core/texture/texture_decode.h"
 #include "video_core/utils.h"
 
@@ -177,127 +179,32 @@ Math::Vec4<u8> LookupTexelInTile(const u8* source, unsigned int x, unsigned int 
     case Regs::TextureFormat::ETC1:
     case Regs::TextureFormat::ETC1A4: {
         bool has_alpha = (info.format == Regs::TextureFormat::ETC1A4);
+        size_t subtile_size = has_alpha ? 16 : 8;
 
         // ETC1 further subdivides each 8x8 tile into four 4x4 subtiles
         constexpr unsigned int subtile_width = 4;
         constexpr unsigned int subtile_height = 4;
 
         unsigned int subtile_index = (x / subtile_width) + 2 * (y / subtile_height);
-        size_t subtile_size = has_alpha ? 16 : 8;
+        x %= subtile_width;
+        y %= subtile_height;
 
-        // TODO(yuriks): Use memcpy instead of reinterpret_cast
-        const u64* source_ptr = reinterpret_cast<const u64*>(source + subtile_index * subtile_size);
+        const u8* subtile_ptr = source + subtile_index * subtile_size;
 
-        u64 alpha = 0xFFFFFFFFFFFFFFFF;
+        u8 alpha = 255;
         if (has_alpha) {
-            alpha = *source_ptr;
-            source_ptr++;
+            u64_le packed_alpha;
+            memcpy(&packed_alpha, subtile_ptr, sizeof(u64));
+            subtile_ptr += sizeof(u64);
+
+            alpha = Color::Convert4To8((packed_alpha >> (4 * (x * subtile_width + y))) & 0xF);
         }
 
-        union ETC1Tile {
-            // Each of these two is a collection of 16 bits (one per lookup value)
-            BitField<0, 16, u64> table_subindexes;
-            BitField<16, 16, u64> negation_flags;
+        u64_le subtile_data;
+        memcpy(&subtile_data, subtile_ptr, sizeof(u64));
 
-            unsigned GetTableSubIndex(unsigned index) const {
-                return (table_subindexes >> index) & 1;
-            }
-
-            bool GetNegationFlag(unsigned index) const {
-                return ((negation_flags >> index) & 1) == 1;
-            }
-
-            BitField<32, 1, u64> flip;
-            BitField<33, 1, u64> differential_mode;
-
-            BitField<34, 3, u64> table_index_2;
-            BitField<37, 3, u64> table_index_1;
-
-            union {
-                // delta value + base value
-                BitField<40, 3, s64> db;
-                BitField<43, 5, u64> b;
-
-                BitField<48, 3, s64> dg;
-                BitField<51, 5, u64> g;
-
-                BitField<56, 3, s64> dr;
-                BitField<59, 5, u64> r;
-            } differential;
-
-            union {
-                BitField<40, 4, u64> b2;
-                BitField<44, 4, u64> b1;
-
-                BitField<48, 4, u64> g2;
-                BitField<52, 4, u64> g1;
-
-                BitField<56, 4, u64> r2;
-                BitField<60, 4, u64> r1;
-            } separate;
-
-            const Math::Vec3<u8> GetRGB(int x, int y) const {
-                int texel = 4 * x + y;
-
-                if (flip)
-                    std::swap(x, y);
-
-                // Lookup base value
-                Math::Vec3<int> ret;
-                if (differential_mode) {
-                    ret.r() = static_cast<int>(differential.r);
-                    ret.g() = static_cast<int>(differential.g);
-                    ret.b() = static_cast<int>(differential.b);
-                    if (x >= 2) {
-                        ret.r() += static_cast<int>(differential.dr);
-                        ret.g() += static_cast<int>(differential.dg);
-                        ret.b() += static_cast<int>(differential.db);
-                    }
-                    ret.r() = Color::Convert5To8(ret.r());
-                    ret.g() = Color::Convert5To8(ret.g());
-                    ret.b() = Color::Convert5To8(ret.b());
-                } else {
-                    if (x < 2) {
-                        ret.r() = Color::Convert4To8(static_cast<u8>(separate.r1));
-                        ret.g() = Color::Convert4To8(static_cast<u8>(separate.g1));
-                        ret.b() = Color::Convert4To8(static_cast<u8>(separate.b1));
-                    } else {
-                        ret.r() = Color::Convert4To8(static_cast<u8>(separate.r2));
-                        ret.g() = Color::Convert4To8(static_cast<u8>(separate.g2));
-                        ret.b() = Color::Convert4To8(static_cast<u8>(separate.b2));
-                    }
-                }
-
-                // Add modifier
-                unsigned table_index =
-                    static_cast<int>((x < 2) ? table_index_1.Value() : table_index_2.Value());
-
-                static const std::array<std::array<u8, 2>, 8> etc1_modifier_table = {{
-                    {{2, 8}},
-                    {{5, 17}},
-                    {{9, 29}},
-                    {{13, 42}},
-                    {{18, 60}},
-                    {{24, 80}},
-                    {{33, 106}},
-                    {{47, 183}},
-                }};
-
-                int modifier = etc1_modifier_table.at(table_index).at(GetTableSubIndex(texel));
-                if (GetNegationFlag(texel))
-                    modifier *= -1;
-
-                ret.r() = MathUtil::Clamp(ret.r() + modifier, 0, 255);
-                ret.g() = MathUtil::Clamp(ret.g() + modifier, 0, 255);
-                ret.b() = MathUtil::Clamp(ret.b() + modifier, 0, 255);
-
-                return ret.Cast<u8>();
-            }
-        } const* etc1_tile = reinterpret_cast<const ETC1Tile*>(source_ptr);
-
-        alpha >>= 4 * ((x & 3) * 4 + (y & 3));
-        return Math::MakeVec(etc1_tile->GetRGB(x & 3, y & 3),
-                             disable_alpha ? (u8)255 : Color::Convert4To8(alpha & 0xF));
+        return Math::MakeVec(SampleETC1Subtile(subtile_data, x, y),
+                             disable_alpha ? (u8)255 : alpha);
     }
 
     default:
