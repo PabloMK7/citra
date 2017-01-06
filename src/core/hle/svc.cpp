@@ -897,7 +897,11 @@ static ResultCode CreateMemoryBlock(Kernel::Handle* out_handle, u32 addr, u32 si
         return ResultCode(ErrorDescription::InvalidCombination, ErrorModule::OS,
                           ErrorSummary::InvalidArgument, ErrorLevel::Usage);
 
-    if (addr < Memory::PROCESS_IMAGE_VADDR || addr + size > Memory::SHARED_MEMORY_VADDR_END) {
+    // TODO(Subv): Processes with memory type APPLICATION are not allowed
+    // to create memory blocks with addr = 0, any attempts to do so
+    // should return error 0xD92007EA.
+    if ((addr < Memory::PROCESS_IMAGE_VADDR || addr + size > Memory::SHARED_MEMORY_VADDR_END) &&
+        addr != 0) {
         return ResultCode(ErrorDescription::InvalidAddress, ErrorModule::OS,
                           ErrorSummary::InvalidArgument, ErrorLevel::Usage);
     }
