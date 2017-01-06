@@ -275,8 +275,11 @@ struct Regs {
         case TextureFormat::I8:
         case TextureFormat::A8:
         case TextureFormat::IA4:
-        default: // placeholder for yet unknown formats
             return 2;
+
+        default: // placeholder for yet unknown formats
+            UNIMPLEMENTED();
+            return 0;
         }
     }
 

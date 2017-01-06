@@ -568,19 +568,14 @@ void GraphicsSurfaceWidget::OnUpdate() {
 
     surface_picture_label->show();
 
-    unsigned nibbles_per_pixel = GraphicsSurfaceWidget::NibblesPerPixel(surface_format);
-    unsigned stride = nibbles_per_pixel * surface_width / 2;
-
-    // We handle depth formats here because DebugUtils only supports TextureFormats
     if (surface_format <= Format::MaxTextureFormat) {
-
         // Generate a virtual texture
         Pica::Texture::TextureInfo info;
         info.physical_address = surface_address;
         info.width = surface_width;
         info.height = surface_height;
         info.format = static_cast<Pica::Regs::TextureFormat>(surface_format);
-        info.stride = stride;
+        info.SetDefaultStride();
 
         for (unsigned int y = 0; y < surface_height; ++y) {
             for (unsigned int x = 0; x < surface_width; ++x) {
@@ -588,8 +583,12 @@ void GraphicsSurfaceWidget::OnUpdate() {
                 decoded_image.setPixel(x, y, qRgba(color.r(), color.g(), color.b(), color.a()));
             }
         }
-
     } else {
+        // We handle depth formats here because DebugUtils only supports TextureFormats
+
+        // TODO(yuriks): Convert to newer tile-based addressing
+        unsigned nibbles_per_pixel = GraphicsSurfaceWidget::NibblesPerPixel(surface_format);
+        unsigned stride = nibbles_per_pixel * surface_width / 2;
 
         ASSERT_MSG(nibbles_per_pixel >= 2,
                    "Depth decoder only supports formats with at least one byte per pixel");

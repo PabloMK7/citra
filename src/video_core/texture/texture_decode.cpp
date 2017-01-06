@@ -9,52 +9,104 @@
 #include "common/logging/log.h"
 #include "common/math_util.h"
 #include "common/vector_math.h"
+#include "video_core/pica.h"
 #include "video_core/texture/texture_decode.h"
 #include "video_core/utils.h"
+
+using TextureFormat = Pica::Regs::TextureFormat;
 
 namespace Pica {
 namespace Texture {
 
-Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const TextureInfo& info,
-                             bool disable_alpha) {
-    const unsigned int coarse_x = x & ~7;
-    const unsigned int coarse_y = y & ~7;
+constexpr size_t TILE_SIZE = 8 * 8;
+constexpr size_t ETC1_SUBTILES = 2 * 2;
 
-    if (info.format != Regs::TextureFormat::ETC1 && info.format != Regs::TextureFormat::ETC1A4) {
-        // TODO(neobrain): Fix code design to unify vertical block offsets!
-        source += coarse_y * info.stride;
+size_t CalculateTileSize(TextureFormat format) {
+    switch (format) {
+    case TextureFormat::RGBA8:
+        return 4 * TILE_SIZE;
+
+    case TextureFormat::RGB8:
+        return 3 * TILE_SIZE;
+
+    case TextureFormat::RGB5A1:
+    case TextureFormat::RGB565:
+    case TextureFormat::RGBA4:
+    case TextureFormat::IA8:
+    case TextureFormat::RG8:
+        return 2 * TILE_SIZE;
+
+    case TextureFormat::I8:
+    case TextureFormat::A8:
+    case TextureFormat::IA4:
+        return 1 * TILE_SIZE;
+
+    case TextureFormat::I4:
+    case TextureFormat::A4:
+        return TILE_SIZE / 2;
+
+    case TextureFormat::ETC1:
+        return ETC1_SUBTILES * 8;
+
+    case TextureFormat::ETC1A4:
+        return ETC1_SUBTILES * 16;
+
+    default: // placeholder for yet unknown formats
+        UNIMPLEMENTED();
+        return 0;
     }
+}
 
-    // TODO: Assert that width/height are multiples of block dimensions
+Math::Vec4<u8> LookupTexture(const u8* source, unsigned int x, unsigned int y,
+                             const TextureInfo& info, bool disable_alpha) {
+    // Coordinate in tiles
+    const unsigned int coarse_x = x / 8;
+    const unsigned int coarse_y = y / 8;
+
+    // Coordinate inside the tile
+    const unsigned int fine_x = x % 8;
+    const unsigned int fine_y = y % 8;
+
+    const u8* line = source + coarse_y * info.stride;
+    const u8* tile = line + coarse_x * CalculateTileSize(info.format);
+    return LookupTexelInTile(tile, fine_x, fine_y, info, disable_alpha);
+}
+
+Math::Vec4<u8> LookupTexelInTile(const u8* source, unsigned int x, unsigned int y,
+                                 const TextureInfo& info, bool disable_alpha) {
+    DEBUG_ASSERT(x < 8);
+    DEBUG_ASSERT(y < 8);
+
+    using VideoCore::MortonInterleave;
 
     switch (info.format) {
     case Regs::TextureFormat::RGBA8: {
-        auto res = Color::DecodeRGBA8(source + VideoCore::GetMortonOffset(x, y, 4));
+        auto res = Color::DecodeRGBA8(source + MortonInterleave(x, y) * 4);
         return {res.r(), res.g(), res.b(), static_cast<u8>(disable_alpha ? 255 : res.a())};
     }
 
     case Regs::TextureFormat::RGB8: {
-        auto res = Color::DecodeRGB8(source + VideoCore::GetMortonOffset(x, y, 3));
+        auto res = Color::DecodeRGB8(source + MortonInterleave(x, y) * 3);
         return {res.r(), res.g(), res.b(), 255};
     }
 
     case Regs::TextureFormat::RGB5A1: {
-        auto res = Color::DecodeRGB5A1(source + VideoCore::GetMortonOffset(x, y, 2));
+        auto res = Color::DecodeRGB5A1(source + MortonInterleave(x, y) * 2);
         return {res.r(), res.g(), res.b(), static_cast<u8>(disable_alpha ? 255 : res.a())};
     }
 
     case Regs::TextureFormat::RGB565: {
-        auto res = Color::DecodeRGB565(source + VideoCore::GetMortonOffset(x, y, 2));
+        auto res = Color::DecodeRGB565(source + MortonInterleave(x, y) * 2);
         return {res.r(), res.g(), res.b(), 255};
     }
 
     case Regs::TextureFormat::RGBA4: {
-        auto res = Color::DecodeRGBA4(source + VideoCore::GetMortonOffset(x, y, 2));
+        auto res = Color::DecodeRGBA4(source + MortonInterleave(x, y) * 2);
         return {res.r(), res.g(), res.b(), static_cast<u8>(disable_alpha ? 255 : res.a())};
     }
 
     case Regs::TextureFormat::IA8: {
-        const u8* source_ptr = source + VideoCore::GetMortonOffset(x, y, 2);
+        const u8* source_ptr = source + MortonInterleave(x, y) * 2;
 
         if (disable_alpha) {
             // Show intensity as red, alpha as green
@@ -65,17 +117,17 @@ Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const TextureInfo& 
     }
 
     case Regs::TextureFormat::RG8: {
-        auto res = Color::DecodeRG8(source + VideoCore::GetMortonOffset(x, y, 2));
+        auto res = Color::DecodeRG8(source + MortonInterleave(x, y) * 2);
         return {res.r(), res.g(), 0, 255};
     }
 
     case Regs::TextureFormat::I8: {
-        const u8* source_ptr = source + VideoCore::GetMortonOffset(x, y, 1);
+        const u8* source_ptr = source + MortonInterleave(x, y);
         return {*source_ptr, *source_ptr, *source_ptr, 255};
     }
 
     case Regs::TextureFormat::A8: {
-        const u8* source_ptr = source + VideoCore::GetMortonOffset(x, y, 1);
+        const u8* source_ptr = source + MortonInterleave(x, y);
 
         if (disable_alpha) {
             return {*source_ptr, *source_ptr, *source_ptr, 255};
@@ -85,7 +137,7 @@ Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const TextureInfo& 
     }
 
     case Regs::TextureFormat::IA4: {
-        const u8* source_ptr = source + VideoCore::GetMortonOffset(x, y, 1);
+        const u8* source_ptr = source + MortonInterleave(x, y);
 
         u8 i = Color::Convert4To8(((*source_ptr) & 0xF0) >> 4);
         u8 a = Color::Convert4To8((*source_ptr) & 0xF);
@@ -99,7 +151,7 @@ Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const TextureInfo& 
     }
 
     case Regs::TextureFormat::I4: {
-        u32 morton_offset = VideoCore::GetMortonOffset(x, y, 1);
+        u32 morton_offset = MortonInterleave(x, y);
         const u8* source_ptr = source + morton_offset / 2;
 
         u8 i = (morton_offset % 2) ? ((*source_ptr & 0xF0) >> 4) : (*source_ptr & 0xF);
@@ -109,7 +161,7 @@ Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const TextureInfo& 
     }
 
     case Regs::TextureFormat::A4: {
-        u32 morton_offset = VideoCore::GetMortonOffset(x, y, 1);
+        u32 morton_offset = MortonInterleave(x, y);
         const u8* source_ptr = source + morton_offset / 2;
 
         u8 a = (morton_offset % 2) ? ((*source_ptr & 0xF0) >> 4) : (*source_ptr & 0xF);
@@ -127,15 +179,15 @@ Math::Vec4<u8> LookupTexture(const u8* source, int x, int y, const TextureInfo& 
         bool has_alpha = (info.format == Regs::TextureFormat::ETC1A4);
 
         // ETC1 further subdivides each 8x8 tile into four 4x4 subtiles
-        const int subtile_width = 4;
-        const int subtile_height = 4;
+        constexpr unsigned int subtile_width = 4;
+        constexpr unsigned int subtile_height = 4;
 
-        int subtile_index = ((x / subtile_width) & 1) + 2 * ((y / subtile_height) & 1);
-        unsigned subtile_bytes = has_alpha ? 2 : 1; // TODO: Name...
+        unsigned int subtile_index = (x / subtile_width) + 2 * (y / subtile_height);
+        size_t subtile_size = has_alpha ? 16 : 8;
 
-        const u64* source_ptr = (const u64*)(source + coarse_x * subtile_bytes * 4 +
-                                             coarse_y * subtile_bytes * 4 * (info.width / 8) +
-                                             subtile_index * subtile_bytes * 8);
+        // TODO(yuriks): Use memcpy instead of reinterpret_cast
+        const u64* source_ptr = reinterpret_cast<const u64*>(source + subtile_index * subtile_size);
+
         u64 alpha = 0xFFFFFFFFFFFFFFFF;
         if (has_alpha) {
             alpha = *source_ptr;
@@ -262,7 +314,7 @@ TextureInfo TextureInfo::FromPicaRegister(const Regs::TextureConfig& config,
     info.width = config.width;
     info.height = config.height;
     info.format = format;
-    info.stride = Pica::Regs::NibblesPerPixel(info.format) * info.width / 2;
+    info.SetDefaultStride();
     return info;
 }
 
