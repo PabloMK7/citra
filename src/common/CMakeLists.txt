@@ -46,6 +46,7 @@ set(HEADERS
             microprofileui.h
             platform.h
             profiler_reporting.h
+            quaternion.h
             scm_rev.h
             scope_exit.h
             string_util.h

@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <cmath>
 #include "common/assert.h"
+#include "common/profiler_reporting.h"
 #include "core/frontend/emu_window.h"
 #include "core/frontend/key_map.h"
 #include "video_core/video_core.h"
@@ -87,6 +88,30 @@ void EmuWindow::TouchMoved(unsigned framebuffer_x, unsigned framebuffer_y) {
         std::tie(framebuffer_x, framebuffer_y) = ClipToTouchScreen(framebuffer_x, framebuffer_y);
 
     TouchPressed(framebuffer_x, framebuffer_y);
+}
+
+void EmuWindow::AccelerometerChanged(float x, float y, float z) {
+    constexpr float coef = 512;
+
+    std::lock_guard<std::mutex> lock(accel_mutex);
+
+    // TODO(wwylele): do a time stretch as it in GyroscopeChanged
+    // The time stretch formula should be like
+    // stretched_vector = (raw_vector - gravity) * stretch_ratio + gravity
+    accel_x = x * coef;
+    accel_y = y * coef;
+    accel_z = z * coef;
+}
+
+void EmuWindow::GyroscopeChanged(float x, float y, float z) {
+    constexpr float FULL_FPS = 60;
+    float coef = GetGyroscopeRawToDpsCoefficient();
+    float stretch =
+        FULL_FPS / Common::Profiling::GetTimingResultsAggregator()->GetAggregatedResults().fps;
+    std::lock_guard<std::mutex> lock(gyro_mutex);
+    gyro_x = x * coef * stretch;
+    gyro_y = y * coef * stretch;
+    gyro_z = z * coef * stretch;
 }
 
 void EmuWindow::UpdateCurrentFramebufferLayout(unsigned width, unsigned height) {
