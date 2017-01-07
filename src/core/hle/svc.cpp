@@ -849,6 +849,11 @@ static ResultCode CancelTimer(Kernel::Handle handle) {
 static void SleepThread(s64 nanoseconds) {
     LOG_TRACE(Kernel_SVC, "called nanoseconds=%lld", nanoseconds);
 
+    // Don't attempt to yield execution if there are no available threads to run,
+    // this way we avoid a useless reschedule to the idle thread.
+    if (nanoseconds == 0 && !Kernel::HaveReadyThreads())
+        return;
+
     // Sleep current thread and check for next thread to schedule
     Kernel::WaitCurrentThread_Sleep();
 

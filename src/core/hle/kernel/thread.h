@@ -219,6 +219,11 @@ private:
 SharedPtr<Thread> SetupMainThread(u32 entry_point, s32 priority);
 
 /**
+ * Returns whether there are any threads that are ready to run.
+ */
+bool HaveReadyThreads();
+
+/**
  * Reschedules to the next available thread (call after current thread is suspended)
  */
 void Reschedule();

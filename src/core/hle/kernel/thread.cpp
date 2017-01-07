@@ -508,6 +508,10 @@ SharedPtr<Thread> SetupMainThread(u32 entry_point, s32 priority) {
     return thread;
 }
 
+bool HaveReadyThreads() {
+    return ready_queue.get_first() != nullptr;
+}
+
 void Reschedule() {
     Thread* cur = GetCurrentThread();
     Thread* next = PopNextReadyThread();
