@@ -37,13 +37,6 @@
          </widget>
         </item>
         <item>
-         <widget class="QCheckBox" name="toggle_scaled_resolution">
-          <property name="text">
-           <string>Enable scaled resolution</string>
-          </property>
-         </widget>
-        </item>
-        <item>
          <widget class="QCheckBox" name="toggle_vsync">
           <property name="text">
            <string>Enable V-Sync</string>
@@ -56,6 +49,76 @@
            <string>Limit framerate</string>
           </property>
          </widget>
+        </item>
+        <item>
+          <layout class="QHBoxLayout" name="horizontalLayout">
+            <item>
+              <widget class="QLabel" name="label">
+                <property name="text">
+                  <string>Internal Resolution:</string>
+                </property>
+              </widget>
+            </item>
+            <item>
+              <widget class="QComboBox" name="resolution_factor_combobox">
+                <item>
+                  <property name="text">
+                    <string notr="true">Auto (Window Size)</string>
+                  </property>
+                </item>
+                <item>
+                  <property name="text">
+                    <string notr="true">Native (400x240)</string>
+                  </property>
+                </item>
+                <item>
+                  <property name="text">
+                    <string notr="true">2x Native (800x480)</string>
+                  </property>
+                </item>
+                <item>
+                  <property name="text">
+                    <string notr="true">3x Native (1200x720)</string>
+                  </property>
+                </item>
+                <item>
+                  <property name="text">
+                    <string notr="true">4x Native (1600x960)</string>
+                  </property>
+                </item>
+                <item>
+                  <property name="text">
+                    <string notr="true">5x Native (2000x1200)</string>
+                  </property>
+                </item>
+                <item>
+                  <property name="text">
+                    <string notr="true">6x Native (2400x1440)</string>
+                  </property>
+                </item>
+                <item>
+                  <property name="text">
+                    <string notr="true">7x Native (2800x1680)</string>
+                  </property>
+                </item>
+                <item>
+                  <property name="text">
+                    <string notr="true">8x Native (3200x1920)</string>
+                  </property>
+                </item>
+                <item>
+                  <property name="text">
+                    <string notr="true">9x Native (3600x2160)</string>
+                  </property>
+                </item>
+                <item>
+                  <property name="text">
+                    <string notr="true">10x Native (4000x2400)</string>
+                  </property>
+                </item>
+              </widget>
+            </item>
+          </layout>
         </item>
        </layout>
       </widget>
@@ -128,5 +191,12 @@
   </layout>
  </widget>
  <resources/>
- <connections/>
+ <connections>
+  <connection>
+   <sender>toggle_hw_renderer</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>resolution_factor_combobox</receiver>
+   <slot>setEnabled(bool)</slot>
+  </connection>
+ </connections>
 </ui>
