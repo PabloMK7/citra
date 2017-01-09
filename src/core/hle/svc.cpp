@@ -837,6 +837,11 @@ static ResultCode SetTimer(Kernel::Handle handle, s64 initial, s64 interval) {
 
     LOG_TRACE(Kernel_SVC, "called timer=0x%08X", handle);
 
+    if (initial < 0 || interval < 0) {
+        return ResultCode(ErrorDescription::OutOfRange, ErrorModule::Kernel,
+                          ErrorSummary::InvalidArgument, ErrorLevel::Permanent);
+    }
+
     SharedPtr<Timer> timer = Kernel::g_handle_table.Get<Timer>(handle);
     if (timer == nullptr)
         return ERR_INVALID_HANDLE;
