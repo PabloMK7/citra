@@ -38,6 +38,8 @@ public:
     bool ShouldWait(Thread* thread) const override;
     void Acquire(Thread* thread) override;
 
+    void WakeupAllWaitingThreads() override;
+
     void Signal();
     void Clear();
 
