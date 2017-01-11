@@ -531,7 +531,9 @@ static void GetStandardCoefficient(Interface* self) {
         LOG_DEBUG(Service_Y2R, "called standard_coefficient=%u ", index);
     } else {
         cmd_buff[0] = IPC::MakeHeader(0x21, 1, 0);
-        cmd_buff[1] = -1; // TODO(bunnei): Identify the correct error code for this
+        cmd_buff[1] = ResultCode(ErrorDescription::InvalidEnumValue, ErrorModule::CAM,
+                                 ErrorSummary::InvalidArgument, ErrorLevel::Usage)
+                          .raw;
 
         LOG_ERROR(Service_Y2R, "called standard_coefficient=%u  The argument is invalid!", index);
     }
