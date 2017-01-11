@@ -275,7 +275,6 @@
          </layout>
         </item>
        </layout>
-       <zorder></zorder>
       </widget>
      </item>
      <item row="1" column="1">
@@ -521,7 +520,7 @@
         <item row="1" column="1">
          <layout class="QVBoxLayout" name="verticalLayout_28">
           <item>
-           <widget class="QLabel" name="label_34">
+           <widget class="QLabel" name="label_36">
             <property name="text">
              <string>Circle Mod:</string>
             </property>
