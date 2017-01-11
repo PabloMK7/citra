@@ -444,25 +444,9 @@ ResultVal<SharedPtr<Thread>> Thread::Create(std::string name, VAddr entry_point,
     return MakeResult<SharedPtr<Thread>>(std::move(thread));
 }
 
-// TODO(peachum): Remove this. Range checking should be done, and an appropriate error should be
-// returned.
-static void ClampPriority(const Thread* thread, s32* priority) {
-    if (*priority < THREADPRIO_HIGHEST || *priority > THREADPRIO_LOWEST) {
-        DEBUG_ASSERT_MSG(
-            false, "Application passed an out of range priority. An error should be returned.");
-
-        s32 new_priority = MathUtil::Clamp<s32>(*priority, THREADPRIO_HIGHEST, THREADPRIO_LOWEST);
-        LOG_WARNING(Kernel_SVC, "(name=%s): invalid priority=%d, clamping to %d",
-                    thread->name.c_str(), *priority, new_priority);
-        // TODO(bunnei): Clamping to a valid priority is not necessarily correct behavior... Confirm
-        // validity of this
-        *priority = new_priority;
-    }
-}
-
 void Thread::SetPriority(s32 priority) {
-    ClampPriority(this, &priority);
-
+    ASSERT_MSG(priority <= THREADPRIO_LOWEST && priority >= THREADPRIO_HIGHEST,
+               "Invalid priority value.");
     // If thread was ready, adjust queues
     if (status == THREADSTATUS_READY)
         ready_queue.move(this, current_priority, priority);

@@ -598,9 +598,23 @@ static ResultCode GetThreadPriority(s32* priority, Kernel::Handle handle) {
 
 /// Sets the priority for the specified thread
 static ResultCode SetThreadPriority(Kernel::Handle handle, s32 priority) {
+    if (priority > THREADPRIO_LOWEST) {
+        return ResultCode(ErrorDescription::OutOfRange, ErrorModule::OS,
+                          ErrorSummary::InvalidArgument, ErrorLevel::Usage);
+    }
+
     SharedPtr<Kernel::Thread> thread = Kernel::g_handle_table.Get<Kernel::Thread>(handle);
     if (thread == nullptr)
         return ERR_INVALID_HANDLE;
+
+    using Kernel::ResourceLimit;
+    // Note: The kernel uses the current process's resource limit instead of
+    // the one from the thread owner's resource limit.
+    Kernel::SharedPtr<ResourceLimit>& resource_limit = Kernel::g_current_process->resource_limit;
+    if (resource_limit->GetMaxResourceValue(Kernel::ResourceTypes::PRIORITY) > priority) {
+        return ResultCode(ErrorDescription::NotAuthorized, ErrorModule::OS,
+                          ErrorSummary::WrongArgument, ErrorLevel::Permanent);
+    }
 
     thread->SetPriority(priority);
     thread->UpdatePriority();

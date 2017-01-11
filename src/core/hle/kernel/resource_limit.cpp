@@ -62,6 +62,8 @@ s32 ResourceLimit::GetCurrentResourceValue(u32 resource) const {
 
 s32 ResourceLimit::GetMaxResourceValue(u32 resource) const {
     switch (resource) {
+    case PRIORITY:
+        return max_priority;
     case COMMIT:
         return max_commit;
     case THREAD:
