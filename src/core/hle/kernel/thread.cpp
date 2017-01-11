@@ -353,14 +353,8 @@ static void ResetThreadContext(ARM_Interface::ThreadContext& context, u32 stack_
 
 ResultVal<SharedPtr<Thread>> Thread::Create(std::string name, VAddr entry_point, s32 priority,
                                             u32 arg, s32 processor_id, VAddr stack_top) {
-    if (priority < THREADPRIO_HIGHEST || priority > THREADPRIO_LOWEST) {
-        s32 new_priority = MathUtil::Clamp<s32>(priority, THREADPRIO_HIGHEST, THREADPRIO_LOWEST);
-        LOG_WARNING(Kernel_SVC, "(name=%s): invalid priority=%d, clamping to %d", name.c_str(),
-                    priority, new_priority);
-        // TODO(bunnei): Clamping to a valid priority is not necessarily correct behavior... Confirm
-        // validity of this
-        priority = new_priority;
-    }
+    ASSERT_MSG(priority >= THREADPRIO_HIGHEST && priority <= THREADPRIO_LOWEST,
+               "Invalid thread priority");
 
     if (!Memory::IsValidVirtualAddress(entry_point)) {
         LOG_ERROR(Kernel_SVC, "(name=%s): invalid entry %08x", name.c_str(), entry_point);

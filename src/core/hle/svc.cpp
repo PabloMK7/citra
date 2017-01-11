@@ -532,14 +532,16 @@ static ResultCode CreateThread(Kernel::Handle* out_handle, s32 priority, u32 ent
         name = Common::StringFromFormat("unknown-%08x", entry_point);
     }
 
-    // TODO(bunnei): Implement resource limits to return an error code instead of the below assert.
-    // The error code should be: Description::NotAuthorized, Module::OS, Summary::WrongArgument,
-    // Level::Permanent
-    ASSERT_MSG(priority >= THREADPRIO_USERLAND_MAX, "Unexpected thread priority!");
-
     if (priority > THREADPRIO_LOWEST) {
         return ResultCode(ErrorDescription::OutOfRange, ErrorModule::OS,
                           ErrorSummary::InvalidArgument, ErrorLevel::Usage);
+    }
+
+    using Kernel::ResourceLimit;
+    Kernel::SharedPtr<ResourceLimit>& resource_limit = Kernel::g_current_process->resource_limit;
+    if (resource_limit->GetMaxResourceValue(Kernel::ResourceTypes::PRIORITY) > priority) {
+        return ResultCode(ErrorDescription::NotAuthorized, ErrorModule::OS,
+                          ErrorSummary::WrongArgument, ErrorLevel::Permanent);
     }
 
     switch (processor_id) {
