@@ -6,9 +6,8 @@
 
 #include "common/logging/log.h"
 #include "common/string_util.h"
-
 #include "core/hle/kernel/server_port.h"
-#include "core/hle/service/ac_u.h"
+#include "core/hle/service/ac/ac.h"
 #include "core/hle/service/act/act.h"
 #include "core/hle/service/am/am.h"
 #include "core/hle/service/apt/apt.h"
@@ -138,6 +137,7 @@ void Init() {
     AddNamedPort(new ERR::ERR_F);
 
     FS::ArchiveInit();
+    AC::Init();
     ACT::Init();
     AM::Init();
     APT::Init();
@@ -158,7 +158,6 @@ void Init() {
     PTM::Init();
     QTM::Init();
 
-    AddService(new AC::AC_U);
     AddService(new CSND::CSND_SND);
     AddService(new DSP_DSP::Interface);
     AddService(new GSP::GSP_GPU);
@@ -192,6 +191,7 @@ void Shutdown() {
     BOSS::Shutdown();
     APT::Shutdown();
     AM::Shutdown();
+    AC::Shutdown();
     FS::ArchiveShutdown();
 
     g_srv_services.clear();

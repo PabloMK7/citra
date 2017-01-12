@@ -1,4 +1,4 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright 2016 Citra Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -9,13 +9,12 @@
 namespace Service {
 namespace AC {
 
-class AC_U final : public Interface {
+class AC_I final : public Interface {
 public:
-    AC_U();
-    ~AC_U();
+    AC_I();
 
     std::string GetPortName() const override {
-        return "ac:u";
+        return "ac:i";
     }
 };
 
