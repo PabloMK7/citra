@@ -149,7 +149,7 @@ static ResultCode WriteHWRegsWithMask(u32 base_address, u32 size_in_bytes, VAddr
                 u32 mask = Memory::Read32(masks_vaddr);
 
                 // Update the current value of the register only for set mask bits
-                reg_value = (reg_value & ~mask) | (data | mask);
+                reg_value = (reg_value & ~mask) | (data & mask);
 
                 WriteSingleHWReg(base_address, reg_value);
 
