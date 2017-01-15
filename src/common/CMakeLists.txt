@@ -1,4 +1,27 @@
 # Generate cpp with Git revision from template
+# Also if this is a CI build, add the build name (ie: Nightly, Bleeding Edge) to the scm_rev file as well
+set(REPO_NAME "")
+if ($ENV{CI})
+  if ($ENV{TRAVIS})
+    set(BUILD_REPOSITORY $ENV{TRAVIS_REPO_SLUG})
+  elseif($ENV{APPVEYOR})
+    set(BUILD_REPOSITORY $ENV{APPVEYOR_REPO_NAME})
+  endif()
+  # regex capture the string nightly or bleeding-edge into CMAKE_MATCH_1
+  string(REGEX MATCH "citra-emu/citra-?(.*)" OUTVAR ${BUILD_REPOSITORY})
+  if (${CMAKE_MATCH_COUNT} GREATER 0)
+    # capitalize the first letter of each word in the repo name.
+    string(REPLACE "-" ";" REPO_NAME_LIST ${CMAKE_MATCH_1})
+    foreach(WORD ${REPO_NAME_LIST})
+      string(SUBSTRING ${WORD} 0 1 FIRST_LETTER)
+      string(SUBSTRING ${WORD} 1 -1 REMAINDER)
+      string(TOUPPER ${FIRST_LETTER} FIRST_LETTER)
+      # this leaves a trailing space on the last word, but we actually want that
+      # because of how its styled in the title bar.
+      set(REPO_NAME "${REPO_NAME}${FIRST_LETTER}${REMAINDER} ")
+    endforeach()
+  endif()
+endif()
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/scm_rev.cpp.in" "${CMAKE_CURRENT_SOURCE_DIR}/scm_rev.cpp" @ONLY)
 
 set(SRCS
