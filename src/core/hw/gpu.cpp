@@ -15,7 +15,6 @@
 #include "common/vector_math.h"
 #include "core/core_timing.h"
 #include "core/hle/service/gsp_gpu.h"
-#include "core/hle/service/hid/hid.h"
 #include "core/hw/gpu.h"
 #include "core/hw/hw.h"
 #include "core/memory.h"
@@ -550,9 +549,6 @@ static void VBlankCallback(u64 userdata, int cycles_late) {
     // two different intervals.
     Service::GSP::SignalInterrupt(Service::GSP::InterruptId::PDC0);
     Service::GSP::SignalInterrupt(Service::GSP::InterruptId::PDC1);
-
-    // Check for user input updates
-    Service::HID::Update();
 
     if (!Settings::values.use_vsync && Settings::values.toggle_framelimit) {
         FrameLimiter();

@@ -35,6 +35,15 @@ static u32 next_gyroscope_index;
 static int enable_accelerometer_count = 0; // positive means enabled
 static int enable_gyroscope_count = 0;     // positive means enabled
 
+static int pad_update_event;
+static int accelerometer_update_event;
+static int gyroscope_update_event;
+
+// Updating period for each HID device. These empirical values are measured from a 11.2 3DS.
+constexpr u64 pad_update_ticks = 268123480ull / 234;
+constexpr u64 accelerometer_update_ticks = 268123480ull / 104;
+constexpr u64 gyroscope_update_ticks = 268123480ull / 101;
+
 static PadState GetCirclePadDirectionState(s16 circle_pad_x, s16 circle_pad_y) {
     // 30 degree and 60 degree are angular thresholds for directions
     constexpr float TAN30 = 0.577350269f;
@@ -65,13 +74,8 @@ static PadState GetCirclePadDirectionState(s16 circle_pad_x, s16 circle_pad_y) {
     return state;
 }
 
-void Update() {
+static void UpdatePadCallback(u64 userdata, int cycles_late) {
     SharedMem* mem = reinterpret_cast<SharedMem*>(shared_mem->GetPointer());
-
-    if (mem == nullptr) {
-        LOG_DEBUG(Service_HID, "Cannot update HID prior to mapping shared memory!");
-        return;
-    }
 
     PadState state = VideoCore::g_emu_window->GetPadState();
 
@@ -131,59 +135,68 @@ void Update() {
     event_pad_or_touch_1->Signal();
     event_pad_or_touch_2->Signal();
 
-    // Update accelerometer
-    if (enable_accelerometer_count > 0) {
-        mem->accelerometer.index = next_accelerometer_index;
-        next_accelerometer_index =
-            (next_accelerometer_index + 1) % mem->accelerometer.entries.size();
+    // Reschedule recurrent event
+    CoreTiming::ScheduleEvent(pad_update_ticks - cycles_late, pad_update_event);
+}
 
-        AccelerometerDataEntry& accelerometer_entry =
-            mem->accelerometer.entries[mem->accelerometer.index];
-        std::tie(accelerometer_entry.x, accelerometer_entry.y, accelerometer_entry.z) =
-            VideoCore::g_emu_window->GetAccelerometerState();
+static void UpdateAccelerometerCallback(u64 userdata, int cycles_late) {
+    SharedMem* mem = reinterpret_cast<SharedMem*>(shared_mem->GetPointer());
 
-        // Make up "raw" entry
-        // TODO(wwylele):
-        // From hardware testing, the raw_entry values are approximately,
-        // but not exactly, as twice as corresponding entries (or with a minus sign).
-        // It may caused by system calibration to the accelerometer.
-        // Figure out how it works, or, if no game reads raw_entry,
-        // the following three lines can be removed and leave raw_entry unimplemented.
-        mem->accelerometer.raw_entry.x = -2 * accelerometer_entry.x;
-        mem->accelerometer.raw_entry.z = 2 * accelerometer_entry.y;
-        mem->accelerometer.raw_entry.y = -2 * accelerometer_entry.z;
+    mem->accelerometer.index = next_accelerometer_index;
+    next_accelerometer_index = (next_accelerometer_index + 1) % mem->accelerometer.entries.size();
 
-        // If we just updated index 0, provide a new timestamp
-        if (mem->accelerometer.index == 0) {
-            mem->accelerometer.index_reset_ticks_previous = mem->accelerometer.index_reset_ticks;
-            mem->accelerometer.index_reset_ticks = (s64)CoreTiming::GetTicks();
-        }
+    AccelerometerDataEntry& accelerometer_entry =
+        mem->accelerometer.entries[mem->accelerometer.index];
+    std::tie(accelerometer_entry.x, accelerometer_entry.y, accelerometer_entry.z) =
+        VideoCore::g_emu_window->GetAccelerometerState();
 
-        event_accelerometer->Signal();
+    // Make up "raw" entry
+    // TODO(wwylele):
+    // From hardware testing, the raw_entry values are approximately, but not exactly, as twice as
+    // corresponding entries (or with a minus sign). It may caused by system calibration to the
+    // accelerometer. Figure out how it works, or, if no game reads raw_entry, the following three
+    // lines can be removed and leave raw_entry unimplemented.
+    mem->accelerometer.raw_entry.x = -2 * accelerometer_entry.x;
+    mem->accelerometer.raw_entry.z = 2 * accelerometer_entry.y;
+    mem->accelerometer.raw_entry.y = -2 * accelerometer_entry.z;
+
+    // If we just updated index 0, provide a new timestamp
+    if (mem->accelerometer.index == 0) {
+        mem->accelerometer.index_reset_ticks_previous = mem->accelerometer.index_reset_ticks;
+        mem->accelerometer.index_reset_ticks = (s64)CoreTiming::GetTicks();
     }
 
-    // Update gyroscope
-    if (enable_gyroscope_count > 0) {
-        mem->gyroscope.index = next_gyroscope_index;
-        next_gyroscope_index = (next_gyroscope_index + 1) % mem->gyroscope.entries.size();
+    event_accelerometer->Signal();
 
-        GyroscopeDataEntry& gyroscope_entry = mem->gyroscope.entries[mem->gyroscope.index];
-        std::tie(gyroscope_entry.x, gyroscope_entry.y, gyroscope_entry.z) =
-            VideoCore::g_emu_window->GetGyroscopeState();
+    // Reschedule recurrent event
+    CoreTiming::ScheduleEvent(accelerometer_update_ticks - cycles_late, accelerometer_update_event);
+}
 
-        // Make up "raw" entry
-        mem->gyroscope.raw_entry.x = gyroscope_entry.x;
-        mem->gyroscope.raw_entry.z = -gyroscope_entry.y;
-        mem->gyroscope.raw_entry.y = gyroscope_entry.z;
+static void UpdateGyroscopeCallback(u64 userdata, int cycles_late) {
+    SharedMem* mem = reinterpret_cast<SharedMem*>(shared_mem->GetPointer());
 
-        // If we just updated index 0, provide a new timestamp
-        if (mem->gyroscope.index == 0) {
-            mem->gyroscope.index_reset_ticks_previous = mem->gyroscope.index_reset_ticks;
-            mem->gyroscope.index_reset_ticks = (s64)CoreTiming::GetTicks();
-        }
+    mem->gyroscope.index = next_gyroscope_index;
+    next_gyroscope_index = (next_gyroscope_index + 1) % mem->gyroscope.entries.size();
 
-        event_gyroscope->Signal();
+    GyroscopeDataEntry& gyroscope_entry = mem->gyroscope.entries[mem->gyroscope.index];
+    std::tie(gyroscope_entry.x, gyroscope_entry.y, gyroscope_entry.z) =
+        VideoCore::g_emu_window->GetGyroscopeState();
+
+    // Make up "raw" entry
+    mem->gyroscope.raw_entry.x = gyroscope_entry.x;
+    mem->gyroscope.raw_entry.z = -gyroscope_entry.y;
+    mem->gyroscope.raw_entry.y = gyroscope_entry.z;
+
+    // If we just updated index 0, provide a new timestamp
+    if (mem->gyroscope.index == 0) {
+        mem->gyroscope.index_reset_ticks_previous = mem->gyroscope.index_reset_ticks;
+        mem->gyroscope.index_reset_ticks = (s64)CoreTiming::GetTicks();
     }
+
+    event_gyroscope->Signal();
+
+    // Reschedule recurrent event
+    CoreTiming::ScheduleEvent(gyroscope_update_ticks - cycles_late, gyroscope_update_event);
 }
 
 void GetIPCHandles(Service::Interface* self) {
@@ -204,7 +217,11 @@ void EnableAccelerometer(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
     ++enable_accelerometer_count;
-    event_accelerometer->Signal();
+
+    // Schedules the accelerometer update event if the accelerometer was just enabled
+    if (enable_accelerometer_count == 1) {
+        CoreTiming::ScheduleEvent(accelerometer_update_ticks, accelerometer_update_event);
+    }
 
     cmd_buff[1] = RESULT_SUCCESS.raw;
 
@@ -215,7 +232,11 @@ void DisableAccelerometer(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
     --enable_accelerometer_count;
-    event_accelerometer->Signal();
+
+    // Unschedules the accelerometer update event if the accelerometer was just disabled
+    if (enable_accelerometer_count == 0) {
+        CoreTiming::UnscheduleEvent(accelerometer_update_event, 0);
+    }
 
     cmd_buff[1] = RESULT_SUCCESS.raw;
 
@@ -226,7 +247,11 @@ void EnableGyroscopeLow(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
     ++enable_gyroscope_count;
-    event_gyroscope->Signal();
+
+    // Schedules the gyroscope update event if the gyroscope was just enabled
+    if (enable_gyroscope_count == 1) {
+        CoreTiming::ScheduleEvent(gyroscope_update_ticks, gyroscope_update_event);
+    }
 
     cmd_buff[1] = RESULT_SUCCESS.raw;
 
@@ -237,7 +262,11 @@ void DisableGyroscopeLow(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
     --enable_gyroscope_count;
-    event_gyroscope->Signal();
+
+    // Unschedules the gyroscope update event if the gyroscope was just disabled
+    if (enable_gyroscope_count == 0) {
+        CoreTiming::UnscheduleEvent(gyroscope_update_event, 0);
+    }
 
     cmd_buff[1] = RESULT_SUCCESS.raw;
 
@@ -298,6 +327,15 @@ void Init() {
     event_accelerometer = Event::Create(ResetType::OneShot, "HID:EventAccelerometer");
     event_gyroscope = Event::Create(ResetType::OneShot, "HID:EventGyroscope");
     event_debug_pad = Event::Create(ResetType::OneShot, "HID:EventDebugPad");
+
+    // Register update callbacks
+    pad_update_event = CoreTiming::RegisterEvent("HID::UpdatePadCallback", UpdatePadCallback);
+    accelerometer_update_event =
+        CoreTiming::RegisterEvent("HID::UpdateAccelerometerCallback", UpdateAccelerometerCallback);
+    gyroscope_update_event =
+        CoreTiming::RegisterEvent("HID::UpdateGyroscopeCallback", UpdateGyroscopeCallback);
+
+    CoreTiming::ScheduleEvent(pad_update_ticks, pad_update_event);
 }
 
 void Shutdown() {

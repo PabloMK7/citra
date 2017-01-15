@@ -296,9 +296,6 @@ void GetGyroscopeLowRawToDpsCoefficient(Service::Interface* self);
  */
 void GetGyroscopeLowCalibrateParam(Service::Interface* self);
 
-/// Checks for user input updates
-void Update();
-
 /// Initialize HID service
 void Init();
 
