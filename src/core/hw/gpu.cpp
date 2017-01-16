@@ -15,7 +15,6 @@
 #include "common/vector_math.h"
 #include "core/core_timing.h"
 #include "core/hle/service/gsp_gpu.h"
-#include "core/hle/service/hid/hid.h"
 #include "core/hw/gpu.h"
 #include "core/hw/hw.h"
 #include "core/memory.h"
@@ -33,7 +32,7 @@ namespace GPU {
 Regs g_regs;
 
 /// 268MHz CPU clocks / 60Hz frames per second
-const u64 frame_ticks = 268123480ull / 60;
+const u64 frame_ticks = BASE_CLOCK_RATE_ARM11 / 60;
 /// Event id for CoreTiming
 static int vblank_event;
 /// Total number of frames drawn
@@ -550,9 +549,6 @@ static void VBlankCallback(u64 userdata, int cycles_late) {
     // two different intervals.
     Service::GSP::SignalInterrupt(Service::GSP::InterruptId::PDC0);
     Service::GSP::SignalInterrupt(Service::GSP::InterruptId::PDC1);
-
-    // Check for user input updates
-    Service::HID::Update();
 
     if (!Settings::values.use_vsync && Settings::values.toggle_framelimit) {
         FrameLimiter();

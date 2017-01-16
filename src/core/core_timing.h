@@ -21,6 +21,7 @@
 // inside callback:
 //   ScheduleEvent(periodInCycles - cycles_late, callback, "whatever")
 
+constexpr int BASE_CLOCK_RATE_ARM11 = 268123480;
 extern int g_clock_rate_arm11;
 
 inline s64 msToCycles(int ms) {
