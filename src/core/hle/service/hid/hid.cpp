@@ -40,9 +40,9 @@ static int accelerometer_update_event;
 static int gyroscope_update_event;
 
 // Updating period for each HID device. These empirical values are measured from a 11.2 3DS.
-constexpr u64 pad_update_ticks = 268123480ull / 234;
-constexpr u64 accelerometer_update_ticks = 268123480ull / 104;
-constexpr u64 gyroscope_update_ticks = 268123480ull / 101;
+constexpr u64 pad_update_ticks = BASE_CLOCK_RATE_ARM11 / 234;
+constexpr u64 accelerometer_update_ticks = BASE_CLOCK_RATE_ARM11 / 104;
+constexpr u64 gyroscope_update_ticks = BASE_CLOCK_RATE_ARM11 / 101;
 
 static PadState GetCirclePadDirectionState(s16 circle_pad_x, s16 circle_pad_y) {
     // 30 degree and 60 degree are angular thresholds for directions

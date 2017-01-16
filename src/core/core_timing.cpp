@@ -13,7 +13,7 @@
 #include "core/core.h"
 #include "core/core_timing.h"
 
-int g_clock_rate_arm11 = 268123480;
+int g_clock_rate_arm11 = BASE_CLOCK_RATE_ARM11;
 
 // is this really necessary?
 #define INITIAL_SLICE_LENGTH 20000
