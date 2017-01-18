@@ -322,46 +322,10 @@ static ResultVal<void*> GetConfigInfoBlockPointer(u32 block_id, u32 size, u32 fl
     return MakeResult<void*>(pointer);
 }
 
-/// Checks if the language is available in the chosen region, and returns a proper one
-static u8 AdjustLanguageInfoBlock(u32 region, u8 language) {
-    static const std::array<std::vector<u8>, 7> region_languages{{
-        // JPN
-        {LANGUAGE_JP},
-        // USA
-        {LANGUAGE_EN, LANGUAGE_FR, LANGUAGE_ES, LANGUAGE_PT},
-        // EUR
-        {LANGUAGE_EN, LANGUAGE_FR, LANGUAGE_DE, LANGUAGE_IT, LANGUAGE_ES, LANGUAGE_NL, LANGUAGE_PT,
-         LANGUAGE_RU},
-        // AUS
-        {LANGUAGE_EN, LANGUAGE_FR, LANGUAGE_DE, LANGUAGE_IT, LANGUAGE_ES, LANGUAGE_NL, LANGUAGE_PT,
-         LANGUAGE_RU},
-        // CHN
-        {LANGUAGE_ZH},
-        // KOR
-        {LANGUAGE_KO},
-        // TWN
-        {LANGUAGE_TW},
-    }};
-    const auto& available = region_languages[region];
-    if (std::find(available.begin(), available.end(), language) == available.end()) {
-        return available[0];
-    }
-    return language;
-}
-
 ResultCode GetConfigInfoBlock(u32 block_id, u32 size, u32 flag, void* output) {
     void* pointer;
     CASCADE_RESULT(pointer, GetConfigInfoBlockPointer(block_id, size, flag));
     memcpy(output, pointer, size);
-
-    // override the language setting if the region setting is auto
-    if (block_id == LanguageBlockID &&
-        Settings::values.region_value == Settings::REGION_VALUE_AUTO_SELECT) {
-        u8 language;
-        memcpy(&language, output, sizeof(u8));
-        language = AdjustLanguageInfoBlock(preferred_region_code, language);
-        memcpy(output, &language, sizeof(u8));
-    }
 
     return RESULT_SUCCESS;
 }
@@ -586,9 +550,47 @@ void Init() {
 
 void Shutdown() {}
 
+/// Checks if the language is available in the chosen region, and returns a proper one
+static SystemLanguage AdjustLanguageInfoBlock(u32 region, SystemLanguage language) {
+    static const std::array<std::vector<SystemLanguage>, 7> region_languages{{
+        // JPN
+        {LANGUAGE_JP},
+        // USA
+        {LANGUAGE_EN, LANGUAGE_FR, LANGUAGE_ES, LANGUAGE_PT},
+        // EUR
+        {LANGUAGE_EN, LANGUAGE_FR, LANGUAGE_DE, LANGUAGE_IT, LANGUAGE_ES, LANGUAGE_NL, LANGUAGE_PT,
+         LANGUAGE_RU},
+        // AUS
+        {LANGUAGE_EN, LANGUAGE_FR, LANGUAGE_DE, LANGUAGE_IT, LANGUAGE_ES, LANGUAGE_NL, LANGUAGE_PT,
+         LANGUAGE_RU},
+        // CHN
+        {LANGUAGE_ZH},
+        // KOR
+        {LANGUAGE_KO},
+        // TWN
+        {LANGUAGE_TW},
+    }};
+    const auto& available = region_languages[region];
+    if (std::find(available.begin(), available.end(), language) == available.end()) {
+        return available[0];
+    }
+    return language;
+}
+
 void SetPreferredRegionCode(u32 region_code) {
     preferred_region_code = region_code;
     LOG_INFO(Service_CFG, "Preferred region code set to %u", preferred_region_code);
+
+    if (Settings::values.region_value == Settings::REGION_VALUE_AUTO_SELECT) {
+        const SystemLanguage current_language = GetSystemLanguage();
+        const SystemLanguage adjusted_language =
+            AdjustLanguageInfoBlock(region_code, current_language);
+        if (current_language != adjusted_language) {
+            LOG_WARNING(Service_CFG, "System language %d does not fit the region. Adjusted to %d",
+                        static_cast<int>(current_language), static_cast<int>(adjusted_language));
+            SetSystemLanguage(adjusted_language);
+        }
+    }
 }
 
 void SetUsername(const std::u16string& name) {
