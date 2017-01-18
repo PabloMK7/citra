@@ -177,18 +177,34 @@ static THREEDSX_Error Load3DSXFile(FileUtil::IOFile& file, u32 base_addr,
                     pos += table.skip;
                     s32 num_patches = table.patch;
                     while (0 < num_patches && pos < end_pos) {
-                        u32 in_addr =
-                            static_cast<u32>(reinterpret_cast<u8*>(pos) - program_image.data());
-                        u32 addr = TranslateAddr(*pos, &loadinfo, offsets);
-                        LOG_TRACE(Loader, "Patching %08X <-- rel(%08X,%d) (%08X)",
-                                  base_addr + in_addr, addr, current_segment_reloc_table, *pos);
+                        u32 in_addr = base_addr + static_cast<u32>(reinterpret_cast<u8*>(pos) -
+                                                                   program_image.data());
+                        u32 orig_data = *pos;
+                        u32 sub_type = orig_data >> (32 - 4);
+                        u32 addr = TranslateAddr(orig_data & ~0xF0000000, &loadinfo, offsets);
+                        LOG_TRACE(Loader, "Patching %08X <-- rel(%08X,%d) (%08X)", in_addr, addr,
+                                  current_segment_reloc_table, *pos);
                         switch (current_segment_reloc_table) {
-                        case 0:
-                            *pos = (addr);
+                        case 0: {
+                            if (sub_type != 0)
+                                return ERROR_READ;
+                            *pos = addr;
                             break;
-                        case 1:
-                            *pos = static_cast<u32>(addr - in_addr);
+                        }
+                        case 1: {
+                            u32 data = addr - in_addr;
+                            switch (sub_type) {
+                            case 0: // 32-bit signed offset
+                                *pos = data;
+                                break;
+                            case 1: // 31-bit signed offset
+                                *pos = data & ~(1U << 31);
+                                break;
+                            default:
+                                return ERROR_READ;
+                            }
                             break;
+                        }
                         default:
                             break; // this should never happen
                         }
