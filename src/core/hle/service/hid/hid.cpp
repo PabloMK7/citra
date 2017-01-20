@@ -2,10 +2,14 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <algorithm>
+#include <atomic>
 #include <cmath>
+#include <memory>
 #include "common/logging/log.h"
 #include "core/core_timing.h"
 #include "core/frontend/emu_window.h"
+#include "core/frontend/input.h"
 #include "core/hle/kernel/event.h"
 #include "core/hle/kernel/shared_memory.h"
 #include "core/hle/service/hid/hid.h"
@@ -44,6 +48,10 @@ constexpr u64 pad_update_ticks = BASE_CLOCK_RATE_ARM11 / 234;
 constexpr u64 accelerometer_update_ticks = BASE_CLOCK_RATE_ARM11 / 104;
 constexpr u64 gyroscope_update_ticks = BASE_CLOCK_RATE_ARM11 / 101;
 
+static std::atomic<bool> is_device_reload_pending;
+static std::array<std::unique_ptr<Input::ButtonDevice>, Settings::NativeButton::NUM_BUTTONS_HID>
+    buttons;
+
 static PadState GetCirclePadDirectionState(s16 circle_pad_x, s16 circle_pad_y) {
     // 30 degree and 60 degree are angular thresholds for directions
     constexpr float TAN30 = 0.577350269f;
@@ -74,10 +82,38 @@ static PadState GetCirclePadDirectionState(s16 circle_pad_x, s16 circle_pad_y) {
     return state;
 }
 
+static void LoadInputDevices() {
+    std::transform(Settings::values.buttons.begin() + Settings::NativeButton::BUTTON_HID_BEGIN,
+                   Settings::values.buttons.begin() + Settings::NativeButton::BUTTON_HID_END,
+                   buttons.begin(), Input::CreateDevice<Input::ButtonDevice>);
+}
+
+static void UnloadInputDevices() {
+    for (auto& button : buttons) {
+        button.reset();
+    }
+}
+
 static void UpdatePadCallback(u64 userdata, int cycles_late) {
     SharedMem* mem = reinterpret_cast<SharedMem*>(shared_mem->GetPointer());
 
-    PadState state = VideoCore::g_emu_window->GetPadState();
+    if (is_device_reload_pending.exchange(false))
+        LoadInputDevices();
+
+    PadState state;
+    using namespace Settings::NativeButton;
+    state.a.Assign(buttons[A - BUTTON_HID_BEGIN]->GetStatus());
+    state.b.Assign(buttons[B - BUTTON_HID_BEGIN]->GetStatus());
+    state.x.Assign(buttons[X - BUTTON_HID_BEGIN]->GetStatus());
+    state.y.Assign(buttons[Y - BUTTON_HID_BEGIN]->GetStatus());
+    state.right.Assign(buttons[Right - BUTTON_HID_BEGIN]->GetStatus());
+    state.left.Assign(buttons[Left - BUTTON_HID_BEGIN]->GetStatus());
+    state.up.Assign(buttons[Up - BUTTON_HID_BEGIN]->GetStatus());
+    state.down.Assign(buttons[Down - BUTTON_HID_BEGIN]->GetStatus());
+    state.l.Assign(buttons[L - BUTTON_HID_BEGIN]->GetStatus());
+    state.r.Assign(buttons[R - BUTTON_HID_BEGIN]->GetStatus());
+    state.start.Assign(buttons[Start - BUTTON_HID_BEGIN]->GetStatus());
+    state.select.Assign(buttons[Select - BUTTON_HID_BEGIN]->GetStatus());
 
     // Get current circle pad position and update circle pad direction
     s16 circle_pad_x, circle_pad_y;
@@ -313,6 +349,8 @@ void Init() {
     AddService(new HID_U_Interface);
     AddService(new HID_SPVR_Interface);
 
+    is_device_reload_pending.store(true);
+
     using Kernel::MemoryPermission;
     shared_mem =
         SharedMemory::Create(nullptr, 0x1000, MemoryPermission::ReadWrite, MemoryPermission::Read,
@@ -350,6 +388,11 @@ void Shutdown() {
     event_accelerometer = nullptr;
     event_gyroscope = nullptr;
     event_debug_pad = nullptr;
+    UnloadInputDevices();
+}
+
+void ReloadInputDevices() {
+    is_device_reload_pending.store(true);
 }
 
 } // namespace HID

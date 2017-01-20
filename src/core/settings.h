@@ -69,6 +69,48 @@ static const std::array<Values, NUM_INPUTS> All = {{
 }};
 }
 
+namespace NativeButton {
+enum Values {
+    A,
+    B,
+    X,
+    Y,
+    Up,
+    Down,
+    Left,
+    Right,
+    L,
+    R,
+    Start,
+    Select,
+
+    ZL,
+    ZR,
+
+    Home,
+
+    NumButtons,
+};
+
+constexpr int BUTTON_HID_BEGIN = A;
+constexpr int BUTTON_IR_BEGIN = ZL;
+constexpr int BUTTON_NS_BEGIN = Home;
+
+constexpr int BUTTON_HID_END = BUTTON_IR_BEGIN;
+constexpr int BUTTON_IR_END = BUTTON_NS_BEGIN;
+constexpr int BUTTON_NS_END = NumButtons;
+
+constexpr int NUM_BUTTONS_HID = BUTTON_HID_END - BUTTON_HID_BEGIN;
+constexpr int NUM_BUTTONS_IR = BUTTON_IR_END - BUTTON_IR_BEGIN;
+constexpr int NUM_BUTTONS_NS = BUTTON_NS_END - BUTTON_NS_BEGIN;
+
+static const std::array<const char*, NumButtons> mapping = {{
+    "button_a", "button_b", "button_x", "button_y", "button_up", "button_down", "button_left",
+    "button_right", "button_l", "button_r", "button_start", "button_select", "button_zl",
+    "button_zr", "button_home",
+}};
+} // namespace NativeButton
+
 struct Values {
     // CheckNew3DS
     bool is_new_3ds;
@@ -76,6 +118,8 @@ struct Values {
     // Controls
     std::array<int, NativeInput::NUM_INPUTS> input_mappings;
     float pad_circle_modifier_scale;
+
+    std::array<std::string, NativeButton::NumButtons> buttons;
 
     // Core
     bool use_cpu_jit;

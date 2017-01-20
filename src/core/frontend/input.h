@@ -94,4 +94,10 @@ std::unique_ptr<InputDeviceType> CreateDevice(const std::string& params) {
     return pair->second->Create(package);
 }
 
+/**
+ * A button device is an input device that returns bool as status.
+ * true for pressed; false for released.
+ */
+using ButtonDevice = InputDevice<bool>;
+
 } // namespace Input

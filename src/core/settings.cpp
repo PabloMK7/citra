@@ -4,6 +4,7 @@
 
 #include "audio_core/audio_core.h"
 #include "core/gdbstub/gdbstub.h"
+#include "core/hle/service/hid/hid.h"
 #include "settings.h"
 #include "video_core/video_core.h"
 
@@ -29,6 +30,8 @@ void Apply() {
 
     AudioCore::SelectSink(values.sink_id);
     AudioCore::EnableStretching(values.enable_audio_stretching);
+
+    Service::HID::ReloadInputDevices();
 }
 
 } // namespace
