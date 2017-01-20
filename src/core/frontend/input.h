@@ -100,4 +100,11 @@ std::unique_ptr<InputDeviceType> CreateDevice(const std::string& params) {
  */
 using ButtonDevice = InputDevice<bool>;
 
+/**
+ * An analog device is an input device that returns a tuple of x and y coordinates as status. The
+ * coordinates are within the unit circle. x+ is defined as right direction, and y+ is defined as up
+ * direction
+ */
+using AnalogDevice = InputDevice<std::tuple<float, float>>;
+
 } // namespace Input

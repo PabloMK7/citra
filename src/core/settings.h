@@ -111,6 +111,19 @@ static const std::array<const char*, NumButtons> mapping = {{
 }};
 } // namespace NativeButton
 
+namespace NativeAnalog {
+enum Values {
+    CirclePad,
+    CStick,
+
+    NumAnalogs,
+};
+
+static const std::array<const char*, NumAnalogs> mapping = {{
+    "circle_pad", "c_stick",
+}};
+} // namespace NumAnalog
+
 struct Values {
     // CheckNew3DS
     bool is_new_3ds;
@@ -120,6 +133,7 @@ struct Values {
     float pad_circle_modifier_scale;
 
     std::array<std::string, NativeButton::NumButtons> buttons;
+    std::array<std::string, NativeAnalog::NumAnalogs> analogs;
 
     // Core
     bool use_cpu_jit;
