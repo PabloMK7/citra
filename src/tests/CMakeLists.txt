@@ -1,6 +1,7 @@
 set(SRCS
             glad.cpp
             tests.cpp
+            common/param_package.cpp
             core/file_sys/path_parser.cpp
             )
 
