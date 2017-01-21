@@ -13,7 +13,8 @@
 #include "common/scm_rev.h"
 #include "common/string_util.h"
 #include "core/core.h"
-#include "core/frontend/key_map.h"
+#include "input_common/keyboard.h"
+#include "input_common/main.h"
 #include "video_core/debug_utils/debug_utils.h"
 #include "video_core/video_core.h"
 
@@ -99,14 +100,17 @@ private:
 };
 
 GRenderWindow::GRenderWindow(QWidget* parent, EmuThread* emu_thread)
-    : QWidget(parent), child(nullptr), keyboard_id(0), emu_thread(emu_thread) {
+    : QWidget(parent), child(nullptr), emu_thread(emu_thread) {
 
     std::string window_title = Common::StringFromFormat("Citra %s| %s-%s", Common::g_build_name,
                                                         Common::g_scm_branch, Common::g_scm_desc);
     setWindowTitle(QString::fromStdString(window_title));
 
-    keyboard_id = KeyMap::NewDeviceId();
-    ReloadSetKeymaps();
+    InputCommon::Init();
+}
+
+GRenderWindow::~GRenderWindow() {
+    InputCommon::Shutdown();
 }
 
 void GRenderWindow::moveContext() {
@@ -197,11 +201,11 @@ void GRenderWindow::closeEvent(QCloseEvent* event) {
 }
 
 void GRenderWindow::keyPressEvent(QKeyEvent* event) {
-    KeyMap::PressKey(*this, {event->key(), keyboard_id});
+    InputCommon::GetKeyboard()->PressKey(event->key());
 }
 
 void GRenderWindow::keyReleaseEvent(QKeyEvent* event) {
-    KeyMap::ReleaseKey(*this, {event->key(), keyboard_id});
+    InputCommon::GetKeyboard()->ReleaseKey(event->key());
 }
 
 void GRenderWindow::mousePressEvent(QMouseEvent* event) {
@@ -230,14 +234,7 @@ void GRenderWindow::mouseReleaseEvent(QMouseEvent* event) {
         motion_emu->EndTilt();
 }
 
-void GRenderWindow::ReloadSetKeymaps() {
-    KeyMap::ClearKeyMapping(keyboard_id);
-    for (int i = 0; i < Settings::NativeInput::NUM_INPUTS; ++i) {
-        KeyMap::SetKeyMapping(
-            {Settings::values.input_mappings[Settings::NativeInput::All[i]], keyboard_id},
-            KeyMap::mapping_targets[i]);
-    }
-}
+void GRenderWindow::ReloadSetKeymaps() {}
 
 void GRenderWindow::OnClientAreaResized(unsigned width, unsigned height) {
     NotifyClientAreaSizeChanged(std::make_pair(width, height));

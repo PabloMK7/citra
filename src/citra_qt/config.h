@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <array>
 #include <string>
 #include <QVariant>
 #include "core/settings.h"
@@ -23,5 +24,5 @@ public:
 
     void Reload();
     void Save();
-    static const std::array<QVariant, Settings::NativeInput::NUM_INPUTS> defaults;
+    static const std::array<int, Settings::NativeButton::NumButtons> default_buttons;
 };

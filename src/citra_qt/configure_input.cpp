@@ -92,14 +92,7 @@ void ConfigureInput::loadConfiguration() {
     updateButtonLabels();
 }
 
-void ConfigureInput::restoreDefaults() {
-    for (const auto& input_id : Settings::NativeInput::All) {
-        const size_t index = static_cast<size_t>(input_id);
-        key_map[input_id] = static_cast<Qt::Key>(Config::defaults[index].toInt());
-    }
-    updateButtonLabels();
-    applyConfiguration();
-}
+void ConfigureInput::restoreDefaults() {}
 
 void ConfigureInput::updateButtonLabels() {
     for (const auto& input_id : Settings::NativeInput::All) {

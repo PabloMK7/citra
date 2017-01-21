@@ -52,8 +52,6 @@ public:
     /// Releases (dunno if this is the "right" word) the GLFW context from the caller thread
     virtual void DoneCurrent() = 0;
 
-    virtual void ReloadSetKeymaps() = 0;
-
     /**
      * Signals a button press action to the HID module.
      * @param pad_state indicates which button to press
