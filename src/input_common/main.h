@@ -22,4 +22,8 @@ Keyboard* GetKeyboard();
 /// Generates a serialized param package for creating a keyboard button device
 std::string GenerateKeyboardParam(int key_code);
 
+/// Generates a serialized param package for creating an analog device taking input from keyboard
+std::string GenerateAnalogParamFromKeys(int key_up, int key_down, int key_left, int key_right,
+                                        int key_modifier, float modifier_scale);
+
 } // namespace InputCommon

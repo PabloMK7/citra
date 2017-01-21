@@ -22,6 +22,15 @@ const std::array<int, Settings::NativeButton::NumButtons> Config::default_button
     Qt::Key_Q, Qt::Key_W, Qt::Key_M, Qt::Key_N, Qt::Key_1, Qt::Key_2, Qt::Key_B,
 };
 
+const std::array<std::array<int, 5>, Settings::NativeAnalog::NumAnalogs> Config::default_analogs{{
+    {
+        Qt::Key_Up, Qt::Key_Down, Qt::Key_Left, Qt::Key_Right, Qt::Key_D,
+    },
+    {
+        Qt::Key_I, Qt::Key_K, Qt::Key_J, Qt::Key_L, Qt::Key_D,
+    },
+}};
+
 void Config::ReadValues() {
     qt_config->beginGroup("Controls");
     for (int i = 0; i < Settings::NativeButton::NumButtons; ++i) {
@@ -34,6 +43,20 @@ void Config::ReadValues() {
         if (Settings::values.buttons[i].empty())
             Settings::values.buttons[i] = default_param;
     }
+
+    for (int i = 0; i < Settings::NativeAnalog::NumAnalogs; ++i) {
+        std::string default_param = InputCommon::GenerateAnalogParamFromKeys(
+            default_analogs[i][0], default_analogs[i][1], default_analogs[i][2],
+            default_analogs[i][3], default_analogs[i][4], 0.5f);
+        Settings::values.analogs[i] =
+            qt_config
+                ->value(Settings::NativeAnalog::mapping[i], QString::fromStdString(default_param))
+                .toString()
+                .toStdString();
+        if (Settings::values.analogs[i].empty())
+            Settings::values.analogs[i] = default_param;
+    }
+
     qt_config->endGroup();
 
     qt_config->beginGroup("Core");
@@ -157,6 +180,10 @@ void Config::SaveValues() {
     for (int i = 0; i < Settings::NativeButton::NumButtons; ++i) {
         qt_config->setValue(QString::fromStdString(Settings::NativeButton::mapping[i]),
                             QString::fromStdString(Settings::values.buttons[i]));
+    }
+    for (int i = 0; i < Settings::NativeAnalog::NumAnalogs; ++i) {
+        qt_config->setValue(QString::fromStdString(Settings::NativeAnalog::mapping[i]),
+                            QString::fromStdString(Settings::values.analogs[i]));
     }
     qt_config->endGroup();
 

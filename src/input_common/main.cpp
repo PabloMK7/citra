@@ -4,6 +4,7 @@
 
 #include <memory>
 #include "common/param_package.h"
+#include "input_common/analog_from_button.h"
 #include "input_common/keyboard.h"
 #include "input_common/main.h"
 
@@ -14,11 +15,14 @@ static std::shared_ptr<Keyboard> keyboard;
 void Init() {
     keyboard = std::make_shared<InputCommon::Keyboard>();
     Input::RegisterFactory<Input::ButtonDevice>("keyboard", keyboard);
+    Input::RegisterFactory<Input::AnalogDevice>("analog_from_button",
+                                                std::make_shared<InputCommon::AnalogFromButton>());
 }
 
 void Shutdown() {
     Input::UnregisterFactory<Input::ButtonDevice>("keyboard");
     keyboard.reset();
+    Input::UnregisterFactory<Input::AnalogDevice>("analog_from_button");
 }
 
 Keyboard* GetKeyboard() {
@@ -30,6 +34,20 @@ std::string GenerateKeyboardParam(int key_code) {
         {"engine", "keyboard"}, {"code", std::to_string(key_code)},
     };
     return param.Serialize();
+}
+
+std::string GenerateAnalogParamFromKeys(int key_up, int key_down, int key_left, int key_right,
+                                        int key_modifier, float modifier_scale) {
+    Common::ParamPackage circle_pad_param{
+        {"engine", "analog_from_button"},
+        {"up", GenerateKeyboardParam(key_up)},
+        {"down", GenerateKeyboardParam(key_down)},
+        {"left", GenerateKeyboardParam(key_left)},
+        {"right", GenerateKeyboardParam(key_right)},
+        {"modifier", GenerateKeyboardParam(key_modifier)},
+        {"modifier_scale", std::to_string(modifier_scale)},
+    };
+    return circle_pad_param.Serialize();
 }
 
 } // namespace InputCommon

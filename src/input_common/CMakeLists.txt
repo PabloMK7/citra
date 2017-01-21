@@ -1,9 +1,11 @@
 set(SRCS
+            analog_from_button.cpp
             keyboard.cpp
             main.cpp
             )
 
 set(HEADERS
+            analog_from_button.h
             keyboard.h
             main.h
             )

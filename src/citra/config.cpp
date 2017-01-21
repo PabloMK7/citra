@@ -8,6 +8,7 @@
 #include "citra/default_ini.h"
 #include "common/file_util.h"
 #include "common/logging/log.h"
+#include "common/param_package.h"
 #include "config.h"
 #include "core/settings.h"
 #include "input_common/main.h"
@@ -44,6 +45,15 @@ static const std::array<int, Settings::NativeButton::NumButtons> default_buttons
     SDL_SCANCODE_M, SDL_SCANCODE_N, SDL_SCANCODE_1, SDL_SCANCODE_2, SDL_SCANCODE_B,
 };
 
+static const std::array<std::array<int, 5>, Settings::NativeAnalog::NumAnalogs> default_analogs{{
+    {
+        SDL_SCANCODE_UP, SDL_SCANCODE_DOWN, SDL_SCANCODE_LEFT, SDL_SCANCODE_RIGHT, SDL_SCANCODE_D,
+    },
+    {
+        SDL_SCANCODE_I, SDL_SCANCODE_K, SDL_SCANCODE_J, SDL_SCANCODE_L, SDL_SCANCODE_D,
+    },
+}};
+
 void Config::ReadValues() {
     // Controls
     for (int i = 0; i < Settings::NativeButton::NumButtons; ++i) {
@@ -52,6 +62,16 @@ void Config::ReadValues() {
             sdl2_config->Get("Controls", Settings::NativeButton::mapping[i], default_param);
         if (Settings::values.buttons[i].empty())
             Settings::values.buttons[i] = default_param;
+    }
+
+    for (int i = 0; i < Settings::NativeAnalog::NumAnalogs; ++i) {
+        std::string default_param = InputCommon::GenerateAnalogParamFromKeys(
+            default_analogs[i][0], default_analogs[i][1], default_analogs[i][2],
+            default_analogs[i][3], default_analogs[i][4], 0.5f);
+        Settings::values.analogs[i] =
+            sdl2_config->Get("Controls", Settings::NativeAnalog::mapping[i], default_param);
+        if (Settings::values.analogs[i].empty())
+            Settings::values.analogs[i] = default_param;
     }
 
     // Core
