@@ -320,6 +320,8 @@ void Init() {
 
     next_pad_index = 0;
     next_touch_index = 0;
+    next_accelerometer_index = 0;
+    next_gyroscope_index = 0;
 
     // Create event handles
     event_pad_or_touch_1 = Event::Create(ResetType::OneShot, "HID:EventPadOrTouch1");
