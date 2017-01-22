@@ -12,6 +12,7 @@
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QtGui>
+#include <QtWidgets>
 #include "citra_qt/bootmanager.h"
 #include "citra_qt/config.h"
 #include "citra_qt/configure_dialog.h"
@@ -45,7 +46,6 @@
 #include "core/gdbstub/gdbstub.h"
 #include "core/loader/loader.h"
 #include "core/settings.h"
-#include "qhexedit.h"
 #include "video_core/video_core.h"
 
 #ifdef QT_STATICPLUGIN
