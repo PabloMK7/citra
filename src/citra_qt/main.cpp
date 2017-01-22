@@ -24,7 +24,6 @@
 #include "citra_qt/debugger/graphics/graphics_tracing.h"
 #include "citra_qt/debugger/graphics/graphics_vertex_shader.h"
 #include "citra_qt/debugger/profiler.h"
-#include "citra_qt/debugger/ramview.h"
 #include "citra_qt/debugger/registers.h"
 #include "citra_qt/debugger/wait_tree.h"
 #include "citra_qt/game_list.h"

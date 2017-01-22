@@ -14,7 +14,6 @@ set(SRCS
             debugger/graphics/graphics_tracing.cpp
             debugger/graphics/graphics_vertex_shader.cpp
             debugger/profiler.cpp
-            debugger/ramview.cpp
             debugger/registers.cpp
             debugger/wait_tree.cpp
             util/spinbox.cpp
@@ -48,7 +47,6 @@ set(HEADERS
             debugger/graphics/graphics_tracing.h
             debugger/graphics/graphics_vertex_shader.h
             debugger/profiler.h
-            debugger/ramview.h
             debugger/registers.h
             debugger/wait_tree.h
             util/spinbox.h
