@@ -271,11 +271,6 @@ if (MSVC)
 endif()
 
 # process subdirectories
-if(ENABLE_QT)
-    include_directories(externals/qhexedit)
-    add_subdirectory(externals/qhexedit)
-endif()
-
 add_subdirectory(externals/soundtouch)
 
 enable_testing()

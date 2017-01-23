@@ -12,6 +12,7 @@
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QtGui>
+#include <QtWidgets>
 #include "citra_qt/bootmanager.h"
 #include "citra_qt/config.h"
 #include "citra_qt/configure_dialog.h"
@@ -24,7 +25,6 @@
 #include "citra_qt/debugger/graphics/graphics_tracing.h"
 #include "citra_qt/debugger/graphics/graphics_vertex_shader.h"
 #include "citra_qt/debugger/profiler.h"
-#include "citra_qt/debugger/ramview.h"
 #include "citra_qt/debugger/registers.h"
 #include "citra_qt/debugger/wait_tree.h"
 #include "citra_qt/game_list.h"
@@ -46,7 +46,6 @@
 #include "core/gdbstub/gdbstub.h"
 #include "core/loader/loader.h"
 #include "core/settings.h"
-#include "qhexedit.h"
 #include "video_core/video_core.h"
 
 #ifdef QT_STATICPLUGIN
