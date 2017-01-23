@@ -118,7 +118,7 @@ void ShaderSetup::Run(UnitState& state, const InputVertex& input, int num_attrib
     // Setup input register table
     const auto& attribute_register_map = config.input_register_map;
 
-    for (unsigned i = 0; i < num_attributes; i++)
+    for (int i = 0; i < num_attributes; i++)
         state.registers.input[attribute_register_map.GetRegisterForAttribute(i)] = input.attr[i];
 
     state.conditional_code[0] = false;
@@ -146,7 +146,7 @@ DebugData<true> ShaderSetup::ProduceDebugInfo(const InputVertex& input, int num_
     // Setup input register table
     boost::fill(state.registers.input, Math::Vec4<float24>::AssignToAll(float24::Zero()));
     const auto& attribute_register_map = config.input_register_map;
-    for (unsigned i = 0; i < num_attributes; i++)
+    for (int i = 0; i < num_attributes; i++)
         state.registers.input[attribute_register_map.GetRegisterForAttribute(i)] = input.attr[i];
 
     state.conditional_code[0] = false;
