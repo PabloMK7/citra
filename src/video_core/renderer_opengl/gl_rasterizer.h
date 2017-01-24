@@ -76,7 +76,7 @@ union PicaShaderConfig {
         }
 
         state.fog_mode = regs.fog_mode;
-        state.fog_flip = regs.fog_flip;
+        state.fog_flip = regs.fog_flip != 0;
 
         state.combiner_buffer_input = regs.tev_combiner_buffer_input.update_mask_rgb.Value() |
                                       regs.tev_combiner_buffer_input.update_mask_a.Value() << 4;

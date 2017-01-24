@@ -748,7 +748,8 @@ bool RasterizerOpenGL::AccelerateDisplayTransfer(const GPU::Regs::DisplayTransfe
 
     // Adjust the source rectangle to take into account parts of the input lines being cropped
     if (config.input_width > config.output_width) {
-        src_rect.right -= (config.input_width - config.output_width) * src_surface->res_scale_width;
+        src_rect.right -= static_cast<int>((config.input_width - config.output_width) *
+                                           src_surface->res_scale_width);
     }
 
     // Require destination surface to have same resolution scale as source to preserve scaling

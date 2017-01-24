@@ -93,7 +93,7 @@ static void StartSampling(Interface* self) {
     sample_rate = static_cast<SampleRate>(cmd_buff[2] & 0xFF);
     audio_buffer_offset = cmd_buff[3];
     audio_buffer_size = cmd_buff[4];
-    audio_buffer_loop = static_cast<bool>(cmd_buff[5] & 0xFF);
+    audio_buffer_loop = (cmd_buff[5] & 0xFF) != 0;
 
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
     is_sampling = true;
@@ -202,7 +202,7 @@ static void GetGain(Interface* self) {
  */
 static void SetPower(Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
-    mic_power = static_cast<bool>(cmd_buff[1] & 0xFF);
+    mic_power = (cmd_buff[1] & 0xFF) != 0;
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
     LOG_WARNING(Service_MIC, "(STUBBED) called, mic_power=%u", mic_power);
 }
@@ -252,7 +252,7 @@ static void SetIirFilterMic(Interface* self) {
  */
 static void SetClamp(Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
-    clamp = static_cast<bool>(cmd_buff[1] & 0xFF);
+    clamp = (cmd_buff[1] & 0xFF) != 0;
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
     LOG_WARNING(Service_MIC, "(STUBBED) called, clamp=%u", clamp);
 }
@@ -282,7 +282,7 @@ static void GetClamp(Interface* self) {
  */
 static void SetAllowShellClosed(Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
-    allow_shell_closed = static_cast<bool>(cmd_buff[1] & 0xFF);
+    allow_shell_closed = (cmd_buff[1] & 0xFF) != 0;
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
     LOG_WARNING(Service_MIC, "(STUBBED) called, allow_shell_closed=%u", allow_shell_closed);
 }
