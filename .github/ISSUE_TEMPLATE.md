@@ -4,10 +4,10 @@ Please read the FAQ:
 https://citra-emu.org/wiki/FAQ
 
 THIS IS NOT A SUPPORT FORUM, FOR SUPPORT GO TO:
-http://discuss.citra-emu.org/
+https://community.citra-emu.org/
 
 If the FAQ does not answer your question, please go to:
-http://discuss.citra-emu.org/
+https://community.citra-emu.org/
 
 ====================================================
 
