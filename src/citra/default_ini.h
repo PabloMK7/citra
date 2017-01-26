@@ -91,6 +91,10 @@ output_engine =
 # 0: No, 1 (default): Yes
 enable_audio_stretching =
 
+# Which audio device to use.
+# auto (default): Auto-select
+output_device =
+
 [Data Storage]
 # Whether to create a virtual SD card.
 # 1 (default): Yes, 0: No

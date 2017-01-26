@@ -31,6 +31,15 @@ public:
 
     /// Samples enqueued that have not been played yet.
     virtual std::size_t SamplesInQueue() const = 0;
+
+    /**
+     * Sets the desired output device.
+     * @paran device_id Id of the desired device.
+     */
+    virtual void SetDevice(int device_id) = 0;
+
+    /// Returns the list of available devices.
+    virtual std::vector<std::string> GetDeviceList() const = 0;
 };
 
 } // namespace

@@ -56,20 +56,8 @@ void AddAddressSpace(Kernel::VMManager& address_space) {
 }
 
 void SelectSink(std::string sink_id) {
-    auto iter =
-        std::find_if(g_sink_details.begin(), g_sink_details.end(),
-                     [sink_id](const auto& sink_detail) { return sink_detail.id == sink_id; });
-
-    if (sink_id == "auto" || iter == g_sink_details.end()) {
-        if (sink_id != "auto") {
-            LOG_ERROR(Audio, "AudioCore::SelectSink given invalid sink_id %s", sink_id.c_str());
-        }
-        // Auto-select.
-        // g_sink_details is ordered in terms of desirability, with the best choice at the front.
-        iter = g_sink_details.begin();
-    }
-
-    DSP::HLE::SetSink(iter->factory());
+    const SinkDetails& sink_details = GetSinkDetails(sink_id);
+    DSP::HLE::SetSink(sink_details.factory());
 }
 
 void EnableStretching(bool enable) {

@@ -23,6 +23,12 @@ public:
     size_t SamplesInQueue() const override {
         return 0;
     }
+
+    void SetDevice(int device_id) override {}
+
+    std::vector<std::string> GetDeviceList() const override {
+        return {};
+    }
 };
 
 } // namespace AudioCore

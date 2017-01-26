@@ -104,6 +104,7 @@ struct Values {
     // Audio
     std::string sink_id;
     bool enable_audio_stretching;
+    std::string audio_device_id;
 
     // Debugging
     bool use_gdbstub;

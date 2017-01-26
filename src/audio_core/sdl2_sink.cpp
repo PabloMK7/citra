@@ -4,12 +4,12 @@
 
 #include <list>
 #include <numeric>
-#include <vector>
 #include <SDL.h>
 #include "audio_core/audio_core.h"
 #include "audio_core/sdl2_sink.h"
 #include "common/assert.h"
 #include "common/logging/log.h"
+#include "core/settings.h"
 
 namespace AudioCore {
 
@@ -42,10 +42,24 @@ SDL2Sink::SDL2Sink() : impl(std::make_unique<Impl>()) {
     SDL_AudioSpec obtained_audiospec;
     SDL_zero(obtained_audiospec);
 
-    impl->audio_device_id =
-        SDL_OpenAudioDevice(nullptr, false, &desired_audiospec, &obtained_audiospec, 0);
+    int device_count = SDL_GetNumAudioDevices(0);
+    device_list.clear();
+    for (int i = 0; i < device_count; ++i) {
+        device_list.push_back(SDL_GetAudioDeviceName(i, 0));
+    }
+
+    const char* device = nullptr;
+
+    if (device_count >= 1 && Settings::values.audio_device_id != "auto" &&
+        !Settings::values.audio_device_id.empty()) {
+        device = Settings::values.audio_device_id.c_str();
+    }
+
+    impl->audio_device_id = SDL_OpenAudioDevice(device, false, &desired_audiospec,
+                                                &obtained_audiospec, SDL_AUDIO_ALLOW_ANY_CHANGE);
     if (impl->audio_device_id <= 0) {
-        LOG_CRITICAL(Audio_Sink, "SDL_OpenAudioDevice failed with: %s", SDL_GetError());
+        LOG_CRITICAL(Audio_Sink, "SDL_OpenAudioDevice failed with code %d for device \"%s\"",
+                     impl->audio_device_id, Settings::values.audio_device_id.c_str());
         return;
     }
 
@@ -67,6 +81,10 @@ unsigned int SDL2Sink::GetNativeSampleRate() const {
         return native_sample_rate;
 
     return impl->sample_rate;
+}
+
+std::vector<std::string> SDL2Sink::GetDeviceList() const {
+    return device_list;
 }
 
 void SDL2Sink::EnqueueSamples(const s16* samples, size_t sample_count) {
@@ -94,6 +112,10 @@ size_t SDL2Sink::SamplesInQueue() const {
     SDL_UnlockAudioDevice(impl->audio_device_id);
 
     return total_size;
+}
+
+void SDL2Sink::SetDevice(int device_id) {
+    this->device_id = device_id;
 }
 
 void SDL2Sink::Impl::Callback(void* impl_, u8* buffer, int buffer_size_in_bytes) {
