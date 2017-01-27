@@ -2,14 +2,8 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <atomic>
 #include <cmath>
 #include <cstring>
-#include <unordered_map>
-#include <utility>
-#include <boost/range/algorithm/fill.hpp>
-#include "common/bit_field.h"
-#include "common/hash.h"
 #include "common/logging/log.h"
 #include "common/microprofile.h"
 #include "video_core/pica.h"
@@ -25,7 +19,8 @@ namespace Pica {
 
 namespace Shader {
 
-OutputVertex OutputRegisters::ToVertex(const Regs::ShaderConfig& config) const {
+OutputVertex OutputVertex::FromRegisters(Math::Vec4<float24> output_regs[16], const Regs& regs,
+                                         u32 output_mask) {
     // Setup output data
     OutputVertex ret;
     // TODO(neobrain): Under some circumstances, up to 16 attributes may be output. We need to
@@ -33,13 +28,13 @@ OutputVertex OutputRegisters::ToVertex(const Regs::ShaderConfig& config) const {
     unsigned index = 0;
     for (unsigned i = 0; i < 7; ++i) {
 
-        if (index >= g_state.regs.vs_output_total)
+        if (index >= regs.vs_output_total)
             break;
 
-        if ((config.output_mask & (1 << i)) == 0)
+        if ((output_mask & (1 << i)) == 0)
             continue;
 
-        const auto& output_register_map = g_state.regs.vs_output_attributes[index];
+        const auto& output_register_map = regs.vs_output_attributes[index];
 
         u32 semantics[4] = {output_register_map.map_x, output_register_map.map_y,
                             output_register_map.map_z, output_register_map.map_w};
@@ -47,7 +42,7 @@ OutputVertex OutputRegisters::ToVertex(const Regs::ShaderConfig& config) const {
         for (unsigned comp = 0; comp < 4; ++comp) {
             float24* out = ((float24*)&ret) + semantics[comp];
             if (semantics[comp] != Regs::VSOutputAttributes::INVALID) {
-                *out = value[i][comp];
+                *out = output_regs[i][comp];
             } else {
                 // Zero output so that attributes which aren't output won't have denormals in them,
                 // which would slow us down later.
@@ -76,84 +71,39 @@ OutputVertex OutputRegisters::ToVertex(const Regs::ShaderConfig& config) const {
     return ret;
 }
 
-#ifdef ARCHITECTURE_x86_64
-static std::unordered_map<u64, std::unique_ptr<JitShader>> shader_map;
-static const JitShader* jit_shader;
-#endif // ARCHITECTURE_x86_64
+void UnitState::LoadInputVertex(const InputVertex& input, int num_attributes) {
+    // Setup input register table
+    const auto& attribute_register_map = g_state.regs.vs.input_register_map;
 
-void ClearCache() {
-#ifdef ARCHITECTURE_x86_64
-    shader_map.clear();
-#endif // ARCHITECTURE_x86_64
-}
-
-void ShaderSetup::Setup() {
-#ifdef ARCHITECTURE_x86_64
-    if (VideoCore::g_shader_jit_enabled) {
-        u64 cache_key =
-            Common::ComputeHash64(&g_state.vs.program_code, sizeof(g_state.vs.program_code)) ^
-            Common::ComputeHash64(&g_state.vs.swizzle_data, sizeof(g_state.vs.swizzle_data));
-
-        auto iter = shader_map.find(cache_key);
-        if (iter != shader_map.end()) {
-            jit_shader = iter->second.get();
-        } else {
-            auto shader = std::make_unique<JitShader>();
-            shader->Compile();
-            jit_shader = shader.get();
-            shader_map[cache_key] = std::move(shader);
-        }
-    }
-#endif // ARCHITECTURE_x86_64
+    for (int i = 0; i < num_attributes; i++)
+        registers.input[attribute_register_map.GetRegisterForAttribute(i)] = input.attr[i];
 }
 
 MICROPROFILE_DEFINE(GPU_Shader, "GPU", "Shader", MP_RGB(50, 50, 240));
 
-void ShaderSetup::Run(UnitState& state, const InputVertex& input, int num_attributes) {
-    auto& config = g_state.regs.vs;
-    auto& setup = g_state.vs;
-
-    MICROPROFILE_SCOPE(GPU_Shader);
-
-    // Setup input register table
-    const auto& attribute_register_map = config.input_register_map;
-
-    for (int i = 0; i < num_attributes; i++)
-        state.registers.input[attribute_register_map.GetRegisterForAttribute(i)] = input.attr[i];
-
-    state.conditional_code[0] = false;
-    state.conditional_code[1] = false;
-
 #ifdef ARCHITECTURE_x86_64
-    if (VideoCore::g_shader_jit_enabled) {
-        jit_shader->Run(setup, state, config.main_offset);
-    } else {
-        DebugData<false> dummy_debug_data;
-        RunInterpreter(setup, state, dummy_debug_data, config.main_offset);
-    }
-#else
-    DebugData<false> dummy_debug_data;
-    RunInterpreter(setup, state, dummy_debug_data, config.main_offset);
+static std::unique_ptr<JitX64Engine> jit_engine;
 #endif // ARCHITECTURE_x86_64
+static InterpreterEngine interpreter_engine;
+
+ShaderEngine* GetEngine() {
+#ifdef ARCHITECTURE_x86_64
+    // TODO(yuriks): Re-initialize on each change rather than being persistent
+    if (VideoCore::g_shader_jit_enabled) {
+        if (jit_engine == nullptr) {
+            jit_engine = std::make_unique<JitX64Engine>();
+        }
+        return jit_engine.get();
+    }
+#endif // ARCHITECTURE_x86_64
+
+    return &interpreter_engine;
 }
 
-DebugData<true> ShaderSetup::ProduceDebugInfo(const InputVertex& input, int num_attributes,
-                                              const Regs::ShaderConfig& config,
-                                              const ShaderSetup& setup) {
-    UnitState state;
-    DebugData<true> debug_data;
-
-    // Setup input register table
-    boost::fill(state.registers.input, Math::Vec4<float24>::AssignToAll(float24::Zero()));
-    const auto& attribute_register_map = config.input_register_map;
-    for (int i = 0; i < num_attributes; i++)
-        state.registers.input[attribute_register_map.GetRegisterForAttribute(i)] = input.attr[i];
-
-    state.conditional_code[0] = false;
-    state.conditional_code[1] = false;
-
-    RunInterpreter(setup, state, debug_data, config.main_offset);
-    return debug_data;
+void Shutdown() {
+#ifdef ARCHITECTURE_x86_64
+    jit_engine = nullptr;
+#endif // ARCHITECTURE_x86_64
 }
 
 } // namespace Shader

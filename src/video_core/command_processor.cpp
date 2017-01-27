@@ -142,16 +142,18 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
                     MICROPROFILE_SCOPE(GPU_Drawing);
                     immediate_attribute_id = 0;
 
-                    Shader::UnitState shader_unit;
-                    g_state.vs.Setup();
+                    auto* shader_engine = Shader::GetEngine();
+                    shader_engine->SetupBatch(g_state.vs, regs.vs.main_offset);
 
                     // Send to vertex shader
                     if (g_debug_context)
                         g_debug_context->OnEvent(DebugContext::Event::VertexShaderInvocation,
                                                  static_cast<void*>(&immediate_input));
-                    g_state.vs.Run(shader_unit, immediate_input, regs.vs.num_input_attributes + 1);
-                    Shader::OutputVertex output_vertex =
-                        shader_unit.output_registers.ToVertex(regs.vs);
+                    Shader::UnitState shader_unit;
+                    shader_unit.LoadInputVertex(immediate_input, regs.vs.num_input_attributes + 1);
+                    shader_engine->Run(g_state.vs, shader_unit);
+                    auto output_vertex = Shader::OutputVertex::FromRegisters(
+                        shader_unit.registers.output, regs, regs.vs.output_mask);
 
                     // Send to renderer
                     using Pica::Shader::OutputVertex;
@@ -243,8 +245,10 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
         unsigned int vertex_cache_pos = 0;
         vertex_cache_ids.fill(-1);
 
+        auto* shader_engine = Shader::GetEngine();
         Shader::UnitState shader_unit;
-        g_state.vs.Setup();
+
+        shader_engine->SetupBatch(g_state.vs, regs.vs.main_offset);
 
         for (unsigned int index = 0; index < regs.num_vertices; ++index) {
             // Indexed rendering doesn't use the start offset
@@ -283,10 +287,12 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
                 if (g_debug_context)
                     g_debug_context->OnEvent(DebugContext::Event::VertexShaderInvocation,
                                              (void*)&input);
-                g_state.vs.Run(shader_unit, input, loader.GetNumTotalAttributes());
+                shader_unit.LoadInputVertex(input, loader.GetNumTotalAttributes());
+                shader_engine->Run(g_state.vs, shader_unit);
 
                 // Retrieve vertex from register data
-                output_vertex = shader_unit.output_registers.ToVertex(regs.vs);
+                output_vertex = Shader::OutputVertex::FromRegisters(shader_unit.registers.output,
+                                                                    regs, regs.vs.output_mask);
 
                 if (is_indexed) {
                     vertex_cache[vertex_cache_pos] = output_vertex;

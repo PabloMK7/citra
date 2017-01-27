@@ -499,7 +499,7 @@ void Init() {
 }
 
 void Shutdown() {
-    Shader::ClearCache();
+    Shader::Shutdown();
 }
 
 template <typename T>

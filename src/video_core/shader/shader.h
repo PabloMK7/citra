@@ -6,7 +6,6 @@
 
 #include <array>
 #include <cstddef>
-#include <memory>
 #include <type_traits>
 #include <nihstro/shader_bytecode.h>
 #include "common/assert.h"
@@ -15,7 +14,6 @@
 #include "common/vector_math.h"
 #include "video_core/pica.h"
 #include "video_core/pica_types.h"
-#include "video_core/shader/debug_data.h"
 
 using nihstro::RegisterType;
 using nihstro::SourceRegister;
@@ -75,18 +73,12 @@ struct OutputVertex {
         ret.Lerp(factor, v1);
         return ret;
     }
+
+    static OutputVertex FromRegisters(Math::Vec4<float24> output_regs[16], const Regs& regs,
+                                      u32 output_mask);
 };
 static_assert(std::is_pod<OutputVertex>::value, "Structure is not POD");
 static_assert(sizeof(OutputVertex) == 32 * sizeof(float), "OutputVertex has invalid size");
-
-struct OutputRegisters {
-    OutputRegisters() = default;
-
-    alignas(16) Math::Vec4<float24> value[16];
-
-    OutputVertex ToVertex(const Regs::ShaderConfig& config) const;
-};
-static_assert(std::is_pod<OutputRegisters>::value, "Structure is not POD");
 
 /**
  * This structure contains the state information that needs to be unique for a shader unit. The 3DS
@@ -100,10 +92,9 @@ struct UnitState {
         // required to be 16-byte aligned.
         alignas(16) Math::Vec4<float24> input[16];
         alignas(16) Math::Vec4<float24> temporary[16];
+        alignas(16) Math::Vec4<float24> output[16];
     } registers;
     static_assert(std::is_pod<Registers>::value, "Structure is not POD");
-
-    OutputRegisters output_registers;
 
     bool conditional_code[2];
 
@@ -130,7 +121,7 @@ struct UnitState {
     static size_t OutputOffset(const DestRegister& reg) {
         switch (reg.GetRegisterType()) {
         case RegisterType::Output:
-            return offsetof(UnitState, output_registers.value) +
+            return offsetof(UnitState, registers.output) +
                    reg.GetIndex() * sizeof(Math::Vec4<float24>);
 
         case RegisterType::Temporary:
@@ -142,13 +133,17 @@ struct UnitState {
             return 0;
         }
     }
+
+    /**
+     * Loads the unit state with an input vertex.
+     *
+     * @param input Input vertex into the shader
+     * @param num_attributes The number of vertex shader attributes to load
+     */
+    void LoadInputVertex(const InputVertex& input, int num_attributes);
 };
 
-/// Clears the shader cache
-void ClearCache();
-
 struct ShaderSetup {
-
     struct {
         // The float uniforms are accessed by the shader JIT using SSE instructions, and are
         // therefore required to be 16-byte aligned.
@@ -173,31 +168,36 @@ struct ShaderSetup {
     std::array<u32, 1024> program_code;
     std::array<u32, 1024> swizzle_data;
 
+    /// Data private to ShaderEngines
+    struct EngineData {
+        unsigned int entry_point;
+        /// Used by the JIT, points to a compiled shader object.
+        const void* cached_shader = nullptr;
+    } engine_data;
+};
+
+class ShaderEngine {
+public:
+    virtual ~ShaderEngine() = default;
+
     /**
      * Performs any shader unit setup that only needs to happen once per shader (as opposed to once
      * per vertex, which would happen within the `Run` function).
      */
-    void Setup();
+    virtual void SetupBatch(ShaderSetup& setup, unsigned int entry_point) = 0;
 
     /**
-     * Runs the currently setup shader
-     * @param state Shader unit state, must be setup per shader and per shader unit
-     * @param input Input vertex into the shader
-     * @param num_attributes The number of vertex shader attributes
+     * Runs the currently setup shader.
+     *
+     * @param setup Shader engine state, must be setup with SetupBatch on each shader change.
+     * @param state Shader unit state, must be setup with input data before each shader invocation.
      */
-    void Run(UnitState& state, const InputVertex& input, int num_attributes);
-
-    /**
-     * Produce debug information based on the given shader and input vertex
-     * @param input Input vertex into the shader
-     * @param num_attributes The number of vertex shader attributes
-     * @param config Configuration object for the shader pipeline
-     * @param setup Setup object for the shader pipeline
-     * @return Debug information for this shader with regards to the given vertex
-     */
-    DebugData<true> ProduceDebugInfo(const InputVertex& input, int num_attributes,
-                                     const Regs::ShaderConfig& config, const ShaderSetup& setup);
+    virtual void Run(const ShaderSetup& setup, UnitState& state) const = 0;
 };
+
+// TODO(yuriks): Remove and make it non-global state somewhere
+ShaderEngine* GetEngine();
+void Shutdown();
 
 } // namespace Shader
 

@@ -18,7 +18,9 @@
 #include "citra_qt/util/util.h"
 #include "video_core/pica.h"
 #include "video_core/pica_state.h"
+#include "video_core/shader/debug_data.h"
 #include "video_core/shader/shader.h"
+#include "video_core/shader/shader_interpreter.h"
 
 using nihstro::OpCode;
 using nihstro::Instruction;
@@ -518,8 +520,9 @@ void GraphicsVertexShaderWidget::Reload(bool replace_vertex_data, void* vertex_d
     info.labels.insert({entry_point, "main"});
 
     // Generate debug information
-    debug_data = Pica::g_state.vs.ProduceDebugInfo(input_vertex, num_attributes, shader_config,
-                                                   shader_setup);
+    Pica::Shader::InterpreterEngine shader_engine;
+    shader_engine.SetupBatch(shader_setup, entry_point);
+    debug_data = shader_engine.ProduceDebugInfo(shader_setup, input_vertex, num_attributes);
 
     // Reload widget state
     for (int attr = 0; attr < num_attributes; ++attr) {

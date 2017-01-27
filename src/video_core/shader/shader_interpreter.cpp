@@ -7,10 +7,12 @@
 #include <cmath>
 #include <numeric>
 #include <boost/container/static_vector.hpp>
+#include <boost/range/algorithm/fill.hpp>
 #include <nihstro/shader_bytecode.h>
 #include "common/assert.h"
 #include "common/common_types.h"
 #include "common/logging/log.h"
+#include "common/microprofile.h"
 #include "common/vector_math.h"
 #include "video_core/pica_state.h"
 #include "video_core/pica_types.h"
@@ -37,11 +39,14 @@ struct CallStackElement {
 };
 
 template <bool Debug>
-void RunInterpreter(const ShaderSetup& setup, UnitState& state, DebugData<Debug>& debug_data,
-                    unsigned offset) {
+static void RunInterpreter(const ShaderSetup& setup, UnitState& state, DebugData<Debug>& debug_data,
+                           unsigned offset) {
     // TODO: Is there a maximal size for this?
     boost::container::static_vector<CallStackElement, 16> call_stack;
     u32 program_counter = offset;
+
+    state.conditional_code[0] = false;
+    state.conditional_code[1] = false;
 
     auto call = [&program_counter, &call_stack](u32 offset, u32 num_instructions, u32 return_offset,
                                                 u8 repeat_count, u8 loop_increment) {
@@ -73,9 +78,9 @@ void RunInterpreter(const ShaderSetup& setup, UnitState& state, DebugData<Debug>
         }
     };
 
-    const auto& uniforms = g_state.vs.uniforms;
-    const auto& swizzle_data = g_state.vs.swizzle_data;
-    const auto& program_code = g_state.vs.program_code;
+    const auto& uniforms = setup.uniforms;
+    const auto& swizzle_data = setup.swizzle_data;
+    const auto& program_code = setup.program_code;
 
     // Placeholder for invalid inputs
     static float24 dummy_vec4_float24[4];
@@ -170,7 +175,7 @@ void RunInterpreter(const ShaderSetup& setup, UnitState& state, DebugData<Debug>
 
             float24* dest =
                 (instr.common.dest.Value() < 0x10)
-                    ? &state.output_registers.value[instr.common.dest.Value().GetIndex()][0]
+                    ? &state.registers.output[instr.common.dest.Value().GetIndex()][0]
                     : (instr.common.dest.Value() < 0x20)
                           ? &state.registers.temporary[instr.common.dest.Value().GetIndex()][0]
                           : dummy_vec4_float24;
@@ -513,7 +518,7 @@ void RunInterpreter(const ShaderSetup& setup, UnitState& state, DebugData<Debug>
 
                 float24* dest =
                     (instr.mad.dest.Value() < 0x10)
-                        ? &state.output_registers.value[instr.mad.dest.Value().GetIndex()][0]
+                        ? &state.registers.output[instr.mad.dest.Value().GetIndex()][0]
                         : (instr.mad.dest.Value() < 0x20)
                               ? &state.registers.temporary[instr.mad.dest.Value().GetIndex()][0]
                               : dummy_vec4_float24;
@@ -647,9 +652,33 @@ void RunInterpreter(const ShaderSetup& setup, UnitState& state, DebugData<Debug>
     }
 }
 
-// Explicit instantiation
-template void RunInterpreter(const ShaderSetup&, UnitState&, DebugData<false>&, unsigned offset);
-template void RunInterpreter(const ShaderSetup&, UnitState&, DebugData<true>&, unsigned offset);
+void InterpreterEngine::SetupBatch(ShaderSetup& setup, unsigned int entry_point) {
+    ASSERT(entry_point < 1024);
+    setup.engine_data.entry_point = entry_point;
+}
+
+MICROPROFILE_DECLARE(GPU_Shader);
+
+void InterpreterEngine::Run(const ShaderSetup& setup, UnitState& state) const {
+
+    MICROPROFILE_SCOPE(GPU_Shader);
+
+    DebugData<false> dummy_debug_data;
+    RunInterpreter(setup, state, dummy_debug_data, setup.engine_data.entry_point);
+}
+
+DebugData<true> InterpreterEngine::ProduceDebugInfo(const ShaderSetup& setup,
+                                                    const InputVertex& input,
+                                                    int num_attributes) const {
+    UnitState state;
+    DebugData<true> debug_data;
+
+    // Setup input register table
+    boost::fill(state.registers.input, Math::Vec4<float24>::AssignToAll(float24::Zero()));
+    state.LoadInputVertex(input, num_attributes);
+    RunInterpreter(setup, state, debug_data, setup.engine_data.entry_point);
+    return debug_data;
+}
 
 } // namespace
 
