@@ -10,7 +10,6 @@
 #include "common/common_types.h"
 #include "common/framebuffer_layout.h"
 #include "common/math_util.h"
-#include "core/hle/service/hid/hid.h"
 
 /**
  * Abstraction class used to provide an interface between emulation code and the frontend
@@ -53,28 +52,6 @@ public:
     virtual void DoneCurrent() = 0;
 
     /**
-     * Signals a button press action to the HID module.
-     * @param pad_state indicates which button to press
-     * @note only handles real buttons (A/B/X/Y/...), excluding analog inputs like the circle pad.
-     */
-    void ButtonPressed(Service::HID::PadState pad_state);
-
-    /**
-     * Signals a button release action to the HID module.
-     * @param pad_state indicates which button to press
-     * @note only handles real buttons (A/B/X/Y/...), excluding analog inputs like the circle pad.
-     */
-    void ButtonReleased(Service::HID::PadState pad_state);
-
-    /**
-     * Signals a circle pad change action to the HID module.
-     * @param x new x-coordinate of the circle pad, in the range [-1.0, 1.0]
-     * @param y new y-coordinate of the circle pad, in the range [-1.0, 1.0]
-     * @note the coordinates will be normalized if the radius is larger than 1
-     */
-    void CirclePadUpdated(float x, float y);
-
-    /**
      * Signal that a touch pressed event has occurred (e.g. mouse click pressed)
      * @param framebuffer_x Framebuffer x-coordinate that was pressed
      * @param framebuffer_y Framebuffer y-coordinate that was pressed
@@ -111,27 +88,6 @@ public:
      * @see GetGyroscopeState for axis explanation.
      */
     void GyroscopeChanged(float x, float y, float z);
-
-    /**
-     * Gets the current pad state (which buttons are pressed).
-     * @note This should be called by the core emu thread to get a state set by the window thread.
-     * @note This doesn't include analog input like circle pad direction
-     * @todo Fix this function to be thread-safe.
-     * @return PadState object indicating the current pad state
-     */
-    Service::HID::PadState GetPadState() const {
-        return pad_state;
-    }
-
-    /**
-     * Gets the current circle pad state.
-     * @note This should be called by the core emu thread to get a state set by the window thread.
-     * @todo Fix this function to be thread-safe.
-     * @return std::tuple of (x, y), where `x` and `y` are the circle pad coordinates
-     */
-    std::tuple<s16, s16> GetCirclePadState() const {
-        return std::make_tuple(circle_pad_x, circle_pad_y);
-    }
 
     /**
      * Gets the current touch screen state (touch X/Y coordinates and whether or not it is pressed).
@@ -228,11 +184,8 @@ protected:
         // TODO: Find a better place to set this.
         config.min_client_area_size = std::make_pair(400u, 480u);
         active_config = config;
-        pad_state.hex = 0;
         touch_x = 0;
         touch_y = 0;
-        circle_pad_x = 0;
-        circle_pad_y = 0;
         touch_pressed = false;
         accel_x = 0;
         accel_y = -512;
@@ -302,9 +255,6 @@ private:
     u16 touch_x; ///< Touchpad X-position in native 3DS pixel coordinates (0-320)
     u16 touch_y; ///< Touchpad Y-position in native 3DS pixel coordinates (0-240)
 
-    s16 circle_pad_x; ///< Circle pad X-position in native 3DS pixel coordinates (-156 - 156)
-    s16 circle_pad_y; ///< Circle pad Y-position in native 3DS pixel coordinates (-156 - 156)
-
     std::mutex accel_mutex;
     s16 accel_x; ///< Accelerometer X-axis value in native 3DS units
     s16 accel_y; ///< Accelerometer Y-axis value in native 3DS units
@@ -319,6 +269,4 @@ private:
      * Clip the provided coordinates to be inside the touchscreen area.
      */
     std::tuple<unsigned, unsigned> ClipToTouchScreen(unsigned new_x, unsigned new_y);
-
-    Service::HID::PadState pad_state;
 };

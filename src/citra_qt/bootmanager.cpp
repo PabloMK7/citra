@@ -13,6 +13,7 @@
 #include "common/scm_rev.h"
 #include "common/string_util.h"
 #include "core/core.h"
+#include "core/settings.h"
 #include "input_common/keyboard.h"
 #include "input_common/main.h"
 #include "video_core/debug_utils/debug_utils.h"

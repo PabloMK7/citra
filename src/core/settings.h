@@ -18,57 +18,6 @@ enum class LayoutOption {
     Custom,
 };
 
-namespace NativeInput {
-
-enum Values {
-    // directly mapped keys
-    A,
-    B,
-    X,
-    Y,
-    L,
-    R,
-    ZL,
-    ZR,
-    START,
-    SELECT,
-    HOME,
-    DUP,
-    DDOWN,
-    DLEFT,
-    DRIGHT,
-    CUP,
-    CDOWN,
-    CLEFT,
-    CRIGHT,
-
-    // indirectly mapped keys
-    CIRCLE_UP,
-    CIRCLE_DOWN,
-    CIRCLE_LEFT,
-    CIRCLE_RIGHT,
-    CIRCLE_MODIFIER,
-
-    NUM_INPUTS
-};
-
-static const std::array<const char*, NUM_INPUTS> Mapping = {{
-    // directly mapped keys
-    "pad_a", "pad_b", "pad_x", "pad_y", "pad_l", "pad_r", "pad_zl", "pad_zr", "pad_start",
-    "pad_select", "pad_home", "pad_dup", "pad_ddown", "pad_dleft", "pad_dright", "pad_cup",
-    "pad_cdown", "pad_cleft", "pad_cright",
-
-    // indirectly mapped keys
-    "pad_circle_up", "pad_circle_down", "pad_circle_left", "pad_circle_right",
-    "pad_circle_modifier",
-}};
-static const std::array<Values, NUM_INPUTS> All = {{
-    A,     B,      X,      Y,         L,           R,           ZL,           ZR,
-    START, SELECT, HOME,   DUP,       DDOWN,       DLEFT,       DRIGHT,       CUP,
-    CDOWN, CLEFT,  CRIGHT, CIRCLE_UP, CIRCLE_DOWN, CIRCLE_LEFT, CIRCLE_RIGHT, CIRCLE_MODIFIER,
-}};
-}
-
 namespace NativeButton {
 enum Values {
     A,
@@ -129,9 +78,6 @@ struct Values {
     bool is_new_3ds;
 
     // Controls
-    std::array<int, NativeInput::NUM_INPUTS> input_mappings;
-    float pad_circle_modifier_scale;
-
     std::array<std::string, NativeButton::NumButtons> buttons;
     std::array<std::string, NativeAnalog::NumAnalogs> analogs;
 
