@@ -34,6 +34,7 @@ set(HEADERS
             rasterizer_interface.h
             regs_framebuffer.h
             regs_lighting.h
+            regs_pipeline.h
             regs_rasterizer.h
             regs_texturing.h
             renderer_base.h

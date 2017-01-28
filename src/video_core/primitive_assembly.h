@@ -5,7 +5,7 @@
 #pragma once
 
 #include <functional>
-#include "video_core/pica.h"
+#include "video_core/regs_pipeline.h"
 
 namespace Pica {
 
@@ -18,7 +18,8 @@ struct PrimitiveAssembler {
     using TriangleHandler =
         std::function<void(const VertexType& v0, const VertexType& v1, const VertexType& v2)>;
 
-    PrimitiveAssembler(Regs::TriangleTopology topology = Regs::TriangleTopology::List);
+    PrimitiveAssembler(
+        PipelineRegs::TriangleTopology topology = PipelineRegs::TriangleTopology::List);
 
     /*
      * Queues a vertex, builds primitives from the vertex queue according to the given
@@ -36,10 +37,10 @@ struct PrimitiveAssembler {
     /**
      * Reconfigures the PrimitiveAssembler to use a different triangle topology.
      */
-    void Reconfigure(Regs::TriangleTopology topology);
+    void Reconfigure(PipelineRegs::TriangleTopology topology);
 
 private:
-    Regs::TriangleTopology topology;
+    PipelineRegs::TriangleTopology topology;
 
     int buffer_index;
     VertexType buffer[2];

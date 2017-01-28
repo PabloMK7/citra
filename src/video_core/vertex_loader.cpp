@@ -16,7 +16,7 @@
 
 namespace Pica {
 
-void VertexLoader::Setup(const Pica::Regs& regs) {
+void VertexLoader::Setup(const PipelineRegs& regs) {
     ASSERT_MSG(!is_setup, "VertexLoader is not intended to be setup more than once.");
 
     const auto& attribute_config = regs.vertex_attributes;
@@ -85,15 +85,16 @@ void VertexLoader::LoadVertex(u32 base_address, int index, int vertex,
                 memory_accesses.AddAccess(
                     source_addr,
                     vertex_attribute_elements[i] *
-                        ((vertex_attribute_formats[i] == Regs::VertexAttributeFormat::FLOAT)
+                        ((vertex_attribute_formats[i] == PipelineRegs::VertexAttributeFormat::FLOAT)
                              ? 4
-                             : (vertex_attribute_formats[i] == Regs::VertexAttributeFormat::SHORT)
+                             : (vertex_attribute_formats[i] ==
+                                PipelineRegs::VertexAttributeFormat::SHORT)
                                    ? 2
                                    : 1));
             }
 
             switch (vertex_attribute_formats[i]) {
-            case Regs::VertexAttributeFormat::BYTE: {
+            case PipelineRegs::VertexAttributeFormat::BYTE: {
                 const s8* srcdata =
                     reinterpret_cast<const s8*>(Memory::GetPhysicalPointer(source_addr));
                 for (unsigned int comp = 0; comp < vertex_attribute_elements[i]; ++comp) {
@@ -101,7 +102,7 @@ void VertexLoader::LoadVertex(u32 base_address, int index, int vertex,
                 }
                 break;
             }
-            case Regs::VertexAttributeFormat::UBYTE: {
+            case PipelineRegs::VertexAttributeFormat::UBYTE: {
                 const u8* srcdata =
                     reinterpret_cast<const u8*>(Memory::GetPhysicalPointer(source_addr));
                 for (unsigned int comp = 0; comp < vertex_attribute_elements[i]; ++comp) {
@@ -109,7 +110,7 @@ void VertexLoader::LoadVertex(u32 base_address, int index, int vertex,
                 }
                 break;
             }
-            case Regs::VertexAttributeFormat::SHORT: {
+            case PipelineRegs::VertexAttributeFormat::SHORT: {
                 const s16* srcdata =
                     reinterpret_cast<const s16*>(Memory::GetPhysicalPointer(source_addr));
                 for (unsigned int comp = 0; comp < vertex_attribute_elements[i]; ++comp) {
@@ -117,7 +118,7 @@ void VertexLoader::LoadVertex(u32 base_address, int index, int vertex,
                 }
                 break;
             }
-            case Regs::VertexAttributeFormat::FLOAT: {
+            case PipelineRegs::VertexAttributeFormat::FLOAT: {
                 const float* srcdata =
                     reinterpret_cast<const float*>(Memory::GetPhysicalPointer(source_addr));
                 for (unsigned int comp = 0; comp < vertex_attribute_elements[i]; ++comp) {

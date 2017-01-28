@@ -513,6 +513,6 @@ void State::Reset() {
     Zero(gs);
     Zero(cmd_list);
     Zero(immediate);
-    primitive_assembler.Reconfigure(Regs::TriangleTopology::List);
+    primitive_assembler.Reconfigure(PipelineRegs::TriangleTopology::List);
 }
 }
