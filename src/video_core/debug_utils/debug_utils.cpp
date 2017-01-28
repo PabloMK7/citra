@@ -88,7 +88,7 @@ std::shared_ptr<DebugContext> g_debug_context; // TODO: Get rid of this global
 
 namespace DebugUtils {
 
-void DumpShader(const std::string& filename, const Regs::ShaderConfig& config,
+void DumpShader(const std::string& filename, const ShaderRegs& config,
                 const Shader::ShaderSetup& setup,
                 const RasterizerRegs::VSOutputAttributes* output_attributes) {
     struct StuffToWrite {

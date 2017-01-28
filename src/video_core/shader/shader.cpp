@@ -66,7 +66,7 @@ OutputVertex OutputVertex::FromAttributeBuffer(const RasterizerRegs& regs, Attri
     return ret;
 }
 
-void UnitState::LoadInput(const Regs::ShaderConfig& config, const AttributeBuffer& input) {
+void UnitState::LoadInput(const ShaderRegs& config, const AttributeBuffer& input) {
     const unsigned max_attribute = config.max_input_attribute_index;
 
     for (unsigned attr = 0; attr <= max_attribute; ++attr) {
@@ -75,7 +75,7 @@ void UnitState::LoadInput(const Regs::ShaderConfig& config, const AttributeBuffe
     }
 }
 
-void UnitState::WriteOutput(const Regs::ShaderConfig& config, AttributeBuffer& output) {
+void UnitState::WriteOutput(const ShaderRegs& config, AttributeBuffer& output) {
     unsigned int output_i = 0;
     for (unsigned int reg : Common::BitSet<u32>(config.output_mask)) {
         output.attr[output_i++] = registers.output[reg];

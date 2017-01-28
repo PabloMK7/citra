@@ -182,7 +182,7 @@ namespace DebugUtils {
 #define PICA_DUMP_TEXTURES 0
 #define PICA_LOG_TEV 0
 
-void DumpShader(const std::string& filename, const Regs::ShaderConfig& config,
+void DumpShader(const std::string& filename, const ShaderRegs& config,
                 const Shader::ShaderSetup& setup,
                 const RasterizerRegs::VSOutputAttributes* output_attributes);
 

@@ -36,6 +36,7 @@ set(HEADERS
             regs_lighting.h
             regs_pipeline.h
             regs_rasterizer.h
+            regs_shader.h
             regs_texturing.h
             renderer_base.h
             renderer_opengl/gl_rasterizer.h

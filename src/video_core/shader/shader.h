@@ -116,9 +116,9 @@ struct UnitState {
      * @param config Shader configuration registers corresponding to the unit.
      * @param input Attribute buffer to load into the input registers.
      */
-    void LoadInput(const Regs::ShaderConfig& config, const AttributeBuffer& input);
+    void LoadInput(const ShaderRegs& config, const AttributeBuffer& input);
 
-    void WriteOutput(const Regs::ShaderConfig& config, AttributeBuffer& output);
+    void WriteOutput(const ShaderRegs& config, AttributeBuffer& output);
 };
 
 struct ShaderSetup {
