@@ -4,11 +4,12 @@
 
 #pragma once
 
+#include <cstddef>
 #include "common/common_types.h"
 
 namespace Common {
 
-void MurmurHash3_128(const void* key, int len, u32 seed, void* out);
+void MurmurHash3_128(const void* key, size_t len, u32 seed, void* out);
 
 /**
  * Computes a 64-bit hash over the specified block of data
@@ -16,7 +17,7 @@ void MurmurHash3_128(const void* key, int len, u32 seed, void* out);
  * @param len Length of data (in bytes) to compute hash over
  * @returns 64-bit hash value that was computed over the data block
  */
-static inline u64 ComputeHash64(const void* data, int len) {
+static inline u64 ComputeHash64(const void* data, size_t len) {
     u64 res[2];
     MurmurHash3_128(data, len, 0, res);
     return res[0];

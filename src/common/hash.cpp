@@ -16,7 +16,7 @@ namespace Common {
 
 // Block read - if your platform needs to do endian-swapping or can only handle aligned reads, do
 // the conversion here
-static FORCE_INLINE u64 getblock64(const u64* p, int i) {
+static FORCE_INLINE u64 getblock64(const u64* p, size_t i) {
     return p[i];
 }
 
@@ -34,9 +34,9 @@ static FORCE_INLINE u64 fmix64(u64 k) {
 // This is the 128-bit variant of the MurmurHash3 hash function that is targeted for 64-bit
 // platforms (MurmurHash3_x64_128). It was taken from:
 // https://code.google.com/p/smhasher/source/browse/trunk/MurmurHash3.cpp
-void MurmurHash3_128(const void* key, int len, u32 seed, void* out) {
+void MurmurHash3_128(const void* key, size_t len, u32 seed, void* out) {
     const u8* data = (const u8*)key;
-    const int nblocks = len / 16;
+    const size_t nblocks = len / 16;
 
     u64 h1 = seed;
     u64 h2 = seed;
@@ -48,7 +48,7 @@ void MurmurHash3_128(const void* key, int len, u32 seed, void* out) {
 
     const u64* blocks = (const u64*)(data);
 
-    for (int i = 0; i < nblocks; i++) {
+    for (size_t i = 0; i < nblocks; i++) {
         u64 k1 = getblock64(blocks, i * 2 + 0);
         u64 k2 = getblock64(blocks, i * 2 + 1);
 
