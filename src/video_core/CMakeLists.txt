@@ -32,6 +32,7 @@ set(HEADERS
             primitive_assembly.h
             rasterizer.h
             rasterizer_interface.h
+            regs_rasterizer.h
             renderer_base.h
             renderer_opengl/gl_rasterizer.h
             renderer_opengl/gl_rasterizer_cache.h

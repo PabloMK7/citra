@@ -13,6 +13,7 @@
 #include "video_core/renderer_opengl/gl_shader_util.h"
 
 using Pica::Regs;
+using Pica::RasterizerRegs;
 using TevStageConfig = Regs::TevStageConfig;
 
 namespace GLShader {
@@ -639,10 +640,10 @@ vec4 secondary_fragment_color = vec4(0.0);
     }
 
     // Append the scissor test
-    if (state.scissor_test_mode != Regs::ScissorMode::Disabled) {
+    if (state.scissor_test_mode != RasterizerRegs::ScissorMode::Disabled) {
         out += "if (";
         // Negate the condition if we have to keep only the pixels outside the scissor box
-        if (state.scissor_test_mode == Regs::ScissorMode::Include)
+        if (state.scissor_test_mode == RasterizerRegs::ScissorMode::Include)
             out += "!";
         out += "(gl_FragCoord.x >= scissor_x1 && "
                "gl_FragCoord.y >= scissor_y1 && "
@@ -652,7 +653,7 @@ vec4 secondary_fragment_color = vec4(0.0);
 
     out += "float z_over_w = 1.0 - gl_FragCoord.z * 2.0;\n";
     out += "float depth = z_over_w * depth_scale + depth_offset;\n";
-    if (state.depthmap_enable == Pica::Regs::DepthBuffering::WBuffering) {
+    if (state.depthmap_enable == Pica::RasterizerRegs::DepthBuffering::WBuffering) {
         out += "depth /= gl_FragCoord.w;\n";
     }
 

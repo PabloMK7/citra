@@ -184,7 +184,7 @@ namespace DebugUtils {
 
 void DumpShader(const std::string& filename, const Regs::ShaderConfig& config,
                 const Shader::ShaderSetup& setup,
-                const Regs::VSOutputAttributes* output_attributes);
+                const RasterizerRegs::VSOutputAttributes* output_attributes);
 
 // Utility class to log Pica commands.
 struct PicaTrace {

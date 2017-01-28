@@ -90,7 +90,7 @@ namespace DebugUtils {
 
 void DumpShader(const std::string& filename, const Regs::ShaderConfig& config,
                 const Shader::ShaderSetup& setup,
-                const Regs::VSOutputAttributes* output_attributes) {
+                const RasterizerRegs::VSOutputAttributes* output_attributes) {
     struct StuffToWrite {
         const u8* pointer;
         u32 size;
@@ -129,7 +129,7 @@ void DumpShader(const std::string& filename, const Regs::ShaderConfig& config,
     // This is put into a try-catch block to make sure we notice unknown configurations.
     std::vector<OutputRegisterInfo> output_info_table;
     for (unsigned i = 0; i < 7; ++i) {
-        using OutputAttributes = Pica::Regs::VSOutputAttributes;
+        using OutputAttributes = Pica::RasterizerRegs::VSOutputAttributes;
 
         // TODO: It's still unclear how the attribute components map to the register!
         //       Once we know that, this code probably will not make much sense anymore.

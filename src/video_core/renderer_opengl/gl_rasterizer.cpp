@@ -197,13 +197,16 @@ void RasterizerOpenGL::DrawTriangles() {
 
     // Sync the viewport
     // These registers hold half-width and half-height, so must be multiplied by 2
-    GLsizei viewport_width = (GLsizei)Pica::float24::FromRaw(regs.viewport_size_x).ToFloat32() * 2;
-    GLsizei viewport_height = (GLsizei)Pica::float24::FromRaw(regs.viewport_size_y).ToFloat32() * 2;
+    GLsizei viewport_width =
+        (GLsizei)Pica::float24::FromRaw(regs.rasterizer.viewport_size_x).ToFloat32() * 2;
+    GLsizei viewport_height =
+        (GLsizei)Pica::float24::FromRaw(regs.rasterizer.viewport_size_y).ToFloat32() * 2;
 
-    glViewport((GLint)(rect.left + regs.viewport_corner.x * color_surface->res_scale_width),
-               (GLint)(rect.bottom + regs.viewport_corner.y * color_surface->res_scale_height),
-               (GLsizei)(viewport_width * color_surface->res_scale_width),
-               (GLsizei)(viewport_height * color_surface->res_scale_height));
+    glViewport(
+        (GLint)(rect.left + regs.rasterizer.viewport_corner.x * color_surface->res_scale_width),
+        (GLint)(rect.bottom + regs.rasterizer.viewport_corner.y * color_surface->res_scale_height),
+        (GLsizei)(viewport_width * color_surface->res_scale_width),
+        (GLsizei)(viewport_height * color_surface->res_scale_height));
 
     if (uniform_block_data.data.framebuffer_scale[0] != color_surface->res_scale_width ||
         uniform_block_data.data.framebuffer_scale[1] != color_surface->res_scale_height) {
@@ -215,16 +218,16 @@ void RasterizerOpenGL::DrawTriangles() {
 
     // Scissor checks are window-, not viewport-relative, which means that if the cached texture
     // sub-rect changes, the scissor bounds also need to be updated.
-    GLint scissor_x1 =
-        static_cast<GLint>(rect.left + regs.scissor_test.x1 * color_surface->res_scale_width);
-    GLint scissor_y1 =
-        static_cast<GLint>(rect.bottom + regs.scissor_test.y1 * color_surface->res_scale_height);
+    GLint scissor_x1 = static_cast<GLint>(
+        rect.left + regs.rasterizer.scissor_test.x1 * color_surface->res_scale_width);
+    GLint scissor_y1 = static_cast<GLint>(
+        rect.bottom + regs.rasterizer.scissor_test.y1 * color_surface->res_scale_height);
     // x2, y2 have +1 added to cover the entire pixel area, otherwise you might get cracks when
     // scaling or doing multisampling.
-    GLint scissor_x2 =
-        static_cast<GLint>(rect.left + (regs.scissor_test.x2 + 1) * color_surface->res_scale_width);
+    GLint scissor_x2 = static_cast<GLint>(
+        rect.left + (regs.rasterizer.scissor_test.x2 + 1) * color_surface->res_scale_width);
     GLint scissor_y2 = static_cast<GLint>(
-        rect.bottom + (regs.scissor_test.y2 + 1) * color_surface->res_scale_height);
+        rect.bottom + (regs.rasterizer.scissor_test.y2 + 1) * color_surface->res_scale_height);
 
     if (uniform_block_data.data.scissor_x1 != scissor_x1 ||
         uniform_block_data.data.scissor_x2 != scissor_x2 ||
@@ -316,20 +319,20 @@ void RasterizerOpenGL::NotifyPicaRegisterChanged(u32 id) {
 
     switch (id) {
     // Culling
-    case PICA_REG_INDEX(cull_mode):
+    case PICA_REG_INDEX(rasterizer.cull_mode):
         SyncCullMode();
         break;
 
     // Depth modifiers
-    case PICA_REG_INDEX(viewport_depth_range):
+    case PICA_REG_INDEX(rasterizer.viewport_depth_range):
         SyncDepthScale();
         break;
-    case PICA_REG_INDEX(viewport_depth_near_plane):
+    case PICA_REG_INDEX(rasterizer.viewport_depth_near_plane):
         SyncDepthOffset();
         break;
 
     // Depth buffering
-    case PICA_REG_INDEX(depthmap_enable):
+    case PICA_REG_INDEX(rasterizer.depthmap_enable):
         shader_dirty = true;
         break;
 
@@ -398,7 +401,7 @@ void RasterizerOpenGL::NotifyPicaRegisterChanged(u32 id) {
         break;
 
     // Scissor test
-    case PICA_REG_INDEX(scissor_test.mode):
+    case PICA_REG_INDEX(rasterizer.scissor_test.mode):
         shader_dirty = true;
         break;
 
@@ -1110,30 +1113,31 @@ void RasterizerOpenGL::SetShader() {
 void RasterizerOpenGL::SyncCullMode() {
     const auto& regs = Pica::g_state.regs;
 
-    switch (regs.cull_mode) {
-    case Pica::Regs::CullMode::KeepAll:
+    switch (regs.rasterizer.cull_mode) {
+    case Pica::RasterizerRegs::CullMode::KeepAll:
         state.cull.enabled = false;
         break;
 
-    case Pica::Regs::CullMode::KeepClockWise:
+    case Pica::RasterizerRegs::CullMode::KeepClockWise:
         state.cull.enabled = true;
         state.cull.front_face = GL_CW;
         break;
 
-    case Pica::Regs::CullMode::KeepCounterClockWise:
+    case Pica::RasterizerRegs::CullMode::KeepCounterClockWise:
         state.cull.enabled = true;
         state.cull.front_face = GL_CCW;
         break;
 
     default:
-        LOG_CRITICAL(Render_OpenGL, "Unknown cull mode %d", regs.cull_mode.Value());
+        LOG_CRITICAL(Render_OpenGL, "Unknown cull mode %d", regs.rasterizer.cull_mode.Value());
         UNIMPLEMENTED();
         break;
     }
 }
 
 void RasterizerOpenGL::SyncDepthScale() {
-    float depth_scale = Pica::float24::FromRaw(Pica::g_state.regs.viewport_depth_range).ToFloat32();
+    float depth_scale =
+        Pica::float24::FromRaw(Pica::g_state.regs.rasterizer.viewport_depth_range).ToFloat32();
     if (depth_scale != uniform_block_data.data.depth_scale) {
         uniform_block_data.data.depth_scale = depth_scale;
         uniform_block_data.dirty = true;
@@ -1142,7 +1146,7 @@ void RasterizerOpenGL::SyncDepthScale() {
 
 void RasterizerOpenGL::SyncDepthOffset() {
     float depth_offset =
-        Pica::float24::FromRaw(Pica::g_state.regs.viewport_depth_near_plane).ToFloat32();
+        Pica::float24::FromRaw(Pica::g_state.regs.rasterizer.viewport_depth_near_plane).ToFloat32();
     if (depth_offset != uniform_block_data.data.depth_offset) {
         uniform_block_data.data.depth_offset = depth_offset;
         uniform_block_data.dirty = true;

@@ -359,7 +359,7 @@ void GraphicsVertexShaderWidget::DumpShader() {
     auto& config = Pica::g_state.regs.vs;
 
     Pica::DebugUtils::DumpShader(filename.toStdString(), config, setup,
-                                 Pica::g_state.regs.vs_output_attributes);
+                                 Pica::g_state.regs.rasterizer.vs_output_attributes);
 }
 
 GraphicsVertexShaderWidget::GraphicsVertexShaderWidget(

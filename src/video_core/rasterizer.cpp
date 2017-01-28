@@ -327,14 +327,14 @@ static void ProcessTriangleInternal(const Vertex& v0, const Vertex& v1, const Ve
                                   ScreenToRasterizerCoordinates(v1.screenpos),
                                   ScreenToRasterizerCoordinates(v2.screenpos)};
 
-    if (regs.cull_mode == Regs::CullMode::KeepAll) {
+    if (regs.rasterizer.cull_mode == RasterizerRegs::CullMode::KeepAll) {
         // Make sure we always end up with a triangle wound counter-clockwise
         if (!reversed && SignedArea(vtxpos[0].xy(), vtxpos[1].xy(), vtxpos[2].xy()) <= 0) {
             ProcessTriangleInternal(v0, v2, v1, true);
             return;
         }
     } else {
-        if (!reversed && regs.cull_mode == Regs::CullMode::KeepClockWise) {
+        if (!reversed && regs.rasterizer.cull_mode == RasterizerRegs::CullMode::KeepClockWise) {
             // Reverse vertex order and use the CCW code path.
             ProcessTriangleInternal(v0, v2, v1, true);
             return;
@@ -351,13 +351,13 @@ static void ProcessTriangleInternal(const Vertex& v0, const Vertex& v1, const Ve
     u16 max_y = std::max({vtxpos[0].y, vtxpos[1].y, vtxpos[2].y});
 
     // Convert the scissor box coordinates to 12.4 fixed point
-    u16 scissor_x1 = (u16)(regs.scissor_test.x1 << 4);
-    u16 scissor_y1 = (u16)(regs.scissor_test.y1 << 4);
+    u16 scissor_x1 = (u16)(regs.rasterizer.scissor_test.x1 << 4);
+    u16 scissor_y1 = (u16)(regs.rasterizer.scissor_test.y1 << 4);
     // x2,y2 have +1 added to cover the entire sub-pixel area
-    u16 scissor_x2 = (u16)((regs.scissor_test.x2 + 1) << 4);
-    u16 scissor_y2 = (u16)((regs.scissor_test.y2 + 1) << 4);
+    u16 scissor_x2 = (u16)((regs.rasterizer.scissor_test.x2 + 1) << 4);
+    u16 scissor_y2 = (u16)((regs.rasterizer.scissor_test.y2 + 1) << 4);
 
-    if (regs.scissor_test.mode == Regs::ScissorMode::Include) {
+    if (regs.rasterizer.scissor_test.mode == RasterizerRegs::ScissorMode::Include) {
         // Calculate the new bounds
         min_x = std::max(min_x, scissor_x1);
         min_y = std::max(min_y, scissor_y1);
@@ -411,7 +411,7 @@ static void ProcessTriangleInternal(const Vertex& v0, const Vertex& v1, const Ve
 
             // Do not process the pixel if it's inside the scissor box and the scissor mode is set
             // to Exclude
-            if (regs.scissor_test.mode == Regs::ScissorMode::Exclude) {
+            if (regs.rasterizer.scissor_test.mode == RasterizerRegs::ScissorMode::Exclude) {
                 if (x >= scissor_x1 && x < scissor_x2 && y >= scissor_y1 && y < scissor_y2)
                     continue;
             }
@@ -441,12 +441,14 @@ static void ProcessTriangleInternal(const Vertex& v0, const Vertex& v1, const Ve
 
             // Not fully accurate. About 3 bits in precision are missing.
             // Z-Buffer (z / w * scale + offset)
-            float depth_scale = float24::FromRaw(regs.viewport_depth_range).ToFloat32();
-            float depth_offset = float24::FromRaw(regs.viewport_depth_near_plane).ToFloat32();
+            float depth_scale = float24::FromRaw(regs.rasterizer.viewport_depth_range).ToFloat32();
+            float depth_offset =
+                float24::FromRaw(regs.rasterizer.viewport_depth_near_plane).ToFloat32();
             float depth = interpolated_z_over_w * depth_scale + depth_offset;
 
             // Potentially switch to W-Buffer
-            if (regs.depthmap_enable == Pica::Regs::DepthBuffering::WBuffering) {
+            if (regs.rasterizer.depthmap_enable ==
+                Pica::RasterizerRegs::DepthBuffering::WBuffering) {
                 // W-Buffer (z * scale + w * offset = (z / w * scale + offset) * w)
                 depth *= interpolated_w_inverse.ToFloat32() * wsum;
             }

@@ -165,7 +165,8 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
                     };
 
                     g_state.primitive_assembler.SubmitVertex(
-                        Shader::OutputVertex::FromAttributeBuffer(regs, output), AddTriangle);
+                        Shader::OutputVertex::FromAttributeBuffer(regs.rasterizer, output),
+                        AddTriangle);
                 }
             }
         }
@@ -295,7 +296,7 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
                 shader_unit.WriteOutput(regs.vs, output);
 
                 // Retrieve vertex from register data
-                output_vertex = Shader::OutputVertex::FromAttributeBuffer(regs, output);
+                output_vertex = Shader::OutputVertex::FromAttributeBuffer(regs.rasterizer, output);
 
                 if (is_indexed) {
                     vertex_cache[vertex_cache_pos] = output_vertex;

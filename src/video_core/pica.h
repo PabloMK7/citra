@@ -18,6 +18,7 @@
 #include "common/common_types.h"
 #include "common/logging/log.h"
 #include "common/vector_math.h"
+#include "video_core/regs_rasterizer.h"
 
 namespace Pica {
 
@@ -44,121 +45,10 @@ namespace Pica {
 #endif // _MSC_VER
 
 struct Regs {
-
     INSERT_PADDING_WORDS(0x10);
-
     u32 trigger_irq;
-
     INSERT_PADDING_WORDS(0x2f);
-
-    enum class CullMode : u32 {
-        // Select which polygons are considered to be "frontfacing".
-        KeepAll = 0,
-        KeepClockWise = 1,
-        KeepCounterClockWise = 2,
-        // TODO: What does the third value imply?
-    };
-
-    union {
-        BitField<0, 2, CullMode> cull_mode;
-    };
-
-    BitField<0, 24, u32> viewport_size_x;
-
-    INSERT_PADDING_WORDS(0x1);
-
-    BitField<0, 24, u32> viewport_size_y;
-
-    INSERT_PADDING_WORDS(0x9);
-
-    BitField<0, 24, u32> viewport_depth_range;      // float24
-    BitField<0, 24, u32> viewport_depth_near_plane; // float24
-
-    BitField<0, 3, u32> vs_output_total;
-
-    union VSOutputAttributes {
-        // Maps components of output vertex attributes to semantics
-        enum Semantic : u32 {
-            POSITION_X = 0,
-            POSITION_Y = 1,
-            POSITION_Z = 2,
-            POSITION_W = 3,
-
-            QUATERNION_X = 4,
-            QUATERNION_Y = 5,
-            QUATERNION_Z = 6,
-            QUATERNION_W = 7,
-
-            COLOR_R = 8,
-            COLOR_G = 9,
-            COLOR_B = 10,
-            COLOR_A = 11,
-
-            TEXCOORD0_U = 12,
-            TEXCOORD0_V = 13,
-            TEXCOORD1_U = 14,
-            TEXCOORD1_V = 15,
-
-            TEXCOORD0_W = 16,
-
-            VIEW_X = 18,
-            VIEW_Y = 19,
-            VIEW_Z = 20,
-
-            TEXCOORD2_U = 22,
-            TEXCOORD2_V = 23,
-
-            INVALID = 31,
-        };
-
-        BitField<0, 5, Semantic> map_x;
-        BitField<8, 5, Semantic> map_y;
-        BitField<16, 5, Semantic> map_z;
-        BitField<24, 5, Semantic> map_w;
-    } vs_output_attributes[7];
-
-    INSERT_PADDING_WORDS(0xe);
-
-    enum class ScissorMode : u32 {
-        Disabled = 0,
-        Exclude = 1, // Exclude pixels inside the scissor box
-
-        Include = 3 // Exclude pixels outside the scissor box
-    };
-
-    struct {
-        BitField<0, 2, ScissorMode> mode;
-
-        union {
-            BitField<0, 16, u32> x1;
-            BitField<16, 16, u32> y1;
-        };
-
-        union {
-            BitField<0, 16, u32> x2;
-            BitField<16, 16, u32> y2;
-        };
-    } scissor_test;
-
-    union {
-        BitField<0, 10, s32> x;
-        BitField<16, 10, s32> y;
-    } viewport_corner;
-
-    INSERT_PADDING_WORDS(0x1);
-
-    // TODO: early depth
-    INSERT_PADDING_WORDS(0x1);
-
-    INSERT_PADDING_WORDS(0x2);
-
-    enum DepthBuffering : u32 {
-        WBuffering = 0,
-        ZBuffering = 1,
-    };
-    BitField<0, 1, DepthBuffering> depthmap_enable;
-
-    INSERT_PADDING_WORDS(0x12);
+    RasterizerRegs rasterizer;
 
     struct TextureConfig {
         enum TextureType : u32 {
@@ -1338,16 +1228,19 @@ private:
                   "Field " #field_name " has invalid position")
 
 ASSERT_REG_POSITION(trigger_irq, 0x10);
-ASSERT_REG_POSITION(cull_mode, 0x40);
-ASSERT_REG_POSITION(viewport_size_x, 0x41);
-ASSERT_REG_POSITION(viewport_size_y, 0x43);
-ASSERT_REG_POSITION(viewport_depth_range, 0x4d);
-ASSERT_REG_POSITION(viewport_depth_near_plane, 0x4e);
-ASSERT_REG_POSITION(vs_output_attributes[0], 0x50);
-ASSERT_REG_POSITION(vs_output_attributes[1], 0x51);
-ASSERT_REG_POSITION(scissor_test, 0x65);
-ASSERT_REG_POSITION(viewport_corner, 0x68);
-ASSERT_REG_POSITION(depthmap_enable, 0x6D);
+
+ASSERT_REG_POSITION(rasterizer, 0x40);
+ASSERT_REG_POSITION(rasterizer.cull_mode, 0x40);
+ASSERT_REG_POSITION(rasterizer.viewport_size_x, 0x41);
+ASSERT_REG_POSITION(rasterizer.viewport_size_y, 0x43);
+ASSERT_REG_POSITION(rasterizer.viewport_depth_range, 0x4d);
+ASSERT_REG_POSITION(rasterizer.viewport_depth_near_plane, 0x4e);
+ASSERT_REG_POSITION(rasterizer.vs_output_attributes[0], 0x50);
+ASSERT_REG_POSITION(rasterizer.vs_output_attributes[1], 0x51);
+ASSERT_REG_POSITION(rasterizer.scissor_test, 0x65);
+ASSERT_REG_POSITION(rasterizer.viewport_corner, 0x68);
+ASSERT_REG_POSITION(rasterizer.depthmap_enable, 0x6D);
+
 ASSERT_REG_POSITION(texture0_enable, 0x80);
 ASSERT_REG_POSITION(texture0, 0x81);
 ASSERT_REG_POSITION(texture0_format, 0x8e);
