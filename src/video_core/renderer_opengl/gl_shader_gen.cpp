@@ -277,8 +277,8 @@ static void AppendAlphaCombiner(std::string& out, TevStageConfig::Operation oper
 }
 
 /// Writes the if-statement condition used to evaluate alpha testing
-static void AppendAlphaTestCondition(std::string& out, Regs::CompareFunc func) {
-    using CompareFunc = Regs::CompareFunc;
+static void AppendAlphaTestCondition(std::string& out, Pica::FramebufferRegs::CompareFunc func) {
+    using CompareFunc = Pica::FramebufferRegs::CompareFunc;
     switch (func) {
     case CompareFunc::Never:
         out += "true";
@@ -634,7 +634,7 @@ vec4 secondary_fragment_color = vec4(0.0);
 )";
 
     // Do not do any sort of processing if it's obvious we're not going to pass the alpha test
-    if (state.alpha_test_func == Regs::CompareFunc::Never) {
+    if (state.alpha_test_func == Pica::FramebufferRegs::CompareFunc::Never) {
         out += "discard; }";
         return out;
     }
@@ -667,7 +667,7 @@ vec4 secondary_fragment_color = vec4(0.0);
     for (size_t index = 0; index < state.tev_stages.size(); ++index)
         WriteTevStage(out, config, (unsigned)index);
 
-    if (state.alpha_test_func != Regs::CompareFunc::Always) {
+    if (state.alpha_test_func != Pica::FramebufferRegs::CompareFunc::Always) {
         out += "if (";
         AppendAlphaTestCondition(out, state.alpha_test_func);
         out += ") discard;\n";

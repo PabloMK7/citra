@@ -32,6 +32,7 @@ set(HEADERS
             primitive_assembly.h
             rasterizer.h
             rasterizer_interface.h
+            regs_framebuffer.h
             regs_rasterizer.h
             regs_texturing.h
             renderer_base.h

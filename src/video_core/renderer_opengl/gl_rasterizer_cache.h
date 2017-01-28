@@ -100,11 +100,11 @@ struct CachedSurface {
         return ((unsigned int)format < 14) ? (PixelFormat)format : PixelFormat::Invalid;
     }
 
-    static PixelFormat PixelFormatFromColorFormat(Pica::Regs::ColorFormat format) {
+    static PixelFormat PixelFormatFromColorFormat(Pica::FramebufferRegs::ColorFormat format) {
         return ((unsigned int)format < 5) ? (PixelFormat)format : PixelFormat::Invalid;
     }
 
-    static PixelFormat PixelFormatFromDepthFormat(Pica::Regs::DepthFormat format) {
+    static PixelFormat PixelFormatFromDepthFormat(Pica::FramebufferRegs::DepthFormat format) {
         return ((unsigned int)format < 4) ? (PixelFormat)((unsigned int)format + 14)
                                           : PixelFormat::Invalid;
     }
@@ -217,7 +217,7 @@ public:
     /// Gets the color and depth surfaces and rect (resolution scaled) based on the framebuffer
     /// configuration
     std::tuple<CachedSurface*, CachedSurface*, MathUtil::Rectangle<int>> GetFramebufferSurfaces(
-        const Pica::Regs::FramebufferConfig& config);
+        const Pica::FramebufferRegs::FramebufferConfig& config);
 
     /// Attempt to get a surface that exactly matches the fill region and format
     CachedSurface* TryGetFillSurface(const GPU::Regs::MemoryFillConfig& config);

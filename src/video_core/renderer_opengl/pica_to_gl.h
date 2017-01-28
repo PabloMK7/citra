@@ -76,7 +76,7 @@ inline GLenum WrapMode(Pica::TexturingRegs::TextureConfig::WrapMode mode) {
     return gl_mode;
 }
 
-inline GLenum BlendEquation(Pica::Regs::BlendEquation equation) {
+inline GLenum BlendEquation(Pica::FramebufferRegs::BlendEquation equation) {
     static const GLenum blend_equation_table[] = {
         GL_FUNC_ADD,              // BlendEquation::Add
         GL_FUNC_SUBTRACT,         // BlendEquation::Subtract
@@ -96,7 +96,7 @@ inline GLenum BlendEquation(Pica::Regs::BlendEquation equation) {
     return blend_equation_table[(unsigned)equation];
 }
 
-inline GLenum BlendFunc(Pica::Regs::BlendFactor factor) {
+inline GLenum BlendFunc(Pica::FramebufferRegs::BlendFactor factor) {
     static const GLenum blend_func_table[] = {
         GL_ZERO,                     // BlendFactor::Zero
         GL_ONE,                      // BlendFactor::One
@@ -126,7 +126,7 @@ inline GLenum BlendFunc(Pica::Regs::BlendFactor factor) {
     return blend_func_table[(unsigned)factor];
 }
 
-inline GLenum LogicOp(Pica::Regs::LogicOp op) {
+inline GLenum LogicOp(Pica::FramebufferRegs::LogicOp op) {
     static const GLenum logic_op_table[] = {
         GL_CLEAR,         // Clear
         GL_AND,           // And
@@ -157,7 +157,7 @@ inline GLenum LogicOp(Pica::Regs::LogicOp op) {
     return logic_op_table[(unsigned)op];
 }
 
-inline GLenum CompareFunc(Pica::Regs::CompareFunc func) {
+inline GLenum CompareFunc(Pica::FramebufferRegs::CompareFunc func) {
     static const GLenum compare_func_table[] = {
         GL_NEVER,    // CompareFunc::Never
         GL_ALWAYS,   // CompareFunc::Always
@@ -180,7 +180,7 @@ inline GLenum CompareFunc(Pica::Regs::CompareFunc func) {
     return compare_func_table[(unsigned)func];
 }
 
-inline GLenum StencilOp(Pica::Regs::StencilAction action) {
+inline GLenum StencilOp(Pica::FramebufferRegs::StencilAction action) {
     static const GLenum stencil_op_table[] = {
         GL_KEEP,      // StencilAction::Keep
         GL_ZERO,      // StencilAction::Zero

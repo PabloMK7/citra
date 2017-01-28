@@ -414,30 +414,30 @@ void GraphicsSurfaceWidget::OnUpdate() {
         // TODO: Store a reference to the registers in the debug context instead of accessing them
         // directly...
 
-        const auto& framebuffer = Pica::g_state.regs.framebuffer;
+        const auto& framebuffer = Pica::g_state.regs.framebuffer.framebuffer;
 
         surface_address = framebuffer.GetColorBufferPhysicalAddress();
         surface_width = framebuffer.GetWidth();
         surface_height = framebuffer.GetHeight();
 
         switch (framebuffer.color_format) {
-        case Pica::Regs::ColorFormat::RGBA8:
+        case Pica::FramebufferRegs::ColorFormat::RGBA8:
             surface_format = Format::RGBA8;
             break;
 
-        case Pica::Regs::ColorFormat::RGB8:
+        case Pica::FramebufferRegs::ColorFormat::RGB8:
             surface_format = Format::RGB8;
             break;
 
-        case Pica::Regs::ColorFormat::RGB5A1:
+        case Pica::FramebufferRegs::ColorFormat::RGB5A1:
             surface_format = Format::RGB5A1;
             break;
 
-        case Pica::Regs::ColorFormat::RGB565:
+        case Pica::FramebufferRegs::ColorFormat::RGB565:
             surface_format = Format::RGB565;
             break;
 
-        case Pica::Regs::ColorFormat::RGBA4:
+        case Pica::FramebufferRegs::ColorFormat::RGBA4:
             surface_format = Format::RGBA4;
             break;
 
@@ -450,22 +450,22 @@ void GraphicsSurfaceWidget::OnUpdate() {
     }
 
     case Source::DepthBuffer: {
-        const auto& framebuffer = Pica::g_state.regs.framebuffer;
+        const auto& framebuffer = Pica::g_state.regs.framebuffer.framebuffer;
 
         surface_address = framebuffer.GetDepthBufferPhysicalAddress();
         surface_width = framebuffer.GetWidth();
         surface_height = framebuffer.GetHeight();
 
         switch (framebuffer.depth_format) {
-        case Pica::Regs::DepthFormat::D16:
+        case Pica::FramebufferRegs::DepthFormat::D16:
             surface_format = Format::D16;
             break;
 
-        case Pica::Regs::DepthFormat::D24:
+        case Pica::FramebufferRegs::DepthFormat::D24:
             surface_format = Format::D24;
             break;
 
-        case Pica::Regs::DepthFormat::D24S8:
+        case Pica::FramebufferRegs::DepthFormat::D24S8:
             surface_format = Format::D24X8;
             break;
 
@@ -478,14 +478,14 @@ void GraphicsSurfaceWidget::OnUpdate() {
     }
 
     case Source::StencilBuffer: {
-        const auto& framebuffer = Pica::g_state.regs.framebuffer;
+        const auto& framebuffer = Pica::g_state.regs.framebuffer.framebuffer;
 
         surface_address = framebuffer.GetDepthBufferPhysicalAddress();
         surface_width = framebuffer.GetWidth();
         surface_height = framebuffer.GetHeight();
 
         switch (framebuffer.depth_format) {
-        case Pica::Regs::DepthFormat::D24S8:
+        case Pica::FramebufferRegs::DepthFormat::D24S8:
             surface_format = Format::X24S8;
             break;
 

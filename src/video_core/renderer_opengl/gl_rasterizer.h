@@ -56,9 +56,9 @@ union PicaShaderConfig {
 
         state.depthmap_enable = regs.rasterizer.depthmap_enable;
 
-        state.alpha_test_func = regs.output_merger.alpha_test.enable
-                                    ? regs.output_merger.alpha_test.func.Value()
-                                    : Pica::Regs::CompareFunc::Always;
+        state.alpha_test_func = regs.framebuffer.output_merger.alpha_test.enable
+                                    ? regs.framebuffer.output_merger.alpha_test.func.Value()
+                                    : Pica::FramebufferRegs::CompareFunc::Always;
 
         state.texture0_type = regs.texturing.texture0.type;
 
@@ -172,7 +172,7 @@ union PicaShaderConfig {
     };
 
     struct State {
-        Pica::Regs::CompareFunc alpha_test_func;
+        Pica::FramebufferRegs::CompareFunc alpha_test_func;
         Pica::RasterizerRegs::ScissorMode scissor_test_mode;
         Pica::TexturingRegs::TextureConfig::TextureType texture0_type;
         std::array<TevStageConfigRaw, 6> tev_stages;

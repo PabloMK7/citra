@@ -29,7 +29,7 @@ namespace Pica {
 namespace Rasterizer {
 
 static void DrawPixel(int x, int y, const Math::Vec4<u8>& color) {
-    const auto& framebuffer = g_state.regs.framebuffer;
+    const auto& framebuffer = g_state.regs.framebuffer.framebuffer;
     const PAddr addr = framebuffer.GetColorBufferPhysicalAddress();
 
     // Similarly to textures, the render framebuffer is laid out from bottom to top, too.
@@ -44,23 +44,23 @@ static void DrawPixel(int x, int y, const Math::Vec4<u8>& color) {
     u8* dst_pixel = Memory::GetPhysicalPointer(addr) + dst_offset;
 
     switch (framebuffer.color_format) {
-    case Regs::ColorFormat::RGBA8:
+    case FramebufferRegs::ColorFormat::RGBA8:
         Color::EncodeRGBA8(color, dst_pixel);
         break;
 
-    case Regs::ColorFormat::RGB8:
+    case FramebufferRegs::ColorFormat::RGB8:
         Color::EncodeRGB8(color, dst_pixel);
         break;
 
-    case Regs::ColorFormat::RGB5A1:
+    case FramebufferRegs::ColorFormat::RGB5A1:
         Color::EncodeRGB5A1(color, dst_pixel);
         break;
 
-    case Regs::ColorFormat::RGB565:
+    case FramebufferRegs::ColorFormat::RGB565:
         Color::EncodeRGB565(color, dst_pixel);
         break;
 
-    case Regs::ColorFormat::RGBA4:
+    case FramebufferRegs::ColorFormat::RGBA4:
         Color::EncodeRGBA4(color, dst_pixel);
         break;
 
@@ -72,7 +72,7 @@ static void DrawPixel(int x, int y, const Math::Vec4<u8>& color) {
 }
 
 static const Math::Vec4<u8> GetPixel(int x, int y) {
-    const auto& framebuffer = g_state.regs.framebuffer;
+    const auto& framebuffer = g_state.regs.framebuffer.framebuffer;
     const PAddr addr = framebuffer.GetColorBufferPhysicalAddress();
 
     y = framebuffer.height - y;
@@ -85,19 +85,19 @@ static const Math::Vec4<u8> GetPixel(int x, int y) {
     u8* src_pixel = Memory::GetPhysicalPointer(addr) + src_offset;
 
     switch (framebuffer.color_format) {
-    case Regs::ColorFormat::RGBA8:
+    case FramebufferRegs::ColorFormat::RGBA8:
         return Color::DecodeRGBA8(src_pixel);
 
-    case Regs::ColorFormat::RGB8:
+    case FramebufferRegs::ColorFormat::RGB8:
         return Color::DecodeRGB8(src_pixel);
 
-    case Regs::ColorFormat::RGB5A1:
+    case FramebufferRegs::ColorFormat::RGB5A1:
         return Color::DecodeRGB5A1(src_pixel);
 
-    case Regs::ColorFormat::RGB565:
+    case FramebufferRegs::ColorFormat::RGB565:
         return Color::DecodeRGB565(src_pixel);
 
-    case Regs::ColorFormat::RGBA4:
+    case FramebufferRegs::ColorFormat::RGBA4:
         return Color::DecodeRGBA4(src_pixel);
 
     default:
@@ -110,25 +110,25 @@ static const Math::Vec4<u8> GetPixel(int x, int y) {
 }
 
 static u32 GetDepth(int x, int y) {
-    const auto& framebuffer = g_state.regs.framebuffer;
+    const auto& framebuffer = g_state.regs.framebuffer.framebuffer;
     const PAddr addr = framebuffer.GetDepthBufferPhysicalAddress();
     u8* depth_buffer = Memory::GetPhysicalPointer(addr);
 
     y = framebuffer.height - y;
 
     const u32 coarse_y = y & ~7;
-    u32 bytes_per_pixel = Regs::BytesPerDepthPixel(framebuffer.depth_format);
+    u32 bytes_per_pixel = FramebufferRegs::BytesPerDepthPixel(framebuffer.depth_format);
     u32 stride = framebuffer.width * bytes_per_pixel;
 
     u32 src_offset = VideoCore::GetMortonOffset(x, y, bytes_per_pixel) + coarse_y * stride;
     u8* src_pixel = depth_buffer + src_offset;
 
     switch (framebuffer.depth_format) {
-    case Regs::DepthFormat::D16:
+    case FramebufferRegs::DepthFormat::D16:
         return Color::DecodeD16(src_pixel);
-    case Regs::DepthFormat::D24:
+    case FramebufferRegs::DepthFormat::D24:
         return Color::DecodeD24(src_pixel);
-    case Regs::DepthFormat::D24S8:
+    case FramebufferRegs::DepthFormat::D24S8:
         return Color::DecodeD24S8(src_pixel).x;
     default:
         LOG_CRITICAL(HW_GPU, "Unimplemented depth format %u", framebuffer.depth_format);
@@ -138,21 +138,21 @@ static u32 GetDepth(int x, int y) {
 }
 
 static u8 GetStencil(int x, int y) {
-    const auto& framebuffer = g_state.regs.framebuffer;
+    const auto& framebuffer = g_state.regs.framebuffer.framebuffer;
     const PAddr addr = framebuffer.GetDepthBufferPhysicalAddress();
     u8* depth_buffer = Memory::GetPhysicalPointer(addr);
 
     y = framebuffer.height - y;
 
     const u32 coarse_y = y & ~7;
-    u32 bytes_per_pixel = Pica::Regs::BytesPerDepthPixel(framebuffer.depth_format);
+    u32 bytes_per_pixel = Pica::FramebufferRegs::BytesPerDepthPixel(framebuffer.depth_format);
     u32 stride = framebuffer.width * bytes_per_pixel;
 
     u32 src_offset = VideoCore::GetMortonOffset(x, y, bytes_per_pixel) + coarse_y * stride;
     u8* src_pixel = depth_buffer + src_offset;
 
     switch (framebuffer.depth_format) {
-    case Regs::DepthFormat::D24S8:
+    case FramebufferRegs::DepthFormat::D24S8:
         return Color::DecodeD24S8(src_pixel).y;
 
     default:
@@ -165,29 +165,29 @@ static u8 GetStencil(int x, int y) {
 }
 
 static void SetDepth(int x, int y, u32 value) {
-    const auto& framebuffer = g_state.regs.framebuffer;
+    const auto& framebuffer = g_state.regs.framebuffer.framebuffer;
     const PAddr addr = framebuffer.GetDepthBufferPhysicalAddress();
     u8* depth_buffer = Memory::GetPhysicalPointer(addr);
 
     y = framebuffer.height - y;
 
     const u32 coarse_y = y & ~7;
-    u32 bytes_per_pixel = Regs::BytesPerDepthPixel(framebuffer.depth_format);
+    u32 bytes_per_pixel = FramebufferRegs::BytesPerDepthPixel(framebuffer.depth_format);
     u32 stride = framebuffer.width * bytes_per_pixel;
 
     u32 dst_offset = VideoCore::GetMortonOffset(x, y, bytes_per_pixel) + coarse_y * stride;
     u8* dst_pixel = depth_buffer + dst_offset;
 
     switch (framebuffer.depth_format) {
-    case Regs::DepthFormat::D16:
+    case FramebufferRegs::DepthFormat::D16:
         Color::EncodeD16(value, dst_pixel);
         break;
 
-    case Regs::DepthFormat::D24:
+    case FramebufferRegs::DepthFormat::D24:
         Color::EncodeD24(value, dst_pixel);
         break;
 
-    case Regs::DepthFormat::D24S8:
+    case FramebufferRegs::DepthFormat::D24S8:
         Color::EncodeD24X8(value, dst_pixel);
         break;
 
@@ -199,26 +199,26 @@ static void SetDepth(int x, int y, u32 value) {
 }
 
 static void SetStencil(int x, int y, u8 value) {
-    const auto& framebuffer = g_state.regs.framebuffer;
+    const auto& framebuffer = g_state.regs.framebuffer.framebuffer;
     const PAddr addr = framebuffer.GetDepthBufferPhysicalAddress();
     u8* depth_buffer = Memory::GetPhysicalPointer(addr);
 
     y = framebuffer.height - y;
 
     const u32 coarse_y = y & ~7;
-    u32 bytes_per_pixel = Pica::Regs::BytesPerDepthPixel(framebuffer.depth_format);
+    u32 bytes_per_pixel = Pica::FramebufferRegs::BytesPerDepthPixel(framebuffer.depth_format);
     u32 stride = framebuffer.width * bytes_per_pixel;
 
     u32 dst_offset = VideoCore::GetMortonOffset(x, y, bytes_per_pixel) + coarse_y * stride;
     u8* dst_pixel = depth_buffer + dst_offset;
 
     switch (framebuffer.depth_format) {
-    case Pica::Regs::DepthFormat::D16:
-    case Pica::Regs::DepthFormat::D24:
+    case Pica::FramebufferRegs::DepthFormat::D16:
+    case Pica::FramebufferRegs::DepthFormat::D24:
         // Nothing to do
         break;
 
-    case Pica::Regs::DepthFormat::D24S8:
+    case Pica::FramebufferRegs::DepthFormat::D24S8:
         Color::EncodeX24S8(value, dst_pixel);
         break;
 
@@ -229,32 +229,32 @@ static void SetStencil(int x, int y, u8 value) {
     }
 }
 
-static u8 PerformStencilAction(Regs::StencilAction action, u8 old_stencil, u8 ref) {
+static u8 PerformStencilAction(FramebufferRegs::StencilAction action, u8 old_stencil, u8 ref) {
     switch (action) {
-    case Regs::StencilAction::Keep:
+    case FramebufferRegs::StencilAction::Keep:
         return old_stencil;
 
-    case Regs::StencilAction::Zero:
+    case FramebufferRegs::StencilAction::Zero:
         return 0;
 
-    case Regs::StencilAction::Replace:
+    case FramebufferRegs::StencilAction::Replace:
         return ref;
 
-    case Regs::StencilAction::Increment:
+    case FramebufferRegs::StencilAction::Increment:
         // Saturated increment
         return std::min<u8>(old_stencil, 254) + 1;
 
-    case Regs::StencilAction::Decrement:
+    case FramebufferRegs::StencilAction::Decrement:
         // Saturated decrement
         return std::max<u8>(old_stencil, 1) - 1;
 
-    case Regs::StencilAction::Invert:
+    case FramebufferRegs::StencilAction::Invert:
         return ~old_stencil;
 
-    case Regs::StencilAction::IncrementWrap:
+    case FramebufferRegs::StencilAction::IncrementWrap:
         return old_stencil + 1;
 
-    case Regs::StencilAction::DecrementWrap:
+    case FramebufferRegs::StencilAction::DecrementWrap:
         return old_stencil - 1;
 
     default:
@@ -400,9 +400,10 @@ static void ProcessTriangleInternal(const Vertex& v0, const Vertex& v1, const Ve
     auto textures = regs.texturing.GetTextures();
     auto tev_stages = regs.texturing.GetTevStages();
 
-    bool stencil_action_enable = g_state.regs.output_merger.stencil_test.enable &&
-                                 g_state.regs.framebuffer.depth_format == Regs::DepthFormat::D24S8;
-    const auto stencil_test = g_state.regs.output_merger.stencil_test;
+    bool stencil_action_enable =
+        g_state.regs.framebuffer.output_merger.stencil_test.enable &&
+        g_state.regs.framebuffer.framebuffer.depth_format == FramebufferRegs::DepthFormat::D24S8;
+    const auto stencil_test = g_state.regs.framebuffer.output_merger.stencil_test;
 
     // Enter rasterization loop, starting at the center of the topleft bounding box corner.
     // TODO: Not sure if looping through x first might be faster
@@ -879,41 +880,41 @@ static void ProcessTriangleInternal(const Vertex& v0, const Vertex& v1, const Ve
                 }
             }
 
-            const auto& output_merger = regs.output_merger;
+            const auto& output_merger = regs.framebuffer.output_merger;
             // TODO: Does alpha testing happen before or after stencil?
             if (output_merger.alpha_test.enable) {
                 bool pass = false;
 
                 switch (output_merger.alpha_test.func) {
-                case Regs::CompareFunc::Never:
+                case FramebufferRegs::CompareFunc::Never:
                     pass = false;
                     break;
 
-                case Regs::CompareFunc::Always:
+                case FramebufferRegs::CompareFunc::Always:
                     pass = true;
                     break;
 
-                case Regs::CompareFunc::Equal:
+                case FramebufferRegs::CompareFunc::Equal:
                     pass = combiner_output.a() == output_merger.alpha_test.ref;
                     break;
 
-                case Regs::CompareFunc::NotEqual:
+                case FramebufferRegs::CompareFunc::NotEqual:
                     pass = combiner_output.a() != output_merger.alpha_test.ref;
                     break;
 
-                case Regs::CompareFunc::LessThan:
+                case FramebufferRegs::CompareFunc::LessThan:
                     pass = combiner_output.a() < output_merger.alpha_test.ref;
                     break;
 
-                case Regs::CompareFunc::LessThanOrEqual:
+                case FramebufferRegs::CompareFunc::LessThanOrEqual:
                     pass = combiner_output.a() <= output_merger.alpha_test.ref;
                     break;
 
-                case Regs::CompareFunc::GreaterThan:
+                case FramebufferRegs::CompareFunc::GreaterThan:
                     pass = combiner_output.a() > output_merger.alpha_test.ref;
                     break;
 
-                case Regs::CompareFunc::GreaterThanOrEqual:
+                case FramebufferRegs::CompareFunc::GreaterThanOrEqual:
                     pass = combiner_output.a() >= output_merger.alpha_test.ref;
                     break;
                 }
@@ -959,10 +960,10 @@ static void ProcessTriangleInternal(const Vertex& v0, const Vertex& v1, const Ve
             u8 old_stencil = 0;
 
             auto UpdateStencil = [stencil_test, x, y,
-                                  &old_stencil](Pica::Regs::StencilAction action) {
+                                  &old_stencil](Pica::FramebufferRegs::StencilAction action) {
                 u8 new_stencil =
                     PerformStencilAction(action, old_stencil, stencil_test.reference_value);
-                if (g_state.regs.framebuffer.allow_depth_stencil_write != 0)
+                if (g_state.regs.framebuffer.framebuffer.allow_depth_stencil_write != 0)
                     SetStencil(x >> 4, y >> 4, (new_stencil & stencil_test.write_mask) |
                                                    (old_stencil & ~stencil_test.write_mask));
             };
@@ -974,35 +975,35 @@ static void ProcessTriangleInternal(const Vertex& v0, const Vertex& v1, const Ve
 
                 bool pass = false;
                 switch (stencil_test.func) {
-                case Regs::CompareFunc::Never:
+                case FramebufferRegs::CompareFunc::Never:
                     pass = false;
                     break;
 
-                case Regs::CompareFunc::Always:
+                case FramebufferRegs::CompareFunc::Always:
                     pass = true;
                     break;
 
-                case Regs::CompareFunc::Equal:
+                case FramebufferRegs::CompareFunc::Equal:
                     pass = (ref == dest);
                     break;
 
-                case Regs::CompareFunc::NotEqual:
+                case FramebufferRegs::CompareFunc::NotEqual:
                     pass = (ref != dest);
                     break;
 
-                case Regs::CompareFunc::LessThan:
+                case FramebufferRegs::CompareFunc::LessThan:
                     pass = (ref < dest);
                     break;
 
-                case Regs::CompareFunc::LessThanOrEqual:
+                case FramebufferRegs::CompareFunc::LessThanOrEqual:
                     pass = (ref <= dest);
                     break;
 
-                case Regs::CompareFunc::GreaterThan:
+                case FramebufferRegs::CompareFunc::GreaterThan:
                     pass = (ref > dest);
                     break;
 
-                case Regs::CompareFunc::GreaterThanOrEqual:
+                case FramebufferRegs::CompareFunc::GreaterThanOrEqual:
                     pass = (ref >= dest);
                     break;
                 }
@@ -1014,7 +1015,8 @@ static void ProcessTriangleInternal(const Vertex& v0, const Vertex& v1, const Ve
             }
 
             // Convert float to integer
-            unsigned num_bits = Regs::DepthBitsPerPixel(regs.framebuffer.depth_format);
+            unsigned num_bits =
+                FramebufferRegs::DepthBitsPerPixel(regs.framebuffer.framebuffer.depth_format);
             u32 z = (u32)(depth * ((1 << num_bits) - 1));
 
             if (output_merger.depth_test_enable) {
@@ -1023,35 +1025,35 @@ static void ProcessTriangleInternal(const Vertex& v0, const Vertex& v1, const Ve
                 bool pass = false;
 
                 switch (output_merger.depth_test_func) {
-                case Regs::CompareFunc::Never:
+                case FramebufferRegs::CompareFunc::Never:
                     pass = false;
                     break;
 
-                case Regs::CompareFunc::Always:
+                case FramebufferRegs::CompareFunc::Always:
                     pass = true;
                     break;
 
-                case Regs::CompareFunc::Equal:
+                case FramebufferRegs::CompareFunc::Equal:
                     pass = z == ref_z;
                     break;
 
-                case Regs::CompareFunc::NotEqual:
+                case FramebufferRegs::CompareFunc::NotEqual:
                     pass = z != ref_z;
                     break;
 
-                case Regs::CompareFunc::LessThan:
+                case FramebufferRegs::CompareFunc::LessThan:
                     pass = z < ref_z;
                     break;
 
-                case Regs::CompareFunc::LessThanOrEqual:
+                case FramebufferRegs::CompareFunc::LessThanOrEqual:
                     pass = z <= ref_z;
                     break;
 
-                case Regs::CompareFunc::GreaterThan:
+                case FramebufferRegs::CompareFunc::GreaterThan:
                     pass = z > ref_z;
                     break;
 
-                case Regs::CompareFunc::GreaterThanOrEqual:
+                case FramebufferRegs::CompareFunc::GreaterThanOrEqual:
                     pass = z >= ref_z;
                     break;
                 }
@@ -1063,8 +1065,11 @@ static void ProcessTriangleInternal(const Vertex& v0, const Vertex& v1, const Ve
                 }
             }
 
-            if (regs.framebuffer.allow_depth_stencil_write != 0 && output_merger.depth_write_enable)
+            if (regs.framebuffer.framebuffer.allow_depth_stencil_write != 0 &&
+                output_merger.depth_write_enable) {
+
                 SetDepth(x >> 4, y >> 4, z);
+            }
 
             // The stencil depth_pass action is executed even if depth testing is disabled
             if (stencil_action_enable)
@@ -1076,7 +1081,8 @@ static void ProcessTriangleInternal(const Vertex& v0, const Vertex& v1, const Ve
             if (output_merger.alphablend_enable) {
                 auto params = output_merger.alpha_blending;
 
-                auto LookupFactor = [&](unsigned channel, Regs::BlendFactor factor) -> u8 {
+                auto LookupFactor = [&](unsigned channel,
+                                        FramebufferRegs::BlendFactor factor) -> u8 {
                     DEBUG_ASSERT(channel < 4);
 
                     const Math::Vec4<u8> blend_const = {
@@ -1087,49 +1093,49 @@ static void ProcessTriangleInternal(const Vertex& v0, const Vertex& v1, const Ve
                     };
 
                     switch (factor) {
-                    case Regs::BlendFactor::Zero:
+                    case FramebufferRegs::BlendFactor::Zero:
                         return 0;
 
-                    case Regs::BlendFactor::One:
+                    case FramebufferRegs::BlendFactor::One:
                         return 255;
 
-                    case Regs::BlendFactor::SourceColor:
+                    case FramebufferRegs::BlendFactor::SourceColor:
                         return combiner_output[channel];
 
-                    case Regs::BlendFactor::OneMinusSourceColor:
+                    case FramebufferRegs::BlendFactor::OneMinusSourceColor:
                         return 255 - combiner_output[channel];
 
-                    case Regs::BlendFactor::DestColor:
+                    case FramebufferRegs::BlendFactor::DestColor:
                         return dest[channel];
 
-                    case Regs::BlendFactor::OneMinusDestColor:
+                    case FramebufferRegs::BlendFactor::OneMinusDestColor:
                         return 255 - dest[channel];
 
-                    case Regs::BlendFactor::SourceAlpha:
+                    case FramebufferRegs::BlendFactor::SourceAlpha:
                         return combiner_output.a();
 
-                    case Regs::BlendFactor::OneMinusSourceAlpha:
+                    case FramebufferRegs::BlendFactor::OneMinusSourceAlpha:
                         return 255 - combiner_output.a();
 
-                    case Regs::BlendFactor::DestAlpha:
+                    case FramebufferRegs::BlendFactor::DestAlpha:
                         return dest.a();
 
-                    case Regs::BlendFactor::OneMinusDestAlpha:
+                    case FramebufferRegs::BlendFactor::OneMinusDestAlpha:
                         return 255 - dest.a();
 
-                    case Regs::BlendFactor::ConstantColor:
+                    case FramebufferRegs::BlendFactor::ConstantColor:
                         return blend_const[channel];
 
-                    case Regs::BlendFactor::OneMinusConstantColor:
+                    case FramebufferRegs::BlendFactor::OneMinusConstantColor:
                         return 255 - blend_const[channel];
 
-                    case Regs::BlendFactor::ConstantAlpha:
+                    case FramebufferRegs::BlendFactor::ConstantAlpha:
                         return blend_const.a();
 
-                    case Regs::BlendFactor::OneMinusConstantAlpha:
+                    case FramebufferRegs::BlendFactor::OneMinusConstantAlpha:
                         return 255 - blend_const.a();
 
-                    case Regs::BlendFactor::SourceAlphaSaturate:
+                    case FramebufferRegs::BlendFactor::SourceAlphaSaturate:
                         // Returns 1.0 for the alpha channel
                         if (channel == 3)
                             return 255;
@@ -1147,36 +1153,37 @@ static void ProcessTriangleInternal(const Vertex& v0, const Vertex& v1, const Ve
                 static auto EvaluateBlendEquation = [](
                     const Math::Vec4<u8>& src, const Math::Vec4<u8>& srcfactor,
                     const Math::Vec4<u8>& dest, const Math::Vec4<u8>& destfactor,
-                    Regs::BlendEquation equation) {
+                    FramebufferRegs::BlendEquation equation) {
+
                     Math::Vec4<int> result;
 
                     auto src_result = (src * srcfactor).Cast<int>();
                     auto dst_result = (dest * destfactor).Cast<int>();
 
                     switch (equation) {
-                    case Regs::BlendEquation::Add:
+                    case FramebufferRegs::BlendEquation::Add:
                         result = (src_result + dst_result) / 255;
                         break;
 
-                    case Regs::BlendEquation::Subtract:
+                    case FramebufferRegs::BlendEquation::Subtract:
                         result = (src_result - dst_result) / 255;
                         break;
 
-                    case Regs::BlendEquation::ReverseSubtract:
+                    case FramebufferRegs::BlendEquation::ReverseSubtract:
                         result = (dst_result - src_result) / 255;
                         break;
 
                     // TODO: How do these two actually work?
                     //       OpenGL doesn't include the blend factors in the min/max computations,
                     //       but is this what the 3DS actually does?
-                    case Regs::BlendEquation::Min:
+                    case FramebufferRegs::BlendEquation::Min:
                         result.r() = std::min(src.r(), dest.r());
                         result.g() = std::min(src.g(), dest.g());
                         result.b() = std::min(src.b(), dest.b());
                         result.a() = std::min(src.a(), dest.a());
                         break;
 
-                    case Regs::BlendEquation::Max:
+                    case FramebufferRegs::BlendEquation::Max:
                         result.r() = std::max(src.r(), dest.r());
                         result.g() = std::max(src.g(), dest.g());
                         result.b() = std::max(src.b(), dest.b());
@@ -1209,54 +1216,54 @@ static void ProcessTriangleInternal(const Vertex& v0, const Vertex& v1, const Ve
                                                          dstfactor, params.blend_equation_a)
                                        .a();
             } else {
-                static auto LogicOp = [](u8 src, u8 dest, Regs::LogicOp op) -> u8 {
+                static auto LogicOp = [](u8 src, u8 dest, FramebufferRegs::LogicOp op) -> u8 {
                     switch (op) {
-                    case Regs::LogicOp::Clear:
+                    case FramebufferRegs::LogicOp::Clear:
                         return 0;
 
-                    case Regs::LogicOp::And:
+                    case FramebufferRegs::LogicOp::And:
                         return src & dest;
 
-                    case Regs::LogicOp::AndReverse:
+                    case FramebufferRegs::LogicOp::AndReverse:
                         return src & ~dest;
 
-                    case Regs::LogicOp::Copy:
+                    case FramebufferRegs::LogicOp::Copy:
                         return src;
 
-                    case Regs::LogicOp::Set:
+                    case FramebufferRegs::LogicOp::Set:
                         return 255;
 
-                    case Regs::LogicOp::CopyInverted:
+                    case FramebufferRegs::LogicOp::CopyInverted:
                         return ~src;
 
-                    case Regs::LogicOp::NoOp:
+                    case FramebufferRegs::LogicOp::NoOp:
                         return dest;
 
-                    case Regs::LogicOp::Invert:
+                    case FramebufferRegs::LogicOp::Invert:
                         return ~dest;
 
-                    case Regs::LogicOp::Nand:
+                    case FramebufferRegs::LogicOp::Nand:
                         return ~(src & dest);
 
-                    case Regs::LogicOp::Or:
+                    case FramebufferRegs::LogicOp::Or:
                         return src | dest;
 
-                    case Regs::LogicOp::Nor:
+                    case FramebufferRegs::LogicOp::Nor:
                         return ~(src | dest);
 
-                    case Regs::LogicOp::Xor:
+                    case FramebufferRegs::LogicOp::Xor:
                         return src ^ dest;
 
-                    case Regs::LogicOp::Equiv:
+                    case FramebufferRegs::LogicOp::Equiv:
                         return ~(src ^ dest);
 
-                    case Regs::LogicOp::AndInverted:
+                    case FramebufferRegs::LogicOp::AndInverted:
                         return ~src & dest;
 
-                    case Regs::LogicOp::OrReverse:
+                    case FramebufferRegs::LogicOp::OrReverse:
                         return src | ~dest;
 
-                    case Regs::LogicOp::OrInverted:
+                    case FramebufferRegs::LogicOp::OrInverted:
                         return ~src | dest;
                     }
                 };
@@ -1275,7 +1282,7 @@ static void ProcessTriangleInternal(const Vertex& v0, const Vertex& v1, const Ve
                 output_merger.alpha_enable ? blend_output.a() : dest.a(),
             };
 
-            if (regs.framebuffer.allow_color_write != 0)
+            if (regs.framebuffer.framebuffer.allow_color_write != 0)
                 DrawPixel(x >> 4, y >> 4, result);
         }
     }
