@@ -18,11 +18,11 @@
 #include "video_core/debug_utils/debug_utils.h"
 #include "video_core/pica_state.h"
 #include "video_core/pica_types.h"
-#include "video_core/rasterizer.h"
 #include "video_core/regs_framebuffer.h"
 #include "video_core/regs_rasterizer.h"
 #include "video_core/regs_texturing.h"
 #include "video_core/shader/shader.h"
+#include "video_core/swrasterizer/rasterizer.h"
 #include "video_core/texture/texture_decode.h"
 #include "video_core/utils.h"
 
