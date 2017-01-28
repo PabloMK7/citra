@@ -64,8 +64,8 @@ struct Regs {
         std::array<u32, NUM_REGS> reg_array;
     };
 
-    // Map register indices to names readable by humans
-    static std::string GetCommandName(int index);
+    /// Map register indices to names readable by humans
+    static const char* GetRegisterName(u16 index);
 };
 
 static_assert(sizeof(Regs) == Regs::NUM_REGS * sizeof(u32), "Regs struct has wrong size");
