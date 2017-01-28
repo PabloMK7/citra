@@ -192,18 +192,18 @@ union PicaShaderConfig {
 
             bool enable;
             unsigned src_num;
-            Pica::Regs::LightingBumpMode bump_mode;
+            Pica::LightingRegs::LightingBumpMode bump_mode;
             unsigned bump_selector;
             bool bump_renorm;
             bool clamp_highlights;
 
-            Pica::Regs::LightingConfig config;
-            Pica::Regs::LightingFresnelSelector fresnel_selector;
+            Pica::LightingRegs::LightingConfig config;
+            Pica::LightingRegs::LightingFresnelSelector fresnel_selector;
 
             struct {
                 bool enable;
                 bool abs_input;
-                Pica::Regs::LightingLutInput type;
+                Pica::LightingRegs::LightingLutInput type;
                 float scale;
             } lut_d0, lut_d1, lut_fr, lut_rr, lut_rg, lut_rb;
         } lighting;
