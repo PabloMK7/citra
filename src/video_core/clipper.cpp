@@ -15,7 +15,6 @@
 #include "video_core/pica_state.h"
 #include "video_core/pica_types.h"
 #include "video_core/rasterizer.h"
-#include "video_core/regs.h"
 #include "video_core/shader/shader.h"
 
 using Pica::Rasterizer::Vertex;

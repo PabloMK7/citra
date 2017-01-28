@@ -17,7 +17,9 @@
 #include <vector>
 #include "common/common_types.h"
 #include "common/vector_math.h"
-#include "video_core/regs.h"
+#include "video_core/regs_rasterizer.h"
+#include "video_core/regs_shader.h"
+#include "video_core/regs_texturing.h"
 
 namespace CiTrace {
 class Recorder;

@@ -21,6 +21,8 @@
 #include "video_core/primitive_assembly.h"
 #include "video_core/rasterizer_interface.h"
 #include "video_core/regs.h"
+#include "video_core/regs_pipeline.h"
+#include "video_core/regs_texturing.h"
 #include "video_core/renderer_base.h"
 #include "video_core/shader/shader.h"
 #include "video_core/vertex_loader.h"

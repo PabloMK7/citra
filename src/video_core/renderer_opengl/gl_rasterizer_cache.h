@@ -21,7 +21,8 @@
 #include "common/common_funcs.h"
 #include "common/common_types.h"
 #include "core/hw/gpu.h"
-#include "video_core/regs.h"
+#include "video_core/regs_framebuffer.h"
+#include "video_core/regs_texturing.h"
 #include "video_core/renderer_opengl/gl_resource_manager.h"
 
 namespace MathUtil {
