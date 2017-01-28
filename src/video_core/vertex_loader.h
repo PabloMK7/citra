@@ -2,7 +2,7 @@
 
 #include <array>
 #include "common/common_types.h"
-#include "video_core/pica.h"
+#include "video_core/regs_pipeline.h"
 
 namespace Pica {
 

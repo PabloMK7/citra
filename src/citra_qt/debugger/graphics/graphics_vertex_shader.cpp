@@ -16,7 +16,6 @@
 #include <QTreeView>
 #include "citra_qt/debugger/graphics/graphics_vertex_shader.h"
 #include "citra_qt/util/util.h"
-#include "video_core/pica.h"
 #include "video_core/pica_state.h"
 #include "video_core/shader/debug_data.h"
 #include "video_core/shader/shader.h"

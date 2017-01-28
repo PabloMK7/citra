@@ -5,6 +5,7 @@ set(SRCS
             pica.cpp
             primitive_assembly.cpp
             rasterizer.cpp
+            regs.cpp
             renderer_base.cpp
             renderer_opengl/gl_rasterizer.cpp
             renderer_opengl/gl_rasterizer_cache.cpp
@@ -32,6 +33,7 @@ set(HEADERS
             primitive_assembly.h
             rasterizer.h
             rasterizer_interface.h
+            regs.h
             regs_framebuffer.h
             regs_lighting.h
             regs_pipeline.h

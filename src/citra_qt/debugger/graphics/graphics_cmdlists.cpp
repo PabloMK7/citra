@@ -18,8 +18,8 @@
 #include "citra_qt/util/util.h"
 #include "common/vector_math.h"
 #include "video_core/debug_utils/debug_utils.h"
-#include "video_core/pica.h"
 #include "video_core/pica_state.h"
+#include "video_core/regs.h"
 #include "video_core/texture/texture_decode.h"
 
 namespace {

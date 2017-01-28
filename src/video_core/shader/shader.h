@@ -12,8 +12,8 @@
 #include "common/common_funcs.h"
 #include "common/common_types.h"
 #include "common/vector_math.h"
-#include "video_core/pica.h"
 #include "video_core/pica_types.h"
+#include "video_core/regs.h"
 
 using nihstro::RegisterType;
 using nihstro::SourceRegister;

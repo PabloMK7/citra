@@ -16,8 +16,8 @@
 #include "common/color.h"
 #include "core/hw/gpu.h"
 #include "core/memory.h"
-#include "video_core/pica.h"
 #include "video_core/pica_state.h"
+#include "video_core/regs.h"
 #include "video_core/texture/texture_decode.h"
 #include "video_core/utils.h"
 
