@@ -6,27 +6,27 @@
 
 #include "common/common_types.h"
 #include "common/vector_math.h"
-#include "video_core/pica.h"
+#include "video_core/regs_texturing.h"
 
 namespace Pica {
 namespace Texture {
 
 /// Returns the byte size of a 8*8 tile of the specified texture format.
-size_t CalculateTileSize(Pica::Regs::TextureFormat format);
+size_t CalculateTileSize(TexturingRegs::TextureFormat format);
 
 struct TextureInfo {
     PAddr physical_address;
     unsigned int width;
     unsigned int height;
     ptrdiff_t stride;
-    Pica::Regs::TextureFormat format;
+    TexturingRegs::TextureFormat format;
 
-    static TextureInfo FromPicaRegister(const Pica::Regs::TextureConfig& config,
-                                        const Pica::Regs::TextureFormat& format);
+    static TextureInfo FromPicaRegister(const TexturingRegs::TextureConfig& config,
+                                        const TexturingRegs::TextureFormat& format);
 
     /// Calculates stride from format and width, assuming that the entire texture is contiguous.
     void SetDefaultStride() {
-        stride = Pica::Texture::CalculateTileSize(format) * (width / 8);
+        stride = CalculateTileSize(format) * (width / 8);
     }
 };
 

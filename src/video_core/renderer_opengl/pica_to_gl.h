@@ -20,7 +20,7 @@ using GLvec4 = std::array<GLfloat, 4>;
 
 namespace PicaToGL {
 
-inline GLenum TextureFilterMode(Pica::Regs::TextureConfig::TextureFilter mode) {
+inline GLenum TextureFilterMode(Pica::TexturingRegs::TextureConfig::TextureFilter mode) {
     static const GLenum filter_mode_table[] = {
         GL_NEAREST, // TextureFilter::Nearest
         GL_LINEAR,  // TextureFilter::Linear
@@ -47,7 +47,7 @@ inline GLenum TextureFilterMode(Pica::Regs::TextureConfig::TextureFilter mode) {
     return gl_mode;
 }
 
-inline GLenum WrapMode(Pica::Regs::TextureConfig::WrapMode mode) {
+inline GLenum WrapMode(Pica::TexturingRegs::TextureConfig::WrapMode mode) {
     static const GLenum wrap_mode_table[] = {
         GL_CLAMP_TO_EDGE,   // WrapMode::ClampToEdge
         GL_CLAMP_TO_BORDER, // WrapMode::ClampToBorder

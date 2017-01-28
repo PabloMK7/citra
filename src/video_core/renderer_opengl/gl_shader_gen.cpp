@@ -14,7 +14,7 @@
 
 using Pica::Regs;
 using Pica::RasterizerRegs;
-using TevStageConfig = Regs::TevStageConfig;
+using TevStageConfig = Pica::TexturingRegs::TevStageConfig;
 
 namespace GLShader {
 
@@ -47,10 +47,10 @@ static void AppendSource(std::string& out, const PicaShaderConfig& config,
     case Source::Texture0:
         // Only unit 0 respects the texturing type (according to 3DBrew)
         switch (state.texture0_type) {
-        case Pica::Regs::TextureConfig::Texture2D:
+        case Pica::TexturingRegs::TextureConfig::Texture2D:
             out += "texture(tex[0], texcoord[0])";
             break;
-        case Pica::Regs::TextureConfig::Projection2D:
+        case Pica::TexturingRegs::TextureConfig::Projection2D:
             out += "textureProj(tex[0], vec3(texcoord[0], texcoord0_w))";
             break;
         default:
@@ -308,7 +308,7 @@ static void AppendAlphaTestCondition(std::string& out, Regs::CompareFunc func) {
 /// Writes the code to emulate the specified TEV stage
 static void WriteTevStage(std::string& out, const PicaShaderConfig& config, unsigned index) {
     const auto stage =
-        static_cast<const Pica::Regs::TevStageConfig>(config.state.tev_stages[index]);
+        static_cast<const Pica::TexturingRegs::TevStageConfig>(config.state.tev_stages[index]);
     if (!IsPassThroughTevStage(stage)) {
         std::string index_name = std::to_string(index);
 
@@ -674,7 +674,7 @@ vec4 secondary_fragment_color = vec4(0.0);
     }
 
     // Append fog combiner
-    if (state.fog_mode == Regs::FogMode::Fog) {
+    if (state.fog_mode == Pica::TexturingRegs::FogMode::Fog) {
         // Get index into fog LUT
         if (state.fog_flip) {
             out += "float fog_index = (1.0 - depth) * 128.0;\n";

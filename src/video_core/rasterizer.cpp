@@ -397,8 +397,8 @@ static void ProcessTriangleInternal(const Vertex& v0, const Vertex& v1, const Ve
 
     auto w_inverse = Math::MakeVec(v0.pos.w, v1.pos.w, v2.pos.w);
 
-    auto textures = regs.GetTextures();
-    auto tev_stages = regs.GetTevStages();
+    auto textures = regs.texturing.GetTextures();
+    auto tev_stages = regs.texturing.GetTevStages();
 
     bool stencil_action_enable = g_state.regs.output_merger.stencil_test.enable &&
                                  g_state.regs.framebuffer.depth_format == Regs::DepthFormat::D24S8;
@@ -515,9 +515,9 @@ static void ProcessTriangleInternal(const Vertex& v0, const Vertex& v1, const Ve
                 // TODO: Refactor so cubemaps and shadowmaps can be handled
                 if (i == 0) {
                     switch (texture.config.type) {
-                    case Regs::TextureConfig::Texture2D:
+                    case TexturingRegs::TextureConfig::Texture2D:
                         break;
-                    case Regs::TextureConfig::Projection2D: {
+                    case TexturingRegs::TextureConfig::Projection2D: {
                         auto tc0_w = GetInterpolatedAttribute(v0.tc0_w, v1.tc0_w, v2.tc0_w);
                         u /= tc0_w;
                         v /= tc0_w;
@@ -536,21 +536,21 @@ static void ProcessTriangleInternal(const Vertex& v0, const Vertex& v1, const Ve
                 int t = (int)(v * float24::FromFloat32(static_cast<float>(texture.config.height)))
                             .ToFloat32();
 
-                static auto GetWrappedTexCoord = [](Regs::TextureConfig::WrapMode mode, int val,
-                                                    unsigned size) {
+                static auto GetWrappedTexCoord = [](TexturingRegs::TextureConfig::WrapMode mode,
+                                                    int val, unsigned size) {
                     switch (mode) {
-                    case Regs::TextureConfig::ClampToEdge:
+                    case TexturingRegs::TextureConfig::ClampToEdge:
                         val = std::max(val, 0);
                         val = std::min(val, (int)size - 1);
                         return val;
 
-                    case Regs::TextureConfig::ClampToBorder:
+                    case TexturingRegs::TextureConfig::ClampToBorder:
                         return val;
 
-                    case Regs::TextureConfig::Repeat:
+                    case TexturingRegs::TextureConfig::Repeat:
                         return (int)((unsigned)val % size);
 
-                    case Regs::TextureConfig::MirroredRepeat: {
+                    case TexturingRegs::TextureConfig::MirroredRepeat: {
                         unsigned int coord = ((unsigned)val % (2 * size));
                         if (coord >= size)
                             coord = 2 * size - 1 - coord;
@@ -564,9 +564,9 @@ static void ProcessTriangleInternal(const Vertex& v0, const Vertex& v1, const Ve
                     }
                 };
 
-                if ((texture.config.wrap_s == Regs::TextureConfig::ClampToBorder &&
+                if ((texture.config.wrap_s == TexturingRegs::TextureConfig::ClampToBorder &&
                      (s < 0 || static_cast<u32>(s) >= texture.config.width)) ||
-                    (texture.config.wrap_t == Regs::TextureConfig::ClampToBorder &&
+                    (texture.config.wrap_t == TexturingRegs::TextureConfig::ClampToBorder &&
                      (t < 0 || static_cast<u32>(t) >= texture.config.height))) {
                     auto border_color = texture.config.border_color;
                     texture_color[i] = {border_color.r, border_color.g, border_color.b,
@@ -602,17 +602,19 @@ static void ProcessTriangleInternal(const Vertex& v0, const Vertex& v1, const Ve
             Math::Vec4<u8> combiner_output;
             Math::Vec4<u8> combiner_buffer = {0, 0, 0, 0};
             Math::Vec4<u8> next_combiner_buffer = {
-                regs.tev_combiner_buffer_color.r, regs.tev_combiner_buffer_color.g,
-                regs.tev_combiner_buffer_color.b, regs.tev_combiner_buffer_color.a,
+                regs.texturing.tev_combiner_buffer_color.r,
+                regs.texturing.tev_combiner_buffer_color.g,
+                regs.texturing.tev_combiner_buffer_color.b,
+                regs.texturing.tev_combiner_buffer_color.a,
             };
 
             for (unsigned tev_stage_index = 0; tev_stage_index < tev_stages.size();
                  ++tev_stage_index) {
                 const auto& tev_stage = tev_stages[tev_stage_index];
-                using Source = Regs::TevStageConfig::Source;
-                using ColorModifier = Regs::TevStageConfig::ColorModifier;
-                using AlphaModifier = Regs::TevStageConfig::AlphaModifier;
-                using Operation = Regs::TevStageConfig::Operation;
+                using Source = TexturingRegs::TevStageConfig::Source;
+                using ColorModifier = TexturingRegs::TevStageConfig::ColorModifier;
+                using AlphaModifier = TexturingRegs::TevStageConfig::AlphaModifier;
+                using Operation = TexturingRegs::TevStageConfig::Operation;
 
                 auto GetSource = [&](Source source) -> Math::Vec4<u8> {
                     switch (source) {
@@ -864,14 +866,14 @@ static void ProcessTriangleInternal(const Vertex& v0, const Vertex& v1, const Ve
 
                 combiner_buffer = next_combiner_buffer;
 
-                if (regs.tev_combiner_buffer_input.TevStageUpdatesCombinerBufferColor(
+                if (regs.texturing.tev_combiner_buffer_input.TevStageUpdatesCombinerBufferColor(
                         tev_stage_index)) {
                     next_combiner_buffer.r() = combiner_output.r();
                     next_combiner_buffer.g() = combiner_output.g();
                     next_combiner_buffer.b() = combiner_output.b();
                 }
 
-                if (regs.tev_combiner_buffer_input.TevStageUpdatesCombinerBufferAlpha(
+                if (regs.texturing.tev_combiner_buffer_input.TevStageUpdatesCombinerBufferAlpha(
                         tev_stage_index)) {
                     next_combiner_buffer.a() = combiner_output.a();
                 }
@@ -924,16 +926,16 @@ static void ProcessTriangleInternal(const Vertex& v0, const Vertex& v1, const Ve
             // Not fully accurate. We'd have to know what data type is used to
             // store the depth etc. Using float for now until we know more
             // about Pica datatypes
-            if (regs.fog_mode == Regs::FogMode::Fog) {
+            if (regs.texturing.fog_mode == TexturingRegs::FogMode::Fog) {
                 const Math::Vec3<u8> fog_color = {
-                    static_cast<u8>(regs.fog_color.r.Value()),
-                    static_cast<u8>(regs.fog_color.g.Value()),
-                    static_cast<u8>(regs.fog_color.b.Value()),
+                    static_cast<u8>(regs.texturing.fog_color.r.Value()),
+                    static_cast<u8>(regs.texturing.fog_color.g.Value()),
+                    static_cast<u8>(regs.texturing.fog_color.b.Value()),
                 };
 
                 // Get index into fog LUT
                 float fog_index;
-                if (g_state.regs.fog_flip) {
+                if (g_state.regs.texturing.fog_flip) {
                     fog_index = (1.0f - depth) * 128.0f;
                 } else {
                     fog_index = depth * 128.0f;

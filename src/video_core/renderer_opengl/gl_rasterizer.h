@@ -60,12 +60,12 @@ union PicaShaderConfig {
                                     ? regs.output_merger.alpha_test.func.Value()
                                     : Pica::Regs::CompareFunc::Always;
 
-        state.texture0_type = regs.texture0.type;
+        state.texture0_type = regs.texturing.texture0.type;
 
         // Copy relevant tev stages fields.
         // We don't sync const_color here because of the high variance, it is a
         // shader uniform instead.
-        const auto& tev_stages = regs.GetTevStages();
+        const auto& tev_stages = regs.texturing.GetTevStages();
         DEBUG_ASSERT(state.tev_stages.size() == tev_stages.size());
         for (size_t i = 0; i < tev_stages.size(); i++) {
             const auto& tev_stage = tev_stages[i];
@@ -75,11 +75,12 @@ union PicaShaderConfig {
             state.tev_stages[i].scales_raw = tev_stage.scales_raw;
         }
 
-        state.fog_mode = regs.fog_mode;
-        state.fog_flip = regs.fog_flip != 0;
+        state.fog_mode = regs.texturing.fog_mode;
+        state.fog_flip = regs.texturing.fog_flip != 0;
 
-        state.combiner_buffer_input = regs.tev_combiner_buffer_input.update_mask_rgb.Value() |
-                                      regs.tev_combiner_buffer_input.update_mask_a.Value() << 4;
+        state.combiner_buffer_input =
+            regs.texturing.tev_combiner_buffer_input.update_mask_rgb.Value() |
+            regs.texturing.tev_combiner_buffer_input.update_mask_a.Value() << 4;
 
         // Fragment lighting
 
@@ -159,8 +160,8 @@ union PicaShaderConfig {
         u32 modifiers_raw;
         u32 ops_raw;
         u32 scales_raw;
-        explicit operator Pica::Regs::TevStageConfig() const noexcept {
-            Pica::Regs::TevStageConfig stage;
+        explicit operator Pica::TexturingRegs::TevStageConfig() const noexcept {
+            Pica::TexturingRegs::TevStageConfig stage;
             stage.sources_raw = sources_raw;
             stage.modifiers_raw = modifiers_raw;
             stage.ops_raw = ops_raw;
@@ -173,12 +174,12 @@ union PicaShaderConfig {
     struct State {
         Pica::Regs::CompareFunc alpha_test_func;
         Pica::RasterizerRegs::ScissorMode scissor_test_mode;
-        Pica::Regs::TextureConfig::TextureType texture0_type;
+        Pica::TexturingRegs::TextureConfig::TextureType texture0_type;
         std::array<TevStageConfigRaw, 6> tev_stages;
         u8 combiner_buffer_input;
 
         Pica::RasterizerRegs::DepthBuffering depthmap_enable;
-        Pica::Regs::FogMode fog_mode;
+        Pica::TexturingRegs::FogMode fog_mode;
         bool fog_flip;
 
         struct {
@@ -251,7 +252,7 @@ public:
 
 private:
     struct SamplerInfo {
-        using TextureConfig = Pica::Regs::TextureConfig;
+        using TextureConfig = Pica::TexturingRegs::TextureConfig;
 
         OGLSampler sampler;
 
@@ -398,7 +399,7 @@ private:
     void SyncCombinerColor();
 
     /// Syncs the TEV constant color to match the PICA register
-    void SyncTevConstColor(int tev_index, const Pica::Regs::TevStageConfig& tev_stage);
+    void SyncTevConstColor(int tev_index, const Pica::TexturingRegs::TevStageConfig& tev_stage);
 
     /// Syncs the lighting global ambient color to match the PICA register
     void SyncGlobalAmbient();

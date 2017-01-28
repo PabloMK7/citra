@@ -342,7 +342,7 @@ CachedSurface* RasterizerCacheOpenGL::GetSurface(const CachedSurface& params, bo
                 Pica::Texture::TextureInfo tex_info;
                 tex_info.width = params.width;
                 tex_info.height = params.height;
-                tex_info.format = (Pica::Regs::TextureFormat)params.pixel_format;
+                tex_info.format = (Pica::TexturingRegs::TextureFormat)params.pixel_format;
                 tex_info.SetDefaultStride();
                 tex_info.physical_address = params.addr;
 
@@ -510,7 +510,7 @@ CachedSurface* RasterizerCacheOpenGL::GetSurfaceRect(const CachedSurface& params
 }
 
 CachedSurface* RasterizerCacheOpenGL::GetTextureSurface(
-    const Pica::Regs::FullTextureConfig& config) {
+    const Pica::TexturingRegs::FullTextureConfig& config) {
 
     Pica::Texture::TextureInfo info =
         Pica::Texture::TextureInfo::FromPicaRegister(config.config, config.format);

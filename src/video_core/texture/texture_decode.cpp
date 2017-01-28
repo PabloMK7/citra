@@ -10,12 +10,12 @@
 #include "common/math_util.h"
 #include "common/swap.h"
 #include "common/vector_math.h"
-#include "video_core/pica.h"
+#include "video_core/regs_texturing.h"
 #include "video_core/texture/etc1.h"
 #include "video_core/texture/texture_decode.h"
 #include "video_core/utils.h"
 
-using TextureFormat = Pica::Regs::TextureFormat;
+using TextureFormat = Pica::TexturingRegs::TextureFormat;
 
 namespace Pica {
 namespace Texture {
@@ -82,32 +82,32 @@ Math::Vec4<u8> LookupTexelInTile(const u8* source, unsigned int x, unsigned int 
     using VideoCore::MortonInterleave;
 
     switch (info.format) {
-    case Regs::TextureFormat::RGBA8: {
+    case TextureFormat::RGBA8: {
         auto res = Color::DecodeRGBA8(source + MortonInterleave(x, y) * 4);
         return {res.r(), res.g(), res.b(), static_cast<u8>(disable_alpha ? 255 : res.a())};
     }
 
-    case Regs::TextureFormat::RGB8: {
+    case TextureFormat::RGB8: {
         auto res = Color::DecodeRGB8(source + MortonInterleave(x, y) * 3);
         return {res.r(), res.g(), res.b(), 255};
     }
 
-    case Regs::TextureFormat::RGB5A1: {
+    case TextureFormat::RGB5A1: {
         auto res = Color::DecodeRGB5A1(source + MortonInterleave(x, y) * 2);
         return {res.r(), res.g(), res.b(), static_cast<u8>(disable_alpha ? 255 : res.a())};
     }
 
-    case Regs::TextureFormat::RGB565: {
+    case TextureFormat::RGB565: {
         auto res = Color::DecodeRGB565(source + MortonInterleave(x, y) * 2);
         return {res.r(), res.g(), res.b(), 255};
     }
 
-    case Regs::TextureFormat::RGBA4: {
+    case TextureFormat::RGBA4: {
         auto res = Color::DecodeRGBA4(source + MortonInterleave(x, y) * 2);
         return {res.r(), res.g(), res.b(), static_cast<u8>(disable_alpha ? 255 : res.a())};
     }
 
-    case Regs::TextureFormat::IA8: {
+    case TextureFormat::IA8: {
         const u8* source_ptr = source + MortonInterleave(x, y) * 2;
 
         if (disable_alpha) {
@@ -118,17 +118,17 @@ Math::Vec4<u8> LookupTexelInTile(const u8* source, unsigned int x, unsigned int 
         }
     }
 
-    case Regs::TextureFormat::RG8: {
+    case TextureFormat::RG8: {
         auto res = Color::DecodeRG8(source + MortonInterleave(x, y) * 2);
         return {res.r(), res.g(), 0, 255};
     }
 
-    case Regs::TextureFormat::I8: {
+    case TextureFormat::I8: {
         const u8* source_ptr = source + MortonInterleave(x, y);
         return {*source_ptr, *source_ptr, *source_ptr, 255};
     }
 
-    case Regs::TextureFormat::A8: {
+    case TextureFormat::A8: {
         const u8* source_ptr = source + MortonInterleave(x, y);
 
         if (disable_alpha) {
@@ -138,7 +138,7 @@ Math::Vec4<u8> LookupTexelInTile(const u8* source, unsigned int x, unsigned int 
         }
     }
 
-    case Regs::TextureFormat::IA4: {
+    case TextureFormat::IA4: {
         const u8* source_ptr = source + MortonInterleave(x, y);
 
         u8 i = Color::Convert4To8(((*source_ptr) & 0xF0) >> 4);
@@ -152,7 +152,7 @@ Math::Vec4<u8> LookupTexelInTile(const u8* source, unsigned int x, unsigned int 
         }
     }
 
-    case Regs::TextureFormat::I4: {
+    case TextureFormat::I4: {
         u32 morton_offset = MortonInterleave(x, y);
         const u8* source_ptr = source + morton_offset / 2;
 
@@ -162,7 +162,7 @@ Math::Vec4<u8> LookupTexelInTile(const u8* source, unsigned int x, unsigned int 
         return {i, i, i, 255};
     }
 
-    case Regs::TextureFormat::A4: {
+    case TextureFormat::A4: {
         u32 morton_offset = MortonInterleave(x, y);
         const u8* source_ptr = source + morton_offset / 2;
 
@@ -176,9 +176,9 @@ Math::Vec4<u8> LookupTexelInTile(const u8* source, unsigned int x, unsigned int 
         }
     }
 
-    case Regs::TextureFormat::ETC1:
-    case Regs::TextureFormat::ETC1A4: {
-        bool has_alpha = (info.format == Regs::TextureFormat::ETC1A4);
+    case TextureFormat::ETC1:
+    case TextureFormat::ETC1A4: {
+        bool has_alpha = (info.format == TextureFormat::ETC1A4);
         size_t subtile_size = has_alpha ? 16 : 8;
 
         // ETC1 further subdivides each 8x8 tile into four 4x4 subtiles
@@ -214,8 +214,8 @@ Math::Vec4<u8> LookupTexelInTile(const u8* source, unsigned int x, unsigned int 
     }
 }
 
-TextureInfo TextureInfo::FromPicaRegister(const Regs::TextureConfig& config,
-                                          const Regs::TextureFormat& format) {
+TextureInfo TextureInfo::FromPicaRegister(const TexturingRegs::TextureConfig& config,
+                                          const TexturingRegs::TextureFormat& format) {
     TextureInfo info;
     info.physical_address = config.GetPhysicalAddress();
     info.width = config.width;

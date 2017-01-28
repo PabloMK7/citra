@@ -512,7 +512,7 @@ void GraphicsSurfaceWidget::OnUpdate() {
             break;
         }
 
-        const auto texture = Pica::g_state.regs.GetTextures()[texture_index];
+        const auto texture = Pica::g_state.regs.texturing.GetTextures()[texture_index];
         auto info = Pica::Texture::TextureInfo::FromPicaRegister(texture.config, texture.format);
 
         surface_address = info.physical_address;
@@ -574,7 +574,7 @@ void GraphicsSurfaceWidget::OnUpdate() {
         info.physical_address = surface_address;
         info.width = surface_width;
         info.height = surface_height;
-        info.format = static_cast<Pica::Regs::TextureFormat>(surface_format);
+        info.format = static_cast<Pica::TexturingRegs::TextureFormat>(surface_format);
         info.SetDefaultStride();
 
         for (unsigned int y = 0; y < surface_height; ++y) {
@@ -689,7 +689,8 @@ void GraphicsSurfaceWidget::SaveSurface() {
 
 unsigned int GraphicsSurfaceWidget::NibblesPerPixel(GraphicsSurfaceWidget::Format format) {
     if (format <= Format::MaxTextureFormat) {
-        return Pica::Regs::NibblesPerPixel(static_cast<Pica::Regs::TextureFormat>(format));
+        return Pica::TexturingRegs::NibblesPerPixel(
+            static_cast<Pica::TexturingRegs::TextureFormat>(format));
     }
 
     switch (format) {

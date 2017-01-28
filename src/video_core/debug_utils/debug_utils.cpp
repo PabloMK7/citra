@@ -331,7 +331,7 @@ static void FlushIOFile(png_structp png_ptr) {
 }
 #endif
 
-void DumpTexture(const Pica::Regs::TextureConfig& texture_config, u8* data) {
+void DumpTexture(const TexturingRegs::TextureConfig& texture_config, u8* data) {
 #ifndef HAVE_PNG
     return;
 #else
@@ -396,7 +396,7 @@ void DumpTexture(const Pica::Regs::TextureConfig& texture_config, u8* data) {
             info.width = texture_config.width;
             info.height = texture_config.height;
             info.stride = row_stride;
-            info.format = g_state.regs.texture0_format;
+            info.format = g_state.regs.texturing.texture0_format;
             Math::Vec4<u8> texture_color = Pica::Texture::LookupTexture(data, x, y, info);
             buf[3 * x + y * row_stride] = texture_color.r();
             buf[3 * x + y * row_stride + 1] = texture_color.g();
@@ -434,8 +434,10 @@ static std::string ReplacePattern(const std::string& input, const std::string& p
     return ret;
 }
 
-static std::string GetTevStageConfigSourceString(const Pica::Regs::TevStageConfig::Source& source) {
-    using Source = Pica::Regs::TevStageConfig::Source;
+static std::string GetTevStageConfigSourceString(
+    const TexturingRegs::TevStageConfig::Source& source) {
+
+    using Source = TexturingRegs::TevStageConfig::Source;
     static const std::map<Source, std::string> source_map = {
         {Source::PrimaryColor, "PrimaryColor"},
         {Source::PrimaryFragmentColor, "PrimaryFragmentColor"},
@@ -457,9 +459,10 @@ static std::string GetTevStageConfigSourceString(const Pica::Regs::TevStageConfi
 }
 
 static std::string GetTevStageConfigColorSourceString(
-    const Pica::Regs::TevStageConfig::Source& source,
-    const Pica::Regs::TevStageConfig::ColorModifier modifier) {
-    using ColorModifier = Pica::Regs::TevStageConfig::ColorModifier;
+    const TexturingRegs::TevStageConfig::Source& source,
+    const TexturingRegs::TevStageConfig::ColorModifier modifier) {
+
+    using ColorModifier = TexturingRegs::TevStageConfig::ColorModifier;
     static const std::map<ColorModifier, std::string> color_modifier_map = {
         {ColorModifier::SourceColor, "%source.rgb"},
         {ColorModifier::OneMinusSourceColor, "(1.0 - %source.rgb)"},
@@ -483,9 +486,10 @@ static std::string GetTevStageConfigColorSourceString(
 }
 
 static std::string GetTevStageConfigAlphaSourceString(
-    const Pica::Regs::TevStageConfig::Source& source,
-    const Pica::Regs::TevStageConfig::AlphaModifier modifier) {
-    using AlphaModifier = Pica::Regs::TevStageConfig::AlphaModifier;
+    const TexturingRegs::TevStageConfig::Source& source,
+    const TexturingRegs::TevStageConfig::AlphaModifier modifier) {
+
+    using AlphaModifier = TexturingRegs::TevStageConfig::AlphaModifier;
     static const std::map<AlphaModifier, std::string> alpha_modifier_map = {
         {AlphaModifier::SourceAlpha, "%source.a"},
         {AlphaModifier::OneMinusSourceAlpha, "(1.0 - %source.a)"},
@@ -507,8 +511,9 @@ static std::string GetTevStageConfigAlphaSourceString(
 }
 
 static std::string GetTevStageConfigOperationString(
-    const Pica::Regs::TevStageConfig::Operation& operation) {
-    using Operation = Pica::Regs::TevStageConfig::Operation;
+    const TexturingRegs::TevStageConfig::Operation& operation) {
+
+    using Operation = TexturingRegs::TevStageConfig::Operation;
     static const std::map<Operation, std::string> combiner_map = {
         {Operation::Replace, "%source1"},
         {Operation::Modulate, "(%source1 * %source2)"},
@@ -528,7 +533,7 @@ static std::string GetTevStageConfigOperationString(
     return op_it->second;
 }
 
-std::string GetTevStageConfigColorCombinerString(const Pica::Regs::TevStageConfig& tev_stage) {
+std::string GetTevStageConfigColorCombinerString(const TexturingRegs::TevStageConfig& tev_stage) {
     auto op_str = GetTevStageConfigOperationString(tev_stage.color_op);
     op_str = ReplacePattern(
         op_str, "%source1",
@@ -541,7 +546,7 @@ std::string GetTevStageConfigColorCombinerString(const Pica::Regs::TevStageConfi
         GetTevStageConfigColorSourceString(tev_stage.color_source3, tev_stage.color_modifier3));
 }
 
-std::string GetTevStageConfigAlphaCombinerString(const Pica::Regs::TevStageConfig& tev_stage) {
+std::string GetTevStageConfigAlphaCombinerString(const TexturingRegs::TevStageConfig& tev_stage) {
     auto op_str = GetTevStageConfigOperationString(tev_stage.alpha_op);
     op_str = ReplacePattern(
         op_str, "%source1",
@@ -554,7 +559,7 @@ std::string GetTevStageConfigAlphaCombinerString(const Pica::Regs::TevStageConfi
         GetTevStageConfigAlphaSourceString(tev_stage.alpha_source3, tev_stage.alpha_modifier3));
 }
 
-void DumpTevStageConfig(const std::array<Pica::Regs::TevStageConfig, 6>& stages) {
+void DumpTevStageConfig(const std::array<TexturingRegs::TevStageConfig, 6>& stages) {
     std::string stage_info = "Tev setup:\n";
     for (size_t index = 0; index < stages.size(); ++index) {
         const auto& tev_stage = stages[index];

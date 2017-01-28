@@ -96,7 +96,7 @@ struct CachedSurface {
         return bpp_table[(unsigned int)format];
     }
 
-    static PixelFormat PixelFormatFromTextureFormat(Pica::Regs::TextureFormat format) {
+    static PixelFormat PixelFormatFromTextureFormat(Pica::TexturingRegs::TextureFormat format) {
         return ((unsigned int)format < 14) ? (PixelFormat)format : PixelFormat::Invalid;
     }
 
@@ -212,7 +212,7 @@ public:
                                   bool load_if_create, MathUtil::Rectangle<int>& out_rect);
 
     /// Gets a surface based on the texture configuration
-    CachedSurface* GetTextureSurface(const Pica::Regs::FullTextureConfig& config);
+    CachedSurface* GetTextureSurface(const Pica::TexturingRegs::FullTextureConfig& config);
 
     /// Gets the color and depth surfaces and rect (resolution scaled) based on the framebuffer
     /// configuration

@@ -26,13 +26,15 @@ MICROPROFILE_DEFINE(OpenGL_Drawing, "OpenGL", "Drawing", MP_RGB(128, 128, 192));
 MICROPROFILE_DEFINE(OpenGL_Blits, "OpenGL", "Blits", MP_RGB(100, 100, 255));
 MICROPROFILE_DEFINE(OpenGL_CacheManagement, "OpenGL", "Cache Mgmt", MP_RGB(100, 255, 100));
 
-static bool IsPassThroughTevStage(const Pica::Regs::TevStageConfig& stage) {
-    return (stage.color_op == Pica::Regs::TevStageConfig::Operation::Replace &&
-            stage.alpha_op == Pica::Regs::TevStageConfig::Operation::Replace &&
-            stage.color_source1 == Pica::Regs::TevStageConfig::Source::Previous &&
-            stage.alpha_source1 == Pica::Regs::TevStageConfig::Source::Previous &&
-            stage.color_modifier1 == Pica::Regs::TevStageConfig::ColorModifier::SourceColor &&
-            stage.alpha_modifier1 == Pica::Regs::TevStageConfig::AlphaModifier::SourceAlpha &&
+static bool IsPassThroughTevStage(const Pica::TexturingRegs::TevStageConfig& stage) {
+    using TevStageConfig = Pica::TexturingRegs::TevStageConfig;
+
+    return (stage.color_op == TevStageConfig::Operation::Replace &&
+            stage.alpha_op == TevStageConfig::Operation::Replace &&
+            stage.color_source1 == TevStageConfig::Source::Previous &&
+            stage.alpha_source1 == TevStageConfig::Source::Previous &&
+            stage.color_modifier1 == TevStageConfig::ColorModifier::SourceColor &&
+            stage.alpha_modifier1 == TevStageConfig::AlphaModifier::SourceAlpha &&
             stage.GetColorMultiplier() == 1 && stage.GetAlphaMultiplier() == 1);
 }
 
@@ -242,7 +244,7 @@ void RasterizerOpenGL::DrawTriangles() {
     }
 
     // Sync and bind the texture surfaces
-    const auto pica_textures = regs.GetTextures();
+    const auto pica_textures = regs.texturing.GetTextures();
     for (unsigned texture_index = 0; texture_index < pica_textures.size(); ++texture_index) {
         const auto& texture = pica_textures[texture_index];
 
@@ -348,17 +350,17 @@ void RasterizerOpenGL::NotifyPicaRegisterChanged(u32 id) {
         break;
 
     // Fog state
-    case PICA_REG_INDEX(fog_color):
+    case PICA_REG_INDEX(texturing.fog_color):
         SyncFogColor();
         break;
-    case PICA_REG_INDEX_WORKAROUND(fog_lut_data[0], 0xe8):
-    case PICA_REG_INDEX_WORKAROUND(fog_lut_data[1], 0xe9):
-    case PICA_REG_INDEX_WORKAROUND(fog_lut_data[2], 0xea):
-    case PICA_REG_INDEX_WORKAROUND(fog_lut_data[3], 0xeb):
-    case PICA_REG_INDEX_WORKAROUND(fog_lut_data[4], 0xec):
-    case PICA_REG_INDEX_WORKAROUND(fog_lut_data[5], 0xed):
-    case PICA_REG_INDEX_WORKAROUND(fog_lut_data[6], 0xee):
-    case PICA_REG_INDEX_WORKAROUND(fog_lut_data[7], 0xef):
+    case PICA_REG_INDEX_WORKAROUND(texturing.fog_lut_data[0], 0xe8):
+    case PICA_REG_INDEX_WORKAROUND(texturing.fog_lut_data[1], 0xe9):
+    case PICA_REG_INDEX_WORKAROUND(texturing.fog_lut_data[2], 0xea):
+    case PICA_REG_INDEX_WORKAROUND(texturing.fog_lut_data[3], 0xeb):
+    case PICA_REG_INDEX_WORKAROUND(texturing.fog_lut_data[4], 0xec):
+    case PICA_REG_INDEX_WORKAROUND(texturing.fog_lut_data[5], 0xed):
+    case PICA_REG_INDEX_WORKAROUND(texturing.fog_lut_data[6], 0xee):
+    case PICA_REG_INDEX_WORKAROUND(texturing.fog_lut_data[7], 0xef):
         uniform_block_data.fog_lut_dirty = true;
         break;
 
@@ -411,60 +413,60 @@ void RasterizerOpenGL::NotifyPicaRegisterChanged(u32 id) {
         break;
 
     // Texture 0 type
-    case PICA_REG_INDEX(texture0.type):
+    case PICA_REG_INDEX(texturing.texture0.type):
         shader_dirty = true;
         break;
 
     // TEV stages
     // (This also syncs fog_mode and fog_flip which are part of tev_combiner_buffer_input)
-    case PICA_REG_INDEX(tev_stage0.color_source1):
-    case PICA_REG_INDEX(tev_stage0.color_modifier1):
-    case PICA_REG_INDEX(tev_stage0.color_op):
-    case PICA_REG_INDEX(tev_stage0.color_scale):
-    case PICA_REG_INDEX(tev_stage1.color_source1):
-    case PICA_REG_INDEX(tev_stage1.color_modifier1):
-    case PICA_REG_INDEX(tev_stage1.color_op):
-    case PICA_REG_INDEX(tev_stage1.color_scale):
-    case PICA_REG_INDEX(tev_stage2.color_source1):
-    case PICA_REG_INDEX(tev_stage2.color_modifier1):
-    case PICA_REG_INDEX(tev_stage2.color_op):
-    case PICA_REG_INDEX(tev_stage2.color_scale):
-    case PICA_REG_INDEX(tev_stage3.color_source1):
-    case PICA_REG_INDEX(tev_stage3.color_modifier1):
-    case PICA_REG_INDEX(tev_stage3.color_op):
-    case PICA_REG_INDEX(tev_stage3.color_scale):
-    case PICA_REG_INDEX(tev_stage4.color_source1):
-    case PICA_REG_INDEX(tev_stage4.color_modifier1):
-    case PICA_REG_INDEX(tev_stage4.color_op):
-    case PICA_REG_INDEX(tev_stage4.color_scale):
-    case PICA_REG_INDEX(tev_stage5.color_source1):
-    case PICA_REG_INDEX(tev_stage5.color_modifier1):
-    case PICA_REG_INDEX(tev_stage5.color_op):
-    case PICA_REG_INDEX(tev_stage5.color_scale):
-    case PICA_REG_INDEX(tev_combiner_buffer_input):
+    case PICA_REG_INDEX(texturing.tev_stage0.color_source1):
+    case PICA_REG_INDEX(texturing.tev_stage0.color_modifier1):
+    case PICA_REG_INDEX(texturing.tev_stage0.color_op):
+    case PICA_REG_INDEX(texturing.tev_stage0.color_scale):
+    case PICA_REG_INDEX(texturing.tev_stage1.color_source1):
+    case PICA_REG_INDEX(texturing.tev_stage1.color_modifier1):
+    case PICA_REG_INDEX(texturing.tev_stage1.color_op):
+    case PICA_REG_INDEX(texturing.tev_stage1.color_scale):
+    case PICA_REG_INDEX(texturing.tev_stage2.color_source1):
+    case PICA_REG_INDEX(texturing.tev_stage2.color_modifier1):
+    case PICA_REG_INDEX(texturing.tev_stage2.color_op):
+    case PICA_REG_INDEX(texturing.tev_stage2.color_scale):
+    case PICA_REG_INDEX(texturing.tev_stage3.color_source1):
+    case PICA_REG_INDEX(texturing.tev_stage3.color_modifier1):
+    case PICA_REG_INDEX(texturing.tev_stage3.color_op):
+    case PICA_REG_INDEX(texturing.tev_stage3.color_scale):
+    case PICA_REG_INDEX(texturing.tev_stage4.color_source1):
+    case PICA_REG_INDEX(texturing.tev_stage4.color_modifier1):
+    case PICA_REG_INDEX(texturing.tev_stage4.color_op):
+    case PICA_REG_INDEX(texturing.tev_stage4.color_scale):
+    case PICA_REG_INDEX(texturing.tev_stage5.color_source1):
+    case PICA_REG_INDEX(texturing.tev_stage5.color_modifier1):
+    case PICA_REG_INDEX(texturing.tev_stage5.color_op):
+    case PICA_REG_INDEX(texturing.tev_stage5.color_scale):
+    case PICA_REG_INDEX(texturing.tev_combiner_buffer_input):
         shader_dirty = true;
         break;
-    case PICA_REG_INDEX(tev_stage0.const_r):
-        SyncTevConstColor(0, regs.tev_stage0);
+    case PICA_REG_INDEX(texturing.tev_stage0.const_r):
+        SyncTevConstColor(0, regs.texturing.tev_stage0);
         break;
-    case PICA_REG_INDEX(tev_stage1.const_r):
-        SyncTevConstColor(1, regs.tev_stage1);
+    case PICA_REG_INDEX(texturing.tev_stage1.const_r):
+        SyncTevConstColor(1, regs.texturing.tev_stage1);
         break;
-    case PICA_REG_INDEX(tev_stage2.const_r):
-        SyncTevConstColor(2, regs.tev_stage2);
+    case PICA_REG_INDEX(texturing.tev_stage2.const_r):
+        SyncTevConstColor(2, regs.texturing.tev_stage2);
         break;
-    case PICA_REG_INDEX(tev_stage3.const_r):
-        SyncTevConstColor(3, regs.tev_stage3);
+    case PICA_REG_INDEX(texturing.tev_stage3.const_r):
+        SyncTevConstColor(3, regs.texturing.tev_stage3);
         break;
-    case PICA_REG_INDEX(tev_stage4.const_r):
-        SyncTevConstColor(4, regs.tev_stage4);
+    case PICA_REG_INDEX(texturing.tev_stage4.const_r):
+        SyncTevConstColor(4, regs.texturing.tev_stage4);
         break;
-    case PICA_REG_INDEX(tev_stage5.const_r):
-        SyncTevConstColor(5, regs.tev_stage5);
+    case PICA_REG_INDEX(texturing.tev_stage5.const_r):
+        SyncTevConstColor(5, regs.texturing.tev_stage5);
         break;
 
     // TEV combiner buffer color
-    case PICA_REG_INDEX(tev_combiner_buffer_color):
+    case PICA_REG_INDEX(texturing.tev_combiner_buffer_color):
         SyncCombinerColor();
         break;
 
@@ -979,7 +981,9 @@ void RasterizerOpenGL::SamplerInfo::Create() {
     // Other attributes have correct defaults
 }
 
-void RasterizerOpenGL::SamplerInfo::SyncWithConfig(const Pica::Regs::TextureConfig& config) {
+void RasterizerOpenGL::SamplerInfo::SyncWithConfig(
+    const Pica::TexturingRegs::TextureConfig& config) {
+
     GLuint s = sampler.handle;
 
     if (mag_filter != config.mag_filter) {
@@ -1091,7 +1095,7 @@ void RasterizerOpenGL::SetShader() {
         SyncDepthOffset();
         SyncAlphaTest();
         SyncCombinerColor();
-        auto& tev_stages = Pica::g_state.regs.GetTevStages();
+        auto& tev_stages = Pica::g_state.regs.texturing.GetTevStages();
         for (int index = 0; index < tev_stages.size(); ++index)
             SyncTevConstColor(index, tev_stages[index]);
 
@@ -1182,8 +1186,8 @@ void RasterizerOpenGL::SyncBlendColor() {
 void RasterizerOpenGL::SyncFogColor() {
     const auto& regs = Pica::g_state.regs;
     uniform_block_data.data.fog_color = {
-        regs.fog_color.r.Value() / 255.0f, regs.fog_color.g.Value() / 255.0f,
-        regs.fog_color.b.Value() / 255.0f,
+        regs.texturing.fog_color.r.Value() / 255.0f, regs.texturing.fog_color.g.Value() / 255.0f,
+        regs.texturing.fog_color.b.Value() / 255.0f,
     };
     uniform_block_data.dirty = true;
 }
@@ -1267,7 +1271,8 @@ void RasterizerOpenGL::SyncDepthTest() {
 }
 
 void RasterizerOpenGL::SyncCombinerColor() {
-    auto combiner_color = PicaToGL::ColorRGBA8(Pica::g_state.regs.tev_combiner_buffer_color.raw);
+    auto combiner_color =
+        PicaToGL::ColorRGBA8(Pica::g_state.regs.texturing.tev_combiner_buffer_color.raw);
     if (combiner_color != uniform_block_data.data.tev_combiner_buffer_color) {
         uniform_block_data.data.tev_combiner_buffer_color = combiner_color;
         uniform_block_data.dirty = true;
@@ -1275,7 +1280,7 @@ void RasterizerOpenGL::SyncCombinerColor() {
 }
 
 void RasterizerOpenGL::SyncTevConstColor(int stage_index,
-                                         const Pica::Regs::TevStageConfig& tev_stage) {
+                                         const Pica::TexturingRegs::TevStageConfig& tev_stage) {
     auto const_color = PicaToGL::ColorRGBA8(tev_stage.const_color);
     if (const_color != uniform_block_data.data.const_color[stage_index]) {
         uniform_block_data.data.const_color[stage_index] = const_color;

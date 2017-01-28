@@ -33,6 +33,7 @@ set(HEADERS
             rasterizer.h
             rasterizer_interface.h
             regs_rasterizer.h
+            regs_texturing.h
             renderer_base.h
             renderer_opengl/gl_rasterizer.h
             renderer_opengl/gl_rasterizer_cache.h
