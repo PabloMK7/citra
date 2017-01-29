@@ -98,9 +98,9 @@ void EmuWindow::AccelerometerChanged(float x, float y, float z) {
     // TODO(wwylele): do a time stretch as it in GyroscopeChanged
     // The time stretch formula should be like
     // stretched_vector = (raw_vector - gravity) * stretch_ratio + gravity
-    accel_x = x * coef;
-    accel_y = y * coef;
-    accel_z = z * coef;
+    accel_x = static_cast<s16>(x * coef);
+    accel_y = static_cast<s16>(y * coef);
+    accel_z = static_cast<s16>(z * coef);
 }
 
 void EmuWindow::GyroscopeChanged(float x, float y, float z) {
@@ -109,9 +109,9 @@ void EmuWindow::GyroscopeChanged(float x, float y, float z) {
     float stretch =
         FULL_FPS / Common::Profiling::GetTimingResultsAggregator()->GetAggregatedResults().fps;
     std::lock_guard<std::mutex> lock(gyro_mutex);
-    gyro_x = x * coef * stretch;
-    gyro_y = y * coef * stretch;
-    gyro_z = z * coef * stretch;
+    gyro_x = static_cast<s16>(x * coef * stretch);
+    gyro_y = static_cast<s16>(y * coef * stretch);
+    gyro_z = static_cast<s16>(z * coef * stretch);
 }
 
 void EmuWindow::UpdateCurrentFramebufferLayout(unsigned width, unsigned height) {
