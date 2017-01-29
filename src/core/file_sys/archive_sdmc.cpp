@@ -72,6 +72,8 @@ ResultVal<std::unique_ptr<FileBackend>> SDMCArchive::OpenFileBase(const Path& pa
             FileUtil::CreateEmptyFile(full_path);
         }
         break;
+    case PathParser::FileFound:
+        break; // Expected 'success' case
     }
 
     FileUtil::IOFile file(full_path, mode.write_flag ? "r+b" : "rb");
@@ -106,6 +108,8 @@ ResultCode SDMCArchive::DeleteFile(const Path& path) const {
     case PathParser::DirectoryFound:
         LOG_ERROR(Service_FS, "%s is not a file", full_path.c_str());
         return ERROR_UNEXPECTED_FILE_OR_DIRECTORY_SDMC;
+    case PathParser::FileFound:
+        break; // Expected 'success' case
     }
 
     if (FileUtil::Delete(full_path)) {
@@ -154,6 +158,8 @@ static ResultCode DeleteDirectoryHelper(const Path& path, const std::string& mou
     case PathParser::FileFound:
         LOG_ERROR(Service_FS, "Unexpected file in path %s", full_path.c_str());
         return ERROR_UNEXPECTED_FILE_OR_DIRECTORY_SDMC;
+    case PathParser::DirectoryFound:
+        break; // Expected 'success' case
     }
 
     if (deleter(full_path)) {
@@ -197,6 +203,8 @@ ResultCode SDMCArchive::CreateFile(const FileSys::Path& path, u64 size) const {
     case PathParser::FileFound:
         LOG_ERROR(Service_FS, "%s already exists", full_path.c_str());
         return ERROR_ALREADY_EXISTS;
+    case PathParser::NotFound:
+        break; // Expected 'success' case
     }
 
     if (size == 0) {
@@ -238,6 +246,8 @@ ResultCode SDMCArchive::CreateDirectory(const Path& path) const {
     case PathParser::FileFound:
         LOG_ERROR(Service_FS, "%s already exists", full_path.c_str());
         return ERROR_ALREADY_EXISTS;
+    case PathParser::NotFound:
+        break; // Expected 'success' case
     }
 
     if (FileUtil::CreateDir(mount_point + path.AsString())) {
@@ -281,6 +291,8 @@ ResultVal<std::unique_ptr<DirectoryBackend>> SDMCArchive::OpenDirectory(const Pa
     case PathParser::FileInPath:
         LOG_ERROR(Service_FS, "Unexpected file in path %s", full_path.c_str());
         return ERROR_UNEXPECTED_FILE_OR_DIRECTORY_SDMC;
+    case PathParser::DirectoryFound:
+        break; // Expected 'success' case
     }
 
     auto directory = std::make_unique<DiskDirectory>(full_path);
