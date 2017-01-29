@@ -115,7 +115,7 @@ private:
     static System s_instance;
 };
 
-static ARM_Interface& CPU() {
+inline ARM_Interface& CPU() {
     return System::GetInstance().CPU();
 }
 
