@@ -227,6 +227,8 @@ static void ThrowFatalError(Interface* self) {
             LOG_CRITICAL(Service_ERR, "FINST2: 0x%08X",
                          errtype.exception_data.exception_info.fpinst2);
             break;
+        case ExceptionType::Undefined:
+            break; // Not logging exception_info for this case
         }
         LOG_CRITICAL(Service_ERR, "Datetime: %s", GetCurrentSystemTime().c_str());
         break;

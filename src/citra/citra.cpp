@@ -141,6 +141,26 @@ int main(int argc, char** argv) {
     case Core::System::ResultStatus::ErrorLoader:
         LOG_CRITICAL(Frontend, "Failed to load ROM!");
         return -1;
+    case Core::System::ResultStatus::ErrorLoader_ErrorEncrypted:
+        LOG_CRITICAL(Frontend, "The game that you are trying to load must be decrypted before "
+                               "being used with Citra. \n\n For more information on dumping and "
+                               "decrypting games, please refer to: "
+                               "https://citra-emu.org/wiki/Dumping-Game-Cartridges");
+        return -1;
+    case Core::System::ResultStatus::ErrorLoader_ErrorInvalidFormat:
+        LOG_CRITICAL(Frontend, "Error while loading ROM: The ROM format is not supported.");
+        return -1;
+    case Core::System::ResultStatus::ErrorNotInitialized:
+        LOG_CRITICAL(Frontend, "CPUCore not initialized");
+        return -1;
+    case Core::System::ResultStatus::ErrorSystemMode:
+        LOG_CRITICAL(Frontend, "Failed to determine system mode!");
+        return -1;
+    case Core::System::ResultStatus::ErrorVideoCore:
+        LOG_CRITICAL(Frontend, "VideoCore not initialized");
+        return -1;
+    case Core::System::ResultStatus::Success:
+        break; // Expected case
     }
 
     while (emu_window->IsOpen()) {

@@ -57,6 +57,8 @@ ResultVal<std::unique_ptr<FileBackend>> SaveDataArchive::OpenFile(const Path& pa
             FileUtil::CreateEmptyFile(full_path);
         }
         break;
+    case PathParser::FileFound:
+        break; // Expected 'success' case
     }
 
     FileUtil::IOFile file(full_path, mode.write_flag ? "r+b" : "rb");
@@ -91,6 +93,8 @@ ResultCode SaveDataArchive::DeleteFile(const Path& path) const {
     case PathParser::NotFound:
         LOG_ERROR(Service_FS, "File not found %s", full_path.c_str());
         return ERROR_FILE_NOT_FOUND;
+    case PathParser::FileFound:
+        break; // Expected 'success' case
     }
 
     if (FileUtil::Delete(full_path)) {
@@ -139,6 +143,8 @@ static ResultCode DeleteDirectoryHelper(const Path& path, const std::string& mou
     case PathParser::FileFound:
         LOG_ERROR(Service_FS, "Unexpected file or directory %s", full_path.c_str());
         return ERROR_UNEXPECTED_FILE_OR_DIRECTORY;
+    case PathParser::DirectoryFound:
+        break; // Expected 'success' case
     }
 
     if (deleter(full_path)) {
@@ -182,6 +188,8 @@ ResultCode SaveDataArchive::CreateFile(const FileSys::Path& path, u64 size) cons
     case PathParser::FileFound:
         LOG_ERROR(Service_FS, "%s already exists", full_path.c_str());
         return ERROR_FILE_ALREADY_EXISTS;
+    case PathParser::NotFound:
+        break; // Expected 'success' case
     }
 
     if (size == 0) {
@@ -225,6 +233,8 @@ ResultCode SaveDataArchive::CreateDirectory(const Path& path) const {
     case PathParser::FileFound:
         LOG_ERROR(Service_FS, "%s already exists", full_path.c_str());
         return ERROR_DIRECTORY_ALREADY_EXISTS;
+    case PathParser::NotFound:
+        break; // Expected 'success' case
     }
 
     if (FileUtil::CreateDir(mount_point + path.AsString())) {
@@ -269,6 +279,8 @@ ResultVal<std::unique_ptr<DirectoryBackend>> SaveDataArchive::OpenDirectory(
     case PathParser::FileFound:
         LOG_ERROR(Service_FS, "Unexpected file in path %s", full_path.c_str());
         return ERROR_UNEXPECTED_FILE_OR_DIRECTORY;
+    case PathParser::DirectoryFound:
+        break; // Expected 'success' case
     }
 
     auto directory = std::make_unique<DiskDirectory>(full_path);

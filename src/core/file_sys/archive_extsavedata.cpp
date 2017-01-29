@@ -107,6 +107,8 @@ public:
         case PathParser::NotFound:
             LOG_ERROR(Service_FS, "%s not found", full_path.c_str());
             return ERROR_FILE_NOT_FOUND;
+        case PathParser::FileFound:
+            break; // Expected 'success' case
         }
 
         FileUtil::IOFile file(full_path, "r+b");
