@@ -8,7 +8,14 @@
 #include <memory>
 #include <set>
 #include <tuple>
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-local-typedef"
+#endif
 #include <boost/icl/interval_map.hpp>
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
 #include <glad/glad.h>
 #include "common/assert.h"
 #include "common/common_funcs.h"
