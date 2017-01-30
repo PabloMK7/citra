@@ -17,6 +17,7 @@ set(SRCS
             swrasterizer/framebuffer.cpp
             swrasterizer/rasterizer.cpp
             swrasterizer/swrasterizer.cpp
+            swrasterizer/texturing.cpp
             texture/etc1.cpp
             texture/texture_decode.cpp
             vertex_loader.cpp
@@ -55,6 +56,7 @@ set(HEADERS
             swrasterizer/framebuffer.h
             swrasterizer/rasterizer.h
             swrasterizer/swrasterizer.h
+            swrasterizer/texturing.h
             texture/etc1.h
             texture/texture_decode.h
             utils.h
