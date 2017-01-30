@@ -172,7 +172,6 @@ bool RasterizerCacheOpenGL::TryBlitSurfaces(CachedSurface* src_surface,
                                             const MathUtil::Rectangle<int>& src_rect,
                                             CachedSurface* dst_surface,
                                             const MathUtil::Rectangle<int>& dst_rect) {
-    using SurfaceType = CachedSurface::SurfaceType;
 
     if (!CachedSurface::CheckFormatsBlittable(src_surface->pixel_format,
                                               dst_surface->pixel_format)) {
