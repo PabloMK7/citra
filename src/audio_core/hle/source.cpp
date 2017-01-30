@@ -158,6 +158,14 @@ void Source::ParseConfig(SourceConfiguration::Configuration& config,
                   static_cast<size_t>(state.mono_or_stereo));
     }
 
+    u32_dsp play_position = {};
+    if (config.play_position_dirty && config.play_position != 0) {
+        config.play_position_dirty.Assign(0);
+        play_position = config.play_position;
+        // play_position applies only to the embedded buffer, and defaults to 0 w/o a dirty bit
+        // This will be the starting sample for the first time the buffer is played.
+    }
+
     if (config.embedded_buffer_dirty) {
         config.embedded_buffer_dirty.Assign(0);
         state.input_queue.emplace(Buffer{
@@ -171,9 +179,18 @@ void Source::ParseConfig(SourceConfiguration::Configuration& config,
             state.mono_or_stereo,
             state.format,
             false,
+            play_position,
+            false,
         });
-        LOG_TRACE(Audio_DSP, "enqueuing embedded addr=0x%08x len=%u id=%hu",
-                  config.physical_address, config.length, config.buffer_id);
+        LOG_TRACE(Audio_DSP, "enqueuing embedded addr=0x%08x len=%u id=%hu start=%u",
+                  config.physical_address, config.length, config.buffer_id,
+                  static_cast<u32>(config.play_position));
+    }
+
+    if (config.loop_related_dirty && config.loop_related != 0) {
+        config.loop_related_dirty.Assign(0);
+        LOG_WARNING(Audio_DSP, "Unhandled complex loop with loop_related=0x%08x",
+                    static_cast<u32>(config.loop_related));
     }
 
     if (config.buffer_queue_dirty) {
@@ -192,6 +209,8 @@ void Source::ParseConfig(SourceConfiguration::Configuration& config,
                     state.mono_or_stereo,
                     state.format,
                     true,
+                    {}, // 0 in u32_dsp
+                    false,
                 });
                 LOG_TRACE(Audio_DSP, "enqueuing queued %zu addr=0x%08x len=%u id=%hu", i,
                           b.physical_address, b.length, b.buffer_id);
@@ -247,16 +266,16 @@ bool Source::DequeueBuffer() {
     if (state.input_queue.empty())
         return false;
 
-    const Buffer buf = state.input_queue.top();
-    state.input_queue.pop();
+    Buffer buf = state.input_queue.top();
+
+    // if we're in a loop, the current sound keeps playing afterwards, so leave the queue alone
+    if (!buf.is_looping) {
+        state.input_queue.pop();
+    }
 
     if (buf.adpcm_dirty) {
         state.adpcm_state.yn1 = buf.adpcm_yn[0];
         state.adpcm_state.yn2 = buf.adpcm_yn[1];
-    }
-
-    if (buf.is_looping) {
-        LOG_ERROR(Audio_DSP, "Looped buffers are unimplemented at the moment");
     }
 
     const u8* const memory = Memory::GetPhysicalPointer(buf.physical_address);
@@ -305,10 +324,13 @@ bool Source::DequeueBuffer() {
         break;
     }
 
-    state.current_sample_number = 0;
-    state.next_sample_number = 0;
+    // the first playthrough starts at play_position, loops start at the beginning of the buffer
+    state.current_sample_number = (!buf.has_played) ? buf.play_position : 0;
+    state.next_sample_number = state.current_sample_number;
     state.current_buffer_id = buf.buffer_id;
-    state.buffer_update = buf.from_queue;
+    state.buffer_update = buf.from_queue && !buf.has_played;
+
+    buf.has_played = true;
 
     LOG_TRACE(Audio_DSP, "source_id=%zu buffer_id=%hu from_queue=%s current_buffer.size()=%zu",
               source_id, buf.buffer_id, buf.from_queue ? "true" : "false",
