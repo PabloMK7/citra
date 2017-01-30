@@ -28,8 +28,317 @@
 #include "video_core/utils.h"
 
 namespace Pica {
-
 namespace Rasterizer {
+
+using TevStageConfig = TexturingRegs::TevStageConfig;
+
+static int GetWrappedTexCoord(TexturingRegs::TextureConfig::WrapMode mode, int val, unsigned size) {
+    switch (mode) {
+    case TexturingRegs::TextureConfig::ClampToEdge:
+        val = std::max(val, 0);
+        val = std::min(val, (int)size - 1);
+        return val;
+
+    case TexturingRegs::TextureConfig::ClampToBorder:
+        return val;
+
+    case TexturingRegs::TextureConfig::Repeat:
+        return (int)((unsigned)val % size);
+
+    case TexturingRegs::TextureConfig::MirroredRepeat: {
+        unsigned int coord = ((unsigned)val % (2 * size));
+        if (coord >= size)
+            coord = 2 * size - 1 - coord;
+        return (int)coord;
+    }
+
+    default:
+        LOG_ERROR(HW_GPU, "Unknown texture coordinate wrapping mode %x", (int)mode);
+        UNIMPLEMENTED();
+        return 0;
+    }
+};
+
+static Math::Vec3<u8> GetColorModifier(TevStageConfig::ColorModifier factor,
+                                       const Math::Vec4<u8>& values) {
+    using ColorModifier = TevStageConfig::ColorModifier;
+
+    switch (factor) {
+    case ColorModifier::SourceColor:
+        return values.rgb();
+
+    case ColorModifier::OneMinusSourceColor:
+        return (Math::Vec3<u8>(255, 255, 255) - values.rgb()).Cast<u8>();
+
+    case ColorModifier::SourceAlpha:
+        return values.aaa();
+
+    case ColorModifier::OneMinusSourceAlpha:
+        return (Math::Vec3<u8>(255, 255, 255) - values.aaa()).Cast<u8>();
+
+    case ColorModifier::SourceRed:
+        return values.rrr();
+
+    case ColorModifier::OneMinusSourceRed:
+        return (Math::Vec3<u8>(255, 255, 255) - values.rrr()).Cast<u8>();
+
+    case ColorModifier::SourceGreen:
+        return values.ggg();
+
+    case ColorModifier::OneMinusSourceGreen:
+        return (Math::Vec3<u8>(255, 255, 255) - values.ggg()).Cast<u8>();
+
+    case ColorModifier::SourceBlue:
+        return values.bbb();
+
+    case ColorModifier::OneMinusSourceBlue:
+        return (Math::Vec3<u8>(255, 255, 255) - values.bbb()).Cast<u8>();
+    }
+};
+
+static u8 GetAlphaModifier(TevStageConfig::AlphaModifier factor, const Math::Vec4<u8>& values) {
+    using AlphaModifier = TevStageConfig::AlphaModifier;
+
+    switch (factor) {
+    case AlphaModifier::SourceAlpha:
+        return values.a();
+
+    case AlphaModifier::OneMinusSourceAlpha:
+        return 255 - values.a();
+
+    case AlphaModifier::SourceRed:
+        return values.r();
+
+    case AlphaModifier::OneMinusSourceRed:
+        return 255 - values.r();
+
+    case AlphaModifier::SourceGreen:
+        return values.g();
+
+    case AlphaModifier::OneMinusSourceGreen:
+        return 255 - values.g();
+
+    case AlphaModifier::SourceBlue:
+        return values.b();
+
+    case AlphaModifier::OneMinusSourceBlue:
+        return 255 - values.b();
+    }
+};
+
+static Math::Vec3<u8> ColorCombine(TevStageConfig::Operation op, const Math::Vec3<u8> input[3]) {
+    using Operation = TevStageConfig::Operation;
+
+    switch (op) {
+    case Operation::Replace:
+        return input[0];
+
+    case Operation::Modulate:
+        return ((input[0] * input[1]) / 255).Cast<u8>();
+
+    case Operation::Add: {
+        auto result = input[0] + input[1];
+        result.r() = std::min(255, result.r());
+        result.g() = std::min(255, result.g());
+        result.b() = std::min(255, result.b());
+        return result.Cast<u8>();
+    }
+
+    case Operation::AddSigned: {
+        // TODO(bunnei): Verify that the color conversion from (float) 0.5f to
+        // (byte) 128 is correct
+        auto result =
+            input[0].Cast<int>() + input[1].Cast<int>() - Math::MakeVec<int>(128, 128, 128);
+        result.r() = MathUtil::Clamp<int>(result.r(), 0, 255);
+        result.g() = MathUtil::Clamp<int>(result.g(), 0, 255);
+        result.b() = MathUtil::Clamp<int>(result.b(), 0, 255);
+        return result.Cast<u8>();
+    }
+
+    case Operation::Lerp:
+        return ((input[0] * input[2] +
+                 input[1] * (Math::MakeVec<u8>(255, 255, 255) - input[2]).Cast<u8>()) /
+                255)
+            .Cast<u8>();
+
+    case Operation::Subtract: {
+        auto result = input[0].Cast<int>() - input[1].Cast<int>();
+        result.r() = std::max(0, result.r());
+        result.g() = std::max(0, result.g());
+        result.b() = std::max(0, result.b());
+        return result.Cast<u8>();
+    }
+
+    case Operation::MultiplyThenAdd: {
+        auto result = (input[0] * input[1] + 255 * input[2].Cast<int>()) / 255;
+        result.r() = std::min(255, result.r());
+        result.g() = std::min(255, result.g());
+        result.b() = std::min(255, result.b());
+        return result.Cast<u8>();
+    }
+
+    case Operation::AddThenMultiply: {
+        auto result = input[0] + input[1];
+        result.r() = std::min(255, result.r());
+        result.g() = std::min(255, result.g());
+        result.b() = std::min(255, result.b());
+        result = (result * input[2].Cast<int>()) / 255;
+        return result.Cast<u8>();
+    }
+    case Operation::Dot3_RGB: {
+        // Not fully accurate.  Worst case scenario seems to yield a +/-3 error.  Some HW results
+        // indicate that the per-component computation can't have a higher precision than 1/256,
+        // while dot3_rgb((0x80,g0,b0), (0x7F,g1,b1)) and dot3_rgb((0x80,g0,b0), (0x80,g1,b1)) give
+        // different results.
+        int result = ((input[0].r() * 2 - 255) * (input[1].r() * 2 - 255) + 128) / 256 +
+                     ((input[0].g() * 2 - 255) * (input[1].g() * 2 - 255) + 128) / 256 +
+                     ((input[0].b() * 2 - 255) * (input[1].b() * 2 - 255) + 128) / 256;
+        result = std::max(0, std::min(255, result));
+        return {(u8)result, (u8)result, (u8)result};
+    }
+    default:
+        LOG_ERROR(HW_GPU, "Unknown color combiner operation %d", (int)op);
+        UNIMPLEMENTED();
+        return {0, 0, 0};
+    }
+};
+
+static u8 AlphaCombine(TevStageConfig::Operation op, const std::array<u8, 3>& input) {
+    switch (op) {
+        using Operation = TevStageConfig::Operation;
+    case Operation::Replace:
+        return input[0];
+
+    case Operation::Modulate:
+        return input[0] * input[1] / 255;
+
+    case Operation::Add:
+        return std::min(255, input[0] + input[1]);
+
+    case Operation::AddSigned: {
+        // TODO(bunnei): Verify that the color conversion from (float) 0.5f to (byte) 128 is correct
+        auto result = static_cast<int>(input[0]) + static_cast<int>(input[1]) - 128;
+        return static_cast<u8>(MathUtil::Clamp<int>(result, 0, 255));
+    }
+
+    case Operation::Lerp:
+        return (input[0] * input[2] + input[1] * (255 - input[2])) / 255;
+
+    case Operation::Subtract:
+        return std::max(0, (int)input[0] - (int)input[1]);
+
+    case Operation::MultiplyThenAdd:
+        return std::min(255, (input[0] * input[1] + 255 * input[2]) / 255);
+
+    case Operation::AddThenMultiply:
+        return (std::min(255, (input[0] + input[1])) * input[2]) / 255;
+
+    default:
+        LOG_ERROR(HW_GPU, "Unknown alpha combiner operation %d", (int)op);
+        UNIMPLEMENTED();
+        return 0;
+    }
+};
+
+static Math::Vec4<u8> EvaluateBlendEquation(const Math::Vec4<u8>& src,
+                                            const Math::Vec4<u8>& srcfactor,
+                                            const Math::Vec4<u8>& dest,
+                                            const Math::Vec4<u8>& destfactor,
+                                            FramebufferRegs::BlendEquation equation) {
+    Math::Vec4<int> result;
+
+    auto src_result = (src * srcfactor).Cast<int>();
+    auto dst_result = (dest * destfactor).Cast<int>();
+
+    switch (equation) {
+    case FramebufferRegs::BlendEquation::Add:
+        result = (src_result + dst_result) / 255;
+        break;
+
+    case FramebufferRegs::BlendEquation::Subtract:
+        result = (src_result - dst_result) / 255;
+        break;
+
+    case FramebufferRegs::BlendEquation::ReverseSubtract:
+        result = (dst_result - src_result) / 255;
+        break;
+
+    // TODO: How do these two actually work?  OpenGL doesn't include the blend factors in the
+    //       min/max computations, but is this what the 3DS actually does?
+    case FramebufferRegs::BlendEquation::Min:
+        result.r() = std::min(src.r(), dest.r());
+        result.g() = std::min(src.g(), dest.g());
+        result.b() = std::min(src.b(), dest.b());
+        result.a() = std::min(src.a(), dest.a());
+        break;
+
+    case FramebufferRegs::BlendEquation::Max:
+        result.r() = std::max(src.r(), dest.r());
+        result.g() = std::max(src.g(), dest.g());
+        result.b() = std::max(src.b(), dest.b());
+        result.a() = std::max(src.a(), dest.a());
+        break;
+
+    default:
+        LOG_CRITICAL(HW_GPU, "Unknown RGB blend equation %x", equation);
+        UNIMPLEMENTED();
+    }
+
+    return Math::Vec4<u8>(MathUtil::Clamp(result.r(), 0, 255), MathUtil::Clamp(result.g(), 0, 255),
+                          MathUtil::Clamp(result.b(), 0, 255), MathUtil::Clamp(result.a(), 0, 255));
+};
+
+static u8 LogicOp(u8 src, u8 dest, FramebufferRegs::LogicOp op) {
+    switch (op) {
+    case FramebufferRegs::LogicOp::Clear:
+        return 0;
+
+    case FramebufferRegs::LogicOp::And:
+        return src & dest;
+
+    case FramebufferRegs::LogicOp::AndReverse:
+        return src & ~dest;
+
+    case FramebufferRegs::LogicOp::Copy:
+        return src;
+
+    case FramebufferRegs::LogicOp::Set:
+        return 255;
+
+    case FramebufferRegs::LogicOp::CopyInverted:
+        return ~src;
+
+    case FramebufferRegs::LogicOp::NoOp:
+        return dest;
+
+    case FramebufferRegs::LogicOp::Invert:
+        return ~dest;
+
+    case FramebufferRegs::LogicOp::Nand:
+        return ~(src & dest);
+
+    case FramebufferRegs::LogicOp::Or:
+        return src | dest;
+
+    case FramebufferRegs::LogicOp::Nor:
+        return ~(src | dest);
+
+    case FramebufferRegs::LogicOp::Xor:
+        return src ^ dest;
+
+    case FramebufferRegs::LogicOp::Equiv:
+        return ~(src ^ dest);
+
+    case FramebufferRegs::LogicOp::AndInverted:
+        return ~src & dest;
+
+    case FramebufferRegs::LogicOp::OrReverse:
+        return src | ~dest;
+
+    case FramebufferRegs::LogicOp::OrInverted:
+        return ~src | dest;
+    }
+};
 
 // NOTE: Assuming that rasterizer coordinates are 12.4 fixed-point values
 struct Fix12P4 {
@@ -304,34 +613,6 @@ static void ProcessTriangleInternal(const Vertex& v0, const Vertex& v1, const Ve
                 int t = (int)(v * float24::FromFloat32(static_cast<float>(texture.config.height)))
                             .ToFloat32();
 
-                static auto GetWrappedTexCoord = [](TexturingRegs::TextureConfig::WrapMode mode,
-                                                    int val, unsigned size) {
-                    switch (mode) {
-                    case TexturingRegs::TextureConfig::ClampToEdge:
-                        val = std::max(val, 0);
-                        val = std::min(val, (int)size - 1);
-                        return val;
-
-                    case TexturingRegs::TextureConfig::ClampToBorder:
-                        return val;
-
-                    case TexturingRegs::TextureConfig::Repeat:
-                        return (int)((unsigned)val % size);
-
-                    case TexturingRegs::TextureConfig::MirroredRepeat: {
-                        unsigned int coord = ((unsigned)val % (2 * size));
-                        if (coord >= size)
-                            coord = 2 * size - 1 - coord;
-                        return (int)coord;
-                    }
-
-                    default:
-                        LOG_ERROR(HW_GPU, "Unknown texture coordinate wrapping mode %x", (int)mode);
-                        UNIMPLEMENTED();
-                        return 0;
-                    }
-                };
-
                 if ((texture.config.wrap_s == TexturingRegs::TextureConfig::ClampToBorder &&
                      (s < 0 || static_cast<u32>(s) >= texture.config.width)) ||
                     (texture.config.wrap_t == TexturingRegs::TextureConfig::ClampToBorder &&
@@ -380,9 +661,6 @@ static void ProcessTriangleInternal(const Vertex& v0, const Vertex& v1, const Ve
                  ++tev_stage_index) {
                 const auto& tev_stage = tev_stages[tev_stage_index];
                 using Source = TexturingRegs::TevStageConfig::Source;
-                using ColorModifier = TexturingRegs::TevStageConfig::ColorModifier;
-                using AlphaModifier = TexturingRegs::TevStageConfig::AlphaModifier;
-                using Operation = TexturingRegs::TevStageConfig::Operation;
 
                 auto GetSource = [&](Source source) -> Math::Vec4<u8> {
                     switch (source) {
@@ -419,187 +697,6 @@ static void ProcessTriangleInternal(const Vertex& v0, const Vertex& v1, const Ve
                         LOG_ERROR(HW_GPU, "Unknown color combiner source %d", (int)source);
                         UNIMPLEMENTED();
                         return {0, 0, 0, 0};
-                    }
-                };
-
-                static auto GetColorModifier = [](ColorModifier factor,
-                                                  const Math::Vec4<u8>& values) -> Math::Vec3<u8> {
-                    switch (factor) {
-                    case ColorModifier::SourceColor:
-                        return values.rgb();
-
-                    case ColorModifier::OneMinusSourceColor:
-                        return (Math::Vec3<u8>(255, 255, 255) - values.rgb()).Cast<u8>();
-
-                    case ColorModifier::SourceAlpha:
-                        return values.aaa();
-
-                    case ColorModifier::OneMinusSourceAlpha:
-                        return (Math::Vec3<u8>(255, 255, 255) - values.aaa()).Cast<u8>();
-
-                    case ColorModifier::SourceRed:
-                        return values.rrr();
-
-                    case ColorModifier::OneMinusSourceRed:
-                        return (Math::Vec3<u8>(255, 255, 255) - values.rrr()).Cast<u8>();
-
-                    case ColorModifier::SourceGreen:
-                        return values.ggg();
-
-                    case ColorModifier::OneMinusSourceGreen:
-                        return (Math::Vec3<u8>(255, 255, 255) - values.ggg()).Cast<u8>();
-
-                    case ColorModifier::SourceBlue:
-                        return values.bbb();
-
-                    case ColorModifier::OneMinusSourceBlue:
-                        return (Math::Vec3<u8>(255, 255, 255) - values.bbb()).Cast<u8>();
-                    }
-                };
-
-                static auto GetAlphaModifier = [](AlphaModifier factor,
-                                                  const Math::Vec4<u8>& values) -> u8 {
-                    switch (factor) {
-                    case AlphaModifier::SourceAlpha:
-                        return values.a();
-
-                    case AlphaModifier::OneMinusSourceAlpha:
-                        return 255 - values.a();
-
-                    case AlphaModifier::SourceRed:
-                        return values.r();
-
-                    case AlphaModifier::OneMinusSourceRed:
-                        return 255 - values.r();
-
-                    case AlphaModifier::SourceGreen:
-                        return values.g();
-
-                    case AlphaModifier::OneMinusSourceGreen:
-                        return 255 - values.g();
-
-                    case AlphaModifier::SourceBlue:
-                        return values.b();
-
-                    case AlphaModifier::OneMinusSourceBlue:
-                        return 255 - values.b();
-                    }
-                };
-
-                static auto ColorCombine = [](Operation op,
-                                              const Math::Vec3<u8> input[3]) -> Math::Vec3<u8> {
-                    switch (op) {
-                    case Operation::Replace:
-                        return input[0];
-
-                    case Operation::Modulate:
-                        return ((input[0] * input[1]) / 255).Cast<u8>();
-
-                    case Operation::Add: {
-                        auto result = input[0] + input[1];
-                        result.r() = std::min(255, result.r());
-                        result.g() = std::min(255, result.g());
-                        result.b() = std::min(255, result.b());
-                        return result.Cast<u8>();
-                    }
-
-                    case Operation::AddSigned: {
-                        // TODO(bunnei): Verify that the color conversion from (float) 0.5f to
-                        // (byte) 128 is correct
-                        auto result = input[0].Cast<int>() + input[1].Cast<int>() -
-                                      Math::MakeVec<int>(128, 128, 128);
-                        result.r() = MathUtil::Clamp<int>(result.r(), 0, 255);
-                        result.g() = MathUtil::Clamp<int>(result.g(), 0, 255);
-                        result.b() = MathUtil::Clamp<int>(result.b(), 0, 255);
-                        return result.Cast<u8>();
-                    }
-
-                    case Operation::Lerp:
-                        return ((input[0] * input[2] +
-                                 input[1] *
-                                     (Math::MakeVec<u8>(255, 255, 255) - input[2]).Cast<u8>()) /
-                                255)
-                            .Cast<u8>();
-
-                    case Operation::Subtract: {
-                        auto result = input[0].Cast<int>() - input[1].Cast<int>();
-                        result.r() = std::max(0, result.r());
-                        result.g() = std::max(0, result.g());
-                        result.b() = std::max(0, result.b());
-                        return result.Cast<u8>();
-                    }
-
-                    case Operation::MultiplyThenAdd: {
-                        auto result = (input[0] * input[1] + 255 * input[2].Cast<int>()) / 255;
-                        result.r() = std::min(255, result.r());
-                        result.g() = std::min(255, result.g());
-                        result.b() = std::min(255, result.b());
-                        return result.Cast<u8>();
-                    }
-
-                    case Operation::AddThenMultiply: {
-                        auto result = input[0] + input[1];
-                        result.r() = std::min(255, result.r());
-                        result.g() = std::min(255, result.g());
-                        result.b() = std::min(255, result.b());
-                        result = (result * input[2].Cast<int>()) / 255;
-                        return result.Cast<u8>();
-                    }
-                    case Operation::Dot3_RGB: {
-                        // Not fully accurate.
-                        // Worst case scenario seems to yield a +/-3 error
-                        // Some HW results indicate that the per-component computation can't have a
-                        // higher precision than 1/256,
-                        // while dot3_rgb( (0x80,g0,b0),(0x7F,g1,b1) ) and dot3_rgb(
-                        // (0x80,g0,b0),(0x80,g1,b1) ) give different results
-                        int result =
-                            ((input[0].r() * 2 - 255) * (input[1].r() * 2 - 255) + 128) / 256 +
-                            ((input[0].g() * 2 - 255) * (input[1].g() * 2 - 255) + 128) / 256 +
-                            ((input[0].b() * 2 - 255) * (input[1].b() * 2 - 255) + 128) / 256;
-                        result = std::max(0, std::min(255, result));
-                        return {(u8)result, (u8)result, (u8)result};
-                    }
-                    default:
-                        LOG_ERROR(HW_GPU, "Unknown color combiner operation %d", (int)op);
-                        UNIMPLEMENTED();
-                        return {0, 0, 0};
-                    }
-                };
-
-                static auto AlphaCombine = [](Operation op, const std::array<u8, 3>& input) -> u8 {
-                    switch (op) {
-                    case Operation::Replace:
-                        return input[0];
-
-                    case Operation::Modulate:
-                        return input[0] * input[1] / 255;
-
-                    case Operation::Add:
-                        return std::min(255, input[0] + input[1]);
-
-                    case Operation::AddSigned: {
-                        // TODO(bunnei): Verify that the color conversion from (float) 0.5f to
-                        // (byte) 128 is correct
-                        auto result = static_cast<int>(input[0]) + static_cast<int>(input[1]) - 128;
-                        return static_cast<u8>(MathUtil::Clamp<int>(result, 0, 255));
-                    }
-
-                    case Operation::Lerp:
-                        return (input[0] * input[2] + input[1] * (255 - input[2])) / 255;
-
-                    case Operation::Subtract:
-                        return std::max(0, (int)input[0] - (int)input[1]);
-
-                    case Operation::MultiplyThenAdd:
-                        return std::min(255, (input[0] * input[1] + 255 * input[2]) / 255);
-
-                    case Operation::AddThenMultiply:
-                        return (std::min(255, (input[0] + input[1])) * input[2]) / 255;
-
-                    default:
-                        LOG_ERROR(HW_GPU, "Unknown alpha combiner operation %d", (int)op);
-                        UNIMPLEMENTED();
-                        return 0;
                     }
                 };
 
@@ -917,56 +1014,6 @@ static void ProcessTriangleInternal(const Vertex& v0, const Vertex& v1, const Ve
                     return combiner_output[channel];
                 };
 
-                static auto EvaluateBlendEquation = [](
-                    const Math::Vec4<u8>& src, const Math::Vec4<u8>& srcfactor,
-                    const Math::Vec4<u8>& dest, const Math::Vec4<u8>& destfactor,
-                    FramebufferRegs::BlendEquation equation) {
-
-                    Math::Vec4<int> result;
-
-                    auto src_result = (src * srcfactor).Cast<int>();
-                    auto dst_result = (dest * destfactor).Cast<int>();
-
-                    switch (equation) {
-                    case FramebufferRegs::BlendEquation::Add:
-                        result = (src_result + dst_result) / 255;
-                        break;
-
-                    case FramebufferRegs::BlendEquation::Subtract:
-                        result = (src_result - dst_result) / 255;
-                        break;
-
-                    case FramebufferRegs::BlendEquation::ReverseSubtract:
-                        result = (dst_result - src_result) / 255;
-                        break;
-
-                    // TODO: How do these two actually work?
-                    //       OpenGL doesn't include the blend factors in the min/max computations,
-                    //       but is this what the 3DS actually does?
-                    case FramebufferRegs::BlendEquation::Min:
-                        result.r() = std::min(src.r(), dest.r());
-                        result.g() = std::min(src.g(), dest.g());
-                        result.b() = std::min(src.b(), dest.b());
-                        result.a() = std::min(src.a(), dest.a());
-                        break;
-
-                    case FramebufferRegs::BlendEquation::Max:
-                        result.r() = std::max(src.r(), dest.r());
-                        result.g() = std::max(src.g(), dest.g());
-                        result.b() = std::max(src.b(), dest.b());
-                        result.a() = std::max(src.a(), dest.a());
-                        break;
-
-                    default:
-                        LOG_CRITICAL(HW_GPU, "Unknown RGB blend equation %x", equation);
-                        UNIMPLEMENTED();
-                    }
-
-                    return Math::Vec4<u8>(
-                        MathUtil::Clamp(result.r(), 0, 255), MathUtil::Clamp(result.g(), 0, 255),
-                        MathUtil::Clamp(result.b(), 0, 255), MathUtil::Clamp(result.a(), 0, 255));
-                };
-
                 auto srcfactor = Math::MakeVec(LookupFactor(0, params.factor_source_rgb),
                                                LookupFactor(1, params.factor_source_rgb),
                                                LookupFactor(2, params.factor_source_rgb),
@@ -983,58 +1030,6 @@ static void ProcessTriangleInternal(const Vertex& v0, const Vertex& v1, const Ve
                                                          dstfactor, params.blend_equation_a)
                                        .a();
             } else {
-                static auto LogicOp = [](u8 src, u8 dest, FramebufferRegs::LogicOp op) -> u8 {
-                    switch (op) {
-                    case FramebufferRegs::LogicOp::Clear:
-                        return 0;
-
-                    case FramebufferRegs::LogicOp::And:
-                        return src & dest;
-
-                    case FramebufferRegs::LogicOp::AndReverse:
-                        return src & ~dest;
-
-                    case FramebufferRegs::LogicOp::Copy:
-                        return src;
-
-                    case FramebufferRegs::LogicOp::Set:
-                        return 255;
-
-                    case FramebufferRegs::LogicOp::CopyInverted:
-                        return ~src;
-
-                    case FramebufferRegs::LogicOp::NoOp:
-                        return dest;
-
-                    case FramebufferRegs::LogicOp::Invert:
-                        return ~dest;
-
-                    case FramebufferRegs::LogicOp::Nand:
-                        return ~(src & dest);
-
-                    case FramebufferRegs::LogicOp::Or:
-                        return src | dest;
-
-                    case FramebufferRegs::LogicOp::Nor:
-                        return ~(src | dest);
-
-                    case FramebufferRegs::LogicOp::Xor:
-                        return src ^ dest;
-
-                    case FramebufferRegs::LogicOp::Equiv:
-                        return ~(src ^ dest);
-
-                    case FramebufferRegs::LogicOp::AndInverted:
-                        return ~src & dest;
-
-                    case FramebufferRegs::LogicOp::OrReverse:
-                        return src | ~dest;
-
-                    case FramebufferRegs::LogicOp::OrInverted:
-                        return ~src | dest;
-                    }
-                };
-
                 blend_output =
                     Math::MakeVec(LogicOp(combiner_output.r(), dest.r(), output_merger.logic_op),
                                   LogicOp(combiner_output.g(), dest.g(), output_merger.logic_op),
