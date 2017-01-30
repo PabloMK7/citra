@@ -109,6 +109,22 @@ is_new_3ds =
 # -1: Auto-select (default), 0: Japan, 1: USA, 2: Europe, 3: Australia, 4: China, 5: Korea, 6: Taiwan
 region_value =
 
+[Camera]
+# Which camera engine to use for the right outer camera
+# blank (default): a dummy camera that always returns black image
+camera_outer_right_name =
+
+# A config string for the right outer camera. Its meaning is defined by the camera engine
+camera_outer_right_config =
+
+# ... for the left outer camera
+camera_outer_left_name =
+camera_outer_left_config =
+
+# ... for the inner camera
+camera_inner_name =
+camera_inner_config =
+
 [Miscellaneous]
 # A filter which removes logs below a certain logging level.
 # Examples: *:Debug Kernel.SVC:Trace Service.*:Critical

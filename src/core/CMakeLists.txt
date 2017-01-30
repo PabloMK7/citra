@@ -29,6 +29,9 @@ set(SRCS
             file_sys/ivfc_archive.cpp
             file_sys/path_parser.cpp
             file_sys/savedata_archive.cpp
+            frontend/camera/blank_camera.cpp
+            frontend/camera/factory.cpp
+            frontend/camera/interface.cpp
             frontend/emu_window.cpp
             frontend/key_map.cpp
             frontend/motion_emu.cpp
@@ -203,6 +206,9 @@ set(HEADERS
             file_sys/ivfc_archive.h
             file_sys/path_parser.h
             file_sys/savedata_archive.h
+            frontend/camera/blank_camera.h
+            frontend/camera/factory.h
+            frontend/camera/interface.h
             frontend/emu_window.h
             frontend/key_map.h
             frontend/motion_emu.h

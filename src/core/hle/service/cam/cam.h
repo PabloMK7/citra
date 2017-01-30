@@ -13,17 +13,12 @@
 namespace Service {
 namespace CAM {
 
-enum class Port : u8 { None = 0, Cam1 = 1, Cam2 = 2, Both = Cam1 | Cam2 };
+enum CameraIndex {
+    OuterRightCamera = 0,
+    InnerCamera = 1,
+    OuterLeftCamera = 2,
 
-enum class CameraSelect : u8 {
-    None = 0,
-    Out1 = 1,
-    In1 = 2,
-    Out2 = 4,
-    In1Out1 = Out1 | In1,
-    Out1Out2 = Out1 | Out2,
-    In1Out2 = In1 | Out2,
-    All = Out1 | In1 | Out2,
+    NumCameras = 3,
 };
 
 enum class Effect : u8 {
@@ -33,13 +28,6 @@ enum class Effect : u8 {
     Negative = 3,
     Negafilm = 4,
     Sepia01 = 5,
-};
-
-enum class Context : u8 {
-    None = 0,
-    A = 1,
-    B = 2,
-    Both = A | B,
 };
 
 enum class Flip : u8 {
@@ -160,8 +148,23 @@ struct StereoCameraCalibrationData {
 static_assert(sizeof(StereoCameraCalibrationData) == 64,
               "StereoCameraCalibrationData structure size is wrong");
 
-struct PackageParameterCameraSelect {
-    CameraSelect camera;
+/**
+ * Resolution parameters for the camera.
+ * The native resolution of 3DS camera is 640 * 480. The captured image will be cropped in the
+ * region [crop_x0, crop_x1] * [crop_y0, crop_y1], and then scaled to size width * height as the
+ * output image. Note that all cropping coordinates are inclusive.
+ */
+struct Resolution {
+    u16 width;
+    u16 height;
+    u16 crop_x0;
+    u16 crop_y0;
+    u16 crop_x1;
+    u16 crop_y1;
+};
+
+struct PackageParameterWithoutContext {
+    u8 camera_select;
     s8 exposure;
     WhiteBalance white_balance;
     s8 sharpness;
@@ -183,14 +186,43 @@ struct PackageParameterCameraSelect {
     s16 auto_white_balance_window_height;
 };
 
-static_assert(sizeof(PackageParameterCameraSelect) == 28,
-              "PackageParameterCameraSelect structure size is wrong");
+static_assert(sizeof(PackageParameterWithoutContext) == 28,
+              "PackageParameterCameraWithoutContext structure size is wrong");
+
+struct PackageParameterWithContext {
+    u8 camera_select;
+    u8 context_select;
+    Flip flip;
+    Effect effect;
+    Size size;
+    INSERT_PADDING_BYTES(3);
+
+    Resolution GetResolution();
+};
+
+static_assert(sizeof(PackageParameterWithContext) == 8,
+              "PackageParameterWithContext structure size is wrong");
+
+struct PackageParameterWithContextDetail {
+    u8 camera_select;
+    u8 context_select;
+    Flip flip;
+    Effect effect;
+    Resolution resolution;
+
+    Resolution GetResolution() {
+        return resolution;
+    }
+};
+
+static_assert(sizeof(PackageParameterWithContextDetail) == 16,
+              "PackageParameterWithContextDetail structure size is wrong");
 
 /**
- * Unknown
+ * Starts capturing at the selected port.
  *  Inputs:
  *      0: 0x00010040
- *      1: u8 Camera port (`Port` enum)
+ *      1: u8 selected port
  *  Outputs:
  *      0: 0x00010040
  *      1: ResultCode
@@ -198,10 +230,10 @@ static_assert(sizeof(PackageParameterCameraSelect) == 28,
 void StartCapture(Service::Interface* self);
 
 /**
- * Unknown
+ * Stops capturing from the selected port.
  *  Inputs:
  *      0: 0x00020040
- *      1: u8 Camera port (`Port` enum)
+ *      1: u8 selected port
  *  Outputs:
  *      0: 0x00020040
  *      1: ResultCode
@@ -209,10 +241,33 @@ void StartCapture(Service::Interface* self);
 void StopCapture(Service::Interface* self);
 
 /**
+ * Gets whether the selected port is currently capturing.
+ *  Inputs:
+ *      0: 0x00030040
+ *      1: u8 selected port
+ *  Outputs:
+ *      0: 0x00030080
+ *      1: ResultCode
+ *      2: 0 if not capturing, 1 if capturing
+ */
+void IsBusy(Service::Interface* self);
+
+/**
+ * Clears the buffer of selected ports.
+ *  Inputs:
+ *      0: 0x00040040
+ *      1: u8 selected port
+ *  Outputs:
+ *      0: 0x00040040
+ *      2: ResultCode
+ */
+void ClearBuffer(Service::Interface* self);
+
+/**
  * Unknown
  *  Inputs:
  *      0: 0x00050040
- *      1: u8 Camera port (`Port` enum)
+ *      1: u8 selected port
  *  Outputs:
  *      0: 0x00050042
  *      1: ResultCode
@@ -225,7 +280,7 @@ void GetVsyncInterruptEvent(Service::Interface* self);
  * Unknown
  *  Inputs:
  *      0: 0x00060040
- *      1: u8 Camera port (`Port` enum)
+ *      1: u8 selected port
  *  Outputs:
  *      0: 0x00060042
  *      1: ResultCode
@@ -241,9 +296,9 @@ void GetBufferErrorInterruptEvent(Service::Interface* self);
  *  Inputs:
  *      0: 0x00070102
  *      1: Destination address in calling process
- *      2: u8 Camera port (`Port` enum)
- *      3: Image size (in bytes?)
- *      4: u16 Transfer unit size (in bytes?)
+ *      2: u8 selected port
+ *      3: Image size (in bytes)
+ *      4: u16 Transfer unit size (in bytes)
  *      5: Descriptor: Handle
  *      6: Handle to destination process
  *  Outputs:
@@ -255,21 +310,34 @@ void GetBufferErrorInterruptEvent(Service::Interface* self);
 void SetReceiving(Service::Interface* self);
 
 /**
- * Unknown
+ * Gets whether the selected port finished receiving a frame.
+ *  Inputs:
+ *      0: 0x00080040
+ *      1: u8 selected port
+ *  Outputs:
+ *      0: 0x00080080
+ *      1: ResultCode
+ *      2: 0 if not finished, 1 if finished
+ */
+void IsFinishedReceiving(Service::Interface* self);
+
+/**
+ * Sets the number of lines the buffer contains.
  *  Inputs:
  *      0: 0x00090100
- *      1: u8 Camera port (`Port` enum)
+ *      1: u8 selected port
  *      2: u16 Number of lines to transfer
  *      3: u16 Width
  *      4: u16 Height
  *  Outputs:
  *      0: 0x00090040
  *      1: ResultCode
+ * @todo figure out how the "buffer" actually works.
  */
 void SetTransferLines(Service::Interface* self);
 
 /**
- * Unknown
+ * Gets the maximum number of lines that fit in the buffer
  *  Inputs:
  *      0: 0x000A0080
  *      1: u16 Width
@@ -277,27 +345,58 @@ void SetTransferLines(Service::Interface* self);
  *  Outputs:
  *      0: 0x000A0080
  *      1: ResultCode
- *      2: Maximum number of lines that fit in the buffer(?)
+ *      2: Maximum number of lines that fit in the buffer
+ * @todo figure out how the "buffer" actually works.
  */
 void GetMaxLines(Service::Interface* self);
 
 /**
- * Unknown
+ * Sets the number of bytes the buffer contains.
+ *  Inputs:
+ *      0: 0x000B0100
+ *      1: u8 selected port
+ *      2: u16 Number of bytes to transfer
+ *      3: u16 Width
+ *      4: u16 Height
+ *  Outputs:
+ *      0: 0x000B0040
+ *      1: ResultCode
+ * @todo figure out how the "buffer" actually works.
+ */
+void SetTransferBytes(Service::Interface* self);
+
+/**
+ * Gets the number of bytes to the buffer contains.
  *  Inputs:
  *      0: 0x000C0040
- *      1: u8 Camera port (`Port` enum)
+ *      1: u8 selected port
  *  Outputs:
  *      0: 0x000C0080
  *      1: ResultCode
- *      2: Total number of bytes for each frame with current settings(?)
+ *      2: The number of bytes the buffer contains
+ * @todo figure out how the "buffer" actually works.
  */
 void GetTransferBytes(Service::Interface* self);
 
 /**
- * Unknown
+ * Gets the maximum number of bytes that fit in the buffer.
+ *  Inputs:
+ *      0: 0x000D0080
+ *      1: u16 Width
+ *      2: u16 Height
+ *  Outputs:
+ *      0: 0x000D0080
+ *      1: ResultCode
+ *      2: Maximum number of bytes that fit in the buffer
+ * @todo figure out how the "buffer" actually works.
+ */
+void GetMaxBytes(Service::Interface* self);
+
+/**
+ * Enables or disables trimming.
  *  Inputs:
  *      0: 0x000E0080
- *      1: u8 Camera port (`Port` enum)
+ *      1: u8 selected port
  *      2: u8 bool Enable trimming if true
  *  Outputs:
  *      0: 0x000E0040
@@ -306,14 +405,58 @@ void GetTransferBytes(Service::Interface* self);
 void SetTrimming(Service::Interface* self);
 
 /**
- * Unknown
+ * Gets whether trimming is enabled.
+ *  Inputs:
+ *      0: 0x000F0040
+ *      1: u8 selected port
+ *  Outputs:
+ *      0: 0x000F0080
+ *      1: ResultCode
+ *      2: u8 bool Enable trimming if true
+ */
+void IsTrimming(Service::Interface* self);
+
+/**
+ * Sets the position to trim.
+ *  Inputs:
+ *      0: 0x00100140
+ *      1: u8 selected port
+ *      2: x start
+ *      3: y start
+ *      4: x end (exclusive)
+ *      5: y end (exclusive)
+ *  Outputs:
+ *      0: 0x00100040
+ *      1: ResultCode
+ */
+void SetTrimmingParams(Service::Interface* self);
+
+/**
+ * Gets the position to trim.
+ *  Inputs:
+ *      0: 0x00110040
+ *      1: u8 selected port
+ *
+ *  Outputs:
+ *      0: 0x00110140
+ *      1: ResultCode
+ *      2: x start
+ *      3: y start
+ *      4: x end (exclusive)
+ *      5: y end (exclusive)
+ */
+void GetTrimmingParams(Service::Interface* self);
+
+/**
+ * Sets the position to trim by giving the width and height. The trimming window is always at the
+ * center.
  *  Inputs:
  *      0: 0x00120140
- *      1: u8 Camera port (`Port` enum)
- *      2: s16 Trim width(?)
- *      3: s16 Trim height(?)
- *      4: s16 Camera width(?)
- *      5: s16 Camera height(?)
+ *      1: u8 selected port
+ *      2: s16 Trim width
+ *      3: s16 Trim height
+ *      4: s16 Camera width
+ *      5: s16 Camera height
  *  Outputs:
  *      0: 0x00120040
  *      1: ResultCode
@@ -324,7 +467,7 @@ void SetTrimmingParamsCenter(Service::Interface* self);
  * Selects up to two physical cameras to enable.
  *  Inputs:
  *      0: 0x00130040
- *      1: u8 Cameras to activate (`CameraSelect` enum)
+ *      1: u8 selected camera
  *  Outputs:
  *      0: 0x00130040
  *      1: ResultCode
@@ -332,12 +475,24 @@ void SetTrimmingParamsCenter(Service::Interface* self);
 void Activate(Service::Interface* self);
 
 /**
- * Unknown
+ * Switches the context of camera settings.
+ *  Inputs:
+ *      0: 0x00140080
+ *      1: u8 selected camera
+ *      2: u8 selected context
+ *  Outputs:
+ *      0: 0x00140040
+ *      1: ResultCode
+ */
+void SwitchContext(Service::Interface* self);
+
+/**
+ * Sets flipping of images
  *  Inputs:
  *      0: 0x001D00C0
- *      1: u8 Camera select (`CameraSelect` enum)
+ *      1: u8 selected camera
  *      2: u8 Type of flipping to perform (`Flip` enum)
- *      3: u8 Context (`Context` enum)
+ *      3: u8 selected context
  *  Outputs:
  *      0: 0x001D0040
  *      1: ResultCode
@@ -345,12 +500,30 @@ void Activate(Service::Interface* self);
 void FlipImage(Service::Interface* self);
 
 /**
- * Unknown
+ * Sets camera resolution from custom parameters. For more details see the Resolution struct.
+ *  Inputs:
+ *      0: 0x001E0200
+ *      1: u8 selected camera
+ *      2: width
+ *      3: height
+ *      4: crop x0
+ *      5: crop y0
+ *      6: crop x1
+ *      7: crop y1
+ *      8: u8 selected context
+ *  Outputs:
+ *      0: 0x001E0040
+ *      1: ResultCode
+ */
+void SetDetailSize(Service::Interface* self);
+
+/**
+ * Sets camera resolution from preset resolution parameters. .
  *  Inputs:
  *      0: 0x001F00C0
- *      1: u8 Camera select (`CameraSelect` enum)
+ *      1: u8 selected camera
  *      2: u8 Camera frame resolution (`Size` enum)
- *      3: u8 Context id (`Context` enum)
+ *      3: u8 selected context
  *  Outputs:
  *      0: 0x001F0040
  *      1: ResultCode
@@ -358,16 +531,54 @@ void FlipImage(Service::Interface* self);
 void SetSize(Service::Interface* self);
 
 /**
- * Unknown
+ * Sets camera framerate.
  *  Inputs:
  *      0: 0x00200080
- *      1: u8 Camera select (`CameraSelect` enum)
+ *      1: u8 selected camera
  *      2: u8 Camera framerate (`FrameRate` enum)
  *  Outputs:
  *      0: 0x00200040
  *      1: ResultCode
  */
 void SetFrameRate(Service::Interface* self);
+
+/**
+ * Sets effect on the output image
+ *  Inputs:
+ *      0: 0x002200C0
+ *      1: u8 selected camera
+ *      2: u8 image effect (`Effect` enum)
+ *      3: u8 selected context
+ *  Outputs:
+ *      0: 0x00220040
+ *      1: ResultCode
+ */
+void SetEffect(Service::Interface* self);
+
+/**
+ * Sets format of the output image
+ *  Inputs:
+ *      0: 0x002500C0
+ *      1: u8 selected camera
+ *      2: u8 image format (`OutputFormat` enum)
+ *      3: u8 selected context
+ *  Outputs:
+ *      0: 0x00250040
+ *      1: ResultCode
+ */
+void SetOutputFormat(Service::Interface* self);
+
+/**
+ * Synchronizes the V-Sync timing of two cameras.
+ *  Inputs:
+ *      0: 0x00290080
+ *      1: u8 selected camera 1
+ *      2: u8 selected camera 2
+ *  Outputs:
+ *      0: 0x00280040
+ *      1: ResultCode
+ */
+void SynchronizeVsyncTiming(Service::Interface* self);
 
 /**
  * Returns calibration data relating the outside cameras to eachother, for use in AR applications.
@@ -380,6 +591,45 @@ void SetFrameRate(Service::Interface* self);
  *      2-17: `StereoCameraCalibrationData` structure with calibration values
  */
 void GetStereoCameraCalibrationData(Service::Interface* self);
+
+/**
+ * Batch-configures context-free settings.
+ *
+ *  Inputs:
+ *      0: 0x003302C0
+ *      1-7: struct PachageParameterWithoutContext
+ *      8-11: unused
+ *  Outputs:
+ *      0: 0x00330040
+ *      1: ResultCode
+ */
+void SetPackageParameterWithoutContext(Service::Interface* self);
+
+/**
+ * Batch-configures context-related settings with preset resolution parameters.
+ *
+ *  Inputs:
+ *      0: 0x00340140
+ *      1-2: struct PackageParameterWithContext
+ *      3-5: unused
+ *  Outputs:
+ *      0: 0x00340040
+ *      1: ResultCode
+ */
+void SetPackageParameterWithContext(Service::Interface* self);
+
+/**
+ * Batch-configures context-related settings with custom resolution parameters
+ *
+ *  Inputs:
+ *      0: 0x003501C0
+ *      1-4: struct PackageParameterWithContextDetail
+ *      5-7: unused
+ *  Outputs:
+ *      0: 0x00350040
+ *      1: ResultCode
+ */
+void SetPackageParameterWithContextDetail(Service::Interface* self);
 
 /**
  * Unknown
