@@ -716,8 +716,6 @@ void RasterizerOpenGL::FlushAndInvalidateRegion(PAddr addr, u32 size) {
 
 bool RasterizerOpenGL::AccelerateDisplayTransfer(const GPU::Regs::DisplayTransferConfig& config) {
     MICROPROFILE_SCOPE(OpenGL_Blits);
-    using PixelFormat = CachedSurface::PixelFormat;
-    using SurfaceType = CachedSurface::SurfaceType;
 
     CachedSurface src_params;
     src_params.addr = config.GetPhysicalInputAddress();
