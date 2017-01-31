@@ -303,7 +303,7 @@ bool Copy(const std::string& srcFilename, const std::string& destFilename) {
     // copy loop
     while (!feof(input)) {
         // read input
-        int rnum = fread(buffer, sizeof(char), BSIZE, input);
+        size_t rnum = fread(buffer, sizeof(char), BSIZE, input);
         if (rnum != BSIZE) {
             if (ferror(input) != 0) {
                 LOG_ERROR(Common_Filesystem, "failed reading from source, %s --> %s: %s",
@@ -313,7 +313,7 @@ bool Copy(const std::string& srcFilename, const std::string& destFilename) {
         }
 
         // write output
-        int wnum = fwrite(buffer, sizeof(char), rnum, output);
+        size_t wnum = fwrite(buffer, sizeof(char), rnum, output);
         if (wnum != rnum) {
             LOG_ERROR(Common_Filesystem, "failed writing to output, %s --> %s: %s",
                       srcFilename.c_str(), destFilename.c_str(), GetLastErrorMsg());
