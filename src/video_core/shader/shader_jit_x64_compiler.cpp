@@ -144,6 +144,8 @@ static const BitSet32 persistent_regs = BuildRegSet({
     ADDROFFS_REG_0, ADDROFFS_REG_1, LOOPCOUNT_REG, COND0, COND1,
     // Constants
     ONE, NEGBIT,
+    // Loop variables
+    LOOPCOUNT, LOOPINC,
 });
 
 /// Raw constant for the source register selector that indicates no swizzling is performed
