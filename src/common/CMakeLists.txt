@@ -61,14 +61,11 @@ set(HEADERS
 
 if(ARCHITECTURE_x86_64)
     set(SRCS ${SRCS}
-            x64/abi.cpp
             x64/cpu_detect.cpp
-            x64/emitter.cpp)
+            )
 
     set(HEADERS ${HEADERS}
-            x64/abi.h
             x64/cpu_detect.h
-            x64/emitter.h
             x64/xbyak_abi.h
             x64/xbyak_util.h
             )
