@@ -17,7 +17,6 @@ static QString getKeyName(Qt::Key key_code) {
     case Qt::Key_Alt:
         return QObject::tr("Alt");
     case Qt::Key_Meta:
-    case -1:
         return "";
     default:
         return QKeySequence(key_code).toString();
