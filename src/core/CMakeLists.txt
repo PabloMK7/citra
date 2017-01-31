@@ -40,6 +40,7 @@ set(SRCS
             hle/applets/applet.cpp
             hle/applets/erreula.cpp
             hle/applets/mii_selector.cpp
+            hle/applets/mint.cpp
             hle/applets/swkbd.cpp
             hle/kernel/address_arbiter.cpp
             hle/kernel/client_port.cpp
@@ -219,6 +220,7 @@ set(HEADERS
             hle/applets/applet.h
             hle/applets/erreula.h
             hle/applets/mii_selector.h
+            hle/applets/mint.h
             hle/applets/swkbd.h
             hle/kernel/address_arbiter.h
             hle/kernel/client_port.h
