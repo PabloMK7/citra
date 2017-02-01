@@ -44,4 +44,12 @@ FramebufferLayout SingleFrameLayout(unsigned width, unsigned height, bool is_swa
  * @return Newly created FramebufferLayout object with default screen regions initialized
  */
 FramebufferLayout LargeFrameLayout(unsigned width, unsigned height, bool is_swapped);
+
+/**
+ * Factory method for constructing a custom FramebufferLayout
+ * @param width Window framebuffer width in pixels
+ * @param height Window framebuffer height in pixels
+ * @return Newly created FramebufferLayout object with default screen regions initialized
+ */
+FramebufferLayout CustomFrameLayout(unsigned width, unsigned height);
 }

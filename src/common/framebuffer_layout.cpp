@@ -6,6 +6,7 @@
 
 #include "common/assert.h"
 #include "common/framebuffer_layout.h"
+#include "core/settings.h"
 #include "video_core/video_core.h"
 
 namespace Layout {
@@ -133,6 +134,24 @@ FramebufferLayout LargeFrameLayout(unsigned width, unsigned height, bool swapped
             .TranslateY(large_screen.GetHeight() + large_screen.top - small_screen.GetHeight());
     res.top_screen = swapped ? small_screen : large_screen;
     res.bottom_screen = swapped ? large_screen : small_screen;
+    return res;
+}
+
+FramebufferLayout CustomFrameLayout(unsigned width, unsigned height) {
+    ASSERT(width > 0);
+    ASSERT(height > 0);
+
+    FramebufferLayout res{width, height, true, true, {}, {}};
+
+    MathUtil::Rectangle<unsigned> top_screen{
+        Settings::values.custom_top_left, Settings::values.custom_top_top,
+        Settings::values.custom_top_right, Settings::values.custom_top_bottom};
+    MathUtil::Rectangle<unsigned> bot_screen{
+        Settings::values.custom_bottom_left, Settings::values.custom_bottom_top,
+        Settings::values.custom_bottom_right, Settings::values.custom_bottom_bottom};
+
+    res.top_screen = top_screen;
+    res.bottom_screen = bot_screen;
     return res;
 }
 }

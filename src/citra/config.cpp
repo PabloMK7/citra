@@ -77,6 +77,23 @@ void Config::ReadValues() {
     Settings::values.layout_option =
         static_cast<Settings::LayoutOption>(sdl2_config->GetInteger("Layout", "layout_option", 0));
     Settings::values.swap_screen = sdl2_config->GetBoolean("Layout", "swap_screen", false);
+    Settings::values.custom_layout = sdl2_config->GetBoolean("Layout", "custom_layout", false);
+    Settings::values.custom_top_left =
+        static_cast<u16>(sdl2_config->GetInteger("Layout", "custom_top_left", 0));
+    Settings::values.custom_top_top =
+        static_cast<u16>(sdl2_config->GetInteger("Layout", "custom_top_top", 0));
+    Settings::values.custom_top_right =
+        static_cast<u16>(sdl2_config->GetInteger("Layout", "custom_top_right", 400));
+    Settings::values.custom_top_bottom =
+        static_cast<u16>(sdl2_config->GetInteger("Layout", "custom_top_bottom", 240));
+    Settings::values.custom_bottom_left =
+        static_cast<u16>(sdl2_config->GetInteger("Layout", "custom_bottom_left", 40));
+    Settings::values.custom_bottom_top =
+        static_cast<u16>(sdl2_config->GetInteger("Layout", "custom_bottom_top", 240));
+    Settings::values.custom_bottom_right =
+        static_cast<u16>(sdl2_config->GetInteger("Layout", "custom_bottom_right", 360));
+    Settings::values.custom_bottom_bottom =
+        static_cast<u16>(sdl2_config->GetInteger("Layout", "custom_bottom_bottom", 480));
 
     // Audio
     Settings::values.sink_id = sdl2_config->Get("Audio", "output_engine", "auto");

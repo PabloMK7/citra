@@ -116,17 +116,21 @@ void EmuWindow::GyroscopeChanged(float x, float y, float z) {
 
 void EmuWindow::UpdateCurrentFramebufferLayout(unsigned width, unsigned height) {
     Layout::FramebufferLayout layout;
-    switch (Settings::values.layout_option) {
-    case Settings::LayoutOption::SingleScreen:
-        layout = Layout::SingleFrameLayout(width, height, Settings::values.swap_screen);
-        break;
-    case Settings::LayoutOption::LargeScreen:
-        layout = Layout::LargeFrameLayout(width, height, Settings::values.swap_screen);
-        break;
-    case Settings::LayoutOption::Default:
-    default:
-        layout = Layout::DefaultFrameLayout(width, height, Settings::values.swap_screen);
-        break;
+    if (Settings::values.custom_layout == true) {
+        layout = Layout::CustomFrameLayout(width, height);
+    } else {
+        switch (Settings::values.layout_option) {
+        case Settings::LayoutOption::SingleScreen:
+            layout = Layout::SingleFrameLayout(width, height, Settings::values.swap_screen);
+            break;
+        case Settings::LayoutOption::LargeScreen:
+            layout = Layout::LargeFrameLayout(width, height, Settings::values.swap_screen);
+            break;
+        case Settings::LayoutOption::Default:
+        default:
+            layout = Layout::DefaultFrameLayout(width, height, Settings::values.swap_screen);
+            break;
+        }
     }
     NotifyFramebufferLayoutChanged(layout);
 }
