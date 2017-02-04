@@ -53,8 +53,8 @@ public:
     void Push(u32 value) {
         cmdbuf[index++] = value;
     }
-    template <typename First, class... Other>
-    void Push(First first_value, const Other&... other_values) {
+    template <typename First, typename... Other>
+    void Push(const First& first_value, const Other&... other_values) {
         Push(first_value);
         Push(other_values...);
     }
@@ -144,7 +144,7 @@ public:
     template <typename T>
     void Pop(T& value);
 
-    template <typename First, class... Other>
+    template <typename First, typename... Other>
     void Pop(First& first_value, Other&... other_values);
 
     Kernel::Handle PopHandle();
@@ -211,7 +211,7 @@ void RequestParser::Pop(T& value) {
     value = Pop<T>();
 }
 
-template <typename First, class... Other>
+template <typename First, typename... Other>
 void RequestParser::Pop(First& first_value, Other&... other_values) {
     first_value = Pop<First>();
     Pop(other_values...);
