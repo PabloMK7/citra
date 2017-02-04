@@ -201,7 +201,7 @@ typedef uint64_t ThreadIdType;
 int64_t MicroProfileGetTick();
 #define MP_TICK() MicroProfileGetTick()
 #define MP_BREAK() __debugbreak()
-#define MP_THREAD_LOCAL __declspec(thread)
+#define MP_THREAD_LOCAL thread_local
 #define MP_STRCASECMP _stricmp
 #define MP_GETCURRENTTHREADID() GetCurrentThreadId()
 typedef uint32_t ThreadIdType;
