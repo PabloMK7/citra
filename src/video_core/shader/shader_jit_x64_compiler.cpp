@@ -589,7 +589,7 @@ void JitShader::Compile_RSQ(Instruction instr) {
 void JitShader::Compile_NOP(Instruction instr) {}
 
 void JitShader::Compile_END(Instruction instr) {
-    ABI_PopRegistersAndAdjustStack(*this, ABI_ALL_CALLEE_SAVED, 8);
+    ABI_PopRegistersAndAdjustStack(*this, ABI_ALL_CALLEE_SAVED, 8, 16);
     ret();
 }
 
@@ -841,7 +841,10 @@ void JitShader::Compile(const std::array<u32, 1024>* program_code_,
     FindReturnOffsets();
 
     // The stack pointer is 8 modulo 16 at the entry of a procedure
-    ABI_PushRegistersAndAdjustStack(*this, ABI_ALL_CALLEE_SAVED, 8);
+    // We reserve 16 bytes and assign a dummy value to the first 8 bytes, to catch any potential
+    // return checks (see Compile_Return) that happen in shader main routine.
+    ABI_PushRegistersAndAdjustStack(*this, ABI_ALL_CALLEE_SAVED, 8, 16);
+    mov(qword[rsp + 8], 0xFFFFFFFFFFFFFFFFULL);
 
     mov(SETUP, ABI_PARAM1);
     mov(STATE, ABI_PARAM2);
