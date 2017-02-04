@@ -71,8 +71,8 @@ void GraphicsTracingWidget::StartRecording() {
     std::array<u32, 4 * 16> default_attributes;
     for (unsigned i = 0; i < 16; ++i) {
         for (unsigned comp = 0; comp < 3; ++comp) {
-            default_attributes[4 * i + comp] =
-                nihstro::to_float24(Pica::g_state.vs_default_attributes[i][comp].ToFloat32());
+            default_attributes[4 * i + comp] = nihstro::to_float24(
+                Pica::g_state.input_default_attributes.attr[i][comp].ToFloat32());
         }
     }
 

@@ -15,7 +15,8 @@ namespace Pica {
  */
 template <typename VertexType>
 struct PrimitiveAssembler {
-    using TriangleHandler = std::function<void(VertexType& v0, VertexType& v1, VertexType& v2)>;
+    using TriangleHandler =
+        std::function<void(const VertexType& v0, const VertexType& v1, const VertexType& v2)>;
 
     PrimitiveAssembler(Regs::TriangleTopology topology = Regs::TriangleTopology::List);
 
@@ -25,7 +26,7 @@ struct PrimitiveAssembler {
      * NOTE: We could specify the triangle handler in the constructor, but this way we can
      * keep event and handler code next to each other.
      */
-    void SubmitVertex(VertexType& vtx, TriangleHandler triangle_handler);
+    void SubmitVertex(const VertexType& vtx, TriangleHandler triangle_handler);
 
     /**
      * Resets the internal state of the PrimitiveAssembler.

@@ -19,12 +19,11 @@ public:
     /**
      * Produce debug information based on the given shader and input vertex
      * @param input Input vertex into the shader
-     * @param num_attributes The number of vertex shader attributes
      * @param config Configuration object for the shader pipeline
      * @return Debug information for this shader with regards to the given vertex
      */
-    DebugData<true> ProduceDebugInfo(const ShaderSetup& setup, const InputVertex& input,
-                                     int num_attributes) const;
+    DebugData<true> ProduceDebugInfo(const ShaderSetup& setup, const AttributeBuffer& input,
+                                     const Regs::ShaderConfig& config) const;
 };
 
 } // namespace

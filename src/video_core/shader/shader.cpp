@@ -4,6 +4,7 @@
 
 #include <cmath>
 #include <cstring>
+#include "common/bit_set.h"
 #include "common/logging/log.h"
 #include "common/microprofile.h"
 #include "video_core/pica.h"
@@ -19,38 +20,32 @@ namespace Pica {
 
 namespace Shader {
 
-OutputVertex OutputVertex::FromRegisters(Math::Vec4<float24> output_regs[16], const Regs& regs,
-                                         u32 output_mask) {
+OutputVertex OutputVertex::FromAttributeBuffer(const Regs& regs, AttributeBuffer& input) {
     // Setup output data
-    OutputVertex ret;
-    // TODO(neobrain): Under some circumstances, up to 16 attributes may be output. We need to
-    // figure out what those circumstances are and enable the remaining outputs then.
-    unsigned index = 0;
-    for (unsigned i = 0; i < 7; ++i) {
+    union {
+        OutputVertex ret{};
+        std::array<float24, 24> vertex_slots;
+    };
+    static_assert(sizeof(vertex_slots) == sizeof(ret), "Struct and array have different sizes.");
 
-        if (index >= regs.vs_output_total)
-            break;
+    unsigned int num_attributes = regs.vs_output_total;
+    ASSERT(num_attributes <= 7);
+    for (unsigned int i = 0; i < num_attributes; ++i) {
+        const auto& output_register_map = regs.vs_output_attributes[i];
 
-        if ((output_mask & (1 << i)) == 0)
-            continue;
-
-        const auto& output_register_map = regs.vs_output_attributes[index];
-
-        u32 semantics[4] = {output_register_map.map_x, output_register_map.map_y,
-                            output_register_map.map_z, output_register_map.map_w};
+        Regs::VSOutputAttributes::Semantic semantics[4] = {
+            output_register_map.map_x, output_register_map.map_y, output_register_map.map_z,
+            output_register_map.map_w};
 
         for (unsigned comp = 0; comp < 4; ++comp) {
-            float24* out = ((float24*)&ret) + semantics[comp];
-            if (semantics[comp] != Regs::VSOutputAttributes::INVALID) {
-                *out = output_regs[i][comp];
-            } else {
-                // Zero output so that attributes which aren't output won't have denormals in them,
-                // which would slow us down later.
-                memset(out, 0, sizeof(*out));
+            Regs::VSOutputAttributes::Semantic semantic = semantics[comp];
+            float24* out = &vertex_slots[semantic];
+            if (semantic < vertex_slots.size()) {
+                *out = input.attr[i][comp];
+            } else if (semantic != Regs::VSOutputAttributes::INVALID) {
+                LOG_ERROR(HW_GPU, "Invalid/unknown semantic id: %u", (unsigned int)semantic);
             }
         }
-
-        index++;
     }
 
     // The hardware takes the absolute and saturates vertex colors like this, *before* doing
@@ -71,12 +66,20 @@ OutputVertex OutputVertex::FromRegisters(Math::Vec4<float24> output_regs[16], co
     return ret;
 }
 
-void UnitState::LoadInputVertex(const InputVertex& input, int num_attributes) {
-    // Setup input register table
-    const auto& attribute_register_map = g_state.regs.vs.input_register_map;
+void UnitState::LoadInput(const Regs::ShaderConfig& config, const AttributeBuffer& input) {
+    const unsigned max_attribute = config.max_input_attribute_index;
 
-    for (int i = 0; i < num_attributes; i++)
-        registers.input[attribute_register_map.GetRegisterForAttribute(i)] = input.attr[i];
+    for (unsigned attr = 0; attr <= max_attribute; ++attr) {
+        unsigned reg = config.GetRegisterForAttribute(attr);
+        registers.input[reg] = input.attr[attr];
+    }
+}
+
+void UnitState::WriteOutput(const Regs::ShaderConfig& config, AttributeBuffer& output) {
+    unsigned int output_i = 0;
+    for (unsigned int reg : Common::BitSet<u32>(config.output_mask)) {
+        output.attr[output_i++] = registers.output[reg];
+    }
 }
 
 MICROPROFILE_DEFINE(GPU_Shader, "GPU", "Shader", MP_RGB(50, 50, 240));

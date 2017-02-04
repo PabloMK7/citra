@@ -14,7 +14,7 @@ PrimitiveAssembler<VertexType>::PrimitiveAssembler(Regs::TriangleTopology topolo
     : topology(topology), buffer_index(0) {}
 
 template <typename VertexType>
-void PrimitiveAssembler<VertexType>::SubmitVertex(VertexType& vtx,
+void PrimitiveAssembler<VertexType>::SubmitVertex(const VertexType& vtx,
                                                   TriangleHandler triangle_handler) {
     switch (topology) {
     // TODO: Figure out what's different with TriangleTopology::Shader.

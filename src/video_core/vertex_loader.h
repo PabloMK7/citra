@@ -11,7 +11,7 @@ class MemoryAccessTracker;
 }
 
 namespace Shader {
-struct InputVertex;
+struct AttributeBuffer;
 }
 
 class VertexLoader {
@@ -22,7 +22,7 @@ public:
     }
 
     void Setup(const Pica::Regs& regs);
-    void LoadVertex(u32 base_address, int index, int vertex, Shader::InputVertex& input,
+    void LoadVertex(u32 base_address, int index, int vertex, Shader::AttributeBuffer& input,
                     DebugUtils::MemoryAccessTracker& memory_accesses);
 
     int GetNumTotalAttributes() const {

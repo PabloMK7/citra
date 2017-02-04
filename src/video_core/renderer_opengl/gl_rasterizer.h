@@ -84,7 +84,7 @@ union PicaShaderConfig {
         // Fragment lighting
 
         state.lighting.enable = !regs.lighting.disable;
-        state.lighting.src_num = regs.lighting.num_lights + 1;
+        state.lighting.src_num = regs.lighting.max_light_index + 1;
 
         for (unsigned light_index = 0; light_index < state.lighting.src_num; ++light_index) {
             unsigned num = regs.lighting.light_enable.GetNum(light_index);
