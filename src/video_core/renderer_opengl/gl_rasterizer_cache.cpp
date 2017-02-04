@@ -17,10 +17,10 @@
 #include "common/vector_math.h"
 #include "core/frontend/emu_window.h"
 #include "core/memory.h"
-#include "video_core/debug_utils/debug_utils.h"
 #include "video_core/pica_state.h"
 #include "video_core/renderer_opengl/gl_rasterizer_cache.h"
 #include "video_core/renderer_opengl/gl_state.h"
+#include "video_core/texture/texture_decode.h"
 #include "video_core/utils.h"
 #include "video_core/video_core.h"
 
@@ -339,17 +339,16 @@ CachedSurface* RasterizerCacheOpenGL::GetSurface(const CachedSurface& params, bo
 
                 std::vector<Math::Vec4<u8>> tex_buffer(params.width * params.height);
 
-                Pica::DebugUtils::TextureInfo tex_info;
+                Pica::Texture::TextureInfo tex_info;
                 tex_info.width = params.width;
                 tex_info.height = params.height;
-                tex_info.stride =
-                    params.width * CachedSurface::GetFormatBpp(params.pixel_format) / 8;
                 tex_info.format = (Pica::Regs::TextureFormat)params.pixel_format;
+                tex_info.SetDefaultStride();
                 tex_info.physical_address = params.addr;
 
                 for (unsigned y = 0; y < params.height; ++y) {
                     for (unsigned x = 0; x < params.width; ++x) {
-                        tex_buffer[x + params.width * y] = Pica::DebugUtils::LookupTexture(
+                        tex_buffer[x + params.width * y] = Pica::Texture::LookupTexture(
                             texture_src_data, x, params.height - 1 - y, tex_info);
                     }
                 }
@@ -512,8 +511,9 @@ CachedSurface* RasterizerCacheOpenGL::GetSurfaceRect(const CachedSurface& params
 
 CachedSurface* RasterizerCacheOpenGL::GetTextureSurface(
     const Pica::Regs::FullTextureConfig& config) {
-    Pica::DebugUtils::TextureInfo info =
-        Pica::DebugUtils::TextureInfo::FromPicaRegister(config.config, config.format);
+
+    Pica::Texture::TextureInfo info =
+        Pica::Texture::TextureInfo::FromPicaRegister(config.config, config.format);
 
     CachedSurface params;
     params.addr = info.physical_address;

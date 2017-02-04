@@ -20,13 +20,14 @@
 #include "video_core/debug_utils/debug_utils.h"
 #include "video_core/pica.h"
 #include "video_core/pica_state.h"
+#include "video_core/texture/texture_decode.h"
 
 namespace {
-QImage LoadTexture(const u8* src, const Pica::DebugUtils::TextureInfo& info) {
+QImage LoadTexture(const u8* src, const Pica::Texture::TextureInfo& info) {
     QImage decoded_image(info.width, info.height, QImage::Format_ARGB32);
     for (int y = 0; y < info.height; ++y) {
         for (int x = 0; x < info.width; ++x) {
-            Math::Vec4<u8> color = Pica::DebugUtils::LookupTexture(src, x, y, info, true);
+            Math::Vec4<u8> color = Pica::Texture::LookupTexture(src, x, y, info, true);
             decoded_image.setPixel(x, y, qRgba(color.r(), color.g(), color.b(), color.a()));
         }
     }
@@ -36,9 +37,10 @@ QImage LoadTexture(const u8* src, const Pica::DebugUtils::TextureInfo& info) {
 
 class TextureInfoWidget : public QWidget {
 public:
-    TextureInfoWidget(const u8* src, const Pica::DebugUtils::TextureInfo& info,
+    TextureInfoWidget(const u8* src, const Pica::Texture::TextureInfo& info,
                       QWidget* parent = nullptr)
         : QWidget(parent) {
+
         QLabel* image_widget = new QLabel;
         QPixmap image_pixmap = QPixmap::fromImage(LoadTexture(src, info));
         image_pixmap = image_pixmap.scaled(200, 100, Qt::KeepAspectRatio, Qt::SmoothTransformation);
@@ -160,7 +162,7 @@ void GPUCommandListWidget::SetCommandInfo(const QModelIndex& index) {
         const auto config = texture.config;
         const auto format = texture.format;
 
-        const auto info = Pica::DebugUtils::TextureInfo::FromPicaRegister(config, format);
+        const auto info = Pica::Texture::TextureInfo::FromPicaRegister(config, format);
         const u8* src = Memory::GetPhysicalPointer(config.GetPhysicalAddress());
         new_info_widget = new TextureInfoWidget(src, info);
     }
