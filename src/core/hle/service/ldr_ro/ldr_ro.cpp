@@ -40,9 +40,6 @@ static const ResultCode ERROR_INVALID_MEMORY_STATE = // 0xD8A12C08
 static const ResultCode ERROR_NOT_LOADED = // 0xD8A12C0D
     ResultCode(static_cast<ErrorDescription>(13), ErrorModule::RO, ErrorSummary::InvalidState,
                ErrorLevel::Permanent);
-static const ResultCode ERROR_INVALID_DESCRIPTOR = // 0xD9001830
-    ResultCode(ErrorDescription::OS_InvalidBufferDescriptor, ErrorModule::OS,
-               ErrorSummary::WrongArgument, ErrorLevel::Permanent);
 
 static MemorySynchronizer memory_synchronizer;
 
@@ -71,66 +68,61 @@ static bool VerifyBufferState(VAddr buffer_ptr, u32 size) {
  *      1 : Result of function, 0 on success, otherwise error code
  */
 static void Initialize(Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-    VAddr crs_buffer_ptr = cmd_buff[1];
-    u32 crs_size = cmd_buff[2];
-    VAddr crs_address = cmd_buff[3];
-    u32 descriptor = cmd_buff[4];
-    u32 process = cmd_buff[5];
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x01, 3, 2);
+    VAddr crs_buffer_ptr = rp.Pop<u32>();
+    u32 crs_size = rp.Pop<u32>();
+    VAddr crs_address = rp.Pop<u32>();
+    // TODO (wwylele): RO service checks the descriptor here and return error 0xD9001830 for
+    // incorrect descriptor. This error return should be probably built in IPC::RequestParser.
+    // All other service functions below have the same issue.
+    Kernel::Handle process = rp.PopHandle();
 
-    LOG_DEBUG(Service_LDR, "called, crs_buffer_ptr=0x%08X, crs_address=0x%08X, crs_size=0x%X, "
-                           "descriptor=0x%08X, process=0x%08X",
-              crs_buffer_ptr, crs_address, crs_size, descriptor, process);
+    LOG_DEBUG(Service_LDR,
+              "called, crs_buffer_ptr=0x%08X, crs_address=0x%08X, crs_size=0x%X, process=0x%08X",
+              crs_buffer_ptr, crs_address, crs_size, process);
 
-    if (descriptor != 0) {
-        LOG_ERROR(Service_LDR, "IPC handle descriptor failed validation (0x%X)", descriptor);
-        cmd_buff[0] = IPC::MakeHeader(0, 1, 0);
-        cmd_buff[1] = ERROR_INVALID_DESCRIPTOR.raw;
-        return;
-    }
-
-    cmd_buff[0] = IPC::MakeHeader(1, 1, 0);
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
 
     if (loaded_crs != 0) {
         LOG_ERROR(Service_LDR, "Already initialized");
-        cmd_buff[1] = ERROR_ALREADY_INITIALIZED.raw;
+        rb.Push(ERROR_ALREADY_INITIALIZED);
         return;
     }
 
     if (crs_size < CRO_HEADER_SIZE) {
         LOG_ERROR(Service_LDR, "CRS is too small");
-        cmd_buff[1] = ERROR_BUFFER_TOO_SMALL.raw;
+        rb.Push(ERROR_BUFFER_TOO_SMALL);
         return;
     }
 
     if (crs_buffer_ptr & Memory::PAGE_MASK) {
         LOG_ERROR(Service_LDR, "CRS original address is not aligned");
-        cmd_buff[1] = ERROR_MISALIGNED_ADDRESS.raw;
+        rb.Push(ERROR_MISALIGNED_ADDRESS);
         return;
     }
 
     if (crs_address & Memory::PAGE_MASK) {
         LOG_ERROR(Service_LDR, "CRS mapping address is not aligned");
-        cmd_buff[1] = ERROR_MISALIGNED_ADDRESS.raw;
+        rb.Push(ERROR_MISALIGNED_ADDRESS);
         return;
     }
 
     if (crs_size & Memory::PAGE_MASK) {
         LOG_ERROR(Service_LDR, "CRS size is not aligned");
-        cmd_buff[1] = ERROR_MISALIGNED_SIZE.raw;
+        rb.Push(ERROR_MISALIGNED_SIZE);
         return;
     }
 
     if (!VerifyBufferState(crs_buffer_ptr, crs_size)) {
         LOG_ERROR(Service_LDR, "CRS original buffer is in invalid state");
-        cmd_buff[1] = ERROR_INVALID_MEMORY_STATE.raw;
+        rb.Push(ERROR_INVALID_MEMORY_STATE);
         return;
     }
 
     if (crs_address < Memory::PROCESS_IMAGE_VADDR ||
         crs_address + crs_size > Memory::PROCESS_IMAGE_VADDR_END) {
         LOG_ERROR(Service_LDR, "CRS mapping address is not in the process image region");
-        cmd_buff[1] = ERROR_ILLEGAL_ADDRESS.raw;
+        rb.Push(ERROR_ILLEGAL_ADDRESS);
         return;
     }
 
@@ -145,7 +137,7 @@ static void Initialize(Interface* self) {
                      .Code();
         if (result.IsError()) {
             LOG_ERROR(Service_LDR, "Error mapping memory block %08X", result.raw);
-            cmd_buff[1] = result.raw;
+            rb.Push(result);
             return;
         }
 
@@ -153,7 +145,7 @@ static void Initialize(Interface* self) {
                                                                       Kernel::VMAPermission::Read);
         if (result.IsError()) {
             LOG_ERROR(Service_LDR, "Error reprotecting memory block %08X", result.raw);
-            cmd_buff[1] = result.raw;
+            rb.Push(result);
             return;
         }
 
@@ -172,7 +164,7 @@ static void Initialize(Interface* self) {
     result = crs.Rebase(0, crs_size, 0, 0, 0, 0, true);
     if (result.IsError()) {
         LOG_ERROR(Service_LDR, "Error rebasing CRS 0x%08X", result.raw);
-        cmd_buff[1] = result.raw;
+        rb.Push(result);
         return;
     }
 
@@ -180,7 +172,7 @@ static void Initialize(Interface* self) {
 
     loaded_crs = crs_address;
 
-    cmd_buff[1] = RESULT_SUCCESS.raw;
+    rb.Push(RESULT_SUCCESS);
 }
 
 /**
@@ -196,25 +188,17 @@ static void Initialize(Interface* self) {
  *      1 : Result of function, 0 on success, otherwise error code
  */
 static void LoadCRR(Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-    u32 crr_buffer_ptr = cmd_buff[1];
-    u32 crr_size = cmd_buff[2];
-    u32 descriptor = cmd_buff[3];
-    u32 process = cmd_buff[4];
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x02, 2, 2);
+    VAddr crr_buffer_ptr = rp.Pop<u32>();
+    u32 crr_size = rp.Pop<u32>();
+    Kernel::Handle process = rp.PopHandle();
 
-    if (descriptor != 0) {
-        LOG_ERROR(Service_LDR, "IPC handle descriptor failed validation (0x%X)", descriptor);
-        cmd_buff[0] = IPC::MakeHeader(0, 1, 0);
-        cmd_buff[1] = ERROR_INVALID_DESCRIPTOR.raw;
-        return;
-    }
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RESULT_SUCCESS);
 
-    cmd_buff[0] = IPC::MakeHeader(2, 1, 0);
-    cmd_buff[1] = RESULT_SUCCESS.raw; // No error
-
-    LOG_WARNING(Service_LDR, "(STUBBED) called, crr_buffer_ptr=0x%08X, crr_size=0x%08X, "
-                             "descriptor=0x%08X, process=0x%08X",
-                crr_buffer_ptr, crr_size, descriptor, process);
+    LOG_WARNING(Service_LDR,
+                "(STUBBED) called, crr_buffer_ptr=0x%08X, crr_size=0x%08X, process=0x%08X",
+                crr_buffer_ptr, crr_size, process);
 }
 
 /**
@@ -229,24 +213,15 @@ static void LoadCRR(Interface* self) {
  *      1 : Result of function, 0 on success, otherwise error code
  */
 static void UnloadCRR(Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-    u32 crr_buffer_ptr = cmd_buff[1];
-    u32 descriptor = cmd_buff[2];
-    u32 process = cmd_buff[3];
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x03, 1, 2);
+    u32 crr_buffer_ptr = rp.Pop<u32>();
+    Kernel::Handle process = rp.PopHandle();
 
-    if (descriptor != 0) {
-        LOG_ERROR(Service_LDR, "IPC handle descriptor failed validation (0x%X)", descriptor);
-        cmd_buff[0] = IPC::MakeHeader(0, 1, 0);
-        cmd_buff[1] = ERROR_INVALID_DESCRIPTOR.raw;
-        return;
-    }
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RESULT_SUCCESS);
 
-    cmd_buff[0] = IPC::MakeHeader(3, 1, 0);
-    cmd_buff[1] = RESULT_SUCCESS.raw; // No error
-
-    LOG_WARNING(Service_LDR,
-                "(STUBBED) called, crr_buffer_ptr=0x%08X, descriptor=0x%08X, process=0x%08X",
-                crr_buffer_ptr, descriptor, process);
+    LOG_WARNING(Service_LDR, "(STUBBED) called, crr_buffer_ptr=0x%08X, process=0x%08X",
+                crr_buffer_ptr, process);
 }
 
 /**
@@ -276,87 +251,85 @@ static void UnloadCRR(Interface* self) {
  *      There is a dispatcher template below.
  */
 static void LoadCRO(Interface* self, bool link_on_load_bug_fix) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-    VAddr cro_buffer_ptr = cmd_buff[1];
-    VAddr cro_address = cmd_buff[2];
-    u32 cro_size = cmd_buff[3];
-    VAddr data_segment_address = cmd_buff[4];
-    u32 zero = cmd_buff[5];
-    u32 data_segment_size = cmd_buff[6];
-    u32 bss_segment_address = cmd_buff[7];
-    u32 bss_segment_size = cmd_buff[8];
-    bool auto_link = (cmd_buff[9] & 0xFF) != 0;
-    u32 fix_level = cmd_buff[10];
-    VAddr crr_address = cmd_buff[11];
-    u32 descriptor = cmd_buff[12];
-    u32 process = cmd_buff[13];
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), link_on_load_bug_fix ? 0x09 : 0x04, 11, 2);
+    VAddr cro_buffer_ptr = rp.Pop<u32>();
+    VAddr cro_address = rp.Pop<u32>();
+    u32 cro_size = rp.Pop<u32>();
+    VAddr data_segment_address = rp.Pop<u32>();
+    u32 zero = rp.Pop<u32>();
+    u32 data_segment_size = rp.Pop<u32>();
+    u32 bss_segment_address = rp.Pop<u32>();
+    u32 bss_segment_size = rp.Pop<u32>();
+    bool auto_link = rp.Pop<bool>();
+    u32 fix_level = rp.Pop<u32>();
+    VAddr crr_address = rp.Pop<u32>();
+    Kernel::Handle process = rp.PopHandle();
 
-    LOG_DEBUG(Service_LDR,
-              "called (%s), cro_buffer_ptr=0x%08X, cro_address=0x%08X, cro_size=0x%X, "
-              "data_segment_address=0x%08X, zero=%d, data_segment_size=0x%X, "
-              "bss_segment_address=0x%08X, bss_segment_size=0x%X, "
-              "auto_link=%s, fix_level=%d, crr_address=0x%08X, descriptor=0x%08X, process=0x%08X",
+    LOG_DEBUG(Service_LDR, "called (%s), cro_buffer_ptr=0x%08X, cro_address=0x%08X, cro_size=0x%X, "
+                           "data_segment_address=0x%08X, zero=%d, data_segment_size=0x%X, "
+                           "bss_segment_address=0x%08X, bss_segment_size=0x%X, auto_link=%s, "
+                           "fix_level=%d, crr_address=0x%08X, process=0x%08X",
               link_on_load_bug_fix ? "new" : "old", cro_buffer_ptr, cro_address, cro_size,
               data_segment_address, zero, data_segment_size, bss_segment_address, bss_segment_size,
-              auto_link ? "true" : "false", fix_level, crr_address, descriptor, process);
+              auto_link ? "true" : "false", fix_level, crr_address, process);
 
-    if (descriptor != 0) {
-        LOG_ERROR(Service_LDR, "IPC handle descriptor failed validation (0x%X)", descriptor);
-        cmd_buff[0] = IPC::MakeHeader(0, 1, 0);
-        cmd_buff[1] = ERROR_INVALID_DESCRIPTOR.raw;
-        return;
-    }
-
-    cmd_buff[0] = IPC::MakeHeader(link_on_load_bug_fix ? 9 : 4, 2, 0);
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
 
     if (loaded_crs == 0) {
         LOG_ERROR(Service_LDR, "Not initialized");
-        cmd_buff[1] = ERROR_NOT_INITIALIZED.raw;
+        rb.Push(ERROR_NOT_INITIALIZED);
+        rb.Push<u32>(0);
         return;
     }
 
     if (cro_size < CRO_HEADER_SIZE) {
         LOG_ERROR(Service_LDR, "CRO too small");
-        cmd_buff[1] = ERROR_BUFFER_TOO_SMALL.raw;
+        rb.Push(ERROR_BUFFER_TOO_SMALL);
+        rb.Push<u32>(0);
         return;
     }
 
     if (cro_buffer_ptr & Memory::PAGE_MASK) {
         LOG_ERROR(Service_LDR, "CRO original address is not aligned");
-        cmd_buff[1] = ERROR_MISALIGNED_ADDRESS.raw;
+        rb.Push(ERROR_MISALIGNED_ADDRESS);
+        rb.Push<u32>(0);
         return;
     }
 
     if (cro_address & Memory::PAGE_MASK) {
         LOG_ERROR(Service_LDR, "CRO mapping address is not aligned");
-        cmd_buff[1] = ERROR_MISALIGNED_ADDRESS.raw;
+        rb.Push(ERROR_MISALIGNED_ADDRESS);
+        rb.Push<u32>(0);
         return;
     }
 
     if (cro_size & Memory::PAGE_MASK) {
         LOG_ERROR(Service_LDR, "CRO size is not aligned");
-        cmd_buff[1] = ERROR_MISALIGNED_SIZE.raw;
+        rb.Push(ERROR_MISALIGNED_SIZE);
+        rb.Push<u32>(0);
         return;
     }
 
     if (!VerifyBufferState(cro_buffer_ptr, cro_size)) {
         LOG_ERROR(Service_LDR, "CRO original buffer is in invalid state");
-        cmd_buff[1] = ERROR_INVALID_MEMORY_STATE.raw;
+        rb.Push(ERROR_INVALID_MEMORY_STATE);
+        rb.Push<u32>(0);
         return;
     }
 
     if (cro_address < Memory::PROCESS_IMAGE_VADDR ||
         cro_address + cro_size > Memory::PROCESS_IMAGE_VADDR_END) {
         LOG_ERROR(Service_LDR, "CRO mapping address is not in the process image region");
-        cmd_buff[1] = ERROR_ILLEGAL_ADDRESS.raw;
+        rb.Push(ERROR_ILLEGAL_ADDRESS);
+        rb.Push<u32>(0);
         return;
     }
 
     if (zero) {
         LOG_ERROR(Service_LDR, "Zero is not zero %d", zero);
-        cmd_buff[1] = ResultCode(static_cast<ErrorDescription>(29), ErrorModule::RO,
-                                 ErrorSummary::Internal, ErrorLevel::Usage)
-                          .raw;
+        rb.Push(ResultCode(static_cast<ErrorDescription>(29), ErrorModule::RO,
+                           ErrorSummary::Internal, ErrorLevel::Usage));
+        rb.Push<u32>(0);
         return;
     }
 
@@ -371,7 +344,8 @@ static void LoadCRO(Interface* self, bool link_on_load_bug_fix) {
                      .Code();
         if (result.IsError()) {
             LOG_ERROR(Service_LDR, "Error mapping memory block %08X", result.raw);
-            cmd_buff[1] = result.raw;
+            rb.Push(result);
+            rb.Push<u32>(0);
             return;
         }
 
@@ -380,7 +354,8 @@ static void LoadCRO(Interface* self, bool link_on_load_bug_fix) {
         if (result.IsError()) {
             LOG_ERROR(Service_LDR, "Error reprotecting memory block %08X", result.raw);
             Kernel::g_current_process->vm_manager.UnmapRange(cro_address, cro_size);
-            cmd_buff[1] = result.raw;
+            rb.Push(result);
+            rb.Push<u32>(0);
             return;
         }
 
@@ -400,7 +375,8 @@ static void LoadCRO(Interface* self, bool link_on_load_bug_fix) {
     if (result.IsError()) {
         LOG_ERROR(Service_LDR, "Error verifying CRO in CRR %08X", result.raw);
         Kernel::g_current_process->vm_manager.UnmapRange(cro_address, cro_size);
-        cmd_buff[1] = result.raw;
+        rb.Push(result);
+        rb.Push<u32>(0);
         return;
     }
 
@@ -409,7 +385,8 @@ static void LoadCRO(Interface* self, bool link_on_load_bug_fix) {
     if (result.IsError()) {
         LOG_ERROR(Service_LDR, "Error rebasing CRO %08X", result.raw);
         Kernel::g_current_process->vm_manager.UnmapRange(cro_address, cro_size);
-        cmd_buff[1] = result.raw;
+        rb.Push(result);
+        rb.Push<u32>(0);
         return;
     }
 
@@ -417,7 +394,8 @@ static void LoadCRO(Interface* self, bool link_on_load_bug_fix) {
     if (result.IsError()) {
         LOG_ERROR(Service_LDR, "Error linking CRO %08X", result.raw);
         Kernel::g_current_process->vm_manager.UnmapRange(cro_address, cro_size);
-        cmd_buff[1] = result.raw;
+        rb.Push(result);
+        rb.Push<u32>(0);
         return;
     }
 
@@ -435,7 +413,8 @@ static void LoadCRO(Interface* self, bool link_on_load_bug_fix) {
             if (result.IsError()) {
                 LOG_ERROR(Service_LDR, "Error unmapping memory block %08X", result.raw);
                 Kernel::g_current_process->vm_manager.UnmapRange(cro_address, cro_size);
-                cmd_buff[1] = result.raw;
+                rb.Push(result);
+                rb.Push<u32>(0);
                 return;
             }
         }
@@ -453,7 +432,8 @@ static void LoadCRO(Interface* self, bool link_on_load_bug_fix) {
         if (result.IsError()) {
             LOG_ERROR(Service_LDR, "Error reprotecting memory block %08X", result.raw);
             Kernel::g_current_process->vm_manager.UnmapRange(cro_address, fix_size);
-            cmd_buff[1] = result.raw;
+            rb.Push(result);
+            rb.Push<u32>(0);
             return;
         }
     }
@@ -463,8 +443,7 @@ static void LoadCRO(Interface* self, bool link_on_load_bug_fix) {
     LOG_INFO(Service_LDR, "CRO \"%s\" loaded at 0x%08X, fixed_end=0x%08X", cro.ModuleName().data(),
              cro_address, cro_address + fix_size);
 
-    cmd_buff[1] = RESULT_SUCCESS.raw;
-    cmd_buff[2] = fix_size;
+    rb.Push(RESULT_SUCCESS, fix_size);
 }
 
 template <bool link_on_load_bug_fix>
@@ -486,43 +465,35 @@ static void LoadCRO(Interface* self) {
  *      1 : Result of function, 0 on success, otherwise error code
  */
 static void UnloadCRO(Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-    VAddr cro_address = cmd_buff[1];
-    u32 zero = cmd_buff[2];
-    VAddr cro_buffer_ptr = cmd_buff[3];
-    u32 descriptor = cmd_buff[4];
-    u32 process = cmd_buff[5];
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x05, 3, 2);
+    VAddr cro_address = rp.Pop<u32>();
+    u32 zero = rp.Pop<u32>();
+    VAddr cro_buffer_ptr = rp.Pop<u32>();
+    Kernel::Handle process = rp.PopHandle();
 
-    LOG_DEBUG(Service_LDR, "called, cro_address=0x%08X, zero=%d, cro_buffer_ptr=0x%08X, "
-                           "descriptor=0x%08X, process=0x%08X",
-              cro_address, zero, cro_buffer_ptr, descriptor, process);
-
-    if (descriptor != 0) {
-        LOG_ERROR(Service_LDR, "IPC handle descriptor failed validation (0x%X)", descriptor);
-        cmd_buff[0] = IPC::MakeHeader(0, 1, 0);
-        cmd_buff[1] = ERROR_INVALID_DESCRIPTOR.raw;
-        return;
-    }
+    LOG_DEBUG(Service_LDR,
+              "called, cro_address=0x%08X, zero=%d, cro_buffer_ptr=0x%08X, process=0x%08X",
+              cro_address, zero, cro_buffer_ptr, process);
 
     CROHelper cro(cro_address);
 
-    cmd_buff[0] = IPC::MakeHeader(5, 1, 0);
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
 
     if (loaded_crs == 0) {
         LOG_ERROR(Service_LDR, "Not initialized");
-        cmd_buff[1] = ERROR_NOT_INITIALIZED.raw;
+        rb.Push(ERROR_NOT_INITIALIZED);
         return;
     }
 
     if (cro_address & Memory::PAGE_MASK) {
         LOG_ERROR(Service_LDR, "CRO address is not aligned");
-        cmd_buff[1] = ERROR_MISALIGNED_ADDRESS.raw;
+        rb.Push(ERROR_MISALIGNED_ADDRESS);
         return;
     }
 
     if (!cro.IsLoaded()) {
         LOG_ERROR(Service_LDR, "Invalid or not loaded CRO");
-        cmd_buff[1] = ERROR_NOT_LOADED.raw;
+        rb.Push(ERROR_NOT_LOADED);
         return;
     }
 
@@ -535,7 +506,7 @@ static void UnloadCRO(Interface* self) {
     ResultCode result = cro.Unlink(loaded_crs);
     if (result.IsError()) {
         LOG_ERROR(Service_LDR, "Error unlinking CRO %08X", result.raw);
-        cmd_buff[1] = result.raw;
+        rb.Push(result);
         return;
     }
 
@@ -545,7 +516,7 @@ static void UnloadCRO(Interface* self) {
         result = cro.ClearRelocations();
         if (result.IsError()) {
             LOG_ERROR(Service_LDR, "Error clearing relocations %08X", result.raw);
-            cmd_buff[1] = result.raw;
+            rb.Push(result);
             return;
         }
     }
@@ -565,7 +536,7 @@ static void UnloadCRO(Interface* self) {
 
     Core::CPU().ClearInstructionCache();
 
-    cmd_buff[1] = result.raw;
+    rb.Push(result);
 }
 
 /**
@@ -580,40 +551,31 @@ static void UnloadCRO(Interface* self) {
  *      1 : Result of function, 0 on success, otherwise error code
  */
 static void LinkCRO(Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-    VAddr cro_address = cmd_buff[1];
-    u32 descriptor = cmd_buff[2];
-    u32 process = cmd_buff[3];
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x06, 1, 2);
+    VAddr cro_address = rp.Pop<u32>();
+    Kernel::Handle process = rp.PopHandle();
 
-    LOG_DEBUG(Service_LDR, "called, cro_address=0x%08X, descriptor=0x%08X, process=0x%08X",
-              cro_address, descriptor, process);
-
-    if (descriptor != 0) {
-        LOG_ERROR(Service_LDR, "IPC handle descriptor failed validation (0x%X)", descriptor);
-        cmd_buff[0] = IPC::MakeHeader(0, 1, 0);
-        cmd_buff[1] = ERROR_INVALID_DESCRIPTOR.raw;
-        return;
-    }
+    LOG_DEBUG(Service_LDR, "called, cro_address=0x%08X, process=0x%08X", cro_address, process);
 
     CROHelper cro(cro_address);
 
-    cmd_buff[0] = IPC::MakeHeader(6, 1, 0);
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
 
     if (loaded_crs == 0) {
         LOG_ERROR(Service_LDR, "Not initialized");
-        cmd_buff[1] = ERROR_NOT_INITIALIZED.raw;
+        rb.Push(ERROR_NOT_INITIALIZED);
         return;
     }
 
     if (cro_address & Memory::PAGE_MASK) {
         LOG_ERROR(Service_LDR, "CRO address is not aligned");
-        cmd_buff[1] = ERROR_MISALIGNED_ADDRESS.raw;
+        rb.Push(ERROR_MISALIGNED_ADDRESS);
         return;
     }
 
     if (!cro.IsLoaded()) {
         LOG_ERROR(Service_LDR, "Invalid or not loaded CRO");
-        cmd_buff[1] = ERROR_NOT_LOADED.raw;
+        rb.Push(ERROR_NOT_LOADED);
         return;
     }
 
@@ -627,7 +589,7 @@ static void LinkCRO(Interface* self) {
     memory_synchronizer.SynchronizeOriginalMemory();
     Core::CPU().ClearInstructionCache();
 
-    cmd_buff[1] = result.raw;
+    rb.Push(result);
 }
 
 /**
@@ -642,40 +604,31 @@ static void LinkCRO(Interface* self) {
  *      1 : Result of function, 0 on success, otherwise error code
  */
 static void UnlinkCRO(Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-    VAddr cro_address = cmd_buff[1];
-    u32 descriptor = cmd_buff[2];
-    u32 process = cmd_buff[3];
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x07, 1, 2);
+    VAddr cro_address = rp.Pop<u32>();
+    Kernel::Handle process = rp.PopHandle();
 
-    LOG_DEBUG(Service_LDR, "called, cro_address=0x%08X, descriptor=0x%08X, process=0x%08X",
-              cro_address, descriptor, process);
-
-    if (descriptor != 0) {
-        LOG_ERROR(Service_LDR, "IPC handle descriptor failed validation (0x%X)", descriptor);
-        cmd_buff[0] = IPC::MakeHeader(0, 1, 0);
-        cmd_buff[1] = ERROR_INVALID_DESCRIPTOR.raw;
-        return;
-    }
+    LOG_DEBUG(Service_LDR, "called, cro_address=0x%08X, process=0x%08X", cro_address, process);
 
     CROHelper cro(cro_address);
 
-    cmd_buff[0] = IPC::MakeHeader(7, 1, 0);
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
 
     if (loaded_crs == 0) {
         LOG_ERROR(Service_LDR, "Not initialized");
-        cmd_buff[1] = ERROR_NOT_INITIALIZED.raw;
+        rb.Push(ERROR_NOT_INITIALIZED);
         return;
     }
 
     if (cro_address & Memory::PAGE_MASK) {
         LOG_ERROR(Service_LDR, "CRO address is not aligned");
-        cmd_buff[1] = ERROR_MISALIGNED_ADDRESS.raw;
+        rb.Push(ERROR_MISALIGNED_ADDRESS);
         return;
     }
 
     if (!cro.IsLoaded()) {
         LOG_ERROR(Service_LDR, "Invalid or not loaded CRO");
-        cmd_buff[1] = ERROR_NOT_LOADED.raw;
+        rb.Push(ERROR_NOT_LOADED);
         return;
     }
 
@@ -689,7 +642,7 @@ static void UnlinkCRO(Interface* self) {
     memory_synchronizer.SynchronizeOriginalMemory();
     Core::CPU().ClearInstructionCache();
 
-    cmd_buff[1] = result.raw;
+    rb.Push(result);
 }
 
 /**
@@ -704,28 +657,20 @@ static void UnlinkCRO(Interface* self) {
  *      1 : Result of function, 0 on success, otherwise error code
  */
 static void Shutdown(Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-    VAddr crs_buffer_ptr = cmd_buff[1];
-    u32 descriptor = cmd_buff[2];
-    u32 process = cmd_buff[3];
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x08, 1, 2);
+    VAddr crs_buffer_ptr = rp.Pop<u32>();
+    Kernel::Handle process = rp.PopHandle();
 
-    LOG_DEBUG(Service_LDR, "called, crs_buffer_ptr=0x%08X, descriptor=0x%08X, process=0x%08X",
-              crs_buffer_ptr, descriptor, process);
+    LOG_DEBUG(Service_LDR, "called, crs_buffer_ptr=0x%08X, process=0x%08X", crs_buffer_ptr,
+              process);
 
-    if (descriptor != 0) {
-        LOG_ERROR(Service_LDR, "IPC handle descriptor failed validation (0x%X)", descriptor);
-        cmd_buff[0] = IPC::MakeHeader(0, 1, 0);
-        cmd_buff[1] = ERROR_INVALID_DESCRIPTOR.raw;
-        return;
-    }
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
 
     if (loaded_crs == 0) {
         LOG_ERROR(Service_LDR, "Not initialized");
-        cmd_buff[1] = ERROR_NOT_INITIALIZED.raw;
+        rb.Push(ERROR_NOT_INITIALIZED);
         return;
     }
-
-    cmd_buff[0] = IPC::MakeHeader(8, 1, 0);
 
     CROHelper crs(loaded_crs);
     crs.Unrebase(true);
@@ -744,7 +689,7 @@ static void Shutdown(Interface* self) {
     }
 
     loaded_crs = 0;
-    cmd_buff[1] = result.raw;
+    rb.Push(result);
 }
 
 const Interface::FunctionInfo FunctionTable[] = {
