@@ -54,15 +54,17 @@ static void Initialize(Service::Interface* self) {
  *      3 : File handle
  */
 static void OpenFile(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
+    // The helper should be passed by argument to the function
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), {0x080201C2});
+    rp.Pop<u32>(); // Always 0 ?
 
-    ArchiveHandle archive_handle = MakeArchiveHandle(cmd_buff[2], cmd_buff[3]);
-    auto filename_type = static_cast<FileSys::LowPathType>(cmd_buff[4]);
-    u32 filename_size = cmd_buff[5];
+    ArchiveHandle archive_handle = rp.Pop<u64>();
+    auto filename_type = static_cast<FileSys::LowPathType>(rp.Pop<u32>());
+    u32 filename_size = rp.Pop<u32>();
     FileSys::Mode mode;
-    mode.hex = cmd_buff[6];
-    u32 attributes = cmd_buff[7]; // TODO(Link Mauve): do something with those attributes.
-    u32 filename_ptr = cmd_buff[9];
+    mode.hex = rp.Pop<u32>();
+    u32 attributes = rp.Pop<u32>(); // TODO(Link Mauve): do something with those attributes.
+    VAddr filename_ptr = rp.PopStaticBuffer();
     FileSys::Path file_path(filename_type, filename_size, filename_ptr);
 
     LOG_DEBUG(Service_FS, "path=%s, mode=%u attrs=%u", file_path.DebugStr().c_str(), mode.hex,
@@ -70,16 +72,17 @@ static void OpenFile(Service::Interface* self) {
 
     ResultVal<std::shared_ptr<File>> file_res =
         OpenFileFromArchive(archive_handle, file_path, mode);
-    cmd_buff[1] = file_res.Code().raw;
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
+    rb.Push(file_res.Code());
     if (file_res.Succeeded()) {
         std::shared_ptr<File> file = *file_res;
         auto sessions = ServerSession::CreateSessionPair(file->GetName(), file);
         file->ClientConnected(std::get<Kernel::SharedPtr<Kernel::ServerSession>>(sessions));
-        cmd_buff[3] = Kernel::g_handle_table
-                          .Create(std::get<Kernel::SharedPtr<Kernel::ClientSession>>(sessions))
-                          .MoveFrom();
+        rb.PushMoveHandles(Kernel::g_handle_table
+                               .Create(std::get<Kernel::SharedPtr<Kernel::ClientSession>>(sessions))
+                               .MoveFrom());
     } else {
-        cmd_buff[3] = 0;
+        rb.PushMoveHandles(0);
         LOG_ERROR(Service_FS, "failed to get a handle for file %s", file_path.DebugStr().c_str());
     }
 }
