@@ -17,7 +17,7 @@ namespace Texture {
 
 namespace {
 
-constexpr std::array<u8[2], 8> etc1_modifier_table = {{
+constexpr std::array<std::array<u8, 2>, 8> etc1_modifier_table = {{
     {2, 8}, {5, 17}, {9, 29}, {13, 42}, {18, 60}, {24, 80}, {33, 106}, {47, 183},
 }};
 
