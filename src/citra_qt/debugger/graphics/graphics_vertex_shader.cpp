@@ -16,7 +16,6 @@
 #include <QTreeView>
 #include "citra_qt/debugger/graphics/graphics_vertex_shader.h"
 #include "citra_qt/util/util.h"
-#include "video_core/pica.h"
 #include "video_core/pica_state.h"
 #include "video_core/shader/debug_data.h"
 #include "video_core/shader/shader.h"
@@ -359,7 +358,7 @@ void GraphicsVertexShaderWidget::DumpShader() {
     auto& config = Pica::g_state.regs.vs;
 
     Pica::DebugUtils::DumpShader(filename.toStdString(), config, setup,
-                                 Pica::g_state.regs.vs_output_attributes);
+                                 Pica::g_state.regs.rasterizer.vs_output_attributes);
 }
 
 GraphicsVertexShaderWidget::GraphicsVertexShaderWidget(

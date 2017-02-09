@@ -669,7 +669,7 @@ void InterpreterEngine::Run(const ShaderSetup& setup, UnitState& state) const {
 
 DebugData<true> InterpreterEngine::ProduceDebugInfo(const ShaderSetup& setup,
                                                     const AttributeBuffer& input,
-                                                    const Regs::ShaderConfig& config) const {
+                                                    const ShaderRegs& config) const {
     UnitState state;
     DebugData<true> debug_data;
 

@@ -18,8 +18,8 @@
 #include "citra_qt/util/util.h"
 #include "common/vector_math.h"
 #include "video_core/debug_utils/debug_utils.h"
-#include "video_core/pica.h"
 #include "video_core/pica_state.h"
+#include "video_core/regs.h"
 #include "video_core/texture/texture_decode.h"
 
 namespace {
@@ -123,15 +123,16 @@ void GPUCommandListModel::OnPicaTraceFinished(const Pica::DebugUtils::PicaTrace&
 void GPUCommandListWidget::OnCommandDoubleClicked(const QModelIndex& index) {
     const unsigned int command_id =
         list_widget->model()->data(index, GPUCommandListModel::CommandIdRole).toUInt();
-    if (COMMAND_IN_RANGE(command_id, texture0) || COMMAND_IN_RANGE(command_id, texture1) ||
-        COMMAND_IN_RANGE(command_id, texture2)) {
+    if (COMMAND_IN_RANGE(command_id, texturing.texture0) ||
+        COMMAND_IN_RANGE(command_id, texturing.texture1) ||
+        COMMAND_IN_RANGE(command_id, texturing.texture2)) {
 
         unsigned texture_index;
-        if (COMMAND_IN_RANGE(command_id, texture0)) {
+        if (COMMAND_IN_RANGE(command_id, texturing.texture0)) {
             texture_index = 0;
-        } else if (COMMAND_IN_RANGE(command_id, texture1)) {
+        } else if (COMMAND_IN_RANGE(command_id, texturing.texture1)) {
             texture_index = 1;
-        } else if (COMMAND_IN_RANGE(command_id, texture2)) {
+        } else if (COMMAND_IN_RANGE(command_id, texturing.texture2)) {
             texture_index = 2;
         } else {
             UNREACHABLE_MSG("Unknown texture command");
@@ -146,19 +147,20 @@ void GPUCommandListWidget::SetCommandInfo(const QModelIndex& index) {
 
     const unsigned int command_id =
         list_widget->model()->data(index, GPUCommandListModel::CommandIdRole).toUInt();
-    if (COMMAND_IN_RANGE(command_id, texture0) || COMMAND_IN_RANGE(command_id, texture1) ||
-        COMMAND_IN_RANGE(command_id, texture2)) {
+    if (COMMAND_IN_RANGE(command_id, texturing.texture0) ||
+        COMMAND_IN_RANGE(command_id, texturing.texture1) ||
+        COMMAND_IN_RANGE(command_id, texturing.texture2)) {
 
         unsigned texture_index;
-        if (COMMAND_IN_RANGE(command_id, texture0)) {
+        if (COMMAND_IN_RANGE(command_id, texturing.texture0)) {
             texture_index = 0;
-        } else if (COMMAND_IN_RANGE(command_id, texture1)) {
+        } else if (COMMAND_IN_RANGE(command_id, texturing.texture1)) {
             texture_index = 1;
         } else {
             texture_index = 2;
         }
 
-        const auto texture = Pica::g_state.regs.GetTextures()[texture_index];
+        const auto texture = Pica::g_state.regs.texturing.GetTextures()[texture_index];
         const auto config = texture.config;
         const auto format = texture.format;
 

@@ -12,10 +12,10 @@
 #include "common/logging/log.h"
 #include "common/vector_math.h"
 #include "video_core/clipper.h"
-#include "video_core/pica.h"
 #include "video_core/pica_state.h"
 #include "video_core/pica_types.h"
 #include "video_core/rasterizer.h"
+#include "video_core/regs.h"
 #include "video_core/shader/shader.h"
 
 using Pica::Rasterizer::Vertex;
@@ -64,10 +64,10 @@ static void InitScreenCoordinates(Vertex& vtx) {
     } viewport;
 
     const auto& regs = g_state.regs;
-    viewport.halfsize_x = float24::FromRaw(regs.viewport_size_x);
-    viewport.halfsize_y = float24::FromRaw(regs.viewport_size_y);
-    viewport.offset_x = float24::FromFloat32(static_cast<float>(regs.viewport_corner.x));
-    viewport.offset_y = float24::FromFloat32(static_cast<float>(regs.viewport_corner.y));
+    viewport.halfsize_x = float24::FromRaw(regs.rasterizer.viewport_size_x);
+    viewport.halfsize_y = float24::FromRaw(regs.rasterizer.viewport_size_y);
+    viewport.offset_x = float24::FromFloat32(static_cast<float>(regs.rasterizer.viewport_corner.x));
+    viewport.offset_y = float24::FromFloat32(static_cast<float>(regs.rasterizer.viewport_corner.y));
 
     float24 inv_w = float24::FromFloat32(1.f) / vtx.pos.w;
     vtx.color *= inv_w;

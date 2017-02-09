@@ -7,8 +7,8 @@
 #include "common/bit_set.h"
 #include "common/logging/log.h"
 #include "common/microprofile.h"
-#include "video_core/pica.h"
 #include "video_core/pica_state.h"
+#include "video_core/regs.h"
 #include "video_core/shader/shader.h"
 #include "video_core/shader/shader_interpreter.h"
 #ifdef ARCHITECTURE_x86_64
@@ -20,7 +20,7 @@ namespace Pica {
 
 namespace Shader {
 
-OutputVertex OutputVertex::FromAttributeBuffer(const Regs& regs, AttributeBuffer& input) {
+OutputVertex OutputVertex::FromAttributeBuffer(const RasterizerRegs& regs, AttributeBuffer& input) {
     // Setup output data
     union {
         OutputVertex ret{};
@@ -33,16 +33,16 @@ OutputVertex OutputVertex::FromAttributeBuffer(const Regs& regs, AttributeBuffer
     for (unsigned int i = 0; i < num_attributes; ++i) {
         const auto& output_register_map = regs.vs_output_attributes[i];
 
-        Regs::VSOutputAttributes::Semantic semantics[4] = {
+        RasterizerRegs::VSOutputAttributes::Semantic semantics[4] = {
             output_register_map.map_x, output_register_map.map_y, output_register_map.map_z,
             output_register_map.map_w};
 
         for (unsigned comp = 0; comp < 4; ++comp) {
-            Regs::VSOutputAttributes::Semantic semantic = semantics[comp];
+            RasterizerRegs::VSOutputAttributes::Semantic semantic = semantics[comp];
             float24* out = &vertex_slots[semantic];
             if (semantic < vertex_slots.size()) {
                 *out = input.attr[i][comp];
-            } else if (semantic != Regs::VSOutputAttributes::INVALID) {
+            } else if (semantic != RasterizerRegs::VSOutputAttributes::INVALID) {
                 LOG_ERROR(HW_GPU, "Invalid/unknown semantic id: %u", (unsigned int)semantic);
             }
         }
@@ -66,7 +66,7 @@ OutputVertex OutputVertex::FromAttributeBuffer(const Regs& regs, AttributeBuffer
     return ret;
 }
 
-void UnitState::LoadInput(const Regs::ShaderConfig& config, const AttributeBuffer& input) {
+void UnitState::LoadInput(const ShaderRegs& config, const AttributeBuffer& input) {
     const unsigned max_attribute = config.max_input_attribute_index;
 
     for (unsigned attr = 0; attr <= max_attribute; ++attr) {
@@ -75,7 +75,7 @@ void UnitState::LoadInput(const Regs::ShaderConfig& config, const AttributeBuffe
     }
 }
 
-void UnitState::WriteOutput(const Regs::ShaderConfig& config, AttributeBuffer& output) {
+void UnitState::WriteOutput(const ShaderRegs& config, AttributeBuffer& output) {
     unsigned int output_i = 0;
     for (unsigned int reg : Common::BitSet<u32>(config.output_mask)) {
         output.attr[output_i++] = registers.output[reg];

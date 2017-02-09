@@ -12,7 +12,7 @@
 #include "common/common_funcs.h"
 #include "common/common_types.h"
 #include "common/logging/log.h"
-#include "video_core/pica.h"
+#include "video_core/regs.h"
 
 using GLvec2 = std::array<GLfloat, 2>;
 using GLvec3 = std::array<GLfloat, 3>;
@@ -20,7 +20,7 @@ using GLvec4 = std::array<GLfloat, 4>;
 
 namespace PicaToGL {
 
-inline GLenum TextureFilterMode(Pica::Regs::TextureConfig::TextureFilter mode) {
+inline GLenum TextureFilterMode(Pica::TexturingRegs::TextureConfig::TextureFilter mode) {
     static const GLenum filter_mode_table[] = {
         GL_NEAREST, // TextureFilter::Nearest
         GL_LINEAR,  // TextureFilter::Linear
@@ -47,7 +47,7 @@ inline GLenum TextureFilterMode(Pica::Regs::TextureConfig::TextureFilter mode) {
     return gl_mode;
 }
 
-inline GLenum WrapMode(Pica::Regs::TextureConfig::WrapMode mode) {
+inline GLenum WrapMode(Pica::TexturingRegs::TextureConfig::WrapMode mode) {
     static const GLenum wrap_mode_table[] = {
         GL_CLAMP_TO_EDGE,   // WrapMode::ClampToEdge
         GL_CLAMP_TO_BORDER, // WrapMode::ClampToBorder
@@ -76,7 +76,7 @@ inline GLenum WrapMode(Pica::Regs::TextureConfig::WrapMode mode) {
     return gl_mode;
 }
 
-inline GLenum BlendEquation(Pica::Regs::BlendEquation equation) {
+inline GLenum BlendEquation(Pica::FramebufferRegs::BlendEquation equation) {
     static const GLenum blend_equation_table[] = {
         GL_FUNC_ADD,              // BlendEquation::Add
         GL_FUNC_SUBTRACT,         // BlendEquation::Subtract
@@ -96,7 +96,7 @@ inline GLenum BlendEquation(Pica::Regs::BlendEquation equation) {
     return blend_equation_table[(unsigned)equation];
 }
 
-inline GLenum BlendFunc(Pica::Regs::BlendFactor factor) {
+inline GLenum BlendFunc(Pica::FramebufferRegs::BlendFactor factor) {
     static const GLenum blend_func_table[] = {
         GL_ZERO,                     // BlendFactor::Zero
         GL_ONE,                      // BlendFactor::One
@@ -126,7 +126,7 @@ inline GLenum BlendFunc(Pica::Regs::BlendFactor factor) {
     return blend_func_table[(unsigned)factor];
 }
 
-inline GLenum LogicOp(Pica::Regs::LogicOp op) {
+inline GLenum LogicOp(Pica::FramebufferRegs::LogicOp op) {
     static const GLenum logic_op_table[] = {
         GL_CLEAR,         // Clear
         GL_AND,           // And
@@ -157,7 +157,7 @@ inline GLenum LogicOp(Pica::Regs::LogicOp op) {
     return logic_op_table[(unsigned)op];
 }
 
-inline GLenum CompareFunc(Pica::Regs::CompareFunc func) {
+inline GLenum CompareFunc(Pica::FramebufferRegs::CompareFunc func) {
     static const GLenum compare_func_table[] = {
         GL_NEVER,    // CompareFunc::Never
         GL_ALWAYS,   // CompareFunc::Always
@@ -180,7 +180,7 @@ inline GLenum CompareFunc(Pica::Regs::CompareFunc func) {
     return compare_func_table[(unsigned)func];
 }
 
-inline GLenum StencilOp(Pica::Regs::StencilAction action) {
+inline GLenum StencilOp(Pica::FramebufferRegs::StencilAction action) {
     static const GLenum stencil_op_table[] = {
         GL_KEEP,      // StencilAction::Keep
         GL_ZERO,      // StencilAction::Zero
@@ -210,7 +210,7 @@ inline GLvec4 ColorRGBA8(const u32 color) {
     }};
 }
 
-inline std::array<GLfloat, 3> LightColor(const Pica::Regs::LightColor& color) {
+inline std::array<GLfloat, 3> LightColor(const Pica::LightingRegs::LightColor& color) {
     return {{
         color.r / 255.0f, color.g / 255.0f, color.b / 255.0f,
     }};

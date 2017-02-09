@@ -16,11 +16,11 @@
 #include "core/tracer/recorder.h"
 #include "video_core/command_processor.h"
 #include "video_core/debug_utils/debug_utils.h"
-#include "video_core/pica.h"
 #include "video_core/pica_state.h"
 #include "video_core/pica_types.h"
 #include "video_core/primitive_assembly.h"
 #include "video_core/rasterizer_interface.h"
+#include "video_core/regs.h"
 #include "video_core/renderer_base.h"
 #include "video_core/shader/shader.h"
 #include "video_core/vertex_loader.h"
@@ -74,23 +74,23 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
         Service::GSP::SignalInterrupt(Service::GSP::InterruptId::P3D);
         break;
 
-    case PICA_REG_INDEX_WORKAROUND(triangle_topology, 0x25E):
-        g_state.primitive_assembler.Reconfigure(regs.triangle_topology);
+    case PICA_REG_INDEX(pipeline.triangle_topology):
+        g_state.primitive_assembler.Reconfigure(regs.pipeline.triangle_topology);
         break;
 
-    case PICA_REG_INDEX_WORKAROUND(restart_primitive, 0x25F):
+    case PICA_REG_INDEX(pipeline.restart_primitive):
         g_state.primitive_assembler.Reset();
         break;
 
-    case PICA_REG_INDEX_WORKAROUND(vs_default_attributes_setup.index, 0x232):
+    case PICA_REG_INDEX(pipeline.vs_default_attributes_setup.index):
         g_state.immediate.current_attribute = 0;
         default_attr_counter = 0;
         break;
 
     // Load default vertex input attributes
-    case PICA_REG_INDEX_WORKAROUND(vs_default_attributes_setup.set_value[0], 0x233):
-    case PICA_REG_INDEX_WORKAROUND(vs_default_attributes_setup.set_value[1], 0x234):
-    case PICA_REG_INDEX_WORKAROUND(vs_default_attributes_setup.set_value[2], 0x235): {
+    case PICA_REG_INDEX_WORKAROUND(pipeline.vs_default_attributes_setup.set_value[0], 0x233):
+    case PICA_REG_INDEX_WORKAROUND(pipeline.vs_default_attributes_setup.set_value[1], 0x234):
+    case PICA_REG_INDEX_WORKAROUND(pipeline.vs_default_attributes_setup.set_value[2], 0x235): {
         // TODO: Does actual hardware indeed keep an intermediate buffer or does
         //       it directly write the values?
         default_attr_write_buffer[default_attr_counter++] = value;
@@ -102,7 +102,7 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
         if (default_attr_counter >= 3) {
             default_attr_counter = 0;
 
-            auto& setup = regs.vs_default_attributes_setup;
+            auto& setup = regs.pipeline.vs_default_attributes_setup;
 
             if (setup.index >= 16) {
                 LOG_ERROR(HW_GPU, "Invalid VS default attribute index %d", (int)setup.index);
@@ -137,7 +137,7 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
 
                 immediate_input.attr[immediate_attribute_id] = attribute;
 
-                if (immediate_attribute_id < regs.max_input_attrib_index) {
+                if (immediate_attribute_id < regs.pipeline.max_input_attrib_index) {
                     immediate_attribute_id += 1;
                 } else {
                     MICROPROFILE_SCOPE(GPU_Drawing);
@@ -165,15 +165,16 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
                     };
 
                     g_state.primitive_assembler.SubmitVertex(
-                        Shader::OutputVertex::FromAttributeBuffer(regs, output), AddTriangle);
+                        Shader::OutputVertex::FromAttributeBuffer(regs.rasterizer, output),
+                        AddTriangle);
                 }
             }
         }
         break;
     }
 
-    case PICA_REG_INDEX(gpu_mode):
-        if (regs.gpu_mode == Regs::GPUMode::Configuring) {
+    case PICA_REG_INDEX(pipeline.gpu_mode):
+        if (regs.pipeline.gpu_mode == PipelineRegs::GPUMode::Configuring) {
             MICROPROFILE_SCOPE(GPU_Drawing);
 
             // Draw immediate mode triangles when GPU Mode is set to GPUMode::Configuring
@@ -185,19 +186,20 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
         }
         break;
 
-    case PICA_REG_INDEX_WORKAROUND(command_buffer.trigger[0], 0x23c):
-    case PICA_REG_INDEX_WORKAROUND(command_buffer.trigger[1], 0x23d): {
-        unsigned index = static_cast<unsigned>(id - PICA_REG_INDEX(command_buffer.trigger[0]));
-        u32* head_ptr =
-            (u32*)Memory::GetPhysicalPointer(regs.command_buffer.GetPhysicalAddress(index));
+    case PICA_REG_INDEX_WORKAROUND(pipeline.command_buffer.trigger[0], 0x23c):
+    case PICA_REG_INDEX_WORKAROUND(pipeline.command_buffer.trigger[1], 0x23d): {
+        unsigned index =
+            static_cast<unsigned>(id - PICA_REG_INDEX(pipeline.command_buffer.trigger[0]));
+        u32* head_ptr = (u32*)Memory::GetPhysicalPointer(
+            regs.pipeline.command_buffer.GetPhysicalAddress(index));
         g_state.cmd_list.head_ptr = g_state.cmd_list.current_ptr = head_ptr;
-        g_state.cmd_list.length = regs.command_buffer.GetSize(index) / sizeof(u32);
+        g_state.cmd_list.length = regs.pipeline.command_buffer.GetSize(index) / sizeof(u32);
         break;
     }
 
     // It seems like these trigger vertex rendering
-    case PICA_REG_INDEX(trigger_draw):
-    case PICA_REG_INDEX(trigger_draw_indexed): {
+    case PICA_REG_INDEX(pipeline.trigger_draw):
+    case PICA_REG_INDEX(pipeline.trigger_draw_indexed): {
         MICROPROFILE_SCOPE(GPU_Drawing);
 
 #if PICA_LOG_TEV
@@ -209,13 +211,13 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
         // Processes information about internal vertex attributes to figure out how a vertex is
         // loaded.
         // Later, these can be compiled and cached.
-        const u32 base_address = regs.vertex_attributes.GetPhysicalBaseAddress();
-        VertexLoader loader(regs);
+        const u32 base_address = regs.pipeline.vertex_attributes.GetPhysicalBaseAddress();
+        VertexLoader loader(regs.pipeline);
 
         // Load vertices
-        bool is_indexed = (id == PICA_REG_INDEX(trigger_draw_indexed));
+        bool is_indexed = (id == PICA_REG_INDEX(pipeline.trigger_draw_indexed));
 
-        const auto& index_info = regs.index_array;
+        const auto& index_info = regs.pipeline.index_array;
         const u8* index_address_8 = Memory::GetPhysicalPointer(base_address + index_info.offset);
         const u16* index_address_16 = reinterpret_cast<const u16*>(index_address_8);
         bool index_u16 = index_info.format != 0;
@@ -224,13 +226,13 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
 
         if (g_debug_context && g_debug_context->recorder) {
             for (int i = 0; i < 3; ++i) {
-                const auto texture = regs.GetTextures()[i];
+                const auto texture = regs.texturing.GetTextures()[i];
                 if (!texture.enabled)
                     continue;
 
                 u8* texture_data = Memory::GetPhysicalPointer(texture.config.GetPhysicalAddress());
                 g_debug_context->recorder->MemoryAccessed(
-                    texture_data, Pica::Regs::NibblesPerPixel(texture.format) *
+                    texture_data, Pica::TexturingRegs::NibblesPerPixel(texture.format) *
                                       texture.config.width / 2 * texture.config.height,
                     texture.config.GetPhysicalAddress());
             }
@@ -253,11 +255,11 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
 
         shader_engine->SetupBatch(g_state.vs, regs.vs.main_offset);
 
-        for (unsigned int index = 0; index < regs.num_vertices; ++index) {
+        for (unsigned int index = 0; index < regs.pipeline.num_vertices; ++index) {
             // Indexed rendering doesn't use the start offset
             unsigned int vertex =
                 is_indexed ? (index_u16 ? index_address_16[index] : index_address_8[index])
-                           : (index + regs.vertex_offset);
+                           : (index + regs.pipeline.vertex_offset);
 
             // -1 is a common special value used for primitive restart. Since it's unknown if
             // the PICA supports it, and it would mess up the caching, guard against it here.
@@ -295,7 +297,7 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
                 shader_unit.WriteOutput(regs.vs, output);
 
                 // Retrieve vertex from register data
-                output_vertex = Shader::OutputVertex::FromAttributeBuffer(regs, output);
+                output_vertex = Shader::OutputVertex::FromAttributeBuffer(regs.rasterizer, output);
 
                 if (is_indexed) {
                     vertex_cache[vertex_cache_pos] = output_vertex;
@@ -437,16 +439,16 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
         break;
     }
 
-    case PICA_REG_INDEX_WORKAROUND(fog_lut_data[0], 0xe8):
-    case PICA_REG_INDEX_WORKAROUND(fog_lut_data[1], 0xe9):
-    case PICA_REG_INDEX_WORKAROUND(fog_lut_data[2], 0xea):
-    case PICA_REG_INDEX_WORKAROUND(fog_lut_data[3], 0xeb):
-    case PICA_REG_INDEX_WORKAROUND(fog_lut_data[4], 0xec):
-    case PICA_REG_INDEX_WORKAROUND(fog_lut_data[5], 0xed):
-    case PICA_REG_INDEX_WORKAROUND(fog_lut_data[6], 0xee):
-    case PICA_REG_INDEX_WORKAROUND(fog_lut_data[7], 0xef): {
-        g_state.fog.lut[regs.fog_lut_offset % 128].raw = value;
-        regs.fog_lut_offset.Assign(regs.fog_lut_offset + 1);
+    case PICA_REG_INDEX_WORKAROUND(texturing.fog_lut_data[0], 0xe8):
+    case PICA_REG_INDEX_WORKAROUND(texturing.fog_lut_data[1], 0xe9):
+    case PICA_REG_INDEX_WORKAROUND(texturing.fog_lut_data[2], 0xea):
+    case PICA_REG_INDEX_WORKAROUND(texturing.fog_lut_data[3], 0xeb):
+    case PICA_REG_INDEX_WORKAROUND(texturing.fog_lut_data[4], 0xec):
+    case PICA_REG_INDEX_WORKAROUND(texturing.fog_lut_data[5], 0xed):
+    case PICA_REG_INDEX_WORKAROUND(texturing.fog_lut_data[6], 0xee):
+    case PICA_REG_INDEX_WORKAROUND(texturing.fog_lut_data[7], 0xef): {
+        g_state.fog.lut[regs.texturing.fog_lut_offset % 128].raw = value;
+        regs.texturing.fog_lut_offset.Assign(regs.texturing.fog_lut_offset + 1);
         break;
     }
 

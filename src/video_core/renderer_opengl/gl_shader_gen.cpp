@@ -7,13 +7,15 @@
 #include "common/assert.h"
 #include "common/bit_field.h"
 #include "common/logging/log.h"
-#include "video_core/pica.h"
+#include "video_core/regs.h"
 #include "video_core/renderer_opengl/gl_rasterizer.h"
 #include "video_core/renderer_opengl/gl_shader_gen.h"
 #include "video_core/renderer_opengl/gl_shader_util.h"
 
 using Pica::Regs;
-using TevStageConfig = Regs::TevStageConfig;
+using Pica::RasterizerRegs;
+using Pica::LightingRegs;
+using TevStageConfig = Pica::TexturingRegs::TevStageConfig;
 
 namespace GLShader {
 
@@ -46,10 +48,10 @@ static void AppendSource(std::string& out, const PicaShaderConfig& config,
     case Source::Texture0:
         // Only unit 0 respects the texturing type (according to 3DBrew)
         switch (state.texture0_type) {
-        case Pica::Regs::TextureConfig::Texture2D:
+        case Pica::TexturingRegs::TextureConfig::Texture2D:
             out += "texture(tex[0], texcoord[0])";
             break;
-        case Pica::Regs::TextureConfig::Projection2D:
+        case Pica::TexturingRegs::TextureConfig::Projection2D:
             out += "textureProj(tex[0], vec3(texcoord[0], texcoord0_w))";
             break;
         default:
@@ -276,8 +278,8 @@ static void AppendAlphaCombiner(std::string& out, TevStageConfig::Operation oper
 }
 
 /// Writes the if-statement condition used to evaluate alpha testing
-static void AppendAlphaTestCondition(std::string& out, Regs::CompareFunc func) {
-    using CompareFunc = Regs::CompareFunc;
+static void AppendAlphaTestCondition(std::string& out, Pica::FramebufferRegs::CompareFunc func) {
+    using CompareFunc = Pica::FramebufferRegs::CompareFunc;
     switch (func) {
     case CompareFunc::Never:
         out += "true";
@@ -307,7 +309,7 @@ static void AppendAlphaTestCondition(std::string& out, Regs::CompareFunc func) {
 /// Writes the code to emulate the specified TEV stage
 static void WriteTevStage(std::string& out, const PicaShaderConfig& config, unsigned index) {
     const auto stage =
-        static_cast<const Pica::Regs::TevStageConfig>(config.state.tev_stages[index]);
+        static_cast<const Pica::TexturingRegs::TevStageConfig>(config.state.tev_stages[index]);
     if (!IsPassThroughTevStage(stage)) {
         std::string index_name = std::to_string(index);
 
@@ -364,7 +366,7 @@ static void WriteLighting(std::string& out, const PicaShaderConfig& config) {
            "vec3 refl_value = vec3(0.0);\n";
 
     // Compute fragment normals
-    if (lighting.bump_mode == Pica::Regs::LightingBumpMode::NormalMap) {
+    if (lighting.bump_mode == LightingRegs::LightingBumpMode::NormalMap) {
         // Bump mapping is enabled using a normal map, read perturbation vector from the selected
         // texture
         std::string bump_selector = std::to_string(lighting.bump_selector);
@@ -378,7 +380,7 @@ static void WriteLighting(std::string& out, const PicaShaderConfig& config) {
                 "(1.0 - (surface_normal.x*surface_normal.x + surface_normal.y*surface_normal.y))";
             out += "surface_normal.z = sqrt(max(" + val + ", 0.0));\n";
         }
-    } else if (lighting.bump_mode == Pica::Regs::LightingBumpMode::TangentMap) {
+    } else if (lighting.bump_mode == LightingRegs::LightingBumpMode::TangentMap) {
         // Bump mapping is enabled using a tangent map
         LOG_CRITICAL(HW_GPU, "unimplemented bump mapping mode (tangent mapping)");
         UNIMPLEMENTED();
@@ -392,23 +394,24 @@ static void WriteLighting(std::string& out, const PicaShaderConfig& config) {
     out += "vec3 normal = normalize(quaternion_rotate(normquat, surface_normal));\n";
 
     // Gets the index into the specified lookup table for specular lighting
-    auto GetLutIndex = [&lighting](unsigned light_num, Regs::LightingLutInput input, bool abs) {
+    auto GetLutIndex = [&lighting](unsigned light_num, LightingRegs::LightingLutInput input,
+                                   bool abs) {
         const std::string half_angle = "normalize(normalize(view) + light_vector)";
         std::string index;
         switch (input) {
-        case Regs::LightingLutInput::NH:
+        case LightingRegs::LightingLutInput::NH:
             index = "dot(normal, " + half_angle + ")";
             break;
 
-        case Regs::LightingLutInput::VH:
+        case LightingRegs::LightingLutInput::VH:
             index = std::string("dot(normalize(view), " + half_angle + ")");
             break;
 
-        case Regs::LightingLutInput::NV:
+        case LightingRegs::LightingLutInput::NV:
             index = std::string("dot(normal, normalize(view))");
             break;
 
-        case Regs::LightingLutInput::LN:
+        case LightingRegs::LightingLutInput::LN:
             index = std::string("dot(light_vector, normal)");
             break;
 
@@ -432,7 +435,7 @@ static void WriteLighting(std::string& out, const PicaShaderConfig& config) {
     };
 
     // Gets the lighting lookup table value given the specified sampler and index
-    auto GetLutValue = [](Regs::LightingSampler sampler, std::string lut_index) {
+    auto GetLutValue = [](LightingRegs::LightingSampler sampler, std::string lut_index) {
         return std::string("texture(lut[" + std::to_string((unsigned)sampler / 4) + "], " +
                            lut_index + ")[" + std::to_string((unsigned)sampler & 3) + "]");
     };
@@ -461,8 +464,8 @@ static void WriteLighting(std::string& out, const PicaShaderConfig& config) {
                                 light_src + ".position) + " + light_src + ".dist_atten_bias)";
             index = "(OFFSET_256 + SCALE_256 * clamp(" + index + ", 0.0, 1.0))";
             const unsigned lut_num =
-                ((unsigned)Regs::LightingSampler::DistanceAttenuation + light_config.num);
-            dist_atten = GetLutValue((Regs::LightingSampler)lut_num, index);
+                ((unsigned)LightingRegs::LightingSampler::DistanceAttenuation + light_config.num);
+            dist_atten = GetLutValue((LightingRegs::LightingSampler)lut_num, index);
         }
 
         // If enabled, clamp specular component if lighting result is negative
@@ -472,24 +475,24 @@ static void WriteLighting(std::string& out, const PicaShaderConfig& config) {
         // Specular 0 component
         std::string d0_lut_value = "1.0";
         if (lighting.lut_d0.enable &&
-            Pica::Regs::IsLightingSamplerSupported(lighting.config,
-                                                   Pica::Regs::LightingSampler::Distribution0)) {
+            LightingRegs::IsLightingSamplerSupported(
+                lighting.config, LightingRegs::LightingSampler::Distribution0)) {
             // Lookup specular "distribution 0" LUT value
             std::string index =
                 GetLutIndex(light_config.num, lighting.lut_d0.type, lighting.lut_d0.abs_input);
             d0_lut_value = "(" + std::to_string(lighting.lut_d0.scale) + " * " +
-                           GetLutValue(Regs::LightingSampler::Distribution0, index) + ")";
+                           GetLutValue(LightingRegs::LightingSampler::Distribution0, index) + ")";
         }
         std::string specular_0 = "(" + d0_lut_value + " * " + light_src + ".specular_0)";
 
         // If enabled, lookup ReflectRed value, otherwise, 1.0 is used
         if (lighting.lut_rr.enable &&
-            Pica::Regs::IsLightingSamplerSupported(lighting.config,
-                                                   Pica::Regs::LightingSampler::ReflectRed)) {
+            LightingRegs::IsLightingSamplerSupported(lighting.config,
+                                                     LightingRegs::LightingSampler::ReflectRed)) {
             std::string index =
                 GetLutIndex(light_config.num, lighting.lut_rr.type, lighting.lut_rr.abs_input);
             std::string value = "(" + std::to_string(lighting.lut_rr.scale) + " * " +
-                                GetLutValue(Regs::LightingSampler::ReflectRed, index) + ")";
+                                GetLutValue(LightingRegs::LightingSampler::ReflectRed, index) + ")";
             out += "refl_value.r = " + value + ";\n";
         } else {
             out += "refl_value.r = 1.0;\n";
@@ -497,12 +500,13 @@ static void WriteLighting(std::string& out, const PicaShaderConfig& config) {
 
         // If enabled, lookup ReflectGreen value, otherwise, ReflectRed value is used
         if (lighting.lut_rg.enable &&
-            Pica::Regs::IsLightingSamplerSupported(lighting.config,
-                                                   Pica::Regs::LightingSampler::ReflectGreen)) {
+            LightingRegs::IsLightingSamplerSupported(lighting.config,
+                                                     LightingRegs::LightingSampler::ReflectGreen)) {
             std::string index =
                 GetLutIndex(light_config.num, lighting.lut_rg.type, lighting.lut_rg.abs_input);
             std::string value = "(" + std::to_string(lighting.lut_rg.scale) + " * " +
-                                GetLutValue(Regs::LightingSampler::ReflectGreen, index) + ")";
+                                GetLutValue(LightingRegs::LightingSampler::ReflectGreen, index) +
+                                ")";
             out += "refl_value.g = " + value + ";\n";
         } else {
             out += "refl_value.g = refl_value.r;\n";
@@ -510,12 +514,13 @@ static void WriteLighting(std::string& out, const PicaShaderConfig& config) {
 
         // If enabled, lookup ReflectBlue value, otherwise, ReflectRed value is used
         if (lighting.lut_rb.enable &&
-            Pica::Regs::IsLightingSamplerSupported(lighting.config,
-                                                   Pica::Regs::LightingSampler::ReflectBlue)) {
+            LightingRegs::IsLightingSamplerSupported(lighting.config,
+                                                     LightingRegs::LightingSampler::ReflectBlue)) {
             std::string index =
                 GetLutIndex(light_config.num, lighting.lut_rb.type, lighting.lut_rb.abs_input);
             std::string value = "(" + std::to_string(lighting.lut_rb.scale) + " * " +
-                                GetLutValue(Regs::LightingSampler::ReflectBlue, index) + ")";
+                                GetLutValue(LightingRegs::LightingSampler::ReflectBlue, index) +
+                                ")";
             out += "refl_value.b = " + value + ";\n";
         } else {
             out += "refl_value.b = refl_value.r;\n";
@@ -524,35 +529,39 @@ static void WriteLighting(std::string& out, const PicaShaderConfig& config) {
         // Specular 1 component
         std::string d1_lut_value = "1.0";
         if (lighting.lut_d1.enable &&
-            Pica::Regs::IsLightingSamplerSupported(lighting.config,
-                                                   Pica::Regs::LightingSampler::Distribution1)) {
+            LightingRegs::IsLightingSamplerSupported(
+                lighting.config, LightingRegs::LightingSampler::Distribution1)) {
             // Lookup specular "distribution 1" LUT value
             std::string index =
                 GetLutIndex(light_config.num, lighting.lut_d1.type, lighting.lut_d1.abs_input);
             d1_lut_value = "(" + std::to_string(lighting.lut_d1.scale) + " * " +
-                           GetLutValue(Regs::LightingSampler::Distribution1, index) + ")";
+                           GetLutValue(LightingRegs::LightingSampler::Distribution1, index) + ")";
         }
         std::string specular_1 =
             "(" + d1_lut_value + " * refl_value * " + light_src + ".specular_1)";
 
         // Fresnel
-        if (lighting.lut_fr.enable && Pica::Regs::IsLightingSamplerSupported(
-                                          lighting.config, Pica::Regs::LightingSampler::Fresnel)) {
+        if (lighting.lut_fr.enable &&
+            LightingRegs::IsLightingSamplerSupported(lighting.config,
+                                                     LightingRegs::LightingSampler::Fresnel)) {
             // Lookup fresnel LUT value
             std::string index =
                 GetLutIndex(light_config.num, lighting.lut_fr.type, lighting.lut_fr.abs_input);
             std::string value = "(" + std::to_string(lighting.lut_fr.scale) + " * " +
-                                GetLutValue(Regs::LightingSampler::Fresnel, index) + ")";
+                                GetLutValue(LightingRegs::LightingSampler::Fresnel, index) + ")";
 
             // Enabled for difffuse lighting alpha component
-            if (lighting.fresnel_selector == Pica::Regs::LightingFresnelSelector::PrimaryAlpha ||
-                lighting.fresnel_selector == Pica::Regs::LightingFresnelSelector::Both)
+            if (lighting.fresnel_selector == LightingRegs::LightingFresnelSelector::PrimaryAlpha ||
+                lighting.fresnel_selector == LightingRegs::LightingFresnelSelector::Both) {
                 out += "diffuse_sum.a  *= " + value + ";\n";
+            }
 
             // Enabled for the specular lighting alpha component
-            if (lighting.fresnel_selector == Pica::Regs::LightingFresnelSelector::SecondaryAlpha ||
-                lighting.fresnel_selector == Pica::Regs::LightingFresnelSelector::Both)
+            if (lighting.fresnel_selector ==
+                    LightingRegs::LightingFresnelSelector::SecondaryAlpha ||
+                lighting.fresnel_selector == LightingRegs::LightingFresnelSelector::Both) {
                 out += "specular_sum.a *= " + value + ";\n";
+            }
         }
 
         // Compute primary fragment color (diffuse lighting) function
@@ -633,16 +642,16 @@ vec4 secondary_fragment_color = vec4(0.0);
 )";
 
     // Do not do any sort of processing if it's obvious we're not going to pass the alpha test
-    if (state.alpha_test_func == Regs::CompareFunc::Never) {
+    if (state.alpha_test_func == Pica::FramebufferRegs::CompareFunc::Never) {
         out += "discard; }";
         return out;
     }
 
     // Append the scissor test
-    if (state.scissor_test_mode != Regs::ScissorMode::Disabled) {
+    if (state.scissor_test_mode != RasterizerRegs::ScissorMode::Disabled) {
         out += "if (";
         // Negate the condition if we have to keep only the pixels outside the scissor box
-        if (state.scissor_test_mode == Regs::ScissorMode::Include)
+        if (state.scissor_test_mode == RasterizerRegs::ScissorMode::Include)
             out += "!";
         out += "(gl_FragCoord.x >= scissor_x1 && "
                "gl_FragCoord.y >= scissor_y1 && "
@@ -652,7 +661,7 @@ vec4 secondary_fragment_color = vec4(0.0);
 
     out += "float z_over_w = 1.0 - gl_FragCoord.z * 2.0;\n";
     out += "float depth = z_over_w * depth_scale + depth_offset;\n";
-    if (state.depthmap_enable == Pica::Regs::DepthBuffering::WBuffering) {
+    if (state.depthmap_enable == Pica::RasterizerRegs::DepthBuffering::WBuffering) {
         out += "depth /= gl_FragCoord.w;\n";
     }
 
@@ -666,14 +675,14 @@ vec4 secondary_fragment_color = vec4(0.0);
     for (size_t index = 0; index < state.tev_stages.size(); ++index)
         WriteTevStage(out, config, (unsigned)index);
 
-    if (state.alpha_test_func != Regs::CompareFunc::Always) {
+    if (state.alpha_test_func != Pica::FramebufferRegs::CompareFunc::Always) {
         out += "if (";
         AppendAlphaTestCondition(out, state.alpha_test_func);
         out += ") discard;\n";
     }
 
     // Append fog combiner
-    if (state.fog_mode == Regs::FogMode::Fog) {
+    if (state.fog_mode == Pica::TexturingRegs::FogMode::Fog) {
         // Get index into fog LUT
         if (state.fog_flip) {
             out += "float fog_index = (1.0 - depth) * 128.0;\n";

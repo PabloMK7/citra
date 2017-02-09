@@ -12,8 +12,8 @@
 #include "common/common_funcs.h"
 #include "common/common_types.h"
 #include "common/vector_math.h"
-#include "video_core/pica.h"
 #include "video_core/pica_types.h"
+#include "video_core/regs.h"
 
 using nihstro::RegisterType;
 using nihstro::SourceRegister;
@@ -39,19 +39,19 @@ struct OutputVertex {
     INSERT_PADDING_WORDS(1);
     Math::Vec2<float24> tc2;
 
-    static OutputVertex FromAttributeBuffer(const Regs& regs, AttributeBuffer& output);
+    static OutputVertex FromAttributeBuffer(const RasterizerRegs& regs, AttributeBuffer& output);
 };
 #define ASSERT_POS(var, pos)                                                                       \
     static_assert(offsetof(OutputVertex, var) == pos * sizeof(float24), "Semantic at wrong "       \
                                                                         "offset.")
-ASSERT_POS(pos, Regs::VSOutputAttributes::POSITION_X);
-ASSERT_POS(quat, Regs::VSOutputAttributes::QUATERNION_X);
-ASSERT_POS(color, Regs::VSOutputAttributes::COLOR_R);
-ASSERT_POS(tc0, Regs::VSOutputAttributes::TEXCOORD0_U);
-ASSERT_POS(tc1, Regs::VSOutputAttributes::TEXCOORD1_U);
-ASSERT_POS(tc0_w, Regs::VSOutputAttributes::TEXCOORD0_W);
-ASSERT_POS(view, Regs::VSOutputAttributes::VIEW_X);
-ASSERT_POS(tc2, Regs::VSOutputAttributes::TEXCOORD2_U);
+ASSERT_POS(pos, RasterizerRegs::VSOutputAttributes::POSITION_X);
+ASSERT_POS(quat, RasterizerRegs::VSOutputAttributes::QUATERNION_X);
+ASSERT_POS(color, RasterizerRegs::VSOutputAttributes::COLOR_R);
+ASSERT_POS(tc0, RasterizerRegs::VSOutputAttributes::TEXCOORD0_U);
+ASSERT_POS(tc1, RasterizerRegs::VSOutputAttributes::TEXCOORD1_U);
+ASSERT_POS(tc0_w, RasterizerRegs::VSOutputAttributes::TEXCOORD0_W);
+ASSERT_POS(view, RasterizerRegs::VSOutputAttributes::VIEW_X);
+ASSERT_POS(tc2, RasterizerRegs::VSOutputAttributes::TEXCOORD2_U);
 #undef ASSERT_POS
 static_assert(std::is_pod<OutputVertex>::value, "Structure is not POD");
 static_assert(sizeof(OutputVertex) == 24 * sizeof(float), "OutputVertex has invalid size");
@@ -116,9 +116,9 @@ struct UnitState {
      * @param config Shader configuration registers corresponding to the unit.
      * @param input Attribute buffer to load into the input registers.
      */
-    void LoadInput(const Regs::ShaderConfig& config, const AttributeBuffer& input);
+    void LoadInput(const ShaderRegs& config, const AttributeBuffer& input);
 
-    void WriteOutput(const Regs::ShaderConfig& config, AttributeBuffer& output);
+    void WriteOutput(const ShaderRegs& config, AttributeBuffer& output);
 };
 
 struct ShaderSetup {

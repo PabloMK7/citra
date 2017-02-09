@@ -23,7 +23,7 @@ public:
      * @return Debug information for this shader with regards to the given vertex
      */
     DebugData<true> ProduceDebugInfo(const ShaderSetup& setup, const AttributeBuffer& input,
-                                     const Regs::ShaderConfig& config) const;
+                                     const ShaderRegs& config) const;
 };
 
 } // namespace
