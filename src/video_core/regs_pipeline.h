@@ -14,7 +14,7 @@
 namespace Pica {
 
 struct PipelineRegs {
-    enum class VertexAttributeFormat : u64 {
+    enum class VertexAttributeFormat : u32 {
         BYTE = 0,
         UBYTE = 1,
         SHORT = 2,
@@ -31,34 +31,37 @@ struct PipelineRegs {
         // Descriptor for internal vertex attributes
         union {
             BitField<0, 2, VertexAttributeFormat> format0; // size of one element
-            BitField<2, 2, u64> size0;                     // number of elements minus 1
+            BitField<2, 2, u32> size0;                     // number of elements minus 1
             BitField<4, 2, VertexAttributeFormat> format1;
-            BitField<6, 2, u64> size1;
+            BitField<6, 2, u32> size1;
             BitField<8, 2, VertexAttributeFormat> format2;
-            BitField<10, 2, u64> size2;
+            BitField<10, 2, u32> size2;
             BitField<12, 2, VertexAttributeFormat> format3;
-            BitField<14, 2, u64> size3;
+            BitField<14, 2, u32> size3;
             BitField<16, 2, VertexAttributeFormat> format4;
-            BitField<18, 2, u64> size4;
+            BitField<18, 2, u32> size4;
             BitField<20, 2, VertexAttributeFormat> format5;
-            BitField<22, 2, u64> size5;
+            BitField<22, 2, u32> size5;
             BitField<24, 2, VertexAttributeFormat> format6;
-            BitField<26, 2, u64> size6;
+            BitField<26, 2, u32> size6;
             BitField<28, 2, VertexAttributeFormat> format7;
-            BitField<30, 2, u64> size7;
-            BitField<32, 2, VertexAttributeFormat> format8;
-            BitField<34, 2, u64> size8;
-            BitField<36, 2, VertexAttributeFormat> format9;
-            BitField<38, 2, u64> size9;
-            BitField<40, 2, VertexAttributeFormat> format10;
-            BitField<42, 2, u64> size10;
-            BitField<44, 2, VertexAttributeFormat> format11;
-            BitField<46, 2, u64> size11;
+            BitField<30, 2, u32> size7;
+        };
 
-            BitField<48, 12, u64> attribute_mask;
+        union {
+            BitField<0, 2, VertexAttributeFormat> format8;
+            BitField<2, 2, u32> size8;
+            BitField<4, 2, VertexAttributeFormat> format9;
+            BitField<6, 2, u32> size9;
+            BitField<8, 2, VertexAttributeFormat> format10;
+            BitField<10, 2, u32> size10;
+            BitField<12, 2, VertexAttributeFormat> format11;
+            BitField<14, 2, u32> size11;
+
+            BitField<16, 12, u32> attribute_mask;
 
             // number of total attributes minus 1
-            BitField<60, 4, u64> max_attribute_index;
+            BitField<28, 4, u32> max_attribute_index;
         };
 
         inline VertexAttributeFormat GetFormat(int n) const {
@@ -69,7 +72,7 @@ struct PipelineRegs {
         }
 
         inline int GetNumElements(int n) const {
-            u64 sizes[] = {size0, size1, size2, size3, size4,  size5,
+            u32 sizes[] = {size0, size1, size2, size3, size4,  size5,
                            size6, size7, size8, size9, size10, size11};
             return (int)sizes[n] + 1;
         }
@@ -99,27 +102,30 @@ struct PipelineRegs {
             u32 data_offset;
 
             union {
-                BitField<0, 4, u64> comp0;
-                BitField<4, 4, u64> comp1;
-                BitField<8, 4, u64> comp2;
-                BitField<12, 4, u64> comp3;
-                BitField<16, 4, u64> comp4;
-                BitField<20, 4, u64> comp5;
-                BitField<24, 4, u64> comp6;
-                BitField<28, 4, u64> comp7;
-                BitField<32, 4, u64> comp8;
-                BitField<36, 4, u64> comp9;
-                BitField<40, 4, u64> comp10;
-                BitField<44, 4, u64> comp11;
+                BitField<0, 4, u32> comp0;
+                BitField<4, 4, u32> comp1;
+                BitField<8, 4, u32> comp2;
+                BitField<12, 4, u32> comp3;
+                BitField<16, 4, u32> comp4;
+                BitField<20, 4, u32> comp5;
+                BitField<24, 4, u32> comp6;
+                BitField<28, 4, u32> comp7;
+            };
+
+            union {
+                BitField<0, 4, u32> comp8;
+                BitField<4, 4, u32> comp9;
+                BitField<8, 4, u32> comp10;
+                BitField<12, 4, u32> comp11;
 
                 // bytes for a single vertex in this loader
-                BitField<48, 8, u64> byte_count;
+                BitField<16, 8, u32> byte_count;
 
-                BitField<60, 4, u64> component_count;
+                BitField<28, 4, u32> component_count;
             };
 
             inline int GetComponent(int n) const {
-                u64 components[] = {comp0, comp1, comp2, comp3, comp4,  comp5,
+                u32 components[] = {comp0, comp1, comp2, comp3, comp4,  comp5,
                                     comp6, comp7, comp8, comp9, comp10, comp11};
                 return (int)components[n];
             }
