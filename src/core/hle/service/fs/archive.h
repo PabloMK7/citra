@@ -26,7 +26,7 @@ namespace FS {
 
 /// Supported archive types
 enum class ArchiveIdCode : u32 {
-    RomFS = 0x00000003,
+    SelfNCCH = 0x00000003,
     SaveData = 0x00000004,
     ExtSaveData = 0x00000006,
     SharedExtSaveData = 0x00000007,

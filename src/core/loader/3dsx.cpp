@@ -5,7 +5,7 @@
 #include <algorithm>
 #include <vector>
 #include "common/logging/log.h"
-#include "core/file_sys/archive_romfs.h"
+#include "core/file_sys/archive_selfncch.h"
 #include "core/hle/kernel/process.h"
 #include "core/hle/kernel/resource_limit.h"
 #include "core/hle/service/fs/archive.h"
@@ -277,8 +277,8 @@ ResultStatus AppLoader_THREEDSX::Load() {
 
     Kernel::g_current_process->Run(48, Kernel::DEFAULT_STACK_SIZE);
 
-    Service::FS::RegisterArchiveType(std::make_unique<FileSys::ArchiveFactory_RomFS>(*this),
-                                     Service::FS::ArchiveIdCode::RomFS);
+    Service::FS::RegisterArchiveType(std::make_unique<FileSys::ArchiveFactory_SelfNCCH>(*this),
+                                     Service::FS::ArchiveIdCode::SelfNCCH);
 
     is_loaded = true;
     return ResultStatus::Success;

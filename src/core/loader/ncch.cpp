@@ -8,7 +8,7 @@
 #include "common/logging/log.h"
 #include "common/string_util.h"
 #include "common/swap.h"
-#include "core/file_sys/archive_romfs.h"
+#include "core/file_sys/archive_selfncch.h"
 #include "core/hle/kernel/process.h"
 #include "core/hle/kernel/resource_limit.h"
 #include "core/hle/service/cfg/cfg.h"
@@ -342,8 +342,8 @@ ResultStatus AppLoader_NCCH::Load() {
     if (ResultStatus::Success != result)
         return result;
 
-    Service::FS::RegisterArchiveType(std::make_unique<FileSys::ArchiveFactory_RomFS>(*this),
-                                     Service::FS::ArchiveIdCode::RomFS);
+    Service::FS::RegisterArchiveType(std::make_unique<FileSys::ArchiveFactory_SelfNCCH>(*this),
+                                     Service::FS::ArchiveIdCode::SelfNCCH);
 
     ParseRegionLockoutInfo();
 
