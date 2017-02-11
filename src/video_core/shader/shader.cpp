@@ -39,9 +39,8 @@ OutputVertex OutputVertex::FromAttributeBuffer(const RasterizerRegs& regs, Attri
 
         for (unsigned comp = 0; comp < 4; ++comp) {
             RasterizerRegs::VSOutputAttributes::Semantic semantic = semantics[comp];
-            float24* out = &vertex_slots[semantic];
             if (semantic < vertex_slots.size()) {
-                *out = input.attr[i][comp];
+                vertex_slots[semantic] = input.attr[i][comp];
             } else if (semantic != RasterizerRegs::VSOutputAttributes::INVALID) {
                 LOG_ERROR(HW_GPU, "Invalid/unknown semantic id: %u", (unsigned int)semantic);
             }
