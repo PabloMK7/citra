@@ -67,10 +67,6 @@ System::ResultStatus System::SingleStep() {
 }
 
 System::ResultStatus System::Load(EmuWindow* emu_window, const std::string& filepath) {
-    if (app_loader) {
-        app_loader.reset();
-    }
-
     app_loader = Loader::GetLoader(filepath);
 
     if (!app_loader) {
@@ -123,10 +119,6 @@ void System::Reschedule() {
 }
 
 System::ResultStatus System::Init(EmuWindow* emu_window, u32 system_mode) {
-    if (cpu_core) {
-        cpu_core.reset();
-    }
-
     Memory::Init();
 
     if (Settings::values.use_cpu_jit) {
@@ -159,7 +151,8 @@ void System::Shutdown() {
     Kernel::Shutdown();
     HW::Shutdown();
     CoreTiming::Shutdown();
-    cpu_core.reset();
+    cpu_core = nullptr;
+    app_loader = nullptr;
 
     LOG_DEBUG(Core, "Shutdown OK");
 }
