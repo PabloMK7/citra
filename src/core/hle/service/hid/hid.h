@@ -42,8 +42,6 @@ struct PadState {
         BitField<14, 1, u32> zl;
         BitField<15, 1, u32> zr;
 
-        BitField<20, 1, u32> touch;
-
         BitField<24, 1, u32> c_right;
         BitField<25, 1, u32> c_left;
         BitField<26, 1, u32> c_up;
@@ -202,8 +200,6 @@ const PadState PAD_Y = {{1u << 11}};
 
 const PadState PAD_ZL = {{1u << 14}};
 const PadState PAD_ZR = {{1u << 15}};
-
-const PadState PAD_TOUCH = {{1u << 20}};
 
 const PadState PAD_C_RIGHT = {{1u << 24}};
 const PadState PAD_C_LEFT = {{1u << 25}};

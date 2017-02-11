@@ -70,14 +70,12 @@ void EmuWindow::TouchPressed(unsigned framebuffer_x, unsigned framebuffer_y) {
               (framebuffer_layout.bottom_screen.bottom - framebuffer_layout.bottom_screen.top);
 
     touch_pressed = true;
-    pad_state.touch.Assign(1);
 }
 
 void EmuWindow::TouchReleased() {
     touch_pressed = false;
     touch_x = 0;
     touch_y = 0;
-    pad_state.touch.Assign(0);
 }
 
 void EmuWindow::TouchMoved(unsigned framebuffer_x, unsigned framebuffer_y) {
