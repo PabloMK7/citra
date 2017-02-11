@@ -119,7 +119,7 @@ inline void RequestBuilder::Push(u64 value) {
 
 template <>
 inline void RequestBuilder::Push(bool value) {
-    Push(u8(value));
+    Push(static_cast<u8>(value));
 }
 
 template <>
@@ -277,7 +277,7 @@ inline u64 RequestParser::Pop() {
 
 template <>
 inline bool RequestParser::Pop() {
-    return Pop<u8>() != 0; // != 0 to remove warning C4800
+    return Pop<u8>() != 0;
 }
 
 template <>

@@ -191,7 +191,7 @@ static void SetSpacialDithering(Interface* self) {
 static void GetSpacialDithering(Interface* self) {
     IPC::RequestBuilder rb(Kernel::GetCommandBuffer(), 0xA, 2, 0);
     rb.Push(RESULT_SUCCESS);
-    rb.Push(bool(spacial_dithering_enabled));
+    rb.Push(spacial_dithering_enabled != 0);
 
     LOG_WARNING(Service_Y2R, "(STUBBED) called");
 }

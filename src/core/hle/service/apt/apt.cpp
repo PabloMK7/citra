@@ -72,7 +72,7 @@ void GetSharedFont(Service::Interface* self) {
     if (!shared_font_mem) {
         LOG_ERROR(Service_APT, "shared font file missing - go dump it from your 3ds");
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(u32(-1)); // Failure
+        rb.Push<u32>(-1); // TODO: Find the right error code
         return;
     }
 
@@ -112,7 +112,7 @@ void GetLockHandle(Service::Interface* self) {
     IPC::RequestBuilder rb = rp.MakeBuilder(3, 2);
     rb.Push(RESULT_SUCCESS);    // No error
     rb.Push(applet_attributes); // Applet Attributes, this value is passed to Enable.
-    rb.Push(u32(0));            // Least significant bit = power button state
+    rb.Push<u32>(0);            // Least significant bit = power button state
     Kernel::Handle handleCopy = Kernel::g_handle_table.Create(lock).MoveFrom();
     rb.PushCopyHandles(handleCopy);
 
@@ -134,8 +134,8 @@ void GetAppletManInfo(Service::Interface* self) {
     u32 unk = rp.Pop<u32>();
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS); // No error
-    rb.Push(u32(0));
-    rb.Push(u32(0));
+    rb.Push<u32>(0);
+    rb.Push<u32>(0);
     rb.Push(static_cast<u32>(AppletId::HomeMenu));    // Home menu AppID
     rb.Push(static_cast<u32>(AppletId::Application)); // TODO(purpasmart96): Do this correctly
 
@@ -150,12 +150,12 @@ void IsRegistered(Service::Interface* self) {
 
     // TODO(Subv): An application is considered "registered" if it has already called APT::Enable
     // handle this properly once we implement multiprocess support.
-    u32 isRegistered = 0; // Set to not registered by default
+    bool isRegistered = false; // Set to not registered by default
 
     if (app_id == static_cast<u32>(AppletId::AnyLibraryApplet)) {
-        isRegistered = HLE::Applets::IsLibraryAppletRunning() ? 1 : 0;
+        isRegistered = HLE::Applets::IsLibraryAppletRunning() ? true : false;
     } else if (auto applet = HLE::Applets::Applet::Get(static_cast<AppletId>(app_id))) {
-        isRegistered = 1; // Set to registered
+        isRegistered = true; // Set to registered
     }
     rb.Push(isRegistered);
 
@@ -189,7 +189,7 @@ void SendParameter(Service::Interface* self) {
 
     if (dest_applet == nullptr) {
         LOG_ERROR(Service_APT, "Unknown applet id=0x%08X", dst_app_id);
-        rb.Push(u32(-1)); // TODO(Subv): Find the right error code
+        rb.Push<u32>(-1); // TODO(Subv): Find the right error code
         return;
     }
 
@@ -227,7 +227,7 @@ void ReceiveParameter(Service::Interface* self) {
     rb.Push(next_parameter.sender_id);
     rb.Push(next_parameter.signal); // Signal type
     ASSERT_MSG(next_parameter.buffer.size() <= buffer_size, "Input static buffer is too small !");
-    rb.Push(u32(next_parameter.buffer.size())); // Parameter buffer size
+    rb.Push(static_cast<u32>(next_parameter.buffer.size())); // Parameter buffer size
 
     rb.PushMoveHandles((next_parameter.object != nullptr)
                            ? Kernel::g_handle_table.Create(next_parameter.object).MoveFrom()
@@ -256,7 +256,7 @@ void GlanceParameter(Service::Interface* self) {
     rb.Push(next_parameter.sender_id);
     rb.Push(next_parameter.signal); // Signal type
     ASSERT_MSG(next_parameter.buffer.size() <= buffer_size, "Input static buffer is too small !");
-    rb.Push(u32(next_parameter.buffer.size())); // Parameter buffer size
+    rb.Push(static_cast<u32>(next_parameter.buffer.size())); // Parameter buffer size
 
     rb.PushCopyHandles((next_parameter.object != nullptr)
                            ? Kernel::g_handle_table.Create(next_parameter.object).MoveFrom()
@@ -277,7 +277,7 @@ void CancelParameter(Service::Interface* self) {
     u32 receiver_appid = rp.Pop<u32>();
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS); // No error
-    rb.Push(u32(1));         // Set to Success
+    rb.Push(true);           // Set to Success
 
     LOG_WARNING(Service_APT, "(STUBBED) called check_sender=0x%08X, sender_appid=0x%08X, "
                              "check_receiver=0x%08X, receiver_appid=0x%08X",
@@ -414,7 +414,7 @@ void StartLibraryApplet(Service::Interface* self) {
     if (applet == nullptr) {
         LOG_ERROR(Service_APT, "unknown applet id=%08X", applet_id);
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0, false);
-        rb.Push(u32(-1)); // TODO(Subv): Find the right error code
+        rb.Push<u32>(-1); // TODO(Subv): Find the right error code
         return;
     }
 
@@ -433,10 +433,10 @@ void StartLibraryApplet(Service::Interface* self) {
 
 void CancelLibraryApplet(Service::Interface* self) {
     IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x3B, 1, 0); // 0x003B0040
-    u32 exiting = rp.Pop<u32>() & 0xFF;
+    bool exiting = rp.Pop<bool>();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(u32(1));
+    rb.Push<u32>(1);
 
     LOG_WARNING(Service_APT, "(STUBBED) called exiting=%u", exiting);
 }
@@ -473,9 +473,9 @@ void GetAppletInfo(Service::Interface* self) {
         u64 titileId = 0;
         rb.Push(titileId);
         rb.Push(static_cast<u32>(Service::FS::MediaType::NAND));
-        rb.Push(u64(1)); // Registered
-        rb.Push(u64(1)); // Loaded
-        rb.Push(u64(0)); // Applet Attributes
+        rb.Push(true);   // Registered
+        rb.Push(true);   // Loaded
+        rb.Push<u32>(0); // Applet Attributes
     } else {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(ResultCode(ErrorDescription::NotFound, ErrorModule::Applet, ErrorSummary::NotFound,
@@ -514,7 +514,7 @@ void GetStartupArgument(Service::Interface* self) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
-    rb.Push(u32(0));
+    rb.Push<u32>(0);
 }
 
 void Wrap(Service::Interface* self) {
@@ -624,7 +624,7 @@ void CheckNew3DSApp(Service::Interface* self) {
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     if (unknown_ns_state_field) {
         rb.Push(RESULT_SUCCESS);
-        rb.Push(u32(0));
+        rb.Push<u32>(0);
     } else {
         PTM::CheckNew3DS(rb);
     }
