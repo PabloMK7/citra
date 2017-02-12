@@ -72,7 +72,7 @@ QVariant GPUCommandListModel::data(const QModelIndex& index, int role) const {
     if (role == Qt::DisplayRole) {
         switch (index.column()) {
         case 0:
-            return QString::fromLatin1(Pica::Regs::GetCommandName(write.cmd_id).c_str());
+            return QString::fromLatin1(Pica::Regs::GetRegisterName(write.cmd_id));
         case 1:
             return QString("%1").arg(write.cmd_id, 3, 16, QLatin1Char('0'));
         case 2:

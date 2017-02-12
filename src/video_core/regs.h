@@ -45,45 +45,30 @@ namespace Pica {
 #endif // _MSC_VER
 
 struct Regs {
-    INSERT_PADDING_WORDS(0x10);
-    u32 trigger_irq;
-    INSERT_PADDING_WORDS(0x2f);
-    RasterizerRegs rasterizer;
-    TexturingRegs texturing;
-    FramebufferRegs framebuffer;
-    LightingRegs lighting;
-    PipelineRegs pipeline;
-    ShaderRegs gs;
-    ShaderRegs vs;
-    INSERT_PADDING_WORDS(0x20);
+    static constexpr size_t NUM_REGS = 0x300;
 
-    // Map register indices to names readable by humans
-    // Used for debugging purposes, so performance is not an issue here
-    static std::string GetCommandName(int index);
+    union {
+        struct {
+            INSERT_PADDING_WORDS(0x10);
+            u32 trigger_irq;
+            INSERT_PADDING_WORDS(0x2f);
+            RasterizerRegs rasterizer;
+            TexturingRegs texturing;
+            FramebufferRegs framebuffer;
+            LightingRegs lighting;
+            PipelineRegs pipeline;
+            ShaderRegs gs;
+            ShaderRegs vs;
+            INSERT_PADDING_WORDS(0x20);
+        };
+        std::array<u32, NUM_REGS> reg_array;
+    };
 
-    static constexpr size_t NumIds() {
-        return sizeof(Regs) / sizeof(u32);
-    }
-
-    const u32& operator[](int index) const {
-        const u32* content = reinterpret_cast<const u32*>(this);
-        return content[index];
-    }
-
-    u32& operator[](int index) {
-        u32* content = reinterpret_cast<u32*>(this);
-        return content[index];
-    }
-
-private:
-    /*
-    * Most physical addresses which Pica registers refer to are 8-byte aligned.
-    * This function should be used to get the address from a raw register value.
-    */
-    static inline u32 DecodeAddressRegister(u32 register_value) {
-        return register_value * 8;
-    }
+    /// Map register indices to names readable by humans
+    static const char* GetRegisterName(u16 index);
 };
+
+static_assert(sizeof(Regs) == Regs::NUM_REGS * sizeof(u32), "Regs struct has wrong size");
 
 // TODO: MSVC does not support using offsetof() on non-static data members even though this
 //       is technically allowed since C++11. This macro should be enabled once MSVC adds
@@ -153,12 +138,5 @@ ASSERT_REG_POSITION(vs, 0x2b0);
 
 #undef ASSERT_REG_POSITION
 #endif // !defined(_MSC_VER)
-
-// The total number of registers is chosen arbitrarily, but let's make sure it's not some odd value
-// anyway.
-static_assert(sizeof(Regs) <= 0x300 * sizeof(u32),
-              "Register set structure larger than it should be");
-static_assert(sizeof(Regs) >= 0x300 * sizeof(u32),
-              "Register set structure smaller than it should be");
 
 } // namespace Pica

@@ -5,7 +5,7 @@
 #include <cstring>
 #include "video_core/pica.h"
 #include "video_core/pica_state.h"
-#include "video_core/regs.h"
+#include "video_core/regs_pipeline.h"
 
 namespace Pica {
 

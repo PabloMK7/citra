@@ -2,8 +2,8 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <algorithm>
 #include <iterator>
-#include <unordered_map>
 #include <utility>
 
 #include "common/common_types.h"
@@ -474,19 +474,14 @@ static const std::pair<u16, const char*> register_names[] = {
     {0x2DD, "GPUREG_VSH_OPDESCS_DATA7"},
 };
 
-std::string Regs::GetCommandName(int index) {
-    static std::unordered_map<u32, const char*> map;
-
-    if (map.empty()) {
-        map.insert(std::begin(register_names), std::end(register_names));
-    }
-
-    // Return empty string if no match is found
-    auto it = map.find(index);
-    if (it != map.end()) {
-        return it->second;
+const char* Regs::GetRegisterName(u16 index) {
+    auto found = std::lower_bound(std::begin(register_names), std::end(register_names), index,
+                                  [](auto p, auto i) { return p.first < i; });
+    if (found->first == index) {
+        return found->second;
     } else {
-        return std::string();
+        // Return empty string if no match is found
+        return "";
     }
 }
 

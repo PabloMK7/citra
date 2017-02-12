@@ -15,7 +15,9 @@
 #include "common/vector_math.h"
 #include "core/hw/gpu.h"
 #include "video_core/pica_state.h"
-#include "video_core/regs.h"
+#include "video_core/regs_framebuffer.h"
+#include "video_core/regs_rasterizer.h"
+#include "video_core/regs_texturing.h"
 #include "video_core/renderer_opengl/gl_rasterizer.h"
 #include "video_core/renderer_opengl/gl_shader_gen.h"
 #include "video_core/renderer_opengl/gl_shader_util.h"
@@ -25,18 +27,6 @@
 MICROPROFILE_DEFINE(OpenGL_Drawing, "OpenGL", "Drawing", MP_RGB(128, 128, 192));
 MICROPROFILE_DEFINE(OpenGL_Blits, "OpenGL", "Blits", MP_RGB(100, 100, 255));
 MICROPROFILE_DEFINE(OpenGL_CacheManagement, "OpenGL", "Cache Mgmt", MP_RGB(100, 255, 100));
-
-static bool IsPassThroughTevStage(const Pica::TexturingRegs::TevStageConfig& stage) {
-    using TevStageConfig = Pica::TexturingRegs::TevStageConfig;
-
-    return (stage.color_op == TevStageConfig::Operation::Replace &&
-            stage.alpha_op == TevStageConfig::Operation::Replace &&
-            stage.color_source1 == TevStageConfig::Source::Previous &&
-            stage.alpha_source1 == TevStageConfig::Source::Previous &&
-            stage.color_modifier1 == TevStageConfig::ColorModifier::SourceColor &&
-            stage.alpha_modifier1 == TevStageConfig::AlphaModifier::SourceAlpha &&
-            stage.GetColorMultiplier() == 1 && stage.GetAlphaMultiplier() == 1);
-}
 
 RasterizerOpenGL::RasterizerOpenGL() : shader_dirty(true) {
     // Create sampler objects

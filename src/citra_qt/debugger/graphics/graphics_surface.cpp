@@ -17,7 +17,8 @@
 #include "core/hw/gpu.h"
 #include "core/memory.h"
 #include "video_core/pica_state.h"
-#include "video_core/regs.h"
+#include "video_core/regs_framebuffer.h"
+#include "video_core/regs_texturing.h"
 #include "video_core/texture/texture_decode.h"
 #include "video_core/utils.h"
 

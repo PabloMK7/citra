@@ -21,6 +21,8 @@
 #include "video_core/primitive_assembly.h"
 #include "video_core/rasterizer_interface.h"
 #include "video_core/regs.h"
+#include "video_core/regs_pipeline.h"
+#include "video_core/regs_texturing.h"
 #include "video_core/renderer_base.h"
 #include "video_core/shader/shader.h"
 #include "video_core/vertex_loader.h"
@@ -49,19 +51,23 @@ MICROPROFILE_DEFINE(GPU_Drawing, "GPU", "Drawing", MP_RGB(50, 50, 240));
 static void WritePicaReg(u32 id, u32 value, u32 mask) {
     auto& regs = g_state.regs;
 
-    if (id >= regs.NumIds())
+    if (id >= Regs::NUM_REGS) {
+        LOG_ERROR(HW_GPU,
+                  "Commandlist tried to write to invalid register 0x%03X (value: %08X, mask: %X)",
+                  id, value, mask);
         return;
+    }
 
     // TODO: Figure out how register masking acts on e.g. vs.uniform_setup.set_value
-    u32 old_value = regs[id];
+    u32 old_value = regs.reg_array[id];
 
     const u32 write_mask = expand_bits_to_bytes[mask];
 
-    regs[id] = (old_value & ~write_mask) | (value & write_mask);
+    regs.reg_array[id] = (old_value & ~write_mask) | (value & write_mask);
 
     // Double check for is_pica_tracing to avoid call overhead
     if (DebugUtils::IsPicaTracing()) {
-        DebugUtils::OnPicaRegWrite({(u16)id, (u16)mask, regs[id]});
+        DebugUtils::OnPicaRegWrite({(u16)id, (u16)mask, regs.reg_array[id]});
     }
 
     if (g_debug_context)

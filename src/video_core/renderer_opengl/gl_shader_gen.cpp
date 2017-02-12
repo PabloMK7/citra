@@ -7,15 +7,19 @@
 #include "common/assert.h"
 #include "common/bit_field.h"
 #include "common/logging/log.h"
-#include "video_core/regs.h"
+#include "video_core/regs_framebuffer.h"
+#include "video_core/regs_lighting.h"
+#include "video_core/regs_rasterizer.h"
+#include "video_core/regs_texturing.h"
 #include "video_core/renderer_opengl/gl_rasterizer.h"
 #include "video_core/renderer_opengl/gl_shader_gen.h"
 #include "video_core/renderer_opengl/gl_shader_util.h"
 
-using Pica::Regs;
-using Pica::RasterizerRegs;
+using Pica::FramebufferRegs;
 using Pica::LightingRegs;
-using TevStageConfig = Pica::TexturingRegs::TevStageConfig;
+using Pica::RasterizerRegs;
+using Pica::TexturingRegs;
+using TevStageConfig = TexturingRegs::TevStageConfig;
 
 namespace GLShader {
 
@@ -48,10 +52,10 @@ static void AppendSource(std::string& out, const PicaShaderConfig& config,
     case Source::Texture0:
         // Only unit 0 respects the texturing type (according to 3DBrew)
         switch (state.texture0_type) {
-        case Pica::TexturingRegs::TextureConfig::Texture2D:
+        case TexturingRegs::TextureConfig::Texture2D:
             out += "texture(tex[0], texcoord[0])";
             break;
-        case Pica::TexturingRegs::TextureConfig::Projection2D:
+        case TexturingRegs::TextureConfig::Projection2D:
             out += "textureProj(tex[0], vec3(texcoord[0], texcoord0_w))";
             break;
         default:
@@ -278,8 +282,8 @@ static void AppendAlphaCombiner(std::string& out, TevStageConfig::Operation oper
 }
 
 /// Writes the if-statement condition used to evaluate alpha testing
-static void AppendAlphaTestCondition(std::string& out, Pica::FramebufferRegs::CompareFunc func) {
-    using CompareFunc = Pica::FramebufferRegs::CompareFunc;
+static void AppendAlphaTestCondition(std::string& out, FramebufferRegs::CompareFunc func) {
+    using CompareFunc = FramebufferRegs::CompareFunc;
     switch (func) {
     case CompareFunc::Never:
         out += "true";
@@ -309,7 +313,7 @@ static void AppendAlphaTestCondition(std::string& out, Pica::FramebufferRegs::Co
 /// Writes the code to emulate the specified TEV stage
 static void WriteTevStage(std::string& out, const PicaShaderConfig& config, unsigned index) {
     const auto stage =
-        static_cast<const Pica::TexturingRegs::TevStageConfig>(config.state.tev_stages[index]);
+        static_cast<const TexturingRegs::TevStageConfig>(config.state.tev_stages[index]);
     if (!IsPassThroughTevStage(stage)) {
         std::string index_name = std::to_string(index);
 
@@ -642,7 +646,7 @@ vec4 secondary_fragment_color = vec4(0.0);
 )";
 
     // Do not do any sort of processing if it's obvious we're not going to pass the alpha test
-    if (state.alpha_test_func == Pica::FramebufferRegs::CompareFunc::Never) {
+    if (state.alpha_test_func == FramebufferRegs::CompareFunc::Never) {
         out += "discard; }";
         return out;
     }
@@ -661,7 +665,7 @@ vec4 secondary_fragment_color = vec4(0.0);
 
     out += "float z_over_w = 1.0 - gl_FragCoord.z * 2.0;\n";
     out += "float depth = z_over_w * depth_scale + depth_offset;\n";
-    if (state.depthmap_enable == Pica::RasterizerRegs::DepthBuffering::WBuffering) {
+    if (state.depthmap_enable == RasterizerRegs::DepthBuffering::WBuffering) {
         out += "depth /= gl_FragCoord.w;\n";
     }
 
@@ -675,14 +679,14 @@ vec4 secondary_fragment_color = vec4(0.0);
     for (size_t index = 0; index < state.tev_stages.size(); ++index)
         WriteTevStage(out, config, (unsigned)index);
 
-    if (state.alpha_test_func != Pica::FramebufferRegs::CompareFunc::Always) {
+    if (state.alpha_test_func != FramebufferRegs::CompareFunc::Always) {
         out += "if (";
         AppendAlphaTestCondition(out, state.alpha_test_func);
         out += ") discard;\n";
     }
 
     // Append fog combiner
-    if (state.fog_mode == Pica::TexturingRegs::FogMode::Fog) {
+    if (state.fog_mode == TexturingRegs::FogMode::Fog) {
         // Get index into fog LUT
         if (state.fog_flip) {
             out += "float fog_index = (1.0 - depth) * 128.0;\n";

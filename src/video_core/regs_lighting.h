@@ -34,7 +34,7 @@ struct LightingRegs {
     * configurations that require more LUTs, more cycles are required on HW to perform lighting
     * computations.
     */
-    enum class LightingConfig {
+    enum class LightingConfig : u32 {
         Config0 = 0, ///< Reflect Red, Distribution 0, Spotlight
         Config1 = 1, ///< Reflect Red, Fresnel, Spotlight
         Config2 = 2, ///< Reflect Red, Distribution 0/1
@@ -48,7 +48,7 @@ struct LightingRegs {
     };
 
     /// Selects which lighting components are affected by fresnel
-    enum class LightingFresnelSelector {
+    enum class LightingFresnelSelector : u32 {
         None = 0,           ///< Fresnel is disabled
         PrimaryAlpha = 1,   ///< Primary (diffuse) lighting alpha is affected by fresnel
         SecondaryAlpha = 2, ///< Secondary (specular) lighting alpha is affected by fresnel
@@ -58,7 +58,7 @@ struct LightingRegs {
     };
 
     /// Factor used to scale the output of a lighting LUT
-    enum class LightingScale {
+    enum class LightingScale : u32 {
         Scale1 = 0, ///< Scale is 1x
         Scale2 = 1, ///< Scale is 2x
         Scale4 = 2, ///< Scale is 4x
@@ -68,7 +68,7 @@ struct LightingRegs {
         Scale1_2 = 7, ///< Scale is 0.5x
     };
 
-    enum class LightingLutInput {
+    enum class LightingLutInput : u32 {
         NH = 0, // Cosine of the angle between the normal and half-angle vectors
         VH = 1, // Cosine of the angle between the view and half-angle vectors
         NV = 2, // Cosine of the angle between the normal and the view vector
