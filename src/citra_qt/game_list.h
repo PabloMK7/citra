@@ -33,6 +33,8 @@ public:
     void SaveInterfaceLayout();
     void LoadInterfaceLayout();
 
+    static const QStringList supported_file_extensions;
+
 signals:
     void GameChosen(QString game_path);
     void ShouldCancelWorker();
