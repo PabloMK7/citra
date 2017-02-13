@@ -39,5 +39,15 @@ const ResultCode ERROR_DIRECTORY_NOT_EMPTY(ErrorDescription::FS_DirectoryNotEmpt
 const ResultCode ERROR_GAMECARD_NOT_INSERTED(ErrorDescription::FS_GameCardNotInserted,
                                              ErrorModule::FS, ErrorSummary::NotFound,
                                              ErrorLevel::Status);
+const ResultCode ERROR_INCORRECT_EXEFS_READ_SIZE(ErrorDescription::FS_IncorrectExeFSReadSize,
+                                                 ErrorModule::FS, ErrorSummary::NotSupported,
+                                                 ErrorLevel::Usage);
+const ResultCode ERROR_ROMFS_NOT_FOUND(ErrorDescription::FS_RomFSNotFound, ErrorModule::FS,
+                                       ErrorSummary::NotFound, ErrorLevel::Status);
+const ResultCode ERROR_COMMAND_NOT_ALLOWED(ErrorDescription::FS_CommandNotAllowed, ErrorModule::FS,
+                                           ErrorSummary::WrongArgument, ErrorLevel::Permanent);
+const ResultCode ERROR_EXEFS_SECTION_NOT_FOUND(ErrorDescription::FS_ExeFSSectionNotFound,
+                                               ErrorModule::FS, ErrorSummary::NotFound,
+                                               ErrorLevel::Status);
 
 } // namespace FileSys

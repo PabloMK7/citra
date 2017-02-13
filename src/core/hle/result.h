@@ -20,6 +20,7 @@ enum class ErrorDescription : u32 {
     OS_InvalidBufferDescriptor = 48,
     MaxConnectionsReached = 52,
     WrongAddress = 53,
+    FS_RomFSNotFound = 100,
     FS_ArchiveNotMounted = 101,
     FS_FileNotFound = 112,
     FS_PathNotFound = 113,
@@ -35,10 +36,13 @@ enum class ErrorDescription : u32 {
     OutofRangeOrMisalignedAddress =
         513, // TODO(purpasmart): Check if this name fits its actual usage
     GPU_FirstInitialization = 519,
+    FS_ExeFSSectionNotFound = 567,
+    FS_CommandNotAllowed = 630,
     FS_InvalidReadFlag = 700,
     FS_InvalidPath = 702,
     FS_WriteBeyondEnd = 705,
     FS_UnsupportedOpenFlags = 760,
+    FS_IncorrectExeFSReadSize = 761,
     FS_UnexpectedFileOrDirectory = 770,
     InvalidSection = 1000,
     TooLarge = 1001,
