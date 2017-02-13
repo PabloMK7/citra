@@ -6,3 +6,6 @@ if (ARCHITECTURE_x86_64)
         target_compile_options(xbyak INTERFACE -fno-operator-names)
     endif()
 endif()
+
+add_subdirectory(cryptopp)
+

@@ -360,9 +360,10 @@ set(HEADERS
             )
 
 include_directories(../../externals/dynarmic/include)
+include_directories(../../externals/cryptopp)
 
 create_directory_groups(${SRCS} ${HEADERS})
 
 add_library(core STATIC ${SRCS} ${HEADERS})
 
-target_link_libraries(core dynarmic)
+target_link_libraries(core dynarmic cryptopp)

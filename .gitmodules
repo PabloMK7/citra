@@ -19,3 +19,6 @@
 [submodule "xbyak"]
     path = externals/xbyak
     url = https://github.com/herumi/xbyak.git
+[submodule "cryptopp"]
+    path = externals/cryptopp/cryptopp
+    url = https://github.com/weidai11/cryptopp.git
