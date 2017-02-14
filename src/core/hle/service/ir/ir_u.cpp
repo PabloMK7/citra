@@ -27,7 +27,7 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x00100000, nullptr, "GetErrorStatus"},
     {0x00110040, nullptr, "SetSleepModeActive"},
     {0x00120040, nullptr, "SetSleepModeState"},
-    // clang-format off
+    // clang-format on
 };
 
 IR_U_Interface::IR_U_Interface() {
