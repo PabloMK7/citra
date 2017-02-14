@@ -77,7 +77,7 @@ union Header {
  */
 inline u32 MakeHeader(u16 command_id, unsigned int normal_params_size,
                       unsigned int translate_params_size) {
-    Header header;
+    Header header{};
     header.command_id.Assign(command_id);
     header.normal_params_size.Assign(normal_params_size);
     header.translate_params_size.Assign(translate_params_size);
@@ -112,7 +112,7 @@ union StaticBufferDescInfo {
 };
 
 inline u32 StaticBufferDesc(u32 size, u8 buffer_id) {
-    StaticBufferDescInfo info;
+    StaticBufferDescInfo info{};
     info.descriptor_type.Assign(StaticBuffer);
     info.buffer_id.Assign(buffer_id);
     info.size.Assign(size);
@@ -150,7 +150,7 @@ union MappedBufferDescInfo {
 };
 
 inline u32 MappedBufferDesc(u32 size, MappedBufferPermissions perms) {
-    MappedBufferDescInfo info;
+    MappedBufferDescInfo info{};
     info.flags.Assign(MappedBuffer);
     info.perms.Assign(perms);
     info.size.Assign(size);
