@@ -137,7 +137,7 @@ const QStringList GameList::supported_file_extensions = {"3ds", "3dsx", "elf", "
 
 static bool HasSupportedFileExtension(const std::string& file_name) {
     QFileInfo file = QFileInfo(file_name.c_str());
-    return GameList::supported_file_extensions.contains(file.completeSuffix(), Qt::CaseInsensitive);
+    return GameList::supported_file_extensions.contains(file.suffix(), Qt::CaseInsensitive);
 }
 
 void GameListWorker::AddFstEntriesToGameList(const std::string& dir_path, unsigned int recursion) {
