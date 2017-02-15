@@ -205,6 +205,7 @@ set(HEADERS
             file_sys/archive_systemsavedata.h
             file_sys/directory_backend.h
             file_sys/disk_archive.h
+            file_sys/errors.h
             file_sys/file_backend.h
             file_sys/ivfc_archive.h
             file_sys/path_parser.h
