@@ -2,8 +2,6 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#pragma once
-
 #include "common/assert.h"
 #include "common/color.h"
 #include "common/logging/log.h"
