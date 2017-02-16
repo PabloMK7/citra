@@ -110,6 +110,7 @@ private:
      * @return true if the user confirmed
      */
     bool ConfirmClose();
+    bool ConfirmChangeGame();
     void closeEvent(QCloseEvent* event) override;
 
 private slots:
@@ -155,6 +156,11 @@ private:
     WaitTreeWidget* waitTreeWidget;
 
     QAction* actions_recent_files[max_recent_files_item];
+
+protected:
+    void dropEvent(QDropEvent* event) override;
+    void dragEnterEvent(QDragEnterEvent* event) override;
+    void dragMoveEvent(QDragMoveEvent* event) override;
 };
 
 #endif // _CITRA_QT_MAIN_HXX_

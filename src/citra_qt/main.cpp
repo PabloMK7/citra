@@ -54,7 +54,7 @@ Q_IMPORT_PLUGIN(QWindowsIntegrationPlugin);
 
 GMainWindow::GMainWindow() : config(new Config()), emu_thread(nullptr) {
     Pica::g_debug_context = Pica::DebugContext::Construct();
-
+    setAcceptDrops(true);
     ui.setupUi(this);
     statusBar()->hide();
 
@@ -623,6 +623,40 @@ void GMainWindow::closeEvent(QCloseEvent* event) {
     render_window->close();
 
     QWidget::closeEvent(event);
+}
+
+bool IsSingleFileDropEvent(QDropEvent* event) {
+    const QMimeData* mimeData = event->mimeData();
+    return mimeData->hasUrls() && mimeData->urls().length() == 1;
+}
+
+void GMainWindow::dropEvent(QDropEvent* event) {
+    if (IsSingleFileDropEvent(event) && ConfirmChangeGame()) {
+        const QMimeData* mimeData = event->mimeData();
+        QString filename = mimeData->urls().at(0).toLocalFile();
+        BootGame(filename.toStdString());
+    }
+}
+
+void GMainWindow::dragEnterEvent(QDragEnterEvent* event) {
+    if (IsSingleFileDropEvent(event)) {
+        event->acceptProposedAction();
+    }
+}
+
+void GMainWindow::dragMoveEvent(QDragMoveEvent* event) {
+    event->acceptProposedAction();
+}
+
+bool GMainWindow::ConfirmChangeGame() {
+    if (emu_thread == nullptr)
+        return true;
+
+    auto answer = QMessageBox::question(
+        this, tr("Citra"),
+        tr("Are you sure you want to stop the emulation? Any unsaved progress will be lost."),
+        QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
+    return answer != QMessageBox::No;
 }
 
 #ifdef main
