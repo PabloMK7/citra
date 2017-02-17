@@ -79,8 +79,8 @@ private:
      * @returns Whether the system was properly initialized.
      */
     bool InitializeSystem(u32 system_mode);
-    bool LoadROM(const std::string& filename);
-    void BootGame(const std::string& filename);
+    bool LoadROM(const QString& filename);
+    void BootGame(const QString& filename);
     void ShutdownGame();
 
     /**
@@ -94,7 +94,7 @@ private:
      *
      * @param filename the filename to store
      */
-    void StoreRecentFile(const std::string& filename);
+    void StoreRecentFile(const QString& filename);
 
     /**
      * Updates the recent files menu.

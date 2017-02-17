@@ -75,7 +75,7 @@ GMainWindow::GMainWindow() : config(new Config()), emu_thread(nullptr) {
 
     QStringList args = QApplication::arguments();
     if (args.length() >= 2) {
-        BootGame(args[1].toStdString());
+        BootGame(args[1]);
     }
 }
 
@@ -272,7 +272,7 @@ void GMainWindow::OnDisplayTitleBars(bool show) {
     }
 }
 
-bool GMainWindow::LoadROM(const std::string& filename) {
+bool GMainWindow::LoadROM(const QString& filename) {
     // Shutdown previous session if the emu thread is still active...
     if (emu_thread != nullptr)
         ShutdownGame();
@@ -290,12 +290,13 @@ bool GMainWindow::LoadROM(const std::string& filename) {
 
     Core::System& system{Core::System::GetInstance()};
 
-    const Core::System::ResultStatus result{system.Load(render_window, filename)};
+    const Core::System::ResultStatus result{system.Load(render_window, filename.toStdString())};
 
     if (result != Core::System::ResultStatus::Success) {
         switch (result) {
         case Core::System::ResultStatus::ErrorGetLoader:
-            LOG_CRITICAL(Frontend, "Failed to obtain loader for %s!", filename.c_str());
+            LOG_CRITICAL(Frontend, "Failed to obtain loader for %s!",
+                         filename.toStdString().c_str());
             QMessageBox::critical(this, tr("Error while loading ROM!"),
                                   tr("The ROM format is not supported."));
             break;
@@ -335,7 +336,7 @@ bool GMainWindow::LoadROM(const std::string& filename) {
     return true;
 }
 
-void GMainWindow::BootGame(const std::string& filename) {
+void GMainWindow::BootGame(const QString& filename) {
     LOG_INFO(Frontend, "Citra starting...");
     StoreRecentFile(filename); // Put the filename on top of the list
 
@@ -411,8 +412,8 @@ void GMainWindow::ShutdownGame() {
     emulation_running = false;
 }
 
-void GMainWindow::StoreRecentFile(const std::string& filename) {
-    UISettings::values.recent_files.prepend(QString::fromStdString(filename));
+void GMainWindow::StoreRecentFile(const QString& filename) {
+    UISettings::values.recent_files.prepend(filename);
     UISettings::values.recent_files.removeDuplicates();
     while (UISettings::values.recent_files.size() > max_recent_files_item) {
         UISettings::values.recent_files.removeLast();
@@ -447,7 +448,7 @@ void GMainWindow::UpdateRecentFiles() {
 }
 
 void GMainWindow::OnGameListLoadFile(QString game_path) {
-    BootGame(game_path.toStdString());
+    BootGame(game_path);
 }
 
 void GMainWindow::OnGameListOpenSaveFolder(u64 program_id) {
@@ -477,7 +478,7 @@ void GMainWindow::OnMenuLoadFile() {
     if (!filename.isEmpty()) {
         UISettings::values.roms_path = QFileInfo(filename).path();
 
-        BootGame(filename.toStdString());
+        BootGame(filename);
     }
 }
 
@@ -506,7 +507,7 @@ void GMainWindow::OnMenuRecentFile() {
     QString filename = action->data().toString();
     QFileInfo file_info(filename);
     if (file_info.exists()) {
-        BootGame(filename.toStdString());
+        BootGame(filename);
     } else {
         // Display an error message and remove the file from the list.
         QMessageBox::information(this, tr("File not found"),
@@ -634,7 +635,7 @@ void GMainWindow::dropEvent(QDropEvent* event) {
     if (IsSingleFileDropEvent(event) && ConfirmChangeGame()) {
         const QMimeData* mimeData = event->mimeData();
         QString filename = mimeData->urls().at(0).toLocalFile();
-        BootGame(filename.toStdString());
+        BootGame(filename);
     }
 }
 
