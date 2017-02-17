@@ -627,7 +627,7 @@ void GMainWindow::closeEvent(QCloseEvent* event) {
     QWidget::closeEvent(event);
 }
 
-bool IsSingleFileDropEvent(QDropEvent* event) {
+static bool IsSingleFileDropEvent(QDropEvent* event) {
     const QMimeData* mimeData = event->mimeData();
     return mimeData->hasUrls() && mimeData->urls().length() == 1;
 }
