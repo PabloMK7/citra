@@ -32,8 +32,8 @@ static u32 next_touch_index;
 static u32 next_accelerometer_index;
 static u32 next_gyroscope_index;
 
-static int enable_accelerometer_count = 0; // positive means enabled
-static int enable_gyroscope_count = 0;     // positive means enabled
+static int enable_accelerometer_count; // positive means enabled
+static int enable_gyroscope_count;     // positive means enabled
 
 static int pad_update_event;
 static int accelerometer_update_event;
@@ -322,6 +322,9 @@ void Init() {
     next_touch_index = 0;
     next_accelerometer_index = 0;
     next_gyroscope_index = 0;
+
+    enable_accelerometer_count = 0;
+    enable_gyroscope_count = 0;
 
     // Create event handles
     event_pad_or_touch_1 = Event::Create(ResetType::OneShot, "HID:EventPadOrTouch1");
