@@ -471,7 +471,8 @@ void GMainWindow::OnMenuLoadFile() {
     for (const auto& piece : game_list->supported_file_extensions)
         extensions += "*." + piece + " ";
 
-    QString file_filter = tr("3DS executable") + " (" + extensions + ")";
+    QString file_filter = tr("3DS Executable") + " (" + extensions + ")";
+    file_filter += ";;" + tr("All Files (*.*)");
 
     QString filename = QFileDialog::getOpenFileName(this, tr("Load File"),
                                                     UISettings::values.roms_path, file_filter);
@@ -484,7 +485,7 @@ void GMainWindow::OnMenuLoadFile() {
 
 void GMainWindow::OnMenuLoadSymbolMap() {
     QString filename = QFileDialog::getOpenFileName(
-        this, tr("Load Symbol Map"), UISettings::values.symbols_path, tr("Symbol map (*)"));
+        this, tr("Load Symbol Map"), UISettings::values.symbols_path, tr("Symbol Map (*.*)"));
     if (!filename.isEmpty()) {
         UISettings::values.symbols_path = QFileInfo(filename).path();
 
