@@ -248,6 +248,7 @@ void GMainWindow::ConnectMenuEvents() {
             &GMainWindow::OnMenuLoadSymbolMap);
     connect(ui.action_Select_Game_List_Root, &QAction::triggered, this,
             &GMainWindow::OnMenuSelectGameListRoot);
+    connect(ui.action_Exit, &QAction::triggered, this, &QMainWindow::close);
 
     // Emulation
     connect(ui.action_Start, &QAction::triggered, this, &GMainWindow::OnStartGame);
@@ -258,6 +259,8 @@ void GMainWindow::ConnectMenuEvents() {
     // View
     connect(ui.action_Single_Window_Mode, &QAction::triggered, this,
             &GMainWindow::ToggleWindowMode);
+    connect(ui.action_Display_Dock_Widget_Headers, &QAction::triggered, this,
+            &GMainWindow::OnDisplayTitleBars);
 }
 
 void GMainWindow::OnDisplayTitleBars(bool show) {

@@ -182,42 +182,4 @@
   </action>
  </widget>
  <resources/>
- <connections>
-  <connection>
-   <sender>action_Exit</sender>
-   <signal>triggered()</signal>
-   <receiver>MainWindow</receiver>
-   <slot>close()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>367</x>
-     <y>314</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>action_Display_Dock_Widget_Headers</sender>
-   <signal>triggered(bool)</signal>
-   <receiver>MainWindow</receiver>
-   <slot>OnDisplayTitleBars(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>540</x>
-     <y>364</y>
-    </hint>
-   </hints>
-  </connection>
- </connections>
- <slots>
-  <slot>OnConfigure()</slot>
-  <slot>OnDisplayTitleBars(bool)</slot>
- </slots>
 </ui>
