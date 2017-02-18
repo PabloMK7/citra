@@ -215,8 +215,8 @@ void GMainWindow::RestoreUIState() {
     ui.action_Single_Window_Mode->setChecked(UISettings::values.single_window_mode);
     ToggleWindowMode();
 
-    ui.actionDisplay_widget_title_bars->setChecked(UISettings::values.display_titlebar);
-    OnDisplayTitleBars(ui.actionDisplay_widget_title_bars->isChecked());
+    ui.action_Display_Dock_Widget_Headers->setChecked(UISettings::values.display_titlebar);
+    OnDisplayTitleBars(ui.action_Display_Dock_Widget_Headers->isChecked());
 }
 
 void GMainWindow::ConnectWidgetEvents() {
@@ -612,7 +612,7 @@ void GMainWindow::closeEvent(QCloseEvent* event) {
     UISettings::values.microprofile_visible = microProfileDialog->isVisible();
 #endif
     UISettings::values.single_window_mode = ui.action_Single_Window_Mode->isChecked();
-    UISettings::values.display_titlebar = ui.actionDisplay_widget_title_bars->isChecked();
+    UISettings::values.display_titlebar = ui.action_Display_Dock_Widget_Headers->isChecked();
     UISettings::values.first_start = false;
 
     game_list->SaveInterfaceLayout();

@@ -80,7 +80,7 @@
      <string>&amp;View</string>
     </property>
     <addaction name="action_Single_Window_Mode"/>
-    <addaction name="actionDisplay_widget_title_bars"/>
+    <addaction name="action_Display_Dock_Widget_Headers"/>
    </widget>
    <widget class="QMenu" name="menu_Help">
     <property name="title">
@@ -151,7 +151,7 @@
     <string>Configure...</string>
    </property>
   </action>
-  <action name="actionDisplay_widget_title_bars">
+  <action name="action_Display_Dock_Widget_Headers">
    <property name="checkable">
     <bool>true</bool>
    </property>
@@ -187,7 +187,7 @@
    </hints>
   </connection>
   <connection>
-   <sender>actionDisplay_widget_title_bars</sender>
+   <sender>action_Display_Dock_Widget_Headers</sender>
    <signal>triggered(bool)</signal>
    <receiver>MainWindow</receiver>
    <slot>OnDisplayTitleBars(bool)</slot>
