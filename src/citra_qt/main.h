@@ -73,14 +73,8 @@ private:
 
     void ConnectWidgetEvents();
 
-    /**
-     * Initializes the emulation system.
-     * @param system_mode The system mode with which to intialize the kernel.
-     * @returns Whether the system was properly initialized.
-     */
-    bool InitializeSystem(u32 system_mode);
-    bool LoadROM(const std::string& filename);
-    void BootGame(const std::string& filename);
+    bool LoadROM(const QString& filename);
+    void BootGame(const QString& filename);
     void ShutdownGame();
 
     /**
@@ -94,7 +88,7 @@ private:
      *
      * @param filename the filename to store
      */
-    void StoreRecentFile(const std::string& filename);
+    void StoreRecentFile(const QString& filename);
 
     /**
      * Updates the recent files menu.
