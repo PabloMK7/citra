@@ -27,6 +27,7 @@ struct Values {
 
     bool single_window_mode;
     bool display_titlebar;
+    bool show_status_bar;
 
     bool confirm_before_closing;
     bool first_start;

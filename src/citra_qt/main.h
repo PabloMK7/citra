@@ -132,12 +132,18 @@ private:
     GRenderWindow* render_window;
     GameList* game_list;
 
+    // Status bar elements
+    QLabel* emu_speed_label = nullptr;
+    QLabel* game_fps_label = nullptr;
+    QLabel* emu_frametime_label = nullptr;
+
     std::unique_ptr<Config> config;
 
     // Whether emulation is currently running in Citra.
     bool emulation_running = false;
     std::unique_ptr<EmuThread> emu_thread;
 
+    // Debugger panes
     ProfilerWidget* profilerWidget;
     MicroProfileDialog* microProfileDialog;
     DisassemblerWidget* disasmWidget;
