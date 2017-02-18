@@ -66,6 +66,7 @@ GMainWindow::GMainWindow() : config(new Config()), emu_thread(nullptr) {
     SetDefaultUIGeometry();
     RestoreUIState();
 
+    ConnectMenuEvents();
     ConnectWidgetEvents();
 
     setWindowTitle(QString("Citra | %1-%2").arg(Common::g_scm_branch, Common::g_scm_desc));
@@ -231,24 +232,32 @@ void GMainWindow::RestoreUIState() {
 }
 
 void GMainWindow::ConnectWidgetEvents() {
-    connect(game_list, SIGNAL(GameChosen(QString)), this, SLOT(OnGameListLoadFile(QString)),
-            Qt::DirectConnection);
+    connect(game_list, SIGNAL(GameChosen(QString)), this, SLOT(OnGameListLoadFile(QString)));
     connect(game_list, SIGNAL(OpenSaveFolderRequested(u64)), this,
-            SLOT(OnGameListOpenSaveFolder(u64)), Qt::DirectConnection);
-    connect(ui.action_Configure, SIGNAL(triggered()), this, SLOT(OnConfigure()));
-    connect(ui.action_Load_File, SIGNAL(triggered()), this, SLOT(OnMenuLoadFile()),
-            Qt::DirectConnection);
-    connect(ui.action_Load_Symbol_Map, SIGNAL(triggered()), this, SLOT(OnMenuLoadSymbolMap()));
-    connect(ui.action_Select_Game_List_Root, SIGNAL(triggered()), this,
-            SLOT(OnMenuSelectGameListRoot()));
-    connect(ui.action_Start, SIGNAL(triggered()), this, SLOT(OnStartGame()));
-    connect(ui.action_Pause, SIGNAL(triggered()), this, SLOT(OnPauseGame()));
-    connect(ui.action_Stop, SIGNAL(triggered()), this, SLOT(OnStopGame()));
-    connect(ui.action_Single_Window_Mode, SIGNAL(triggered(bool)), this, SLOT(ToggleWindowMode()));
+            SLOT(OnGameListOpenSaveFolder(u64)));
 
     connect(this, SIGNAL(EmulationStarting(EmuThread*)), render_window,
             SLOT(OnEmulationStarting(EmuThread*)));
     connect(this, SIGNAL(EmulationStopping()), render_window, SLOT(OnEmulationStopping()));
+}
+
+void GMainWindow::ConnectMenuEvents() {
+    // File
+    connect(ui.action_Load_File, &QAction::triggered, this, &GMainWindow::OnMenuLoadFile);
+    connect(ui.action_Load_Symbol_Map, &QAction::triggered, this,
+            &GMainWindow::OnMenuLoadSymbolMap);
+    connect(ui.action_Select_Game_List_Root, &QAction::triggered, this,
+            &GMainWindow::OnMenuSelectGameListRoot);
+
+    // Emulation
+    connect(ui.action_Start, &QAction::triggered, this, &GMainWindow::OnStartGame);
+    connect(ui.action_Pause, &QAction::triggered, this, &GMainWindow::OnPauseGame);
+    connect(ui.action_Stop, &QAction::triggered, this, &GMainWindow::OnStopGame);
+    connect(ui.action_Configure, &QAction::triggered, this, &GMainWindow::OnConfigure);
+
+    // View
+    connect(ui.action_Single_Window_Mode, &QAction::triggered, this,
+            &GMainWindow::ToggleWindowMode);
 }
 
 void GMainWindow::OnDisplayTitleBars(bool show) {
