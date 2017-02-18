@@ -79,8 +79,16 @@
     <property name="title">
      <string>&amp;View</string>
     </property>
+    <widget class="QMenu" name="menu_View_Debugging">
+     <property name="title">
+      <string>Debugging</string>
+     </property>
+     <addaction name="action_Create_Pica_Surface_Viewer"/>
+     <addaction name="separator"/>
+    </widget>
     <addaction name="action_Single_Window_Mode"/>
     <addaction name="action_Display_Dock_Widget_Headers"/>
+    <addaction name="menu_View_Debugging"/>
    </widget>
    <widget class="QMenu" name="menu_Help">
     <property name="title">
@@ -165,6 +173,11 @@
    </property>
    <property name="toolTip">
     <string>Selects a folder to display in the game list</string>
+   </property>
+  </action>
+  <action name="action_Create_Pica_Surface_Viewer">
+   <property name="text">
+    <string>Create Pica Surface Viewer</string>
    </property>
   </action>
  </widget>

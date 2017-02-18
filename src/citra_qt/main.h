@@ -64,7 +64,7 @@ signals:
 
 private:
     void InitializeWidgets();
-    void InitializeDebugMenuActions();
+    void InitializeDebugWidgets();
     void InitializeRecentFileMenuActions();
     void InitializeHotkeys();
 

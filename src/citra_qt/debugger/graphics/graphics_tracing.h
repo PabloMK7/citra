@@ -15,6 +15,9 @@ public:
     explicit GraphicsTracingWidget(std::shared_ptr<Pica::DebugContext> debug_context,
                                    QWidget* parent = nullptr);
 
+    void OnEmulationStarting(EmuThread* emu_thread);
+    void OnEmulationStopping();
+
 private slots:
     void StartRecording();
     void StopRecording();
@@ -22,9 +25,6 @@ private slots:
 
     void OnBreakPointHit(Pica::DebugContext::Event event, void* data) override;
     void OnResumed() override;
-
-    void OnEmulationStarting(EmuThread* emu_thread);
-    void OnEmulationStopping();
 
 signals:
     void SetStartTracingButtonEnabled(bool enable);
