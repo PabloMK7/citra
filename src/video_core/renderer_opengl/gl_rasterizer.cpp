@@ -1071,37 +1071,38 @@ void RasterizerOpenGL::SetShader() {
 
         current_shader = shader_cache.emplace(config, std::move(shader)).first->second.get();
 
-        unsigned int block_index =
-            glGetUniformBlockIndex(current_shader->shader.handle, "shader_data");
-        GLint block_size;
-        glGetActiveUniformBlockiv(current_shader->shader.handle, block_index,
-                                  GL_UNIFORM_BLOCK_DATA_SIZE, &block_size);
-        ASSERT_MSG(block_size == sizeof(UniformData),
-                   "Uniform block size did not match! Got %d, expected %zu",
-                   static_cast<int>(block_size), sizeof(UniformData));
-        glUniformBlockBinding(current_shader->shader.handle, block_index, 0);
+        GLuint block_index = glGetUniformBlockIndex(current_shader->shader.handle, "shader_data");
+        if (block_index != GL_INVALID_INDEX) {
+            GLint block_size;
+            glGetActiveUniformBlockiv(current_shader->shader.handle, block_index,
+                                      GL_UNIFORM_BLOCK_DATA_SIZE, &block_size);
+            ASSERT_MSG(block_size == sizeof(UniformData),
+                       "Uniform block size did not match! Got %d, expected %zu",
+                       static_cast<int>(block_size), sizeof(UniformData));
+            glUniformBlockBinding(current_shader->shader.handle, block_index, 0);
 
-        // Update uniforms
-        SyncDepthScale();
-        SyncDepthOffset();
-        SyncAlphaTest();
-        SyncCombinerColor();
-        auto& tev_stages = Pica::g_state.regs.texturing.GetTevStages();
-        for (int index = 0; index < tev_stages.size(); ++index)
-            SyncTevConstColor(index, tev_stages[index]);
+            // Update uniforms
+            SyncDepthScale();
+            SyncDepthOffset();
+            SyncAlphaTest();
+            SyncCombinerColor();
+            auto& tev_stages = Pica::g_state.regs.texturing.GetTevStages();
+            for (int index = 0; index < tev_stages.size(); ++index)
+                SyncTevConstColor(index, tev_stages[index]);
 
-        SyncGlobalAmbient();
-        for (int light_index = 0; light_index < 8; light_index++) {
-            SyncLightSpecular0(light_index);
-            SyncLightSpecular1(light_index);
-            SyncLightDiffuse(light_index);
-            SyncLightAmbient(light_index);
-            SyncLightPosition(light_index);
-            SyncLightDistanceAttenuationBias(light_index);
-            SyncLightDistanceAttenuationScale(light_index);
+            SyncGlobalAmbient();
+            for (int light_index = 0; light_index < 8; light_index++) {
+                SyncLightSpecular0(light_index);
+                SyncLightSpecular1(light_index);
+                SyncLightDiffuse(light_index);
+                SyncLightAmbient(light_index);
+                SyncLightPosition(light_index);
+                SyncLightDistanceAttenuationBias(light_index);
+                SyncLightDistanceAttenuationScale(light_index);
+            }
+
+            SyncFogColor();
         }
-
-        SyncFogColor();
     }
 }
 
