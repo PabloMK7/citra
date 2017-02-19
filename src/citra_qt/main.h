@@ -64,7 +64,7 @@ signals:
 
 private:
     void InitializeWidgets();
-    void InitializeDebugMenuActions();
+    void InitializeDebugWidgets();
     void InitializeRecentFileMenuActions();
     void InitializeHotkeys();
 
@@ -72,6 +72,7 @@ private:
     void RestoreUIState();
 
     void ConnectWidgetEvents();
+    void ConnectMenuEvents();
 
     bool LoadROM(const QString& filename);
     void BootGame(const QString& filename);

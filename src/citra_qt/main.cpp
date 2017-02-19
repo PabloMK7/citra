@@ -59,13 +59,14 @@ GMainWindow::GMainWindow() : config(new Config()), emu_thread(nullptr) {
     statusBar()->hide();
 
     InitializeWidgets();
-    InitializeDebugMenuActions();
+    InitializeDebugWidgets();
     InitializeRecentFileMenuActions();
     InitializeHotkeys();
 
     SetDefaultUIGeometry();
     RestoreUIState();
 
+    ConnectMenuEvents();
     ConnectWidgetEvents();
 
     setWindowTitle(QString("Citra | %1-%2").arg(Common::g_scm_branch, Common::g_scm_desc));
@@ -93,74 +94,85 @@ void GMainWindow::InitializeWidgets() {
 
     game_list = new GameList();
     ui.horizontalLayout->addWidget(game_list);
+}
+
+void GMainWindow::InitializeDebugWidgets() {
+    connect(ui.action_Create_Pica_Surface_Viewer, &QAction::triggered, this,
+            &GMainWindow::OnCreateGraphicsSurfaceViewer);
+
+    QMenu* debug_menu = ui.menu_View_Debugging;
 
     profilerWidget = new ProfilerWidget(this);
     addDockWidget(Qt::BottomDockWidgetArea, profilerWidget);
     profilerWidget->hide();
+    debug_menu->addAction(profilerWidget->toggleViewAction());
 
 #if MICROPROFILE_ENABLED
     microProfileDialog = new MicroProfileDialog(this);
     microProfileDialog->hide();
+    debug_menu->addAction(microProfileDialog->toggleViewAction());
 #endif
 
     disasmWidget = new DisassemblerWidget(this, emu_thread.get());
     addDockWidget(Qt::BottomDockWidgetArea, disasmWidget);
     disasmWidget->hide();
+    debug_menu->addAction(disasmWidget->toggleViewAction());
+    connect(this, &GMainWindow::EmulationStarting, disasmWidget,
+            &DisassemblerWidget::OnEmulationStarting);
+    connect(this, &GMainWindow::EmulationStopping, disasmWidget,
+            &DisassemblerWidget::OnEmulationStopping);
 
     registersWidget = new RegistersWidget(this);
     addDockWidget(Qt::RightDockWidgetArea, registersWidget);
     registersWidget->hide();
+    debug_menu->addAction(registersWidget->toggleViewAction());
+    connect(this, &GMainWindow::EmulationStarting, registersWidget,
+            &RegistersWidget::OnEmulationStarting);
+    connect(this, &GMainWindow::EmulationStopping, registersWidget,
+            &RegistersWidget::OnEmulationStopping);
 
     callstackWidget = new CallstackWidget(this);
     addDockWidget(Qt::RightDockWidgetArea, callstackWidget);
     callstackWidget->hide();
+    debug_menu->addAction(callstackWidget->toggleViewAction());
 
     graphicsWidget = new GPUCommandStreamWidget(this);
     addDockWidget(Qt::RightDockWidgetArea, graphicsWidget);
     graphicsWidget->hide();
+    debug_menu->addAction(graphicsWidget->toggleViewAction());
 
     graphicsCommandsWidget = new GPUCommandListWidget(this);
     addDockWidget(Qt::RightDockWidgetArea, graphicsCommandsWidget);
     graphicsCommandsWidget->hide();
+    debug_menu->addAction(graphicsCommandsWidget->toggleViewAction());
 
     graphicsBreakpointsWidget = new GraphicsBreakPointsWidget(Pica::g_debug_context, this);
     addDockWidget(Qt::RightDockWidgetArea, graphicsBreakpointsWidget);
     graphicsBreakpointsWidget->hide();
+    debug_menu->addAction(graphicsBreakpointsWidget->toggleViewAction());
 
     graphicsVertexShaderWidget = new GraphicsVertexShaderWidget(Pica::g_debug_context, this);
     addDockWidget(Qt::RightDockWidgetArea, graphicsVertexShaderWidget);
     graphicsVertexShaderWidget->hide();
+    debug_menu->addAction(graphicsVertexShaderWidget->toggleViewAction());
 
     graphicsTracingWidget = new GraphicsTracingWidget(Pica::g_debug_context, this);
     addDockWidget(Qt::RightDockWidgetArea, graphicsTracingWidget);
     graphicsTracingWidget->hide();
+    debug_menu->addAction(graphicsTracingWidget->toggleViewAction());
+    connect(this, &GMainWindow::EmulationStarting, graphicsTracingWidget,
+            &GraphicsTracingWidget::OnEmulationStarting);
+    connect(this, &GMainWindow::EmulationStopping, graphicsTracingWidget,
+            &GraphicsTracingWidget::OnEmulationStopping);
 
     waitTreeWidget = new WaitTreeWidget(this);
     addDockWidget(Qt::LeftDockWidgetArea, waitTreeWidget);
     waitTreeWidget->hide();
-}
-
-void GMainWindow::InitializeDebugMenuActions() {
-    auto graphicsSurfaceViewerAction = new QAction(tr("Create Pica Surface Viewer"), this);
-    connect(graphicsSurfaceViewerAction, SIGNAL(triggered()), this,
-            SLOT(OnCreateGraphicsSurfaceViewer()));
-
-    QMenu* debug_menu = ui.menu_View->addMenu(tr("Debugging"));
-    debug_menu->addAction(graphicsSurfaceViewerAction);
-    debug_menu->addSeparator();
-    debug_menu->addAction(profilerWidget->toggleViewAction());
-#if MICROPROFILE_ENABLED
-    debug_menu->addAction(microProfileDialog->toggleViewAction());
-#endif
-    debug_menu->addAction(disasmWidget->toggleViewAction());
-    debug_menu->addAction(registersWidget->toggleViewAction());
-    debug_menu->addAction(callstackWidget->toggleViewAction());
-    debug_menu->addAction(graphicsWidget->toggleViewAction());
-    debug_menu->addAction(graphicsCommandsWidget->toggleViewAction());
-    debug_menu->addAction(graphicsBreakpointsWidget->toggleViewAction());
-    debug_menu->addAction(graphicsVertexShaderWidget->toggleViewAction());
-    debug_menu->addAction(graphicsTracingWidget->toggleViewAction());
     debug_menu->addAction(waitTreeWidget->toggleViewAction());
+    connect(this, &GMainWindow::EmulationStarting, waitTreeWidget,
+            &WaitTreeWidget::OnEmulationStarting);
+    connect(this, &GMainWindow::EmulationStopping, waitTreeWidget,
+            &WaitTreeWidget::OnEmulationStopping);
 }
 
 void GMainWindow::InitializeRecentFileMenuActions() {
@@ -215,41 +227,40 @@ void GMainWindow::RestoreUIState() {
     ui.action_Single_Window_Mode->setChecked(UISettings::values.single_window_mode);
     ToggleWindowMode();
 
-    ui.actionDisplay_widget_title_bars->setChecked(UISettings::values.display_titlebar);
-    OnDisplayTitleBars(ui.actionDisplay_widget_title_bars->isChecked());
+    ui.action_Display_Dock_Widget_Headers->setChecked(UISettings::values.display_titlebar);
+    OnDisplayTitleBars(ui.action_Display_Dock_Widget_Headers->isChecked());
 }
 
 void GMainWindow::ConnectWidgetEvents() {
-    connect(game_list, SIGNAL(GameChosen(QString)), this, SLOT(OnGameListLoadFile(QString)),
-            Qt::DirectConnection);
+    connect(game_list, SIGNAL(GameChosen(QString)), this, SLOT(OnGameListLoadFile(QString)));
     connect(game_list, SIGNAL(OpenSaveFolderRequested(u64)), this,
-            SLOT(OnGameListOpenSaveFolder(u64)), Qt::DirectConnection);
-    connect(ui.action_Configure, SIGNAL(triggered()), this, SLOT(OnConfigure()));
-    connect(ui.action_Load_File, SIGNAL(triggered()), this, SLOT(OnMenuLoadFile()),
-            Qt::DirectConnection);
-    connect(ui.action_Load_Symbol_Map, SIGNAL(triggered()), this, SLOT(OnMenuLoadSymbolMap()));
-    connect(ui.action_Select_Game_List_Root, SIGNAL(triggered()), this,
-            SLOT(OnMenuSelectGameListRoot()));
-    connect(ui.action_Start, SIGNAL(triggered()), this, SLOT(OnStartGame()));
-    connect(ui.action_Pause, SIGNAL(triggered()), this, SLOT(OnPauseGame()));
-    connect(ui.action_Stop, SIGNAL(triggered()), this, SLOT(OnStopGame()));
-    connect(ui.action_Single_Window_Mode, SIGNAL(triggered(bool)), this, SLOT(ToggleWindowMode()));
+            SLOT(OnGameListOpenSaveFolder(u64)));
 
-    connect(this, SIGNAL(EmulationStarting(EmuThread*)), disasmWidget,
-            SLOT(OnEmulationStarting(EmuThread*)));
-    connect(this, SIGNAL(EmulationStopping()), disasmWidget, SLOT(OnEmulationStopping()));
-    connect(this, SIGNAL(EmulationStarting(EmuThread*)), registersWidget,
-            SLOT(OnEmulationStarting(EmuThread*)));
-    connect(this, SIGNAL(EmulationStopping()), registersWidget, SLOT(OnEmulationStopping()));
     connect(this, SIGNAL(EmulationStarting(EmuThread*)), render_window,
             SLOT(OnEmulationStarting(EmuThread*)));
     connect(this, SIGNAL(EmulationStopping()), render_window, SLOT(OnEmulationStopping()));
-    connect(this, SIGNAL(EmulationStarting(EmuThread*)), graphicsTracingWidget,
-            SLOT(OnEmulationStarting(EmuThread*)));
-    connect(this, SIGNAL(EmulationStopping()), graphicsTracingWidget, SLOT(OnEmulationStopping()));
-    connect(this, SIGNAL(EmulationStarting(EmuThread*)), waitTreeWidget,
-            SLOT(OnEmulationStarting(EmuThread*)));
-    connect(this, SIGNAL(EmulationStopping()), waitTreeWidget, SLOT(OnEmulationStopping()));
+}
+
+void GMainWindow::ConnectMenuEvents() {
+    // File
+    connect(ui.action_Load_File, &QAction::triggered, this, &GMainWindow::OnMenuLoadFile);
+    connect(ui.action_Load_Symbol_Map, &QAction::triggered, this,
+            &GMainWindow::OnMenuLoadSymbolMap);
+    connect(ui.action_Select_Game_List_Root, &QAction::triggered, this,
+            &GMainWindow::OnMenuSelectGameListRoot);
+    connect(ui.action_Exit, &QAction::triggered, this, &QMainWindow::close);
+
+    // Emulation
+    connect(ui.action_Start, &QAction::triggered, this, &GMainWindow::OnStartGame);
+    connect(ui.action_Pause, &QAction::triggered, this, &GMainWindow::OnPauseGame);
+    connect(ui.action_Stop, &QAction::triggered, this, &GMainWindow::OnStopGame);
+    connect(ui.action_Configure, &QAction::triggered, this, &GMainWindow::OnConfigure);
+
+    // View
+    connect(ui.action_Single_Window_Mode, &QAction::triggered, this,
+            &GMainWindow::ToggleWindowMode);
+    connect(ui.action_Display_Dock_Widget_Headers, &QAction::triggered, this,
+            &GMainWindow::OnDisplayTitleBars);
 }
 
 void GMainWindow::OnDisplayTitleBars(bool show) {
@@ -612,7 +623,7 @@ void GMainWindow::closeEvent(QCloseEvent* event) {
     UISettings::values.microprofile_visible = microProfileDialog->isVisible();
 #endif
     UISettings::values.single_window_mode = ui.action_Single_Window_Mode->isChecked();
-    UISettings::values.display_titlebar = ui.actionDisplay_widget_title_bars->isChecked();
+    UISettings::values.display_titlebar = ui.action_Display_Dock_Widget_Headers->isChecked();
     UISettings::values.first_start = false;
 
     game_list->SaveInterfaceLayout();

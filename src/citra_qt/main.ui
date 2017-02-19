@@ -79,8 +79,16 @@
     <property name="title">
      <string>&amp;View</string>
     </property>
+    <widget class="QMenu" name="menu_View_Debugging">
+     <property name="title">
+      <string>Debugging</string>
+     </property>
+     <addaction name="action_Create_Pica_Surface_Viewer"/>
+     <addaction name="separator"/>
+    </widget>
     <addaction name="action_Single_Window_Mode"/>
-    <addaction name="actionDisplay_widget_title_bars"/>
+    <addaction name="action_Display_Dock_Widget_Headers"/>
+    <addaction name="menu_View_Debugging"/>
    </widget>
    <widget class="QMenu" name="menu_Help">
     <property name="title">
@@ -151,7 +159,7 @@
     <string>Configure...</string>
    </property>
   </action>
-  <action name="actionDisplay_widget_title_bars">
+  <action name="action_Display_Dock_Widget_Headers">
    <property name="checkable">
     <bool>true</bool>
    </property>
@@ -167,44 +175,11 @@
     <string>Selects a folder to display in the game list</string>
    </property>
   </action>
+  <action name="action_Create_Pica_Surface_Viewer">
+   <property name="text">
+    <string>Create Pica Surface Viewer</string>
+   </property>
+  </action>
  </widget>
  <resources/>
- <connections>
-  <connection>
-   <sender>action_Exit</sender>
-   <signal>triggered()</signal>
-   <receiver>MainWindow</receiver>
-   <slot>close()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>367</x>
-     <y>314</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>actionDisplay_widget_title_bars</sender>
-   <signal>triggered(bool)</signal>
-   <receiver>MainWindow</receiver>
-   <slot>OnDisplayTitleBars(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>540</x>
-     <y>364</y>
-    </hint>
-   </hints>
-  </connection>
- </connections>
- <slots>
-  <slot>OnConfigure()</slot>
-  <slot>OnDisplayTitleBars(bool)</slot>
- </slots>
 </ui>
