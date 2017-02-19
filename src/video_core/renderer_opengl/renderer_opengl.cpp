@@ -12,6 +12,7 @@
 #include "common/logging/log.h"
 #include "common/profiler_reporting.h"
 #include "common/synchronized_wrapper.h"
+#include "core/core.h"
 #include "core/frontend/emu_window.h"
 #include "core/hw/gpu.h"
 #include "core/hw/hw.h"
@@ -151,6 +152,10 @@ void RendererOpenGL::SwapBuffers() {
         auto aggregator = Common::Profiling::GetTimingResultsAggregator();
         aggregator->AddFrame(profiler.GetPreviousFrameResults());
     }
+    {
+        auto perf_stats = Core::System::GetInstance().perf_stats.Lock();
+        perf_stats->EndSystemFrame();
+    }
 
     // Swap buffers
     render_window->PollEvents();
@@ -159,6 +164,10 @@ void RendererOpenGL::SwapBuffers() {
     prev_state.Apply();
 
     profiler.BeginFrame();
+    {
+        auto perf_stats = Core::System::GetInstance().perf_stats.Lock();
+        perf_stats->BeginSystemFrame();
+    }
 
     RefreshRasterizerSetting();
 

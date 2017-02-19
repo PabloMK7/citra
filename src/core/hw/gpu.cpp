@@ -32,7 +32,7 @@ namespace GPU {
 Regs g_regs;
 
 /// 268MHz CPU clocks / 60Hz frames per second
-const u64 frame_ticks = BASE_CLOCK_RATE_ARM11 / 60;
+const u64 frame_ticks = BASE_CLOCK_RATE_ARM11 / SCREEN_REFRESH_RATE;
 /// Event id for CoreTiming
 static int vblank_event;
 /// Total number of frames drawn
@@ -41,7 +41,7 @@ static u64 frame_count;
 static u32 time_point;
 /// Total delay caused by slow frames
 static float time_delay;
-constexpr float FIXED_FRAME_TIME = 1000.0f / 60;
+constexpr float FIXED_FRAME_TIME = 1000.0f / SCREEN_REFRESH_RATE;
 // Max lag caused by slow frames. Can be adjusted to compensate for too many slow frames. Higher
 // values increases time needed to limit frame rate after spikes
 constexpr float MAX_LAG_TIME = 18;

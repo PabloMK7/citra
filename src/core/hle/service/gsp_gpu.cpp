@@ -4,6 +4,7 @@
 
 #include "common/bit_field.h"
 #include "common/microprofile.h"
+#include "core/core.h"
 #include "core/hle/kernel/event.h"
 #include "core/hle/kernel/shared_memory.h"
 #include "core/hle/result.h"
@@ -280,6 +281,8 @@ ResultCode SetBufferSwap(u32 screen_id, const FrameBufferInfo& info) {
 
     if (screen_id == 0) {
         MicroProfileFlip();
+        auto perf_stats = Core::System::GetInstance().perf_stats.Lock();
+        perf_stats->EndGameFrame();
     }
 
     return RESULT_SUCCESS;

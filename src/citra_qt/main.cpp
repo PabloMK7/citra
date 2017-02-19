@@ -253,6 +253,8 @@ void GMainWindow::ConnectWidgetEvents() {
     connect(this, SIGNAL(EmulationStarting(EmuThread*)), render_window,
             SLOT(OnEmulationStarting(EmuThread*)));
     connect(this, SIGNAL(EmulationStopping()), render_window, SLOT(OnEmulationStopping()));
+
+    connect(&status_bar_update_timer, &QTimer::timeout, this, &GMainWindow::UpdateStatusBar);
 }
 
 void GMainWindow::ConnectMenuEvents() {
@@ -401,6 +403,8 @@ void GMainWindow::BootGame(const QString& filename) {
     if (ui.action_Single_Window_Mode->isChecked()) {
         game_list->hide();
     }
+    status_bar_update_timer.start(1000);
+
     render_window->show();
     render_window->setFocus();
 
@@ -434,6 +438,12 @@ void GMainWindow::ShutdownGame() {
     ui.action_Stop->setEnabled(false);
     render_window->hide();
     game_list->show();
+
+    // Disable status bar updates
+    status_bar_update_timer.stop();
+    emu_speed_label->setVisible(false);
+    game_fps_label->setVisible(false);
+    emu_frametime_label->setVisible(false);
 
     emulation_running = false;
 }
@@ -612,6 +622,23 @@ void GMainWindow::OnCreateGraphicsSurfaceViewer() {
     addDockWidget(Qt::RightDockWidgetArea, graphicsSurfaceViewerWidget);
     // TODO: Maybe graphicsSurfaceViewerWidget->setFloating(true);
     graphicsSurfaceViewerWidget->show();
+}
+
+void GMainWindow::UpdateStatusBar() {
+    if (emu_thread == nullptr) {
+        status_bar_update_timer.stop();
+        return;
+    }
+
+    auto results = Core::System::GetInstance().GetAndResetPerfStats();
+
+    emu_speed_label->setText(tr("Speed: %1%").arg(results.emulation_speed * 100.0, 0, 'f', 2));
+    game_fps_label->setText(tr("Game: %1 FPS").arg(results.game_fps, 0, 'f', 1));
+    emu_frametime_label->setText(tr("Frame: %1 ms").arg(results.frametime * 1000.0, 0, 'f', 2));
+
+    emu_speed_label->setVisible(true);
+    game_fps_label->setVisible(true);
+    emu_frametime_label->setVisible(true);
 }
 
 bool GMainWindow::ConfirmClose() {

@@ -127,6 +127,8 @@ private slots:
     void OnCreateGraphicsSurfaceViewer();
 
 private:
+    void UpdateStatusBar();
+
     Ui::MainWindow ui;
 
     GRenderWindow* render_window;
@@ -136,6 +138,7 @@ private:
     QLabel* emu_speed_label = nullptr;
     QLabel* game_fps_label = nullptr;
     QLabel* emu_frametime_label = nullptr;
+    QTimer status_bar_update_timer;
 
     std::unique_ptr<Config> config;
 
