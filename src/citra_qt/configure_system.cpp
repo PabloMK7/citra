@@ -4,6 +4,7 @@
 
 #include "citra_qt/configure_system.h"
 #include "citra_qt/ui_settings.h"
+#include "core/core.h"
 #include "core/hle/service/cfg/cfg.h"
 #include "core/hle/service/fs/archive.h"
 #include "ui_configure_system.h"

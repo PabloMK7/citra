@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <memory>
 #include <string>
 #include "common/assert.h"
 #include "common/common_types.h"
