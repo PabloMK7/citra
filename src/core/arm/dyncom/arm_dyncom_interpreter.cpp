@@ -3928,13 +3928,13 @@ SXTB16_INST : {
         if (inst_cream->Rn == 15) {
             u32 lo = (u32)(s8)rm_val;
             u32 hi = (u32)(s8)(rm_val >> 16);
-            RD = (lo | (hi << 16));
+            RD = (lo & 0xFFFF) | (hi << 16);
         }
         // SXTAB16
         else {
-            u32 lo = (rn_val & 0xFFFF) + (u32)(s8)(rm_val & 0xFF);
-            u32 hi = ((rn_val >> 16) & 0xFFFF) + (u32)(s8)((rm_val >> 16) & 0xFF);
-            RD = (lo | (hi << 16));
+            u32 lo = rn_val + (u32)(s8)(rm_val & 0xFF);
+            u32 hi = (rn_val >> 16) + (u32)(s8)((rm_val >> 16) & 0xFF);
+            RD = (lo & 0xFFFF) | (hi << 16);
         }
     }
 
