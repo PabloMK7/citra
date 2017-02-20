@@ -69,7 +69,6 @@ set(HEADERS
 set(UIS
             debugger/callstack.ui
             debugger/disassembler.ui
-            debugger/profiler.ui
             debugger/registers.ui
             configure.ui
             configure_audio.ui

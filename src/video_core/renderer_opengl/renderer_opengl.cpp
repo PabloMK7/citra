@@ -10,7 +10,6 @@
 #include "common/assert.h"
 #include "common/bit_field.h"
 #include "common/logging/log.h"
-#include "common/profiler_reporting.h"
 #include "common/synchronized_wrapper.h"
 #include "core/core.h"
 #include "core/frontend/emu_window.h"
@@ -146,12 +145,6 @@ void RendererOpenGL::SwapBuffers() {
 
     DrawScreens();
 
-    auto& profiler = Common::Profiling::GetProfilingManager();
-    profiler.FinishFrame();
-    {
-        auto aggregator = Common::Profiling::GetTimingResultsAggregator();
-        aggregator->AddFrame(profiler.GetPreviousFrameResults());
-    }
     {
         auto perf_stats = Core::System::GetInstance().perf_stats.Lock();
         perf_stats->EndSystemFrame();
@@ -163,7 +156,6 @@ void RendererOpenGL::SwapBuffers() {
 
     prev_state.Apply();
 
-    profiler.BeginFrame();
     {
         auto perf_stats = Core::System::GetInstance().perf_stats.Lock();
         perf_stats->BeginSystemFrame();

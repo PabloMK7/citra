@@ -113,11 +113,6 @@ void GMainWindow::InitializeDebugWidgets() {
 
     QMenu* debug_menu = ui.menu_View_Debugging;
 
-    profilerWidget = new ProfilerWidget(this);
-    addDockWidget(Qt::BottomDockWidgetArea, profilerWidget);
-    profilerWidget->hide();
-    debug_menu->addAction(profilerWidget->toggleViewAction());
-
 #if MICROPROFILE_ENABLED
     microProfileDialog = new MicroProfileDialog(this);
     microProfileDialog->hide();

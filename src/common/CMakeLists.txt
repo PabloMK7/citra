@@ -12,7 +12,6 @@ set(SRCS
             memory_util.cpp
             microprofile.cpp
             misc.cpp
-            profiler.cpp
             scm_rev.cpp
             string_util.cpp
             symbols.cpp
@@ -45,7 +44,6 @@ set(HEADERS
             microprofile.h
             microprofileui.h
             platform.h
-            profiler_reporting.h
             quaternion.h
             scm_rev.h
             scope_exit.h
