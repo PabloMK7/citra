@@ -6,6 +6,9 @@
 #include "core/hw/gpu.h"
 #include "core/perf_stats.h"
 
+using DoubleSecs = std::chrono::duration<double, std::chrono::seconds::period>;
+using std::chrono::duration_cast;
+
 namespace Core {
 
 void PerfStats::BeginSystemFrame() {
@@ -16,6 +19,9 @@ void PerfStats::EndSystemFrame() {
     auto frame_end = Clock::now();
     accumulated_frametime += frame_end - frame_begin;
     system_frames += 1;
+
+    previous_frame_length = frame_end - previous_frame_end;
+    previous_frame_end = frame_end;
 }
 
 void PerfStats::EndGameFrame() {
@@ -23,9 +29,6 @@ void PerfStats::EndGameFrame() {
 }
 
 PerfStats::Results PerfStats::GetAndResetStats(u64 current_system_time_us) {
-    using DoubleSecs = std::chrono::duration<double, std::chrono::seconds::period>;
-    using std::chrono::duration_cast;
-
     auto now = Clock::now();
     // Walltime elapsed since stats were reset
     auto interval = duration_cast<DoubleSecs>(now - reset_point).count();
@@ -48,6 +51,11 @@ PerfStats::Results PerfStats::GetAndResetStats(u64 current_system_time_us) {
     game_frames = 0;
 
     return results;
+}
+
+double PerfStats::GetLastFrameTimeScale() {
+    constexpr double FRAME_LENGTH = 1.0 / GPU::SCREEN_REFRESH_RATE;
+    return duration_cast<DoubleSecs>(previous_frame_length).count() / FRAME_LENGTH;
 }
 
 } // namespace Core

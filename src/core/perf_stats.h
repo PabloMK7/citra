@@ -30,11 +30,19 @@ public:
 
     Results GetAndResetStats(u64 current_system_time_us);
 
+    /**
+     * Gets the ratio between walltime and the emulated time of the previous system frame. This is
+     * useful for scaling inputs or outputs moving between the two time domains.
+     */
+    double GetLastFrameTimeScale();
+
 private:
     Clock::time_point reset_point = Clock::now();
 
-    Clock::time_point frame_begin;
+    Clock::time_point frame_begin = reset_point;
+    Clock::time_point previous_frame_end = reset_point;
     Clock::duration accumulated_frametime = Clock::duration::zero();
+    Clock::duration previous_frame_length = Clock::duration::zero();
     u64 reset_point_system_us = 0;
     u32 system_frames = 0;
     u32 game_frames = 0;
