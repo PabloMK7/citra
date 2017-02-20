@@ -110,8 +110,7 @@ void System::PrepareReschedule() {
 }
 
 PerfStats::Results System::GetAndResetPerfStats() {
-    auto perf_stats = this->perf_stats.Lock();
-    return perf_stats->GetAndResetStats(CoreTiming::GetGlobalTimeUs());
+    return perf_stats.GetAndResetStats(CoreTiming::GetGlobalTimeUs());
 }
 
 void System::Reschedule() {
@@ -147,7 +146,7 @@ System::ResultStatus System::Init(EmuWindow* emu_window, u32 system_mode) {
 
     // Reset counters and set time origin to current frame
     GetAndResetPerfStats();
-    perf_stats.Lock()->BeginSystemFrame();
+    perf_stats.BeginSystemFrame();
 
     return ResultStatus::Success;
 }

@@ -7,7 +7,6 @@
 #include <memory>
 #include <string>
 #include "common/common_types.h"
-#include "common/synchronized_wrapper.h"
 #include "core/memory.h"
 #include "core/perf_stats.h"
 
@@ -94,7 +93,7 @@ public:
         return *cpu_core;
     }
 
-    Common::SynchronizedWrapper<PerfStats> perf_stats;
+    PerfStats perf_stats;
 
 private:
     /**

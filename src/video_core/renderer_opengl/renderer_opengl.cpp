@@ -145,10 +145,7 @@ void RendererOpenGL::SwapBuffers() {
 
     DrawScreens();
 
-    {
-        auto perf_stats = Core::System::GetInstance().perf_stats.Lock();
-        perf_stats->EndSystemFrame();
-    }
+    Core::System::GetInstance().perf_stats.EndSystemFrame();
 
     // Swap buffers
     render_window->PollEvents();
@@ -156,10 +153,7 @@ void RendererOpenGL::SwapBuffers() {
 
     prev_state.Apply();
 
-    {
-        auto perf_stats = Core::System::GetInstance().perf_stats.Lock();
-        perf_stats->BeginSystemFrame();
-    }
+    Core::System::GetInstance().perf_stats.BeginSystemFrame();
 
     RefreshRasterizerSetting();
 

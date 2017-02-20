@@ -5,10 +5,15 @@
 #pragma once
 
 #include <chrono>
+#include <mutex>
 #include "common/common_types.h"
 
 namespace Core {
 
+/**
+ * Class to manage and query performance/timing statistics. All public functions of this class are
+ * thread-safe unless stated otherwise.
+ */
 class PerfStats {
 public:
     using Clock = std::chrono::high_resolution_clock;
@@ -37,6 +42,8 @@ public:
     double GetLastFrameTimeScale();
 
 private:
+    std::mutex object_mutex;
+
     Clock::time_point reset_point = Clock::now();
 
     Clock::time_point frame_begin = reset_point;

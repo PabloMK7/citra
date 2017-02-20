@@ -104,7 +104,7 @@ void EmuWindow::AccelerometerChanged(float x, float y, float z) {
 void EmuWindow::GyroscopeChanged(float x, float y, float z) {
     constexpr float FULL_FPS = 60;
     float coef = GetGyroscopeRawToDpsCoefficient();
-    float stretch = Core::System::GetInstance().perf_stats.Lock()->GetLastFrameTimeScale();
+    float stretch = Core::System::GetInstance().perf_stats.GetLastFrameTimeScale();
     std::lock_guard<std::mutex> lock(gyro_mutex);
     gyro_x = static_cast<s16>(x * coef * stretch);
     gyro_y = static_cast<s16>(y * coef * stretch);
