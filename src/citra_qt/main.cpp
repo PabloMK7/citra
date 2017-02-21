@@ -405,7 +405,7 @@ void GMainWindow::BootGame(const QString& filename) {
     if (ui.action_Single_Window_Mode->isChecked()) {
         game_list->hide();
     }
-    status_bar_update_timer.start(1000);
+    status_bar_update_timer.start(2000);
 
     render_window->show();
     render_window->setFocus();
