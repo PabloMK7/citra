@@ -109,6 +109,8 @@ void GMainWindow::InitializeWidgets() {
 
     for (auto& label : {emu_speed_label, game_fps_label, emu_frametime_label}) {
         label->setVisible(false);
+        label->setFrameStyle(QFrame::NoFrame);
+        label->setContentsMargins(4, 0, 4, 0);
         statusBar()->addPermanentWidget(label);
     }
     statusBar()->setVisible(true);
