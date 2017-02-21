@@ -94,6 +94,7 @@ public:
     }
 
     PerfStats perf_stats;
+    FrameLimiter frame_limiter;
 
 private:
     /**

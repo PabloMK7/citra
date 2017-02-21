@@ -10,8 +10,8 @@
 #include "common/assert.h"
 #include "common/bit_field.h"
 #include "common/logging/log.h"
-#include "common/synchronized_wrapper.h"
 #include "core/core.h"
+#include "core/core_timing.h"
 #include "core/frontend/emu_window.h"
 #include "core/hw/gpu.h"
 #include "core/hw/hw.h"
@@ -151,10 +151,10 @@ void RendererOpenGL::SwapBuffers() {
     render_window->PollEvents();
     render_window->SwapBuffers();
 
-    prev_state.Apply();
-
+    Core::System::GetInstance().frame_limiter.DoFrameLimiting(CoreTiming::GetGlobalTimeUs());
     Core::System::GetInstance().perf_stats.BeginSystemFrame();
 
+    prev_state.Apply();
     RefreshRasterizerSetting();
 
     if (Pica::g_debug_context && Pica::g_debug_context->recorder) {

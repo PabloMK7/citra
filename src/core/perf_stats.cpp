@@ -4,11 +4,16 @@
 
 #include <chrono>
 #include <mutex>
+#include <thread>
+#include "common/math_util.h"
 #include "core/hw/gpu.h"
 #include "core/perf_stats.h"
+#include "core/settings.h"
 
+using namespace std::chrono_literals;
 using DoubleSecs = std::chrono::duration<double, std::chrono::seconds::period>;
 using std::chrono::duration_cast;
+using std::chrono::microseconds;
 
 namespace Core {
 
@@ -67,6 +72,34 @@ double PerfStats::GetLastFrameTimeScale() {
 
     constexpr double FRAME_LENGTH = 1.0 / GPU::SCREEN_REFRESH_RATE;
     return duration_cast<DoubleSecs>(previous_frame_length).count() / FRAME_LENGTH;
+}
+
+void FrameLimiter::DoFrameLimiting(u64 current_system_time_us) {
+    // Max lag caused by slow frames. Can be adjusted to compensate for too many slow frames. Higher
+    // values increases time needed to limit frame rate after spikes.
+    constexpr microseconds MAX_LAG_TIME_US = 25ms;
+
+    if (!Settings::values.toggle_framelimit) {
+        return;
+    }
+
+    auto now = Clock::now();
+
+    frame_limiting_delta_err += microseconds(current_system_time_us - previous_system_time_us);
+    frame_limiting_delta_err -= duration_cast<microseconds>(now - previous_walltime);
+    frame_limiting_delta_err =
+        MathUtil::Clamp(frame_limiting_delta_err, -MAX_LAG_TIME_US, MAX_LAG_TIME_US);
+
+    if (frame_limiting_delta_err > microseconds::zero()) {
+        std::this_thread::sleep_for(frame_limiting_delta_err);
+
+        auto now_after_sleep = Clock::now();
+        frame_limiting_delta_err -= duration_cast<microseconds>(now_after_sleep - now);
+        now = now_after_sleep;
+    }
+
+    previous_system_time_us = current_system_time_us;
+    previous_walltime = now;
 }
 
 } // namespace Core

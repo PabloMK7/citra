@@ -55,4 +55,20 @@ private:
     u32 game_frames = 0;
 };
 
+class FrameLimiter {
+public:
+    using Clock = std::chrono::high_resolution_clock;
+
+    void DoFrameLimiting(u64 current_system_time_us);
+
+private:
+    /// Emulated system time (in microseconds) at the last limiter invocation
+    u64 previous_system_time_us = 0;
+    /// Walltime at the last limiter invocation
+    Clock::time_point previous_walltime = Clock::now();
+
+    /// Accumulated difference between walltime and emulated time
+    std::chrono::microseconds frame_limiting_delta_err{0};
+};
+
 } // namespace Core
