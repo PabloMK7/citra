@@ -39,6 +39,7 @@ GameList::GameList(QWidget* parent) : QWidget{parent} {
 
     connect(tree_view, &QTreeView::activated, this, &GameList::ValidateEntry);
     connect(tree_view, &QTreeView::customContextMenuRequested, this, &GameList::PopupContextMenu);
+    connect(&watcher, &QFileSystemWatcher::directoryChanged, this, &GameList::RefreshGameDirectory);
 
     // We must register all custom types with the Qt Automoc system so that we are able to use it
     // with signals/slots. In this case, QList falls under the umbrells of custom types.
@@ -103,6 +104,12 @@ void GameList::PopulateAsync(const QString& dir_path, bool deep_scan) {
     item_model->removeRows(0, item_model->rowCount());
 
     emit ShouldCancelWorker();
+
+    auto watch_dirs = watcher.directories();
+    if (!watch_dirs.isEmpty()) {
+        watcher.removePaths(watch_dirs);
+    }
+    UpdateWatcherList(dir_path.toStdString(), deep_scan ? 256 : 0);
     GameListWorker* worker = new GameListWorker(dir_path, deep_scan);
 
     connect(worker, &GameListWorker::EntryReady, this, &GameList::AddEntry, Qt::QueuedConnection);
@@ -138,6 +145,45 @@ const QStringList GameList::supported_file_extensions = {"3ds", "3dsx", "elf", "
 static bool HasSupportedFileExtension(const std::string& file_name) {
     QFileInfo file = QFileInfo(file_name.c_str());
     return GameList::supported_file_extensions.contains(file.suffix(), Qt::CaseInsensitive);
+}
+
+void GameList::RefreshGameDirectory() {
+    if (!UISettings::values.gamedir.isEmpty() && current_worker != nullptr) {
+        LOG_INFO(Frontend, "Change detected in the games directory. Reloading game list.");
+        PopulateAsync(UISettings::values.gamedir, UISettings::values.gamedir_deepscan);
+    }
+}
+
+/**
+ * Adds the game list folder to the QFileSystemWatcher to check for updates.
+ *
+ * The file watcher will fire off an update to the game list when a change is detected in the game
+ * list folder.
+ *
+ * Notice: This method is run on the UI thread because QFileSystemWatcher is not thread safe and
+ * this function is fast enough to not stall the UI thread. If performance is an issue, it should
+ * be moved to another thread and properly locked to prevent concurrency issues.
+ *
+ * @param dir folder to check for changes in
+ * @param recursion 0 if recursion is disabled. Any positive number passed to this will add each
+ *        directory recursively to the watcher and will update the file list if any of the folders
+ *        change. The number determines how deep the recursion should traverse.
+ */
+void GameList::UpdateWatcherList(const std::string& dir, unsigned int recursion) {
+    const auto callback = [this, recursion](unsigned* num_entries_out, const std::string& directory,
+                                            const std::string& virtual_name) -> bool {
+        std::string physical_name = directory + DIR_SEP + virtual_name;
+
+        if (FileUtil::IsDirectory(physical_name)) {
+            UpdateWatcherList(physical_name, recursion - 1);
+        }
+        return true;
+    };
+
+    watcher.addPath(QString::fromStdString(dir));
+    if (recursion > 0) {
+        FileUtil::ForeachDirectoryEntry(nullptr, dir, callback);
+    }
 }
 
 void GameListWorker::AddFstEntriesToGameList(const std::string& dir_path, unsigned int recursion) {
@@ -182,6 +228,6 @@ void GameListWorker::run() {
 }
 
 void GameListWorker::Cancel() {
-    disconnect(this, nullptr, nullptr, nullptr);
+    this->disconnect();
     stop_processing = true;
 }
