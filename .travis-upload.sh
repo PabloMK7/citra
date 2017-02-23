@@ -118,8 +118,8 @@ EOL
     cp license.txt "$REV_NAME"
     cp README.md "$REV_NAME"
 
-    ARCHIVE_NAME="${REV_NAME}.tar.xz"
-    tar -cJvf "$ARCHIVE_NAME" "$REV_NAME"
+    ARCHIVE_NAME="${REV_NAME}.tar.gz"
+    tar -czvf "$ARCHIVE_NAME" "$REV_NAME"
 
     # move the compiled archive into the artifacts directory to be uploaded by travis releases
     mv "$ARCHIVE_NAME" artifacts/
