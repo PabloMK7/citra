@@ -27,7 +27,7 @@
           <item>
            <widget class="QCheckBox" name="toggle_deepscan">
             <property name="text">
-             <string>Recursive scan for game folder</string>
+             <string>Search sub-directories for games</string>
             </property>
            </widget>
           </item>
