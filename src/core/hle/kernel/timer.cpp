@@ -52,9 +52,14 @@ void Timer::Set(s64 initial, s64 interval) {
     initial_delay = initial;
     interval_delay = interval;
 
-    u64 initial_microseconds = initial / 1000;
-    CoreTiming::ScheduleEvent(usToCycles(initial_microseconds), timer_callback_event_type,
-                              callback_handle);
+    if (initial == 0) {
+        // Immediately invoke the callback
+        Signal(0);
+    } else {
+        u64 initial_microseconds = initial / 1000;
+        CoreTiming::ScheduleEvent(usToCycles(initial_microseconds), timer_callback_event_type,
+                                  callback_handle);
+    }
 }
 
 void Timer::Cancel() {
@@ -72,6 +77,20 @@ void Timer::WakeupAllWaitingThreads() {
         signaled = false;
 }
 
+void Timer::Signal(int cycles_late) {
+    LOG_TRACE(Kernel, "Timer %08" PRIx64 " fired", timer_handle);
+
+    // Resume all waiting threads
+    WakeupAllWaitingThreads();
+
+    if (interval_delay != 0) {
+        // Reschedule the timer with the interval delay
+        u64 interval_microseconds = interval_delay / 1000;
+        CoreTiming::ScheduleEvent(usToCycles(interval_microseconds) - cycles_late,
+                                  timer_callback_event_type, callback_handle);
+    }
+}
+
 /// The timer callback event, called when a timer is fired
 static void TimerCallback(u64 timer_handle, int cycles_late) {
     SharedPtr<Timer> timer =
@@ -82,19 +101,7 @@ static void TimerCallback(u64 timer_handle, int cycles_late) {
         return;
     }
 
-    LOG_TRACE(Kernel, "Timer %08" PRIx64 " fired", timer_handle);
-
-    timer->signaled = true;
-
-    // Resume all waiting threads
-    timer->WakeupAllWaitingThreads();
-
-    if (timer->interval_delay != 0) {
-        // Reschedule the timer with the interval delay
-        u64 interval_microseconds = timer->interval_delay / 1000;
-        CoreTiming::ScheduleEvent(usToCycles(interval_microseconds) - cycles_late,
-                                  timer_callback_event_type, timer_handle);
-    }
+    timer->Signal(cycles_late);
 }
 
 void TimersInit() {

@@ -54,6 +54,14 @@ public:
     void Cancel();
     void Clear();
 
+    /**
+     * Signals the timer, waking up any waiting threads and rescheduling it
+     * for the next interval.
+     * This method should not be called from outside the timer callback handler,
+     * lest multiple callback events get scheduled.
+     */
+    void Signal(int cycles_late);
+
 private:
     Timer();
     ~Timer() override;
