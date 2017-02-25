@@ -6,6 +6,7 @@ if [ "$TRAVIS_EVENT_TYPE" = "push" ]&&[ "$TRAVIS_BRANCH" = "master" ]; then
     if [ "$TRAVIS_OS_NAME" = "linux" -o -z "$TRAVIS_OS_NAME" ]; then
         REV_NAME="citra-linux-${GITDATE}-${GITREV}"
         ARCHIVE_NAME="${REV_NAME}.tar.xz"
+        COMPRESSION_FLAGS="-cJvf"
         mkdir "$REV_NAME"
 
         cp build/src/citra/citra "$REV_NAME"
@@ -13,6 +14,7 @@ if [ "$TRAVIS_EVENT_TYPE" = "push" ]&&[ "$TRAVIS_BRANCH" = "master" ]; then
     elif [ "$TRAVIS_OS_NAME" = "osx" ]; then
         REV_NAME="citra-osx-${GITDATE}-${GITREV}"
         ARCHIVE_NAME="${REV_NAME}.tar.gz"
+        COMPRESSION_FLAGS="-czvf"
         mkdir "$REV_NAME"
 
         cp build/src/citra/Release/citra "$REV_NAME"
@@ -120,7 +122,7 @@ EOL
     cp license.txt "$REV_NAME"
     cp README.md "$REV_NAME"
 
-    tar -cavf "$ARCHIVE_NAME" "$REV_NAME"
+    tar $COMPRESSION_FLAGS "$ARCHIVE_NAME" "$REV_NAME"
 
     # move the compiled archive into the artifacts directory to be uploaded by travis releases
     mv "$ARCHIVE_NAME" artifacts/
