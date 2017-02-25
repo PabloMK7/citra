@@ -18,5 +18,8 @@ public:
     }
 };
 
+void InitRST();
+void ShutdownRST();
+
 } // namespace IR
 } // namespace Service
