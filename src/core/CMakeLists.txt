@@ -159,6 +159,9 @@ set(SRCS
             hle/service/y2r_u.cpp
             hle/shared_page.cpp
             hle/svc.cpp
+            hw/aes/arithmetic128.cpp
+            hw/aes/ccm.cpp
+            hw/aes/key.cpp
             hw/gpu.cpp
             hw/hw.cpp
             hw/lcd.cpp
@@ -343,6 +346,9 @@ set(HEADERS
             hle/service/y2r_u.h
             hle/shared_page.h
             hle/svc.h
+            hw/aes/arithmetic128.h
+            hw/aes/ccm.h
+            hw/aes/key.h
             hw/gpu.h
             hw/hw.h
             hw/lcd.h

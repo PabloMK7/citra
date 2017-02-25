@@ -137,6 +137,46 @@ void Initialize(Service::Interface* self);
 void GetSharedFont(Service::Interface* self);
 
 /**
+ * APT::Wrap service function
+ *  Inputs:
+ *      1 : Output buffer size
+ *      2 : Input buffer size
+ *      3 : Nonce offset to the input buffer
+ *      4 : Nonce size
+ *      5 : Buffer mapping descriptor ((input_buffer_size << 4) | 0xA)
+ *      6 : Input buffer address
+ *      7 : Buffer mapping descriptor ((input_buffer_size << 4) | 0xC)
+ *      8 : Output buffer address
+ *  Outputs:
+ *      1 : Result of function, 0 on success, otherwise error code
+ *      2 : Buffer unmapping descriptor ((input_buffer_size << 4) | 0xA)
+ *      3 : Input buffer address
+ *      4 : Buffer unmapping descriptor ((input_buffer_size << 4) | 0xC)
+ *      5 : Output buffer address
+ */
+void Wrap(Service::Interface* self);
+
+/**
+ * APT::Unwrap service function
+ *  Inputs:
+ *      1 : Output buffer size
+ *      2 : Input buffer size
+ *      3 : Nonce offset to the output buffer
+ *      4 : Nonce size
+ *      5 : Buffer mapping descriptor ((input_buffer_size << 4) | 0xA)
+ *      6 : Input buffer address
+ *      7 : Buffer mapping descriptor ((input_buffer_size << 4) | 0xC)
+ *      8 : Output buffer address
+ *  Outputs:
+ *      1 : Result of function, 0 on success, otherwise error code
+ *      2 : Buffer unmapping descriptor ((input_buffer_size << 4) | 0xA)
+ *      3 : Input buffer address
+ *      4 : Buffer unmapping descriptor ((input_buffer_size << 4) | 0xC)
+ *      5 : Output buffer address
+ */
+void Unwrap(Service::Interface* self);
+
+/**
  * APT::NotifyToWait service function
  *  Inputs:
  *      1 : AppID

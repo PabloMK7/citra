@@ -45,3 +45,4 @@
 
 // Sys files
 #define SHARED_FONT "shared_font.bin"
+#define AES_KEYS "aes_keys.txt"

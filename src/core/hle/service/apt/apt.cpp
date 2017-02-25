@@ -18,6 +18,8 @@
 #include "core/hle/service/fs/archive.h"
 #include "core/hle/service/ptm/ptm.h"
 #include "core/hle/service/service.h"
+#include "core/hw/aes/ccm.h"
+#include "core/hw/aes/key.h"
 
 namespace Service {
 namespace APT {
@@ -468,6 +470,107 @@ void GetStartupArgument(Service::Interface* self) {
 
     cmd_buff[1] = RESULT_SUCCESS.raw;
     cmd_buff[2] = 0;
+}
+
+void Wrap(Service::Interface* self) {
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x46, 4, 4);
+    const u32 output_size = rp.Pop<u32>();
+    const u32 input_size = rp.Pop<u32>();
+    const u32 nonce_offset = rp.Pop<u32>();
+    u32 nonce_size = rp.Pop<u32>();
+    size_t desc_size;
+    IPC::MappedBufferPermissions desc_permission;
+    const VAddr input = rp.PopMappedBuffer(&desc_size, &desc_permission);
+    ASSERT(desc_size == input_size && desc_permission == IPC::MappedBufferPermissions::R);
+    const VAddr output = rp.PopMappedBuffer(&desc_size, &desc_permission);
+    ASSERT(desc_size == output_size && desc_permission == IPC::MappedBufferPermissions::W);
+
+    // Note: real 3DS still returns SUCCESS when the sizes don't match. It seems that it doesn't
+    // check the buffer size and writes data with potential overflow.
+    ASSERT_MSG(output_size == input_size + HW::AES::CCM_MAC_SIZE,
+               "input_size (%d) doesn't match to output_size (%d)", input_size, output_size);
+
+    LOG_DEBUG(Service_APT, "called, output_size=%u, input_size=%u, nonce_offset=%u, nonce_size=%u",
+              output_size, input_size, nonce_offset, nonce_size);
+
+    // Note: This weird nonce size modification is verified against real 3DS
+    nonce_size = std::min<u32>(nonce_size & ~3, HW::AES::CCM_NONCE_SIZE);
+
+    // Reads nonce and concatenates the rest of the input as plaintext
+    HW::AES::CCMNonce nonce{};
+    Memory::ReadBlock(input + nonce_offset, nonce.data(), nonce_size);
+    u32 pdata_size = input_size - nonce_size;
+    std::vector<u8> pdata(pdata_size);
+    Memory::ReadBlock(input, pdata.data(), nonce_offset);
+    Memory::ReadBlock(input + nonce_offset + nonce_size, pdata.data() + nonce_offset,
+                      pdata_size - nonce_offset);
+
+    // Encrypts the plaintext using AES-CCM
+    auto cipher = HW::AES::EncryptSignCCM(pdata, nonce, HW::AES::KeySlotID::APTWrap);
+
+    // Puts the nonce to the beginning of the output, with ciphertext followed
+    Memory::WriteBlock(output, nonce.data(), nonce_size);
+    Memory::WriteBlock(output + nonce_size, cipher.data(), cipher.size());
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 4);
+    rb.Push(RESULT_SUCCESS);
+
+    // Unmap buffer
+    rb.PushMappedBuffer(input, input_size, IPC::MappedBufferPermissions::R);
+    rb.PushMappedBuffer(output, output_size, IPC::MappedBufferPermissions::W);
+}
+
+void Unwrap(Service::Interface* self) {
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x47, 4, 4);
+    const u32 output_size = rp.Pop<u32>();
+    const u32 input_size = rp.Pop<u32>();
+    const u32 nonce_offset = rp.Pop<u32>();
+    u32 nonce_size = rp.Pop<u32>();
+    size_t desc_size;
+    IPC::MappedBufferPermissions desc_permission;
+    const VAddr input = rp.PopMappedBuffer(&desc_size, &desc_permission);
+    ASSERT(desc_size == input_size && desc_permission == IPC::MappedBufferPermissions::R);
+    const VAddr output = rp.PopMappedBuffer(&desc_size, &desc_permission);
+    ASSERT(desc_size == output_size && desc_permission == IPC::MappedBufferPermissions::W);
+
+    // Note: real 3DS still returns SUCCESS when the sizes don't match. It seems that it doesn't
+    // check the buffer size and writes data with potential overflow.
+    ASSERT_MSG(output_size == input_size - HW::AES::CCM_MAC_SIZE,
+               "input_size (%d) doesn't match to output_size (%d)", input_size, output_size);
+
+    LOG_DEBUG(Service_APT, "called, output_size=%u, input_size=%u, nonce_offset=%u, nonce_size=%u",
+              output_size, input_size, nonce_offset, nonce_size);
+
+    // Note: This weird nonce size modification is verified against real 3DS
+    nonce_size = std::min<u32>(nonce_size & ~3, HW::AES::CCM_NONCE_SIZE);
+
+    // Reads nonce and cipher text
+    HW::AES::CCMNonce nonce{};
+    Memory::ReadBlock(input, nonce.data(), nonce_size);
+    u32 cipher_size = input_size - nonce_size;
+    std::vector<u8> cipher(cipher_size);
+    Memory::ReadBlock(input + nonce_size, cipher.data(), cipher_size);
+
+    // Decrypts the ciphertext using AES-CCM
+    auto pdata = HW::AES::DecryptVerifyCCM(cipher, nonce, HW::AES::KeySlotID::APTWrap);
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    if (!pdata.empty()) {
+        // Splits the plaintext and put the nonce in between
+        Memory::WriteBlock(output, pdata.data(), nonce_offset);
+        Memory::WriteBlock(output + nonce_offset, nonce.data(), nonce_size);
+        Memory::WriteBlock(output + nonce_offset + nonce_size, pdata.data() + nonce_offset,
+                           pdata.size() - nonce_offset);
+        rb.Push(RESULT_SUCCESS);
+    } else {
+        LOG_ERROR(Service_APT, "Failed to decrypt data");
+        rb.Push(ResultCode(static_cast<ErrorDescription>(1), ErrorModule::PS,
+                           ErrorSummary::WrongArgument, ErrorLevel::Status));
+    }
+
+    // Unmap buffer
+    rb.PushMappedBuffer(input, input_size, IPC::MappedBufferPermissions::R);
+    rb.PushMappedBuffer(output, output_size, IPC::MappedBufferPermissions::W);
 }
 
 void CheckNew3DSApp(Service::Interface* self) {

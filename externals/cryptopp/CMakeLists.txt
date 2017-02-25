@@ -3,6 +3,7 @@
 # The differences are:
 #  - removed support for legacy CMake versions
 #  - removed support for 32-bit
+#  - removed -march=native flag
 #  - removed rdrand module.asm as a workaround for an issue (see below)
 #  - added prefix "CRYPTOPP_" to all option names
 #  - disabled testing
@@ -93,14 +94,6 @@ if ((NOT CRYPTOPP_CROSS_COMPILE) AND (NOT (WINDOWS OR WINDOWS_STORE OR WINDOWS_P
     # Use Regex; match i386, i486, i586 and i686
     if (NOT (${UNAME_MACHINE} MATCHES "i.86"))
         SET(CMAKE_POSITION_INDEPENDENT_CODE 1)
-    endif()
-endif()
-
-# -march=native for GCC, Clang and ICC in any version that does support it.
-if ((NOT CRYPTOPP_DISABLE_CXXFLAGS_OPTIMIZATIONS) AND (NOT CRYPTOPP_CROSS_COMPILE) AND (CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU|Intel"))
-    CHECK_CXX_COMPILER_FLAG("-march=native" COMPILER_OPT_ARCH_NATIVE_SUPPORTED)
-    if (COMPILER_OPT_ARCH_NATIVE_SUPPORTED AND NOT CMAKE_CXX_FLAGS MATCHES "-march=")
-        SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
     endif()
 endif()
 

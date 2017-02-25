@@ -4,6 +4,7 @@
 
 #include "common/common_types.h"
 #include "common/logging/log.h"
+#include "core/hw/aes/key.h"
 #include "core/hw/gpu.h"
 #include "core/hw/hw.h"
 #include "core/hw/lcd.h"
@@ -85,6 +86,7 @@ void Update() {}
 
 /// Initialize hardware
 void Init() {
+    AES::InitKeys();
     GPU::Init();
     LCD::Init();
     LOG_DEBUG(HW, "initialized OK");
