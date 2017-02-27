@@ -173,6 +173,7 @@ set(SRCS
             loader/smdh.cpp
             tracer/recorder.cpp
             memory.cpp
+            perf_stats.cpp
             settings.cpp
             )
 
@@ -363,6 +364,7 @@ set(HEADERS
             memory.h
             memory_setup.h
             mmio.h
+            perf_stats.h
             settings.h
             )
 

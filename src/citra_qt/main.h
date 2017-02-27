@@ -127,10 +127,18 @@ private slots:
     void OnCreateGraphicsSurfaceViewer();
 
 private:
+    void UpdateStatusBar();
+
     Ui::MainWindow ui;
 
     GRenderWindow* render_window;
     GameList* game_list;
+
+    // Status bar elements
+    QLabel* emu_speed_label = nullptr;
+    QLabel* game_fps_label = nullptr;
+    QLabel* emu_frametime_label = nullptr;
+    QTimer status_bar_update_timer;
 
     std::unique_ptr<Config> config;
 
@@ -138,6 +146,7 @@ private:
     bool emulation_running = false;
     std::unique_ptr<EmuThread> emu_thread;
 
+    // Debugger panes
     ProfilerWidget* profilerWidget;
     MicroProfileDialog* microProfileDialog;
     DisassemblerWidget* disasmWidget;

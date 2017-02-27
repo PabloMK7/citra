@@ -45,6 +45,7 @@ GameList::GameList(QWidget* parent) : QWidget{parent} {
     // with signals/slots. In this case, QList falls under the umbrells of custom types.
     qRegisterMetaType<QList<QStandardItem*>>("QList<QStandardItem*>");
 
+    layout->setContentsMargins(0, 0, 0, 0);
     layout->addWidget(tree_view);
     setLayout(layout);
 }

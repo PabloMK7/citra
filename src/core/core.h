@@ -6,9 +6,9 @@
 
 #include <memory>
 #include <string>
-
 #include "common/common_types.h"
 #include "core/memory.h"
+#include "core/perf_stats.h"
 
 class EmuWindow;
 class ARM_Interface;
@@ -83,6 +83,8 @@ public:
     /// Prepare the core emulation for a reschedule
     void PrepareReschedule();
 
+    PerfStats::Results GetAndResetPerfStats();
+
     /**
      * Gets a reference to the emulated CPU.
      * @returns A reference to the emulated CPU.
@@ -90,6 +92,9 @@ public:
     ARM_Interface& CPU() {
         return *cpu_core;
     }
+
+    PerfStats perf_stats;
+    FrameLimiter frame_limiter;
 
 private:
     /**

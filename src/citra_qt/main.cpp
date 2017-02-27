@@ -95,6 +95,26 @@ void GMainWindow::InitializeWidgets() {
 
     game_list = new GameList();
     ui.horizontalLayout->addWidget(game_list);
+
+    // Create status bar
+    emu_speed_label = new QLabel();
+    emu_speed_label->setToolTip(tr("Current emulation speed. Values higher or lower than 100% "
+                                   "indicate emulation is running faster or slower than a 3DS."));
+    game_fps_label = new QLabel();
+    game_fps_label->setToolTip(tr("How many frames per second the game is currently displaying. "
+                                  "This will vary from game to game and scene to scene."));
+    emu_frametime_label = new QLabel();
+    emu_frametime_label->setToolTip(
+        tr("Time taken to emulate a 3DS frame, not counting framelimiting or v-sync. For "
+           "full-speed emulation this should be at most 16.67 ms."));
+
+    for (auto& label : {emu_speed_label, game_fps_label, emu_frametime_label}) {
+        label->setVisible(false);
+        label->setFrameStyle(QFrame::NoFrame);
+        label->setContentsMargins(4, 0, 4, 0);
+        statusBar()->addPermanentWidget(label);
+    }
+    statusBar()->setVisible(true);
 }
 
 void GMainWindow::InitializeDebugWidgets() {
@@ -102,11 +122,6 @@ void GMainWindow::InitializeDebugWidgets() {
             &GMainWindow::OnCreateGraphicsSurfaceViewer);
 
     QMenu* debug_menu = ui.menu_View_Debugging;
-
-    profilerWidget = new ProfilerWidget(this);
-    addDockWidget(Qt::BottomDockWidgetArea, profilerWidget);
-    profilerWidget->hide();
-    debug_menu->addAction(profilerWidget->toggleViewAction());
 
 #if MICROPROFILE_ENABLED
     microProfileDialog = new MicroProfileDialog(this);
@@ -230,6 +245,9 @@ void GMainWindow::RestoreUIState() {
 
     ui.action_Display_Dock_Widget_Headers->setChecked(UISettings::values.display_titlebar);
     OnDisplayTitleBars(ui.action_Display_Dock_Widget_Headers->isChecked());
+
+    ui.action_Show_Status_Bar->setChecked(UISettings::values.show_status_bar);
+    statusBar()->setVisible(ui.action_Show_Status_Bar->isChecked());
 }
 
 void GMainWindow::ConnectWidgetEvents() {
@@ -240,6 +258,8 @@ void GMainWindow::ConnectWidgetEvents() {
     connect(this, SIGNAL(EmulationStarting(EmuThread*)), render_window,
             SLOT(OnEmulationStarting(EmuThread*)));
     connect(this, SIGNAL(EmulationStopping()), render_window, SLOT(OnEmulationStopping()));
+
+    connect(&status_bar_update_timer, &QTimer::timeout, this, &GMainWindow::UpdateStatusBar);
 }
 
 void GMainWindow::ConnectMenuEvents() {
@@ -262,6 +282,7 @@ void GMainWindow::ConnectMenuEvents() {
             &GMainWindow::ToggleWindowMode);
     connect(ui.action_Display_Dock_Widget_Headers, &QAction::triggered, this,
             &GMainWindow::OnDisplayTitleBars);
+    connect(ui.action_Show_Status_Bar, &QAction::triggered, statusBar(), &QStatusBar::setVisible);
 }
 
 void GMainWindow::OnDisplayTitleBars(bool show) {
@@ -387,6 +408,8 @@ void GMainWindow::BootGame(const QString& filename) {
     if (ui.action_Single_Window_Mode->isChecked()) {
         game_list->hide();
     }
+    status_bar_update_timer.start(2000);
+
     render_window->show();
     render_window->setFocus();
 
@@ -420,6 +443,12 @@ void GMainWindow::ShutdownGame() {
     ui.action_Stop->setEnabled(false);
     render_window->hide();
     game_list->show();
+
+    // Disable status bar updates
+    status_bar_update_timer.stop();
+    emu_speed_label->setVisible(false);
+    game_fps_label->setVisible(false);
+    emu_frametime_label->setVisible(false);
 
     emulation_running = false;
 }
@@ -600,6 +629,23 @@ void GMainWindow::OnCreateGraphicsSurfaceViewer() {
     graphicsSurfaceViewerWidget->show();
 }
 
+void GMainWindow::UpdateStatusBar() {
+    if (emu_thread == nullptr) {
+        status_bar_update_timer.stop();
+        return;
+    }
+
+    auto results = Core::System::GetInstance().GetAndResetPerfStats();
+
+    emu_speed_label->setText(tr("Speed: %1%").arg(results.emulation_speed * 100.0, 0, 'f', 0));
+    game_fps_label->setText(tr("Game: %1 FPS").arg(results.game_fps, 0, 'f', 0));
+    emu_frametime_label->setText(tr("Frame: %1 ms").arg(results.frametime * 1000.0, 0, 'f', 2));
+
+    emu_speed_label->setVisible(true);
+    game_fps_label->setVisible(true);
+    emu_frametime_label->setVisible(true);
+}
+
 bool GMainWindow::ConfirmClose() {
     if (emu_thread == nullptr || !UISettings::values.confirm_before_closing)
         return true;
@@ -625,6 +671,7 @@ void GMainWindow::closeEvent(QCloseEvent* event) {
 #endif
     UISettings::values.single_window_mode = ui.action_Single_Window_Mode->isChecked();
     UISettings::values.display_titlebar = ui.action_Display_Dock_Widget_Headers->isChecked();
+    UISettings::values.show_status_bar = ui.action_Show_Status_Bar->isChecked();
     UISettings::values.first_start = false;
 
     game_list->SaveInterfaceLayout();

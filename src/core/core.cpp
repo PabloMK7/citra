@@ -109,6 +109,10 @@ void System::PrepareReschedule() {
     reschedule_pending = true;
 }
 
+PerfStats::Results System::GetAndResetPerfStats() {
+    return perf_stats.GetAndResetStats(CoreTiming::GetGlobalTimeUs());
+}
+
 void System::Reschedule() {
     if (!reschedule_pending) {
         return;
@@ -139,6 +143,10 @@ System::ResultStatus System::Init(EmuWindow* emu_window, u32 system_mode) {
     }
 
     LOG_DEBUG(Core, "Initialized OK");
+
+    // Reset counters and set time origin to current frame
+    GetAndResetPerfStats();
+    perf_stats.BeginSystemFrame();
 
     return ResultStatus::Success;
 }

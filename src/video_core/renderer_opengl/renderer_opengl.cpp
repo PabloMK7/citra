@@ -10,8 +10,8 @@
 #include "common/assert.h"
 #include "common/bit_field.h"
 #include "common/logging/log.h"
-#include "common/profiler_reporting.h"
-#include "common/synchronized_wrapper.h"
+#include "core/core.h"
+#include "core/core_timing.h"
 #include "core/frontend/emu_window.h"
 #include "core/hw/gpu.h"
 #include "core/hw/hw.h"
@@ -145,21 +145,16 @@ void RendererOpenGL::SwapBuffers() {
 
     DrawScreens();
 
-    auto& profiler = Common::Profiling::GetProfilingManager();
-    profiler.FinishFrame();
-    {
-        auto aggregator = Common::Profiling::GetTimingResultsAggregator();
-        aggregator->AddFrame(profiler.GetPreviousFrameResults());
-    }
+    Core::System::GetInstance().perf_stats.EndSystemFrame();
 
     // Swap buffers
     render_window->PollEvents();
     render_window->SwapBuffers();
 
+    Core::System::GetInstance().frame_limiter.DoFrameLimiting(CoreTiming::GetGlobalTimeUs());
+    Core::System::GetInstance().perf_stats.BeginSystemFrame();
+
     prev_state.Apply();
-
-    profiler.BeginFrame();
-
     RefreshRasterizerSetting();
 
     if (Pica::g_debug_context && Pica::g_debug_context->recorder) {
