@@ -16,8 +16,8 @@ public:
 
     /**
      * Creates a camera object based on the configuration string.
-     * @params config Configuration string to create the camera. The implementation can decide the
-     *     meaning of this string.
+     * @param config Configuration string to create the camera. The implementation can decide the
+     *               meaning of this string.
      * @returns a unique_ptr to the created camera object.
      */
     virtual std::unique_ptr<CameraInterface> Create(const std::string& config) const = 0;

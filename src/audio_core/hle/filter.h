@@ -27,7 +27,7 @@ public:
      * See also: SourceConfiguration::Configuration::simple_filter_enabled,
      *           SourceConfiguration::Configuration::biquad_filter_enabled.
      * @param simple If true, enables the simple filter. If false, disables it.
-     * @param simple If true, enables the biquad filter. If false, disables it.
+     * @param biquad If true, enables the biquad filter. If false, disables it.
      */
     void Enable(bool simple, bool biquad);
 

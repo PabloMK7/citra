@@ -16,8 +16,8 @@
 #include "video_core/utils.h"
 
 /**
- * Gets game icon from SMDH
- * @param sdmh SMDH data
+ * Gets the game icon from SMDH data.
+ * @param smdh SMDH data
  * @param large If true, returns large icon (48x48), otherwise returns small icon (24x24)
  * @return QPixmap game icon
  */
@@ -42,8 +42,8 @@ static QPixmap GetDefaultIcon(bool large) {
 }
 
 /**
- * Gets the short game title fromn SMDH
- * @param sdmh SMDH data
+ * Gets the short game title from SMDH data.
+ * @param smdh SMDH data
  * @param language title language
  * @return QString short title
  */

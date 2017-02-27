@@ -87,7 +87,7 @@ public:
          * @param data Optional data pointer (if unused, this is a nullptr)
          * @note This function will perform nothing unless it is overridden in the child class.
          */
-        virtual void OnPicaBreakPointHit(Event, void*) {}
+        virtual void OnPicaBreakPointHit(Event event, void* data) {}
 
         /**
          * Action to perform when emulation is resumed from a breakpoint.

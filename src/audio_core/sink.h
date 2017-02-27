@@ -34,7 +34,7 @@ public:
 
     /**
      * Sets the desired output device.
-     * @paran device_id Id of the desired device.
+     * @param device_id ID of the desired device.
      */
     virtual void SetDevice(int device_id) = 0;
 

@@ -72,8 +72,8 @@ union Header {
  * through modifications and checks by the kernel.
  * The translate parameters are described by headers generated with the IPC::*Desc functions.
  *
- * @note While #normal_params_size is equivalent to the number of normal parameters,
- * #translate_params_size includes the size occupied by the translate parameters headers.
+ * @note While @p normal_params_size is equivalent to the number of normal parameters,
+ * @p translate_params_size includes the size occupied by the translate parameters headers.
  */
 inline u32 MakeHeader(u16 command_id, unsigned int normal_params_size,
                       unsigned int translate_params_size) {

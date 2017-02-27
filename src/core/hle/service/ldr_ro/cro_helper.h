@@ -57,7 +57,7 @@ public:
      * @param is_crs true if the module itself is the static module
      * @returns ResultCode RESULT_SUCCESS on success, otherwise error code.
      */
-    ResultCode Rebase(VAddr crs_address, u32 cro_size, VAddr data_segment_addresss,
+    ResultCode Rebase(VAddr crs_address, u32 cro_size, VAddr data_segment_address,
                       u32 data_segment_size, VAddr bss_segment_address, u32 bss_segment_size,
                       bool is_crs);
 
@@ -102,7 +102,7 @@ public:
     /**
      * Registers this module and adds it to the module list.
      * @param crs_address the virtual address of the static module
-     * @auto_link whether to register as an auto link module
+     * @param auto_link   whether to register as an auto link module
      */
     void Register(VAddr crs_address, bool auto_link);
 

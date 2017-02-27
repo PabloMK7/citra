@@ -18,7 +18,8 @@ public:
 
     /**
      * Produce debug information based on the given shader and input vertex
-     * @param input Input vertex into the shader
+     * @param setup  Shader engine state
+     * @param input  Input vertex into the shader
      * @param config Configuration object for the shader pipeline
      * @return Debug information for this shader with regards to the given vertex
      */

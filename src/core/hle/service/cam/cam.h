@@ -518,7 +518,7 @@ void FlipImage(Service::Interface* self);
 void SetDetailSize(Service::Interface* self);
 
 /**
- * Sets camera resolution from preset resolution parameters. .
+ * Sets camera resolution from preset resolution parameters.
  *  Inputs:
  *      0: 0x001F00C0
  *      1: u8 selected camera

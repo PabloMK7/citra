@@ -45,7 +45,8 @@ public:
 
     /**
      * Creates a pair of ServerSession and an associated ClientSession.
-     * @param name Optional name of the ports
+     * @param name        Optional name of the ports.
+     * @param hle_handler Optional HLE handler for this server session.
      * @return The created session tuple
      */
     static SessionPair CreateSessionPair(

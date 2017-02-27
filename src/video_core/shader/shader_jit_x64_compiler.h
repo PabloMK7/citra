@@ -93,7 +93,8 @@ private:
 
     /**
      * Assertion evaluated at compile-time, but only triggered if executed at runtime.
-     * @param msg Message to be logged if the assertion fails.
+     * @param condition Condition to be evaluated.
+     * @param msg       Message to be logged if the assertion fails.
      */
     void Compile_Assert(bool condition, const char* msg);
 

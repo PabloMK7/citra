@@ -25,7 +25,7 @@ public:
     /**
      * Add samples to be processed.
      * @param sample_buffer Buffer of samples in interleaved stereo PCM16 format.
-     * @param num_sample Number of samples.
+     * @param num_samples Number of samples.
      */
     void AddSamples(const s16* sample_buffer, size_t num_samples);
 

@@ -230,6 +230,7 @@ static void GdbHexToMem(u8* dest, const u8* src, size_t len) {
  * Convert a u32 into a gdb-formatted hex string.
  *
  * @param dest Pointer to buffer to store output hex string characters.
+ * @param v    Value to convert.
  */
 static void IntToGdbHex(u8* dest, u32 v) {
     for (int i = 0; i < 8; i += 2) {

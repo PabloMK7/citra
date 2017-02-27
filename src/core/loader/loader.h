@@ -54,7 +54,7 @@ FileType IdentifyFile(const std::string& file_name);
  * @return FileType of file. Note: this will return FileType::Unknown if it is unable to determine
  * a filetype, and will never return FileType::Error.
  */
-FileType GuessFromExtension(const std::string& extension_);
+FileType GuessFromExtension(const std::string& extension);
 
 /**
  * Convert a FileType into a string which can be displayed to the user.
