@@ -76,7 +76,7 @@ double PerfStats::GetLastFrameTimeScale() {
 
 void FrameLimiter::DoFrameLimiting(u64 current_system_time_us) {
     // Max lag caused by slow frames. Can be adjusted to compensate for too many slow frames. Higher
-    // values increases time needed to limit frame rate after spikes.
+    // values increase the time needed to recover and limit framerate again after spikes.
     constexpr microseconds MAX_LAG_TIME_US = 25ms;
 
     if (!Settings::values.toggle_framelimit) {

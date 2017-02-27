@@ -44,15 +44,24 @@ public:
 private:
     std::mutex object_mutex;
 
+    /// Point when the cumulative counters were reset
     Clock::time_point reset_point = Clock::now();
-
-    Clock::time_point frame_begin = reset_point;
-    Clock::time_point previous_frame_end = reset_point;
-    Clock::duration accumulated_frametime = Clock::duration::zero();
-    Clock::duration previous_frame_length = Clock::duration::zero();
+    /// System time when the cumulative counters were reset
     u64 reset_point_system_us = 0;
+
+    /// Cumulative duration (excluding v-sync/frame-limiting) of frames since last reset
+    Clock::duration accumulated_frametime = Clock::duration::zero();
+    /// Cumulative number of system frames (LCD VBlanks) presented since last reset
     u32 system_frames = 0;
+    /// Cumulative number of game frames (GSP frame submissions) since last reset
     u32 game_frames = 0;
+
+    /// Point when the previous system frame ended
+    Clock::time_point previous_frame_end = reset_point;
+    /// Point when the current system frame began
+    Clock::time_point frame_begin = reset_point;
+    /// Total visible duration (including frame-limiting, etc.) of the previous system frame
+    Clock::duration previous_frame_length = Clock::duration::zero();
 };
 
 class FrameLimiter {
