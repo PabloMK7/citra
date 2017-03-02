@@ -79,11 +79,14 @@ ConfigureInput::ConfigureInput(QWidget* parent)
 
     for (int analog_id = 0; analog_id < Settings::NativeAnalog::NumAnalogs; analog_id++) {
         for (int sub_button_id = 0; sub_button_id < ANALOG_SUB_BUTTONS_NUM; sub_button_id++) {
-            connect(analog_map[analog_id][sub_button_id], &QPushButton::released, [=]() {
-                handleClick(analog_map[analog_id][sub_button_id], [=](int key) {
-                    SetAnalogKey(key, analogs_param[analog_id], analog_sub_buttons[sub_button_id]);
+            if (analog_map[analog_id][sub_button_id] != nullptr) {
+                connect(analog_map[analog_id][sub_button_id], &QPushButton::released, [=]() {
+                    handleClick(analog_map[analog_id][sub_button_id], [=](int key) {
+                        SetAnalogKey(key, analogs_param[analog_id],
+                                     analog_sub_buttons[sub_button_id]);
+                    });
                 });
-            });
+            }
         }
     }
 
