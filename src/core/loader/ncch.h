@@ -179,9 +179,10 @@ public:
 
     /**
      * Loads the Exheader and returns the system mode for this application.
-     * @return Optional with the kernel system mode
+     * @param boost::optional<u32> Reference to Boost optional to store system mode.
+     * @return Result of operation.
      */
-    boost::optional<u32> LoadKernelSystemMode() override;
+    ResultStatus LoadKernelSystemMode(boost::optional<u32>& system_mode) override;
 
     ResultStatus ReadCode(std::vector<u8>& buffer) override;
 

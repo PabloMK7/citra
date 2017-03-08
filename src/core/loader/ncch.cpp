@@ -121,12 +121,19 @@ FileType AppLoader_NCCH::IdentifyType(FileUtil::IOFile& file) {
     return FileType::Error;
 }
 
-boost::optional<u32> AppLoader_NCCH::LoadKernelSystemMode() {
+ResultStatus AppLoader_NCCH::LoadKernelSystemMode(boost::optional<u32>& system_mode) {
     if (!is_loaded) {
-        if (LoadExeFS() != ResultStatus::Success)
-            return boost::none;
+        ResultStatus res = LoadExeFS();
+        if (res != ResultStatus::Success) {
+            // Set the system mode as invalid.
+            system_mode = boost::none;
+            // Return the error code.
+            return res;
+        }
     }
-    return exheader_header.arm11_system_local_caps.system_mode.Value();
+    // Set the system mode as the one from the exheader.
+    system_mode = exheader_header.arm11_system_local_caps.system_mode.Value();
+    return ResultStatus::Success;
 }
 
 ResultStatus AppLoader_NCCH::LoadExec() {

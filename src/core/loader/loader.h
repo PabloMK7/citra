@@ -100,11 +100,13 @@ public:
      * Loads the system mode that this application needs.
      * This function defaults to 2 (96MB allocated to the application) if it can't read the
      * information.
-     * @returns Optional with the kernel system mode
+     * @param boost::optional<u32> Reference to Boost optional to store system mode.
+     * @ return Result of operation.
      */
-    virtual boost::optional<u32> LoadKernelSystemMode() {
+    virtual ResultStatus LoadKernelSystemMode(boost::optional<u32>& system_mode) {
         // 96MB allocated to the application.
-        return 2;
+        system_mode = 2;
+        return ResultStatus::Success;
     }
 
     /**
