@@ -301,8 +301,7 @@ bool GMainWindow::LoadROM(const QString& filename) {
 
     if (!gladLoadGL()) {
         QMessageBox::critical(this, tr("Error while starting Citra!"),
-                              tr("Failed to initialize the video core!\n\n"
-                                 "Please ensure that your GPU supports OpenGL 3.3 and that you "
+                              tr("Your GPU may not support OpenGL 3.3, or you do not"
                                  "have the latest graphics driver."));
         return false;
     }
@@ -327,18 +326,17 @@ bool GMainWindow::LoadROM(const QString& filename) {
             break;
 
         case Core::System::ResultStatus::ErrorLoader_ErrorEncrypted: {
-            // Build the MessageBox ourselves to have clickable link
-            QMessageBox popup_error;
-            popup_error.setTextFormat(Qt::RichText);
-            popup_error.setWindowTitle(tr("Error while loading ROM!"));
-            popup_error.setText(
+            QMessageBox::critical(
+                this, tr("Error while loading ROM!"),
                 tr("The game that you are trying to load must be decrypted before being used with "
                    "Citra.<br/><br/>"
-                   "For more information on dumping and decrypting games, please see: <a "
-                   "href='https://citra-emu.org/wiki/Dumping-Game-Cartridges'>https://"
-                   "citra-emu.org/wiki/Dumping-Game-Cartridges</a>"));
-            popup_error.setIcon(QMessageBox::Critical);
-            popup_error.exec();
+                   "For more information on dumping and decrypting games, please see the following "
+                   "wiki pages: <ul>"
+                   "<li><a href='https://citra-emu.org/wiki/Dumping-Game-Cartridges/'>Dumping Game "
+                   "Cartridges</a></li>"
+                   "<li><a href='https://citra-emu.org/wiki/Dumping-Installed-Titles/'>Dumping "
+                   "Installed Titles</a></li>"
+                   "</ul>"));
             break;
         }
         case Core::System::ResultStatus::ErrorLoader_ErrorInvalidFormat:
@@ -346,8 +344,16 @@ bool GMainWindow::LoadROM(const QString& filename) {
                                   tr("The ROM format is not supported."));
             break;
 
+        case Core::System::ResultStatus::ErrorOpenGL:
+            QMessageBox::critical(this, tr("Error while loading OpenGL!"),
+                                  tr("Your GPU may not support OpenGL 3.3, or you do not "
+                                     "have the latest graphics driver."));
+            break;
+
         default:
-            QMessageBox::critical(this, tr("Error while loading ROM!"), tr("Unknown error!"));
+            QMessageBox::critical(
+                this, tr("Error while loading ROM!"),
+                tr("An unknown error occured. Please see the log for more details."));
             break;
         }
         return false;
@@ -530,6 +536,9 @@ void GMainWindow::OnMenuRecentFile() {
 
 void GMainWindow::OnStartGame() {
     emu_thread->SetRunning(true);
+    qRegisterMetaType<Core::System::ResultStatus>("Core::System::ResultStatus");
+    connect(emu_thread.get(), SIGNAL(ErrorThrown(Core::System::ResultStatus)), this,
+            SLOT(OnCoreError(Core::System::ResultStatus)));
 
     ui.action_Start->setEnabled(false);
     ui.action_Start->setText(tr("Continue"));
@@ -622,14 +631,57 @@ void GMainWindow::UpdateStatusBar() {
     emu_frametime_label->setVisible(true);
 }
 
+void GMainWindow::OnCoreError(Core::System::ResultStatus result) {
+    // Waiting for the dialog to be closed before shutting down causes a segfault, maybe because of
+    // the profiler
+    ShutdownGame();
+    switch (result) {
+    case Core::System::ResultStatus::ErrorSystemFiles:
+        QMessageBox::critical(
+            this, "System Archive Not Found",
+            "Citra was unable to locate the 3DS system archive.<br/><br/>"
+            "The game you are trying to load requires additional files from your 3DS to be dumped "
+            "before playing.<br/><br/>"
+            "For more information on dumping these files, please see the following wiki page: "
+            "<a "
+            "href='https://citra-emu.org/wiki/"
+            "Dumping-System-Archives-and-the-Shared-Fonts-from-a-3DS-Console/'>Dumping System "
+            "Archives and the Shared Fonts from a 3DS Console</a>"
+            ".");
+        break;
+
+    case Core::System::ResultStatus::ErrorSharedFont:
+        QMessageBox::critical(
+            this, "Shared Fonts Not Found",
+            "Citra was unable to locate the 3DS shared fonts.<br/><br/>"
+            "The game you are trying to load requires additional files from your 3DS to be dumped "
+            "before playing.<br/><br/>"
+            "For more information on dumping these files, please see the following wiki page: "
+            "<a "
+            "href='https://citra-emu.org/wiki/"
+            "Dumping-System-Archives-and-the-Shared-Fonts-from-a-3DS-Console/'>Dumping System "
+            "Archives and the Shared Fonts from a 3DS Console</a>"
+            ".");
+        break;
+
+    case Core::System::ResultStatus::ErrorUnknown:
+        QMessageBox::critical(
+            this, "Fatal Error",
+            "Citra has encountered a fatal error, please see the log for more details.");
+        break;
+
+    default:
+        break;
+    }
+}
+
 bool GMainWindow::ConfirmClose() {
     if (emu_thread == nullptr || !UISettings::values.confirm_before_closing)
         return true;
 
-    auto answer =
-        QMessageBox::question(this, tr("Citra"), tr("Are you sure you want to close Citra?"),
-                              QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
-    return answer != QMessageBox::No;
+    return QMessageBox::question(this, tr("Citra"), tr("Are you sure you want to close Citra?"),
+                                 QMessageBox::Yes | QMessageBox::No,
+                                 QMessageBox::No) != QMessageBox::No;
 }
 
 void GMainWindow::closeEvent(QCloseEvent* event) {

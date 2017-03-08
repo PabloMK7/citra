@@ -40,7 +40,11 @@ public:
         ErrorLoader_ErrorEncrypted, ///< Error loading the specified application due to encryption
         ErrorLoader_ErrorInvalidFormat, ///< Error loading the specified application due to an
                                         /// invalid format
+        ErrorSystemFiles,               ///< Error in finding system files
+        ErrorSharedFont,                ///< Error in finding shared font
         ErrorVideoCore,                 ///< Error in the video core
+        ErrorOpenGL,                    ///< Error when initializing OpenGL
+        ErrorUnknown                    ///< Any other error
     };
 
     /**
@@ -105,6 +109,14 @@ public:
     PerfStats perf_stats;
     FrameLimiter frame_limiter;
 
+    ResultStatus GetStatus() {
+        return status;
+    }
+
+    void SetStatus(ResultStatus newStatus) {
+        status = newStatus;
+    }
+
 private:
     /**
      * Initialize the emulated system.
@@ -130,6 +142,7 @@ private:
     std::unique_ptr<Core::TelemetrySession> telemetry_session;
 
     static System s_instance;
+    ResultStatus status;
 };
 
 inline ARM_Interface& CPU() {

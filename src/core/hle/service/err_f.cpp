@@ -10,6 +10,7 @@
 #include "common/bit_field.h"
 #include "common/common_types.h"
 #include "common/logging/log.h"
+#include "core/core.h"
 #include "core/hle/result.h"
 #include "core/hle/service/err_f.h"
 
@@ -172,6 +173,7 @@ static void ThrowFatalError(Interface* self) {
     const ErrInfo* errinfo = reinterpret_cast<ErrInfo*>(&cmd_buff[1]);
     LOG_CRITICAL(Service_ERR, "Fatal error type: %s",
                  GetErrType(errinfo->errinfo_common.specifier).c_str());
+    Core::System::GetInstance().SetStatus(Core::System::ResultStatus::ErrorUnknown);
 
     // Generic Info
     LogGenericInfo(errinfo->errinfo_common);

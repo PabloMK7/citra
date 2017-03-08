@@ -59,7 +59,7 @@ System::ResultStatus System::RunLoop(int tight_loop) {
     HW::Update();
     Reschedule();
 
-    return ResultStatus::Success;
+    return GetStatus();
 }
 
 System::ResultStatus System::SingleStep() {
@@ -73,11 +73,21 @@ System::ResultStatus System::Load(EmuWindow* emu_window, const std::string& file
         LOG_CRITICAL(Core, "Failed to obtain loader for %s!", filepath.c_str());
         return ResultStatus::ErrorGetLoader;
     }
+    boost::optional<u32> system_mode = boost::none;
 
-    boost::optional<u32> system_mode{app_loader->LoadKernelSystemMode()};
+    Loader::ResultStatus load_result{app_loader->LoadKernelSystemMode(system_mode)};
     if (!system_mode) {
-        LOG_CRITICAL(Core, "Failed to determine system mode!");
-        return ResultStatus::ErrorSystemMode;
+        LOG_CRITICAL(Core, "Failed to determine system mode (Error %i)!", load_result);
+        System::Shutdown();
+
+        switch (load_result) {
+        case Loader::ResultStatus::ErrorEncrypted:
+            return ResultStatus::ErrorLoader_ErrorEncrypted;
+        case Loader::ResultStatus::ErrorInvalidFormat:
+            return ResultStatus::ErrorLoader_ErrorInvalidFormat;
+        default:
+            return ResultStatus::ErrorSystemMode;
+        }
     }
 
     ResultStatus init_result{Init(emu_window, system_mode.get())};
@@ -87,7 +97,7 @@ System::ResultStatus System::Load(EmuWindow* emu_window, const std::string& file
         return init_result;
     }
 
-    const Loader::ResultStatus load_result{app_loader->Load()};
+    load_result = app_loader->Load();
     if (Loader::ResultStatus::Success != load_result) {
         LOG_CRITICAL(Core, "Failed to load ROM (Error %i)!", load_result);
         System::Shutdown();
@@ -101,6 +111,8 @@ System::ResultStatus System::Load(EmuWindow* emu_window, const std::string& file
             return ResultStatus::ErrorLoader;
         }
     }
+    // this->status will be used for errors while actually running the game
+    status = ResultStatus::Success;
     return ResultStatus::Success;
 }
 
@@ -142,7 +154,7 @@ System::ResultStatus System::Init(EmuWindow* emu_window, u32 system_mode) {
     GDBStub::Init();
 
     if (!VideoCore::Init(emu_window)) {
-        return ResultStatus::ErrorVideoCore;
+        return ResultStatus::ErrorOpenGL;
     }
 
     LOG_DEBUG(Core, "Initialized OK");
