@@ -139,7 +139,7 @@ std::unique_ptr<AppLoader> GetLoader(const std::string& filename) {
             type = filename_type;
     }
 
-    LOG_INFO(Loader, "Loading file %s as %s...", filename.c_str(), GetFileTypeString(type));
+    LOG_DEBUG(Loader, "Loading file %s as %s...", filename.c_str(), GetFileTypeString(type));
 
     return GetFileLoader(std::move(file), type, filename_filename, filename);
 }
