@@ -118,8 +118,7 @@ bool IsDirectory(const std::string& filename) {
 #endif
 
     if (result < 0) {
-        LOG_WARNING(Common_Filesystem, "stat failed on %s: %s", filename.c_str(),
-                    GetLastErrorMsg());
+        LOG_DEBUG(Common_Filesystem, "stat failed on %s: %s", filename.c_str(), GetLastErrorMsg());
         return false;
     }
 
@@ -129,12 +128,12 @@ bool IsDirectory(const std::string& filename) {
 // Deletes a given filename, return true on success
 // Doesn't supports deleting a directory
 bool Delete(const std::string& filename) {
-    LOG_INFO(Common_Filesystem, "file %s", filename.c_str());
+    LOG_TRACE(Common_Filesystem, "file %s", filename.c_str());
 
     // Return true because we care about the file no
     // being there, not the actual delete.
     if (!Exists(filename)) {
-        LOG_WARNING(Common_Filesystem, "%s does not exist", filename.c_str());
+        LOG_DEBUG(Common_Filesystem, "%s does not exist", filename.c_str());
         return true;
     }
 
@@ -169,8 +168,7 @@ bool CreateDir(const std::string& path) {
         return true;
     DWORD error = GetLastError();
     if (error == ERROR_ALREADY_EXISTS) {
-        LOG_WARNING(Common_Filesystem, "CreateDirectory failed on %s: already exists",
-                    path.c_str());
+        LOG_DEBUG(Common_Filesystem, "CreateDirectory failed on %s: already exists", path.c_str());
         return true;
     }
     LOG_ERROR(Common_Filesystem, "CreateDirectory failed on %s: %i", path.c_str(), error);
@@ -182,7 +180,7 @@ bool CreateDir(const std::string& path) {
     int err = errno;
 
     if (err == EEXIST) {
-        LOG_WARNING(Common_Filesystem, "mkdir failed on %s: already exists", path.c_str());
+        LOG_DEBUG(Common_Filesystem, "mkdir failed on %s: already exists", path.c_str());
         return true;
     }
 
@@ -197,7 +195,7 @@ bool CreateFullPath(const std::string& fullPath) {
     LOG_TRACE(Common_Filesystem, "path %s", fullPath.c_str());
 
     if (FileUtil::Exists(fullPath)) {
-        LOG_WARNING(Common_Filesystem, "path exists %s", fullPath.c_str());
+        LOG_DEBUG(Common_Filesystem, "path exists %s", fullPath.c_str());
         return true;
     }
 
@@ -229,7 +227,7 @@ bool CreateFullPath(const std::string& fullPath) {
 
 // Deletes a directory filename, returns true on success
 bool DeleteDir(const std::string& filename) {
-    LOG_INFO(Common_Filesystem, "directory %s", filename.c_str());
+    LOG_TRACE(Common_Filesystem, "directory %s", filename.c_str());
 
     // check if a directory
     if (!FileUtil::IsDirectory(filename)) {
