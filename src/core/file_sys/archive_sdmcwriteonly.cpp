@@ -32,7 +32,7 @@ ResultVal<std::unique_ptr<DirectoryBackend>> SDMCWriteOnlyArchive::OpenDirectory
 
 ArchiveFactory_SDMCWriteOnly::ArchiveFactory_SDMCWriteOnly(const std::string& mount_point)
     : sdmc_directory(mount_point) {
-    LOG_INFO(Service_FS, "Directory %s set as SDMCWriteOnly.", sdmc_directory.c_str());
+    LOG_DEBUG(Service_FS, "Directory %s set as SDMCWriteOnly.", sdmc_directory.c_str());
 }
 
 bool ArchiveFactory_SDMCWriteOnly::Initialize() {

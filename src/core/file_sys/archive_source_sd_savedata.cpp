@@ -39,7 +39,7 @@ std::string GetSaveDataMetadataPath(const std::string& mount_location, u64 progr
 
 ArchiveSource_SDSaveData::ArchiveSource_SDSaveData(const std::string& sdmc_directory)
     : mount_point(GetSaveDataContainerPath(sdmc_directory)) {
-    LOG_INFO(Service_FS, "Directory %s set as SaveData.", mount_point.c_str());
+    LOG_DEBUG(Service_FS, "Directory %s set as SaveData.", mount_point.c_str());
 }
 
 ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveSource_SDSaveData::Open(u64 program_id) {
