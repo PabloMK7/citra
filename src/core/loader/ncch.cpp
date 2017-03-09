@@ -121,19 +121,16 @@ FileType AppLoader_NCCH::IdentifyType(FileUtil::IOFile& file) {
     return FileType::Error;
 }
 
-ResultStatus AppLoader_NCCH::LoadKernelSystemMode(boost::optional<u32>& system_mode) {
+std::pair<boost::optional<u32>, ResultStatus> AppLoader_NCCH::LoadKernelSystemMode() {
     if (!is_loaded) {
         ResultStatus res = LoadExeFS();
         if (res != ResultStatus::Success) {
-            // Set the system mode as invalid.
-            system_mode = boost::none;
-            // Return the error code.
-            return res;
+            return std::make_pair(boost::none, res);
         }
     }
     // Set the system mode as the one from the exheader.
-    system_mode = exheader_header.arm11_system_local_caps.system_mode.Value();
-    return ResultStatus::Success;
+    return std::make_pair(exheader_header.arm11_system_local_caps.system_mode.Value(),
+                          ResultStatus::Success);
 }
 
 ResultStatus AppLoader_NCCH::LoadExec() {

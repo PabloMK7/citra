@@ -3,6 +3,9 @@
 // Refer to the license.txt file included.
 
 #include <memory>
+#include <utility>
+
+#include <boost/optional.hpp>
 
 #include "audio_core/audio_core.h"
 #include "common/logging/log.h"
@@ -26,6 +29,7 @@ namespace Core {
 /*static*/ System System::s_instance;
 
 System::ResultStatus System::RunLoop(int tight_loop) {
+    this->status = ResultStatus::Success;
     if (!cpu_core) {
         return ResultStatus::ErrorNotInitialized;
     }
@@ -73,14 +77,14 @@ System::ResultStatus System::Load(EmuWindow* emu_window, const std::string& file
         LOG_CRITICAL(Core, "Failed to obtain loader for %s!", filepath.c_str());
         return ResultStatus::ErrorGetLoader;
     }
-    boost::optional<u32> system_mode = boost::none;
+    std::pair<boost::optional<u32>, Loader::ResultStatus> system_mode =
+        app_loader->LoadKernelSystemMode();
 
-    Loader::ResultStatus load_result{app_loader->LoadKernelSystemMode(system_mode)};
-    if (!system_mode) {
-        LOG_CRITICAL(Core, "Failed to determine system mode (Error %i)!", load_result);
+    if (system_mode.second != Loader::ResultStatus::Success) {
+        LOG_CRITICAL(Core, "Failed to determine system mode (Error %i)!", system_mode.second);
         System::Shutdown();
 
-        switch (load_result) {
+        switch (system_mode.second) {
         case Loader::ResultStatus::ErrorEncrypted:
             return ResultStatus::ErrorLoader_ErrorEncrypted;
         case Loader::ResultStatus::ErrorInvalidFormat:
@@ -90,15 +94,15 @@ System::ResultStatus System::Load(EmuWindow* emu_window, const std::string& file
         }
     }
 
-    ResultStatus init_result{Init(emu_window, system_mode.get())};
+    ResultStatus init_result{Init(emu_window, system_mode.first.get())};
     if (init_result != ResultStatus::Success) {
         LOG_CRITICAL(Core, "Failed to initialize system (Error %i)!", init_result);
         System::Shutdown();
         return init_result;
     }
 
-    load_result = app_loader->Load();
-    if (Loader::ResultStatus::Success != load_result) {
+    Loader::ResultStatus load_result = app_loader->Load();
+    if (load_result != Loader::ResultStatus::Success) {
         LOG_CRITICAL(Core, "Failed to load ROM (Error %i)!", load_result);
         System::Shutdown();
 
@@ -154,7 +158,7 @@ System::ResultStatus System::Init(EmuWindow* emu_window, u32 system_mode) {
     GDBStub::Init();
 
     if (!VideoCore::Init(emu_window)) {
-        return ResultStatus::ErrorOpenGL;
+        return ResultStatus::ErrorVideoCore;
     }
 
     LOG_DEBUG(Core, "Initialized OK");

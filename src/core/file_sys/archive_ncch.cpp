@@ -37,7 +37,8 @@ ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_NCCH::Open(const Path&
     auto file = std::make_shared<FileUtil::IOFile>(file_path, "rb");
 
     if (!file->IsOpen()) {
-        return ResultCode(-1); // TODO(Subv): Find the right error code
+        return ResultCode(ErrorDescription::FS_NotFound, ErrorModule::FS, ErrorSummary::NotFound,
+                          ErrorLevel::Status);
     }
     auto size = file->GetSize();
 

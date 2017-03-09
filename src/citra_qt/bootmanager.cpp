@@ -40,7 +40,6 @@ void EmuThread::run() {
             Core::System::ResultStatus result = Core::System::GetInstance().RunLoop();
             if (result != Core::System::ResultStatus::Success) {
                 emit ErrorThrown(result);
-                break;
             }
 
             was_active = running || exec_step;
