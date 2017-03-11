@@ -691,6 +691,8 @@ const std::string& GetUserPath(const unsigned int DirIDX, const std::string& new
         paths[D_USER_IDX] = GetExeDirectory() + DIR_SEP USERDATA_DIR DIR_SEP;
         if (!FileUtil::IsDirectory(paths[D_USER_IDX])) {
             paths[D_USER_IDX] = AppDataRoamingDirectory() + DIR_SEP EMU_DATA_DIR DIR_SEP;
+        } else {
+            LOG_INFO(Common_Filesystem, "Using the local user directory");
         }
 
         paths[D_CONFIG_IDX] = paths[D_USER_IDX] + CONFIG_DIR DIR_SEP;
