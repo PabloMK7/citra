@@ -38,11 +38,8 @@ static std::unordered_map<u32, Kernel::SharedPtr<Kernel::Event>> bind_node_event
 // Since we're not actually interacting with physical radio waves, this is just a dummy value.
 static u8 network_channel = DefaultNetworkChannel;
 
-// The identifier of the network kind, this is used to filter away networks that we're not interested in.
-static u32 wlan_comm_id = 0;
-
-// Application data that is sent when broadcasting the beacon frames.
-static std::vector<u8> application_data;
+// Information about the network that we're currently connected to.
+static NetworkInfo network_info;
 
 /**
  * NWM_UDS::Shutdown service function
@@ -244,12 +241,10 @@ static void BeginHostingNetwork(Interface* self) {
 
     LOG_DEBUG(Service_NWM, "called");
 
-    NetworkInfo network_info;
     Memory::ReadBlock(network_info_address, &network_info, sizeof(NetworkInfo));
 
     connection_status.status = static_cast<u32>(NetworkStatus::ConnectedAsHost);
     connection_status.max_nodes = network_info.max_nodes;
-    wlan_comm_id = network_info.wlan_comm_id;
 
     // There's currently only one node in the network (the host).
     connection_status.total_nodes = 1;
@@ -262,9 +257,6 @@ static void BeginHostingNetwork(Interface* self) {
     // If the game has a preferred channel, use that instead.
     if (network_info.channel != 0)
         network_channel = network_info.channel;
-
-    // Clear the pre-existing application data.
-    application_data.clear();
 
     connection_status_event->Signal();
 
@@ -333,8 +325,8 @@ static void SetApplicationData(Interface* self) {
         return;
     }
 
-    application_data.resize(size);
-    Memory::ReadBlock(address, application_data.data(), size);
+    network_info.application_data_size = size;
+    Memory::ReadBlock(address, network_info.application_data.data(), size);
 
     rb.Push(RESULT_SUCCESS);
 }
@@ -379,7 +371,7 @@ NWM_UDS::NWM_UDS() {
 }
 
 NWM_UDS::~NWM_UDS() {
-    application_data.clear();
+    network_info = {};
     bind_node_events.clear();
     connection_status_event = nullptr;
     recv_buffer_memory = nullptr;
