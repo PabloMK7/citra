@@ -8,9 +8,9 @@
 #include "common/common_types.h"
 #include "cpu_detect.h"
 
-namespace Common {
-
-#ifndef _MSC_VER
+#ifdef _MSC_VER
+#include <intrin.h>
+#else
 
 #if defined(__DragonFly__) || defined(__FreeBSD__)
 // clang-format off
@@ -37,13 +37,15 @@ static inline void __cpuid(int info[4], int function_id) {
 }
 
 #define _XCR_XFEATURE_ENABLED_MASK 0
-static u64 _xgetbv(u32 index) {
+static inline u64 _xgetbv(u32 index) {
     u32 eax, edx;
     __asm__ __volatile__("xgetbv" : "=a"(eax), "=d"(edx) : "c"(index));
     return ((u64)edx << 32) | eax;
 }
 
-#endif // ifndef _MSC_VER
+#endif // _MSC_VER
+
+namespace Common {
 
 // Detects the various CPU features
 static CPUCaps Detect() {
