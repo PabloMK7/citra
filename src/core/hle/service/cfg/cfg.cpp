@@ -3,6 +3,8 @@
 // Refer to the license.txt file included.
 
 #include <algorithm>
+#include <array>
+#include <cryptopp/sha.h>
 #include "common/file_util.h"
 #include "common/logging/log.h"
 #include "common/string_util.h"
@@ -176,14 +178,29 @@ void SecureInfoGetRegion(Service::Interface* self) {
 }
 
 void GenHashConsoleUnique(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-    u32 app_id_salt = cmd_buff[1];
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x03, 1, 0);
+    const u32 app_id_salt = rp.Pop<u32>() & 0x000FFFFF;
 
-    cmd_buff[1] = RESULT_SUCCESS.raw;
-    cmd_buff[2] = 0x33646D6F ^ (app_id_salt & 0xFFFFF); // 3dmoo hash
-    cmd_buff[3] = 0x6F534841 ^ (app_id_salt & 0xFFFFF);
+    IPC::RequestBuilder rb = rp.MakeBuilder(3, 0);
 
-    LOG_WARNING(Service_CFG, "(STUBBED) called app_id_salt=0x%X", app_id_salt);
+    std::array<u8, 12> buffer;
+    const ResultCode result = GetConfigInfoBlock(ConsoleUniqueID2BlockID, 8, 2, buffer.data());
+    rb.Push(result);
+    if (result.IsSuccess()) {
+        std::memcpy(&buffer[8], &app_id_salt, sizeof(u32));
+        std::array<u8, CryptoPP::SHA256::DIGESTSIZE> hash;
+        CryptoPP::SHA256().CalculateDigest(hash.data(), buffer.data(), sizeof(buffer));
+        u32 low, high;
+        memcpy(&low, &hash[hash.size() - 8], sizeof(u32));
+        memcpy(&high, &hash[hash.size() - 4], sizeof(u32));
+        rb.Push(low);
+        rb.Push(high);
+    } else {
+        rb.Push<u32>(0);
+        rb.Push<u32>(0);
+    }
+
+    LOG_DEBUG(Service_CFG, "called app_id_salt=0x%X", app_id_salt);
 }
 
 void GetRegionCanadaUSA(Service::Interface* self) {
