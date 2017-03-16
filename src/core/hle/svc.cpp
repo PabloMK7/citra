@@ -556,11 +556,21 @@ static ResultCode CreateThread(Kernel::Handle* out_handle, s32 priority, u32 ent
         break;
     }
 
-    if (processor_id == THREADPROCESSORID_1 || processor_id == THREADPROCESSORID_ALL ||
-        (processor_id == THREADPROCESSORID_DEFAULT &&
-         Kernel::g_current_process->ideal_processor == THREADPROCESSORID_1)) {
-        LOG_WARNING(Kernel_SVC,
-                    "Newly created thread is allowed to be run in the SysCore, unimplemented.");
+    if (processor_id == THREADPROCESSORID_ALL) {
+        LOG_INFO(Kernel_SVC,
+                 "Newly created thread is allowed to be run in any Core, unimplemented.");
+    }
+
+    if (processor_id == THREADPROCESSORID_DEFAULT &&
+        Kernel::g_current_process->ideal_processor == THREADPROCESSORID_1) {
+        LOG_WARNING(
+            Kernel_SVC,
+            "Newly created thread is allowed to be run in the SysCore (Core1), unimplemented.");
+    }
+
+    if (processor_id == THREADPROCESSORID_1) {
+        LOG_ERROR(Kernel_SVC,
+                  "Newly created thread must run in the SysCore (Core1), unimplemented.");
     }
 
     CASCADE_RESULT(SharedPtr<Thread> thread, Kernel::Thread::Create(name, entry_point, priority,
