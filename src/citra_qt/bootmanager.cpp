@@ -240,8 +240,6 @@ void GRenderWindow::focusOutEvent(QFocusEvent* event) {
     InputCommon::GetKeyboard()->ReleaseAllKeys();
 }
 
-void GRenderWindow::ReloadSetKeymaps() {}
-
 void GRenderWindow::OnClientAreaResized(unsigned width, unsigned height) {
     NotifyClientAreaSizeChanged(std::make_pair(width, height));
 }

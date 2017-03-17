@@ -130,8 +130,6 @@ public:
 
     void focusOutEvent(QFocusEvent* event) override;
 
-    void ReloadSetKeymaps();
-
     void OnClientAreaResized(unsigned width, unsigned height);
 
     void InitRenderTarget();
