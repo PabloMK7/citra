@@ -38,6 +38,8 @@ public:
      */
     void ReleaseKey(int key_code);
 
+    void ReleaseAllKeys();
+
 private:
     std::shared_ptr<KeyButtonList> key_button_list;
 };

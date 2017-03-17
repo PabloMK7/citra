@@ -128,6 +128,8 @@ public:
     void mouseMoveEvent(QMouseEvent* event) override;
     void mouseReleaseEvent(QMouseEvent* event) override;
 
+    void focusOutEvent(QFocusEvent* event) override;
+
     void ReloadSetKeymaps();
 
     void OnClientAreaResized(unsigned width, unsigned height);

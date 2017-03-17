@@ -235,6 +235,11 @@ void GRenderWindow::mouseReleaseEvent(QMouseEvent* event) {
         motion_emu->EndTilt();
 }
 
+void GRenderWindow::focusOutEvent(QFocusEvent* event) {
+    QWidget::focusOutEvent(event);
+    InputCommon::GetKeyboard()->ReleaseAllKeys();
+}
+
 void GRenderWindow::ReloadSetKeymaps() {}
 
 void GRenderWindow::OnClientAreaResized(unsigned width, unsigned height) {
