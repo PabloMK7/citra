@@ -39,13 +39,6 @@ struct PadState {
         BitField<10, 1, u32> x;
         BitField<11, 1, u32> y;
 
-        BitField<14, 1, u32> zl;
-        BitField<15, 1, u32> zr;
-
-        BitField<24, 1, u32> c_right;
-        BitField<25, 1, u32> c_left;
-        BitField<26, 1, u32> c_up;
-        BitField<27, 1, u32> c_down;
         BitField<28, 1, u32> circle_right;
         BitField<29, 1, u32> circle_left;
         BitField<30, 1, u32> circle_up;
@@ -183,33 +176,6 @@ ASSERT_REG_POSITION(touch.index_reset_ticks, 0x2A);
 #undef ASSERT_REG_POSITION
 #endif // !defined(_MSC_VER)
 
-// Pre-defined PadStates for single button presses
-const PadState PAD_NONE = {{0}};
-const PadState PAD_A = {{1u << 0}};
-const PadState PAD_B = {{1u << 1}};
-const PadState PAD_SELECT = {{1u << 2}};
-const PadState PAD_START = {{1u << 3}};
-const PadState PAD_RIGHT = {{1u << 4}};
-const PadState PAD_LEFT = {{1u << 5}};
-const PadState PAD_UP = {{1u << 6}};
-const PadState PAD_DOWN = {{1u << 7}};
-const PadState PAD_R = {{1u << 8}};
-const PadState PAD_L = {{1u << 9}};
-const PadState PAD_X = {{1u << 10}};
-const PadState PAD_Y = {{1u << 11}};
-
-const PadState PAD_ZL = {{1u << 14}};
-const PadState PAD_ZR = {{1u << 15}};
-
-const PadState PAD_C_RIGHT = {{1u << 24}};
-const PadState PAD_C_LEFT = {{1u << 25}};
-const PadState PAD_C_UP = {{1u << 26}};
-const PadState PAD_C_DOWN = {{1u << 27}};
-const PadState PAD_CIRCLE_RIGHT = {{1u << 28}};
-const PadState PAD_CIRCLE_LEFT = {{1u << 29}};
-const PadState PAD_CIRCLE_UP = {{1u << 30}};
-const PadState PAD_CIRCLE_DOWN = {{1u << 31}};
-
 /**
  * HID::GetIPCHandles service function
  *  Inputs:
@@ -297,5 +263,8 @@ void Init();
 
 /// Shutdown HID service
 void Shutdown();
+
+/// Reload input devices. Used when input configuration changed
+void ReloadInputDevices();
 }
 }

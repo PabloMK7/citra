@@ -35,6 +35,7 @@ set(SRCS
             memory_util.cpp
             microprofile.cpp
             misc.cpp
+            param_package.cpp
             scm_rev.cpp
             string_util.cpp
             symbols.cpp
@@ -66,6 +67,7 @@ set(HEADERS
             memory_util.h
             microprofile.h
             microprofileui.h
+            param_package.h
             platform.h
             quaternion.h
             scm_rev.h

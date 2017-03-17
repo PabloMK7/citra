@@ -31,9 +31,6 @@ public:
     /// Whether the window is still open, and a close request hasn't yet been sent
     bool IsOpen() const;
 
-    /// Load keymap from configuration
-    void ReloadSetKeymaps() override;
-
 private:
     /// Called by PollEvents when a key is pressed or released.
     void OnKeyEvent(int key, u8 state);
@@ -60,9 +57,6 @@ private:
     using SDL_GLContext = void*;
     /// The OpenGL context associated with the window
     SDL_GLContext gl_context;
-
-    /// Device id of keyboard for use with KeyMap
-    int keyboard_id;
 
     /// Motion sensors emulation
     std::unique_ptr<Motion::MotionEmu> motion_emu;

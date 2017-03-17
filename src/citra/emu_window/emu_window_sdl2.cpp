@@ -12,9 +12,9 @@
 #include "common/logging/log.h"
 #include "common/scm_rev.h"
 #include "common/string_util.h"
-#include "core/frontend/key_map.h"
-#include "core/hle/service/hid/hid.h"
 #include "core/settings.h"
+#include "input_common/keyboard.h"
+#include "input_common/main.h"
 #include "video_core/video_core.h"
 
 void EmuWindow_SDL2::OnMouseMotion(s32 x, s32 y) {
@@ -40,9 +40,9 @@ void EmuWindow_SDL2::OnMouseButton(u32 button, u8 state, s32 x, s32 y) {
 
 void EmuWindow_SDL2::OnKeyEvent(int key, u8 state) {
     if (state == SDL_PRESSED) {
-        KeyMap::PressKey(*this, {key, keyboard_id});
+        InputCommon::GetKeyboard()->PressKey(key);
     } else if (state == SDL_RELEASED) {
-        KeyMap::ReleaseKey(*this, {key, keyboard_id});
+        InputCommon::GetKeyboard()->ReleaseKey(key);
     }
 }
 
@@ -57,9 +57,8 @@ void EmuWindow_SDL2::OnResize() {
 }
 
 EmuWindow_SDL2::EmuWindow_SDL2() {
-    keyboard_id = KeyMap::NewDeviceId();
+    InputCommon::Init();
 
-    ReloadSetKeymaps();
     motion_emu = std::make_unique<Motion::MotionEmu>(*this);
 
     SDL_SetMainReady();
@@ -117,6 +116,7 @@ EmuWindow_SDL2::~EmuWindow_SDL2() {
     SDL_GL_DeleteContext(gl_context);
     SDL_Quit();
     motion_emu = nullptr;
+    InputCommon::Shutdown();
 }
 
 void EmuWindow_SDL2::SwapBuffers() {
@@ -167,15 +167,6 @@ void EmuWindow_SDL2::MakeCurrent() {
 
 void EmuWindow_SDL2::DoneCurrent() {
     SDL_GL_MakeCurrent(render_window, nullptr);
-}
-
-void EmuWindow_SDL2::ReloadSetKeymaps() {
-    KeyMap::ClearKeyMapping(keyboard_id);
-    for (int i = 0; i < Settings::NativeInput::NUM_INPUTS; ++i) {
-        KeyMap::SetKeyMapping(
-            {Settings::values.input_mappings[Settings::NativeInput::All[i]], keyboard_id},
-            KeyMap::mapping_targets[i]);
-    }
 }
 
 void EmuWindow_SDL2::OnMinimalClientAreaChangeRequest(

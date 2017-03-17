@@ -104,6 +104,7 @@ class GRenderWindow : public QWidget, public EmuWindow {
 
 public:
     GRenderWindow(QWidget* parent, EmuThread* emu_thread);
+    ~GRenderWindow();
 
     // EmuWindow implementation
     void SwapBuffers() override;
@@ -127,7 +128,7 @@ public:
     void mouseMoveEvent(QMouseEvent* event) override;
     void mouseReleaseEvent(QMouseEvent* event) override;
 
-    void ReloadSetKeymaps() override;
+    void ReloadSetKeymaps();
 
     void OnClientAreaResized(unsigned width, unsigned height);
 
@@ -151,9 +152,6 @@ private:
     GGLWidgetInternal* child;
 
     QByteArray geometry;
-
-    /// Device id of keyboard for use with KeyMap
-    int keyboard_id;
 
     EmuThread* emu_thread;
 

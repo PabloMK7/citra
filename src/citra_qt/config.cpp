@@ -6,6 +6,7 @@
 #include "citra_qt/config.h"
 #include "citra_qt/ui_settings.h"
 #include "common/file_util.h"
+#include "input_common/main.h"
 
 Config::Config() {
     // TODO: Don't hardcode the path; let the frontend decide where to put the config files.
@@ -16,25 +17,46 @@ Config::Config() {
     Reload();
 }
 
-const std::array<QVariant, Settings::NativeInput::NUM_INPUTS> Config::defaults = {
-    // directly mapped keys
-    Qt::Key_A, Qt::Key_S, Qt::Key_Z, Qt::Key_X, Qt::Key_Q, Qt::Key_W, Qt::Key_1, Qt::Key_2,
-    Qt::Key_M, Qt::Key_N, Qt::Key_B, Qt::Key_T, Qt::Key_G, Qt::Key_F, Qt::Key_H, Qt::Key_I,
-    Qt::Key_K, Qt::Key_J, Qt::Key_L,
-
-    // indirectly mapped keys
-    Qt::Key_Up, Qt::Key_Down, Qt::Key_Left, Qt::Key_Right, Qt::Key_D,
+const std::array<int, Settings::NativeButton::NumButtons> Config::default_buttons = {
+    Qt::Key_A, Qt::Key_S, Qt::Key_Z, Qt::Key_X, Qt::Key_T, Qt::Key_G, Qt::Key_F, Qt::Key_H,
+    Qt::Key_Q, Qt::Key_W, Qt::Key_M, Qt::Key_N, Qt::Key_1, Qt::Key_2, Qt::Key_B,
 };
+
+const std::array<std::array<int, 5>, Settings::NativeAnalog::NumAnalogs> Config::default_analogs{{
+    {
+        Qt::Key_Up, Qt::Key_Down, Qt::Key_Left, Qt::Key_Right, Qt::Key_D,
+    },
+    {
+        Qt::Key_I, Qt::Key_K, Qt::Key_J, Qt::Key_L, Qt::Key_D,
+    },
+}};
 
 void Config::ReadValues() {
     qt_config->beginGroup("Controls");
-    for (int i = 0; i < Settings::NativeInput::NUM_INPUTS; ++i) {
-        Settings::values.input_mappings[Settings::NativeInput::All[i]] =
-            qt_config->value(QString::fromStdString(Settings::NativeInput::Mapping[i]), defaults[i])
-                .toInt();
+    for (int i = 0; i < Settings::NativeButton::NumButtons; ++i) {
+        std::string default_param = InputCommon::GenerateKeyboardParam(default_buttons[i]);
+        Settings::values.buttons[i] =
+            qt_config
+                ->value(Settings::NativeButton::mapping[i], QString::fromStdString(default_param))
+                .toString()
+                .toStdString();
+        if (Settings::values.buttons[i].empty())
+            Settings::values.buttons[i] = default_param;
     }
-    Settings::values.pad_circle_modifier_scale =
-        qt_config->value("pad_circle_modifier_scale", 0.5).toFloat();
+
+    for (int i = 0; i < Settings::NativeAnalog::NumAnalogs; ++i) {
+        std::string default_param = InputCommon::GenerateAnalogParamFromKeys(
+            default_analogs[i][0], default_analogs[i][1], default_analogs[i][2],
+            default_analogs[i][3], default_analogs[i][4], 0.5f);
+        Settings::values.analogs[i] =
+            qt_config
+                ->value(Settings::NativeAnalog::mapping[i], QString::fromStdString(default_param))
+                .toString()
+                .toStdString();
+        if (Settings::values.analogs[i].empty())
+            Settings::values.analogs[i] = default_param;
+    }
+
     qt_config->endGroup();
 
     qt_config->beginGroup("Core");
@@ -155,12 +177,14 @@ void Config::ReadValues() {
 
 void Config::SaveValues() {
     qt_config->beginGroup("Controls");
-    for (int i = 0; i < Settings::NativeInput::NUM_INPUTS; ++i) {
-        qt_config->setValue(QString::fromStdString(Settings::NativeInput::Mapping[i]),
-                            Settings::values.input_mappings[Settings::NativeInput::All[i]]);
+    for (int i = 0; i < Settings::NativeButton::NumButtons; ++i) {
+        qt_config->setValue(QString::fromStdString(Settings::NativeButton::mapping[i]),
+                            QString::fromStdString(Settings::values.buttons[i]));
     }
-    qt_config->setValue("pad_circle_modifier_scale",
-                        (double)Settings::values.pad_circle_modifier_scale);
+    for (int i = 0; i < Settings::NativeAnalog::NumAnalogs; ++i) {
+        qt_config->setValue(QString::fromStdString(Settings::NativeAnalog::mapping[i]),
+                            QString::fromStdString(Settings::values.analogs[i]));
+    }
     qt_config->endGroup();
 
     qt_config->beginGroup("Core");

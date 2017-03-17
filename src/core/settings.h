@@ -18,64 +18,68 @@ enum class LayoutOption {
     Custom,
 };
 
-namespace NativeInput {
-
+namespace NativeButton {
 enum Values {
-    // directly mapped keys
     A,
     B,
     X,
     Y,
+    Up,
+    Down,
+    Left,
+    Right,
     L,
     R,
+    Start,
+    Select,
+
     ZL,
     ZR,
-    START,
-    SELECT,
-    HOME,
-    DUP,
-    DDOWN,
-    DLEFT,
-    DRIGHT,
-    CUP,
-    CDOWN,
-    CLEFT,
-    CRIGHT,
 
-    // indirectly mapped keys
-    CIRCLE_UP,
-    CIRCLE_DOWN,
-    CIRCLE_LEFT,
-    CIRCLE_RIGHT,
-    CIRCLE_MODIFIER,
+    Home,
 
-    NUM_INPUTS
+    NumButtons,
 };
 
-static const std::array<const char*, NUM_INPUTS> Mapping = {{
-    // directly mapped keys
-    "pad_a", "pad_b", "pad_x", "pad_y", "pad_l", "pad_r", "pad_zl", "pad_zr", "pad_start",
-    "pad_select", "pad_home", "pad_dup", "pad_ddown", "pad_dleft", "pad_dright", "pad_cup",
-    "pad_cdown", "pad_cleft", "pad_cright",
+constexpr int BUTTON_HID_BEGIN = A;
+constexpr int BUTTON_IR_BEGIN = ZL;
+constexpr int BUTTON_NS_BEGIN = Home;
 
-    // indirectly mapped keys
-    "pad_circle_up", "pad_circle_down", "pad_circle_left", "pad_circle_right",
-    "pad_circle_modifier",
+constexpr int BUTTON_HID_END = BUTTON_IR_BEGIN;
+constexpr int BUTTON_IR_END = BUTTON_NS_BEGIN;
+constexpr int BUTTON_NS_END = NumButtons;
+
+constexpr int NUM_BUTTONS_HID = BUTTON_HID_END - BUTTON_HID_BEGIN;
+constexpr int NUM_BUTTONS_IR = BUTTON_IR_END - BUTTON_IR_BEGIN;
+constexpr int NUM_BUTTONS_NS = BUTTON_NS_END - BUTTON_NS_BEGIN;
+
+static const std::array<const char*, NumButtons> mapping = {{
+    "button_a", "button_b", "button_x", "button_y", "button_up", "button_down", "button_left",
+    "button_right", "button_l", "button_r", "button_start", "button_select", "button_zl",
+    "button_zr", "button_home",
 }};
-static const std::array<Values, NUM_INPUTS> All = {{
-    A,     B,      X,      Y,         L,           R,           ZL,           ZR,
-    START, SELECT, HOME,   DUP,       DDOWN,       DLEFT,       DRIGHT,       CUP,
-    CDOWN, CLEFT,  CRIGHT, CIRCLE_UP, CIRCLE_DOWN, CIRCLE_LEFT, CIRCLE_RIGHT, CIRCLE_MODIFIER,
+} // namespace NativeButton
+
+namespace NativeAnalog {
+enum Values {
+    CirclePad,
+    CStick,
+
+    NumAnalogs,
+};
+
+static const std::array<const char*, NumAnalogs> mapping = {{
+    "circle_pad", "c_stick",
 }};
-}
+} // namespace NumAnalog
 
 struct Values {
     // CheckNew3DS
     bool is_new_3ds;
 
     // Controls
-    std::array<int, NativeInput::NUM_INPUTS> input_mappings;
-    float pad_circle_modifier_scale;
+    std::array<std::string, NativeButton::NumButtons> buttons;
+    std::array<std::string, NativeAnalog::NumAnalogs> analogs;
 
     // Core
     bool use_cpu_jit;
