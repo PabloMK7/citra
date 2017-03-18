@@ -231,7 +231,7 @@ void ReceiveParameter(Service::Interface* self) {
     rb.PushMoveHandles((next_parameter.object != nullptr)
                            ? Kernel::g_handle_table.Create(next_parameter.object).MoveFrom()
                            : 0);
-    rb.PushStaticBuffer(buffer, next_parameter.buffer.size(), 0);
+    rb.PushStaticBuffer(buffer, static_cast<u32>(next_parameter.buffer.size()), 0);
 
     Memory::WriteBlock(buffer, next_parameter.buffer.data(), next_parameter.buffer.size());
 
@@ -261,7 +261,7 @@ void GlanceParameter(Service::Interface* self) {
     rb.PushCopyHandles((next_parameter.object != nullptr)
                            ? Kernel::g_handle_table.Create(next_parameter.object).MoveFrom()
                            : 0);
-    rb.PushStaticBuffer(buffer, next_parameter.buffer.size(), 0);
+    rb.PushStaticBuffer(buffer, static_cast<u32>(next_parameter.buffer.size()), 0);
 
     Memory::WriteBlock(buffer, next_parameter.buffer.data(), next_parameter.buffer.size());
 
