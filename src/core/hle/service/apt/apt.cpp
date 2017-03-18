@@ -554,7 +554,7 @@ void Unwrap(Service::Interface* self) {
     // Decrypts the ciphertext using AES-CCM
     auto pdata = HW::AES::DecryptVerifyCCM(cipher, nonce, HW::AES::KeySlotID::APTWrap);
 
-    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 4);
     if (!pdata.empty()) {
         // Splits the plaintext and put the nonce in between
         Memory::WriteBlock(output, pdata.data(), nonce_offset);
