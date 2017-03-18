@@ -7,6 +7,7 @@
 #include <vector>
 #include "common/common_types.h"
 #include "common/logging/log.h"
+#include "core/core_timing.h"
 #include "core/hle/kernel/event.h"
 #include "core/hle/kernel/shared_memory.h"
 #include "core/hle/result.h"
@@ -40,6 +41,9 @@ static u8 network_channel = DefaultNetworkChannel;
 
 // Information about the network that we're currently connected to.
 static NetworkInfo network_info;
+
+// Event that will generate and send the 802.11 beacon frames.
+static int beacon_broadcast_event;
 
 /**
  * NWM_UDS::Shutdown service function
@@ -260,13 +264,42 @@ static void BeginHostingNetwork(Interface* self) {
 
     connection_status_event->Signal();
 
-    // TODO(Subv): Start broadcasting the network, send a beacon frame every 102.4ms.
+    // Start broadcasting the network, send a beacon frame every 102.4ms.
+    CoreTiming::ScheduleEvent(msToCycles(DefaultBeaconInterval * MillisecondsPerTU),
+                              beacon_broadcast_event, 0);
 
     LOG_WARNING(Service_NWM,
                 "An UDS network has been created, but broadcasting it is unimplemented.");
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
+}
+
+/**
+ * NWM_UDS::DestroyNetwork service function.
+ * Closes the network that we're currently hosting.
+ *  Inputs:
+ *      0 : Command header.
+ *  Outputs:
+ *      0 : Return header
+ *      1 : Result of function, 0 on success, otherwise error code
+ */
+static void DestroyNetwork(Interface* self) {
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x08, 0, 0);
+
+    // TODO(Subv): Find out what happens if this is called while
+    // no network is being hosted.
+
+    // Unschedule the beacon broadcast event.
+    CoreTiming::UnscheduleEvent(beacon_broadcast_event, 0);
+
+    connection_status.status = static_cast<u8>(NetworkStatus::NotConnected);
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+
+    rb.Push(RESULT_SUCCESS);
+
+    LOG_WARNING(Service_NWM, "called");
 }
 
 /**
@@ -331,6 +364,19 @@ static void SetApplicationData(Interface* self) {
     rb.Push(RESULT_SUCCESS);
 }
 
+// Sends a 802.11 beacon frame with information about the current network.
+static void BeaconBroadcastCallback(u64 userdata, int cycles_late) {
+    // Don't do anything if we're not actually hosting a network
+    if (connection_status.status != static_cast<u32>(NetworkStatus::ConnectedAsHost))
+        return;
+
+    // TODO(Subv): Actually generate the beacon and send it.
+
+    // Start broadcasting the network, send a beacon frame every 102.4ms.
+    CoreTiming::ScheduleEvent(msToCycles(DefaultBeaconInterval * MillisecondsPerTU) - cycles_late,
+                              beacon_broadcast_event, 0);
+}
+
 const Interface::FunctionInfo FunctionTable[] = {
     {0x00010442, nullptr, "Initialize (deprecated)"},
     {0x00020000, nullptr, "Scrap"},
@@ -339,7 +385,7 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x00050040, nullptr, "EjectClient"},
     {0x00060000, nullptr, "EjectSpectator"},
     {0x00070080, nullptr, "UpdateNetworkAttribute"},
-    {0x00080000, nullptr, "DestroyNetwork"},
+    {0x00080000, DestroyNetwork, "DestroyNetwork"},
     {0x00090442, nullptr, "ConnectNetwork (deprecated)"},
     {0x000A0000, nullptr, "DisconnectNetwork"},
     {0x000B0000, GetConnectionStatus, "GetConnectionStatus"},
@@ -368,6 +414,9 @@ NWM_UDS::NWM_UDS() {
         Kernel::Event::Create(Kernel::ResetType::OneShot, "NWM::connection_status_event");
 
     Register(FunctionTable);
+
+    beacon_broadcast_event =
+        CoreTiming::RegisterEvent("UDS::BeaconBroadcastCallback", BeaconBroadcastCallback);
 }
 
 NWM_UDS::~NWM_UDS() {
@@ -378,6 +427,8 @@ NWM_UDS::~NWM_UDS() {
 
     connection_status = {};
     connection_status.status = static_cast<u32>(NetworkStatus::NotConnected);
+
+    CoreTiming::UnscheduleEvent(beacon_broadcast_event, 0);
 }
 
 } // namespace NWM

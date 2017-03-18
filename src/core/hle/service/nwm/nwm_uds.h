@@ -18,6 +18,11 @@ namespace NWM {
 const size_t ApplicationDataSize = 0xC8;
 const u8 DefaultNetworkChannel = 11;
 
+// Number of milliseconds in a TU.
+const double MillisecondsPerTU = 1.024;
+// Interval measured in TU, the default value is 100TU = 102.4ms
+const u16 DefaultBeaconInterval = 100;
+
 struct NodeInfo {
     u64_le friend_code_seed;
     std::array<u16_le, 10> username;
