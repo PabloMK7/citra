@@ -69,10 +69,11 @@ void Initialize(Service::Interface* self) {
 
 void GetSharedFont(Service::Interface* self) {
     IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x44, 0, 0); // 0x00440000
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
     if (!shared_font_mem) {
         LOG_ERROR(Service_APT, "shared font file missing - go dump it from your 3ds");
-        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push<u32>(-1); // TODO: Find the right error code
+        rb.Skip(1 + 2, true);
         return;
     }
 
@@ -85,7 +86,6 @@ void GetSharedFont(Service::Interface* self) {
         shared_font_relocated = true;
     }
 
-    IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
     rb.Push(RESULT_SUCCESS); // No error
     // Since the SharedMemory interface doesn't provide the address at which the memory was
     // allocated, the real APT service calculates this address by scanning the entire address space
@@ -113,10 +113,10 @@ void GetLockHandle(Service::Interface* self) {
     rb.Push(RESULT_SUCCESS);    // No error
     rb.Push(applet_attributes); // Applet Attributes, this value is passed to Enable.
     rb.Push<u32>(0);            // Least significant bit = power button state
-    Kernel::Handle handleCopy = Kernel::g_handle_table.Create(lock).MoveFrom();
-    rb.PushCopyHandles(handleCopy);
+    Kernel::Handle handle_copy = Kernel::g_handle_table.Create(lock).MoveFrom();
+    rb.PushCopyHandles(handle_copy);
 
-    LOG_WARNING(Service_APT, "(STUBBED) called handle=0x%08X applet_attributes=0x%08X", handleCopy,
+    LOG_WARNING(Service_APT, "(STUBBED) called handle=0x%08X applet_attributes=0x%08X", handle_copy,
                 applet_attributes);
 }
 
@@ -150,14 +150,14 @@ void IsRegistered(Service::Interface* self) {
 
     // TODO(Subv): An application is considered "registered" if it has already called APT::Enable
     // handle this properly once we implement multiprocess support.
-    bool isRegistered = false; // Set to not registered by default
+    bool is_registered = false; // Set to not registered by default
 
     if (app_id == static_cast<u32>(AppletId::AnyLibraryApplet)) {
-        isRegistered = HLE::Applets::IsLibraryAppletRunning() ? true : false;
+        is_registered = HLE::Applets::IsLibraryAppletRunning();
     } else if (auto applet = HLE::Applets::Applet::Get(static_cast<AppletId>(app_id))) {
-        isRegistered = true; // Set to registered
+        is_registered = true; // Set to registered
     }
-    rb.Push(isRegistered);
+    rb.Push(is_registered);
 
     LOG_WARNING(Service_APT, "(STUBBED) called app_id=0x%08X", app_id);
 }
@@ -177,10 +177,9 @@ void SendParameter(Service::Interface* self) {
     u32 dst_app_id = rp.Pop<u32>();
     u32 signal_type = rp.Pop<u32>();
     u32 buffer_size = rp.Pop<u32>();
-    u32 value = rp.Pop<u32>();
-    u32 handle = rp.Pop<u32>();
-    u32 size = rp.Pop<u32>();
-    u32 buffer = rp.Pop<u32>();
+    Kernel::Handle handle = rp.PopHandle();
+    size_t size;
+    VAddr buffer = rp.PopStaticBuffer(&size);
 
     std::shared_ptr<HLE::Applets::Applet> dest_applet =
         HLE::Applets::Applet::Get(static_cast<AppletId>(dst_app_id));
@@ -203,11 +202,10 @@ void SendParameter(Service::Interface* self) {
 
     rb.Push(dest_applet->ReceiveParameter(param));
 
-    LOG_WARNING(
-        Service_APT,
-        "(STUBBED) called src_app_id=0x%08X, dst_app_id=0x%08X, signal_type=0x%08X,"
-        "buffer_size=0x%08X, value=0x%08X, handle=0x%08X, size=0x%08X, in_param_buffer_ptr=0x%08X",
-        src_app_id, dst_app_id, signal_type, buffer_size, value, handle, size, buffer);
+    LOG_WARNING(Service_APT,
+                "(STUBBED) called src_app_id=0x%08X, dst_app_id=0x%08X, signal_type=0x%08X,"
+                "buffer_size=0x%08X, handle=0x%08X, size=0x%08zX, in_param_buffer_ptr=0x%08X",
+                src_app_id, dst_app_id, signal_type, buffer_size, handle, size, buffer);
 }
 
 void ReceiveParameter(Service::Interface* self) {
@@ -218,8 +216,9 @@ void ReceiveParameter(Service::Interface* self) {
     size_t static_buff_size;
     VAddr buffer = rp.PeekStaticBuffer(0, &static_buff_size);
     if (buffer_size > static_buff_size)
-        LOG_WARNING(Service_APT, "ReceiveParameter: buffer_size is bigger than the size in the "
-                                 "buffer descriptor (0x%08X > 0x%08X)",
+        LOG_WARNING(Service_APT,
+                    "ReceiveParameter: buffer_size is bigger than the size in the "
+                    "buffer descriptor (0x%08X > 0x%08zX)",
                     buffer_size, static_buff_size);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(4, 4);
@@ -236,7 +235,7 @@ void ReceiveParameter(Service::Interface* self) {
 
     Memory::WriteBlock(buffer, next_parameter.buffer.data(), next_parameter.buffer.size());
 
-    LOG_WARNING(Service_APT, "called app_id=0x%08X, buffer_size=0x%08X", app_id, buffer_size);
+    LOG_WARNING(Service_APT, "called app_id=0x%08X, buffer_size=0x%08zX", app_id, buffer_size);
 }
 
 void GlanceParameter(Service::Interface* self) {
@@ -247,8 +246,9 @@ void GlanceParameter(Service::Interface* self) {
     size_t static_buff_size;
     VAddr buffer = rp.PeekStaticBuffer(0, &static_buff_size);
     if (buffer_size > static_buff_size)
-        LOG_WARNING(Service_APT, "ReceiveParameter: buffer_size is bigger than the size in the "
-                                 "buffer descriptor (0x%08X > 0x%08X)",
+        LOG_WARNING(Service_APT,
+                    "ReceiveParameter: buffer_size is bigger than the size in the "
+                    "buffer descriptor (0x%08X > 0x%08zX)",
                     buffer_size, static_buff_size);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(4, 4);
@@ -265,7 +265,7 @@ void GlanceParameter(Service::Interface* self) {
 
     Memory::WriteBlock(buffer, next_parameter.buffer.data(), next_parameter.buffer.size());
 
-    LOG_WARNING(Service_APT, "called app_id=0x%08X, buffer_size=0x%08X", app_id, buffer_size);
+    LOG_WARNING(Service_APT, "called app_id=0x%08X, buffer_size=0x%08zX", app_id, buffer_size);
 }
 
 void CancelParameter(Service::Interface* self) {
@@ -285,7 +285,7 @@ void CancelParameter(Service::Interface* self) {
 }
 
 void PrepareToStartApplication(Service::Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x00150140);
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x15, 5, 0); // 0x00150140
     u32 title_info1 = rp.Pop<u32>();
     u32 title_info2 = rp.Pop<u32>();
     u32 title_info3 = rp.Pop<u32>();
@@ -306,26 +306,26 @@ void PrepareToStartApplication(Service::Interface* self) {
 }
 
 void StartApplication(Service::Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x001B00C4);
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x1B, 3, 4); // 0x001B00C4
     u32 buffer1_size = rp.Pop<u32>();
     u32 buffer2_size = rp.Pop<u32>();
     u32 flag = rp.Pop<u32>();
-    u32 size1 = rp.Pop<u32>();
-    u32 buffer1_ptr = rp.Pop<u32>();
-    u32 size2 = rp.Pop<u32>();
-    u32 buffer2_ptr = rp.Pop<u32>();
+    size_t size1;
+    VAddr buffer1_ptr = rp.PopStaticBuffer(&size1);
+    size_t size2;
+    VAddr buffer2_ptr = rp.PopStaticBuffer(&size2);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS); // No error
 
     LOG_WARNING(Service_APT,
                 "(STUBBED) called buffer1_size=0x%08X, buffer2_size=0x%08X, flag=0x%08X,"
-                "size1=0x%08X, buffer1_ptr=0x%08X, size2=0x%08X, buffer2_ptr=0x%08X",
+                "size1=0x%08zX, buffer1_ptr=0x%08X, size2=0x%08zX, buffer2_ptr=0x%08X",
                 buffer1_size, buffer2_size, flag, size1, buffer1_ptr, size2, buffer2_ptr);
 }
 
 void AppletUtility(Service::Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x004B00C2);
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x4B, 3, 2); // 0x004B00C2
 
     // These are from 3dbrew - I'm not really sure what they're used for.
     u32 utility_command = rp.Pop<u32>();
@@ -438,7 +438,7 @@ void CancelLibraryApplet(Service::Interface* self) {
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push<u32>(1);
 
-    LOG_WARNING(Service_APT, "(STUBBED) called exiting=%u", exiting);
+    LOG_WARNING(Service_APT, "(STUBBED) called exiting=%d", exiting);
 }
 
 void SetScreenCapPostPermission(Service::Interface* self) {
@@ -501,8 +501,9 @@ void GetStartupArgument(Service::Interface* self) {
     size_t static_buff_size;
     VAddr addr = rp.PeekStaticBuffer(0, &static_buff_size);
     if (parameter_size > static_buff_size)
-        LOG_WARNING(Service_APT, "GetStartupArgument: parameter_size is bigger than the size in "
-                                 "the buffer descriptor (0x%08X > 0x%08X)",
+        LOG_WARNING(Service_APT,
+                    "GetStartupArgument: parameter_size is bigger than the size in "
+                    "the buffer descriptor (0x%08X > 0x%08zX)",
                     parameter_size, static_buff_size);
 
     if (addr && parameter_size) {
@@ -512,9 +513,10 @@ void GetStartupArgument(Service::Interface* self) {
     LOG_WARNING(Service_APT, "(stubbed) called startup_argument_type=%u , parameter_size=0x%08x",
                 startup_argument_type, parameter_size);
 
-    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
     rb.Push(RESULT_SUCCESS);
     rb.Push<u32>(0);
+    rb.PushStaticBuffer(addr, parameter_size, 0);
 }
 
 void Wrap(Service::Interface* self) {

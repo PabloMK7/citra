@@ -107,7 +107,7 @@ void CheckNew3DS(IPC::RequestBuilder& rb) {
 }
 
 void CheckNew3DS(Service::Interface* self) {
-    IPC::RequestBuilder rb(Kernel::GetCommandBuffer(), 0x040A0000);
+    IPC::RequestBuilder rb(Kernel::GetCommandBuffer(), 0x40A, 0, 0); // 0x040A0000
     CheckNew3DS(rb);
 }
 
