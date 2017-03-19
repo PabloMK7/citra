@@ -132,7 +132,7 @@ void Enable(Service::Interface* self) {
 void GetAppletManInfo(Service::Interface* self) {
     IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x5, 1, 0); // 0x50040
     u32 unk = rp.Pop<u32>();
-    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    IPC::RequestBuilder rb = rp.MakeBuilder(5, 0);
     rb.Push(RESULT_SUCCESS); // No error
     rb.Push<u32>(0);
     rb.Push<u32>(0);
@@ -216,10 +216,10 @@ void ReceiveParameter(Service::Interface* self) {
     size_t static_buff_size;
     VAddr buffer = rp.PeekStaticBuffer(0, &static_buff_size);
     if (buffer_size > static_buff_size)
-        LOG_WARNING(Service_APT,
-                    "ReceiveParameter: buffer_size is bigger than the size in the "
-                    "buffer descriptor (0x%08X > 0x%08zX)",
-                    buffer_size, static_buff_size);
+        LOG_WARNING(
+            Service_APT,
+            "buffer_size is bigger than the size in the buffer descriptor (0x%08X > 0x%08zX)",
+            buffer_size, static_buff_size);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(4, 4);
     rb.Push(RESULT_SUCCESS); // No error
@@ -246,10 +246,10 @@ void GlanceParameter(Service::Interface* self) {
     size_t static_buff_size;
     VAddr buffer = rp.PeekStaticBuffer(0, &static_buff_size);
     if (buffer_size > static_buff_size)
-        LOG_WARNING(Service_APT,
-                    "ReceiveParameter: buffer_size is bigger than the size in the "
-                    "buffer descriptor (0x%08X > 0x%08zX)",
-                    buffer_size, static_buff_size);
+        LOG_WARNING(
+            Service_APT,
+            "buffer_size is bigger than the size in the buffer descriptor (0x%08X > 0x%08zX)",
+            buffer_size, static_buff_size);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(4, 4);
     rb.Push(RESULT_SUCCESS); // No error
@@ -279,8 +279,9 @@ void CancelParameter(Service::Interface* self) {
     rb.Push(RESULT_SUCCESS); // No error
     rb.Push(true);           // Set to Success
 
-    LOG_WARNING(Service_APT, "(STUBBED) called check_sender=0x%08X, sender_appid=0x%08X, "
-                             "check_receiver=0x%08X, receiver_appid=0x%08X",
+    LOG_WARNING(Service_APT,
+                "(STUBBED) called check_sender=0x%08X, sender_appid=0x%08X, "
+                "check_receiver=0x%08X, receiver_appid=0x%08X",
                 check_sender, sender_appid, check_receiver, receiver_appid);
 }
 
@@ -436,7 +437,7 @@ void CancelLibraryApplet(Service::Interface* self) {
     bool exiting = rp.Pop<bool>();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push<u32>(1);
+    rb.Push<u32>(1); // TODO: Find the return code meaning
 
     LOG_WARNING(Service_APT, "(STUBBED) called exiting=%d", exiting);
 }
@@ -470,8 +471,8 @@ void GetAppletInfo(Service::Interface* self) {
         // TODO(Subv): Get the title id for the current applet and write it in the response[2-3]
         IPC::RequestBuilder rb = rp.MakeBuilder(7, 0);
         rb.Push(RESULT_SUCCESS);
-        u64 titileId = 0;
-        rb.Push(titileId);
+        u64 title_id = 0;
+        rb.Push(title_id);
         rb.Push(static_cast<u32>(Service::FS::MediaType::NAND));
         rb.Push(true);   // Registered
         rb.Push(true);   // Loaded
@@ -487,8 +488,7 @@ void GetAppletInfo(Service::Interface* self) {
 void GetStartupArgument(Service::Interface* self) {
     IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x51, 2, 0); // 0x00510080
     u32 parameter_size = rp.Pop<u32>();
-    StartupArgumentType startup_argument_type =
-        static_cast<StartupArgumentType>(rp.Pop<u32>() & 0xF);
+    StartupArgumentType startup_argument_type = static_cast<StartupArgumentType>(rp.Pop<u8>());
 
     if (parameter_size >= 0x300) {
         LOG_ERROR(
@@ -501,10 +501,10 @@ void GetStartupArgument(Service::Interface* self) {
     size_t static_buff_size;
     VAddr addr = rp.PeekStaticBuffer(0, &static_buff_size);
     if (parameter_size > static_buff_size)
-        LOG_WARNING(Service_APT,
-                    "GetStartupArgument: parameter_size is bigger than the size in "
-                    "the buffer descriptor (0x%08X > 0x%08zX)",
-                    parameter_size, static_buff_size);
+        LOG_WARNING(
+            Service_APT,
+            "parameter_size is bigger than the size in the buffer descriptor (0x%08X > 0x%08zX)",
+            parameter_size, static_buff_size);
 
     if (addr && parameter_size) {
         Memory::ZeroBlock(addr, parameter_size);
