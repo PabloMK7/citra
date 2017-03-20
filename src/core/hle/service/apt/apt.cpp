@@ -279,9 +279,8 @@ void CancelParameter(Service::Interface* self) {
     rb.Push(RESULT_SUCCESS); // No error
     rb.Push(true);           // Set to Success
 
-    LOG_WARNING(Service_APT,
-                "(STUBBED) called check_sender=0x%08X, sender_appid=0x%08X, "
-                "check_receiver=0x%08X, receiver_appid=0x%08X",
+    LOG_WARNING(Service_APT, "(STUBBED) called check_sender=0x%08X, sender_appid=0x%08X, "
+                             "check_receiver=0x%08X, receiver_appid=0x%08X",
                 check_sender, sender_appid, check_receiver, receiver_appid);
 }
 
