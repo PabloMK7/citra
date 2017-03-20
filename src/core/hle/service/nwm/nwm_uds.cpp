@@ -86,29 +86,79 @@ static void Shutdown(Interface* self) {
  *      1 : Result of function, 0 on success, otherwise error code
  */
 static void RecvBeaconBroadcastData(Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-    u32 out_buffer_size = cmd_buff[1];
-    u32 unk1 = cmd_buff[2];
-    u32 unk2 = cmd_buff[3];
-    u32 mac_address = cmd_buff[4];
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x0F, 16, 4);
 
-    u32 unk3 = cmd_buff[6];
+    u32 out_buffer_size = rp.Pop<u32>();
+    rp.Pop<u32>();
+    rp.Pop<u32>();
 
-    u32 wlan_comm_id = cmd_buff[15];
-    u32 ctr_gen_id = cmd_buff[16];
-    u32 value = cmd_buff[17];
-    u32 input_handle = cmd_buff[18];
-    u32 new_buffer_size = cmd_buff[19];
-    u32 out_buffer_ptr = cmd_buff[20];
+    MacAddress mac_address;
+    rp.PopRaw(mac_address);
 
-    cmd_buff[1] = RESULT_SUCCESS.raw;
+    // TODO(Subv): Use IPC::RequestParser::Skip when possible.
+    rp.Pop<u32>();
+    rp.Pop<u32>();
+    rp.Pop<u32>();
+    rp.Pop<u32>();
+    rp.Pop<u32>();
+    rp.Pop<u32>();
+    rp.Pop<u32>();
+    rp.Pop<u32>();
+    rp.Pop<u32>();
 
-    LOG_WARNING(Service_NWM,
-                "(STUBBED) called out_buffer_size=0x%08X, unk1=0x%08X, unk2=0x%08X,"
-                "mac_address=0x%08X, unk3=0x%08X, wlan_comm_id=0x%08X, ctr_gen_id=0x%08X,"
-                "value=%u, input_handle=0x%08X, new_buffer_size=0x%08X, out_buffer_ptr=0x%08X",
-                out_buffer_size, unk1, unk2, mac_address, unk3, wlan_comm_id, ctr_gen_id, value,
-                input_handle, new_buffer_size, out_buffer_ptr);
+    u32 wlan_comm_id = rp.Pop<u32>();
+    u32 id = rp.Pop<u32>();
+    Kernel::Handle input_handle = rp.PopHandle();
+
+    size_t desc_size;
+    const VAddr out_buffer_ptr = rp.PopMappedBuffer(&desc_size);
+    ASSERT(desc_size == out_buffer_size);
+
+    VAddr current_buffer_pos = out_buffer_ptr;
+    u32 total_size = sizeof(BeaconDataReplyHeader);
+
+    // Retrieve all beacon frames that were received from the desired mac address.
+    std::deque<WifiPacket> beacons =
+        GetReceivedPackets(WifiPacket::PacketType::Beacon, mac_address);
+
+    BeaconDataReplyHeader data_reply_header{};
+    data_reply_header.total_entries = beacons.size();
+    data_reply_header.max_output_size = out_buffer_size;
+
+    Memory::WriteBlock(current_buffer_pos, &data_reply_header, sizeof(BeaconDataReplyHeader));
+    current_buffer_pos += sizeof(BeaconDataReplyHeader);
+
+    // Write each of the received beacons into the buffer
+    for (const auto& beacon : beacons) {
+        BeaconEntryHeader entry{};
+        // TODO(Subv): Figure out what this size is used for.
+        entry.unk_size = sizeof(BeaconEntryHeader) + beacon.data.size();
+        entry.total_size = sizeof(BeaconEntryHeader) + beacon.data.size();
+        entry.wifi_channel = beacon.channel;
+        entry.header_size = sizeof(BeaconEntryHeader);
+        entry.mac_address = beacon.transmitter_address;
+
+        ASSERT(current_buffer_pos < out_buffer_ptr + out_buffer_size);
+
+        Memory::WriteBlock(current_buffer_pos, &entry, sizeof(BeaconEntryHeader));
+        current_buffer_pos += sizeof(BeaconEntryHeader);
+
+        Memory::WriteBlock(current_buffer_pos, beacon.data.data(), beacon.data.size());
+        current_buffer_pos += beacon.data.size();
+
+        total_size += sizeof(BeaconEntryHeader) + beacon.data.size();
+    }
+
+    // Update the total size in the structure and write it to the buffer again.
+    data_reply_header.total_size = total_size;
+    Memory::WriteBlock(out_buffer_ptr, &data_reply_header, sizeof(BeaconDataReplyHeader));
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RESULT_SUCCESS);
+
+    LOG_DEBUG(Service_NWM, "called out_buffer_size=0x%08X, wlan_comm_id=0x%08X, id=0x%08X,"
+                           "input_handle=0x%08X, out_buffer_ptr=0x%08X",
+              out_buffer_size, wlan_comm_id, id, input_handle, out_buffer_ptr);
 }
 
 /**
