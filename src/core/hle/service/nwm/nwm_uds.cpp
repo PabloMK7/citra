@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <array>
 #include <cstring>
 #include <unordered_map>
 #include <vector>
@@ -12,6 +13,7 @@
 #include "core/hle/kernel/shared_memory.h"
 #include "core/hle/result.h"
 #include "core/hle/service/nwm/nwm_uds.h"
+#include "core/hle/service/nwm/uds_beacon.h"
 #include "core/memory.h"
 
 namespace Service {
@@ -27,10 +29,12 @@ static Kernel::SharedPtr<Kernel::SharedMemory> recv_buffer_memory;
 // Connection status of this 3DS.
 static ConnectionStatus connection_status{};
 
-// Node information about the current 3DS.
-// TODO(Subv): Keep an array of all nodes connected to the network,
-// that data has to be retransmitted in every beacon frame.
-static NodeInfo node_info;
+/* Node information about the current network.
+ * The amount of elements in this vector is always the maximum number
+ * of nodes specified in the network configuration.
+ * The first node is always the host, so this always contains at least 1 entry.
+ */
+static NodeList node_info(1);
 
 // Mapping of bind node ids to their respective events.
 static std::unordered_map<u32, Kernel::SharedPtr<Kernel::Event>> bind_node_events;
@@ -127,7 +131,7 @@ static void InitializeWithVersion(Interface* self) {
     u32 sharedmem_size = rp.Pop<u32>();
 
     // Update the node information with the data the game gave us.
-    rp.PopRaw(node_info);
+    rp.PopRaw(node_info[0]);
 
     u16 version;
     rp.PopRaw(version);
@@ -251,13 +255,25 @@ static void BeginHostingNetwork(Interface* self) {
     ASSERT_MSG(network_info.max_nodes > 1, "Trying to host a network of only one member.");
 
     connection_status.status = static_cast<u32>(NetworkStatus::ConnectedAsHost);
+
+    // Ensure the application data size is less than the maximum value.
+    ASSERT_MSG(network_info.application_data_size <= ApplicationDataSize, "Data size is too big.");
+
+    // Set up basic information for this network.
+    network_info.oui_value = NintendoOUI;
+    network_info.oui_type = static_cast<u8>(NintendoTagId::NetworkInfo);
+
     connection_status.max_nodes = network_info.max_nodes;
+
+    // Resize the nodes list to hold max_nodes.
+    node_info.resize(network_info.max_nodes);
 
     // There's currently only one node in the network (the host).
     connection_status.total_nodes = 1;
+    network_info.total_nodes = 1;
     // The host is always the first node
     connection_status.network_node_id = 1;
-    node_info.network_node_id = 1;
+    node_info[0].network_node_id = 1;
     // Set the bit 0 in the nodes bitmask to indicate that node 1 is already taken.
     connection_status.node_bitmask |= 1;
 
@@ -373,7 +389,8 @@ static void BeaconBroadcastCallback(u64 userdata, int cycles_late) {
     if (connection_status.status != static_cast<u32>(NetworkStatus::ConnectedAsHost))
         return;
 
-    // TODO(Subv): Actually generate the beacon and send it.
+    // TODO(Subv): Actually send the beacon.
+    std::vector<u8> frame = GenerateBeaconFrame(network_info, node_info);
 
     // Start broadcasting the network, send a beacon frame every 102.4ms.
     CoreTiming::ScheduleEvent(msToCycles(DefaultBeaconInterval * MillisecondsPerTU) - cycles_late,
