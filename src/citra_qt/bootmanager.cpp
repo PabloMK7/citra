@@ -235,7 +235,10 @@ void GRenderWindow::mouseReleaseEvent(QMouseEvent* event) {
         motion_emu->EndTilt();
 }
 
-void GRenderWindow::ReloadSetKeymaps() {}
+void GRenderWindow::focusOutEvent(QFocusEvent* event) {
+    QWidget::focusOutEvent(event);
+    InputCommon::GetKeyboard()->ReleaseAllKeys();
+}
 
 void GRenderWindow::OnClientAreaResized(unsigned width, unsigned height) {
     NotifyClientAreaSizeChanged(std::make_pair(width, height));
