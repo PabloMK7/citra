@@ -6,6 +6,7 @@
 #include <cstring>
 #include <ctime>
 #include "core/core_timing.h"
+#include "core/hle/service/ptm/ptm.h"
 #include "core/hle/shared_page.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -72,6 +73,12 @@ void Init() {
 
     // Some games wait until this value becomes 0x1, before asking running_hw
     shared_page.unknown_value = 0x1;
+
+    // Set to a completely full battery
+    shared_page.battery_state.charge_level.Assign(
+        static_cast<u8>(Service::PTM::ChargeLevels::CompletelyFull));
+    shared_page.battery_state.is_adapter_connected.Assign(1);
+    shared_page.battery_state.is_charging.Assign(1);
 
     update_time_event =
         CoreTiming::RegisterEvent("SharedPage::UpdateTimeCallback", UpdateTimeCallback);

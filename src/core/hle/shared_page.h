@@ -10,6 +10,7 @@
  * write access, according to 3dbrew; this is not emulated)
  */
 
+#include "common/bit_field.h"
 #include "common/common_funcs.h"
 #include "common/common_types.h"
 #include "common/swap.h"
@@ -29,6 +30,13 @@ struct DateTime {
 };
 static_assert(sizeof(DateTime) == 0x20, "Datetime size is wrong");
 
+union BatteryState {
+    u8 raw;
+    BitField<0, 1, u8> is_adapter_connected;
+    BitField<1, 1, u8> is_charging;
+    BitField<2, 3, u8> charge_level;
+};
+
 struct SharedPageDef {
     // Most of these names are taken from the 3dbrew page linked above.
     u32_le date_time_counter; // 0
@@ -44,7 +52,7 @@ struct SharedPageDef {
     INSERT_PADDING_BYTES(0x80 - 0x68);   // 68
     float_le sliderstate_3d;             // 80
     u8 ledstate_3d;                      // 84
-    INSERT_PADDING_BYTES(1);             // 85
+    BatteryState battery_state;          // 85
     u8 unknown_value;                    // 86
     INSERT_PADDING_BYTES(0xA0 - 0x87);   // 87
     u64_le menu_title_id;                // A0
