@@ -15,7 +15,6 @@ enum class LayoutOption {
     Default,
     SingleScreen,
     LargeScreen,
-    Custom,
 };
 
 namespace NativeButton {
@@ -99,6 +98,15 @@ struct Values {
 
     LayoutOption layout_option;
     bool swap_screen;
+    bool custom_layout;
+    u16 custom_top_left;
+    u16 custom_top_top;
+    u16 custom_top_right;
+    u16 custom_top_bottom;
+    u16 custom_bottom_left;
+    u16 custom_bottom_top;
+    u16 custom_bottom_right;
+    u16 custom_bottom_bottom;
 
     float bg_red;
     float bg_green;
