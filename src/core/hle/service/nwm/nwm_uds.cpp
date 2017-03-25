@@ -247,6 +247,9 @@ static void BeginHostingNetwork(Interface* self) {
 
     Memory::ReadBlock(network_info_address, &network_info, sizeof(NetworkInfo));
 
+    // The real UDS module throws a fatal error if this assert fails.
+    ASSERT_MSG(network_info.max_nodes > 1, "Trying to host a network of only one member.");
+
     connection_status.status = static_cast<u32>(NetworkStatus::ConnectedAsHost);
     connection_status.max_nodes = network_info.max_nodes;
 
