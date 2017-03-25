@@ -297,6 +297,7 @@ static void DestroyNetwork(Interface* self) {
     CoreTiming::UnscheduleEvent(beacon_broadcast_event, 0);
 
     connection_status.status = static_cast<u8>(NetworkStatus::NotConnected);
+    connection_status_event->Signal();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
 
