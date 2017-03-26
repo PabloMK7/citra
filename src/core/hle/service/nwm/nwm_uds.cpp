@@ -35,7 +35,7 @@ static NodeInfo node_info;
 // Mapping of bind node ids to their respective events.
 static std::unordered_map<u32, Kernel::SharedPtr<Kernel::Event>> bind_node_events;
 
-// The wifi network channel that the network is currently on.
+// The WiFi network channel that the network is currently on.
 // Since we're not actually interacting with physical radio waves, this is just a dummy value.
 static u8 network_channel = DefaultNetworkChannel;
 
@@ -320,10 +320,10 @@ static void GetChannel(Interface* self) {
     IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x1A, 0, 0);
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
 
-    u8 channel = network_channel;
+    bool is_connected = connection_status.status !=
+        static_cast<u32>(NetworkStatus::NotConnected);
 
-    if (connection_status.status == static_cast<u32>(NetworkStatus::NotConnected))
-        channel = 0;
+    u8 channel = is_connected ? network_channel : 0;
 
     rb.Push(RESULT_SUCCESS);
     rb.PushRaw(channel);
