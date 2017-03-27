@@ -320,8 +320,7 @@ static void GetChannel(Interface* self) {
     IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x1A, 0, 0);
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
 
-    bool is_connected = connection_status.status !=
-        static_cast<u32>(NetworkStatus::NotConnected);
+    bool is_connected = connection_status.status != static_cast<u32>(NetworkStatus::NotConnected);
 
     u8 channel = is_connected ? network_channel : 0;
 
