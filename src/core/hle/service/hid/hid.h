@@ -176,6 +176,16 @@ ASSERT_REG_POSITION(touch.index_reset_ticks, 0x2A);
 #undef ASSERT_REG_POSITION
 #endif // !defined(_MSC_VER)
 
+struct DirectionState {
+    bool up;
+    bool down;
+    bool left;
+    bool right;
+};
+
+/// Translates analog stick axes to directions. This is exposed for ir_rst module to use.
+DirectionState GetStickDirectionState(s16 circle_pad_x, s16 circle_pad_y);
+
 /**
  * HID::GetIPCHandles service function
  *  Inputs:

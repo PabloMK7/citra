@@ -542,7 +542,7 @@ void ShutdownUser() {
     receive_event = nullptr;
 }
 
-void ReloadInputDevices() {
+void ReloadInputDevicesUser() {
     if (extra_hid)
         extra_hid->RequestInputDevicesReload();
 }
