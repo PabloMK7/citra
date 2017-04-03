@@ -467,8 +467,8 @@ static void Break(u8 break_reason) {
 }
 
 /// Used to output a message on a debug hardware unit - does nothing on a retail unit
-static void OutputDebugString(const char* string) {
-    LOG_DEBUG(Debug_Emulated, "%s", string);
+static void OutputDebugString(const char* string, int len) {
+    LOG_DEBUG(Debug_Emulated, "%.*s", len, string);
 }
 
 /// Get resource limit
