@@ -6,7 +6,7 @@
 #include "audio_core/audio_core.h"
 #include "audio_core/sink.h"
 #include "audio_core/sink_details.h"
-#include "citra_qt/configure_audio.h"
+#include "citra_qt/configuration/configure_audio.h"
 #include "core/settings.h"
 #include "ui_configure_audio.h"
 

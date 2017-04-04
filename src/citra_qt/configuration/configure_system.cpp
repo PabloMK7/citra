@@ -2,7 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "citra_qt/configure_system.h"
+#include "citra_qt/configuration/configure_system.h"
 #include "citra_qt/ui_settings.h"
 #include "core/core.h"
 #include "core/hle/service/cfg/cfg.h"

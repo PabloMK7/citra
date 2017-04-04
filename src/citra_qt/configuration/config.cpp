@@ -3,7 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <QSettings>
-#include "citra_qt/config.h"
+#include "citra_qt/configuration/config.h"
 #include "citra_qt/ui_settings.h"
 #include "common/file_util.h"
 #include "input_common/main.h"
