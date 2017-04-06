@@ -49,13 +49,13 @@ void SendParameter(const MessageParameter& parameter) {
 }
 
 void Initialize(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-    u32 app_id = cmd_buff[1];
-    u32 flags = cmd_buff[2];
-
-    cmd_buff[2] = IPC::CopyHandleDesc(2);
-    cmd_buff[3] = Kernel::g_handle_table.Create(notification_event).MoveFrom();
-    cmd_buff[4] = Kernel::g_handle_table.Create(parameter_event).MoveFrom();
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x2, 2, 0); // 0x20080
+    u32 app_id = rp.Pop<u32>();
+    u32 flags = rp.Pop<u32>();
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 3);
+    rb.Push(RESULT_SUCCESS);
+    rb.PushCopyHandles(Kernel::g_handle_table.Create(notification_event).MoveFrom(),
+                       Kernel::g_handle_table.Create(parameter_event).MoveFrom());
 
     // TODO(bunnei): Check if these events are cleared every time Initialize is called.
     notification_event->Clear();
@@ -64,18 +64,16 @@ void Initialize(Service::Interface* self) {
     ASSERT_MSG((nullptr != lock), "Cannot initialize without lock");
     lock->Release();
 
-    cmd_buff[1] = RESULT_SUCCESS.raw; // No error
-
     LOG_DEBUG(Service_APT, "called app_id=0x%08X, flags=0x%08X", app_id, flags);
 }
 
 void GetSharedFont(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x44, 0, 0); // 0x00440000
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
     if (!shared_font_mem) {
         LOG_ERROR(Service_APT, "shared font file missing - go dump it from your 3ds");
-        cmd_buff[0] = IPC::MakeHeader(0x44, 2, 2);
-        cmd_buff[1] = -1; // TODO: Find the right error code
+        rb.Push<u32>(-1); // TODO: Find the right error code
+        rb.Skip(1 + 2, true);
         return;
     }
 
@@ -87,103 +85,110 @@ void GetSharedFont(Service::Interface* self) {
         BCFNT::RelocateSharedFont(shared_font_mem, target_address);
         shared_font_relocated = true;
     }
-    cmd_buff[0] = IPC::MakeHeader(0x44, 2, 2);
-    cmd_buff[1] = RESULT_SUCCESS.raw; // No error
+
+    rb.Push(RESULT_SUCCESS); // No error
     // Since the SharedMemory interface doesn't provide the address at which the memory was
     // allocated, the real APT service calculates this address by scanning the entire address space
     // (using svcQueryMemory) and searches for an allocation of the same size as the Shared Font.
-    cmd_buff[2] = target_address;
-    cmd_buff[3] = IPC::CopyHandleDesc();
-    cmd_buff[4] = Kernel::g_handle_table.Create(shared_font_mem).MoveFrom();
+    rb.Push(target_address);
+    rb.PushCopyHandles(Kernel::g_handle_table.Create(shared_font_mem).MoveFrom());
 }
 
 void NotifyToWait(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-    u32 app_id = cmd_buff[1];
-    cmd_buff[1] = RESULT_SUCCESS.raw; // No error
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x43, 1, 0); // 0x430040
+    u32 app_id = rp.Pop<u32>();
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RESULT_SUCCESS); // No error
     LOG_WARNING(Service_APT, "(STUBBED) app_id=%u", app_id);
 }
 
 void GetLockHandle(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x1, 1, 0); // 0x10040
+
     // Bits [0:2] are the applet type (System, Library, etc)
     // Bit 5 tells the application that there's a pending APT parameter,
     // this will cause the app to wait until parameter_event is signaled.
-    u32 applet_attributes = cmd_buff[1];
+    u32 applet_attributes = rp.Pop<u32>();
+    IPC::RequestBuilder rb = rp.MakeBuilder(3, 2);
+    rb.Push(RESULT_SUCCESS);    // No error
+    rb.Push(applet_attributes); // Applet Attributes, this value is passed to Enable.
+    rb.Push<u32>(0);            // Least significant bit = power button state
+    Kernel::Handle handle_copy = Kernel::g_handle_table.Create(lock).MoveFrom();
+    rb.PushCopyHandles(handle_copy);
 
-    cmd_buff[1] = RESULT_SUCCESS.raw; // No error
-
-    cmd_buff[2] = applet_attributes; // Applet Attributes, this value is passed to Enable.
-    cmd_buff[3] = 0;                 // Least significant bit = power button state
-    cmd_buff[4] = IPC::CopyHandleDesc();
-    cmd_buff[5] = Kernel::g_handle_table.Create(lock).MoveFrom();
-
-    LOG_WARNING(Service_APT, "(STUBBED) called handle=0x%08X applet_attributes=0x%08X", cmd_buff[5],
+    LOG_WARNING(Service_APT, "(STUBBED) called handle=0x%08X applet_attributes=0x%08X", handle_copy,
                 applet_attributes);
 }
 
 void Enable(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-    u32 attributes = cmd_buff[1];
-    cmd_buff[1] = RESULT_SUCCESS.raw; // No error
-    parameter_event->Signal();        // Let the application know that it has been started
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x3, 1, 0); // 0x30040
+    u32 attributes = rp.Pop<u32>();
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RESULT_SUCCESS);   // No error
+    parameter_event->Signal(); // Let the application know that it has been started
     LOG_WARNING(Service_APT, "(STUBBED) called attributes=0x%08X", attributes);
 }
 
 void GetAppletManInfo(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-    u32 unk = cmd_buff[1];
-    cmd_buff[1] = RESULT_SUCCESS.raw; // No error
-    cmd_buff[2] = 0;
-    cmd_buff[3] = 0;
-    cmd_buff[4] = static_cast<u32>(AppletId::HomeMenu);    // Home menu AppID
-    cmd_buff[5] = static_cast<u32>(AppletId::Application); // TODO(purpasmart96): Do this correctly
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x5, 1, 0); // 0x50040
+    u32 unk = rp.Pop<u32>();
+    IPC::RequestBuilder rb = rp.MakeBuilder(5, 0);
+    rb.Push(RESULT_SUCCESS); // No error
+    rb.Push<u32>(0);
+    rb.Push<u32>(0);
+    rb.Push(static_cast<u32>(AppletId::HomeMenu));    // Home menu AppID
+    rb.Push(static_cast<u32>(AppletId::Application)); // TODO(purpasmart96): Do this correctly
 
     LOG_WARNING(Service_APT, "(STUBBED) called unk=0x%08X", unk);
 }
 
 void IsRegistered(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-    u32 app_id = cmd_buff[1];
-    cmd_buff[1] = RESULT_SUCCESS.raw; // No error
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x9, 1, 0); // 0x90040
+    u32 app_id = rp.Pop<u32>();
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
+    rb.Push(RESULT_SUCCESS); // No error
 
     // TODO(Subv): An application is considered "registered" if it has already called APT::Enable
     // handle this properly once we implement multiprocess support.
-    cmd_buff[2] = 0; // Set to not registered by default
+    bool is_registered = false; // Set to not registered by default
 
     if (app_id == static_cast<u32>(AppletId::AnyLibraryApplet)) {
-        cmd_buff[2] = HLE::Applets::IsLibraryAppletRunning() ? 1 : 0;
+        is_registered = HLE::Applets::IsLibraryAppletRunning();
     } else if (auto applet = HLE::Applets::Applet::Get(static_cast<AppletId>(app_id))) {
-        cmd_buff[2] = 1; // Set to registered
+        is_registered = true; // Set to registered
     }
+    rb.Push(is_registered);
+
     LOG_WARNING(Service_APT, "(STUBBED) called app_id=0x%08X", app_id);
 }
 
 void InquireNotification(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-    u32 app_id = cmd_buff[1];
-    cmd_buff[1] = RESULT_SUCCESS.raw;                 // No error
-    cmd_buff[2] = static_cast<u32>(SignalType::None); // Signal type
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0xB, 1, 0); // 0xB0040
+    u32 app_id = rp.Pop<u32>();
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
+    rb.Push(RESULT_SUCCESS);                     // No error
+    rb.Push(static_cast<u32>(SignalType::None)); // Signal type
     LOG_WARNING(Service_APT, "(STUBBED) called app_id=0x%08X", app_id);
 }
 
 void SendParameter(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-    u32 src_app_id = cmd_buff[1];
-    u32 dst_app_id = cmd_buff[2];
-    u32 signal_type = cmd_buff[3];
-    u32 buffer_size = cmd_buff[4];
-    u32 value = cmd_buff[5];
-    u32 handle = cmd_buff[6];
-    u32 size = cmd_buff[7];
-    u32 buffer = cmd_buff[8];
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0xC, 4, 4); // 0xC0104
+    u32 src_app_id = rp.Pop<u32>();
+    u32 dst_app_id = rp.Pop<u32>();
+    u32 signal_type = rp.Pop<u32>();
+    u32 buffer_size = rp.Pop<u32>();
+    Kernel::Handle handle = rp.PopHandle();
+    size_t size;
+    VAddr buffer = rp.PopStaticBuffer(&size);
 
     std::shared_ptr<HLE::Applets::Applet> dest_applet =
         HLE::Applets::Applet::Get(static_cast<AppletId>(dst_app_id));
 
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+
     if (dest_applet == nullptr) {
         LOG_ERROR(Service_APT, "Unknown applet id=0x%08X", dst_app_id);
-        cmd_buff[1] = -1; // TODO(Subv): Find the right error code
+        rb.Push<u32>(-1); // TODO(Subv): Find the right error code
         return;
     }
 
@@ -195,88 +200,104 @@ void SendParameter(Service::Interface* self) {
     param.buffer.resize(buffer_size);
     Memory::ReadBlock(buffer, param.buffer.data(), param.buffer.size());
 
-    cmd_buff[1] = dest_applet->ReceiveParameter(param).raw;
+    rb.Push(dest_applet->ReceiveParameter(param));
 
-    LOG_WARNING(
-        Service_APT,
-        "(STUBBED) called src_app_id=0x%08X, dst_app_id=0x%08X, signal_type=0x%08X,"
-        "buffer_size=0x%08X, value=0x%08X, handle=0x%08X, size=0x%08X, in_param_buffer_ptr=0x%08X",
-        src_app_id, dst_app_id, signal_type, buffer_size, value, handle, size, buffer);
+    LOG_WARNING(Service_APT,
+                "(STUBBED) called src_app_id=0x%08X, dst_app_id=0x%08X, signal_type=0x%08X,"
+                "buffer_size=0x%08X, handle=0x%08X, size=0x%08zX, in_param_buffer_ptr=0x%08X",
+                src_app_id, dst_app_id, signal_type, buffer_size, handle, size, buffer);
 }
 
 void ReceiveParameter(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-    u32 app_id = cmd_buff[1];
-    u32 buffer_size = cmd_buff[2];
-    VAddr buffer = cmd_buff[0x104 >> 2];
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0xD, 2, 0); // 0xD0080
+    u32 app_id = rp.Pop<u32>();
+    u32 buffer_size = rp.Pop<u32>();
 
-    cmd_buff[1] = RESULT_SUCCESS.raw; // No error
-    cmd_buff[2] = next_parameter.sender_id;
-    cmd_buff[3] = next_parameter.signal;        // Signal type
-    cmd_buff[4] = next_parameter.buffer.size(); // Parameter buffer size
-    cmd_buff[5] = 0x10;
-    cmd_buff[6] = 0;
-    if (next_parameter.object != nullptr)
-        cmd_buff[6] = Kernel::g_handle_table.Create(next_parameter.object).MoveFrom();
-    cmd_buff[7] = (next_parameter.buffer.size() << 14) | 2;
-    cmd_buff[8] = buffer;
+    size_t static_buff_size;
+    VAddr buffer = rp.PeekStaticBuffer(0, &static_buff_size);
+    if (buffer_size > static_buff_size)
+        LOG_WARNING(
+            Service_APT,
+            "buffer_size is bigger than the size in the buffer descriptor (0x%08X > 0x%08zX)",
+            buffer_size, static_buff_size);
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(4, 4);
+    rb.Push(RESULT_SUCCESS); // No error
+    rb.Push(next_parameter.sender_id);
+    rb.Push(next_parameter.signal); // Signal type
+    ASSERT_MSG(next_parameter.buffer.size() <= buffer_size, "Input static buffer is too small !");
+    rb.Push(static_cast<u32>(next_parameter.buffer.size())); // Parameter buffer size
+
+    rb.PushMoveHandles((next_parameter.object != nullptr)
+                           ? Kernel::g_handle_table.Create(next_parameter.object).MoveFrom()
+                           : 0);
+    rb.PushStaticBuffer(buffer, static_cast<u32>(next_parameter.buffer.size()), 0);
 
     Memory::WriteBlock(buffer, next_parameter.buffer.data(), next_parameter.buffer.size());
 
-    LOG_WARNING(Service_APT, "called app_id=0x%08X, buffer_size=0x%08X", app_id, buffer_size);
+    LOG_WARNING(Service_APT, "called app_id=0x%08X, buffer_size=0x%08zX", app_id, buffer_size);
 }
 
 void GlanceParameter(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-    u32 app_id = cmd_buff[1];
-    u32 buffer_size = cmd_buff[2];
-    VAddr buffer = cmd_buff[0x104 >> 2];
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0xE, 2, 0); // 0xE0080
+    u32 app_id = rp.Pop<u32>();
+    u32 buffer_size = rp.Pop<u32>();
 
-    cmd_buff[1] = RESULT_SUCCESS.raw; // No error
-    cmd_buff[2] = next_parameter.sender_id;
-    cmd_buff[3] = next_parameter.signal;        // Signal type
-    cmd_buff[4] = next_parameter.buffer.size(); // Parameter buffer size
-    cmd_buff[5] = 0x10;
-    cmd_buff[6] = 0;
-    if (next_parameter.object != nullptr)
-        cmd_buff[6] = Kernel::g_handle_table.Create(next_parameter.object).MoveFrom();
-    cmd_buff[7] = (next_parameter.buffer.size() << 14) | 2;
-    cmd_buff[8] = buffer;
+    size_t static_buff_size;
+    VAddr buffer = rp.PeekStaticBuffer(0, &static_buff_size);
+    if (buffer_size > static_buff_size)
+        LOG_WARNING(
+            Service_APT,
+            "buffer_size is bigger than the size in the buffer descriptor (0x%08X > 0x%08zX)",
+            buffer_size, static_buff_size);
 
-    Memory::WriteBlock(buffer, next_parameter.buffer.data(),
-                       std::min(static_cast<size_t>(buffer_size), next_parameter.buffer.size()));
+    IPC::RequestBuilder rb = rp.MakeBuilder(4, 4);
+    rb.Push(RESULT_SUCCESS); // No error
+    rb.Push(next_parameter.sender_id);
+    rb.Push(next_parameter.signal); // Signal type
+    ASSERT_MSG(next_parameter.buffer.size() <= buffer_size, "Input static buffer is too small !");
+    rb.Push(static_cast<u32>(next_parameter.buffer.size())); // Parameter buffer size
 
-    LOG_WARNING(Service_APT, "called app_id=0x%08X, buffer_size=0x%08X", app_id, buffer_size);
+    rb.PushCopyHandles((next_parameter.object != nullptr)
+                           ? Kernel::g_handle_table.Create(next_parameter.object).MoveFrom()
+                           : 0);
+    rb.PushStaticBuffer(buffer, static_cast<u32>(next_parameter.buffer.size()), 0);
+
+    Memory::WriteBlock(buffer, next_parameter.buffer.data(), next_parameter.buffer.size());
+
+    LOG_WARNING(Service_APT, "called app_id=0x%08X, buffer_size=0x%08zX", app_id, buffer_size);
 }
 
 void CancelParameter(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-    u32 flag1 = cmd_buff[1];
-    u32 unk = cmd_buff[2];
-    u32 flag2 = cmd_buff[3];
-    u32 app_id = cmd_buff[4];
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0xF, 4, 0); // 0xF0100
 
-    cmd_buff[1] = RESULT_SUCCESS.raw; // No error
-    cmd_buff[2] = 1;                  // Set to Success
+    u32 check_sender = rp.Pop<u32>();
+    u32 sender_appid = rp.Pop<u32>();
+    u32 check_receiver = rp.Pop<u32>();
+    u32 receiver_appid = rp.Pop<u32>();
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
+    rb.Push(RESULT_SUCCESS); // No error
+    rb.Push(true);           // Set to Success
 
-    LOG_WARNING(Service_APT,
-                "(STUBBED) called flag1=0x%08X, unk=0x%08X, flag2=0x%08X, app_id=0x%08X", flag1,
-                unk, flag2, app_id);
+    LOG_WARNING(Service_APT, "(STUBBED) called check_sender=0x%08X, sender_appid=0x%08X, "
+                             "check_receiver=0x%08X, receiver_appid=0x%08X",
+                check_sender, sender_appid, check_receiver, receiver_appid);
 }
 
 void PrepareToStartApplication(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-    u32 title_info1 = cmd_buff[1];
-    u32 title_info2 = cmd_buff[2];
-    u32 title_info3 = cmd_buff[3];
-    u32 title_info4 = cmd_buff[4];
-    u32 flags = cmd_buff[5];
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x15, 5, 0); // 0x00150140
+    u32 title_info1 = rp.Pop<u32>();
+    u32 title_info2 = rp.Pop<u32>();
+    u32 title_info3 = rp.Pop<u32>();
+    u32 title_info4 = rp.Pop<u32>();
+    u32 flags = rp.Pop<u32>();
 
     if (flags & 0x00000100) {
         unknown_ns_state_field = 1;
     }
 
-    cmd_buff[1] = RESULT_SUCCESS.raw; // No error
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RESULT_SUCCESS); // No error
 
     LOG_WARNING(Service_APT,
                 "(STUBBED) called title_info1=0x%08X, title_info2=0x%08X, title_info3=0x%08X,"
@@ -285,172 +306,188 @@ void PrepareToStartApplication(Service::Interface* self) {
 }
 
 void StartApplication(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-    u32 buffer1_size = cmd_buff[1];
-    u32 buffer2_size = cmd_buff[2];
-    u32 flag = cmd_buff[3];
-    u32 size1 = cmd_buff[4];
-    u32 buffer1_ptr = cmd_buff[5];
-    u32 size2 = cmd_buff[6];
-    u32 buffer2_ptr = cmd_buff[7];
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x1B, 3, 4); // 0x001B00C4
+    u32 buffer1_size = rp.Pop<u32>();
+    u32 buffer2_size = rp.Pop<u32>();
+    u32 flag = rp.Pop<u32>();
+    size_t size1;
+    VAddr buffer1_ptr = rp.PopStaticBuffer(&size1);
+    size_t size2;
+    VAddr buffer2_ptr = rp.PopStaticBuffer(&size2);
 
-    cmd_buff[1] = RESULT_SUCCESS.raw; // No error
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RESULT_SUCCESS); // No error
 
     LOG_WARNING(Service_APT,
                 "(STUBBED) called buffer1_size=0x%08X, buffer2_size=0x%08X, flag=0x%08X,"
-                "size1=0x%08X, buffer1_ptr=0x%08X, size2=0x%08X, buffer2_ptr=0x%08X",
+                "size1=0x%08zX, buffer1_ptr=0x%08X, size2=0x%08zX, buffer2_ptr=0x%08X",
                 buffer1_size, buffer2_size, flag, size1, buffer1_ptr, size2, buffer2_ptr);
 }
 
 void AppletUtility(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x4B, 3, 2); // 0x004B00C2
 
     // These are from 3dbrew - I'm not really sure what they're used for.
-    u32 command = cmd_buff[1];
-    u32 buffer1_size = cmd_buff[2];
-    u32 buffer2_size = cmd_buff[3];
-    u32 buffer1_addr = cmd_buff[5];
-    u32 buffer2_addr = cmd_buff[65];
+    u32 utility_command = rp.Pop<u32>();
+    u32 input_size = rp.Pop<u32>();
+    u32 output_size = rp.Pop<u32>();
+    VAddr input_addr = rp.PopStaticBuffer();
 
-    cmd_buff[1] = RESULT_SUCCESS.raw; // No error
+    VAddr output_addr = rp.PeekStaticBuffer(0);
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RESULT_SUCCESS); // No error
 
     LOG_WARNING(Service_APT,
-                "(STUBBED) called command=0x%08X, buffer1_size=0x%08X, buffer2_size=0x%08X, "
-                "buffer1_addr=0x%08X, buffer2_addr=0x%08X",
-                command, buffer1_size, buffer2_size, buffer1_addr, buffer2_addr);
+                "(STUBBED) called command=0x%08X, input_size=0x%08X, output_size=0x%08X, "
+                "input_addr=0x%08X, output_addr=0x%08X",
+                utility_command, input_size, output_size, input_addr, output_addr);
 }
 
 void SetAppCpuTimeLimit(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-    u32 value = cmd_buff[1];
-    cpu_percent = cmd_buff[2];
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x4F, 2, 0); // 0x4F0080
+    u32 value = rp.Pop<u32>();
+    cpu_percent = rp.Pop<u32>();
 
     if (value != 1) {
         LOG_ERROR(Service_APT, "This value should be one, but is actually %u!", value);
     }
 
-    cmd_buff[1] = RESULT_SUCCESS.raw; // No error
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RESULT_SUCCESS); // No error
 
     LOG_WARNING(Service_APT, "(STUBBED) called cpu_percent=%u, value=%u", cpu_percent, value);
 }
 
 void GetAppCpuTimeLimit(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-    u32 value = cmd_buff[1];
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x50, 1, 0); // 0x500040
+    u32 value = rp.Pop<u32>();
 
     if (value != 1) {
         LOG_ERROR(Service_APT, "This value should be one, but is actually %u!", value);
     }
 
-    cmd_buff[1] = RESULT_SUCCESS.raw; // No error
-    cmd_buff[2] = cpu_percent;
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
+    rb.Push(RESULT_SUCCESS); // No error
+    rb.Push(cpu_percent);
 
     LOG_WARNING(Service_APT, "(STUBBED) called value=%u", value);
 }
 
 void PrepareToStartLibraryApplet(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-    AppletId applet_id = static_cast<AppletId>(cmd_buff[1]);
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x18, 1, 0); // 0x180040
+    AppletId applet_id = static_cast<AppletId>(rp.Pop<u32>());
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     auto applet = HLE::Applets::Applet::Get(applet_id);
     if (applet) {
         LOG_WARNING(Service_APT, "applet has already been started id=%08X", applet_id);
-        cmd_buff[1] = RESULT_SUCCESS.raw;
+        rb.Push(RESULT_SUCCESS);
     } else {
-        cmd_buff[1] = HLE::Applets::Applet::Create(applet_id).raw;
+        rb.Push(HLE::Applets::Applet::Create(applet_id));
     }
     LOG_DEBUG(Service_APT, "called applet_id=%08X", applet_id);
 }
 
 void PreloadLibraryApplet(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-    AppletId applet_id = static_cast<AppletId>(cmd_buff[1]);
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x16, 1, 0); // 0x160040
+    AppletId applet_id = static_cast<AppletId>(rp.Pop<u32>());
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     auto applet = HLE::Applets::Applet::Get(applet_id);
     if (applet) {
         LOG_WARNING(Service_APT, "applet has already been started id=%08X", applet_id);
-        cmd_buff[1] = RESULT_SUCCESS.raw;
+        rb.Push(RESULT_SUCCESS);
     } else {
-        cmd_buff[1] = HLE::Applets::Applet::Create(applet_id).raw;
+        rb.Push(HLE::Applets::Applet::Create(applet_id));
     }
     LOG_DEBUG(Service_APT, "called applet_id=%08X", applet_id);
 }
 
 void StartLibraryApplet(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-    AppletId applet_id = static_cast<AppletId>(cmd_buff[1]);
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x1E, 2, 4); // 0x1E0084
+    AppletId applet_id = static_cast<AppletId>(rp.Pop<u32>());
     std::shared_ptr<HLE::Applets::Applet> applet = HLE::Applets::Applet::Get(applet_id);
 
     LOG_DEBUG(Service_APT, "called applet_id=%08X", applet_id);
 
     if (applet == nullptr) {
         LOG_ERROR(Service_APT, "unknown applet id=%08X", applet_id);
-        cmd_buff[1] = -1; // TODO(Subv): Find the right error code
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0, false);
+        rb.Push<u32>(-1); // TODO(Subv): Find the right error code
         return;
     }
 
-    size_t buffer_size = cmd_buff[2];
-    VAddr buffer_addr = cmd_buff[6];
+    size_t buffer_size = rp.Pop<u32>();
+    Kernel::Handle handle = rp.PopHandle();
+    VAddr buffer_addr = rp.PopStaticBuffer();
 
     AppletStartupParameter parameter;
-    parameter.object = Kernel::g_handle_table.GetGeneric(cmd_buff[4]);
+    parameter.object = Kernel::g_handle_table.GetGeneric(handle);
     parameter.buffer.resize(buffer_size);
     Memory::ReadBlock(buffer_addr, parameter.buffer.data(), parameter.buffer.size());
 
-    cmd_buff[1] = applet->Start(parameter).raw;
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(applet->Start(parameter));
 }
 
 void CancelLibraryApplet(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-    u32 exiting = cmd_buff[1] & 0xFF;
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x3B, 1, 0); // 0x003B0040
+    bool exiting = rp.Pop<bool>();
 
-    cmd_buff[1] = 1; // TODO: Find the return code meaning
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push<u32>(1); // TODO: Find the return code meaning
 
-    LOG_WARNING(Service_APT, "(STUBBED) called exiting=%u", exiting);
+    LOG_WARNING(Service_APT, "(STUBBED) called exiting=%d", exiting);
 }
 
 void SetScreenCapPostPermission(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x55, 1, 0); // 0x00550040
 
-    screen_capture_post_permission = static_cast<ScreencapPostPermission>(cmd_buff[1] & 0xF);
+    screen_capture_post_permission = static_cast<ScreencapPostPermission>(rp.Pop<u32>() & 0xF);
 
-    cmd_buff[0] = IPC::MakeHeader(0x55, 1, 0);
-    cmd_buff[1] = RESULT_SUCCESS.raw;
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RESULT_SUCCESS); // No error
     LOG_WARNING(Service_APT, "(STUBBED) screen_capture_post_permission=%u",
                 screen_capture_post_permission);
 }
 
 void GetScreenCapPostPermission(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x56, 0, 0); // 0x00560000
 
-    cmd_buff[0] = IPC::MakeHeader(0x56, 2, 0);
-    cmd_buff[1] = RESULT_SUCCESS.raw;
-    cmd_buff[2] = static_cast<u32>(screen_capture_post_permission);
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
+    rb.Push(RESULT_SUCCESS); // No error
+    rb.Push(static_cast<u32>(screen_capture_post_permission));
     LOG_WARNING(Service_APT, "(STUBBED) screen_capture_post_permission=%u",
                 screen_capture_post_permission);
 }
 
 void GetAppletInfo(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-    auto app_id = static_cast<AppletId>(cmd_buff[1]);
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x6, 1, 0); // 0x60040
+    auto app_id = static_cast<AppletId>(rp.Pop<u32>());
 
     if (auto applet = HLE::Applets::Applet::Get(app_id)) {
         // TODO(Subv): Get the title id for the current applet and write it in the response[2-3]
-        cmd_buff[1] = RESULT_SUCCESS.raw;
-        cmd_buff[4] = static_cast<u32>(Service::FS::MediaType::NAND);
-        cmd_buff[5] = 1; // Registered
-        cmd_buff[6] = 1; // Loaded
-        cmd_buff[7] = 0; // Applet Attributes
+        IPC::RequestBuilder rb = rp.MakeBuilder(7, 0);
+        rb.Push(RESULT_SUCCESS);
+        u64 title_id = 0;
+        rb.Push(title_id);
+        rb.Push(static_cast<u32>(Service::FS::MediaType::NAND));
+        rb.Push(true);   // Registered
+        rb.Push(true);   // Loaded
+        rb.Push<u32>(0); // Applet Attributes
     } else {
-        cmd_buff[1] = ResultCode(ErrorDescription::NotFound, ErrorModule::Applet,
-                                 ErrorSummary::NotFound, ErrorLevel::Status)
-                          .raw;
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(ResultCode(ErrorDescription::NotFound, ErrorModule::Applet, ErrorSummary::NotFound,
+                           ErrorLevel::Status));
     }
     LOG_WARNING(Service_APT, "(stubbed) called appid=%u", app_id);
 }
 
 void GetStartupArgument(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-    u32 parameter_size = cmd_buff[1];
-    StartupArgumentType startup_argument_type = static_cast<StartupArgumentType>(cmd_buff[2]);
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x51, 2, 0); // 0x00510080
+    u32 parameter_size = rp.Pop<u32>();
+    StartupArgumentType startup_argument_type = static_cast<StartupArgumentType>(rp.Pop<u8>());
 
     if (parameter_size >= 0x300) {
         LOG_ERROR(
@@ -460,7 +497,14 @@ void GetStartupArgument(Service::Interface* self) {
         return;
     }
 
-    u32 addr = cmd_buff[65];
+    size_t static_buff_size;
+    VAddr addr = rp.PeekStaticBuffer(0, &static_buff_size);
+    if (parameter_size > static_buff_size)
+        LOG_WARNING(
+            Service_APT,
+            "parameter_size is bigger than the size in the buffer descriptor (0x%08X > 0x%08zX)",
+            parameter_size, static_buff_size);
+
     if (addr && parameter_size) {
         Memory::ZeroBlock(addr, parameter_size);
     }
@@ -468,8 +512,10 @@ void GetStartupArgument(Service::Interface* self) {
     LOG_WARNING(Service_APT, "(stubbed) called startup_argument_type=%u , parameter_size=0x%08x",
                 startup_argument_type, parameter_size);
 
-    cmd_buff[1] = RESULT_SUCCESS.raw;
-    cmd_buff[2] = 0;
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
+    rb.Push(RESULT_SUCCESS);
+    rb.Push<u32>(0);
+    rb.PushStaticBuffer(addr, parameter_size, 0);
 }
 
 void Wrap(Service::Interface* self) {
@@ -574,25 +620,25 @@ void Unwrap(Service::Interface* self) {
 }
 
 void CheckNew3DSApp(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x101, 0, 0); // 0x01010000
 
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     if (unknown_ns_state_field) {
-        cmd_buff[1] = RESULT_SUCCESS.raw;
-        cmd_buff[2] = 0;
+        rb.Push(RESULT_SUCCESS);
+        rb.Push<u32>(0);
     } else {
-        PTM::CheckNew3DS(self);
+        PTM::CheckNew3DS(rb);
     }
 
-    cmd_buff[0] = IPC::MakeHeader(0x101, 2, 0);
     LOG_WARNING(Service_APT, "(STUBBED) called");
 }
 
 void CheckNew3DS(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x102, 0, 0); // 0x01020000
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
 
-    PTM::CheckNew3DS(self);
+    PTM::CheckNew3DS(rb);
 
-    cmd_buff[0] = IPC::MakeHeader(0x102, 2, 0);
     LOG_WARNING(Service_APT, "(STUBBED) called");
 }
 

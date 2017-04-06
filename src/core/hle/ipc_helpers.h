@@ -27,6 +27,24 @@ public:
         DEBUG_ASSERT_MSG(index == TotalSize(), "Operations do not match the header (cmd 0x%x)",
                          header.raw);
     }
+
+    void Skip(unsigned size_in_words, bool set_to_null) {
+        if (set_to_null)
+            memset(cmdbuf + index, 0, size_in_words * sizeof(u32));
+        index += size_in_words;
+    }
+
+    /**
+     * @brief Retrieves the address of a static buffer, used when a buffer is needed for output
+     * @param buffer_id The index of the static buffer
+     * @param data_size If non-null, will store the size of the buffer
+     */
+    VAddr PeekStaticBuffer(u8 buffer_id, size_t* data_size = nullptr) const {
+        u32* static_buffer = cmdbuf + Kernel::kStaticBuffersOffset / sizeof(u32) + buffer_id * 2;
+        if (data_size)
+            *data_size = StaticBufferDescInfo{static_buffer[0]}.size;
+        return static_buffer[1];
+    }
 };
 
 class RequestBuilder : public RequestHelperBase {
@@ -50,14 +68,8 @@ public:
     template <typename T>
     void Push(T value);
 
-    void Push(u32 value) {
-        cmdbuf[index++] = value;
-    }
     template <typename First, typename... Other>
-    void Push(const First& first_value, const Other&... other_values) {
-        Push(first_value);
-        Push(other_values...);
-    }
+    void Push(const First& first_value, const Other&... other_values);
 
     /**
      * @brief Copies the content of the given trivially copyable class to the buffer as a normal
@@ -65,57 +77,94 @@ public:
      * @note: The input class must be correctly packed/padded to fit hardware layout.
      */
     template <typename T>
-    void PushRaw(const T& value) {
-        static_assert(std::is_trivially_copyable<T>(), "Raw types should be trivially copyable");
-        std::memcpy(cmdbuf + index, &value, sizeof(T));
-        index += (sizeof(T) + 3) / 4; // round up to word length
-    }
+    void PushRaw(const T& value);
 
     // TODO : ensure that translate params are added after all regular params
     template <typename... H>
-    void PushCopyHandles(H... handles) {
-        Push(CopyHandleDesc(sizeof...(H)));
-        Push(static_cast<Kernel::Handle>(handles)...);
-    }
+    void PushCopyHandles(H... handles);
 
     template <typename... H>
-    void PushMoveHandles(H... handles) {
-        Push(MoveHandleDesc(sizeof...(H)));
-        Push(static_cast<Kernel::Handle>(handles)...);
-    }
+    void PushMoveHandles(H... handles);
 
-    void PushCurrentPIDHandle() {
-        Push(CallingPidDesc());
-        Push(u32(0));
-    }
+    void PushCurrentPIDHandle();
 
-    void PushStaticBuffer(VAddr buffer_vaddr, u32 size, u8 buffer_id) {
-        Push(StaticBufferDesc(size, buffer_id));
-        Push(buffer_vaddr);
-    }
+    void PushStaticBuffer(VAddr buffer_vaddr, u32 size, u8 buffer_id);
 
-    void PushMappedBuffer(VAddr buffer_vaddr, u32 size, MappedBufferPermissions perms) {
-        Push(MappedBufferDesc(size, perms));
-        Push(buffer_vaddr);
-    }
+    void PushMappedBuffer(VAddr buffer_vaddr, u32 size, MappedBufferPermissions perms);
 };
 
 /// Push ///
 
 template <>
-inline void RequestBuilder::Push<u32>(u32 value) {
-    Push(value);
+inline void RequestBuilder::Push(u32 value) {
+    cmdbuf[index++] = value;
+}
+
+template <typename T>
+void RequestBuilder::PushRaw(const T& value) {
+    static_assert(std::is_trivially_copyable<T>(), "Raw types should be trivially copyable");
+    std::memcpy(cmdbuf + index, &value, sizeof(T));
+    index += (sizeof(T) + 3) / 4; // round up to word length
 }
 
 template <>
-inline void RequestBuilder::Push<u64>(u64 value) {
+inline void RequestBuilder::Push(u8 value) {
+    PushRaw(value);
+}
+
+template <>
+inline void RequestBuilder::Push(u16 value) {
+    PushRaw(value);
+}
+
+template <>
+inline void RequestBuilder::Push(u64 value) {
     Push(static_cast<u32>(value));
     Push(static_cast<u32>(value >> 32));
 }
 
 template <>
-inline void RequestBuilder::Push<ResultCode>(ResultCode value) {
+inline void RequestBuilder::Push(bool value) {
+    Push(static_cast<u8>(value));
+}
+
+template <>
+inline void RequestBuilder::Push(ResultCode value) {
     Push(value.raw);
+}
+
+template <typename First, typename... Other>
+void RequestBuilder::Push(const First& first_value, const Other&... other_values) {
+    Push(first_value);
+    Push(other_values...);
+}
+
+template <typename... H>
+inline void RequestBuilder::PushCopyHandles(H... handles) {
+    Push(CopyHandleDesc(sizeof...(H)));
+    Push(static_cast<Kernel::Handle>(handles)...);
+}
+
+template <typename... H>
+inline void RequestBuilder::PushMoveHandles(H... handles) {
+    Push(MoveHandleDesc(sizeof...(H)));
+    Push(static_cast<Kernel::Handle>(handles)...);
+}
+
+inline void RequestBuilder::PushCurrentPIDHandle() {
+    Push(CallingPidDesc());
+    Push(u32(0));
+}
+
+inline void RequestBuilder::PushStaticBuffer(VAddr buffer_vaddr, u32 size, u8 buffer_id) {
+    Push(StaticBufferDesc(size, buffer_id));
+    Push(buffer_vaddr);
+}
+
+inline void RequestBuilder::PushMappedBuffer(VAddr buffer_vaddr, u32 size,
+                                             MappedBufferPermissions perms) {
+    Push(MappedBufferDesc(size, perms));
+    Push(buffer_vaddr);
 }
 
 class RequestParser : public RequestHelperBase {
@@ -185,24 +234,60 @@ public:
      */
     template <typename T>
     void PopRaw(T& value);
+
+    /**
+     * @brief Reads the next normal parameters as a struct, by copying it into a new value
+     * @note: The output class must be correctly packed/padded to fit hardware layout.
+     */
+    template <typename T>
+    T PopRaw();
 };
 
 /// Pop ///
 
 template <>
-inline u32 RequestParser::Pop<u32>() {
+inline u32 RequestParser::Pop() {
     return cmdbuf[index++];
 }
 
+template <typename T>
+void RequestParser::PopRaw(T& value) {
+    static_assert(std::is_trivially_copyable<T>(), "Raw types should be trivially copyable");
+    std::memcpy(&value, cmdbuf + index, sizeof(T));
+    index += (sizeof(T) + 3) / 4; // round up to word length
+}
+
+template <typename T>
+T RequestParser::PopRaw() {
+    T value;
+    PopRaw(value);
+    return value;
+}
+
 template <>
-inline u64 RequestParser::Pop<u64>() {
+inline u8 RequestParser::Pop() {
+    return PopRaw<u8>();
+}
+
+template <>
+inline u16 RequestParser::Pop() {
+    return PopRaw<u16>();
+}
+
+template <>
+inline u64 RequestParser::Pop() {
     const u64 lsw = Pop<u32>();
     const u64 msw = Pop<u32>();
     return msw << 32 | lsw;
 }
 
 template <>
-inline ResultCode RequestParser::Pop<ResultCode>() {
+inline bool RequestParser::Pop() {
+    return Pop<u8>() != 0;
+}
+
+template <>
+inline ResultCode RequestParser::Pop() {
     return ResultCode{Pop<u32>()};
 }
 
@@ -263,13 +348,6 @@ inline VAddr RequestParser::PopMappedBuffer(size_t* data_size,
     if (buffer_perms != nullptr)
         *buffer_perms = bufferInfo.perms;
     return Pop<VAddr>();
-}
-
-template <typename T>
-void RequestParser::PopRaw(T& value) {
-    static_assert(std::is_trivially_copyable<T>(), "Raw types should be trivially copyable");
-    std::memcpy(&value, cmdbuf + index, sizeof(T));
-    index += (sizeof(T) + 3) / 4; // round up to word length
 }
 
 } // namespace IPC

@@ -5,6 +5,7 @@
 #pragma once
 
 #include "common/common_types.h"
+#include "core/hle/ipc_helpers.h"
 
 namespace Service {
 
@@ -97,6 +98,7 @@ void GetSoftwareClosedFlag(Interface* self);
  *      2: u8 output: 0 = Old3DS, 1 = New3DS.
  */
 void CheckNew3DS(Interface* self);
+void CheckNew3DS(IPC::RequestBuilder& rb);
 
 /// Initialize the PTM service
 void Init();

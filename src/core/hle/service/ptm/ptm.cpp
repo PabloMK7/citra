@@ -92,8 +92,7 @@ void GetSoftwareClosedFlag(Service::Interface* self) {
     LOG_WARNING(Service_PTM, "(STUBBED) called");
 }
 
-void CheckNew3DS(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
+void CheckNew3DS(IPC::RequestBuilder& rb) {
     const bool is_new_3ds = Settings::values.is_new_3ds;
 
     if (is_new_3ds) {
@@ -101,10 +100,15 @@ void CheckNew3DS(Service::Interface* self) {
                                   "settings. Citra does not fully support New 3DS emulation yet!");
     }
 
-    cmd_buff[1] = RESULT_SUCCESS.raw;
-    cmd_buff[2] = is_new_3ds ? 1 : 0;
+    rb.Push(RESULT_SUCCESS);
+    rb.Push(is_new_3ds);
 
     LOG_WARNING(Service_PTM, "(STUBBED) called isNew3DS = 0x%08x", static_cast<u32>(is_new_3ds));
+}
+
+void CheckNew3DS(Service::Interface* self) {
+    IPC::RequestBuilder rb(Kernel::GetCommandBuffer(), 0x40A, 0, 0); // 0x040A0000
+    CheckNew3DS(rb);
 }
 
 void Init() {
