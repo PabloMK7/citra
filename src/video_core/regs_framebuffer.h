@@ -89,8 +89,8 @@ struct FramebufferRegs {
         };
 
         union {
-            BitField<0, 8, BlendEquation> blend_equation_rgb;
-            BitField<8, 8, BlendEquation> blend_equation_a;
+            BitField<0, 3, BlendEquation> blend_equation_rgb;
+            BitField<8, 3, BlendEquation> blend_equation_a;
 
             BitField<16, 4, BlendFactor> factor_source_rgb;
             BitField<20, 4, BlendFactor> factor_dest_rgb;
