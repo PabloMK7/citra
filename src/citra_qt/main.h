@@ -136,6 +136,7 @@ private:
     GameList* game_list;
 
     // Status bar elements
+    QLabel* message_label = nullptr;
     QLabel* emu_speed_label = nullptr;
     QLabel* game_fps_label = nullptr;
     QLabel* emu_frametime_label = nullptr;

@@ -93,6 +93,14 @@ void GMainWindow::InitializeWidgets() {
     ui.horizontalLayout->addWidget(game_list);
 
     // Create status bar
+    message_label = new QLabel();
+    // Configured separately for left alignment
+    message_label->setVisible(false);
+    message_label->setFrameStyle(QFrame::NoFrame);
+    message_label->setContentsMargins(4, 0, 4, 0);
+    message_label->setAlignment(Qt::AlignLeft);
+    statusBar()->addPermanentWidget(message_label, 1);
+
     emu_speed_label = new QLabel();
     emu_speed_label->setToolTip(tr("Current emulation speed. Values higher or lower than 100% "
                                    "indicate emulation is running faster or slower than a 3DS."));
@@ -108,7 +116,7 @@ void GMainWindow::InitializeWidgets() {
         label->setVisible(false);
         label->setFrameStyle(QFrame::NoFrame);
         label->setContentsMargins(4, 0, 4, 0);
-        statusBar()->addPermanentWidget(label);
+        statusBar()->addPermanentWidget(label, 0);
     }
     statusBar()->setVisible(true);
     setStyleSheet("QStatusBar::item{border: none;}");
@@ -437,6 +445,7 @@ void GMainWindow::ShutdownGame() {
 
     // Disable status bar updates
     status_bar_update_timer.stop();
+    message_label->setVisible(false);
     emu_speed_label->setVisible(false);
     game_fps_label->setVisible(false);
     emu_frametime_label->setVisible(false);
