@@ -89,22 +89,13 @@ static void RecvBeaconBroadcastData(Interface* self) {
     IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x0F, 16, 4);
 
     u32 out_buffer_size = rp.Pop<u32>();
-    rp.Pop<u32>();
-    rp.Pop<u32>();
+    u32 unk1 = rp.Pop<u32>();
+    u32 unk2 = rp.Pop<u32>();
 
     MacAddress mac_address;
     rp.PopRaw(mac_address);
 
-    // TODO(Subv): Use IPC::RequestParser::Skip when possible.
-    rp.Pop<u32>();
-    rp.Pop<u32>();
-    rp.Pop<u32>();
-    rp.Pop<u32>();
-    rp.Pop<u32>();
-    rp.Pop<u32>();
-    rp.Pop<u32>();
-    rp.Pop<u32>();
-    rp.Pop<u32>();
+    rp.Skip(9, false);
 
     u32 wlan_comm_id = rp.Pop<u32>();
     u32 id = rp.Pop<u32>();
@@ -157,8 +148,8 @@ static void RecvBeaconBroadcastData(Interface* self) {
     rb.Push(RESULT_SUCCESS);
 
     LOG_DEBUG(Service_NWM, "called out_buffer_size=0x%08X, wlan_comm_id=0x%08X, id=0x%08X,"
-                           "input_handle=0x%08X, out_buffer_ptr=0x%08X",
-              out_buffer_size, wlan_comm_id, id, input_handle, out_buffer_ptr);
+                           "input_handle=0x%08X, out_buffer_ptr=0x%08X, unk1=0x%08X, unk2=0x%08X",
+              out_buffer_size, wlan_comm_id, id, input_handle, out_buffer_ptr, unk1, unk2);
 }
 
 /**
@@ -183,8 +174,8 @@ static void InitializeWithVersion(Interface* self) {
     // Update the node information with the data the game gave us.
     rp.PopRaw(node_info[0]);
 
-    u16 version;
-    rp.PopRaw(version);
+    u16 version = rp.Pop<u16>();
+
     Kernel::Handle sharedmem_handle = rp.PopHandle();
 
     recv_buffer_memory = Kernel::g_handle_table.Get<Kernel::SharedMemory>(sharedmem_handle);
@@ -245,10 +236,8 @@ static void Bind(Interface* self) {
 
     u32 bind_node_id = rp.Pop<u32>();
     u32 recv_buffer_size = rp.Pop<u32>();
-    u8 data_channel;
-    rp.PopRaw(data_channel);
-    u16 network_node_id;
-    rp.PopRaw(network_node_id);
+    u8 data_channel = rp.Pop<u8>();
+    u16 network_node_id = rp.Pop<u16>();
 
     // TODO(Subv): Store the data channel and verify it when receiving data frames.
 
@@ -391,7 +380,7 @@ static void GetChannel(Interface* self) {
     u8 channel = is_connected ? network_channel : 0;
 
     rb.Push(RESULT_SUCCESS);
-    rb.PushRaw(channel);
+    rb.Push(channel);
 
     LOG_DEBUG(Service_NWM, "called");
 }
