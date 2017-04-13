@@ -6,9 +6,6 @@
 
 #include <memory>
 #include <string>
-
-#include <boost/optional.hpp>
-
 #include "common/common_types.h"
 #include "core/memory.h"
 #include "core/perf_stats.h"
@@ -117,13 +114,10 @@ public:
 
     void SetStatus(ResultStatus new_status, std::string details = std::string()) {
         status = new_status;
-        if (details == std::string())
-            status_details = boost::none;
-        else
-            status_details = details;
+        status_details = details;
     }
 
-    boost::optional<std::string> GetStatusDetails() {
+    std::string GetStatusDetails() {
         return status_details;
     }
 
@@ -154,7 +148,7 @@ private:
     static System s_instance;
 
     ResultStatus status;
-    boost::optional<std::string> status_details;
+    std::string status_details;
 };
 
 inline ARM_Interface& CPU() {

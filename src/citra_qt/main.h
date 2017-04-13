@@ -8,6 +8,7 @@
 #include <memory>
 #include <QMainWindow>
 #include <QTimer>
+#include "core/core.h"
 #include "ui_main.h"
 
 class Config;
@@ -125,7 +126,7 @@ private slots:
     void OnDisplayTitleBars(bool);
     void ToggleWindowMode();
     void OnCreateGraphicsSurfaceViewer();
-    void OnCoreError(Core::System::ResultStatus, boost::optional<std::string>);
+    void OnCoreError(Core::System::ResultStatus, std::string);
 
 private:
     void UpdateStatusBar();

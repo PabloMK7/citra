@@ -553,10 +553,9 @@ void GMainWindow::OnMenuRecentFile() {
 void GMainWindow::OnStartGame() {
     emu_thread->SetRunning(true);
     qRegisterMetaType<Core::System::ResultStatus>("Core::System::ResultStatus");
-    qRegisterMetaType<boost::optional<std::string>>("boost::optional<std::string>");
-    connect(emu_thread.get(),
-            SIGNAL(ErrorThrown(Core::System::ResultStatus, boost::optional<std::string>)), this,
-            SLOT(OnCoreError(Core::System::ResultStatus, boost::optional<std::string>)));
+    qRegisterMetaType<std::string>("std::string");
+    connect(emu_thread.get(), SIGNAL(ErrorThrown(Core::System::ResultStatus, std::string)), this,
+            SLOT(OnCoreError(Core::System::ResultStatus, std::string)));
 
     ui.action_Start->setEnabled(false);
     ui.action_Start->setText(tr("Continue"));
@@ -649,8 +648,7 @@ void GMainWindow::UpdateStatusBar() {
     emu_frametime_label->setVisible(true);
 }
 
-void GMainWindow::OnCoreError(Core::System::ResultStatus result,
-                              boost::optional<std::string> details) {
+void GMainWindow::OnCoreError(Core::System::ResultStatus result, std::string details) {
     QMessageBox::StandardButton answer;
     QString status_message;
     const QString common_message =
@@ -664,8 +662,8 @@ void GMainWindow::OnCoreError(Core::System::ResultStatus result,
     switch (result) {
     case Core::System::ResultStatus::ErrorSystemFiles: {
         QString message = "Citra was unable to locate a 3DS system archive";
-        if (details)
-            message.append(tr(": %1. ").arg(details.get().c_str()));
+        if (details != std::string())
+            message.append(tr(": %1. ").arg(details.c_str()));
         else
             message.append(". ");
         message.append(common_message);
@@ -693,7 +691,7 @@ void GMainWindow::OnCoreError(Core::System::ResultStatus result,
                "<a href='https://community.citra-emu.org/t/how-to-upload-the-log-file/296'>How to "
                "Upload the Log File</a>.<br/><br/>Would you like to quit back to the game list?"),
             QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
-        status_message = "Fatal Error encountered.";
+        status_message = "Fatal Error encountered";
         break;
     }
 

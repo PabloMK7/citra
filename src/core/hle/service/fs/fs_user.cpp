@@ -130,14 +130,61 @@ static void OpenFileDirectly(Service::Interface* self) {
 
     ResultVal<ArchiveHandle> archive_handle = OpenArchive(archive_id, archive_path);
     if (archive_handle.Failed()) {
-        LOG_ERROR(Service_FS,
-                  "failed to get a handle for archive archive_id=0x%08X archive_path=%s",
-                  static_cast<u32>(archive_id), archive_path.DebugStr().c_str());
         cmd_buff[1] = archive_handle.Code().raw;
         cmd_buff[3] = 0;
+
         if (static_cast<FS::ArchiveIdCode>(archive_id) == ArchiveIdCode::NCCH) {
-            Core::System::GetInstance().SetStatus(Core::System::ResultStatus::ErrorSystemFiles);
+            // High Title ID of the archive: The category (https://3dbrew.org/wiki/Title_list).
+            // (Note: The values there are big endian, these must be little endian.)
+            const std::vector<u8> shared_data_archive = {0x9B, 0x00, 0x04, 0x00};
+            const std::vector<u8> system_data_archive = {0xDB, 0x00, 0x04, 0x00};
+
+            // Low Title IDs.
+            const std::vector<u8> mii_data = {0x02, 0x02, 0x01, 0x00};
+            const std::vector<u8> region_manifest = {0x02, 0x04, 0x01, 0x00};
+            const std::vector<u8> ng_word_list = {0x02, 0x03, 0x01, 0x00};
+
+            // Make a copy of the binary path because reusing AsBinary() for creating category
+            // results in bad_alloc being thrown.
+            std::vector<u8> binary_archive_path = archive_path.AsBinary();
+            std::vector<u8> category(binary_archive_path.begin() + 4,
+                                     binary_archive_path.begin() + 8);
+            std::vector<u8> path(binary_archive_path.begin(), binary_archive_path.begin() + 4);
+
+            if (category == shared_data_archive) {
+                if (path == mii_data) {
+                    LOG_ERROR(Service_FS,
+                              "Failed to get a handle for shared data archive: Mii data. "
+                              "Archive ID=0x%08X Archive Path=%s",
+                              static_cast<u32>(archive_id), archive_path.DebugStr().c_str());
+                    Core::System::GetInstance().SetStatus(
+                        Core::System::ResultStatus::ErrorSystemFiles, "Mii data");
+                    return;
+                } else if (path == region_manifest) {
+                    LOG_ERROR(Service_FS,
+                              "Failed to get a handle for shared data archive: region manifest. "
+                              "Archive ID=0x%08X Archive Path=%s",
+                              static_cast<u32>(archive_id), archive_path.DebugStr().c_str());
+                    Core::System::GetInstance().SetStatus(
+                        Core::System::ResultStatus::ErrorSystemFiles, "Region manifest");
+                    return;
+                }
+            } else if (category == system_data_archive) {
+                if (path == ng_word_list) {
+                    LOG_ERROR(Service_FS,
+                              "Failed to get a handle for system data archive: NG bad word list. "
+                              "Archive ID=0x%08X Archive Path=%s",
+                              static_cast<u32>(archive_id), archive_path.DebugStr().c_str());
+                    Core::System::GetInstance().SetStatus(
+                        Core::System::ResultStatus::ErrorSystemFiles, "NG bad word list");
+                    return;
+                }
+            }
         }
+
+        LOG_ERROR(Service_FS,
+                  "Failed to get a handle for archive archive_id=0x%08X archive_path=%s",
+                  static_cast<u32>(archive_id), archive_path.DebugStr().c_str());
         return;
     }
     SCOPE_EXIT({ CloseArchive(*archive_handle); });

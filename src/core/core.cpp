@@ -4,9 +4,6 @@
 
 #include <memory>
 #include <utility>
-
-#include <boost/optional.hpp>
-
 #include "audio_core/audio_core.h"
 #include "common/logging/log.h"
 #include "core/arm/arm_interface.h"
@@ -81,7 +78,8 @@ System::ResultStatus System::Load(EmuWindow* emu_window, const std::string& file
         app_loader->LoadKernelSystemMode();
 
     if (system_mode.second != Loader::ResultStatus::Success) {
-        LOG_CRITICAL(Core, "Failed to determine system mode (Error %i)!", system_mode.second);
+        LOG_CRITICAL(Core, "Failed to determine system mode (Error %i)!",
+                     static_cast<int>(system_mode.second));
         System::Shutdown();
 
         switch (system_mode.second) {
