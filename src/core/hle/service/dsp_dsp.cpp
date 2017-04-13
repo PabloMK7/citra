@@ -303,6 +303,24 @@ static void WriteProcessPipe(Service::Interface* self) {
         message[i] = Memory::Read8(buffer + i);
     }
 
+    // This behaviour was confirmed by RE.
+    // The likely reason for this is that games tend to pass in garbage at these bytes
+    // because they read random bytes off the stack.
+    switch (pipe) {
+    case DSP::HLE::DspPipe::Audio:
+        ASSERT(message.size() >= 4);
+        message[2] = 0;
+        message[3] = 0;
+        break;
+    case DSP::HLE::DspPipe::Binary:
+        ASSERT(message.size() >= 8);
+        message[4] = 1;
+        message[5] = 0;
+        message[6] = 0;
+        message[7] = 0;
+        break;
+    }
+
     DSP::HLE::PipeWrite(pipe, message);
 
     cmd_buff[0] = IPC::MakeHeader(0xD, 1, 0);
