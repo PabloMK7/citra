@@ -125,7 +125,7 @@ private slots:
     void OnDisplayTitleBars(bool);
     void ToggleWindowMode();
     void OnCreateGraphicsSurfaceViewer();
-    void OnCoreError(Core::System::ResultStatus);
+    void OnCoreError(Core::System::ResultStatus, boost::optional<std::string>);
 
 private:
     void UpdateStatusBar();

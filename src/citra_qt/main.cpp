@@ -553,8 +553,10 @@ void GMainWindow::OnMenuRecentFile() {
 void GMainWindow::OnStartGame() {
     emu_thread->SetRunning(true);
     qRegisterMetaType<Core::System::ResultStatus>("Core::System::ResultStatus");
-    connect(emu_thread.get(), SIGNAL(ErrorThrown(Core::System::ResultStatus)), this,
-            SLOT(OnCoreError(Core::System::ResultStatus)));
+    qRegisterMetaType<boost::optional<std::string>>("boost::optional<std::string>");
+    connect(emu_thread.get(),
+            SIGNAL(ErrorThrown(Core::System::ResultStatus, boost::optional<std::string>)), this,
+            SLOT(OnCoreError(Core::System::ResultStatus, boost::optional<std::string>)));
 
     ui.action_Start->setEnabled(false);
     ui.action_Start->setText(tr("Continue"));
@@ -647,44 +649,60 @@ void GMainWindow::UpdateStatusBar() {
     emu_frametime_label->setVisible(true);
 }
 
-void GMainWindow::OnCoreError(Core::System::ResultStatus result) {
+void GMainWindow::OnCoreError(Core::System::ResultStatus result,
+                              boost::optional<std::string> details) {
+    QMessageBox::StandardButton answer;
+    QString status_message;
+    const QString common_message =
+        tr("The game you are trying to load requires additional files from your 3DS to be dumped "
+           "before playing.<br/><br/>For more information on dumping these files, please see the "
+           "following wiki page: <a "
+           "href='https://citra-emu.org/wiki/"
+           "Dumping-System-Archives-and-the-Shared-Fonts-from-a-3DS-Console/'>Dumping System "
+           "Archives and the Shared Fonts from a 3DS Console</a>.<br/><br/>Would you like to quit "
+           "back to the game list?");
     switch (result) {
-    case Core::System::ResultStatus::ErrorSystemFiles:
-        QMessageBox::critical(
-            this, "System Archive Not Found",
-            "Citra was unable to locate the 3DS system archive.<br/><br/>"
-            "The game you are trying to load requires additional files from your 3DS to be dumped "
-            "before playing.<br/><br/>"
-            "For more information on dumping these files, please see the following wiki page: "
-            "<a "
-            "href='https://citra-emu.org/wiki/"
-            "Dumping-System-Archives-and-the-Shared-Fonts-from-a-3DS-Console/'>Dumping System "
-            "Archives and the Shared Fonts from a 3DS Console</a>"
-            ".");
-        break;
+    case Core::System::ResultStatus::ErrorSystemFiles: {
+        QString message = "Citra was unable to locate a 3DS system archive";
+        if (details)
+            message.append(tr(": %1. ").arg(details.get().c_str()));
+        else
+            message.append(". ");
+        message.append(common_message);
 
-    case Core::System::ResultStatus::ErrorSharedFont:
-        QMessageBox::critical(
-            this, "Shared Fonts Not Found",
-            "Citra was unable to locate the 3DS shared fonts.<br/><br/>"
-            "The game you are trying to load requires additional files from your 3DS to be dumped "
-            "before playing.<br/><br/>"
-            "For more information on dumping these files, please see the following wiki page: "
-            "<a "
-            "href='https://citra-emu.org/wiki/"
-            "Dumping-System-Archives-and-the-Shared-Fonts-from-a-3DS-Console/'>Dumping System "
-            "Archives and the Shared Fonts from a 3DS Console</a>"
-            ".");
+        answer = QMessageBox::question(this, tr("System Archive Not Found"), message,
+                                       QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
+        status_message = "System Archive Missing";
         break;
+    }
+
+    case Core::System::ResultStatus::ErrorSharedFont: {
+        QString message = tr("Citra was unable to locate the 3DS shared fonts. ");
+        message.append(common_message);
+        answer = QMessageBox::question(this, tr("Shared Fonts Not Found"), message,
+                                       QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
+        status_message = "Shared Font Missing";
+        break;
+    }
 
     default:
-        QMessageBox::critical(
-            this, "Fatal Error",
-            "Citra has encountered a fatal error, please see the log for more details. "
-            "For more information on accessing the log, please see the following page: "
-            "<a href='https://community.citra-emu.org/t/how-to-upload-the-log-file/296'>How to "
-            "Upload the Log File</a>.");
+        answer = QMessageBox::question(
+            this, tr("Fatal Error"),
+            tr("Citra has encountered a fatal error, please see the log for more details. "
+               "For more information on accessing the log, please see the following page: "
+               "<a href='https://community.citra-emu.org/t/how-to-upload-the-log-file/296'>How to "
+               "Upload the Log File</a>.<br/><br/>Would you like to quit back to the game list?"),
+            QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
+        status_message = "Fatal Error encountered.";
         break;
+    }
+
+    if (answer == QMessageBox::Yes) {
+        if (emu_thread != nullptr)
+            ShutdownGame();
+    } else {
+        message_label->setText(status_message);
+        message_label->setVisible(true);
     }
 }
 
@@ -692,7 +710,7 @@ bool GMainWindow::ConfirmClose() {
     if (emu_thread == nullptr || !UISettings::values.confirm_before_closing)
         return true;
 
-    auto answer =
+    QMessageBox::StandardButton answer =
         QMessageBox::question(this, tr("Citra"), tr("Are you sure you want to close Citra?"),
                               QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
     return answer != QMessageBox::No;

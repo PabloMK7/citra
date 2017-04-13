@@ -99,7 +99,7 @@ signals:
      */
     void DebugModeLeft();
 
-    void ErrorThrown(Core::System::ResultStatus);
+    void ErrorThrown(Core::System::ResultStatus, boost::optional<std::string>);
 };
 
 class GRenderWindow : public QWidget, public EmuWindow {
