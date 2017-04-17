@@ -4,6 +4,7 @@
 
 #include <array>
 #include <cstddef>
+#include <cstring>
 #include "common/assert.h"
 #include "common/bit_field.h"
 #include "common/logging/log.h"
@@ -22,6 +23,99 @@ using Pica::TexturingRegs;
 using TevStageConfig = TexturingRegs::TevStageConfig;
 
 namespace GLShader {
+
+PicaShaderConfig PicaShaderConfig::CurrentConfig() {
+    PicaShaderConfig res;
+
+    auto& state = res.state;
+    std::memset(&state, 0, sizeof(PicaShaderConfig::State));
+
+    const auto& regs = Pica::g_state.regs;
+
+    state.scissor_test_mode = regs.rasterizer.scissor_test.mode;
+
+    state.depthmap_enable = regs.rasterizer.depthmap_enable;
+
+    state.alpha_test_func = regs.framebuffer.output_merger.alpha_test.enable
+                                ? regs.framebuffer.output_merger.alpha_test.func.Value()
+                                : Pica::FramebufferRegs::CompareFunc::Always;
+
+    state.texture0_type = regs.texturing.texture0.type;
+
+    // Copy relevant tev stages fields.
+    // We don't sync const_color here because of the high variance, it is a
+    // shader uniform instead.
+    const auto& tev_stages = regs.texturing.GetTevStages();
+    DEBUG_ASSERT(state.tev_stages.size() == tev_stages.size());
+    for (size_t i = 0; i < tev_stages.size(); i++) {
+        const auto& tev_stage = tev_stages[i];
+        state.tev_stages[i].sources_raw = tev_stage.sources_raw;
+        state.tev_stages[i].modifiers_raw = tev_stage.modifiers_raw;
+        state.tev_stages[i].ops_raw = tev_stage.ops_raw;
+        state.tev_stages[i].scales_raw = tev_stage.scales_raw;
+    }
+
+    state.fog_mode = regs.texturing.fog_mode;
+    state.fog_flip = regs.texturing.fog_flip != 0;
+
+    state.combiner_buffer_input = regs.texturing.tev_combiner_buffer_input.update_mask_rgb.Value() |
+                                  regs.texturing.tev_combiner_buffer_input.update_mask_a.Value()
+                                      << 4;
+
+    // Fragment lighting
+
+    state.lighting.enable = !regs.lighting.disable;
+    state.lighting.src_num = regs.lighting.max_light_index + 1;
+
+    for (unsigned light_index = 0; light_index < state.lighting.src_num; ++light_index) {
+        unsigned num = regs.lighting.light_enable.GetNum(light_index);
+        const auto& light = regs.lighting.light[num];
+        state.lighting.light[light_index].num = num;
+        state.lighting.light[light_index].directional = light.config.directional != 0;
+        state.lighting.light[light_index].two_sided_diffuse = light.config.two_sided_diffuse != 0;
+        state.lighting.light[light_index].dist_atten_enable =
+            !regs.lighting.IsDistAttenDisabled(num);
+    }
+
+    state.lighting.lut_d0.enable = regs.lighting.config1.disable_lut_d0 == 0;
+    state.lighting.lut_d0.abs_input = regs.lighting.abs_lut_input.disable_d0 == 0;
+    state.lighting.lut_d0.type = regs.lighting.lut_input.d0.Value();
+    state.lighting.lut_d0.scale = regs.lighting.lut_scale.GetScale(regs.lighting.lut_scale.d0);
+
+    state.lighting.lut_d1.enable = regs.lighting.config1.disable_lut_d1 == 0;
+    state.lighting.lut_d1.abs_input = regs.lighting.abs_lut_input.disable_d1 == 0;
+    state.lighting.lut_d1.type = regs.lighting.lut_input.d1.Value();
+    state.lighting.lut_d1.scale = regs.lighting.lut_scale.GetScale(regs.lighting.lut_scale.d1);
+
+    state.lighting.lut_fr.enable = regs.lighting.config1.disable_lut_fr == 0;
+    state.lighting.lut_fr.abs_input = regs.lighting.abs_lut_input.disable_fr == 0;
+    state.lighting.lut_fr.type = regs.lighting.lut_input.fr.Value();
+    state.lighting.lut_fr.scale = regs.lighting.lut_scale.GetScale(regs.lighting.lut_scale.fr);
+
+    state.lighting.lut_rr.enable = regs.lighting.config1.disable_lut_rr == 0;
+    state.lighting.lut_rr.abs_input = regs.lighting.abs_lut_input.disable_rr == 0;
+    state.lighting.lut_rr.type = regs.lighting.lut_input.rr.Value();
+    state.lighting.lut_rr.scale = regs.lighting.lut_scale.GetScale(regs.lighting.lut_scale.rr);
+
+    state.lighting.lut_rg.enable = regs.lighting.config1.disable_lut_rg == 0;
+    state.lighting.lut_rg.abs_input = regs.lighting.abs_lut_input.disable_rg == 0;
+    state.lighting.lut_rg.type = regs.lighting.lut_input.rg.Value();
+    state.lighting.lut_rg.scale = regs.lighting.lut_scale.GetScale(regs.lighting.lut_scale.rg);
+
+    state.lighting.lut_rb.enable = regs.lighting.config1.disable_lut_rb == 0;
+    state.lighting.lut_rb.abs_input = regs.lighting.abs_lut_input.disable_rb == 0;
+    state.lighting.lut_rb.type = regs.lighting.lut_input.rb.Value();
+    state.lighting.lut_rb.scale = regs.lighting.lut_scale.GetScale(regs.lighting.lut_scale.rb);
+
+    state.lighting.config = regs.lighting.config0.config;
+    state.lighting.fresnel_selector = regs.lighting.config0.fresnel_selector;
+    state.lighting.bump_mode = regs.lighting.config0.bump_mode;
+    state.lighting.bump_selector = regs.lighting.config0.bump_selector;
+    state.lighting.bump_renorm = regs.lighting.config0.disable_bump_renorm == 0;
+    state.lighting.clamp_highlights = regs.lighting.config0.clamp_highlights != 0;
+
+    return res;
+}
 
 /// Detects if a TEV stage is configured to be skipped (to avoid generating unnecessary code)
 static bool IsPassThroughTevStage(const TevStageConfig& stage) {
