@@ -7,6 +7,7 @@
 #include <array>
 #include "common/bit_field.h"
 #include "common/common_types.h"
+#include "common/vector_math.h"
 #include "video_core/primitive_assembly.h"
 #include "video_core/regs.h"
 #include "video_core/shader/shader.h"
@@ -24,6 +25,59 @@ struct State {
     Shader::ShaderSetup gs;
 
     Shader::AttributeBuffer input_default_attributes;
+
+    struct ProcTex {
+        union ValueEntry {
+            u32 raw;
+
+            // LUT value, encoded as 12-bit fixed point, with 12 fraction bits
+            BitField<0, 12, u32> value; // 0.0.12 fixed point
+
+            // Difference between two entry values. Used for efficient interpolation.
+            // 0.0.12 fixed point with two's complement. The range is [-0.5, 0.5).
+            // Note: the type of this is different from the one of lighting LUT
+            BitField<12, 12, s32> difference;
+
+            float ToFloat() const {
+                return static_cast<float>(value) / 4095.f;
+            }
+
+            float DiffToFloat() const {
+                return static_cast<float>(difference) / 4095.f;
+            }
+        };
+
+        union ColorEntry {
+            u32 raw;
+            BitField<0, 8, u32> r;
+            BitField<8, 8, u32> g;
+            BitField<16, 8, u32> b;
+            BitField<24, 8, u32> a;
+
+            Math::Vec4<u8> ToVector() const {
+                return {static_cast<u8>(r), static_cast<u8>(g), static_cast<u8>(b),
+                        static_cast<u8>(a)};
+            }
+        };
+
+        union ColorDifferenceEntry {
+            u32 raw;
+            BitField<0, 8, s32> r; // half of the difference between two ColorEntry
+            BitField<8, 8, s32> g;
+            BitField<16, 8, s32> b;
+            BitField<24, 8, s32> a;
+
+            Math::Vec4<s32> ToVector() const {
+                return Math::Vec4<s32>{r, g, b, a} * 2;
+            }
+        };
+
+        std::array<ValueEntry, 128> noise_table;
+        std::array<ValueEntry, 128> color_map_table;
+        std::array<ValueEntry, 128> alpha_map_table;
+        std::array<ColorEntry, 256> color_table;
+        std::array<ColorDifferenceEntry, 256> color_diff_table;
+    } proctex;
 
     struct {
         union LutEntry {

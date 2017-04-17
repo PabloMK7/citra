@@ -652,6 +652,16 @@ static inline decltype((X{} * int{} + X{} * int{}) / base) LerpInt(const X& begi
     return (begin * (base - t) + end * t) / base;
 }
 
+// bilinear interpolation. s is for interpolating x00-x01 and x10-x11, and t is for the second
+// interpolation.
+template <typename X>
+inline auto BilinearInterp(const X& x00, const X& x01, const X& x10, const X& x11, const float s,
+                           const float t) {
+    auto y0 = Lerp(x00, x01, s);
+    auto y1 = Lerp(x10, x11, s);
+    return Lerp(y0, y1, t);
+}
+
 // Utility vector factories
 template <typename T>
 static inline Vec2<T> MakeVec(const T& x, const T& y) {

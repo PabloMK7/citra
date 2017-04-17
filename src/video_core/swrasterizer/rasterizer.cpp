@@ -23,6 +23,7 @@
 #include "video_core/regs_texturing.h"
 #include "video_core/shader/shader.h"
 #include "video_core/swrasterizer/framebuffer.h"
+#include "video_core/swrasterizer/proctex.h"
 #include "video_core/swrasterizer/rasterizer.h"
 #include "video_core/swrasterizer/texturing.h"
 #include "video_core/texture/texture_decode.h"
@@ -268,7 +269,7 @@ static void ProcessTriangleInternal(const Vertex& v0, const Vertex& v1, const Ve
             uv[2].u() = GetInterpolatedAttribute(v0.tc2.u(), v1.tc2.u(), v2.tc2.u());
             uv[2].v() = GetInterpolatedAttribute(v0.tc2.v(), v1.tc2.v(), v2.tc2.v());
 
-            Math::Vec4<u8> texture_color[3]{};
+            Math::Vec4<u8> texture_color[4]{};
             for (int i = 0; i < 3; ++i) {
                 const auto& texture = textures[i];
                 if (!texture.enabled)
@@ -334,6 +335,13 @@ static void ProcessTriangleInternal(const Vertex& v0, const Vertex& v1, const Ve
                 }
             }
 
+            // sample procedural texture
+            if (regs.texturing.main_config.texture3_enable) {
+                const auto& proctex_uv = uv[regs.texturing.main_config.texture3_coordinates];
+                texture_color[3] = ProcTex(proctex_uv.u().ToFloat32(), proctex_uv.v().ToFloat32(),
+                                           g_state.regs.texturing, g_state.proctex);
+            }
+
             // Texture environment - consists of 6 stages of color and alpha combining.
             //
             // Color combiners take three input color values from some source (e.g. interpolated
@@ -375,6 +383,9 @@ static void ProcessTriangleInternal(const Vertex& v0, const Vertex& v1, const Ve
 
                     case Source::Texture2:
                         return texture_color[2];
+
+                    case Source::Texture3:
+                        return texture_color[3];
 
                     case Source::PreviousBuffer:
                         return combiner_buffer;
