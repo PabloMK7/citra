@@ -1004,7 +1004,7 @@ void RasterizerOpenGL::SamplerInfo::SyncWithConfig(
 }
 
 void RasterizerOpenGL::SetShader() {
-    GLShader::PicaShaderConfig config = GLShader::PicaShaderConfig::CurrentConfig();
+    auto config = GLShader::PicaShaderConfig::BuildFromRegs(Pica::g_state.regs);
     std::unique_ptr<PicaShader> shader = std::make_unique<PicaShader>();
 
     // Find (or generate) the GLSL shader for the current TEV state

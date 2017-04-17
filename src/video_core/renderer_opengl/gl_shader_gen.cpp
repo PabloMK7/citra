@@ -24,13 +24,11 @@ using TevStageConfig = TexturingRegs::TevStageConfig;
 
 namespace GLShader {
 
-PicaShaderConfig PicaShaderConfig::CurrentConfig() {
+PicaShaderConfig PicaShaderConfig::BuildFromRegs(const Pica::Regs& regs) {
     PicaShaderConfig res;
 
     auto& state = res.state;
     std::memset(&state, 0, sizeof(PicaShaderConfig::State));
-
-    const auto& regs = Pica::g_state.regs;
 
     state.scissor_test_mode = regs.rasterizer.scissor_test.mode;
 

@@ -39,8 +39,8 @@ enum Attributes {
  */
 union PicaShaderConfig {
 
-    /// Construct a PicaShaderConfig with the current Pica register configuration.
-    static PicaShaderConfig CurrentConfig();
+    /// Construct a PicaShaderConfig with the given Pica register configuration.
+    static PicaShaderConfig BuildFromRegs(const Pica::Regs& regs);
 
     bool TevStageUpdatesCombinerBufferColor(unsigned stage_index) const {
         return (stage_index < 4) && (state.combiner_buffer_input & (1 << stage_index));
@@ -58,7 +58,7 @@ union PicaShaderConfig {
     //       This makes BitField not TC when used in a union or struct so we have to resort
     //       to this ugly hack.
     //       Once that bug is fixed we can use Pica::Regs::TevStageConfig here.
-    //       Doesn't include const_color because we don't sync it, see comment in CurrentConfig()
+    //       Doesn't include const_color because we don't sync it, see comment in BuildFromRegs()
     struct TevStageConfigRaw {
         u32 sources_raw;
         u32 modifiers_raw;
