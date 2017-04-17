@@ -8,6 +8,7 @@
 #include <tuple>
 #include <unordered_map>
 #include <SDL.h>
+#include "common/logging/log.h"
 #include "common/math_util.h"
 #include "input_common/sdl/sdl.h"
 
@@ -40,12 +41,16 @@ public:
         return SDL_JoystickGetButton(joystick.get(), button) == 1;
     }
 
-    std::tuple<float, float> GetAnalog(int axis_x, int axis_y) const {
+    float GetAxis(int axis) const {
         if (!joystick)
             return {};
         SDL_JoystickUpdate();
-        float x = SDL_JoystickGetAxis(joystick.get(), axis_x) / 32767.0f;
-        float y = SDL_JoystickGetAxis(joystick.get(), axis_y) / 32767.0f;
+        return SDL_JoystickGetAxis(joystick.get(), axis) / 32767.0f;
+    }
+
+    std::tuple<float, float> GetAnalog(int axis_x, int axis_y) const {
+        float x = GetAxis(axis_x);
+        float y = GetAxis(axis_y);
         y = -y; // 3DS uses an y-axis inverse from SDL
 
         // Make sure the coordinates are in the unit circle,
@@ -97,6 +102,27 @@ private:
     Uint8 direction;
 };
 
+class SDLAxisButton final : public Input::ButtonDevice {
+public:
+    explicit SDLAxisButton(std::shared_ptr<SDLJoystick> joystick_, int axis_, float threshold_,
+                           bool trigger_if_greater_)
+        : joystick(joystick_), axis(axis_), threshold(threshold_),
+          trigger_if_greater(trigger_if_greater_) {}
+
+    bool GetStatus() const override {
+        float axis_value = joystick->GetAxis(axis);
+        if (trigger_if_greater)
+            return axis_value > threshold;
+        return axis_value < threshold;
+    }
+
+private:
+    std::shared_ptr<SDLJoystick> joystick;
+    int axis;
+    float threshold;
+    bool trigger_if_greater;
+};
+
 class SDLAnalog final : public Input::AnalogDevice {
 public:
     SDLAnalog(std::shared_ptr<SDLJoystick> joystick_, int axis_x_, int axis_y_)
@@ -130,8 +156,14 @@ public:
      *     - "joystick": the index of the joystick to bind
      *     - "button"(optional): the index of the button to bind
      *     - "hat"(optional): the index of the hat to bind as direction buttons
+     *     - "axis"(optional): the index of the axis to bind
      *     - "direction"(only used for hat): the direction name of the hat to bind. Can be "up",
-     *                                     "down", "left" or "right"
+     *         "down", "left" or "right"
+     *     - "threshould"(only used for axis): a float value in (-1.0, 1.0) which the button is
+     *         triggered if the axis value crosses
+     *     - "direction"(only used for axis): "+" means the button is triggered when the axis value
+     *         is greater than the threshold; "-" means the button is triggered when the axis value
+     *         is smaller than the threshold
      */
     std::unique_ptr<Input::ButtonDevice> Create(const Common::ParamPackage& params) override {
         const int joystick_index = params.Get("joystick", 0);
@@ -153,6 +185,23 @@ public:
             }
             return std::make_unique<SDLDirectionButton>(GetJoystick(joystick_index), hat,
                                                         direction);
+        }
+
+        if (params.Has("axis")) {
+            const int axis = params.Get("axis", 0);
+            const float threshold = params.Get("threshold", 0.5f);
+            const std::string direction_name = params.Get("direction", "");
+            bool trigger_if_greater;
+            if (direction_name == "+") {
+                trigger_if_greater = true;
+            } else if (direction_name == "-") {
+                trigger_if_greater = false;
+            } else {
+                trigger_if_greater = true;
+                LOG_ERROR(Input, "Unknown direction %s", direction_name.c_str());
+            }
+            return std::make_unique<SDLAxisButton>(GetJoystick(joystick_index), axis, threshold,
+                                                   trigger_if_greater);
         }
 
         const int button = params.Get("button", 0);
