@@ -8,17 +8,6 @@
 
 namespace GLShader {
 
-enum Attributes {
-    ATTRIBUTE_POSITION,
-    ATTRIBUTE_COLOR,
-    ATTRIBUTE_TEXCOORD0,
-    ATTRIBUTE_TEXCOORD1,
-    ATTRIBUTE_TEXCOORD2,
-    ATTRIBUTE_TEXCOORD0_W,
-    ATTRIBUTE_NORMQUAT,
-    ATTRIBUTE_VIEW,
-};
-
 /**
  * Utility function to create and compile an OpenGL GLSL shader program (vertex + fragment shader)
  * @param vertex_shader String of the GLSL vertex shader program

@@ -10,6 +10,17 @@ union PicaShaderConfig;
 
 namespace GLShader {
 
+enum Attributes {
+    ATTRIBUTE_POSITION,
+    ATTRIBUTE_COLOR,
+    ATTRIBUTE_TEXCOORD0,
+    ATTRIBUTE_TEXCOORD1,
+    ATTRIBUTE_TEXCOORD2,
+    ATTRIBUTE_TEXCOORD0_W,
+    ATTRIBUTE_NORMQUAT,
+    ATTRIBUTE_VIEW,
+};
+
 /**
  * Generates the GLSL vertex shader program source code for the current Pica state
  * @returns String of the shader source code
