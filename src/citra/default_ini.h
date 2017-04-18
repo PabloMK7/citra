@@ -19,7 +19,13 @@ const char* sdl2_config_file = R"(
 #      - "joystick": the index of the joystick to bind
 #      - "button"(optional): the index of the button to bind
 #      - "hat"(optional): the index of the hat to bind as direction buttons
+#      - "axis"(optional): the index of the axis to bind
 #      - "direction"(only used for hat): the direction name of the hat to bind. Can be "up", "down", "left" or "right"
+#      - "threshould"(only used for axis): a float value in (-1.0, 1.0) which the button is
+#          triggered if the axis value crosses
+#      - "direction"(only used for axis): "+" means the button is triggered when the axis value
+#          is greater than the threshold; "-" means the button is triggered when the axis value
+#          is smaller than the threshold
 button_a=
 button_b=
 button_x=
