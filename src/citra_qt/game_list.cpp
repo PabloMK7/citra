@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <QApplication>
 #include <QFileInfo>
 #include <QHeaderView>
 #include <QKeyEvent>
@@ -194,6 +195,9 @@ void GameList::onFilterCloseClicked() {
 }
 
 GameList::GameList(GMainWindow* parent) : QWidget{parent} {
+    watcher = new QFileSystemWatcher(this);
+    connect(watcher, &QFileSystemWatcher::directoryChanged, this, &GameList::RefreshGameDirectory);
+
     this->main_window = parent;
     layout = new QVBoxLayout;
     tree_view = new QTreeView;
@@ -218,7 +222,6 @@ GameList::GameList(GMainWindow* parent) : QWidget{parent} {
 
     connect(tree_view, &QTreeView::activated, this, &GameList::ValidateEntry);
     connect(tree_view, &QTreeView::customContextMenuRequested, this, &GameList::PopupContextMenu);
-    connect(&watcher, &QFileSystemWatcher::directoryChanged, this, &GameList::RefreshGameDirectory);
 
     // We must register all custom types with the Qt Automoc system so that we are able to use it
     // with signals/slots. In this case, QList falls under the umbrells of custom types.
@@ -269,7 +272,22 @@ void GameList::ValidateEntry(const QModelIndex& item) {
     emit GameChosen(file_path);
 }
 
-void GameList::DonePopulating() {
+void GameList::DonePopulating(QStringList watch_list) {
+    // Clear out the old directories to watch for changes and add the new ones
+    auto watch_dirs = watcher->directories();
+    if (!watch_dirs.isEmpty()) {
+        watcher->removePaths(watch_dirs);
+    }
+    // Workaround: Add the watch paths in chunks to allow the gui to refresh
+    // This prevents the UI from stalling when a large number of watch paths are added
+    // Also artificially caps the watcher to a certain number of directories
+    constexpr int LIMIT_WATCH_DIRECTORIES = 5000;
+    constexpr int SLICE_SIZE = 25;
+    int len = std::min(watch_list.length(), LIMIT_WATCH_DIRECTORIES);
+    for (int i = 0; i < len; i += SLICE_SIZE) {
+        watcher->addPaths(watch_list.mid(i, i + SLICE_SIZE));
+        QCoreApplication::processEvents();
+    }
     tree_view->setEnabled(true);
     int rowCount = tree_view->model()->rowCount();
     search_field->setFilterResult(rowCount, rowCount);
@@ -309,11 +327,6 @@ void GameList::PopulateAsync(const QString& dir_path, bool deep_scan) {
 
     emit ShouldCancelWorker();
 
-    auto watch_dirs = watcher.directories();
-    if (!watch_dirs.isEmpty()) {
-        watcher.removePaths(watch_dirs);
-    }
-    UpdateWatcherList(dir_path.toStdString(), deep_scan ? 256 : 0);
     GameListWorker* worker = new GameListWorker(dir_path, deep_scan);
 
     connect(worker, &GameListWorker::EntryReady, this, &GameList::AddEntry, Qt::QueuedConnection);
@@ -359,38 +372,6 @@ void GameList::RefreshGameDirectory() {
     }
 }
 
-/**
- * Adds the game list folder to the QFileSystemWatcher to check for updates.
- *
- * The file watcher will fire off an update to the game list when a change is detected in the game
- * list folder.
- *
- * Notice: This method is run on the UI thread because QFileSystemWatcher is not thread safe and
- * this function is fast enough to not stall the UI thread. If performance is an issue, it should
- * be moved to another thread and properly locked to prevent concurrency issues.
- *
- * @param dir folder to check for changes in
- * @param recursion 0 if recursion is disabled. Any positive number passed to this will add each
- *        directory recursively to the watcher and will update the file list if any of the folders
- *        change. The number determines how deep the recursion should traverse.
- */
-void GameList::UpdateWatcherList(const std::string& dir, unsigned int recursion) {
-    const auto callback = [this, recursion](unsigned* num_entries_out, const std::string& directory,
-                                            const std::string& virtual_name) -> bool {
-        std::string physical_name = directory + DIR_SEP + virtual_name;
-
-        if (FileUtil::IsDirectory(physical_name)) {
-            UpdateWatcherList(physical_name, recursion - 1);
-        }
-        return true;
-    };
-
-    watcher.addPath(QString::fromStdString(dir));
-    if (recursion > 0) {
-        FileUtil::ForeachDirectoryEntry(nullptr, dir, callback);
-    }
-}
-
 void GameListWorker::AddFstEntriesToGameList(const std::string& dir_path, unsigned int recursion) {
     const auto callback = [this, recursion](unsigned* num_entries_out, const std::string& directory,
                                             const std::string& virtual_name) -> bool {
@@ -399,7 +380,8 @@ void GameListWorker::AddFstEntriesToGameList(const std::string& dir_path, unsign
         if (stop_processing)
             return false; // Breaks the callback loop.
 
-        if (!FileUtil::IsDirectory(physical_name) && HasSupportedFileExtension(physical_name)) {
+        bool is_dir = FileUtil::IsDirectory(physical_name);
+        if (!is_dir && HasSupportedFileExtension(physical_name)) {
             std::unique_ptr<Loader::AppLoader> loader = Loader::GetLoader(physical_name);
             if (!loader)
                 return true;
@@ -416,7 +398,8 @@ void GameListWorker::AddFstEntriesToGameList(const std::string& dir_path, unsign
                     QString::fromStdString(Loader::GetFileTypeString(loader->GetFileType()))),
                 new GameListItemSize(FileUtil::GetSize(physical_name)),
             });
-        } else if (recursion > 0) {
+        } else if (is_dir && recursion > 0) {
+            watch_list.append(QString::fromStdString(physical_name));
             AddFstEntriesToGameList(physical_name, recursion - 1);
         }
 
@@ -428,8 +411,9 @@ void GameListWorker::AddFstEntriesToGameList(const std::string& dir_path, unsign
 
 void GameListWorker::run() {
     stop_processing = false;
+    watch_list.append(dir_path);
     AddFstEntriesToGameList(dir_path.toStdString(), deep_scan ? 256 : 0);
-    emit Finished();
+    emit Finished(watch_list);
 }
 
 void GameListWorker::Cancel() {

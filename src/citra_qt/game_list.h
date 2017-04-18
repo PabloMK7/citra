@@ -85,10 +85,9 @@ private slots:
 private:
     void AddEntry(const QList<QStandardItem*>& entry_items);
     void ValidateEntry(const QModelIndex& item);
-    void DonePopulating();
+    void DonePopulating(QStringList watch_list);
 
     void PopupContextMenu(const QPoint& menu_location);
-    void UpdateWatcherList(const std::string& path, unsigned int recursion);
     void RefreshGameDirectory();
     bool containsAllWords(QString haystack, QString userinput);
 
@@ -98,5 +97,5 @@ private:
     QTreeView* tree_view = nullptr;
     QStandardItemModel* item_model = nullptr;
     GameListWorker* current_worker = nullptr;
-    QFileSystemWatcher watcher;
+    QFileSystemWatcher* watcher = nullptr;
 };
