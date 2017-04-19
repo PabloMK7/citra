@@ -230,6 +230,7 @@ static void AppendColorCombiner(std::string& out, TevStageConfig::Operation oper
                variable_name + "[2]";
         break;
     case Operation::Dot3_RGB:
+    case Operation::Dot3_RGBA:
         out += "vec3(dot(" + variable_name + "[0] - vec3(0.5), " + variable_name +
                "[1] - vec3(0.5)) * 4.0)";
         break;
@@ -329,17 +330,25 @@ static void WriteTevStage(std::string& out, const PicaShaderConfig& config, unsi
         AppendColorCombiner(out, stage.color_op, "color_results_" + index_name);
         out += ";\n";
 
-        out += "float alpha_results_" + index_name + "[3] = float[3](";
-        AppendAlphaModifier(out, config, stage.alpha_modifier1, stage.alpha_source1, index_name);
-        out += ", ";
-        AppendAlphaModifier(out, config, stage.alpha_modifier2, stage.alpha_source2, index_name);
-        out += ", ";
-        AppendAlphaModifier(out, config, stage.alpha_modifier3, stage.alpha_source3, index_name);
-        out += ");\n";
+        if (stage.color_op == TevStageConfig::Operation::Dot3_RGBA) {
+            // result of Dot3_RGBA operation is also placed to the alpha component
+            out += "float alpha_output_" + index_name + " = color_output_" + index_name + "[0];\n";
+        } else {
+            out += "float alpha_results_" + index_name + "[3] = float[3](";
+            AppendAlphaModifier(out, config, stage.alpha_modifier1, stage.alpha_source1,
+                                index_name);
+            out += ", ";
+            AppendAlphaModifier(out, config, stage.alpha_modifier2, stage.alpha_source2,
+                                index_name);
+            out += ", ";
+            AppendAlphaModifier(out, config, stage.alpha_modifier3, stage.alpha_source3,
+                                index_name);
+            out += ");\n";
 
-        out += "float alpha_output_" + index_name + " = ";
-        AppendAlphaCombiner(out, stage.alpha_op, "alpha_results_" + index_name);
-        out += ";\n";
+            out += "float alpha_output_" + index_name + " = ";
+            AppendAlphaCombiner(out, stage.alpha_op, "alpha_results_" + index_name);
+            out += ";\n";
+        }
 
         out += "last_tex_env_out = vec4("
                "clamp(color_output_" +

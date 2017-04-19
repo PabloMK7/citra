@@ -169,7 +169,8 @@ Math::Vec3<u8> ColorCombine(TevStageConfig::Operation op, const Math::Vec3<u8> i
         result = (result * input[2].Cast<int>()) / 255;
         return result.Cast<u8>();
     }
-    case Operation::Dot3_RGB: {
+    case Operation::Dot3_RGB:
+    case Operation::Dot3_RGBA: {
         // Not fully accurate.  Worst case scenario seems to yield a +/-3 error.  Some HW results
         // indicate that the per-component computation can't have a higher precision than 1/256,
         // while dot3_rgb((0x80,g0,b0), (0x7F,g1,b1)) and dot3_rgb((0x80,g0,b0), (0x80,g1,b1)) give

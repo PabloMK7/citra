@@ -199,7 +199,7 @@ struct TexturingRegs {
             Lerp = 4,
             Subtract = 5,
             Dot3_RGB = 6,
-
+            Dot3_RGBA = 7,
             MultiplyThenAdd = 8,
             AddThenMultiply = 9,
         };

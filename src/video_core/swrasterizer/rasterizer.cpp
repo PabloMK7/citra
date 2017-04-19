@@ -403,13 +403,22 @@ static void ProcessTriangleInternal(const Vertex& v0, const Vertex& v1, const Ve
                 };
                 auto color_output = ColorCombine(tev_stage.color_op, color_result);
 
-                // alpha combiner
-                std::array<u8, 3> alpha_result = {{
-                    GetAlphaModifier(tev_stage.alpha_modifier1, GetSource(tev_stage.alpha_source1)),
-                    GetAlphaModifier(tev_stage.alpha_modifier2, GetSource(tev_stage.alpha_source2)),
-                    GetAlphaModifier(tev_stage.alpha_modifier3, GetSource(tev_stage.alpha_source3)),
-                }};
-                auto alpha_output = AlphaCombine(tev_stage.alpha_op, alpha_result);
+                u8 alpha_output;
+                if (tev_stage.color_op == TexturingRegs::TevStageConfig::Operation::Dot3_RGBA) {
+                    // result of Dot3_RGBA operation is also placed to the alpha component
+                    alpha_output = color_output.x;
+                } else {
+                    // alpha combiner
+                    std::array<u8, 3> alpha_result = {{
+                        GetAlphaModifier(tev_stage.alpha_modifier1,
+                                         GetSource(tev_stage.alpha_source1)),
+                        GetAlphaModifier(tev_stage.alpha_modifier2,
+                                         GetSource(tev_stage.alpha_source2)),
+                        GetAlphaModifier(tev_stage.alpha_modifier3,
+                                         GetSource(tev_stage.alpha_source3)),
+                    }};
+                    alpha_output = AlphaCombine(tev_stage.alpha_op, alpha_result);
+                }
 
                 combiner_output[0] =
                     std::min((unsigned)255, color_output.r() * tev_stage.GetColorMultiplier());
