@@ -214,8 +214,6 @@ static void AppendColorCombiner(std::string& out, TevStageConfig::Operation oper
         out += variable_name + "[0] + " + variable_name + "[1] - vec3(0.5)";
         break;
     case Operation::Lerp:
-        // TODO(bunnei): Verify if HW actually does this per-component, otherwise we can just use
-        // builtin lerp
         out += variable_name + "[0] * " + variable_name + "[2] + " + variable_name +
                "[1] * (vec3(1.0) - " + variable_name + "[2])";
         break;
