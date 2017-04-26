@@ -78,7 +78,8 @@ void RelocateSharedFont(Kernel::SharedPtr<Kernel::SharedMemory> shared_font, VAd
             memcpy(&cmap, data, sizeof(cmap));
 
             // Relocate the offsets in the CMAP section
-            cmap.next_cmap_offset += offset;
+            if (cmap.next_cmap_offset != 0)
+                cmap.next_cmap_offset += offset;
 
             memcpy(data, &cmap, sizeof(cmap));
         } else if (memcmp(section_header.magic, "CWDH", 4) == 0) {
@@ -86,7 +87,8 @@ void RelocateSharedFont(Kernel::SharedPtr<Kernel::SharedMemory> shared_font, VAd
             memcpy(&cwdh, data, sizeof(cwdh));
 
             // Relocate the offsets in the CWDH section
-            cwdh.next_cwdh_offset += offset;
+            if (cwdh.next_cwdh_offset != 0)
+                cwdh.next_cwdh_offset += offset;
 
             memcpy(data, &cwdh, sizeof(cwdh));
         } else if (memcmp(section_header.magic, "TGLP", 4) == 0) {
