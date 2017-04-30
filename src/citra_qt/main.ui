@@ -88,6 +88,7 @@
     </widget>
     <addaction name="action_Single_Window_Mode"/>
     <addaction name="action_Display_Dock_Widget_Headers"/>
+    <addaction name="action_Show_Filter_Bar"/>
     <addaction name="action_Show_Status_Bar"/>
     <addaction name="menu_View_Debugging"/>
    </widget>
@@ -165,6 +166,14 @@
    </property>
    <property name="text">
     <string>Display Dock Widget Headers</string>
+   </property>
+  </action>
+  <action name="action_Show_Filter_Bar">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Show Filter Bar</string>
    </property>
   </action>
   <action name="action_Show_Status_Bar">

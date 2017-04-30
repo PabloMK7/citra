@@ -7,6 +7,7 @@
 
 #include <memory>
 #include <QMainWindow>
+#include <QTimer>
 #include "ui_main.h"
 
 class CallstackWidget;
@@ -41,6 +42,7 @@ class GMainWindow : public QMainWindow {
     };
 
 public:
+    void filterBarSetChecked(bool state);
     GMainWindow();
     ~GMainWindow();
 
@@ -122,6 +124,7 @@ private slots:
     void OnMenuRecentFile();
     void OnSwapScreens();
     void OnConfigure();
+    void OnToggleFilterBar();
     void OnDisplayTitleBars(bool);
     void ToggleWindowMode();
     void OnCreateGraphicsSurfaceViewer();

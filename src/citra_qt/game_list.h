@@ -5,13 +5,19 @@
 #pragma once
 
 #include <QFileSystemWatcher>
+#include <QHBoxLayout>
+#include <QLabel>
+#include <QLineEdit>
 #include <QModelIndex>
 #include <QSettings>
 #include <QStandardItem>
 #include <QStandardItemModel>
 #include <QString>
+#include <QToolButton>
 #include <QTreeView>
+#include <QVBoxLayout>
 #include <QWidget>
+#include "main.h"
 
 class GameListWorker;
 
@@ -26,8 +32,39 @@ public:
         COLUMN_COUNT, // Number of columns
     };
 
-    explicit GameList(QWidget* parent = nullptr);
+    class SearchField : public QWidget {
+    public:
+        void setFilterResult(int visable, int total);
+        void clear();
+        void setFocus();
+        explicit SearchField(GameList* parent = nullptr);
+
+    private:
+        class KeyReleaseEater : public QObject {
+        public:
+            explicit KeyReleaseEater(GameList* gamelist);
+
+        private:
+            GameList* gamelist = nullptr;
+            QString edit_filter_text_old;
+
+        protected:
+            bool eventFilter(QObject* obj, QEvent* event);
+        };
+        QHBoxLayout* layout_filter = nullptr;
+        QTreeView* tree_view = nullptr;
+        QLabel* label_filter = nullptr;
+        QLineEdit* edit_filter = nullptr;
+        QLabel* label_filter_result = nullptr;
+        QToolButton* button_filter_close = nullptr;
+    };
+
+    explicit GameList(GMainWindow* parent = nullptr);
     ~GameList() override;
+
+    void clearFilter();
+    void setFilterFocus();
+    void setFilterVisible(bool visablility);
 
     void PopulateAsync(const QString& dir_path, bool deep_scan);
 
@@ -41,6 +78,10 @@ signals:
     void ShouldCancelWorker();
     void OpenSaveFolderRequested(u64 program_id);
 
+private slots:
+    void onTextChanged(const QString& newText);
+    void onFilterCloseClicked();
+
 private:
     void AddEntry(const QList<QStandardItem*>& entry_items);
     void ValidateEntry(const QModelIndex& item);
@@ -49,7 +90,11 @@ private:
     void PopupContextMenu(const QPoint& menu_location);
     void UpdateWatcherList(const std::string& path, unsigned int recursion);
     void RefreshGameDirectory();
+    bool containsAllWords(QString haystack, QString userinput);
 
+    SearchField* search_field;
+    GMainWindow* main_window = nullptr;
+    QVBoxLayout* layout = nullptr;
     QTreeView* tree_view = nullptr;
     QStandardItemModel* item_model = nullptr;
     GameListWorker* current_worker = nullptr;

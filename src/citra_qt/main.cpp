@@ -93,7 +93,7 @@ void GMainWindow::InitializeWidgets() {
     render_window = new GRenderWindow(this, emu_thread.get());
     render_window->hide();
 
-    game_list = new GameList();
+    game_list = new GameList(this);
     ui.horizontalLayout->addWidget(game_list);
 
     // Create status bar
@@ -247,6 +247,9 @@ void GMainWindow::RestoreUIState() {
     ui.action_Display_Dock_Widget_Headers->setChecked(UISettings::values.display_titlebar);
     OnDisplayTitleBars(ui.action_Display_Dock_Widget_Headers->isChecked());
 
+    ui.action_Show_Filter_Bar->setChecked(UISettings::values.show_filter_bar);
+    game_list->setFilterVisible(ui.action_Show_Filter_Bar->isChecked());
+
     ui.action_Show_Status_Bar->setChecked(UISettings::values.show_status_bar);
     statusBar()->setVisible(ui.action_Show_Status_Bar->isChecked());
 }
@@ -283,6 +286,8 @@ void GMainWindow::ConnectMenuEvents() {
             &GMainWindow::ToggleWindowMode);
     connect(ui.action_Display_Dock_Widget_Headers, &QAction::triggered, this,
             &GMainWindow::OnDisplayTitleBars);
+    ui.action_Show_Filter_Bar->setShortcut(tr("CTRL+F"));
+    connect(ui.action_Show_Filter_Bar, &QAction::triggered, this, &GMainWindow::OnToggleFilterBar);
     connect(ui.action_Show_Status_Bar, &QAction::triggered, statusBar(), &QStatusBar::setVisible);
 }
 
@@ -444,6 +449,7 @@ void GMainWindow::ShutdownGame() {
     ui.action_Stop->setEnabled(false);
     render_window->hide();
     game_list->show();
+    game_list->setFilterFocus();
 
     // Disable status bar updates
     status_bar_update_timer.stop();
@@ -617,6 +623,15 @@ void GMainWindow::OnConfigure() {
     }
 }
 
+void GMainWindow::OnToggleFilterBar() {
+    game_list->setFilterVisible(ui.action_Show_Filter_Bar->isChecked());
+    if (ui.action_Show_Filter_Bar->isChecked()) {
+        game_list->setFilterFocus();
+    } else {
+        game_list->clearFilter();
+    }
+}
+
 void GMainWindow::OnSwapScreens() {
     Settings::values.swap_screen = !Settings::values.swap_screen;
     Settings::Apply();
@@ -671,6 +686,7 @@ void GMainWindow::closeEvent(QCloseEvent* event) {
 #endif
     UISettings::values.single_window_mode = ui.action_Single_Window_Mode->isChecked();
     UISettings::values.display_titlebar = ui.action_Display_Dock_Widget_Headers->isChecked();
+    UISettings::values.show_filter_bar = ui.action_Show_Filter_Bar->isChecked();
     UISettings::values.show_status_bar = ui.action_Show_Status_Bar->isChecked();
     UISettings::values.first_start = false;
 
@@ -718,6 +734,11 @@ bool GMainWindow::ConfirmChangeGame() {
         tr("Are you sure you want to stop the emulation? Any unsaved progress will be lost."),
         QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
     return answer != QMessageBox::No;
+}
+
+void GMainWindow::filterBarSetChecked(bool state) {
+    ui.action_Show_Filter_Bar->setChecked(state);
+    emit(OnToggleFilterBar());
 }
 
 #ifdef main
