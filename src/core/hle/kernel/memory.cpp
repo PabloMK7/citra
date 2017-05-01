@@ -137,7 +137,12 @@ void InitLegacyAddressSpace(Kernel::VMManager& address_space) {
                                .MoveFrom();
     address_space.Reprotect(shared_page_vma, VMAPermission::Read);
 
-    AudioCore::AddAddressSpace(address_space);
+    auto& dsp_ram = AudioCore::GetDspMemory();
+    auto dsp_vma = address_space
+                       .MapBackingMemory(DSP_RAM_VADDR, dsp_ram.data(), dsp_ram.size(),
+                                         Kernel::MemoryState::IO)
+                       .MoveFrom();
+    address_space.Reprotect(dsp_vma, Kernel::VMAPermission::ReadWrite);
 }
 
 } // namespace

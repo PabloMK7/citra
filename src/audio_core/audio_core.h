@@ -4,11 +4,10 @@
 
 #pragma once
 
+#include <array>
 #include <string>
-
-namespace Kernel {
-class VMManager;
-}
+#include "common/common_types.h"
+#include "core/memory.h"
 
 namespace AudioCore {
 
@@ -17,8 +16,8 @@ constexpr int native_sample_rate = 32728; ///< 32kHz
 /// Initialise Audio Core
 void Init();
 
-/// Add DSP address spaces to a Process.
-void AddAddressSpace(Kernel::VMManager& vm_manager);
+/// Returns a reference to the array backing DSP memory
+std::array<u8, Memory::DSP_RAM_SIZE>& GetDspMemory();
 
 /// Select the sink to use based on sink id.
 void SelectSink(std::string sink_id);
@@ -29,4 +28,4 @@ void EnableStretching(bool enable);
 /// Shutdown Audio Core
 void Shutdown();
 
-} // namespace
+} // namespace AudioCore

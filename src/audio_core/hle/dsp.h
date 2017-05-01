@@ -31,8 +31,8 @@ namespace HLE {
 // double-buffer. The frame counter is located as the very last u16 of each region and is
 // incremented each audio tick.
 
-constexpr VAddr region0_base = 0x1FF50000;
-constexpr VAddr region1_base = 0x1FF70000;
+constexpr u32 region0_offset = 0x50000;
+constexpr u32 region1_offset = 0x70000;
 
 /**
  * The DSP is native 16-bit. The DSP also appears to be big-endian. When reading 32-bit numbers from
@@ -512,7 +512,22 @@ struct SharedMemory {
 };
 ASSERT_DSP_STRUCT(SharedMemory, 0x8000);
 
-extern std::array<SharedMemory, 2> g_regions;
+union DspMemory {
+    std::array<u8, 0x80000> raw_memory;
+    struct {
+        u8 unused_0[0x50000];
+        SharedMemory region_0;
+        u8 unused_1[0x18000];
+        SharedMemory region_1;
+        u8 unused_2[0x8000];
+    };
+};
+static_assert(offsetof(DspMemory, region_0) == region0_offset,
+              "DSP region 0 is at the wrong offset");
+static_assert(offsetof(DspMemory, region_1) == region1_offset,
+              "DSP region 1 is at the wrong offset");
+
+extern DspMemory g_dsp_memory;
 
 // Structures must have an offset that is a multiple of two.
 static_assert(offsetof(SharedMemory, frame_counter) % 2 == 0,
