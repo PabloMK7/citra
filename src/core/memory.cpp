@@ -672,12 +672,14 @@ PAddr VirtualToPhysicalAddress(const VAddr addr) {
         return addr - VRAM_VADDR + VRAM_PADDR;
     } else if (addr >= LINEAR_HEAP_VADDR && addr < LINEAR_HEAP_VADDR_END) {
         return addr - LINEAR_HEAP_VADDR + FCRAM_PADDR;
+    } else if (addr >= NEW_LINEAR_HEAP_VADDR && addr < NEW_LINEAR_HEAP_VADDR_END) {
+        return addr - NEW_LINEAR_HEAP_VADDR + FCRAM_PADDR;
     } else if (addr >= DSP_RAM_VADDR && addr < DSP_RAM_VADDR_END) {
         return addr - DSP_RAM_VADDR + DSP_RAM_PADDR;
     } else if (addr >= IO_AREA_VADDR && addr < IO_AREA_VADDR_END) {
         return addr - IO_AREA_VADDR + IO_AREA_PADDR;
-    } else if (addr >= NEW_LINEAR_HEAP_VADDR && addr < NEW_LINEAR_HEAP_VADDR_END) {
-        return addr - NEW_LINEAR_HEAP_VADDR + FCRAM_PADDR;
+    } else if (addr >= N3DS_EXTRA_RAM_VADDR && addr < N3DS_EXTRA_RAM_VADDR_END) {
+        return addr - N3DS_EXTRA_RAM_VADDR + N3DS_EXTRA_RAM_PADDR;
     }
 
     LOG_ERROR(HW_Memory, "Unknown virtual address @ 0x%08X", addr);
@@ -696,6 +698,8 @@ VAddr PhysicalToVirtualAddress(const PAddr addr) {
         return addr - DSP_RAM_PADDR + DSP_RAM_VADDR;
     } else if (addr >= IO_AREA_PADDR && addr < IO_AREA_PADDR_END) {
         return addr - IO_AREA_PADDR + IO_AREA_VADDR;
+    } else if (addr >= N3DS_EXTRA_RAM_PADDR && addr < N3DS_EXTRA_RAM_PADDR_END) {
+        return addr - N3DS_EXTRA_RAM_PADDR + N3DS_EXTRA_RAM_VADDR;
     }
 
     LOG_ERROR(HW_Memory, "Unknown physical address @ 0x%08X", addr);
