@@ -25,7 +25,8 @@ class TestEnvironment final {
 public:
     /*
      * Inititalise test environment
-     * @param mutable_memory If false, writes to memory can never be read back. (Memory is immutable.)
+     * @param mutable_memory If false, writes to memory can never be read back.
+     *                       (Memory is immutable.)
      */
     explicit TestEnvironment(bool mutable_memory = false);
 

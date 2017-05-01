@@ -9,7 +9,7 @@
 namespace ArmTests {
 
 TestEnvironment::TestEnvironment(bool mutable_memory_)
-        : mutable_memory(mutable_memory_), test_memory(std::make_shared<TestMemory>(this)) {
+    : mutable_memory(mutable_memory_), test_memory(std::make_shared<TestMemory>(this)) {
     Memory::MapIoRegion(0x00000000, 0x80000000, test_memory);
     Memory::MapIoRegion(0x80000000, 0x80000000, test_memory);
 }
