@@ -174,6 +174,7 @@ set(SRCS
             memory.cpp
             perf_stats.cpp
             settings.cpp
+            telemetry_session.cpp
             )
 
 set(HEADERS
@@ -366,6 +367,7 @@ set(HEADERS
             mmio.h
             perf_stats.h
             settings.h
+            telemetry_session.h
             )
 
 include_directories(../../externals/dynarmic/include)
