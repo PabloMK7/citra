@@ -239,8 +239,8 @@ void GameList::setFilterFocus() {
     search_field->setFocus();
 }
 
-void GameList::setFilterVisible(bool visablility) {
-    search_field->setVisible(visablility);
+void GameList::setFilterVisible(bool visibility) {
+    search_field->setVisible(visibility);
 }
 
 void GameList::clearFilter() {
