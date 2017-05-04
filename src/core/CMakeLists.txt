@@ -109,6 +109,7 @@ set(SRCS
             hle/service/hid/hid_spvr.cpp
             hle/service/hid/hid_user.cpp
             hle/service/http_c.cpp
+            hle/service/ir/extra_hid.cpp
             hle/service/ir/ir.cpp
             hle/service/ir/ir_rst.cpp
             hle/service/ir/ir_u.cpp
@@ -297,6 +298,7 @@ set(HEADERS
             hle/service/hid/hid_spvr.h
             hle/service/hid/hid_user.h
             hle/service/http_c.h
+            hle/service/ir/extra_hid.h
             hle/service/ir/ir.h
             hle/service/ir/ir_rst.h
             hle/service/ir/ir_u.h

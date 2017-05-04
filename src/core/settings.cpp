@@ -5,6 +5,7 @@
 #include "audio_core/audio_core.h"
 #include "core/gdbstub/gdbstub.h"
 #include "core/hle/service/hid/hid.h"
+#include "core/hle/service/ir/ir_user.h"
 #include "settings.h"
 #include "video_core/video_core.h"
 
@@ -32,6 +33,7 @@ void Apply() {
     AudioCore::EnableStretching(values.enable_audio_stretching);
 
     Service::HID::ReloadInputDevices();
+    Service::IR::ReloadInputDevices();
 }
 
 } // namespace
