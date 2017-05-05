@@ -276,7 +276,8 @@ static void ProcessTriangleInternal(const Vertex& v0, const Vertex& v1, const Ve
 
                 DEBUG_ASSERT(0 != texture.config.address);
 
-                int coordinate_i = (i == 2 && regs.texturing.texture2_use_coord1) ? 1 : i;
+                int coordinate_i =
+                    (i == 2 && regs.texturing.main_config.texture2_use_coord1) ? 1 : i;
                 float24 u = uv[coordinate_i].u();
                 float24 v = uv[coordinate_i].v();
 
