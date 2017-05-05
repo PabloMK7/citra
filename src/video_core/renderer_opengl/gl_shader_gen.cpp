@@ -114,6 +114,22 @@ PicaShaderConfig PicaShaderConfig::BuildFromRegs(const Pica::Regs& regs) {
     state.lighting.bump_renorm = regs.lighting.config0.disable_bump_renorm == 0;
     state.lighting.clamp_highlights = regs.lighting.config0.clamp_highlights != 0;
 
+    state.proctex.enable = regs.texturing.main_config.texture3_enable;
+    if (state.proctex.enable) {
+        state.proctex.coord = regs.texturing.main_config.texture3_coordinates;
+        state.proctex.u_clamp = regs.texturing.proctex.u_clamp;
+        state.proctex.v_clamp = regs.texturing.proctex.v_clamp;
+        state.proctex.color_combiner = regs.texturing.proctex.color_combiner;
+        state.proctex.alpha_combiner = regs.texturing.proctex.alpha_combiner;
+        state.proctex.separate_alpha = regs.texturing.proctex.separate_alpha;
+        state.proctex.noise_enable = regs.texturing.proctex.noise_enable;
+        state.proctex.u_shift = regs.texturing.proctex.u_shift;
+        state.proctex.v_shift = regs.texturing.proctex.v_shift;
+        state.proctex.lut_width = regs.texturing.proctex_lut.width;
+        state.proctex.lut_offset = regs.texturing.proctex_lut_offset;
+        state.proctex.lut_filter = regs.texturing.proctex_lut.filter;
+    }
+
     return res;
 }
 
@@ -132,8 +148,7 @@ static std::string TexCoord(const PicaShaderConfig& config, int texture_unit) {
     if (texture_unit == 2 && config.state.texture2_use_coord1) {
         return "texcoord[1]";
     }
-    // TODO: if texture unit 3 (procedural texture) implementation also uses this function,
-    //       config.state.texture3_coordinates should be repected here.
+
     return "texcoord[" + std::to_string(texture_unit) + "]";
 }
 
@@ -174,6 +189,14 @@ static void AppendSource(std::string& out, const PicaShaderConfig& config,
         break;
     case Source::Texture2:
         out += "texture(tex[2], " + TexCoord(config, 2) + ")";
+        break;
+    case Source::Texture3:
+        if (config.state.proctex.enable) {
+            out += "ProcTex()";
+        } else {
+            LOG_ERROR(Render_OpenGL, "Using Texture3 without enabling it");
+            out += "vec4(0.0)";
+        }
         break;
     case Source::PreviousBuffer:
         out += "combiner_buffer";
@@ -483,9 +506,18 @@ static void WriteLighting(std::string& out, const PicaShaderConfig& config) {
     if (lighting.bump_mode == LightingRegs::LightingBumpMode::NormalMap) {
         // Bump mapping is enabled using a normal map, read perturbation vector from the selected
         // texture
-        std::string bump_selector = std::to_string(lighting.bump_selector);
-        out += "vec3 surface_normal = 2.0 * texture(tex[" + bump_selector + "], " +
-               TexCoord(config, lighting.bump_selector) + ").rgb - 1.0;\n";
+        if (lighting.bump_selector == 3) {
+            if (config.state.proctex.enable) {
+                out += "vec3 surface_normal = 2.0 * ProcTex().rgb - 1.0;\n";
+            } else {
+                LOG_ERROR(Render_OpenGL, "Using Texture3 without enabling it");
+                out += "vec3 surface_normal = vec3(-1.0);\n";
+            }
+        } else {
+            std::string bump_selector = std::to_string(lighting.bump_selector);
+            out += "vec3 surface_normal = 2.0 * texture(tex[" + bump_selector + "], " +
+                   TexCoord(config, lighting.bump_selector) + ").rgb - 1.0;\n";
+        }
 
         // Recompute Z-component of perturbation if 'renorm' is enabled, this provides a higher
         // precision result
@@ -693,6 +725,221 @@ static void WriteLighting(std::string& out, const PicaShaderConfig& config) {
     out += "secondary_fragment_color = clamp(specular_sum, vec4(0.0), vec4(1.0));\n";
 }
 
+using ProcTexClamp = TexturingRegs::ProcTexClamp;
+using ProcTexShift = TexturingRegs::ProcTexShift;
+using ProcTexCombiner = TexturingRegs::ProcTexCombiner;
+using ProcTexFilter = TexturingRegs::ProcTexFilter;
+
+void AppendProcTexShiftOffset(std::string& out, const std::string& v, ProcTexShift mode,
+                              ProcTexClamp clamp_mode) {
+    std::string offset = (clamp_mode == ProcTexClamp::MirroredRepeat) ? "1.0" : "0.5";
+    switch (mode) {
+    case ProcTexShift::None:
+        out += "0";
+        break;
+    case ProcTexShift::Odd:
+        out += offset + " * ((int(" + v + ") / 2) % 2)";
+        break;
+    case ProcTexShift::Even:
+        out += offset + " * (((int(" + v + ") + 1) / 2) % 2)";
+        break;
+    default:
+        LOG_CRITICAL(HW_GPU, "Unknown shift mode %u", static_cast<u32>(mode));
+        out += "0";
+        break;
+    }
+}
+
+void AppendProcTexClamp(std::string& out, const std::string& var, ProcTexClamp mode) {
+    switch (mode) {
+    case ProcTexClamp::ToZero:
+        out += var + " = " + var + " > 1.0 ? 0 : " + var + ";\n";
+        break;
+    case ProcTexClamp::ToEdge:
+        out += var + " = " + "min(" + var + ", 1.0);\n";
+        break;
+    case ProcTexClamp::SymmetricalRepeat:
+        out += var + " = " + "fract(" + var + ");\n";
+        break;
+    case ProcTexClamp::MirroredRepeat: {
+        out +=
+            var + " = int(" + var + ") % 2 == 0 ? fract(" + var + ") : 1.0 - fract(" + var + ");\n";
+        break;
+    }
+    case ProcTexClamp::Pulse:
+        out += var + " = " + var + " > 0.5 ? 1.0 : 0.0;\n";
+        break;
+    default:
+        LOG_CRITICAL(HW_GPU, "Unknown clamp mode %u", static_cast<u32>(mode));
+        out += var + " = " + "min(" + var + ", 1.0);\n";
+        break;
+    }
+}
+
+void AppendProcTexCombineAndMap(std::string& out, ProcTexCombiner combiner,
+                                const std::string& map_lut) {
+    std::string combined;
+    switch (combiner) {
+    case ProcTexCombiner::U:
+        combined = "u";
+        break;
+    case ProcTexCombiner::U2:
+        combined = "(u * u)";
+        break;
+    case TexturingRegs::ProcTexCombiner::V:
+        combined = "v";
+        break;
+    case TexturingRegs::ProcTexCombiner::V2:
+        combined = "(v * v)";
+        break;
+    case TexturingRegs::ProcTexCombiner::Add:
+        combined = "((u + v) * 0.5)";
+        break;
+    case TexturingRegs::ProcTexCombiner::Add2:
+        combined = "((u * u + v * v) * 0.5)";
+        break;
+    case TexturingRegs::ProcTexCombiner::SqrtAdd2:
+        combined = "min(sqrt(u * u + v * v), 1.0)";
+        break;
+    case TexturingRegs::ProcTexCombiner::Min:
+        combined = "min(u, v)";
+        break;
+    case TexturingRegs::ProcTexCombiner::Max:
+        combined = "max(u, v)";
+        break;
+    case TexturingRegs::ProcTexCombiner::RMax:
+        combined = "min(((u + v) * 0.5 + sqrt(u * u + v * v)) * 0.5, 1.0)";
+        break;
+    default:
+        LOG_CRITICAL(HW_GPU, "Unknown combiner %u", static_cast<u32>(combiner));
+        combined = "0.0";
+        break;
+    }
+    out += "ProcTexLookupLUT(" + map_lut + ", " + combined + ")";
+}
+
+void AppendProcTexSampler(std::string& out, const PicaShaderConfig& config) {
+    // LUT sampling uitlity
+    // For NoiseLUT/ColorMap/AlphaMap, coord=0.0 is lut[0], coord=127.0/128.0 is lut[127] and
+    // coord=1.0 is lut[127]+lut_diff[127]. For other indices, the result is interpolated using
+    // value entries and difference entries.
+    out += R"(
+float ProcTexLookupLUT(sampler1D lut, float coord) {
+    coord *= 128;
+    float index_i = clamp(floor(coord), 0.0, 127.0);
+    float index_f = coord - index_i; // fract() cannot be used here because 128.0 needs to be
+                                     // extracted as index_i = 127.0 and index_f = 1.0
+    vec2 entry = texelFetch(lut, int(index_i), 0).rg;
+    return clamp(entry.r + entry.g * index_f, 0.0, 1.0);
+}
+    )";
+
+    // Noise utility
+    if (config.state.proctex.noise_enable) {
+        // See swrasterizer/proctex.cpp for more information about these functions
+        out += R"(
+int ProcTexNoiseRand1D(int v) {
+    const int table[] = int[](0,4,10,8,4,9,7,12,5,15,13,14,11,15,2,11);
+    return ((v % 9 + 2) * 3 & 0xF) ^ table[(v / 9) & 0xF];
+}
+
+float ProcTexNoiseRand2D(vec2 point) {
+    const int table[] = int[](10,2,15,8,0,7,4,5,5,13,2,6,13,9,3,14);
+    int u2 = ProcTexNoiseRand1D(int(point.x));
+    int v2 = ProcTexNoiseRand1D(int(point.y));
+    v2 += ((u2 & 3) == 1) ? 4 : 0;
+    v2 ^= (u2 & 1) * 6;
+    v2 += 10 + u2;
+    v2 &= 0xF;
+    v2 ^= table[u2];
+    return -1.0 + float(v2) * 2.0/ 15.0;
+}
+
+float ProcTexNoiseCoef(vec2 x) {
+    vec2 grid  = 9.0 * proctex_noise_f * abs(x + proctex_noise_p);
+    vec2 point = floor(grid);
+    vec2 frac  = grid - point;
+
+    float g0 = ProcTexNoiseRand2D(point) * (frac.x + frac.y);
+    float g1 = ProcTexNoiseRand2D(point + vec2(1.0, 0.0)) * (frac.x + frac.y - 1.0);
+    float g2 = ProcTexNoiseRand2D(point + vec2(0.0, 1.0)) * (frac.x + frac.y - 1.0);
+    float g3 = ProcTexNoiseRand2D(point + vec2(1.0, 1.0)) * (frac.x + frac.y - 2.0);
+
+    float x_noise = ProcTexLookupLUT(proctex_noise_lut, frac.x);
+    float y_noise = ProcTexLookupLUT(proctex_noise_lut, frac.y);
+    float x0 = mix(g0, g1, x_noise);
+    float x1 = mix(g2, g3, x_noise);
+    return mix(x0, x1, y_noise);
+}
+        )";
+    }
+
+    out += "vec4 ProcTex() {\n";
+    out += "vec2 uv = abs(texcoord[" + std::to_string(config.state.proctex.coord) + "]);\n";
+
+    // Get shift offset before noise generation
+    out += "float u_shift = ";
+    AppendProcTexShiftOffset(out, "uv.y", config.state.proctex.u_shift,
+                             config.state.proctex.u_clamp);
+    out += ";\n";
+    out += "float v_shift = ";
+    AppendProcTexShiftOffset(out, "uv.x", config.state.proctex.v_shift,
+                             config.state.proctex.v_clamp);
+    out += ";\n";
+
+    // Generate noise
+    if (config.state.proctex.noise_enable) {
+        out += "uv += proctex_noise_a * ProcTexNoiseCoef(uv);\n";
+        out += "uv = abs(uv);\n";
+    }
+
+    // Shift
+    out += "float u = uv.x + u_shift;\n";
+    out += "float v = uv.y + v_shift;\n";
+
+    // Clamp
+    AppendProcTexClamp(out, "u", config.state.proctex.u_clamp);
+    AppendProcTexClamp(out, "v", config.state.proctex.v_clamp);
+
+    // Combine and map
+    out += "float lut_coord = ";
+    AppendProcTexCombineAndMap(out, config.state.proctex.color_combiner, "proctex_color_map");
+    out += ";\n";
+
+    // Look up color
+    // For the color lut, coord=0.0 is lut[offset] and coord=1.0 is lut[offset+width-1]
+    out += "lut_coord *= " + std::to_string(config.state.proctex.lut_width - 1) + ";\n";
+    // TODO(wwylele): implement mipmap
+    switch (config.state.proctex.lut_filter) {
+    case ProcTexFilter::Linear:
+    case ProcTexFilter::LinearMipmapLinear:
+    case ProcTexFilter::LinearMipmapNearest:
+        out += "int lut_index_i = int(lut_coord) + " +
+               std::to_string(config.state.proctex.lut_offset) + ";\n";
+        out += "float lut_index_f = fract(lut_coord);\n";
+        out += "vec4 final_color = texelFetch(proctex_lut, lut_index_i, 0) + lut_index_f * "
+               "texelFetch(proctex_diff_lut, lut_index_i, 0);\n";
+        break;
+    case ProcTexFilter::Nearest:
+    case ProcTexFilter::NearestMipmapLinear:
+    case ProcTexFilter::NearestMipmapNearest:
+        out += "lut_coord += " + std::to_string(config.state.proctex.lut_offset) + ";\n";
+        out += "vec4 final_color = texelFetch(proctex_lut, int(round(lut_coord)), 0);\n";
+        break;
+    }
+
+    if (config.state.proctex.separate_alpha) {
+        // Note: in separate alpha mode, the alpha channel skips the color LUT look up stage. It
+        // uses the output of CombineAndMap directly instead.
+        out += "float final_alpha = ";
+        AppendProcTexCombineAndMap(out, config.state.proctex.alpha_combiner, "proctex_alpha_map");
+        out += ";\n";
+        out += "return vec4(final_color.xyz, final_alpha);\n}\n";
+    } else {
+        out += "return final_color;\n}\n";
+    }
+}
+
 std::string GenerateFragmentShader(const PicaShaderConfig& config) {
     const auto& state = config.state;
 
@@ -735,6 +982,9 @@ layout (std140) uniform shader_data {
     int scissor_x2;
     int scissor_y2;
     vec3 fog_color;
+    vec2 proctex_noise_f;
+    vec2 proctex_noise_a;
+    vec2 proctex_noise_p;
     vec3 lighting_global_ambient;
     LightSrc light_src[NUM_LIGHTS];
     vec4 const_color[NUM_TEV_STAGES];
@@ -744,12 +994,21 @@ layout (std140) uniform shader_data {
 uniform sampler2D tex[3];
 uniform sampler1D lut[6];
 uniform usampler1D fog_lut;
+uniform sampler1D proctex_noise_lut;
+uniform sampler1D proctex_color_map;
+uniform sampler1D proctex_alpha_map;
+uniform sampler1D proctex_lut;
+uniform sampler1D proctex_diff_lut;
 
 // Rotate the vector v by the quaternion q
 vec3 quaternion_rotate(vec4 q, vec3 v) {
     return v + 2.0 * cross(q.xyz, cross(q.xyz, v) + q.w * v);
-}
+})";
 
+    if (config.state.proctex.enable)
+        AppendProcTexSampler(out, config);
+
+    out += R"(
 void main() {
 vec4 primary_fragment_color = vec4(0.0);
 vec4 secondary_fragment_color = vec4(0.0);

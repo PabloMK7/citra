@@ -143,6 +143,9 @@ private:
         GLint scissor_x2;
         GLint scissor_y2;
         alignas(16) GLvec3 fog_color;
+        alignas(8) GLvec2 proctex_noise_f;
+        alignas(8) GLvec2 proctex_noise_a;
+        alignas(8) GLvec2 proctex_noise_p;
         alignas(16) GLvec3 lighting_global_ambient;
         LightSrc light_src[8];
         alignas(16) GLvec4 const_color[6]; // A vec4 color for each of the six tev stages
@@ -150,7 +153,7 @@ private:
     };
 
     static_assert(
-        sizeof(UniformData) == 0x3C0,
+        sizeof(UniformData) == 0x3E0,
         "The size of the UniformData structure has changed, update the structure in the shader");
     static_assert(sizeof(UniformData) < 16384,
                   "UniformData structure must be less than 16kb as per the OpenGL spec");
@@ -179,6 +182,16 @@ private:
     /// Syncs the fog states to match the PICA register
     void SyncFogColor();
     void SyncFogLUT();
+
+    /// Sync the procedural texture noise configuration to match the PICA register
+    void SyncProcTexNoise();
+
+    /// Sync the procedural texture lookup tables
+    void SyncProcTexNoiseLUT();
+    void SyncProcTexColorMap();
+    void SyncProcTexAlphaMap();
+    void SyncProcTexLUT();
+    void SyncProcTexDiffLUT();
 
     /// Syncs the alpha test states to match the PICA register
     void SyncAlphaTest();
@@ -248,6 +261,11 @@ private:
         UniformData data;
         bool lut_dirty[6];
         bool fog_lut_dirty;
+        bool proctex_noise_lut_dirty;
+        bool proctex_color_map_dirty;
+        bool proctex_alpha_map_dirty;
+        bool proctex_lut_dirty;
+        bool proctex_diff_lut_dirty;
         bool dirty;
     } uniform_block_data = {};
 
@@ -262,4 +280,19 @@ private:
 
     OGLTexture fog_lut;
     std::array<GLuint, 128> fog_lut_data{};
+
+    OGLTexture proctex_noise_lut;
+    std::array<GLvec2, 128> proctex_noise_lut_data{};
+
+    OGLTexture proctex_color_map;
+    std::array<GLvec2, 128> proctex_color_map_data{};
+
+    OGLTexture proctex_alpha_map;
+    std::array<GLvec2, 128> proctex_alpha_map_data{};
+
+    OGLTexture proctex_lut;
+    std::array<GLvec4, 256> proctex_lut_data{};
+
+    OGLTexture proctex_diff_lut;
+    std::array<GLvec4, 256> proctex_diff_lut_data{};
 };

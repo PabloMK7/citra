@@ -113,6 +113,19 @@ union PicaShaderConfig {
             } lut_d0, lut_d1, lut_fr, lut_rr, lut_rg, lut_rb;
         } lighting;
 
+        struct {
+            bool enable;
+            u32 coord;
+            Pica::TexturingRegs::ProcTexClamp u_clamp, v_clamp;
+            Pica::TexturingRegs::ProcTexCombiner color_combiner, alpha_combiner;
+            bool separate_alpha;
+            bool noise_enable;
+            Pica::TexturingRegs::ProcTexShift u_shift, v_shift;
+            u32 lut_width;
+            u32 lut_offset;
+            Pica::TexturingRegs::ProcTexFilter lut_filter;
+        } proctex;
+
     } state;
 };
 #if (__GNUC__ >= 5) || defined(__clang__) || defined(_MSC_VER)
