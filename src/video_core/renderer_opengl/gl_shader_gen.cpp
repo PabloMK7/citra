@@ -40,6 +40,8 @@ PicaShaderConfig PicaShaderConfig::BuildFromRegs(const Pica::Regs& regs) {
 
     state.texture0_type = regs.texturing.texture0.type;
 
+    state.texture2_use_coord1 = regs.texturing.main_config.texture2_use_coord1 != 0;
+
     // Copy relevant tev stages fields.
     // We don't sync const_color here because of the high variance, it is a
     // shader uniform instead.
@@ -126,6 +128,15 @@ static bool IsPassThroughTevStage(const TevStageConfig& stage) {
             stage.GetColorMultiplier() == 1 && stage.GetAlphaMultiplier() == 1);
 }
 
+static std::string TexCoord(const PicaShaderConfig& config, int texture_unit) {
+    if (texture_unit == 2 && config.state.texture2_use_coord1) {
+        return "texcoord[1]";
+    }
+    // TODO: if texture unit 3 (procedural texture) implementation also uses this function,
+    //       config.state.texture3_coordinates should be repected here.
+    return "texcoord[" + std::to_string(texture_unit) + "]";
+}
+
 /// Writes the specified TEV stage source component(s)
 static void AppendSource(std::string& out, const PicaShaderConfig& config,
                          TevStageConfig::Source source, const std::string& index_name) {
@@ -162,7 +173,7 @@ static void AppendSource(std::string& out, const PicaShaderConfig& config,
         out += "texture(tex[1], texcoord[1])";
         break;
     case Source::Texture2:
-        out += "texture(tex[2], texcoord[2])";
+        out += "texture(tex[2], " + TexCoord(config, 2) + ")";
         break;
     case Source::PreviousBuffer:
         out += "combiner_buffer";
@@ -473,8 +484,8 @@ static void WriteLighting(std::string& out, const PicaShaderConfig& config) {
         // Bump mapping is enabled using a normal map, read perturbation vector from the selected
         // texture
         std::string bump_selector = std::to_string(lighting.bump_selector);
-        out += "vec3 surface_normal = 2.0 * texture(tex[" + bump_selector + "], texcoord[" +
-               bump_selector + "]).rgb - 1.0;\n";
+        out += "vec3 surface_normal = 2.0 * texture(tex[" + bump_selector + "], " +
+               TexCoord(config, lighting.bump_selector) + ").rgb - 1.0;\n";
 
         // Recompute Z-component of perturbation if 'renorm' is enabled, this provides a higher
         // precision result

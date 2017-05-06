@@ -402,6 +402,10 @@ void RasterizerOpenGL::NotifyPicaRegisterChanged(u32 id) {
         SyncLogicOp();
         break;
 
+    case PICA_REG_INDEX(texturing.main_config):
+        shader_dirty = true;
+        break;
+
     // Texture 0 type
     case PICA_REG_INDEX(texturing.texture0.type):
         shader_dirty = true;

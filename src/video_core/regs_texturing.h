@@ -122,7 +122,11 @@ struct TexturingRegs {
         BitField<0, 1, u32> texture0_enable;
         BitField<1, 1, u32> texture1_enable;
         BitField<2, 1, u32> texture2_enable;
-    };
+        BitField<8, 2, u32> texture3_coordinates; // TODO: unimplemented
+        BitField<10, 1, u32> texture3_enable;     // TODO: unimplemented
+        BitField<13, 1, u32> texture2_use_coord1;
+        BitField<16, 1, u32> clear_texture_cache; // TODO: unimplemented
+    } main_config;
     TextureConfig texture0;
     INSERT_PADDING_WORDS(0x8);
     BitField<0, 4, TextureFormat> texture0_format;
@@ -142,9 +146,9 @@ struct TexturingRegs {
     };
     const std::array<FullTextureConfig, 3> GetTextures() const {
         return {{
-            {texture0_enable.ToBool(), texture0, texture0_format},
-            {texture1_enable.ToBool(), texture1, texture1_format},
-            {texture2_enable.ToBool(), texture2, texture2_format},
+            {main_config.texture0_enable.ToBool(), texture0, texture0_format},
+            {main_config.texture1_enable.ToBool(), texture1, texture1_format},
+            {main_config.texture2_enable.ToBool(), texture2, texture2_format},
         }};
     }
 

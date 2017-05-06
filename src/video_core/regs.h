@@ -93,7 +93,7 @@ ASSERT_REG_POSITION(rasterizer.viewport_corner, 0x68);
 ASSERT_REG_POSITION(rasterizer.depthmap_enable, 0x6D);
 
 ASSERT_REG_POSITION(texturing, 0x80);
-ASSERT_REG_POSITION(texturing.texture0_enable, 0x80);
+ASSERT_REG_POSITION(texturing.main_config, 0x80);
 ASSERT_REG_POSITION(texturing.texture0, 0x81);
 ASSERT_REG_POSITION(texturing.texture0_format, 0x8e);
 ASSERT_REG_POSITION(texturing.fragment_lighting_enable, 0x8f);

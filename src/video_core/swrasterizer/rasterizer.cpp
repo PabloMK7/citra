@@ -276,8 +276,10 @@ static void ProcessTriangleInternal(const Vertex& v0, const Vertex& v1, const Ve
 
                 DEBUG_ASSERT(0 != texture.config.address);
 
-                float24 u = uv[i].u();
-                float24 v = uv[i].v();
+                int coordinate_i =
+                    (i == 2 && regs.texturing.main_config.texture2_use_coord1) ? 1 : i;
+                float24 u = uv[coordinate_i].u();
+                float24 v = uv[coordinate_i].v();
 
                 // Only unit 0 respects the texturing type (according to 3DBrew)
                 // TODO: Refactor so cubemaps and shadowmaps can be handled

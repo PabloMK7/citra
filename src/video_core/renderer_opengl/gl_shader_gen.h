@@ -79,6 +79,7 @@ union PicaShaderConfig {
         Pica::FramebufferRegs::CompareFunc alpha_test_func;
         Pica::RasterizerRegs::ScissorMode scissor_test_mode;
         Pica::TexturingRegs::TextureConfig::TextureType texture0_type;
+        bool texture2_use_coord1;
         std::array<TevStageConfigRaw, 6> tev_stages;
         u8 combiner_buffer_input;
 
