@@ -20,7 +20,7 @@ struct AddressMapping {
     // Address and size must be page-aligned
     VAddr address;
     u32 size;
-    bool writable;
+    bool read_only;
     bool unk_flag;
 };
 

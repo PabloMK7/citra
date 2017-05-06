@@ -23,11 +23,7 @@ struct MemoryRegionInfo {
 void MemoryInit(u32 mem_type);
 void MemoryShutdown();
 MemoryRegionInfo* GetMemoryRegion(MemoryRegion region);
-}
 
-namespace Memory {
-
-void Init();
-void InitLegacyAddressSpace(Kernel::VMManager& address_space);
-
-} // namespace
+void HandleSpecialMapping(VMManager& address_space, const AddressMapping& mapping);
+void MapSharedPages(VMManager& address_space);
+} // namespace Kernel
