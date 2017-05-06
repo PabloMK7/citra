@@ -342,5 +342,26 @@ void SetSoundOutputMode(SoundOutputMode mode);
  */
 SoundOutputMode GetSoundOutputMode();
 
+/**
+ * Generates a new random console unique id.
+ * @param random_number a random generated 16bit number stored at 0x90002, used for generating the
+ * console_id
+ * @param console_id the randomly created console id
+ */
+void GenerateConsoleUniqueId(u32& random_number, u64& console_id);
+
+/**
+ * Sets the random_number and the  console unique id in the config savegame.
+ * @param random_number the random_number to set
+ * @param console_id the console id to set
+ */
+ResultCode SetConsoleUniqueId(u32 random_number, u64 console_id);
+
+/**
+ * Gets the console unique id from config savegame.
+ * @returns the console unique id
+ */
+u64 GetConsoleUniqueId();
+
 } // namespace CFG
 } // namespace Service

@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cryptopp/osrng.h>
 #include <cryptopp/sha.h>
 #include "common/file_util.h"
 #include "common/logging/log.h"
@@ -50,6 +51,7 @@ enum ConfigBlockID {
     SoundOutputModeBlockID = 0x00070001,
     ConsoleUniqueID1BlockID = 0x00090000,
     ConsoleUniqueID2BlockID = 0x00090001,
+    ConsoleUniqueID3BlockID = 0x00090002,
     UsernameBlockID = 0x000A0000,
     BirthdayBlockID = 0x000A0001,
     LanguageBlockID = 0x000A0002,
@@ -86,7 +88,6 @@ struct ConsoleCountryInfo {
 static_assert(sizeof(ConsoleCountryInfo) == 4, "ConsoleCountryInfo must be exactly 4 bytes");
 }
 
-static const u64 CONSOLE_UNIQUE_ID = 0xDEADC0DE;
 static const ConsoleModelInfo CONSOLE_MODEL = {NINTENDO_3DS_XL, {0, 0, 0}};
 static const u8 CONSOLE_LANGUAGE = LANGUAGE_EN;
 static const UsernameBlock CONSOLE_USERNAME_BLOCK = {u"CITRA", 0, 0};
@@ -438,13 +439,22 @@ ResultCode FormatConfig() {
     if (!res.IsSuccess())
         return res;
 
-    res = CreateConfigInfoBlk(ConsoleUniqueID1BlockID, sizeof(CONSOLE_UNIQUE_ID), 0xE,
-                              &CONSOLE_UNIQUE_ID);
+    u32 random_number;
+    u64 console_id;
+    GenerateConsoleUniqueId(random_number, console_id);
+
+    u64_le console_id_le = console_id;
+    res = CreateConfigInfoBlk(ConsoleUniqueID1BlockID, sizeof(console_id_le), 0xE, &console_id_le);
     if (!res.IsSuccess())
         return res;
 
-    res = CreateConfigInfoBlk(ConsoleUniqueID2BlockID, sizeof(CONSOLE_UNIQUE_ID), 0xE,
-                              &CONSOLE_UNIQUE_ID);
+    res = CreateConfigInfoBlk(ConsoleUniqueID2BlockID, sizeof(console_id_le), 0xE, &console_id_le);
+    if (!res.IsSuccess())
+        return res;
+
+    u32_le random_number_le = random_number;
+    res = CreateConfigInfoBlk(ConsoleUniqueID3BlockID, sizeof(random_number_le), 0xE,
+                              &random_number_le);
     if (!res.IsSuccess())
         return res;
 
@@ -661,6 +671,41 @@ SoundOutputMode GetSoundOutputMode() {
     u8 block;
     GetConfigInfoBlock(SoundOutputModeBlockID, sizeof(block), 8, &block);
     return static_cast<SoundOutputMode>(block);
+}
+
+void GenerateConsoleUniqueId(u32& random_number, u64& console_id) {
+    CryptoPP::AutoSeededRandomPool rng;
+    random_number = rng.GenerateWord32(0, 0xFFFF);
+    u64_le local_friend_code_seed;
+    rng.GenerateBlock(reinterpret_cast<byte*>(&local_friend_code_seed),
+                      sizeof(local_friend_code_seed));
+    console_id = (local_friend_code_seed & 0x3FFFFFFFF) | (static_cast<u64>(random_number) << 48);
+}
+
+ResultCode SetConsoleUniqueId(u32 random_number, u64 console_id) {
+    u64_le console_id_le = console_id;
+    ResultCode res =
+        SetConfigInfoBlock(ConsoleUniqueID1BlockID, sizeof(console_id_le), 0xE, &console_id_le);
+    if (!res.IsSuccess())
+        return res;
+
+    res = SetConfigInfoBlock(ConsoleUniqueID2BlockID, sizeof(console_id_le), 0xE, &console_id_le);
+    if (!res.IsSuccess())
+        return res;
+
+    u32_le random_number_le = random_number;
+    res = SetConfigInfoBlock(ConsoleUniqueID3BlockID, sizeof(random_number_le), 0xE,
+                             &random_number_le);
+    if (!res.IsSuccess())
+        return res;
+
+    return RESULT_SUCCESS;
+}
+
+u64 GetConsoleUniqueId() {
+    u64_le console_id_le;
+    GetConfigInfoBlock(ConsoleUniqueID2BlockID, sizeof(console_id_le), 0xE, &console_id_le);
+    return console_id_le;
 }
 
 } // namespace CFG

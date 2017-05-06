@@ -23,6 +23,7 @@ public:
 
 public slots:
     void updateBirthdayComboBox(int birthmonth_index);
+    void refreshConsoleID();
 
 private:
     void ReadSystemSettings();

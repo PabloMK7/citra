@@ -220,6 +220,29 @@
           </item>
          </widget>
         </item>
+        <item row="4" column="0">
+         <widget class="QLabel" name="label_console_id">
+          <property name="text">
+           <string>Console ID:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="1">
+         <widget class="QPushButton" name="button_regenerate_console_id">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="layoutDirection">
+           <enum>Qt::RightToLeft</enum>
+          </property>
+          <property name="text">
+           <string>Regenerate</string>
+          </property>
+         </widget>
+        </item>
        </layout>
       </widget>
      </item>

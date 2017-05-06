@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <QMessageBox>
 #include "citra_qt/configuration/configure_system.h"
 #include "citra_qt/ui_settings.h"
 #include "core/core.h"
@@ -15,8 +16,11 @@ static const std::array<int, 12> days_in_month = {{
 
 ConfigureSystem::ConfigureSystem(QWidget* parent) : QWidget(parent), ui(new Ui::ConfigureSystem) {
     ui->setupUi(this);
-    connect(ui->combo_birthmonth, SIGNAL(currentIndexChanged(int)),
-            SLOT(updateBirthdayComboBox(int)));
+    connect(ui->combo_birthmonth,
+            static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this,
+            &ConfigureSystem::updateBirthdayComboBox);
+    connect(ui->button_regenerate_console_id, &QPushButton::clicked, this,
+            &ConfigureSystem::refreshConsoleID);
 
     this->setConfiguration();
 }
@@ -71,6 +75,10 @@ void ConfigureSystem::ReadSystemSettings() {
     // set sound output mode
     sound_index = Service::CFG::GetSoundOutputMode();
     ui->combo_sound->setCurrentIndex(sound_index);
+
+    // set the console id
+    u64 console_id = Service::CFG::GetConsoleUniqueId();
+    ui->label_console_id->setText("Console ID: 0x" + QString::number(console_id, 16).toUpper());
 }
 
 void ConfigureSystem::applyConfiguration() {
@@ -139,4 +147,22 @@ void ConfigureSystem::updateBirthdayComboBox(int birthmonth_index) {
 
     // restore the day selection
     ui->combo_birthday->setCurrentIndex(birthday_index);
+}
+
+void ConfigureSystem::refreshConsoleID() {
+    QMessageBox::StandardButton reply;
+    QString warning_text = tr("This will replace your current virtual 3DS with a new one. "
+                              "Your current virtual 3DS will not be recoverable. "
+                              "This might have unexpected effects in games. This might fail, "
+                              "if you use an outdated config savegame. Continue?");
+    reply = QMessageBox::critical(this, tr("Warning"), warning_text,
+                                  QMessageBox::No | QMessageBox::Yes);
+    if (reply == QMessageBox::No)
+        return;
+    u32 random_number;
+    u64 console_id;
+    Service::CFG::GenerateConsoleUniqueId(random_number, console_id);
+    Service::CFG::SetConsoleUniqueId(random_number, console_id);
+    Service::CFG::UpdateConfigNANDSavegame();
+    ui->label_console_id->setText("Console ID: 0x" + QString::number(console_id, 16).toUpper());
 }
