@@ -236,7 +236,9 @@ GameList::~GameList() {
 }
 
 void GameList::setFilterFocus() {
-    search_field->setFocus();
+    if (tree_view->model()->rowCount() > 0) {
+        search_field->setFocus();
+    }
 }
 
 void GameList::setFilterVisible(bool visibility) {
@@ -271,7 +273,9 @@ void GameList::DonePopulating() {
     tree_view->setEnabled(true);
     int rowCount = tree_view->model()->rowCount();
     search_field->setFilterResult(rowCount, rowCount);
-    search_field->setFocus();
+    if (rowCount > 0) {
+        search_field->setFocus();
+    }
 }
 
 void GameList::PopupContextMenu(const QPoint& menu_location) {
@@ -296,7 +300,6 @@ void GameList::PopulateAsync(const QString& dir_path, bool deep_scan) {
         !FileUtil::IsDirectory(dir_path.toStdString())) {
         LOG_ERROR(Frontend, "Could not find game list folder at %s", dir_path.toLocal8Bit().data());
         search_field->setFilterResult(0, 0);
-        search_field->setFocus();
         return;
     }
 
