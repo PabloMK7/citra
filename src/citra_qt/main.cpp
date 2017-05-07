@@ -17,7 +17,6 @@
 #include "citra_qt/configuration/config.h"
 #include "citra_qt/configuration/configure_dialog.h"
 #include "citra_qt/debugger/callstack.h"
-#include "citra_qt/debugger/disassembler.h"
 #include "citra_qt/debugger/graphics/graphics.h"
 #include "citra_qt/debugger/graphics/graphics_breakpoints.h"
 #include "citra_qt/debugger/graphics/graphics_cmdlists.h"
@@ -129,15 +128,6 @@ void GMainWindow::InitializeDebugWidgets() {
     microProfileDialog->hide();
     debug_menu->addAction(microProfileDialog->toggleViewAction());
 #endif
-
-    disasmWidget = new DisassemblerWidget(this, emu_thread.get());
-    addDockWidget(Qt::BottomDockWidgetArea, disasmWidget);
-    disasmWidget->hide();
-    debug_menu->addAction(disasmWidget->toggleViewAction());
-    connect(this, &GMainWindow::EmulationStarting, disasmWidget,
-            &DisassemblerWidget::OnEmulationStarting);
-    connect(this, &GMainWindow::EmulationStopping, disasmWidget,
-            &DisassemblerWidget::OnEmulationStopping);
 
     registersWidget = new RegistersWidget(this);
     addDockWidget(Qt::RightDockWidgetArea, registersWidget);
@@ -391,16 +381,12 @@ void GMainWindow::BootGame(const QString& filename) {
     connect(render_window, SIGNAL(Closed()), this, SLOT(OnStopGame()));
     // BlockingQueuedConnection is important here, it makes sure we've finished refreshing our views
     // before the CPU continues
-    connect(emu_thread.get(), SIGNAL(DebugModeEntered()), disasmWidget, SLOT(OnDebugModeEntered()),
-            Qt::BlockingQueuedConnection);
     connect(emu_thread.get(), SIGNAL(DebugModeEntered()), registersWidget,
             SLOT(OnDebugModeEntered()), Qt::BlockingQueuedConnection);
     connect(emu_thread.get(), SIGNAL(DebugModeEntered()), callstackWidget,
             SLOT(OnDebugModeEntered()), Qt::BlockingQueuedConnection);
     connect(emu_thread.get(), SIGNAL(DebugModeEntered()), waitTreeWidget,
             SLOT(OnDebugModeEntered()), Qt::BlockingQueuedConnection);
-    connect(emu_thread.get(), SIGNAL(DebugModeLeft()), disasmWidget, SLOT(OnDebugModeLeft()),
-            Qt::BlockingQueuedConnection);
     connect(emu_thread.get(), SIGNAL(DebugModeLeft()), registersWidget, SLOT(OnDebugModeLeft()),
             Qt::BlockingQueuedConnection);
     connect(emu_thread.get(), SIGNAL(DebugModeLeft()), callstackWidget, SLOT(OnDebugModeLeft()),

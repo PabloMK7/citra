@@ -12,7 +12,6 @@
 
 class CallstackWidget;
 class Config;
-class DisassemblerWidget;
 class EmuThread;
 class GameList;
 class GImageInfo;
@@ -152,7 +151,6 @@ private:
     // Debugger panes
     ProfilerWidget* profilerWidget;
     MicroProfileDialog* microProfileDialog;
-    DisassemblerWidget* disasmWidget;
     RegistersWidget* registersWidget;
     CallstackWidget* callstackWidget;
     GPUCommandStreamWidget* graphicsWidget;
