@@ -58,7 +58,6 @@
      </property>
     </widget>
     <addaction name="action_Load_File"/>
-    <addaction name="action_Load_Symbol_Map"/>
     <addaction name="separator"/>
     <addaction name="action_Select_Game_List_Root"/>
     <addaction name="menu_recent_files"/>

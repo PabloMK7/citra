@@ -2,12 +2,12 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <cinttypes>
 #include <map>
 #include "common/logging/log.h"
 #include "common/microprofile.h"
 #include "common/scope_exit.h"
 #include "common/string_util.h"
-#include "common/symbols.h"
 #include "core/arm/arm_interface.h"
 #include "core/core_timing.h"
 #include "core/hle/function_wrappers.h"
@@ -524,13 +524,7 @@ static ResultCode CreateThread(Kernel::Handle* out_handle, s32 priority, u32 ent
                                u32 stack_top, s32 processor_id) {
     using Kernel::Thread;
 
-    std::string name;
-    if (Symbols::HasSymbol(entry_point)) {
-        TSymbol symbol = Symbols::GetSymbol(entry_point);
-        name = symbol.name;
-    } else {
-        name = Common::StringFromFormat("unknown-%08x", entry_point);
-    }
+    std::string name = Common::StringFromFormat("unknown-%08" PRIX32, entry_point);
 
     if (priority > THREADPRIO_LOWEST) {
         return ResultCode(ErrorDescription::OutOfRange, ErrorModule::OS,

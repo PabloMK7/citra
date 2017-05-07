@@ -38,7 +38,6 @@
 #include "common/scm_rev.h"
 #include "common/scope_exit.h"
 #include "common/string_util.h"
-#include "core/arm/disassembler/load_symbol_map.h"
 #include "core/core.h"
 #include "core/file_sys/archive_source_sd_savedata.h"
 #include "core/gdbstub/gdbstub.h"
@@ -253,8 +252,6 @@ void GMainWindow::ConnectWidgetEvents() {
 void GMainWindow::ConnectMenuEvents() {
     // File
     connect(ui.action_Load_File, &QAction::triggered, this, &GMainWindow::OnMenuLoadFile);
-    connect(ui.action_Load_Symbol_Map, &QAction::triggered, this,
-            &GMainWindow::OnMenuLoadSymbolMap);
     connect(ui.action_Select_Game_List_Root, &QAction::triggered, this,
             &GMainWindow::OnMenuSelectGameListRoot);
     connect(ui.action_Exit, &QAction::triggered, this, &QMainWindow::close);
@@ -503,16 +500,6 @@ void GMainWindow::OnMenuLoadFile() {
         UISettings::values.roms_path = QFileInfo(filename).path();
 
         BootGame(filename);
-    }
-}
-
-void GMainWindow::OnMenuLoadSymbolMap() {
-    QString filename = QFileDialog::getOpenFileName(
-        this, tr("Load Symbol Map"), UISettings::values.symbols_path, tr("Symbol Map (*.*)"));
-    if (!filename.isEmpty()) {
-        UISettings::values.symbols_path = QFileInfo(filename).path();
-
-        LoadSymbolMap(filename.toStdString());
     }
 }
 
