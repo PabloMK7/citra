@@ -10,7 +10,6 @@
 #include "common/common_types.h"
 #include "common/logging/log.h"
 #include "common/microprofile.h"
-#include "core/arm/disassembler/arm_disasm.h"
 #include "core/arm/dyncom/arm_dyncom_dec.h"
 #include "core/arm/dyncom/arm_dyncom_interpreter.h"
 #include "core/arm/dyncom/arm_dyncom_run.h"
@@ -828,10 +827,8 @@ static unsigned int InterpreterTranslateInstruction(const ARMul_State* cpu, cons
 
     int idx;
     if (DecodeARMInstruction(inst, &idx) == ARMDecodeStatus::FAILURE) {
-        std::string disasm = ARM_Disasm::Disassemble(phys_addr, inst);
-        LOG_ERROR(Core_ARM11,
-                  "Decode failure.\tPC: [0x%08" PRIX32 "]\tInstruction: %s [%08" PRIX32 "]",
-                  phys_addr, disasm.c_str(), inst);
+        LOG_ERROR(Core_ARM11, "Decode failure.\tPC: [0x%08" PRIX32 "]\tInstruction: %08" PRIX32,
+                  phys_addr, inst);
         LOG_ERROR(Core_ARM11, "cpsr=0x%" PRIX32 ", cpu->TFlag=%d, r15=0x%08" PRIX32, cpu->Cpsr,
                   cpu->TFlag, cpu->Reg[15]);
         CITRA_IGNORE_EXIT(-1);
