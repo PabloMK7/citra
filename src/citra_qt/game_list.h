@@ -34,7 +34,7 @@ public:
 
     class SearchField : public QWidget {
     public:
-        void setFilterResult(int visable, int total);
+        void setFilterResult(int visible, int total);
         void clear();
         void setFocus();
         explicit SearchField(GameList* parent = nullptr);
@@ -64,7 +64,7 @@ public:
 
     void clearFilter();
     void setFilterFocus();
-    void setFilterVisible(bool visablility);
+    void setFilterVisible(bool visibility);
 
     void PopulateAsync(const QString& dir_path, bool deep_scan);
 

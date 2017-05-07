@@ -45,7 +45,7 @@ bool GameList::SearchField::KeyReleaseEater::eventFilter(QObject* obj, QEvent* e
             break;
         }
         // Return and Enter
-        // If the enter key gets pressed first checks how many and which entry is visable
+        // If the enter key gets pressed first checks how many and which entry is visible
         // If there is only one result launch this game
         case Qt::Key_Return:
         case Qt::Key_Enter: {
@@ -80,7 +80,7 @@ bool GameList::SearchField::KeyReleaseEater::eventFilter(QObject* obj, QEvent* e
     return QObject::eventFilter(obj, event);
 }
 
-void GameList::SearchField::setFilterResult(int visable, int total) {
+void GameList::SearchField::setFilterResult(int visible, int total) {
     QString result_of_text = tr("of");
     QString result_text;
     if (total == 1) {
@@ -89,7 +89,7 @@ void GameList::SearchField::setFilterResult(int visable, int total) {
         result_text = tr("results");
     }
     label_filter_result->setText(
-        QString("%1 %2 %3 %4").arg(visable).arg(result_of_text).arg(total).arg(result_text));
+        QString("%1 %2 %3 %4").arg(visible).arg(result_of_text).arg(total).arg(result_text));
 }
 
 void GameList::SearchField::clear() {
@@ -133,13 +133,13 @@ GameList::SearchField::SearchField(GameList* parent) : QWidget{parent} {
 }
 
 /**
-* Checks if all words separated by spaces are contained in another string
-* This offers a word order insensitive search function
-*
-* @param String that gets checked if it contains all words of the userinput string
-* @param String containing all words getting checked
-* @return true if the haystack contains all words of userinput
-*/
+ * Checks if all words separated by spaces are contained in another string
+ * This offers a word order insensitive search function
+ *
+ * @param String that gets checked if it contains all words of the userinput string
+ * @param String containing all words getting checked
+ * @return true if the haystack contains all words of userinput
+ */
 bool GameList::containsAllWords(QString haystack, QString userinput) {
     QStringList userinput_split = userinput.split(" ", QString::SplitBehavior::SkipEmptyParts);
     return std::all_of(userinput_split.begin(), userinput_split.end(),
@@ -236,11 +236,13 @@ GameList::~GameList() {
 }
 
 void GameList::setFilterFocus() {
-    search_field->setFocus();
+    if (tree_view->model()->rowCount() > 0) {
+        search_field->setFocus();
+    }
 }
 
-void GameList::setFilterVisible(bool visablility) {
-    search_field->setVisible(visablility);
+void GameList::setFilterVisible(bool visibility) {
+    search_field->setVisible(visibility);
 }
 
 void GameList::clearFilter() {
@@ -271,7 +273,9 @@ void GameList::DonePopulating() {
     tree_view->setEnabled(true);
     int rowCount = tree_view->model()->rowCount();
     search_field->setFilterResult(rowCount, rowCount);
-    search_field->setFocus();
+    if (rowCount > 0) {
+        search_field->setFocus();
+    }
 }
 
 void GameList::PopupContextMenu(const QPoint& menu_location) {
@@ -295,6 +299,7 @@ void GameList::PopulateAsync(const QString& dir_path, bool deep_scan) {
     if (!FileUtil::Exists(dir_path.toStdString()) ||
         !FileUtil::IsDirectory(dir_path.toStdString())) {
         LOG_ERROR(Frontend, "Could not find game list folder at %s", dir_path.toLocal8Bit().data());
+        search_field->setFilterResult(0, 0);
         return;
     }
 
@@ -355,20 +360,20 @@ void GameList::RefreshGameDirectory() {
 }
 
 /**
-* Adds the game list folder to the QFileSystemWatcher to check for updates.
-*
-* The file watcher will fire off an update to the game list when a change is detected in the game
-* list folder.
-*
-* Notice: This method is run on the UI thread because QFileSystemWatcher is not thread safe and
-* this function is fast enough to not stall the UI thread. If performance is an issue, it should
-* be moved to another thread and properly locked to prevent concurrency issues.
-*
-* @param dir folder to check for changes in
-* @param recursion 0 if recursion is disabled. Any positive number passed to this will add each
-*        directory recursively to the watcher and will update the file list if any of the folders
-*        change. The number determines how deep the recursion should traverse.
-*/
+ * Adds the game list folder to the QFileSystemWatcher to check for updates.
+ *
+ * The file watcher will fire off an update to the game list when a change is detected in the game
+ * list folder.
+ *
+ * Notice: This method is run on the UI thread because QFileSystemWatcher is not thread safe and
+ * this function is fast enough to not stall the UI thread. If performance is an issue, it should
+ * be moved to another thread and properly locked to prevent concurrency issues.
+ *
+ * @param dir folder to check for changes in
+ * @param recursion 0 if recursion is disabled. Any positive number passed to this will add each
+ *        directory recursively to the watcher and will update the file list if any of the folders
+ *        change. The number determines how deep the recursion should traverse.
+ */
 void GameList::UpdateWatcherList(const std::string& dir, unsigned int recursion) {
     const auto callback = [this, recursion](unsigned* num_entries_out, const std::string& directory,
                                             const std::string& virtual_name) -> bool {
