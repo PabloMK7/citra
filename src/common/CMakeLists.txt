@@ -38,7 +38,6 @@ set(SRCS
             param_package.cpp
             scm_rev.cpp
             string_util.cpp
-            symbols.cpp
             thread.cpp
             timer.cpp
             )
@@ -74,7 +73,6 @@ set(HEADERS
             scope_exit.h
             string_util.h
             swap.h
-            symbols.h
             synchronized_wrapper.h
             thread.h
             thread_queue_list.h

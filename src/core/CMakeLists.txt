@@ -1,6 +1,5 @@
 set(SRCS
             arm/disassembler/arm_disasm.cpp
-            arm/disassembler/load_symbol_map.cpp
             arm/dynarmic/arm_dynarmic.cpp
             arm/dynarmic/arm_dynarmic_cp15.cpp
             arm/dyncom/arm_dyncom.cpp
@@ -180,7 +179,6 @@ set(SRCS
 set(HEADERS
             arm/arm_interface.h
             arm/disassembler/arm_disasm.h
-            arm/disassembler/load_symbol_map.h
             arm/dynarmic/arm_dynarmic.h
             arm/dynarmic/arm_dynarmic_cp15.h
             arm/dyncom/arm_dyncom.h
