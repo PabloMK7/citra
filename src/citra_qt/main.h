@@ -10,7 +10,6 @@
 #include <QTimer>
 #include "ui_main.h"
 
-class CallstackWidget;
 class Config;
 class EmuThread;
 class GameList;
@@ -152,7 +151,6 @@ private:
     ProfilerWidget* profilerWidget;
     MicroProfileDialog* microProfileDialog;
     RegistersWidget* registersWidget;
-    CallstackWidget* callstackWidget;
     GPUCommandStreamWidget* graphicsWidget;
     GPUCommandListWidget* graphicsCommandsWidget;
     GraphicsBreakPointsWidget* graphicsBreakpointsWidget;

@@ -16,7 +16,6 @@
 #include "citra_qt/bootmanager.h"
 #include "citra_qt/configuration/config.h"
 #include "citra_qt/configuration/configure_dialog.h"
-#include "citra_qt/debugger/callstack.h"
 #include "citra_qt/debugger/graphics/graphics.h"
 #include "citra_qt/debugger/graphics/graphics_breakpoints.h"
 #include "citra_qt/debugger/graphics/graphics_cmdlists.h"
@@ -137,11 +136,6 @@ void GMainWindow::InitializeDebugWidgets() {
             &RegistersWidget::OnEmulationStarting);
     connect(this, &GMainWindow::EmulationStopping, registersWidget,
             &RegistersWidget::OnEmulationStopping);
-
-    callstackWidget = new CallstackWidget(this);
-    addDockWidget(Qt::RightDockWidgetArea, callstackWidget);
-    callstackWidget->hide();
-    debug_menu->addAction(callstackWidget->toggleViewAction());
 
     graphicsWidget = new GPUCommandStreamWidget(this);
     addDockWidget(Qt::RightDockWidgetArea, graphicsWidget);
@@ -383,20 +377,15 @@ void GMainWindow::BootGame(const QString& filename) {
     // before the CPU continues
     connect(emu_thread.get(), SIGNAL(DebugModeEntered()), registersWidget,
             SLOT(OnDebugModeEntered()), Qt::BlockingQueuedConnection);
-    connect(emu_thread.get(), SIGNAL(DebugModeEntered()), callstackWidget,
-            SLOT(OnDebugModeEntered()), Qt::BlockingQueuedConnection);
     connect(emu_thread.get(), SIGNAL(DebugModeEntered()), waitTreeWidget,
             SLOT(OnDebugModeEntered()), Qt::BlockingQueuedConnection);
     connect(emu_thread.get(), SIGNAL(DebugModeLeft()), registersWidget, SLOT(OnDebugModeLeft()),
-            Qt::BlockingQueuedConnection);
-    connect(emu_thread.get(), SIGNAL(DebugModeLeft()), callstackWidget, SLOT(OnDebugModeLeft()),
             Qt::BlockingQueuedConnection);
     connect(emu_thread.get(), SIGNAL(DebugModeLeft()), waitTreeWidget, SLOT(OnDebugModeLeft()),
             Qt::BlockingQueuedConnection);
 
     // Update the GUI
     registersWidget->OnDebugModeEntered();
-    callstackWidget->OnDebugModeEntered();
     if (ui.action_Single_Window_Mode->isChecked()) {
         game_list->hide();
     }
