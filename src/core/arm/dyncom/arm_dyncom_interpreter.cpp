@@ -5,6 +5,7 @@
 #define CITRA_IGNORE_EXIT(x)
 
 #include <algorithm>
+#include <cinttypes>
 #include <cstdio>
 #include "common/common_types.h"
 #include "common/logging/log.h"
@@ -808,8 +809,8 @@ MICROPROFILE_DEFINE(DynCom_Decode, "DynCom", "Decode", MP_RGB(255, 64, 64));
 
 static unsigned int InterpreterTranslateInstruction(const ARMul_State* cpu, const u32 phys_addr,
                                                     ARM_INST_PTR& inst_base) {
-    unsigned int inst_size = 4;
-    unsigned int inst = Memory::Read32(phys_addr & 0xFFFFFFFC);
+    u32 inst_size = 4;
+    u32 inst = Memory::Read32(phys_addr & 0xFFFFFFFC);
 
     // If we are in Thumb mode, we'll translate one Thumb instruction to the corresponding ARM
     // instruction
@@ -828,10 +829,11 @@ static unsigned int InterpreterTranslateInstruction(const ARMul_State* cpu, cons
     int idx;
     if (DecodeARMInstruction(inst, &idx) == ARMDecodeStatus::FAILURE) {
         std::string disasm = ARM_Disasm::Disassemble(phys_addr, inst);
-        LOG_ERROR(Core_ARM11, "Decode failure.\tPC : [0x%x]\tInstruction : %s [%x]", phys_addr,
-                  disasm.c_str(), inst);
-        LOG_ERROR(Core_ARM11, "cpsr=0x%x, cpu->TFlag=%d, r15=0x%x", cpu->Cpsr, cpu->TFlag,
-                  cpu->Reg[15]);
+        LOG_ERROR(Core_ARM11,
+                  "Decode failure.\tPC: [0x%08" PRIX32 "]\tInstruction: %s [%08" PRIX32 "]",
+                  phys_addr, disasm.c_str(), inst);
+        LOG_ERROR(Core_ARM11, "cpsr=0x%" PRIX32 ", cpu->TFlag=%d, r15=0x%08" PRIX32, cpu->Cpsr,
+                  cpu->TFlag, cpu->Reg[15]);
         CITRA_IGNORE_EXIT(-1);
     }
     inst_base = arm_instruction_trans[idx](inst, idx);
