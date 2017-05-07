@@ -17,15 +17,15 @@ namespace Service {
 namespace IR {
 
 union PadState {
-    u32 hex;
+    u32_le hex;
 
-    BitField<14, 1, u32> zl;
-    BitField<15, 1, u32> zr;
+    BitField<14, 1, u32_le> zl;
+    BitField<15, 1, u32_le> zr;
 
-    BitField<24, 1, u32> c_stick_right;
-    BitField<25, 1, u32> c_stick_left;
-    BitField<26, 1, u32> c_stick_up;
-    BitField<27, 1, u32> c_stick_down;
+    BitField<24, 1, u32_le> c_stick_right;
+    BitField<25, 1, u32_le> c_stick_left;
+    BitField<26, 1, u32_le> c_stick_up;
+    BitField<27, 1, u32_le> c_stick_down;
 };
 
 struct PadDataEntry {
@@ -33,14 +33,14 @@ struct PadDataEntry {
     PadState delta_additions;
     PadState delta_removals;
 
-    s16 c_stick_x;
-    s16 c_stick_y;
+    s16_le c_stick_x;
+    s16_le c_stick_y;
 };
 
 struct SharedMem {
-    u64 index_reset_ticks;          ///< CPU tick count for when HID module updated entry index 0
-    u64 index_reset_ticks_previous; ///< Previous `index_reset_ticks`
-    u32 index;
+    u64_le index_reset_ticks;          ///< CPU tick count for when HID module updated entry index 0
+    u64_le index_reset_ticks_previous; ///< Previous `index_reset_ticks`
+    u32_le index;
     INSERT_PADDING_WORDS(1);
     std::array<PadDataEntry, 8> entries; ///< Last 8 pad entries
 };
@@ -50,26 +50,26 @@ static_assert(sizeof(SharedMem) == 0x98, "SharedMem has wrong size!");
 static Kernel::SharedPtr<Kernel::Event> update_event;
 static Kernel::SharedPtr<Kernel::SharedMemory> shared_memory;
 static u32 next_pad_index;
-static int update_callback;
-static std::unique_ptr<Input::ButtonDevice> zl;
-static std::unique_ptr<Input::ButtonDevice> zr;
+static int update_callback_id;
+static std::unique_ptr<Input::ButtonDevice> zl_button;
+static std::unique_ptr<Input::ButtonDevice> zr_button;
 static std::unique_ptr<Input::AnalogDevice> c_stick;
 static std::atomic<bool> is_device_reload_pending;
 static bool raw_c_stick;
 static int update_period;
 
 static void LoadInputDevices() {
-    zl = Input::CreateDevice<Input::ButtonDevice>(
+    zl_button = Input::CreateDevice<Input::ButtonDevice>(
         Settings::values.buttons[Settings::NativeButton::ZL]);
-    zr = Input::CreateDevice<Input::ButtonDevice>(
+    zr_button = Input::CreateDevice<Input::ButtonDevice>(
         Settings::values.buttons[Settings::NativeButton::ZR]);
     c_stick = Input::CreateDevice<Input::AnalogDevice>(
         Settings::values.analogs[Settings::NativeAnalog::CStick]);
 }
 
 static void UnloadInputDevices() {
-    zl = nullptr;
-    zr = nullptr;
+    zl_button = nullptr;
+    zr_button = nullptr;
     c_stick = nullptr;
 }
 
@@ -80,15 +80,15 @@ static void UpdateCallback(u64 userdata, int cycles_late) {
         LoadInputDevices();
 
     PadState state;
-    state.zl.Assign(zl->GetStatus());
-    state.zr.Assign(zr->GetStatus());
+    state.zl.Assign(zl_button->GetStatus());
+    state.zr.Assign(zr_button->GetStatus());
 
     // Get current c-stick position and update c-stick direction
     float c_stick_x_f, c_stick_y_f;
     std::tie(c_stick_x_f, c_stick_y_f) = c_stick->GetStatus();
-    constexpr int MAX_CSTICK_POS = 0x9C; // Max value for a c-stick position
-    const s16 c_stick_x = static_cast<s16>(c_stick_x_f * MAX_CSTICK_POS);
-    const s16 c_stick_y = static_cast<s16>(c_stick_y_f * MAX_CSTICK_POS);
+    constexpr int MAX_CSTICK_RADIUS = 0x9C; // Max value for a c-stick radius
+    const s16 c_stick_x = static_cast<s16>(c_stick_x_f * MAX_CSTICK_RADIUS);
+    const s16 c_stick_y = static_cast<s16>(c_stick_y_f * MAX_CSTICK_RADIUS);
 
     if (!raw_c_stick) {
         const HID::DirectionState direction = HID::GetStickDirectionState(c_stick_x, c_stick_y);
@@ -129,7 +129,7 @@ static void UpdateCallback(u64 userdata, int cycles_late) {
     update_event->Signal();
 
     // Reschedule recurrent event
-    CoreTiming::ScheduleEvent(msToCycles(update_period) - cycles_late, update_callback);
+    CoreTiming::ScheduleEvent(msToCycles(update_period) - cycles_late, update_callback_id);
 }
 
 /**
@@ -164,23 +164,23 @@ static void Initialize(Interface* self) {
 
     next_pad_index = 0;
     is_device_reload_pending.store(true);
-    CoreTiming::ScheduleEvent(msToCycles(update_period), update_callback);
+    CoreTiming::ScheduleEvent(msToCycles(update_period), update_callback_id);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
 
-    LOG_INFO(Service_IR, "called. update_period=%d, raw_c_stick=%d", update_period, raw_c_stick);
+    LOG_DEBUG(Service_IR, "called. update_period=%d, raw_c_stick=%d", update_period, raw_c_stick);
 }
 
 static void Shutdown(Interface* self) {
     IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x03, 1, 0);
 
-    CoreTiming::UnscheduleEvent(update_callback, 0);
+    CoreTiming::UnscheduleEvent(update_callback_id, 0);
     UnloadInputDevices();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
-    LOG_INFO(Service_IR, "called");
+    LOG_DEBUG(Service_IR, "called");
 }
 
 const Interface::FunctionInfo FunctionTable[] = {
@@ -195,14 +195,15 @@ IR_RST_Interface::IR_RST_Interface() {
 }
 
 void InitRST() {
-    // Note: these two kernel objects are available before Initialize service function is called.
     using namespace Kernel;
+    // Note: these two kernel objects are even available before Initialize service function is
+    // called.
     shared_memory =
         SharedMemory::Create(nullptr, 0x1000, MemoryPermission::ReadWrite, MemoryPermission::Read,
                              0, MemoryRegion::BASE, "IRRST:SharedMemory");
     update_event = Event::Create(ResetType::OneShot, "IRRST:UpdateEvent");
 
-    update_callback = CoreTiming::RegisterEvent("IRRST:UpdateCallBack", UpdateCallback);
+    update_callback_id = CoreTiming::RegisterEvent("IRRST:UpdateCallBack", UpdateCallback);
 }
 
 void ShutdownRST() {
