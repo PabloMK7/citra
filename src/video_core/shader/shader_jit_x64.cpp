@@ -15,7 +15,7 @@ JitX64Engine::JitX64Engine() = default;
 JitX64Engine::~JitX64Engine() = default;
 
 void JitX64Engine::SetupBatch(ShaderSetup& setup, unsigned int entry_point) {
-    ASSERT(entry_point < 1024);
+    ASSERT(entry_point < MAX_PROGRAM_CODE_LENGTH);
     setup.engine_data.entry_point = entry_point;
 
     u64 code_hash = Common::ComputeHash64(&setup.program_code, sizeof(setup.program_code));
