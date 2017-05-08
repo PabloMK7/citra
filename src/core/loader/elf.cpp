@@ -8,7 +8,6 @@
 #include "common/common_types.h"
 #include "common/file_util.h"
 #include "common/logging/log.h"
-#include "common/symbols.h"
 #include "core/hle/kernel/process.h"
 #include "core/hle/kernel/resource_limit.h"
 #include "core/loader/elf.h"
@@ -210,7 +209,6 @@ public:
         return (u32)(header->e_flags);
     }
     SharedPtr<CodeSet> LoadInto(u32 vaddr);
-    bool LoadSymbols();
 
     int GetNumSegments() const {
         return (int)(header->e_phnum);
@@ -258,8 +256,6 @@ ElfReader::ElfReader(void* ptr) {
     sections = (Elf32_Shdr*)(base + header->e_shoff);
 
     entryPoint = header->e_entry;
-
-    LoadSymbols();
 }
 
 const char* ElfReader::GetSectionName(int section) const {
@@ -360,34 +356,6 @@ SectionID ElfReader::GetSectionByName(const char* name, int firstSection) const 
             return i;
     }
     return -1;
-}
-
-bool ElfReader::LoadSymbols() {
-    bool hasSymbols = false;
-    SectionID sec = GetSectionByName(".symtab");
-    if (sec != -1) {
-        int stringSection = sections[sec].sh_link;
-        const char* stringBase = reinterpret_cast<const char*>(GetSectionDataPtr(stringSection));
-
-        // We have a symbol table!
-        const Elf32_Sym* symtab = reinterpret_cast<const Elf32_Sym*>(GetSectionDataPtr(sec));
-        unsigned int numSymbols = sections[sec].sh_size / sizeof(Elf32_Sym);
-        for (unsigned sym = 0; sym < numSymbols; sym++) {
-            int size = symtab[sym].st_size;
-            if (size == 0)
-                continue;
-
-            int type = symtab[sym].st_info & 0xF;
-
-            const char* name = stringBase + symtab[sym].st_name;
-
-            Symbols::Add(symtab[sym].st_value, name, size, type);
-
-            hasSymbols = true;
-        }
-    }
-
-    return hasSymbols;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

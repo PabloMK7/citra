@@ -8,7 +8,7 @@
 
 enum class ARMDecodeStatus { SUCCESS, FAILURE };
 
-ARMDecodeStatus DecodeARMInstruction(u32 instr, s32* idx);
+ARMDecodeStatus DecodeARMInstruction(u32 instr, int* idx);
 
 struct InstructionSetEncodingItem {
     const char* name;

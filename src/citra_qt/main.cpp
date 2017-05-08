@@ -16,8 +16,6 @@
 #include "citra_qt/bootmanager.h"
 #include "citra_qt/configuration/config.h"
 #include "citra_qt/configuration/configure_dialog.h"
-#include "citra_qt/debugger/callstack.h"
-#include "citra_qt/debugger/disassembler.h"
 #include "citra_qt/debugger/graphics/graphics.h"
 #include "citra_qt/debugger/graphics/graphics_breakpoints.h"
 #include "citra_qt/debugger/graphics/graphics_cmdlists.h"
@@ -40,7 +38,6 @@
 #include "common/scm_rev.h"
 #include "common/scope_exit.h"
 #include "common/string_util.h"
-#include "core/arm/disassembler/load_symbol_map.h"
 #include "core/core.h"
 #include "core/file_sys/archive_source_sd_savedata.h"
 #include "core/gdbstub/gdbstub.h"
@@ -130,15 +127,6 @@ void GMainWindow::InitializeDebugWidgets() {
     debug_menu->addAction(microProfileDialog->toggleViewAction());
 #endif
 
-    disasmWidget = new DisassemblerWidget(this, emu_thread.get());
-    addDockWidget(Qt::BottomDockWidgetArea, disasmWidget);
-    disasmWidget->hide();
-    debug_menu->addAction(disasmWidget->toggleViewAction());
-    connect(this, &GMainWindow::EmulationStarting, disasmWidget,
-            &DisassemblerWidget::OnEmulationStarting);
-    connect(this, &GMainWindow::EmulationStopping, disasmWidget,
-            &DisassemblerWidget::OnEmulationStopping);
-
     registersWidget = new RegistersWidget(this);
     addDockWidget(Qt::RightDockWidgetArea, registersWidget);
     registersWidget->hide();
@@ -147,11 +135,6 @@ void GMainWindow::InitializeDebugWidgets() {
             &RegistersWidget::OnEmulationStarting);
     connect(this, &GMainWindow::EmulationStopping, registersWidget,
             &RegistersWidget::OnEmulationStopping);
-
-    callstackWidget = new CallstackWidget(this);
-    addDockWidget(Qt::RightDockWidgetArea, callstackWidget);
-    callstackWidget->hide();
-    debug_menu->addAction(callstackWidget->toggleViewAction());
 
     graphicsWidget = new GPUCommandStreamWidget(this);
     addDockWidget(Qt::RightDockWidgetArea, graphicsWidget);
@@ -269,8 +252,6 @@ void GMainWindow::ConnectWidgetEvents() {
 void GMainWindow::ConnectMenuEvents() {
     // File
     connect(ui.action_Load_File, &QAction::triggered, this, &GMainWindow::OnMenuLoadFile);
-    connect(ui.action_Load_Symbol_Map, &QAction::triggered, this,
-            &GMainWindow::OnMenuLoadSymbolMap);
     connect(ui.action_Select_Game_List_Root, &QAction::triggered, this,
             &GMainWindow::OnMenuSelectGameListRoot);
     connect(ui.action_Exit, &QAction::triggered, this, &QMainWindow::close);
@@ -391,26 +372,17 @@ void GMainWindow::BootGame(const QString& filename) {
     connect(render_window, SIGNAL(Closed()), this, SLOT(OnStopGame()));
     // BlockingQueuedConnection is important here, it makes sure we've finished refreshing our views
     // before the CPU continues
-    connect(emu_thread.get(), SIGNAL(DebugModeEntered()), disasmWidget, SLOT(OnDebugModeEntered()),
-            Qt::BlockingQueuedConnection);
     connect(emu_thread.get(), SIGNAL(DebugModeEntered()), registersWidget,
-            SLOT(OnDebugModeEntered()), Qt::BlockingQueuedConnection);
-    connect(emu_thread.get(), SIGNAL(DebugModeEntered()), callstackWidget,
             SLOT(OnDebugModeEntered()), Qt::BlockingQueuedConnection);
     connect(emu_thread.get(), SIGNAL(DebugModeEntered()), waitTreeWidget,
             SLOT(OnDebugModeEntered()), Qt::BlockingQueuedConnection);
-    connect(emu_thread.get(), SIGNAL(DebugModeLeft()), disasmWidget, SLOT(OnDebugModeLeft()),
-            Qt::BlockingQueuedConnection);
     connect(emu_thread.get(), SIGNAL(DebugModeLeft()), registersWidget, SLOT(OnDebugModeLeft()),
-            Qt::BlockingQueuedConnection);
-    connect(emu_thread.get(), SIGNAL(DebugModeLeft()), callstackWidget, SLOT(OnDebugModeLeft()),
             Qt::BlockingQueuedConnection);
     connect(emu_thread.get(), SIGNAL(DebugModeLeft()), waitTreeWidget, SLOT(OnDebugModeLeft()),
             Qt::BlockingQueuedConnection);
 
     // Update the GUI
     registersWidget->OnDebugModeEntered();
-    callstackWidget->OnDebugModeEntered();
     if (ui.action_Single_Window_Mode->isChecked()) {
         game_list->hide();
     }
@@ -528,16 +500,6 @@ void GMainWindow::OnMenuLoadFile() {
         UISettings::values.roms_path = QFileInfo(filename).path();
 
         BootGame(filename);
-    }
-}
-
-void GMainWindow::OnMenuLoadSymbolMap() {
-    QString filename = QFileDialog::getOpenFileName(
-        this, tr("Load Symbol Map"), UISettings::values.symbols_path, tr("Symbol Map (*.*)"));
-    if (!filename.isEmpty()) {
-        UISettings::values.symbols_path = QFileInfo(filename).path();
-
-        LoadSymbolMap(filename.toStdString());
     }
 }
 
