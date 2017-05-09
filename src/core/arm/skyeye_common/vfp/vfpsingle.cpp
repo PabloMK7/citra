@@ -1231,7 +1231,7 @@ u32 vfp_single_cpdo(ARMul_State* state, u32 inst, u32 fpscr) {
         except = fop->fn(state, dest, sn, m, fpscr);
         LOG_TRACE(Core_ARM11, "itr%d: exceptions=%08x", vecitr >> FPSCR_LENGTH_BIT, except);
 
-        exceptions |= except;
+        exceptions |= except & ~VFP_NAN_FLAG;
 
         /*
          * CHECK: It appears to be undefined whether we stop when
