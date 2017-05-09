@@ -82,11 +82,10 @@ static void vfp_double_normalise_denormal(struct vfp_double* vd) {
 }
 
 u32 vfp_double_normaliseround(ARMul_State* state, int dd, struct vfp_double* vd, u32 fpscr,
-                              const char* func) {
+                              u32 exceptions, const char* func) {
     u64 significand, incr;
     int exponent, shift, underflow;
     u32 rmode;
-    u32 exceptions = 0;
 
     vfp_double_dump("pack: in", vd);
 
@@ -360,7 +359,8 @@ static u32 vfp_double_fsqrt(ARMul_State* state, int dd, int unused, int dm, u32 
     }
     vdd.significand = vfp_shiftright64jamming(vdd.significand, 1);
 
-    exceptions |= vfp_double_normaliseround(state, dd, &vdd, fpscr, "fsqrt");
+    exceptions |= vfp_double_normaliseround(state, dd, &vdd, fpscr, 0, "fsqrt");
+
     return exceptions;
 }
 
@@ -492,8 +492,7 @@ static u32 vfp_double_fcvts(ARMul_State* state, int sd, int unused, int dm, u32 
     else
         vsd.exponent = vdm.exponent - (1023 - 127);
 
-    exceptions |= vfp_single_normaliseround(state, sd, &vsd, fpscr, "fcvts");
-    return exceptions;
+    return vfp_single_normaliseround(state, sd, &vsd, fpscr, exceptions, "fcvts");
 
 pack_nan:
     vfp_put_float(state, vfp_single_pack(&vsd), sd);
@@ -502,7 +501,6 @@ pack_nan:
 
 static u32 vfp_double_fuito(ARMul_State* state, int dd, int unused, int dm, u32 fpscr) {
     struct vfp_double vdm;
-    u32 exceptions = 0;
     u32 m = vfp_get_float(state, dm);
 
     LOG_TRACE(Core_ARM11, "In %s", __FUNCTION__);
@@ -510,13 +508,11 @@ static u32 vfp_double_fuito(ARMul_State* state, int dd, int unused, int dm, u32 
     vdm.exponent = 1023 + 63 - 1;
     vdm.significand = (u64)m;
 
-    exceptions |= vfp_double_normaliseround(state, dd, &vdm, fpscr, "fuito");
-    return exceptions;
+    return vfp_double_normaliseround(state, dd, &vdm, fpscr, 0, "fuito");
 }
 
 static u32 vfp_double_fsito(ARMul_State* state, int dd, int unused, int dm, u32 fpscr) {
     struct vfp_double vdm;
-    u32 exceptions = 0;
     u32 m = vfp_get_float(state, dm);
 
     LOG_TRACE(Core_ARM11, "In %s", __FUNCTION__);
@@ -524,8 +520,7 @@ static u32 vfp_double_fsito(ARMul_State* state, int dd, int unused, int dm, u32 
     vdm.exponent = 1023 + 63 - 1;
     vdm.significand = vdm.sign ? (~m + 1) : m;
 
-    exceptions |= vfp_double_normaliseround(state, dd, &vdm, fpscr, "fsito");
-    return exceptions;
+    return vfp_double_normaliseround(state, dd, &vdm, fpscr, 0, "fsito");
 }
 
 static u32 vfp_double_ftoui(ARMul_State* state, int sd, int unused, int dm, u32 fpscr) {
@@ -912,8 +907,7 @@ static u32 vfp_double_multiply_accumulate(ARMul_State* state, int dd, int dn, in
 
     exceptions |= vfp_double_add(&vdd, &vdn, &vdp, fpscr);
 
-    exceptions |= vfp_double_normaliseround(state, dd, &vdd, fpscr, func);
-    return exceptions;
+    return vfp_double_normaliseround(state, dd, &vdd, fpscr, exceptions, func);
 }
 
 /*
@@ -970,9 +964,7 @@ static u32 vfp_double_fmul(ARMul_State* state, int dd, int dn, int dm, u32 fpscr
         vfp_double_normalise_denormal(&vdm);
 
     exceptions |= vfp_double_multiply(&vdd, &vdn, &vdm, fpscr);
-
-    exceptions |= vfp_double_normaliseround(state, dd, &vdd, fpscr, "fmul");
-    return exceptions;
+    return vfp_double_normaliseround(state, dd, &vdd, fpscr, exceptions, "fmul");
 }
 
 /*
@@ -994,8 +986,7 @@ static u32 vfp_double_fnmul(ARMul_State* state, int dd, int dn, int dm, u32 fpsc
     exceptions |= vfp_double_multiply(&vdd, &vdn, &vdm, fpscr);
     vdd.sign = vfp_sign_negate(vdd.sign);
 
-    exceptions |= vfp_double_normaliseround(state, dd, &vdd, fpscr, "fnmul");
-    return exceptions;
+    return vfp_double_normaliseround(state, dd, &vdd, fpscr, exceptions, "fnmul");
 }
 
 /*
@@ -1016,8 +1007,7 @@ static u32 vfp_double_fadd(ARMul_State* state, int dd, int dn, int dm, u32 fpscr
 
     exceptions |= vfp_double_add(&vdd, &vdn, &vdm, fpscr);
 
-    exceptions |= vfp_double_normaliseround(state, dd, &vdd, fpscr, "fadd");
-    return exceptions;
+    return vfp_double_normaliseround(state, dd, &vdd, fpscr, exceptions, "fadd");
 }
 
 /*
@@ -1043,8 +1033,7 @@ static u32 vfp_double_fsub(ARMul_State* state, int dd, int dn, int dm, u32 fpscr
 
     exceptions |= vfp_double_add(&vdd, &vdn, &vdm, fpscr);
 
-    exceptions |= vfp_double_normaliseround(state, dd, &vdd, fpscr, "fsub");
-    return exceptions;
+    return vfp_double_normaliseround(state, dd, &vdd, fpscr, exceptions, "fsub");
 }
 
 /*
@@ -1126,9 +1115,7 @@ static u32 vfp_double_fdiv(ARMul_State* state, int dd, int dn, int dm, u32 fpscr
         }
         vdd.significand |= (reml != 0);
     }
-
-    exceptions |= vfp_double_normaliseround(state, dd, &vdd, fpscr, "fdiv");
-    return exceptions;
+    return vfp_double_normaliseround(state, dd, &vdd, fpscr, 0, "fdiv");
 
 vdn_nan:
     exceptions |= vfp_propagate_nan(&vdd, &vdn, &vdm, fpscr);
@@ -1154,8 +1141,7 @@ infinity:
 
 invalid:
     vfp_put_double(state, vfp_double_pack(&vfp_double_default_qnan), dd);
-    exceptions |= FPSCR_IOC;
-    return exceptions;
+    return FPSCR_IOC;
 }
 
 static struct op fops[] = {
