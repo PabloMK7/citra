@@ -16,5 +16,8 @@ void Init();
 /// Shutdown IR service
 void Shutdown();
 
+/// Reload input devices. Used when input configuration changed
+void ReloadInputDevices();
+
 } // namespace IR
 } // namespace Service

@@ -5,7 +5,7 @@
 #include "audio_core/audio_core.h"
 #include "core/gdbstub/gdbstub.h"
 #include "core/hle/service/hid/hid.h"
-#include "core/hle/service/ir/ir_user.h"
+#include "core/hle/service/ir/ir.h"
 #include "settings.h"
 #include "video_core/video_core.h"
 

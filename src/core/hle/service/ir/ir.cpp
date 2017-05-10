@@ -25,6 +25,11 @@ void Shutdown() {
     ShutdownRST();
 }
 
+void ReloadInputDevices() {
+    ReloadInputDevicesUser();
+    ReloadInputDevicesRST();
+}
+
 } // namespace IR
 
 } // namespace Service

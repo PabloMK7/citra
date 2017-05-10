@@ -53,30 +53,29 @@ static std::array<std::unique_ptr<Input::ButtonDevice>, Settings::NativeButton::
     buttons;
 static std::unique_ptr<Input::AnalogDevice> circle_pad;
 
-static PadState GetCirclePadDirectionState(s16 circle_pad_x, s16 circle_pad_y) {
+DirectionState GetStickDirectionState(s16 circle_pad_x, s16 circle_pad_y) {
     // 30 degree and 60 degree are angular thresholds for directions
     constexpr float TAN30 = 0.577350269f;
     constexpr float TAN60 = 1 / TAN30;
     // a circle pad radius greater than 40 will trigger circle pad direction
     constexpr int CIRCLE_PAD_THRESHOLD_SQUARE = 40 * 40;
-    PadState state;
-    state.hex = 0;
+    DirectionState state{false, false, false, false};
 
     if (circle_pad_x * circle_pad_x + circle_pad_y * circle_pad_y > CIRCLE_PAD_THRESHOLD_SQUARE) {
         float t = std::abs(static_cast<float>(circle_pad_y) / circle_pad_x);
 
         if (circle_pad_x != 0 && t < TAN60) {
             if (circle_pad_x > 0)
-                state.circle_right.Assign(1);
+                state.right = true;
             else
-                state.circle_left.Assign(1);
+                state.left = true;
         }
 
         if (circle_pad_x == 0 || t > TAN30) {
             if (circle_pad_y > 0)
-                state.circle_up.Assign(1);
+                state.up = true;
             else
-                state.circle_down.Assign(1);
+                state.down = true;
         }
     }
 
@@ -125,7 +124,11 @@ static void UpdatePadCallback(u64 userdata, int cycles_late) {
     constexpr int MAX_CIRCLEPAD_POS = 0x9C; // Max value for a circle pad position
     s16 circle_pad_x = static_cast<s16>(circle_pad_x_f * MAX_CIRCLEPAD_POS);
     s16 circle_pad_y = static_cast<s16>(circle_pad_y_f * MAX_CIRCLEPAD_POS);
-    state.hex |= GetCirclePadDirectionState(circle_pad_x, circle_pad_y).hex;
+    const DirectionState direction = GetStickDirectionState(circle_pad_x, circle_pad_y);
+    state.circle_up.Assign(direction.up);
+    state.circle_down.Assign(direction.down);
+    state.circle_left.Assign(direction.left);
+    state.circle_right.Assign(direction.right);
 
     mem->pad.current_state.hex = state.hex;
     mem->pad.index = next_pad_index;

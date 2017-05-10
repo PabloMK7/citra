@@ -52,7 +52,7 @@ void InitUser();
 void ShutdownUser();
 
 /// Reload input devices. Used when input configuration changed
-void ReloadInputDevices();
+void ReloadInputDevicesUser();
 
 } // namespace IR
 } // namespace Service

@@ -21,5 +21,8 @@ public:
 void InitRST();
 void ShutdownRST();
 
+/// Reload input devices. Used when input configuration changed
+void ReloadInputDevicesRST();
+
 } // namespace IR
 } // namespace Service
