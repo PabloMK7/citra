@@ -170,9 +170,15 @@ signals:
      * @param entry_items a list with `QStandardItem`s that make up the columns of the new entry.
      */
     void EntryReady(QList<QStandardItem*> entry_items);
-    void Finished();
+
+    /**
+     * After the worker has traversed the game directory looking for entries, this signal is emmited
+     * with a list of folders that should be watched for changes as well.
+     */
+    void Finished(QStringList watch_list);
 
 private:
+    QStringList watch_list;
     QString dir_path;
     bool deep_scan;
     std::atomic_bool stop_processing;
