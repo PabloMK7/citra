@@ -653,7 +653,7 @@ static void RunInterpreter(const ShaderSetup& setup, UnitState& state, DebugData
 }
 
 void InterpreterEngine::SetupBatch(ShaderSetup& setup, unsigned int entry_point) {
-    ASSERT(entry_point < 1024);
+    ASSERT(entry_point < MAX_PROGRAM_CODE_LENGTH);
     setup.engine_data.entry_point = entry_point;
 }
 

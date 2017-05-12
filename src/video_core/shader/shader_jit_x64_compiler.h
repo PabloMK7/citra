@@ -22,8 +22,8 @@ namespace Pica {
 
 namespace Shader {
 
-/// Memory allocated for each compiled shader (64Kb)
-constexpr size_t MAX_SHADER_SIZE = 1024 * 64;
+/// Memory allocated for each compiled shader
+constexpr size_t MAX_SHADER_SIZE = MAX_PROGRAM_CODE_LENGTH * 64;
 
 /**
  * This class implements the shader JIT compiler. It recompiles a Pica shader program into x86_64
@@ -37,8 +37,8 @@ public:
         program(&setup, &state, instruction_labels[offset].getAddress());
     }
 
-    void Compile(const std::array<u32, 1024>* program_code,
-                 const std::array<u32, 1024>* swizzle_data);
+    void Compile(const std::array<u32, MAX_PROGRAM_CODE_LENGTH>* program_code,
+                 const std::array<u32, MAX_SWIZZLE_DATA_LENGTH>* swizzle_data);
 
     void Compile_ADD(Instruction instr);
     void Compile_DP3(Instruction instr);
@@ -104,11 +104,11 @@ private:
      */
     void FindReturnOffsets();
 
-    const std::array<u32, 1024>* program_code = nullptr;
-    const std::array<u32, 1024>* swizzle_data = nullptr;
+    const std::array<u32, MAX_PROGRAM_CODE_LENGTH>* program_code = nullptr;
+    const std::array<u32, MAX_SWIZZLE_DATA_LENGTH>* swizzle_data = nullptr;
 
     /// Mapping of Pica VS instructions to pointers in the emitted code
-    std::array<Xbyak::Label, 1024> instruction_labels;
+    std::array<Xbyak::Label, MAX_PROGRAM_CODE_LENGTH> instruction_labels;
 
     /// Offsets in code where a return needs to be inserted
     std::vector<unsigned> return_offsets;
