@@ -16,31 +16,33 @@ namespace HLE {
 
 // Region management
 
-std::array<SharedMemory, 2> g_regions;
+DspMemory g_dsp_memory;
 
 static size_t CurrentRegionIndex() {
     // The region with the higher frame counter is chosen unless there is wraparound.
     // This function only returns a 0 or 1.
+    u16 frame_counter_0 = g_dsp_memory.region_0.frame_counter;
+    u16 frame_counter_1 = g_dsp_memory.region_1.frame_counter;
 
-    if (g_regions[0].frame_counter == 0xFFFFu && g_regions[1].frame_counter != 0xFFFEu) {
+    if (frame_counter_0 == 0xFFFFu && frame_counter_1 != 0xFFFEu) {
         // Wraparound has occurred.
         return 1;
     }
 
-    if (g_regions[1].frame_counter == 0xFFFFu && g_regions[0].frame_counter != 0xFFFEu) {
+    if (frame_counter_1 == 0xFFFFu && frame_counter_0 != 0xFFFEu) {
         // Wraparound has occurred.
         return 0;
     }
 
-    return (g_regions[0].frame_counter > g_regions[1].frame_counter) ? 0 : 1;
+    return (frame_counter_0 > frame_counter_1) ? 0 : 1;
 }
 
 static SharedMemory& ReadRegion() {
-    return g_regions[CurrentRegionIndex()];
+    return CurrentRegionIndex() == 0 ? g_dsp_memory.region_0 : g_dsp_memory.region_1;
 }
 
 static SharedMemory& WriteRegion() {
-    return g_regions[1 - CurrentRegionIndex()];
+    return CurrentRegionIndex() != 0 ? g_dsp_memory.region_0 : g_dsp_memory.region_1;
 }
 
 // Audio processing and mixing

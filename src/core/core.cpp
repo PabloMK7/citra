@@ -13,11 +13,11 @@
 #include "core/core_timing.h"
 #include "core/gdbstub/gdbstub.h"
 #include "core/hle/kernel/kernel.h"
-#include "core/hle/kernel/memory.h"
 #include "core/hle/kernel/thread.h"
 #include "core/hle/service/service.h"
 #include "core/hw/hw.h"
 #include "core/loader/loader.h"
+#include "core/memory_setup.h"
 #include "core/settings.h"
 #include "video_core/video_core.h"
 
@@ -123,7 +123,8 @@ void System::Reschedule() {
 }
 
 System::ResultStatus System::Init(EmuWindow* emu_window, u32 system_mode) {
-    Memory::Init();
+    Memory::InitMemoryMap();
+    LOG_DEBUG(HW_Memory, "initialized OK");
 
     if (Settings::values.use_cpu_jit) {
         cpu_core = std::make_unique<ARM_Dynarmic>(USER32MODE);

@@ -35,7 +35,6 @@ SharedPtr<Process> Process::Create(SharedPtr<CodeSet> code_set) {
     process->codeset = std::move(code_set);
     process->flags.raw = 0;
     process->flags.memory_region.Assign(MemoryRegion::APPLICATION);
-    Memory::InitLegacyAddressSpace(process->vm_manager);
 
     return process;
 }
@@ -78,8 +77,15 @@ void Process::ParseKernelCaps(const u32* kernel_caps, size_t len) {
 
             AddressMapping mapping;
             mapping.address = descriptor << 12;
-            mapping.size = (end_desc << 12) - mapping.address;
-            mapping.writable = (descriptor & (1 << 20)) != 0;
+            VAddr end_address = end_desc << 12;
+
+            if (mapping.address < end_address) {
+                mapping.size = end_address - mapping.address;
+            } else {
+                mapping.size = 0;
+            }
+
+            mapping.read_only = (descriptor & (1 << 20)) != 0;
             mapping.unk_flag = (end_desc & (1 << 20)) != 0;
 
             address_mappings.push_back(mapping);
@@ -88,8 +94,10 @@ void Process::ParseKernelCaps(const u32* kernel_caps, size_t len) {
             AddressMapping mapping;
             mapping.address = descriptor << 12;
             mapping.size = Memory::PAGE_SIZE;
-            mapping.writable = true; // TODO: Not sure if correct
+            mapping.read_only = false;
             mapping.unk_flag = false;
+
+            address_mappings.push_back(mapping);
         } else if ((type & 0xFE0) == 0xFC0) { // 0x01FF
             // Kernel version
             kernel_version = descriptor & 0xFFFF;
@@ -131,6 +139,12 @@ void Process::Run(s32 main_thread_priority, u32 stack_size) {
     misc_memory_used += stack_size;
     memory_region->used += stack_size;
 
+    // Map special address mappings
+    MapSharedPages(vm_manager);
+    for (const auto& mapping : address_mappings) {
+        HandleSpecialMapping(vm_manager, mapping);
+    }
+
     vm_manager.LogLayout(Log::Level::Debug);
     Kernel::SetupMainThread(codeset->entrypoint, main_thread_priority);
 }
@@ -138,6 +152,7 @@ void Process::Run(s32 main_thread_priority, u32 stack_size) {
 VAddr Process::GetLinearHeapAreaAddress() const {
     return kernel_version < 0x22C ? Memory::LINEAR_HEAP_VADDR : Memory::NEW_LINEAR_HEAP_VADDR;
 }
+
 VAddr Process::GetLinearHeapBase() const {
     return GetLinearHeapAreaAddress() + memory_region->base;
 }
