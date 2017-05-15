@@ -92,13 +92,13 @@ struct RasterizerRegs {
         BitField<0, 2, ScissorMode> mode;
 
         union {
-            BitField<0, 16, u32> x1;
-            BitField<16, 16, u32> y1;
+            BitField<0, 10, u32> x1;
+            BitField<16, 10, u32> y1;
         };
 
         union {
-            BitField<0, 16, u32> x2;
-            BitField<16, 16, u32> y2;
+            BitField<0, 10, u32> x2;
+            BitField<16, 10, u32> y2;
         };
     } scissor_test;
 
