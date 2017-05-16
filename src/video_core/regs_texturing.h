@@ -29,6 +29,11 @@ struct TexturingRegs {
             ClampToBorder = 1,
             Repeat = 2,
             MirroredRepeat = 3,
+            // Mode 4-7 produces some weird result and may be just invalid:
+            // 4: Positive coord: clamp to edge; negative coord: repeat
+            // 5: Positive coord: clamp to border; negative coord: repeat
+            // 6: Repeat
+            // 7: Repeat
         };
 
         enum TextureFilter : u32 {
@@ -45,22 +50,22 @@ struct TexturingRegs {
         } border_color;
 
         union {
-            BitField<0, 16, u32> height;
-            BitField<16, 16, u32> width;
+            BitField<0, 11, u32> height;
+            BitField<16, 11, u32> width;
         };
 
         union {
             BitField<1, 1, TextureFilter> mag_filter;
             BitField<2, 1, TextureFilter> min_filter;
-            BitField<8, 2, WrapMode> wrap_t;
-            BitField<12, 2, WrapMode> wrap_s;
-            BitField<28, 2, TextureType>
-                type; ///< @note Only valid for texture 0 according to 3DBrew.
+            BitField<8, 3, WrapMode> wrap_t;
+            BitField<12, 3, WrapMode> wrap_s;
+            /// @note Only valid for texture 0 according to 3DBrew.
+            BitField<28, 3, TextureType> type;
         };
 
         INSERT_PADDING_WORDS(0x1);
 
-        u32 address;
+        BitField<0, 28, u32> address;
 
         PAddr GetPhysicalAddress() const {
             return address * 8;

@@ -211,13 +211,14 @@ struct FramebufferRegs {
             BitField<0, 2, u32> allow_depth_stencil_write; // 0 = disable, else enable
         };
 
-        DepthFormat depth_format; // TODO: Should be a BitField!
+        BitField<0, 2, DepthFormat> depth_format;
+
         BitField<16, 3, ColorFormat> color_format;
 
         INSERT_PADDING_WORDS(0x4);
 
-        u32 depth_buffer_address;
-        u32 color_buffer_address;
+        BitField<0, 28, u32> depth_buffer_address;
+        BitField<0, 28, u32> color_buffer_address;
 
         union {
             // Apparently, the framebuffer width is stored as expected,

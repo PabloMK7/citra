@@ -22,10 +22,10 @@ struct PipelineRegs {
     };
 
     struct {
-        BitField<0, 29, u32> base_address;
+        BitField<1, 28, u32> base_address;
 
         PAddr GetPhysicalBaseAddress() const {
-            return base_address * 8;
+            return base_address * 16;
         }
 
         // Descriptor for internal vertex attributes
@@ -99,7 +99,7 @@ struct PipelineRegs {
         // This e.g. allows to load different attributes from different memory locations
         struct {
             // Source attribute data offset from the base address
-            u32 data_offset;
+            BitField<0, 28, u32> data_offset;
 
             union {
                 BitField<0, 4, u32> comp0;
@@ -180,6 +180,8 @@ struct PipelineRegs {
         //     kicked off.
         //  2) Games can configure these registers to provide a command list subroutine mechanism.
 
+        // TODO: verify the bit length of these two fields
+        // According to 3dbrew, the bit length of them are 21 and 29, respectively
         BitField<0, 20, u32> size[2]; ///< Size (in bytes / 8) of each channel's command buffer
         BitField<0, 28, u32> addr[2]; ///< Physical address / 8 of each channel's command buffer
         u32 trigger[2]; ///< Triggers execution of the channel's command buffer when written to
