@@ -17,7 +17,7 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x00060000, GetShellState, "GetShellState"},
     {0x00070000, GetBatteryLevel, "GetBatteryLevel"},
     {0x00080000, GetBatteryChargeState, "GetBatteryChargeState"},
-    {0x00090000, nullptr, "GetPedometerState"},
+    {0x00090000, GetPedometerState, "GetPedometerState"},
     {0x000A0042, nullptr, "GetStepHistoryEntry"},
     {0x000B00C2, nullptr, "GetStepHistory"},
     {0x000C0000, GetTotalStepCount, "GetTotalStepCount"},

@@ -75,6 +75,14 @@ void GetBatteryLevel(Interface* self);
 void GetBatteryChargeState(Interface* self);
 
 /**
+ * PTM::GetPedometerState service function
+ *  Outputs:
+ *      1 : Result of function, 0 on success, otherwise error code
+ *      2 : Output of function, 0 = not counting steps, 1 = counting steps.
+ */
+void GetPedometerState(Interface* self);
+
+/**
  * PTM::GetTotalStepCount service function
  *  Outputs:
  *      1 : Result of function, 0 on success, otherwise error code

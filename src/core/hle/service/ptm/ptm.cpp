@@ -27,67 +27,72 @@ static bool shell_open;
 
 static bool battery_is_charging;
 
+static bool pedometer_is_counting;
+
 void GetAdapterState(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x5, 0, 0);
 
-    // TODO(purpasmart96): This function is only a stub,
-    // it returns a valid result without implementing full functionality.
-
-    cmd_buff[1] = RESULT_SUCCESS.raw;
-    cmd_buff[2] = battery_is_charging ? 1 : 0;
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
+    rb.Push(RESULT_SUCCESS);
+    rb.Push(battery_is_charging);
 
     LOG_WARNING(Service_PTM, "(STUBBED) called");
 }
 
 void GetShellState(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x6, 0, 0);
 
-    cmd_buff[1] = RESULT_SUCCESS.raw;
-    cmd_buff[2] = shell_open ? 1 : 0;
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
+    rb.Push(RESULT_SUCCESS);
+    rb.Push(shell_open);
 }
 
 void GetBatteryLevel(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x7, 0, 0);
 
-    // TODO(purpasmart96): This function is only a stub,
-    // it returns a valid result without implementing full functionality.
-
-    cmd_buff[1] = RESULT_SUCCESS.raw;
-    cmd_buff[2] =
-        static_cast<u32>(ChargeLevels::CompletelyFull); // Set to a completely full battery
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
+    rb.Push(RESULT_SUCCESS);
+    rb.Push(static_cast<u32>(ChargeLevels::CompletelyFull)); // Set to a completely full battery
 
     LOG_WARNING(Service_PTM, "(STUBBED) called");
 }
 
 void GetBatteryChargeState(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x8, 0, 0);
 
-    // TODO(purpasmart96): This function is only a stub,
-    // it returns a valid result without implementing full functionality.
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
+    rb.Push(RESULT_SUCCESS);
+    rb.Push(battery_is_charging);
 
-    cmd_buff[1] = RESULT_SUCCESS.raw;
-    cmd_buff[2] = battery_is_charging ? 1 : 0;
+    LOG_WARNING(Service_PTM, "(STUBBED) called");
+}
+
+void GetPedometerState(Service::Interface* self) {
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x9, 0, 0);
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
+    rb.Push(RESULT_SUCCESS);
+    rb.Push(pedometer_is_counting);
 
     LOG_WARNING(Service_PTM, "(STUBBED) called");
 }
 
 void GetTotalStepCount(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0xC, 0, 0);
 
-    // TODO: This function is only a stub,
-    // it returns 0 as the total step count
-
-    cmd_buff[1] = RESULT_SUCCESS.raw;
-    cmd_buff[2] = 0;
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
+    rb.Push(RESULT_SUCCESS);
+    rb.Push<u32>(0);
 
     LOG_WARNING(Service_PTM, "(STUBBED) called");
 }
 
 void GetSoftwareClosedFlag(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x80F, 0, 0);
 
-    cmd_buff[1] = RESULT_SUCCESS.raw;
-    cmd_buff[2] = 0;
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
+    rb.Push(RESULT_SUCCESS);
+    rb.Push(false);
 
     LOG_WARNING(Service_PTM, "(STUBBED) called");
 }
@@ -121,6 +126,7 @@ void Init() {
 
     shell_open = true;
     battery_is_charging = true;
+    pedometer_is_counting = false;
 
     // Open the SharedExtSaveData archive 0xF000000B and create the gamecoin.dat file if it doesn't
     // exist
