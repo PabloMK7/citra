@@ -423,7 +423,7 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
     }
 
     case PICA_REG_INDEX(gs.bool_uniforms):
-        WriteUniformBoolReg(g_state.gs, value);
+        WriteUniformBoolReg(g_state.gs, g_state.regs.gs.bool_uniforms.Value());
         break;
 
     case PICA_REG_INDEX_WORKAROUND(gs.int_uniforms[0], 0x281):
@@ -475,7 +475,7 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
     }
 
     case PICA_REG_INDEX(vs.bool_uniforms):
-        WriteUniformBoolReg(g_state.vs, value);
+        WriteUniformBoolReg(g_state.vs, g_state.regs.vs.bool_uniforms.Value());
         break;
 
     case PICA_REG_INDEX_WORKAROUND(vs.int_uniforms[0], 0x2b1):
