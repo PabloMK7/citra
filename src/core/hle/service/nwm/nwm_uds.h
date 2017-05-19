@@ -6,6 +6,7 @@
 
 #include <array>
 #include <cstddef>
+#include <vector>
 #include "common/common_types.h"
 #include "common/swap.h"
 #include "core/hle/service/service.h"
@@ -32,6 +33,8 @@ struct NodeInfo {
 };
 
 static_assert(sizeof(NodeInfo) == 40, "NodeInfo has incorrect size.");
+
+using NodeList = std::vector<NodeInfo>;
 
 enum class NetworkStatus {
     NotConnected = 3,
@@ -75,6 +78,8 @@ struct NetworkInfo {
     std::array<u8, ApplicationDataSize> application_data;
 };
 
+static_assert(offsetof(NetworkInfo, oui_value) == 0xC, "oui_value is at the wrong offset.");
+static_assert(offsetof(NetworkInfo, wlan_comm_id) == 0x10, "wlancommid is at the wrong offset.");
 static_assert(sizeof(NetworkInfo) == 0x108, "NetworkInfo has incorrect size.");
 
 class NWM_UDS final : public Interface {

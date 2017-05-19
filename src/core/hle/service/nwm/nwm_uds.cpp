@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <array>
 #include <cstring>
 #include <unordered_map>
 #include <vector>
@@ -12,6 +13,7 @@
 #include "core/hle/kernel/shared_memory.h"
 #include "core/hle/result.h"
 #include "core/hle/service/nwm/nwm_uds.h"
+#include "core/hle/service/nwm/uds_beacon.h"
 #include "core/memory.h"
 
 namespace Service {
@@ -27,10 +29,12 @@ static Kernel::SharedPtr<Kernel::SharedMemory> recv_buffer_memory;
 // Connection status of this 3DS.
 static ConnectionStatus connection_status{};
 
-// Node information about the current 3DS.
-// TODO(Subv): Keep an array of all nodes connected to the network,
-// that data has to be retransmitted in every beacon frame.
-static NodeInfo node_info;
+/* Node information about the current network.
+ * The amount of elements in this vector is always the maximum number
+ * of nodes specified in the network configuration.
+ * The first node is always the host, so this always contains at least 1 entry.
+ */
+static NodeList node_info(1);
 
 // Mapping of bind node ids to their respective events.
 static std::unordered_map<u32, Kernel::SharedPtr<Kernel::Event>> bind_node_events;
@@ -82,29 +86,70 @@ static void Shutdown(Interface* self) {
  *      1 : Result of function, 0 on success, otherwise error code
  */
 static void RecvBeaconBroadcastData(Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-    u32 out_buffer_size = cmd_buff[1];
-    u32 unk1 = cmd_buff[2];
-    u32 unk2 = cmd_buff[3];
-    u32 mac_address = cmd_buff[4];
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x0F, 16, 4);
 
-    u32 unk3 = cmd_buff[6];
+    u32 out_buffer_size = rp.Pop<u32>();
+    u32 unk1 = rp.Pop<u32>();
+    u32 unk2 = rp.Pop<u32>();
 
-    u32 wlan_comm_id = cmd_buff[15];
-    u32 ctr_gen_id = cmd_buff[16];
-    u32 value = cmd_buff[17];
-    u32 input_handle = cmd_buff[18];
-    u32 new_buffer_size = cmd_buff[19];
-    u32 out_buffer_ptr = cmd_buff[20];
+    MacAddress mac_address;
+    rp.PopRaw(mac_address);
 
-    cmd_buff[1] = RESULT_SUCCESS.raw;
+    rp.Skip(9, false);
 
-    LOG_WARNING(Service_NWM,
-                "(STUBBED) called out_buffer_size=0x%08X, unk1=0x%08X, unk2=0x%08X,"
-                "mac_address=0x%08X, unk3=0x%08X, wlan_comm_id=0x%08X, ctr_gen_id=0x%08X,"
-                "value=%u, input_handle=0x%08X, new_buffer_size=0x%08X, out_buffer_ptr=0x%08X",
-                out_buffer_size, unk1, unk2, mac_address, unk3, wlan_comm_id, ctr_gen_id, value,
-                input_handle, new_buffer_size, out_buffer_ptr);
+    u32 wlan_comm_id = rp.Pop<u32>();
+    u32 id = rp.Pop<u32>();
+    Kernel::Handle input_handle = rp.PopHandle();
+
+    size_t desc_size;
+    const VAddr out_buffer_ptr = rp.PopMappedBuffer(&desc_size);
+    ASSERT(desc_size == out_buffer_size);
+
+    VAddr current_buffer_pos = out_buffer_ptr;
+    u32 total_size = sizeof(BeaconDataReplyHeader);
+
+    // Retrieve all beacon frames that were received from the desired mac address.
+    std::deque<WifiPacket> beacons =
+        GetReceivedPackets(WifiPacket::PacketType::Beacon, mac_address);
+
+    BeaconDataReplyHeader data_reply_header{};
+    data_reply_header.total_entries = beacons.size();
+    data_reply_header.max_output_size = out_buffer_size;
+
+    Memory::WriteBlock(current_buffer_pos, &data_reply_header, sizeof(BeaconDataReplyHeader));
+    current_buffer_pos += sizeof(BeaconDataReplyHeader);
+
+    // Write each of the received beacons into the buffer
+    for (const auto& beacon : beacons) {
+        BeaconEntryHeader entry{};
+        // TODO(Subv): Figure out what this size is used for.
+        entry.unk_size = sizeof(BeaconEntryHeader) + beacon.data.size();
+        entry.total_size = sizeof(BeaconEntryHeader) + beacon.data.size();
+        entry.wifi_channel = beacon.channel;
+        entry.header_size = sizeof(BeaconEntryHeader);
+        entry.mac_address = beacon.transmitter_address;
+
+        ASSERT(current_buffer_pos < out_buffer_ptr + out_buffer_size);
+
+        Memory::WriteBlock(current_buffer_pos, &entry, sizeof(BeaconEntryHeader));
+        current_buffer_pos += sizeof(BeaconEntryHeader);
+
+        Memory::WriteBlock(current_buffer_pos, beacon.data.data(), beacon.data.size());
+        current_buffer_pos += beacon.data.size();
+
+        total_size += sizeof(BeaconEntryHeader) + beacon.data.size();
+    }
+
+    // Update the total size in the structure and write it to the buffer again.
+    data_reply_header.total_size = total_size;
+    Memory::WriteBlock(out_buffer_ptr, &data_reply_header, sizeof(BeaconDataReplyHeader));
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RESULT_SUCCESS);
+
+    LOG_DEBUG(Service_NWM, "called out_buffer_size=0x%08X, wlan_comm_id=0x%08X, id=0x%08X,"
+                           "input_handle=0x%08X, out_buffer_ptr=0x%08X, unk1=0x%08X, unk2=0x%08X",
+              out_buffer_size, wlan_comm_id, id, input_handle, out_buffer_ptr, unk1, unk2);
 }
 
 /**
@@ -127,10 +172,10 @@ static void InitializeWithVersion(Interface* self) {
     u32 sharedmem_size = rp.Pop<u32>();
 
     // Update the node information with the data the game gave us.
-    rp.PopRaw(node_info);
+    rp.PopRaw(node_info[0]);
 
-    u16 version;
-    rp.PopRaw(version);
+    u16 version = rp.Pop<u16>();
+
     Kernel::Handle sharedmem_handle = rp.PopHandle();
 
     recv_buffer_memory = Kernel::g_handle_table.Get<Kernel::SharedMemory>(sharedmem_handle);
@@ -191,10 +236,8 @@ static void Bind(Interface* self) {
 
     u32 bind_node_id = rp.Pop<u32>();
     u32 recv_buffer_size = rp.Pop<u32>();
-    u8 data_channel;
-    rp.PopRaw(data_channel);
-    u16 network_node_id;
-    rp.PopRaw(network_node_id);
+    u8 data_channel = rp.Pop<u8>();
+    u16 network_node_id = rp.Pop<u16>();
 
     // TODO(Subv): Store the data channel and verify it when receiving data frames.
 
@@ -251,13 +294,25 @@ static void BeginHostingNetwork(Interface* self) {
     ASSERT_MSG(network_info.max_nodes > 1, "Trying to host a network of only one member.");
 
     connection_status.status = static_cast<u32>(NetworkStatus::ConnectedAsHost);
+
+    // Ensure the application data size is less than the maximum value.
+    ASSERT_MSG(network_info.application_data_size <= ApplicationDataSize, "Data size is too big.");
+
+    // Set up basic information for this network.
+    network_info.oui_value = NintendoOUI;
+    network_info.oui_type = static_cast<u8>(NintendoTagId::NetworkInfo);
+
     connection_status.max_nodes = network_info.max_nodes;
+
+    // Resize the nodes list to hold max_nodes.
+    node_info.resize(network_info.max_nodes);
 
     // There's currently only one node in the network (the host).
     connection_status.total_nodes = 1;
+    network_info.total_nodes = 1;
     // The host is always the first node
     connection_status.network_node_id = 1;
-    node_info.network_node_id = 1;
+    node_info[0].network_node_id = 1;
     // Set the bit 0 in the nodes bitmask to indicate that node 1 is already taken.
     connection_status.node_bitmask |= 1;
 
@@ -325,7 +380,7 @@ static void GetChannel(Interface* self) {
     u8 channel = is_connected ? network_channel : 0;
 
     rb.Push(RESULT_SUCCESS);
-    rb.PushRaw(channel);
+    rb.Push(channel);
 
     LOG_DEBUG(Service_NWM, "called");
 }
@@ -373,7 +428,8 @@ static void BeaconBroadcastCallback(u64 userdata, int cycles_late) {
     if (connection_status.status != static_cast<u32>(NetworkStatus::ConnectedAsHost))
         return;
 
-    // TODO(Subv): Actually generate the beacon and send it.
+    // TODO(Subv): Actually send the beacon.
+    std::vector<u8> frame = GenerateBeaconFrame(network_info, node_info);
 
     // Start broadcasting the network, send a beacon frame every 102.4ms.
     CoreTiming::ScheduleEvent(msToCycles(DefaultBeaconInterval * MillisecondsPerTU) - cycles_late,
