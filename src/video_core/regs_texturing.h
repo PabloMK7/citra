@@ -133,7 +133,32 @@ struct TexturingRegs {
         BitField<16, 1, u32> clear_texture_cache; // TODO: unimplemented
     } main_config;
     TextureConfig texture0;
-    INSERT_PADDING_WORDS(0x8);
+
+    enum class CubeFace {
+        PositiveX = 0,
+        NegativeX = 1,
+        PositiveY = 2,
+        NegativeY = 3,
+        PositiveZ = 4,
+        NegativeZ = 5,
+    };
+
+    BitField<0, 22, u32> cube_address[5];
+
+    PAddr GetCubePhysicalAddress(CubeFace face) const {
+        PAddr address = texture0.address;
+        if (face != CubeFace::PositiveX) {
+            // Bits [22:27] from the main texture address is shared with all cubemap additional
+            // addresses.
+            auto& face_addr = cube_address[static_cast<size_t>(face) - 1];
+            address &= ~face_addr.mask;
+            address |= face_addr;
+        }
+        // A multiplier of 8 is also needed in the same way as the main address.
+        return address * 8;
+    }
+
+    INSERT_PADDING_WORDS(0x3);
     BitField<0, 4, TextureFormat> texture0_format;
     BitField<0, 1, u32> fragment_lighting_enable;
     INSERT_PADDING_WORDS(0x1);
