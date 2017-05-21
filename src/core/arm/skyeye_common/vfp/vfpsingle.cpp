@@ -1049,12 +1049,22 @@ static u32 vfp_single_fadd(ARMul_State* state, int sd, int sn, s32 m, u32 fpscr)
 static u32 vfp_single_fsub(ARMul_State* state, int sd, int sn, s32 m, u32 fpscr) {
     LOG_TRACE(Core_ARM11, "s%u = %08x", sn, sd);
     /*
-     * Subtraction is addition with one sign inverted.
+     * Subtraction is addition with one sign inverted. Unpack the second operand to perform FTZ if
+     * necessary, we can't let fadd do this because a denormal in m might get flushed to +0 in FTZ
+     * mode, and the resulting sign of 0 OP +0 differs between fadd and fsub. We do not need to do
+     * this for n because +0 OP 0 is always +0 for both fadd and fsub.
      */
+    struct vfp_single vsm;
+    u32 exceptions = vfp_single_unpack(&vsm, m, fpscr);
+    if (exceptions & FPSCR_IDC) {
+        // The value was flushed to zero, re-pack it.
+        m = vfp_single_pack(&vsm);
+    }
+
     if (m != 0x7FC00000) // Only negate if m isn't NaN.
         m = vfp_single_packed_negate(m);
 
-    return vfp_single_fadd(state, sd, sn, m, fpscr);
+    return vfp_single_fadd(state, sd, sn, m, fpscr) | exceptions;
 }
 
 /*
