@@ -69,13 +69,14 @@ static void InitScreenCoordinates(Vertex& vtx) {
     viewport.offset_y = float24::FromFloat32(static_cast<float>(regs.rasterizer.viewport_corner.y));
 
     float24 inv_w = float24::FromFloat32(1.f) / vtx.pos.w;
-    vtx.color *= inv_w;
-    vtx.view *= inv_w;
+    vtx.pos.w = inv_w;
     vtx.quat *= inv_w;
+    vtx.color *= inv_w;
     vtx.tc0 *= inv_w;
     vtx.tc1 *= inv_w;
+    vtx.tc0_w *= inv_w;
+    vtx.view *= inv_w;
     vtx.tc2 *= inv_w;
-    vtx.pos.w = inv_w;
 
     vtx.screenpos[0] =
         (vtx.pos.x * inv_w + float24::FromFloat32(1.0)) * viewport.halfsize_x + viewport.offset_x;
