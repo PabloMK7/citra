@@ -134,7 +134,7 @@ void Init() {
     auto archive_result =
         Service::FS::OpenArchive(Service::FS::ArchiveIdCode::SharedExtSaveData, archive_path);
     // If the archive didn't exist, create the files inside
-    if (archive_result.Code().description == ErrorDescription::FS_NotFormatted) {
+    if (archive_result.Code().description == static_cast<u32>(ErrorDescription::FS_NotFormatted)) {
         // Format the archive to create the directories
         Service::FS::FormatArchive(Service::FS::ArchiveIdCode::SharedExtSaveData,
                                    FileSys::ArchiveFormatInfo(), archive_path);

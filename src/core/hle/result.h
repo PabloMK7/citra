@@ -13,9 +13,14 @@
 
 // All the constants in this file come from http://3dbrew.org/wiki/Error_codes
 
-/// Detailed description of the error. This listing is likely incomplete.
+/**
+ * Detailed description of the error. Code 0 always means success. Codes 1000 and above are
+ * considered "well-known" and have common values between all modules. The meaning of other codes
+ * vary by module.
+ */
 enum class ErrorDescription : u32 {
     Success = 0,
+
     SessionClosedByRemote = 26,
     WrongPermission = 46,
     OS_InvalidBufferDescriptor = 48,
@@ -45,6 +50,8 @@ enum class ErrorDescription : u32 {
     FS_UnsupportedOpenFlags = 760,
     FS_IncorrectExeFSReadSize = 761,
     FS_UnexpectedFileOrDirectory = 770,
+
+    // Codes 1000 and above are considered "well-known" and have common values between all modules.
     InvalidSection = 1000,
     TooLarge = 1001,
     NotAuthorized = 1002,
@@ -218,7 +225,7 @@ enum class ErrorLevel : u32 {
 union ResultCode {
     u32 raw;
 
-    BitField<0, 10, ErrorDescription> description;
+    BitField<0, 10, u32> description;
     BitField<10, 8, ErrorModule> module;
 
     BitField<21, 6, ErrorSummary> summary;
@@ -230,7 +237,11 @@ union ResultCode {
 
     constexpr explicit ResultCode(u32 raw) : raw(raw) {}
 
-    constexpr ResultCode(ErrorDescription description_, ErrorModule module_, ErrorSummary summary_,
+    constexpr ResultCode(ErrorDescription description, ErrorModule module, ErrorSummary summary,
+                         ErrorLevel level)
+        : ResultCode(static_cast<u32>(description), module, summary, level) {}
+
+    constexpr ResultCode(u32 description_, ErrorModule module_, ErrorSummary summary_,
                          ErrorLevel level_)
         : raw(description.FormatValue(description_) | module.FormatValue(module_) |
               summary.FormatValue(summary_) | level.FormatValue(level_)) {}
