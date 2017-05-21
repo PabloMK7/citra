@@ -20,8 +20,6 @@ install:
   - git submodule update --init --recursive
 
 before_build:
-  # Xamarin log spam workaround
-  - del "C:\Program Files (x86)\MSBuild\15.0\Microsoft.Common.targets\ImportAfter\Xamarin.Common.targets"
   - mkdir build
   - cd build
   - cmake -G "Visual Studio 15 2017 Win64" -DCITRA_USE_BUNDLED_QT=1 -DCITRA_USE_BUNDLED_SDL2=1 ..
