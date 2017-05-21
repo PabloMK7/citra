@@ -140,11 +140,9 @@ u32 vfp_double_normaliseround(ARMul_State* state, int dd, struct vfp_double* vd,
 
         if ((type & VFP_DENORMAL) && (fpscr & FPSCR_FLUSH_TO_ZERO)) {
             // Flush denormal to positive 0
-            exponent = 0;
             significand = 0;
 
             vd->sign = 0;
-            vd->exponent = exponent;
             vd->significand = significand;
 
             underflow = 0;
