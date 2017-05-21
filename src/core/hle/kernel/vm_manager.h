@@ -13,14 +13,6 @@
 
 namespace Kernel {
 
-const ResultCode ERR_INVALID_ADDRESS{// 0xE0E01BF5
-                                     ErrorDescription::InvalidAddress, ErrorModule::OS,
-                                     ErrorSummary::InvalidArgument, ErrorLevel::Usage};
-
-const ResultCode ERR_INVALID_ADDRESS_STATE{// 0xE0A01BF5
-                                           ErrorDescription::InvalidAddress, ErrorModule::OS,
-                                           ErrorSummary::InvalidState, ErrorLevel::Usage};
-
 enum class VMAType : u8 {
     /// VMA represents an unmapped region of the address space.
     Free,

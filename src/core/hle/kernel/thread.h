@@ -57,7 +57,7 @@ public:
      * @param stack_top The address of the thread's stack top
      * @return A shared pointer to the newly created thread
      */
-    static ResultVal<SharedPtr<Thread>> Create(std::string name, VAddr entry_point, s32 priority,
+    static ResultVal<SharedPtr<Thread>> Create(std::string name, VAddr entry_point, u32 priority,
                                                u32 arg, s32 processor_id, VAddr stack_top);
 
     std::string GetName() const override {

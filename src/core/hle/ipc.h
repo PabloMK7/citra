@@ -5,6 +5,7 @@
 #pragma once
 
 #include "common/common_types.h"
+#include "core/hle/kernel/errors.h"
 #include "core/hle/kernel/thread.h"
 #include "core/memory.h"
 
@@ -42,6 +43,12 @@ inline u32* GetStaticBuffers(const int offset = 0) {
 }
 
 namespace IPC {
+
+// These errors are commonly returned by invalid IPC translations, so alias them here for
+// convenience.
+// TODO(yuriks): These will probably go away once translation is implemented inside the kernel.
+using Kernel::ERR_INVALID_BUFFER_DESCRIPTOR;
+constexpr auto ERR_INVALID_HANDLE = Kernel::ERR_INVALID_HANDLE_OS;
 
 enum DescriptorType : u32 {
     // Buffer related desciptors types (mask : 0x0F)

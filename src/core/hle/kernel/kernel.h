@@ -19,13 +19,6 @@ using Handle = u32;
 
 class Thread;
 
-// TODO: Verify code
-const ResultCode ERR_OUT_OF_HANDLES(ErrorDescription::OutOfMemory, ErrorModule::Kernel,
-                                    ErrorSummary::OutOfResource, ErrorLevel::Temporary);
-// TOOD: Verify code
-const ResultCode ERR_INVALID_HANDLE(ErrorDescription::InvalidHandle, ErrorModule::Kernel,
-                                    ErrorSummary::InvalidArgument, ErrorLevel::Permanent);
-
 enum KernelHandle : Handle {
     CurrentThread = 0xFFFF8000,
     CurrentProcess = 0xFFFF8001,

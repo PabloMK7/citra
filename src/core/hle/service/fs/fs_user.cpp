@@ -801,9 +801,7 @@ static void InitializeWithSdkVersion(Service::Interface* self) {
         cmd_buff[1] = RESULT_SUCCESS.raw;
     } else {
         LOG_ERROR(Service_FS, "ProcessId Header must be 0x20");
-        cmd_buff[1] = ResultCode(ErrorDescription::OS_InvalidBufferDescriptor, ErrorModule::OS,
-                                 ErrorSummary::WrongArgument, ErrorLevel::Permanent)
-                          .raw;
+        cmd_buff[1] = IPC::ERR_INVALID_BUFFER_DESCRIPTOR.raw;
     }
 }
 

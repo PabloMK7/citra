@@ -14,6 +14,7 @@
 #include "core/arm/skyeye_common/armstate.h"
 #include "core/core.h"
 #include "core/core_timing.h"
+#include "core/hle/kernel/errors.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/memory.h"
 #include "core/hle/kernel/mutex.h"
@@ -241,9 +242,7 @@ static void ThreadWakeupCallback(u64 thread_handle, int cycles_late) {
         for (auto& object : thread->wait_objects)
             object->RemoveWaitingThread(thread.get());
         thread->wait_objects.clear();
-        thread->SetWaitSynchronizationResult(ResultCode(ErrorDescription::Timeout, ErrorModule::OS,
-                                                        ErrorSummary::StatusChanged,
-                                                        ErrorLevel::Info));
+        thread->SetWaitSynchronizationResult(RESULT_TIMEOUT);
     }
 
     thread->ResumeFromWait();
@@ -351,10 +350,20 @@ static void ResetThreadContext(ARM_Interface::ThreadContext& context, u32 stack_
     context.cpsr = USER32MODE | ((entry_point & 1) << 5); // Usermode and THUMB mode
 }
 
-ResultVal<SharedPtr<Thread>> Thread::Create(std::string name, VAddr entry_point, s32 priority,
+ResultVal<SharedPtr<Thread>> Thread::Create(std::string name, VAddr entry_point, u32 priority,
                                             u32 arg, s32 processor_id, VAddr stack_top) {
-    ASSERT_MSG(priority >= THREADPRIO_HIGHEST && priority <= THREADPRIO_LOWEST,
-               "Invalid thread priority");
+    // Check if priority is in ranged. Lowest priority -> highest priority id.
+    if (priority > THREADPRIO_LOWEST) {
+        LOG_ERROR(Kernel_SVC, "Invalid thread priority: %d", priority);
+        return ERR_OUT_OF_RANGE;
+    }
+
+    if (processor_id > THREADPROCESSORID_MAX) {
+        LOG_ERROR(Kernel_SVC, "Invalid processor id: %d", processor_id);
+        return ERR_OUT_OF_RANGE_KERNEL;
+    }
+
+    // TODO(yuriks): Other checks, returning 0xD9001BEA
 
     if (!Memory::IsValidVirtualAddress(entry_point)) {
         LOG_ERROR(Kernel_SVC, "(name=%s): invalid entry %08x", name.c_str(), entry_point);
@@ -399,8 +408,7 @@ ResultVal<SharedPtr<Thread>> Thread::Create(std::string name, VAddr entry_point,
         if (linheap_memory->size() + Memory::PAGE_SIZE > memory_region->size) {
             LOG_ERROR(Kernel_SVC,
                       "Not enough space in region to allocate a new TLS page for thread");
-            return ResultCode(ErrorDescription::OutOfMemory, ErrorModule::Kernel,
-                              ErrorSummary::OutOfResource, ErrorLevel::Permanent);
+            return ERR_OUT_OF_MEMORY;
         }
 
         u32 offset = linheap_memory->size();

@@ -5,6 +5,7 @@
 #include "common/common_types.h"
 #include "common/logging/log.h"
 #include "core/hle/kernel/address_arbiter.h"
+#include "core/hle/kernel/errors.h"
 #include "core/hle/kernel/thread.h"
 #include "core/memory.h"
 
@@ -74,8 +75,7 @@ ResultCode AddressArbiter::ArbitrateAddress(ArbitrationType type, VAddr address,
 
     default:
         LOG_ERROR(Kernel, "unknown type=%d", type);
-        return ResultCode(ErrorDescription::InvalidEnumValue, ErrorModule::Kernel,
-                          ErrorSummary::WrongArgument, ErrorLevel::Usage);
+        return ERR_INVALID_ENUM_VALUE_FND;
     }
 
     // The calls that use a timeout seem to always return a Timeout error even if they did not put
@@ -83,8 +83,7 @@ ResultCode AddressArbiter::ArbitrateAddress(ArbitrationType type, VAddr address,
     if (type == ArbitrationType::WaitIfLessThanWithTimeout ||
         type == ArbitrationType::DecrementAndWaitIfLessThanWithTimeout) {
 
-        return ResultCode(ErrorDescription::Timeout, ErrorModule::OS, ErrorSummary::StatusChanged,
-                          ErrorLevel::Info);
+        return RESULT_TIMEOUT;
     }
     return RESULT_SUCCESS;
 }

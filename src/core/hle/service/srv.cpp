@@ -30,9 +30,7 @@ static void RegisterClient(Interface* self) {
 
     if (cmd_buff[1] != IPC::CallingPidDesc()) {
         cmd_buff[0] = IPC::MakeHeader(0x0, 0x1, 0); // 0x40
-        cmd_buff[1] = ResultCode(ErrorDescription::OS_InvalidBufferDescriptor, ErrorModule::OS,
-                                 ErrorSummary::WrongArgument, ErrorLevel::Permanent)
-                          .raw;
+        cmd_buff[1] = IPC::ERR_INVALID_BUFFER_DESCRIPTOR.raw;
         return;
     }
     cmd_buff[0] = IPC::MakeHeader(0x1, 0x1, 0); // 0x10040

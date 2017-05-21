@@ -14,6 +14,7 @@
 #include "core/hle/kernel/address_arbiter.h"
 #include "core/hle/kernel/client_port.h"
 #include "core/hle/kernel/client_session.h"
+#include "core/hle/kernel/errors.h"
 #include "core/hle/kernel/event.h"
 #include "core/hle/kernel/memory.h"
 #include "core/hle/kernel/mutex.h"
@@ -36,25 +37,6 @@ using Kernel::SharedPtr;
 using Kernel::ERR_INVALID_HANDLE;
 
 namespace SVC {
-
-const ResultCode ERR_NOT_FOUND(ErrorDescription::NotFound, ErrorModule::Kernel,
-                               ErrorSummary::NotFound, ErrorLevel::Permanent); // 0xD88007FA
-const ResultCode ERR_PORT_NAME_TOO_LONG(ErrorDescription(30), ErrorModule::OS,
-                                        ErrorSummary::InvalidArgument,
-                                        ErrorLevel::Usage); // 0xE0E0181E
-
-const ResultCode ERR_SYNC_TIMEOUT(ErrorDescription::Timeout, ErrorModule::OS,
-                                  ErrorSummary::StatusChanged, ErrorLevel::Info);
-
-const ResultCode ERR_MISALIGNED_ADDRESS{// 0xE0E01BF1
-                                        ErrorDescription::MisalignedAddress, ErrorModule::OS,
-                                        ErrorSummary::InvalidArgument, ErrorLevel::Usage};
-const ResultCode ERR_MISALIGNED_SIZE{// 0xE0E01BF2
-                                     ErrorDescription::MisalignedSize, ErrorModule::OS,
-                                     ErrorSummary::InvalidArgument, ErrorLevel::Usage};
-const ResultCode ERR_INVALID_COMBINATION{// 0xE0E01BEE
-                                         ErrorDescription::InvalidCombination, ErrorModule::OS,
-                                         ErrorSummary::InvalidArgument, ErrorLevel::Usage};
 
 enum ControlMemoryOperation {
     MEMOP_FREE = 1,
@@ -195,8 +177,7 @@ static ResultCode MapMemoryBlock(Kernel::Handle handle, u32 addr, u32 permission
         LOG_ERROR(Kernel_SVC, "unknown permissions=0x%08X", permissions);
     }
 
-    return ResultCode(ErrorDescription::InvalidCombination, ErrorModule::OS,
-                      ErrorSummary::InvalidArgument, ErrorLevel::Usage);
+    return Kernel::ERR_INVALID_COMBINATION;
 }
 
 static ResultCode UnmapMemoryBlock(Kernel::Handle handle, u32 addr) {
@@ -216,16 +197,16 @@ static ResultCode UnmapMemoryBlock(Kernel::Handle handle, u32 addr) {
 /// Connect to an OS service given the port name, returns the handle to the port to out
 static ResultCode ConnectToPort(Kernel::Handle* out_handle, const char* port_name) {
     if (port_name == nullptr)
-        return ERR_NOT_FOUND;
+        return Kernel::ERR_NOT_FOUND;
     if (std::strlen(port_name) > 11)
-        return ERR_PORT_NAME_TOO_LONG;
+        return Kernel::ERR_PORT_NAME_TOO_LONG;
 
     LOG_TRACE(Kernel_SVC, "called port_name=%s", port_name);
 
     auto it = Service::g_kernel_named_ports.find(port_name);
     if (it == Service::g_kernel_named_ports.end()) {
         LOG_WARNING(Kernel_SVC, "tried to connect to unknown port: %s", port_name);
-        return ERR_NOT_FOUND;
+        return Kernel::ERR_NOT_FOUND;
     }
 
     auto client_port = it->second;
@@ -275,7 +256,7 @@ static ResultCode WaitSynchronization1(Kernel::Handle handle, s64 nano_seconds) 
     if (object->ShouldWait(thread)) {
 
         if (nano_seconds == 0)
-            return ERR_SYNC_TIMEOUT;
+            return Kernel::RESULT_TIMEOUT;
 
         thread->wait_objects = {object};
         object->AddWaitingThread(thread);
@@ -289,7 +270,7 @@ static ResultCode WaitSynchronization1(Kernel::Handle handle, s64 nano_seconds) 
         // Note: The output of this SVC will be set to RESULT_SUCCESS if the thread
         // resumes due to a signal in its wait objects.
         // Otherwise we retain the default value of timeout.
-        return ERR_SYNC_TIMEOUT;
+        return Kernel::RESULT_TIMEOUT;
     }
 
     object->Acquire(thread);
@@ -304,8 +285,7 @@ static ResultCode WaitSynchronizationN(s32* out, Kernel::Handle* handles, s32 ha
 
     // Check if 'handles' is invalid
     if (handles == nullptr)
-        return ResultCode(ErrorDescription::InvalidPointer, ErrorModule::Kernel,
-                          ErrorSummary::InvalidArgument, ErrorLevel::Permanent);
+        return Kernel::ERR_INVALID_POINTER;
 
     // NOTE: on real hardware, there is no nullptr check for 'out' (tested with firmware 4.4). If
     // this happens, the running application will crash.
@@ -313,8 +293,7 @@ static ResultCode WaitSynchronizationN(s32* out, Kernel::Handle* handles, s32 ha
 
     // Check if 'handle_count' is invalid
     if (handle_count < 0)
-        return ResultCode(ErrorDescription::OutOfRange, ErrorModule::OS,
-                          ErrorSummary::InvalidArgument, ErrorLevel::Usage);
+        return Kernel::ERR_OUT_OF_RANGE;
 
     using ObjectPtr = Kernel::SharedPtr<Kernel::WaitObject>;
     std::vector<ObjectPtr> objects(handle_count);
@@ -344,7 +323,7 @@ static ResultCode WaitSynchronizationN(s32* out, Kernel::Handle* handles, s32 ha
         // If a timeout value of 0 was provided, just return the Timeout error code instead of
         // suspending the thread.
         if (nano_seconds == 0)
-            return ERR_SYNC_TIMEOUT;
+            return Kernel::RESULT_TIMEOUT;
 
         // Put the thread to sleep
         thread->status = THREADSTATUS_WAIT_SYNCH_ALL;
@@ -365,7 +344,7 @@ static ResultCode WaitSynchronizationN(s32* out, Kernel::Handle* handles, s32 ha
         *out = -1;
         // Note: The output of this SVC will be set to RESULT_SUCCESS if the thread resumes due to
         // a signal in one of its wait objects.
-        return ERR_SYNC_TIMEOUT;
+        return Kernel::RESULT_TIMEOUT;
     } else {
         // Find the first object that is acquirable in the provided list of objects
         auto itr = std::find_if(objects.begin(), objects.end(), [thread](const ObjectPtr& object) {
@@ -385,7 +364,7 @@ static ResultCode WaitSynchronizationN(s32* out, Kernel::Handle* handles, s32 ha
         // If a timeout value of 0 was provided, just return the Timeout error code instead of
         // suspending the thread.
         if (nano_seconds == 0)
-            return ERR_SYNC_TIMEOUT;
+            return Kernel::RESULT_TIMEOUT;
 
         // Put the thread to sleep
         thread->status = THREADSTATUS_WAIT_SYNCH_ANY;
@@ -411,7 +390,7 @@ static ResultCode WaitSynchronizationN(s32* out, Kernel::Handle* handles, s32 ha
         // Otherwise we retain the default value of timeout, and -1 in the out parameter
         thread->wait_set_output = true;
         *out = -1;
-        return ERR_SYNC_TIMEOUT;
+        return Kernel::RESULT_TIMEOUT;
     }
 }
 
@@ -520,22 +499,20 @@ static ResultCode GetResourceLimitLimitValues(s64* values, Kernel::Handle resour
 }
 
 /// Creates a new thread
-static ResultCode CreateThread(Kernel::Handle* out_handle, s32 priority, u32 entry_point, u32 arg,
+static ResultCode CreateThread(Kernel::Handle* out_handle, u32 priority, u32 entry_point, u32 arg,
                                u32 stack_top, s32 processor_id) {
     using Kernel::Thread;
 
     std::string name = Common::StringFromFormat("unknown-%08" PRIX32, entry_point);
 
     if (priority > THREADPRIO_LOWEST) {
-        return ResultCode(ErrorDescription::OutOfRange, ErrorModule::OS,
-                          ErrorSummary::InvalidArgument, ErrorLevel::Usage);
+        return Kernel::ERR_OUT_OF_RANGE;
     }
 
     using Kernel::ResourceLimit;
     Kernel::SharedPtr<ResourceLimit>& resource_limit = Kernel::g_current_process->resource_limit;
     if (resource_limit->GetMaxResourceValue(Kernel::ResourceTypes::PRIORITY) > priority) {
-        return ResultCode(ErrorDescription::NotAuthorized, ErrorModule::OS,
-                          ErrorSummary::WrongArgument, ErrorLevel::Permanent);
+        return Kernel::ERR_NOT_AUTHORIZED;
     }
 
     switch (processor_id) {
@@ -605,8 +582,7 @@ static ResultCode GetThreadPriority(s32* priority, Kernel::Handle handle) {
 /// Sets the priority for the specified thread
 static ResultCode SetThreadPriority(Kernel::Handle handle, s32 priority) {
     if (priority > THREADPRIO_LOWEST) {
-        return ResultCode(ErrorDescription::OutOfRange, ErrorModule::OS,
-                          ErrorSummary::InvalidArgument, ErrorLevel::Usage);
+        return Kernel::ERR_OUT_OF_RANGE;
     }
 
     SharedPtr<Kernel::Thread> thread = Kernel::g_handle_table.Get<Kernel::Thread>(handle);
@@ -618,8 +594,7 @@ static ResultCode SetThreadPriority(Kernel::Handle handle, s32 priority) {
     // the one from the thread owner's resource limit.
     Kernel::SharedPtr<ResourceLimit>& resource_limit = Kernel::g_current_process->resource_limit;
     if (resource_limit->GetMaxResourceValue(Kernel::ResourceTypes::PRIORITY) > priority) {
-        return ResultCode(ErrorDescription::NotAuthorized, ErrorModule::OS,
-                          ErrorSummary::WrongArgument, ErrorLevel::Permanent);
+        return Kernel::ERR_NOT_AUTHORIZED;
     }
 
     thread->SetPriority(priority);
@@ -743,8 +718,7 @@ static ResultCode QueryProcessMemory(MemoryInfo* memory_info, PageInfo* page_inf
     auto vma = process->vm_manager.FindVMA(addr);
 
     if (vma == Kernel::g_current_process->vm_manager.vma_map.end())
-        return ResultCode(ErrorDescription::InvalidAddress, ErrorModule::OS,
-                          ErrorSummary::InvalidArgument, ErrorLevel::Usage);
+        return Kernel::ERR_INVALID_ADDRESS;
 
     memory_info->base_address = vma->second.base;
     memory_info->permission = static_cast<u32>(vma->second.permissions);
@@ -842,8 +816,7 @@ static ResultCode SetTimer(Kernel::Handle handle, s64 initial, s64 interval) {
     LOG_TRACE(Kernel_SVC, "called timer=0x%08X", handle);
 
     if (initial < 0 || interval < 0) {
-        return ResultCode(ErrorDescription::OutOfRange, ErrorModule::Kernel,
-                          ErrorSummary::InvalidArgument, ErrorLevel::Permanent);
+        return Kernel::ERR_OUT_OF_RANGE_KERNEL;
     }
 
     SharedPtr<Timer> timer = Kernel::g_handle_table.Get<Timer>(handle);
@@ -902,8 +875,7 @@ static ResultCode CreateMemoryBlock(Kernel::Handle* out_handle, u32 addr, u32 si
     using Kernel::SharedMemory;
 
     if (size % Memory::PAGE_SIZE != 0)
-        return ResultCode(ErrorDescription::MisalignedSize, ErrorModule::OS,
-                          ErrorSummary::InvalidArgument, ErrorLevel::Usage);
+        return Kernel::ERR_MISALIGNED_SIZE;
 
     SharedPtr<SharedMemory> shared_memory = nullptr;
 
@@ -924,16 +896,14 @@ static ResultCode CreateMemoryBlock(Kernel::Handle* out_handle, u32 addr, u32 si
 
     if (!VerifyPermissions(static_cast<MemoryPermission>(my_permission)) ||
         !VerifyPermissions(static_cast<MemoryPermission>(other_permission)))
-        return ResultCode(ErrorDescription::InvalidCombination, ErrorModule::OS,
-                          ErrorSummary::InvalidArgument, ErrorLevel::Usage);
+        return Kernel::ERR_INVALID_COMBINATION;
 
     // TODO(Subv): Processes with memory type APPLICATION are not allowed
     // to create memory blocks with addr = 0, any attempts to do so
     // should return error 0xD92007EA.
     if ((addr < Memory::PROCESS_IMAGE_VADDR || addr + size > Memory::SHARED_MEMORY_VADDR_END) &&
         addr != 0) {
-        return ResultCode(ErrorDescription::InvalidAddress, ErrorModule::OS,
-                          ErrorSummary::InvalidArgument, ErrorLevel::Usage);
+        return Kernel::ERR_INVALID_ADDRESS;
     }
 
     // When trying to create a memory block with address = 0,
@@ -1035,7 +1005,7 @@ static ResultCode GetProcessInfo(s64* out, Kernel::Handle process_handle, u32 ty
         *out = process->heap_used + process->linear_heap_used + process->misc_memory_used;
         if (*out % Memory::PAGE_SIZE != 0) {
             LOG_ERROR(Kernel_SVC, "called, memory size not page-aligned");
-            return ERR_MISALIGNED_SIZE;
+            return Kernel::ERR_MISALIGNED_SIZE;
         }
         break;
     case 1:
@@ -1051,19 +1021,15 @@ static ResultCode GetProcessInfo(s64* out, Kernel::Handle process_handle, u32 ty
     case 20:
         *out = Memory::FCRAM_PADDR - process->GetLinearHeapBase();
         break;
+    case 21:
+    case 22:
+    case 23:
+        // These return a different error value than higher invalid values
+        LOG_ERROR(Kernel_SVC, "unknown GetProcessInfo type=%u", type);
+        return Kernel::ERR_NOT_IMPLEMENTED;
     default:
         LOG_ERROR(Kernel_SVC, "unknown GetProcessInfo type=%u", type);
-
-        if (type >= 21 && type <= 23) {
-            return ResultCode( // 0xE0E01BF4
-                ErrorDescription::NotImplemented, ErrorModule::OS, ErrorSummary::InvalidArgument,
-                ErrorLevel::Usage);
-        } else {
-            return ResultCode( // 0xD8E007ED
-                ErrorDescription::InvalidEnumValue, ErrorModule::Kernel,
-                ErrorSummary::InvalidArgument, ErrorLevel::Permanent);
-        }
-        break;
+        return Kernel::ERR_INVALID_ENUM_VALUE;
     }
 
     return RESULT_SUCCESS;

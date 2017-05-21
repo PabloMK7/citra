@@ -21,12 +21,6 @@
 enum class ErrorDescription : u32 {
     Success = 0,
 
-    SessionClosedByRemote = 26,
-    WrongPermission = 46,
-    OS_InvalidBufferDescriptor = 48,
-    MaxConnectionsReached = 52,
-    WrongAddress = 53,
-
     // Codes 1000 and above are considered "well-known" and have common values between all modules.
     InvalidSection = 1000,
     TooLarge = 1001,
