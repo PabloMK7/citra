@@ -26,9 +26,6 @@ enum class ErrorDescription : u32 {
     OS_InvalidBufferDescriptor = 48,
     MaxConnectionsReached = 52,
     WrongAddress = 53,
-    OutofRangeOrMisalignedAddress =
-        513, // TODO(purpasmart): Check if this name fits its actual usage
-    GPU_FirstInitialization = 519,
 
     // Codes 1000 and above are considered "well-known" and have common values between all modules.
     InvalidSection = 1000,
