@@ -228,45 +228,42 @@ union ResultCode {
     // error
     BitField<31, 1, u32> is_error;
 
-    explicit ResultCode(u32 raw) : raw(raw) {}
-    ResultCode(ErrorDescription description_, ErrorModule module_, ErrorSummary summary_,
-               ErrorLevel level_)
-        : raw(0) {
-        description.Assign(description_);
-        module.Assign(module_);
-        summary.Assign(summary_);
-        level.Assign(level_);
-    }
+    constexpr explicit ResultCode(u32 raw) : raw(raw) {}
 
-    ResultCode& operator=(const ResultCode& o) {
+    constexpr ResultCode(ErrorDescription description_, ErrorModule module_, ErrorSummary summary_,
+                         ErrorLevel level_)
+        : raw(description.FormatValue(description_) | module.FormatValue(module_) |
+              summary.FormatValue(summary_) | level.FormatValue(level_)) {}
+
+    constexpr ResultCode& operator=(const ResultCode& o) {
         raw = o.raw;
         return *this;
     }
 
-    bool IsSuccess() const {
-        return is_error == 0;
+    constexpr bool IsSuccess() const {
+        return is_error.ExtractValue(raw) == 0;
     }
 
-    bool IsError() const {
-        return is_error == 1;
+    constexpr bool IsError() const {
+        return is_error.ExtractValue(raw) == 1;
     }
 };
 
-inline bool operator==(const ResultCode& a, const ResultCode& b) {
+constexpr bool operator==(const ResultCode& a, const ResultCode& b) {
     return a.raw == b.raw;
 }
 
-inline bool operator!=(const ResultCode& a, const ResultCode& b) {
+constexpr bool operator!=(const ResultCode& a, const ResultCode& b) {
     return a.raw != b.raw;
 }
 
 // Convenience functions for creating some common kinds of errors:
 
 /// The default success `ResultCode`.
-const ResultCode RESULT_SUCCESS(0);
+constexpr ResultCode RESULT_SUCCESS(0);
 
 /// Might be returned instead of a dummy success for unimplemented APIs.
-inline ResultCode UnimplementedFunction(ErrorModule module) {
+constexpr ResultCode UnimplementedFunction(ErrorModule module) {
     return ResultCode(ErrorDescription::NotImplemented, module, ErrorSummary::NotSupported,
                       ErrorLevel::Permanent);
 }
