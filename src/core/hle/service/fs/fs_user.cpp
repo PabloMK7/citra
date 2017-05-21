@@ -8,6 +8,7 @@
 #include "common/logging/log.h"
 #include "common/scope_exit.h"
 #include "common/string_util.h"
+#include "core/file_sys/errors.h"
 #include "core/hle/kernel/client_session.h"
 #include "core/hle/result.h"
 #include "core/hle/service/fs/archive.h"
@@ -539,9 +540,7 @@ static void FormatSaveData(Service::Interface* self) {
     if (archive_id != FS::ArchiveIdCode::SaveData) {
         LOG_ERROR(Service_FS, "tried to format an archive different than SaveData, %u",
                   static_cast<u32>(archive_id));
-        cmd_buff[1] = ResultCode(ErrorDescription::FS_InvalidPath, ErrorModule::FS,
-                                 ErrorSummary::InvalidArgument, ErrorLevel::Usage)
-                          .raw;
+        cmd_buff[1] = FileSys::ERROR_INVALID_PATH.raw;
         return;
     }
 

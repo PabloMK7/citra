@@ -38,8 +38,7 @@ public:
     ResultVal<size_t> Write(u64 offset, size_t length, bool flush,
                             const u8* buffer) const override {
         if (offset > size) {
-            return ResultCode(ErrorDescription::FS_WriteBeyondEnd, ErrorModule::FS,
-                              ErrorSummary::InvalidArgument, ErrorLevel::Usage);
+            return ERR_WRITE_BEYOND_END;
         } else if (offset == size) {
             return MakeResult<size_t>(0);
         }
@@ -191,11 +190,9 @@ ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_ExtSaveData::Open(cons
         // TODO(Subv): Verify the archive behavior of SharedExtSaveData compared to ExtSaveData.
         // ExtSaveData seems to return FS_NotFound (120) when the archive doesn't exist.
         if (!shared) {
-            return ResultCode(ErrorDescription::FS_NotFound, ErrorModule::FS,
-                              ErrorSummary::InvalidState, ErrorLevel::Status);
+            return ERR_NOT_FOUND_INVALID_STATE;
         } else {
-            return ResultCode(ErrorDescription::FS_NotFormatted, ErrorModule::FS,
-                              ErrorSummary::InvalidState, ErrorLevel::Status);
+            return ERR_NOT_FORMATTED;
         }
     }
     auto archive = std::make_unique<ExtSaveDataArchive>(fullpath);
@@ -230,8 +227,7 @@ ResultVal<ArchiveFormatInfo> ArchiveFactory_ExtSaveData::GetFormatInfo(const Pat
     if (!file.IsOpen()) {
         LOG_ERROR(Service_FS, "Could not open metadata information for archive");
         // TODO(Subv): Verify error code
-        return ResultCode(ErrorDescription::FS_NotFormatted, ErrorModule::FS,
-                          ErrorSummary::InvalidState, ErrorLevel::Status);
+        return ERR_NOT_FORMATTED;
     }
 
     ArchiveFormatInfo info = {};

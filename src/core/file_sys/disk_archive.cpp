@@ -9,6 +9,7 @@
 #include "common/file_util.h"
 #include "common/logging/log.h"
 #include "core/file_sys/disk_archive.h"
+#include "core/file_sys/errors.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // FileSys namespace
@@ -17,8 +18,7 @@ namespace FileSys {
 
 ResultVal<size_t> DiskFile::Read(const u64 offset, const size_t length, u8* buffer) const {
     if (!mode.read_flag)
-        return ResultCode(ErrorDescription::FS_InvalidOpenFlags, ErrorModule::FS,
-                          ErrorSummary::Canceled, ErrorLevel::Status);
+        return ERROR_INVALID_OPEN_FLAGS;
 
     file->Seek(offset, SEEK_SET);
     return MakeResult<size_t>(file->ReadBytes(buffer, length));
@@ -27,8 +27,7 @@ ResultVal<size_t> DiskFile::Read(const u64 offset, const size_t length, u8* buff
 ResultVal<size_t> DiskFile::Write(const u64 offset, const size_t length, const bool flush,
                                   const u8* buffer) const {
     if (!mode.write_flag)
-        return ResultCode(ErrorDescription::FS_InvalidOpenFlags, ErrorModule::FS,
-                          ErrorSummary::Canceled, ErrorLevel::Status);
+        return ERROR_INVALID_OPEN_FLAGS;
 
     file->Seek(offset, SEEK_SET);
     size_t written = file->WriteBytes(buffer, length);

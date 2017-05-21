@@ -26,30 +26,9 @@ enum class ErrorDescription : u32 {
     OS_InvalidBufferDescriptor = 48,
     MaxConnectionsReached = 52,
     WrongAddress = 53,
-    FS_RomFSNotFound = 100,
-    FS_ArchiveNotMounted = 101,
-    FS_FileNotFound = 112,
-    FS_PathNotFound = 113,
-    FS_GameCardNotInserted = 141,
-    FS_NotFound = 120,
-    FS_FileAlreadyExists = 180,
-    FS_DirectoryAlreadyExists = 185,
-    FS_AlreadyExists = 190,
-    FS_InvalidOpenFlags = 230,
-    FS_DirectoryNotEmpty = 240,
-    FS_NotAFile = 250,
-    FS_NotFormatted = 340, ///< This is used by the FS service when creating a SaveData archive
     OutofRangeOrMisalignedAddress =
         513, // TODO(purpasmart): Check if this name fits its actual usage
     GPU_FirstInitialization = 519,
-    FS_ExeFSSectionNotFound = 567,
-    FS_CommandNotAllowed = 630,
-    FS_InvalidReadFlag = 700,
-    FS_InvalidPath = 702,
-    FS_WriteBeyondEnd = 705,
-    FS_UnsupportedOpenFlags = 760,
-    FS_IncorrectExeFSReadSize = 761,
-    FS_UnexpectedFileOrDirectory = 770,
 
     // Codes 1000 and above are considered "well-known" and have common values between all modules.
     InvalidSection = 1000,
