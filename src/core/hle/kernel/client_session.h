@@ -47,13 +47,6 @@ public:
 private:
     ClientSession();
     ~ClientSession() override;
-
-    /**
-     * Creates a client session.
-     * @param name Optional name of client session
-     * @return The created client session
-     */
-    static ResultVal<SharedPtr<ClientSession>> Create(std::string name = "Unknown");
 };
 
 } // namespace

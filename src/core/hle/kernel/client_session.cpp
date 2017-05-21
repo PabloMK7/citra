@@ -25,14 +25,6 @@ ClientSession::~ClientSession() {
     parent->client = nullptr;
 }
 
-ResultVal<SharedPtr<ClientSession>> ClientSession::Create(std::string name) {
-    SharedPtr<ClientSession> client_session(new ClientSession);
-
-    client_session->name = std::move(name);
-    client_session->parent = nullptr;
-    return MakeResult<SharedPtr<ClientSession>>(std::move(client_session));
-}
-
 ResultCode ClientSession::SendSyncRequest() {
     // Signal the server session that new data is available
     if (parent->server)

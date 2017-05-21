@@ -74,7 +74,9 @@ ServerSession::SessionPair ServerSession::CreateSessionPair(
 
     auto server_session =
         ServerSession::Create(name + "_Server", std::move(hle_handler)).MoveFrom();
-    auto client_session = ClientSession::Create(name + "_Client").MoveFrom();
+
+    SharedPtr<ClientSession> client_session(new ClientSession);
+    client_session->name = name + "_Client";
 
     std::shared_ptr<Session> parent(new Session);
     parent->client = client_session.get();
