@@ -134,6 +134,19 @@ u32 vfp_double_normaliseround(ARMul_State* state, int dd, struct vfp_double* vd,
 #endif
         if (!(significand & ((1ULL << (VFP_DOUBLE_LOW_BITS + 1)) - 1)))
             underflow = 0;
+
+        int type = vfp_double_type(vd);
+
+        if ((type & VFP_DENORMAL) && (fpscr & FPSCR_FLUSH_TO_ZERO)) {
+            // Flush denormal to positive 0
+            significand = 0;
+
+            vd->sign = 0;
+            vd->significand = significand;
+
+            underflow = 0;
+            exceptions |= FPSCR_UFC;
+        }
     }
 
     /*
