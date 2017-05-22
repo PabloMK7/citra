@@ -14,12 +14,7 @@
 namespace Kernel {
 
 class ServerSession;
-
-enum class SessionStatus {
-    Open = 1,
-    ClosedByClient = 2,
-    ClosedBYServer = 3,
-};
+class Session;
 
 class ClientSession final : public Object {
 public:
@@ -44,22 +39,14 @@ public:
      */
     ResultCode SendSyncRequest();
 
-    std::string name;              ///< Name of client port (optional)
-    ServerSession* server_session; ///< The server session associated with this client session.
-    SessionStatus session_status;  ///< The session's current status.
+    std::string name; ///< Name of client port (optional)
+
+    /// The parent session, which links to the server endpoint.
+    std::shared_ptr<Session> parent;
 
 private:
     ClientSession();
     ~ClientSession() override;
-
-    /**
-     * Creates a client session.
-     * @param server_session The server session associated with this client session
-     * @param name Optional name of client session
-     * @return The created client session
-     */
-    static ResultVal<SharedPtr<ClientSession>> Create(ServerSession* server_session,
-                                                      std::string name = "Unknown");
 };
 
 } // namespace

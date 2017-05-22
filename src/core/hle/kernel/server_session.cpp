@@ -14,8 +14,15 @@ ServerSession::ServerSession() = default;
 ServerSession::~ServerSession() {
     // This destructor will be called automatically when the last ServerSession handle is closed by
     // the emulated application.
-    // TODO(Subv): Reduce the ClientPort's connection count,
-    // if the session is still open, set the connection status to 3 (Closed by server),
+
+    // Decrease the port's connection count.
+    if (parent->port)
+        parent->port->active_sessions--;
+
+    // TODO(Subv): Wake up all the ClientSession's waiting threads and set
+    // the SendSyncRequest result to 0xC920181A.
+
+    parent->server = nullptr;
 }
 
 ResultVal<SharedPtr<ServerSession>> ServerSession::Create(
@@ -25,6 +32,7 @@ ResultVal<SharedPtr<ServerSession>> ServerSession::Create(
     server_session->name = std::move(name);
     server_session->signaled = false;
     server_session->hle_handler = std::move(hle_handler);
+    server_session->parent = nullptr;
 
     return MakeResult<SharedPtr<ServerSession>>(std::move(server_session));
 }
@@ -61,13 +69,22 @@ ResultCode ServerSession::HandleSyncRequest() {
 }
 
 ServerSession::SessionPair ServerSession::CreateSessionPair(
-    const std::string& name, std::shared_ptr<Service::SessionRequestHandler> hle_handler) {
+    const std::string& name, std::shared_ptr<Service::SessionRequestHandler> hle_handler,
+    SharedPtr<ClientPort> port) {
+
     auto server_session =
         ServerSession::Create(name + "_Server", std::move(hle_handler)).MoveFrom();
-    // We keep a non-owning pointer to the ServerSession in the ClientSession because we don't want
-    // to prevent the ServerSession's destructor from being called when the emulated
-    // application closes the last ServerSession handle.
-    auto client_session = ClientSession::Create(server_session.get(), name + "_Client").MoveFrom();
+
+    SharedPtr<ClientSession> client_session(new ClientSession);
+    client_session->name = name + "_Client";
+
+    std::shared_ptr<Session> parent(new Session);
+    parent->client = client_session.get();
+    parent->server = server_session.get();
+    parent->port = port;
+
+    client_session->parent = parent;
+    server_session->parent = parent;
 
     return std::make_tuple(std::move(server_session), std::move(client_session));
 }
