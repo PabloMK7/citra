@@ -38,6 +38,7 @@ set(SRCS
             param_package.cpp
             scm_rev.cpp
             string_util.cpp
+            telemetry.cpp
             thread.cpp
             timer.cpp
             )
@@ -74,6 +75,7 @@ set(HEADERS
             string_util.h
             swap.h
             synchronized_wrapper.h
+            telemetry.h
             thread.h
             thread_queue_list.h
             timer.h

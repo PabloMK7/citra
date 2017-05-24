@@ -132,6 +132,8 @@ System::ResultStatus System::Init(EmuWindow* emu_window, u32 system_mode) {
         cpu_core = std::make_unique<ARM_DynCom>(USER32MODE);
     }
 
+    telemetry_session = std::make_unique<Core::TelemetrySession>();
+
     CoreTiming::Init();
     HW::Init();
     Kernel::Init(system_mode);
@@ -162,6 +164,7 @@ void System::Shutdown() {
     CoreTiming::Shutdown();
     cpu_core = nullptr;
     app_loader = nullptr;
+    telemetry_session = nullptr;
 
     LOG_DEBUG(Core, "Shutdown OK");
 }

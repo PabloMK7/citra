@@ -9,6 +9,7 @@
 #include "common/logging/log.h"
 #include "common/string_util.h"
 #include "common/swap.h"
+#include "core/core.h"
 #include "core/file_sys/archive_selfncch.h"
 #include "core/hle/kernel/process.h"
 #include "core/hle/kernel/resource_limit.h"
@@ -338,6 +339,8 @@ ResultStatus AppLoader_NCCH::Load() {
         return result;
 
     LOG_INFO(Loader, "Program ID: %016" PRIX64, ncch_header.program_id);
+
+    Core::Telemetry().AddField(Telemetry::FieldType::Session, "ProgramId", ncch_header.program_id);
 
     is_loaded = true; // Set state to loaded
 
