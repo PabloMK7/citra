@@ -26,6 +26,16 @@ struct LightingRegs {
         DistanceAttenuation = 16,
     };
 
+    static LightingSampler SpotlightAttenuationSampler(unsigned index) {
+        return static_cast<LightingSampler>(
+            static_cast<unsigned>(LightingSampler::SpotlightAttenuation) + index);
+    }
+
+    static LightingSampler DistanceAttenuationSampler(unsigned index) {
+        return static_cast<LightingSampler>(
+            static_cast<unsigned>(LightingSampler::DistanceAttenuation) + index);
+    }
+
     /**
     * Pica fragment lighting supports using different LUTs for each lighting component:  Reflectance
     * R, G, and B channels, distribution function for specular components 0 and 1, fresnel factor,
@@ -73,6 +83,8 @@ struct LightingRegs {
         VH = 1, // Cosine of the angle between the view and half-angle vectors
         NV = 2, // Cosine of the angle between the normal and the view vector
         LN = 3, // Cosine of the angle between the light and the normal vectors
+        SP = 4, // Cosine of the angle between the light and the inverse spotlight vectors
+        CP = 5, // TODO: document and implement
     };
 
     enum class LightingBumpMode : u32 {
@@ -104,6 +116,9 @@ struct LightingRegs {
             return (config != LightingConfig::Config0) && (config != LightingConfig::Config1) &&
                    (config != LightingConfig::Config5);
 
+        case LightingSampler::SpotlightAttenuation:
+            return (config != LightingConfig::Config2) && (config != LightingConfig::Config3);
+
         case LightingSampler::Fresnel:
             return (config != LightingConfig::Config0) && (config != LightingConfig::Config2) &&
                    (config != LightingConfig::Config4);
@@ -116,11 +131,10 @@ struct LightingRegs {
             return (config == LightingConfig::Config4) || (config == LightingConfig::Config5) ||
                    (config == LightingConfig::Config7);
         default:
-            UNREACHABLE_MSG("Regs::IsLightingSamplerSupported: Reached "
-                            "unreachable section, sampler should be one "
-                            "of Distribution0, Distribution1, Fresnel, "
-                            "ReflectRed, ReflectGreen or ReflectBlue, instead "
-                            "got %i",
+            UNREACHABLE_MSG("Regs::IsLightingSamplerSupported: Reached unreachable section, "
+                            "sampler should be one of Distribution0, Distribution1, "
+                            "SpotlightAttenuation, Fresnel, ReflectRed, ReflectGreen or "
+                            "ReflectBlue, instead got %i",
                             static_cast<int>(config));
         }
     }
@@ -140,7 +154,16 @@ struct LightingRegs {
             BitField<0, 16, u32> z;
         };
 
-        INSERT_PADDING_WORDS(0x3);
+        // inverse spotlight direction vector, encoded as fixed1.1.11
+        union {
+            BitField<0, 13, s32> spot_x;
+            BitField<16, 13, s32> spot_y;
+        };
+        union {
+            BitField<0, 13, s32> spot_z;
+        };
+
+        INSERT_PADDING_WORDS(0x1);
 
         union {
             BitField<0, 1, u32> directional;
@@ -169,8 +192,16 @@ struct LightingRegs {
     } config0;
 
     union {
+        u32 raw;
+
+        // Each bit specifies whether spot light attenuation should be applied for the corresponding
+        // light.
+        BitField<8, 8, u32> disable_spot_atten;
+
         BitField<16, 1, u32> disable_lut_d0;
         BitField<17, 1, u32> disable_lut_d1;
+        // Note: by intuition, BitField<18, 1, u32> should be disable_lut_sp, but it is actually a
+        // dummy bit which is always set as 1.
         BitField<19, 1, u32> disable_lut_fr;
         BitField<20, 1, u32> disable_lut_rr;
         BitField<21, 1, u32> disable_lut_rg;
@@ -178,23 +209,15 @@ struct LightingRegs {
 
         // Each bit specifies whether distance attenuation should be applied for the corresponding
         // light.
-        BitField<24, 1, u32> disable_dist_atten_light_0;
-        BitField<25, 1, u32> disable_dist_atten_light_1;
-        BitField<26, 1, u32> disable_dist_atten_light_2;
-        BitField<27, 1, u32> disable_dist_atten_light_3;
-        BitField<28, 1, u32> disable_dist_atten_light_4;
-        BitField<29, 1, u32> disable_dist_atten_light_5;
-        BitField<30, 1, u32> disable_dist_atten_light_6;
-        BitField<31, 1, u32> disable_dist_atten_light_7;
+        BitField<24, 8, u32> disable_dist_atten;
     } config1;
 
     bool IsDistAttenDisabled(unsigned index) const {
-        const unsigned disable[] = {
-            config1.disable_dist_atten_light_0, config1.disable_dist_atten_light_1,
-            config1.disable_dist_atten_light_2, config1.disable_dist_atten_light_3,
-            config1.disable_dist_atten_light_4, config1.disable_dist_atten_light_5,
-            config1.disable_dist_atten_light_6, config1.disable_dist_atten_light_7};
-        return disable[index] != 0;
+        return (config1.disable_dist_atten & (1 << index)) != 0;
+    }
+
+    bool IsSpotAttenDisabled(unsigned index) const {
+        return (config1.disable_spot_atten & (1 << index)) != 0;
     }
 
     union {
