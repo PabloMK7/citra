@@ -11,6 +11,7 @@
 #include "common/string_util.h"
 #include "core/core.h"
 #include "core/file_sys/archive_ncch.h"
+#include "core/file_sys/errors.h"
 #include "core/file_sys/ivfc_archive.h"
 #include "core/hle/service/fs/archive.h"
 
@@ -71,8 +72,7 @@ ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_NCCH::Open(const Path&
                                                       "NG bad word list");
             }
         }
-        return ResultCode(ErrorDescription::FS_NotFound, ErrorModule::FS, ErrorSummary::NotFound,
-                          ErrorLevel::Status);
+        return ERROR_NOT_FOUND;
     }
     auto size = file->GetSize();
 
