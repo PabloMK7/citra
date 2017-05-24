@@ -225,8 +225,7 @@ static void ActivatePort(int port_id, int camera_id) {
 template <int max_index>
 class CommandParamBitSet : public BitSet8 {
 public:
-    explicit CommandParamBitSet(u32 command_param)
-        : BitSet8(static_cast<u8>(command_param & 0xFF)) {}
+    explicit CommandParamBitSet(u8 command_param) : BitSet8(command_param) {}
 
     bool IsValid() const {
         return m_val < (1 << max_index);
@@ -245,7 +244,7 @@ using CameraSet = CommandParamBitSet<3>;
 
 void StartCapture(Service::Interface* self) {
     IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x01, 1, 0);
-    const PortSet port_select(rp.Pop<u32>());
+    const PortSet port_select(rp.Pop<u8>());
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
 
@@ -279,7 +278,7 @@ void StartCapture(Service::Interface* self) {
 
 void StopCapture(Service::Interface* self) {
     IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x02, 1, 0);
-    const PortSet port_select(rp.Pop<u32>());
+    const PortSet port_select(rp.Pop<u8>());
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
 
@@ -304,7 +303,7 @@ void StopCapture(Service::Interface* self) {
 
 void IsBusy(Service::Interface* self) {
     IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x03, 1, 0);
-    const PortSet port_select(rp.Pop<u32>());
+    const PortSet port_select(rp.Pop<u8>());
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
 
@@ -327,7 +326,7 @@ void IsBusy(Service::Interface* self) {
 
 void ClearBuffer(Service::Interface* self) {
     IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x04, 1, 0);
-    const PortSet port_select(rp.Pop<u32>());
+    const PortSet port_select(rp.Pop<u8>());
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
@@ -337,7 +336,7 @@ void ClearBuffer(Service::Interface* self) {
 
 void GetVsyncInterruptEvent(Service::Interface* self) {
     IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x05, 1, 0);
-    const PortSet port_select(rp.Pop<u32>());
+    const PortSet port_select(rp.Pop<u8>());
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
     if (port_select.IsSingle()) {
@@ -356,7 +355,7 @@ void GetVsyncInterruptEvent(Service::Interface* self) {
 
 void GetBufferErrorInterruptEvent(Service::Interface* self) {
     IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x06, 1, 0);
-    const PortSet port_select(rp.Pop<u32>());
+    const PortSet port_select(rp.Pop<u8>());
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
     if (port_select.IsSingle()) {
@@ -376,7 +375,7 @@ void GetBufferErrorInterruptEvent(Service::Interface* self) {
 void SetReceiving(Service::Interface* self) {
     IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x07, 4, 2);
     const VAddr dest = rp.Pop<u32>();
-    const PortSet port_select(rp.Pop<u32>());
+    const PortSet port_select(rp.Pop<u8>());
     const u32 image_size = rp.Pop<u32>();
     const u16 trans_unit = rp.Pop<u16>();
     rp.PopHandle(); // Handle to destination process. not used
@@ -409,7 +408,7 @@ void SetReceiving(Service::Interface* self) {
 
 void IsFinishedReceiving(Service::Interface* self) {
     IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x08, 1, 0);
-    const PortSet port_select(rp.Pop<u32>());
+    const PortSet port_select(rp.Pop<u8>());
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     if (port_select.IsSingle()) {
@@ -427,7 +426,7 @@ void IsFinishedReceiving(Service::Interface* self) {
 
 void SetTransferLines(Service::Interface* self) {
     IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x09, 4, 0);
-    const PortSet port_select(rp.Pop<u32>());
+    const PortSet port_select(rp.Pop<u8>());
     const u16 transfer_lines = rp.Pop<u16>();
     const u16 width = rp.Pop<u16>();
     const u16 height = rp.Pop<u16>();
@@ -482,7 +481,7 @@ void GetMaxLines(Service::Interface* self) {
 
 void SetTransferBytes(Service::Interface* self) {
     IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x0B, 4, 0);
-    const PortSet port_select(rp.Pop<u32>());
+    const PortSet port_select(rp.Pop<u8>());
     const u16 transfer_bytes = rp.Pop<u16>();
     const u16 width = rp.Pop<u16>();
     const u16 height = rp.Pop<u16>();
@@ -504,7 +503,7 @@ void SetTransferBytes(Service::Interface* self) {
 
 void GetTransferBytes(Service::Interface* self) {
     IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x0C, 1, 0);
-    const PortSet port_select(rp.Pop<u32>());
+    const PortSet port_select(rp.Pop<u8>());
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     if (port_select.IsSingle()) {
@@ -549,7 +548,7 @@ void GetMaxBytes(Service::Interface* self) {
 
 void SetTrimming(Service::Interface* self) {
     IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x0E, 2, 0);
-    const PortSet port_select(rp.Pop<u32>());
+    const PortSet port_select(rp.Pop<u8>());
     const bool trim = rp.Pop<bool>();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
@@ -568,7 +567,7 @@ void SetTrimming(Service::Interface* self) {
 
 void IsTrimming(Service::Interface* self) {
     IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x0F, 1, 0);
-    const PortSet port_select(rp.Pop<u32>());
+    const PortSet port_select(rp.Pop<u8>());
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     if (port_select.IsSingle()) {
@@ -586,7 +585,7 @@ void IsTrimming(Service::Interface* self) {
 
 void SetTrimmingParams(Service::Interface* self) {
     IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x10, 5, 0);
-    const PortSet port_select(rp.Pop<u32>());
+    const PortSet port_select(rp.Pop<u8>());
     const u16 x0 = rp.Pop<u16>();
     const u16 y0 = rp.Pop<u16>();
     const u16 x1 = rp.Pop<u16>();
@@ -612,7 +611,7 @@ void SetTrimmingParams(Service::Interface* self) {
 
 void GetTrimmingParams(Service::Interface* self) {
     IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x11, 1, 0);
-    const PortSet port_select(rp.Pop<u32>());
+    const PortSet port_select(rp.Pop<u8>());
 
     IPC::RequestBuilder rb = rp.MakeBuilder(5, 0);
     if (port_select.IsSingle()) {
@@ -633,7 +632,7 @@ void GetTrimmingParams(Service::Interface* self) {
 
 void SetTrimmingParamsCenter(Service::Interface* self) {
     IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x12, 5, 0);
-    const PortSet port_select(rp.Pop<u32>());
+    const PortSet port_select(rp.Pop<u8>());
     const u16 trim_w = rp.Pop<u16>();
     const u16 trim_h = rp.Pop<u16>();
     const u16 cam_w = rp.Pop<u16>();
@@ -659,7 +658,7 @@ void SetTrimmingParamsCenter(Service::Interface* self) {
 
 void Activate(Service::Interface* self) {
     IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x13, 1, 0);
-    const CameraSet camera_select(rp.Pop<u32>());
+    const CameraSet camera_select(rp.Pop<u8>());
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     if (camera_select.IsValid()) {
@@ -698,8 +697,8 @@ void Activate(Service::Interface* self) {
 
 void SwitchContext(Service::Interface* self) {
     IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x14, 2, 0);
-    const CameraSet camera_select(rp.Pop<u32>());
-    const ContextSet context_select(rp.Pop<u32>());
+    const CameraSet camera_select(rp.Pop<u8>());
+    const ContextSet context_select(rp.Pop<u8>());
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     if (camera_select.IsValid() && context_select.IsSingle()) {
@@ -725,9 +724,9 @@ void SwitchContext(Service::Interface* self) {
 
 void FlipImage(Service::Interface* self) {
     IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x1D, 3, 0);
-    const CameraSet camera_select(rp.Pop<u32>());
+    const CameraSet camera_select(rp.Pop<u8>());
     const Flip flip = static_cast<Flip>(rp.Pop<u8>());
-    const ContextSet context_select(rp.Pop<u32>());
+    const ContextSet context_select(rp.Pop<u8>());
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     if (camera_select.IsValid() && context_select.IsValid()) {
@@ -752,7 +751,7 @@ void FlipImage(Service::Interface* self) {
 
 void SetDetailSize(Service::Interface* self) {
     IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x1E, 8, 0);
-    const CameraSet camera_select(rp.Pop<u32>());
+    const CameraSet camera_select(rp.Pop<u8>());
     Resolution resolution;
     resolution.width = rp.Pop<u16>();
     resolution.height = rp.Pop<u16>();
@@ -760,7 +759,7 @@ void SetDetailSize(Service::Interface* self) {
     resolution.crop_y0 = rp.Pop<u16>();
     resolution.crop_x1 = rp.Pop<u16>();
     resolution.crop_y1 = rp.Pop<u16>();
-    const ContextSet context_select(rp.Pop<u32>());
+    const ContextSet context_select(rp.Pop<u8>());
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     if (camera_select.IsValid() && context_select.IsValid()) {
@@ -787,9 +786,9 @@ void SetDetailSize(Service::Interface* self) {
 
 void SetSize(Service::Interface* self) {
     IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x1F, 3, 0);
-    const CameraSet camera_select(rp.Pop<u32>());
+    const CameraSet camera_select(rp.Pop<u8>());
     const u8 size = rp.Pop<u8>();
-    const ContextSet context_select(rp.Pop<u32>());
+    const ContextSet context_select(rp.Pop<u8>());
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     if (camera_select.IsValid() && context_select.IsValid()) {
@@ -814,7 +813,7 @@ void SetSize(Service::Interface* self) {
 
 void SetFrameRate(Service::Interface* self) {
     IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x20, 2, 0);
-    const CameraSet camera_select(rp.Pop<u32>());
+    const CameraSet camera_select(rp.Pop<u8>());
     const FrameRate frame_rate = static_cast<FrameRate>(rp.Pop<u8>());
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
@@ -835,9 +834,9 @@ void SetFrameRate(Service::Interface* self) {
 
 void SetEffect(Service::Interface* self) {
     IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x22, 3, 0);
-    const CameraSet camera_select(rp.Pop<u32>());
+    const CameraSet camera_select(rp.Pop<u8>());
     const Effect effect = static_cast<Effect>(rp.Pop<u8>());
-    const ContextSet context_select(rp.Pop<u32>());
+    const ContextSet context_select(rp.Pop<u8>());
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     if (camera_select.IsValid() && context_select.IsValid()) {
@@ -862,9 +861,9 @@ void SetEffect(Service::Interface* self) {
 
 void SetOutputFormat(Service::Interface* self) {
     IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x25, 3, 0);
-    const CameraSet camera_select(rp.Pop<u32>());
+    const CameraSet camera_select(rp.Pop<u8>());
     const OutputFormat format = static_cast<OutputFormat>(rp.Pop<u8>());
-    const ContextSet context_select(rp.Pop<u32>());
+    const ContextSet context_select(rp.Pop<u8>());
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     if (camera_select.IsValid() && context_select.IsValid()) {
@@ -947,8 +946,8 @@ static void SetPackageParameter() {
     rp.PopRaw(package);
     rp.Skip(param_length - (sizeof(PackageParameterType) + 3) / 4, false);
 
-    const CameraSet camera_select(static_cast<u32>(package.camera_select));
-    const ContextSet context_select(static_cast<u32>(package.context_select));
+    const CameraSet camera_select(package.camera_select);
+    const ContextSet context_select(package.context_select);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     if (camera_select.IsValid() && context_select.IsValid()) {
