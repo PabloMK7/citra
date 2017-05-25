@@ -184,9 +184,10 @@ struct PackageParameterWithoutContext {
     s16 auto_white_balance_window_y;
     s16 auto_white_balance_window_width;
     s16 auto_white_balance_window_height;
+    INSERT_PADDING_WORDS(4);
 };
 
-static_assert(sizeof(PackageParameterWithoutContext) == 28,
+static_assert(sizeof(PackageParameterWithoutContext) == 44,
               "PackageParameterCameraWithoutContext structure size is wrong");
 
 struct PackageParameterWithContext {
@@ -196,11 +197,12 @@ struct PackageParameterWithContext {
     Effect effect;
     Size size;
     INSERT_PADDING_BYTES(3);
+    INSERT_PADDING_WORDS(3);
 
-    Resolution GetResolution();
+    Resolution GetResolution() const;
 };
 
-static_assert(sizeof(PackageParameterWithContext) == 8,
+static_assert(sizeof(PackageParameterWithContext) == 20,
               "PackageParameterWithContext structure size is wrong");
 
 struct PackageParameterWithContextDetail {
@@ -209,13 +211,14 @@ struct PackageParameterWithContextDetail {
     Flip flip;
     Effect effect;
     Resolution resolution;
+    INSERT_PADDING_WORDS(3);
 
-    Resolution GetResolution() {
+    Resolution GetResolution() const {
         return resolution;
     }
 };
 
-static_assert(sizeof(PackageParameterWithContextDetail) == 16,
+static_assert(sizeof(PackageParameterWithContextDetail) == 28,
               "PackageParameterWithContextDetail structure size is wrong");
 
 /**

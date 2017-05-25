@@ -398,6 +398,7 @@ void SetReceiving(Service::Interface* self) {
         rb.Push(RESULT_SUCCESS);
         rb.PushCopyHandles(Kernel::g_handle_table.Create(port.completion_event).MoveFrom());
     } else {
+        LOG_ERROR(Service_CAM, "invalid port_select=%u", port_select.m_val);
         rb.Push(ERROR_INVALID_ENUM_VALUE);
         rb.PushCopyHandles(0);
     }
@@ -413,8 +414,9 @@ void IsFinishedReceiving(Service::Interface* self) {
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     if (port_select.IsSingle()) {
         int port = *port_select.begin();
+        bool is_busy = ports[port].is_receiving || ports[port].is_pending_receiving;
         rb.Push(RESULT_SUCCESS);
-        rb.Push(ports[port].is_receiving || ports[port].is_pending_receiving);
+        rb.Push(!is_busy);
     } else {
         LOG_ERROR(Service_CAM, "invalid port_select=%u", port_select.m_val);
         rb.Push(ERROR_INVALID_ENUM_VALUE);
@@ -508,7 +510,7 @@ void GetTransferBytes(Service::Interface* self) {
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     if (port_select.IsSingle()) {
         int port = *port_select.begin();
-        rb.Push(RESULT_SUCCESS.raw);
+        rb.Push(RESULT_SUCCESS);
         rb.Push(ports[port].transfer_bytes);
     } else {
         LOG_ERROR(Service_CAM, "invalid port_select=%u", port_select.m_val);
@@ -930,7 +932,6 @@ void SetPackageParameterWithoutContext(Service::Interface* self) {
 
     PackageParameterWithoutContext package;
     rp.PopRaw(package);
-    rp.Skip(4, false);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
@@ -938,18 +939,11 @@ void SetPackageParameterWithoutContext(Service::Interface* self) {
     LOG_WARNING(Service_CAM, "(STUBBED) called");
 }
 
-template <typename PackageParameterType, int command_id, int param_length>
-static void SetPackageParameter() {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), command_id, param_length, 0);
-
-    PackageParameterType package;
-    rp.PopRaw(package);
-    rp.Skip(param_length - (sizeof(PackageParameterType) + 3) / 4, false);
-
+template <typename PackageParameterType>
+static ResultCode SetPackageParameter(const PackageParameterType& package) {
     const CameraSet camera_select(package.camera_select);
     const ContextSet context_select(package.context_select);
 
-    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     if (camera_select.IsValid() && context_select.IsValid()) {
         for (int camera_id : camera_select) {
             CameraConfig& camera = cameras[camera_id];
@@ -965,31 +959,47 @@ static void SetPackageParameter() {
                 }
             }
         }
-        rb.Push(RESULT_SUCCESS);
+        return RESULT_SUCCESS;
     } else {
         LOG_ERROR(Service_CAM, "invalid camera_select=%u, context_select=%u", package.camera_select,
                   package.context_select);
-        rb.Push(ERROR_INVALID_ENUM_VALUE);
+        return ERROR_INVALID_ENUM_VALUE;
     }
-
-    LOG_DEBUG(Service_CAM, "called");
 }
 
-Resolution PackageParameterWithContext::GetResolution() {
+Resolution PackageParameterWithContext::GetResolution() const {
     return PRESET_RESOLUTION[static_cast<int>(size)];
 }
 
 void SetPackageParameterWithContext(Service::Interface* self) {
-    SetPackageParameter<PackageParameterWithContext, 0x34, 5>();
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x34, 5, 0);
+
+    PackageParameterWithContext package;
+    rp.PopRaw(package);
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    ResultCode result = SetPackageParameter(package);
+    rb.Push(result);
+
+    LOG_DEBUG(Service_CAM, "called");
 }
 
 void SetPackageParameterWithContextDetail(Service::Interface* self) {
-    SetPackageParameter<PackageParameterWithContextDetail, 0x35, 7>();
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x35, 7, 0);
+
+    PackageParameterWithContextDetail package;
+    rp.PopRaw(package);
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    ResultCode result = SetPackageParameter(package);
+    rb.Push(result);
+
+    LOG_DEBUG(Service_CAM, "called");
 }
 
 void GetSuitableY2rStandardCoefficient(Service::Interface* self) {
-    IPC::RequestBuilder rb =
-        IPC::RequestParser(Kernel::GetCommandBuffer(), 0x36, 0, 0).MakeBuilder(2, 0);
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x36, 0, 0);
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
     rb.Push<u32>(0);
 
@@ -1007,8 +1017,8 @@ void PlayShutterSound(Service::Interface* self) {
 }
 
 void DriverInitialize(Service::Interface* self) {
-    IPC::RequestBuilder rb =
-        IPC::RequestParser(Kernel::GetCommandBuffer(), 0x39, 0, 0).MakeBuilder(1, 0);
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x39, 0, 0);
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
 
     for (int camera_id = 0; camera_id < NumCameras; ++camera_id) {
         CameraConfig& camera = cameras[camera_id];
@@ -1040,8 +1050,8 @@ void DriverInitialize(Service::Interface* self) {
 }
 
 void DriverFinalize(Service::Interface* self) {
-    IPC::RequestBuilder rb =
-        IPC::RequestParser(Kernel::GetCommandBuffer(), 0x3A, 0, 0).MakeBuilder(1, 0);
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x3A, 0, 0);
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
 
     CancelReceiving(0);
     CancelReceiving(1);
