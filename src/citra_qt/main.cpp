@@ -340,9 +340,9 @@ bool GMainWindow::LoadROM(const QString& filename) {
                    "Citra. A real 3DS is required.<br/><br/>"
                    "For more information on dumping and decrypting games, please see the following "
                    "wiki pages: <ul>"
-                   "<li><a href='https://citra-emu.org/wiki/Dumping-Game-Cartridges/'>Dumping Game "
+                   "<li><a href='https://citra-emu.org/wiki/dumping-game-cartridges/'>Dumping Game "
                    "Cartridges</a></li>"
-                   "<li><a href='https://citra-emu.org/wiki/Dumping-Installed-Titles/'>Dumping "
+                   "<li><a href='https://citra-emu.org/wiki/dumping-installed-titles/'>Dumping "
                    "Installed Titles</a></li>"
                    "</ul>"));
             break;
@@ -355,7 +355,7 @@ bool GMainWindow::LoadROM(const QString& filename) {
         case Core::System::ResultStatus::ErrorVideoCore:
             QMessageBox::critical(
                 this, tr("An error occured in the video core."),
-                tr("Citra has encountered an error while running the video core,  please see the "
+                tr("Citra has encountered an error while running the video core, please see the "
                    "log for more details."
                    "For more information on accessing the log, please see the following page: "
                    "<a href='https://community.citra-emu.org/t/how-to-upload-the-log-file/296'>How "
@@ -656,9 +656,10 @@ void GMainWindow::OnCoreError(Core::System::ResultStatus result, std::string det
            "before playing.<br/><br/>For more information on dumping these files, please see the "
            "following wiki page: <a "
            "href='https://citra-emu.org/wiki/"
-           "Dumping-System-Archives-and-the-Shared-Fonts-from-a-3DS-Console/'>Dumping System "
+           "dumping-system-archives-and-the-shared-fonts-from-a-3ds-console/'>Dumping System "
            "Archives and the Shared Fonts from a 3DS Console</a>.<br/><br/>Would you like to quit "
-           "back to the game list?");
+           "back to the game list? Continuing emulation may result in crashes, corrupted save "
+           "data, or other bugs.");
     switch (result) {
     case Core::System::ResultStatus::ErrorSystemFiles: {
         QString message = "Citra was unable to locate a 3DS system archive";
@@ -689,7 +690,8 @@ void GMainWindow::OnCoreError(Core::System::ResultStatus result, std::string det
             tr("Citra has encountered a fatal error, please see the log for more details. "
                "For more information on accessing the log, please see the following page: "
                "<a href='https://community.citra-emu.org/t/how-to-upload-the-log-file/296'>How to "
-               "Upload the Log File</a>.<br/><br/>Would you like to quit back to the game list?"),
+               "Upload the Log File</a>.<br/><br/>Would you like to quit back to the game list? "
+               "Continuing emulation may result in crashes, corrupted save data, or other bugs."),
             QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
         status_message = "Fatal Error encountered";
         break;
