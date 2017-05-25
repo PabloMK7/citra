@@ -51,11 +51,6 @@ static constexpr Kernel::Handle INVALID_HANDLE{};
 namespace Service {
 namespace FS {
 
-// TODO: Verify code
-/// Returned when a function is passed an invalid handle.
-const ResultCode ERR_INVALID_HANDLE(ErrorDescription::InvalidHandle, ErrorModule::FS,
-                                    ErrorSummary::InvalidArgument, ErrorLevel::Permanent);
-
 // Command to access archive file
 enum class FileCommand : u32 {
     Dummy1 = 0x000100C6,
