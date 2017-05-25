@@ -556,6 +556,37 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
         break;
     }
 
+    case PICA_REG_INDEX_WORKAROUND(texturing.proctex_lut_data[0], 0xb0):
+    case PICA_REG_INDEX_WORKAROUND(texturing.proctex_lut_data[1], 0xb1):
+    case PICA_REG_INDEX_WORKAROUND(texturing.proctex_lut_data[2], 0xb2):
+    case PICA_REG_INDEX_WORKAROUND(texturing.proctex_lut_data[3], 0xb3):
+    case PICA_REG_INDEX_WORKAROUND(texturing.proctex_lut_data[4], 0xb4):
+    case PICA_REG_INDEX_WORKAROUND(texturing.proctex_lut_data[5], 0xb5):
+    case PICA_REG_INDEX_WORKAROUND(texturing.proctex_lut_data[6], 0xb6):
+    case PICA_REG_INDEX_WORKAROUND(texturing.proctex_lut_data[7], 0xb7): {
+        auto& index = regs.texturing.proctex_lut_config.index;
+        auto& pt = g_state.proctex;
+
+        switch (regs.texturing.proctex_lut_config.ref_table.Value()) {
+        case TexturingRegs::ProcTexLutTable::Noise:
+            pt.noise_table[index % pt.noise_table.size()].raw = value;
+            break;
+        case TexturingRegs::ProcTexLutTable::ColorMap:
+            pt.color_map_table[index % pt.color_map_table.size()].raw = value;
+            break;
+        case TexturingRegs::ProcTexLutTable::AlphaMap:
+            pt.alpha_map_table[index % pt.alpha_map_table.size()].raw = value;
+            break;
+        case TexturingRegs::ProcTexLutTable::Color:
+            pt.color_table[index % pt.color_table.size()].raw = value;
+            break;
+        case TexturingRegs::ProcTexLutTable::ColorDiff:
+            pt.color_diff_table[index % pt.color_diff_table.size()].raw = value;
+            break;
+        }
+        index.Assign(index + 1);
+        break;
+    }
     default:
         break;
     }

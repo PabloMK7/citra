@@ -58,6 +58,12 @@ OpenGLState::OpenGLState() {
 
     fog_lut.texture_1d = 0;
 
+    proctex_lut.texture_1d = 0;
+    proctex_diff_lut.texture_1d = 0;
+    proctex_color_map.texture_1d = 0;
+    proctex_alpha_map.texture_1d = 0;
+    proctex_noise_lut.texture_1d = 0;
+
     draw.read_framebuffer = 0;
     draw.draw_framebuffer = 0;
     draw.vertex_array = 0;
@@ -199,6 +205,36 @@ void OpenGLState::Apply() const {
     if (fog_lut.texture_1d != cur_state.fog_lut.texture_1d) {
         glActiveTexture(GL_TEXTURE9);
         glBindTexture(GL_TEXTURE_1D, fog_lut.texture_1d);
+    }
+
+    // ProcTex Noise LUT
+    if (proctex_noise_lut.texture_1d != cur_state.proctex_noise_lut.texture_1d) {
+        glActiveTexture(GL_TEXTURE10);
+        glBindTexture(GL_TEXTURE_1D, proctex_noise_lut.texture_1d);
+    }
+
+    // ProcTex Color Map
+    if (proctex_color_map.texture_1d != cur_state.proctex_color_map.texture_1d) {
+        glActiveTexture(GL_TEXTURE11);
+        glBindTexture(GL_TEXTURE_1D, proctex_color_map.texture_1d);
+    }
+
+    // ProcTex Alpha Map
+    if (proctex_alpha_map.texture_1d != cur_state.proctex_alpha_map.texture_1d) {
+        glActiveTexture(GL_TEXTURE12);
+        glBindTexture(GL_TEXTURE_1D, proctex_alpha_map.texture_1d);
+    }
+
+    // ProcTex LUT
+    if (proctex_lut.texture_1d != cur_state.proctex_lut.texture_1d) {
+        glActiveTexture(GL_TEXTURE13);
+        glBindTexture(GL_TEXTURE_1D, proctex_lut.texture_1d);
+    }
+
+    // ProcTex Diff LUT
+    if (proctex_diff_lut.texture_1d != cur_state.proctex_diff_lut.texture_1d) {
+        glActiveTexture(GL_TEXTURE14);
+        glBindTexture(GL_TEXTURE_1D, proctex_diff_lut.texture_1d);
     }
 
     // Framebuffer

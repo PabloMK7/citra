@@ -127,8 +127,8 @@ struct TexturingRegs {
         BitField<0, 1, u32> texture0_enable;
         BitField<1, 1, u32> texture1_enable;
         BitField<2, 1, u32> texture2_enable;
-        BitField<8, 2, u32> texture3_coordinates; // TODO: unimplemented
-        BitField<10, 1, u32> texture3_enable;     // TODO: unimplemented
+        BitField<8, 2, u32> texture3_coordinates;
+        BitField<10, 1, u32> texture3_enable;
         BitField<13, 1, u32> texture2_use_coord1;
         BitField<16, 1, u32> clear_texture_cache; // TODO: unimplemented
     } main_config;
@@ -142,7 +142,7 @@ struct TexturingRegs {
     INSERT_PADDING_WORDS(0x2);
     TextureConfig texture2;
     BitField<0, 4, TextureFormat> texture2_format;
-    INSERT_PADDING_WORDS(0x21);
+    INSERT_PADDING_WORDS(0x9);
 
     struct FullTextureConfig {
         const bool enabled;
@@ -156,6 +156,96 @@ struct TexturingRegs {
             {main_config.texture2_enable.ToBool(), texture2, texture2_format},
         }};
     }
+
+    // 0xa8-0xad: ProcTex Config
+    enum class ProcTexClamp : u32 {
+        ToZero = 0,
+        ToEdge = 1,
+        SymmetricalRepeat = 2,
+        MirroredRepeat = 3,
+        Pulse = 4,
+    };
+
+    enum class ProcTexCombiner : u32 {
+        U = 0,        // u
+        U2 = 1,       // u * u
+        V = 2,        // v
+        V2 = 3,       // v * v
+        Add = 4,      // (u + v) / 2
+        Add2 = 5,     // (u * u + v * v) / 2
+        SqrtAdd2 = 6, // sqrt(u * u + v * v)
+        Min = 7,      // min(u, v)
+        Max = 8,      // max(u, v)
+        RMax = 9,     // Average of Max and SqrtAdd2
+    };
+
+    enum class ProcTexShift : u32 {
+        None = 0,
+        Odd = 1,
+        Even = 2,
+    };
+
+    union {
+        BitField<0, 3, ProcTexClamp> u_clamp;
+        BitField<3, 3, ProcTexClamp> v_clamp;
+        BitField<6, 4, ProcTexCombiner> color_combiner;
+        BitField<10, 4, ProcTexCombiner> alpha_combiner;
+        BitField<14, 1, u32> separate_alpha;
+        BitField<15, 1, u32> noise_enable;
+        BitField<16, 2, ProcTexShift> u_shift;
+        BitField<18, 2, ProcTexShift> v_shift;
+        BitField<20, 8, u32> bias_low; // float16 TODO: unimplemented
+    } proctex;
+
+    union ProcTexNoiseConfig {
+        BitField<0, 16, s32> amplitude; // fixed1.3.12
+        BitField<16, 16, u32> phase;    // float16
+    };
+
+    ProcTexNoiseConfig proctex_noise_u;
+    ProcTexNoiseConfig proctex_noise_v;
+
+    union {
+        BitField<0, 16, u32> u;  // float16
+        BitField<16, 16, u32> v; // float16
+    } proctex_noise_frequency;
+
+    enum class ProcTexFilter : u32 {
+        Nearest = 0,
+        Linear = 1,
+        NearestMipmapNearest = 2,
+        LinearMipmapNearest = 3,
+        NearestMipmapLinear = 4,
+        LinearMipmapLinear = 5,
+    };
+
+    union {
+        BitField<0, 3, ProcTexFilter> filter;
+        BitField<11, 8, u32> width;
+        BitField<19, 8, u32> bias_high; // TODO: unimplemented
+    } proctex_lut;
+
+    BitField<0, 8, u32> proctex_lut_offset;
+
+    INSERT_PADDING_WORDS(0x1);
+
+    // 0xaf-0xb7: ProcTex LUT
+    enum class ProcTexLutTable : u32 {
+        Noise = 0,
+        ColorMap = 2,
+        AlphaMap = 3,
+        Color = 4,
+        ColorDiff = 5,
+    };
+
+    union {
+        BitField<0, 8, u32> index;
+        BitField<8, 4, ProcTexLutTable> ref_table;
+    } proctex_lut_config;
+
+    u32 proctex_lut_data[8];
+
+    INSERT_PADDING_WORDS(0x8);
 
     // 0xc0-0xff: Texture Combiner (akin to glTexEnv)
     struct TevStageConfig {
