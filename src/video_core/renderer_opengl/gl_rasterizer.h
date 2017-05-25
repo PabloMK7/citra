@@ -125,6 +125,7 @@ private:
         alignas(16) GLvec3 diffuse;
         alignas(16) GLvec3 ambient;
         alignas(16) GLvec3 position;
+        alignas(16) GLvec3 spot_direction; // negated
         GLfloat dist_atten_bias;
         GLfloat dist_atten_scale;
     };
@@ -153,7 +154,7 @@ private:
     };
 
     static_assert(
-        sizeof(UniformData) == 0x3E0,
+        sizeof(UniformData) == 0x460,
         "The size of the UniformData structure has changed, update the structure in the shader");
     static_assert(sizeof(UniformData) < 16384,
                   "UniformData structure must be less than 16kb as per the OpenGL spec");
@@ -240,6 +241,9 @@ private:
 
     /// Syncs the specified light's position to match the PICA register
     void SyncLightPosition(int light_index);
+
+    /// Syncs the specified spot light direcition to match the PICA register
+    void SyncLightSpotDirection(int light_index);
 
     /// Syncs the specified light's distance attenuation bias to match the PICA register
     void SyncLightDistanceAttenuationBias(int light_index);

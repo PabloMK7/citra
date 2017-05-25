@@ -75,6 +75,8 @@ PicaShaderConfig PicaShaderConfig::BuildFromRegs(const Pica::Regs& regs) {
         state.lighting.light[light_index].two_sided_diffuse = light.config.two_sided_diffuse != 0;
         state.lighting.light[light_index].dist_atten_enable =
             !regs.lighting.IsDistAttenDisabled(num);
+        state.lighting.light[light_index].spot_atten_enable =
+            !regs.lighting.IsSpotAttenDisabled(num);
     }
 
     state.lighting.lut_d0.enable = regs.lighting.config1.disable_lut_d0 == 0;
@@ -86,6 +88,12 @@ PicaShaderConfig PicaShaderConfig::BuildFromRegs(const Pica::Regs& regs) {
     state.lighting.lut_d1.abs_input = regs.lighting.abs_lut_input.disable_d1 == 0;
     state.lighting.lut_d1.type = regs.lighting.lut_input.d1.Value();
     state.lighting.lut_d1.scale = regs.lighting.lut_scale.GetScale(regs.lighting.lut_scale.d1);
+
+    // this is a dummy field due to lack of the corresponding register
+    state.lighting.lut_sp.enable = true;
+    state.lighting.lut_sp.abs_input = regs.lighting.abs_lut_input.disable_sp == 0;
+    state.lighting.lut_sp.type = regs.lighting.lut_input.sp.Value();
+    state.lighting.lut_sp.scale = regs.lighting.lut_scale.GetScale(regs.lighting.lut_scale.sp);
 
     state.lighting.lut_fr.enable = regs.lighting.config1.disable_lut_fr == 0;
     state.lighting.lut_fr.abs_input = regs.lighting.abs_lut_input.disable_fr == 0;
@@ -968,6 +976,7 @@ struct LightSrc {
     vec3 diffuse;
     vec3 ambient;
     vec3 position;
+    vec3 spot_direction;
     float dist_atten_bias;
     float dist_atten_scale;
 };
