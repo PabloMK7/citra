@@ -11,6 +11,7 @@
 #include "common/string_util.h"
 #include "common/swap.h"
 #include "core/file_sys/archive_systemsavedata.h"
+#include "core/file_sys/errors.h"
 #include "core/file_sys/file_backend.h"
 #include "core/hle/result.h"
 #include "core/hle/service/cfg/cfg.h"
@@ -411,7 +412,7 @@ ResultCode UpdateConfigNANDSavegame() {
 ResultCode FormatConfig() {
     ResultCode res = DeleteConfigNANDSaveFile();
     // The delete command fails if the file doesn't exist, so we have to check that too
-    if (!res.IsSuccess() && res.description != ErrorDescription::FS_FileNotFound) {
+    if (!res.IsSuccess() && res != FileSys::ERROR_FILE_NOT_FOUND) {
         return res;
     }
     // Delete the old data
@@ -534,7 +535,7 @@ ResultCode LoadConfigNANDSaveFile() {
         Service::FS::OpenArchive(Service::FS::ArchiveIdCode::SystemSaveData, archive_path);
 
     // If the archive didn't exist, create the files inside
-    if (archive_result.Code().description == ErrorDescription::FS_NotFormatted) {
+    if (archive_result.Code() == FileSys::ERR_NOT_FORMATTED) {
         // Format the archive to create the directories
         Service::FS::FormatArchive(Service::FS::ArchiveIdCode::SystemSaveData,
                                    FileSys::ArchiveFormatInfo(), archive_path);

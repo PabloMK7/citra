@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include "common/logging/log.h"
+#include "core/file_sys/errors.h"
 #include "core/file_sys/file_backend.h"
 #include "core/hle/service/fs/archive.h"
 #include "core/hle/service/ptm/ptm.h"
@@ -134,7 +135,7 @@ void Init() {
     auto archive_result =
         Service::FS::OpenArchive(Service::FS::ArchiveIdCode::SharedExtSaveData, archive_path);
     // If the archive didn't exist, create the files inside
-    if (archive_result.Code().description == ErrorDescription::FS_NotFormatted) {
+    if (archive_result.Code() == FileSys::ERR_NOT_FORMATTED) {
         // Format the archive to create the directories
         Service::FS::FormatArchive(Service::FS::ArchiveIdCode::SharedExtSaveData,
                                    FileSys::ArchiveFormatInfo(), archive_path);

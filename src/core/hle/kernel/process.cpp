@@ -6,6 +6,7 @@
 #include "common/assert.h"
 #include "common/common_funcs.h"
 #include "common/logging/log.h"
+#include "core/hle/kernel/errors.h"
 #include "core/hle/kernel/memory.h"
 #include "core/hle/kernel/process.h"
 #include "core/hle/kernel/resource_limit.h"

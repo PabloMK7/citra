@@ -289,9 +289,7 @@ static void WriteProcessPipe(Service::Interface* self) {
                                "size=0x%X, buffer=0x%08X",
                   cmd_buff[3], pipe_index, size, buffer);
         cmd_buff[0] = IPC::MakeHeader(0, 1, 0);
-        cmd_buff[1] = ResultCode(ErrorDescription::OS_InvalidBufferDescriptor, ErrorModule::OS,
-                                 ErrorSummary::WrongArgument, ErrorLevel::Permanent)
-                          .raw;
+        cmd_buff[1] = IPC::ERR_INVALID_BUFFER_DESCRIPTOR.raw;
         return;
     }
 

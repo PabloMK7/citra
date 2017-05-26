@@ -9,6 +9,7 @@
 #include "common/file_util.h"
 #include "common/string_util.h"
 #include "core/file_sys/archive_systemsavedata.h"
+#include "core/file_sys/errors.h"
 #include "core/file_sys/savedata_archive.h"
 #include "core/hle/service/fs/archive.h"
 
@@ -53,8 +54,7 @@ ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_SystemSaveData::Open(c
     std::string fullpath = GetSystemSaveDataPath(base_path, path);
     if (!FileUtil::Exists(fullpath)) {
         // TODO(Subv): Check error code, this one is probably wrong
-        return ResultCode(ErrorDescription::FS_NotFormatted, ErrorModule::FS,
-                          ErrorSummary::InvalidState, ErrorLevel::Status);
+        return ERR_NOT_FORMATTED;
     }
     auto archive = std::make_unique<SaveDataArchive>(fullpath);
     return MakeResult<std::unique_ptr<ArchiveBackend>>(std::move(archive));

@@ -267,8 +267,7 @@ static void InitializeIrNopShared(Interface* self) {
     shared_memory = Kernel::g_handle_table.Get<Kernel::SharedMemory>(handle);
     if (!shared_memory) {
         LOG_CRITICAL(Service_IR, "invalid shared memory handle 0x%08X", handle);
-        rb.Push(ResultCode(ErrorDescription::InvalidHandle, ErrorModule::OS,
-                           ErrorSummary::WrongArgument, ErrorLevel::Permanent));
+        rb.Push(IPC::ERR_INVALID_HANDLE);
         return;
     }
     shared_memory->name = "IR_USER: shared memory";

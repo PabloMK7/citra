@@ -30,8 +30,7 @@ ResultCode ClientSession::SendSyncRequest() {
     if (parent->server)
         return parent->server->HandleSyncRequest();
 
-    return ResultCode(ErrorDescription::SessionClosedByRemote, ErrorModule::OS,
-                      ErrorSummary::Canceled, ErrorLevel::Status);
+    return ERR_SESSION_CLOSED_BY_REMOTE;
 }
 
 } // namespace

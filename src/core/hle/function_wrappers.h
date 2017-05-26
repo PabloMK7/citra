@@ -53,7 +53,7 @@ void Wrap() {
     FuncReturn(retval);
 }
 
-template <ResultCode func(u32*, s32, u32, u32, u32, s32)>
+template <ResultCode func(u32*, u32, u32, u32, u32, s32)>
 void Wrap() {
     u32 param_1 = 0;
     u32 retval = func(&param_1, PARAM(0), PARAM(1), PARAM(2), PARAM(3), PARAM(4)).raw;

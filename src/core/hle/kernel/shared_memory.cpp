@@ -4,6 +4,7 @@
 
 #include <cstring>
 #include "common/logging/log.h"
+#include "core/hle/kernel/errors.h"
 #include "core/hle/kernel/memory.h"
 #include "core/hle/kernel/shared_memory.h"
 #include "core/memory.h"
@@ -102,24 +103,21 @@ ResultCode SharedMemory::Map(Process* target_process, VAddr address, MemoryPermi
 
     // Automatically allocated memory blocks can only be mapped with other_permissions = DontCare
     if (base_address == 0 && other_permissions != MemoryPermission::DontCare) {
-        return ResultCode(ErrorDescription::InvalidCombination, ErrorModule::OS,
-                          ErrorSummary::InvalidArgument, ErrorLevel::Usage);
+        return ERR_INVALID_COMBINATION;
     }
 
     // Error out if the requested permissions don't match what the creator process allows.
     if (static_cast<u32>(permissions) & ~static_cast<u32>(own_other_permissions)) {
         LOG_ERROR(Kernel, "cannot map id=%u, address=0x%08X name=%s, permissions don't match",
                   GetObjectId(), address, name.c_str());
-        return ResultCode(ErrorDescription::InvalidCombination, ErrorModule::OS,
-                          ErrorSummary::InvalidArgument, ErrorLevel::Usage);
+        return ERR_INVALID_COMBINATION;
     }
 
     // Heap-backed memory blocks can not be mapped with other_permissions = DontCare
     if (base_address != 0 && other_permissions == MemoryPermission::DontCare) {
         LOG_ERROR(Kernel, "cannot map id=%u, address=0x%08X name=%s, permissions don't match",
                   GetObjectId(), address, name.c_str());
-        return ResultCode(ErrorDescription::InvalidCombination, ErrorModule::OS,
-                          ErrorSummary::InvalidArgument, ErrorLevel::Usage);
+        return ERR_INVALID_COMBINATION;
     }
 
     // Error out if the provided permissions are not compatible with what the creator process needs.
@@ -127,8 +125,7 @@ ResultCode SharedMemory::Map(Process* target_process, VAddr address, MemoryPermi
         static_cast<u32>(this->permissions) & ~static_cast<u32>(other_permissions)) {
         LOG_ERROR(Kernel, "cannot map id=%u, address=0x%08X name=%s, permissions don't match",
                   GetObjectId(), address, name.c_str());
-        return ResultCode(ErrorDescription::WrongPermission, ErrorModule::OS,
-                          ErrorSummary::WrongArgument, ErrorLevel::Permanent);
+        return ERR_WRONG_PERMISSION;
     }
 
     // TODO(Subv): Check for the Shared Device Mem flag in the creator process.
@@ -144,8 +141,7 @@ ResultCode SharedMemory::Map(Process* target_process, VAddr address, MemoryPermi
         if (address < Memory::HEAP_VADDR || address + size >= Memory::SHARED_MEMORY_VADDR_END) {
             LOG_ERROR(Kernel, "cannot map id=%u, address=0x%08X name=%s, invalid address",
                       GetObjectId(), address, name.c_str());
-            return ResultCode(ErrorDescription::InvalidAddress, ErrorModule::OS,
-                              ErrorSummary::InvalidArgument, ErrorLevel::Usage);
+            return ERR_INVALID_ADDRESS;
         }
     }
 

@@ -25,13 +25,24 @@ namespace GSP {
 // Beginning address of HW regs
 const u32 REGS_BEGIN = 0x1EB00000;
 
-const ResultCode ERR_GSP_REGS_OUTOFRANGE_OR_MISALIGNED(
-    ErrorDescription::OutofRangeOrMisalignedAddress, ErrorModule::GX, ErrorSummary::InvalidArgument,
-    ErrorLevel::Usage); // 0xE0E02A01
-const ResultCode ERR_GSP_REGS_MISALIGNED(ErrorDescription::MisalignedSize, ErrorModule::GX,
+namespace ErrCodes {
+enum {
+    // TODO(purpasmart): Check if this name fits its actual usage
+    OutofRangeOrMisalignedAddress = 513,
+    FirstInitialization = 519,
+};
+}
+
+constexpr ResultCode RESULT_FIRST_INITIALIZATION(ErrCodes::FirstInitialization, ErrorModule::GX,
+                                                 ErrorSummary::Success, ErrorLevel::Success);
+constexpr ResultCode ERR_REGS_OUTOFRANGE_OR_MISALIGNED(ErrCodes::OutofRangeOrMisalignedAddress,
+                                                       ErrorModule::GX,
+                                                       ErrorSummary::InvalidArgument,
+                                                       ErrorLevel::Usage); // 0xE0E02A01
+constexpr ResultCode ERR_REGS_MISALIGNED(ErrorDescription::MisalignedSize, ErrorModule::GX,
                                          ErrorSummary::InvalidArgument,
                                          ErrorLevel::Usage); // 0xE0E02BF2
-const ResultCode ERR_GSP_REGS_INVALID_SIZE(ErrorDescription::InvalidSize, ErrorModule::GX,
+constexpr ResultCode ERR_REGS_INVALID_SIZE(ErrorDescription::InvalidSize, ErrorModule::GX,
                                            ErrorSummary::InvalidArgument,
                                            ErrorLevel::Usage); // 0xE0E02BEC
 
@@ -93,11 +104,11 @@ static ResultCode WriteHWRegs(u32 base_address, u32 size_in_bytes, VAddr data_va
         LOG_ERROR(Service_GSP,
                   "Write address was out of range or misaligned! (address=0x%08x, size=0x%08x)",
                   base_address, size_in_bytes);
-        return ERR_GSP_REGS_OUTOFRANGE_OR_MISALIGNED;
+        return ERR_REGS_OUTOFRANGE_OR_MISALIGNED;
     } else if (size_in_bytes <= max_size_in_bytes) {
         if (size_in_bytes & 3) {
             LOG_ERROR(Service_GSP, "Misaligned size 0x%08x", size_in_bytes);
-            return ERR_GSP_REGS_MISALIGNED;
+            return ERR_REGS_MISALIGNED;
         } else {
             while (size_in_bytes > 0) {
                 WriteSingleHWReg(base_address, Memory::Read32(data_vaddr));
@@ -111,7 +122,7 @@ static ResultCode WriteHWRegs(u32 base_address, u32 size_in_bytes, VAddr data_va
 
     } else {
         LOG_ERROR(Service_GSP, "Out of range size 0x%08x", size_in_bytes);
-        return ERR_GSP_REGS_INVALID_SIZE;
+        return ERR_REGS_INVALID_SIZE;
     }
 }
 
@@ -134,11 +145,11 @@ static ResultCode WriteHWRegsWithMask(u32 base_address, u32 size_in_bytes, VAddr
         LOG_ERROR(Service_GSP,
                   "Write address was out of range or misaligned! (address=0x%08x, size=0x%08x)",
                   base_address, size_in_bytes);
-        return ERR_GSP_REGS_OUTOFRANGE_OR_MISALIGNED;
+        return ERR_REGS_OUTOFRANGE_OR_MISALIGNED;
     } else if (size_in_bytes <= max_size_in_bytes) {
         if (size_in_bytes & 3) {
             LOG_ERROR(Service_GSP, "Misaligned size 0x%08x", size_in_bytes);
-            return ERR_GSP_REGS_MISALIGNED;
+            return ERR_REGS_MISALIGNED;
         } else {
             while (size_in_bytes > 0) {
                 const u32 reg_address = base_address + REGS_BEGIN;
@@ -164,7 +175,7 @@ static ResultCode WriteHWRegsWithMask(u32 base_address, u32 size_in_bytes, VAddr
 
     } else {
         LOG_ERROR(Service_GSP, "Out of range size 0x%08x", size_in_bytes);
-        return ERR_GSP_REGS_INVALID_SIZE;
+        return ERR_REGS_INVALID_SIZE;
     }
 }
 
@@ -372,9 +383,7 @@ static void RegisterInterruptRelayQueue(Interface* self) {
     if (first_initialization) {
         // This specific code is required for a successful initialization, rather than 0
         first_initialization = false;
-        cmd_buff[1] = ResultCode(ErrorDescription::GPU_FirstInitialization, ErrorModule::GX,
-                                 ErrorSummary::Success, ErrorLevel::Success)
-                          .raw;
+        cmd_buff[1] = RESULT_FIRST_INITIALIZATION.raw;
     } else {
         cmd_buff[1] = RESULT_SUCCESS.raw;
     }

@@ -4,6 +4,7 @@
 
 #include <iterator>
 #include "common/assert.h"
+#include "core/hle/kernel/errors.h"
 #include "core/hle/kernel/vm_manager.h"
 #include "core/memory.h"
 #include "core/memory_setup.h"

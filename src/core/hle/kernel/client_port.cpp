@@ -5,6 +5,7 @@
 #include "common/assert.h"
 #include "core/hle/kernel/client_port.h"
 #include "core/hle/kernel/client_session.h"
+#include "core/hle/kernel/errors.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/server_port.h"
 #include "core/hle/kernel/server_session.h"
@@ -19,8 +20,7 @@ ResultVal<SharedPtr<ClientSession>> ClientPort::Connect() {
     // AcceptSession before returning from this call.
 
     if (active_sessions >= max_sessions) {
-        return ResultCode(ErrorDescription::MaxConnectionsReached, ErrorModule::OS,
-                          ErrorSummary::WouldBlock, ErrorLevel::Temporary);
+        return ERR_MAX_CONNECTIONS_REACHED;
     }
     active_sessions++;
 

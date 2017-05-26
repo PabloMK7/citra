@@ -13,38 +13,15 @@
 
 // All the constants in this file come from http://3dbrew.org/wiki/Error_codes
 
-/// Detailed description of the error. This listing is likely incomplete.
+/**
+ * Detailed description of the error. Code 0 always means success. Codes 1000 and above are
+ * considered "well-known" and have common values between all modules. The meaning of other codes
+ * vary by module.
+ */
 enum class ErrorDescription : u32 {
     Success = 0,
-    SessionClosedByRemote = 26,
-    WrongPermission = 46,
-    OS_InvalidBufferDescriptor = 48,
-    MaxConnectionsReached = 52,
-    WrongAddress = 53,
-    FS_RomFSNotFound = 100,
-    FS_ArchiveNotMounted = 101,
-    FS_FileNotFound = 112,
-    FS_PathNotFound = 113,
-    FS_GameCardNotInserted = 141,
-    FS_NotFound = 120,
-    FS_FileAlreadyExists = 180,
-    FS_DirectoryAlreadyExists = 185,
-    FS_AlreadyExists = 190,
-    FS_InvalidOpenFlags = 230,
-    FS_DirectoryNotEmpty = 240,
-    FS_NotAFile = 250,
-    FS_NotFormatted = 340, ///< This is used by the FS service when creating a SaveData archive
-    OutofRangeOrMisalignedAddress =
-        513, // TODO(purpasmart): Check if this name fits its actual usage
-    GPU_FirstInitialization = 519,
-    FS_ExeFSSectionNotFound = 567,
-    FS_CommandNotAllowed = 630,
-    FS_InvalidReadFlag = 700,
-    FS_InvalidPath = 702,
-    FS_WriteBeyondEnd = 705,
-    FS_UnsupportedOpenFlags = 760,
-    FS_IncorrectExeFSReadSize = 761,
-    FS_UnexpectedFileOrDirectory = 770,
+
+    // Codes 1000 and above are considered "well-known" and have common values between all modules.
     InvalidSection = 1000,
     TooLarge = 1001,
     NotAuthorized = 1002,
@@ -218,7 +195,7 @@ enum class ErrorLevel : u32 {
 union ResultCode {
     u32 raw;
 
-    BitField<0, 10, ErrorDescription> description;
+    BitField<0, 10, u32> description;
     BitField<10, 8, ErrorModule> module;
 
     BitField<21, 6, ErrorSummary> summary;
@@ -228,45 +205,46 @@ union ResultCode {
     // error
     BitField<31, 1, u32> is_error;
 
-    explicit ResultCode(u32 raw) : raw(raw) {}
-    ResultCode(ErrorDescription description_, ErrorModule module_, ErrorSummary summary_,
-               ErrorLevel level_)
-        : raw(0) {
-        description.Assign(description_);
-        module.Assign(module_);
-        summary.Assign(summary_);
-        level.Assign(level_);
-    }
+    constexpr explicit ResultCode(u32 raw) : raw(raw) {}
 
-    ResultCode& operator=(const ResultCode& o) {
+    constexpr ResultCode(ErrorDescription description, ErrorModule module, ErrorSummary summary,
+                         ErrorLevel level)
+        : ResultCode(static_cast<u32>(description), module, summary, level) {}
+
+    constexpr ResultCode(u32 description_, ErrorModule module_, ErrorSummary summary_,
+                         ErrorLevel level_)
+        : raw(description.FormatValue(description_) | module.FormatValue(module_) |
+              summary.FormatValue(summary_) | level.FormatValue(level_)) {}
+
+    constexpr ResultCode& operator=(const ResultCode& o) {
         raw = o.raw;
         return *this;
     }
 
-    bool IsSuccess() const {
-        return is_error == 0;
+    constexpr bool IsSuccess() const {
+        return is_error.ExtractValue(raw) == 0;
     }
 
-    bool IsError() const {
-        return is_error == 1;
+    constexpr bool IsError() const {
+        return is_error.ExtractValue(raw) == 1;
     }
 };
 
-inline bool operator==(const ResultCode& a, const ResultCode& b) {
+constexpr bool operator==(const ResultCode& a, const ResultCode& b) {
     return a.raw == b.raw;
 }
 
-inline bool operator!=(const ResultCode& a, const ResultCode& b) {
+constexpr bool operator!=(const ResultCode& a, const ResultCode& b) {
     return a.raw != b.raw;
 }
 
 // Convenience functions for creating some common kinds of errors:
 
 /// The default success `ResultCode`.
-const ResultCode RESULT_SUCCESS(0);
+constexpr ResultCode RESULT_SUCCESS(0);
 
 /// Might be returned instead of a dummy success for unimplemented APIs.
-inline ResultCode UnimplementedFunction(ErrorModule module) {
+constexpr ResultCode UnimplementedFunction(ErrorModule module) {
     return ResultCode(ErrorDescription::NotImplemented, module, ErrorSummary::NotSupported,
                       ErrorLevel::Permanent);
 }

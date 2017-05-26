@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include "common/assert.h"
+#include "core/hle/kernel/errors.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/semaphore.h"
 #include "core/hle/kernel/thread.h"
@@ -16,8 +17,7 @@ ResultVal<SharedPtr<Semaphore>> Semaphore::Create(s32 initial_count, s32 max_cou
                                                   std::string name) {
 
     if (initial_count > max_count)
-        return ResultCode(ErrorDescription::InvalidCombination, ErrorModule::Kernel,
-                          ErrorSummary::WrongArgument, ErrorLevel::Permanent);
+        return ERR_INVALID_COMBINATION_KERNEL;
 
     SharedPtr<Semaphore> semaphore(new Semaphore);
 
@@ -42,8 +42,7 @@ void Semaphore::Acquire(Thread* thread) {
 
 ResultVal<s32> Semaphore::Release(s32 release_count) {
     if (max_count - available_count < release_count)
-        return ResultCode(ErrorDescription::OutOfRange, ErrorModule::Kernel,
-                          ErrorSummary::InvalidArgument, ErrorLevel::Permanent);
+        return ERR_OUT_OF_RANGE_KERNEL;
 
     s32 previous_count = available_count;
     available_count += release_count;

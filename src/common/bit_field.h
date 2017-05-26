@@ -108,7 +108,7 @@
  * symptoms.
  */
 #pragma pack(1)
-template <std::size_t position, std::size_t bits, typename T>
+template <std::size_t Position, std::size_t Bits, typename T>
 struct BitField {
 private:
     // We hide the copy assigment operator here, because the default copy
@@ -117,7 +117,45 @@ private:
     // We don't delete it because we want BitField to be trivially copyable.
     BitField& operator=(const BitField&) = default;
 
+    // StorageType is T for non-enum types and the underlying type of T if
+    // T is an enumeration. Note that T is wrapped within an enable_if in the
+    // former case to workaround compile errors which arise when using
+    // std::underlying_type<T>::type directly.
+    using StorageType = typename std::conditional_t<std::is_enum<T>::value, std::underlying_type<T>,
+                                                    std::enable_if<true, T>>::type;
+
+    // Unsigned version of StorageType
+    using StorageTypeU = std::make_unsigned_t<StorageType>;
+
 public:
+    /// Constants to allow limited introspection of fields if needed
+    static constexpr size_t position = Position;
+    static constexpr size_t bits = Bits;
+    static constexpr StorageType mask = (((StorageTypeU)~0) >> (8 * sizeof(T) - bits)) << position;
+
+    /**
+     * Formats a value by masking and shifting it according to the field parameters. A value
+     * containing several bitfields can be assembled by formatting each of their values and ORing
+     * the results together.
+     */
+    static constexpr FORCE_INLINE StorageType FormatValue(const T& value) {
+        return ((StorageType)value << position) & mask;
+    }
+
+    /**
+     * Extracts a value from the passed storage. In most situations prefer use the member functions
+     * (such as Value() or operator T), but this can be used to extract a value from a bitfield
+     * union in a constexpr context.
+     */
+    static constexpr FORCE_INLINE T ExtractValue(const StorageType& storage) {
+        if (std::numeric_limits<T>::is_signed) {
+            std::size_t shift = 8 * sizeof(T) - bits;
+            return (T)((storage << (shift - position)) >> shift);
+        } else {
+            return (T)((storage & mask) >> position);
+        }
+    }
+
     // This constructor and assignment operator might be considered ambiguous:
     // Would they initialize the storage or just the bitfield?
     // Hence, delete them. Use the Assign method to set bitfield values!
@@ -126,23 +164,18 @@ public:
 
     // Force default constructor to be created
     // so that we can use this within unions
-    BitField() = default;
+    constexpr BitField() = default;
 
     FORCE_INLINE operator T() const {
         return Value();
     }
 
     FORCE_INLINE void Assign(const T& value) {
-        storage = (storage & ~GetMask()) | (((StorageType)value << position) & GetMask());
+        storage = (storage & ~mask) | FormatValue(value);
     }
 
     FORCE_INLINE T Value() const {
-        if (std::numeric_limits<T>::is_signed) {
-            std::size_t shift = 8 * sizeof(T) - bits;
-            return (T)((storage << (shift - position)) >> shift);
-        } else {
-            return (T)((storage & GetMask()) >> position);
-        }
+        return ExtractValue(storage);
     }
 
     // TODO: we may want to change this to explicit operator bool() if it's bug-free in VS2015
@@ -151,20 +184,6 @@ public:
     }
 
 private:
-    // StorageType is T for non-enum types and the underlying type of T if
-    // T is an enumeration. Note that T is wrapped within an enable_if in the
-    // former case to workaround compile errors which arise when using
-    // std::underlying_type<T>::type directly.
-    typedef typename std::conditional<std::is_enum<T>::value, std::underlying_type<T>,
-                                      std::enable_if<true, T>>::type::type StorageType;
-
-    // Unsigned version of StorageType
-    typedef typename std::make_unsigned<StorageType>::type StorageTypeU;
-
-    FORCE_INLINE StorageType GetMask() const {
-        return (((StorageTypeU)~0) >> (8 * sizeof(T) - bits)) << position;
-    }
-
     StorageType storage;
 
     static_assert(bits + position <= 8 * sizeof(T), "Bitfield out of range");

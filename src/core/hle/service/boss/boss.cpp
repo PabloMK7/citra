@@ -24,9 +24,7 @@ void InitializeSession(Service::Interface* self) {
 
     if (translation != IPC::CallingPidDesc()) {
         cmd_buff[0] = IPC::MakeHeader(0, 0x1, 0); // 0x40
-        cmd_buff[1] = ResultCode(ErrorDescription::OS_InvalidBufferDescriptor, ErrorModule::OS,
-                                 ErrorSummary::WrongArgument, ErrorLevel::Permanent)
-                          .raw;
+        cmd_buff[1] = IPC::ERR_INVALID_BUFFER_DESCRIPTOR.raw;
         LOG_ERROR(Service_BOSS, "The translation was invalid, translation=0x%08X", translation);
         return;
     }

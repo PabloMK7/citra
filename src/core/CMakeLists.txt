@@ -231,6 +231,7 @@ set(HEADERS
             hle/kernel/address_arbiter.h
             hle/kernel/client_port.h
             hle/kernel/client_session.h
+            hle/kernel/errors.h
             hle/kernel/event.h
             hle/kernel/kernel.h
             hle/kernel/memory.h
