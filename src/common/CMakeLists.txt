@@ -27,7 +27,6 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/scm_rev.cpp.in" "${CMAKE_CURRENT_SOU
 set(SRCS
             break_points.cpp
             file_util.cpp
-            framebuffer_layout.cpp
             hash.cpp
             logging/filter.cpp
             logging/text_formatter.cpp
@@ -56,7 +55,6 @@ set(HEADERS
             common_paths.h
             common_types.h
             file_util.h
-            framebuffer_layout.h
             hash.h
             linear_disk_cache.h
             logging/text_formatter.h

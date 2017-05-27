@@ -8,8 +8,8 @@
 #include <tuple>
 #include <utility>
 #include "common/common_types.h"
-#include "common/framebuffer_layout.h"
 #include "common/math_util.h"
+#include "core/frontend/framebuffer_layout.h"
 
 /**
  * Abstraction class used to provide an interface between emulation code and the frontend

@@ -5,7 +5,7 @@
 #include <cmath>
 
 #include "common/assert.h"
-#include "common/framebuffer_layout.h"
+#include "core/frontend/framebuffer_layout.h"
 #include "core/settings.h"
 #include "video_core/video_core.h"
 
