@@ -22,3 +22,6 @@
 [submodule "cryptopp"]
     path = externals/cryptopp/cryptopp
     url = https://github.com/weidai11/cryptopp.git
+[submodule "fmt"]
+    path = externals/fmt
+    url = https://github.com/fmtlib/fmt.git
