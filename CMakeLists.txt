@@ -258,6 +258,7 @@ add_subdirectory(${INI_PREFIX})
 add_subdirectory(externals)
 
 option(DYNARMIC_TESTS OFF)
+set(DYNARMIC_NO_BUNDLED_FMT ON)
 add_subdirectory(externals/dynarmic)
 
 add_subdirectory(externals/glad)
