@@ -8,8 +8,8 @@
 #include <unordered_map>
 #include <vector>
 #include <boost/crc.hpp>
-#include "citrace.h"
 #include "common/common_types.h"
+#include "core/tracer/citrace.h"
 
 namespace CiTrace {
 
