@@ -144,12 +144,40 @@ static bool IsPassThroughTevStage(const TevStageConfig& stage) {
             stage.GetColorMultiplier() == 1 && stage.GetAlphaMultiplier() == 1);
 }
 
-static std::string TexCoord(const PicaShaderConfig& config, int texture_unit) {
-    if (texture_unit == 2 && config.state.texture2_use_coord1) {
-        return "texcoord[1]";
+static std::string SampleTexture(const PicaShaderConfig& config, unsigned texture_unit) {
+    const auto& state = config.state;
+    switch (texture_unit) {
+    case 0:
+        // Only unit 0 respects the texturing type
+        switch (state.texture0_type) {
+        case TexturingRegs::TextureConfig::Texture2D:
+            return "texture(tex[0], texcoord[0])";
+        case TexturingRegs::TextureConfig::Projection2D:
+            return "textureProj(tex[0], vec3(texcoord[0], texcoord0_w))";
+        default:
+            LOG_CRITICAL(HW_GPU, "Unhandled texture type %x",
+                         static_cast<int>(state.texture0_type));
+            UNIMPLEMENTED();
+            return "texture(tex[0], texcoord[0])";
+        }
+    case 1:
+        return "texture(tex[1], texcoord[1])";
+    case 2:
+        if (state.texture2_use_coord1)
+            return "texture(tex[2], texcoord[1])";
+        else
+            return "texture(tex[2], texcoord[2])";
+    case 3:
+        if (state.proctex.enable) {
+            return "ProcTex()";
+        } else {
+            LOG_ERROR(Render_OpenGL, "Using Texture3 without enabling it");
+            return "vec4(0.0)";
+        }
+    default:
+        UNREACHABLE();
+        return "";
     }
-
-    return "texcoord[" + std::to_string(texture_unit) + "]";
 }
 
 /// Writes the specified TEV stage source component(s)
@@ -168,35 +196,16 @@ static void AppendSource(std::string& out, const PicaShaderConfig& config,
         out += "secondary_fragment_color";
         break;
     case Source::Texture0:
-        // Only unit 0 respects the texturing type (according to 3DBrew)
-        switch (state.texture0_type) {
-        case TexturingRegs::TextureConfig::Texture2D:
-            out += "texture(tex[0], texcoord[0])";
-            break;
-        case TexturingRegs::TextureConfig::Projection2D:
-            out += "textureProj(tex[0], vec3(texcoord[0], texcoord0_w))";
-            break;
-        default:
-            out += "texture(tex[0], texcoord[0])";
-            LOG_CRITICAL(HW_GPU, "Unhandled texture type %x",
-                         static_cast<int>(state.texture0_type));
-            UNIMPLEMENTED();
-            break;
-        }
+        out += SampleTexture(config, 0);
         break;
     case Source::Texture1:
-        out += "texture(tex[1], texcoord[1])";
+        out += SampleTexture(config, 1);
         break;
     case Source::Texture2:
-        out += "texture(tex[2], " + TexCoord(config, 2) + ")";
+        out += SampleTexture(config, 2);
         break;
     case Source::Texture3:
-        if (config.state.proctex.enable) {
-            out += "ProcTex()";
-        } else {
-            LOG_ERROR(Render_OpenGL, "Using Texture3 without enabling it");
-            out += "vec4(0.0)";
-        }
+        out += SampleTexture(config, 3);
         break;
     case Source::PreviousBuffer:
         out += "combiner_buffer";
@@ -506,18 +515,8 @@ static void WriteLighting(std::string& out, const PicaShaderConfig& config) {
     if (lighting.bump_mode == LightingRegs::LightingBumpMode::NormalMap) {
         // Bump mapping is enabled using a normal map, read perturbation vector from the selected
         // texture
-        if (lighting.bump_selector == 3) {
-            if (config.state.proctex.enable) {
-                out += "vec3 surface_normal = 2.0 * ProcTex().rgb - 1.0;\n";
-            } else {
-                LOG_ERROR(Render_OpenGL, "Using Texture3 without enabling it");
-                out += "vec3 surface_normal = vec3(-1.0);\n";
-            }
-        } else {
-            std::string bump_selector = std::to_string(lighting.bump_selector);
-            out += "vec3 surface_normal = 2.0 * texture(tex[" + bump_selector + "], " +
-                   TexCoord(config, lighting.bump_selector) + ").rgb - 1.0;\n";
-        }
+        out += "vec3 surface_normal = 2.0 * (" + SampleTexture(config, lighting.bump_selector) +
+               ").rgb - 1.0;\n";
 
         // Recompute Z-component of perturbation if 'renorm' is enabled, this provides a higher
         // precision result
