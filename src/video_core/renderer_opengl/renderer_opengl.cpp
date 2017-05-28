@@ -94,14 +94,8 @@ static std::array<GLfloat, 3 * 2> MakeOrthographicMatrix(const float width, cons
     return matrix;
 }
 
-/// RendererOpenGL constructor
-RendererOpenGL::RendererOpenGL() {
-    resolution_width = std::max(VideoCore::kScreenTopWidth, VideoCore::kScreenBottomWidth);
-    resolution_height = VideoCore::kScreenTopHeight + VideoCore::kScreenBottomHeight;
-}
-
-/// RendererOpenGL destructor
-RendererOpenGL::~RendererOpenGL() {}
+RendererOpenGL::RendererOpenGL() = default;
+RendererOpenGL::~RendererOpenGL() = default;
 
 /// Swap buffers (render frame)
 void RendererOpenGL::SwapBuffers() {
