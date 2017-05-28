@@ -1,5 +1,5 @@
-# CMake 3.5 required for support for IMPORTED find_package libraries
-cmake_minimum_required(VERSION 3.5)
+# CMake 3.6 required for FindBoost to define IMPORTED libs properly on unknown Boost versions
+cmake_minimum_required(VERSION 3.6)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/CMakeModules)
 
 function(download_bundled_external remote_path lib_name prefix_var)
@@ -135,12 +135,14 @@ if (NOT PNG_FOUND)
     message(STATUS "libpng not found. Some debugging features have been disabled.")
 endif()
 
-find_package(Boost 1.57.0 QUIET)
+find_package(Boost 1.63.0 QUIET)
 if (NOT Boost_FOUND)
-    message(STATUS "Boost 1.57.0 or newer not found, falling back to externals")
-    set(Boost_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/externals/boost")
+    message(STATUS "Boost 1.63.0 or newer not found, falling back to externals")
+
+    set(BOOST_ROOT "${CMAKE_SOURCE_DIR}/externals/boost")
+    set(Boost_NO_SYSTEM_PATHS OFF)
+    find_package(Boost QUIET REQUIRED)
 endif()
-include_directories(${Boost_INCLUDE_DIR})
 
 # Include bundled CMake modules
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/externals/cmake-modules")

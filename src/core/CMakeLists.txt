@@ -381,4 +381,4 @@ create_directory_groups(${SRCS} ${HEADERS})
 
 add_library(core STATIC ${SRCS} ${HEADERS})
 target_link_libraries(core PUBLIC common PRIVATE audio_core video_core)
-target_link_libraries(core PRIVATE cryptopp dynarmic)
+target_link_libraries(core PUBLIC Boost::boost PRIVATE cryptopp dynarmic)
