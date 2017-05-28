@@ -535,8 +535,8 @@ static void WriteLighting(std::string& out, const PicaShaderConfig& config) {
     }
 
     // Rotate the surface-local normal by the interpolated normal quaternion to convert it to
-    // eyespace
-    out += "vec3 normal = normalize(quaternion_rotate(normquat, surface_normal));\n";
+    // eyespace.
+    out += "vec3 normal = quaternion_rotate(normalize(normquat), surface_normal);\n";
 
     // Gets the index into the specified lookup table for specular lighting
     auto GetLutIndex = [&lighting](unsigned light_num, LightingRegs::LightingLutInput input,
@@ -1002,7 +1002,9 @@ uniform sampler1D proctex_diff_lut;
 // Rotate the vector v by the quaternion q
 vec3 quaternion_rotate(vec4 q, vec3 v) {
     return v + 2.0 * cross(q.xyz, cross(q.xyz, v) + q.w * v);
-})";
+}
+
+)";
 
     if (config.state.proctex.enable)
         AppendProcTexSampler(out, config);
