@@ -27,8 +27,6 @@ set(HEADERS
             time_stretch.h
             )
 
-include_directories(../../externals/soundtouch/include)
-
 if(SDL2_FOUND)
     set(SRCS ${SRCS} sdl2_sink.cpp)
     set(HEADERS ${HEADERS} sdl2_sink.h)

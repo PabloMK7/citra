@@ -272,6 +272,8 @@ endif()
 
 # process subdirectories
 add_subdirectory(externals/soundtouch)
+# The SoundTouch target doesn't export the necessary include paths as properties by default
+target_include_directories(SoundTouch INTERFACE "externals/soundtouch/include")
 
 enable_testing()
 
