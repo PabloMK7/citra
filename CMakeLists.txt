@@ -171,6 +171,13 @@ if (ENABLE_SDL2)
     else()
         find_package(SDL2 REQUIRED)
     endif()
+
+    if (SDL2_FOUND)
+        # TODO(yuriks): Make FindSDL2.cmake export an IMPORTED library instead
+        add_library(SDL2 INTERFACE)
+        target_link_libraries(SDL2 INTERFACE "${SDL2_LIBRARY}")
+        target_include_directories(SDL2 INTERFACE "${SDL2_INCLUDE_DIR}")
+    endif()
 else()
     set(SDL2_FOUND NO)
 endif()
