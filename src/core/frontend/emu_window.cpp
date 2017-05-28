@@ -5,10 +5,10 @@
 #include <algorithm>
 #include <cmath>
 #include "common/assert.h"
+#include "core/3ds.h"
 #include "core/core.h"
 #include "core/frontend/emu_window.h"
 #include "core/settings.h"
-#include "video_core/video_core.h"
 
 /**
  * Check if the given x/y coordinates are within the touchpad specified by the framebuffer layout
@@ -38,11 +38,9 @@ void EmuWindow::TouchPressed(unsigned framebuffer_x, unsigned framebuffer_y) {
     if (!IsWithinTouchscreen(framebuffer_layout, framebuffer_x, framebuffer_y))
         return;
 
-    touch_x = VideoCore::kScreenBottomWidth *
-              (framebuffer_x - framebuffer_layout.bottom_screen.left) /
+    touch_x = Core::kScreenBottomWidth * (framebuffer_x - framebuffer_layout.bottom_screen.left) /
               (framebuffer_layout.bottom_screen.right - framebuffer_layout.bottom_screen.left);
-    touch_y = VideoCore::kScreenBottomHeight *
-              (framebuffer_y - framebuffer_layout.bottom_screen.top) /
+    touch_y = Core::kScreenBottomHeight * (framebuffer_y - framebuffer_layout.bottom_screen.top) /
               (framebuffer_layout.bottom_screen.bottom - framebuffer_layout.bottom_screen.top);
 
     touch_pressed = true;

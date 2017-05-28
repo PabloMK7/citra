@@ -5,7 +5,9 @@
 #pragma once
 
 #include "common/math_util.h"
+
 namespace Layout {
+
 /// Describes the layout of the window framebuffer (size and top/bottom screen positions)
 struct FramebufferLayout {
     unsigned width;
@@ -14,6 +16,12 @@ struct FramebufferLayout {
     bool bottom_screen_enabled;
     MathUtil::Rectangle<unsigned> top_screen;
     MathUtil::Rectangle<unsigned> bottom_screen;
+
+    /**
+     * Returns the ration of pixel size of the top screen, compared to the native size of the 3DS
+     * screen.
+     */
+    float GetScalingRatio() const;
 };
 
 /**
@@ -52,4 +60,5 @@ FramebufferLayout LargeFrameLayout(unsigned width, unsigned height, bool is_swap
  * @return Newly created FramebufferLayout object with default screen regions initialized
  */
 FramebufferLayout CustomFrameLayout(unsigned width, unsigned height);
-}
+
+} // namespace Layout

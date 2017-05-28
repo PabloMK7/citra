@@ -179,6 +179,7 @@ set(SRCS
             )
 
 set(HEADERS
+            3ds.h
             arm/arm_interface.h
             arm/dynarmic/arm_dynarmic.h
             arm/dynarmic/arm_dynarmic_cp15.h

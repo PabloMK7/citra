@@ -12,12 +12,11 @@
 #include "common/microprofile.h"
 #include "common/scm_rev.h"
 #include "common/string_util.h"
+#include "core/3ds.h"
 #include "core/core.h"
 #include "core/settings.h"
 #include "input_common/keyboard.h"
 #include "input_common/main.h"
-#include "video_core/debug_utils/debug_utils.h"
-#include "video_core/video_core.h"
 
 EmuThread::EmuThread(GRenderWindow* render_window)
     : exec_step(false), running(false), stop_run(false), render_window(render_window) {}
@@ -266,8 +265,7 @@ void GRenderWindow::InitRenderTarget() {
     child = new GGLWidgetInternal(fmt, this);
     QBoxLayout* layout = new QHBoxLayout(this);
 
-    resize(VideoCore::kScreenTopWidth,
-           VideoCore::kScreenTopHeight + VideoCore::kScreenBottomHeight);
+    resize(Core::kScreenTopWidth, Core::kScreenTopHeight + Core::kScreenBottomHeight);
     layout->addWidget(child);
     layout->setMargin(0);
     setLayout(layout);
