@@ -1,24 +1,25 @@
 # CMake 3.6 required for FindBoost to define IMPORTED libs properly on unknown Boost versions
 cmake_minimum_required(VERSION 3.6)
-list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/CMakeModules")
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules")
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/externals/cmake-modules")
 
-# This function downloads a binary library package from our external repo.
-# Params:
-#   remote_path: path to the file to download, relative to the remote repository root
-#   prefix_var: name of a variable which will be set with the path to the extracted contents
-function(download_bundled_external remote_path lib_name prefix_var)
-    set(prefix "${CMAKE_BINARY_DIR}/externals/${lib_name}")
-    if (NOT EXISTS "${prefix}")
-        message(STATUS "Downloading binaries for ${lib_name}...")
-        file(DOWNLOAD
-            https://github.com/citra-emu/ext-windows-bin/raw/master/${remote_path}${lib_name}.7z
-            "${CMAKE_BINARY_DIR}/externals/${lib_name}.7z" SHOW_PROGRESS)
-        execute_process(COMMAND ${CMAKE_COMMAND} -E tar xf "${CMAKE_BINARY_DIR}/externals/${lib_name}.7z"
-            WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/externals")
-    endif()
-    message(STATUS "Using bundled binaries at ${prefix}")
-    set(${prefix_var} "${prefix}" PARENT_SCOPE)
-endfunction()
+project(citra)
+
+option(ENABLE_SDL2 "Enable the SDL2 frontend" ON)
+option(CITRA_USE_BUNDLED_SDL2 "Download bundled SDL2 binaries" OFF)
+
+option(ENABLE_QT "Enable the Qt frontend" ON)
+option(CITRA_USE_BUNDLED_QT "Download bundled Qt binaries" OFF)
+
+if(NOT EXISTS ${CMAKE_SOURCE_DIR}/.git/hooks/pre-commit)
+    message(STATUS "Copying pre-commit hook")
+    file(COPY hooks/pre-commit
+        DESTINATION ${CMAKE_SOURCE_DIR}/.git/hooks)
+endif()
+
+
+# Detect current compilation architecture and create standard definitions
+# =======================================================================
 
 include(CheckSymbolExists)
 function(detect_architecture symbol arch)
@@ -37,20 +38,6 @@ function(detect_architecture symbol arch)
     endif()
 endfunction()
 
-project(citra)
-
-option(ENABLE_SDL2 "Enable the SDL2 frontend" ON)
-option(CITRA_USE_BUNDLED_SDL2 "Download bundled SDL2 binaries" OFF)
-
-option(ENABLE_QT "Enable the Qt frontend" ON)
-option(CITRA_USE_BUNDLED_QT "Download bundled Qt binaries" OFF)
-
-if(NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/.git/hooks/pre-commit)
-    message(STATUS "Copying pre-commit hook")
-    file(COPY hooks/pre-commit
-        DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/.git/hooks)
-endif()
-
 if (MSVC)
     detect_architecture("_M_AMD64" x86_64)
     detect_architecture("_M_IX86" x86)
@@ -66,6 +53,10 @@ if (NOT DEFINED ARCHITECTURE)
     add_definitions(-DARCHITECTURE_GENERIC=1)
 endif()
 message(STATUS "Target architecture: ${ARCHITECTURE}")
+
+
+# Configure compilation flags
+# ===========================
 
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -134,6 +125,28 @@ add_definitions(-DSINGLETHREADED)
 set_property(DIRECTORY APPEND PROPERTY
     COMPILE_DEFINITIONS $<$<CONFIG:Debug>:_DEBUG> $<$<NOT:$<CONFIG:Debug>>:NDEBUG>)
 
+
+# System imported libraries
+# ======================
+
+# This function downloads a binary library package from our external repo.
+# Params:
+#   remote_path: path to the file to download, relative to the remote repository root
+#   prefix_var: name of a variable which will be set with the path to the extracted contents
+function(download_bundled_external remote_path lib_name prefix_var)
+    set(prefix "${CMAKE_BINARY_DIR}/externals/${lib_name}")
+    if (NOT EXISTS "${prefix}")
+        message(STATUS "Downloading binaries for ${lib_name}...")
+        file(DOWNLOAD
+            https://github.com/citra-emu/ext-windows-bin/raw/master/${remote_path}${lib_name}.7z
+            "${CMAKE_BINARY_DIR}/externals/${lib_name}.7z" SHOW_PROGRESS)
+        execute_process(COMMAND ${CMAKE_COMMAND} -E tar xf "${CMAKE_BINARY_DIR}/externals/${lib_name}.7z"
+            WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/externals")
+    endif()
+    message(STATUS "Using bundled binaries at ${prefix}")
+    set(${prefix_var} "${prefix}" PARENT_SCOPE)
+endfunction()
+
 find_package(PNG QUIET)
 if (NOT PNG_FOUND)
     message(STATUS "libpng not found. Some debugging features have been disabled.")
@@ -148,11 +161,8 @@ if (NOT Boost_FOUND)
     find_package(Boost QUIET REQUIRED)
 endif()
 
-# Include bundled CMake modules
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/externals/cmake-modules")
-
 # Prefer the -pthread flag on Linux.
-set (THREADS_PREFER_PTHREAD_FLAG ON)
+set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
 if (ENABLE_SDL2)
@@ -186,6 +196,32 @@ else()
     set(SDL2_FOUND NO)
 endif()
 
+if (ENABLE_QT)
+    if (CITRA_USE_BUNDLED_QT)
+        if (MSVC14 AND ARCHITECTURE_x86_64)
+            set(QT_VER qt-5.7-msvc2015_64)
+        else()
+            message(FATAL_ERROR "No bundled Qt binaries for your toolchain. Disable CITRA_USE_BUNDLED_QT and provide your own.")
+        endif()
+
+        if (DEFINED QT_VER)
+            download_bundled_external("qt/" ${QT_VER} QT_PREFIX)
+        endif()
+
+        set(QT_PREFIX_HINT HINTS "${QT_PREFIX}")
+    else()
+        # Passing an empty HINTS seems to cause default system paths to get ignored in CMake 2.8 so
+        # make sure to not pass anything if we don't have one.
+        set(QT_PREFIX_HINT)
+    endif()
+
+    find_package(Qt5 REQUIRED COMPONENTS Widgets OpenGL ${QT_PREFIX_HINT})
+endif()
+
+
+# Platform-specific library requirements
+# ======================================
+
 IF (APPLE)
     FIND_LIBRARY(COCOA_LIBRARY Cocoa)           # Umbrella framework for everything GUI-related
     set(PLATFORM_LIBRARIES ${COCOA_LIBRARY} ${IOKIT_LIBRARY} ${COREVIDEO_LIBRARY})
@@ -214,27 +250,9 @@ if (UNIX OR MINGW)
     endif()
 endif()
 
-if (ENABLE_QT)
-    if (CITRA_USE_BUNDLED_QT)
-        if (MSVC14 AND ARCHITECTURE_x86_64)
-            set(QT_VER qt-5.7-msvc2015_64)
-        else()
-            message(FATAL_ERROR "No bundled Qt binaries for your toolchain. Disable CITRA_USE_BUNDLED_QT and provide your own.")
-        endif()
 
-        if (DEFINED QT_VER)
-            download_bundled_external("qt/" ${QT_VER} QT_PREFIX)
-        endif()
-
-        set(QT_PREFIX_HINT HINTS "${QT_PREFIX}")
-    else()
-        # Passing an empty HINTS seems to cause default system paths to get ignored in CMake 2.8 so
-        # make sure to not pass anything if we don't have one.
-        set(QT_PREFIX_HINT)
-    endif()
-
-    find_package(Qt5 REQUIRED COMPONENTS Widgets OpenGL ${QT_PREFIX_HINT})
-endif()
+# Include source code
+# ===================
 
 # This function should be passed a list of all files in a target. It will automatically generate
 # file groups following the directory hierarchy, so that the layout of the files in IDEs matches the
@@ -261,6 +279,10 @@ git_branch_name(GIT_BRANCH)
 add_subdirectory(externals)
 add_subdirectory(src)
 enable_testing()
+
+
+# Installation instructions
+# =========================
 
 # Install freedesktop.org metadata files, following those specifications:
 # http://standards.freedesktop.org/desktop-entry-spec/desktop-entry-spec-latest.html
