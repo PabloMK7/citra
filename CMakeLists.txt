@@ -1,5 +1,5 @@
-# CMake 3.2 required for cmake to know the right flags for CXX standard on OSX
-cmake_minimum_required(VERSION 3.2)
+# CMake 3.5 required for support for IMPORTED find_package libraries
+cmake_minimum_required(VERSION 3.5)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/CMakeModules)
 
 function(download_bundled_external remote_path lib_name prefix_var)
@@ -131,9 +131,7 @@ set_property(DIRECTORY APPEND PROPERTY
     COMPILE_DEFINITIONS $<$<CONFIG:Debug>:_DEBUG> $<$<NOT:$<CONFIG:Debug>>:NDEBUG>)
 
 find_package(PNG QUIET)
-if (PNG_FOUND)
-    add_definitions(-DHAVE_PNG)
-else()
+if (NOT PNG_FOUND)
     message(STATUS "libpng not found. Some debugging features have been disabled.")
 endif()
 
