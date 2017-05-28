@@ -96,5 +96,5 @@ create_directory_groups(${SRCS} ${HEADERS})
 
 add_library(common STATIC ${SRCS} ${HEADERS})
 if (ARCHITECTURE_x86_64)
-    target_link_libraries(common xbyak)
+    target_link_libraries(common PRIVATE xbyak)
 endif()

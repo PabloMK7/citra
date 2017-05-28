@@ -19,9 +19,9 @@ endif()
 create_directory_groups(${SRCS} ${HEADERS})
 
 add_library(input_common STATIC ${SRCS} ${HEADERS})
-target_link_libraries(input_common common core)
+target_link_libraries(input_common PUBLIC core PRIVATE common)
 
 if(SDL2_FOUND)
-    target_link_libraries(input_common ${SDL2_LIBRARY})
-    set_property(TARGET input_common APPEND PROPERTY COMPILE_DEFINITIONS HAVE_SDL2)
+    target_link_libraries(input_common PRIVATE ${SDL2_LIBRARY})
+    target_compile_definitions(input_common PRIVATE HAVE_SDL2)
 endif()

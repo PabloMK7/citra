@@ -380,5 +380,5 @@ include_directories(../../externals/cryptopp)
 create_directory_groups(${SRCS} ${HEADERS})
 
 add_library(core STATIC ${SRCS} ${HEADERS})
-
-target_link_libraries(core dynarmic cryptopp)
+target_link_libraries(core PUBLIC common PRIVATE audio_core video_core)
+target_link_libraries(core PRIVATE cryptopp dynarmic)
