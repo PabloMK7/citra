@@ -5,11 +5,11 @@
 #include <memory>
 #include <SDL.h>
 #include <inih/cpp/INIReader.h>
+#include "citra/config.h"
 #include "citra/default_ini.h"
 #include "common/file_util.h"
 #include "common/logging/log.h"
 #include "common/param_package.h"
-#include "config.h"
 #include "core/settings.h"
 #include "input_common/main.h"
 
@@ -20,6 +20,8 @@ Config::Config() {
 
     Reload();
 }
+
+Config::~Config() = default;
 
 bool Config::LoadINI(const std::string& default_contents, bool retry) {
     const char* location = this->sdl2_config_loc.c_str();
