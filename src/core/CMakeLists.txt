@@ -375,7 +375,6 @@ set(HEADERS
             )
 
 include_directories(../../externals/dynarmic/include)
-include_directories(../../externals/cryptopp)
 
 create_directory_groups(${SRCS} ${HEADERS})
 

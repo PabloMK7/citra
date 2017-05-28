@@ -10,6 +10,7 @@
 #  - disabled installation
 #  - disabled documentation
 #  - configured to build a static library only
+#  - adds include directories to the library target
 
 include(TestBigEndian)
 include(CheckCXXCompilerFlag)
@@ -148,14 +149,15 @@ endif()
 # Compile targets
 #============================================================================
 add_library(cryptopp STATIC ${cryptopp_SOURCES})
+target_include_directories(cryptopp INTERFACE .)
 
 #============================================================================
 # Third-party libraries
 #============================================================================
 
 if(WIN32)
-    target_link_libraries(cryptopp ws2_32)
+    target_link_libraries(cryptopp PRIVATE ws2_32)
 endif()
 
 find_package(Threads)
-target_link_libraries(cryptopp ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(cryptopp PRIVATE ${CMAKE_THREAD_LIBS_INIT})
