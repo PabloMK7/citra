@@ -14,7 +14,6 @@
 #include "core/hle/service/gsp_gpu.h"
 #include "core/hle/service/hid/hid.h"
 #include "core/memory.h"
-#include "video_core/video_core.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 

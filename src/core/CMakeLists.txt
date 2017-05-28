@@ -32,6 +32,7 @@ set(SRCS
             frontend/camera/factory.cpp
             frontend/camera/interface.cpp
             frontend/emu_window.cpp
+            frontend/framebuffer_layout.cpp
             frontend/motion_emu.cpp
             gdbstub/gdbstub.cpp
             hle/config_mem.cpp
@@ -178,6 +179,7 @@ set(SRCS
             )
 
 set(HEADERS
+            3ds.h
             arm/arm_interface.h
             arm/dynarmic/arm_dynarmic.h
             arm/dynarmic/arm_dynarmic_cp15.h
@@ -216,6 +218,7 @@ set(HEADERS
             frontend/camera/factory.h
             frontend/camera/interface.h
             frontend/emu_window.h
+            frontend/framebuffer_layout.h
             frontend/input.h
             frontend/motion_emu.h
             gdbstub/gdbstub.h
@@ -377,5 +380,5 @@ include_directories(../../externals/cryptopp)
 create_directory_groups(${SRCS} ${HEADERS})
 
 add_library(core STATIC ${SRCS} ${HEADERS})
-
-target_link_libraries(core dynarmic cryptopp)
+target_link_libraries(core PUBLIC common PRIVATE audio_core video_core)
+target_link_libraries(core PRIVATE cryptopp dynarmic)

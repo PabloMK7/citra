@@ -12,10 +12,10 @@
 #include "common/logging/log.h"
 #include "common/scm_rev.h"
 #include "common/string_util.h"
+#include "core/3ds.h"
 #include "core/settings.h"
 #include "input_common/keyboard.h"
 #include "input_common/main.h"
-#include "video_core/video_core.h"
 
 void EmuWindow_SDL2::OnMouseMotion(s32 x, s32 y) {
     TouchMoved((unsigned)std::max(x, 0), (unsigned)std::max(y, 0));
@@ -80,12 +80,12 @@ EmuWindow_SDL2::EmuWindow_SDL2() {
 
     std::string window_title = Common::StringFromFormat("Citra %s| %s-%s ", Common::g_build_name,
                                                         Common::g_scm_branch, Common::g_scm_desc);
-    render_window = SDL_CreateWindow(
-        window_title.c_str(),
-        SDL_WINDOWPOS_UNDEFINED, // x position
-        SDL_WINDOWPOS_UNDEFINED, // y position
-        VideoCore::kScreenTopWidth, VideoCore::kScreenTopHeight + VideoCore::kScreenBottomHeight,
-        SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
+    render_window =
+        SDL_CreateWindow(window_title.c_str(),
+                         SDL_WINDOWPOS_UNDEFINED, // x position
+                         SDL_WINDOWPOS_UNDEFINED, // y position
+                         Core::kScreenTopWidth, Core::kScreenTopHeight + Core::kScreenBottomHeight,
+                         SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
 
     if (render_window == nullptr) {
         LOG_CRITICAL(Frontend, "Failed to create SDL2 window! Exiting...");

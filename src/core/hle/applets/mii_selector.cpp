@@ -11,7 +11,6 @@
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/shared_memory.h"
 #include "core/hle/result.h"
-#include "video_core/video_core.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 

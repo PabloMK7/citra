@@ -6,7 +6,7 @@
 #include <string>
 #include <thread>
 #include "common/common_types.h"
-#include "cpu_detect.h"
+#include "common/x64/cpu_detect.h"
 
 #ifdef _MSC_VER
 #include <intrin.h>

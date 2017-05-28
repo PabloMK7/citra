@@ -68,9 +68,6 @@ private:
 
     EmuWindow* render_window; ///< Handle to render window
 
-    int resolution_width;  ///< Current resolution width
-    int resolution_height; ///< Current resolution height
-
     OpenGLState state;
 
     // OpenGL object IDs

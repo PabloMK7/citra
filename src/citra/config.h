@@ -6,7 +6,8 @@
 
 #include <memory>
 #include <string>
-#include <inih/cpp/INIReader.h>
+
+class INIReader;
 
 class Config {
     std::unique_ptr<INIReader> sdl2_config;
@@ -17,6 +18,7 @@ class Config {
 
 public:
     Config();
+    ~Config();
 
     void Reload();
 };

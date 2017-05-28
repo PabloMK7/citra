@@ -5,16 +5,20 @@
 #include <cmath>
 
 #include "common/assert.h"
-#include "common/framebuffer_layout.h"
+#include "core/3ds.h"
+#include "core/frontend/framebuffer_layout.h"
 #include "core/settings.h"
-#include "video_core/video_core.h"
 
 namespace Layout {
 
 static const float TOP_SCREEN_ASPECT_RATIO =
-    static_cast<float>(VideoCore::kScreenTopHeight) / VideoCore::kScreenTopWidth;
+    static_cast<float>(Core::kScreenTopHeight) / Core::kScreenTopWidth;
 static const float BOT_SCREEN_ASPECT_RATIO =
-    static_cast<float>(VideoCore::kScreenBottomHeight) / VideoCore::kScreenBottomWidth;
+    static_cast<float>(Core::kScreenBottomHeight) / Core::kScreenBottomWidth;
+
+float FramebufferLayout::GetScalingRatio() const {
+    return static_cast<float>(top_screen.GetWidth()) / Core::kScreenTopWidth;
+}
 
 // Finds the largest size subrectangle contained in window area that is confined to the aspect ratio
 template <class T>
@@ -106,10 +110,10 @@ FramebufferLayout LargeFrameLayout(unsigned width, unsigned height, bool swapped
     float window_aspect_ratio = static_cast<float>(height) / width;
     float emulation_aspect_ratio =
         swapped
-            ? VideoCore::kScreenBottomHeight * 4 /
-                  (VideoCore::kScreenBottomWidth * 4.0f + VideoCore::kScreenTopWidth)
-            : VideoCore::kScreenTopHeight * 4 /
-                  (VideoCore::kScreenTopWidth * 4.0f + VideoCore::kScreenBottomWidth);
+            ? Core::kScreenBottomHeight * 4 /
+                  (Core::kScreenBottomWidth * 4.0f + Core::kScreenTopWidth)
+            : Core::kScreenTopHeight * 4 /
+                  (Core::kScreenTopWidth * 4.0f + Core::kScreenBottomWidth);
     float large_screen_aspect_ratio = swapped ? BOT_SCREEN_ASPECT_RATIO : TOP_SCREEN_ASPECT_RATIO;
     float small_screen_aspect_ratio = swapped ? TOP_SCREEN_ASPECT_RATIO : BOT_SCREEN_ASPECT_RATIO;
 

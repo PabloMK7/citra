@@ -33,7 +33,6 @@
 #include "core/gdbstub/gdbstub.h"
 #include "core/loader/loader.h"
 #include "core/settings.h"
-#include "video_core/video_core.h"
 
 static void PrintHelp(const char* argv0) {
     std::cout << "Usage: " << argv0

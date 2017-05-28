@@ -38,9 +38,10 @@ endif()
 create_directory_groups(${SRCS} ${HEADERS})
 
 add_library(audio_core STATIC ${SRCS} ${HEADERS})
-target_link_libraries(audio_core SoundTouch)
+target_link_libraries(audio_core PUBLIC common core)
+target_link_libraries(audio_core PRIVATE SoundTouch)
 
 if(SDL2_FOUND)
-    target_link_libraries(audio_core ${SDL2_LIBRARY})
-    set_property(TARGET audio_core APPEND PROPERTY COMPILE_DEFINITIONS HAVE_SDL2)
+    target_link_libraries(audio_core PRIVATE ${SDL2_LIBRARY})
+    target_compile_definitions(audio_core PRIVATE HAVE_SDL2)
 endif()
