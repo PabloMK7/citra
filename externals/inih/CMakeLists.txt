@@ -9,3 +9,4 @@ set(HEADERS
 
 create_directory_groups(${SRCS} ${HEADERS})
 add_library(inih ${SRCS} ${HEADERS})
+target_include_directories(inih INTERFACE .)

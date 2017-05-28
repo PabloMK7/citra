@@ -254,9 +254,7 @@ get_git_head_revision(GIT_REF_SPEC GIT_REV)
 git_describe(GIT_DESC --always --long --dirty)
 git_branch_name(GIT_BRANCH)
 
-set(INI_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/externals/inih")
-include_directories(${INI_PREFIX})
-add_subdirectory(${INI_PREFIX})
+add_subdirectory(externals/inih)
 
 add_subdirectory(externals)
 
