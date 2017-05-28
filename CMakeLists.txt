@@ -263,8 +263,12 @@ set(DYNARMIC_NO_BUNDLED_FMT ON)
 add_subdirectory(externals/dynarmic)
 
 add_subdirectory(externals/glad)
-include_directories(externals/microprofile)
-include_directories(externals/nihstro/include)
+
+add_library(microprofile INTERFACE)
+target_include_directories(microprofile INTERFACE externals/microprofile)
+
+add_library(nihstro-headers INTERFACE)
+target_include_directories(nihstro-headers INTERFACE externals/nihstro/include)
 
 if (MSVC)
     add_subdirectory(externals/getopt)

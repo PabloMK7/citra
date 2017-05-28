@@ -80,7 +80,7 @@ create_directory_groups(${SRCS} ${HEADERS})
 
 add_library(video_core STATIC ${SRCS} ${HEADERS})
 target_link_libraries(video_core PUBLIC common core)
-target_link_libraries(video_core PRIVATE glad)
+target_link_libraries(video_core PRIVATE glad nihstro-headers)
 
 if (ARCHITECTURE_x86_64)
     target_link_libraries(video_core PRIVATE xbyak)
