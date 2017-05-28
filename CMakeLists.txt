@@ -2,6 +2,10 @@
 cmake_minimum_required(VERSION 3.6)
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/CMakeModules")
 
+# This function downloads a binary library package from our external repo.
+# Params:
+#   remote_path: path to the file to download, relative to the remote repository root
+#   prefix_var: name of a variable which will be set with the path to the extracted contents
 function(download_bundled_external remote_path lib_name prefix_var)
     set(prefix "${CMAKE_BINARY_DIR}/externals/${lib_name}")
     if (NOT EXISTS "${prefix}")
@@ -254,34 +258,9 @@ get_git_head_revision(GIT_REF_SPEC GIT_REV)
 git_describe(GIT_DESC --always --long --dirty)
 git_branch_name(GIT_BRANCH)
 
-add_subdirectory(externals/inih)
-
 add_subdirectory(externals)
-
-option(DYNARMIC_TESTS OFF)
-set(DYNARMIC_NO_BUNDLED_FMT ON)
-add_subdirectory(externals/dynarmic)
-
-add_subdirectory(externals/glad)
-
-add_library(microprofile INTERFACE)
-target_include_directories(microprofile INTERFACE externals/microprofile)
-
-add_library(nihstro-headers INTERFACE)
-target_include_directories(nihstro-headers INTERFACE externals/nihstro/include)
-
-if (MSVC)
-    add_subdirectory(externals/getopt)
-endif()
-
-# process subdirectories
-add_subdirectory(externals/soundtouch)
-# The SoundTouch target doesn't export the necessary include paths as properties by default
-target_include_directories(SoundTouch INTERFACE "externals/soundtouch/include")
-
-enable_testing()
-
 add_subdirectory(src)
+enable_testing()
 
 # Install freedesktop.org metadata files, following those specifications:
 # http://standards.freedesktop.org/desktop-entry-spec/desktop-entry-spec-latest.html
