@@ -11,7 +11,7 @@ if [ "$TRAVIS_OS_NAME" = "linux" -o -z "$TRAVIS_OS_NAME" ]; then
 
     if [ ! -e $HOME/.local/bin/cmake ]; then
         echo "CMake not found in the cache, get and extract it..."
-        curl -L http://www.cmake.org/files/v3.2/cmake-3.2.0-Linux-i386.tar.gz \
+        curl -L http://www.cmake.org/files/v3.6/cmake-3.6.3-Linux-x86_64.tar.gz \
             | tar -xz -C $HOME/.local --strip-components=1
     else
         echo "Using cached CMake"
