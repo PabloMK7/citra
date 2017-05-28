@@ -19,7 +19,7 @@ include_directories(${SDL2_INCLUDE_DIR})
 
 add_executable(citra ${SRCS} ${HEADERS})
 target_link_libraries(citra PRIVATE common core input_common)
-target_link_libraries(citra PRIVATE ${SDL2_LIBRARY} ${OPENGL_gl_LIBRARY} inih glad)
+target_link_libraries(citra PRIVATE ${SDL2_LIBRARY} inih glad)
 if (MSVC)
     target_link_libraries(citra PRIVATE getopt)
 endif()
