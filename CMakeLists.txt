@@ -223,7 +223,6 @@ if (ENABLE_QT)
     endif()
 
     find_package(Qt5 REQUIRED COMPONENTS Widgets OpenGL ${QT_PREFIX_HINT})
-    set(CITRA_QT_LIBS Qt5::Widgets Qt5::OpenGL)
 endif()
 
 # This function should be passed a list of all files in a target. It will automatically generate
