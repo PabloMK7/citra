@@ -80,14 +80,13 @@ create_directory_groups(${SRCS} ${HEADERS})
 
 add_library(video_core STATIC ${SRCS} ${HEADERS})
 target_link_libraries(video_core PUBLIC common core)
-target_link_libraries(video_core PRIVATE glad)
+target_link_libraries(video_core PRIVATE glad nihstro-headers)
 
 if (ARCHITECTURE_x86_64)
     target_link_libraries(video_core PRIVATE xbyak)
 endif()
 
 if (PNG_FOUND)
-    target_link_libraries(video_core PRIVATE ${PNG_LIBRARIES})
-    target_include_directories(video_core PRIVATE ${PNG_INCLUDE_DIRS})
-    target_compile_definitions(video_core PRIVATE ${PNG_DEFINITIONS})
+    target_link_libraries(video_core PRIVATE PNG::PNG)
+    target_compile_definitions(video_core PRIVATE HAVE_PNG)
 endif()

@@ -10,11 +10,9 @@ set(HEADERS
 
 create_directory_groups(${SRCS} ${HEADERS})
 
-include_directories(../../externals/catch/single_include/)
-
 add_executable(tests ${SRCS} ${HEADERS})
 target_link_libraries(tests PRIVATE common core)
 target_link_libraries(tests PRIVATE glad) # To support linker work-around
-target_link_libraries(tests PRIVATE ${PLATFORM_LIBRARIES} Threads::Threads)
+target_link_libraries(tests PRIVATE ${PLATFORM_LIBRARIES} catch-single-include Threads::Threads)
 
-add_test(NAME tests COMMAND $<TARGET_FILE:tests>)
+add_test(NAME tests COMMAND tests)
