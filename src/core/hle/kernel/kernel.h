@@ -121,6 +121,18 @@ inline void intrusive_ptr_release(Object* object) {
 template <typename T>
 using SharedPtr = boost::intrusive_ptr<T>;
 
+/**
+ * Attempts to downcast the given Object pointer to a pointer to T.
+ * @return Derived pointer to the object, or `nullptr` if `object` isn't of type T.
+ */
+template <typename T>
+inline SharedPtr<T> DynamicObjectCast(SharedPtr<Object> object) {
+    if (object != nullptr && object->GetHandleType() == T::HANDLE_TYPE) {
+        return boost::static_pointer_cast<T>(std::move(object));
+    }
+    return nullptr;
+}
+
 /// Class that represents a Kernel object that a thread can be waiting on
 class WaitObject : public Object {
 public:
@@ -162,6 +174,15 @@ private:
     /// Threads waiting for this object to become available
     std::vector<SharedPtr<Thread>> waiting_threads;
 };
+
+// Specialization of DynamicObjectCast for WaitObjects
+template <>
+inline SharedPtr<WaitObject> DynamicObjectCast<WaitObject>(SharedPtr<Object> object) {
+    if (object != nullptr && object->IsWaitable()) {
+        return boost::static_pointer_cast<WaitObject>(std::move(object));
+    }
+    return nullptr;
+}
 
 /**
  * This class allows the creation of Handles, which are references to objects that can be tested
@@ -224,15 +245,11 @@ public:
     /**
      * Looks up a handle while verifying its type.
      * @return Pointer to the looked-up object, or `nullptr` if the handle is not valid or its
-     *         type differs from the handle type `T::HANDLE_TYPE`.
+     *         type differs from the requested one.
      */
     template <class T>
     SharedPtr<T> Get(Handle handle) const {
-        SharedPtr<Object> object = GetGeneric(handle);
-        if (object != nullptr && object->GetHandleType() == T::HANDLE_TYPE) {
-            return boost::static_pointer_cast<T>(std::move(object));
-        }
-        return nullptr;
+        return DynamicObjectCast<T>(GetGeneric(handle));
     }
 
     /**
@@ -241,11 +258,7 @@ public:
      *         not a waitable object.
      */
     SharedPtr<WaitObject> GetWaitObject(Handle handle) const {
-        SharedPtr<Object> object = GetGeneric(handle);
-        if (object != nullptr && object->IsWaitable()) {
-            return boost::static_pointer_cast<WaitObject>(std::move(object));
-        }
-        return nullptr;
+        return DynamicObjectCast<WaitObject>(GetGeneric(handle));
     }
 
     /// Closes all handles held in this table.
