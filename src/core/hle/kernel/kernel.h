@@ -252,15 +252,6 @@ public:
         return DynamicObjectCast<T>(GetGeneric(handle));
     }
 
-    /**
-     * Looks up a handle while verifying that it is an object that a thread can wait on
-     * @return Pointer to the looked-up object, or `nullptr` if the handle is not valid or it is
-     *         not a waitable object.
-     */
-    SharedPtr<WaitObject> GetWaitObject(Handle handle) const {
-        return DynamicObjectCast<WaitObject>(GetGeneric(handle));
-    }
-
     /// Closes all handles held in this table.
     void Clear();
 

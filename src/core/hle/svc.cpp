@@ -244,7 +244,7 @@ static ResultCode CloseHandle(Kernel::Handle handle) {
 
 /// Wait for a handle to synchronize, timeout after the specified nanoseconds
 static ResultCode WaitSynchronization1(Kernel::Handle handle, s64 nano_seconds) {
-    auto object = Kernel::g_handle_table.GetWaitObject(handle);
+    auto object = Kernel::g_handle_table.Get<Kernel::WaitObject>(handle);
     Kernel::Thread* thread = Kernel::GetCurrentThread();
 
     if (object == nullptr)
@@ -299,7 +299,7 @@ static ResultCode WaitSynchronizationN(s32* out, Kernel::Handle* handles, s32 ha
     std::vector<ObjectPtr> objects(handle_count);
 
     for (int i = 0; i < handle_count; ++i) {
-        auto object = Kernel::g_handle_table.GetWaitObject(handles[i]);
+        auto object = Kernel::g_handle_table.Get<Kernel::WaitObject>(handles[i]);
         if (object == nullptr)
             return ERR_INVALID_HANDLE;
         objects[i] = object;
