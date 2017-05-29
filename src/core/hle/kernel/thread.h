@@ -12,6 +12,7 @@
 #include "common/common_types.h"
 #include "core/arm/arm_interface.h"
 #include "core/hle/kernel/kernel.h"
+#include "core/hle/kernel/wait_object.h"
 #include "core/hle/result.h"
 
 enum ThreadPriority : s32 {

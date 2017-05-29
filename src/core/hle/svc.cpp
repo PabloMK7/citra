@@ -27,6 +27,7 @@
 #include "core/hle/kernel/thread.h"
 #include "core/hle/kernel/timer.h"
 #include "core/hle/kernel/vm_manager.h"
+#include "core/hle/kernel/wait_object.h"
 #include "core/hle/result.h"
 #include "core/hle/service/service.h"
 
