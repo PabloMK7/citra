@@ -6,6 +6,7 @@
 
 #include "common/common_types.h"
 #include "core/hle/kernel/kernel.h"
+#include "core/hle/result.h"
 
 // Address arbiters are an underlying kernel synchronization object that can be created/used via
 // supervisor calls (SVCs). They function as sort of a global lock. Typically, games/other CTR

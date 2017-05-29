@@ -45,6 +45,7 @@ set(SRCS
             hle/kernel/client_port.cpp
             hle/kernel/client_session.cpp
             hle/kernel/event.cpp
+            hle/kernel/handle_table.cpp
             hle/kernel/kernel.cpp
             hle/kernel/memory.cpp
             hle/kernel/mutex.cpp
@@ -237,6 +238,7 @@ set(HEADERS
             hle/kernel/client_session.h
             hle/kernel/errors.h
             hle/kernel/event.h
+            hle/kernel/handle_table.h
             hle/kernel/kernel.h
             hle/kernel/memory.h
             hle/kernel/mutex.h

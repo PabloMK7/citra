@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <algorithm>
 #include <cinttypes>
 #include <map>
 #include "common/logging/log.h"
@@ -16,6 +17,7 @@
 #include "core/hle/kernel/client_session.h"
 #include "core/hle/kernel/errors.h"
 #include "core/hle/kernel/event.h"
+#include "core/hle/kernel/handle_table.h"
 #include "core/hle/kernel/memory.h"
 #include "core/hle/kernel/mutex.h"
 #include "core/hle/kernel/process.h"
