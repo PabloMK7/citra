@@ -4,12 +4,10 @@
 
 #pragma once
 
-#include <boost/container/flat_set.hpp>
-
 #include <QAbstractItemModel>
 #include <QDockWidget>
 #include <QTreeView>
-
+#include <boost/container/flat_set.hpp>
 #include "core/core.h"
 #include "core/hle/kernel/kernel.h"
 

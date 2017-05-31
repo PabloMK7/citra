@@ -15,6 +15,7 @@
 #include "core/core.h"
 #include "core/core_timing.h"
 #include "core/hle/kernel/errors.h"
+#include "core/hle/kernel/handle_table.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/memory.h"
 #include "core/hle/kernel/mutex.h"

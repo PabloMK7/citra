@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <algorithm>
 #include <cinttypes>
 #include <map>
 #include "common/logging/log.h"
@@ -16,6 +17,7 @@
 #include "core/hle/kernel/client_session.h"
 #include "core/hle/kernel/errors.h"
 #include "core/hle/kernel/event.h"
+#include "core/hle/kernel/handle_table.h"
 #include "core/hle/kernel/memory.h"
 #include "core/hle/kernel/mutex.h"
 #include "core/hle/kernel/process.h"
@@ -27,6 +29,7 @@
 #include "core/hle/kernel/thread.h"
 #include "core/hle/kernel/timer.h"
 #include "core/hle/kernel/vm_manager.h"
+#include "core/hle/kernel/wait_object.h"
 #include "core/hle/result.h"
 #include "core/hle/service/service.h"
 
@@ -244,7 +247,7 @@ static ResultCode CloseHandle(Kernel::Handle handle) {
 
 /// Wait for a handle to synchronize, timeout after the specified nanoseconds
 static ResultCode WaitSynchronization1(Kernel::Handle handle, s64 nano_seconds) {
-    auto object = Kernel::g_handle_table.GetWaitObject(handle);
+    auto object = Kernel::g_handle_table.Get<Kernel::WaitObject>(handle);
     Kernel::Thread* thread = Kernel::GetCurrentThread();
 
     if (object == nullptr)
@@ -299,7 +302,7 @@ static ResultCode WaitSynchronizationN(s32* out, Kernel::Handle* handles, s32 ha
     std::vector<ObjectPtr> objects(handle_count);
 
     for (int i = 0; i < handle_count; ++i) {
-        auto object = Kernel::g_handle_table.GetWaitObject(handles[i]);
+        auto object = Kernel::g_handle_table.Get<Kernel::WaitObject>(handles[i]);
         if (object == nullptr)
             return ERR_INVALID_HANDLE;
         objects[i] = object;

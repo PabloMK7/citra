@@ -3,7 +3,9 @@
 // Refer to the license.txt file included.
 
 #pragma once
+
 #include "core/hle/ipc.h"
+#include "core/hle/kernel/handle_table.h"
 #include "core/hle/kernel/kernel.h"
 
 namespace IPC {

@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <cstring>
+#include "common/assert.h"
 #include "common/logging/log.h"
 #include "core/hle/kernel/resource_limit.h"
 

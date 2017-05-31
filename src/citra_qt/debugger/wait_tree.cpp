@@ -10,6 +10,7 @@
 #include "core/hle/kernel/semaphore.h"
 #include "core/hle/kernel/thread.h"
 #include "core/hle/kernel/timer.h"
+#include "core/hle/kernel/wait_object.h"
 
 WaitTreeItem::~WaitTreeItem() {}
 

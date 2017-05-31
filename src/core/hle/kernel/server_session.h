@@ -10,7 +10,7 @@
 #include "common/common_types.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/session.h"
-#include "core/hle/kernel/thread.h"
+#include "core/hle/kernel/wait_object.h"
 #include "core/hle/result.h"
 #include "core/hle/service/service.h"
 #include "core/memory.h"
@@ -20,6 +20,7 @@ namespace Kernel {
 class ClientSession;
 class ClientPort;
 class ServerSession;
+class Thread;
 
 /**
  * Kernel object representing the server endpoint of an IPC session. Sessions are the basic CTR-OS

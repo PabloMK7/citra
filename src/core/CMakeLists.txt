@@ -45,6 +45,7 @@ set(SRCS
             hle/kernel/client_port.cpp
             hle/kernel/client_session.cpp
             hle/kernel/event.cpp
+            hle/kernel/handle_table.cpp
             hle/kernel/kernel.cpp
             hle/kernel/memory.cpp
             hle/kernel/mutex.cpp
@@ -57,6 +58,7 @@ set(SRCS
             hle/kernel/thread.cpp
             hle/kernel/timer.cpp
             hle/kernel/vm_manager.cpp
+            hle/kernel/wait_object.cpp
             hle/service/ac/ac.cpp
             hle/service/ac/ac_i.cpp
             hle/service/ac/ac_u.cpp
@@ -236,6 +238,7 @@ set(HEADERS
             hle/kernel/client_session.h
             hle/kernel/errors.h
             hle/kernel/event.h
+            hle/kernel/handle_table.h
             hle/kernel/kernel.h
             hle/kernel/memory.h
             hle/kernel/mutex.h
@@ -249,6 +252,7 @@ set(HEADERS
             hle/kernel/thread.h
             hle/kernel/timer.h
             hle/kernel/vm_manager.h
+            hle/kernel/wait_object.h
             hle/result.h
             hle/service/ac/ac.h
             hle/service/ac/ac_i.h
