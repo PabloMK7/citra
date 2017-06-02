@@ -663,10 +663,11 @@ void GMainWindow::OnCoreError(Core::System::ResultStatus result, std::string det
     switch (result) {
     case Core::System::ResultStatus::ErrorSystemFiles: {
         QString message = "Citra was unable to locate a 3DS system archive";
-        if (details != std::string())
+        if (!details.empty()) {
             message.append(tr(": %1. ").arg(details.c_str()));
-        else
+        } else {
             message.append(". ");
+        }
         message.append(common_message);
 
         answer = QMessageBox::question(this, tr("System Archive Not Found"), message,
@@ -698,11 +699,15 @@ void GMainWindow::OnCoreError(Core::System::ResultStatus result, std::string det
     }
 
     if (answer == QMessageBox::Yes) {
-        if (emu_thread != nullptr)
+        if (emu_thread) {
             ShutdownGame();
+        }
     } else {
-        message_label->setText(status_message);
-        message_label->setVisible(true);
+        // Only show the message if the game is still running.
+        if (emu_thread) {
+            message_label->setText(status_message);
+            message_label->setVisible(true);
+        }
     }
 }
 

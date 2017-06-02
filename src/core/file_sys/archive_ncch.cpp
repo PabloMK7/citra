@@ -42,13 +42,13 @@ ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_NCCH::Open(const Path&
 
     if (!file->IsOpen()) {
         // High Title ID of the archive: The category (https://3dbrew.org/wiki/Title_list).
-        const u32 shared_data_archive = 0x0004009B;
-        const u32 system_data_archive = 0x000400DB;
+        constexpr u32 shared_data_archive = 0x0004009B;
+        constexpr u32 system_data_archive = 0x000400DB;
 
         // Low Title IDs.
-        const u32 mii_data = 0x00010202;
-        const u32 region_manifest = 0x00010402;
-        const u32 ng_word_list = 0x00010302;
+        constexpr u32 mii_data = 0x00010202;
+        constexpr u32 region_manifest = 0x00010402;
+        constexpr u32 ng_word_list = 0x00010302;
 
         LOG_DEBUG(Service_FS, "Full Path: %s. Category: 0x%X. Path: 0x%X.", path.DebugStr().c_str(),
                   high, low);
@@ -60,7 +60,7 @@ ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_NCCH::Open(const Path&
                                                       "Mii data");
             } else if (low == region_manifest) {
                 LOG_ERROR(Service_FS,
-                          "Failed to get a handle for shared data archive: region manifes");
+                          "Failed to get a handle for shared data archive: region manifest.");
                 Core::System::GetInstance().SetStatus(Core::System::ResultStatus::ErrorSystemFiles,
                                                       "Region manifest");
             }

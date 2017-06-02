@@ -179,7 +179,7 @@ public:
 
     /**
      * Loads the Exheader and returns the system mode for this application.
-     * @returns a pair of Optional with the kernel system mode and ResultStatus
+     * @returns A pair with the optional system mode, and and the status.
      */
     std::pair<boost::optional<u32>, ResultStatus> LoadKernelSystemMode() override;
 

@@ -26,7 +26,7 @@ namespace Core {
 /*static*/ System System::s_instance;
 
 System::ResultStatus System::RunLoop(int tight_loop) {
-    this->status = ResultStatus::Success;
+    status = ResultStatus::Success;
     if (!cpu_core) {
         return ResultStatus::ErrorNotInitialized;
     }
@@ -60,7 +60,7 @@ System::ResultStatus System::RunLoop(int tight_loop) {
     HW::Update();
     Reschedule();
 
-    return GetStatus();
+    return status;
 }
 
 System::ResultStatus System::SingleStep() {
@@ -99,8 +99,8 @@ System::ResultStatus System::Load(EmuWindow* emu_window, const std::string& file
         return init_result;
     }
 
-    Loader::ResultStatus load_result = app_loader->Load();
-    if (load_result != Loader::ResultStatus::Success) {
+    const Loader::ResultStatus load_result{app_loader->Load()};
+    if (Loader::ResultStatus::Success != load_result) {
         LOG_CRITICAL(Core, "Failed to load ROM (Error %i)!", load_result);
         System::Shutdown();
 
@@ -113,9 +113,8 @@ System::ResultStatus System::Load(EmuWindow* emu_window, const std::string& file
             return ResultStatus::ErrorLoader;
         }
     }
-    // this->status will be used for errors while actually running the game
     status = ResultStatus::Success;
-    return ResultStatus::Success;
+    return status;
 }
 
 void System::PrepareReschedule() {

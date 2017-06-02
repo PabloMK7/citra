@@ -101,7 +101,7 @@ public:
      * Loads the system mode that this application needs.
      * This function defaults to 2 (96MB allocated to the application) if it can't read the
      * information.
-     * @returns a pair of Optional with the kernel system mode and ResultStatus.
+     * @returns A pair with the optional system mode, and and the status.
      */
     virtual std::pair<boost::optional<u32>, ResultStatus> LoadKernelSystemMode() {
         // 96MB allocated to the application.

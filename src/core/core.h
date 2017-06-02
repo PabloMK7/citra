@@ -108,16 +108,14 @@ public:
     PerfStats perf_stats;
     FrameLimiter frame_limiter;
 
-    ResultStatus GetStatus() {
-        return status;
-    }
-
-    void SetStatus(ResultStatus new_status, std::string details = std::string()) {
+    void SetStatus(ResultStatus new_status, const char* details = nullptr) {
         status = new_status;
-        status_details = details;
+        if (details) {
+            status_details = details;
+        }
     }
 
-    std::string GetStatusDetails() {
+    const std::string& GetStatusDetails() const {
         return status_details;
     }
 
@@ -147,8 +145,8 @@ private:
 
     static System s_instance;
 
-    ResultStatus status;
-    std::string status_details;
+    ResultStatus status = ResultStatus::Success;
+    std::string status_details = "";
 };
 
 inline ARM_Interface& CPU() {
