@@ -1,7 +1,7 @@
 <!---
 
 Please read the FAQ:
-https://citra-emu.org/wiki/FAQ
+https://citra-emu.org/wiki/faq/
 
 THIS IS NOT A SUPPORT FORUM, FOR SUPPORT GO TO:
 https://community.citra-emu.org/
