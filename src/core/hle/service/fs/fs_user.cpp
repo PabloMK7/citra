@@ -8,6 +8,7 @@
 #include "common/logging/log.h"
 #include "common/scope_exit.h"
 #include "common/string_util.h"
+#include "core/core.h"
 #include "core/file_sys/errors.h"
 #include "core/hle/kernel/client_session.h"
 #include "core/hle/result.h"
@@ -130,7 +131,7 @@ static void OpenFileDirectly(Service::Interface* self) {
     ResultVal<ArchiveHandle> archive_handle = OpenArchive(archive_id, archive_path);
     if (archive_handle.Failed()) {
         LOG_ERROR(Service_FS,
-                  "failed to get a handle for archive archive_id=0x%08X archive_path=%s",
+                  "Failed to get a handle for archive archive_id=0x%08X archive_path=%s",
                   static_cast<u32>(archive_id), archive_path.DebugStr().c_str());
         cmd_buff[1] = archive_handle.Code().raw;
         cmd_buff[3] = 0;

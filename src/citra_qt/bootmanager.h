@@ -10,6 +10,7 @@
 #include <QGLWidget>
 #include <QThread>
 #include "common/thread.h"
+#include "core/core.h"
 #include "core/frontend/emu_window.h"
 #include "core/frontend/motion_emu.h"
 
@@ -97,6 +98,8 @@ signals:
      * Qt::BlockingQueuedConnection (additionally block source thread until slot returns)
      */
     void DebugModeLeft();
+
+    void ErrorThrown(Core::System::ResultStatus, std::string);
 };
 
 class GRenderWindow : public QWidget, public EmuWindow {

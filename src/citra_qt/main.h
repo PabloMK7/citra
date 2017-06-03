@@ -8,6 +8,7 @@
 #include <memory>
 #include <QMainWindow>
 #include <QTimer>
+#include "core/core.h"
 #include "ui_main.h"
 
 class Config;
@@ -125,6 +126,7 @@ private slots:
     void OnDisplayTitleBars(bool);
     void ToggleWindowMode();
     void OnCreateGraphicsSurfaceViewer();
+    void OnCoreError(Core::System::ResultStatus, std::string);
 
 private:
     void UpdateStatusBar();
@@ -135,6 +137,7 @@ private:
     GameList* game_list;
 
     // Status bar elements
+    QLabel* message_label = nullptr;
     QLabel* emu_speed_label = nullptr;
     QLabel* game_fps_label = nullptr;
     QLabel* emu_frametime_label = nullptr;

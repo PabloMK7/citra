@@ -8,6 +8,7 @@
 #include <initializer_list>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 #include <boost/optional.hpp>
 #include "common/common_types.h"
@@ -100,11 +101,11 @@ public:
      * Loads the system mode that this application needs.
      * This function defaults to 2 (96MB allocated to the application) if it can't read the
      * information.
-     * @returns Optional with the kernel system mode
+     * @returns A pair with the optional system mode, and and the status.
      */
-    virtual boost::optional<u32> LoadKernelSystemMode() {
+    virtual std::pair<boost::optional<u32>, ResultStatus> LoadKernelSystemMode() {
         // 96MB allocated to the application.
-        return 2;
+        return std::make_pair(2, ResultStatus::Success);
     }
 
     /**

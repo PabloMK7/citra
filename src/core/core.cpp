@@ -3,7 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <memory>
-
+#include <utility>
 #include "audio_core/audio_core.h"
 #include "common/logging/log.h"
 #include "core/arm/arm_interface.h"
@@ -26,6 +26,7 @@ namespace Core {
 /*static*/ System System::s_instance;
 
 System::ResultStatus System::RunLoop(int tight_loop) {
+    status = ResultStatus::Success;
     if (!cpu_core) {
         return ResultStatus::ErrorNotInitialized;
     }
@@ -59,7 +60,7 @@ System::ResultStatus System::RunLoop(int tight_loop) {
     HW::Update();
     Reschedule();
 
-    return ResultStatus::Success;
+    return status;
 }
 
 System::ResultStatus System::SingleStep() {
@@ -73,14 +74,25 @@ System::ResultStatus System::Load(EmuWindow* emu_window, const std::string& file
         LOG_CRITICAL(Core, "Failed to obtain loader for %s!", filepath.c_str());
         return ResultStatus::ErrorGetLoader;
     }
+    std::pair<boost::optional<u32>, Loader::ResultStatus> system_mode =
+        app_loader->LoadKernelSystemMode();
 
-    boost::optional<u32> system_mode{app_loader->LoadKernelSystemMode()};
-    if (!system_mode) {
-        LOG_CRITICAL(Core, "Failed to determine system mode!");
-        return ResultStatus::ErrorSystemMode;
+    if (system_mode.second != Loader::ResultStatus::Success) {
+        LOG_CRITICAL(Core, "Failed to determine system mode (Error %i)!",
+                     static_cast<int>(system_mode.second));
+        System::Shutdown();
+
+        switch (system_mode.second) {
+        case Loader::ResultStatus::ErrorEncrypted:
+            return ResultStatus::ErrorLoader_ErrorEncrypted;
+        case Loader::ResultStatus::ErrorInvalidFormat:
+            return ResultStatus::ErrorLoader_ErrorInvalidFormat;
+        default:
+            return ResultStatus::ErrorSystemMode;
+        }
     }
 
-    ResultStatus init_result{Init(emu_window, system_mode.get())};
+    ResultStatus init_result{Init(emu_window, system_mode.first.get())};
     if (init_result != ResultStatus::Success) {
         LOG_CRITICAL(Core, "Failed to initialize system (Error %i)!", init_result);
         System::Shutdown();
@@ -101,7 +113,8 @@ System::ResultStatus System::Load(EmuWindow* emu_window, const std::string& file
             return ResultStatus::ErrorLoader;
         }
     }
-    return ResultStatus::Success;
+    status = ResultStatus::Success;
+    return status;
 }
 
 void System::PrepareReschedule() {
