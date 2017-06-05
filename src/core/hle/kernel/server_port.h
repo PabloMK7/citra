@@ -11,13 +11,10 @@
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/wait_object.h"
 
-namespace Service {
-class SessionRequestHandler;
-}
-
 namespace Kernel {
 
 class ClientPort;
+class SessionRequestHandler;
 
 class ServerPort final : public WaitObject {
 public:
@@ -31,7 +28,7 @@ public:
      */
     static std::tuple<SharedPtr<ServerPort>, SharedPtr<ClientPort>> CreatePortPair(
         u32 max_sessions, std::string name = "UnknownPort",
-        std::shared_ptr<Service::SessionRequestHandler> hle_handler = nullptr);
+        std::shared_ptr<SessionRequestHandler> hle_handler = nullptr);
 
     std::string GetTypeName() const override {
         return "ServerPort";
@@ -52,7 +49,7 @@ public:
 
     /// This session's HLE request handler template (optional)
     /// ServerSessions created from this port inherit a reference to this handler.
-    std::shared_ptr<Service::SessionRequestHandler> hle_handler;
+    std::shared_ptr<SessionRequestHandler> hle_handler;
 
     bool ShouldWait(Thread* thread) const override;
     void Acquire(Thread* thread) override;

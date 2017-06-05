@@ -4,8 +4,11 @@
 
 #include <tuple>
 
+#include "core/hle/kernel/client_port.h"
 #include "core/hle/kernel/client_session.h"
+#include "core/hle/kernel/hle_ipc.h"
 #include "core/hle/kernel/server_session.h"
+#include "core/hle/kernel/session.h"
 #include "core/hle/kernel/thread.h"
 
 namespace Kernel {
@@ -26,7 +29,7 @@ ServerSession::~ServerSession() {
 }
 
 ResultVal<SharedPtr<ServerSession>> ServerSession::Create(
-    std::string name, std::shared_ptr<Service::SessionRequestHandler> hle_handler) {
+    std::string name, std::shared_ptr<SessionRequestHandler> hle_handler) {
     SharedPtr<ServerSession> server_session(new ServerSession);
 
     server_session->name = std::move(name);
@@ -69,7 +72,7 @@ ResultCode ServerSession::HandleSyncRequest() {
 }
 
 ServerSession::SessionPair ServerSession::CreateSessionPair(
-    const std::string& name, std::shared_ptr<Service::SessionRequestHandler> hle_handler,
+    const std::string& name, std::shared_ptr<SessionRequestHandler> hle_handler,
     SharedPtr<ClientPort> port) {
 
     auto server_session =

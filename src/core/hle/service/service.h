@@ -12,12 +12,9 @@
 #include "core/hle/ipc.h"
 #include "core/hle/ipc_helpers.h"
 #include "core/hle/kernel/client_port.h"
+#include "core/hle/kernel/hle_ipc.h"
 #include "core/hle/result.h"
 #include "core/memory.h"
-
-namespace Kernel {
-class ServerSession;
-}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Namespace Service
@@ -29,48 +26,10 @@ static const int kMaxPortSize = 8; ///< Maximum size of a port name (8 character
 static const u32 DefaultMaxSessions = 10;
 
 /**
- * Interface implemented by HLE Session handlers.
- * This can be provided to a ServerSession in order to hook into several relevant events
- * (such as a new connection or a SyncRequest) so they can be implemented in the emulator.
- */
-class SessionRequestHandler {
-public:
-    /**
-     * Handles a sync request from the emulated application.
-     * @param server_session The ServerSession that was triggered for this sync request,
-     * it should be used to differentiate which client (As in ClientSession) we're answering to.
-     * TODO(Subv): Use a wrapper structure to hold all the information relevant to
-     * this request (ServerSession, Originator thread, Translated command buffer, etc).
-     * @returns ResultCode the result code of the translate operation.
-     */
-    virtual void HandleSyncRequest(Kernel::SharedPtr<Kernel::ServerSession> server_session) = 0;
-
-    /**
-     * Signals that a client has just connected to this HLE handler and keeps the
-     * associated ServerSession alive for the duration of the connection.
-     * @param server_session Owning pointer to the ServerSession associated with the connection.
-     */
-    void ClientConnected(Kernel::SharedPtr<Kernel::ServerSession> server_session);
-
-    /**
-     * Signals that a client has just disconnected from this HLE handler and releases the
-     * associated ServerSession.
-     * @param server_session ServerSession associated with the connection.
-     */
-    void ClientDisconnected(Kernel::SharedPtr<Kernel::ServerSession> server_session);
-
-protected:
-    /// List of sessions that are connected to this handler.
-    /// A ServerSession whose server endpoint is an HLE implementation is kept alive by this list
-    // for the duration of the connection.
-    std::vector<Kernel::SharedPtr<Kernel::ServerSession>> connected_sessions;
-};
-
-/**
  * Framework for implementing HLE service handlers which dispatch incoming SyncRequests based on a
  * table mapping header ids to handler functions.
  */
-class Interface : public SessionRequestHandler {
+class Interface : public Kernel::SessionRequestHandler {
 public:
     /**
      * Creates an HLE interface with the specified max sessions.

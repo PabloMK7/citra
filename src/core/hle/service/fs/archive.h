@@ -8,7 +8,7 @@
 #include <string>
 #include "common/common_types.h"
 #include "core/file_sys/archive_backend.h"
-#include "core/hle/kernel/server_session.h"
+#include "core/hle/kernel/hle_ipc.h"
 #include "core/hle/result.h"
 
 namespace FileSys {
@@ -43,7 +43,7 @@ enum class MediaType : u32 { NAND = 0, SDMC = 1, GameCard = 2 };
 
 typedef u64 ArchiveHandle;
 
-class File final : public SessionRequestHandler, public std::enable_shared_from_this<File> {
+class File final : public Kernel::SessionRequestHandler, public std::enable_shared_from_this<File> {
 public:
     File(std::unique_ptr<FileSys::FileBackend>&& backend, const FileSys::Path& path);
     ~File();
@@ -60,7 +60,7 @@ protected:
     void HandleSyncRequest(Kernel::SharedPtr<Kernel::ServerSession> server_session) override;
 };
 
-class Directory final : public SessionRequestHandler {
+class Directory final : public Kernel::SessionRequestHandler {
 public:
     Directory(std::unique_ptr<FileSys::DirectoryBackend>&& backend, const FileSys::Path& path);
     ~Directory();

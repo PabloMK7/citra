@@ -25,6 +25,7 @@
 #include "core/file_sys/errors.h"
 #include "core/file_sys/file_backend.h"
 #include "core/hle/kernel/client_session.h"
+#include "core/hle/kernel/server_session.h"
 #include "core/hle/result.h"
 #include "core/hle/service/fs/archive.h"
 #include "core/hle/service/fs/fs_user.h"
