@@ -38,8 +38,8 @@
 #include "core/hle/service/ptm/ptm.h"
 #include "core/hle/service/qtm/qtm.h"
 #include "core/hle/service/service.h"
+#include "core/hle/service/sm/srv.h"
 #include "core/hle/service/soc_u.h"
-#include "core/hle/service/srv.h"
 #include "core/hle/service/ssl_c.h"
 #include "core/hle/service/y2r_u.h"
 
@@ -126,7 +126,7 @@ void AddService(Interface* interface_) {
 
 /// Initialize ServiceManager
 void Init() {
-    AddNamedPort(new SRV::SRV);
+    AddNamedPort(new SM::SRV);
     AddNamedPort(new ERR::ERR_F);
 
     FS::ArchiveInit();

@@ -156,8 +156,8 @@ set(SRCS
             hle/service/qtm/qtm_sp.cpp
             hle/service/qtm/qtm_u.cpp
             hle/service/service.cpp
+            hle/service/sm/srv.cpp
             hle/service/soc_u.cpp
-            hle/service/srv.cpp
             hle/service/ssl_c.cpp
             hle/service/y2r_u.cpp
             hle/shared_page.cpp
@@ -352,8 +352,8 @@ set(HEADERS
             hle/service/qtm/qtm_sp.h
             hle/service/qtm/qtm_u.h
             hle/service/service.h
+            hle/service/sm/srv.h
             hle/service/soc_u.h
-            hle/service/srv.h
             hle/service/ssl_c.h
             hle/service/y2r_u.h
             hle/shared_page.h

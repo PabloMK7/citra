@@ -4,10 +4,11 @@
 
 #pragma once
 
+#include <string>
 #include "core/hle/service/service.h"
 
 namespace Service {
-namespace SRV {
+namespace SM {
 
 /// Interface to "srv:" service
 class SRV final : public Interface {
@@ -20,5 +21,5 @@ public:
     }
 };
 
-} // namespace SRV
+} // namespace SM
 } // namespace Service

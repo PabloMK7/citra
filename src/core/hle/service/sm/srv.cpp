@@ -9,10 +9,10 @@
 #include "core/hle/kernel/client_session.h"
 #include "core/hle/kernel/event.h"
 #include "core/hle/kernel/server_session.h"
-#include "core/hle/service/srv.h"
+#include "core/hle/service/sm/srv.h"
 
 namespace Service {
-namespace SRV {
+namespace SM {
 
 static Kernel::SharedPtr<Kernel::Event> event_handle;
 
@@ -184,5 +184,5 @@ SRV::~SRV() {
     event_handle = nullptr;
 }
 
-} // namespace SRV
+} // namespace SM
 } // namespace Service
