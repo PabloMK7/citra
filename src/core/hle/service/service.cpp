@@ -38,6 +38,7 @@
 #include "core/hle/service/ptm/ptm.h"
 #include "core/hle/service/qtm/qtm.h"
 #include "core/hle/service/service.h"
+#include "core/hle/service/sm/sm.h"
 #include "core/hle/service/sm/srv.h"
 #include "core/hle/service/soc_u.h"
 #include "core/hle/service/ssl_c.h"
@@ -46,7 +47,6 @@
 namespace Service {
 
 std::unordered_map<std::string, Kernel::SharedPtr<Kernel::ClientPort>> g_kernel_named_ports;
-std::unordered_map<std::string, Kernel::SharedPtr<Kernel::ClientPort>> g_srv_services;
 
 /**
  * Creates a function string for logging, complete with the name (or header code, depending
@@ -115,17 +115,16 @@ static void AddNamedPort(Interface* interface_) {
 }
 
 void AddService(Interface* interface_) {
-    Kernel::SharedPtr<Kernel::ServerPort> server_port;
-    Kernel::SharedPtr<Kernel::ClientPort> client_port;
-    std::tie(server_port, client_port) =
-        Kernel::ServerPort::CreatePortPair(interface_->GetMaxSessions(), interface_->GetPortName());
-
+    auto server_port =
+        SM::g_service_manager
+            ->RegisterService(interface_->GetPortName(), interface_->GetMaxSessions())
+            .MoveFrom();
     server_port->SetHleHandler(std::shared_ptr<Interface>(interface_));
-    g_srv_services.emplace(interface_->GetPortName(), std::move(client_port));
 }
 
 /// Initialize ServiceManager
 void Init() {
+    SM::g_service_manager = std::make_unique<SM::ServiceManager>();
     AddNamedPort(new SM::SRV);
     AddNamedPort(new ERR::ERR_F);
 
@@ -187,7 +186,7 @@ void Shutdown() {
     AC::Shutdown();
     FS::ArchiveShutdown();
 
-    g_srv_services.clear();
+    SM::g_service_manager = nullptr;
     g_kernel_named_ports.clear();
     LOG_DEBUG(Service, "shutdown OK");
 }
