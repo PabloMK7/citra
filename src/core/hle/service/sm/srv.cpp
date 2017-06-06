@@ -7,14 +7,16 @@
 #include "common/common_types.h"
 #include "common/logging/log.h"
 #include "core/hle/kernel/client_session.h"
-#include "core/hle/kernel/event.h"
+#include "core/hle/kernel/semaphore.h"
 #include "core/hle/kernel/server_session.h"
 #include "core/hle/service/sm/srv.h"
 
 namespace Service {
 namespace SM {
 
-static Kernel::SharedPtr<Kernel::Event> event_handle;
+constexpr int MAX_PENDING_NOTIFICATIONS = 16;
+
+static Kernel::SharedPtr<Kernel::Semaphore> notification_semaphore;
 
 /**
  * SRV::RegisterClient service function
@@ -51,14 +53,13 @@ static void RegisterClient(Interface* self) {
 static void EnableNotification(Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
-    // TODO(bunnei): Change to a semaphore once these have been implemented
-    event_handle = Kernel::Event::Create(Kernel::ResetType::OneShot, "SRV:Event");
-    event_handle->Clear();
+    notification_semaphore =
+        Kernel::Semaphore::Create(0, MAX_PENDING_NOTIFICATIONS, "SRV:Notification").Unwrap();
 
     cmd_buff[0] = IPC::MakeHeader(0x2, 0x1, 0x2); // 0x20042
     cmd_buff[1] = RESULT_SUCCESS.raw;             // No error
     cmd_buff[2] = IPC::CopyHandleDesc(1);
-    cmd_buff[3] = Kernel::g_handle_table.Create(event_handle).MoveFrom();
+    cmd_buff[3] = Kernel::g_handle_table.Create(notification_semaphore).MoveFrom();
     LOG_WARNING(Service_SRV, "(STUBBED) called");
 }
 
@@ -177,11 +178,11 @@ const Interface::FunctionInfo FunctionTable[] = {
 
 SRV::SRV() {
     Register(FunctionTable);
-    event_handle = nullptr;
+    notification_semaphore = nullptr;
 }
 
 SRV::~SRV() {
-    event_handle = nullptr;
+    notification_semaphore = nullptr;
 }
 
 } // namespace SM
