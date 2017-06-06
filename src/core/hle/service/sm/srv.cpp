@@ -7,14 +7,17 @@
 #include "common/common_types.h"
 #include "common/logging/log.h"
 #include "core/hle/kernel/client_session.h"
-#include "core/hle/kernel/event.h"
+#include "core/hle/kernel/semaphore.h"
 #include "core/hle/kernel/server_session.h"
-#include "core/hle/service/srv.h"
+#include "core/hle/service/sm/sm.h"
+#include "core/hle/service/sm/srv.h"
 
 namespace Service {
-namespace SRV {
+namespace SM {
 
-static Kernel::SharedPtr<Kernel::Event> event_handle;
+constexpr int MAX_PENDING_NOTIFICATIONS = 16;
+
+static Kernel::SharedPtr<Kernel::Semaphore> notification_semaphore;
 
 /**
  * SRV::RegisterClient service function
@@ -51,14 +54,13 @@ static void RegisterClient(Interface* self) {
 static void EnableNotification(Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
-    // TODO(bunnei): Change to a semaphore once these have been implemented
-    event_handle = Kernel::Event::Create(Kernel::ResetType::OneShot, "SRV:Event");
-    event_handle->Clear();
+    notification_semaphore =
+        Kernel::Semaphore::Create(0, MAX_PENDING_NOTIFICATIONS, "SRV:Notification").Unwrap();
 
     cmd_buff[0] = IPC::MakeHeader(0x2, 0x1, 0x2); // 0x20042
     cmd_buff[1] = RESULT_SUCCESS.raw;             // No error
     cmd_buff[2] = IPC::CopyHandleDesc(1);
-    cmd_buff[3] = Kernel::g_handle_table.Create(event_handle).MoveFrom();
+    cmd_buff[3] = Kernel::g_handle_table.Create(notification_semaphore).MoveFrom();
     LOG_WARNING(Service_SRV, "(STUBBED) called");
 }
 
@@ -77,25 +79,41 @@ static void GetServiceHandle(Interface* self) {
     ResultCode res = RESULT_SUCCESS;
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
-    std::string port_name = std::string((const char*)&cmd_buff[1], 0, Service::kMaxPortSize);
-    auto it = Service::g_srv_services.find(port_name);
-
-    if (it != Service::g_srv_services.end()) {
-        auto client_port = it->second;
-
-        auto client_session = client_port->Connect();
-        res = client_session.Code();
-
-        if (client_session.Succeeded()) {
-            // Return the client session
-            cmd_buff[3] = Kernel::g_handle_table.Create(*client_session).MoveFrom();
-        }
-        LOG_TRACE(Service_SRV, "called port=%s, handle=0x%08X", port_name.c_str(), cmd_buff[3]);
-    } else {
-        LOG_ERROR(Service_SRV, "(UNIMPLEMENTED) called port=%s", port_name.c_str());
-        res = UnimplementedFunction(ErrorModule::SRV);
+    size_t name_len = cmd_buff[3];
+    if (name_len > Service::kMaxPortSize) {
+        cmd_buff[1] = ERR_INVALID_NAME_SIZE.raw;
+        LOG_ERROR(Service_SRV, "called name_len=0x%X, failed with code=0x%08X", name_len,
+                  cmd_buff[1]);
+        return;
     }
-    cmd_buff[1] = res.raw;
+    std::string name(reinterpret_cast<const char*>(&cmd_buff[1]), name_len);
+    bool return_port_on_failure = (cmd_buff[4] & 1) == 0;
+
+    // TODO(yuriks): Permission checks go here
+
+    auto client_port = g_service_manager->GetServicePort(name);
+    if (client_port.Failed()) {
+        cmd_buff[1] = client_port.Code().raw;
+        LOG_ERROR(Service_SRV, "called service=%s, failed with code=0x%08X", name.c_str(),
+                  cmd_buff[1]);
+        return;
+    }
+
+    auto session = client_port.Unwrap()->Connect();
+    cmd_buff[1] = session.Code().raw;
+    if (session.Succeeded()) {
+        cmd_buff[3] = Kernel::g_handle_table.Create(session.MoveFrom()).MoveFrom();
+        LOG_DEBUG(Service_SRV, "called service=%s, session handle=0x%08X", name.c_str(),
+                  cmd_buff[3]);
+    } else if (session.Code() == Kernel::ERR_MAX_CONNECTIONS_REACHED && return_port_on_failure) {
+        cmd_buff[1] = ERR_MAX_CONNECTIONS_REACHED.raw;
+        cmd_buff[3] = Kernel::g_handle_table.Create(client_port.MoveFrom()).MoveFrom();
+        LOG_WARNING(Service_SRV, "called service=%s, *port* handle=0x%08X", name.c_str(),
+                    cmd_buff[3]);
+    } else {
+        LOG_ERROR(Service_SRV, "called service=%s, failed with code=0x%08X", name.c_str(),
+                  cmd_buff[1]);
+    }
 }
 
 /**
@@ -177,12 +195,12 @@ const Interface::FunctionInfo FunctionTable[] = {
 
 SRV::SRV() {
     Register(FunctionTable);
-    event_handle = nullptr;
+    notification_semaphore = nullptr;
 }
 
 SRV::~SRV() {
-    event_handle = nullptr;
+    notification_semaphore = nullptr;
 }
 
-} // namespace SRV
+} // namespace SM
 } // namespace Service

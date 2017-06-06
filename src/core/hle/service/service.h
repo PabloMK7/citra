@@ -107,8 +107,6 @@ void Shutdown();
 
 /// Map of named ports managed by the kernel, which can be retrieved using the ConnectToPort SVC.
 extern std::unordered_map<std::string, Kernel::SharedPtr<Kernel::ClientPort>> g_kernel_named_ports;
-/// Map of services registered with the "srv:" service, retrieved using GetServiceHandle.
-extern std::unordered_map<std::string, Kernel::SharedPtr<Kernel::ClientPort>> g_srv_services;
 
 /// Adds a service to the services table
 void AddService(Interface* interface_);
