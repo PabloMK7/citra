@@ -20,15 +20,13 @@ class ServerPort final : public WaitObject {
 public:
     /**
      * Creates a pair of ServerPort and an associated ClientPort.
+     *
      * @param max_sessions Maximum number of sessions to the port
      * @param name Optional name of the ports
-     * @param hle_handler Optional HLE handler template for the port,
-     * ServerSessions crated from this port will inherit a reference to this handler.
      * @return The created port tuple
      */
     static std::tuple<SharedPtr<ServerPort>, SharedPtr<ClientPort>> CreatePortPair(
-        u32 max_sessions, std::string name = "UnknownPort",
-        std::shared_ptr<SessionRequestHandler> hle_handler = nullptr);
+        u32 max_sessions, std::string name = "UnknownPort");
 
     std::string GetTypeName() const override {
         return "ServerPort";
@@ -40,6 +38,14 @@ public:
     static const HandleType HANDLE_TYPE = HandleType::ServerPort;
     HandleType GetHandleType() const override {
         return HANDLE_TYPE;
+    }
+
+    /**
+     * Sets the HLE handler template for the port. ServerSessions crated by connecting to this port
+     * will inherit a reference to this handler.
+     */
+    void SetHleHandler(std::shared_ptr<SessionRequestHandler> hle_handler_) {
+        hle_handler = std::move(hle_handler_);
     }
 
     std::string name; ///< Name of port (optional)

@@ -84,6 +84,10 @@ File::File(std::unique_ptr<FileSys::FileBackend>&& backend, const FileSys::Path&
 File::~File() {}
 
 void File::HandleSyncRequest(Kernel::SharedPtr<Kernel::ServerSession> server_session) {
+    using Kernel::ClientSession;
+    using Kernel::ServerSession;
+    using Kernel::SharedPtr;
+
     u32* cmd_buff = Kernel::GetCommandBuffer();
     FileCommand cmd = static_cast<FileCommand>(cmd_buff[0]);
     switch (cmd) {
@@ -162,10 +166,9 @@ void File::HandleSyncRequest(Kernel::SharedPtr<Kernel::ServerSession> server_ses
 
     case FileCommand::OpenLinkFile: {
         LOG_WARNING(Service_FS, "(STUBBED) File command OpenLinkFile %s", GetName().c_str());
-        auto sessions = Kernel::ServerSession::CreateSessionPair(GetName(), shared_from_this());
-        ClientConnected(std::get<Kernel::SharedPtr<Kernel::ServerSession>>(sessions));
-        cmd_buff[3] = Kernel::g_handle_table
-                          .Create(std::get<Kernel::SharedPtr<Kernel::ClientSession>>(sessions))
+        auto sessions = ServerSession::CreateSessionPair(GetName());
+        ClientConnected(std::get<SharedPtr<ServerSession>>(sessions));
+        cmd_buff[3] = Kernel::g_handle_table.Create(std::get<SharedPtr<ClientSession>>(sessions))
                           .ValueOr(INVALID_HANDLE);
         break;
     }

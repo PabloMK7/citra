@@ -28,16 +28,14 @@ ServerSession::~ServerSession() {
     parent->server = nullptr;
 }
 
-ResultVal<SharedPtr<ServerSession>> ServerSession::Create(
-    std::string name, std::shared_ptr<SessionRequestHandler> hle_handler) {
+ResultVal<SharedPtr<ServerSession>> ServerSession::Create(std::string name) {
     SharedPtr<ServerSession> server_session(new ServerSession);
 
     server_session->name = std::move(name);
     server_session->signaled = false;
-    server_session->hle_handler = std::move(hle_handler);
     server_session->parent = nullptr;
 
-    return MakeResult<SharedPtr<ServerSession>>(std::move(server_session));
+    return MakeResult(std::move(server_session));
 }
 
 bool ServerSession::ShouldWait(Thread* thread) const {
@@ -71,13 +69,9 @@ ResultCode ServerSession::HandleSyncRequest() {
     return RESULT_SUCCESS;
 }
 
-ServerSession::SessionPair ServerSession::CreateSessionPair(
-    const std::string& name, std::shared_ptr<SessionRequestHandler> hle_handler,
-    SharedPtr<ClientPort> port) {
-
-    auto server_session =
-        ServerSession::Create(name + "_Server", std::move(hle_handler)).MoveFrom();
-
+ServerSession::SessionPair ServerSession::CreateSessionPair(const std::string& name,
+                                                            SharedPtr<ClientPort> port) {
+    auto server_session = ServerSession::Create(name + "_Server").MoveFrom();
     SharedPtr<ClientSession> client_session(new ClientSession);
     client_session->name = name + "_Client";
 

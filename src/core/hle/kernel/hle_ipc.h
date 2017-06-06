@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <memory>
 #include <vector>
 #include "core/hle/kernel/kernel.h"
 
@@ -16,7 +17,7 @@ class ServerSession;
  * This can be provided to a ServerSession in order to hook into several relevant events
  * (such as a new connection or a SyncRequest) so they can be implemented in the emulator.
  */
-class SessionRequestHandler {
+class SessionRequestHandler : public std::enable_shared_from_this<SessionRequestHandler> {
 public:
     /**
      * Handles a sync request from the emulated application.

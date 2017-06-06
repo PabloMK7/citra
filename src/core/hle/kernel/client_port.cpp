@@ -26,20 +26,17 @@ ResultVal<SharedPtr<ClientSession>> ClientPort::Connect() {
     active_sessions++;
 
     // Create a new session pair, let the created sessions inherit the parent port's HLE handler.
-    auto sessions =
-        ServerSession::CreateSessionPair(server_port->GetName(), server_port->hle_handler, this);
-    auto client_session = std::get<SharedPtr<ClientSession>>(sessions);
-    auto server_session = std::get<SharedPtr<ServerSession>>(sessions);
+    auto sessions = ServerSession::CreateSessionPair(server_port->GetName(), this);
 
     if (server_port->hle_handler)
-        server_port->hle_handler->ClientConnected(server_session);
+        server_port->hle_handler->ClientConnected(std::get<SharedPtr<ServerSession>>(sessions));
     else
-        server_port->pending_sessions.push_back(std::move(server_session));
+        server_port->pending_sessions.push_back(std::get<SharedPtr<ServerSession>>(sessions));
 
     // Wake the threads waiting on the ServerPort
     server_port->WakeupAllWaitingThreads();
 
-    return MakeResult<SharedPtr<ClientSession>>(std::move(client_session));
+    return MakeResult(std::get<SharedPtr<ClientSession>>(sessions));
 }
 
 } // namespace

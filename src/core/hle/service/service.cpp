@@ -105,18 +105,22 @@ void Interface::Register(const FunctionInfo* functions, size_t n) {
 // Module interface
 
 static void AddNamedPort(Interface* interface_) {
-    auto ports =
-        Kernel::ServerPort::CreatePortPair(interface_->GetMaxSessions(), interface_->GetPortName(),
-                                           std::shared_ptr<Interface>(interface_));
-    auto client_port = std::get<Kernel::SharedPtr<Kernel::ClientPort>>(ports);
+    Kernel::SharedPtr<Kernel::ServerPort> server_port;
+    Kernel::SharedPtr<Kernel::ClientPort> client_port;
+    std::tie(server_port, client_port) =
+        Kernel::ServerPort::CreatePortPair(interface_->GetMaxSessions(), interface_->GetPortName());
+
+    server_port->SetHleHandler(std::shared_ptr<Interface>(interface_));
     g_kernel_named_ports.emplace(interface_->GetPortName(), std::move(client_port));
 }
 
 void AddService(Interface* interface_) {
-    auto ports =
-        Kernel::ServerPort::CreatePortPair(interface_->GetMaxSessions(), interface_->GetPortName(),
-                                           std::shared_ptr<Interface>(interface_));
-    auto client_port = std::get<Kernel::SharedPtr<Kernel::ClientPort>>(ports);
+    Kernel::SharedPtr<Kernel::ServerPort> server_port;
+    Kernel::SharedPtr<Kernel::ClientPort> client_port;
+    std::tie(server_port, client_port) =
+        Kernel::ServerPort::CreatePortPair(interface_->GetMaxSessions(), interface_->GetPortName());
+
+    server_port->SetHleHandler(std::shared_ptr<Interface>(interface_));
     g_srv_services.emplace(interface_->GetPortName(), std::move(client_port));
 }
 

@@ -50,14 +50,20 @@ public:
     /**
      * Creates a pair of ServerSession and an associated ClientSession.
      * @param name        Optional name of the ports.
-     * @param hle_handler Optional HLE handler for this server session.
      * @param client_port Optional The ClientPort that spawned this session.
      * @return The created session tuple
      */
-    static SessionPair CreateSessionPair(
-        const std::string& name = "Unknown",
-        std::shared_ptr<SessionRequestHandler> hle_handler = nullptr,
-        SharedPtr<ClientPort> client_port = nullptr);
+    static SessionPair CreateSessionPair(const std::string& name = "Unknown",
+                                         SharedPtr<ClientPort> client_port = nullptr);
+
+    /**
+     * Sets the HLE handler for the session. This handler will be called to service IPC requests
+     * instead of the regular IPC machinery. (The regular IPC machinery is currently not
+     * implemented.)
+     */
+    void SetHleHandler(std::shared_ptr<SessionRequestHandler> hle_handler_) {
+        hle_handler = std::move(hle_handler_);
+    }
 
     /**
      * Handle a sync request from the emulated application.
@@ -83,11 +89,9 @@ private:
      * Creates a server session. The server session can have an optional HLE handler,
      * which will be invoked to handle the IPC requests that this session receives.
      * @param name Optional name of the server session.
-     * @param hle_handler Optional HLE handler for this server session.
      * @return The created server session
      */
-    static ResultVal<SharedPtr<ServerSession>> Create(
-        std::string name = "Unknown", std::shared_ptr<SessionRequestHandler> hle_handler = nullptr);
+    static ResultVal<SharedPtr<ServerSession>> Create(std::string name = "Unknown");
 };
 
 /**

@@ -24,13 +24,12 @@ void ServerPort::Acquire(Thread* thread) {
 }
 
 std::tuple<SharedPtr<ServerPort>, SharedPtr<ClientPort>> ServerPort::CreatePortPair(
-    u32 max_sessions, std::string name, std::shared_ptr<SessionRequestHandler> hle_handler) {
+    u32 max_sessions, std::string name) {
 
     SharedPtr<ServerPort> server_port(new ServerPort);
     SharedPtr<ClientPort> client_port(new ClientPort);
 
     server_port->name = name + "_Server";
-    server_port->hle_handler = std::move(hle_handler);
     client_port->name = name + "_Client";
     client_port->server_port = server_port;
     client_port->max_sessions = max_sessions;

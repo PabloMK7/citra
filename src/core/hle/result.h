@@ -416,6 +416,16 @@ ResultVal<T> MakeResult(Args&&... args) {
 }
 
 /**
+ * Deducible overload of MakeResult, allowing the template parameter to be ommited if you're just
+ * copy or move constructing.
+ */
+template <typename Arg>
+ResultVal<std::remove_reference_t<Arg>> MakeResult(Arg&& arg) {
+    return ResultVal<std::remove_reference_t<Arg>>::WithCode(RESULT_SUCCESS,
+                                                             std::forward<Arg>(arg));
+}
+
+/**
  * Check for the success of `source` (which must evaluate to a ResultVal). If it succeeds, unwraps
  * the contained value and assigns it to `target`, which can be either an l-value expression or a
  * variable declaration. If it fails the return code is returned from the current function. Thus it
@@ -426,3 +436,12 @@ ResultVal<T> MakeResult(Args&&... args) {
     if (CONCAT2(check_result_L, __LINE__).Failed())                                                \
         return CONCAT2(check_result_L, __LINE__).Code();                                           \
     target = std::move(*CONCAT2(check_result_L, __LINE__))
+
+/**
+ * Analogous to CASCADE_RESULT, but for a bare ResultCode. The code will be propagated if
+ * non-success, or discarded otherwise.
+ */
+#define CASCADE_CODE(source)                                                                       \
+    auto CONCAT2(check_result_L, __LINE__) = source;                                               \
+    if (CONCAT2(check_result_L, __LINE__).IsError())                                               \
+        return CONCAT2(check_result_L, __LINE__);
