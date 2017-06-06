@@ -2,11 +2,10 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <boost/range/algorithm_ext/erase.hpp>
-
 #include "common/logging/log.h"
 #include "common/string_util.h"
 #include "core/hle/kernel/server_port.h"
+#include "core/hle/kernel/server_session.h"
 #include "core/hle/service/ac/ac.h"
 #include "core/hle/service/act/act.h"
 #include "core/hle/service/am/am.h"
@@ -64,16 +63,6 @@ static std::string MakeFunctionString(const char* name, const char* port_name,
         function_string += Common::StringFromFormat(", cmd_buff[%i]=0x%X", i, cmd_buff[i]);
     }
     return function_string;
-}
-
-void SessionRequestHandler::ClientConnected(
-    Kernel::SharedPtr<Kernel::ServerSession> server_session) {
-    connected_sessions.push_back(server_session);
-}
-
-void SessionRequestHandler::ClientDisconnected(
-    Kernel::SharedPtr<Kernel::ServerSession> server_session) {
-    boost::range::remove_erase(connected_sessions, server_session);
 }
 
 Interface::Interface(u32 max_sessions) : max_sessions(max_sessions) {}
