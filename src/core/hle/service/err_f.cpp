@@ -6,11 +6,11 @@
 #include <chrono>
 #include <iomanip>
 #include <sstream>
-
 #include "common/bit_field.h"
 #include "common/common_types.h"
 #include "common/logging/log.h"
 #include "core/core.h"
+#include "core/hle/ipc.h"
 #include "core/hle/result.h"
 #include "core/hle/service/err_f.h"
 

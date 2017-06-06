@@ -3,14 +3,13 @@
 // Refer to the license.txt file included.
 
 #include <cstring>
-
-#include "core/hle/service/nwm/nwm_uds.h"
-#include "core/hle/service/nwm/uds_beacon.h"
-
 #include <cryptopp/aes.h>
 #include <cryptopp/md5.h>
 #include <cryptopp/modes.h>
 #include <cryptopp/sha.h>
+#include "common/assert.h"
+#include "core/hle/service/nwm/nwm_uds.h"
+#include "core/hle/service/nwm/uds_beacon.h"
 
 namespace Service {
 namespace NWM {

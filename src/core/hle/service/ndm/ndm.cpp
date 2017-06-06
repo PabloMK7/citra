@@ -2,8 +2,10 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <array>
 #include "common/common_types.h"
 #include "common/logging/log.h"
+#include "core/hle/ipc.h"
 #include "core/hle/service/ndm/ndm.h"
 #include "core/hle/service/ndm/ndm_u.h"
 #include "core/hle/service/service.h"

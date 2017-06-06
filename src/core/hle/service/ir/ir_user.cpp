@@ -7,6 +7,7 @@
 #include <boost/optional.hpp>
 #include "common/string_util.h"
 #include "common/swap.h"
+#include "core/hle/ipc_helpers.h"
 #include "core/hle/kernel/event.h"
 #include "core/hle/kernel/shared_memory.h"
 #include "core/hle/service/ir/extra_hid.h"

@@ -2,7 +2,9 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "core/hle/ipc.h"
 #include "core/hle/kernel/event.h"
+#include "core/hle/kernel/handle_table.h"
 #include "core/hle/service/nfc/nfc.h"
 #include "core/hle/service/nfc/nfc_m.h"
 #include "core/hle/service/nfc/nfc_u.h"

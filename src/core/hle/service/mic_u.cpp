@@ -3,7 +3,9 @@
 // Refer to the license.txt file included.
 
 #include "common/logging/log.h"
+#include "core/hle/ipc.h"
 #include "core/hle/kernel/event.h"
+#include "core/hle/kernel/handle_table.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/shared_memory.h"
 #include "core/hle/service/mic_u.h"

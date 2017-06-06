@@ -3,6 +3,9 @@
 // Refer to the license.txt file included.
 
 #include <cinttypes>
+#include "common/logging/log.h"
+#include "core/hle/ipc.h"
+#include "core/hle/result.h"
 #include "core/hle/service/boss/boss.h"
 #include "core/hle/service/boss/boss_p.h"
 #include "core/hle/service/boss/boss_u.h"

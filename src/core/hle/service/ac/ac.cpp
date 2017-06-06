@@ -4,11 +4,16 @@
 
 #include <array>
 
+#include "common/common_types.h"
 #include "common/logging/log.h"
+#include "core/hle/ipc.h"
 #include "core/hle/kernel/event.h"
+#include "core/hle/kernel/handle_table.h"
+#include "core/hle/result.h"
 #include "core/hle/service/ac/ac.h"
 #include "core/hle/service/ac/ac_i.h"
 #include "core/hle/service/ac/ac_u.h"
+#include "core/memory.h"
 
 namespace Service {
 namespace AC {

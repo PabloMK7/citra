@@ -13,6 +13,8 @@
 #include "core/file_sys/archive_systemsavedata.h"
 #include "core/file_sys/errors.h"
 #include "core/file_sys/file_backend.h"
+#include "core/hle/ipc.h"
+#include "core/hle/ipc_helpers.h"
 #include "core/hle/result.h"
 #include "core/hle/service/cfg/cfg.h"
 #include "core/hle/service/cfg/cfg_i.h"
@@ -21,6 +23,7 @@
 #include "core/hle/service/cfg/cfg_u.h"
 #include "core/hle/service/fs/archive.h"
 #include "core/hle/service/service.h"
+#include "core/memory.h"
 #include "core/settings.h"
 
 namespace Service {

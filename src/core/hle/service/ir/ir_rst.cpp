@@ -6,6 +6,7 @@
 #include "common/bit_field.h"
 #include "core/core_timing.h"
 #include "core/frontend/input.h"
+#include "core/hle/ipc_helpers.h"
 #include "core/hle/kernel/event.h"
 #include "core/hle/kernel/shared_memory.h"
 #include "core/hle/service/hid/hid.h"

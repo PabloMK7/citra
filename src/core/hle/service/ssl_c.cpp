@@ -4,7 +4,9 @@
 
 #include <random>
 #include "common/common_types.h"
+#include "core/hle/ipc.h"
 #include "core/hle/service/ssl_c.h"
+#include "core/memory.h"
 
 namespace Service {
 namespace SSL {

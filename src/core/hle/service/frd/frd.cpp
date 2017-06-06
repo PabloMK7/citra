@@ -2,11 +2,16 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "common/assert.h"
+#include "common/logging/log.h"
 #include "common/string_util.h"
+#include "core/hle/ipc.h"
+#include "core/hle/result.h"
 #include "core/hle/service/frd/frd.h"
 #include "core/hle/service/frd/frd_a.h"
 #include "core/hle/service/frd/frd_u.h"
 #include "core/hle/service/service.h"
+#include "core/memory.h"
 
 namespace Service {
 namespace FRD {
