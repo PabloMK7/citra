@@ -6,6 +6,8 @@
 #include "common/common_funcs.h"
 #include "common/common_types.h"
 #include "common/logging/log.h"
+#include "core/hle/ipc.h"
+#include "core/hle/ipc_helpers.h"
 #include "core/hle/kernel/event.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/service/y2r_u.h"

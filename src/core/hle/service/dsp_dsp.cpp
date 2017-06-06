@@ -3,12 +3,18 @@
 // Refer to the license.txt file included.
 
 #include <algorithm>
+#include <array>
 #include <cinttypes>
 #include "audio_core/hle/pipe.h"
+#include "common/assert.h"
 #include "common/hash.h"
 #include "common/logging/log.h"
+#include "core/hle/ipc.h"
 #include "core/hle/kernel/event.h"
+#include "core/hle/kernel/handle_table.h"
+#include "core/hle/result.h"
 #include "core/hle/service/dsp_dsp.h"
+#include "core/memory.h"
 
 using DspPipe = DSP::HLE::DspPipe;
 

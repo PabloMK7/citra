@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <tuple>
+#include "core/hle/kernel/client_port.h"
 #include "core/hle/kernel/client_session.h"
 #include "core/hle/kernel/server_port.h"
 #include "core/hle/result.h"

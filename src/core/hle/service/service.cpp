@@ -4,6 +4,7 @@
 
 #include "common/logging/log.h"
 #include "common/string_util.h"
+#include "core/hle/kernel/client_port.h"
 #include "core/hle/kernel/server_port.h"
 #include "core/hle/kernel/server_session.h"
 #include "core/hle/service/ac/ac.h"

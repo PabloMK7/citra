@@ -8,16 +8,18 @@
 #include <string>
 #include <unordered_map>
 #include <boost/container/flat_map.hpp>
+#include "common/bit_field.h"
 #include "common/common_types.h"
-#include "core/hle/ipc.h"
-#include "core/hle/ipc_helpers.h"
-#include "core/hle/kernel/client_port.h"
 #include "core/hle/kernel/hle_ipc.h"
-#include "core/hle/result.h"
-#include "core/memory.h"
+#include "core/hle/kernel/kernel.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Namespace Service
+
+namespace Kernel {
+class ClientPort;
+class ServerSession;
+}
 
 namespace Service {
 

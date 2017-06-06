@@ -11,13 +11,17 @@
 #include "common/logging/log.h"
 #include "core/core_timing.h"
 #include "core/frontend/camera/factory.h"
+#include "core/hle/ipc.h"
+#include "core/hle/ipc_helpers.h"
 #include "core/hle/kernel/event.h"
+#include "core/hle/result.h"
 #include "core/hle/service/cam/cam.h"
 #include "core/hle/service/cam/cam_c.h"
 #include "core/hle/service/cam/cam_q.h"
 #include "core/hle/service/cam/cam_s.h"
 #include "core/hle/service/cam/cam_u.h"
 #include "core/hle/service/service.h"
+#include "core/memory.h"
 #include "core/settings.h"
 
 namespace Service {

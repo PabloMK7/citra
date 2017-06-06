@@ -4,6 +4,7 @@
 
 #include "common/common_types.h"
 #include "common/logging/log.h"
+#include "core/hle/ipc.h"
 #include "core/hle/result.h"
 #include "core/hle/service/dlp/dlp_srvr.h"
 

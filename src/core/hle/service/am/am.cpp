@@ -2,8 +2,12 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <array>
 #include <cinttypes>
+#include "common/common_types.h"
 #include "common/logging/log.h"
+#include "core/hle/ipc.h"
+#include "core/hle/result.h"
 #include "core/hle/service/am/am.h"
 #include "core/hle/service/am/am_app.h"
 #include "core/hle/service/am/am_net.h"
@@ -176,8 +180,6 @@ void GetTicketList(Service::Interface* self) {
 }
 
 void Init() {
-    using namespace Kernel;
-
     AddService(new AM_APP_Interface);
     AddService(new AM_NET_Interface);
     AddService(new AM_SYS_Interface);

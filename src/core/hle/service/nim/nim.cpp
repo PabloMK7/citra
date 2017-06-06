@@ -4,6 +4,7 @@
 
 #include "common/common_types.h"
 #include "common/logging/log.h"
+#include "core/hle/ipc.h"
 #include "core/hle/service/nim/nim.h"
 #include "core/hle/service/nim/nim_aoc.h"
 #include "core/hle/service/nim/nim_s.h"

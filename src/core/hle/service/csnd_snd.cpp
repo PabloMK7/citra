@@ -4,9 +4,12 @@
 
 #include <cstring>
 #include "common/alignment.h"
+#include "core/hle/ipc.h"
+#include "core/hle/kernel/handle_table.h"
 #include "core/hle/kernel/mutex.h"
 #include "core/hle/kernel/shared_memory.h"
 #include "core/hle/service/csnd_snd.h"
+#include "core/memory.h"
 
 namespace Service {
 namespace CSND {

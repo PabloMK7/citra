@@ -7,6 +7,7 @@
 #include "common/logging/log.h"
 #include "core/arm/arm_interface.h"
 #include "core/core.h"
+#include "core/hle/ipc_helpers.h"
 #include "core/hle/kernel/process.h"
 #include "core/hle/kernel/vm_manager.h"
 #include "core/hle/service/ldr_ro/cro_helper.h"
