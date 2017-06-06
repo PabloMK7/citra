@@ -43,7 +43,7 @@ enum class MediaType : u32 { NAND = 0, SDMC = 1, GameCard = 2 };
 
 typedef u64 ArchiveHandle;
 
-class File final : public Kernel::SessionRequestHandler, public std::enable_shared_from_this<File> {
+class File final : public Kernel::SessionRequestHandler {
 public:
     File(std::unique_ptr<FileSys::FileBackend>&& backend, const FileSys::Path& path);
     ~File();
