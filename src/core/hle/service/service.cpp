@@ -206,8 +206,9 @@ void AddService(Interface* interface_) {
 
 /// Initialize ServiceManager
 void Init() {
-    SM::g_service_manager = std::make_unique<SM::ServiceManager>();
-    AddNamedPort(new SM::SRV);
+    SM::g_service_manager = std::make_shared<SM::ServiceManager>();
+    SM::ServiceManager::InstallInterfaces(SM::g_service_manager);
+
     AddNamedPort(new ERR::ERR_F);
 
     FS::ArchiveInit();
