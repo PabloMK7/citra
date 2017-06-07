@@ -423,6 +423,102 @@ static void SetApplicationData(Interface* self) {
     rb.Push(RESULT_SUCCESS);
 }
 
+/**
+ * NWM_UDS::DecryptBeaconData service function.
+ * Decrypts the encrypted data tags contained in the 802.11 beacons.
+ *  Inputs:
+ *      1 : Input network struct buffer descriptor.
+ *      2 : Input network struct buffer ptr.
+ *      3 : Input tag0 encrypted buffer descriptor.
+ *      4 : Input tag0 encrypted buffer ptr.
+ *      5 : Input tag1 encrypted buffer descriptor.
+ *      6 : Input tag1 encrypted buffer ptr.
+ *     64 : Output buffer descriptor.
+ *     65 : Output buffer ptr.
+ *  Outputs:
+ *      0 : Return header
+ *      1 : Result of function, 0 on success, otherwise error code
+ */
+static void DecryptBeaconData(Interface* self) {
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x1F, 0, 6);
+
+    size_t desc_size;
+    const VAddr network_struct_addr = rp.PopStaticBuffer(&desc_size);
+    ASSERT(desc_size == sizeof(NetworkInfo));
+
+    size_t data0_size;
+    const VAddr encrypted_data0_addr = rp.PopStaticBuffer(&data0_size);
+
+    size_t data1_size;
+    const VAddr encrypted_data1_addr = rp.PopStaticBuffer(&data1_size);
+
+    size_t output_buffer_size;
+    const VAddr output_buffer_addr = rp.PeekStaticBuffer(0, &output_buffer_size);
+
+    // This size is hardcoded in the 3DS UDS code.
+    ASSERT(output_buffer_size == sizeof(NodeInfo) * UDSMaxNodes);
+
+    LOG_WARNING(Service_NWM, "called in0=%08X in1=%08X out=%08X", encrypted_data0_addr,
+                encrypted_data1_addr, output_buffer_addr);
+
+    NetworkInfo net_info;
+    Memory::ReadBlock(network_struct_addr, &net_info, sizeof(net_info));
+
+    // Read the encrypted data.
+    // The first 4 bytes should be the OUI and the OUI Type of the tags.
+    std::array<u8, 3> oui;
+    Memory::ReadBlock(encrypted_data0_addr, oui.data(), oui.size());
+    ASSERT_MSG(oui == NintendoOUI, "Unexpected OUI");
+    Memory::ReadBlock(encrypted_data1_addr, oui.data(), oui.size());
+    ASSERT_MSG(oui == NintendoOUI, "Unexpected OUI");
+
+    ASSERT_MSG(Memory::Read8(encrypted_data0_addr + 3) ==
+                   static_cast<u8>(NintendoTagId::EncryptedData0),
+               "Unexpected tag id");
+    ASSERT_MSG(Memory::Read8(encrypted_data1_addr + 3) ==
+                   static_cast<u8>(NintendoTagId::EncryptedData1),
+               "Unexpected tag id");
+
+    std::vector<u8> beacon_data(data0_size + data1_size);
+    Memory::ReadBlock(encrypted_data0_addr + 4, beacon_data.data(), data0_size);
+    Memory::ReadBlock(encrypted_data1_addr + 4, beacon_data.data() + data0_size, data1_size);
+
+    // Decrypt the data
+    DecryptBeaconData(net_info, beacon_data);
+
+    // The beacon data header contains the MD5 hash of the data.
+    BeaconData beacon_header;
+    std::memcpy(&beacon_header, beacon_data.data(), sizeof(beacon_header));
+
+    // TODO(Subv): Verify the MD5 hash of the data and return 0xE1211005 if invalid.
+
+    u8 num_nodes = net_info.max_nodes;
+
+    std::vector<NodeInfo> nodes;
+
+    for (int i = 0; i < num_nodes; ++i) {
+        BeaconNodeInfo info;
+        std::memcpy(&info, beacon_data.data() + sizeof(beacon_header) + i * sizeof(info),
+                    sizeof(info));
+
+        // Deserialize the node information.
+        NodeInfo node{};
+        node.friend_code_seed = info.friend_code_seed;
+        node.network_node_id = info.network_node_id;
+        for (int i = 0; i < info.username.size(); ++i)
+            node.username[i] = info.username[i];
+
+        nodes.push_back(node);
+    }
+
+    Memory::ZeroBlock(output_buffer_addr, sizeof(NodeInfo) * UDSMaxNodes);
+    Memory::WriteBlock(output_buffer_addr, nodes.data(), sizeof(NodeInfo) * nodes.size());
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
+    rb.PushStaticBuffer(output_buffer_addr, output_buffer_size, 0);
+    rb.Push(RESULT_SUCCESS);
+}
+
 // Sends a 802.11 beacon frame with information about the current network.
 static void BeaconBroadcastCallback(u64 userdata, int cycles_late) {
     // Don't do anything if we're not actually hosting a network
@@ -463,7 +559,7 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x001B0302, InitializeWithVersion, "InitializeWithVersion"},
     {0x001D0044, BeginHostingNetwork, "BeginHostingNetwork"},
     {0x001E0084, nullptr, "ConnectToNetwork"},
-    {0x001F0006, nullptr, "DecryptBeaconData"},
+    {0x001F0006, DecryptBeaconData, "DecryptBeaconData"},
     {0x00200040, nullptr, "Flush"},
     {0x00210080, nullptr, "SetProbeResponseParam"},
     {0x00220402, nullptr, "ScanOnConnection"},
