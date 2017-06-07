@@ -21,4 +21,6 @@ void SessionRequestHandler::ClientDisconnected(SharedPtr<ServerSession> server_s
     boost::range::remove_erase(connected_sessions, server_session);
 }
 
+HLERequestContext::~HLERequestContext() = default;
+
 } // namespace Kernel

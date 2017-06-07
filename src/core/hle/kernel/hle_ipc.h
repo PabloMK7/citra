@@ -7,10 +7,13 @@
 #include <memory>
 #include <vector>
 #include "core/hle/kernel/kernel.h"
+#include "core/hle/kernel/server_session.h"
+
+namespace Service {
+class ServiceFrameworkBase;
+}
 
 namespace Kernel {
-
-class ServerSession;
 
 /**
  * Interface implemented by HLE Session handlers.
@@ -50,6 +53,35 @@ protected:
     /// A ServerSession whose server endpoint is an HLE implementation is kept alive by this list
     // for the duration of the connection.
     std::vector<SharedPtr<ServerSession>> connected_sessions;
+};
+
+/**
+ * Class containing information about an in-flight IPC request being handled by an HLE service
+ * implementation. Services should avoid using old global APIs (e.g. Kernel::GetCommandBuffer()) and
+ * when possible use the APIs in this class to service the request.
+ */
+class HLERequestContext {
+public:
+    ~HLERequestContext();
+
+    /// Returns a pointer to the IPC command buffer for this request.
+    u32* CommandBuffer() const {
+        return cmd_buf;
+    }
+
+    /**
+     * Returns the session through which this request was made. This can be used as a map key to
+     * access per-client data on services.
+     */
+    SharedPtr<ServerSession> Session() const {
+        return session;
+    }
+
+private:
+    friend class Service::ServiceFrameworkBase;
+
+    u32* cmd_buf = nullptr;
+    SharedPtr<ServerSession> session;
 };
 
 } // namespace Kernel
