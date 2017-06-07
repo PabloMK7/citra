@@ -53,7 +53,7 @@ using Kernel::SharedPtr;
 
 namespace Service {
 
-std::unordered_map<std::string, Kernel::SharedPtr<Kernel::ClientPort>> g_kernel_named_ports;
+std::unordered_map<std::string, SharedPtr<ClientPort>> g_kernel_named_ports;
 
 /**
  * Creates a function string for logging, complete with the name (or header code, depending
@@ -75,7 +75,7 @@ static std::string MakeFunctionString(const char* name, const char* port_name,
 Interface::Interface(u32 max_sessions) : max_sessions(max_sessions) {}
 Interface::~Interface() = default;
 
-void Interface::HandleSyncRequest(Kernel::SharedPtr<Kernel::ServerSession> server_session) {
+void Interface::HandleSyncRequest(SharedPtr<ServerSession> server_session) {
     // TODO(Subv): Make use of the server_session in the HLE service handlers to distinguish which
     // session triggered each command.
 
@@ -187,10 +187,10 @@ void AddNamedPort(std::string name, SharedPtr<ClientPort> port) {
 }
 
 static void AddNamedPort(Interface* interface_) {
-    Kernel::SharedPtr<Kernel::ServerPort> server_port;
-    Kernel::SharedPtr<Kernel::ClientPort> client_port;
+    SharedPtr<ServerPort> server_port;
+    SharedPtr<ClientPort> client_port;
     std::tie(server_port, client_port) =
-        Kernel::ServerPort::CreatePortPair(interface_->GetMaxSessions(), interface_->GetPortName());
+        ServerPort::CreatePortPair(interface_->GetMaxSessions(), interface_->GetPortName());
 
     server_port->SetHleHandler(std::shared_ptr<Interface>(interface_));
     AddNamedPort(interface_->GetPortName(), std::move(client_port));
