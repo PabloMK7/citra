@@ -73,6 +73,8 @@ PicaShaderConfig PicaShaderConfig::BuildFromRegs(const Pica::Regs& regs) {
         state.lighting.light[light_index].num = num;
         state.lighting.light[light_index].directional = light.config.directional != 0;
         state.lighting.light[light_index].two_sided_diffuse = light.config.two_sided_diffuse != 0;
+        state.lighting.light[light_index].geometric_factor_0 = light.config.geometric_factor_0 != 0;
+        state.lighting.light[light_index].geometric_factor_1 = light.config.geometric_factor_1 != 0;
         state.lighting.light[light_index].dist_atten_enable =
             !regs.lighting.IsDistAttenDisabled(num);
         state.lighting.light[light_index].spot_atten_enable =
@@ -518,7 +520,8 @@ static void WriteLighting(std::string& out, const PicaShaderConfig& config) {
            "vec4 specular_sum = vec4(0.0, 0.0, 0.0, 1.0);\n"
            "vec3 light_vector = vec3(0.0);\n"
            "vec3 refl_value = vec3(0.0);\n"
-           "vec3 spot_dir = vec3(0.0);\n;";
+           "vec3 spot_dir = vec3(0.0);\n"
+           "float geo_factor = 1.0;\n";
 
     // Compute fragment normals and tangents
     const std::string pertubation =
@@ -671,6 +674,12 @@ static void WriteLighting(std::string& out, const PicaShaderConfig& config) {
         std::string clamp_highlights =
             lighting.clamp_highlights ? "(dot(light_vector, normal) <= 0.0 ? 0.0 : 1.0)" : "1.0";
 
+        if (light_config.geometric_factor_0 || light_config.geometric_factor_1) {
+            out += "geo_factor = 1 + dot(light_vector, normalize(view));\n"
+                   "geo_factor = geo_factor == 0.0 ? 0.0 : min(0.5 * " +
+                   dot_product + " / geo_factor, 1.0);\n";
+        }
+
         // Specular 0 component
         std::string d0_lut_value = "1.0";
         if (lighting.lut_d0.enable &&
@@ -683,6 +692,9 @@ static void WriteLighting(std::string& out, const PicaShaderConfig& config) {
                            GetLutValue(LightingRegs::LightingSampler::Distribution0, index) + ")";
         }
         std::string specular_0 = "(" + d0_lut_value + " * " + light_src + ".specular_0)";
+        if (light_config.geometric_factor_0) {
+            specular_0 = "(" + specular_0 + " * geo_factor)";
+        }
 
         // If enabled, lookup ReflectRed value, otherwise, 1.0 is used
         if (lighting.lut_rr.enable &&
@@ -738,6 +750,9 @@ static void WriteLighting(std::string& out, const PicaShaderConfig& config) {
         }
         std::string specular_1 =
             "(" + d1_lut_value + " * refl_value * " + light_src + ".specular_1)";
+        if (light_config.geometric_factor_1) {
+            specular_1 = "(" + specular_1 + " * geo_factor)";
+        }
 
         // Fresnel
         if (lighting.lut_fr.enable &&
