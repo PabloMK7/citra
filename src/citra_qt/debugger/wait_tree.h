@@ -18,7 +18,6 @@ class WaitObject;
 class Event;
 class Mutex;
 class Semaphore;
-class Session;
 class Thread;
 class Timer;
 }
