@@ -16,9 +16,13 @@ ClientSession::~ClientSession() {
     // This destructor will be called automatically when the last ClientSession handle is closed by
     // the emulated application.
 
-    if (parent->server) {
-        if (parent->server->hle_handler)
-            parent->server->hle_handler->ClientDisconnected(parent->server);
+    // Local references to ServerSession and SessionRequestHandler are necessary to guarantee they
+    // will be kept alive until after ClientDisconnected() returns.
+    SharedPtr<ServerSession> server = parent->server;
+    if (server) {
+        std::shared_ptr<SessionRequestHandler> hle_handler = server->hle_handler;
+        if (hle_handler)
+            hle_handler->ClientDisconnected(server);
 
         // TODO(Subv): Force a wake up of all the ServerSession's waiting threads and set
         // their WaitSynchronization result to 0xC920181A.
@@ -28,11 +32,13 @@ ClientSession::~ClientSession() {
 }
 
 ResultCode ClientSession::SendSyncRequest() {
-    // Signal the server session that new data is available
-    if (parent->server)
-        return parent->server->HandleSyncRequest();
+    // Keep ServerSession alive until we're done working with it.
+    SharedPtr<ServerSession> server = parent->server;
+    if (server == nullptr)
+        return ERR_SESSION_CLOSED_BY_REMOTE;
 
-    return ERR_SESSION_CLOSED_BY_REMOTE;
+    // Signal the server session that new data is available
+    return server->HandleSyncRequest();
 }
 
 } // namespace
