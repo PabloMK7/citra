@@ -520,12 +520,12 @@ static void WriteLighting(std::string& out, const PicaShaderConfig& config) {
            "vec3 refl_value = vec3(0.0);\n"
            "vec3 spot_dir = vec3(0.0);\n;";
 
-    // Compute fragment normals
+    // Compute fragment normals and tangents
+    const std::string pertubation =
+        "2.0 * (" + SampleTexture(config, lighting.bump_selector) + ").rgb - 1.0";
     if (lighting.bump_mode == LightingRegs::LightingBumpMode::NormalMap) {
-        // Bump mapping is enabled using a normal map, read perturbation vector from the selected
-        // texture
-        out += "vec3 surface_normal = 2.0 * (" + SampleTexture(config, lighting.bump_selector) +
-               ").rgb - 1.0;\n";
+        // Bump mapping is enabled using a normal map
+        out += "vec3 surface_normal = " + pertubation + ";\n";
 
         // Recompute Z-component of perturbation if 'renorm' is enabled, this provides a higher
         // precision result
@@ -539,8 +539,13 @@ static void WriteLighting(std::string& out, const PicaShaderConfig& config) {
         out += "vec3 surface_tangent = vec3(1.0, 0.0, 0.0);\n";
     } else if (lighting.bump_mode == LightingRegs::LightingBumpMode::TangentMap) {
         // Bump mapping is enabled using a tangent map
-        LOG_CRITICAL(HW_GPU, "unimplemented bump mapping mode (tangent mapping)");
-        UNIMPLEMENTED();
+        out += "vec3 surface_tangent = " + pertubation + ";\n";
+        // Mathematically, recomputing Z-component of the tangent vector won't affect the relevant
+        // computation below, which is also confirmed on 3DS. So we don't bother recomputing here
+        // even if 'renorm' is enabled.
+
+        // The normal vector is not perturbed by the tangent map and is just a unit vector.
+        out += "vec3 surface_normal = vec3(0.0, 0.0, 1.0);\n";
     } else {
         // No bump mapping - surface local normal and tangent are just unit vectors
         out += "vec3 surface_normal = vec3(0.0, 0.0, 1.0);\n";
