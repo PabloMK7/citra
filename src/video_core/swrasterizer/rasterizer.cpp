@@ -13,6 +13,7 @@
 #include "common/logging/log.h"
 #include "common/math_util.h"
 #include "common/microprofile.h"
+#include "common/quaternion.h"
 #include "common/vector_math.h"
 #include "core/hw/gpu.h"
 #include "core/memory.h"
@@ -114,6 +115,86 @@ static std::tuple<float24, float24, PAddr> ConvertCubeCoord(float24 u, float24 v
     return std::make_tuple(x / z * half + half, y / z * half + half, addr);
 }
 
+std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(const Math::Quaternion<float>& normquat, const Math::Vec3<float>& view) {
+    const auto& lighting = g_state.regs.lighting;
+
+    if (lighting.disable)
+        return {{}, {}};
+
+    // TODO(Subv): Bump mapping
+    Math::Vec3<float> surface_normal = {0.0f, 0.0f, 1.0f};
+
+    if (lighting.config0.bump_mode != LightingRegs::LightingBumpMode::None) {
+        LOG_CRITICAL(HW_GPU, "unimplemented bump mapping");
+        UNIMPLEMENTED();
+    }
+
+    // TODO(Subv): Do we need to normalize the quaternion here?
+    auto normal = Math::QuaternionRotate(normquat, surface_normal);
+
+    Math::Vec3<float> light_vector = {};
+    Math::Vec3<float> diffuse_sum = {};
+    // TODO(Subv): Calculate specular
+    Math::Vec3<float> specular_sum = {};
+
+    for (unsigned light_index = 0; light_index <= lighting.max_light_index; ++light_index) {
+        unsigned num = lighting.light_enable.GetNum(light_index);
+        const auto& light_config = g_state.regs.lighting.light[num];
+
+        Math::Vec3<float> position = {float16::FromRaw(light_config.x).ToFloat32(), float16::FromRaw(light_config.y).ToFloat32(), float16::FromRaw(light_config.z).ToFloat32()};
+
+        if (light_config.config.directional)
+            light_vector = position;
+        else
+            light_vector = position + view;
+
+        light_vector.Normalize();
+
+        auto dot_product = Math::Dot(light_vector, normal);
+
+        if (light_config.config.two_sided_diffuse)
+            dot_product = std::abs(dot_product);
+        else
+            dot_product = std::max(dot_product, 0.0f);
+
+        float dist_atten = 1.0f;
+        if (!lighting.IsDistAttenDisabled(num)) {
+            auto distance = (-view - position).Length();
+            float scale = Pica::float20::FromRaw(light_config.dist_atten_scale).ToFloat32();
+            float bias = Pica::float20::FromRaw(light_config.dist_atten_scale).ToFloat32();
+            size_t lut = static_cast<size_t>(LightingRegs::LightingSampler::DistanceAttenuation) + num;
+
+            float sample_loc = scale * distance + bias;
+            unsigned index_i = static_cast<unsigned>(MathUtil::Clamp(floor(sample_loc * 256), 0.0f, 1.0f));
+
+            float index_f = sample_loc - index_i;
+
+            ASSERT_MSG(lut < g_state.lighting.luts.size(), "Out of range lut");
+
+            float lut_value = g_state.lighting.luts[lut][index_i].ToFloat();
+            float lut_diff = g_state.lighting.luts[lut][index_i].DiffToFloat();
+
+            dist_atten = lut_value + lut_diff * index_f;
+        }
+
+        auto diffuse = light_config.diffuse.ToVec3f() * dot_product + light_config.ambient.ToVec3f();
+        diffuse_sum += diffuse * dist_atten;
+    }
+
+    diffuse_sum += lighting.global_ambient.ToVec3f();
+    return {
+        Math::MakeVec<float>(MathUtil::Clamp(diffuse_sum.x, 0.0f, 1.0f) * 255, MathUtil::Clamp(diffuse_sum.y, 0.0f, 1.0f) * 255, MathUtil::Clamp(diffuse_sum.z, 0.0f, 1.0f) * 255, 255).Cast<u8>(),
+        Math::MakeVec<float>(MathUtil::Clamp(specular_sum.x, 0.0f, 1.0f) * 255, MathUtil::Clamp(specular_sum.y, 0.0f, 1.0f) * 255, MathUtil::Clamp(specular_sum.z, 0.0f, 1.0f) * 255, 255).Cast<u8>()
+    };
+}
+
+static bool AreQuaternionsOpposite(Math::Vec4<Pica::float24> qa, Math::Vec4<Pica::float24> qb) {
+    Math::Vec4f a{ qa.x.ToFloat32(), qa.y.ToFloat32(), qa.z.ToFloat32(), qa.w.ToFloat32() };
+    Math::Vec4f b{ qb.x.ToFloat32(), qb.y.ToFloat32(), qb.z.ToFloat32(), qb.w.ToFloat32() };
+
+    return (Math::Dot(a, b) < 0.f);
+}
+
 MICROPROFILE_DEFINE(GPU_Rasterization, "GPU", "Rasterization", MP_RGB(50, 50, 240));
 
 /**
@@ -206,6 +287,15 @@ static void ProcessTriangleInternal(const Vertex& v0, const Vertex& v1, const Ve
         IsRightSideOrFlatBottomEdge(vtxpos[1].xy(), vtxpos[2].xy(), vtxpos[0].xy()) ? -1 : 0;
     int bias2 =
         IsRightSideOrFlatBottomEdge(vtxpos[2].xy(), vtxpos[0].xy(), vtxpos[1].xy()) ? -1 : 0;
+
+    // Flip the quaternions if they are opposite to prevent interpolating them over the wrong direction.
+    auto v1_quat = v1.quat;
+    auto v2_quat = v2.quat;
+
+    if (AreQuaternionsOpposite(v0.quat, v1.quat))
+        v1_quat = v1_quat * float24::FromFloat32(-1.0f);
+    if (AreQuaternionsOpposite(v0.quat, v2.quat))
+        v2_quat = v2_quat * float24::FromFloat32(-1.0f);
 
     auto w_inverse = Math::MakeVec(v0.pos.w, v1.pos.w, v2.pos.w);
 
@@ -303,6 +393,21 @@ static void ProcessTriangleInternal(const Vertex& v0, const Vertex& v1, const Ve
                 (u8)(
                     GetInterpolatedAttribute(v0.color.a(), v1.color.a(), v2.color.a()).ToFloat32() *
                     255),
+            };
+
+            Math::Quaternion<float> normquat{
+                {
+                    GetInterpolatedAttribute(v0.quat.x, v1_quat.x, v2_quat.x).ToFloat32(),
+                    GetInterpolatedAttribute(v0.quat.y, v1_quat.y, v2_quat.y).ToFloat32(),
+                    GetInterpolatedAttribute(v0.quat.z, v1_quat.z, v2_quat.z).ToFloat32()
+                },
+                GetInterpolatedAttribute(v0.quat.w, v1_quat.w, v2_quat.w).ToFloat32(),
+            };
+
+            Math::Vec3<float> fragment_position{
+                GetInterpolatedAttribute(v0.view.x, v1.view.x, v2.view.x).ToFloat32(),
+                GetInterpolatedAttribute(v0.view.y, v1.view.y, v2.view.y).ToFloat32(),
+                GetInterpolatedAttribute(v0.view.z, v1.view.z, v2.view.z).ToFloat32()
             };
 
             Math::Vec2<float24> uv[3];
@@ -419,6 +524,11 @@ static void ProcessTriangleInternal(const Vertex& v0, const Vertex& v1, const Ve
                 regs.texturing.tev_combiner_buffer_color.a,
             };
 
+            Math::Vec4<u8> primary_fragment_color;
+            Math::Vec4<u8> secondary_fragment_color;
+
+            std::tie(primary_fragment_color, secondary_fragment_color) = ComputeFragmentsColors(normquat, fragment_position);
+
             for (unsigned tev_stage_index = 0; tev_stage_index < tev_stages.size();
                  ++tev_stage_index) {
                 const auto& tev_stage = tev_stages[tev_stage_index];
@@ -427,14 +537,13 @@ static void ProcessTriangleInternal(const Vertex& v0, const Vertex& v1, const Ve
                 auto GetSource = [&](Source source) -> Math::Vec4<u8> {
                     switch (source) {
                     case Source::PrimaryColor:
-
-                    // HACK: Until we implement fragment lighting, use primary_color
-                    case Source::PrimaryFragmentColor:
                         return primary_color;
 
-                    // HACK: Until we implement fragment lighting, use zero
+                    case Source::PrimaryFragmentColor:
+                        return primary_fragment_color;
+
                     case Source::SecondaryFragmentColor:
-                        return {0, 0, 0, 0};
+                        return secondary_fragment_color;
 
                     case Source::Texture0:
                         return texture_color[0];
