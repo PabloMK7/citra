@@ -30,6 +30,11 @@ public:
         return {xyz * other.w + other.xyz * w + Cross(xyz, other.xyz),
                 w * other.w - Dot(xyz, other.xyz)};
     }
+
+    Quaternion<T> Normalized() const {
+        T length = std::sqrt(xyz.Length2() + w * w);
+        return {xyz / length, w / length};
+    }
 };
 
 template <typename T>

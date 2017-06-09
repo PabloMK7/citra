@@ -115,20 +115,14 @@ static std::tuple<float24, float24, PAddr> ConvertCubeCoord(float24 u, float24 v
     return std::make_tuple(x / z * half + half, y / z * half + half, addr);
 }
 
-
-float LookupLightingLut(size_t lut_index, float index) {
-    index *= 256;
-
-    unsigned index_i = static_cast<unsigned>(MathUtil::Clamp(floor(index), 0.0f, 255.0f));
-
-    float index_f = index - index_i;
-
+float LookupLightingLut(size_t lut_index, u8 index, float delta) {
     ASSERT_MSG(lut_index < g_state.lighting.luts.size(), "Out of range lut");
+    ASSERT_MSG(index < g_state.lighting.luts[0].size(), "Out of range index");
 
-    float lut_value = g_state.lighting.luts[lut_index][index_i].ToFloat();
-    float lut_diff = g_state.lighting.luts[lut_index][index_i].DiffToFloat();
+    float lut_value = g_state.lighting.luts[lut_index][index].ToFloat();
+    float lut_diff = g_state.lighting.luts[lut_index][index].DiffToFloat();
 
-    return lut_value + lut_diff * index_f / 256.f;
+    return lut_value + lut_diff * delta;
 }
 
 std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(const Math::Quaternion<float>& normquat, const Math::Vec3<float>& view) {
@@ -145,8 +139,8 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(const Math::Qu
         UNIMPLEMENTED();
     }
 
-    // TODO(Subv): Do we need to normalize the quaternion here?
-    auto normal = Math::QuaternionRotate(normquat, surface_normal);
+    // Use the normalized the quaternion when performing the rotation
+    auto normal = Math::QuaternionRotate(normquat.Normalized(), surface_normal);
 
     Math::Vec3<float> light_vector = {};
     Math::Vec4<float> diffuse_sum = {0.f, 0.f, 0.f, 1.f};
@@ -182,7 +176,10 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(const Math::Qu
             size_t lut = static_cast<size_t>(LightingRegs::LightingSampler::DistanceAttenuation) + num;
 
             float sample_loc = scale * distance + bias;
-            dist_atten = LookupLightingLut(lut, sample_loc);
+
+            u8 lutindex = MathUtil::Clamp(floorf(sample_loc * 256.f), 0.0f, 255.0f);
+            float delta = sample_loc * 256 - lutindex;
+            dist_atten = LookupLightingLut(lut, lutindex, delta / 256.f);
         }
 
         float clamp_highlights = 1.0f;
@@ -195,7 +192,7 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(const Math::Qu
         }
 
         auto GetLutIndex = [&](unsigned num, LightingRegs::LightingLutInput input,
-                              bool abs) -> float {
+                              bool abs) -> std::tuple<u8, float> {
 
             Math::Vec3<float> norm_view = view.Normalized();
             Math::Vec3<float> half_angle = (norm_view + light_vector).Normalized();
@@ -229,14 +226,15 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(const Math::Qu
                     result = std::abs(result);
                 else
                     result = std::max(result, 0.0f);
+
+                u8 lutindex = MathUtil::Clamp(floorf(result * 256.f), 0.0f, 255.0f);
+                float delta = result * 256 - lutindex;
+                return { lutindex, delta / 256.f };
             } else {
-                if (result < 0.f)
-                    result += 2.f;
-
-                result /= 2.f;
+                u8 tmpi = MathUtil::Clamp(floorf(result * 128.f), 0.0f, 127.0f);
+                float delta = result * 128.f - tmpi;
+                return { tmpi & 0xFF, delta / 128.f };
             }
-
-            return MathUtil::Clamp(result, 0.0f, 1.0f);
         };
 
         // Specular 0 component
@@ -246,11 +244,13 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(const Math::Qu
                 lighting.config0.config, LightingRegs::LightingSampler::Distribution0)) {
 
             // Lookup specular "distribution 0" LUT value
-            float index = GetLutIndex(num, lighting.lut_input.d0.Value(), lighting.abs_lut_input.disable_d0 == 0);
+            u8 index;
+            float delta;
+            std::tie(index, delta) = GetLutIndex(num, lighting.lut_input.d0.Value(), lighting.abs_lut_input.disable_d0 == 0);
 
             float scale = lighting.lut_scale.GetScale(lighting.lut_scale.d0);
 
-            d0_lut_value = scale * LookupLightingLut(static_cast<size_t>(LightingRegs::LightingSampler::Distribution0), index);
+            d0_lut_value = scale * LookupLightingLut(static_cast<size_t>(LightingRegs::LightingSampler::Distribution0), index, delta);
         }
 
         Math::Vec3<float> specular_0 = d0_lut_value * light_config.specular_0.ToVec3f();
@@ -260,11 +260,13 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(const Math::Qu
             LightingRegs::IsLightingSamplerSupported(lighting.config0.config,
                                                      LightingRegs::LightingSampler::ReflectRed)) {
 
-            float index = GetLutIndex(num, lighting.lut_input.rr, lighting.abs_lut_input.disable_rr == 0);
+            u8 index;
+            float delta;
+            std::tie(index, delta) = GetLutIndex(num, lighting.lut_input.rr, lighting.abs_lut_input.disable_rr == 0);
 
             float scale = lighting.lut_scale.GetScale(lighting.lut_scale.rr);
 
-            refl_value.x = scale * LookupLightingLut(static_cast<size_t>(LightingRegs::LightingSampler::ReflectRed), index);
+            refl_value.x = scale * LookupLightingLut(static_cast<size_t>(LightingRegs::LightingSampler::ReflectRed), index, delta);
         } else {
             refl_value.x = 1.0f;
         }
@@ -274,11 +276,13 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(const Math::Qu
             LightingRegs::IsLightingSamplerSupported(lighting.config0.config,
                                                      LightingRegs::LightingSampler::ReflectGreen)) {
 
-            float index = GetLutIndex(num, lighting.lut_input.rg, lighting.abs_lut_input.disable_rg == 0);
+            u8 index;
+            float delta;
+            std::tie(index, delta) = GetLutIndex(num, lighting.lut_input.rg, lighting.abs_lut_input.disable_rg == 0);
 
             float scale = lighting.lut_scale.GetScale(lighting.lut_scale.rg);
 
-            refl_value.y = scale * LookupLightingLut(static_cast<size_t>(LightingRegs::LightingSampler::ReflectGreen), index);
+            refl_value.y = scale * LookupLightingLut(static_cast<size_t>(LightingRegs::LightingSampler::ReflectGreen), index, delta);
         } else {
             refl_value.y = refl_value.x;
         }
@@ -288,11 +292,13 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(const Math::Qu
             LightingRegs::IsLightingSamplerSupported(lighting.config0.config,
                                                      LightingRegs::LightingSampler::ReflectBlue)) {
 
-            float index = GetLutIndex(num, lighting.lut_input.rb, lighting.abs_lut_input.disable_rb == 0);
+            u8 index;
+            float delta;
+            std::tie(index, delta) = GetLutIndex(num, lighting.lut_input.rb, lighting.abs_lut_input.disable_rb == 0);
 
             float scale = lighting.lut_scale.GetScale(lighting.lut_scale.rb);
 
-            refl_value.z = scale * LookupLightingLut(static_cast<size_t>(LightingRegs::LightingSampler::ReflectBlue), index);
+            refl_value.z = scale * LookupLightingLut(static_cast<size_t>(LightingRegs::LightingSampler::ReflectBlue), index, delta);
         } else {
             refl_value.z = refl_value.x;
         }
@@ -303,11 +309,13 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(const Math::Qu
                 lighting.config0.config, LightingRegs::LightingSampler::Distribution1)) {
 
             // Lookup specular "distribution 1" LUT value
-            float index = GetLutIndex(num, lighting.lut_input.d1.Value(), lighting.abs_lut_input.disable_d1 == 0);
+            u8 index;
+            float delta;
+            std::tie(index, delta) = GetLutIndex(num, lighting.lut_input.d1.Value(), lighting.abs_lut_input.disable_d1 == 0);
 
             float scale = lighting.lut_scale.GetScale(lighting.lut_scale.d1);
 
-            d1_lut_value = scale * LookupLightingLut(static_cast<size_t>(LightingRegs::LightingSampler::Distribution1), index);
+            d1_lut_value = scale * LookupLightingLut(static_cast<size_t>(LightingRegs::LightingSampler::Distribution1), index, delta);
         }
 
         Math::Vec3<float> specular_1 = d1_lut_value * refl_value * light_config.specular_1.ToVec3f();
@@ -317,11 +325,13 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(const Math::Qu
                 lighting.config0.config, LightingRegs::LightingSampler::Fresnel)) {
 
             // Lookup fresnel LUT value
-            float index = GetLutIndex(num, lighting.lut_input.fr.Value(), lighting.abs_lut_input.disable_fr == 0);
+            u8 index;
+            float delta;
+            std::tie(index, delta) = GetLutIndex(num, lighting.lut_input.fr.Value(), lighting.abs_lut_input.disable_fr == 0);
 
             float scale = lighting.lut_scale.GetScale(lighting.lut_scale.fr);
 
-            float lut_value = scale * LookupLightingLut(static_cast<size_t>(LightingRegs::LightingSampler::Fresnel), index);
+            float lut_value = scale * LookupLightingLut(static_cast<size_t>(LightingRegs::LightingSampler::Fresnel), index, delta);
 
             // Enabled for difffuse lighting alpha component
             if (lighting.config0.fresnel_selector == LightingRegs::LightingFresnelSelector::PrimaryAlpha ||
