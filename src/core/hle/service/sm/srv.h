@@ -4,21 +4,33 @@
 
 #pragma once
 
-#include <string>
+#include "core/hle/kernel/kernel.h"
 #include "core/hle/service/service.h"
+
+namespace Kernel {
+class HLERequestContext;
+class Semaphore;
+}
 
 namespace Service {
 namespace SM {
 
 /// Interface to "srv:" service
-class SRV final : public Interface {
+class SRV final : public ServiceFramework<SRV> {
 public:
-    SRV();
-    ~SRV() override;
+    explicit SRV(std::shared_ptr<ServiceManager> service_manager);
+    ~SRV();
 
-    std::string GetPortName() const override {
-        return "srv:";
-    }
+private:
+    void RegisterClient(Kernel::HLERequestContext& ctx);
+    void EnableNotification(Kernel::HLERequestContext& ctx);
+    void GetServiceHandle(Kernel::HLERequestContext& ctx);
+    void Subscribe(Kernel::HLERequestContext& ctx);
+    void Unsubscribe(Kernel::HLERequestContext& ctx);
+    void PublishToSubscriber(Kernel::HLERequestContext& ctx);
+
+    std::shared_ptr<ServiceManager> service_manager;
+    Kernel::SharedPtr<Kernel::Semaphore> notification_semaphore;
 };
 
 } // namespace SM

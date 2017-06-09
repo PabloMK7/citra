@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <fmt/format.h>
 #include "common/logging/log.h"
 #include "common/string_util.h"
 #include "core/hle/kernel/client_port.h"
@@ -45,9 +46,14 @@
 #include "core/hle/service/ssl_c.h"
 #include "core/hle/service/y2r_u.h"
 
+using Kernel::ClientPort;
+using Kernel::ServerPort;
+using Kernel::ServerSession;
+using Kernel::SharedPtr;
+
 namespace Service {
 
-std::unordered_map<std::string, Kernel::SharedPtr<Kernel::ClientPort>> g_kernel_named_ports;
+std::unordered_map<std::string, SharedPtr<ClientPort>> g_kernel_named_ports;
 
 /**
  * Creates a function string for logging, complete with the name (or header code, depending
@@ -69,7 +75,7 @@ static std::string MakeFunctionString(const char* name, const char* port_name,
 Interface::Interface(u32 max_sessions) : max_sessions(max_sessions) {}
 Interface::~Interface() = default;
 
-void Interface::HandleSyncRequest(Kernel::SharedPtr<Kernel::ServerSession> server_session) {
+void Interface::HandleSyncRequest(SharedPtr<ServerSession> server_session) {
     // TODO(Subv): Make use of the server_session in the HLE service handlers to distinguish which
     // session triggered each command.
 
@@ -103,16 +109,91 @@ void Interface::Register(const FunctionInfo* functions, size_t n) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
+
+ServiceFrameworkBase::ServiceFrameworkBase(const char* service_name, u32 max_sessions,
+                                           InvokerFn* handler_invoker)
+    : service_name(service_name), max_sessions(max_sessions), handler_invoker(handler_invoker) {}
+
+ServiceFrameworkBase::~ServiceFrameworkBase() = default;
+
+void ServiceFrameworkBase::InstallAsService(SM::ServiceManager& service_manager) {
+    ASSERT(port == nullptr);
+    port = service_manager.RegisterService(service_name, max_sessions).Unwrap();
+    port->SetHleHandler(shared_from_this());
+}
+
+void ServiceFrameworkBase::InstallAsNamedPort() {
+    ASSERT(port == nullptr);
+    SharedPtr<ServerPort> server_port;
+    SharedPtr<ClientPort> client_port;
+    std::tie(server_port, client_port) = ServerPort::CreatePortPair(max_sessions, service_name);
+    server_port->SetHleHandler(shared_from_this());
+    AddNamedPort(service_name, std::move(client_port));
+}
+
+void ServiceFrameworkBase::RegisterHandlersBase(const FunctionInfoBase* functions, size_t n) {
+    handlers.reserve(handlers.size() + n);
+    for (size_t i = 0; i < n; ++i) {
+        // Usually this array is sorted by id already, so hint to insert at the end
+        handlers.emplace_hint(handlers.cend(), functions[i].expected_header, functions[i]);
+    }
+}
+
+void ServiceFrameworkBase::ReportUnimplementedFunction(u32* cmd_buf, const FunctionInfoBase* info) {
+    IPC::Header header{cmd_buf[0]};
+    int num_params = header.normal_params_size + header.translate_params_size;
+    std::string function_name = info == nullptr ? fmt::format("{:#08x}", cmd_buf[0]) : info->name;
+
+    fmt::MemoryWriter w;
+    w.write("function '{}': port='{}' cmd_buf={{[0]={:#x}", function_name, service_name,
+            cmd_buf[0]);
+    for (int i = 1; i <= num_params; ++i) {
+        w.write(", [{}]={:#x}", i, cmd_buf[i]);
+    }
+    w << '}';
+
+    LOG_ERROR(Service, "unknown / unimplemented %s", w.c_str());
+    // TODO(bunnei): Hack - ignore error
+    cmd_buf[1] = 0;
+}
+
+void ServiceFrameworkBase::HandleSyncRequest(SharedPtr<ServerSession> server_session) {
+    u32* cmd_buf = Kernel::GetCommandBuffer();
+
+    // TODO(yuriks): The kernel should be the one handling this as part of translation after
+    // everything else is migrated
+    Kernel::HLERequestContext context;
+    context.cmd_buf = cmd_buf;
+    context.session = std::move(server_session);
+
+    u32 header_code = cmd_buf[0];
+    auto itr = handlers.find(header_code);
+    const FunctionInfoBase* info = itr == handlers.end() ? nullptr : &itr->second;
+    if (info == nullptr || info->handler_callback == nullptr) {
+        return ReportUnimplementedFunction(cmd_buf, info);
+    }
+
+    LOG_TRACE(Service, "%s",
+              MakeFunctionString(info->name, GetServiceName().c_str(), cmd_buf).c_str());
+    handler_invoker(this, info->handler_callback, context);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 // Module interface
 
+// TODO(yuriks): Move to kernel
+void AddNamedPort(std::string name, SharedPtr<ClientPort> port) {
+    g_kernel_named_ports.emplace(std::move(name), std::move(port));
+}
+
 static void AddNamedPort(Interface* interface_) {
-    Kernel::SharedPtr<Kernel::ServerPort> server_port;
-    Kernel::SharedPtr<Kernel::ClientPort> client_port;
+    SharedPtr<ServerPort> server_port;
+    SharedPtr<ClientPort> client_port;
     std::tie(server_port, client_port) =
-        Kernel::ServerPort::CreatePortPair(interface_->GetMaxSessions(), interface_->GetPortName());
+        ServerPort::CreatePortPair(interface_->GetMaxSessions(), interface_->GetPortName());
 
     server_port->SetHleHandler(std::shared_ptr<Interface>(interface_));
-    g_kernel_named_ports.emplace(interface_->GetPortName(), std::move(client_port));
+    AddNamedPort(interface_->GetPortName(), std::move(client_port));
 }
 
 void AddService(Interface* interface_) {
@@ -125,8 +206,9 @@ void AddService(Interface* interface_) {
 
 /// Initialize ServiceManager
 void Init() {
-    SM::g_service_manager = std::make_unique<SM::ServiceManager>();
-    AddNamedPort(new SM::SRV);
+    SM::g_service_manager = std::make_shared<SM::ServiceManager>();
+    SM::ServiceManager::InstallInterfaces(SM::g_service_manager);
+
     AddNamedPort(new ERR::ERR_F);
 
     FS::ArchiveInit();

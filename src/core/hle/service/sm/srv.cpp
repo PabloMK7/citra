@@ -20,8 +20,6 @@ namespace SM {
 
 constexpr int MAX_PENDING_NOTIFICATIONS = 16;
 
-static Kernel::SharedPtr<Kernel::Semaphore> notification_semaphore;
-
 /**
  * SRV::RegisterClient service function
  *  Inputs:
@@ -31,8 +29,8 @@ static Kernel::SharedPtr<Kernel::Semaphore> notification_semaphore;
  *      0: 0x00010040
  *      1: ResultCode
  */
-static void RegisterClient(Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
+void SRV::RegisterClient(Kernel::HLERequestContext& ctx) {
+    u32* cmd_buff = ctx.CommandBuffer();
 
     if (cmd_buff[1] != IPC::CallingPidDesc()) {
         cmd_buff[0] = IPC::MakeHeader(0x0, 0x1, 0); // 0x40
@@ -54,8 +52,8 @@ static void RegisterClient(Interface* self) {
  *      2: Translation descriptor: 0x20
  *      3: Handle to semaphore signaled on process notification
  */
-static void EnableNotification(Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
+void SRV::EnableNotification(Kernel::HLERequestContext& ctx) {
+    u32* cmd_buff = ctx.CommandBuffer();
 
     notification_semaphore =
         Kernel::Semaphore::Create(0, MAX_PENDING_NOTIFICATIONS, "SRV:Notification").Unwrap();
@@ -78,9 +76,9 @@ static void EnableNotification(Interface* self) {
  *      1: ResultCode
  *      3: Service handle
  */
-static void GetServiceHandle(Interface* self) {
+void SRV::GetServiceHandle(Kernel::HLERequestContext& ctx) {
     ResultCode res = RESULT_SUCCESS;
-    u32* cmd_buff = Kernel::GetCommandBuffer();
+    u32* cmd_buff = ctx.CommandBuffer();
 
     size_t name_len = cmd_buff[3];
     if (name_len > Service::kMaxPortSize) {
@@ -94,7 +92,7 @@ static void GetServiceHandle(Interface* self) {
 
     // TODO(yuriks): Permission checks go here
 
-    auto client_port = g_service_manager->GetServicePort(name);
+    auto client_port = service_manager->GetServicePort(name);
     if (client_port.Failed()) {
         cmd_buff[1] = client_port.Code().raw;
         LOG_ERROR(Service_SRV, "called service=%s, failed with code=0x%08X", name.c_str(),
@@ -128,8 +126,8 @@ static void GetServiceHandle(Interface* self) {
  *      0: 0x00090040
  *      1: ResultCode
  */
-static void Subscribe(Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
+void SRV::Subscribe(Kernel::HLERequestContext& ctx) {
+    u32* cmd_buff = ctx.CommandBuffer();
 
     u32 notification_id = cmd_buff[1];
 
@@ -147,8 +145,8 @@ static void Subscribe(Interface* self) {
  *      0: 0x000A0040
  *      1: ResultCode
  */
-static void Unsubscribe(Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
+void SRV::Unsubscribe(Kernel::HLERequestContext& ctx) {
+    u32* cmd_buff = ctx.CommandBuffer();
 
     u32 notification_id = cmd_buff[1];
 
@@ -167,8 +165,8 @@ static void Unsubscribe(Interface* self) {
  *      0: 0x000C0040
  *      1: ResultCode
  */
-static void PublishToSubscriber(Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
+void SRV::PublishToSubscriber(Kernel::HLERequestContext& ctx) {
+    u32* cmd_buff = ctx.CommandBuffer();
 
     u32 notification_id = cmd_buff[1];
     u8 flags = cmd_buff[2] & 0xFF;
@@ -179,31 +177,28 @@ static void PublishToSubscriber(Interface* self) {
                 flags);
 }
 
-const Interface::FunctionInfo FunctionTable[] = {
-    {0x00010002, RegisterClient, "RegisterClient"},
-    {0x00020000, EnableNotification, "EnableNotification"},
-    {0x00030100, nullptr, "RegisterService"},
-    {0x000400C0, nullptr, "UnregisterService"},
-    {0x00050100, GetServiceHandle, "GetServiceHandle"},
-    {0x000600C2, nullptr, "RegisterPort"},
-    {0x000700C0, nullptr, "UnregisterPort"},
-    {0x00080100, nullptr, "GetPort"},
-    {0x00090040, Subscribe, "Subscribe"},
-    {0x000A0040, Unsubscribe, "Unsubscribe"},
-    {0x000B0000, nullptr, "ReceiveNotification"},
-    {0x000C0080, PublishToSubscriber, "PublishToSubscriber"},
-    {0x000D0040, nullptr, "PublishAndGetSubscriber"},
-    {0x000E00C0, nullptr, "IsServiceRegistered"},
-};
-
-SRV::SRV() {
-    Register(FunctionTable);
-    notification_semaphore = nullptr;
+SRV::SRV(std::shared_ptr<ServiceManager> service_manager)
+    : ServiceFramework("srv:", 4), service_manager(std::move(service_manager)) {
+    static const FunctionInfo functions[] = {
+        {0x00010002, &SRV::RegisterClient, "RegisterClient"},
+        {0x00020000, &SRV::EnableNotification, "EnableNotification"},
+        {0x00030100, nullptr, "RegisterService"},
+        {0x000400C0, nullptr, "UnregisterService"},
+        {0x00050100, &SRV::GetServiceHandle, "GetServiceHandle"},
+        {0x000600C2, nullptr, "RegisterPort"},
+        {0x000700C0, nullptr, "UnregisterPort"},
+        {0x00080100, nullptr, "GetPort"},
+        {0x00090040, &SRV::Subscribe, "Subscribe"},
+        {0x000A0040, &SRV::Unsubscribe, "Unsubscribe"},
+        {0x000B0000, nullptr, "ReceiveNotification"},
+        {0x000C0080, &SRV::PublishToSubscriber, "PublishToSubscriber"},
+        {0x000D0040, nullptr, "PublishAndGetSubscriber"},
+        {0x000E00C0, nullptr, "IsServiceRegistered"},
+    };
+    RegisterHandlers(functions);
 }
 
-SRV::~SRV() {
-    notification_semaphore = nullptr;
-}
+SRV::~SRV() = default;
 
 } // namespace SM
 } // namespace Service

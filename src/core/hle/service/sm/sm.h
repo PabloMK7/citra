@@ -20,6 +20,8 @@ class SessionRequestHandler;
 namespace Service {
 namespace SM {
 
+class SRV;
+
 constexpr ResultCode ERR_SERVICE_NOT_REGISTERED(1, ErrorModule::SRV, ErrorSummary::WouldBlock,
                                                 ErrorLevel::Temporary); // 0xD0406401
 constexpr ResultCode ERR_MAX_CONNECTIONS_REACHED(2, ErrorModule::SRV, ErrorSummary::WouldBlock,
@@ -33,17 +35,21 @@ constexpr ResultCode ERR_NAME_CONTAINS_NUL(7, ErrorModule::SRV, ErrorSummary::Wr
 
 class ServiceManager {
 public:
+    static void InstallInterfaces(std::shared_ptr<ServiceManager> self);
+
     ResultVal<Kernel::SharedPtr<Kernel::ServerPort>> RegisterService(std::string name,
                                                                      unsigned int max_sessions);
     ResultVal<Kernel::SharedPtr<Kernel::ClientPort>> GetServicePort(const std::string& name);
     ResultVal<Kernel::SharedPtr<Kernel::ClientSession>> ConnectToService(const std::string& name);
 
 private:
-    /// Map of services registered with the "srv:" service, retrieved using GetServiceHandle.
+    std::weak_ptr<SRV> srv_interface;
+
+    /// Map of registered services, retrieved using GetServicePort or ConnectToService.
     std::unordered_map<std::string, Kernel::SharedPtr<Kernel::ClientPort>> registered_services;
 };
 
-extern std::unique_ptr<ServiceManager> g_service_manager;
+extern std::shared_ptr<ServiceManager> g_service_manager;
 
 } // namespace SM
 } // namespace Service
