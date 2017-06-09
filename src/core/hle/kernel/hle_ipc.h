@@ -4,8 +4,11 @@
 
 #pragma once
 
+#include <array>
 #include <memory>
 #include <vector>
+#include "common/common_types.h"
+#include "core/hle/ipc.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/server_session.h"
 
@@ -65,8 +68,8 @@ public:
     ~HLERequestContext();
 
     /// Returns a pointer to the IPC command buffer for this request.
-    u32* CommandBuffer() const {
-        return cmd_buf;
+    u32* CommandBuffer() {
+        return cmd_buf.data();
     }
 
     /**
@@ -80,7 +83,7 @@ public:
 private:
     friend class Service::ServiceFrameworkBase;
 
-    u32* cmd_buf = nullptr;
+    std::array<u32, IPC::COMMAND_BUFFER_LENGTH> cmd_buf;
     SharedPtr<ServerSession> session;
 };
 
