@@ -7,9 +7,11 @@
 #include "common/common_types.h"
 #include "common/logging/log.h"
 #include "core/hle/ipc.h"
+#include "core/hle/ipc_helpers.h"
 #include "core/hle/kernel/client_port.h"
 #include "core/hle/kernel/client_session.h"
-#include "core/hle/kernel/handle_table.h"
+#include "core/hle/kernel/errors.h"
+#include "core/hle/kernel/hle_ipc.h"
 #include "core/hle/kernel/semaphore.h"
 #include "core/hle/kernel/server_session.h"
 #include "core/hle/service/sm/sm.h"
@@ -30,15 +32,18 @@ constexpr int MAX_PENDING_NOTIFICATIONS = 16;
  *      1: ResultCode
  */
 void SRV::RegisterClient(Kernel::HLERequestContext& ctx) {
-    u32* cmd_buff = ctx.CommandBuffer();
+    IPC::RequestParser rp(ctx, 0x1, 0, 2);
 
-    if (cmd_buff[1] != IPC::CallingPidDesc()) {
-        cmd_buff[0] = IPC::MakeHeader(0x0, 0x1, 0); // 0x40
-        cmd_buff[1] = IPC::ERR_INVALID_BUFFER_DESCRIPTOR.raw;
+    u32 pid_descriptor = rp.Pop<u32>();
+    if (pid_descriptor != IPC::CallingPidDesc()) {
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(IPC::ERR_INVALID_BUFFER_DESCRIPTOR);
         return;
     }
-    cmd_buff[0] = IPC::MakeHeader(0x1, 0x1, 0); // 0x10040
-    cmd_buff[1] = RESULT_SUCCESS.raw;           // No error
+    u32 caller_pid = rp.Pop<u32>();
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RESULT_SUCCESS);
     LOG_WARNING(Service_SRV, "(STUBBED) called");
 }
 
@@ -53,15 +58,14 @@ void SRV::RegisterClient(Kernel::HLERequestContext& ctx) {
  *      3: Handle to semaphore signaled on process notification
  */
 void SRV::EnableNotification(Kernel::HLERequestContext& ctx) {
-    u32* cmd_buff = ctx.CommandBuffer();
+    IPC::RequestParser rp(ctx, 0x2, 0, 0);
 
     notification_semaphore =
         Kernel::Semaphore::Create(0, MAX_PENDING_NOTIFICATIONS, "SRV:Notification").Unwrap();
 
-    cmd_buff[0] = IPC::MakeHeader(0x2, 0x1, 0x2); // 0x20042
-    cmd_buff[1] = RESULT_SUCCESS.raw;             // No error
-    cmd_buff[2] = IPC::CopyHandleDesc(1);
-    cmd_buff[3] = Kernel::g_handle_table.Create(notification_semaphore).MoveFrom();
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
+    rb.Push(RESULT_SUCCESS);
+    rb.PushObjects(notification_semaphore);
     LOG_WARNING(Service_SRV, "(STUBBED) called");
 }
 
@@ -77,43 +81,49 @@ void SRV::EnableNotification(Kernel::HLERequestContext& ctx) {
  *      3: Service handle
  */
 void SRV::GetServiceHandle(Kernel::HLERequestContext& ctx) {
-    ResultCode res = RESULT_SUCCESS;
-    u32* cmd_buff = ctx.CommandBuffer();
+    IPC::RequestParser rp(ctx, 0x5, 4, 0);
+    auto name_buf = rp.PopRaw<std::array<char, 8>>();
+    size_t name_len = rp.Pop<u32>();
+    u32 flags = rp.Pop<u32>();
 
-    size_t name_len = cmd_buff[3];
+    bool return_port_on_failure = (flags & 1) == 0;
+
     if (name_len > Service::kMaxPortSize) {
-        cmd_buff[1] = ERR_INVALID_NAME_SIZE.raw;
-        LOG_ERROR(Service_SRV, "called name_len=0x%X, failed with code=0x%08X", name_len,
-                  cmd_buff[1]);
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(ERR_INVALID_NAME_SIZE);
+        LOG_ERROR(Service_SRV, "called name_len=0x%X -> ERR_INVALID_NAME_SIZE", name_len);
         return;
     }
-    std::string name(reinterpret_cast<const char*>(&cmd_buff[1]), name_len);
-    bool return_port_on_failure = (cmd_buff[4] & 1) == 0;
+    std::string name(name_buf.data(), name_len);
 
     // TODO(yuriks): Permission checks go here
 
     auto client_port = service_manager->GetServicePort(name);
     if (client_port.Failed()) {
-        cmd_buff[1] = client_port.Code().raw;
-        LOG_ERROR(Service_SRV, "called service=%s, failed with code=0x%08X", name.c_str(),
-                  cmd_buff[1]);
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(client_port.Code());
+        LOG_ERROR(Service_SRV, "called service=%s -> error 0x%08X", name.c_str(),
+                  client_port.Code().raw);
         return;
     }
 
     auto session = client_port.Unwrap()->Connect();
-    cmd_buff[1] = session.Code().raw;
     if (session.Succeeded()) {
-        cmd_buff[3] = Kernel::g_handle_table.Create(session.MoveFrom()).MoveFrom();
-        LOG_DEBUG(Service_SRV, "called service=%s, session handle=0x%08X", name.c_str(),
-                  cmd_buff[3]);
+        LOG_DEBUG(Service_SRV, "called service=%s -> session=%u", name.c_str(),
+                  (*session)->GetObjectId());
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
+        rb.Push(session.Code());
+        rb.PushObjects(session.MoveFrom());
     } else if (session.Code() == Kernel::ERR_MAX_CONNECTIONS_REACHED && return_port_on_failure) {
-        cmd_buff[1] = ERR_MAX_CONNECTIONS_REACHED.raw;
-        cmd_buff[3] = Kernel::g_handle_table.Create(client_port.MoveFrom()).MoveFrom();
-        LOG_WARNING(Service_SRV, "called service=%s, *port* handle=0x%08X", name.c_str(),
-                    cmd_buff[3]);
+        LOG_WARNING(Service_SRV, "called service=%s -> ERR_MAX_CONNECTIONS_REACHED, *port*=%u",
+                    name.c_str(), (*client_port)->GetObjectId());
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
+        rb.Push(ERR_MAX_CONNECTIONS_REACHED);
+        rb.PushObjects(client_port.MoveFrom());
     } else {
-        LOG_ERROR(Service_SRV, "called service=%s, failed with code=0x%08X", name.c_str(),
-                  cmd_buff[1]);
+        LOG_ERROR(Service_SRV, "called service=%s -> error 0x%08X", name.c_str(), session.Code());
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(session.Code());
     }
 }
 
@@ -127,12 +137,11 @@ void SRV::GetServiceHandle(Kernel::HLERequestContext& ctx) {
  *      1: ResultCode
  */
 void SRV::Subscribe(Kernel::HLERequestContext& ctx) {
-    u32* cmd_buff = ctx.CommandBuffer();
+    IPC::RequestParser rp(ctx, 0x9, 1, 0);
+    u32 notification_id = rp.Pop<u32>();
 
-    u32 notification_id = cmd_buff[1];
-
-    cmd_buff[0] = IPC::MakeHeader(0x9, 0x1, 0); // 0x90040
-    cmd_buff[1] = RESULT_SUCCESS.raw;           // No error
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RESULT_SUCCESS);
     LOG_WARNING(Service_SRV, "(STUBBED) called, notification_id=0x%X", notification_id);
 }
 
@@ -146,12 +155,11 @@ void SRV::Subscribe(Kernel::HLERequestContext& ctx) {
  *      1: ResultCode
  */
 void SRV::Unsubscribe(Kernel::HLERequestContext& ctx) {
-    u32* cmd_buff = ctx.CommandBuffer();
+    IPC::RequestParser rp(ctx, 0xA, 1, 0);
+    u32 notification_id = rp.Pop<u32>();
 
-    u32 notification_id = cmd_buff[1];
-
-    cmd_buff[0] = IPC::MakeHeader(0xA, 0x1, 0); // 0xA0040
-    cmd_buff[1] = RESULT_SUCCESS.raw;           // No error
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RESULT_SUCCESS);
     LOG_WARNING(Service_SRV, "(STUBBED) called, notification_id=0x%X", notification_id);
 }
 
@@ -166,13 +174,12 @@ void SRV::Unsubscribe(Kernel::HLERequestContext& ctx) {
  *      1: ResultCode
  */
 void SRV::PublishToSubscriber(Kernel::HLERequestContext& ctx) {
-    u32* cmd_buff = ctx.CommandBuffer();
+    IPC::RequestParser rp(ctx, 0xC, 2, 0);
+    u32 notification_id = rp.Pop<u32>();
+    u8 flags = rp.Pop<u8>();
 
-    u32 notification_id = cmd_buff[1];
-    u8 flags = cmd_buff[2] & 0xFF;
-
-    cmd_buff[0] = IPC::MakeHeader(0xC, 0x1, 0); // 0xC0040
-    cmd_buff[1] = RESULT_SUCCESS.raw;           // No error
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RESULT_SUCCESS);
     LOG_WARNING(Service_SRV, "(STUBBED) called, notification_id=0x%X, flags=%u", notification_id,
                 flags);
 }
