@@ -177,9 +177,9 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(const Math::Qu
 
             float sample_loc = scale * distance + bias;
 
-            u8 lutindex = MathUtil::Clamp(floorf(sample_loc * 256.f), 0.0f, 255.0f);
+            u8 lutindex = MathUtil::Clamp(std::floor(sample_loc * 256.f), 0.0f, 255.0f);
             float delta = sample_loc * 256 - lutindex;
-            dist_atten = LookupLightingLut(lut, lutindex, delta / 256.f);
+            dist_atten = LookupLightingLut(lut, lutindex, delta);
         }
 
         float clamp_highlights = 1.0f;
@@ -227,13 +227,14 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(const Math::Qu
                 else
                     result = std::max(result, 0.0f);
 
-                u8 lutindex = MathUtil::Clamp(floorf(result * 256.f), 0.0f, 255.0f);
+                u8 lutindex = MathUtil::Clamp(std::floor(result * 256.f), 0.0f, 255.0f);
                 float delta = result * 256 - lutindex;
-                return { lutindex, delta / 256.f };
+                return { lutindex, delta };
             } else {
-                u8 tmpi = MathUtil::Clamp(floorf(result * 128.f), 0.0f, 127.0f);
+                float flr = std::floor(result * 128.f);
+                s8 tmpi = MathUtil::Clamp(flr, -128.0f, 127.0f);
                 float delta = result * 128.f - tmpi;
-                return { tmpi & 0xFF, delta / 128.f };
+                return { tmpi & 0xFF, delta };
             }
         };
 
