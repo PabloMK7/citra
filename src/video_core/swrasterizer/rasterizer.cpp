@@ -310,7 +310,31 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(const Math::Qu
 
         Math::Vec3<float> specular_1 = d1_lut_value * refl_value * light_config.specular_1.ToVec3f();
 
-        // TODO(Subv): Fresnel
+        if (lighting.config1.disable_lut_fr == 0 &&
+            LightingRegs::IsLightingSamplerSupported(
+                lighting.config0.config, LightingRegs::LightingSampler::Fresnel)) {
+
+            // Lookup fresnel LUT value
+            float index = GetLutIndex(num, lighting.lut_input.fr.Value(), lighting.abs_lut_input.disable_fr == 0);
+
+            float scale = lighting.lut_scale.GetScale(lighting.lut_scale.fr);
+
+            float lut_value = scale * LookupLightingLut(static_cast<size_t>(LightingRegs::LightingSampler::Fresnel), index);
+
+            // Enabled for difffuse lighting alpha component
+            if (lighting.config0.fresnel_selector == LightingRegs::LightingFresnelSelector::PrimaryAlpha ||
+                lighting.config0.fresnel_selector == LightingRegs::LightingFresnelSelector::Both) {
+                diffuse_sum.a() *= lut_value;
+            }
+
+            // Enabled for the specular lighting alpha component
+            if (lighting.config0.fresnel_selector ==
+                LightingRegs::LightingFresnelSelector::SecondaryAlpha ||
+                lighting.config0.fresnel_selector == LightingRegs::LightingFresnelSelector::Both) {
+                specular_sum.a() *= lut_value;
+            }
+        }
+
 
         auto diffuse = light_config.diffuse.ToVec3f() * dot_product + light_config.ambient.ToVec3f();
         diffuse_sum += Math::MakeVec(diffuse * dist_atten, 0.0f);
