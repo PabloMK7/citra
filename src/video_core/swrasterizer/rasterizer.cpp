@@ -115,6 +115,20 @@ static std::tuple<float24, float24, PAddr> ConvertCubeCoord(float24 u, float24 v
     return std::make_tuple(x / z * half + half, y / z * half + half, addr);
 }
 
+
+float LookupLightingLut(size_t lut_index, float index) {
+    unsigned index_i = static_cast<unsigned>(MathUtil::Clamp(floor(index * 256), 0.0f, 1.0f));
+
+    float index_f = index - index_i;
+
+    ASSERT_MSG(lut_index < g_state.lighting.luts.size(), "Out of range lut");
+
+    float lut_value = g_state.lighting.luts[lut_index][index_i].ToFloat();
+    float lut_diff = g_state.lighting.luts[lut_index][index_i].DiffToFloat();
+
+    return lut_value + lut_diff * index_f;
+}
+
 std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(const Math::Quaternion<float>& normquat, const Math::Vec3<float>& view) {
     const auto& lighting = g_state.regs.lighting;
 
@@ -133,9 +147,9 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(const Math::Qu
     auto normal = Math::QuaternionRotate(normquat, surface_normal);
 
     Math::Vec3<float> light_vector = {};
-    Math::Vec3<float> diffuse_sum = {};
+    Math::Vec4<float> diffuse_sum = {0.f, 0.f, 0.f, 1.f};
     // TODO(Subv): Calculate specular
-    Math::Vec3<float> specular_sum = {};
+    Math::Vec4<float> specular_sum = {0.f, 0.f, 0.f, 1.f};
 
     for (unsigned light_index = 0; light_index <= lighting.max_light_index; ++light_index) {
         unsigned num = lighting.light_enable.GetNum(light_index);
@@ -150,7 +164,8 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(const Math::Qu
 
         light_vector.Normalize();
 
-        auto dot_product = Math::Dot(light_vector, normal);
+        auto LV_N = Math::Dot(light_vector, normal);
+        auto dot_product = LV_N;
 
         if (light_config.config.two_sided_diffuse)
             dot_product = std::abs(dot_product);
@@ -165,26 +180,92 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(const Math::Qu
             size_t lut = static_cast<size_t>(LightingRegs::LightingSampler::DistanceAttenuation) + num;
 
             float sample_loc = scale * distance + bias;
-            unsigned index_i = static_cast<unsigned>(MathUtil::Clamp(floor(sample_loc * 256), 0.0f, 1.0f));
-
-            float index_f = sample_loc - index_i;
-
-            ASSERT_MSG(lut < g_state.lighting.luts.size(), "Out of range lut");
-
-            float lut_value = g_state.lighting.luts[lut][index_i].ToFloat();
-            float lut_diff = g_state.lighting.luts[lut][index_i].DiffToFloat();
-
-            dist_atten = lut_value + lut_diff * index_f;
+            dist_atten = LookupLightingLut(lut, sample_loc);
         }
 
+        float clamp_highlights = 1.0f;
+
+        if (lighting.config0.clamp_highlights) {
+            if (LV_N <= 0.f)
+                clamp_highlights = 0.f;
+            else
+                clamp_highlights = 1.f;
+        }
+
+        auto GetLutIndex = [&](unsigned num, LightingRegs::LightingLutInput input,
+                              bool abs) -> float {
+
+            Math::Vec3<float> norm_view = view.Normalized();
+            Math::Vec3<float> half_angle = (norm_view + light_vector).Normalized();
+            float result = 0.0f;
+
+            switch (input) {
+            case LightingRegs::LightingLutInput::NH:
+                result = Math::Dot(normal, half_angle);
+                break;
+
+            case LightingRegs::LightingLutInput::VH:
+                result = Math::Dot(norm_view, half_angle);
+                break;
+
+            case LightingRegs::LightingLutInput::NV:
+                result = Math::Dot(normal, norm_view);
+                break;
+
+            case LightingRegs::LightingLutInput::LN:
+                result = Math::Dot(light_vector, normal);
+                break;
+
+            default:
+                LOG_CRITICAL(HW_GPU, "Unknown lighting LUT input %d\n", (int)input);
+                UNIMPLEMENTED();
+                result = 0.f;
+            }
+
+            if (abs) {
+                if (light_config.config.two_sided_diffuse)
+                    result = std::abs(result);
+                else
+                    result = std::max(result, 0.0f);
+            } else {
+                if (result < 0.f)
+                    result += 2.f;
+
+                result /= 2.f;
+            }
+
+            return MathUtil::Clamp(result, 0.0f, 1.0f);
+        };
+
+        // Specular 0 component
+        float d0_lut_value = 1.0f;
+        if (lighting.config1.disable_lut_d0 == 0 &&
+            LightingRegs::IsLightingSamplerSupported(
+                lighting.config0.config, LightingRegs::LightingSampler::Distribution0)) {
+
+            // Lookup specular "distribution 0" LUT value
+            float index = GetLutIndex(num, lighting.lut_input.d0.Value(), lighting.abs_lut_input.disable_d0 == 0);
+
+            float scale = lighting.lut_scale.GetScale(lighting.lut_scale.d0);
+
+            d0_lut_value = scale * LookupLightingLut(static_cast<size_t>(LightingRegs::LightingSampler::Distribution0), index);
+        }
+
+        Math::Vec3<float> specular_0 = d0_lut_value * light_config.specular_0.ToVec3f();
+
+        // TODO(Subv): Specular 1
+        Math::Vec3<float> specular_1 = {};
+
         auto diffuse = light_config.diffuse.ToVec3f() * dot_product + light_config.ambient.ToVec3f();
-        diffuse_sum += diffuse * dist_atten;
+        diffuse_sum += Math::MakeVec(diffuse * dist_atten, 0.0f);
+
+        specular_sum += Math::MakeVec((specular_0 + specular_1) * clamp_highlights * dist_atten, 0.f);
     }
 
-    diffuse_sum += lighting.global_ambient.ToVec3f();
+    diffuse_sum += Math::MakeVec(lighting.global_ambient.ToVec3f(), 0.0f);
     return {
-        Math::MakeVec<float>(MathUtil::Clamp(diffuse_sum.x, 0.0f, 1.0f) * 255, MathUtil::Clamp(diffuse_sum.y, 0.0f, 1.0f) * 255, MathUtil::Clamp(diffuse_sum.z, 0.0f, 1.0f) * 255, 255).Cast<u8>(),
-        Math::MakeVec<float>(MathUtil::Clamp(specular_sum.x, 0.0f, 1.0f) * 255, MathUtil::Clamp(specular_sum.y, 0.0f, 1.0f) * 255, MathUtil::Clamp(specular_sum.z, 0.0f, 1.0f) * 255, 255).Cast<u8>()
+        Math::MakeVec<float>(MathUtil::Clamp(diffuse_sum.x, 0.0f, 1.0f) * 255, MathUtil::Clamp(diffuse_sum.y, 0.0f, 1.0f) * 255, MathUtil::Clamp(diffuse_sum.z, 0.0f, 1.0f) * 255, MathUtil::Clamp(diffuse_sum.w, 0.0f, 1.0f) * 255).Cast<u8>(),
+        Math::MakeVec<float>(MathUtil::Clamp(specular_sum.x, 0.0f, 1.0f) * 255, MathUtil::Clamp(specular_sum.y, 0.0f, 1.0f) * 255, MathUtil::Clamp(specular_sum.z, 0.0f, 1.0f) * 255, MathUtil::Clamp(specular_sum.w, 0.0f, 1.0f) * 255).Cast<u8>()
     };
 }
 
