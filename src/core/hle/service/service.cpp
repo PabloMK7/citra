@@ -9,6 +9,7 @@
 #include "common/string_util.h"
 #include "core/hle/ipc.h"
 #include "core/hle/kernel/client_port.h"
+#include "core/hle/kernel/process.h"
 #include "core/hle/kernel/server_port.h"
 #include "core/hle/kernel/server_session.h"
 #include "core/hle/service/ac/ac.h"
@@ -172,24 +173,16 @@ void ServiceFrameworkBase::HandleSyncRequest(SharedPtr<ServerSession> server_ses
 
     // TODO(yuriks): The kernel should be the one handling this as part of translation after
     // everything else is migrated
-    IPC::Header request_header{cmd_buf[0]};
-    size_t request_size =
-        1 + request_header.normal_params_size + request_header.translate_params_size;
-    ASSERT(request_size <= IPC::COMMAND_BUFFER_LENGTH); // TODO(yuriks): Return error
-
     Kernel::HLERequestContext context;
-    std::copy_n(cmd_buf, request_size, context.cmd_buf.begin());
     context.session = std::move(server_session);
+    context.PopulateFromIncomingCommandBuffer(cmd_buf, *Kernel::g_current_process,
+                                              Kernel::g_handle_table);
 
     LOG_TRACE(Service, "%s",
               MakeFunctionString(info->name, GetServiceName().c_str(), cmd_buf).c_str());
     handler_invoker(this, info->handler_callback, context);
-
-    IPC::Header response_header{context.cmd_buf[0]};
-    size_t response_size =
-        1 + response_header.normal_params_size + response_header.translate_params_size;
-    ASSERT(response_size <= IPC::COMMAND_BUFFER_LENGTH);
-    std::copy_n(context.cmd_buf.begin(), response_size, cmd_buf);
+    context.WriteToOutgoingCommandBuffer(cmd_buf, *Kernel::g_current_process,
+                                         Kernel::g_handle_table);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
