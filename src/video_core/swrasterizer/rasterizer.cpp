@@ -148,8 +148,8 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(const Math::Qu
 
     Math::Vec3<float> light_vector = {};
     Math::Vec4<float> diffuse_sum = {0.f, 0.f, 0.f, 1.f};
-    // TODO(Subv): Calculate specular
     Math::Vec4<float> specular_sum = {0.f, 0.f, 0.f, 1.f};
+    Math::Vec3<float> refl_value = {};
 
     for (unsigned light_index = 0; light_index <= lighting.max_light_index; ++light_index) {
         unsigned num = lighting.light_enable.GetNum(light_index);
@@ -253,8 +253,64 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(const Math::Qu
 
         Math::Vec3<float> specular_0 = d0_lut_value * light_config.specular_0.ToVec3f();
 
-        // TODO(Subv): Specular 1
-        Math::Vec3<float> specular_1 = {};
+        // If enabled, lookup ReflectRed value, otherwise, 1.0 is used
+        if (lighting.config1.disable_lut_rr == 0 &&
+            LightingRegs::IsLightingSamplerSupported(lighting.config0.config,
+                                                     LightingRegs::LightingSampler::ReflectRed)) {
+
+            float index = GetLutIndex(num, lighting.lut_input.rr, lighting.abs_lut_input.disable_rr == 0);
+
+            float scale = lighting.lut_scale.GetScale(lighting.lut_scale.rr);
+
+            refl_value.x = scale * LookupLightingLut(static_cast<size_t>(LightingRegs::LightingSampler::ReflectRed), index);
+        } else {
+            refl_value.x = 1.0f;
+        }
+
+        // If enabled, lookup ReflectGreen value, otherwise, ReflectRed value is used
+        if (lighting.config1.disable_lut_rg == 0 &&
+            LightingRegs::IsLightingSamplerSupported(lighting.config0.config,
+                                                     LightingRegs::LightingSampler::ReflectGreen)) {
+
+            float index = GetLutIndex(num, lighting.lut_input.rg, lighting.abs_lut_input.disable_rg == 0);
+
+            float scale = lighting.lut_scale.GetScale(lighting.lut_scale.rg);
+
+            refl_value.y = scale * LookupLightingLut(static_cast<size_t>(LightingRegs::LightingSampler::ReflectGreen), index);
+        } else {
+            refl_value.y = refl_value.x;
+        }
+
+        // If enabled, lookup ReflectBlue value, otherwise, ReflectRed value is used
+        if (lighting.config1.disable_lut_rb == 0 &&
+            LightingRegs::IsLightingSamplerSupported(lighting.config0.config,
+                                                     LightingRegs::LightingSampler::ReflectBlue)) {
+
+            float index = GetLutIndex(num, lighting.lut_input.rb, lighting.abs_lut_input.disable_rb == 0);
+
+            float scale = lighting.lut_scale.GetScale(lighting.lut_scale.rb);
+
+            refl_value.z = scale * LookupLightingLut(static_cast<size_t>(LightingRegs::LightingSampler::ReflectBlue), index);
+        } else {
+            refl_value.z = refl_value.x;
+        }
+
+        float d1_lut_value = 1.0f;
+        if (lighting.config1.disable_lut_d1 == 0 &&
+            LightingRegs::IsLightingSamplerSupported(
+                lighting.config0.config, LightingRegs::LightingSampler::Distribution1)) {
+
+            // Lookup specular "distribution 1" LUT value
+            float index = GetLutIndex(num, lighting.lut_input.d1.Value(), lighting.abs_lut_input.disable_d1 == 0);
+
+            float scale = lighting.lut_scale.GetScale(lighting.lut_scale.d1);
+
+            d1_lut_value = scale * LookupLightingLut(static_cast<size_t>(LightingRegs::LightingSampler::Distribution1), index);
+        }
+
+        Math::Vec3<float> specular_1 = d1_lut_value * refl_value * light_config.specular_1.ToVec3f();
+
+        // TODO(Subv): Fresnel
 
         auto diffuse = light_config.diffuse.ToVec3f() * dot_product + light_config.ambient.ToVec3f();
         diffuse_sum += Math::MakeVec(diffuse * dist_atten, 0.0f);
