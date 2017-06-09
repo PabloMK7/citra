@@ -117,7 +117,9 @@ static std::tuple<float24, float24, PAddr> ConvertCubeCoord(float24 u, float24 v
 
 
 float LookupLightingLut(size_t lut_index, float index) {
-    unsigned index_i = static_cast<unsigned>(MathUtil::Clamp(floor(index * 256), 0.0f, 1.0f));
+    index *= 256;
+
+    unsigned index_i = static_cast<unsigned>(MathUtil::Clamp(floor(index), 0.0f, 255.0f));
 
     float index_f = index - index_i;
 
@@ -126,7 +128,7 @@ float LookupLightingLut(size_t lut_index, float index) {
     float lut_value = g_state.lighting.luts[lut_index][index_i].ToFloat();
     float lut_diff = g_state.lighting.luts[lut_index][index_i].DiffToFloat();
 
-    return lut_value + lut_diff * index_f;
+    return lut_value + lut_diff * index_f / 256.f;
 }
 
 std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(const Math::Quaternion<float>& normquat, const Math::Vec3<float>& view) {
