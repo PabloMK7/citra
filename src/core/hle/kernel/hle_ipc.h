@@ -80,6 +80,9 @@ public:
         return session;
     }
 
+    SharedPtr<Object> GetIncomingHandle(Handle id_from_cmdbuf) const;
+    Handle AddOutgoingHandle(SharedPtr<Object> object);
+
 private:
     friend class Service::ServiceFrameworkBase;
 

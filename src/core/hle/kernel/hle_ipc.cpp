@@ -5,6 +5,7 @@
 #include <boost/range/algorithm_ext/erase.hpp>
 #include "common/assert.h"
 #include "common/common_types.h"
+#include "core/hle/kernel/handle_table.h"
 #include "core/hle/kernel/hle_ipc.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/server_session.h"
@@ -22,5 +23,13 @@ void SessionRequestHandler::ClientDisconnected(SharedPtr<ServerSession> server_s
 }
 
 HLERequestContext::~HLERequestContext() = default;
+
+SharedPtr<Object> HLERequestContext::GetIncomingHandle(Handle id_from_cmdbuf) const {
+    return Kernel::g_handle_table.GetGeneric(id_from_cmdbuf);
+}
+
+Handle HLERequestContext::AddOutgoingHandle(SharedPtr<Object> object) {
+    return Kernel::g_handle_table.Create(object).Unwrap();
+}
 
 } // namespace Kernel
