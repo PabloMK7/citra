@@ -35,6 +35,10 @@ u32 HLERequestContext::AddOutgoingHandle(SharedPtr<Object> object) {
     return request_handles.size() - 1;
 }
 
+void HLERequestContext::ClearIncomingObjects() {
+    request_handles.clear();
+}
+
 ResultCode HLERequestContext::PopulateFromIncomingCommandBuffer(const u32_le* src_cmdbuf,
                                                                 Process& src_process,
                                                                 HandleTable& src_table) {

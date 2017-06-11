@@ -110,6 +110,13 @@ public:
      */
     u32 AddOutgoingHandle(SharedPtr<Object> object);
 
+    /**
+     * Discards all Objects from the context, invalidating all ids. This may be called after reading
+     * out all incoming objects, so that the buffer memory can be re-used for outgoing handles, but
+     * this is not required.
+     */
+    void ClearIncomingObjects();
+
 private:
     friend class Service::ServiceFrameworkBase;
 

@@ -62,6 +62,9 @@ class RequestBuilder : public RequestHelperBase {
 public:
     RequestBuilder(Kernel::HLERequestContext& context, Header command_header)
         : RequestHelperBase(context, command_header) {
+        // From this point we will start overwriting the existing command buffer, so it's safe to
+        // release all previous incoming Object pointers since they won't be usable anymore.
+        context.ClearIncomingObjects();
         cmdbuf[0] = header.raw;
     }
 
