@@ -75,6 +75,8 @@ PicaShaderConfig PicaShaderConfig::BuildFromRegs(const Pica::Regs& regs) {
         state.lighting.light[light_index].two_sided_diffuse = light.config.two_sided_diffuse != 0;
         state.lighting.light[light_index].dist_atten_enable =
             !regs.lighting.IsDistAttenDisabled(num);
+        state.lighting.light[light_index].spot_atten_enable =
+            !regs.lighting.IsSpotAttenDisabled(num);
     }
 
     state.lighting.lut_d0.enable = regs.lighting.config1.disable_lut_d0 == 0;
@@ -86,6 +88,12 @@ PicaShaderConfig PicaShaderConfig::BuildFromRegs(const Pica::Regs& regs) {
     state.lighting.lut_d1.abs_input = regs.lighting.abs_lut_input.disable_d1 == 0;
     state.lighting.lut_d1.type = regs.lighting.lut_input.d1.Value();
     state.lighting.lut_d1.scale = regs.lighting.lut_scale.GetScale(regs.lighting.lut_scale.d1);
+
+    // this is a dummy field due to lack of the corresponding register
+    state.lighting.lut_sp.enable = true;
+    state.lighting.lut_sp.abs_input = regs.lighting.abs_lut_input.disable_sp == 0;
+    state.lighting.lut_sp.type = regs.lighting.lut_input.sp.Value();
+    state.lighting.lut_sp.scale = regs.lighting.lut_scale.GetScale(regs.lighting.lut_scale.sp);
 
     state.lighting.lut_fr.enable = regs.lighting.config1.disable_lut_fr == 0;
     state.lighting.lut_fr.abs_input = regs.lighting.abs_lut_input.disable_fr == 0;
@@ -509,7 +517,8 @@ static void WriteLighting(std::string& out, const PicaShaderConfig& config) {
     out += "vec4 diffuse_sum = vec4(0.0, 0.0, 0.0, 1.0);\n"
            "vec4 specular_sum = vec4(0.0, 0.0, 0.0, 1.0);\n"
            "vec3 light_vector = vec3(0.0);\n"
-           "vec3 refl_value = vec3(0.0);\n";
+           "vec3 refl_value = vec3(0.0);\n"
+           "vec3 spot_dir = vec3(0.0);\n;";
 
     // Compute fragment normals
     if (lighting.bump_mode == LightingRegs::LightingBumpMode::NormalMap) {
@@ -560,6 +569,10 @@ static void WriteLighting(std::string& out, const PicaShaderConfig& config) {
             index = std::string("dot(light_vector, normal)");
             break;
 
+        case LightingRegs::LightingLutInput::SP:
+            index = std::string("dot(light_vector, spot_dir)");
+            break;
+
         default:
             LOG_CRITICAL(HW_GPU, "Unknown lighting LUT input %d\n", (int)input);
             UNIMPLEMENTED();
@@ -596,11 +609,25 @@ static void WriteLighting(std::string& out, const PicaShaderConfig& config) {
         else
             out += "light_vector = normalize(" + light_src + ".position + view);\n";
 
+        out += "spot_dir = " + light_src + ".spot_direction;\n";
+
         // Compute dot product of light_vector and normal, adjust if lighting is one-sided or
         // two-sided
         std::string dot_product = light_config.two_sided_diffuse
                                       ? "abs(dot(light_vector, normal))"
                                       : "max(dot(light_vector, normal), 0.0)";
+
+        // If enabled, compute spot light attenuation value
+        std::string spot_atten = "1.0";
+        if (light_config.spot_atten_enable &&
+            LightingRegs::IsLightingSamplerSupported(
+                lighting.config, LightingRegs::LightingSampler::SpotlightAttenuation)) {
+            std::string index =
+                GetLutIndex(light_config.num, lighting.lut_sp.type, lighting.lut_sp.abs_input);
+            auto sampler = LightingRegs::SpotlightAttenuationSampler(light_config.num);
+            spot_atten = "(" + std::to_string(lighting.lut_sp.scale) + " * " +
+                         GetLutValue(sampler, index) + ")";
+        }
 
         // If enabled, compute distance attenuation value
         std::string dist_atten = "1.0";
@@ -608,9 +635,8 @@ static void WriteLighting(std::string& out, const PicaShaderConfig& config) {
             std::string index = "(" + light_src + ".dist_atten_scale * length(-view - " +
                                 light_src + ".position) + " + light_src + ".dist_atten_bias)";
             index = "(OFFSET_256 + SCALE_256 * clamp(" + index + ", 0.0, 1.0))";
-            const unsigned lut_num =
-                ((unsigned)LightingRegs::LightingSampler::DistanceAttenuation + light_config.num);
-            dist_atten = GetLutValue((LightingRegs::LightingSampler)lut_num, index);
+            auto sampler = LightingRegs::DistanceAttenuationSampler(light_config.num);
+            dist_atten = GetLutValue(sampler, index);
         }
 
         // If enabled, clamp specular component if lighting result is negative
@@ -711,11 +737,11 @@ static void WriteLighting(std::string& out, const PicaShaderConfig& config) {
 
         // Compute primary fragment color (diffuse lighting) function
         out += "diffuse_sum.rgb += ((" + light_src + ".diffuse * " + dot_product + ") + " +
-               light_src + ".ambient) * " + dist_atten + ";\n";
+               light_src + ".ambient) * " + dist_atten + " * " + spot_atten + ";\n";
 
         // Compute secondary fragment color (specular lighting) function
         out += "specular_sum.rgb += (" + specular_0 + " + " + specular_1 + ") * " +
-               clamp_highlights + " * " + dist_atten + ";\n";
+               clamp_highlights + " * " + dist_atten + " * " + spot_atten + ";\n";
     }
 
     // Sum final lighting result
@@ -967,6 +993,7 @@ struct LightSrc {
     vec3 diffuse;
     vec3 ambient;
     vec3 position;
+    vec3 spot_direction;
     float dist_atten_bias;
     float dist_atten_scale;
 };

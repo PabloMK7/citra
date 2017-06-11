@@ -735,6 +735,40 @@ void RasterizerOpenGL::NotifyPicaRegisterChanged(u32 id) {
         SyncLightPosition(7);
         break;
 
+    // Fragment spot lighting direction
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[0].spot_x, 0x146 + 0 * 0x10):
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[0].spot_z, 0x147 + 0 * 0x10):
+        SyncLightSpotDirection(0);
+        break;
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[1].spot_x, 0x146 + 1 * 0x10):
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[1].spot_z, 0x147 + 1 * 0x10):
+        SyncLightSpotDirection(1);
+        break;
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[2].spot_x, 0x146 + 2 * 0x10):
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[2].spot_z, 0x147 + 2 * 0x10):
+        SyncLightSpotDirection(2);
+        break;
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[3].spot_x, 0x146 + 3 * 0x10):
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[3].spot_z, 0x147 + 3 * 0x10):
+        SyncLightSpotDirection(3);
+        break;
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[4].spot_x, 0x146 + 4 * 0x10):
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[4].spot_z, 0x147 + 4 * 0x10):
+        SyncLightSpotDirection(4);
+        break;
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[5].spot_x, 0x146 + 5 * 0x10):
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[5].spot_z, 0x147 + 5 * 0x10):
+        SyncLightSpotDirection(5);
+        break;
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[6].spot_x, 0x146 + 6 * 0x10):
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[6].spot_z, 0x147 + 6 * 0x10):
+        SyncLightSpotDirection(6);
+        break;
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[7].spot_x, 0x146 + 7 * 0x10):
+    case PICA_REG_INDEX_WORKAROUND(lighting.light[7].spot_z, 0x147 + 7 * 0x10):
+        SyncLightSpotDirection(7);
+        break;
+
     // Fragment lighting light source config
     case PICA_REG_INDEX_WORKAROUND(lighting.light[0].config, 0x149 + 0 * 0x10):
     case PICA_REG_INDEX_WORKAROUND(lighting.light[1].config, 0x149 + 1 * 0x10):
@@ -1591,6 +1625,17 @@ void RasterizerOpenGL::SyncLightPosition(int light_index) {
 
     if (position != uniform_block_data.data.light_src[light_index].position) {
         uniform_block_data.data.light_src[light_index].position = position;
+        uniform_block_data.dirty = true;
+    }
+}
+
+void RasterizerOpenGL::SyncLightSpotDirection(int light_index) {
+    const auto& light = Pica::g_state.regs.lighting.light[light_index];
+    GLvec3 spot_direction = {light.spot_x / 2047.0f, light.spot_y / 2047.0f,
+                             light.spot_z / 2047.0f};
+
+    if (spot_direction != uniform_block_data.data.light_src[light_index].spot_direction) {
+        uniform_block_data.data.light_src[light_index].spot_direction = spot_direction;
         uniform_block_data.dirty = true;
     }
 }

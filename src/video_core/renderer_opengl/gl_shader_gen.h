@@ -93,6 +93,7 @@ union PicaShaderConfig {
                 bool directional;
                 bool two_sided_diffuse;
                 bool dist_atten_enable;
+                bool spot_atten_enable;
             } light[8];
 
             bool enable;
@@ -110,7 +111,7 @@ union PicaShaderConfig {
                 bool abs_input;
                 Pica::LightingRegs::LightingLutInput type;
                 float scale;
-            } lut_d0, lut_d1, lut_fr, lut_rr, lut_rg, lut_rb;
+            } lut_d0, lut_d1, lut_sp, lut_fr, lut_rr, lut_rg, lut_rb;
         } lighting;
 
         struct {
