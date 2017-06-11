@@ -462,7 +462,7 @@ public:
         z -= other.z;
         w -= other.w;
     }
-    template <typename Q = T, class = typename std::enable_if<std::is_signed<Q>::value>::type>
+    template <typename Q = T>
     Vec4<decltype(-T{})> operator-() const {
         return MakeVec(-x, -y, -z, -w);
     }

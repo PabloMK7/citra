@@ -362,13 +362,6 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(const Math::Qu
     };
 }
 
-static bool AreQuaternionsOpposite(Math::Vec4<Pica::float24> qa, Math::Vec4<Pica::float24> qb) {
-    Math::Vec4f a{ qa.x.ToFloat32(), qa.y.ToFloat32(), qa.z.ToFloat32(), qa.w.ToFloat32() };
-    Math::Vec4f b{ qb.x.ToFloat32(), qb.y.ToFloat32(), qb.z.ToFloat32(), qb.w.ToFloat32() };
-
-    return (Math::Dot(a, b) < 0.f);
-}
-
 MICROPROFILE_DEFINE(GPU_Rasterization, "GPU", "Rasterization", MP_RGB(50, 50, 240));
 
 /**
@@ -461,15 +454,6 @@ static void ProcessTriangleInternal(const Vertex& v0, const Vertex& v1, const Ve
         IsRightSideOrFlatBottomEdge(vtxpos[1].xy(), vtxpos[2].xy(), vtxpos[0].xy()) ? -1 : 0;
     int bias2 =
         IsRightSideOrFlatBottomEdge(vtxpos[2].xy(), vtxpos[0].xy(), vtxpos[1].xy()) ? -1 : 0;
-
-    // Flip the quaternions if they are opposite to prevent interpolating them over the wrong direction.
-    auto v1_quat = v1.quat;
-    auto v2_quat = v2.quat;
-
-    if (AreQuaternionsOpposite(v0.quat, v1.quat))
-        v1_quat = v1_quat * float24::FromFloat32(-1.0f);
-    if (AreQuaternionsOpposite(v0.quat, v2.quat))
-        v2_quat = v2_quat * float24::FromFloat32(-1.0f);
 
     auto w_inverse = Math::MakeVec(v0.pos.w, v1.pos.w, v2.pos.w);
 
@@ -571,11 +555,11 @@ static void ProcessTriangleInternal(const Vertex& v0, const Vertex& v1, const Ve
 
             Math::Quaternion<float> normquat{
                 {
-                    GetInterpolatedAttribute(v0.quat.x, v1_quat.x, v2_quat.x).ToFloat32(),
-                    GetInterpolatedAttribute(v0.quat.y, v1_quat.y, v2_quat.y).ToFloat32(),
-                    GetInterpolatedAttribute(v0.quat.z, v1_quat.z, v2_quat.z).ToFloat32()
+                    GetInterpolatedAttribute(v0.quat.x, v1.quat.x, v2.quat.x).ToFloat32(),
+                    GetInterpolatedAttribute(v0.quat.y, v1.quat.y, v2.quat.y).ToFloat32(),
+                    GetInterpolatedAttribute(v0.quat.z, v1.quat.z, v2.quat.z).ToFloat32()
                 },
-                GetInterpolatedAttribute(v0.quat.w, v1_quat.w, v2_quat.w).ToFloat32(),
+                GetInterpolatedAttribute(v0.quat.w, v1.quat.w, v2.quat.w).ToFloat32(),
             };
 
             Math::Vec3<float> fragment_position{
