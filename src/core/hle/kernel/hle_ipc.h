@@ -7,6 +7,7 @@
 #include <array>
 #include <memory>
 #include <vector>
+#include <boost/container/small_vector.hpp>
 #include "common/common_types.h"
 #include "common/swap.h"
 #include "core/hle/ipc.h"
@@ -127,7 +128,8 @@ private:
 
     std::array<u32, IPC::COMMAND_BUFFER_LENGTH> cmd_buf;
     SharedPtr<ServerSession> session;
-    std::vector<SharedPtr<Object>> request_handles;
+    // TODO(yuriks): Check common usage of this and optimize size accordingly
+    boost::container::small_vector<SharedPtr<Object>, 8> request_handles;
 };
 
 } // namespace Kernel
