@@ -4,19 +4,28 @@
 
 #pragma once
 
+#include <array>
+#include <tuple>
+#include <type_traits>
+#include <utility>
 #include "core/hle/ipc.h"
 #include "core/hle/kernel/handle_table.h"
+#include "core/hle/kernel/hle_ipc.h"
 #include "core/hle/kernel/kernel.h"
 
 namespace IPC {
 
 class RequestHelperBase {
 protected:
+    Kernel::HLERequestContext* context = nullptr;
     u32* cmdbuf;
     ptrdiff_t index = 1;
     Header header;
 
 public:
+    RequestHelperBase(Kernel::HLERequestContext& context, Header desired_header)
+        : context(&context), cmdbuf(context.CommandBuffer()), header(desired_header) {}
+
     RequestHelperBase(u32* command_buffer, Header command_header)
         : cmdbuf(command_buffer), header(command_header) {}
 
@@ -51,12 +60,27 @@ public:
 
 class RequestBuilder : public RequestHelperBase {
 public:
+    RequestBuilder(Kernel::HLERequestContext& context, Header command_header)
+        : RequestHelperBase(context, command_header) {
+        // From this point we will start overwriting the existing command buffer, so it's safe to
+        // release all previous incoming Object pointers since they won't be usable anymore.
+        context.ClearIncomingObjects();
+        cmdbuf[0] = header.raw;
+    }
+
+    RequestBuilder(Kernel::HLERequestContext& context, u16 command_id, unsigned normal_params_size,
+                   unsigned translate_params_size)
+        : RequestBuilder(
+              context, Header{MakeHeader(command_id, normal_params_size, translate_params_size)}) {}
+
     RequestBuilder(u32* command_buffer, Header command_header)
         : RequestHelperBase(command_buffer, command_header) {
         cmdbuf[0] = header.raw;
     }
+
     explicit RequestBuilder(u32* command_buffer, u32 command_header)
         : RequestBuilder(command_buffer, Header{command_header}) {}
+
     RequestBuilder(u32* command_buffer, u16 command_id, unsigned normal_params_size,
                    unsigned translate_params_size)
         : RequestBuilder(command_buffer,
@@ -87,6 +111,9 @@ public:
 
     template <typename... H>
     void PushMoveHandles(H... handles);
+
+    template <typename... O>
+    void PushObjects(Kernel::SharedPtr<O>... pointers);
 
     void PushCurrentPIDHandle();
 
@@ -153,6 +180,11 @@ inline void RequestBuilder::PushMoveHandles(H... handles) {
     Push(static_cast<Kernel::Handle>(handles)...);
 }
 
+template <typename... O>
+inline void RequestBuilder::PushObjects(Kernel::SharedPtr<O>... pointers) {
+    PushMoveHandles(context->AddOutgoingHandle(std::move(pointers))...);
+}
+
 inline void RequestBuilder::PushCurrentPIDHandle() {
     Push(CallingPidDesc());
     Push(u32(0));
@@ -171,10 +203,21 @@ inline void RequestBuilder::PushMappedBuffer(VAddr buffer_vaddr, u32 size,
 
 class RequestParser : public RequestHelperBase {
 public:
+    RequestParser(Kernel::HLERequestContext& context, Header desired_header)
+        : RequestHelperBase(context, desired_header) {}
+
+    RequestParser(Kernel::HLERequestContext& context, u16 command_id, unsigned normal_params_size,
+                  unsigned translate_params_size)
+        : RequestParser(context,
+                        Header{MakeHeader(command_id, normal_params_size, translate_params_size)}) {
+    }
+
     RequestParser(u32* command_buffer, Header command_header)
         : RequestHelperBase(command_buffer, command_header) {}
+
     explicit RequestParser(u32* command_buffer, u32 command_header)
         : RequestParser(command_buffer, Header{command_header}) {}
+
     RequestParser(u32* command_buffer, u16 command_id, unsigned normal_params_size,
                   unsigned translate_params_size)
         : RequestParser(command_buffer,
@@ -186,7 +229,10 @@ public:
             ValidateHeader();
         Header builderHeader{
             MakeHeader(header.command_id, normal_params_size, translate_params_size)};
-        return {cmdbuf, builderHeader};
+        if (context != nullptr)
+            return {*context, builderHeader};
+        else
+            return {cmdbuf, builderHeader};
     }
 
     template <typename T>
@@ -198,10 +244,52 @@ public:
     template <typename First, typename... Other>
     void Pop(First& first_value, Other&... other_values);
 
+    /// Equivalent to calling `PopHandles<1>()[0]`.
     Kernel::Handle PopHandle();
 
+    /**
+     * Pops a descriptor containing `N` handles. The handles are returned as an array. The
+     * descriptor must contain exactly `N` handles, it is not permitted to, for example, call
+     * PopHandles<1>() twice to read a multi-handle descriptor with 2 handles, or to make a single
+     * PopHandles<2>() call to read 2 single-handle descriptors.
+     */
+    template <unsigned int N>
+    std::array<Kernel::Handle, N> PopHandles();
+
+    /// Convenience wrapper around PopHandles() which assigns the handles to the passed references.
     template <typename... H>
-    void PopHandles(H&... handles);
+    void PopHandles(H&... handles) {
+        std::tie(handles...) = PopHandles<sizeof...(H)>();
+    }
+
+    /// Equivalent to calling `PopGenericObjects<1>()[0]`.
+    Kernel::SharedPtr<Kernel::Object> PopGenericObject();
+
+    /// Equivalent to calling `std::get<0>(PopObjects<T>())`.
+    template <typename T>
+    Kernel::SharedPtr<T> PopObject();
+
+    /**
+     * Pop a descriptor containing `N` handles and resolves them to Kernel::Object pointers. If a
+     * handle is invalid, null is returned for that object instead. The same caveats from
+     * PopHandles() apply regarding `N` matching the number of handles in the descriptor.
+     */
+    template <unsigned int N>
+    std::array<Kernel::SharedPtr<Kernel::Object>, N> PopGenericObjects();
+
+    /**
+     * Resolves handles to Kernel::Objects as in PopGenericsObjects(), but then also casts them to
+     * the passed `T` types, while verifying that the cast is valid. If the type of an object does
+     * not match, null is returned instead.
+     */
+    template <typename... T>
+    std::tuple<Kernel::SharedPtr<T>...> PopObjects();
+
+    /// Convenience wrapper around PopObjects() which assigns the handles to the passed references.
+    template <typename... T>
+    void PopObjects(Kernel::SharedPtr<T>&... pointers) {
+        std::tie(pointers...) = PopObjects<T...>();
+    }
 
     /**
      * @brief Pops the static buffer vaddr
@@ -313,15 +401,54 @@ inline Kernel::Handle RequestParser::PopHandle() {
     return Pop<Kernel::Handle>();
 }
 
-template <typename... H>
-void RequestParser::PopHandles(H&... handles) {
-    const u32 handle_descriptor = Pop<u32>();
-    const int handles_number = sizeof...(H);
-    DEBUG_ASSERT_MSG(IsHandleDescriptor(handle_descriptor),
-                     "Tried to pop handle(s) but the descriptor is not a handle descriptor");
-    DEBUG_ASSERT_MSG(handles_number == HandleNumberFromDesc(handle_descriptor),
-                     "Number of handles doesn't match the descriptor");
-    Pop(static_cast<Kernel::Handle&>(handles)...);
+template <unsigned int N>
+std::array<Kernel::Handle, N> RequestParser::PopHandles() {
+    u32 handle_descriptor = Pop<u32>();
+    ASSERT_MSG(IsHandleDescriptor(handle_descriptor),
+               "Tried to pop handle(s) but the descriptor is not a handle descriptor");
+    ASSERT_MSG(N == HandleNumberFromDesc(handle_descriptor),
+               "Number of handles doesn't match the descriptor");
+
+    std::array<Kernel::Handle, N> handles{};
+    for (Kernel::Handle& handle : handles) {
+        handle = Pop<Kernel::Handle>();
+    }
+    return handles;
+}
+
+inline Kernel::SharedPtr<Kernel::Object> RequestParser::PopGenericObject() {
+    Kernel::Handle handle = PopHandle();
+    return context->GetIncomingHandle(handle);
+}
+
+template <typename T>
+Kernel::SharedPtr<T> RequestParser::PopObject() {
+    return Kernel::DynamicObjectCast<T>(PopGenericObject());
+}
+
+template <unsigned int N>
+inline std::array<Kernel::SharedPtr<Kernel::Object>, N> RequestParser::PopGenericObjects() {
+    std::array<Kernel::Handle, N> handles = PopHandles<N>();
+    std::array<Kernel::SharedPtr<Kernel::Object>, N> pointers;
+    for (int i = 0; i < N; ++i) {
+        pointers[i] = context->GetIncomingHandle(handles[i]);
+    }
+    return pointers;
+}
+
+namespace detail {
+template <typename... T, size_t... I>
+std::tuple<Kernel::SharedPtr<T>...> PopObjectsHelper(
+    std::array<Kernel::SharedPtr<Kernel::Object>, sizeof...(T)>&& pointers,
+    std::index_sequence<I...>) {
+    return std::make_tuple(Kernel::DynamicObjectCast<T>(std::move(pointers[I]))...);
+}
+} // namespace detail
+
+template <typename... T>
+inline std::tuple<Kernel::SharedPtr<T>...> RequestParser::PopObjects() {
+    return detail::PopObjectsHelper<T...>(PopGenericObjects<sizeof...(T)>(),
+                                          std::index_sequence_for<T...>{});
 }
 
 inline VAddr RequestParser::PopStaticBuffer(size_t* data_size, bool useStaticBuffersToGetVaddr) {

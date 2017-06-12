@@ -44,6 +44,9 @@ inline u32* GetStaticBuffers(const int offset = 0) {
 
 namespace IPC {
 
+/// Size of the command buffer area, in 32-bit words.
+constexpr size_t COMMAND_BUFFER_LENGTH = 0x100 / sizeof(u32);
+
 // These errors are commonly returned by invalid IPC translations, so alias them here for
 // convenience.
 // TODO(yuriks): These will probably go away once translation is implemented inside the kernel.

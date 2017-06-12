@@ -2,10 +2,14 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <algorithm>
 #include <fmt/format.h>
+#include "common/assert.h"
 #include "common/logging/log.h"
 #include "common/string_util.h"
+#include "core/hle/ipc.h"
 #include "core/hle/kernel/client_port.h"
+#include "core/hle/kernel/process.h"
 #include "core/hle/kernel/server_port.h"
 #include "core/hle/kernel/server_session.h"
 #include "core/hle/service/ac/ac.h"
@@ -160,12 +164,6 @@ void ServiceFrameworkBase::ReportUnimplementedFunction(u32* cmd_buf, const Funct
 void ServiceFrameworkBase::HandleSyncRequest(SharedPtr<ServerSession> server_session) {
     u32* cmd_buf = Kernel::GetCommandBuffer();
 
-    // TODO(yuriks): The kernel should be the one handling this as part of translation after
-    // everything else is migrated
-    Kernel::HLERequestContext context;
-    context.cmd_buf = cmd_buf;
-    context.session = std::move(server_session);
-
     u32 header_code = cmd_buf[0];
     auto itr = handlers.find(header_code);
     const FunctionInfoBase* info = itr == handlers.end() ? nullptr : &itr->second;
@@ -173,9 +171,18 @@ void ServiceFrameworkBase::HandleSyncRequest(SharedPtr<ServerSession> server_ses
         return ReportUnimplementedFunction(cmd_buf, info);
     }
 
+    // TODO(yuriks): The kernel should be the one handling this as part of translation after
+    // everything else is migrated
+    Kernel::HLERequestContext context;
+    context.session = std::move(server_session);
+    context.PopulateFromIncomingCommandBuffer(cmd_buf, *Kernel::g_current_process,
+                                              Kernel::g_handle_table);
+
     LOG_TRACE(Service, "%s",
               MakeFunctionString(info->name, GetServiceName().c_str(), cmd_buf).c_str());
     handler_invoker(this, info->handler_callback, context);
+    context.WriteToOutgoingCommandBuffer(cmd_buf, *Kernel::g_current_process,
+                                         Kernel::g_handle_table);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

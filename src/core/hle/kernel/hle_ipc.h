@@ -4,8 +4,13 @@
 
 #pragma once
 
+#include <array>
 #include <memory>
 #include <vector>
+#include <boost/container/small_vector.hpp>
+#include "common/common_types.h"
+#include "common/swap.h"
+#include "core/hle/ipc.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/server_session.h"
 
@@ -14,6 +19,9 @@ class ServiceFrameworkBase;
 }
 
 namespace Kernel {
+
+class HandleTable;
+class Process;
 
 /**
  * Interface implemented by HLE Session handlers.
@@ -59,14 +67,28 @@ protected:
  * Class containing information about an in-flight IPC request being handled by an HLE service
  * implementation. Services should avoid using old global APIs (e.g. Kernel::GetCommandBuffer()) and
  * when possible use the APIs in this class to service the request.
+ *
+ * HLE handle protocol
+ * ===================
+ *
+ * To avoid needing HLE services to keep a separate handle table, or having to directly modify the
+ * requester's table, a tweaked protocol is used to receive and send handles in requests. The kernel
+ * will decode the incoming handles into object pointers and insert a id in the buffer where the
+ * handle would normally be. The service then calls GetIncomingHandle() with that id to get the
+ * pointer to the object. Similarly, instead of inserting a handle into the command buffer, the
+ * service calls AddOutgoingHandle() and stores the returned id where the handle would normally go.
+ *
+ * The end result is similar to just giving services their own real handle tables, but since these
+ * ids are local to a specific context, it avoids requiring services to manage handles for objects
+ * across multiple calls and ensuring that unneeded handles are cleaned up.
  */
 class HLERequestContext {
 public:
     ~HLERequestContext();
 
     /// Returns a pointer to the IPC command buffer for this request.
-    u32* CommandBuffer() const {
-        return cmd_buf;
+    u32* CommandBuffer() {
+        return cmd_buf.data();
     }
 
     /**
@@ -77,11 +99,37 @@ public:
         return session;
     }
 
+    /**
+     * Resolves a object id from the request command buffer into a pointer to an object. See the
+     * "HLE handle protocol" section in the class documentation for more details.
+     */
+    SharedPtr<Object> GetIncomingHandle(u32 id_from_cmdbuf) const;
+
+    /**
+     * Adds an outgoing object to the response, returning the id which should be used to reference
+     * it. See the "HLE handle protocol" section in the class documentation for more details.
+     */
+    u32 AddOutgoingHandle(SharedPtr<Object> object);
+
+    /**
+     * Discards all Objects from the context, invalidating all ids. This may be called after reading
+     * out all incoming objects, so that the buffer memory can be re-used for outgoing handles, but
+     * this is not required.
+     */
+    void ClearIncomingObjects();
+
 private:
     friend class Service::ServiceFrameworkBase;
 
-    u32* cmd_buf = nullptr;
+    ResultCode PopulateFromIncomingCommandBuffer(const u32_le* src_cmdbuf, Process& src_process,
+                                                 HandleTable& src_table);
+    ResultCode WriteToOutgoingCommandBuffer(u32_le* dst_cmdbuf, Process& dst_process,
+                                            HandleTable& dst_table) const;
+
+    std::array<u32, IPC::COMMAND_BUFFER_LENGTH> cmd_buf;
     SharedPtr<ServerSession> session;
+    // TODO(yuriks): Check common usage of this and optimize size accordingly
+    boost::container::small_vector<SharedPtr<Object>, 8> request_handles;
 };
 
 } // namespace Kernel
