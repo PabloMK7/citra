@@ -182,19 +182,22 @@ RasterizerOpenGL::RasterizerOpenGL() : shader_dirty(true) {
 RasterizerOpenGL::~RasterizerOpenGL() {}
 
 /**
- * This is a helper function to resolve an issue with opposite quaternions being interpolated by
- * OpenGL. See below for a detailed description of this issue (yuriks):
+ * This is a helper function to resolve an issue when interpolating opposite quaternions. See below
+ * for a detailed description of this issue (yuriks):
  *
  * For any rotation, there are two quaternions Q, and -Q, that represent the same rotation. If you
  * interpolate two quaternions that are opposite, instead of going from one rotation to another
  * using the shortest path, you'll go around the longest path. You can test if two quaternions are
- * opposite by checking if Dot(Q1, W2) < 0. In that case, you can flip either of them, therefore
- * making Dot(-Q1, W2) positive.
+ * opposite by checking if Dot(Q1, Q2) < 0. In that case, you can flip either of them, therefore
+ * making Dot(Q1, -Q2) positive.
  *
- * NOTE: This solution corrects this issue per-vertex before passing the quaternions to OpenGL. This
- * should be correct for nearly all cases, however a more correct implementation (but less trivial
- * and perhaps unnecessary) would be to handle this per-fragment, by interpolating the quaternions
- * manually using two Lerps, and doing this correction before each Lerp.
+ * This solution corrects this issue per-vertex before passing the quaternions to OpenGL. This is
+ * correct for most cases but can still rotate around the long way sometimes. An implementation
+ * which did `lerp(lerp(Q1, Q2), Q3)` (with proper weighting), applying the dot product check
+ * between each step would work for those cases at the cost of being more complex to implement.
+ *
+ * Fortunately however, the 3DS hardware happens to also use this exact same logic to work around
+ * these issues, making this basic implementation actually more accurate to the hardware.
  */
 static bool AreQuaternionsOpposite(Math::Vec4<Pica::float24> qa, Math::Vec4<Pica::float24> qb) {
     Math::Vec4f a{qa.x.ToFloat32(), qa.y.ToFloat32(), qa.z.ToFloat32(), qa.w.ToFloat32()};
