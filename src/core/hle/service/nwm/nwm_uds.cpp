@@ -543,6 +543,42 @@ static void BeaconBroadcastCallback(u64 userdata, int cycles_late) {
                               beacon_broadcast_event, 0);
 }
 
+/*
+ * Returns an available index in the nodes array for the
+ * currently-hosted UDS network.
+ */
+static u32 GetNextAvailableNodeId() {
+    ASSERT_MSG(connection_status.status == static_cast<u32>(NetworkStatus::ConnectedAsHost),
+               "Can not accept clients if we're not hosting a network");
+
+    for (unsigned index = 0; index < connection_status.max_nodes; ++index) {
+        if ((connection_status.node_bitmask & (1 << index)) == 0)
+            return index;
+    }
+
+    // Any connection attempts to an already full network should have been refused.
+    ASSERT_MSG(false, "No available connection slots in the network");
+}
+
+/*
+ * Called when a client connects to an UDS network we're hosting,
+ * updates the connection status and signals the update event.
+ * @param network_node_id Network Node Id of the connecting client.
+ */
+void OnClientConnected(u16 network_node_id) {
+    ASSERT_MSG(connection_status.status == static_cast<u32>(NetworkStatus::ConnectedAsHost),
+               "Can not accept clients if we're not hosting a network");
+    ASSERT_MSG(connection_status.total_nodes < connection_status.max_nodes,
+               "Can not accept connections on a full network");
+
+    u32 node_id = GetNextAvailableNodeId();
+    connection_status.node_bitmask |= 1 << node_id;
+    connection_status.changed_nodes |= 1 << node_id;
+    connection_status.nodes[node_id] = network_node_id;
+    connection_status.total_nodes++;
+    connection_status_event->Signal();
+}
+
 const Interface::FunctionInfo FunctionTable[] = {
     {0x00010442, nullptr, "Initialize (deprecated)"},
     {0x00020000, nullptr, "Scrap"},
