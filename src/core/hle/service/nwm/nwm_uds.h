@@ -24,6 +24,9 @@ const double MillisecondsPerTU = 1.024;
 // Interval measured in TU, the default value is 100TU = 102.4ms
 const u16 DefaultBeaconInterval = 100;
 
+/// The maximum number of nodes that can exist in an UDS session.
+constexpr u32 UDSMaxNodes = 16;
+
 struct NodeInfo {
     u64_le friend_code_seed;
     std::array<u16_le, 10> username;
@@ -47,8 +50,8 @@ struct ConnectionStatus {
     u32_le status;
     INSERT_PADDING_WORDS(1);
     u16_le network_node_id;
-    INSERT_PADDING_BYTES(2);
-    INSERT_PADDING_BYTES(32);
+    u16_le changed_nodes;
+    u16_le nodes[UDSMaxNodes];
     u8 total_nodes;
     u8 max_nodes;
     u16_le node_bitmask;

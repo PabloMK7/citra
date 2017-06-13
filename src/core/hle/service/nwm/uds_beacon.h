@@ -15,9 +15,6 @@ namespace Service {
 namespace NWM {
 
 using MacAddress = std::array<u8, 6>;
-
-/// The maximum number of nodes that can exist in an UDS session.
-constexpr u32 UDSMaxNodes = 16;
 constexpr std::array<u8, 3> NintendoOUI = {0x00, 0x1F, 0x32};
 
 /// Additional block tag ids in the Beacon frames

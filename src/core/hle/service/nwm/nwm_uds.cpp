@@ -215,6 +215,11 @@ static void GetConnectionStatus(Interface* self) {
     rb.Push(RESULT_SUCCESS);
     rb.PushRaw(connection_status);
 
+    // Reset the bitmask of changed nodes after each call to this
+    // function to prevent falsely informing games of outstanding
+    // changes in subsequent calls.
+    connection_status.changed_nodes = 0;
+
     LOG_DEBUG(Service_NWM, "called");
 }
 
@@ -314,8 +319,11 @@ static void BeginHostingNetwork(Interface* self) {
     // The host is always the first node
     connection_status.network_node_id = 1;
     node_info[0].network_node_id = 1;
+    connection_status.nodes[0] = connection_status.network_node_id;
     // Set the bit 0 in the nodes bitmask to indicate that node 1 is already taken.
     connection_status.node_bitmask |= 1;
+    // Notify the application that the first node was set.
+    connection_status.changed_nodes |= 1;
 
     // If the game has a preferred channel, use that instead.
     if (network_info.channel != 0)
@@ -352,6 +360,8 @@ static void DestroyNetwork(Interface* self) {
     // Unschedule the beacon broadcast event.
     CoreTiming::UnscheduleEvent(beacon_broadcast_event, 0);
 
+    // TODO(Subv): Check if connection_status is indeed reset after this call.
+    connection_status = {};
     connection_status.status = static_cast<u8>(NetworkStatus::NotConnected);
     connection_status_event->Signal();
 
