@@ -143,18 +143,18 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(
     // Use the normalized the quaternion when performing the rotation
     auto normal = Math::QuaternionRotate(normquat.Normalized(), surface_normal);
 
-    Math::Vec3<float> light_vector = {};
     Math::Vec4<float> diffuse_sum = {0.f, 0.f, 0.f, 1.f};
     Math::Vec4<float> specular_sum = {0.f, 0.f, 0.f, 1.f};
-    Math::Vec3<float> refl_value = {};
 
     for (unsigned light_index = 0; light_index <= lighting.max_light_index; ++light_index) {
         unsigned num = lighting.light_enable.GetNum(light_index);
         const auto& light_config = g_state.regs.lighting.light[num];
 
+        Math::Vec3<float> refl_value = {};
         Math::Vec3<float> position = {float16::FromRaw(light_config.x).ToFloat32(),
                                       float16::FromRaw(light_config.y).ToFloat32(),
                                       float16::FromRaw(light_config.z).ToFloat32()};
+        Math::Vec3<float> light_vector;
 
         if (light_config.config.directional)
             light_vector = position;
@@ -175,11 +175,12 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(
         if (!lighting.IsDistAttenDisabled(num)) {
             auto distance = (-view - position).Length();
             float scale = Pica::float20::FromRaw(light_config.dist_atten_scale).ToFloat32();
-            float bias = Pica::float20::FromRaw(light_config.dist_atten_scale).ToFloat32();
+            float dist_aten_bias =
+                Pica::float20::FromRaw(light_config.dist_atten_scale).ToFloat32();
             size_t lut =
                 static_cast<size_t>(LightingRegs::LightingSampler::DistanceAttenuation) + num;
 
-            float sample_loc = scale * distance + bias;
+            float sample_loc = scale * distance + dist_aten_bias;
 
             u8 lutindex =
                 static_cast<u8>(MathUtil::Clamp(std::floor(sample_loc * 256.f), 0.0f, 255.0f));
@@ -238,7 +239,7 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(
                 return {lutindex, delta};
             } else {
                 float flr = std::floor(result * 128.f);
-                s8 lutindex = static_cast<u8>(MathUtil::Clamp(flr, -128.0f, 127.0f));
+                s8 lutindex = static_cast<s8>(MathUtil::Clamp(flr, -128.0f, 127.0f));
                 float delta = result * 128.f - lutindex;
                 return {static_cast<u8>(lutindex), delta};
             }
