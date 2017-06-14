@@ -17,9 +17,6 @@ namespace NWM {
 
 using MacAddress = std::array<u8, 6>;
 
-// AES Keyslot used to generate the UDS data frame CCMP key.
-constexpr size_t UDSDataCryptoAESKeySlot = 0x2D;
-
 /*
  * Generates a SNAP-enabled 802.2 LLC header for the specified protocol.
  * @returns a buffer with the bytes of the generated header.
@@ -94,7 +91,7 @@ static std::array<u8, CryptoPP::AES::BLOCKSIZE> GenerateDataCCMPKey(
     // keyslot 0x2D.
     using CryptoPP::AES;
     std::array<u8, CryptoPP::MD5::DIGESTSIZE> counter = GetDataCryptoCTR(network_info);
-    std::array<u8, AES::BLOCKSIZE> key = HW::AES::GetNormalKey(UDSDataCryptoAESKeySlot);
+    std::array<u8, AES::BLOCKSIZE> key = HW::AES::GetNormalKey(HW::AES::KeySlotID::UDSDataKey);
     CryptoPP::CTR_Mode<AES>::Encryption aes;
     aes.SetKeyWithIV(key.data(), AES::BLOCKSIZE, counter.data());
     aes.ProcessData(ccmp_key.data(), passphrase_hash.data(), passphrase_hash.size());
