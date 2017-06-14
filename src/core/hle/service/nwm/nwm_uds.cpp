@@ -404,15 +404,22 @@ static void SendTo(Interface* self) {
     const VAddr input_address = rp.PopStaticBuffer(&desc_size, false);
     ASSERT(desc_size == data_size);
 
-    // TODO(Subv): Figure out the error if this is called while not connected to a network.
-    if (connection_status.status == static_cast<u32>(NetworkStatus::ConnectedAsClient) ||
-        connection_status.status == static_cast<u32>(NetworkStatus::ConnectedAsHost)) {
-        ASSERT_MSG(false, "Not connected to a network (unimplemented)");
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+
+    if (connection_status.status != static_cast<u32>(NetworkStatus::ConnectedAsClient) &&
+        connection_status.status != static_cast<u32>(NetworkStatus::ConnectedAsHost)) {
+        rb.Push(ResultCode(ErrorDescription::NotAuthorized, ErrorModule::UDS,
+                           ErrorSummary::InvalidState, ErrorLevel::Status));
+        return;
+    }
+
+    if (dest_node_id == connection_status.network_node_id) {
+        rb.Push(ResultCode(ErrorDescription::NotFound, ErrorModule::UDS,
+                           ErrorSummary::WrongArgument, ErrorLevel::Status));
+        return;
     }
 
     // TODO(Subv): Do something with the flags.
-
-    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
 
     constexpr size_t MaxSize = 0x5C6;
     if (data_size > MaxSize) {
