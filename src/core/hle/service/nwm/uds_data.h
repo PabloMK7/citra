@@ -4,9 +4,14 @@
 
 #pragma once
 
+#include <array>
+#include <vector>
+
 #include "common/common_types.h"
 #include "common/swap.h"
 #include "core/hle/service/service.h"
+
+#include <cryptopp/aes.h>
 
 namespace Service {
 namespace NWM {
@@ -73,10 +78,10 @@ struct DataFrameCryptoCTR {
 static_assert(sizeof(DataFrameCryptoCTR) == 16, "DataFrameCryptoCTR has the wrong size");
 
 /**
- * Generates an encrypted 802.11 data frame starting at the CCMP IV.
- * @returns The generated frame.
+ * Generates an unencrypted 802.11 data payload.
+ * @returns The generated frame payload.
  */
-std::vector<u8> GenerateDataFrame(const std::vector<u8>& data, u8 channel, u16 dest_node, u16 src_node, u16 sequence_number);
+std::vector<u8> GenerateDataPayload(const std::vector<u8>& data, u8 channel, u16 dest_node, u16 src_node, u16 sequence_number);
 
 } // namespace NWM
 } // namespace Service

@@ -433,9 +433,12 @@ static void SendTo(Interface* self) {
 
     // TODO(Subv): Increment the sequence number after each sent packet.
     u16 sequence_number = 0;
-    std::vector<u8> data_frame = GenerateDataFrame(data, data_channel, dest_node_id,
-                                                   connection_status.network_node_id,
-                                                   sequence_number);
+    std::vector<u8> data_payload = GenerateDataPayload(data, data_channel, dest_node_id,
+                                                       connection_status.network_node_id,
+                                                       sequence_number);
+
+    // TODO(Subv): Retrieve the MAC address of the dest_node_id and our own to encrypt
+    // and encapsulate the payload.
 
     // TODO(Subv): Send the frame.
 

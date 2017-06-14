@@ -5,10 +5,12 @@
 #include <cstring>
 
 #include "core/hle/service/nwm/nwm_uds.h"
+#include "core/hle/service/nwm/uds_beacon.h"
 #include "core/hle/service/nwm/uds_data.h"
 #include "core/hw/aes/key.h"
 
-#include <cryptopp/aes.h>
+#include <cryptopp/ccm.h>
+#include <cryptopp/filters.h>
 #include <cryptopp/md5.h>
 #include <cryptopp/modes.h>
 
@@ -98,15 +100,149 @@ static std::array<u8, CryptoPP::AES::BLOCKSIZE> GenerateDataCCMPKey(const std::v
     return ccmp_key;
 }
 
-std::vector<u8> GenerateDataFrame(const std::vector<u8>& data, u8 channel, u16 dest_node, u16 src_node, u16 sequence_number) {
+/*
+ * Generates the Additional Authenticated Data (AAD) for an UDS 802.11 encrypted data frame.
+ * @returns a buffer with the bytes of the AAD.
+ */
+static std::vector<u8> GenerateCCMPAAD(const MacAddress& sender, const MacAddress& receiver) {
+    // Reference: IEEE 802.11-2007
+
+    // 8.3.3.3.2 Construct AAD (22-30 bytes)
+    // The AAD is constructed from the MPDU header. The AAD does not include the header Duration
+    // field, because the Duration field value can change due to normal IEEE 802.11 operation (e.g.,
+    // a rate change during retransmission). For similar reasons, several subfields in the Frame
+    // Control field are masked to 0.
+    struct {
+        u16_be FC; // MPDU Frame Control field
+        MacAddress receiver;
+        MacAddress transmitter;
+        MacAddress destination;
+        u16_be SC; // MPDU Sequence Control field
+    } aad_struct{};
+
+    // Default FC value of DataFrame | Protected | ToDS
+    constexpr u16 DefaultFrameControl = 0x0841;
+
+    aad_struct.FC = DefaultFrameControl;
+    aad_struct.SC = 0;
+    aad_struct.transmitter = sender;
+    aad_struct.receiver = receiver;
+    aad_struct.destination = receiver;
+
+    std::vector<u8> aad(sizeof(aad_struct));
+    std::memcpy(aad.data(), &aad_struct, sizeof(aad_struct));
+
+    return aad;
+}
+
+/*
+ * Decrypts the payload of an encrypted 802.11 data frame using the specified key.
+ * @returns The decrypted payload.
+ */
+static std::vector<u8> DecryptDataFrame(const std::vector<u8>& encrypted_payload, const std::array<u8, CryptoPP::AES::BLOCKSIZE>& ccmp_key,
+    const MacAddress& sender, const MacAddress& receiver, u16 sequence_number) {
+
+    // Reference: IEEE 802.11-2007
+
+    std::vector<u8> aad = GenerateCCMPAAD(sender, receiver);
+
+    std::vector<u8> packet_number{0, 0, 0, 0,
+                                  static_cast<u8>((sequence_number >> 8) & 0xFF),
+                                  static_cast<u8>(sequence_number & 0xFF)};
+
+    // 8.3.3.3.3 Construct CCM nonce (13 bytes)
+    std::vector<u8> nonce;
+    nonce.push_back(0); // priority
+    nonce.insert(nonce.end(), sender.begin(), sender.end()); // Address 2
+    nonce.insert(nonce.end(), packet_number.begin(), packet_number.end()); // PN
+
+    try {
+        CryptoPP::CCM<CryptoPP::AES, 8>::Decryption d;
+        d.SetKeyWithIV(ccmp_key.data(), ccmp_key.size(), nonce.data(), nonce.size());
+        d.SpecifyDataLengths(aad.size(), encrypted_payload.size() - 8, 0);
+
+        CryptoPP::AuthenticatedDecryptionFilter df(d, nullptr,
+            CryptoPP::AuthenticatedDecryptionFilter::MAC_AT_END |
+                CryptoPP::AuthenticatedDecryptionFilter::THROW_EXCEPTION);
+        // put aad
+        df.ChannelPut(CryptoPP::AAD_CHANNEL, aad.data(), aad.size());
+
+        // put cipher with mac
+        df.ChannelPut(CryptoPP::DEFAULT_CHANNEL, encrypted_payload.data(), encrypted_payload.size() - 8);
+        df.ChannelPut(CryptoPP::DEFAULT_CHANNEL, encrypted_payload.data() + encrypted_payload.size() - 8, 8);
+
+        df.ChannelMessageEnd(CryptoPP::AAD_CHANNEL);
+        df.ChannelMessageEnd(CryptoPP::DEFAULT_CHANNEL);
+        df.SetRetrievalChannel(CryptoPP::DEFAULT_CHANNEL);
+
+        int size = df.MaxRetrievable();
+
+        std::vector<u8> pdata(size);
+        df.Get(pdata.data(), size);
+        return pdata;
+    } catch (CryptoPP::Exception&) {
+        LOG_ERROR(Service_NWM, "failed to decrypt");
+    }
+
+    return {};
+}
+
+/*
+ * Encrypts the payload of an 802.11 data frame using the specified key.
+ * @returns The encrypted payload.
+ */
+static std::vector<u8> EncryptDataFrame(const std::vector<u8>& payload, const std::array<u8, CryptoPP::AES::BLOCKSIZE>& ccmp_key,
+                                 const MacAddress& sender, const MacAddress& receiver, u16 sequence_number) {
+    // Reference: IEEE 802.11-2007
+
+    std::vector<u8> aad = GenerateCCMPAAD(sender, receiver);
+
+    std::vector<u8> packet_number{0, 0, 0, 0,
+        static_cast<u8>((sequence_number >> 8) & 0xFF),
+        static_cast<u8>(sequence_number & 0xFF)};
+
+    // 8.3.3.3.3 Construct CCM nonce (13 bytes)
+    std::vector<u8> nonce;
+    nonce.push_back(0); // priority
+    nonce.insert(nonce.end(), sender.begin(), sender.end()); // Address 2
+    nonce.insert(nonce.end(), packet_number.begin(), packet_number.end()); // PN
+
+    try {
+        CryptoPP::CCM<CryptoPP::AES, 8>::Encryption d;
+        d.SetKeyWithIV(ccmp_key.data(), ccmp_key.size(), nonce.data(), nonce.size());
+        d.SpecifyDataLengths(aad.size(), payload.size(), 0);
+
+        CryptoPP::AuthenticatedEncryptionFilter df(d);
+        // put aad
+        df.ChannelPut(CryptoPP::AAD_CHANNEL, aad.data(), aad.size());
+        df.ChannelMessageEnd(CryptoPP::AAD_CHANNEL);
+
+        // put plaintext
+        df.ChannelPut(CryptoPP::DEFAULT_CHANNEL, payload.data(), payload.size());
+        df.ChannelMessageEnd(CryptoPP::DEFAULT_CHANNEL);
+
+        df.SetRetrievalChannel(CryptoPP::DEFAULT_CHANNEL);
+
+        int size = df.MaxRetrievable();
+
+        std::vector<u8> cipher(size);
+        df.Get(cipher.data(), size);
+        return cipher;
+    } catch (CryptoPP::Exception&) {
+        LOG_ERROR(Service_NWM, "failed to encrypt");
+    }
+
+    return {};
+}
+
+std::vector<u8> GenerateDataPayload(const std::vector<u8>& data, u8 channel, u16 dest_node, u16 src_node,
+    u16 sequence_number) {
     std::vector<u8> buffer = GenerateLLCHeader(EtherType::SecureData);
-    std::vector<u8> securedata_header = GenerateSecureDataHeader(data.size(), channel, dest_node, src_node, sequence_number);
+    std::vector<u8> securedata_header = GenerateSecureDataHeader(data.size(), channel, dest_node, src_node,
+                                                                 sequence_number);
 
     buffer.insert(buffer.end(), securedata_header.begin(), securedata_header.end());
     buffer.insert(buffer.end(), data.begin(), data.end());
-    // TODO(Subv): Encrypt the frame.
-    // TODO(Subv): Prepend CCMP initialization vector (sequence_number).
-    // TODO(Subv): Encapsulate the frame in an 802.11 data frame.
     return buffer;
 }
 
