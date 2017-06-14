@@ -55,6 +55,12 @@ inline GLenum WrapMode(Pica::TexturingRegs::TextureConfig::WrapMode mode) {
         GL_CLAMP_TO_BORDER, // WrapMode::ClampToBorder
         GL_REPEAT,          // WrapMode::Repeat
         GL_MIRRORED_REPEAT, // WrapMode::MirroredRepeat
+        // TODO(wwylele): ClampToEdge2 and ClampToBorder2 are not properly implemented here. See the
+        // comments in enum WrapMode.
+        GL_CLAMP_TO_EDGE,   // WrapMode::ClampToEdge2
+        GL_CLAMP_TO_BORDER, // WrapMode::ClampToBorder2
+        GL_REPEAT,          // WrapMode::Repeat2
+        GL_REPEAT,          // WrapMode::Repeat3
     };
 
     // Range check table for input
@@ -63,6 +69,13 @@ inline GLenum WrapMode(Pica::TexturingRegs::TextureConfig::WrapMode mode) {
         UNREACHABLE();
 
         return GL_CLAMP_TO_EDGE;
+    }
+
+    if (static_cast<u32>(mode) > 3) {
+        // It is still unclear whether mode 4-7 are valid, so log it if a game uses them.
+        // TODO(wwylele): telemetry should be added here so we can collect more info about which
+        // game uses this.
+        LOG_WARNING(Render_OpenGL, "Using texture wrap mode %u", static_cast<u32>(mode));
     }
 
     GLenum gl_mode = wrap_mode_table[mode];

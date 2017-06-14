@@ -30,10 +30,10 @@ struct TexturingRegs {
             Repeat = 2,
             MirroredRepeat = 3,
             // Mode 4-7 produces some weird result and may be just invalid:
-            // 4: Positive coord: clamp to edge; negative coord: repeat
-            // 5: Positive coord: clamp to border; negative coord: repeat
-            // 6: Repeat
-            // 7: Repeat
+            ClampToEdge2 = 4,   // Positive coord: clamp to edge; negative coord: repeat
+            ClampToBorder2 = 5, // Positive coord: clamp to border; negative coord: repeat
+            Repeat2 = 6,        // Same as Repeat
+            Repeat3 = 7,        // Same as Repeat
         };
 
         enum TextureFilter : u32 {

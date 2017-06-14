@@ -357,10 +357,22 @@ static void ProcessTriangleInternal(const Vertex& v0, const Vertex& v1, const Ve
                 int t = (int)(v * float24::FromFloat32(static_cast<float>(texture.config.height)))
                             .ToFloat32();
 
-                if ((texture.config.wrap_s == TexturingRegs::TextureConfig::ClampToBorder &&
-                     (s < 0 || static_cast<u32>(s) >= texture.config.width)) ||
-                    (texture.config.wrap_t == TexturingRegs::TextureConfig::ClampToBorder &&
-                     (t < 0 || static_cast<u32>(t) >= texture.config.height))) {
+                bool use_border_s = false;
+                bool use_border_t = false;
+
+                if (texture.config.wrap_s == TexturingRegs::TextureConfig::ClampToBorder) {
+                    use_border_s = s < 0 || s >= static_cast<int>(texture.config.width);
+                } else if (texture.config.wrap_s == TexturingRegs::TextureConfig::ClampToBorder2) {
+                    use_border_s = s >= static_cast<int>(texture.config.width);
+                }
+
+                if (texture.config.wrap_t == TexturingRegs::TextureConfig::ClampToBorder) {
+                    use_border_t = t < 0 || t >= static_cast<int>(texture.config.height);
+                } else if (texture.config.wrap_t == TexturingRegs::TextureConfig::ClampToBorder2) {
+                    use_border_t = t >= static_cast<int>(texture.config.height);
+                }
+
+                if (use_border_s || use_border_t) {
                     auto border_color = texture.config.border_color;
                     texture_color[i] = {border_color.r, border_color.g, border_color.b,
                                         border_color.a};

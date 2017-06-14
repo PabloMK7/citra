@@ -18,22 +18,33 @@ using TevStageConfig = TexturingRegs::TevStageConfig;
 
 int GetWrappedTexCoord(TexturingRegs::TextureConfig::WrapMode mode, int val, unsigned size) {
     switch (mode) {
+    case TexturingRegs::TextureConfig::ClampToEdge2:
+        // For negative coordinate, ClampToEdge2 behaves the same as Repeat
+        if (val < 0) {
+            return static_cast<int>(static_cast<unsigned>(val) % size);
+        }
+    // [[fallthrough]]
     case TexturingRegs::TextureConfig::ClampToEdge:
         val = std::max(val, 0);
-        val = std::min(val, (int)size - 1);
+        val = std::min(val, static_cast<int>(size) - 1);
         return val;
 
     case TexturingRegs::TextureConfig::ClampToBorder:
         return val;
 
+    case TexturingRegs::TextureConfig::ClampToBorder2:
+    // For ClampToBorder2, the case of positive coordinate beyond the texture size is already
+    // handled outside. Here we only handle the negative coordinate in the same way as Repeat.
+    case TexturingRegs::TextureConfig::Repeat2:
+    case TexturingRegs::TextureConfig::Repeat3:
     case TexturingRegs::TextureConfig::Repeat:
-        return (int)((unsigned)val % size);
+        return static_cast<int>(static_cast<unsigned>(val) % size);
 
     case TexturingRegs::TextureConfig::MirroredRepeat: {
-        unsigned int coord = ((unsigned)val % (2 * size));
+        unsigned int coord = (static_cast<unsigned>(val) % (2 * size));
         if (coord >= size)
             coord = 2 * size - 1 - coord;
-        return (int)coord;
+        return static_cast<int>(coord);
     }
 
     default:
