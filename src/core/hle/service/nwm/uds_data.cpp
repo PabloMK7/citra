@@ -40,7 +40,9 @@ static std::vector<u8> GenerateSecureDataHeader(u16 data_size, u8 channel, u16 d
     u16 src_node_id, u16 sequence_number) {
     SecureDataHeader header{};
     header.protocol_size = data_size + sizeof(SecureDataHeader);
-    // TODO(Subv): It is likely that the first 4 bytes of this header are actually a decorator for another protocol.
+    // Note: This size includes everything except the first 4 bytes of the structure,
+    // reinforcing the hypotheses that the first 4 bytes are actually the header of
+    // another container protocol.
     header.securedata_size = data_size + sizeof(SecureDataHeader) - 4;
     header.is_management = 0; // Frames sent by the emulated application are never UDS management frames
     header.data_channel = channel;
