@@ -433,9 +433,8 @@ static void SendTo(Interface* self) {
 
     // TODO(Subv): Increment the sequence number after each sent packet.
     u16 sequence_number = 0;
-    std::vector<u8> data_payload = GenerateDataPayload(data, data_channel, dest_node_id,
-                                                       connection_status.network_node_id,
-                                                       sequence_number);
+    std::vector<u8> data_payload = GenerateDataPayload(
+        data, data_channel, dest_node_id, connection_status.network_node_id, sequence_number);
 
     // TODO(Subv): Retrieve the MAC address of the dest_node_id and our own to encrypt
     // and encapsulate the payload.
@@ -640,7 +639,7 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x00130040, nullptr, "Unbind"},
     {0x001400C0, nullptr, "PullPacket"},
     {0x00150080, nullptr, "SetMaxSendDelay"},
-    {0x00170182, SendTo,  "SendTo"},
+    {0x00170182, SendTo, "SendTo"},
     {0x001A0000, GetChannel, "GetChannel"},
     {0x001B0302, InitializeWithVersion, "InitializeWithVersion"},
     {0x001D0044, BeginHostingNetwork, "BeginHostingNetwork"},

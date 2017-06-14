@@ -6,28 +6,18 @@
 
 #include <array>
 #include <vector>
-
 #include "common/common_types.h"
 #include "common/swap.h"
 #include "core/hle/service/service.h"
 
-#include <cryptopp/aes.h>
-
 namespace Service {
 namespace NWM {
 
-enum class SAP : u8 {
-    SNAPExtensionUsed = 0xAA
-};
+enum class SAP : u8 { SNAPExtensionUsed = 0xAA };
 
-enum class PDUControl : u8 {
-    UnnumberedInformation = 3
-};
+enum class PDUControl : u8 { UnnumberedInformation = 3 };
 
-enum class EtherType : u16 {
-    SecureData = 0x876D,
-    EAPoL = 0x888E
-};
+enum class EtherType : u16 { SecureData = 0x876D, EAPoL = 0x888E };
 
 /*
  * 802.2 header, UDS packets always use SNAP for these headers,
@@ -81,7 +71,8 @@ static_assert(sizeof(DataFrameCryptoCTR) == 16, "DataFrameCryptoCTR has the wron
  * Generates an unencrypted 802.11 data payload.
  * @returns The generated frame payload.
  */
-std::vector<u8> GenerateDataPayload(const std::vector<u8>& data, u8 channel, u16 dest_node, u16 src_node, u16 sequence_number);
+std::vector<u8> GenerateDataPayload(const std::vector<u8>& data, u8 channel, u16 dest_node,
+                                    u16 src_node, u16 sequence_number);
 
 } // namespace NWM
 } // namespace Service
