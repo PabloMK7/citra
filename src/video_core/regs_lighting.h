@@ -84,7 +84,7 @@ struct LightingRegs {
         NV = 2, // Cosine of the angle between the normal and the view vector
         LN = 3, // Cosine of the angle between the light and the normal vectors
         SP = 4, // Cosine of the angle between the light and the inverse spotlight vectors
-        CP = 5, // TODO: document and implement
+        CP = 5, // Cosine of the angle between the tangent and projection of half-angle vectors
     };
 
     enum class LightingBumpMode : u32 {

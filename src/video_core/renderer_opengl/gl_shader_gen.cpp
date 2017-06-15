@@ -520,12 +520,12 @@ static void WriteLighting(std::string& out, const PicaShaderConfig& config) {
            "vec3 refl_value = vec3(0.0);\n"
            "vec3 spot_dir = vec3(0.0);\n;";
 
-    // Compute fragment normals
+    // Compute fragment normals and tangents
+    const std::string pertubation =
+        "2.0 * (" + SampleTexture(config, lighting.bump_selector) + ").rgb - 1.0";
     if (lighting.bump_mode == LightingRegs::LightingBumpMode::NormalMap) {
-        // Bump mapping is enabled using a normal map, read perturbation vector from the selected
-        // texture
-        out += "vec3 surface_normal = 2.0 * (" + SampleTexture(config, lighting.bump_selector) +
-               ").rgb - 1.0;\n";
+        // Bump mapping is enabled using a normal map
+        out += "vec3 surface_normal = " + pertubation + ";\n";
 
         // Recompute Z-component of perturbation if 'renorm' is enabled, this provides a higher
         // precision result
@@ -534,18 +534,29 @@ static void WriteLighting(std::string& out, const PicaShaderConfig& config) {
                 "(1.0 - (surface_normal.x*surface_normal.x + surface_normal.y*surface_normal.y))";
             out += "surface_normal.z = sqrt(max(" + val + ", 0.0));\n";
         }
+
+        // The tangent vector is not perturbed by the normal map and is just a unit vector.
+        out += "vec3 surface_tangent = vec3(1.0, 0.0, 0.0);\n";
     } else if (lighting.bump_mode == LightingRegs::LightingBumpMode::TangentMap) {
         // Bump mapping is enabled using a tangent map
-        LOG_CRITICAL(HW_GPU, "unimplemented bump mapping mode (tangent mapping)");
-        UNIMPLEMENTED();
-    } else {
-        // No bump mapping - surface local normal is just a unit normal
+        out += "vec3 surface_tangent = " + pertubation + ";\n";
+        // Mathematically, recomputing Z-component of the tangent vector won't affect the relevant
+        // computation below, which is also confirmed on 3DS. So we don't bother recomputing here
+        // even if 'renorm' is enabled.
+
+        // The normal vector is not perturbed by the tangent map and is just a unit vector.
         out += "vec3 surface_normal = vec3(0.0, 0.0, 1.0);\n";
+    } else {
+        // No bump mapping - surface local normal and tangent are just unit vectors
+        out += "vec3 surface_normal = vec3(0.0, 0.0, 1.0);\n";
+        out += "vec3 surface_tangent = vec3(1.0, 0.0, 0.0);\n";
     }
 
     // Rotate the surface-local normal by the interpolated normal quaternion to convert it to
     // eyespace.
-    out += "vec3 normal = quaternion_rotate(normalize(normquat), surface_normal);\n";
+    out += "vec4 normalized_normquat = normalize(normquat);\n";
+    out += "vec3 normal = quaternion_rotate(normalized_normquat, surface_normal);\n";
+    out += "vec3 tangent = quaternion_rotate(normalized_normquat, surface_tangent);\n";
 
     // Gets the index into the specified lookup table for specular lighting
     auto GetLutIndex = [&lighting](unsigned light_num, LightingRegs::LightingLutInput input,
@@ -571,6 +582,23 @@ static void WriteLighting(std::string& out, const PicaShaderConfig& config) {
 
         case LightingRegs::LightingLutInput::SP:
             index = std::string("dot(light_vector, spot_dir)");
+            break;
+
+        case LightingRegs::LightingLutInput::CP:
+            // CP input is only available with configuration 7
+            if (lighting.config == LightingRegs::LightingConfig::Config7) {
+                // Note: even if the normal vector is modified by normal map, which is not the
+                // normal of the tangent plane anymore, the half angle vector is still projected
+                // using the modified normal vector.
+                std::string half_angle_proj = half_angle +
+                                              " - normal / dot(normal, normal) * dot(normal, " +
+                                              half_angle + ")";
+                // Note: the half angle vector projection is confirmed not normalized before the dot
+                // product. The result is in fact not cos(phi) as the name suggested.
+                index = "dot(" + half_angle_proj + ", tangent)";
+            } else {
+                index = "0.0";
+            }
             break;
 
         default:
