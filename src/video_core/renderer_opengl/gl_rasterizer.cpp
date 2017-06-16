@@ -49,9 +49,7 @@ RasterizerOpenGL::RasterizerOpenGL() : shader_dirty(true) {
 
     uniform_block_data.dirty = true;
 
-    for (unsigned index = 0; index < lighting_luts.size(); index++) {
-        uniform_block_data.lut_dirty[index] = true;
-    }
+    uniform_block_data.lut_dirty.fill(true);
 
     uniform_block_data.fog_lut_dirty = true;
 
@@ -96,18 +94,16 @@ RasterizerOpenGL::RasterizerOpenGL() : shader_dirty(true) {
     framebuffer.Create();
 
     // Allocate and bind lighting lut textures
-    for (size_t i = 0; i < lighting_luts.size(); ++i) {
-        lighting_luts[i].Create();
-        state.lighting_luts[i].texture_1d = lighting_luts[i].handle;
-    }
+    lighting_lut_buffer.Create();
+    state.lighting_lut.texture_buffer = lighting_lut.handle;
     state.Apply();
-
-    for (size_t i = 0; i < lighting_luts.size(); ++i) {
-        glActiveTexture(static_cast<GLenum>(GL_TEXTURE3 + i));
-        glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA32F, 256, 0, GL_RGBA, GL_FLOAT, nullptr);
-        glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    }
+    lighting_lut.Create();
+    glBindBuffer(GL_TEXTURE_BUFFER, lighting_lut_buffer.handle);
+    glBufferData(GL_TEXTURE_BUFFER,
+                 sizeof(GLfloat) * 2 * 256 * Pica::LightingRegs::NumLightingSampler, nullptr,
+                 GL_DYNAMIC_DRAW);
+    glActiveTexture(GL_TEXTURE15);
+    glTexBuffer(GL_TEXTURE_BUFFER, GL_RG32F, lighting_lut_buffer.handle);
 
     // Setup the LUT for the fog
     {
@@ -313,7 +309,7 @@ void RasterizerOpenGL::DrawTriangles() {
     }
 
     // Sync the lighting luts
-    for (unsigned index = 0; index < lighting_luts.size(); index++) {
+    for (unsigned index = 0; index < uniform_block_data.lut_dirty.size(); index++) {
         if (uniform_block_data.lut_dirty[index]) {
             SyncLightingLUT(index);
             uniform_block_data.lut_dirty[index] = false;
@@ -851,7 +847,7 @@ void RasterizerOpenGL::NotifyPicaRegisterChanged(u32 id) {
     case PICA_REG_INDEX_WORKAROUND(lighting.lut_data[6], 0x1ce):
     case PICA_REG_INDEX_WORKAROUND(lighting.lut_data[7], 0x1cf): {
         auto& lut_config = regs.lighting.lut_config;
-        uniform_block_data.lut_dirty[lut_config.type / 4] = true;
+        uniform_block_data.lut_dirty[lut_config.type] = true;
         break;
     }
     }
@@ -1201,29 +1197,9 @@ void RasterizerOpenGL::SetShader() {
         }
 
         // Set the texture samplers to correspond to different lookup table texture units
-        GLuint uniform_lut = glGetUniformLocation(shader->shader.handle, "lut[0]");
+        GLuint uniform_lut = glGetUniformLocation(shader->shader.handle, "lighting_lut");
         if (uniform_lut != -1) {
-            glUniform1i(uniform_lut, 3);
-        }
-        uniform_lut = glGetUniformLocation(shader->shader.handle, "lut[1]");
-        if (uniform_lut != -1) {
-            glUniform1i(uniform_lut, 4);
-        }
-        uniform_lut = glGetUniformLocation(shader->shader.handle, "lut[2]");
-        if (uniform_lut != -1) {
-            glUniform1i(uniform_lut, 5);
-        }
-        uniform_lut = glGetUniformLocation(shader->shader.handle, "lut[3]");
-        if (uniform_lut != -1) {
-            glUniform1i(uniform_lut, 6);
-        }
-        uniform_lut = glGetUniformLocation(shader->shader.handle, "lut[4]");
-        if (uniform_lut != -1) {
-            glUniform1i(uniform_lut, 7);
-        }
-        uniform_lut = glGetUniformLocation(shader->shader.handle, "lut[5]");
-        if (uniform_lut != -1) {
-            glUniform1i(uniform_lut, 8);
+            glUniform1i(uniform_lut, 15);
         }
 
         GLuint uniform_fog_lut = glGetUniformLocation(shader->shader.handle, "fog_lut");
@@ -1571,20 +1547,17 @@ void RasterizerOpenGL::SyncGlobalAmbient() {
 }
 
 void RasterizerOpenGL::SyncLightingLUT(unsigned lut_index) {
-    std::array<GLvec4, 256> new_data;
-
-    for (unsigned offset = 0; offset < new_data.size(); ++offset) {
-        new_data[offset][0] = Pica::g_state.lighting.luts[(lut_index * 4) + 0][offset].ToFloat();
-        new_data[offset][1] = Pica::g_state.lighting.luts[(lut_index * 4) + 1][offset].ToFloat();
-        new_data[offset][2] = Pica::g_state.lighting.luts[(lut_index * 4) + 2][offset].ToFloat();
-        new_data[offset][3] = Pica::g_state.lighting.luts[(lut_index * 4) + 3][offset].ToFloat();
-    }
+    std::array<GLvec2, 256> new_data;
+    const auto& source_lut = Pica::g_state.lighting.luts[lut_index];
+    std::transform(source_lut.begin(), source_lut.end(), new_data.begin(), [](const auto& entry) {
+        return GLvec2{entry.ToFloat(), entry.DiffToFloat()};
+    });
 
     if (new_data != lighting_lut_data[lut_index]) {
         lighting_lut_data[lut_index] = new_data;
-        glActiveTexture(GL_TEXTURE3 + lut_index);
-        glTexSubImage1D(GL_TEXTURE_1D, 0, 0, 256, GL_RGBA, GL_FLOAT,
-                        lighting_lut_data[lut_index].data());
+        glBindBuffer(GL_TEXTURE_BUFFER, lighting_lut_buffer.handle);
+        glBufferSubData(GL_TEXTURE_BUFFER, lut_index * new_data.size() * sizeof(GLvec2),
+                        new_data.size() * sizeof(GLvec2), new_data.data());
     }
 }
 

@@ -52,9 +52,7 @@ OpenGLState::OpenGLState() {
         texture_unit.sampler = 0;
     }
 
-    for (auto& lut : lighting_luts) {
-        lut.texture_1d = 0;
-    }
+    lighting_lut.texture_buffer = 0;
 
     fog_lut.texture_1d = 0;
 
@@ -194,11 +192,9 @@ void OpenGLState::Apply() const {
     }
 
     // Lighting LUTs
-    for (unsigned i = 0; i < ARRAY_SIZE(lighting_luts); ++i) {
-        if (lighting_luts[i].texture_1d != cur_state.lighting_luts[i].texture_1d) {
-            glActiveTexture(GL_TEXTURE3 + i);
-            glBindTexture(GL_TEXTURE_1D, lighting_luts[i].texture_1d);
-        }
+    if (lighting_lut.texture_buffer != cur_state.lighting_lut.texture_buffer) {
+        glActiveTexture(GL_TEXTURE15);
+        glBindTexture(GL_TEXTURE_BUFFER, cur_state.lighting_lut.texture_buffer);
     }
 
     // Fog LUT

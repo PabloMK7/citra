@@ -26,6 +26,8 @@ struct LightingRegs {
         DistanceAttenuation = 16,
     };
 
+    static constexpr unsigned NumLightingSampler = 24;
+
     static LightingSampler SpotlightAttenuationSampler(unsigned index) {
         return static_cast<LightingSampler>(
             static_cast<unsigned>(LightingSampler::SpotlightAttenuation) + index);

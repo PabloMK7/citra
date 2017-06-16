@@ -64,8 +64,8 @@ public:
     } texture_units[3];
 
     struct {
-        GLuint texture_1d; // GL_TEXTURE_BINDING_1D
-    } lighting_luts[6];
+        GLuint texture_buffer; // GL_TEXTURE_BINDING_BUFFER
+    } lighting_lut;
 
     struct {
         GLuint texture_1d; // GL_TEXTURE_BINDING_1D
