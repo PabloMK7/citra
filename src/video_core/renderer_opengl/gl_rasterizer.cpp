@@ -1183,7 +1183,7 @@ void RasterizerOpenGL::SetShader() {
         state.Apply();
 
         // Set the texture samplers to correspond to different texture units
-        GLuint uniform_tex = glGetUniformLocation(shader->shader.handle, "tex[0]");
+        GLint uniform_tex = glGetUniformLocation(shader->shader.handle, "tex[0]");
         if (uniform_tex != -1) {
             glUniform1i(uniform_tex, TextureUnits::PicaTexture(0).id);
         }
@@ -1197,40 +1197,40 @@ void RasterizerOpenGL::SetShader() {
         }
 
         // Set the texture samplers to correspond to different lookup table texture units
-        GLuint uniform_lut = glGetUniformLocation(shader->shader.handle, "lighting_lut");
+        GLint uniform_lut = glGetUniformLocation(shader->shader.handle, "lighting_lut");
         if (uniform_lut != -1) {
             glUniform1i(uniform_lut, TextureUnits::LightingLUT.id);
         }
 
-        GLuint uniform_fog_lut = glGetUniformLocation(shader->shader.handle, "fog_lut");
+        GLint uniform_fog_lut = glGetUniformLocation(shader->shader.handle, "fog_lut");
         if (uniform_fog_lut != -1) {
             glUniform1i(uniform_fog_lut, TextureUnits::FogLUT.id);
         }
 
-        GLuint uniform_proctex_noise_lut =
+        GLint uniform_proctex_noise_lut =
             glGetUniformLocation(shader->shader.handle, "proctex_noise_lut");
         if (uniform_proctex_noise_lut != -1) {
             glUniform1i(uniform_proctex_noise_lut, TextureUnits::ProcTexNoiseLUT.id);
         }
 
-        GLuint uniform_proctex_color_map =
+        GLint uniform_proctex_color_map =
             glGetUniformLocation(shader->shader.handle, "proctex_color_map");
         if (uniform_proctex_color_map != -1) {
             glUniform1i(uniform_proctex_color_map, TextureUnits::ProcTexColorMap.id);
         }
 
-        GLuint uniform_proctex_alpha_map =
+        GLint uniform_proctex_alpha_map =
             glGetUniformLocation(shader->shader.handle, "proctex_alpha_map");
         if (uniform_proctex_alpha_map != -1) {
             glUniform1i(uniform_proctex_alpha_map, TextureUnits::ProcTexAlphaMap.id);
         }
 
-        GLuint uniform_proctex_lut = glGetUniformLocation(shader->shader.handle, "proctex_lut");
+        GLint uniform_proctex_lut = glGetUniformLocation(shader->shader.handle, "proctex_lut");
         if (uniform_proctex_lut != -1) {
             glUniform1i(uniform_proctex_lut, TextureUnits::ProcTexLUT.id);
         }
 
-        GLuint uniform_proctex_diff_lut =
+        GLint uniform_proctex_diff_lut =
             glGetUniformLocation(shader->shader.handle, "proctex_diff_lut");
         if (uniform_proctex_diff_lut != -1) {
             glUniform1i(uniform_proctex_diff_lut, TextureUnits::ProcTexDiffLUT.id);
