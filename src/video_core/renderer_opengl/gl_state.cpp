@@ -270,6 +270,20 @@ void OpenGLState::ResetTexture(GLuint handle) {
             unit.texture_2d = 0;
         }
     }
+    if (cur_state.lighting_lut.texture_buffer == handle)
+        cur_state.lighting_lut.texture_buffer = 0;
+    if (cur_state.fog_lut.texture_1d == handle)
+        cur_state.fog_lut.texture_1d = 0;
+    if (cur_state.proctex_noise_lut.texture_1d == handle)
+        cur_state.proctex_noise_lut.texture_1d = 0;
+    if (cur_state.proctex_color_map.texture_1d == handle)
+        cur_state.proctex_color_map.texture_1d = 0;
+    if (cur_state.proctex_alpha_map.texture_1d == handle)
+        cur_state.proctex_alpha_map.texture_1d = 0;
+    if (cur_state.proctex_lut.texture_1d == handle)
+        cur_state.proctex_lut.texture_1d = 0;
+    if (cur_state.proctex_diff_lut.texture_1d == handle)
+        cur_state.proctex_diff_lut.texture_1d = 0;
 }
 
 void OpenGLState::ResetSampler(GLuint handle) {
