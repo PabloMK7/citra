@@ -46,7 +46,5 @@ if (ARCHITECTURE_x86_64)
     # Defined before "dynarmic" above
     # add_library(xbyak INTERFACE)
     target_include_directories(xbyak INTERFACE ./xbyak/xbyak)
-    if (NOT MSVC)
-        target_compile_options(xbyak INTERFACE -fno-operator-names)
-    endif()
+    target_compile_definitions(xbyak INTERFACE XBYAK_NO_OP_NAMES)
 endif()
