@@ -94,6 +94,8 @@ union PicaShaderConfig {
                 bool two_sided_diffuse;
                 bool dist_atten_enable;
                 bool spot_atten_enable;
+                bool geometric_factor_0;
+                bool geometric_factor_1;
             } light[8];
 
             bool enable;

@@ -168,6 +168,8 @@ struct LightingRegs {
         union {
             BitField<0, 1, u32> directional;
             BitField<1, 1, u32> two_sided_diffuse; // When disabled, clamp dot-product to 0
+            BitField<2, 1, u32> geometric_factor_0;
+            BitField<3, 1, u32> geometric_factor_1;
         } config;
 
         BitField<0, 20, u32> dist_atten_bias;
