@@ -521,6 +521,7 @@ static void WriteLighting(std::string& out, const PicaShaderConfig& config) {
            "vec3 light_vector = vec3(0.0);\n"
            "vec3 refl_value = vec3(0.0);\n"
            "vec3 spot_dir = vec3(0.0);\n"
+           "vec3 half_vector = vec3(0.0);\n"
            "float geo_factor = 1.0;\n";
 
     // Compute fragment normals and tangents
@@ -564,15 +565,14 @@ static void WriteLighting(std::string& out, const PicaShaderConfig& config) {
     // Gets the index into the specified lookup table for specular lighting
     auto GetLutIndex = [&lighting](unsigned light_num, LightingRegs::LightingLutInput input,
                                    bool abs) {
-        const std::string half_angle = "normalize(normalize(view) + light_vector)";
         std::string index;
         switch (input) {
         case LightingRegs::LightingLutInput::NH:
-            index = "dot(normal, " + half_angle + ")";
+            index = "dot(normal, normalize(half_vector))";
             break;
 
         case LightingRegs::LightingLutInput::VH:
-            index = std::string("dot(normalize(view), " + half_angle + ")");
+            index = std::string("dot(normalize(view), normalize(half_vector))");
             break;
 
         case LightingRegs::LightingLutInput::NV:
@@ -593,9 +593,8 @@ static void WriteLighting(std::string& out, const PicaShaderConfig& config) {
                 // Note: even if the normal vector is modified by normal map, which is not the
                 // normal of the tangent plane anymore, the half angle vector is still projected
                 // using the modified normal vector.
-                std::string half_angle_proj = half_angle +
-                                              " - normal / dot(normal, normal) * dot(normal, " +
-                                              half_angle + ")";
+                std::string half_angle_proj = "normalize(half_vector) - normal / dot(normal, "
+                                              "normal) * dot(normal, normalize(half_vector))";
                 // Note: the half angle vector projection is confirmed not normalized before the dot
                 // product. The result is in fact not cos(phi) as the name suggested.
                 index = "dot(" + half_angle_proj + ", tangent)";
@@ -641,6 +640,7 @@ static void WriteLighting(std::string& out, const PicaShaderConfig& config) {
             out += "light_vector = normalize(" + light_src + ".position + view);\n";
 
         out += "spot_dir = " + light_src + ".spot_direction;\n";
+        out += "half_vector = normalize(view) + light_vector;\n";
 
         // Compute dot product of light_vector and normal, adjust if lighting is one-sided or
         // two-sided
@@ -675,8 +675,8 @@ static void WriteLighting(std::string& out, const PicaShaderConfig& config) {
             lighting.clamp_highlights ? "(dot(light_vector, normal) <= 0.0 ? 0.0 : 1.0)" : "1.0";
 
         if (light_config.geometric_factor_0 || light_config.geometric_factor_1) {
-            out += "geo_factor = 1 + dot(light_vector, normalize(view));\n"
-                   "geo_factor = geo_factor == 0.0 ? 0.0 : min(0.5 * " +
+            out += "geo_factor = dot(half_vector, half_vector);\n"
+                   "geo_factor = geo_factor == 0.0 ? 0.0 : min(" +
                    dot_product + " / geo_factor, 1.0);\n";
         }
 
