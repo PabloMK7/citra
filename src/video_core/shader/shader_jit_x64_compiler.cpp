@@ -321,27 +321,27 @@ void JitShader::Compile_EvaluateCondition(Instruction instr) {
     case Instruction::FlowControlType::Or:
         mov(eax, COND0);
         mov(ebx, COND1);
-        xor(eax, (instr.flow_control.refx.Value() ^ 1));
-        xor(ebx, (instr.flow_control.refy.Value() ^ 1));
-        or (eax, ebx);
+        xor_(eax, (instr.flow_control.refx.Value() ^ 1));
+        xor_(ebx, (instr.flow_control.refy.Value() ^ 1));
+        or_(eax, ebx);
         break;
 
     case Instruction::FlowControlType::And:
         mov(eax, COND0);
         mov(ebx, COND1);
-        xor(eax, (instr.flow_control.refx.Value() ^ 1));
-        xor(ebx, (instr.flow_control.refy.Value() ^ 1));
-        and(eax, ebx);
+        xor_(eax, (instr.flow_control.refx.Value() ^ 1));
+        xor_(ebx, (instr.flow_control.refy.Value() ^ 1));
+        and_(eax, ebx);
         break;
 
     case Instruction::FlowControlType::JustX:
         mov(eax, COND0);
-        xor(eax, (instr.flow_control.refx.Value() ^ 1));
+        xor_(eax, (instr.flow_control.refx.Value() ^ 1));
         break;
 
     case Instruction::FlowControlType::JustY:
         mov(eax, COND1);
-        xor(eax, (instr.flow_control.refy.Value() ^ 1));
+        xor_(eax, (instr.flow_control.refy.Value() ^ 1));
         break;
     }
 }
@@ -734,10 +734,10 @@ void JitShader::Compile_LOOP(Instruction instr) {
     mov(LOOPCOUNT, dword[SETUP + offset]);
     mov(LOOPCOUNT_REG, LOOPCOUNT);
     shr(LOOPCOUNT_REG, 4);
-    and(LOOPCOUNT_REG, 0xFF0); // Y-component is the start
+    and_(LOOPCOUNT_REG, 0xFF0); // Y-component is the start
     mov(LOOPINC, LOOPCOUNT);
     shr(LOOPINC, 12);
-    and(LOOPINC, 0xFF0);                // Z-component is the incrementer
+    and_(LOOPINC, 0xFF0);               // Z-component is the incrementer
     movzx(LOOPCOUNT, LOOPCOUNT.cvt8()); // X-component is iteration count
     add(LOOPCOUNT, 1);                  // Iteration count is X-component + 1
 
@@ -858,9 +858,9 @@ void JitShader::Compile(const std::array<u32, MAX_PROGRAM_CODE_LENGTH>* program_
     mov(STATE, ABI_PARAM2);
 
     // Zero address/loop  registers
-    xor(ADDROFFS_REG_0.cvt32(), ADDROFFS_REG_0.cvt32());
-    xor(ADDROFFS_REG_1.cvt32(), ADDROFFS_REG_1.cvt32());
-    xor(LOOPCOUNT_REG, LOOPCOUNT_REG);
+    xor_(ADDROFFS_REG_0.cvt32(), ADDROFFS_REG_0.cvt32());
+    xor_(ADDROFFS_REG_1.cvt32(), ADDROFFS_REG_1.cvt32());
+    xor_(LOOPCOUNT_REG, LOOPCOUNT_REG);
 
     // Used to set a register to one
     static const __m128 one = {1.f, 1.f, 1.f, 1.f};

@@ -92,10 +92,13 @@ else()
     # /W3 - Level 3 warnings
     # /MP - Multi-threaded compilation
     # /Zi - Output debugging information
-    # /Zo - enahnced debug info for optimized builds
-    set(CMAKE_C_FLAGS   "/W3 /MP /Zi /Zo" CACHE STRING "" FORCE)
+    # /Zo - enhanced debug info for optimized builds
+    # /permissive- - enables stricter C++ standards conformance checks
+    set(CMAKE_C_FLAGS   "/W3 /MP /Zi /Zo /permissive-" CACHE STRING "" FORCE)
     # /EHsc - C++-only exception handling semantics
-    set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} /EHsc" CACHE STRING "" FORCE)
+    # /Zc:throwingNew - let codegen assume `operator new` will never return null
+    # /Zc:inline - let codegen omit inline functions in object files
+    set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} /EHsc /Zc:throwingNew,inline" CACHE STRING "" FORCE)
 
     # /MDd - Multi-threaded Debug Runtime DLL
     set(CMAKE_C_FLAGS_DEBUG   "/Od /MDd" CACHE STRING "" FORCE)
