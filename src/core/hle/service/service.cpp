@@ -173,8 +173,7 @@ void ServiceFrameworkBase::HandleSyncRequest(SharedPtr<ServerSession> server_ses
 
     // TODO(yuriks): The kernel should be the one handling this as part of translation after
     // everything else is migrated
-    Kernel::HLERequestContext context;
-    context.session = std::move(server_session);
+    Kernel::HLERequestContext context(std::move(server_session));
     context.PopulateFromIncomingCommandBuffer(cmd_buf, *Kernel::g_current_process,
                                               Kernel::g_handle_table);
 

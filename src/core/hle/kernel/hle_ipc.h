@@ -84,6 +84,7 @@ protected:
  */
 class HLERequestContext {
 public:
+    HLERequestContext(SharedPtr<ServerSession> session);
     ~HLERequestContext();
 
     /// Returns a pointer to the IPC command buffer for this request.
@@ -118,14 +119,14 @@ public:
      */
     void ClearIncomingObjects();
 
-private:
-    friend class Service::ServiceFrameworkBase;
-
+    /// Populates this context with data from the requesting process/thread.
     ResultCode PopulateFromIncomingCommandBuffer(const u32_le* src_cmdbuf, Process& src_process,
                                                  HandleTable& src_table);
+    /// Writes data from this context back to the requesting process/thread.
     ResultCode WriteToOutgoingCommandBuffer(u32_le* dst_cmdbuf, Process& dst_process,
                                             HandleTable& dst_table) const;
 
+private:
     std::array<u32, IPC::COMMAND_BUFFER_LENGTH> cmd_buf;
     SharedPtr<ServerSession> session;
     // TODO(yuriks): Check common usage of this and optimize size accordingly
