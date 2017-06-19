@@ -160,7 +160,7 @@ static void IsSampling(Interface* self) {
 static void GetBufferFullEvent(Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
-    cmd_buff[3] = Kernel::g_handle_table.Create(buffer_full_event).MoveFrom();
+    cmd_buff[3] = Kernel::g_handle_table.Create(buffer_full_event).Unwrap();
     LOG_WARNING(Service_MIC, "(STUBBED) called");
 }
 

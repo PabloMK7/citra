@@ -398,10 +398,6 @@ public:
         return std::move(**this);
     }
 
-    T&& MoveFrom() {
-        return std::move(Unwrap());
-    }
-
 private:
     // A union is used to allocate the storage for the value, while allowing us to construct and
     // destruct it at will.

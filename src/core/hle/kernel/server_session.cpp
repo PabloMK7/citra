@@ -71,7 +71,7 @@ ResultCode ServerSession::HandleSyncRequest() {
 
 ServerSession::SessionPair ServerSession::CreateSessionPair(const std::string& name,
                                                             SharedPtr<ClientPort> port) {
-    auto server_session = ServerSession::Create(name + "_Server").MoveFrom();
+    auto server_session = ServerSession::Create(name + "_Server").Unwrap();
     SharedPtr<ClientSession> client_session(new ClientSession);
     client_session->name = name + "_Client";
 

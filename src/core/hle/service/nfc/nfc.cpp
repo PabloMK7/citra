@@ -95,7 +95,7 @@ void GetTagInRangeEvent(Interface* self) {
     cmd_buff[0] = IPC::MakeHeader(0xB, 1, 2);
     cmd_buff[1] = RESULT_SUCCESS.raw;
     cmd_buff[2] = IPC::CopyHandleDesc();
-    cmd_buff[3] = Kernel::g_handle_table.Create(tag_in_range_event).MoveFrom();
+    cmd_buff[3] = Kernel::g_handle_table.Create(tag_in_range_event).Unwrap();
     LOG_WARNING(Service_NFC, "(STUBBED) called");
 }
 
@@ -105,7 +105,7 @@ void GetTagOutOfRangeEvent(Interface* self) {
     cmd_buff[0] = IPC::MakeHeader(0xC, 1, 2);
     cmd_buff[1] = RESULT_SUCCESS.raw;
     cmd_buff[2] = IPC::CopyHandleDesc();
-    cmd_buff[3] = Kernel::g_handle_table.Create(tag_out_of_range_event).MoveFrom();
+    cmd_buff[3] = Kernel::g_handle_table.Create(tag_out_of_range_event).Unwrap();
     LOG_WARNING(Service_NFC, "(STUBBED) called");
 }
 

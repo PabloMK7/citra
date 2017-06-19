@@ -87,7 +87,7 @@ static void OpenFile(Service::Interface* self) {
         file->ClientConnected(std::get<SharedPtr<ServerSession>>(sessions));
 
         rb.PushMoveHandles(
-            Kernel::g_handle_table.Create(std::get<SharedPtr<ClientSession>>(sessions)).MoveFrom());
+            Kernel::g_handle_table.Create(std::get<SharedPtr<ClientSession>>(sessions)).Unwrap());
     } else {
         rb.PushMoveHandles(0);
         LOG_ERROR(Service_FS, "failed to get a handle for file %s", file_path.DebugStr().c_str());
@@ -153,7 +153,7 @@ static void OpenFileDirectly(Service::Interface* self) {
         file->ClientConnected(std::get<SharedPtr<ServerSession>>(sessions));
 
         cmd_buff[3] =
-            Kernel::g_handle_table.Create(std::get<SharedPtr<ClientSession>>(sessions)).MoveFrom();
+            Kernel::g_handle_table.Create(std::get<SharedPtr<ClientSession>>(sessions)).Unwrap();
     } else {
         cmd_buff[3] = 0;
         LOG_ERROR(Service_FS, "failed to get a handle for file %s mode=%u attributes=%u",
@@ -420,7 +420,7 @@ static void OpenDirectory(Service::Interface* self) {
         directory->ClientConnected(std::get<SharedPtr<ServerSession>>(sessions));
 
         cmd_buff[3] =
-            Kernel::g_handle_table.Create(std::get<SharedPtr<ClientSession>>(sessions)).MoveFrom();
+            Kernel::g_handle_table.Create(std::get<SharedPtr<ClientSession>>(sessions)).Unwrap();
     } else {
         LOG_ERROR(Service_FS, "failed to get a handle for directory type=%d size=%d data=%s",
                   dirname_type, dirname_size, dir_path.DebugStr().c_str());

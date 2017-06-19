@@ -253,12 +253,12 @@ void GetIPCHandles(Service::Interface* self) {
     cmd_buff[1] = 0;          // No error
     cmd_buff[2] = 0x14000000; // IPC Command Structure translate-header
     // TODO(yuriks): Return error from SendSyncRequest is this fails (part of IPC marshalling)
-    cmd_buff[3] = Kernel::g_handle_table.Create(Service::HID::shared_mem).MoveFrom();
-    cmd_buff[4] = Kernel::g_handle_table.Create(Service::HID::event_pad_or_touch_1).MoveFrom();
-    cmd_buff[5] = Kernel::g_handle_table.Create(Service::HID::event_pad_or_touch_2).MoveFrom();
-    cmd_buff[6] = Kernel::g_handle_table.Create(Service::HID::event_accelerometer).MoveFrom();
-    cmd_buff[7] = Kernel::g_handle_table.Create(Service::HID::event_gyroscope).MoveFrom();
-    cmd_buff[8] = Kernel::g_handle_table.Create(Service::HID::event_debug_pad).MoveFrom();
+    cmd_buff[3] = Kernel::g_handle_table.Create(Service::HID::shared_mem).Unwrap();
+    cmd_buff[4] = Kernel::g_handle_table.Create(Service::HID::event_pad_or_touch_1).Unwrap();
+    cmd_buff[5] = Kernel::g_handle_table.Create(Service::HID::event_pad_or_touch_2).Unwrap();
+    cmd_buff[6] = Kernel::g_handle_table.Create(Service::HID::event_accelerometer).Unwrap();
+    cmd_buff[7] = Kernel::g_handle_table.Create(Service::HID::event_gyroscope).Unwrap();
+    cmd_buff[8] = Kernel::g_handle_table.Create(Service::HID::event_debug_pad).Unwrap();
 }
 
 void EnableAccelerometer(Service::Interface* self) {

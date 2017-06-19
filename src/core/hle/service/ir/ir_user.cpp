@@ -337,7 +337,7 @@ void GetReceiveEvent(Interface* self) {
     IPC::RequestBuilder rb(Kernel::GetCommandBuffer(), 0x0A, 1, 2);
 
     rb.Push(RESULT_SUCCESS);
-    rb.PushCopyHandles(Kernel::g_handle_table.Create(Service::IR::receive_event).MoveFrom());
+    rb.PushCopyHandles(Kernel::g_handle_table.Create(Service::IR::receive_event).Unwrap());
 
     LOG_INFO(Service_IR, "called");
 }
@@ -354,7 +354,7 @@ void GetSendEvent(Interface* self) {
     IPC::RequestBuilder rb(Kernel::GetCommandBuffer(), 0x0B, 1, 2);
 
     rb.Push(RESULT_SUCCESS);
-    rb.PushCopyHandles(Kernel::g_handle_table.Create(Service::IR::send_event).MoveFrom());
+    rb.PushCopyHandles(Kernel::g_handle_table.Create(Service::IR::send_event).Unwrap());
 
     LOG_INFO(Service_IR, "called");
 }
@@ -394,7 +394,7 @@ static void GetConnectionStatusEvent(Interface* self) {
     IPC::RequestBuilder rb(Kernel::GetCommandBuffer(), 0x0C, 1, 2);
 
     rb.Push(RESULT_SUCCESS);
-    rb.PushCopyHandles(Kernel::g_handle_table.Create(Service::IR::conn_status_event).MoveFrom());
+    rb.PushCopyHandles(Kernel::g_handle_table.Create(Service::IR::conn_status_event).Unwrap());
 
     LOG_INFO(Service_IR, "called");
 }

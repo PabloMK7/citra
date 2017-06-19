@@ -207,7 +207,7 @@ void AddService(Interface* interface_) {
     auto server_port =
         SM::g_service_manager
             ->RegisterService(interface_->GetPortName(), interface_->GetMaxSessions())
-            .MoveFrom();
+            .Unwrap();
     server_port->SetHleHandler(std::shared_ptr<Interface>(interface_));
 }
 

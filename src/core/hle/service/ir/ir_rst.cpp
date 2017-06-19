@@ -145,8 +145,8 @@ static void GetHandles(Interface* self) {
     IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x01, 0, 0);
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 3);
     rb.Push(RESULT_SUCCESS);
-    rb.PushMoveHandles(Kernel::g_handle_table.Create(Service::IR::shared_memory).MoveFrom(),
-                       Kernel::g_handle_table.Create(Service::IR::update_event).MoveFrom());
+    rb.PushMoveHandles(Kernel::g_handle_table.Create(Service::IR::shared_memory).Unwrap(),
+                       Kernel::g_handle_table.Create(Service::IR::update_event).Unwrap());
 }
 
 /**
