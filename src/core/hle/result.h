@@ -388,9 +388,14 @@ public:
     }
 
     /// Asserts that the result succeeded and returns a reference to it.
-    T& Unwrap() {
+    T& Unwrap() & {
         ASSERT_MSG(Succeeded(), "Tried to Unwrap empty ResultVal");
         return **this;
+    }
+
+    T&& Unwrap() && {
+        ASSERT_MSG(Succeeded(), "Tried to Unwrap empty ResultVal");
+        return std::move(**this);
     }
 
     T&& MoveFrom() {
