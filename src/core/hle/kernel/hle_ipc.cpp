@@ -23,6 +23,11 @@ void SessionRequestHandler::ClientDisconnected(SharedPtr<ServerSession> server_s
     boost::range::remove_erase(connected_sessions, server_session);
 }
 
+HLERequestContext::HLERequestContext(SharedPtr<ServerSession> session)
+    : session(std::move(session)) {
+    cmd_buf[0] = 0;
+}
+
 HLERequestContext::~HLERequestContext() = default;
 
 SharedPtr<Object> HLERequestContext::GetIncomingHandle(u32 id_from_cmdbuf) const {
