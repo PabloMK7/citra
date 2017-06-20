@@ -39,7 +39,7 @@ ResultCode ClientSession::SendSyncRequest() {
         return ERR_SESSION_CLOSED_BY_REMOTE;
 
     // Signal the server session that new data is available
-    return server->HandleSyncRequest();
+    return server->HandleSyncRequest(GetCurrentThread());
 }
 
 } // namespace
