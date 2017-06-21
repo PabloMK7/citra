@@ -168,7 +168,7 @@ static void GetSemaphoreEventHandle(Service::Interface* self) {
     cmd_buff[0] = IPC::MakeHeader(0x16, 1, 2);
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
     // cmd_buff[2] not set
-    cmd_buff[3] = Kernel::g_handle_table.Create(semaphore_event).MoveFrom(); // Event handle
+    cmd_buff[3] = Kernel::g_handle_table.Create(semaphore_event).Unwrap(); // Event handle
 
     LOG_WARNING(Service_DSP, "(STUBBED) called");
 }

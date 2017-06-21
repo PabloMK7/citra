@@ -347,7 +347,7 @@ void GetVsyncInterruptEvent(Service::Interface* self) {
         int port = *port_select.begin();
         rb.Push(RESULT_SUCCESS);
         rb.PushCopyHandles(
-            Kernel::g_handle_table.Create(ports[port].vsync_interrupt_event).MoveFrom());
+            Kernel::g_handle_table.Create(ports[port].vsync_interrupt_event).Unwrap());
     } else {
         LOG_ERROR(Service_CAM, "invalid port_select=%u", port_select.m_val);
         rb.Push(ERROR_INVALID_ENUM_VALUE);
@@ -366,7 +366,7 @@ void GetBufferErrorInterruptEvent(Service::Interface* self) {
         int port = *port_select.begin();
         rb.Push(RESULT_SUCCESS);
         rb.PushCopyHandles(
-            Kernel::g_handle_table.Create(ports[port].buffer_error_interrupt_event).MoveFrom());
+            Kernel::g_handle_table.Create(ports[port].buffer_error_interrupt_event).Unwrap());
     } else {
         LOG_ERROR(Service_CAM, "invalid port_select=%u", port_select.m_val);
         rb.Push(ERROR_INVALID_ENUM_VALUE);
@@ -400,7 +400,7 @@ void SetReceiving(Service::Interface* self) {
         }
 
         rb.Push(RESULT_SUCCESS);
-        rb.PushCopyHandles(Kernel::g_handle_table.Create(port.completion_event).MoveFrom());
+        rb.PushCopyHandles(Kernel::g_handle_table.Create(port.completion_event).Unwrap());
     } else {
         LOG_ERROR(Service_CAM, "invalid port_select=%u", port_select.m_val);
         rb.Push(ERROR_INVALID_ENUM_VALUE);

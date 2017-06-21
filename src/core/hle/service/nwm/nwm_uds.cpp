@@ -190,7 +190,7 @@ static void InitializeWithVersion(Interface* self) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
     rb.Push(RESULT_SUCCESS);
-    rb.PushCopyHandles(Kernel::g_handle_table.Create(connection_status_event).MoveFrom());
+    rb.PushCopyHandles(Kernel::g_handle_table.Create(connection_status_event).Unwrap());
 
     LOG_DEBUG(Service_NWM, "called sharedmem_size=0x%08X, version=0x%08X, sharedmem_handle=0x%08X",
               sharedmem_size, version, sharedmem_handle);
@@ -265,7 +265,7 @@ static void Bind(Interface* self) {
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
 
     rb.Push(RESULT_SUCCESS);
-    rb.PushCopyHandles(Kernel::g_handle_table.Create(event).MoveFrom());
+    rb.PushCopyHandles(Kernel::g_handle_table.Create(event).Unwrap());
 }
 
 /**

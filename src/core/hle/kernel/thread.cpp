@@ -389,7 +389,7 @@ ResultVal<SharedPtr<Thread>> Thread::Create(std::string name, VAddr entry_point,
     thread->wait_objects.clear();
     thread->wait_address = 0;
     thread->name = std::move(name);
-    thread->callback_handle = wakeup_callback_handle_table.Create(thread).MoveFrom();
+    thread->callback_handle = wakeup_callback_handle_table.Create(thread).Unwrap();
     thread->owner_process = g_current_process;
 
     // Find the next available TLS index, and mark it as used
@@ -484,7 +484,7 @@ SharedPtr<Thread> SetupMainThread(u32 entry_point, s32 priority) {
     auto thread_res = Thread::Create("main", entry_point, priority, 0, THREADPROCESSORID_0,
                                      Memory::HEAP_VADDR_END);
 
-    SharedPtr<Thread> thread = thread_res.MoveFrom();
+    SharedPtr<Thread> thread = std::move(thread_res).Unwrap();
 
     thread->context.fpscr =
         FPSCR_DEFAULT_NAN | FPSCR_FLUSH_TO_ZERO | FPSCR_ROUND_TOZERO | FPSCR_IXC; // 0x03C00010

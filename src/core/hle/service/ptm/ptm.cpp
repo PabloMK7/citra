@@ -152,7 +152,7 @@ void Init() {
         auto gamecoin_result =
             Service::FS::OpenFileFromArchive(*archive_result, gamecoin_path, open_mode);
         if (gamecoin_result.Succeeded()) {
-            auto gamecoin = gamecoin_result.MoveFrom();
+            auto gamecoin = std::move(gamecoin_result).Unwrap();
             gamecoin->backend->Write(0, sizeof(GameCoin), true,
                                      reinterpret_cast<const u8*>(&default_game_coin));
             gamecoin->backend->Close();

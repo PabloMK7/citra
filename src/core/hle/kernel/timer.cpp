@@ -30,7 +30,7 @@ SharedPtr<Timer> Timer::Create(ResetType reset_type, std::string name) {
     timer->name = std::move(name);
     timer->initial_delay = 0;
     timer->interval_delay = 0;
-    timer->callback_handle = timer_callback_handle_table.Create(timer).MoveFrom();
+    timer->callback_handle = timer_callback_handle_table.Create(timer).Unwrap();
 
     return timer;
 }

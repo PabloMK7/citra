@@ -389,8 +389,8 @@ static void RegisterInterruptRelayQueue(Interface* self) {
     } else {
         cmd_buff[1] = RESULT_SUCCESS.raw;
     }
-    cmd_buff[2] = g_thread_id++;                                             // Thread ID
-    cmd_buff[4] = Kernel::g_handle_table.Create(g_shared_memory).MoveFrom(); // GSP shared memory
+    cmd_buff[2] = g_thread_id++;                                           // Thread ID
+    cmd_buff[4] = Kernel::g_handle_table.Create(g_shared_memory).Unwrap(); // GSP shared memory
 
     g_interrupt_event->Signal(); // TODO(bunnei): Is this correct?
 

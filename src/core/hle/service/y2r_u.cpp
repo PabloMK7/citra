@@ -275,7 +275,7 @@ static void GetTransferEndEvent(Interface* self) {
 
     cmd_buff[0] = IPC::MakeHeader(0xF, 2, 0);
     cmd_buff[1] = RESULT_SUCCESS.raw;
-    cmd_buff[3] = Kernel::g_handle_table.Create(completion_event).MoveFrom();
+    cmd_buff[3] = Kernel::g_handle_table.Create(completion_event).Unwrap();
 
     LOG_DEBUG(Service_Y2R, "called");
 }

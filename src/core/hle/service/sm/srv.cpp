@@ -113,13 +113,13 @@ void SRV::GetServiceHandle(Kernel::HLERequestContext& ctx) {
                   (*session)->GetObjectId());
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
         rb.Push(session.Code());
-        rb.PushObjects(session.MoveFrom());
+        rb.PushObjects(std::move(session).Unwrap());
     } else if (session.Code() == Kernel::ERR_MAX_CONNECTIONS_REACHED && return_port_on_failure) {
         LOG_WARNING(Service_SRV, "called service=%s -> ERR_MAX_CONNECTIONS_REACHED, *port*=%u",
                     name.c_str(), (*client_port)->GetObjectId());
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
         rb.Push(ERR_MAX_CONNECTIONS_REACHED);
-        rb.PushObjects(client_port.MoveFrom());
+        rb.PushObjects(std::move(client_port).Unwrap());
     } else {
         LOG_ERROR(Service_SRV, "called service=%s -> error 0x%08X", name.c_str(), session.Code());
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);

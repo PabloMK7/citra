@@ -31,8 +31,8 @@ void GetCecStateAbbreviated(Service::Interface* self) {
 void GetCecInfoEventHandle(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
-    cmd_buff[1] = RESULT_SUCCESS.raw;                                      // No error
-    cmd_buff[3] = Kernel::g_handle_table.Create(cecinfo_event).MoveFrom(); // Event handle
+    cmd_buff[1] = RESULT_SUCCESS.raw;                                    // No error
+    cmd_buff[3] = Kernel::g_handle_table.Create(cecinfo_event).Unwrap(); // Event handle
 
     LOG_WARNING(Service_CECD, "(STUBBED) called");
 }
@@ -40,8 +40,8 @@ void GetCecInfoEventHandle(Service::Interface* self) {
 void GetChangeStateEventHandle(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
-    cmd_buff[1] = RESULT_SUCCESS.raw;                                           // No error
-    cmd_buff[3] = Kernel::g_handle_table.Create(change_state_event).MoveFrom(); // Event handle
+    cmd_buff[1] = RESULT_SUCCESS.raw;                                         // No error
+    cmd_buff[3] = Kernel::g_handle_table.Create(change_state_event).Unwrap(); // Event handle
 
     LOG_WARNING(Service_CECD, "(STUBBED) called");
 }

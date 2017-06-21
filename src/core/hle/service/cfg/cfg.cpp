@@ -406,7 +406,7 @@ ResultCode UpdateConfigNANDSavegame() {
     auto config_result = Service::FS::OpenFileFromArchive(cfg_system_save_data_archive, path, mode);
     ASSERT_MSG(config_result.Succeeded(), "could not open file");
 
-    auto config = config_result.MoveFrom();
+    auto config = std::move(config_result).Unwrap();
     config->backend->Write(0, CONFIG_SAVEFILE_SIZE, 1, cfg_config_file_buffer.data());
 
     return RESULT_SUCCESS;
@@ -560,7 +560,7 @@ ResultCode LoadConfigNANDSaveFile() {
 
     // Read the file if it already exists
     if (config_result.Succeeded()) {
-        auto config = config_result.MoveFrom();
+        auto config = std::move(config_result).Unwrap();
         config->backend->Read(0, CONFIG_SAVEFILE_SIZE, cfg_config_file_buffer.data());
         return RESULT_SUCCESS;
     }

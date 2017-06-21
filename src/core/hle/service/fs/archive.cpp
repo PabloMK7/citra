@@ -311,7 +311,7 @@ ResultVal<std::shared_ptr<File>> OpenFileFromArchive(ArchiveHandle archive_handl
     if (backend.Failed())
         return backend.Code();
 
-    auto file = std::shared_ptr<File>(new File(backend.MoveFrom(), path));
+    auto file = std::shared_ptr<File>(new File(std::move(backend).Unwrap(), path));
     return MakeResult<std::shared_ptr<File>>(std::move(file));
 }
 
@@ -401,7 +401,7 @@ ResultVal<std::shared_ptr<Directory>> OpenDirectoryFromArchive(ArchiveHandle arc
     if (backend.Failed())
         return backend.Code();
 
-    auto directory = std::shared_ptr<Directory>(new Directory(backend.MoveFrom(), path));
+    auto directory = std::shared_ptr<Directory>(new Directory(std::move(backend).Unwrap(), path));
     return MakeResult<std::shared_ptr<Directory>>(std::move(directory));
 }
 

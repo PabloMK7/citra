@@ -55,8 +55,8 @@ void Initialize(Service::Interface* self) {
     u32 flags = rp.Pop<u32>();
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 3);
     rb.Push(RESULT_SUCCESS);
-    rb.PushCopyHandles(Kernel::g_handle_table.Create(notification_event).MoveFrom(),
-                       Kernel::g_handle_table.Create(parameter_event).MoveFrom());
+    rb.PushCopyHandles(Kernel::g_handle_table.Create(notification_event).Unwrap(),
+                       Kernel::g_handle_table.Create(parameter_event).Unwrap());
 
     // TODO(bunnei): Check if these events are cleared every time Initialize is called.
     notification_event->Clear();
@@ -93,7 +93,7 @@ void GetSharedFont(Service::Interface* self) {
     // allocated, the real APT service calculates this address by scanning the entire address space
     // (using svcQueryMemory) and searches for an allocation of the same size as the Shared Font.
     rb.Push(target_address);
-    rb.PushCopyHandles(Kernel::g_handle_table.Create(shared_font_mem).MoveFrom());
+    rb.PushCopyHandles(Kernel::g_handle_table.Create(shared_font_mem).Unwrap());
 }
 
 void NotifyToWait(Service::Interface* self) {
@@ -115,7 +115,7 @@ void GetLockHandle(Service::Interface* self) {
     rb.Push(RESULT_SUCCESS);    // No error
     rb.Push(applet_attributes); // Applet Attributes, this value is passed to Enable.
     rb.Push<u32>(0);            // Least significant bit = power button state
-    Kernel::Handle handle_copy = Kernel::g_handle_table.Create(lock).MoveFrom();
+    Kernel::Handle handle_copy = Kernel::g_handle_table.Create(lock).Unwrap();
     rb.PushCopyHandles(handle_copy);
 
     LOG_WARNING(Service_APT, "(STUBBED) called handle=0x%08X applet_attributes=0x%08X", handle_copy,
@@ -231,7 +231,7 @@ void ReceiveParameter(Service::Interface* self) {
     rb.Push(static_cast<u32>(next_parameter.buffer.size())); // Parameter buffer size
 
     rb.PushMoveHandles((next_parameter.object != nullptr)
-                           ? Kernel::g_handle_table.Create(next_parameter.object).MoveFrom()
+                           ? Kernel::g_handle_table.Create(next_parameter.object).Unwrap()
                            : 0);
     rb.PushStaticBuffer(buffer, static_cast<u32>(next_parameter.buffer.size()), 0);
 
@@ -261,7 +261,7 @@ void GlanceParameter(Service::Interface* self) {
     rb.Push(static_cast<u32>(next_parameter.buffer.size())); // Parameter buffer size
 
     rb.PushCopyHandles((next_parameter.object != nullptr)
-                           ? Kernel::g_handle_table.Create(next_parameter.object).MoveFrom()
+                           ? Kernel::g_handle_table.Create(next_parameter.object).Unwrap()
                            : 0);
     rb.PushStaticBuffer(buffer, static_cast<u32>(next_parameter.buffer.size()), 0);
 
