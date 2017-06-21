@@ -52,9 +52,7 @@ OpenGLState::OpenGLState() {
         texture_unit.sampler = 0;
     }
 
-    for (auto& lut : lighting_luts) {
-        lut.texture_1d = 0;
-    }
+    lighting_lut.texture_buffer = 0;
 
     fog_lut.texture_1d = 0;
 
@@ -185,7 +183,7 @@ void OpenGLState::Apply() const {
     // Textures
     for (unsigned i = 0; i < ARRAY_SIZE(texture_units); ++i) {
         if (texture_units[i].texture_2d != cur_state.texture_units[i].texture_2d) {
-            glActiveTexture(GL_TEXTURE0 + i);
+            glActiveTexture(TextureUnits::PicaTexture(i).Enum());
             glBindTexture(GL_TEXTURE_2D, texture_units[i].texture_2d);
         }
         if (texture_units[i].sampler != cur_state.texture_units[i].sampler) {
@@ -194,46 +192,44 @@ void OpenGLState::Apply() const {
     }
 
     // Lighting LUTs
-    for (unsigned i = 0; i < ARRAY_SIZE(lighting_luts); ++i) {
-        if (lighting_luts[i].texture_1d != cur_state.lighting_luts[i].texture_1d) {
-            glActiveTexture(GL_TEXTURE3 + i);
-            glBindTexture(GL_TEXTURE_1D, lighting_luts[i].texture_1d);
-        }
+    if (lighting_lut.texture_buffer != cur_state.lighting_lut.texture_buffer) {
+        glActiveTexture(TextureUnits::LightingLUT.Enum());
+        glBindTexture(GL_TEXTURE_BUFFER, cur_state.lighting_lut.texture_buffer);
     }
 
     // Fog LUT
     if (fog_lut.texture_1d != cur_state.fog_lut.texture_1d) {
-        glActiveTexture(GL_TEXTURE9);
+        glActiveTexture(TextureUnits::FogLUT.Enum());
         glBindTexture(GL_TEXTURE_1D, fog_lut.texture_1d);
     }
 
     // ProcTex Noise LUT
     if (proctex_noise_lut.texture_1d != cur_state.proctex_noise_lut.texture_1d) {
-        glActiveTexture(GL_TEXTURE10);
+        glActiveTexture(TextureUnits::ProcTexNoiseLUT.Enum());
         glBindTexture(GL_TEXTURE_1D, proctex_noise_lut.texture_1d);
     }
 
     // ProcTex Color Map
     if (proctex_color_map.texture_1d != cur_state.proctex_color_map.texture_1d) {
-        glActiveTexture(GL_TEXTURE11);
+        glActiveTexture(TextureUnits::ProcTexColorMap.Enum());
         glBindTexture(GL_TEXTURE_1D, proctex_color_map.texture_1d);
     }
 
     // ProcTex Alpha Map
     if (proctex_alpha_map.texture_1d != cur_state.proctex_alpha_map.texture_1d) {
-        glActiveTexture(GL_TEXTURE12);
+        glActiveTexture(TextureUnits::ProcTexAlphaMap.Enum());
         glBindTexture(GL_TEXTURE_1D, proctex_alpha_map.texture_1d);
     }
 
     // ProcTex LUT
     if (proctex_lut.texture_1d != cur_state.proctex_lut.texture_1d) {
-        glActiveTexture(GL_TEXTURE13);
+        glActiveTexture(TextureUnits::ProcTexLUT.Enum());
         glBindTexture(GL_TEXTURE_1D, proctex_lut.texture_1d);
     }
 
     // ProcTex Diff LUT
     if (proctex_diff_lut.texture_1d != cur_state.proctex_diff_lut.texture_1d) {
-        glActiveTexture(GL_TEXTURE14);
+        glActiveTexture(TextureUnits::ProcTexDiffLUT.Enum());
         glBindTexture(GL_TEXTURE_1D, proctex_diff_lut.texture_1d);
     }
 
@@ -274,6 +270,20 @@ void OpenGLState::ResetTexture(GLuint handle) {
             unit.texture_2d = 0;
         }
     }
+    if (cur_state.lighting_lut.texture_buffer == handle)
+        cur_state.lighting_lut.texture_buffer = 0;
+    if (cur_state.fog_lut.texture_1d == handle)
+        cur_state.fog_lut.texture_1d = 0;
+    if (cur_state.proctex_noise_lut.texture_1d == handle)
+        cur_state.proctex_noise_lut.texture_1d = 0;
+    if (cur_state.proctex_color_map.texture_1d == handle)
+        cur_state.proctex_color_map.texture_1d = 0;
+    if (cur_state.proctex_alpha_map.texture_1d == handle)
+        cur_state.proctex_alpha_map.texture_1d = 0;
+    if (cur_state.proctex_lut.texture_1d == handle)
+        cur_state.proctex_lut.texture_1d = 0;
+    if (cur_state.proctex_diff_lut.texture_1d == handle)
+        cur_state.proctex_diff_lut.texture_1d = 0;
 }
 
 void OpenGLState::ResetSampler(GLuint handle) {

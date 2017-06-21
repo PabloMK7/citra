@@ -49,9 +49,7 @@ RasterizerOpenGL::RasterizerOpenGL() : shader_dirty(true) {
 
     uniform_block_data.dirty = true;
 
-    for (unsigned index = 0; index < lighting_luts.size(); index++) {
-        uniform_block_data.lut_dirty[index] = true;
-    }
+    uniform_block_data.lut_dirty.fill(true);
 
     uniform_block_data.fog_lut_dirty = true;
 
@@ -96,18 +94,16 @@ RasterizerOpenGL::RasterizerOpenGL() : shader_dirty(true) {
     framebuffer.Create();
 
     // Allocate and bind lighting lut textures
-    for (size_t i = 0; i < lighting_luts.size(); ++i) {
-        lighting_luts[i].Create();
-        state.lighting_luts[i].texture_1d = lighting_luts[i].handle;
-    }
+    lighting_lut_buffer.Create();
+    state.lighting_lut.texture_buffer = lighting_lut.handle;
     state.Apply();
-
-    for (size_t i = 0; i < lighting_luts.size(); ++i) {
-        glActiveTexture(static_cast<GLenum>(GL_TEXTURE3 + i));
-        glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA32F, 256, 0, GL_RGBA, GL_FLOAT, nullptr);
-        glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    }
+    lighting_lut.Create();
+    glBindBuffer(GL_TEXTURE_BUFFER, lighting_lut_buffer.handle);
+    glBufferData(GL_TEXTURE_BUFFER,
+                 sizeof(GLfloat) * 2 * 256 * Pica::LightingRegs::NumLightingSampler, nullptr,
+                 GL_DYNAMIC_DRAW);
+    glActiveTexture(TextureUnits::LightingLUT.Enum());
+    glTexBuffer(GL_TEXTURE_BUFFER, GL_RG32F, lighting_lut_buffer.handle);
 
     // Setup the LUT for the fog
     {
@@ -116,7 +112,7 @@ RasterizerOpenGL::RasterizerOpenGL() : shader_dirty(true) {
     }
     state.Apply();
 
-    glActiveTexture(GL_TEXTURE9);
+    glActiveTexture(TextureUnits::FogLUT.Enum());
     glTexImage1D(GL_TEXTURE_1D, 0, GL_R32UI, 128, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, nullptr);
     glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -125,7 +121,7 @@ RasterizerOpenGL::RasterizerOpenGL() : shader_dirty(true) {
     proctex_noise_lut.Create();
     state.proctex_noise_lut.texture_1d = proctex_noise_lut.handle;
     state.Apply();
-    glActiveTexture(GL_TEXTURE10);
+    glActiveTexture(TextureUnits::ProcTexNoiseLUT.Enum());
     glTexImage1D(GL_TEXTURE_1D, 0, GL_RG32F, 128, 0, GL_RG, GL_FLOAT, nullptr);
     glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -134,7 +130,7 @@ RasterizerOpenGL::RasterizerOpenGL() : shader_dirty(true) {
     proctex_color_map.Create();
     state.proctex_color_map.texture_1d = proctex_color_map.handle;
     state.Apply();
-    glActiveTexture(GL_TEXTURE11);
+    glActiveTexture(TextureUnits::ProcTexColorMap.Enum());
     glTexImage1D(GL_TEXTURE_1D, 0, GL_RG32F, 128, 0, GL_RG, GL_FLOAT, nullptr);
     glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -143,7 +139,7 @@ RasterizerOpenGL::RasterizerOpenGL() : shader_dirty(true) {
     proctex_alpha_map.Create();
     state.proctex_alpha_map.texture_1d = proctex_alpha_map.handle;
     state.Apply();
-    glActiveTexture(GL_TEXTURE12);
+    glActiveTexture(TextureUnits::ProcTexAlphaMap.Enum());
     glTexImage1D(GL_TEXTURE_1D, 0, GL_RG32F, 128, 0, GL_RG, GL_FLOAT, nullptr);
     glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -152,7 +148,7 @@ RasterizerOpenGL::RasterizerOpenGL() : shader_dirty(true) {
     proctex_lut.Create();
     state.proctex_lut.texture_1d = proctex_lut.handle;
     state.Apply();
-    glActiveTexture(GL_TEXTURE13);
+    glActiveTexture(TextureUnits::ProcTexLUT.Enum());
     glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA32F, 256, 0, GL_RGBA, GL_FLOAT, nullptr);
     glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -161,7 +157,7 @@ RasterizerOpenGL::RasterizerOpenGL() : shader_dirty(true) {
     proctex_diff_lut.Create();
     state.proctex_diff_lut.texture_1d = proctex_diff_lut.handle;
     state.Apply();
-    glActiveTexture(GL_TEXTURE14);
+    glActiveTexture(TextureUnits::ProcTexDiffLUT.Enum());
     glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA32F, 256, 0, GL_RGBA, GL_FLOAT, nullptr);
     glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -313,7 +309,7 @@ void RasterizerOpenGL::DrawTriangles() {
     }
 
     // Sync the lighting luts
-    for (unsigned index = 0; index < lighting_luts.size(); index++) {
+    for (unsigned index = 0; index < uniform_block_data.lut_dirty.size(); index++) {
         if (uniform_block_data.lut_dirty[index]) {
             SyncLightingLUT(index);
             uniform_block_data.lut_dirty[index] = false;
@@ -851,7 +847,7 @@ void RasterizerOpenGL::NotifyPicaRegisterChanged(u32 id) {
     case PICA_REG_INDEX_WORKAROUND(lighting.lut_data[6], 0x1ce):
     case PICA_REG_INDEX_WORKAROUND(lighting.lut_data[7], 0x1cf): {
         auto& lut_config = regs.lighting.lut_config;
-        uniform_block_data.lut_dirty[lut_config.type / 4] = true;
+        uniform_block_data.lut_dirty[lut_config.type] = true;
         break;
     }
     }
@@ -1187,77 +1183,57 @@ void RasterizerOpenGL::SetShader() {
         state.Apply();
 
         // Set the texture samplers to correspond to different texture units
-        GLuint uniform_tex = glGetUniformLocation(shader->shader.handle, "tex[0]");
+        GLint uniform_tex = glGetUniformLocation(shader->shader.handle, "tex[0]");
         if (uniform_tex != -1) {
-            glUniform1i(uniform_tex, 0);
+            glUniform1i(uniform_tex, TextureUnits::PicaTexture(0).id);
         }
         uniform_tex = glGetUniformLocation(shader->shader.handle, "tex[1]");
         if (uniform_tex != -1) {
-            glUniform1i(uniform_tex, 1);
+            glUniform1i(uniform_tex, TextureUnits::PicaTexture(1).id);
         }
         uniform_tex = glGetUniformLocation(shader->shader.handle, "tex[2]");
         if (uniform_tex != -1) {
-            glUniform1i(uniform_tex, 2);
+            glUniform1i(uniform_tex, TextureUnits::PicaTexture(2).id);
         }
 
         // Set the texture samplers to correspond to different lookup table texture units
-        GLuint uniform_lut = glGetUniformLocation(shader->shader.handle, "lut[0]");
+        GLint uniform_lut = glGetUniformLocation(shader->shader.handle, "lighting_lut");
         if (uniform_lut != -1) {
-            glUniform1i(uniform_lut, 3);
-        }
-        uniform_lut = glGetUniformLocation(shader->shader.handle, "lut[1]");
-        if (uniform_lut != -1) {
-            glUniform1i(uniform_lut, 4);
-        }
-        uniform_lut = glGetUniformLocation(shader->shader.handle, "lut[2]");
-        if (uniform_lut != -1) {
-            glUniform1i(uniform_lut, 5);
-        }
-        uniform_lut = glGetUniformLocation(shader->shader.handle, "lut[3]");
-        if (uniform_lut != -1) {
-            glUniform1i(uniform_lut, 6);
-        }
-        uniform_lut = glGetUniformLocation(shader->shader.handle, "lut[4]");
-        if (uniform_lut != -1) {
-            glUniform1i(uniform_lut, 7);
-        }
-        uniform_lut = glGetUniformLocation(shader->shader.handle, "lut[5]");
-        if (uniform_lut != -1) {
-            glUniform1i(uniform_lut, 8);
+            glUniform1i(uniform_lut, TextureUnits::LightingLUT.id);
         }
 
-        GLuint uniform_fog_lut = glGetUniformLocation(shader->shader.handle, "fog_lut");
+        GLint uniform_fog_lut = glGetUniformLocation(shader->shader.handle, "fog_lut");
         if (uniform_fog_lut != -1) {
-            glUniform1i(uniform_fog_lut, 9);
+            glUniform1i(uniform_fog_lut, TextureUnits::FogLUT.id);
         }
 
-        GLuint uniform_proctex_noise_lut =
+        GLint uniform_proctex_noise_lut =
             glGetUniformLocation(shader->shader.handle, "proctex_noise_lut");
         if (uniform_proctex_noise_lut != -1) {
-            glUniform1i(uniform_proctex_noise_lut, 10);
+            glUniform1i(uniform_proctex_noise_lut, TextureUnits::ProcTexNoiseLUT.id);
         }
 
-        GLuint uniform_proctex_color_map =
+        GLint uniform_proctex_color_map =
             glGetUniformLocation(shader->shader.handle, "proctex_color_map");
         if (uniform_proctex_color_map != -1) {
-            glUniform1i(uniform_proctex_color_map, 11);
+            glUniform1i(uniform_proctex_color_map, TextureUnits::ProcTexColorMap.id);
         }
 
-        GLuint uniform_proctex_alpha_map =
+        GLint uniform_proctex_alpha_map =
             glGetUniformLocation(shader->shader.handle, "proctex_alpha_map");
         if (uniform_proctex_alpha_map != -1) {
-            glUniform1i(uniform_proctex_alpha_map, 12);
+            glUniform1i(uniform_proctex_alpha_map, TextureUnits::ProcTexAlphaMap.id);
         }
 
-        GLuint uniform_proctex_lut = glGetUniformLocation(shader->shader.handle, "proctex_lut");
+        GLint uniform_proctex_lut = glGetUniformLocation(shader->shader.handle, "proctex_lut");
         if (uniform_proctex_lut != -1) {
-            glUniform1i(uniform_proctex_lut, 13);
+            glUniform1i(uniform_proctex_lut, TextureUnits::ProcTexLUT.id);
         }
 
-        GLuint uniform_proctex_diff_lut =
+        GLint uniform_proctex_diff_lut =
             glGetUniformLocation(shader->shader.handle, "proctex_diff_lut");
         if (uniform_proctex_diff_lut != -1) {
-            glUniform1i(uniform_proctex_diff_lut, 14);
+            glUniform1i(uniform_proctex_diff_lut, TextureUnits::ProcTexDiffLUT.id);
         }
 
         current_shader = shader_cache.emplace(config, std::move(shader)).first->second.get();
@@ -1387,7 +1363,7 @@ void RasterizerOpenGL::SyncFogLUT() {
 
     if (new_data != fog_lut_data) {
         fog_lut_data = new_data;
-        glActiveTexture(GL_TEXTURE9);
+        glActiveTexture(TextureUnits::FogLUT.Enum());
         glTexSubImage1D(GL_TEXTURE_1D, 0, 0, 128, GL_RED_INTEGER, GL_UNSIGNED_INT,
                         fog_lut_data.data());
     }
@@ -1426,17 +1402,18 @@ static void SyncProcTexValueLUT(const std::array<Pica::State::ProcTex::ValueEntr
 }
 
 void RasterizerOpenGL::SyncProcTexNoiseLUT() {
-    SyncProcTexValueLUT(Pica::g_state.proctex.noise_table, proctex_noise_lut_data, GL_TEXTURE10);
+    SyncProcTexValueLUT(Pica::g_state.proctex.noise_table, proctex_noise_lut_data,
+                        TextureUnits::ProcTexNoiseLUT.Enum());
 }
 
 void RasterizerOpenGL::SyncProcTexColorMap() {
     SyncProcTexValueLUT(Pica::g_state.proctex.color_map_table, proctex_color_map_data,
-                        GL_TEXTURE11);
+                        TextureUnits::ProcTexColorMap.Enum());
 }
 
 void RasterizerOpenGL::SyncProcTexAlphaMap() {
     SyncProcTexValueLUT(Pica::g_state.proctex.alpha_map_table, proctex_alpha_map_data,
-                        GL_TEXTURE12);
+                        TextureUnits::ProcTexAlphaMap.Enum());
 }
 
 void RasterizerOpenGL::SyncProcTexLUT() {
@@ -1451,7 +1428,7 @@ void RasterizerOpenGL::SyncProcTexLUT() {
 
     if (new_data != proctex_lut_data) {
         proctex_lut_data = new_data;
-        glActiveTexture(GL_TEXTURE13);
+        glActiveTexture(TextureUnits::ProcTexLUT.Enum());
         glTexSubImage1D(GL_TEXTURE_1D, 0, 0, 256, GL_RGBA, GL_FLOAT, proctex_lut_data.data());
     }
 }
@@ -1468,7 +1445,7 @@ void RasterizerOpenGL::SyncProcTexDiffLUT() {
 
     if (new_data != proctex_diff_lut_data) {
         proctex_diff_lut_data = new_data;
-        glActiveTexture(GL_TEXTURE14);
+        glActiveTexture(TextureUnits::ProcTexDiffLUT.Enum());
         glTexSubImage1D(GL_TEXTURE_1D, 0, 0, 256, GL_RGBA, GL_FLOAT, proctex_diff_lut_data.data());
     }
 }
@@ -1571,20 +1548,17 @@ void RasterizerOpenGL::SyncGlobalAmbient() {
 }
 
 void RasterizerOpenGL::SyncLightingLUT(unsigned lut_index) {
-    std::array<GLvec4, 256> new_data;
-
-    for (unsigned offset = 0; offset < new_data.size(); ++offset) {
-        new_data[offset][0] = Pica::g_state.lighting.luts[(lut_index * 4) + 0][offset].ToFloat();
-        new_data[offset][1] = Pica::g_state.lighting.luts[(lut_index * 4) + 1][offset].ToFloat();
-        new_data[offset][2] = Pica::g_state.lighting.luts[(lut_index * 4) + 2][offset].ToFloat();
-        new_data[offset][3] = Pica::g_state.lighting.luts[(lut_index * 4) + 3][offset].ToFloat();
-    }
+    std::array<GLvec2, 256> new_data;
+    const auto& source_lut = Pica::g_state.lighting.luts[lut_index];
+    std::transform(source_lut.begin(), source_lut.end(), new_data.begin(), [](const auto& entry) {
+        return GLvec2{entry.ToFloat(), entry.DiffToFloat()};
+    });
 
     if (new_data != lighting_lut_data[lut_index]) {
         lighting_lut_data[lut_index] = new_data;
-        glActiveTexture(GL_TEXTURE3 + lut_index);
-        glTexSubImage1D(GL_TEXTURE_1D, 0, 0, 256, GL_RGBA, GL_FLOAT,
-                        lighting_lut_data[lut_index].data());
+        glBindBuffer(GL_TEXTURE_BUFFER, lighting_lut_buffer.handle);
+        glBufferSubData(GL_TEXTURE_BUFFER, lut_index * new_data.size() * sizeof(GLvec2),
+                        new_data.size() * sizeof(GLvec2), new_data.data());
     }
 }
 

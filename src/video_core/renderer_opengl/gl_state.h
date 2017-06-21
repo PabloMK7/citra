@@ -6,6 +6,29 @@
 
 #include <glad/glad.h>
 
+namespace TextureUnits {
+
+struct TextureUnit {
+    GLint id;
+    constexpr GLenum Enum() const {
+        return static_cast<GLenum>(GL_TEXTURE0 + id);
+    }
+};
+
+constexpr TextureUnit PicaTexture(int unit) {
+    return TextureUnit{unit};
+}
+
+constexpr TextureUnit LightingLUT{3};
+constexpr TextureUnit FogLUT{4};
+constexpr TextureUnit ProcTexNoiseLUT{5};
+constexpr TextureUnit ProcTexColorMap{6};
+constexpr TextureUnit ProcTexAlphaMap{7};
+constexpr TextureUnit ProcTexLUT{8};
+constexpr TextureUnit ProcTexDiffLUT{9};
+
+} // namespace TextureUnits
+
 class OpenGLState {
 public:
     struct {
@@ -64,8 +87,8 @@ public:
     } texture_units[3];
 
     struct {
-        GLuint texture_1d; // GL_TEXTURE_BINDING_1D
-    } lighting_luts[6];
+        GLuint texture_buffer; // GL_TEXTURE_BINDING_BUFFER
+    } lighting_lut;
 
     struct {
         GLuint texture_1d; // GL_TEXTURE_BINDING_1D
