@@ -67,10 +67,13 @@ ResultCode HLERequestContext::PopulateFromIncomingCommandBuffer(const u32_le* sr
             ASSERT(i + num_handles <= command_size); // TODO(yuriks): Return error
             for (u32 j = 0; j < num_handles; ++j) {
                 Handle handle = src_cmdbuf[i];
-                SharedPtr<Object> object = src_table.GetGeneric(handle);
-                ASSERT(object != nullptr); // TODO(yuriks): Return error
-                if (descriptor == IPC::DescriptorType::MoveHandle) {
-                    src_table.Close(handle);
+                SharedPtr<Object> object = nullptr;
+                if (handle != 0) {
+                    object = src_table.GetGeneric(handle);
+                    ASSERT(object != nullptr); // TODO(yuriks): Return error
+                    if (descriptor == IPC::DescriptorType::MoveHandle) {
+                        src_table.Close(handle);
+                    }
                 }
 
                 cmd_buf[i++] = AddOutgoingHandle(std::move(object));
@@ -112,9 +115,11 @@ ResultCode HLERequestContext::WriteToOutgoingCommandBuffer(u32_le* dst_cmdbuf, P
             ASSERT(i + num_handles <= command_size);
             for (u32 j = 0; j < num_handles; ++j) {
                 SharedPtr<Object> object = GetIncomingHandle(cmd_buf[i]);
-
-                // TODO(yuriks): Figure out the proper error handling for if this fails
-                Handle handle = dst_table.Create(object).Unwrap();
+                Handle handle = 0;
+                if (object != nullptr) {
+                    // TODO(yuriks): Figure out the proper error handling for if this fails
+                    handle = dst_table.Create(object).Unwrap();
+                }
                 dst_cmdbuf[i++] = handle;
             }
             break;
