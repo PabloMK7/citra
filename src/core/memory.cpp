@@ -139,7 +139,12 @@ void UnmapRegion(VAddr base, u32 size) {
 static u8* GetPointerFromVMA(VAddr vaddr) {
     u8* direct_pointer = nullptr;
 
-    auto& vma = Kernel::g_current_process->vm_manager.FindVMA(vaddr)->second;
+    auto& vm_manager = Kernel::g_current_process->vm_manager;
+
+    auto it = vm_manager.FindVMA(vaddr);
+    ASSERT(it != vm_manager.vma_map.end());
+
+    auto& vma = it->second;
     switch (vma.type) {
     case Kernel::VMAType::AllocatedMemoryBlock:
         direct_pointer = vma.backing_block->data() + vma.offset;
@@ -147,6 +152,8 @@ static u8* GetPointerFromVMA(VAddr vaddr) {
     case Kernel::VMAType::BackingMemory:
         direct_pointer = vma.backing_memory;
         break;
+    case Kernel::VMAType::Free:
+        return nullptr;
     default:
         UNREACHABLE();
     }
@@ -341,11 +348,19 @@ void RasterizerMarkRegionCached(PAddr start, u32 size, int count_delta) {
         if (res_count == 0) {
             PageType& page_type = current_page_table->attributes[vaddr >> PAGE_BITS];
             switch (page_type) {
-            case PageType::RasterizerCachedMemory:
-                page_type = PageType::Memory;
-                current_page_table->pointers[vaddr >> PAGE_BITS] =
-                    GetPointerFromVMA(vaddr & ~PAGE_MASK);
+            case PageType::RasterizerCachedMemory: {
+                u8* pointer = GetPointerFromVMA(vaddr & ~PAGE_MASK);
+                if (pointer == nullptr) {
+                    // It's possible that this function has called been while updating the pagetable
+                    // after unmapping a VMA. In that case the underlying VMA will no longer exist,
+                    // and we should just leave the pagetable entry blank.
+                    page_type = PageType::Unmapped;
+                } else {
+                    page_type = PageType::Memory;
+                    current_page_table->pointers[vaddr >> PAGE_BITS] = pointer;
+                }
                 break;
+            }
             case PageType::RasterizerCachedSpecial:
                 page_type = PageType::Special;
                 break;
