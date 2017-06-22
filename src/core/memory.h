@@ -149,9 +149,17 @@ u8* GetPointer(VAddr virtual_address);
 std::string ReadCString(VAddr virtual_address, std::size_t max_length);
 
 /**
-* Converts a virtual address inside a region with 1:1 mapping to physical memory to a physical
-* address. This should be used by services to translate addresses for use by the hardware.
-*/
+ * Converts a virtual address inside a region with 1:1 mapping to physical memory to a physical
+ * address. This should be used by services to translate addresses for use by the hardware.
+ */
+boost::optional<PAddr> TryVirtualToPhysicalAddress(VAddr addr);
+
+/**
+ * Converts a virtual address inside a region with 1:1 mapping to physical memory to a physical
+ * address. This should be used by services to translate addresses for use by the hardware.
+ *
+ * @deprecated Use TryVirtualToPhysicalAddress(), which reports failure.
+ */
 PAddr VirtualToPhysicalAddress(VAddr addr);
 
 /**

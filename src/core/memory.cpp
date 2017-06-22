@@ -670,7 +670,7 @@ void WriteMMIO<u64>(MMIORegionPointer mmio_handler, VAddr addr, const u64 data) 
     mmio_handler->Write64(addr, data);
 }
 
-PAddr VirtualToPhysicalAddress(const VAddr addr) {
+boost::optional<PAddr> TryVirtualToPhysicalAddress(const VAddr addr) {
     if (addr == 0) {
         return 0;
     } else if (addr >= VRAM_VADDR && addr < VRAM_VADDR_END) {
@@ -687,9 +687,17 @@ PAddr VirtualToPhysicalAddress(const VAddr addr) {
         return addr - N3DS_EXTRA_RAM_VADDR + N3DS_EXTRA_RAM_PADDR;
     }
 
-    LOG_ERROR(HW_Memory, "Unknown virtual address @ 0x%08X", addr);
-    // To help with debugging, set bit on address so that it's obviously invalid.
-    return addr | 0x80000000;
+    return boost::none;
+}
+
+PAddr VirtualToPhysicalAddress(const VAddr addr) {
+    auto paddr = TryVirtualToPhysicalAddress(addr);
+    if (!paddr) {
+        LOG_ERROR(HW_Memory, "Unknown virtual address @ 0x%08X", addr);
+        // To help with debugging, set bit on address so that it's obviously invalid.
+        return addr | 0x80000000;
+    }
+    return *paddr;
 }
 
 boost::optional<VAddr> PhysicalToVirtualAddress(const PAddr addr) {
