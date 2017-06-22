@@ -18,7 +18,7 @@ static SharedPtr<Object> MakeObject() {
     return Event::Create(ResetType::OneShot);
 }
 
-TEST_CASE("HLERequestContext::PopoulateFromIncomingCommandBuffer", "[core][kernel]") {
+TEST_CASE("HLERequestContext::PopulateFromIncomingCommandBuffer", "[core][kernel]") {
     auto session = std::get<SharedPtr<ServerSession>>(ServerSession::CreateSessionPair());
     HLERequestContext context(std::move(session));
 
