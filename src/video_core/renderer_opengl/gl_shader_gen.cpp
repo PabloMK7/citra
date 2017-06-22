@@ -1052,7 +1052,7 @@ layout (std140) uniform shader_data {
 
 uniform sampler2D tex[3];
 uniform samplerBuffer lighting_lut;
-uniform usampler1D fog_lut;
+uniform samplerBuffer fog_lut;
 uniform sampler1D proctex_noise_lut;
 uniform sampler1D proctex_color_map;
 uniform sampler1D proctex_alpha_map;
@@ -1145,12 +1145,8 @@ vec4 secondary_fragment_color = vec4(0.0);
         // Generate clamped fog factor from LUT for given fog index
         out += "float fog_i = clamp(floor(fog_index), 0.0, 127.0);\n";
         out += "float fog_f = fog_index - fog_i;\n";
-        out += "uint fog_lut_entry = texelFetch(fog_lut, int(fog_i), 0).r;\n";
-        out += "float fog_lut_entry_difference = float(int((fog_lut_entry & 0x1FFFU) << 19U) >> "
-               "19);\n"; // Extract signed difference
-        out += "float fog_lut_entry_value = float((fog_lut_entry >> 13U) & 0x7FFU);\n";
-        out += "float fog_factor = (fog_lut_entry_value + fog_lut_entry_difference * fog_f) / "
-               "2047.0;\n";
+        out += "vec2 fog_lut_entry = texelFetch(fog_lut, int(fog_i)).rg;\n";
+        out += "float fog_factor = fog_lut_entry.r + fog_lut_entry.g * fog_f;\n";
         out += "fog_factor = clamp(fog_factor, 0.0, 1.0);\n";
 
         // Blend the fog

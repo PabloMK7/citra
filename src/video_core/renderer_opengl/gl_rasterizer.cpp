@@ -106,16 +106,14 @@ RasterizerOpenGL::RasterizerOpenGL() : shader_dirty(true) {
     glTexBuffer(GL_TEXTURE_BUFFER, GL_RG32F, lighting_lut_buffer.handle);
 
     // Setup the LUT for the fog
-    {
-        fog_lut.Create();
-        state.fog_lut.texture_1d = fog_lut.handle;
-    }
+    fog_lut.Create();
+    state.fog_lut.texture_buffer = fog_lut.handle;
     state.Apply();
-
+    fog_lut_buffer.Create();
+    glBindBuffer(GL_TEXTURE_BUFFER, fog_lut_buffer.handle);
+    glBufferData(GL_TEXTURE_BUFFER, sizeof(GLfloat) * 2 * 128, nullptr, GL_DYNAMIC_DRAW);
     glActiveTexture(TextureUnits::FogLUT.Enum());
-    glTexImage1D(GL_TEXTURE_1D, 0, GL_R32UI, 128, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, nullptr);
-    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexBuffer(GL_TEXTURE_BUFFER, GL_RG32F, fog_lut_buffer.handle);
 
     // Setup the noise LUT for proctex
     proctex_noise_lut.Create();
@@ -1356,16 +1354,17 @@ void RasterizerOpenGL::SyncFogColor() {
 }
 
 void RasterizerOpenGL::SyncFogLUT() {
-    std::array<GLuint, 128> new_data;
+    std::array<GLvec2, 128> new_data;
 
     std::transform(Pica::g_state.fog.lut.begin(), Pica::g_state.fog.lut.end(), new_data.begin(),
-                   [](const auto& entry) { return entry.raw; });
+                   [](const auto& entry) {
+                       return GLvec2{entry.ToFloat(), entry.DiffToFloat()};
+                   });
 
     if (new_data != fog_lut_data) {
         fog_lut_data = new_data;
-        glActiveTexture(TextureUnits::FogLUT.Enum());
-        glTexSubImage1D(GL_TEXTURE_1D, 0, 0, 128, GL_RED_INTEGER, GL_UNSIGNED_INT,
-                        fog_lut_data.data());
+        glBindBuffer(GL_TEXTURE_BUFFER, fog_lut_buffer.handle);
+        glBufferSubData(GL_TEXTURE_BUFFER, 0, new_data.size() * sizeof(GLvec2), new_data.data());
     }
 }
 

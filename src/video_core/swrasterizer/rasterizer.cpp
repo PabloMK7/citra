@@ -584,8 +584,7 @@ static void ProcessTriangleInternal(const Vertex& v0, const Vertex& v1, const Ve
                 float fog_i = MathUtil::Clamp(floorf(fog_index), 0.0f, 127.0f);
                 float fog_f = fog_index - fog_i;
                 const auto& fog_lut_entry = g_state.fog.lut[static_cast<unsigned int>(fog_i)];
-                float fog_factor = (fog_lut_entry.value + fog_lut_entry.difference * fog_f) /
-                                   2047.0f; // This is signed fixed point 1.11
+                float fog_factor = fog_lut_entry.ToFloat() + fog_lut_entry.DiffToFloat() * fog_f;
                 fog_factor = MathUtil::Clamp(fog_factor, 0.0f, 1.0f);
 
                 // Blend the fog

@@ -54,7 +54,7 @@ OpenGLState::OpenGLState() {
 
     lighting_lut.texture_buffer = 0;
 
-    fog_lut.texture_1d = 0;
+    fog_lut.texture_buffer = 0;
 
     proctex_lut.texture_1d = 0;
     proctex_diff_lut.texture_1d = 0;
@@ -198,9 +198,9 @@ void OpenGLState::Apply() const {
     }
 
     // Fog LUT
-    if (fog_lut.texture_1d != cur_state.fog_lut.texture_1d) {
+    if (fog_lut.texture_buffer != cur_state.fog_lut.texture_buffer) {
         glActiveTexture(TextureUnits::FogLUT.Enum());
-        glBindTexture(GL_TEXTURE_1D, fog_lut.texture_1d);
+        glBindTexture(GL_TEXTURE_BUFFER, fog_lut.texture_buffer);
     }
 
     // ProcTex Noise LUT
@@ -272,8 +272,8 @@ void OpenGLState::ResetTexture(GLuint handle) {
     }
     if (cur_state.lighting_lut.texture_buffer == handle)
         cur_state.lighting_lut.texture_buffer = 0;
-    if (cur_state.fog_lut.texture_1d == handle)
-        cur_state.fog_lut.texture_1d = 0;
+    if (cur_state.fog_lut.texture_buffer == handle)
+        cur_state.fog_lut.texture_buffer = 0;
     if (cur_state.proctex_noise_lut.texture_1d == handle)
         cur_state.proctex_noise_lut.texture_1d = 0;
     if (cur_state.proctex_color_map.texture_1d == handle)
