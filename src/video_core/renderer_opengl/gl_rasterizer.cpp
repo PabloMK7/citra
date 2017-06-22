@@ -94,10 +94,10 @@ RasterizerOpenGL::RasterizerOpenGL() : shader_dirty(true) {
     framebuffer.Create();
 
     // Allocate and bind lighting lut textures
-    lighting_lut_buffer.Create();
+    lighting_lut.Create();
     state.lighting_lut.texture_buffer = lighting_lut.handle;
     state.Apply();
-    lighting_lut.Create();
+    lighting_lut_buffer.Create();
     glBindBuffer(GL_TEXTURE_BUFFER, lighting_lut_buffer.handle);
     glBufferData(GL_TEXTURE_BUFFER,
                  sizeof(GLfloat) * 2 * 256 * Pica::LightingRegs::NumLightingSampler, nullptr,
