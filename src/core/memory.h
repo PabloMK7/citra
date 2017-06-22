@@ -190,6 +190,19 @@ void RasterizerFlushRegion(PAddr start, u32 size);
  */
 void RasterizerFlushAndInvalidateRegion(PAddr start, u32 size);
 
+enum class FlushMode {
+    /// Write back modified surfaces to RAM
+    Flush,
+    /// Write back modified surfaces to RAM, and also remove them from the cache
+    FlushAndInvalidate,
+};
+
+/**
+ * Flushes and invalidates any externally cached rasterizer resources touching the given virtual
+ * address region.
+ */
+void RasterizerFlushVirtualRegion(VAddr start, u32 size, FlushMode mode);
+
 /**
  * Dynarmic has an optimization to memory accesses when the pointer to the page exists that
  * can be used by setting up the current page table as a callback. This function is used to
