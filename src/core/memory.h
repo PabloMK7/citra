@@ -7,6 +7,7 @@
 #include <array>
 #include <cstddef>
 #include <string>
+#include <boost/optional.hpp>
 #include "common/common_types.h"
 
 namespace Memory {
@@ -154,9 +155,9 @@ std::string ReadCString(VAddr virtual_address, std::size_t max_length);
 PAddr VirtualToPhysicalAddress(VAddr addr);
 
 /**
-* Undoes a mapping performed by VirtualToPhysicalAddress().
-*/
-VAddr PhysicalToVirtualAddress(PAddr addr);
+ * Undoes a mapping performed by VirtualToPhysicalAddress().
+ */
+boost::optional<VAddr> PhysicalToVirtualAddress(PAddr addr);
 
 /**
  * Gets a pointer to the memory region beginning at the specified physical address.

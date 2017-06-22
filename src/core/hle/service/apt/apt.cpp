@@ -82,7 +82,7 @@ void GetSharedFont(Service::Interface* self) {
     // The shared font has to be relocated to the new address before being passed to the
     // application.
     VAddr target_address =
-        Memory::PhysicalToVirtualAddress(shared_font_mem->linear_heap_phys_address);
+        Memory::PhysicalToVirtualAddress(shared_font_mem->linear_heap_phys_address).value();
     if (!shared_font_relocated) {
         BCFNT::RelocateSharedFont(shared_font_mem, target_address);
         shared_font_relocated = true;

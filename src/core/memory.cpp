@@ -268,7 +268,8 @@ bool IsValidVirtualAddress(const VAddr vaddr) {
 }
 
 bool IsValidPhysicalAddress(const PAddr paddr) {
-    return IsValidVirtualAddress(PhysicalToVirtualAddress(paddr));
+    boost::optional<VAddr> vaddr = PhysicalToVirtualAddress(paddr);
+    return vaddr && IsValidVirtualAddress(*vaddr);
 }
 
 u8* GetPointer(const VAddr vaddr) {
@@ -301,7 +302,8 @@ std::string ReadCString(VAddr vaddr, std::size_t max_length) {
 
 u8* GetPhysicalPointer(PAddr address) {
     // TODO(Subv): This call should not go through the application's memory mapping.
-    return GetPointer(PhysicalToVirtualAddress(address));
+    boost::optional<VAddr> vaddr = PhysicalToVirtualAddress(address);
+    return vaddr ? GetPointer(*vaddr) : nullptr;
 }
 
 void RasterizerMarkRegionCached(PAddr start, u32 size, int count_delta) {
@@ -312,8 +314,12 @@ void RasterizerMarkRegionCached(PAddr start, u32 size, int count_delta) {
     u32 num_pages = ((start + size - 1) >> PAGE_BITS) - (start >> PAGE_BITS) + 1;
     PAddr paddr = start;
 
-    for (unsigned i = 0; i < num_pages; ++i) {
-        VAddr vaddr = PhysicalToVirtualAddress(paddr);
+    for (unsigned i = 0; i < num_pages; ++i, paddr += PAGE_SIZE) {
+        boost::optional<VAddr> maybe_vaddr = PhysicalToVirtualAddress(paddr);
+        if (!maybe_vaddr)
+            continue;
+        VAddr vaddr = *maybe_vaddr;
+
         u8& res_count = current_page_table->cached_res_count[vaddr >> PAGE_BITS];
         ASSERT_MSG(count_delta <= UINT8_MAX - res_count,
                    "Rasterizer resource cache counter overflow!");
@@ -353,7 +359,6 @@ void RasterizerMarkRegionCached(PAddr start, u32 size, int count_delta) {
                 UNREACHABLE();
             }
         }
-        paddr += PAGE_SIZE;
     }
 }
 
@@ -687,7 +692,7 @@ PAddr VirtualToPhysicalAddress(const VAddr addr) {
     return addr | 0x80000000;
 }
 
-VAddr PhysicalToVirtualAddress(const PAddr addr) {
+boost::optional<VAddr> PhysicalToVirtualAddress(const PAddr addr) {
     if (addr == 0) {
         return 0;
     } else if (addr >= VRAM_PADDR && addr < VRAM_PADDR_END) {
@@ -702,9 +707,7 @@ VAddr PhysicalToVirtualAddress(const PAddr addr) {
         return addr - N3DS_EXTRA_RAM_PADDR + N3DS_EXTRA_RAM_VADDR;
     }
 
-    LOG_ERROR(HW_Memory, "Unknown physical address @ 0x%08X", addr);
-    // To help with debugging, set bit on address so that it's obviously invalid.
-    return addr | 0x80000000;
+    return boost::none;
 }
 
 } // namespace
