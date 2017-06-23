@@ -232,6 +232,16 @@ void Wrap() {
     FuncReturn(retval);
 }
 
+template <ResultCode func(Kernel::Handle*, Kernel::Handle*)>
+void Wrap() {
+    Kernel::Handle param_1 = 0;
+    Kernel::Handle param_2 = 0;
+    u32 retval = func(&param_1, &param_2).raw;
+    Core::CPU().SetReg(1, param_1);
+    Core::CPU().SetReg(2, param_2);
+    FuncReturn(retval);
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Function wrappers that return type u32
 

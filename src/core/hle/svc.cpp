@@ -36,8 +36,9 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Namespace SVC
 
-using Kernel::SharedPtr;
 using Kernel::ERR_INVALID_HANDLE;
+using Kernel::Handle;
+using Kernel::SharedPtr;
 
 namespace SVC {
 
@@ -933,7 +934,6 @@ static ResultCode CreatePort(Kernel::Handle* server_port, Kernel::Handle* client
 
     using Kernel::ServerPort;
     using Kernel::ClientPort;
-    using Kernel::SharedPtr;
 
     auto ports = ServerPort::CreatePortPair(max_sessions);
     CASCADE_RESULT(*client_port, Kernel::g_handle_table.Create(
@@ -944,6 +944,19 @@ static ResultCode CreatePort(Kernel::Handle* server_port, Kernel::Handle* client
                                      std::move(std::get<SharedPtr<ServerPort>>(ports))));
 
     LOG_TRACE(Kernel_SVC, "called max_sessions=%u", max_sessions);
+    return RESULT_SUCCESS;
+}
+
+static ResultCode CreateSession(Handle* server_session, Handle* client_session) {
+    auto sessions = Kernel::ServerSession::CreateSessionPair();
+
+    auto& server = std::get<SharedPtr<Kernel::ServerSession>>(sessions);
+    CASCADE_RESULT(*server_session, Kernel::g_handle_table.Create(std::move(server)));
+
+    auto& client = std::get<SharedPtr<Kernel::ClientSession>>(sessions);
+    CASCADE_RESULT(*client_session, Kernel::g_handle_table.Create(std::move(client)));
+
+    LOG_TRACE(Kernel_SVC, "called");
     return RESULT_SUCCESS;
 }
 
@@ -1122,7 +1135,7 @@ static const FunctionDef SVC_Table[] = {
     {0x46, nullptr, "Unknown"},
     {0x47, HLE::Wrap<CreatePort>, "CreatePort"},
     {0x48, nullptr, "CreateSessionToPort"},
-    {0x49, nullptr, "CreateSession"},
+    {0x49, HLE::Wrap<CreateSession>, "CreateSession"},
     {0x4A, nullptr, "AcceptSession"},
     {0x4B, nullptr, "ReplyAndReceive1"},
     {0x4C, nullptr, "ReplyAndReceive2"},
