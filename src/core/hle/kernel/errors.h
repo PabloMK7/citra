@@ -13,6 +13,7 @@ enum {
     OutOfHandles = 19,
     SessionClosedByRemote = 26,
     PortNameTooLong = 30,
+    NoPendingSessions = 35,
     WrongPermission = 46,
     InvalidBufferDescriptor = 48,
     MaxConnectionsReached = 52,
@@ -94,5 +95,9 @@ constexpr ResultCode ERR_OUT_OF_RANGE_KERNEL(ErrorDescription::OutOfRange, Error
                                              ErrorLevel::Permanent); // 0xD8E007FD
 constexpr ResultCode RESULT_TIMEOUT(ErrorDescription::Timeout, ErrorModule::OS,
                                     ErrorSummary::StatusChanged, ErrorLevel::Info);
+/// Returned when Accept() is called on a port with no sessions to be accepted.
+constexpr ResultCode ERR_NO_PENDING_SESSIONS(ErrCodes::NoPendingSessions, ErrorModule::OS,
+                                             ErrorSummary::WouldBlock,
+                                             ErrorLevel::Permanent); // 0xD8401823
 
 } // namespace Kernel

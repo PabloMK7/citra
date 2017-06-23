@@ -14,6 +14,7 @@
 namespace Kernel {
 
 class ClientPort;
+class ServerSession;
 class SessionRequestHandler;
 
 class ServerPort final : public WaitObject {
@@ -41,6 +42,12 @@ public:
     }
 
     /**
+     * Accepts a pending incoming connection on this port. If there are no pending sessions, will
+     * return ERR_NO_PENDING_SESSIONS.
+     */
+    ResultVal<SharedPtr<ServerSession>> Accept();
+
+    /**
      * Sets the HLE handler template for the port. ServerSessions crated by connecting to this port
      * will inherit a reference to this handler.
      */
@@ -50,8 +57,8 @@ public:
 
     std::string name; ///< Name of port (optional)
 
-    std::vector<SharedPtr<WaitObject>>
-        pending_sessions; ///< ServerSessions waiting to be accepted by the port
+    /// ServerSessions waiting to be accepted by the port
+    std::vector<SharedPtr<ServerSession>> pending_sessions;
 
     /// This session's HLE request handler template (optional)
     /// ServerSessions created from this port inherit a reference to this handler.
