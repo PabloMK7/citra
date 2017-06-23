@@ -226,9 +226,8 @@ void Wrap() {
     u32 retval = func(&param_1, &param_2,
                       reinterpret_cast<const char*>(Memory::GetPointer(PARAM(2))), PARAM(3))
                      .raw;
-    // The first out parameter is moved into R2 and the second is moved into R1.
-    Core::CPU().SetReg(1, param_2);
-    Core::CPU().SetReg(2, param_1);
+    Core::CPU().SetReg(1, param_1);
+    Core::CPU().SetReg(2, param_2);
     FuncReturn(retval);
 }
 
