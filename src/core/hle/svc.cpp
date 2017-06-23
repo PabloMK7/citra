@@ -947,6 +947,17 @@ static ResultCode CreatePort(Kernel::Handle* server_port, Kernel::Handle* client
     return RESULT_SUCCESS;
 }
 
+static ResultCode CreateSessionToPort(Handle* out_client_session, Handle client_port_handle) {
+    using Kernel::ClientPort;
+    SharedPtr<ClientPort> client_port = Kernel::g_handle_table.Get<ClientPort>(client_port_handle);
+    if (client_port == nullptr)
+        return ERR_INVALID_HANDLE;
+
+    CASCADE_RESULT(auto session, client_port->Connect());
+    CASCADE_RESULT(*out_client_session, Kernel::g_handle_table.Create(std::move(session)));
+    return RESULT_SUCCESS;
+}
+
 static ResultCode CreateSession(Handle* server_session, Handle* client_session) {
     auto sessions = Kernel::ServerSession::CreateSessionPair();
 
@@ -1134,7 +1145,7 @@ static const FunctionDef SVC_Table[] = {
     {0x45, nullptr, "Unknown"},
     {0x46, nullptr, "Unknown"},
     {0x47, HLE::Wrap<CreatePort>, "CreatePort"},
-    {0x48, nullptr, "CreateSessionToPort"},
+    {0x48, HLE::Wrap<CreateSessionToPort>, "CreateSessionToPort"},
     {0x49, HLE::Wrap<CreateSession>, "CreateSession"},
     {0x4A, nullptr, "AcceptSession"},
     {0x4B, nullptr, "ReplyAndReceive1"},
