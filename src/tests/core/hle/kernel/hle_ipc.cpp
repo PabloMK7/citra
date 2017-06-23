@@ -18,7 +18,7 @@ static SharedPtr<Object> MakeObject() {
     return Event::Create(ResetType::OneShot);
 }
 
-TEST_CASE("HLERequestContext::PopoulateFromIncomingCommandBuffer", "[core][kernel]") {
+TEST_CASE("HLERequestContext::PopulateFromIncomingCommandBuffer", "[core][kernel]") {
     auto session = std::get<SharedPtr<ServerSession>>(ServerSession::CreateSessionPair());
     HLERequestContext context(std::move(session));
 
@@ -92,6 +92,18 @@ TEST_CASE("HLERequestContext::PopoulateFromIncomingCommandBuffer", "[core][kerne
         REQUIRE(context.GetIncomingHandle(output[2]) == a);
         REQUIRE(context.GetIncomingHandle(output[3]) == b);
         REQUIRE(context.GetIncomingHandle(output[5]) == c);
+    }
+
+    SECTION("translates null handles") {
+        const u32_le input[]{
+            IPC::MakeHeader(0, 0, 2), IPC::MoveHandleDesc(1), 0,
+        };
+
+        auto result = context.PopulateFromIncomingCommandBuffer(input, *process, handle_table);
+
+        REQUIRE(result == RESULT_SUCCESS);
+        auto* output = context.CommandBuffer();
+        REQUIRE(context.GetIncomingHandle(output[2]) == nullptr);
     }
 
     SECTION("translates CallingPid descriptors") {
@@ -169,6 +181,17 @@ TEST_CASE("HLERequestContext::WriteToOutgoingCommandBuffer", "[core][kernel]") {
 
         REQUIRE(handle_table.GetGeneric(output[2]) == a);
         REQUIRE(handle_table.GetGeneric(output[4]) == b);
+    }
+
+    SECTION("translates null handles") {
+        input[0] = IPC::MakeHeader(0, 0, 2);
+        input[1] = IPC::MoveHandleDesc(1);
+        input[2] = context.AddOutgoingHandle(nullptr);
+
+        auto result = context.WriteToOutgoingCommandBuffer(output, *process, handle_table);
+
+        REQUIRE(result == RESULT_SUCCESS);
+        REQUIRE(output[2] == 0);
     }
 
     SECTION("translates multi-handle descriptors") {
