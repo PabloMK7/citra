@@ -12,6 +12,11 @@ ConfigureGeneral::ConfigureGeneral(QWidget* parent)
     : QWidget(parent), ui(new Ui::ConfigureGeneral) {
 
     ui->setupUi(this);
+
+    for (auto theme : UISettings::themes) {
+        ui->theme_combobox->addItem(theme.first, theme.second);
+    }
+
     this->setConfiguration();
 
     ui->toggle_cpu_jit->setEnabled(!Core::System::GetInstance().IsPoweredOn());
@@ -26,11 +31,15 @@ void ConfigureGeneral::setConfiguration() {
 
     // The first item is "auto-select" with actual value -1, so plus one here will do the trick
     ui->region_combobox->setCurrentIndex(Settings::values.region_value + 1);
+
+    ui->theme_combobox->setCurrentIndex(ui->theme_combobox->findData(UISettings::values.theme));
 }
 
 void ConfigureGeneral::applyConfiguration() {
     UISettings::values.gamedir_deepscan = ui->toggle_deepscan->isChecked();
     UISettings::values.confirm_before_closing = ui->toggle_check_exit->isChecked();
+    UISettings::values.theme =
+        ui->theme_combobox->itemData(ui->theme_combobox->currentIndex()).toString();
     Settings::values.region_value = ui->region_combobox->currentIndex() - 1;
     Settings::values.use_cpu_jit = ui->toggle_cpu_jit->isChecked();
     Settings::Apply();
