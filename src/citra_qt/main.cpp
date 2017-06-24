@@ -71,6 +71,8 @@ GMainWindow::GMainWindow() : config(new Config()), emu_thread(nullptr) {
 
     game_list->PopulateAsync(UISettings::values.gamedir, UISettings::values.gamedir_deepscan);
 
+    UpdateUITheme();
+
     QStringList args = QApplication::arguments();
     if (args.length() >= 2) {
         BootGame(args[1]);
@@ -606,6 +608,7 @@ void GMainWindow::OnConfigure() {
     auto result = configureDialog.exec();
     if (result == QDialog::Accepted) {
         configureDialog.applyConfiguration();
+        UpdateUITheme();
         config->Save();
     }
 }
@@ -789,6 +792,24 @@ bool GMainWindow::ConfirmChangeGame() {
 void GMainWindow::filterBarSetChecked(bool state) {
     ui.action_Show_Filter_Bar->setChecked(state);
     emit(OnToggleFilterBar());
+}
+
+void GMainWindow::UpdateUITheme() {
+    if (UISettings::values.theme != UISettings::themes[0].second) {
+        QString theme_uri(":" + UISettings::values.theme + "/style.qss");
+        QFile f(theme_uri);
+        if (!f.exists()) {
+            LOG_ERROR(Frontend, "Unable to set style, stylesheet file not found");
+        } else {
+            f.open(QFile::ReadOnly | QFile::Text);
+            QTextStream ts(&f);
+            qApp->setStyleSheet(ts.readAll());
+            GMainWindow::setStyleSheet(ts.readAll());
+        }
+    } else {
+        qApp->setStyleSheet("");
+        GMainWindow::setStyleSheet("");
+    }
 }
 
 #ifdef main
