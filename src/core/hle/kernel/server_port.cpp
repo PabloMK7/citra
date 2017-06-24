@@ -5,14 +5,26 @@
 #include <tuple>
 #include "common/assert.h"
 #include "core/hle/kernel/client_port.h"
+#include "core/hle/kernel/errors.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/server_port.h"
+#include "core/hle/kernel/server_session.h"
 #include "core/hle/kernel/thread.h"
 
 namespace Kernel {
 
 ServerPort::ServerPort() {}
 ServerPort::~ServerPort() {}
+
+ResultVal<SharedPtr<ServerSession>> ServerPort::Accept() {
+    if (pending_sessions.empty()) {
+        return ERR_NO_PENDING_SESSIONS;
+    }
+
+    auto session = std::move(pending_sessions.back());
+    pending_sessions.pop_back();
+    return MakeResult(std::move(session));
+}
 
 bool ServerPort::ShouldWait(Thread* thread) const {
     // If there are no pending sessions, we wait until a new one is added.
