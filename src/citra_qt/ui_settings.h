@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <array>
 #include <vector>
 #include <QByteArray>
 #include <QString>
@@ -13,6 +14,10 @@ namespace UISettings {
 
 using ContextualShortcut = std::pair<QString, int>;
 using Shortcut = std::pair<QString, ContextualShortcut>;
+
+static const std::array<std::pair<QString, QString>, 2> themes = {
+    {std::make_pair(QString("Default"), QString("default")),
+     std::make_pair(QString("Dark"), QString("qdarkstyle"))}};
 
 struct Values {
     QByteArray geometry;
@@ -38,6 +43,8 @@ struct Values {
     QString gamedir;
     bool gamedir_deepscan;
     QStringList recent_files;
+
+    QString theme;
 
     // Shortcut name <Shortcut, context>
     std::vector<Shortcut> shortcuts;

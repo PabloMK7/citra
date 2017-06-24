@@ -134,6 +134,7 @@ void Config::ReadValues() {
     qt_config->endGroup();
 
     qt_config->beginGroup("UI");
+    UISettings::values.theme = qt_config->value("theme", UISettings::themes[0].second).toString();
 
     qt_config->beginGroup("UILayout");
     UISettings::values.geometry = qt_config->value("geometry").toByteArray();
@@ -269,6 +270,7 @@ void Config::SaveValues() {
     qt_config->endGroup();
 
     qt_config->beginGroup("UI");
+    qt_config->setValue("theme", UISettings::values.theme);
 
     qt_config->beginGroup("UILayout");
     qt_config->setValue("geometry", UISettings::values.geometry);
