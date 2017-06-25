@@ -44,6 +44,11 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Intel")
     add_definitions(-wd68 -wd186 -wd279 -wd327 -wd161 -wd3180)
 endif()
 
+if(MSVC)
+  # Disable C4390: empty controlled statement found: is this the intent?
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4390")
+endif()
+
 # Endianness
 TEST_BIG_ENDIAN(IS_BIG_ENDIAN)
 if(IS_BIG_ENDIAN)
