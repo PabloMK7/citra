@@ -79,6 +79,8 @@ else()
     add_definitions(/D_CRT_SECURE_NO_WARNINGS /D_CRT_NONSTDC_NO_DEPRECATE /D_SCL_SECURE_NO_WARNINGS)
     # Avoid windows.h junk
     add_definitions(/DNOMINMAX)
+    # Avoid windows.h from including some usually unused libs like winsocks.h, since this might cause some redefinition errors.
+    add_definitions(/DWIN32_LEAN_AND_MEAN)
 
     # set up output paths for executable binaries (.exe-files, and .dll-files on DLL-capable platforms)
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
