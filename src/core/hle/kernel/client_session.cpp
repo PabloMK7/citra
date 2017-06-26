@@ -27,6 +27,11 @@ ClientSession::~ClientSession() {
 
         // TODO(Subv): Force a wake up of all the ServerSession's waiting threads and set
         // their WaitSynchronization result to 0xC920181A.
+
+        // Clean up the list of client threads with pending requests, they are unneeded now that the
+        // client endpoint is closed.
+        server->pending_requesting_threads.clear();
+        server->currently_handling = nullptr;
     }
 
     parent->client = nullptr;
