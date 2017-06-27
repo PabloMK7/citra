@@ -5,6 +5,7 @@
 #include <cstring>
 #include <numeric>
 #include <type_traits>
+#include "common/alignment.h"
 #include "common/color.h"
 #include "common/common_types.h"
 #include "common/logging/log.h"
@@ -313,7 +314,7 @@ static void TextureCopy(const Regs::DisplayTransferConfig& config) {
     const PAddr src_addr = config.GetPhysicalInputAddress();
     const PAddr dst_addr = config.GetPhysicalOutputAddress();
 
-    // TODO: do hwtest with these cases
+    // TODO: do hwtest with invalid addresses
     if (!Memory::IsValidPhysicalAddress(src_addr)) {
         LOG_CRITICAL(HW_GPU, "invalid input address 0x%08X", src_addr);
         return;
@@ -324,31 +325,36 @@ static void TextureCopy(const Regs::DisplayTransferConfig& config) {
         return;
     }
 
-    if (config.texture_copy.input_width == 0) {
-        LOG_CRITICAL(HW_GPU, "zero input width");
-        return;
-    }
-
-    if (config.texture_copy.output_width == 0) {
-        LOG_CRITICAL(HW_GPU, "zero output width");
-        return;
-    }
-
-    if (config.texture_copy.size == 0) {
-        LOG_CRITICAL(HW_GPU, "zero size");
-        return;
-    }
-
     if (VideoCore::g_renderer->Rasterizer()->AccelerateTextureCopy(config))
         return;
 
     u8* src_pointer = Memory::GetPhysicalPointer(src_addr);
     u8* dst_pointer = Memory::GetPhysicalPointer(dst_addr);
 
-    u32 input_width = config.texture_copy.input_width * 16;
+    u32 remaining_size = Common::AlignDown(config.texture_copy.size, 16);
+
+    if (remaining_size == 0) {
+        // Real hardware freeze on this
+        LOG_CRITICAL(HW_GPU, "zero size");
+        return;
+    }
+
     u32 input_gap = config.texture_copy.input_gap * 16;
-    u32 output_width = config.texture_copy.output_width * 16;
+    u32 input_width = input_gap == 0 ? remaining_size : config.texture_copy.input_width * 16;
     u32 output_gap = config.texture_copy.output_gap * 16;
+    u32 output_width = output_gap == 0 ? remaining_size : config.texture_copy.output_width * 16;
+
+    if (input_width == 0) {
+        // Real hardware freeze on this
+        LOG_CRITICAL(HW_GPU, "zero input width");
+        return;
+    }
+
+    if (output_width == 0) {
+        // Real hardware freeze on this
+        LOG_CRITICAL(HW_GPU, "zero output width");
+        return;
+    }
 
     size_t contiguous_input_size =
         config.texture_copy.size / input_width * (input_width + input_gap);
@@ -360,7 +366,6 @@ static void TextureCopy(const Regs::DisplayTransferConfig& config) {
     Memory::RasterizerFlushAndInvalidateRegion(config.GetPhysicalOutputAddress(),
                                                static_cast<u32>(contiguous_output_size));
 
-    u32 remaining_size = config.texture_copy.size;
     u32 remaining_input = input_width;
     u32 remaining_output = output_width;
     while (remaining_size > 0) {
