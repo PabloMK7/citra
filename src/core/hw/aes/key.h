@@ -12,6 +12,8 @@ namespace HW {
 namespace AES {
 
 enum KeySlotID : size_t {
+    // AES Keyslot used to generate the UDS data frame CCMP key.
+    UDSDataKey = 0x2D,
     APTWrap = 0x31,
 
     MaxKeySlotID = 0x40,

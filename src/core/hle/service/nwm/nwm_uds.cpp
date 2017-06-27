@@ -15,6 +15,7 @@
 #include "core/hle/result.h"
 #include "core/hle/service/nwm/nwm_uds.h"
 #include "core/hle/service/nwm/uds_beacon.h"
+#include "core/hle/service/nwm/uds_data.h"
 #include "core/memory.h"
 
 namespace Service {
@@ -373,6 +374,80 @@ static void DestroyNetwork(Interface* self) {
 }
 
 /**
+ * NWM_UDS::SendTo service function.
+ * Sends a data frame to the UDS network we're connected to.
+ *  Inputs:
+ *      0 : Command header.
+ *      1 : Unknown.
+ *      2 : u16 Destination network node id.
+ *      3 : u8 Data channel.
+ *      4 : Buffer size >> 2
+ *      5 : Data size
+ *      6 : Flags
+ *      7 : Input buffer descriptor
+ *      8 : Input buffer address
+ *  Outputs:
+ *      0 : Return header
+ *      1 : Result of function, 0 on success, otherwise error code
+ */
+static void SendTo(Interface* self) {
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x17, 6, 2);
+
+    rp.Skip(1, false);
+    u16 dest_node_id = rp.Pop<u16>();
+    u8 data_channel = rp.Pop<u8>();
+    rp.Skip(1, false);
+    u32 data_size = rp.Pop<u32>();
+    u32 flags = rp.Pop<u32>();
+
+    size_t desc_size;
+    const VAddr input_address = rp.PopStaticBuffer(&desc_size, false);
+    ASSERT(desc_size == data_size);
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+
+    if (connection_status.status != static_cast<u32>(NetworkStatus::ConnectedAsClient) &&
+        connection_status.status != static_cast<u32>(NetworkStatus::ConnectedAsHost)) {
+        rb.Push(ResultCode(ErrorDescription::NotAuthorized, ErrorModule::UDS,
+                           ErrorSummary::InvalidState, ErrorLevel::Status));
+        return;
+    }
+
+    if (dest_node_id == connection_status.network_node_id) {
+        rb.Push(ResultCode(ErrorDescription::NotFound, ErrorModule::UDS,
+                           ErrorSummary::WrongArgument, ErrorLevel::Status));
+        return;
+    }
+
+    // TODO(Subv): Do something with the flags.
+
+    constexpr size_t MaxSize = 0x5C6;
+    if (data_size > MaxSize) {
+        rb.Push(ResultCode(ErrorDescription::TooLarge, ErrorModule::UDS,
+                           ErrorSummary::WrongArgument, ErrorLevel::Usage));
+        return;
+    }
+
+    std::vector<u8> data(data_size);
+    Memory::ReadBlock(input_address, data.data(), data.size());
+
+    // TODO(Subv): Increment the sequence number after each sent packet.
+    u16 sequence_number = 0;
+    std::vector<u8> data_payload = GenerateDataPayload(
+        data, data_channel, dest_node_id, connection_status.network_node_id, sequence_number);
+
+    // TODO(Subv): Retrieve the MAC address of the dest_node_id and our own to encrypt
+    // and encapsulate the payload.
+
+    // TODO(Subv): Send the frame.
+
+    rb.Push(RESULT_SUCCESS);
+
+    LOG_WARNING(Service_NWM, "(STUB) called dest_node_id=%u size=%u flags=%u channel=%u",
+                static_cast<u32>(dest_node_id), data_size, flags, static_cast<u32>(data_channel));
+}
+
+/**
  * NWM_UDS::GetChannel service function.
  * Returns the WiFi channel in which the network we're connected to is transmitting.
  *  Inputs:
@@ -600,7 +675,7 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x00130040, nullptr, "Unbind"},
     {0x001400C0, nullptr, "PullPacket"},
     {0x00150080, nullptr, "SetMaxSendDelay"},
-    {0x00170182, nullptr, "SendTo"},
+    {0x00170182, SendTo, "SendTo"},
     {0x001A0000, GetChannel, "GetChannel"},
     {0x001B0302, InitializeWithVersion, "InitializeWithVersion"},
     {0x001D0044, BeginHostingNetwork, "BeginHostingNetwork"},
