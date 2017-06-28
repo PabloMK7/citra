@@ -129,8 +129,8 @@ static float LookupLightingLut(const Pica::State::Lighting& lighting, size_t lut
 }
 
 std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(
-    const Math::Quaternion<float>& normquat, const Math::Vec3<float>& view) {
-    const auto& lighting = g_state.regs.lighting;
+    const Pica::LightingRegs& lighting, const Math::Quaternion<float>& normquat,
+    const Math::Vec3<float>& view) {
 
     if (lighting.disable)
         return {Math::MakeVec<u8>(0, 0, 0, 0), Math::MakeVec<u8>(0, 0, 0, 0)};
@@ -732,7 +732,7 @@ static void ProcessTriangleInternal(const Vertex& v0, const Vertex& v1, const Ve
             Math::Vec4<u8> secondary_fragment_color;
 
             std::tie(primary_fragment_color, secondary_fragment_color) =
-                ComputeFragmentsColors(normquat, fragment_position);
+                ComputeFragmentsColors(g_state.regs.lighting, normquat, fragment_position);
 
             for (unsigned tev_stage_index = 0; tev_stage_index < tev_stages.size();
                  ++tev_stage_index) {
