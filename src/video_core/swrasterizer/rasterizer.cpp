@@ -115,12 +115,15 @@ static std::tuple<float24, float24, PAddr> ConvertCubeCoord(float24 u, float24 v
     return std::make_tuple(x / z * half + half, y / z * half + half, addr);
 }
 
-float LookupLightingLut(size_t lut_index, u8 index, float delta) {
-    ASSERT_MSG(lut_index < g_state.lighting.luts.size(), "Out of range lut");
-    ASSERT_MSG(index < g_state.lighting.luts[0].size(), "Out of range index");
+static float LookupLightingLut(const Pica::State::Lighting& lighting, size_t lut_index, u8 index,
+                        float delta) {
+    ASSERT_MSG(lut_index < lighting.luts.size(), "Out of range lut");
+    ASSERT_MSG(index < lighting.luts[0].size(), "Out of range index");
 
-    float lut_value = g_state.lighting.luts[lut_index][index].ToFloat();
-    float lut_diff = g_state.lighting.luts[lut_index][index].DiffToFloat();
+    const auto& lut = lighting.luts[lut_index][index];
+
+    float lut_value = lut.ToFloat();
+    float lut_diff = lut.DiffToFloat();
 
     return lut_value + lut_diff * delta;
 }
@@ -184,7 +187,7 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(
             u8 lutindex =
                 static_cast<u8>(MathUtil::Clamp(std::floor(sample_loc * 256.f), 0.0f, 255.0f));
             float delta = sample_loc * 256 - lutindex;
-            dist_atten = LookupLightingLut(lut, lutindex, delta);
+            dist_atten = LookupLightingLut(g_state.lighting, lut, lutindex, delta);
         }
 
         float clamp_highlights = 1.0f;
@@ -260,7 +263,8 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(
 
             d0_lut_value =
                 scale *
-                LookupLightingLut(static_cast<size_t>(LightingRegs::LightingSampler::Distribution0),
+                LookupLightingLut(g_state.lighting,
+                                  static_cast<size_t>(LightingRegs::LightingSampler::Distribution0),
                                   index, delta);
         }
 
@@ -280,7 +284,8 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(
 
             refl_value.x =
                 scale *
-                LookupLightingLut(static_cast<size_t>(LightingRegs::LightingSampler::ReflectRed),
+                LookupLightingLut(g_state.lighting,
+                                  static_cast<size_t>(LightingRegs::LightingSampler::ReflectRed),
                                   index, delta);
         } else {
             refl_value.x = 1.0f;
@@ -300,7 +305,8 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(
 
             refl_value.y =
                 scale *
-                LookupLightingLut(static_cast<size_t>(LightingRegs::LightingSampler::ReflectGreen),
+                LookupLightingLut(g_state.lighting,
+                                  static_cast<size_t>(LightingRegs::LightingSampler::ReflectGreen),
                                   index, delta);
         } else {
             refl_value.y = refl_value.x;
@@ -320,7 +326,8 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(
 
             refl_value.z =
                 scale *
-                LookupLightingLut(static_cast<size_t>(LightingRegs::LightingSampler::ReflectBlue),
+                LookupLightingLut(g_state.lighting,
+                                  static_cast<size_t>(LightingRegs::LightingSampler::ReflectBlue),
                                   index, delta);
         } else {
             refl_value.z = refl_value.x;
@@ -341,7 +348,8 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(
 
             d1_lut_value =
                 scale *
-                LookupLightingLut(static_cast<size_t>(LightingRegs::LightingSampler::Distribution1),
+                LookupLightingLut(g_state.lighting,
+                                  static_cast<size_t>(LightingRegs::LightingSampler::Distribution1),
                                   index, delta);
         }
 
@@ -362,7 +370,8 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(
 
             float lut_value =
                 scale *
-                LookupLightingLut(static_cast<size_t>(LightingRegs::LightingSampler::Fresnel),
+                LookupLightingLut(g_state.lighting,
+                                  static_cast<size_t>(LightingRegs::LightingSampler::Fresnel),
                                   index, delta);
 
             // Enabled for diffuse lighting alpha component

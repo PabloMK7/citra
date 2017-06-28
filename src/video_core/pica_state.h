@@ -79,7 +79,7 @@ struct State {
         std::array<ColorDifferenceEntry, 256> color_diff_table;
     } proctex;
 
-    struct {
+    struct Lighting {
         union LutEntry {
             // Used for raw access
             u32 raw;
