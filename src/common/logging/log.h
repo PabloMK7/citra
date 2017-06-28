@@ -91,6 +91,7 @@ enum class Class : ClassType {
     Loader,            ///< ROM loader
     Input,             ///< Input emulation
     Network,           ///< Network emulation
+    WebService,        ///< Interface to Citra Web Services
     Count              ///< Total number of logging classes
 };
 
