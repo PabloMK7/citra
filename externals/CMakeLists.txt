@@ -4,6 +4,12 @@
 add_library(catch-single-include INTERFACE)
 target_include_directories(catch-single-include INTERFACE catch/single_include)
 
+# CPR
+option(BUILD_TESTING OFF)
+option(BUILD_CPR_TESTS OFF)
+add_subdirectory(cpr)
+target_include_directories(cpr INTERFACE ./cpr/include)
+
 # Crypto++
 add_subdirectory(cryptopp)
 

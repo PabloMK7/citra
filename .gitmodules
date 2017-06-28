@@ -28,3 +28,6 @@
 [submodule "externals/enet"]
     path = externals/enet
     url = https://github.com/lsalzman/enet
+[submodule "cpr"]
+    path = externals/cpr
+    url = https://github.com/whoshuu/cpr.git
