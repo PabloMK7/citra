@@ -132,9 +132,6 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(
     const Pica::LightingRegs& lighting, const Math::Quaternion<float>& normquat,
     const Math::Vec3<float>& view) {
 
-    if (lighting.disable)
-        return {Math::MakeVec<u8>(0, 0, 0, 0), Math::MakeVec<u8>(0, 0, 0, 0)};
-
     // TODO(Subv): Bump mapping
     Math::Vec3<float> surface_normal = {0.0f, 0.0f, 1.0f};
 
@@ -728,11 +725,13 @@ static void ProcessTriangleInternal(const Vertex& v0, const Vertex& v1, const Ve
                 regs.texturing.tev_combiner_buffer_color.a,
             };
 
-            Math::Vec4<u8> primary_fragment_color;
-            Math::Vec4<u8> secondary_fragment_color;
+            Math::Vec4<u8> primary_fragment_color = {0, 0, 0, 0};
+            Math::Vec4<u8> secondary_fragment_color = {0, 0, 0, 0};
 
-            std::tie(primary_fragment_color, secondary_fragment_color) =
-                ComputeFragmentsColors(g_state.regs.lighting, normquat, fragment_position);
+            if (!g_state.regs.lighting.disable) {
+                std::tie(primary_fragment_color, secondary_fragment_color) =
+                    ComputeFragmentsColors(g_state.regs.lighting, normquat, fragment_position);
+            }
 
             for (unsigned tev_stage_index = 0; tev_stage_index < tev_stages.size();
                  ++tev_stage_index) {
