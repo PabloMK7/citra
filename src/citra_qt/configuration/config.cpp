@@ -133,6 +133,13 @@ void Config::ReadValues() {
     Settings::values.gdbstub_port = qt_config->value("gdbstub_port", 24689).toInt();
     qt_config->endGroup();
 
+    qt_config->beginGroup("WebService");
+    Settings::values.telemetry_endpoint_url =
+        qt_config->value("telemetry_endpoint_url", "https://services.citra-emu.org/api/telemetry")
+            .toString()
+            .toStdString();
+    qt_config->endGroup();
+
     qt_config->beginGroup("UI");
 
     qt_config->beginGroup("UILayout");
@@ -266,6 +273,11 @@ void Config::SaveValues() {
     qt_config->beginGroup("Debugging");
     qt_config->setValue("use_gdbstub", Settings::values.use_gdbstub);
     qt_config->setValue("gdbstub_port", Settings::values.gdbstub_port);
+    qt_config->endGroup();
+
+    qt_config->beginGroup("WebService");
+    qt_config->setValue("telemetry_endpoint_url",
+                        QString::fromStdString(Settings::values.telemetry_endpoint_url));
     qt_config->endGroup();
 
     qt_config->beginGroup("UI");
