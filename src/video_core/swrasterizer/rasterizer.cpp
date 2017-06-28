@@ -163,14 +163,6 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(
 
         light_vector.Normalize();
 
-        auto LV_N = Math::Dot(light_vector, normal);
-        auto dot_product = LV_N;
-
-        if (light_config.config.two_sided_diffuse)
-            dot_product = std::abs(dot_product);
-        else
-            dot_product = std::max(dot_product, 0.0f);
-
         float dist_atten = 1.0f;
         if (!lighting.IsDistAttenDisabled(num)) {
             auto distance = (-view - position).Length();
@@ -185,15 +177,6 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(
                 static_cast<u8>(MathUtil::Clamp(std::floor(sample_loc * 256.f), 0.0f, 255.0f));
             float delta = sample_loc * 256 - lutindex;
             dist_atten = LookupLightingLut(g_state.lighting, lut, lutindex, delta);
-        }
-
-        float clamp_highlights = 1.0f;
-
-        if (lighting.config0.clamp_highlights) {
-            if (LV_N <= 0.f)
-                clamp_highlights = 0.f;
-            else
-                clamp_highlights = 1.f;
         }
 
         auto GetLutIndex = [&](unsigned num, LightingRegs::LightingLutInput input,
@@ -385,6 +368,23 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(
                 specular_sum.a() *= lut_value;
             }
         }
+
+        auto dot_product = Math::Dot(light_vector, normal);
+
+        // Calculate clamp highlights before applying the two-sided diffuse configuration to the dot
+        // product.
+        float clamp_highlights = 1.0f;
+        if (lighting.config0.clamp_highlights) {
+            if (dot_product <= 0.f)
+                clamp_highlights = 0.f;
+            else
+                clamp_highlights = 1.f;
+        }
+
+        if (light_config.config.two_sided_diffuse)
+            dot_product = std::abs(dot_product);
+        else
+            dot_product = std::max(dot_product, 0.0f);
 
         auto diffuse =
             light_config.diffuse.ToVec3f() * dot_product + light_config.ambient.ToVec3f();
