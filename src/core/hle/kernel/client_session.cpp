@@ -9,6 +9,7 @@
 #include "core/hle/kernel/hle_ipc.h"
 #include "core/hle/kernel/server_session.h"
 #include "core/hle/kernel/session.h"
+#include "core/hle/kernel/thread.h"
 
 namespace Kernel {
 
@@ -37,14 +38,14 @@ ClientSession::~ClientSession() {
     parent->client = nullptr;
 }
 
-ResultCode ClientSession::SendSyncRequest() {
+ResultCode ClientSession::SendSyncRequest(SharedPtr<Thread> thread) {
     // Keep ServerSession alive until we're done working with it.
     SharedPtr<ServerSession> server = parent->server;
     if (server == nullptr)
         return ERR_SESSION_CLOSED_BY_REMOTE;
 
     // Signal the server session that new data is available
-    return server->HandleSyncRequest(GetCurrentThread());
+    return server->HandleSyncRequest(std::move(thread));
 }
 
 } // namespace
