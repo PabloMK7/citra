@@ -91,7 +91,7 @@ public:
     } lighting_lut;
 
     struct {
-        GLuint texture_1d; // GL_TEXTURE_BINDING_1D
+        GLuint texture_buffer; // GL_TEXTURE_BINDING_BUFFER
     } fog_lut;
 
     struct {

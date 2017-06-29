@@ -283,8 +283,9 @@ private:
     OGLTexture lighting_lut;
     std::array<std::array<GLvec2, 256>, Pica::LightingRegs::NumLightingSampler> lighting_lut_data{};
 
+    OGLBuffer fog_lut_buffer;
     OGLTexture fog_lut;
-    std::array<GLuint, 128> fog_lut_data{};
+    std::array<GLvec2, 128> fog_lut_data{};
 
     OGLTexture proctex_noise_lut;
     std::array<GLvec2, 128> proctex_noise_lut_data{};

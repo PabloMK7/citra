@@ -111,6 +111,14 @@ struct State {
 
             BitField<0, 13, s32> difference; // 1.1.11 fixed point
             BitField<13, 11, u32> value;     // 0.0.11 fixed point
+
+            float ToFloat() const {
+                return static_cast<float>(value) / 2047.0f;
+            }
+
+            float DiffToFloat() const {
+                return static_cast<float>(difference) / 2047.0f;
+            }
         };
 
         std::array<LutEntry, 128> lut;
