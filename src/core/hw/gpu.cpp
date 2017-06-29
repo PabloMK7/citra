@@ -334,25 +334,25 @@ static void TextureCopy(const Regs::DisplayTransferConfig& config) {
     u32 remaining_size = Common::AlignDown(config.texture_copy.size, 16);
 
     if (remaining_size == 0) {
-        // Real hardware freeze on this
-        LOG_CRITICAL(HW_GPU, "zero size");
+        LOG_CRITICAL(HW_GPU, "zero size. Real hardware freezes on this.");
         return;
     }
 
     u32 input_gap = config.texture_copy.input_gap * 16;
-    u32 input_width = input_gap == 0 ? remaining_size : config.texture_copy.input_width * 16;
     u32 output_gap = config.texture_copy.output_gap * 16;
+
+    // Zero gap means contiguous input/output even if width = 0. To avoid infinite loop below, width
+    // is assigned with the total size if gap = 0.
+    u32 input_width = input_gap == 0 ? remaining_size : config.texture_copy.input_width * 16;
     u32 output_width = output_gap == 0 ? remaining_size : config.texture_copy.output_width * 16;
 
     if (input_width == 0) {
-        // Real hardware freeze on this
-        LOG_CRITICAL(HW_GPU, "zero input width");
+        LOG_CRITICAL(HW_GPU, "zero input width. Real hardware freezes on this.");
         return;
     }
 
     if (output_width == 0) {
-        // Real hardware freeze on this
-        LOG_CRITICAL(HW_GPU, "zero output width");
+        LOG_CRITICAL(HW_GPU, "zero output width. Real hardware freezes on this.");
         return;
     }
 

@@ -225,7 +225,7 @@ struct Regs {
         INSERT_PADDING_WORDS(0x1);
 
         struct {
-            u32 size;
+            u32 size; // The lower 4 bits are ignored
 
             union {
                 u32 input_size;
