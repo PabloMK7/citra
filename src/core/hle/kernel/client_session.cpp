@@ -9,6 +9,7 @@
 #include "core/hle/kernel/hle_ipc.h"
 #include "core/hle/kernel/server_session.h"
 #include "core/hle/kernel/session.h"
+#include "core/hle/kernel/thread.h"
 
 namespace Kernel {
 
@@ -27,19 +28,24 @@ ClientSession::~ClientSession() {
 
         // TODO(Subv): Force a wake up of all the ServerSession's waiting threads and set
         // their WaitSynchronization result to 0xC920181A.
+
+        // Clean up the list of client threads with pending requests, they are unneeded now that the
+        // client endpoint is closed.
+        server->pending_requesting_threads.clear();
+        server->currently_handling = nullptr;
     }
 
     parent->client = nullptr;
 }
 
-ResultCode ClientSession::SendSyncRequest() {
+ResultCode ClientSession::SendSyncRequest(SharedPtr<Thread> thread) {
     // Keep ServerSession alive until we're done working with it.
     SharedPtr<ServerSession> server = parent->server;
     if (server == nullptr)
         return ERR_SESSION_CLOSED_BY_REMOTE;
 
     // Signal the server session that new data is available
-    return server->HandleSyncRequest();
+    return server->HandleSyncRequest(std::move(thread));
 }
 
 } // namespace

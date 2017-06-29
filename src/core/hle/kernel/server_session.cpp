@@ -32,22 +32,29 @@ ResultVal<SharedPtr<ServerSession>> ServerSession::Create(std::string name) {
     SharedPtr<ServerSession> server_session(new ServerSession);
 
     server_session->name = std::move(name);
-    server_session->signaled = false;
     server_session->parent = nullptr;
 
     return MakeResult(std::move(server_session));
 }
 
 bool ServerSession::ShouldWait(Thread* thread) const {
-    return !signaled;
+    // Closed sessions should never wait, an error will be returned from svcReplyAndReceive.
+    if (parent->client == nullptr)
+        return false;
+    // Wait if we have no pending requests, or if we're currently handling a request.
+    return pending_requesting_threads.empty() || currently_handling != nullptr;
 }
 
 void ServerSession::Acquire(Thread* thread) {
     ASSERT_MSG(!ShouldWait(thread), "object unavailable!");
-    signaled = false;
+    // We are now handling a request, pop it from the stack.
+    // TODO(Subv): What happens if the client endpoint is closed before any requests are made?
+    ASSERT(!pending_requesting_threads.empty());
+    currently_handling = pending_requesting_threads.back();
+    pending_requesting_threads.pop_back();
 }
 
-ResultCode ServerSession::HandleSyncRequest() {
+ResultCode ServerSession::HandleSyncRequest(SharedPtr<Thread> thread) {
     // The ServerSession received a sync request, this means that there's new data available
     // from its ClientSession, so wake up any threads that may be waiting on a svcReplyAndReceive or
     // similar.
@@ -60,11 +67,14 @@ ResultCode ServerSession::HandleSyncRequest() {
             return result;
         hle_handler->HandleSyncRequest(SharedPtr<ServerSession>(this));
         // TODO(Subv): Translate the response command buffer.
+    } else {
+        // Add the thread to the list of threads that have issued a sync request with this
+        // server.
+        pending_requesting_threads.push_back(std::move(thread));
     }
 
     // If this ServerSession does not have an HLE implementation, just wake up the threads waiting
     // on it.
-    signaled = true;
     WakeupAllWaitingThreads();
     return RESULT_SUCCESS;
 }
@@ -90,4 +100,4 @@ ResultCode TranslateHLERequest(ServerSession* server_session) {
     // TODO(Subv): Implement this function once multiple concurrent processes are supported.
     return RESULT_SUCCESS;
 }
-}
+} // namespace Kernel

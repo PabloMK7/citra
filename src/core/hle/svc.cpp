@@ -25,6 +25,7 @@
 #include "core/hle/kernel/semaphore.h"
 #include "core/hle/kernel/server_port.h"
 #include "core/hle/kernel/server_session.h"
+#include "core/hle/kernel/session.h"
 #include "core/hle/kernel/shared_memory.h"
 #include "core/hle/kernel/thread.h"
 #include "core/hle/kernel/timer.h"
@@ -237,7 +238,7 @@ static ResultCode SendSyncRequest(Kernel::Handle handle) {
 
     // TODO(Subv): svcSendSyncRequest should put the caller thread to sleep while the server
     // responds and cause a reschedule.
-    return session->SendSyncRequest();
+    return session->SendSyncRequest(Kernel::GetCurrentThread());
 }
 
 /// Close a handle
@@ -396,6 +397,112 @@ static ResultCode WaitSynchronizationN(s32* out, Kernel::Handle* handles, s32 ha
         *out = -1;
         return Kernel::RESULT_TIMEOUT;
     }
+}
+
+/// In a single operation, sends a IPC reply and waits for a new request.
+static ResultCode ReplyAndReceive(s32* index, Kernel::Handle* handles, s32 handle_count,
+                                  Kernel::Handle reply_target) {
+    // 'handles' has to be a valid pointer even if 'handle_count' is 0.
+    if (handles == nullptr)
+        return Kernel::ERR_INVALID_POINTER;
+
+    // Check if 'handle_count' is invalid
+    if (handle_count < 0)
+        return Kernel::ERR_OUT_OF_RANGE;
+
+    using ObjectPtr = SharedPtr<Kernel::WaitObject>;
+    std::vector<ObjectPtr> objects(handle_count);
+
+    for (int i = 0; i < handle_count; ++i) {
+        auto object = Kernel::g_handle_table.Get<Kernel::WaitObject>(handles[i]);
+        if (object == nullptr)
+            return ERR_INVALID_HANDLE;
+        objects[i] = object;
+    }
+
+    // We are also sending a command reply.
+    // Do not send a reply if the command id in the command buffer is 0xFFFF.
+    u32* cmd_buff = Kernel::GetCommandBuffer();
+    IPC::Header header{cmd_buff[0]};
+    if (reply_target != 0 && header.command_id != 0xFFFF) {
+        auto session = Kernel::g_handle_table.Get<Kernel::ServerSession>(reply_target);
+        if (session == nullptr)
+            return ERR_INVALID_HANDLE;
+
+        auto request_thread = std::move(session->currently_handling);
+
+        // Mark the request as "handled".
+        session->currently_handling = nullptr;
+
+        // Error out if there's no request thread or the session was closed.
+        // TODO(Subv): Is the same error code (ClosedByRemote) returned for both of these cases?
+        if (request_thread == nullptr || session->parent->client == nullptr) {
+            *index = -1;
+            return Kernel::ERR_SESSION_CLOSED_BY_REMOTE;
+        }
+
+        // TODO(Subv): Perform IPC translation from the current thread to request_thread.
+
+        // Note: The scheduler is not invoked here.
+        request_thread->ResumeFromWait();
+    }
+
+    if (handle_count == 0) {
+        *index = 0;
+        // The kernel uses this value as a placeholder for the real error, and returns it when we
+        // pass no handles and do not perform any reply.
+        if (reply_target == 0 || header.command_id == 0xFFFF)
+            return ResultCode(0xE7E3FFFF);
+
+        return RESULT_SUCCESS;
+    }
+
+    auto thread = Kernel::GetCurrentThread();
+
+    // Find the first object that is acquirable in the provided list of objects
+    auto itr = std::find_if(objects.begin(), objects.end(), [thread](const ObjectPtr& object) {
+        return !object->ShouldWait(thread);
+    });
+
+    if (itr != objects.end()) {
+        // We found a ready object, acquire it and set the result value
+        Kernel::WaitObject* object = itr->get();
+        object->Acquire(thread);
+        *index = std::distance(objects.begin(), itr);
+
+        if (object->GetHandleType() == Kernel::HandleType::ServerSession) {
+            auto server_session = static_cast<Kernel::ServerSession*>(object);
+            if (server_session->parent->client == nullptr)
+                return Kernel::ERR_SESSION_CLOSED_BY_REMOTE;
+
+            // TODO(Subv): Perform IPC translation from the ServerSession to the current thread.
+        }
+        return RESULT_SUCCESS;
+    }
+
+    // No objects were ready to be acquired, prepare to suspend the thread.
+
+    // TODO(Subv): Perform IPC translation upon wakeup.
+
+    // Put the thread to sleep
+    thread->status = THREADSTATUS_WAIT_SYNCH_ANY;
+
+    // Add the thread to each of the objects' waiting threads.
+    for (size_t i = 0; i < objects.size(); ++i) {
+        Kernel::WaitObject* object = objects[i].get();
+        object->AddWaitingThread(thread);
+    }
+
+    thread->wait_objects = std::move(objects);
+
+    Core::System::GetInstance().PrepareReschedule();
+
+    // Note: The output of this SVC will be set to RESULT_SUCCESS if the thread resumes due to a
+    // signal in one of its wait objects, or to 0xC8A01836 if there was a translation error.
+    // By default the index is set to -1.
+    thread->wait_set_output = true;
+    *index = -1;
+    return RESULT_SUCCESS;
 }
 
 /// Create an address arbiter (to allocate access to shared resources)
@@ -1163,7 +1270,7 @@ static const FunctionDef SVC_Table[] = {
     {0x4C, nullptr, "ReplyAndReceive2"},
     {0x4D, nullptr, "ReplyAndReceive3"},
     {0x4E, nullptr, "ReplyAndReceive4"},
-    {0x4F, nullptr, "ReplyAndReceive"},
+    {0x4F, HLE::Wrap<ReplyAndReceive>, "ReplyAndReceive"},
     {0x50, nullptr, "BindInterrupt"},
     {0x51, nullptr, "UnbindInterrupt"},
     {0x52, nullptr, "InvalidateProcessDataCache"},

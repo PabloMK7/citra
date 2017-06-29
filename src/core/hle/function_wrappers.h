@@ -16,9 +16,6 @@ namespace HLE {
 
 #define PARAM(n) Core::CPU().GetReg(n)
 
-/// An invalid result code that is meant to be overwritten when a thread resumes from waiting
-static const ResultCode RESULT_INVALID(0xDEADC0DE);
-
 /**
  * HLE a function return from the current ARM11 userland process
  * @param res Result to return
@@ -68,10 +65,18 @@ void Wrap() {
                       (PARAM(3) != 0), (((s64)PARAM(4) << 32) | PARAM(0)))
                      .raw;
 
-    if (retval != RESULT_INVALID.raw) {
-        Core::CPU().SetReg(1, (u32)param_1);
-        FuncReturn(retval);
-    }
+    Core::CPU().SetReg(1, (u32)param_1);
+    FuncReturn(retval);
+}
+
+template <ResultCode func(s32*, u32*, s32, u32)>
+void Wrap() {
+    s32 param_1 = 0;
+    u32 retval =
+        func(&param_1, (Kernel::Handle*)Memory::GetPointer(PARAM(1)), (s32)PARAM(2), PARAM(3)).raw;
+
+    Core::CPU().SetReg(1, (u32)param_1);
+    FuncReturn(retval);
 }
 
 template <ResultCode func(u32, u32, u32, u32, s64)>
@@ -92,9 +97,7 @@ template <ResultCode func(u32, s64)>
 void Wrap() {
     s32 retval = func(PARAM(0), (((s64)PARAM(3) << 32) | PARAM(2))).raw;
 
-    if (retval != RESULT_INVALID.raw) {
-        FuncReturn(retval);
-    }
+    FuncReturn(retval);
 }
 
 template <ResultCode func(MemoryInfo*, PageInfo*, u32)>

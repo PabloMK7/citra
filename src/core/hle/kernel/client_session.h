@@ -14,6 +14,7 @@ namespace Kernel {
 
 class ServerSession;
 class Session;
+class Thread;
 
 class ClientSession final : public Object {
 public:
@@ -34,9 +35,10 @@ public:
 
     /**
      * Sends an SyncRequest from the current emulated thread.
+     * @param thread Thread that initiated the request.
      * @return ResultCode of the operation.
      */
-    ResultCode SendSyncRequest();
+    ResultCode SendSyncRequest(SharedPtr<Thread> thread);
 
     std::string name; ///< Name of client port (optional)
 

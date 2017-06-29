@@ -67,19 +67,29 @@ public:
 
     /**
      * Handle a sync request from the emulated application.
+     * @param thread Thread that initiated the request.
      * @returns ResultCode from the operation.
      */
-    ResultCode HandleSyncRequest();
+    ResultCode HandleSyncRequest(SharedPtr<Thread> thread);
 
     bool ShouldWait(Thread* thread) const override;
 
     void Acquire(Thread* thread) override;
 
     std::string name;                ///< The name of this session (optional)
-    bool signaled;                   ///< Whether there's new data available to this ServerSession
     std::shared_ptr<Session> parent; ///< The parent session, which links to the client endpoint.
     std::shared_ptr<SessionRequestHandler>
         hle_handler; ///< This session's HLE request handler (optional)
+
+    /// List of threads that are pending a response after a sync request. This list is processed in
+    /// a LIFO manner, thus, the last request will be dispatched first.
+    /// TODO(Subv): Verify if this is indeed processed in LIFO using a hardware test.
+    std::vector<SharedPtr<Thread>> pending_requesting_threads;
+
+    /// Thread whose request is currently being handled. A request is considered "handled" when a
+    /// response is sent via svcReplyAndReceive.
+    /// TODO(Subv): Find a better name for this.
+    SharedPtr<Thread> currently_handling;
 
 private:
     ServerSession();
