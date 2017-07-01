@@ -287,18 +287,23 @@ private:
     OGLTexture fog_lut;
     std::array<GLvec2, 128> fog_lut_data{};
 
+    OGLBuffer proctex_noise_lut_buffer;
     OGLTexture proctex_noise_lut;
     std::array<GLvec2, 128> proctex_noise_lut_data{};
 
+    OGLBuffer proctex_color_map_buffer;
     OGLTexture proctex_color_map;
     std::array<GLvec2, 128> proctex_color_map_data{};
 
+    OGLBuffer proctex_alpha_map_buffer;
     OGLTexture proctex_alpha_map;
     std::array<GLvec2, 128> proctex_alpha_map_data{};
 
+    OGLBuffer proctex_lut_buffer;
     OGLTexture proctex_lut;
     std::array<GLvec4, 256> proctex_lut_data{};
 
+    OGLBuffer proctex_diff_lut_buffer;
     OGLTexture proctex_diff_lut;
     std::array<GLvec4, 256> proctex_diff_lut_data{};
 };

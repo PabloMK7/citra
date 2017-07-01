@@ -117,48 +117,53 @@ RasterizerOpenGL::RasterizerOpenGL() : shader_dirty(true) {
 
     // Setup the noise LUT for proctex
     proctex_noise_lut.Create();
-    state.proctex_noise_lut.texture_1d = proctex_noise_lut.handle;
+    state.proctex_noise_lut.texture_buffer = proctex_noise_lut.handle;
     state.Apply();
+    proctex_noise_lut_buffer.Create();
+    glBindBuffer(GL_TEXTURE_BUFFER, proctex_noise_lut_buffer.handle);
+    glBufferData(GL_TEXTURE_BUFFER, sizeof(GLfloat) * 2 * 128, nullptr, GL_DYNAMIC_DRAW);
     glActiveTexture(TextureUnits::ProcTexNoiseLUT.Enum());
-    glTexImage1D(GL_TEXTURE_1D, 0, GL_RG32F, 128, 0, GL_RG, GL_FLOAT, nullptr);
-    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexBuffer(GL_TEXTURE_BUFFER, GL_RG32F, proctex_noise_lut_buffer.handle);
 
     // Setup the color map for proctex
     proctex_color_map.Create();
-    state.proctex_color_map.texture_1d = proctex_color_map.handle;
+    state.proctex_color_map.texture_buffer = proctex_color_map.handle;
     state.Apply();
+    proctex_color_map_buffer.Create();
+    glBindBuffer(GL_TEXTURE_BUFFER, proctex_color_map_buffer.handle);
+    glBufferData(GL_TEXTURE_BUFFER, sizeof(GLfloat) * 2 * 128, nullptr, GL_DYNAMIC_DRAW);
     glActiveTexture(TextureUnits::ProcTexColorMap.Enum());
-    glTexImage1D(GL_TEXTURE_1D, 0, GL_RG32F, 128, 0, GL_RG, GL_FLOAT, nullptr);
-    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexBuffer(GL_TEXTURE_BUFFER, GL_RG32F, proctex_color_map_buffer.handle);
 
     // Setup the alpha map for proctex
     proctex_alpha_map.Create();
-    state.proctex_alpha_map.texture_1d = proctex_alpha_map.handle;
+    state.proctex_alpha_map.texture_buffer = proctex_alpha_map.handle;
     state.Apply();
+    proctex_alpha_map_buffer.Create();
+    glBindBuffer(GL_TEXTURE_BUFFER, proctex_alpha_map_buffer.handle);
+    glBufferData(GL_TEXTURE_BUFFER, sizeof(GLfloat) * 2 * 128, nullptr, GL_DYNAMIC_DRAW);
     glActiveTexture(TextureUnits::ProcTexAlphaMap.Enum());
-    glTexImage1D(GL_TEXTURE_1D, 0, GL_RG32F, 128, 0, GL_RG, GL_FLOAT, nullptr);
-    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexBuffer(GL_TEXTURE_BUFFER, GL_RG32F, proctex_alpha_map_buffer.handle);
 
     // Setup the LUT for proctex
     proctex_lut.Create();
-    state.proctex_lut.texture_1d = proctex_lut.handle;
+    state.proctex_lut.texture_buffer = proctex_lut.handle;
     state.Apply();
+    proctex_lut_buffer.Create();
+    glBindBuffer(GL_TEXTURE_BUFFER, proctex_lut_buffer.handle);
+    glBufferData(GL_TEXTURE_BUFFER, sizeof(GLfloat) * 4 * 256, nullptr, GL_DYNAMIC_DRAW);
     glActiveTexture(TextureUnits::ProcTexLUT.Enum());
-    glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA32F, 256, 0, GL_RGBA, GL_FLOAT, nullptr);
-    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexBuffer(GL_TEXTURE_BUFFER, GL_RGBA32F, proctex_lut_buffer.handle);
 
     // Setup the difference LUT for proctex
     proctex_diff_lut.Create();
-    state.proctex_diff_lut.texture_1d = proctex_diff_lut.handle;
+    state.proctex_diff_lut.texture_buffer = proctex_diff_lut.handle;
     state.Apply();
+    proctex_diff_lut_buffer.Create();
+    glBindBuffer(GL_TEXTURE_BUFFER, proctex_diff_lut_buffer.handle);
+    glBufferData(GL_TEXTURE_BUFFER, sizeof(GLfloat) * 4 * 256, nullptr, GL_DYNAMIC_DRAW);
     glActiveTexture(TextureUnits::ProcTexDiffLUT.Enum());
-    glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA32F, 256, 0, GL_RGBA, GL_FLOAT, nullptr);
-    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexBuffer(GL_TEXTURE_BUFFER, GL_RGBA32F, proctex_diff_lut_buffer.handle);
 
     // Sync fixed function OpenGL state
     SyncCullMode();
@@ -1387,7 +1392,7 @@ void RasterizerOpenGL::SyncProcTexNoise() {
 
 // helper function for SyncProcTexNoiseLUT/ColorMap/AlphaMap
 static void SyncProcTexValueLUT(const std::array<Pica::State::ProcTex::ValueEntry, 128>& lut,
-                                std::array<GLvec2, 128>& lut_data, GLenum texture) {
+                                std::array<GLvec2, 128>& lut_data, GLuint buffer) {
     std::array<GLvec2, 128> new_data;
     std::transform(lut.begin(), lut.end(), new_data.begin(), [](const auto& entry) {
         return GLvec2{entry.ToFloat(), entry.DiffToFloat()};
@@ -1395,24 +1400,24 @@ static void SyncProcTexValueLUT(const std::array<Pica::State::ProcTex::ValueEntr
 
     if (new_data != lut_data) {
         lut_data = new_data;
-        glActiveTexture(texture);
-        glTexSubImage1D(GL_TEXTURE_1D, 0, 0, 128, GL_RG, GL_FLOAT, lut_data.data());
+        glBindBuffer(GL_TEXTURE_BUFFER, buffer);
+        glBufferSubData(GL_TEXTURE_BUFFER, 0, new_data.size() * sizeof(GLvec2), new_data.data());
     }
 }
 
 void RasterizerOpenGL::SyncProcTexNoiseLUT() {
     SyncProcTexValueLUT(Pica::g_state.proctex.noise_table, proctex_noise_lut_data,
-                        TextureUnits::ProcTexNoiseLUT.Enum());
+                        proctex_noise_lut_buffer.handle);
 }
 
 void RasterizerOpenGL::SyncProcTexColorMap() {
     SyncProcTexValueLUT(Pica::g_state.proctex.color_map_table, proctex_color_map_data,
-                        TextureUnits::ProcTexColorMap.Enum());
+                        proctex_color_map_buffer.handle);
 }
 
 void RasterizerOpenGL::SyncProcTexAlphaMap() {
     SyncProcTexValueLUT(Pica::g_state.proctex.alpha_map_table, proctex_alpha_map_data,
-                        TextureUnits::ProcTexAlphaMap.Enum());
+                        proctex_alpha_map_buffer.handle);
 }
 
 void RasterizerOpenGL::SyncProcTexLUT() {
@@ -1427,8 +1432,8 @@ void RasterizerOpenGL::SyncProcTexLUT() {
 
     if (new_data != proctex_lut_data) {
         proctex_lut_data = new_data;
-        glActiveTexture(TextureUnits::ProcTexLUT.Enum());
-        glTexSubImage1D(GL_TEXTURE_1D, 0, 0, 256, GL_RGBA, GL_FLOAT, proctex_lut_data.data());
+        glBindBuffer(GL_TEXTURE_BUFFER, proctex_lut_buffer.handle);
+        glBufferSubData(GL_TEXTURE_BUFFER, 0, new_data.size() * sizeof(GLvec4), new_data.data());
     }
 }
 
@@ -1444,8 +1449,8 @@ void RasterizerOpenGL::SyncProcTexDiffLUT() {
 
     if (new_data != proctex_diff_lut_data) {
         proctex_diff_lut_data = new_data;
-        glActiveTexture(TextureUnits::ProcTexDiffLUT.Enum());
-        glTexSubImage1D(GL_TEXTURE_1D, 0, 0, 256, GL_RGBA, GL_FLOAT, proctex_diff_lut_data.data());
+        glBindBuffer(GL_TEXTURE_BUFFER, proctex_diff_lut_buffer.handle);
+        glBufferSubData(GL_TEXTURE_BUFFER, 0, new_data.size() * sizeof(GLvec4), new_data.data());
     }
 }
 
