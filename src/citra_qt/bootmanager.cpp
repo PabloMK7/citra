@@ -17,6 +17,7 @@
 #include "core/settings.h"
 #include "input_common/keyboard.h"
 #include "input_common/main.h"
+#include "network/network.h"
 
 EmuThread::EmuThread(GRenderWindow* render_window)
     : exec_step(false), running(false), stop_run(false), render_window(render_window) {}
@@ -110,10 +111,12 @@ GRenderWindow::GRenderWindow(QWidget* parent, EmuThread* emu_thread)
     setWindowTitle(QString::fromStdString(window_title));
 
     InputCommon::Init();
+    Network::Init();
 }
 
 GRenderWindow::~GRenderWindow() {
     InputCommon::Shutdown();
+    Network::Shutdown();
 }
 
 void GRenderWindow::moveContext() {
