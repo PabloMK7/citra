@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <array>
 #include <memory>
 #include <string>
 #include "common/common_types.h"
@@ -17,6 +18,11 @@ struct RoomInformation {
     std::string name; ///< Name of the server
     u32 member_slots; ///< Maximum number of members in this room
 };
+
+using MacAddress = std::array<uint8_t, 6>;
+/// A special MAC address that tells the room we're joining to assign us a MAC address
+/// automatically.
+const MacAddress NoPreferredMac = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 
 // The different types of messages that can be sent. The first byte of each packet defines the type
 typedef uint8_t MessageID;
