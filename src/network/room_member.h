@@ -6,6 +6,7 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 #include "common/common_types.h"
 #include "network/room.h"
 
@@ -31,6 +32,14 @@ public:
         CouldNotConnect ///< The room is not responding to a connection attempt
     };
 
+    struct MemberInformation {
+        std::string nickname;   ///< Nickname of the member.
+        std::string game_name;  ///< Name of the game they're currently playing, or empty if they're
+                                /// not playing anything.
+        MacAddress mac_address; ///< MAC address associated with this member.
+    };
+    using MemberList = std::vector<MemberInformation>;
+
     RoomMember();
     ~RoomMember();
 
@@ -38,6 +47,15 @@ public:
      * Returns the status of our connection to the room.
      */
     State GetState() const;
+
+    /**
+     * Returns information about the members in the room we're currently connected to.
+     */
+    const MemberList& GetMemberInformation() const;
+    /**
+     * Returns information about the room we're currently connected to.
+     */
+    RoomInformation GetRoomInformation() const;
 
     /**
      * Returns whether we're connected to a server or not.
