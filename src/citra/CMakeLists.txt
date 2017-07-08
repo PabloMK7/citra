@@ -16,7 +16,7 @@ set(HEADERS
 create_directory_groups(${SRCS} ${HEADERS})
 
 add_executable(citra ${SRCS} ${HEADERS})
-target_link_libraries(citra PRIVATE common core input_common)
+target_link_libraries(citra PRIVATE common core input_common network)
 target_link_libraries(citra PRIVATE inih glad)
 if (MSVC)
     target_link_libraries(citra PRIVATE getopt)
