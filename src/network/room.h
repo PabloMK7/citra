@@ -4,7 +4,6 @@
 
 #pragma once
 
-#include <atomic>
 #include <memory>
 #include <string>
 #include "common/common_types.h"
@@ -17,6 +16,19 @@ constexpr size_t NumChannels = 1; // Number of channels used for the connection
 struct RoomInformation {
     std::string name; ///< Name of the server
     u32 member_slots; ///< Maximum number of members in this room
+};
+
+// The different types of messages that can be sent. The first byte of each packet defines the type
+typedef uint8_t MessageID;
+enum RoomMessageTypes {
+    IdJoinRequest = 1,
+    IdJoinSuccess,
+    IdRoomInformation,
+    IdSetGameName,
+    IdWifiPacket,
+    IdChatMessage,
+    IdNameCollision,
+    IdMacCollision
 };
 
 /// This is what a server [person creating a server] would use.

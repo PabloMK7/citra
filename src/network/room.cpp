@@ -2,6 +2,8 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <atomic>
+#include <thread>
 #include "enet/enet.h"
 #include "network/room.h"
 
@@ -16,8 +18,38 @@ public:
 
     std::atomic<State> state{State::Closed}; ///< Current state of the room.
     RoomInformation room_information;        ///< Information about this room.
+
+    /// Thread that receives and dispatches network packets
+    std::unique_ptr<std::thread> room_thread;
+
+    /// Thread function that will receive and dispatch messages until the room is destroyed.
+    void ServerLoop();
+    void StartLoop();
 };
 
+// RoomImpl
+void Room::RoomImpl::ServerLoop() {
+    while (state != State::Closed) {
+        ENetEvent event;
+        if (enet_host_service(server, &event, 1000) > 0) {
+            switch (event.type) {
+            case ENET_EVENT_TYPE_RECEIVE:
+                // TODO(B3N30): Select the type of message and handle it
+                enet_packet_destroy(event.packet);
+                break;
+            case ENET_EVENT_TYPE_DISCONNECT:
+                // TODO(B3N30): Handle the disconnect from a client
+                break;
+            }
+        }
+    }
+}
+
+void Room::RoomImpl::StartLoop() {
+    room_thread = std::make_unique<std::thread>(&Room::RoomImpl::ServerLoop, this);
+}
+
+// Room
 Room::Room() : room_impl{std::make_unique<RoomImpl>()} {}
 
 Room::~Room() = default;
@@ -34,8 +66,7 @@ void Room::Create(const std::string& name, const std::string& server_address, u1
 
     room_impl->room_information.name = name;
     room_impl->room_information.member_slots = MaxConcurrentConnections;
-
-    // TODO(B3N30): Start the receiving thread
+    room_impl->StartLoop();
 }
 
 Room::State Room::GetState() const {
@@ -48,7 +79,8 @@ const RoomInformation& Room::GetRoomInformation() const {
 
 void Room::Destroy() {
     room_impl->state = State::Closed;
-    // TODO(B3n30): Join the receiving thread
+    room_impl->room_thread->join();
+    room_impl->room_thread.reset();
 
     if (room_impl->server) {
         enet_host_destroy(room_impl->server);
