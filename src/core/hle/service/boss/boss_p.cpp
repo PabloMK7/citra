@@ -66,7 +66,10 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x00360084, SetTaskQuery, "SetTaskQuery"},
     {0x00370084, GetTaskQuery, "GetTaskQuery"},
     // boss:p
+    {0x04010082, nullptr, "InitializeSessionPrivileged"},
     {0x04040080, nullptr, "GetAppNewFlag"},
+    {0x040D0182, nullptr, "GetNsDataIdListPrivileged"},
+    {0x040E0182, nullptr, "GetNsDataIdListPrivileged1"},
     {0x04130082, nullptr, "SendPropertyPrivileged"},
     {0x041500C0, nullptr, "DeleteNsDataPrivileged"},
     {0x04160142, nullptr, "GetNsDataHeaderInfoPrivileged"},
