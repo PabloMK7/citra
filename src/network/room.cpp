@@ -85,8 +85,8 @@ public:
      * The packet has the structure:
      * <MessageID>ID_ROOM_INFORMATION
      * <String> room_name
-     * <uint32_t> member_slots: The max number of clients allowed in this room
-     * <uint32_t> num_members: the number of currently joined clients
+     * <u32> member_slots: The max number of clients allowed in this room
+     * <u32> num_members: the number of currently joined clients
      * This is followed by the following three values for each member:
      * <String> nickname of that member
      * <MacAddress> mac_address of that member
@@ -113,6 +113,12 @@ public:
     void HandleChatPacket(const ENetEvent* event);
 
     /**
+     * Extracts the game name from a received ENet packet and broadcasts it.
+     * @param event The ENet event that was received.
+     */
+    void HandleGameNamePacket(const ENetEvent* event);
+
+    /**
      * Removes the client from the members list if it was in it and announces the change
      * to all other clients.
      */
@@ -130,7 +136,9 @@ void Room::RoomImpl::ServerLoop() {
                 case IdJoinRequest:
                     HandleJoinRequest(&event);
                     break;
-                // TODO(B3N30): Handle the other message types
+                case IdSetGameName:
+                    HandleGameNamePacket(&event);
+                    break;
                 case IdWifiPacket:
                     HandleWifiPacket(&event);
                     break;
@@ -184,7 +192,7 @@ void Room::RoomImpl::HandleJoinRequest(const ENetEvent* event) {
     member.nickname = nickname;
     member.peer = event->peer;
 
-    members.push_back(member);
+    members.push_back(std::move(member));
 
     // Notify everyone that the room information has changed.
     BroadcastRoomInformation();
@@ -194,22 +202,14 @@ void Room::RoomImpl::HandleJoinRequest(const ENetEvent* event) {
 bool Room::RoomImpl::IsValidNickname(const std::string& nickname) const {
     // A nickname is valid if it is not already taken by anybody else in the room.
     // TODO(B3N30): Check for empty names, spaces, etc.
-    for (const Member& member : members) {
-        if (member.nickname == nickname) {
-            return false;
-        }
-    }
-    return true;
+    return std::all_of(members.begin(), members.end(),
+                       [&nickname](const auto& member) { return member.nickname != nickname; });
 }
 
 bool Room::RoomImpl::IsValidMacAddress(const MacAddress& address) const {
     // A MAC address is valid if it is not already taken by anybody else in the room.
-    for (const Member& member : members) {
-        if (member.mac_address == address) {
-            return false;
-        }
-    }
-    return true;
+    return std::all_of(members.begin(), members.end(),
+                       [&address](const auto& member) { return member.mac_address != address; });
 }
 
 void Room::RoomImpl::SendNameCollision(ENetPeer* client) {
@@ -248,7 +248,7 @@ void Room::RoomImpl::BroadcastRoomInformation() {
     packet << room_information.name;
     packet << room_information.member_slots;
 
-    packet << static_cast<uint32_t>(members.size());
+    packet << static_cast<u32>(members.size());
     for (const auto& member : members) {
         packet << member.nickname;
         packet << member.mac_address;
@@ -262,10 +262,11 @@ void Room::RoomImpl::BroadcastRoomInformation() {
 }
 
 MacAddress Room::RoomImpl::GenerateMacAddress() {
-    MacAddress result_mac = NintendoOUI;
+    MacAddress result_mac =
+        NintendoOUI; // The first three bytes of each MAC address will be the NintendoOUI
     std::uniform_int_distribution<> dis(0x00, 0xFF); // Random byte between 0 and 0xFF
     do {
-        for (int i = 3; i < result_mac.size(); ++i) {
+        for (size_t i = 3; i < result_mac.size(); ++i) {
             result_mac[i] = dis(random_gen);
         }
     } while (!IsValidMacAddress(result_mac));
@@ -273,9 +274,33 @@ MacAddress Room::RoomImpl::GenerateMacAddress() {
 }
 
 void Room::RoomImpl::HandleWifiPacket(const ENetEvent* event) {
-    for (auto it = members.begin(); it != members.end(); ++it) {
-        if (it->peer != event->peer)
-            enet_peer_send(it->peer, 0, event->packet);
+    Packet in_packet;
+    in_packet.Append(event->packet->data, event->packet->dataLength);
+    in_packet.IgnoreBytes(sizeof(MessageID));
+    in_packet.IgnoreBytes(sizeof(u8));         // WifiPacket Type
+    in_packet.IgnoreBytes(sizeof(u8));         // WifiPacket Channel
+    in_packet.IgnoreBytes(sizeof(MacAddress)); // WifiPacket Transmitter Address
+    MacAddress destination_address;
+    in_packet >> destination_address;
+
+    Packet out_packet;
+    out_packet.Append(event->packet->data, event->packet->dataLength);
+    ENetPacket* enet_packet = enet_packet_create(out_packet.GetData(), out_packet.GetDataSize(),
+                                                 ENET_PACKET_FLAG_RELIABLE);
+
+    if (destination_address == BroadcastMac) { // Send the data to everyone except the sender
+        for (const auto& member : members) {
+            if (member.peer != event->peer)
+                enet_peer_send(member.peer, 0, event->packet);
+        }
+    } else { // Send the data only to the destination client
+        auto member = std::find_if(members.begin(), members.end(),
+                                   [destination_address](const Member& member) -> bool {
+                                       return member.mac_address == destination_address;
+                                   });
+        if (member != members.end()) {
+            enet_peer_send(member->peer, 0, enet_packet);
+        }
     }
     enet_host_flush(server);
 }
@@ -287,7 +312,7 @@ void Room::RoomImpl::HandleChatPacket(const ENetEvent* event) {
     in_packet.IgnoreBytes(sizeof(MessageID));
     std::string message;
     in_packet >> message;
-    auto CompareNetworkAddress = [&](const Member member) -> bool {
+    auto CompareNetworkAddress = [event](const Member member) -> bool {
         return member.peer == event->peer;
     };
     const auto sending_member = std::find_if(members.begin(), members.end(), CompareNetworkAddress);
@@ -309,13 +334,30 @@ void Room::RoomImpl::HandleChatPacket(const ENetEvent* event) {
     enet_host_flush(server);
 }
 
+void Room::RoomImpl::HandleGameNamePacket(const ENetEvent* event) {
+    Packet in_packet;
+    in_packet.Append(event->packet->data, event->packet->dataLength);
+
+    in_packet.IgnoreBytes(sizeof(MessageID));
+    std::string game_name;
+    in_packet >> game_name;
+    auto member =
+        std::find_if(members.begin(), members.end(),
+                     [event](const Member& member) -> bool { return member.peer == event->peer; });
+    if (member != members.end()) {
+        member->game_name = game_name;
+        BroadcastRoomInformation();
+    }
+}
+
 void Room::RoomImpl::HandleClientDisconnection(ENetPeer* client) {
     // Remove the client from the members list.
     members.erase(std::remove_if(members.begin(), members.end(),
-                                 [&](const Member& member) { return member.peer == client; }),
+                                 [client](const Member& member) { return member.peer == client; }),
                   members.end());
 
     // Announce the change to all clients.
+    enet_peer_disconnect(client, 0);
     BroadcastRoomInformation();
 }
 
@@ -327,7 +369,6 @@ Room::~Room() = default;
 void Room::Create(const std::string& name, const std::string& server_address, u16 server_port) {
     ENetAddress address;
     address.host = ENET_HOST_ANY;
-    enet_address_set_host(&address, server_address.c_str());
     address.port = server_port;
 
     room_impl->server = enet_host_create(&address, MaxConcurrentConnections, NumChannels, 0, 0);
@@ -357,6 +398,9 @@ void Room::Destroy() {
     }
     room_impl->room_information = {};
     room_impl->server = nullptr;
+    room_impl->members.clear();
+    room_impl->room_information.member_slots = 0;
+    room_impl->room_information.name.clear();
 }
 
 } // namespace Network

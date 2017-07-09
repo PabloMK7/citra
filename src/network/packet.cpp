@@ -13,10 +13,6 @@
 
 namespace Network {
 
-Packet::Packet() : read_pos(0), is_valid(true) {}
-
-Packet::~Packet() {}
-
 void Packet::Append(const void* in_data, std::size_t size_in_bytes) {
     if (in_data && (size_in_bytes > 0)) {
         std::size_t start = data.size();
@@ -39,7 +35,7 @@ void Packet::Clear() {
 }
 
 const void* Packet::GetData() const {
-    return !data.empty() ? &data[0] : NULL;
+    return !data.empty() ? &data[0] : nullptr;
 }
 
 void Packet::IgnoreBytes(u32 length) {
@@ -54,8 +50,8 @@ bool Packet::EndOfPacket() const {
     return read_pos >= data.size();
 }
 
-Packet::operator BoolType() const {
-    return is_valid ? &Packet::CheckSize : NULL;
+Packet::operator bool() const {
+    return is_valid ? &Packet::CheckSize : nullptr;
 }
 
 Packet& Packet::operator>>(bool& out_data) {

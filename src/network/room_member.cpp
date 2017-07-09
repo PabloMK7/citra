@@ -74,6 +74,11 @@ public:
      * @param event The ENet event that was received.
      */
     void HandleChatPacket(const ENetEvent* event);
+
+    /**
+     * Disconnects the RoomMember from the Room
+     */
+    void Disconnect();
 };
 
 // RoomMemberImpl
@@ -92,7 +97,8 @@ void RoomMember::RoomMemberImpl::ReceiveLoop() {
         std::lock_guard<std::mutex> lock(network_mutex);
         ENetEvent event;
         if (enet_host_service(client, &event, 1000) > 0) {
-            if (event.type == ENET_EVENT_TYPE_RECEIVE) {
+            switch (event.type) {
+            case ENET_EVENT_TYPE_RECEIVE:
                 switch (event.packet->data[0]) {
                 // TODO(B3N30): Handle the other message types
                 case IdChatMessage:
@@ -111,25 +117,21 @@ void RoomMember::RoomMemberImpl::ReceiveLoop() {
                     break;
                 case IdNameCollision:
                     SetState(State::NameCollision);
-                    enet_packet_destroy(event.packet);
-                    enet_peer_disconnect(server, 0);
-                    enet_peer_reset(server);
-                    return;
                     break;
                 case IdMacCollision:
                     SetState(State::MacCollision);
-                    enet_packet_destroy(event.packet);
-                    enet_peer_disconnect(server, 0);
-                    enet_peer_reset(server);
-                    return;
                     break;
                 default:
                     break;
                 }
                 enet_packet_destroy(event.packet);
+                break;
+            case ENET_EVENT_TYPE_DISCONNECT:
+                SetState(State::LostConnection);
             }
         }
     }
+    Disconnect();
 };
 
 void RoomMember::RoomMemberImpl::StartLoop() {
@@ -137,6 +139,7 @@ void RoomMember::RoomMemberImpl::StartLoop() {
 }
 
 void RoomMember::RoomMemberImpl::Send(Packet& packet) {
+    std::lock_guard<std::mutex> lock(network_mutex);
     ENetPacket* enetPacket =
         enet_packet_create(packet.GetData(), packet.GetDataSize(), ENET_PACKET_FLAG_RELIABLE);
     enet_peer_send(server, 0, enetPacket);
@@ -165,7 +168,7 @@ void RoomMember::RoomMemberImpl::HandleRoomInformationPacket(const ENetEvent* ev
     room_information.name = info.name;
     room_information.member_slots = info.member_slots;
 
-    uint32_t num_members;
+    u32 num_members;
     packet >> num_members;
     member_information.resize(num_members);
 
@@ -198,7 +201,7 @@ void RoomMember::RoomMemberImpl::HandleWifiPackets(const ENetEvent* event) {
     packet.IgnoreBytes(sizeof(MessageID));
 
     // Parse the WifiPacket from the BitStream
-    uint8_t frame_type;
+    u8 frame_type;
     packet >> frame_type;
     WifiPacket::PacketType type = static_cast<WifiPacket::PacketType>(frame_type);
 
@@ -207,10 +210,10 @@ void RoomMember::RoomMemberImpl::HandleWifiPackets(const ENetEvent* event) {
     packet >> wifi_packet.transmitter_address;
     packet >> wifi_packet.destination_address;
 
-    uint32_t data_length;
+    u32 data_length;
     packet >> data_length;
 
-    std::vector<uint8_t> data(data_length);
+    std::vector<u8> data(data_length);
     packet >> data;
 
     wifi_packet.data = std::move(data);
@@ -228,6 +231,33 @@ void RoomMember::RoomMemberImpl::HandleChatPacket(const ENetEvent* event) {
     packet >> chat_entry.nickname;
     packet >> chat_entry.message;
     // TODO(B3N30): Invoke callbacks
+}
+
+void RoomMember::RoomMemberImpl::Disconnect() {
+    member_information.clear();
+    room_information.member_slots = 0;
+    room_information.name.clear();
+
+    if (server) {
+        enet_peer_disconnect(server, 0);
+    } else {
+        return;
+    }
+
+    ENetEvent event;
+    while (enet_host_service(client, &event, ConnectionTimeoutMs) > 0) {
+        switch (event.type) {
+        case ENET_EVENT_TYPE_RECEIVE:
+            enet_packet_destroy(event.packet); // Ignore all incoming data
+            break;
+        case ENET_EVENT_TYPE_DISCONNECT:
+            server = nullptr;
+            return;
+        }
+    }
+    // didn't disconnect gracefully force disconnect
+    enet_peer_reset(server);
+    server = nullptr;
 }
 
 // RoomMember
@@ -249,16 +279,36 @@ const RoomMember::MemberList& RoomMember::GetMemberInformation() const {
     return room_member_impl->member_information;
 }
 
+const std::string& RoomMember::GetNickname() const {
+    return room_member_impl->nickname;
+}
+
+const MacAddress& RoomMember::GetMacAddress() const {
+    if (GetState() == State::Joined)
+        return room_member_impl->mac_address;
+    return MacAddress{};
+}
+
 RoomInformation RoomMember::GetRoomInformation() const {
     return room_member_impl->room_information;
 }
 
 void RoomMember::Join(const std::string& nick, const char* server_addr, u16 server_port,
                       u16 client_port) {
+    // If the member is connected, kill the connection first
+    if (room_member_impl->receive_thread && room_member_impl->receive_thread->joinable()) {
+        room_member_impl->SetState(State::Error);
+        room_member_impl->receive_thread->join();
+        room_member_impl->receive_thread.reset();
+    }
+    // If the thread isn't running but the ptr still exists, reset it
+    else if (room_member_impl->receive_thread) {
+        room_member_impl->receive_thread.reset();
+    }
+
     ENetAddress address{};
     enet_address_set_host(&address, server_addr);
     address.port = server_port;
-
     room_member_impl->server =
         enet_host_connect(room_member_impl->client, &address, NumChannels, 0);
 
@@ -286,11 +336,11 @@ bool RoomMember::IsConnected() const {
 void RoomMember::SendWifiPacket(const WifiPacket& wifi_packet) {
     Packet packet;
     packet << static_cast<MessageID>(IdWifiPacket);
-    packet << static_cast<uint8_t>(wifi_packet.type);
+    packet << static_cast<u8>(wifi_packet.type);
     packet << wifi_packet.channel;
     packet << wifi_packet.transmitter_address;
     packet << wifi_packet.destination_address;
-    packet << static_cast<uint32_t>(wifi_packet.data.size());
+    packet << static_cast<u32>(wifi_packet.data.size());
     packet << wifi_packet.data;
     room_member_impl->Send(packet);
 }
@@ -302,16 +352,17 @@ void RoomMember::SendChatMessage(const std::string& message) {
     room_member_impl->Send(packet);
 }
 
+void RoomMember::SendGameName(const std::string& game_name) {
+    Packet packet;
+    packet << static_cast<MessageID>(IdSetGameName);
+    packet << game_name;
+    room_member_impl->Send(packet);
+}
+
 void RoomMember::Leave() {
-    ASSERT_MSG(room_member_impl->receive_thread != nullptr, "Must be in a room to leave it.");
-    {
-        std::lock_guard<std::mutex> lock(room_member_impl->network_mutex);
-        enet_peer_disconnect(room_member_impl->server, 0);
-        room_member_impl->SetState(State::Idle);
-    }
+    room_member_impl->SetState(State::Idle);
     room_member_impl->receive_thread->join();
     room_member_impl->receive_thread.reset();
-    enet_peer_reset(room_member_impl->server);
 }
 
 } // namespace Network

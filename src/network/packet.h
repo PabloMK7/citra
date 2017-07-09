@@ -10,14 +10,11 @@
 
 namespace Network {
 
-/// A class for serialize data for network transfer. It also handles endianess
+/// A class that serializes data for network transfer. It also handles endianess
 class Packet {
-    /// A bool-like type that cannot be converted to integer or pointer types
-    typedef bool (Packet::*BoolType)(std::size_t);
-
 public:
-    Packet();
-    ~Packet();
+    Packet() = default;
+    ~Packet() = default;
 
     /**
      * Append data to the end of the packet
@@ -64,41 +61,8 @@ public:
      * @return True if all data was read, false otherwise
      */
     bool EndOfPacket() const;
-    /**
-     * Test the validity of the packet, for reading
-     * This operator allows to test the packet as a boolean
-     * variable, to check if a reading operation was successful.
-     *
-     * A packet will be in an invalid state if it has no more
-     * data to read.
-     *
-     * This behaviour is the same as standard C++ streams.
-     *
-     * Usage example:
-     * @code
-     * float x;
-     * packet >> x;
-     * if (packet)
-     * {
-     *    // ok, x was extracted successfully
-     * }
-     *
-     * // -- or --
-     *
-     * float x;
-     * if (packet >> x)
-     * {
-     *    // ok, x was extracted successfully
-     * }
-     * @endcode
-     *
-     * Don't focus on the return type, it's equivalent to bool but
-     * it disallows unwanted implicit conversions to integer or
-     * pointer types.
-     *
-     * @return True if last data extraction from packet was successful
-     */
-    operator BoolType() const;
+
+    explicit operator bool() const;
 
     /// Overloads of operator >> to read data from the packet
     Packet& operator>>(bool& out_data);
@@ -135,10 +99,6 @@ public:
     Packet& operator<<(const std::array<T, S>& data);
 
 private:
-    /// Disallow comparisons between packets
-    bool operator==(const Packet& right) const;
-    bool operator!=(const Packet& right) const;
-
     /**
      * Check if the packet can extract a given number of bytes
      * This function updates accordingly the state of the packet.
@@ -148,14 +108,14 @@ private:
     bool CheckSize(std::size_t size);
 
     // Member data
-    std::vector<char> data; ///< Data stored in the packet
-    std::size_t read_pos;   ///< Current reading position in the packet
-    bool is_valid;          ///< Reading state of the packet
+    std::vector<char> data;   ///< Data stored in the packet
+    std::size_t read_pos = 0; ///< Current reading position in the packet
+    bool is_valid = true;     ///< Reading state of the packet
 };
 
 template <typename T>
 Packet& Packet::operator>>(std::vector<T>& out_data) {
-    for (u32 i = 0; i < out_data.size(); ++i) {
+    for (std::size_t i = 0; i < out_data.size(); ++i) {
         T character = 0;
         *this >> character;
         out_data[i] = character;
@@ -165,7 +125,7 @@ Packet& Packet::operator>>(std::vector<T>& out_data) {
 
 template <typename T, std::size_t S>
 Packet& Packet::operator>>(std::array<T, S>& out_data) {
-    for (u32 i = 0; i < out_data.size(); ++i) {
+    for (std::size_t i = 0; i < out_data.size(); ++i) {
         T character = 0;
         *this >> character;
         out_data[i] = character;
@@ -175,7 +135,7 @@ Packet& Packet::operator>>(std::array<T, S>& out_data) {
 
 template <typename T>
 Packet& Packet::operator<<(const std::vector<T>& in_data) {
-    for (u32 i = 0; i < in_data.size(); ++i) {
+    for (std::size_t i = 0; i < in_data.size(); ++i) {
         *this << in_data[i];
     }
     return *this;
@@ -183,7 +143,7 @@ Packet& Packet::operator<<(const std::vector<T>& in_data) {
 
 template <typename T, std::size_t S>
 Packet& Packet::operator<<(const std::array<T, S>& in_data) {
-    for (u32 i = 0; i < in_data.size(); ++i) {
+    for (std::size_t i = 0; i < in_data.size(); ++i) {
         *this << in_data[i];
     }
     return *this;

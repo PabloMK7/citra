@@ -19,13 +19,16 @@ struct RoomInformation {
     u32 member_slots; ///< Maximum number of members in this room
 };
 
-using MacAddress = std::array<uint8_t, 6>;
+using MacAddress = std::array<u8, 6>;
 /// A special MAC address that tells the room we're joining to assign us a MAC address
 /// automatically.
 const MacAddress NoPreferredMac = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 
+// 802.11 broadcast MAC address
+constexpr MacAddress BroadcastMac = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+
 // The different types of messages that can be sent. The first byte of each packet defines the type
-typedef uint8_t MessageID;
+using MessageID = u8;
 enum RoomMessageTypes {
     IdJoinRequest = 1,
     IdJoinSuccess,

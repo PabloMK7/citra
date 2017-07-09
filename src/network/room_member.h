@@ -15,13 +15,13 @@ namespace Network {
 /// Information about the received WiFi packets.
 /// Acts as our own 802.11 header.
 struct WifiPacket {
-    enum class PacketType { Beacon, Data, Management };
-    PacketType type;           ///< The type of 802.11 frame, Beacon / Data.
-    std::vector<uint8_t> data; ///< Raw 802.11 frame data, starting at the management frame header
-                               /// for management frames.
+    enum class PacketType { Beacon, Data, Authentication, AssociationResponse };
+    PacketType type;      ///< The type of 802.11 frame.
+    std::vector<u8> data; ///< Raw 802.11 frame data, starting at the management frame header
+                          /// for management frames.
     MacAddress transmitter_address; ///< Mac address of the transmitter.
     MacAddress destination_address; ///< Mac address of the receiver.
-    uint8_t channel;                ///< WiFi channel where this frame was transmitted.
+    u8 channel;                     ///< WiFi channel where this frame was transmitted.
 };
 
 /// Represents a chat message.
@@ -70,6 +70,17 @@ public:
      * Returns information about the members in the room we're currently connected to.
      */
     const MemberList& GetMemberInformation() const;
+
+    /**
+     * Returns the nickname of the RoomMember.
+     */
+    const std::string& GetNickname() const;
+
+    /**
+     * Returns the MAC address of the RoomMember.
+     */
+    const MacAddress& GetMacAddress() const;
+
     /**
      * Returns information about the room we're currently connected to.
      */
@@ -98,6 +109,12 @@ public:
      * @param message The contents of the message.
      */
     void SendChatMessage(const std::string& message);
+
+    /**
+     * Sends the current game name  to the room.
+     * @param game_name The game name.
+     */
+    void SendGameName(const std::string& game_name);
 
     /**
      * Leaves the current room.
