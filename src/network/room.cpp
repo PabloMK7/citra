@@ -107,6 +107,12 @@ public:
     void HandleWifiPacket(const ENetEvent* event);
 
     /**
+     * Extracts a chat entry from a received ENet packet and adds it to the chat queue.
+     * @param event The ENet event that was received.
+     */
+    void HandleChatPacket(const ENetEvent* event);
+
+    /**
      * Removes the client from the members list if it was in it and announces the change
      * to all other clients.
      */
@@ -127,6 +133,9 @@ void Room::RoomImpl::ServerLoop() {
                 // TODO(B3N30): Handle the other message types
                 case IdWifiPacket:
                     HandleWifiPacket(&event);
+                    break;
+                case IdChatMessage:
+                    HandleChatPacket(&event);
                     break;
                 }
                 enet_packet_destroy(event.packet);
@@ -267,6 +276,35 @@ void Room::RoomImpl::HandleWifiPacket(const ENetEvent* event) {
     for (auto it = members.begin(); it != members.end(); ++it) {
         if (it->peer != event->peer)
             enet_peer_send(it->peer, 0, event->packet);
+    }
+    enet_host_flush(server);
+}
+
+void Room::RoomImpl::HandleChatPacket(const ENetEvent* event) {
+    Packet in_packet;
+    in_packet.Append(event->packet->data, event->packet->dataLength);
+
+    in_packet.IgnoreBytes(sizeof(MessageID));
+    std::string message;
+    in_packet >> message;
+    auto CompareNetworkAddress = [&](const Member member) -> bool {
+        return member.peer == event->peer;
+    };
+    const auto sending_member = std::find_if(members.begin(), members.end(), CompareNetworkAddress);
+    if (sending_member == members.end()) {
+        return; // Received a chat message from a unknown sender
+    }
+
+    Packet out_packet;
+    out_packet << static_cast<MessageID>(IdChatMessage);
+    out_packet << sending_member->nickname;
+    out_packet << message;
+
+    ENetPacket* enet_packet = enet_packet_create(out_packet.GetData(), out_packet.GetDataSize(),
+                                                 ENET_PACKET_FLAG_RELIABLE);
+    for (auto it = members.begin(); it != members.end(); ++it) {
+        if (it->peer != event->peer)
+            enet_peer_send(it->peer, 0, enet_packet);
     }
     enet_host_flush(server);
 }

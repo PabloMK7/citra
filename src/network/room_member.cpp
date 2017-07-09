@@ -68,6 +68,12 @@ public:
      * @param event The  ENet event that was received.
      */
     void HandleWifiPackets(const ENetEvent* event);
+
+    /**
+     * Extracts a chat entry from a received ENet packet and adds it to the chat queue.
+     * @param event The ENet event that was received.
+     */
+    void HandleChatPacket(const ENetEvent* event);
 };
 
 // RoomMemberImpl
@@ -89,6 +95,9 @@ void RoomMember::RoomMemberImpl::ReceiveLoop() {
             if (event.type == ENET_EVENT_TYPE_RECEIVE) {
                 switch (event.packet->data[0]) {
                 // TODO(B3N30): Handle the other message types
+                case IdChatMessage:
+                    HandleChatPacket(&event);
+                    break;
                 case IdRoomInformation:
                     HandleRoomInformationPacket(&event);
                     break;
@@ -208,6 +217,19 @@ void RoomMember::RoomMemberImpl::HandleWifiPackets(const ENetEvent* event) {
     // TODO(B3N30): Invoke callbacks
 }
 
+void RoomMember::RoomMemberImpl::HandleChatPacket(const ENetEvent* event) {
+    Packet packet;
+    packet.Append(event->packet->data, event->packet->dataLength);
+
+    // Ignore the first byte, which is the message id.
+    packet.IgnoreBytes(sizeof(MessageID));
+
+    ChatEntry chat_entry{};
+    packet >> chat_entry.nickname;
+    packet >> chat_entry.message;
+    // TODO(B3N30): Invoke callbacks
+}
+
 // RoomMember
 RoomMember::RoomMember() : room_member_impl{std::make_unique<RoomMemberImpl>()} {
     room_member_impl->client = enet_host_create(nullptr, 1, NumChannels, 0, 0);
@@ -270,6 +292,13 @@ void RoomMember::SendWifiPacket(const WifiPacket& wifi_packet) {
     packet << wifi_packet.destination_address;
     packet << static_cast<uint32_t>(wifi_packet.data.size());
     packet << wifi_packet.data;
+    room_member_impl->Send(packet);
+}
+
+void RoomMember::SendChatMessage(const std::string& message) {
+    Packet packet;
+    packet << static_cast<MessageID>(IdChatMessage);
+    packet << message;
     room_member_impl->Send(packet);
 }
 

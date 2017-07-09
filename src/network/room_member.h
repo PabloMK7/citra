@@ -24,6 +24,12 @@ struct WifiPacket {
     uint8_t channel;                ///< WiFi channel where this frame was transmitted.
 };
 
+/// Represents a chat message.
+struct ChatEntry {
+    std::string nickname; ///< Nickname of the client who sent this message.
+    std::string message;  ///< Body of the message.
+};
+
 /**
  * This is what a client [person joining a server] would use.
  * It also has to be used if you host a game yourself (You'd create both, a Room and a
@@ -86,6 +92,12 @@ public:
      * @param packet The WiFi packet to send.
      */
     void SendWifiPacket(const WifiPacket& packet);
+
+    /**
+     * Sends a chat message to the room.
+     * @param message The contents of the message.
+     */
+    void SendChatMessage(const std::string& message);
 
     /**
      * Leaves the current room.
