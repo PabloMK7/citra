@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <algorithm>
 #include <atomic>
 #include <random>
 #include <thread>
@@ -104,6 +105,12 @@ public:
      * @param event The ENet event containing the data
      */
     void HandleWifiPacket(const ENetEvent* event);
+
+    /**
+     * Removes the client from the members list if it was in it and announces the change
+     * to all other clients.
+     */
+    void HandleClientDisconnection(ENetPeer* client);
 };
 
 // RoomImpl
@@ -125,7 +132,7 @@ void Room::RoomImpl::ServerLoop() {
                 enet_packet_destroy(event.packet);
                 break;
             case ENET_EVENT_TYPE_DISCONNECT:
-                // TODO(B3N30): Handle the disconnect from a client
+                HandleClientDisconnection(event.peer);
                 break;
             }
         }
@@ -262,6 +269,16 @@ void Room::RoomImpl::HandleWifiPacket(const ENetEvent* event) {
             enet_peer_send(it->peer, 0, event->packet);
     }
     enet_host_flush(server);
+}
+
+void Room::RoomImpl::HandleClientDisconnection(ENetPeer* client) {
+    // Remove the client from the members list.
+    members.erase(std::remove_if(members.begin(), members.end(),
+                                 [&](const Member& member) { return member.peer == client; }),
+                  members.end());
+
+    // Announce the change to all clients.
+    BroadcastRoomInformation();
 }
 
 // Room
