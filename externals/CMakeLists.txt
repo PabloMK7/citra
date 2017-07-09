@@ -34,6 +34,10 @@ add_subdirectory(glad)
 # inih
 add_subdirectory(inih)
 
+# JSON
+add_library(json-headers INTERFACE)
+target_include_directories(json-headers INTERFACE ./json/src)
+
 # MicroProfile
 add_library(microprofile INTERFACE)
 target_include_directories(microprofile INTERFACE ./microprofile)
