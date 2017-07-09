@@ -12,6 +12,18 @@
 
 namespace Network {
 
+/// Information about the received WiFi packets.
+/// Acts as our own 802.11 header.
+struct WifiPacket {
+    enum class PacketType { Beacon, Data, Management };
+    PacketType type;           ///< The type of 802.11 frame, Beacon / Data.
+    std::vector<uint8_t> data; ///< Raw 802.11 frame data, starting at the management frame header
+                               /// for management frames.
+    MacAddress transmitter_address; ///< Mac address of the transmitter.
+    MacAddress destination_address; ///< Mac address of the receiver.
+    uint8_t channel;                ///< WiFi channel where this frame was transmitted.
+};
+
 /**
  * This is what a client [person joining a server] would use.
  * It also has to be used if you host a game yourself (You'd create both, a Room and a
@@ -68,6 +80,12 @@ public:
      */
     void Join(const std::string& nickname, const char* server_addr = "127.0.0.1",
               const u16 serverPort = DefaultRoomPort, const u16 clientPort = 0);
+
+    /**
+     * Sends a WiFi packet to the room.
+     * @param packet The WiFi packet to send.
+     */
+    void SendWifiPacket(const WifiPacket& packet);
 
     /**
      * Leaves the current room.

@@ -62,6 +62,12 @@ public:
      * @param event The ENet event that was received.
      */
     void HandleRoomInformationPacket(const ENetEvent* event);
+
+    /**
+     * Extracts a WifiPacket from a received ENet packet.
+     * @param event The  ENet event that was received.
+     */
+    void HandleWifiPackets(const ENetEvent* event);
 };
 
 // RoomMemberImpl
@@ -174,6 +180,34 @@ void RoomMember::RoomMemberImpl::HandleJoinPacket(const ENetEvent* event) {
     // TODO(B3N30): Invoke callbacks
 }
 
+void RoomMember::RoomMemberImpl::HandleWifiPackets(const ENetEvent* event) {
+    WifiPacket wifi_packet{};
+    Packet packet;
+    packet.Append(event->packet->data, event->packet->dataLength);
+
+    // Ignore the first byte, which is the message id.
+    packet.IgnoreBytes(sizeof(MessageID));
+
+    // Parse the WifiPacket from the BitStream
+    uint8_t frame_type;
+    packet >> frame_type;
+    WifiPacket::PacketType type = static_cast<WifiPacket::PacketType>(frame_type);
+
+    wifi_packet.type = type;
+    packet >> wifi_packet.channel;
+    packet >> wifi_packet.transmitter_address;
+    packet >> wifi_packet.destination_address;
+
+    uint32_t data_length;
+    packet >> data_length;
+
+    std::vector<uint8_t> data(data_length);
+    packet >> data;
+
+    wifi_packet.data = std::move(data);
+    // TODO(B3N30): Invoke callbacks
+}
+
 // RoomMember
 RoomMember::RoomMember() : room_member_impl{std::make_unique<RoomMemberImpl>()} {
     room_member_impl->client = enet_host_create(nullptr, 1, NumChannels, 0, 0);
@@ -225,6 +259,18 @@ void RoomMember::Join(const std::string& nick, const char* server_addr, u16 serv
 
 bool RoomMember::IsConnected() const {
     return room_member_impl->IsConnected();
+}
+
+void RoomMember::SendWifiPacket(const WifiPacket& wifi_packet) {
+    Packet packet;
+    packet << static_cast<MessageID>(IdWifiPacket);
+    packet << static_cast<uint8_t>(wifi_packet.type);
+    packet << wifi_packet.channel;
+    packet << wifi_packet.transmitter_address;
+    packet << wifi_packet.destination_address;
+    packet << static_cast<uint32_t>(wifi_packet.data.size());
+    packet << wifi_packet.data;
+    room_member_impl->Send(packet);
 }
 
 void RoomMember::Leave() {

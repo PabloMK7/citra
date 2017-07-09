@@ -98,6 +98,12 @@ public:
      * The first 3 bytes are the NintendoOUI 0x00, 0x1F, 0x32
      */
     MacAddress GenerateMacAddress();
+
+    /**
+     * Broadcasts this packet to all members except the sender.
+     * @param event The ENet event containing the data
+     */
+    void HandleWifiPacket(const ENetEvent* event);
 };
 
 // RoomImpl
@@ -111,7 +117,10 @@ void Room::RoomImpl::ServerLoop() {
                 case IdJoinRequest:
                     HandleJoinRequest(&event);
                     break;
-                    // TODO(B3N30): Handle the other message types
+                // TODO(B3N30): Handle the other message types
+                case IdWifiPacket:
+                    HandleWifiPacket(&event);
+                    break;
                 }
                 enet_packet_destroy(event.packet);
                 break;
@@ -245,6 +254,14 @@ MacAddress Room::RoomImpl::GenerateMacAddress() {
         }
     } while (!IsValidMacAddress(result_mac));
     return result_mac;
+}
+
+void Room::RoomImpl::HandleWifiPacket(const ENetEvent* event) {
+    for (auto it = members.begin(); it != members.end(); ++it) {
+        if (it->peer != event->peer)
+            enet_peer_send(it->peer, 0, event->packet);
+    }
+    enet_host_flush(server);
 }
 
 // Room
