@@ -6,13 +6,19 @@
 
 #include "common/scm_rev.h"
 #include "core/telemetry_session.h"
-#include "web_services/telemetry_json.h"
+
+#ifdef ENABLE_WEB_SERVICE
+#include "web_service/telemetry_json.h"
+#endif
 
 namespace Core {
 
 TelemetrySession::TelemetrySession() {
+#ifdef ENABLE_WEB_SERVICE
     backend = std::make_unique<WebService::TelemetryJson>();
-
+#else
+    backend = std::make_unique<Telemetry::NullVisitor>();
+#endif
     // Log one-time session start information
     const auto duration{std::chrono::steady_clock::now().time_since_epoch()};
     const auto start_time{std::chrono::duration_cast<std::chrono::microseconds>(duration).count()};
