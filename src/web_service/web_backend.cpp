@@ -9,6 +9,7 @@
 
 namespace WebService {
 
+static constexpr char API_VERSION[]{"1"};
 static constexpr char ENV_VAR_USERNAME[]{"CITRA_WEB_SERVICES_USERNAME"};
 static constexpr char ENV_VAR_TOKEN[]{"CITRA_WEB_SERVICES_TOKEN"};
 
@@ -44,7 +45,8 @@ void PostJson(const std::string& url, const std::string& data) {
 
     cpr::PostAsync(cpr::Url{url}, cpr::Body{data}, cpr::Header{{"Content-Type", "application/json"},
                                                                {"x-username", GetUsername()},
-                                                               {"x-token", GetToken()}});
+                                                               {"x-token", GetToken()},
+                                                               {"api-version", API_VERSION}});
 }
 
 } // namespace WebService
