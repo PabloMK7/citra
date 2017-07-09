@@ -6,12 +6,12 @@
 
 #include "common/scm_rev.h"
 #include "core/telemetry_session.h"
+#include "web_services/telemetry_json.h"
 
 namespace Core {
 
 TelemetrySession::TelemetrySession() {
-    // TODO(bunnei): Replace with a backend that logs to our web service
-    backend = std::make_unique<Telemetry::NullVisitor>();
+    backend = std::make_unique<WebService::TelemetryJson>();
 
     // Log one-time session start information
     const auto duration{std::chrono::steady_clock::now().time_since_epoch()};

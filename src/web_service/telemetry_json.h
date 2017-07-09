@@ -17,7 +17,7 @@ namespace WebService {
  */
 class TelemetryJson : public Telemetry::VisitorInterface {
 public:
-    TelemetryJson();
+    TelemetryJson() = default;
     ~TelemetryJson() = default;
 
     void Visit(const Telemetry::Field<bool>& field) override;

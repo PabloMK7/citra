@@ -9,8 +9,6 @@
 
 namespace WebService {
 
-TelemetryJson::TelemetryJson() {}
-
 template <class T>
 void TelemetryJson::Serialize(Telemetry::FieldType type, const std::string& name, T value) {
     sections[static_cast<u8>(type)][name] = value;
