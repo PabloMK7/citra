@@ -171,7 +171,7 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(
             size_t lut =
                 static_cast<size_t>(LightingRegs::LightingSampler::DistanceAttenuation) + num;
 
-            float sample_loc = scale * distance + bias;
+            float sample_loc = MathUtil::Clamp(scale * distance + bias, 0.0f, 1.0f);
 
             u8 lutindex =
                 static_cast<u8>(MathUtil::Clamp(std::floor(sample_loc * 256.0f), 0.0f, 255.0f));
