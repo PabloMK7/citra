@@ -461,7 +461,7 @@ public:
         z -= other.z;
         w -= other.w;
     }
-    template <typename Q = T>
+
     Vec4<decltype(-T{})> operator-() const {
         return MakeVec(-x, -y, -z, -w);
     }
