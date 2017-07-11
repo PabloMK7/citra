@@ -116,7 +116,7 @@ static std::tuple<float24, float24, PAddr> ConvertCubeCoord(float24 u, float24 v
 }
 
 static float LookupLightingLut(const Pica::State::Lighting& lighting, size_t lut_index, u8 index,
-                        float delta) {
+                               float delta) {
     ASSERT_MSG(lut_index < lighting.luts.size(), "Out of range lut");
     ASSERT_MSG(index < lighting.luts[0].size(), "Out of range index");
 
@@ -129,8 +129,8 @@ static float LookupLightingLut(const Pica::State::Lighting& lighting, size_t lut
 }
 
 std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(
-    const Pica::LightingRegs& lighting, const Math::Quaternion<float>& normquat,
-    const Math::Vec3<float>& view) {
+    const Pica::LightingRegs& lighting, const Pica::State::Lighting& lighting_state,
+    const Math::Quaternion<float>& normquat, const Math::Vec3<float>& view) {
 
     // TODO(Subv): Bump mapping
     Math::Vec3<float> surface_normal = {0.0f, 0.0f, 1.0f};
@@ -148,7 +148,7 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(
 
     for (unsigned light_index = 0; light_index <= lighting.max_light_index; ++light_index) {
         unsigned num = lighting.light_enable.GetNum(light_index);
-        const auto& light_config = g_state.regs.lighting.light[num];
+        const auto& light_config = lighting.light[num];
 
         Math::Vec3<float> refl_value = {};
         Math::Vec3<float> position = {float16::FromRaw(light_config.x).ToFloat32(),
@@ -176,7 +176,7 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(
             u8 lutindex =
                 static_cast<u8>(MathUtil::Clamp(std::floor(sample_loc * 256.f), 0.0f, 255.0f));
             float delta = sample_loc * 256 - lutindex;
-            dist_atten = LookupLightingLut(g_state.lighting, lut, lutindex, delta);
+            dist_atten = LookupLightingLut(lighting_state, lut, lutindex, delta);
         }
 
         auto GetLutIndex = [&](unsigned num, LightingRegs::LightingLutInput input,
@@ -243,7 +243,7 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(
 
             d0_lut_value =
                 scale *
-                LookupLightingLut(g_state.lighting,
+                LookupLightingLut(lighting_state,
                                   static_cast<size_t>(LightingRegs::LightingSampler::Distribution0),
                                   index, delta);
         }
@@ -264,7 +264,7 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(
 
             refl_value.x =
                 scale *
-                LookupLightingLut(g_state.lighting,
+                LookupLightingLut(lighting_state,
                                   static_cast<size_t>(LightingRegs::LightingSampler::ReflectRed),
                                   index, delta);
         } else {
@@ -285,7 +285,7 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(
 
             refl_value.y =
                 scale *
-                LookupLightingLut(g_state.lighting,
+                LookupLightingLut(lighting_state,
                                   static_cast<size_t>(LightingRegs::LightingSampler::ReflectGreen),
                                   index, delta);
         } else {
@@ -306,7 +306,7 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(
 
             refl_value.z =
                 scale *
-                LookupLightingLut(g_state.lighting,
+                LookupLightingLut(lighting_state,
                                   static_cast<size_t>(LightingRegs::LightingSampler::ReflectBlue),
                                   index, delta);
         } else {
@@ -328,7 +328,7 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(
 
             d1_lut_value =
                 scale *
-                LookupLightingLut(g_state.lighting,
+                LookupLightingLut(lighting_state,
                                   static_cast<size_t>(LightingRegs::LightingSampler::Distribution1),
                                   index, delta);
         }
@@ -350,7 +350,7 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(
 
             float lut_value =
                 scale *
-                LookupLightingLut(g_state.lighting,
+                LookupLightingLut(lighting_state,
                                   static_cast<size_t>(LightingRegs::LightingSampler::Fresnel),
                                   index, delta);
 
@@ -729,8 +729,8 @@ static void ProcessTriangleInternal(const Vertex& v0, const Vertex& v1, const Ve
             Math::Vec4<u8> secondary_fragment_color = {0, 0, 0, 0};
 
             if (!g_state.regs.lighting.disable) {
-                std::tie(primary_fragment_color, secondary_fragment_color) =
-                    ComputeFragmentsColors(g_state.regs.lighting, normquat, fragment_position);
+                std::tie(primary_fragment_color, secondary_fragment_color) = ComputeFragmentsColors(
+                    g_state.regs.lighting, g_state.lighting, normquat, fragment_position);
             }
 
             for (unsigned tev_stage_index = 0; tev_stage_index < tev_stages.size();
