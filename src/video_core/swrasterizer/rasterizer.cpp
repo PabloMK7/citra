@@ -179,9 +179,9 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(
             dist_atten = LookupLightingLut(lighting_state, lut, lutindex, delta);
         }
 
-        auto GetLutIndex = [&](unsigned num, LightingRegs::LightingLutInput input,
-                               bool abs) -> std::tuple<u8, float> {
-
+        auto GetLutValue = [&](LightingRegs::LightingLutInput input, bool abs,
+                               LightingRegs::LightingScale scale_enum,
+                               LightingRegs::LightingSampler sampler) {
             Math::Vec3<float> norm_view = view.Normalized();
             Math::Vec3<float> half_angle = (norm_view + light_vector).Normalized();
             float result = 0.0f;
@@ -209,6 +209,9 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(
                 result = 0.f;
             }
 
+            u8 index;
+            float delta;
+
             if (abs) {
                 if (light_config.config.two_sided_diffuse)
                     result = std::abs(result);
@@ -216,15 +219,18 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(
                     result = std::max(result, 0.0f);
 
                 float flr = std::floor(result * 256.f);
-                u8 lutindex = static_cast<u8>(MathUtil::Clamp(flr, 0.0f, 255.0f));
-                float delta = result * 256 - lutindex;
-                return {lutindex, delta};
+                index = static_cast<u8>(MathUtil::Clamp(flr, 0.0f, 255.0f));
+                delta = result * 256 - index;
             } else {
                 float flr = std::floor(result * 128.f);
-                s8 lutindex = static_cast<s8>(MathUtil::Clamp(flr, -128.0f, 127.0f));
-                float delta = result * 128.f - lutindex;
-                return {static_cast<u8>(lutindex), delta};
+                s8 signed_index = static_cast<s8>(MathUtil::Clamp(flr, -128.0f, 127.0f));
+                delta = result * 128.f - signed_index;
+                index = static_cast<u8>(signed_index);
             }
+
+            float scale = lighting.lut_scale.GetScale(scale_enum);
+            return scale *
+                   LookupLightingLut(lighting_state, static_cast<size_t>(sampler), index, delta);
         };
 
         // Specular 0 component
@@ -232,20 +238,9 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(
         if (lighting.config1.disable_lut_d0 == 0 &&
             LightingRegs::IsLightingSamplerSupported(
                 lighting.config0.config, LightingRegs::LightingSampler::Distribution0)) {
-
-            // Lookup specular "distribution 0" LUT value
-            u8 index;
-            float delta;
-            std::tie(index, delta) = GetLutIndex(num, lighting.lut_input.d0.Value(),
-                                                 lighting.abs_lut_input.disable_d0 == 0);
-
-            float scale = lighting.lut_scale.GetScale(lighting.lut_scale.d0);
-
             d0_lut_value =
-                scale *
-                LookupLightingLut(lighting_state,
-                                  static_cast<size_t>(LightingRegs::LightingSampler::Distribution0),
-                                  index, delta);
+                GetLutValue(lighting.lut_input.d0, lighting.abs_lut_input.disable_d0 == 0,
+                            lighting.lut_scale.d0, LightingRegs::LightingSampler::Distribution0);
         }
 
         Math::Vec3<float> specular_0 = d0_lut_value * light_config.specular_0.ToVec3f();
@@ -254,19 +249,9 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(
         if (lighting.config1.disable_lut_rr == 0 &&
             LightingRegs::IsLightingSamplerSupported(lighting.config0.config,
                                                      LightingRegs::LightingSampler::ReflectRed)) {
-
-            u8 index;
-            float delta;
-            std::tie(index, delta) =
-                GetLutIndex(num, lighting.lut_input.rr, lighting.abs_lut_input.disable_rr == 0);
-
-            float scale = lighting.lut_scale.GetScale(lighting.lut_scale.rr);
-
             refl_value.x =
-                scale *
-                LookupLightingLut(lighting_state,
-                                  static_cast<size_t>(LightingRegs::LightingSampler::ReflectRed),
-                                  index, delta);
+                GetLutValue(lighting.lut_input.rr, lighting.abs_lut_input.disable_rr == 0,
+                            lighting.lut_scale.rr, LightingRegs::LightingSampler::ReflectRed);
         } else {
             refl_value.x = 1.0f;
         }
@@ -275,19 +260,9 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(
         if (lighting.config1.disable_lut_rg == 0 &&
             LightingRegs::IsLightingSamplerSupported(lighting.config0.config,
                                                      LightingRegs::LightingSampler::ReflectGreen)) {
-
-            u8 index;
-            float delta;
-            std::tie(index, delta) =
-                GetLutIndex(num, lighting.lut_input.rg, lighting.abs_lut_input.disable_rg == 0);
-
-            float scale = lighting.lut_scale.GetScale(lighting.lut_scale.rg);
-
             refl_value.y =
-                scale *
-                LookupLightingLut(lighting_state,
-                                  static_cast<size_t>(LightingRegs::LightingSampler::ReflectGreen),
-                                  index, delta);
+                GetLutValue(lighting.lut_input.rg, lighting.abs_lut_input.disable_rg == 0,
+                            lighting.lut_scale.rg, LightingRegs::LightingSampler::ReflectGreen);
         } else {
             refl_value.y = refl_value.x;
         }
@@ -296,19 +271,9 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(
         if (lighting.config1.disable_lut_rb == 0 &&
             LightingRegs::IsLightingSamplerSupported(lighting.config0.config,
                                                      LightingRegs::LightingSampler::ReflectBlue)) {
-
-            u8 index;
-            float delta;
-            std::tie(index, delta) =
-                GetLutIndex(num, lighting.lut_input.rb, lighting.abs_lut_input.disable_rb == 0);
-
-            float scale = lighting.lut_scale.GetScale(lighting.lut_scale.rb);
-
             refl_value.z =
-                scale *
-                LookupLightingLut(lighting_state,
-                                  static_cast<size_t>(LightingRegs::LightingSampler::ReflectBlue),
-                                  index, delta);
+                GetLutValue(lighting.lut_input.rb, lighting.abs_lut_input.disable_rb == 0,
+                            lighting.lut_scale.rb, LightingRegs::LightingSampler::ReflectBlue);
         } else {
             refl_value.z = refl_value.x;
         }
@@ -317,20 +282,9 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(
         if (lighting.config1.disable_lut_d1 == 0 &&
             LightingRegs::IsLightingSamplerSupported(
                 lighting.config0.config, LightingRegs::LightingSampler::Distribution1)) {
-
-            // Lookup specular "distribution 1" LUT value
-            u8 index;
-            float delta;
-            std::tie(index, delta) = GetLutIndex(num, lighting.lut_input.d1.Value(),
-                                                 lighting.abs_lut_input.disable_d1 == 0);
-
-            float scale = lighting.lut_scale.GetScale(lighting.lut_scale.d1);
-
             d1_lut_value =
-                scale *
-                LookupLightingLut(lighting_state,
-                                  static_cast<size_t>(LightingRegs::LightingSampler::Distribution1),
-                                  index, delta);
+                GetLutValue(lighting.lut_input.d1, lighting.abs_lut_input.disable_d1 == 0,
+                            lighting.lut_scale.d1, LightingRegs::LightingSampler::Distribution1);
         }
 
         Math::Vec3<float> specular_1 =
@@ -340,19 +294,9 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(
             LightingRegs::IsLightingSamplerSupported(lighting.config0.config,
                                                      LightingRegs::LightingSampler::Fresnel)) {
 
-            // Lookup fresnel LUT value
-            u8 index;
-            float delta;
-            std::tie(index, delta) = GetLutIndex(num, lighting.lut_input.fr.Value(),
-                                                 lighting.abs_lut_input.disable_fr == 0);
-
-            float scale = lighting.lut_scale.GetScale(lighting.lut_scale.fr);
-
             float lut_value =
-                scale *
-                LookupLightingLut(lighting_state,
-                                  static_cast<size_t>(LightingRegs::LightingSampler::Fresnel),
-                                  index, delta);
+                GetLutValue(lighting.lut_input.fr, lighting.abs_lut_input.disable_fr == 0,
+                            lighting.lut_scale.fr, LightingRegs::LightingSampler::Fresnel);
 
             // Enabled for diffuse lighting alpha component
             if (lighting.config0.fresnel_selector ==
