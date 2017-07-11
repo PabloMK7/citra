@@ -143,8 +143,8 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(
     // Use the normalized the quaternion when performing the rotation
     auto normal = Math::QuaternionRotate(normquat.Normalized(), surface_normal);
 
-    Math::Vec4<float> diffuse_sum = {0.f, 0.f, 0.f, 1.f};
-    Math::Vec4<float> specular_sum = {0.f, 0.f, 0.f, 1.f};
+    Math::Vec4<float> diffuse_sum = {0.0f, 0.0f, 0.0f, 1.0f};
+    Math::Vec4<float> specular_sum = {0.0f, 0.0f, 0.0f, 1.0f};
 
     for (unsigned light_index = 0; light_index <= lighting.max_light_index; ++light_index) {
         unsigned num = lighting.light_enable.GetNum(light_index);
@@ -174,7 +174,7 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(
             float sample_loc = scale * distance + bias;
 
             u8 lutindex =
-                static_cast<u8>(MathUtil::Clamp(std::floor(sample_loc * 256.f), 0.0f, 255.0f));
+                static_cast<u8>(MathUtil::Clamp(std::floor(sample_loc * 256.0f), 0.0f, 255.0f));
             float delta = sample_loc * 256 - lutindex;
             dist_atten = LookupLightingLut(lighting_state, lut, lutindex, delta);
         }
@@ -206,7 +206,7 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(
             default:
                 LOG_CRITICAL(HW_GPU, "Unknown lighting LUT input %u\n", static_cast<u32>(input));
                 UNIMPLEMENTED();
-                result = 0.f;
+                result = 0.0f;
             }
 
             u8 index;
@@ -218,13 +218,13 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(
                 else
                     result = std::max(result, 0.0f);
 
-                float flr = std::floor(result * 256.f);
+                float flr = std::floor(result * 256.0f);
                 index = static_cast<u8>(MathUtil::Clamp(flr, 0.0f, 255.0f));
                 delta = result * 256 - index;
             } else {
-                float flr = std::floor(result * 128.f);
+                float flr = std::floor(result * 128.0f);
                 s8 signed_index = static_cast<s8>(MathUtil::Clamp(flr, -128.0f, 127.0f));
-                delta = result * 128.f - signed_index;
+                delta = result * 128.0f - signed_index;
                 index = static_cast<u8>(signed_index);
             }
 
@@ -278,6 +278,7 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(
             refl_value.z = refl_value.x;
         }
 
+        // Specular 1 component
         float d1_lut_value = 1.0f;
         if (lighting.config1.disable_lut_d1 == 0 &&
             LightingRegs::IsLightingSamplerSupported(
@@ -290,6 +291,7 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(
         Math::Vec3<float> specular_1 =
             d1_lut_value * refl_value * light_config.specular_1.ToVec3f();
 
+        // Fresnel
         if (lighting.config1.disable_lut_fr == 0 &&
             LightingRegs::IsLightingSamplerSupported(lighting.config0.config,
                                                      LightingRegs::LightingSampler::Fresnel)) {
@@ -319,10 +321,10 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(
         // product.
         float clamp_highlights = 1.0f;
         if (lighting.config0.clamp_highlights) {
-            if (dot_product <= 0.f)
-                clamp_highlights = 0.f;
+            if (dot_product <= 0.0f)
+                clamp_highlights = 0.0f;
             else
-                clamp_highlights = 1.f;
+                clamp_highlights = 1.0f;
         }
 
         if (light_config.config.two_sided_diffuse)
@@ -335,7 +337,7 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(
         diffuse_sum += Math::MakeVec(diffuse * dist_atten, 0.0f);
 
         specular_sum +=
-            Math::MakeVec((specular_0 + specular_1) * clamp_highlights * dist_atten, 0.f);
+            Math::MakeVec((specular_0 + specular_1) * clamp_highlights * dist_atten, 0.0f);
     }
 
     diffuse_sum += Math::MakeVec(lighting.global_ambient.ToVec3f(), 0.0f);
