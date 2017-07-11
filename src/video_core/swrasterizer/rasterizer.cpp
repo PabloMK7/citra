@@ -340,16 +340,17 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(
 
     diffuse_sum += Math::MakeVec(lighting.global_ambient.ToVec3f(), 0.0f);
 
-    return {Math::MakeVec<float>(MathUtil::Clamp(diffuse_sum.x, 0.0f, 1.0f) * 255,
-                                 MathUtil::Clamp(diffuse_sum.y, 0.0f, 1.0f) * 255,
-                                 MathUtil::Clamp(diffuse_sum.z, 0.0f, 1.0f) * 255,
-                                 MathUtil::Clamp(diffuse_sum.w, 0.0f, 1.0f) * 255)
-                .Cast<u8>(),
-            Math::MakeVec<float>(MathUtil::Clamp(specular_sum.x, 0.0f, 1.0f) * 255,
-                                 MathUtil::Clamp(specular_sum.y, 0.0f, 1.0f) * 255,
-                                 MathUtil::Clamp(specular_sum.z, 0.0f, 1.0f) * 255,
-                                 MathUtil::Clamp(specular_sum.w, 0.0f, 1.0f) * 255)
-                .Cast<u8>()};
+    auto diffuse = Math::MakeVec<float>(MathUtil::Clamp(diffuse_sum.x, 0.0f, 1.0f) * 255,
+                                        MathUtil::Clamp(diffuse_sum.y, 0.0f, 1.0f) * 255,
+                                        MathUtil::Clamp(diffuse_sum.z, 0.0f, 1.0f) * 255,
+                                        MathUtil::Clamp(diffuse_sum.w, 0.0f, 1.0f) * 255)
+                       .Cast<u8>();
+    auto specular = Math::MakeVec<float>(MathUtil::Clamp(specular_sum.x, 0.0f, 1.0f) * 255,
+                                         MathUtil::Clamp(specular_sum.y, 0.0f, 1.0f) * 255,
+                                         MathUtil::Clamp(specular_sum.z, 0.0f, 1.0f) * 255,
+                                         MathUtil::Clamp(specular_sum.w, 0.0f, 1.0f) * 255)
+                        .Cast<u8>();
+    return {diffuse, specular};
 }
 
 MICROPROFILE_DEFINE(GPU_Rasterization, "GPU", "Rasterization", MP_RGB(50, 50, 240));
