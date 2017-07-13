@@ -481,9 +481,18 @@ bool RendererOpenGL::Init() {
         glDebugMessageCallback(DebugHandler, nullptr);
     }
 
-    LOG_INFO(Render_OpenGL, "GL_VERSION: %s", glGetString(GL_VERSION));
-    LOG_INFO(Render_OpenGL, "GL_VENDOR: %s", glGetString(GL_VENDOR));
-    LOG_INFO(Render_OpenGL, "GL_RENDERER: %s", glGetString(GL_RENDERER));
+    const char* gl_version{reinterpret_cast<char const*>(glGetString(GL_VERSION))};
+    const char* gpu_vendor{reinterpret_cast<char const*>(glGetString(GL_VENDOR))};
+    const char* gpu_model{reinterpret_cast<char const*>(glGetString(GL_RENDERER))};
+
+    LOG_INFO(Render_OpenGL, "GL_VERSION: %s", gl_version);
+    LOG_INFO(Render_OpenGL, "GL_VENDOR: %s", gpu_vendor);
+    LOG_INFO(Render_OpenGL, "GL_RENDERER: %s", gpu_model);
+
+    Core::Telemetry().AddField(Telemetry::FieldType::UserSystem, "GPU_Vendor", gpu_vendor);
+    Core::Telemetry().AddField(Telemetry::FieldType::UserSystem, "GPU_Model", gpu_model);
+    Core::Telemetry().AddField(Telemetry::FieldType::UserSystem, "GPU_OpenGL_Version", gl_version);
+
     if (!GLAD_GL_VERSION_3_3) {
         return false;
     }
