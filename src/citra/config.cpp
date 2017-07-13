@@ -151,6 +151,10 @@ void Config::ReadValues() {
     Settings::values.use_gdbstub = sdl2_config->GetBoolean("Debugging", "use_gdbstub", false);
     Settings::values.gdbstub_port =
         static_cast<u16>(sdl2_config->GetInteger("Debugging", "gdbstub_port", 24689));
+
+    // Web Service
+    Settings::values.telemetry_endpoint_url = sdl2_config->Get(
+        "WebService", "telemetry_endpoint_url", "https://services.citra-emu.org/api/telemetry");
 }
 
 void Config::Reload() {

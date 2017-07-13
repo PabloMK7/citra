@@ -168,5 +168,9 @@ log_filter = *:Info
 # Port for listening to GDB connections.
 use_gdbstub=false
 gdbstub_port=24689
+
+[WebService]
+# Endpoint URL for submitting telemetry data
+telemetry_endpoint_url =
 )";
 }

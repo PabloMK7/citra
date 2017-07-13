@@ -126,6 +126,9 @@ struct Values {
     // Debugging
     bool use_gdbstub;
     u16 gdbstub_port;
+
+    // WebService
+    std::string telemetry_endpoint_url;
 } extern values;
 
 // a special value for Values::region_value indicating that citra will automatically select a region

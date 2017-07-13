@@ -52,3 +52,15 @@ endif()
 # ENet
 add_subdirectory(enet)
 target_include_directories(enet INTERFACE ./enet/include)
+
+if (ENABLE_WEB_SERVICE)
+    # CPR
+    option(BUILD_TESTING OFF)
+    option(BUILD_CPR_TESTS OFF)
+    add_subdirectory(cpr)
+    target_include_directories(cpr INTERFACE ./cpr/include)
+
+    # JSON
+    add_library(json-headers INTERFACE)
+    target_include_directories(json-headers INTERFACE ./json/src)
+endif()

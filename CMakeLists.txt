@@ -11,6 +11,8 @@ option(CITRA_USE_BUNDLED_SDL2 "Download bundled SDL2 binaries" OFF)
 option(ENABLE_QT "Enable the Qt frontend" ON)
 option(CITRA_USE_BUNDLED_QT "Download bundled Qt binaries" OFF)
 
+option(ENABLE_WEB_SERVICE "Enable web services (telemetry, etc.)" ON)
+
 if(NOT EXISTS ${CMAKE_SOURCE_DIR}/.git/hooks/pre-commit)
     message(STATUS "Copying pre-commit hook")
     file(COPY hooks/pre-commit
@@ -223,6 +225,9 @@ if (ENABLE_QT)
     find_package(Qt5 REQUIRED COMPONENTS Widgets OpenGL ${QT_PREFIX_HINT})
 endif()
 
+if (ENABLE_WEB_SERVICE)
+    add_definitions(-DENABLE_WEB_SERVICE)
+endif()
 
 # Platform-specific library requirements
 # ======================================
