@@ -10,6 +10,7 @@
 #include "core/file_sys/archive_backend.h"
 #include "core/hle/kernel/hle_ipc.h"
 #include "core/hle/result.h"
+#include "core/hle/service/service.h"
 
 namespace FileSys {
 class DirectoryBackend;
@@ -47,7 +48,9 @@ enum class MediaType : u32 { NAND = 0, SDMC = 1, GameCard = 2 };
 
 typedef u64 ArchiveHandle;
 
-class File final : public Kernel::SessionRequestHandler {
+// TODO: File is not a real service, but it can still utilize ServiceFramework::RegisterHandlers.
+// Consider splitting ServiceFramework interface.
+class File final : public ServiceFramework<File> {
 public:
     File(std::unique_ptr<FileSys::FileBackend>&& backend, const FileSys::Path& path);
     ~File();
@@ -60,8 +63,16 @@ public:
     u32 priority;       ///< Priority of the file. TODO(Subv): Find out what this means
     std::unique_ptr<FileSys::FileBackend> backend; ///< File backend interface
 
-protected:
-    void HandleSyncRequest(Kernel::SharedPtr<Kernel::ServerSession> server_session) override;
+private:
+    void Read(Kernel::HLERequestContext& ctx);
+    void Write(Kernel::HLERequestContext& ctx);
+    void GetSize(Kernel::HLERequestContext& ctx);
+    void SetSize(Kernel::HLERequestContext& ctx);
+    void Close(Kernel::HLERequestContext& ctx);
+    void Flush(Kernel::HLERequestContext& ctx);
+    void SetPriority(Kernel::HLERequestContext& ctx);
+    void GetPriority(Kernel::HLERequestContext& ctx);
+    void OpenLinkFile(Kernel::HLERequestContext& ctx);
 };
 
 class Directory final : public Kernel::SessionRequestHandler {

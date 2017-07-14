@@ -27,6 +27,7 @@
 #include "core/file_sys/errors.h"
 #include "core/file_sys/file_backend.h"
 #include "core/hle/ipc.h"
+#include "core/hle/ipc_helpers.h"
 #include "core/hle/kernel/client_port.h"
 #include "core/hle/kernel/client_session.h"
 #include "core/hle/kernel/handle_table.h"
@@ -84,121 +85,131 @@ enum class DirectoryCommand : u32 {
 };
 
 File::File(std::unique_ptr<FileSys::FileBackend>&& backend, const FileSys::Path& path)
-    : path(path), priority(0), backend(std::move(backend)) {}
+    : path(path), priority(0), backend(std::move(backend)), ServiceFramework("", 1) {
+    static const FunctionInfo functions[] = {
+        {0x080200C2, &File::Read, "Read"},
+        {0x08030102, &File::Write, "Write"},
+        {0x08040000, &File::GetSize, "GetSize"},
+        {0x08050080, &File::SetSize, "SetSize"},
+        {0x08080000, &File::Close, "Close"},
+        {0x08090000, &File::Flush, "Flush"},
+        {0x080A0040, &File::SetPriority, "SetPriority"},
+        {0x080B0000, &File::GetPriority, "GetPriority"},
+        {0x080C0000, &File::OpenLinkFile, "OpenLinkFile"},
+    };
+    RegisterHandlers(functions);
+}
 
-File::~File() {}
+void File::Read(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x0802, 3, 2);
+    u64 offset = rp.Pop<u64>();
+    u32 length = rp.Pop<u32>();
+    auto& buffer = rp.PopMappedBuffer();
+    LOG_TRACE(Service_FS, "Read %s: offset=0x%" PRIx64 " length=0x%08X", GetName().c_str(), offset,
+              length);
 
-void File::HandleSyncRequest(Kernel::SharedPtr<Kernel::ServerSession> server_session) {
+    if (offset + length > backend->GetSize()) {
+        LOG_ERROR(Service_FS, "Reading from out of bounds offset=0x%" PRIx64
+                              " length=0x%08X file_size=0x%" PRIx64,
+                  offset, length, backend->GetSize());
+    }
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
+
+    std::vector<u8> data(length);
+    ResultVal<size_t> read = backend->Read(offset, data.size(), data.data());
+    if (read.Failed()) {
+        rb.Push(read.Code());
+        rb.Push<u32>(0);
+    } else {
+        buffer.Write(data.data(), 0, *read);
+        rb.Push(RESULT_SUCCESS);
+        rb.Push<u32>(*read);
+    }
+    rb.PushMappedBuffer(buffer);
+}
+
+void File::Write(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x0803, 3, 2);
+    u64 offset = rp.Pop<u64>();
+    u32 length = rp.Pop<u32>();
+    u32 flush = rp.Pop<u32>();
+    auto& buffer = rp.PopMappedBuffer();
+    LOG_TRACE(Service_FS, "Write %s: offset=0x%llx length=%d, flush=0x%x", GetName().c_str(),
+              offset, length, flush);
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
+
+    std::vector<u8> data(length);
+    buffer.Read(data.data(), 0, data.size());
+    ResultVal<size_t> written = backend->Write(offset, data.size(), flush != 0, data.data());
+    if (written.Failed()) {
+        rb.Push(written.Code());
+        rb.Push<u32>(0);
+    } else {
+        rb.Push(RESULT_SUCCESS);
+        rb.Push<u32>(*written);
+    }
+    rb.PushMappedBuffer(buffer);
+}
+
+void File::GetSize(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x0804, 0, 0);
+    IPC::RequestBuilder rb = rp.MakeBuilder(3, 0);
+    rb.Push(RESULT_SUCCESS);
+    rb.Push(backend->GetSize());
+}
+
+void File::SetSize(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x0805, 2, 0);
+    backend->SetSize(rp.Pop<u64>());
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RESULT_SUCCESS);
+}
+
+void File::Close(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x0808, 0, 0);
+    backend->Close();
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RESULT_SUCCESS);
+}
+
+void File::Flush(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x0809, 0, 0);
+    backend->Flush();
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RESULT_SUCCESS);
+}
+
+void File::SetPriority(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x080A, 1, 0);
+    priority = rp.Pop<u32>();
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RESULT_SUCCESS);
+}
+
+void File::GetPriority(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x080B, 0, 0);
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
+    rb.Push(RESULT_SUCCESS);
+    rb.Push(priority);
+}
+
+void File::OpenLinkFile(Kernel::HLERequestContext& ctx) {
+    LOG_WARNING(Service_FS, "(STUBBED) File command OpenLinkFile %s", GetName().c_str());
     using Kernel::ClientSession;
     using Kernel::ServerSession;
     using Kernel::SharedPtr;
+    IPC::RequestParser rp(ctx, 0x080C, 0, 0);
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
+    auto sessions = ServerSession::CreateSessionPair(GetName());
+    ClientConnected(std::get<SharedPtr<ServerSession>>(sessions));
 
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-    FileCommand cmd = static_cast<FileCommand>(cmd_buff[0]);
-    switch (cmd) {
-
-    // Read from file...
-    case FileCommand::Read: {
-        u64 offset = cmd_buff[1] | ((u64)cmd_buff[2]) << 32;
-        u32 length = cmd_buff[3];
-        u32 address = cmd_buff[5];
-        LOG_TRACE(Service_FS, "Read %s: offset=0x%llx length=%d address=0x%x", GetName().c_str(),
-                  offset, length, address);
-
-        if (offset + length > backend->GetSize()) {
-            LOG_ERROR(Service_FS, "Reading from out of bounds offset=0x%" PRIx64
-                                  " length=0x%08X file_size=0x%" PRIx64,
-                      offset, length, backend->GetSize());
-        }
-
-        std::vector<u8> data(length);
-        ResultVal<size_t> read = backend->Read(offset, data.size(), data.data());
-        if (read.Failed()) {
-            cmd_buff[1] = read.Code().raw;
-            return;
-        }
-        Memory::WriteBlock(address, data.data(), *read);
-        cmd_buff[2] = static_cast<u32>(*read);
-        break;
-    }
-
-    // Write to file...
-    case FileCommand::Write: {
-        u64 offset = cmd_buff[1] | ((u64)cmd_buff[2]) << 32;
-        u32 length = cmd_buff[3];
-        u32 flush = cmd_buff[4];
-        u32 address = cmd_buff[6];
-        LOG_TRACE(Service_FS, "Write %s: offset=0x%llx length=%d address=0x%x, flush=0x%x",
-                  GetName().c_str(), offset, length, address, flush);
-
-        std::vector<u8> data(length);
-        Memory::ReadBlock(address, data.data(), data.size());
-        ResultVal<size_t> written = backend->Write(offset, data.size(), flush != 0, data.data());
-        if (written.Failed()) {
-            cmd_buff[1] = written.Code().raw;
-            return;
-        }
-        cmd_buff[2] = static_cast<u32>(*written);
-        break;
-    }
-
-    case FileCommand::GetSize: {
-        LOG_TRACE(Service_FS, "GetSize %s", GetName().c_str());
-        u64 size = backend->GetSize();
-        cmd_buff[2] = (u32)size;
-        cmd_buff[3] = size >> 32;
-        break;
-    }
-
-    case FileCommand::SetSize: {
-        u64 size = cmd_buff[1] | ((u64)cmd_buff[2] << 32);
-        LOG_TRACE(Service_FS, "SetSize %s size=%llu", GetName().c_str(), size);
-        backend->SetSize(size);
-        break;
-    }
-
-    case FileCommand::Close: {
-        LOG_TRACE(Service_FS, "Close %s", GetName().c_str());
-        backend->Close();
-        break;
-    }
-
-    case FileCommand::Flush: {
-        LOG_TRACE(Service_FS, "Flush");
-        backend->Flush();
-        break;
-    }
-
-    case FileCommand::OpenLinkFile: {
-        LOG_WARNING(Service_FS, "(STUBBED) File command OpenLinkFile %s", GetName().c_str());
-        auto sessions = ServerSession::CreateSessionPair(GetName());
-        ClientConnected(std::get<SharedPtr<ServerSession>>(sessions));
-        cmd_buff[3] = Kernel::g_handle_table.Create(std::get<SharedPtr<ClientSession>>(sessions))
-                          .ValueOr(INVALID_HANDLE);
-        break;
-    }
-
-    case FileCommand::SetPriority: {
-        priority = cmd_buff[1];
-        LOG_TRACE(Service_FS, "SetPriority %u", priority);
-        break;
-    }
-
-    case FileCommand::GetPriority: {
-        cmd_buff[2] = priority;
-        LOG_TRACE(Service_FS, "GetPriority");
-        break;
-    }
-
-    // Unknown command...
-    default:
-        LOG_ERROR(Service_FS, "Unknown command=0x%08X!", static_cast<u32>(cmd));
-        ResultCode error = UnimplementedFunction(ErrorModule::FS);
-        cmd_buff[1] = error.raw; // TODO(Link Mauve): use the correct error code for that.
-        return;
-    }
-    cmd_buff[1] = RESULT_SUCCESS.raw; // No error
+    rb.Push(RESULT_SUCCESS);
+    rb.PushObjects(std::get<SharedPtr<ClientSession>>(sessions));
 }
+
+File::~File() {}
 
 Directory::Directory(std::unique_ptr<FileSys::DirectoryBackend>&& backend,
                      const FileSys::Path& path)
