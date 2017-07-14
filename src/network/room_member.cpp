@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <atomic>
+#include <list>
 #include <mutex>
 #include <thread>
 #include "common/assert.h"
@@ -33,8 +34,10 @@ public:
 
     std::mutex network_mutex; ///< Mutex that controls access to the `client` variable.
     /// Thread that receives and dispatches network packets
-    std::unique_ptr<std::thread> receive_thread;
-    void ReceiveLoop();
+    std::unique_ptr<std::thread> loop_thread;
+    std::mutex send_list_mutex;  ///< Mutex that controls access to the `send_list` variable.
+    std::list<Packet> send_list; ///< A list that stores all packets to send the async
+    void MemberLoop();
     void StartLoop();
 
     /**
@@ -91,7 +94,7 @@ bool RoomMember::RoomMemberImpl::IsConnected() const {
     return state == State::Joining || state == State::Joined;
 }
 
-void RoomMember::RoomMemberImpl::ReceiveLoop() {
+void RoomMember::RoomMemberImpl::MemberLoop() {
     // Receive packets while the connection is open
     while (IsConnected()) {
         std::lock_guard<std::mutex> lock(network_mutex);
@@ -121,6 +124,9 @@ void RoomMember::RoomMemberImpl::ReceiveLoop() {
                 case IdMacCollision:
                     SetState(State::MacCollision);
                     break;
+                case IdVersionMismatch:
+                    SetState(State::WrongVersion);
+                    break;
                 default:
                     break;
                 }
@@ -128,22 +134,30 @@ void RoomMember::RoomMemberImpl::ReceiveLoop() {
                 break;
             case ENET_EVENT_TYPE_DISCONNECT:
                 SetState(State::LostConnection);
+                break;
             }
+        }
+        {
+            std::lock_guard<std::mutex> lock(send_list_mutex);
+            for (const auto& packet : send_list) {
+                ENetPacket* enetPacket = enet_packet_create(packet.GetData(), packet.GetDataSize(),
+                                                            ENET_PACKET_FLAG_RELIABLE);
+                enet_peer_send(server, 0, enetPacket);
+            }
+            enet_host_flush(client);
+            send_list.clear();
         }
     }
     Disconnect();
 };
 
 void RoomMember::RoomMemberImpl::StartLoop() {
-    receive_thread = std::make_unique<std::thread>(&RoomMember::RoomMemberImpl::ReceiveLoop, this);
+    loop_thread = std::make_unique<std::thread>(&RoomMember::RoomMemberImpl::MemberLoop, this);
 }
 
 void RoomMember::RoomMemberImpl::Send(Packet& packet) {
-    std::lock_guard<std::mutex> lock(network_mutex);
-    ENetPacket* enetPacket =
-        enet_packet_create(packet.GetData(), packet.GetDataSize(), ENET_PACKET_FLAG_RELIABLE);
-    enet_peer_send(server, 0, enetPacket);
-    enet_host_flush(client);
+    std::lock_guard<std::mutex> lock(send_list_mutex);
+    send_list.push_back(std::move(packet));
 }
 
 void RoomMember::RoomMemberImpl::SendJoinRequest(const std::string& nickname,
@@ -152,6 +166,7 @@ void RoomMember::RoomMemberImpl::SendJoinRequest(const std::string& nickname,
     packet << static_cast<MessageID>(IdJoinRequest);
     packet << nickname;
     packet << preferred_mac;
+    packet << network_version;
     Send(packet);
 }
 
@@ -238,11 +253,9 @@ void RoomMember::RoomMemberImpl::Disconnect() {
     room_information.member_slots = 0;
     room_information.name.clear();
 
-    if (server) {
-        enet_peer_disconnect(server, 0);
-    } else {
+    if (!server)
         return;
-    }
+    enet_peer_disconnect(server, 0);
 
     ENetEvent event;
     while (enet_host_service(client, &event, ConnectionTimeoutMs) > 0) {
@@ -296,14 +309,14 @@ RoomInformation RoomMember::GetRoomInformation() const {
 void RoomMember::Join(const std::string& nick, const char* server_addr, u16 server_port,
                       u16 client_port) {
     // If the member is connected, kill the connection first
-    if (room_member_impl->receive_thread && room_member_impl->receive_thread->joinable()) {
+    if (room_member_impl->loop_thread && room_member_impl->loop_thread->joinable()) {
         room_member_impl->SetState(State::Error);
-        room_member_impl->receive_thread->join();
-        room_member_impl->receive_thread.reset();
+        room_member_impl->loop_thread->join();
+        room_member_impl->loop_thread.reset();
     }
     // If the thread isn't running but the ptr still exists, reset it
-    else if (room_member_impl->receive_thread) {
-        room_member_impl->receive_thread.reset();
+    else if (room_member_impl->loop_thread) {
+        room_member_impl->loop_thread.reset();
     }
 
     ENetAddress address{};
@@ -361,8 +374,8 @@ void RoomMember::SendGameName(const std::string& game_name) {
 
 void RoomMember::Leave() {
     room_member_impl->SetState(State::Idle);
-    room_member_impl->receive_thread->join();
-    room_member_impl->receive_thread.reset();
+    room_member_impl->loop_thread->join();
+    room_member_impl->loop_thread.reset();
 }
 
 } // namespace Network

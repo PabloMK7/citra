@@ -11,6 +11,8 @@
 
 namespace Network {
 
+constexpr u32 network_version = 1; ///< The version of this Room and RoomMember
+
 constexpr u16 DefaultRoomPort = 1234;
 constexpr size_t NumChannels = 1; // Number of channels used for the connection
 
@@ -37,7 +39,9 @@ enum RoomMessageTypes {
     IdWifiPacket,
     IdChatMessage,
     IdNameCollision,
-    IdMacCollision
+    IdMacCollision,
+    IdVersionMismatch,
+    IdCloseRoom
 };
 
 /// This is what a server [person creating a server] would use.

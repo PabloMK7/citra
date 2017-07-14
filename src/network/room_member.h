@@ -47,6 +47,7 @@ public:
         // Reasons why connection was rejected
         NameCollision,  ///< Somebody is already using this name
         MacCollision,   ///< Somebody is already using that mac-address
+        WrongVersion,   ///< The room version is not the same as for this RoomMember
         CouldNotConnect ///< The room is not responding to a connection attempt
     };
 

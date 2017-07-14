@@ -74,6 +74,11 @@ public:
     void SendMacCollision(ENetPeer* client);
 
     /**
+     * Sends a ID_ROOM_VERSION_MISMATCH message telling the client that the MAC is invalid.
+     */
+    void SendVersionMismatch(ENetPeer* client);
+
+    /**
      * Notifies the member that its connection attempt was successful,
      * and it is now part of the room.
      */
@@ -170,6 +175,9 @@ void Room::RoomImpl::HandleJoinRequest(const ENetEvent* event) {
     MacAddress preferred_mac;
     packet >> preferred_mac;
 
+    u32 client_version;
+    packet >> client_version;
+
     if (!IsValidNickname(nickname)) {
         SendNameCollision(event->peer);
         return;
@@ -184,6 +192,11 @@ void Room::RoomImpl::HandleJoinRequest(const ENetEvent* event) {
     } else {
         // Assign a MAC address of this client automatically
         preferred_mac = GenerateMacAddress();
+    }
+
+    if (client_version != network_version) {
+        SendVersionMismatch(event->peer);
+        return;
     }
 
     // At this point the client is ready to be added to the room.
@@ -225,6 +238,17 @@ void Room::RoomImpl::SendNameCollision(ENetPeer* client) {
 void Room::RoomImpl::SendMacCollision(ENetPeer* client) {
     Packet packet;
     packet << static_cast<MessageID>(IdMacCollision);
+
+    ENetPacket* enet_packet =
+        enet_packet_create(packet.GetData(), packet.GetDataSize(), ENET_PACKET_FLAG_RELIABLE);
+    enet_peer_send(client, 0, enet_packet);
+    enet_host_flush(server);
+}
+
+void Room::RoomImpl::SendVersionMismatch(ENetPeer* client) {
+    Packet packet;
+    packet << static_cast<MessageID>(IdVersionMismatch);
+    packet << network_version;
 
     ENetPacket* enet_packet =
         enet_packet_create(packet.GetData(), packet.GetDataSize(), ENET_PACKET_FLAG_RELIABLE);
@@ -291,7 +315,7 @@ void Room::RoomImpl::HandleWifiPacket(const ENetEvent* event) {
     if (destination_address == BroadcastMac) { // Send the data to everyone except the sender
         for (const auto& member : members) {
             if (member.peer != event->peer)
-                enet_peer_send(member.peer, 0, event->packet);
+                enet_peer_send(member.peer, 0, enet_packet);
         }
     } else { // Send the data only to the destination client
         auto member = std::find_if(members.begin(), members.end(),
@@ -327,9 +351,9 @@ void Room::RoomImpl::HandleChatPacket(const ENetEvent* event) {
 
     ENetPacket* enet_packet = enet_packet_create(out_packet.GetData(), out_packet.GetDataSize(),
                                                  ENET_PACKET_FLAG_RELIABLE);
-    for (auto it = members.begin(); it != members.end(); ++it) {
-        if (it->peer != event->peer)
-            enet_peer_send(it->peer, 0, enet_packet);
+    for (const auto& member : members) {
+        if (member.peer != event->peer)
+            enet_peer_send(member.peer, 0, enet_packet);
     }
     enet_host_flush(server);
 }
@@ -369,6 +393,9 @@ Room::~Room() = default;
 void Room::Create(const std::string& name, const std::string& server_address, u16 server_port) {
     ENetAddress address;
     address.host = ENET_HOST_ANY;
+    if (!server_address.empty()) {
+        enet_address_set_host(&address, server_address.c_str());
+    }
     address.port = server_port;
 
     room_impl->server = enet_host_create(&address, MaxConcurrentConnections, NumChannels, 0, 0);
