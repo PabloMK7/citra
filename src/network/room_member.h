@@ -15,7 +15,7 @@ namespace Network {
 /// Information about the received WiFi packets.
 /// Acts as our own 802.11 header.
 struct WifiPacket {
-    enum class PacketType { Beacon, Data, Authentication, AssociationResponse };
+    enum class PacketType : u8 { Beacon, Data, Authentication, AssociationResponse };
     PacketType type;      ///< The type of 802.11 frame.
     std::vector<u8> data; ///< Raw 802.11 frame data, starting at the management frame header
                           /// for management frames.

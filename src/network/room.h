@@ -30,8 +30,7 @@ const MacAddress NoPreferredMac = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 constexpr MacAddress BroadcastMac = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 
 // The different types of messages that can be sent. The first byte of each packet defines the type
-using MessageID = u8;
-enum RoomMessageTypes {
+enum RoomMessageTypes : u8 {
     IdJoinRequest = 1,
     IdJoinSuccess,
     IdRoomInformation,

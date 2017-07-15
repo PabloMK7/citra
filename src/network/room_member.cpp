@@ -38,13 +38,15 @@ public:
     std::mutex send_list_mutex;  ///< Mutex that controls access to the `send_list` variable.
     std::list<Packet> send_list; ///< A list that stores all packets to send the async
     void MemberLoop();
+
     void StartLoop();
 
     /**
      * Sends data to the room. It will be send on channel 0 with flag RELIABLE
      * @param packet The data to send
      */
-    void Send(Packet& packet);
+    void Send(Packet&& packet);
+
     /**
      * Sends a request to the server, asking for permission to join a room with the specified
      * nickname and preferred mac.
@@ -99,11 +101,13 @@ void RoomMember::RoomMemberImpl::MemberLoop() {
     while (IsConnected()) {
         std::lock_guard<std::mutex> lock(network_mutex);
         ENetEvent event;
-        if (enet_host_service(client, &event, 1000) > 0) {
+        if (enet_host_service(client, &event, 100) > 0) {
             switch (event.type) {
             case ENET_EVENT_TYPE_RECEIVE:
                 switch (event.packet->data[0]) {
-                // TODO(B3N30): Handle the other message types
+                case IdWifiPacket:
+                    HandleWifiPackets(&event);
+                    break;
                 case IdChatMessage:
                     HandleChatPacket(&event);
                     break;
@@ -129,8 +133,6 @@ void RoomMember::RoomMemberImpl::MemberLoop() {
                     break;
                 case IdCloseRoom:
                     SetState(State::LostConnection);
-                    break;
-                default:
                     break;
                 }
                 enet_packet_destroy(event.packet);
@@ -158,7 +160,7 @@ void RoomMember::RoomMemberImpl::StartLoop() {
     loop_thread = std::make_unique<std::thread>(&RoomMember::RoomMemberImpl::MemberLoop, this);
 }
 
-void RoomMember::RoomMemberImpl::Send(Packet& packet) {
+void RoomMember::RoomMemberImpl::Send(Packet&& packet) {
     std::lock_guard<std::mutex> lock(send_list_mutex);
     send_list.push_back(std::move(packet));
 }
@@ -166,11 +168,11 @@ void RoomMember::RoomMemberImpl::Send(Packet& packet) {
 void RoomMember::RoomMemberImpl::SendJoinRequest(const std::string& nickname,
                                                  const MacAddress& preferred_mac) {
     Packet packet;
-    packet << static_cast<MessageID>(IdJoinRequest);
+    packet << static_cast<u8>(IdJoinRequest);
     packet << nickname;
     packet << preferred_mac;
     packet << network_version;
-    Send(packet);
+    Send(std::move(packet));
 }
 
 void RoomMember::RoomMemberImpl::HandleRoomInformationPacket(const ENetEvent* event) {
@@ -178,7 +180,7 @@ void RoomMember::RoomMemberImpl::HandleRoomInformationPacket(const ENetEvent* ev
     packet.Append(event->packet->data, event->packet->dataLength);
 
     // Ignore the first byte, which is the message id.
-    packet.IgnoreBytes(sizeof(MessageID));
+    packet.IgnoreBytes(sizeof(u8)); // Igonore the message type
 
     RoomInformation info{};
     packet >> info.name;
@@ -203,9 +205,9 @@ void RoomMember::RoomMemberImpl::HandleJoinPacket(const ENetEvent* event) {
     packet.Append(event->packet->data, event->packet->dataLength);
 
     // Ignore the first byte, which is the message id.
-    packet.IgnoreBytes(sizeof(MessageID));
+    packet.IgnoreBytes(sizeof(u8)); // Igonore the message type
 
-    // Parse the MAC Address from the BitStream
+    // Parse the MAC Address from the packet
     packet >> mac_address;
     // TODO(B3N30): Invoke callbacks
 }
@@ -216,9 +218,9 @@ void RoomMember::RoomMemberImpl::HandleWifiPackets(const ENetEvent* event) {
     packet.Append(event->packet->data, event->packet->dataLength);
 
     // Ignore the first byte, which is the message id.
-    packet.IgnoreBytes(sizeof(MessageID));
+    packet.IgnoreBytes(sizeof(u8)); // Igonore the message type
 
-    // Parse the WifiPacket from the BitStream
+    // Parse the WifiPacket from the packet
     u8 frame_type;
     packet >> frame_type;
     WifiPacket::PacketType type = static_cast<WifiPacket::PacketType>(frame_type);
@@ -231,10 +233,8 @@ void RoomMember::RoomMemberImpl::HandleWifiPackets(const ENetEvent* event) {
     u32 data_length;
     packet >> data_length;
 
-    std::vector<u8> data(data_length);
-    packet >> data;
+    packet >> wifi_packet.data;
 
-    wifi_packet.data = std::move(data);
     // TODO(B3N30): Invoke callbacks
 }
 
@@ -243,7 +243,7 @@ void RoomMember::RoomMemberImpl::HandleChatPacket(const ENetEvent* event) {
     packet.Append(event->packet->data, event->packet->dataLength);
 
     // Ignore the first byte, which is the message id.
-    packet.IgnoreBytes(sizeof(MessageID));
+    packet.IgnoreBytes(sizeof(u8));
 
     ChatEntry chat_entry{};
     packet >> chat_entry.nickname;
@@ -300,9 +300,8 @@ const std::string& RoomMember::GetNickname() const {
 }
 
 const MacAddress& RoomMember::GetMacAddress() const {
-    if (GetState() == State::Joined)
-        return room_member_impl->mac_address;
-    return MacAddress{};
+    ASSERT_MSG(IsConnected(), "Tried to get MAC address while not connected");
+    return room_member_impl->mac_address;
 }
 
 RoomInformation RoomMember::GetRoomInformation() const {
@@ -351,28 +350,27 @@ bool RoomMember::IsConnected() const {
 
 void RoomMember::SendWifiPacket(const WifiPacket& wifi_packet) {
     Packet packet;
-    packet << static_cast<MessageID>(IdWifiPacket);
+    packet << static_cast<u8>(IdWifiPacket);
     packet << static_cast<u8>(wifi_packet.type);
     packet << wifi_packet.channel;
     packet << wifi_packet.transmitter_address;
     packet << wifi_packet.destination_address;
-    packet << static_cast<u32>(wifi_packet.data.size());
     packet << wifi_packet.data;
-    room_member_impl->Send(packet);
+    room_member_impl->Send(std::move(packet));
 }
 
 void RoomMember::SendChatMessage(const std::string& message) {
     Packet packet;
-    packet << static_cast<MessageID>(IdChatMessage);
+    packet << static_cast<u8>(IdChatMessage);
     packet << message;
-    room_member_impl->Send(packet);
+    room_member_impl->Send(std::move(packet));
 }
 
 void RoomMember::SendGameName(const std::string& game_name) {
     Packet packet;
-    packet << static_cast<MessageID>(IdSetGameName);
+    packet << static_cast<u8>(IdSetGameName);
     packet << game_name;
-    room_member_impl->Send(packet);
+    room_member_impl->Send(std::move(packet));
 }
 
 void RoomMember::Leave() {

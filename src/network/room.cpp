@@ -74,7 +74,7 @@ public:
     void SendMacCollision(ENetPeer* client);
 
     /**
-     * Sends a ID_ROOM_VERSION_MISMATCH message telling the client that the MAC is invalid.
+     * Sends a ID_ROOM_VERSION_MISMATCH message telling the client that the version is invalid.
      */
     void SendVersionMismatch(ENetPeer* client);
 
@@ -139,7 +139,7 @@ public:
 void Room::RoomImpl::ServerLoop() {
     while (state != State::Closed) {
         ENetEvent event;
-        if (enet_host_service(server, &event, 1000) > 0) {
+        if (enet_host_service(server, &event, 100) > 0) {
             switch (event.type) {
             case ENET_EVENT_TYPE_RECEIVE:
                 switch (event.packet->data[0]) {
@@ -175,7 +175,7 @@ void Room::RoomImpl::StartLoop() {
 void Room::RoomImpl::HandleJoinRequest(const ENetEvent* event) {
     Packet packet;
     packet.Append(event->packet->data, event->packet->dataLength);
-    packet.IgnoreBytes(sizeof(MessageID));
+    packet.IgnoreBytes(sizeof(u8)); // Igonore the message type
     std::string nickname;
     packet >> nickname;
 
@@ -234,7 +234,7 @@ bool Room::RoomImpl::IsValidMacAddress(const MacAddress& address) const {
 
 void Room::RoomImpl::SendNameCollision(ENetPeer* client) {
     Packet packet;
-    packet << static_cast<MessageID>(IdNameCollision);
+    packet << static_cast<u8>(IdNameCollision);
 
     ENetPacket* enet_packet =
         enet_packet_create(packet.GetData(), packet.GetDataSize(), ENET_PACKET_FLAG_RELIABLE);
@@ -244,7 +244,7 @@ void Room::RoomImpl::SendNameCollision(ENetPeer* client) {
 
 void Room::RoomImpl::SendMacCollision(ENetPeer* client) {
     Packet packet;
-    packet << static_cast<MessageID>(IdMacCollision);
+    packet << static_cast<u8>(IdMacCollision);
 
     ENetPacket* enet_packet =
         enet_packet_create(packet.GetData(), packet.GetDataSize(), ENET_PACKET_FLAG_RELIABLE);
@@ -254,7 +254,7 @@ void Room::RoomImpl::SendMacCollision(ENetPeer* client) {
 
 void Room::RoomImpl::SendVersionMismatch(ENetPeer* client) {
     Packet packet;
-    packet << static_cast<MessageID>(IdVersionMismatch);
+    packet << static_cast<u8>(IdVersionMismatch);
     packet << network_version;
 
     ENetPacket* enet_packet =
@@ -265,7 +265,7 @@ void Room::RoomImpl::SendVersionMismatch(ENetPeer* client) {
 
 void Room::RoomImpl::SendJoinSuccess(ENetPeer* client, MacAddress mac_address) {
     Packet packet;
-    packet << static_cast<MessageID>(IdJoinSuccess);
+    packet << static_cast<u8>(IdJoinSuccess);
     packet << mac_address;
     ENetPacket* enet_packet =
         enet_packet_create(packet.GetData(), packet.GetDataSize(), ENET_PACKET_FLAG_RELIABLE);
@@ -275,7 +275,7 @@ void Room::RoomImpl::SendJoinSuccess(ENetPeer* client, MacAddress mac_address) {
 
 void Room::RoomImpl::SendCloseMessage() {
     Packet packet;
-    packet << static_cast<MessageID>(IdCloseRoom);
+    packet << static_cast<u8>(IdCloseRoom);
     ENetPacket* enet_packet =
         enet_packet_create(packet.GetData(), packet.GetDataSize(), ENET_PACKET_FLAG_RELIABLE);
     for (auto& member : members) {
@@ -289,7 +289,7 @@ void Room::RoomImpl::SendCloseMessage() {
 
 void Room::RoomImpl::BroadcastRoomInformation() {
     Packet packet;
-    packet << static_cast<MessageID>(IdRoomInformation);
+    packet << static_cast<u8>(IdRoomInformation);
     packet << room_information.name;
     packet << room_information.member_slots;
 
@@ -321,7 +321,7 @@ MacAddress Room::RoomImpl::GenerateMacAddress() {
 void Room::RoomImpl::HandleWifiPacket(const ENetEvent* event) {
     Packet in_packet;
     in_packet.Append(event->packet->data, event->packet->dataLength);
-    in_packet.IgnoreBytes(sizeof(MessageID));
+    in_packet.IgnoreBytes(sizeof(u8));         // Message type
     in_packet.IgnoreBytes(sizeof(u8));         // WifiPacket Type
     in_packet.IgnoreBytes(sizeof(u8));         // WifiPacket Channel
     in_packet.IgnoreBytes(sizeof(MacAddress)); // WifiPacket Transmitter Address
@@ -354,7 +354,7 @@ void Room::RoomImpl::HandleChatPacket(const ENetEvent* event) {
     Packet in_packet;
     in_packet.Append(event->packet->data, event->packet->dataLength);
 
-    in_packet.IgnoreBytes(sizeof(MessageID));
+    in_packet.IgnoreBytes(sizeof(u8)); // Igonore the message type
     std::string message;
     in_packet >> message;
     auto CompareNetworkAddress = [event](const Member member) -> bool {
@@ -366,7 +366,7 @@ void Room::RoomImpl::HandleChatPacket(const ENetEvent* event) {
     }
 
     Packet out_packet;
-    out_packet << static_cast<MessageID>(IdChatMessage);
+    out_packet << static_cast<u8>(IdChatMessage);
     out_packet << sending_member->nickname;
     out_packet << message;
 
@@ -383,7 +383,7 @@ void Room::RoomImpl::HandleGameNamePacket(const ENetEvent* event) {
     Packet in_packet;
     in_packet.Append(event->packet->data, event->packet->dataLength);
 
-    in_packet.IgnoreBytes(sizeof(MessageID));
+    in_packet.IgnoreBytes(sizeof(u8)); // Igonore the message type
     std::string game_name;
     in_packet >> game_name;
     auto member =

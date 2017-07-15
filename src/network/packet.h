@@ -115,6 +115,12 @@ private:
 
 template <typename T>
 Packet& Packet::operator>>(std::vector<T>& out_data) {
+    // First extract the size
+    u32 size = 0;
+    *this >> size;
+    out_data.resize(size);
+
+    // Then extract the data
     for (std::size_t i = 0; i < out_data.size(); ++i) {
         T character = 0;
         *this >> character;
@@ -135,6 +141,10 @@ Packet& Packet::operator>>(std::array<T, S>& out_data) {
 
 template <typename T>
 Packet& Packet::operator<<(const std::vector<T>& in_data) {
+    // First insert the size
+    *this << static_cast<u32>(in_data.size());
+
+    // Then insert the data
     for (std::size_t i = 0; i < in_data.size(); ++i) {
         *this << in_data[i];
     }
