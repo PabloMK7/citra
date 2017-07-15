@@ -85,6 +85,11 @@ public:
     void SendJoinSuccess(ENetPeer* client, MacAddress mac_address);
 
     /**
+     * Notifies the members that the room is closed,
+     */
+    void SendCloseMessage();
+
+    /**
      * Sends the information about the room, along with the list of members
      * to every connected client in the room.
      * The packet has the structure:
@@ -159,6 +164,8 @@ void Room::RoomImpl::ServerLoop() {
             }
         }
     }
+    // Close the connection to all members:
+    SendCloseMessage();
 }
 
 void Room::RoomImpl::StartLoop() {
@@ -264,6 +271,20 @@ void Room::RoomImpl::SendJoinSuccess(ENetPeer* client, MacAddress mac_address) {
         enet_packet_create(packet.GetData(), packet.GetDataSize(), ENET_PACKET_FLAG_RELIABLE);
     enet_peer_send(client, 0, enet_packet);
     enet_host_flush(server);
+}
+
+void Room::RoomImpl::SendCloseMessage() {
+    Packet packet;
+    packet << static_cast<MessageID>(IdCloseRoom);
+    ENetPacket* enet_packet =
+        enet_packet_create(packet.GetData(), packet.GetDataSize(), ENET_PACKET_FLAG_RELIABLE);
+    for (auto& member : members) {
+        enet_peer_send(member.peer, 0, enet_packet);
+    }
+    enet_host_flush(server);
+    for (auto& member : members) {
+        enet_peer_disconnect(member.peer, 0);
+    }
 }
 
 void Room::RoomImpl::BroadcastRoomInformation() {

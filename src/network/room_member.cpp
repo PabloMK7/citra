@@ -127,6 +127,9 @@ void RoomMember::RoomMemberImpl::MemberLoop() {
                 case IdVersionMismatch:
                     SetState(State::WrongVersion);
                     break;
+                case IdCloseRoom:
+                    SetState(State::LostConnection);
+                    break;
                 default:
                     break;
                 }
@@ -307,7 +310,7 @@ RoomInformation RoomMember::GetRoomInformation() const {
 }
 
 void RoomMember::Join(const std::string& nick, const char* server_addr, u16 server_port,
-                      u16 client_port) {
+                      u16 client_port, const MacAddress& preferred_mac) {
     // If the member is connected, kill the connection first
     if (room_member_impl->loop_thread && room_member_impl->loop_thread->joinable()) {
         room_member_impl->SetState(State::Error);
@@ -336,7 +339,7 @@ void RoomMember::Join(const std::string& nick, const char* server_addr, u16 serv
         room_member_impl->nickname = nick;
         room_member_impl->SetState(State::Joining);
         room_member_impl->StartLoop();
-        room_member_impl->SendJoinRequest(nick);
+        room_member_impl->SendJoinRequest(nick, preferred_mac);
     } else {
         room_member_impl->SetState(State::CouldNotConnect);
     }

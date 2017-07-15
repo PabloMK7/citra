@@ -97,7 +97,8 @@ public:
      * This may fail if the username is already taken.
      */
     void Join(const std::string& nickname, const char* server_addr = "127.0.0.1",
-              const u16 serverPort = DefaultRoomPort, const u16 clientPort = 0);
+              const u16 serverPort = DefaultRoomPort, const u16 clientPort = 0,
+              const MacAddress& preferred_mac = NoPreferredMac);
 
     /**
      * Sends a WiFi packet to the room.
