@@ -17,17 +17,6 @@ namespace NWM {
 using MacAddress = std::array<u8, 6>;
 constexpr std::array<u8, 3> NintendoOUI = {0x00, 0x1F, 0x32};
 
-/// Additional block tag ids in the Beacon frames
-enum class TagId : u8 {
-    SSID = 0,
-    SupportedRates = 1,
-    DSParameterSet = 2,
-    TrafficIndicationMap = 5,
-    CountryInformation = 7,
-    ERPInformation = 42,
-    VendorSpecific = 221
-};
-
 /**
  * Internal vendor-specific tag ids as stored inside
  * VendorSpecific blocks in the Beacon frames.
