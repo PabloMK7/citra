@@ -91,11 +91,94 @@ void HandleBeaconFrame(const Network::WifiPacket& packet) {
         received_beacons.pop_front();
 }
 
+/*
+ * Returns an available index in the nodes array for the
+ * currently-hosted UDS network.
+ */
+static u16 GetNextAvailableNodeId() {
+    ASSERT_MSG(connection_status.status == static_cast<u32>(NetworkStatus::ConnectedAsHost),
+               "Can not accept clients if we're not hosting a network");
+
+    for (u16 index = 0; index < connection_status.max_nodes; ++index) {
+        if ((connection_status.node_bitmask & (1 << index)) == 0)
+            return index;
+    }
+
+    // Any connection attempts to an already full network should have been refused.
+    ASSERT_MSG(false, "No available connection slots in the network");
+}
+
+/*
+ * Start a connection sequence with an UDS server. The sequence starts by sending an 802.11
+ * authentication frame with SEQ1.
+ */
+void StartConnectionSequence(const MacAddress& server) {
+    ASSERT(connection_status.status == static_cast<u32>(NetworkStatus::NotConnected));
+
+    // TODO(Subv): Handle timeout.
+
+    // Send an authentication frame with SEQ1
+    using Network::WifiPacket;
+    WifiPacket auth_request;
+    auth_request.channel = network_channel;
+    auth_request.data = GenerateAuthenticationFrame(AuthenticationSeq::SEQ1);
+    auth_request.destination_address = server;
+    auth_request.type = WifiPacket::PacketType::Authentication;
+
+    SendPacket(auth_request);
+}
+
+/// Sends an Association Response frame to the specified mac address
+void SendAssociationResponseFrame(const MacAddress& address) {
+    ASSERT_MSG(connection_status.status == static_cast<u32>(NetworkStatus::ConnectedAsHost));
+
+    using Network::WifiPacket;
+    WifiPacket assoc_response;
+    assoc_response.channel = network_channel;
+    // TODO(Subv): This will cause multiple clients to end up with the same association id, but
+    // we're not using that for anything.
+    u16 association_id = 1;
+    assoc_response.data = GenerateAssocResponseFrame(AssocStatus::Successful, association_id,
+                                                     network_info.network_id);
+    assoc_response.destination_address = address;
+    assoc_response.type = WifiPacket::PacketType::AssociationResponse;
+
+    SendPacket(assoc_response);
+}
+
+/*
+ * Handles the authentication request frame and sends the authentication response and association
+ * response frames. Once an Authentication frame with SEQ1 is received by the server, it responds
+ * with an Authentication frame containing SEQ2, and immediately sends an Association response frame
+ * containing the details of the access point and the assigned association id for the new client.
+ */
+void HandleAuthenticationFrame(const Network::WifiPacket& packet) {
+    // Only the SEQ1 auth frame is handled here, the SEQ2 frame doesn't need any special behavior
+    if (GetAuthenticationSeqNumber(packet.data) == AuthenticationSeq::SEQ1) {
+        ASSERT_MSG(connection_status.status == static_cast<u32>(NetworkStatus::ConnectedAsHost));
+
+        // Respond with an authentication response frame with SEQ2
+        using Network::WifiPacket;
+        WifiPacket auth_request;
+        auth_request.channel = network_channel;
+        auth_request.data = GenerateAuthenticationFrame(AuthenticationSeq::SEQ2);
+        auth_request.destination_address = packet.transmitter_address;
+        auth_request.type = WifiPacket::PacketType::Authentication;
+
+        SendPacket(auth_request);
+
+        SendAssociationResponseFrame(packet.transmitter_address);
+    }
+}
+
 /// Callback to parse and handle a received wifi packet.
 void OnWifiPacketReceived(const Network::WifiPacket& packet) {
     switch (packet.type) {
     case Network::WifiPacket::PacketType::Beacon:
         HandleBeaconFrame(packet);
+        break;
+    case Network::WifiPacket::PacketType::Authentication:
+        HandleAuthenticationFrame(packet);
         break;
     }
 }
@@ -675,23 +758,6 @@ static void BeaconBroadcastCallback(u64 userdata, int cycles_late) {
     // Start broadcasting the network, send a beacon frame every 102.4ms.
     CoreTiming::ScheduleEvent(msToCycles(DefaultBeaconInterval * MillisecondsPerTU) - cycles_late,
                               beacon_broadcast_event, 0);
-}
-
-/*
- * Returns an available index in the nodes array for the
- * currently-hosted UDS network.
- */
-static u32 GetNextAvailableNodeId() {
-    ASSERT_MSG(connection_status.status == static_cast<u32>(NetworkStatus::ConnectedAsHost),
-               "Can not accept clients if we're not hosting a network");
-
-    for (unsigned index = 0; index < connection_status.max_nodes; ++index) {
-        if ((connection_status.node_bitmask & (1 << index)) == 0)
-            return index;
-    }
-
-    // Any connection attempts to an already full network should have been refused.
-    ASSERT_MSG(false, "No available connection slots in the network");
 }
 
 /*
