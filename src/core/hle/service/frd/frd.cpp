@@ -6,6 +6,7 @@
 #include "common/logging/log.h"
 #include "common/string_util.h"
 #include "core/hle/ipc.h"
+#include "core/hle/ipc_helpers.h"
 #include "core/hle/result.h"
 #include "core/hle/service/frd/frd.h"
 #include "core/hle/service/frd/frd_a.h"
@@ -103,6 +104,48 @@ void GetMyScreenName(Service::Interface* self) {
     // TODO: (mailwl) get the name from config
     Common::UTF8ToUTF16("Citra").copy(reinterpret_cast<char16_t*>(&cmd_buff[2]), 11);
     LOG_WARNING(Service_FRD, "(STUBBED) called");
+}
+
+void UnscrambleLocalFriendCode(Service::Interface* self) {
+    const size_t scrambled_friend_code_size = 12;
+    const size_t friend_code_size = 8;
+
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x1C, 1, 2);
+    const u32 friend_code_count = rp.Pop<u32>();
+    size_t in_buffer_size;
+    const VAddr scrambled_friend_codes = rp.PopStaticBuffer(&in_buffer_size, false);
+    ASSERT_MSG(in_buffer_size == (friend_code_count * scrambled_friend_code_size),
+               "Wrong input buffer size");
+
+    size_t out_buffer_size;
+    VAddr unscrambled_friend_codes = rp.PeekStaticBuffer(0, &out_buffer_size);
+    ASSERT_MSG(out_buffer_size == (friend_code_count * friend_code_size),
+               "Wrong output buffer size");
+
+    for (u32 current = 0; current < friend_code_count; ++current) {
+        // TODO(B3N30): Unscramble the codes and compare them against the friend list
+        //              Only write 0 if the code isn't in friend list, otherwise write the
+        //              unscrambled one
+        //
+        // Code for unscrambling (should be compared to HW):
+        // std::array<u16, 6> scambled_friend_code;
+        // Memory::ReadBlock(scrambled_friend_codes+(current*scrambled_friend_code_size),
+        // scambled_friend_code.data(), scrambled_friend_code_size); std::array<u16, 4>
+        // unscrambled_friend_code; unscrambled_friend_code[0] = scambled_friend_code[0] ^
+        // scambled_friend_code[5]; unscrambled_friend_code[1] = scambled_friend_code[1] ^
+        // scambled_friend_code[5]; unscrambled_friend_code[2] = scambled_friend_code[2] ^
+        // scambled_friend_code[5]; unscrambled_friend_code[3] = scambled_friend_code[3] ^
+        // scambled_friend_code[5];
+
+        u64 result = 0ull;
+        Memory::WriteBlock(unscrambled_friend_codes + (current * sizeof(result)), &result,
+                           sizeof(result));
+    }
+
+    LOG_WARNING(Service_FRD, "(STUBBED) called");
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
+    rb.Push(RESULT_SUCCESS);
+    rb.PushStaticBuffer(unscrambled_friend_codes, out_buffer_size, 0);
 }
 
 void SetClientSdkVersion(Service::Interface* self) {

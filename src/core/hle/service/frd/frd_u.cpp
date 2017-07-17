@@ -36,7 +36,7 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x00190042, nullptr, "GetFriendFavoriteGame"},
     {0x001A00C4, nullptr, "GetFriendInfo"},
     {0x001B0080, nullptr, "IsIncludedInFriendList"},
-    {0x001C0042, nullptr, "UnscrambleLocalFriendCode"},
+    {0x001C0042, UnscrambleLocalFriendCode, "UnscrambleLocalFriendCode"},
     {0x001D0002, nullptr, "UpdateGameModeDescription"},
     {0x001E02C2, nullptr, "UpdateGameMode"},
     {0x001F0042, nullptr, "SendInvitation"},

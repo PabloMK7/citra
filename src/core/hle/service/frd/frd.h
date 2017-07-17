@@ -96,6 +96,19 @@ void GetMyFriendKey(Service::Interface* self);
 void GetMyScreenName(Service::Interface* self);
 
 /**
+ * FRD::UnscrambleLocalFriendCode service function
+ *  Inputs:
+ *      1 : Friend code count
+ *      2 : ((count * 12) << 14) | 0x402
+ *      3 : Pointer to encoded friend codes. Each is 12 bytes large
+ *      64 : ((count * 8) << 14) | 2
+ *      65 : Pointer to write decoded local friend codes to. Each is 8 bytes large.
+ *  Outputs:
+ *      1 : Result of function, 0 on success, otherwise error code
+ */
+void UnscrambleLocalFriendCode(Service::Interface* self);
+
+/**
  * FRD::SetClientSdkVersion service function
  *  Inputs:
  *      1 : Used SDK Version
