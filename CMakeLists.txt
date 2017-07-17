@@ -19,6 +19,21 @@ if(NOT EXISTS ${CMAKE_SOURCE_DIR}/.git/hooks/pre-commit)
         DESTINATION ${CMAKE_SOURCE_DIR}/.git/hooks)
 endif()
 
+# Sanity check : Check that all submodules are present
+# =======================================================================
+
+function(check_submodules_present)
+    file(READ "${CMAKE_SOURCE_DIR}/.gitmodules" gitmodules)
+    string(REGEX MATCHALL "path *= *[^ \t\r\n]*" gitmodules ${gitmodules})
+    foreach(module ${gitmodules})
+        string(REGEX REPLACE "path *= *" "" module ${module})
+        if (NOT EXISTS "${CMAKE_SOURCE_DIR}/${module}/.git")
+            message(SEND_ERROR "Git submodule ${module} not found."
+                    "Please run: git submodule update --init --recursive")
+        endif()
+    endforeach()
+endfunction()
+check_submodules_present()
 
 # Detect current compilation architecture and create standard definitions
 # =======================================================================
