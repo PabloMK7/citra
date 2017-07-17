@@ -4,6 +4,7 @@
 
 #include <array>
 #include <cstring>
+#include <mutex>
 #include <unordered_map>
 #include <vector>
 #include "common/common_types.h"
@@ -15,8 +16,10 @@
 #include "core/hle/result.h"
 #include "core/hle/service/nwm/nwm_uds.h"
 #include "core/hle/service/nwm/uds_beacon.h"
+#include "core/hle/service/nwm/uds_connection.h"
 #include "core/hle/service/nwm/uds_data.h"
 #include "core/memory.h"
+#include "network/network.h"
 
 namespace Service {
 namespace NWM {
@@ -50,6 +53,52 @@ static NetworkInfo network_info;
 
 // Event that will generate and send the 802.11 beacon frames.
 static int beacon_broadcast_event;
+
+// Mutex to synchronize access to the list of received beacons between the emulation thread and the
+// network thread.
+static std::mutex beacon_mutex;
+
+// Number of beacons to store before we start dropping the old ones.
+// TODO(Subv): Find a more accurate value for this limit.
+constexpr size_t MaxBeaconFrames = 15;
+
+// List of the last <MaxBeaconFrames> beacons received from the network.
+static std::deque<Network::WifiPacket> received_beacons;
+
+/**
+ * Returns a list of received 802.11 beacon frames from the specified sender since the last call.
+ */
+std::deque<Network::WifiPacket> GetReceivedBeacons(const MacAddress& sender) {
+    std::lock_guard<std::mutex> lock(beacon_mutex);
+    // TODO(Subv): Filter by sender.
+    return std::move(received_beacons);
+}
+
+/// Sends a WifiPacket to the room we're currently connected to.
+void SendPacket(Network::WifiPacket& packet) {
+    // TODO(Subv): Implement.
+}
+
+// Inserts the received beacon frame in the beacon queue and removes any older beacons if the size
+// limit is exceeded.
+void HandleBeaconFrame(const Network::WifiPacket& packet) {
+    std::lock_guard<std::mutex> lock(beacon_mutex);
+
+    received_beacons.emplace_back(packet);
+
+    // Discard old beacons if the buffer is full.
+    if (received_beacons.size() > MaxBeaconFrames)
+        received_beacons.pop_front();
+}
+
+/// Callback to parse and handle a received wifi packet.
+void OnWifiPacketReceived(const Network::WifiPacket& packet) {
+    switch (packet.type) {
+    case Network::WifiPacket::PacketType::Beacon:
+        HandleBeaconFrame(packet);
+        break;
+    }
+}
 
 /**
  * NWM_UDS::Shutdown service function
@@ -111,8 +160,7 @@ static void RecvBeaconBroadcastData(Interface* self) {
     u32 total_size = sizeof(BeaconDataReplyHeader);
 
     // Retrieve all beacon frames that were received from the desired mac address.
-    std::deque<WifiPacket> beacons =
-        GetReceivedPackets(WifiPacket::PacketType::Beacon, mac_address);
+    auto beacons = GetReceivedBeacons(mac_address);
 
     BeaconDataReplyHeader data_reply_header{};
     data_reply_header.total_entries = beacons.size();
@@ -192,6 +240,9 @@ static void InitializeWithVersion(Interface* self) {
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
     rb.Push(RESULT_SUCCESS);
     rb.PushCopyHandles(Kernel::g_handle_table.Create(connection_status_event).Unwrap());
+
+    // TODO(Subv): Connect the OnWifiPacketReceived function to the wifi packet received callback of
+    // the room we're currently in.
 
     LOG_DEBUG(Service_NWM, "called sharedmem_size=0x%08X, version=0x%08X, sharedmem_handle=0x%08X",
               sharedmem_size, version, sharedmem_handle);
@@ -610,8 +661,16 @@ static void BeaconBroadcastCallback(u64 userdata, int cycles_late) {
     if (connection_status.status != static_cast<u32>(NetworkStatus::ConnectedAsHost))
         return;
 
-    // TODO(Subv): Actually send the beacon.
     std::vector<u8> frame = GenerateBeaconFrame(network_info, node_info);
+
+    using Network::WifiPacket;
+    WifiPacket packet;
+    packet.type = WifiPacket::PacketType::Beacon;
+    packet.data = std::move(frame);
+    packet.destination_address = Network::BroadcastMac;
+    packet.channel = network_channel;
+
+    SendPacket(packet);
 
     // Start broadcasting the network, send a beacon frame every 102.4ms.
     CoreTiming::ScheduleEvent(msToCycles(DefaultBeaconInterval * MillisecondsPerTU) - cycles_late,
