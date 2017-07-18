@@ -62,5 +62,5 @@ if (ENABLE_WEB_SERVICE)
 
     # JSON
     add_library(json-headers INTERFACE)
-    target_include_directories(json-headers INTERFACE ./json/src)
+    target_include_directories(json-headers INTERFACE ./json)
 endif()
