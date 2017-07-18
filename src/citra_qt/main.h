@@ -42,6 +42,7 @@ class GMainWindow : public QMainWindow {
 
 public:
     void filterBarSetChecked(bool state);
+    void UpdateUITheme();
     GMainWindow();
     ~GMainWindow();
 
