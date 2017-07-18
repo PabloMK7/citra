@@ -4,7 +4,10 @@
 
 #include <cstring>
 
+#include "common/assert.h"
 #include "common/scm_rev.h"
+#include "common/x64/cpu_detect.h"
+#include "core/settings.h"
 #include "core/telemetry_session.h"
 
 #ifdef ENABLE_WEB_SERVICE
@@ -13,6 +16,18 @@
 
 namespace Core {
 
+static const char* CpuVendorToStr(Common::CPUVendor vendor) {
+    switch (vendor) {
+    case Common::CPUVendor::INTEL:
+        return "Intel";
+    case Common::CPUVendor::AMD:
+        return "Amd";
+    case Common::CPUVendor::OTHER:
+        return "Other";
+    }
+    UNREACHABLE();
+}
+
 TelemetrySession::TelemetrySession() {
 #ifdef ENABLE_WEB_SERVICE
     backend = std::make_unique<WebService::TelemetryJson>();
@@ -20,22 +35,63 @@ TelemetrySession::TelemetrySession() {
     backend = std::make_unique<Telemetry::NullVisitor>();
 #endif
     // Log one-time session start information
-    const auto duration{std::chrono::steady_clock::now().time_since_epoch()};
-    const auto start_time{std::chrono::duration_cast<std::chrono::microseconds>(duration).count()};
-    AddField(Telemetry::FieldType::Session, "StartTime", start_time);
+    const s64 init_time{std::chrono::duration_cast<std::chrono::milliseconds>(
+                            std::chrono::system_clock::now().time_since_epoch())
+                            .count()};
+    AddField(Telemetry::FieldType::Session, "Init_Time", init_time);
 
-    // Log one-time application information
+    // Log application information
     const bool is_git_dirty{std::strstr(Common::g_scm_desc, "dirty") != nullptr};
-    AddField(Telemetry::FieldType::App, "GitIsDirty", is_git_dirty);
-    AddField(Telemetry::FieldType::App, "GitBranch", Common::g_scm_branch);
-    AddField(Telemetry::FieldType::App, "GitRevision", Common::g_scm_rev);
+    AddField(Telemetry::FieldType::App, "Git_IsDirty", is_git_dirty);
+    AddField(Telemetry::FieldType::App, "Git_Branch", Common::g_scm_branch);
+    AddField(Telemetry::FieldType::App, "Git_Revision", Common::g_scm_rev);
+
+    // Log user system information
+    AddField(Telemetry::FieldType::UserSystem, "CPU_Model", Common::GetCPUCaps().cpu_string);
+    AddField(Telemetry::FieldType::UserSystem, "CPU_BrandString",
+             Common::GetCPUCaps().brand_string);
+    AddField(Telemetry::FieldType::UserSystem, "CPU_Vendor",
+             CpuVendorToStr(Common::GetCPUCaps().vendor));
+    AddField(Telemetry::FieldType::UserSystem, "CPU_Extension_x64_AES", Common::GetCPUCaps().aes);
+    AddField(Telemetry::FieldType::UserSystem, "CPU_Extension_x64_AVX", Common::GetCPUCaps().avx);
+    AddField(Telemetry::FieldType::UserSystem, "CPU_Extension_x64_AVX2", Common::GetCPUCaps().avx2);
+    AddField(Telemetry::FieldType::UserSystem, "CPU_Extension_x64_BMI1", Common::GetCPUCaps().bmi1);
+    AddField(Telemetry::FieldType::UserSystem, "CPU_Extension_x64_BMI2", Common::GetCPUCaps().bmi2);
+    AddField(Telemetry::FieldType::UserSystem, "CPU_Extension_x64_FMA", Common::GetCPUCaps().fma);
+    AddField(Telemetry::FieldType::UserSystem, "CPU_Extension_x64_FMA4", Common::GetCPUCaps().fma4);
+    AddField(Telemetry::FieldType::UserSystem, "CPU_Extension_x64_SSE", Common::GetCPUCaps().sse);
+    AddField(Telemetry::FieldType::UserSystem, "CPU_Extension_x64_SSE2", Common::GetCPUCaps().sse2);
+    AddField(Telemetry::FieldType::UserSystem, "CPU_Extension_x64_SSE3", Common::GetCPUCaps().sse3);
+    AddField(Telemetry::FieldType::UserSystem, "CPU_Extension_x64_SSSE3",
+             Common::GetCPUCaps().ssse3);
+    AddField(Telemetry::FieldType::UserSystem, "CPU_Extension_x64_SSE41",
+             Common::GetCPUCaps().sse4_1);
+    AddField(Telemetry::FieldType::UserSystem, "CPU_Extension_x64_SSE42",
+             Common::GetCPUCaps().sse4_2);
+
+    // Log user configuration information
+    AddField(Telemetry::FieldType::UserConfig, "Audio_EnableAudioStretching",
+             Settings::values.enable_audio_stretching);
+    AddField(Telemetry::FieldType::UserConfig, "Core_UseCpuJit", Settings::values.use_cpu_jit);
+    AddField(Telemetry::FieldType::UserConfig, "Renderer_ResolutionFactor",
+             Settings::values.resolution_factor);
+    AddField(Telemetry::FieldType::UserConfig, "Renderer_ToggleFramelimit",
+             Settings::values.toggle_framelimit);
+    AddField(Telemetry::FieldType::UserConfig, "Renderer_UseHwRenderer",
+             Settings::values.use_hw_renderer);
+    AddField(Telemetry::FieldType::UserConfig, "Renderer_UseShaderJit",
+             Settings::values.use_shader_jit);
+    AddField(Telemetry::FieldType::UserConfig, "Renderer_UseVsync", Settings::values.use_vsync);
+    AddField(Telemetry::FieldType::UserConfig, "System_IsNew3ds", Settings::values.is_new_3ds);
+    AddField(Telemetry::FieldType::UserConfig, "System_RegionValue", Settings::values.region_value);
 }
 
 TelemetrySession::~TelemetrySession() {
     // Log one-time session end information
-    const auto duration{std::chrono::steady_clock::now().time_since_epoch()};
-    const auto end_time{std::chrono::duration_cast<std::chrono::microseconds>(duration).count()};
-    AddField(Telemetry::FieldType::Session, "EndTime", end_time);
+    const s64 shutdown_time{std::chrono::duration_cast<std::chrono::milliseconds>(
+                                std::chrono::system_clock::now().time_since_epoch())
+                                .count()};
+    AddField(Telemetry::FieldType::Session, "Shutdown_Time", shutdown_time);
 
     // Complete the session, submitting to web service if necessary
     // This is just a placeholder to wrap up the session once the core completes and this is

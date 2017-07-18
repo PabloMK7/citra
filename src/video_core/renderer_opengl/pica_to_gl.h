@@ -12,6 +12,7 @@
 #include "common/common_funcs.h"
 #include "common/common_types.h"
 #include "common/logging/log.h"
+#include "core/core.h"
 #include "video_core/regs_framebuffer.h"
 #include "video_core/regs_lighting.h"
 #include "video_core/regs_texturing.h"
@@ -72,9 +73,9 @@ inline GLenum WrapMode(Pica::TexturingRegs::TextureConfig::WrapMode mode) {
     }
 
     if (static_cast<u32>(mode) > 3) {
-        // It is still unclear whether mode 4-7 are valid, so log it if a game uses them.
-        // TODO(wwylele): telemetry should be added here so we can collect more info about which
-        // game uses this.
+        Core::Telemetry().AddField(Telemetry::FieldType::Session,
+                                   "VideoCore_Pica_UnsupportedTextureWrapMode",
+                                   static_cast<u32>(mode));
         LOG_WARNING(Render_OpenGL, "Using texture wrap mode %u", static_cast<u32>(mode));
     }
 

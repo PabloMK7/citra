@@ -342,9 +342,11 @@ ResultStatus AppLoader_NCCH::Load() {
     if (result != ResultStatus::Success)
         return result;
 
-    LOG_INFO(Loader, "Program ID: %016" PRIX64, ncch_header.program_id);
+    std::string program_id{Common::StringFromFormat("%016" PRIX64, ncch_header.program_id)};
 
-    Core::Telemetry().AddField(Telemetry::FieldType::Session, "ProgramId", ncch_header.program_id);
+    LOG_INFO(Loader, "Program ID: %s", program_id.c_str());
+
+    Core::Telemetry().AddField(Telemetry::FieldType::Session, "ProgramId", program_id);
 
     is_loaded = true; // Set state to loaded
 

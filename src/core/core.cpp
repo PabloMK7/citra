@@ -168,6 +168,16 @@ System::ResultStatus System::Init(EmuWindow* emu_window, u32 system_mode) {
 }
 
 void System::Shutdown() {
+    // Log last frame performance stats
+    auto perf_results = GetAndResetPerfStats();
+    Telemetry().AddField(Telemetry::FieldType::Performance, "Shutdown_EmulationSpeed",
+                         perf_results.emulation_speed * 100.0);
+    Telemetry().AddField(Telemetry::FieldType::Performance, "Shutdown_Framerate",
+                         perf_results.game_fps);
+    Telemetry().AddField(Telemetry::FieldType::Performance, "Shutdown_Frametime",
+                         perf_results.frametime * 1000.0);
+
+    // Shutdown emulation session
     GDBStub::Shutdown();
     AudioCore::Shutdown();
     VideoCore::Shutdown();
