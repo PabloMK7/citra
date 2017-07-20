@@ -263,6 +263,10 @@ QVariant GraphicsVertexShaderModel::data(const QModelIndex& index, int role) con
 
                         output << ") ";
                     } else if (opcode_info.subtype & OpCode::Info::HasUniformIndex) {
+                        if (opcode.EffectiveOpCode() == OpCode::Id::JMPU &&
+                            (instr.flow_control.num_instructions & 1) == 1) {
+                            output << '!';
+                        }
                         output << 'b' << instr.flow_control.bool_uniform_id << ' ';
                     }
 
