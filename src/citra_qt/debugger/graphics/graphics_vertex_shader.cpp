@@ -183,23 +183,13 @@ QVariant GraphicsVertexShaderModel::data(const QModelIndex& index, int role) con
                     print_input(output, src1, swizzle.negate_src1,
                                 SelectorToString(swizzle.src1_selector));
                     AlignToColumn(kInputOperandColumnWidth);
-                    if (src_is_inverted) {
-                        print_input(output, src2, swizzle.negate_src2,
-                                    SelectorToString(swizzle.src2_selector));
-                    } else {
-                        print_input(output, src2, swizzle.negate_src2,
-                                    SelectorToString(swizzle.src2_selector), true,
-                                    instr.mad.AddressRegisterName());
-                    }
+                    print_input(output, src2, swizzle.negate_src2,
+                                SelectorToString(swizzle.src2_selector), true,
+                                src_is_inverted ? "" : instr.mad.AddressRegisterName());
                     AlignToColumn(kInputOperandColumnWidth);
-                    if (src_is_inverted) {
-                        print_input(output, src3, swizzle.negate_src3,
-                                    SelectorToString(swizzle.src3_selector), true,
-                                    instr.mad.AddressRegisterName());
-                    } else {
-                        print_input(output, src3, swizzle.negate_src3,
-                                    SelectorToString(swizzle.src3_selector));
-                    }
+                    print_input(output, src3, swizzle.negate_src3,
+                                SelectorToString(swizzle.src3_selector), true,
+                                src_is_inverted ? instr.mad.AddressRegisterName() : "");
                     AlignToColumn(kInputOperandColumnWidth);
                     break;
                 }
@@ -222,16 +212,15 @@ QVariant GraphicsVertexShaderModel::data(const QModelIndex& index, int role) con
                         SourceRegister src1 = instr.common.GetSrc1(src_is_inverted);
                         print_input(output, src1, swizzle.negate_src1,
                                     swizzle.SelectorToString(false), true,
-                                    instr.common.AddressRegisterName());
+                                    src_is_inverted ? "" : instr.common.AddressRegisterName());
                         AlignToColumn(kInputOperandColumnWidth);
                     }
 
-                    // TODO: In some cases, the Address Register is used as an index for SRC2
-                    // instead of SRC1
                     if (opcode_info.subtype & OpCode::Info::Src2) {
                         SourceRegister src2 = instr.common.GetSrc2(src_is_inverted);
                         print_input(output, src2, swizzle.negate_src2,
-                                    swizzle.SelectorToString(true));
+                                    swizzle.SelectorToString(true), true,
+                                    src_is_inverted ? instr.common.AddressRegisterName() : "");
                         AlignToColumn(kInputOperandColumnWidth);
                     }
                     break;
