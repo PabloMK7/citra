@@ -255,7 +255,7 @@ QVariant GraphicsVertexShaderModel::data(const QModelIndex& index, int role) con
                         output << '(';
 
                         if (instr.flow_control.op != instr.flow_control.JustY) {
-                            if (instr.flow_control.refx)
+                            if (!instr.flow_control.refx)
                                 output << '!';
                             output << "cc.x";
                         }
@@ -267,7 +267,7 @@ QVariant GraphicsVertexShaderModel::data(const QModelIndex& index, int role) con
                         }
 
                         if (instr.flow_control.op != instr.flow_control.JustX) {
-                            if (instr.flow_control.refy)
+                            if (!instr.flow_control.refy)
                                 output << '!';
                             output << "cc.y";
                         }
