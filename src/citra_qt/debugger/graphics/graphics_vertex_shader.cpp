@@ -236,7 +236,9 @@ QVariant GraphicsVertexShaderModel::data(const QModelIndex& index, int role) con
 
                 switch (opcode.EffectiveOpCode()) {
                 case OpCode::Id::LOOP:
-                    output << "(unknown instruction format)";
+                    output << 'i' << instr.flow_control.int_uniform_id << " (end on 0x"
+                           << std::setw(4) << std::right << std::setfill('0') << std::hex
+                           << (4 * instr.flow_control.dest_offset) << ")";
                     break;
 
                 default:
