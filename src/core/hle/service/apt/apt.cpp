@@ -227,6 +227,20 @@ void ReceiveParameter(Service::Interface* self) {
             "buffer_size is bigger than the size in the buffer descriptor (0x%08X > 0x%08zX)",
             buffer_size, static_buff_size);
 
+    if (!next_parameter) {
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(ResultCode(ErrorDescription::NoData, ErrorModule::Applet,
+                           ErrorSummary::InvalidState, ErrorLevel::Status));
+        return;
+    }
+
+    if (next_parameter->destination_id != app_id) {
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(ResultCode(ErrorDescription::NotFound, ErrorModule::Applet, ErrorSummary::NotFound,
+                           ErrorLevel::Status));
+        return;
+    }
+
     IPC::RequestBuilder rb = rp.MakeBuilder(4, 4);
 
     rb.Push(RESULT_SUCCESS); // No error
@@ -258,6 +272,20 @@ void GlanceParameter(Service::Interface* self) {
             Service_APT,
             "buffer_size is bigger than the size in the buffer descriptor (0x%08X > 0x%08zX)",
             buffer_size, static_buff_size);
+
+    if (!next_parameter) {
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(ResultCode(ErrorDescription::NoData, ErrorModule::Applet,
+                           ErrorSummary::InvalidState, ErrorLevel::Status));
+        return;
+    }
+
+    if (next_parameter->destination_id != app_id) {
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(ResultCode(ErrorDescription::NotFound, ErrorModule::Applet, ErrorSummary::NotFound,
+                           ErrorLevel::Status));
+        return;
+    }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(4, 4);
     rb.Push(RESULT_SUCCESS); // No error
