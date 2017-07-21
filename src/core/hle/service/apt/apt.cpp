@@ -190,6 +190,11 @@ void SendParameter(Service::Interface* self) {
     std::shared_ptr<HLE::Applets::Applet> dest_applet =
         HLE::Applets::Applet::Get(static_cast<AppletId>(dst_app_id));
 
+    LOG_DEBUG(Service_APT,
+              "called src_app_id=0x%08X, dst_app_id=0x%08X, signal_type=0x%08X,"
+              "buffer_size=0x%08X, handle=0x%08X, size=0x%08zX, in_param_buffer_ptr=0x%08X",
+              src_app_id, dst_app_id, signal_type, buffer_size, handle, size, buffer);
+
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
 
     // A new parameter can not be sent if the previous one hasn't been consumed yet
@@ -214,11 +219,6 @@ void SendParameter(Service::Interface* self) {
     Memory::ReadBlock(buffer, param.buffer.data(), param.buffer.size());
 
     rb.Push(dest_applet->ReceiveParameter(param));
-
-    LOG_DEBUG(Service_APT,
-              "called src_app_id=0x%08X, dst_app_id=0x%08X, signal_type=0x%08X,"
-              "buffer_size=0x%08X, handle=0x%08X, size=0x%08zX, in_param_buffer_ptr=0x%08X",
-              src_app_id, dst_app_id, signal_type, buffer_size, handle, size, buffer);
 }
 
 void ReceiveParameter(Service::Interface* self) {
@@ -233,6 +233,8 @@ void ReceiveParameter(Service::Interface* self) {
             Service_APT,
             "buffer_size is bigger than the size in the buffer descriptor (0x%08X > 0x%08zX)",
             buffer_size, static_buff_size);
+
+    LOG_DEBUG(Service_APT, "called app_id=0x%08X, buffer_size=0x%08zX", app_id, buffer_size);
 
     if (!next_parameter) {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
@@ -266,7 +268,6 @@ void ReceiveParameter(Service::Interface* self) {
 
     // Clear the parameter
     next_parameter = boost::none;
-    LOG_DEBUG(Service_APT, "called app_id=0x%08X, buffer_size=0x%08zX", app_id, buffer_size);
 }
 
 void GlanceParameter(Service::Interface* self) {
@@ -281,6 +282,8 @@ void GlanceParameter(Service::Interface* self) {
             Service_APT,
             "buffer_size is bigger than the size in the buffer descriptor (0x%08X > 0x%08zX)",
             buffer_size, static_buff_size);
+
+    LOG_DEBUG(Service_APT, "called app_id=0x%08X, buffer_size=0x%08zX", app_id, buffer_size);
 
     if (!next_parameter) {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
@@ -315,7 +318,6 @@ void GlanceParameter(Service::Interface* self) {
     if (next_parameter->signal == static_cast<u32>(SignalType::DspSleep) ||
         next_parameter->signal == static_cast<u32>(SignalType::DspWakeup))
         next_parameter = boost::none;
-    LOG_DEBUG(Service_APT, "called app_id=0x%08X, buffer_size=0x%08zX", app_id, buffer_size);
 }
 
 void CancelParameter(Service::Interface* self) {
