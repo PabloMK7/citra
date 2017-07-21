@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <boost/optional.hpp>
 #include "common/common_paths.h"
 #include "common/file_util.h"
 #include "common/logging/log.h"
@@ -44,7 +45,7 @@ static u8 unknown_ns_state_field;
 static ScreencapPostPermission screen_capture_post_permission;
 
 /// Parameter data to be returned in the next call to Glance/ReceiveParameter
-static MessageParameter next_parameter;
+static boost::optional<MessageParameter> next_parameter;
 
 void SendParameter(const MessageParameter& parameter) {
     next_parameter = parameter;
@@ -227,18 +228,20 @@ void ReceiveParameter(Service::Interface* self) {
             buffer_size, static_buff_size);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(4, 4);
+
     rb.Push(RESULT_SUCCESS); // No error
-    rb.Push(next_parameter.sender_id);
-    rb.Push(next_parameter.signal); // Signal type
-    ASSERT_MSG(next_parameter.buffer.size() <= buffer_size, "Input static buffer is too small !");
-    rb.Push(static_cast<u32>(next_parameter.buffer.size())); // Parameter buffer size
+    rb.Push(next_parameter->sender_id);
+    rb.Push(next_parameter->signal); // Signal type
+    ASSERT_MSG(next_parameter->buffer.size() <= buffer_size, "Input static buffer is too small !");
+    rb.Push(static_cast<u32>(next_parameter->buffer.size())); // Parameter buffer size
 
-    rb.PushMoveHandles((next_parameter.object != nullptr)
-                           ? Kernel::g_handle_table.Create(next_parameter.object).Unwrap()
+    rb.PushMoveHandles((next_parameter->object != nullptr)
+                           ? Kernel::g_handle_table.Create(next_parameter->object).Unwrap()
                            : 0);
-    rb.PushStaticBuffer(buffer, static_cast<u32>(next_parameter.buffer.size()), 0);
 
-    Memory::WriteBlock(buffer, next_parameter.buffer.data(), next_parameter.buffer.size());
+    rb.PushStaticBuffer(buffer, static_cast<u32>(next_parameter->buffer.size()), 0);
+
+    Memory::WriteBlock(buffer, next_parameter->buffer.data(), next_parameter->buffer.size());
 
     LOG_WARNING(Service_APT, "called app_id=0x%08X, buffer_size=0x%08zX", app_id, buffer_size);
 }
@@ -258,17 +261,18 @@ void GlanceParameter(Service::Interface* self) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(4, 4);
     rb.Push(RESULT_SUCCESS); // No error
-    rb.Push(next_parameter.sender_id);
-    rb.Push(next_parameter.signal); // Signal type
-    ASSERT_MSG(next_parameter.buffer.size() <= buffer_size, "Input static buffer is too small !");
-    rb.Push(static_cast<u32>(next_parameter.buffer.size())); // Parameter buffer size
+    rb.Push(next_parameter->sender_id);
+    rb.Push(next_parameter->signal); // Signal type
+    ASSERT_MSG(next_parameter->buffer.size() <= buffer_size, "Input static buffer is too small !");
+    rb.Push(static_cast<u32>(next_parameter->buffer.size())); // Parameter buffer size
 
-    rb.PushCopyHandles((next_parameter.object != nullptr)
-                           ? Kernel::g_handle_table.Create(next_parameter.object).Unwrap()
+    rb.PushMoveHandles((next_parameter->object != nullptr)
+                           ? Kernel::g_handle_table.Create(next_parameter->object).Unwrap()
                            : 0);
-    rb.PushStaticBuffer(buffer, static_cast<u32>(next_parameter.buffer.size()), 0);
 
-    Memory::WriteBlock(buffer, next_parameter.buffer.data(), next_parameter.buffer.size());
+    rb.PushStaticBuffer(buffer, static_cast<u32>(next_parameter->buffer.size()), 0);
+
+    Memory::WriteBlock(buffer, next_parameter->buffer.data(), next_parameter->buffer.size());
 
     LOG_WARNING(Service_APT, "called app_id=0x%08X, buffer_size=0x%08zX", app_id, buffer_size);
 }
@@ -800,8 +804,10 @@ void Init() {
     notification_event = Kernel::Event::Create(Kernel::ResetType::OneShot, "APT_U:Notification");
     parameter_event = Kernel::Event::Create(Kernel::ResetType::OneShot, "APT_U:Start");
 
-    next_parameter.signal = static_cast<u32>(SignalType::Wakeup);
-    next_parameter.destination_id = 0x300;
+    // Initialize the parameter to wake up the application.
+    next_parameter.emplace();
+    next_parameter->signal = static_cast<u32>(SignalType::Wakeup);
+    next_parameter->destination_id = static_cast<u32>(AppletId::Application);
 }
 
 void Shutdown() {
@@ -812,7 +818,7 @@ void Shutdown() {
     notification_event = nullptr;
     parameter_event = nullptr;
 
-    next_parameter.object = nullptr;
+    next_parameter = boost::none;
 
     HLE::Applets::Shutdown();
 }
