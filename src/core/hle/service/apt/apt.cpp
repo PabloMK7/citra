@@ -314,17 +314,34 @@ void GlanceParameter(Service::Interface* self) {
 void CancelParameter(Service::Interface* self) {
     IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0xF, 4, 0); // 0xF0100
 
-    u32 check_sender = rp.Pop<u32>();
+    bool check_sender = rp.Pop<bool>();
     u32 sender_appid = rp.Pop<u32>();
-    u32 check_receiver = rp.Pop<u32>();
+    bool check_receiver = rp.Pop<bool>();
     u32 receiver_appid = rp.Pop<u32>();
-    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS); // No error
-    rb.Push(true);           // Set to Success
 
-    LOG_WARNING(Service_APT, "(STUBBED) called check_sender=0x%08X, sender_appid=0x%08X, "
-                             "check_receiver=0x%08X, receiver_appid=0x%08X",
-                check_sender, sender_appid, check_receiver, receiver_appid);
+    bool cancellation_success = true;
+
+    if (!next_parameter) {
+        cancellation_success = false;
+    } else {
+        if (check_sender && next_parameter->sender_id != sender_appid)
+            cancellation_success = false;
+
+        if (check_receiver && next_parameter->destination_id != receiver_appid)
+            cancellation_success = false;
+    }
+
+    if (cancellation_success)
+        next_parameter = boost::none;
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
+
+    rb.Push(RESULT_SUCCESS); // No error
+    rb.Push(cancellation_success);
+
+    LOG_DEBUG(Service_APT, "called check_sender=%u, sender_appid=0x%08X, "
+                           "check_receiver=%u, receiver_appid=0x%08X",
+              check_sender, sender_appid, check_receiver, receiver_appid);
 }
 
 void PrepareToStartApplication(Service::Interface* self) {
