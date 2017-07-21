@@ -9,6 +9,7 @@
 #include "common/logging/log.h"
 #include "common/swap.h"
 #include "core/hle/kernel/process.h"
+#include "core/hle/lock.h"
 #include "core/memory.h"
 #include "core/memory_setup.h"
 #include "core/mmio.h"
@@ -187,6 +188,9 @@ T Read(const VAddr vaddr) {
         return value;
     }
 
+    // The memory access might do an MMIO or cached access, so we have to lock the HLE kernel state
+    std::lock_guard<std::mutex> lock(HLE::g_hle_lock);
+
     PageType type = current_page_table->attributes[vaddr >> PAGE_BITS];
     switch (type) {
     case PageType::Unmapped:
@@ -225,6 +229,9 @@ void Write(const VAddr vaddr, const T data) {
         std::memcpy(&page_pointer[vaddr & PAGE_MASK], &data, sizeof(T));
         return;
     }
+
+    // The memory access might do an MMIO or cached access, so we have to lock the HLE kernel state
+    std::lock_guard<std::mutex> lock(HLE::g_hle_lock);
 
     PageType type = current_page_table->attributes[vaddr >> PAGE_BITS];
     switch (type) {
@@ -722,4 +729,4 @@ VAddr PhysicalToVirtualAddress(const PAddr addr) {
     return addr | 0x80000000;
 }
 
-} // namespace
+} // namespace Memory
