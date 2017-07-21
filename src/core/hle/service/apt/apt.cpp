@@ -192,6 +192,13 @@ void SendParameter(Service::Interface* self) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
 
+    // A new parameter can not be sent if the previous one hasn't been consumed yet
+    if (next_parameter) {
+        rb.Push(ResultCode(ErrCodes::ParameterPresent, ErrorModule::Applet,
+                           ErrorSummary::InvalidState, ErrorLevel::Status));
+        return;
+    }
+
     if (dest_applet == nullptr) {
         LOG_ERROR(Service_APT, "Unknown applet id=0x%08X", dst_app_id);
         rb.Push<u32>(-1); // TODO(Subv): Find the right error code
@@ -208,10 +215,10 @@ void SendParameter(Service::Interface* self) {
 
     rb.Push(dest_applet->ReceiveParameter(param));
 
-    LOG_WARNING(Service_APT,
-                "(STUBBED) called src_app_id=0x%08X, dst_app_id=0x%08X, signal_type=0x%08X,"
-                "buffer_size=0x%08X, handle=0x%08X, size=0x%08zX, in_param_buffer_ptr=0x%08X",
-                src_app_id, dst_app_id, signal_type, buffer_size, handle, size, buffer);
+    LOG_DEBUG(Service_APT,
+              "called src_app_id=0x%08X, dst_app_id=0x%08X, signal_type=0x%08X,"
+              "buffer_size=0x%08X, handle=0x%08X, size=0x%08zX, in_param_buffer_ptr=0x%08X",
+              src_app_id, dst_app_id, signal_type, buffer_size, handle, size, buffer);
 }
 
 void ReceiveParameter(Service::Interface* self) {
