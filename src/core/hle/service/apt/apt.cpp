@@ -257,7 +257,9 @@ void ReceiveParameter(Service::Interface* self) {
 
     Memory::WriteBlock(buffer, next_parameter->buffer.data(), next_parameter->buffer.size());
 
-    LOG_WARNING(Service_APT, "called app_id=0x%08X, buffer_size=0x%08zX", app_id, buffer_size);
+    // Clear the parameter
+    next_parameter = boost::none;
+    LOG_DEBUG(Service_APT, "called app_id=0x%08X, buffer_size=0x%08zX", app_id, buffer_size);
 }
 
 void GlanceParameter(Service::Interface* self) {
@@ -302,7 +304,11 @@ void GlanceParameter(Service::Interface* self) {
 
     Memory::WriteBlock(buffer, next_parameter->buffer.data(), next_parameter->buffer.size());
 
-    LOG_WARNING(Service_APT, "called app_id=0x%08X, buffer_size=0x%08zX", app_id, buffer_size);
+    // Note: The NS module always clears the DSPSleep and DSPWakeup signals even in GlanceParameter.
+    if (next_parameter->signal == static_cast<u32>(SignalType::DspSleep) ||
+        next_parameter->signal == static_cast<u32>(SignalType::DspWakeup))
+        next_parameter = boost::none;
+    LOG_DEBUG(Service_APT, "called app_id=0x%08X, buffer_size=0x%08zX", app_id, buffer_size);
 }
 
 void CancelParameter(Service::Interface* self) {
