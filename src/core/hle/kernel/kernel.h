@@ -129,4 +129,4 @@ void Init(u32 system_mode);
 /// Shutdown the kernel
 void Shutdown();
 
-} // namespace
+} // namespace Kernel
