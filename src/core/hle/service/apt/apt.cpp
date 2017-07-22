@@ -34,8 +34,6 @@ static bool shared_font_loaded = false;
 static bool shared_font_relocated = false;
 
 static Kernel::SharedPtr<Kernel::Mutex> lock;
-static Kernel::SharedPtr<Kernel::Event> notification_event; ///< APT notification event
-static Kernel::SharedPtr<Kernel::Event> parameter_event;    ///< APT parameter event
 
 static u32 cpu_percent; ///< CPU time available to the running application
 
@@ -44,32 +42,164 @@ static u8 unknown_ns_state_field;
 
 static ScreencapPostPermission screen_capture_post_permission;
 
-/// Parameter data to be returned in the next call to Glance/ReceiveParameter
+/// Parameter data to be returned in the next call to Glance/ReceiveParameter.
+/// TODO(Subv): Use std::optional once we migrate to C++17.
 static boost::optional<MessageParameter> next_parameter;
+
+enum class AppletPos { Application = 0, Library = 1, System = 2, SysLibrary = 3, Resident = 4 };
+
+static constexpr size_t NumAppletSlot = 4;
+
+enum class AppletSlot : u8 {
+    Application,
+    SystemApplet,
+    HomeMenu,
+    LibraryApplet,
+
+    // An invalid tag
+    Error,
+};
+
+struct AppletSlotData {
+    AppletId applet_id;
+    AppletSlot slot;
+    bool registered;
+    u32 attributes;
+    Kernel::SharedPtr<Kernel::Event> notification_event;
+    Kernel::SharedPtr<Kernel::Event> parameter_event;
+};
+
+// Holds data about the concurrently running applets in the system.
+static std::array<AppletSlotData, NumAppletSlot> applet_slots = {};
+
+union AppletAttributes {
+    u32 raw;
+
+    BitField<0, 3, u32> applet_pos;
+
+    AppletAttributes(u32 attributes) : raw(attributes) {}
+};
+
+// Helper function to extract the AppletPos from the lower bits of the applet attributes
+static u32 GetAppletPos(AppletAttributes attributes) {
+    return attributes.applet_pos;
+}
+
+// This overload returns nullptr if no applet with the specified id has been started.
+static AppletSlotData* GetAppletSlotData(AppletId id) {
+    auto GetSlot = [](AppletSlot slot) -> AppletSlotData* {
+        return &applet_slots[static_cast<size_t>(slot)];
+    };
+
+    if (id == AppletId::Application) {
+        auto* slot = GetSlot(AppletSlot::Application);
+        if (slot->applet_id != AppletId::None)
+            return slot;
+
+        return nullptr;
+    }
+
+    if (id == AppletId::AnySystemApplet) {
+        auto* system_slot = GetSlot(AppletSlot::SystemApplet);
+        if (system_slot->applet_id != AppletId::None)
+            return system_slot;
+
+        // The Home Menu is also a system applet, but it lives in its own slot to be able to run
+        // concurrently with other system applets.
+        auto* home_slot = GetSlot(AppletSlot::HomeMenu);
+        if (home_slot->applet_id != AppletId::None)
+            return home_slot;
+
+        return nullptr;
+    }
+
+    if (id == AppletId::AnyLibraryApplet || id == AppletId::AnySysLibraryApplet) {
+        auto* slot = GetSlot(AppletSlot::LibraryApplet);
+        if (slot->applet_id == AppletId::None)
+            return nullptr;
+
+        u32 applet_pos = GetAppletPos(slot->attributes);
+
+        if (id == AppletId::AnyLibraryApplet && applet_pos == static_cast<u32>(AppletPos::Library))
+            return slot;
+
+        if (id == AppletId::AnySysLibraryApplet &&
+            applet_pos == static_cast<u32>(AppletPos::SysLibrary))
+            return slot;
+
+        return nullptr;
+    }
+
+    if (id == AppletId::HomeMenu || id == AppletId::AlternateMenu) {
+        auto* slot = GetSlot(AppletSlot::HomeMenu);
+        if (slot->applet_id != AppletId::None)
+            return slot;
+
+        return nullptr;
+    }
+
+    for (auto& slot : applet_slots) {
+        if (slot.applet_id == id)
+            return &slot;
+    }
+
+    return nullptr;
+}
+
+static AppletSlotData* GetAppletSlotData(u32 attributes) {
+    // Mapping from AppletPos to AppletSlot
+    static constexpr std::array<AppletSlot, 6> applet_position_slots = {
+        AppletSlot::Application,   AppletSlot::LibraryApplet, AppletSlot::SystemApplet,
+        AppletSlot::LibraryApplet, AppletSlot::Error,         AppletSlot::LibraryApplet};
+
+    u32 applet_pos = GetAppletPos(attributes);
+    if (applet_pos >= applet_position_slots.size())
+        return nullptr;
+
+    AppletSlot slot = applet_position_slots[applet_pos];
+
+    if (slot == AppletSlot::Error)
+        return nullptr;
+
+    return &applet_slots[static_cast<size_t>(slot)];
+}
 
 void SendParameter(const MessageParameter& parameter) {
     next_parameter = parameter;
-    // Signal the event to let the application know that a new parameter is ready to be read
-    parameter_event->Signal();
+    // Signal the event to let the receiver know that a new parameter is ready to be read
+    auto* const slot_data = GetAppletSlotData(static_cast<AppletId>(parameter.destination_id));
+    ASSERT(slot_data);
+
+    slot_data->parameter_event->Signal();
 }
 
 void Initialize(Service::Interface* self) {
     IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x2, 2, 0); // 0x20080
     u32 app_id = rp.Pop<u32>();
-    u32 flags = rp.Pop<u32>();
+    u32 attributes = rp.Pop<u32>();
+
+    LOG_DEBUG(Service_APT, "called app_id=0x%08X, attributes=0x%08X", app_id, attributes);
+
+    auto* const slot_data = GetAppletSlotData(attributes);
+
+    // Note: The real NS service does not check if the attributes value is valid before accessing
+    // the data in the array
+    ASSERT_MSG(slot_data, "Invalid application attributes");
+
+    if (slot_data->registered) {
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(ResultCode(ErrorDescription::AlreadyExists, ErrorModule::Applet,
+                           ErrorSummary::InvalidState, ErrorLevel::Status));
+        return;
+    }
+
+    slot_data->applet_id = static_cast<AppletId>(app_id);
+    slot_data->attributes = attributes;
+
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 3);
     rb.Push(RESULT_SUCCESS);
-    rb.PushCopyHandles(Kernel::g_handle_table.Create(notification_event).Unwrap(),
-                       Kernel::g_handle_table.Create(parameter_event).Unwrap());
-
-    // TODO(bunnei): Check if these events are cleared every time Initialize is called.
-    notification_event->Clear();
-    parameter_event->Clear();
-
-    ASSERT_MSG((nullptr != lock), "Cannot initialize without lock");
-    lock->Release();
-
-    LOG_DEBUG(Service_APT, "called app_id=0x%08X, flags=0x%08X", app_id, flags);
+    rb.PushCopyHandles(Kernel::g_handle_table.Create(slot_data->notification_event).Unwrap(),
+                       Kernel::g_handle_table.Create(slot_data->parameter_event).Unwrap());
 }
 
 void GetSharedFont(Service::Interface* self) {
@@ -120,7 +250,12 @@ void GetLockHandle(Service::Interface* self) {
     // this will cause the app to wait until parameter_event is signaled.
     u32 applet_attributes = rp.Pop<u32>();
     IPC::RequestBuilder rb = rp.MakeBuilder(3, 2);
-    rb.Push(RESULT_SUCCESS);    // No error
+    rb.Push(RESULT_SUCCESS); // No error
+
+    // TODO(Subv): The output attributes should have an AppletPos of either Library or System |
+    // Library (depending on the type of the last launched applet) if the input attributes'
+    // AppletPos has the Library bit set.
+
     rb.Push(applet_attributes); // Applet Attributes, this value is passed to Enable.
     rb.Push<u32>(0);            // Least significant bit = power button state
     Kernel::Handle handle_copy = Kernel::g_handle_table.Create(lock).Unwrap();
@@ -133,10 +268,22 @@ void GetLockHandle(Service::Interface* self) {
 void Enable(Service::Interface* self) {
     IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x3, 1, 0); // 0x30040
     u32 attributes = rp.Pop<u32>();
+
+    LOG_DEBUG(Service_APT, "called attributes=0x%08X", attributes);
+
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);   // No error
-    parameter_event->Signal(); // Let the application know that it has been started
-    LOG_WARNING(Service_APT, "(STUBBED) called attributes=0x%08X", attributes);
+
+    auto* const slot_data = GetAppletSlotData(attributes);
+
+    if (!slot_data) {
+        rb.Push(ResultCode(ErrCodes::InvalidAppletSlot, ErrorModule::Applet,
+                           ErrorSummary::InvalidState, ErrorLevel::Status));
+        return;
+    }
+
+    slot_data->registered = true;
+
+    rb.Push(RESULT_SUCCESS);
 }
 
 void GetAppletManInfo(Service::Interface* self) {
@@ -154,22 +301,27 @@ void GetAppletManInfo(Service::Interface* self) {
 
 void IsRegistered(Service::Interface* self) {
     IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x9, 1, 0); // 0x90040
-    u32 app_id = rp.Pop<u32>();
+    AppletId app_id = static_cast<AppletId>(rp.Pop<u32>());
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS); // No error
 
-    // TODO(Subv): An application is considered "registered" if it has already called APT::Enable
-    // handle this properly once we implement multiprocess support.
-    bool is_registered = false; // Set to not registered by default
+    auto* const slot_data = GetAppletSlotData(app_id);
 
-    if (app_id == static_cast<u32>(AppletId::AnyLibraryApplet)) {
-        is_registered = HLE::Applets::IsLibraryAppletRunning();
-    } else if (auto applet = HLE::Applets::Applet::Get(static_cast<AppletId>(app_id))) {
-        is_registered = true; // Set to registered
+    // Check if an LLE applet was registered first, then fallback to HLE applets
+    bool is_registered = slot_data && slot_data->registered;
+
+    if (!is_registered) {
+        if (app_id == AppletId::AnyLibraryApplet) {
+            is_registered = HLE::Applets::IsLibraryAppletRunning();
+        } else if (auto applet = HLE::Applets::Applet::Get(app_id)) {
+            // The applet exists, set it as registered.
+            is_registered = true;
+        }
     }
+
     rb.Push(is_registered);
 
-    LOG_WARNING(Service_APT, "(STUBBED) called app_id=0x%08X", app_id);
+    LOG_DEBUG(Service_APT, "called app_id=0x%08X", static_cast<u32>(app_id));
 }
 
 void InquireNotification(Service::Interface* self) {
@@ -864,14 +1016,23 @@ void Init() {
     screen_capture_post_permission =
         ScreencapPostPermission::CleanThePermission; // TODO(JamePeng): verify the initial value
 
-    // TODO(bunnei): Check if these are created in Initialize or on APT process startup.
-    notification_event = Kernel::Event::Create(Kernel::ResetType::OneShot, "APT_U:Notification");
-    parameter_event = Kernel::Event::Create(Kernel::ResetType::OneShot, "APT_U:Start");
+    for (size_t slot = 0; slot < applet_slots.size(); ++slot) {
+        auto& slot_data = applet_slots[slot];
+        slot_data.slot = static_cast<AppletSlot>(slot);
+        slot_data.applet_id = AppletId::None;
+        slot_data.attributes = 0;
+        slot_data.registered = false;
+        slot_data.notification_event =
+            Kernel::Event::Create(Kernel::ResetType::OneShot, "APT:Notification");
+        slot_data.parameter_event =
+            Kernel::Event::Create(Kernel::ResetType::OneShot, "APT:Parameter");
+    }
 
     // Initialize the parameter to wake up the application.
     next_parameter.emplace();
     next_parameter->signal = static_cast<u32>(SignalType::Wakeup);
     next_parameter->destination_id = static_cast<u32>(AppletId::Application);
+    applet_slots[static_cast<size_t>(AppletSlot::Application)].parameter_event->Signal();
 }
 
 void Shutdown() {
@@ -879,8 +1040,12 @@ void Shutdown() {
     shared_font_loaded = false;
     shared_font_relocated = false;
     lock = nullptr;
-    notification_event = nullptr;
-    parameter_event = nullptr;
+
+    for (auto& slot : applet_slots) {
+        slot.registered = false;
+        slot.notification_event = nullptr;
+        slot.parameter_event = nullptr;
+    }
 
     next_parameter = boost::none;
 

@@ -72,6 +72,8 @@ enum class SignalType : u32 {
 
 /// App Id's used by APT functions
 enum class AppletId : u32 {
+    None = 0,
+    AnySystemApplet = 0x100,
     HomeMenu = 0x101,
     AlternateMenu = 0x103,
     Camera = 0x110,
@@ -83,6 +85,7 @@ enum class AppletId : u32 {
     Miiverse = 0x117,
     MiiversePost = 0x118,
     AmiiboSettings = 0x119,
+    AnySysLibraryApplet = 0x200,
     SoftwareKeyboard1 = 0x201,
     Ed1 = 0x202,
     PnoteApp = 0x204,
@@ -119,8 +122,9 @@ enum class ScreencapPostPermission : u32 {
 namespace ErrCodes {
 enum {
     ParameterPresent = 2,
+    InvalidAppletSlot = 4,
 };
-}
+} // namespace ErrCodes
 
 /// Send a parameter to the currently-running application, which will read it via ReceiveParameter
 void SendParameter(const MessageParameter& parameter);
