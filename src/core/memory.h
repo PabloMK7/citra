@@ -7,6 +7,7 @@
 #include <array>
 #include <cstddef>
 #include <string>
+#include <boost/optional.hpp>
 #include "common/common_types.h"
 
 namespace Memory {
@@ -148,15 +149,23 @@ u8* GetPointer(VAddr virtual_address);
 std::string ReadCString(VAddr virtual_address, std::size_t max_length);
 
 /**
-* Converts a virtual address inside a region with 1:1 mapping to physical memory to a physical
-* address. This should be used by services to translate addresses for use by the hardware.
-*/
+ * Converts a virtual address inside a region with 1:1 mapping to physical memory to a physical
+ * address. This should be used by services to translate addresses for use by the hardware.
+ */
+boost::optional<PAddr> TryVirtualToPhysicalAddress(VAddr addr);
+
+/**
+ * Converts a virtual address inside a region with 1:1 mapping to physical memory to a physical
+ * address. This should be used by services to translate addresses for use by the hardware.
+ *
+ * @deprecated Use TryVirtualToPhysicalAddress(), which reports failure.
+ */
 PAddr VirtualToPhysicalAddress(VAddr addr);
 
 /**
-* Undoes a mapping performed by VirtualToPhysicalAddress().
-*/
-VAddr PhysicalToVirtualAddress(PAddr addr);
+ * Undoes a mapping performed by VirtualToPhysicalAddress().
+ */
+boost::optional<VAddr> PhysicalToVirtualAddress(PAddr addr);
 
 /**
  * Gets a pointer to the memory region beginning at the specified physical address.
@@ -180,6 +189,19 @@ void RasterizerFlushRegion(PAddr start, u32 size);
  * Flushes and invalidates any externally cached rasterizer resources touching the given region.
  */
 void RasterizerFlushAndInvalidateRegion(PAddr start, u32 size);
+
+enum class FlushMode {
+    /// Write back modified surfaces to RAM
+    Flush,
+    /// Write back modified surfaces to RAM, and also remove them from the cache
+    FlushAndInvalidate,
+};
+
+/**
+ * Flushes and invalidates any externally cached rasterizer resources touching the given virtual
+ * address region.
+ */
+void RasterizerFlushVirtualRegion(VAddr start, u32 size, FlushMode mode);
 
 /**
  * Dynarmic has an optimization to memory accesses when the pointer to the page exists that

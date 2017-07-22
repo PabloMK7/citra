@@ -149,7 +149,7 @@ ResultCode SharedMemory::Map(Process* target_process, VAddr address, MemoryPermi
 
     if (base_address == 0 && target_address == 0) {
         // Calculate the address at which to map the memory block.
-        target_address = Memory::PhysicalToVirtualAddress(linear_heap_phys_address);
+        target_address = Memory::PhysicalToVirtualAddress(linear_heap_phys_address).value();
     }
 
     // Map the memory block into the target process
