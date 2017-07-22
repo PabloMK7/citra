@@ -4,10 +4,12 @@
 
 #include <array>
 #include <cstring>
+#include "audio_core/audio_core.h"
 #include "common/assert.h"
 #include "common/common_types.h"
 #include "common/logging/log.h"
 #include "common/swap.h"
+#include "core/hle/kernel/memory.h"
 #include "core/hle/kernel/process.h"
 #include "core/memory.h"
 #include "core/memory_setup.h"
@@ -15,6 +17,9 @@
 #include "video_core/video_core.h"
 
 namespace Memory {
+
+static std::array<u8, Memory::VRAM_SIZE> vram;
+static std::array<u8, Memory::N3DS_EXTRA_RAM_SIZE> n3ds_extra_ram;
 
 PageTable* current_page_table = nullptr;
 
@@ -236,9 +241,63 @@ std::string ReadCString(VAddr vaddr, std::size_t max_length) {
 }
 
 u8* GetPhysicalPointer(PAddr address) {
-    // TODO(Subv): This call should not go through the application's memory mapping.
-    boost::optional<VAddr> vaddr = PhysicalToVirtualAddress(address);
-    return vaddr ? GetPointer(*vaddr) : nullptr;
+    struct MemoryArea {
+        PAddr paddr_base;
+        u32 size;
+    };
+
+    static constexpr MemoryArea memory_areas[] = {
+        {VRAM_PADDR, VRAM_SIZE},
+        {IO_AREA_PADDR, IO_AREA_SIZE},
+        {DSP_RAM_PADDR, DSP_RAM_SIZE},
+        {FCRAM_PADDR, FCRAM_N3DS_SIZE},
+        {N3DS_EXTRA_RAM_PADDR, N3DS_EXTRA_RAM_SIZE},
+    };
+
+    const auto area =
+        std::find_if(std::begin(memory_areas), std::end(memory_areas), [&](const auto& area) {
+            return address >= area.paddr_base && address < area.paddr_base + area.size;
+        });
+
+    if (area == std::end(memory_areas)) {
+        LOG_ERROR(HW_Memory, "unknown GetPhysicalPointer @ 0x%08X", address);
+        return nullptr;
+    }
+
+    if (area->paddr_base == IO_AREA_PADDR) {
+        LOG_ERROR(HW_Memory, "MMIO mappings are not supported yet. phys_addr=0x%08X", address);
+        return nullptr;
+    }
+
+    u32 offset_into_region = address - area->paddr_base;
+
+    u8* target_pointer = nullptr;
+    switch (area->paddr_base) {
+    case VRAM_PADDR:
+        target_pointer = vram.data() + offset_into_region;
+        break;
+    case DSP_RAM_PADDR:
+        target_pointer = AudioCore::GetDspMemory().data() + offset_into_region;
+        break;
+    case FCRAM_PADDR:
+        for (const auto& region : Kernel::memory_regions) {
+            if (offset_into_region >= region.base &&
+                offset_into_region < region.base + region.size) {
+                target_pointer =
+                    region.linear_heap_memory->data() + offset_into_region - region.base;
+                break;
+            }
+        }
+        ASSERT_MSG(target_pointer != nullptr, "Invalid FCRAM address");
+        break;
+    case N3DS_EXTRA_RAM_PADDR:
+        target_pointer = n3ds_extra_ram.data() + offset_into_region;
+        break;
+    default:
+        UNREACHABLE();
+    }
+
+    return target_pointer;
 }
 
 void RasterizerMarkRegionCached(PAddr start, u32 size, int count_delta) {

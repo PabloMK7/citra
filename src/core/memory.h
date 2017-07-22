@@ -227,8 +227,6 @@ boost::optional<VAddr> PhysicalToVirtualAddress(PAddr addr);
 
 /**
  * Gets a pointer to the memory region beginning at the specified physical address.
- *
- * @note This is currently implemented using PhysicalToVirtualAddress().
  */
 u8* GetPhysicalPointer(PAddr address);
 
