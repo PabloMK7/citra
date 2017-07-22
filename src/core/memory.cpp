@@ -11,75 +11,18 @@
 #include "core/hle/kernel/process.h"
 #include "core/memory.h"
 #include "core/memory_setup.h"
-#include "core/mmio.h"
 #include "video_core/renderer_base.h"
 #include "video_core/video_core.h"
 
 namespace Memory {
 
-enum class PageType {
-    /// Page is unmapped and should cause an access error.
-    Unmapped,
-    /// Page is mapped to regular memory. This is the only type you can get pointers to.
-    Memory,
-    /// Page is mapped to regular memory, but also needs to check for rasterizer cache flushing and
-    /// invalidation
-    RasterizerCachedMemory,
-    /// Page is mapped to a I/O region. Writing and reading to this page is handled by functions.
-    Special,
-    /// Page is mapped to a I/O region, but also needs to check for rasterizer cache flushing and
-    /// invalidation
-    RasterizerCachedSpecial,
-};
-
-struct SpecialRegion {
-    VAddr base;
-    u32 size;
-    MMIORegionPointer handler;
-};
-
-/**
- * A (reasonably) fast way of allowing switchable and remappable process address spaces. It loosely
- * mimics the way a real CPU page table works, but instead is optimized for minimal decoding and
- * fetching requirements when accessing. In the usual case of an access to regular memory, it only
- * requires an indexed fetch and a check for NULL.
- */
-struct PageTable {
-    /**
-     * Array of memory pointers backing each page. An entry can only be non-null if the
-     * corresponding entry in the `attributes` array is of type `Memory`.
-     */
-    std::array<u8*, PAGE_TABLE_NUM_ENTRIES> pointers;
-
-    /**
-     * Contains MMIO handlers that back memory regions whose entries in the `attribute` array is of
-     * type `Special`.
-     */
-    std::vector<SpecialRegion> special_regions;
-
-    /**
-     * Array of fine grained page attributes. If it is set to any value other than `Memory`, then
-     * the corresponding entry in `pointers` MUST be set to null.
-     */
-    std::array<PageType, PAGE_TABLE_NUM_ENTRIES> attributes;
-
-    /**
-     * Indicates the number of externally cached resources touching a page that should be
-     * flushed before the memory is accessed
-     */
-    std::array<u8, PAGE_TABLE_NUM_ENTRIES> cached_res_count;
-};
-
-/// Singular page table used for the singleton process
-static PageTable main_page_table;
-/// Currently active page table
-static PageTable* current_page_table = &main_page_table;
+PageTable* current_page_table = nullptr;
 
 std::array<u8*, PAGE_TABLE_NUM_ENTRIES>* GetCurrentPageTablePointers() {
     return &current_page_table->pointers;
 }
 
-static void MapPages(u32 base, u32 size, u8* memory, PageType type) {
+static void MapPages(PageTable& page_table, u32 base, u32 size, u8* memory, PageType type) {
     LOG_DEBUG(HW_Memory, "Mapping %p onto %08X-%08X", memory, base * PAGE_SIZE,
               (base + size) * PAGE_SIZE);
 
@@ -90,9 +33,9 @@ static void MapPages(u32 base, u32 size, u8* memory, PageType type) {
     while (base != end) {
         ASSERT_MSG(base < PAGE_TABLE_NUM_ENTRIES, "out of range mapping at %08X", base);
 
-        current_page_table->attributes[base] = type;
-        current_page_table->pointers[base] = memory;
-        current_page_table->cached_res_count[base] = 0;
+        page_table.attributes[base] = type;
+        page_table.pointers[base] = memory;
+        page_table.cached_res_count[base] = 0;
 
         base += 1;
         if (memory != nullptr)
@@ -100,30 +43,24 @@ static void MapPages(u32 base, u32 size, u8* memory, PageType type) {
     }
 }
 
-void InitMemoryMap() {
-    main_page_table.pointers.fill(nullptr);
-    main_page_table.attributes.fill(PageType::Unmapped);
-    main_page_table.cached_res_count.fill(0);
-}
-
-void MapMemoryRegion(VAddr base, u32 size, u8* target) {
+void MapMemoryRegion(PageTable& page_table, VAddr base, u32 size, u8* target) {
     ASSERT_MSG((size & PAGE_MASK) == 0, "non-page aligned size: %08X", size);
     ASSERT_MSG((base & PAGE_MASK) == 0, "non-page aligned base: %08X", base);
-    MapPages(base / PAGE_SIZE, size / PAGE_SIZE, target, PageType::Memory);
+    MapPages(page_table, base / PAGE_SIZE, size / PAGE_SIZE, target, PageType::Memory);
 }
 
-void MapIoRegion(VAddr base, u32 size, MMIORegionPointer mmio_handler) {
+void MapIoRegion(PageTable& page_table, VAddr base, u32 size, MMIORegionPointer mmio_handler) {
     ASSERT_MSG((size & PAGE_MASK) == 0, "non-page aligned size: %08X", size);
     ASSERT_MSG((base & PAGE_MASK) == 0, "non-page aligned base: %08X", base);
-    MapPages(base / PAGE_SIZE, size / PAGE_SIZE, nullptr, PageType::Special);
+    MapPages(page_table, base / PAGE_SIZE, size / PAGE_SIZE, nullptr, PageType::Special);
 
-    current_page_table->special_regions.emplace_back(SpecialRegion{base, size, mmio_handler});
+    page_table.special_regions.emplace_back(SpecialRegion{base, size, mmio_handler});
 }
 
-void UnmapRegion(VAddr base, u32 size) {
+void UnmapRegion(PageTable& page_table, VAddr base, u32 size) {
     ASSERT_MSG((size & PAGE_MASK) == 0, "non-page aligned size: %08X", size);
     ASSERT_MSG((base & PAGE_MASK) == 0, "non-page aligned base: %08X", base);
-    MapPages(base / PAGE_SIZE, size / PAGE_SIZE, nullptr, PageType::Unmapped);
+    MapPages(page_table, base / PAGE_SIZE, size / PAGE_SIZE, nullptr, PageType::Unmapped);
 }
 
 /**

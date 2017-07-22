@@ -137,7 +137,6 @@ void System::Reschedule() {
 }
 
 System::ResultStatus System::Init(EmuWindow* emu_window, u32 system_mode) {
-    Memory::InitMemoryMap();
     LOG_DEBUG(HW_Memory, "initialized OK");
 
     if (Settings::values.use_cpu_jit) {

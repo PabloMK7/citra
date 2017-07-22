@@ -56,6 +56,10 @@ void VMManager::Reset() {
     initial_vma.size = MAX_ADDRESS;
     vma_map.emplace(initial_vma.base, initial_vma);
 
+    page_table.pointers.fill(nullptr);
+    page_table.attributes.fill(Memory::PageType::Unmapped);
+    page_table.cached_res_count.fill(0);
+
     UpdatePageTableForVMA(initial_vma);
 }
 
@@ -328,16 +332,17 @@ VMManager::VMAIter VMManager::MergeAdjacent(VMAIter iter) {
 void VMManager::UpdatePageTableForVMA(const VirtualMemoryArea& vma) {
     switch (vma.type) {
     case VMAType::Free:
-        Memory::UnmapRegion(vma.base, vma.size);
+        Memory::UnmapRegion(page_table, vma.base, vma.size);
         break;
     case VMAType::AllocatedMemoryBlock:
-        Memory::MapMemoryRegion(vma.base, vma.size, vma.backing_block->data() + vma.offset);
+        Memory::MapMemoryRegion(page_table, vma.base, vma.size,
+                                vma.backing_block->data() + vma.offset);
         break;
     case VMAType::BackingMemory:
-        Memory::MapMemoryRegion(vma.base, vma.size, vma.backing_memory);
+        Memory::MapMemoryRegion(page_table, vma.base, vma.size, vma.backing_memory);
         break;
     case VMAType::MMIO:
-        Memory::MapIoRegion(vma.base, vma.size, vma.mmio_handler);
+        Memory::MapIoRegion(page_table, vma.base, vma.size, vma.mmio_handler);
         break;
     }
 }

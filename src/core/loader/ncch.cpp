@@ -172,6 +172,7 @@ ResultStatus AppLoader_NCCH::LoadExec() {
         codeset->memory = std::make_shared<std::vector<u8>>(std::move(code));
 
         Kernel::g_current_process = Kernel::Process::Create(std::move(codeset));
+        Memory::current_page_table = &Kernel::g_current_process->vm_manager.page_table;
 
         // Attach a resource limit to the process based on the resource limit category
         Kernel::g_current_process->resource_limit =
