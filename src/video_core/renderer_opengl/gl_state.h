@@ -95,23 +95,23 @@ public:
     } fog_lut;
 
     struct {
-        GLuint texture_1d; // GL_TEXTURE_BINDING_1D
+        GLuint texture_buffer; // GL_TEXTURE_BINDING_BUFFER
     } proctex_noise_lut;
 
     struct {
-        GLuint texture_1d; // GL_TEXTURE_BINDING_1D
+        GLuint texture_buffer; // GL_TEXTURE_BINDING_BUFFER
     } proctex_color_map;
 
     struct {
-        GLuint texture_1d; // GL_TEXTURE_BINDING_1D
+        GLuint texture_buffer; // GL_TEXTURE_BINDING_BUFFER
     } proctex_alpha_map;
 
     struct {
-        GLuint texture_1d; // GL_TEXTURE_BINDING_1D
+        GLuint texture_buffer; // GL_TEXTURE_BINDING_BUFFER
     } proctex_lut;
 
     struct {
-        GLuint texture_1d; // GL_TEXTURE_BINDING_1D
+        GLuint texture_buffer; // GL_TEXTURE_BINDING_BUFFER
     } proctex_diff_lut;
 
     struct {

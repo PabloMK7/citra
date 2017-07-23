@@ -886,12 +886,12 @@ void AppendProcTexSampler(std::string& out, const PicaShaderConfig& config) {
     // coord=1.0 is lut[127]+lut_diff[127]. For other indices, the result is interpolated using
     // value entries and difference entries.
     out += R"(
-float ProcTexLookupLUT(sampler1D lut, float coord) {
+float ProcTexLookupLUT(samplerBuffer lut, float coord) {
     coord *= 128;
     float index_i = clamp(floor(coord), 0.0, 127.0);
     float index_f = coord - index_i; // fract() cannot be used here because 128.0 needs to be
                                      // extracted as index_i = 127.0 and index_f = 1.0
-    vec2 entry = texelFetch(lut, int(index_i), 0).rg;
+    vec2 entry = texelFetch(lut, int(index_i)).rg;
     return clamp(entry.r + entry.g * index_f, 0.0, 1.0);
 }
     )";
@@ -979,14 +979,14 @@ float ProcTexNoiseCoef(vec2 x) {
         out += "int lut_index_i = int(lut_coord) + " +
                std::to_string(config.state.proctex.lut_offset) + ";\n";
         out += "float lut_index_f = fract(lut_coord);\n";
-        out += "vec4 final_color = texelFetch(proctex_lut, lut_index_i, 0) + lut_index_f * "
-               "texelFetch(proctex_diff_lut, lut_index_i, 0);\n";
+        out += "vec4 final_color = texelFetch(proctex_lut, lut_index_i) + lut_index_f * "
+               "texelFetch(proctex_diff_lut, lut_index_i);\n";
         break;
     case ProcTexFilter::Nearest:
     case ProcTexFilter::NearestMipmapLinear:
     case ProcTexFilter::NearestMipmapNearest:
         out += "lut_coord += " + std::to_string(config.state.proctex.lut_offset) + ";\n";
-        out += "vec4 final_color = texelFetch(proctex_lut, int(round(lut_coord)), 0);\n";
+        out += "vec4 final_color = texelFetch(proctex_lut, int(round(lut_coord)));\n";
         break;
     }
 
@@ -1053,11 +1053,11 @@ layout (std140) uniform shader_data {
 uniform sampler2D tex[3];
 uniform samplerBuffer lighting_lut;
 uniform samplerBuffer fog_lut;
-uniform sampler1D proctex_noise_lut;
-uniform sampler1D proctex_color_map;
-uniform sampler1D proctex_alpha_map;
-uniform sampler1D proctex_lut;
-uniform sampler1D proctex_diff_lut;
+uniform samplerBuffer proctex_noise_lut;
+uniform samplerBuffer proctex_color_map;
+uniform samplerBuffer proctex_alpha_map;
+uniform samplerBuffer proctex_lut;
+uniform samplerBuffer proctex_diff_lut;
 
 // Rotate the vector v by the quaternion q
 vec3 quaternion_rotate(vec4 q, vec3 v) {
