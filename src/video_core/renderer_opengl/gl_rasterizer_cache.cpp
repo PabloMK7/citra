@@ -542,10 +542,11 @@ RasterizerCacheOpenGL::GetFramebufferSurfaces(
             config.GetDepthBufferPhysicalAddress(),
             fb_area * Pica::FramebufferRegs::BytesPerDepthPixel(config.depth_format));
     bool using_color_fb = config.GetColorBufferPhysicalAddress() != 0;
-    bool using_depth_fb =
-        config.GetDepthBufferPhysicalAddress() != 0 &&
-        (regs.framebuffer.output_merger.depth_test_enable ||
-         regs.framebuffer.output_merger.depth_write_enable || !framebuffers_overlap);
+    bool depth_write_enable = regs.framebuffer.output_merger.depth_write_enable &&
+                              regs.framebuffer.framebuffer.allow_depth_stencil_write;
+    bool using_depth_fb = config.GetDepthBufferPhysicalAddress() != 0 &&
+                          (regs.framebuffer.output_merger.depth_test_enable || depth_write_enable ||
+                           !framebuffers_overlap);
 
     if (framebuffers_overlap && using_color_fb && using_depth_fb) {
         LOG_CRITICAL(Render_OpenGL, "Color and depth framebuffer memory regions overlap; "
