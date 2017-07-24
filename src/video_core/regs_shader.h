@@ -24,9 +24,16 @@ struct ShaderRegs {
 
     INSERT_PADDING_WORDS(0x4);
 
+    enum ShaderMode {
+        GS = 0x08,
+        VS = 0xA0,
+    };
+
     union {
         // Number of input attributes to shader unit - 1
         BitField<0, 4, u32> max_input_attribute_index;
+        BitField<8, 8, u32> input_to_uniform;
+        BitField<24, 8, ShaderMode> shader_mode;
     };
 
     // Offset to shader program entry point (in words)
