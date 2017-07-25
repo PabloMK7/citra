@@ -50,7 +50,8 @@ struct OutputVertex {
     INSERT_PADDING_WORDS(1);
     Math::Vec2<float24> tc2;
 
-    static OutputVertex FromAttributeBuffer(const RasterizerRegs& regs, AttributeBuffer& output);
+    static OutputVertex FromAttributeBuffer(const RasterizerRegs& regs,
+                                            const AttributeBuffer& output);
 };
 #define ASSERT_POS(var, pos)                                                                       \
     static_assert(offsetof(OutputVertex, var) == pos * sizeof(float24), "Semantic at wrong "       \

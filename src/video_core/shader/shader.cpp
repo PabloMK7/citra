@@ -21,7 +21,8 @@ namespace Pica {
 
 namespace Shader {
 
-OutputVertex OutputVertex::FromAttributeBuffer(const RasterizerRegs& regs, AttributeBuffer& input) {
+OutputVertex OutputVertex::FromAttributeBuffer(const RasterizerRegs& regs,
+                                               const AttributeBuffer& input) {
     // Setup output data
     union {
         OutputVertex ret{};
