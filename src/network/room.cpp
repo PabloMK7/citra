@@ -19,7 +19,7 @@ static constexpr u32 MaxConcurrentConnections = 10;
 class Room::RoomImpl {
 public:
     // This MAC address is used to generate a 'Nintendo' like Mac address.
-    const MacAddress NintendoOUI = {0x00, 0x1F, 0x32, 0x00, 0x00, 0x00};
+    const MacAddress NintendoOUI;
     std::mt19937 random_gen; ///< Random number generator. Used for GenerateMacAddress
 
     ENetHost* server = nullptr; ///< Network interface.
@@ -36,7 +36,8 @@ public:
     using MemberList = std::vector<Member>;
     MemberList members; ///< Information about the members of this room.
 
-    RoomImpl() : random_gen(std::random_device()()) {}
+    RoomImpl()
+        : random_gen(std::random_device()()), NintendoOUI{0x00, 0x1F, 0x32, 0x00, 0x00, 0x00} {}
 
     /// Thread that receives and dispatches network packets
     std::unique_ptr<std::thread> room_thread;
