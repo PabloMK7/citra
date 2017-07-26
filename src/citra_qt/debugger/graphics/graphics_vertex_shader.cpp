@@ -183,23 +183,13 @@ QVariant GraphicsVertexShaderModel::data(const QModelIndex& index, int role) con
                     print_input(output, src1, swizzle.negate_src1,
                                 SelectorToString(swizzle.src1_selector));
                     AlignToColumn(kInputOperandColumnWidth);
-                    if (src_is_inverted) {
-                        print_input(output, src2, swizzle.negate_src2,
-                                    SelectorToString(swizzle.src2_selector));
-                    } else {
-                        print_input(output, src2, swizzle.negate_src2,
-                                    SelectorToString(swizzle.src2_selector), true,
-                                    instr.mad.AddressRegisterName());
-                    }
+                    print_input(output, src2, swizzle.negate_src2,
+                                SelectorToString(swizzle.src2_selector), true,
+                                src_is_inverted ? "" : instr.mad.AddressRegisterName());
                     AlignToColumn(kInputOperandColumnWidth);
-                    if (src_is_inverted) {
-                        print_input(output, src3, swizzle.negate_src3,
-                                    SelectorToString(swizzle.src3_selector), true,
-                                    instr.mad.AddressRegisterName());
-                    } else {
-                        print_input(output, src3, swizzle.negate_src3,
-                                    SelectorToString(swizzle.src3_selector));
-                    }
+                    print_input(output, src3, swizzle.negate_src3,
+                                SelectorToString(swizzle.src3_selector), true,
+                                src_is_inverted ? instr.mad.AddressRegisterName() : "");
                     AlignToColumn(kInputOperandColumnWidth);
                     break;
                 }
@@ -222,16 +212,15 @@ QVariant GraphicsVertexShaderModel::data(const QModelIndex& index, int role) con
                         SourceRegister src1 = instr.common.GetSrc1(src_is_inverted);
                         print_input(output, src1, swizzle.negate_src1,
                                     swizzle.SelectorToString(false), true,
-                                    instr.common.AddressRegisterName());
+                                    src_is_inverted ? "" : instr.common.AddressRegisterName());
                         AlignToColumn(kInputOperandColumnWidth);
                     }
 
-                    // TODO: In some cases, the Address Register is used as an index for SRC2
-                    // instead of SRC1
                     if (opcode_info.subtype & OpCode::Info::Src2) {
                         SourceRegister src2 = instr.common.GetSrc2(src_is_inverted);
                         print_input(output, src2, swizzle.negate_src2,
-                                    swizzle.SelectorToString(true));
+                                    swizzle.SelectorToString(true), true,
+                                    src_is_inverted ? instr.common.AddressRegisterName() : "");
                         AlignToColumn(kInputOperandColumnWidth);
                     }
                     break;
@@ -247,7 +236,9 @@ QVariant GraphicsVertexShaderModel::data(const QModelIndex& index, int role) con
 
                 switch (opcode.EffectiveOpCode()) {
                 case OpCode::Id::LOOP:
-                    output << "(unknown instruction format)";
+                    output << 'i' << instr.flow_control.int_uniform_id << " (end on 0x"
+                           << std::setw(4) << std::right << std::setfill('0') << std::hex
+                           << (4 * instr.flow_control.dest_offset) << ")";
                     break;
 
                 default:
@@ -255,7 +246,7 @@ QVariant GraphicsVertexShaderModel::data(const QModelIndex& index, int role) con
                         output << '(';
 
                         if (instr.flow_control.op != instr.flow_control.JustY) {
-                            if (instr.flow_control.refx)
+                            if (!instr.flow_control.refx)
                                 output << '!';
                             output << "cc.x";
                         }
@@ -267,13 +258,17 @@ QVariant GraphicsVertexShaderModel::data(const QModelIndex& index, int role) con
                         }
 
                         if (instr.flow_control.op != instr.flow_control.JustX) {
-                            if (instr.flow_control.refy)
+                            if (!instr.flow_control.refy)
                                 output << '!';
                             output << "cc.y";
                         }
 
                         output << ") ";
                     } else if (opcode_info.subtype & OpCode::Info::HasUniformIndex) {
+                        if (opcode.EffectiveOpCode() == OpCode::Id::JMPU &&
+                            (instr.flow_control.num_instructions & 1) == 1) {
+                            output << '!';
+                        }
                         output << 'b' << instr.flow_control.bool_uniform_id << ' ';
                     }
 
