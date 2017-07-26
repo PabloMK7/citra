@@ -75,8 +75,8 @@ const JitFunction instr_table[64] = {
     &JitShader::Compile_IF,    // ifu
     &JitShader::Compile_IF,    // ifc
     &JitShader::Compile_LOOP,  // loop
-    nullptr,                   // emit
-    nullptr,                   // sete
+    &JitShader::Compile_EMIT,  // emit
+    &JitShader::Compile_SETE,  // sete
     &JitShader::Compile_JMP,   // jmpc
     &JitShader::Compile_JMP,   // jmpu
     &JitShader::Compile_CMP,   // cmp
@@ -770,6 +770,51 @@ void JitShader::Compile_JMP(Instruction instr) {
     } else {
         jnz(b, T_NEAR);
     }
+}
+
+static void Emit(GSEmitter* emitter, Math::Vec4<float24> (*output)[16]) {
+    emitter->Emit(*output);
+}
+
+void JitShader::Compile_EMIT(Instruction instr) {
+    Label have_emitter, end;
+    mov(rax, qword[STATE + offsetof(UnitState, emitter_ptr)]);
+    test(rax, rax);
+    jnz(have_emitter);
+
+    ABI_PushRegistersAndAdjustStack(*this, PersistentCallerSavedRegs(), 0);
+    mov(ABI_PARAM1, reinterpret_cast<size_t>("Execute EMIT on VS"));
+    CallFarFunction(*this, LogCritical);
+    ABI_PopRegistersAndAdjustStack(*this, PersistentCallerSavedRegs(), 0);
+    jmp(end);
+
+    L(have_emitter);
+    ABI_PushRegistersAndAdjustStack(*this, PersistentCallerSavedRegs(), 0);
+    mov(ABI_PARAM1, rax);
+    mov(ABI_PARAM2, STATE);
+    add(ABI_PARAM2, static_cast<Xbyak::uint32>(offsetof(UnitState, registers.output)));
+    CallFarFunction(*this, Emit);
+    ABI_PopRegistersAndAdjustStack(*this, PersistentCallerSavedRegs(), 0);
+    L(end);
+}
+
+void JitShader::Compile_SETE(Instruction instr) {
+    Label have_emitter, end;
+    mov(rax, qword[STATE + offsetof(UnitState, emitter_ptr)]);
+    test(rax, rax);
+    jnz(have_emitter);
+
+    ABI_PushRegistersAndAdjustStack(*this, PersistentCallerSavedRegs(), 0);
+    mov(ABI_PARAM1, reinterpret_cast<size_t>("Execute SETEMIT on VS"));
+    CallFarFunction(*this, LogCritical);
+    ABI_PopRegistersAndAdjustStack(*this, PersistentCallerSavedRegs(), 0);
+    jmp(end);
+
+    L(have_emitter);
+    mov(byte[rax + offsetof(GSEmitter, vertex_id)], instr.setemit.vertex_id);
+    mov(byte[rax + offsetof(GSEmitter, prim_emit)], instr.setemit.prim_emit);
+    mov(byte[rax + offsetof(GSEmitter, winding)], instr.setemit.winding);
+    L(end);
 }
 
 void JitShader::Compile_Block(unsigned end) {
