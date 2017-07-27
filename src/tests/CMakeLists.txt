@@ -1,5 +1,7 @@
 set(SRCS
             common/param_package.cpp
+            core/arm/arm_test_common.cpp
+            core/arm/dyncom/arm_dyncom_vfp_tests.cpp
             core/file_sys/path_parser.cpp
             core/hle/kernel/hle_ipc.cpp
             glad.cpp
@@ -7,6 +9,7 @@ set(SRCS
             )
 
 set(HEADERS
+            core/arm/arm_test_common.h
             )
 
 create_directory_groups(${SRCS} ${HEADERS})
