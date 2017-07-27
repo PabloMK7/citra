@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <boost/optional.hpp>
 #include "common/common_paths.h"
 #include "common/file_util.h"
 #include "common/logging/log.h"
@@ -44,7 +45,7 @@ static u8 unknown_ns_state_field;
 static ScreencapPostPermission screen_capture_post_permission;
 
 /// Parameter data to be returned in the next call to Glance/ReceiveParameter
-static MessageParameter next_parameter;
+static boost::optional<MessageParameter> next_parameter;
 
 void SendParameter(const MessageParameter& parameter) {
     next_parameter = parameter;
@@ -189,7 +190,19 @@ void SendParameter(Service::Interface* self) {
     std::shared_ptr<HLE::Applets::Applet> dest_applet =
         HLE::Applets::Applet::Get(static_cast<AppletId>(dst_app_id));
 
+    LOG_DEBUG(Service_APT,
+              "called src_app_id=0x%08X, dst_app_id=0x%08X, signal_type=0x%08X,"
+              "buffer_size=0x%08X, handle=0x%08X, size=0x%08zX, in_param_buffer_ptr=0x%08X",
+              src_app_id, dst_app_id, signal_type, buffer_size, handle, size, buffer);
+
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+
+    // A new parameter can not be sent if the previous one hasn't been consumed yet
+    if (next_parameter) {
+        rb.Push(ResultCode(ErrCodes::ParameterPresent, ErrorModule::Applet,
+                           ErrorSummary::InvalidState, ErrorLevel::Status));
+        return;
+    }
 
     if (dest_applet == nullptr) {
         LOG_ERROR(Service_APT, "Unknown applet id=0x%08X", dst_app_id);
@@ -206,11 +219,6 @@ void SendParameter(Service::Interface* self) {
     Memory::ReadBlock(buffer, param.buffer.data(), param.buffer.size());
 
     rb.Push(dest_applet->ReceiveParameter(param));
-
-    LOG_WARNING(Service_APT,
-                "(STUBBED) called src_app_id=0x%08X, dst_app_id=0x%08X, signal_type=0x%08X,"
-                "buffer_size=0x%08X, handle=0x%08X, size=0x%08zX, in_param_buffer_ptr=0x%08X",
-                src_app_id, dst_app_id, signal_type, buffer_size, handle, size, buffer);
 }
 
 void ReceiveParameter(Service::Interface* self) {
@@ -226,21 +234,40 @@ void ReceiveParameter(Service::Interface* self) {
             "buffer_size is bigger than the size in the buffer descriptor (0x%08X > 0x%08zX)",
             buffer_size, static_buff_size);
 
+    LOG_DEBUG(Service_APT, "called app_id=0x%08X, buffer_size=0x%08zX", app_id, buffer_size);
+
+    if (!next_parameter) {
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(ResultCode(ErrorDescription::NoData, ErrorModule::Applet,
+                           ErrorSummary::InvalidState, ErrorLevel::Status));
+        return;
+    }
+
+    if (next_parameter->destination_id != app_id) {
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(ResultCode(ErrorDescription::NotFound, ErrorModule::Applet, ErrorSummary::NotFound,
+                           ErrorLevel::Status));
+        return;
+    }
+
     IPC::RequestBuilder rb = rp.MakeBuilder(4, 4);
+
     rb.Push(RESULT_SUCCESS); // No error
-    rb.Push(next_parameter.sender_id);
-    rb.Push(next_parameter.signal); // Signal type
-    ASSERT_MSG(next_parameter.buffer.size() <= buffer_size, "Input static buffer is too small !");
-    rb.Push(static_cast<u32>(next_parameter.buffer.size())); // Parameter buffer size
+    rb.Push(next_parameter->sender_id);
+    rb.Push(next_parameter->signal); // Signal type
+    ASSERT_MSG(next_parameter->buffer.size() <= buffer_size, "Input static buffer is too small !");
+    rb.Push(static_cast<u32>(next_parameter->buffer.size())); // Parameter buffer size
 
-    rb.PushMoveHandles((next_parameter.object != nullptr)
-                           ? Kernel::g_handle_table.Create(next_parameter.object).Unwrap()
+    rb.PushMoveHandles((next_parameter->object != nullptr)
+                           ? Kernel::g_handle_table.Create(next_parameter->object).Unwrap()
                            : 0);
-    rb.PushStaticBuffer(buffer, static_cast<u32>(next_parameter.buffer.size()), 0);
 
-    Memory::WriteBlock(buffer, next_parameter.buffer.data(), next_parameter.buffer.size());
+    rb.PushStaticBuffer(buffer, static_cast<u32>(next_parameter->buffer.size()), 0);
 
-    LOG_WARNING(Service_APT, "called app_id=0x%08X, buffer_size=0x%08zX", app_id, buffer_size);
+    Memory::WriteBlock(buffer, next_parameter->buffer.data(), next_parameter->buffer.size());
+
+    // Clear the parameter
+    next_parameter = boost::none;
 }
 
 void GlanceParameter(Service::Interface* self) {
@@ -256,37 +283,74 @@ void GlanceParameter(Service::Interface* self) {
             "buffer_size is bigger than the size in the buffer descriptor (0x%08X > 0x%08zX)",
             buffer_size, static_buff_size);
 
+    LOG_DEBUG(Service_APT, "called app_id=0x%08X, buffer_size=0x%08zX", app_id, buffer_size);
+
+    if (!next_parameter) {
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(ResultCode(ErrorDescription::NoData, ErrorModule::Applet,
+                           ErrorSummary::InvalidState, ErrorLevel::Status));
+        return;
+    }
+
+    if (next_parameter->destination_id != app_id) {
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(ResultCode(ErrorDescription::NotFound, ErrorModule::Applet, ErrorSummary::NotFound,
+                           ErrorLevel::Status));
+        return;
+    }
+
     IPC::RequestBuilder rb = rp.MakeBuilder(4, 4);
     rb.Push(RESULT_SUCCESS); // No error
-    rb.Push(next_parameter.sender_id);
-    rb.Push(next_parameter.signal); // Signal type
-    ASSERT_MSG(next_parameter.buffer.size() <= buffer_size, "Input static buffer is too small !");
-    rb.Push(static_cast<u32>(next_parameter.buffer.size())); // Parameter buffer size
+    rb.Push(next_parameter->sender_id);
+    rb.Push(next_parameter->signal); // Signal type
+    ASSERT_MSG(next_parameter->buffer.size() <= buffer_size, "Input static buffer is too small !");
+    rb.Push(static_cast<u32>(next_parameter->buffer.size())); // Parameter buffer size
 
-    rb.PushCopyHandles((next_parameter.object != nullptr)
-                           ? Kernel::g_handle_table.Create(next_parameter.object).Unwrap()
+    rb.PushMoveHandles((next_parameter->object != nullptr)
+                           ? Kernel::g_handle_table.Create(next_parameter->object).Unwrap()
                            : 0);
-    rb.PushStaticBuffer(buffer, static_cast<u32>(next_parameter.buffer.size()), 0);
 
-    Memory::WriteBlock(buffer, next_parameter.buffer.data(), next_parameter.buffer.size());
+    rb.PushStaticBuffer(buffer, static_cast<u32>(next_parameter->buffer.size()), 0);
 
-    LOG_WARNING(Service_APT, "called app_id=0x%08X, buffer_size=0x%08zX", app_id, buffer_size);
+    Memory::WriteBlock(buffer, next_parameter->buffer.data(), next_parameter->buffer.size());
+
+    // Note: The NS module always clears the DSPSleep and DSPWakeup signals even in GlanceParameter.
+    if (next_parameter->signal == static_cast<u32>(SignalType::DspSleep) ||
+        next_parameter->signal == static_cast<u32>(SignalType::DspWakeup))
+        next_parameter = boost::none;
 }
 
 void CancelParameter(Service::Interface* self) {
     IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0xF, 4, 0); // 0xF0100
 
-    u32 check_sender = rp.Pop<u32>();
+    bool check_sender = rp.Pop<bool>();
     u32 sender_appid = rp.Pop<u32>();
-    u32 check_receiver = rp.Pop<u32>();
+    bool check_receiver = rp.Pop<bool>();
     u32 receiver_appid = rp.Pop<u32>();
-    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-    rb.Push(RESULT_SUCCESS); // No error
-    rb.Push(true);           // Set to Success
 
-    LOG_WARNING(Service_APT, "(STUBBED) called check_sender=0x%08X, sender_appid=0x%08X, "
-                             "check_receiver=0x%08X, receiver_appid=0x%08X",
-                check_sender, sender_appid, check_receiver, receiver_appid);
+    bool cancellation_success = true;
+
+    if (!next_parameter) {
+        cancellation_success = false;
+    } else {
+        if (check_sender && next_parameter->sender_id != sender_appid)
+            cancellation_success = false;
+
+        if (check_receiver && next_parameter->destination_id != receiver_appid)
+            cancellation_success = false;
+    }
+
+    if (cancellation_success)
+        next_parameter = boost::none;
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
+
+    rb.Push(RESULT_SUCCESS); // No error
+    rb.Push(cancellation_success);
+
+    LOG_DEBUG(Service_APT, "called check_sender=%u, sender_appid=0x%08X, "
+                           "check_receiver=%u, receiver_appid=0x%08X",
+              check_sender, sender_appid, check_receiver, receiver_appid);
 }
 
 void PrepareToStartApplication(Service::Interface* self) {
@@ -800,8 +864,10 @@ void Init() {
     notification_event = Kernel::Event::Create(Kernel::ResetType::OneShot, "APT_U:Notification");
     parameter_event = Kernel::Event::Create(Kernel::ResetType::OneShot, "APT_U:Start");
 
-    next_parameter.signal = static_cast<u32>(SignalType::Wakeup);
-    next_parameter.destination_id = 0x300;
+    // Initialize the parameter to wake up the application.
+    next_parameter.emplace();
+    next_parameter->signal = static_cast<u32>(SignalType::Wakeup);
+    next_parameter->destination_id = static_cast<u32>(AppletId::Application);
 }
 
 void Shutdown() {
@@ -812,7 +878,7 @@ void Shutdown() {
     notification_event = nullptr;
     parameter_event = nullptr;
 
-    next_parameter.object = nullptr;
+    next_parameter = boost::none;
 
     HLE::Applets::Shutdown();
 }

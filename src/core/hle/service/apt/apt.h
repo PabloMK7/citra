@@ -116,6 +116,12 @@ enum class ScreencapPostPermission : u32 {
     DisableScreenshotPostingToMiiverse = 3
 };
 
+namespace ErrCodes {
+enum {
+    ParameterPresent = 2,
+};
+}
+
 /// Send a parameter to the currently-running application, which will read it via ReceiveParameter
 void SendParameter(const MessageParameter& parameter);
 
