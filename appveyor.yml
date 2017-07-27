@@ -37,16 +37,25 @@ after_build:
         # Where are these spaces coming from? Regardless, let's remove them
         $MSVC_BUILD_NAME = "citra-windows-msvc-$GITDATE-$GITREV.zip" -replace " ", ""
         $MSVC_BUILD_PDB = "citra-windows-msvc-$GITDATE-$GITREV-debugsymbols.zip" -replace " ", ""
+        $MSVC_SEVENZIP = "citra-windows-msvc-$GITDATE-$GITREV.7z" -replace " ", ""
         $BINTRAY_VERSION = "nightly-$GIT_LONG_HASH" -replace " ", ""
 
         # set the build names as env vars so the artifacts can upload them
         $env:MSVC_BUILD_NAME = $MSVC_BUILD_NAME
         $env:MSVC_BUILD_PDB = $MSVC_BUILD_PDB
+        $env:MSVC_SEVENZIP = $MSVC_SEVENZIP
         $env:GITREV = $GITREV
 
         7z a -tzip $MSVC_BUILD_PDB .\build\bin\release\*.pdb
         rm .\build\bin\release\*.pdb
-        7z a -tzip $MSVC_BUILD_NAME .\build\bin\release\* .\license.txt .\README.md
+
+        mkdir nightly
+        Copy-Item .\build\bin\release\* -Destination nightly -Recurse
+        Copy-Item .\license.txt -Destination nightly
+        Copy-Item .\README.md -Destination nightly
+
+        7z a -tzip $MSVC_BUILD_NAME nightly\*
+        7z a $MSVC_SEVENZIP nightly
 
 test_script:
   - cd build && ctest -VV -C Release && cd ..
@@ -58,6 +67,8 @@ artifacts:
   - path: $(MSVC_BUILD_PDB)
     name: msvcdebug
     type: zip
+  - path: $(MSVC_SEVENZIP)
+    name: msvcupdate
 
 deploy:
   provider: GitHub
@@ -68,7 +79,7 @@ deploy:
     Short Commit Hash $(GITREV)
   auth_token:
     secure: "dbpsMC/MgPKWFNJCXpQl4cR8FYhepkPLjgNp/pRMktZ8oLKTqPYErfreaIxb/4P1"
-  artifact: msvcbuild
+  artifact: msvcupdate,msvcbuild
   draft: false
   prerelease: false
   on:
