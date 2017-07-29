@@ -631,7 +631,7 @@ static void RunInterpreter(const ShaderSetup& setup, UnitState& state, DebugData
                 state.address_registers[2] = loop_param.y;
 
                 Record<DebugDataRecord::LOOP_INT_IN>(debug_data, iteration, loop_param);
-                call(program_counter + 1, instr.flow_control.dest_offset - program_counter + 1,
+                call(program_counter + 1, instr.flow_control.dest_offset - program_counter,
                      instr.flow_control.dest_offset + 1, loop_param.x, loop_param.z);
                 break;
             }
