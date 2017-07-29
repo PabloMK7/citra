@@ -124,6 +124,11 @@ EOL
 
     tar $COMPRESSION_FLAGS "$ARCHIVE_NAME" "$REV_NAME"
 
+    mv "$REV_NAME" nightly
+
+    7z a "$REV_NAME.7z" nightly
+
     # move the compiled archive into the artifacts directory to be uploaded by travis releases
     mv "$ARCHIVE_NAME" artifacts/
+    mv "$REV_NAME.7z" artifacts/
 fi

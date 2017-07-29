@@ -19,6 +19,7 @@ addons:
       - libqt5opengl5-dev
       - xorg-dev
       - lib32stdc++6 # For CMake
+      - p7zip-full
 
 cache:
   directories:
@@ -33,7 +34,7 @@ deploy:
   api_key:
     secure: Mck15DIWaJdxDiS3aYVlM9N3G6y8VKUI1rnwII7/iolfm1s94U+tgvbheZDmT7SSbFyaGaYO/E8HrV/uZR9Vvs7ev20sHsTN1u60OTWfDIIyHs9SqjhcGbtq95m9/dMFschOYqTOR+gAs5BsxjuoeAotHdhpQEwvkO2oo5oR0zhGy45gjFnVvtcxT/IfpZBIpVgcK3aLb9zT6ekcJbSiPmEB15iLq3xXd0nFUNtEZdX3D6Veye4n5jB6n72qN8JVoKvPZAwaC2K0pZxpcGJaXDchLsw1q+4eCvdz6UJfUemeQ/uMAmjfeQ3wrzYGXe3nCM3WmX5wosCsB0mw4zYatzl3si6CZ1W+0GkV4Rwlx03dfp7v3EeFhTsXYCaXqhwuLZnWOLUik8t9vaSoFUx4nUIRwfO9kAMUJQSpLuHNO2nT01s3GxvqxzczuLQ9he5nGSi0RRodUzDwek1qUp6I4uV3gRHKz4B07YIc1i2fK88NLXjyQ0uLVZ+7Oq1+kgDp6+N7vvXXZ5qZ17tdaysSbKEE0Y8zsoXw7Rk1tPN19vrCS+TSpomNMyQyne1k+I5iZ/qkxPTLAS5qI6Utc2dL3GJdxWRAEfGNO9AIX3GV/jmmKfdcvwGsCYP8hxqs5vLYfgacw3D8NLf1941lQUwavC17jm9EV9g5G3Pn1Cp516E=
   file_glob: true
-  file: "artifacts/*.tar.*"
+  file: "artifacts/*"
   skip_cleanup: true
   on:
     repo: citra-emu/citra-nightly
