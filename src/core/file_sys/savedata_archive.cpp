@@ -106,7 +106,25 @@ ResultCode SaveDataArchive::DeleteFile(const Path& path) const {
 }
 
 ResultCode SaveDataArchive::RenameFile(const Path& src_path, const Path& dest_path) const {
-    if (FileUtil::Rename(mount_point + src_path.AsString(), mount_point + dest_path.AsString())) {
+    const PathParser path_parser_src(src_path);
+
+    // TODO: Verify these return codes with HW
+    if (!path_parser_src.IsValid()) {
+        LOG_ERROR(Service_FS, "Invalid src path %s", src_path.DebugStr().c_str());
+        return ERROR_INVALID_PATH;
+    }
+
+    const PathParser path_parser_dest(dest_path);
+
+    if (!path_parser_dest.IsValid()) {
+        LOG_ERROR(Service_FS, "Invalid dest path %s", dest_path.DebugStr().c_str());
+        return ERROR_INVALID_PATH;
+    }
+
+    const auto src_path_full = path_parser_src.BuildHostPath(mount_point);
+    const auto dest_path_full = path_parser_dest.BuildHostPath(mount_point);
+
+    if (FileUtil::Rename(src_path_full, dest_path_full)) {
         return RESULT_SUCCESS;
     }
 
@@ -247,8 +265,27 @@ ResultCode SaveDataArchive::CreateDirectory(const Path& path) const {
 }
 
 ResultCode SaveDataArchive::RenameDirectory(const Path& src_path, const Path& dest_path) const {
-    if (FileUtil::Rename(mount_point + src_path.AsString(), mount_point + dest_path.AsString()))
+    const PathParser path_parser_src(src_path);
+
+    // TODO: Verify these return codes with HW
+    if (!path_parser_src.IsValid()) {
+        LOG_ERROR(Service_FS, "Invalid src path %s", src_path.DebugStr().c_str());
+        return ERROR_INVALID_PATH;
+    }
+
+    const PathParser path_parser_dest(dest_path);
+
+    if (!path_parser_dest.IsValid()) {
+        LOG_ERROR(Service_FS, "Invalid dest path %s", dest_path.DebugStr().c_str());
+        return ERROR_INVALID_PATH;
+    }
+
+    const auto src_path_full = path_parser_src.BuildHostPath(mount_point);
+    const auto dest_path_full = path_parser_dest.BuildHostPath(mount_point);
+
+    if (FileUtil::Rename(src_path_full, dest_path_full)) {
         return RESULT_SUCCESS;
+    }
 
     // TODO(yuriks): This code probably isn't right, it'll return a Status even if the file didn't
     // exist or similar. Verify.
