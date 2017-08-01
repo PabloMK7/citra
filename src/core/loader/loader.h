@@ -166,6 +166,15 @@ public:
         return ResultStatus::ErrorNotImplemented;
     }
 
+    /**
+     * Get the title of the application
+     * @param title Reference to store the application title into
+     * @return ResultStatus result of function
+     */
+    virtual ResultStatus ReadTitle(std::string& title) {
+        return ResultStatus::ErrorNotImplemented;
+    }
+
 protected:
     FileUtil::IOFile file;
     bool is_loaded = false;
