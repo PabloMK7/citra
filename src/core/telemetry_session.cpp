@@ -7,6 +7,7 @@
 #include "common/assert.h"
 #include "common/scm_rev.h"
 #include "common/x64/cpu_detect.h"
+#include "core/core.h"
 #include "core/settings.h"
 #include "core/telemetry_session.h"
 
@@ -39,12 +40,18 @@ TelemetrySession::TelemetrySession() {
                             std::chrono::system_clock::now().time_since_epoch())
                             .count()};
     AddField(Telemetry::FieldType::Session, "Init_Time", init_time);
+    std::string program_name;
+    const Loader::ResultStatus res{System::GetInstance().GetAppLoader().ReadTitle(program_name)};
+    if (res == Loader::ResultStatus::Success) {
+        AddField(Telemetry::FieldType::Session, "ProgramName", program_name);
+    }
 
     // Log application information
     const bool is_git_dirty{std::strstr(Common::g_scm_desc, "dirty") != nullptr};
     AddField(Telemetry::FieldType::App, "Git_IsDirty", is_git_dirty);
     AddField(Telemetry::FieldType::App, "Git_Branch", Common::g_scm_branch);
     AddField(Telemetry::FieldType::App, "Git_Revision", Common::g_scm_rev);
+    AddField(Telemetry::FieldType::App, "BuildDate", Common::g_build_date);
 
     // Log user system information
     AddField(Telemetry::FieldType::UserSystem, "CPU_Model", Common::GetCPUCaps().cpu_string);
