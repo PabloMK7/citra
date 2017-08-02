@@ -141,7 +141,7 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(
     }
 
     // Use the normalized the quaternion when performing the rotation
-    auto normal = Math::QuaternionRotate(normquat.Normalized(), surface_normal);
+    auto normal = Math::QuaternionRotate(normquat, surface_normal);
 
     Math::Vec4<float> diffuse_sum = {0.0f, 0.0f, 0.0f, 1.0f};
     Math::Vec4<float> specular_sum = {0.0f, 0.0f, 0.0f, 1.0f};
@@ -664,12 +664,12 @@ static void ProcessTriangleInternal(const Vertex& v0, const Vertex& v1, const Ve
             Math::Vec4<u8> secondary_fragment_color = {0, 0, 0, 0};
 
             if (!g_state.regs.lighting.disable) {
-                Math::Quaternion<float> normquat{
+                Math::Quaternion<float> normquat = Math::Quaternion<float>{
                     {GetInterpolatedAttribute(v0.quat.x, v1.quat.x, v2.quat.x).ToFloat32(),
                      GetInterpolatedAttribute(v0.quat.y, v1.quat.y, v2.quat.y).ToFloat32(),
                      GetInterpolatedAttribute(v0.quat.z, v1.quat.z, v2.quat.z).ToFloat32()},
                     GetInterpolatedAttribute(v0.quat.w, v1.quat.w, v2.quat.w).ToFloat32(),
-                };
+                }.Normalized();
 
                 Math::Vec3<float> view{
                     GetInterpolatedAttribute(v0.view.x, v1.view.x, v2.view.x).ToFloat32(),
