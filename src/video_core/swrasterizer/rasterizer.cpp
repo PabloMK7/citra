@@ -118,7 +118,7 @@ static std::tuple<float24, float24, PAddr> ConvertCubeCoord(float24 u, float24 v
 static float LookupLightingLut(const Pica::State::Lighting& lighting, size_t lut_index, u8 index,
                                float delta) {
     ASSERT_MSG(lut_index < lighting.luts.size(), "Out of range lut");
-    ASSERT_MSG(index < lighting.luts[0].size(), "Out of range index");
+    ASSERT_MSG(index < lighting.luts[lut_index].size(), "Out of range index");
 
     const auto& lut = lighting.luts[lut_index][index];
 
