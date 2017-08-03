@@ -244,17 +244,27 @@ void Source::GenerateFrame() {
             break;
         }
 
-        const size_t size_to_copy =
-            std::min(state.current_buffer.size(), current_frame.size() - frame_position);
-
-        std::copy(state.current_buffer.begin(), state.current_buffer.begin() + size_to_copy,
-                  current_frame.begin() + frame_position);
-        state.current_buffer.erase(state.current_buffer.begin(),
-                                   state.current_buffer.begin() + size_to_copy);
-
-        frame_position += size_to_copy;
-        state.next_sample_number += static_cast<u32>(size_to_copy);
+        switch (state.interpolation_mode) {
+        case InterpolationMode::None:
+            AudioInterp::None(state.interp_state, state.current_buffer, state.rate_multiplier,
+                              current_frame, frame_position);
+            break;
+        case InterpolationMode::Linear:
+            AudioInterp::Linear(state.interp_state, state.current_buffer, state.rate_multiplier,
+                                current_frame, frame_position);
+            break;
+        case InterpolationMode::Polyphase:
+            // TODO(merry): Implement polyphase interpolation
+            LOG_DEBUG(Audio_DSP, "Polyphase interpolation unimplemented; falling back to linear");
+            AudioInterp::Linear(state.interp_state, state.current_buffer, state.rate_multiplier,
+                                current_frame, frame_position);
+            break;
+        default:
+            UNIMPLEMENTED();
+            break;
+        }
     }
+    state.next_sample_number += frame_position;
 
     state.filters.ProcessFrame(current_frame);
 }
@@ -303,25 +313,6 @@ bool Source::DequeueBuffer() {
                     source_id, buf.buffer_id, buf.length, buf.physical_address);
         state.current_buffer.clear();
         return true;
-    }
-
-    switch (state.interpolation_mode) {
-    case InterpolationMode::None:
-        state.current_buffer =
-            AudioInterp::None(state.interp_state, state.current_buffer, state.rate_multiplier);
-        break;
-    case InterpolationMode::Linear:
-        state.current_buffer =
-            AudioInterp::Linear(state.interp_state, state.current_buffer, state.rate_multiplier);
-        break;
-    case InterpolationMode::Polyphase:
-        // TODO(merry): Implement polyphase interpolation
-        state.current_buffer =
-            AudioInterp::Linear(state.interp_state, state.current_buffer, state.rate_multiplier);
-        break;
-    default:
-        UNIMPLEMENTED();
-        break;
     }
 
     // the first playthrough starts at play_position, loops start at the beginning of the buffer

@@ -13,74 +13,64 @@ namespace AudioInterp {
 constexpr u64 scale_factor = 1 << 24;
 constexpr u64 scale_mask = scale_factor - 1;
 
-/// Here we step over the input in steps of rate_multiplier, until we consume all of the input.
+/// Here we step over the input in steps of rate, until we consume all of the input.
 /// Three adjacent samples are passed to fn each step.
 template <typename Function>
-static StereoBuffer16 StepOverSamples(State& state, const StereoBuffer16& input,
-                                      float rate_multiplier, Function fn) {
-    ASSERT(rate_multiplier > 0);
+static void StepOverSamples(State& state, StereoBuffer16& input, float rate,
+                            DSP::HLE::StereoFrame16& output, size_t& outputi, Function fn) {
+    ASSERT(rate > 0);
 
-    if (input.size() < 2)
-        return {};
+    if (input.empty())
+        return;
 
-    StereoBuffer16 output;
-    output.reserve(static_cast<size_t>(input.size() / rate_multiplier));
+    input.insert(input.begin(), {state.xn2, state.xn1});
 
-    u64 step_size = static_cast<u64>(rate_multiplier * scale_factor);
+    const u64 step_size = static_cast<u64>(rate * scale_factor);
+    u64 fposition = state.fposition;
+    size_t inputi = 0;
 
-    u64 fposition = 0;
-    const u64 max_fposition = input.size() * scale_factor;
+    while (outputi < output.size()) {
+        inputi = static_cast<size_t>(fposition / scale_factor);
 
-    while (fposition < 1 * scale_factor) {
+        if (inputi + 2 >= input.size()) {
+            inputi = input.size() - 2;
+            break;
+        }
+
         u64 fraction = fposition & scale_mask;
-
-        output.push_back(fn(fraction, state.xn2, state.xn1, input[0]));
+        output[outputi++] = fn(fraction, input[inputi], input[inputi + 1], input[inputi + 2]);
 
         fposition += step_size;
     }
 
-    while (fposition < 2 * scale_factor) {
-        u64 fraction = fposition & scale_mask;
+    state.xn2 = input[inputi];
+    state.xn1 = input[inputi + 1];
+    state.fposition = fposition - inputi * scale_factor;
 
-        output.push_back(fn(fraction, state.xn1, input[0], input[1]));
-
-        fposition += step_size;
-    }
-
-    while (fposition < max_fposition) {
-        u64 fraction = fposition & scale_mask;
-
-        size_t index = static_cast<size_t>(fposition / scale_factor);
-        output.push_back(fn(fraction, input[index - 2], input[index - 1], input[index]));
-
-        fposition += step_size;
-    }
-
-    state.xn2 = input[input.size() - 2];
-    state.xn1 = input[input.size() - 1];
-
-    return output;
+    input.erase(input.begin(), input.begin() + inputi + 2);
 }
 
-StereoBuffer16 None(State& state, const StereoBuffer16& input, float rate_multiplier) {
-    return StepOverSamples(
-        state, input, rate_multiplier,
+void None(State& state, StereoBuffer16& input, float rate, DSP::HLE::StereoFrame16& output,
+          size_t& outputi) {
+    StepOverSamples(
+        state, input, rate, output, outputi,
         [](u64 fraction, const auto& x0, const auto& x1, const auto& x2) { return x0; });
 }
 
-StereoBuffer16 Linear(State& state, const StereoBuffer16& input, float rate_multiplier) {
+void Linear(State& state, StereoBuffer16& input, float rate, DSP::HLE::StereoFrame16& output,
+            size_t& outputi) {
     // Note on accuracy: Some values that this produces are +/- 1 from the actual firmware.
-    return StepOverSamples(state, input, rate_multiplier,
-                           [](u64 fraction, const auto& x0, const auto& x1, const auto& x2) {
-                               // This is a saturated subtraction. (Verified by black-box fuzzing.)
-                               s64 delta0 = MathUtil::Clamp<s64>(x1[0] - x0[0], -32768, 32767);
-                               s64 delta1 = MathUtil::Clamp<s64>(x1[1] - x0[1], -32768, 32767);
+    StepOverSamples(state, input, rate, output, outputi,
+                    [](u64 fraction, const auto& x0, const auto& x1, const auto& x2) {
+                        // This is a saturated subtraction. (Verified by black-box fuzzing.)
+                        s64 delta0 = MathUtil::Clamp<s64>(x1[0] - x0[0], -32768, 32767);
+                        s64 delta1 = MathUtil::Clamp<s64>(x1[1] - x0[1], -32768, 32767);
 
-                               return std::array<s16, 2>{
-                                   static_cast<s16>(x0[0] + fraction * delta0 / scale_factor),
-                                   static_cast<s16>(x0[1] + fraction * delta1 / scale_factor),
-                               };
-                           });
+                        return std::array<s16, 2>{
+                            static_cast<s16>(x0[0] + fraction * delta0 / scale_factor),
+                            static_cast<s16>(x0[1] + fraction * delta1 / scale_factor),
+                        };
+                    });
 }
 
 } // namespace AudioInterp
