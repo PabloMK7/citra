@@ -3,7 +3,7 @@
 // Refer to the license.txt file included.
 
 #include "common/math_util.h"
-#include "video_core/swrasterizer/fragment_lighting.h"
+#include "video_core/swrasterizer/lighting.h"
 
 namespace Pica {
 
