@@ -52,6 +52,7 @@ TelemetrySession::TelemetrySession() {
     AddField(Telemetry::FieldType::App, "Git_Branch", Common::g_scm_branch);
     AddField(Telemetry::FieldType::App, "Git_Revision", Common::g_scm_rev);
     AddField(Telemetry::FieldType::App, "BuildDate", Common::g_build_date);
+    AddField(Telemetry::FieldType::App, "BuildName", Common::g_build_name);
 
     // Log user system information
     AddField(Telemetry::FieldType::UserSystem, "CPU_Model", Common::GetCPUCaps().cpu_string);
