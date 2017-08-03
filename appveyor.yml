@@ -1,9 +1,6 @@
 # shallow clone
 clone_depth: 10
 
-# don't build on tag
-skip_tags: true
-
 cache:
   - C:\ProgramData\chocolatey\bin -> appveyor.yml
   - C:\ProgramData\chocolatey\lib -> appveyor.yml
@@ -72,16 +69,11 @@ artifacts:
 
 deploy:
   provider: GitHub
-  release: nightly-$(appveyor_build_number)
-  description: |
-    Citra nightly releases. Please choose the correct download for your operating system from the list below.
-
-    Short Commit Hash $(GITREV)
+  release: $(appveyor_repo_tag_name)
   auth_token:
     secure: "dbpsMC/MgPKWFNJCXpQl4cR8FYhepkPLjgNp/pRMktZ8oLKTqPYErfreaIxb/4P1"
   artifact: msvcupdate,msvcbuild
   draft: false
   prerelease: false
   on:
-    branch: master
-    appveyor_repo_name: citra-emu/citra-nightly
+    appveyor_repo_tag: true
