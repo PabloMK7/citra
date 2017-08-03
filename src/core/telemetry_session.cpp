@@ -76,6 +76,15 @@ TelemetrySession::TelemetrySession() {
              Common::GetCPUCaps().sse4_1);
     AddField(Telemetry::FieldType::UserSystem, "CPU_Extension_x64_SSE42",
              Common::GetCPUCaps().sse4_2);
+#ifdef __APPLE__
+    AddField(Telemetry::FieldType::UserSystem, "OsPlatform", "Apple");
+#elif defined(_WIN32)
+    AddField(Telemetry::FieldType::UserSystem, "OsPlatform", "Windows");
+#elif defined(__linux__) || defined(linux) || defined(__linux)
+    AddField(Telemetry::FieldType::UserSystem, "OsPlatform", "Linux");
+#else
+    AddField(Telemetry::FieldType::UserSystem, "OsPlatform", "Unknown");
+#endif
 
     // Log user configuration information
     AddField(Telemetry::FieldType::UserConfig, "Audio_EnableAudioStretching",
