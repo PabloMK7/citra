@@ -1,6 +1,7 @@
 set(SRCS
             command_processor.cpp
             debug_utils/debug_utils.cpp
+            geometry_pipeline.cpp
             pica.cpp
             primitive_assembly.cpp
             regs.cpp
@@ -29,6 +30,7 @@ set(SRCS
 set(HEADERS
             command_processor.h
             debug_utils/debug_utils.h
+            geometry_pipeline.h
             gpu_debugger.h
             pica.h
             pica_state.h

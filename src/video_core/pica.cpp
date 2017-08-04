@@ -3,9 +3,11 @@
 // Refer to the license.txt file included.
 
 #include <cstring>
+#include "video_core/geometry_pipeline.h"
 #include "video_core/pica.h"
 #include "video_core/pica_state.h"
-#include "video_core/regs_pipeline.h"
+#include "video_core/renderer_base.h"
+#include "video_core/video_core.h"
 
 namespace Pica {
 
@@ -22,6 +24,23 @@ void Shutdown() {
 template <typename T>
 void Zero(T& o) {
     memset(&o, 0, sizeof(o));
+}
+
+State::State() : geometry_pipeline(*this) {
+    auto SubmitVertex = [this](const Shader::AttributeBuffer& vertex) {
+        using Pica::Shader::OutputVertex;
+        auto AddTriangle = [this](const OutputVertex& v0, const OutputVertex& v1,
+                                  const OutputVertex& v2) {
+            VideoCore::g_renderer->Rasterizer()->AddTriangle(v0, v1, v2);
+        };
+        primitive_assembler.SubmitVertex(
+            Shader::OutputVertex::FromAttributeBuffer(regs.rasterizer, vertex), AddTriangle);
+    };
+
+    auto SetWinding = [this]() { primitive_assembler.SetWinding(); };
+
+    g_state.gs_unit.SetVertexHandler(SubmitVertex, SetWinding);
+    g_state.geometry_pipeline.SetVertexHandler(SubmitVertex);
 }
 
 void State::Reset() {

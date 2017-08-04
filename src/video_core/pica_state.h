@@ -8,6 +8,7 @@
 #include "common/bit_field.h"
 #include "common/common_types.h"
 #include "common/vector_math.h"
+#include "video_core/geometry_pipeline.h"
 #include "video_core/primitive_assembly.h"
 #include "video_core/regs.h"
 #include "video_core/shader/shader.h"
@@ -16,6 +17,7 @@ namespace Pica {
 
 /// Struct used to describe current Pica state
 struct State {
+    State();
     void Reset();
 
     /// Pica registers
@@ -137,7 +139,16 @@ struct State {
         Shader::AttributeBuffer input_vertex;
         // Index of the next attribute to be loaded into `input_vertex`.
         u32 current_attribute = 0;
+        // Indicates the immediate mode just started and the geometry pipeline needs to reconfigure
+        bool reset_geometry_pipeline = true;
     } immediate;
+
+    // the geometry shader needs to be kept in the global state because some shaders relie on
+    // preserved register value across shader invocation.
+    // TODO: also bring the three vertex shader units here and implement the shader scheduler.
+    Shader::GSUnitState gs_unit;
+
+    GeometryPipeline geometry_pipeline;
 
     // This is constructed with a dummy triangle topology
     PrimitiveAssembler<Shader::OutputVertex> primitive_assembler;
