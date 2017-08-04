@@ -8,22 +8,14 @@ matrix:
       sudo: false
       osx_image: xcode7.3
 
+services:
+  - docker
+
 addons:
   apt:
-    sources:
-      - ubuntu-toolchain-r-test
     packages:
-      - gcc-6
-      - g++-6
-      - qt5-default
-      - libqt5opengl5-dev
-      - xorg-dev
-      - lib32stdc++6 # For CMake
+      - clang-format-3.9
       - p7zip-full
-
-cache:
-  directories:
-    - "$HOME/.local"
 
 install: "./.travis-deps.sh"
 script: "./.travis-build.sh"
