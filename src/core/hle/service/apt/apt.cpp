@@ -75,6 +75,10 @@ void Initialize(Service::Interface* self) {
 void GetSharedFont(Service::Interface* self) {
     IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x44, 0, 0); // 0x00440000
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
+
+    // Log in telemetry if the game uses the shared font
+    Core::Telemetry().AddField(Telemetry::FieldType::Session, "RequiresSharedFont", true);
+
     if (!shared_font_loaded) {
         LOG_ERROR(Service_APT, "shared font file missing - go dump it from your 3ds");
         rb.Push<u32>(-1); // TODO: Find the right error code

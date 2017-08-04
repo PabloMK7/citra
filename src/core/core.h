@@ -7,16 +7,13 @@
 #include <memory>
 #include <string>
 #include "common/common_types.h"
+#include "core/loader/loader.h"
 #include "core/memory.h"
 #include "core/perf_stats.h"
 #include "core/telemetry_session.h"
 
 class EmuWindow;
 class ARM_Interface;
-
-namespace Loader {
-class AppLoader;
-}
 
 namespace Core {
 
@@ -117,6 +114,10 @@ public:
 
     const std::string& GetStatusDetails() const {
         return status_details;
+    }
+
+    Loader::AppLoader& GetAppLoader() const {
+        return *app_loader;
     }
 
 private:

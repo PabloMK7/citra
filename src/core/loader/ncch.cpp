@@ -4,7 +4,9 @@
 
 #include <algorithm>
 #include <cinttypes>
+#include <codecvt>
 #include <cstring>
+#include <locale>
 #include <memory>
 #include "common/logging/log.h"
 #include "common/string_util.h"
@@ -418,6 +420,24 @@ ResultStatus AppLoader_NCCH::ReadRomFS(std::shared_ptr<FileUtil::IOFile>& romfs_
     }
     LOG_DEBUG(Loader, "NCCH has no RomFS");
     return ResultStatus::ErrorNotUsed;
+}
+
+ResultStatus AppLoader_NCCH::ReadTitle(std::string& title) {
+    std::vector<u8> data;
+    Loader::SMDH smdh;
+    ReadIcon(data);
+
+    if (!Loader::IsValidSMDH(data)) {
+        return ResultStatus::ErrorInvalidFormat;
+    }
+
+    memcpy(&smdh, data.data(), sizeof(Loader::SMDH));
+
+    const auto& short_title = smdh.GetShortTitle(SMDH::TitleLanguage::English);
+    auto title_end = std::find(short_title.begin(), short_title.end(), u'\0');
+    title = Common::UTF16ToUTF8(std::u16string{short_title.begin(), title_end});
+
+    return ResultStatus::Success;
 }
 
 } // namespace Loader

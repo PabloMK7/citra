@@ -191,22 +191,12 @@ public:
 
     ResultStatus ReadLogo(std::vector<u8>& buffer) override;
 
-    /**
-     * Get the program id of the application
-     * @param out_program_id Reference to store program id into
-     * @return ResultStatus result of function
-     */
     ResultStatus ReadProgramId(u64& out_program_id) override;
 
-    /**
-     * Get the RomFS of the application
-     * @param romfs_file Reference to buffer to store data
-     * @param offset     Offset in the file to the RomFS
-     * @param size       Size of the RomFS in bytes
-     * @return ResultStatus result of function
-     */
     ResultStatus ReadRomFS(std::shared_ptr<FileUtil::IOFile>& romfs_file, u64& offset,
                            u64& size) override;
+
+    ResultStatus ReadTitle(std::string& title) override;
 
 private:
     /**
