@@ -311,7 +311,7 @@ bool GMainWindow::LoadROM(const QString& filename) {
 
     if (!gladLoadGL()) {
         QMessageBox::critical(this, tr("Error while initializing OpenGL 3.3 Core!"),
-                              tr("Your GPU may not support OpenGL 3.3, or you do not"
+                              tr("Your GPU may not support OpenGL 3.3, or you do not "
                                  "have the latest graphics driver."));
         return false;
     }
