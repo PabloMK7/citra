@@ -2,12 +2,14 @@ set(SRCS
             analog_from_button.cpp
             keyboard.cpp
             main.cpp
+            motion_emu.cpp
             )
 
 set(HEADERS
             analog_from_button.h
             keyboard.h
             main.h
+            motion_emu.h
             )
 
 if(SDL2_FOUND)

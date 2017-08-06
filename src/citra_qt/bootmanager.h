@@ -12,7 +12,6 @@
 #include "common/thread.h"
 #include "core/core.h"
 #include "core/frontend/emu_window.h"
-#include "core/frontend/motion_emu.h"
 
 class QKeyEvent;
 class QScreen;
@@ -157,9 +156,6 @@ private:
     QByteArray geometry;
 
     EmuThread* emu_thread;
-
-    /// Motion sensors emulation
-    std::unique_ptr<Motion::MotionEmu> motion_emu;
 
 protected:
     void showEvent(QShowEvent* event) override;

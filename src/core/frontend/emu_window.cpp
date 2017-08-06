@@ -62,29 +62,6 @@ void EmuWindow::TouchMoved(unsigned framebuffer_x, unsigned framebuffer_y) {
     TouchPressed(framebuffer_x, framebuffer_y);
 }
 
-void EmuWindow::AccelerometerChanged(float x, float y, float z) {
-    constexpr float coef = 512;
-
-    std::lock_guard<std::mutex> lock(accel_mutex);
-
-    // TODO(wwylele): do a time stretch as it in GyroscopeChanged
-    // The time stretch formula should be like
-    // stretched_vector = (raw_vector - gravity) * stretch_ratio + gravity
-    accel_x = static_cast<s16>(x * coef);
-    accel_y = static_cast<s16>(y * coef);
-    accel_z = static_cast<s16>(z * coef);
-}
-
-void EmuWindow::GyroscopeChanged(float x, float y, float z) {
-    constexpr float FULL_FPS = 60;
-    float coef = GetGyroscopeRawToDpsCoefficient();
-    float stretch = Core::System::GetInstance().perf_stats.GetLastFrameTimeScale();
-    std::lock_guard<std::mutex> lock(gyro_mutex);
-    gyro_x = static_cast<s16>(x * coef * stretch);
-    gyro_y = static_cast<s16>(y * coef * stretch);
-    gyro_z = static_cast<s16>(z * coef * stretch);
-}
-
 void EmuWindow::UpdateCurrentFramebufferLayout(unsigned width, unsigned height) {
     Layout::FramebufferLayout layout;
     if (Settings::values.custom_layout == true) {

@@ -43,7 +43,7 @@ button_zr=
 button_home=
 
 # for analog input, the following devices are available:
-#  - "analog_from_button" (default) for emulating analog input from direction buttons.  Required parameters:
+#  - "analog_from_button" (default) for emulating analog input from direction buttons. Required parameters:
 #      - "up", "down", "left", "right": sub-devices for each direction.
 #          Should be in the format as a button input devices using escape characters, for example, "engine$0keyboard$1code$00"
 #      - "modifier": sub-devices as a modifier.
@@ -55,6 +55,12 @@ button_home=
 #      - "axis_y": the index of the axis to bind as y-axis (default to 1)
 circle_pad=
 c_stick=
+
+# for motion input, the following devices are available:
+#  - "motion_emu" (default) for emulating motion input from mouse input. Required parameters:
+#      - "update_period": update period in milliseconds (default to 100)
+#      - "sensitivity": the coefficient converting mouse movement to tilting angle (default to 0.01)
+motion_device=
 
 [Core]
 # Whether to use the Just-In-Time (JIT) compiler for CPU emulation

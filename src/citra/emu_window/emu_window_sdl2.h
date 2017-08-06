@@ -7,7 +7,6 @@
 #include <memory>
 #include <utility>
 #include "core/frontend/emu_window.h"
-#include "core/frontend/motion_emu.h"
 
 struct SDL_Window;
 
@@ -57,7 +56,4 @@ private:
     using SDL_GLContext = void*;
     /// The OpenGL context associated with the window
     SDL_GLContext gl_context;
-
-    /// Motion sensors emulation
-    std::unique_ptr<Motion::MotionEmu> motion_emu;
 };

@@ -112,16 +112,15 @@ using AnalogDevice = InputDevice<std::tuple<float, float>>;
  * A motion device is an input device that returns a tuple of accelerometer state vector and
  * gyroscope state vector.
  *
- * For accelerometer state vector:
+ * For both vectors:
  *   x+ is the same direction as LEFT on D-pad.
  *   y+ is normal to the touch screen, pointing outward.
  *   z+ is the same direction as UP on D-pad.
- *   Units: measured in unit of gravitational acceleration
+ *
+ * For accelerometer state vector
+ *   Units: g (gravitational acceleration)
  *
  * For gyroscope state vector:
- *   x+ is the same direction as LEFT on D-pad.
- *   y+ is normal to the touch screen, pointing outward.
- *   z+ is the same direction as UP on D-pad.
  *   Orientation is determined by right-hand rule.
  *   Units: deg/sec
  */

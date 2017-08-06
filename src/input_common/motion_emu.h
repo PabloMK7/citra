@@ -1,19 +1,25 @@
-// Copyright 2016 Citra Emulator Project
+// Copyright 2017 Citra Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #pragma once
 #include "common/thread.h"
 #include "common/vector_math.h"
+#include "core/frontend/input.h"
 
-class EmuWindow;
+namespace InputCommon {
 
-namespace Motion {
+class MotionEmuDevice;
 
-class MotionEmu final {
+class MotionEmu : public Input::Factory<Input::MotionDevice> {
 public:
-    MotionEmu(EmuWindow& emu_window);
-    ~MotionEmu();
+    /**
+     * Creates a motion device emulated from mouse input
+     * @param params contains parameters for creating the device:
+     *     - "update_period": update period in milliseconds
+     *     - "sensitivity": the coefficient converting mouse movement to tilting angle
+     */
+    std::unique_ptr<Input::MotionDevice> Create(const Common::ParamPackage& params) override;
 
     /**
      * Signals that a motion sensor tilt has begun.
@@ -35,18 +41,7 @@ public:
     void EndTilt();
 
 private:
-    Math::Vec2<int> mouse_origin;
-
-    std::mutex tilt_mutex;
-    Math::Vec2<float> tilt_direction;
-    float tilt_angle = 0;
-
-    bool is_tilting = false;
-
-    Common::Event shutdown_event;
-    std::thread motion_emu_thread;
-
-    void MotionEmuThread(EmuWindow& emu_window);
+    std::weak_ptr<MotionEmuDevice> current_device;
 };
 
-} // namespace Motion
+} // namespace InputCommon

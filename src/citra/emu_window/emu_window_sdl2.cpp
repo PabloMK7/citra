@@ -16,11 +16,12 @@
 #include "core/settings.h"
 #include "input_common/keyboard.h"
 #include "input_common/main.h"
+#include "input_common/motion_emu.h"
 #include "network/network.h"
 
 void EmuWindow_SDL2::OnMouseMotion(s32 x, s32 y) {
     TouchMoved((unsigned)std::max(x, 0), (unsigned)std::max(y, 0));
-    motion_emu->Tilt(x, y);
+    InputCommon::GetMotionEmu()->Tilt(x, y);
 }
 
 void EmuWindow_SDL2::OnMouseButton(u32 button, u8 state, s32 x, s32 y) {
@@ -32,9 +33,9 @@ void EmuWindow_SDL2::OnMouseButton(u32 button, u8 state, s32 x, s32 y) {
         }
     } else if (button == SDL_BUTTON_RIGHT) {
         if (state == SDL_PRESSED) {
-            motion_emu->BeginTilt(x, y);
+            InputCommon::GetMotionEmu()->BeginTilt(x, y);
         } else {
-            motion_emu->EndTilt();
+            InputCommon::GetMotionEmu()->EndTilt();
         }
     }
 }
@@ -60,8 +61,6 @@ void EmuWindow_SDL2::OnResize() {
 EmuWindow_SDL2::EmuWindow_SDL2() {
     InputCommon::Init();
     Network::Init();
-
-    motion_emu = std::make_unique<Motion::MotionEmu>(*this);
 
     SDL_SetMainReady();
 
@@ -117,7 +116,6 @@ EmuWindow_SDL2::EmuWindow_SDL2() {
 EmuWindow_SDL2::~EmuWindow_SDL2() {
     SDL_GL_DeleteContext(gl_context);
     SDL_Quit();
-    motion_emu = nullptr;
 
     Network::Shutdown();
     InputCommon::Shutdown();

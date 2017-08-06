@@ -19,6 +19,11 @@ class Keyboard;
 /// Gets the keyboard button device factory.
 Keyboard* GetKeyboard();
 
+class MotionEmu;
+
+/// Gets the motion emulation factory.
+MotionEmu* GetMotionEmu();
+
 /// Generates a serialized param package for creating a keyboard button device
 std::string GenerateKeyboardParam(int key_code);
 
