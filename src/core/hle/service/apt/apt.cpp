@@ -60,30 +60,26 @@ enum class AppletSlot : u8 {
     Error,
 };
 
+union AppletAttributes {
+    u32 raw;
+
+    BitField<0, 3, u32> applet_pos;
+
+    AppletAttributes() : raw(0) {}
+    AppletAttributes(u32 attributes) : raw(attributes) {}
+};
+
 struct AppletSlotData {
     AppletId applet_id;
     AppletSlot slot;
     bool registered;
-    u32 attributes;
+    AppletAttributes attributes;
     Kernel::SharedPtr<Kernel::Event> notification_event;
     Kernel::SharedPtr<Kernel::Event> parameter_event;
 };
 
 // Holds data about the concurrently running applets in the system.
 static std::array<AppletSlotData, NumAppletSlot> applet_slots = {};
-
-union AppletAttributes {
-    u32 raw;
-
-    BitField<0, 3, u32> applet_pos;
-
-    AppletAttributes(u32 attributes) : raw(attributes) {}
-};
-
-// Helper function to extract the AppletPos from the lower bits of the applet attributes
-static u32 GetAppletPos(AppletAttributes attributes) {
-    return attributes.applet_pos;
-}
 
 // This overload returns nullptr if no applet with the specified id has been started.
 static AppletSlotData* GetAppletSlotData(AppletId id) {
@@ -118,7 +114,7 @@ static AppletSlotData* GetAppletSlotData(AppletId id) {
         if (slot->applet_id == AppletId::None)
             return nullptr;
 
-        u32 applet_pos = GetAppletPos(slot->attributes);
+        u32 applet_pos = slot->attributes.applet_pos;
 
         if (id == AppletId::AnyLibraryApplet && applet_pos == static_cast<u32>(AppletPos::Library))
             return slot;
@@ -146,13 +142,13 @@ static AppletSlotData* GetAppletSlotData(AppletId id) {
     return nullptr;
 }
 
-static AppletSlotData* GetAppletSlotData(u32 attributes) {
+static AppletSlotData* GetAppletSlotData(AppletAttributes attributes) {
     // Mapping from AppletPos to AppletSlot
     static constexpr std::array<AppletSlot, 6> applet_position_slots = {
         AppletSlot::Application,   AppletSlot::LibraryApplet, AppletSlot::SystemApplet,
         AppletSlot::LibraryApplet, AppletSlot::Error,         AppletSlot::LibraryApplet};
 
-    u32 applet_pos = GetAppletPos(attributes);
+    u32 applet_pos = attributes.applet_pos;
     if (applet_pos >= applet_position_slots.size())
         return nullptr;
 
@@ -194,7 +190,7 @@ void Initialize(Service::Interface* self) {
     }
 
     slot_data->applet_id = static_cast<AppletId>(app_id);
-    slot_data->attributes = attributes;
+    slot_data->attributes.raw = attributes;
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 3);
     rb.Push(RESULT_SUCCESS);
@@ -1020,7 +1016,7 @@ void Init() {
         auto& slot_data = applet_slots[slot];
         slot_data.slot = static_cast<AppletSlot>(slot);
         slot_data.applet_id = AppletId::None;
-        slot_data.attributes = 0;
+        slot_data.attributes.raw = 0;
         slot_data.registered = false;
         slot_data.notification_event =
             Kernel::Event::Create(Kernel::ResetType::OneShot, "APT:Notification");
