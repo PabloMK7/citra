@@ -208,8 +208,7 @@ bool IsValidVirtualAddress(const VAddr vaddr) {
 }
 
 bool IsValidPhysicalAddress(const PAddr paddr) {
-    boost::optional<VAddr> vaddr = PhysicalToVirtualAddress(paddr);
-    return vaddr && IsValidVirtualAddress(*vaddr);
+    return GetPhysicalPointer(paddr) != nullptr;
 }
 
 u8* GetPointer(const VAddr vaddr) {
