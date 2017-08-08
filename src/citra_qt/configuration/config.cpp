@@ -61,6 +61,8 @@ void Config::ReadValues() {
         qt_config->value("motion_device", "engine:motion_emu,update_period:100,sensitivity:0.01")
             .toString()
             .toStdString();
+    Settings::values.touch_device =
+        qt_config->value("touch_device", "engine:emu_window").toString().toStdString();
 
     qt_config->endGroup();
 
@@ -209,6 +211,7 @@ void Config::SaveValues() {
                             QString::fromStdString(Settings::values.analogs[i]));
     }
     qt_config->setValue("motion_device", QString::fromStdString(Settings::values.motion_device));
+    qt_config->setValue("touch_device", QString::fromStdString(Settings::values.touch_device));
     qt_config->endGroup();
 
     qt_config->beginGroup("Core");

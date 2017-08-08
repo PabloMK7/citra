@@ -4,11 +4,10 @@
 
 #pragma once
 
-#include <mutex>
+#include <memory>
 #include <tuple>
 #include <utility>
 #include "common/common_types.h"
-#include "common/math_util.h"
 #include "core/frontend/framebuffer_layout.h"
 
 /**
@@ -69,17 +68,6 @@ public:
     void TouchMoved(unsigned framebuffer_x, unsigned framebuffer_y);
 
     /**
-     * Gets the current touch screen state (touch X/Y coordinates and whether or not it is pressed).
-     * @note This should be called by the core emu thread to get a state set by the window thread.
-     * @todo Fix this function to be thread-safe.
-     * @return std::tuple of (x, y, pressed) where `x` and `y` are the touch coordinates and
-     *         `pressed` is true if the touch screen is currently being pressed
-     */
-    std::tuple<u16, u16, bool> GetTouchState() const {
-        return std::make_tuple(touch_x, touch_y, touch_pressed);
-    }
-
-    /**
      * Returns currently active configuration.
      * @note Accesses to the returned object need not be consistent because it may be modified in
      * another thread
@@ -113,15 +101,8 @@ public:
     void UpdateCurrentFramebufferLayout(unsigned width, unsigned height);
 
 protected:
-    EmuWindow() {
-        // TODO: Find a better place to set this.
-        config.min_client_area_size = std::make_pair(400u, 480u);
-        active_config = config;
-        touch_x = 0;
-        touch_y = 0;
-        touch_pressed = false;
-    }
-    virtual ~EmuWindow() {}
+    EmuWindow();
+    virtual ~EmuWindow();
 
     /**
      * Processes any pending configuration changes from the last SetConfig call.
@@ -177,10 +158,8 @@ private:
                                 /// ProcessConfigurationChanges)
     WindowConfig active_config; ///< Internal active configuration
 
-    bool touch_pressed; ///< True if touchpad area is currently pressed, otherwise false
-
-    u16 touch_x; ///< Touchpad X-position in native 3DS pixel coordinates (0-320)
-    u16 touch_y; ///< Touchpad Y-position in native 3DS pixel coordinates (0-240)
+    class TouchState;
+    std::shared_ptr<TouchState> touch_state;
 
     /**
      * Clip the provided coordinates to be inside the touchscreen area.
