@@ -18,7 +18,7 @@ namespace Service {
 namespace IR {
 
 union PadState {
-    u32_le hex;
+    u32_le hex{};
 
     BitField<14, 1, u32_le> zl;
     BitField<15, 1, u32_le> zr;

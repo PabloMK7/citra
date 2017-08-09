@@ -24,7 +24,7 @@ namespace HID {
  */
 struct PadState {
     union {
-        u32 hex;
+        u32 hex{};
 
         BitField<0, 1, u32> a;
         BitField<1, 1, u32> b;
