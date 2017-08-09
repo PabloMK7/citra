@@ -681,7 +681,7 @@ void GenerateConsoleUniqueId(u32& random_number, u64& console_id) {
     CryptoPP::AutoSeededRandomPool rng;
     random_number = rng.GenerateWord32(0, 0xFFFF);
     u64_le local_friend_code_seed;
-    rng.GenerateBlock(reinterpret_cast<byte*>(&local_friend_code_seed),
+    rng.GenerateBlock(reinterpret_cast<CryptoPP::byte*>(&local_friend_code_seed),
                       sizeof(local_friend_code_seed));
     console_id = (local_friend_code_seed & 0x3FFFFFFFF) | (static_cast<u64>(random_number) << 48);
 }
