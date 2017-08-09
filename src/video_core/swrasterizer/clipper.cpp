@@ -95,6 +95,17 @@ void ProcessTriangle(const OutputVertex& v0, const OutputVertex& v1, const Outpu
     static const size_t MAX_VERTICES = 9;
     static_vector<Vertex, MAX_VERTICES> buffer_a = {v0, v1, v2};
     static_vector<Vertex, MAX_VERTICES> buffer_b;
+
+    auto FlipQuaternionIfOpposite = [](auto& a, const auto& b) {
+        if (Math::Dot(a, b) < float24::Zero())
+            a = -a;
+    };
+
+    // Flip the quaternions if they are opposite to prevent interpolating them over the wrong
+    // direction.
+    FlipQuaternionIfOpposite(buffer_a[1].quat, buffer_a[0].quat);
+    FlipQuaternionIfOpposite(buffer_a[2].quat, buffer_a[0].quat);
+
     auto* output_list = &buffer_a;
     auto* input_list = &buffer_b;
 

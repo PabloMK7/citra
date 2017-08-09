@@ -13,6 +13,7 @@
 #include "common/logging/log.h"
 #include "common/math_util.h"
 #include "common/microprofile.h"
+#include "common/quaternion.h"
 #include "common/vector_math.h"
 #include "core/hw/gpu.h"
 #include "core/memory.h"
@@ -24,6 +25,7 @@
 #include "video_core/regs_texturing.h"
 #include "video_core/shader/shader.h"
 #include "video_core/swrasterizer/framebuffer.h"
+#include "video_core/swrasterizer/lighting.h"
 #include "video_core/swrasterizer/proctex.h"
 #include "video_core/swrasterizer/rasterizer.h"
 #include "video_core/swrasterizer/texturing.h"
@@ -419,6 +421,26 @@ static void ProcessTriangleInternal(const Vertex& v0, const Vertex& v1, const Ve
                 regs.texturing.tev_combiner_buffer_color.a,
             };
 
+            Math::Vec4<u8> primary_fragment_color = {0, 0, 0, 0};
+            Math::Vec4<u8> secondary_fragment_color = {0, 0, 0, 0};
+
+            if (!g_state.regs.lighting.disable) {
+                Math::Quaternion<float> normquat = Math::Quaternion<float>{
+                    {GetInterpolatedAttribute(v0.quat.x, v1.quat.x, v2.quat.x).ToFloat32(),
+                     GetInterpolatedAttribute(v0.quat.y, v1.quat.y, v2.quat.y).ToFloat32(),
+                     GetInterpolatedAttribute(v0.quat.z, v1.quat.z, v2.quat.z).ToFloat32()},
+                    GetInterpolatedAttribute(v0.quat.w, v1.quat.w, v2.quat.w).ToFloat32(),
+                }.Normalized();
+
+                Math::Vec3<float> view{
+                    GetInterpolatedAttribute(v0.view.x, v1.view.x, v2.view.x).ToFloat32(),
+                    GetInterpolatedAttribute(v0.view.y, v1.view.y, v2.view.y).ToFloat32(),
+                    GetInterpolatedAttribute(v0.view.z, v1.view.z, v2.view.z).ToFloat32(),
+                };
+                std::tie(primary_fragment_color, secondary_fragment_color) =
+                    ComputeFragmentsColors(g_state.regs.lighting, g_state.lighting, normquat, view);
+            }
+
             for (unsigned tev_stage_index = 0; tev_stage_index < tev_stages.size();
                  ++tev_stage_index) {
                 const auto& tev_stage = tev_stages[tev_stage_index];
@@ -427,14 +449,13 @@ static void ProcessTriangleInternal(const Vertex& v0, const Vertex& v1, const Ve
                 auto GetSource = [&](Source source) -> Math::Vec4<u8> {
                     switch (source) {
                     case Source::PrimaryColor:
-
-                    // HACK: Until we implement fragment lighting, use primary_color
-                    case Source::PrimaryFragmentColor:
                         return primary_color;
 
-                    // HACK: Until we implement fragment lighting, use zero
+                    case Source::PrimaryFragmentColor:
+                        return primary_fragment_color;
+
                     case Source::SecondaryFragmentColor:
-                        return {0, 0, 0, 0};
+                        return secondary_fragment_color;
 
                     case Source::Texture0:
                         return texture_color[0];

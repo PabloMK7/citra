@@ -15,6 +15,7 @@ set(SRCS
             shader/shader_interpreter.cpp
             swrasterizer/clipper.cpp
             swrasterizer/framebuffer.cpp
+            swrasterizer/lighting.cpp
             swrasterizer/proctex.cpp
             swrasterizer/rasterizer.cpp
             swrasterizer/swrasterizer.cpp
@@ -55,6 +56,7 @@ set(HEADERS
             shader/shader_interpreter.h
             swrasterizer/clipper.h
             swrasterizer/framebuffer.h
+            swrasterizer/lighting.h
             swrasterizer/proctex.h
             swrasterizer/rasterizer.h
             swrasterizer/swrasterizer.h
