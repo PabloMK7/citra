@@ -11,7 +11,7 @@
 namespace Service {
 namespace DLP {
 
-static void unk_0x000E0040(Interface* self) {
+static void IsChild(Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
 
     cmd_buff[1] = RESULT_SUCCESS.raw;
@@ -24,14 +24,19 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x00010183, nullptr, "Initialize"},
     {0x00020000, nullptr, "Finalize"},
     {0x00030000, nullptr, "GetServerState"},
+    {0x00040000, nullptr, "GetEventDescription"},
     {0x00050080, nullptr, "StartAccepting"},
+    {0x00060000, nullptr, "EndAccepting"},
     {0x00070000, nullptr, "StartDistribution"},
     {0x000800C0, nullptr, "SendWirelessRebootPassphrase"},
     {0x00090040, nullptr, "AcceptClient"},
+    {0x000A0040, nullptr, "DisconnectClient"},
     {0x000B0042, nullptr, "GetConnectingClients"},
     {0x000C0040, nullptr, "GetClientInfo"},
     {0x000D0040, nullptr, "GetClientState"},
-    {0x000E0040, unk_0x000E0040, "unk_0x000E0040"},
+    {0x000E0040, IsChild, "IsChild"},
+    {0x000F0303, nullptr, "InitializeWithName"},
+    {0x00100000, nullptr, "GetDupNoticeNeed"},
 };
 
 DLP_SRVR_Interface::DLP_SRVR_Interface() {
