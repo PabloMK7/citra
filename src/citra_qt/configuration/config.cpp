@@ -194,6 +194,7 @@ void Config::ReadValues() {
     UISettings::values.show_status_bar = qt_config->value("showStatusBar", true).toBool();
     UISettings::values.confirm_before_closing = qt_config->value("confirmClose", true).toBool();
     UISettings::values.first_start = qt_config->value("firstStart", true).toBool();
+    UISettings::values.callout_flags = qt_config->value("calloutFlags", 0).toUInt();
 
     qt_config->endGroup();
 }
@@ -320,6 +321,7 @@ void Config::SaveValues() {
     qt_config->setValue("showStatusBar", UISettings::values.show_status_bar);
     qt_config->setValue("confirmClose", UISettings::values.confirm_before_closing);
     qt_config->setValue("firstStart", UISettings::values.first_start);
+    qt_config->setValue("calloutFlags", UISettings::values.callout_flags);
 
     qt_config->endGroup();
 }

@@ -48,6 +48,47 @@
 Q_IMPORT_PLUGIN(QWindowsIntegrationPlugin);
 #endif
 
+/**
+ * "Callouts" are one-time instructional messages shown to the user. In the config settings, there
+ * is a bitfield "callout_flags" options, used to track if a message has already been shown to the
+ * user. This is 32-bits - if we have more than 32 callouts, we should retire and recyle old ones.
+ */
+enum class CalloutFlag : uint32_t {
+    Telemetry = 0x1,
+};
+
+static void ShowCalloutMessage(const QString& message, CalloutFlag flag) {
+    if (UISettings::values.callout_flags & static_cast<uint32_t>(flag)) {
+        return;
+    }
+
+    UISettings::values.callout_flags |= static_cast<uint32_t>(flag);
+
+    QMessageBox msg;
+    msg.setText(message);
+    msg.setStandardButtons(QMessageBox::Ok);
+    msg.setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    msg.setStyleSheet("QLabel{min-width: 900px;}");
+    msg.exec();
+}
+
+void GMainWindow::ShowCallouts() {
+    static const QString telemetry_message =
+        tr("To help improve Citra, the Citra Team collects anonymous usage data. No private or "
+           "personally identifying information is collected. This data helps us to understand how "
+           "people use Citra and prioritize our efforts. Furthermore, it helps us to more easily "
+           "identify emulation bugs and performance issues. This data includes:<ul><li>Information"
+           " about the version of Citra you are using</li><li>Performance data about the games you "
+           "play</li><li>Your configuration settings</li><li>Information about your computer "
+           "hardware</li><li>Emulation errors and crash information</li></ul>By default, this "
+           "feature is enabled. To disable this feature, click 'Emulation' from the menu and then "
+           "select 'Configure...'. Then, on the 'Web' tab, uncheck 'Share anonymous usage data with"
+           " the Citra team'. <br/><br/>By using this software, you agree to the above terms.<br/>"
+           "<br/><a href='https://citra-emu.org/entry/telemetry-and-why-thats-a-good-thing/'>Learn "
+           "more</a>");
+    ShowCalloutMessage(telemetry_message, CalloutFlag::Telemetry);
+}
+
 GMainWindow::GMainWindow() : config(new Config()), emu_thread(nullptr) {
     Pica::g_debug_context = Pica::DebugContext::Construct();
     setAcceptDrops(true);
@@ -72,6 +113,9 @@ GMainWindow::GMainWindow() : config(new Config()), emu_thread(nullptr) {
     game_list->PopulateAsync(UISettings::values.gamedir, UISettings::values.gamedir_deepscan);
 
     UpdateUITheme();
+
+    // Show one-time "callout" messages to the user
+    ShowCallouts();
 
     QStringList args = QApplication::arguments();
     if (args.length() >= 2) {
