@@ -202,7 +202,14 @@ struct PipelineRegs {
     /// Number of input attributes to the vertex shader minus 1
     BitField<0, 4, u32> max_input_attrib_index;
 
-    INSERT_PADDING_WORDS(2);
+    INSERT_PADDING_WORDS(1);
+
+    // The shader unit 3, which can be used for both vertex and geometry shader, gets its
+    // configuration depending on this register. If this is not set, unit 3 will share some
+    // configuration with other units. It is known that program code and swizzle pattern uploaded
+    // via regs.vs will be also uploaded to unit 3 if this is not set. Although very likely, it is
+    // still unclear whether uniforms and other configuration can be also shared.
+    BitField<0, 1, u32> gs_unit_exclusive_configuration;
 
     enum class GPUMode : u32 {
         Drawing = 0,
