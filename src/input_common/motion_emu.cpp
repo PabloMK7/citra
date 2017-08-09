@@ -2,8 +2,14 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <chrono>
+#include <mutex>
+#include <thread>
+#include <tuple>
 #include "common/math_util.h"
 #include "common/quaternion.h"
+#include "common/thread.h"
+#include "common/vector_math.h"
 #include "input_common/motion_emu.h"
 
 namespace InputCommon {

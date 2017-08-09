@@ -3,8 +3,7 @@
 // Refer to the license.txt file included.
 
 #pragma once
-#include "common/thread.h"
-#include "common/vector_math.h"
+
 #include "core/frontend/input.h"
 
 namespace InputCommon {
