@@ -244,7 +244,7 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(
                                          MathUtil::Clamp(specular_sum.z, 0.0f, 1.0f) * 255,
                                          MathUtil::Clamp(specular_sum.w, 0.0f, 1.0f) * 255)
                         .Cast<u8>();
-    return {diffuse, specular};
+    return std::make_tuple(diffuse, specular);
 }
 
 } // namespace Pica
