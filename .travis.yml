@@ -37,4 +37,4 @@ deploy:
   file: "artifacts/*"
   skip_cleanup: true
   on:
-    repo: citra-emu/citra-nightly
+    tags: true
