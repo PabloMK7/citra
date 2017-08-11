@@ -159,7 +159,7 @@ public:
      *     - "axis"(optional): the index of the axis to bind
      *     - "direction"(only used for hat): the direction name of the hat to bind. Can be "up",
      *         "down", "left" or "right"
-     *     - "threshould"(only used for axis): a float value in (-1.0, 1.0) which the button is
+     *     - "threshold"(only used for axis): a float value in (-1.0, 1.0) which the button is
      *         triggered if the axis value crosses
      *     - "direction"(only used for axis): "+" means the button is triggered when the axis value
      *         is greater than the threshold; "-" means the button is triggered when the axis value

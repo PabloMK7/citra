@@ -12,7 +12,7 @@ const char* sdl2_config_file = R"(
 # It should be in the format of "engine:[engine_name],[param1]:[value1],[param2]:[value2]..."
 # Escape characters $0 (for ':'), $1 (for ',') and $2 (for '$') can be used in values
 
-# for button input, the following devices are avaible:
+# for button input, the following devices are available:
 #  - "keyboard" (default) for keyboard input. Required parameters:
 #      - "code": the code of the key to bind
 #  - "sdl" for joystick input using SDL. Required parameters:
@@ -21,7 +21,7 @@ const char* sdl2_config_file = R"(
 #      - "hat"(optional): the index of the hat to bind as direction buttons
 #      - "axis"(optional): the index of the axis to bind
 #      - "direction"(only used for hat): the direction name of the hat to bind. Can be "up", "down", "left" or "right"
-#      - "threshould"(only used for axis): a float value in (-1.0, 1.0) which the button is
+#      - "threshold"(only used for axis): a float value in (-1.0, 1.0) which the button is
 #          triggered if the axis value crosses
 #      - "direction"(only used for axis): "+" means the button is triggered when the axis value
 #          is greater than the threshold; "-" means the button is triggered when the axis value
@@ -42,7 +42,7 @@ button_zl=
 button_zr=
 button_home=
 
-# for analog input, the following devices are avaible:
+# for analog input, the following devices are available:
 #  - "analog_from_button" (default) for emulating analog input from direction buttons.  Required parameters:
 #      - "up", "down", "left", "right": sub-devices for each direction.
 #          Should be in the format as a button input devices using escape characters, for example, "engine$0keyboard$1code$00"
