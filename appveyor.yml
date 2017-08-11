@@ -46,13 +46,21 @@ after_build:
         7z a -tzip $MSVC_BUILD_PDB .\build\bin\release\*.pdb
         rm .\build\bin\release\*.pdb
 
-        mkdir nightly
-        Copy-Item .\build\bin\release\* -Destination nightly -Recurse
-        Copy-Item .\license.txt -Destination nightly
-        Copy-Item .\README.md -Destination nightly
+        # Find out which kind of release we are producing by tag name
+        if ($env:APPVEYOR_REPO_TAG_NAME) {
+            $RELEASE_DIST, $RELEASE_VERSION = $env:APPVEYOR_REPO_TAG_NAME.split('-')
+        } else {
+            # There is no repo tag - make assumptions
+            $RELEASE_DIST = "head"
+        }
 
-        7z a -tzip $MSVC_BUILD_NAME nightly\*
-        7z a $MSVC_SEVENZIP nightly
+        mkdir $RELEASE_DIST
+        Copy-Item .\build\bin\release\* -Destination $RELEASE_DIST -Recurse
+        Copy-Item .\license.txt -Destination $RELEASE_DIST
+        Copy-Item .\README.md -Destination $RELEASE_DIST
+
+        7z a -tzip $MSVC_BUILD_NAME $RELEASE_DIST\*
+        7z a $MSVC_SEVENZIP $RELEASE_DIST
 
 test_script:
   - cd build && ctest -VV -C Release && cd ..
