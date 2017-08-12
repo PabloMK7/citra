@@ -56,7 +56,9 @@ static Dynarmic::UserCallbacks GetUserCallbacks(
     user_callbacks.memory.Write16 = &Memory::Write16;
     user_callbacks.memory.Write32 = &Memory::Write32;
     user_callbacks.memory.Write64 = &Memory::Write64;
-    user_callbacks.page_table = Memory::GetCurrentPageTablePointers();
+    // TODO(Subv): Re-add the page table pointers once dynarmic supports switching page tables at
+    // runtime.
+    user_callbacks.page_table = nullptr;
     user_callbacks.coprocessors[15] = std::make_shared<DynarmicCP15>(interpeter_state);
     return user_callbacks;
 }
