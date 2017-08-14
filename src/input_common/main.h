@@ -11,7 +11,7 @@ namespace InputCommon {
 /// Initializes and registers all built-in input device factories.
 void Init();
 
-/// Unresisters all build-in input device factories and shut them down.
+/// Deregisters all built-in input device factories and shuts them down.
 void Shutdown();
 
 class Keyboard;
