@@ -147,9 +147,10 @@ static void LoadComponent(Service::Interface* self) {
     LOG_INFO(Service_DSP, "Firmware hash: %#" PRIx64,
              Common::ComputeHash64(component_data.data(), component_data.size()));
     // Some versions of the firmware have the location of DSP structures listed here.
-    ASSERT(size > 0x37C);
-    LOG_INFO(Service_DSP, "Structures hash: %#" PRIx64,
-             Common::ComputeHash64(component_data.data() + 0x340, 60));
+    if (size > 0x37C) {
+        LOG_INFO(Service_DSP, "Structures hash: %#" PRIx64,
+                 Common::ComputeHash64(component_data.data() + 0x340, 60));
+    }
 
     LOG_WARNING(Service_DSP,
                 "(STUBBED) called size=0x%X, prog_mask=0x%08X, data_mask=0x%08X, buffer=0x%08X",
