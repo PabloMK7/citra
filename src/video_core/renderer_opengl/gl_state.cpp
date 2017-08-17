@@ -68,6 +68,8 @@ OpenGLState::OpenGLState() {
     draw.vertex_buffer = 0;
     draw.uniform_buffer = 0;
     draw.shader_program = 0;
+
+    clip_distance = {};
 }
 
 void OpenGLState::Apply() const {
@@ -259,6 +261,17 @@ void OpenGLState::Apply() const {
     // Shader program
     if (draw.shader_program != cur_state.draw.shader_program) {
         glUseProgram(draw.shader_program);
+    }
+
+    // Clip distance
+    for (size_t i = 0; i < clip_distance.size(); ++i) {
+        if (clip_distance[i] != cur_state.clip_distance[i]) {
+            if (clip_distance[i]) {
+                glEnable(GL_CLIP_DISTANCE0 + i);
+            } else {
+                glDisable(GL_CLIP_DISTANCE0 + i);
+            }
+        }
     }
 
     cur_state = *this;

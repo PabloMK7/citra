@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <array>
 #include <glad/glad.h>
 
 namespace TextureUnits {
@@ -122,6 +123,8 @@ public:
         GLuint uniform_buffer;   // GL_UNIFORM_BUFFER_BINDING
         GLuint shader_program;   // GL_CURRENT_PROGRAM
     } draw;
+
+    std::array<bool, 2> clip_distance; // GL_CLIP_DISTANCE
 
     OpenGLState();
 

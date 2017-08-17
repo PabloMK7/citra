@@ -1196,6 +1196,8 @@ void main() {
     normquat = vert_normquat;
     view = vert_view;
     gl_Position = vec4(vert_position.x, vert_position.y, -vert_position.z, vert_position.w);
+    gl_ClipDistance[0] = -vert_position.z; // fixed PICA clipping plane z <= 0
+    // TODO (wwylele): calculate gl_ClipDistance[1] from user-defined clipping plane
 }
 )";
 
