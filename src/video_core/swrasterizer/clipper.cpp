@@ -125,10 +125,6 @@ void ProcessTriangle(const OutputVertex& v0, const OutputVertex& v1, const Outpu
         {Math::MakeVec(f0, f0, f0, -f1), Math::Vec4<float24>(f0, f0, f0, EPSILON)}, // w = EPSILON
     }};
 
-    // TODO: If one vertex lies outside one of the depth clipping planes, some platforms (e.g. Wii)
-    //       drop the whole primitive instead of clipping the primitive properly. We should test if
-    //       this happens on the 3DS, too.
-
     // Simple implementation of the Sutherland-Hodgman clipping algorithm.
     // TODO: Make this less inefficient (currently lots of useless buffering overhead happens here)
     for (auto edge : clipping_edges) {
