@@ -52,6 +52,7 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(
 
     // Use the normalized the quaternion when performing the rotation
     auto normal = Math::QuaternionRotate(normquat, surface_normal);
+    auto tangent = Math::QuaternionRotate(normquat, surface_tangent);
 
     Math::Vec4<float> diffuse_sum = {0.0f, 0.0f, 0.0f, 1.0f};
     Math::Vec4<float> specular_sum = {0.0f, 0.0f, 0.0f, 1.0f};
@@ -120,6 +121,16 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(
                 result = Math::Dot(light_vector, spot_dir.Cast<float>() / 2047.0f);
                 break;
             }
+            case LightingRegs::LightingLutInput::CP:
+                if (lighting.config0.config == LightingRegs::LightingConfig::Config7) {
+                    const Math::Vec3<float> norm_half_vector = half_vector.Normalized();
+                    const Math::Vec3<float> half_vector_proj =
+                        norm_half_vector - normal * Math::Dot(normal, norm_half_vector);
+                    result = Math::Dot(half_vector_proj, tangent);
+                } else {
+                    result = 0.0f;
+                }
+                break;
             default:
                 LOG_CRITICAL(HW_GPU, "Unknown lighting LUT input %u\n", static_cast<u32>(input));
                 UNIMPLEMENTED();
