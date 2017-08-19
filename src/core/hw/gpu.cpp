@@ -29,7 +29,7 @@ namespace GPU {
 Regs g_regs;
 
 /// 268MHz CPU clocks / 60Hz frames per second
-const u64 frame_ticks = BASE_CLOCK_RATE_ARM11 / SCREEN_REFRESH_RATE;
+const u64 frame_ticks = static_cast<u64>(BASE_CLOCK_RATE_ARM11 / SCREEN_REFRESH_RATE);
 /// Event id for CoreTiming
 static int vblank_event;
 
