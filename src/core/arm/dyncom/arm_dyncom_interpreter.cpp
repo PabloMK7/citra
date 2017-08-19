@@ -759,7 +759,7 @@ static ThumbDecodeStatus DecodeThumbInstruction(u32 inst, u32 addr, u32* arm_ins
     ThumbDecodeStatus ret = TranslateThumbInstruction(addr, inst, arm_inst, inst_size);
     if (ret == ThumbDecodeStatus::BRANCH) {
         int inst_index;
-        int table_length = arm_instruction_trans_len;
+        int table_length = static_cast<int>(arm_instruction_trans_len);
         u32 tinstr = GetThumbInstruction(inst, addr);
 
         switch ((tinstr & 0xF800) >> 11) {
