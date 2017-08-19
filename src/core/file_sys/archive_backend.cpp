@@ -90,6 +90,8 @@ std::u16string Path::AsU16Str() const {
         LOG_ERROR(Service_FS, "LowPathType cannot be converted to u16string!");
         return {};
     }
+
+    UNREACHABLE();
 }
 
 std::vector<u8> Path::AsBinary() const {
