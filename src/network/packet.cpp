@@ -13,6 +13,18 @@
 
 namespace Network {
 
+#ifndef htonll
+u64 htonll(u64 x) {
+    return ((1 == htonl(1)) ? (x) : ((uint64_t)htonl((x)&0xFFFFFFFF) << 32) | htonl((x) >> 32));
+}
+#endif
+
+#ifndef ntohll
+u64 ntohll(u64 x) {
+    return ((1 == ntohl(1)) ? (x) : ((uint64_t)ntohl((x)&0xFFFFFFFF) << 32) | ntohl((x) >> 32));
+}
+#endif
+
 void Packet::Append(const void* in_data, std::size_t size_in_bytes) {
     if (in_data && (size_in_bytes > 0)) {
         std::size_t start = data.size();
@@ -100,6 +112,20 @@ Packet& Packet::operator>>(u32& out_data) {
     return *this;
 }
 
+Packet& Packet::operator>>(s64& out_data) {
+    s64 value;
+    Read(&value, sizeof(value));
+    out_data = ntohll(value);
+    return *this;
+}
+
+Packet& Packet::operator>>(u64& out_data) {
+    u64 value;
+    Read(&value, sizeof(value));
+    out_data = ntohll(value);
+    return *this;
+}
+
 Packet& Packet::operator>>(float& out_data) {
     Read(&out_data, sizeof(out_data));
     return *this;
@@ -179,6 +205,18 @@ Packet& Packet::operator<<(s32 in_data) {
 
 Packet& Packet::operator<<(u32 in_data) {
     u32 toWrite = htonl(in_data);
+    Append(&toWrite, sizeof(toWrite));
+    return *this;
+}
+
+Packet& Packet::operator<<(s64 in_data) {
+    s64 toWrite = htonll(in_data);
+    Append(&toWrite, sizeof(toWrite));
+    return *this;
+}
+
+Packet& Packet::operator<<(u64 in_data) {
+    u64 toWrite = htonll(in_data);
     Append(&toWrite, sizeof(toWrite));
     return *this;
 }

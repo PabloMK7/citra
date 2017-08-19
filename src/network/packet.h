@@ -72,6 +72,8 @@ public:
     Packet& operator>>(u16& out_data);
     Packet& operator>>(s32& out_data);
     Packet& operator>>(u32& out_data);
+    Packet& operator>>(s64& out_data);
+    Packet& operator>>(u64& out_data);
     Packet& operator>>(float& out_data);
     Packet& operator>>(double& out_data);
     Packet& operator>>(char* out_data);
@@ -89,6 +91,8 @@ public:
     Packet& operator<<(u16 in_data);
     Packet& operator<<(s32 in_data);
     Packet& operator<<(u32 in_data);
+    Packet& operator<<(s64 in_data);
+    Packet& operator<<(u64 in_data);
     Packet& operator<<(float in_data);
     Packet& operator<<(double in_data);
     Packet& operator<<(const char* in_data);

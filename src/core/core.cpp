@@ -19,6 +19,7 @@
 #include "core/loader/loader.h"
 #include "core/memory_setup.h"
 #include "core/settings.h"
+#include "network/network.h"
 #include "video_core/video_core.h"
 
 namespace Core {
@@ -188,6 +189,10 @@ void System::Shutdown() {
     cpu_core = nullptr;
     app_loader = nullptr;
     telemetry_session = nullptr;
+    if (auto room_member = Network::GetRoomMember().lock()) {
+        Network::GameInfo game_info{};
+        room_member->SendGameInfo(game_info);
+    }
 
     LOG_DEBUG(Core, "Shutdown OK");
 }

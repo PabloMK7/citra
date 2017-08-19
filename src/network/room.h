@@ -7,6 +7,7 @@
 #include <array>
 #include <memory>
 #include <string>
+#include <vector>
 #include "common/common_types.h"
 
 namespace Network {
@@ -19,6 +20,11 @@ constexpr size_t NumChannels = 1; // Number of channels used for the connection
 struct RoomInformation {
     std::string name; ///< Name of the server
     u32 member_slots; ///< Maximum number of members in this room
+};
+
+struct GameInfo {
+    std::string name{""};
+    u64 id{0};
 };
 
 using MacAddress = std::array<u8, 6>;
@@ -34,7 +40,7 @@ enum RoomMessageTypes : u8 {
     IdJoinRequest = 1,
     IdJoinSuccess,
     IdRoomInformation,
-    IdSetGameName,
+    IdSetGameInfo,
     IdWifiPacket,
     IdChatMessage,
     IdNameCollision,
@@ -51,6 +57,12 @@ public:
         Closed, ///< The room is not opened and can not accept connections.
     };
 
+    struct Member {
+        std::string nickname;   ///< The nickname of the member.
+        GameInfo game_info;     ///< The current game of the member
+        MacAddress mac_address; ///< The assigned mac address of the member.
+    };
+
     Room();
     ~Room();
 
@@ -63,6 +75,11 @@ public:
      * Gets the room information of the room.
      */
     const RoomInformation& GetRoomInformation() const;
+
+    /**
+     * Gets a list of the mbmers connected to the room.
+     */
+    std::vector<Member> GetRoomMemberList() const;
 
     /**
      * Creates the socket for this room. Will bind to default address if

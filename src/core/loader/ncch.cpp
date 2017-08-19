@@ -20,6 +20,7 @@
 #include "core/loader/ncch.h"
 #include "core/loader/smdh.h"
 #include "core/memory.h"
+#include "network/network.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Loader namespace
@@ -349,6 +350,13 @@ ResultStatus AppLoader_NCCH::Load() {
     LOG_INFO(Loader, "Program ID: %s", program_id.c_str());
 
     Core::Telemetry().AddField(Telemetry::FieldType::Session, "ProgramId", program_id);
+
+    if (auto room_member = Network::GetRoomMember().lock()) {
+        Network::GameInfo game_info;
+        ReadTitle(game_info.name);
+        game_info.id = ncch_header.program_id;
+        room_member->SendGameInfo(game_info);
+    }
 
     is_loaded = true; // Set state to loaded
 

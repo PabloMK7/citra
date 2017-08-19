@@ -5,6 +5,7 @@
 #include <atomic>
 #include <list>
 #include <mutex>
+#include <set>
 #include <thread>
 #include "common/assert.h"
 #include "enet/enet.h"
@@ -25,6 +26,9 @@ public:
     /// Information about the room we're connected to.
     RoomInformation room_information;
 
+    /// The current game name, id and version
+    GameInfo current_game_info;
+
     std::atomic<State> state{State::Idle}; ///< Current state of the RoomMember.
     void SetState(const State new_state);
     bool IsConnected() const;
@@ -37,6 +41,24 @@ public:
     std::unique_ptr<std::thread> loop_thread;
     std::mutex send_list_mutex;  ///< Mutex that controls access to the `send_list` variable.
     std::list<Packet> send_list; ///< A list that stores all packets to send the async
+
+    template <typename T>
+    using CallbackSet = std::set<CallbackHandle<T>>;
+    std::mutex callback_mutex; ///< The mutex used for handling callbacks
+
+    class Callbacks {
+    public:
+        template <typename T>
+        CallbackSet<T>& Get();
+
+    private:
+        CallbackSet<WifiPacket> callback_set_wifi_packet;
+        CallbackSet<ChatEntry> callback_set_chat_messages;
+        CallbackSet<RoomInformation> callback_set_room_information;
+        CallbackSet<State> callback_set_state;
+    };
+    Callbacks callbacks; ///< All CallbackSets to all events
+
     void MemberLoop();
 
     void StartLoop();
@@ -84,12 +106,20 @@ public:
      * Disconnects the RoomMember from the Room
      */
     void Disconnect();
+
+    template <typename T>
+    void Invoke(const T& data);
+
+    template <typename T>
+    CallbackHandle<T> Bind(std::function<void(const T&)> callback);
 };
 
 // RoomMemberImpl
 void RoomMember::RoomMemberImpl::SetState(const State new_state) {
-    state = new_state;
-    // TODO(B3N30): Invoke the callback functions
+    if (state != new_state) {
+        state = new_state;
+        Invoke<State>(state);
+    }
 }
 
 bool RoomMember::RoomMemberImpl::IsConnected() const {
@@ -195,9 +225,10 @@ void RoomMember::RoomMemberImpl::HandleRoomInformationPacket(const ENetEvent* ev
     for (auto& member : member_information) {
         packet >> member.nickname;
         packet >> member.mac_address;
-        packet >> member.game_name;
+        packet >> member.game_info.name;
+        packet >> member.game_info.id;
     }
-    // TODO(B3N30): Invoke callbacks
+    Invoke(room_information);
 }
 
 void RoomMember::RoomMemberImpl::HandleJoinPacket(const ENetEvent* event) {
@@ -209,7 +240,7 @@ void RoomMember::RoomMemberImpl::HandleJoinPacket(const ENetEvent* event) {
 
     // Parse the MAC Address from the packet
     packet >> mac_address;
-    // TODO(B3N30): Invoke callbacks
+    SetState(State::Joined);
 }
 
 void RoomMember::RoomMemberImpl::HandleWifiPackets(const ENetEvent* event) {
@@ -235,7 +266,7 @@ void RoomMember::RoomMemberImpl::HandleWifiPackets(const ENetEvent* event) {
 
     packet >> wifi_packet.data;
 
-    // TODO(B3N30): Invoke callbacks
+    Invoke<WifiPacket>(wifi_packet);
 }
 
 void RoomMember::RoomMemberImpl::HandleChatPacket(const ENetEvent* event) {
@@ -248,7 +279,7 @@ void RoomMember::RoomMemberImpl::HandleChatPacket(const ENetEvent* event) {
     ChatEntry chat_entry{};
     packet >> chat_entry.nickname;
     packet >> chat_entry.message;
-    // TODO(B3N30): Invoke callbacks
+    Invoke<ChatEntry>(chat_entry);
 }
 
 void RoomMember::RoomMemberImpl::Disconnect() {
@@ -274,6 +305,46 @@ void RoomMember::RoomMemberImpl::Disconnect() {
     // didn't disconnect gracefully force disconnect
     enet_peer_reset(server);
     server = nullptr;
+}
+
+template <>
+RoomMember::RoomMemberImpl::CallbackSet<WifiPacket>& RoomMember::RoomMemberImpl::Callbacks::Get() {
+    return callback_set_wifi_packet;
+}
+
+template <>
+RoomMember::RoomMemberImpl::CallbackSet<RoomMember::State>&
+RoomMember::RoomMemberImpl::Callbacks::Get() {
+    return callback_set_state;
+}
+
+template <>
+RoomMember::RoomMemberImpl::CallbackSet<RoomInformation>&
+RoomMember::RoomMemberImpl::Callbacks::Get() {
+    return callback_set_room_information;
+}
+
+template <>
+RoomMember::RoomMemberImpl::CallbackSet<ChatEntry>& RoomMember::RoomMemberImpl::Callbacks::Get() {
+    return callback_set_chat_messages;
+}
+
+template <typename T>
+void RoomMember::RoomMemberImpl::Invoke(const T& data) {
+    std::lock_guard<std::mutex> lock(callback_mutex);
+    CallbackSet<T> callback_set = callbacks.Get<T>();
+    for (auto const& callback : callback_set)
+        (*callback)(data);
+}
+
+template <typename T>
+RoomMember::CallbackHandle<T> RoomMember::RoomMemberImpl::Bind(
+    std::function<void(const T&)> callback) {
+    std::lock_guard<std::mutex> lock(callback_mutex);
+    CallbackHandle<T> handle;
+    handle = std::make_shared<std::function<void(const T&)>>(callback);
+    callbacks.Get<T>().insert(handle);
+    return handle;
 }
 
 // RoomMember
@@ -339,6 +410,7 @@ void RoomMember::Join(const std::string& nick, const char* server_addr, u16 serv
         room_member_impl->SetState(State::Joining);
         room_member_impl->StartLoop();
         room_member_impl->SendJoinRequest(nick, preferred_mac);
+        SendGameInfo(room_member_impl->current_game_info);
     } else {
         room_member_impl->SetState(State::CouldNotConnect);
     }
@@ -366,11 +438,42 @@ void RoomMember::SendChatMessage(const std::string& message) {
     room_member_impl->Send(std::move(packet));
 }
 
-void RoomMember::SendGameName(const std::string& game_name) {
+void RoomMember::SendGameInfo(const GameInfo& game_info) {
+    room_member_impl->current_game_info = game_info;
+    if (!IsConnected())
+        return;
+
     Packet packet;
-    packet << static_cast<u8>(IdSetGameName);
-    packet << game_name;
+    packet << static_cast<u8>(IdSetGameInfo);
+    packet << game_info.name;
+    packet << game_info.id;
     room_member_impl->Send(std::move(packet));
+}
+
+RoomMember::CallbackHandle<RoomMember::State> RoomMember::BindOnStateChanged(
+    std::function<void(const RoomMember::State&)> callback) {
+    return room_member_impl->Bind(callback);
+}
+
+RoomMember::CallbackHandle<WifiPacket> RoomMember::BindOnWifiPacketReceived(
+    std::function<void(const WifiPacket&)> callback) {
+    return room_member_impl->Bind(callback);
+}
+
+RoomMember::CallbackHandle<RoomInformation> RoomMember::BindOnRoomInformationChanged(
+    std::function<void(const RoomInformation&)> callback) {
+    return room_member_impl->Bind(callback);
+}
+
+RoomMember::CallbackHandle<ChatEntry> RoomMember::BindOnChatMessageRecieved(
+    std::function<void(const ChatEntry&)> callback) {
+    return room_member_impl->Bind(callback);
+}
+
+template <typename T>
+void RoomMember::Unbind(CallbackHandle<T> handle) {
+    std::lock_guard<std::mutex> lock(room_member_impl->callback_mutex);
+    room_member_impl->callbacks.Get<T>().erase(handle);
 }
 
 void RoomMember::Leave() {
@@ -378,5 +481,10 @@ void RoomMember::Leave() {
     room_member_impl->loop_thread->join();
     room_member_impl->loop_thread.reset();
 }
+
+template void RoomMember::Unbind(CallbackHandle<WifiPacket>);
+template void RoomMember::Unbind(CallbackHandle<RoomMember::State>);
+template void RoomMember::Unbind(CallbackHandle<RoomInformation>);
+template void RoomMember::Unbind(CallbackHandle<ChatEntry>);
 
 } // namespace Network
