@@ -157,6 +157,12 @@ void Config::ReadValues() {
     qt_config->beginGroup("UI");
     UISettings::values.theme = qt_config->value("theme", UISettings::themes[0].second).toString();
 
+    qt_config->beginGroup("Updater");
+    UISettings::values.check_for_update_on_start =
+        qt_config->value("check_for_update_on_start", true).toBool();
+    UISettings::values.update_on_close = qt_config->value("update_on_close", false).toBool();
+    qt_config->endGroup();
+
     qt_config->beginGroup("UILayout");
     UISettings::values.geometry = qt_config->value("geometry").toByteArray();
     UISettings::values.state = qt_config->value("state").toByteArray();
@@ -306,6 +312,11 @@ void Config::SaveValues() {
 
     qt_config->beginGroup("UI");
     qt_config->setValue("theme", UISettings::values.theme);
+
+    qt_config->beginGroup("Updater");
+    qt_config->setValue("check_for_update_on_start", UISettings::values.check_for_update_on_start);
+    qt_config->setValue("update_on_close", UISettings::values.update_on_close);
+    qt_config->endGroup();
 
     qt_config->beginGroup("UILayout");
     qt_config->setValue("geometry", UISettings::values.geometry);

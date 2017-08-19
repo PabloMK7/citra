@@ -30,6 +30,7 @@
 #include "citra_qt/hotkeys.h"
 #include "citra_qt/main.h"
 #include "citra_qt/ui_settings.h"
+#include "citra_qt/updater/updater.h"
 #include "common/logging/backend.h"
 #include "common/logging/filter.h"
 #include "common/logging/log.h"
@@ -100,6 +101,7 @@ GMainWindow::GMainWindow() : config(new Config()), emu_thread(nullptr) {
     InitializeDebugWidgets();
     InitializeRecentFileMenuActions();
     InitializeHotkeys();
+    ShowUpdaterWidgets();
 
     SetDefaultUIGeometry();
     RestoreUIState();
@@ -117,6 +119,10 @@ GMainWindow::GMainWindow() : config(new Config()), emu_thread(nullptr) {
 
     // Show one-time "callout" messages to the user
     ShowCallouts();
+
+    if (UISettings::values.check_for_update_on_start) {
+        CheckForUpdates();
+    }
 
     QStringList args = QApplication::arguments();
     if (args.length() >= 2) {
@@ -138,6 +144,10 @@ void GMainWindow::InitializeWidgets() {
 
     game_list = new GameList(this);
     ui.horizontalLayout->addWidget(game_list);
+
+    // Setup updater
+    updater = new Updater(this);
+    UISettings::values.updater_found = updater->HasUpdater();
 
     // Create status bar
     message_label = new QLabel();
@@ -268,6 +278,13 @@ void GMainWindow::InitializeHotkeys() {
     });
 }
 
+void GMainWindow::ShowUpdaterWidgets() {
+    ui.action_Check_For_Updates->setVisible(UISettings::values.updater_found);
+    ui.action_Open_Maintenance_Tool->setVisible(UISettings::values.updater_found);
+
+    connect(updater, &Updater::CheckUpdatesDone, this, &GMainWindow::OnUpdateFound);
+}
+
 void GMainWindow::SetDefaultUIGeometry() {
     // geometry: 55% of the window contents are in the upper screen half, 45% in the lower half
     const QRect screenRect = QApplication::desktop()->screenGeometry(this);
@@ -346,6 +363,10 @@ void GMainWindow::ConnectMenuEvents() {
     connect(ui.action_FAQ, &QAction::triggered,
             []() { QDesktopServices::openUrl(QUrl("https://citra-emu.org/wiki/faq/")); });
     connect(ui.action_About, &QAction::triggered, this, &GMainWindow::OnMenuAboutCitra);
+    connect(ui.action_Check_For_Updates, &QAction::triggered, this,
+            &GMainWindow::OnCheckForUpdates);
+    connect(ui.action_Open_Maintenance_Tool, &QAction::triggered, this,
+            &GMainWindow::OnOpenUpdater);
 }
 
 void GMainWindow::OnDisplayTitleBars(bool show) {
@@ -366,6 +387,46 @@ void GMainWindow::OnDisplayTitleBars(bool show) {
                 delete old;
         }
     }
+}
+
+void GMainWindow::OnCheckForUpdates() {
+    CheckForUpdates();
+}
+
+void GMainWindow::CheckForUpdates() {
+    if (updater->CheckForUpdates()) {
+        LOG_INFO(Frontend, "Update check started");
+    } else {
+        LOG_WARNING(Frontend, "Unable to start check for updates");
+    }
+}
+
+void GMainWindow::OnUpdateFound(bool found, bool error) {
+    if (error) {
+        LOG_WARNING(Frontend, "Update check failed");
+        return;
+    }
+
+    if (!found) {
+        LOG_INFO(Frontend, "No updates found");
+        return;
+    }
+
+    LOG_INFO(Frontend, "Update found!");
+    auto result = QMessageBox::question(
+        this, tr("Update available!"),
+        tr("An update for Citra is available. Do you wish to install it now?<br /><br />"
+           "This <b>will</b> terminate emulation, if it is running."),
+        QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes);
+
+    if (result == QMessageBox::Yes) {
+        updater->LaunchUIOnExit();
+        close();
+    }
+}
+
+void GMainWindow::OnOpenUpdater() {
+    updater->LaunchUI();
 }
 
 bool GMainWindow::LoadROM(const QString& filename) {
