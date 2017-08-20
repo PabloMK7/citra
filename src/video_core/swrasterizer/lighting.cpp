@@ -95,6 +95,12 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(
                 result = Math::Dot(light_vector, normal);
                 break;
 
+            case LightingRegs::LightingLutInput::SP: {
+                Math::Vec3<s32> spot_dir{light_config.spot_x.Value(), light_config.spot_y.Value(),
+                                         light_config.spot_z.Value()};
+                result = Math::Dot(light_vector, spot_dir.Cast<float>() / 2047.0f);
+                break;
+            }
             default:
                 LOG_CRITICAL(HW_GPU, "Unknown lighting LUT input %u\n", static_cast<u32>(input));
                 UNIMPLEMENTED();
@@ -124,6 +130,16 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(
             return scale *
                    LookupLightingLut(lighting_state, static_cast<size_t>(sampler), index, delta);
         };
+
+        // If enabled, compute spot light attenuation value
+        float spot_atten = 1.0f;
+        if (!lighting.IsSpotAttenDisabled(num) &&
+            LightingRegs::IsLightingSamplerSupported(
+                lighting.config0.config, LightingRegs::LightingSampler::SpotlightAttenuation)) {
+            auto lut = LightingRegs::SpotlightAttenuationSampler(num);
+            spot_atten = GetLutValue(lighting.lut_input.sp, lighting.abs_lut_input.disable_sp == 0,
+                                     lighting.lut_scale.sp, lut);
+        }
 
         // Specular 0 component
         float d0_lut_value = 1.0f;
@@ -226,10 +242,10 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(
 
         auto diffuse =
             light_config.diffuse.ToVec3f() * dot_product + light_config.ambient.ToVec3f();
-        diffuse_sum += Math::MakeVec(diffuse * dist_atten, 0.0f);
+        diffuse_sum += Math::MakeVec(diffuse * dist_atten * spot_atten, 0.0f);
 
-        specular_sum +=
-            Math::MakeVec((specular_0 + specular_1) * clamp_highlights * dist_atten, 0.0f);
+        specular_sum += Math::MakeVec(
+            (specular_0 + specular_1) * clamp_highlights * dist_atten * spot_atten, 0.0f);
     }
 
     diffuse_sum += Math::MakeVec(lighting.global_ambient.ToVec3f(), 0.0f);
