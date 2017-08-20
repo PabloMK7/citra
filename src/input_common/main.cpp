@@ -7,6 +7,7 @@
 #include "input_common/analog_from_button.h"
 #include "input_common/keyboard.h"
 #include "input_common/main.h"
+#include "input_common/motion_emu.h"
 #ifdef HAVE_SDL2
 #include "input_common/sdl/sdl.h"
 #endif
@@ -14,12 +15,16 @@
 namespace InputCommon {
 
 static std::shared_ptr<Keyboard> keyboard;
+static std::shared_ptr<MotionEmu> motion_emu;
 
 void Init() {
-    keyboard = std::make_shared<InputCommon::Keyboard>();
+    keyboard = std::make_shared<Keyboard>();
     Input::RegisterFactory<Input::ButtonDevice>("keyboard", keyboard);
     Input::RegisterFactory<Input::AnalogDevice>("analog_from_button",
-                                                std::make_shared<InputCommon::AnalogFromButton>());
+                                                std::make_shared<AnalogFromButton>());
+    motion_emu = std::make_shared<MotionEmu>();
+    Input::RegisterFactory<Input::MotionDevice>("motion_emu", motion_emu);
+
 #ifdef HAVE_SDL2
     SDL::Init();
 #endif
@@ -29,6 +34,8 @@ void Shutdown() {
     Input::UnregisterFactory<Input::ButtonDevice>("keyboard");
     keyboard.reset();
     Input::UnregisterFactory<Input::AnalogDevice>("analog_from_button");
+    Input::UnregisterFactory<Input::MotionDevice>("motion_emu");
+    motion_emu.reset();
 
 #ifdef HAVE_SDL2
     SDL::Shutdown();
@@ -37,6 +44,10 @@ void Shutdown() {
 
 Keyboard* GetKeyboard() {
     return keyboard.get();
+}
+
+MotionEmu* GetMotionEmu() {
+    return motion_emu.get();
 }
 
 std::string GenerateKeyboardParam(int key_code) {

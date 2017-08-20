@@ -57,6 +57,11 @@ void Config::ReadValues() {
             Settings::values.analogs[i] = default_param;
     }
 
+    Settings::values.motion_device =
+        qt_config->value("motion_device", "engine:motion_emu,update_period:100,sensitivity:0.01")
+            .toString()
+            .toStdString();
+
     qt_config->endGroup();
 
     qt_config->beginGroup("Core");
@@ -203,6 +208,7 @@ void Config::SaveValues() {
         qt_config->setValue(QString::fromStdString(Settings::NativeAnalog::mapping[i]),
                             QString::fromStdString(Settings::values.analogs[i]));
     }
+    qt_config->setValue("motion_device", QString::fromStdString(Settings::values.motion_device));
     qt_config->endGroup();
 
     qt_config->beginGroup("Core");

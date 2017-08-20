@@ -11,6 +11,7 @@
 #include <utility>
 #include "common/logging/log.h"
 #include "common/param_package.h"
+#include "common/vector_math.h"
 
 namespace Input {
 
@@ -106,5 +107,23 @@ using ButtonDevice = InputDevice<bool>;
  * direction
  */
 using AnalogDevice = InputDevice<std::tuple<float, float>>;
+
+/**
+ * A motion device is an input device that returns a tuple of accelerometer state vector and
+ * gyroscope state vector.
+ *
+ * For both vectors:
+ *   x+ is the same direction as LEFT on D-pad.
+ *   y+ is normal to the touch screen, pointing outward.
+ *   z+ is the same direction as UP on D-pad.
+ *
+ * For accelerometer state vector
+ *   Units: g (gravitational acceleration)
+ *
+ * For gyroscope state vector:
+ *   Orientation is determined by right-hand rule.
+ *   Units: deg/sec
+ */
+using MotionDevice = InputDevice<std::tuple<Math::Vec3<float>, Math::Vec3<float>>>;
 
 } // namespace Input

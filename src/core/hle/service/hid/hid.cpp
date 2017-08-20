@@ -7,6 +7,7 @@
 #include <cmath>
 #include <memory>
 #include "common/logging/log.h"
+#include "core/core.h"
 #include "core/core_timing.h"
 #include "core/frontend/emu_window.h"
 #include "core/frontend/input.h"
@@ -50,10 +51,14 @@ constexpr u64 pad_update_ticks = BASE_CLOCK_RATE_ARM11 / 234;
 constexpr u64 accelerometer_update_ticks = BASE_CLOCK_RATE_ARM11 / 104;
 constexpr u64 gyroscope_update_ticks = BASE_CLOCK_RATE_ARM11 / 101;
 
+constexpr float accelerometer_coef = 512.0f; // measured from hw test result
+constexpr float gyroscope_coef = 14.375f; // got from hwtest GetGyroscopeLowRawToDpsCoefficient call
+
 static std::atomic<bool> is_device_reload_pending;
 static std::array<std::unique_ptr<Input::ButtonDevice>, Settings::NativeButton::NUM_BUTTONS_HID>
     buttons;
 static std::unique_ptr<Input::AnalogDevice> circle_pad;
+static std::unique_ptr<Input::MotionDevice> motion_device;
 
 DirectionState GetStickDirectionState(s16 circle_pad_x, s16 circle_pad_y) {
     // 30 degree and 60 degree are angular thresholds for directions
@@ -90,6 +95,7 @@ static void LoadInputDevices() {
                    buttons.begin(), Input::CreateDevice<Input::ButtonDevice>);
     circle_pad = Input::CreateDevice<Input::AnalogDevice>(
         Settings::values.analogs[Settings::NativeAnalog::CirclePad]);
+    motion_device = Input::CreateDevice<Input::MotionDevice>(Settings::values.motion_device);
 }
 
 static void UnloadInputDevices() {
@@ -97,6 +103,7 @@ static void UnloadInputDevices() {
         button.reset();
     }
     circle_pad.reset();
+    motion_device.reset();
 }
 
 static void UpdatePadCallback(u64 userdata, int cycles_late) {
@@ -193,10 +200,19 @@ static void UpdateAccelerometerCallback(u64 userdata, int cycles_late) {
     mem->accelerometer.index = next_accelerometer_index;
     next_accelerometer_index = (next_accelerometer_index + 1) % mem->accelerometer.entries.size();
 
+    Math::Vec3<float> accel;
+    std::tie(accel, std::ignore) = motion_device->GetStatus();
+    accel *= accelerometer_coef;
+    // TODO(wwylele): do a time stretch like the one in UpdateGyroscopeCallback
+    // The time stretch formula should be like
+    // stretched_vector = (raw_vector - gravity) * stretch_ratio + gravity
+
     AccelerometerDataEntry& accelerometer_entry =
         mem->accelerometer.entries[mem->accelerometer.index];
-    std::tie(accelerometer_entry.x, accelerometer_entry.y, accelerometer_entry.z) =
-        VideoCore::g_emu_window->GetAccelerometerState();
+
+    accelerometer_entry.x = static_cast<s16>(accel.x);
+    accelerometer_entry.y = static_cast<s16>(accel.y);
+    accelerometer_entry.z = static_cast<s16>(accel.z);
 
     // Make up "raw" entry
     // TODO(wwylele):
@@ -227,8 +243,14 @@ static void UpdateGyroscopeCallback(u64 userdata, int cycles_late) {
     next_gyroscope_index = (next_gyroscope_index + 1) % mem->gyroscope.entries.size();
 
     GyroscopeDataEntry& gyroscope_entry = mem->gyroscope.entries[mem->gyroscope.index];
-    std::tie(gyroscope_entry.x, gyroscope_entry.y, gyroscope_entry.z) =
-        VideoCore::g_emu_window->GetGyroscopeState();
+
+    Math::Vec3<float> gyro;
+    std::tie(std::ignore, gyro) = motion_device->GetStatus();
+    double stretch = Core::System::GetInstance().perf_stats.GetLastFrameTimeScale();
+    gyro *= gyroscope_coef * stretch;
+    gyroscope_entry.x = static_cast<s16>(gyro.x);
+    gyroscope_entry.y = static_cast<s16>(gyro.y);
+    gyroscope_entry.z = static_cast<s16>(gyro.z);
 
     // Make up "raw" entry
     mem->gyroscope.raw_entry.x = gyroscope_entry.x;
@@ -326,7 +348,7 @@ void GetGyroscopeLowRawToDpsCoefficient(Service::Interface* self) {
 
     cmd_buff[1] = RESULT_SUCCESS.raw;
 
-    f32 coef = VideoCore::g_emu_window->GetGyroscopeRawToDpsCoefficient();
+    f32 coef = gyroscope_coef;
     memcpy(&cmd_buff[2], &coef, 4);
 }
 

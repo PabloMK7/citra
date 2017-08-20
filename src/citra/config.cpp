@@ -76,6 +76,9 @@ void Config::ReadValues() {
             Settings::values.analogs[i] = default_param;
     }
 
+    Settings::values.motion_device = sdl2_config->Get(
+        "Controls", "motion_device", "engine:motion_emu,update_period:100,sensitivity:0.01");
+
     // Core
     Settings::values.use_cpu_jit = sdl2_config->GetBoolean("Core", "use_cpu_jit", true);
 

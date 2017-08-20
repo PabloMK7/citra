@@ -33,7 +33,6 @@ set(SRCS
             frontend/camera/interface.cpp
             frontend/emu_window.cpp
             frontend/framebuffer_layout.cpp
-            frontend/motion_emu.cpp
             gdbstub/gdbstub.cpp
             hle/config_mem.cpp
             hle/applets/applet.cpp
@@ -226,7 +225,6 @@ set(HEADERS
             frontend/emu_window.h
             frontend/framebuffer_layout.h
             frontend/input.h
-            frontend/motion_emu.h
             gdbstub/gdbstub.h
             hle/config_mem.h
             hle/function_wrappers.h

@@ -69,27 +69,6 @@ public:
     void TouchMoved(unsigned framebuffer_x, unsigned framebuffer_y);
 
     /**
-     * Signal accelerometer state has changed.
-     * @param x X-axis accelerometer value
-     * @param y Y-axis accelerometer value
-     * @param z Z-axis accelerometer value
-     * @note all values are in unit of g (gravitational acceleration).
-     *    e.g. x = 1.0 means 9.8m/s^2 in x direction.
-     * @see GetAccelerometerState for axis explanation.
-     */
-    void AccelerometerChanged(float x, float y, float z);
-
-    /**
-     * Signal gyroscope state has changed.
-     * @param x X-axis accelerometer value
-     * @param y Y-axis accelerometer value
-     * @param z Z-axis accelerometer value
-     * @note all values are in deg/sec.
-     * @see GetGyroscopeState for axis explanation.
-     */
-    void GyroscopeChanged(float x, float y, float z);
-
-    /**
      * Gets the current touch screen state (touch X/Y coordinates and whether or not it is pressed).
      * @note This should be called by the core emu thread to get a state set by the window thread.
      * @todo Fix this function to be thread-safe.
@@ -98,52 +77,6 @@ public:
      */
     std::tuple<u16, u16, bool> GetTouchState() const {
         return std::make_tuple(touch_x, touch_y, touch_pressed);
-    }
-
-    /**
-     * Gets the current accelerometer state (acceleration along each three axis).
-     * Axis explained:
-     *   +x is the same direction as LEFT on D-pad.
-     *   +y is normal to the touch screen, pointing outward.
-     *   +z is the same direction as UP on D-pad.
-     * Units:
-     *   1 unit of return value = 1/512 g (measured by hw test),
-     *   where g is the gravitational acceleration (9.8 m/sec2).
-     * @note This should be called by the core emu thread to get a state set by the window thread.
-     * @return std::tuple of (x, y, z)
-     */
-    std::tuple<s16, s16, s16> GetAccelerometerState() {
-        std::lock_guard<std::mutex> lock(accel_mutex);
-        return std::make_tuple(accel_x, accel_y, accel_z);
-    }
-
-    /**
-     * Gets the current gyroscope state (angular rates about each three axis).
-     * Axis explained:
-     *   +x is the same direction as LEFT on D-pad.
-     *   +y is normal to the touch screen, pointing outward.
-     *   +z is the same direction as UP on D-pad.
-     * Orientation is determined by right-hand rule.
-     * Units:
-     *   1 unit of return value = (1/coef) deg/sec,
-     *   where coef is the return value of GetGyroscopeRawToDpsCoefficient().
-     * @note This should be called by the core emu thread to get a state set by the window thread.
-     * @return std::tuple of (x, y, z)
-     */
-    std::tuple<s16, s16, s16> GetGyroscopeState() {
-        std::lock_guard<std::mutex> lock(gyro_mutex);
-        return std::make_tuple(gyro_x, gyro_y, gyro_z);
-    }
-
-    /**
-     * Gets the coefficient for units conversion of gyroscope state.
-     * The conversion formula is r = coefficient * v,
-     * where v is angular rate in deg/sec,
-     * and r is the gyroscope state.
-     * @return float-type coefficient
-     */
-    f32 GetGyroscopeRawToDpsCoefficient() const {
-        return 14.375f; // taken from hw test, and gyroscope's document
     }
 
     /**
@@ -187,12 +120,6 @@ protected:
         touch_x = 0;
         touch_y = 0;
         touch_pressed = false;
-        accel_x = 0;
-        accel_y = -512;
-        accel_z = 0;
-        gyro_x = 0;
-        gyro_y = 0;
-        gyro_z = 0;
     }
     virtual ~EmuWindow() {}
 
@@ -254,16 +181,6 @@ private:
 
     u16 touch_x; ///< Touchpad X-position in native 3DS pixel coordinates (0-320)
     u16 touch_y; ///< Touchpad Y-position in native 3DS pixel coordinates (0-240)
-
-    std::mutex accel_mutex;
-    s16 accel_x; ///< Accelerometer X-axis value in native 3DS units
-    s16 accel_y; ///< Accelerometer Y-axis value in native 3DS units
-    s16 accel_z; ///< Accelerometer Z-axis value in native 3DS units
-
-    std::mutex gyro_mutex;
-    s16 gyro_x; ///< Gyroscope X-axis value in native 3DS units
-    s16 gyro_y; ///< Gyroscope Y-axis value in native 3DS units
-    s16 gyro_z; ///< Gyroscope Z-axis value in native 3DS units
 
     /**
      * Clip the provided coordinates to be inside the touchscreen area.

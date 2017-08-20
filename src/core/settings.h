@@ -79,6 +79,7 @@ struct Values {
     // Controls
     std::array<std::string, NativeButton::NumButtons> buttons;
     std::array<std::string, NativeAnalog::NumAnalogs> analogs;
+    std::string motion_device;
 
     // Core
     bool use_cpu_jit;
