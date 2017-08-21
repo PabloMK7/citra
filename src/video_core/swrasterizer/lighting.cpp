@@ -55,6 +55,9 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(
 
         light_vector.Normalize();
 
+        Math::Vec3<float> norm_view = view.Normalized();
+        Math::Vec3<float> half_vector = norm_view + light_vector;
+
         float dist_atten = 1.0f;
         if (!lighting.IsDistAttenDisabled(num)) {
             auto distance = (-view - position).Length();
@@ -74,17 +77,15 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(
         auto GetLutValue = [&](LightingRegs::LightingLutInput input, bool abs,
                                LightingRegs::LightingScale scale_enum,
                                LightingRegs::LightingSampler sampler) {
-            Math::Vec3<float> norm_view = view.Normalized();
-            Math::Vec3<float> half_angle = (norm_view + light_vector).Normalized();
             float result = 0.0f;
 
             switch (input) {
             case LightingRegs::LightingLutInput::NH:
-                result = Math::Dot(normal, half_angle);
+                result = Math::Dot(normal, half_vector.Normalized());
                 break;
 
             case LightingRegs::LightingLutInput::VH:
-                result = Math::Dot(norm_view, half_angle);
+                result = Math::Dot(norm_view, half_vector.Normalized());
                 break;
 
             case LightingRegs::LightingLutInput::NV:
@@ -239,6 +240,17 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(
             dot_product = std::abs(dot_product);
         else
             dot_product = std::max(dot_product, 0.0f);
+
+        if (light_config.config.geometric_factor_0 || light_config.config.geometric_factor_1) {
+            float geo_factor = half_vector.Length2();
+            geo_factor = geo_factor == 0.0f ? 0.0f : std::min(dot_product / geo_factor, 1.0f);
+            if (light_config.config.geometric_factor_0) {
+                specular_0 *= geo_factor;
+            }
+            if (light_config.config.geometric_factor_1) {
+                specular_1 *= geo_factor;
+            }
+        }
 
         auto diffuse =
             light_config.diffuse.ToVec3f() * dot_product + light_config.ambient.ToVec3f();
