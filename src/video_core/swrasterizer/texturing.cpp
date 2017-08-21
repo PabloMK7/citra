@@ -89,6 +89,8 @@ Math::Vec3<u8> GetColorModifier(TevStageConfig::ColorModifier factor,
     case ColorModifier::OneMinusSourceBlue:
         return (Math::Vec3<u8>(255, 255, 255) - values.bbb()).Cast<u8>();
     }
+
+    UNREACHABLE();
 };
 
 u8 GetAlphaModifier(TevStageConfig::AlphaModifier factor, const Math::Vec4<u8>& values) {
@@ -119,6 +121,8 @@ u8 GetAlphaModifier(TevStageConfig::AlphaModifier factor, const Math::Vec4<u8>& 
     case AlphaModifier::OneMinusSourceBlue:
         return 255 - values.b();
     }
+
+    UNREACHABLE();
 };
 
 Math::Vec3<u8> ColorCombine(TevStageConfig::Operation op, const Math::Vec3<u8> input[3]) {
