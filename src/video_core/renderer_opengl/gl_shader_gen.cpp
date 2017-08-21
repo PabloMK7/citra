@@ -594,8 +594,8 @@ static void WriteLighting(std::string& out, const PicaShaderConfig& config) {
                 // Note: even if the normal vector is modified by normal map, which is not the
                 // normal of the tangent plane anymore, the half angle vector is still projected
                 // using the modified normal vector.
-                std::string half_angle_proj = "normalize(half_vector) - normal / dot(normal, "
-                                              "normal) * dot(normal, normalize(half_vector))";
+                std::string half_angle_proj =
+                    "normalize(half_vector) - normal * dot(normal, normalize(half_vector))";
                 // Note: the half angle vector projection is confirmed not normalized before the dot
                 // product. The result is in fact not cos(phi) as the name suggested.
                 index = "dot(" + half_angle_proj + ", tangent)";
