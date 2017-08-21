@@ -1112,7 +1112,10 @@ vec4 secondary_fragment_color = vec4(0.0);
                "gl_FragCoord.y < scissor_y2)) discard;\n";
     }
 
-    out += "float z_over_w = 1.0 - gl_FragCoord.z * 2.0;\n";
+    // After perspective divide, OpenGL transform z_over_w from [-1, 1] to [near, far]. Here we use
+    // default near = 0 and far = 1, and undo the transformation to get the original z_over_w, then
+    // do our own transformation according to PICA specification.
+    out += "float z_over_w = 2.0 * gl_FragCoord.z - 1.0;\n";
     out += "float depth = z_over_w * depth_scale + depth_offset;\n";
     if (state.depthmap_enable == RasterizerRegs::DepthBuffering::WBuffering) {
         out += "depth /= gl_FragCoord.w;\n";
@@ -1195,7 +1198,9 @@ void main() {
     texcoord0_w = vert_texcoord0_w;
     normquat = vert_normquat;
     view = vert_view;
-    gl_Position = vec4(vert_position.x, vert_position.y, -vert_position.z, vert_position.w);
+    gl_Position = vert_position;
+    gl_ClipDistance[0] = -vert_position.z; // fixed PICA clipping plane z <= 0
+    // TODO (wwylele): calculate gl_ClipDistance[1] from user-defined clipping plane
 }
 )";
 
