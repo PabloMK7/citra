@@ -127,8 +127,7 @@ void ProcessTriangle(const OutputVertex& v0, const OutputVertex& v1, const Outpu
 
     // Simple implementation of the Sutherland-Hodgman clipping algorithm.
     // TODO: Make this less inefficient (currently lots of useless buffering overhead happens here)
-    for (auto edge : clipping_edges) {
-
+    auto Clip = [&](const ClippingEdge& edge) {
         std::swap(input_list, output_list);
         output_list->clear();
 
@@ -147,8 +146,20 @@ void ProcessTriangle(const OutputVertex& v0, const OutputVertex& v1, const Outpu
             }
             reference_vertex = &vertex;
         }
+    };
+
+    for (auto edge : clipping_edges) {
+        Clip(edge);
 
         // Need to have at least a full triangle to continue...
+        if (output_list->size() < 3)
+            return;
+    }
+
+    if (g_state.regs.rasterizer.clip_enable) {
+        ClippingEdge custom_edge{-g_state.regs.rasterizer.GetClipCoef()};
+        Clip(custom_edge);
+
         if (output_list->size() < 3)
             return;
     }
