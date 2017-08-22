@@ -151,13 +151,20 @@ private:
         LightSrc light_src[8];
         alignas(16) GLvec4 const_color[6]; // A vec4 color for each of the six tev stages
         alignas(16) GLvec4 tev_combiner_buffer_color;
+        alignas(16) GLvec4 clip_coef;
     };
 
     static_assert(
-        sizeof(UniformData) == 0x460,
+        sizeof(UniformData) == 0x470,
         "The size of the UniformData structure has changed, update the structure in the shader");
     static_assert(sizeof(UniformData) < 16384,
                   "UniformData structure must be less than 16kb as per the OpenGL spec");
+
+    /// Syncs the clip enabled status to match the PICA register
+    void SyncClipEnabled();
+
+    /// Syncs the clip coefficients to match the PICA register
+    void SyncClipCoef();
 
     /// Sets the OpenGL shader in accordance with the current PICA register state
     void SetShader();

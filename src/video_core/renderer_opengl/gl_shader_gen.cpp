@@ -24,6 +24,42 @@ using TevStageConfig = TexturingRegs::TevStageConfig;
 
 namespace GLShader {
 
+static const std::string UniformBlockDef = R"(
+#define NUM_TEV_STAGES 6
+#define NUM_LIGHTS 8
+
+struct LightSrc {
+    vec3 specular_0;
+    vec3 specular_1;
+    vec3 diffuse;
+    vec3 ambient;
+    vec3 position;
+    vec3 spot_direction;
+    float dist_atten_bias;
+    float dist_atten_scale;
+};
+
+layout (std140) uniform shader_data {
+    vec2 framebuffer_scale;
+    int alphatest_ref;
+    float depth_scale;
+    float depth_offset;
+    int scissor_x1;
+    int scissor_y1;
+    int scissor_x2;
+    int scissor_y2;
+    vec3 fog_color;
+    vec2 proctex_noise_f;
+    vec2 proctex_noise_a;
+    vec2 proctex_noise_p;
+    vec3 lighting_global_ambient;
+    LightSrc light_src[NUM_LIGHTS];
+    vec4 const_color[NUM_TEV_STAGES];
+    vec4 tev_combiner_buffer_color;
+    vec4 clip_coef;
+};
+)";
+
 PicaShaderConfig PicaShaderConfig::BuildFromRegs(const Pica::Regs& regs) {
     PicaShaderConfig res;
 
@@ -1008,8 +1044,6 @@ std::string GenerateFragmentShader(const PicaShaderConfig& config) {
 
     std::string out = R"(
 #version 330 core
-#define NUM_TEV_STAGES 6
-#define NUM_LIGHTS 8
 
 in vec4 primary_color;
 in vec2 texcoord[3];
@@ -1021,36 +1055,6 @@ in vec4 gl_FragCoord;
 
 out vec4 color;
 
-struct LightSrc {
-    vec3 specular_0;
-    vec3 specular_1;
-    vec3 diffuse;
-    vec3 ambient;
-    vec3 position;
-    vec3 spot_direction;
-    float dist_atten_bias;
-    float dist_atten_scale;
-};
-
-layout (std140) uniform shader_data {
-    vec2 framebuffer_scale;
-    int alphatest_ref;
-    float depth_scale;
-    float depth_offset;
-    int scissor_x1;
-    int scissor_y1;
-    int scissor_x2;
-    int scissor_y2;
-    vec3 fog_color;
-    vec2 proctex_noise_f;
-    vec2 proctex_noise_a;
-    vec2 proctex_noise_p;
-    vec3 lighting_global_ambient;
-    LightSrc light_src[NUM_LIGHTS];
-    vec4 const_color[NUM_TEV_STAGES];
-    vec4 tev_combiner_buffer_color;
-};
-
 uniform sampler2D tex[3];
 uniform samplerBuffer lighting_lut;
 uniform samplerBuffer fog_lut;
@@ -1059,7 +1063,11 @@ uniform samplerBuffer proctex_color_map;
 uniform samplerBuffer proctex_alpha_map;
 uniform samplerBuffer proctex_lut;
 uniform samplerBuffer proctex_diff_lut;
+)";
 
+    out += UniformBlockDef;
+
+    out += R"(
 // Rotate the vector v by the quaternion q
 vec3 quaternion_rotate(vec4 q, vec3 v) {
     return v + 2.0 * cross(q.xyz, cross(q.xyz, v) + q.w * v);
@@ -1190,6 +1198,12 @@ out float texcoord0_w;
 out vec4 normquat;
 out vec3 view;
 
+)";
+
+    out += UniformBlockDef;
+
+    out += R"(
+
 void main() {
     primary_color = vert_color;
     texcoord[0] = vert_texcoord0;
@@ -1200,7 +1214,7 @@ void main() {
     view = vert_view;
     gl_Position = vert_position;
     gl_ClipDistance[0] = -vert_position.z; // fixed PICA clipping plane z <= 0
-    // TODO (wwylele): calculate gl_ClipDistance[1] from user-defined clipping plane
+    gl_ClipDistance[1] = dot(clip_coef, vert_position);
 }
 )";
 

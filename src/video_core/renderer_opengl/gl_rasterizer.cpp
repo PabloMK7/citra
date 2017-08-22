@@ -169,6 +169,8 @@ RasterizerOpenGL::RasterizerOpenGL() : shader_dirty(true) {
     glTexBuffer(GL_TEXTURE_BUFFER, GL_RGBA32F, proctex_diff_lut_buffer.handle);
 
     // Sync fixed function OpenGL state
+    SyncClipEnabled();
+    SyncClipCoef();
     SyncCullMode();
     SyncBlendEnabled();
     SyncBlendFuncs();
@@ -399,6 +401,18 @@ void RasterizerOpenGL::NotifyPicaRegisterChanged(u32 id) {
     // Culling
     case PICA_REG_INDEX(rasterizer.cull_mode):
         SyncCullMode();
+        break;
+
+    // Clipping plane
+    case PICA_REG_INDEX(rasterizer.clip_enable):
+        SyncClipEnabled();
+        break;
+
+    case PICA_REG_INDEX_WORKAROUND(rasterizer.clip_coef[0], 0x48):
+    case PICA_REG_INDEX_WORKAROUND(rasterizer.clip_coef[1], 0x49):
+    case PICA_REG_INDEX_WORKAROUND(rasterizer.clip_coef[2], 0x4a):
+    case PICA_REG_INDEX_WORKAROUND(rasterizer.clip_coef[3], 0x4b):
+        SyncClipCoef();
         break;
 
     // Depth modifiers
@@ -1277,6 +1291,20 @@ void RasterizerOpenGL::SetShader() {
             SyncFogColor();
             SyncProcTexNoise();
         }
+    }
+}
+
+void RasterizerOpenGL::SyncClipEnabled() {
+    state.clip_distance[1] = Pica::g_state.regs.rasterizer.clip_enable != 0;
+}
+
+void RasterizerOpenGL::SyncClipCoef() {
+    const auto raw_clip_coef = Pica::g_state.regs.rasterizer.GetClipCoef();
+    const GLvec4 new_clip_coef = {raw_clip_coef.x.ToFloat32(), raw_clip_coef.y.ToFloat32(),
+                                  raw_clip_coef.z.ToFloat32(), raw_clip_coef.w.ToFloat32()};
+    if (new_clip_coef != uniform_block_data.data.clip_coef) {
+        uniform_block_data.data.clip_coef = new_clip_coef;
+        uniform_block_data.dirty = true;
     }
 }
 
