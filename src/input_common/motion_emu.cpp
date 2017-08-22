@@ -74,10 +74,13 @@ private:
     bool is_tilting = false;
 
     Common::Event shutdown_event;
-    std::thread motion_emu_thread;
 
     std::tuple<Math::Vec3<float>, Math::Vec3<float>> status;
     std::mutex status_mutex;
+
+    // Note: always keep the thread declaration at the end so that other objects are initialized
+    // before this!
+    std::thread motion_emu_thread;
 
     void MotionEmuThread() {
         auto update_time = std::chrono::steady_clock::now();
