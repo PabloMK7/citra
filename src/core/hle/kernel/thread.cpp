@@ -478,8 +478,6 @@ void Thread::BoostPriority(s32 priority) {
 }
 
 SharedPtr<Thread> SetupMainThread(u32 entry_point, s32 priority) {
-    DEBUG_ASSERT(!GetCurrentThread());
-
     // Initialize new "main" thread
     auto thread_res = Thread::Create("main", entry_point, priority, 0, THREADPROCESSORID_0,
                                      Memory::HEAP_VADDR_END);
@@ -489,9 +487,7 @@ SharedPtr<Thread> SetupMainThread(u32 entry_point, s32 priority) {
     thread->context.fpscr =
         FPSCR_DEFAULT_NAN | FPSCR_FLUSH_TO_ZERO | FPSCR_ROUND_TOZERO | FPSCR_IXC; // 0x03C00010
 
-    // Run new "main" thread
-    SwitchContext(thread.get());
-
+    // Note: The newly created thread will be run when the scheduler fires.
     return thread;
 }
 
