@@ -759,7 +759,7 @@ static ThumbDecodeStatus DecodeThumbInstruction(u32 inst, u32 addr, u32* arm_ins
     ThumbDecodeStatus ret = TranslateThumbInstruction(addr, inst, arm_inst, inst_size);
     if (ret == ThumbDecodeStatus::BRANCH) {
         int inst_index;
-        int table_length = arm_instruction_trans_len;
+        int table_length = static_cast<int>(arm_instruction_trans_len);
         u32 tinstr = GetThumbInstruction(inst, addr);
 
         switch ((tinstr & 0xF800) >> 11) {
@@ -838,7 +838,7 @@ static unsigned int InterpreterTranslateInstruction(const ARMul_State* cpu, cons
     return inst_size;
 }
 
-static int InterpreterTranslateBlock(ARMul_State* cpu, int& bb_start, u32 addr) {
+static int InterpreterTranslateBlock(ARMul_State* cpu, std::size_t& bb_start, u32 addr) {
     MICROPROFILE_SCOPE(DynCom_Decode);
 
     // Decode instruction, get index
@@ -871,7 +871,7 @@ static int InterpreterTranslateBlock(ARMul_State* cpu, int& bb_start, u32 addr) 
     return KEEP_GOING;
 }
 
-static int InterpreterTranslateSingle(ARMul_State* cpu, int& bb_start, u32 addr) {
+static int InterpreterTranslateSingle(ARMul_State* cpu, std::size_t& bb_start, u32 addr) {
     MICROPROFILE_SCOPE(DynCom_Decode);
 
     ARM_INST_PTR inst_base = nullptr;
@@ -1620,7 +1620,7 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
     unsigned int addr;
     unsigned int num_instrs = 0;
 
-    int ptr;
+    std::size_t ptr;
 
     LOAD_NZCVT;
 DISPATCH : {

@@ -31,8 +31,8 @@ ResultCode ErrEula::ReceiveParameter(const Service::APT::MessageParameter& param
     heap_memory = std::make_shared<std::vector<u8>>(capture_info.size);
     // Create a SharedMemory that directly points to this heap block.
     framebuffer_memory = Kernel::SharedMemory::CreateForApplet(
-        heap_memory, 0, heap_memory->size(), MemoryPermission::ReadWrite,
-        MemoryPermission::ReadWrite, "ErrEula Memory");
+        heap_memory, 0, capture_info.size, MemoryPermission::ReadWrite, MemoryPermission::ReadWrite,
+        "ErrEula Memory");
 
     // Send the response message with the newly created SharedMemory
     Service::APT::MessageParameter result;
