@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>441</width>
-    <height>501</height>
+    <width>740</width>
+    <height>500</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -47,6 +47,11 @@
      <widget class="ConfigureDebug" name="debugTab">
       <attribute name="title">
        <string>Debug</string>
+      </attribute>
+     </widget>
+     <widget class="ConfigureWeb" name="webTab">
+      <attribute name="title">
+       <string>Web</string>
       </attribute>
      </widget>
     </widget>
@@ -95,6 +100,12 @@
    <class>ConfigureGraphics</class>
    <extends>QWidget</extends>
    <header>configuration/configure_graphics.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>ConfigureWeb</class>
+   <extends>QWidget</extends>
+   <header>configuration/configure_web.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>
