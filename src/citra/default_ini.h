@@ -180,7 +180,7 @@ gdbstub_port=24689
 # 0: No, 1 (default): Yes
 enable_telemetry =
 # Endpoint URL for submitting telemetry data
-telemetry_endpoint_url =
+telemetry_endpoint_url = https://services.citra-emu.org/api/telemetry
 # Username and token for Citra Web Service
 # See https://services.citra-emu.org/ for more info
 citra_username =
