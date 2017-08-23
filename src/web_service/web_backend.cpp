@@ -5,48 +5,37 @@
 #include <cpr/cpr.h>
 #include <stdlib.h>
 #include "common/logging/log.h"
+#include "core/settings.h"
 #include "web_service/web_backend.h"
 
 namespace WebService {
 
 static constexpr char API_VERSION[]{"1"};
-static constexpr char ENV_VAR_USERNAME[]{"CITRA_WEB_SERVICES_USERNAME"};
-static constexpr char ENV_VAR_TOKEN[]{"CITRA_WEB_SERVICES_TOKEN"};
-
-static std::string GetEnvironmentVariable(const char* name) {
-    const char* value{getenv(name)};
-    if (value) {
-        return value;
-    }
-    return {};
-}
-
-const std::string& GetUsername() {
-    static const std::string username{GetEnvironmentVariable(ENV_VAR_USERNAME)};
-    return username;
-}
-
-const std::string& GetToken() {
-    static const std::string token{GetEnvironmentVariable(ENV_VAR_TOKEN)};
-    return token;
-}
 
 void PostJson(const std::string& url, const std::string& data) {
+    if (!Settings::values.enable_telemetry) {
+        // Telemetry disabled by user configuration
+        return;
+    }
+
     if (url.empty()) {
         LOG_ERROR(WebService, "URL is invalid");
         return;
     }
 
-    if (GetUsername().empty() || GetToken().empty()) {
-        LOG_ERROR(WebService, "Environment variables %s and %s must be set to POST JSON",
-                  ENV_VAR_USERNAME, ENV_VAR_TOKEN);
-        return;
+    if (Settings::values.citra_token.empty() || Settings::values.citra_username.empty()) {
+        // Anonymous request if citra token or username are empty
+        cpr::PostAsync(
+            cpr::Url{url}, cpr::Body{data},
+            cpr::Header{{"Content-Type", "application/json"}, {"api-version", API_VERSION}});
+    } else {
+        // We have both, do an authenticated request
+        cpr::PostAsync(cpr::Url{url}, cpr::Body{data},
+                       cpr::Header{{"Content-Type", "application/json"},
+                                   {"x-username", Settings::values.citra_username},
+                                   {"x-token", Settings::values.citra_token},
+                                   {"api-version", API_VERSION}});
     }
-
-    cpr::PostAsync(cpr::Url{url}, cpr::Body{data}, cpr::Header{{"Content-Type", "application/json"},
-                                                               {"x-username", GetUsername()},
-                                                               {"x-token", GetToken()},
-                                                               {"api-version", API_VERSION}});
 }
 
 } // namespace WebService
