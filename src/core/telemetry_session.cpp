@@ -38,21 +38,21 @@ static u64 GenerateTelemetryId() {
     return telemetry_id;
 }
 
-static u64 GetTelemetryId() {
+u64 GetTelemetryId() {
     u64 telemetry_id{};
     static const std::string& filename{FileUtil::GetUserPath(D_CONFIG_IDX) + "telemetry_id"};
 
     if (FileUtil::Exists(filename)) {
         FileUtil::IOFile file(filename, "rb");
         if (!file.IsOpen()) {
-            LOG_ERROR(WebService, "failed to open telemetry_id: %s", filename.c_str());
+            LOG_ERROR(Core, "failed to open telemetry_id: %s", filename.c_str());
             return {};
         }
         file.ReadBytes(&telemetry_id, sizeof(u64));
     } else {
         FileUtil::IOFile file(filename, "wb");
         if (!file.IsOpen()) {
-            LOG_ERROR(WebService, "failed to open telemetry_id: %s", filename.c_str());
+            LOG_ERROR(Core, "failed to open telemetry_id: %s", filename.c_str());
             return {};
         }
         telemetry_id = GenerateTelemetryId();
@@ -60,6 +60,19 @@ static u64 GetTelemetryId() {
     }
 
     return telemetry_id;
+}
+
+u64 RegenerateTelemetryId() {
+    const u64 new_telemetry_id{GenerateTelemetryId()};
+    static const std::string& filename{FileUtil::GetUserPath(D_CONFIG_IDX) + "telemetry_id"};
+
+    FileUtil::IOFile file(filename, "wb");
+    if (!file.IsOpen()) {
+        LOG_ERROR(Core, "failed to open telemetry_id: %s", filename.c_str());
+        return {};
+    }
+    file.WriteBytes(&new_telemetry_id, sizeof(u64));
+    return new_telemetry_id;
 }
 
 TelemetrySession::TelemetrySession() {

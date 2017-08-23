@@ -35,4 +35,16 @@ private:
     std::unique_ptr<Telemetry::VisitorInterface> backend; ///< Backend interface that logs fields
 };
 
+/**
+ * Gets TelemetryId, a unique identifier used for the user's telemetry sessions.
+ * @returns The current TelemetryId for the session.
+ */
+u64 GetTelemetryId();
+
+/**
+ * Regenerates TelemetryId, a unique identifier used for the user's telemetry sessions.
+ * @returns The new TelemetryId that was generated.
+ */
+u64 RegenerateTelemetryId();
+
 } // namespace Core

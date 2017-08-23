@@ -21,7 +21,7 @@ public:
     void applyConfiguration();
 
 public slots:
-    void updateWeb();
+    void refreshTelemetryID();
 
 private:
     void setConfiguration();
