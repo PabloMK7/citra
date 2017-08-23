@@ -176,7 +176,14 @@ use_gdbstub=false
 gdbstub_port=24689
 
 [WebService]
+# Whether or not to enable telemetry
+# 0: No, 1 (default): Yes
+enable_telemetry =
 # Endpoint URL for submitting telemetry data
 telemetry_endpoint_url =
+# Username and token for Citra Web Service
+# See https://services.citra-emu.org/ for more info
+citra_username =
+citra_token =
 )";
 }

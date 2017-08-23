@@ -156,8 +156,12 @@ void Config::ReadValues() {
         static_cast<u16>(sdl2_config->GetInteger("Debugging", "gdbstub_port", 24689));
 
     // Web Service
+    Settings::values.enable_telemetry =
+        sdl2_config->GetBoolean("WebService", "enable_telemetry", true);
     Settings::values.telemetry_endpoint_url = sdl2_config->Get(
         "WebService", "telemetry_endpoint_url", "https://services.citra-emu.org/api/telemetry");
+    Settings::values.citra_username = sdl2_config->Get("WebService", "citra_username", "");
+    Settings::values.citra_token = sdl2_config->Get("WebService", "citra_token", "");
 }
 
 void Config::Reload() {
