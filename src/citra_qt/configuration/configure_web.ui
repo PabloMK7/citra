@@ -17,11 +17,11 @@
    <item>
     <layout class="QVBoxLayout" name="verticalLayout_3">
      <item>
-      <widget class="QGroupBox" name="groupBox">
+      <widget class="QGroupBox" name="groupBoxWebConfig">
        <property name="title">
         <string>Citra Web Service</string>
        </property>
-       <layout class="QVBoxLayout" name="verticalLayout_2">
+       <layout class="QVBoxLayout" name="verticalLayoutCitraWebService">
         <item>
          <widget class="QLabel" name="web_credentials_disclaimer">
           <property name="text">
@@ -30,7 +30,7 @@
          </widget>
         </item>
         <item>
-         <layout class="QGridLayout" name="gridLayout">
+         <layout class="QGridLayout" name="gridLayoutCitraUsername">
           <item row="0" column="0">
            <widget class="QLabel" name="label_username">
             <property name="text">
@@ -100,6 +100,33 @@
            <string>Learn more</string>
           </property>
          </widget>
+        </item>
+        <item>
+         <layout class="QGridLayout" name="gridLayoutTelemetryId">
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_telemetry_id">
+             <property name="text">
+              <string>Telemetry ID:</string>
+             </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QPushButton" name="button_regenerate_telemetry_id">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="layoutDirection">
+             <enum>Qt::RightToLeft</enum>
+            </property>
+            <property name="text">
+             <string>Regenerate</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </item>
        </layout>
       </widget>
