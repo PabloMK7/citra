@@ -31,6 +31,7 @@
 #include "core/hle/kernel/timer.h"
 #include "core/hle/kernel/vm_manager.h"
 #include "core/hle/kernel/wait_object.h"
+#include "core/hle/lock.h"
 #include "core/hle/result.h"
 #include "core/hle/service/service.h"
 
@@ -1188,7 +1189,7 @@ struct FunctionDef {
     Func* func;
     const char* name;
 };
-}
+} // namespace
 
 static const FunctionDef SVC_Table[] = {
     {0x00, nullptr, "Unknown"},
@@ -1332,6 +1333,9 @@ MICROPROFILE_DEFINE(Kernel_SVC, "Kernel", "SVC", MP_RGB(70, 200, 70));
 void CallSVC(u32 immediate) {
     MICROPROFILE_SCOPE(Kernel_SVC);
 
+    // Lock the global kernel mutex when we enter the kernel HLE.
+    std::lock_guard<std::mutex> lock(HLE::g_hle_lock);
+
     const FunctionDef* info = GetSVCInfo(immediate);
     if (info) {
         if (info->func) {
@@ -1342,4 +1346,4 @@ void CallSVC(u32 immediate) {
     }
 }
 
-} // namespace
+} // namespace SVC

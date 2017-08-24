@@ -59,6 +59,7 @@ set(SRCS
             hle/kernel/timer.cpp
             hle/kernel/vm_manager.cpp
             hle/kernel/wait_object.cpp
+            hle/lock.cpp
             hle/romfs.cpp
             hle/service/ac/ac.cpp
             hle/service/ac/ac_i.cpp
@@ -256,6 +257,7 @@ set(HEADERS
             hle/kernel/timer.h
             hle/kernel/vm_manager.h
             hle/kernel/wait_object.h
+            hle/lock.h
             hle/result.h
             hle/romfs.h
             hle/service/ac/ac.h
