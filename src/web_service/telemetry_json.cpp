@@ -3,7 +3,6 @@
 // Refer to the license.txt file included.
 
 #include "common/assert.h"
-#include "core/settings.h"
 #include "web_service/telemetry_json.h"
 #include "web_service/web_backend.h"
 
@@ -81,7 +80,7 @@ void TelemetryJson::Complete() {
     SerializeSection(Telemetry::FieldType::UserFeedback, "UserFeedback");
     SerializeSection(Telemetry::FieldType::UserConfig, "UserConfig");
     SerializeSection(Telemetry::FieldType::UserSystem, "UserSystem");
-    PostJson(Settings::values.telemetry_endpoint_url, TopSection().dump());
+    PostJson(endpoint_url, TopSection().dump(), true, username, token);
 }
 
 } // namespace WebService

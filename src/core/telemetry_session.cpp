@@ -77,7 +77,13 @@ u64 RegenerateTelemetryId() {
 
 TelemetrySession::TelemetrySession() {
 #ifdef ENABLE_WEB_SERVICE
-    backend = std::make_unique<WebService::TelemetryJson>();
+    if (Settings::values.enable_telemetry) {
+        backend = std::make_unique<WebService::TelemetryJson>(
+            Settings::values.telemetry_endpoint_url, Settings::values.citra_username,
+            Settings::values.citra_token);
+    } else {
+        backend = std::make_unique<Telemetry::NullVisitor>();
+    }
 #else
     backend = std::make_unique<Telemetry::NullVisitor>();
 #endif
