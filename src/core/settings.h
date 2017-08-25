@@ -15,6 +15,7 @@ enum class LayoutOption {
     Default,
     SingleScreen,
     LargeScreen,
+    SideScreen,
 };
 
 namespace NativeButton {
@@ -70,7 +71,7 @@ enum Values {
 static const std::array<const char*, NumAnalogs> mapping = {{
     "circle_pad", "c_stick",
 }};
-} // namespace NumAnalog
+} // namespace NativeAnalog
 
 struct Values {
     // CheckNew3DS
@@ -137,4 +138,4 @@ struct Values {
 static constexpr int REGION_VALUE_AUTO_SELECT = -1;
 
 void Apply();
-}
+} // namespace Settings

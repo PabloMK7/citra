@@ -36,4 +36,4 @@ void Apply() {
     Service::IR::ReloadInputDevices();
 }
 
-} // namespace
+} // namespace Settings

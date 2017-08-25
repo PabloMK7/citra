@@ -146,17 +146,22 @@
            <widget class="QComboBox" name="layout_combobox">
             <item>
              <property name="text">
-              <string notr="true">Default</string>
+              <string>Default</string>
              </property>
             </item>
             <item>
              <property name="text">
-              <string notr="true">Single Screen</string>
+              <string>Single Screen</string>
              </property>
             </item>
             <item>
              <property name="text">
-              <string notr="true">Large Screen</string>
+              <string>Large Screen</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Side by Side</string>
              </property>
             </item>
            </widget>

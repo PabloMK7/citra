@@ -54,6 +54,17 @@ FramebufferLayout SingleFrameLayout(unsigned width, unsigned height, bool is_swa
 FramebufferLayout LargeFrameLayout(unsigned width, unsigned height, bool is_swapped);
 
 /**
+* Factory method for constructing a Frame with the Top screen and bottom
+* screen side by side
+* This is useful for devices with small screens, like the GPDWin
+* @param width Window framebuffer width in pixels
+* @param height Window framebuffer height in pixels
+* @param is_swapped if true, the bottom screen will be the left display
+* @return Newly created FramebufferLayout object with default screen regions initialized
+*/
+FramebufferLayout SideFrameLayout(unsigned width, unsigned height, bool is_swapped);
+
+/**
  * Factory method for constructing a custom FramebufferLayout
  * @param width Window framebuffer width in pixels
  * @param height Window framebuffer height in pixels
