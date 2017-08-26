@@ -2,6 +2,10 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#ifdef _WIN32
+#include <winsock.h>
+#endif
+
 #include <cstdlib>
 #include <thread>
 #include <cpr/cpr.h>
@@ -12,18 +16,7 @@ namespace WebService {
 
 static constexpr char API_VERSION[]{"1"};
 
-static void PostJsonAuthenticated(const std::string& url, const std::string& data,
-                                  const std::string& username, const std::string& token) {
-    cpr::Post(cpr::Url{url}, cpr::Body{data}, cpr::Header{{"Content-Type", "application/json"},
-                                                          {"x-username", username},
-                                                          {"x-token", token},
-                                                          {"api-version", API_VERSION}});
-}
-
-static void PostJsonAnonymous(const std::string& url, const std::string& data) {
-    cpr::Post(cpr::Url{url}, cpr::Body{data},
-              cpr::Header{{"Content-Type", "application/json"}, {"api-version", API_VERSION}});
-}
+static std::unique_ptr<cpr::Session> g_session;
 
 void PostJson(const std::string& url, const std::string& data, bool allow_anonymous,
               const std::string& username, const std::string& token) {
@@ -38,14 +31,33 @@ void PostJson(const std::string& url, const std::string& data, bool allow_anonym
         return;
     }
 
-    // Post JSON asynchronously by spawning a new thread
+#ifdef _WIN32
+    // On Windows, CPR/libcurl does not properly initialize Winsock. The below code is used to
+    // initialize Winsock globally, which fixes this problem. Without this, only the first CPR
+    // session will properly be created, and subsequent ones will fail.
+    WSADATA wsa_data;
+    const int wsa_result{WSAStartup(MAKEWORD(2, 2), &wsa_data)};
+    if (wsa_result) {
+        LOG_CRITICAL(WebService, "WSAStartup failed: %d", wsa_result);
+    }
+#endif
+
+    // Built request header
+    cpr::Header header;
     if (are_credentials_provided) {
         // Authenticated request if credentials are provided
-        std::thread{PostJsonAuthenticated, url, data, username, token}.detach();
+        header = {{"Content-Type", "application/json"},
+                  {"x-username", username.c_str()},
+                  {"x-token", token.c_str()},
+                  {"api-version", API_VERSION}};
     } else {
         // Otherwise, anonymous request
-        std::thread{PostJsonAnonymous, url, data}.detach();
+        header = cpr::Header{{"Content-Type", "application/json"}, {"api-version", API_VERSION}};
     }
+
+    // Post JSON asynchronously
+    static cpr::AsyncResponse future;
+    future = cpr::PostAsync(cpr::Url{url.c_str()}, cpr::Body{data.c_str()}, header);
 }
 
 } // namespace WebService
