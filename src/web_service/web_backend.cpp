@@ -2,51 +2,62 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#ifdef _WIN32
+#include <winsock.h>
+#endif
+
+#include <cstdlib>
+#include <thread>
 #include <cpr/cpr.h>
-#include <stdlib.h>
 #include "common/logging/log.h"
 #include "web_service/web_backend.h"
 
 namespace WebService {
 
 static constexpr char API_VERSION[]{"1"};
-static constexpr char ENV_VAR_USERNAME[]{"CITRA_WEB_SERVICES_USERNAME"};
-static constexpr char ENV_VAR_TOKEN[]{"CITRA_WEB_SERVICES_TOKEN"};
 
-static std::string GetEnvironmentVariable(const char* name) {
-    const char* value{getenv(name)};
-    if (value) {
-        return value;
-    }
-    return {};
-}
+static std::unique_ptr<cpr::Session> g_session;
 
-const std::string& GetUsername() {
-    static const std::string username{GetEnvironmentVariable(ENV_VAR_USERNAME)};
-    return username;
-}
-
-const std::string& GetToken() {
-    static const std::string token{GetEnvironmentVariable(ENV_VAR_TOKEN)};
-    return token;
-}
-
-void PostJson(const std::string& url, const std::string& data) {
+void PostJson(const std::string& url, const std::string& data, bool allow_anonymous,
+              const std::string& username, const std::string& token) {
     if (url.empty()) {
         LOG_ERROR(WebService, "URL is invalid");
         return;
     }
 
-    if (GetUsername().empty() || GetToken().empty()) {
-        LOG_ERROR(WebService, "Environment variables %s and %s must be set to POST JSON",
-                  ENV_VAR_USERNAME, ENV_VAR_TOKEN);
+    const bool are_credentials_provided{!token.empty() && !username.empty()};
+    if (!allow_anonymous && !are_credentials_provided) {
+        LOG_ERROR(WebService, "Credentials must be provided for authenticated requests");
         return;
     }
 
-    cpr::PostAsync(cpr::Url{url}, cpr::Body{data}, cpr::Header{{"Content-Type", "application/json"},
-                                                               {"x-username", GetUsername()},
-                                                               {"x-token", GetToken()},
-                                                               {"api-version", API_VERSION}});
+#ifdef _WIN32
+    // On Windows, CPR/libcurl does not properly initialize Winsock. The below code is used to
+    // initialize Winsock globally, which fixes this problem. Without this, only the first CPR
+    // session will properly be created, and subsequent ones will fail.
+    WSADATA wsa_data;
+    const int wsa_result{WSAStartup(MAKEWORD(2, 2), &wsa_data)};
+    if (wsa_result) {
+        LOG_CRITICAL(WebService, "WSAStartup failed: %d", wsa_result);
+    }
+#endif
+
+    // Built request header
+    cpr::Header header;
+    if (are_credentials_provided) {
+        // Authenticated request if credentials are provided
+        header = {{"Content-Type", "application/json"},
+                  {"x-username", username.c_str()},
+                  {"x-token", token.c_str()},
+                  {"api-version", API_VERSION}};
+    } else {
+        // Otherwise, anonymous request
+        header = cpr::Header{{"Content-Type", "application/json"}, {"api-version", API_VERSION}};
+    }
+
+    // Post JSON asynchronously
+    static cpr::AsyncResponse future;
+    future = cpr::PostAsync(cpr::Url{url.c_str()}, cpr::Body{data.c_str()}, header);
 }
 
 } // namespace WebService

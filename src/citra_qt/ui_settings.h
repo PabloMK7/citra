@@ -48,6 +48,8 @@ struct Values {
 
     // Shortcut name <Shortcut, context>
     std::vector<Shortcut> shortcuts;
+
+    uint32_t callout_flags;
 };
 
 extern Values values;

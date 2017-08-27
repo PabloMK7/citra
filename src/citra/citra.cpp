@@ -165,6 +165,8 @@ int main(int argc, char** argv) {
         break; // Expected case
     }
 
+    Core::Telemetry().AddField(Telemetry::FieldType::App, "Frontend", "SDL");
+
     while (emu_window->IsOpen()) {
         system.RunLoop();
     }

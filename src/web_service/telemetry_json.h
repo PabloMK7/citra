@@ -17,7 +17,9 @@ namespace WebService {
  */
 class TelemetryJson : public Telemetry::VisitorInterface {
 public:
-    TelemetryJson() = default;
+    TelemetryJson(const std::string& endpoint_url, const std::string& username,
+                  const std::string& token)
+        : endpoint_url(endpoint_url), username(username), token(token) {}
     ~TelemetryJson() = default;
 
     void Visit(const Telemetry::Field<bool>& field) override;
@@ -49,6 +51,9 @@ private:
 
     nlohmann::json output;
     std::array<nlohmann::json, 7> sections;
+    std::string endpoint_url;
+    std::string username;
+    std::string token;
 };
 
 } // namespace WebService

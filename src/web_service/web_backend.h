@@ -10,22 +10,14 @@
 namespace WebService {
 
 /**
- * Gets the current username for accessing services.citra-emu.org.
- * @returns Username as a string, empty if not set.
- */
-const std::string& GetUsername();
-
-/**
- * Gets the current token for accessing services.citra-emu.org.
- * @returns Token as a string, empty if not set.
- */
-const std::string& GetToken();
-
-/**
  * Posts JSON to services.citra-emu.org.
  * @param url URL of the services.citra-emu.org endpoint to post data to.
  * @param data String of JSON data to use for the body of the POST request.
+ * @param allow_anonymous If true, allow anonymous unauthenticated requests.
+ * @param username Citra username to use for authentication.
+ * @param token Citra token to use for authentication.
  */
-void PostJson(const std::string& url, const std::string& data);
+void PostJson(const std::string& url, const std::string& data, bool allow_anonymous,
+              const std::string& username = {}, const std::string& token = {});
 
 } // namespace WebService

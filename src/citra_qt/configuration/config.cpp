@@ -139,10 +139,13 @@ void Config::ReadValues() {
     qt_config->endGroup();
 
     qt_config->beginGroup("WebService");
+    Settings::values.enable_telemetry = qt_config->value("enable_telemetry", true).toBool();
     Settings::values.telemetry_endpoint_url =
         qt_config->value("telemetry_endpoint_url", "https://services.citra-emu.org/api/telemetry")
             .toString()
             .toStdString();
+    Settings::values.citra_username = qt_config->value("citra_username").toString().toStdString();
+    Settings::values.citra_token = qt_config->value("citra_token").toString().toStdString();
     qt_config->endGroup();
 
     qt_config->beginGroup("UI");
@@ -194,6 +197,7 @@ void Config::ReadValues() {
     UISettings::values.show_status_bar = qt_config->value("showStatusBar", true).toBool();
     UISettings::values.confirm_before_closing = qt_config->value("confirmClose", true).toBool();
     UISettings::values.first_start = qt_config->value("firstStart", true).toBool();
+    UISettings::values.callout_flags = qt_config->value("calloutFlags", 0).toUInt();
 
     qt_config->endGroup();
 }
@@ -283,8 +287,11 @@ void Config::SaveValues() {
     qt_config->endGroup();
 
     qt_config->beginGroup("WebService");
+    qt_config->setValue("enable_telemetry", Settings::values.enable_telemetry);
     qt_config->setValue("telemetry_endpoint_url",
                         QString::fromStdString(Settings::values.telemetry_endpoint_url));
+    qt_config->setValue("citra_username", QString::fromStdString(Settings::values.citra_username));
+    qt_config->setValue("citra_token", QString::fromStdString(Settings::values.citra_token));
     qt_config->endGroup();
 
     qt_config->beginGroup("UI");
@@ -320,6 +327,7 @@ void Config::SaveValues() {
     qt_config->setValue("showStatusBar", UISettings::values.show_status_bar);
     qt_config->setValue("confirmClose", UISettings::values.confirm_before_closing);
     qt_config->setValue("firstStart", UISettings::values.first_start);
+    qt_config->setValue("calloutFlags", UISettings::values.callout_flags);
 
     qt_config->endGroup();
 }

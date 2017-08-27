@@ -80,6 +80,8 @@ private:
     void BootGame(const QString& filename);
     void ShutdownGame();
 
+    void ShowCallouts();
+
     /**
      * Stores the filename in the recently loaded files list.
      * The new filename is stored at the beginning of the recently loaded files list.

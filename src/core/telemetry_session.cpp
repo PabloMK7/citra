@@ -3,8 +3,10 @@
 // Refer to the license.txt file included.
 
 #include <cstring>
+#include <cryptopp/osrng.h>
 
 #include "common/assert.h"
+#include "common/file_util.h"
 #include "common/scm_rev.h"
 #include "common/x64/cpu_detect.h"
 #include "core/core.h"
@@ -29,12 +31,65 @@ static const char* CpuVendorToStr(Common::CPUVendor vendor) {
     UNREACHABLE();
 }
 
+static u64 GenerateTelemetryId() {
+    u64 telemetry_id{};
+    CryptoPP::AutoSeededRandomPool rng;
+    rng.GenerateBlock(reinterpret_cast<CryptoPP::byte*>(&telemetry_id), sizeof(u64));
+    return telemetry_id;
+}
+
+u64 GetTelemetryId() {
+    u64 telemetry_id{};
+    static const std::string& filename{FileUtil::GetUserPath(D_CONFIG_IDX) + "telemetry_id"};
+
+    if (FileUtil::Exists(filename)) {
+        FileUtil::IOFile file(filename, "rb");
+        if (!file.IsOpen()) {
+            LOG_ERROR(Core, "failed to open telemetry_id: %s", filename.c_str());
+            return {};
+        }
+        file.ReadBytes(&telemetry_id, sizeof(u64));
+    } else {
+        FileUtil::IOFile file(filename, "wb");
+        if (!file.IsOpen()) {
+            LOG_ERROR(Core, "failed to open telemetry_id: %s", filename.c_str());
+            return {};
+        }
+        telemetry_id = GenerateTelemetryId();
+        file.WriteBytes(&telemetry_id, sizeof(u64));
+    }
+
+    return telemetry_id;
+}
+
+u64 RegenerateTelemetryId() {
+    const u64 new_telemetry_id{GenerateTelemetryId()};
+    static const std::string& filename{FileUtil::GetUserPath(D_CONFIG_IDX) + "telemetry_id"};
+
+    FileUtil::IOFile file(filename, "wb");
+    if (!file.IsOpen()) {
+        LOG_ERROR(Core, "failed to open telemetry_id: %s", filename.c_str());
+        return {};
+    }
+    file.WriteBytes(&new_telemetry_id, sizeof(u64));
+    return new_telemetry_id;
+}
+
 TelemetrySession::TelemetrySession() {
 #ifdef ENABLE_WEB_SERVICE
-    backend = std::make_unique<WebService::TelemetryJson>();
+    if (Settings::values.enable_telemetry) {
+        backend = std::make_unique<WebService::TelemetryJson>(
+            Settings::values.telemetry_endpoint_url, Settings::values.citra_username,
+            Settings::values.citra_token);
+    } else {
+        backend = std::make_unique<Telemetry::NullVisitor>();
+    }
 #else
     backend = std::make_unique<Telemetry::NullVisitor>();
 #endif
+    // Log one-time top-level information
+    AddField(Telemetry::FieldType::None, "TelemetryId", GetTelemetryId());
+
     // Log one-time session start information
     const s64 init_time{std::chrono::duration_cast<std::chrono::milliseconds>(
                             std::chrono::system_clock::now().time_since_epoch())
