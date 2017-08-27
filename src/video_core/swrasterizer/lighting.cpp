@@ -230,7 +230,8 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(
             d1_lut_value * refl_value * light_config.specular_1.ToVec3f();
 
         // Fresnel
-        if (lighting.config1.disable_lut_fr == 0 &&
+        // Note: only the last entry in the light slots applies the Fresnel factor
+        if (light_index == lighting.max_light_index && lighting.config1.disable_lut_fr == 0 &&
             LightingRegs::IsLightingSamplerSupported(lighting.config0.config,
                                                      LightingRegs::LightingSampler::Fresnel)) {
 
@@ -242,14 +243,14 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(
             if (lighting.config0.fresnel_selector ==
                     LightingRegs::LightingFresnelSelector::PrimaryAlpha ||
                 lighting.config0.fresnel_selector == LightingRegs::LightingFresnelSelector::Both) {
-                diffuse_sum.a() *= lut_value;
+                diffuse_sum.a() = lut_value;
             }
 
             // Enabled for the specular lighting alpha component
             if (lighting.config0.fresnel_selector ==
                     LightingRegs::LightingFresnelSelector::SecondaryAlpha ||
                 lighting.config0.fresnel_selector == LightingRegs::LightingFresnelSelector::Both) {
-                specular_sum.a() *= lut_value;
+                specular_sum.a() = lut_value;
             }
         }
 
