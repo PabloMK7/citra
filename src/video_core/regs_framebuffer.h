@@ -256,10 +256,9 @@ struct FramebufferRegs {
             return 3;
         case DepthFormat::D24S8:
             return 4;
-        default:
-            LOG_CRITICAL(HW_GPU, "Unknown depth format %u", format);
-            UNIMPLEMENTED();
         }
+
+        ASSERT_MSG(false, "Unknown depth format %u", format);
     }
 
     // Returns the number of bits per depth component of the specified depth format
@@ -270,10 +269,9 @@ struct FramebufferRegs {
         case DepthFormat::D24:
         case DepthFormat::D24S8:
             return 24;
-        default:
-            LOG_CRITICAL(HW_GPU, "Unknown depth format %u", format);
-            UNIMPLEMENTED();
         }
+
+        ASSERT_MSG(false, "Unknown depth format %u", format);
     }
 
     INSERT_PADDING_WORDS(0x20);
