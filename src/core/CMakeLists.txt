@@ -135,7 +135,8 @@ set(SRCS
             hle/service/nim/nim_aoc.cpp
             hle/service/nim/nim_s.cpp
             hle/service/nim/nim_u.cpp
-            hle/service/ns_s.cpp
+            hle/service/ns/ns.cpp
+            hle/service/ns/ns_s.cpp
             hle/service/nwm/nwm.cpp
             hle/service/nwm/nwm_cec.cpp
             hle/service/nwm/nwm_ext.cpp
@@ -334,7 +335,8 @@ set(HEADERS
             hle/service/nim/nim_aoc.h
             hle/service/nim/nim_s.h
             hle/service/nim/nim_u.h
-            hle/service/ns_s.h
+            hle/service/ns/ns.h
+            hle/service/ns/ns_s.h
             hle/service/nwm/nwm.h
             hle/service/nwm/nwm_cec.h
             hle/service/nwm/nwm_ext.h

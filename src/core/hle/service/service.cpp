@@ -38,7 +38,7 @@
 #include "core/hle/service/news/news.h"
 #include "core/hle/service/nfc/nfc.h"
 #include "core/hle/service/nim/nim.h"
-#include "core/hle/service/ns_s.h"
+#include "core/hle/service/ns/ns.h"
 #include "core/hle/service/nwm/nwm.h"
 #include "core/hle/service/pm_app.h"
 #include "core/hle/service/ptm/ptm.h"
@@ -215,6 +215,8 @@ void Init() {
     SM::g_service_manager = std::make_shared<SM::ServiceManager>();
     SM::ServiceManager::InstallInterfaces(SM::g_service_manager);
 
+    NS::InstallInterfaces(*SM::g_service_manager);
+
     AddNamedPort(new ERR::ERR_F);
 
     FS::ArchiveInit();
@@ -246,7 +248,6 @@ void Init() {
     AddService(new HTTP::HTTP_C);
     AddService(new LDR::LDR_RO);
     AddService(new MIC::MIC_U);
-    AddService(new NS::NS_S);
     AddService(new PM::PM_APP);
     AddService(new SOC::SOC_U);
     AddService(new SSL::SSL_C);
