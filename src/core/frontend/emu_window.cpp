@@ -2,13 +2,54 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <algorithm>
 #include <cmath>
-#include "common/assert.h"
-#include "core/3ds.h"
-#include "core/core.h"
+#include <mutex>
 #include "core/frontend/emu_window.h"
+#include "core/frontend/input.h"
 #include "core/settings.h"
+
+class EmuWindow::TouchState : public Input::Factory<Input::TouchDevice>,
+                              public std::enable_shared_from_this<TouchState> {
+public:
+    std::unique_ptr<Input::TouchDevice> Create(const Common::ParamPackage&) override {
+        return std::make_unique<Device>(shared_from_this());
+    }
+
+    std::mutex mutex;
+
+    bool touch_pressed = false; ///< True if touchpad area is currently pressed, otherwise false
+
+    float touch_x = 0.0f; ///< Touchpad X-position
+    float touch_y = 0.0f; ///< Touchpad Y-position
+
+private:
+    class Device : public Input::TouchDevice {
+    public:
+        explicit Device(std::weak_ptr<TouchState>&& touch_state) : touch_state(touch_state) {}
+        std::tuple<float, float, bool> GetStatus() const override {
+            if (auto state = touch_state.lock()) {
+                std::lock_guard<std::mutex> guard(state->mutex);
+                return std::make_tuple(state->touch_x, state->touch_y, state->touch_pressed);
+            }
+            return std::make_tuple(0.0f, 0.0f, false);
+        }
+
+    private:
+        std::weak_ptr<TouchState> touch_state;
+    };
+};
+
+EmuWindow::EmuWindow() {
+    // TODO: Find a better place to set this.
+    config.min_client_area_size = std::make_pair(400u, 480u);
+    active_config = config;
+    touch_state = std::make_shared<TouchState>();
+    Input::RegisterFactory<Input::TouchDevice>("emu_window", touch_state);
+}
+
+EmuWindow::~EmuWindow() {
+    Input::UnregisterFactory<Input::TouchDevice>("emu_window");
+}
 
 /**
  * Check if the given x/y coordinates are within the touchpad specified by the framebuffer layout
@@ -38,22 +79,26 @@ void EmuWindow::TouchPressed(unsigned framebuffer_x, unsigned framebuffer_y) {
     if (!IsWithinTouchscreen(framebuffer_layout, framebuffer_x, framebuffer_y))
         return;
 
-    touch_x = Core::kScreenBottomWidth * (framebuffer_x - framebuffer_layout.bottom_screen.left) /
-              (framebuffer_layout.bottom_screen.right - framebuffer_layout.bottom_screen.left);
-    touch_y = Core::kScreenBottomHeight * (framebuffer_y - framebuffer_layout.bottom_screen.top) /
-              (framebuffer_layout.bottom_screen.bottom - framebuffer_layout.bottom_screen.top);
+    std::lock_guard<std::mutex> guard(touch_state->mutex);
+    touch_state->touch_x =
+        static_cast<float>(framebuffer_x - framebuffer_layout.bottom_screen.left) /
+        (framebuffer_layout.bottom_screen.right - framebuffer_layout.bottom_screen.left);
+    touch_state->touch_y =
+        static_cast<float>(framebuffer_y - framebuffer_layout.bottom_screen.top) /
+        (framebuffer_layout.bottom_screen.bottom - framebuffer_layout.bottom_screen.top);
 
-    touch_pressed = true;
+    touch_state->touch_pressed = true;
 }
 
 void EmuWindow::TouchReleased() {
-    touch_pressed = false;
-    touch_x = 0;
-    touch_y = 0;
+    std::lock_guard<std::mutex> guard(touch_state->mutex);
+    touch_state->touch_pressed = false;
+    touch_state->touch_x = 0;
+    touch_state->touch_y = 0;
 }
 
 void EmuWindow::TouchMoved(unsigned framebuffer_x, unsigned framebuffer_y) {
-    if (!touch_pressed)
+    if (!touch_state->touch_pressed)
         return;
 
     if (!IsWithinTouchscreen(framebuffer_layout, framebuffer_x, framebuffer_y))

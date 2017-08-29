@@ -62,6 +62,10 @@ c_stick=
 #      - "sensitivity": the coefficient converting mouse movement to tilting angle (default to 0.01)
 motion_device=
 
+# for touch input, the following devices are available:
+#  - "emu_window" (default) for emulating touch input from mouse input to the emulation window. No parameters required
+touch_device=
+
 [Core]
 # Whether to use the Just-In-Time (JIT) compiler for CPU emulation
 # 0: Interpreter (slow), 1 (default): JIT (fast)

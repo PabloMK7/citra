@@ -7,9 +7,9 @@
 #include <cmath>
 #include <memory>
 #include "common/logging/log.h"
+#include "core/3ds.h"
 #include "core/core.h"
 #include "core/core_timing.h"
-#include "core/frontend/emu_window.h"
 #include "core/frontend/input.h"
 #include "core/hle/ipc.h"
 #include "core/hle/kernel/event.h"
@@ -19,7 +19,6 @@
 #include "core/hle/service/hid/hid_spvr.h"
 #include "core/hle/service/hid/hid_user.h"
 #include "core/hle/service/service.h"
-#include "video_core/video_core.h"
 
 namespace Service {
 namespace HID {
@@ -59,6 +58,7 @@ static std::array<std::unique_ptr<Input::ButtonDevice>, Settings::NativeButton::
     buttons;
 static std::unique_ptr<Input::AnalogDevice> circle_pad;
 static std::unique_ptr<Input::MotionDevice> motion_device;
+static std::unique_ptr<Input::TouchDevice> touch_device;
 
 DirectionState GetStickDirectionState(s16 circle_pad_x, s16 circle_pad_y) {
     // 30 degree and 60 degree are angular thresholds for directions
@@ -96,6 +96,7 @@ static void LoadInputDevices() {
     circle_pad = Input::CreateDevice<Input::AnalogDevice>(
         Settings::values.analogs[Settings::NativeAnalog::CirclePad]);
     motion_device = Input::CreateDevice<Input::MotionDevice>(Settings::values.motion_device);
+    touch_device = Input::CreateDevice<Input::TouchDevice>(Settings::values.touch_device);
 }
 
 static void UnloadInputDevices() {
@@ -104,6 +105,7 @@ static void UnloadInputDevices() {
     }
     circle_pad.reset();
     motion_device.reset();
+    touch_device.reset();
 }
 
 static void UpdatePadCallback(u64 userdata, int cycles_late) {
@@ -172,8 +174,10 @@ static void UpdatePadCallback(u64 userdata, int cycles_late) {
     // Get the current touch entry
     TouchDataEntry& touch_entry = mem->touch.entries[mem->touch.index];
     bool pressed = false;
-
-    std::tie(touch_entry.x, touch_entry.y, pressed) = VideoCore::g_emu_window->GetTouchState();
+    float x, y;
+    std::tie(x, y, pressed) = touch_device->GetStatus();
+    touch_entry.x = static_cast<u16>(x * Core::kScreenBottomWidth);
+    touch_entry.y = static_cast<u16>(y * Core::kScreenBottomHeight);
     touch_entry.valid.Assign(pressed ? 1 : 0);
 
     // TODO(bunnei): We're not doing anything with offset 0xA8 + 0x18 of HID SharedMemory, which
