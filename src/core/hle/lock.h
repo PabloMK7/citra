@@ -14,5 +14,5 @@ namespace HLE {
  * to the emulated memory is not protected by this mutex, and should be avoided in any threads other
  * than the CPU thread.
  */
-extern std::mutex g_hle_lock;
+extern std::recursive_mutex g_hle_lock;
 } // namespace HLE

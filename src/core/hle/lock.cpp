@@ -7,5 +7,5 @@
 #include <core/hle/lock.h>
 
 namespace HLE {
-std::mutex g_hle_lock;
+std::recursive_mutex g_hle_lock;
 }
