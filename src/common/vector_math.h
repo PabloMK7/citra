@@ -31,6 +31,7 @@
 #pragma once
 
 #include <cmath>
+#include <type_traits>
 
 namespace Math {
 
@@ -90,7 +91,8 @@ public:
         y -= other.y;
     }
 
-    Vec2<decltype(-T{})> operator-() const {
+    template <typename U = T>
+    Vec2<std::enable_if_t<std::is_signed<U>::value, U>> operator-() const {
         return MakeVec(-x, -y);
     }
     Vec2<decltype(T{} * T{})> operator*(const Vec2& other) const {
@@ -247,7 +249,8 @@ public:
         z -= other.z;
     }
 
-    Vec3<decltype(-T{})> operator-() const {
+    template <typename U = T>
+    Vec3<std::enable_if_t<std::is_signed<U>::value, U>> operator-() const {
         return MakeVec(-x, -y, -z);
     }
     Vec3<decltype(T{} * T{})> operator*(const Vec3& other) const {
@@ -462,7 +465,8 @@ public:
         w -= other.w;
     }
 
-    Vec4<decltype(-T{})> operator-() const {
+    template <typename U = T>
+    Vec4<std::enable_if_t<std::is_signed<U>::value, U>> operator-() const {
         return MakeVec(-x, -y, -z, -w);
     }
     Vec4<decltype(T{} * T{})> operator*(const Vec4& other) const {
@@ -720,4 +724,4 @@ static inline Vec4<T> MakeVec(const T& x, const Vec3<T>& yzw) {
     return MakeVec(x, yzw[0], yzw[1], yzw[2]);
 }
 
-} // namespace
+} // namespace Math
