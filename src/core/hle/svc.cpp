@@ -1334,7 +1334,7 @@ void CallSVC(u32 immediate) {
     MICROPROFILE_SCOPE(Kernel_SVC);
 
     // Lock the global kernel mutex when we enter the kernel HLE.
-    std::lock_guard<std::mutex> lock(HLE::g_hle_lock);
+    std::lock_guard<std::recursive_mutex> lock(HLE::g_hle_lock);
 
     const FunctionDef* info = GetSVCInfo(immediate);
     if (info) {
