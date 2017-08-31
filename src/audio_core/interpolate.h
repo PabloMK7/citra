@@ -6,6 +6,7 @@
 
 #include <array>
 #include <vector>
+#include "audio_core/hle/common.h"
 #include "common/common_types.h"
 
 namespace AudioInterp {
@@ -14,31 +15,35 @@ namespace AudioInterp {
 using StereoBuffer16 = std::vector<std::array<s16, 2>>;
 
 struct State {
-    // Two historical samples.
+    /// Two historical samples.
     std::array<s16, 2> xn1 = {}; ///< x[n-1]
     std::array<s16, 2> xn2 = {}; ///< x[n-2]
+    /// Current fractional position.
+    u64 fposition = 0;
 };
 
 /**
  * No interpolation. This is equivalent to a zero-order hold. There is a two-sample predelay.
  * @param state Interpolation state.
  * @param input Input buffer.
- * @param rate_multiplier Stretch factor. Must be a positive non-zero value.
- *                        rate_multiplier > 1.0 performs decimation and rate_multipler < 1.0
- *                        performs upsampling.
- * @return The resampled audio buffer.
+ * @param rate Stretch factor. Must be a positive non-zero value.
+ *             rate > 1.0 performs decimation and rate < 1.0 performs upsampling.
+ * @param output The resampled audio buffer.
+ * @param outputi The index of output to start writing to.
  */
-StereoBuffer16 None(State& state, const StereoBuffer16& input, float rate_multiplier);
+void None(State& state, StereoBuffer16& input, float rate, DSP::HLE::StereoFrame16& output,
+          size_t& outputi);
 
 /**
  * Linear interpolation. This is equivalent to a first-order hold. There is a two-sample predelay.
  * @param state Interpolation state.
  * @param input Input buffer.
- * @param rate_multiplier Stretch factor. Must be a positive non-zero value.
- *                        rate_multiplier > 1.0 performs decimation and rate_multipler < 1.0
- *                        performs upsampling.
- * @return The resampled audio buffer.
+ * @param rate Stretch factor. Must be a positive non-zero value.
+ *             rate > 1.0 performs decimation and rate < 1.0 performs upsampling.
+ * @param output The resampled audio buffer.
+ * @param outputi The index of output to start writing to.
  */
-StereoBuffer16 Linear(State& state, const StereoBuffer16& input, float rate_multiplier);
+void Linear(State& state, StereoBuffer16& input, float rate, DSP::HLE::StereoFrame16& output,
+            size_t& outputi);
 
 } // namespace AudioInterp
