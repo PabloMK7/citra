@@ -7,6 +7,15 @@ cache:
 
 os: Visual Studio 2017
 
+environment:
+  # Tell msys2 to add mingw64 to the path
+  MSYSTEM: MINGW64
+  # Tell msys2 to inherit the current directory when starting the shell
+  CHERE_INVOKING: 1
+  matrix:
+    - BUILD_TYPE: mingw
+    - BUILD_TYPE: msvc
+
 platform:
   - x64
 
@@ -15,72 +24,146 @@ configuration:
 
 install:
   - git submodule update --init --recursive
+  - ps: |
+        if ($env:BUILD_TYPE -eq 'mingw') {
+          $dependencies = "mingw64/mingw-w64-x86_64-cmake",
+                          "mingw64/mingw-w64-x86_64-qt5",
+                          "mingw64/mingw-w64-x86_64-curl",
+                          "mingw64/mingw-w64-x86_64-SDL2"
+          # redirect err to null to prevent warnings from becoming errors
+          # workaround to prevent pacman from failing due to cyclical dependencies
+          C:\msys64\usr\bin\bash -lc "pacman --noconfirm -S mingw64/mingw-w64-x86_64-freetype mingw64/mingw-w64-x86_64-fontconfig" 2> $null
+          C:\msys64\usr\bin\bash -lc "pacman --noconfirm -S $dependencies" 2> $null
+        }
 
 before_build:
-  - mkdir build
-  - cd build
-  - cmake -G "Visual Studio 15 2017 Win64" -DCITRA_USE_BUNDLED_QT=1 -DCITRA_USE_BUNDLED_SDL2=1 -DCMAKE_USE_OPENSSL=0 ..
+  - mkdir %BUILD_TYPE%_build
+  - cd %BUILD_TYPE%_build
+  - ps: |
+        if ($env:BUILD_TYPE -eq 'msvc') {
+          # redirect stderr and change the exit code to prevent powershell from cancelling the build if cmake prints a warning
+          cmd /C 'cmake -G "Visual Studio 15 2017 Win64" -DCITRA_USE_BUNDLED_QT=1 -DCITRA_USE_BUNDLED_SDL2=1 -DCMAKE_USE_OPENSSL=0 .. 2>&1 && exit 0'
+        } else {
+          C:\msys64\usr\bin\bash.exe -lc "cmake -G 'MSYS Makefiles' -DUSE_SYSTEM_CURL=1 -DCMAKE_BUILD_TYPE=Release .. 2>&1"
+        }
   - cd ..
 
-build:
-  project: build/citra.sln
-  parallel: true
+build_script:
+  - ps: |
+        if ($env:BUILD_TYPE -eq 'msvc') {
+          # https://www.appveyor.com/docs/build-phase
+          msbuild msvc_build/citra.sln /maxcpucount /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
+        } else {
+          C:\msys64\usr\bin\bash.exe -lc 'mingw32-make -C mingw_build/ 2>&1'
+        }
 
 after_build:
   - ps: |
         $GITDATE = $(git show -s --date=short --format='%ad') -replace "-",""
         $GITREV = $(git show -s --format='%h')
-        $GIT_LONG_HASH = $(git rev-parse HEAD)
-        # Where are these spaces coming from? Regardless, let's remove them
-        $MSVC_BUILD_NAME = "citra-windows-msvc-$GITDATE-$GITREV.zip" -replace " ", ""
-        $MSVC_BUILD_PDB = "citra-windows-msvc-$GITDATE-$GITREV-debugsymbols.zip" -replace " ", ""
-        $MSVC_SEVENZIP = "citra-windows-msvc-$GITDATE-$GITREV.7z" -replace " ", ""
-        $BINTRAY_VERSION = "nightly-$GIT_LONG_HASH" -replace " ", ""
-
-        # set the build names as env vars so the artifacts can upload them
-        $env:MSVC_BUILD_NAME = $MSVC_BUILD_NAME
-        $env:MSVC_BUILD_PDB = $MSVC_BUILD_PDB
-        $env:MSVC_SEVENZIP = $MSVC_SEVENZIP
-        $env:GITREV = $GITREV
-
-        7z a -tzip $MSVC_BUILD_PDB .\build\bin\release\*.pdb
-        rm .\build\bin\release\*.pdb
 
         # Find out which kind of release we are producing by tag name
         if ($env:APPVEYOR_REPO_TAG_NAME) {
-            $RELEASE_DIST, $RELEASE_VERSION = $env:APPVEYOR_REPO_TAG_NAME.split('-')
+          $RELEASE_DIST, $RELEASE_VERSION = $env:APPVEYOR_REPO_TAG_NAME.split('-')
         } else {
-            # There is no repo tag - make assumptions
-            $RELEASE_DIST = "head"
+          # There is no repo tag - make assumptions
+          $RELEASE_DIST = "head"
         }
 
-        mkdir $RELEASE_DIST
-        Copy-Item .\build\bin\release\* -Destination $RELEASE_DIST -Recurse
-        Copy-Item .\license.txt -Destination $RELEASE_DIST
-        Copy-Item .\README.md -Destination $RELEASE_DIST
+        if ($env:BUILD_TYPE -eq 'msvc') {
+          # Where are these spaces coming from? Regardless, let's remove them
+          $MSVC_BUILD_ZIP = "citra-windows-msvc-$GITDATE-$GITREV.zip" -replace " ", ""
+          $MSVC_BUILD_PDB = "citra-windows-msvc-$GITDATE-$GITREV-debugsymbols.zip" -replace " ", ""
+          $MSVC_SEVENZIP = "citra-windows-msvc-$GITDATE-$GITREV.7z" -replace " ", ""
 
-        7z a -tzip $MSVC_BUILD_NAME $RELEASE_DIST\*
-        7z a $MSVC_SEVENZIP $RELEASE_DIST
+          # set the build names as env vars so the artifacts can upload them
+          $env:BUILD_ZIP = $MSVC_BUILD_ZIP
+          $env:BUILD_SYMBOLS = $MSVC_BUILD_PDB
+          $env:BUILD_UPDATE = $MSVC_SEVENZIP
+
+          7z a -tzip $MSVC_BUILD_PDB .\msvc_build\bin\release\*.pdb
+          rm .\msvc_build\bin\release\*.pdb
+
+          mkdir $RELEASE_DIST
+          Copy-Item .\msvc_build\bin\release\* -Destination $RELEASE_DIST -Recurse
+          Copy-Item .\license.txt -Destination $RELEASE_DIST
+          Copy-Item .\README.md -Destination $RELEASE_DIST
+          7z a -tzip $MSVC_BUILD_ZIP $RELEASE_DIST\*
+          7z a $MSVC_SEVENZIP $RELEASE_DIST
+        } else {
+          $MINGW_BUILD_ZIP = "citra-windows-mingw-$GITDATE-$GITREV.zip" -replace " ", ""
+          $MINGW_SEVENZIP = "citra-windows-mingw-$GITDATE-$GITREV.7z" -replace " ", ""
+          # not going to bother adding separate debug symbols for mingw, so just upload a README for it
+          # if someone wants to add them, change mingw to compile with -g and use objdump and strip to separate the symbols from the binary
+          $MINGW_NO_DEBUG_SYMBOLS = "README_No_Debug_Symbols.txt"
+          Set-Content -Path $MINGW_NO_DEBUG_SYMBOLS -Value "This is a workaround for Appveyor since msvc has debug symbols but mingw doesnt" -Force
+
+          # store the build information in env vars so we can use them as artifacts
+          $env:BUILD_ZIP = $MINGW_BUILD_ZIP
+          $env:BUILD_SYMBOLS = $MINGW_NO_DEBUG_SYMBOLS
+          $env:BUILD_UPDATE = $MINGW_SEVENZIP
+
+          $CMAKE_SOURCE_DIR = "$env:APPVEYOR_BUILD_FOLDER"
+          $CMAKE_BINARY_DIR = "$CMAKE_SOURCE_DIR/mingw_build"
+          $RELEASE_DIST = $RELEASE_DIST + "-mingw"
+
+          mkdir $RELEASE_DIST
+          mkdir $RELEASE_DIST/platforms
+
+          # copy the compiled binaries and other release files to the release folder
+          Get-ChildItem "$CMAKE_BINARY_DIR" -Recurse -Filter "citra*.exe" | Copy-Item -destination $RELEASE_DIST
+          Copy-Item -path "$CMAKE_SOURCE_DIR/license.txt" -destination $RELEASE_DIST
+          Copy-Item -path "$CMAKE_SOURCE_DIR/README.md" -destination $RELEASE_DIST
+
+          # copy all the dll dependencies to the release folder
+          # hardcoded list because we don't build static and determining the list of dlls from the binary is a pain.
+          $MingwDLLs = "Qt5Core.dll","Qt5Widgets.dll","Qt5Gui.dll","Qt5OpenGL.dll",
+                       # QT dll dependencies
+                       "libbz2-*.dll","libicudt*.dll","libicuin*.dll","libicuuc*.dll","libffi-*.dll",
+                       "libfreetype-*.dll","libglib-*.dll","libgobject-*.dll","libgraphite2.dll","libiconv-*.dll",
+                       "libharfbuzz-*.dll","libintl-*.dll","libpcre-*.dll","libpcre16-*.dll","libpng16-*.dll",
+                       # Runtime/Other dependencies
+                       "libgcc_s_seh-*.dll","libstdc++-*.dll","libwinpthread-*.dll","SDL2.dll","zlib1.dll",
+                       # curl dependencies
+                       "libcurl-*.dll","libnghttp2-*.dll","libeay32.dll","libgmp-*.dll","librtmp-*.dll",
+                       "libgnutls-*.dll","libhogweed-*.dll","libnettle-*.dll","libssh2-*.dll",
+                       "ssleay32.dll","libidn-*.dll","libp11-kit-*.dll","libtasn1-*.dll","libunistring-*.dll"
+          foreach ($file in $MingwDLLs) {
+            Copy-Item -path "C:/msys64/mingw64/bin/$file" -force -destination "$RELEASE_DIST"
+          }
+
+          # copy the qt windows plugin dll to platforms
+          Copy-Item -path "C:/msys64/mingw64/share/qt5/plugins/platforms/qwindows.dll" -force -destination "$RELEASE_DIST/platforms"
+
+          7z a -tzip $MINGW_BUILD_ZIP $RELEASE_DIST\*
+          7z a $MINGW_SEVENZIP $RELEASE_DIST
+        }
 
 test_script:
-  - cd build && ctest -VV -C Release && cd ..
+  - cd %BUILD_TYPE%_build
+  - ps: |
+        if ($env:BUILD_TYPE -eq 'msvc') {
+          ctest -VV -C Release
+        } else {
+          C:\msys64\usr\bin\bash.exe -lc "ctest -VV -C Release"
+        }
+  - cd ..
 
 artifacts:
-  - path: $(MSVC_BUILD_NAME)
-    name: msvcbuild
+  - path: $(BUILD_ZIP)
+    name: build
     type: zip
-  - path: $(MSVC_BUILD_PDB)
-    name: msvcdebug
-    type: zip
-  - path: $(MSVC_SEVENZIP)
-    name: msvcupdate
+  - path: $(BUILD_SYMBOLS)
+    name: debugsymbols
+  - path: $(BUILD_UPDATE)
+    name: update
 
 deploy:
   provider: GitHub
   release: $(appveyor_repo_tag_name)
   auth_token:
     secure: "dbpsMC/MgPKWFNJCXpQl4cR8FYhepkPLjgNp/pRMktZ8oLKTqPYErfreaIxb/4P1"
-  artifact: msvcupdate,msvcbuild
+  artifact: update,build
   draft: false
   prerelease: false
   on:
