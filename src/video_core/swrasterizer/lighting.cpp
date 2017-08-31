@@ -22,18 +22,37 @@ static float LookupLightingLut(const Pica::State::Lighting& lighting, size_t lut
 
 std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(
     const Pica::LightingRegs& lighting, const Pica::State::Lighting& lighting_state,
-    const Math::Quaternion<float>& normquat, const Math::Vec3<float>& view) {
+    const Math::Quaternion<float>& normquat, const Math::Vec3<float>& view,
+    const Math::Vec4<u8> (&texture_color)[4]) {
 
-    // TODO(Subv): Bump mapping
-    Math::Vec3<float> surface_normal = {0.0f, 0.0f, 1.0f};
+    Math::Vec3<float> surface_normal;
+    Math::Vec3<float> surface_tangent;
 
     if (lighting.config0.bump_mode != LightingRegs::LightingBumpMode::None) {
-        LOG_CRITICAL(HW_GPU, "unimplemented bump mapping");
-        UNIMPLEMENTED();
+        Math::Vec3<float> perturbation =
+            texture_color[lighting.config0.bump_selector].xyz().Cast<float>() / 127.5f -
+            Math::MakeVec(1.0f, 1.0f, 1.0f);
+        if (lighting.config0.bump_mode == LightingRegs::LightingBumpMode::NormalMap) {
+            if (!lighting.config0.disable_bump_renorm) {
+                const float z_square = 1 - perturbation.xy().Length2();
+                perturbation.z = std::sqrt(std::max(z_square, 0.0f));
+            }
+            surface_normal = perturbation;
+            surface_tangent = Math::MakeVec(1.0f, 0.0f, 0.0f);
+        } else if (lighting.config0.bump_mode == LightingRegs::LightingBumpMode::TangentMap) {
+            surface_normal = Math::MakeVec(0.0f, 0.0f, 1.0f);
+            surface_tangent = perturbation;
+        } else {
+            LOG_ERROR(HW_GPU, "Unknown bump mode %u", lighting.config0.bump_mode.Value());
+        }
+    } else {
+        surface_normal = Math::MakeVec(0.0f, 0.0f, 1.0f);
+        surface_tangent = Math::MakeVec(1.0f, 0.0f, 0.0f);
     }
 
     // Use the normalized the quaternion when performing the rotation
     auto normal = Math::QuaternionRotate(normquat, surface_normal);
+    auto tangent = Math::QuaternionRotate(normquat, surface_tangent);
 
     Math::Vec4<float> diffuse_sum = {0.0f, 0.0f, 0.0f, 1.0f};
     Math::Vec4<float> specular_sum = {0.0f, 0.0f, 0.0f, 1.0f};
@@ -102,6 +121,16 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(
                 result = Math::Dot(light_vector, spot_dir.Cast<float>() / 2047.0f);
                 break;
             }
+            case LightingRegs::LightingLutInput::CP:
+                if (lighting.config0.config == LightingRegs::LightingConfig::Config7) {
+                    const Math::Vec3<float> norm_half_vector = half_vector.Normalized();
+                    const Math::Vec3<float> half_vector_proj =
+                        norm_half_vector - normal * Math::Dot(normal, norm_half_vector);
+                    result = Math::Dot(half_vector_proj, tangent);
+                } else {
+                    result = 0.0f;
+                }
+                break;
             default:
                 LOG_CRITICAL(HW_GPU, "Unknown lighting LUT input %u\n", static_cast<u32>(input));
                 UNIMPLEMENTED();

@@ -437,8 +437,8 @@ static void ProcessTriangleInternal(const Vertex& v0, const Vertex& v1, const Ve
                     GetInterpolatedAttribute(v0.view.y, v1.view.y, v2.view.y).ToFloat32(),
                     GetInterpolatedAttribute(v0.view.z, v1.view.z, v2.view.z).ToFloat32(),
                 };
-                std::tie(primary_fragment_color, secondary_fragment_color) =
-                    ComputeFragmentsColors(g_state.regs.lighting, g_state.lighting, normquat, view);
+                std::tie(primary_fragment_color, secondary_fragment_color) = ComputeFragmentsColors(
+                    g_state.regs.lighting, g_state.lighting, normquat, view, texture_color);
             }
 
             for (unsigned tev_stage_index = 0; tev_stage_index < tev_stages.size();
