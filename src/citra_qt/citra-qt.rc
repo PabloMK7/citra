@@ -1,3 +1,4 @@
+#include "winresrc.h"
 /////////////////////////////////////////////////////////////////////////////
 //
 // Icon
@@ -7,3 +8,10 @@
 // remains consistent on all systems.
 CITRA_ICON              ICON                    "../../dist/citra.ico"
 
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// RT_MANIFEST
+//
+
+1                       RT_MANIFEST             "../../dist/citra.manifest"
