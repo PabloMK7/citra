@@ -16,13 +16,13 @@ namespace HLE {
 namespace Applets {
 
 struct MiiConfig {
-    u8 cancel_button_flag;
-    u8 enable_guest_mii_flag;
-    u8 show_on_top_screen_flag;
+    u8 enable_cancel_button;
+    u8 enable_guest_mii;
+    u8 show_on_top_screen;
     INSERT_PADDING_BYTES(5);
     u16 title[0x40];
     INSERT_PADDING_BYTES(4);
-    u8 show_guest_miis_flag;
+    u8 show_guest_miis;
     INSERT_PADDING_BYTES(3);
     u32 initially_selected_mii_index;
     u8 guest_mii_whitelist[6];
@@ -35,14 +35,14 @@ static_assert(sizeof(MiiConfig) == 0x104, "MiiConfig structure has incorrect siz
     static_assert(offsetof(MiiConfig, field_name) == position,                                     \
                   "Field " #field_name " has invalid position")
 ASSERT_REG_POSITION(title, 0x08);
-ASSERT_REG_POSITION(show_guest_miis_flag, 0x8C);
+ASSERT_REG_POSITION(show_guest_miis, 0x8C);
 ASSERT_REG_POSITION(initially_selected_mii_index, 0x90);
 ASSERT_REG_POSITION(guest_mii_whitelist, 0x94);
 #undef ASSERT_REG_POSITION
 
 struct MiiResult {
     u32 return_code;
-    u32 guest_mii_selected_flag;
+    u32 is_guest_mii_selected;
     u32 selected_guest_mii_index;
     // TODO(mailwl): expand to Mii Format structure: https://www.3dbrew.org/wiki/Mii
     u8 selected_mii_data[0x5C];
