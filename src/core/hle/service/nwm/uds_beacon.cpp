@@ -325,8 +325,5 @@ std::vector<u8> GenerateBeaconFrame(const NetworkInfo& network_info, const NodeL
     return buffer;
 }
 
-std::deque<WifiPacket> GetReceivedPackets(WifiPacket::PacketType type, const MacAddress& sender) {
-    return {};
-}
 } // namespace NWM
 } // namespace Service

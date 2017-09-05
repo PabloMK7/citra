@@ -17,17 +17,6 @@ namespace NWM {
 using MacAddress = std::array<u8, 6>;
 constexpr std::array<u8, 3> NintendoOUI = {0x00, 0x1F, 0x32};
 
-/// Additional block tag ids in the Beacon frames
-enum class TagId : u8 {
-    SSID = 0,
-    SupportedRates = 1,
-    DSParameterSet = 2,
-    TrafficIndicationMap = 5,
-    CountryInformation = 7,
-    ERPInformation = 42,
-    VendorSpecific = 221
-};
-
 /**
  * Internal vendor-specific tag ids as stored inside
  * VendorSpecific blocks in the Beacon frames.
@@ -135,20 +124,6 @@ struct BeaconData {
 
 static_assert(sizeof(BeaconData) == 0x12, "BeaconData has incorrect size.");
 
-/// Information about a received WiFi packet.
-/// Acts as our own 802.11 header.
-struct WifiPacket {
-    enum class PacketType { Beacon, Data };
-
-    PacketType type; ///< The type of 802.11 frame, Beacon / Data.
-
-    /// Raw 802.11 frame data, starting at the management frame header for management frames.
-    std::vector<u8> data;
-    MacAddress transmitter_address; ///< Mac address of the transmitter.
-    MacAddress destination_address; ///< Mac address of the receiver.
-    u8 channel;                     ///< WiFi channel where this frame was transmitted.
-};
-
 /**
  * Decrypts the beacon data buffer for the network described by `network_info`.
  */
@@ -161,10 +136,5 @@ void DecryptBeaconData(const NetworkInfo& network_info, std::vector<u8>& buffer)
  */
 std::vector<u8> GenerateBeaconFrame(const NetworkInfo& network_info, const NodeList& nodes);
 
-/**
- * Returns a list of received 802.11 frames from the specified sender
- * matching the type since the last call.
- */
-std::deque<WifiPacket> GetReceivedPackets(WifiPacket::PacketType type, const MacAddress& sender);
 } // namespace NWM
 } // namespace Service

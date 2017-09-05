@@ -145,6 +145,7 @@ set(SRCS
             hle/service/nwm/nwm_tst.cpp
             hle/service/nwm/nwm_uds.cpp
             hle/service/nwm/uds_beacon.cpp
+            hle/service/nwm/uds_connection.cpp
             hle/service/nwm/uds_data.cpp
             hle/service/pm_app.cpp
             hle/service/ptm/ptm.cpp
@@ -344,6 +345,7 @@ set(HEADERS
             hle/service/nwm/nwm_tst.h
             hle/service/nwm/nwm_uds.h
             hle/service/nwm/uds_beacon.h
+            hle/service/nwm/uds_connection.h
             hle/service/nwm/uds_data.h
             hle/service/pm_app.h
             hle/service/ptm/ptm.h
