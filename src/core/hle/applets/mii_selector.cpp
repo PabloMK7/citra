@@ -66,7 +66,7 @@ ResultCode MiiSelector::StartImpl(const Service::APT::AppletStartupParameter& pa
     // continue.
     MiiResult result;
     memset(&result, 0, sizeof(result));
-    result.result_code = 0;
+    result.return_code = 0;
 
     // Let the application know that we're closing
     Service::APT::MessageParameter message;
@@ -82,5 +82,5 @@ ResultCode MiiSelector::StartImpl(const Service::APT::AppletStartupParameter& pa
 }
 
 void MiiSelector::Update() {}
-}
-} // namespace
+} // namespace Applets
+} // namespace HLE

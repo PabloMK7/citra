@@ -16,51 +16,46 @@ namespace HLE {
 namespace Applets {
 
 struct MiiConfig {
-    u8 unk_000;
-    u8 unk_001;
-    u8 unk_002;
-    u8 unk_003;
-    u8 unk_004;
+    u8 enable_cancel_button;
+    u8 enable_guest_mii;
+    u8 show_on_top_screen;
+    INSERT_PADDING_BYTES(5);
+    u16 title[0x40];
+    INSERT_PADDING_BYTES(4);
+    u8 show_guest_miis;
     INSERT_PADDING_BYTES(3);
-    u16 unk_008;
-    INSERT_PADDING_BYTES(0x82);
-    u8 unk_08C;
-    INSERT_PADDING_BYTES(3);
-    u16 unk_090;
+    u32 initially_selected_mii_index;
+    u8 guest_mii_whitelist[6];
+    u8 user_mii_whitelist[0x64];
     INSERT_PADDING_BYTES(2);
-    u32 unk_094;
-    u16 unk_098;
-    u8 unk_09A[0x64];
-    u8 unk_0FE;
-    u8 unk_0FF;
-    u32 unk_100;
+    u32 magic_value;
 };
-
 static_assert(sizeof(MiiConfig) == 0x104, "MiiConfig structure has incorrect size");
 #define ASSERT_REG_POSITION(field_name, position)                                                  \
     static_assert(offsetof(MiiConfig, field_name) == position,                                     \
                   "Field " #field_name " has invalid position")
-ASSERT_REG_POSITION(unk_008, 0x08);
-ASSERT_REG_POSITION(unk_08C, 0x8C);
-ASSERT_REG_POSITION(unk_090, 0x90);
-ASSERT_REG_POSITION(unk_094, 0x94);
-ASSERT_REG_POSITION(unk_0FE, 0xFE);
+ASSERT_REG_POSITION(title, 0x08);
+ASSERT_REG_POSITION(show_guest_miis, 0x8C);
+ASSERT_REG_POSITION(initially_selected_mii_index, 0x90);
+ASSERT_REG_POSITION(guest_mii_whitelist, 0x94);
 #undef ASSERT_REG_POSITION
 
 struct MiiResult {
-    u32 result_code;
-    u8 unk_04;
-    INSERT_PADDING_BYTES(7);
-    u8 unk_0C[0x60];
-    u8 unk_6C[0x16];
+    u32 return_code;
+    u32 is_guest_mii_selected;
+    u32 selected_guest_mii_index;
+    // TODO(mailwl): expand to Mii Format structure: https://www.3dbrew.org/wiki/Mii
+    u8 selected_mii_data[0x5C];
     INSERT_PADDING_BYTES(2);
+    u16 mii_data_checksum;
+    u16 guest_mii_name[0xC];
 };
 static_assert(sizeof(MiiResult) == 0x84, "MiiResult structure has incorrect size");
 #define ASSERT_REG_POSITION(field_name, position)                                                  \
     static_assert(offsetof(MiiResult, field_name) == position,                                     \
                   "Field " #field_name " has invalid position")
-ASSERT_REG_POSITION(unk_0C, 0x0C);
-ASSERT_REG_POSITION(unk_6C, 0x6C);
+ASSERT_REG_POSITION(selected_mii_data, 0x0C);
+ASSERT_REG_POSITION(guest_mii_name, 0x6C);
 #undef ASSERT_REG_POSITION
 
 class MiiSelector final : public Applet {
@@ -79,5 +74,5 @@ private:
 
     MiiConfig config;
 };
-}
-} // namespace
+} // namespace Applets
+} // namespace HLE
