@@ -751,7 +751,8 @@ static void WriteLighting(std::string& out, const PicaShaderConfig& config) {
         }
 
         // Fresnel
-        if (lighting.lut_fr.enable &&
+        // Note: only the last entry in the light slots applies the Fresnel factor
+        if (light_index == lighting.src_num - 1 && lighting.lut_fr.enable &&
             LightingRegs::IsLightingSamplerSupported(lighting.config,
                                                      LightingRegs::LightingSampler::Fresnel)) {
             // Lookup fresnel LUT value
@@ -760,17 +761,17 @@ static void WriteLighting(std::string& out, const PicaShaderConfig& config) {
                             lighting.lut_fr.type, lighting.lut_fr.abs_input);
             value = "(" + std::to_string(lighting.lut_fr.scale) + " * " + value + ")";
 
-            // Enabled for difffuse lighting alpha component
+            // Enabled for diffuse lighting alpha component
             if (lighting.fresnel_selector == LightingRegs::LightingFresnelSelector::PrimaryAlpha ||
                 lighting.fresnel_selector == LightingRegs::LightingFresnelSelector::Both) {
-                out += "diffuse_sum.a  *= " + value + ";\n";
+                out += "diffuse_sum.a = " + value + ";\n";
             }
 
             // Enabled for the specular lighting alpha component
             if (lighting.fresnel_selector ==
                     LightingRegs::LightingFresnelSelector::SecondaryAlpha ||
                 lighting.fresnel_selector == LightingRegs::LightingFresnelSelector::Both) {
-                out += "specular_sum.a *= " + value + ";\n";
+                out += "specular_sum.a = " + value + ";\n";
             }
         }
 
