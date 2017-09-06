@@ -131,6 +131,12 @@ after_build:
           foreach ($file in $MingwDLLs) {
             Copy-Item -path "C:/msys64/mingw64/bin/$file" -force -destination "$RELEASE_DIST"
           }
+          # the above list copies a few extra debug dlls that aren't needed (thanks globbing patterns!)
+          # so we can remove them by hardcoding another list of extra dlls to remove
+          $DebugDLLs = "libicudtd*.dll","libicuind*.dll","libicuucd*.dll"
+          foreach ($file in $DebugDLLs) {
+            Remove-Item -path "$RELEASE_DIST/$file"
+          }
 
           # copy the qt windows plugin dll to platforms
           Copy-Item -path "C:/msys64/mingw64/share/qt5/plugins/platforms/qwindows.dll" -force -destination "$RELEASE_DIST/platforms"
