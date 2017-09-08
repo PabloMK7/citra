@@ -243,6 +243,15 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
                     ASSERT(!g_state.geometry_pipeline.NeedIndexInput());
                     g_state.geometry_pipeline.Setup(shader_engine);
                     g_state.geometry_pipeline.SubmitVertex(output);
+
+                    // TODO: If drawing after every immediate mode triangle kills performance,
+                    // change it to flush triangles whenever a draing config register changes
+                    // See: https://github.com/citra-emu/citra/pull/2866#issuecomment-327011550
+                    VideoCore::g_renderer->Rasterizer()->DrawTriangles();
+                    if (g_debug_context) {
+                        g_debug_context->OnEvent(DebugContext::Event::FinishedPrimitiveBatch,
+                                                 nullptr);
+                    }
                 }
             }
         }
@@ -396,6 +405,12 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
         for (auto& range : memory_accesses.ranges) {
             g_debug_context->recorder->MemoryAccessed(Memory::GetPhysicalPointer(range.first),
                                                       range.second, range.first);
+        }
+
+        MICROPROFILE_SCOPE(GPU_Drawing);
+        VideoCore::g_renderer->Rasterizer()->DrawTriangles();
+        if (g_debug_context) {
+            g_debug_context->OnEvent(DebugContext::Event::FinishedPrimitiveBatch, nullptr);
         }
 
         break;
@@ -632,6 +647,6 @@ void ProcessCommandList(const u32* list, u32 size) {
     }
 }
 
-} // namespace
+} // namespace CommandProcessor
 
-} // namespace
+} // namespace Pica
