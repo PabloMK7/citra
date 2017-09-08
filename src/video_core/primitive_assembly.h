@@ -30,6 +30,12 @@ struct PrimitiveAssembler {
     void SubmitVertex(const VertexType& vtx, TriangleHandler triangle_handler);
 
     /**
+     * Invert the vertex order of the next triangle. Called by geometry shader emitter.
+     * This only takes effect for TriangleTopology::Shader.
+     */
+    void SetWinding();
+
+    /**
      * Resets the internal state of the PrimitiveAssembler.
      */
     void Reset();
@@ -45,6 +51,7 @@ private:
     int buffer_index;
     VertexType buffer[2];
     bool strip_ready = false;
+    bool winding = false;
 };
 
 } // namespace

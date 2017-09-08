@@ -6,6 +6,7 @@
 
 #include <array>
 #include <cstddef>
+#include <functional>
 #include <type_traits>
 #include <nihstro/shader_bytecode.h>
 #include "common/assert.h"
@@ -31,6 +32,12 @@ struct AttributeBuffer {
     alignas(16) Math::Vec4<float24> attr[16];
 };
 
+/// Handler type for receiving vertex outputs from vertex shader or geometry shader
+using VertexHandler = std::function<void(const AttributeBuffer&)>;
+
+/// Handler type for signaling to invert the vertex order of the next triangle
+using WindingSetter = std::function<void()>;
+
 struct OutputVertex {
     Math::Vec4<float24> pos;
     Math::Vec4<float24> quat;
@@ -43,7 +50,8 @@ struct OutputVertex {
     INSERT_PADDING_WORDS(1);
     Math::Vec2<float24> tc2;
 
-    static OutputVertex FromAttributeBuffer(const RasterizerRegs& regs, AttributeBuffer& output);
+    static OutputVertex FromAttributeBuffer(const RasterizerRegs& regs,
+                                            const AttributeBuffer& output);
 };
 #define ASSERT_POS(var, pos)                                                                       \
     static_assert(offsetof(OutputVertex, var) == pos * sizeof(float24), "Semantic at wrong "       \
@@ -61,12 +69,36 @@ static_assert(std::is_pod<OutputVertex>::value, "Structure is not POD");
 static_assert(sizeof(OutputVertex) == 24 * sizeof(float), "OutputVertex has invalid size");
 
 /**
+ * This structure contains state information for primitive emitting in geometry shader.
+ */
+struct GSEmitter {
+    std::array<std::array<Math::Vec4<float24>, 16>, 3> buffer;
+    u8 vertex_id;
+    bool prim_emit;
+    bool winding;
+    u32 output_mask;
+
+    // Function objects are hidden behind a raw pointer to make the structure standard layout type,
+    // for JIT to use offsetof to access other members.
+    struct Handlers {
+        VertexHandler vertex_handler;
+        WindingSetter winding_setter;
+    } * handlers;
+
+    GSEmitter();
+    ~GSEmitter();
+    void Emit(Math::Vec4<float24> (&vertex)[16]);
+};
+static_assert(std::is_standard_layout<GSEmitter>::value, "GSEmitter is not standard layout type");
+
+/**
  * This structure contains the state information that needs to be unique for a shader unit. The 3DS
  * has four shader units that process shaders in parallel. At the present, Citra only implements a
  * single shader unit that processes all shaders serially. Putting the state information in a struct
  * here will make it easier for us to parallelize the shader processing later.
  */
 struct UnitState {
+    explicit UnitState(GSEmitter* emitter = nullptr);
     struct Registers {
         // The registers are accessed by the shader JIT using SSE instructions, and are therefore
         // required to be 16-byte aligned.
@@ -81,6 +113,8 @@ struct UnitState {
     // Two Address registers and one loop counter
     // TODO: How many bits do these actually have?
     s32 address_registers[3];
+
+    GSEmitter* emitter_ptr;
 
     static size_t InputOffset(const SourceRegister& reg) {
         switch (reg.GetRegisterType()) {
@@ -123,6 +157,19 @@ struct UnitState {
     void LoadInput(const ShaderRegs& config, const AttributeBuffer& input);
 
     void WriteOutput(const ShaderRegs& config, AttributeBuffer& output);
+};
+
+/**
+ * This is an extended shader unit state that represents the special unit that can run both vertex
+ * shader and geometry shader. It contains an additional primitive emitter and utilities for
+ * geometry shader.
+ */
+struct GSUnitState : public UnitState {
+    GSUnitState();
+    void SetVertexHandler(VertexHandler vertex_handler, WindingSetter winding_setter);
+    void ConfigOutput(const ShaderRegs& config);
+
+    GSEmitter emitter;
 };
 
 struct ShaderSetup {

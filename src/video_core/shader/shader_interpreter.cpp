@@ -636,6 +636,22 @@ static void RunInterpreter(const ShaderSetup& setup, UnitState& state, DebugData
                 break;
             }
 
+            case OpCode::Id::EMIT: {
+                GSEmitter* emitter = state.emitter_ptr;
+                ASSERT_MSG(emitter, "Execute EMIT on VS");
+                emitter->Emit(state.registers.output);
+                break;
+            }
+
+            case OpCode::Id::SETEMIT: {
+                GSEmitter* emitter = state.emitter_ptr;
+                ASSERT_MSG(emitter, "Execute SETEMIT on VS");
+                emitter->vertex_id = instr.setemit.vertex_id;
+                emitter->prim_emit = instr.setemit.prim_emit != 0;
+                emitter->winding = instr.setemit.winding != 0;
+                break;
+            }
+
             default:
                 LOG_ERROR(HW_GPU, "Unhandled instruction: 0x%02x (%s): 0x%08x",
                           (int)instr.opcode.Value().EffectiveOpCode(),

@@ -66,6 +66,8 @@ public:
     void Compile_JMP(Instruction instr);
     void Compile_CMP(Instruction instr);
     void Compile_MAD(Instruction instr);
+    void Compile_EMIT(Instruction instr);
+    void Compile_SETE(Instruction instr);
 
 private:
     void Compile_Block(unsigned end);

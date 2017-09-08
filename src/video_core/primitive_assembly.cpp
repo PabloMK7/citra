@@ -17,15 +17,18 @@ template <typename VertexType>
 void PrimitiveAssembler<VertexType>::SubmitVertex(const VertexType& vtx,
                                                   TriangleHandler triangle_handler) {
     switch (topology) {
-    // TODO: Figure out what's different with TriangleTopology::Shader.
     case PipelineRegs::TriangleTopology::List:
     case PipelineRegs::TriangleTopology::Shader:
         if (buffer_index < 2) {
             buffer[buffer_index++] = vtx;
         } else {
             buffer_index = 0;
-
-            triangle_handler(buffer[0], buffer[1], vtx);
+            if (topology == PipelineRegs::TriangleTopology::Shader && winding) {
+                triangle_handler(buffer[1], buffer[0], vtx);
+                winding = false;
+            } else {
+                triangle_handler(buffer[0], buffer[1], vtx);
+            }
         }
         break;
 
@@ -51,9 +54,15 @@ void PrimitiveAssembler<VertexType>::SubmitVertex(const VertexType& vtx,
 }
 
 template <typename VertexType>
+void PrimitiveAssembler<VertexType>::SetWinding() {
+    winding = true;
+}
+
+template <typename VertexType>
 void PrimitiveAssembler<VertexType>::Reset() {
     buffer_index = 0;
     strip_ready = false;
+    winding = false;
 }
 
 template <typename VertexType>
