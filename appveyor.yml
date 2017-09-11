@@ -44,7 +44,7 @@ before_build:
           # redirect stderr and change the exit code to prevent powershell from cancelling the build if cmake prints a warning
           cmd /C 'cmake -G "Visual Studio 15 2017 Win64" -DCITRA_USE_BUNDLED_QT=1 -DCITRA_USE_BUNDLED_SDL2=1 -DCMAKE_USE_OPENSSL=0 .. 2>&1 && exit 0'
         } else {
-          C:\msys64\usr\bin\bash.exe -lc "cmake -G 'MSYS Makefiles' -DUSE_SYSTEM_CURL=1 -DCMAKE_BUILD_TYPE=Release .. 2>&1"
+          C:\msys64\usr\bin\bash.exe -lc "cmake -G 'MSYS Makefiles' -DUSE_SYSTEM_CURL=1 -DCITRA_USE_BUNDLED_CURL=1 -DCMAKE_BUILD_TYPE=Release .. 2>&1"
         }
   - cd ..
 
@@ -112,9 +112,10 @@ after_build:
 
           # copy the compiled binaries and other release files to the release folder
           Get-ChildItem "$CMAKE_BINARY_DIR" -Recurse -Filter "citra*.exe" | Copy-Item -destination $RELEASE_DIST
+          # copy the libcurl dll
+          Get-ChildItem "$CMAKE_BINARY_DIR" -Recurse -Filter "libcurl.dll" | Copy-Item -destination $RELEASE_DIST
           Copy-Item -path "$CMAKE_SOURCE_DIR/license.txt" -destination $RELEASE_DIST
           Copy-Item -path "$CMAKE_SOURCE_DIR/README.md" -destination $RELEASE_DIST
-
           # copy all the dll dependencies to the release folder
           # hardcoded list because we don't build static and determining the list of dlls from the binary is a pain.
           $MingwDLLs = "Qt5Core.dll","Qt5Widgets.dll","Qt5Gui.dll","Qt5OpenGL.dll",
@@ -123,11 +124,7 @@ after_build:
                        "libfreetype-*.dll","libglib-*.dll","libgobject-*.dll","libgraphite2.dll","libiconv-*.dll",
                        "libharfbuzz-*.dll","libintl-*.dll","libpcre-*.dll","libpcre16-*.dll","libpng16-*.dll",
                        # Runtime/Other dependencies
-                       "libgcc_s_seh-*.dll","libstdc++-*.dll","libwinpthread-*.dll","SDL2.dll","zlib1.dll",
-                       # curl dependencies
-                       "libcurl-*.dll","libnghttp2-*.dll","libeay32.dll","libgmp-*.dll","librtmp-*.dll",
-                       "libgnutls-*.dll","libhogweed-*.dll","libnettle-*.dll","libssh2-*.dll",
-                       "ssleay32.dll","libidn-*.dll","libp11-kit-*.dll","libtasn1-*.dll","libunistring-*.dll"
+                       "libgcc_s_seh-*.dll","libstdc++-*.dll","libwinpthread-*.dll","SDL2.dll","zlib1.dll"
           foreach ($file in $MingwDLLs) {
             Copy-Item -path "C:/msys64/mingw64/bin/$file" -force -destination "$RELEASE_DIST"
           }

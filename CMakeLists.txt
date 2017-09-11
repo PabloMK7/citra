@@ -2,6 +2,7 @@
 cmake_minimum_required(VERSION 3.6)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules")
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/externals/cmake-modules")
+include(DownloadExternals)
 
 project(citra)
 
@@ -12,6 +13,15 @@ option(ENABLE_QT "Enable the Qt frontend" ON)
 option(CITRA_USE_BUNDLED_QT "Download bundled Qt binaries" OFF)
 
 option(ENABLE_WEB_SERVICE "Enable web services (telemetry, etc.)" ON)
+option(CITRA_USE_BUNDLED_CURL "FOR MINGW ONLY: Download curl configured against winssl instead of openssl" OFF)
+if (ENABLE_WEB_SERVICE AND CITRA_USE_BUNDLED_CURL AND WINDOWS AND MSVC)
+    message("Turning off use bundled curl as msvc can compile curl on cpr")
+    SET(CITRA_USE_BUNDLED_CURL OFF CACHE BOOL "" FORCE)
+endif()
+if (ENABLE_WEB_SERVICE AND NOT CITRA_USE_BUNDLED_CURL AND MINGW)
+    message(AUTHOR_WARNING "Turning on CITRA_USE_BUNDLED_CURL. Override it only if you know what you are doing.")
+    SET(CITRA_USE_BUNDLED_CURL ON CACHE BOOL "" FORCE)
+endif()
 
 if(NOT EXISTS ${CMAKE_SOURCE_DIR}/.git/hooks/pre-commit)
     message(STATUS "Copying pre-commit hook")
@@ -150,24 +160,6 @@ set_property(DIRECTORY APPEND PROPERTY
 
 # System imported libraries
 # ======================
-
-# This function downloads a binary library package from our external repo.
-# Params:
-#   remote_path: path to the file to download, relative to the remote repository root
-#   prefix_var: name of a variable which will be set with the path to the extracted contents
-function(download_bundled_external remote_path lib_name prefix_var)
-    set(prefix "${CMAKE_BINARY_DIR}/externals/${lib_name}")
-    if (NOT EXISTS "${prefix}")
-        message(STATUS "Downloading binaries for ${lib_name}...")
-        file(DOWNLOAD
-            https://github.com/citra-emu/ext-windows-bin/raw/master/${remote_path}${lib_name}.7z
-            "${CMAKE_BINARY_DIR}/externals/${lib_name}.7z" SHOW_PROGRESS)
-        execute_process(COMMAND ${CMAKE_COMMAND} -E tar xf "${CMAKE_BINARY_DIR}/externals/${lib_name}.7z"
-            WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/externals")
-    endif()
-    message(STATUS "Using bundled binaries at ${prefix}")
-    set(${prefix_var} "${prefix}" PARENT_SCOPE)
-endfunction()
 
 find_package(PNG QUIET)
 if (NOT PNG_FOUND)
