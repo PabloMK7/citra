@@ -34,6 +34,10 @@ void ARM_DynCom::ClearInstructionCache() {
     trans_cache_buf_top = 0;
 }
 
+void ARM_DynCom::InvalidateCacheRange(u32, size_t) {
+    ClearInstructionCache();
+}
+
 void ARM_DynCom::PageTableChanged() {
     ClearInstructionCache();
 }
