@@ -168,7 +168,7 @@ void GetCountryCodeID(Service::Interface* self) {
     cmd_buff[2] = country_code_id;
 }
 
-static u32 GetRegionValue() {
+u32 GetRegionValue() {
     if (Settings::values.region_value == Settings::REGION_VALUE_AUTO_SELECT)
         return preferred_region_code;
 

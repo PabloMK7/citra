@@ -101,6 +101,8 @@ void GetCountryCodeString(Service::Interface* self);
  */
 void GetCountryCodeID(Service::Interface* self);
 
+u32 GetRegionValue();
+
 /**
  * CFG::SecureInfoGetRegion service function
  *  Inputs:
