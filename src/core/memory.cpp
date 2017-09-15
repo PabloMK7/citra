@@ -4,83 +4,31 @@
 
 #include <array>
 #include <cstring>
+#include "audio_core/audio_core.h"
 #include "common/assert.h"
 #include "common/common_types.h"
 #include "common/logging/log.h"
 #include "common/swap.h"
+#include "core/hle/kernel/memory.h"
 #include "core/hle/kernel/process.h"
 #include "core/hle/lock.h"
 #include "core/memory.h"
 #include "core/memory_setup.h"
-#include "core/mmio.h"
 #include "video_core/renderer_base.h"
 #include "video_core/video_core.h"
 
 namespace Memory {
 
-enum class PageType {
-    /// Page is unmapped and should cause an access error.
-    Unmapped,
-    /// Page is mapped to regular memory. This is the only type you can get pointers to.
-    Memory,
-    /// Page is mapped to regular memory, but also needs to check for rasterizer cache flushing and
-    /// invalidation
-    RasterizerCachedMemory,
-    /// Page is mapped to a I/O region. Writing and reading to this page is handled by functions.
-    Special,
-    /// Page is mapped to a I/O region, but also needs to check for rasterizer cache flushing and
-    /// invalidation
-    RasterizerCachedSpecial,
-};
+static std::array<u8, Memory::VRAM_SIZE> vram;
+static std::array<u8, Memory::N3DS_EXTRA_RAM_SIZE> n3ds_extra_ram;
 
-struct SpecialRegion {
-    VAddr base;
-    u32 size;
-    MMIORegionPointer handler;
-};
-
-/**
- * A (reasonably) fast way of allowing switchable and remappable process address spaces. It loosely
- * mimics the way a real CPU page table works, but instead is optimized for minimal decoding and
- * fetching requirements when accessing. In the usual case of an access to regular memory, it only
- * requires an indexed fetch and a check for NULL.
- */
-struct PageTable {
-    /**
-     * Array of memory pointers backing each page. An entry can only be non-null if the
-     * corresponding entry in the `attributes` array is of type `Memory`.
-     */
-    std::array<u8*, PAGE_TABLE_NUM_ENTRIES> pointers;
-
-    /**
-     * Contains MMIO handlers that back memory regions whose entries in the `attribute` array is of
-     * type `Special`.
-     */
-    std::vector<SpecialRegion> special_regions;
-
-    /**
-     * Array of fine grained page attributes. If it is set to any value other than `Memory`, then
-     * the corresponding entry in `pointers` MUST be set to null.
-     */
-    std::array<PageType, PAGE_TABLE_NUM_ENTRIES> attributes;
-
-    /**
-     * Indicates the number of externally cached resources touching a page that should be
-     * flushed before the memory is accessed
-     */
-    std::array<u8, PAGE_TABLE_NUM_ENTRIES> cached_res_count;
-};
-
-/// Singular page table used for the singleton process
-static PageTable main_page_table;
-/// Currently active page table
-static PageTable* current_page_table = &main_page_table;
+PageTable* current_page_table = nullptr;
 
 std::array<u8*, PAGE_TABLE_NUM_ENTRIES>* GetCurrentPageTablePointers() {
     return &current_page_table->pointers;
 }
 
-static void MapPages(u32 base, u32 size, u8* memory, PageType type) {
+static void MapPages(PageTable& page_table, u32 base, u32 size, u8* memory, PageType type) {
     LOG_DEBUG(HW_Memory, "Mapping %p onto %08X-%08X", memory, base * PAGE_SIZE,
               (base + size) * PAGE_SIZE);
 
@@ -91,9 +39,9 @@ static void MapPages(u32 base, u32 size, u8* memory, PageType type) {
     while (base != end) {
         ASSERT_MSG(base < PAGE_TABLE_NUM_ENTRIES, "out of range mapping at %08X", base);
 
-        current_page_table->attributes[base] = type;
-        current_page_table->pointers[base] = memory;
-        current_page_table->cached_res_count[base] = 0;
+        page_table.attributes[base] = type;
+        page_table.pointers[base] = memory;
+        page_table.cached_res_count[base] = 0;
 
         base += 1;
         if (memory != nullptr)
@@ -101,30 +49,24 @@ static void MapPages(u32 base, u32 size, u8* memory, PageType type) {
     }
 }
 
-void InitMemoryMap() {
-    main_page_table.pointers.fill(nullptr);
-    main_page_table.attributes.fill(PageType::Unmapped);
-    main_page_table.cached_res_count.fill(0);
-}
-
-void MapMemoryRegion(VAddr base, u32 size, u8* target) {
+void MapMemoryRegion(PageTable& page_table, VAddr base, u32 size, u8* target) {
     ASSERT_MSG((size & PAGE_MASK) == 0, "non-page aligned size: %08X", size);
     ASSERT_MSG((base & PAGE_MASK) == 0, "non-page aligned base: %08X", base);
-    MapPages(base / PAGE_SIZE, size / PAGE_SIZE, target, PageType::Memory);
+    MapPages(page_table, base / PAGE_SIZE, size / PAGE_SIZE, target, PageType::Memory);
 }
 
-void MapIoRegion(VAddr base, u32 size, MMIORegionPointer mmio_handler) {
+void MapIoRegion(PageTable& page_table, VAddr base, u32 size, MMIORegionPointer mmio_handler) {
     ASSERT_MSG((size & PAGE_MASK) == 0, "non-page aligned size: %08X", size);
     ASSERT_MSG((base & PAGE_MASK) == 0, "non-page aligned base: %08X", base);
-    MapPages(base / PAGE_SIZE, size / PAGE_SIZE, nullptr, PageType::Special);
+    MapPages(page_table, base / PAGE_SIZE, size / PAGE_SIZE, nullptr, PageType::Special);
 
-    current_page_table->special_regions.emplace_back(SpecialRegion{base, size, mmio_handler});
+    page_table.special_regions.emplace_back(SpecialRegion{base, size, mmio_handler});
 }
 
-void UnmapRegion(VAddr base, u32 size) {
+void UnmapRegion(PageTable& page_table, VAddr base, u32 size) {
     ASSERT_MSG((size & PAGE_MASK) == 0, "non-page aligned size: %08X", size);
     ASSERT_MSG((base & PAGE_MASK) == 0, "non-page aligned base: %08X", base);
-    MapPages(base / PAGE_SIZE, size / PAGE_SIZE, nullptr, PageType::Unmapped);
+    MapPages(page_table, base / PAGE_SIZE, size / PAGE_SIZE, nullptr, PageType::Unmapped);
 }
 
 /**
@@ -273,8 +215,7 @@ bool IsValidVirtualAddress(const VAddr vaddr) {
 }
 
 bool IsValidPhysicalAddress(const PAddr paddr) {
-    boost::optional<VAddr> vaddr = PhysicalToVirtualAddress(paddr);
-    return vaddr && IsValidVirtualAddress(*vaddr);
+    return GetPhysicalPointer(paddr) != nullptr;
 }
 
 u8* GetPointer(const VAddr vaddr) {
@@ -306,9 +247,63 @@ std::string ReadCString(VAddr vaddr, std::size_t max_length) {
 }
 
 u8* GetPhysicalPointer(PAddr address) {
-    // TODO(Subv): This call should not go through the application's memory mapping.
-    boost::optional<VAddr> vaddr = PhysicalToVirtualAddress(address);
-    return vaddr ? GetPointer(*vaddr) : nullptr;
+    struct MemoryArea {
+        PAddr paddr_base;
+        u32 size;
+    };
+
+    static constexpr MemoryArea memory_areas[] = {
+        {VRAM_PADDR, VRAM_SIZE},
+        {IO_AREA_PADDR, IO_AREA_SIZE},
+        {DSP_RAM_PADDR, DSP_RAM_SIZE},
+        {FCRAM_PADDR, FCRAM_N3DS_SIZE},
+        {N3DS_EXTRA_RAM_PADDR, N3DS_EXTRA_RAM_SIZE},
+    };
+
+    const auto area =
+        std::find_if(std::begin(memory_areas), std::end(memory_areas), [&](const auto& area) {
+            return address >= area.paddr_base && address < area.paddr_base + area.size;
+        });
+
+    if (area == std::end(memory_areas)) {
+        LOG_ERROR(HW_Memory, "unknown GetPhysicalPointer @ 0x%08X", address);
+        return nullptr;
+    }
+
+    if (area->paddr_base == IO_AREA_PADDR) {
+        LOG_ERROR(HW_Memory, "MMIO mappings are not supported yet. phys_addr=0x%08X", address);
+        return nullptr;
+    }
+
+    u32 offset_into_region = address - area->paddr_base;
+
+    u8* target_pointer = nullptr;
+    switch (area->paddr_base) {
+    case VRAM_PADDR:
+        target_pointer = vram.data() + offset_into_region;
+        break;
+    case DSP_RAM_PADDR:
+        target_pointer = AudioCore::GetDspMemory().data() + offset_into_region;
+        break;
+    case FCRAM_PADDR:
+        for (const auto& region : Kernel::memory_regions) {
+            if (offset_into_region >= region.base &&
+                offset_into_region < region.base + region.size) {
+                target_pointer =
+                    region.linear_heap_memory->data() + offset_into_region - region.base;
+                break;
+            }
+        }
+        ASSERT_MSG(target_pointer != nullptr, "Invalid FCRAM address");
+        break;
+    case N3DS_EXTRA_RAM_PADDR:
+        target_pointer = n3ds_extra_ram.data() + offset_into_region;
+        break;
+    default:
+        UNREACHABLE();
+    }
+
+    return target_pointer;
 }
 
 void RasterizerMarkRegionCached(PAddr start, u32 size, int count_delta) {

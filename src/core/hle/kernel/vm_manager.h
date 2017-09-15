@@ -9,6 +9,7 @@
 #include <vector>
 #include "common/common_types.h"
 #include "core/hle/result.h"
+#include "core/memory.h"
 #include "core/mmio.h"
 
 namespace Kernel {
@@ -102,7 +103,6 @@ struct VirtualMemoryArea {
  *  - http://duartes.org/gustavo/blog/post/page-cache-the-affair-between-memory-and-files/
  */
 class VMManager final {
-    // TODO(yuriks): Make page tables switchable to support multiple VMManagers
 public:
     /**
      * The maximum amount of address space managed by the kernel. Addresses above this are never
@@ -183,6 +183,10 @@ public:
 
     /// Dumps the address space layout to the log, for debugging
     void LogLayout(Log::Level log_level) const;
+
+    /// Each VMManager has its own page table, which is set as the main one when the owning process
+    /// is scheduled.
+    Memory::PageTable page_table;
 
 private:
     using VMAIter = decltype(vma_map)::iterator;

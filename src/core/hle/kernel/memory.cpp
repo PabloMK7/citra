@@ -8,7 +8,6 @@
 #include <memory>
 #include <utility>
 #include <vector>
-#include "audio_core/audio_core.h"
 #include "common/assert.h"
 #include "common/common_types.h"
 #include "common/logging/log.h"
@@ -24,7 +23,7 @@
 
 namespace Kernel {
 
-static MemoryRegionInfo memory_regions[3];
+MemoryRegionInfo memory_regions[3];
 
 /// Size of the APPLICATION, SYSTEM and BASE memory regions (respectively) for each system
 /// memory configuration type.
@@ -96,9 +95,6 @@ MemoryRegionInfo* GetMemoryRegion(MemoryRegion region) {
     }
 }
 
-std::array<u8, Memory::VRAM_SIZE> vram;
-std::array<u8, Memory::N3DS_EXTRA_RAM_SIZE> n3ds_extra_ram;
-
 void HandleSpecialMapping(VMManager& address_space, const AddressMapping& mapping) {
     using namespace Memory;
 
@@ -143,30 +139,14 @@ void HandleSpecialMapping(VMManager& address_space, const AddressMapping& mappin
         return;
     }
 
-    // TODO(yuriks): Use GetPhysicalPointer when that becomes independent of the virtual
-    // mappings.
-    u8* target_pointer = nullptr;
-    switch (area->paddr_base) {
-    case VRAM_PADDR:
-        target_pointer = vram.data();
-        break;
-    case DSP_RAM_PADDR:
-        target_pointer = AudioCore::GetDspMemory().data();
-        break;
-    case N3DS_EXTRA_RAM_PADDR:
-        target_pointer = n3ds_extra_ram.data();
-        break;
-    default:
-        UNREACHABLE();
-    }
+    u8* target_pointer = Memory::GetPhysicalPointer(area->paddr_base + offset_into_region);
 
     // TODO(yuriks): This flag seems to have some other effect, but it's unknown what
     MemoryState memory_state = mapping.unk_flag ? MemoryState::Static : MemoryState::IO;
 
-    auto vma = address_space
-                   .MapBackingMemory(mapping.address, target_pointer + offset_into_region,
-                                     mapping.size, memory_state)
-                   .Unwrap();
+    auto vma =
+        address_space.MapBackingMemory(mapping.address, target_pointer, mapping.size, memory_state)
+            .Unwrap();
     address_space.Reprotect(vma,
                             mapping.read_only ? VMAPermission::Read : VMAPermission::ReadWrite);
 }

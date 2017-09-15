@@ -7,8 +7,10 @@
 #include <array>
 #include <cstddef>
 #include <string>
+#include <vector>
 #include <boost/optional.hpp>
 #include "common/common_types.h"
+#include "core/mmio.h"
 
 namespace Memory {
 
@@ -20,6 +22,59 @@ const u32 PAGE_SIZE = 0x1000;
 const u32 PAGE_MASK = PAGE_SIZE - 1;
 const int PAGE_BITS = 12;
 const size_t PAGE_TABLE_NUM_ENTRIES = 1 << (32 - PAGE_BITS);
+
+enum class PageType {
+    /// Page is unmapped and should cause an access error.
+    Unmapped,
+    /// Page is mapped to regular memory. This is the only type you can get pointers to.
+    Memory,
+    /// Page is mapped to regular memory, but also needs to check for rasterizer cache flushing and
+    /// invalidation
+    RasterizerCachedMemory,
+    /// Page is mapped to a I/O region. Writing and reading to this page is handled by functions.
+    Special,
+    /// Page is mapped to a I/O region, but also needs to check for rasterizer cache flushing and
+    /// invalidation
+    RasterizerCachedSpecial,
+};
+
+struct SpecialRegion {
+    VAddr base;
+    u32 size;
+    MMIORegionPointer handler;
+};
+
+/**
+ * A (reasonably) fast way of allowing switchable and remappable process address spaces. It loosely
+ * mimics the way a real CPU page table works, but instead is optimized for minimal decoding and
+ * fetching requirements when accessing. In the usual case of an access to regular memory, it only
+ * requires an indexed fetch and a check for NULL.
+ */
+struct PageTable {
+    /**
+     * Array of memory pointers backing each page. An entry can only be non-null if the
+     * corresponding entry in the `attributes` array is of type `Memory`.
+     */
+    std::array<u8*, PAGE_TABLE_NUM_ENTRIES> pointers;
+
+    /**
+     * Contains MMIO handlers that back memory regions whose entries in the `attribute` array is of
+     * type `Special`.
+     */
+    std::vector<SpecialRegion> special_regions;
+
+    /**
+     * Array of fine grained page attributes. If it is set to any value other than `Memory`, then
+     * the corresponding entry in `pointers` MUST be set to null.
+     */
+    std::array<PageType, PAGE_TABLE_NUM_ENTRIES> attributes;
+
+    /**
+     * Indicates the number of externally cached resources touching a page that should be
+     * flushed before the memory is accessed
+     */
+    std::array<u8, PAGE_TABLE_NUM_ENTRIES> cached_res_count;
+};
 
 /// Physical memory regions as seen from the ARM11
 enum : PAddr {
@@ -126,6 +181,9 @@ enum : VAddr {
     NEW_LINEAR_HEAP_VADDR_END = NEW_LINEAR_HEAP_VADDR + NEW_LINEAR_HEAP_SIZE,
 };
 
+/// Currently active page table
+extern PageTable* current_page_table;
+
 bool IsValidVirtualAddress(const VAddr addr);
 bool IsValidPhysicalAddress(const PAddr addr);
 
@@ -169,8 +227,6 @@ boost::optional<VAddr> PhysicalToVirtualAddress(PAddr addr);
 
 /**
  * Gets a pointer to the memory region beginning at the specified physical address.
- *
- * @note This is currently implemented using PhysicalToVirtualAddress().
  */
 u8* GetPhysicalPointer(PAddr address);
 
@@ -209,4 +265,4 @@ void RasterizerFlushVirtualRegion(VAddr start, u32 size, FlushMode mode);
  * retrieve the current page table for that purpose.
  */
 std::array<u8*, PAGE_TABLE_NUM_ENTRIES>* GetCurrentPageTablePointers();
-}
+} // namespace Memory
