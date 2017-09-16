@@ -31,7 +31,7 @@ public:
         : coeffs(coeffs), bias(bias) {}
 
     bool IsInside(const Vertex& vertex) const {
-        return Math::Dot(vertex.pos + bias, coeffs) <= float24::FromFloat32(0);
+        return Math::Dot(vertex.pos + bias, coeffs) >= float24::FromFloat32(0);
     }
 
     bool IsOutSide(const Vertex& vertex) const {
@@ -116,19 +116,18 @@ void ProcessTriangle(const OutputVertex& v0, const OutputVertex& v1, const Outpu
     static const float24 f0 = float24::FromFloat32(0.0);
     static const float24 f1 = float24::FromFloat32(1.0);
     static const std::array<ClippingEdge, 7> clipping_edges = {{
-        {Math::MakeVec(f1, f0, f0, -f1)},                                           // x = +w
-        {Math::MakeVec(-f1, f0, f0, -f1)},                                          // x = -w
-        {Math::MakeVec(f0, f1, f0, -f1)},                                           // y = +w
-        {Math::MakeVec(f0, -f1, f0, -f1)},                                          // y = -w
-        {Math::MakeVec(f0, f0, f1, f0)},                                            // z =  0
-        {Math::MakeVec(f0, f0, -f1, -f1)},                                          // z = -w
-        {Math::MakeVec(f0, f0, f0, -f1), Math::Vec4<float24>(f0, f0, f0, EPSILON)}, // w = EPSILON
+        {Math::MakeVec(-f1, f0, f0, f1)},                                          // x = +w
+        {Math::MakeVec(f1, f0, f0, f1)},                                           // x = -w
+        {Math::MakeVec(f0, -f1, f0, f1)},                                          // y = +w
+        {Math::MakeVec(f0, f1, f0, f1)},                                           // y = -w
+        {Math::MakeVec(f0, f0, -f1, f0)},                                          // z =  0
+        {Math::MakeVec(f0, f0, f1, f1)},                                           // z = -w
+        {Math::MakeVec(f0, f0, f0, f1), Math::Vec4<float24>(f0, f0, f0, EPSILON)}, // w = EPSILON
     }};
 
     // Simple implementation of the Sutherland-Hodgman clipping algorithm.
     // TODO: Make this less inefficient (currently lots of useless buffering overhead happens here)
-    for (auto edge : clipping_edges) {
-
+    auto Clip = [&](const ClippingEdge& edge) {
         std::swap(input_list, output_list);
         output_list->clear();
 
@@ -147,8 +146,20 @@ void ProcessTriangle(const OutputVertex& v0, const OutputVertex& v1, const Outpu
             }
             reference_vertex = &vertex;
         }
+    };
+
+    for (auto edge : clipping_edges) {
+        Clip(edge);
 
         // Need to have at least a full triangle to continue...
+        if (output_list->size() < 3)
+            return;
+    }
+
+    if (g_state.regs.rasterizer.clip_enable) {
+        ClippingEdge custom_edge{g_state.regs.rasterizer.GetClipCoef()};
+        Clip(custom_edge);
+
         if (output_list->size() < 3)
             return;
     }

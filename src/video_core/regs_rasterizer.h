@@ -5,10 +5,10 @@
 #pragma once
 
 #include <array>
-
 #include "common/bit_field.h"
 #include "common/common_funcs.h"
 #include "common/common_types.h"
+#include "video_core/pica_types.h"
 
 namespace Pica {
 
@@ -31,7 +31,17 @@ struct RasterizerRegs {
 
     BitField<0, 24, u32> viewport_size_y;
 
-    INSERT_PADDING_WORDS(0x9);
+    INSERT_PADDING_WORDS(0x3);
+
+    BitField<0, 1, u32> clip_enable;
+    BitField<0, 24, u32> clip_coef[4]; // float24
+
+    Math::Vec4<float24> GetClipCoef() const {
+        return {float24::FromRaw(clip_coef[0]), float24::FromRaw(clip_coef[1]),
+                float24::FromRaw(clip_coef[2]), float24::FromRaw(clip_coef[3])};
+    }
+
+    INSERT_PADDING_WORDS(0x1);
 
     BitField<0, 24, u32> viewport_depth_range;      // float24
     BitField<0, 24, u32> viewport_depth_near_plane; // float24
