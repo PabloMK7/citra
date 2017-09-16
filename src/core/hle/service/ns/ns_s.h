@@ -4,18 +4,17 @@
 
 #pragma once
 
+#include "core/hle/kernel/kernel.h"
 #include "core/hle/service/service.h"
 
 namespace Service {
 namespace NS {
 
-class NS_S final : public Interface {
+/// Interface to "ns:s" service
+class NS_S final : public ServiceFramework<NS_S> {
 public:
     NS_S();
-
-    std::string GetPortName() const override {
-        return "ns:s";
-    }
+    ~NS_S();
 };
 
 } // namespace NS
