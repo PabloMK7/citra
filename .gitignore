@@ -26,3 +26,8 @@ src/common/scm_rev.cpp
 # Windows global filetypes
 Thumbs.db
 
+# QtIFW builds
+dist/installer/redist
+dist/installer/citra-installer*
+dist/installer/*.zip
+dist/installer/*.tar.gz
