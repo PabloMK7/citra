@@ -10,10 +10,10 @@
     <InstallerApplicationIcon>icon</InstallerApplicationIcon>
     <InstallerWindowIcon>icon.png</InstallerWindowIcon>
     <RemoteRepositories>
-		<Repository>
+        <Repository>
             <Url>https://repo.citra-emu.org</Url>
             <Enabled>1</Enabled>
             <DisplayName>Official Citra Repository</DisplayName>
-		</Repository>
-	</RemoteRepositories>
+        </Repository>
+    </RemoteRepositories>
 </Installer>

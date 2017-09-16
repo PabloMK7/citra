@@ -15,13 +15,13 @@ fi
 if [ ! -f redist/installerbase_$PLATFORM ]; then
     echo Downloading dependencies...
     curl -L -O https://github.com/citra-emu/ext-windows-bin/raw/master/qtifw/$PLATFORM.tar.gz
-    
+
     echo Extracting...
     mkdir -p redist
     cd redist
     tar -zxvf ../$PLATFORM.tar.gz
     cd ..
-    
+
     chmod +x redist/*
 fi
 
