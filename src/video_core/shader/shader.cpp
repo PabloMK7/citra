@@ -52,7 +52,8 @@ OutputVertex OutputVertex::FromAttributeBuffer(const RasterizerRegs& regs,
     // The hardware takes the absolute and saturates vertex colors like this, *before* doing
     // interpolation
     for (unsigned i = 0; i < 4; ++i) {
-        ret.color[i] = float24::FromFloat32(std::fmin(std::fabs(ret.color[i].ToFloat32()), 1.0f));
+        float c = std::fabs(ret.color[i].ToFloat32());
+        ret.color[i] = float24::FromFloat32(c < 1.0f ? c : 1.0f);
     }
 
     LOG_TRACE(HW_GPU, "Output vertex: pos(%.2f, %.2f, %.2f, %.2f), quat(%.2f, %.2f, %.2f, %.2f), "
