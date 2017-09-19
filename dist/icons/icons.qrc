@@ -1,0 +1,6 @@
+<RCC>
+  <qresource prefix="icons">
+    <file>checked.png</file>
+    <file>failed.png</file>
+  </qresource>
+</RCC>

@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <QMessageBox>
 #include "citra_qt/configuration/configure_web.h"
 #include "core/settings.h"
 #include "core/telemetry_session.h"
@@ -11,7 +12,9 @@ ConfigureWeb::ConfigureWeb(QWidget* parent)
     : QWidget(parent), ui(std::make_unique<Ui::ConfigureWeb>()) {
     ui->setupUi(this);
     connect(ui->button_regenerate_telemetry_id, &QPushButton::clicked, this,
-            &ConfigureWeb::refreshTelemetryID);
+            &ConfigureWeb::RefreshTelemetryID);
+    connect(ui->button_verify_login, &QPushButton::clicked, this, &ConfigureWeb::VerifyLogin);
+    connect(this, &ConfigureWeb::LoginVerified, this, &ConfigureWeb::OnLoginVerified);
 
     this->setConfiguration();
 }
@@ -34,19 +37,66 @@ void ConfigureWeb::setConfiguration() {
     ui->toggle_telemetry->setChecked(Settings::values.enable_telemetry);
     ui->edit_username->setText(QString::fromStdString(Settings::values.citra_username));
     ui->edit_token->setText(QString::fromStdString(Settings::values.citra_token));
+    // Connect after setting the values, to avoid calling OnLoginChanged now
+    connect(ui->edit_token, &QLineEdit::textChanged, this, &ConfigureWeb::OnLoginChanged);
+    connect(ui->edit_username, &QLineEdit::textChanged, this, &ConfigureWeb::OnLoginChanged);
     ui->label_telemetry_id->setText("Telemetry ID: 0x" +
                                     QString::number(Core::GetTelemetryId(), 16).toUpper());
+    user_verified = true;
 }
 
 void ConfigureWeb::applyConfiguration() {
     Settings::values.enable_telemetry = ui->toggle_telemetry->isChecked();
-    Settings::values.citra_username = ui->edit_username->text().toStdString();
-    Settings::values.citra_token = ui->edit_token->text().toStdString();
+    if (user_verified) {
+        Settings::values.citra_username = ui->edit_username->text().toStdString();
+        Settings::values.citra_token = ui->edit_token->text().toStdString();
+    } else {
+        QMessageBox::warning(this, tr("Username and token not verfied"),
+                             tr("Username and token were not verified. The changes to your "
+                                "username and/or token have not been saved."));
+    }
     Settings::Apply();
 }
 
-void ConfigureWeb::refreshTelemetryID() {
+void ConfigureWeb::RefreshTelemetryID() {
     const u64 new_telemetry_id{Core::RegenerateTelemetryId()};
     ui->label_telemetry_id->setText("Telemetry ID: 0x" +
                                     QString::number(new_telemetry_id, 16).toUpper());
+}
+
+void ConfigureWeb::OnLoginChanged() {
+    if (ui->edit_username->text().isEmpty() && ui->edit_token->text().isEmpty()) {
+        user_verified = true;
+        ui->label_username_verified->setPixmap(QPixmap(":/icons/checked.png"));
+        ui->label_token_verified->setPixmap(QPixmap(":/icons/checked.png"));
+    } else {
+        user_verified = false;
+        ui->label_username_verified->setPixmap(QPixmap(":/icons/failed.png"));
+        ui->label_token_verified->setPixmap(QPixmap(":/icons/failed.png"));
+    }
+}
+
+void ConfigureWeb::VerifyLogin() {
+    verified =
+        Core::VerifyLogin(ui->edit_username->text().toStdString(),
+                          ui->edit_token->text().toStdString(), [&]() { emit LoginVerified(); });
+    ui->button_verify_login->setDisabled(true);
+    ui->button_verify_login->setText(tr("Verifying"));
+}
+
+void ConfigureWeb::OnLoginVerified() {
+    ui->button_verify_login->setEnabled(true);
+    ui->button_verify_login->setText(tr("Verify"));
+    if (verified.get()) {
+        user_verified = true;
+        ui->label_username_verified->setPixmap(QPixmap(":/icons/checked.png"));
+        ui->label_token_verified->setPixmap(QPixmap(":/icons/checked.png"));
+    } else {
+        ui->label_username_verified->setPixmap(QPixmap(":/icons/failed.png"));
+        ui->label_token_verified->setPixmap(QPixmap(":/icons/failed.png"));
+        QMessageBox::critical(
+            this, tr("Verification failed"),
+            tr("Verification failed. Check that you have entered your username and token "
+               "correctly, and that your internet connection is working."));
+    }
 }

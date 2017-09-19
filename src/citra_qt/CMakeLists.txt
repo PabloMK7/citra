@@ -79,6 +79,7 @@ set(UIS
             main.ui
             )
 
+file(GLOB_RECURSE ICONS ${CMAKE_SOURCE_DIR}/dist/icons/*)
 file(GLOB_RECURSE THEMES ${CMAKE_SOURCE_DIR}/dist/qt_themes/*)
 
 create_directory_groups(${SRCS} ${HEADERS} ${UIS})
@@ -92,10 +93,10 @@ endif()
 if (APPLE)
     set(MACOSX_ICON "../../dist/citra.icns")
     set_source_files_properties(${MACOSX_ICON} PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
-    add_executable(citra-qt MACOSX_BUNDLE ${SRCS} ${HEADERS} ${UI_HDRS} ${THEMES} ${MACOSX_ICON})
+    add_executable(citra-qt MACOSX_BUNDLE ${SRCS} ${HEADERS} ${UI_HDRS} ${ICONS} ${THEMES} ${MACOSX_ICON})
     set_target_properties(citra-qt PROPERTIES MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/Info.plist)
 else()
-    add_executable(citra-qt ${SRCS} ${HEADERS} ${UI_HDRS} ${THEMES})
+    add_executable(citra-qt ${SRCS} ${HEADERS} ${UI_HDRS} ${ICONS} ${THEMES})
 endif()
 target_link_libraries(citra-qt PRIVATE audio_core common core input_common network video_core)
 target_link_libraries(citra-qt PRIVATE Boost::boost glad nihstro-headers Qt5::OpenGL Qt5::Widgets)

@@ -15,6 +15,7 @@
 
 #ifdef ENABLE_WEB_SERVICE
 #include "web_service/telemetry_json.h"
+#include "web_service/verify_login.h"
 #endif
 
 namespace Core {
@@ -73,6 +74,17 @@ u64 RegenerateTelemetryId() {
     }
     file.WriteBytes(&new_telemetry_id, sizeof(u64));
     return new_telemetry_id;
+}
+
+std::future<bool> VerifyLogin(std::string username, std::string token, std::function<void()> func) {
+#ifdef ENABLE_WEB_SERVICE
+    return WebService::VerifyLogin(username, token, Settings::values.verify_endpoint_url, func);
+#else
+    return std::async(std::launch::async, [func{std::move(func)}]() {
+        func();
+        return false;
+    });
+#endif
 }
 
 TelemetrySession::TelemetrySession() {

@@ -1,10 +1,12 @@
 set(SRCS
             telemetry_json.cpp
+            verify_login.cpp
             web_backend.cpp
             )
 
 set(HEADERS
             telemetry_json.h
+            verify_login.h
             web_backend.h
             )
 

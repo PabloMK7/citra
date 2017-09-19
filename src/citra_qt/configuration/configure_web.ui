@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
-    <height>300</height>
+    <width>926</width>
+    <height>561</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -31,14 +31,30 @@
         </item>
         <item>
          <layout class="QGridLayout" name="gridLayoutCitraUsername">
-          <item row="0" column="0">
-           <widget class="QLabel" name="label_username">
+          <item row="2" column="3">
+           <widget class="QPushButton" name="button_verify_login">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="layoutDirection">
+             <enum>Qt::RightToLeft</enum>
+            </property>
             <property name="text">
-             <string>Username: </string>
+             <string>Verify</string>
             </property>
            </widget>
           </item>
-          <item row="0" column="1">
+          <item row="2" column="0">
+           <widget class="QLabel" name="web_signup_link">
+            <property name="text">
+             <string>Sign up</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1" colspan="3">
            <widget class="QLineEdit" name="edit_username">
             <property name="maxLength">
              <number>36</number>
@@ -52,7 +68,22 @@
             </property>
            </widget>
           </item>
-          <item row="1" column="1">
+          <item row="1" column="4">
+           <widget class="QLabel" name="label_token_verified">
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_username">
+            <property name="text">
+             <string>Username: </string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="4">
+           <widget class="QLabel" name="label_username_verified">
+           </widget>
+          </item>
+          <item row="1" column="1" colspan="3">
            <widget class="QLineEdit" name="edit_token">
             <property name="maxLength">
              <number>36</number>
@@ -62,19 +93,25 @@
             </property>
            </widget>
           </item>
-          <item row="2" column="0">
-           <widget class="QLabel" name="web_signup_link">
-            <property name="text">
-             <string>Sign up</string>
-            </property>
-           </widget>
-          </item>
           <item row="2" column="1">
            <widget class="QLabel" name="web_token_info_link">
             <property name="text">
              <string>What is my token?</string>
             </property>
            </widget>
+          </item>
+          <item row="2" column="2">
+           <spacer name="horizontalSpacer">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
           </item>
          </layout>
         </item>
@@ -105,17 +142,17 @@
          <layout class="QGridLayout" name="gridLayoutTelemetryId">
           <item row="0" column="0">
            <widget class="QLabel" name="label_telemetry_id">
-             <property name="text">
-              <string>Telemetry ID:</string>
-             </property>
+            <property name="text">
+             <string>Telemetry ID:</string>
+            </property>
            </widget>
           </item>
           <item row="0" column="1">
            <widget class="QPushButton" name="button_regenerate_telemetry_id">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
              </sizepolicy>
             </property>
             <property name="layoutDirection">

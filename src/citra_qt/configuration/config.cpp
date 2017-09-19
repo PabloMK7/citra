@@ -146,6 +146,10 @@ void Config::ReadValues() {
         qt_config->value("telemetry_endpoint_url", "https://services.citra-emu.org/api/telemetry")
             .toString()
             .toStdString();
+    Settings::values.verify_endpoint_url =
+        qt_config->value("verify_endpoint_url", "https://services.citra-emu.org/api/profile")
+            .toString()
+            .toStdString();
     Settings::values.citra_username = qt_config->value("citra_username").toString().toStdString();
     Settings::values.citra_token = qt_config->value("citra_token").toString().toStdString();
     qt_config->endGroup();
@@ -293,6 +297,8 @@ void Config::SaveValues() {
     qt_config->setValue("enable_telemetry", Settings::values.enable_telemetry);
     qt_config->setValue("telemetry_endpoint_url",
                         QString::fromStdString(Settings::values.telemetry_endpoint_url));
+    qt_config->setValue("verify_endpoint_url",
+                        QString::fromStdString(Settings::values.verify_endpoint_url));
     qt_config->setValue("citra_username", QString::fromStdString(Settings::values.citra_username));
     qt_config->setValue("citra_token", QString::fromStdString(Settings::values.citra_token));
     qt_config->endGroup();

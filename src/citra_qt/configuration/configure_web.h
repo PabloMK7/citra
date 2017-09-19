@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <future>
 #include <memory>
 #include <QWidget>
 
@@ -21,10 +22,19 @@ public:
     void applyConfiguration();
 
 public slots:
-    void refreshTelemetryID();
+    void RefreshTelemetryID();
+    void OnLoginChanged();
+    void VerifyLogin();
+    void OnLoginVerified();
+
+signals:
+    void LoginVerified();
 
 private:
     void setConfiguration();
+
+    bool user_verified = true;
+    std::future<bool> verified;
 
     std::unique_ptr<Ui::ConfigureWeb> ui;
 };
