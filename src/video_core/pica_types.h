@@ -58,11 +58,12 @@ public:
     }
 
     Float<M, E> operator*(const Float<M, E>& flt) const {
-        if ((this->value == 0.f && !std::isnan(flt.value)) ||
-            (flt.value == 0.f && !std::isnan(this->value)))
-            // PICA gives 0 instead of NaN when multiplying by inf
-            return Zero();
-        return Float<M, E>::FromFloat32(ToFloat32() * flt.ToFloat32());
+        float result = value * flt.ToFloat32();
+        // PICA gives 0 instead of NaN when multiplying by inf
+        if (!std::isnan(value) && !std::isnan(flt.ToFloat32()))
+            if (std::isnan(result))
+                result = 0.f;
+        return Float<M, E>::FromFloat32(result);
     }
 
     Float<M, E> operator/(const Float<M, E>& flt) const {
@@ -78,12 +79,7 @@ public:
     }
 
     Float<M, E>& operator*=(const Float<M, E>& flt) {
-        if ((this->value == 0.f && !std::isnan(flt.value)) ||
-            (flt.value == 0.f && !std::isnan(this->value)))
-            // PICA gives 0 instead of NaN when multiplying by inf
-            *this = Zero();
-        else
-            value *= flt.ToFloat32();
+        value = operator*(flt).value;
         return *this;
     }
 
