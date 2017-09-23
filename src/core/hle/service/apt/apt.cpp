@@ -776,6 +776,20 @@ void PrepareToStartLibraryApplet(Service::Interface* self) {
     LOG_DEBUG(Service_APT, "called applet_id=%08X", applet_id);
 }
 
+void PrepareToStartNewestHomeMenu(Service::Interface* self) {
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x1A, 0, 0); // 0x1A0000
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+
+    // TODO(Subv): This command can only be called by a System Applet (return 0xC8A0CC04 otherwise).
+
+    // This command must return an error when called, otherwise the Home Menu will try to reboot the
+    // system.
+    rb.Push(ResultCode(ErrorDescription::AlreadyExists, ErrorModule::Applet,
+                       ErrorSummary::InvalidState, ErrorLevel::Status));
+
+    LOG_DEBUG(Service_APT, "called");
+}
+
 void PreloadLibraryApplet(Service::Interface* self) {
     IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x16, 1, 0); // 0x160040
     AppletId applet_id = static_cast<AppletId>(rp.Pop<u32>());

@@ -420,6 +420,16 @@ void GetAppCpuTimeLimit(Service::Interface* self);
 void PrepareToStartLibraryApplet(Service::Interface* self);
 
 /**
+ * APT::PrepareToStartNewestHomeMenu service function
+ *  Inputs:
+ *      0 : Command header [0x001A0000]
+ *  Outputs:
+ *      0 : Return header
+ *      1 : Result of function
+ */
+void PrepareToStartNewestHomeMenu(Service::Interface* self);
+
+/**
  * APT::PreloadLibraryApplet service function
  *  Inputs:
  *      0 : Command header [0x00160040]
