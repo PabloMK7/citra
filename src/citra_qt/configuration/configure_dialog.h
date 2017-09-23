@@ -20,6 +20,12 @@ public:
 
     void applyConfiguration();
 
+private slots:
+    void onLanguageChanged(const QString& locale);
+
+signals:
+    void languageChanged(const QString& locale);
+
 private:
     void setConfiguration();
 

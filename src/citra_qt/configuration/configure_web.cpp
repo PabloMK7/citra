@@ -100,3 +100,7 @@ void ConfigureWeb::OnLoginVerified() {
                "correctly, and that your internet connection is working."));
     }
 }
+
+void ConfigureWeb::retranslateUi() {
+    ui->retranslateUi(this);
+}

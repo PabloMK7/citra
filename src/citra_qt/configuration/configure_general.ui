@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>300</width>
-    <height>377</height>
+    <width>345</width>
+    <height>493</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -37,6 +37,20 @@
              <string>Search sub-directories for games</string>
             </property>
            </widget>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_2">
+            <item>
+             <widget class="QLabel" name="language_label">
+              <property name="text">
+               <string>Interface language</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QComboBox" name="language_combobox"/>
+            </item>
+           </layout>
           </item>
          </layout>
         </item>
