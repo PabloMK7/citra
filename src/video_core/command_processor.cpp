@@ -245,7 +245,7 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
                     g_state.geometry_pipeline.SubmitVertex(output);
 
                     // TODO: If drawing after every immediate mode triangle kills performance,
-                    // change it to flush triangles whenever a draing config register changes
+                    // change it to flush triangles whenever a drawing config register changes
                     // See: https://github.com/citra-emu/citra/pull/2866#issuecomment-327011550
                     VideoCore::g_renderer->Rasterizer()->DrawTriangles();
                     if (g_debug_context) {
@@ -259,16 +259,7 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
     }
 
     case PICA_REG_INDEX(pipeline.gpu_mode):
-        if (regs.pipeline.gpu_mode == PipelineRegs::GPUMode::Configuring) {
-            MICROPROFILE_SCOPE(GPU_Drawing);
-
-            // Draw immediate mode triangles when GPU Mode is set to GPUMode::Configuring
-            VideoCore::g_renderer->Rasterizer()->DrawTriangles();
-
-            if (g_debug_context) {
-                g_debug_context->OnEvent(DebugContext::Event::FinishedPrimitiveBatch, nullptr);
-            }
-        }
+        // This register likely just enables vertex processing and doesn't need any special handling
         break;
 
     case PICA_REG_INDEX_WORKAROUND(pipeline.command_buffer.trigger[0], 0x23c):
@@ -407,7 +398,6 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
                                                       range.second, range.first);
         }
 
-        MICROPROFILE_SCOPE(GPU_Drawing);
         VideoCore::g_renderer->Rasterizer()->DrawTriangles();
         if (g_debug_context) {
             g_debug_context->OnEvent(DebugContext::Event::FinishedPrimitiveBatch, nullptr);
