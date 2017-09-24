@@ -260,10 +260,4 @@ enum class FlushMode {
  */
 void RasterizerFlushVirtualRegion(VAddr start, u32 size, FlushMode mode);
 
-/**
- * Dynarmic has an optimization to memory accesses when the pointer to the page exists that
- * can be used by setting up the current page table as a callback. This function is used to
- * retrieve the current page table for that purpose.
- */
-std::array<u8*, PAGE_TABLE_NUM_ENTRIES>* GetCurrentPageTablePointers();
 } // namespace Memory
