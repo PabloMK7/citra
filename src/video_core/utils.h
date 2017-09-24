@@ -8,17 +8,11 @@
 
 namespace VideoCore {
 
-/**
- * Interleave the lower 3 bits of each coordinate to get the intra-block offsets, which are
- * arranged in a Z-order curve. More details on the bit manipulation at:
- * https://fgiesen.wordpress.com/2009/12/13/decoding-morton-codes/
- */
+// 8x8 Z-Order coordinate from 2D coordinates
 static inline u32 MortonInterleave(u32 x, u32 y) {
-    u32 i = (x & 7) | ((y & 7) << 8); // ---- -210
-    i = (i ^ (i << 2)) & 0x1313;      // ---2 --10
-    i = (i ^ (i << 1)) & 0x1515;      // ---2 -1-0
-    i = (i | (i >> 7)) & 0x3F;
-    return i;
+    static const u32 xlut[] = {0x00, 0x01, 0x04, 0x05, 0x10, 0x11, 0x14, 0x15};
+    static const u32 ylut[] = {0x00, 0x02, 0x08, 0x0a, 0x20, 0x22, 0x28, 0x2a};
+    return xlut[x % 8] + ylut[y % 8];
 }
 
 /**
