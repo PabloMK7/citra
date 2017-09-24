@@ -41,6 +41,9 @@ public:
     /// Clear all instruction cache
     virtual void ClearInstructionCache() = 0;
 
+    /// Notify CPU emulation that page tables have changed
+    virtual void PageTableChanged() = 0;
+
     /**
      * Set the Program Counter to an address
      * @param addr Address to set PC to

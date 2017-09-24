@@ -4,11 +4,16 @@
 
 #pragma once
 
+#include <map>
 #include <memory>
 #include <dynarmic/dynarmic.h>
 #include "common/common_types.h"
 #include "core/arm/arm_interface.h"
 #include "core/arm/skyeye_common/armstate.h"
+
+namespace Memory {
+struct PageTable;
+} // namespace Memory
 
 class ARM_Dynarmic final : public ARM_Interface {
 public:
@@ -36,8 +41,11 @@ public:
     void ExecuteInstructions(int num_instructions) override;
 
     void ClearInstructionCache() override;
+    void PageTableChanged() override;
 
 private:
-    std::unique_ptr<Dynarmic::Jit> jit;
+    Dynarmic::Jit* jit = nullptr;
+    Memory::PageTable* current_page_table = nullptr;
+    std::map<Memory::PageTable*, std::unique_ptr<Dynarmic::Jit>> jits;
     std::shared_ptr<ARMul_State> interpreter_state;
 };

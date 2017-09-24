@@ -16,6 +16,7 @@ public:
     ~ARM_DynCom();
 
     void ClearInstructionCache() override;
+    void PageTableChanged() override;
 
     void SetPC(u32 pc) override;
     u32 GetPC() const override;
