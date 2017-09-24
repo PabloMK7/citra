@@ -187,8 +187,7 @@ ResultStatus AppLoader_NCCH::Load() {
     if (ResultStatus::Success != result)
         return result;
 
-    Service::FS::RegisterArchiveType(std::make_unique<FileSys::ArchiveFactory_SelfNCCH>(*this),
-                                     Service::FS::ArchiveIdCode::SelfNCCH);
+    Service::FS::RegisterSelfNCCH(*this);
 
     ParseRegionLockoutInfo();
 

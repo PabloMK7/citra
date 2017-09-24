@@ -21,6 +21,10 @@ static constexpr char SYSTEM_ID[]{"00000000000000000000000000000000"};
 /// The scrambled SD card CID, also known as ID1
 static constexpr char SDCARD_ID[]{"00000000000000000000000000000000"};
 
+namespace Loader {
+class AppLoader;
+}
+
 namespace Service {
 namespace FS {
 
@@ -258,6 +262,9 @@ void ArchiveInit();
 
 /// Shutdown archives
 void ArchiveShutdown();
+
+/// Registers a new NCCH file with the SelfNCCH archive factory
+void RegisterSelfNCCH(Loader::AppLoader& app_loader);
 
 /// Register all archive types
 void RegisterArchiveTypes();

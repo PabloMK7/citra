@@ -3,12 +3,14 @@
 // Refer to the license.txt file included.
 
 #include <array>
+#include <cinttypes>
 #include "common/common_types.h"
 #include "common/logging/log.h"
 #include "common/swap.h"
 #include "core/file_sys/archive_selfncch.h"
 #include "core/file_sys/errors.h"
 #include "core/file_sys/ivfc_archive.h"
+#include "core/hle/kernel/process.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // FileSys namespace
@@ -227,38 +229,57 @@ private:
     NCCHData ncch_data;
 };
 
-ArchiveFactory_SelfNCCH::ArchiveFactory_SelfNCCH(Loader::AppLoader& app_loader) {
-    std::shared_ptr<FileUtil::IOFile> romfs_file;
-    if (Loader::ResultStatus::Success ==
-        app_loader.ReadRomFS(romfs_file, ncch_data.romfs_offset, ncch_data.romfs_size)) {
+void ArchiveFactory_SelfNCCH::Register(Loader::AppLoader& app_loader) {
+    u64 program_id = 0;
+    if (app_loader.ReadProgramId(program_id) != Loader::ResultStatus::Success) {
+        LOG_WARNING(
+            Service_FS,
+            "Could not read program id when registering with SelfNCCH, this might be a 3dsx file");
+    }
 
-        ncch_data.romfs_file = std::move(romfs_file);
+    LOG_DEBUG(Service_FS, "Registering program %016" PRIX64 " with the SelfNCCH archive factory",
+              program_id);
+
+    if (ncch_data.find(program_id) != ncch_data.end()) {
+        LOG_WARNING(Service_FS, "Registering program %016" PRIX64
+                                " with SelfNCCH will override existing mapping",
+                    program_id);
+    }
+
+    NCCHData& data = ncch_data[program_id];
+
+    std::shared_ptr<FileUtil::IOFile> romfs_file_;
+    if (Loader::ResultStatus::Success ==
+        app_loader.ReadRomFS(romfs_file_, data.romfs_offset, data.romfs_size)) {
+
+        data.romfs_file = std::move(romfs_file_);
     }
 
     std::shared_ptr<FileUtil::IOFile> update_romfs_file;
     if (Loader::ResultStatus::Success ==
-        app_loader.ReadUpdateRomFS(update_romfs_file, ncch_data.update_romfs_offset,
-                                   ncch_data.update_romfs_size)) {
+        app_loader.ReadUpdateRomFS(update_romfs_file, data.update_romfs_offset,
+                                   data.update_romfs_size)) {
 
-        ncch_data.update_romfs_file = std::move(update_romfs_file);
+        data.update_romfs_file = std::move(update_romfs_file);
     }
 
     std::vector<u8> buffer;
 
     if (Loader::ResultStatus::Success == app_loader.ReadIcon(buffer))
-        ncch_data.icon = std::make_shared<std::vector<u8>>(std::move(buffer));
+        data.icon = std::make_shared<std::vector<u8>>(std::move(buffer));
 
     buffer.clear();
     if (Loader::ResultStatus::Success == app_loader.ReadLogo(buffer))
-        ncch_data.logo = std::make_shared<std::vector<u8>>(std::move(buffer));
+        data.logo = std::make_shared<std::vector<u8>>(std::move(buffer));
 
     buffer.clear();
     if (Loader::ResultStatus::Success == app_loader.ReadBanner(buffer))
-        ncch_data.banner = std::make_shared<std::vector<u8>>(std::move(buffer));
+        data.banner = std::make_shared<std::vector<u8>>(std::move(buffer));
 }
 
 ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_SelfNCCH::Open(const Path& path) {
-    auto archive = std::make_unique<SelfNCCHArchive>(ncch_data);
+    auto archive = std::make_unique<SelfNCCHArchive>(
+        ncch_data[Kernel::g_current_process->codeset->program_id]);
     return MakeResult<std::unique_ptr<ArchiveBackend>>(std::move(archive));
 }
 
