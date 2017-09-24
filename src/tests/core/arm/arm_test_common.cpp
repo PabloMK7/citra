@@ -21,7 +21,7 @@ TestEnvironment::TestEnvironment(bool mutable_memory_)
     Memory::MapIoRegion(page_table, 0x00000000, 0x80000000, test_memory);
     Memory::MapIoRegion(page_table, 0x80000000, 0x80000000, test_memory);
 
-    Memory::current_page_table = &page_table;
+    Memory::SetCurrentPageTable(&page_table);
 }
 
 TestEnvironment::~TestEnvironment() {

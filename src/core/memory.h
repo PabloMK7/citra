@@ -182,7 +182,8 @@ enum : VAddr {
 };
 
 /// Currently active page table
-extern PageTable* current_page_table;
+void SetCurrentPageTable(PageTable* page_table);
+PageTable* GetCurrentPageTable();
 
 bool IsValidVirtualAddress(const VAddr addr);
 bool IsValidPhysicalAddress(const PAddr addr);
