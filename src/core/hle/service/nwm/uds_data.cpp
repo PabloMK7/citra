@@ -274,5 +274,26 @@ std::vector<u8> GenerateDataPayload(const std::vector<u8>& data, u8 channel, u16
     return buffer;
 }
 
+std::vector<u8> GenerateEAPoLStartFrame(u16 association_id, const NodeInfo& node_info) {
+    EAPoLStartPacket eapol_start{};
+    eapol_start.association_id = association_id;
+    eapol_start.friend_code_seed = node_info.friend_code_seed;
+
+    for (int i = 0; i < node_info.username.size(); ++i)
+        eapol_start.username[i] = node_info.username[i];
+
+    // Note: The network_node_id and unknown bytes seem to be uninitialized in the NWM module.
+    // TODO(B3N30): The last 8 bytes seem to have a fixed value of 07 88 15 00 04 e9 13 00 in
+    // EAPoL-Start packets from different 3DSs to the same host during a Super Smash Bros. 4 game.
+    // Find out what that means.
+
+    std::vector<u8> eapol_buffer(sizeof(EAPoLStartPacket));
+    std::memcpy(eapol_buffer.data(), &eapol_start, sizeof(eapol_start));
+
+    std::vector<u8> buffer = GenerateLLCHeader(EtherType::EAPoL);
+    buffer.insert(buffer.end(), eapol_buffer.begin(), eapol_buffer.end());
+    return buffer;
+}
+
 } // namespace NWM
 } // namespace Service

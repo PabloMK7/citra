@@ -67,12 +67,40 @@ struct DataFrameCryptoCTR {
 
 static_assert(sizeof(DataFrameCryptoCTR) == 16, "DataFrameCryptoCTR has the wrong size");
 
+constexpr u16 EAPoLStartMagic = 0x201;
+
+/*
+ * Nintendo EAPoLStartPacket, is used to initaliaze a connection between client and host
+ */
+struct EAPoLStartPacket {
+    u16_be magic = EAPoLStartMagic;
+    u16_be association_id;
+    // This value is hardcoded to 1 in the NWM module.
+    u16_be unknown = 1;
+    INSERT_PADDING_BYTES(2);
+
+    u64_be friend_code_seed;
+    std::array<u16_be, 10> username;
+    INSERT_PADDING_BYTES(4);
+    u16_be network_node_id;
+    INSERT_PADDING_BYTES(6);
+};
+
+static_assert(sizeof(EAPoLStartPacket) == 0x30, "EAPoLStartPacket has the wrong size");
+
 /**
  * Generates an unencrypted 802.11 data payload.
  * @returns The generated frame payload.
  */
 std::vector<u8> GenerateDataPayload(const std::vector<u8>& data, u8 channel, u16 dest_node,
                                     u16 src_node, u16 sequence_number);
+
+/*
+ * Generates an unencrypted 802.11 data frame body with the EAPoL-Start format for UDS
+ * communication.
+ * @returns The generated frame body.
+ */
+std::vector<u8> GenerateEAPoLStartFrame(u16 association_id, const NodeInfo& node_info);
 
 } // namespace NWM
 } // namespace Service

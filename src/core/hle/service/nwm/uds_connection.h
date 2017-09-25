@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <tuple>
 #include <vector>
 #include "common/common_types.h"
 #include "common/swap.h"
@@ -46,6 +47,10 @@ AuthenticationSeq GetAuthenticationSeqNumber(const std::vector<u8>& body);
 /// Generates an 802.11 association response frame with the specified status, association id and
 /// network id, starting at the frame body.
 std::vector<u8> GenerateAssocResponseFrame(AssocStatus status, u16 association_id, u32 network_id);
+
+/// Returns a tuple of (association status, association id) from the body of an AssociationResponse
+/// frame.
+std::tuple<AssocStatus, u16> GetAssociationResult(const std::vector<u8>& body);
 
 } // namespace NWM
 } // namespace Service

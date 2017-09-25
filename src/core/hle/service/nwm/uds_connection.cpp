@@ -75,5 +75,14 @@ std::vector<u8> GenerateAssocResponseFrame(AssocStatus status, u16 association_i
     return data;
 }
 
+std::tuple<AssocStatus, u16> GetAssociationResult(const std::vector<u8>& body) {
+    AssociationResponseFrame frame;
+    memcpy(&frame, body.data(), sizeof(frame));
+
+    constexpr u16 AssociationIdMask = 0x3FFF;
+    return std::make_tuple(static_cast<AssocStatus>(frame.status_code),
+                           frame.assoc_id & AssociationIdMask);
+}
+
 } // namespace NWM
 } // namespace Service

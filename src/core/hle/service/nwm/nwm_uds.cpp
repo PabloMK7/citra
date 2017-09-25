@@ -2,8 +2,10 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <algorithm>
 #include <array>
 #include <cstring>
+#include <list>
 #include <mutex>
 #include <unordered_map>
 #include <vector>
@@ -37,9 +39,12 @@ static ConnectionStatus connection_status{};
 /* Node information about the current network.
  * The amount of elements in this vector is always the maximum number
  * of nodes specified in the network configuration.
- * The first node is always the host, so this always contains at least 1 entry.
+ * The first node is always the host.
  */
-static NodeList node_info(1);
+static NodeList node_info;
+
+// Node information about our own system.
+static NodeInfo current_node;
 
 // Mapping of bind node ids to their respective events.
 static std::unordered_map<u32, Kernel::SharedPtr<Kernel::Event>> bind_node_events;
@@ -54,6 +59,10 @@ static NetworkInfo network_info;
 // Event that will generate and send the 802.11 beacon frames.
 static int beacon_broadcast_event;
 
+// Mutex to synchronize access to the connection status between the emulation thread and the
+// network thread.
+static std::mutex connection_status_mutex;
+
 // Mutex to synchronize access to the list of received beacons between the emulation thread and the
 // network thread.
 static std::mutex beacon_mutex;
@@ -63,14 +72,26 @@ static std::mutex beacon_mutex;
 constexpr size_t MaxBeaconFrames = 15;
 
 // List of the last <MaxBeaconFrames> beacons received from the network.
-static std::deque<Network::WifiPacket> received_beacons;
+static std::list<Network::WifiPacket> received_beacons;
 
 /**
  * Returns a list of received 802.11 beacon frames from the specified sender since the last call.
  */
-std::deque<Network::WifiPacket> GetReceivedBeacons(const MacAddress& sender) {
+std::list<Network::WifiPacket> GetReceivedBeacons(const MacAddress& sender) {
     std::lock_guard<std::mutex> lock(beacon_mutex);
-    // TODO(Subv): Filter by sender.
+    if (sender != Network::BroadcastMac) {
+        std::list<Network::WifiPacket> filtered_list;
+        const auto beacon = std::find_if(received_beacons.begin(), received_beacons.end(),
+                                         [&sender](const Network::WifiPacket& packet) {
+                                             return packet.transmitter_address == sender;
+                                         });
+        if (beacon != received_beacons.end()) {
+            filtered_list.push_back(*beacon);
+            // TODO(B3N30): Check if the complete deque is cleared or just the fetched entries
+            received_beacons.erase(beacon);
+        }
+        return filtered_list;
+    }
     return std::move(received_beacons);
 }
 
@@ -83,6 +104,15 @@ void SendPacket(Network::WifiPacket& packet) {
 // limit is exceeded.
 void HandleBeaconFrame(const Network::WifiPacket& packet) {
     std::lock_guard<std::mutex> lock(beacon_mutex);
+    const auto unique_beacon =
+        std::find_if(received_beacons.begin(), received_beacons.end(),
+                     [&packet](const Network::WifiPacket& new_packet) {
+                         return new_packet.transmitter_address == packet.transmitter_address;
+                     });
+    if (unique_beacon != received_beacons.end()) {
+        // We already have a beacon from the same mac in the deque, remove the old one;
+        received_beacons.erase(unique_beacon);
+    }
 
     received_beacons.emplace_back(packet);
 
@@ -91,14 +121,33 @@ void HandleBeaconFrame(const Network::WifiPacket& packet) {
         received_beacons.pop_front();
 }
 
+void HandleAssociationResponseFrame(const Network::WifiPacket& packet) {
+    auto assoc_result = GetAssociationResult(packet.data);
+
+    ASSERT_MSG(std::get<AssocStatus>(assoc_result) == AssocStatus::Successful,
+               "Could not join network");
+    {
+        std::lock_guard<std::mutex> lock(connection_status_mutex);
+        ASSERT(connection_status.status == static_cast<u32>(NetworkStatus::Connecting));
+    }
+
+    // Send the EAPoL-Start packet to the server.
+    using Network::WifiPacket;
+    WifiPacket eapol_start;
+    eapol_start.channel = network_channel;
+    eapol_start.data = GenerateEAPoLStartFrame(std::get<u16>(assoc_result), current_node);
+    // TODO(B3N30): Encrypt the packet.
+    eapol_start.destination_address = packet.transmitter_address;
+    eapol_start.type = WifiPacket::PacketType::Data;
+
+    SendPacket(eapol_start);
+}
+
 /*
  * Returns an available index in the nodes array for the
  * currently-hosted UDS network.
  */
 static u16 GetNextAvailableNodeId() {
-    ASSERT_MSG(connection_status.status == static_cast<u32>(NetworkStatus::ConnectedAsHost),
-               "Can not accept clients if we're not hosting a network");
-
     for (u16 index = 0; index < connection_status.max_nodes; ++index) {
         if ((connection_status.node_bitmask & (1 << index)) == 0)
             return index;
@@ -113,35 +162,46 @@ static u16 GetNextAvailableNodeId() {
  * authentication frame with SEQ1.
  */
 void StartConnectionSequence(const MacAddress& server) {
-    ASSERT(connection_status.status == static_cast<u32>(NetworkStatus::NotConnected));
-
-    // TODO(Subv): Handle timeout.
-
-    // Send an authentication frame with SEQ1
     using Network::WifiPacket;
     WifiPacket auth_request;
-    auth_request.channel = network_channel;
-    auth_request.data = GenerateAuthenticationFrame(AuthenticationSeq::SEQ1);
-    auth_request.destination_address = server;
-    auth_request.type = WifiPacket::PacketType::Authentication;
+    {
+        std::lock_guard<std::mutex> lock(connection_status_mutex);
+        ASSERT(connection_status.status == static_cast<u32>(NetworkStatus::NotConnected));
+
+        // TODO(Subv): Handle timeout.
+
+        // Send an authentication frame with SEQ1
+        auth_request.channel = network_channel;
+        auth_request.data = GenerateAuthenticationFrame(AuthenticationSeq::SEQ1);
+        auth_request.destination_address = server;
+        auth_request.type = WifiPacket::PacketType::Authentication;
+    }
 
     SendPacket(auth_request);
 }
 
 /// Sends an Association Response frame to the specified mac address
 void SendAssociationResponseFrame(const MacAddress& address) {
-    ASSERT_MSG(connection_status.status == static_cast<u32>(NetworkStatus::ConnectedAsHost));
-
     using Network::WifiPacket;
     WifiPacket assoc_response;
-    assoc_response.channel = network_channel;
-    // TODO(Subv): This will cause multiple clients to end up with the same association id, but
-    // we're not using that for anything.
-    u16 association_id = 1;
-    assoc_response.data = GenerateAssocResponseFrame(AssocStatus::Successful, association_id,
-                                                     network_info.network_id);
-    assoc_response.destination_address = address;
-    assoc_response.type = WifiPacket::PacketType::AssociationResponse;
+
+    {
+        std::lock_guard<std::mutex> lock(connection_status_mutex);
+        if (connection_status.status != static_cast<u32>(NetworkStatus::ConnectedAsHost)) {
+            LOG_ERROR(Service_NWM, "Connection sequence aborted, because connection status is %u",
+                      connection_status.status);
+            return;
+        }
+
+        assoc_response.channel = network_channel;
+        // TODO(Subv): This will cause multiple clients to end up with the same association id, but
+        // we're not using that for anything.
+        u16 association_id = 1;
+        assoc_response.data = GenerateAssocResponseFrame(AssocStatus::Successful, association_id,
+                                                         network_info.network_id);
+        assoc_response.destination_address = address;
+        assoc_response.type = WifiPacket::PacketType::AssociationResponse;
+    }
 
     SendPacket(assoc_response);
 }
@@ -155,16 +215,23 @@ void SendAssociationResponseFrame(const MacAddress& address) {
 void HandleAuthenticationFrame(const Network::WifiPacket& packet) {
     // Only the SEQ1 auth frame is handled here, the SEQ2 frame doesn't need any special behavior
     if (GetAuthenticationSeqNumber(packet.data) == AuthenticationSeq::SEQ1) {
-        ASSERT_MSG(connection_status.status == static_cast<u32>(NetworkStatus::ConnectedAsHost));
-
-        // Respond with an authentication response frame with SEQ2
         using Network::WifiPacket;
         WifiPacket auth_request;
-        auth_request.channel = network_channel;
-        auth_request.data = GenerateAuthenticationFrame(AuthenticationSeq::SEQ2);
-        auth_request.destination_address = packet.transmitter_address;
-        auth_request.type = WifiPacket::PacketType::Authentication;
+        {
+            std::lock_guard<std::mutex> lock(connection_status_mutex);
+            if (connection_status.status != static_cast<u32>(NetworkStatus::ConnectedAsHost)) {
+                LOG_ERROR(Service_NWM,
+                          "Connection sequence aborted, because connection status is %u",
+                          connection_status.status);
+                return;
+            }
 
+            // Respond with an authentication response frame with SEQ2
+            auth_request.channel = network_channel;
+            auth_request.data = GenerateAuthenticationFrame(AuthenticationSeq::SEQ2);
+            auth_request.destination_address = packet.transmitter_address;
+            auth_request.type = WifiPacket::PacketType::Authentication;
+        }
         SendPacket(auth_request);
 
         SendAssociationResponseFrame(packet.transmitter_address);
@@ -179,6 +246,9 @@ void OnWifiPacketReceived(const Network::WifiPacket& packet) {
         break;
     case Network::WifiPacket::PacketType::Authentication:
         HandleAuthenticationFrame(packet);
+        break;
+    case Network::WifiPacket::PacketType::AssociationResponse:
+        HandleAssociationResponseFrame(packet);
         break;
     }
 }
@@ -305,7 +375,7 @@ static void InitializeWithVersion(Interface* self) {
     u32 sharedmem_size = rp.Pop<u32>();
 
     // Update the node information with the data the game gave us.
-    rp.PopRaw(node_info[0]);
+    rp.PopRaw(current_node);
 
     u16 version = rp.Pop<u16>();
 
@@ -315,10 +385,14 @@ static void InitializeWithVersion(Interface* self) {
 
     ASSERT_MSG(recv_buffer_memory->size == sharedmem_size, "Invalid shared memory size.");
 
-    // Reset the connection status, it contains all zeros after initialization,
-    // except for the actual status value.
-    connection_status = {};
-    connection_status.status = static_cast<u32>(NetworkStatus::NotConnected);
+    {
+        std::lock_guard<std::mutex> lock(connection_status_mutex);
+
+        // Reset the connection status, it contains all zeros after initialization,
+        // except for the actual status value.
+        connection_status = {};
+        connection_status.status = static_cast<u32>(NetworkStatus::NotConnected);
+    }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
     rb.Push(RESULT_SUCCESS);
@@ -348,12 +422,16 @@ static void GetConnectionStatus(Interface* self) {
     IPC::RequestBuilder rb = rp.MakeBuilder(13, 0);
 
     rb.Push(RESULT_SUCCESS);
-    rb.PushRaw(connection_status);
+    {
+        std::lock_guard<std::mutex> lock(connection_status_mutex);
+        rb.PushRaw(connection_status);
 
-    // Reset the bitmask of changed nodes after each call to this
-    // function to prevent falsely informing games of outstanding
-    // changes in subsequent calls.
-    connection_status.changed_nodes = 0;
+        // Reset the bitmask of changed nodes after each call to this
+        // function to prevent falsely informing games of outstanding
+        // changes in subsequent calls.
+        // TODO(Subv): Find exactly where the NWM module resets this value.
+        connection_status.changed_nodes = 0;
+    }
 
     LOG_DEBUG(Service_NWM, "called");
 }
@@ -434,31 +512,36 @@ static void BeginHostingNetwork(Interface* self) {
     // The real UDS module throws a fatal error if this assert fails.
     ASSERT_MSG(network_info.max_nodes > 1, "Trying to host a network of only one member.");
 
-    connection_status.status = static_cast<u32>(NetworkStatus::ConnectedAsHost);
+    {
+        std::lock_guard<std::mutex> lock(connection_status_mutex);
+        connection_status.status = static_cast<u32>(NetworkStatus::ConnectedAsHost);
 
-    // Ensure the application data size is less than the maximum value.
-    ASSERT_MSG(network_info.application_data_size <= ApplicationDataSize, "Data size is too big.");
+        // Ensure the application data size is less than the maximum value.
+        ASSERT_MSG(network_info.application_data_size <= ApplicationDataSize,
+                   "Data size is too big.");
 
-    // Set up basic information for this network.
-    network_info.oui_value = NintendoOUI;
-    network_info.oui_type = static_cast<u8>(NintendoTagId::NetworkInfo);
+        // Set up basic information for this network.
+        network_info.oui_value = NintendoOUI;
+        network_info.oui_type = static_cast<u8>(NintendoTagId::NetworkInfo);
 
-    connection_status.max_nodes = network_info.max_nodes;
+        connection_status.max_nodes = network_info.max_nodes;
 
-    // Resize the nodes list to hold max_nodes.
-    node_info.resize(network_info.max_nodes);
+        // Resize the nodes list to hold max_nodes.
+        node_info.resize(network_info.max_nodes);
 
-    // There's currently only one node in the network (the host).
-    connection_status.total_nodes = 1;
-    network_info.total_nodes = 1;
-    // The host is always the first node
-    connection_status.network_node_id = 1;
-    node_info[0].network_node_id = 1;
-    connection_status.nodes[0] = connection_status.network_node_id;
-    // Set the bit 0 in the nodes bitmask to indicate that node 1 is already taken.
-    connection_status.node_bitmask |= 1;
-    // Notify the application that the first node was set.
-    connection_status.changed_nodes |= 1;
+        // There's currently only one node in the network (the host).
+        connection_status.total_nodes = 1;
+        network_info.total_nodes = 1;
+        // The host is always the first node
+        connection_status.network_node_id = 1;
+        current_node.network_node_id = 1;
+        connection_status.nodes[0] = connection_status.network_node_id;
+        // Set the bit 0 in the nodes bitmask to indicate that node 1 is already taken.
+        connection_status.node_bitmask |= 1;
+        // Notify the application that the first node was set.
+        connection_status.changed_nodes |= 1;
+        node_info[0] = current_node;
+    }
 
     // If the game has a preferred channel, use that instead.
     if (network_info.channel != 0)
@@ -495,9 +578,13 @@ static void DestroyNetwork(Interface* self) {
     // Unschedule the beacon broadcast event.
     CoreTiming::UnscheduleEvent(beacon_broadcast_event, 0);
 
-    // TODO(Subv): Check if connection_status is indeed reset after this call.
-    connection_status = {};
-    connection_status.status = static_cast<u8>(NetworkStatus::NotConnected);
+    {
+        std::lock_guard<std::mutex> lock(connection_status_mutex);
+
+        // TODO(Subv): Check if connection_status is indeed reset after this call.
+        connection_status = {};
+        connection_status.status = static_cast<u8>(NetworkStatus::NotConnected);
+    }
     connection_status_event->Signal();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
@@ -540,17 +627,24 @@ static void SendTo(Interface* self) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
 
-    if (connection_status.status != static_cast<u32>(NetworkStatus::ConnectedAsClient) &&
-        connection_status.status != static_cast<u32>(NetworkStatus::ConnectedAsHost)) {
-        rb.Push(ResultCode(ErrorDescription::NotAuthorized, ErrorModule::UDS,
-                           ErrorSummary::InvalidState, ErrorLevel::Status));
-        return;
-    }
+    u16 network_node_id;
 
-    if (dest_node_id == connection_status.network_node_id) {
-        rb.Push(ResultCode(ErrorDescription::NotFound, ErrorModule::UDS,
-                           ErrorSummary::WrongArgument, ErrorLevel::Status));
-        return;
+    {
+        std::lock_guard<std::mutex> lock(connection_status_mutex);
+        if (connection_status.status != static_cast<u32>(NetworkStatus::ConnectedAsClient) &&
+            connection_status.status != static_cast<u32>(NetworkStatus::ConnectedAsHost)) {
+            rb.Push(ResultCode(ErrorDescription::NotAuthorized, ErrorModule::UDS,
+                               ErrorSummary::InvalidState, ErrorLevel::Status));
+            return;
+        }
+
+        if (dest_node_id == connection_status.network_node_id) {
+            rb.Push(ResultCode(ErrorDescription::NotFound, ErrorModule::UDS,
+                               ErrorSummary::WrongArgument, ErrorLevel::Status));
+            return;
+        }
+
+        network_node_id = connection_status.network_node_id;
     }
 
     // TODO(Subv): Do something with the flags.
@@ -567,8 +661,8 @@ static void SendTo(Interface* self) {
 
     // TODO(Subv): Increment the sequence number after each sent packet.
     u16 sequence_number = 0;
-    std::vector<u8> data_payload = GenerateDataPayload(
-        data, data_channel, dest_node_id, connection_status.network_node_id, sequence_number);
+    std::vector<u8> data_payload =
+        GenerateDataPayload(data, data_channel, dest_node_id, network_node_id, sequence_number);
 
     // TODO(Subv): Retrieve the MAC address of the dest_node_id and our own to encrypt
     // and encapsulate the payload.
@@ -595,6 +689,7 @@ static void GetChannel(Interface* self) {
     IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x1A, 0, 0);
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
 
+    std::lock_guard<std::mutex> lock(connection_status_mutex);
     bool is_connected = connection_status.status != static_cast<u32>(NetworkStatus::NotConnected);
 
     u8 channel = is_connected ? network_channel : 0;
@@ -766,6 +861,7 @@ static void BeaconBroadcastCallback(u64 userdata, int cycles_late) {
  * @param network_node_id Network Node Id of the connecting client.
  */
 void OnClientConnected(u16 network_node_id) {
+    std::lock_guard<std::mutex> lock(connection_status_mutex);
     ASSERT_MSG(connection_status.status == static_cast<u32>(NetworkStatus::ConnectedAsHost),
                "Can not accept clients if we're not hosting a network");
     ASSERT_MSG(connection_status.total_nodes < connection_status.max_nodes,
@@ -827,8 +923,11 @@ NWM_UDS::~NWM_UDS() {
     connection_status_event = nullptr;
     recv_buffer_memory = nullptr;
 
-    connection_status = {};
-    connection_status.status = static_cast<u32>(NetworkStatus::NotConnected);
+    {
+        std::lock_guard<std::mutex> lock(connection_status_mutex);
+        connection_status = {};
+        connection_status.status = static_cast<u32>(NetworkStatus::NotConnected);
+    }
 
     CoreTiming::UnscheduleEvent(beacon_broadcast_event, 0);
 }
