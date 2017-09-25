@@ -316,8 +316,15 @@ void RasterizerMarkRegionCached(PAddr start, u32 size, int count_delta) {
 
     for (unsigned i = 0; i < num_pages; ++i, paddr += PAGE_SIZE) {
         boost::optional<VAddr> maybe_vaddr = PhysicalToVirtualAddress(paddr);
-        if (!maybe_vaddr)
+        // While the physical <-> virtual mapping is 1:1 for the regions supported by the cache,
+        // some games (like Pokemon Super Mystery Dungeon) will try to use textures that go beyond
+        // the end address of VRAM, causing the Virtual->Physical translation to fail when flushing
+        // parts of the texture.
+        if (!maybe_vaddr) {
+            LOG_ERROR(HW_Memory,
+                      "Trying to flush a cached region to an invalid physical address %08X", paddr);
             continue;
+        }
         VAddr vaddr = *maybe_vaddr;
 
         u8& res_count = current_page_table->cached_res_count[vaddr >> PAGE_BITS];
@@ -329,6 +336,10 @@ void RasterizerMarkRegionCached(PAddr start, u32 size, int count_delta) {
         if (res_count == 0) {
             PageType& page_type = current_page_table->attributes[vaddr >> PAGE_BITS];
             switch (page_type) {
+            case PageType::Unmapped:
+                // It is not necessary for a process to have this region mapped into its address
+                // space, for example, a system module need not have a VRAM mapping.
+                break;
             case PageType::Memory:
                 page_type = PageType::RasterizerCachedMemory;
                 current_page_table->pointers[vaddr >> PAGE_BITS] = nullptr;
@@ -347,6 +358,10 @@ void RasterizerMarkRegionCached(PAddr start, u32 size, int count_delta) {
         if (res_count == 0) {
             PageType& page_type = current_page_table->attributes[vaddr >> PAGE_BITS];
             switch (page_type) {
+            case PageType::Unmapped:
+                // It is not necessary for a process to have this region mapped into its address
+                // space, for example, a system module need not have a VRAM mapping.
+                break;
             case PageType::RasterizerCachedMemory: {
                 u8* pointer = GetPointerFromVMA(vaddr & ~PAGE_MASK);
                 if (pointer == nullptr) {
