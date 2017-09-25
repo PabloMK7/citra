@@ -24,15 +24,15 @@ ConfigureWeb::~ConfigureWeb() {}
 void ConfigureWeb::setConfiguration() {
     ui->web_credentials_disclaimer->setWordWrap(true);
     ui->telemetry_learn_more->setOpenExternalLinks(true);
-    ui->telemetry_learn_more->setText("<a "
-                                      "href='https://citra-emu.org/entry/"
-                                      "telemetry-and-why-thats-a-good-thing/'>Learn more</a>");
+    ui->telemetry_learn_more->setText(tr("<a "
+                                         "href='https://citra-emu.org/entry/"
+                                         "telemetry-and-why-thats-a-good-thing/'>Learn more</a>"));
 
     ui->web_signup_link->setOpenExternalLinks(true);
-    ui->web_signup_link->setText("<a href='https://services.citra-emu.org/'>Sign up</a>");
+    ui->web_signup_link->setText(tr("<a href='https://services.citra-emu.org/'>Sign up</a>"));
     ui->web_token_info_link->setOpenExternalLinks(true);
     ui->web_token_info_link->setText(
-        "<a href='https://citra-emu.org/wiki/citra-web-service/'>What is my token?</a>");
+        tr("<a href='https://citra-emu.org/wiki/citra-web-service/'>What is my token?</a>"));
 
     ui->toggle_telemetry->setChecked(Settings::values.enable_telemetry);
     ui->edit_username->setText(QString::fromStdString(Settings::values.citra_username));
@@ -40,8 +40,8 @@ void ConfigureWeb::setConfiguration() {
     // Connect after setting the values, to avoid calling OnLoginChanged now
     connect(ui->edit_token, &QLineEdit::textChanged, this, &ConfigureWeb::OnLoginChanged);
     connect(ui->edit_username, &QLineEdit::textChanged, this, &ConfigureWeb::OnLoginChanged);
-    ui->label_telemetry_id->setText("Telemetry ID: 0x" +
-                                    QString::number(Core::GetTelemetryId(), 16).toUpper());
+    ui->label_telemetry_id->setText(
+        tr("Telemetry ID: 0x%1").arg(QString::number(Core::GetTelemetryId(), 16).toUpper()));
     user_verified = true;
 }
 
@@ -60,8 +60,8 @@ void ConfigureWeb::applyConfiguration() {
 
 void ConfigureWeb::RefreshTelemetryID() {
     const u64 new_telemetry_id{Core::RegenerateTelemetryId()};
-    ui->label_telemetry_id->setText("Telemetry ID: 0x" +
-                                    QString::number(new_telemetry_id, 16).toUpper());
+    ui->label_telemetry_id->setText(
+        tr("Telemetry ID: 0x%1").arg(QString::number(new_telemetry_id, 16).toUpper()));
 }
 
 void ConfigureWeb::OnLoginChanged() {

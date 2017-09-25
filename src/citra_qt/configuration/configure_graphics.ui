@@ -63,57 +63,57 @@
               <widget class="QComboBox" name="resolution_factor_combobox">
                 <item>
                   <property name="text">
-                    <string notr="true">Auto (Window Size)</string>
+                    <string>Auto (Window Size)</string>
                   </property>
                 </item>
                 <item>
                   <property name="text">
-                    <string notr="true">Native (400x240)</string>
+                    <string>Native (400x240)</string>
                   </property>
                 </item>
                 <item>
                   <property name="text">
-                    <string notr="true">2x Native (800x480)</string>
+                    <string>2x Native (800x480)</string>
                   </property>
                 </item>
                 <item>
                   <property name="text">
-                    <string notr="true">3x Native (1200x720)</string>
+                    <string>3x Native (1200x720)</string>
                   </property>
                 </item>
                 <item>
                   <property name="text">
-                    <string notr="true">4x Native (1600x960)</string>
+                    <string>4x Native (1600x960)</string>
                   </property>
                 </item>
                 <item>
                   <property name="text">
-                    <string notr="true">5x Native (2000x1200)</string>
+                    <string>5x Native (2000x1200)</string>
                   </property>
                 </item>
                 <item>
                   <property name="text">
-                    <string notr="true">6x Native (2400x1440)</string>
+                    <string>6x Native (2400x1440)</string>
                   </property>
                 </item>
                 <item>
                   <property name="text">
-                    <string notr="true">7x Native (2800x1680)</string>
+                    <string>7x Native (2800x1680)</string>
                   </property>
                 </item>
                 <item>
                   <property name="text">
-                    <string notr="true">8x Native (3200x1920)</string>
+                    <string>8x Native (3200x1920)</string>
                   </property>
                 </item>
                 <item>
                   <property name="text">
-                    <string notr="true">9x Native (3600x2160)</string>
+                    <string>9x Native (3600x2160)</string>
                   </property>
                 </item>
                 <item>
                   <property name="text">
-                    <string notr="true">10x Native (4000x2400)</string>
+                    <string>10x Native (4000x2400)</string>
                   </property>
                 </item>
               </widget>
