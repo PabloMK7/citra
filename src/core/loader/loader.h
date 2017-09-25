@@ -167,6 +167,19 @@ public:
     }
 
     /**
+     * Get the update RomFS of the application
+     * Since the RomFS can be huge, we return a file reference instead of copying to a buffer
+     * @param romfs_file The file containing the RomFS
+     * @param offset The offset the romfs begins on
+     * @param size The size of the romfs
+     * @return ResultStatus result of function
+     */
+    virtual ResultStatus ReadUpdateRomFS(std::shared_ptr<FileUtil::IOFile>& romfs_file, u64& offset,
+                                         u64& size) {
+        return ResultStatus::ErrorNotImplemented;
+    }
+
+    /**
      * Get the title of the application
      * @param title Reference to store the application title into
      * @return ResultStatus result of function

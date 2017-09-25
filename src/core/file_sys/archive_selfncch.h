@@ -24,6 +24,10 @@ struct NCCHData {
     std::shared_ptr<FileUtil::IOFile> romfs_file;
     u64 romfs_offset = 0;
     u64 romfs_size = 0;
+
+    std::shared_ptr<FileUtil::IOFile> update_romfs_file;
+    u64 update_romfs_offset = 0;
+    u64 update_romfs_size = 0;
 };
 
 /// File system interface to the SelfNCCH archive

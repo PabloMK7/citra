@@ -26,6 +26,7 @@ set(SRCS
             file_sys/archive_systemsavedata.cpp
             file_sys/disk_archive.cpp
             file_sys/ivfc_archive.cpp
+            file_sys/ncch_container.cpp
             file_sys/path_parser.cpp
             file_sys/savedata_archive.cpp
             frontend/camera/blank_camera.cpp
