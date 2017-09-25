@@ -117,7 +117,9 @@ StereoBuffer16 DecodePCM16(const unsigned num_channels, const u8* const data,
             ret[i].fill(sample);
         }
     } else {
-        std::memcpy(ret.data(), data, sample_count * 2 * sizeof(u16));
+        for (size_t i = 0; i < sample_count; ++i) {
+            std::memcpy(&ret[i], data + i * sizeof(s16) * 2, 2 * sizeof(s16));
+        }
     }
 
     return ret;
