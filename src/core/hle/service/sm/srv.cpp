@@ -13,6 +13,7 @@
 #include "core/hle/kernel/errors.h"
 #include "core/hle/kernel/hle_ipc.h"
 #include "core/hle/kernel/semaphore.h"
+#include "core/hle/kernel/server_port.h"
 #include "core/hle/kernel/server_session.h"
 #include "core/hle/service/sm/sm.h"
 #include "core/hle/service/sm/srv.h"
@@ -184,12 +185,35 @@ void SRV::PublishToSubscriber(Kernel::HLERequestContext& ctx) {
                 flags);
 }
 
+void SRV::RegisterService(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x3, 4, 0);
+
+    auto name_buf = rp.PopRaw<std::array<char, 8>>();
+    size_t name_len = rp.Pop<u32>();
+    u32 max_sessions = rp.Pop<u32>();
+
+    std::string name(name_buf.data(), std::min(name_len, name_buf.size()));
+
+    auto port = service_manager->RegisterService(name, max_sessions);
+
+    if (port.Failed()) {
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(port.Code());
+        LOG_ERROR(Service_SRV, "called service=%s -> error 0x%08X", name.c_str(), port.Code().raw);
+        return;
+    }
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
+    rb.Push(RESULT_SUCCESS);
+    rb.PushObjects(port.Unwrap());
+}
+
 SRV::SRV(std::shared_ptr<ServiceManager> service_manager)
     : ServiceFramework("srv:", 4), service_manager(std::move(service_manager)) {
     static const FunctionInfo functions[] = {
         {0x00010002, &SRV::RegisterClient, "RegisterClient"},
         {0x00020000, &SRV::EnableNotification, "EnableNotification"},
-        {0x00030100, nullptr, "RegisterService"},
+        {0x00030100, &SRV::RegisterService, "RegisterService"},
         {0x000400C0, nullptr, "UnregisterService"},
         {0x00050100, &SRV::GetServiceHandle, "GetServiceHandle"},
         {0x000600C2, nullptr, "RegisterPort"},

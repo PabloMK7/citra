@@ -32,6 +32,9 @@ constexpr ResultCode ERR_ACCESS_DENIED(6, ErrorModule::SRV, ErrorSummary::Invali
                                        ErrorLevel::Permanent); // 0xD8E06406
 constexpr ResultCode ERR_NAME_CONTAINS_NUL(7, ErrorModule::SRV, ErrorSummary::WrongArgument,
                                            ErrorLevel::Permanent); // 0xD9006407
+constexpr ResultCode ERR_ALREADY_REGISTERED(ErrorDescription::AlreadyExists, ErrorModule::OS,
+                                            ErrorSummary::WrongArgument,
+                                            ErrorLevel::Permanent); // 0xD9001BFC
 
 class ServiceManager {
 public:

@@ -28,6 +28,7 @@ private:
     void Subscribe(Kernel::HLERequestContext& ctx);
     void Unsubscribe(Kernel::HLERequestContext& ctx);
     void PublishToSubscriber(Kernel::HLERequestContext& ctx);
+    void RegisterService(Kernel::HLERequestContext& ctx);
 
     std::shared_ptr<ServiceManager> service_manager;
     Kernel::SharedPtr<Kernel::Semaphore> notification_semaphore;

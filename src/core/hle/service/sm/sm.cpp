@@ -36,6 +36,10 @@ ResultVal<Kernel::SharedPtr<Kernel::ServerPort>> ServiceManager::RegisterService
     std::string name, unsigned int max_sessions) {
 
     CASCADE_CODE(ValidateServiceName(name));
+
+    if (registered_services.find(name) != registered_services.end())
+        return ERR_ALREADY_REGISTERED;
+
     Kernel::SharedPtr<Kernel::ServerPort> server_port;
     Kernel::SharedPtr<Kernel::ClientPort> client_port;
     std::tie(server_port, client_port) = Kernel::ServerPort::CreatePortPair(max_sessions, name);
