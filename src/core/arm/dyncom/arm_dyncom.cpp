@@ -25,6 +25,10 @@ void ARM_DynCom::ClearInstructionCache() {
     trans_cache_buf_top = 0;
 }
 
+void ARM_DynCom::PageTableChanged() {
+    ClearInstructionCache();
+}
+
 void ARM_DynCom::SetPC(u32 pc) {
     state->Reg[15] = pc;
 }

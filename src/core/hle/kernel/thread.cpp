@@ -178,16 +178,13 @@ static void SwitchContext(Thread* new_thread) {
         ready_queue.remove(new_thread->current_priority, new_thread);
         new_thread->status = THREADSTATUS_RUNNING;
 
-        Core::CPU().LoadContext(new_thread->context);
-        Core::CPU().SetCP15Register(CP15_THREAD_URO, new_thread->GetTLSAddress());
-
         if (previous_process != current_thread->owner_process) {
             Kernel::g_current_process = current_thread->owner_process;
-            Memory::current_page_table = &Kernel::g_current_process->vm_manager.page_table;
-            // We have switched processes and thus, page tables, clear the instruction cache so we
-            // don't keep stale data from the previous process.
-            Core::CPU().ClearInstructionCache();
+            SetCurrentPageTable(&Kernel::g_current_process->vm_manager.page_table);
         }
+
+        Core::CPU().LoadContext(new_thread->context);
+        Core::CPU().SetCP15Register(CP15_THREAD_URO, new_thread->GetTLSAddress());
     } else {
         current_thread = nullptr;
         // Note: We do not reset the current process and current page table when idling because

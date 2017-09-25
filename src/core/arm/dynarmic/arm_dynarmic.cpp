@@ -41,7 +41,7 @@ static bool IsReadOnlyMemory(u32 vaddr) {
 }
 
 static Dynarmic::UserCallbacks GetUserCallbacks(
-    const std::shared_ptr<ARMul_State>& interpeter_state) {
+    const std::shared_ptr<ARMul_State>& interpeter_state, Memory::PageTable* current_page_table) {
     Dynarmic::UserCallbacks user_callbacks{};
     user_callbacks.InterpreterFallback = &InterpreterFallback;
     user_callbacks.user_arg = static_cast<void*>(interpeter_state.get());
@@ -56,16 +56,14 @@ static Dynarmic::UserCallbacks GetUserCallbacks(
     user_callbacks.memory.Write16 = &Memory::Write16;
     user_callbacks.memory.Write32 = &Memory::Write32;
     user_callbacks.memory.Write64 = &Memory::Write64;
-    // TODO(Subv): Re-add the page table pointers once dynarmic supports switching page tables at
-    // runtime.
-    user_callbacks.page_table = nullptr;
+    user_callbacks.page_table = &current_page_table->pointers;
     user_callbacks.coprocessors[15] = std::make_shared<DynarmicCP15>(interpeter_state);
     return user_callbacks;
 }
 
 ARM_Dynarmic::ARM_Dynarmic(PrivilegeMode initial_mode) {
     interpreter_state = std::make_shared<ARMul_State>(initial_mode);
-    jit = std::make_unique<Dynarmic::Jit>(GetUserCallbacks(interpreter_state));
+    PageTableChanged();
 }
 
 void ARM_Dynarmic::SetPC(u32 pc) {
@@ -136,6 +134,7 @@ void ARM_Dynarmic::AddTicks(u64 ticks) {
 MICROPROFILE_DEFINE(ARM_Jit, "ARM JIT", "ARM JIT", MP_RGB(255, 64, 64));
 
 void ARM_Dynarmic::ExecuteInstructions(int num_instructions) {
+    ASSERT(Memory::GetCurrentPageTable() == current_page_table);
     MICROPROFILE_SCOPE(ARM_Jit);
 
     std::size_t ticks_executed = jit->Run(static_cast<unsigned>(num_instructions));
@@ -177,4 +176,17 @@ void ARM_Dynarmic::PrepareReschedule() {
 
 void ARM_Dynarmic::ClearInstructionCache() {
     jit->ClearCache();
+}
+
+void ARM_Dynarmic::PageTableChanged() {
+    current_page_table = Memory::GetCurrentPageTable();
+
+    auto iter = jits.find(current_page_table);
+    if (iter != jits.end()) {
+        jit = iter->second.get();
+        return;
+    }
+
+    jit = new Dynarmic::Jit(GetUserCallbacks(interpreter_state, current_page_table));
+    jits.emplace(current_page_table, std::unique_ptr<Dynarmic::Jit>(jit));
 }
