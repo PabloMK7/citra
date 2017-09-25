@@ -6,6 +6,7 @@
 
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <vector>
 #include "common/common_types.h"
 #include "core/file_sys/archive_backend.h"
@@ -33,7 +34,10 @@ struct NCCHData {
 /// File system interface to the SelfNCCH archive
 class ArchiveFactory_SelfNCCH final : public ArchiveFactory {
 public:
-    explicit ArchiveFactory_SelfNCCH(Loader::AppLoader& app_loader);
+    ArchiveFactory_SelfNCCH() = default;
+
+    /// Registers a loaded application so that we can open its SelfNCCH archive when requested.
+    void Register(Loader::AppLoader& app_loader);
 
     std::string GetName() const override {
         return "SelfNCCH";
@@ -43,7 +47,8 @@ public:
     ResultVal<ArchiveFormatInfo> GetFormatInfo(const Path& path) const override;
 
 private:
-    NCCHData ncch_data;
+    /// Mapping of ProgramId -> NCCHData
+    std::unordered_map<u64, NCCHData> ncch_data;
 };
 
 } // namespace FileSys

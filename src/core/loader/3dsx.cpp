@@ -278,8 +278,7 @@ ResultStatus AppLoader_THREEDSX::Load() {
 
     Kernel::g_current_process->Run(48, Kernel::DEFAULT_STACK_SIZE);
 
-    Service::FS::RegisterArchiveType(std::make_unique<FileSys::ArchiveFactory_SelfNCCH>(*this),
-                                     Service::FS::ArchiveIdCode::SelfNCCH);
+    Service::FS::RegisterSelfNCCH(*this);
 
     is_loaded = true;
     return ResultStatus::Success;
