@@ -361,7 +361,8 @@ static void ResetThreadContext(ARM_Interface::ThreadContext& context, u32 stack_
 }
 
 ResultVal<SharedPtr<Thread>> Thread::Create(std::string name, VAddr entry_point, u32 priority,
-                                            u32 arg, s32 processor_id, VAddr stack_top) {
+                                            u32 arg, s32 processor_id, VAddr stack_top,
+                                            SharedPtr<Process> owner_process) {
     // Check if priority is in ranged. Lowest priority -> highest priority id.
     if (priority > THREADPRIO_LOWEST) {
         LOG_ERROR(Kernel_SVC, "Invalid thread priority: %d", priority);
@@ -375,7 +376,7 @@ ResultVal<SharedPtr<Thread>> Thread::Create(std::string name, VAddr entry_point,
 
     // TODO(yuriks): Other checks, returning 0xD9001BEA
 
-    if (!Memory::IsValidVirtualAddress(entry_point)) {
+    if (!Memory::IsValidVirtualAddress(*owner_process, entry_point)) {
         LOG_ERROR(Kernel_SVC, "(name=%s): invalid entry %08x", name.c_str(), entry_point);
         // TODO: Verify error
         return ResultCode(ErrorDescription::InvalidAddress, ErrorModule::Kernel,
@@ -399,10 +400,10 @@ ResultVal<SharedPtr<Thread>> Thread::Create(std::string name, VAddr entry_point,
     thread->wait_address = 0;
     thread->name = std::move(name);
     thread->callback_handle = wakeup_callback_handle_table.Create(thread).Unwrap();
-    thread->owner_process = g_current_process;
+    thread->owner_process = owner_process;
 
     // Find the next available TLS index, and mark it as used
-    auto& tls_slots = Kernel::g_current_process->tls_slots;
+    auto& tls_slots = owner_process->tls_slots;
     bool needs_allocation = true;
     u32 available_page; // Which allocated page has free space
     u32 available_slot; // Which slot within the page is free
@@ -426,13 +427,13 @@ ResultVal<SharedPtr<Thread>> Thread::Create(std::string name, VAddr entry_point,
         // Allocate some memory from the end of the linear heap for this region.
         linheap_memory->insert(linheap_memory->end(), Memory::PAGE_SIZE, 0);
         memory_region->used += Memory::PAGE_SIZE;
-        Kernel::g_current_process->linear_heap_used += Memory::PAGE_SIZE;
+        owner_process->linear_heap_used += Memory::PAGE_SIZE;
 
         tls_slots.emplace_back(0); // The page is completely available at the start
         available_page = tls_slots.size() - 1;
         available_slot = 0; // Use the first slot in the new page
 
-        auto& vm_manager = Kernel::g_current_process->vm_manager;
+        auto& vm_manager = owner_process->vm_manager;
         vm_manager.RefreshMemoryBlockMappings(linheap_memory.get());
 
         // Map the page to the current process' address space.
@@ -486,10 +487,10 @@ void Thread::BoostPriority(s32 priority) {
     current_priority = priority;
 }
 
-SharedPtr<Thread> SetupMainThread(u32 entry_point, s32 priority) {
+SharedPtr<Thread> SetupMainThread(u32 entry_point, s32 priority, SharedPtr<Process> owner_process) {
     // Initialize new "main" thread
     auto thread_res = Thread::Create("main", entry_point, priority, 0, THREADPROCESSORID_0,
-                                     Memory::HEAP_VADDR_END);
+                                     Memory::HEAP_VADDR_END, owner_process);
 
     SharedPtr<Thread> thread = std::move(thread_res).Unwrap();
 

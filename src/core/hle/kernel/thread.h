@@ -56,10 +56,12 @@ public:
      * @param arg User data to pass to the thread
      * @param processor_id The ID(s) of the processors on which the thread is desired to be run
      * @param stack_top The address of the thread's stack top
+     * @param owner_process The parent process for the thread
      * @return A shared pointer to the newly created thread
      */
     static ResultVal<SharedPtr<Thread>> Create(std::string name, VAddr entry_point, u32 priority,
-                                               u32 arg, s32 processor_id, VAddr stack_top);
+                                               u32 arg, s32 processor_id, VAddr stack_top,
+                                               SharedPtr<Process> owner_process);
 
     std::string GetName() const override {
         return name;
@@ -116,9 +118,9 @@ public:
     void ResumeFromWait();
 
     /**
-    * Schedules an event to wake up the specified thread after the specified delay
-    * @param nanoseconds The time this thread will be allowed to sleep for
-    */
+     * Schedules an event to wake up the specified thread after the specified delay
+     * @param nanoseconds The time this thread will be allowed to sleep for
+     */
     void WakeAfterDelay(s64 nanoseconds);
 
     /**
@@ -214,9 +216,10 @@ private:
  * Sets up the primary application thread
  * @param entry_point The address at which the thread should start execution
  * @param priority The priority to give the main thread
+ * @param owner_process The parent process for the main thread
  * @return A shared pointer to the main thread
  */
-SharedPtr<Thread> SetupMainThread(u32 entry_point, s32 priority);
+SharedPtr<Thread> SetupMainThread(u32 entry_point, s32 priority, SharedPtr<Process> owner_process);
 
 /**
  * Returns whether there are any threads that are ready to run.
@@ -276,4 +279,4 @@ void ThreadingShutdown();
  */
 const std::vector<SharedPtr<Thread>>& GetThreadList();
 
-} // namespace
+} // namespace Kernel
