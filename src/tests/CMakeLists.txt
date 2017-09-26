@@ -4,6 +4,7 @@ set(SRCS
             core/arm/dyncom/arm_dyncom_vfp_tests.cpp
             core/file_sys/path_parser.cpp
             core/hle/kernel/hle_ipc.cpp
+            core/memory/memory.cpp
             glad.cpp
             tests.cpp
             )
