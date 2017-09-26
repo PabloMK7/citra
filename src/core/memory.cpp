@@ -110,14 +110,19 @@ static u8* GetPointerFromVMA(VAddr vaddr) {
 /**
  * This function should only be called for virtual addreses with attribute `PageType::Special`.
  */
-static MMIORegionPointer GetMMIOHandler(VAddr vaddr) {
-    for (const auto& region : current_page_table->special_regions) {
+static MMIORegionPointer GetMMIOHandler(const PageTable& page_table, VAddr vaddr) {
+    for (const auto& region : page_table.special_regions) {
         if (vaddr >= region.base && vaddr < (region.base + region.size)) {
             return region.handler;
         }
     }
     ASSERT_MSG(false, "Mapped IO page without a handler @ %08X", vaddr);
     return nullptr; // Should never happen
+}
+
+static MMIORegionPointer GetMMIOHandler(VAddr vaddr) {
+    const PageTable& page_table = Kernel::g_current_process->vm_manager.page_table;
+    return GetMMIOHandler(page_table, vaddr);
 }
 
 template <typename T>
@@ -204,23 +209,29 @@ void Write(const VAddr vaddr, const T data) {
     }
 }
 
-bool IsValidVirtualAddress(const VAddr vaddr) {
-    const u8* page_pointer = current_page_table->pointers[vaddr >> PAGE_BITS];
+bool IsValidVirtualAddress(const Kernel::Process& process, const VAddr vaddr) {
+    auto& page_table = process.vm_manager.page_table;
+
+    const u8* page_pointer = page_table.pointers[vaddr >> PAGE_BITS];
     if (page_pointer)
         return true;
 
-    if (current_page_table->attributes[vaddr >> PAGE_BITS] == PageType::RasterizerCachedMemory)
+    if (page_table.attributes[vaddr >> PAGE_BITS] == PageType::RasterizerCachedMemory)
         return true;
 
-    if (current_page_table->attributes[vaddr >> PAGE_BITS] != PageType::Special)
+    if (page_table.attributes[vaddr >> PAGE_BITS] != PageType::Special)
         return false;
 
-    MMIORegionPointer mmio_region = GetMMIOHandler(vaddr);
+    MMIORegionPointer mmio_region = GetMMIOHandler(page_table, vaddr);
     if (mmio_region) {
         return mmio_region->IsValidAddress(vaddr);
     }
 
     return false;
+}
+
+bool IsValidVirtualAddress(const VAddr vaddr) {
+    return IsValidVirtualAddress(*Kernel::g_current_process, vaddr);
 }
 
 bool IsValidPhysicalAddress(const PAddr paddr) {
