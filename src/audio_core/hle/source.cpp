@@ -264,7 +264,7 @@ void Source::GenerateFrame() {
             break;
         }
     }
-    state.next_sample_number += frame_position;
+    state.next_sample_number += static_cast<u32>(frame_position);
 
     state.filters.ProcessFrame(current_frame);
 }

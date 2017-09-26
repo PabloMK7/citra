@@ -61,7 +61,7 @@ s32 ResourceLimit::GetCurrentResourceValue(u32 resource) const {
     }
 }
 
-s32 ResourceLimit::GetMaxResourceValue(u32 resource) const {
+u32 ResourceLimit::GetMaxResourceValue(u32 resource) const {
     switch (resource) {
     case PRIORITY:
         return max_priority;

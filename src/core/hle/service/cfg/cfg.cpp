@@ -141,7 +141,7 @@ void GetCountryCodeString(Service::Interface* self) {
 
 void GetCountryCodeID(Service::Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
-    u16 country_code = cmd_buff[1];
+    u16 country_code = static_cast<u16>(cmd_buff[1]);
     u16 country_code_id = 0;
 
     // The following algorithm will fail if the first country code isn't 0.

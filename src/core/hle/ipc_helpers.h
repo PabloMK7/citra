@@ -117,9 +117,9 @@ public:
 
     void PushCurrentPIDHandle();
 
-    void PushStaticBuffer(VAddr buffer_vaddr, u32 size, u8 buffer_id);
+    void PushStaticBuffer(VAddr buffer_vaddr, size_t size, u8 buffer_id);
 
-    void PushMappedBuffer(VAddr buffer_vaddr, u32 size, MappedBufferPermissions perms);
+    void PushMappedBuffer(VAddr buffer_vaddr, size_t size, MappedBufferPermissions perms);
 };
 
 /// Push ///
@@ -190,12 +190,12 @@ inline void RequestBuilder::PushCurrentPIDHandle() {
     Push(u32(0));
 }
 
-inline void RequestBuilder::PushStaticBuffer(VAddr buffer_vaddr, u32 size, u8 buffer_id) {
+inline void RequestBuilder::PushStaticBuffer(VAddr buffer_vaddr, size_t size, u8 buffer_id) {
     Push(StaticBufferDesc(size, buffer_id));
     Push(buffer_vaddr);
 }
 
-inline void RequestBuilder::PushMappedBuffer(VAddr buffer_vaddr, u32 size,
+inline void RequestBuilder::PushMappedBuffer(VAddr buffer_vaddr, size_t size,
                                              MappedBufferPermissions perms) {
     Push(MappedBufferDesc(size, perms));
     Push(buffer_vaddr);
@@ -227,8 +227,8 @@ public:
                                bool validateHeader = true) {
         if (validateHeader)
             ValidateHeader();
-        Header builderHeader{
-            MakeHeader(header.command_id, normal_params_size, translate_params_size)};
+        Header builderHeader{MakeHeader(static_cast<u16>(header.command_id), normal_params_size,
+                                        translate_params_size)};
         if (context != nullptr)
             return {*context, builderHeader};
         else

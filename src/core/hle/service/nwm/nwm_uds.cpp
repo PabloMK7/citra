@@ -316,7 +316,7 @@ static void RecvBeaconBroadcastData(Interface* self) {
     auto beacons = GetReceivedBeacons(mac_address);
 
     BeaconDataReplyHeader data_reply_header{};
-    data_reply_header.total_entries = beacons.size();
+    data_reply_header.total_entries = static_cast<u32>(beacons.size());
     data_reply_header.max_output_size = out_buffer_size;
 
     Memory::WriteBlock(current_buffer_pos, &data_reply_header, sizeof(BeaconDataReplyHeader));
@@ -326,8 +326,8 @@ static void RecvBeaconBroadcastData(Interface* self) {
     for (const auto& beacon : beacons) {
         BeaconEntryHeader entry{};
         // TODO(Subv): Figure out what this size is used for.
-        entry.unk_size = sizeof(BeaconEntryHeader) + beacon.data.size();
-        entry.total_size = sizeof(BeaconEntryHeader) + beacon.data.size();
+        entry.unk_size = static_cast<u32>(sizeof(BeaconEntryHeader) + beacon.data.size());
+        entry.total_size = static_cast<u32>(sizeof(BeaconEntryHeader) + beacon.data.size());
         entry.wifi_channel = beacon.channel;
         entry.header_size = sizeof(BeaconEntryHeader);
         entry.mac_address = beacon.transmitter_address;
@@ -338,9 +338,9 @@ static void RecvBeaconBroadcastData(Interface* self) {
         current_buffer_pos += sizeof(BeaconEntryHeader);
 
         Memory::WriteBlock(current_buffer_pos, beacon.data.data(), beacon.data.size());
-        current_buffer_pos += beacon.data.size();
+        current_buffer_pos += static_cast<VAddr>(beacon.data.size());
 
-        total_size += sizeof(BeaconEntryHeader) + beacon.data.size();
+        total_size += static_cast<u32>(sizeof(BeaconEntryHeader) + beacon.data.size());
     }
 
     // Update the total size in the structure and write it to the buffer again.

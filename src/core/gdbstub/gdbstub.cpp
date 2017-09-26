@@ -946,7 +946,7 @@ static void Init(u16 port) {
     WSAStartup(MAKEWORD(2, 2), &InitData);
 #endif
 
-    int tmpsock = socket(PF_INET, SOCK_STREAM, 0);
+    int tmpsock = static_cast<int>(socket(PF_INET, SOCK_STREAM, 0));
     if (tmpsock == -1) {
         LOG_ERROR(Debug_GDBStub, "Failed to create gdb socket");
     }
@@ -973,7 +973,7 @@ static void Init(u16 port) {
     sockaddr_in saddr_client;
     sockaddr* client_addr = reinterpret_cast<sockaddr*>(&saddr_client);
     socklen_t client_addrlen = sizeof(saddr_client);
-    gdbserver_socket = accept(tmpsock, client_addr, &client_addrlen);
+    gdbserver_socket = static_cast<int>(accept(tmpsock, client_addr, &client_addrlen));
     if (gdbserver_socket < 0) {
         // In the case that we couldn't start the server for whatever reason, just start CPU
         // execution like normal.

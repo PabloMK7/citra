@@ -217,7 +217,7 @@ void Directory::HandleSyncRequest(Kernel::SharedPtr<Kernel::ServerSession> serve
         LOG_TRACE(Service_FS, "Read %s: count=%d", GetName().c_str(), count);
 
         // Number of entries actually read
-        u32 read = backend->Read(entries.size(), entries.data());
+        u32 read = backend->Read(static_cast<u32>(entries.size()), entries.data());
         cmd_buff[2] = read;
         Memory::WriteBlock(address, entries.data(), read * sizeof(FileSys::Entry));
         break;
