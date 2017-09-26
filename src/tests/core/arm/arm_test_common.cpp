@@ -3,30 +3,34 @@
 // Refer to the license.txt file included.
 
 #include "core/core.h"
+#include "core/hle/kernel/process.h"
 #include "core/memory.h"
 #include "core/memory_setup.h"
 #include "tests/core/arm/arm_test_common.h"
 
 namespace ArmTests {
 
-static Memory::PageTable page_table;
+static Memory::PageTable* page_table = nullptr;
 
 TestEnvironment::TestEnvironment(bool mutable_memory_)
     : mutable_memory(mutable_memory_), test_memory(std::make_shared<TestMemory>(this)) {
 
-    page_table.pointers.fill(nullptr);
-    page_table.attributes.fill(Memory::PageType::Unmapped);
-    page_table.cached_res_count.fill(0);
+    Kernel::g_current_process = Kernel::Process::Create(Kernel::CodeSet::Create("", 0));
+    page_table = &Kernel::g_current_process->vm_manager.page_table;
 
-    Memory::MapIoRegion(page_table, 0x00000000, 0x80000000, test_memory);
-    Memory::MapIoRegion(page_table, 0x80000000, 0x80000000, test_memory);
+    page_table->pointers.fill(nullptr);
+    page_table->attributes.fill(Memory::PageType::Unmapped);
+    page_table->cached_res_count.fill(0);
 
-    Memory::SetCurrentPageTable(&page_table);
+    Memory::MapIoRegion(*page_table, 0x00000000, 0x80000000, test_memory);
+    Memory::MapIoRegion(*page_table, 0x80000000, 0x80000000, test_memory);
+
+    Memory::SetCurrentPageTable(page_table);
 }
 
 TestEnvironment::~TestEnvironment() {
-    Memory::UnmapRegion(page_table, 0x80000000, 0x80000000);
-    Memory::UnmapRegion(page_table, 0x00000000, 0x80000000);
+    Memory::UnmapRegion(*page_table, 0x80000000, 0x80000000);
+    Memory::UnmapRegion(*page_table, 0x00000000, 0x80000000);
 }
 
 void TestEnvironment::SetMemory64(VAddr vaddr, u64 value) {
