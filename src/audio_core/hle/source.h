@@ -108,7 +108,7 @@ private:
 
         u32 current_sample_number = 0;
         u32 next_sample_number = 0;
-        std::vector<std::array<s16, 2>> current_buffer;
+        AudioInterp::StereoBuffer16 current_buffer;
 
         // buffer_id state
 

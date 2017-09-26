@@ -47,7 +47,7 @@ static void StepOverSamples(State& state, StereoBuffer16& input, float rate,
     state.xn1 = input[inputi + 1];
     state.fposition = fposition - inputi * scale_factor;
 
-    input.erase(input.begin(), input.begin() + inputi + 2);
+    input.erase(input.begin(), std::next(input.begin(), inputi + 2));
 }
 
 void None(State& state, StereoBuffer16& input, float rate, DSP::HLE::StereoFrame16& output,

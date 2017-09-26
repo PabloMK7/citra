@@ -5,13 +5,13 @@
 #pragma once
 
 #include <array>
-#include <vector>
+#include <deque>
 #include "common/common_types.h"
 
 namespace Codec {
 
 /// A variable length buffer of signed PCM16 stereo samples.
-using StereoBuffer16 = std::vector<std::array<s16, 2>>;
+using StereoBuffer16 = std::deque<std::array<s16, 2>>;
 
 /// See: Codec::DecodeADPCM
 struct ADPCMState {

@@ -5,14 +5,14 @@
 #pragma once
 
 #include <array>
-#include <vector>
+#include <deque>
 #include "audio_core/hle/common.h"
 #include "common/common_types.h"
 
 namespace AudioInterp {
 
 /// A variable length buffer of signed PCM16 stereo samples.
-using StereoBuffer16 = std::vector<std::array<s16, 2>>;
+using StereoBuffer16 = std::deque<std::array<s16, 2>>;
 
 struct State {
     /// Two historical samples.
