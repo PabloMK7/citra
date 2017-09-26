@@ -91,8 +91,8 @@ static u32 TranslateAddr(u32 addr, const THREEloadinfo* loadinfo, u32* offsets) 
     return loadinfo->seg_addrs[2] + addr - offsets[1];
 }
 
-using Kernel::SharedPtr;
 using Kernel::CodeSet;
+using Kernel::SharedPtr;
 
 static THREEDSX_Error Load3DSXFile(FileUtil::IOFile& file, u32 base_addr,
                                    SharedPtr<CodeSet>* out_codeset) {
@@ -255,7 +255,7 @@ FileType AppLoader_THREEDSX::IdentifyType(FileUtil::IOFile& file) {
     return FileType::Error;
 }
 
-ResultStatus AppLoader_THREEDSX::Load() {
+ResultStatus AppLoader_THREEDSX::Load(Kernel::SharedPtr<Kernel::Process>& process) {
     if (is_loaded)
         return ResultStatus::ErrorAlreadyLoaded;
 
@@ -267,16 +267,15 @@ ResultStatus AppLoader_THREEDSX::Load() {
         return ResultStatus::Error;
     codeset->name = filename;
 
-    Kernel::g_current_process = Kernel::Process::Create(std::move(codeset));
-    Kernel::g_current_process->svc_access_mask.set();
-    Kernel::g_current_process->address_mappings = default_address_mappings;
-    Memory::SetCurrentPageTable(&Kernel::g_current_process->vm_manager.page_table);
+    process = Kernel::Process::Create(std::move(codeset));
+    process->svc_access_mask.set();
+    process->address_mappings = default_address_mappings;
 
     // Attach the default resource limit (APPLICATION) to the process
-    Kernel::g_current_process->resource_limit =
+    process->resource_limit =
         Kernel::ResourceLimit::GetForCategory(Kernel::ResourceLimitCategory::APPLICATION);
 
-    Kernel::g_current_process->Run(48, Kernel::DEFAULT_STACK_SIZE);
+    process->Run(48, Kernel::DEFAULT_STACK_SIZE);
 
     Service::FS::RegisterSelfNCCH(*this);
 

@@ -30,7 +30,7 @@ public:
         return IdentifyType(file);
     }
 
-    ResultStatus Load() override;
+    ResultStatus Load(Kernel::SharedPtr<Kernel::Process>& process) override;
 
 private:
     std::string filename;
