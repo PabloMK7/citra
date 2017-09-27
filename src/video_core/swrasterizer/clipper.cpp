@@ -98,7 +98,7 @@ void ProcessTriangle(const OutputVertex& v0, const OutputVertex& v1, const Outpu
 
     auto FlipQuaternionIfOpposite = [](auto& a, const auto& b) {
         if (Math::Dot(a, b) < float24::Zero())
-            a = -a;
+            a = a * float24::FromFloat32(-1.0f);
     };
 
     // Flip the quaternions if they are opposite to prevent interpolating them over the wrong
