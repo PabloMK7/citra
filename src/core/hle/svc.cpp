@@ -271,6 +271,24 @@ static ResultCode WaitSynchronization1(Kernel::Handle handle, s64 nano_seconds) 
         // Create an event to wake the thread up after the specified nanosecond delay has passed
         thread->WakeAfterDelay(nano_seconds);
 
+        thread->wakeup_callback = [](ThreadWakeupReason reason,
+                                     Kernel::SharedPtr<Kernel::Thread> thread,
+                                     Kernel::SharedPtr<Kernel::WaitObject> object) {
+
+            ASSERT(thread->status == THREADSTATUS_WAIT_SYNCH_ANY);
+
+            if (reason == ThreadWakeupReason::Timeout) {
+                thread->SetWaitSynchronizationResult(Kernel::RESULT_TIMEOUT);
+                return;
+            }
+
+            ASSERT(reason == ThreadWakeupReason::Signal);
+            thread->SetWaitSynchronizationResult(RESULT_SUCCESS);
+
+            // WaitSynchronization1 doesn't have an output index like WaitSynchronizationN, so we
+            // don't have to do anything else here.
+        };
+
         Core::System::GetInstance().PrepareReschedule();
 
         // Note: The output of this SVC will be set to RESULT_SUCCESS if the thread
@@ -344,6 +362,23 @@ static ResultCode WaitSynchronizationN(s32* out, Kernel::Handle* handles, s32 ha
         // Create an event to wake the thread up after the specified nanosecond delay has passed
         thread->WakeAfterDelay(nano_seconds);
 
+        thread->wakeup_callback = [](ThreadWakeupReason reason,
+                                     Kernel::SharedPtr<Kernel::Thread> thread,
+                                     Kernel::SharedPtr<Kernel::WaitObject> object) {
+
+            ASSERT(thread->status == THREADSTATUS_WAIT_SYNCH_ALL);
+
+            if (reason == ThreadWakeupReason::Timeout) {
+                thread->SetWaitSynchronizationResult(Kernel::RESULT_TIMEOUT);
+                return;
+            }
+
+            ASSERT(reason == ThreadWakeupReason::Signal);
+
+            thread->SetWaitSynchronizationResult(RESULT_SUCCESS);
+            // The wait_all case does not update the output index.
+        };
+
         Core::System::GetInstance().PrepareReschedule();
 
         // This value gets set to -1 by default in this case, it is not modified after this.
@@ -389,12 +424,28 @@ static ResultCode WaitSynchronizationN(s32* out, Kernel::Handle* handles, s32 ha
         // Create an event to wake the thread up after the specified nanosecond delay has passed
         thread->WakeAfterDelay(nano_seconds);
 
+        thread->wakeup_callback = [](ThreadWakeupReason reason,
+                                     Kernel::SharedPtr<Kernel::Thread> thread,
+                                     Kernel::SharedPtr<Kernel::WaitObject> object) {
+
+            ASSERT(thread->status == THREADSTATUS_WAIT_SYNCH_ANY);
+
+            if (reason == ThreadWakeupReason::Timeout) {
+                thread->SetWaitSynchronizationResult(Kernel::RESULT_TIMEOUT);
+                return;
+            }
+
+            ASSERT(reason == ThreadWakeupReason::Signal);
+
+            thread->SetWaitSynchronizationResult(RESULT_SUCCESS);
+            thread->SetWaitSynchronizationOutput(thread->GetWaitObjectIndex(object.get()));
+        };
+
         Core::System::GetInstance().PrepareReschedule();
 
         // Note: The output of this SVC will be set to RESULT_SUCCESS if the thread resumes due to a
         // signal in one of its wait objects.
         // Otherwise we retain the default value of timeout, and -1 in the out parameter
-        thread->wait_set_output = true;
         *out = -1;
         return Kernel::RESULT_TIMEOUT;
     }
@@ -483,8 +534,6 @@ static ResultCode ReplyAndReceive(s32* index, Kernel::Handle* handles, s32 handl
 
     // No objects were ready to be acquired, prepare to suspend the thread.
 
-    // TODO(Subv): Perform IPC translation upon wakeup.
-
     // Put the thread to sleep
     thread->status = THREADSTATUS_WAIT_SYNCH_ANY;
 
@@ -496,12 +545,24 @@ static ResultCode ReplyAndReceive(s32* index, Kernel::Handle* handles, s32 handl
 
     thread->wait_objects = std::move(objects);
 
+    thread->wakeup_callback = [](ThreadWakeupReason reason,
+                                 Kernel::SharedPtr<Kernel::Thread> thread,
+                                 Kernel::SharedPtr<Kernel::WaitObject> object) {
+
+        ASSERT(thread->status == THREADSTATUS_WAIT_SYNCH_ANY);
+        ASSERT(reason == ThreadWakeupReason::Signal);
+
+        thread->SetWaitSynchronizationResult(RESULT_SUCCESS);
+        thread->SetWaitSynchronizationOutput(thread->GetWaitObjectIndex(object.get()));
+
+        // TODO(Subv): Perform IPC translation upon wakeup.
+    };
+
     Core::System::GetInstance().PrepareReschedule();
 
     // Note: The output of this SVC will be set to RESULT_SUCCESS if the thread resumes due to a
     // signal in one of its wait objects, or to 0xC8A01836 if there was a translation error.
     // By default the index is set to -1.
-    thread->wait_set_output = true;
     *index = -1;
     return RESULT_SUCCESS;
 }
