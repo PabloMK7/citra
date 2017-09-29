@@ -83,6 +83,18 @@ void GetBatteryChargeState(Interface* self);
 void GetPedometerState(Interface* self);
 
 /**
+ * PTM::GetStepHistory service function
+ *  Inputs:
+ *      1 : Number of hours
+ *    2-3 : Start time
+ *      4 : Buffer mapping descriptor
+ *      5 : (short*) Buffer for step counts
+ *  Outputs:
+ *      1 : Result of function, 0 on success, otherwise error code
+ */
+void GetStepHistory(Interface* self);
+
+/**
  * PTM::GetTotalStepCount service function
  *  Outputs:
  *      1 : Result of function, 0 on success, otherwise error code
