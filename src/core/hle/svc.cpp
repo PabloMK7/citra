@@ -656,8 +656,9 @@ static ResultCode CreateThread(Kernel::Handle* out_handle, u32 priority, u32 ent
                   "Newly created thread must run in the SysCore (Core1), unimplemented.");
     }
 
-    CASCADE_RESULT(SharedPtr<Thread> thread, Kernel::Thread::Create(name, entry_point, priority,
-                                                                    arg, processor_id, stack_top));
+    CASCADE_RESULT(SharedPtr<Thread> thread,
+                   Kernel::Thread::Create(name, entry_point, priority, arg, processor_id, stack_top,
+                                          Kernel::g_current_process));
 
     thread->context.fpscr =
         FPSCR_DEFAULT_NAN | FPSCR_FLUSH_TO_ZERO | FPSCR_ROUND_TOZERO; // 0x03C00000

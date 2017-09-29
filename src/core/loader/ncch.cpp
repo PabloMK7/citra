@@ -67,9 +67,9 @@ std::pair<boost::optional<u32>, ResultStatus> AppLoader_NCCH::LoadKernelSystemMo
                           ResultStatus::Success);
 }
 
-ResultStatus AppLoader_NCCH::LoadExec() {
-    using Kernel::SharedPtr;
+ResultStatus AppLoader_NCCH::LoadExec(Kernel::SharedPtr<Kernel::Process>& process) {
     using Kernel::CodeSet;
+    using Kernel::SharedPtr;
 
     if (!is_loaded)
         return ResultStatus::ErrorNotLoaded;
@@ -107,16 +107,15 @@ ResultStatus AppLoader_NCCH::LoadExec() {
         codeset->entrypoint = codeset->code.addr;
         codeset->memory = std::make_shared<std::vector<u8>>(std::move(code));
 
-        Kernel::g_current_process = Kernel::Process::Create(std::move(codeset));
-        Memory::SetCurrentPageTable(&Kernel::g_current_process->vm_manager.page_table);
+        process = Kernel::Process::Create(std::move(codeset));
 
         // Attach a resource limit to the process based on the resource limit category
-        Kernel::g_current_process->resource_limit =
+        process->resource_limit =
             Kernel::ResourceLimit::GetForCategory(static_cast<Kernel::ResourceLimitCategory>(
                 overlay_ncch->exheader_header.arm11_system_local_caps.resource_limit_category));
 
         // Set the default CPU core for this process
-        Kernel::g_current_process->ideal_processor =
+        process->ideal_processor =
             overlay_ncch->exheader_header.arm11_system_local_caps.ideal_processor;
 
         // Copy data while converting endianness
@@ -124,11 +123,11 @@ ResultStatus AppLoader_NCCH::LoadExec() {
             kernel_caps;
         std::copy_n(overlay_ncch->exheader_header.arm11_kernel_caps.descriptors, kernel_caps.size(),
                     begin(kernel_caps));
-        Kernel::g_current_process->ParseKernelCaps(kernel_caps.data(), kernel_caps.size());
+        process->ParseKernelCaps(kernel_caps.data(), kernel_caps.size());
 
         s32 priority = overlay_ncch->exheader_header.arm11_system_local_caps.priority;
         u32 stack_size = overlay_ncch->exheader_header.codeset_info.stack_size;
-        Kernel::g_current_process->Run(priority, stack_size);
+        process->Run(priority, stack_size);
         return ResultStatus::Success;
     }
     return ResultStatus::Error;
@@ -151,7 +150,7 @@ void AppLoader_NCCH::ParseRegionLockoutInfo() {
     }
 }
 
-ResultStatus AppLoader_NCCH::Load() {
+ResultStatus AppLoader_NCCH::Load(Kernel::SharedPtr<Kernel::Process>& process) {
     u64_le ncch_program_id;
 
     if (is_loaded)
@@ -183,7 +182,7 @@ ResultStatus AppLoader_NCCH::Load() {
 
     is_loaded = true; // Set state to loaded
 
-    result = LoadExec(); // Load the executable into memory for booting
+    result = LoadExec(process); // Load the executable into memory for booting
     if (ResultStatus::Success != result)
         return result;
 

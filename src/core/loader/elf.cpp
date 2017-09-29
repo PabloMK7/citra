@@ -13,8 +13,8 @@
 #include "core/loader/elf.h"
 #include "core/memory.h"
 
-using Kernel::SharedPtr;
 using Kernel::CodeSet;
+using Kernel::SharedPtr;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // ELF Header Constants
@@ -375,7 +375,7 @@ FileType AppLoader_ELF::IdentifyType(FileUtil::IOFile& file) {
     return FileType::Error;
 }
 
-ResultStatus AppLoader_ELF::Load() {
+ResultStatus AppLoader_ELF::Load(Kernel::SharedPtr<Kernel::Process>& process) {
     if (is_loaded)
         return ResultStatus::ErrorAlreadyLoaded;
 
@@ -394,16 +394,15 @@ ResultStatus AppLoader_ELF::Load() {
     SharedPtr<CodeSet> codeset = elf_reader.LoadInto(Memory::PROCESS_IMAGE_VADDR);
     codeset->name = filename;
 
-    Kernel::g_current_process = Kernel::Process::Create(std::move(codeset));
-    Kernel::g_current_process->svc_access_mask.set();
-    Kernel::g_current_process->address_mappings = default_address_mappings;
-    Memory::SetCurrentPageTable(&Kernel::g_current_process->vm_manager.page_table);
+    process = Kernel::Process::Create(std::move(codeset));
+    process->svc_access_mask.set();
+    process->address_mappings = default_address_mappings;
 
     // Attach the default resource limit (APPLICATION) to the process
-    Kernel::g_current_process->resource_limit =
+    process->resource_limit =
         Kernel::ResourceLimit::GetForCategory(Kernel::ResourceLimitCategory::APPLICATION);
 
-    Kernel::g_current_process->Run(48, Kernel::DEFAULT_STACK_SIZE);
+    process->Run(48, Kernel::DEFAULT_STACK_SIZE);
 
     is_loaded = true;
     return ResultStatus::Success;

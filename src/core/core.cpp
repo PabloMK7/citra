@@ -13,6 +13,7 @@
 #include "core/core_timing.h"
 #include "core/gdbstub/gdbstub.h"
 #include "core/hle/kernel/kernel.h"
+#include "core/hle/kernel/process.h"
 #include "core/hle/kernel/thread.h"
 #include "core/hle/service/service.h"
 #include "core/hw/hw.h"
@@ -100,7 +101,7 @@ System::ResultStatus System::Load(EmuWindow* emu_window, const std::string& file
         return init_result;
     }
 
-    const Loader::ResultStatus load_result{app_loader->Load()};
+    const Loader::ResultStatus load_result{app_loader->Load(Kernel::g_current_process)};
     if (Loader::ResultStatus::Success != load_result) {
         LOG_CRITICAL(Core, "Failed to load ROM (Error %i)!", load_result);
         System::Shutdown();
@@ -114,6 +115,7 @@ System::ResultStatus System::Load(EmuWindow* emu_window, const std::string& file
             return ResultStatus::ErrorLoader;
         }
     }
+    Memory::SetCurrentPageTable(&Kernel::g_current_process->vm_manager.page_table);
     status = ResultStatus::Success;
     return status;
 }
@@ -196,4 +198,4 @@ void System::Shutdown() {
     LOG_DEBUG(Core, "Shutdown OK");
 }
 
-} // namespace
+} // namespace Core

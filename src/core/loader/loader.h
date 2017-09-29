@@ -13,10 +13,12 @@
 #include <boost/optional.hpp>
 #include "common/common_types.h"
 #include "common/file_util.h"
+#include "core/hle/kernel/kernel.h"
 
 namespace Kernel {
 struct AddressMapping;
-}
+class Process;
+} // namespace Kernel
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Loader namespace
@@ -92,10 +94,11 @@ public:
     virtual FileType GetFileType() = 0;
 
     /**
-     * Load the application
-     * @return ResultStatus result of function
+     * Load the application and return the created Process instance
+     * @param process The newly created process.
+     * @return The status result of the operation.
      */
-    virtual ResultStatus Load() = 0;
+    virtual ResultStatus Load(Kernel::SharedPtr<Kernel::Process>& process) = 0;
 
     /**
      * Loads the system mode that this application needs.
@@ -206,4 +209,4 @@ extern const std::initializer_list<Kernel::AddressMapping> default_address_mappi
  */
 std::unique_ptr<AppLoader> GetLoader(const std::string& filename);
 
-} // namespace
+} // namespace Loader

@@ -147,7 +147,7 @@ void Process::Run(s32 main_thread_priority, u32 stack_size) {
     }
 
     vm_manager.LogLayout(Log::Level::Debug);
-    Kernel::SetupMainThread(codeset->entrypoint, main_thread_priority);
+    Kernel::SetupMainThread(codeset->entrypoint, main_thread_priority, this);
 }
 
 VAddr Process::GetLinearHeapAreaAddress() const {
