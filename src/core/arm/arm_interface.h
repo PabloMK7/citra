@@ -125,12 +125,6 @@ public:
     virtual void SetCP15Register(CP15Register reg, u32 value) = 0;
 
     /**
-     * Advance the CPU core by the specified number of ticks (e.g. to simulate CPU execution time)
-     * @param ticks Number of ticks to advance the CPU core
-     */
-    virtual void AddTicks(u64 ticks) = 0;
-
-    /**
      * Saves the current CPU context
      * @param ctx Thread context to save
      */
@@ -149,9 +143,6 @@ public:
     u64 GetNumInstructions() const {
         return num_instructions;
     }
-
-    s64 down_count = 0; ///< A decreasing counter of remaining cycles before the next event,
-                        /// decreased by the cpu run loop
 
 protected:
     /**

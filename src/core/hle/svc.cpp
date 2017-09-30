@@ -1039,7 +1039,7 @@ static void SleepThread(s64 nanoseconds) {
 static s64 GetSystemTick() {
     s64 result = CoreTiming::GetTicks();
     // Advance time to defeat dumb games (like Cubic Ninja) that busy-wait for the frame to end.
-    Core::CPU().AddTicks(150); // Measured time between two calls on a 9.2 o3DS with Ninjhax 1.1b
+    CoreTiming::AddTicks(150); // Measured time between two calls on a 9.2 o3DS with Ninjhax 1.1b
     return result;
 }
 
