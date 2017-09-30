@@ -8,6 +8,7 @@
 #include <vector>
 #include "common/common_types.h"
 #include "common/swap.h"
+#include "core/hle/service/nwm/uds_beacon.h"
 #include "core/hle/service/service.h"
 
 namespace Service {
@@ -67,6 +68,16 @@ struct DataFrameCryptoCTR {
 
 static_assert(sizeof(DataFrameCryptoCTR) == 16, "DataFrameCryptoCTR has the wrong size");
 
+struct EAPoLNodeInfo {
+    u64_be friend_code_seed;
+    std::array<u16_be, 10> username;
+    INSERT_PADDING_BYTES(4);
+    u16_be network_node_id;
+    INSERT_PADDING_BYTES(6);
+};
+
+static_assert(sizeof(EAPoLNodeInfo) == 0x28, "EAPoLNodeInfo has the wrong size");
+
 constexpr u16 EAPoLStartMagic = 0x201;
 
 /*
@@ -78,15 +89,27 @@ struct EAPoLStartPacket {
     // This value is hardcoded to 1 in the NWM module.
     u16_be unknown = 1;
     INSERT_PADDING_BYTES(2);
-
-    u64_be friend_code_seed;
-    std::array<u16_be, 10> username;
-    INSERT_PADDING_BYTES(4);
-    u16_be network_node_id;
-    INSERT_PADDING_BYTES(6);
+    EAPoLNodeInfo node;
 };
 
 static_assert(sizeof(EAPoLStartPacket) == 0x30, "EAPoLStartPacket has the wrong size");
+
+constexpr u16 EAPoLLogoffMagic = 0x202;
+
+struct EAPoLLogoffPacket {
+    u16_be magic = EAPoLLogoffMagic;
+    INSERT_PADDING_BYTES(2);
+    u16_be assigned_node_id;
+    MacAddress client_mac_address;
+    INSERT_PADDING_BYTES(6);
+    u8 connected_nodes;
+    u8 max_nodes;
+    INSERT_PADDING_BYTES(4);
+
+    std::array<EAPoLNodeInfo, UDSMaxNodes> nodes;
+};
+
+static_assert(sizeof(EAPoLLogoffPacket) == 0x298, "EAPoLLogoffPacket has the wrong size");
 
 /**
  * Generates an unencrypted 802.11 data payload.
@@ -101,6 +124,41 @@ std::vector<u8> GenerateDataPayload(const std::vector<u8>& data, u8 channel, u16
  * @returns The generated frame body.
  */
 std::vector<u8> GenerateEAPoLStartFrame(u16 association_id, const NodeInfo& node_info);
+
+/*
+ * Returns the EtherType of the specified 802.11 frame.
+ */
+EtherType GetFrameEtherType(const std::vector<u8>& frame);
+
+/*
+ * Returns the EAPoL type (Start / Logoff) of the specified 802.11 frame.
+ * Note: The frame *must* be an EAPoL frame.
+ */
+u16 GetEAPoLFrameType(const std::vector<u8>& frame);
+
+/*
+ * Returns a deserialized NodeInfo structure from the information inside an EAPoL-Start packet
+ * encapsulated in an 802.11 data frame.
+ */
+NodeInfo DeserializeNodeInfoFromFrame(const std::vector<u8>& frame);
+
+/*
+ * Returns a NodeInfo constructed from the data in the specified EAPoLNodeInfo.
+ */
+NodeInfo DeserializeNodeInfo(const EAPoLNodeInfo& node);
+
+/*
+ * Generates an unencrypted 802.11 data frame body with the EAPoL-Logoff format for UDS
+ * communication.
+ * @returns The generated frame body.
+ */
+std::vector<u8> GenerateEAPoLLogoffFrame(const MacAddress& mac_address, u16 network_node_id,
+                                         const NodeList& nodes, u8 max_nodes, u8 total_nodes);
+
+/*
+ * Returns a EAPoLLogoffPacket representing the specified 802.11-encapsulated data frame.
+ */
+EAPoLLogoffPacket ParseEAPoLLogoffFrame(const std::vector<u8>& frame);
 
 } // namespace NWM
 } // namespace Service

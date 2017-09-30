@@ -15,6 +15,7 @@
 #include "core/hle/ipc_helpers.h"
 #include "core/hle/kernel/event.h"
 #include "core/hle/kernel/shared_memory.h"
+#include "core/hle/lock.h"
 #include "core/hle/result.h"
 #include "core/hle/service/nwm/nwm_uds.h"
 #include "core/hle/service/nwm/uds_beacon.h"
@@ -100,6 +101,20 @@ void SendPacket(Network::WifiPacket& packet) {
     // TODO(Subv): Implement.
 }
 
+/*
+ * Returns an available index in the nodes array for the
+ * currently-hosted UDS network.
+ */
+static u16 GetNextAvailableNodeId() {
+    for (u16 index = 0; index < connection_status.max_nodes; ++index) {
+        if ((connection_status.node_bitmask & (1 << index)) == 0)
+            return index;
+    }
+
+    // Any connection attempts to an already full network should have been refused.
+    ASSERT_MSG(false, "No available connection slots in the network");
+}
+
 // Inserts the received beacon frame in the beacon queue and removes any older beacons if the size
 // limit is exceeded.
 void HandleBeaconFrame(const Network::WifiPacket& packet) {
@@ -143,18 +158,88 @@ void HandleAssociationResponseFrame(const Network::WifiPacket& packet) {
     SendPacket(eapol_start);
 }
 
-/*
- * Returns an available index in the nodes array for the
- * currently-hosted UDS network.
- */
-static u16 GetNextAvailableNodeId() {
-    for (u16 index = 0; index < connection_status.max_nodes; ++index) {
-        if ((connection_status.node_bitmask & (1 << index)) == 0)
-            return index;
-    }
+static void HandleEAPoLPacket(const Network::WifiPacket& packet) {
+    std::lock_guard<std::mutex> lock(connection_status_mutex);
 
-    // Any connection attempts to an already full network should have been refused.
-    ASSERT_MSG(false, "No available connection slots in the network");
+    if (GetEAPoLFrameType(packet.data) == EAPoLStartMagic) {
+        if (connection_status.status != static_cast<u32>(NetworkStatus::ConnectedAsHost)) {
+            LOG_DEBUG(Service_NWM, "Connection sequence aborted, because connection status is %u",
+                      connection_status.status);
+            return;
+        }
+
+        auto node = DeserializeNodeInfoFromFrame(packet.data);
+
+        if (connection_status.max_nodes == connection_status.total_nodes) {
+            // Reject connection attempt
+            LOG_ERROR(Service_NWM, "Reached maximum nodes, but reject packet wasn't sent.");
+            // TODO(B3N30): Figure out what packet is sent here
+            return;
+        }
+
+        // Get an unused network node id
+        u16 node_id = GetNextAvailableNodeId();
+        node.network_node_id = node_id + 1;
+
+        connection_status.node_bitmask |= 1 << node_id;
+        connection_status.changed_nodes |= 1 << node_id;
+        connection_status.nodes[node_id] = node.network_node_id;
+        connection_status.total_nodes++;
+
+        u8 current_nodes = network_info.total_nodes;
+        node_info[current_nodes] = node;
+
+        network_info.total_nodes++;
+
+        // Send the EAPoL-Logoff packet.
+        using Network::WifiPacket;
+        WifiPacket eapol_logoff;
+        eapol_logoff.channel = network_channel;
+        eapol_logoff.data =
+            GenerateEAPoLLogoffFrame(packet.transmitter_address, node.network_node_id, node_info,
+                                     network_info.max_nodes, network_info.total_nodes);
+        // TODO(Subv): Encrypt the packet.
+        eapol_logoff.destination_address = packet.transmitter_address;
+        eapol_logoff.type = WifiPacket::PacketType::Data;
+
+        SendPacket(eapol_logoff);
+        // TODO(B3N30): Broadcast updated node list
+        // The 3ds does this presumably to support spectators.
+        std::lock_guard<std::recursive_mutex> lock(HLE::g_hle_lock);
+        connection_status_event->Signal();
+    } else {
+        if (connection_status.status != static_cast<u32>(NetworkStatus::NotConnected)) {
+            LOG_DEBUG(Service_NWM, "Connection sequence aborted, because connection status is %u",
+                      connection_status.status);
+            return;
+        }
+        auto logoff = ParseEAPoLLogoffFrame(packet.data);
+
+        network_info.total_nodes = logoff.connected_nodes;
+        network_info.max_nodes = logoff.max_nodes;
+
+        connection_status.network_node_id = logoff.assigned_node_id;
+        connection_status.total_nodes = logoff.connected_nodes;
+        connection_status.max_nodes = logoff.max_nodes;
+
+        node_info.clear();
+        node_info.reserve(network_info.max_nodes);
+        for (size_t index = 0; index < logoff.connected_nodes; ++index) {
+            connection_status.node_bitmask |= 1 << index;
+            connection_status.changed_nodes |= 1 << index;
+            connection_status.nodes[index] = logoff.nodes[index].network_node_id;
+
+            node_info.emplace_back(DeserializeNodeInfo(logoff.nodes[index]));
+        }
+
+        // We're now connected, signal the application
+        connection_status.status = static_cast<u32>(NetworkStatus::ConnectedAsClient);
+        // Some games require ConnectToNetwork to block, for now it doesn't
+        // If blocking is implemented this lock needs to be changed,
+        // otherwise it might cause deadlocks
+        std::lock_guard<std::recursive_mutex> lock(HLE::g_hle_lock);
+        connection_status_event->Signal();
+    }
 }
 
 /*
@@ -238,6 +323,17 @@ void HandleAuthenticationFrame(const Network::WifiPacket& packet) {
     }
 }
 
+static void HandleDataFrame(const Network::WifiPacket& packet) {
+    switch (GetFrameEtherType(packet.data)) {
+    case EtherType::EAPoL:
+        HandleEAPoLPacket(packet);
+        break;
+    case EtherType::SecureData:
+        // TODO(B3N30): Handle SecureData packets
+        break;
+    }
+}
+
 /// Callback to parse and handle a received wifi packet.
 void OnWifiPacketReceived(const Network::WifiPacket& packet) {
     switch (packet.type) {
@@ -249,6 +345,9 @@ void OnWifiPacketReceived(const Network::WifiPacket& packet) {
         break;
     case Network::WifiPacket::PacketType::AssociationResponse:
         HandleAssociationResponseFrame(packet);
+        break;
+    case Network::WifiPacket::PacketType::Data:
+        HandleDataFrame(packet);
         break;
     }
 }
