@@ -82,10 +82,10 @@ void UnmapRegion(PageTable& page_table, VAddr base, u32 size) {
  * Gets a pointer to the exact memory at the virtual address (i.e. not page aligned)
  * using a VMA from the current process
  */
-static u8* GetPointerFromVMA(VAddr vaddr) {
+static u8* GetPointerFromVMA(const Kernel::Process& process, VAddr vaddr) {
     u8* direct_pointer = nullptr;
 
-    auto& vm_manager = Kernel::g_current_process->vm_manager;
+    auto& vm_manager = process.vm_manager;
 
     auto it = vm_manager.FindVMA(vaddr);
     ASSERT(it != vm_manager.vma_map.end());
@@ -105,6 +105,14 @@ static u8* GetPointerFromVMA(VAddr vaddr) {
     }
 
     return direct_pointer + (vaddr - vma.base);
+}
+
+/**
+ * Gets a pointer to the exact memory at the virtual address (i.e. not page aligned)
+ * using a VMA from the current process.
+ */
+static u8* GetPointerFromVMA(VAddr vaddr) {
+    return GetPointerFromVMA(*Kernel::g_current_process, vaddr);
 }
 
 /**
@@ -470,7 +478,10 @@ u64 Read64(const VAddr addr) {
     return Read<u64_le>(addr);
 }
 
-void ReadBlock(const VAddr src_addr, void* dest_buffer, const size_t size) {
+void ReadBlock(const Kernel::Process& process, const VAddr src_addr, void* dest_buffer,
+               const size_t size) {
+    auto& page_table = process.vm_manager.page_table;
+
     size_t remaining_size = size;
     size_t page_index = src_addr >> PAGE_BITS;
     size_t page_offset = src_addr & PAGE_MASK;
@@ -479,7 +490,7 @@ void ReadBlock(const VAddr src_addr, void* dest_buffer, const size_t size) {
         const size_t copy_amount = std::min(PAGE_SIZE - page_offset, remaining_size);
         const VAddr current_vaddr = static_cast<VAddr>((page_index << PAGE_BITS) + page_offset);
 
-        switch (current_page_table->attributes[page_index]) {
+        switch (page_table.attributes[page_index]) {
         case PageType::Unmapped: {
             LOG_ERROR(HW_Memory, "unmapped ReadBlock @ 0x%08X (start address = 0x%08X, size = %zu)",
                       current_vaddr, src_addr, size);
@@ -487,29 +498,30 @@ void ReadBlock(const VAddr src_addr, void* dest_buffer, const size_t size) {
             break;
         }
         case PageType::Memory: {
-            DEBUG_ASSERT(current_page_table->pointers[page_index]);
+            DEBUG_ASSERT(page_table.pointers[page_index]);
 
-            const u8* src_ptr = current_page_table->pointers[page_index] + page_offset;
+            const u8* src_ptr = page_table.pointers[page_index] + page_offset;
             std::memcpy(dest_buffer, src_ptr, copy_amount);
             break;
         }
         case PageType::Special: {
-            DEBUG_ASSERT(GetMMIOHandler(current_vaddr));
-
-            GetMMIOHandler(current_vaddr)->ReadBlock(current_vaddr, dest_buffer, copy_amount);
+            MMIORegionPointer handler = GetMMIOHandler(page_table, current_vaddr);
+            DEBUG_ASSERT(handler);
+            handler->ReadBlock(current_vaddr, dest_buffer, copy_amount);
             break;
         }
         case PageType::RasterizerCachedMemory: {
             RasterizerFlushVirtualRegion(current_vaddr, static_cast<u32>(copy_amount),
                                          FlushMode::Flush);
-            std::memcpy(dest_buffer, GetPointerFromVMA(current_vaddr), copy_amount);
+            std::memcpy(dest_buffer, GetPointerFromVMA(process, current_vaddr), copy_amount);
             break;
         }
         case PageType::RasterizerCachedSpecial: {
-            DEBUG_ASSERT(GetMMIOHandler(current_vaddr));
+            MMIORegionPointer handler = GetMMIOHandler(page_table, current_vaddr);
+            DEBUG_ASSERT(handler);
             RasterizerFlushVirtualRegion(current_vaddr, static_cast<u32>(copy_amount),
                                          FlushMode::Flush);
-            GetMMIOHandler(current_vaddr)->ReadBlock(current_vaddr, dest_buffer, copy_amount);
+            handler->ReadBlock(current_vaddr, dest_buffer, copy_amount);
             break;
         }
         default:
@@ -521,6 +533,10 @@ void ReadBlock(const VAddr src_addr, void* dest_buffer, const size_t size) {
         dest_buffer = static_cast<u8*>(dest_buffer) + copy_amount;
         remaining_size -= copy_amount;
     }
+}
+
+void ReadBlock(const VAddr src_addr, void* dest_buffer, const size_t size) {
+    ReadBlock(*Kernel::g_current_process, src_addr, dest_buffer, size);
 }
 
 void Write8(const VAddr addr, const u8 data) {
