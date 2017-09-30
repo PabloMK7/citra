@@ -247,12 +247,15 @@ static void ThreadWakeupCallback(u64 thread_handle, int cycles_late) {
 
     if (thread->status == THREADSTATUS_WAIT_SYNCH_ANY ||
         thread->status == THREADSTATUS_WAIT_SYNCH_ALL || thread->status == THREADSTATUS_WAIT_ARB) {
-        thread->wait_set_output = false;
+
+        // Invoke the wakeup callback before clearing the wait objects
+        if (thread->wakeup_callback)
+            thread->wakeup_callback(ThreadWakeupReason::Timeout, thread, nullptr);
+
         // Remove the thread from each of its waiting objects' waitlists
         for (auto& object : thread->wait_objects)
             object->RemoveWaitingThread(thread.get());
         thread->wait_objects.clear();
-        thread->SetWaitSynchronizationResult(RESULT_TIMEOUT);
     }
 
     thread->ResumeFromWait();
@@ -278,6 +281,9 @@ void Thread::ResumeFromWait() {
         break;
 
     case THREADSTATUS_READY:
+        // The thread's wakeup callback must have already been cleared when the thread was first
+        // awoken.
+        ASSERT(wakeup_callback == nullptr);
         // If the thread is waiting on multiple wait objects, it might be awoken more than once
         // before actually resuming. We can ignore subsequent wakeups if the thread status has
         // already been set to THREADSTATUS_READY.
@@ -292,6 +298,8 @@ void Thread::ResumeFromWait() {
                          GetObjectId());
         return;
     }
+
+    wakeup_callback = nullptr;
 
     ready_queue.push_back(current_priority, this);
     status = THREADSTATUS_READY;
@@ -395,7 +403,6 @@ ResultVal<SharedPtr<Thread>> Thread::Create(std::string name, VAddr entry_point,
     thread->nominal_priority = thread->current_priority = priority;
     thread->last_running_ticks = CoreTiming::GetTicks();
     thread->processor_id = processor_id;
-    thread->wait_set_output = false;
     thread->wait_objects.clear();
     thread->wait_address = 0;
     thread->name = std::move(name);

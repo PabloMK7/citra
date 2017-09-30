@@ -41,6 +41,11 @@ enum ThreadStatus {
     THREADSTATUS_DEAD            ///< Run to completion, or forcefully terminated
 };
 
+enum class ThreadWakeupReason {
+    Signal, // The thread was woken up by WakeupAllWaitingThreads due to an object signal.
+    Timeout // The thread was woken up due to a wait timeout.
+};
+
 namespace Kernel {
 
 class Mutex;
@@ -199,13 +204,17 @@ public:
 
     VAddr wait_address; ///< If waiting on an AddressArbiter, this is the arbitration address
 
-    /// True if the WaitSynchronizationN output parameter should be set on thread wakeup.
-    bool wait_set_output;
-
     std::string name;
 
     /// Handle used as userdata to reference this object when inserting into the CoreTiming queue.
     Handle callback_handle;
+
+    using WakeupCallback = void(ThreadWakeupReason reason, SharedPtr<Thread> thread,
+                                SharedPtr<WaitObject> object);
+    // Callback that will be invoked when the thread is resumed from a waiting state. If the thread
+    // was waiting via WaitSynchronizationN then the object will be the last object that became
+    // available. In case of a timeout, the object will be nullptr.
+    std::function<WakeupCallback> wakeup_callback;
 
 private:
     Thread();
