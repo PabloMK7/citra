@@ -104,8 +104,7 @@ public:
     }
     template <typename V>
     void operator*=(const V& f) {
-        x *= f;
-        y *= f;
+        *this = *this * f;
     }
     template <typename V>
     Vec2<decltype(T{} / V{})> operator/(const V& f) const {
@@ -262,9 +261,7 @@ public:
     }
     template <typename V>
     void operator*=(const V& f) {
-        x *= f;
-        y *= f;
-        z *= f;
+        *this = *this * f;
     }
     template <typename V>
     Vec3<decltype(T{} / V{})> operator/(const V& f) const {
@@ -478,10 +475,7 @@ public:
     }
     template <typename V>
     void operator*=(const V& f) {
-        x *= f;
-        y *= f;
-        z *= f;
-        w *= f;
+        *this = *this * f;
     }
     template <typename V>
     Vec4<decltype(T{} / V{})> operator/(const V& f) const {

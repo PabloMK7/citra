@@ -42,7 +42,8 @@ SharedPtr<SharedMemory> SharedMemory::Create(SharedPtr<Process> owner_process, u
         memory_region->used += size;
 
         shared_memory->linear_heap_phys_address =
-            Memory::FCRAM_PADDR + memory_region->base + shared_memory->backing_block_offset;
+            Memory::FCRAM_PADDR + memory_region->base +
+            static_cast<PAddr>(shared_memory->backing_block_offset);
 
         // Increase the amount of used linear heap memory for the owner process.
         if (shared_memory->owner_process != nullptr) {

@@ -67,7 +67,7 @@ public:
      * @param resource Requested resource type
      * @returns The max value of the resource type
      */
-    s32 GetMaxResourceValue(u32 resource) const;
+    u32 GetMaxResourceValue(u32 resource) const;
 
     /// Name of resource limit object.
     std::string name;

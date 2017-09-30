@@ -197,7 +197,7 @@ static std::vector<u8> DecryptDataFrame(const std::vector<u8>& encrypted_payload
         df.ChannelMessageEnd(CryptoPP::DEFAULT_CHANNEL);
         df.SetRetrievalChannel(CryptoPP::DEFAULT_CHANNEL);
 
-        int size = df.MaxRetrievable();
+        size_t size = df.MaxRetrievable();
 
         std::vector<u8> pdata(size);
         df.Get(pdata.data(), size);
@@ -251,7 +251,7 @@ static std::vector<u8> EncryptDataFrame(const std::vector<u8>& payload,
 
         df.SetRetrievalChannel(CryptoPP::DEFAULT_CHANNEL);
 
-        int size = df.MaxRetrievable();
+        size_t size = df.MaxRetrievable();
 
         std::vector<u8> cipher(size);
         df.Get(cipher.data(), size);
@@ -266,8 +266,8 @@ static std::vector<u8> EncryptDataFrame(const std::vector<u8>& payload,
 std::vector<u8> GenerateDataPayload(const std::vector<u8>& data, u8 channel, u16 dest_node,
                                     u16 src_node, u16 sequence_number) {
     std::vector<u8> buffer = GenerateLLCHeader(EtherType::SecureData);
-    std::vector<u8> securedata_header =
-        GenerateSecureDataHeader(data.size(), channel, dest_node, src_node, sequence_number);
+    std::vector<u8> securedata_header = GenerateSecureDataHeader(
+        static_cast<u16>(data.size()), channel, dest_node, src_node, sequence_number);
 
     buffer.insert(buffer.end(), securedata_header.begin(), securedata_header.end());
     buffer.insert(buffer.end(), data.begin(), data.end());

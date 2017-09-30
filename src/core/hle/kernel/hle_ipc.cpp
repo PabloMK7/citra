@@ -37,7 +37,7 @@ SharedPtr<Object> HLERequestContext::GetIncomingHandle(u32 id_from_cmdbuf) const
 
 u32 HLERequestContext::AddOutgoingHandle(SharedPtr<Object> object) {
     request_handles.push_back(std::move(object));
-    return request_handles.size() - 1;
+    return static_cast<u32>(request_handles.size() - 1);
 }
 
 void HLERequestContext::ClearIncomingObjects() {

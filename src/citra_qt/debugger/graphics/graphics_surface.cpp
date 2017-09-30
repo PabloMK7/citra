@@ -273,7 +273,8 @@ void GraphicsSurfaceWidget::Pick(int x, int y) {
     surface_picker_x_control->setValue(x);
     surface_picker_y_control->setValue(y);
 
-    if (x < 0 || x >= surface_width || y < 0 || y >= surface_height) {
+    if (x < 0 || x >= static_cast<int>(surface_width) || y < 0 ||
+        y >= static_cast<int>(surface_height)) {
         surface_info_label->setText(tr("Pixel out of bounds"));
         surface_info_label->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
         return;

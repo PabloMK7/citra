@@ -361,7 +361,7 @@ static ResultCode WaitSynchronizationN(s32* out, Kernel::Handle* handles, s32 ha
             // We found a ready object, acquire it and set the result value
             Kernel::WaitObject* object = itr->get();
             object->Acquire(thread);
-            *out = std::distance(objects.begin(), itr);
+            *out = static_cast<s32>(std::distance(objects.begin(), itr));
             return RESULT_SUCCESS;
         }
 
@@ -469,7 +469,7 @@ static ResultCode ReplyAndReceive(s32* index, Kernel::Handle* handles, s32 handl
         // We found a ready object, acquire it and set the result value
         Kernel::WaitObject* object = itr->get();
         object->Acquire(thread);
-        *index = std::distance(objects.begin(), itr);
+        *index = static_cast<s32>(std::distance(objects.begin(), itr));
 
         if (object->GetHandleType() == Kernel::HandleType::ServerSession) {
             auto server_session = static_cast<Kernel::ServerSession*>(object);
@@ -683,7 +683,7 @@ static void ExitThread() {
 }
 
 /// Gets the priority for the specified thread
-static ResultCode GetThreadPriority(s32* priority, Kernel::Handle handle) {
+static ResultCode GetThreadPriority(u32* priority, Kernel::Handle handle) {
     const SharedPtr<Kernel::Thread> thread = Kernel::g_handle_table.Get<Kernel::Thread>(handle);
     if (thread == nullptr)
         return ERR_INVALID_HANDLE;
@@ -693,7 +693,7 @@ static ResultCode GetThreadPriority(s32* priority, Kernel::Handle handle) {
 }
 
 /// Sets the priority for the specified thread
-static ResultCode SetThreadPriority(Kernel::Handle handle, s32 priority) {
+static ResultCode SetThreadPriority(Kernel::Handle handle, u32 priority) {
     if (priority > THREADPRIO_LOWEST) {
         return Kernel::ERR_OUT_OF_RANGE;
     }

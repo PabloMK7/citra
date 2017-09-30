@@ -111,7 +111,7 @@ void Thread::Stop() {
 
 Thread* ArbitrateHighestPriorityThread(u32 address) {
     Thread* highest_priority_thread = nullptr;
-    s32 priority = THREADPRIO_LOWEST;
+    u32 priority = THREADPRIO_LOWEST;
 
     // Iterate through threads, find highest priority thread that is waiting to be arbitrated...
     for (auto& thread : thread_list) {
@@ -311,7 +311,7 @@ static void DebugThreadQueue() {
     }
 
     for (auto& t : thread_list) {
-        s32 priority = ready_queue.contains(t.get());
+        u32 priority = ready_queue.contains(t.get());
         if (priority != -1) {
             LOG_DEBUG(Kernel, "0x%02X %u", priority, t->GetObjectId());
         }
@@ -422,7 +422,7 @@ ResultVal<SharedPtr<Thread>> Thread::Create(std::string name, VAddr entry_point,
             return ERR_OUT_OF_MEMORY;
         }
 
-        u32 offset = linheap_memory->size();
+        size_t offset = linheap_memory->size();
 
         // Allocate some memory from the end of the linear heap for this region.
         linheap_memory->insert(linheap_memory->end(), Memory::PAGE_SIZE, 0);
@@ -430,7 +430,7 @@ ResultVal<SharedPtr<Thread>> Thread::Create(std::string name, VAddr entry_point,
         owner_process->linear_heap_used += Memory::PAGE_SIZE;
 
         tls_slots.emplace_back(0); // The page is completely available at the start
-        available_page = tls_slots.size() - 1;
+        available_page = static_cast<u32>(tls_slots.size() - 1);
         available_slot = 0; // Use the first slot in the new page
 
         auto& vm_manager = owner_process->vm_manager;
@@ -457,7 +457,7 @@ ResultVal<SharedPtr<Thread>> Thread::Create(std::string name, VAddr entry_point,
     return MakeResult<SharedPtr<Thread>>(std::move(thread));
 }
 
-void Thread::SetPriority(s32 priority) {
+void Thread::SetPriority(u32 priority) {
     ASSERT_MSG(priority <= THREADPRIO_LOWEST && priority >= THREADPRIO_HIGHEST,
                "Invalid priority value.");
     // If thread was ready, adjust queues
@@ -470,7 +470,7 @@ void Thread::SetPriority(s32 priority) {
 }
 
 void Thread::UpdatePriority() {
-    s32 best_priority = nominal_priority;
+    u32 best_priority = nominal_priority;
     for (auto& mutex : held_mutexes) {
         if (mutex->priority < best_priority)
             best_priority = mutex->priority;
@@ -478,7 +478,7 @@ void Thread::UpdatePriority() {
     BoostPriority(best_priority);
 }
 
-void Thread::BoostPriority(s32 priority) {
+void Thread::BoostPriority(u32 priority) {
     // If thread was ready, adjust queues
     if (status == THREADSTATUS_READY)
         ready_queue.move(this, current_priority, priority);
@@ -487,7 +487,7 @@ void Thread::BoostPriority(s32 priority) {
     current_priority = priority;
 }
 
-SharedPtr<Thread> SetupMainThread(u32 entry_point, s32 priority, SharedPtr<Process> owner_process) {
+SharedPtr<Thread> SetupMainThread(u32 entry_point, u32 priority, SharedPtr<Process> owner_process) {
     // Initialize new "main" thread
     auto thread_res = Thread::Create("main", entry_point, priority, 0, THREADPROCESSORID_0,
                                      Memory::HEAP_VADDR_END, owner_process);
@@ -531,7 +531,7 @@ void Thread::SetWaitSynchronizationOutput(s32 output) {
 s32 Thread::GetWaitObjectIndex(WaitObject* object) const {
     ASSERT_MSG(!wait_objects.empty(), "Thread is not waiting for anything");
     auto match = std::find(wait_objects.rbegin(), wait_objects.rend(), object);
-    return std::distance(match, wait_objects.rend()) - 1;
+    return static_cast<s32>(std::distance(match, wait_objects.rend()) - 1);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

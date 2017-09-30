@@ -34,7 +34,7 @@ void WaitObject::RemoveWaitingThread(Thread* thread) {
 
 SharedPtr<Thread> WaitObject::GetHighestPriorityReadyThread() {
     Thread* candidate = nullptr;
-    s32 candidate_priority = THREADPRIO_LOWEST + 1;
+    u32 candidate_priority = THREADPRIO_LOWEST + 1;
 
     for (const auto& thread : waiting_threads) {
         // The list of waiting threads must not contain threads that are not waiting to be awakened.

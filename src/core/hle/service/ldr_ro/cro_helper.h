@@ -413,7 +413,8 @@ private:
      */
     template <typename T>
     void GetEntry(std::size_t index, T& data) const {
-        Memory::ReadBlock(GetField(T::TABLE_OFFSET_FIELD) + index * sizeof(T), &data, sizeof(T));
+        Memory::ReadBlock(GetField(T::TABLE_OFFSET_FIELD) + static_cast<u32>(index * sizeof(T)),
+                          &data, sizeof(T));
     }
 
     /**
@@ -425,7 +426,8 @@ private:
      */
     template <typename T>
     void SetEntry(std::size_t index, const T& data) {
-        Memory::WriteBlock(GetField(T::TABLE_OFFSET_FIELD) + index * sizeof(T), &data, sizeof(T));
+        Memory::WriteBlock(GetField(T::TABLE_OFFSET_FIELD) + static_cast<u32>(index * sizeof(T)),
+                           &data, sizeof(T));
     }
 
     /**

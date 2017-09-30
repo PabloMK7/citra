@@ -105,7 +105,7 @@ public:
         DEBUG_ASSERT(need_index);
 
         // The number of vertex input is put to the uniform register
-        float24 vertex_num = float24::FromFloat32(val);
+        float24 vertex_num = float24::FromFloat32(static_cast<float>(val));
         setup.uniforms.f[0] = Math::MakeVec(vertex_num, vertex_num, vertex_num, vertex_num);
 
         // The second uniform register and so on are used for receiving input vertices

@@ -177,7 +177,7 @@ void CompletionEventCallBack(u64 port_id, int) {
             LOG_ERROR(Service_CAM, "The destination size (%u) doesn't match the source (%zu)!",
                       port.dest_size, buffer_size);
         }
-        Memory::WriteBlock(port.dest, buffer.data(), std::min<u32>(port.dest_size, buffer_size));
+        Memory::WriteBlock(port.dest, buffer.data(), std::min<size_t>(port.dest_size, buffer_size));
     }
 
     port.is_receiving = false;

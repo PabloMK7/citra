@@ -233,7 +233,7 @@ Packet& Packet::operator<<(double in_data) {
 
 Packet& Packet::operator<<(const char* in_data) {
     // First insert string length
-    u32 length = std::strlen(in_data);
+    u32 length = static_cast<u32>(std::strlen(in_data));
     *this << length;
 
     // Then insert characters

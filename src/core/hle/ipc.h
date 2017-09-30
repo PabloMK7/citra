@@ -122,11 +122,11 @@ union StaticBufferDescInfo {
     BitField<14, 18, u32> size;
 };
 
-inline u32 StaticBufferDesc(u32 size, u8 buffer_id) {
+inline u32 StaticBufferDesc(size_t size, u8 buffer_id) {
     StaticBufferDescInfo info{};
     info.descriptor_type.Assign(StaticBuffer);
     info.buffer_id.Assign(buffer_id);
-    info.size.Assign(size);
+    info.size.Assign(static_cast<u32>(size));
     return info.raw;
 }
 
@@ -160,11 +160,11 @@ union MappedBufferDescInfo {
     BitField<4, 28, u32> size;
 };
 
-inline u32 MappedBufferDesc(u32 size, MappedBufferPermissions perms) {
+inline u32 MappedBufferDesc(size_t size, MappedBufferPermissions perms) {
     MappedBufferDescInfo info{};
     info.flags.Assign(MappedBuffer);
     info.perms.Assign(perms);
-    info.size.Assign(size);
+    info.size.Assign(static_cast<u32>(size));
     return info.raw;
 }
 
