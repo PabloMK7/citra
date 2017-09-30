@@ -67,6 +67,12 @@ void Shutdown();
 typedef void (*MHzChangeCallback)();
 typedef std::function<void(u64 userdata, int cycles_late)> TimedCallback;
 
+/**
+* Advance the CPU core by the specified number of ticks (e.g. to simulate CPU execution time)
+* @param ticks Number of ticks to advance the CPU core
+*/
+void AddTicks(u64 ticks);
+
 u64 GetTicks();
 u64 GetIdleTicks();
 u64 GetGlobalTimeUs();

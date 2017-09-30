@@ -124,13 +124,6 @@ void ARM_Dynarmic::SetCP15Register(CP15Register reg, u32 value) {
     interpreter_state->CP15[reg] = value;
 }
 
-void ARM_Dynarmic::AddTicks(u64 ticks) {
-    down_count -= ticks;
-    if (down_count < 0) {
-        CoreTiming::Advance();
-    }
-}
-
 MICROPROFILE_DEFINE(ARM_Jit, "ARM JIT", "ARM JIT", MP_RGB(255, 64, 64));
 
 void ARM_Dynarmic::ExecuteInstructions(int num_instructions) {
@@ -139,7 +132,7 @@ void ARM_Dynarmic::ExecuteInstructions(int num_instructions) {
 
     std::size_t ticks_executed = jit->Run(static_cast<unsigned>(num_instructions));
 
-    AddTicks(ticks_executed);
+    CoreTiming::AddTicks(ticks_executed);
 }
 
 void ARM_Dynarmic::SaveContext(ARM_Interface::ThreadContext& ctx) {

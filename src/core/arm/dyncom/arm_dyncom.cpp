@@ -77,12 +77,6 @@ void ARM_DynCom::SetCP15Register(CP15Register reg, u32 value) {
     state->CP15[reg] = value;
 }
 
-void ARM_DynCom::AddTicks(u64 ticks) {
-    down_count -= ticks;
-    if (down_count < 0)
-        CoreTiming::Advance();
-}
-
 void ARM_DynCom::ExecuteInstructions(int num_instructions) {
     state->NumInstrsToExecute = num_instructions;
 
@@ -90,7 +84,7 @@ void ARM_DynCom::ExecuteInstructions(int num_instructions) {
     // executing one instruction at a time. Otherwise, if a block is being executed, more
     // instructions may actually be executed than specified.
     unsigned ticks_executed = InterpreterMainLoop(state.get());
-    AddTicks(ticks_executed);
+    CoreTiming::AddTicks(ticks_executed);
 }
 
 void ARM_DynCom::SaveContext(ThreadContext& ctx) {

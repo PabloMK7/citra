@@ -5,6 +5,7 @@
 #include <catch.hpp>
 
 #include "core/arm/dyncom/arm_dyncom.h"
+#include "core/core_timing.h"
 #include "tests/core/arm/arm_test_common.h"
 
 namespace ArmTests {
@@ -29,7 +30,6 @@ TEST_CASE("ARM_DynCom (vfp): vadd", "[arm_dyncom]") {
     }};
 
     for (const auto& test_case : test_cases) {
-        dyncom.down_count = 1000; // Ensure that CoreTimeing will not be called.
         dyncom.SetPC(0);
         dyncom.SetVFPSystemReg(VFP_FPSCR, test_case.initial_fpscr);
         dyncom.SetVFPReg(4, test_case.a);
