@@ -9,11 +9,15 @@ src/common/scm_rev.cpp
 # Project/editor files
 *.swp
 .idea/
+.vs/
 .vscode/
 
 # *nix related
 # Common convention for backup or temporary files
 *~
+
+# Visual Studio CMake settings
+CMakeSettings.json
 
 # OSX global filetypes
 # Created by Finder or Spotlight in directories for various OS functionality (indexing, etc)
