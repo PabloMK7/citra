@@ -14,6 +14,7 @@
 #include "core/core.h"
 #include "core/file_sys/archive_selfncch.h"
 #include "core/file_sys/ncch_container.h"
+#include "core/file_sys/title_metadata.h"
 #include "core/hle/kernel/process.h"
 #include "core/hle/kernel/resource_limit.h"
 #include "core/hle/service/cfg/cfg.h"
@@ -49,9 +50,19 @@ static std::string GetUpdateNCCHPath(u64_le program_id) {
     u32 high = static_cast<u32>((program_id | UPDATE_MASK) >> 32);
     u32 low = static_cast<u32>((program_id | UPDATE_MASK) & 0xFFFFFFFF);
 
-    return Common::StringFromFormat("%sNintendo 3DS/%s/%s/title/%08x/%08x/content/00000000.app",
-                                    FileUtil::GetUserPath(D_SDMC_IDX).c_str(), SYSTEM_ID, SDCARD_ID,
-                                    high, low);
+    // TODO(shinyquagsire23): Title database should be doing this path lookup
+    std::string content_path = Common::StringFromFormat(
+        "%sNintendo 3DS/%s/%s/title/%08x/%08x/content/", FileUtil::GetUserPath(D_SDMC_IDX).c_str(),
+        SYSTEM_ID, SDCARD_ID, high, low);
+    std::string tmd_path = content_path + "00000000.tmd";
+
+    u32 content_id = 0;
+    FileSys::TitleMetadata tmd(tmd_path);
+    if (tmd.Load() == ResultStatus::Success) {
+        content_id = tmd.GetBootContentID();
+    }
+
+    return Common::StringFromFormat("%s%08x.app", content_path.c_str(), content_id);
 }
 
 std::pair<boost::optional<u32>, ResultStatus> AppLoader_NCCH::LoadKernelSystemMode() {

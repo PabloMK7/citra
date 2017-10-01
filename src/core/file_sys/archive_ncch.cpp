@@ -14,6 +14,7 @@
 #include "core/file_sys/errors.h"
 #include "core/file_sys/ivfc_archive.h"
 #include "core/file_sys/ncch_container.h"
+#include "core/file_sys/title_metadata.h"
 #include "core/hle/service/fs/archive.h"
 #include "core/loader/loader.h"
 
@@ -27,8 +28,18 @@ static std::string GetNCCHContainerPath(const std::string& nand_directory) {
 }
 
 static std::string GetNCCHPath(const std::string& mount_point, u32 high, u32 low) {
-    return Common::StringFromFormat("%s%08x/%08x/content/00000000.app", mount_point.c_str(), high,
-                                    low);
+    u32 content_id = 0;
+
+    // TODO(shinyquagsire23): Title database should be doing this path lookup
+    std::string content_path =
+        Common::StringFromFormat("%s%08x/%08x/content/", mount_point.c_str(), high, low);
+    std::string tmd_path = content_path + "00000000.tmd";
+    TitleMetadata tmd(tmd_path);
+    if (tmd.Load() == Loader::ResultStatus::Success) {
+        content_id = tmd.GetBootContentID();
+    }
+
+    return Common::StringFromFormat("%s%08x.app", content_path.c_str(), content_id);
 }
 
 ArchiveFactory_NCCH::ArchiveFactory_NCCH(const std::string& nand_directory)
