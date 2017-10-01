@@ -164,6 +164,12 @@ public:
         return tls_address;
     }
 
+    /*
+     * Returns the address of the current thread's command buffer, located in the TLS.
+     * @returns VAddr of the thread's command buffer.
+     */
+    VAddr GetCommandBufferAddress() const;
+
     /**
      * Returns whether this thread is waiting for all the objects in
      * its wait list to become ready, as a result of a WaitSynchronizationN call
