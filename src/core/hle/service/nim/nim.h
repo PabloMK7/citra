@@ -11,6 +11,17 @@ class Interface;
 namespace NIM {
 
 /**
+ * NIM::CheckForSysUpdateEvent service function
+ *  Inputs:
+ *      1 : None
+ *  Outputs:
+ *      1 : Result of function, 0 on success, otherwise error code
+ *      2 : Copy handle descriptor
+ *      3 : System Update event handle
+ */
+void CheckForSysUpdateEvent(Service::Interface* self);
+
+/**
  * NIM::CheckSysUpdateAvailable service function
  *  Inputs:
  *      1 : None
