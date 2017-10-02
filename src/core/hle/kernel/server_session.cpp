@@ -61,12 +61,7 @@ ResultCode ServerSession::HandleSyncRequest(SharedPtr<Thread> thread) {
 
     // If this ServerSession has an associated HLE handler, forward the request to it.
     if (hle_handler != nullptr) {
-        // Attempt to translate the incoming request's command buffer.
-        ResultCode result = TranslateHLERequest(this);
-        if (result.IsError())
-            return result;
         hle_handler->HandleSyncRequest(SharedPtr<ServerSession>(this));
-        // TODO(Subv): Translate the response command buffer.
     } else {
         // Add the thread to the list of threads that have issued a sync request with this
         // server.
@@ -96,8 +91,4 @@ ServerSession::SessionPair ServerSession::CreateSessionPair(const std::string& n
     return std::make_tuple(std::move(server_session), std::move(client_session));
 }
 
-ResultCode TranslateHLERequest(ServerSession* server_session) {
-    // TODO(Subv): Implement this function once multiple concurrent processes are supported.
-    return RESULT_SUCCESS;
-}
 } // namespace Kernel
