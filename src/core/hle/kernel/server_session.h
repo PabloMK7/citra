@@ -36,6 +36,9 @@ class Thread;
  */
 class ServerSession final : public WaitObject {
 public:
+    std::string GetName() const override {
+        return name;
+    }
     std::string GetTypeName() const override {
         return "ServerSession";
     }
@@ -104,4 +107,4 @@ private:
     static ResultVal<SharedPtr<ServerSession>> Create(std::string name = "Unknown");
 };
 
-}
+} // namespace Kernel
