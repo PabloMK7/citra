@@ -241,8 +241,6 @@ static ResultCode SendSyncRequest(Kernel::Handle handle) {
 
     Core::System::GetInstance().PrepareReschedule();
 
-    // TODO(Subv): svcSendSyncRequest should put the caller thread to sleep while the server
-    // responds and cause a reschedule.
     return session->SendSyncRequest(Kernel::GetCurrentThread());
 }
 
