@@ -154,6 +154,9 @@ QString WaitTreeThread::GetText() const {
     case THREADSTATUS_WAIT_SLEEP:
         status = tr("sleeping");
         break;
+    case THREADSTATUS_WAIT_IPC:
+        status = tr("waiting for IPC response");
+        break;
     case THREADSTATUS_WAIT_SYNCH_ALL:
     case THREADSTATUS_WAIT_SYNCH_ANY:
         status = tr("waiting for objects");
@@ -182,6 +185,8 @@ QColor WaitTreeThread::GetColor() const {
         return QColor(Qt::GlobalColor::darkRed);
     case THREADSTATUS_WAIT_SLEEP:
         return QColor(Qt::GlobalColor::darkYellow);
+    case THREADSTATUS_WAIT_IPC:
+        return QColor(Qt::GlobalColor::darkCyan);
     case THREADSTATUS_WAIT_SYNCH_ALL:
     case THREADSTATUS_WAIT_SYNCH_ANY:
         return QColor(Qt::GlobalColor::red);
