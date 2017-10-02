@@ -7,7 +7,6 @@
 #include "core/hle/result.h"
 
 namespace Kernel {
-
 namespace ErrCodes {
 enum {
     OutOfHandles = 19,
@@ -18,6 +17,7 @@ enum {
     WrongPermission = 46,
     InvalidBufferDescriptor = 48,
     MaxConnectionsReached = 52,
+    CommandTooLarge = 54,
 };
 }
 
