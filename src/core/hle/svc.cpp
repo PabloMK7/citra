@@ -18,6 +18,7 @@
 #include "core/hle/kernel/errors.h"
 #include "core/hle/kernel/event.h"
 #include "core/hle/kernel/handle_table.h"
+#include "core/hle/kernel/ipc.h"
 #include "core/hle/kernel/memory.h"
 #include "core/hle/kernel/mutex.h"
 #include "core/hle/kernel/process.h"
@@ -453,6 +454,33 @@ static ResultCode WaitSynchronizationN(s32* out, VAddr handles_address, s32 hand
     }
 }
 
+static ResultCode ReceiveIPCRequest(Kernel::SharedPtr<Kernel::ServerSession> server_session,
+                                    Kernel::SharedPtr<Kernel::Thread> thread) {
+    if (server_session->parent->client == nullptr) {
+        return Kernel::ERR_SESSION_CLOSED_BY_REMOTE;
+    }
+
+    VAddr target_address = thread->GetCommandBufferAddress();
+    VAddr source_address = server_session->currently_handling->GetCommandBufferAddress();
+
+    ResultCode translation_result = Kernel::TranslateCommandBuffer(
+        server_session->currently_handling, thread, source_address, target_address);
+
+    // If a translation error occurred, immediately resume the client thread.
+    if (translation_result.IsError()) {
+        // Set the output of SendSyncRequest in the client thread to the translation output.
+        server_session->currently_handling->SetWaitSynchronizationResult(translation_result);
+
+        server_session->currently_handling->ResumeFromWait();
+        server_session->currently_handling = nullptr;
+
+        // TODO(Subv): This path should try to wait again on the same objects.
+        ASSERT_MSG(false, "ReplyAndReceive translation error behavior unimplemented");
+    }
+
+    return translation_result;
+}
+
 /// In a single operation, sends a IPC reply and waits for a new request.
 static ResultCode ReplyAndReceive(s32* index, VAddr handles_address, s32 handle_count,
                                   Kernel::Handle reply_target) {
@@ -495,7 +523,15 @@ static ResultCode ReplyAndReceive(s32* index, VAddr handles_address, s32 handle_
             return Kernel::ERR_SESSION_CLOSED_BY_REMOTE;
         }
 
-        // TODO(Subv): Perform IPC translation from the current thread to request_thread.
+        VAddr source_address = Kernel::GetCurrentThread()->GetCommandBufferAddress();
+        VAddr target_address = request_thread->GetCommandBufferAddress();
+
+        ResultCode translation_result = Kernel::TranslateCommandBuffer(
+            Kernel::GetCurrentThread(), request_thread, source_address, target_address);
+
+        // Note: The real kernel seems to always panic if the Server->Client buffer translation
+        // fails for whatever reason.
+        ASSERT(translation_result.IsSuccess());
 
         // Note: The scheduler is not invoked here.
         request_thread->ResumeFromWait();
@@ -524,14 +560,11 @@ static ResultCode ReplyAndReceive(s32* index, VAddr handles_address, s32 handle_
         object->Acquire(thread);
         *index = static_cast<s32>(std::distance(objects.begin(), itr));
 
-        if (object->GetHandleType() == Kernel::HandleType::ServerSession) {
-            auto server_session = static_cast<Kernel::ServerSession*>(object);
-            if (server_session->parent->client == nullptr)
-                return Kernel::ERR_SESSION_CLOSED_BY_REMOTE;
+        if (object->GetHandleType() != Kernel::HandleType::ServerSession)
+            return RESULT_SUCCESS;
 
-            // TODO(Subv): Perform IPC translation from the ServerSession to the current thread.
-        }
-        return RESULT_SUCCESS;
+        auto server_session = static_cast<Kernel::ServerSession*>(object);
+        return ReceiveIPCRequest(server_session, Kernel::GetCurrentThread());
     }
 
     // No objects were ready to be acquired, prepare to suspend the thread.
@@ -554,10 +587,15 @@ static ResultCode ReplyAndReceive(s32* index, VAddr handles_address, s32 handle_
         ASSERT(thread->status == THREADSTATUS_WAIT_SYNCH_ANY);
         ASSERT(reason == ThreadWakeupReason::Signal);
 
-        thread->SetWaitSynchronizationResult(RESULT_SUCCESS);
-        thread->SetWaitSynchronizationOutput(thread->GetWaitObjectIndex(object.get()));
+        ResultCode result = RESULT_SUCCESS;
 
-        // TODO(Subv): Perform IPC translation upon wakeup.
+        if (object->GetHandleType() == Kernel::HandleType::ServerSession) {
+            auto server_session = Kernel::DynamicObjectCast<Kernel::ServerSession>(object);
+            result = ReceiveIPCRequest(server_session, thread);
+        }
+
+        thread->SetWaitSynchronizationResult(result);
+        thread->SetWaitSynchronizationOutput(thread->GetWaitObjectIndex(object.get()));
     };
 
     Core::System::GetInstance().PrepareReschedule();
