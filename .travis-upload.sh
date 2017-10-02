@@ -16,8 +16,8 @@ elif [ "$TRAVIS_OS_NAME" = "osx" ]; then
     COMPRESSION_FLAGS="-czvf"
     mkdir "$REV_NAME"
 
-    cp build/src/citra/Release/citra "$REV_NAME"
-    cp -r build/src/citra_qt/Release/citra-qt.app "$REV_NAME"
+    cp build/src/citra/citra "$REV_NAME"
+    cp -r build/src/citra_qt/citra-qt.app "$REV_NAME"
 
     # move qt libs into app bundle for deployment
     $(brew --prefix)/opt/qt5/bin/macdeployqt "${REV_NAME}/citra-qt.app"

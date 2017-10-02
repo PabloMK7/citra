@@ -52,8 +52,8 @@ elif [ "$TRAVIS_OS_NAME" = "osx" ]; then
     export Qt5_DIR=$(brew --prefix)/opt/qt5
 
     mkdir build && cd build
-    cmake .. -DUSE_SYSTEM_CURL=ON -GXcode
-    xcodebuild -configuration Release
+    cmake .. -DUSE_SYSTEM_CURL=ON -DCMAKE_OSX_ARCHITECTURES="x86_64;x86_64h" -DCMAKE_BUILD_TYPE=Release
+    make -j4
 
     ctest -VV -C Release
 fi
