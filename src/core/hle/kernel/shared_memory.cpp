@@ -55,22 +55,19 @@ SharedPtr<SharedMemory> SharedMemory::Create(SharedPtr<Process> owner_process, u
             Kernel::g_current_process->vm_manager.RefreshMemoryBlockMappings(linheap_memory.get());
         }
     } else {
-        // TODO(Subv): What happens if an application tries to create multiple memory blocks
-        // pointing to the same address?
         auto& vm_manager = shared_memory->owner_process->vm_manager;
         // The memory is already available and mapped in the owner process.
-        auto vma = vm_manager.FindVMA(address)->second;
-        // Copy it over to our own storage
-        shared_memory->backing_block = std::make_shared<std::vector<u8>>(
-            vma.backing_block->data() + vma.offset, vma.backing_block->data() + vma.offset + size);
-        shared_memory->backing_block_offset = 0;
-        // Unmap the existing pages
-        vm_manager.UnmapRange(address, size);
-        // Map our own block into the address space
-        vm_manager.MapMemoryBlock(address, shared_memory->backing_block, 0, size,
-                                  MemoryState::Shared);
-        // Reprotect the block with the new permissions
-        vm_manager.ReprotectRange(address, size, ConvertPermissions(permissions));
+        auto vma = vm_manager.FindVMA(address);
+        ASSERT_MSG(vma != vm_manager.vma_map.end(), "Invalid memory address");
+        ASSERT_MSG(vma->second.backing_block, "Backing block doesn't exist for address");
+
+        // The returned VMA might be a bigger one encompassing the desired address.
+        auto vma_offset = address - vma->first;
+        ASSERT_MSG(vma_offset + size <= vma->second.size,
+                   "Shared memory exceeds bounds of mapped block");
+
+        shared_memory->backing_block = vma->second.backing_block;
+        shared_memory->backing_block_offset = vma->second.offset + vma_offset;
     }
 
     shared_memory->base_address = address;
@@ -184,4 +181,4 @@ u8* SharedMemory::GetPointer(u32 offset) {
     return backing_block->data() + backing_block_offset + offset;
 }
 
-} // namespace
+} // namespace Kernel
