@@ -32,7 +32,7 @@ struct NodeInfo {
     std::array<u16_le, 10> username;
     INSERT_PADDING_BYTES(4);
     u16_le network_node_id;
-    INSERT_PADDING_BYTES(6);
+    std::array<u8, 6> address;
 };
 
 static_assert(sizeof(NodeInfo) == 40, "NodeInfo has incorrect size.");

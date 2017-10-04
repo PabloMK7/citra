@@ -600,6 +600,36 @@ static void GetConnectionStatus(Interface* self) {
 }
 
 /**
+ * NWM_UDS::GetNodeInformation service function.
+ * Returns the node inforamtion structure for the currently connected node.
+ *  Inputs:
+ *      0 : Command header.
+ *      1 : Node ID.
+ *  Outputs:
+ *      0 : Return header
+ *      1 : Result of function, 0 on success, otherwise error code
+ *      2-11 : NodeInfo structure.
+ */
+static void GetNodeInformation(Interface* self) {
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0xD, 1, 0);
+    u16 network_node_id = rp.Pop<u16>();
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(11, 0);
+    rb.Push(RESULT_SUCCESS);
+
+    {
+        std::lock_guard<std::mutex> lock(connection_status_mutex);
+        auto itr = std::find_if(node_info.begin(), node_info.end(),
+                                [network_node_id](const NodeInfo& node) {
+                                    return node.network_node_id == network_node_id;
+                                });
+        ASSERT(itr != node_info.end());
+        rb.PushRaw<NodeInfo>(*itr);
+    }
+    LOG_DEBUG(Service_NWM, "called");
+}
+
+/**
  * NWM_UDS::Bind service function.
  * Binds a BindNodeId to a data channel and retrieves a data event.
  *  Inputs:
@@ -642,6 +672,35 @@ static void Bind(Interface* self) {
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
     rb.Push(RESULT_SUCCESS);
     rb.PushCopyHandles(Kernel::g_handle_table.Create(event).Unwrap());
+}
+
+/**
+ * NWM_UDS::Unbind service function.
+ * Unbinds a BindNodeId from a data channel.
+ *  Inputs:
+ *      1 : BindNodeId
+ *  Outputs:
+ *      0 : Return header
+ *      1 : Result of function, 0 on success, otherwise error code
+ */
+static void Unbind(Interface* self) {
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x12, 1, 0);
+
+    u32 bind_node_id = rp.Pop<u32>();
+
+    std::lock_guard<std::mutex> lock(connection_status_mutex);
+
+    auto itr =
+        std::find_if(channel_data.begin(), channel_data.end(), [bind_node_id](const auto& data) {
+            return data.second.bind_node_id == bind_node_id;
+        });
+
+    if (itr != channel_data.end()) {
+        channel_data.erase(itr);
+    }
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RESULT_SUCCESS);
 }
 
 /**
@@ -1131,13 +1190,13 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x00090442, nullptr, "ConnectNetwork (deprecated)"},
     {0x000A0000, nullptr, "DisconnectNetwork"},
     {0x000B0000, GetConnectionStatus, "GetConnectionStatus"},
-    {0x000D0040, nullptr, "GetNodeInformation"},
+    {0x000D0040, GetNodeInformation, "GetNodeInformation"},
     {0x000E0006, nullptr, "DecryptBeaconData (deprecated)"},
     {0x000F0404, RecvBeaconBroadcastData, "RecvBeaconBroadcastData"},
     {0x00100042, SetApplicationData, "SetApplicationData"},
     {0x00110040, nullptr, "GetApplicationData"},
     {0x00120100, Bind, "Bind"},
-    {0x00130040, nullptr, "Unbind"},
+    {0x00130040, Unbind, "Unbind"},
     {0x001400C0, PullPacket, "PullPacket"},
     {0x00150080, nullptr, "SetMaxSendDelay"},
     {0x00170182, SendTo, "SendTo"},
