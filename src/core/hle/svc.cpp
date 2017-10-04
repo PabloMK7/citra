@@ -303,12 +303,11 @@ static ResultCode WaitSynchronization1(Kernel::Handle handle, s64 nano_seconds) 
 }
 
 /// Wait for the given handles to synchronize, timeout after the specified nanoseconds
-static ResultCode WaitSynchronizationN(s32* out, Kernel::Handle* handles, s32 handle_count,
+static ResultCode WaitSynchronizationN(s32* out, VAddr handles_address, s32 handle_count,
                                        bool wait_all, s64 nano_seconds) {
     Kernel::Thread* thread = Kernel::GetCurrentThread();
 
-    // Check if 'handles' is invalid
-    if (handles == nullptr)
+    if (!Memory::IsValidVirtualAddress(handles_address))
         return Kernel::ERR_INVALID_POINTER;
 
     // NOTE: on real hardware, there is no nullptr check for 'out' (tested with firmware 4.4). If
@@ -323,7 +322,8 @@ static ResultCode WaitSynchronizationN(s32* out, Kernel::Handle* handles, s32 ha
     std::vector<ObjectPtr> objects(handle_count);
 
     for (int i = 0; i < handle_count; ++i) {
-        auto object = Kernel::g_handle_table.Get<Kernel::WaitObject>(handles[i]);
+        Kernel::Handle handle = Memory::Read32(handles_address + i * sizeof(Kernel::Handle));
+        auto object = Kernel::g_handle_table.Get<Kernel::WaitObject>(handle);
         if (object == nullptr)
             return ERR_INVALID_HANDLE;
         objects[i] = object;

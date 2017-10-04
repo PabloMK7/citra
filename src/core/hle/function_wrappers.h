@@ -58,12 +58,12 @@ void Wrap() {
     FuncReturn(retval);
 }
 
-template <ResultCode func(s32*, u32*, s32, bool, s64)>
+template <ResultCode func(s32*, VAddr, s32, bool, s64)>
 void Wrap() {
     s32 param_1 = 0;
-    s32 retval = func(&param_1, (Kernel::Handle*)Memory::GetPointer(PARAM(1)), (s32)PARAM(2),
-                      (PARAM(3) != 0), (((s64)PARAM(4) << 32) | PARAM(0)))
-                     .raw;
+    s32 retval =
+        func(&param_1, PARAM(1), (s32)PARAM(2), (PARAM(3) != 0), (((s64)PARAM(4) << 32) | PARAM(0)))
+            .raw;
 
     Core::CPU().SetReg(1, (u32)param_1);
     FuncReturn(retval);
