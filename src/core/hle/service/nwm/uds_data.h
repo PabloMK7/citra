@@ -52,7 +52,7 @@ struct SecureDataHeader {
     u16_be dest_node_id;
     u16_be src_node_id;
 
-    u32 GetActualDataSize() {
+    u32 GetActualDataSize() const {
         return protocol_size - sizeof(SecureDataHeader);
     }
 };

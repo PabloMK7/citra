@@ -32,7 +32,7 @@ struct NodeInfo {
     std::array<u16_le, 10> username;
     INSERT_PADDING_BYTES(4);
     u16_le network_node_id;
-    std::array<u8, 6> address;
+    INSERT_PADDING_BYTES(6);
 };
 
 static_assert(sizeof(NodeInfo) == 40, "NodeInfo has incorrect size.");
@@ -42,6 +42,7 @@ using NodeList = std::vector<NodeInfo>;
 enum class NetworkStatus {
     NotConnected = 3,
     ConnectedAsHost = 6,
+    Connecting = 7,
     ConnectedAsClient = 9,
     ConnectedAsSpectator = 10,
 };
