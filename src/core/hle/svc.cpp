@@ -1104,9 +1104,9 @@ static ResultCode CreateMemoryBlock(Kernel::Handle* out_handle, u32 addr, u32 si
 }
 
 static ResultCode CreatePort(Kernel::Handle* server_port, Kernel::Handle* client_port,
-                             const char* name, u32 max_sessions) {
+                             VAddr name_address, u32 max_sessions) {
     // TODO(Subv): Implement named ports.
-    ASSERT_MSG(name == nullptr, "Named ports are currently unimplemented");
+    ASSERT_MSG(name_address == 0, "Named ports are currently unimplemented");
 
     using Kernel::ServerPort;
     using Kernel::ClientPort;

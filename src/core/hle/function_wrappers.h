@@ -206,13 +206,11 @@ void Wrap() {
     FuncReturn(func(PARAM(0), PARAM(1)).raw);
 }
 
-template <ResultCode func(Kernel::Handle*, Kernel::Handle*, const char*, u32)>
+template <ResultCode func(Kernel::Handle*, Kernel::Handle*, VAddr, u32)>
 void Wrap() {
     Kernel::Handle param_1 = 0;
     Kernel::Handle param_2 = 0;
-    u32 retval = func(&param_1, &param_2,
-                      reinterpret_cast<const char*>(Memory::GetPointer(PARAM(2))), PARAM(3))
-                     .raw;
+    u32 retval = func(&param_1, &param_2, PARAM(2), PARAM(3)).raw;
     Core::CPU().SetReg(1, param_1);
     Core::CPU().SetReg(2, param_2);
     FuncReturn(retval);
