@@ -42,7 +42,6 @@ using NodeList = std::vector<NodeInfo>;
 enum class NetworkStatus {
     NotConnected = 3,
     ConnectedAsHost = 6,
-    Connecting = 7,
     ConnectedAsClient = 9,
     ConnectedAsSpectator = 10,
 };

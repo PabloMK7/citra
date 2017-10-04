@@ -275,6 +275,15 @@ std::vector<u8> GenerateDataPayload(const std::vector<u8>& data, u8 channel, u16
     return buffer;
 }
 
+SecureDataHeader ParseSecureDataHeader(const std::vector<u8>& data) {
+    SecureDataHeader header;
+
+    // Skip the LLC header
+    std::memcpy(&header, data.data() + sizeof(LLCHeader), sizeof(header));
+
+    return header;
+}
+
 std::vector<u8> GenerateEAPoLStartFrame(u16 association_id, const NodeInfo& node_info) {
     EAPoLStartPacket eapol_start{};
     eapol_start.association_id = association_id;
