@@ -201,17 +201,21 @@ static ResultCode UnmapMemoryBlock(Kernel::Handle handle, u32 addr) {
 }
 
 /// Connect to an OS service given the port name, returns the handle to the port to out
-static ResultCode ConnectToPort(Kernel::Handle* out_handle, const char* port_name) {
-    if (port_name == nullptr)
+static ResultCode ConnectToPort(Kernel::Handle* out_handle, VAddr port_name_address) {
+    if (!Memory::IsValidVirtualAddress(port_name_address))
         return Kernel::ERR_NOT_FOUND;
-    if (std::strlen(port_name) > 11)
+
+    static constexpr std::size_t PortNameMaxLength = 11;
+    // Read 1 char beyond the max allowed port name to detect names that are too long.
+    std::string port_name = Memory::ReadCString(port_name_address, PortNameMaxLength + 1);
+    if (port_name.size() > PortNameMaxLength)
         return Kernel::ERR_PORT_NAME_TOO_LONG;
 
-    LOG_TRACE(Kernel_SVC, "called port_name=%s", port_name);
+    LOG_TRACE(Kernel_SVC, "called port_name=%s", port_name.c_str());
 
     auto it = Service::g_kernel_named_ports.find(port_name);
     if (it == Service::g_kernel_named_ports.end()) {
-        LOG_WARNING(Kernel_SVC, "tried to connect to unknown port: %s", port_name);
+        LOG_WARNING(Kernel_SVC, "tried to connect to unknown port: %s", port_name.c_str());
         return Kernel::ERR_NOT_FOUND;
     }
 

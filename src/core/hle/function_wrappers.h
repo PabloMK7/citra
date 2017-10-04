@@ -151,21 +151,6 @@ void Wrap() {
     FuncReturn(func(PARAM(0)).raw);
 }
 
-template <ResultCode func(s64*, u32, u32*, u32)>
-void Wrap() {
-    FuncReturn(func((s64*)Memory::GetPointer(PARAM(0)), PARAM(1),
-                    (u32*)Memory::GetPointer(PARAM(2)), (s32)PARAM(3))
-                   .raw);
-}
-
-template <ResultCode func(u32*, const char*)>
-void Wrap() {
-    u32 param_1 = 0;
-    u32 retval = func(&param_1, (char*)Memory::GetPointer(PARAM(1))).raw;
-    Core::CPU().SetReg(1, param_1);
-    FuncReturn(retval);
-}
-
 template <ResultCode func(u32*, s32, s32)>
 void Wrap() {
     u32 param_1 = 0;
