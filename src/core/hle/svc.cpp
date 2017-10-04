@@ -452,10 +452,9 @@ static ResultCode WaitSynchronizationN(s32* out, VAddr handles_address, s32 hand
 }
 
 /// In a single operation, sends a IPC reply and waits for a new request.
-static ResultCode ReplyAndReceive(s32* index, Kernel::Handle* handles, s32 handle_count,
+static ResultCode ReplyAndReceive(s32* index, VAddr handles_address, s32 handle_count,
                                   Kernel::Handle reply_target) {
-    // 'handles' has to be a valid pointer even if 'handle_count' is 0.
-    if (handles == nullptr)
+    if (!Memory::IsValidVirtualAddress(handles_address))
         return Kernel::ERR_INVALID_POINTER;
 
     // Check if 'handle_count' is invalid
@@ -466,7 +465,8 @@ static ResultCode ReplyAndReceive(s32* index, Kernel::Handle* handles, s32 handl
     std::vector<ObjectPtr> objects(handle_count);
 
     for (int i = 0; i < handle_count; ++i) {
-        auto object = Kernel::g_handle_table.Get<Kernel::WaitObject>(handles[i]);
+        Kernel::Handle handle = Memory::Read32(handles_address + i * sizeof(Kernel::Handle));
+        auto object = Kernel::g_handle_table.Get<Kernel::WaitObject>(handle);
         if (object == nullptr)
             return ERR_INVALID_HANDLE;
         objects[i] = object;
