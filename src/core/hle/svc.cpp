@@ -619,8 +619,10 @@ static void Break(u8 break_reason) {
 }
 
 /// Used to output a message on a debug hardware unit - does nothing on a retail unit
-static void OutputDebugString(const char* string, int len) {
-    LOG_DEBUG(Debug_Emulated, "%.*s", len, string);
+static void OutputDebugString(VAddr address, int len) {
+    std::vector<char> string(len);
+    Memory::ReadBlock(address, string.data(), len);
+    LOG_DEBUG(Debug_Emulated, "%.*s", len, string.data());
 }
 
 /// Get resource limit

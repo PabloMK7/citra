@@ -267,9 +267,9 @@ void Wrap() {
     func(((s64)PARAM(1) << 32) | PARAM(0));
 }
 
-template <void func(const char*, int len)>
+template <void func(VAddr, int len)>
 void Wrap() {
-    func((char*)Memory::GetPointer(PARAM(0)), PARAM(1));
+    func(PARAM(0), PARAM(1));
 }
 
 template <void func(u8)>
