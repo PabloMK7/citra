@@ -4,11 +4,63 @@
 
 #pragma once
 
+#include <string>
+#include "common/common_types.h"
+
+namespace Service {
+namespace FS {
+enum class MediaType : u32;
+}
+}
+
 namespace Service {
 
 class Interface;
 
 namespace AM {
+
+/**
+ * Get the .tmd path for a title
+ * @param media_type the media the title exists on
+ * @param tid the title ID to get
+ * @returns string path to the .tmd file if it exists, otherwise a path to create one is given.
+ */
+std::string GetTitleMetadataPath(Service::FS::MediaType media_type, u64 tid);
+
+/**
+ * Get the .app path for a title's installed content index.
+ * @param media_type the media the title exists on
+ * @param tid the title ID to get
+ * @param index the content index to get
+ * @returns string path to the .app file
+ */
+std::string GetTitleContentPath(Service::FS::MediaType media_type, u64 tid, u16 index = 0);
+
+/**
+ * Get the folder for a title's installed content.
+ * @param media_type the media the title exists on
+ * @param tid the title ID to get
+ * @returns string path to the title folder
+ */
+std::string GetTitlePath(Service::FS::MediaType media_type, u64 tid);
+
+/**
+ * Get the title/ folder for a storage medium.
+ * @param media_type the storage medium to get the path for
+ * @returns string path to the folder
+ */
+std::string GetMediaTitlePath(Service::FS::MediaType media_type);
+
+/**
+ * Scans the for titles in a storage medium for listing.
+ * @param media_type the storage medium to scan
+ */
+void ScanForTitles(Service::FS::MediaType media_type);
+
+/**
+ * Scans all storage mediums for titles for listing.
+ */
+void ScanForAllTitles();
 
 /**
  * AM::GetNumPrograms service function
@@ -153,6 +205,38 @@ void GetNumTickets(Service::Interface* self);
  *      2 : Total TicketList
  */
 void GetTicketList(Service::Interface* self);
+
+/**
+ * AM::QueryAvailableTitleDatabase service function
+ *  Inputs:
+ *      1 : Media Type
+ *  Outputs:
+ *      1 : Result, 0 on success, otherwise error code
+ *      2 : Boolean, database availability
+ */
+void QueryAvailableTitleDatabase(Service::Interface* self);
+
+/**
+ * AM::CheckContentRights service function
+ *  Inputs:
+ *      1-2 : Title ID
+ *      3 : Content Index
+ *  Outputs:
+ *      1 : Result, 0 on success, otherwise error code
+ *      2 : Boolean, whether we have rights to this content
+ */
+void CheckContentRights(Service::Interface* self);
+
+/**
+ * AM::CheckContentRightsIgnorePlatform service function
+ *  Inputs:
+ *      1-2 : Title ID
+ *      3 : Content Index
+ *  Outputs:
+ *      1 : Result, 0 on success, otherwise error code
+ *      2 : Boolean, whether we have rights to this content
+ */
+void CheckContentRightsIgnorePlatform(Service::Interface* self);
 
 /// Initialize AM service
 void Init();
