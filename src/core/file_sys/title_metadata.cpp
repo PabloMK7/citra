@@ -153,6 +153,18 @@ u32 TitleMetadata::GetDLPContentID() const {
     return tmd_chunks[TMDContentIndex::DLP].id;
 }
 
+u32 TitleMetadata::GetContentIDByIndex(u16 index) const {
+    return tmd_chunks[index].id;
+}
+
+u16 TitleMetadata::GetContentTypeByIndex(u16 index) const {
+    return tmd_chunks[index].type;
+}
+
+u64 TitleMetadata::GetContentSizeByIndex(u16 index) const {
+    return tmd_chunks[index].size;
+}
+
 void TitleMetadata::SetTitleID(u64 title_id) {
     tmd_body.title_id = title_id;
 }
