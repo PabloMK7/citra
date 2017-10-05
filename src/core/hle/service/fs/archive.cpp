@@ -559,7 +559,7 @@ void RegisterArchiveTypes() {
                   sharedextsavedata_factory->GetMountPoint().c_str());
 
     // Create the NCCH archive, basically a small variation of the RomFS archive
-    auto savedatacheck_factory = std::make_unique<FileSys::ArchiveFactory_NCCH>(nand_directory);
+    auto savedatacheck_factory = std::make_unique<FileSys::ArchiveFactory_NCCH>();
     RegisterArchiveType(std::move(savedatacheck_factory), ArchiveIdCode::NCCH);
 
     auto systemsavedata_factory =
