@@ -1,7 +1,4 @@
-#!/bin/sh
-
-set -e
-set -x
+#!/bin/bash -ex
 
 cd /citra
 

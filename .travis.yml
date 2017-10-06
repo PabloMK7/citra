@@ -2,24 +2,32 @@ language: cpp
 matrix:
   include:
     - os: linux
+      env: NAME="linux build"
       sudo: required
       dist: trusty
+      services: docker
+      addons:
+        apt:
+          packages:
+            - p7zip-full
+      install: "./.travis/linux/deps.sh"
+      script: "./.travis/linux/build.sh"
+      after_success: "./.travis/linux/upload.sh"
     - os: osx
+      env: NAME="macos build"
       sudo: false
       osx_image: xcode7.3
-
-services:
-  - docker
-
-addons:
-  apt:
-    packages:
-      - clang-format-3.9
-      - p7zip-full
-
-install: "./.travis-deps.sh"
-script: "./.travis-build.sh"
-after_success: "./.travis-upload.sh"
+      install: "./.travis/macos/deps.sh"
+      script: "./.travis/macos/build.sh"
+      after_success: "./.travis/macos/upload.sh"
+    - os: linux
+      env: NAME="clang-format"
+      dist: trusty
+      addons:
+        apt:
+          packages:
+            - clang-format-3.9
+      script: "./.travis/clang-format/script.sh"
 
 deploy:
   provider: releases
