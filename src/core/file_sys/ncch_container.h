@@ -180,12 +180,28 @@ public:
     Loader::ResultStatus Load();
 
     /**
+     * Attempt to find overridden sections for the NCCH and mark the container as tainted
+     * if any are found.
+     * @return ResultStatus result of function
+     */
+    Loader::ResultStatus LoadOverrides();
+
+    /**
      * Reads an application ExeFS section of an NCCH file (e.g. .code, .logo, etc.)
      * @param name Name of section to read out of NCCH file
      * @param buffer Vector to read data into
      * @return ResultStatus result of function
      */
     Loader::ResultStatus LoadSectionExeFS(const char* name, std::vector<u8>& buffer);
+
+    /**
+     * Reads an application ExeFS section from external files instead of an NCCH file,
+     * (e.g. code.bin, logo.bcma.lz, icon.icn, banner.bnr)
+     * @param name Name of section to read from external files
+     * @param buffer Vector to read data into
+     * @return ResultStatus result of function
+     */
+    Loader::ResultStatus LoadOverrideExeFSSection(const char* name, std::vector<u8>& buffer);
 
     /**
      * Get the RomFS of the NCCH container
@@ -197,6 +213,17 @@ public:
      */
     Loader::ResultStatus ReadRomFS(std::shared_ptr<FileUtil::IOFile>& romfs_file, u64& offset,
                                    u64& size);
+
+    /**
+    * Get the override RomFS of the NCCH container
+    * Since the RomFS can be huge, we return a file reference instead of copying to a buffer
+    * @param romfs_file The file containing the RomFS
+    * @param offset The offset the romfs begins on
+    * @param size The size of the romfs
+    * @return ResultStatus result of function
+    */
+    Loader::ResultStatus ReadOverrideRomFS(std::shared_ptr<FileUtil::IOFile>& romfs_file,
+                                           u64& offset, u64& size);
 
     /**
      * Get the Program ID of the NCCH container
@@ -227,10 +254,12 @@ public:
     ExHeader_Header exheader_header;
 
 private:
+    bool has_header = false;
     bool has_exheader = false;
     bool has_exefs = false;
     bool has_romfs = false;
 
+    bool is_tainted = false; // Are there parts of this container being overridden?
     bool is_loaded = false;
     bool is_compressed = false;
 
@@ -239,6 +268,7 @@ private:
 
     std::string filepath;
     FileUtil::IOFile file;
+    FileUtil::IOFile exefs_file;
 };
 
 } // namespace FileSys

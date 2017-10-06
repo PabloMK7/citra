@@ -13,7 +13,10 @@
 #include "core/file_sys/archive_ncch.h"
 #include "core/file_sys/errors.h"
 #include "core/file_sys/ivfc_archive.h"
+#include "core/file_sys/ncch_container.h"
+#include "core/file_sys/title_metadata.h"
 #include "core/hle/service/fs/archive.h"
+#include "core/loader/loader.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // FileSys namespace
@@ -25,8 +28,18 @@ static std::string GetNCCHContainerPath(const std::string& nand_directory) {
 }
 
 static std::string GetNCCHPath(const std::string& mount_point, u32 high, u32 low) {
-    return Common::StringFromFormat("%s%08x/%08x/content/00000000.app.romfs", mount_point.c_str(),
-                                    high, low);
+    u32 content_id = 0;
+
+    // TODO(shinyquagsire23): Title database should be doing this path lookup
+    std::string content_path =
+        Common::StringFromFormat("%s%08x/%08x/content/", mount_point.c_str(), high, low);
+    std::string tmd_path = content_path + "00000000.tmd";
+    TitleMetadata tmd(tmd_path);
+    if (tmd.Load() == Loader::ResultStatus::Success) {
+        content_id = tmd.GetBootContentID();
+    }
+
+    return Common::StringFromFormat("%s%08x.app", content_path.c_str(), content_id);
 }
 
 ArchiveFactory_NCCH::ArchiveFactory_NCCH(const std::string& nand_directory)
@@ -38,9 +51,14 @@ ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_NCCH::Open(const Path&
     u32 high = data[1];
     u32 low = data[0];
     std::string file_path = GetNCCHPath(mount_point, high, low);
-    auto file = std::make_shared<FileUtil::IOFile>(file_path, "rb");
 
-    if (!file->IsOpen()) {
+    std::shared_ptr<FileUtil::IOFile> romfs_file;
+    u64 romfs_offset = 0;
+    u64 romfs_size = 0;
+    auto ncch_container = NCCHContainer(file_path);
+
+    if (ncch_container.ReadRomFS(romfs_file, romfs_offset, romfs_size) !=
+        Loader::ResultStatus::Success) {
         // High Title ID of the archive: The category (https://3dbrew.org/wiki/Title_list).
         constexpr u32 shared_data_archive = 0x0004009B;
         constexpr u32 system_data_archive = 0x000400DB;
@@ -74,9 +92,8 @@ ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_NCCH::Open(const Path&
         }
         return ERROR_NOT_FOUND;
     }
-    auto size = file->GetSize();
 
-    auto archive = std::make_unique<IVFCArchive>(file, 0, size);
+    auto archive = std::make_unique<IVFCArchive>(romfs_file, romfs_offset, romfs_size);
     return MakeResult<std::unique_ptr<ArchiveBackend>>(std::move(archive));
 }
 

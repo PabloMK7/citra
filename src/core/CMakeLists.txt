@@ -29,6 +29,7 @@ set(SRCS
             file_sys/ncch_container.cpp
             file_sys/path_parser.cpp
             file_sys/savedata_archive.cpp
+            file_sys/title_metadata.cpp
             frontend/camera/blank_camera.cpp
             frontend/camera/factory.cpp
             frontend/camera/interface.cpp
