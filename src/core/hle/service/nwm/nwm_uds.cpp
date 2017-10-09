@@ -975,7 +975,7 @@ void OnClientConnected(u16 network_node_id) {
 }
 
 const Interface::FunctionInfo FunctionTable[] = {
-    {0x00010442, nullptr, "Initialize (deprecated)"},
+    {0x000102C2, nullptr, "Initialize (deprecated)"},
     {0x00020000, nullptr, "Scrap"},
     {0x00030000, Shutdown, "Shutdown"},
     {0x00040402, nullptr, "CreateNetwork (deprecated)"},
