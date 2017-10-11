@@ -3,9 +3,10 @@
     <Name>Citra</Name>
     <Version>1.0.0</Version>
     <Title>Citra Updater</Title>
-    <Publisher>Citra team</Publisher>
-    <!-- e.g. /home/<user>/Citra -->
-    <TargetDir>@HomeDir@/Citra</TargetDir>
+    <Publisher>Citra Team</Publisher>
+    <!-- e.g. /home/<user>/.citra or /opt/citra if run as root -->
+    <TargetDir>@HomeDir@/.citra</TargetDir>
+    <AdminTargetDir>/opt/citra</AdminTargetDir>
     <InstallerApplicationIcon>icon</InstallerApplicationIcon>
     <InstallerWindowIcon>icon.png</InstallerWindowIcon>
     <RemoteRepositories>

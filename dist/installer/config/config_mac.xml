@@ -3,8 +3,8 @@
     <Name>Citra</Name>
     <Version>1.0.0</Version>
     <Title>Citra Updater</Title>
-    <Publisher>Citra team</Publisher>
-    <!-- e.g. /Applcations/Citra -->
+    <Publisher>Citra Team</Publisher>
+    <!-- e.g. /Applications/Citra -->
     <TargetDir>@ApplicationsDir@/Citra</TargetDir>
     <InstallerApplicationIcon>icon</InstallerApplicationIcon>
     <InstallerWindowIcon>icon.png</InstallerWindowIcon>
