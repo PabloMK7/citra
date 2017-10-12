@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Installer>
+    <Name>Citra</Name>
+    <Version>1.0.0</Version>
+    <Title>Citra Updater</Title>
+    <Publisher>Citra Team</Publisher>
+    <StartMenuDir>Citra</StartMenuDir>
+    <!-- e.g. C:\home\<user>\AppData\Local\Citra -->
+    <TargetDir>@HomeDir@/AppData/Local/Citra</TargetDir>
+    <InstallerApplicationIcon>icon</InstallerApplicationIcon>
+    <InstallerWindowIcon>icon.png</InstallerWindowIcon>
+    <RemoteRepositories>
+        <Repository>
+            <Url>https://repo.citra-emu.org</Url>
+            <Enabled>1</Enabled>
+            <DisplayName>Official Citra Repository</DisplayName>
+        </Repository>
+    </RemoteRepositories>
+</Installer>

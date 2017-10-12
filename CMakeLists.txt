@@ -303,6 +303,7 @@ get_timestamp(BUILD_DATE)
 enable_testing()
 add_subdirectory(externals)
 add_subdirectory(src)
+add_subdirectory(dist/installer)
 
 
 # Installation instructions
