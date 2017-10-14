@@ -390,6 +390,7 @@ void GMainWindow::OnDisplayTitleBars(bool show) {
 }
 
 void GMainWindow::OnCheckForUpdates() {
+    explicit_update_check = true;
     CheckForUpdates();
 }
 
@@ -409,10 +410,29 @@ void GMainWindow::OnUpdateFound(bool found, bool error) {
 
     if (!found) {
         LOG_INFO(Frontend, "No updates found");
+
+        // If the user explicitly clicked the "Check for Updates" button, we are
+        //  going to want to show them a prompt anyway.
+        if (explicit_update_check) {
+            explicit_update_check = false;
+            ShowNoUpdatePrompt();
+        }
+        return;
+    }
+
+    if (emulation_running && !explicit_update_check) {
+        LOG_INFO(Frontend, "Update found, deferring as game is running");
+        defer_update_prompt = true;
         return;
     }
 
     LOG_INFO(Frontend, "Update found!");
+    explicit_update_check = false;
+
+    ShowUpdatePrompt();
+}
+
+void GMainWindow::ShowUpdatePrompt() {
     auto result = QMessageBox::question(
         this, tr("Update available!"),
         tr("An update for Citra is available. Do you wish to install it now?<br /><br />"
@@ -423,6 +443,11 @@ void GMainWindow::OnUpdateFound(bool found, bool error) {
         updater->LaunchUIOnExit();
         close();
     }
+}
+
+void GMainWindow::ShowNoUpdatePrompt() {
+    QMessageBox::information(this, tr("No update found"), tr("No update has been found for Citra."),
+                             QMessageBox::Ok, QMessageBox::Ok);
 }
 
 void GMainWindow::OnOpenUpdater() {
@@ -584,6 +609,11 @@ void GMainWindow::ShutdownGame() {
     emu_frametime_label->setVisible(false);
 
     emulation_running = false;
+
+    if (defer_update_prompt) {
+        defer_update_prompt = false;
+        ShowUpdatePrompt();
+    }
 }
 
 void GMainWindow::StoreRecentFile(const QString& filename) {

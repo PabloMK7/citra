@@ -83,6 +83,8 @@ private:
 
     void ShowCallouts();
     void ShowUpdaterWidgets();
+    void ShowUpdatePrompt();
+    void ShowNoUpdatePrompt();
     void CheckForUpdates();
 
     /**
@@ -172,6 +174,9 @@ private:
     GraphicsTracingWidget* graphicsTracingWidget;
     WaitTreeWidget* waitTreeWidget;
     Updater* updater;
+
+    bool explicit_update_check = false;
+    bool defer_update_prompt = false;
 
     QAction* actions_recent_files[max_recent_files_item];
 
