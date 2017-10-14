@@ -433,6 +433,8 @@ void GMainWindow::OnUpdateFound(bool found, bool error) {
 }
 
 void GMainWindow::ShowUpdatePrompt() {
+    defer_update_prompt = false;
+
     auto result = QMessageBox::question(
         this, tr("Update available!"),
         tr("An update for Citra is available. Do you wish to install it now?<br /><br />"
@@ -611,7 +613,6 @@ void GMainWindow::ShutdownGame() {
     emulation_running = false;
 
     if (defer_update_prompt) {
-        defer_update_prompt = false;
         ShowUpdatePrompt();
     }
 }
