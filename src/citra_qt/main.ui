@@ -45,7 +45,7 @@
      <x>0</x>
      <y>0</y>
      <width>1081</width>
-     <height>19</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_File">
@@ -85,6 +85,7 @@
      <addaction name="action_Create_Pica_Surface_Viewer"/>
      <addaction name="separator"/>
     </widget>
+    <addaction name="action_Fullscreen"/>
     <addaction name="action_Single_Window_Mode"/>
     <addaction name="action_Display_Dock_Widget_Headers"/>
     <addaction name="action_Show_Filter_Bar"/>
@@ -194,6 +195,14 @@
   <action name="action_Create_Pica_Surface_Viewer">
    <property name="text">
     <string>Create Pica Surface Viewer</string>
+   </property>
+  </action>
+  <action name="action_Fullscreen">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Fullscreen</string>
    </property>
   </action>
  </widget>

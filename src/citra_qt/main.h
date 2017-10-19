@@ -127,6 +127,7 @@ private slots:
     void OnConfigure();
     void OnToggleFilterBar();
     void OnDisplayTitleBars(bool);
+    void ToggleFullscreen();
     void ToggleWindowMode();
     void OnCreateGraphicsSurfaceViewer();
     void OnCoreError(Core::System::ResultStatus, std::string);
