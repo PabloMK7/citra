@@ -7,17 +7,71 @@
 #include <memory>
 #include <string>
 #include "core/file_sys/archive_backend.h"
+#include "core/file_sys/file_backend.h"
 #include "core/hle/result.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // FileSys namespace
 
+namespace Service {
+namespace FS {
+enum class MediaType : u32;
+}
+}
+
 namespace FileSys {
+
+/// Archive backend for NCCH Archives (RomFS, ExeFS)
+class NCCHArchive : public ArchiveBackend {
+public:
+    explicit NCCHArchive(u64 title_id, Service::FS::MediaType media_type)
+        : title_id(title_id), media_type(media_type) {}
+
+    std::string GetName() const override {
+        return "NCCHArchive";
+    }
+
+    ResultVal<std::unique_ptr<FileBackend>> OpenFile(const Path& path,
+                                                     const Mode& mode) const override;
+    ResultCode DeleteFile(const Path& path) const override;
+    ResultCode RenameFile(const Path& src_path, const Path& dest_path) const override;
+    ResultCode DeleteDirectory(const Path& path) const override;
+    ResultCode DeleteDirectoryRecursively(const Path& path) const override;
+    ResultCode CreateFile(const Path& path, u64 size) const override;
+    ResultCode CreateDirectory(const Path& path) const override;
+    ResultCode RenameDirectory(const Path& src_path, const Path& dest_path) const override;
+    ResultVal<std::unique_ptr<DirectoryBackend>> OpenDirectory(const Path& path) const override;
+    u64 GetFreeBytes() const override;
+
+protected:
+    u64 title_id;
+    Service::FS::MediaType media_type;
+};
+
+// File backend for NCCH files
+class NCCHFile : public FileBackend {
+public:
+    NCCHFile(std::vector<u8> buffer) : file_buffer(buffer) {}
+
+    ResultVal<size_t> Read(u64 offset, size_t length, u8* buffer) const override;
+    ResultVal<size_t> Write(u64 offset, size_t length, bool flush, const u8* buffer) const override;
+    u64 GetSize() const override;
+    bool SetSize(u64 size) const override;
+    bool Close() const override {
+        return false;
+    }
+    void Flush() const override {}
+
+private:
+    std::vector<u8> file_buffer;
+    u64 data_offset;
+    u64 data_size;
+};
 
 /// File system interface to the NCCH archive
 class ArchiveFactory_NCCH final : public ArchiveFactory {
 public:
-    explicit ArchiveFactory_NCCH(const std::string& mount_point);
+    explicit ArchiveFactory_NCCH();
 
     std::string GetName() const override {
         return "NCCH";
@@ -26,9 +80,6 @@ public:
     ResultVal<std::unique_ptr<ArchiveBackend>> Open(const Path& path) override;
     ResultCode Format(const Path& path, const FileSys::ArchiveFormatInfo& format_info) override;
     ResultVal<ArchiveFormatInfo> GetFormatInfo(const Path& path) const override;
-
-private:
-    std::string mount_point;
 };
 
 } // namespace FileSys
