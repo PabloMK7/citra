@@ -98,8 +98,8 @@ std::string GetTitleContentPath(Service::FS::MediaType media_type, u64 tid, u16 
     std::string tmd_path = GetTitleMetadataPath(media_type, tid);
 
     u32 content_id = 0;
-    FileSys::TitleMetadata tmd(tmd_path);
-    if (tmd.Load() == Loader::ResultStatus::Success) {
+    FileSys::TitleMetadata tmd;
+    if (tmd.LoadFromFile(tmd_path) == Loader::ResultStatus::Success) {
         content_id = tmd.GetContentIDByIndex(index);
 
         // TODO(shinyquagsire23): how does DLC actually get this folder on hardware?
@@ -199,8 +199,8 @@ void FindContentInfos(Service::Interface* self) {
     std::string tmd_path = GetTitleMetadataPath(media_type, title_id);
 
     u32 content_read = 0;
-    FileSys::TitleMetadata tmd(tmd_path);
-    if (tmd.Load() == Loader::ResultStatus::Success) {
+    FileSys::TitleMetadata tmd;
+    if (tmd.LoadFromFile(tmd_path) == Loader::ResultStatus::Success) {
         // Get info for each content index requested
         for (size_t i = 0; i < content_count; i++) {
             std::shared_ptr<FileUtil::IOFile> romfs_file;
@@ -238,8 +238,8 @@ void ListContentInfos(Service::Interface* self) {
     std::string tmd_path = GetTitleMetadataPath(media_type, title_id);
 
     u32 copied = 0;
-    FileSys::TitleMetadata tmd(tmd_path);
-    if (tmd.Load() == Loader::ResultStatus::Success) {
+    FileSys::TitleMetadata tmd;
+    if (tmd.LoadFromFile(tmd_path) == Loader::ResultStatus::Success) {
         copied = std::min(content_count, static_cast<u32>(tmd.GetContentCount()));
         for (u32 i = start_index; i < copied; i++) {
             std::shared_ptr<FileUtil::IOFile> romfs_file;
@@ -313,8 +313,8 @@ ResultCode GetTitleInfoFromList(const std::vector<u64>& title_id_list,
         TitleInfo title_info = {};
         title_info.tid = title_id_list[i];
 
-        FileSys::TitleMetadata tmd(tmd_path);
-        if (tmd.Load() == Loader::ResultStatus::Success) {
+        FileSys::TitleMetadata tmd;
+        if (tmd.LoadFromFile(tmd_path) == Loader::ResultStatus::Success) {
             // TODO(shinyquagsire23): This is the total size of all files this process owns,
             // including savefiles and other content. This comes close but is off.
             title_info.size = tmd.GetContentSizeByIndex(FileSys::TMDContentIndex::Main);
@@ -462,8 +462,8 @@ void GetNumContentInfos(Service::Interface* self) {
 
     std::string tmd_path = GetTitleMetadataPath(media_type, title_id);
 
-    FileSys::TitleMetadata tmd(tmd_path);
-    if (tmd.Load() == Loader::ResultStatus::Success) {
+    FileSys::TitleMetadata tmd;
+    if (tmd.LoadFromFile(tmd_path) == Loader::ResultStatus::Success)
         rb.Push<u32>(tmd.GetContentCount());
     } else {
         rb.Push<u32>(1); // Number of content infos plus one
