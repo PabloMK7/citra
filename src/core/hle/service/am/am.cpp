@@ -513,7 +513,7 @@ void QueryAvailableTitleDatabase(Service::Interface* self) {
     rb.Push(RESULT_SUCCESS); // No error
     rb.Push(true);
 
-    LOG_WARNING(Service_APT, "(STUBBED) media_type=%u", media_type);
+    LOG_WARNING(Service_AM, "(STUBBED) media_type=%u", media_type);
 }
 
 void CheckContentRights(Service::Interface* self) {
@@ -529,7 +529,7 @@ void CheckContentRights(Service::Interface* self) {
     rb.Push(RESULT_SUCCESS); // No error
     rb.Push(has_rights);
 
-    LOG_WARNING(Service_APT, "(STUBBED) tid=%016" PRIx64 ", content_index=%u", tid, content_index);
+    LOG_WARNING(Service_AM, "(STUBBED) tid=%016" PRIx64 ", content_index=%u", tid, content_index);
 }
 
 void CheckContentRightsIgnorePlatform(Service::Interface* self) {
@@ -545,7 +545,7 @@ void CheckContentRightsIgnorePlatform(Service::Interface* self) {
     rb.Push(RESULT_SUCCESS); // No error
     rb.Push(has_rights);
 
-    LOG_WARNING(Service_APT, "(STUBBED) tid=%016" PRIx64 ", content_index=%u", tid, content_index);
+    LOG_WARNING(Service_AM, "(STUBBED) tid=%016" PRIx64 ", content_index=%u", tid, content_index);
 }
 
 void Init() {
