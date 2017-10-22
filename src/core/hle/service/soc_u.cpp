@@ -29,8 +29,6 @@
 #define ENOSR 124
 #define ENOSTR 125
 #define ETIME 137
-#define EIDRM 2001
-#define ENOLINK 2002
 #endif // _MSC_VER
 #else
 #include <cerrno>
