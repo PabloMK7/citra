@@ -13,24 +13,24 @@
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout">
+  <layout class="QVBoxLayout" name="verticalLayout_1">
    <item>
-    <layout class="QVBoxLayout" name="verticalLayout_3">
+    <layout class="QVBoxLayout" name="verticalLayout_2">
      <item>
       <widget class="QGroupBox" name="groupBox">
        <property name="title">
         <string>GDB</string>
        </property>
-       <layout class="QVBoxLayout" name="verticalLayout_2">
+       <layout class="QVBoxLayout" name="verticalLayout_3">
         <item>
-         <widget class="QLabel">
+         <widget class="QLabel" name="label_1">
           <property name="text">
            <string>The GDB Stub only works correctly when the CPU JIT is off.</string>
           </property>
          </widget>
         </item>
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_3">
+         <layout class="QHBoxLayout" name="horizontalLayout_1">
           <item>
            <widget class="QCheckBox" name="toggle_gdbstub">
             <property name="text">
@@ -52,7 +52,7 @@
            </spacer>
           </item>
           <item>
-           <widget class="QLabel" name="label">
+           <widget class="QLabel" name="label_2">
             <property name="text">
              <string>Port:</string>
             </property>
