@@ -2,6 +2,8 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#define CRYPTOPP_ENABLE_NAMESPACE_WEAK 1
+
 #include <algorithm>
 #include <cstring>
 #include <cryptopp/aes.h>
@@ -62,7 +64,8 @@ static std::vector<u8> GenerateSecureDataHeader(u16 data_size, u8 channel, u16 d
  * the CCMP crypto key for data frames.
  * @returns The CTR used for data frames crypto key generation.
  */
-static std::array<u8, CryptoPP::MD5::DIGESTSIZE> GetDataCryptoCTR(const NetworkInfo& network_info) {
+static std::array<u8, CryptoPP::Weak::MD5::DIGESTSIZE> GetDataCryptoCTR(
+    const NetworkInfo& network_info) {
     DataFrameCryptoCTR data{};
 
     data.host_mac = network_info.host_mac_address;
@@ -70,8 +73,8 @@ static std::array<u8, CryptoPP::MD5::DIGESTSIZE> GetDataCryptoCTR(const NetworkI
     data.id = network_info.id;
     data.network_id = network_info.network_id;
 
-    std::array<u8, CryptoPP::MD5::DIGESTSIZE> hash;
-    CryptoPP::MD5().CalculateDigest(hash.data(), reinterpret_cast<u8*>(&data), sizeof(data));
+    std::array<u8, CryptoPP::Weak::MD5::DIGESTSIZE> hash;
+    CryptoPP::Weak::MD5().CalculateDigest(hash.data(), reinterpret_cast<u8*>(&data), sizeof(data));
 
     return hash;
 }
@@ -83,15 +86,16 @@ static std::array<u8, CryptoPP::MD5::DIGESTSIZE> GetDataCryptoCTR(const NetworkI
 static std::array<u8, CryptoPP::AES::BLOCKSIZE> GenerateDataCCMPKey(
     const std::vector<u8>& passphrase, const NetworkInfo& network_info) {
     // Calculate the MD5 hash of the input passphrase.
-    std::array<u8, CryptoPP::MD5::DIGESTSIZE> passphrase_hash;
-    CryptoPP::MD5().CalculateDigest(passphrase_hash.data(), passphrase.data(), passphrase.size());
+    std::array<u8, CryptoPP::Weak::MD5::DIGESTSIZE> passphrase_hash;
+    CryptoPP::Weak::MD5().CalculateDigest(passphrase_hash.data(), passphrase.data(),
+                                          passphrase.size());
 
     std::array<u8, CryptoPP::AES::BLOCKSIZE> ccmp_key;
 
     // The CCMP key is the result of encrypting the MD5 hash of the passphrase with AES-CTR using
     // keyslot 0x2D.
     using CryptoPP::AES;
-    std::array<u8, CryptoPP::MD5::DIGESTSIZE> counter = GetDataCryptoCTR(network_info);
+    std::array<u8, CryptoPP::Weak::MD5::DIGESTSIZE> counter = GetDataCryptoCTR(network_info);
     std::array<u8, AES::BLOCKSIZE> key = HW::AES::GetNormalKey(HW::AES::KeySlotID::UDSDataKey);
     CryptoPP::CTR_Mode<AES>::Encryption aes;
     aes.SetKeyWithIV(key.data(), AES::BLOCKSIZE, counter.data());
