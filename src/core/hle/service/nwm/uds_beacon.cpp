@@ -2,6 +2,8 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#define CRYPTOPP_ENABLE_NAMESPACE_WEAK 1
+
 #include <cstring>
 #include <cryptopp/aes.h>
 #include <cryptopp/md5.h>
@@ -204,9 +206,10 @@ std::vector<u8> GeneratedEncryptedData(const NetworkInfo& network_info, const No
     }
 
     // Calculate the MD5 hash of the data in the buffer, not including the hash field.
-    std::array<u8, CryptoPP::MD5::DIGESTSIZE> hash;
-    CryptoPP::MD5().CalculateDigest(hash.data(), buffer.data() + offsetof(BeaconData, bitmask),
-                                    buffer.size() - sizeof(data.md5_hash));
+    std::array<u8, CryptoPP::Weak::MD5::DIGESTSIZE> hash;
+    CryptoPP::Weak::MD5().CalculateDigest(hash.data(),
+                                          buffer.data() + offsetof(BeaconData, bitmask),
+                                          buffer.size() - sizeof(data.md5_hash));
 
     // Copy the hash into the buffer.
     std::memcpy(buffer.data(), hash.data(), hash.size());
