@@ -376,8 +376,9 @@ static void ProcessTriangleInternal(const Vertex& v0, const Vertex& v1, const Ve
 
                 if (use_border_s || use_border_t) {
                     auto border_color = texture.config.border_color;
-                    texture_color[i] = {border_color.r, border_color.g, border_color.b,
-                                        border_color.a};
+                    texture_color[i] = {
+                        static_cast<u8>(border_color.r), static_cast<u8>(border_color.g),
+                        static_cast<u8>(border_color.b), static_cast<u8>(border_color.a)};
                 } else {
                     // Textures are laid out from bottom to top, hence we invert the t coordinate.
                     // NOTE: This may not be the right place for the inversion.
@@ -415,10 +416,10 @@ static void ProcessTriangleInternal(const Vertex& v0, const Vertex& v1, const Ve
             Math::Vec4<u8> combiner_output;
             Math::Vec4<u8> combiner_buffer = {0, 0, 0, 0};
             Math::Vec4<u8> next_combiner_buffer = {
-                regs.texturing.tev_combiner_buffer_color.r,
-                regs.texturing.tev_combiner_buffer_color.g,
-                regs.texturing.tev_combiner_buffer_color.b,
-                regs.texturing.tev_combiner_buffer_color.a,
+                static_cast<u8>(regs.texturing.tev_combiner_buffer_color.r),
+                static_cast<u8>(regs.texturing.tev_combiner_buffer_color.g),
+                static_cast<u8>(regs.texturing.tev_combiner_buffer_color.b),
+                static_cast<u8>(regs.texturing.tev_combiner_buffer_color.a),
             };
 
             Math::Vec4<u8> primary_fragment_color = {0, 0, 0, 0};
@@ -473,8 +474,9 @@ static void ProcessTriangleInternal(const Vertex& v0, const Vertex& v1, const Ve
                         return combiner_buffer;
 
                     case Source::Constant:
-                        return {tev_stage.const_r, tev_stage.const_g, tev_stage.const_b,
-                                tev_stage.const_a};
+                        return {
+                            static_cast<u8>(tev_stage.const_r), static_cast<u8>(tev_stage.const_g),
+                            static_cast<u8>(tev_stage.const_b), static_cast<u8>(tev_stage.const_a)};
 
                     case Source::Previous:
                         return combiner_output;
