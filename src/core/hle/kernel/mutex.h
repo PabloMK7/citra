@@ -8,6 +8,7 @@
 #include "common/common_types.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/wait_object.h"
+#include "core/hle/result.h"
 
 namespace Kernel {
 
@@ -52,7 +53,12 @@ public:
     void AddWaitingThread(SharedPtr<Thread> thread) override;
     void RemoveWaitingThread(Thread* thread) override;
 
-    void Release();
+    /**
+     * Attempts to release the mutex from the specified thread.
+     * @param thread Thread that wants to release the mutex.
+     * @returns The result code of the operation.
+     */
+    ResultCode Release(Thread* thread);
 
 private:
     Mutex();
@@ -65,4 +71,4 @@ private:
  */
 void ReleaseThreadMutexes(Thread* thread);
 
-} // namespace
+} // namespace Kernel

@@ -7,6 +7,7 @@
 #include <boost/range/algorithm_ext/erase.hpp>
 #include "common/assert.h"
 #include "core/core.h"
+#include "core/hle/kernel/errors.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/mutex.h"
 #include "core/hle/kernel/thread.h"
@@ -58,19 +59,34 @@ void Mutex::Acquire(Thread* thread) {
     lock_count++;
 }
 
-void Mutex::Release() {
-    // Only release if the mutex is held
-    if (lock_count > 0) {
-        lock_count--;
-
-        // Yield to the next thread only if we've fully released the mutex
-        if (lock_count == 0) {
-            holding_thread->held_mutexes.erase(this);
-            holding_thread->UpdatePriority();
-            holding_thread = nullptr;
-            WakeupAllWaitingThreads();
-            Core::System::GetInstance().PrepareReschedule();
+ResultCode Mutex::Release(Thread* thread) {
+    // We can only release the mutex if it's held by the calling thread.
+    if (thread != holding_thread) {
+        if (holding_thread) {
+            LOG_ERROR(
+                Kernel,
+                "Tried to release a mutex (owned by thread id %u) from a different thread id %u",
+                holding_thread->thread_id, thread->thread_id);
         }
+        return ResultCode(ErrCodes::WrongLockingThread, ErrorModule::Kernel,
+                          ErrorSummary::InvalidArgument, ErrorLevel::Permanent);
+    }
+
+    // Note: It should not be possible for the situation where the mutex has a holding thread with a
+    // zero lock count to occur. The real kernel still checks for this, so we do too.
+    if (lock_count <= 0)
+        return ResultCode(ErrorDescription::InvalidResultValue, ErrorModule::Kernel,
+                          ErrorSummary::InvalidState, ErrorLevel::Permanent);
+
+    lock_count--;
+
+    // Yield to the next thread only if we've fully released the mutex
+    if (lock_count == 0) {
+        holding_thread->held_mutexes.erase(this);
+        holding_thread->UpdatePriority();
+        holding_thread = nullptr;
+        WakeupAllWaitingThreads();
+        Core::System::GetInstance().PrepareReschedule();
     }
 }
 
@@ -102,4 +118,4 @@ void Mutex::UpdatePriority() {
     }
 }
 
-} // namespace
+} // namespace Kernel
