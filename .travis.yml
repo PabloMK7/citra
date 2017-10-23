@@ -2,6 +2,14 @@ language: cpp
 matrix:
   include:
     - os: linux
+      env: NAME="clang-format"
+      dist: trusty
+      addons:
+        apt:
+          packages:
+            - clang-format-3.9
+      script: "./.travis/clang-format/script.sh"
+    - os: linux
       env: NAME="linux build"
       sudo: required
       dist: trusty
@@ -20,14 +28,6 @@ matrix:
       install: "./.travis/macos/deps.sh"
       script: "./.travis/macos/build.sh"
       after_success: "./.travis/macos/upload.sh"
-    - os: linux
-      env: NAME="clang-format"
-      dist: trusty
-      addons:
-        apt:
-          packages:
-            - clang-format-3.9
-      script: "./.travis/clang-format/script.sh"
 
 deploy:
   provider: releases
