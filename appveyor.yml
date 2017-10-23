@@ -122,7 +122,7 @@ after_build:
                        # QT dll dependencies
                        "libbz2-*.dll","libicudt*.dll","libicuin*.dll","libicuuc*.dll","libffi-*.dll",
                        "libfreetype-*.dll","libglib-*.dll","libgobject-*.dll","libgraphite2.dll","libiconv-*.dll",
-                       "libharfbuzz-*.dll","libintl-*.dll","libpcre-*.dll","libpcre16-*.dll","libpng16-*.dll",
+                       "libharfbuzz-*.dll","libintl-*.dll","libpcre-*.dll","libpcre16-*.dll","libpcre2-16-*.dll","libpng16-*.dll",
                        # Runtime/Other dependencies
                        "libgcc_s_seh-*.dll","libstdc++-*.dll","libwinpthread-*.dll","SDL2.dll","zlib1.dll"
           foreach ($file in $MingwDLLs) {
