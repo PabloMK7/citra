@@ -58,7 +58,7 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x10020104, FindContentInfos, "FindContentInfos"},
     {0x10030142, ListContentInfos, "ListContentInfos"},
     {0x10040102, DeleteContents, "DeleteContents"},
-    {0x10050084, GetDataTitleInfos, "GetDataTitleInfos"},
+    {0x10050084, GetDLCTitleInfos, "GetDLCTitleInfos"},
     {0x10060080, nullptr, "GetNumDataTitleTickets"},
     {0x10070102, ListDataTitleTicketInfos, "ListDataTitleTicketInfos"},
     {0x100801C2, nullptr, "GetItemRights"},
@@ -66,7 +66,7 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x100A0000, nullptr, "IsExternalTitleDatabaseInitialized"},
     {0x100B00C0, nullptr, "GetNumExistingContentInfos"},
     {0x100C0142, nullptr, "ListExistingContentInfos"},
-    {0x100D0084, nullptr, "GetPatchTitleInfos"},
+    {0x100D0084, GetPatchTitleInfos, "GetPatchTitleInfos"},
 };
 
 AM_SYS_Interface::AM_SYS_Interface() {
