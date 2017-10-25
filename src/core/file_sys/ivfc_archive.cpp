@@ -94,7 +94,7 @@ ResultVal<size_t> IVFCFile::Read(const u64 offset, const size_t length, u8* buff
 }
 
 ResultVal<size_t> IVFCFile::Write(const u64 offset, const size_t length, const bool flush,
-                                  const u8* buffer) const {
+                                  const u8* buffer) {
     LOG_ERROR(Service_FS, "Attempted to write to IVFC file");
     // TODO(Subv): Find error code
     return MakeResult<size_t>(0);
