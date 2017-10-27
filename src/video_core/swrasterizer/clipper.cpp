@@ -20,7 +20,6 @@
 using Pica::Rasterizer::Vertex;
 
 namespace Pica {
-
 namespace Clipper {
 
 struct ClippingEdge {
@@ -192,6 +191,5 @@ void ProcessTriangle(const OutputVertex& v0, const OutputVertex& v1, const Outpu
     }
 }
 
-} // namespace
-
-} // namespace
+} // namespace Clipper
+} // namespace Pica
