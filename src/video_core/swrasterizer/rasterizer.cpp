@@ -376,8 +376,9 @@ static void ProcessTriangleInternal(const Vertex& v0, const Vertex& v1, const Ve
 
                 if (use_border_s || use_border_t) {
                     auto border_color = texture.config.border_color;
-                    texture_color[i] = {border_color.r, border_color.g, border_color.b,
-                                        border_color.a};
+                    texture_color[i] = Math::MakeVec(border_color.r.Value(), border_color.g.Value(),
+                                                     border_color.b.Value(), border_color.a.Value())
+                                           .Cast<u8>();
                 } else {
                     // Textures are laid out from bottom to top, hence we invert the t coordinate.
                     // NOTE: This may not be the right place for the inversion.
@@ -414,12 +415,12 @@ static void ProcessTriangleInternal(const Vertex& v0, const Vertex& v1, const Ve
             // analogously.
             Math::Vec4<u8> combiner_output;
             Math::Vec4<u8> combiner_buffer = {0, 0, 0, 0};
-            Math::Vec4<u8> next_combiner_buffer = {
-                regs.texturing.tev_combiner_buffer_color.r,
-                regs.texturing.tev_combiner_buffer_color.g,
-                regs.texturing.tev_combiner_buffer_color.b,
-                regs.texturing.tev_combiner_buffer_color.a,
-            };
+            Math::Vec4<u8> next_combiner_buffer =
+                Math::MakeVec(regs.texturing.tev_combiner_buffer_color.r.Value(),
+                              regs.texturing.tev_combiner_buffer_color.g.Value(),
+                              regs.texturing.tev_combiner_buffer_color.b.Value(),
+                              regs.texturing.tev_combiner_buffer_color.a.Value())
+                    .Cast<u8>();
 
             Math::Vec4<u8> primary_fragment_color = {0, 0, 0, 0};
             Math::Vec4<u8> secondary_fragment_color = {0, 0, 0, 0};
@@ -473,8 +474,9 @@ static void ProcessTriangleInternal(const Vertex& v0, const Vertex& v1, const Ve
                         return combiner_buffer;
 
                     case Source::Constant:
-                        return {tev_stage.const_r, tev_stage.const_g, tev_stage.const_b,
-                                tev_stage.const_a};
+                        return Math::MakeVec(tev_stage.const_r.Value(), tev_stage.const_g.Value(),
+                                             tev_stage.const_b.Value(), tev_stage.const_a.Value())
+                            .Cast<u8>();
 
                     case Source::Previous:
                         return combiner_output;
@@ -587,11 +589,10 @@ static void ProcessTriangleInternal(const Vertex& v0, const Vertex& v1, const Ve
             // store the depth etc. Using float for now until we know more
             // about Pica datatypes
             if (regs.texturing.fog_mode == TexturingRegs::FogMode::Fog) {
-                const Math::Vec3<u8> fog_color = {
-                    static_cast<u8>(regs.texturing.fog_color.r.Value()),
-                    static_cast<u8>(regs.texturing.fog_color.g.Value()),
-                    static_cast<u8>(regs.texturing.fog_color.b.Value()),
-                };
+                const Math::Vec3<u8> fog_color = Math::MakeVec(regs.texturing.fog_color.r.Value(),
+                                                               regs.texturing.fog_color.g.Value(),
+                                                               regs.texturing.fog_color.b.Value())
+                                                     .Cast<u8>();
 
                 // Get index into fog LUT
                 float fog_index;
@@ -743,12 +744,12 @@ static void ProcessTriangleInternal(const Vertex& v0, const Vertex& v1, const Ve
                                         FramebufferRegs::BlendFactor factor) -> u8 {
                     DEBUG_ASSERT(channel < 4);
 
-                    const Math::Vec4<u8> blend_const = {
-                        static_cast<u8>(output_merger.blend_const.r),
-                        static_cast<u8>(output_merger.blend_const.g),
-                        static_cast<u8>(output_merger.blend_const.b),
-                        static_cast<u8>(output_merger.blend_const.a),
-                    };
+                    const Math::Vec4<u8> blend_const =
+                        Math::MakeVec(output_merger.blend_const.r.Value(),
+                                      output_merger.blend_const.g.Value(),
+                                      output_merger.blend_const.b.Value(),
+                                      output_merger.blend_const.a.Value())
+                            .Cast<u8>();
 
                     switch (factor) {
                     case FramebufferRegs::BlendFactor::Zero:
@@ -849,5 +850,4 @@ void ProcessTriangle(const Vertex& v0, const Vertex& v1, const Vertex& v2) {
 }
 
 } // namespace Rasterizer
-
 } // namespace Pica
