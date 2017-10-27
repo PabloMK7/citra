@@ -174,7 +174,7 @@ void GameList::onTextChanged(const QString& newText) {
                 child_file->data(GameListItemPath::ProgramIdRole).toString().toLower();
 
             // Only items which filename in combination with its title contains all words
-            // that are in the searchfiel will be visible in the gamelist
+            // that are in the searchfield will be visible in the gamelist
             // The search is case insensitive because of toLower()
             // I decided not to use Qt::CaseInsensitive in containsAllWords to prevent
             // multiple conversions of edit_filter_text for each game in the gamelist
