@@ -24,6 +24,9 @@
 namespace Service {
 namespace AM {
 
+constexpr u32 TID_HIGH_UPDATE = 0x0004000E;
+constexpr u32 TID_HIGH_DLC = 0x0004008C;
+
 static bool lists_initialized = false;
 static std::array<std::vector<u64_le>, 3> am_title_list;
 
@@ -182,7 +185,7 @@ void GetNumPrograms(Service::Interface* self) {
 }
 
 void FindContentInfos(Service::Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x1002, 4, 2); // 0x10020104
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x1002, 4, 4); // 0x10020104
 
     auto media_type = static_cast<Service::FS::MediaType>(rp.Pop<u8>());
     u64 title_id = rp.Pop<u64>();
@@ -225,7 +228,7 @@ void FindContentInfos(Service::Interface* self) {
 }
 
 void ListContentInfos(Service::Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x1003, 5, 1); // 0x10030142
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x1003, 5, 2); // 0x10030142
     u32 content_count = rp.Pop<u32>();
     auto media_type = static_cast<Service::FS::MediaType>(rp.Pop<u8>());
     u64 title_id = rp.Pop<u64>();
@@ -264,7 +267,7 @@ void ListContentInfos(Service::Interface* self) {
 }
 
 void DeleteContents(Service::Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x1004, 4, 1); // 0x10040102
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x1004, 4, 2); // 0x10040102
     u8 media_type = rp.Pop<u8>();
     u64 title_id = rp.Pop<u64>();
     u32 content_count = rp.Pop<u32>();
@@ -278,7 +281,7 @@ void DeleteContents(Service::Interface* self) {
 }
 
 void GetProgramList(Service::Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 2, 2, 1); // 0x00020082
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 2, 2, 2); // 0x00020082
 
     u32 count = rp.Pop<u32>();
     u8 media_type = rp.Pop<u8>();
@@ -302,18 +305,9 @@ void GetProgramList(Service::Interface* self) {
     rb.Push(copied);
 }
 
-void GetProgramInfos(Service::Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 3, 2, 2); // 0x00030084
-
-    auto media_type = static_cast<Service::FS::MediaType>(rp.Pop<u8>());
-    u32 title_count = rp.Pop<u32>();
-    VAddr title_id_list_pointer = rp.PopMappedBuffer();
-    VAddr title_info_out = rp.PopMappedBuffer();
-
-    std::vector<u64> title_id_list(title_count);
-    Memory::ReadBlock(title_id_list_pointer, title_id_list.data(), title_count * sizeof(u64));
-
-    for (u32 i = 0; i < title_count; i++) {
+ResultCode GetTitleInfoFromList(const std::vector<u64>& title_id_list,
+                                Service::FS::MediaType media_type, VAddr title_info_out) {
+    for (u32 i = 0; i < title_id_list.size(); i++) {
         std::string tmd_path = GetTitleMetadataPath(media_type, title_id_list[i]);
 
         TitleInfo title_info = {};
@@ -326,23 +320,113 @@ void GetProgramInfos(Service::Interface* self) {
             title_info.size = tmd.GetContentSizeByIndex(FileSys::TMDContentIndex::Main);
             title_info.version = tmd.GetTitleVersion();
             title_info.type = tmd.GetTitleType();
+        } else {
+            return ResultCode(ErrorDescription::NotFound, ErrorModule::AM,
+                              ErrorSummary::InvalidState, ErrorLevel::Permanent);
         }
         Memory::WriteBlock(title_info_out, &title_info, sizeof(TitleInfo));
         title_info_out += sizeof(TitleInfo);
     }
 
-    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
+    return RESULT_SUCCESS;
 }
 
-void GetDataTitleInfos(Service::Interface* self) {
-    GetProgramInfos(self);
+void GetProgramInfos(Service::Interface* self) {
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 3, 2, 4); // 0x00030084
 
-    LOG_WARNING(Service_AM, "(STUBBED) called");
+    auto media_type = static_cast<Service::FS::MediaType>(rp.Pop<u8>());
+    u32 title_count = rp.Pop<u32>();
+
+    size_t title_id_list_size, title_info_size;
+    IPC::MappedBufferPermissions title_id_list_perms, title_info_perms;
+    VAddr title_id_list_pointer = rp.PopMappedBuffer(&title_id_list_size, &title_id_list_perms);
+    VAddr title_info_out = rp.PopMappedBuffer(&title_info_size, &title_info_perms);
+
+    std::vector<u64> title_id_list(title_count);
+    Memory::ReadBlock(title_id_list_pointer, title_id_list.data(), title_count * sizeof(u64));
+
+    ResultCode result = GetTitleInfoFromList(title_id_list, media_type, title_info_out);
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 4);
+    rb.Push(result);
+    rb.PushMappedBuffer(title_id_list_pointer, title_id_list_size, title_id_list_perms);
+    rb.PushMappedBuffer(title_info_out, title_info_size, title_info_perms);
+}
+
+void GetDLCTitleInfos(Service::Interface* self) {
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x1005, 2, 4); // 0x10050084
+
+    auto media_type = static_cast<Service::FS::MediaType>(rp.Pop<u8>());
+    u32 title_count = rp.Pop<u32>();
+
+    size_t title_id_list_size, title_info_size;
+    IPC::MappedBufferPermissions title_id_list_perms, title_info_perms;
+    VAddr title_id_list_pointer = rp.PopMappedBuffer(&title_id_list_size, &title_id_list_perms);
+    VAddr title_info_out = rp.PopMappedBuffer(&title_info_size, &title_info_perms);
+
+    std::vector<u64> title_id_list(title_count);
+    Memory::ReadBlock(title_id_list_pointer, title_id_list.data(), title_count * sizeof(u64));
+
+    ResultCode result = RESULT_SUCCESS;
+
+    // Validate that DLC TIDs were passed in
+    for (u32 i = 0; i < title_count; i++) {
+        u32 tid_high = static_cast<u32>(title_id_list[i] >> 32);
+        if (tid_high != TID_HIGH_DLC) {
+            result = ResultCode(ErrCodes::InvalidTIDInList, ErrorModule::AM,
+                                ErrorSummary::InvalidArgument, ErrorLevel::Usage);
+            break;
+        }
+    }
+
+    if (result.IsSuccess()) {
+        result = GetTitleInfoFromList(title_id_list, media_type, title_info_out);
+    }
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 4);
+    rb.Push(result);
+    rb.PushMappedBuffer(title_id_list_pointer, title_id_list_size, title_id_list_perms);
+    rb.PushMappedBuffer(title_info_out, title_info_size, title_info_perms);
+}
+
+void GetPatchTitleInfos(Service::Interface* self) {
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x100D, 2, 4); // 0x100D0084
+
+    auto media_type = static_cast<Service::FS::MediaType>(rp.Pop<u8>());
+    u32 title_count = rp.Pop<u32>();
+
+    size_t title_id_list_size, title_info_size;
+    IPC::MappedBufferPermissions title_id_list_perms, title_info_perms;
+    VAddr title_id_list_pointer = rp.PopMappedBuffer(&title_id_list_size, &title_id_list_perms);
+    VAddr title_info_out = rp.PopMappedBuffer(&title_info_size, &title_info_perms);
+
+    std::vector<u64> title_id_list(title_count);
+    Memory::ReadBlock(title_id_list_pointer, title_id_list.data(), title_count * sizeof(u64));
+
+    ResultCode result = RESULT_SUCCESS;
+
+    // Validate that update TIDs were passed in
+    for (u32 i = 0; i < title_count; i++) {
+        u32 tid_high = static_cast<u32>(title_id_list[i] >> 32);
+        if (tid_high != TID_HIGH_UPDATE) {
+            result = ResultCode(ErrCodes::InvalidTIDInList, ErrorModule::AM,
+                                ErrorSummary::InvalidArgument, ErrorLevel::Usage);
+            break;
+        }
+    }
+
+    if (result.IsSuccess()) {
+        result = GetTitleInfoFromList(title_id_list, media_type, title_info_out);
+    }
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 4);
+    rb.Push(result);
+    rb.PushMappedBuffer(title_id_list_pointer, title_id_list_size, title_id_list_perms);
+    rb.PushMappedBuffer(title_info_out, title_info_size, title_info_perms);
 }
 
 void ListDataTitleTicketInfos(Service::Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x1007, 4, 1); // 0x10070102
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x1007, 4, 4); // 0x10070102
     u32 ticket_count = rp.Pop<u32>();
     u64 title_id = rp.Pop<u64>();
     u32 start_index = rp.Pop<u32>();
@@ -408,7 +492,7 @@ void GetNumTickets(Service::Interface* self) {
 }
 
 void GetTicketList(Service::Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 9, 2, 1); // 0x00090082
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 9, 2, 2); // 0x00090082
     u32 ticket_list_count = rp.Pop<u32>();
     u32 ticket_index = rp.Pop<u32>();
     VAddr ticket_tids_out = rp.PopMappedBuffer();
