@@ -30,9 +30,9 @@ void EmuThread::run() {
 
     stop_run = false;
 
-    // holds whether the cpu was running during the last iteration,
+    // Holds whether the cpu was running during the last iteration,
     // so that the DebugModeLeft signal can be emitted before the
-    // next execution step
+    // next execution step.
     bool was_active = false;
     while (!stop_run) {
         if (running) {
