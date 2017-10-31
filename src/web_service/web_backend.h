@@ -7,6 +7,8 @@
 #include <functional>
 #include <future>
 #include <string>
+#include <tuple>
+#include "common/announce_multiplayer_room.h"
 #include "common/common_types.h"
 
 namespace WebService {
@@ -18,9 +20,11 @@ namespace WebService {
  * @param allow_anonymous If true, allow anonymous unauthenticated requests.
  * @param username Citra username to use for authentication.
  * @param token Citra token to use for authentication.
+ * @return future with the error or result of the POST
  */
-void PostJson(const std::string& url, const std::string& data, bool allow_anonymous,
-              const std::string& username = {}, const std::string& token = {});
+std::future<Common::WebResult> PostJson(const std::string& url, const std::string& data,
+                                        bool allow_anonymous, const std::string& username = {},
+                                        const std::string& token = {});
 
 /**
  * Gets JSON from services.citra-emu.org.
@@ -35,5 +39,15 @@ template <typename T>
 std::future<T> GetJson(std::function<T(const std::string&)> func, const std::string& url,
                        bool allow_anonymous, const std::string& username = {},
                        const std::string& token = {});
+
+/**
+ * Delete JSON to services.citra-emu.org.
+ * @param url URL of the services.citra-emu.org endpoint to post data to.
+ * @param data String of JSON data to use for the body of the DELETE request.
+ * @param username Citra username to use for authentication.
+ * @param token Citra token to use for authentication.
+ */
+void DeleteJson(const std::string& url, const std::string& data, const std::string& username = {},
+                const std::string& token = {});
 
 } // namespace WebService

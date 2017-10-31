@@ -26,6 +26,7 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/scm_rev.cpp.in" "${CMAKE_CURRENT_SOU
 
 add_library(common STATIC
     alignment.h
+    announce_multiplayer_room.h
     assert.h
     bit_field.h
     bit_set.h

@@ -187,6 +187,8 @@ enable_telemetry =
 telemetry_endpoint_url = https://services.citra-emu.org/api/telemetry
 # Endpoint URL to verify the username and token
 verify_endpoint_url = https://services.citra-emu.org/api/profile
+# Endpoint URL for announcing public rooms
+announce_multiplayer_room_endpoint_url = https://services.citra-emu.org/api/multiplayer/rooms
 # Username and token for Citra Web Service
 # See https://services.citra-emu.org/ for more info
 citra_username =
