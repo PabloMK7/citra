@@ -28,6 +28,12 @@ matrix:
       install: "./.travis/macos/deps.sh"
       script: "./.travis/macos/build.sh"
       after_success: "./.travis/macos/upload.sh"
+    - os: linux
+      env: NAME="linux build (frozen versions of dependencies)"
+      sudo: required
+      dist: trusty
+      services: docker
+      script: "./.travis/linux-frozen/build.sh"
 
 deploy:
   provider: releases
