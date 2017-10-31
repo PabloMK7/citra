@@ -29,6 +29,7 @@ public:
     bool HasUpdater() const;
 
     bool StartUpdateCheck();
+    void StopUpdateCheck(int delay, bool async);
 
     void LaunchWithArguments(const QStringList& args);
     void LaunchUI();
@@ -37,7 +38,6 @@ public:
     void LaunchUIOnExit();
 
 public slots:
-	void StopUpdateCheck(int delay, bool async);
     void UpdaterReady(int exit_code, QProcess::ExitStatus exit_status);
     void UpdaterError(QProcess::ProcessError error);
 

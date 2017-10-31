@@ -152,15 +152,15 @@ void UpdaterPrivate::StopUpdateCheck(int delay, bool async) {
     if (delay > 0) {
         main_process->terminate();
         if (async) {
-			QTimer *timer = new QTimer(this);
-			timer->setSingleShot(true);
+            QTimer* timer = new QTimer(this);
+            timer->setSingleShot(true);
 
-			connect(timer, &QTimer::timeout, [=]() {
-				StopUpdateCheck(0, false);
-				timer->deleteLater();
-			});
+            connect(timer, &QTimer::timeout, [=]() {
+                StopUpdateCheck(0, false);
+                timer->deleteLater();
+            });
 
-			timer->start(delay);
+            timer->start(delay);
         } else {
             if (!main_process->waitForFinished(delay)) {
                 main_process->kill();

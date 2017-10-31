@@ -61,58 +61,107 @@ public:
         /// The update download size (in Bytes)
         quint64 size = 0;
 
-        /// Default Constructor
+        /**
+         * Default Constructor
+         */
         UpdateInfo();
-        /// Copy Constructor
+
+        /**
+         * Copy Constructor
+         */
         UpdateInfo(const UpdateInfo& other);
-        /// Constructor that takes name, version and size
+
+        /**
+         * Constructor that takes name, version and size.
+         */
         UpdateInfo(QString name, QString version, quint64 size);
     };
 
-    /// Default constructor
+    /**
+     * Default constructor
+     **/
     explicit Updater(QObject* parent = nullptr);
-    /// Constructor with an explicitly set path
+
+    /**
+     * Constructor with an explicitly set path
+     **/
     explicit Updater(const QString& maintenance_tool_path, QObject* parent = nullptr);
-    /// Destroys the updater and kills the update check (if running)
+
+    /**
+     * Destroys the updater and kills the update check (if running)
+     **/
     ~Updater();
 
-    /// Returns `true`, if the updater exited normally
+    /**
+     * Returns `true`, if the updater exited normally
+     **/
     bool ExitedNormally() const;
-    /// Returns the mainetancetools error code of the last update
+
+    /**
+     * Returns the mainetancetools error code from the last update check, if any.
+     **/
     int ErrorCode() const;
-    /// returns the error output (stderr) of the last update
+
+    /**
+     * Returns the error output (stderr) of the last update
+     **/
     QByteArray ErrorLog() const;
 
-    /// readAcFn{Updater::running}
+    /**
+     * Returns if a update check is running.
+     **/
     bool IsRunning() const;
-    /// readAcFn{Updater::updateInfo}
+
+    /**
+     * Returns the latest update information available, if any.
+     **/
     QList<UpdateInfo> LatestUpdateInfo() const;
 
-    /// Launches the updater UI formally
+    /**
+     * Launches the updater UI formally
+     **/
     void LaunchUI();
 
-    /// Silently updates the application in the background
+    /**
+     * Silently updates the application in the background
+     **/
     void SilentlyUpdate();
 
-    /// Checks to see if a updater application is available
+    /**
+     * Checks to see if a updater application is available
+     **/
     bool HasUpdater() const;
 
-    /// Instead of silently updating, explictly open the UI on shutdown
+    /**
+     * Instead of silently updating, explictly open the UI on shutdown
+     **/
     void LaunchUIOnExit();
 
 public slots:
-    /// Starts checking for updates
+    /**
+     * Starts checking for updates
+     **/
     bool CheckForUpdates();
-    /// Aborts checking for updates
+
+    /**
+     * Aborts checking for updates
+     **/
     void AbortUpdateCheck(int max_delay = 5000, bool async = false);
 
 signals:
-    /// Will be emitted as soon as the updater finished checking for updates
+    /**
+     * Will be emitted as soon as the updater finished checking for updates
+     **/
     void CheckUpdatesDone(bool has_updates, bool has_error);
 
-    /// notifyAcFn{Updater::running}
+    /**
+     * Emitted when a update check operation changes stage
+     **/
     void RunningChanged(bool running);
-    /// notifyAcFn{Updater::updateInfo}
+
+    /**
+     * Emitted when new update information has been found
+     **/
     void UpdateInfoChanged(QList<Updater::UpdateInfo> update_info);
 
 private:
