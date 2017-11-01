@@ -74,7 +74,7 @@ ResultCode AddressArbiter::ArbitrateAddress(ArbitrationType type, VAddr address,
     }
 
     default:
-        LOG_ERROR(Kernel, "unknown type=%d", type);
+        LOG_ERROR(Kernel, "unknown type=%d", static_cast<u32>(type));
         return ERR_INVALID_ENUM_VALUE_FND;
     }
 

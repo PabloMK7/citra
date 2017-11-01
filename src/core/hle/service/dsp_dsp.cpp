@@ -301,7 +301,7 @@ static void WriteProcessPipe(Service::Interface* self) {
     }
 
     ASSERT_MSG(Memory::IsValidVirtualAddress(buffer),
-               "Invalid Buffer: pipe=%u, size=0x%X, buffer=0x%08X", pipe, size, buffer);
+               "Invalid Buffer: pipe=%u, size=0x%X, buffer=0x%08X", pipe_index, size, buffer);
 
     std::vector<u8> message(size);
     for (u32 i = 0; i < size; i++) {
@@ -359,8 +359,8 @@ static void ReadPipeIfPossible(Service::Interface* self) {
     DSP::HLE::DspPipe pipe = static_cast<DSP::HLE::DspPipe>(pipe_index);
 
     ASSERT_MSG(Memory::IsValidVirtualAddress(addr),
-               "Invalid addr: pipe=0x%08X, unknown=0x%08X, size=0x%X, buffer=0x%08X", pipe, unknown,
-               size, addr);
+               "Invalid addr: pipe=0x%08X, unknown=0x%08X, size=0x%X, buffer=0x%08X", pipe_index,
+               unknown, size, addr);
 
     cmd_buff[0] = IPC::MakeHeader(0x10, 1, 2);
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
@@ -403,8 +403,8 @@ static void ReadPipe(Service::Interface* self) {
     DSP::HLE::DspPipe pipe = static_cast<DSP::HLE::DspPipe>(pipe_index);
 
     ASSERT_MSG(Memory::IsValidVirtualAddress(addr),
-               "Invalid addr: pipe=0x%08X, unknown=0x%08X, size=0x%X, buffer=0x%08X", pipe, unknown,
-               size, addr);
+               "Invalid addr: pipe=0x%08X, unknown=0x%08X, size=0x%X, buffer=0x%08X", pipe_index,
+               unknown, size, addr);
 
     if (DSP::HLE::GetPipeReadableSize(pipe) >= size) {
         std::vector<u8> response = DSP::HLE::PipeRead(pipe, size);

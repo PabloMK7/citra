@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <cinttypes>
 #include <cstddef>
 #include <memory>
 #include <system_error>
@@ -105,8 +106,8 @@ void File::HandleSyncRequest(Kernel::SharedPtr<Kernel::ServerSession> server_ses
                   offset, length, address);
 
         if (offset + length > backend->GetSize()) {
-            LOG_ERROR(Service_FS,
-                      "Reading from out of bounds offset=0x%llX length=0x%08X file_size=0x%llX",
+            LOG_ERROR(Service_FS, "Reading from out of bounds offset=0x%" PRIx64
+                                  " length=0x%08X file_size=0x%" PRIx64,
                       offset, length, backend->GetSize());
         }
 
@@ -191,7 +192,7 @@ void File::HandleSyncRequest(Kernel::SharedPtr<Kernel::ServerSession> server_ses
 
     // Unknown command...
     default:
-        LOG_ERROR(Service_FS, "Unknown command=0x%08X!", cmd);
+        LOG_ERROR(Service_FS, "Unknown command=0x%08X!", static_cast<u32>(cmd));
         ResultCode error = UnimplementedFunction(ErrorModule::FS);
         cmd_buff[1] = error.raw; // TODO(Link Mauve): use the correct error code for that.
         return;
@@ -231,7 +232,7 @@ void Directory::HandleSyncRequest(Kernel::SharedPtr<Kernel::ServerSession> serve
 
     // Unknown command...
     default:
-        LOG_ERROR(Service_FS, "Unknown command=0x%08X!", cmd);
+        LOG_ERROR(Service_FS, "Unknown command=0x%08X!", static_cast<u32>(cmd));
         ResultCode error = UnimplementedFunction(ErrorModule::FS);
         cmd_buff[1] = error.raw; // TODO(Link Mauve): use the correct error code for that.
         return;
@@ -297,7 +298,7 @@ ResultCode RegisterArchiveType(std::unique_ptr<FileSys::ArchiveFactory>&& factor
 
     auto& archive = result.first->second;
     LOG_DEBUG(Service_FS, "Registered archive %s with id code 0x%08X", archive->GetName().c_str(),
-              id_code);
+              static_cast<u32>(id_code));
     return RESULT_SUCCESS;
 }
 
@@ -472,7 +473,7 @@ ResultCode DeleteExtSaveData(MediaType media_type, u32 high, u32 low) {
     } else if (media_type == MediaType::SDMC) {
         media_type_directory = FileUtil::GetUserPath(D_SDMC_IDX);
     } else {
-        LOG_ERROR(Service_FS, "Unsupported media type %u", media_type);
+        LOG_ERROR(Service_FS, "Unsupported media type %u", static_cast<u32>(media_type));
         return ResultCode(-1); // TODO(Subv): Find the right error code
     }
 
