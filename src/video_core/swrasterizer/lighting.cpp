@@ -43,7 +43,8 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(
             surface_normal = Math::MakeVec(0.0f, 0.0f, 1.0f);
             surface_tangent = perturbation;
         } else {
-            LOG_ERROR(HW_GPU, "Unknown bump mode %u", lighting.config0.bump_mode.Value());
+            LOG_ERROR(HW_GPU, "Unknown bump mode %u",
+                      static_cast<u32>(lighting.config0.bump_mode.Value()));
         }
     } else {
         surface_normal = Math::MakeVec(0.0f, 0.0f, 1.0f);

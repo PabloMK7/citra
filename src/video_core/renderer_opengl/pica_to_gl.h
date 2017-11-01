@@ -103,7 +103,7 @@ inline GLenum BlendEquation(Pica::FramebufferRegs::BlendEquation equation) {
 
     // Range check table for input
     if (static_cast<size_t>(equation) >= ARRAY_SIZE(blend_equation_table)) {
-        LOG_CRITICAL(Render_OpenGL, "Unknown blend equation %d", equation);
+        LOG_CRITICAL(Render_OpenGL, "Unknown blend equation %u", static_cast<u32>(equation));
         UNREACHABLE();
 
         return GL_FUNC_ADD;
@@ -133,7 +133,7 @@ inline GLenum BlendFunc(Pica::FramebufferRegs::BlendFactor factor) {
 
     // Range check table for input
     if (static_cast<size_t>(factor) >= ARRAY_SIZE(blend_func_table)) {
-        LOG_CRITICAL(Render_OpenGL, "Unknown blend factor %d", factor);
+        LOG_CRITICAL(Render_OpenGL, "Unknown blend factor %u", static_cast<u32>(factor));
         UNREACHABLE();
 
         return GL_ONE;
@@ -164,7 +164,7 @@ inline GLenum LogicOp(Pica::FramebufferRegs::LogicOp op) {
 
     // Range check table for input
     if (static_cast<size_t>(op) >= ARRAY_SIZE(logic_op_table)) {
-        LOG_CRITICAL(Render_OpenGL, "Unknown logic op %d", op);
+        LOG_CRITICAL(Render_OpenGL, "Unknown logic op %u", static_cast<u32>(op));
         UNREACHABLE();
 
         return GL_COPY;
@@ -187,7 +187,7 @@ inline GLenum CompareFunc(Pica::FramebufferRegs::CompareFunc func) {
 
     // Range check table for input
     if (static_cast<size_t>(func) >= ARRAY_SIZE(compare_func_table)) {
-        LOG_CRITICAL(Render_OpenGL, "Unknown compare function %d", func);
+        LOG_CRITICAL(Render_OpenGL, "Unknown compare function %u", static_cast<u32>(func));
         UNREACHABLE();
 
         return GL_ALWAYS;
@@ -210,7 +210,7 @@ inline GLenum StencilOp(Pica::FramebufferRegs::StencilAction action) {
 
     // Range check table for input
     if (static_cast<size_t>(action) >= ARRAY_SIZE(stencil_op_table)) {
-        LOG_CRITICAL(Render_OpenGL, "Unknown stencil op %d", action);
+        LOG_CRITICAL(Render_OpenGL, "Unknown stencil op %u", static_cast<u32>(action));
         UNREACHABLE();
 
         return GL_KEEP;

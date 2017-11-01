@@ -58,7 +58,7 @@ void DrawPixel(int x, int y, const Math::Vec4<u8>& color) {
 
     default:
         LOG_CRITICAL(Render_Software, "Unknown framebuffer color format %x",
-                     framebuffer.color_format.Value());
+                     static_cast<u32>(framebuffer.color_format.Value()));
         UNIMPLEMENTED();
     }
 }
@@ -94,7 +94,7 @@ const Math::Vec4<u8> GetPixel(int x, int y) {
 
     default:
         LOG_CRITICAL(Render_Software, "Unknown framebuffer color format %x",
-                     framebuffer.color_format.Value());
+                     static_cast<u32>(framebuffer.color_format.Value()));
         UNIMPLEMENTED();
     }
 
@@ -123,7 +123,8 @@ u32 GetDepth(int x, int y) {
     case FramebufferRegs::DepthFormat::D24S8:
         return Color::DecodeD24S8(src_pixel).x;
     default:
-        LOG_CRITICAL(HW_GPU, "Unimplemented depth format %u", framebuffer.depth_format);
+        LOG_CRITICAL(HW_GPU, "Unimplemented depth format %u",
+                     static_cast<u32>(framebuffer.depth_format.Value()));
         UNIMPLEMENTED();
         return 0;
     }
@@ -151,7 +152,7 @@ u8 GetStencil(int x, int y) {
         LOG_WARNING(
             HW_GPU,
             "GetStencil called for function which doesn't have a stencil component (format %u)",
-            framebuffer.depth_format);
+            static_cast<u32>(framebuffer.depth_format.Value()));
         return 0;
     }
 }
@@ -184,7 +185,8 @@ void SetDepth(int x, int y, u32 value) {
         break;
 
     default:
-        LOG_CRITICAL(HW_GPU, "Unimplemented depth format %u", framebuffer.depth_format);
+        LOG_CRITICAL(HW_GPU, "Unimplemented depth format %u",
+                     static_cast<u32>(framebuffer.depth_format.Value()));
         UNIMPLEMENTED();
         break;
     }
@@ -215,7 +217,8 @@ void SetStencil(int x, int y, u8 value) {
         break;
 
     default:
-        LOG_CRITICAL(HW_GPU, "Unimplemented depth format %u", framebuffer.depth_format);
+        LOG_CRITICAL(HW_GPU, "Unimplemented depth format %u",
+                     static_cast<u32>(framebuffer.depth_format.Value()));
         UNIMPLEMENTED();
         break;
     }
@@ -294,7 +297,7 @@ Math::Vec4<u8> EvaluateBlendEquation(const Math::Vec4<u8>& src, const Math::Vec4
         break;
 
     default:
-        LOG_CRITICAL(HW_GPU, "Unknown RGB blend equation %x", equation);
+        LOG_CRITICAL(HW_GPU, "Unknown RGB blend equation 0x%x", static_cast<u8>(equation));
         UNIMPLEMENTED();
     }
 
