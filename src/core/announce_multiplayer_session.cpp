@@ -104,7 +104,6 @@ void AnnounceMultiplayerSession::AnnounceMultiplayerLoop() {
                 for (auto callback : error_callbacks) {
                     (*callback)(result);
                 }
-                announce = false;
             }
         }
         std::this_thread::sleep_for(announce_time_interval);
