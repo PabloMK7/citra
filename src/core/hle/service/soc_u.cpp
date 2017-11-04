@@ -780,10 +780,6 @@ static void Connect(Interface* self) {
 
 static void InitializeSockets(Interface* self) {
 // TODO(Subv): Implement
-#ifdef _WIN32
-    WSADATA data;
-    WSAStartup(MAKEWORD(2, 2), &data);
-#endif
 
     u32* cmd_buffer = Kernel::GetCommandBuffer();
     cmd_buffer[0] = IPC::MakeHeader(1, 1, 0);
@@ -900,10 +896,18 @@ const Interface::FunctionInfo FunctionTable[] = {
 
 SOC_U::SOC_U() {
     Register(FunctionTable);
+
+#ifdef _WIN32
+    WSADATA data;
+    WSAStartup(MAKEWORD(2, 2), &data);
+#endif
 }
 
 SOC_U::~SOC_U() {
     CleanupSockets();
+#ifdef _WIN32
+    WSACleanup();
+#endif
 }
 
 } // namespace SOC
