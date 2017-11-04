@@ -216,11 +216,11 @@ void Init() {
     SM::ServiceManager::InstallInterfaces(SM::g_service_manager);
 
     NS::InstallInterfaces(*SM::g_service_manager);
+    AC::InstallInterfaces(*SM::g_service_manager);
 
     AddNamedPort(new ERR::ERR_F);
 
     FS::ArchiveInit();
-    AC::Init();
     ACT::Init();
     AM::Init();
     APT::Init();
@@ -273,7 +273,6 @@ void Shutdown() {
     BOSS::Shutdown();
     APT::Shutdown();
     AM::Shutdown();
-    AC::Shutdown();
     FS::ArchiveShutdown();
 
     SM::g_service_manager = nullptr;
