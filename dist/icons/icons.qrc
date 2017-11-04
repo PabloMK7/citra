@@ -2,5 +2,6 @@
   <qresource prefix="icons">
     <file>checked.png</file>
     <file>failed.png</file>
+    <file>citra.png</file>
   </qresource>
 </RCC>

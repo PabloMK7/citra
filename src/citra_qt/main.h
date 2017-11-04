@@ -25,6 +25,7 @@ class MicroProfileDialog;
 class ProfilerWidget;
 class RegistersWidget;
 class WaitTreeWidget;
+class AboutDialog;
 
 class GMainWindow : public QMainWindow {
     Q_OBJECT
@@ -131,6 +132,8 @@ private slots:
     void ToggleWindowMode();
     void OnCreateGraphicsSurfaceViewer();
     void OnCoreError(Core::System::ResultStatus, std::string);
+    /// Called whenever a user selects Help->About Citra
+    void OnMenuAboutCitra();
 
 private:
     void UpdateStatusBar();
