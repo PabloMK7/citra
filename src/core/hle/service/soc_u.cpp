@@ -779,8 +779,8 @@ static void Connect(Interface* self) {
 }
 
 static void InitializeSockets(Interface* self) {
-// TODO(Subv): Implement
-
+    // TODO(Subv): Implement
+    
     u32* cmd_buffer = Kernel::GetCommandBuffer();
     cmd_buffer[0] = IPC::MakeHeader(1, 1, 0);
     cmd_buffer[1] = RESULT_SUCCESS.raw;
