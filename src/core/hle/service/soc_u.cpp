@@ -794,10 +794,6 @@ static void ShutdownSockets(Interface* self) {
     // TODO(Subv): Implement
     CleanupSockets();
 
-#ifdef _WIN32
-    WSACleanup();
-#endif
-
     u32* cmd_buffer = Kernel::GetCommandBuffer();
     cmd_buffer[1] = 0;
 }
@@ -908,9 +904,6 @@ SOC_U::SOC_U() {
 
 SOC_U::~SOC_U() {
     CleanupSockets();
-#ifdef _WIN32
-    WSACleanup();
-#endif
 }
 
 } // namespace SOC
