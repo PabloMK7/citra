@@ -51,6 +51,10 @@ struct SecureDataHeader {
     u16_be sequence_number;
     u16_be dest_node_id;
     u16_be src_node_id;
+
+    u32 GetActualDataSize() const {
+        return protocol_size - sizeof(SecureDataHeader);
+    }
 };
 
 static_assert(sizeof(SecureDataHeader) == 14, "SecureDataHeader has the wrong size");
@@ -117,6 +121,11 @@ static_assert(sizeof(EAPoLLogoffPacket) == 0x298, "EAPoLLogoffPacket has the wro
  */
 std::vector<u8> GenerateDataPayload(const std::vector<u8>& data, u8 channel, u16 dest_node,
                                     u16 src_node, u16 sequence_number);
+
+/*
+ * Returns the SecureDataHeader stored in an 802.11 data frame.
+ */
+SecureDataHeader ParseSecureDataHeader(const std::vector<u8>& data);
 
 /*
  * Generates an unencrypted 802.11 data frame body with the EAPoL-Start format for UDS
