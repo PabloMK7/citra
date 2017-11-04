@@ -444,7 +444,6 @@ void HandleDeauthenticationFrame(const Network::WifiPacket& packet) {
     connection_status.total_nodes--;
 
     network_info.total_nodes--;
-    node_info.erase(node);
     connection_status_event->Signal();
 }
 
