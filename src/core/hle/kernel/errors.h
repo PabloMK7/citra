@@ -13,6 +13,7 @@ enum {
     OutOfHandles = 19,
     SessionClosedByRemote = 26,
     PortNameTooLong = 30,
+    WrongLockingThread = 31,
     NoPendingSessions = 35,
     WrongPermission = 46,
     InvalidBufferDescriptor = 48,
