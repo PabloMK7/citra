@@ -65,7 +65,7 @@ static Math::Vec4<u8> DecodePixel(Regs::PixelFormat input_format, const u8* src_
         return Color::DecodeRGBA4(src_pixel);
 
     default:
-        LOG_ERROR(HW_GPU, "Unknown source framebuffer format %x", input_format);
+        LOG_ERROR(HW_GPU, "Unknown source framebuffer format %x", static_cast<u32>(input_format));
         return {0, 0, 0, 0};
     }
 }
@@ -303,7 +303,7 @@ static void DisplayTransfer(const Regs::DisplayTransferConfig& config) {
 
             default:
                 LOG_ERROR(HW_GPU, "Unknown destination framebuffer format %x",
-                          config.output_format.Value());
+                          static_cast<u32>(config.output_format.Value()));
                 break;
             }
         }

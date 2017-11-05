@@ -853,7 +853,7 @@ void JitShader::Compile_NextInstr() {
     } else {
         // Unhandled instruction
         LOG_CRITICAL(HW_GPU, "Unhandled instruction: 0x%02x (0x%08x)",
-                     instr.opcode.Value().EffectiveOpCode(), instr.hex);
+                     static_cast<u32>(instr.opcode.Value().EffectiveOpCode()), instr.hex);
     }
 }
 

@@ -554,7 +554,7 @@ void ReceiveParameter(Service::Interface* self) {
             "buffer_size is bigger than the size in the buffer descriptor (0x%08X > 0x%08zX)",
             buffer_size, static_buff_size);
 
-    LOG_DEBUG(Service_APT, "called app_id=0x%08X, buffer_size=0x%08zX", app_id, buffer_size);
+    LOG_DEBUG(Service_APT, "called app_id=0x%08X, buffer_size=0x%08X", app_id, buffer_size);
 
     if (!next_parameter) {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
@@ -603,7 +603,7 @@ void GlanceParameter(Service::Interface* self) {
             "buffer_size is bigger than the size in the buffer descriptor (0x%08X > 0x%08zX)",
             buffer_size, static_buff_size);
 
-    LOG_DEBUG(Service_APT, "called app_id=0x%08X, buffer_size=0x%08zX", app_id, buffer_size);
+    LOG_DEBUG(Service_APT, "called app_id=0x%08X, buffer_size=0x%08X", app_id, buffer_size);
 
     if (!next_parameter) {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
@@ -767,7 +767,7 @@ void PrepareToStartLibraryApplet(Service::Interface* self) {
     IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x18, 1, 0); // 0x180040
     AppletId applet_id = static_cast<AppletId>(rp.Pop<u32>());
 
-    LOG_DEBUG(Service_APT, "called applet_id=%08X", applet_id);
+    LOG_DEBUG(Service_APT, "called applet_id=%08X", static_cast<u32>(applet_id));
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
 
@@ -775,7 +775,8 @@ void PrepareToStartLibraryApplet(Service::Interface* self) {
 
     auto applet = HLE::Applets::Applet::Get(applet_id);
     if (applet) {
-        LOG_WARNING(Service_APT, "applet has already been started id=%08X", applet_id);
+        LOG_WARNING(Service_APT, "applet has already been started id=%08X",
+                    static_cast<u32>(applet_id));
         rb.Push(RESULT_SUCCESS);
     } else {
         rb.Push(HLE::Applets::Applet::Create(applet_id));
@@ -800,7 +801,7 @@ void PreloadLibraryApplet(Service::Interface* self) {
     IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x16, 1, 0); // 0x160040
     AppletId applet_id = static_cast<AppletId>(rp.Pop<u32>());
 
-    LOG_DEBUG(Service_APT, "called applet_id=%08X", applet_id);
+    LOG_DEBUG(Service_APT, "called applet_id=%08X", static_cast<u32>(applet_id));
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
 
@@ -808,7 +809,8 @@ void PreloadLibraryApplet(Service::Interface* self) {
 
     auto applet = HLE::Applets::Applet::Get(applet_id);
     if (applet) {
-        LOG_WARNING(Service_APT, "applet has already been started id=%08X", applet_id);
+        LOG_WARNING(Service_APT, "applet has already been started id=%08X",
+                    static_cast<u32>(applet_id));
         rb.Push(RESULT_SUCCESS);
     } else {
         rb.Push(HLE::Applets::Applet::Create(applet_id));
@@ -823,7 +825,7 @@ void StartLibraryApplet(Service::Interface* self) {
     Kernel::Handle handle = rp.PopHandle();
     VAddr buffer_addr = rp.PopStaticBuffer();
 
-    LOG_DEBUG(Service_APT, "called applet_id=%08X", applet_id);
+    LOG_DEBUG(Service_APT, "called applet_id=%08X", static_cast<u32>(applet_id));
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
 
@@ -867,7 +869,7 @@ void SetScreenCapPostPermission(Service::Interface* self) {
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS); // No error
     LOG_WARNING(Service_APT, "(STUBBED) screen_capture_post_permission=%u",
-                screen_capture_post_permission);
+                static_cast<u32>(screen_capture_post_permission));
 }
 
 void GetScreenCapPostPermission(Service::Interface* self) {
@@ -877,7 +879,7 @@ void GetScreenCapPostPermission(Service::Interface* self) {
     rb.Push(RESULT_SUCCESS); // No error
     rb.Push(static_cast<u32>(screen_capture_post_permission));
     LOG_WARNING(Service_APT, "(STUBBED) screen_capture_post_permission=%u",
-                screen_capture_post_permission);
+                static_cast<u32>(screen_capture_post_permission));
 }
 
 void GetAppletInfo(Service::Interface* self) {
@@ -899,7 +901,7 @@ void GetAppletInfo(Service::Interface* self) {
         rb.Push(ResultCode(ErrorDescription::NotFound, ErrorModule::Applet, ErrorSummary::NotFound,
                            ErrorLevel::Status));
     }
-    LOG_WARNING(Service_APT, "(stubbed) called appid=%u", app_id);
+    LOG_WARNING(Service_APT, "(stubbed) called appid=%u", static_cast<u32>(app_id));
 }
 
 void GetStartupArgument(Service::Interface* self) {
@@ -928,7 +930,7 @@ void GetStartupArgument(Service::Interface* self) {
     }
 
     LOG_WARNING(Service_APT, "(stubbed) called startup_argument_type=%u , parameter_size=0x%08x",
-                startup_argument_type, parameter_size);
+                static_cast<u32>(startup_argument_type), parameter_size);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
     rb.Push(RESULT_SUCCESS);

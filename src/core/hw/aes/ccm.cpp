@@ -46,7 +46,7 @@ public:
 std::vector<u8> EncryptSignCCM(const std::vector<u8>& pdata, const CCMNonce& nonce,
                                size_t slot_id) {
     if (!IsNormalKeyAvailable(slot_id)) {
-        LOG_ERROR(HW_AES, "Key slot %d not available. Will use zero key.", slot_id);
+        LOG_ERROR(HW_AES, "Key slot %zu not available. Will use zero key.", slot_id);
     }
     const AESKey normal = GetNormalKey(slot_id);
     std::vector<u8> cipher(pdata.size() + CCM_MAC_SIZE);
@@ -67,7 +67,7 @@ std::vector<u8> EncryptSignCCM(const std::vector<u8>& pdata, const CCMNonce& non
 std::vector<u8> DecryptVerifyCCM(const std::vector<u8>& cipher, const CCMNonce& nonce,
                                  size_t slot_id) {
     if (!IsNormalKeyAvailable(slot_id)) {
-        LOG_ERROR(HW_AES, "Key slot %d not available. Will use zero key.", slot_id);
+        LOG_ERROR(HW_AES, "Key slot %zu not available. Will use zero key.", slot_id);
     }
     const AESKey normal = GetNormalKey(slot_id);
     const std::size_t pdata_size = cipher.size() - CCM_MAC_SIZE;

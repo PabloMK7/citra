@@ -92,7 +92,7 @@ void SRV::GetServiceHandle(Kernel::HLERequestContext& ctx) {
     if (name_len > Service::kMaxPortSize) {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(ERR_INVALID_NAME_SIZE);
-        LOG_ERROR(Service_SRV, "called name_len=0x%X -> ERR_INVALID_NAME_SIZE", name_len);
+        LOG_ERROR(Service_SRV, "called name_len=0x%zX -> ERR_INVALID_NAME_SIZE", name_len);
         return;
     }
     std::string name(name_buf.data(), name_len);
@@ -122,7 +122,8 @@ void SRV::GetServiceHandle(Kernel::HLERequestContext& ctx) {
         rb.Push(ERR_MAX_CONNECTIONS_REACHED);
         rb.PushObjects(std::move(client_port).Unwrap());
     } else {
-        LOG_ERROR(Service_SRV, "called service=%s -> error 0x%08X", name.c_str(), session.Code());
+        LOG_ERROR(Service_SRV, "called service=%s -> error 0x%08X", name.c_str(),
+                  session.Code().raw);
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(session.Code());
     }

@@ -96,14 +96,15 @@ System::ResultStatus System::Load(EmuWindow* emu_window, const std::string& file
 
     ResultStatus init_result{Init(emu_window, system_mode.first.get())};
     if (init_result != ResultStatus::Success) {
-        LOG_CRITICAL(Core, "Failed to initialize system (Error %i)!", init_result);
+        LOG_CRITICAL(Core, "Failed to initialize system (Error %u)!",
+                     static_cast<u32>(init_result));
         System::Shutdown();
         return init_result;
     }
 
     const Loader::ResultStatus load_result{app_loader->Load(Kernel::g_current_process)};
     if (Loader::ResultStatus::Success != load_result) {
-        LOG_CRITICAL(Core, "Failed to load ROM (Error %i)!", load_result);
+        LOG_CRITICAL(Core, "Failed to load ROM (Error %u)!", static_cast<u32>(load_result));
         System::Shutdown();
 
         switch (load_result) {
