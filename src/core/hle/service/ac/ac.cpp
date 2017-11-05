@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <vector>
 #include "common/common_types.h"
 #include "common/logging/log.h"
 #include "core/hle/ipc.h"
@@ -19,17 +20,12 @@ namespace AC {
 void Module::Interface::CreateDefaultConfig(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x1, 0, 0);
 
-    std::size_t desc_size;
-    VAddr ac_config_addr = rp.PeekStaticBuffer(0, &desc_size);
-
-    ASSERT_MSG(desc_size >= sizeof(Module::ACConfig),
-               "Output buffer size can't fit ACConfig structure");
-
-    Memory::WriteBlock(ac_config_addr, &ac->default_config, sizeof(ACConfig));
+    std::vector<u8> buffer(sizeof(ACConfig));
+    std::memcpy(buffer.data(), &ac->default_config, buffer.size());
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
     rb.Push(RESULT_SUCCESS);
-    rb.PushStaticBuffer(ac_config_addr, sizeof(ACConfig), 0);
+    rb.PushStaticBuffer(std::move(buffer), 0);
 
     LOG_WARNING(Service_AC, "(STUBBED) called");
 }
@@ -106,7 +102,7 @@ void Module::Interface::GetWifiStatus(Kernel::HLERequestContext& ctx) {
 
 void Module::Interface::GetInfraPriority(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x27, 0, 2);
-    VAddr ac_config = rp.PopStaticBuffer();
+    const std::vector<u8>& ac_config = rp.PopStaticBuffer();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
@@ -121,13 +117,13 @@ void Module::Interface::SetRequestEulaVersion(Kernel::HLERequestContext& ctx) {
     u32 major = rp.Pop<u8>();
     u32 minor = rp.Pop<u8>();
 
-    VAddr ac_config = rp.PopStaticBuffer();
+    const std::vector<u8>& ac_config = rp.PopStaticBuffer();
 
     // TODO(Subv): Copy over the input ACConfig to the stored ACConfig.
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
     rb.Push(RESULT_SUCCESS);
-    rb.PushStaticBuffer(ac_config, sizeof(ACConfig), 0);
+    rb.PushStaticBuffer(std::move(ac_config), 0);
 
     LOG_WARNING(Service_AC, "(STUBBED) called, major=%u, minor=%u", major, minor);
 }

@@ -40,12 +40,15 @@ static const int kStaticBuffersOffset = 0x100;
 inline u32* GetStaticBuffers(const int offset = 0) {
     return GetCommandBuffer(kStaticBuffersOffset + offset);
 }
-}
+} // namespace Kernel
 
 namespace IPC {
 
 /// Size of the command buffer area, in 32-bit words.
 constexpr size_t COMMAND_BUFFER_LENGTH = 0x100 / sizeof(u32);
+
+// Maximum number of static buffers per thread.
+constexpr size_t MAX_STATIC_BUFFERS = 16;
 
 // These errors are commonly returned by invalid IPC translations, so alias them here for
 // convenience.

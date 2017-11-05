@@ -720,7 +720,7 @@ void AppletUtility(Service::Interface* self) {
     u32 utility_command = rp.Pop<u32>();
     u32 input_size = rp.Pop<u32>();
     u32 output_size = rp.Pop<u32>();
-    VAddr input_addr = rp.PopStaticBuffer();
+    VAddr input_addr = rp.PopStaticBuffer(nullptr);
 
     VAddr output_addr = rp.PeekStaticBuffer(0);
 
@@ -823,7 +823,7 @@ void StartLibraryApplet(Service::Interface* self) {
 
     size_t buffer_size = rp.Pop<u32>();
     Kernel::Handle handle = rp.PopHandle();
-    VAddr buffer_addr = rp.PopStaticBuffer();
+    VAddr buffer_addr = rp.PopStaticBuffer(nullptr);
 
     LOG_DEBUG(Service_APT, "called applet_id=%08X", static_cast<u32>(applet_id));
 

@@ -113,7 +113,7 @@ void UnscrambleLocalFriendCode(Service::Interface* self) {
     IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x1C, 1, 2);
     const u32 friend_code_count = rp.Pop<u32>();
     size_t in_buffer_size;
-    const VAddr scrambled_friend_codes = rp.PopStaticBuffer(&in_buffer_size, false);
+    const VAddr scrambled_friend_codes = rp.PopStaticBuffer(&in_buffer_size);
     ASSERT_MSG(in_buffer_size == (friend_code_count * scrambled_friend_code_size),
                "Wrong input buffer size");
 
