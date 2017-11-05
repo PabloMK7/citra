@@ -7,8 +7,7 @@
 namespace Service {
 namespace AC {
 
-// TODO(Subv): Find out the correct number of concurrent sessions allowed
-AC_I::AC_I(std::shared_ptr<Module> ac) : Module::Interface(std::move(ac), "ac:i", 1) {
+AC_I::AC_I(std::shared_ptr<Module> ac) : Module::Interface(std::move(ac), "ac:i", 10) {
     static const FunctionInfo functions[] = {
         {0x00010000, &AC_I::CreateDefaultConfig, "CreateDefaultConfig"},
         {0x00040006, &AC_I::ConnectAsync, "ConnectAsync"},
