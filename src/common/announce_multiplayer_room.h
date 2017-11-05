@@ -13,7 +13,7 @@
 
 namespace Common {
 struct WebResult {
-    enum Code : u32 {
+    enum class Code : u32 {
         Success,
         InvalidURL,
         CredentialsMissing,
@@ -39,7 +39,7 @@ struct Room {
         u64 game_id;
     };
     std::string name;
-    std::string GUID;
+    std::string UID;
     std::string owner;
     std::string ip;
     u16 port;
@@ -60,8 +60,8 @@ using RoomList = std::vector<Room>;
 class Backend : NonCopyable {
 public:
     virtual ~Backend() = default;
-    virtual void SetRoomInformation(const std::string& guid, const std::string& name,
-                                    const u16 port, const u32 max_player, const u32 net_version,
+    virtual void SetRoomInformation(const std::string& uid, const std::string& name, const u16 port,
+                                    const u32 max_player, const u32 net_version,
                                     const bool has_password, const std::string& preferred_game,
                                     const u64 preferred_game_id) = 0;
     virtual void AddPlayer(const std::string& nickname, const MacAddress& mac_address,
@@ -79,7 +79,7 @@ public:
 class NullBackend : public Backend {
 public:
     ~NullBackend() = default;
-    void SetRoomInformation(const std::string& /*guid*/, const std::string& /*name*/,
+    void SetRoomInformation(const std::string& /*uid*/, const std::string& /*name*/,
                             const u16 /*port*/, const u32 /*max_player*/, const u32 /*net_version*/,
                             const bool /*has_password*/, const std::string& /*preferred_game*/,
                             const u64 /*preferred_game_id*/) override {}

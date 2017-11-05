@@ -20,7 +20,7 @@ public:
     RoomJson(const std::string& endpoint_url, const std::string& username, const std::string& token)
         : endpoint_url(endpoint_url), username(username), token(token) {}
     ~RoomJson() = default;
-    void SetRoomInformation(const std::string& guid, const std::string& name, const u16 port,
+    void SetRoomInformation(const std::string& uid, const std::string& name, const u16 port,
                             const u32 max_player, const u32 net_version, const bool has_password,
                             const std::string& preferred_game,
                             const u64 preferred_game_id) override;

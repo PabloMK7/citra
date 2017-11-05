@@ -23,7 +23,7 @@ void from_json(const nlohmann::json& json, Room::Member& member) {
 }
 
 void to_json(nlohmann::json& json, const Room& room) {
-    json["id"] = room.GUID;
+    json["id"] = room.UID;
     json["port"] = room.port;
     json["name"] = room.name;
     json["preferredGameName"] = room.preferred_game;
@@ -58,12 +58,12 @@ void from_json(const nlohmann::json& json, Room& room) {
 
 namespace WebService {
 
-void RoomJson::SetRoomInformation(const std::string& guid, const std::string& name, const u16 port,
+void RoomJson::SetRoomInformation(const std::string& uid, const std::string& name, const u16 port,
                                   const u32 max_player, const u32 net_version,
                                   const bool has_password, const std::string& preferred_game,
                                   const u64 preferred_game_id) {
     room.name = name;
-    room.GUID = guid;
+    room.UID = uid;
     room.port = port;
     room.max_player = max_player;
     room.net_version = net_version;
@@ -105,7 +105,7 @@ std::future<AnnounceMultiplayerRoom::RoomList> RoomJson::GetRoomList(std::functi
 
 void RoomJson::Delete() {
     nlohmann::json json;
-    json["id"] = room.GUID;
+    json["id"] = room.UID;
     DeleteJson(endpoint_url, json.dump(), username, token);
 }
 

@@ -77,29 +77,30 @@ void AnnounceMultiplayerSession::AnnounceMultiplayerLoop() {
     finished = false;
     std::future<Common::WebResult> future;
     while (announce) {
-        if (std::shared_ptr<Network::Room> room = Network::GetRoom().lock()) {
-            if (room->GetState() == Network::Room::State::Open) {
-                Network::RoomInformation room_information = room->GetRoomInformation();
-                std::vector<Network::Room::Member> memberlist = room->GetRoomMemberList();
-                backend->SetRoomInformation(
-                    room_information.guid, room_information.name, room_information.port,
-                    room_information.member_slots, Network::network_version, room->HasPassword(),
-                    room_information.preferred_game, room_information.preferred_game_id);
-                backend->ClearPlayers();
-                for (const auto& member : memberlist) {
-                    backend->AddPlayer(member.nickname, member.mac_address, member.game_info.id,
-                                       member.game_info.name);
-                }
-                future = backend->Announce();
-            } else {
-                announce = false;
-            }
-        } else {
+        std::shared_ptr<Network::Room> room = Network::GetRoom().lock();
+        if (!room) {
             announce = false;
+            continue;
         }
+        if (room->GetState() != Network::Room::State::Open) {
+            announce = false;
+            continue;
+        }
+        Network::RoomInformation room_information = room->GetRoomInformation();
+        std::vector<Network::Room::Member> memberlist = room->GetRoomMemberList();
+        backend->SetRoomInformation(
+            room_information.uid, room_information.name, room_information.port,
+            room_information.member_slots, Network::network_version, room->HasPassword(),
+            room_information.preferred_game, room_information.preferred_game_id);
+        backend->ClearPlayers();
+        for (const auto& member : memberlist) {
+            backend->AddPlayer(member.nickname, member.mac_address, member.game_info.id,
+                               member.game_info.name);
+        }
+        future = backend->Announce();
         if (future.valid()) {
             Common::WebResult result = future.get();
-            if (result.result_code != Common::WebResult::Success) {
+            if (result.result_code != Common::WebResult::Code::Success) {
                 std::lock_guard<std::mutex> lock(callback_mutex);
                 for (auto callback : error_callbacks) {
                     (*callback)(result);
