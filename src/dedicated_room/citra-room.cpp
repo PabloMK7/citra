@@ -40,11 +40,11 @@ static void PrintHelp(const char* argv0) {
                  "--port              The port used for the room\n"
                  "--max_members       The maximum number of players for this room\n"
                  "--password          The password for the room\n"
-                 "--preferred-game    The prefered game for this room\n"
-                 "--preferred-game-id The prefered game-id for this room\n"
+                 "--preferred-game    The preferred game for this room\n"
+                 "--preferred-game-id The preferred game-id for this room\n"
                  "--username          The username used for announce\n"
                  "--token             The token used for announce\n"
-                 "--announce-url      The url to the announce server"
+                 "--announce-url      The url to the announce server\n"
                  "-h, --help          Display this help and exit\n"
                  "-v, --version       Output version information and exit\n";
 }
@@ -58,15 +58,6 @@ static void PrintVersion() {
 int main(int argc, char** argv) {
     int option_index = 0;
     char* endarg;
-#ifdef _WIN32
-    int argc_w;
-    auto argv_w = CommandLineToArgvW(GetCommandLineW(), &argc_w);
-
-    if (argv_w == nullptr) {
-        LOG_CRITICAL(Frontend, "Failed to get command line arguments");
-        return -1;
-    }
-#endif
 
     // This is just to be able to link against core
     gladLoadGLLoader(static_cast<GLADloadproc>(SDL_GL_GetProcAddress));
@@ -136,10 +127,6 @@ int main(int argc, char** argv) {
             }
         }
     }
-    std::cout << port << std::endl;
-#ifdef _WIN32
-    LocalFree(argv_w);
-#endif
 
     if (room_name.empty()) {
         std::cout << "room name is empty!\n\n";
