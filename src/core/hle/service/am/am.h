@@ -96,7 +96,8 @@ void ScanForAllTitles();
 void GetNumPrograms(Service::Interface* self);
 
 /**
- * AM::FindContentInfos service function
+ * AM::FindDLCContentInfos service function
+ * Explicitly checks that TID high value is 0004008C or an error is returned.
  *  Inputs:
  *      1 : MediaType
  *    2-3 : u64, Title ID
@@ -106,7 +107,7 @@ void GetNumPrograms(Service::Interface* self);
  *  Outputs:
  *      1 : Result, 0 on success, otherwise error code
  */
-void FindContentInfos(Service::Interface* self);
+void FindDLCContentInfos(Service::Interface* self);
 
 /**
  * AM::ListContentInfos service function

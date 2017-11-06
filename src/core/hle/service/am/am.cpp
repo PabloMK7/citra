@@ -401,14 +401,28 @@ void GetNumPrograms(Service::Interface* self) {
     rb.Push<u32>(am_title_list[media_type].size());
 }
 
-void FindContentInfos(Service::Interface* self) {
+void FindDLCContentInfos(Service::Interface* self) {
     IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x1002, 4, 4); // 0x10020104
 
     auto media_type = static_cast<Service::FS::MediaType>(rp.Pop<u8>());
     u64 title_id = rp.Pop<u64>();
     u32 content_count = rp.Pop<u32>();
-    VAddr content_requested_in = rp.PopMappedBuffer();
-    VAddr content_info_out = rp.PopMappedBuffer();
+
+    size_t input_buffer_size, output_buffer_size;
+    IPC::MappedBufferPermissions input_buffer_perms, output_buffer_perms;
+    VAddr content_requested_in = rp.PopMappedBuffer(&input_buffer_size, &input_buffer_perms);
+    VAddr content_info_out = rp.PopMappedBuffer(&output_buffer_size, &output_buffer_perms);
+
+    // Validate that only DLC TIDs are passed in
+    u32 tid_high = static_cast<u32>(title_id >> 32);
+    if (tid_high != TID_HIGH_DLC) {
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 4);
+        rb.Push(ResultCode(ErrCodes::InvalidTIDInList, ErrorModule::AM,
+                           ErrorSummary::InvalidArgument, ErrorLevel::Usage));
+        rb.PushMappedBuffer(content_requested_in, input_buffer_size, input_buffer_perms);
+        rb.PushMappedBuffer(content_info_out, output_buffer_size, output_buffer_perms);
+        return;
+    }
 
     std::vector<u16_le> content_requested(content_count);
     Memory::ReadBlock(content_requested_in, content_requested.data(), content_count * sizeof(u16));
@@ -440,8 +454,10 @@ void FindContentInfos(Service::Interface* self) {
         }
     }
 
-    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 4);
     rb.Push(RESULT_SUCCESS);
+    rb.PushMappedBuffer(content_requested_in, input_buffer_size, input_buffer_perms);
+    rb.PushMappedBuffer(content_info_out, output_buffer_size, output_buffer_perms);
 }
 
 void ListContentInfos(Service::Interface* self) {
