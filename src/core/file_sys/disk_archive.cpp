@@ -25,7 +25,7 @@ ResultVal<size_t> DiskFile::Read(const u64 offset, const size_t length, u8* buff
 }
 
 ResultVal<size_t> DiskFile::Write(const u64 offset, const size_t length, const bool flush,
-                                  const u8* buffer) const {
+                                  const u8* buffer) {
     if (!mode.write_flag)
         return ERROR_INVALID_OPEN_FLAGS;
 

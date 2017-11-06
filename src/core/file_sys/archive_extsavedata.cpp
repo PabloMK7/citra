@@ -35,8 +35,7 @@ public:
         return false;
     }
 
-    ResultVal<size_t> Write(u64 offset, size_t length, bool flush,
-                            const u8* buffer) const override {
+    ResultVal<size_t> Write(u64 offset, size_t length, bool flush, const u8* buffer) override {
         if (offset > size) {
             return ERR_WRITE_BEYOND_END;
         } else if (offset == size) {

@@ -51,8 +51,7 @@ public:
         return MakeResult<size_t>(data->size());
     }
 
-    ResultVal<size_t> Write(u64 offset, size_t length, bool flush,
-                            const u8* buffer) const override {
+    ResultVal<size_t> Write(u64 offset, size_t length, bool flush, const u8* buffer) override {
         LOG_ERROR(Service_FS, "The file is read-only!");
         return ERROR_UNSUPPORTED_OPEN_FLAGS;
     }

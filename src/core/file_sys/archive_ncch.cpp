@@ -206,7 +206,7 @@ ResultVal<size_t> NCCHFile::Read(const u64 offset, const size_t length, u8* buff
 }
 
 ResultVal<size_t> NCCHFile::Write(const u64 offset, const size_t length, const bool flush,
-                                  const u8* buffer) const {
+                                  const u8* buffer) {
     LOG_ERROR(Service_FS, "Attempted to write to NCCH file");
     // TODO(shinyquagsire23): Find error code
     return MakeResult<size_t>(0);

@@ -24,6 +24,7 @@ set(SRCS
             file_sys/archive_selfncch.cpp
             file_sys/archive_source_sd_savedata.cpp
             file_sys/archive_systemsavedata.cpp
+            file_sys/cia_container.cpp
             file_sys/disk_archive.cpp
             file_sys/ivfc_archive.cpp
             file_sys/ncch_container.cpp

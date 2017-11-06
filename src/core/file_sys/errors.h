@@ -19,6 +19,7 @@ enum {
     FileAlreadyExists = 180,
     DirectoryAlreadyExists = 185,
     AlreadyExists = 190,
+    InsufficientSpace = 210,
     InvalidOpenFlags = 230,
     DirectoryNotEmpty = 240,
     NotAFile = 250,
@@ -74,6 +75,8 @@ constexpr ResultCode ERROR_COMMAND_NOT_ALLOWED(ErrCodes::CommandNotAllowed, Erro
                                                ErrorSummary::WrongArgument, ErrorLevel::Permanent);
 constexpr ResultCode ERROR_EXEFS_SECTION_NOT_FOUND(ErrCodes::ExeFSSectionNotFound, ErrorModule::FS,
                                                    ErrorSummary::NotFound, ErrorLevel::Status);
+constexpr ResultCode ERROR_INSUFFICIENT_SPACE(ErrCodes::InsufficientSpace, ErrorModule::FS,
+                                              ErrorSummary::OutOfResource, ErrorLevel::Status);
 
 /// Returned when a function is passed an invalid archive handle.
 constexpr ResultCode ERR_INVALID_ARCHIVE_HANDLE(ErrCodes::ArchiveNotMounted, ErrorModule::FS,
