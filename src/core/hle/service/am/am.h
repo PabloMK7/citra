@@ -110,7 +110,8 @@ void GetNumPrograms(Service::Interface* self);
 void FindDLCContentInfos(Service::Interface* self);
 
 /**
- * AM::ListContentInfos service function
+ * AM::ListDLCContentInfos service function
+ * Explicitly checks that TID high value is 0004008C or an error is returned.
  *  Inputs:
  *      1 : Content count
  *      2 : MediaType
@@ -121,7 +122,7 @@ void FindDLCContentInfos(Service::Interface* self);
  *      1 : Result, 0 on success, otherwise error code
  *      2 : Number of content infos returned
  */
-void ListContentInfos(Service::Interface* self);
+void ListDLCContentInfos(Service::Interface* self);
 
 /**
  * AM::DeleteContents service function

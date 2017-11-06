@@ -11,7 +11,7 @@ namespace AM {
 const Interface::FunctionInfo FunctionTable[] = {
     {0x100100C0, GetNumContentInfos, "GetNumContentInfos"},
     {0x10020104, FindDLCContentInfos, "FindDLCContentInfos"},
-    {0x10030142, ListContentInfos, "ListContentInfos"},
+    {0x10030142, ListDLCContentInfos, "ListDLCContentInfos"},
     {0x10040102, DeleteContents, "DeleteContents"},
     {0x10050084, GetDLCTitleInfos, "GetDLCTitleInfos"},
     {0x10060080, nullptr, "GetNumDataTitleTickets"},

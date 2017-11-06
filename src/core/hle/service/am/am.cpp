@@ -460,13 +460,28 @@ void FindDLCContentInfos(Service::Interface* self) {
     rb.PushMappedBuffer(content_info_out, output_buffer_size, output_buffer_perms);
 }
 
-void ListContentInfos(Service::Interface* self) {
+void ListDLCContentInfos(Service::Interface* self) {
     IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x1003, 5, 2); // 0x10030142
+
     u32 content_count = rp.Pop<u32>();
     auto media_type = static_cast<Service::FS::MediaType>(rp.Pop<u8>());
     u64 title_id = rp.Pop<u64>();
     u32 start_index = rp.Pop<u32>();
-    VAddr content_info_out = rp.PopMappedBuffer();
+
+    size_t output_buffer_size;
+    IPC::MappedBufferPermissions output_buffer_perms;
+    VAddr content_info_out = rp.PopMappedBuffer(&output_buffer_size, &output_buffer_perms);
+
+    // Validate that only DLC TIDs are passed in
+    u32 tid_high = static_cast<u32>(title_id >> 32);
+    if (tid_high != TID_HIGH_DLC) {
+        IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
+        rb.Push(ResultCode(ErrCodes::InvalidTIDInList, ErrorModule::AM,
+                           ErrorSummary::InvalidArgument, ErrorLevel::Usage));
+        rb.Push<u32>(0);
+        rb.PushMappedBuffer(content_info_out, output_buffer_size, output_buffer_perms);
+        return;
+    }
 
     std::string tmd_path = GetTitleMetadataPath(media_type, title_id);
 
@@ -494,9 +509,10 @@ void ListContentInfos(Service::Interface* self) {
         }
     }
 
-    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
     rb.Push(RESULT_SUCCESS);
     rb.Push(copied);
+    rb.PushMappedBuffer(content_info_out, output_buffer_size, output_buffer_perms);
 }
 
 void DeleteContents(Service::Interface* self) {
