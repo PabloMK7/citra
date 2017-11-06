@@ -736,33 +736,27 @@ static ResultCode CreateThread(Kernel::Handle* out_handle, u32 priority, u32 ent
         return Kernel::ERR_NOT_AUTHORIZED;
     }
 
+    if (processor_id == THREADPROCESSORID_DEFAULT) {
+        // Set the target CPU to the one specified in the process' exheader.
+        processor_id = Kernel::g_current_process->ideal_processor;
+        ASSERT(processor_id != THREADPROCESSORID_DEFAULT);
+    }
+
     switch (processor_id) {
-    case THREADPROCESSORID_ALL:
-    case THREADPROCESSORID_DEFAULT:
     case THREADPROCESSORID_0:
+        break;
+    case THREADPROCESSORID_ALL:
+        LOG_INFO(Kernel_SVC,
+                 "Newly created thread is allowed to be run in any Core, unimplemented.");
+        break;
     case THREADPROCESSORID_1:
+        LOG_ERROR(Kernel_SVC,
+                  "Newly created thread must run in the SysCore (Core1), unimplemented.");
         break;
     default:
         // TODO(bunnei): Implement support for other processor IDs
         ASSERT_MSG(false, "Unsupported thread processor ID: %d", processor_id);
         break;
-    }
-
-    if (processor_id == THREADPROCESSORID_ALL) {
-        LOG_INFO(Kernel_SVC,
-                 "Newly created thread is allowed to be run in any Core, unimplemented.");
-    }
-
-    if (processor_id == THREADPROCESSORID_DEFAULT &&
-        Kernel::g_current_process->ideal_processor == THREADPROCESSORID_1) {
-        LOG_WARNING(
-            Kernel_SVC,
-            "Newly created thread is allowed to be run in the SysCore (Core1), unimplemented.");
-    }
-
-    if (processor_id == THREADPROCESSORID_1) {
-        LOG_ERROR(Kernel_SVC,
-                  "Newly created thread must run in the SysCore (Core1), unimplemented.");
     }
 
     CASCADE_RESULT(SharedPtr<Thread> thread,
