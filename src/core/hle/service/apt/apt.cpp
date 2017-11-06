@@ -21,6 +21,7 @@
 #include "core/hle/service/apt/bcfnt/bcfnt.h"
 #include "core/hle/service/cfg/cfg.h"
 #include "core/hle/service/fs/archive.h"
+#include "core/hle/service/ns/ns.h"
 #include "core/hle/service/ptm/ptm.h"
 #include "core/hle/service/service.h"
 #include "core/hw/aes/ccm.h"
@@ -804,8 +805,29 @@ void PrepareToStartLibraryApplet(Service::Interface* self) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
 
-    // TODO(Subv): Launch the requested applet application.
+    // The real APT service returns an error if there's a pending APT parameter when this function
+    // is called.
+    if (next_parameter) {
+        rb.Push(ResultCode(ErrCodes::ParameterPresent, ErrorModule::Applet,
+                           ErrorSummary::InvalidState, ErrorLevel::Status));
+        return;
+    }
 
+    const auto& slot = applet_slots[static_cast<size_t>(AppletSlot::LibraryApplet)];
+
+    if (slot.registered) {
+        rb.Push(ResultCode(ErrorDescription::AlreadyExists, ErrorModule::Applet,
+                           ErrorSummary::InvalidState, ErrorLevel::Status));
+        return;
+    }
+
+    auto process = NS::LaunchTitle(FS::MediaType::NAND, GetTitleIdForApplet(applet_id));
+    if (process) {
+        rb.Push(RESULT_SUCCESS);
+        return;
+    }
+
+    // If we weren't able to load the native applet title, try to fallback to an HLE implementation.
     auto applet = HLE::Applets::Applet::Get(applet_id);
     if (applet) {
         LOG_WARNING(Service_APT, "applet has already been started id=%08X",
@@ -838,8 +860,21 @@ void PreloadLibraryApplet(Service::Interface* self) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
 
-    // TODO(Subv): Launch the requested applet application.
+    const auto& slot = applet_slots[static_cast<size_t>(AppletSlot::LibraryApplet)];
 
+    if (slot.registered) {
+        rb.Push(ResultCode(ErrorDescription::AlreadyExists, ErrorModule::Applet,
+                           ErrorSummary::InvalidState, ErrorLevel::Status));
+        return;
+    }
+
+    auto process = NS::LaunchTitle(FS::MediaType::NAND, GetTitleIdForApplet(applet_id));
+    if (process) {
+        rb.Push(RESULT_SUCCESS);
+        return;
+    }
+
+    // If we weren't able to load the native applet title, try to fallback to an HLE implementation.
     auto applet = HLE::Applets::Applet::Get(applet_id);
     if (applet) {
         LOG_WARNING(Service_APT, "applet has already been started id=%08X",
