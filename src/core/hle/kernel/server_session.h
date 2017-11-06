@@ -36,6 +36,9 @@ class Thread;
  */
 class ServerSession final : public WaitObject {
 public:
+    std::string GetName() const override {
+        return name;
+    }
     std::string GetTypeName() const override {
         return "ServerSession";
     }
@@ -104,13 +107,4 @@ private:
     static ResultVal<SharedPtr<ServerSession>> Create(std::string name = "Unknown");
 };
 
-/**
- * Performs command buffer translation for an HLE IPC request.
- * The command buffer from the ServerSession thread's TLS is copied into a
- * buffer and all descriptors in the buffer are processed.
- * TODO(Subv): Implement this function, currently we do not support multiple processes running at
- * once, but once that is implemented we'll need to properly translate all descriptors
- * in the command buffer.
- */
-ResultCode TranslateHLERequest(ServerSession* server_session);
-}
+} // namespace Kernel
