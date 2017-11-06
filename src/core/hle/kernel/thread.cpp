@@ -497,8 +497,9 @@ void Thread::BoostPriority(u32 priority) {
 
 SharedPtr<Thread> SetupMainThread(u32 entry_point, u32 priority, SharedPtr<Process> owner_process) {
     // Initialize new "main" thread
-    auto thread_res = Thread::Create("main", entry_point, priority, 0, THREADPROCESSORID_0,
-                                     Memory::HEAP_VADDR_END, owner_process);
+    auto thread_res =
+        Thread::Create("main", entry_point, priority, 0, owner_process->ideal_processor,
+                       Memory::HEAP_VADDR_END, owner_process);
 
     SharedPtr<Thread> thread = std::move(thread_res).Unwrap();
 
@@ -571,4 +572,4 @@ const std::vector<SharedPtr<Thread>>& GetThreadList() {
     return thread_list;
 }
 
-} // namespace
+} // namespace Kernel
