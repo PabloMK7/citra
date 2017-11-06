@@ -87,7 +87,7 @@ void SRV::GetServiceHandle(Kernel::HLERequestContext& ctx) {
     size_t name_len = rp.Pop<u32>();
     u32 flags = rp.Pop<u32>();
 
-    bool return_port_on_failure = (flags & 1) == 0;
+    bool wait_until_available = (flags & 1) == 0;
 
     if (name_len > Service::kMaxPortSize) {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
@@ -115,12 +115,10 @@ void SRV::GetServiceHandle(Kernel::HLERequestContext& ctx) {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
         rb.Push(session.Code());
         rb.PushObjects(std::move(session).Unwrap());
-    } else if (session.Code() == Kernel::ERR_MAX_CONNECTIONS_REACHED && return_port_on_failure) {
-        LOG_WARNING(Service_SRV, "called service=%s -> ERR_MAX_CONNECTIONS_REACHED, *port*=%u",
-                    name.c_str(), (*client_port)->GetObjectId());
-        IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
-        rb.Push(ERR_MAX_CONNECTIONS_REACHED);
-        rb.PushObjects(std::move(client_port).Unwrap());
+    } else if (session.Code() == Kernel::ERR_MAX_CONNECTIONS_REACHED && wait_until_available) {
+        LOG_WARNING(Service_SRV, "called service=%s -> ERR_MAX_CONNECTIONS_REACHED", name.c_str());
+        // TODO(Subv): Put the caller guest thread to sleep until this port becomes available again.
+        UNIMPLEMENTED_MSG("Unimplemented wait until port %s is available.", name.c_str());
     } else {
         LOG_ERROR(Service_SRV, "called service=%s -> error 0x%08X", name.c_str(),
                   session.Code().raw);
