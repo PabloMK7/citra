@@ -88,7 +88,7 @@ ResultCode Mutex::Release(Thread* thread) {
         WakeupAllWaitingThreads();
         Core::System::GetInstance().PrepareReschedule();
     }
-    
+
     return RESULT_SUCCESS;
 }
 
