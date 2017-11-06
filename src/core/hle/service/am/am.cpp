@@ -685,7 +685,7 @@ void GetNumContentInfos(Service::Interface* self) {
     } else {
         rb.Push<u32>(1); // Number of content infos plus one
         LOG_WARNING(Service_AM, "(STUBBED) called media_type=%u, title_id=0x%016" PRIx64,
-                    media_type, title_id);
+                    static_cast<u32>(media_type), title_id);
     }
 }
 
@@ -793,7 +793,7 @@ void BeginImportProgram(Service::Interface* self) {
         Kernel::g_handle_table.Create(std::get<Kernel::SharedPtr<Kernel::ClientSession>>(sessions))
             .Unwrap());
 
-    LOG_WARNING(Service_AM, "(STUBBED) media_type=%u", media_type);
+    LOG_WARNING(Service_AM, "(STUBBED) media_type=%u", static_cast<u32>(media_type));
 }
 
 void EndImportProgram(Service::Interface* self) {
