@@ -701,10 +701,20 @@ void ListDataTitleTicketInfos(Service::Interface* self) {
                 ticket_count, title_id, start_index, ticket_info_out);
 }
 
-void GetNumContentInfos(Service::Interface* self) {
+void GetDLCContentInfoCount(Service::Interface* self) {
     IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x1001, 3, 0); // 0x100100C0
     auto media_type = static_cast<Service::FS::MediaType>(rp.Pop<u8>());
     u64 title_id = rp.Pop<u64>();
+
+    // Validate that only DLC TIDs are passed in
+    u32 tid_high = static_cast<u32>(title_id >> 32);
+    if (tid_high != TID_HIGH_DLC) {
+        IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
+        rb.Push(ResultCode(ErrCodes::InvalidTID, ErrorModule::AM, ErrorSummary::InvalidArgument,
+                           ErrorLevel::Usage));
+        rb.Push<u32>(0);
+        return;
+    }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS); // No error

@@ -9,7 +9,7 @@ namespace Service {
 namespace AM {
 
 const Interface::FunctionInfo FunctionTable[] = {
-    {0x100100C0, GetNumContentInfos, "GetNumContentInfos"},
+    {0x100100C0, GetDLCContentInfoCount, "GetDLCContentInfoCount"},
     {0x10020104, FindDLCContentInfos, "FindDLCContentInfos"},
     {0x10030142, ListDLCContentInfos, "ListDLCContentInfos"},
     {0x10040102, DeleteContents, "DeleteContents"},

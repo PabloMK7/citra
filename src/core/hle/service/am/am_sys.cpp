@@ -54,7 +54,7 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x002B0142, nullptr, "ListExistingContentInfosSystem"},
     {0x002C0084, nullptr, "GetProgramInfosIgnorePlatform"},
     {0x002D00C0, CheckContentRightsIgnorePlatform, "CheckContentRightsIgnorePlatform"},
-    {0x100100C0, GetNumContentInfos, "GetNumContentInfos"},
+    {0x100100C0, GetDLCContentInfoCount, "GetDLCContentInfoCount"},
     {0x10020104, FindDLCContentInfos, "FindDLCContentInfos"},
     {0x10030142, ListDLCContentInfos, "ListDLCContentInfos"},
     {0x10040102, DeleteContents, "DeleteContents"},

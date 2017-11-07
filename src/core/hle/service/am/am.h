@@ -22,6 +22,7 @@ namespace AM {
 namespace ErrCodes {
 enum {
     CIACurrentlyInstalling = 4,
+    InvalidTID = 31,
     EmptyCIA = 32,
     InvalidTIDInList = 60,
     InvalidCIAHeader = 104,
@@ -204,7 +205,8 @@ void GetPatchTitleInfos(Service::Interface* self);
 void ListDataTitleTicketInfos(Service::Interface* self);
 
 /**
- * AM::GetNumContentInfos service function
+ * AM::GetDLCContentInfoCount service function
+ * Explicitly checks that TID high value is 0004008C or an error is returned.
  *  Inputs:
  *      0 : Command header (0x100100C0)
  *      1 : MediaType
@@ -213,7 +215,7 @@ void ListDataTitleTicketInfos(Service::Interface* self);
  *      1 : Result, 0 on success, otherwise error code
  *      2 : Number of content infos plus one
  */
-void GetNumContentInfos(Service::Interface* self);
+void GetDLCContentInfoCount(Service::Interface* self);
 
 /**
  * AM::DeleteTicket service function
