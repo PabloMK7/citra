@@ -401,14 +401,28 @@ void GetNumPrograms(Service::Interface* self) {
     rb.Push<u32>(am_title_list[media_type].size());
 }
 
-void FindContentInfos(Service::Interface* self) {
+void FindDLCContentInfos(Service::Interface* self) {
     IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x1002, 4, 4); // 0x10020104
 
     auto media_type = static_cast<Service::FS::MediaType>(rp.Pop<u8>());
     u64 title_id = rp.Pop<u64>();
     u32 content_count = rp.Pop<u32>();
-    VAddr content_requested_in = rp.PopMappedBuffer();
-    VAddr content_info_out = rp.PopMappedBuffer();
+
+    size_t input_buffer_size, output_buffer_size;
+    IPC::MappedBufferPermissions input_buffer_perms, output_buffer_perms;
+    VAddr content_requested_in = rp.PopMappedBuffer(&input_buffer_size, &input_buffer_perms);
+    VAddr content_info_out = rp.PopMappedBuffer(&output_buffer_size, &output_buffer_perms);
+
+    // Validate that only DLC TIDs are passed in
+    u32 tid_high = static_cast<u32>(title_id >> 32);
+    if (tid_high != TID_HIGH_DLC) {
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 4);
+        rb.Push(ResultCode(ErrCodes::InvalidTIDInList, ErrorModule::AM,
+                           ErrorSummary::InvalidArgument, ErrorLevel::Usage));
+        rb.PushMappedBuffer(content_requested_in, input_buffer_size, input_buffer_perms);
+        rb.PushMappedBuffer(content_info_out, output_buffer_size, output_buffer_perms);
+        return;
+    }
 
     std::vector<u16_le> content_requested(content_count);
     Memory::ReadBlock(content_requested_in, content_requested.data(), content_count * sizeof(u16));
@@ -440,17 +454,34 @@ void FindContentInfos(Service::Interface* self) {
         }
     }
 
-    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 4);
     rb.Push(RESULT_SUCCESS);
+    rb.PushMappedBuffer(content_requested_in, input_buffer_size, input_buffer_perms);
+    rb.PushMappedBuffer(content_info_out, output_buffer_size, output_buffer_perms);
 }
 
-void ListContentInfos(Service::Interface* self) {
+void ListDLCContentInfos(Service::Interface* self) {
     IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x1003, 5, 2); // 0x10030142
+
     u32 content_count = rp.Pop<u32>();
     auto media_type = static_cast<Service::FS::MediaType>(rp.Pop<u8>());
     u64 title_id = rp.Pop<u64>();
     u32 start_index = rp.Pop<u32>();
-    VAddr content_info_out = rp.PopMappedBuffer();
+
+    size_t output_buffer_size;
+    IPC::MappedBufferPermissions output_buffer_perms;
+    VAddr content_info_out = rp.PopMappedBuffer(&output_buffer_size, &output_buffer_perms);
+
+    // Validate that only DLC TIDs are passed in
+    u32 tid_high = static_cast<u32>(title_id >> 32);
+    if (tid_high != TID_HIGH_DLC) {
+        IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
+        rb.Push(ResultCode(ErrCodes::InvalidTIDInList, ErrorModule::AM,
+                           ErrorSummary::InvalidArgument, ErrorLevel::Usage));
+        rb.Push<u32>(0);
+        rb.PushMappedBuffer(content_info_out, output_buffer_size, output_buffer_perms);
+        return;
+    }
 
     std::string tmd_path = GetTitleMetadataPath(media_type, title_id);
 
@@ -478,9 +509,10 @@ void ListContentInfos(Service::Interface* self) {
         }
     }
 
-    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
     rb.Push(RESULT_SUCCESS);
     rb.Push(copied);
+    rb.PushMappedBuffer(content_info_out, output_buffer_size, output_buffer_perms);
 }
 
 void DeleteContents(Service::Interface* self) {
@@ -669,10 +701,20 @@ void ListDataTitleTicketInfos(Service::Interface* self) {
                 ticket_count, title_id, start_index, ticket_info_out);
 }
 
-void GetNumContentInfos(Service::Interface* self) {
+void GetDLCContentInfoCount(Service::Interface* self) {
     IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x1001, 3, 0); // 0x100100C0
     auto media_type = static_cast<Service::FS::MediaType>(rp.Pop<u8>());
     u64 title_id = rp.Pop<u64>();
+
+    // Validate that only DLC TIDs are passed in
+    u32 tid_high = static_cast<u32>(title_id >> 32);
+    if (tid_high != TID_HIGH_DLC) {
+        IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
+        rb.Push(ResultCode(ErrCodes::InvalidTID, ErrorModule::AM, ErrorSummary::InvalidArgument,
+                           ErrorLevel::Usage));
+        rb.Push<u32>(0);
+        return;
+    }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS); // No error
@@ -685,7 +727,7 @@ void GetNumContentInfos(Service::Interface* self) {
     } else {
         rb.Push<u32>(1); // Number of content infos plus one
         LOG_WARNING(Service_AM, "(STUBBED) called media_type=%u, title_id=0x%016" PRIx64,
-                    media_type, title_id);
+                    static_cast<u32>(media_type), title_id);
     }
 }
 
@@ -793,7 +835,7 @@ void BeginImportProgram(Service::Interface* self) {
         Kernel::g_handle_table.Create(std::get<Kernel::SharedPtr<Kernel::ClientSession>>(sessions))
             .Unwrap());
 
-    LOG_WARNING(Service_AM, "(STUBBED) media_type=%u", media_type);
+    LOG_WARNING(Service_AM, "(STUBBED) media_type=%u", static_cast<u32>(media_type));
 }
 
 void EndImportProgram(Service::Interface* self) {

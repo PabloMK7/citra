@@ -22,6 +22,7 @@ namespace AM {
 namespace ErrCodes {
 enum {
     CIACurrentlyInstalling = 4,
+    InvalidTID = 31,
     EmptyCIA = 32,
     InvalidTIDInList = 60,
     InvalidCIAHeader = 104,
@@ -96,7 +97,8 @@ void ScanForAllTitles();
 void GetNumPrograms(Service::Interface* self);
 
 /**
- * AM::FindContentInfos service function
+ * AM::FindDLCContentInfos service function
+ * Explicitly checks that TID high value is 0004008C or an error is returned.
  *  Inputs:
  *      1 : MediaType
  *    2-3 : u64, Title ID
@@ -106,10 +108,11 @@ void GetNumPrograms(Service::Interface* self);
  *  Outputs:
  *      1 : Result, 0 on success, otherwise error code
  */
-void FindContentInfos(Service::Interface* self);
+void FindDLCContentInfos(Service::Interface* self);
 
 /**
- * AM::ListContentInfos service function
+ * AM::ListDLCContentInfos service function
+ * Explicitly checks that TID high value is 0004008C or an error is returned.
  *  Inputs:
  *      1 : Content count
  *      2 : MediaType
@@ -120,7 +123,7 @@ void FindContentInfos(Service::Interface* self);
  *      1 : Result, 0 on success, otherwise error code
  *      2 : Number of content infos returned
  */
-void ListContentInfos(Service::Interface* self);
+void ListDLCContentInfos(Service::Interface* self);
 
 /**
  * AM::DeleteContents service function
@@ -202,7 +205,8 @@ void GetPatchTitleInfos(Service::Interface* self);
 void ListDataTitleTicketInfos(Service::Interface* self);
 
 /**
- * AM::GetNumContentInfos service function
+ * AM::GetDLCContentInfoCount service function
+ * Explicitly checks that TID high value is 0004008C or an error is returned.
  *  Inputs:
  *      0 : Command header (0x100100C0)
  *      1 : MediaType
@@ -211,7 +215,7 @@ void ListDataTitleTicketInfos(Service::Interface* self);
  *      1 : Result, 0 on success, otherwise error code
  *      2 : Number of content infos plus one
  */
-void GetNumContentInfos(Service::Interface* self);
+void GetDLCContentInfoCount(Service::Interface* self);
 
 /**
  * AM::DeleteTicket service function

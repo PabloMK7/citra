@@ -215,7 +215,7 @@ void CIAContainer::Print() const {
     LOG_DEBUG(Service_FS, "Ticket Size:      0x%08x bytes", GetTicketSize());
     LOG_DEBUG(Service_FS, "TMD Size:         0x%08x bytes", GetTitleMetadataSize());
     LOG_DEBUG(Service_FS, "Meta Size:        0x%08x bytes", GetMetadataSize());
-    LOG_DEBUG(Service_FS, "Content Size:     0x%08x bytes\n", GetTotalContentSize());
+    LOG_DEBUG(Service_FS, "Content Size:     0x%08" PRIx64 " bytes\n", GetTotalContentSize());
 
     LOG_DEBUG(Service_FS, "Certificate Offset: 0x%08" PRIx64 " bytes", GetCertificateOffset());
     LOG_DEBUG(Service_FS, "Ticket Offset:      0x%08" PRIx64 " bytes", GetTicketOffset());
