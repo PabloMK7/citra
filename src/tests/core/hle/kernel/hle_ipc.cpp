@@ -116,25 +116,58 @@ TEST_CASE("HLERequestContext::PopulateFromIncomingCommandBuffer", "[core][kernel
         REQUIRE(context.CommandBuffer()[2] == process->process_id);
     }
 
+    SECTION("translates StaticBuffer descriptors") {
+        auto buffer = std::make_shared<std::vector<u8>>(Memory::PAGE_SIZE);
+        std::fill(buffer->begin(), buffer->end(), 0xAB);
+
+        VAddr target_address = 0x10000000;
+        auto result = process->vm_manager.MapMemoryBlock(target_address, buffer, 0, buffer->size(),
+                                                         MemoryState::Private);
+        REQUIRE(result.Code() == RESULT_SUCCESS);
+
+        const u32_le input[]{
+            IPC::MakeHeader(0, 0, 2), IPC::StaticBufferDesc(buffer->size(), 0), target_address,
+        };
+
+        context.PopulateFromIncomingCommandBuffer(input, *process, handle_table);
+
+        CHECK(context.GetStaticBuffer(0) == *buffer);
+
+        REQUIRE(process->vm_manager.UnmapRange(target_address, buffer->size()) == RESULT_SUCCESS);
+    }
+
     SECTION("translates mixed params") {
+        auto buffer = std::make_shared<std::vector<u8>>(Memory::PAGE_SIZE);
+        std::fill(buffer->begin(), buffer->end(), 0xCE);
+
+        VAddr target_address = 0x10000000;
+        auto result = process->vm_manager.MapMemoryBlock(target_address, buffer, 0, buffer->size(),
+                                                         MemoryState::Private);
+        REQUIRE(result.Code() == RESULT_SUCCESS);
+
         auto a = MakeObject();
         const u32_le input[]{
-            IPC::MakeHeader(0, 2, 4),
+            IPC::MakeHeader(0, 2, 6),
             0x12345678,
             0xABCDEF00,
             IPC::MoveHandleDesc(1),
             handle_table.Create(a).Unwrap(),
             IPC::CallingPidDesc(),
             0,
+            IPC::StaticBufferDesc(buffer->size(), 0),
+            target_address,
         };
 
         context.PopulateFromIncomingCommandBuffer(input, *process, handle_table);
 
         auto* output = context.CommandBuffer();
-        REQUIRE(output[1] == 0x12345678);
-        REQUIRE(output[2] == 0xABCDEF00);
-        REQUIRE(context.GetIncomingHandle(output[4]) == a);
-        REQUIRE(output[6] == process->process_id);
+        CHECK(output[1] == 0x12345678);
+        CHECK(output[2] == 0xABCDEF00);
+        CHECK(context.GetIncomingHandle(output[4]) == a);
+        CHECK(output[6] == process->process_id);
+        CHECK(context.GetStaticBuffer(0) == *buffer);
+
+        REQUIRE(process->vm_manager.UnmapRange(target_address, buffer->size()) == RESULT_SUCCESS);
     }
 }
 
@@ -210,6 +243,37 @@ TEST_CASE("HLERequestContext::WriteToOutgoingCommandBuffer", "[core][kernel]") {
         REQUIRE(handle_table.GetGeneric(output[2]) == a);
         REQUIRE(handle_table.GetGeneric(output[3]) == b);
         REQUIRE(handle_table.GetGeneric(output[5]) == c);
+    }
+
+    SECTION("translates StaticBuffer descriptors") {
+        std::vector<u8> input_buffer(Memory::PAGE_SIZE);
+        std::fill(input_buffer.begin(), input_buffer.end(), 0xAB);
+
+        context.AddStaticBuffer(0, input_buffer);
+
+        auto output_buffer = std::make_shared<std::vector<u8>>(Memory::PAGE_SIZE);
+        VAddr target_address = 0x10000000;
+        auto result = process->vm_manager.MapMemoryBlock(
+            target_address, output_buffer, 0, output_buffer->size(), MemoryState::Private);
+        REQUIRE(result.Code() == RESULT_SUCCESS);
+
+        input[0] = IPC::MakeHeader(0, 0, 2);
+        input[1] = IPC::StaticBufferDesc(input_buffer.size(), 0);
+        input[2] = target_address;
+
+        // An entire command buffer plus enough space for one static buffer descriptor and its
+        // target address
+        std::array<u32_le, IPC::COMMAND_BUFFER_LENGTH + 2> output_cmdbuff;
+        // Set up the output StaticBuffer
+        output_cmdbuff[IPC::COMMAND_BUFFER_LENGTH] =
+            IPC::StaticBufferDesc(output_buffer->size(), 0);
+        output_cmdbuff[IPC::COMMAND_BUFFER_LENGTH + 1] = target_address;
+
+        context.WriteToOutgoingCommandBuffer(output_cmdbuff.data(), *process, handle_table);
+
+        CHECK(*output_buffer == input_buffer);
+        REQUIRE(process->vm_manager.UnmapRange(target_address, output_buffer->size()) ==
+                RESULT_SUCCESS);
     }
 }
 
