@@ -26,9 +26,6 @@ ClientSession::~ClientSession() {
         if (hle_handler)
             hle_handler->ClientDisconnected(server);
 
-        // TODO(Subv): Force a wake up of all the ServerSession's waiting threads and set
-        // their WaitSynchronization result to 0xC920181A.
-
         // Clean up the list of client threads with pending requests, they are unneeded now that the
         // client endpoint is closed.
         server->pending_requesting_threads.clear();
@@ -36,6 +33,13 @@ ClientSession::~ClientSession() {
     }
 
     parent->client = nullptr;
+
+    if (server) {
+        // Notify any threads waiting on the ServerSession that the endpoint has been closed. Note
+        // that this call has to happen after `Session::client` has been set to nullptr to let the
+        // ServerSession know that the client endpoint has been closed.
+        server->WakeupAllWaitingThreads();
+    }
 }
 
 ResultCode ClientSession::SendSyncRequest(SharedPtr<Thread> thread) {
