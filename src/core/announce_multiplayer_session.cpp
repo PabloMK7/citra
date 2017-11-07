@@ -19,7 +19,7 @@ namespace Core {
 // Time between room is announced to web_service
 static constexpr std::chrono::seconds announce_time_interval(15);
 
-AnnounceMultiplayerSession::AnnounceMultiplayerSession() : announce(false), finished(true) {
+AnnounceMultiplayerSession::AnnounceMultiplayerSession() : announce(false) {
 #ifdef ENABLE_WEB_SERVICE
     backend = std::make_unique<WebService::RoomJson>(
         Settings::values.announce_multiplayer_room_endpoint_url, Settings::values.citra_username,
@@ -39,19 +39,19 @@ void AnnounceMultiplayerSession::Start() {
 }
 
 void AnnounceMultiplayerSession::Stop() {
-    if (!announce && finished)
+    if (!announce)
         return;
     announce = false;
     // Detaching the loop, to not wait for the sleep to finish. The loop thread will finish soon.
     if (announce_multiplayer_thread) {
-        announce_multiplayer_thread->detach();
+        cv.notify_all();
+        announce_multiplayer_thread->join();
         announce_multiplayer_thread.reset();
         backend->Delete();
     }
 }
 
-std::shared_ptr<std::function<void(const Common::WebResult&)>>
-AnnounceMultiplayerSession::BindErrorCallback(
+AnnounceMultiplayerSession::CallbackHandle AnnounceMultiplayerSession::BindErrorCallback(
     std::function<void(const Common::WebResult&)> function) {
     std::lock_guard<std::mutex> lock(callback_mutex);
     auto handle = std::make_shared<std::function<void(const Common::WebResult&)>>(function);
@@ -59,8 +59,7 @@ AnnounceMultiplayerSession::BindErrorCallback(
     return handle;
 }
 
-void AnnounceMultiplayerSession::UnbindErrorCallback(
-    std::shared_ptr<std::function<void(const Common::WebResult&)>> handle) {
+void AnnounceMultiplayerSession::UnbindErrorCallback(CallbackHandle handle) {
     std::lock_guard<std::mutex> lock(callback_mutex);
     error_callbacks.erase(handle);
 }
@@ -70,13 +69,11 @@ AnnounceMultiplayerSession::~AnnounceMultiplayerSession() {
 }
 
 void AnnounceMultiplayerSession::AnnounceMultiplayerLoop() {
-    while (!finished) {
-        std::this_thread::sleep_for(announce_time_interval / 10);
-    }
     announce = true;
-    finished = false;
     std::future<Common::WebResult> future;
     while (announce) {
+        std::unique_lock<std::mutex> lock(cv_m);
+        cv.wait_for(lock, announce_time_interval);
         std::shared_ptr<Network::Room> room = Network::GetRoom().lock();
         if (!room) {
             announce = false;
@@ -107,9 +104,7 @@ void AnnounceMultiplayerSession::AnnounceMultiplayerLoop() {
                 }
             }
         }
-        std::this_thread::sleep_for(announce_time_interval);
     }
-    finished = true;
 }
 
 std::future<AnnounceMultiplayerRoom::RoomList> AnnounceMultiplayerSession::GetRoomList(

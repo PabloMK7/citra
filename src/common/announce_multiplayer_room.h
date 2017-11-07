@@ -60,15 +60,53 @@ using RoomList = std::vector<Room>;
 class Backend : NonCopyable {
 public:
     virtual ~Backend() = default;
+
+    /**
+     * Sets the Information that gets used for the announce
+     * @param uid The Id of the room
+     * @param name The name of the room
+     * @param port The port of the room
+     * @param net_version The version of the libNetwork that gets used
+     * @param has_password True if the room is passowrd protected
+     * @param preferred_game The preferred game of the room
+     * @param preferred_game_id The title id of the preferred game
+     */
     virtual void SetRoomInformation(const std::string& uid, const std::string& name, const u16 port,
                                     const u32 max_player, const u32 net_version,
                                     const bool has_password, const std::string& preferred_game,
                                     const u64 preferred_game_id) = 0;
+    /**
+     * Adds a player information to the data that gets announced
+     * @param nickname The nickname of the player
+     * @param mac_address The MAC Address of the player
+     * @param game_id The title id of the game the player plays
+     * @param game_name The name of the game the player plays
+     */
     virtual void AddPlayer(const std::string& nickname, const MacAddress& mac_address,
                            const u64 game_id, const std::string& game_name) = 0;
+
+    /**
+     * Send the data to the announce service
+     * @result The result of the announce attempt
+     */
     virtual std::future<Common::WebResult> Announce() = 0;
+
+    /**
+     * Empties the stored players
+     */
     virtual void ClearPlayers() = 0;
+
+    /**
+     * Get the room information from the announce service
+     * @param func a function that gets exectued when the get finished.
+     * Can be used as a callback
+     * @result A list of all rooms the announce service has
+     */
     virtual std::future<RoomList> GetRoomList(std::function<void()> func) = 0;
+
+    /**
+     * Sends a delete message to the announce service
+     */
     virtual void Delete() = 0;
 };
 
@@ -93,7 +131,7 @@ public:
     }
     void ClearPlayers() override {}
     std::future<RoomList> GetRoomList(std::function<void()> func) override {
-        return std::async(std::launch::async, [func]() {
+        return std::async(std::launch::deferred, [func]() {
             func();
             return RoomList{};
         });

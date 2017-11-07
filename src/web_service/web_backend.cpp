@@ -37,7 +37,7 @@ std::future<Common::WebResult> PostJson(const std::string& url, const std::strin
                                         const std::string& token) {
     if (url.empty()) {
         LOG_ERROR(WebService, "URL is invalid");
-        return std::async(std::launch::async, []() {
+        return std::async(std::launch::deferred, []() {
             return Common::WebResult{Common::WebResult::Code::InvalidURL, "URL is invalid"};
         });
     }
@@ -45,7 +45,7 @@ std::future<Common::WebResult> PostJson(const std::string& url, const std::strin
     const bool are_credentials_provided{!token.empty() && !username.empty()};
     if (!allow_anonymous && !are_credentials_provided) {
         LOG_ERROR(WebService, "Credentials must be provided for authenticated requests");
-        return std::async(std::launch::async, []() {
+        return std::async(std::launch::deferred, []() {
             return Common::WebResult{Common::WebResult::Code::CredentialsMissing,
                                      "Credentials needed"};
         });
@@ -97,13 +97,13 @@ std::future<T> GetJson(std::function<T(const std::string&)> func, const std::str
                        const std::string& token) {
     if (url.empty()) {
         LOG_ERROR(WebService, "URL is invalid");
-        return std::async(std::launch::async, [func{std::move(func)}]() { return func(""); });
+        return std::async(std::launch::deferred, [func{std::move(func)}]() { return func(""); });
     }
 
     const bool are_credentials_provided{!token.empty() && !username.empty()};
     if (!allow_anonymous && !are_credentials_provided) {
         LOG_ERROR(WebService, "Credentials must be provided for authenticated requests");
-        return std::async(std::launch::async, [func{std::move(func)}]() { return func(""); });
+        return std::async(std::launch::deferred, [func{std::move(func)}]() { return func(""); });
     }
 
     Win32WSAStartup();

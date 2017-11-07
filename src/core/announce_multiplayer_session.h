@@ -5,8 +5,10 @@
 #pragma once
 
 #include <atomic>
+#include <condition_variable>
 #include <functional>
 #include <memory>
+#include <mutex>
 #include <set>
 #include <thread>
 #include "common/announce_multiplayer_room.h"
@@ -21,6 +23,7 @@ namespace Core {
  */
 class AnnounceMultiplayerSession : NonCopyable {
 public:
+    using CallbackHandle = std::shared_ptr<std::function<void(const Common::WebResult&)>>;
     AnnounceMultiplayerSession();
     ~AnnounceMultiplayerSession();
 
@@ -29,14 +32,13 @@ public:
      * @param function The function that gets called
      * @return A handle that can be used the unbind the function
      */
-    std::shared_ptr<std::function<void(const Common::WebResult&)>> BindErrorCallback(
-        std::function<void(const Common::WebResult&)> function);
+    CallbackHandle BindErrorCallback(std::function<void(const Common::WebResult&)> function);
 
     /**
      * Unbind a function from the error callbacks
      * @param handle The handle for the function that should get unbind
      */
-    void UnbindErrorCallback(std::shared_ptr<std::function<void(const Common::WebResult&)>> handle);
+    void UnbindErrorCallback(CallbackHandle handle);
 
     /**
      * Starts the announce of a room to web services
@@ -57,13 +59,16 @@ public:
 
 private:
     std::atomic<bool> announce{false};
-    std::atomic<bool> finished{true};
+
+    /// conditional variable to notify the announce thread to end early
+    std::condition_variable cv;
+    std::mutex cv_m; ///< mutex for cv
     std::mutex callback_mutex;
-    std::set<std::shared_ptr<std::function<void(const Common::WebResult&)>>> error_callbacks;
+    std::set<CallbackHandle> error_callbacks;
     std::unique_ptr<std::thread> announce_multiplayer_thread;
 
-    std::unique_ptr<AnnounceMultiplayerRoom::Backend>
-        backend; ///< Backend interface that logs fields
+    /// Backend interface that logs fields
+    std::unique_ptr<AnnounceMultiplayerRoom::Backend> backend;
 
     void AnnounceMultiplayerLoop();
 };
