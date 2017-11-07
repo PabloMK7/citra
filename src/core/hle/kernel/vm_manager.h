@@ -145,6 +145,18 @@ public:
                                         size_t offset, u32 size, MemoryState state);
 
     /**
+     * Maps part of a ref-counted block of memory at the first free address after the given base.
+     *
+     * @param base The base address to start the mapping at.
+     * @param block The block to be mapped.
+     * @param offset Offset into `block` to map from.
+     * @param size Size of the mapping.
+     * @param state MemoryState tag to attach to the VMA.
+     * @returns The address at which the memory was mapped.
+     */
+    ResultVal<VAddr> MapMemoryBlockToBase(VAddr base, std::shared_ptr<std::vector<u8>> block,
+                                          size_t offset, u32 size, MemoryState state);
+    /**
      * Maps an unmanaged host memory pointer at a given address.
      *
      * @param target The guest address to start the mapping at.

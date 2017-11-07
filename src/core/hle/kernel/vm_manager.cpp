@@ -93,6 +93,33 @@ ResultVal<VMManager::VMAHandle> VMManager::MapMemoryBlock(VAddr target,
     return MakeResult<VMAHandle>(MergeAdjacent(vma_handle));
 }
 
+ResultVal<VAddr> VMManager::MapMemoryBlockToBase(VAddr base, std::shared_ptr<std::vector<u8>> block,
+                                                 size_t offset, u32 size, MemoryState state) {
+
+    // Find the first Free VMA.
+    VMAHandle vma_handle = std::find_if(vma_map.begin(), vma_map.end(), [&](const auto& vma) {
+        if (vma.second.type != VMAType::Free)
+            return false;
+
+        VAddr vma_end = vma.second.base + vma.second.size;
+        return vma_end > base && vma_end >= base + size;
+    });
+
+    if (vma_handle == vma_map.end()) {
+        return ResultCode(ErrorDescription::OutOfMemory, ErrorModule::Kernel,
+                          ErrorSummary::OutOfResource, ErrorLevel::Permanent);
+    }
+
+    VAddr target = std::max(base, vma_handle->second.base);
+
+    auto result = MapMemoryBlock(target, block, offset, size, state);
+
+    if (result.Failed())
+        return result.Code();
+
+    return MakeResult<VAddr>(target);
+}
+
 ResultVal<VMManager::VMAHandle> VMManager::MapBackingMemory(VAddr target, u8* memory, u32 size,
                                                             MemoryState state) {
     ASSERT(memory != nullptr);
