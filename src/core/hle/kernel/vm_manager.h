@@ -148,14 +148,16 @@ public:
      * Maps part of a ref-counted block of memory at the first free address after the given base.
      *
      * @param base The base address to start the mapping at.
+     * @param region_size The max size of the region from where we'll try to find an address.
      * @param block The block to be mapped.
      * @param offset Offset into `block` to map from.
      * @param size Size of the mapping.
      * @param state MemoryState tag to attach to the VMA.
      * @returns The address at which the memory was mapped.
      */
-    ResultVal<VAddr> MapMemoryBlockToBase(VAddr base, std::shared_ptr<std::vector<u8>> block,
-                                          size_t offset, u32 size, MemoryState state);
+    ResultVal<VAddr> MapMemoryBlockToBase(VAddr base, u32 region_size,
+                                          std::shared_ptr<std::vector<u8>> block, size_t offset,
+                                          u32 size, MemoryState state);
     /**
      * Maps an unmanaged host memory pointer at a given address.
      *
@@ -236,4 +238,4 @@ private:
     /// Updates the pages corresponding to this VMA so they match the VMA's attributes.
     void UpdatePageTableForVMA(const VirtualMemoryArea& vma);
 };
-}
+} // namespace Kernel

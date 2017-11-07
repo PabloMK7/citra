@@ -93,7 +93,8 @@ ResultVal<VMManager::VMAHandle> VMManager::MapMemoryBlock(VAddr target,
     return MakeResult<VMAHandle>(MergeAdjacent(vma_handle));
 }
 
-ResultVal<VAddr> VMManager::MapMemoryBlockToBase(VAddr base, std::shared_ptr<std::vector<u8>> block,
+ResultVal<VAddr> VMManager::MapMemoryBlockToBase(VAddr base, u32 region_size,
+                                                 std::shared_ptr<std::vector<u8>> block,
                                                  size_t offset, u32 size, MemoryState state) {
 
     // Find the first Free VMA.
@@ -105,12 +106,14 @@ ResultVal<VAddr> VMManager::MapMemoryBlockToBase(VAddr base, std::shared_ptr<std
         return vma_end > base && vma_end >= base + size;
     });
 
-    if (vma_handle == vma_map.end()) {
+    VAddr target = std::max(base, vma_handle->second.base);
+
+    // Do not try to allocate the block if there are no available addresses within the desired
+    // region.
+    if (vma_handle == vma_map.end() || target + size > base + region_size) {
         return ResultCode(ErrorDescription::OutOfMemory, ErrorModule::Kernel,
                           ErrorSummary::OutOfResource, ErrorLevel::Permanent);
     }
-
-    VAddr target = std::max(base, vma_handle->second.base);
 
     auto result = MapMemoryBlock(target, block, offset, size, state);
 
@@ -373,4 +376,4 @@ void VMManager::UpdatePageTableForVMA(const VirtualMemoryArea& vma) {
         break;
     }
 }
-}
+} // namespace Kernel
