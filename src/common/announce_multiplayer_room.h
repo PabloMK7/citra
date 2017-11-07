@@ -124,7 +124,7 @@ public:
     void AddPlayer(const std::string& /*nickname*/, const MacAddress& /*mac_address*/,
                    const u64 /*game_id*/, const std::string& /*game_name*/) override {}
     std::future<Common::WebResult> Announce() override {
-        return std::async(std::launch::async, []() {
+        return std::async(std::launch::deferred, []() {
             return Common::WebResult{Common::WebResult::Code::NoWebservice,
                                      "WebService is missing"};
         });
