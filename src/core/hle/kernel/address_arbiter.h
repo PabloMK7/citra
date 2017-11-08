@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <vector>
 #include "common/common_types.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/result.h"
@@ -11,12 +12,14 @@
 // Address arbiters are an underlying kernel synchronization object that can be created/used via
 // supervisor calls (SVCs). They function as sort of a global lock. Typically, games/other CTR
 // applications use them as an underlying mechanism to implement thread-safe barriers, events, and
-// semphores.
+// semaphores.
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Kernel namespace
 
 namespace Kernel {
+
+class Thread;
 
 enum class ArbitrationType : u32 {
     Signal,
@@ -50,11 +53,25 @@ public:
 
     std::string name; ///< Name of address arbiter object (optional)
 
-    ResultCode ArbitrateAddress(ArbitrationType type, VAddr address, s32 value, u64 nanoseconds);
+    ResultCode ArbitrateAddress(SharedPtr<Thread> thread, ArbitrationType type, VAddr address,
+                                s32 value, u64 nanoseconds);
 
 private:
     AddressArbiter();
     ~AddressArbiter() override;
+
+    /// Puts the thread to wait on the specified arbitration address under this address arbiter.
+    void WaitThread(SharedPtr<Thread> thread, VAddr wait_address);
+
+    /// Resume all threads found to be waiting on the address under this address arbiter
+    void ResumeAllThreads(VAddr address);
+
+    /// Resume one thread found to be waiting on the address under this address arbiter and return
+    /// the resumed thread.
+    SharedPtr<Thread> ResumeHighestPriorityThread(VAddr address);
+
+    /// Threads waiting for the address arbiter to be signaled.
+    std::vector<SharedPtr<Thread>> waiting_threads;
 };
 
-} // namespace FileSys
+} // namespace Kernel
