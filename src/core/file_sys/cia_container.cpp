@@ -72,7 +72,7 @@ Loader::ResultStatus CIAContainer::Load(const std::string& filepath) {
     // Load Title Metadata
     std::vector<u8> tmd_data(cia_header.tmd_size);
     file.Seek(GetTitleMetadataOffset(), SEEK_SET);
-    if (!file.ReadBytes(tmd_data.data(), cia_header.tmd_size) != cia_header.tmd_size)
+    if (file.ReadBytes(tmd_data.data(), cia_header.tmd_size) != cia_header.tmd_size)
         return Loader::ResultStatus::Error;
 
     result = LoadTitleMetadata(tmd_data);
