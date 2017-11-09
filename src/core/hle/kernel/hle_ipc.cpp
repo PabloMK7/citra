@@ -6,6 +6,7 @@
 #include <boost/range/algorithm_ext/erase.hpp>
 #include "common/assert.h"
 #include "common/common_types.h"
+#include "core/hle/kernel/event.h"
 #include "core/hle/kernel/handle_table.h"
 #include "core/hle/kernel/hle_ipc.h"
 #include "core/hle/kernel/kernel.h"
@@ -22,6 +23,40 @@ void SessionRequestHandler::ClientConnected(SharedPtr<ServerSession> server_sess
 void SessionRequestHandler::ClientDisconnected(SharedPtr<ServerSession> server_session) {
     server_session->SetHleHandler(nullptr);
     boost::range::remove_erase(connected_sessions, server_session);
+}
+
+SharedPtr<Event> HLERequestContext::SleepClientThread(SharedPtr<Thread> thread,
+                                                      const std::string& reason, u64 timeout,
+                                                      WakeupCallback&& callback) {
+    // Put the client thread to sleep until the wait event is signaled or the timeout expires.
+    thread->wakeup_callback = [context = *this, callback](ThreadWakeupReason reason,
+                                                          SharedPtr<Thread> thread,
+                                                          SharedPtr<WaitObject> object) mutable {
+        ASSERT(thread->status == THREADSTATUS_WAIT_HLE_EVENT);
+        callback(thread, context, reason);
+
+        auto& process = thread->owner_process;
+        // We must copy the entire command buffer *plus* the entire static buffers area, since
+        // the translation might need to read from it in order to retrieve the StaticBuffer
+        // target addresses.
+        std::array<u32, IPC::COMMAND_BUFFER_LENGTH + 2 * IPC::MAX_STATIC_BUFFERS> cmd_buff;
+        Memory::ReadBlock(*process, thread->GetCommandBufferAddress(), cmd_buff.data(),
+                          cmd_buff.size() * sizeof(u32));
+        context.WriteToOutgoingCommandBuffer(cmd_buff.data(), *process, Kernel::g_handle_table);
+        // Copy the translated command buffer back into the thread's command buffer area.
+        Memory::WriteBlock(*process, thread->GetCommandBufferAddress(), cmd_buff.data(),
+                           cmd_buff.size() * sizeof(u32));
+    };
+
+    auto event = Kernel::Event::Create(Kernel::ResetType::OneShot, "HLE Pause Event: " + reason);
+    thread->status = THREADSTATUS_WAIT_HLE_EVENT;
+    thread->wait_objects = {event};
+    event->AddWaitingThread(thread);
+
+    if (timeout > 0)
+        thread->WakeAfterDelay(timeout);
+
+    return event;
 }
 
 HLERequestContext::HLERequestContext(SharedPtr<ServerSession> session)
