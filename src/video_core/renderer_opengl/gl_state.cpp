@@ -33,7 +33,7 @@ OpenGLState::OpenGLState() {
     stencil.action_depth_pass = GL_KEEP;
     stencil.action_stencil_fail = GL_KEEP;
 
-    blend.enabled = false;
+    blend.enabled = true;
     blend.rgb_equation = GL_FUNC_ADD;
     blend.a_equation = GL_FUNC_ADD;
     blend.src_rgb_func = GL_ONE;
@@ -148,9 +148,6 @@ void OpenGLState::Apply() const {
     if (blend.enabled != cur_state.blend.enabled) {
         if (blend.enabled) {
             glEnable(GL_BLEND);
-
-            cur_state.logic_op = GL_COPY;
-            glLogicOp(cur_state.logic_op);
             glDisable(GL_COLOR_LOGIC_OP);
         } else {
             glDisable(GL_BLEND);

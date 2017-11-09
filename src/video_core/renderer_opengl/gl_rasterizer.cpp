@@ -168,6 +168,8 @@ RasterizerOpenGL::RasterizerOpenGL() : shader_dirty(true) {
     glActiveTexture(TextureUnits::ProcTexDiffLUT.Enum());
     glTexBuffer(GL_TEXTURE_BUFFER, GL_RGBA32F, proctex_diff_lut_buffer.handle);
 
+    glEnable(GL_BLEND);
+
     // Sync fixed function OpenGL state
     SyncClipEnabled();
     SyncClipCoef();
