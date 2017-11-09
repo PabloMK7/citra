@@ -81,8 +81,11 @@ ResultCode ServerSession::HandleSyncRequest(SharedPtr<Thread> thread) {
             // starvation when a thread only does sync requests to HLE services while a
             // lower-priority thread is waiting to run.
 
-            // TODO(Subv): Figure out a good value for this.
-            static constexpr u64 IPCDelayNanoseconds = 100;
+            // This delay was approximated in a homebrew application by measuring the average time
+            // it takes for svcSendSyncRequest to return when performing the SetLcdForceBlack IPC
+            // request to the GSP:GPU service in a n3DS with firmware 11.6. The measured values have
+            // a high variance and vary between models.
+            static constexpr u64 IPCDelayNanoseconds = 39000;
             thread->WakeAfterDelay(IPCDelayNanoseconds);
         } else {
             // Add the thread to the list of threads that have issued a sync request with this
