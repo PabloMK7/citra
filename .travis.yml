@@ -44,3 +44,8 @@ deploy:
   skip_cleanup: true
   on:
     tags: true
+
+notifications:
+  webhooks:
+    urls:
+      - https://mailroom.citra-emu.org/travis-build
