@@ -4,8 +4,6 @@
 
 #pragma once
 
-#include <atomic>
-#include <condition_variable>
 #include <functional>
 #include <memory>
 #include <mutex>
@@ -13,6 +11,7 @@
 #include <thread>
 #include "common/announce_multiplayer_room.h"
 #include "common/common_types.h"
+#include "common/thread.h"
 
 namespace Core {
 
@@ -58,11 +57,7 @@ public:
     std::future<AnnounceMultiplayerRoom::RoomList> GetRoomList(std::function<void()> func);
 
 private:
-    std::atomic<bool> announce{false};
-
-    /// conditional variable to notify the announce thread to end early
-    std::condition_variable cv;
-    std::mutex cv_m; ///< mutex for cv
+    Common::Event shutdown_event;
     std::mutex callback_mutex;
     std::set<CallbackHandle> error_callbacks;
     std::unique_ptr<std::thread> announce_multiplayer_thread;

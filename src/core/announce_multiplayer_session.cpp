@@ -19,7 +19,7 @@ namespace Core {
 // Time between room is announced to web_service
 static constexpr std::chrono::seconds announce_time_interval(15);
 
-AnnounceMultiplayerSession::AnnounceMultiplayerSession() : announce(false) {
+AnnounceMultiplayerSession::AnnounceMultiplayerSession() {
 #ifdef ENABLE_WEB_SERVICE
     backend = std::make_unique<WebService::RoomJson>(
         Settings::values.announce_multiplayer_room_endpoint_url, Settings::values.citra_username,
@@ -33,18 +33,14 @@ void AnnounceMultiplayerSession::Start() {
     if (announce_multiplayer_thread) {
         Stop();
     }
-
+    shutdown_event.Reset();
     announce_multiplayer_thread =
         std::make_unique<std::thread>(&AnnounceMultiplayerSession::AnnounceMultiplayerLoop, this);
 }
 
 void AnnounceMultiplayerSession::Stop() {
-    if (!announce)
-        return;
-    announce = false;
-    // Detaching the loop, to not wait for the sleep to finish. The loop thread will finish soon.
     if (announce_multiplayer_thread) {
-        cv.notify_all();
+        shutdown_event.Set();
         announce_multiplayer_thread->join();
         announce_multiplayer_thread.reset();
         backend->Delete();
@@ -69,19 +65,16 @@ AnnounceMultiplayerSession::~AnnounceMultiplayerSession() {
 }
 
 void AnnounceMultiplayerSession::AnnounceMultiplayerLoop() {
-    announce = true;
+    auto update_time = std::chrono::steady_clock::now();
     std::future<Common::WebResult> future;
-    while (announce) {
-        std::unique_lock<std::mutex> lock(cv_m);
-        cv.wait_for(lock, announce_time_interval);
+    while (!shutdown_event.WaitUntil(update_time)) {
+        update_time += announce_time_interval;
         std::shared_ptr<Network::Room> room = Network::GetRoom().lock();
         if (!room) {
-            announce = false;
-            continue;
+            break;
         }
         if (room->GetState() != Network::Room::State::Open) {
-            announce = false;
-            continue;
+            break;
         }
         Network::RoomInformation room_information = room->GetRoomInformation();
         std::vector<Network::Room::Member> memberlist = room->GetRoomMemberList();
