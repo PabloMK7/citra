@@ -48,4 +48,4 @@ deploy:
 notifications:
   webhooks:
     urls:
-      - https://mailroom.citra-emu.org/travis-build
+      - https://api.citra-emu.org/code/travis/notify
