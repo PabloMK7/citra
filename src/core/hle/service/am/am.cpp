@@ -10,9 +10,7 @@
 #include "common/file_util.h"
 #include "common/logging/log.h"
 #include "common/string_util.h"
-#include "core/file_sys/cia_container.h"
 #include "core/file_sys/errors.h"
-#include "core/file_sys/file_backend.h"
 #include "core/file_sys/ncch_container.h"
 #include "core/file_sys/title_metadata.h"
 #include "core/hle/ipc.h"
@@ -23,7 +21,6 @@
 #include "core/hle/kernel/handle_table.h"
 #include "core/hle/kernel/server_session.h"
 #include "core/hle/kernel/session.h"
-#include "core/hle/result.h"
 #include "core/hle/service/am/am.h"
 #include "core/hle/service/am/am_app.h"
 #include "core/hle/service/am/am_net.h"
@@ -82,190 +79,168 @@ struct TicketInfo {
 
 static_assert(sizeof(TicketInfo) == 0x18, "Ticket info structure size is wrong");
 
-// A file handled returned for CIAs to be written into and subsequently installed.
-class CIAFile final : public FileSys::FileBackend {
-public:
-    explicit CIAFile(Service::FS::MediaType media_type) : media_type(media_type) {}
+ResultVal<size_t> CIAFile::Read(u64 offset, size_t length, u8* buffer) const {
+    UNIMPLEMENTED();
+    return MakeResult<size_t>(length);
+}
 
-    ResultVal<size_t> Read(u64 offset, size_t length, u8* buffer) const override {
-        UNIMPLEMENTED();
-        return MakeResult<size_t>(length);
+ResultVal<size_t> CIAFile::WriteTitleMetadata(u64 offset, size_t length, const u8* buffer) {
+    container.LoadTitleMetadata(data, container.GetTitleMetadataOffset());
+    FileSys::TitleMetadata tmd = container.GetTitleMetadata();
+    cia_installing_tid = tmd.GetTitleID();
+    tmd.Print();
+
+    // If a TMD already exists for this app (ie 00000000.tmd), the incoming TMD
+    // will be the same plus one, (ie 00000001.tmd), both will be kept until
+    // the install is finalized and old contents can be discarded.
+    if (FileUtil::Exists(GetTitleMetadataPath(media_type, tmd.GetTitleID())))
+        is_update = true;
+
+    std::string tmd_path = GetTitleMetadataPath(media_type, tmd.GetTitleID(), is_update);
+
+    // Create content/ folder if it doesn't exist
+    std::string tmd_folder;
+    Common::SplitPath(tmd_path, &tmd_folder, nullptr, nullptr);
+    FileUtil::CreateFullPath(tmd_folder);
+
+    // Save TMD so that we can start getting new .app paths
+    if (tmd.Save(tmd_path) != Loader::ResultStatus::Success)
+        return FileSys::ERROR_INSUFFICIENT_SPACE;
+
+    // Create any other .app folders which may not exist yet
+    std::string app_folder;
+    Common::SplitPath(GetTitleContentPath(media_type, tmd.GetTitleID(),
+                                          FileSys::TMDContentIndex::Main, is_update),
+                      &app_folder, nullptr, nullptr);
+    FileUtil::CreateFullPath(app_folder);
+
+    content_written.resize(container.GetTitleMetadata().GetContentCount());
+    install_state = CIAInstallState::TMDLoaded;
+
+    return MakeResult<size_t>(length);
+}
+
+ResultVal<size_t> CIAFile::WriteContentData(u64 offset, size_t length, const u8* buffer) {
+    // Data is not being buffered, so we have to keep track of how much of each <ID>.app
+    // has been written since we might get a written buffer which contains multiple .app
+    // contents or only part of a larger .app's contents.
+    u64 offset_max = offset + length;
+    for (int i = 0; i < container.GetTitleMetadata().GetContentCount(); i++) {
+        if (content_written[i] < container.GetContentSize(i)) {
+            // The size, minimum unwritten offset, and maximum unwritten offset of this content
+            u64 size = container.GetContentSize(i);
+            u64 range_min = container.GetContentOffset(i) + content_written[i];
+            u64 range_max = container.GetContentOffset(i) + size;
+
+            // The unwritten range for this content is beyond the buffered data we have
+            // or comes before the buffered data we have, so skip this content ID.
+            if (range_min > offset_max || range_max < offset)
+                continue;
+
+            // Figure out how much of this content ID we have just recieved/can write out
+            u64 available_to_write = std::min(offset_max, range_max) - range_min;
+
+            // Since the incoming TMD has already been written, we can use GetTitleContentPath
+            // to get the content paths to write to.
+            FileSys::TitleMetadata tmd = container.GetTitleMetadata();
+            FileUtil::IOFile file(GetTitleContentPath(media_type, tmd.GetTitleID(), i, is_update),
+                                  content_written[i] ? "ab" : "wb");
+
+            if (!file.IsOpen())
+                return FileSys::ERROR_INSUFFICIENT_SPACE;
+
+            file.WriteBytes(buffer + (range_min - offset), available_to_write);
+
+            // Keep tabs on how much of this content ID has been written so new range_min
+            // values can be calculated.
+            content_written[i] += available_to_write;
+            LOG_DEBUG(Service_AM, "Wrote %" PRIx64 " to content %u, total %" PRIx64,
+                      available_to_write, i, content_written[i]);
+        }
     }
 
-    ResultVal<size_t> WriteTitleMetadata(u64 offset, size_t length, const u8* buffer) {
-        container.LoadTitleMetadata(data, container.GetTitleMetadataOffset());
-        FileSys::TitleMetadata tmd = container.GetTitleMetadata();
-        cia_installing_tid = tmd.GetTitleID();
-        tmd.Print();
+    return MakeResult<size_t>(length);
+}
 
-        // If a TMD already exists for this app (ie 00000000.tmd), the incoming TMD
-        // will be the same plus one, (ie 00000001.tmd), both will be kept until
-        // the install is finalized and old contents can be discarded.
-        if (FileUtil::Exists(GetTitleMetadataPath(media_type, tmd.GetTitleID())))
-            is_update = true;
+ResultVal<size_t> CIAFile::Write(u64 offset, size_t length, bool flush, const u8* buffer) {
+    written += length;
 
-        std::string tmd_path = GetTitleMetadataPath(media_type, tmd.GetTitleID(), is_update);
+    // TODO(shinyquagsire23): Can we assume that things will only be written in sequence?
+    // Does AM send an error if we write to things out of order?
+    // Or does it just ignore offsets and assume a set sequence of incoming data?
 
-        // Create content/ folder if it doesn't exist
-        std::string tmd_folder;
-        Common::SplitPath(tmd_path, &tmd_folder, nullptr, nullptr);
-        FileUtil::CreateFullPath(tmd_folder);
+    // The data in CIAs is always stored CIA Header > Cert > Ticket > TMD > Content > Meta.
+    // The CIA Header describes Cert, Ticket, TMD, total content sizes, and TMD is needed for
+    // content sizes so it ends up becoming a problem of keeping track of how much has been
+    // written and what we have been able to pick up.
+    if (install_state == CIAInstallState::InstallStarted) {
+        size_t buf_copy_size = std::min(length, FileSys::CIA_HEADER_SIZE);
+        size_t buf_max_size =
+            std::min(static_cast<size_t>(offset + length), FileSys::CIA_HEADER_SIZE);
+        data.resize(buf_max_size);
+        memcpy(data.data() + offset, buffer, buf_copy_size);
 
-        // Save TMD so that we can start getting new .app paths
-        if (tmd.Save(tmd_path) != Loader::ResultStatus::Success)
-            return FileSys::ERROR_INSUFFICIENT_SPACE;
-
-        // Create any other .app folders which may not exist yet
-        std::string app_folder;
-        Common::SplitPath(GetTitleContentPath(media_type, tmd.GetTitleID(),
-                                              FileSys::TMDContentIndex::Main, is_update),
-                          &app_folder, nullptr, nullptr);
-        FileUtil::CreateFullPath(app_folder);
-
-        content_written.resize(container.GetTitleMetadata().GetContentCount());
-        install_state = CIAInstallState::TMDLoaded;
-
-        return MakeResult<size_t>(length);
+        // We have enough data to load a CIA header and parse it.
+        if (written >= FileSys::CIA_HEADER_SIZE) {
+            container.LoadHeader(data);
+            container.Print();
+            install_state = CIAInstallState::HeaderLoaded;
+        }
     }
 
-    ResultVal<size_t> WriteContentData(u64 offset, size_t length, const u8* buffer) {
-        // Data is not being buffered, so we have to keep track of how much of each <ID>.app
-        // has been written since we might get a written buffer which contains multiple .app
-        // contents or only part of a larger .app's contents.
-        u64 offset_max = offset + length;
-        for (int i = 0; i < container.GetTitleMetadata().GetContentCount(); i++) {
-            if (content_written[i] < container.GetContentSize(i)) {
-                // The size, minimum unwritten offset, and maximum unwritten offset of this content
-                u64 size = container.GetContentSize(i);
-                u64 range_min = container.GetContentOffset(i) + content_written[i];
-                u64 range_max = container.GetContentOffset(i) + size;
-
-                // The unwritten range for this content is beyond the buffered data we have
-                // or comes before the buffered data we have, so skip this content ID.
-                if (range_min > offset_max || range_max < offset)
-                    continue;
-
-                // Figure out how much of this content ID we have just recieved/can write out
-                u64 available_to_write = std::min(offset_max, range_max) - range_min;
-
-                // Since the incoming TMD has already been written, we can use GetTitleContentPath
-                // to get the content paths to write to.
-                FileSys::TitleMetadata tmd = container.GetTitleMetadata();
-                FileUtil::IOFile file(
-                    GetTitleContentPath(media_type, tmd.GetTitleID(), i, is_update),
-                    content_written[i] ? "ab" : "wb");
-
-                if (!file.IsOpen())
-                    return FileSys::ERROR_INSUFFICIENT_SPACE;
-
-                file.WriteBytes(buffer + (range_min - offset), available_to_write);
-
-                // Keep tabs on how much of this content ID has been written so new range_min
-                // values can be calculated.
-                content_written[i] += available_to_write;
-                LOG_DEBUG(Service_AM, "Wrote %" PRIx64 " to content %u, total %" PRIx64,
-                          available_to_write, i, content_written[i]);
-            }
-        }
-
+    // If we don't have a header yet, we can't pull offsets of other sections
+    if (install_state == CIAInstallState::InstallStarted)
         return MakeResult<size_t>(length);
+
+    // If we have been given data before (or including) .app content, pull it into
+    // our buffer, but only pull *up to* the content offset, no further.
+    if (offset < container.GetContentOffset()) {
+        size_t buf_loaded = data.size();
+        size_t copy_offset = std::max(static_cast<size_t>(offset), buf_loaded);
+        size_t buf_offset = buf_loaded - offset;
+        size_t buf_copy_size =
+            std::min(length, static_cast<size_t>(container.GetContentOffset() - offset)) -
+            buf_loaded;
+        size_t buf_max_size = std::min(offset + length, container.GetContentOffset());
+        data.resize(buf_max_size);
+        memcpy(data.data() + copy_offset, buffer + buf_offset, buf_copy_size);
     }
 
-    ResultVal<size_t> Write(u64 offset, size_t length, bool flush, const u8* buffer) override {
-        written += length;
+    // TODO(shinyquagsire23): Write out .tik files to nand?
 
-        // TODO(shinyquagsire23): Can we assume that things will only be written in sequence?
-        // Does AM send an error if we write to things out of order?
-        // Or does it just ignore offsets and assume a set sequence of incoming data?
-
-        // The data in CIAs is always stored CIA Header > Cert > Ticket > TMD > Content > Meta.
-        // The CIA Header describes Cert, Ticket, TMD, total content sizes, and TMD is needed for
-        // content sizes so it ends up becoming a problem of keeping track of how much has been
-        // written and what we have been able to pick up.
-        if (install_state == CIAInstallState::InstallStarted) {
-            size_t buf_copy_size = std::min(length, FileSys::CIA_HEADER_SIZE);
-            size_t buf_max_size =
-                std::min(static_cast<size_t>(offset + length), FileSys::CIA_HEADER_SIZE);
-            data.resize(buf_max_size);
-            memcpy(data.data() + offset, buffer, buf_copy_size);
-
-            // We have enough data to load a CIA header and parse it.
-            if (written >= FileSys::CIA_HEADER_SIZE) {
-                container.LoadHeader(data);
-                container.Print();
-                install_state = CIAInstallState::HeaderLoaded;
-            }
-        }
-
-        // If we don't have a header yet, we can't pull offsets of other sections
-        if (install_state == CIAInstallState::InstallStarted)
-            return MakeResult<size_t>(length);
-
-        // If we have been given data before (or including) .app content, pull it into
-        // our buffer, but only pull *up to* the content offset, no further.
-        if (offset < container.GetContentOffset()) {
-            size_t buf_loaded = data.size();
-            size_t copy_offset = std::max(static_cast<size_t>(offset), buf_loaded);
-            size_t buf_offset = buf_loaded - offset;
-            size_t buf_copy_size =
-                std::min(length, static_cast<size_t>(container.GetContentOffset() - offset)) -
-                buf_loaded;
-            size_t buf_max_size = std::min(offset + length, container.GetContentOffset());
-            data.resize(buf_max_size);
-            memcpy(data.data() + copy_offset, buffer + buf_offset, buf_copy_size);
-        }
-
-        // TODO(shinyquagsire23): Write out .tik files to nand?
-
-        // The end of our TMD is at the beginning of Content data, so ensure we have that much
-        // buffered before trying to parse.
-        if (written >= container.GetContentOffset() &&
-            install_state != CIAInstallState::TMDLoaded) {
-            auto result = WriteTitleMetadata(offset, length, buffer);
-            if (result.Failed())
-                return result;
-        }
-
-        // Content data sizes can only be retrieved from TMD data
-        if (install_state != CIAInstallState::TMDLoaded)
-            return MakeResult<size_t>(length);
-
-        // From this point forward, data will no longer be buffered in data
-        auto result = WriteContentData(offset, length, buffer);
+    // The end of our TMD is at the beginning of Content data, so ensure we have that much
+    // buffered before trying to parse.
+    if (written >= container.GetContentOffset() && install_state != CIAInstallState::TMDLoaded) {
+        auto result = WriteTitleMetadata(offset, length, buffer);
         if (result.Failed())
             return result;
+    }
 
+    // Content data sizes can only be retrieved from TMD data
+    if (install_state != CIAInstallState::TMDLoaded)
         return MakeResult<size_t>(length);
-    }
 
-    u64 GetSize() const override {
-        return written;
-    }
+    // From this point forward, data will no longer be buffered in data
+    auto result = WriteContentData(offset, length, buffer);
+    if (result.Failed())
+        return result;
 
-    bool SetSize(u64 size) const override {
-        return false;
-    }
+    return MakeResult<size_t>(length);
+}
 
-    bool Close() const override {
-        return true;
-    }
+u64 CIAFile::GetSize() const {
+    return written;
+}
 
-    void Flush() const override {}
+bool CIAFile::SetSize(u64 size) const {
+    return false;
+}
 
-private:
-    // Whether it's installing an update, and what step of installation it is at
-    bool is_update = false;
-    CIAInstallState install_state = CIAInstallState::InstallStarted;
+bool CIAFile::Close() const {
+    return true;
+}
 
-    // How much has been written total, CIAContainer for the installing CIA, buffer of all data
-    // prior to content data, how much of each content index has been written, and where the CIA
-    // is being installed to
-    u64 written = 0;
-    FileSys::CIAContainer container;
-    std::vector<u8> data;
-    std::vector<u64> content_written;
-    Service::FS::MediaType media_type;
-};
+void CIAFile::Flush() const {}
 
 Service::FS::MediaType GetTitleMediaType(u64 titleId) {
     u16 platform = static_cast<u16>(titleId >> 48);
