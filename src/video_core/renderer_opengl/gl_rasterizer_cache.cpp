@@ -525,11 +525,26 @@ CachedSurface* RasterizerCacheOpenGL::GetTextureSurface(
     return GetSurface(params, false, true);
 }
 
+// If the resolution
+static u16 GetResolutionScaleFactor() {
+    return !Settings::values.resolution_factor
+               ? VideoCore::g_emu_window->GetFramebufferLayout().GetScalingRatio()
+               : Settings::values.resolution_factor;
+}
+
 std::tuple<CachedSurface*, CachedSurface*, MathUtil::Rectangle<int>>
 RasterizerCacheOpenGL::GetFramebufferSurfaces(
     const Pica::FramebufferRegs::FramebufferConfig& config) {
 
     const auto& regs = Pica::g_state.regs;
+
+    // update resolution_scale_factor and reset cache if changed
+    static u16 resolution_scale_factor = GetResolutionScaleFactor();
+    if (resolution_scale_factor != GetResolutionScaleFactor()) {
+        resolution_scale_factor = GetResolutionScaleFactor();
+        FlushAll();
+        InvalidateRegion(0, 0xffffffff, nullptr);
+    }
 
     // Make sur that framebuffers don't overlap if both color and depth are being used
     u32 fb_area = config.GetWidth() * config.GetHeight();
@@ -561,12 +576,6 @@ RasterizerCacheOpenGL::GetFramebufferSurfaces(
     color_params.height = depth_params.height = config.GetHeight();
     color_params.is_tiled = depth_params.is_tiled = true;
 
-    // Set the internal resolution, assume the same scaling factor for top and bottom screens
-    float resolution_scale_factor = Settings::values.resolution_factor;
-    if (resolution_scale_factor == 0.0f) {
-        // Auto - scale resolution to the window size
-        resolution_scale_factor = VideoCore::g_emu_window->GetFramebufferLayout().GetScalingRatio();
-    }
     // Scale the resolution by the specified factor
     color_params.res_scale_width = resolution_scale_factor;
     depth_params.res_scale_width = resolution_scale_factor;

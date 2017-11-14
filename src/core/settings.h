@@ -95,7 +95,7 @@ struct Values {
     // Renderer
     bool use_hw_renderer;
     bool use_shader_jit;
-    float resolution_factor;
+    u16 resolution_factor;
     bool use_vsync;
     bool toggle_framelimit;
 

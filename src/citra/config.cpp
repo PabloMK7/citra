@@ -88,7 +88,7 @@ void Config::ReadValues() {
     Settings::values.use_hw_renderer = sdl2_config->GetBoolean("Renderer", "use_hw_renderer", true);
     Settings::values.use_shader_jit = sdl2_config->GetBoolean("Renderer", "use_shader_jit", true);
     Settings::values.resolution_factor =
-        (float)sdl2_config->GetReal("Renderer", "resolution_factor", 1.0);
+        static_cast<u16>(sdl2_config->GetInteger("Renderer", "resolution_factor", 1));
     Settings::values.use_vsync = sdl2_config->GetBoolean("Renderer", "use_vsync", false);
     Settings::values.toggle_framelimit =
         sdl2_config->GetBoolean("Renderer", "toggle_framelimit", true);
