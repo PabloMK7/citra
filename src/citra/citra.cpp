@@ -26,6 +26,7 @@
 
 #include "citra/config.h"
 #include "citra/emu_window/emu_window_sdl2.h"
+#include "common/file_util.h"
 #include "common/logging/backend.h"
 #include "common/logging/filter.h"
 #include "common/logging/log.h"
@@ -33,7 +34,9 @@
 #include "common/scope_exit.h"
 #include "common/string_util.h"
 #include "core/core.h"
+#include "core/file_sys/cia_container.h"
 #include "core/gdbstub/gdbstub.h"
+#include "core/hle/service/am/am.h"
 #include "core/loader/loader.h"
 #include "core/settings.h"
 
@@ -41,6 +44,7 @@ static void PrintHelp(const char* argv0) {
     std::cout << "Usage: " << argv0
               << " [options] <filename>\n"
                  "-g, --gdbport=NUMBER  Enable gdb stub on port NUMBER\n"
+                 "-i, --install=FILE    Installs a specified CIA file\n"
                  "-h, --help            Display this help and exit\n"
                  "-v, --version         Output version information and exit\n";
 }
@@ -69,13 +73,14 @@ int main(int argc, char** argv) {
 
     static struct option long_options[] = {
         {"gdbport", required_argument, 0, 'g'},
+        {"install", required_argument, 0, 'i'},
         {"help", no_argument, 0, 'h'},
         {"version", no_argument, 0, 'v'},
         {0, 0, 0, 0},
     };
 
     while (optind < argc) {
-        char arg = getopt_long(argc, argv, "g:hv", long_options, &option_index);
+        char arg = getopt_long(argc, argv, "g:i:hv", long_options, &option_index);
         if (arg != -1) {
             switch (arg) {
             case 'g':
@@ -89,6 +94,16 @@ int main(int argc, char** argv) {
                     exit(1);
                 }
                 break;
+            case 'i': {
+                const auto cia_progress = [](size_t written, size_t total) {
+                    LOG_INFO(Frontend, "%02zu%%", (written * 100 / total));
+                };
+                if (!Service::AM::InstallCIA(std::string(optarg), cia_progress))
+                    errno = EINVAL;
+                if (errno != 0)
+                    exit(1);
+                break;
+            }
             case 'h':
                 PrintHelp(argv[0]);
                 return 0;
