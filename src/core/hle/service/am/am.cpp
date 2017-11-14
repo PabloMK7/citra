@@ -37,6 +37,10 @@
 namespace Service {
 namespace AM {
 
+constexpr u16 PLATFORM_CTR = 0x0004;
+constexpr u16 CATEGORY_SYSTEM = 0x0010;
+constexpr u16 CATEGORY_DLP = 0x0001;
+constexpr u8 VARIATION_SYSTEM = 0x02;
 constexpr u32 TID_HIGH_UPDATE = 0x0004000E;
 constexpr u32 TID_HIGH_DLC = 0x0004008C;
 
@@ -262,6 +266,20 @@ private:
     std::vector<u64> content_written;
     Service::FS::MediaType media_type;
 };
+
+Service::FS::MediaType GetTitleMediaType(u64 titleId) {
+    u16 platform = static_cast<u16>(titleId >> 48);
+    u16 category = static_cast<u16>((titleId >> 32) & 0xFFFF);
+    u8 variation = static_cast<u8>(titleId & 0xFF);
+
+    if (platform != PLATFORM_CTR)
+        return Service::FS::MediaType::NAND;
+
+    if (category & CATEGORY_SYSTEM || category & CATEGORY_DLP || variation & VARIATION_SYSTEM)
+        return Service::FS::MediaType::NAND;
+
+    return Service::FS::MediaType::SDMC;
+}
 
 std::string GetTitleMetadataPath(Service::FS::MediaType media_type, u64 tid, bool update) {
     std::string content_path = GetTitlePath(media_type, tid) + "content/";

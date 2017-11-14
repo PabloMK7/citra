@@ -39,6 +39,13 @@ enum class CIAInstallState : u32 {
 };
 
 /**
+ * Get the mediatype for an installed title
+ * @param titleId the installed title ID
+ * @returns MediaType which the installed title will reside on
+ */
+Service::FS::MediaType GetTitleMediaType(u64 titleId);
+
+/**
  * Get the .tmd path for a title
  * @param media_type the media the title exists on
  * @param tid the title ID to get
