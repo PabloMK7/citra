@@ -115,8 +115,8 @@ custom_bottom_top =
 custom_bottom_right =
 custom_bottom_bottom =
 
-#Whether to toggle frame limiter on or off.
-# 0: Off , 1  (default): On
+# Whether to toggle frame limiter on or off.
+# 0: Off, 1 (default): On
 toggle_framelimit =
 
 # Swaps the prominent screen with the other screen.
