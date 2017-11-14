@@ -25,6 +25,11 @@
 #include "video_core/utils.h"
 #include "video_core/video_core.h"
 
+using SurfaceType = SurfaceParams::SurfaceType;
+using PixelFormat = SurfaceParams::PixelFormat;
+
+static std::array<OGLFramebuffer, 2> transfer_framebuffers;
+
 struct FormatTuple {
     GLint internal_format;
     GLenum format;
@@ -46,6 +51,27 @@ static const std::array<FormatTuple, 4> depth_format_tuples = {{
     {GL_DEPTH24_STENCIL8, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8}, // D24S8
 }};
 
+static constexpr FormatTuple tex_tuple = {GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE};
+
+static const FormatTuple& GetFormatTuple(PixelFormat pixel_format) {
+    const SurfaceType type = SurfaceParams::GetFormatType(pixel_format);
+    if (type == SurfaceType::Color) {
+        ASSERT((size_t)pixel_format < fb_format_tuples.size());
+        return fb_format_tuples[(unsigned int)pixel_format];
+    } else if (type == SurfaceType::Depth || type == SurfaceType::DepthStencil) {
+        size_t tuple_idx = (size_t)pixel_format - 14;
+        ASSERT(tuple_idx < depth_format_tuples.size());
+        return depth_format_tuples[tuple_idx];
+    } else {
+        return tex_tuple;
+    }
+}
+
+template <typename Map, typename Interval>
+constexpr auto RangeFromInterval(Map& map, const Interval& interval) {
+    return boost::make_iterator_range(map.equal_range(interval));
+}
+
 static bool FillSurface(const Surface& surface, const u8* fill_data,
                         const MathUtil::Rectangle<u32>& fill_rect) {
     OpenGLState state = OpenGLState::GetCurState();
@@ -53,11 +79,11 @@ static bool FillSurface(const Surface& surface, const u8* fill_data,
     OpenGLState prev_state = state;
     SCOPE_EXIT({ prev_state.Apply(); });
 
-    OpenGLState::ResetTexture(surface->texture.handle);
+    state.ResetTexture(surface->texture.handle);
 
     state.scissor.enabled = true;
     state.scissor.x = static_cast<GLint>(fill_rect.left);
-    state.scissor.y = static_cast<GLint>(std::min(fill_rect.top, fill_rect.bottom));
+    state.scissor.y = static_cast<GLint>(fill_rect.bottom);
     state.scissor.width = static_cast<GLsizei>(fill_rect.GetWidth());
     state.scissor.height = static_cast<GLsizei>(fill_rect.GetHeight());
 
@@ -256,24 +282,22 @@ static constexpr std::array<void (*)(u32, u32, u8*, PAddr, PAddr, PAddr), 18> gl
     MortonCopy<false, PixelFormat::D24S8> // 17
 };
 
-void RasterizerCacheOpenGL::BlitTextures(GLuint src_tex, GLuint dst_tex,
-                                         CachedSurface::SurfaceType type,
-                                         const MathUtil::Rectangle<int>& src_rect,
-                                         const MathUtil::Rectangle<int>& dst_rect) {
-    using SurfaceType = CachedSurface::SurfaceType;
+static bool BlitTextures(GLuint src_tex, const MathUtil::Rectangle<u32>& src_rect, GLuint dst_tex,
+                         const MathUtil::Rectangle<u32>& dst_rect, SurfaceType type) {
+    OpenGLState state = OpenGLState::GetCurState();
 
-    OpenGLState cur_state = OpenGLState::GetCurState();
+    OpenGLState prev_state = state;
+    SCOPE_EXIT({ prev_state.Apply(); });
 
     // Make sure textures aren't bound to texture units, since going to bind them to framebuffer
     // components
-    OpenGLState::ResetTexture(src_tex);
-    OpenGLState::ResetTexture(dst_tex);
+    state.ResetTexture(src_tex);
+    state.ResetTexture(dst_tex);
 
     // Keep track of previous framebuffer bindings
-    GLuint old_fbs[2] = {cur_state.draw.read_framebuffer, cur_state.draw.draw_framebuffer};
-    cur_state.draw.read_framebuffer = transfer_framebuffers[0].handle;
-    cur_state.draw.draw_framebuffer = transfer_framebuffers[1].handle;
-    cur_state.Apply();
+    state.draw.read_framebuffer = transfer_framebuffers[0].handle;
+    state.draw.draw_framebuffer = transfer_framebuffers[1].handle;
+    state.Apply();
 
     u32 buffers = 0;
 
@@ -311,14 +335,11 @@ void RasterizerCacheOpenGL::BlitTextures(GLuint src_tex, GLuint dst_tex,
         buffers = GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT;
     }
 
-    glBlitFramebuffer(src_rect.left, src_rect.top, src_rect.right, src_rect.bottom, dst_rect.left,
-                      dst_rect.top, dst_rect.right, dst_rect.bottom, buffers,
+    glBlitFramebuffer(src_rect.left, src_rect.bottom, src_rect.right, src_rect.top, dst_rect.left,
+                      dst_rect.bottom, dst_rect.right, dst_rect.top, buffers,
                       buffers == GL_COLOR_BUFFER_BIT ? GL_LINEAR : GL_NEAREST);
 
-    // Restore previous framebuffer bindings
-    cur_state.draw.read_framebuffer = old_fbs[0];
-    cur_state.draw.draw_framebuffer = old_fbs[1];
-    cur_state.Apply();
+    return true;
 }
 
 bool RasterizerCacheOpenGL::TryBlitSurfaces(CachedSurface* src_surface,
@@ -336,11 +357,9 @@ bool RasterizerCacheOpenGL::TryBlitSurfaces(CachedSurface* src_surface,
     return true;
 }
 
-static void AllocateSurfaceTexture(GLuint texture, CachedSurface::PixelFormat pixel_format,
-                                   u32 width, u32 height) {
-    // Allocate an uninitialized texture of appropriate size and format for the surface
-    using SurfaceType = CachedSurface::SurfaceType;
-
+// Allocate an uninitialized texture of appropriate size and format for the surface
+static void AllocateSurfaceTexture(GLuint texture, const FormatTuple& format_tuple, u32 width,
+                                   u32 height) {
     OpenGLState cur_state = OpenGLState::GetCurState();
 
     // Keep track of previous texture bindings
@@ -349,22 +368,8 @@ static void AllocateSurfaceTexture(GLuint texture, CachedSurface::PixelFormat pi
     cur_state.Apply();
     glActiveTexture(GL_TEXTURE0);
 
-    SurfaceType type = CachedSurface::GetFormatType(pixel_format);
-
-    FormatTuple tuple;
-    if (type == SurfaceType::Color) {
-        ASSERT((size_t)pixel_format < fb_format_tuples.size());
-        tuple = fb_format_tuples[(unsigned int)pixel_format];
-    } else if (type == SurfaceType::Depth || type == SurfaceType::DepthStencil) {
-        size_t tuple_idx = (size_t)pixel_format - 14;
-        ASSERT(tuple_idx < depth_format_tuples.size());
-        tuple = depth_format_tuples[tuple_idx];
-    } else {
-        tuple = {GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE};
-    }
-
-    glTexImage2D(GL_TEXTURE_2D, 0, tuple.internal_format, width, height, 0, tuple.format,
-                 tuple.type, nullptr);
+    glTexImage2D(GL_TEXTURE_2D, 0, format_tuple.internal_format, width, height, 0,
+                 format_tuple.format, format_tuple.type, nullptr);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
