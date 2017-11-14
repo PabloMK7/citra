@@ -43,8 +43,6 @@ constexpr u32 TID_HIGH_DLC = 0x0004008C;
 
 // CIA installation static context variables
 static bool cia_installing = false;
-static u64 cia_installing_tid;
-static Service::FS::MediaType cia_installing_media_type;
 
 static bool lists_initialized = false;
 static std::array<std::vector<u64_le>, 3> am_title_list;
@@ -87,7 +85,6 @@ ResultVal<size_t> CIAFile::Read(u64 offset, size_t length, u8* buffer) const {
 ResultVal<size_t> CIAFile::WriteTitleMetadata(u64 offset, size_t length, const u8* buffer) {
     container.LoadTitleMetadata(data, container.GetTitleMetadataOffset());
     FileSys::TitleMetadata tmd = container.GetTitleMetadata();
-    cia_installing_tid = tmd.GetTitleID();
     tmd.Print();
 
     // If a TMD already exists for this app (ie 00000000.tmd), the incoming TMD
@@ -237,6 +234,50 @@ bool CIAFile::SetSize(u64 size) const {
 }
 
 bool CIAFile::Close() const {
+    bool complete = true;
+    for (size_t i = 0; i < container.GetTitleMetadata().GetContentCount(); i++) {
+        if (content_written[i] < container.GetContentSize(i))
+            complete = false;
+    }
+
+    // Install aborted
+    if (!complete) {
+        LOG_ERROR(Service_AM, "CIAFile closed prematurely, aborting install...");
+        FileUtil::DeleteDir(GetTitlePath(media_type, container.GetTitleMetadata().GetTitleID()));
+        return true;
+    }
+
+    // Clean up older content data if we installed newer content on top
+    std::string old_tmd_path =
+        GetTitleMetadataPath(media_type, container.GetTitleMetadata().GetTitleID(), false);
+    std::string new_tmd_path =
+        GetTitleMetadataPath(media_type, container.GetTitleMetadata().GetTitleID(), true);
+    if (FileUtil::Exists(new_tmd_path) && old_tmd_path != new_tmd_path) {
+        FileSys::TitleMetadata old_tmd;
+        FileSys::TitleMetadata new_tmd;
+
+        old_tmd.Load(old_tmd_path);
+        new_tmd.Load(new_tmd_path);
+
+        // For each content ID in the old TMD, check if there is a matching ID in the new
+        // TMD. If a CIA contains (and wrote to) an identical ID, it should be kept while
+        // IDs which only existed for the old TMD should be deleted.
+        for (u16 old_index = 0; old_index < old_tmd.GetContentCount(); old_index++) {
+            bool abort = false;
+            for (u16 new_index = 0; new_index < new_tmd.GetContentCount(); new_index++) {
+                if (old_tmd.GetContentIDByIndex(old_index) ==
+                    new_tmd.GetContentIDByIndex(new_index)) {
+                    abort = true;
+                }
+            }
+            if (abort)
+                break;
+
+            FileUtil::Delete(GetTitleContentPath(media_type, old_tmd.GetTitleID(), old_index));
+        }
+
+        FileUtil::Delete(old_tmd_path);
+    }
     return true;
 }
 
@@ -820,7 +861,6 @@ void BeginImportProgram(Service::Interface* self) {
     file->ClientConnected(std::get<Kernel::SharedPtr<Kernel::ServerSession>>(sessions));
 
     cia_installing = true;
-    cia_installing_media_type = media_type;
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
     rb.Push(RESULT_SUCCESS); // No error
@@ -835,38 +875,7 @@ void EndImportProgram(Service::Interface* self) {
     IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x0405, 0, 2); // 0x04050002
     auto cia_handle = rp.PopHandle();
 
-    // Clean up older content data if we installed newer content on top
-    std::string old_tmd_path =
-        GetTitleMetadataPath(cia_installing_media_type, cia_installing_tid, false);
-    std::string new_tmd_path =
-        GetTitleMetadataPath(cia_installing_media_type, cia_installing_tid, true);
-    if (FileUtil::Exists(new_tmd_path) && old_tmd_path != new_tmd_path) {
-        FileSys::TitleMetadata old_tmd;
-        FileSys::TitleMetadata new_tmd;
-
-        old_tmd.Load(old_tmd_path);
-        new_tmd.Load(new_tmd_path);
-
-        // For each content ID in the old TMD, check if there is a matching ID in the new
-        // TMD. If a CIA contains (and wrote to) an identical ID, it should be kept while
-        // IDs which only existed for the old TMD should be deleted.
-        for (u16 old_index = 0; old_index < old_tmd.GetContentCount(); old_index++) {
-            bool abort = false;
-            for (u16 new_index = 0; new_index < new_tmd.GetContentCount(); new_index++) {
-                if (old_tmd.GetContentIDByIndex(old_index) ==
-                    new_tmd.GetContentIDByIndex(new_index)) {
-                    abort = true;
-                }
-            }
-            if (abort)
-                break;
-
-            FileUtil::Delete(
-                GetTitleContentPath(cia_installing_media_type, old_tmd.GetTitleID(), old_index));
-        }
-
-        FileUtil::Delete(old_tmd_path);
-    }
+    Kernel::g_handle_table.Close(cia_handle);
     ScanForAllTitles();
 
     cia_installing = false;

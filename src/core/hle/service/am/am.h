@@ -45,6 +45,9 @@ enum class CIAInstallState : u32 {
 class CIAFile final : public FileSys::FileBackend {
 public:
     explicit CIAFile(Service::FS::MediaType media_type) : media_type(media_type) {}
+    ~CIAFile() {
+        Close();
+    }
 
     ResultVal<size_t> Read(u64 offset, size_t length, u8* buffer) const override;
     ResultVal<size_t> WriteTitleMetadata(u64 offset, size_t length, const u8* buffer);
