@@ -47,8 +47,13 @@ bool ServerSession::ShouldWait(Thread* thread) const {
 
 void ServerSession::Acquire(Thread* thread) {
     ASSERT_MSG(!ShouldWait(thread), "object unavailable!");
+
+    // If the client endpoint was closed, don't do anything. This ServerSession is now useless and
+    // will linger until its last handle is closed by the running application.
+    if (parent->client == nullptr)
+        return;
+
     // We are now handling a request, pop it from the stack.
-    // TODO(Subv): What happens if the client endpoint is closed before any requests are made?
     ASSERT(!pending_requesting_threads.empty());
     currently_handling = pending_requesting_threads.back();
     pending_requesting_threads.pop_back();
