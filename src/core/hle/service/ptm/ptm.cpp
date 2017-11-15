@@ -30,7 +30,7 @@ static bool battery_is_charging;
 
 static bool pedometer_is_counting;
 
-void GetAdapterState(Service::Interface* self) {
+void GetAdapterState(Interface* self) {
     IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x5, 0, 0);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
@@ -40,7 +40,7 @@ void GetAdapterState(Service::Interface* self) {
     LOG_WARNING(Service_PTM, "(STUBBED) called");
 }
 
-void GetShellState(Service::Interface* self) {
+void GetShellState(Interface* self) {
     IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x6, 0, 0);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
@@ -48,7 +48,7 @@ void GetShellState(Service::Interface* self) {
     rb.Push(shell_open);
 }
 
-void GetBatteryLevel(Service::Interface* self) {
+void GetBatteryLevel(Interface* self) {
     IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x7, 0, 0);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
@@ -58,7 +58,7 @@ void GetBatteryLevel(Service::Interface* self) {
     LOG_WARNING(Service_PTM, "(STUBBED) called");
 }
 
-void GetBatteryChargeState(Service::Interface* self) {
+void GetBatteryChargeState(Interface* self) {
     IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x8, 0, 0);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
@@ -68,7 +68,7 @@ void GetBatteryChargeState(Service::Interface* self) {
     LOG_WARNING(Service_PTM, "(STUBBED) called");
 }
 
-void GetPedometerState(Service::Interface* self) {
+void GetPedometerState(Interface* self) {
     IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x9, 0, 0);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
@@ -78,7 +78,29 @@ void GetPedometerState(Service::Interface* self) {
     LOG_WARNING(Service_PTM, "(STUBBED) called");
 }
 
-void GetTotalStepCount(Service::Interface* self) {
+void GetStepHistory(Interface* self) {
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0xB, 3, 2);
+
+    u32 hours = rp.Pop<u32>();
+    u64 start_time = rp.Pop<u64>();
+    size_t steps_buff_size;
+    const VAddr steps_buff_addr = rp.PopMappedBuffer(&steps_buff_size);
+    ASSERT_MSG(sizeof(u16) * hours == steps_buff_size, "Buffer for steps count has incorrect size");
+
+    // Stub: set zero steps count for every hour
+    for (u32 i = 0; i < hours; ++i) {
+        const u16 steps_per_hour = 0;
+        Memory::Write16(steps_buff_addr + i * sizeof(u16), steps_per_hour);
+    }
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RESULT_SUCCESS);
+
+    LOG_WARNING(Service_PTM, "(STUBBED) called, from time(raw): 0x%llx, for %d hours", start_time,
+                hours);
+}
+
+void GetTotalStepCount(Interface* self) {
     IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0xC, 0, 0);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
@@ -88,7 +110,7 @@ void GetTotalStepCount(Service::Interface* self) {
     LOG_WARNING(Service_PTM, "(STUBBED) called");
 }
 
-void GetSoftwareClosedFlag(Service::Interface* self) {
+void GetSoftwareClosedFlag(Interface* self) {
     IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x80F, 0, 0);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
@@ -112,7 +134,7 @@ void CheckNew3DS(IPC::RequestBuilder& rb) {
     LOG_WARNING(Service_PTM, "(STUBBED) called isNew3DS = 0x%08x", static_cast<u32>(is_new_3ds));
 }
 
-void CheckNew3DS(Service::Interface* self) {
+void CheckNew3DS(Interface* self) {
     IPC::RequestBuilder rb(Kernel::GetCommandBuffer(), 0x40A, 0, 0); // 0x040A0000
     CheckNew3DS(rb);
 }
