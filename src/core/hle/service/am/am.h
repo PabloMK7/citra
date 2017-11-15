@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <functional>
 #include <string>
 #include "common/common_types.h"
 #include "core/file_sys/cia_container.h"
@@ -41,6 +42,9 @@ enum class CIAInstallState : u32 {
     ContentWritten,
 };
 
+// Progress callback for InstallCIA, recieves bytes written and total bytes
+using ProgressCallback = void(size_t, size_t);
+
 // A file handled returned for CIAs to be written into and subsequently installed.
 class CIAFile final : public FileSys::FileBackend {
 public:
@@ -72,6 +76,15 @@ private:
     std::vector<u64> content_written;
     Service::FS::MediaType media_type;
 };
+
+/**
+ * Installs a CIA file from a specified file path.
+ * @param path file path of the CIA file to install
+ * @param update_callback callback function called during filesystem write
+ * @returns bool whether the install was successful
+ */
+bool InstallCIA(const std::string& path,
+                std::function<ProgressCallback>&& update_callback = nullptr);
 
 /**
  * Get the mediatype for an installed title
