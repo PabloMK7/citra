@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <algorithm>
 #include "common/common_types.h"
 #include "common/logging/log.h"
 #include "core/hle/kernel/address_arbiter.h"
@@ -14,6 +15,55 @@
 
 namespace Kernel {
 
+void AddressArbiter::WaitThread(SharedPtr<Thread> thread, VAddr wait_address) {
+    thread->wait_address = wait_address;
+    thread->status = THREADSTATUS_WAIT_ARB;
+    waiting_threads.emplace_back(std::move(thread));
+}
+
+void AddressArbiter::ResumeAllThreads(VAddr address) {
+    // Determine which threads are waiting on this address, those should be woken up.
+    auto itr = std::stable_partition(waiting_threads.begin(), waiting_threads.end(),
+                                     [address](const auto& thread) {
+                                         ASSERT_MSG(thread->status == THREADSTATUS_WAIT_ARB,
+                                                    "Inconsistent AddressArbiter state");
+                                         return thread->wait_address != address;
+                                     });
+
+    // Wake up all the found threads
+    std::for_each(itr, waiting_threads.end(), [](auto& thread) { thread->ResumeFromWait(); });
+
+    // Remove the woken up threads from the wait list.
+    waiting_threads.erase(itr, waiting_threads.end());
+}
+
+SharedPtr<Thread> AddressArbiter::ResumeHighestPriorityThread(VAddr address) {
+    // Determine which threads are waiting on this address, those should be considered for wakeup.
+    auto matches_start = std::stable_partition(
+        waiting_threads.begin(), waiting_threads.end(), [address](const auto& thread) {
+            ASSERT_MSG(thread->status == THREADSTATUS_WAIT_ARB,
+                       "Inconsistent AddressArbiter state");
+            return thread->wait_address != address;
+        });
+
+    // Iterate through threads, find highest priority thread that is waiting to be arbitrated.
+    // Note: The real kernel will pick the first thread in the list if more than one have the
+    // same highest priority value. Lower priority values mean higher priority.
+    auto itr = std::min_element(matches_start, waiting_threads.end(),
+                                [](const auto& lhs, const auto& rhs) {
+                                    return lhs->current_priority < rhs->current_priority;
+                                });
+
+    if (itr == waiting_threads.end())
+        return nullptr;
+
+    auto thread = *itr;
+    thread->ResumeFromWait();
+
+    waiting_threads.erase(itr);
+    return thread;
+}
+
 AddressArbiter::AddressArbiter() {}
 AddressArbiter::~AddressArbiter() {}
 
@@ -25,32 +75,32 @@ SharedPtr<AddressArbiter> AddressArbiter::Create(std::string name) {
     return address_arbiter;
 }
 
-ResultCode AddressArbiter::ArbitrateAddress(ArbitrationType type, VAddr address, s32 value,
-                                            u64 nanoseconds) {
+ResultCode AddressArbiter::ArbitrateAddress(SharedPtr<Thread> thread, ArbitrationType type,
+                                            VAddr address, s32 value, u64 nanoseconds) {
     switch (type) {
 
     // Signal thread(s) waiting for arbitrate address...
     case ArbitrationType::Signal:
         // Negative value means resume all threads
         if (value < 0) {
-            ArbitrateAllThreads(address);
+            ResumeAllThreads(address);
         } else {
             // Resume first N threads
             for (int i = 0; i < value; i++)
-                ArbitrateHighestPriorityThread(address);
+                ResumeHighestPriorityThread(address);
         }
         break;
 
     // Wait current thread (acquire the arbiter)...
     case ArbitrationType::WaitIfLessThan:
         if ((s32)Memory::Read32(address) < value) {
-            Kernel::WaitCurrentThread_ArbitrateAddress(address);
+            WaitThread(std::move(thread), address);
         }
         break;
     case ArbitrationType::WaitIfLessThanWithTimeout:
         if ((s32)Memory::Read32(address) < value) {
-            Kernel::WaitCurrentThread_ArbitrateAddress(address);
-            GetCurrentThread()->WakeAfterDelay(nanoseconds);
+            thread->WakeAfterDelay(nanoseconds);
+            WaitThread(std::move(thread), address);
         }
         break;
     case ArbitrationType::DecrementAndWaitIfLessThan: {
@@ -58,7 +108,7 @@ ResultCode AddressArbiter::ArbitrateAddress(ArbitrationType type, VAddr address,
         if (memory_value < value) {
             // Only change the memory value if the thread should wait
             Memory::Write32(address, (s32)memory_value - 1);
-            Kernel::WaitCurrentThread_ArbitrateAddress(address);
+            WaitThread(std::move(thread), address);
         }
         break;
     }
@@ -67,8 +117,8 @@ ResultCode AddressArbiter::ArbitrateAddress(ArbitrationType type, VAddr address,
         if (memory_value < value) {
             // Only change the memory value if the thread should wait
             Memory::Write32(address, (s32)memory_value - 1);
-            Kernel::WaitCurrentThread_ArbitrateAddress(address);
-            GetCurrentThread()->WakeAfterDelay(nanoseconds);
+            thread->WakeAfterDelay(nanoseconds);
+            WaitThread(std::move(thread), address);
         }
         break;
     }

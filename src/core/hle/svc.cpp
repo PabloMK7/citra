@@ -629,7 +629,8 @@ static ResultCode ArbitrateAddress(Kernel::Handle handle, u32 address, u32 type,
     if (arbiter == nullptr)
         return ERR_INVALID_HANDLE;
 
-    auto res = arbiter->ArbitrateAddress(static_cast<Kernel::ArbitrationType>(type), address, value,
+    auto res = arbiter->ArbitrateAddress(Kernel::GetCurrentThread(),
+                                         static_cast<Kernel::ArbitrationType>(type), address, value,
                                          nanoseconds);
 
     // TODO(Subv): Identify in which specific cases this call should cause a reschedule.
