@@ -149,7 +149,7 @@ public:
                 FileSys::TitleMetadata tmd = container.GetTitleMetadata();
                 FileUtil::IOFile file(
                     GetTitleContentPath(media_type, tmd.GetTitleID(), i, is_update),
-                    content_written[i] ? "a" : "w");
+                    content_written[i] ? "ab" : "wb");
 
                 if (!file.IsOpen())
                     return FileSys::ERROR_INSUFFICIENT_SPACE;
