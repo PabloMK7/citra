@@ -95,12 +95,14 @@ static bool LZSS_Decompress(const u8* compressed, u32 compressed_size, u8* decom
     return true;
 }
 
-NCCHContainer::NCCHContainer(const std::string& filepath) : filepath(filepath) {
+NCCHContainer::NCCHContainer(const std::string& filepath, u32 ncch_offset)
+    : filepath(filepath), ncch_offset(ncch_offset) {
     file = FileUtil::IOFile(filepath, "rb");
 }
 
-Loader::ResultStatus NCCHContainer::OpenFile(const std::string& filepath) {
+Loader::ResultStatus NCCHContainer::OpenFile(const std::string& filepath, u32 ncch_offset) {
     this->filepath = filepath;
+    this->ncch_offset = ncch_offset;
     file = FileUtil::IOFile(filepath, "rb");
 
     if (!file.IsOpen()) {
@@ -118,7 +120,7 @@ Loader::ResultStatus NCCHContainer::Load() {
 
     if (file.IsOpen()) {
         // Reset read pointer in case this file has been read before.
-        file.Seek(0, SEEK_SET);
+        file.Seek(ncch_offset, SEEK_SET);
 
         if (file.ReadBytes(&ncch_header, sizeof(NCCH_Header)) != sizeof(NCCH_Header))
             return Loader::ResultStatus::Error;
@@ -126,7 +128,7 @@ Loader::ResultStatus NCCHContainer::Load() {
         // Skip NCSD header and load first NCCH (NCSD is just a container of NCCH files)...
         if (Loader::MakeMagic('N', 'C', 'S', 'D') == ncch_header.magic) {
             LOG_DEBUG(Service_FS, "Only loading the first (bootable) NCCH within the NCSD file!");
-            ncch_offset = 0x4000;
+            ncch_offset += 0x4000;
             file.Seek(ncch_offset, SEEK_SET);
             file.ReadBytes(&ncch_header, sizeof(NCCH_Header));
         }
