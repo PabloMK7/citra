@@ -10,7 +10,7 @@ mkdir "$REV_NAME"
 
 cp build/src/citra/citra "$REV_NAME"
 cp -r build/src/citra_qt/citra-qt.app "$REV_NAME"
-cp build/src/citra/citra-room "$REV_NAME"
+cp build/src/dedicated_room/citra-room "$REV_NAME"
 
 # move qt libs into app bundle for deployment
 $(brew --prefix)/opt/qt5/bin/macdeployqt "${REV_NAME}/citra-qt.app"

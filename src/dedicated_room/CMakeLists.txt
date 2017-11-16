@@ -1,13 +1,12 @@
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/CMakeModules)
 
-set(SRCS
-            citra-room.cpp
-            citra-room.rc
-            )
+add_executable(citra-room
+    citra-room.cpp
+    citra-room.rc
+)
 
-create_directory_groups(${SRCS})
+create_target_directory_groups(citra-room)
 
-add_executable(citra-room ${SRCS})
 target_link_libraries(citra-room PRIVATE common core network)
 target_link_libraries(citra-room PRIVATE glad)
 if (MSVC)
