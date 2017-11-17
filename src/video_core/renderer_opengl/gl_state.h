@@ -144,7 +144,7 @@ public:
     OpenGLState();
 
     /// Get the currently active OpenGL state
-    static OpenGLState& GetCurState() {
+    static OpenGLState GetCurState() {
         return cur_state;
     }
 
