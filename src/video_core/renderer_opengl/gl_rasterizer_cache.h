@@ -71,8 +71,8 @@ struct CachedSurface {
         Invalid = 4,
     };
 
-    static unsigned int GetFormatBpp(CachedSurface::PixelFormat format) {
-        static const std::array<unsigned int, 18> bpp_table = {
+    static constexpr unsigned int GetFormatBpp(CachedSurface::PixelFormat format) {
+        constexpr std::array<unsigned int, 18> bpp_table = {
             32, // RGBA8
             24, // RGB8
             16, // RGB5A1
@@ -142,7 +142,7 @@ struct CachedSurface {
         return false;
     }
 
-    static SurfaceType GetFormatType(PixelFormat pixel_format) {
+    static constexpr SurfaceType GetFormatType(PixelFormat pixel_format) {
         if ((unsigned int)pixel_format < 5) {
             return SurfaceType::Color;
         }
