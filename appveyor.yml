@@ -171,3 +171,7 @@ deploy:
   prerelease: false
   on:
     appveyor_repo_tag: true
+
+notifications:
+  - provider: Webhook
+    url: https://api.citra-emu.org/code/appveyor/notify
