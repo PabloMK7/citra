@@ -129,6 +129,39 @@ ResultVal<VMManager::VMAHandle> VMManager::MapMMIO(VAddr target, PAddr paddr, u3
     return MakeResult<VMAHandle>(MergeAdjacent(vma_handle));
 }
 
+ResultCode VMManager::ChangeMemoryState(VAddr target, u32 size, MemoryState expected_state,
+                                        VMAPermission expected_perms, MemoryState new_state,
+                                        VMAPermission new_perms) {
+    VAddr target_end = target + size;
+    VMAIter begin_vma = StripIterConstness(FindVMA(target));
+    VMAIter i_end = vma_map.lower_bound(target_end);
+
+    if (begin_vma == vma_map.end())
+        return ERR_INVALID_ADDRESS;
+
+    for (auto i = begin_vma; i != i_end; ++i) {
+        auto& vma = i->second;
+        if (vma.meminfo_state != expected_state) {
+            return ERR_INVALID_ADDRESS_STATE;
+        }
+        u32 perms = static_cast<u32>(expected_perms);
+        if ((static_cast<u32>(vma.permissions) & perms) != perms) {
+            return ERR_INVALID_ADDRESS_STATE;
+        }
+    }
+
+    CASCADE_RESULT(auto vma, CarveVMARange(target, size));
+    ASSERT(vma->second.size == size);
+
+    vma->second.permissions = new_perms;
+    vma->second.meminfo_state = new_state;
+    UpdatePageTableForVMA(vma->second);
+
+    MergeAdjacent(vma);
+
+    return RESULT_SUCCESS;
+}
+
 VMManager::VMAIter VMManager::Unmap(VMAIter vma_handle) {
     VirtualMemoryArea& vma = vma_handle->second;
     vma.type = VMAType::Free;
