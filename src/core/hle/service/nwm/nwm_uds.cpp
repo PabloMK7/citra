@@ -771,9 +771,9 @@ static void BeginHostingNetwork(Interface* self) {
     const u32 passphrase_size = rp.Pop<u32>();
 
     size_t desc_size;
-    const VAddr network_info_address = rp.PopStaticBuffer(&desc_size, false);
+    const VAddr network_info_address = rp.PopStaticBuffer(&desc_size);
     ASSERT(desc_size == sizeof(NetworkInfo));
-    const VAddr passphrase_address = rp.PopStaticBuffer(&desc_size, false);
+    const VAddr passphrase_address = rp.PopStaticBuffer(&desc_size);
     ASSERT(desc_size == passphrase_size);
 
     // TODO(Subv): Store the passphrase and verify it when attempting a connection.
@@ -907,7 +907,7 @@ static void SendTo(Interface* self) {
     u32 flags = rp.Pop<u32>();
 
     size_t desc_size;
-    const VAddr input_address = rp.PopStaticBuffer(&desc_size, false);
+    const VAddr input_address = rp.PopStaticBuffer(&desc_size);
     ASSERT(desc_size >= data_size);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
@@ -1093,7 +1093,7 @@ static void SetApplicationData(Interface* self) {
     u32 size = rp.Pop<u32>();
 
     size_t desc_size;
-    const VAddr address = rp.PopStaticBuffer(&desc_size, false);
+    const VAddr address = rp.PopStaticBuffer(&desc_size);
     ASSERT(desc_size == size);
 
     LOG_DEBUG(Service_NWM, "called");

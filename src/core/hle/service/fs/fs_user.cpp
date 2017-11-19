@@ -72,7 +72,7 @@ static void OpenFile(Service::Interface* self) {
     FileSys::Mode mode;
     mode.hex = rp.Pop<u32>();
     u32 attributes = rp.Pop<u32>(); // TODO(Link Mauve): do something with those attributes.
-    VAddr filename_ptr = rp.PopStaticBuffer();
+    VAddr filename_ptr = rp.PopStaticBuffer(nullptr);
     FileSys::Path file_path(filename_type, filename_size, filename_ptr);
 
     LOG_DEBUG(Service_FS, "path=%s, mode=%u attrs=%u", file_path.DebugStr().c_str(), mode.hex,

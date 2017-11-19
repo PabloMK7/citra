@@ -433,7 +433,7 @@ static void FinalizeIrNop(Interface* self) {
 static void SendIrNop(Interface* self) {
     IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x0D, 1, 2);
     const u32 size = rp.Pop<u32>();
-    const VAddr address = rp.PopStaticBuffer();
+    const VAddr address = rp.PopStaticBuffer(nullptr);
 
     std::vector<u8> buffer(size);
     Memory::ReadBlock(address, buffer.data(), size);
