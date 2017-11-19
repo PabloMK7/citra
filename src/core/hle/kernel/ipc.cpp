@@ -17,6 +17,7 @@ ResultCode TranslateCommandBuffer(SharedPtr<Thread> src_thread, SharedPtr<Thread
                                   VAddr src_address, VAddr dst_address) {
 
     auto& src_process = src_thread->owner_process;
+    auto& dst_process = dst_thread->owner_process;
 
     IPC::Header header;
     // TODO(Subv): Replace by Memory::Read32 when possible.
@@ -80,13 +81,46 @@ ResultCode TranslateCommandBuffer(SharedPtr<Thread> src_thread, SharedPtr<Thread
             cmd_buf[i++] = src_process->process_id;
             break;
         }
+        case IPC::DescriptorType::StaticBuffer: {
+            IPC::StaticBufferDescInfo bufferInfo{descriptor};
+            VAddr static_buffer_src_address = cmd_buf[i];
+
+            std::vector<u8> data(bufferInfo.size);
+            Memory::ReadBlock(*src_process, static_buffer_src_address, data.data(), data.size());
+
+            // Grab the address that the target thread set up to receive the response static buffer
+            // and write our data there. The static buffers area is located right after the command
+            // buffer area.
+            struct StaticBuffer {
+                IPC::StaticBufferDescInfo descriptor;
+                VAddr address;
+            };
+
+            static_assert(sizeof(StaticBuffer) == 8, "StaticBuffer struct has incorrect size.");
+
+            StaticBuffer target_buffer;
+
+            u32 static_buffer_offset = IPC::COMMAND_BUFFER_LENGTH * sizeof(u32) +
+                                       sizeof(StaticBuffer) * bufferInfo.buffer_id;
+            Memory::ReadBlock(*dst_process, dst_address + static_buffer_offset, &target_buffer,
+                              sizeof(target_buffer));
+
+            // Note: The real kernel doesn't seem to have any error recovery mechanisms for this
+            // case.
+            ASSERT_MSG(target_buffer.descriptor.size >= data.size(),
+                       "Static buffer data is too big");
+
+            Memory::WriteBlock(*dst_process, target_buffer.address, data.data(), data.size());
+
+            cmd_buf[i++] = target_buffer.address;
+            break;
+        }
         default:
             UNIMPLEMENTED_MSG("Unsupported handle translation: 0x%08X", descriptor);
         }
     }
 
-    Memory::WriteBlock(*dst_thread->owner_process, dst_address, cmd_buf.data(),
-                       command_size * sizeof(u32));
+    Memory::WriteBlock(*dst_process, dst_address, cmd_buf.data(), command_size * sizeof(u32));
 
     return RESULT_SUCCESS;
 }
