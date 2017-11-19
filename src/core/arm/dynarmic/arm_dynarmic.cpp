@@ -168,7 +168,9 @@ void ARM_Dynarmic::PrepareReschedule() {
 }
 
 void ARM_Dynarmic::ClearInstructionCache() {
-    jit->ClearCache();
+    for (const auto& j : jits) {
+        j.second->ClearCache();
+    }
 }
 
 void ARM_Dynarmic::PageTableChanged() {
