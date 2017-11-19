@@ -16,7 +16,13 @@ namespace Network {
 /// Information about the received WiFi packets.
 /// Acts as our own 802.11 header.
 struct WifiPacket {
-    enum class PacketType : u8 { Beacon, Data, Authentication, AssociationResponse };
+    enum class PacketType : u8 {
+        Beacon,
+        Data,
+        Authentication,
+        AssociationResponse,
+        Deauthentication
+    };
     PacketType type;      ///< The type of 802.11 frame.
     std::vector<u8> data; ///< Raw 802.11 frame data, starting at the management frame header
                           /// for management frames.
@@ -49,6 +55,7 @@ public:
         NameCollision,  ///< Somebody is already using this name
         MacCollision,   ///< Somebody is already using that mac-address
         WrongVersion,   ///< The room version is not the same as for this RoomMember
+        WrongPassword,  ///< The password doesn't match the one from the Room
         CouldNotConnect ///< The room is not responding to a connection attempt
     };
 
@@ -109,8 +116,8 @@ public:
      * This may fail if the username is already taken.
      */
     void Join(const std::string& nickname, const char* server_addr = "127.0.0.1",
-              const u16 serverPort = DefaultRoomPort, const u16 clientPort = 0,
-              const MacAddress& preferred_mac = NoPreferredMac);
+              const u16 server_port = DefaultRoomPort, const u16 client_port = 0,
+              const MacAddress& preferred_mac = NoPreferredMac, const std::string& password = "");
 
     /**
      * Sends a WiFi packet to the room.
