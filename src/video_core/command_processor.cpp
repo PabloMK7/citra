@@ -119,224 +119,6 @@ static void WriteUniformFloatReg(ShaderRegs& config, Shader::ShaderSetup& setup,
     }
 }
 
-static void LoadDefaultVertexAttributes(u32 register_value) {
-    auto& regs = g_state.regs;
-
-    // TODO: Does actual hardware indeed keep an intermediate buffer or does
-    //       it directly write the values?
-    default_attr_write_buffer[default_attr_counter++] = register_value;
-
-    // Default attributes are written in a packed format such that four float24 values are encoded
-    // in three 32-bit numbers.
-    // We write to internal memory once a full such vector is written.
-    if (default_attr_counter >= 3) {
-        default_attr_counter = 0;
-
-        auto& setup = regs.pipeline.vs_default_attributes_setup;
-
-        if (setup.index >= 16) {
-            LOG_ERROR(HW_GPU, "Invalid VS default attribute index %d", (int)setup.index);
-            return;
-        }
-
-        Math::Vec4<float24> attribute;
-
-        // NOTE: The destination component order indeed is "backwards"
-        attribute.w = float24::FromRaw(default_attr_write_buffer[0] >> 8);
-        attribute.z = float24::FromRaw(((default_attr_write_buffer[0] & 0xFF) << 16) |
-                                       ((default_attr_write_buffer[1] >> 16) & 0xFFFF));
-        attribute.y = float24::FromRaw(((default_attr_write_buffer[1] & 0xFFFF) << 8) |
-                                       ((default_attr_write_buffer[2] >> 24) & 0xFF));
-        attribute.x = float24::FromRaw(default_attr_write_buffer[2] & 0xFFFFFF);
-
-        LOG_TRACE(HW_GPU, "Set default VS attribute %x to (%f %f %f %f)", (int)setup.index,
-                  attribute.x.ToFloat32(), attribute.y.ToFloat32(), attribute.z.ToFloat32(),
-                  attribute.w.ToFloat32());
-
-        // TODO: Verify that this actually modifies the register!
-        if (setup.index < 15) {
-            g_state.input_default_attributes.attr[setup.index] = attribute;
-            setup.index++;
-        } else {
-            // Put each attribute into an immediate input buffer.  When all specified immediate
-            // attributes are present, the Vertex Shader is invoked and everything is sent to
-            // the primitive assembler.
-
-            auto& immediate_input = g_state.immediate.input_vertex;
-            auto& immediate_attribute_id = g_state.immediate.current_attribute;
-
-            immediate_input.attr[immediate_attribute_id] = attribute;
-
-            if (immediate_attribute_id < regs.pipeline.max_input_attrib_index) {
-                immediate_attribute_id += 1;
-            } else {
-                MICROPROFILE_SCOPE(GPU_Drawing);
-                immediate_attribute_id = 0;
-
-                auto* shader_engine = Shader::GetEngine();
-                shader_engine->SetupBatch(g_state.vs, regs.vs.main_offset);
-
-                // Send to vertex shader
-                if (g_debug_context)
-                    g_debug_context->OnEvent(DebugContext::Event::VertexShaderInvocation,
-                                             static_cast<void*>(&immediate_input));
-                Shader::UnitState shader_unit;
-                Shader::AttributeBuffer output{};
-
-                shader_unit.LoadInput(regs.vs, immediate_input);
-                shader_engine->Run(g_state.vs, shader_unit);
-                shader_unit.WriteOutput(regs.vs, output);
-
-                // Send to geometry pipeline
-                if (g_state.immediate.reset_geometry_pipeline) {
-                    g_state.geometry_pipeline.Reconfigure();
-                    g_state.immediate.reset_geometry_pipeline = false;
-                }
-                ASSERT(!g_state.geometry_pipeline.NeedIndexInput());
-                g_state.geometry_pipeline.Setup(shader_engine);
-                g_state.geometry_pipeline.SubmitVertex(output);
-
-                // TODO: If drawing after every immediate mode triangle kills performance,
-                // change it to flush triangles whenever a drawing config register changes
-                // See: https://github.com/citra-emu/citra/pull/2866#issuecomment-327011550
-                VideoCore::g_renderer->Rasterizer()->DrawTriangles();
-                if (g_debug_context) {
-                    g_debug_context->OnEvent(DebugContext::Event::FinishedPrimitiveBatch, nullptr);
-                }
-            }
-        }
-    }
-}
-
-static void Draw(u32 command_id) {
-    MICROPROFILE_SCOPE(GPU_Drawing);
-    auto& regs = g_state.regs;
-
-#if PICA_LOG_TEV
-    DebugUtils::DumpTevStageConfig(regs.GetTevStages());
-#endif
-    if (g_debug_context)
-        g_debug_context->OnEvent(DebugContext::Event::IncomingPrimitiveBatch, nullptr);
-
-    // Processes information about internal vertex attributes to figure out how a vertex is
-    // loaded.
-    // Later, these can be compiled and cached.
-    const u32 base_address = regs.pipeline.vertex_attributes.GetPhysicalBaseAddress();
-    VertexLoader loader(regs.pipeline);
-
-    // Load vertices
-    bool is_indexed = (command_id == PICA_REG_INDEX(pipeline.trigger_draw_indexed));
-
-    const auto& index_info = regs.pipeline.index_array;
-    const u8* index_address_8 = Memory::GetPhysicalPointer(base_address + index_info.offset);
-    const u16* index_address_16 = reinterpret_cast<const u16*>(index_address_8);
-    bool index_u16 = index_info.format != 0;
-
-    PrimitiveAssembler<Shader::OutputVertex>& primitive_assembler = g_state.primitive_assembler;
-
-    if (g_debug_context && g_debug_context->recorder) {
-        for (int i = 0; i < 3; ++i) {
-            const auto texture = regs.texturing.GetTextures()[i];
-            if (!texture.enabled)
-                continue;
-
-            u8* texture_data = Memory::GetPhysicalPointer(texture.config.GetPhysicalAddress());
-            g_debug_context->recorder->MemoryAccessed(
-                texture_data, Pica::TexturingRegs::NibblesPerPixel(texture.format) *
-                                  texture.config.width / 2 * texture.config.height,
-                texture.config.GetPhysicalAddress());
-        }
-    }
-
-    DebugUtils::MemoryAccessTracker memory_accesses;
-
-    // Simple circular-replacement vertex cache
-    // The size has been tuned for optimal balance between hit-rate and the cost of lookup
-    const size_t VERTEX_CACHE_SIZE = 32;
-    std::array<u16, VERTEX_CACHE_SIZE> vertex_cache_ids;
-    std::array<Shader::AttributeBuffer, VERTEX_CACHE_SIZE> vertex_cache;
-    Shader::AttributeBuffer vs_output;
-
-    unsigned int vertex_cache_pos = 0;
-    vertex_cache_ids.fill(-1);
-
-    auto* shader_engine = Shader::GetEngine();
-    Shader::UnitState shader_unit;
-
-    shader_engine->SetupBatch(g_state.vs, regs.vs.main_offset);
-
-    g_state.geometry_pipeline.Reconfigure();
-    g_state.geometry_pipeline.Setup(shader_engine);
-    if (g_state.geometry_pipeline.NeedIndexInput())
-        ASSERT(is_indexed);
-
-    for (unsigned int index = 0; index < regs.pipeline.num_vertices; ++index) {
-        // Indexed rendering doesn't use the start offset
-        unsigned int vertex = is_indexed
-                                  ? (index_u16 ? index_address_16[index] : index_address_8[index])
-                                  : (index + regs.pipeline.vertex_offset);
-
-        // -1 is a common special value used for primitive restart. Since it's unknown if
-        // the PICA supports it, and it would mess up the caching, guard against it here.
-        ASSERT(vertex != -1);
-
-        bool vertex_cache_hit = false;
-
-        if (is_indexed) {
-            if (g_state.geometry_pipeline.NeedIndexInput()) {
-                g_state.geometry_pipeline.SubmitIndex(vertex);
-                continue;
-            }
-
-            if (g_debug_context && Pica::g_debug_context->recorder) {
-                int size = index_u16 ? 2 : 1;
-                memory_accesses.AddAccess(base_address + index_info.offset + size * index, size);
-            }
-
-            for (unsigned int i = 0; i < VERTEX_CACHE_SIZE; ++i) {
-                if (vertex == vertex_cache_ids[i]) {
-                    vs_output = vertex_cache[i];
-                    vertex_cache_hit = true;
-                    break;
-                }
-            }
-        }
-
-        if (!vertex_cache_hit) {
-            // Initialize data for the current vertex
-            Shader::AttributeBuffer input;
-            loader.LoadVertex(base_address, index, vertex, input, memory_accesses);
-
-            // Send to vertex shader
-            if (g_debug_context)
-                g_debug_context->OnEvent(DebugContext::Event::VertexShaderInvocation,
-                                         (void*)&input);
-            shader_unit.LoadInput(regs.vs, input);
-            shader_engine->Run(g_state.vs, shader_unit);
-            shader_unit.WriteOutput(regs.vs, vs_output);
-
-            if (is_indexed) {
-                vertex_cache[vertex_cache_pos] = vs_output;
-                vertex_cache_ids[vertex_cache_pos] = vertex;
-                vertex_cache_pos = (vertex_cache_pos + 1) % VERTEX_CACHE_SIZE;
-            }
-        }
-
-        // Send to geometry pipeline
-        g_state.geometry_pipeline.SubmitVertex(vs_output);
-    }
-
-    for (auto& range : memory_accesses.ranges) {
-        g_debug_context->recorder->MemoryAccessed(Memory::GetPhysicalPointer(range.first),
-                                                  range.second, range.first);
-    }
-
-    VideoCore::g_renderer->Rasterizer()->DrawTriangles();
-    if (g_debug_context) {
-        g_debug_context->OnEvent(DebugContext::Event::FinishedPrimitiveBatch, nullptr);
-    }
-}
-
 static void WritePicaReg(u32 id, u32 value, u32 mask) {
     auto& regs = g_state.regs;
 
@@ -386,9 +168,95 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
     // Load default vertex input attributes
     case PICA_REG_INDEX_WORKAROUND(pipeline.vs_default_attributes_setup.set_value[0], 0x233):
     case PICA_REG_INDEX_WORKAROUND(pipeline.vs_default_attributes_setup.set_value[1], 0x234):
-    case PICA_REG_INDEX_WORKAROUND(pipeline.vs_default_attributes_setup.set_value[2], 0x235):
-        LoadDefaultVertexAttributes(value);
+    case PICA_REG_INDEX_WORKAROUND(pipeline.vs_default_attributes_setup.set_value[2], 0x235): {
+        // TODO: Does actual hardware indeed keep an intermediate buffer or does
+        //       it directly write the values?
+        default_attr_write_buffer[default_attr_counter++] = value;
+
+        // Default attributes are written in a packed format such that four float24 values are
+        // encoded in
+        // three 32-bit numbers. We write to internal memory once a full such vector is
+        // written.
+        if (default_attr_counter >= 3) {
+            default_attr_counter = 0;
+
+            auto& setup = regs.pipeline.vs_default_attributes_setup;
+
+            if (setup.index >= 16) {
+                LOG_ERROR(HW_GPU, "Invalid VS default attribute index %d", (int)setup.index);
+                break;
+            }
+
+            Math::Vec4<float24> attribute;
+
+            // NOTE: The destination component order indeed is "backwards"
+            attribute.w = float24::FromRaw(default_attr_write_buffer[0] >> 8);
+            attribute.z = float24::FromRaw(((default_attr_write_buffer[0] & 0xFF) << 16) |
+                                           ((default_attr_write_buffer[1] >> 16) & 0xFFFF));
+            attribute.y = float24::FromRaw(((default_attr_write_buffer[1] & 0xFFFF) << 8) |
+                                           ((default_attr_write_buffer[2] >> 24) & 0xFF));
+            attribute.x = float24::FromRaw(default_attr_write_buffer[2] & 0xFFFFFF);
+
+            LOG_TRACE(HW_GPU, "Set default VS attribute %x to (%f %f %f %f)", (int)setup.index,
+                      attribute.x.ToFloat32(), attribute.y.ToFloat32(), attribute.z.ToFloat32(),
+                      attribute.w.ToFloat32());
+
+            // TODO: Verify that this actually modifies the register!
+            if (setup.index < 15) {
+                g_state.input_default_attributes.attr[setup.index] = attribute;
+                setup.index++;
+            } else {
+                // Put each attribute into an immediate input buffer.  When all specified immediate
+                // attributes are present, the Vertex Shader is invoked and everything is sent to
+                // the primitive assembler.
+
+                auto& immediate_input = g_state.immediate.input_vertex;
+                auto& immediate_attribute_id = g_state.immediate.current_attribute;
+
+                immediate_input.attr[immediate_attribute_id] = attribute;
+
+                if (immediate_attribute_id < regs.pipeline.max_input_attrib_index) {
+                    immediate_attribute_id += 1;
+                } else {
+                    MICROPROFILE_SCOPE(GPU_Drawing);
+                    immediate_attribute_id = 0;
+
+                    auto* shader_engine = Shader::GetEngine();
+                    shader_engine->SetupBatch(g_state.vs, regs.vs.main_offset);
+
+                    // Send to vertex shader
+                    if (g_debug_context)
+                        g_debug_context->OnEvent(DebugContext::Event::VertexShaderInvocation,
+                                                 static_cast<void*>(&immediate_input));
+                    Shader::UnitState shader_unit;
+                    Shader::AttributeBuffer output{};
+
+                    shader_unit.LoadInput(regs.vs, immediate_input);
+                    shader_engine->Run(g_state.vs, shader_unit);
+                    shader_unit.WriteOutput(regs.vs, output);
+
+                    // Send to geometry pipeline
+                    if (g_state.immediate.reset_geometry_pipeline) {
+                        g_state.geometry_pipeline.Reconfigure();
+                        g_state.immediate.reset_geometry_pipeline = false;
+                    }
+                    ASSERT(!g_state.geometry_pipeline.NeedIndexInput());
+                    g_state.geometry_pipeline.Setup(shader_engine);
+                    g_state.geometry_pipeline.SubmitVertex(output);
+
+                    // TODO: If drawing after every immediate mode triangle kills performance,
+                    // change it to flush triangles whenever a drawing config register changes
+                    // See: https://github.com/citra-emu/citra/pull/2866#issuecomment-327011550
+                    VideoCore::g_renderer->Rasterizer()->DrawTriangles();
+                    if (g_debug_context) {
+                        g_debug_context->OnEvent(DebugContext::Event::FinishedPrimitiveBatch,
+                                                 nullptr);
+                    }
+                }
+            }
+        }
         break;
+    }
 
     case PICA_REG_INDEX(pipeline.gpu_mode):
         // This register likely just enables vertex processing and doesn't need any special handling
@@ -407,9 +275,136 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
 
     // It seems like these trigger vertex rendering
     case PICA_REG_INDEX(pipeline.trigger_draw):
-    case PICA_REG_INDEX(pipeline.trigger_draw_indexed):
-        Draw(id);
+    case PICA_REG_INDEX(pipeline.trigger_draw_indexed): {
+        MICROPROFILE_SCOPE(GPU_Drawing);
+
+#if PICA_LOG_TEV
+        DebugUtils::DumpTevStageConfig(regs.GetTevStages());
+#endif
+        if (g_debug_context)
+            g_debug_context->OnEvent(DebugContext::Event::IncomingPrimitiveBatch, nullptr);
+
+        // Processes information about internal vertex attributes to figure out how a vertex is
+        // loaded.
+        // Later, these can be compiled and cached.
+        const u32 base_address = regs.pipeline.vertex_attributes.GetPhysicalBaseAddress();
+        VertexLoader loader(regs.pipeline);
+
+        // Load vertices
+        bool is_indexed = (id == PICA_REG_INDEX(pipeline.trigger_draw_indexed));
+
+        const auto& index_info = regs.pipeline.index_array;
+        const u8* index_address_8 = Memory::GetPhysicalPointer(base_address + index_info.offset);
+        const u16* index_address_16 = reinterpret_cast<const u16*>(index_address_8);
+        bool index_u16 = index_info.format != 0;
+
+        PrimitiveAssembler<Shader::OutputVertex>& primitive_assembler = g_state.primitive_assembler;
+
+        if (g_debug_context && g_debug_context->recorder) {
+            for (int i = 0; i < 3; ++i) {
+                const auto texture = regs.texturing.GetTextures()[i];
+                if (!texture.enabled)
+                    continue;
+
+                u8* texture_data = Memory::GetPhysicalPointer(texture.config.GetPhysicalAddress());
+                g_debug_context->recorder->MemoryAccessed(
+                    texture_data, Pica::TexturingRegs::NibblesPerPixel(texture.format) *
+                                      texture.config.width / 2 * texture.config.height,
+                    texture.config.GetPhysicalAddress());
+            }
+        }
+
+        DebugUtils::MemoryAccessTracker memory_accesses;
+
+        // Simple circular-replacement vertex cache
+        // The size has been tuned for optimal balance between hit-rate and the cost of lookup
+        const size_t VERTEX_CACHE_SIZE = 32;
+        std::array<u16, VERTEX_CACHE_SIZE> vertex_cache_ids;
+        std::array<Shader::AttributeBuffer, VERTEX_CACHE_SIZE> vertex_cache;
+        Shader::AttributeBuffer vs_output;
+
+        unsigned int vertex_cache_pos = 0;
+        vertex_cache_ids.fill(-1);
+
+        auto* shader_engine = Shader::GetEngine();
+        Shader::UnitState shader_unit;
+
+        shader_engine->SetupBatch(g_state.vs, regs.vs.main_offset);
+
+        g_state.geometry_pipeline.Reconfigure();
+        g_state.geometry_pipeline.Setup(shader_engine);
+        if (g_state.geometry_pipeline.NeedIndexInput())
+            ASSERT(is_indexed);
+
+        for (unsigned int index = 0; index < regs.pipeline.num_vertices; ++index) {
+            // Indexed rendering doesn't use the start offset
+            unsigned int vertex =
+                is_indexed ? (index_u16 ? index_address_16[index] : index_address_8[index])
+                           : (index + regs.pipeline.vertex_offset);
+
+            // -1 is a common special value used for primitive restart. Since it's unknown if
+            // the PICA supports it, and it would mess up the caching, guard against it here.
+            ASSERT(vertex != -1);
+
+            bool vertex_cache_hit = false;
+
+            if (is_indexed) {
+                if (g_state.geometry_pipeline.NeedIndexInput()) {
+                    g_state.geometry_pipeline.SubmitIndex(vertex);
+                    continue;
+                }
+
+                if (g_debug_context && Pica::g_debug_context->recorder) {
+                    int size = index_u16 ? 2 : 1;
+                    memory_accesses.AddAccess(base_address + index_info.offset + size * index,
+                                              size);
+                }
+
+                for (unsigned int i = 0; i < VERTEX_CACHE_SIZE; ++i) {
+                    if (vertex == vertex_cache_ids[i]) {
+                        vs_output = vertex_cache[i];
+                        vertex_cache_hit = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!vertex_cache_hit) {
+                // Initialize data for the current vertex
+                Shader::AttributeBuffer input;
+                loader.LoadVertex(base_address, index, vertex, input, memory_accesses);
+
+                // Send to vertex shader
+                if (g_debug_context)
+                    g_debug_context->OnEvent(DebugContext::Event::VertexShaderInvocation,
+                                             (void*)&input);
+                shader_unit.LoadInput(regs.vs, input);
+                shader_engine->Run(g_state.vs, shader_unit);
+                shader_unit.WriteOutput(regs.vs, vs_output);
+
+                if (is_indexed) {
+                    vertex_cache[vertex_cache_pos] = vs_output;
+                    vertex_cache_ids[vertex_cache_pos] = vertex;
+                    vertex_cache_pos = (vertex_cache_pos + 1) % VERTEX_CACHE_SIZE;
+                }
+            }
+
+            // Send to geometry pipeline
+            g_state.geometry_pipeline.SubmitVertex(vs_output);
+        }
+
+        for (auto& range : memory_accesses.ranges) {
+            g_debug_context->recorder->MemoryAccessed(Memory::GetPhysicalPointer(range.first),
+                                                      range.second, range.first);
+        }
+
+        VideoCore::g_renderer->Rasterizer()->DrawTriangles();
+        if (g_debug_context) {
+            g_debug_context->OnEvent(DebugContext::Event::FinishedPrimitiveBatch, nullptr);
+        }
+
         break;
+    }
 
     case PICA_REG_INDEX(gs.bool_uniforms):
         WriteUniformBoolReg(g_state.gs, g_state.regs.gs.bool_uniforms.Value());
