@@ -26,14 +26,15 @@ install:
   - git submodule update --init --recursive
   - ps: |
         if ($env:BUILD_TYPE -eq 'mingw') {
-          $dependencies = "mingw64/mingw-w64-x86_64-cmake",
-                          "mingw64/mingw-w64-x86_64-qt5",
+          $dependencies = "mingw64/mingw-w64-x86_64-qt5",
                           "mingw64/mingw-w64-x86_64-curl"
           # redirect err to null to prevent warnings from becoming errors
           # workaround to prevent pacman from failing due to cyclical dependencies
           C:\msys64\usr\bin\bash -lc "pacman --noconfirm -S mingw64/mingw-w64-x86_64-freetype mingw64/mingw-w64-x86_64-fontconfig" 2> $null
           C:\msys64\usr\bin\bash -lc "pacman --noconfirm -U http://repo.msys2.org/mingw/x86_64/mingw-w64-x86_64-SDL2-2.0.5-2-any.pkg.tar.xz" 2> $null
           C:\msys64\usr\bin\bash -lc "pacman --noconfirm -S $dependencies" 2> $null
+          # stick to cmake 3.9.6 since on lower versions it could happen that cmake generates a Makefile that links against gcc_eh
+          C:\msys64\usr\bin\bash -lc "pacman --noconfirm -U http://repo.msys2.org/mingw/x86_64/mingw-w64-x86_64-cmake-3.9.6-1-any.pkg.tar.xz" 2> $null
         }
 
 before_build:
