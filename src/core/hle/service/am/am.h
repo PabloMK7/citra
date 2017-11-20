@@ -42,6 +42,15 @@ enum class CIAInstallState : u32 {
     ContentWritten,
 };
 
+enum class InstallStatus : u32 {
+    Success,
+    ErrorFailedToOpenFile,
+    ErrorFileNotFound,
+    ErrorAborted,
+    ErrorInvalid,
+    ErrorEncrypted,
+};
+
 // Progress callback for InstallCIA, recieves bytes written and total bytes
 using ProgressCallback = void(size_t, size_t);
 
@@ -83,8 +92,8 @@ private:
  * @param update_callback callback function called during filesystem write
  * @returns bool whether the install was successful
  */
-bool InstallCIA(const std::string& path,
-                std::function<ProgressCallback>&& update_callback = nullptr);
+InstallStatus InstallCIA(const std::string& path,
+                         std::function<ProgressCallback>&& update_callback = nullptr);
 
 /**
  * Get the mediatype for an installed title

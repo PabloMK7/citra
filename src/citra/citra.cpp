@@ -98,7 +98,8 @@ int main(int argc, char** argv) {
                 const auto cia_progress = [](size_t written, size_t total) {
                     LOG_INFO(Frontend, "%02zu%%", (written * 100 / total));
                 };
-                if (!Service::AM::InstallCIA(std::string(optarg), cia_progress))
+                if (Service::AM::InstallCIA(std::string(optarg), cia_progress) !=
+                    Service::AM::InstallStatus::Success)
                     errno = EINVAL;
                 if (errno != 0)
                     exit(1);
