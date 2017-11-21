@@ -297,6 +297,14 @@ InstallStatus InstallCIA(const std::string& path,
         Service::AM::CIAFile installFile(
             Service::AM::GetTitleMediaType(container.GetTitleMetadata().GetTitleID()));
 
+        for (size_t i = 0; i < container.GetTitleMetadata().GetContentCount(); i++) {
+            if (container.GetTitleMetadata().GetContentTypeByIndex(i) &
+                FileSys::TMDContentTypeFlag::Encrypted) {
+                LOG_ERROR(Service_AM, "File %s is encrypted! Aborting...", path.c_str());
+                return InstallStatus::ErrorEncrypted;
+            }
+        }
+
         FileUtil::IOFile file(path, "rb");
         if (!file.IsOpen())
             return InstallStatus::ErrorFailedToOpenFile;
