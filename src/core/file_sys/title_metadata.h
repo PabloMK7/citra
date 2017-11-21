@@ -29,7 +29,7 @@ enum TMDSignatureType : u32 {
 };
 
 enum TMDContentTypeFlag : u16 {
-    Encrypted = 1 << 1,
+    Encrypted = 1 << 0,
     Disc = 1 << 2,
     CFM = 1 << 3,
     Optional = 1 << 14,
