@@ -4,8 +4,12 @@
 
 #pragma once
 
+#include <functional>
 #include <string>
 #include "common/common_types.h"
+#include "core/file_sys/cia_container.h"
+#include "core/file_sys/file_backend.h"
+#include "core/hle/result.h"
 
 namespace Service {
 namespace FS {
@@ -37,6 +41,66 @@ enum class CIAInstallState : u32 {
     TMDLoaded,
     ContentWritten,
 };
+
+enum class InstallStatus : u32 {
+    Success,
+    ErrorFailedToOpenFile,
+    ErrorFileNotFound,
+    ErrorAborted,
+    ErrorInvalid,
+    ErrorEncrypted,
+};
+
+// Progress callback for InstallCIA, recieves bytes written and total bytes
+using ProgressCallback = void(size_t, size_t);
+
+// A file handled returned for CIAs to be written into and subsequently installed.
+class CIAFile final : public FileSys::FileBackend {
+public:
+    explicit CIAFile(Service::FS::MediaType media_type) : media_type(media_type) {}
+    ~CIAFile() {
+        Close();
+    }
+
+    ResultVal<size_t> Read(u64 offset, size_t length, u8* buffer) const override;
+    ResultVal<size_t> WriteTitleMetadata(u64 offset, size_t length, const u8* buffer);
+    ResultVal<size_t> WriteContentData(u64 offset, size_t length, const u8* buffer);
+    ResultVal<size_t> Write(u64 offset, size_t length, bool flush, const u8* buffer) override;
+    u64 GetSize() const override;
+    bool SetSize(u64 size) const override;
+    bool Close() const override;
+    void Flush() const override;
+
+private:
+    // Whether it's installing an update, and what step of installation it is at
+    bool is_update = false;
+    CIAInstallState install_state = CIAInstallState::InstallStarted;
+
+    // How much has been written total, CIAContainer for the installing CIA, buffer of all data
+    // prior to content data, how much of each content index has been written, and where the CIA
+    // is being installed to
+    u64 written = 0;
+    FileSys::CIAContainer container;
+    std::vector<u8> data;
+    std::vector<u64> content_written;
+    Service::FS::MediaType media_type;
+};
+
+/**
+ * Installs a CIA file from a specified file path.
+ * @param path file path of the CIA file to install
+ * @param update_callback callback function called during filesystem write
+ * @returns bool whether the install was successful
+ */
+InstallStatus InstallCIA(const std::string& path,
+                         std::function<ProgressCallback>&& update_callback = nullptr);
+
+/**
+ * Get the mediatype for an installed title
+ * @param titleId the installed title ID
+ * @returns MediaType which the installed title will reside on
+ */
+Service::FS::MediaType GetTitleMediaType(u64 titleId);
 
 /**
  * Get the .tmd path for a title
