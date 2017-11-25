@@ -1179,42 +1179,140 @@ Surface FindMatch(const SurfaceCache& surface_cache, const SurfaceParams& params
     return match_surface;
 }
 
-void RasterizerCacheOpenGL::FlushRegion(PAddr addr, u32 size, const CachedSurface* skip_surface,
-                                        bool invalidate) {
-    if (size == 0) {
+void RasterizerCacheOpenGL::FlushRegion(PAddr addr, u32 size, Surface flush_surface) {
+    if (size == 0)
         return;
-    }
 
-    // Gather up unique surfaces that touch the region
-    std::unordered_set<std::shared_ptr<CachedSurface>> touching_surfaces;
+    const auto flush_interval = SurfaceInterval(addr, addr + size);
+    for (auto& pair : RangeFromInterval(dirty_regions, flush_interval)) {
+        const auto interval = pair.first & flush_interval;
+        auto& surface = pair.second;
 
-    auto surface_interval = boost::icl::interval<PAddr>::right_open(addr, addr + size);
-    auto cache_upper_bound = surface_cache.upper_bound(surface_interval);
-    for (auto it = surface_cache.lower_bound(surface_interval); it != cache_upper_bound; ++it) {
-        std::copy_if(it->second.begin(), it->second.end(),
-                     std::inserter(touching_surfaces, touching_surfaces.end()),
-                     [skip_surface](std::shared_ptr<CachedSurface> surface) {
-                         return (surface.get() != skip_surface);
-                     });
-    }
+        if (flush_surface != nullptr && surface != flush_surface)
+            continue;
 
-    // Flush and invalidate surfaces
-    for (auto surface : touching_surfaces) {
-        FlushSurface(surface.get());
-        if (invalidate) {
-            Memory::RasterizerMarkRegionCached(surface->addr, surface->size, -1);
-            surface_cache.subtract(
-                std::make_pair(boost::icl::interval<PAddr>::right_open(
-                                   surface->addr, surface->addr + surface->size),
-                               std::set<std::shared_ptr<CachedSurface>>({surface})));
+        // Sanity check, this surface is the last one that marked this region dirty
+        ASSERT(surface->IsRegionValid(interval));
+
+        if (surface->type != SurfaceType::Fill) {
+            SurfaceParams params = surface->FromInterval(interval);
+            surface->DownloadGLTexture(surface->GetSubRect(params));
         }
+        surface->FlushGLBuffer(boost::icl::first(interval), boost::icl::last_next(interval));
     }
+
+    // Reset dirty regions
+    dirty_regions.erase(flush_interval);
 }
 
 void RasterizerCacheOpenGL::FlushAll() {
-    for (auto& surfaces : surface_cache) {
-        for (auto& surface : surfaces.second) {
-            FlushSurface(surface.get());
+    FlushRegion(0, 0xFFFFFFFF);
+}
+
+void RasterizerCacheOpenGL::InvalidateRegion(PAddr addr, u32 size, const Surface& region_owner) {
+    if (size == 0)
+        return;
+
+    const auto invalid_interval = SurfaceInterval(addr, addr + size);
+
+    if (region_owner != nullptr) {
+        ASSERT(region_owner->type != SurfaceType::Texture);
+        ASSERT(addr >= region_owner->addr && addr + size <= region_owner->end);
+        ASSERT(region_owner->width == region_owner->stride); // Surfaces can't have a gap
+        region_owner->invalid_regions.erase(invalid_interval);
+    }
+
+    for (auto& pair : RangeFromInterval(surface_cache, invalid_interval)) {
+        for (auto& cached_surface : pair.second) {
+            if (cached_surface == region_owner)
+                continue;
+
+            const auto interval = cached_surface->GetInterval() & invalid_interval;
+            cached_surface->invalid_regions.insert(interval);
+
+            // Remove only "empty" fill surfaces to avoid destroying and recreating OGL textures
+            if (cached_surface->type == SurfaceType::Fill &&
+                cached_surface->IsSurfaceFullyInvalid()) {
+                remove_surfaces.emplace(cached_surface);
+            }
         }
     }
+
+    if (region_owner != nullptr)
+        dirty_regions.set({invalid_interval, region_owner});
+    else
+        dirty_regions.erase(invalid_interval);
+
+    for (auto& remove_surface : remove_surfaces) {
+        if (remove_surface == region_owner) {
+            Surface expanded_surface = FindMatch<MatchFlags::SubRect | MatchFlags::Invalid>(
+                surface_cache, *region_owner, ScaleMatch::Ignore);
+            ASSERT(expanded_surface);
+
+            if ((region_owner->invalid_regions - expanded_surface->invalid_regions).empty()) {
+                DuplicateSurface(region_owner, expanded_surface);
+            } else {
+                continue;
+            }
+        }
+        UnregisterSurface(remove_surface);
+    }
+
+    remove_surfaces.clear();
+}
+
+Surface RasterizerCacheOpenGL::CreateSurface(const SurfaceParams& params) {
+    Surface surface = std::make_shared<CachedSurface>();
+    static_cast<SurfaceParams&>(*surface) = params;
+
+    surface->texture.Create();
+
+    surface->gl_buffer_size = 0;
+    surface->invalid_regions.insert(surface->GetInterval());
+    AllocateSurfaceTexture(surface->texture.handle, GetFormatTuple(surface->pixel_format),
+                           surface->GetScaledWidth(), surface->GetScaledHeight());
+
+    return surface;
+}
+
+void RasterizerCacheOpenGL::RegisterSurface(const Surface& surface) {
+    surface_cache.add({surface->GetInterval(), SurfaceSet{surface}});
+    UpdatePagesCachedCount(surface->addr, surface->size, 1);
+}
+
+void RasterizerCacheOpenGL::UnregisterSurface(const Surface& surface) {
+    UpdatePagesCachedCount(surface->addr, surface->size, -1);
+    surface_cache.subtract({surface->GetInterval(), SurfaceSet{surface}});
+}
+
+void RasterizerCacheOpenGL::UpdatePagesCachedCount(PAddr addr, u32 size, int delta) {
+    const u32 num_pages =
+        ((addr + size - 1) >> Memory::PAGE_BITS) - (addr >> Memory::PAGE_BITS) + 1;
+    const u32 page_start = addr >> Memory::PAGE_BITS;
+    const u32 page_end = page_start + num_pages;
+
+    // Interval maps will erase segments if count reaches 0, so if delta is negative we have to
+    // subtract after iterating
+    const auto pages_interval = PageMap::interval_type::right_open(page_start, page_end);
+    if (delta > 0)
+        cached_pages.add({pages_interval, delta});
+
+    for (auto& pair : RangeFromInterval(cached_pages, pages_interval)) {
+        const auto interval = pair.first & pages_interval;
+        const int count = pair.second;
+
+        const PAddr interval_start_addr = boost::icl::first(interval) << Memory::PAGE_BITS;
+        const PAddr interval_end_addr = boost::icl::last_next(interval) << Memory::PAGE_BITS;
+        const u32 interval_size = interval_end_addr - interval_start_addr;
+
+        if (delta > 0 && count == delta)
+            Memory::RasterizerMarkRegionCached(interval_start_addr, interval_size, true);
+        else if (delta < 0 && count == -delta)
+            Memory::RasterizerMarkRegionCached(interval_start_addr, interval_size, false);
+        else
+            ASSERT(count >= 0);
+    }
+
+    if (delta < 0)
+        cached_pages.add({pages_interval, delta});
 }

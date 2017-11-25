@@ -298,46 +298,65 @@ public:
     RasterizerCacheOpenGL();
     ~RasterizerCacheOpenGL();
 
-    /// Blits one texture to another
-    void BlitTextures(GLuint src_tex, GLuint dst_tex, CachedSurface::SurfaceType type,
-                      const MathUtil::Rectangle<int>& src_rect,
-                      const MathUtil::Rectangle<int>& dst_rect);
+    /// Blit one surface's texture to another
+    bool BlitSurfaces(const Surface& src_surface, const MathUtil::Rectangle<u32>& src_rect,
+                      const Surface& dst_surface, const MathUtil::Rectangle<u32>& dst_rect);
 
-    /// Attempt to blit one surface's texture to another
-    bool TryBlitSurfaces(CachedSurface* src_surface, const MathUtil::Rectangle<int>& src_rect,
-                         CachedSurface* dst_surface, const MathUtil::Rectangle<int>& dst_rect);
+    /// Copy one surface's region to another
+    void CopySurface(const Surface& src_surface, const Surface& dst_surface,
+                     SurfaceInterval copy_interval);
 
-    /// Loads a texture from 3DS memory to OpenGL and caches it (if not already cached)
-    CachedSurface* GetSurface(const CachedSurface& params, bool match_res_scale,
-                              bool load_if_create);
+    /// Load a texture from 3DS memory to OpenGL and cache it (if not already cached)
+    Surface GetSurface(const SurfaceParams& params, ScaleMatch match_res_scale,
+                       bool load_if_create);
 
     /// Attempt to find a subrect (resolution scaled) of a surface, otherwise loads a texture from
     /// 3DS memory to OpenGL and caches it (if not already cached)
-    CachedSurface* GetSurfaceRect(const CachedSurface& params, bool match_res_scale,
-                                  bool load_if_create, MathUtil::Rectangle<int>& out_rect);
+    SurfaceRect_Tuple GetSurfaceSubRect(const SurfaceParams& params, ScaleMatch match_res_scale,
+                                        bool load_if_create);
 
-    /// Gets a surface based on the texture configuration
-    CachedSurface* GetTextureSurface(const Pica::TexturingRegs::FullTextureConfig& config);
+    /// Get a surface based on the texture configuration
+    Surface GetTextureSurface(const Pica::TexturingRegs::FullTextureConfig& config);
 
-    /// Gets the color and depth surfaces and rect (resolution scaled) based on the framebuffer
-    /// configuration
-    std::tuple<CachedSurface*, CachedSurface*, MathUtil::Rectangle<int>> GetFramebufferSurfaces(
-        const Pica::FramebufferRegs::FramebufferConfig& config);
+    /// Get the color and depth surfaces based on the framebuffer configuration
+    SurfaceSurfaceRect_Tuple GetFramebufferSurfaces(bool using_color_fb, bool using_depth_fb,
+                                                    const MathUtil::Rectangle<s32>& viewport_rect);
 
-    /// Attempt to get a surface that exactly matches the fill region and format
-    CachedSurface* TryGetFillSurface(const GPU::Regs::MemoryFillConfig& config);
+    /// Get a surface that matches the fill config
+    Surface GetFillSurface(const GPU::Regs::MemoryFillConfig& config);
 
-    /// Write the surface back to memory
-    void FlushSurface(CachedSurface* surface);
+    /// Get a surface that matches a "texture copy" display transfer config
+    SurfaceRect_Tuple GetTexCopySurface(const SurfaceParams& params);
 
-    /// Write any cached resources overlapping the region back to memory (if dirty) and optionally
-    /// invalidate them in the cache
-    void FlushRegion(PAddr addr, u32 size, const CachedSurface* skip_surface, bool invalidate);
+    /// Write any cached resources overlapping the region back to memory (if dirty)
+    void FlushRegion(PAddr addr, u32 size, Surface flush_surface = nullptr);
+
+    /// Mark region as being invalidated by region_owner (nullptr if 3DS memory)
+    void InvalidateRegion(PAddr addr, u32 size, const Surface& region_owner);
 
     /// Flush all cached resources tracked by this cache manager
     void FlushAll();
 
 private:
+    void DuplicateSurface(const Surface& src_surface, const Surface& dest_surface);
+
+    /// Update surface's texture for given region when necessary
+    void ValidateSurface(const Surface& surface, PAddr addr, u32 size);
+
+    /// Create a new surface
+    Surface CreateSurface(const SurfaceParams& params);
+
+    /// Register surface into the cache
+    void RegisterSurface(const Surface& surface);
+
+    /// Remove surface from the cache
+    void UnregisterSurface(const Surface& surface);
+
+    /// Increase/decrease the number of surface in pages touching the specified region
+    void UpdatePagesCachedCount(PAddr addr, u32 size, int delta);
+
     SurfaceCache surface_cache;
-    OGLFramebuffer transfer_framebuffers[2];
+    SurfaceMap dirty_regions;
+    PageMap cached_pages;
+    SurfaceSet remove_surfaces;
 };
