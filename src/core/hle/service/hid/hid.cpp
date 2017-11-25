@@ -41,9 +41,9 @@ static u32 next_gyroscope_index;
 static int enable_accelerometer_count; // positive means enabled
 static int enable_gyroscope_count;     // positive means enabled
 
-static int pad_update_event;
-static int accelerometer_update_event;
-static int gyroscope_update_event;
+static CoreTiming::EventType* pad_update_event;
+static CoreTiming::EventType* accelerometer_update_event;
+static CoreTiming::EventType* gyroscope_update_event;
 
 // Updating period for each HID device. These empirical values are measured from a 11.2 3DS.
 constexpr u64 pad_update_ticks = BASE_CLOCK_RATE_ARM11 / 234;

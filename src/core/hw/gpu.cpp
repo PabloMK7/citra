@@ -31,7 +31,7 @@ Regs g_regs;
 /// 268MHz CPU clocks / 60Hz frames per second
 const u64 frame_ticks = static_cast<u64>(BASE_CLOCK_RATE_ARM11 / SCREEN_REFRESH_RATE);
 /// Event id for CoreTiming
-static int vblank_event;
+static CoreTiming::EventType* vblank_event;
 
 template <typename T>
 inline void Read(T& var, const u32 raw_addr) {

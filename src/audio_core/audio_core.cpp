@@ -18,7 +18,7 @@
 namespace AudioCore {
 
 // Audio Ticks occur about every 5 miliseconds.
-static int tick_event;                               ///< CoreTiming event
+static CoreTiming::EventType* tick_event;            ///< CoreTiming event
 static constexpr u64 audio_frame_ticks = 1310252ull; ///< Units: ARM11 cycles
 
 static void AudioTickCallback(u64 /*userdata*/, int cycles_late) {

@@ -76,7 +76,7 @@ static u8 network_channel = DefaultNetworkChannel;
 static NetworkInfo network_info;
 
 // Event that will generate and send the 802.11 beacon frames.
-static int beacon_broadcast_event;
+static CoreTiming::EventType* beacon_broadcast_event;
 
 // Mutex to synchronize access to the connection status between the emulation thread and the
 // network thread.

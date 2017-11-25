@@ -9,6 +9,10 @@
 #include "core/frontend/input.h"
 #include "core/hle/service/ir/ir_user.h"
 
+namespace CoreTiming {
+struct EventType;
+} // namespace CoreTiming
+
 namespace Service {
 namespace IR {
 
@@ -36,7 +40,7 @@ private:
     void LoadInputDevices();
 
     u8 hid_period;
-    int hid_polling_callback_id;
+    CoreTiming::EventType* hid_polling_callback_id;
     std::array<u8, 0x40> calibration_data;
     std::unique_ptr<Input::ButtonDevice> zl;
     std::unique_ptr<Input::ButtonDevice> zr;

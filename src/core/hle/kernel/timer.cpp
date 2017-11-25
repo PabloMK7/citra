@@ -14,7 +14,7 @@
 namespace Kernel {
 
 /// The event type of the generic timer callback event
-static int timer_callback_event_type;
+static CoreTiming::EventType* timer_callback_event_type = nullptr;
 // TODO(yuriks): This can be removed if Timer objects are explicitly pooled in the future, allowing
 //               us to simply use a pool index or similar.
 static Kernel::HandleTable timer_callback_handle_table;
@@ -57,9 +57,7 @@ void Timer::Set(s64 initial, s64 interval) {
         // Immediately invoke the callback
         Signal(0);
     } else {
-        u64 initial_microseconds = initial / 1000;
-        CoreTiming::ScheduleEvent(usToCycles(initial_microseconds), timer_callback_event_type,
-                                  callback_handle);
+        CoreTiming::ScheduleEvent(nsToCycles(initial), timer_callback_event_type, callback_handle);
     }
 }
 
@@ -88,8 +86,7 @@ void Timer::Signal(int cycles_late) {
 
     if (interval_delay != 0) {
         // Reschedule the timer with the interval delay
-        u64 interval_microseconds = interval_delay / 1000;
-        CoreTiming::ScheduleEvent(usToCycles(interval_microseconds) - cycles_late,
+        CoreTiming::ScheduleEvent(nsToCycles(interval_delay) - cycles_late,
                                   timer_callback_event_type, callback_handle);
     }
 }

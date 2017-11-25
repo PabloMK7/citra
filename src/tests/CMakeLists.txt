@@ -2,6 +2,7 @@ set(SRCS
             common/param_package.cpp
             core/arm/arm_test_common.cpp
             core/arm/dyncom/arm_dyncom_vfp_tests.cpp
+            core/core_timing.cpp
             core/file_sys/path_parser.cpp
             core/hle/kernel/hle_ipc.cpp
             core/memory/memory.cpp

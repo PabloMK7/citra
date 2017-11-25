@@ -38,8 +38,8 @@ namespace HLE {
 namespace Applets {
 
 static std::unordered_map<Service::APT::AppletId, std::shared_ptr<Applet>> applets;
-static u32 applet_update_event =
-    -1; ///< The CoreTiming event identifier for the Applet update callback.
+/// The CoreTiming event identifier for the Applet update callback.
+static CoreTiming::EventType* applet_update_event = nullptr;
 /// The interval at which the Applet update callback will be called, 16.6ms
 static const u64 applet_update_interval_us = 16666;
 

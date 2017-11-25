@@ -51,7 +51,7 @@ static_assert(sizeof(SharedMem) == 0x98, "SharedMem has wrong size!");
 static Kernel::SharedPtr<Kernel::Event> update_event;
 static Kernel::SharedPtr<Kernel::SharedMemory> shared_memory;
 static u32 next_pad_index;
-static int update_callback_id;
+static CoreTiming::EventType* update_callback_id;
 static std::unique_ptr<Input::ButtonDevice> zl_button;
 static std::unique_ptr<Input::ButtonDevice> zr_button;
 static std::unique_ptr<Input::AnalogDevice> c_stick;

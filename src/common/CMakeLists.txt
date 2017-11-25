@@ -76,6 +76,7 @@ set(HEADERS
             telemetry.h
             thread.h
             thread_queue_list.h
+            threadsafe_queue.h
             timer.h
             vector_math.h
             )

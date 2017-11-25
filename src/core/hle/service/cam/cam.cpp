@@ -117,7 +117,7 @@ constexpr std::array<int, 13> LATENCY_BY_FRAME_RATE{{
 
 std::array<CameraConfig, NumCameras> cameras;
 std::array<PortConfig, 2> ports;
-int completion_event_callback;
+CoreTiming::EventType* completion_event_callback;
 
 const ResultCode ERROR_INVALID_ENUM_VALUE(ErrorDescription::InvalidEnumValue, ErrorModule::CAM,
                                           ErrorSummary::InvalidArgument, ErrorLevel::Usage);

@@ -15,7 +15,7 @@ namespace SharedPage {
 
 SharedPageDef shared_page;
 
-static int update_time_event;
+static CoreTiming::EventType* update_time_event;
 
 /// Gets system time in 3DS format. The epoch is Jan 1900, and the unit is millisecond.
 static u64 GetSystemTime() {
@@ -57,7 +57,7 @@ static void UpdateTimeCallback(u64 userdata, int cycles_late) {
 
     date_time.date_time = GetSystemTime();
     date_time.update_tick = CoreTiming::GetTicks();
-    date_time.tick_to_second_coefficient = g_clock_rate_arm11;
+    date_time.tick_to_second_coefficient = BASE_CLOCK_RATE_ARM11;
     date_time.tick_offset = 0;
 
     ++shared_page.date_time_counter;
