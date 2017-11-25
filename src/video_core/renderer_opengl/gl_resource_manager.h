@@ -36,7 +36,7 @@ public:
         if (handle == 0)
             return;
         glDeleteTextures(1, &handle);
-        OpenGLState::ResetTexture(handle);
+        OpenGLState::GetCurState().ResetTexture(handle).Apply();
         handle = 0;
     }
 
@@ -69,7 +69,7 @@ public:
         if (handle == 0)
             return;
         glDeleteSamplers(1, &handle);
-        OpenGLState::ResetSampler(handle);
+        OpenGLState::GetCurState().ResetSampler(handle).Apply();
         handle = 0;
     }
 
@@ -102,7 +102,7 @@ public:
         if (handle == 0)
             return;
         glDeleteProgram(handle);
-        OpenGLState::ResetProgram(handle);
+        OpenGLState::GetCurState().ResetProgram(handle).Apply();
         handle = 0;
     }
 
@@ -135,7 +135,7 @@ public:
         if (handle == 0)
             return;
         glDeleteBuffers(1, &handle);
-        OpenGLState::ResetBuffer(handle);
+        OpenGLState::GetCurState().OpenGLState::ResetBuffer(handle).Apply();
         handle = 0;
     }
 
@@ -168,7 +168,7 @@ public:
         if (handle == 0)
             return;
         glDeleteVertexArrays(1, &handle);
-        OpenGLState::ResetVertexArray(handle);
+        OpenGLState::GetCurState().ResetVertexArray(handle).Apply();
         handle = 0;
     }
 
@@ -201,7 +201,7 @@ public:
         if (handle == 0)
             return;
         glDeleteFramebuffers(1, &handle);
-        OpenGLState::ResetFramebuffer(handle);
+        OpenGLState::GetCurState().ResetFramebuffer(handle).Apply();
         handle = 0;
     }
 
