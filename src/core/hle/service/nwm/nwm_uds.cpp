@@ -89,8 +89,7 @@ static Network::RoomMember::CallbackHandle<Network::WifiPacket> wifi_packet_rece
 // network thread.
 static std::mutex connection_status_mutex;
 
-// token for the blocking ConnectToNetwork
-static ThreadContinuationToken connection_token;
+static Kernel::SharedPtr<Kernel::Event> connection_event;
 
 // Mutex to synchronize access to the list of received beacons between the emulation thread and the
 // network thread.
@@ -278,9 +277,7 @@ static void HandleEAPoLPacket(const Network::WifiPacket& packet) {
         // If blocking is implemented this lock needs to be changed,
         // otherwise it might cause deadlocks
         connection_status_event->Signal();
-        if (connection_token.IsValid()) {
-            ContinueClientThread(connection_token);
-        }
+        connection_event->Signal();
     }
 }
 
@@ -479,16 +476,8 @@ void OnWifiPacketReceived(const Network::WifiPacket& packet) {
     }
 }
 
-/**
- * NWM_UDS::Shutdown service function
- *  Inputs:
- *      1 : None
- *  Outputs:
- *      0 : Return header
- *      1 : Result of function, 0 on success, otherwise error code
- */
-static void Shutdown(Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x03, 0, 0);
+void NWM_UDS::Shutdown(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x03, 0, 0);
 
     if (auto room_member = Network::GetRoomMember().lock())
         room_member->Unbind(wifi_packet_received);
@@ -506,26 +495,8 @@ static void Shutdown(Interface* self) {
     LOG_DEBUG(Service_NWM, "called");
 }
 
-/**
- * NWM_UDS::RecvBeaconBroadcastData service function
- * Returns the raw beacon data for nearby networks that match the supplied WlanCommId.
- *  Inputs:
- *      1 : Output buffer max size
- *    2-3 : Unknown
- *    4-5 : Host MAC address.
- *   6-14 : Unused
- *     15 : WLan Comm Id
- *     16 : Id
- *     17 : Value 0
- *     18 : Input handle
- *     19 : (Size<<4) | 12
- *     20 : Output buffer ptr
- *  Outputs:
- *      0 : Return header
- *      1 : Result of function, 0 on success, otherwise error code
- */
-static void RecvBeaconBroadcastData(Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x0F, 16, 4);
+void NWM_UDS::RecvBeaconBroadcastData(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x0F, 16, 4);
 
     u32 out_buffer_size = rp.Pop<u32>();
     u32 unk1 = rp.Pop<u32>();
@@ -540,11 +511,10 @@ static void RecvBeaconBroadcastData(Interface* self) {
     u32 id = rp.Pop<u32>();
     Kernel::Handle input_handle = rp.PopHandle();
 
-    size_t desc_size;
-    const VAddr out_buffer_ptr = rp.PopMappedBuffer(&desc_size);
-    ASSERT(desc_size == out_buffer_size);
+    Kernel::MappedBuffer out_buffer = rp.PopMappedBuffer();
+    ASSERT(out_buffer.GetSize() == out_buffer_size);
 
-    VAddr current_buffer_pos = out_buffer_ptr;
+    size_t offset = sizeof(BeaconDataReplyHeader);
     u32 total_size = sizeof(BeaconDataReplyHeader);
 
     // Retrieve all beacon frames that were received from the desired mac address.
@@ -554,8 +524,6 @@ static void RecvBeaconBroadcastData(Interface* self) {
     data_reply_header.total_entries = static_cast<u32>(beacons.size());
     data_reply_header.max_output_size = out_buffer_size;
 
-    Memory::WriteBlock(current_buffer_pos, &data_reply_header, sizeof(BeaconDataReplyHeader));
-    current_buffer_pos += sizeof(BeaconDataReplyHeader);
     // Write each of the received beacons into the buffer
     for (const auto& beacon : beacons) {
         BeaconEntryHeader entry{};
@@ -566,45 +534,31 @@ static void RecvBeaconBroadcastData(Interface* self) {
         entry.header_size = sizeof(BeaconEntryHeader);
         entry.mac_address = beacon.transmitter_address;
 
-        ASSERT(current_buffer_pos < out_buffer_ptr + out_buffer_size);
+        ASSERT(offset < out_buffer_size);
 
-        Memory::WriteBlock(current_buffer_pos, &entry, sizeof(BeaconEntryHeader));
-        current_buffer_pos += sizeof(BeaconEntryHeader);
-
-        Memory::WriteBlock(current_buffer_pos, beacon.data.data(), beacon.data.size());
-        current_buffer_pos += static_cast<VAddr>(beacon.data.size());
+        out_buffer.Write(&entry, offset, sizeof(BeaconEntryHeader));
+        offset += sizeof(BeaconEntryHeader);
+        const unsigned char* beacon_data = beacon.data.data();
+        out_buffer.Write(const_cast<void*>(static_cast<const void*>(beacon_data)), offset, beacon.data.size());
+        offset += beacon.data.size();
 
         total_size += static_cast<u32>(sizeof(BeaconEntryHeader) + beacon.data.size());
     }
 
     // Update the total size in the structure and write it to the buffer again.
     data_reply_header.total_size = total_size;
-    Memory::WriteBlock(out_buffer_ptr, &data_reply_header, sizeof(BeaconDataReplyHeader));
+    out_buffer.Write(&data_reply_header, 0, sizeof(BeaconDataReplyHeader));
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
 
     LOG_DEBUG(Service_NWM, "called out_buffer_size=0x%08X, wlan_comm_id=0x%08X, id=0x%08X,"
-                           "input_handle=0x%08X, out_buffer_ptr=0x%08X, unk1=0x%08X, unk2=0x%08X",
-              out_buffer_size, wlan_comm_id, id, input_handle, out_buffer_ptr, unk1, unk2);
+                           "input_handle=0x%08X, unk1=0x%08X, unk2=0x%08X, offset=%d",
+                  out_buffer_size, wlan_comm_id, id, input_handle, unk1, unk2, offset);
 }
 
-/**
- * NWM_UDS::Initialize service function
- *  Inputs:
- *      1 : Shared memory size
- *   2-11 : Input NodeInfo Structure
- *     12 : 2-byte Version
- *     13 : Value 0
- *     14 : Shared memory handle
- *  Outputs:
- *      0 : Return header
- *      1 : Result of function, 0 on success, otherwise error code
- *      2 : Value 0
- *      3 : Output event handle
- */
-static void InitializeWithVersion(Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x1B, 12, 2);
+void NWM_UDS::InitializeWithVersion(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x1B, 12, 2);
 
     u32 sharedmem_size = rp.Pop<u32>();
 
@@ -613,9 +567,7 @@ static void InitializeWithVersion(Interface* self) {
 
     u16 version = rp.Pop<u16>();
 
-    Kernel::Handle sharedmem_handle = rp.PopHandle();
-
-    recv_buffer_memory = Kernel::g_handle_table.Get<Kernel::SharedMemory>(sharedmem_handle);
+    recv_buffer_memory = rp.PopObject<Kernel::SharedMemory>();
 
     initialized = true;
 
@@ -644,26 +596,14 @@ static void InitializeWithVersion(Interface* self) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
     rb.Push(RESULT_SUCCESS);
-    rb.PushCopyHandles(Kernel::g_handle_table.Create(connection_status_event).Unwrap());
+    rb.PushCopyObjects(connection_status_event);
 
-    LOG_DEBUG(Service_NWM, "called sharedmem_size=0x%08X, version=0x%08X, sharedmem_handle=0x%08X",
-              sharedmem_size, version, sharedmem_handle);
+    LOG_DEBUG(Service_NWM, "called sharedmem_size=0x%08X, version=0x%08X",
+              sharedmem_size, version);
 }
 
-/**
- * NWM_UDS::GetConnectionStatus service function.
- * Returns the connection status structure for the currently open network connection.
- * This structure contains information about the connection,
- * like the number of connected nodes, etc.
- *  Inputs:
- *      0 : Command header.
- *  Outputs:
- *      0 : Return header
- *      1 : Result of function, 0 on success, otherwise error code
- *      2-13 : Channel of the current WiFi network connection.
- */
-static void GetConnectionStatus(Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0xB, 0, 0);
+void NWM_UDS::GetConnectionStatus(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0xB, 0, 0);
     IPC::RequestBuilder rb = rp.MakeBuilder(13, 0);
 
     rb.Push(RESULT_SUCCESS);
@@ -681,19 +621,8 @@ static void GetConnectionStatus(Interface* self) {
     LOG_DEBUG(Service_NWM, "called");
 }
 
-/**
- * NWM_UDS::GetNodeInformation service function.
- * Returns the node inforamtion structure for the currently connected node.
- *  Inputs:
- *      0 : Command header.
- *      1 : Node ID.
- *  Outputs:
- *      0 : Return header
- *      1 : Result of function, 0 on success, otherwise error code
- *      2-11 : NodeInfo structure.
- */
-static void GetNodeInformation(Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0xD, 1, 0);
+void NWM_UDS::GetNodeInformation(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0xD, 1, 0);
     u16 network_node_id = rp.Pop<u16>();
 
     if (!initialized) {
@@ -723,22 +652,8 @@ static void GetNodeInformation(Interface* self) {
     LOG_DEBUG(Service_NWM, "called");
 }
 
-/**
- * NWM_UDS::Bind service function.
- * Binds a BindNodeId to a data channel and retrieves a data event.
- *  Inputs:
- *      1 : BindNodeId
- *      2 : Receive buffer size.
- *      3 : u8 Data channel to bind to.
- *      4 : Network node id.
- *  Outputs:
- *      0 : Return header
- *      1 : Result of function, 0 on success, otherwise error code
- *      2 : Copy handle descriptor.
- *      3 : Data available event handle.
- */
-static void Bind(Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x12, 4, 0);
+void NWM_UDS::Bind(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x12, 4, 0);
 
     u32 bind_node_id = rp.Pop<u32>();
     u32 recv_buffer_size = rp.Pop<u32>();
@@ -751,6 +666,7 @@ static void Bind(Interface* self) {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(ResultCode(ErrorDescription::NotAuthorized, ErrorModule::UDS,
                            ErrorSummary::WrongArgument, ErrorLevel::Usage));
+        LOG_DEBUG(Service_NWM, "data_channel = %d, bind_node_id = %d", data_channel, bind_node_id);
         return;
     }
 
@@ -759,6 +675,7 @@ static void Bind(Interface* self) {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(ResultCode(ErrorDescription::OutOfMemory, ErrorModule::UDS,
                            ErrorSummary::OutOfResource, ErrorLevel::Status));
+        LOG_DEBUG(Service_NWM, "max bind nodes");
         return;
     }
 
@@ -767,6 +684,7 @@ static void Bind(Interface* self) {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(ResultCode(ErrorDescription::TooLarge, ErrorModule::UDS,
                            ErrorSummary::WrongArgument, ErrorLevel::Usage));
+        LOG_DEBUG(Service_NWM, "MinRecvBufferSize");
         return;
     }
 
@@ -781,20 +699,11 @@ static void Bind(Interface* self) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
     rb.Push(RESULT_SUCCESS);
-    rb.PushCopyHandles(Kernel::g_handle_table.Create(event).Unwrap());
+    rb.PushCopyObjects(event);
 }
 
-/**
- * NWM_UDS::Unbind service function.
- * Unbinds a BindNodeId from a data channel.
- *  Inputs:
- *      1 : BindNodeId
- *  Outputs:
- *      0 : Return header
- *      1 : Result of function, 0 on success, otherwise error code
- */
-static void Unbind(Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x12, 1, 0);
+void NWM_UDS::Unbind(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x12, 1, 0);
 
     u32 bind_node_id = rp.Pop<u32>();
     if (bind_node_id == 0) {
@@ -824,27 +733,15 @@ static void Unbind(Interface* self) {
     rb.Push<u32>(0);
 }
 
-/**
- * NWM_UDS::BeginHostingNetwork service function.
- * Creates a network and starts broadcasting its presence.
- *  Inputs:
- *      1 : Passphrase buffer size.
- *      3 : VAddr of the NetworkInfo structure.
- *      5 : VAddr of the passphrase.
- *  Outputs:
- *      0 : Return header
- *      1 : Result of function, 0 on success, otherwise error code
- */
-static void BeginHostingNetwork(Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x1D, 1, 4);
+void NWM_UDS::BeginHostingNetwork(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x1D, 1, 4);
 
     const u32 passphrase_size = rp.Pop<u32>();
 
-    size_t desc_size;
-    const VAddr network_info_address = rp.PopStaticBuffer(&desc_size);
-    ASSERT(desc_size == sizeof(NetworkInfo));
-    const VAddr passphrase_address = rp.PopStaticBuffer(&desc_size);
-    ASSERT(desc_size == passphrase_size);
+    const std::vector<u8> network_info_buffer = rp.PopStaticBuffer();
+    ASSERT(network_info_buffer.size() == sizeof(NetworkInfo));
+    const std::vector<u8> passphrase = rp.PopStaticBuffer();
+    ASSERT(passphrase.size() == passphrase_size);
 
     // TODO(Subv): Store the passphrase and verify it when attempting a connection.
 
@@ -852,8 +749,7 @@ static void BeginHostingNetwork(Interface* self) {
 
     {
         std::lock_guard<std::mutex> lock(connection_status_mutex);
-
-        Memory::ReadBlock(network_info_address, &network_info, sizeof(NetworkInfo));
+        std::memcpy(&network_info, network_info_buffer.data(), sizeof(NetworkInfo));
 
         // The real UDS module throws a fatal error if this assert fails.
         ASSERT_MSG(network_info.max_nodes > 1, "Trying to host a network of only one member.");
@@ -915,17 +811,15 @@ static void BeginHostingNetwork(Interface* self) {
     rb.Push(RESULT_SUCCESS);
 }
 
-/**
- * NWM_UDS::DestroyNetwork service function.
- * Closes the network that we're currently hosting.
- *  Inputs:
- *      0 : Command header.
- *  Outputs:
- *      0 : Return header
- *      1 : Result of function, 0 on success, otherwise error code
- */
-static void DestroyNetwork(Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x08, 0, 0);
+void NWM_UDS::UpdateNetworkAttribute(Kernel::HLERequestContext& ctx){
+    IPC::RequestParser rp(ctx, 0x07, 2, 0);
+    rp.Skip(2, false);
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RESULT_SUCCESS);
+}
+
+void NWM_UDS::DestroyNetwork(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x08, 0, 0);
 
     // Unschedule the beacon broadcast event.
     CoreTiming::UnscheduleEvent(beacon_broadcast_event, 0);
@@ -960,8 +854,8 @@ static void DestroyNetwork(Interface* self) {
     LOG_DEBUG(Service_NWM, "called");
 }
 
-static void DisconnectNetwork(Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0xA, 0, 0);
+void NWM_UDS::DisconnectNetwork(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0xA, 0, 0);
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
 
@@ -1002,25 +896,8 @@ static void DisconnectNetwork(Interface* self) {
     LOG_DEBUG(Service_NWM, "called");
 }
 
-/**
- * NWM_UDS::SendTo service function.
- * Sends a data frame to the UDS network we're connected to.
- *  Inputs:
- *      0 : Command header.
- *      1 : Unknown.
- *      2 : u16 Destination network node id.
- *      3 : u8 Data channel.
- *      4 : Buffer size >> 2
- *      5 : Data size
- *      6 : Flags
- *      7 : Input buffer descriptor
- *      8 : Input buffer address
- *  Outputs:
- *      0 : Return header
- *      1 : Result of function, 0 on success, otherwise error code
- */
-static void SendTo(Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x17, 6, 2);
+void NWM_UDS::SendTo(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x17, 6, 2);
 
     rp.Skip(1, false);
     u16 dest_node_id = rp.Pop<u16>();
@@ -1029,9 +906,8 @@ static void SendTo(Interface* self) {
     u32 data_size = rp.Pop<u32>();
     u32 flags = rp.Pop<u32>();
 
-    size_t desc_size;
-    const VAddr input_address = rp.PopStaticBuffer(&desc_size);
-    ASSERT(desc_size >= data_size);
+    const std::vector<u8> input_buffer = rp.PopStaticBuffer();
+    ASSERT(input_buffer.size() >= data_size);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
 
@@ -1058,13 +934,10 @@ static void SendTo(Interface* self) {
         return;
     }
 
-    std::vector<u8> data(data_size);
-    Memory::ReadBlock(input_address, data.data(), data.size());
-
     // TODO(B3N30): Increment the sequence number after each sent packet.
     u16 sequence_number = 0;
     std::vector<u8> data_payload = GenerateDataPayload(
-        data, data_channel, dest_node_id, connection_status.network_node_id, sequence_number);
+        input_buffer, data_channel, dest_node_id, connection_status.network_node_id, sequence_number);
 
     // TODO(B3N30): Retrieve the MAC address of the dest_node_id and our own to encrypt
     // and encapsulate the payload.
@@ -1085,34 +958,13 @@ static void SendTo(Interface* self) {
     rb.Push(RESULT_SUCCESS);
 }
 
-/**
- * NWM_UDS::PullPacket service function.
- * Receives a data frame from the specified bind node id
- *  Inputs:
- *      0 : Command header.
- *      1 : Bind node id.
- *      2 : Max out buff size >> 2.
- *      3 : Max out buff size.
- *     64 : Output buffer descriptor
- *     65 : Output buffer address
- *  Outputs:
- *      0 : Return header
- *      1 : Result of function, 0 on success, otherwise error code
- *      2 : Received data size
- *      3 : u16 Source network node id
- *      4 : Buffer descriptor
- *      5 : Buffer address
- */
-static void PullPacket(Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x14, 3, 0);
+void NWM_UDS::PullPacket(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x14, 3, 0);
 
     u32 bind_node_id = rp.Pop<u32>();
     u32 max_out_buff_size_aligned = rp.Pop<u32>();
     u32 max_out_buff_size = rp.Pop<u32>();
 
-    size_t desc_size;
-    const VAddr output_address = rp.PeekStaticBuffer(0, &desc_size);
-    ASSERT(desc_size == max_out_buff_size);
 
     std::lock_guard<std::mutex> lock(connection_status_mutex);
     if (connection_status.status != static_cast<u32>(NetworkStatus::ConnectedAsHost) &&
@@ -1137,12 +989,12 @@ static void PullPacket(Interface* self) {
     }
 
     if (channel->second.received_packets.empty()) {
-        Memory::ZeroBlock(output_address, desc_size);
+        std::vector<u8> output_buffer(max_out_buff_size, 0);
         IPC::RequestBuilder rb = rp.MakeBuilder(3, 2);
         rb.Push(RESULT_SUCCESS);
         rb.Push<u32>(0);
         rb.Push<u16>(0);
-        rb.PushStaticBuffer(output_address, desc_size, 0);
+        rb.PushStaticBuffer(output_buffer, 0);
         return;
     }
 
@@ -1159,32 +1011,23 @@ static void PullPacket(Interface* self) {
     }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(3, 2);
-    Memory::ZeroBlock(output_address, desc_size);
+
+    std::vector<u8> output_buffer(max_out_buff_size, 0);
     // Write the actual data.
-    Memory::WriteBlock(output_address,
+    std::memcpy(output_buffer.data(),
                        next_packet.data() + sizeof(LLCHeader) + sizeof(SecureDataHeader),
                        data_size);
 
     rb.Push(RESULT_SUCCESS);
     rb.Push<u32>(data_size);
     rb.Push<u16>(secure_data.src_node_id);
-    rb.PushStaticBuffer(output_address, desc_size, 0);
+    rb.PushStaticBuffer(output_buffer, 0);
 
     channel->second.received_packets.pop_front();
 }
 
-/**
- * NWM_UDS::GetChannel service function.
- * Returns the WiFi channel in which the network we're connected to is transmitting.
- *  Inputs:
- *      0 : Command header.
- *  Outputs:
- *      0 : Return header
- *      1 : Result of function, 0 on success, otherwise error code
- *      2 : Channel of the current WiFi network connection.
- */
-static void GetChannel(Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x1A, 0, 0);
+void NWM_UDS::GetChannel(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x1A, 0, 0);
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
 
     std::lock_guard<std::mutex> lock(connection_status_mutex);
@@ -1198,48 +1041,32 @@ static void GetChannel(Interface* self) {
     LOG_DEBUG(Service_NWM, "called");
 }
 
-/**
- * NWM_UDS::ConnectToNetwork service function.
- * This connects to the specified network
- *  Inputs:
- *      0 : Command header
- *      1 : Connection type: 0x1 = Client, 0x2 = Spectator.
- *      2 : Passphrase buffer size
- *      3 : (NetworkStructSize<<12) | 0x402
- *      4 : Network struct buffer ptr
- *      5 : (PassphraseSize<<12) | 2
- *      6 : Input passphrase buffer ptr
- *  Outputs:
- *      0 : Return header
- *      1 : Result of function, 0 on success, otherwise error code
- */
-static void ConnectToNetwork(Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x1E, 2, 4);
+void NWM_UDS::ConnectToNetwork(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x1E, 2, 4);
 
     u8 connection_type = rp.Pop<u8>();
     u32 passphrase_size = rp.Pop<u32>();
 
-    size_t desc_size;
-    const VAddr network_struct_addr = rp.PopStaticBuffer(&desc_size);
-    ASSERT(desc_size == sizeof(NetworkInfo));
+    const std::vector<u8> network_struct_buffer = rp.PopStaticBuffer();
+    ASSERT(network_struct_buffer.size() == sizeof(NetworkInfo));
 
-    size_t passphrase_desc_size;
-    const VAddr passphrase_addr = rp.PopStaticBuffer(&passphrase_desc_size);
+    const std::vector<u8> passphrase = rp.PopStaticBuffer();
 
-    Memory::ReadBlock(network_struct_addr, &network_info, sizeof(network_info));
+    std::memcpy(&network_info, network_struct_buffer.data(), sizeof(network_info));
 
     // Start the connection sequence
     StartConnectionSequence(network_info.host_mac_address);
 
-    connection_token =
-        SleepClientThread("uds::ConnectToNetwork", [](Kernel::SharedPtr<Kernel::Thread> thread) {
-            VAddr address = thread->GetCommandBufferAddress();
-            std::array<u32, IPC::COMMAND_BUFFER_LENGTH> buffer;
-            IPC::RequestBuilder rb(buffer.data(), 0x1E, 1, 0);
-            // TODO(B3N30): Add error handling for host full and timeout
-            rb.Push(RESULT_SUCCESS);
-            Memory::WriteBlock(address, &*thread->owner_process, *buffer.data());
+    // 300 ms
+    // Since this timing is handled by core_timing it could differ from the 'real world' time
+    static constexpr u64 UDSConnectionTimeout = 300000000;
 
+    connection_event =
+        ctx.SleepClientThread(Kernel::GetCurrentThread(), "uds::ConnectToNetwork", UDSConnectionTimeout, [](Kernel::SharedPtr<Kernel::Thread> thread, Kernel::HLERequestContext& ctx,
+           ThreadWakeupReason reason) {
+            // TODO(B3N30): Add error handling for host full and timeout
+            IPC::RequestBuilder rb(ctx, 0x1E, 1, 0);
+            rb.Push(RESULT_SUCCESS);
             LOG_DEBUG(Service_NWM, "connection sequence finished");
         });
 
@@ -1247,26 +1074,13 @@ static void ConnectToNetwork(Interface* self) {
     LOG_DEBUG(Service_NWM, "called");
 }
 
-/**
- * NWM_UDS::SetApplicationData service function.
- * Updates the application data that is being broadcast in the beacon frames
- * for the network that we're hosting.
- *  Inputs:
- *      1 : Data size.
- *      3 : VAddr of the data.
- *  Outputs:
- *      0 : Return header
- *      1 : Result of function, 0 on success, otherwise error code
- *      2 : Channel of the current WiFi network connection.
- */
-static void SetApplicationData(Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x10, 1, 2);
+void NWM_UDS::SetApplicationData(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x10, 1, 2);
 
     u32 size = rp.Pop<u32>();
 
-    size_t desc_size;
-    const VAddr address = rp.PopStaticBuffer(&desc_size);
-    ASSERT(desc_size == size);
+    const std::vector<u8> address = rp.PopStaticBuffer();
+    ASSERT(address.size() == size);
 
     LOG_DEBUG(Service_NWM, "called");
 
@@ -1279,68 +1093,43 @@ static void SetApplicationData(Interface* self) {
     }
 
     network_info.application_data_size = size;
-    Memory::ReadBlock(address, network_info.application_data.data(), size);
+    memcpy(network_info.application_data.data(), address.data(), size);
 
     rb.Push(RESULT_SUCCESS);
 }
 
-/**
- * NWM_UDS::DecryptBeaconData service function.
- * Decrypts the encrypted data tags contained in the 802.11 beacons.
- *  Inputs:
- *      1 : Input network struct buffer descriptor.
- *      2 : Input network struct buffer ptr.
- *      3 : Input tag0 encrypted buffer descriptor.
- *      4 : Input tag0 encrypted buffer ptr.
- *      5 : Input tag1 encrypted buffer descriptor.
- *      6 : Input tag1 encrypted buffer ptr.
- *     64 : Output buffer descriptor.
- *     65 : Output buffer ptr.
- *  Outputs:
- *      0 : Return header
- *      1 : Result of function, 0 on success, otherwise error code
- */
-static void DecryptBeaconData(Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x1F, 0, 6);
+void NWM_UDS::DecryptBeaconData(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x1F, 0, 6);
 
-    size_t desc_size;
-    const VAddr network_struct_addr = rp.PopStaticBuffer(&desc_size);
-    ASSERT(desc_size == sizeof(NetworkInfo));
+    const std::vector<u8> network_struct_buffer = rp.PopStaticBuffer();
+    ASSERT(network_struct_buffer.size() == sizeof(NetworkInfo));
 
-    size_t data0_size;
-    const VAddr encrypted_data0_addr = rp.PopStaticBuffer(&data0_size);
+    const std::vector<u8> encrypted_data0_buffer = rp.PopStaticBuffer();
 
-    size_t data1_size;
-    const VAddr encrypted_data1_addr = rp.PopStaticBuffer(&data1_size);
+    const std::vector<u8> encrypted_data1_buffer = rp.PopStaticBuffer();
 
-    size_t output_buffer_size;
-    const VAddr output_buffer_addr = rp.PeekStaticBuffer(0, &output_buffer_size);
 
-    // This size is hardcoded in the 3DS UDS code.
-    ASSERT(output_buffer_size == sizeof(NodeInfo) * UDSMaxNodes);
-
-    LOG_DEBUG(Service_NWM, "called in0=%08X in1=%08X out=%08X", encrypted_data0_addr,
-              encrypted_data1_addr, output_buffer_addr);
+    LOG_DEBUG(Service_NWM, "called");
 
     NetworkInfo net_info;
-    Memory::ReadBlock(network_struct_addr, &net_info, sizeof(net_info));
+    std::memcpy(&net_info, network_struct_buffer.data(), sizeof(net_info));
 
     // Read the encrypted data.
     // The first 4 bytes should be the OUI and the OUI Type of the tags.
     std::array<u8, 3> oui;
-    Memory::ReadBlock(encrypted_data0_addr, oui.data(), oui.size());
+    std::memcpy(oui.data(), encrypted_data0_buffer.data(), oui.size());
     ASSERT_MSG(oui == NintendoOUI, "Unexpected OUI");
 
-    ASSERT_MSG(Memory::Read8(encrypted_data0_addr + 3) ==
+    ASSERT_MSG(encrypted_data0_buffer[3] ==
                    static_cast<u8>(NintendoTagId::EncryptedData0),
                "Unexpected tag id");
 
-    std::vector<u8> beacon_data(data0_size + data1_size);
-    Memory::ReadBlock(encrypted_data0_addr + 4, beacon_data.data(), data0_size);
-    Memory::ReadBlock(encrypted_data1_addr + 4, beacon_data.data() + data0_size, data1_size);
+    std::vector<u8> beacon_data(encrypted_data0_buffer.size() + encrypted_data1_buffer.size());
+    std::memcpy(beacon_data.data(), encrypted_data0_buffer.data() + 4, encrypted_data0_buffer.size());
+    std::memcpy(beacon_data.data() + encrypted_data0_buffer.size(), encrypted_data1_buffer.data() + 4, encrypted_data1_buffer.size());
 
     // Decrypt the data
-    DecryptBeaconData(net_info, beacon_data);
+    DecryptBeacon(net_info, beacon_data);
 
     // The beacon data header contains the MD5 hash of the data.
     BeaconData beacon_header;
@@ -1367,12 +1156,12 @@ static void DecryptBeaconData(Interface* self) {
         nodes.push_back(node);
     }
 
-    Memory::ZeroBlock(output_buffer_addr, sizeof(NodeInfo) * UDSMaxNodes);
-    Memory::WriteBlock(output_buffer_addr, nodes.data(), sizeof(NodeInfo) * nodes.size());
-
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
-    rb.PushStaticBuffer(output_buffer_addr, output_buffer_size, 0);
     rb.Push(RESULT_SUCCESS);
+
+    std::vector<u8> output_buffer(sizeof(NodeInfo) * UDSMaxNodes, 0);
+    std::memcpy(output_buffer.data(), nodes.data(), sizeof(NodeInfo) * nodes.size());
+    rb.PushStaticBuffer(output_buffer, 0);
 }
 
 // Sends a 802.11 beacon frame with information about the current network.
@@ -1397,43 +1186,43 @@ static void BeaconBroadcastCallback(u64 userdata, int cycles_late) {
                               beacon_broadcast_event, 0);
 }
 
-const Interface::FunctionInfo FunctionTable[] = {
-    {0x000102C2, nullptr, "Initialize (deprecated)"},
-    {0x00020000, nullptr, "Scrap"},
-    {0x00030000, Shutdown, "Shutdown"},
-    {0x00040402, nullptr, "CreateNetwork (deprecated)"},
-    {0x00050040, nullptr, "EjectClient"},
-    {0x00060000, nullptr, "EjectSpectator"},
-    {0x00070080, nullptr, "UpdateNetworkAttribute"},
-    {0x00080000, DestroyNetwork, "DestroyNetwork"},
-    {0x00090442, nullptr, "ConnectNetwork (deprecated)"},
-    {0x000A0000, DisconnectNetwork, "DisconnectNetwork"},
-    {0x000B0000, GetConnectionStatus, "GetConnectionStatus"},
-    {0x000D0040, GetNodeInformation, "GetNodeInformation"},
-    {0x000E0006, nullptr, "DecryptBeaconData (deprecated)"},
-    {0x000F0404, RecvBeaconBroadcastData, "RecvBeaconBroadcastData"},
-    {0x00100042, SetApplicationData, "SetApplicationData"},
-    {0x00110040, nullptr, "GetApplicationData"},
-    {0x00120100, Bind, "Bind"},
-    {0x00130040, Unbind, "Unbind"},
-    {0x001400C0, PullPacket, "PullPacket"},
-    {0x00150080, nullptr, "SetMaxSendDelay"},
-    {0x00170182, SendTo, "SendTo"},
-    {0x001A0000, GetChannel, "GetChannel"},
-    {0x001B0302, InitializeWithVersion, "InitializeWithVersion"},
-    {0x001D0044, BeginHostingNetwork, "BeginHostingNetwork"},
-    {0x001E0084, ConnectToNetwork, "ConnectToNetwork"},
-    {0x001F0006, DecryptBeaconData, "DecryptBeaconData"},
-    {0x00200040, nullptr, "Flush"},
-    {0x00210080, nullptr, "SetProbeResponseParam"},
-    {0x00220402, nullptr, "ScanOnConnection"},
-};
 
-NWM_UDS::NWM_UDS() {
+NWM_UDS::NWM_UDS() : ServiceFramework("nwm::UDS") {
+    static const FunctionInfo functions[] = {
+        {0x000102C2, nullptr, "Initialize (deprecated)"},
+        {0x00020000, nullptr, "Scrap"},
+        {0x00030000, &NWM_UDS::Shutdown, "Shutdown"},
+        {0x00040402, nullptr, "CreateNetwork (deprecated)"},
+        {0x00050040, nullptr, "EjectClient"},
+        {0x00060000, nullptr, "EjectSpectator"},
+        {0x00070080, &NWM_UDS::UpdateNetworkAttribute, "UpdateNetworkAttribute"},
+        {0x00080000, &NWM_UDS::DestroyNetwork, "DestroyNetwork"},
+        {0x00090442, nullptr, "ConnectNetwork (deprecated)"},
+        {0x000A0000, &NWM_UDS::DisconnectNetwork, "DisconnectNetwork"},
+        {0x000B0000, &NWM_UDS::GetConnectionStatus, "GetConnectionStatus"},
+        {0x000D0040, &NWM_UDS::GetNodeInformation, "GetNodeInformation"},
+        {0x000E0006, nullptr, "DecryptBeaconData (deprecated)"},
+        {0x000F0404, &NWM_UDS::RecvBeaconBroadcastData, "RecvBeaconBroadcastData"},
+        {0x00100042, &NWM_UDS::SetApplicationData, "SetApplicationData"},
+        {0x00110040, nullptr, "GetApplicationData"},
+        {0x00120100, &NWM_UDS::Bind, "Bind"},
+        {0x00130040, &NWM_UDS::Unbind, "Unbind"},
+        {0x001400C0, &NWM_UDS::PullPacket, "PullPacket"},
+        {0x00150080, nullptr, "SetMaxSendDelay"},
+        {0x00170182, &NWM_UDS::SendTo, "SendTo"},
+        {0x001A0000, &NWM_UDS::GetChannel, "GetChannel"},
+        {0x001B0302, &NWM_UDS::InitializeWithVersion, "InitializeWithVersion"},
+        {0x001D0044, &NWM_UDS::BeginHostingNetwork, "BeginHostingNetwork"},
+        {0x001E0084, &NWM_UDS::ConnectToNetwork, "ConnectToNetwork"},
+        {0x001F0006, &NWM_UDS::DecryptBeaconData, "DecryptBeaconData"},
+        {0x00200040, nullptr, "Flush"},
+        {0x00210080, nullptr, "SetProbeResponseParam"},
+        {0x00220402, nullptr, "ScanOnConnection"},
+    };
     connection_status_event =
         Kernel::Event::Create(Kernel::ResetType::OneShot, "NWM::connection_status_event");
 
-    Register(FunctionTable);
+    RegisterHandlers(functions);
 
     beacon_broadcast_event =
         CoreTiming::RegisterEvent("UDS::BeaconBroadcastCallback", BeaconBroadcastCallback);

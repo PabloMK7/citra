@@ -224,7 +224,7 @@ std::vector<u8> GeneratedEncryptedData(const NetworkInfo& network_info, const No
     return buffer;
 }
 
-void DecryptBeaconData(const NetworkInfo& network_info, std::vector<u8>& buffer) {
+void DecryptBeacon(const NetworkInfo& network_info, std::vector<u8>& buffer) {
     // Decrypt the data using AES-CTR and the NWM beacon key.
     using CryptoPP::AES;
     std::array<u8, AES::BLOCKSIZE> counter = GetBeaconCryptoCTR(network_info);

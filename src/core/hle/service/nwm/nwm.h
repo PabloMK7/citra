@@ -4,11 +4,14 @@
 
 #pragma once
 
+#include "core/hle/service/service.h"
+
 namespace Service {
 namespace NWM {
 
 /// Initialize all NWM services
 void Init();
+void InstallInterfaces(SM::ServiceManager& service_manager);
 
 } // namespace NWM
 } // namespace Service
