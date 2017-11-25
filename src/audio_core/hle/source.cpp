@@ -277,11 +277,7 @@ bool Source::DequeueBuffer() {
         return false;
 
     Buffer buf = state.input_queue.top();
-
-    // if we're in a loop, the current sound keeps playing afterwards, so leave the queue alone
-    if (!buf.is_looping) {
-        state.input_queue.pop();
-    }
+    state.input_queue.pop();
 
     if (buf.adpcm_dirty) {
         state.adpcm_state.yn1 = buf.adpcm_yn[0];
@@ -321,7 +317,10 @@ bool Source::DequeueBuffer() {
     state.current_buffer_id = buf.buffer_id;
     state.buffer_update = buf.from_queue && !buf.has_played;
 
-    buf.has_played = true;
+    if (buf.is_looping) {
+        buf.has_played = true;
+        state.input_queue.push(buf);
+    }
 
     LOG_TRACE(Audio_DSP, "source_id=%zu buffer_id=%hu from_queue=%s current_buffer.size()=%zu",
               source_id, buf.buffer_id, buf.from_queue ? "true" : "false",
