@@ -168,10 +168,10 @@ namespace FileSys {
  */
 class NCCHContainer {
 public:
-    NCCHContainer(const std::string& filepath);
+    NCCHContainer(const std::string& filepath, u32 ncch_offset = 0);
     NCCHContainer() {}
 
-    Loader::ResultStatus OpenFile(const std::string& filepath);
+    Loader::ResultStatus OpenFile(const std::string& filepath, u32 ncch_offset = 0);
 
     /**
      * Ensure ExeFS and exheader is loaded and ready for reading sections
@@ -263,7 +263,7 @@ private:
     bool is_loaded = false;
     bool is_compressed = false;
 
-    u32 ncch_offset = 0; // Offset to NCCH header, can be 0 or after NCSD header
+    u32 ncch_offset = 0; // Offset to NCCH header, can be 0 for NCCHs or non-zero for CIAs/NCSDs
     u32 exefs_offset = 0;
 
     std::string filepath;
