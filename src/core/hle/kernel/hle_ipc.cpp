@@ -51,7 +51,6 @@ const std::vector<u8>& HLERequestContext::GetStaticBuffer(u8 buffer_id) const {
 }
 
 void HLERequestContext::AddStaticBuffer(u8 buffer_id, std::vector<u8> data) {
-    ASSERT(static_buffers[buffer_id].empty() && !data.empty());
     static_buffers[buffer_id] = std::move(data);
 }
 
