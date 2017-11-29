@@ -177,6 +177,9 @@ void Room::RoomImpl::ServerLoop() {
             case ENET_EVENT_TYPE_DISCONNECT:
                 HandleClientDisconnection(event.peer);
                 break;
+            case ENET_EVENT_TYPE_NONE:
+            case ENET_EVENT_TYPE_CONNECT:
+                break;
             }
         }
     }
