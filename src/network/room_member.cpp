@@ -308,6 +308,9 @@ void RoomMember::RoomMemberImpl::Disconnect() {
         case ENET_EVENT_TYPE_DISCONNECT:
             server = nullptr;
             return;
+        case ENET_EVENT_TYPE_NONE:
+        case ENET_EVENT_TYPE_CONNECT:
+            break;
         }
     }
     // didn't disconnect gracefully force disconnect
