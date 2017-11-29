@@ -29,9 +29,8 @@ SharedPtr<Event> HLERequestContext::SleepClientThread(SharedPtr<Thread> thread,
                                                       const std::string& reason, u64 timeout,
                                                       WakeupCallback&& callback) {
     // Put the client thread to sleep until the wait event is signaled or the timeout expires.
-    thread->wakeup_callback = [context = *this, callback](ThreadWakeupReason reason,
-                                                          SharedPtr<Thread> thread,
-                                                          SharedPtr<WaitObject> object) mutable {
+    thread->wakeup_callback = [ context = *this, callback ](
+        ThreadWakeupReason reason, SharedPtr<Thread> thread, SharedPtr<WaitObject> object) mutable {
         ASSERT(thread->status == THREADSTATUS_WAIT_HLE_EVENT);
         callback(thread, context, reason);
 
