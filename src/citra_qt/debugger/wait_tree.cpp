@@ -161,6 +161,9 @@ QString WaitTreeThread::GetText() const {
     case THREADSTATUS_WAIT_SYNCH_ANY:
         status = tr("waiting for objects");
         break;
+    case THREADSTATUS_WAIT_HLE_EVENT:
+        status = tr("waiting for HLE return");
+        break;
     case THREADSTATUS_DORMANT:
         status = tr("dormant");
         break;
@@ -189,6 +192,7 @@ QColor WaitTreeThread::GetColor() const {
         return QColor(Qt::GlobalColor::darkCyan);
     case THREADSTATUS_WAIT_SYNCH_ALL:
     case THREADSTATUS_WAIT_SYNCH_ANY:
+    case THREADSTATUS_WAIT_HLE_EVENT:
         return QColor(Qt::GlobalColor::red);
     case THREADSTATUS_DORMANT:
         return QColor(Qt::GlobalColor::darkCyan);
@@ -237,7 +241,8 @@ std::vector<std::unique_ptr<WaitTreeItem>> WaitTreeThread::GetChildren() const {
         list.push_back(std::make_unique<WaitTreeMutexList>(thread.held_mutexes));
     }
     if (thread.status == THREADSTATUS_WAIT_SYNCH_ANY ||
-        thread.status == THREADSTATUS_WAIT_SYNCH_ALL) {
+        thread.status == THREADSTATUS_WAIT_SYNCH_ALL ||
+        thread.status == THREADSTATUS_WAIT_HLE_EVENT) {
         list.push_back(std::make_unique<WaitTreeObjectList>(thread.wait_objects,
                                                             thread.IsSleepingOnWaitAll()));
     }

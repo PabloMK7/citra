@@ -9,6 +9,7 @@
 #include "common/string_util.h"
 #include "core/hle/ipc.h"
 #include "core/hle/kernel/client_port.h"
+#include "core/hle/kernel/event.h"
 #include "core/hle/kernel/process.h"
 #include "core/hle/kernel/server_port.h"
 #include "core/hle/kernel/server_session.h"
@@ -210,6 +211,47 @@ void AddService(Interface* interface_) {
     server_port->SetHleHandler(std::shared_ptr<Interface>(interface_));
 }
 
+bool ThreadContinuationToken::IsValid() {
+    return thread != nullptr && event != nullptr;
+}
+
+ThreadContinuationToken SleepClientThread(const std::string& reason,
+                                          ThreadContinuationToken::Callback callback) {
+    auto thread = Kernel::GetCurrentThread();
+
+    ASSERT(thread->status == THREADSTATUS_RUNNING);
+
+    ThreadContinuationToken token;
+
+    token.event = Kernel::Event::Create(Kernel::ResetType::OneShot, "HLE Pause Event: " + reason);
+    token.thread = thread;
+    token.callback = std::move(callback);
+    token.pause_reason = std::move(reason);
+
+    // Make the thread wait on our newly created event, it will be signaled when
+    // ContinueClientThread is called.
+    thread->status = THREADSTATUS_WAIT_HLE_EVENT;
+    thread->wait_objects = {token.event};
+    token.event->AddWaitingThread(thread);
+
+    return token;
+}
+
+void ContinueClientThread(ThreadContinuationToken& token) {
+    ASSERT_MSG(token.IsValid(), "Invalid continuation token");
+    ASSERT(token.thread->status == THREADSTATUS_WAIT_HLE_EVENT);
+
+    // Signal the event to wake up the thread
+    token.event->Signal();
+    ASSERT(token.thread->status == THREADSTATUS_READY);
+
+    token.callback(token.thread);
+
+    token.event = nullptr;
+    token.thread = nullptr;
+    token.callback = nullptr;
+}
+
 /// Initialize ServiceManager
 void Init() {
     SM::g_service_manager = std::make_shared<SM::ServiceManager>();
@@ -279,4 +321,4 @@ void Shutdown() {
     g_kernel_named_ports.clear();
     LOG_DEBUG(Service, "shutdown OK");
 }
-}
+} // namespace Service

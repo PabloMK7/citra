@@ -20,7 +20,8 @@ namespace Kernel {
 class ClientPort;
 class ServerPort;
 class ServerSession;
-}
+class Event;
+} // namespace Kernel
 
 namespace Service {
 
@@ -249,6 +250,45 @@ private:
     }
 };
 
+/*
+ * Token representing a pause request for a guest thread from an HLE service function.
+ * Using this token a function can put a guest thread to sleep to defer returning a result from
+ * SendSyncRequest until an async operation completes on the host. To use it, call SleepClientThread
+ * to create a specific continuation token for the current thread, perform your async operation, and
+ * then call ContinueClientThread passing in the returned token as a parameter.
+ */
+class ThreadContinuationToken {
+public:
+    using Callback = std::function<void(Kernel::SharedPtr<Kernel::Thread> thread)>;
+    friend ThreadContinuationToken SleepClientThread(const std::string& reason, Callback callback);
+    friend void ContinueClientThread(ThreadContinuationToken& token);
+
+    bool IsValid();
+
+private:
+    Kernel::SharedPtr<Kernel::Event> event;
+    Kernel::SharedPtr<Kernel::Thread> thread;
+    Callback callback;
+    std::string pause_reason;
+};
+
+/*
+ * Puts the current guest thread to sleep and returns a ThreadContinuationToken to be used with
+ * ContinueClientThread.
+ * @param reason Reason for pausing the thread, to be used for debugging purposes.
+ * @param callback Callback to be invoked when the thread is resumed by ContinueClientThread.
+ * @returns ThreadContinuationToken representing the pause request.
+ */
+ThreadContinuationToken SleepClientThread(const std::string& reason,
+                                          ThreadContinuationToken::Callback callback);
+
+/*
+ * Completes a continuation request and resumes the associated guest thread.
+ * This function invalidates the token.
+ * @param token The continuation token associated with the continuation request.
+ */
+void ContinueClientThread(ThreadContinuationToken& token);
+
 /// Initialize ServiceManager
 void Init();
 
@@ -263,4 +303,4 @@ void AddNamedPort(std::string name, Kernel::SharedPtr<Kernel::ClientPort> port);
 /// Adds a service to the services table
 void AddService(Interface* interface_);
 
-} // namespace
+} // namespace Service

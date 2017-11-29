@@ -39,7 +39,8 @@ SharedPtr<Thread> WaitObject::GetHighestPriorityReadyThread() {
     for (const auto& thread : waiting_threads) {
         // The list of waiting threads must not contain threads that are not waiting to be awakened.
         ASSERT_MSG(thread->status == THREADSTATUS_WAIT_SYNCH_ANY ||
-                       thread->status == THREADSTATUS_WAIT_SYNCH_ALL,
+                       thread->status == THREADSTATUS_WAIT_SYNCH_ALL ||
+                       thread->status == THREADSTATUS_WAIT_HLE_EVENT,
                    "Inconsistent thread statuses in waiting_threads");
 
         if (thread->current_priority >= candidate_priority)
