@@ -63,7 +63,7 @@ bool Packet::EndOfPacket() const {
 }
 
 Packet::operator bool() const {
-    return is_valid ? &Packet::CheckSize : nullptr;
+    return is_valid;
 }
 
 Packet& Packet::operator>>(bool& out_data) {
