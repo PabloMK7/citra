@@ -2,8 +2,8 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <cmath>
 #include <catch.hpp>
-#include <math.h>
 #include "common/param_package.h"
 
 namespace Common {
