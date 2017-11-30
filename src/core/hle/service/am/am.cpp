@@ -320,7 +320,7 @@ InstallStatus InstallCIA(const std::string& path,
                 update_callback(total_bytes_read, file.GetSize());
             if (result.Failed()) {
                 LOG_ERROR(Service_AM, "CIA file installation aborted with error code %08x",
-                          result.Code());
+                          result.Code().raw);
                 return InstallStatus::ErrorAborted;
             }
             total_bytes_read += bytes_read;

@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <cinttypes>
 #include "common/logging/log.h"
 #include "core/file_sys/errors.h"
 #include "core/file_sys/file_backend.h"
@@ -96,8 +97,8 @@ void GetStepHistory(Interface* self) {
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
 
-    LOG_WARNING(Service_PTM, "(STUBBED) called, from time(raw): 0x%llx, for %d hours", start_time,
-                hours);
+    LOG_WARNING(Service_PTM, "(STUBBED) called, from time(raw): 0x" PRIx64 ", for %u hours",
+                start_time, hours);
 }
 
 void GetTotalStepCount(Interface* self) {
