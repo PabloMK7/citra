@@ -383,12 +383,11 @@ static u32 vfp_double_fsqrt(ARMul_State* state, int dd, int unused, int dm, u32 
  * Greater than	:= C
  * Unordered	:= CV
  */
-static u32 vfp_compare(ARMul_State* state, int dd, int signal_on_qnan, int dm, u32 fpscr) {
-    s64 d, m;
+static u32 vfp_compare(ARMul_State* state, int dd, int signal_on_qnan, s64 m, u32 fpscr) {
+    s64 d;
     u32 ret = 0;
 
     LOG_TRACE(Core_ARM11, "In %s, state=0x%p, fpscr=0x%x", __FUNCTION__, state, fpscr);
-    m = vfp_get_double(state, dm);
     if (vfp_double_packed_exponent(m) == 2047 && vfp_double_packed_mantissa(m)) {
         ret |= FPSCR_CFLAG | FPSCR_VFLAG;
         if (signal_on_qnan ||
@@ -451,22 +450,22 @@ static u32 vfp_compare(ARMul_State* state, int dd, int signal_on_qnan, int dm, u
 
 static u32 vfp_double_fcmp(ARMul_State* state, int dd, int unused, int dm, u32 fpscr) {
     LOG_TRACE(Core_ARM11, "In %s", __FUNCTION__);
-    return vfp_compare(state, dd, 0, dm, fpscr);
+    return vfp_compare(state, dd, 0, vfp_get_double(state, dm), fpscr);
 }
 
 static u32 vfp_double_fcmpe(ARMul_State* state, int dd, int unused, int dm, u32 fpscr) {
     LOG_TRACE(Core_ARM11, "In %s", __FUNCTION__);
-    return vfp_compare(state, dd, 1, dm, fpscr);
+    return vfp_compare(state, dd, 1, vfp_get_double(state, dm), fpscr);
 }
 
 static u32 vfp_double_fcmpz(ARMul_State* state, int dd, int unused, int dm, u32 fpscr) {
     LOG_TRACE(Core_ARM11, "In %s", __FUNCTION__);
-    return vfp_compare(state, dd, 0, VFP_REG_ZERO, fpscr);
+    return vfp_compare(state, dd, 0, 0, fpscr);
 }
 
 static u32 vfp_double_fcmpez(ARMul_State* state, int dd, int unused, int dm, u32 fpscr) {
     LOG_TRACE(Core_ARM11, "In %s", __FUNCTION__);
-    return vfp_compare(state, dd, 1, VFP_REG_ZERO, fpscr);
+    return vfp_compare(state, dd, 1, 0, fpscr);
 }
 
 static u32 vfp_double_fcvts(ARMul_State* state, int sd, int unused, int dm, u32 fpscr) {
