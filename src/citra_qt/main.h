@@ -8,24 +8,28 @@
 #include <QMainWindow>
 #include <QTimer>
 #include "core/core.h"
+#include "core/hle/service/am/am.h"
 #include "ui_main.h"
 
+class AboutDialog;
 class Config;
 class EmuThread;
 class GameList;
 class GImageInfo;
-class GPUCommandStreamWidget;
 class GPUCommandListWidget;
+class GPUCommandStreamWidget;
 class GraphicsBreakPointsWidget;
 class GraphicsTracingWidget;
 class GraphicsVertexShaderWidget;
 class GRenderWindow;
 class MicroProfileDialog;
 class ProfilerWidget;
+template <typename>
+class QFutureWatcher;
+class QProgressBar;
 class RegistersWidget;
 class Updater;
 class WaitTreeWidget;
-class AboutDialog;
 
 class GMainWindow : public QMainWindow {
     Q_OBJECT
@@ -64,6 +68,7 @@ signals:
      * system emulation handles and memory are still valid, but are about become invalid.
      */
     void EmulationStopping();
+    void UpdateProgress(size_t written, size_t total);
 
 private:
     void InitializeWidgets();
@@ -125,6 +130,9 @@ private slots:
     void OnGameListLoadFile(QString game_path);
     void OnGameListOpenSaveFolder(u64 program_id);
     void OnMenuLoadFile();
+    void OnMenuInstallCIA();
+    void OnUpdateProgress(size_t written, size_t total);
+    void OnCIAInstallFinished();
     /// Called whenever a user selects the "File->Select Game List Root" menu item
     void OnMenuSelectGameListRoot();
     void OnMenuRecentFile();
@@ -149,8 +157,10 @@ private:
 
     GRenderWindow* render_window;
     GameList* game_list;
+    QFutureWatcher<Service::AM::InstallStatus>* watcher = nullptr;
 
     // Status bar elements
+    QProgressBar* progress_bar = nullptr;
     QLabel* message_label = nullptr;
     QLabel* emu_speed_label = nullptr;
     QLabel* game_fps_label = nullptr;
@@ -185,3 +195,5 @@ protected:
     void dragEnterEvent(QDragEnterEvent* event) override;
     void dragMoveEvent(QDragMoveEvent* event) override;
 };
+
+Q_DECLARE_METATYPE(size_t);

@@ -58,6 +58,7 @@
      </property>
     </widget>
     <addaction name="action_Load_File"/>
+    <addaction name="action_Install_CIA"/>
     <addaction name="separator"/>
     <addaction name="action_Select_Game_List_Root"/>
     <addaction name="menu_recent_files"/>
@@ -110,6 +111,11 @@
   <action name="action_Load_File">
    <property name="text">
     <string>Load File...</string>
+   </property>
+  </action>
+  <action name="action_Install_CIA">
+   <property name="text">
+    <string>Install CIA...</string>
    </property>
   </action>
   <action name="action_Load_Symbol_Map">
