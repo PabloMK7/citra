@@ -40,11 +40,20 @@ static bool IsReadOnlyMemory(u32 vaddr) {
     return false;
 }
 
+static void AddTicks(u64 ticks) {
+    CoreTiming::AddTicks(ticks);
+}
+
+static u64 GetTicksRemaining() {
+    int ticks = CoreTiming::GetDowncount();
+    return static_cast<u64>(ticks <= 0 ? 0 : ticks);
+}
+
 static Dynarmic::UserCallbacks GetUserCallbacks(
-    const std::shared_ptr<ARMul_State>& interpeter_state, Memory::PageTable* current_page_table) {
+    const std::shared_ptr<ARMul_State>& interpreter_state, Memory::PageTable* current_page_table) {
     Dynarmic::UserCallbacks user_callbacks{};
     user_callbacks.InterpreterFallback = &InterpreterFallback;
-    user_callbacks.user_arg = static_cast<void*>(interpeter_state.get());
+    user_callbacks.user_arg = static_cast<void*>(interpreter_state.get());
     user_callbacks.CallSVC = &SVC::CallSVC;
     user_callbacks.memory.IsReadOnlyMemory = &IsReadOnlyMemory;
     user_callbacks.memory.ReadCode = &Memory::Read32;
@@ -56,14 +65,29 @@ static Dynarmic::UserCallbacks GetUserCallbacks(
     user_callbacks.memory.Write16 = &Memory::Write16;
     user_callbacks.memory.Write32 = &Memory::Write32;
     user_callbacks.memory.Write64 = &Memory::Write64;
+    user_callbacks.AddTicks = &AddTicks;
+    user_callbacks.GetTicksRemaining = &GetTicksRemaining;
     user_callbacks.page_table = &current_page_table->pointers;
-    user_callbacks.coprocessors[15] = std::make_shared<DynarmicCP15>(interpeter_state);
+    user_callbacks.coprocessors[15] = std::make_shared<DynarmicCP15>(interpreter_state);
     return user_callbacks;
 }
 
 ARM_Dynarmic::ARM_Dynarmic(PrivilegeMode initial_mode) {
     interpreter_state = std::make_shared<ARMul_State>(initial_mode);
     PageTableChanged();
+}
+
+MICROPROFILE_DEFINE(ARM_Jit, "ARM JIT", "ARM JIT", MP_RGB(255, 64, 64));
+
+void ARM_Dynarmic::Run() {
+    ASSERT(Memory::GetCurrentPageTable() == current_page_table);
+    MICROPROFILE_SCOPE(ARM_Jit);
+
+    jit->Run(GetTicksRemaining());
+}
+
+void ARM_Dynarmic::Step() {
+    InterpreterFallback(jit->Regs()[15], jit, static_cast<void*>(interpreter_state.get()));
 }
 
 void ARM_Dynarmic::SetPC(u32 pc) {
@@ -124,17 +148,6 @@ void ARM_Dynarmic::SetCP15Register(CP15Register reg, u32 value) {
     interpreter_state->CP15[reg] = value;
 }
 
-MICROPROFILE_DEFINE(ARM_Jit, "ARM JIT", "ARM JIT", MP_RGB(255, 64, 64));
-
-void ARM_Dynarmic::ExecuteInstructions(int num_instructions) {
-    ASSERT(Memory::GetCurrentPageTable() == current_page_table);
-    MICROPROFILE_SCOPE(ARM_Jit);
-
-    std::size_t ticks_executed = jit->Run(static_cast<unsigned>(num_instructions));
-
-    CoreTiming::AddTicks(ticks_executed);
-}
-
 void ARM_Dynarmic::SaveContext(ARM_Interface::ThreadContext& ctx) {
     memcpy(ctx.cpu_registers, jit->Regs().data(), sizeof(ctx.cpu_registers));
     memcpy(ctx.fpu_registers, jit->ExtRegs().data(), sizeof(ctx.fpu_registers));
@@ -168,6 +181,7 @@ void ARM_Dynarmic::PrepareReschedule() {
 }
 
 void ARM_Dynarmic::ClearInstructionCache() {
+    // TODO: Clear interpreter cache when appropriate.
     for (const auto& j : jits) {
         j.second->ClearCache();
     }

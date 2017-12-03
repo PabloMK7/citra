@@ -15,6 +15,9 @@ public:
     ARM_DynCom(PrivilegeMode initial_mode);
     ~ARM_DynCom();
 
+    void Run() override;
+    void Step() override;
+
     void ClearInstructionCache() override;
     void PageTableChanged() override;
 
@@ -35,8 +38,9 @@ public:
     void LoadContext(const ThreadContext& ctx) override;
 
     void PrepareReschedule() override;
-    void ExecuteInstructions(int num_instructions) override;
 
 private:
+    void ExecuteInstructions(int num_instructions);
+
     std::unique_ptr<ARMul_State> state;
 };

@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <algorithm>
 #include <cstring>
 #include <memory>
 #include "core/arm/dyncom/arm_dyncom.h"
@@ -19,6 +20,14 @@ ARM_DynCom::ARM_DynCom(PrivilegeMode initial_mode) {
 }
 
 ARM_DynCom::~ARM_DynCom() {}
+
+void ARM_DynCom::Run() {
+    ExecuteInstructions(std::max(CoreTiming::GetDowncount(), 0));
+}
+
+void ARM_DynCom::Step() {
+    ExecuteInstructions(1);
+}
 
 void ARM_DynCom::ClearInstructionCache() {
     state->instruction_cache.clear();
@@ -79,10 +88,6 @@ void ARM_DynCom::SetCP15Register(CP15Register reg, u32 value) {
 
 void ARM_DynCom::ExecuteInstructions(int num_instructions) {
     state->NumInstrsToExecute = num_instructions;
-
-    // Dyncom only breaks on instruction dispatch. This only happens on every instruction when
-    // executing one instruction at a time. Otherwise, if a block is being executed, more
-    // instructions may actually be executed than specified.
     unsigned ticks_executed = InterpreterMainLoop(state.get());
     CoreTiming::AddTicks(ticks_executed);
 }

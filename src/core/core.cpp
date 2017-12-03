@@ -27,7 +27,7 @@ namespace Core {
 
 /*static*/ System System::s_instance;
 
-System::ResultStatus System::RunLoop(int tight_loop) {
+System::ResultStatus System::RunLoop(bool tight_loop) {
     status = ResultStatus::Success;
     if (!cpu_core) {
         return ResultStatus::ErrorNotInitialized;
@@ -57,7 +57,11 @@ System::ResultStatus System::RunLoop(int tight_loop) {
         PrepareReschedule();
     } else {
         CoreTiming::Advance();
-        cpu_core->Run(tight_loop);
+        if (tight_loop) {
+            cpu_core->Run();
+        } else {
+            cpu_core->Step();
+        }
     }
 
     HW::Update();
@@ -67,7 +71,7 @@ System::ResultStatus System::RunLoop(int tight_loop) {
 }
 
 System::ResultStatus System::SingleStep() {
-    return RunLoop(1);
+    return RunLoop(false);
 }
 
 System::ResultStatus System::Load(EmuWindow* emu_window, const std::string& filepath) {

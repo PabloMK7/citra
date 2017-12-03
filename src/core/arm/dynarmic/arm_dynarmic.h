@@ -19,6 +19,9 @@ class ARM_Dynarmic final : public ARM_Interface {
 public:
     ARM_Dynarmic(PrivilegeMode initial_mode);
 
+    void Run() override;
+    void Step() override;
+
     void SetPC(u32 pc) override;
     u32 GetPC() const override;
     u32 GetReg(int index) const override;
@@ -36,7 +39,6 @@ public:
     void LoadContext(const ThreadContext& ctx) override;
 
     void PrepareReschedule() override;
-    void ExecuteInstructions(int num_instructions) override;
 
     void ClearInstructionCache() override;
     void PageTableChanged() override;
