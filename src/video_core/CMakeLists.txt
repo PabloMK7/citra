@@ -87,7 +87,7 @@ target_link_libraries(video_core PUBLIC common core)
 target_link_libraries(video_core PRIVATE glad nihstro-headers)
 
 if (ARCHITECTURE_x86_64)
-    target_link_libraries(video_core PRIVATE xbyak)
+    target_link_libraries(video_core PUBLIC xbyak)
 endif()
 
 if (PNG_FOUND)

@@ -432,27 +432,13 @@ void JitShader::Compile_DPH(Instruction instr) {
 
 void JitShader::Compile_EX2(Instruction instr) {
     Compile_SwizzleSrc(instr, 1, instr.common.src1, SRC1);
-    movss(xmm0, SRC1); // ABI_PARAM1
-
-    ABI_PushRegistersAndAdjustStack(*this, PersistentCallerSavedRegs(), 0);
-    CallFarFunction(*this, exp2f);
-    ABI_PopRegistersAndAdjustStack(*this, PersistentCallerSavedRegs(), 0);
-
-    shufps(xmm0, xmm0, _MM_SHUFFLE(0, 0, 0, 0)); // ABI_RETURN
-    movaps(SRC1, xmm0);
+    call(exp2_subroutine);
     Compile_DestEnable(instr, SRC1);
 }
 
 void JitShader::Compile_LG2(Instruction instr) {
     Compile_SwizzleSrc(instr, 1, instr.common.src1, SRC1);
-    movss(xmm0, SRC1); // ABI_PARAM1
-
-    ABI_PushRegistersAndAdjustStack(*this, PersistentCallerSavedRegs(), 0);
-    CallFarFunction(*this, log2f);
-    ABI_PopRegistersAndAdjustStack(*this, PersistentCallerSavedRegs(), 0);
-
-    shufps(xmm0, xmm0, _MM_SHUFFLE(0, 0, 0, 0)); // ABI_RETURN
-    movaps(SRC1, xmm0);
+    call(log2_subroutine);
     Compile_DestEnable(instr, SRC1);
 }
 
@@ -935,7 +921,179 @@ void JitShader::Compile(const std::array<u32, MAX_PROGRAM_CODE_LENGTH>* program_
     LOG_DEBUG(HW_GPU, "Compiled shader size=%lu", getSize());
 }
 
-JitShader::JitShader() : Xbyak::CodeGenerator(MAX_SHADER_SIZE) {}
+JitShader::JitShader() : Xbyak::CodeGenerator(MAX_SHADER_SIZE) {
+    CompilePrelude();
+}
+
+void JitShader::CompilePrelude() {
+    log2_subroutine = CompilePrelude_Log2();
+    exp2_subroutine = CompilePrelude_Exp2();
+}
+
+Xbyak::Label JitShader::CompilePrelude_Log2() {
+    Xbyak::Label subroutine;
+
+    // SSE does not have a log instruction, thus we must approximate.
+    // We perform this approximation first performaing a range reduction into the range [1.0, 2.0).
+    // A minimax polynomial which was fit for the function log2(x) / (x - 1) is then evaluated.
+    // We multiply the result by (x - 1) then restore the result into the appropriate range.
+
+    // Coefficients for the minimax polynomial.
+    // f(x) computes approximately log2(x) / (x - 1).
+    // f(x) = c4 + x * (c3 + x * (c2 + x * (c1 + x * c0)).
+    align(64);
+    const void* c0 = getCurr();
+    dd(0x3d74552f);
+    const void* c1 = getCurr();
+    dd(0xbeee7397);
+    const void* c2 = getCurr();
+    dd(0x3fbd96dd);
+    const void* c3 = getCurr();
+    dd(0xc02153f6);
+    const void* c4 = getCurr();
+    dd(0x4038d96c);
+
+    align(16);
+    const void* negative_infinity_vector = getCurr();
+    dd(0xff800000);
+    dd(0xff800000);
+    dd(0xff800000);
+    dd(0xff800000);
+    const void* default_qnan_vector = getCurr();
+    dd(0x7fc00000);
+    dd(0x7fc00000);
+    dd(0x7fc00000);
+    dd(0x7fc00000);
+
+    Xbyak::Label input_is_nan, input_is_zero, input_out_of_range;
+
+    align(16);
+    L(input_out_of_range);
+    je(input_is_zero);
+    movaps(SRC1, xword[rip + default_qnan_vector]);
+    ret();
+    L(input_is_zero);
+    movaps(SRC1, xword[rip + negative_infinity_vector]);
+    ret();
+
+    align(16);
+    L(subroutine);
+
+    // Here we handle edge cases: input in {NaN, 0, -Inf, Negative}.
+    xorps(SCRATCH, SCRATCH);
+    ucomiss(SCRATCH, SRC1);
+    jp(input_is_nan);
+    jae(input_out_of_range);
+
+    // Split input
+    movd(eax, SRC1);
+    mov(edx, eax);
+    and_(eax, 0x7f800000);
+    and_(edx, 0x007fffff);
+    movss(SCRATCH, xword[rip + c0]); // Preload c0.
+    or_(edx, 0x3f800000);
+    movd(SRC1, edx);
+    // SRC1 now contains the mantissa of the input.
+    mulss(SCRATCH, SRC1);
+    shr(eax, 23);
+    sub(eax, 0x7f);
+    cvtsi2ss(SCRATCH2, eax);
+    // SCRATCH2 now contains the exponent of the input.
+
+    // Complete computation of polynomial
+    addss(SCRATCH, xword[rip + c1]);
+    mulss(SCRATCH, SRC1);
+    addss(SCRATCH, xword[rip + c2]);
+    mulss(SCRATCH, SRC1);
+    addss(SCRATCH, xword[rip + c3]);
+    mulss(SCRATCH, SRC1);
+    subss(SRC1, ONE);
+    addss(SCRATCH, xword[rip + c4]);
+    mulss(SCRATCH, SRC1);
+    addss(SCRATCH2, SCRATCH);
+
+    // Duplicate result across vector
+    xorps(SRC1, SRC1); // break dependency chain
+    movss(SRC1, SCRATCH2);
+    L(input_is_nan);
+    shufps(SRC1, SRC1, _MM_SHUFFLE(0, 0, 0, 0));
+
+    ret();
+
+    return subroutine;
+}
+
+Xbyak::Label JitShader::CompilePrelude_Exp2() {
+    Xbyak::Label subroutine;
+
+    // SSE does not have a exp instruction, thus we must approximate.
+    // We perform this approximation first performaing a range reduction into the range [-0.5, 0.5).
+    // A minimax polynomial which was fit for the function exp2(x) is then evaluated.
+    // We then restore the result into the appropriate range.
+
+    align(64);
+    const void* input_max = getCurr();
+    dd(0x43010000);
+    const void* input_min = getCurr();
+    dd(0xc2fdffff);
+    const void* c0 = getCurr();
+    dd(0x3c5dbe69);
+    const void* half = getCurr();
+    dd(0x3f000000);
+    const void* c1 = getCurr();
+    dd(0x3d5509f9);
+    const void* c2 = getCurr();
+    dd(0x3e773cc5);
+    const void* c3 = getCurr();
+    dd(0x3f3168b3);
+    const void* c4 = getCurr();
+    dd(0x3f800016);
+
+    Xbyak::Label ret_label;
+
+    align(16);
+    L(subroutine);
+
+    // Handle edge cases
+    ucomiss(SRC1, SRC1);
+    jp(ret_label);
+    // Clamp to maximum range since we shift the value directly into the exponent.
+    minss(SRC1, xword[rip + input_max]);
+    maxss(SRC1, xword[rip + input_min]);
+
+    // Decompose input
+    movss(SCRATCH, SRC1);
+    movss(SCRATCH2, xword[rip + c0]); // Preload c0.
+    subss(SCRATCH, xword[rip + half]);
+    cvtss2si(eax, SCRATCH);
+    cvtsi2ss(SCRATCH, eax);
+    // SCRATCH now contains input rounded to the nearest integer.
+    add(eax, 0x7f);
+    subss(SRC1, SCRATCH);
+    // SRC1 contains input - round(input), which is in [-0.5, 0.5).
+    mulss(SCRATCH2, SRC1);
+    shl(eax, 23);
+    movd(SCRATCH, eax);
+    // SCRATCH contains 2^(round(input)).
+
+    // Complete computation of polynomial.
+    addss(SCRATCH2, xword[rip + c1]);
+    mulss(SCRATCH2, SRC1);
+    addss(SCRATCH2, xword[rip + c2]);
+    mulss(SCRATCH2, SRC1);
+    addss(SCRATCH2, xword[rip + c3]);
+    mulss(SRC1, SCRATCH2);
+    addss(SRC1, xword[rip + c4]);
+    mulss(SRC1, SCRATCH);
+
+    // Duplicate result across vector
+    L(ret_label);
+    shufps(SRC1, SRC1, _MM_SHUFFLE(0, 0, 0, 0));
+
+    ret();
+
+    return subroutine;
+}
 
 } // namespace Shader
 
