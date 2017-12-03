@@ -97,7 +97,7 @@ void GetStepHistory(Interface* self) {
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
 
-    LOG_WARNING(Service_PTM, "(STUBBED) called, from time(raw): 0x" PRIx64 ", for %u hours",
+    LOG_WARNING(Service_PTM, "(STUBBED) called, from time(raw): 0x%" PRIx64 ", for %u hours",
                 start_time, hours);
 }
 
