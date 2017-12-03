@@ -60,8 +60,8 @@ public:
     Float<M, E> operator*(const Float<M, E>& flt) const {
         float result = value * flt.ToFloat32();
         // PICA gives 0 instead of NaN when multiplying by inf
-        if (!std::isnan(value) && !std::isnan(flt.ToFloat32()))
-            if (std::isnan(result))
+        if (std::isnan(result))
+            if (!std::isnan(value) && !std::isnan(flt.ToFloat32()))
                 result = 0.f;
         return Float<M, E>::FromFloat32(result);
     }
