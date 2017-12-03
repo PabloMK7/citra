@@ -106,6 +106,12 @@ ResultCode HLERequestContext::PopulateFromIncomingCommandBuffer(const u32_le* sr
             cmd_buf[i++] = source_address;
             break;
         }
+        case IPC::DescriptorType::MappedBuffer: {
+            u32 next_id = static_cast<u32>(request_mapped_buffers.size());
+            request_mapped_buffers.emplace_back(src_process, descriptor, src_cmdbuf[i], next_id);
+            cmd_buf[i++] = next_id;
+            break;
+        }
         default:
             UNIMPLEMENTED_MSG("Unsupported handle translation: 0x%08X", descriptor);
         }
@@ -165,12 +171,41 @@ ResultCode HLERequestContext::WriteToOutgoingCommandBuffer(u32_le* dst_cmdbuf, P
             dst_cmdbuf[i++] = target_address;
             break;
         }
+        case IPC::DescriptorType::MappedBuffer: {
+            VAddr addr = request_mapped_buffers[cmd_buf[i]].address;
+            dst_cmdbuf[i++] = addr;
+            break;
+        }
         default:
             UNIMPLEMENTED_MSG("Unsupported handle translation: 0x%08X", descriptor);
         }
     }
 
     return RESULT_SUCCESS;
+}
+
+MappedBuffer& HLERequestContext::GetMappedBuffer(u32 id_from_cmdbuf) {
+    ASSERT_MSG(id_from_cmdbuf < request_mapped_buffers.size(), "Mapped Buffer ID out of range!");
+    return request_mapped_buffers[id_from_cmdbuf];
+}
+
+MappedBuffer::MappedBuffer(const Process& process, u32 descriptor, VAddr address, u32 id)
+    : process(&process), address(address), id(id) {
+    IPC::MappedBufferDescInfo desc{descriptor};
+    size = desc.size;
+    perms = desc.perms;
+}
+
+void MappedBuffer::Read(void* dest_buffer, size_t offset, size_t size) {
+    ASSERT(perms & IPC::R);
+    ASSERT(offset + size <= this->size);
+    Memory::ReadBlock(*process, address + offset, dest_buffer, size);
+}
+
+void MappedBuffer::Write(const void* src_buffer, size_t offset, size_t size) {
+    ASSERT(perms & IPC::W);
+    ASSERT(offset + size <= this->size);
+    Memory::WriteBlock(*process, address + offset, src_buffer, size);
 }
 
 } // namespace Kernel

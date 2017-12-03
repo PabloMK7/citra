@@ -121,7 +121,11 @@ public:
     [[deprecated]] void PushStaticBuffer(VAddr buffer_vaddr, size_t size, u8 buffer_id);
     void PushStaticBuffer(const std::vector<u8>& buffer, u8 buffer_id);
 
-    void PushMappedBuffer(VAddr buffer_vaddr, size_t size, MappedBufferPermissions perms);
+    [[deprecated]] void PushMappedBuffer(VAddr buffer_vaddr, size_t size,
+                                         MappedBufferPermissions perms);
+
+    /// Pushes an HLE MappedBuffer interface back to unmapped the buffer.
+    void PushMappedBuffer(const Kernel::MappedBuffer& mapped_buffer);
 };
 
 /// Push ///
@@ -211,6 +215,11 @@ inline void RequestBuilder::PushMappedBuffer(VAddr buffer_vaddr, size_t size,
                                              MappedBufferPermissions perms) {
     Push(MappedBufferDesc(size, perms));
     Push(buffer_vaddr);
+}
+
+inline void RequestBuilder::PushMappedBuffer(const Kernel::MappedBuffer& mapped_buffer) {
+    Push(mapped_buffer.GenerateDescriptor());
+    Push(mapped_buffer.GetId());
 }
 
 class RequestParser : public RequestHelperBase {
@@ -333,8 +342,11 @@ public:
      * @param[out] buffer_perms If non-null, the pointed value will be set to the permissions of the
      * buffer
      */
-    VAddr PopMappedBuffer(size_t* data_size = nullptr,
-                          MappedBufferPermissions* buffer_perms = nullptr);
+    [[deprecated]] VAddr PopMappedBuffer(size_t* data_size,
+                                         MappedBufferPermissions* buffer_perms = nullptr);
+
+    /// Pops a mapped buffer descriptor with its vaddr and resolves it to an HLE interface
+    Kernel::MappedBuffer& PopMappedBuffer();
 
     /**
      * @brief Reads the next normal parameters as a struct, by copying it
@@ -495,6 +507,13 @@ inline VAddr RequestParser::PopMappedBuffer(size_t* data_size,
     if (buffer_perms != nullptr)
         *buffer_perms = bufferInfo.perms;
     return Pop<VAddr>();
+}
+
+inline Kernel::MappedBuffer& RequestParser::PopMappedBuffer() {
+    u32 mapped_buffer_descriptor = Pop<u32>();
+    ASSERT_MSG(GetDescriptorType(mapped_buffer_descriptor) == MappedBuffer,
+               "Tried to pop mapped buffer but the descriptor is not a mapped buffer descriptor");
+    return context->GetMappedBuffer(Pop<u32>());
 }
 
 } // namespace IPC
