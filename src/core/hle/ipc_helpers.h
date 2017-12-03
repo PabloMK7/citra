@@ -114,7 +114,10 @@ public:
     void PushMoveHandles(H... handles);
 
     template <typename... O>
-    void PushObjects(Kernel::SharedPtr<O>... pointers);
+    void PushCopyObjects(Kernel::SharedPtr<O>... pointers);
+
+    template <typename... O>
+    void PushMoveObjects(Kernel::SharedPtr<O>... pointers);
 
     void PushCurrentPIDHandle();
 
@@ -187,7 +190,12 @@ inline void RequestBuilder::PushMoveHandles(H... handles) {
 }
 
 template <typename... O>
-inline void RequestBuilder::PushObjects(Kernel::SharedPtr<O>... pointers) {
+inline void RequestBuilder::PushCopyObjects(Kernel::SharedPtr<O>... pointers) {
+    PushCopyHandles(context->AddOutgoingHandle(std::move(pointers))...);
+}
+
+template <typename... O>
+inline void RequestBuilder::PushMoveObjects(Kernel::SharedPtr<O>... pointers) {
     PushMoveHandles(context->AddOutgoingHandle(std::move(pointers))...);
 }
 

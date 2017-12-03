@@ -66,7 +66,7 @@ void SRV::EnableNotification(Kernel::HLERequestContext& ctx) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
     rb.Push(RESULT_SUCCESS);
-    rb.PushObjects(notification_semaphore);
+    rb.PushCopyObjects(notification_semaphore);
     LOG_WARNING(Service_SRV, "(STUBBED) called");
 }
 
@@ -114,7 +114,7 @@ void SRV::GetServiceHandle(Kernel::HLERequestContext& ctx) {
                   (*session)->GetObjectId());
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
         rb.Push(session.Code());
-        rb.PushObjects(std::move(session).Unwrap());
+        rb.PushMoveObjects(std::move(session).Unwrap());
     } else if (session.Code() == Kernel::ERR_MAX_CONNECTIONS_REACHED && wait_until_available) {
         LOG_WARNING(Service_SRV, "called service=%s -> ERR_MAX_CONNECTIONS_REACHED", name.c_str());
         // TODO(Subv): Put the caller guest thread to sleep until this port becomes available again.
@@ -204,7 +204,7 @@ void SRV::RegisterService(Kernel::HLERequestContext& ctx) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
     rb.Push(RESULT_SUCCESS);
-    rb.PushObjects(port.Unwrap());
+    rb.PushMoveObjects(port.Unwrap());
 }
 
 SRV::SRV(std::shared_ptr<ServiceManager> service_manager)
