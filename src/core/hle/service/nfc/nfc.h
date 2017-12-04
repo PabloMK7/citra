@@ -12,6 +12,12 @@ class Interface;
 
 namespace NFC {
 
+namespace ErrCodes {
+enum {
+    CommandInvalidForState = 512,
+};
+} // namespace ErrCodes
+
 enum class TagState : u8 {
     NotInitialized = 0,
     NotScanning = 1,

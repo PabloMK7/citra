@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include "core/hle/ipc.h"
+#include "core/hle/ipc_helpers.h"
 #include "core/hle/kernel/event.h"
 #include "core/hle/kernel/handle_table.h"
 #include "core/hle/service/nfc/nfc.h"
@@ -53,13 +54,23 @@ void StopCommunication(Interface* self) {
 }
 
 void StartTagScanning(Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 5, 1, 0); // 0x00050040
+    u16 in_val = rp.Pop<u16>();
 
-    nfc_tag_state = TagState::TagInRange;
-    tag_in_range_event->Signal();
+    ResultCode result = RESULT_SUCCESS;
 
-    cmd_buff[1] = RESULT_SUCCESS.raw; // No error
-    LOG_WARNING(Service_NFC, "(STUBBED) called");
+    // TODO(shinyquagsire23): Implement NFC tag detection, for now stub result
+    result = ResultCode(ErrCodes::CommandInvalidForState, ErrorModule::NFC,
+                        ErrorSummary::InvalidState, ErrorLevel::Status);
+
+    if (result == RESULT_SUCCESS) {
+        nfc_tag_state = TagState::TagInRange;
+        tag_in_range_event->Signal();
+    }
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(result);
+    LOG_WARNING(Service_NFC, "(STUBBED) called, in_val=%04x", in_val);
 }
 
 void StopTagScanning(Interface* self) {
