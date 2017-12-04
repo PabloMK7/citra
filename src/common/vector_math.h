@@ -131,7 +131,7 @@ public:
     {
         return *((&x) + i);
     }
-    T operator[](const int i) const {
+    const T& operator[](const int i) const {
         return *((&x) + i);
     }
 
@@ -288,7 +288,7 @@ public:
     {
         return *((&x) + i);
     }
-    T operator[](const int i) const {
+    const T& operator[](const int i) const {
         return *((&x) + i);
     }
 
@@ -502,7 +502,7 @@ public:
     {
         return *((&x) + i);
     }
-    T operator[](const int i) const {
+    const T& operator[](const int i) const {
         return *((&x) + i);
     }
 
