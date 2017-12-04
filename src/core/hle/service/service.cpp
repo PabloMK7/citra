@@ -257,10 +257,10 @@ void Init() {
     SM::g_service_manager = std::make_shared<SM::ServiceManager>();
     SM::ServiceManager::InstallInterfaces(SM::g_service_manager);
 
+    ERR::InstallInterfaces();
+
     NS::InstallInterfaces(*SM::g_service_manager);
     AC::InstallInterfaces(*SM::g_service_manager);
-
-    AddNamedPort(new ERR::ERR_F);
 
     FS::ArchiveInit();
     ACT::Init();
