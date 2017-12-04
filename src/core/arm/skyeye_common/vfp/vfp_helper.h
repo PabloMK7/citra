@@ -301,15 +301,6 @@ struct vfp_double {
     u64 significand;
 };
 
-// VFP_REG_ZERO is a special register number for vfp_get_double
-// which returns (double)0.0.  This is useful for the compare with
-// zero instructions.
-#ifdef CONFIG_VFPv3
-#define VFP_REG_ZERO 32
-#else
-#define VFP_REG_ZERO 16
-#endif
-
 #define VFP_DOUBLE_MANTISSA_BITS (52)
 #define VFP_DOUBLE_EXPONENT_BITS (11)
 #define VFP_DOUBLE_LOW_BITS (64 - VFP_DOUBLE_MANTISSA_BITS - 2)
