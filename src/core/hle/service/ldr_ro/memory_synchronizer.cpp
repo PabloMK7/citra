@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include "common/assert.h"
+#include "core/hle/kernel/process.h"
 #include "core/hle/service/ldr_ro/memory_synchronizer.h"
 
 namespace Service {
@@ -32,9 +33,9 @@ void MemorySynchronizer::RemoveMemoryBlock(VAddr mapping, VAddr original) {
     memory_blocks.erase(FindMemoryBlock(mapping, original));
 }
 
-void MemorySynchronizer::SynchronizeOriginalMemory() {
+void MemorySynchronizer::SynchronizeOriginalMemory(Kernel::Process& process) {
     for (auto& block : memory_blocks) {
-        Memory::CopyBlock(block.original, block.mapping, block.size);
+        Memory::CopyBlock(process, block.original, block.mapping, block.size);
     }
 }
 

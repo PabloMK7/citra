@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <unordered_map>
 #include "core/hle/service/ldr_ro/memory_synchronizer.h"
 #include "core/hle/service/service.h"
 
@@ -144,8 +145,11 @@ private:
      */
     void Shutdown(Kernel::HLERequestContext& self);
 
-    MemorySynchronizer memory_synchronizer;
-    VAddr loaded_crs = 0; ///< the virtual address of the static module
+    struct ClientSlot {
+        MemorySynchronizer memory_synchronizer;
+        VAddr loaded_crs = 0; ///< the virtual address of the static module
+    };
+    std::unordered_map<u32, ClientSlot> slots;
 };
 
 void InstallInterfaces(SM::ServiceManager& service_manager);
