@@ -11,6 +11,7 @@
 #include "common/logging/log.h"
 #include "core/core.h"
 #include "core/hle/ipc.h"
+#include "core/hle/ipc_helpers.h"
 #include "core/hle/result.h"
 #include "core/hle/service/err_f.h"
 
@@ -57,23 +58,12 @@ struct ExceptionData {
 };
 static_assert(sizeof(ExceptionData) == 0x60, "ExceptionData struct has incorrect size");
 
-// This is used instead of ResultCode from result.h
-// because we can't have non-trivial data members in unions.
-union RSL {
-    u32 raw;
-
-    BitField<0, 10, u32> description;
-    BitField<10, 8, u32> module;
-    BitField<21, 6, u32> summary;
-    BitField<27, 5, u32> level;
-};
-
 struct ErrInfo {
     struct ErrInfoCommon {
         u8 specifier;          // 0x0
         u8 rev_high;           // 0x1
         u16 rev_low;           // 0x2
-        RSL result_code;       // 0x4
+        u32 result_code;       // 0x4
         u32 pc_address;        // 0x8
         u32 pid;               // 0xC
         u32 title_id_low;      // 0x10
@@ -151,34 +141,27 @@ static void LogGenericInfo(const ErrInfo::ErrInfoCommon& errinfo_common) {
                  errinfo_common.app_title_id_low);
     LOG_CRITICAL(Service_ERR, "ADR: 0x%08X", errinfo_common.pc_address);
 
-    LOG_CRITICAL(Service_ERR, "RSL: 0x%08X", errinfo_common.result_code.raw);
-    LOG_CRITICAL(Service_ERR, "  Level: %u", errinfo_common.result_code.level.Value());
-    LOG_CRITICAL(Service_ERR, "  Summary: %u", errinfo_common.result_code.summary.Value());
-    LOG_CRITICAL(Service_ERR, "  Module: %u", errinfo_common.result_code.module.Value());
-    LOG_CRITICAL(Service_ERR, "  Desc: %u", errinfo_common.result_code.description.Value());
+    ResultCode result_code{errinfo_common.result_code};
+    LOG_CRITICAL(Service_ERR, "RSL: 0x%08X", result_code.raw);
+    LOG_CRITICAL(Service_ERR, "  Level: %u", result_code.level.Value());
+    LOG_CRITICAL(Service_ERR, "  Summary: %u", result_code.summary.Value());
+    LOG_CRITICAL(Service_ERR, "  Module: %u", result_code.module.Value());
+    LOG_CRITICAL(Service_ERR, "  Desc: %u", result_code.description.Value());
 }
 
-/* ThrowFatalError function
- * Inputs:
- *       0 : Header code [0x00010800]
- *    1-32 : FatalErrInfo
- * Outputs:
- *       0 : Header code
- *       1 : Result code
- */
-static void ThrowFatalError(Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
+void ERR_F::ThrowFatalError(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 1, 32, 0);
 
     LOG_CRITICAL(Service_ERR, "Fatal error");
-    const ErrInfo* errinfo = reinterpret_cast<ErrInfo*>(&cmd_buff[1]);
+    const ErrInfo errinfo = rp.PopRaw<ErrInfo>();
     LOG_CRITICAL(Service_ERR, "Fatal error type: %s",
-                 GetErrType(errinfo->errinfo_common.specifier).c_str());
+                 GetErrType(errinfo.errinfo_common.specifier).c_str());
     Core::System::GetInstance().SetStatus(Core::System::ResultStatus::ErrorUnknown);
 
     // Generic Info
-    LogGenericInfo(errinfo->errinfo_common);
+    LogGenericInfo(errinfo.errinfo_common);
 
-    switch (static_cast<FatalErrType>(errinfo->errinfo_common.specifier)) {
+    switch (static_cast<FatalErrType>(errinfo.errinfo_common.specifier)) {
     case FatalErrType::Generic:
     case FatalErrType::Corrupted:
     case FatalErrType::CardRemoved:
@@ -187,7 +170,7 @@ static void ThrowFatalError(Interface* self) {
         break;
     }
     case FatalErrType::Exception: {
-        const auto& errtype = errinfo->exception;
+        const auto& errtype = errinfo.exception;
 
         // Register Info
         LOG_CRITICAL(Service_ERR, "ARM Registers:");
@@ -237,7 +220,7 @@ static void ThrowFatalError(Interface* self) {
     }
 
     case FatalErrType::ResultFailure: {
-        const auto& errtype = errinfo->result_failure;
+        const auto& errtype = errinfo.result_failure;
 
         // Failure Message
         LOG_CRITICAL(Service_ERR, "Failure Message: %s", errtype.message);
@@ -247,19 +230,23 @@ static void ThrowFatalError(Interface* self) {
 
     } // switch FatalErrType
 
-    cmd_buff[0] = IPC::MakeHeader(0x1, 1, 0);
-    cmd_buff[1] = RESULT_SUCCESS.raw; // No error
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RESULT_SUCCESS);
 }
 
-const Interface::FunctionInfo FunctionTable[] = {
-    // clang-format off
-    {0x00010800, ThrowFatalError, "ThrowFatalError"},
-    {0x00020042, nullptr, "SetUserString"},
-    // clang-format on
-};
+ERR_F::ERR_F() : ServiceFramework("err:f", 1) {
+    static const FunctionInfo functions[] = {
+        {0x00010800, &ERR_F::ThrowFatalError, "ThrowFatalError"},
+        {0x00020042, nullptr, "SetUserString"},
+    };
+    RegisterHandlers(functions);
+}
 
-ERR_F::ERR_F() {
-    Register(FunctionTable);
+ERR_F::~ERR_F() = default;
+
+void InstallInterfaces() {
+    auto errf = std::make_shared<ERR_F>();
+    errf->InstallAsNamedPort();
 }
 
 } // namespace ERR
