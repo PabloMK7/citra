@@ -261,6 +261,7 @@ void Init() {
 
     NS::InstallInterfaces(*SM::g_service_manager);
     AC::InstallInterfaces(*SM::g_service_manager);
+    LDR::InstallInterfaces(*SM::g_service_manager);
 
     FS::ArchiveInit();
     ACT::Init();
@@ -288,7 +289,6 @@ void Init() {
     AddService(new GSP::GSP_GPU);
     AddService(new GSP::GSP_LCD);
     AddService(new HTTP::HTTP_C);
-    AddService(new LDR::LDR_RO);
     AddService(new MIC::MIC_U);
     AddService(new PM::PM_APP);
     AddService(new SOC::SOC_U);

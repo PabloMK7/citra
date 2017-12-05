@@ -9,10 +9,8 @@
 #include "core/core.h"
 #include "core/hle/ipc_helpers.h"
 #include "core/hle/kernel/process.h"
-#include "core/hle/kernel/vm_manager.h"
 #include "core/hle/service/ldr_ro/cro_helper.h"
 #include "core/hle/service/ldr_ro/ldr_ro.h"
-#include "core/hle/service/ldr_ro/memory_synchronizer.h"
 
 namespace Service {
 namespace LDR {
@@ -42,11 +40,6 @@ static const ResultCode ERROR_NOT_LOADED = // 0xD8A12C0D
     ResultCode(static_cast<ErrorDescription>(13), ErrorModule::RO, ErrorSummary::InvalidState,
                ErrorLevel::Permanent);
 
-static MemorySynchronizer memory_synchronizer;
-
-// TODO(wwylele): this should be in the per-client storage when we implement multi-process
-static VAddr loaded_crs; ///< the virtual address of the static module
-
 static bool VerifyBufferState(VAddr buffer_ptr, u32 size) {
     auto vma = Kernel::g_current_process->vm_manager.FindVMA(buffer_ptr);
     return vma != Kernel::g_current_process->vm_manager.vma_map.end() &&
@@ -55,32 +48,18 @@ static bool VerifyBufferState(VAddr buffer_ptr, u32 size) {
            vma->second.meminfo_state == Kernel::MemoryState::Private;
 }
 
-/**
- * LDR_RO::Initialize service function
- *  Inputs:
- *      0 : 0x000100C2
- *      1 : CRS buffer pointer
- *      2 : CRS Size
- *      3 : Process memory address where the CRS will be mapped
- *      4 : handle translation descriptor (zero)
- *      5 : KProcess handle
- *  Outputs:
- *      0 : Return header
- *      1 : Result of function, 0 on success, otherwise error code
- */
-static void Initialize(Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x01, 3, 2);
+void RO::Initialize(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x01, 3, 2);
     VAddr crs_buffer_ptr = rp.Pop<u32>();
     u32 crs_size = rp.Pop<u32>();
     VAddr crs_address = rp.Pop<u32>();
     // TODO (wwylele): RO service checks the descriptor here and return error 0xD9001830 for
     // incorrect descriptor. This error return should be probably built in IPC::RequestParser.
     // All other service functions below have the same issue.
-    Kernel::Handle process = rp.PopHandle();
+    auto process = rp.PopObject<Kernel::Process>();
 
-    LOG_DEBUG(Service_LDR,
-              "called, crs_buffer_ptr=0x%08X, crs_address=0x%08X, crs_size=0x%X, process=0x%08X",
-              crs_buffer_ptr, crs_address, crs_size, process);
+    LOG_DEBUG(Service_LDR, "called, crs_buffer_ptr=0x%08X, crs_address=0x%08X, crs_size=0x%X",
+              crs_buffer_ptr, crs_address, crs_size);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
 
@@ -176,83 +155,32 @@ static void Initialize(Interface* self) {
     rb.Push(RESULT_SUCCESS);
 }
 
-/**
- * LDR_RO::LoadCRR service function
- *  Inputs:
- *      0 : 0x00020082
- *      1 : CRR buffer pointer
- *      2 : CRR Size
- *      3 : handle translation descriptor (zero)
- *      4 : KProcess handle
- *  Outputs:
- *      0 : Return header
- *      1 : Result of function, 0 on success, otherwise error code
- */
-static void LoadCRR(Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x02, 2, 2);
+void RO::LoadCRR(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x02, 2, 2);
     VAddr crr_buffer_ptr = rp.Pop<u32>();
     u32 crr_size = rp.Pop<u32>();
-    Kernel::Handle process = rp.PopHandle();
+    auto process = rp.PopObject<Kernel::Process>();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
 
-    LOG_WARNING(Service_LDR,
-                "(STUBBED) called, crr_buffer_ptr=0x%08X, crr_size=0x%08X, process=0x%08X",
-                crr_buffer_ptr, crr_size, process);
+    LOG_WARNING(Service_LDR, "(STUBBED) called, crr_buffer_ptr=0x%08X, crr_size=0x%08X",
+                crr_buffer_ptr, crr_size);
 }
 
-/**
- * LDR_RO::UnloadCRR service function
- *  Inputs:
- *      0 : 0x00030042
- *      1 : CRR buffer pointer
- *      2 : handle translation descriptor (zero)
- *      3 : KProcess handle
- *  Outputs:
- *      0 : Return header
- *      1 : Result of function, 0 on success, otherwise error code
- */
-static void UnloadCRR(Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x03, 1, 2);
+void RO::UnloadCRR(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x03, 1, 2);
     u32 crr_buffer_ptr = rp.Pop<u32>();
-    Kernel::Handle process = rp.PopHandle();
+    auto process = rp.PopObject<Kernel::Process>();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
 
-    LOG_WARNING(Service_LDR, "(STUBBED) called, crr_buffer_ptr=0x%08X, process=0x%08X",
-                crr_buffer_ptr, process);
+    LOG_WARNING(Service_LDR, "(STUBBED) called, crr_buffer_ptr=0x%08X", crr_buffer_ptr);
 }
 
-/**
- * LDR_RO::LoadCRO service function
- *  Inputs:
- *      0 : 0x000402C2 (old) / 0x000902C2 (new)
- *      1 : CRO buffer pointer
- *      2 : memory address where the CRO will be mapped
- *      3 : CRO Size
- *      4 : .data segment buffer pointer
- *      5 : must be zero
- *      6 : .data segment buffer size
- *      7 : .bss segment buffer pointer
- *      8 : .bss segment buffer size
- *      9 : (bool) register CRO as auto-link module
- *     10 : fix level
- *     11 : CRR address (zero if use loaded CRR)
- *     12 : handle translation descriptor (zero)
- *     13 : KProcess handle
- *  Outputs:
- *      0 : Return header
- *      1 : Result of function, 0 on success, otherwise error code
- *      2 : CRO fixed size
- *  Note:
- *      This service function has two versions. The function defined here is a
- *      unified one of two, with an additional parameter link_on_load_bug_fix.
- *      There is a dispatcher template below.
- */
-static void LoadCRO(Interface* self, bool link_on_load_bug_fix) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), link_on_load_bug_fix ? 0x09 : 0x04, 11, 2);
+void RO::LoadCRO(Kernel::HLERequestContext& ctx, bool link_on_load_bug_fix) {
+    IPC::RequestParser rp(ctx, link_on_load_bug_fix ? 0x09 : 0x04, 11, 2);
     VAddr cro_buffer_ptr = rp.Pop<u32>();
     VAddr cro_address = rp.Pop<u32>();
     u32 cro_size = rp.Pop<u32>();
@@ -264,15 +192,15 @@ static void LoadCRO(Interface* self, bool link_on_load_bug_fix) {
     bool auto_link = rp.Pop<bool>();
     u32 fix_level = rp.Pop<u32>();
     VAddr crr_address = rp.Pop<u32>();
-    Kernel::Handle process = rp.PopHandle();
+    auto process = rp.PopObject<Kernel::Process>();
 
     LOG_DEBUG(Service_LDR, "called (%s), cro_buffer_ptr=0x%08X, cro_address=0x%08X, cro_size=0x%X, "
                            "data_segment_address=0x%08X, zero=%d, data_segment_size=0x%X, "
                            "bss_segment_address=0x%08X, bss_segment_size=0x%X, auto_link=%s, "
-                           "fix_level=%d, crr_address=0x%08X, process=0x%08X",
+                           "fix_level=%d, crr_address=0x%08X",
               link_on_load_bug_fix ? "new" : "old", cro_buffer_ptr, cro_address, cro_size,
               data_segment_address, zero, data_segment_size, bss_segment_address, bss_segment_size,
-              auto_link ? "true" : "false", fix_level, crr_address, process);
+              auto_link ? "true" : "false", fix_level, crr_address);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
 
@@ -447,34 +375,15 @@ static void LoadCRO(Interface* self, bool link_on_load_bug_fix) {
     rb.Push(RESULT_SUCCESS, fix_size);
 }
 
-template <bool link_on_load_bug_fix>
-static void LoadCRO(Interface* self) {
-    LoadCRO(self, link_on_load_bug_fix);
-}
-
-/**
- * LDR_RO::UnloadCRO service function
- *  Inputs:
- *      0 : 0x000500C2
- *      1 : mapped CRO pointer
- *      2 : zero? (RO service doesn't care)
- *      3 : original CRO pointer
- *      4 : handle translation descriptor (zero)
- *      5 : KProcess handle
- *  Outputs:
- *      0 : Return header
- *      1 : Result of function, 0 on success, otherwise error code
- */
-static void UnloadCRO(Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x05, 3, 2);
+void RO::UnloadCRO(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x05, 3, 2);
     VAddr cro_address = rp.Pop<u32>();
     u32 zero = rp.Pop<u32>();
     VAddr cro_buffer_ptr = rp.Pop<u32>();
-    Kernel::Handle process = rp.PopHandle();
+    auto process = rp.PopObject<Kernel::Process>();
 
-    LOG_DEBUG(Service_LDR,
-              "called, cro_address=0x%08X, zero=%d, cro_buffer_ptr=0x%08X, process=0x%08X",
-              cro_address, zero, cro_buffer_ptr, process);
+    LOG_DEBUG(Service_LDR, "called, cro_address=0x%08X, zero=%d, cro_buffer_ptr=0x%08X",
+              cro_address, zero, cro_buffer_ptr);
 
     CROHelper cro(cro_address);
 
@@ -540,23 +449,12 @@ static void UnloadCRO(Interface* self) {
     rb.Push(result);
 }
 
-/**
- * LDR_RO::LinkCRO service function
- *  Inputs:
- *      0 : 0x00060042
- *      1 : mapped CRO pointer
- *      2 : handle translation descriptor (zero)
- *      3 : KProcess handle
- *  Outputs:
- *      0 : Return header
- *      1 : Result of function, 0 on success, otherwise error code
- */
-static void LinkCRO(Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x06, 1, 2);
+void RO::LinkCRO(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x06, 1, 2);
     VAddr cro_address = rp.Pop<u32>();
-    Kernel::Handle process = rp.PopHandle();
+    auto process = rp.PopObject<Kernel::Process>();
 
-    LOG_DEBUG(Service_LDR, "called, cro_address=0x%08X, process=0x%08X", cro_address, process);
+    LOG_DEBUG(Service_LDR, "called, cro_address=0x%08X", cro_address);
 
     CROHelper cro(cro_address);
 
@@ -592,23 +490,12 @@ static void LinkCRO(Interface* self) {
     rb.Push(result);
 }
 
-/**
- * LDR_RO::UnlinkCRO service function
- *  Inputs:
- *      0 : 0x00070042
- *      1 : mapped CRO pointer
- *      2 : handle translation descriptor (zero)
- *      3 : KProcess handle
- *  Outputs:
- *      0 : Return header
- *      1 : Result of function, 0 on success, otherwise error code
- */
-static void UnlinkCRO(Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x07, 1, 2);
+void RO::UnlinkCRO(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x07, 1, 2);
     VAddr cro_address = rp.Pop<u32>();
-    Kernel::Handle process = rp.PopHandle();
+    auto process = rp.PopObject<Kernel::Process>();
 
-    LOG_DEBUG(Service_LDR, "called, cro_address=0x%08X, process=0x%08X", cro_address, process);
+    LOG_DEBUG(Service_LDR, "called, cro_address=0x%08X", cro_address);
 
     CROHelper cro(cro_address);
 
@@ -644,24 +531,12 @@ static void UnlinkCRO(Interface* self) {
     rb.Push(result);
 }
 
-/**
- * LDR_RO::Shutdown service function
- *  Inputs:
- *      0 : 0x00080042
- *      1 : original CRS buffer pointer
- *      2 : handle translation descriptor (zero)
- *      3 : KProcess handle
- *  Outputs:
- *      0 : Return header
- *      1 : Result of function, 0 on success, otherwise error code
- */
-static void Shutdown(Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x08, 1, 2);
+void RO::Shutdown(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x08, 1, 2);
     VAddr crs_buffer_ptr = rp.Pop<u32>();
-    Kernel::Handle process = rp.PopHandle();
+    auto process = rp.PopObject<Kernel::Process>();
 
-    LOG_DEBUG(Service_LDR, "called, crs_buffer_ptr=0x%08X, process=0x%08X", crs_buffer_ptr,
-              process);
+    LOG_DEBUG(Service_LDR, "called, crs_buffer_ptr=0x%08X", crs_buffer_ptr);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
 
@@ -691,25 +566,23 @@ static void Shutdown(Interface* self) {
     rb.Push(result);
 }
 
-const Interface::FunctionInfo FunctionTable[] = {
-    // clang-format off
-    {0x000100C2, Initialize, "Initialize"},
-    {0x00020082, LoadCRR, "LoadCRR"},
-    {0x00030042, UnloadCRR, "UnloadCRR"},
-    {0x000402C2, LoadCRO<false>, "LoadCRO"},
-    {0x000500C2, UnloadCRO, "UnloadCRO"},
-    {0x00060042, LinkCRO, "LinkCRO"},
-    {0x00070042, UnlinkCRO, "UnlinkCRO"},
-    {0x00080042, Shutdown, "Shutdown"},
-    {0x000902C2, LoadCRO<true>, "LoadCRO_New"},
-    // clang-format on
-};
+RO::RO() : ServiceFramework("ldr:ro", 2) {
+    static const FunctionInfo functions[] = {
+        {0x000100C2, &RO::Initialize, "Initialize"},
+        {0x00020082, &RO::LoadCRR, "LoadCRR"},
+        {0x00030042, &RO::UnloadCRR, "UnloadCRR"},
+        {0x000402C2, &RO::LoadCRO<false>, "LoadCRO"},
+        {0x000500C2, &RO::UnloadCRO, "UnloadCRO"},
+        {0x00060042, &RO::LinkCRO, "LinkCRO"},
+        {0x00070042, &RO::UnlinkCRO, "UnlinkCRO"},
+        {0x00080042, &RO::Shutdown, "Shutdown"},
+        {0x000902C2, &RO::LoadCRO<true>, "LoadCRO_New"},
+    };
+    RegisterHandlers(functions);
+}
 
-LDR_RO::LDR_RO() {
-    Register(FunctionTable);
-
-    loaded_crs = 0;
-    memory_synchronizer.Clear();
+void InstallInterfaces(SM::ServiceManager& service_manager) {
+    std::make_shared<RO>()->InstallAsService(service_manager);
 }
 
 } // namespace LDR
