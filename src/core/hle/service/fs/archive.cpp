@@ -58,24 +58,6 @@ static constexpr Kernel::Handle INVALID_HANDLE{};
 namespace Service {
 namespace FS {
 
-// Command to access archive file
-enum class FileCommand : u32 {
-    Dummy1 = 0x000100C6,
-    Control = 0x040100C4,
-    OpenSubFile = 0x08010100,
-    Read = 0x080200C2,
-    Write = 0x08030102,
-    GetSize = 0x08040000,
-    SetSize = 0x08050080,
-    GetAttributes = 0x08060000,
-    SetAttributes = 0x08070040,
-    Close = 0x08080000,
-    Flush = 0x08090000,
-    SetPriority = 0x080A0040,
-    GetPriority = 0x080B0000,
-    OpenLinkFile = 0x080C0000,
-};
-
 // Command to access directory
 enum class DirectoryCommand : u32 {
     Dummy1 = 0x000100C6,
@@ -130,12 +112,12 @@ void File::Read(Kernel::HLERequestContext& ctx) {
 }
 
 void File::Write(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x0803, 3, 2);
+    IPC::RequestParser rp(ctx, 0x0803, 4, 2);
     u64 offset = rp.Pop<u64>();
     u32 length = rp.Pop<u32>();
     u32 flush = rp.Pop<u32>();
     auto& buffer = rp.PopMappedBuffer();
-    LOG_TRACE(Service_FS, "Write %s: offset=0x%llx length=%d, flush=0x%x", GetName().c_str(),
+    LOG_TRACE(Service_FS, "Write %s: offset=0x%" PRIx64 " length=%d, flush=0x%x", GetName().c_str(),
               offset, length, flush);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
