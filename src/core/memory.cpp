@@ -615,7 +615,8 @@ void WriteBlock(const VAddr dest_addr, const void* src_buffer, const size_t size
     WriteBlock(*Kernel::g_current_process, dest_addr, src_buffer, size);
 }
 
-void ZeroBlock(const VAddr dest_addr, const size_t size) {
+void ZeroBlock(const Kernel::Process& process, const VAddr dest_addr, const size_t size) {
+    auto& page_table = process.vm_manager.page_table;
     size_t remaining_size = size;
     size_t page_index = dest_addr >> PAGE_BITS;
     size_t page_offset = dest_addr & PAGE_MASK;
@@ -626,36 +627,37 @@ void ZeroBlock(const VAddr dest_addr, const size_t size) {
         const size_t copy_amount = std::min(PAGE_SIZE - page_offset, remaining_size);
         const VAddr current_vaddr = static_cast<VAddr>((page_index << PAGE_BITS) + page_offset);
 
-        switch (current_page_table->attributes[page_index]) {
+        switch (page_table.attributes[page_index]) {
         case PageType::Unmapped: {
             LOG_ERROR(HW_Memory, "unmapped ZeroBlock @ 0x%08X (start address = 0x%08X, size = %zu)",
                       current_vaddr, dest_addr, size);
             break;
         }
         case PageType::Memory: {
-            DEBUG_ASSERT(current_page_table->pointers[page_index]);
+            DEBUG_ASSERT(page_table.pointers[page_index]);
 
-            u8* dest_ptr = current_page_table->pointers[page_index] + page_offset;
+            u8* dest_ptr = page_table.pointers[page_index] + page_offset;
             std::memset(dest_ptr, 0, copy_amount);
             break;
         }
         case PageType::Special: {
-            DEBUG_ASSERT(GetMMIOHandler(current_vaddr));
-
-            GetMMIOHandler(current_vaddr)->WriteBlock(current_vaddr, zeros.data(), copy_amount);
+            MMIORegionPointer handler = GetMMIOHandler(page_table, current_vaddr);
+            DEBUG_ASSERT(handler);
+            handler->WriteBlock(current_vaddr, zeros.data(), copy_amount);
             break;
         }
         case PageType::RasterizerCachedMemory: {
             RasterizerFlushVirtualRegion(current_vaddr, static_cast<u32>(copy_amount),
                                          FlushMode::FlushAndInvalidate);
-            std::memset(GetPointerFromVMA(current_vaddr), 0, copy_amount);
+            std::memset(GetPointerFromVMA(process, current_vaddr), 0, copy_amount);
             break;
         }
         case PageType::RasterizerCachedSpecial: {
-            DEBUG_ASSERT(GetMMIOHandler(current_vaddr));
+            MMIORegionPointer handler = GetMMIOHandler(page_table, current_vaddr);
+            DEBUG_ASSERT(handler);
             RasterizerFlushVirtualRegion(current_vaddr, static_cast<u32>(copy_amount),
                                          FlushMode::FlushAndInvalidate);
-            GetMMIOHandler(current_vaddr)->WriteBlock(current_vaddr, zeros.data(), copy_amount);
+            handler->WriteBlock(current_vaddr, zeros.data(), copy_amount);
             break;
         }
         default:
@@ -668,7 +670,12 @@ void ZeroBlock(const VAddr dest_addr, const size_t size) {
     }
 }
 
-void CopyBlock(VAddr dest_addr, VAddr src_addr, const size_t size) {
+void ZeroBlock(const VAddr dest_addr, const size_t size) {
+    ZeroBlock(*Kernel::g_current_process, dest_addr, size);
+}
+
+void CopyBlock(const Kernel::Process& process, VAddr dest_addr, VAddr src_addr, const size_t size) {
+    auto& page_table = process.vm_manager.page_table;
     size_t remaining_size = size;
     size_t page_index = src_addr >> PAGE_BITS;
     size_t page_offset = src_addr & PAGE_MASK;
@@ -677,41 +684,42 @@ void CopyBlock(VAddr dest_addr, VAddr src_addr, const size_t size) {
         const size_t copy_amount = std::min(PAGE_SIZE - page_offset, remaining_size);
         const VAddr current_vaddr = static_cast<VAddr>((page_index << PAGE_BITS) + page_offset);
 
-        switch (current_page_table->attributes[page_index]) {
+        switch (page_table.attributes[page_index]) {
         case PageType::Unmapped: {
             LOG_ERROR(HW_Memory, "unmapped CopyBlock @ 0x%08X (start address = 0x%08X, size = %zu)",
                       current_vaddr, src_addr, size);
-            ZeroBlock(dest_addr, copy_amount);
+            ZeroBlock(process, dest_addr, copy_amount);
             break;
         }
         case PageType::Memory: {
-            DEBUG_ASSERT(current_page_table->pointers[page_index]);
-            const u8* src_ptr = current_page_table->pointers[page_index] + page_offset;
-            WriteBlock(dest_addr, src_ptr, copy_amount);
+            DEBUG_ASSERT(page_table.pointers[page_index]);
+            const u8* src_ptr = page_table.pointers[page_index] + page_offset;
+            WriteBlock(process, dest_addr, src_ptr, copy_amount);
             break;
         }
         case PageType::Special: {
-            DEBUG_ASSERT(GetMMIOHandler(current_vaddr));
-
+            MMIORegionPointer handler = GetMMIOHandler(page_table, current_vaddr);
+            DEBUG_ASSERT(handler);
             std::vector<u8> buffer(copy_amount);
-            GetMMIOHandler(current_vaddr)->ReadBlock(current_vaddr, buffer.data(), buffer.size());
-            WriteBlock(dest_addr, buffer.data(), buffer.size());
+            handler->ReadBlock(current_vaddr, buffer.data(), buffer.size());
+            WriteBlock(process, dest_addr, buffer.data(), buffer.size());
             break;
         }
         case PageType::RasterizerCachedMemory: {
             RasterizerFlushVirtualRegion(current_vaddr, static_cast<u32>(copy_amount),
                                          FlushMode::Flush);
-            WriteBlock(dest_addr, GetPointerFromVMA(current_vaddr), copy_amount);
+            WriteBlock(process, dest_addr, GetPointerFromVMA(process, current_vaddr), copy_amount);
             break;
         }
         case PageType::RasterizerCachedSpecial: {
-            DEBUG_ASSERT(GetMMIOHandler(current_vaddr));
+            MMIORegionPointer handler = GetMMIOHandler(page_table, current_vaddr);
+            DEBUG_ASSERT(handler);
             RasterizerFlushVirtualRegion(current_vaddr, static_cast<u32>(copy_amount),
                                          FlushMode::Flush);
 
             std::vector<u8> buffer(copy_amount);
-            GetMMIOHandler(current_vaddr)->ReadBlock(current_vaddr, buffer.data(), buffer.size());
-            WriteBlock(dest_addr, buffer.data(), buffer.size());
+            handler->ReadBlock(current_vaddr, buffer.data(), buffer.size());
+            WriteBlock(process, dest_addr, buffer.data(), buffer.size());
             break;
         }
         default:
@@ -724,6 +732,10 @@ void CopyBlock(VAddr dest_addr, VAddr src_addr, const size_t size) {
         src_addr += static_cast<VAddr>(copy_amount);
         remaining_size -= copy_amount;
     }
+}
+
+void CopyBlock(VAddr dest_addr, VAddr src_addr, const size_t size) {
+    CopyBlock(*Kernel::g_current_process, dest_addr, src_addr, size);
 }
 
 template <>
