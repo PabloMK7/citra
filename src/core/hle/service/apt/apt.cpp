@@ -114,7 +114,7 @@ static u64 GetTitleIdForApplet(AppletId id) {
                                 return data.applet_ids[0] == id || data.applet_ids[1] == id;
                             });
 
-    ASSERT_MSG(itr != applet_titleids.end(), "Unknown applet id");
+    ASSERT_MSG(itr != applet_titleids.end(), "Unknown applet id 0x%03X", static_cast<u32>(id));
 
     return itr->title_ids[CFG::GetRegionValue()];
 }
