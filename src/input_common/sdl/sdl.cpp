@@ -3,13 +3,15 @@
 // Refer to the license.txt file included.
 
 #include <cmath>
-#include <memory>
 #include <string>
 #include <tuple>
 #include <unordered_map>
+#include <utility>
 #include <SDL.h>
 #include "common/logging/log.h"
 #include "common/math_util.h"
+#include "common/param_package.h"
+#include "input_common/main.h"
 #include "input_common/sdl/sdl.h"
 
 namespace InputCommon {
@@ -67,6 +69,10 @@ public:
 
     bool GetHatDirection(int hat, Uint8 direction) const {
         return (SDL_JoystickGetHat(joystick.get(), hat) & direction) != 0;
+    }
+
+    SDL_JoystickID GetJoystickID() const {
+        return SDL_JoystickInstanceID(joystick.get());
     }
 
 private:
@@ -247,5 +253,180 @@ void Shutdown() {
     }
 }
 
+/**
+ * This function converts a joystick ID used in SDL events to the device index. This is necessary
+ * because Citra opens joysticks using their indices, not their IDs.
+ */
+static int JoystickIDToDeviceIndex(SDL_JoystickID id) {
+    int num_joysticks = SDL_NumJoysticks();
+    for (int i = 0; i < num_joysticks; i++) {
+        auto joystick = GetJoystick(i);
+        if (joystick->GetJoystickID() == id) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+Common::ParamPackage SDLEventToButtonParamPackage(const SDL_Event& event) {
+    Common::ParamPackage params({{"engine", "sdl"}});
+    switch (event.type) {
+    case SDL_JOYAXISMOTION:
+        params.Set("joystick", JoystickIDToDeviceIndex(event.jaxis.which));
+        params.Set("axis", event.jaxis.axis);
+        if (event.jaxis.value > 0) {
+            params.Set("direction", "+");
+            params.Set("threshold", "0.5");
+        } else {
+            params.Set("direction", "-");
+            params.Set("threshold", "-0.5");
+        }
+        break;
+    case SDL_JOYBUTTONUP:
+        params.Set("joystick", JoystickIDToDeviceIndex(event.jbutton.which));
+        params.Set("button", event.jbutton.button);
+        break;
+    case SDL_JOYHATMOTION:
+        params.Set("joystick", JoystickIDToDeviceIndex(event.jhat.which));
+        params.Set("hat", event.jhat.hat);
+        switch (event.jhat.value) {
+        case SDL_HAT_UP:
+            params.Set("direction", "up");
+            break;
+        case SDL_HAT_DOWN:
+            params.Set("direction", "down");
+            break;
+        case SDL_HAT_LEFT:
+            params.Set("direction", "left");
+            break;
+        case SDL_HAT_RIGHT:
+            params.Set("direction", "right");
+            break;
+        default:
+            return {};
+        }
+        break;
+    }
+    return params;
+}
+
+namespace Polling {
+
+class SDLPoller : public InputCommon::Polling::DevicePoller {
+public:
+    SDLPoller() = default;
+
+    ~SDLPoller() = default;
+
+    void Start() override {
+        // SDL joysticks must be opened, otherwise they don't generate events
+        SDL_JoystickUpdate();
+        int num_joysticks = SDL_NumJoysticks();
+        for (int i = 0; i < num_joysticks; i++) {
+            joysticks_opened.emplace_back(GetJoystick(i));
+        }
+        // Empty event queue to get rid of old events. citra-qt doesn't use the queue
+        SDL_Event dummy;
+        while (SDL_PollEvent(&dummy)) {
+        }
+    }
+
+    void Stop() override {
+        joysticks_opened.clear();
+    }
+
+private:
+    std::vector<std::shared_ptr<SDLJoystick>> joysticks_opened;
+};
+
+class SDLButtonPoller final : public SDLPoller {
+public:
+    SDLButtonPoller() = default;
+
+    ~SDLButtonPoller() = default;
+
+    Common::ParamPackage GetNextInput() override {
+        SDL_Event event;
+        while (SDL_PollEvent(&event)) {
+            switch (event.type) {
+            case SDL_JOYAXISMOTION:
+                if (std::abs(event.jaxis.value / 32767.0) < 0.5) {
+                    break;
+                }
+            case SDL_JOYBUTTONUP:
+            case SDL_JOYHATMOTION:
+                return SDLEventToButtonParamPackage(event);
+            }
+        }
+        return {};
+    }
+};
+
+class SDLAnalogPoller final : public SDLPoller {
+public:
+    SDLAnalogPoller() = default;
+
+    ~SDLAnalogPoller() = default;
+
+    void Start() override {
+        SDLPoller::Start();
+
+        // Reset stored axes
+        analog_xaxis = -1;
+        analog_yaxis = -1;
+        analog_axes_joystick = -1;
+    }
+
+    Common::ParamPackage GetNextInput() override {
+        SDL_Event event;
+        while (SDL_PollEvent(&event)) {
+            if (event.type != SDL_JOYAXISMOTION || std::abs(event.jaxis.value / 32767.0) < 0.5) {
+                continue;
+            }
+            // An analog device needs two axes, so we need to store the axis for later and wait for
+            // a second SDL event. The axes also must be from the same joystick.
+            int axis = event.jaxis.axis;
+            if (analog_xaxis == -1) {
+                analog_xaxis = axis;
+                analog_axes_joystick = event.jaxis.which;
+            } else if (analog_yaxis == -1 && analog_xaxis != axis &&
+                       analog_axes_joystick == event.jaxis.which) {
+                analog_yaxis = axis;
+            }
+        }
+        Common::ParamPackage params;
+        if (analog_xaxis != -1 && analog_yaxis != -1) {
+            params.Set("engine", "sdl");
+            params.Set("joystick", JoystickIDToDeviceIndex(analog_axes_joystick));
+            params.Set("axis_x", analog_xaxis);
+            params.Set("axis_y", analog_yaxis);
+            analog_xaxis = -1;
+            analog_yaxis = -1;
+            analog_axes_joystick = -1;
+            return params;
+        }
+        return params;
+    }
+
+private:
+    int analog_xaxis = -1;
+    int analog_yaxis = -1;
+    SDL_JoystickID analog_axes_joystick = -1;
+};
+
+std::vector<std::unique_ptr<InputCommon::Polling::DevicePoller>> GetPollers(
+    InputCommon::Polling::DeviceType type) {
+    std::vector<std::unique_ptr<InputCommon::Polling::DevicePoller>> pollers;
+    switch (type) {
+    case InputCommon::Polling::DeviceType::Analog:
+        pollers.push_back(std::make_unique<SDLAnalogPoller>());
+        break;
+    case InputCommon::Polling::DeviceType::Button:
+        pollers.push_back(std::make_unique<SDLButtonPoller>());
+        break;
+    }
+    return std::move(pollers);
+}
+} // namespace Polling
 } // namespace SDL
 } // namespace InputCommon

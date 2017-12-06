@@ -71,4 +71,15 @@ std::string GenerateAnalogParamFromKeys(int key_up, int key_down, int key_left, 
     return circle_pad_param.Serialize();
 }
 
+namespace Polling {
+
+std::vector<std::unique_ptr<DevicePoller>> GetPollers(DeviceType type) {
+#ifdef HAVE_SDL2
+    return SDL::Polling::GetPollers(type);
+#else
+    return {};
+#endif
+}
+
+} // namespace Polling
 } // namespace InputCommon

@@ -5,11 +5,11 @@
 #include <algorithm>
 #include <memory>
 #include <utility>
+#include <QMessageBox>
 #include <QTimer>
 #include "citra_qt/configuration/config.h"
 #include "citra_qt/configuration/configure_input.h"
 #include "common/param_package.h"
-#include "input_common/main.h"
 
 const std::array<std::string, ConfigureInput::ANALOG_SUB_BUTTONS_NUM>
     ConfigureInput::analog_sub_buttons{{
@@ -31,23 +31,19 @@ static QString getKeyName(int key_code) {
     }
 }
 
-static void SetButtonKey(int key, Common::ParamPackage& button_param) {
-    button_param = Common::ParamPackage{InputCommon::GenerateKeyboardParam(key)};
-}
-
-static void SetAnalogKey(int key, Common::ParamPackage& analog_param,
-                         const std::string& button_name) {
+static void SetAnalogButton(const Common::ParamPackage& input_param,
+                            Common::ParamPackage& analog_param, const std::string& button_name) {
     if (analog_param.Get("engine", "") != "analog_from_button") {
         analog_param = {
             {"engine", "analog_from_button"}, {"modifier_scale", "0.5"},
         };
     }
-    analog_param.Set(button_name, InputCommon::GenerateKeyboardParam(key));
+    analog_param.Set(button_name, input_param.Serialize());
 }
 
 ConfigureInput::ConfigureInput(QWidget* parent)
     : QWidget(parent), ui(std::make_unique<Ui::ConfigureInput>()),
-      timer(std::make_unique<QTimer>()) {
+      timeout_timer(std::make_unique<QTimer>()), poll_timer(std::make_unique<QTimer>()) {
 
     ui->setupUi(this);
     setFocusPolicy(Qt::ClickFocus);
@@ -58,7 +54,7 @@ ConfigureInput::ConfigureInput(QWidget* parent)
         ui->buttonStart,    ui->buttonSelect,   ui->buttonZL,        ui->buttonZR, ui->buttonHome,
     };
 
-    analog_map = {{
+    analog_map_buttons = {{
         {
             ui->buttonCircleUp, ui->buttonCircleDown, ui->buttonCircleLeft, ui->buttonCircleRight,
             ui->buttonCircleMod,
@@ -69,35 +65,57 @@ ConfigureInput::ConfigureInput(QWidget* parent)
         },
     }};
 
+    analog_map_stick = {ui->buttonCircleAnalog, ui->buttonCStickAnalog};
+
     for (int button_id = 0; button_id < Settings::NativeButton::NumButtons; button_id++) {
         if (button_map[button_id])
             connect(button_map[button_id], &QPushButton::released, [=]() {
-                handleClick(button_map[button_id],
-                            [=](int key) { SetButtonKey(key, buttons_param[button_id]); });
+                handleClick(
+                    button_map[button_id],
+                    [=](const Common::ParamPackage& params) { buttons_param[button_id] = params; },
+                    InputCommon::Polling::DeviceType::Button);
             });
     }
 
     for (int analog_id = 0; analog_id < Settings::NativeAnalog::NumAnalogs; analog_id++) {
         for (int sub_button_id = 0; sub_button_id < ANALOG_SUB_BUTTONS_NUM; sub_button_id++) {
-            if (analog_map[analog_id][sub_button_id] != nullptr) {
-                connect(analog_map[analog_id][sub_button_id], &QPushButton::released, [=]() {
-                    handleClick(analog_map[analog_id][sub_button_id], [=](int key) {
-                        SetAnalogKey(key, analogs_param[analog_id],
-                                     analog_sub_buttons[sub_button_id]);
-                    });
-                });
+            if (analog_map_buttons[analog_id][sub_button_id] != nullptr) {
+                connect(analog_map_buttons[analog_id][sub_button_id], &QPushButton::released,
+                        [=]() {
+                            handleClick(analog_map_buttons[analog_id][sub_button_id],
+                                        [=](const Common::ParamPackage& params) {
+                                            SetAnalogButton(params, analogs_param[analog_id],
+                                                            analog_sub_buttons[sub_button_id]);
+                                        },
+                                        InputCommon::Polling::DeviceType::Button);
+                        });
             }
         }
+        connect(analog_map_stick[analog_id], &QPushButton::released, [=]() {
+            QMessageBox::information(
+                this, "Information",
+                "After pressing OK, first move your joystick horizontally, and then vertically.");
+            handleClick(
+                analog_map_stick[analog_id],
+                [=](const Common::ParamPackage& params) { analogs_param[analog_id] = params; },
+                InputCommon::Polling::DeviceType::Analog);
+        });
     }
 
     connect(ui->buttonRestoreDefaults, &QPushButton::released, [this]() { restoreDefaults(); });
 
-    timer->setSingleShot(true);
-    connect(timer.get(), &QTimer::timeout, [this]() {
-        releaseKeyboard();
-        releaseMouse();
-        key_setter = boost::none;
-        updateButtonLabels();
+    timeout_timer->setSingleShot(true);
+    connect(timeout_timer.get(), &QTimer::timeout, [this]() { setPollingResult({}, true); });
+
+    connect(poll_timer.get(), &QTimer::timeout, [this]() {
+        Common::ParamPackage params;
+        for (auto& poller : device_pollers) {
+            params = poller->GetNextInput();
+            if (params.Has("engine")) {
+                setPollingResult(params, false);
+                return;
+            }
+        }
     });
 
     this->loadConfiguration();
@@ -127,13 +145,15 @@ void ConfigureInput::loadConfiguration() {
 
 void ConfigureInput::restoreDefaults() {
     for (int button_id = 0; button_id < Settings::NativeButton::NumButtons; button_id++) {
-        SetButtonKey(Config::default_buttons[button_id], buttons_param[button_id]);
+        buttons_param[button_id] = Common::ParamPackage{
+            InputCommon::GenerateKeyboardParam(Config::default_buttons[button_id])};
     }
 
     for (int analog_id = 0; analog_id < Settings::NativeAnalog::NumAnalogs; analog_id++) {
         for (int sub_button_id = 0; sub_button_id < ANALOG_SUB_BUTTONS_NUM; sub_button_id++) {
-            SetAnalogKey(Config::default_analogs[analog_id][sub_button_id],
-                         analogs_param[analog_id], analog_sub_buttons[sub_button_id]);
+            Common::ParamPackage params{InputCommon::GenerateKeyboardParam(
+                Config::default_analogs[analog_id][sub_button_id])};
+            SetAnalogButton(params, analogs_param[analog_id], analog_sub_buttons[sub_button_id]);
         }
     }
     updateButtonLabels();
@@ -144,7 +164,9 @@ void ConfigureInput::updateButtonLabels() {
     QString non_keyboard(tr("[non-keyboard]"));
 
     auto KeyToText = [&non_keyboard](const Common::ParamPackage& param) {
-        if (param.Get("engine", "") != "keyboard") {
+        if (!param.Has("engine")) {
+            return QString("[not set]");
+        } else if (param.Get("engine", "") != "keyboard") {
             return non_keyboard;
         } else {
             return getKeyName(param.Get("code", 0));
@@ -157,7 +179,7 @@ void ConfigureInput::updateButtonLabels() {
 
     for (int analog_id = 0; analog_id < Settings::NativeAnalog::NumAnalogs; analog_id++) {
         if (analogs_param[analog_id].Get("engine", "") != "analog_from_button") {
-            for (QPushButton* button : analog_map[analog_id]) {
+            for (QPushButton* button : analog_map_buttons[analog_id]) {
                 if (button)
                     button->setText(non_keyboard);
             }
@@ -165,35 +187,66 @@ void ConfigureInput::updateButtonLabels() {
             for (int sub_button_id = 0; sub_button_id < ANALOG_SUB_BUTTONS_NUM; sub_button_id++) {
                 Common::ParamPackage param(
                     analogs_param[analog_id].Get(analog_sub_buttons[sub_button_id], ""));
-                if (analog_map[analog_id][sub_button_id])
-                    analog_map[analog_id][sub_button_id]->setText(KeyToText(param));
+                if (analog_map_buttons[analog_id][sub_button_id])
+                    analog_map_buttons[analog_id][sub_button_id]->setText(KeyToText(param));
             }
         }
+        analog_map_stick[analog_id]->setText("Set Analog Stick");
     }
 }
 
-void ConfigureInput::handleClick(QPushButton* button, std::function<void(int)> new_key_setter) {
+void ConfigureInput::handleClick(QPushButton* button,
+                                 std::function<void(const Common::ParamPackage&)> new_input_setter,
+                                 InputCommon::Polling::DeviceType type) {
     button->setText(tr("[press key]"));
     button->setFocus();
 
-    key_setter = new_key_setter;
+    input_setter = new_input_setter;
+
+    device_pollers = InputCommon::Polling::GetPollers(type);
+
+    // Keyboard keys can only be used as button devices
+    want_keyboard_keys = type == InputCommon::Polling::DeviceType::Button;
+
+    for (auto& poller : device_pollers) {
+        poller->Start();
+    }
 
     grabKeyboard();
     grabMouse();
-    timer->start(5000); // Cancel after 5 seconds
+    timeout_timer->start(5000); // Cancel after 5 seconds
+    poll_timer->start(200);     // Check for new inputs every 200ms
+}
+
+void ConfigureInput::setPollingResult(const Common::ParamPackage& params, bool abort) {
+    releaseKeyboard();
+    releaseMouse();
+    timeout_timer->stop();
+    poll_timer->stop();
+    for (auto& poller : device_pollers) {
+        poller->Stop();
+    }
+
+    if (!abort) {
+        (*input_setter)(params);
+    }
+
+    updateButtonLabels();
+    input_setter = boost::none;
 }
 
 void ConfigureInput::keyPressEvent(QKeyEvent* event) {
-    releaseKeyboard();
-    releaseMouse();
-
-    if (!key_setter || !event)
+    if (!input_setter || !event)
         return;
 
-    if (event->key() != Qt::Key_Escape)
-        (*key_setter)(event->key());
-
-    updateButtonLabels();
-    key_setter = boost::none;
-    timer->stop();
+    if (event->key() != Qt::Key_Escape) {
+        if (want_keyboard_keys) {
+            setPollingResult(Common::ParamPackage{InputCommon::GenerateKeyboardParam(event->key())},
+                             false);
+        } else {
+            // Escape key wasn't pressed and we don't want any keyboard keys, so don't stop polling
+            return;
+        }
+    }
+    setPollingResult({}, true);
 }
