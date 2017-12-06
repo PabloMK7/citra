@@ -24,19 +24,11 @@ public:
         u32 fpexc;
     };
 
-    /**
-     * Runs the CPU for the given number of instructions
-     * @param num_instructions Number of instructions to run
-     */
-    void Run(int num_instructions) {
-        ExecuteInstructions(num_instructions);
-        this->num_instructions += num_instructions;
-    }
+    /// Runs the CPU until an event happens
+    virtual void Run() = 0;
 
     /// Step CPU by one instruction
-    void Step() {
-        Run(1);
-    }
+    virtual void Step() = 0;
 
     /// Clear all instruction cache
     virtual void ClearInstructionCache() = 0;
@@ -138,19 +130,4 @@ public:
 
     /// Prepare core for thread reschedule (if needed to correctly handle state)
     virtual void PrepareReschedule() = 0;
-
-    /// Getter for num_instructions
-    u64 GetNumInstructions() const {
-        return num_instructions;
-    }
-
-protected:
-    /**
-     * Executes the given number of instructions
-     * @param num_instructions Number of instructions to executes
-     */
-    virtual void ExecuteInstructions(int num_instructions) = 0;
-
-private:
-    u64 num_instructions = 0; ///< Number of instructions executed
 };
