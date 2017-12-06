@@ -4,18 +4,14 @@
 
 #pragma once
 
-#include "core/hle/service/service.h"
+#include "core/hle/service/cam/cam.h"
 
 namespace Service {
 namespace CAM {
 
-class CAM_S_Interface : public Service::Interface {
+class CAM_S final : public Module::Interface {
 public:
-    CAM_S_Interface();
-
-    std::string GetPortName() const override {
-        return "cam:s";
-    }
+    explicit CAM_S(std::shared_ptr<Module> cam);
 };
 
 } // namespace CAM

@@ -4,11 +4,26 @@
 
 #pragma once
 
-#include "common/common_funcs.h"
+#include <array>
+#include <future>
+#include <memory>
+#include <vector>
 #include "common/common_types.h"
 #include "common/swap.h"
-#include "core/hle/kernel/kernel.h"
+#include "core/hle/result.h"
 #include "core/hle/service/service.h"
+
+namespace Camera {
+class CameraInterface;
+}
+
+namespace CoreTiming {
+class EventType;
+}
+
+namespace Kernel {
+class Process;
+}
 
 namespace Service {
 namespace CAM {
@@ -221,466 +236,547 @@ struct PackageParameterWithContextDetail {
 static_assert(sizeof(PackageParameterWithContextDetail) == 28,
               "PackageParameterWithContextDetail structure size is wrong");
 
-/**
- * Starts capturing at the selected port.
- *  Inputs:
- *      0: 0x00010040
- *      1: u8 selected port
- *  Outputs:
- *      0: 0x00010040
- *      1: ResultCode
- */
-void StartCapture(Service::Interface* self);
+class Module final {
+public:
+    Module();
+    ~Module();
 
-/**
- * Stops capturing from the selected port.
- *  Inputs:
- *      0: 0x00020040
- *      1: u8 selected port
- *  Outputs:
- *      0: 0x00020040
- *      1: ResultCode
- */
-void StopCapture(Service::Interface* self);
+    class Interface : public ServiceFramework<Interface> {
+    public:
+        Interface(std::shared_ptr<Module> cam, const char* name, u32 max_session);
+        ~Interface();
 
-/**
- * Gets whether the selected port is currently capturing.
- *  Inputs:
- *      0: 0x00030040
- *      1: u8 selected port
- *  Outputs:
- *      0: 0x00030080
- *      1: ResultCode
- *      2: 0 if not capturing, 1 if capturing
- */
-void IsBusy(Service::Interface* self);
+    protected:
+        /**
+         * Starts capturing at the selected port.
+         *  Inputs:
+         *      0: 0x00010040
+         *      1: u8 selected port
+         *  Outputs:
+         *      0: 0x00010040
+         *      1: ResultCode
+         */
+        void StartCapture(Kernel::HLERequestContext& ctx);
 
-/**
- * Clears the buffer of selected ports.
- *  Inputs:
- *      0: 0x00040040
- *      1: u8 selected port
- *  Outputs:
- *      0: 0x00040040
- *      2: ResultCode
- */
-void ClearBuffer(Service::Interface* self);
+        /**
+         * Stops capturing from the selected port.
+         *  Inputs:
+         *      0: 0x00020040
+         *      1: u8 selected port
+         *  Outputs:
+         *      0: 0x00020040
+         *      1: ResultCode
+         */
+        void StopCapture(Kernel::HLERequestContext& ctx);
 
-/**
- * Unknown
- *  Inputs:
- *      0: 0x00050040
- *      1: u8 selected port
- *  Outputs:
- *      0: 0x00050042
- *      1: ResultCode
- *      2: Descriptor: Handle
- *      3: Event handle
- */
-void GetVsyncInterruptEvent(Service::Interface* self);
+        /**
+         * Gets whether the selected port is currently capturing.
+         *  Inputs:
+         *      0: 0x00030040
+         *      1: u8 selected port
+         *  Outputs:
+         *      0: 0x00030080
+         *      1: ResultCode
+         *      2: 0 if not capturing, 1 if capturing
+         */
+        void IsBusy(Kernel::HLERequestContext& ctx);
 
-/**
- * Unknown
- *  Inputs:
- *      0: 0x00060040
- *      1: u8 selected port
- *  Outputs:
- *      0: 0x00060042
- *      1: ResultCode
- *      2: Descriptor: Handle
- *      3: Event handle
- */
-void GetBufferErrorInterruptEvent(Service::Interface* self);
+        /**
+         * Clears the buffer of selected ports.
+         *  Inputs:
+         *      0: 0x00040040
+         *      1: u8 selected port
+         *  Outputs:
+         *      0: 0x00040040
+         *      2: ResultCode
+         */
+        void ClearBuffer(Kernel::HLERequestContext& ctx);
 
-/**
- * Sets the target buffer to receive a frame of image data and starts the transfer. Each camera
- * port has its own event to signal the end of the transfer.
- *
- *  Inputs:
- *      0: 0x00070102
- *      1: Destination address in calling process
- *      2: u8 selected port
- *      3: Image size (in bytes)
- *      4: u16 Transfer unit size (in bytes)
- *      5: Descriptor: Handle
- *      6: Handle to destination process
- *  Outputs:
- *      0: 0x00070042
- *      1: ResultCode
- *      2: Descriptor: Handle
- *      3: Handle to event signalled when transfer finishes
- */
-void SetReceiving(Service::Interface* self);
+        /**
+         * Unknown
+         *  Inputs:
+         *      0: 0x00050040
+         *      1: u8 selected port
+         *  Outputs:
+         *      0: 0x00050042
+         *      1: ResultCode
+         *      2: Descriptor: Handle
+         *      3: Event handle
+         */
+        void GetVsyncInterruptEvent(Kernel::HLERequestContext& ctx);
 
-/**
- * Gets whether the selected port finished receiving a frame.
- *  Inputs:
- *      0: 0x00080040
- *      1: u8 selected port
- *  Outputs:
- *      0: 0x00080080
- *      1: ResultCode
- *      2: 0 if not finished, 1 if finished
- */
-void IsFinishedReceiving(Service::Interface* self);
+        /**
+         * Unknown
+         *  Inputs:
+         *      0: 0x00060040
+         *      1: u8 selected port
+         *  Outputs:
+         *      0: 0x00060042
+         *      1: ResultCode
+         *      2: Descriptor: Handle
+         *      3: Event handle
+         */
+        void GetBufferErrorInterruptEvent(Kernel::HLERequestContext& ctx);
 
-/**
- * Sets the number of lines the buffer contains.
- *  Inputs:
- *      0: 0x00090100
- *      1: u8 selected port
- *      2: u16 Number of lines to transfer
- *      3: u16 Width
- *      4: u16 Height
- *  Outputs:
- *      0: 0x00090040
- *      1: ResultCode
- * @todo figure out how the "buffer" actually works.
- */
-void SetTransferLines(Service::Interface* self);
+        /**
+         * Sets the target buffer to receive a frame of image data and starts the transfer. Each
+         * camera port has its own event to signal the end of the transfer.
+         *
+         *  Inputs:
+         *      0: 0x00070102
+         *      1: Destination address in calling process
+         *      2: u8 selected port
+         *      3: Image size (in bytes)
+         *      4: u16 Transfer unit size (in bytes)
+         *      5: Descriptor: Handle
+         *      6: Handle to destination process
+         *  Outputs:
+         *      0: 0x00070042
+         *      1: ResultCode
+         *      2: Descriptor: Handle
+         *      3: Handle to event signalled when transfer finishes
+         */
+        void SetReceiving(Kernel::HLERequestContext& ctx);
 
-/**
- * Gets the maximum number of lines that fit in the buffer
- *  Inputs:
- *      0: 0x000A0080
- *      1: u16 Width
- *      2: u16 Height
- *  Outputs:
- *      0: 0x000A0080
- *      1: ResultCode
- *      2: Maximum number of lines that fit in the buffer
- * @todo figure out how the "buffer" actually works.
- */
-void GetMaxLines(Service::Interface* self);
+        /**
+         * Gets whether the selected port finished receiving a frame.
+         *  Inputs:
+         *      0: 0x00080040
+         *      1: u8 selected port
+         *  Outputs:
+         *      0: 0x00080080
+         *      1: ResultCode
+         *      2: 0 if not finished, 1 if finished
+         */
+        void IsFinishedReceiving(Kernel::HLERequestContext& ctx);
 
-/**
- * Sets the number of bytes the buffer contains.
- *  Inputs:
- *      0: 0x000B0100
- *      1: u8 selected port
- *      2: u16 Number of bytes to transfer
- *      3: u16 Width
- *      4: u16 Height
- *  Outputs:
- *      0: 0x000B0040
- *      1: ResultCode
- * @todo figure out how the "buffer" actually works.
- */
-void SetTransferBytes(Service::Interface* self);
+        /**
+         * Sets the number of lines the buffer contains.
+         *  Inputs:
+         *      0: 0x00090100
+         *      1: u8 selected port
+         *      2: u16 Number of lines to transfer
+         *      3: u16 Width
+         *      4: u16 Height
+         *  Outputs:
+         *      0: 0x00090040
+         *      1: ResultCode
+         * @todo figure out how the "buffer" actually works.
+         */
+        void SetTransferLines(Kernel::HLERequestContext& ctx);
 
-/**
- * Gets the number of bytes to the buffer contains.
- *  Inputs:
- *      0: 0x000C0040
- *      1: u8 selected port
- *  Outputs:
- *      0: 0x000C0080
- *      1: ResultCode
- *      2: The number of bytes the buffer contains
- * @todo figure out how the "buffer" actually works.
- */
-void GetTransferBytes(Service::Interface* self);
+        /**
+         * Gets the maximum number of lines that fit in the buffer
+         *  Inputs:
+         *      0: 0x000A0080
+         *      1: u16 Width
+         *      2: u16 Height
+         *  Outputs:
+         *      0: 0x000A0080
+         *      1: ResultCode
+         *      2: Maximum number of lines that fit in the buffer
+         * @todo figure out how the "buffer" actually works.
+         */
+        void GetMaxLines(Kernel::HLERequestContext& ctx);
 
-/**
- * Gets the maximum number of bytes that fit in the buffer.
- *  Inputs:
- *      0: 0x000D0080
- *      1: u16 Width
- *      2: u16 Height
- *  Outputs:
- *      0: 0x000D0080
- *      1: ResultCode
- *      2: Maximum number of bytes that fit in the buffer
- * @todo figure out how the "buffer" actually works.
- */
-void GetMaxBytes(Service::Interface* self);
+        /**
+         * Sets the number of bytes the buffer contains.
+         *  Inputs:
+         *      0: 0x000B0100
+         *      1: u8 selected port
+         *      2: u16 Number of bytes to transfer
+         *      3: u16 Width
+         *      4: u16 Height
+         *  Outputs:
+         *      0: 0x000B0040
+         *      1: ResultCode
+         * @todo figure out how the "buffer" actually works.
+         */
+        void SetTransferBytes(Kernel::HLERequestContext& ctx);
 
-/**
- * Enables or disables trimming.
- *  Inputs:
- *      0: 0x000E0080
- *      1: u8 selected port
- *      2: u8 bool Enable trimming if true
- *  Outputs:
- *      0: 0x000E0040
- *      1: ResultCode
- */
-void SetTrimming(Service::Interface* self);
+        /**
+         * Gets the number of bytes to the buffer contains.
+         *  Inputs:
+         *      0: 0x000C0040
+         *      1: u8 selected port
+         *  Outputs:
+         *      0: 0x000C0080
+         *      1: ResultCode
+         *      2: The number of bytes the buffer contains
+         * @todo figure out how the "buffer" actually works.
+         */
+        void GetTransferBytes(Kernel::HLERequestContext& ctx);
 
-/**
- * Gets whether trimming is enabled.
- *  Inputs:
- *      0: 0x000F0040
- *      1: u8 selected port
- *  Outputs:
- *      0: 0x000F0080
- *      1: ResultCode
- *      2: u8 bool Enable trimming if true
- */
-void IsTrimming(Service::Interface* self);
+        /**
+         * Gets the maximum number of bytes that fit in the buffer.
+         *  Inputs:
+         *      0: 0x000D0080
+         *      1: u16 Width
+         *      2: u16 Height
+         *  Outputs:
+         *      0: 0x000D0080
+         *      1: ResultCode
+         *      2: Maximum number of bytes that fit in the buffer
+         * @todo figure out how the "buffer" actually works.
+         */
+        void GetMaxBytes(Kernel::HLERequestContext& ctx);
 
-/**
- * Sets the position to trim.
- *  Inputs:
- *      0: 0x00100140
- *      1: u8 selected port
- *      2: x start
- *      3: y start
- *      4: x end (exclusive)
- *      5: y end (exclusive)
- *  Outputs:
- *      0: 0x00100040
- *      1: ResultCode
- */
-void SetTrimmingParams(Service::Interface* self);
+        /**
+         * Enables or disables trimming.
+         *  Inputs:
+         *      0: 0x000E0080
+         *      1: u8 selected port
+         *      2: u8 bool Enable trimming if true
+         *  Outputs:
+         *      0: 0x000E0040
+         *      1: ResultCode
+         */
+        void SetTrimming(Kernel::HLERequestContext& ctx);
 
-/**
- * Gets the position to trim.
- *  Inputs:
- *      0: 0x00110040
- *      1: u8 selected port
- *
- *  Outputs:
- *      0: 0x00110140
- *      1: ResultCode
- *      2: x start
- *      3: y start
- *      4: x end (exclusive)
- *      5: y end (exclusive)
- */
-void GetTrimmingParams(Service::Interface* self);
+        /**
+         * Gets whether trimming is enabled.
+         *  Inputs:
+         *      0: 0x000F0040
+         *      1: u8 selected port
+         *  Outputs:
+         *      0: 0x000F0080
+         *      1: ResultCode
+         *      2: u8 bool Enable trimming if true
+         */
+        void IsTrimming(Kernel::HLERequestContext& ctx);
 
-/**
- * Sets the position to trim by giving the width and height. The trimming window is always at the
- * center.
- *  Inputs:
- *      0: 0x00120140
- *      1: u8 selected port
- *      2: s16 Trim width
- *      3: s16 Trim height
- *      4: s16 Camera width
- *      5: s16 Camera height
- *  Outputs:
- *      0: 0x00120040
- *      1: ResultCode
- */
-void SetTrimmingParamsCenter(Service::Interface* self);
+        /**
+         * Sets the position to trim.
+         *  Inputs:
+         *      0: 0x00100140
+         *      1: u8 selected port
+         *      2: x start
+         *      3: y start
+         *      4: x end (exclusive)
+         *      5: y end (exclusive)
+         *  Outputs:
+         *      0: 0x00100040
+         *      1: ResultCode
+         */
+        void SetTrimmingParams(Kernel::HLERequestContext& ctx);
 
-/**
- * Selects up to two physical cameras to enable.
- *  Inputs:
- *      0: 0x00130040
- *      1: u8 selected camera
- *  Outputs:
- *      0: 0x00130040
- *      1: ResultCode
- */
-void Activate(Service::Interface* self);
+        /**
+         * Gets the position to trim.
+         *  Inputs:
+         *      0: 0x00110040
+         *      1: u8 selected port
+         *
+         *  Outputs:
+         *      0: 0x00110140
+         *      1: ResultCode
+         *      2: x start
+         *      3: y start
+         *      4: x end (exclusive)
+         *      5: y end (exclusive)
+         */
+        void GetTrimmingParams(Kernel::HLERequestContext& ctx);
 
-/**
- * Switches the context of camera settings.
- *  Inputs:
- *      0: 0x00140080
- *      1: u8 selected camera
- *      2: u8 selected context
- *  Outputs:
- *      0: 0x00140040
- *      1: ResultCode
- */
-void SwitchContext(Service::Interface* self);
+        /**
+         * Sets the position to trim by giving the width and height. The trimming window is always
+         * at the center.
+         *  Inputs:
+         *      0: 0x00120140
+         *      1: u8 selected port
+         *      2: s16 Trim width
+         *      3: s16 Trim height
+         *      4: s16 Camera width
+         *      5: s16 Camera height
+         *  Outputs:
+         *      0: 0x00120040
+         *      1: ResultCode
+         */
+        void SetTrimmingParamsCenter(Kernel::HLERequestContext& ctx);
 
-/**
- * Sets flipping of images
- *  Inputs:
- *      0: 0x001D00C0
- *      1: u8 selected camera
- *      2: u8 Type of flipping to perform (`Flip` enum)
- *      3: u8 selected context
- *  Outputs:
- *      0: 0x001D0040
- *      1: ResultCode
- */
-void FlipImage(Service::Interface* self);
+        /**
+         * Selects up to two physical cameras to enable.
+         *  Inputs:
+         *      0: 0x00130040
+         *      1: u8 selected camera
+         *  Outputs:
+         *      0: 0x00130040
+         *      1: ResultCode
+         */
+        void Activate(Kernel::HLERequestContext& ctx);
 
-/**
- * Sets camera resolution from custom parameters. For more details see the Resolution struct.
- *  Inputs:
- *      0: 0x001E0200
- *      1: u8 selected camera
- *      2: width
- *      3: height
- *      4: crop x0
- *      5: crop y0
- *      6: crop x1
- *      7: crop y1
- *      8: u8 selected context
- *  Outputs:
- *      0: 0x001E0040
- *      1: ResultCode
- */
-void SetDetailSize(Service::Interface* self);
+        /**
+         * Switches the context of camera settings.
+         *  Inputs:
+         *      0: 0x00140080
+         *      1: u8 selected camera
+         *      2: u8 selected context
+         *  Outputs:
+         *      0: 0x00140040
+         *      1: ResultCode
+         */
+        void SwitchContext(Kernel::HLERequestContext& ctx);
 
-/**
- * Sets camera resolution from preset resolution parameters.
- *  Inputs:
- *      0: 0x001F00C0
- *      1: u8 selected camera
- *      2: u8 Camera frame resolution (`Size` enum)
- *      3: u8 selected context
- *  Outputs:
- *      0: 0x001F0040
- *      1: ResultCode
- */
-void SetSize(Service::Interface* self);
+        /**
+         * Sets flipping of images
+         *  Inputs:
+         *      0: 0x001D00C0
+         *      1: u8 selected camera
+         *      2: u8 Type of flipping to perform (`Flip` enum)
+         *      3: u8 selected context
+         *  Outputs:
+         *      0: 0x001D0040
+         *      1: ResultCode
+         */
+        void FlipImage(Kernel::HLERequestContext& ctx);
 
-/**
- * Sets camera framerate.
- *  Inputs:
- *      0: 0x00200080
- *      1: u8 selected camera
- *      2: u8 Camera framerate (`FrameRate` enum)
- *  Outputs:
- *      0: 0x00200040
- *      1: ResultCode
- */
-void SetFrameRate(Service::Interface* self);
+        /**
+         * Sets camera resolution from custom parameters. For more details see the Resolution
+         * struct.
+         *  Inputs:
+         *      0: 0x001E0200
+         *      1: u8 selected camera
+         *      2: width
+         *      3: height
+         *      4: crop x0
+         *      5: crop y0
+         *      6: crop x1
+         *      7: crop y1
+         *      8: u8 selected context
+         *  Outputs:
+         *      0: 0x001E0040
+         *      1: ResultCode
+         */
+        void SetDetailSize(Kernel::HLERequestContext& ctx);
 
-/**
- * Sets effect on the output image
- *  Inputs:
- *      0: 0x002200C0
- *      1: u8 selected camera
- *      2: u8 image effect (`Effect` enum)
- *      3: u8 selected context
- *  Outputs:
- *      0: 0x00220040
- *      1: ResultCode
- */
-void SetEffect(Service::Interface* self);
+        /**
+         * Sets camera resolution from preset resolution parameters.
+         *  Inputs:
+         *      0: 0x001F00C0
+         *      1: u8 selected camera
+         *      2: u8 Camera frame resolution (`Size` enum)
+         *      3: u8 selected context
+         *  Outputs:
+         *      0: 0x001F0040
+         *      1: ResultCode
+         */
+        void SetSize(Kernel::HLERequestContext& ctx);
 
-/**
- * Sets format of the output image
- *  Inputs:
- *      0: 0x002500C0
- *      1: u8 selected camera
- *      2: u8 image format (`OutputFormat` enum)
- *      3: u8 selected context
- *  Outputs:
- *      0: 0x00250040
- *      1: ResultCode
- */
-void SetOutputFormat(Service::Interface* self);
+        /**
+         * Sets camera framerate.
+         *  Inputs:
+         *      0: 0x00200080
+         *      1: u8 selected camera
+         *      2: u8 Camera framerate (`FrameRate` enum)
+         *  Outputs:
+         *      0: 0x00200040
+         *      1: ResultCode
+         */
+        void SetFrameRate(Kernel::HLERequestContext& ctx);
 
-/**
- * Synchronizes the V-Sync timing of two cameras.
- *  Inputs:
- *      0: 0x00290080
- *      1: u8 selected camera 1
- *      2: u8 selected camera 2
- *  Outputs:
- *      0: 0x00280040
- *      1: ResultCode
- */
-void SynchronizeVsyncTiming(Service::Interface* self);
+        /**
+         * Sets effect on the output image
+         *  Inputs:
+         *      0: 0x002200C0
+         *      1: u8 selected camera
+         *      2: u8 image effect (`Effect` enum)
+         *      3: u8 selected context
+         *  Outputs:
+         *      0: 0x00220040
+         *      1: ResultCode
+         */
+        void SetEffect(Kernel::HLERequestContext& ctx);
 
-/**
- * Returns calibration data relating the outside cameras to eachother, for use in AR applications.
- *
- *  Inputs:
- *      0: 0x002B0000
- *  Outputs:
- *      0: 0x002B0440
- *      1: ResultCode
- *      2-17: `StereoCameraCalibrationData` structure with calibration values
- */
-void GetStereoCameraCalibrationData(Service::Interface* self);
+        /**
+         * Sets format of the output image
+         *  Inputs:
+         *      0: 0x002500C0
+         *      1: u8 selected camera
+         *      2: u8 image format (`OutputFormat` enum)
+         *      3: u8 selected context
+         *  Outputs:
+         *      0: 0x00250040
+         *      1: ResultCode
+         */
+        void SetOutputFormat(Kernel::HLERequestContext& ctx);
 
-/**
- * Batch-configures context-free settings.
- *
- *  Inputs:
- *      0: 0x003302C0
- *      1-7: struct PachageParameterWithoutContext
- *      8-11: unused
- *  Outputs:
- *      0: 0x00330040
- *      1: ResultCode
- */
-void SetPackageParameterWithoutContext(Service::Interface* self);
+        /**
+         * Synchronizes the V-Sync timing of two cameras.
+         *  Inputs:
+         *      0: 0x00290080
+         *      1: u8 selected camera 1
+         *      2: u8 selected camera 2
+         *  Outputs:
+         *      0: 0x00280040
+         *      1: ResultCode
+         */
+        void SynchronizeVsyncTiming(Kernel::HLERequestContext& ctx);
 
-/**
- * Batch-configures context-related settings with preset resolution parameters.
- *
- *  Inputs:
- *      0: 0x00340140
- *      1-2: struct PackageParameterWithContext
- *      3-5: unused
- *  Outputs:
- *      0: 0x00340040
- *      1: ResultCode
- */
-void SetPackageParameterWithContext(Service::Interface* self);
+        /**
+         * Returns calibration data relating the outside cameras to each other, for use in AR
+         * applications.
+         *
+         *  Inputs:
+         *      0: 0x002B0000
+         *  Outputs:
+         *      0: 0x002B0440
+         *      1: ResultCode
+         *      2-17: `StereoCameraCalibrationData` structure with calibration values
+         */
+        void GetStereoCameraCalibrationData(Kernel::HLERequestContext& ctx);
 
-/**
- * Batch-configures context-related settings with custom resolution parameters
- *
- *  Inputs:
- *      0: 0x003501C0
- *      1-4: struct PackageParameterWithContextDetail
- *      5-7: unused
- *  Outputs:
- *      0: 0x00350040
- *      1: ResultCode
- */
-void SetPackageParameterWithContextDetail(Service::Interface* self);
+        /**
+         * Batch-configures context-free settings.
+         *
+         *  Inputs:
+         *      0: 0x003302C0
+         *      1-7: struct PachageParameterWithoutContext
+         *      8-11: unused
+         *  Outputs:
+         *      0: 0x00330040
+         *      1: ResultCode
+         */
+        void SetPackageParameterWithoutContext(Kernel::HLERequestContext& ctx);
 
-/**
- * Unknown
- *  Inputs:
- *      0: 0x00360000
- *  Outputs:
- *      0: 0x00360080
- *      1: ResultCode
- *      2: ?
- */
-void GetSuitableY2rStandardCoefficient(Service::Interface* self);
+        /**
+         * Batch-configures context-related settings with preset resolution parameters.
+         *
+         *  Inputs:
+         *      0: 0x00340140
+         *      1-2: struct PackageParameterWithContext
+         *      3-5: unused
+         *  Outputs:
+         *      0: 0x00340040
+         *      1: ResultCode
+         */
+        void SetPackageParameterWithContext(Kernel::HLERequestContext& ctx);
 
-/**
- * Unknown
- *  Inputs:
- *      0: 0x00380040
- *      1: u8 Sound ID
- *  Outputs:
- *      0: 0x00380040
- *      1: ResultCode
- */
-void PlayShutterSound(Service::Interface* self);
+        /**
+         * Batch-configures context-related settings with custom resolution parameters
+         *
+         *  Inputs:
+         *      0: 0x003501C0
+         *      1-4: struct PackageParameterWithContextDetail
+         *      5-7: unused
+         *  Outputs:
+         *      0: 0x00350040
+         *      1: ResultCode
+         */
+        void SetPackageParameterWithContextDetail(Kernel::HLERequestContext& ctx);
 
-/**
- * Initializes the camera driver. Must be called before using other functions.
- *  Inputs:
- *      0: 0x00390000
- *  Outputs:
- *      0: 0x00390040
- *      1: ResultCode
- */
-void DriverInitialize(Service::Interface* self);
+        /**
+         * Unknown
+         *  Inputs:
+         *      0: 0x00360000
+         *  Outputs:
+         *      0: 0x00360080
+         *      1: ResultCode
+         *      2: ?
+         */
+        void GetSuitableY2rStandardCoefficient(Kernel::HLERequestContext& ctx);
 
-/**
- * Shuts down the camera driver.
- *  Inputs:
- *      0: 0x003A0000
- *  Outputs:
- *      0: 0x003A0040
- *      1: ResultCode
- */
-void DriverFinalize(Service::Interface* self);
+        /**
+         * Unknown
+         *  Inputs:
+         *      0: 0x00380040
+         *      1: u8 Sound ID
+         *  Outputs:
+         *      0: 0x00380040
+         *      1: ResultCode
+         */
+        void PlayShutterSound(Kernel::HLERequestContext& ctx);
 
-/// Initialize CAM service(s)
-void Init();
+        /**
+         * Initializes the camera driver. Must be called before using other functions.
+         *  Inputs:
+         *      0: 0x00390000
+         *  Outputs:
+         *      0: 0x00390040
+         *      1: ResultCode
+         */
+        void DriverInitialize(Kernel::HLERequestContext& ctx);
 
-/// Shutdown CAM service(s)
-void Shutdown();
+        /**
+         * Shuts down the camera driver.
+         *  Inputs:
+         *      0: 0x003A0000
+         *  Outputs:
+         *      0: 0x003A0040
+         *      1: ResultCode
+         */
+        void DriverFinalize(Kernel::HLERequestContext& ctx);
+
+    private:
+        std::shared_ptr<Module> cam;
+    };
+
+private:
+    void CompletionEventCallBack(u64 port_id, int);
+
+    // Starts a receiving process on the specified port. This can only be called when is_busy = true
+    // and is_receiving = false.
+    void StartReceiving(int port_id);
+
+    // Cancels any ongoing receiving processes at the specified port. This is used by functions that
+    // stop capturing.
+    // TODO: what is the exact behaviour on real 3DS when stopping capture during an ongoing
+    //       process? Will the completion event still be signaled?
+    void CancelReceiving(int port_id);
+
+    // Activates the specified port with the specfied camera.
+    void ActivatePort(int port_id, int camera_id);
+
+    template <typename PackageParameterType>
+    ResultCode SetPackageParameter(const PackageParameterType& package);
+
+    struct ContextConfig {
+        Flip flip;
+        Effect effect;
+        OutputFormat format;
+        Resolution resolution;
+    };
+
+    struct CameraConfig {
+        std::unique_ptr<Camera::CameraInterface> impl;
+        std::array<ContextConfig, 2> contexts;
+        int current_context;
+        FrameRate frame_rate;
+    };
+
+    struct PortConfig {
+        int camera_id;
+
+        bool is_active;            // set when the port is activated by an Activate call.
+        bool is_pending_receiving; // set if SetReceiving is called when is_busy = false. When
+        // StartCapture is called then, this will trigger a receiving
+        // process and reset itself.
+        bool is_busy;      // set when StartCapture is called and reset when StopCapture is called.
+        bool is_receiving; // set when there is an ongoing receiving process.
+
+        bool is_trimming;
+        u16 x0; // x-coordinate of starting position for trimming
+        u16 y0; // y-coordinate of starting position for trimming
+        u16 x1; // x-coordinate of ending position for trimming
+        u16 y1; // y-coordinate of ending position for trimming
+
+        u16 transfer_bytes;
+
+        Kernel::SharedPtr<Kernel::Event> completion_event;
+        Kernel::SharedPtr<Kernel::Event> buffer_error_interrupt_event;
+        Kernel::SharedPtr<Kernel::Event> vsync_interrupt_event;
+
+        std::future<std::vector<u16>> capture_result; // will hold the received frame.
+        Kernel::Process* dest_process;
+        VAddr dest;    // the destination address of the receiving process
+        u32 dest_size; // the destination size of the receiving process
+
+        void Clear();
+    };
+
+    std::array<CameraConfig, NumCameras> cameras;
+    std::array<PortConfig, 2> ports;
+    CoreTiming::EventType* completion_event_callback;
+};
+
+void InstallInterfaces(SM::ServiceManager& service_manager);
 
 } // namespace CAM
 } // namespace Service

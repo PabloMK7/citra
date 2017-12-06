@@ -267,7 +267,7 @@ void Init() {
     AM::Init();
     APT::Init();
     BOSS::Init();
-    CAM::Init();
+    CAM::InstallInterfaces(*SM::g_service_manager);
     CECD::Init();
     CFG::Init();
     DLP::Init();
@@ -311,7 +311,6 @@ void Shutdown() {
     DLP::Shutdown();
     CFG::Shutdown();
     CECD::Shutdown();
-    CAM::Shutdown();
     BOSS::Shutdown();
     APT::Shutdown();
     AM::Shutdown();
