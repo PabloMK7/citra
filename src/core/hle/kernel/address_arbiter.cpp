@@ -77,6 +77,15 @@ SharedPtr<AddressArbiter> AddressArbiter::Create(std::string name) {
 
 ResultCode AddressArbiter::ArbitrateAddress(SharedPtr<Thread> thread, ArbitrationType type,
                                             VAddr address, s32 value, u64 nanoseconds) {
+
+    auto timeout_callback = [this](ThreadWakeupReason reason, SharedPtr<Thread> thread,
+                                   SharedPtr<WaitObject> object) {
+        ASSERT(reason == ThreadWakeupReason::Timeout);
+        // Remove the newly-awakened thread from the Arbiter's waiting list.
+        waiting_threads.erase(std::remove(waiting_threads.begin(), waiting_threads.end(), thread),
+                              waiting_threads.end());
+    };
+
     switch (type) {
 
     // Signal thread(s) waiting for arbitrate address...
@@ -99,6 +108,7 @@ ResultCode AddressArbiter::ArbitrateAddress(SharedPtr<Thread> thread, Arbitratio
         break;
     case ArbitrationType::WaitIfLessThanWithTimeout:
         if ((s32)Memory::Read32(address) < value) {
+            thread->wakeup_callback = timeout_callback;
             thread->WakeAfterDelay(nanoseconds);
             WaitThread(std::move(thread), address);
         }
@@ -117,6 +127,7 @@ ResultCode AddressArbiter::ArbitrateAddress(SharedPtr<Thread> thread, Arbitratio
         if (memory_value < value) {
             // Only change the memory value if the thread should wait
             Memory::Write32(address, (s32)memory_value - 1);
+            thread->wakeup_callback = timeout_callback;
             thread->WakeAfterDelay(nanoseconds);
             WaitThread(std::move(thread), address);
         }
