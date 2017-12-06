@@ -178,6 +178,10 @@ public:
     bool InAPrivilegedMode() const {
         return (Mode != USER32MODE);
     }
+    // Whether or not the current CPU mode has a Saved Program Status Register
+    bool CurrentModeHasSPSR() const {
+        return Mode != SYSTEM32MODE && InAPrivilegedMode();
+    }
     // Note that for the 3DS, a Thumb instruction will only ever be
     // two bytes in size. Thus we don't need to worry about ThumbEE
     // or Thumb-2 where instructions can be 4 bytes in length.
