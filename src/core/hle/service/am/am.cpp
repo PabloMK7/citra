@@ -909,16 +909,12 @@ void BeginImportProgram(Service::Interface* self) {
     const FileSys::Path cia_path = {};
     auto file =
         std::make_shared<Service::FS::File>(std::make_unique<CIAFile>(media_type), cia_path);
-    auto sessions = Kernel::ServerSession::CreateSessionPair(file->GetName());
-    file->ClientConnected(std::get<Kernel::SharedPtr<Kernel::ServerSession>>(sessions));
 
     cia_installing = true;
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
     rb.Push(RESULT_SUCCESS); // No error
-    rb.PushCopyHandles(
-        Kernel::g_handle_table.Create(std::get<Kernel::SharedPtr<Kernel::ClientSession>>(sessions))
-            .Unwrap());
+    rb.PushCopyHandles(Kernel::g_handle_table.Create(file->Connect()).Unwrap());
 
     LOG_WARNING(Service_AM, "(STUBBED) media_type=%u", static_cast<u32>(media_type));
 }
