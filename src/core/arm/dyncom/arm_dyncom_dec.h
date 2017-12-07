@@ -9,28 +9,3 @@
 enum class ARMDecodeStatus { SUCCESS, FAILURE };
 
 ARMDecodeStatus DecodeARMInstruction(u32 instr, int* idx);
-
-struct InstructionSetEncodingItem {
-    const char* name;
-    int attribute_value;
-    int version;
-    u32 content[21];
-};
-
-// ARM versions
-enum {
-    INVALID = 0,
-    ARMALL,
-    ARMV4,
-    ARMV4T,
-    ARMV5T,
-    ARMV5TE,
-    ARMV5TEJ,
-    ARMV6,
-    ARM1176JZF_S,
-    ARMVFP2,
-    ARMVFP3,
-    ARMV6K,
-};
-
-extern const InstructionSetEncodingItem arm_instruction[];
