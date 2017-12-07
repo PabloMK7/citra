@@ -12,7 +12,7 @@
 
 class ARM_DynCom final : public ARM_Interface {
 public:
-    ARM_DynCom(PrivilegeMode initial_mode);
+    explicit ARM_DynCom(PrivilegeMode initial_mode);
     ~ARM_DynCom();
 
     void Run() override;

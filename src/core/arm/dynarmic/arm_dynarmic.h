@@ -17,7 +17,7 @@ struct PageTable;
 
 class ARM_Dynarmic final : public ARM_Interface {
 public:
-    ARM_Dynarmic(PrivilegeMode initial_mode);
+    explicit ARM_Dynarmic(PrivilegeMode initial_mode);
 
     void Run() override;
     void Step() override;
