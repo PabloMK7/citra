@@ -1,7 +1,6 @@
 #include <cstdlib>
 #include "common/assert.h"
 #include "common/common_types.h"
-#include "core/arm/dyncom/arm_dyncom_interpreter.h"
 #include "core/arm/dyncom/arm_dyncom_trans.h"
 #include "core/arm/skyeye_common/armstate.h"
 #include "core/arm/skyeye_common/armsupp.h"
