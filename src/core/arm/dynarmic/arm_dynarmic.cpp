@@ -187,6 +187,10 @@ void ARM_Dynarmic::ClearInstructionCache() {
     }
 }
 
+void ARM_Dynarmic::InvalidateCacheRange(u32 start_address, size_t length) {
+    jit->InvalidateCacheRange(start_address, length);
+}
+
 void ARM_Dynarmic::PageTableChanged() {
     current_page_table = Memory::GetCurrentPageTable();
 
