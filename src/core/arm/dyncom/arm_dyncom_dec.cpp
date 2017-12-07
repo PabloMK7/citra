@@ -5,6 +5,31 @@
 #include "core/arm/dyncom/arm_dyncom_dec.h"
 #include "core/arm/skyeye_common/armsupp.h"
 
+namespace {
+struct InstructionSetEncodingItem {
+    const char* name;
+    int attribute_value;
+    int version;
+    u32 content[21];
+};
+
+// ARM versions
+enum {
+    INVALID = 0,
+    ARMALL,
+    ARMV4,
+    ARMV4T,
+    ARMV5T,
+    ARMV5TE,
+    ARMV5TEJ,
+    ARMV6,
+    ARM1176JZF_S,
+    ARMVFP2,
+    ARMVFP3,
+    ARMV6K,
+};
+}
+
 // clang-format off
 const InstructionSetEncodingItem arm_instruction[] = {
     { "vmla", 5, ARMVFP2,      { 23, 27, 0x1C, 20, 21, 0x0, 9, 11, 0x5, 6, 6, 0, 4, 4, 0 }},
