@@ -1268,7 +1268,7 @@ static ResultCode GetProcessInfo(s64* out, Kernel::Handle process_handle, u32 ty
         LOG_ERROR(Kernel_SVC, "unimplemented GetProcessInfo type=%u", type);
         break;
     case 20:
-        *out = Memory::FCRAM_PADDR - process->GetLinearHeapBase();
+        *out = Memory::FCRAM_PADDR - process->GetLinearHeapAreaAddress();
         break;
     case 21:
     case 22:
