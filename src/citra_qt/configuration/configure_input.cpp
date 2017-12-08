@@ -161,34 +161,63 @@ void ConfigureInput::restoreDefaults() {
 }
 
 void ConfigureInput::updateButtonLabels() {
-    QString non_keyboard(tr("[non-keyboard]"));
+    QString unknown_mapping(tr("[unknown]"));
 
-    auto KeyToText = [&non_keyboard](const Common::ParamPackage& param) {
+    auto ButtonToText = [&unknown_mapping](const Common::ParamPackage& param) {
         if (!param.Has("engine")) {
             return QString("[not set]");
-        } else if (param.Get("engine", "") != "keyboard") {
-            return non_keyboard;
-        } else {
+        } else if (param.Get("engine", "") == "keyboard") {
             return getKeyName(param.Get("code", 0));
+        } else if (param.Get("engine", "") == "sdl") {
+            QString text = QString("Joystick %1").arg(param.Get("joystick", "").c_str());
+            if (param.Has("hat")) {
+                text += QString(" Hat %1 %2")
+                            .arg(param.Get("hat", "").c_str(), param.Get("direction", "").c_str());
+            }
+            if (param.Has("axis")) {
+                text += QString(" Axis %1%2")
+                            .arg(param.Get("axis", "").c_str(), param.Get("direction", "").c_str());
+            }
+            if (param.Has("button")) {
+                text += QString(" Button %1").arg(param.Get("button", "").c_str());
+            }
+            return text;
+        } else {
+            return unknown_mapping;
+        }
+    };
+    auto AnalogToText = [&unknown_mapping, &ButtonToText](const Common::ParamPackage& param,
+                                                          const std::string& dir) {
+        if (!param.Has("engine")) {
+            return QString("[not set]");
+        } else if (param.Get("engine", "") == "analog_from_button") {
+            return ButtonToText(Common::ParamPackage{param.Get(dir, "")});
+        } else if (param.Get("engine", "") == "sdl") {
+            if (dir == "modifier") {
+                return QString("[unused]");
+            }
+
+            QString text = QString("Joystick %1").arg(param.Get("joystick", "").c_str());
+            if (dir == "left" || dir == "right") {
+                text += QString(" Axis %1").arg(param.Get("axis_x", "").c_str());
+            } else if (dir == "up" || dir == "down") {
+                text += QString(" Axis %1").arg(param.Get("axis_y", "").c_str());
+            }
+            return text;
+        } else {
+            return unknown_mapping;
         }
     };
 
     for (int button = 0; button < Settings::NativeButton::NumButtons; button++) {
-        button_map[button]->setText(KeyToText(buttons_param[button]));
+        button_map[button]->setText(ButtonToText(buttons_param[button]));
     }
 
     for (int analog_id = 0; analog_id < Settings::NativeAnalog::NumAnalogs; analog_id++) {
-        if (analogs_param[analog_id].Get("engine", "") != "analog_from_button") {
-            for (QPushButton* button : analog_map_buttons[analog_id]) {
-                if (button)
-                    button->setText(non_keyboard);
-            }
-        } else {
-            for (int sub_button_id = 0; sub_button_id < ANALOG_SUB_BUTTONS_NUM; sub_button_id++) {
-                Common::ParamPackage param(
-                    analogs_param[analog_id].Get(analog_sub_buttons[sub_button_id], ""));
-                if (analog_map_buttons[analog_id][sub_button_id])
-                    analog_map_buttons[analog_id][sub_button_id]->setText(KeyToText(param));
+        for (int sub_button_id = 0; sub_button_id < ANALOG_SUB_BUTTONS_NUM; sub_button_id++) {
+            if (analog_map_buttons[analog_id][sub_button_id]) {
+                analog_map_buttons[analog_id][sub_button_id]->setText(
+                    AnalogToText(analogs_param[analog_id], analog_sub_buttons[sub_button_id]));
             }
         }
         analog_map_stick[analog_id]->setText("Set Analog Stick");
