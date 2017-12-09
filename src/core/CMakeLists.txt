@@ -159,6 +159,8 @@ set(SRCS
             hle/service/ptm/ptm_sets.cpp
             hle/service/ptm/ptm_sysm.cpp
             hle/service/ptm/ptm_u.cpp
+            hle/service/pxi/dev.cpp
+            hle/service/pxi/pxi.cpp
             hle/service/qtm/qtm.cpp
             hle/service/qtm/qtm_s.cpp
             hle/service/qtm/qtm_sp.cpp
@@ -364,6 +366,8 @@ set(HEADERS
             hle/service/ptm/ptm_sets.h
             hle/service/ptm/ptm_sysm.h
             hle/service/ptm/ptm_u.h
+            hle/service/pxi/dev.h
+            hle/service/pxi/pxi.h
             hle/service/qtm/qtm.h
             hle/service/qtm/qtm_s.h
             hle/service/qtm/qtm_sp.h
