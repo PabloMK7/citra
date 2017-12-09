@@ -272,19 +272,21 @@ static void DeleteDirectory(Service::Interface* self) {
  *      1 : Result of function, 0 on success, otherwise error code
  */
 static void DeleteDirectoryRecursively(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x807, 5, 2);
 
-    ArchiveHandle archive_handle = MakeArchiveHandle(cmd_buff[2], cmd_buff[3]);
-    auto dirname_type = static_cast<FileSys::LowPathType>(cmd_buff[4]);
-    u32 dirname_size = cmd_buff[5];
-    u32 dirname_ptr = cmd_buff[7];
+    rp.Skip(1, false); // TransactionId
+    ArchiveHandle archive_handle = rp.PopRaw<ArchiveHandle>();
+    auto dirname_type = rp.PopEnum<FileSys::LowPathType>();
+    u32 dirname_size = rp.Pop<u32>();
+    u32 dirname_ptr = rp.PopStaticBuffer(nullptr);
 
     FileSys::Path dir_path(dirname_type, dirname_size, dirname_ptr);
 
     LOG_DEBUG(Service_FS, "type=%u size=%u data=%s", static_cast<u32>(dirname_type), dirname_size,
               dir_path.DebugStr().c_str());
 
-    cmd_buff[1] = DeleteDirectoryRecursivelyFromArchive(archive_handle, dir_path).raw;
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(DeleteDirectoryRecursivelyFromArchive(archive_handle, dir_path));
 }
 
 /*
