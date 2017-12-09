@@ -4,14 +4,12 @@
 
 #include <memory>
 #include <boost/crc.hpp>
-#include <boost/optional.hpp>
 #include "common/string_util.h"
 #include "common/swap.h"
 #include "core/hle/ipc_helpers.h"
 #include "core/hle/kernel/event.h"
 #include "core/hle/kernel/shared_memory.h"
 #include "core/hle/service/ir/extra_hid.h"
-#include "core/hle/service/ir/ir.h"
 #include "core/hle/service/ir/ir_user.h"
 
 namespace Service {
@@ -183,14 +181,8 @@ private:
     u32 max_data_size;
 };
 
-static Kernel::SharedPtr<Kernel::Event> conn_status_event, send_event, receive_event;
-static Kernel::SharedPtr<Kernel::SharedMemory> shared_memory;
-static std::unique_ptr<ExtraHID> extra_hid;
-static IRDevice* connected_device;
-static boost::optional<BufferManager> receive_buffer;
-
 /// Wraps the payload into packet and puts it to the receive buffer
-static void PutToReceive(const std::vector<u8>& payload) {
+void IR_USER::PutToReceive(const std::vector<u8>& payload) {
     LOG_TRACE(Service_IR, "called, data=%s",
               Common::ArrayToString(payload.data(), payload.size()).c_str());
     size_t size = payload.size();
@@ -237,44 +229,22 @@ static void PutToReceive(const std::vector<u8>& payload) {
     }
 }
 
-/**
- * IR::InitializeIrNopShared service function
- * Initializes ir:USER service with a user provided shared memory. The shared memory is configured
- * to shared mode (with SharedMemoryHeader at the beginning of the shared memory).
- *  Inputs:
- *      1 : Size of shared memory
- *      2 : Recv buffer size
- *      3 : Recv buffer packet count
- *      4 : Send buffer size
- *      5 : Send buffer packet count
- *      6 : BaudRate (u8)
- *      7 : 0 (Handle descriptor)
- *      8 : Handle of shared memory
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- */
-static void InitializeIrNopShared(Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x18, 6, 2);
+void IR_USER::InitializeIrNopShared(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x18, 6, 2);
     const u32 shared_buff_size = rp.Pop<u32>();
     const u32 recv_buff_size = rp.Pop<u32>();
     const u32 recv_buff_packet_count = rp.Pop<u32>();
     const u32 send_buff_size = rp.Pop<u32>();
     const u32 send_buff_packet_count = rp.Pop<u32>();
     const u8 baud_rate = rp.Pop<u8>();
-    const Kernel::Handle handle = rp.PopHandle();
+    shared_memory = rp.PopObject<Kernel::SharedMemory>();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
 
-    shared_memory = Kernel::g_handle_table.Get<Kernel::SharedMemory>(handle);
-    if (!shared_memory) {
-        LOG_CRITICAL(Service_IR, "invalid shared memory handle 0x%08X", handle);
-        rb.Push(IPC::ERR_INVALID_HANDLE);
-        return;
-    }
     shared_memory->name = "IR_USER: shared memory";
 
-    receive_buffer =
-        BufferManager(shared_memory, 0x10, 0x20, recv_buff_packet_count, recv_buff_size);
+    receive_buffer = std::make_unique<BufferManager>(shared_memory, 0x10, 0x20,
+                                                     recv_buff_packet_count, recv_buff_size);
     SharedMemoryHeader shared_memory_init{};
     shared_memory_init.initialized = 1;
     std::memcpy(shared_memory->GetPointer(), &shared_memory_init, sizeof(SharedMemoryHeader));
@@ -283,23 +253,13 @@ static void InitializeIrNopShared(Interface* self) {
 
     LOG_INFO(Service_IR, "called, shared_buff_size=%u, recv_buff_size=%u, "
                          "recv_buff_packet_count=%u, send_buff_size=%u, "
-                         "send_buff_packet_count=%u, baud_rate=%u, handle=0x%08X",
+                         "send_buff_packet_count=%u, baud_rate=%u",
              shared_buff_size, recv_buff_size, recv_buff_packet_count, send_buff_size,
-             send_buff_packet_count, baud_rate, handle);
+             send_buff_packet_count, baud_rate);
 }
 
-/**
- * IR::RequireConnection service function
- * Searches for an IR device and connects to it. After connecting to the device, applications can
- * use SendIrNop function, ReceiveIrNop function (or read from the buffer directly) to communicate
- * with the device.
- *  Inputs:
- *      1 : device ID? always 1 for circle pad pro
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- */
-static void RequireConnection(Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x06, 1, 0);
+void IR_USER::RequireConnection(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x06, 1, 0);
     const u8 device_id = rp.Pop<u8>();
 
     u8* shared_memory_ptr = shared_memory->GetPointer();
@@ -325,47 +285,25 @@ static void RequireConnection(Interface* self) {
     LOG_INFO(Service_IR, "called, device_id = %u", device_id);
 }
 
-/**
- * IR::GetReceiveEvent service function
- * Gets an event that is signaled when a packet is received from the IR device.
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- *      2 : 0 (Handle descriptor)
- *      3 : Receive event handle
- */
-void GetReceiveEvent(Interface* self) {
-    IPC::RequestBuilder rb(Kernel::GetCommandBuffer(), 0x0A, 1, 2);
+void IR_USER::GetReceiveEvent(Kernel::HLERequestContext& ctx) {
+    IPC::RequestBuilder rb(ctx, 0x0A, 1, 2);
 
     rb.Push(RESULT_SUCCESS);
-    rb.PushCopyHandles(Kernel::g_handle_table.Create(Service::IR::receive_event).Unwrap());
+    rb.PushCopyObjects(receive_event);
 
     LOG_INFO(Service_IR, "called");
 }
 
-/**
- * IR::GetSendEvent service function
- * Gets an event that is signaled when the sending of a packet is complete
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- *      2 : 0 (Handle descriptor)
- *      3 : Send event handle
- */
-void GetSendEvent(Interface* self) {
-    IPC::RequestBuilder rb(Kernel::GetCommandBuffer(), 0x0B, 1, 2);
+void IR_USER::GetSendEvent(Kernel::HLERequestContext& ctx) {
+    IPC::RequestBuilder rb(ctx, 0x0B, 1, 2);
 
     rb.Push(RESULT_SUCCESS);
-    rb.PushCopyHandles(Kernel::g_handle_table.Create(Service::IR::send_event).Unwrap());
+    rb.PushCopyObjects(send_event);
 
     LOG_INFO(Service_IR, "called");
 }
 
-/**
- * IR::Disconnect service function
- * Disconnects from the current connected IR device.
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- */
-static void Disconnect(Interface* self) {
+void IR_USER::Disconnect(Kernel::HLERequestContext& ctx) {
     if (connected_device) {
         connected_device->OnDisconnect();
         connected_device = nullptr;
@@ -376,67 +314,41 @@ static void Disconnect(Interface* self) {
     shared_memory_ptr[offsetof(SharedMemoryHeader, connection_status)] = 0;
     shared_memory_ptr[offsetof(SharedMemoryHeader, connected)] = 0;
 
-    IPC::RequestBuilder rb(Kernel::GetCommandBuffer(), 0x09, 1, 0);
+    IPC::RequestBuilder rb(ctx, 0x09, 1, 0);
     rb.Push(RESULT_SUCCESS);
 
     LOG_INFO(Service_IR, "called");
 }
 
-/**
- * IR::GetConnectionStatusEvent service function
- * Gets an event that is signaled when the connection status is changed
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- *      2 : 0 (Handle descriptor)
- *      3 : Connection Status Event handle
- */
-static void GetConnectionStatusEvent(Interface* self) {
-    IPC::RequestBuilder rb(Kernel::GetCommandBuffer(), 0x0C, 1, 2);
+void IR_USER::GetConnectionStatusEvent(Kernel::HLERequestContext& ctx) {
+    IPC::RequestBuilder rb(ctx, 0x0C, 1, 2);
 
     rb.Push(RESULT_SUCCESS);
-    rb.PushCopyHandles(Kernel::g_handle_table.Create(Service::IR::conn_status_event).Unwrap());
+    rb.PushCopyObjects(conn_status_event);
 
     LOG_INFO(Service_IR, "called");
 }
 
-/**
- * IR::FinalizeIrNop service function
- * Finalize ir:USER service.
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- */
-static void FinalizeIrNop(Interface* self) {
+void IR_USER::FinalizeIrNop(Kernel::HLERequestContext& ctx) {
     if (connected_device) {
         connected_device->OnDisconnect();
         connected_device = nullptr;
     }
 
     shared_memory = nullptr;
-    receive_buffer = boost::none;
+    receive_buffer = nullptr;
 
-    IPC::RequestBuilder rb(Kernel::GetCommandBuffer(), 0x02, 1, 0);
+    IPC::RequestBuilder rb(ctx, 0x02, 1, 0);
     rb.Push(RESULT_SUCCESS);
 
     LOG_INFO(Service_IR, "called");
 }
 
-/**
- * IR::SendIrNop service function
- * Sends a packet to the connected IR device
- *  Inpus:
- *      1 : Size of data to send
- *      2 : 2 + (size << 14) (Static buffer descriptor)
- *      3 : Data buffer address
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- */
-static void SendIrNop(Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x0D, 1, 2);
+void IR_USER::SendIrNop(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x0D, 1, 2);
     const u32 size = rp.Pop<u32>();
-    const VAddr address = rp.PopStaticBuffer(nullptr);
-
-    std::vector<u8> buffer(size);
-    Memory::ReadBlock(address, buffer.data(), size);
+    std::vector<u8> buffer = rp.PopStaticBuffer();
+    ASSERT(size == buffer.size());
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     if (connected_device) {
@@ -452,18 +364,8 @@ static void SendIrNop(Interface* self) {
     LOG_TRACE(Service_IR, "called, data=%s", Common::ArrayToString(buffer.data(), size).c_str());
 }
 
-/**
- * IR::ReleaseReceivedData function
- * Release a specified amount of packet from the receive buffer. This is called after the
- * application reads received packet from the buffer directly, to release the buffer space for
- * future packets.
- *  Inpus:
- *      1 : Number of packets to release
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- */
-static void ReleaseReceivedData(Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x19, 1, 0);
+void IR_USER::ReleaseReceivedData(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x19, 1, 0);
     u32 count = rp.Pop<u32>();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
@@ -479,72 +381,55 @@ static void ReleaseReceivedData(Interface* self) {
     LOG_TRACE(Service_IR, "called, count=%u", count);
 }
 
-const Interface::FunctionInfo FunctionTable[] = {
-    {0x00010182, nullptr, "InitializeIrNop"},
-    {0x00020000, FinalizeIrNop, "FinalizeIrNop"},
-    {0x00030000, nullptr, "ClearReceiveBuffer"},
-    {0x00040000, nullptr, "ClearSendBuffer"},
-    {0x000500C0, nullptr, "WaitConnection"},
-    {0x00060040, RequireConnection, "RequireConnection"},
-    {0x000702C0, nullptr, "AutoConnection"},
-    {0x00080000, nullptr, "AnyConnection"},
-    {0x00090000, Disconnect, "Disconnect"},
-    {0x000A0000, GetReceiveEvent, "GetReceiveEvent"},
-    {0x000B0000, GetSendEvent, "GetSendEvent"},
-    {0x000C0000, GetConnectionStatusEvent, "GetConnectionStatusEvent"},
-    {0x000D0042, SendIrNop, "SendIrNop"},
-    {0x000E0042, nullptr, "SendIrNopLarge"},
-    {0x000F0040, nullptr, "ReceiveIrnop"},
-    {0x00100042, nullptr, "ReceiveIrnopLarge"},
-    {0x00110040, nullptr, "GetLatestReceiveErrorResult"},
-    {0x00120040, nullptr, "GetLatestSendErrorResult"},
-    {0x00130000, nullptr, "GetConnectionStatus"},
-    {0x00140000, nullptr, "GetTryingToConnectStatus"},
-    {0x00150000, nullptr, "GetReceiveSizeFreeAndUsed"},
-    {0x00160000, nullptr, "GetSendSizeFreeAndUsed"},
-    {0x00170000, nullptr, "GetConnectionRole"},
-    {0x00180182, InitializeIrNopShared, "InitializeIrNopShared"},
-    {0x00190040, ReleaseReceivedData, "ReleaseReceivedData"},
-    {0x001A0040, nullptr, "SetOwnMachineId"},
-};
+IR_USER::IR_USER() : ServiceFramework("ir:USER", 1) {
+    const FunctionInfo functions[] = {
+        {0x00010182, nullptr, "InitializeIrNop"},
+        {0x00020000, &IR_USER::FinalizeIrNop, "FinalizeIrNop"},
+        {0x00030000, nullptr, "ClearReceiveBuffer"},
+        {0x00040000, nullptr, "ClearSendBuffer"},
+        {0x000500C0, nullptr, "WaitConnection"},
+        {0x00060040, &IR_USER::RequireConnection, "RequireConnection"},
+        {0x000702C0, nullptr, "AutoConnection"},
+        {0x00080000, nullptr, "AnyConnection"},
+        {0x00090000, &IR_USER::Disconnect, "Disconnect"},
+        {0x000A0000, &IR_USER::GetReceiveEvent, "GetReceiveEvent"},
+        {0x000B0000, &IR_USER::GetSendEvent, "GetSendEvent"},
+        {0x000C0000, &IR_USER::GetConnectionStatusEvent, "GetConnectionStatusEvent"},
+        {0x000D0042, &IR_USER::SendIrNop, "SendIrNop"},
+        {0x000E0042, nullptr, "SendIrNopLarge"},
+        {0x000F0040, nullptr, "ReceiveIrnop"},
+        {0x00100042, nullptr, "ReceiveIrnopLarge"},
+        {0x00110040, nullptr, "GetLatestReceiveErrorResult"},
+        {0x00120040, nullptr, "GetLatestSendErrorResult"},
+        {0x00130000, nullptr, "GetConnectionStatus"},
+        {0x00140000, nullptr, "GetTryingToConnectStatus"},
+        {0x00150000, nullptr, "GetReceiveSizeFreeAndUsed"},
+        {0x00160000, nullptr, "GetSendSizeFreeAndUsed"},
+        {0x00170000, nullptr, "GetConnectionRole"},
+        {0x00180182, &IR_USER::InitializeIrNopShared, "InitializeIrNopShared"},
+        {0x00190040, &IR_USER::ReleaseReceivedData, "ReleaseReceivedData"},
+        {0x001A0040, nullptr, "SetOwnMachineId"},
+    };
+    RegisterHandlers(functions);
 
-IR_User_Interface::IR_User_Interface() {
-    Register(FunctionTable);
-}
-
-void InitUser() {
     using namespace Kernel;
-
-    shared_memory = nullptr;
 
     conn_status_event = Event::Create(ResetType::OneShot, "IR:ConnectionStatusEvent");
     send_event = Event::Create(ResetType::OneShot, "IR:SendEvent");
     receive_event = Event::Create(ResetType::OneShot, "IR:ReceiveEvent");
 
-    receive_buffer = boost::none;
-
-    extra_hid = std::make_unique<ExtraHID>(PutToReceive);
-
-    connected_device = nullptr;
+    extra_hid =
+        std::make_unique<ExtraHID>([this](const std::vector<u8>& data) { PutToReceive(data); });
 }
 
-void ShutdownUser() {
+IR_USER::~IR_USER() {
     if (connected_device) {
         connected_device->OnDisconnect();
-        connected_device = nullptr;
     }
-
-    extra_hid = nullptr;
-    receive_buffer = boost::none;
-    shared_memory = nullptr;
-    conn_status_event = nullptr;
-    send_event = nullptr;
-    receive_event = nullptr;
 }
 
-void ReloadInputDevicesUser() {
-    if (extra_hid)
-        extra_hid->RequestInputDevicesReload();
+void IR_USER::ReloadInputDevices() {
+    extra_hid->RequestInputDevicesReload();
 }
 
 IRDevice::IRDevice(SendFunc send_func_) : send_func(send_func_) {}
