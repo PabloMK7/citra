@@ -7,7 +7,6 @@
 #include <cstddef>
 #include <memory>
 #include <string>
-#include <vector>
 #include "common/common_types.h"
 #include "common/file_util.h"
 #include "core/file_sys/archive_backend.h"
@@ -27,8 +26,7 @@ namespace FileSys {
  */
 class IVFCArchive : public ArchiveBackend {
 public:
-    IVFCArchive(std::shared_ptr<FileUtil::IOFile> file, u64 offset, u64 size)
-        : romfs_file(file), data_offset(offset), data_size(size) {}
+    IVFCArchive(std::shared_ptr<FileUtil::IOFile> file, u64 offset, u64 size);
 
     std::string GetName() const override;
 
@@ -52,8 +50,7 @@ protected:
 
 class IVFCFile : public FileBackend {
 public:
-    IVFCFile(std::shared_ptr<FileUtil::IOFile> file, u64 offset, u64 size)
-        : romfs_file(file), data_offset(offset), data_size(size) {}
+    IVFCFile(std::shared_ptr<FileUtil::IOFile> file, u64 offset, u64 size);
 
     ResultVal<size_t> Read(u64 offset, size_t length, u8* buffer) const override;
     ResultVal<size_t> Write(u64 offset, size_t length, bool flush, const u8* buffer) override;

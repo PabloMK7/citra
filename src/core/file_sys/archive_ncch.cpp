@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <cinttypes>
 #include <memory>
+#include <utility>
 #include <vector>
 #include "common/common_types.h"
 #include "common/file_util.h"
@@ -76,14 +77,14 @@ ResultVal<std::unique_ptr<FileBackend>> NCCHArchive::OpenFile(const Path& path,
         u64 romfs_size = 0;
 
         result = ncch_container.ReadRomFS(romfs_file, romfs_offset, romfs_size);
-        file = std::make_unique<IVFCFile>(romfs_file, romfs_offset, romfs_size);
+        file = std::make_unique<IVFCFile>(std::move(romfs_file), romfs_offset, romfs_size);
     } else if (filepath_type == NCCHFilePathType::Code ||
                filepath_type == NCCHFilePathType::ExeFS) {
         std::vector<u8> buffer;
 
         // Load NCCH .code or icon/banner/logo
         result = ncch_container.LoadSectionExeFS(openfile_path.exefs_filepath.data(), buffer);
-        file = std::make_unique<NCCHFile>(buffer);
+        file = std::make_unique<NCCHFile>(std::move(buffer));
     } else {
         LOG_ERROR(Service_FS, "Unknown NCCH archive type %u!", openfile_path.filepath_type);
         result = Loader::ResultStatus::Error;
@@ -192,6 +193,8 @@ u64 NCCHArchive::GetFreeBytes() const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
+
+NCCHFile::NCCHFile(std::vector<u8> buffer) : file_buffer(std::move(buffer)) {}
 
 ResultVal<size_t> NCCHFile::Read(const u64 offset, const size_t length, u8* buffer) const {
     LOG_TRACE(Service_FS, "called offset=%" PRIu64 ", length=%zu", offset, length);

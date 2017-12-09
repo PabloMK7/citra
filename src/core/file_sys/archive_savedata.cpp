@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <utility>
 #include "core/file_sys/archive_savedata.h"
 #include "core/hle/kernel/process.h"
 
@@ -12,7 +13,7 @@ namespace FileSys {
 
 ArchiveFactory_SaveData::ArchiveFactory_SaveData(
     std::shared_ptr<ArchiveSource_SDSaveData> sd_savedata)
-    : sd_savedata_source(sd_savedata) {}
+    : sd_savedata_source(std::move(sd_savedata)) {}
 
 ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_SaveData::Open(const Path& path) {
     return sd_savedata_source->Open(Kernel::g_current_process->codeset->program_id);
