@@ -203,17 +203,17 @@ static void DeleteFile(Service::Interface* self) {
  *      1 : Result of function, 0 on success, otherwise error code
  */
 static void RenameFile(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x805, 9, 4);
+    rp.Skip(1, false); // TransactionId
 
-    ArchiveHandle src_archive_handle = MakeArchiveHandle(cmd_buff[2], cmd_buff[3]);
-    auto src_filename_type = static_cast<FileSys::LowPathType>(cmd_buff[4]);
-    u32 src_filename_size = cmd_buff[5];
-    ArchiveHandle dest_archive_handle = MakeArchiveHandle(cmd_buff[6], cmd_buff[7]);
-    ;
-    auto dest_filename_type = static_cast<FileSys::LowPathType>(cmd_buff[8]);
-    u32 dest_filename_size = cmd_buff[9];
-    u32 src_filename_ptr = cmd_buff[11];
-    u32 dest_filename_ptr = cmd_buff[13];
+    ArchiveHandle src_archive_handle = rp.PopRaw<ArchiveHandle>();
+    auto src_filename_type = rp.PopEnum<FileSys::LowPathType>();
+    u32 src_filename_size = rp.Pop<u32>();
+    ArchiveHandle dest_archive_handle = rp.PopRaw<ArchiveHandle>();
+    auto dest_filename_type = rp.PopEnum<FileSys::LowPathType>();
+    u32 dest_filename_size = rp.Pop<u32>();
+    u32 src_filename_ptr = rp.PopStaticBuffer(nullptr);
+    u32 dest_filename_ptr = rp.PopStaticBuffer(nullptr);
 
     FileSys::Path src_file_path(src_filename_type, src_filename_size, src_filename_ptr);
     FileSys::Path dest_file_path(dest_filename_type, dest_filename_size, dest_filename_ptr);
@@ -224,9 +224,9 @@ static void RenameFile(Service::Interface* self) {
               src_file_path.DebugStr().c_str(), static_cast<u32>(dest_filename_type),
               dest_filename_size, dest_file_path.DebugStr().c_str());
 
-    cmd_buff[1] = RenameFileBetweenArchives(src_archive_handle, src_file_path, dest_archive_handle,
-                                            dest_file_path)
-                      .raw;
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RenameFileBetweenArchives(src_archive_handle, src_file_path, dest_archive_handle,
+                                      dest_file_path));
 }
 
 /*
