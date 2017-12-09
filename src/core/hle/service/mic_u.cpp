@@ -4,6 +4,7 @@
 
 #include "common/logging/log.h"
 #include "core/hle/ipc.h"
+#include "core/hle/ipc_helpers.h"
 #include "core/hle/kernel/event.h"
 #include "core/hle/kernel/handle_table.h"
 #include "core/hle/kernel/kernel.h"
@@ -27,319 +28,271 @@ enum class SampleRate : u8 {
     SampleRate8180 = 3
 };
 
-static Kernel::SharedPtr<Kernel::Event> buffer_full_event;
-static Kernel::SharedPtr<Kernel::SharedMemory> shared_memory;
-static u8 mic_gain = 0;
-static bool mic_power = false;
-static bool is_sampling = false;
-static bool allow_shell_closed;
-static bool clamp = false;
-static Encoding encoding;
-static SampleRate sample_rate;
-static s32 audio_buffer_offset;
-static u32 audio_buffer_size;
-static bool audio_buffer_loop;
+struct MIC_U::Impl {
+    void MapSharedMem(Kernel::HLERequestContext& ctx) {
+        IPC::RequestParser rp{ctx, 0x01, 1, 2};
+        const u32 size = rp.Pop<u32>();
+        shared_memory = rp.PopObject<Kernel::SharedMemory>();
 
-/**
- * MIC::MapSharedMem service function
- *  Inputs:
- *      0 : Header Code[0x00010042]
- *      1 : Shared-mem size
- *      2 : CopyHandleDesc
- *      3 : Shared-mem handle
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- */
-static void MapSharedMem(Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-    u32 size = cmd_buff[1];
-    Kernel::Handle mem_handle = cmd_buff[3];
-    shared_memory = Kernel::g_handle_table.Get<Kernel::SharedMemory>(mem_handle);
-    if (shared_memory) {
-        shared_memory->name = "MIC_U:shared_memory";
+        if (shared_memory) {
+            shared_memory->name = "MIC_U:shared_memory";
+        }
+
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(RESULT_SUCCESS);
+
+        LOG_WARNING(Service_MIC, "called, size=0x%X", size);
     }
-    cmd_buff[1] = RESULT_SUCCESS.raw; // No error
-    LOG_WARNING(Service_MIC, "called, size=0x%X, mem_handle=0x%08X", size, mem_handle);
-}
 
-/**
- * MIC::UnmapSharedMem service function
- *  Inputs:
- *      0 : Header Code[0x00020000]
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- */
-static void UnmapSharedMem(Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
+    void UnmapSharedMem(Kernel::HLERequestContext& ctx) {
+        IPC::RequestParser rp{ctx, 0x02, 0, 0};
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(RESULT_SUCCESS);
+        LOG_WARNING(Service_MIC, "called");
+    }
 
-    cmd_buff[1] = RESULT_SUCCESS.raw; // No error
-    LOG_WARNING(Service_MIC, "called");
-}
+    void StartSampling(Kernel::HLERequestContext& ctx) {
+        IPC::RequestParser rp{ctx, 0x03, 5, 0};
 
-/**
- * MIC::StartSampling service function
- *  Inputs:
- *      0 : Header Code[0x00030140]
- *      1 : Encoding
- *      2 : SampleRate
- *      3 : Base offset for audio data in sharedmem
- *      4 : Size of the audio data in sharedmem
- *      5 : Loop at end of buffer
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- */
-static void StartSampling(Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
+        encoding = rp.PopEnum<Encoding>();
+        sample_rate = rp.PopEnum<SampleRate>();
+        audio_buffer_offset = rp.PopRaw<s32>();
+        audio_buffer_size = rp.Pop<u32>();
+        audio_buffer_loop = rp.Pop<bool>();
 
-    encoding = static_cast<Encoding>(cmd_buff[1] & 0xFF);
-    sample_rate = static_cast<SampleRate>(cmd_buff[2] & 0xFF);
-    audio_buffer_offset = cmd_buff[3];
-    audio_buffer_size = cmd_buff[4];
-    audio_buffer_loop = (cmd_buff[5] & 0xFF) != 0;
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(RESULT_SUCCESS);
+        is_sampling = true;
+        LOG_WARNING(Service_MIC,
+                    "(STUBBED) called, encoding=%u, sample_rate=%u, "
+                    "audio_buffer_offset=%d, audio_buffer_size=%u, audio_buffer_loop=%u",
+                    static_cast<u32>(encoding), static_cast<u32>(sample_rate), audio_buffer_offset,
+                    audio_buffer_size, audio_buffer_loop);
+    }
 
-    cmd_buff[1] = RESULT_SUCCESS.raw; // No error
-    is_sampling = true;
-    LOG_WARNING(Service_MIC, "(STUBBED) called, encoding=%u, sample_rate=%u, "
-                             "audio_buffer_offset=%d, audio_buffer_size=%u, audio_buffer_loop=%u",
-                static_cast<u32>(encoding), static_cast<u32>(sample_rate), audio_buffer_offset,
-                audio_buffer_size, audio_buffer_loop);
-}
+    void AdjustSampling(Kernel::HLERequestContext& ctx) {
+        IPC::RequestParser rp{ctx, 0x04, 1, 0};
+        sample_rate = rp.PopEnum<SampleRate>();
 
-/**
- * MIC::AdjustSampling service function
- *  Inputs:
- *      0 : Header Code[0x00040040]
- *      1 : SampleRate
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- */
-static void AdjustSampling(Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-    sample_rate = static_cast<SampleRate>(cmd_buff[1] & 0xFF);
-    cmd_buff[1] = RESULT_SUCCESS.raw; // No error
-    LOG_WARNING(Service_MIC, "(STUBBED) called, sample_rate=%u", static_cast<u32>(sample_rate));
-}
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(RESULT_SUCCESS);
+        LOG_WARNING(Service_MIC, "(STUBBED) called, sample_rate=%u", static_cast<u32>(sample_rate));
+    }
 
-/**
- * MIC::StopSampling service function
- *  Inputs:
- *      0 : Header Code[0x00050000]
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- */
-static void StopSampling(Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-    cmd_buff[1] = RESULT_SUCCESS.raw; // No error
-    is_sampling = false;
-    LOG_WARNING(Service_MIC, "(STUBBED) called");
-}
+    void StopSampling(Kernel::HLERequestContext& ctx) {
+        IPC::RequestParser rp{ctx, 0x05, 0, 0};
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(RESULT_SUCCESS);
+        is_sampling = false;
+        LOG_WARNING(Service_MIC, "(STUBBED) called");
+    }
 
-/**
- * MIC::IsSampling service function
- *  Inputs:
- *      0 : Header Code[0x00060000]
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- *      2 : 0 = sampling, non-zero = sampling
- */
-static void IsSampling(Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-    cmd_buff[1] = RESULT_SUCCESS.raw; // No error
-    cmd_buff[2] = is_sampling;
-    LOG_WARNING(Service_MIC, "(STUBBED) called");
-}
+    void IsSampling(Kernel::HLERequestContext& ctx) {
+        IPC::RequestParser rp{ctx, 0x06, 0, 0};
+        IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
+        rb.Push(RESULT_SUCCESS);
+        rb.Push<bool>(is_sampling);
+        LOG_WARNING(Service_MIC, "(STUBBED) called");
+    }
 
-/**
- * MIC::GetBufferFullEvent service function
- *  Inputs:
- *      0 : Header Code[0x00070000]
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- *      3 : Event handle
- */
-static void GetBufferFullEvent(Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-    cmd_buff[1] = RESULT_SUCCESS.raw; // No error
-    cmd_buff[3] = Kernel::g_handle_table.Create(buffer_full_event).Unwrap();
-    LOG_WARNING(Service_MIC, "(STUBBED) called");
-}
+    void GetBufferFullEvent(Kernel::HLERequestContext& ctx) {
+        IPC::RequestParser rp{ctx, 0x07, 0, 0};
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
+        rb.Push(RESULT_SUCCESS);
+        rb.PushCopyObjects(buffer_full_event);
+        LOG_WARNING(Service_MIC, "(STUBBED) called");
+    }
 
-/**
- * MIC::SetGain service function
- *  Inputs:
- *      0 : Header Code[0x00080040]
- *      1 : Gain
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- */
-static void SetGain(Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-    mic_gain = cmd_buff[1] & 0xFF;
-    cmd_buff[1] = RESULT_SUCCESS.raw; // No error
-    LOG_WARNING(Service_MIC, "(STUBBED) called, mic_gain=%u", mic_gain);
-}
+    void SetGain(Kernel::HLERequestContext& ctx) {
+        IPC::RequestParser rp{ctx, 0x08, 1, 0};
+        mic_gain = rp.Pop<u8>();
 
-/**
- * MIC::GetGain service function
- *  Inputs:
- *      0 : Header Code[0x00090000]
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- *      2 : Gain
- */
-static void GetGain(Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-    cmd_buff[1] = RESULT_SUCCESS.raw; // No error
-    cmd_buff[2] = mic_gain;
-    LOG_WARNING(Service_MIC, "(STUBBED) called");
-}
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(RESULT_SUCCESS);
+        LOG_WARNING(Service_MIC, "(STUBBED) called, mic_gain=%u", mic_gain);
+    }
 
-/**
- * MIC::SetPower service function
- *  Inputs:
- *      0 : Header Code[0x000A0040]
- *      1 : Power (0 = off, 1 = on)
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- */
-static void SetPower(Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-    mic_power = (cmd_buff[1] & 0xFF) != 0;
-    cmd_buff[1] = RESULT_SUCCESS.raw; // No error
-    LOG_WARNING(Service_MIC, "(STUBBED) called, mic_power=%u", mic_power);
-}
+    void GetGain(Kernel::HLERequestContext& ctx) {
+        IPC::RequestParser rp{ctx, 0x09, 0, 0};
 
-/**
- * MIC::GetPower service function
- *  Inputs:
- *      0 : Header Code[0x000B0000]
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- *      2 : Power
- */
-static void GetPower(Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-    cmd_buff[1] = RESULT_SUCCESS.raw; // No error
-    cmd_buff[2] = mic_power;
-    LOG_WARNING(Service_MIC, "(STUBBED) called");
-}
+        IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
+        rb.Push(RESULT_SUCCESS);
+        rb.Push<u8>(mic_gain);
+        LOG_WARNING(Service_MIC, "(STUBBED) called");
+    }
 
-/**
- * MIC::SetIirFilterMic service function
- *  Inputs:
- *      0 : Header Code[0x000C0042]
- *      1 : Size
- *      2 : (Size << 4) | 0xA
- *      3 : Pointer to IIR Filter Data
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- */
-static void SetIirFilterMic(Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
+    void SetPower(Kernel::HLERequestContext& ctx) {
+        IPC::RequestParser rp{ctx, 0x0A, 1, 0};
+        mic_power = rp.Pop<bool>();
 
-    u32 size = cmd_buff[1];
-    VAddr buffer = cmd_buff[3];
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(RESULT_SUCCESS);
+        LOG_WARNING(Service_MIC, "(STUBBED) called, mic_power=%u", mic_power);
+    }
 
-    cmd_buff[1] = RESULT_SUCCESS.raw; // No error
-    LOG_WARNING(Service_MIC, "(STUBBED) called, size=0x%X, buffer=0x%08X", size, buffer);
-}
+    void GetPower(Kernel::HLERequestContext& ctx) {
+        IPC::RequestParser rp{ctx, 0x0B, 0, 0};
+        IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
+        rb.Push(RESULT_SUCCESS);
+        rb.Push<u8>(mic_power);
+        LOG_WARNING(Service_MIC, "(STUBBED) called");
+    }
 
-/**
- * MIC::SetClamp service function
- *  Inputs:
- *      0 : Header Code[0x000D0040]
- *      1 : Clamp (0 = don't clamp, non-zero = clamp)
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- */
-static void SetClamp(Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-    clamp = (cmd_buff[1] & 0xFF) != 0;
-    cmd_buff[1] = RESULT_SUCCESS.raw; // No error
-    LOG_WARNING(Service_MIC, "(STUBBED) called, clamp=%u", clamp);
-}
+    void SetIirFilterMic(Kernel::HLERequestContext& ctx) {
+        IPC::RequestParser rp{ctx, 0x0C, 1, 2};
+        const u32 size = rp.Pop<u32>();
+        const Kernel::MappedBuffer& buffer = rp.PopMappedBuffer();
 
-/**
- * MIC::GetClamp service function
- *  Inputs:
- *      0 : Header Code[0x000E0000]
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- *      2 : Clamp (0 = don't clamp, non-zero = clamp)
- */
-static void GetClamp(Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-    cmd_buff[1] = RESULT_SUCCESS.raw; // No error
-    cmd_buff[2] = clamp;
-    LOG_WARNING(Service_MIC, "(STUBBED) called");
-}
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
+        rb.Push(RESULT_SUCCESS);
+        rb.PushMappedBuffer(buffer);
+        LOG_WARNING(Service_MIC, "(STUBBED) called, size=0x%X, buffer=0x%08X", size,
+                    buffer.GetId());
+    }
 
-/**
- * MIC::SetAllowShellClosed service function
- *  Inputs:
- *      0 : Header Code[0x000D0040]
- *      1 : Sampling allowed while shell closed (0 = disallow, non-zero = allow)
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- */
-static void SetAllowShellClosed(Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-    allow_shell_closed = (cmd_buff[1] & 0xFF) != 0;
-    cmd_buff[1] = RESULT_SUCCESS.raw; // No error
-    LOG_WARNING(Service_MIC, "(STUBBED) called, allow_shell_closed=%u", allow_shell_closed);
-}
+    void SetClamp(Kernel::HLERequestContext& ctx) {
+        IPC::RequestParser rp{ctx, 0x0D, 1, 0};
+        clamp = rp.Pop<bool>();
 
-/**
- * MIC_U::SetClientVersion service function
- *  Inputs:
- *      1 : Used SDK Version
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- */
-static void SetClientVersion(Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(RESULT_SUCCESS);
+        LOG_WARNING(Service_MIC, "(STUBBED) called, clamp=%u", clamp);
+    }
 
-    const u32 version = cmd_buff[1];
-    self->SetVersion(version);
+    void GetClamp(Kernel::HLERequestContext& ctx) {
+        IPC::RequestParser rp{ctx, 0x0E, 0, 0};
+        IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
+        rb.Push(RESULT_SUCCESS);
+        rb.Push<bool>(clamp);
+        LOG_WARNING(Service_MIC, "(STUBBED) called");
+    }
 
-    LOG_WARNING(Service_MIC, "(STUBBED) called, version: 0x%08X", version);
+    void SetAllowShellClosed(Kernel::HLERequestContext& ctx) {
+        IPC::RequestParser rp{ctx, 0x0F, 1, 0};
+        allow_shell_closed = rp.Pop<bool>();
 
-    cmd_buff[1] = RESULT_SUCCESS.raw; // No error
-}
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(RESULT_SUCCESS);
+        LOG_WARNING(Service_MIC, "(STUBBED) called, allow_shell_closed=%u", allow_shell_closed);
+    }
 
-const Interface::FunctionInfo FunctionTable[] = {
-    {0x00010042, MapSharedMem, "MapSharedMem"},
-    {0x00020000, UnmapSharedMem, "UnmapSharedMem"},
-    {0x00030140, StartSampling, "StartSampling"},
-    {0x00040040, AdjustSampling, "AdjustSampling"},
-    {0x00050000, StopSampling, "StopSampling"},
-    {0x00060000, IsSampling, "IsSampling"},
-    {0x00070000, GetBufferFullEvent, "GetBufferFullEvent"},
-    {0x00080040, SetGain, "SetGain"},
-    {0x00090000, GetGain, "GetGain"},
-    {0x000A0040, SetPower, "SetPower"},
-    {0x000B0000, GetPower, "GetPower"},
-    {0x000C0042, SetIirFilterMic, "SetIirFilterMic"},
-    {0x000D0040, SetClamp, "SetClamp"},
-    {0x000E0000, GetClamp, "GetClamp"},
-    {0x000F0040, SetAllowShellClosed, "SetAllowShellClosed"},
-    {0x00100040, SetClientVersion, "SetClientVersion"},
+    void SetClientVersion(Kernel::HLERequestContext& ctx) {
+        IPC::RequestParser rp{ctx, 0x10, 1, 0};
+
+        const u32 version = rp.Pop<u32>();
+        LOG_WARNING(Service_MIC, "(STUBBED) called, version: 0x%08X", version);
+
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(RESULT_SUCCESS);
+    }
+
+    u32 client_version = 0;
+    Kernel::SharedPtr<Kernel::Event> buffer_full_event =
+        Kernel::Event::Create(Kernel::ResetType::OneShot, "MIC_U::buffer_full_event");
+    Kernel::SharedPtr<Kernel::SharedMemory> shared_memory;
+    u8 mic_gain = 0;
+    bool mic_power = false;
+    bool is_sampling = false;
+    bool allow_shell_closed;
+    bool clamp = false;
+    Encoding encoding = Encoding::PCM8;
+    SampleRate sample_rate = SampleRate::SampleRate32730;
+    s32 audio_buffer_offset = 0;
+    u32 audio_buffer_size = 0;
+    bool audio_buffer_loop = false;
 };
 
-MIC_U::MIC_U() {
-    Register(FunctionTable);
-    shared_memory = nullptr;
-    buffer_full_event =
-        Kernel::Event::Create(Kernel::ResetType::OneShot, "MIC_U::buffer_full_event");
-    mic_gain = 0;
-    mic_power = false;
-    is_sampling = false;
-    clamp = false;
+void MIC_U::MapSharedMem(Kernel::HLERequestContext& ctx) {
+    impl->MapSharedMem(ctx);
 }
 
-MIC_U::~MIC_U() {
-    shared_memory = nullptr;
-    buffer_full_event = nullptr;
+void MIC_U::UnmapSharedMem(Kernel::HLERequestContext& ctx) {
+    impl->UnmapSharedMem(ctx);
+}
+
+void MIC_U::StartSampling(Kernel::HLERequestContext& ctx) {
+    impl->StartSampling(ctx);
+}
+
+void MIC_U::AdjustSampling(Kernel::HLERequestContext& ctx) {
+    impl->AdjustSampling(ctx);
+}
+
+void MIC_U::StopSampling(Kernel::HLERequestContext& ctx) {
+    impl->StopSampling(ctx);
+}
+
+void MIC_U::IsSampling(Kernel::HLERequestContext& ctx) {
+    impl->IsSampling(ctx);
+}
+
+void MIC_U::GetBufferFullEvent(Kernel::HLERequestContext& ctx) {
+    impl->GetBufferFullEvent(ctx);
+}
+
+void MIC_U::SetGain(Kernel::HLERequestContext& ctx) {
+    impl->SetGain(ctx);
+}
+
+void MIC_U::GetGain(Kernel::HLERequestContext& ctx) {
+    impl->GetGain(ctx);
+}
+
+void MIC_U::SetPower(Kernel::HLERequestContext& ctx) {
+    impl->SetPower(ctx);
+}
+
+void MIC_U::GetPower(Kernel::HLERequestContext& ctx) {
+    impl->GetPower(ctx);
+}
+
+void MIC_U::SetIirFilterMic(Kernel::HLERequestContext& ctx) {
+    impl->SetIirFilterMic(ctx);
+}
+
+void MIC_U::SetClamp(Kernel::HLERequestContext& ctx) {
+    impl->SetClamp(ctx);
+}
+
+void MIC_U::GetClamp(Kernel::HLERequestContext& ctx) {
+    impl->GetClamp(ctx);
+}
+
+void MIC_U::SetAllowShellClosed(Kernel::HLERequestContext& ctx) {
+    impl->SetAllowShellClosed(ctx);
+}
+
+void MIC_U::SetClientVersion(Kernel::HLERequestContext& ctx) {
+    impl->SetClientVersion(ctx);
+}
+
+MIC_U::MIC_U() : ServiceFramework{"mic:u", 1}, impl{std::make_unique<Impl>()} {
+    static const FunctionInfo functions[] = {
+        {0x00010042, &MIC_U::MapSharedMem, "MapSharedMem"},
+        {0x00020000, &MIC_U::UnmapSharedMem, "UnmapSharedMem"},
+        {0x00030140, &MIC_U::StartSampling, "StartSampling"},
+        {0x00040040, &MIC_U::AdjustSampling, "AdjustSampling"},
+        {0x00050000, &MIC_U::StopSampling, "StopSampling"},
+        {0x00060000, &MIC_U::IsSampling, "IsSampling"},
+        {0x00070000, &MIC_U::GetBufferFullEvent, "GetBufferFullEvent"},
+        {0x00080040, &MIC_U::SetGain, "SetGain"},
+        {0x00090000, &MIC_U::GetGain, "GetGain"},
+        {0x000A0040, &MIC_U::SetPower, "SetPower"},
+        {0x000B0000, &MIC_U::GetPower, "GetPower"},
+        {0x000C0042, &MIC_U::SetIirFilterMic, "SetIirFilterMic"},
+        {0x000D0040, &MIC_U::SetClamp, "SetClamp"},
+        {0x000E0000, &MIC_U::GetClamp, "GetClamp"},
+        {0x000F0040, &MIC_U::SetAllowShellClosed, "SetAllowShellClosed"},
+        {0x00100040, &MIC_U::SetClientVersion, "SetClientVersion"},
+    };
+
+    RegisterHandlers(functions);
+}
+
+MIC_U::~MIC_U() = default;
+
+void InstallInterfaces(SM::ServiceManager& service_manager) {
+    std::make_shared<MIC_U>()->InstallAsService(service_manager);
 }
 
 } // namespace MIC
