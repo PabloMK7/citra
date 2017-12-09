@@ -4,25 +4,76 @@
 
 #pragma once
 
+#include <atomic>
+#include <memory>
+#include "core/frontend/input.h"
+#include "core/hle/kernel/kernel.h"
 #include "core/hle/service/service.h"
+
+namespace Kernel {
+class Event;
+class SharedMemory;
+}
+
+namespace CoreTiming {
+class EventType;
+};
 
 namespace Service {
 namespace IR {
 
-class IR_RST_Interface : public Service::Interface {
+/// Interface to "ir:rst" service
+class IR_RST final : public ServiceFramework<IR_RST> {
 public:
-    IR_RST_Interface();
+    IR_RST();
+    ~IR_RST();
+    void ReloadInputDevices();
 
-    std::string GetPortName() const override {
-        return "ir:rst";
-    }
+private:
+    /**
+     * GetHandles service function
+     *  No input
+     *  Outputs:
+     *      1 : Result of function, 0 on success, otherwise error code
+     *      2 : Handle translation descriptor
+     *      3 : Shared memory handle
+     *      4 : Event handle
+     */
+    void GetHandles(Kernel::HLERequestContext& ctx);
+
+    /**
+     * Initialize service function
+     *  Inputs:
+     *      1 : pad state update period in ms
+     *      2 : bool output raw c-stick data
+     *  Outputs:
+     *      1 : Result of function, 0 on success, otherwise error code
+     */
+    void Initialize(Kernel::HLERequestContext& ctx);
+
+    /**
+     * Shutdown service function
+     *  No input
+     *  Outputs:
+     *      1 : Result of function, 0 on success, otherwise error code
+     */
+    void Shutdown(Kernel::HLERequestContext& ctx);
+
+    void LoadInputDevices();
+    void UnloadInputDevices();
+    void UpdateCallback(u64 userdata, int cycles_late);
+
+    Kernel::SharedPtr<Kernel::Event> update_event;
+    Kernel::SharedPtr<Kernel::SharedMemory> shared_memory;
+    u32 next_pad_index{0};
+    CoreTiming::EventType* update_callback_id;
+    std::unique_ptr<Input::ButtonDevice> zl_button;
+    std::unique_ptr<Input::ButtonDevice> zr_button;
+    std::unique_ptr<Input::AnalogDevice> c_stick;
+    std::atomic<bool> is_device_reload_pending{false};
+    bool raw_c_stick{false};
+    int update_period{0};
 };
-
-void InitRST();
-void ShutdownRST();
-
-/// Reload input devices. Used when input configuration changed
-void ReloadInputDevicesRST();
 
 } // namespace IR
 } // namespace Service

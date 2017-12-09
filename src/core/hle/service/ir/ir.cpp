@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <memory>
 #include "core/hle/service/ir/ir.h"
 #include "core/hle/service/ir/ir_rst.h"
 #include "core/hle/service/ir/ir_u.h"
@@ -11,26 +12,31 @@
 namespace Service {
 namespace IR {
 
+static std::weak_ptr<IR_RST> current_ir_rst;
+
 void Init() {
-    AddService(new IR_RST_Interface);
     AddService(new IR_User_Interface);
 
     InitUser();
-    InitRST();
 }
 
 void Shutdown() {
     ShutdownUser();
-    ShutdownRST();
 }
 
 void ReloadInputDevices() {
     ReloadInputDevicesUser();
-    ReloadInputDevicesRST();
+
+    if (auto ir_rst = current_ir_rst.lock())
+        ir_rst->ReloadInputDevices();
 }
 
 void InstallInterfaces(SM::ServiceManager& service_manager) {
     std::make_shared<IR_U>()->InstallAsService(service_manager);
+
+    auto ir_rst = std::make_shared<IR_RST>();
+    ir_rst->InstallAsService(service_manager);
+    current_ir_rst = ir_rst;
 }
 
 } // namespace IR
