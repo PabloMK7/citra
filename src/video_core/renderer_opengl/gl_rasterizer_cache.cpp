@@ -875,10 +875,11 @@ Surface FindMatch(const SurfaceCache& surface_cache, const SurfaceParams& params
             const bool res_scale_matched = match_scale_type == ScaleMatch::Exact
                                                ? (params.res_scale == surface->res_scale)
                                                : (params.res_scale <= surface->res_scale);
+            // validity will be checked in GetCopyableInterval
             bool is_valid =
-                find_flags & MatchFlags::Copy ? true
-                                              : // validity will be checked in GetCopyableInterval
-                    surface->IsRegionValid(validate_interval.value_or(params.GetInterval()));
+                find_flags & MatchFlags::Copy
+                    ? true
+                    : surface->IsRegionValid(validate_interval.value_or(params.GetInterval()));
 
             if (!(find_flags & MatchFlags::Invalid) && !is_valid)
                 continue;
@@ -976,8 +977,8 @@ Surface RasterizerCacheOpenGL::GetSurface(const SurfaceParams& params, ScaleMatc
     if (params.addr == 0 || params.height * params.width == 0) {
         return nullptr;
     }
-
-    ASSERT(params.width == params.stride); // Use GetSurfaceSubRect instead
+    // Use GetSurfaceSubRect instead
+    ASSERT(params.width == params.stride);
 
     // Check for an exact match in existing surfaces
     Surface surface =
@@ -1072,7 +1073,8 @@ SurfaceRect_Tuple RasterizerCacheOpenGL::GetSurfaceSubRect(const SurfaceParams& 
     // No subrect found - create and return a new surface
     if (surface == nullptr) {
         SurfaceParams new_params = params;
-        new_params.width = params.stride; // Can't have gaps in a surface
+        // Can't have gaps in a surface
+        new_params.width = params.stride;
         new_params.UpdateParams();
         // GetSurface will create the new surface and possibly adjust res_scale if necessary
         surface = GetSurface(new_params, match_res_scale, load_if_create);
@@ -1141,7 +1143,7 @@ SurfaceSurfaceRect_Tuple RasterizerCacheOpenGL::GetFramebufferSurfaces(
     auto color_vp_interval = color_params.GetSubRectInterval(viewport_clamped);
     auto depth_vp_interval = depth_params.GetSubRectInterval(viewport_clamped);
 
-    // Make sur that framebuffers don't overlap if both color and depth are being used
+    // Make sure that framebuffers don't overlap if both color and depth are being used
     if (using_color_fb && using_depth_fb &&
         boost::icl::length(color_vp_interval & depth_vp_interval)) {
         LOG_CRITICAL(Render_OpenGL, "Color and depth framebuffer memory regions overlap; "
@@ -1322,10 +1324,8 @@ void RasterizerCacheOpenGL::FlushRegion(PAddr addr, u32 size, Surface flush_surf
     SurfaceRegions flushed_intervals;
 
     for (auto& pair : RangeFromInterval(dirty_regions, flush_interval)) {
-        const auto interval = size <= 8
-                                  ? // this most likely comes from the cpu, flush the entire region
-                                  pair.first
-                                  : pair.first & flush_interval;
+        // small sizes imply that this most likely comes from the cpu, flush the entire region
+        const auto interval = size <= 8 ? pair.first : pair.first & flush_interval;
         auto& surface = pair.second;
 
         if (flush_surface != nullptr && surface != flush_surface)
@@ -1358,7 +1358,8 @@ void RasterizerCacheOpenGL::InvalidateRegion(PAddr addr, u32 size, const Surface
     if (region_owner != nullptr) {
         ASSERT(region_owner->type != SurfaceType::Texture);
         ASSERT(addr >= region_owner->addr && addr + size <= region_owner->end);
-        ASSERT(region_owner->width == region_owner->stride); // Surfaces can't have a gap
+        // Surfaces can't have a gap
+        ASSERT(region_owner->width == region_owner->stride);
         region_owner->invalid_regions.erase(invalid_interval);
     }
 
