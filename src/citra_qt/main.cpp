@@ -487,8 +487,6 @@ bool GMainWindow::LoadROM(const QString& filename) {
 
     const Core::System::ResultStatus result{system.Load(render_window, filename.toStdString())};
 
-    Core::Telemetry().AddField(Telemetry::FieldType::App, "Frontend", "Qt");
-
     if (result != Core::System::ResultStatus::Success) {
         switch (result) {
         case Core::System::ResultStatus::ErrorGetLoader:
@@ -544,6 +542,8 @@ bool GMainWindow::LoadROM(const QString& filename) {
         }
         return false;
     }
+
+    Core::Telemetry().AddField(Telemetry::FieldType::App, "Frontend", "Qt");
     return true;
 }
 
