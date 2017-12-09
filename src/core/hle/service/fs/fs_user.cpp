@@ -170,19 +170,20 @@ static void OpenFileDirectly(Service::Interface* self) {
  *      1 : Result of function, 0 on success, otherwise error code
  */
 static void DeleteFile(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-
-    ArchiveHandle archive_handle = MakeArchiveHandle(cmd_buff[2], cmd_buff[3]);
-    auto filename_type = static_cast<FileSys::LowPathType>(cmd_buff[4]);
-    u32 filename_size = cmd_buff[5];
-    u32 filename_ptr = cmd_buff[7];
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x804, 5, 2);
+    rp.Skip(1, false); // TransactionId
+    ArchiveHandle archive_handle = rp.PopRaw<ArchiveHandle>();
+    auto filename_type = rp.PopEnum<FileSys::LowPathType>();
+    u32 filename_size = rp.Pop<u32>();
+    u32 filename_ptr = rp.PopStaticBuffer(nullptr);
 
     FileSys::Path file_path(filename_type, filename_size, filename_ptr);
 
     LOG_DEBUG(Service_FS, "type=%u size=%u data=%s", static_cast<u32>(filename_type), filename_size,
               file_path.DebugStr().c_str());
 
-    cmd_buff[1] = DeleteFileFromArchive(archive_handle, file_path).raw;
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(DeleteFileFromArchive(archive_handle, file_path));
 }
 
 /*
