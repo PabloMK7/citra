@@ -76,7 +76,7 @@ ResultVal<std::unique_ptr<FileBackend>> NCCHArchive::OpenFile(const Path& path,
         u64 romfs_size = 0;
 
         result = ncch_container.ReadRomFS(romfs_file, romfs_offset, romfs_size);
-        file = std::make_unique<IVFCFile>(romfs_file, romfs_offset, romfs_size);
+        file = std::make_unique<IVFCFile>(std::move(romfs_file), romfs_offset, romfs_size);
     } else if (filepath_type == NCCHFilePathType::Code ||
                filepath_type == NCCHFilePathType::ExeFS) {
         std::vector<u8> buffer;
