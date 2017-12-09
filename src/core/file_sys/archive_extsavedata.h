@@ -56,6 +56,9 @@ private:
      * See GetExtSaveDataPath for the code that extracts this data from an archive path.
      */
     std::string mount_point;
+
+    /// Returns a path with the correct SaveIdHigh value for Shared extdata paths.
+    Path GetCorrectedPath(const Path& path);
 };
 
 /**

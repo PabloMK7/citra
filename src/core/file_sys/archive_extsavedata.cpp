@@ -131,6 +131,14 @@ public:
     }
 };
 
+struct ExtSaveDataArchivePath {
+    u32_le media_type;
+    u32_le save_low;
+    u32_le save_high;
+};
+
+static_assert(sizeof(ExtSaveDataArchivePath) == 12, "Incorrect path size");
+
 std::string GetExtSaveDataPath(const std::string& mount_point, const Path& path) {
     std::vector<u8> vec_data = path.AsBinary();
     const u32* data = reinterpret_cast<const u32*>(vec_data.data());
@@ -183,8 +191,27 @@ bool ArchiveFactory_ExtSaveData::Initialize() {
     return true;
 }
 
+Path ArchiveFactory_ExtSaveData::GetCorrectedPath(const Path& path) {
+    if (!shared)
+        return path;
+
+    static constexpr u32 SharedExtDataHigh = 0x48000;
+
+    ExtSaveDataArchivePath new_path;
+    std::memcpy(&new_path, path.AsBinary().data(), sizeof(new_path));
+
+    // The FS module overwrites the high value of the saveid when dealing with the SharedExtSaveData
+    // archive.
+    new_path.save_high = SharedExtDataHigh;
+
+    std::vector<u8> binary_data(sizeof(new_path));
+    std::memcpy(binary_data.data(), &new_path, binary_data.size());
+
+    return {binary_data};
+}
+
 ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_ExtSaveData::Open(const Path& path) {
-    std::string fullpath = GetExtSaveDataPath(mount_point, path) + "user/";
+    std::string fullpath = GetExtSaveDataPath(mount_point, GetCorrectedPath(path)) + "user/";
     if (!FileUtil::Exists(fullpath)) {
         // TODO(Subv): Verify the archive behavior of SharedExtSaveData compared to ExtSaveData.
         // ExtSaveData seems to return FS_NotFound (120) when the archive doesn't exist.
@@ -200,14 +227,16 @@ ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_ExtSaveData::Open(cons
 
 ResultCode ArchiveFactory_ExtSaveData::Format(const Path& path,
                                               const FileSys::ArchiveFormatInfo& format_info) {
+    auto corrected_path = GetCorrectedPath(path);
+
     // These folders are always created with the ExtSaveData
-    std::string user_path = GetExtSaveDataPath(mount_point, path) + "user/";
-    std::string boss_path = GetExtSaveDataPath(mount_point, path) + "boss/";
+    std::string user_path = GetExtSaveDataPath(mount_point, corrected_path) + "user/";
+    std::string boss_path = GetExtSaveDataPath(mount_point, corrected_path) + "boss/";
     FileUtil::CreateFullPath(user_path);
     FileUtil::CreateFullPath(boss_path);
 
     // Write the format metadata
-    std::string metadata_path = GetExtSaveDataPath(mount_point, path) + "metadata";
+    std::string metadata_path = GetExtSaveDataPath(mount_point, corrected_path) + "metadata";
     FileUtil::IOFile file(metadata_path, "wb");
 
     if (!file.IsOpen()) {
