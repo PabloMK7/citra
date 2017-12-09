@@ -13,7 +13,6 @@ namespace IR {
 
 void Init() {
     AddService(new IR_RST_Interface);
-    AddService(new IR_U_Interface);
     AddService(new IR_User_Interface);
 
     InitUser();
@@ -28,6 +27,10 @@ void Shutdown() {
 void ReloadInputDevices() {
     ReloadInputDevicesUser();
     ReloadInputDevicesRST();
+}
+
+void InstallInterfaces(SM::ServiceManager& service_manager) {
+    std::make_shared<IR_U>()->InstallAsService(service_manager);
 }
 
 } // namespace IR

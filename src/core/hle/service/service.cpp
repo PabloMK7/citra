@@ -274,6 +274,7 @@ void Init() {
     FRD::Init();
     HID::Init();
     IR::Init();
+    IR::InstallInterfaces(*SM::g_service_manager);
     MVD::Init();
     NDM::Init();
     NEWS::Init();
