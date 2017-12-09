@@ -131,12 +131,22 @@ public:
     }
 };
 
+struct ExtSaveDataArchivePath {
+    u32_le media_type;
+    u32_le save_low;
+    u32_le save_high;
+};
+
+static_assert(sizeof(ExtSaveDataArchivePath) == 12, "Incorrect path size");
+
 std::string GetExtSaveDataPath(const std::string& mount_point, const Path& path) {
     std::vector<u8> vec_data = path.AsBinary();
-    const u32* data = reinterpret_cast<const u32*>(vec_data.data());
-    u32 save_low = data[1];
-    u32 save_high = data[2];
-    return Common::StringFromFormat("%s%08X/%08X/", mount_point.c_str(), save_high, save_low);
+
+    ExtSaveDataArchivePath path_data;
+    std::memcpy(&path_data, vec_data.data(), sizeof(path_data));
+
+    return Common::StringFromFormat("%s%08X/%08X/", mount_point.c_str(), path_data.save_high,
+                                    path_data.save_low);
 }
 
 std::string GetExtDataContainerPath(const std::string& mount_point, bool shared) {
@@ -148,22 +158,13 @@ std::string GetExtDataContainerPath(const std::string& mount_point, bool shared)
 }
 
 Path ConstructExtDataBinaryPath(u32 media_type, u32 high, u32 low) {
-    std::vector<u8> binary_path;
-    binary_path.reserve(12);
+    ExtSaveDataArchivePath path;
+    path.media_type = media_type;
+    path.save_high = high;
+    path.save_low = low;
 
-    // Append each word byte by byte
-
-    // The first word is the media type
-    for (unsigned i = 0; i < 4; ++i)
-        binary_path.push_back((media_type >> (8 * i)) & 0xFF);
-
-    // Next is the low word
-    for (unsigned i = 0; i < 4; ++i)
-        binary_path.push_back((low >> (8 * i)) & 0xFF);
-
-    // Next is the high word
-    for (unsigned i = 0; i < 4; ++i)
-        binary_path.push_back((high >> (8 * i)) & 0xFF);
+    std::vector<u8> binary_path(sizeof(path));
+    std::memcpy(binary_path.data(), &path, binary_path.size());
 
     return {binary_path};
 }
@@ -183,8 +184,27 @@ bool ArchiveFactory_ExtSaveData::Initialize() {
     return true;
 }
 
+Path ArchiveFactory_ExtSaveData::GetCorrectedPath(const Path& path) {
+    if (!shared)
+        return path;
+
+    static constexpr u32 SharedExtDataHigh = 0x48000;
+
+    ExtSaveDataArchivePath new_path;
+    std::memcpy(&new_path, path.AsBinary().data(), sizeof(new_path));
+
+    // The FS module overwrites the high value of the saveid when dealing with the SharedExtSaveData
+    // archive.
+    new_path.save_high = SharedExtDataHigh;
+
+    std::vector<u8> binary_data(sizeof(new_path));
+    std::memcpy(binary_data.data(), &new_path, binary_data.size());
+
+    return {binary_data};
+}
+
 ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_ExtSaveData::Open(const Path& path) {
-    std::string fullpath = GetExtSaveDataPath(mount_point, path) + "user/";
+    std::string fullpath = GetExtSaveDataPath(mount_point, GetCorrectedPath(path)) + "user/";
     if (!FileUtil::Exists(fullpath)) {
         // TODO(Subv): Verify the archive behavior of SharedExtSaveData compared to ExtSaveData.
         // ExtSaveData seems to return FS_NotFound (120) when the archive doesn't exist.
@@ -200,14 +220,16 @@ ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_ExtSaveData::Open(cons
 
 ResultCode ArchiveFactory_ExtSaveData::Format(const Path& path,
                                               const FileSys::ArchiveFormatInfo& format_info) {
+    auto corrected_path = GetCorrectedPath(path);
+
     // These folders are always created with the ExtSaveData
-    std::string user_path = GetExtSaveDataPath(mount_point, path) + "user/";
-    std::string boss_path = GetExtSaveDataPath(mount_point, path) + "boss/";
+    std::string user_path = GetExtSaveDataPath(mount_point, corrected_path) + "user/";
+    std::string boss_path = GetExtSaveDataPath(mount_point, corrected_path) + "boss/";
     FileUtil::CreateFullPath(user_path);
     FileUtil::CreateFullPath(boss_path);
 
     // Write the format metadata
-    std::string metadata_path = GetExtSaveDataPath(mount_point, path) + "metadata";
+    std::string metadata_path = GetExtSaveDataPath(mount_point, corrected_path) + "metadata";
     FileUtil::IOFile file(metadata_path, "wb");
 
     if (!file.IsOpen()) {
