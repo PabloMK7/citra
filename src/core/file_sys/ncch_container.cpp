@@ -252,6 +252,26 @@ Loader::ResultStatus NCCHContainer::LoadSectionExeFS(const char* name, std::vect
     if (result == Loader::ResultStatus::Success || !has_exefs)
         return result;
 
+    // As of firmware 5.0.0-11 the logo is stored between the access descriptor and the plain region
+    // instead of the ExeFS.
+    if (std::strcmp(name, "logo") == 0) {
+        if (ncch_header.logo_region_offset && ncch_header.logo_region_size) {
+            size_t logo_offset = ncch_header.logo_region_offset * kBlockSize;
+            size_t logo_size = ncch_header.logo_region_size * kBlockSize;
+
+            buffer.resize(logo_size);
+            file.Seek(ncch_offset + logo_offset, SEEK_SET);
+
+            if (file.ReadBytes(buffer.data(), logo_size) != logo_size) {
+                LOG_ERROR(Service_FS, "Could not read NCCH logo");
+                return Loader::ResultStatus::Error;
+            }
+            return Loader::ResultStatus::Success;
+        } else {
+            LOG_INFO(Service_FS, "Attempting to load logo from the ExeFS");
+        }
+    }
+
     // If we don't have any separate files, we'll need a full ExeFS
     if (!exefs_file.IsOpen())
         return Loader::ResultStatus::Error;
