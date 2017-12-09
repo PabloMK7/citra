@@ -297,26 +297,30 @@ static void DeleteDirectoryRecursively(Service::Interface* self) {
  *      3 : Archive handle upper word
  *      4 : File path string type
  *      5 : File path string size
+ *      6 : File attributes
  *      7-8 : File size
  *      10: File path string data
  *  Outputs:
  *      1 : Result of function, 0 on success, otherwise error code
  */
 static void CreateFile(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x808, 8, 2);
 
-    ArchiveHandle archive_handle = MakeArchiveHandle(cmd_buff[2], cmd_buff[3]);
-    auto filename_type = static_cast<FileSys::LowPathType>(cmd_buff[4]);
-    u32 filename_size = cmd_buff[5];
-    u64 file_size = ((u64)cmd_buff[8] << 32) | cmd_buff[7];
-    u32 filename_ptr = cmd_buff[10];
+    rp.Skip(1, false); // TransactionId
+    ArchiveHandle archive_handle = rp.PopRaw<ArchiveHandle>();
+    auto filename_type = rp.PopEnum<FileSys::LowPathType>();
+    u32 filename_size = rp.Pop<u32>();
+    u32 attributes = rp.Pop<u32>();
+    u64 file_size = rp.Pop<u64>();
+    u32 filename_ptr = rp.PopStaticBuffer(nullptr);
 
     FileSys::Path file_path(filename_type, filename_size, filename_ptr);
 
-    LOG_DEBUG(Service_FS, "type=%u size=%" PRIx64 " data=%s", static_cast<u32>(filename_type),
-              file_size, file_path.DebugStr().c_str());
+    LOG_DEBUG(Service_FS, "type=%u attributes=%u size=%" PRIx64 " data=%s",
+              static_cast<u32>(filename_type), attributes, file_size, file_path.DebugStr().c_str());
 
-    cmd_buff[1] = CreateFileInArchive(archive_handle, file_path, file_size).raw;
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(CreateFileInArchive(archive_handle, file_path, file_size));
 }
 
 /*
