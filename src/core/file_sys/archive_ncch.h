@@ -51,7 +51,7 @@ protected:
 // File backend for NCCH files
 class NCCHFile : public FileBackend {
 public:
-    NCCHFile(std::vector<u8> buffer) : file_buffer(buffer) {}
+    explicit NCCHFile(std::vector<u8> buffer);
 
     ResultVal<size_t> Read(u64 offset, size_t length, u8* buffer) const override;
     ResultVal<size_t> Write(u64 offset, size_t length, bool flush, const u8* buffer) override;
