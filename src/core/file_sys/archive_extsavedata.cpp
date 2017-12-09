@@ -141,10 +141,12 @@ static_assert(sizeof(ExtSaveDataArchivePath) == 12, "Incorrect path size");
 
 std::string GetExtSaveDataPath(const std::string& mount_point, const Path& path) {
     std::vector<u8> vec_data = path.AsBinary();
-    const u32* data = reinterpret_cast<const u32*>(vec_data.data());
-    u32 save_low = data[1];
-    u32 save_high = data[2];
-    return Common::StringFromFormat("%s%08X/%08X/", mount_point.c_str(), save_high, save_low);
+
+    ExtSaveDataArchivePath path_data;
+    std::memcpy(&path_data, vec_data.data(), sizeof(path_data));
+
+    return Common::StringFromFormat("%s%08X/%08X/", mount_point.c_str(), path_data.save_high,
+                                    path_data.save_low);
 }
 
 std::string GetExtDataContainerPath(const std::string& mount_point, bool shared) {
@@ -156,22 +158,13 @@ std::string GetExtDataContainerPath(const std::string& mount_point, bool shared)
 }
 
 Path ConstructExtDataBinaryPath(u32 media_type, u32 high, u32 low) {
-    std::vector<u8> binary_path;
-    binary_path.reserve(12);
+    ExtSaveDataArchivePath path;
+    path.media_type = media_type;
+    path.save_high = high;
+    path.save_low = low;
 
-    // Append each word byte by byte
-
-    // The first word is the media type
-    for (unsigned i = 0; i < 4; ++i)
-        binary_path.push_back((media_type >> (8 * i)) & 0xFF);
-
-    // Next is the low word
-    for (unsigned i = 0; i < 4; ++i)
-        binary_path.push_back((low >> (8 * i)) & 0xFF);
-
-    // Next is the high word
-    for (unsigned i = 0; i < 4; ++i)
-        binary_path.push_back((high >> (8 * i)) & 0xFF);
+    std::vector<u8> binary_path(sizeof(path));
+    std::memcpy(binary_path.data(), &path, binary_path.size());
 
     return {binary_path};
 }
