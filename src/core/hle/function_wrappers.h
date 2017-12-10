@@ -8,8 +8,8 @@
 #include "core/arm/arm_interface.h"
 #include "core/core.h"
 #include "core/hle/kernel/kernel.h"
+#include "core/hle/kernel/svc.h"
 #include "core/hle/result.h"
-#include "core/hle/svc.h"
 #include "core/memory.h"
 
 namespace HLE {

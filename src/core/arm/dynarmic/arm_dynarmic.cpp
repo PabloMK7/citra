@@ -11,7 +11,7 @@
 #include "core/arm/dyncom/arm_dyncom_interpreter.h"
 #include "core/core.h"
 #include "core/core_timing.h"
-#include "core/hle/svc.h"
+#include "core/hle/kernel/svc.h"
 #include "core/memory.h"
 
 static void InterpreterFallback(u32 pc, Dynarmic::Jit* jit, void* user_arg) {

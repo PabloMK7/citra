@@ -20,7 +20,7 @@
 #include "core/arm/skyeye_common/vfp/vfp.h"
 #include "core/core_timing.h"
 #include "core/gdbstub/gdbstub.h"
-#include "core/hle/svc.h"
+#include "core/hle/kernel/svc.h"
 #include "core/memory.h"
 
 #define RM BITS(sht_oper, 0, 3)
