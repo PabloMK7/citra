@@ -127,6 +127,8 @@ set(cryptopp_SOURCES
         cryptopp/ccm.cpp
         cryptopp/cpu.cpp
         cryptopp/cryptlib.cpp
+        cryptopp/des.cpp
+        cryptopp/dessp.cpp
         cryptopp/dll.cpp
         cryptopp/ec2n.cpp
         cryptopp/ecp.cpp
