@@ -1,21 +1,18 @@
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/CMakeModules)
 
-set(SRCS
-            emu_window/emu_window_sdl2.cpp
-            citra.cpp
-            config.cpp
-            citra.rc
-            )
-set(HEADERS
-            emu_window/emu_window_sdl2.h
-            config.h
-            default_ini.h
-            resource.h
-            )
+add_executable(citra
+    citra.cpp
+    citra.rc
+    config.cpp
+    config.h
+    default_ini.h
+    emu_window/emu_window_sdl2.cpp
+    emu_window/emu_window_sdl2.h
+    resource.h
+)
 
-create_directory_groups(${SRCS} ${HEADERS})
+create_target_directory_groups(citra)
 
-add_executable(citra ${SRCS} ${HEADERS})
 target_link_libraries(citra PRIVATE common core input_common network)
 target_link_libraries(citra PRIVATE inih glad)
 if (MSVC)
