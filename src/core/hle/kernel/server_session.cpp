@@ -67,13 +67,31 @@ ResultCode ServerSession::HandleSyncRequest(SharedPtr<Thread> thread) {
     // If this ServerSession has an associated HLE handler, forward the request to it.
     if (hle_handler != nullptr) {
         hle_handler->HandleSyncRequest(SharedPtr<ServerSession>(this));
-    } else {
+    }
+
+    if (thread->status == THREADSTATUS_RUNNING) {
         // Put the thread to sleep until the server replies, it will be awoken in
-        // svcReplyAndReceive.
+        // svcReplyAndReceive for LLE servers.
         thread->status = THREADSTATUS_WAIT_IPC;
-        // Add the thread to the list of threads that have issued a sync request with this
-        // server.
-        pending_requesting_threads.push_back(std::move(thread));
+
+        if (hle_handler != nullptr) {
+            // For HLE services, we put the request threads to sleep for a short duration to
+            // simulate IPC overhead, but only if the HLE handler didn't put the thread to sleep for
+            // other reasons like an async callback. The IPC overhead is needed to prevent
+            // starvation when a thread only does sync requests to HLE services while a
+            // lower-priority thread is waiting to run.
+
+            // This delay was approximated in a homebrew application by measuring the average time
+            // it takes for svcSendSyncRequest to return when performing the SetLcdForceBlack IPC
+            // request to the GSP:GPU service in a n3DS with firmware 11.6. The measured values have
+            // a high variance and vary between models.
+            static constexpr u64 IPCDelayNanoseconds = 39000;
+            thread->WakeAfterDelay(IPCDelayNanoseconds);
+        } else {
+            // Add the thread to the list of threads that have issued a sync request with this
+            // server.
+            pending_requesting_threads.push_back(std::move(thread));
+        }
     }
 
     // If this ServerSession does not have an HLE implementation, just wake up the threads waiting
