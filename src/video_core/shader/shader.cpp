@@ -99,16 +99,16 @@ GSEmitter::~GSEmitter() {
     delete handlers;
 }
 
-void GSEmitter::Emit(Math::Vec4<float24> (&vertex)[16]) {
+void GSEmitter::Emit(Math::Vec4<float24> (&output_regs)[16]) {
     ASSERT(vertex_id < 3);
-    std::copy(std::begin(vertex), std::end(vertex), buffer[vertex_id].begin());
+    // TODO: This should be merged with UnitState::WriteOutput somehow
+    CopyRegistersToOutput(output_regs, output_mask, buffer[vertex_id]);
+
     if (prim_emit) {
         if (winding)
             handlers->winding_setter();
         for (size_t i = 0; i < buffer.size(); ++i) {
-            AttributeBuffer output;
-            CopyRegistersToOutput(buffer[i].data(), output_mask, output);
-            handlers->vertex_handler(output);
+            handlers->vertex_handler(buffer[i]);
         }
     }
 }
