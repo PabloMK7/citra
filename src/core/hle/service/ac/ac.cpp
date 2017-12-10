@@ -170,7 +170,7 @@ void Module::Interface::SetClientVersion(Kernel::HLERequestContext& ctx) {
 }
 
 Module::Interface::Interface(std::shared_ptr<Module> ac, const char* name, u32 max_session)
-    : ac(std::move(ac)), ServiceFramework(name, max_session) {}
+    : ServiceFramework(name, max_session), ac(std::move(ac)) {}
 
 void InstallInterfaces(SM::ServiceManager& service_manager) {
     auto ac = std::make_shared<Module>();
