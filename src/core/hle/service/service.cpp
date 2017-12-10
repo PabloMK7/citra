@@ -43,6 +43,7 @@
 #include "core/hle/service/nwm/nwm.h"
 #include "core/hle/service/pm_app.h"
 #include "core/hle/service/ptm/ptm.h"
+#include "core/hle/service/pxi/pxi.h"
 #include "core/hle/service/qtm/qtm.h"
 #include "core/hle/service/service.h"
 #include "core/hle/service/sm/sm.h"
@@ -259,6 +260,7 @@ void Init() {
 
     ERR::InstallInterfaces();
 
+    PXI::InstallInterfaces(*SM::g_service_manager);
     NS::InstallInterfaces(*SM::g_service_manager);
     AC::InstallInterfaces(*SM::g_service_manager);
 
