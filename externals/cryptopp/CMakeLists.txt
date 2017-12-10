@@ -120,13 +120,19 @@ file(GLOB cryptopp_HEADERS cryptopp/*.h)
 # These have been trimmed to include only things Citra uses. This speeds up
 # compiles and reduces the amount of compilation breakage.
 set(cryptopp_SOURCES
+        # The Crypto++ readme says you should put these 3 object files first,
+        # to avoid "problems associated with C++ static initialization order",
+        # but doesn't actually tell what could go wrong. Better safe than sorry
+        # I guess...
+        cryptopp/cryptlib.cpp
+        cryptopp/cpu.cpp
+        cryptopp/integer.cpp
+
         cryptopp/algparam.cpp
         cryptopp/asn.cpp
         cryptopp/authenc.cpp
         cryptopp/basecode.cpp
         cryptopp/ccm.cpp
-        cryptopp/cpu.cpp
-        cryptopp/cryptlib.cpp
         cryptopp/des.cpp
         cryptopp/dessp.cpp
         cryptopp/dll.cpp
@@ -139,7 +145,6 @@ set(cryptopp_SOURCES
         cryptopp/hex.cpp
         cryptopp/hmac.cpp
         cryptopp/hrtimer.cpp
-        cryptopp/integer.cpp
         cryptopp/iterhash.cpp
         cryptopp/md5.cpp
         cryptopp/misc.cpp
