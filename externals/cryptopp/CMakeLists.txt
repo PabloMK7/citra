@@ -116,20 +116,44 @@ endif()
 # Library headers
 file(GLOB cryptopp_HEADERS cryptopp/*.h)
 
-# Library sources. You can use the GNUmakefile to generate the list: `make sources`.
-file(GLOB cryptopp_SOURCES cryptopp/*.cpp)
-list(REMOVE_ITEM cryptopp_SOURCES
-        # These are removed in the original CMakeLists.txt
-        ${CMAKE_CURRENT_SOURCE_DIR}/cryptopp/pch.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/cryptopp/simple.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/cryptopp/winpipes.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/cryptopp/cryptlib_bds.cpp
-        ${cryptopp_SOURCES_TEST}
+# Library sources.
+# These have been trimmed to include only things Citra uses. This speeds up
+# compiles and reduces the amount of compilation breakage.
+set(cryptopp_SOURCES
+        cryptopp/algparam.cpp
+        cryptopp/asn.cpp
+        cryptopp/authenc.cpp
+        cryptopp/basecode.cpp
+        cryptopp/ccm.cpp
+        cryptopp/cpu.cpp
+        cryptopp/cryptlib.cpp
+        cryptopp/dll.cpp
+        cryptopp/ec2n.cpp
+        cryptopp/ecp.cpp
+        cryptopp/filters.cpp
+        cryptopp/fips140.cpp
+        cryptopp/gf2n.cpp
+        cryptopp/gfpcrypt.cpp
+        cryptopp/hex.cpp
+        cryptopp/hmac.cpp
+        cryptopp/hrtimer.cpp
+        cryptopp/integer.cpp
+        cryptopp/iterhash.cpp
+        cryptopp/md5.cpp
+        cryptopp/misc.cpp
+        cryptopp/modes.cpp
+        cryptopp/mqueue.cpp
+        cryptopp/nbtheory.cpp
+        cryptopp/oaep.cpp
+        cryptopp/osrng.cpp
+        cryptopp/pubkey.cpp
+        cryptopp/queue.cpp
+        cryptopp/randpool.cpp
+        cryptopp/rdtables.cpp
+        cryptopp/rijndael.cpp
+        cryptopp/rng.cpp
+        cryptopp/sha.cpp
         )
-
-if(MINGW OR WIN32)
-    list(APPEND cryptopp_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/cryptopp/winpipes.cpp)
-endif()
 
 if(MSVC AND NOT CRYPTOPP_DISABLE_ASM)
     if(${CMAKE_GENERATOR} MATCHES ".*ARM")
@@ -159,10 +183,6 @@ target_include_directories(cryptopp INTERFACE .)
 #============================================================================
 # Third-party libraries
 #============================================================================
-
-if(WIN32)
-    target_link_libraries(cryptopp PRIVATE ws2_32)
-endif()
 
 find_package(Threads)
 target_link_libraries(cryptopp PRIVATE ${CMAKE_THREAD_LIBS_INIT})
