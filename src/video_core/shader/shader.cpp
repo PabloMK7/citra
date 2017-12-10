@@ -77,11 +77,16 @@ void UnitState::LoadInput(const ShaderRegs& config, const AttributeBuffer& input
     }
 }
 
-void UnitState::WriteOutput(const ShaderRegs& config, AttributeBuffer& output) {
-    unsigned int output_i = 0;
-    for (unsigned int reg : Common::BitSet<u32>(config.output_mask)) {
-        output.attr[output_i++] = registers.output[reg];
+static void CopyRegistersToOutput(const Math::Vec4<float24>* regs, u32 mask,
+                                  AttributeBuffer& buffer) {
+    int output_i = 0;
+    for (int reg : Common::BitSet<u32>(mask)) {
+        buffer.attr[output_i++] = regs[reg];
     }
+}
+
+void UnitState::WriteOutput(const ShaderRegs& config, AttributeBuffer& output) {
+    CopyRegistersToOutput(registers.output, config.output_mask, output);
 }
 
 UnitState::UnitState(GSEmitter* emitter) : emitter_ptr(emitter) {}
@@ -102,10 +107,7 @@ void GSEmitter::Emit(Math::Vec4<float24> (&vertex)[16]) {
             handlers->winding_setter();
         for (size_t i = 0; i < buffer.size(); ++i) {
             AttributeBuffer output;
-            unsigned int output_i = 0;
-            for (unsigned int reg : Common::BitSet<u32>(output_mask)) {
-                output.attr[output_i++] = buffer[i][reg];
-            }
+            CopyRegistersToOutput(buffer[i].data(), output_mask, output);
             handlers->vertex_handler(output);
         }
     }
