@@ -8,6 +8,7 @@
 #include <cstddef>
 #include <memory>
 #include <string>
+#include <vector>
 #include <boost/container/static_vector.hpp>
 #include "common/bit_field.h"
 #include "common/common_types.h"
@@ -175,5 +176,10 @@ private:
     ~Process() override;
 };
 
+void ClearProcessList();
+
+/// Retrieves a process from the current list of processes.
+SharedPtr<Process> GetProcessById(u32 process_id);
+
 extern SharedPtr<Process> g_current_process;
-}
+} // namespace Kernel
