@@ -72,7 +72,7 @@ static_assert(sizeof(OutputVertex) == 24 * sizeof(float), "OutputVertex has inva
  * This structure contains state information for primitive emitting in geometry shader.
  */
 struct GSEmitter {
-    std::array<std::array<Math::Vec4<float24>, 16>, 3> buffer;
+    std::array<AttributeBuffer, 3> buffer;
     u8 vertex_id;
     bool prim_emit;
     bool winding;
@@ -87,7 +87,7 @@ struct GSEmitter {
 
     GSEmitter();
     ~GSEmitter();
-    void Emit(Math::Vec4<float24> (&vertex)[16]);
+    void Emit(Math::Vec4<float24> (&output_regs)[16]);
 };
 static_assert(std::is_standard_layout<GSEmitter>::value, "GSEmitter is not standard layout type");
 
