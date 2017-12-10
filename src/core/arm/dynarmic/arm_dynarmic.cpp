@@ -11,7 +11,7 @@
 #include "core/arm/dyncom/arm_dyncom_interpreter.h"
 #include "core/core.h"
 #include "core/core_timing.h"
-#include "core/hle/svc.h"
+#include "core/hle/kernel/svc.h"
 #include "core/memory.h"
 
 static void InterpreterFallback(u32 pc, Dynarmic::Jit* jit, void* user_arg) {
@@ -54,7 +54,7 @@ static Dynarmic::UserCallbacks GetUserCallbacks(
     Dynarmic::UserCallbacks user_callbacks{};
     user_callbacks.InterpreterFallback = &InterpreterFallback;
     user_callbacks.user_arg = static_cast<void*>(interpreter_state.get());
-    user_callbacks.CallSVC = &SVC::CallSVC;
+    user_callbacks.CallSVC = &Kernel::CallSVC;
     user_callbacks.memory.IsReadOnlyMemory = &IsReadOnlyMemory;
     user_callbacks.memory.ReadCode = &Memory::Read32;
     user_callbacks.memory.Read8 = &Memory::Read8;

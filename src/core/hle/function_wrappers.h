@@ -8,8 +8,8 @@
 #include "core/arm/arm_interface.h"
 #include "core/core.h"
 #include "core/hle/kernel/kernel.h"
+#include "core/hle/kernel/svc.h"
 #include "core/hle/result.h"
-#include "core/hle/svc.h"
 #include "core/memory.h"
 
 namespace HLE {
@@ -99,10 +99,10 @@ void Wrap() {
     FuncReturn(retval);
 }
 
-template <ResultCode func(MemoryInfo*, PageInfo*, u32)>
+template <ResultCode func(Kernel::MemoryInfo*, Kernel::PageInfo*, u32)>
 void Wrap() {
-    MemoryInfo memory_info = {};
-    PageInfo page_info = {};
+    Kernel::MemoryInfo memory_info = {};
+    Kernel::PageInfo page_info = {};
     u32 retval = func(&memory_info, &page_info, PARAM(2)).raw;
     Core::CPU().SetReg(1, memory_info.base_address);
     Core::CPU().SetReg(2, memory_info.size);
@@ -112,10 +112,10 @@ void Wrap() {
     FuncReturn(retval);
 }
 
-template <ResultCode func(MemoryInfo*, PageInfo*, Kernel::Handle, u32)>
+template <ResultCode func(Kernel::MemoryInfo*, Kernel::PageInfo*, Kernel::Handle, u32)>
 void Wrap() {
-    MemoryInfo memory_info = {};
-    PageInfo page_info = {};
+    Kernel::MemoryInfo memory_info = {};
+    Kernel::PageInfo page_info = {};
     u32 retval = func(&memory_info, &page_info, PARAM(2), PARAM(3)).raw;
     Core::CPU().SetReg(1, memory_info.base_address);
     Core::CPU().SetReg(2, memory_info.size);

@@ -58,6 +58,7 @@ set(SRCS
             hle/kernel/server_port.cpp
             hle/kernel/server_session.cpp
             hle/kernel/shared_memory.cpp
+            hle/kernel/svc.cpp
             hle/kernel/thread.cpp
             hle/kernel/timer.cpp
             hle/kernel/vm_manager.cpp
@@ -170,7 +171,6 @@ set(SRCS
             hle/service/ssl_c.cpp
             hle/service/y2r_u.cpp
             hle/shared_page.cpp
-            hle/svc.cpp
             hw/aes/arithmetic128.cpp
             hw/aes/ccm.cpp
             hw/aes/key.cpp
@@ -263,6 +263,7 @@ set(HEADERS
             hle/kernel/server_session.h
             hle/kernel/session.h
             hle/kernel/shared_memory.h
+            hle/kernel/svc.h
             hle/kernel/thread.h
             hle/kernel/timer.h
             hle/kernel/vm_manager.h
@@ -375,7 +376,6 @@ set(HEADERS
             hle/service/ssl_c.h
             hle/service/y2r_u.h
             hle/shared_page.h
-            hle/svc.h
             hw/aes/arithmetic128.h
             hw/aes/ccm.h
             hw/aes/key.h

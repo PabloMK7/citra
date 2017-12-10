@@ -6,8 +6,7 @@
 
 #include "common/common_types.h"
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// SVC types
+namespace Kernel {
 
 struct MemoryInfo {
     u32 base_address;
@@ -19,11 +18,6 @@ struct MemoryInfo {
 struct PageInfo {
     u32 flags;
 };
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Namespace SVC
-
-namespace SVC {
 
 /// Values accepted by svcGetSystemInfo's type parameter.
 enum class SystemInfoType {
@@ -56,4 +50,4 @@ enum class SystemInfoMemUsageRegion {
 
 void CallSVC(u32 immediate);
 
-} // namespace
+} // namespace Kernel
