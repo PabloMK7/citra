@@ -54,7 +54,7 @@ static Dynarmic::UserCallbacks GetUserCallbacks(
     Dynarmic::UserCallbacks user_callbacks{};
     user_callbacks.InterpreterFallback = &InterpreterFallback;
     user_callbacks.user_arg = static_cast<void*>(interpreter_state.get());
-    user_callbacks.CallSVC = &SVC::CallSVC;
+    user_callbacks.CallSVC = &Kernel::CallSVC;
     user_callbacks.memory.IsReadOnlyMemory = &IsReadOnlyMemory;
     user_callbacks.memory.ReadCode = &Memory::Read32;
     user_callbacks.memory.Read8 = &Memory::Read8;

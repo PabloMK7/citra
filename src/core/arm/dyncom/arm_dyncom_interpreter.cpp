@@ -3863,7 +3863,7 @@ SWI_INST : {
         cpu->NumInstrsToExecute =
             num_instrs >= cpu->NumInstrsToExecute ? 0 : cpu->NumInstrsToExecute - num_instrs;
         num_instrs = 0;
-        SVC::CallSVC(inst_cream->num & 0xFFFF);
+        Kernel::CallSVC(inst_cream->num & 0xFFFF);
     }
 
     cpu->Reg[15] += cpu->GetInstructionSize();
