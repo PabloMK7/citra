@@ -425,7 +425,7 @@ std::vector<std::unique_ptr<InputCommon::Polling::DevicePoller>> GetPollers(
         pollers.push_back(std::make_unique<SDLButtonPoller>());
         break;
     }
-    return std::move(pollers);
+    return pollers;
 }
 } // namespace Polling
 } // namespace SDL
