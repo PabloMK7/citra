@@ -98,6 +98,15 @@ public:
     template <typename First, typename... Other>
     void Push(const First& first_value, const Other&... other_values);
 
+    template <typename T>
+    void PushEnum(T value) {
+        static_assert(std::is_enum<T>(), "T must be an enum type within a PushEnum call.");
+        static_assert(!std::is_convertible<T, int>(),
+                      "enum type in PushEnum must be a strongly typed enum.");
+        static_assert(sizeof(value) < sizeof(u64), "64-bit enums may not be pushed.");
+        Push(static_cast<std::underlying_type_t<T>>(value));
+    }
+
     /**
      * @brief Copies the content of the given trivially copyable class to the buffer as a normal
      * param
@@ -272,6 +281,15 @@ public:
 
     template <typename First, typename... Other>
     void Pop(First& first_value, Other&... other_values);
+
+    template <typename T>
+    T PopEnum() {
+        static_assert(std::is_enum<T>(), "T must be an enum type within a PopEnum call.");
+        static_assert(!std::is_convertible<T, int>(),
+                      "enum type in PopEnum must be a strongly typed enum.");
+        static_assert(sizeof(T) < sizeof(u64), "64-bit enums cannot be popped.");
+        return static_cast<T>(Pop<std::underlying_type_t<T>>());
+    }
 
     /// Equivalent to calling `PopHandles<1>()[0]`.
     Kernel::Handle PopHandle();
