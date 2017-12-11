@@ -96,7 +96,7 @@ static bool LZSS_Decompress(const u8* compressed, u32 compressed_size, u8* decom
 }
 
 NCCHContainer::NCCHContainer(const std::string& filepath, u32 ncch_offset)
-    : filepath(filepath), ncch_offset(ncch_offset) {
+    : ncch_offset(ncch_offset), filepath(filepath) {
     file = FileUtil::IOFile(filepath, "rb");
 }
 

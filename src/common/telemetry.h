@@ -53,10 +53,10 @@ template <typename T>
 class Field : public FieldInterface {
 public:
     Field(FieldType type, std::string name, const T& value)
-        : type(type), name(std::move(name)), value(value) {}
+        : name(std::move(name)), type(type), value(value) {}
 
     Field(FieldType type, std::string name, T&& value)
-        : type(type), name(std::move(name)), value(std::move(value)) {}
+        : name(std::move(name)), type(type), value(std::move(value)) {}
 
     Field(const Field& other) : Field(other.type, other.name, other.value) {}
 
