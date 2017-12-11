@@ -58,7 +58,7 @@ public:
      * @return True if the emulation thread is running, otherwise false
      * @note This function is thread-safe
      */
-    bool IsRunning() {
+    bool IsRunning() const {
         return running;
     }
 
@@ -71,9 +71,9 @@ public:
     };
 
 private:
-    bool exec_step;
-    bool running;
-    std::atomic<bool> stop_run;
+    bool exec_step = false;
+    bool running = false;
+    std::atomic<bool> stop_run{false};
     std::mutex running_mutex;
     std::condition_variable running_cv;
 
