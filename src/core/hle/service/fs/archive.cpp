@@ -67,7 +67,7 @@ enum class DirectoryCommand : u32 {
 };
 
 File::File(std::unique_ptr<FileSys::FileBackend>&& backend, const FileSys::Path& path)
-    : path(path), priority(0), backend(std::move(backend)), ServiceFramework("", 1) {
+    : ServiceFramework("", 1), path(path), priority(0), backend(std::move(backend)) {
     static const FunctionInfo functions[] = {
         {0x080200C2, &File::Read, "Read"},
         {0x08030102, &File::Write, "Write"},

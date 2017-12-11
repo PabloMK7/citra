@@ -190,7 +190,7 @@ MappedBuffer& HLERequestContext::GetMappedBuffer(u32 id_from_cmdbuf) {
 }
 
 MappedBuffer::MappedBuffer(const Process& process, u32 descriptor, VAddr address, u32 id)
-    : process(&process), address(address), id(id) {
+    : id(id), address(address), process(&process) {
     IPC::MappedBufferDescInfo desc{descriptor};
     size = desc.size;
     perms = desc.perms;
