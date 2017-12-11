@@ -441,6 +441,17 @@ void PrepareToStartNewestHomeMenu(Service::Interface* self);
 void PreloadLibraryApplet(Service::Interface* self);
 
 /**
+ * APT::FinishPreloadingLibraryApplet service function
+ *  Inputs:
+ *      0 : Command header [0x00170040]
+ *      1 : Id of the applet
+ *  Outputs:
+ *      0 : Return header
+ *      1 : Result of function, 0 on success, otherwise error code
+ */
+void FinishPreloadingLibraryApplet(Service::Interface* self);
+
+/**
  * APT::StartLibraryApplet service function
  *  Inputs:
  *      0 : Command header [0x001E0084]

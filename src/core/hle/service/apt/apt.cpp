@@ -76,6 +76,7 @@ struct AppletSlotData {
     AppletId applet_id;
     AppletSlot slot;
     bool registered;
+    bool loaded;
     AppletAttributes attributes;
     Kernel::SharedPtr<Kernel::Event> notification_event;
     Kernel::SharedPtr<Kernel::Event> parameter_event;
@@ -507,7 +508,7 @@ void IsRegistered(Service::Interface* self) {
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS); // No error
 
-    auto* const slot_data = GetAppletSlotData(app_id);
+    const auto* slot_data = GetAppletSlotData(app_id);
 
     // Check if an LLE applet was registered first, then fallback to HLE applets
     bool is_registered = slot_data && slot_data->registered;
@@ -887,6 +888,20 @@ void PreloadLibraryApplet(Service::Interface* self) {
     }
 }
 
+void FinishPreloadingLibraryApplet(Service::Interface* self) {
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x17, 1, 0); // 0x00170040
+    AppletId applet_id = static_cast<AppletId>(rp.Pop<u32>());
+
+    // TODO(Subv): This function should fail depending on the applet preparation state.
+    auto& slot = applet_slots[static_cast<size_t>(AppletSlot::LibraryApplet)];
+    slot.loaded = true;
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RESULT_SUCCESS);
+
+    LOG_WARNING(Service_APT, "(STUBBED) called applet_id=%03X", static_cast<u32>(applet_id));
+}
+
 void StartLibraryApplet(Service::Interface* self) {
     IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x1E, 2, 4); // 0x1E0084
     AppletId applet_id = static_cast<AppletId>(rp.Pop<u32>());
@@ -1158,6 +1173,7 @@ void Init() {
         slot_data.applet_id = AppletId::None;
         slot_data.attributes.raw = 0;
         slot_data.registered = false;
+        slot_data.loaded = false;
         slot_data.notification_event =
             Kernel::Event::Create(Kernel::ResetType::OneShot, "APT:Notification");
         slot_data.parameter_event =
@@ -1175,6 +1191,9 @@ void Shutdown() {
         slot.registered = false;
         slot.notification_event = nullptr;
         slot.parameter_event = nullptr;
+        slot.loaded = false;
+        slot.attributes.raw = 0;
+        slot.applet_id = AppletId::None;
     }
 
     next_parameter = boost::none;
