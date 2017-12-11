@@ -222,6 +222,8 @@ ResultStatus AppLoader_NCCH::ReadUpdateRomFS(std::shared_ptr<FileUtil::IOFile>& 
 
     if (result != ResultStatus::Success)
         return base_ncch.ReadRomFS(romfs_file, offset, size);
+
+    return ResultStatus::Success;
 }
 
 ResultStatus AppLoader_NCCH::ReadTitle(std::string& title) {
