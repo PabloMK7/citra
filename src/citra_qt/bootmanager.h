@@ -58,7 +58,7 @@ public:
      * @return True if the emulation thread is running, otherwise false
      * @note This function is thread-safe
      */
-    bool IsRunning() {
+    bool IsRunning() const {
         return running;
     }
 
