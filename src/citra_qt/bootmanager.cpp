@@ -20,8 +20,7 @@
 #include "input_common/motion_emu.h"
 #include "network/network.h"
 
-EmuThread::EmuThread(GRenderWindow* render_window)
-    : exec_step(false), running(false), stop_run(false), render_window(render_window) {}
+EmuThread::EmuThread(GRenderWindow* render_window) : render_window(render_window) {}
 
 void EmuThread::run() {
     render_window->MakeCurrent();
