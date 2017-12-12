@@ -87,7 +87,6 @@ System::ResultStatus System::Load(EmuWindow* emu_window, const std::string& file
     if (system_mode.second != Loader::ResultStatus::Success) {
         LOG_CRITICAL(Core, "Failed to determine system mode (Error %i)!",
                      static_cast<int>(system_mode.second));
-        System::Shutdown();
 
         switch (system_mode.second) {
         case Loader::ResultStatus::ErrorEncrypted:
