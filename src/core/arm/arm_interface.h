@@ -5,6 +5,7 @@
 #pragma once
 
 #include <cstddef>
+#include <memory>
 #include "common/common_types.h"
 #include "core/arm/skyeye_common/arm_regformat.h"
 #include "core/arm/skyeye_common/vfp/asm_vfp.h"
@@ -14,15 +15,42 @@ class ARM_Interface : NonCopyable {
 public:
     virtual ~ARM_Interface() {}
 
-    struct ThreadContext {
-        u32 cpu_registers[13];
-        u32 sp;
-        u32 lr;
-        u32 pc;
-        u32 cpsr;
-        u32 fpu_registers[64];
-        u32 fpscr;
-        u32 fpexc;
+    class ThreadContext {
+    public:
+        virtual ~ThreadContext() = default;
+
+        virtual void Reset() = 0;
+        virtual u32 GetCpuRegister(size_t index) const = 0;
+        virtual void SetCpuRegister(size_t index, u32 value) = 0;
+        virtual u32 GetCpsr() const = 0;
+        virtual void SetCpsr(u32 value) = 0;
+        virtual u32 GetFpuRegister(size_t index) const = 0;
+        virtual void SetFpuRegister(size_t index, u32 value) = 0;
+        virtual u32 GetFpscr() const = 0;
+        virtual void SetFpscr(u32 value) = 0;
+        virtual u32 GetFpexc() const = 0;
+        virtual void SetFpexc(u32 value) = 0;
+
+        u32 GetStackPointer() const {
+            return GetCpuRegister(13);
+        }
+        void SetStackPointer(u32 value) {
+            return SetCpuRegister(13, value);
+        }
+
+        u32 GetLinkRegister() const {
+            return GetCpuRegister(14);
+        }
+        void SetLinkRegister(u32 value) {
+            return SetCpuRegister(14, value);
+        }
+
+        u32 GetProgramCounter() const {
+            return GetCpuRegister(15);
+        }
+        void SetProgramCounter(u32 value) {
+            return SetCpuRegister(15, value);
+        }
     };
 
     /// Runs the CPU until an event happens
@@ -125,16 +153,22 @@ public:
     virtual void SetCP15Register(CP15Register reg, u32 value) = 0;
 
     /**
+     * Creates a CPU context
+     * @note The created context may only be used with this instance.
+     */
+    virtual std::unique_ptr<ThreadContext> NewContext() const = 0;
+
+    /**
      * Saves the current CPU context
      * @param ctx Thread context to save
      */
-    virtual void SaveContext(ThreadContext& ctx) = 0;
+    virtual void SaveContext(const std::unique_ptr<ThreadContext>& ctx) = 0;
 
     /**
      * Loads a CPU context
      * @param ctx Thread context to load
      */
-    virtual void LoadContext(const ThreadContext& ctx) = 0;
+    virtual void LoadContext(const std::unique_ptr<ThreadContext>& ctx) = 0;
 
     /// Prepare core for thread reschedule (if needed to correctly handle state)
     virtual void PrepareReschedule() = 0;

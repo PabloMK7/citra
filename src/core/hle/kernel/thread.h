@@ -181,7 +181,7 @@ public:
         return status == THREADSTATUS_WAIT_SYNCH_ALL;
     }
 
-    ARM_Interface::ThreadContext context;
+    std::unique_ptr<ARM_Interface::ThreadContext> context;
 
     u32 thread_id;
 

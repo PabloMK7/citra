@@ -12,6 +12,62 @@
 #include "core/core.h"
 #include "core/core_timing.h"
 
+class DynComThreadContext final : public ARM_Interface::ThreadContext {
+public:
+    DynComThreadContext() {
+        Reset();
+    }
+    ~DynComThreadContext() override = default;
+
+    void Reset() override {
+        cpu_registers = {};
+        cpsr = 0;
+        fpu_registers = {};
+        fpscr = 0;
+        fpexc = 0;
+    }
+
+    u32 GetCpuRegister(size_t index) const override {
+        return cpu_registers[index];
+    }
+    void SetCpuRegister(size_t index, u32 value) override {
+        cpu_registers[index] = value;
+    }
+    u32 GetCpsr() const override {
+        return cpsr;
+    }
+    void SetCpsr(u32 value) override {
+        cpsr = value;
+    }
+    u32 GetFpuRegister(size_t index) const override {
+        return fpu_registers[index];
+    }
+    void SetFpuRegister(size_t index, u32 value) override {
+        fpu_registers[index] = value;
+    }
+    u32 GetFpscr() const override {
+        return fpscr;
+    }
+    void SetFpscr(u32 value) override {
+        fpscr = value;
+    }
+    u32 GetFpexc() const override {
+        return fpexc;
+    }
+    void SetFpexc(u32 value) override {
+        fpexc = value;
+    }
+
+private:
+    friend class ARM_DynCom;
+
+    std::array<u32, 16> cpu_registers;
+    u32 cpsr;
+    std::array<u32, 64> fpu_registers;
+    u32 fpscr;
+    u32 fpexc;
+};
+
 ARM_DynCom::ARM_DynCom(PrivilegeMode initial_mode) {
     state = std::make_unique<ARMul_State>(initial_mode);
 }
@@ -93,30 +149,30 @@ void ARM_DynCom::ExecuteInstructions(int num_instructions) {
     CoreTiming::AddTicks(ticks_executed);
 }
 
-void ARM_DynCom::SaveContext(ThreadContext& ctx) {
-    memcpy(ctx.cpu_registers, state->Reg.data(), sizeof(ctx.cpu_registers));
-    memcpy(ctx.fpu_registers, state->ExtReg.data(), sizeof(ctx.fpu_registers));
-
-    ctx.sp = state->Reg[13];
-    ctx.lr = state->Reg[14];
-    ctx.pc = state->Reg[15];
-    ctx.cpsr = state->Cpsr;
-
-    ctx.fpscr = state->VFP[VFP_FPSCR];
-    ctx.fpexc = state->VFP[VFP_FPEXC];
+std::unique_ptr<ARM_Interface::ThreadContext> ARM_DynCom::NewContext() const {
+    return std::make_unique<DynComThreadContext>();
 }
 
-void ARM_DynCom::LoadContext(const ThreadContext& ctx) {
-    memcpy(state->Reg.data(), ctx.cpu_registers, sizeof(ctx.cpu_registers));
-    memcpy(state->ExtReg.data(), ctx.fpu_registers, sizeof(ctx.fpu_registers));
+void ARM_DynCom::SaveContext(const std::unique_ptr<ThreadContext>& arg) {
+    DynComThreadContext* ctx = dynamic_cast<DynComThreadContext*>(arg.get());
+    ASSERT(ctx);
 
-    state->Reg[13] = ctx.sp;
-    state->Reg[14] = ctx.lr;
-    state->Reg[15] = ctx.pc;
-    state->Cpsr = ctx.cpsr;
+    ctx->cpu_registers = state->Reg;
+    ctx->cpsr = state->Cpsr;
+    ctx->fpu_registers = state->ExtReg;
+    ctx->fpscr = state->VFP[VFP_FPSCR];
+    ctx->fpexc = state->VFP[VFP_FPEXC];
+}
 
-    state->VFP[VFP_FPSCR] = ctx.fpscr;
-    state->VFP[VFP_FPEXC] = ctx.fpexc;
+void ARM_DynCom::LoadContext(const std::unique_ptr<ThreadContext>& arg) {
+    DynComThreadContext* ctx = dynamic_cast<DynComThreadContext*>(arg.get());
+    ASSERT(ctx);
+
+    state->Reg = ctx->cpu_registers;
+    state->Cpsr = ctx->cpsr;
+    state->ExtReg = ctx->fpu_registers;
+    state->VFP[VFP_FPSCR] = ctx->fpscr;
+    state->VFP[VFP_FPEXC] = ctx->fpexc;
 }
 
 void ARM_DynCom::PrepareReschedule() {
