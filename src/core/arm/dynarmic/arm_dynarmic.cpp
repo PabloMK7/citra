@@ -30,7 +30,7 @@ static void InterpreterFallback(u32 pc, Dynarmic::Jit* jit, void* user_arg) {
     state->Reg[15] &= (is_thumb ? 0xFFFFFFFE : 0xFFFFFFFC);
 
     jit->Regs() = state->Reg;
-    jit->Cpsr() = state->Cpsr;
+    jit->SetCpsr(state->Cpsr);
     jit->ExtRegs() = state->ExtReg;
     jit->SetFpscr(state->VFP[VFP_FPSCR]);
 }
@@ -137,7 +137,7 @@ u32 ARM_Dynarmic::GetCPSR() const {
 }
 
 void ARM_Dynarmic::SetCPSR(u32 cpsr) {
-    jit->Cpsr() = cpsr;
+    jit->SetCpsr(cpsr);
 }
 
 u32 ARM_Dynarmic::GetCP15Register(CP15Register reg) {
@@ -168,7 +168,7 @@ void ARM_Dynarmic::LoadContext(const ARM_Interface::ThreadContext& ctx) {
     jit->Regs()[13] = ctx.sp;
     jit->Regs()[14] = ctx.lr;
     jit->Regs()[15] = ctx.pc;
-    jit->Cpsr() = ctx.cpsr;
+    jit->SetCpsr(ctx.cpsr);
 
     jit->SetFpscr(ctx.fpscr);
     interpreter_state->VFP[VFP_FPEXC] = ctx.fpexc;
