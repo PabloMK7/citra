@@ -54,7 +54,7 @@ public:
      * associated ServerSession.
      * @param server_session ServerSession associated with the connection.
      */
-    void ClientDisconnected(SharedPtr<ServerSession> server_session);
+    virtual void ClientDisconnected(SharedPtr<ServerSession> server_session);
 
 protected:
     /// List of sessions that are connected to this handler.

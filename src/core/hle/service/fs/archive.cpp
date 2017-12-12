@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <algorithm>
 #include <cinttypes>
 #include <cstddef>
 #include <memory>
@@ -67,8 +68,9 @@ enum class DirectoryCommand : u32 {
 };
 
 File::File(std::unique_ptr<FileSys::FileBackend>&& backend, const FileSys::Path& path)
-    : ServiceFramework("", 1), path(path), priority(0), backend(std::move(backend)) {
+    : ServiceFramework("", 1), path(path), backend(std::move(backend)) {
     static const FunctionInfo functions[] = {
+        {0x08010100, &File::OpenSubFile, "OpenSubFile"},
         {0x080200C2, &File::Read, "Read"},
         {0x08030102, &File::Write, "Write"},
         {0x08040000, &File::GetSize, "GetSize"},
@@ -89,6 +91,16 @@ void File::Read(Kernel::HLERequestContext& ctx) {
     auto& buffer = rp.PopMappedBuffer();
     LOG_TRACE(Service_FS, "Read %s: offset=0x%" PRIx64 " length=0x%08X", GetName().c_str(), offset,
               length);
+
+    const SessionSlot& file = GetSessionSlot(ctx.Session());
+
+    if (file.subfile && length > file.size) {
+        LOG_WARNING(Service_FS, "Trying to read beyond the subfile size, truncating");
+        length = file.size;
+    }
+
+    // This file session might have a specific offset from where to start reading, apply it.
+    offset += file.offset;
 
     if (offset + length > backend->GetSize()) {
         LOG_ERROR(Service_FS, "Reading from out of bounds offset=0x%" PRIx64
@@ -122,6 +134,16 @@ void File::Write(Kernel::HLERequestContext& ctx) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
 
+    const SessionSlot& file = GetSessionSlot(ctx.Session());
+
+    // Subfiles can not be written to
+    if (file.subfile) {
+        rb.Push(FileSys::ERROR_UNSUPPORTED_OPEN_FLAGS);
+        rb.Push<u32>(0);
+        rb.PushMappedBuffer(buffer);
+        return;
+    }
+
     std::vector<u8> data(length);
     buffer.Read(data.data(), 0, data.size());
     ResultVal<size_t> written = backend->Write(offset, data.size(), flush != 0, data.data());
@@ -137,20 +159,41 @@ void File::Write(Kernel::HLERequestContext& ctx) {
 
 void File::GetSize(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x0804, 0, 0);
+
+    const SessionSlot& file = GetSessionSlot(ctx.Session());
+
     IPC::RequestBuilder rb = rp.MakeBuilder(3, 0);
     rb.Push(RESULT_SUCCESS);
-    rb.Push(backend->GetSize());
+    rb.Push<u64>(file.size);
 }
 
 void File::SetSize(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x0805, 2, 0);
-    backend->SetSize(rp.Pop<u64>());
+    u64 size = rp.Pop<u64>();
+
+    SessionSlot& file = GetSessionSlot(ctx.Session());
+
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+
+    // SetSize can not be called on subfiles.
+    if (file.subfile) {
+        rb.Push(FileSys::ERROR_UNSUPPORTED_OPEN_FLAGS);
+        return;
+    }
+
+    file.size = size;
+    backend->SetSize(size);
     rb.Push(RESULT_SUCCESS);
 }
 
 void File::Close(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x0808, 0, 0);
+
+    // TODO(Subv): Only close the backend if this client is the only one left.
+    if (session_slots.size() > 1)
+        LOG_WARNING(Service_FS, "Closing File backend but %zu clients still connected",
+                    session_slots.size());
+
     backend->Close();
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
@@ -158,23 +201,38 @@ void File::Close(Kernel::HLERequestContext& ctx) {
 
 void File::Flush(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x0809, 0, 0);
-    backend->Flush();
+
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+
+    const SessionSlot& file = GetSessionSlot(ctx.Session());
+
+    // Subfiles can not be flushed.
+    if (file.subfile) {
+        rb.Push(FileSys::ERROR_UNSUPPORTED_OPEN_FLAGS);
+        return;
+    }
+
+    backend->Flush();
     rb.Push(RESULT_SUCCESS);
 }
 
 void File::SetPriority(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x080A, 1, 0);
-    priority = rp.Pop<u32>();
+
+    SessionSlot& file = GetSessionSlot(ctx.Session());
+    file.priority = rp.Pop<u32>();
+
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
 }
 
 void File::GetPriority(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x080B, 0, 0);
+    const SessionSlot& file = GetSessionSlot(ctx.Session());
+
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
-    rb.Push(priority);
+    rb.Push(file.priority);
 }
 
 void File::OpenLinkFile(Kernel::HLERequestContext& ctx) {
@@ -185,13 +243,104 @@ void File::OpenLinkFile(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x080C, 0, 0);
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
     auto sessions = ServerSession::CreateSessionPair(GetName());
-    ClientConnected(std::get<SharedPtr<ServerSession>>(sessions));
+    auto server = std::get<SharedPtr<ServerSession>>(sessions);
+    ClientConnected(server);
+
+    const SessionSlot& original_file = GetSessionSlot(ctx.Session());
+
+    SessionSlot slot{};
+    slot.priority = original_file.priority;
+    slot.offset = 0;
+    slot.size = backend->GetSize();
+    slot.session = server;
+    slot.subfile = false;
+
+    session_slots.emplace_back(std::move(slot));
 
     rb.Push(RESULT_SUCCESS);
     rb.PushMoveObjects(std::get<SharedPtr<ClientSession>>(sessions));
 }
 
-File::~File() {}
+void File::OpenSubFile(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x0801, 4, 0);
+    s64 offset = rp.PopRaw<s64>();
+    s64 size = rp.PopRaw<s64>();
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
+
+    const SessionSlot& original_file = GetSessionSlot(ctx.Session());
+
+    if (original_file.subfile) {
+        // OpenSubFile can not be called on a file which is already as subfile
+        rb.Push(FileSys::ERROR_UNSUPPORTED_OPEN_FLAGS);
+        return;
+    }
+
+    if (offset < 0 || size < 0) {
+        rb.Push(FileSys::ERR_WRITE_BEYOND_END);
+        return;
+    }
+
+    size_t end = offset + size;
+
+    // TODO(Subv): Check for overflow and return ERR_WRITE_BEYOND_END
+
+    if (end > original_file.size) {
+        rb.Push(FileSys::ERR_WRITE_BEYOND_END);
+        return;
+    }
+
+    using Kernel::ClientSession;
+    using Kernel::ServerSession;
+    using Kernel::SharedPtr;
+    auto sessions = ServerSession::CreateSessionPair(GetName());
+    auto server = std::get<SharedPtr<ServerSession>>(sessions);
+    ClientConnected(server);
+
+    SessionSlot slot{};
+    slot.priority = original_file.priority;
+    slot.offset = offset;
+    slot.size = size;
+    slot.session = server;
+    slot.subfile = true;
+
+    session_slots.emplace_back(std::move(slot));
+
+    rb.Push(RESULT_SUCCESS);
+    rb.PushMoveObjects(std::get<SharedPtr<ClientSession>>(sessions));
+}
+
+File::SessionSlot& File::GetSessionSlot(Kernel::SharedPtr<Kernel::ServerSession> session) {
+    auto itr = std::find_if(session_slots.begin(), session_slots.end(),
+                            [&](const SessionSlot& slot) { return slot.session == session; });
+    ASSERT(itr != session_slots.end());
+    return *itr;
+}
+
+void File::ClientDisconnected(Kernel::SharedPtr<Kernel::ServerSession> server_session) {
+    session_slots.erase(
+        std::remove_if(session_slots.begin(), session_slots.end(),
+                       [&](const SessionSlot& slot) { return slot.session == server_session; }),
+        session_slots.end());
+    SessionRequestHandler::ClientDisconnected(server_session);
+}
+
+Kernel::SharedPtr<Kernel::ClientSession> File::Connect() {
+    auto sessions = Kernel::ServerSession::CreateSessionPair(GetName());
+    auto server = std::get<Kernel::SharedPtr<Kernel::ServerSession>>(sessions);
+    ClientConnected(server);
+
+    SessionSlot slot{};
+    slot.priority = 0;
+    slot.offset = 0;
+    slot.size = backend->GetSize();
+    slot.session = server;
+    slot.subfile = false;
+
+    session_slots.emplace_back(std::move(slot));
+
+    return std::get<Kernel::SharedPtr<Kernel::ClientSession>>(sessions);
+}
 
 Directory::Directory(std::unique_ptr<FileSys::DirectoryBackend>&& backend,
                      const FileSys::Path& path)

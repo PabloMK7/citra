@@ -86,11 +86,7 @@ static void OpenFile(Service::Interface* self) {
     rb.Push(file_res.Code());
     if (file_res.Succeeded()) {
         std::shared_ptr<File> file = *file_res;
-        auto sessions = ServerSession::CreateSessionPair(file->GetName());
-        file->ClientConnected(std::get<SharedPtr<ServerSession>>(sessions));
-
-        rb.PushMoveHandles(
-            Kernel::g_handle_table.Create(std::get<SharedPtr<ClientSession>>(sessions)).Unwrap());
+        rb.PushMoveHandles(Kernel::g_handle_table.Create(file->Connect()).Unwrap());
     } else {
         rb.PushMoveHandles(0);
         LOG_ERROR(Service_FS, "failed to get a handle for file %s", file_path.DebugStr().c_str());
@@ -152,11 +148,7 @@ static void OpenFileDirectly(Service::Interface* self) {
     cmd_buff[1] = file_res.Code().raw;
     if (file_res.Succeeded()) {
         std::shared_ptr<File> file = *file_res;
-        auto sessions = ServerSession::CreateSessionPair(file->GetName());
-        file->ClientConnected(std::get<SharedPtr<ServerSession>>(sessions));
-
-        cmd_buff[3] =
-            Kernel::g_handle_table.Create(std::get<SharedPtr<ClientSession>>(sessions)).Unwrap();
+        cmd_buff[3] = Kernel::g_handle_table.Create(file->Connect()).Unwrap();
     } else {
         cmd_buff[3] = 0;
         LOG_ERROR(Service_FS, "failed to get a handle for file %s mode=%u attributes=%u",
