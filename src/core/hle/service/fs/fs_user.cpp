@@ -69,10 +69,9 @@ static void OpenFile(Service::Interface* self) {
     rp.Pop<u32>(); // Always 0 ?
 
     ArchiveHandle archive_handle = rp.Pop<u64>();
-    auto filename_type = static_cast<FileSys::LowPathType>(rp.Pop<u32>());
+    auto filename_type = rp.PopEnum<FileSys::LowPathType>();
     u32 filename_size = rp.Pop<u32>();
-    FileSys::Mode mode;
-    mode.hex = rp.Pop<u32>();
+    FileSys::Mode mode{rp.Pop<u32>()};
     u32 attributes = rp.Pop<u32>(); // TODO(Link Mauve): do something with those attributes.
     VAddr filename_ptr = rp.PopStaticBuffer(nullptr);
     FileSys::Path file_path(filename_type, filename_size, filename_ptr);
