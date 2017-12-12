@@ -8,7 +8,6 @@
 #include <utility>
 #include <glad/glad.h>
 #include "common/assert.h"
-#include "common/color.h"
 #include "common/logging/log.h"
 #include "common/math_util.h"
 #include "common/microprofile.h"
@@ -22,6 +21,9 @@
 #include "video_core/renderer_opengl/gl_shader_gen.h"
 #include "video_core/renderer_opengl/pica_to_gl.h"
 #include "video_core/renderer_opengl/renderer_opengl.h"
+
+using PixelFormat = SurfaceParams::PixelFormat;
+using SurfaceType = SurfaceParams::SurfaceType;
 
 MICROPROFILE_DEFINE(OpenGL_Drawing, "OpenGL", "Drawing", MP_RGB(128, 128, 192));
 MICROPROFILE_DEFINE(OpenGL_Blits, "OpenGL", "Blits", MP_RGB(100, 100, 255));
@@ -227,21 +229,64 @@ void RasterizerOpenGL::DrawTriangles() {
     MICROPROFILE_SCOPE(OpenGL_Drawing);
     const auto& regs = Pica::g_state.regs;
 
-    // Sync and bind the framebuffer surfaces
-    CachedSurface* color_surface;
-    CachedSurface* depth_surface;
-    MathUtil::Rectangle<int> rect;
-    std::tie(color_surface, depth_surface, rect) =
-        res_cache.GetFramebufferSurfaces(regs.framebuffer.framebuffer);
+    const bool has_stencil =
+        regs.framebuffer.framebuffer.depth_format == Pica::FramebufferRegs::DepthFormat::D24S8;
 
+    const bool write_color_fb =
+        state.color_mask.red_enabled == GL_TRUE || state.color_mask.green_enabled == GL_TRUE ||
+        state.color_mask.blue_enabled == GL_TRUE || state.color_mask.alpha_enabled == GL_TRUE;
+
+    const bool write_depth_fb =
+        (state.depth.test_enabled && state.depth.write_mask == GL_TRUE) ||
+        (has_stencil && state.stencil.test_enabled && state.stencil.write_mask != 0);
+
+    const bool using_color_fb =
+        regs.framebuffer.framebuffer.GetColorBufferPhysicalAddress() != 0 && write_color_fb;
+    const bool using_depth_fb =
+        regs.framebuffer.framebuffer.GetDepthBufferPhysicalAddress() != 0 &&
+        (write_depth_fb || regs.framebuffer.output_merger.depth_test_enable != 0 ||
+         (has_stencil && state.stencil.test_enabled));
+
+    MathUtil::Rectangle<s32> viewport_rect_unscaled{
+        // These registers hold half-width and half-height, so must be multiplied by 2
+        regs.rasterizer.viewport_corner.x,  // left
+        regs.rasterizer.viewport_corner.y + // top
+            static_cast<s32>(Pica::float24::FromRaw(regs.rasterizer.viewport_size_y).ToFloat32() *
+                             2),
+        regs.rasterizer.viewport_corner.x + // right
+            static_cast<s32>(Pica::float24::FromRaw(regs.rasterizer.viewport_size_x).ToFloat32() *
+                             2),
+        regs.rasterizer.viewport_corner.y // bottom
+    };
+
+    Surface color_surface;
+    Surface depth_surface;
+    MathUtil::Rectangle<u32> surfaces_rect;
+    std::tie(color_surface, depth_surface, surfaces_rect) =
+        res_cache.GetFramebufferSurfaces(using_color_fb, using_depth_fb, viewport_rect_unscaled);
+
+    const u16 res_scale = color_surface != nullptr
+                              ? color_surface->res_scale
+                              : (depth_surface == nullptr ? 1u : depth_surface->res_scale);
+
+    MathUtil::Rectangle<u32> draw_rect{
+        MathUtil::Clamp(surfaces_rect.left + viewport_rect_unscaled.left * res_scale, // left
+                        surfaces_rect.left, surfaces_rect.right),
+        MathUtil::Clamp(surfaces_rect.bottom + viewport_rect_unscaled.top * res_scale, // top
+                        surfaces_rect.bottom, surfaces_rect.top),
+        MathUtil::Clamp(surfaces_rect.left + viewport_rect_unscaled.right * res_scale, // right
+                        surfaces_rect.left, surfaces_rect.right),
+        MathUtil::Clamp(surfaces_rect.bottom + viewport_rect_unscaled.bottom * res_scale, // bottom
+                        surfaces_rect.bottom, surfaces_rect.top)};
+
+    // Bind the framebuffer surfaces
     state.draw.draw_framebuffer = framebuffer.handle;
     state.Apply();
 
     glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
                            color_surface != nullptr ? color_surface->texture.handle : 0, 0);
     if (depth_surface != nullptr) {
-        if (regs.framebuffer.framebuffer.depth_format ==
-            Pica::FramebufferRegs::DepthFormat::D24S8) {
+        if (has_stencil) {
             // attach both depth and stencil
             glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D,
                                    depth_surface->texture.handle, 0);
@@ -259,38 +304,30 @@ void RasterizerOpenGL::DrawTriangles() {
     }
 
     // Sync the viewport
-    // These registers hold half-width and half-height, so must be multiplied by 2
-    GLsizei viewport_width =
-        (GLsizei)Pica::float24::FromRaw(regs.rasterizer.viewport_size_x).ToFloat32() * 2;
-    GLsizei viewport_height =
-        (GLsizei)Pica::float24::FromRaw(regs.rasterizer.viewport_size_y).ToFloat32() * 2;
+    state.viewport.x =
+        static_cast<GLint>(surfaces_rect.left + viewport_rect_unscaled.left * res_scale);
+    state.viewport.y =
+        static_cast<GLint>(surfaces_rect.bottom + viewport_rect_unscaled.bottom * res_scale);
+    state.viewport.width = static_cast<GLsizei>(viewport_rect_unscaled.GetWidth() * res_scale);
+    state.viewport.height = static_cast<GLsizei>(viewport_rect_unscaled.GetHeight() * res_scale);
 
-    glViewport(
-        (GLint)(rect.left + regs.rasterizer.viewport_corner.x * color_surface->res_scale_width),
-        (GLint)(rect.bottom + regs.rasterizer.viewport_corner.y * color_surface->res_scale_height),
-        (GLsizei)(viewport_width * color_surface->res_scale_width),
-        (GLsizei)(viewport_height * color_surface->res_scale_height));
-
-    if (uniform_block_data.data.framebuffer_scale[0] != color_surface->res_scale_width ||
-        uniform_block_data.data.framebuffer_scale[1] != color_surface->res_scale_height) {
-
-        uniform_block_data.data.framebuffer_scale[0] = color_surface->res_scale_width;
-        uniform_block_data.data.framebuffer_scale[1] = color_surface->res_scale_height;
+    if (uniform_block_data.data.framebuffer_scale != res_scale) {
+        uniform_block_data.data.framebuffer_scale = res_scale;
         uniform_block_data.dirty = true;
     }
 
     // Scissor checks are window-, not viewport-relative, which means that if the cached texture
     // sub-rect changes, the scissor bounds also need to be updated.
-    GLint scissor_x1 = static_cast<GLint>(
-        rect.left + regs.rasterizer.scissor_test.x1 * color_surface->res_scale_width);
-    GLint scissor_y1 = static_cast<GLint>(
-        rect.bottom + regs.rasterizer.scissor_test.y1 * color_surface->res_scale_height);
+    GLint scissor_x1 =
+        static_cast<GLint>(surfaces_rect.left + regs.rasterizer.scissor_test.x1 * res_scale);
+    GLint scissor_y1 =
+        static_cast<GLint>(surfaces_rect.bottom + regs.rasterizer.scissor_test.y1 * res_scale);
     // x2, y2 have +1 added to cover the entire pixel area, otherwise you might get cracks when
     // scaling or doing multisampling.
-    GLint scissor_x2 = static_cast<GLint>(
-        rect.left + (regs.rasterizer.scissor_test.x2 + 1) * color_surface->res_scale_width);
-    GLint scissor_y2 = static_cast<GLint>(
-        rect.bottom + (regs.rasterizer.scissor_test.y2 + 1) * color_surface->res_scale_height);
+    GLint scissor_x2 =
+        static_cast<GLint>(surfaces_rect.left + (regs.rasterizer.scissor_test.x2 + 1) * res_scale);
+    GLint scissor_y2 = static_cast<GLint>(surfaces_rect.bottom +
+                                          (regs.rasterizer.scissor_test.y2 + 1) * res_scale);
 
     if (uniform_block_data.data.scissor_x1 != scissor_x1 ||
         uniform_block_data.data.scissor_x2 != scissor_x2 ||
@@ -311,7 +348,7 @@ void RasterizerOpenGL::DrawTriangles() {
 
         if (texture.enabled) {
             texture_samplers[texture_index].SyncWithConfig(texture.config);
-            CachedSurface* surface = res_cache.GetTextureSurface(texture);
+            Surface surface = res_cache.GetTextureSurface(texture);
             if (surface != nullptr) {
                 state.texture_units[texture_index].texture_2d = surface->texture.handle;
             } else {
@@ -380,6 +417,15 @@ void RasterizerOpenGL::DrawTriangles() {
         uniform_block_data.dirty = false;
     }
 
+    // Viewport can have negative offsets or larger
+    // dimensions than our framebuffer sub-rect.
+    // Enable scissor test to prevent drawing
+    // outside of the framebuffer region
+    state.scissor.enabled = true;
+    state.scissor.x = draw_rect.left;
+    state.scissor.y = draw_rect.bottom;
+    state.scissor.width = draw_rect.GetWidth();
+    state.scissor.height = draw_rect.GetHeight();
     state.Apply();
 
     // Draw the vertex batch
@@ -387,16 +433,8 @@ void RasterizerOpenGL::DrawTriangles() {
                  GL_STREAM_DRAW);
     glDrawArrays(GL_TRIANGLES, 0, (GLsizei)vertex_batch.size());
 
-    // Mark framebuffer surfaces as dirty
-    // TODO: Restrict invalidation area to the viewport
-    if (color_surface != nullptr) {
-        color_surface->dirty = true;
-        res_cache.FlushRegion(color_surface->addr, color_surface->size, color_surface, true);
-    }
-    if (depth_surface != nullptr) {
-        depth_surface->dirty = true;
-        res_cache.FlushRegion(depth_surface->addr, depth_surface->size, depth_surface, true);
-    }
+    // Disable scissor test
+    state.scissor.enabled = false;
 
     vertex_batch.clear();
 
@@ -405,6 +443,22 @@ void RasterizerOpenGL::DrawTriangles() {
         state.texture_units[texture_index].texture_2d = 0;
     }
     state.Apply();
+
+    // Mark framebuffer surfaces as dirty
+    MathUtil::Rectangle<u32> draw_rect_unscaled{
+        draw_rect.left / res_scale, draw_rect.top / res_scale, draw_rect.right / res_scale,
+        draw_rect.bottom / res_scale};
+
+    if (color_surface != nullptr && write_color_fb) {
+        auto interval = color_surface->GetSubRectInterval(draw_rect_unscaled);
+        res_cache.InvalidateRegion(boost::icl::first(interval), boost::icl::length(interval),
+                                   color_surface);
+    }
+    if (depth_surface != nullptr && write_depth_fb) {
+        auto interval = depth_surface->GetSubRectInterval(draw_rect_unscaled);
+        res_cache.InvalidateRegion(boost::icl::first(interval), boost::icl::length(interval),
+                                   depth_surface);
+    }
 }
 
 void RasterizerOpenGL::NotifyPicaRegisterChanged(u32 id) {
@@ -893,227 +947,143 @@ void RasterizerOpenGL::FlushAll() {
 
 void RasterizerOpenGL::FlushRegion(PAddr addr, u32 size) {
     MICROPROFILE_SCOPE(OpenGL_CacheManagement);
-    res_cache.FlushRegion(addr, size, nullptr, false);
+    res_cache.FlushRegion(addr, size);
+}
+
+void RasterizerOpenGL::InvalidateRegion(PAddr addr, u32 size) {
+    MICROPROFILE_SCOPE(OpenGL_CacheManagement);
+    res_cache.InvalidateRegion(addr, size, nullptr);
 }
 
 void RasterizerOpenGL::FlushAndInvalidateRegion(PAddr addr, u32 size) {
     MICROPROFILE_SCOPE(OpenGL_CacheManagement);
-    res_cache.FlushRegion(addr, size, nullptr, true);
+    res_cache.FlushRegion(addr, size);
+    res_cache.InvalidateRegion(addr, size, nullptr);
 }
 
 bool RasterizerOpenGL::AccelerateDisplayTransfer(const GPU::Regs::DisplayTransferConfig& config) {
     MICROPROFILE_SCOPE(OpenGL_Blits);
 
-    CachedSurface src_params;
+    SurfaceParams src_params;
     src_params.addr = config.GetPhysicalInputAddress();
-    // It's important to use the correct source input width to properly skip over parts of the input
-    // image which will be cropped from the output but still affect the stride of the input image.
-    src_params.width = config.input_width;
-    // Using the output's height is fine because we don't read or skip over the remaining part of
-    // the image, and it allows for smaller texture cache lookup rectangles.
+    src_params.width = config.output_width;
+    src_params.stride = config.input_width;
     src_params.height = config.output_height;
     src_params.is_tiled = !config.input_linear;
-    src_params.pixel_format = CachedSurface::PixelFormatFromGPUPixelFormat(config.input_format);
+    src_params.pixel_format = SurfaceParams::PixelFormatFromGPUPixelFormat(config.input_format);
+    src_params.UpdateParams();
 
-    CachedSurface dst_params;
+    SurfaceParams dst_params;
     dst_params.addr = config.GetPhysicalOutputAddress();
-    dst_params.width =
-        config.scaling != config.NoScale ? config.output_width / 2 : config.output_width.Value();
-    dst_params.height =
-        config.scaling == config.ScaleXY ? config.output_height / 2 : config.output_height.Value();
+    dst_params.width = config.scaling != config.NoScale ? config.output_width.Value() / 2
+                                                        : config.output_width.Value();
+    dst_params.height = config.scaling == config.ScaleXY ? config.output_height.Value() / 2
+                                                         : config.output_height.Value();
     dst_params.is_tiled = config.input_linear != config.dont_swizzle;
-    dst_params.pixel_format = CachedSurface::PixelFormatFromGPUPixelFormat(config.output_format);
+    dst_params.pixel_format = SurfaceParams::PixelFormatFromGPUPixelFormat(config.output_format);
+    dst_params.UpdateParams();
 
-    MathUtil::Rectangle<int> src_rect;
-    CachedSurface* src_surface = res_cache.GetSurfaceRect(src_params, false, true, src_rect);
-
-    if (src_surface == nullptr) {
+    MathUtil::Rectangle<u32> src_rect;
+    Surface src_surface;
+    std::tie(src_surface, src_rect) =
+        res_cache.GetSurfaceSubRect(src_params, ScaleMatch::Ignore, true);
+    if (src_surface == nullptr)
         return false;
-    }
 
-    // Adjust the source rectangle to take into account parts of the input lines being cropped
-    if (config.input_width > config.output_width) {
-        src_rect.right -= static_cast<int>((config.input_width - config.output_width) *
-                                           src_surface->res_scale_width);
-    }
+    dst_params.res_scale = src_surface->res_scale;
 
-    // Require destination surface to have same resolution scale as source to preserve scaling
-    dst_params.res_scale_width = src_surface->res_scale_width;
-    dst_params.res_scale_height = src_surface->res_scale_height;
-
-    MathUtil::Rectangle<int> dst_rect;
-    CachedSurface* dst_surface = res_cache.GetSurfaceRect(dst_params, true, false, dst_rect);
-
-    if (dst_surface == nullptr) {
+    MathUtil::Rectangle<u32> dst_rect;
+    Surface dst_surface;
+    std::tie(dst_surface, dst_rect) =
+        res_cache.GetSurfaceSubRect(dst_params, ScaleMatch::Upscale, false);
+    if (dst_surface == nullptr)
         return false;
-    }
 
-    // Don't accelerate if the src and dst surfaces are the same
-    if (src_surface == dst_surface) {
+    if (src_surface->is_tiled != dst_surface->is_tiled)
+        std::swap(src_rect.top, src_rect.bottom);
+
+    if (config.flip_vertically)
+        std::swap(src_rect.top, src_rect.bottom);
+
+    if (!res_cache.BlitSurfaces(src_surface, src_rect, dst_surface, dst_rect))
         return false;
-    }
 
-    if (config.flip_vertically) {
-        std::swap(dst_rect.top, dst_rect.bottom);
-    }
-
-    if (!res_cache.TryBlitSurfaces(src_surface, src_rect, dst_surface, dst_rect)) {
-        return false;
-    }
-
-    u32 dst_size = dst_params.width * dst_params.height *
-                   CachedSurface::GetFormatBpp(dst_params.pixel_format) / 8;
-    dst_surface->dirty = true;
-    res_cache.FlushRegion(config.GetPhysicalOutputAddress(), dst_size, dst_surface, true);
+    res_cache.InvalidateRegion(dst_params.addr, dst_params.size, dst_surface);
     return true;
 }
 
 bool RasterizerOpenGL::AccelerateTextureCopy(const GPU::Regs::DisplayTransferConfig& config) {
-    // TODO(tfarley): Try to hardware accelerate this
-    return false;
-}
+    u32 input_width = config.texture_copy.input_width * 16;
+    u32 input_gap = config.texture_copy.input_gap * 16;
+    u32 output_width = config.texture_copy.output_width * 16;
+    u32 output_gap = config.texture_copy.output_gap * 16;
 
-bool RasterizerOpenGL::AccelerateFill(const GPU::Regs::MemoryFillConfig& config) {
-    MICROPROFILE_SCOPE(OpenGL_Blits);
-    using PixelFormat = CachedSurface::PixelFormat;
-    using SurfaceType = CachedSurface::SurfaceType;
+    if (config.texture_copy.size == 0)
+        return true;
 
-    CachedSurface* dst_surface = res_cache.TryGetFillSurface(config);
+    if (input_width >= config.texture_copy.size) {
+        input_width = config.texture_copy.size;
+        input_gap = 0;
+    }
 
-    if (dst_surface == nullptr) {
+    if (output_width >= config.texture_copy.size) {
+        output_width = config.texture_copy.size;
+        output_gap = 0;
+    }
+
+    if (input_width != output_width || config.texture_copy.size % input_width != 0) {
         return false;
     }
 
-    OpenGLState cur_state = OpenGLState::GetCurState();
+    SurfaceParams src_params;
+    src_params.addr = config.GetPhysicalInputAddress();
+    src_params.stride = input_width + input_gap; // stride in bytes
+    src_params.width = input_width;              // width in bytes
+    src_params.height = config.texture_copy.size / input_width;
+    src_params.size = ((src_params.height - 1) * src_params.stride) + src_params.width;
+    src_params.end = src_params.addr + src_params.size;
 
-    SurfaceType dst_type = CachedSurface::GetFormatType(dst_surface->pixel_format);
+    MathUtil::Rectangle<u32> src_rect;
+    Surface src_surface;
+    std::tie(src_surface, src_rect) = res_cache.GetTexCopySurface(src_params);
+    if (src_surface == nullptr)
+        return false;
 
-    GLuint old_fb = cur_state.draw.draw_framebuffer;
-    cur_state.draw.draw_framebuffer = framebuffer.handle;
-    // TODO: When scissor test is implemented, need to disable scissor test in cur_state here so
-    // Clear call isn't affected
-    cur_state.Apply();
+    if ((output_gap * 8) % SurfaceParams::GetFormatBpp(src_surface->pixel_format) != 0 ||
+        (src_surface->is_tiled && src_surface->PixelsInBytes(output_gap) % 64 != 0))
+        return false;
 
-    if (dst_type == SurfaceType::Color || dst_type == SurfaceType::Texture) {
-        glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
-                               dst_surface->texture.handle, 0);
-        glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, 0,
-                               0);
+    SurfaceParams dst_params = *src_surface;
+    dst_params.addr = config.GetPhysicalOutputAddress();
+    dst_params.width = src_rect.GetWidth() / src_surface->res_scale;
+    dst_params.stride = dst_params.width + src_surface->PixelsInBytes(
+                                               src_surface->is_tiled ? output_gap / 8 : output_gap);
+    dst_params.height = src_rect.GetHeight() / src_surface->res_scale;
+    dst_params.res_scale = src_surface->res_scale;
+    dst_params.UpdateParams();
 
-        GLfloat color_values[4] = {0.0f, 0.0f, 0.0f, 0.0f};
+    const bool load_gap = output_gap != 0; // Since we are going to invalidate the gap if there is
+                                           // one, we will have to load it first
+    MathUtil::Rectangle<u32> dst_rect;
+    Surface dst_surface;
+    std::tie(dst_surface, dst_rect) =
+        res_cache.GetSurfaceSubRect(dst_params, ScaleMatch::Upscale, load_gap);
+    if (src_surface == nullptr)
+        return false;
 
-        // TODO: Handle additional pixel format and fill value size combinations to accelerate more
-        // cases
-        //       For instance, checking if fill value's bytes/bits repeat to allow filling
-        //       I8/A8/I4/A4/...
-        //       Currently only handles formats that are multiples of the fill value size
+    if (!res_cache.BlitSurfaces(src_surface, src_rect, dst_surface, dst_rect))
+        return false;
 
-        if (config.fill_24bit) {
-            switch (dst_surface->pixel_format) {
-            case PixelFormat::RGB8:
-                color_values[0] = config.value_24bit_r / 255.0f;
-                color_values[1] = config.value_24bit_g / 255.0f;
-                color_values[2] = config.value_24bit_b / 255.0f;
-                break;
-            default:
-                return false;
-            }
-        } else if (config.fill_32bit) {
-            u32 value = config.value_32bit;
+    res_cache.InvalidateRegion(dst_params.addr, dst_params.size, dst_surface);
+    return true;
+}
 
-            switch (dst_surface->pixel_format) {
-            case PixelFormat::RGBA8:
-                color_values[0] = (value >> 24) / 255.0f;
-                color_values[1] = ((value >> 16) & 0xFF) / 255.0f;
-                color_values[2] = ((value >> 8) & 0xFF) / 255.0f;
-                color_values[3] = (value & 0xFF) / 255.0f;
-                break;
-            default:
-                return false;
-            }
-        } else {
-            u16 value_16bit = config.value_16bit.Value();
-            Math::Vec4<u8> color;
+bool RasterizerOpenGL::AccelerateFill(const GPU::Regs::MemoryFillConfig& config) {
+    Surface dst_surface = res_cache.GetFillSurface(config);
+    if (dst_surface == nullptr)
+        return false;
 
-            switch (dst_surface->pixel_format) {
-            case PixelFormat::RGBA8:
-                color_values[0] = (value_16bit >> 8) / 255.0f;
-                color_values[1] = (value_16bit & 0xFF) / 255.0f;
-                color_values[2] = color_values[0];
-                color_values[3] = color_values[1];
-                break;
-            case PixelFormat::RGB5A1:
-                color = Color::DecodeRGB5A1((const u8*)&value_16bit);
-                color_values[0] = color[0] / 31.0f;
-                color_values[1] = color[1] / 31.0f;
-                color_values[2] = color[2] / 31.0f;
-                color_values[3] = color[3];
-                break;
-            case PixelFormat::RGB565:
-                color = Color::DecodeRGB565((const u8*)&value_16bit);
-                color_values[0] = color[0] / 31.0f;
-                color_values[1] = color[1] / 63.0f;
-                color_values[2] = color[2] / 31.0f;
-                break;
-            case PixelFormat::RGBA4:
-                color = Color::DecodeRGBA4((const u8*)&value_16bit);
-                color_values[0] = color[0] / 15.0f;
-                color_values[1] = color[1] / 15.0f;
-                color_values[2] = color[2] / 15.0f;
-                color_values[3] = color[3] / 15.0f;
-                break;
-            case PixelFormat::IA8:
-            case PixelFormat::RG8:
-                color_values[0] = (value_16bit >> 8) / 255.0f;
-                color_values[1] = (value_16bit & 0xFF) / 255.0f;
-                break;
-            default:
-                return false;
-            }
-        }
-
-        cur_state.color_mask.red_enabled = GL_TRUE;
-        cur_state.color_mask.green_enabled = GL_TRUE;
-        cur_state.color_mask.blue_enabled = GL_TRUE;
-        cur_state.color_mask.alpha_enabled = GL_TRUE;
-        cur_state.Apply();
-        glClearBufferfv(GL_COLOR, 0, color_values);
-    } else if (dst_type == SurfaceType::Depth) {
-        glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, 0, 0);
-        glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D,
-                               dst_surface->texture.handle, 0);
-        glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D, 0, 0);
-
-        GLfloat value_float;
-        if (dst_surface->pixel_format == CachedSurface::PixelFormat::D16) {
-            value_float = config.value_32bit / 65535.0f; // 2^16 - 1
-        } else if (dst_surface->pixel_format == CachedSurface::PixelFormat::D24) {
-            value_float = config.value_32bit / 16777215.0f; // 2^24 - 1
-        }
-
-        cur_state.depth.write_mask = GL_TRUE;
-        cur_state.Apply();
-        glClearBufferfv(GL_DEPTH, 0, &value_float);
-    } else if (dst_type == SurfaceType::DepthStencil) {
-        glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, 0, 0);
-        glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D,
-                               dst_surface->texture.handle, 0);
-
-        GLfloat value_float = (config.value_32bit & 0xFFFFFF) / 16777215.0f; // 2^24 - 1
-        GLint value_int = (config.value_32bit >> 24);
-
-        cur_state.depth.write_mask = GL_TRUE;
-        cur_state.stencil.write_mask = 0xFF;
-        cur_state.Apply();
-        glClearBufferfi(GL_DEPTH_STENCIL, 0, value_float, value_int);
-    }
-
-    cur_state.draw.draw_framebuffer = old_fb;
-    // TODO: Return scissor test to previous value when scissor test is implemented
-    cur_state.Apply();
-
-    dst_surface->dirty = true;
-    res_cache.FlushRegion(dst_surface->addr, dst_surface->size, dst_surface, true);
+    res_cache.InvalidateRegion(dst_surface->addr, dst_surface->size, dst_surface);
     return true;
 }
 
@@ -1125,16 +1095,19 @@ bool RasterizerOpenGL::AccelerateDisplay(const GPU::Regs::FramebufferConfig& con
     }
     MICROPROFILE_SCOPE(OpenGL_CacheManagement);
 
-    CachedSurface src_params;
+    SurfaceParams src_params;
     src_params.addr = framebuffer_addr;
-    src_params.width = config.width;
+    src_params.width = std::min(config.width.Value(), pixel_stride);
     src_params.height = config.height;
-    src_params.pixel_stride = pixel_stride;
+    src_params.stride = pixel_stride;
     src_params.is_tiled = false;
-    src_params.pixel_format = CachedSurface::PixelFormatFromGPUPixelFormat(config.color_format);
+    src_params.pixel_format = SurfaceParams::PixelFormatFromGPUPixelFormat(config.color_format);
+    src_params.UpdateParams();
 
-    MathUtil::Rectangle<int> src_rect;
-    CachedSurface* src_surface = res_cache.GetSurfaceRect(src_params, false, true, src_rect);
+    MathUtil::Rectangle<u32> src_rect;
+    Surface src_surface;
+    std::tie(src_surface, src_rect) =
+        res_cache.GetSurfaceSubRect(src_params, ScaleMatch::Ignore, true);
 
     if (src_surface == nullptr) {
         return false;
@@ -1144,8 +1117,8 @@ bool RasterizerOpenGL::AccelerateDisplay(const GPU::Regs::FramebufferConfig& con
     u32 scaled_height = src_surface->GetScaledHeight();
 
     screen_info.display_texcoords = MathUtil::Rectangle<float>(
-        (float)src_rect.top / (float)scaled_height, (float)src_rect.left / (float)scaled_width,
-        (float)src_rect.bottom / (float)scaled_height, (float)src_rect.right / (float)scaled_width);
+        (float)src_rect.bottom / (float)scaled_height, (float)src_rect.left / (float)scaled_width,
+        (float)src_rect.top / (float)scaled_height, (float)src_rect.right / (float)scaled_width);
 
     screen_info.display_texture = src_surface->texture.handle;
 
