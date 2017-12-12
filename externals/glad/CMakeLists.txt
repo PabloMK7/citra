@@ -1,13 +1,10 @@
-set(SRCS
-            src/glad.c
-            )
-set(HEADERS
-            include/KHR/khrplatform.h
-            include/glad/glad.h
-            )
+add_library(glad STATIC
+    src/glad.c
+    include/KHR/khrplatform.h
+    include/glad/glad.h
+)
 
-create_directory_groups(${SRCS} ${HEADERS})
-add_library(glad STATIC ${SRCS} ${HEADERS})
+create_target_directory_groups(glad)
 target_include_directories(glad PUBLIC "include/")
 
 if ("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")

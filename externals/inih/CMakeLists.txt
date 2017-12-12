@@ -1,12 +1,9 @@
-set(SRCS
-            inih/ini.c
-            inih/cpp/INIReader.cpp
-            )
-set(HEADERS
-            inih/ini.h
-            inih/cpp/INIReader.h
-            )
+add_library(inih
+    inih/ini.c
+    inih/ini.h
+    inih/cpp/INIReader.cpp
+    inih/cpp/INIReader.h
+)
 
-create_directory_groups(${SRCS} ${HEADERS})
-add_library(inih ${SRCS} ${HEADERS})
+create_target_directory_groups(inih)
 target_include_directories(inih INTERFACE .)

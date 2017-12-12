@@ -1,16 +1,12 @@
-set(SRCS
-            telemetry_json.cpp
-            verify_login.cpp
-            web_backend.cpp
-            )
+add_library(web_service STATIC
+    telemetry_json.cpp
+    telemetry_json.h
+    verify_login.cpp
+    verify_login.h
+    web_backend.cpp
+    web_backend.h
+)
 
-set(HEADERS
-            telemetry_json.h
-            verify_login.h
-            web_backend.h
-            )
+create_target_directory_groups(web_service)
 
-create_directory_groups(${SRCS} ${HEADERS})
-
-add_library(web_service STATIC ${SRCS} ${HEADERS})
 target_link_libraries(web_service PUBLIC common cpr json-headers)

@@ -1,18 +1,14 @@
-set(SRCS
-            network.cpp
-            packet.cpp
-            room.cpp
-            room_member.cpp
-            )
+add_library(network STATIC
+    network.cpp
+    network.h
+    packet.cpp
+    packet.h
+    room.cpp
+    room.h
+    room_member.cpp
+    room_member.h
+)
 
-set(HEADERS
-            network.h
-            packet.h
-            room.h
-            room_member.h
-            )
+create_target_directory_groups(network)
 
-create_directory_groups(${SRCS} ${HEADERS})
-
-add_library(network STATIC ${SRCS} ${HEADERS})
 target_link_libraries(network PRIVATE common enet)
