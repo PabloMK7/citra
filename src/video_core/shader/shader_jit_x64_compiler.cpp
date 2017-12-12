@@ -387,18 +387,8 @@ void JitShader::Compile_DP4(Instruction instr) {
 
     Compile_SanitizedMul(SRC1, SRC2, SCRATCH);
 
-    if (Common::GetCPUCaps().sse3) {
-        haddps(SRC1, SRC1);
-        haddps(SRC1, SRC1);
-    } else {
-        movaps(SRC2, SRC1);
-        shufps(SRC1, SRC1, _MM_SHUFFLE(2, 3, 0, 1)); // XYZW -> ZWXY
-        addps(SRC1, SRC2);
-
-        movaps(SRC2, SRC1);
-        shufps(SRC1, SRC1, _MM_SHUFFLE(0, 1, 2, 3)); // XYZW -> WZYX
-        addps(SRC1, SRC2);
-    }
+    haddps(SRC1, SRC1);
+    haddps(SRC1, SRC1);
 
     Compile_DestEnable(instr, SRC1);
 }
@@ -424,18 +414,8 @@ void JitShader::Compile_DPH(Instruction instr) {
 
     Compile_SanitizedMul(SRC1, SRC2, SCRATCH);
 
-    if (Common::GetCPUCaps().sse3) {
-        haddps(SRC1, SRC1);
-        haddps(SRC1, SRC1);
-    } else {
-        movaps(SRC2, SRC1);
-        shufps(SRC1, SRC1, _MM_SHUFFLE(2, 3, 0, 1)); // XYZW -> ZWXY
-        addps(SRC1, SRC2);
-
-        movaps(SRC2, SRC1);
-        shufps(SRC1, SRC1, _MM_SHUFFLE(0, 1, 2, 3)); // XYZW -> WZYX
-        addps(SRC1, SRC2);
-    }
+    haddps(SRC1, SRC1);
+    haddps(SRC1, SRC1);
 
     Compile_DestEnable(instr, SRC1);
 }
