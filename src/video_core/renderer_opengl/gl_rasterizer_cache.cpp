@@ -1271,10 +1271,8 @@ void RasterizerCacheOpenGL::ValidateSurface(const Surface& surface, PAddr addr, 
         return;
     }
 
-    auto validate_regions = surface->invalid_regions & validate_interval;
-
     for (;;) {
-        const auto it = validate_regions.begin();
+        const auto it = surface->invalid_regions.find(validate_interval);
         if (it == surface->invalid_regions.end())
             break;
 
@@ -1287,7 +1285,7 @@ void RasterizerCacheOpenGL::ValidateSurface(const Surface& surface, PAddr addr, 
         if (copy_surface != nullptr) {
             SurfaceInterval copy_interval = params.GetCopyableInterval(copy_surface);
             CopySurface(copy_surface, surface, copy_interval);
-            validate_regions.erase(interval);
+            surface->invalid_regions.erase(interval);
             continue;
         }
 
@@ -1295,7 +1293,7 @@ void RasterizerCacheOpenGL::ValidateSurface(const Surface& surface, PAddr addr, 
         FlushRegion(params.addr, params.size);
         surface->LoadGLBuffer(params.addr, params.end);
         surface->UploadGLTexture(surface->GetSubRect(params));
-        validate_regions.erase(interval);
+        surface->invalid_regions.erase(interval);
     }
 }
 
