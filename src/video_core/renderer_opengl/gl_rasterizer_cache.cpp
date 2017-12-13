@@ -872,7 +872,7 @@ Surface FindMatch(const SurfaceCache& surface_cache, const SurfaceParams& params
 
     for (auto& pair : RangeFromInterval(surface_cache, params.GetInterval())) {
         for (auto& surface : pair.second) {
-            const bool res_scale_matched = match_scale_type == ScaleMatch::Exact
+            bool res_scale_matched = match_scale_type == ScaleMatch::Exact
                                                ? (params.res_scale == surface->res_scale)
                                                : (params.res_scale <= surface->res_scale);
             // validity will be checked in GetCopyableInterval
