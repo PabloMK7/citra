@@ -50,9 +50,16 @@ enum class MediaType : u32 { NAND = 0, SDMC = 1, GameCard = 2 };
 
 typedef u64 ArchiveHandle;
 
+struct FileSessionSlot : public Kernel::SessionRequestHandler::SessionDataBase {
+    u32 priority; ///< Priority of the file. TODO(Subv): Find out what this means
+    u64 offset;   ///< Offset that this session will start reading from.
+    u64 size;     ///< Max size of the file that this session is allowed to access
+    bool subfile; ///< Whether this file was opened via OpenSubFile or not.
+};
+
 // TODO: File is not a real service, but it can still utilize ServiceFramework::RegisterHandlers.
 // Consider splitting ServiceFramework interface.
-class File final : public ServiceFramework<File> {
+class File final : public ServiceFramework<File, FileSessionSlot> {
 public:
     File(std::unique_ptr<FileSys::FileBackend>&& backend, const FileSys::Path& path);
     ~File() = default;
@@ -67,8 +74,6 @@ public:
     /// Creates a new session to this File and returns the ClientSession part of the connection.
     Kernel::SharedPtr<Kernel::ClientSession> Connect();
 
-    void ClientDisconnected(Kernel::SharedPtr<Kernel::ServerSession> server_session) override;
-
 private:
     void Read(Kernel::HLERequestContext& ctx);
     void Write(Kernel::HLERequestContext& ctx);
@@ -80,18 +85,6 @@ private:
     void GetPriority(Kernel::HLERequestContext& ctx);
     void OpenLinkFile(Kernel::HLERequestContext& ctx);
     void OpenSubFile(Kernel::HLERequestContext& ctx);
-
-    struct SessionSlot {
-        Kernel::SharedPtr<Kernel::ServerSession> session; ///< The session that this slot refers to.
-        u32 priority; ///< Priority of the file. TODO(Subv): Find out what this means
-        u64 offset;   ///< Offset that this session will start reading from.
-        u64 size;     ///< Max size of the file that this session is allowed to access
-        bool subfile; ///< Whether this file was opened via OpenSubFile or not.
-    };
-
-    std::vector<SessionSlot> session_slots;
-
-    SessionSlot& GetSessionSlot(Kernel::SharedPtr<Kernel::ServerSession> session);
 };
 
 class Directory final : public Kernel::SessionRequestHandler {
