@@ -7,6 +7,7 @@
 #include <tuple>
 #include <utility>
 #include <glad/glad.h>
+#include "common/alignment.h"
 #include "common/assert.h"
 #include "common/logging/log.h"
 #include "common/math_util.h"
@@ -1013,25 +1014,42 @@ bool RasterizerOpenGL::AccelerateDisplayTransfer(const GPU::Regs::DisplayTransfe
 }
 
 bool RasterizerOpenGL::AccelerateTextureCopy(const GPU::Regs::DisplayTransferConfig& config) {
-    u32 input_width = config.texture_copy.input_width * 16;
+    u32 copy_size = Common::AlignDown(config.texture_copy.size, 16);
+
+    if (copy_size == 0)
+        return false;
+
     u32 input_gap = config.texture_copy.input_gap * 16;
-    u32 output_width = config.texture_copy.output_width * 16;
+    u32 input_width = config.texture_copy.input_width * 16;
+    if (input_width == 0) {
+        if (input_gap == 0) {
+            input_width = copy_size;
+        } else {
+            return false;
+        }
+    }
+
     u32 output_gap = config.texture_copy.output_gap * 16;
+    u32 output_width = config.texture_copy.output_width * 16;
+    if (output_width == 0) {
+        if (output_gap == 0) {
+            output_width = copy_size;
+        } else {
+            return false;
+        }
+    }
 
-    if (config.texture_copy.size == 0)
-        return true;
-
-    if (input_width >= config.texture_copy.size) {
-        input_width = config.texture_copy.size;
+    if (input_width >= copy_size) {
+        input_width = copy_size;
         input_gap = 0;
     }
 
-    if (output_width >= config.texture_copy.size) {
-        output_width = config.texture_copy.size;
+    if (output_width >= copy_size) {
+        output_width = copy_size;
         output_gap = 0;
     }
 
-    if (input_width != output_width || config.texture_copy.size % input_width != 0) {
+    if (input_width != output_width || copy_size % input_width != 0) {
         return false;
     }
 
@@ -1039,7 +1057,7 @@ bool RasterizerOpenGL::AccelerateTextureCopy(const GPU::Regs::DisplayTransferCon
     src_params.addr = config.GetPhysicalInputAddress();
     src_params.stride = input_width + input_gap; // stride in bytes
     src_params.width = input_width;              // width in bytes
-    src_params.height = config.texture_copy.size / input_width;
+    src_params.height = copy_size / input_width;
     src_params.size = ((src_params.height - 1) * src_params.stride) + src_params.width;
     src_params.end = src_params.addr + src_params.size;
 
