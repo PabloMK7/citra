@@ -1271,15 +1271,11 @@ void RasterizerCacheOpenGL::ValidateSurface(const Surface& surface, PAddr addr, 
         return;
     }
 
-    auto validate_regions = surface->invalid_regions & validate_interval;
-    auto notify_validated = [&](SurfaceInterval interval) {
-        surface->invalid_regions.erase(interval);
-        validate_regions.erase(interval);
-    };
+    const auto validate_regions = surface->invalid_regions.find(validate_interval);
 
     for (;;) {
         const auto it = validate_regions.begin();
-        if (it == validate_regions.end())
+        if (it == surface->invalid_regions.end())
             break;
 
         const auto interval = *it & validate_interval;
@@ -1291,28 +1287,15 @@ void RasterizerCacheOpenGL::ValidateSurface(const Surface& surface, PAddr addr, 
         if (copy_surface != nullptr) {
             SurfaceInterval copy_interval = params.GetCopyableInterval(copy_surface);
             CopySurface(copy_surface, surface, copy_interval);
-            notify_validated(copy_interval);
+            validate_regions.erase(interval);
             continue;
         }
-
-        // HACK HACK HACK: Ignore format reinterpretation
-        // this is a placeholder for HW texture decoding/encoding
-        constexpr bool IGNORE_FORMAT_REINTERPRETING = true;
-        bool retry = false;
-        if (IGNORE_FORMAT_REINTERPRETING) {
-            for (const auto& pair : RangeFromInterval(dirty_regions, interval)) {
-                validate_regions.erase(pair.first & interval);
-                retry = true;
-            }
-        }
-        if (retry)
-            continue;
 
         // Load data from 3DS memory
         FlushRegion(params.addr, params.size);
         surface->LoadGLBuffer(params.addr, params.end);
         surface->UploadGLTexture(surface->GetSubRect(params));
-        notify_validated(params.GetInterval());
+        validate_regions.erase(interval)
     }
 }
 
