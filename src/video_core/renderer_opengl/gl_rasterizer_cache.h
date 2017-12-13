@@ -111,7 +111,7 @@ struct SurfaceParams {
             32, // D24S8
         };
 
-        ASSERT(static_cast<size_t>(format) < bpp_table.size());
+        assert(static_cast<size_t>(format) < bpp_table.size());
         return bpp_table[static_cast<size_t>(format)];
     }
     unsigned int GetFormatBpp() const {
