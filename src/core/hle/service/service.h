@@ -87,6 +87,10 @@ public:
 protected:
     void HandleSyncRequest(Kernel::SharedPtr<Kernel::ServerSession> server_session) override;
 
+    std::unique_ptr<SessionDataBase> MakeSessionData() const override {
+        return nullptr;
+    }
+
     /**
      * Registers the functions in the service
      */
@@ -144,7 +148,7 @@ protected:
     using HandlerFnP = void (Self::*)(Kernel::HLERequestContext&);
 
 private:
-    template <typename T>
+    template <typename T, typename SessionData>
     friend class ServiceFramework;
 
     struct FunctionInfoBase {
@@ -190,7 +194,7 @@ private:
  * of the passed in function pointers and then delegate the actual work to the implementation in the
  * base class.
  */
-template <typename Self>
+template <typename Self, typename SessionData = Kernel::SessionRequestHandler::SessionDataBase>
 class ServiceFramework : public ServiceFrameworkBase {
 protected:
     /// Contains information about a request type which is handled by the service.
@@ -234,6 +238,14 @@ protected:
      */
     void RegisterHandlers(const FunctionInfo* functions, size_t n) {
         RegisterHandlersBase(functions, n);
+    }
+
+    std::unique_ptr<SessionDataBase> MakeSessionData() const override {
+        return std::make_unique<SessionData>();
+    }
+
+    SessionData* GetSessionData(Kernel::SharedPtr<Kernel::ServerSession> server_session) {
+        return ServiceFrameworkBase::GetSessionData<SessionData>(server_session);
     }
 
 private:

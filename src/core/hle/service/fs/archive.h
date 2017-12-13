@@ -108,6 +108,10 @@ public:
 
 protected:
     void HandleSyncRequest(Kernel::SharedPtr<Kernel::ServerSession> server_session) override;
+
+    std::unique_ptr<SessionDataBase> MakeSessionData() const override {
+        return nullptr;
+    }
 };
 
 /**
