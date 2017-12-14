@@ -4,20 +4,17 @@
 
 #pragma once
 
+namespace SM {
+class ServiceManager;
+}
+
 namespace Service {
-
-class Interface;
-
 namespace IR {
-
-/// Initialize IR service
-void Init();
-
-/// Shutdown IR service
-void Shutdown();
 
 /// Reload input devices. Used when input configuration changed
 void ReloadInputDevices();
+
+void InstallInterfaces(SM::ServiceManager& service_manager);
 
 } // namespace IR
 } // namespace Service
