@@ -35,13 +35,19 @@ public:
 
         const int width = M + E + 1;
         const int bias = 128 - (1 << (E - 1));
-        const int exponent = (hex >> M) & ((1 << E) - 1);
+        int exponent = (hex >> M) & ((1 << E) - 1);
         const unsigned mantissa = hex & ((1 << M) - 1);
+        const unsigned sign = (hex >> (E + M)) << 31;
 
-        if (hex & ((1 << (width - 1)) - 1))
-            hex = ((hex >> (E + M)) << 31) | (mantissa << (23 - M)) | ((exponent + bias) << 23);
-        else
-            hex = ((hex >> (E + M)) << 31);
+        if (hex & ((1 << (width - 1)) - 1)) {
+            if (exponent == (1 << E) - 1)
+                exponent = 255;
+            else
+                exponent += bias;
+            hex = sign | (mantissa << (23 - M)) | (exponent << 23);
+        } else {
+            hex = sign;
+        }
 
         std::memcpy(&res.value, &hex, sizeof(float));
 
