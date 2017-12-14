@@ -873,8 +873,8 @@ Surface FindMatch(const SurfaceCache& surface_cache, const SurfaceParams& params
     for (auto& pair : RangeFromInterval(surface_cache, params.GetInterval())) {
         for (auto& surface : pair.second) {
             bool res_scale_matched = match_scale_type == ScaleMatch::Exact
-                                               ? (params.res_scale == surface->res_scale)
-                                               : (params.res_scale <= surface->res_scale);
+                                         ? (params.res_scale == surface->res_scale)
+                                         : (params.res_scale <= surface->res_scale);
             // validity will be checked in GetCopyableInterval
             bool is_valid =
                 find_flags & MatchFlags::Copy
@@ -1285,7 +1285,7 @@ void RasterizerCacheOpenGL::ValidateSurface(const Surface& surface, PAddr addr, 
         if (copy_surface != nullptr) {
             SurfaceInterval copy_interval = params.GetCopyableInterval(copy_surface);
             CopySurface(copy_surface, surface, copy_interval);
-            surface->invalid_regions.erase(interval);
+            surface->invalid_regions.erase(copy_interval);
             continue;
         }
 
@@ -1293,7 +1293,7 @@ void RasterizerCacheOpenGL::ValidateSurface(const Surface& surface, PAddr addr, 
         FlushRegion(params.addr, params.size);
         surface->LoadGLBuffer(params.addr, params.end);
         surface->UploadGLTexture(surface->GetSubRect(params));
-        surface->invalid_regions.erase(interval);
+        surface->invalid_regions.erase(params.GetInterval());
     }
 }
 
