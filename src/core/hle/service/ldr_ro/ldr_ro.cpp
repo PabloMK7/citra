@@ -9,10 +9,8 @@
 #include "core/core.h"
 #include "core/hle/ipc_helpers.h"
 #include "core/hle/kernel/process.h"
-#include "core/hle/kernel/vm_manager.h"
 #include "core/hle/service/ldr_ro/cro_helper.h"
 #include "core/hle/service/ldr_ro/ldr_ro.h"
-#include "core/hle/service/ldr_ro/memory_synchronizer.h"
 
 namespace Service {
 namespace LDR {
@@ -42,53 +40,37 @@ static const ResultCode ERROR_NOT_LOADED = // 0xD8A12C0D
     ResultCode(static_cast<ErrorDescription>(13), ErrorModule::RO, ErrorSummary::InvalidState,
                ErrorLevel::Permanent);
 
-static MemorySynchronizer memory_synchronizer;
-
-// TODO(wwylele): this should be in the per-client storage when we implement multi-process
-static VAddr loaded_crs; ///< the virtual address of the static module
-
-static bool VerifyBufferState(VAddr buffer_ptr, u32 size) {
-    auto vma = Kernel::g_current_process->vm_manager.FindVMA(buffer_ptr);
-    return vma != Kernel::g_current_process->vm_manager.vma_map.end() &&
+static bool VerifyBufferState(Kernel::Process& process, VAddr buffer_ptr, u32 size) {
+    auto vma = process.vm_manager.FindVMA(buffer_ptr);
+    return vma != process.vm_manager.vma_map.end() &&
            vma->second.base + vma->second.size >= buffer_ptr + size &&
            vma->second.permissions == Kernel::VMAPermission::ReadWrite &&
            vma->second.meminfo_state == Kernel::MemoryState::Private;
 }
 
-/**
- * LDR_RO::Initialize service function
- *  Inputs:
- *      0 : 0x000100C2
- *      1 : CRS buffer pointer
- *      2 : CRS Size
- *      3 : Process memory address where the CRS will be mapped
- *      4 : handle translation descriptor (zero)
- *      5 : KProcess handle
- *  Outputs:
- *      0 : Return header
- *      1 : Result of function, 0 on success, otherwise error code
- */
-static void Initialize(Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x01, 3, 2);
+void RO::Initialize(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x01, 3, 2);
     VAddr crs_buffer_ptr = rp.Pop<u32>();
     u32 crs_size = rp.Pop<u32>();
     VAddr crs_address = rp.Pop<u32>();
     // TODO (wwylele): RO service checks the descriptor here and return error 0xD9001830 for
     // incorrect descriptor. This error return should be probably built in IPC::RequestParser.
     // All other service functions below have the same issue.
-    Kernel::Handle process = rp.PopHandle();
+    auto process = rp.PopObject<Kernel::Process>();
 
-    LOG_DEBUG(Service_LDR,
-              "called, crs_buffer_ptr=0x%08X, crs_address=0x%08X, crs_size=0x%X, process=0x%08X",
-              crs_buffer_ptr, crs_address, crs_size, process);
+    LOG_DEBUG(Service_LDR, "called, crs_buffer_ptr=0x%08X, crs_address=0x%08X, crs_size=0x%X",
+              crs_buffer_ptr, crs_address, crs_size);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
 
-    if (loaded_crs != 0) {
+    auto insert_result = slots.insert({process->process_id, {}});
+    if (!insert_result.second) {
         LOG_ERROR(Service_LDR, "Already initialized");
         rb.Push(ERROR_ALREADY_INITIALIZED);
         return;
     }
+
+    auto& slot = insert_result.first->second;
 
     if (crs_size < CRO_HEADER_SIZE) {
         LOG_ERROR(Service_LDR, "CRS is too small");
@@ -114,7 +96,7 @@ static void Initialize(Interface* self) {
         return;
     }
 
-    if (!VerifyBufferState(crs_buffer_ptr, crs_size)) {
+    if (!VerifyBufferState(*process, crs_buffer_ptr, crs_size)) {
         LOG_ERROR(Service_LDR, "CRS original buffer is in invalid state");
         rb.Push(ERROR_INVALID_MEMORY_STATE);
         return;
@@ -133,7 +115,7 @@ static void Initialize(Interface* self) {
         // TODO(wwylele): should be memory aliasing
         std::shared_ptr<std::vector<u8>> crs_mem = std::make_shared<std::vector<u8>>(crs_size);
         Memory::ReadBlock(crs_buffer_ptr, crs_mem->data(), crs_size);
-        result = Kernel::g_current_process->vm_manager
+        result = process->vm_manager
                      .MapMemoryBlock(crs_address, crs_mem, 0, crs_size, Kernel::MemoryState::Code)
                      .Code();
         if (result.IsError()) {
@@ -142,15 +124,15 @@ static void Initialize(Interface* self) {
             return;
         }
 
-        result = Kernel::g_current_process->vm_manager.ReprotectRange(crs_address, crs_size,
-                                                                      Kernel::VMAPermission::Read);
+        result =
+            process->vm_manager.ReprotectRange(crs_address, crs_size, Kernel::VMAPermission::Read);
         if (result.IsError()) {
             LOG_ERROR(Service_LDR, "Error reprotecting memory block %08X", result.raw);
             rb.Push(result);
             return;
         }
 
-        memory_synchronizer.AddMemoryBlock(crs_address, crs_buffer_ptr, crs_size);
+        slot.memory_synchronizer.AddMemoryBlock(crs_address, crs_buffer_ptr, crs_size);
     } else {
         // Do nothing if buffer_ptr == address
         // TODO(wwylele): verify this behaviour. This is only seen in the web browser app,
@@ -169,90 +151,39 @@ static void Initialize(Interface* self) {
         return;
     }
 
-    memory_synchronizer.SynchronizeOriginalMemory();
+    slot.memory_synchronizer.SynchronizeOriginalMemory(*process);
 
-    loaded_crs = crs_address;
+    slot.loaded_crs = crs_address;
 
     rb.Push(RESULT_SUCCESS);
 }
 
-/**
- * LDR_RO::LoadCRR service function
- *  Inputs:
- *      0 : 0x00020082
- *      1 : CRR buffer pointer
- *      2 : CRR Size
- *      3 : handle translation descriptor (zero)
- *      4 : KProcess handle
- *  Outputs:
- *      0 : Return header
- *      1 : Result of function, 0 on success, otherwise error code
- */
-static void LoadCRR(Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x02, 2, 2);
+void RO::LoadCRR(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x02, 2, 2);
     VAddr crr_buffer_ptr = rp.Pop<u32>();
     u32 crr_size = rp.Pop<u32>();
-    Kernel::Handle process = rp.PopHandle();
+    auto process = rp.PopObject<Kernel::Process>();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
 
-    LOG_WARNING(Service_LDR,
-                "(STUBBED) called, crr_buffer_ptr=0x%08X, crr_size=0x%08X, process=0x%08X",
-                crr_buffer_ptr, crr_size, process);
+    LOG_WARNING(Service_LDR, "(STUBBED) called, crr_buffer_ptr=0x%08X, crr_size=0x%08X",
+                crr_buffer_ptr, crr_size);
 }
 
-/**
- * LDR_RO::UnloadCRR service function
- *  Inputs:
- *      0 : 0x00030042
- *      1 : CRR buffer pointer
- *      2 : handle translation descriptor (zero)
- *      3 : KProcess handle
- *  Outputs:
- *      0 : Return header
- *      1 : Result of function, 0 on success, otherwise error code
- */
-static void UnloadCRR(Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x03, 1, 2);
+void RO::UnloadCRR(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x03, 1, 2);
     u32 crr_buffer_ptr = rp.Pop<u32>();
-    Kernel::Handle process = rp.PopHandle();
+    auto process = rp.PopObject<Kernel::Process>();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
 
-    LOG_WARNING(Service_LDR, "(STUBBED) called, crr_buffer_ptr=0x%08X, process=0x%08X",
-                crr_buffer_ptr, process);
+    LOG_WARNING(Service_LDR, "(STUBBED) called, crr_buffer_ptr=0x%08X", crr_buffer_ptr);
 }
 
-/**
- * LDR_RO::LoadCRO service function
- *  Inputs:
- *      0 : 0x000402C2 (old) / 0x000902C2 (new)
- *      1 : CRO buffer pointer
- *      2 : memory address where the CRO will be mapped
- *      3 : CRO Size
- *      4 : .data segment buffer pointer
- *      5 : must be zero
- *      6 : .data segment buffer size
- *      7 : .bss segment buffer pointer
- *      8 : .bss segment buffer size
- *      9 : (bool) register CRO as auto-link module
- *     10 : fix level
- *     11 : CRR address (zero if use loaded CRR)
- *     12 : handle translation descriptor (zero)
- *     13 : KProcess handle
- *  Outputs:
- *      0 : Return header
- *      1 : Result of function, 0 on success, otherwise error code
- *      2 : CRO fixed size
- *  Note:
- *      This service function has two versions. The function defined here is a
- *      unified one of two, with an additional parameter link_on_load_bug_fix.
- *      There is a dispatcher template below.
- */
-static void LoadCRO(Interface* self, bool link_on_load_bug_fix) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), link_on_load_bug_fix ? 0x09 : 0x04, 11, 2);
+void RO::LoadCRO(Kernel::HLERequestContext& ctx, bool link_on_load_bug_fix) {
+    IPC::RequestParser rp(ctx, link_on_load_bug_fix ? 0x09 : 0x04, 11, 2);
     VAddr cro_buffer_ptr = rp.Pop<u32>();
     VAddr cro_address = rp.Pop<u32>();
     u32 cro_size = rp.Pop<u32>();
@@ -264,24 +195,26 @@ static void LoadCRO(Interface* self, bool link_on_load_bug_fix) {
     bool auto_link = rp.Pop<bool>();
     u32 fix_level = rp.Pop<u32>();
     VAddr crr_address = rp.Pop<u32>();
-    Kernel::Handle process = rp.PopHandle();
+    auto process = rp.PopObject<Kernel::Process>();
 
     LOG_DEBUG(Service_LDR, "called (%s), cro_buffer_ptr=0x%08X, cro_address=0x%08X, cro_size=0x%X, "
                            "data_segment_address=0x%08X, zero=%d, data_segment_size=0x%X, "
                            "bss_segment_address=0x%08X, bss_segment_size=0x%X, auto_link=%s, "
-                           "fix_level=%d, crr_address=0x%08X, process=0x%08X",
+                           "fix_level=%d, crr_address=0x%08X",
               link_on_load_bug_fix ? "new" : "old", cro_buffer_ptr, cro_address, cro_size,
               data_segment_address, zero, data_segment_size, bss_segment_address, bss_segment_size,
-              auto_link ? "true" : "false", fix_level, crr_address, process);
+              auto_link ? "true" : "false", fix_level, crr_address);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
 
-    if (loaded_crs == 0) {
+    auto find_result = slots.find(process->process_id);
+    if (find_result == slots.end()) {
         LOG_ERROR(Service_LDR, "Not initialized");
         rb.Push(ERROR_NOT_INITIALIZED);
         rb.Push<u32>(0);
         return;
     }
+    auto& slot = find_result->second;
 
     if (cro_size < CRO_HEADER_SIZE) {
         LOG_ERROR(Service_LDR, "CRO too small");
@@ -311,7 +244,7 @@ static void LoadCRO(Interface* self, bool link_on_load_bug_fix) {
         return;
     }
 
-    if (!VerifyBufferState(cro_buffer_ptr, cro_size)) {
+    if (!VerifyBufferState(*process, cro_buffer_ptr, cro_size)) {
         LOG_ERROR(Service_LDR, "CRO original buffer is in invalid state");
         rb.Push(ERROR_INVALID_MEMORY_STATE);
         rb.Push<u32>(0);
@@ -340,7 +273,7 @@ static void LoadCRO(Interface* self, bool link_on_load_bug_fix) {
         // TODO(wwylele): should be memory aliasing
         std::shared_ptr<std::vector<u8>> cro_mem = std::make_shared<std::vector<u8>>(cro_size);
         Memory::ReadBlock(cro_buffer_ptr, cro_mem->data(), cro_size);
-        result = Kernel::g_current_process->vm_manager
+        result = process->vm_manager
                      .MapMemoryBlock(cro_address, cro_mem, 0, cro_size, Kernel::MemoryState::Code)
                      .Code();
         if (result.IsError()) {
@@ -350,17 +283,17 @@ static void LoadCRO(Interface* self, bool link_on_load_bug_fix) {
             return;
         }
 
-        result = Kernel::g_current_process->vm_manager.ReprotectRange(cro_address, cro_size,
-                                                                      Kernel::VMAPermission::Read);
+        result =
+            process->vm_manager.ReprotectRange(cro_address, cro_size, Kernel::VMAPermission::Read);
         if (result.IsError()) {
             LOG_ERROR(Service_LDR, "Error reprotecting memory block %08X", result.raw);
-            Kernel::g_current_process->vm_manager.UnmapRange(cro_address, cro_size);
+            process->vm_manager.UnmapRange(cro_address, cro_size);
             rb.Push(result);
             rb.Push<u32>(0);
             return;
         }
 
-        memory_synchronizer.AddMemoryBlock(cro_address, cro_buffer_ptr, cro_size);
+        slot.memory_synchronizer.AddMemoryBlock(cro_address, cro_buffer_ptr, cro_size);
     } else {
         // Do nothing if buffer_ptr == address
         // TODO(wwylele): verify this behaviour.
@@ -375,45 +308,44 @@ static void LoadCRO(Interface* self, bool link_on_load_bug_fix) {
     result = cro.VerifyHash(cro_size, crr_address);
     if (result.IsError()) {
         LOG_ERROR(Service_LDR, "Error verifying CRO in CRR %08X", result.raw);
-        Kernel::g_current_process->vm_manager.UnmapRange(cro_address, cro_size);
+        process->vm_manager.UnmapRange(cro_address, cro_size);
         rb.Push(result);
         rb.Push<u32>(0);
         return;
     }
 
-    result = cro.Rebase(loaded_crs, cro_size, data_segment_address, data_segment_size,
+    result = cro.Rebase(slot.loaded_crs, cro_size, data_segment_address, data_segment_size,
                         bss_segment_address, bss_segment_size, false);
     if (result.IsError()) {
         LOG_ERROR(Service_LDR, "Error rebasing CRO %08X", result.raw);
-        Kernel::g_current_process->vm_manager.UnmapRange(cro_address, cro_size);
+        process->vm_manager.UnmapRange(cro_address, cro_size);
         rb.Push(result);
         rb.Push<u32>(0);
         return;
     }
 
-    result = cro.Link(loaded_crs, link_on_load_bug_fix);
+    result = cro.Link(slot.loaded_crs, link_on_load_bug_fix);
     if (result.IsError()) {
         LOG_ERROR(Service_LDR, "Error linking CRO %08X", result.raw);
-        Kernel::g_current_process->vm_manager.UnmapRange(cro_address, cro_size);
+        process->vm_manager.UnmapRange(cro_address, cro_size);
         rb.Push(result);
         rb.Push<u32>(0);
         return;
     }
 
-    cro.Register(loaded_crs, auto_link);
+    cro.Register(slot.loaded_crs, auto_link);
 
     u32 fix_size = cro.Fix(fix_level);
 
-    memory_synchronizer.SynchronizeOriginalMemory();
+    slot.memory_synchronizer.SynchronizeOriginalMemory(*process);
 
     // TODO(wwylele): verify the behaviour when buffer_ptr == address
     if (cro_buffer_ptr != cro_address) {
         if (fix_size != cro_size) {
-            result = Kernel::g_current_process->vm_manager.UnmapRange(cro_address + fix_size,
-                                                                      cro_size - fix_size);
+            result = process->vm_manager.UnmapRange(cro_address + fix_size, cro_size - fix_size);
             if (result.IsError()) {
                 LOG_ERROR(Service_LDR, "Error unmapping memory block %08X", result.raw);
-                Kernel::g_current_process->vm_manager.UnmapRange(cro_address, cro_size);
+                process->vm_manager.UnmapRange(cro_address, cro_size);
                 rb.Push(result);
                 rb.Push<u32>(0);
                 return;
@@ -421,18 +353,18 @@ static void LoadCRO(Interface* self, bool link_on_load_bug_fix) {
         }
 
         // Changes the block size
-        memory_synchronizer.ResizeMemoryBlock(cro_address, cro_buffer_ptr, fix_size);
+        slot.memory_synchronizer.ResizeMemoryBlock(cro_address, cro_buffer_ptr, fix_size);
     }
 
     VAddr exe_begin;
     u32 exe_size;
     std::tie(exe_begin, exe_size) = cro.GetExecutablePages();
     if (exe_begin) {
-        result = Kernel::g_current_process->vm_manager.ReprotectRange(
-            exe_begin, exe_size, Kernel::VMAPermission::ReadExecute);
+        result = process->vm_manager.ReprotectRange(exe_begin, exe_size,
+                                                    Kernel::VMAPermission::ReadExecute);
         if (result.IsError()) {
             LOG_ERROR(Service_LDR, "Error reprotecting memory block %08X", result.raw);
-            Kernel::g_current_process->vm_manager.UnmapRange(cro_address, fix_size);
+            process->vm_manager.UnmapRange(cro_address, fix_size);
             rb.Push(result);
             rb.Push<u32>(0);
             return;
@@ -447,44 +379,27 @@ static void LoadCRO(Interface* self, bool link_on_load_bug_fix) {
     rb.Push(RESULT_SUCCESS, fix_size);
 }
 
-template <bool link_on_load_bug_fix>
-static void LoadCRO(Interface* self) {
-    LoadCRO(self, link_on_load_bug_fix);
-}
-
-/**
- * LDR_RO::UnloadCRO service function
- *  Inputs:
- *      0 : 0x000500C2
- *      1 : mapped CRO pointer
- *      2 : zero? (RO service doesn't care)
- *      3 : original CRO pointer
- *      4 : handle translation descriptor (zero)
- *      5 : KProcess handle
- *  Outputs:
- *      0 : Return header
- *      1 : Result of function, 0 on success, otherwise error code
- */
-static void UnloadCRO(Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x05, 3, 2);
+void RO::UnloadCRO(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x05, 3, 2);
     VAddr cro_address = rp.Pop<u32>();
     u32 zero = rp.Pop<u32>();
     VAddr cro_buffer_ptr = rp.Pop<u32>();
-    Kernel::Handle process = rp.PopHandle();
+    auto process = rp.PopObject<Kernel::Process>();
 
-    LOG_DEBUG(Service_LDR,
-              "called, cro_address=0x%08X, zero=%d, cro_buffer_ptr=0x%08X, process=0x%08X",
-              cro_address, zero, cro_buffer_ptr, process);
+    LOG_DEBUG(Service_LDR, "called, cro_address=0x%08X, zero=%d, cro_buffer_ptr=0x%08X",
+              cro_address, zero, cro_buffer_ptr);
 
     CROHelper cro(cro_address);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
 
-    if (loaded_crs == 0) {
+    auto find_result = slots.find(process->process_id);
+    if (find_result == slots.end()) {
         LOG_ERROR(Service_LDR, "Not initialized");
         rb.Push(ERROR_NOT_INITIALIZED);
         return;
     }
+    auto& slot = find_result->second;
 
     if (cro_address & Memory::PAGE_MASK) {
         LOG_ERROR(Service_LDR, "CRO address is not aligned");
@@ -502,9 +417,9 @@ static void UnloadCRO(Interface* self) {
 
     u32 fixed_size = cro.GetFixedSize();
 
-    cro.Unregister(loaded_crs);
+    cro.Unregister(slot.loaded_crs);
 
-    ResultCode result = cro.Unlink(loaded_crs);
+    ResultCode result = cro.Unlink(slot.loaded_crs);
     if (result.IsError()) {
         LOG_ERROR(Service_LDR, "Error unlinking CRO %08X", result.raw);
         rb.Push(result);
@@ -524,15 +439,15 @@ static void UnloadCRO(Interface* self) {
 
     cro.Unrebase(false);
 
-    memory_synchronizer.SynchronizeOriginalMemory();
+    slot.memory_synchronizer.SynchronizeOriginalMemory(*process);
 
     // TODO(wwylele): verify the behaviour when buffer_ptr == address
     if (cro_address != cro_buffer_ptr) {
-        result = Kernel::g_current_process->vm_manager.UnmapRange(cro_address, fixed_size);
+        result = process->vm_manager.UnmapRange(cro_address, fixed_size);
         if (result.IsError()) {
             LOG_ERROR(Service_LDR, "Error unmapping CRO %08X", result.raw);
         }
-        memory_synchronizer.RemoveMemoryBlock(cro_address, cro_buffer_ptr);
+        slot.memory_synchronizer.RemoveMemoryBlock(cro_address, cro_buffer_ptr);
     }
 
     Core::CPU().InvalidateCacheRange(cro_address, fixed_size);
@@ -540,33 +455,24 @@ static void UnloadCRO(Interface* self) {
     rb.Push(result);
 }
 
-/**
- * LDR_RO::LinkCRO service function
- *  Inputs:
- *      0 : 0x00060042
- *      1 : mapped CRO pointer
- *      2 : handle translation descriptor (zero)
- *      3 : KProcess handle
- *  Outputs:
- *      0 : Return header
- *      1 : Result of function, 0 on success, otherwise error code
- */
-static void LinkCRO(Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x06, 1, 2);
+void RO::LinkCRO(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x06, 1, 2);
     VAddr cro_address = rp.Pop<u32>();
-    Kernel::Handle process = rp.PopHandle();
+    auto process = rp.PopObject<Kernel::Process>();
 
-    LOG_DEBUG(Service_LDR, "called, cro_address=0x%08X, process=0x%08X", cro_address, process);
+    LOG_DEBUG(Service_LDR, "called, cro_address=0x%08X", cro_address);
 
     CROHelper cro(cro_address);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
 
-    if (loaded_crs == 0) {
+    auto find_result = slots.find(process->process_id);
+    if (find_result == slots.end()) {
         LOG_ERROR(Service_LDR, "Not initialized");
         rb.Push(ERROR_NOT_INITIALIZED);
         return;
     }
+    auto& slot = find_result->second;
 
     if (cro_address & Memory::PAGE_MASK) {
         LOG_ERROR(Service_LDR, "CRO address is not aligned");
@@ -582,43 +488,34 @@ static void LinkCRO(Interface* self) {
 
     LOG_INFO(Service_LDR, "Linking CRO \"%s\"", cro.ModuleName().data());
 
-    ResultCode result = cro.Link(loaded_crs, false);
+    ResultCode result = cro.Link(slot.loaded_crs, false);
     if (result.IsError()) {
         LOG_ERROR(Service_LDR, "Error linking CRO %08X", result.raw);
     }
 
-    memory_synchronizer.SynchronizeOriginalMemory();
+    slot.memory_synchronizer.SynchronizeOriginalMemory(*process);
 
     rb.Push(result);
 }
 
-/**
- * LDR_RO::UnlinkCRO service function
- *  Inputs:
- *      0 : 0x00070042
- *      1 : mapped CRO pointer
- *      2 : handle translation descriptor (zero)
- *      3 : KProcess handle
- *  Outputs:
- *      0 : Return header
- *      1 : Result of function, 0 on success, otherwise error code
- */
-static void UnlinkCRO(Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x07, 1, 2);
+void RO::UnlinkCRO(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x07, 1, 2);
     VAddr cro_address = rp.Pop<u32>();
-    Kernel::Handle process = rp.PopHandle();
+    auto process = rp.PopObject<Kernel::Process>();
 
-    LOG_DEBUG(Service_LDR, "called, cro_address=0x%08X, process=0x%08X", cro_address, process);
+    LOG_DEBUG(Service_LDR, "called, cro_address=0x%08X", cro_address);
 
     CROHelper cro(cro_address);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
 
-    if (loaded_crs == 0) {
+    auto find_result = slots.find(process->process_id);
+    if (find_result == slots.end()) {
         LOG_ERROR(Service_LDR, "Not initialized");
         rb.Push(ERROR_NOT_INITIALIZED);
         return;
     }
+    auto& slot = find_result->second;
 
     if (cro_address & Memory::PAGE_MASK) {
         LOG_ERROR(Service_LDR, "CRO address is not aligned");
@@ -634,82 +531,70 @@ static void UnlinkCRO(Interface* self) {
 
     LOG_INFO(Service_LDR, "Unlinking CRO \"%s\"", cro.ModuleName().data());
 
-    ResultCode result = cro.Unlink(loaded_crs);
+    ResultCode result = cro.Unlink(slot.loaded_crs);
     if (result.IsError()) {
         LOG_ERROR(Service_LDR, "Error unlinking CRO %08X", result.raw);
     }
 
-    memory_synchronizer.SynchronizeOriginalMemory();
+    slot.memory_synchronizer.SynchronizeOriginalMemory(*process);
 
     rb.Push(result);
 }
 
-/**
- * LDR_RO::Shutdown service function
- *  Inputs:
- *      0 : 0x00080042
- *      1 : original CRS buffer pointer
- *      2 : handle translation descriptor (zero)
- *      3 : KProcess handle
- *  Outputs:
- *      0 : Return header
- *      1 : Result of function, 0 on success, otherwise error code
- */
-static void Shutdown(Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x08, 1, 2);
+void RO::Shutdown(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x08, 1, 2);
     VAddr crs_buffer_ptr = rp.Pop<u32>();
-    Kernel::Handle process = rp.PopHandle();
+    auto process = rp.PopObject<Kernel::Process>();
 
-    LOG_DEBUG(Service_LDR, "called, crs_buffer_ptr=0x%08X, process=0x%08X", crs_buffer_ptr,
-              process);
+    LOG_DEBUG(Service_LDR, "called, crs_buffer_ptr=0x%08X", crs_buffer_ptr);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
 
-    if (loaded_crs == 0) {
+    auto find_result = slots.find(process->process_id);
+    if (find_result == slots.end()) {
         LOG_ERROR(Service_LDR, "Not initialized");
         rb.Push(ERROR_NOT_INITIALIZED);
         return;
     }
+    auto& slot = find_result->second;
 
-    CROHelper crs(loaded_crs);
+    CROHelper crs(slot.loaded_crs);
     crs.Unrebase(true);
 
-    memory_synchronizer.SynchronizeOriginalMemory();
+    slot.memory_synchronizer.SynchronizeOriginalMemory(*process);
 
     ResultCode result = RESULT_SUCCESS;
 
     // TODO(wwylele): verify the behaviour when buffer_ptr == address
-    if (loaded_crs != crs_buffer_ptr) {
-        result = Kernel::g_current_process->vm_manager.UnmapRange(loaded_crs, crs.GetFileSize());
+    if (slot.loaded_crs != crs_buffer_ptr) {
+        result = process->vm_manager.UnmapRange(slot.loaded_crs, crs.GetFileSize());
         if (result.IsError()) {
             LOG_ERROR(Service_LDR, "Error unmapping CRS %08X", result.raw);
         }
-        memory_synchronizer.RemoveMemoryBlock(loaded_crs, crs_buffer_ptr);
+        slot.memory_synchronizer.RemoveMemoryBlock(slot.loaded_crs, crs_buffer_ptr);
     }
 
-    loaded_crs = 0;
+    slots.erase(find_result);
     rb.Push(result);
 }
 
-const Interface::FunctionInfo FunctionTable[] = {
-    // clang-format off
-    {0x000100C2, Initialize, "Initialize"},
-    {0x00020082, LoadCRR, "LoadCRR"},
-    {0x00030042, UnloadCRR, "UnloadCRR"},
-    {0x000402C2, LoadCRO<false>, "LoadCRO"},
-    {0x000500C2, UnloadCRO, "UnloadCRO"},
-    {0x00060042, LinkCRO, "LinkCRO"},
-    {0x00070042, UnlinkCRO, "UnlinkCRO"},
-    {0x00080042, Shutdown, "Shutdown"},
-    {0x000902C2, LoadCRO<true>, "LoadCRO_New"},
-    // clang-format on
-};
+RO::RO() : ServiceFramework("ldr:ro", 2) {
+    static const FunctionInfo functions[] = {
+        {0x000100C2, &RO::Initialize, "Initialize"},
+        {0x00020082, &RO::LoadCRR, "LoadCRR"},
+        {0x00030042, &RO::UnloadCRR, "UnloadCRR"},
+        {0x000402C2, &RO::LoadCRO<false>, "LoadCRO"},
+        {0x000500C2, &RO::UnloadCRO, "UnloadCRO"},
+        {0x00060042, &RO::LinkCRO, "LinkCRO"},
+        {0x00070042, &RO::UnlinkCRO, "UnlinkCRO"},
+        {0x00080042, &RO::Shutdown, "Shutdown"},
+        {0x000902C2, &RO::LoadCRO<true>, "LoadCRO_New"},
+    };
+    RegisterHandlers(functions);
+}
 
-LDR_RO::LDR_RO() {
-    Register(FunctionTable);
-
-    loaded_crs = 0;
-    memory_synchronizer.Clear();
+void InstallInterfaces(SM::ServiceManager& service_manager) {
+    std::make_shared<RO>()->InstallAsService(service_manager);
 }
 
 } // namespace LDR

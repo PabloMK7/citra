@@ -7,6 +7,10 @@
 #include <vector>
 #include "core/memory.h"
 
+namespace Kernel {
+class Process;
+}
+
 namespace Service {
 namespace LDR {
 
@@ -24,7 +28,7 @@ public:
     void ResizeMemoryBlock(VAddr mapping, VAddr original, u32 size);
     void RemoveMemoryBlock(VAddr mapping, VAddr original);
 
-    void SynchronizeOriginalMemory();
+    void SynchronizeOriginalMemory(Kernel::Process& process);
 
 private:
     struct MemoryBlock {
