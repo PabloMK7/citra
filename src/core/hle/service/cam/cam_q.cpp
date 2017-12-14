@@ -7,11 +7,10 @@
 namespace Service {
 namespace CAM {
 
-// Empty arrays are illegal -- commented out until an entry is added.
-// const Interface::FunctionInfo FunctionTable[] = { };
-
-CAM_Q_Interface::CAM_Q_Interface() {
-    // Register(FunctionTable);
+CAM_Q::CAM_Q() : ServiceFramework("cam:q", 1 /*TODO: find the true value*/) {
+    // Empty arrays are illegal -- commented out until an entry is added.
+    // static const FunctionInfo functions[] = {};
+    // RegisterHandlers(functions);
 }
 
 } // namespace CAM
