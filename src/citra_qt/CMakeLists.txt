@@ -85,11 +85,7 @@ set(UIS
 file(GLOB_RECURSE ICONS ${CMAKE_SOURCE_DIR}/dist/icons/*)
 file(GLOB_RECURSE THEMES ${CMAKE_SOURCE_DIR}/dist/qt_themes/*)
 
-if (Qt5_FOUND)
-    qt5_wrap_ui(UI_HDRS ${UIS})
-else()
-    qt4_wrap_ui(UI_HDRS ${UIS})
-endif()
+qt5_wrap_ui(UI_HDRS ${UIS})
 
 target_sources(citra-qt
     PRIVATE
