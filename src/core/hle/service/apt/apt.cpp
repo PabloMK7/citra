@@ -76,6 +76,7 @@ struct AppletSlotData {
     AppletId applet_id;
     AppletSlot slot;
     bool registered;
+    bool loaded;
     AppletAttributes attributes;
     Kernel::SharedPtr<Kernel::Event> notification_event;
     Kernel::SharedPtr<Kernel::Event> parameter_event;
@@ -540,7 +541,7 @@ void IsRegistered(Service::Interface* self) {
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS); // No error
 
-    auto* const slot_data = GetAppletSlotData(app_id);
+    const auto* slot_data = GetAppletSlotData(app_id);
 
     // Check if an LLE applet was registered first, then fallback to HLE applets
     bool is_registered = slot_data && slot_data->registered;
@@ -920,6 +921,20 @@ void PreloadLibraryApplet(Service::Interface* self) {
     }
 }
 
+void FinishPreloadingLibraryApplet(Service::Interface* self) {
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x17, 1, 0); // 0x00170040
+    AppletId applet_id = static_cast<AppletId>(rp.Pop<u32>());
+
+    // TODO(Subv): This function should fail depending on the applet preparation state.
+    auto& slot = applet_slots[static_cast<size_t>(AppletSlot::LibraryApplet)];
+    slot.loaded = true;
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RESULT_SUCCESS);
+
+    LOG_WARNING(Service_APT, "(STUBBED) called applet_id=%03X", static_cast<u32>(applet_id));
+}
+
 void StartLibraryApplet(Service::Interface* self) {
     IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x1E, 2, 4); // 0x1E0084
     AppletId applet_id = static_cast<AppletId>(rp.Pop<u32>());
@@ -989,7 +1004,20 @@ void GetAppletInfo(Service::Interface* self) {
     IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x6, 1, 0); // 0x60040
     auto app_id = static_cast<AppletId>(rp.Pop<u32>());
 
-    if (auto applet = HLE::Applets::Applet::Get(app_id)) {
+    LOG_DEBUG(Service_APT, "called appid=%u", static_cast<u32>(app_id));
+
+    const auto* slot = GetAppletSlotData(app_id);
+
+    if (slot == nullptr || !slot->registered) {
+        // See if there's an HLE applet and try to use it before erroring out.
+        auto hle_applet = HLE::Applets::Applet::Get(app_id);
+        if (hle_applet == nullptr) {
+            IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+            rb.Push(ResultCode(ErrorDescription::NotFound, ErrorModule::Applet,
+                               ErrorSummary::NotFound, ErrorLevel::Status));
+            return;
+        }
+
         // TODO(Subv): Get the title id for the current applet and write it in the response[2-3]
         IPC::RequestBuilder rb = rp.MakeBuilder(7, 0);
         rb.Push(RESULT_SUCCESS);
@@ -999,12 +1027,27 @@ void GetAppletInfo(Service::Interface* self) {
         rb.Push(true);   // Registered
         rb.Push(true);   // Loaded
         rb.Push<u32>(0); // Applet Attributes
-    } else {
+        LOG_WARNING(Service_APT, "Using HLE applet info for applet %03X", static_cast<u32>(app_id));
+        return;
+    }
+
+    if (app_id == AppletId::Application) {
+        // TODO(Subv): Implement this once Application launching is implemented
+        LOG_ERROR(Service_APT, "Unimplemented GetAppletInfo(Application)");
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(ResultCode(ErrorDescription::NotFound, ErrorModule::Applet, ErrorSummary::NotFound,
                            ErrorLevel::Status));
+        return;
     }
-    LOG_WARNING(Service_APT, "(stubbed) called appid=%u", static_cast<u32>(app_id));
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(7, 0);
+    rb.Push(RESULT_SUCCESS);
+    rb.Push(GetTitleIdForApplet(app_id));
+    // Note: The NS service hardcodes this to NAND for all applets except the Application applet.
+    rb.Push(static_cast<u8>(Service::FS::MediaType::NAND));
+    rb.Push(slot->registered);
+    rb.Push(slot->loaded);
+    rb.Push(slot->attributes.raw);
 }
 
 void GetStartupArgument(Service::Interface* self) {
@@ -1191,6 +1234,7 @@ void Init() {
         slot_data.applet_id = AppletId::None;
         slot_data.attributes.raw = 0;
         slot_data.registered = false;
+        slot_data.loaded = false;
         slot_data.notification_event =
             Kernel::Event::Create(Kernel::ResetType::OneShot, "APT:Notification");
         slot_data.parameter_event =
@@ -1208,6 +1252,9 @@ void Shutdown() {
         slot.registered = false;
         slot.notification_event = nullptr;
         slot.parameter_event = nullptr;
+        slot.loaded = false;
+        slot.attributes.raw = 0;
+        slot.applet_id = AppletId::None;
     }
 
     next_parameter = boost::none;
