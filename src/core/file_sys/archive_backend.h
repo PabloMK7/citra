@@ -19,7 +19,7 @@ class FileBackend;
 class DirectoryBackend;
 
 // Path string type
-enum LowPathType : u32 {
+enum class LowPathType : u32 {
     Invalid = 0,
     Empty = 1,
     Binary = 2,
@@ -36,9 +36,9 @@ union Mode {
 
 class Path {
 public:
-    Path() : type(Invalid) {}
-    Path(const char* path) : type(Char), string(path) {}
-    Path(std::vector<u8> binary_data) : type(Binary), binary(std::move(binary_data)) {}
+    Path() : type(LowPathType::Invalid) {}
+    Path(const char* path) : type(LowPathType::Char), string(path) {}
+    Path(std::vector<u8> binary_data) : type(LowPathType::Binary), binary(std::move(binary_data)) {}
     Path(LowPathType type, u32 size, u32 pointer);
 
     LowPathType GetType() const {

@@ -22,7 +22,7 @@ namespace {
 
 template <typename T>
 ResultVal<std::tuple<MediaType, u64>> ParsePath(const Path& path, T program_id_reader) {
-    if (path.GetType() != Binary) {
+    if (path.GetType() != LowPathType::Binary) {
         LOG_ERROR(Service_FS, "Wrong path type %d", static_cast<int>(path.GetType()));
         return ERROR_INVALID_PATH;
     }
