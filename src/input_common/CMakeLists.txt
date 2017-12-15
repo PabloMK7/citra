@@ -11,14 +11,6 @@ add_library(input_common STATIC
     $<$<BOOL:SDL2_FOUND>:sdl/sdl.cpp sdl/sdl.h>
 )
 
-if(SDL2_FOUND)
-    target_sources(input_common
-        PRIVATE
-            sdl/sdl.cpp
-            sdl/sdl.h
-    )
-endif()
-
 create_target_directory_groups(input_common)
 
 target_link_libraries(input_common PUBLIC core PRIVATE common)
