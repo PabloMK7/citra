@@ -21,6 +21,22 @@ matrix:
       install: "./.travis/linux/deps.sh"
       script: "./.travis/linux/build.sh"
       after_success: "./.travis/linux/upload.sh"
+    - if: branch = master AND type = push
+      os: linux
+      env: NAME="transifex push"
+      sudo: required
+      dist: trusty
+      addons:
+        apt:
+          packages:
+            - libsdl2-dev
+            - qtbase5-dev
+            - libqt5opengl5-dev
+            - qttools5-dev
+            - qttools5-dev-tools
+      install: "./.travis/transifex/deps.sh"
+      script: "./.travis/transifex/build.sh"
+      after_success: "./.travis/transifex/upload.sh"
     - os: osx
       env: NAME="macos build"
       sudo: false
