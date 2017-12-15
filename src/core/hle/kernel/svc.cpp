@@ -143,6 +143,36 @@ static ResultCode ControlMemory(u32* out_addr, u32 operation, u32 addr0, u32 add
     return RESULT_SUCCESS;
 }
 
+static void ExitProcess() {
+    LOG_INFO(Kernel_SVC, "Process %u exiting", g_current_process->process_id);
+
+    ASSERT_MSG(g_current_process->status == ProcessStatus::Running, "Process has already exited");
+
+    g_current_process->status = ProcessStatus::Exited;
+
+    // Stop all the process threads that are currently waiting for objects.
+    auto& thread_list = GetThreadList();
+    for (auto& thread : thread_list) {
+        if (thread->owner_process != g_current_process)
+            continue;
+
+        if (thread == GetCurrentThread())
+            continue;
+
+        // TODO(Subv): When are the other running/ready threads terminated?
+        ASSERT_MSG(thread->status == THREADSTATUS_WAIT_SYNCH_ANY ||
+                       thread->status == THREADSTATUS_WAIT_SYNCH_ALL,
+                   "Exiting processes with non-waiting threads is currently unimplemented");
+
+        thread->Stop();
+    }
+
+    // Kill the current thread
+    GetCurrentThread()->Stop();
+
+    Core::System::GetInstance().PrepareReschedule();
+}
+
 /// Maps a memory block to specified address
 static ResultCode MapMemoryBlock(Handle handle, u32 addr, u32 permissions, u32 other_permissions) {
     LOG_TRACE(Kernel_SVC,
@@ -1232,7 +1262,7 @@ static const FunctionDef SVC_Table[] = {
     {0x00, nullptr, "Unknown"},
     {0x01, HLE::Wrap<ControlMemory>, "ControlMemory"},
     {0x02, HLE::Wrap<QueryMemory>, "QueryMemory"},
-    {0x03, nullptr, "ExitProcess"},
+    {0x03, ExitProcess, "ExitProcess"},
     {0x04, nullptr, "GetProcessAffinityMask"},
     {0x05, nullptr, "SetProcessAffinityMask"},
     {0x06, nullptr, "GetProcessIdealProcessor"},
@@ -1372,6 +1402,9 @@ void CallSVC(u32 immediate) {
 
     // Lock the global kernel mutex when we enter the kernel HLE.
     std::lock_guard<std::recursive_mutex> lock(HLE::g_hle_lock);
+
+    ASSERT_MSG(g_current_process->status == ProcessStatus::Running,
+               "Running threads from exiting processes is unimplemented");
 
     const FunctionDef* info = GetSVCInfo(immediate);
     if (info) {
