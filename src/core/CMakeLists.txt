@@ -236,8 +236,10 @@ add_library(core STATIC
     hle/service/fs/archive.h
     hle/service/fs/fs_user.cpp
     hle/service/fs/fs_user.h
-    hle/service/gsp_gpu.cpp
-    hle/service/gsp_gpu.h
+    hle/service/gsp/gsp.cpp
+    hle/service/gsp/gsp.h
+    hle/service/gsp/gsp_gpu.cpp
+    hle/service/gsp/gsp_gpu.h
     hle/service/gsp_lcd.cpp
     hle/service/gsp_lcd.h
     hle/service/hid/hid.cpp

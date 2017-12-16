@@ -12,7 +12,7 @@
 #include "common/microprofile.h"
 #include "common/vector_math.h"
 #include "core/core_timing.h"
-#include "core/hle/service/gsp_gpu.h"
+#include "core/hle/service/gsp/gsp.h"
 #include "core/hw/gpu.h"
 #include "core/hw/hw.h"
 #include "core/memory.h"

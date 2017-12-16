@@ -7,7 +7,7 @@
 #include <algorithm>
 #include <functional>
 #include <vector>
-#include "core/hle/service/gsp_gpu.h"
+#include "core/hle/service/gsp/gsp.h"
 
 class GraphicsDebugger {
 public:
