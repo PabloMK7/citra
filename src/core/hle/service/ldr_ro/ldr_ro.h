@@ -4,14 +4,18 @@
 
 #pragma once
 
-#include <unordered_map>
 #include "core/hle/service/ldr_ro/memory_synchronizer.h"
 #include "core/hle/service/service.h"
 
 namespace Service {
 namespace LDR {
 
-class RO final : public ServiceFramework<RO> {
+struct ClientSlot : public Kernel::SessionRequestHandler::SessionDataBase {
+    MemorySynchronizer memory_synchronizer;
+    VAddr loaded_crs = 0; ///< the virtual address of the static module
+};
+
+class RO final : public ServiceFramework<RO, ClientSlot> {
 public:
     RO();
 
@@ -144,12 +148,6 @@ private:
      *      1 : Result of function, 0 on success, otherwise error code
      */
     void Shutdown(Kernel::HLERequestContext& self);
-
-    struct ClientSlot {
-        MemorySynchronizer memory_synchronizer;
-        VAddr loaded_crs = 0; ///< the virtual address of the static module
-    };
-    std::unordered_map<u32, ClientSlot> slots;
 };
 
 void InstallInterfaces(SM::ServiceManager& service_manager);

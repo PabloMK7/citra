@@ -63,14 +63,12 @@ void RO::Initialize(Kernel::HLERequestContext& ctx) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
 
-    auto insert_result = slots.insert({process->process_id, {}});
-    if (!insert_result.second) {
+    ClientSlot* slot = GetSessionData(ctx.Session());
+    if (slot->loaded_crs != 0) {
         LOG_ERROR(Service_LDR, "Already initialized");
         rb.Push(ERROR_ALREADY_INITIALIZED);
         return;
     }
-
-    auto& slot = insert_result.first->second;
 
     if (crs_size < CRO_HEADER_SIZE) {
         LOG_ERROR(Service_LDR, "CRS is too small");
@@ -132,7 +130,7 @@ void RO::Initialize(Kernel::HLERequestContext& ctx) {
             return;
         }
 
-        slot.memory_synchronizer.AddMemoryBlock(crs_address, crs_buffer_ptr, crs_size);
+        slot->memory_synchronizer.AddMemoryBlock(crs_address, crs_buffer_ptr, crs_size);
     } else {
         // Do nothing if buffer_ptr == address
         // TODO(wwylele): verify this behaviour. This is only seen in the web browser app,
@@ -151,9 +149,9 @@ void RO::Initialize(Kernel::HLERequestContext& ctx) {
         return;
     }
 
-    slot.memory_synchronizer.SynchronizeOriginalMemory(*process);
+    slot->memory_synchronizer.SynchronizeOriginalMemory(*process);
 
-    slot.loaded_crs = crs_address;
+    slot->loaded_crs = crs_address;
 
     rb.Push(RESULT_SUCCESS);
 }
@@ -207,14 +205,13 @@ void RO::LoadCRO(Kernel::HLERequestContext& ctx, bool link_on_load_bug_fix) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
 
-    auto find_result = slots.find(process->process_id);
-    if (find_result == slots.end()) {
+    ClientSlot* slot = GetSessionData(ctx.Session());
+    if (slot->loaded_crs == 0) {
         LOG_ERROR(Service_LDR, "Not initialized");
         rb.Push(ERROR_NOT_INITIALIZED);
         rb.Push<u32>(0);
         return;
     }
-    auto& slot = find_result->second;
 
     if (cro_size < CRO_HEADER_SIZE) {
         LOG_ERROR(Service_LDR, "CRO too small");
@@ -293,7 +290,7 @@ void RO::LoadCRO(Kernel::HLERequestContext& ctx, bool link_on_load_bug_fix) {
             return;
         }
 
-        slot.memory_synchronizer.AddMemoryBlock(cro_address, cro_buffer_ptr, cro_size);
+        slot->memory_synchronizer.AddMemoryBlock(cro_address, cro_buffer_ptr, cro_size);
     } else {
         // Do nothing if buffer_ptr == address
         // TODO(wwylele): verify this behaviour.
@@ -314,7 +311,7 @@ void RO::LoadCRO(Kernel::HLERequestContext& ctx, bool link_on_load_bug_fix) {
         return;
     }
 
-    result = cro.Rebase(slot.loaded_crs, cro_size, data_segment_address, data_segment_size,
+    result = cro.Rebase(slot->loaded_crs, cro_size, data_segment_address, data_segment_size,
                         bss_segment_address, bss_segment_size, false);
     if (result.IsError()) {
         LOG_ERROR(Service_LDR, "Error rebasing CRO %08X", result.raw);
@@ -324,7 +321,7 @@ void RO::LoadCRO(Kernel::HLERequestContext& ctx, bool link_on_load_bug_fix) {
         return;
     }
 
-    result = cro.Link(slot.loaded_crs, link_on_load_bug_fix);
+    result = cro.Link(slot->loaded_crs, link_on_load_bug_fix);
     if (result.IsError()) {
         LOG_ERROR(Service_LDR, "Error linking CRO %08X", result.raw);
         process->vm_manager.UnmapRange(cro_address, cro_size);
@@ -333,11 +330,11 @@ void RO::LoadCRO(Kernel::HLERequestContext& ctx, bool link_on_load_bug_fix) {
         return;
     }
 
-    cro.Register(slot.loaded_crs, auto_link);
+    cro.Register(slot->loaded_crs, auto_link);
 
     u32 fix_size = cro.Fix(fix_level);
 
-    slot.memory_synchronizer.SynchronizeOriginalMemory(*process);
+    slot->memory_synchronizer.SynchronizeOriginalMemory(*process);
 
     // TODO(wwylele): verify the behaviour when buffer_ptr == address
     if (cro_buffer_ptr != cro_address) {
@@ -353,7 +350,7 @@ void RO::LoadCRO(Kernel::HLERequestContext& ctx, bool link_on_load_bug_fix) {
         }
 
         // Changes the block size
-        slot.memory_synchronizer.ResizeMemoryBlock(cro_address, cro_buffer_ptr, fix_size);
+        slot->memory_synchronizer.ResizeMemoryBlock(cro_address, cro_buffer_ptr, fix_size);
     }
 
     VAddr exe_begin;
@@ -393,13 +390,12 @@ void RO::UnloadCRO(Kernel::HLERequestContext& ctx) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
 
-    auto find_result = slots.find(process->process_id);
-    if (find_result == slots.end()) {
+    ClientSlot* slot = GetSessionData(ctx.Session());
+    if (slot->loaded_crs == 0) {
         LOG_ERROR(Service_LDR, "Not initialized");
         rb.Push(ERROR_NOT_INITIALIZED);
         return;
     }
-    auto& slot = find_result->second;
 
     if (cro_address & Memory::PAGE_MASK) {
         LOG_ERROR(Service_LDR, "CRO address is not aligned");
@@ -417,9 +413,9 @@ void RO::UnloadCRO(Kernel::HLERequestContext& ctx) {
 
     u32 fixed_size = cro.GetFixedSize();
 
-    cro.Unregister(slot.loaded_crs);
+    cro.Unregister(slot->loaded_crs);
 
-    ResultCode result = cro.Unlink(slot.loaded_crs);
+    ResultCode result = cro.Unlink(slot->loaded_crs);
     if (result.IsError()) {
         LOG_ERROR(Service_LDR, "Error unlinking CRO %08X", result.raw);
         rb.Push(result);
@@ -439,7 +435,7 @@ void RO::UnloadCRO(Kernel::HLERequestContext& ctx) {
 
     cro.Unrebase(false);
 
-    slot.memory_synchronizer.SynchronizeOriginalMemory(*process);
+    slot->memory_synchronizer.SynchronizeOriginalMemory(*process);
 
     // TODO(wwylele): verify the behaviour when buffer_ptr == address
     if (cro_address != cro_buffer_ptr) {
@@ -447,7 +443,7 @@ void RO::UnloadCRO(Kernel::HLERequestContext& ctx) {
         if (result.IsError()) {
             LOG_ERROR(Service_LDR, "Error unmapping CRO %08X", result.raw);
         }
-        slot.memory_synchronizer.RemoveMemoryBlock(cro_address, cro_buffer_ptr);
+        slot->memory_synchronizer.RemoveMemoryBlock(cro_address, cro_buffer_ptr);
     }
 
     Core::CPU().InvalidateCacheRange(cro_address, fixed_size);
@@ -466,13 +462,12 @@ void RO::LinkCRO(Kernel::HLERequestContext& ctx) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
 
-    auto find_result = slots.find(process->process_id);
-    if (find_result == slots.end()) {
+    ClientSlot* slot = GetSessionData(ctx.Session());
+    if (slot->loaded_crs == 0) {
         LOG_ERROR(Service_LDR, "Not initialized");
         rb.Push(ERROR_NOT_INITIALIZED);
         return;
     }
-    auto& slot = find_result->second;
 
     if (cro_address & Memory::PAGE_MASK) {
         LOG_ERROR(Service_LDR, "CRO address is not aligned");
@@ -488,12 +483,12 @@ void RO::LinkCRO(Kernel::HLERequestContext& ctx) {
 
     LOG_INFO(Service_LDR, "Linking CRO \"%s\"", cro.ModuleName().data());
 
-    ResultCode result = cro.Link(slot.loaded_crs, false);
+    ResultCode result = cro.Link(slot->loaded_crs, false);
     if (result.IsError()) {
         LOG_ERROR(Service_LDR, "Error linking CRO %08X", result.raw);
     }
 
-    slot.memory_synchronizer.SynchronizeOriginalMemory(*process);
+    slot->memory_synchronizer.SynchronizeOriginalMemory(*process);
 
     rb.Push(result);
 }
@@ -509,13 +504,12 @@ void RO::UnlinkCRO(Kernel::HLERequestContext& ctx) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
 
-    auto find_result = slots.find(process->process_id);
-    if (find_result == slots.end()) {
+    ClientSlot* slot = GetSessionData(ctx.Session());
+    if (slot->loaded_crs == 0) {
         LOG_ERROR(Service_LDR, "Not initialized");
         rb.Push(ERROR_NOT_INITIALIZED);
         return;
     }
-    auto& slot = find_result->second;
 
     if (cro_address & Memory::PAGE_MASK) {
         LOG_ERROR(Service_LDR, "CRO address is not aligned");
@@ -531,12 +525,12 @@ void RO::UnlinkCRO(Kernel::HLERequestContext& ctx) {
 
     LOG_INFO(Service_LDR, "Unlinking CRO \"%s\"", cro.ModuleName().data());
 
-    ResultCode result = cro.Unlink(slot.loaded_crs);
+    ResultCode result = cro.Unlink(slot->loaded_crs);
     if (result.IsError()) {
         LOG_ERROR(Service_LDR, "Error unlinking CRO %08X", result.raw);
     }
 
-    slot.memory_synchronizer.SynchronizeOriginalMemory(*process);
+    slot->memory_synchronizer.SynchronizeOriginalMemory(*process);
 
     rb.Push(result);
 }
@@ -550,31 +544,30 @@ void RO::Shutdown(Kernel::HLERequestContext& ctx) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
 
-    auto find_result = slots.find(process->process_id);
-    if (find_result == slots.end()) {
+    ClientSlot* slot = GetSessionData(ctx.Session());
+    if (slot->loaded_crs == 0) {
         LOG_ERROR(Service_LDR, "Not initialized");
         rb.Push(ERROR_NOT_INITIALIZED);
         return;
     }
-    auto& slot = find_result->second;
 
-    CROHelper crs(slot.loaded_crs);
+    CROHelper crs(slot->loaded_crs);
     crs.Unrebase(true);
 
-    slot.memory_synchronizer.SynchronizeOriginalMemory(*process);
+    slot->memory_synchronizer.SynchronizeOriginalMemory(*process);
 
     ResultCode result = RESULT_SUCCESS;
 
     // TODO(wwylele): verify the behaviour when buffer_ptr == address
-    if (slot.loaded_crs != crs_buffer_ptr) {
-        result = process->vm_manager.UnmapRange(slot.loaded_crs, crs.GetFileSize());
+    if (slot->loaded_crs != crs_buffer_ptr) {
+        result = process->vm_manager.UnmapRange(slot->loaded_crs, crs.GetFileSize());
         if (result.IsError()) {
             LOG_ERROR(Service_LDR, "Error unmapping CRS %08X", result.raw);
         }
-        slot.memory_synchronizer.RemoveMemoryBlock(slot.loaded_crs, crs_buffer_ptr);
+        slot->memory_synchronizer.RemoveMemoryBlock(slot->loaded_crs, crs_buffer_ptr);
     }
 
-    slots.erase(find_result);
+    slot->loaded_crs = 0;
     rb.Push(result);
 }
 
