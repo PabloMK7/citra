@@ -2,26 +2,32 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <algorithm>
 #include <vector>
-#include <boost/range/algorithm_ext/erase.hpp>
 #include "common/assert.h"
 #include "common/common_types.h"
 #include "core/hle/kernel/handle_table.h"
 #include "core/hle/kernel/hle_ipc.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/process.h"
-#include "core/hle/kernel/server_session.h"
 
 namespace Kernel {
 
+SessionRequestHandler::SessionInfo::SessionInfo(SharedPtr<ServerSession> session,
+                                                std::unique_ptr<SessionDataBase> data)
+    : session(std::move(session)), data(std::move(data)) {}
+
 void SessionRequestHandler::ClientConnected(SharedPtr<ServerSession> server_session) {
     server_session->SetHleHandler(shared_from_this());
-    connected_sessions.push_back(server_session);
+    connected_sessions.emplace_back(std::move(server_session), MakeSessionData());
 }
 
 void SessionRequestHandler::ClientDisconnected(SharedPtr<ServerSession> server_session) {
     server_session->SetHleHandler(nullptr);
-    boost::range::remove_erase(connected_sessions, server_session);
+    connected_sessions.erase(
+        std::remove_if(connected_sessions.begin(), connected_sessions.end(),
+                       [&](const SessionInfo& info) { return info.session == server_session; }),
+        connected_sessions.end());
 }
 
 HLERequestContext::HLERequestContext(SharedPtr<ServerSession> session)

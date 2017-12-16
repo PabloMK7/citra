@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <algorithm>
 #include <array>
 #include <memory>
 #include <vector>
@@ -54,13 +55,36 @@ public:
      * associated ServerSession.
      * @param server_session ServerSession associated with the connection.
      */
-    virtual void ClientDisconnected(SharedPtr<ServerSession> server_session);
+    void ClientDisconnected(SharedPtr<ServerSession> server_session);
+
+    /// Empty placeholder structure for services with no per-session data. The session data classes
+    /// in each service must inherit from this.
+    struct SessionDataBase {};
 
 protected:
-    /// List of sessions that are connected to this handler.
-    /// A ServerSession whose server endpoint is an HLE implementation is kept alive by this list
-    // for the duration of the connection.
-    std::vector<SharedPtr<ServerSession>> connected_sessions;
+    /// Creates the storage for the session data of the service.
+    virtual std::unique_ptr<SessionDataBase> MakeSessionData() const = 0;
+
+    /// Returns the session data associated with the server session.
+    template <typename T>
+    T* GetSessionData(SharedPtr<ServerSession> session) {
+        static_assert(std::is_base_of<SessionDataBase, T>(),
+                      "T is not a subclass of SessionDataBase");
+        auto itr = std::find_if(connected_sessions.begin(), connected_sessions.end(),
+                                [&](const SessionInfo& info) { return info.session == session; });
+        ASSERT(itr != connected_sessions.end());
+        return static_cast<T*>(itr->data.get());
+    }
+
+    struct SessionInfo {
+        SessionInfo(SharedPtr<ServerSession> session, std::unique_ptr<SessionDataBase> data);
+
+        SharedPtr<ServerSession> session;
+        std::unique_ptr<SessionDataBase> data;
+    };
+    /// List of sessions that are connected to this handler. A ServerSession whose server endpoint
+    /// is an HLE implementation is kept alive by this list for the duration of the connection.
+    std::vector<SessionInfo> connected_sessions;
 };
 
 class MappedBuffer {

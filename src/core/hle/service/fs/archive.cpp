@@ -92,15 +92,15 @@ void File::Read(Kernel::HLERequestContext& ctx) {
     LOG_TRACE(Service_FS, "Read %s: offset=0x%" PRIx64 " length=0x%08X", GetName().c_str(), offset,
               length);
 
-    const SessionSlot& file = GetSessionSlot(ctx.Session());
+    const FileSessionSlot* file = GetSessionData(ctx.Session());
 
-    if (file.subfile && length > file.size) {
+    if (file->subfile && length > file->size) {
         LOG_WARNING(Service_FS, "Trying to read beyond the subfile size, truncating");
-        length = file.size;
+        length = file->size;
     }
 
     // This file session might have a specific offset from where to start reading, apply it.
-    offset += file.offset;
+    offset += file->offset;
 
     if (offset + length > backend->GetSize()) {
         LOG_ERROR(Service_FS, "Reading from out of bounds offset=0x%" PRIx64
@@ -134,10 +134,10 @@ void File::Write(Kernel::HLERequestContext& ctx) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
 
-    const SessionSlot& file = GetSessionSlot(ctx.Session());
+    const FileSessionSlot* file = GetSessionData(ctx.Session());
 
     // Subfiles can not be written to
-    if (file.subfile) {
+    if (file->subfile) {
         rb.Push(FileSys::ERROR_UNSUPPORTED_OPEN_FLAGS);
         rb.Push<u32>(0);
         rb.PushMappedBuffer(buffer);
@@ -160,28 +160,28 @@ void File::Write(Kernel::HLERequestContext& ctx) {
 void File::GetSize(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x0804, 0, 0);
 
-    const SessionSlot& file = GetSessionSlot(ctx.Session());
+    const FileSessionSlot* file = GetSessionData(ctx.Session());
 
     IPC::RequestBuilder rb = rp.MakeBuilder(3, 0);
     rb.Push(RESULT_SUCCESS);
-    rb.Push<u64>(file.size);
+    rb.Push<u64>(file->size);
 }
 
 void File::SetSize(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x0805, 2, 0);
     u64 size = rp.Pop<u64>();
 
-    SessionSlot& file = GetSessionSlot(ctx.Session());
+    FileSessionSlot* file = GetSessionData(ctx.Session());
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
 
     // SetSize can not be called on subfiles.
-    if (file.subfile) {
+    if (file->subfile) {
         rb.Push(FileSys::ERROR_UNSUPPORTED_OPEN_FLAGS);
         return;
     }
 
-    file.size = size;
+    file->size = size;
     backend->SetSize(size);
     rb.Push(RESULT_SUCCESS);
 }
@@ -190,9 +190,9 @@ void File::Close(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x0808, 0, 0);
 
     // TODO(Subv): Only close the backend if this client is the only one left.
-    if (session_slots.size() > 1)
+    if (connected_sessions.size() > 1)
         LOG_WARNING(Service_FS, "Closing File backend but %zu clients still connected",
-                    session_slots.size());
+                    connected_sessions.size());
 
     backend->Close();
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
@@ -204,10 +204,10 @@ void File::Flush(Kernel::HLERequestContext& ctx) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
 
-    const SessionSlot& file = GetSessionSlot(ctx.Session());
+    const FileSessionSlot* file = GetSessionData(ctx.Session());
 
     // Subfiles can not be flushed.
-    if (file.subfile) {
+    if (file->subfile) {
         rb.Push(FileSys::ERROR_UNSUPPORTED_OPEN_FLAGS);
         return;
     }
@@ -219,8 +219,8 @@ void File::Flush(Kernel::HLERequestContext& ctx) {
 void File::SetPriority(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x080A, 1, 0);
 
-    SessionSlot& file = GetSessionSlot(ctx.Session());
-    file.priority = rp.Pop<u32>();
+    FileSessionSlot* file = GetSessionData(ctx.Session());
+    file->priority = rp.Pop<u32>();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
@@ -228,11 +228,11 @@ void File::SetPriority(Kernel::HLERequestContext& ctx) {
 
 void File::GetPriority(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x080B, 0, 0);
-    const SessionSlot& file = GetSessionSlot(ctx.Session());
+    const FileSessionSlot* file = GetSessionData(ctx.Session());
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
-    rb.Push(file.priority);
+    rb.Push(file->priority);
 }
 
 void File::OpenLinkFile(Kernel::HLERequestContext& ctx) {
@@ -246,16 +246,13 @@ void File::OpenLinkFile(Kernel::HLERequestContext& ctx) {
     auto server = std::get<SharedPtr<ServerSession>>(sessions);
     ClientConnected(server);
 
-    const SessionSlot& original_file = GetSessionSlot(ctx.Session());
+    FileSessionSlot* slot = GetSessionData(server);
+    const FileSessionSlot* original_file = GetSessionData(ctx.Session());
 
-    SessionSlot slot{};
-    slot.priority = original_file.priority;
-    slot.offset = 0;
-    slot.size = backend->GetSize();
-    slot.session = server;
-    slot.subfile = false;
-
-    session_slots.emplace_back(std::move(slot));
+    slot->priority = original_file->priority;
+    slot->offset = 0;
+    slot->size = backend->GetSize();
+    slot->subfile = false;
 
     rb.Push(RESULT_SUCCESS);
     rb.PushMoveObjects(std::get<SharedPtr<ClientSession>>(sessions));
@@ -268,9 +265,9 @@ void File::OpenSubFile(Kernel::HLERequestContext& ctx) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
 
-    const SessionSlot& original_file = GetSessionSlot(ctx.Session());
+    const FileSessionSlot* original_file = GetSessionData(ctx.Session());
 
-    if (original_file.subfile) {
+    if (original_file->subfile) {
         // OpenSubFile can not be called on a file which is already as subfile
         rb.Push(FileSys::ERROR_UNSUPPORTED_OPEN_FLAGS);
         return;
@@ -285,7 +282,7 @@ void File::OpenSubFile(Kernel::HLERequestContext& ctx) {
 
     // TODO(Subv): Check for overflow and return ERR_WRITE_BEYOND_END
 
-    if (end > original_file.size) {
+    if (end > original_file->size) {
         rb.Push(FileSys::ERR_WRITE_BEYOND_END);
         return;
     }
@@ -297,32 +294,14 @@ void File::OpenSubFile(Kernel::HLERequestContext& ctx) {
     auto server = std::get<SharedPtr<ServerSession>>(sessions);
     ClientConnected(server);
 
-    SessionSlot slot{};
-    slot.priority = original_file.priority;
-    slot.offset = offset;
-    slot.size = size;
-    slot.session = server;
-    slot.subfile = true;
-
-    session_slots.emplace_back(std::move(slot));
+    FileSessionSlot* slot = GetSessionData(server);
+    slot->priority = original_file->priority;
+    slot->offset = offset;
+    slot->size = size;
+    slot->subfile = true;
 
     rb.Push(RESULT_SUCCESS);
     rb.PushMoveObjects(std::get<SharedPtr<ClientSession>>(sessions));
-}
-
-File::SessionSlot& File::GetSessionSlot(Kernel::SharedPtr<Kernel::ServerSession> session) {
-    auto itr = std::find_if(session_slots.begin(), session_slots.end(),
-                            [&](const SessionSlot& slot) { return slot.session == session; });
-    ASSERT(itr != session_slots.end());
-    return *itr;
-}
-
-void File::ClientDisconnected(Kernel::SharedPtr<Kernel::ServerSession> server_session) {
-    session_slots.erase(
-        std::remove_if(session_slots.begin(), session_slots.end(),
-                       [&](const SessionSlot& slot) { return slot.session == server_session; }),
-        session_slots.end());
-    SessionRequestHandler::ClientDisconnected(server_session);
 }
 
 Kernel::SharedPtr<Kernel::ClientSession> File::Connect() {
@@ -330,14 +309,11 @@ Kernel::SharedPtr<Kernel::ClientSession> File::Connect() {
     auto server = std::get<Kernel::SharedPtr<Kernel::ServerSession>>(sessions);
     ClientConnected(server);
 
-    SessionSlot slot{};
-    slot.priority = 0;
-    slot.offset = 0;
-    slot.size = backend->GetSize();
-    slot.session = server;
-    slot.subfile = false;
-
-    session_slots.emplace_back(std::move(slot));
+    FileSessionSlot* slot = GetSessionData(server);
+    slot->priority = 0;
+    slot->offset = 0;
+    slot->size = backend->GetSize();
+    slot->subfile = false;
 
     return std::get<Kernel::SharedPtr<Kernel::ClientSession>>(sessions);
 }
