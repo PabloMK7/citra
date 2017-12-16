@@ -192,12 +192,7 @@ GPUCommandListWidget::GPUCommandListWidget(QWidget* parent)
     list_widget->setFont(GetMonospaceFont());
     list_widget->setRootIsDecorated(false);
     list_widget->setUniformRowHeights(true);
-
-#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     list_widget->header()->setSectionResizeMode(QHeaderView::ResizeToContents);
-#else
-    list_widget->header()->setResizeMode(QHeaderView::ResizeToContents);
-#endif
 
     connect(list_widget->selectionModel(),
             SIGNAL(currentChanged(const QModelIndex&, const QModelIndex&)), this,
