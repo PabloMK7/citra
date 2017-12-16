@@ -4,22 +4,22 @@
 
 #pragma once
 
-#include <QFileSystemWatcher>
-#include <QHBoxLayout>
-#include <QLabel>
-#include <QLineEdit>
-#include <QModelIndex>
-#include <QSettings>
-#include <QStandardItem>
-#include <QStandardItemModel>
 #include <QString>
-#include <QToolButton>
-#include <QTreeView>
-#include <QVBoxLayout>
 #include <QWidget>
-#include "main.h"
+#include "common/common_types.h"
 
 class GameListWorker;
+class GMainWindow;
+class QFileSystemWatcher;
+class QHBoxLayout;
+class QLabel;
+class QLineEdit;
+class QModelIndex;
+class QStandardItem;
+class QStandardItemModel;
+class QTreeView;
+class QToolButton;
+class QVBoxLayout;
 
 class GameList : public QWidget {
     Q_OBJECT
