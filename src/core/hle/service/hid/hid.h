@@ -5,17 +5,29 @@
 #pragma once
 
 #include <array>
+#include <atomic>
 #ifndef _MSC_VER
 #include <cstddef>
 #endif
+#include <memory>
 #include "common/bit_field.h"
 #include "common/common_funcs.h"
 #include "common/common_types.h"
+#include "core/frontend/input.h"
+#include "core/hle/kernel/kernel.h"
+#include "core/hle/service/service.h"
 #include "core/settings.h"
 
-namespace Service {
+namespace Kernel {
+class Event;
+class SharedMemory;
+}
 
-class Interface;
+namespace CoreTiming {
+class EventType;
+};
+
+namespace Service {
 
 namespace HID {
 
@@ -186,93 +198,140 @@ struct DirectionState {
 /// Translates analog stick axes to directions. This is exposed for ir_rst module to use.
 DirectionState GetStickDirectionState(s16 circle_pad_x, s16 circle_pad_y);
 
-/**
- * HID::GetIPCHandles service function
- *  Inputs:
- *      None
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- *      2 : IPC Command Structure translate-header
- *      3 : Handle to HID shared memory
- *      4 : Event signaled by HID
- *      5 : Event signaled by HID
- *      6 : Event signaled by HID
- *      7 : Gyroscope event
- *      8 : Event signaled by HID
- */
-void GetIPCHandles(Interface* self);
+class Module final {
+public:
+    Module();
 
-/**
- * HID::EnableAccelerometer service function
- *  Inputs:
- *      None
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- */
-void EnableAccelerometer(Interface* self);
+    class Interface : public ServiceFramework<Interface> {
+    public:
+        Interface(std::shared_ptr<Module> hid, const char* name, u32 max_session);
 
-/**
- * HID::DisableAccelerometer service function
- *  Inputs:
- *      None
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- */
-void DisableAccelerometer(Interface* self);
+    protected:
+        /**
+         * HID::GetIPCHandles service function
+         *  Inputs:
+         *      None
+         *  Outputs:
+         *      1 : Result of function, 0 on success, otherwise error code
+         *      2 : IPC Command Structure translate-header
+         *      3 : Handle to HID shared memory
+         *      4 : Event signaled by HID
+         *      5 : Event signaled by HID
+         *      6 : Event signaled by HID
+         *      7 : Gyroscope event
+         *      8 : Event signaled by HID
+         */
+        void GetIPCHandles(Kernel::HLERequestContext& ctx);
 
-/**
- * HID::EnableGyroscopeLow service function
- *  Inputs:
- *      None
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- */
-void EnableGyroscopeLow(Interface* self);
+        /**
+         * HID::EnableAccelerometer service function
+         *  Inputs:
+         *      None
+         *  Outputs:
+         *      1 : Result of function, 0 on success, otherwise error code
+         */
+        void EnableAccelerometer(Kernel::HLERequestContext& ctx);
 
-/**
- * HID::DisableGyroscopeLow service function
- *  Inputs:
- *      None
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- */
-void DisableGyroscopeLow(Interface* self);
+        /**
+         * HID::DisableAccelerometer service function
+         *  Inputs:
+         *      None
+         *  Outputs:
+         *      1 : Result of function, 0 on success, otherwise error code
+         */
+        void DisableAccelerometer(Kernel::HLERequestContext& ctx);
 
-/**
- * HID::GetSoundVolume service function
- *  Inputs:
- *      None
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- *      2 : u8 output value
- */
-void GetSoundVolume(Interface* self);
+        /**
+         * HID::EnableGyroscopeLow service function
+         *  Inputs:
+         *      None
+         *  Outputs:
+         *      1 : Result of function, 0 on success, otherwise error code
+         */
+        void EnableGyroscopeLow(Kernel::HLERequestContext& ctx);
 
-/**
- * HID::GetGyroscopeLowRawToDpsCoefficient service function
- *  Inputs:
- *      None
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- *      2 : float output value
- */
-void GetGyroscopeLowRawToDpsCoefficient(Service::Interface* self);
+        /**
+         * HID::DisableGyroscopeLow service function
+         *  Inputs:
+         *      None
+         *  Outputs:
+         *      1 : Result of function, 0 on success, otherwise error code
+         */
+        void DisableGyroscopeLow(Kernel::HLERequestContext& ctx);
 
-/**
- * HID::GetGyroscopeLowCalibrateParam service function
- *  Inputs:
- *      None
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- *      2~6 (18 bytes) : struct GyroscopeCalibrateParam
- */
-void GetGyroscopeLowCalibrateParam(Service::Interface* self);
+        /**
+         * HID::GetSoundVolume service function
+         *  Inputs:
+         *      None
+         *  Outputs:
+         *      1 : Result of function, 0 on success, otherwise error code
+         *      2 : u8 output value
+         */
+        void GetSoundVolume(Kernel::HLERequestContext& ctx);
 
-/// Initialize HID service
-void Init();
+        /**
+         * HID::GetGyroscopeLowRawToDpsCoefficient service function
+         *  Inputs:
+         *      None
+         *  Outputs:
+         *      1 : Result of function, 0 on success, otherwise error code
+         *      2 : float output value
+         */
+        void GetGyroscopeLowRawToDpsCoefficient(Kernel::HLERequestContext& ctx);
 
-/// Shutdown HID service
-void Shutdown();
+        /**
+         * HID::GetGyroscopeLowCalibrateParam service function
+         *  Inputs:
+         *      None
+         *  Outputs:
+         *      1 : Result of function, 0 on success, otherwise error code
+         *      2~6 (18 bytes) : struct GyroscopeCalibrateParam
+         */
+        void GetGyroscopeLowCalibrateParam(Kernel::HLERequestContext& ctx);
+
+    private:
+        std::shared_ptr<Module> hid;
+    };
+
+    void ReloadInputDevices();
+
+private:
+    void LoadInputDevices();
+    void UpdatePadCallback(u64 userdata, int cycles_late);
+    void UpdateAccelerometerCallback(u64 userdata, int cycles_late);
+    void UpdateGyroscopeCallback(u64 userdata, int cycles_late);
+
+    // Handle to shared memory region designated to HID_User service
+    Kernel::SharedPtr<Kernel::SharedMemory> shared_mem;
+
+    // Event handles
+    Kernel::SharedPtr<Kernel::Event> event_pad_or_touch_1;
+    Kernel::SharedPtr<Kernel::Event> event_pad_or_touch_2;
+    Kernel::SharedPtr<Kernel::Event> event_accelerometer;
+    Kernel::SharedPtr<Kernel::Event> event_gyroscope;
+    Kernel::SharedPtr<Kernel::Event> event_debug_pad;
+
+    u32 next_pad_index = 0;
+    u32 next_touch_index = 0;
+    u32 next_accelerometer_index = 0;
+    u32 next_gyroscope_index = 0;
+
+    int enable_accelerometer_count = 0; // positive means enabled
+    int enable_gyroscope_count = 0;     // positive means enabled
+
+    CoreTiming::EventType* pad_update_event;
+    CoreTiming::EventType* accelerometer_update_event;
+    CoreTiming::EventType* gyroscope_update_event;
+
+    std::atomic<bool> is_device_reload_pending{true};
+    std::array<std::unique_ptr<Input::ButtonDevice>, Settings::NativeButton::NUM_BUTTONS_HID>
+        buttons;
+    std::unique_ptr<Input::AnalogDevice> circle_pad;
+    std::unique_ptr<Input::MotionDevice> motion_device;
+    std::unique_ptr<Input::TouchDevice> touch_device;
+};
+
+void InstallInterfaces(SM::ServiceManager& service_manager);
 
 /// Reload input devices. Used when input configuration changed
 void ReloadInputDevices();
