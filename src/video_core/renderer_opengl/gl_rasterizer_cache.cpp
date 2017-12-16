@@ -780,6 +780,7 @@ void CachedSurface::UploadGLTexture(const MathUtil::Rectangle<u32>& rect) {
                      scaled_rect, type);
     }
 }
+
 void CachedSurface::DownloadGLTexture(const MathUtil::Rectangle<u32>& rect) {
     if (type == SurfaceType::Fill)
         return;
@@ -801,7 +802,6 @@ void CachedSurface::DownloadGLTexture(const MathUtil::Rectangle<u32>& rect) {
     size_t buffer_offset = (rect.bottom * stride + rect.left) * GetGLBytesPerPixel(pixel_format);
 
     // If not 1x scale, blit scaled texture to a new 1x texture and use that to flush
-    OGLTexture unscaled_tex;
     if (res_scale != 1) {
         auto scaled_rect = rect;
         scaled_rect.left *= res_scale;
@@ -809,9 +809,12 @@ void CachedSurface::DownloadGLTexture(const MathUtil::Rectangle<u32>& rect) {
         scaled_rect.right *= res_scale;
         scaled_rect.bottom *= res_scale;
 
+        OGLTexture unscaled_tex;
         unscaled_tex.Create();
+
+        MathUtil::Rectangle<u32> unscaled_tex_rect{0, rect.GetHeight(), rect.GetWidth(), 0};
         AllocateSurfaceTexture(unscaled_tex.handle, tuple, rect.GetWidth(), rect.GetHeight());
-        BlitTextures(texture.handle, scaled_rect, unscaled_tex.handle, rect, type);
+        BlitTextures(texture.handle, scaled_rect, unscaled_tex.handle, unscaled_tex_rect, type);
 
         state.texture_units[0].texture_2d = unscaled_tex.handle;
         state.Apply();
