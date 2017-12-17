@@ -19,7 +19,9 @@
 #include "core/hle/service/ir/ir_rst.h"
 #include "core/movie.h"
 
-namespace Movie {
+namespace Core {
+
+/*static*/ Movie Movie::s_instance;
 
 enum class PlayMode { None, Recording, Playing };
 
@@ -116,25 +118,21 @@ struct CTMHeader {
 static_assert(sizeof(CTMHeader) == 256, "CTMHeader should be 256 bytes");
 #pragma pack(pop)
 
-static PlayMode play_mode = PlayMode::None;
-static std::vector<u8> recorded_input;
-static size_t current_byte = 0;
-
-static bool IsPlayingInput() {
+bool Movie::IsPlayingInput() {
     return play_mode == PlayMode::Playing;
 }
-static bool IsRecordingInput() {
+bool Movie::IsRecordingInput() {
     return play_mode == PlayMode::Recording;
 }
 
-static void CheckInputEnd() {
+void Movie::CheckInputEnd() {
     if (current_byte + sizeof(ControllerState) > recorded_input.size()) {
         LOG_INFO(Movie, "Playback finished");
         play_mode = PlayMode::None;
     }
 }
 
-static void Play(Service::HID::PadState& pad_state, s16& circle_pad_x, s16& circle_pad_y) {
+void Movie::Play(Service::HID::PadState& pad_state, s16& circle_pad_x, s16& circle_pad_y) {
     ControllerState s;
     std::memcpy(&s, &recorded_input[current_byte], sizeof(ControllerState));
     current_byte += sizeof(ControllerState);
@@ -163,7 +161,7 @@ static void Play(Service::HID::PadState& pad_state, s16& circle_pad_x, s16& circ
     circle_pad_y = s.pad_and_circle.circle_pad_y;
 }
 
-static void Play(Service::HID::TouchDataEntry& touch_data) {
+void Movie::Play(Service::HID::TouchDataEntry& touch_data) {
     ControllerState s;
     std::memcpy(&s, &recorded_input[current_byte], sizeof(ControllerState));
     current_byte += sizeof(ControllerState);
@@ -180,7 +178,7 @@ static void Play(Service::HID::TouchDataEntry& touch_data) {
     touch_data.valid.Assign(s.touch.valid);
 }
 
-static void Play(Service::HID::AccelerometerDataEntry& accelerometer_data) {
+void Movie::Play(Service::HID::AccelerometerDataEntry& accelerometer_data) {
     ControllerState s;
     std::memcpy(&s, &recorded_input[current_byte], sizeof(ControllerState));
     current_byte += sizeof(ControllerState);
@@ -197,7 +195,7 @@ static void Play(Service::HID::AccelerometerDataEntry& accelerometer_data) {
     accelerometer_data.z = s.accelerometer.z;
 }
 
-static void Play(Service::HID::GyroscopeDataEntry& gyroscope_data) {
+void Movie::Play(Service::HID::GyroscopeDataEntry& gyroscope_data) {
     ControllerState s;
     std::memcpy(&s, &recorded_input[current_byte], sizeof(ControllerState));
     current_byte += sizeof(ControllerState);
@@ -214,7 +212,7 @@ static void Play(Service::HID::GyroscopeDataEntry& gyroscope_data) {
     gyroscope_data.z = s.gyroscope.z;
 }
 
-static void Play(Service::IR::PadState& pad_state, s16& c_stick_x, s16& c_stick_y) {
+void Movie::Play(Service::IR::PadState& pad_state, s16& c_stick_x, s16& c_stick_y) {
     ControllerState s;
     std::memcpy(&s, &recorded_input[current_byte], sizeof(ControllerState));
     current_byte += sizeof(ControllerState);
@@ -232,7 +230,7 @@ static void Play(Service::IR::PadState& pad_state, s16& c_stick_x, s16& c_stick_
     pad_state.zr.Assign(s.ir_rst.zr);
 }
 
-static void Play(Service::IR::ExtraHIDResponse& extra_hid_response) {
+void Movie::Play(Service::IR::ExtraHIDResponse& extra_hid_response) {
     ControllerState s;
     std::memcpy(&s, &recorded_input[current_byte], sizeof(ControllerState));
     current_byte += sizeof(ControllerState);
@@ -252,13 +250,13 @@ static void Play(Service::IR::ExtraHIDResponse& extra_hid_response) {
     extra_hid_response.buttons.zr_not_held.Assign(s.extra_hid_response.zr_not_held);
 }
 
-static void Record(const ControllerState& controller_state) {
+void Movie::Record(const ControllerState& controller_state) {
     recorded_input.resize(current_byte + sizeof(ControllerState));
     std::memcpy(&recorded_input[current_byte], &controller_state, sizeof(ControllerState));
     current_byte += sizeof(ControllerState);
 }
 
-static void Record(const Service::HID::PadState& pad_state, const s16& circle_pad_x,
+void Movie::Record(const Service::HID::PadState& pad_state, const s16& circle_pad_x,
                    const s16& circle_pad_y) {
     ControllerState s;
     s.type = ControllerStateType::PadAndCircle;
@@ -282,7 +280,7 @@ static void Record(const Service::HID::PadState& pad_state, const s16& circle_pa
     Record(s);
 }
 
-static void Record(const Service::HID::TouchDataEntry& touch_data) {
+void Movie::Record(const Service::HID::TouchDataEntry& touch_data) {
     ControllerState s;
     s.type = ControllerStateType::Touch;
 
@@ -293,7 +291,7 @@ static void Record(const Service::HID::TouchDataEntry& touch_data) {
     Record(s);
 }
 
-static void Record(const Service::HID::AccelerometerDataEntry& accelerometer_data) {
+void Movie::Record(const Service::HID::AccelerometerDataEntry& accelerometer_data) {
     ControllerState s;
     s.type = ControllerStateType::Accelerometer;
 
@@ -304,7 +302,7 @@ static void Record(const Service::HID::AccelerometerDataEntry& accelerometer_dat
     Record(s);
 }
 
-static void Record(const Service::HID::GyroscopeDataEntry& gyroscope_data) {
+void Movie::Record(const Service::HID::GyroscopeDataEntry& gyroscope_data) {
     ControllerState s;
     s.type = ControllerStateType::Gyroscope;
 
@@ -315,7 +313,7 @@ static void Record(const Service::HID::GyroscopeDataEntry& gyroscope_data) {
     Record(s);
 }
 
-static void Record(const Service::IR::PadState& pad_state, const s16& c_stick_x,
+void Movie::Record(const Service::IR::PadState& pad_state, const s16& c_stick_x,
                    const s16& c_stick_y) {
     ControllerState s;
     s.type = ControllerStateType::IrRst;
@@ -328,7 +326,7 @@ static void Record(const Service::IR::PadState& pad_state, const s16& c_stick_x,
     Record(s);
 }
 
-static void Record(const Service::IR::ExtraHIDResponse& extra_hid_response) {
+void Movie::Record(const Service::IR::ExtraHIDResponse& extra_hid_response) {
     ControllerState s;
     s.type = ControllerStateType::ExtraHidResponse;
 
@@ -342,7 +340,7 @@ static void Record(const Service::IR::ExtraHIDResponse& extra_hid_response) {
     Record(s);
 }
 
-static bool ValidateHeader(const CTMHeader& header) {
+bool Movie::ValidateHeader(const CTMHeader& header) {
     if (header_magic_bytes != header.filetype) {
         LOG_ERROR(Movie, "Playback file does not have valid header");
         return false;
@@ -366,7 +364,7 @@ static bool ValidateHeader(const CTMHeader& header) {
     return true;
 }
 
-static void SaveMovie() {
+void Movie::SaveMovie() {
     LOG_INFO(Movie, "Saving movie");
     FileUtil::IOFile save_record(Settings::values.movie_record, "wb");
 
@@ -393,7 +391,7 @@ static void SaveMovie() {
     }
 }
 
-void Init() {
+void Movie::Init() {
     if (!Settings::values.movie_play.empty()) {
         LOG_INFO(Movie, "Loading Movie for playback");
         FileUtil::IOFile save_record(Settings::values.movie_play, "rb");
@@ -420,12 +418,10 @@ void Init() {
     }
 }
 
-void Shutdown() {
-    if (!IsRecordingInput()) {
-        return;
+void Movie::Shutdown() {
+    if (IsRecordingInput()) {
+        SaveMovie();
     }
-
-    SaveMovie();
 
     play_mode = PlayMode::None;
     recorded_input.resize(0);
@@ -433,8 +429,9 @@ void Shutdown() {
 }
 
 template <typename... Targs>
-static void Handle(Targs&... Fargs) {
+void Movie::Handle(Targs&... Fargs) {
     if (IsPlayingInput()) {
+        ASSERT(current_byte + sizeof(ControllerState) <= recorded_input.size());
         Play(Fargs...);
         CheckInputEnd();
     } else if (IsRecordingInput()) {
@@ -442,28 +439,28 @@ static void Handle(Targs&... Fargs) {
     }
 }
 
-void HandlePadAndCircleStatus(Service::HID::PadState& pad_state, s16& circle_pad_x,
-                              s16& circle_pad_y) {
+void Movie::HandlePadAndCircleStatus(Service::HID::PadState& pad_state, s16& circle_pad_x,
+                                     s16& circle_pad_y) {
     Handle(pad_state, circle_pad_x, circle_pad_y);
 }
 
-void HandleTouchStatus(Service::HID::TouchDataEntry& touch_data) {
+void Movie::HandleTouchStatus(Service::HID::TouchDataEntry& touch_data) {
     Handle(touch_data);
 }
 
-void HandleAccelerometerStatus(Service::HID::AccelerometerDataEntry& accelerometer_data) {
+void Movie::HandleAccelerometerStatus(Service::HID::AccelerometerDataEntry& accelerometer_data) {
     Handle(accelerometer_data);
 }
 
-void HandleGyroscopeStatus(Service::HID::GyroscopeDataEntry& gyroscope_data) {
+void Movie::HandleGyroscopeStatus(Service::HID::GyroscopeDataEntry& gyroscope_data) {
     Handle(gyroscope_data);
 }
 
-void HandleIrRst(Service::IR::PadState& pad_state, s16& c_stick_x, s16& c_stick_y) {
+void Movie::HandleIrRst(Service::IR::PadState& pad_state, s16& c_stick_x, s16& c_stick_y) {
     Handle(pad_state, c_stick_x, c_stick_y);
 }
 
-void HandleExtraHidResponse(Service::IR::ExtraHIDResponse& extra_hid_response) {
+void Movie::HandleExtraHidResponse(Service::IR::ExtraHIDResponse& extra_hid_response) {
     Handle(extra_hid_response);
 }
-}
+}; // namespace Core

@@ -241,6 +241,7 @@ int main(int argc, char** argv) {
 
     if (!movie_record.empty() && !movie_play.empty()) {
         LOG_CRITICAL(Frontend, "Cannot both play and record a movie");
+        return -1;
     }
 
     log_filter.ParseFilterString(Settings::values.log_filter);
