@@ -19,6 +19,8 @@
 #include "core/hle/service/hid/hid_spvr.h"
 #include "core/hle/service/hid/hid_user.h"
 #include "core/hle/service/service.h"
+#include "core/movie.h"
+#include "video_core/video_core.h"
 
 namespace Service {
 namespace HID {
@@ -135,6 +137,9 @@ static void UpdatePadCallback(u64 userdata, int cycles_late) {
     constexpr int MAX_CIRCLEPAD_POS = 0x9C; // Max value for a circle pad position
     s16 circle_pad_x = static_cast<s16>(circle_pad_x_f * MAX_CIRCLEPAD_POS);
     s16 circle_pad_y = static_cast<s16>(circle_pad_y_f * MAX_CIRCLEPAD_POS);
+
+    Movie::HandlePadAndCircleStatus(state, circle_pad_x, circle_pad_y);
+
     const DirectionState direction = GetStickDirectionState(circle_pad_x, circle_pad_y);
     state.circle_up.Assign(direction.up);
     state.circle_down.Assign(direction.down);
@@ -180,6 +185,8 @@ static void UpdatePadCallback(u64 userdata, int cycles_late) {
     touch_entry.y = static_cast<u16>(y * Core::kScreenBottomHeight);
     touch_entry.valid.Assign(pressed ? 1 : 0);
 
+    Movie::HandleTouchStatus(touch_entry);
+
     // TODO(bunnei): We're not doing anything with offset 0xA8 + 0x18 of HID SharedMemory, which
     // supposedly is "Touch-screen entry, which contains the raw coordinate data prior to being
     // converted to pixel coordinates." (http://3dbrew.org/wiki/HID_Shared_Memory#Offset_0xA8).
@@ -218,6 +225,8 @@ static void UpdateAccelerometerCallback(u64 userdata, int cycles_late) {
     accelerometer_entry.y = static_cast<s16>(accel.y);
     accelerometer_entry.z = static_cast<s16>(accel.z);
 
+    Movie::HandleAccelerometerStatus(accelerometer_entry);
+
     // Make up "raw" entry
     // TODO(wwylele):
     // From hardware testing, the raw_entry values are approximately, but not exactly, as twice as
@@ -255,6 +264,8 @@ static void UpdateGyroscopeCallback(u64 userdata, int cycles_late) {
     gyroscope_entry.x = static_cast<s16>(gyro.x);
     gyroscope_entry.y = static_cast<s16>(gyro.y);
     gyroscope_entry.z = static_cast<s16>(gyro.z);
+
+    Movie::HandleGyroscopeStatus(gyroscope_entry);
 
     // Make up "raw" entry
     mem->gyroscope.raw_entry.x = gyroscope_entry.x;
