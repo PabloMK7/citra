@@ -39,7 +39,7 @@ CSpinBox::CSpinBox(QWidget* parent)
     // TODO: Might be nice to not immediately call the slot.
     //       Think of an address that is being replaced by a different one, in which case a lot
     //       invalid intermediate addresses would be read from during editing.
-    connect(lineEdit(), SIGNAL(textEdited(QString)), this, SLOT(OnEditingFinished()));
+    connect(lineEdit(), &QLineEdit::textEdited, this, &CSpinBox::OnEditingFinished);
 
     UpdateText();
 }

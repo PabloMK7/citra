@@ -74,7 +74,7 @@ QAction* MicroProfileDialog::toggleViewAction() {
         toggle_view_action = new QAction(windowTitle(), this);
         toggle_view_action->setCheckable(true);
         toggle_view_action->setChecked(isVisible());
-        connect(toggle_view_action, SIGNAL(toggled(bool)), SLOT(setVisible(bool)));
+        connect(toggle_view_action, &QAction::toggled, this, &MicroProfileDialog::setVisible);
     }
 
     return toggle_view_action;
@@ -107,7 +107,8 @@ MicroProfileWidget::MicroProfileWidget(QWidget* parent) : QWidget(parent) {
     MicroProfileSetDisplayMode(1); // Timers screen
     MicroProfileInitUI();
 
-    connect(&update_timer, SIGNAL(timeout()), SLOT(update()));
+    connect(&update_timer, &QTimer::timeout, this,
+            static_cast<void (MicroProfileWidget::*)()>(&MicroProfileWidget::update));
 }
 
 void MicroProfileWidget::paintEvent(QPaintEvent* ev) {

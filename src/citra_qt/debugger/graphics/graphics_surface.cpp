@@ -118,22 +118,24 @@ GraphicsSurfaceWidget::GraphicsSurfaceWidget(std::shared_ptr<Pica::DebugContext>
     save_surface = new QPushButton(QIcon::fromTheme("document-save"), tr("Save"));
 
     // Connections
-    connect(this, SIGNAL(Update()), this, SLOT(OnUpdate()));
-    connect(surface_source_list, SIGNAL(currentIndexChanged(int)), this,
-            SLOT(OnSurfaceSourceChanged(int)));
-    connect(surface_address_control, SIGNAL(ValueChanged(qint64)), this,
-            SLOT(OnSurfaceAddressChanged(qint64)));
-    connect(surface_width_control, SIGNAL(valueChanged(int)), this,
-            SLOT(OnSurfaceWidthChanged(int)));
-    connect(surface_height_control, SIGNAL(valueChanged(int)), this,
-            SLOT(OnSurfaceHeightChanged(int)));
-    connect(surface_format_control, SIGNAL(currentIndexChanged(int)), this,
-            SLOT(OnSurfaceFormatChanged(int)));
-    connect(surface_picker_x_control, SIGNAL(valueChanged(int)), this,
-            SLOT(OnSurfacePickerXChanged(int)));
-    connect(surface_picker_y_control, SIGNAL(valueChanged(int)), this,
-            SLOT(OnSurfacePickerYChanged(int)));
-    connect(save_surface, SIGNAL(clicked()), this, SLOT(SaveSurface()));
+    connect(this, &GraphicsSurfaceWidget::Update, this, &GraphicsSurfaceWidget::OnUpdate);
+    connect(surface_source_list,
+            static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this,
+            &GraphicsSurfaceWidget::OnSurfaceSourceChanged);
+    connect(surface_address_control, &CSpinBox::ValueChanged, this,
+            &GraphicsSurfaceWidget::OnSurfaceAddressChanged);
+    connect(surface_width_control, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged),
+            this, &GraphicsSurfaceWidget::OnSurfaceWidthChanged);
+    connect(surface_height_control, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged),
+            this, &GraphicsSurfaceWidget::OnSurfaceHeightChanged);
+    connect(surface_format_control,
+            static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this,
+            &GraphicsSurfaceWidget::OnSurfaceFormatChanged);
+    connect(surface_picker_x_control, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged),
+            this, &GraphicsSurfaceWidget::OnSurfacePickerXChanged);
+    connect(surface_picker_y_control, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged),
+            this, &GraphicsSurfaceWidget::OnSurfacePickerYChanged);
+    connect(save_surface, &QPushButton::clicked, this, &GraphicsSurfaceWidget::SaveSurface);
 
     auto main_widget = new QWidget;
     auto main_layout = new QVBoxLayout;

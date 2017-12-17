@@ -194,20 +194,19 @@ GPUCommandListWidget::GPUCommandListWidget(QWidget* parent)
     list_widget->setUniformRowHeights(true);
     list_widget->header()->setSectionResizeMode(QHeaderView::ResizeToContents);
 
-    connect(list_widget->selectionModel(),
-            SIGNAL(currentChanged(const QModelIndex&, const QModelIndex&)), this,
-            SLOT(SetCommandInfo(const QModelIndex&)));
-    connect(list_widget, SIGNAL(doubleClicked(const QModelIndex&)), this,
-            SLOT(OnCommandDoubleClicked(const QModelIndex&)));
+    connect(list_widget->selectionModel(), &QItemSelectionModel::currentChanged, this,
+            &GPUCommandListWidget::SetCommandInfo);
+    connect(list_widget, &QTreeView::doubleClicked, this,
+            &GPUCommandListWidget::OnCommandDoubleClicked);
 
     toggle_tracing = new QPushButton(tr("Start Tracing"));
     QPushButton* copy_all = new QPushButton(tr("Copy All"));
 
-    connect(toggle_tracing, SIGNAL(clicked()), this, SLOT(OnToggleTracing()));
-    connect(this, SIGNAL(TracingFinished(const Pica::DebugUtils::PicaTrace&)), model,
-            SLOT(OnPicaTraceFinished(const Pica::DebugUtils::PicaTrace&)));
+    connect(toggle_tracing, &QPushButton::clicked, this, &GPUCommandListWidget::OnToggleTracing);
+    connect(this, &GPUCommandListWidget::TracingFinished, model,
+            &GPUCommandListModel::OnPicaTraceFinished);
 
-    connect(copy_all, SIGNAL(clicked()), this, SLOT(CopyAllToClipboard()));
+    connect(copy_all, &QPushButton::clicked, this, &GPUCommandListWidget::CopyAllToClipboard);
 
     command_info_widget = nullptr;
 
