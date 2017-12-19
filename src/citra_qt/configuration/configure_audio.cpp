@@ -21,8 +21,9 @@ ConfigureAudio::ConfigureAudio(QWidget* parent)
     }
 
     this->setConfiguration();
-    connect(ui->output_sink_combo_box, SIGNAL(currentIndexChanged(int)), this,
-            SLOT(updateAudioDevices(int)));
+    connect(ui->output_sink_combo_box,
+            static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this,
+            &ConfigureAudio::updateAudioDevices);
 }
 
 ConfigureAudio::~ConfigureAudio() {}

@@ -292,6 +292,6 @@ void GRenderWindow::showEvent(QShowEvent* event) {
     QWidget::showEvent(event);
 
     // windowHandle() is not initialized until the Window is shown, so we connect it here.
-    connect(this->windowHandle(), SIGNAL(screenChanged(QScreen*)), this,
-            SLOT(OnFramebufferSizeChanged()), Qt::UniqueConnection);
+    connect(windowHandle(), &QWindow::screenChanged, this, &GRenderWindow::OnFramebufferSizeChanged,
+            Qt::UniqueConnection);
 }

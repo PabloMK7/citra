@@ -10,12 +10,12 @@ BreakPointObserverDock::BreakPointObserverDock(std::shared_ptr<Pica::DebugContex
     : QDockWidget(title, parent), BreakPointObserver(debug_context) {
     qRegisterMetaType<Pica::DebugContext::Event>("Pica::DebugContext::Event");
 
-    connect(this, SIGNAL(Resumed()), this, SLOT(OnResumed()));
+    connect(this, &BreakPointObserverDock::Resumed, this, &BreakPointObserverDock::OnResumed);
 
     // NOTE: This signal is emitted from a non-GUI thread, but connect() takes
     //       care of delaying its handling to the GUI thread.
-    connect(this, SIGNAL(BreakPointHit(Pica::DebugContext::Event, void*)), this,
-            SLOT(OnBreakPointHit(Pica::DebugContext::Event, void*)), Qt::BlockingQueuedConnection);
+    connect(this, &BreakPointObserverDock::BreakPointHit, this,
+            &BreakPointObserverDock::OnBreakPointHit, Qt::BlockingQueuedConnection);
 }
 
 void BreakPointObserverDock::OnPicaBreakPointHit(Pica::DebugContext::Event event, void* data) {

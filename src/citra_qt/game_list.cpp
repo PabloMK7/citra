@@ -124,8 +124,7 @@ GameList::SearchField::SearchField(GameList* parent) : QWidget{parent} {
     edit_filter->setPlaceholderText(tr("Enter pattern to filter"));
     edit_filter->installEventFilter(keyReleaseEater);
     edit_filter->setClearButtonEnabled(true);
-    connect(edit_filter, SIGNAL(textChanged(const QString&)), parent,
-            SLOT(onTextChanged(const QString&)));
+    connect(edit_filter, &QLineEdit::textChanged, parent, &GameList::onTextChanged);
     label_filter_result = new QLabel;
     button_filter_close = new QToolButton(this);
     button_filter_close->setText("X");
@@ -134,7 +133,7 @@ GameList::SearchField::SearchField(GameList* parent) : QWidget{parent} {
                                        "#000000; font-weight: bold; background: #F0F0F0; }"
                                        "QToolButton:hover{ border: none; padding: 0px; color: "
                                        "#EEEEEE; font-weight: bold; background: #E81123}");
-    connect(button_filter_close, SIGNAL(clicked()), parent, SLOT(onFilterCloseClicked()));
+    connect(button_filter_close, &QToolButton::clicked, parent, &GameList::onFilterCloseClicked);
     layout_filter->setSpacing(10);
     layout_filter->addWidget(label_filter);
     layout_filter->addWidget(edit_filter);

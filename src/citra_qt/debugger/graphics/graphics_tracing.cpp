@@ -31,15 +31,15 @@ GraphicsTracingWidget::GraphicsTracingWidget(std::shared_ptr<Pica::DebugContext>
         new QPushButton(QIcon::fromTheme("document-save"), tr("Stop and Save"));
     QPushButton* abort_recording = new QPushButton(tr("Abort Recording"));
 
-    connect(this, SIGNAL(SetStartTracingButtonEnabled(bool)), start_recording,
-            SLOT(setVisible(bool)));
-    connect(this, SIGNAL(SetStopTracingButtonEnabled(bool)), stop_recording,
-            SLOT(setVisible(bool)));
-    connect(this, SIGNAL(SetAbortTracingButtonEnabled(bool)), abort_recording,
-            SLOT(setVisible(bool)));
-    connect(start_recording, SIGNAL(clicked()), this, SLOT(StartRecording()));
-    connect(stop_recording, SIGNAL(clicked()), this, SLOT(StopRecording()));
-    connect(abort_recording, SIGNAL(clicked()), this, SLOT(AbortRecording()));
+    connect(this, &GraphicsTracingWidget::SetStartTracingButtonEnabled, start_recording,
+            &QPushButton::setVisible);
+    connect(this, &GraphicsTracingWidget::SetStopTracingButtonEnabled, stop_recording,
+            &QPushButton::setVisible);
+    connect(this, &GraphicsTracingWidget::SetAbortTracingButtonEnabled, abort_recording,
+            &QPushButton::setVisible);
+    connect(start_recording, &QPushButton::clicked, this, &GraphicsTracingWidget::StartRecording);
+    connect(stop_recording, &QPushButton::clicked, this, &GraphicsTracingWidget::StopRecording);
+    connect(abort_recording, &QPushButton::clicked, this, &GraphicsTracingWidget::AbortRecording);
 
     stop_recording->setVisible(false);
     abort_recording->setVisible(false);

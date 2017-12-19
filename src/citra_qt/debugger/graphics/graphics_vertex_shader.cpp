@@ -393,15 +393,18 @@ GraphicsVertexShaderWidget::GraphicsVertexShaderWidget(
 
     cycle_index = new QSpinBox;
 
-    connect(dump_shader, SIGNAL(clicked()), this, SLOT(DumpShader()));
+    connect(dump_shader, &QPushButton::clicked, this, &GraphicsVertexShaderWidget::DumpShader);
 
-    connect(cycle_index, SIGNAL(valueChanged(int)), this, SLOT(OnCycleIndexChanged(int)));
+    connect(cycle_index, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this,
+            &GraphicsVertexShaderWidget::OnCycleIndexChanged);
 
     for (unsigned i = 0; i < ARRAY_SIZE(input_data); ++i) {
-        connect(input_data[i], SIGNAL(textEdited(const QString&)), input_data_mapper, SLOT(map()));
+        connect(input_data[i], &QLineEdit::textEdited, input_data_mapper,
+                static_cast<void (QSignalMapper::*)()>(&QSignalMapper::map));
         input_data_mapper->setMapping(input_data[i], i);
     }
-    connect(input_data_mapper, SIGNAL(mapped(int)), this, SLOT(OnInputAttributeChanged(int)));
+    connect(input_data_mapper, static_cast<void (QSignalMapper::*)(int)>(&QSignalMapper::mapped),
+            this, &GraphicsVertexShaderWidget::OnInputAttributeChanged);
 
     auto main_widget = new QWidget;
     auto main_layout = new QVBoxLayout;

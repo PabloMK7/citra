@@ -145,21 +145,25 @@ GraphicsBreakPointsWidget::GraphicsBreakPointsWidget(
 
     qRegisterMetaType<Pica::DebugContext::Event>("Pica::DebugContext::Event");
 
-    connect(breakpoint_list, SIGNAL(doubleClicked(const QModelIndex&)), this,
-            SLOT(OnItemDoubleClicked(const QModelIndex&)));
+    connect(breakpoint_list, &QTreeView::doubleClicked, this,
+            &GraphicsBreakPointsWidget::OnItemDoubleClicked);
 
-    connect(resume_button, SIGNAL(clicked()), this, SLOT(OnResumeRequested()));
+    connect(resume_button, &QPushButton::clicked, this,
+            &GraphicsBreakPointsWidget::OnResumeRequested);
 
-    connect(this, SIGNAL(BreakPointHit(Pica::DebugContext::Event, void*)), this,
-            SLOT(OnBreakPointHit(Pica::DebugContext::Event, void*)), Qt::BlockingQueuedConnection);
-    connect(this, SIGNAL(Resumed()), this, SLOT(OnResumed()));
+    connect(this, &GraphicsBreakPointsWidget::BreakPointHit, this,
+            &GraphicsBreakPointsWidget::OnBreakPointHit, Qt::BlockingQueuedConnection);
+    connect(this, &GraphicsBreakPointsWidget::Resumed, this, &GraphicsBreakPointsWidget::OnResumed);
 
-    connect(this, SIGNAL(BreakPointHit(Pica::DebugContext::Event, void*)), breakpoint_model,
-            SLOT(OnBreakPointHit(Pica::DebugContext::Event)), Qt::BlockingQueuedConnection);
-    connect(this, SIGNAL(Resumed()), breakpoint_model, SLOT(OnResumed()));
+    connect(this, &GraphicsBreakPointsWidget::BreakPointHit, breakpoint_model,
+            &BreakPointModel::OnBreakPointHit, Qt::BlockingQueuedConnection);
+    connect(this, &GraphicsBreakPointsWidget::Resumed, breakpoint_model,
+            &BreakPointModel::OnResumed);
 
-    connect(this, SIGNAL(BreakPointsChanged(const QModelIndex&, const QModelIndex&)),
-            breakpoint_model, SIGNAL(dataChanged(const QModelIndex&, const QModelIndex&)));
+    connect(this, &GraphicsBreakPointsWidget::BreakPointsChanged,
+            [this](const QModelIndex& top_left, const QModelIndex& bottom_right) {
+                breakpoint_model->dataChanged(top_left, bottom_right);
+            });
 
     QWidget* main_widget = new QWidget;
     auto main_layout = new QVBoxLayout;

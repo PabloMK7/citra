@@ -10,7 +10,8 @@ extern GraphicsDebugger g_debugger;
 
 GPUCommandStreamItemModel::GPUCommandStreamItemModel(QObject* parent)
     : QAbstractListModel(parent), command_count(0) {
-    connect(this, SIGNAL(GXCommandFinished(int)), this, SLOT(OnGXCommandFinishedInternal(int)));
+    connect(this, &GPUCommandStreamItemModel::GXCommandFinished, this,
+            &GPUCommandStreamItemModel::OnGXCommandFinishedInternal);
 }
 
 int GPUCommandStreamItemModel::rowCount(const QModelIndex& parent) const {
