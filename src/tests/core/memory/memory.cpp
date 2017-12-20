@@ -39,12 +39,6 @@ TEST_CASE("Memory::IsValidVirtualAddress", "[core][memory]") {
                 process->vm_manager, {Memory::IO_AREA_VADDR, Memory::IO_AREA_SIZE, false, false});
             CHECK_FALSE(Memory::IsValidVirtualAddress(*process, Memory::IO_AREA_VADDR) == true);
         }
-
-        SECTION("DSP") {
-            Kernel::HandleSpecialMapping(
-                process->vm_manager, {Memory::DSP_RAM_VADDR, Memory::DSP_RAM_SIZE, false, false});
-            CHECK(Memory::IsValidVirtualAddress(*process, Memory::DSP_RAM_VADDR) == true);
-        }
     }
 
     SECTION("Unmapping a VAddr should make it invalid") {
