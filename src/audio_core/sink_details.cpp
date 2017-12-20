@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <memory>
+#include <string>
 #include <vector>
 #include "audio_core/null_sink.h"
 #include "audio_core/sink_details.h"

@@ -5,7 +5,7 @@
 #include <list>
 #include <numeric>
 #include <SDL.h>
-#include "audio_core/audio_core.h"
+#include "audio_core/audio_types.h"
 #include "audio_core/sdl2_sink.h"
 #include "common/assert.h"
 #include "common/logging/log.h"

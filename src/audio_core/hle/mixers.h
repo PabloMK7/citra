@@ -5,10 +5,10 @@
 #pragma once
 
 #include <array>
-#include "audio_core/hle/common.h"
-#include "audio_core/hle/dsp.h"
+#include "audio_core/audio_types.h"
+#include "audio_core/hle/shared_memory.h"
 
-namespace DSP {
+namespace AudioCore {
 namespace HLE {
 
 class Mixers final {
@@ -58,4 +58,4 @@ private:
 };
 
 } // namespace HLE
-} // namespace DSP
+} // namespace AudioCore

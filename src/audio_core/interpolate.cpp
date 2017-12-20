@@ -6,6 +6,7 @@
 #include "common/assert.h"
 #include "common/math_util.h"
 
+namespace AudioCore {
 namespace AudioInterp {
 
 // Calculations are done in fixed point with 24 fractional bits.
@@ -16,8 +17,8 @@ constexpr u64 scale_mask = scale_factor - 1;
 /// Here we step over the input in steps of rate, until we consume all of the input.
 /// Three adjacent samples are passed to fn each step.
 template <typename Function>
-static void StepOverSamples(State& state, StereoBuffer16& input, float rate,
-                            DSP::HLE::StereoFrame16& output, size_t& outputi, Function fn) {
+static void StepOverSamples(State& state, StereoBuffer16& input, float rate, StereoFrame16& output,
+                            size_t& outputi, Function fn) {
     ASSERT(rate > 0);
 
     if (input.empty())
@@ -50,14 +51,13 @@ static void StepOverSamples(State& state, StereoBuffer16& input, float rate,
     input.erase(input.begin(), std::next(input.begin(), inputi + 2));
 }
 
-void None(State& state, StereoBuffer16& input, float rate, DSP::HLE::StereoFrame16& output,
-          size_t& outputi) {
+void None(State& state, StereoBuffer16& input, float rate, StereoFrame16& output, size_t& outputi) {
     StepOverSamples(
         state, input, rate, output, outputi,
         [](u64 fraction, const auto& x0, const auto& x1, const auto& x2) { return x0; });
 }
 
-void Linear(State& state, StereoBuffer16& input, float rate, DSP::HLE::StereoFrame16& output,
+void Linear(State& state, StereoBuffer16& input, float rate, StereoFrame16& output,
             size_t& outputi) {
     // Note on accuracy: Some values that this produces are +/- 1 from the actual firmware.
     StepOverSamples(state, input, rate, output, outputi,
@@ -74,3 +74,4 @@ void Linear(State& state, StereoBuffer16& input, float rate, DSP::HLE::StereoFra
 }
 
 } // namespace AudioInterp
+} // namespace AudioCore

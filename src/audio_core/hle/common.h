@@ -5,20 +5,12 @@
 #pragma once
 
 #include <algorithm>
-#include <array>
-#include "common/common_types.h"
+#include <cstddef>
 
-namespace DSP {
+namespace AudioCore {
 namespace HLE {
 
-constexpr int num_sources = 24;
-constexpr int samples_per_frame = 160; ///< Samples per audio frame at native sample rate
-
-/// The final output to the speakers is stereo. Preprocessing output in Source is also stereo.
-using StereoFrame16 = std::array<std::array<s16, 2>, samples_per_frame>;
-
-/// The DSP is quadraphonic internally.
-using QuadFrame32 = std::array<std::array<s32, 4>, samples_per_frame>;
+constexpr size_t num_sources = 24;
 
 /**
  * This performs the filter operation defined by FilterT::ProcessSample on the frame in-place.
@@ -31,4 +23,4 @@ void FilterFrame(FrameT& frame, FilterT& filter) {
 }
 
 } // namespace HLE
-} // namespace DSP
+} // namespace AudioCore

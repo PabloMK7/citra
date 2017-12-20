@@ -5,11 +5,11 @@
 #pragma once
 
 #include <array>
-#include "audio_core/hle/common.h"
-#include "audio_core/hle/dsp.h"
+#include "audio_core/audio_types.h"
+#include "audio_core/hle/shared_memory.h"
 #include "common/common_types.h"
 
-namespace DSP {
+namespace AudioCore {
 namespace HLE {
 
 /// Preprocessing filters. There is an independent set of filters for each Source.
@@ -114,4 +114,4 @@ private:
 };
 
 } // namespace HLE
-} // namespace DSP
+} // namespace AudioCore

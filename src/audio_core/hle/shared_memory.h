@@ -8,6 +8,7 @@
 #include <cstddef>
 #include <memory>
 #include <type_traits>
+#include "audio_core/audio_types.h"
 #include "audio_core/hle/common.h"
 #include "common/bit_field.h"
 #include "common/common_funcs.h"
@@ -15,10 +16,6 @@
 #include "common/swap.h"
 
 namespace AudioCore {
-class Sink;
-}
-
-namespace DSP {
 namespace HLE {
 
 // The application-accessible region of DSP memory consists of two parts. Both are marked as IO and
@@ -86,7 +83,7 @@ static_assert(std::is_trivially_copyable<u32_dsp>::value, "u32_dsp isn't trivial
 //       0           0xBFFF                     Frame Counter                         Application
 //
 // #: This refers to the order in which they appear in the DspPipe::Audio DSP pipe.
-//    See also: DSP::HLE::PipeRead.
+//    See also: HLE::PipeRead.
 //
 // Note that the above addresses do vary slightly between audio firmwares observed; the addresses
 // are not fixed in stone. The addresses above are only an examplar; they're what this
@@ -527,69 +524,40 @@ static_assert(offsetof(DspMemory, region_0) == region0_offset,
 static_assert(offsetof(DspMemory, region_1) == region1_offset,
               "DSP region 1 is at the wrong offset");
 
-extern DspMemory g_dsp_memory;
-
 // Structures must have an offset that is a multiple of two.
 static_assert(offsetof(SharedMemory, frame_counter) % 2 == 0,
-              "Structures in DSP::HLE::SharedMemory must be 2-byte aligned");
+              "Structures in HLE::SharedMemory must be 2-byte aligned");
 static_assert(offsetof(SharedMemory, source_configurations) % 2 == 0,
-              "Structures in DSP::HLE::SharedMemory must be 2-byte aligned");
+              "Structures in HLE::SharedMemory must be 2-byte aligned");
 static_assert(offsetof(SharedMemory, source_statuses) % 2 == 0,
-              "Structures in DSP::HLE::SharedMemory must be 2-byte aligned");
+              "Structures in HLE::SharedMemory must be 2-byte aligned");
 static_assert(offsetof(SharedMemory, adpcm_coefficients) % 2 == 0,
-              "Structures in DSP::HLE::SharedMemory must be 2-byte aligned");
+              "Structures in HLE::SharedMemory must be 2-byte aligned");
 static_assert(offsetof(SharedMemory, dsp_configuration) % 2 == 0,
-              "Structures in DSP::HLE::SharedMemory must be 2-byte aligned");
+              "Structures in HLE::SharedMemory must be 2-byte aligned");
 static_assert(offsetof(SharedMemory, dsp_status) % 2 == 0,
-              "Structures in DSP::HLE::SharedMemory must be 2-byte aligned");
+              "Structures in HLE::SharedMemory must be 2-byte aligned");
 static_assert(offsetof(SharedMemory, final_samples) % 2 == 0,
-              "Structures in DSP::HLE::SharedMemory must be 2-byte aligned");
+              "Structures in HLE::SharedMemory must be 2-byte aligned");
 static_assert(offsetof(SharedMemory, intermediate_mix_samples) % 2 == 0,
-              "Structures in DSP::HLE::SharedMemory must be 2-byte aligned");
+              "Structures in HLE::SharedMemory must be 2-byte aligned");
 static_assert(offsetof(SharedMemory, compressor) % 2 == 0,
-              "Structures in DSP::HLE::SharedMemory must be 2-byte aligned");
+              "Structures in HLE::SharedMemory must be 2-byte aligned");
 static_assert(offsetof(SharedMemory, dsp_debug) % 2 == 0,
-              "Structures in DSP::HLE::SharedMemory must be 2-byte aligned");
+              "Structures in HLE::SharedMemory must be 2-byte aligned");
 static_assert(offsetof(SharedMemory, unknown10) % 2 == 0,
-              "Structures in DSP::HLE::SharedMemory must be 2-byte aligned");
+              "Structures in HLE::SharedMemory must be 2-byte aligned");
 static_assert(offsetof(SharedMemory, unknown11) % 2 == 0,
-              "Structures in DSP::HLE::SharedMemory must be 2-byte aligned");
+              "Structures in HLE::SharedMemory must be 2-byte aligned");
 static_assert(offsetof(SharedMemory, unknown12) % 2 == 0,
-              "Structures in DSP::HLE::SharedMemory must be 2-byte aligned");
+              "Structures in HLE::SharedMemory must be 2-byte aligned");
 static_assert(offsetof(SharedMemory, unknown13) % 2 == 0,
-              "Structures in DSP::HLE::SharedMemory must be 2-byte aligned");
+              "Structures in HLE::SharedMemory must be 2-byte aligned");
 static_assert(offsetof(SharedMemory, unknown14) % 2 == 0,
-              "Structures in DSP::HLE::SharedMemory must be 2-byte aligned");
+              "Structures in HLE::SharedMemory must be 2-byte aligned");
 
 #undef INSERT_PADDING_DSPWORDS
 #undef ASSERT_DSP_STRUCT
 
-/// Initialize DSP hardware
-void Init();
-
-/// Shutdown DSP hardware
-void Shutdown();
-
-/**
- * Perform processing and updates state of current shared memory buffer.
- * This function is called every audio tick before triggering the audio interrupt.
- * @return Whether an audio interrupt should be triggered this frame.
- */
-bool Tick();
-
-/**
- * Set the output sink. This must be called before calling Tick().
- * @param sink The sink to which audio will be output to.
- */
-void SetSink(std::unique_ptr<AudioCore::Sink> sink);
-
-/**
- * Enables/Disables audio-stretching.
- * Audio stretching is an enhancement that stretches audio to match emulation
- * speed to prevent stuttering at the cost of some audio latency.
- * @param enable true to enable, false to disable.
- */
-void EnableStretching(bool enable);
-
 } // namespace HLE
-} // namespace DSP
+} // namespace AudioCore

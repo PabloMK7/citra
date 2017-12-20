@@ -6,9 +6,10 @@
 
 #include <array>
 #include <deque>
-#include "audio_core/hle/common.h"
+#include "audio_core/audio_types.h"
 #include "common/common_types.h"
 
+namespace AudioCore {
 namespace AudioInterp {
 
 /// A variable length buffer of signed PCM16 stereo samples.
@@ -31,8 +32,7 @@ struct State {
  * @param output The resampled audio buffer.
  * @param outputi The index of output to start writing to.
  */
-void None(State& state, StereoBuffer16& input, float rate, DSP::HLE::StereoFrame16& output,
-          size_t& outputi);
+void None(State& state, StereoBuffer16& input, float rate, StereoFrame16& output, size_t& outputi);
 
 /**
  * Linear interpolation. This is equivalent to a first-order hold. There is a two-sample predelay.
@@ -43,7 +43,8 @@ void None(State& state, StereoBuffer16& input, float rate, DSP::HLE::StereoFrame
  * @param output The resampled audio buffer.
  * @param outputi The index of output to start writing to.
  */
-void Linear(State& state, StereoBuffer16& input, float rate, DSP::HLE::StereoFrame16& output,
+void Linear(State& state, StereoBuffer16& input, float rate, StereoFrame16& output,
             size_t& outputi);
 
 } // namespace AudioInterp
+} // namespace AudioCore
