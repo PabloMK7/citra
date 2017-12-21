@@ -649,17 +649,25 @@ void GSP_GPU::AcquireRight(Kernel::HLERequestContext& ctx) {
     u32 flag = rp.Pop<u32>();
     auto process = rp.PopObject<Kernel::Process>();
 
+    SessionData* session_data = GetSessionData(ctx.Session());
+
+    LOG_WARNING(Service_GSP, "called flag=%08X process=%u thread_id=%u", flag, process->process_id,
+                session_data->thread_id);
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+
+    if (active_thread_id == session_data->thread_id) {
+        rb.Push(ResultCode(ErrorDescription::AlreadyDone, ErrorModule::GX, ErrorSummary::Success,
+                           ErrorLevel::Success));
+        return;
+    }
+
     // TODO(Subv): This case should put the caller thread to sleep until the right is released.
     ASSERT_MSG(active_thread_id == -1, "GPU right has already been acquired");
 
-    SessionData* session_data = GetSessionData(ctx.Session());
     active_thread_id = session_data->thread_id;
 
-    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
-
-    LOG_WARNING(Service_GSP, "called flag=%08X process=%u thread_id=%u", flag, process->process_id,
-                active_thread_id);
 }
 
 void GSP_GPU::ReleaseRight(Kernel::HLERequestContext& ctx) {
