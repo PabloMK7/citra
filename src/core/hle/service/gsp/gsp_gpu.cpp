@@ -370,9 +370,6 @@ void GSP_GPU::UnregisterInterruptRelayQueue(Kernel::HLERequestContext& ctx) {
  * @todo This probably does not belong in the GSP module, instead move to video_core
  */
 void GSP_GPU::SignalInterrupt(InterruptId interrupt_id) {
-    if (!gpu_right_acquired) {
-        return;
-    }
     if (nullptr == shared_memory) {
         LOG_WARNING(Service_GSP, "cannot synchronize until GSP shared memory has been created!");
         return;
@@ -634,18 +631,26 @@ void GSP_GPU::AcquireRight(Kernel::HLERequestContext& ctx) {
     u32 flag = rp.Pop<u32>();
     auto process = rp.PopObject<Kernel::Process>();
 
-    gpu_right_acquired = true;
+    // TODO(Subv): This case should put the caller thread to sleep until the right is released.
+    ASSERT_MSG(active_thread_id == -1, "GPU right has already been acquired");
+
+    SessionData* session_data = GetSessionData(ctx.Session());
+    active_thread_id = session_data->thread_id;
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
 
-    LOG_WARNING(Service_GSP, "called flag=%08X process=%u", flag, process->process_id);
+    LOG_WARNING(Service_GSP, "called flag=%08X process=%u thread_id=%u", flag, process->process_id,
+                active_thread_id);
 }
 
 void GSP_GPU::ReleaseRight(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x17, 0, 0);
 
-    gpu_right_acquired = false;
+    SessionData* session_data = GetSessionData(ctx.Session());
+    ASSERT_MSG(active_thread_id == session_data->thread_id,
+               "Wrong thread tried to release GPU right");
+    active_thread_id = -1;
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
@@ -669,7 +674,7 @@ void GSP_GPU::StoreDataCache(Kernel::HLERequestContext& ctx) {
 
 SessionData* GSP_GPU::FindRegisteredThreadData(u32 thread_id) {
     for (auto& session_info : connected_sessions) {
-        SessionData* data = static_cast<SessionData*>(session_info.data.get())
+        SessionData* data = static_cast<SessionData*>(session_info.data.get());
         if (!data->registered)
             continue;
         if (data->thread_id == thread_id)
@@ -719,7 +724,6 @@ GSP_GPU::GSP_GPU() : ServiceFramework("gsp::Gpu", 2) {
                                                  MemoryPermission::ReadWrite, 0,
                                                  Kernel::MemoryRegion::BASE, "GSP:SharedMemory");
 
-    gpu_right_acquired = false;
     first_initialization = true;
 };
 } // namespace GSP

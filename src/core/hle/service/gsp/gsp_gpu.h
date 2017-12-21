@@ -369,7 +369,9 @@ private:
     /// GSP shared memory
     Kernel::SharedPtr<Kernel::SharedMemory> shared_memory;
 
-    bool gpu_right_acquired = false;
+    /// Thread id that currently has GPU rights or -1 if none.
+    int active_thread_id = -1;
+
     bool first_initialization = true;
 };
 
