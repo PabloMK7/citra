@@ -8,12 +8,12 @@
 #include <string>
 #include "common/bit_field.h"
 #include "common/common_types.h"
+#include "core/hle/kernel/event.h"
 #include "core/hle/kernel/hle_ipc.h"
 #include "core/hle/result.h"
 #include "core/hle/service/service.h"
 
 namespace Kernel {
-class Event;
 class SharedMemory;
 } // namespace Kernel
 
@@ -179,7 +179,16 @@ struct CommandBuffer {
 };
 static_assert(sizeof(CommandBuffer) == 0x200, "CommandBuffer struct has incorrect size");
 
-class GSP_GPU final : public ServiceFramework<GSP_GPU> {
+struct SessionData : public Kernel::SessionRequestHandler::SessionDataBase {
+    /// Event triggered when GSP interrupt has been signalled
+    Kernel::SharedPtr<Kernel::Event> interrupt_event;
+    /// Thread index into interrupt relay queue
+    u32 thread_id = 0;
+    /// Whether RegisterInterruptRelayQueue was called for this session
+    bool registered = false;
+};
+
+class GSP_GPU final : public ServiceFramework<GSP_GPU, SessionData> {
 public:
     GSP_GPU();
     ~GSP_GPU() = default;
@@ -351,12 +360,14 @@ private:
      */
     void StoreDataCache(Kernel::HLERequestContext& ctx);
 
-    /// Event triggered when GSP interrupt has been signalled
-    Kernel::SharedPtr<Kernel::Event> interrupt_event;
-    /// GSP shared memoryings
+    /// Returns the session data for the specified registered thread id, or nullptr if not found.
+    SessionData* FindRegisteredThreadData(u32 thread_id);
+
+    /// Next threadid value to use when RegisterInterruptRelayQueue is called.
+    u32 next_thread_id = 0;
+
+    /// GSP shared memory
     Kernel::SharedPtr<Kernel::SharedMemory> shared_memory;
-    /// Thread index into interrupt relay queue
-    u32 thread_id = 0;
 
     bool gpu_right_acquired = false;
     bool first_initialization = true;
