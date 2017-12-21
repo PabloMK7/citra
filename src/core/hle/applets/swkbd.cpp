@@ -11,7 +11,7 @@
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/shared_memory.h"
 #include "core/hle/result.h"
-#include "core/hle/service/gsp_gpu.h"
+#include "core/hle/service/gsp/gsp.h"
 #include "core/hle/service/hid/hid.h"
 #include "core/memory.h"
 

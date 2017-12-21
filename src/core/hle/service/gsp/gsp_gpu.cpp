@@ -2,15 +2,18 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <vector>
 #include "common/bit_field.h"
 #include "common/microprofile.h"
+#include "common/swap.h"
 #include "core/core.h"
 #include "core/hle/ipc.h"
+#include "core/hle/ipc_helpers.h"
 #include "core/hle/kernel/event.h"
 #include "core/hle/kernel/handle_table.h"
 #include "core/hle/kernel/shared_memory.h"
 #include "core/hle/result.h"
-#include "core/hle/service/gsp_gpu.h"
+#include "core/hle/service/gsp/gsp_gpu.h"
 #include "core/hw/gpu.h"
 #include "core/hw/hw.h"
 #include "core/hw/lcd.h"
@@ -48,32 +51,25 @@ constexpr ResultCode ERR_REGS_INVALID_SIZE(ErrorDescription::InvalidSize, ErrorM
                                            ErrorSummary::InvalidArgument,
                                            ErrorLevel::Usage); // 0xE0E02BEC
 
-/// Event triggered when GSP interrupt has been signalled
-Kernel::SharedPtr<Kernel::Event> g_interrupt_event;
-/// GSP shared memoryings
-Kernel::SharedPtr<Kernel::SharedMemory> g_shared_memory;
-/// Thread index into interrupt relay queue
-u32 g_thread_id = 0;
-
-static bool gpu_right_acquired = false;
-static bool first_initialization = true;
 /// Gets a pointer to a thread command buffer in GSP shared memory
-static inline u8* GetCommandBuffer(u32 thread_id) {
-    return g_shared_memory->GetPointer(0x800 + (thread_id * sizeof(CommandBuffer)));
+static inline u8* GetCommandBuffer(Kernel::SharedPtr<Kernel::SharedMemory> shared_memory,
+                                   u32 thread_id) {
+    return shared_memory->GetPointer(0x800 + (thread_id * sizeof(CommandBuffer)));
 }
 
-FrameBufferUpdate* GetFrameBufferInfo(u32 thread_id, u32 screen_index) {
+FrameBufferUpdate* GSP_GPU::GetFrameBufferInfo(u32 thread_id, u32 screen_index) {
     DEBUG_ASSERT_MSG(screen_index < 2, "Invalid screen index");
 
     // For each thread there are two FrameBufferUpdate fields
     u32 offset = 0x200 + (2 * thread_id + screen_index) * sizeof(FrameBufferUpdate);
-    u8* ptr = g_shared_memory->GetPointer(offset);
+    u8* ptr = shared_memory->GetPointer(offset);
     return reinterpret_cast<FrameBufferUpdate*>(ptr);
 }
 
 /// Gets a pointer to the interrupt relay queue for a given thread index
-static inline InterruptRelayQueue* GetInterruptRelayQueue(u32 thread_id) {
-    u8* ptr = g_shared_memory->GetPointer(sizeof(InterruptRelayQueue) * thread_id);
+static inline InterruptRelayQueue* GetInterruptRelayQueue(
+    Kernel::SharedPtr<Kernel::SharedMemory> shared_memory, u32 thread_id) {
+    u8* ptr = shared_memory->GetPointer(sizeof(InterruptRelayQueue) * thread_id);
     return reinterpret_cast<InterruptRelayQueue*>(ptr);
 }
 
@@ -95,10 +91,10 @@ static void WriteSingleHWReg(u32 base_address, u32 data) {
  *
  * @param base_address The address of the first register in the sequence
  * @param size_in_bytes The number of registers to update (size of data)
- * @param data_vaddr A pointer to the source data
+ * @param data A vector containing the source data
  * @return RESULT_SUCCESS if the parameters are valid, error code otherwise
  */
-static ResultCode WriteHWRegs(u32 base_address, u32 size_in_bytes, VAddr data_vaddr) {
+static ResultCode WriteHWRegs(u32 base_address, u32 size_in_bytes, const std::vector<u8>& data) {
     // This magic number is verified to be done by the gsp module
     const u32 max_size_in_bytes = 0x80;
 
@@ -112,11 +108,14 @@ static ResultCode WriteHWRegs(u32 base_address, u32 size_in_bytes, VAddr data_va
             LOG_ERROR(Service_GSP, "Misaligned size 0x%08x", size_in_bytes);
             return ERR_REGS_MISALIGNED;
         } else {
+            size_t offset = 0;
             while (size_in_bytes > 0) {
-                WriteSingleHWReg(base_address, Memory::Read32(data_vaddr));
+                u32 value;
+                std::memcpy(&value, &data[offset], sizeof(u32));
+                WriteSingleHWReg(base_address, value);
 
                 size_in_bytes -= 4;
-                data_vaddr += 4;
+                offset += 4;
                 base_address += 4;
             }
             return RESULT_SUCCESS;
@@ -134,12 +133,12 @@ static ResultCode WriteHWRegs(u32 base_address, u32 size_in_bytes, VAddr data_va
  *
  * @param base_address  The address of the first register in the sequence
  * @param size_in_bytes The number of registers to update (size of data)
- * @param data_vaddr    A virtual address to the source data to use for updates
- * @param masks_vaddr   A virtual address to the masks
+ * @param data    A vector containing the data to write
+ * @param masks   A vector containing the masks
  * @return RESULT_SUCCESS if the parameters are valid, error code otherwise
  */
-static ResultCode WriteHWRegsWithMask(u32 base_address, u32 size_in_bytes, VAddr data_vaddr,
-                                      VAddr masks_vaddr) {
+static ResultCode WriteHWRegsWithMask(u32 base_address, u32 size_in_bytes,
+                                      const std::vector<u8>& data, const std::vector<u8>& masks) {
     // This magic number is verified to be done by the gsp module
     const u32 max_size_in_bytes = 0x80;
 
@@ -153,23 +152,24 @@ static ResultCode WriteHWRegsWithMask(u32 base_address, u32 size_in_bytes, VAddr
             LOG_ERROR(Service_GSP, "Misaligned size 0x%08x", size_in_bytes);
             return ERR_REGS_MISALIGNED;
         } else {
+            size_t offset = 0;
             while (size_in_bytes > 0) {
                 const u32 reg_address = base_address + REGS_BEGIN;
 
                 u32 reg_value;
                 HW::Read<u32>(reg_value, reg_address);
 
-                u32 data = Memory::Read32(data_vaddr);
-                u32 mask = Memory::Read32(masks_vaddr);
+                u32 value, mask;
+                std::memcpy(&value, &data[offset], sizeof(u32));
+                std::memcpy(&mask, &masks[offset], sizeof(u32));
 
                 // Update the current value of the register only for set mask bits
-                reg_value = (reg_value & ~mask) | (data & mask);
+                reg_value = (reg_value & ~mask) | (value & mask);
 
                 WriteSingleHWReg(base_address, reg_value);
 
                 size_in_bytes -= 4;
-                data_vaddr += 4;
-                masks_vaddr += 4;
+                offset += 4;
                 base_address += 4;
             }
             return RESULT_SUCCESS;
@@ -181,78 +181,59 @@ static ResultCode WriteHWRegsWithMask(u32 base_address, u32 size_in_bytes, VAddr
     }
 }
 
-/**
- * GSP_GPU::WriteHWRegs service function
- *
- * Writes sequential GSP GPU hardware registers
- *
- *  Inputs:
- *      1 : address of first GPU register
- *      2 : number of registers to write sequentially
- *      4 : pointer to source data array
- */
-static void WriteHWRegs(Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-    u32 reg_addr = cmd_buff[1];
-    u32 size = cmd_buff[2];
-    VAddr src = cmd_buff[4];
+void GSP_GPU::WriteHWRegs(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x1, 2, 2);
+    u32 reg_addr = rp.Pop<u32>();
+    u32 size = rp.Pop<u32>();
+    std::vector<u8> src_data = rp.PopStaticBuffer();
 
-    cmd_buff[1] = WriteHWRegs(reg_addr, size, src).raw;
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(GSP::WriteHWRegs(reg_addr, size, src_data));
 }
 
-/**
- * GSP_GPU::WriteHWRegsWithMask service function
- *
- * Updates sequential GSP GPU hardware registers using masks
- *
- *  Inputs:
- *      1 : address of first GPU register
- *      2 : number of registers to update sequentially
- *      4 : pointer to source data array
- *      6 : pointer to mask array
- */
-static void WriteHWRegsWithMask(Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-    u32 reg_addr = cmd_buff[1];
-    u32 size = cmd_buff[2];
+void GSP_GPU::WriteHWRegsWithMask(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x2, 2, 4);
+    u32 reg_addr = rp.Pop<u32>();
+    u32 size = rp.Pop<u32>();
 
-    VAddr src_data = cmd_buff[4];
-    VAddr mask_data = cmd_buff[6];
+    std::vector<u8> src_data = rp.PopStaticBuffer();
+    std::vector<u8> mask_data = rp.PopStaticBuffer();
 
-    cmd_buff[1] = WriteHWRegsWithMask(reg_addr, size, src_data, mask_data).raw;
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(GSP::WriteHWRegsWithMask(reg_addr, size, src_data, mask_data));
 }
 
-/// Read a GSP GPU hardware register
-static void ReadHWRegs(Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-    u32 reg_addr = cmd_buff[1];
-    u32 size = cmd_buff[2];
+void GSP_GPU::ReadHWRegs(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x4, 2, 0);
+    u32 reg_addr = rp.Pop<u32>();
+    u32 input_size = rp.Pop<u32>();
 
-    // TODO: Return proper error codes
-    if (reg_addr + size >= 0x420000) {
-        LOG_ERROR(Service_GSP, "Read address out of range! (address=0x%08x, size=0x%08x)", reg_addr,
-                  size);
+    static constexpr u32 MaxReadSize = 0x80;
+    u32 size = std::min(input_size, MaxReadSize);
+
+    if ((reg_addr % 4) != 0 || reg_addr >= 0x420000) {
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(ERR_REGS_OUTOFRANGE_OR_MISALIGNED);
+        LOG_ERROR(Service_GSP, "Invalid address 0x%08x", reg_addr);
         return;
     }
 
     // size should be word-aligned
     if ((size % 4) != 0) {
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(ERR_REGS_MISALIGNED);
         LOG_ERROR(Service_GSP, "Invalid size 0x%08x", size);
         return;
     }
 
-    VAddr dst_vaddr = cmd_buff[0x41];
-
-    while (size > 0) {
-        u32 value;
-        HW::Read<u32>(value, reg_addr + REGS_BEGIN);
-
-        Memory::Write32(dst_vaddr, value);
-
-        size -= 4;
-        dst_vaddr += 4;
-        reg_addr += 4;
+    std::vector<u8> buffer(size);
+    for (u32 offset = 0; offset < size; ++offset) {
+        HW::Read<u8>(buffer[offset], REGS_BEGIN + reg_addr + offset);
     }
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
+    rb.Push(RESULT_SUCCESS);
+    rb.PushStaticBuffer(std::move(buffer), 0);
 }
 
 ResultCode SetBufferSwap(u32 screen_id, const FrameBufferInfo& info) {
@@ -300,115 +281,77 @@ ResultCode SetBufferSwap(u32 screen_id, const FrameBufferInfo& info) {
     return RESULT_SUCCESS;
 }
 
-/**
- * GSP_GPU::SetBufferSwap service function
- *
- * Updates GPU display framebuffer configuration using the specified parameters.
- *
- *  Inputs:
- *      1 : Screen ID (0 = top screen, 1 = bottom screen)
- *      2-7 : FrameBufferInfo structure
- *  Outputs:
- *      1: Result code
- */
-static void SetBufferSwap(Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-    u32 screen_id = cmd_buff[1];
-    FrameBufferInfo* fb_info = (FrameBufferInfo*)&cmd_buff[2];
+void GSP_GPU::SetBufferSwap(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x5, 8, 0);
+    u32 screen_id = rp.Pop<u32>();
+    auto fb_info = rp.PopRaw<FrameBufferInfo>();
 
-    cmd_buff[1] = SetBufferSwap(screen_id, *fb_info).raw;
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(GSP::SetBufferSwap(screen_id, fb_info));
 }
 
-/**
- * GSP_GPU::FlushDataCache service function
- *
- * This Function is a no-op, We aren't emulating the CPU cache any time soon.
- *
- *  Inputs:
- *      1 : Address
- *      2 : Size
- *      3 : Value 0, some descriptor for the KProcess Handle
- *      4 : KProcess handle
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- */
-static void FlushDataCache(Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-    u32 address = cmd_buff[1];
-    u32 size = cmd_buff[2];
-    u32 process = cmd_buff[4];
+void GSP_GPU::FlushDataCache(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x9, 2, 2);
+    u32 address = rp.Pop<u32>();
+    u32 size = rp.Pop<u32>();
+    auto process = rp.PopObject<Kernel::Process>();
 
     // TODO(purpasmart96): Verify return header on HW
 
-    cmd_buff[1] = RESULT_SUCCESS.raw; // No error
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RESULT_SUCCESS);
 
-    LOG_DEBUG(Service_GSP, "(STUBBED) called address=0x%08X, size=0x%08X, process=0x%08X", address,
-              size, process);
+    LOG_DEBUG(Service_GSP, "(STUBBED) called address=0x%08X, size=0x%08X, process=%u", address,
+              size, process->process_id);
 }
 
-/**
- * GSP_GPU::SetAxiConfigQoSMode service function
- *  Inputs:
- *      1 : Mode, unused in emulator
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- */
-static void SetAxiConfigQoSMode(Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-    u32 mode = cmd_buff[1];
+void GSP_GPU::SetAxiConfigQoSMode(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x10, 1, 0);
+    u32 mode = rp.Pop<u32>();
 
-    cmd_buff[1] = RESULT_SUCCESS.raw; // No error
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RESULT_SUCCESS);
 
     LOG_DEBUG(Service_GSP, "(STUBBED) called mode=0x%08X", mode);
 }
 
-/**
- * GSP_GPU::RegisterInterruptRelayQueue service function
- *  Inputs:
- *      1 : "Flags" field, purpose is unknown
- *      3 : Handle to GSP synchronization event
- *  Outputs:
- *      1 : Result of function, 0x2A07 on success, otherwise error code
- *      2 : Thread index into GSP command buffer
- *      4 : Handle to GSP shared memory
- */
-static void RegisterInterruptRelayQueue(Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-    u32 flags = cmd_buff[1];
+void GSP_GPU::RegisterInterruptRelayQueue(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x13, 1, 2);
+    u32 flags = rp.Pop<u32>();
 
-    g_interrupt_event = Kernel::g_handle_table.Get<Kernel::Event>(cmd_buff[3]);
+    interrupt_event = rp.PopObject<Kernel::Event>();
     // TODO(mailwl): return right error code instead assert
-    ASSERT_MSG((g_interrupt_event != nullptr), "handle is not valid!");
+    ASSERT_MSG((interrupt_event != nullptr), "handle is not valid!");
 
-    g_interrupt_event->name = "GSP_GPU::interrupt_event";
+    interrupt_event->name = "GSP_GSP_GPU::interrupt_event";
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
 
     if (first_initialization) {
         // This specific code is required for a successful initialization, rather than 0
         first_initialization = false;
-        cmd_buff[1] = RESULT_FIRST_INITIALIZATION.raw;
+        rb.Push(RESULT_FIRST_INITIALIZATION);
     } else {
-        cmd_buff[1] = RESULT_SUCCESS.raw;
+        rb.Push(RESULT_SUCCESS);
     }
-    cmd_buff[2] = g_thread_id++;                                           // Thread ID
-    cmd_buff[4] = Kernel::g_handle_table.Create(g_shared_memory).Unwrap(); // GSP shared memory
 
-    g_interrupt_event->Signal(); // TODO(bunnei): Is this correct?
+    rb.Push(thread_id);
+    rb.PushCopyObjects(shared_memory);
+
+    thread_id++;
+    interrupt_event->Signal(); // TODO(bunnei): Is this correct?
 
     LOG_WARNING(Service_GSP, "called, flags=0x%08X", flags);
 }
 
-/**
- * GSP_GPU::UnregisterInterruptRelayQueue service function
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- */
-static void UnregisterInterruptRelayQueue(Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
+void GSP_GPU::UnregisterInterruptRelayQueue(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x14, 0, 0);
 
-    g_thread_id = 0;
-    g_interrupt_event = nullptr;
+    thread_id = 0;
+    interrupt_event = nullptr;
 
-    cmd_buff[1] = RESULT_SUCCESS.raw;
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RESULT_SUCCESS);
 
     LOG_WARNING(Service_GSP, "(STUBBED) called");
 }
@@ -419,20 +362,21 @@ static void UnregisterInterruptRelayQueue(Interface* self) {
  * @todo This should probably take a thread_id parameter and only signal this thread?
  * @todo This probably does not belong in the GSP module, instead move to video_core
  */
-void SignalInterrupt(InterruptId interrupt_id) {
+void GSP_GPU::SignalInterrupt(InterruptId interrupt_id) {
     if (!gpu_right_acquired) {
         return;
     }
-    if (nullptr == g_interrupt_event) {
+    if (nullptr == interrupt_event) {
         LOG_WARNING(Service_GSP, "cannot synchronize until GSP event has been created!");
         return;
     }
-    if (nullptr == g_shared_memory) {
+    if (nullptr == shared_memory) {
         LOG_WARNING(Service_GSP, "cannot synchronize until GSP shared memory has been created!");
         return;
     }
     for (int thread_id = 0; thread_id < 0x4; ++thread_id) {
-        InterruptRelayQueue* interrupt_relay_queue = GetInterruptRelayQueue(thread_id);
+        InterruptRelayQueue* interrupt_relay_queue =
+            GetInterruptRelayQueue(shared_memory, thread_id);
         u8 next = interrupt_relay_queue->index;
         next += interrupt_relay_queue->number_interrupts;
         next = next % 0x34; // 0x34 is the number of interrupt slots
@@ -450,12 +394,12 @@ void SignalInterrupt(InterruptId interrupt_id) {
         if (screen_id != -1) {
             FrameBufferUpdate* info = GetFrameBufferInfo(thread_id, screen_id);
             if (info->is_dirty) {
-                SetBufferSwap(screen_id, info->framebuffer_info[info->index]);
+                GSP::SetBufferSwap(screen_id, info->framebuffer_info[info->index]);
                 info->is_dirty.Assign(false);
             }
         }
     }
-    g_interrupt_event->Signal();
+    interrupt_event->Signal();
 }
 
 MICROPROFILE_DEFINE(GPU_GSP_DMA, "GPU", "GSP DMA", MP_RGB(100, 0, 255));
@@ -592,20 +536,10 @@ static void ExecuteCommand(const Command& command, u32 thread_id) {
                                        (void*)&command);
 }
 
-/**
- * GSP_GPU::SetLcdForceBlack service function
- *
- * Enable or disable REG_LCDCOLORFILL with the color black.
- *
- *  Inputs:
- *      1: Black color fill flag (0 = don't fill, !0 = fill)
- *  Outputs:
- *      1: Result code
- */
-static void SetLcdForceBlack(Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
+void GSP_GPU::SetLcdForceBlack(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0xB, 1, 0);
 
-    bool enable_black = cmd_buff[1] != 0;
+    bool enable_black = rp.Pop<bool>();
     LCD::Regs::ColorFill data = {0};
 
     // Since data is already zeroed, there is no need to explicitly set
@@ -615,14 +549,16 @@ static void SetLcdForceBlack(Interface* self) {
     LCD::Write(HW::VADDR_LCD + 4 * LCD_REG_INDEX(color_fill_top), data.raw);    // Top LCD
     LCD::Write(HW::VADDR_LCD + 4 * LCD_REG_INDEX(color_fill_bottom), data.raw); // Bottom LCD
 
-    cmd_buff[1] = RESULT_SUCCESS.raw;
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RESULT_SUCCESS);
 }
 
-/// This triggers handling of the GX command written to the command buffer in shared memory.
-static void TriggerCmdReqQueue(Interface* self) {
+void GSP_GPU::TriggerCmdReqQueue(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0xC, 0, 0);
+
     // Iterate through each thread's command queue...
     for (unsigned thread_id = 0; thread_id < 0x4; ++thread_id) {
-        CommandBuffer* command_buffer = (CommandBuffer*)GetCommandBuffer(thread_id);
+        CommandBuffer* command_buffer = (CommandBuffer*)GetCommandBuffer(shared_memory, thread_id);
 
         // Iterate through each command...
         for (unsigned i = 0; i < command_buffer->number_commands; ++i) {
@@ -636,31 +572,12 @@ static void TriggerCmdReqQueue(Interface* self) {
         }
     }
 
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-    cmd_buff[1] = 0; // No error
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RESULT_SUCCESS);
 }
 
-/**
- * GSP_GPU::ImportDisplayCaptureInfo service function
- *
- * Returns information about the current framebuffer state
- *
- *  Inputs:
- *      0: Header 0x00180000
- *  Outputs:
- *      0: Header Code[0x00180240]
- *      1: Result code
- *      2: Left framebuffer virtual address for the main screen
- *      3: Right framebuffer virtual address for the main screen
- *      4: Main screen framebuffer format
- *      5: Main screen framebuffer width
- *      6: Left framebuffer virtual address for the bottom screen
- *      7: Right framebuffer virtual address for the bottom screen
- *      8: Bottom screen framebuffer format
- *      9: Bottom screen framebuffer width
- */
-static void ImportDisplayCaptureInfo(Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
+void GSP_GPU::ImportDisplayCaptureInfo(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x18, 0, 0);
 
     // TODO(Subv): We're always returning the framebuffer structures for thread_id = 0,
     // because we only support a single running application at a time.
@@ -671,133 +588,120 @@ static void ImportDisplayCaptureInfo(Interface* self) {
     FrameBufferUpdate* top_screen = GetFrameBufferInfo(thread_id, 0);
     FrameBufferUpdate* bottom_screen = GetFrameBufferInfo(thread_id, 1);
 
-    cmd_buff[0] = IPC::MakeHeader(0x18, 0x9, 0);
-    cmd_buff[1] = RESULT_SUCCESS.raw;
+    struct CaptureInfoEntry {
+        u32_le address_left;
+        u32_le address_right;
+        u32_le format;
+        u32_le stride;
+    };
+
+    CaptureInfoEntry top_entry, bottom_entry;
     // Top Screen
-    cmd_buff[2] = top_screen->framebuffer_info[top_screen->index].address_left;
-    cmd_buff[3] = top_screen->framebuffer_info[top_screen->index].address_right;
-    cmd_buff[4] = top_screen->framebuffer_info[top_screen->index].format;
-    cmd_buff[5] = top_screen->framebuffer_info[top_screen->index].stride;
+    top_entry.address_left = top_screen->framebuffer_info[top_screen->index].address_left;
+    top_entry.address_right = top_screen->framebuffer_info[top_screen->index].address_right;
+    top_entry.format = top_screen->framebuffer_info[top_screen->index].format;
+    top_entry.stride = top_screen->framebuffer_info[top_screen->index].stride;
     // Bottom Screen
-    cmd_buff[6] = bottom_screen->framebuffer_info[bottom_screen->index].address_left;
-    cmd_buff[7] = bottom_screen->framebuffer_info[bottom_screen->index].address_right;
-    cmd_buff[8] = bottom_screen->framebuffer_info[bottom_screen->index].format;
-    cmd_buff[9] = bottom_screen->framebuffer_info[bottom_screen->index].stride;
+    bottom_entry.address_left = bottom_screen->framebuffer_info[bottom_screen->index].address_left;
+    bottom_entry.address_right =
+        bottom_screen->framebuffer_info[bottom_screen->index].address_right;
+    bottom_entry.format = bottom_screen->framebuffer_info[bottom_screen->index].format;
+    bottom_entry.stride = bottom_screen->framebuffer_info[bottom_screen->index].stride;
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(9, 0);
+    rb.Push(RESULT_SUCCESS);
+    rb.PushRaw(top_entry);
+    rb.PushRaw(bottom_entry);
 
     LOG_WARNING(Service_GSP, "called");
 }
 
-/**
- * GSP_GPU::AcquireRight service function
- *  Outputs:
- *      1: Result code
- */
-static void AcquireRight(Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
+void GSP_GPU::AcquireRight(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x16, 1, 2);
+
+    u32 flag = rp.Pop<u32>();
+    auto process = rp.PopObject<Kernel::Process>();
 
     gpu_right_acquired = true;
 
-    cmd_buff[1] = RESULT_SUCCESS.raw;
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RESULT_SUCCESS);
 
-    LOG_WARNING(Service_GSP, "called");
+    LOG_WARNING(Service_GSP, "called flag=%08X process=%u", flag, process->process_id);
 }
 
-/**
- * GSP_GPU::ReleaseRight service function
- *  Outputs:
- *      1: Result code
- */
-static void ReleaseRight(Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
+void GSP_GPU::ReleaseRight(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x17, 0, 0);
 
     gpu_right_acquired = false;
 
-    cmd_buff[1] = RESULT_SUCCESS.raw;
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RESULT_SUCCESS);
 
     LOG_WARNING(Service_GSP, "called");
 }
 
-/**
- * GSP_GPU::StoreDataCache service function
- *
- * This Function is a no-op, We aren't emulating the CPU cache any time soon.
- *
- *  Inputs:
- *      0 : Header code [0x001F0082]
- *      1 : Address
- *      2 : Size
- *      3 : Value 0, some descriptor for the KProcess Handle
- *      4 : KProcess handle
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- */
-static void StoreDataCache(Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-    u32 address = cmd_buff[1];
-    u32 size = cmd_buff[2];
-    u32 process = cmd_buff[4];
+void GSP_GPU::StoreDataCache(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x1F, 2, 2);
 
-    cmd_buff[0] = IPC::MakeHeader(0x1F, 0x1, 0);
-    cmd_buff[1] = RESULT_SUCCESS.raw; // No error
+    u32 address = rp.Pop<u32>();
+    u32 size = rp.Pop<u32>();
+    auto process = rp.PopObject<Kernel::Process>();
 
-    LOG_DEBUG(Service_GSP, "(STUBBED) called address=0x%08X, size=0x%08X, process=0x%08X", address,
-              size, process);
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RESULT_SUCCESS);
+
+    LOG_DEBUG(Service_GSP, "(STUBBED) called address=0x%08X, size=0x%08X, process=%u", address,
+              size, process->process_id);
 }
 
-const Interface::FunctionInfo FunctionTable[] = {
-    {0x00010082, WriteHWRegs, "WriteHWRegs"},
-    {0x00020084, WriteHWRegsWithMask, "WriteHWRegsWithMask"},
-    {0x00030082, nullptr, "WriteHWRegRepeat"},
-    {0x00040080, ReadHWRegs, "ReadHWRegs"},
-    {0x00050200, SetBufferSwap, "SetBufferSwap"},
-    {0x00060082, nullptr, "SetCommandList"},
-    {0x000700C2, nullptr, "RequestDma"},
-    {0x00080082, FlushDataCache, "FlushDataCache"},
-    {0x00090082, nullptr, "InvalidateDataCache"},
-    {0x000A0044, nullptr, "RegisterInterruptEvents"},
-    {0x000B0040, SetLcdForceBlack, "SetLcdForceBlack"},
-    {0x000C0000, TriggerCmdReqQueue, "TriggerCmdReqQueue"},
-    {0x000D0140, nullptr, "SetDisplayTransfer"},
-    {0x000E0180, nullptr, "SetTextureCopy"},
-    {0x000F0200, nullptr, "SetMemoryFill"},
-    {0x00100040, SetAxiConfigQoSMode, "SetAxiConfigQoSMode"},
-    {0x00110040, nullptr, "SetPerfLogMode"},
-    {0x00120000, nullptr, "GetPerfLog"},
-    {0x00130042, RegisterInterruptRelayQueue, "RegisterInterruptRelayQueue"},
-    {0x00140000, UnregisterInterruptRelayQueue, "UnregisterInterruptRelayQueue"},
-    {0x00150002, nullptr, "TryAcquireRight"},
-    {0x00160042, AcquireRight, "AcquireRight"},
-    {0x00170000, ReleaseRight, "ReleaseRight"},
-    {0x00180000, ImportDisplayCaptureInfo, "ImportDisplayCaptureInfo"},
-    {0x00190000, nullptr, "SaveVramSysArea"},
-    {0x001A0000, nullptr, "RestoreVramSysArea"},
-    {0x001B0000, nullptr, "ResetGpuCore"},
-    {0x001C0040, nullptr, "SetLedForceOff"},
-    {0x001D0040, nullptr, "SetTestCommand"},
-    {0x001E0080, nullptr, "SetInternalPriorities"},
-    {0x001F0082, StoreDataCache, "StoreDataCache"},
-};
+GSP_GPU::GSP_GPU() : ServiceFramework("gsp::Gpu", 2) {
+    static const FunctionInfo functions[] = {
+        {0x00010082, &GSP_GPU::WriteHWRegs, "WriteHWRegs"},
+        {0x00020084, &GSP_GPU::WriteHWRegsWithMask, "WriteHWRegsWithMask"},
+        {0x00030082, nullptr, "WriteHWRegRepeat"},
+        {0x00040080, &GSP_GPU::ReadHWRegs, "ReadHWRegs"},
+        {0x00050200, &GSP_GPU::SetBufferSwap, "SetBufferSwap"},
+        {0x00060082, nullptr, "SetCommandList"},
+        {0x000700C2, nullptr, "RequestDma"},
+        {0x00080082, &GSP_GPU::FlushDataCache, "FlushDataCache"},
+        {0x00090082, nullptr, "InvalidateDataCache"},
+        {0x000A0044, nullptr, "RegisterInterruptEvents"},
+        {0x000B0040, &GSP_GPU::SetLcdForceBlack, "SetLcdForceBlack"},
+        {0x000C0000, &GSP_GPU::TriggerCmdReqQueue, "TriggerCmdReqQueue"},
+        {0x000D0140, nullptr, "SetDisplayTransfer"},
+        {0x000E0180, nullptr, "SetTextureCopy"},
+        {0x000F0200, nullptr, "SetMemoryFill"},
+        {0x00100040, &GSP_GPU::SetAxiConfigQoSMode, "SetAxiConfigQoSMode"},
+        {0x00110040, nullptr, "SetPerfLogMode"},
+        {0x00120000, nullptr, "GetPerfLog"},
+        {0x00130042, &GSP_GPU::RegisterInterruptRelayQueue, "RegisterInterruptRelayQueue"},
+        {0x00140000, &GSP_GPU::UnregisterInterruptRelayQueue, "UnregisterInterruptRelayQueue"},
+        {0x00150002, nullptr, "TryAcquireRight"},
+        {0x00160042, &GSP_GPU::AcquireRight, "AcquireRight"},
+        {0x00170000, &GSP_GPU::ReleaseRight, "ReleaseRight"},
+        {0x00180000, &GSP_GPU::ImportDisplayCaptureInfo, "ImportDisplayCaptureInfo"},
+        {0x00190000, nullptr, "SaveVramSysArea"},
+        {0x001A0000, nullptr, "RestoreVramSysArea"},
+        {0x001B0000, nullptr, "ResetGpuCore"},
+        {0x001C0040, nullptr, "SetLedForceOff"},
+        {0x001D0040, nullptr, "SetTestCommand"},
+        {0x001E0080, nullptr, "SetInternalPriorities"},
+        {0x001F0082, &GSP_GPU::StoreDataCache, "StoreDataCache"},
+    };
+    RegisterHandlers(functions);
 
-GSP_GPU::GSP_GPU() {
-    Register(FunctionTable);
-
-    g_interrupt_event = nullptr;
+    interrupt_event = nullptr;
 
     using Kernel::MemoryPermission;
-    g_shared_memory = Kernel::SharedMemory::Create(nullptr, 0x1000, MemoryPermission::ReadWrite,
-                                                   MemoryPermission::ReadWrite, 0,
-                                                   Kernel::MemoryRegion::BASE, "GSP:SharedMemory");
+    shared_memory = Kernel::SharedMemory::Create(nullptr, 0x1000, MemoryPermission::ReadWrite,
+                                                 MemoryPermission::ReadWrite, 0,
+                                                 Kernel::MemoryRegion::BASE, "GSP:SharedMemory");
 
-    g_thread_id = 0;
+    thread_id = 0;
     gpu_right_acquired = false;
     first_initialization = true;
-}
-
-GSP_GPU::~GSP_GPU() {
-    g_interrupt_event = nullptr;
-    g_shared_memory = nullptr;
-    gpu_right_acquired = false;
-}
+};
 
 } // namespace GSP
 } // namespace Service

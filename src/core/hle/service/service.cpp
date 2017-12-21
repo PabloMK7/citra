@@ -27,7 +27,7 @@
 #include "core/hle/service/err_f.h"
 #include "core/hle/service/frd/frd.h"
 #include "core/hle/service/fs/archive.h"
-#include "core/hle/service/gsp_gpu.h"
+#include "core/hle/service/gsp/gsp.h"
 #include "core/hle/service/gsp_lcd.h"
 #include "core/hle/service/hid/hid.h"
 #include "core/hle/service/http_c.h"
@@ -276,6 +276,7 @@ void Init() {
     CFG::Init();
     DLP::Init();
     FRD::Init();
+    GSP::InstallInterfaces(*SM::g_service_manager);
     HID::Init();
     IR::InstallInterfaces(*SM::g_service_manager);
     MVD::Init();
@@ -289,7 +290,6 @@ void Init() {
 
     AddService(new CSND::CSND_SND);
     AddService(new DSP_DSP::Interface);
-    AddService(new GSP::GSP_GPU);
     AddService(new GSP::GSP_LCD);
     AddService(new HTTP::HTTP_C);
     AddService(new PM::PM_APP);
