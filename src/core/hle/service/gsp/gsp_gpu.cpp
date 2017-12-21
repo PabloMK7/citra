@@ -50,6 +50,9 @@ constexpr ResultCode ERR_REGS_INVALID_SIZE(ErrorDescription::InvalidSize, ErrorM
                                            ErrorSummary::InvalidArgument,
                                            ErrorLevel::Usage); // 0xE0E02BEC
 
+/// Maximum number of threads that can be registered at the same time in the GSP module.
+constexpr u32 MaxGSPThreads = 4;
+
 /// Gets a pointer to a thread command buffer in GSP shared memory
 static inline u8* GetCommandBuffer(Kernel::SharedPtr<Kernel::SharedMemory> shared_memory,
                                    u32 thread_id) {
@@ -325,6 +328,7 @@ void GSP_GPU::RegisterInterruptRelayQueue(Kernel::HLERequestContext& ctx) {
     interrupt_event->name = "GSP_GSP_GPU::interrupt_event";
 
     u32 thread_id = next_thread_id++;
+    ASSERT_MSG(thread_id < MaxGSPThreads, "GSP thread id overflow");
 
     SessionData* session_data = GetSessionData(ctx.Session());
     session_data->thread_id = thread_id;
@@ -370,11 +374,23 @@ void GSP_GPU::UnregisterInterruptRelayQueue(Kernel::HLERequestContext& ctx) {
  * @todo This probably does not belong in the GSP module, instead move to video_core
  */
 void GSP_GPU::SignalInterrupt(InterruptId interrupt_id) {
+    // Don't do anything if no process has acquired the GPU right.
+    if (active_thread_id == -1)
+        return;
+
     if (nullptr == shared_memory) {
         LOG_WARNING(Service_GSP, "cannot synchronize until GSP shared memory has been created!");
         return;
     }
-    for (int thread_id = 0; thread_id < 0x4; ++thread_id) {
+
+    // Normal interrupts are only signaled for the active thread (ie, the thread that has the GPU
+    // right), but the PDC0/1 interrupts are signaled for every registered thread.
+    for (int thread_id = 0; thread_id < MaxGSPThreads; ++thread_id) {
+        if (interrupt_id != InterruptId::PDC0 && interrupt_id != InterruptId::PDC1) {
+            // Ignore threads that aren't the current active thread
+            if (thread_id != active_thread_id)
+                continue;
+        }
         SessionData* session_data = FindRegisteredThreadData(thread_id);
         if (session_data == nullptr)
             continue;
@@ -398,6 +414,8 @@ void GSP_GPU::SignalInterrupt(InterruptId interrupt_id) {
         // Update framebuffer information if requested
         // TODO(yuriks): Confirm where this code should be called. It is definitely updated without
         //               executing any GSP commands, only waiting on the event.
+        // TODO(Subv): The real GSP module triggers PDC0 after updating both the top and bottom
+        // screen, it is currently unknown what PDC1 does.
         int screen_id =
             (interrupt_id == InterruptId::PDC0) ? 0 : (interrupt_id == InterruptId::PDC1) ? 1 : -1;
         if (screen_id != -1) {
