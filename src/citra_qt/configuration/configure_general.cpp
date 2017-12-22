@@ -24,9 +24,9 @@ ConfigureGeneral::ConfigureGeneral(QWidget* parent)
         ui->language_combobox->addItem(lang, locale);
     }
 
-    // Unlike other configuration, interface language change need to be reflect on the interface
-    // immediately. This is done by passing a signal to the main window, and then retranslating when
-    // passing back.
+    // Unlike other configuration changes, interface language changes need to be reflected on the
+    // interface immediately. This is done by passing a signal to the main window, and then
+    // retranslating when passing back.
     connect(ui->language_combobox,
             static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this,
             &ConfigureGeneral::onLanguageChanged);
