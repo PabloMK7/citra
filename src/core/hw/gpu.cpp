@@ -439,18 +439,16 @@ inline void Write(u32 addr, const T data) {
 
             if (config.is_texture_copy) {
                 TextureCopy(config);
-                LOG_TRACE(HW_GPU,
-                          "TextureCopy: 0x%X bytes from 0x%08X(%u+%u)-> "
-                          "0x%08X(%u+%u), flags 0x%08X",
+                LOG_TRACE(HW_GPU, "TextureCopy: 0x%X bytes from 0x%08X(%u+%u)-> "
+                                  "0x%08X(%u+%u), flags 0x%08X",
                           config.texture_copy.size, config.GetPhysicalInputAddress(),
                           config.texture_copy.input_width * 16, config.texture_copy.input_gap * 16,
                           config.GetPhysicalOutputAddress(), config.texture_copy.output_width * 16,
                           config.texture_copy.output_gap * 16, config.flags);
             } else {
                 DisplayTransfer(config);
-                LOG_TRACE(HW_GPU,
-                          "DisplayTransfer: 0x%08x(%ux%u)-> "
-                          "0x%08x(%ux%u), dst format %x, flags 0x%08X",
+                LOG_TRACE(HW_GPU, "DisplayTransfer: 0x%08x(%ux%u)-> "
+                                  "0x%08x(%ux%u), dst format %x, flags 0x%08X",
                           config.GetPhysicalInputAddress(), config.input_width.Value(),
                           config.input_height.Value(), config.GetPhysicalOutputAddress(),
                           config.output_width.Value(), config.output_height.Value(),

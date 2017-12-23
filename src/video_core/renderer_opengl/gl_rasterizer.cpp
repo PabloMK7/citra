@@ -1074,8 +1074,9 @@ bool RasterizerOpenGL::AccelerateTextureCopy(const GPU::Regs::DisplayTransferCon
     SurfaceParams dst_params = *src_surface;
     dst_params.addr = config.GetPhysicalOutputAddress();
     dst_params.width = src_rect.GetWidth() / src_surface->res_scale;
-    dst_params.stride = dst_params.width + src_surface->PixelsInBytes(
-                                               src_surface->is_tiled ? output_gap / 8 : output_gap);
+    dst_params.stride =
+        dst_params.width +
+        src_surface->PixelsInBytes(src_surface->is_tiled ? output_gap / 8 : output_gap);
     dst_params.height = src_rect.GetHeight() / src_surface->res_scale;
     dst_params.res_scale = src_surface->res_scale;
     dst_params.UpdateParams();
