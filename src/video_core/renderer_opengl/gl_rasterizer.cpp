@@ -1150,8 +1150,8 @@ void RasterizerOpenGL::SamplerInfo::Create() {
     wrap_s = wrap_t = TextureConfig::Repeat;
     border_color = 0;
 
-    glSamplerParameteri(sampler.handle, GL_TEXTURE_MIN_FILTER,
-                        GL_LINEAR); // default is GL_LINEAR_MIPMAP_LINEAR
+    // default is GL_LINEAR_MIPMAP_LINEAR
+    glSamplerParameteri(sampler.handle, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     // Other attributes have correct defaults
 }
 

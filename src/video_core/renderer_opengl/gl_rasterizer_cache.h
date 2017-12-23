@@ -224,11 +224,11 @@ struct SurfaceParams {
     }
 
     u32 PixelsInBytes(u32 size) const {
-        return size * 8 / GetFormatBpp(pixel_format);
+        return size * CHAR_BIT / GetFormatBpp(pixel_format);
     }
 
     u32 BytesInPixels(u32 pixels) const {
-        return pixels * GetFormatBpp(pixel_format) / 8;
+        return pixels * GetFormatBpp(pixel_format) / CHAR_BIT;
     }
 
     bool ExactMatch(const SurfaceParams& other_surface) const;
@@ -283,6 +283,9 @@ struct CachedSurface : SurfaceParams {
 
     std::unique_ptr<u8[]> gl_buffer;
     size_t gl_buffer_size = 0;
+
+    GLuint read_framebuffer_handle;
+    GLuint draw_framebuffer_handle;
 
     // Read/Write data in 3DS memory to/from gl_buffer
     void LoadGLBuffer(PAddr load_start, PAddr load_end);
@@ -359,4 +362,6 @@ private:
     SurfaceMap dirty_regions;
     PageMap cached_pages;
     SurfaceSet remove_surfaces;
+    OGLFramebuffer read_framebuffer;
+    OGLFramebuffer draw_framebuffer;
 };
