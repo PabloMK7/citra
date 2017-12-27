@@ -19,6 +19,10 @@ using GLvec2 = std::array<GLfloat, 2>;
 using GLvec3 = std::array<GLfloat, 3>;
 using GLvec4 = std::array<GLfloat, 4>;
 
+using GLuvec2 = std::array<GLuint, 2>;
+using GLuvec3 = std::array<GLuint, 3>;
+using GLuvec4 = std::array<GLuint, 4>;
+
 namespace PicaToGL {
 
 inline GLenum TextureFilterMode(Pica::TexturingRegs::TextureConfig::TextureFilter mode) {
