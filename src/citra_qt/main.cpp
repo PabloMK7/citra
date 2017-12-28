@@ -918,7 +918,6 @@ void GMainWindow::UpdateStatusBar() {
 }
 
 void GMainWindow::OnCoreError(Core::System::ResultStatus result, std::string details) {
-    emu_thread->SetRunning(false);
     QMessageBox::StandardButton answer;
     QString status_message;
     const QString common_message =

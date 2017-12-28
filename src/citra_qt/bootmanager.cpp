@@ -36,6 +36,7 @@ void EmuThread::run() {
 
             Core::System::ResultStatus result = Core::System::GetInstance().RunLoop();
             if (result != Core::System::ResultStatus::Success) {
+                this->SetRunning(false);
                 emit ErrorThrown(result, Core::System::GetInstance().GetStatusDetails());
             }
 
