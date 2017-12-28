@@ -918,6 +918,7 @@ void GMainWindow::UpdateStatusBar() {
 }
 
 void GMainWindow::OnCoreError(Core::System::ResultStatus result, std::string details) {
+    emu_thread->SetRunning(false);
     QMessageBox::StandardButton answer;
     QString status_message;
     const QString common_message =
@@ -974,6 +975,7 @@ void GMainWindow::OnCoreError(Core::System::ResultStatus result, std::string det
     } else {
         // Only show the message if the game is still running.
         if (emu_thread) {
+            emu_thread->SetRunning(true);            
             message_label->setText(status_message);
             message_label->setVisible(true);
         }
