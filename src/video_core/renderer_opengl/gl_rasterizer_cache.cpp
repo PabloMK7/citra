@@ -233,7 +233,7 @@ static void AllocateSurfaceTexture(GLuint texture, const FormatTuple& format_tup
 
 static bool BlitTextures(GLuint src_tex, const MathUtil::Rectangle<u32>& src_rect, GLuint dst_tex,
                          const MathUtil::Rectangle<u32>& dst_rect, SurfaceType type,
-                         GLuint read_handle, GLuint draw_handle) {
+                         GLuint read_fb_handle, GLuint draw_fb_handle) {
     OpenGLState state = OpenGLState::GetCurState();
 
     OpenGLState prev_state = state;
@@ -245,8 +245,8 @@ static bool BlitTextures(GLuint src_tex, const MathUtil::Rectangle<u32>& src_rec
     state.ResetTexture(dst_tex);
 
     // Keep track of previous framebuffer bindings
-    state.draw.read_framebuffer = read_handle;
-    state.draw.draw_framebuffer = draw_handle;
+    state.draw.read_framebuffer = read_fb_handle;
+    state.draw.draw_framebuffer = draw_fb_handle;
     state.Apply();
 
     u32 buffers = 0;
@@ -293,7 +293,7 @@ static bool BlitTextures(GLuint src_tex, const MathUtil::Rectangle<u32>& src_rec
 }
 
 static bool FillSurface(const Surface& surface, const u8* fill_data,
-                        const MathUtil::Rectangle<u32>& fill_rect, GLuint draw_handle) {
+                        const MathUtil::Rectangle<u32>& fill_rect, GLuint draw_fb_handle) {
     OpenGLState state = OpenGLState::GetCurState();
 
     OpenGLState prev_state = state;
@@ -307,7 +307,7 @@ static bool FillSurface(const Surface& surface, const u8* fill_data,
     state.scissor.width = static_cast<GLsizei>(fill_rect.GetWidth());
     state.scissor.height = static_cast<GLsizei>(fill_rect.GetHeight());
 
-    state.draw.draw_framebuffer = draw_handle;
+    state.draw.draw_framebuffer = draw_fb_handle;
     state.Apply();
 
     if (surface->type == SurfaceType::Color || surface->type == SurfaceType::Texture) {
@@ -723,7 +723,8 @@ void CachedSurface::FlushGLBuffer(PAddr flush_start, PAddr flush_end) {
     }
 }
 
-void CachedSurface::UploadGLTexture(const MathUtil::Rectangle<u32>& rect) {
+void CachedSurface::UploadGLTexture(const MathUtil::Rectangle<u32>& rect, GLuint read_fb_handle,
+                                    GLuint draw_fb_handle) {
     if (type == SurfaceType::Fill)
         return;
 
@@ -777,11 +778,12 @@ void CachedSurface::UploadGLTexture(const MathUtil::Rectangle<u32>& rect) {
         scaled_rect.bottom *= res_scale;
 
         BlitTextures(unscaled_tex.handle, {0, rect.GetHeight(), rect.GetWidth(), 0}, texture.handle,
-                     scaled_rect, type, read_framebuffer_handle, draw_framebuffer_handle);
+                     scaled_rect, type, read_fb_handle, draw_fb_handle);
     }
 }
 
-void CachedSurface::DownloadGLTexture(const MathUtil::Rectangle<u32>& rect) {
+void CachedSurface::DownloadGLTexture(const MathUtil::Rectangle<u32>& rect, GLuint read_fb_handle,
+                                      GLuint draw_fb_handle) {
     if (type == SurfaceType::Fill)
         return;
 
@@ -815,7 +817,7 @@ void CachedSurface::DownloadGLTexture(const MathUtil::Rectangle<u32>& rect) {
         MathUtil::Rectangle<u32> unscaled_tex_rect{0, rect.GetHeight(), rect.GetWidth(), 0};
         AllocateSurfaceTexture(unscaled_tex.handle, tuple, rect.GetWidth(), rect.GetHeight());
         BlitTextures(texture.handle, scaled_rect, unscaled_tex.handle, unscaled_tex_rect, type,
-                     read_framebuffer_handle, draw_framebuffer_handle);
+                     read_fb_handle, draw_fb_handle);
 
         state.texture_units[0].texture_2d = unscaled_tex.handle;
         state.Apply();
@@ -824,7 +826,7 @@ void CachedSurface::DownloadGLTexture(const MathUtil::Rectangle<u32>& rect) {
         glGetTexImage(GL_TEXTURE_2D, 0, tuple.format, tuple.type, &gl_buffer[buffer_offset]);
     } else {
         state.ResetTexture(texture.handle);
-        state.draw.read_framebuffer = read_framebuffer_handle;
+        state.draw.read_framebuffer = read_fb_handle;
         state.Apply();
 
         if (type == SurfaceType::Color || type == SurfaceType::Texture) {
@@ -961,8 +963,6 @@ RasterizerCacheOpenGL::~RasterizerCacheOpenGL() {
     FlushAll();
     while (!surface_cache.empty())
         UnregisterSurface(*surface_cache.begin()->second.begin());
-    read_framebuffer.Release();
-    draw_framebuffer.Release();
 }
 
 bool RasterizerCacheOpenGL::BlitSurfaces(const Surface& src_surface,
@@ -1205,8 +1205,6 @@ Surface RasterizerCacheOpenGL::GetFillSurface(const GPU::Regs::MemoryFillConfig&
     new_surface->size = new_surface->end - new_surface->addr;
     new_surface->type = SurfaceType::Fill;
     new_surface->res_scale = std::numeric_limits<u16>::max();
-    new_surface->read_framebuffer_handle = read_framebuffer.handle;
-    new_surface->draw_framebuffer_handle = draw_framebuffer.handle;
 
     std::memcpy(&new_surface->fill_data[0], &config.value_32bit, 4);
     if (config.fill_32bit) {
@@ -1300,7 +1298,8 @@ void RasterizerCacheOpenGL::ValidateSurface(const Surface& surface, PAddr addr, 
         // Load data from 3DS memory
         FlushRegion(params.addr, params.size);
         surface->LoadGLBuffer(params.addr, params.end);
-        surface->UploadGLTexture(surface->GetSubRect(params));
+        surface->UploadGLTexture(surface->GetSubRect(params), read_framebuffer.handle,
+                                 draw_framebuffer.handle);
         surface->invalid_regions.erase(params.GetInterval());
     }
 }
@@ -1327,7 +1326,8 @@ void RasterizerCacheOpenGL::FlushRegion(PAddr addr, u32 size, Surface flush_surf
 
         if (surface->type != SurfaceType::Fill) {
             SurfaceParams params = surface->FromInterval(interval);
-            surface->DownloadGLTexture(surface->GetSubRect(params));
+            surface->DownloadGLTexture(surface->GetSubRect(params), read_framebuffer.handle,
+                                       draw_framebuffer.handle);
         }
         surface->FlushGLBuffer(boost::icl::first(interval), boost::icl::last_next(interval));
         flushed_intervals += interval;
@@ -1404,8 +1404,6 @@ void RasterizerCacheOpenGL::InvalidateRegion(PAddr addr, u32 size, const Surface
 Surface RasterizerCacheOpenGL::CreateSurface(const SurfaceParams& params) {
     Surface surface = std::make_shared<CachedSurface>();
     static_cast<SurfaceParams&>(*surface) = params;
-    surface->read_framebuffer_handle = read_framebuffer.handle;
-    surface->draw_framebuffer_handle = draw_framebuffer.handle;
 
     surface->texture.Create();
 
