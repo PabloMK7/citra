@@ -723,10 +723,13 @@ void CachedSurface::FlushGLBuffer(PAddr flush_start, PAddr flush_end) {
     }
 }
 
+MICROPROFILE_DEFINE(OpenGL_TextureUL, "OpenGL", "Texture Upload", MP_RGB(128, 64, 192));
 void CachedSurface::UploadGLTexture(const MathUtil::Rectangle<u32>& rect, GLuint read_fb_handle,
                                     GLuint draw_fb_handle) {
     if (type == SurfaceType::Fill)
         return;
+
+    MICROPROFILE_SCOPE(OpenGL_TextureUL);
 
     ASSERT(gl_buffer_size == width * height * GetGLBytesPerPixel(pixel_format));
 
@@ -782,10 +785,13 @@ void CachedSurface::UploadGLTexture(const MathUtil::Rectangle<u32>& rect, GLuint
     }
 }
 
+MICROPROFILE_DEFINE(OpenGL_TextureDL, "OpenGL", "Texture Download", MP_RGB(128, 192, 64));
 void CachedSurface::DownloadGLTexture(const MathUtil::Rectangle<u32>& rect, GLuint read_fb_handle,
                                       GLuint draw_fb_handle) {
     if (type == SurfaceType::Fill)
         return;
+
+    MICROPROFILE_SCOPE(OpenGL_TextureDL);
 
     if (gl_buffer == nullptr) {
         gl_buffer_size = width * height * GetGLBytesPerPixel(pixel_format);
