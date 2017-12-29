@@ -271,14 +271,18 @@ void RasterizerOpenGL::DrawTriangles() {
                               : (depth_surface == nullptr ? 1u : depth_surface->res_scale);
 
     MathUtil::Rectangle<u32> draw_rect{
-        MathUtil::Clamp(surfaces_rect.left + viewport_rect_unscaled.left * res_scale, // left
-                        surfaces_rect.left, surfaces_rect.right),
-        MathUtil::Clamp(surfaces_rect.bottom + viewport_rect_unscaled.top * res_scale, // top
-                        surfaces_rect.bottom, surfaces_rect.top),
-        MathUtil::Clamp(surfaces_rect.left + viewport_rect_unscaled.right * res_scale, // right
-                        surfaces_rect.left, surfaces_rect.right),
-        MathUtil::Clamp(surfaces_rect.bottom + viewport_rect_unscaled.bottom * res_scale, // bottom
-                        surfaces_rect.bottom, surfaces_rect.top)};
+        static_cast<u32>(MathUtil::Clamp<s32>(static_cast<s32>(surfaces_rect.left) +
+                                                  viewport_rect_unscaled.left * res_scale,
+                                              surfaces_rect.left, surfaces_rect.right)), // Left
+        static_cast<u32>(MathUtil::Clamp<s32>(static_cast<s32>(surfaces_rect.bottom) +
+                                                  viewport_rect_unscaled.top * res_scale,
+                                              surfaces_rect.bottom, surfaces_rect.top)), // Top
+        static_cast<u32>(MathUtil::Clamp<s32>(static_cast<s32>(surfaces_rect.left) +
+                                                  viewport_rect_unscaled.right * res_scale,
+                                              surfaces_rect.left, surfaces_rect.right)), // Right
+        static_cast<u32>(MathUtil::Clamp<s32>(static_cast<s32>(surfaces_rect.bottom) +
+                                                  viewport_rect_unscaled.bottom * res_scale,
+                                              surfaces_rect.bottom, surfaces_rect.top))}; // Bottom
 
     // Bind the framebuffer surfaces
     state.draw.draw_framebuffer = framebuffer.handle;
@@ -306,9 +310,9 @@ void RasterizerOpenGL::DrawTriangles() {
 
     // Sync the viewport
     state.viewport.x =
-        static_cast<GLint>(surfaces_rect.left + viewport_rect_unscaled.left * res_scale);
+        static_cast<GLint>(surfaces_rect.left) + viewport_rect_unscaled.left * res_scale;
     state.viewport.y =
-        static_cast<GLint>(surfaces_rect.bottom + viewport_rect_unscaled.bottom * res_scale);
+        static_cast<GLint>(surfaces_rect.bottom) + viewport_rect_unscaled.bottom * res_scale;
     state.viewport.width = static_cast<GLsizei>(viewport_rect_unscaled.GetWidth() * res_scale);
     state.viewport.height = static_cast<GLsizei>(viewport_rect_unscaled.GetHeight() * res_scale);
 
