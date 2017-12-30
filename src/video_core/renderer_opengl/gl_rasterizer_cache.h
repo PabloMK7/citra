@@ -265,6 +265,7 @@ struct CachedSurface : SurfaceParams {
         return (invalid_regions & GetInterval()) == SurfaceRegions(GetInterval());
     }
 
+    bool registered = false;
     SurfaceRegions invalid_regions;
 
     u32 fill_size = 0; /// Number of bytes to read from fill_data
