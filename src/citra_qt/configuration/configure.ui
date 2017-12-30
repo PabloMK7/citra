@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>740</width>
+    <width>461</width>
     <height>500</height>
    </rect>
   </property>
@@ -17,7 +17,7 @@
    <item>
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>0</number>
+      <number>4</number>
      </property>
      <widget class="ConfigureGeneral" name="generalTab">
       <attribute name="title">
@@ -34,15 +34,15 @@
        <string>Input</string>
       </attribute>
      </widget>
-      <widget class="ConfigureGraphics" name="graphicsTab">
-        <attribute name="title">
-          <string>Graphics</string>
-        </attribute>
-      </widget>
+     <widget class="ConfigureGraphics" name="graphicsTab">
+      <attribute name="title">
+       <string>Graphics</string>
+      </attribute>
+     </widget>
      <widget class="ConfigureAudio" name="audioTab">
-       <attribute name="title">
-         <string>Audio</string>
-       </attribute>
+      <attribute name="title">
+       <string>Audio</string>
+      </attribute>
      </widget>
      <widget class="ConfigureDebug" name="debugTab">
       <attribute name="title">
