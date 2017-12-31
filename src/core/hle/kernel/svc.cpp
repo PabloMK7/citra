@@ -715,7 +715,7 @@ static ResultCode GetResourceLimitLimitValues(VAddr values, Handle resource_limi
 
     for (unsigned int i = 0; i < name_count; ++i) {
         u32 name = Memory::Read32(names + i * sizeof(u32));
-        s64 value = resource_limit->GetMaxResourceValue(names);
+        s64 value = resource_limit->GetMaxResourceValue(name);
         Memory::Write64(values + i * sizeof(u64), value);
     }
 
