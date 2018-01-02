@@ -11,10 +11,8 @@
 // This needs to be included before getopt.h because the latter #defines symbols used by it
 #include "common/microprofile.h"
 
-#ifdef _MSC_VER
 #include <getopt.h>
-#else
-#include <getopt.h>
+#ifndef _MSC_VER
 #include <unistd.h>
 #endif
 
@@ -157,13 +155,14 @@ int main(int argc, char** argv) {
                     errno = EINVAL;
                 if (errno != 0)
                     exit(1);
+                break;
             }
             case 'm': {
                 use_multiplayer = true;
-                std::string str_arg(optarg);
+                const std::string str_arg(optarg);
                 // regex to check if the format is nickname:password@ip:port
                 // with optional :password
-                std::regex re("^([^:]+)(?::(.+))?@([^:]+)(?::([0-9]+))?$");
+                const std::regex re("^([^:]+)(?::(.+))?@([^:]+)(?::([0-9]+))?$");
                 if (!std::regex_match(str_arg, re)) {
                     std::cout << "Wrong format for option --multiplayer\n";
                     PrintHelp(argv[0]);
@@ -186,10 +185,6 @@ int main(int argc, char** argv) {
                 }
                 if (address.empty()) {
                     std::cout << "Address to room must not be empty.\n";
-                    return 0;
-                }
-                if (port > 65535) {
-                    std::cout << "Port must be between 0 and 65535.\n";
                     return 0;
                 }
                 break;
