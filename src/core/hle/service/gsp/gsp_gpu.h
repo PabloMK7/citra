@@ -180,10 +180,12 @@ struct CommandBuffer {
 static_assert(sizeof(CommandBuffer) == 0x200, "CommandBuffer struct has incorrect size");
 
 struct SessionData : public Kernel::SessionRequestHandler::SessionDataBase {
+    SessionData();
+
     /// Event triggered when GSP interrupt has been signalled
     Kernel::SharedPtr<Kernel::Event> interrupt_event;
     /// Thread index into interrupt relay queue
-    u32 thread_id = 0;
+    u32 thread_id;
     /// Whether RegisterInterruptRelayQueue was called for this session
     bool registered = false;
 };
@@ -362,9 +364,6 @@ private:
 
     /// Returns the session data for the specified registered thread id, or nullptr if not found.
     SessionData* FindRegisteredThreadData(u32 thread_id);
-
-    /// Next threadid value to use when RegisterInterruptRelayQueue is called.
-    u32 next_thread_id = 0;
 
     /// GSP shared memory
     Kernel::SharedPtr<Kernel::SharedMemory> shared_memory;

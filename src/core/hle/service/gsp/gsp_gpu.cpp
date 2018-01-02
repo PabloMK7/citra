@@ -53,6 +53,17 @@ constexpr ResultCode ERR_REGS_INVALID_SIZE(ErrorDescription::InvalidSize, ErrorM
 /// Maximum number of threads that can be registered at the same time in the GSP module.
 constexpr u32 MaxGSPThreads = 4;
 
+/// Thread ids currently in use by the sessions connected to the GSPGPU service.
+static std::array<bool, MaxGSPThreads> used_thread_ids = {false, false, false, false};
+
+static u32 GetUnusedThreadId() {
+    for (u32 id = 0; id < MaxGSPThreads; ++id) {
+        if (!used_thread_ids[id])
+            return id;
+    }
+    ASSERT_MSG(false, "All GSP threads are in use");
+}
+
 /// Gets a pointer to a thread command buffer in GSP shared memory
 static inline u8* GetCommandBuffer(Kernel::SharedPtr<Kernel::SharedMemory> shared_memory,
                                    u32 thread_id) {
@@ -327,11 +338,7 @@ void GSP_GPU::RegisterInterruptRelayQueue(Kernel::HLERequestContext& ctx) {
 
     interrupt_event->name = "GSP_GSP_GPU::interrupt_event";
 
-    u32 thread_id = next_thread_id++;
-    ASSERT_MSG(thread_id < MaxGSPThreads, "GSP thread id overflow");
-
     SessionData* session_data = GetSessionData(ctx.Session());
-    session_data->thread_id = thread_id;
     session_data->interrupt_event = std::move(interrupt_event);
     session_data->registered = true;
 
@@ -345,7 +352,7 @@ void GSP_GPU::RegisterInterruptRelayQueue(Kernel::HLERequestContext& ctx) {
         rb.Push(RESULT_SUCCESS);
     }
 
-    rb.Push(thread_id);
+    rb.Push(session_data->thread_id);
     rb.PushCopyObjects(shared_memory);
 
     LOG_DEBUG(Service_GSP, "called, flags=0x%08X", flags);
@@ -752,5 +759,14 @@ GSP_GPU::GSP_GPU() : ServiceFramework("gsp::Gpu", 2) {
 
     first_initialization = true;
 };
+
+SessionData::SessionData() {
+    // Assign a new thread id to this session when it connects. Note: In the real GSP service this
+    // is done through a real thread (svcCreateThread) but we have to simulate it since our HLE
+    // services don't have threads.
+    thread_id = GetUnusedThreadId();
+    used_thread_ids[thread_id] = true;
+}
+
 } // namespace GSP
 } // namespace Service
