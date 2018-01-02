@@ -65,6 +65,8 @@ add_executable(citra-qt
     util/spinbox.h
     util/util.cpp
     util/util.h
+    compatdb.cpp
+    compatdb.h
 )
 
 set(UIS
@@ -80,6 +82,7 @@ set(UIS
     aboutdialog.ui
     hotkeys.ui
     main.ui
+    compatdb.ui
 )
 
 file(GLOB_RECURSE ICONS ${CMAKE_SOURCE_DIR}/dist/icons/*)
