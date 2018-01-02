@@ -362,11 +362,8 @@ void GSP_GPU::UnregisterInterruptRelayQueue(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x14, 0, 0);
 
     SessionData* session_data = GetSessionData(ctx.Session());
-    session_data->thread_id = 0;
     session_data->interrupt_event = nullptr;
     session_data->registered = false;
-
-    // TODO(Subv): Reset next_thread_id so that it doesn't go past the maximum of 4.
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
@@ -766,6 +763,11 @@ SessionData::SessionData() {
     // services don't have threads.
     thread_id = GetUnusedThreadId();
     used_thread_ids[thread_id] = true;
+}
+
+SessionData::~SessionData() {
+    // Free the thread id slot so that other sessions can use it.
+    used_thread_ids[thread_id] = false;
 }
 
 } // namespace GSP

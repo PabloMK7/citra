@@ -181,6 +181,7 @@ static_assert(sizeof(CommandBuffer) == 0x200, "CommandBuffer struct has incorrec
 
 struct SessionData : public Kernel::SessionRequestHandler::SessionDataBase {
     SessionData();
+    ~SessionData();
 
     /// Event triggered when GSP interrupt has been signalled
     Kernel::SharedPtr<Kernel::Event> interrupt_event;
