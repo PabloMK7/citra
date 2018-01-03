@@ -117,23 +117,16 @@ after_build:
           Get-ChildItem "$CMAKE_BINARY_DIR" -Recurse -Filter "libcurl.dll" | Copy-Item -destination $RELEASE_DIST
           Copy-Item -path "$CMAKE_SOURCE_DIR/license.txt" -destination $RELEASE_DIST
           Copy-Item -path "$CMAKE_SOURCE_DIR/README.md" -destination $RELEASE_DIST
+
           # copy all the dll dependencies to the release folder
-          # hardcoded list because we don't build static and determining the list of dlls from the binary is a pain.
-          $MingwDLLs = "Qt5Core.dll","Qt5Widgets.dll","Qt5Gui.dll","Qt5OpenGL.dll",
-                       # QT dll dependencies
-                       "libbz2-*.dll","libicudt*.dll","libicuin*.dll","libicuuc*.dll","libffi-*.dll",
-                       "libfreetype-*.dll","libglib-*.dll","libgobject-*.dll","libgraphite2.dll","libiconv-*.dll",
-                       "libharfbuzz-*.dll","libintl-*.dll","libpcre-*.dll","libpcre16-*.dll","libpcre2-16-*.dll","libpng16-*.dll",
-                       # Runtime/Other dependencies
-                       "libgcc_s_seh-*.dll","libstdc++-*.dll","libwinpthread-*.dll","SDL2.dll","zlib1.dll"
+          . "./.appveyor/UtilityFunctions.ps1"
+          $DLLSearchPath = "$CMAKE_BINARY_DIR\externals\curl-7_55_1\lib;C:\msys64\mingw64\bin;$env:PATH"
+          $MingwDLLs = RecursivelyGetDeps $DLLSearchPath "$RELEASE_DIST\citra.exe"
+          $MingwDLLs += RecursivelyGetDeps $DLLSearchPath  "$RELEASE_DIST\citra-qt.exe"
+          Write-Host "Detected the following dependencies:"
+          Write-Host $MingwDLLs
           foreach ($file in $MingwDLLs) {
-            Copy-Item -path "C:/msys64/mingw64/bin/$file" -force -destination "$RELEASE_DIST"
-          }
-          # the above list copies a few extra debug dlls that aren't needed (thanks globbing patterns!)
-          # so we can remove them by hardcoding another list of extra dlls to remove
-          $DebugDLLs = "libicudtd*.dll","libicuind*.dll","libicuucd*.dll"
-          foreach ($file in $DebugDLLs) {
-            Remove-Item -path "$RELEASE_DIST/$file"
+            Copy-Item -path "$file" -force -destination "$RELEASE_DIST"
           }
 
           # copy the qt windows plugin dll to platforms
