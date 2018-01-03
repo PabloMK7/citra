@@ -59,7 +59,9 @@ public:
 
     /// Empty placeholder structure for services with no per-session data. The session data classes
     /// in each service must inherit from this.
-    struct SessionDataBase {};
+    struct SessionDataBase {
+        virtual ~SessionDataBase() = default;
+    };
 
 protected:
     /// Creates the storage for the session data of the service.
