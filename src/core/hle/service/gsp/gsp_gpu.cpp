@@ -371,6 +371,43 @@ void GSP_GPU::UnregisterInterruptRelayQueue(Kernel::HLERequestContext& ctx) {
     LOG_DEBUG(Service_GSP, "called");
 }
 
+void GSP_GPU::SignalInterruptForThread(InterruptId interrupt_id, u32 thread_id) {
+    SessionData* session_data = FindRegisteredThreadData(thread_id);
+    if (session_data == nullptr)
+        return;
+
+    auto interrupt_event = session_data->interrupt_event;
+    if (interrupt_event == nullptr) {
+        LOG_WARNING(Service_GSP, "cannot synchronize until GSP event has been created!");
+        return;
+    }
+    InterruptRelayQueue* interrupt_relay_queue = GetInterruptRelayQueue(shared_memory, thread_id);
+    u8 next = interrupt_relay_queue->index;
+    next += interrupt_relay_queue->number_interrupts;
+    next = next % 0x34; // 0x34 is the number of interrupt slots
+
+    interrupt_relay_queue->number_interrupts += 1;
+
+    interrupt_relay_queue->slot[next] = interrupt_id;
+    interrupt_relay_queue->error_code = 0x0; // No error
+
+    // Update framebuffer information if requested
+    // TODO(yuriks): Confirm where this code should be called. It is definitely updated without
+    //               executing any GSP commands, only waiting on the event.
+    // TODO(Subv): The real GSP module triggers PDC0 after updating both the top and bottom
+    // screen, it is currently unknown what PDC1 does.
+    int screen_id =
+        (interrupt_id == InterruptId::PDC0) ? 0 : (interrupt_id == InterruptId::PDC1) ? 1 : -1;
+    if (screen_id != -1) {
+        FrameBufferUpdate* info = GetFrameBufferInfo(thread_id, screen_id);
+        if (info->is_dirty) {
+            GSP::SetBufferSwap(screen_id, info->framebuffer_info[info->index]);
+            info->is_dirty.Assign(false);
+        }
+    }
+    interrupt_event->Signal();
+}
+
 /**
  * Signals that the specified interrupt type has occurred to userland code
  * @param interrupt_id ID of interrupt that is being signalled
@@ -378,59 +415,26 @@ void GSP_GPU::UnregisterInterruptRelayQueue(Kernel::HLERequestContext& ctx) {
  * @todo This probably does not belong in the GSP module, instead move to video_core
  */
 void GSP_GPU::SignalInterrupt(InterruptId interrupt_id) {
-    // Don't do anything if no process has acquired the GPU right.
-    if (active_thread_id == -1)
-        return;
-
     if (nullptr == shared_memory) {
         LOG_WARNING(Service_GSP, "cannot synchronize until GSP shared memory has been created!");
         return;
     }
 
+    // The PDC0 and PDC1 interrupts are fired even if the GPU right hasn't been acquired.
     // Normal interrupts are only signaled for the active thread (ie, the thread that has the GPU
     // right), but the PDC0/1 interrupts are signaled for every registered thread.
-    for (int thread_id = 0; thread_id < MaxGSPThreads; ++thread_id) {
-        if (interrupt_id != InterruptId::PDC0 && interrupt_id != InterruptId::PDC1) {
-            // Ignore threads that aren't the current active thread
-            if (thread_id != active_thread_id)
-                continue;
+    if (interrupt_id == InterruptId::PDC0 || interrupt_id == InterruptId::PDC1) {
+        for (u32 thread_id = 0; thread_id < MaxGSPThreads; ++thread_id) {
+            SignalInterruptForThread(interrupt_id, thread_id);
         }
-        SessionData* session_data = FindRegisteredThreadData(thread_id);
-        if (session_data == nullptr)
-            continue;
-
-        auto interrupt_event = session_data->interrupt_event;
-        if (interrupt_event == nullptr) {
-            LOG_WARNING(Service_GSP, "cannot synchronize until GSP event has been created!");
-            continue;
-        }
-        InterruptRelayQueue* interrupt_relay_queue =
-            GetInterruptRelayQueue(shared_memory, thread_id);
-        u8 next = interrupt_relay_queue->index;
-        next += interrupt_relay_queue->number_interrupts;
-        next = next % 0x34; // 0x34 is the number of interrupt slots
-
-        interrupt_relay_queue->number_interrupts += 1;
-
-        interrupt_relay_queue->slot[next] = interrupt_id;
-        interrupt_relay_queue->error_code = 0x0; // No error
-
-        // Update framebuffer information if requested
-        // TODO(yuriks): Confirm where this code should be called. It is definitely updated without
-        //               executing any GSP commands, only waiting on the event.
-        // TODO(Subv): The real GSP module triggers PDC0 after updating both the top and bottom
-        // screen, it is currently unknown what PDC1 does.
-        int screen_id =
-            (interrupt_id == InterruptId::PDC0) ? 0 : (interrupt_id == InterruptId::PDC1) ? 1 : -1;
-        if (screen_id != -1) {
-            FrameBufferUpdate* info = GetFrameBufferInfo(thread_id, screen_id);
-            if (info->is_dirty) {
-                GSP::SetBufferSwap(screen_id, info->framebuffer_info[info->index]);
-                info->is_dirty.Assign(false);
-            }
-        }
-        interrupt_event->Signal();
+        return;
     }
+
+    // For normal interrupts, don't do anything if no process has acquired the GPU right.
+    if (active_thread_id == -1)
+        return;
+
+    SignalInterruptForThread(interrupt_id, active_thread_id);
 }
 
 MICROPROFILE_DEFINE(GPU_GSP_DMA, "GPU", "GSP DMA", MP_RGB(100, 0, 255));

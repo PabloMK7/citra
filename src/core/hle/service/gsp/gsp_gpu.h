@@ -214,6 +214,14 @@ public:
 
 private:
     /**
+     * Signals that the specified interrupt type has occurred to userland code for the specified GSP
+     * thread id.
+     * @param interrupt_id ID of interrupt that is being signalled.
+     * @param thread_id GSP thread that will receive the interrupt.
+     */
+    void SignalInterruptForThread(InterruptId interrupt_id, u32 thread_id);
+
+    /**
      * GSP_GPU::WriteHWRegs service function
      *
      * Writes sequential GSP GPU hardware registers
