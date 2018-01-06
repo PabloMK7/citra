@@ -73,7 +73,6 @@
     <addaction name="action_Pause"/>
     <addaction name="action_Stop"/>
     <addaction name="separator"/>
-    <addaction name="action_Report_Compatibility"/>
     <addaction name="action_Configure"/>
    </widget>
    <widget class="QMenu" name="menu_View">
@@ -100,6 +99,8 @@
     </property>
     <addaction name="action_Check_For_Updates"/>
     <addaction name="action_Open_Maintenance_Tool"/>
+    <addaction name="separator"/>
+    <addaction name="action_Report_Compatibility"/>
     <addaction name="separator"/>
     <addaction name="action_FAQ"/>
     <addaction name="action_About"/>
