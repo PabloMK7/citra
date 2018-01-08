@@ -406,7 +406,7 @@ if (ENABLE_WEB_SERVICE)
 endif()
 
 if (ARCHITECTURE_x86_64)
-    add_library(core STATIC
+    target_sources(core PRIVATE
         arm/dynarmic/arm_dynarmic.cpp
         arm/dynarmic/arm_dynarmic.h
         arm/dynarmic/arm_dynarmic_cp15.cpp
