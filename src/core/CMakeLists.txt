@@ -1,10 +1,6 @@
 add_library(core STATIC
     3ds.h
     arm/arm_interface.h
-    arm/dynarmic/arm_dynarmic.cpp
-    arm/dynarmic/arm_dynarmic.h
-    arm/dynarmic/arm_dynarmic_cp15.cpp
-    arm/dynarmic/arm_dynarmic_cp15.h
     arm/dyncom/arm_dyncom.cpp
     arm/dyncom/arm_dyncom.h
     arm/dyncom/arm_dyncom_dec.cpp
@@ -404,7 +400,17 @@ add_library(core STATIC
 create_target_directory_groups(core)
 
 target_link_libraries(core PUBLIC common PRIVATE audio_core network video_core)
-target_link_libraries(core PUBLIC Boost::boost PRIVATE cryptopp dynarmic fmt)
+target_link_libraries(core PUBLIC Boost::boost PRIVATE cryptopp fmt)
 if (ENABLE_WEB_SERVICE)
     target_link_libraries(core PUBLIC json-headers web_service)
+endif()
+
+if (ARCHITECTURE_x86_64)
+    add_library(core STATIC
+        arm/dynarmic/arm_dynarmic.cpp
+        arm/dynarmic/arm_dynarmic.h
+        arm/dynarmic/arm_dynarmic_cp15.cpp
+        arm/dynarmic/arm_dynarmic_cp15.h
+    )
+    target_link_libraries(core PRIVATE dynarmic)
 endif()
