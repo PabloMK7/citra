@@ -13,7 +13,6 @@
 #include "core/hle/service/ptm/ptm_sets.h"
 #include "core/hle/service/ptm/ptm_sysm.h"
 #include "core/hle/service/ptm/ptm_u.h"
-#include "core/hle/service/service.h"
 #include "core/settings.h"
 
 namespace Service {
@@ -25,32 +24,26 @@ static const GameCoin default_game_coin = {0x4F00, 42, 0, 0, 0, 2014, 12, 29};
 /// Id of the SharedExtData archive used by the PTM process
 static const std::vector<u8> ptm_shared_extdata_id = {0, 0, 0, 0, 0x0B, 0, 0, 0xF0, 0, 0, 0, 0};
 
-static bool shell_open;
-
-static bool battery_is_charging;
-
-static bool pedometer_is_counting;
-
-void GetAdapterState(Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x5, 0, 0);
+void Module::Interface::GetAdapterState(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x5, 0, 0);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
-    rb.Push(battery_is_charging);
+    rb.Push(ptm->battery_is_charging);
 
     LOG_WARNING(Service_PTM, "(STUBBED) called");
 }
 
-void GetShellState(Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x6, 0, 0);
+void Module::Interface::GetShellState(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x6, 0, 0);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
-    rb.Push(shell_open);
+    rb.Push(ptm->shell_open);
 }
 
-void GetBatteryLevel(Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x7, 0, 0);
+void Module::Interface::GetBatteryLevel(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x7, 0, 0);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
@@ -59,50 +52,52 @@ void GetBatteryLevel(Interface* self) {
     LOG_WARNING(Service_PTM, "(STUBBED) called");
 }
 
-void GetBatteryChargeState(Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x8, 0, 0);
+void Module::Interface::GetBatteryChargeState(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x8, 0, 0);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
-    rb.Push(battery_is_charging);
+    rb.Push(ptm->battery_is_charging);
 
     LOG_WARNING(Service_PTM, "(STUBBED) called");
 }
 
-void GetPedometerState(Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x9, 0, 0);
+void Module::Interface::GetPedometerState(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x9, 0, 0);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
-    rb.Push(pedometer_is_counting);
+    rb.Push(ptm->pedometer_is_counting);
 
     LOG_WARNING(Service_PTM, "(STUBBED) called");
 }
 
-void GetStepHistory(Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0xB, 3, 2);
+void Module::Interface::GetStepHistory(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0xB, 3, 2);
 
     u32 hours = rp.Pop<u32>();
     u64 start_time = rp.Pop<u64>();
     size_t steps_buff_size;
-    const VAddr steps_buff_addr = rp.PopMappedBuffer(&steps_buff_size);
-    ASSERT_MSG(sizeof(u16) * hours == steps_buff_size, "Buffer for steps count has incorrect size");
+    auto& buffer = rp.PopMappedBuffer();
+    ASSERT_MSG(sizeof(u16) * hours == buffer.GetSize(),
+               "Buffer for steps count has incorrect size");
 
     // Stub: set zero steps count for every hour
     for (u32 i = 0; i < hours; ++i) {
-        const u16 steps_per_hour = 0;
-        Memory::Write16(steps_buff_addr + i * sizeof(u16), steps_per_hour);
+        const u16_le steps_per_hour = 0;
+        buffer.Write(&steps_per_hour, i * sizeof(u16), sizeof(u16));
     }
 
-    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
     rb.Push(RESULT_SUCCESS);
+    rb.PushMappedBuffer(buffer);
 
     LOG_WARNING(Service_PTM, "(STUBBED) called, from time(raw): 0x%" PRIx64 ", for %u hours",
                 start_time, hours);
 }
 
-void GetTotalStepCount(Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0xC, 0, 0);
+void Module::Interface::GetTotalStepCount(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0xC, 0, 0);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
@@ -111,8 +106,8 @@ void GetTotalStepCount(Interface* self) {
     LOG_WARNING(Service_PTM, "(STUBBED) called");
 }
 
-void GetSoftwareClosedFlag(Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x80F, 0, 0);
+void Module::Interface::GetSoftwareClosedFlag(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x80F, 0, 0);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
@@ -135,23 +130,14 @@ void CheckNew3DS(IPC::RequestBuilder& rb) {
     LOG_WARNING(Service_PTM, "(STUBBED) called isNew3DS = 0x%08x", static_cast<u32>(is_new_3ds));
 }
 
-void CheckNew3DS(Interface* self) {
-    IPC::RequestBuilder rb(Kernel::GetCommandBuffer(), 0x40A, 0, 0); // 0x040A0000
-    CheckNew3DS(rb);
+void Module::Interface::CheckNew3DS(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x40A, 0, 0);
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
+    Service::PTM::CheckNew3DS(rb);
 }
 
-void Init() {
-    AddService(new PTM_Gets);
-    AddService(new PTM_Play);
-    AddService(new PTM_S);
-    AddService(new PTM_Sets);
-    AddService(new PTM_Sysm);
-    AddService(new PTM_U);
-
-    shell_open = true;
-    battery_is_charging = true;
-    pedometer_is_counting = false;
-
+Module::Module() {
     // Open the SharedExtSaveData archive 0xF000000B and create the gamecoin.dat file if it doesn't
     // exist
     FileSys::Path archive_path(ptm_shared_extdata_id);
@@ -183,7 +169,18 @@ void Init() {
     }
 }
 
-void Shutdown() {}
+Module::Interface::Interface(std::shared_ptr<Module> ptm, const char* name, u32 max_session)
+    : ServiceFramework(name, max_session), ptm(std::move(ptm)) {}
+
+void InstallInterfaces(SM::ServiceManager& service_manager) {
+    auto ptm = std::make_shared<Module>();
+    std::make_shared<PTM_Gets>(ptm)->InstallAsService(service_manager);
+    std::make_shared<PTM_Play>(ptm)->InstallAsService(service_manager);
+    std::make_shared<PTM_Sets>(ptm)->InstallAsService(service_manager);
+    std::make_shared<PTM_S>(ptm)->InstallAsService(service_manager);
+    std::make_shared<PTM_Sysm>(ptm)->InstallAsService(service_manager);
+    std::make_shared<PTM_U>(ptm)->InstallAsService(service_manager);
+}
 
 } // namespace PTM
 } // namespace Service

@@ -4,13 +4,12 @@
 
 #pragma once
 
+#include <memory>
 #include "common/common_types.h"
 #include "core/hle/ipc_helpers.h"
+#include "core/hle/service/service.h"
 
 namespace Service {
-
-class Interface;
-
 namespace PTM {
 
 /// Charge levels used by PTM functions
@@ -38,93 +37,109 @@ struct GameCoin {
     u8 day;
 };
 
-/**
- * It is unknown if GetAdapterState is the same as GetBatteryChargeState,
- * it is likely to just be a duplicate function of GetBatteryChargeState
- * that controls another part of the HW.
- * PTM::GetAdapterState service function
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- *      2 : Output of function, 0 = not charging, 1 = charging.
- */
-void GetAdapterState(Interface* self);
-
-/**
- * PTM::GetShellState service function.
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- *      2 : Whether the 3DS's physical shell casing is open (1) or closed (0)
- */
-void GetShellState(Interface* self);
-
-/**
- * PTM::GetBatteryLevel service function
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- *      2 : Battery level, 5 = completely full battery, 4 = mostly full battery,
- *          3 = half full battery, 2 =  low battery, 1 = critical battery.
- */
-void GetBatteryLevel(Interface* self);
-
-/**
- * PTM::GetBatteryChargeState service function
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- *      2 : Output of function, 0 = not charging, 1 = charging.
- */
-void GetBatteryChargeState(Interface* self);
-
-/**
- * PTM::GetPedometerState service function
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- *      2 : Output of function, 0 = not counting steps, 1 = counting steps.
- */
-void GetPedometerState(Interface* self);
-
-/**
- * PTM::GetStepHistory service function
- *  Inputs:
- *      1 : Number of hours
- *    2-3 : Start time
- *      4 : Buffer mapping descriptor
- *      5 : (short*) Buffer for step counts
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- */
-void GetStepHistory(Interface* self);
-
-/**
- * PTM::GetTotalStepCount service function
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- *      2 : Output of function, * = total step count
- */
-void GetTotalStepCount(Interface* self);
-
-/**
- * PTM::GetSoftwareClosedFlag service function
- *  Outputs:
- *      1: Result code, 0 on success, otherwise error code
- *      2: Whether or not the "software closed" dialog was requested by the last FIRM
- *         and should be displayed.
- */
-void GetSoftwareClosedFlag(Interface* self);
-
-/**
- * PTM::CheckNew3DS service function
- *  Outputs:
- *      1: Result code, 0 on success, otherwise error code
- *      2: u8 output: 0 = Old3DS, 1 = New3DS.
- */
-void CheckNew3DS(Interface* self);
 void CheckNew3DS(IPC::RequestBuilder& rb);
 
-/// Initialize the PTM service
-void Init();
+class Module final {
+public:
+    Module();
 
-/// Shutdown the PTM service
-void Shutdown();
+    class Interface : public ServiceFramework<Interface> {
+    public:
+        Interface(std::shared_ptr<Module> ptm, const char* name, u32 max_session);
+
+    protected:
+        /**
+         * It is unknown if GetAdapterState is the same as GetBatteryChargeState,
+         * it is likely to just be a duplicate function of GetBatteryChargeState
+         * that controls another part of the HW.
+         * PTM::GetAdapterState service function
+         *  Outputs:
+         *      1 : Result of function, 0 on success, otherwise error code
+         *      2 : Output of function, 0 = not charging, 1 = charging.
+         */
+        void GetAdapterState(Kernel::HLERequestContext& ctx);
+
+        /**
+         * PTM::GetShellState service function.
+         *  Outputs:
+         *      1 : Result of function, 0 on success, otherwise error code
+         *      2 : Whether the 3DS's physical shell casing is open (1) or closed (0)
+         */
+        void GetShellState(Kernel::HLERequestContext& ctx);
+
+        /**
+         * PTM::GetBatteryLevel service function
+         *  Outputs:
+         *      1 : Result of function, 0 on success, otherwise error code
+         *      2 : Battery level, 5 = completely full battery, 4 = mostly full battery,
+         *          3 = half full battery, 2 =  low battery, 1 = critical battery.
+         */
+        void GetBatteryLevel(Kernel::HLERequestContext& ctx);
+
+        /**
+         * PTM::GetBatteryChargeState service function
+         *  Outputs:
+         *      1 : Result of function, 0 on success, otherwise error code
+         *      2 : Output of function, 0 = not charging, 1 = charging.
+         */
+        void GetBatteryChargeState(Kernel::HLERequestContext& ctx);
+
+        /**
+         * PTM::GetPedometerState service function
+         *  Outputs:
+         *      1 : Result of function, 0 on success, otherwise error code
+         *      2 : Output of function, 0 = not counting steps, 1 = counting steps.
+         */
+        void GetPedometerState(Kernel::HLERequestContext& ctx);
+
+        /**
+         * PTM::GetStepHistory service function
+         *  Inputs:
+         *      1 : Number of hours
+         *    2-3 : Start time
+         *      4 : Buffer mapping descriptor
+         *      5 : (short*) Buffer for step counts
+         *  Outputs:
+         *      1 : Result of function, 0 on success, otherwise error code
+         */
+        void GetStepHistory(Kernel::HLERequestContext& ctx);
+
+        /**
+         * PTM::GetTotalStepCount service function
+         *  Outputs:
+         *      1 : Result of function, 0 on success, otherwise error code
+         *      2 : Output of function, * = total step count
+         */
+        void GetTotalStepCount(Kernel::HLERequestContext& ctx);
+
+        /**
+         * PTM::GetSoftwareClosedFlag service function
+         *  Outputs:
+         *      1: Result code, 0 on success, otherwise error code
+         *      2: Whether or not the "software closed" dialog was requested by the last FIRM
+         *         and should be displayed.
+         */
+        void GetSoftwareClosedFlag(Kernel::HLERequestContext& ctx);
+
+        /**
+         * PTM::CheckNew3DS service function
+         *  Outputs:
+         *      1: Result code, 0 on success, otherwise error code
+         *      2: u8 output: 0 = Old3DS, 1 = New3DS.
+         */
+        void CheckNew3DS(Kernel::HLERequestContext& ctx);
+
+    private:
+        std::shared_ptr<Module> ptm;
+    };
+
+private:
+    bool shell_open = true;
+    bool battery_is_charging = true;
+    bool pedometer_is_counting = false;
+};
+
+void InstallInterfaces(SM::ServiceManager& service_manager);
 
 } // namespace PTM
 } // namespace Service
