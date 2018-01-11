@@ -39,17 +39,16 @@ void CompatDB::Submit() {
         }
         break;
     case 2:
-        LOG_DEBUG(
-            Frontend,
-            tr("Compatibility Rating: %1").arg(compatibility->checkedId()).toStdString().c_str());
+        LOG_DEBUG(Frontend, "Compatibility Rating: %1", compatibility->checkedId());
         Core::Telemetry().AddField(Telemetry::FieldType::UserFeedback, "Compatibility",
                                    compatibility->checkedId());
-        // the frozen dependency Linux build does not support the "NoCancelButtonOnLastPage" option,
-        // this is a workaround
+        // older versions of QT don't support the "NoCancelButtonOnLastPage" option, this is a
+        // workaround
         button(QWizard::CancelButton)->setVisible(false);
         break;
     }
 }
+
 void CompatDB::EnableNext() {
     button(NextButton)->setEnabled(true);
 }
