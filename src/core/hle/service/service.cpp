@@ -295,7 +295,7 @@ void Init() {
     AddService(new PM::PM_APP);
     AddService(new SOC::SOC_U);
     AddService(new SSL::SSL_C);
-    AddService(new Y2R::Y2R_U);
+    Y2R::InstallInterfaces(*SM::g_service_manager);
 
     LOG_DEBUG(Service, "initialized OK");
 }
