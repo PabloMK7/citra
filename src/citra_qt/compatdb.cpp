@@ -39,7 +39,7 @@ void CompatDB::Submit() {
         }
         break;
     case 2:
-        LOG_DEBUG(Frontend, "Compatibility Rating: %1", compatibility->checkedId());
+        LOG_DEBUG(Frontend, "Compatibility Rating: %d", compatibility->checkedId());
         Core::Telemetry().AddField(Telemetry::FieldType::UserFeedback, "Compatibility",
                                    compatibility->checkedId());
         // older versions of QT don't support the "NoCancelButtonOnLastPage" option, this is a
