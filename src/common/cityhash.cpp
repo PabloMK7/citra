@@ -42,6 +42,12 @@
 
 using namespace std;
 
+typedef uint8_t uint8;
+typedef uint32_t uint32;
+typedef uint64_t uint64;
+
+namespace Common {
+
 static uint64 UNALIGNED_LOAD64(const char* p) {
     uint64 result;
     memcpy(&result, p, sizeof(result));
@@ -648,3 +654,5 @@ uint128 CityHashCrc128(const char* s, size_t len) {
 }
 
 #endif
+
+} // namespace Common
