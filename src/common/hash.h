@@ -5,11 +5,10 @@
 #pragma once
 
 #include <cstddef>
+#include "common/cityhash.h"
 #include "common/common_types.h"
 
 namespace Common {
-
-void MurmurHash3_128(const void* key, size_t len, u32 seed, void* out);
 
 /**
  * Computes a 64-bit hash over the specified block of data
@@ -18,9 +17,7 @@ void MurmurHash3_128(const void* key, size_t len, u32 seed, void* out);
  * @returns 64-bit hash value that was computed over the data block
  */
 static inline u64 ComputeHash64(const void* data, size_t len) {
-    u64 res[2];
-    MurmurHash3_128(data, len, 0, res);
-    return res[0];
+    return CityHash64(static_cast<const char*>(data), len);
 }
 
 } // namespace Common
