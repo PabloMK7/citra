@@ -94,9 +94,6 @@ uint128 CityHash128(const char* s, size_t len);
 // hashed into the result.
 uint128 CityHash128WithSeed(const char* s, size_t len, uint128 seed);
 
-// Hash function for a byte array.  Most useful in 32-bit binaries.
-uint32_t CityHash32(const char* buf, size_t len);
-
 // Hash 128 input bits down to 64 bits of output.
 // This is intended to be a reasonably good hash function.
 inline uint64_t Hash128to64(const uint128& x) {
