@@ -390,6 +390,7 @@ SurfaceParams SurfaceParams::FromInterval(SurfaceInterval interval) const {
             addr + Common::AlignUp(boost::icl::last_next(interval) - addr, tiled_alignment);
         params.addr = aligned_start;
         params.width = PixelsInBytes(aligned_end - aligned_start) / (is_tiled ? 8 : 1);
+        params.stride = params.width;
         params.height = is_tiled ? 8 : 1;
     }
     params.UpdateParams();
@@ -447,57 +448,45 @@ MathUtil::Rectangle<u32> SurfaceParams::GetScaledSubRect(const SurfaceParams& su
 }
 
 bool SurfaceParams::ExactMatch(const SurfaceParams& other_surface) const {
-    return (other_surface.addr == addr && other_surface.width == width &&
-            other_surface.height == height && other_surface.stride == stride &&
-            other_surface.pixel_format == pixel_format && pixel_format != PixelFormat::Invalid &&
-            other_surface.is_tiled == is_tiled);
+    return other_surface.addr == addr && other_surface.width == width &&
+           other_surface.height == height && other_surface.stride == stride &&
+           other_surface.pixel_format == pixel_format && pixel_format != PixelFormat::Invalid &&
+           other_surface.is_tiled == is_tiled;
 }
 
 bool SurfaceParams::CanSubRect(const SurfaceParams& sub_surface) const {
-    return (sub_surface.addr >= addr && sub_surface.end <= end &&
-            sub_surface.pixel_format == pixel_format && pixel_format != PixelFormat::Invalid &&
-            sub_surface.is_tiled == is_tiled &&
-            (sub_surface.addr - addr) * 8 % GetFormatBpp() == 0 &&
-            (!is_tiled || PixelsInBytes(sub_surface.addr - addr) % 64 == 0) &&
-            (sub_surface.stride == stride || sub_surface.height <= (is_tiled ? 8u : 1u)) &&
-            GetSubRect(sub_surface).left + sub_surface.width <= stride);
+    return sub_surface.addr >= addr && sub_surface.end <= end &&
+           sub_surface.pixel_format == pixel_format && pixel_format != PixelFormat::Invalid &&
+           sub_surface.is_tiled == is_tiled &&
+           (sub_surface.addr - addr) % BytesInPixels(is_tiled ? 64 : 1) == 0 &&
+           (sub_surface.stride == stride || sub_surface.height <= (is_tiled ? 8u : 1u)) &&
+           GetSubRect(sub_surface).left + sub_surface.width <= stride;
 }
 
 bool SurfaceParams::CanExpand(const SurfaceParams& expanded_surface) const {
-    if (pixel_format == PixelFormat::Invalid || pixel_format != expanded_surface.pixel_format ||
-        is_tiled != expanded_surface.is_tiled || addr > expanded_surface.end ||
-        expanded_surface.addr > end || stride != expanded_surface.stride)
-        return false;
-
-    const u32 byte_offset =
-        std::max(expanded_surface.addr, addr) - std::min(expanded_surface.addr, addr);
-
-    const int x0 = byte_offset % BytesInPixels(stride);
-    const int y0 = byte_offset / BytesInPixels(stride);
-
-    return x0 == 0 && (!is_tiled || y0 % 8 == 0);
+    return pixel_format != PixelFormat::Invalid && pixel_format == expanded_surface.pixel_format &&
+           addr <= expanded_surface.end && expanded_surface.addr <= end &&
+           is_tiled == expanded_surface.is_tiled && stride == expanded_surface.stride &&
+           (std::max(expanded_surface.addr, addr) - std::min(expanded_surface.addr, addr)) %
+                   BytesInPixels(stride * (is_tiled ? 8 : 1)) ==
+               0;
 }
 
 bool SurfaceParams::CanTexCopy(const SurfaceParams& texcopy_params) const {
     if (pixel_format == PixelFormat::Invalid || addr > texcopy_params.addr ||
-        end < texcopy_params.end || ((texcopy_params.addr - addr) * 8) % GetFormatBpp() != 0 ||
-        (texcopy_params.width * 8) % GetFormatBpp() != 0 ||
-        (texcopy_params.stride * 8) % GetFormatBpp() != 0)
+        end < texcopy_params.end) {
         return false;
-
-    const u32 begin_pixel_index = PixelsInBytes(texcopy_params.addr - addr);
-
-    if (!is_tiled) {
-        const int x0 = begin_pixel_index % stride;
-        return ((texcopy_params.height == 1 || PixelsInBytes(texcopy_params.stride) == stride) &&
-                x0 + PixelsInBytes(texcopy_params.width) <= stride);
     }
-
-    const int x0 = (begin_pixel_index % (stride * 8)) / 8;
-    return (PixelsInBytes(texcopy_params.addr - addr) % 64 == 0 &&
-            PixelsInBytes(texcopy_params.width) % 64 == 0 &&
-            (texcopy_params.height == 1 || PixelsInBytes(texcopy_params.stride) == stride * 8) &&
-            x0 + PixelsInBytes(texcopy_params.width / 8) <= stride);
+    if (texcopy_params.width != texcopy_params.stride) {
+        const u32 tile_stride = BytesInPixels(stride * (is_tiled ? 8 : 1));
+        return (texcopy_params.addr - addr) % BytesInPixels(is_tiled ? 64 : 1) == 0 &&
+               texcopy_params.width % BytesInPixels(is_tiled ? 64 : 1) == 0 &&
+               (texcopy_params.height == 1 || texcopy_params.stride == tile_stride) &&
+               ((texcopy_params.addr - addr) % tile_stride) + texcopy_params.width <= tile_stride;
+    } else {
+        return FromInterval(texcopy_params.GetInterval()).GetInterval() ==
+               texcopy_params.GetInterval();
+    }
 }
 
 bool CachedSurface::CanFill(const SurfaceParams& dest_surface,
@@ -1245,14 +1234,17 @@ SurfaceRect_Tuple RasterizerCacheOpenGL::GetTexCopySurface(const SurfaceParams& 
     if (match_surface != nullptr) {
         ValidateSurface(match_surface, params.addr, params.size);
 
-        SurfaceParams match_subrect = params;
-        match_subrect.width = match_surface->PixelsInBytes(params.width);
-        match_subrect.stride = match_surface->PixelsInBytes(params.stride);
-
-        if (match_surface->is_tiled) {
-            match_subrect.width /= 8;
-            match_subrect.stride /= 8;
-            match_subrect.height *= 8;
+        SurfaceParams match_subrect;
+        if (params.width != params.stride) {
+            match_subrect = params;
+            match_subrect.width =
+                match_surface->PixelsInBytes(params.width) / (match_surface->is_tiled ? 8 : 1);
+            match_subrect.stride =
+                match_surface->PixelsInBytes(params.stride) / (match_surface->is_tiled ? 8 : 1);
+            match_subrect.height *= (match_surface->is_tiled ? 8 : 1);
+        } else {
+            match_subrect = match_surface->FromInterval(params.GetInterval());
+            ASSERT(match_subrect.GetInterval() == params.GetInterval());
         }
 
         rect = match_surface->GetScaledSubRect(match_subrect);

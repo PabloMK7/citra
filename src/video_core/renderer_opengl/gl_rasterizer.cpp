@@ -1019,41 +1019,33 @@ bool RasterizerOpenGL::AccelerateDisplayTransfer(const GPU::Regs::DisplayTransfe
 
 bool RasterizerOpenGL::AccelerateTextureCopy(const GPU::Regs::DisplayTransferConfig& config) {
     u32 copy_size = Common::AlignDown(config.texture_copy.size, 16);
-
-    if (copy_size == 0)
+    if (copy_size == 0) {
         return false;
+    }
 
     u32 input_gap = config.texture_copy.input_gap * 16;
     u32 input_width = config.texture_copy.input_width * 16;
-    if (input_width == 0) {
-        if (input_gap == 0) {
-            input_width = copy_size;
-        } else {
-            return false;
-        }
+    if (input_width == 0 && input_gap != 0) {
+        return false;
+    }
+    if (input_gap == 0 || input_width >= copy_size) {
+        input_width = copy_size;
+        input_gap = 0;
+    }
+    if (copy_size % input_width != 0) {
+        return false;
     }
 
     u32 output_gap = config.texture_copy.output_gap * 16;
     u32 output_width = config.texture_copy.output_width * 16;
-    if (output_width == 0) {
-        if (output_gap == 0) {
-            output_width = copy_size;
-        } else {
-            return false;
-        }
+    if (output_width == 0 && output_gap != 0) {
+        return false;
     }
-
-    if (input_width >= copy_size) {
-        input_width = copy_size;
-        input_gap = 0;
-    }
-
-    if (output_width >= copy_size) {
+    if (output_gap == 0 || output_width >= copy_size) {
         output_width = copy_size;
         output_gap = 0;
     }
-
-    if (input_width != output_width || copy_size % input_width != 0) {
+    if (copy_size % output_width != 0) {
         return false;
     }
 
@@ -1068,12 +1060,16 @@ bool RasterizerOpenGL::AccelerateTextureCopy(const GPU::Regs::DisplayTransferCon
     MathUtil::Rectangle<u32> src_rect;
     Surface src_surface;
     std::tie(src_surface, src_rect) = res_cache.GetTexCopySurface(src_params);
-    if (src_surface == nullptr)
+    if (src_surface == nullptr) {
         return false;
+    }
 
-    if ((output_gap * 8) % SurfaceParams::GetFormatBpp(src_surface->pixel_format) != 0 ||
-        (src_surface->is_tiled && src_surface->PixelsInBytes(output_gap) % 64 != 0))
+    if (output_gap != 0 &&
+        (output_width != src_surface->BytesInPixels(src_rect.GetWidth() / src_surface->res_scale) *
+                             (src_surface->is_tiled ? 8 : 1) ||
+         output_gap % src_surface->BytesInPixels(src_surface->is_tiled ? 64 : 1) != 0)) {
         return false;
+    }
 
     SurfaceParams dst_params = *src_surface;
     dst_params.addr = config.GetPhysicalOutputAddress();
@@ -1091,11 +1087,13 @@ bool RasterizerOpenGL::AccelerateTextureCopy(const GPU::Regs::DisplayTransferCon
     Surface dst_surface;
     std::tie(dst_surface, dst_rect) =
         res_cache.GetSurfaceSubRect(dst_params, ScaleMatch::Upscale, load_gap);
-    if (src_surface == nullptr)
+    if (src_surface == nullptr) {
         return false;
+    }
 
-    if (!res_cache.BlitSurfaces(src_surface, src_rect, dst_surface, dst_rect))
+    if (!res_cache.BlitSurfaces(src_surface, src_rect, dst_surface, dst_rect)) {
         return false;
+    }
 
     res_cache.InvalidateRegion(dst_params.addr, dst_params.size, dst_surface);
     return true;
