@@ -60,55 +60,9 @@ static uint32 UNALIGNED_LOAD32(const char* p) {
     return result;
 }
 
-#ifdef _MSC_VER
-
-#include <stdlib.h>
-#define bswap_32(x) _byteswap_ulong(x)
-#define bswap_64(x) _byteswap_uint64(x)
-
-#elif defined(__APPLE__)
-
-// Mac OS X / Darwin features
-#include <libkern/OSByteOrder.h>
-#define bswap_32(x) OSSwapInt32(x)
-#define bswap_64(x) OSSwapInt64(x)
-
-#elif defined(__sun) || defined(sun)
-
-#include <sys/byteorder.h>
-#define bswap_32(x) BSWAP_32(x)
-#define bswap_64(x) BSWAP_64(x)
-
-#elif defined(__FreeBSD__)
-
-#include <sys/endian.h>
-#define bswap_32(x) bswap32(x)
-#define bswap_64(x) bswap64(x)
-
-#elif defined(__OpenBSD__)
-
-#include <sys/types.h>
-#define bswap_32(x) swap32(x)
-#define bswap_64(x) swap64(x)
-
-#elif defined(__NetBSD__)
-
-#include <machine/bswap.h>
-#include <sys/types.h>
-#if defined(__BSWAP_RENAME) && !defined(__bswap_32)
-#define bswap_32(x) bswap32(x)
-#define bswap_64(x) bswap64(x)
-#endif
-
-#else
-
-#include <byteswap.h>
-
-#endif
-
 #ifdef WORDS_BIGENDIAN
-#define uint32_in_expected_order(x) (bswap_32(x))
-#define uint64_in_expected_order(x) (bswap_64(x))
+#define uint32_in_expected_order(x) (swap32(x))
+#define uint64_in_expected_order(x) (swap64(x))
 #else
 #define uint32_in_expected_order(x) (x)
 #define uint64_in_expected_order(x) (x)
@@ -228,11 +182,11 @@ static uint64 HashLen33to64(const char* s, size_t len) {
     uint64 h = Fetch64(s + len - 16) * mul;
     uint64 u = Rotate(a + g, 43) + (Rotate(b, 30) + c) * 9;
     uint64 v = ((a + g) ^ d) + f + 1;
-    uint64 w = bswap_64((u + v) * mul) + h;
+    uint64 w = swap64((u + v) * mul) + h;
     uint64 x = Rotate(e + f, 42) + c;
-    uint64 y = (bswap_64((v + w) * mul) + g) * mul;
+    uint64 y = (swap64((v + w) * mul) + g) * mul;
     uint64 z = e + f + c;
-    a = bswap_64((x + z) * mul + y) + b;
+    a = swap64((x + z) * mul + y) + b;
     b = ShiftMix((z + a) * mul + d + h) * mul;
     return b + x;
 }
