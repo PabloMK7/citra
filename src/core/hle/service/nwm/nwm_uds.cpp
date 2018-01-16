@@ -32,6 +32,7 @@ namespace NWM {
 namespace ErrCodes {
 enum {
     NotInitialized = 2,
+    WrongStatus = 490,
 };
 } // namespace ErrCodes
 
@@ -577,10 +578,6 @@ void NWM_UDS::InitializeWithVersion(Kernel::HLERequestContext& ctx) {
         wifi_packet_received = room_member->BindOnWifiPacketReceived(OnWifiPacketReceived);
     } else {
         LOG_ERROR(Service_NWM, "Network isn't initalized");
-        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        // TODO(B3N30): Find the correct error code and return it;
-        rb.Push<u32>(-1);
-        return;
     }
 
     {
@@ -591,7 +588,7 @@ void NWM_UDS::InitializeWithVersion(Kernel::HLERequestContext& ctx) {
         connection_status = {};
         connection_status.status = static_cast<u32>(NetworkStatus::NotConnected);
         node_info.clear();
-        node_info.push_back(NodeInfo{});
+        node_info.push_back(current_node);
     }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
@@ -828,7 +825,8 @@ void NWM_UDS::DestroyNetwork(Kernel::HLERequestContext& ctx) {
     std::lock_guard<std::mutex> lock(connection_status_mutex);
     if (connection_status.status != static_cast<u8>(NetworkStatus::ConnectedAsHost)) {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(RESULT_SUCCESS);
+        rb.Push(ResultCode(ErrCodes::WrongStatus, ErrorModule::UDS,
+                           ErrorSummary::InvalidState, ErrorLevel::Status));
         LOG_WARNING(Service_NWM, "called with status %u", connection_status.status);
         return;
     }
@@ -857,7 +855,6 @@ void NWM_UDS::DestroyNetwork(Kernel::HLERequestContext& ctx) {
 void NWM_UDS::DisconnectNetwork(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0xA, 0, 0);
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
 
     using Network::WifiPacket;
     WifiPacket deauth;
@@ -870,6 +867,8 @@ void NWM_UDS::DisconnectNetwork(Kernel::HLERequestContext& ctx) {
             connection_status.status = static_cast<u32>(NetworkStatus::ConnectedAsHost);
             connection_status.network_node_id = tmp_node_id;
             LOG_DEBUG(Service_NWM, "called as a host");
+            rb.Push(ResultCode(ErrCodes::WrongStatus, ErrorModule::UDS,
+                               ErrorSummary::InvalidState, ErrorLevel::Status));
             return;
         }
         u16_le tmp_node_id = connection_status.network_node_id;
@@ -893,6 +892,7 @@ void NWM_UDS::DisconnectNetwork(Kernel::HLERequestContext& ctx) {
     }
     channel_data.clear();
 
+    rb.Push(RESULT_SUCCESS);
     LOG_DEBUG(Service_NWM, "called");
 }
 
@@ -1070,7 +1070,6 @@ void NWM_UDS::ConnectToNetwork(Kernel::HLERequestContext& ctx) {
             LOG_DEBUG(Service_NWM, "connection sequence finished");
         });
 
-    // TODO(B3N30): Add a timout for the connection sequence
     LOG_DEBUG(Service_NWM, "called");
 }
 
