@@ -305,6 +305,9 @@ public:
     bool BlitSurfaces(const Surface& src_surface, const MathUtil::Rectangle<u32>& src_rect,
                       const Surface& dst_surface, const MathUtil::Rectangle<u32>& dst_rect);
 
+    void ConvertD24S8toABGR(GLuint src_tex, const MathUtil::Rectangle<u32>& src_rect,
+                            GLuint dst_tex, const MathUtil::Rectangle<u32>& dst_rect);
+
     /// Copy one surface's region to another
     void CopySurface(const Surface& src_surface, const Surface& dst_surface,
                      SurfaceInterval copy_interval);
@@ -365,4 +368,11 @@ private:
 
     OGLFramebuffer read_framebuffer;
     OGLFramebuffer draw_framebuffer;
+
+    OGLVertexArray attributeless_vao;
+    OGLBuffer d24s8_abgr_buffer;
+    GLsizeiptr d24s8_abgr_buffer_size;
+    OGLShader d24s8_abgr_shader;
+    GLint d24s8_abgr_tbo_size_u_id;
+    GLint d24s8_abgr_viewport_u_id;
 };
