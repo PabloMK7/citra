@@ -17,6 +17,7 @@
 #include <QtWidgets>
 #include "citra_qt/aboutdialog.h"
 #include "citra_qt/bootmanager.h"
+#include "citra_qt/compatdb.h"
 #include "citra_qt/configuration/config.h"
 #include "citra_qt/configuration/configure_dialog.h"
 #include "citra_qt/debugger/graphics/graphics.h"
@@ -47,10 +48,6 @@
 #include "core/gdbstub/gdbstub.h"
 #include "core/loader/loader.h"
 #include "core/settings.h"
-
-#ifdef CITRA_ENABLE_COMPATIBILITY_REPORTING
-#include "citra_qt/compatdb.h"
-#endif
 
 #ifdef QT_STATICPLUGIN
 Q_IMPORT_PLUGIN(QWindowsIntegrationPlugin);
@@ -821,7 +818,6 @@ void GMainWindow::OnStopGame() {
 }
 
 void GMainWindow::OnMenuReportCompatibility() {
-#ifdef CITRA_ENABLE_COMPATIBILITY_REPORTING
     if (!Settings::values.citra_token.empty() && !Settings::values.citra_username.empty()) {
         CompatDB compatdb{this};
         compatdb.exec();
@@ -832,7 +828,6 @@ void GMainWindow::OnMenuReportCompatibility() {
                "account.<br><br/>To link your Citra account, go to Emulation \> Configuration \> "
                "Web."));
     }
-#endif
 }
 
 void GMainWindow::ToggleFullscreen() {
