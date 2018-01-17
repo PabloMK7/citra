@@ -131,10 +131,6 @@ union PicaShaderConfig {
 
     } state;
 };
-#if (__GNUC__ >= 5) || defined(__clang__) || defined(_MSC_VER)
-static_assert(std::is_trivially_copyable<PicaShaderConfig::State>::value,
-              "PicaShaderConfig::State must be trivially copyable");
-#endif
 
 /**
  * Generates the GLSL vertex shader program source code for the current Pica state
@@ -156,7 +152,7 @@ namespace std {
 template <>
 struct hash<GLShader::PicaShaderConfig> {
     size_t operator()(const GLShader::PicaShaderConfig& k) const {
-        return Common::ComputeHash64(&k.state, sizeof(GLShader::PicaShaderConfig::State));
+        return Common::ComputeStructHash64(k.state);
     }
 };
 } // namespace std
