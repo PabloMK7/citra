@@ -8,6 +8,7 @@
 #include "input_common/keyboard.h"
 #include "input_common/main.h"
 #include "input_common/motion_emu.h"
+#include "input_common/udp/udp.h"
 #ifdef HAVE_SDL2
 #include "input_common/sdl/sdl.h"
 #endif
@@ -16,6 +17,7 @@ namespace InputCommon {
 
 static std::shared_ptr<Keyboard> keyboard;
 static std::shared_ptr<MotionEmu> motion_emu;
+static std::unique_ptr<CemuhookUDP::State> udp;
 
 void Init() {
     keyboard = std::make_shared<Keyboard>();
@@ -28,6 +30,8 @@ void Init() {
 #ifdef HAVE_SDL2
     SDL::Init();
 #endif
+
+    udp = CemuhookUDP::Init();
 }
 
 void Shutdown() {
@@ -75,11 +79,13 @@ std::string GenerateAnalogParamFromKeys(int key_up, int key_down, int key_left, 
 namespace Polling {
 
 std::vector<std::unique_ptr<DevicePoller>> GetPollers(DeviceType type) {
+    std::vector<std::unique_ptr<DevicePoller>> pollers;
+
 #ifdef HAVE_SDL2
-    return SDL::Polling::GetPollers(type);
-#else
-    return {};
+    SDL::Polling::GetPollers(type, pollers);
 #endif
+
+    return pollers;
 }
 
 } // namespace Polling

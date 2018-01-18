@@ -95,6 +95,8 @@ struct Values {
     std::array<std::string, NativeAnalog::NumAnalogs> analogs;
     std::string motion_device;
     std::string touch_device;
+    std::string udp_input_address;
+    u16 udp_input_port;
 
     // Core
     bool use_cpu_jit;

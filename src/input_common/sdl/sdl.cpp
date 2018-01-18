@@ -414,18 +414,16 @@ private:
     SDL_JoystickID analog_axes_joystick = -1;
 };
 
-std::vector<std::unique_ptr<InputCommon::Polling::DevicePoller>> GetPollers(
-    InputCommon::Polling::DeviceType type) {
-    std::vector<std::unique_ptr<InputCommon::Polling::DevicePoller>> pollers;
+void GetPollers(InputCommon::Polling::DeviceType type,
+                std::vector<std::unique_ptr<InputCommon::Polling::DevicePoller>>& pollers) {
     switch (type) {
     case InputCommon::Polling::DeviceType::Analog:
-        pollers.push_back(std::make_unique<SDLAnalogPoller>());
+        pollers.emplace_back(std::make_unique<SDLAnalogPoller>());
         break;
     case InputCommon::Polling::DeviceType::Button:
-        pollers.push_back(std::make_unique<SDLButtonPoller>());
+        pollers.emplace_back(std::make_unique<SDLButtonPoller>());
         break;
     }
-    return pollers;
 }
 } // namespace Polling
 } // namespace SDL

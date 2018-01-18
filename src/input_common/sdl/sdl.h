@@ -34,8 +34,8 @@ Common::ParamPackage SDLEventToButtonParamPackage(const SDL_Event& event);
 namespace Polling {
 
 /// Get all DevicePoller that use the SDL backend for a specific device type
-std::vector<std::unique_ptr<InputCommon::Polling::DevicePoller>> GetPollers(
-    InputCommon::Polling::DeviceType type);
+void GetPollers(InputCommon::Polling::DeviceType type,
+                std::vector<std::unique_ptr<InputCommon::Polling::DevicePoller>>& pollers);
 
 } // namespace Polling
 } // namespace SDL
