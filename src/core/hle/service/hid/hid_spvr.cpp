@@ -2,27 +2,26 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "core/hle/service/hid/hid.h"
 #include "core/hle/service/hid/hid_spvr.h"
 
 namespace Service {
 namespace HID {
 
-const Interface::FunctionInfo FunctionTable[] = {
-    {0x000A0000, GetIPCHandles, "GetIPCHandles"},
-    {0x000B0000, nullptr, "StartAnalogStickCalibration"},
-    {0x000E0000, nullptr, "GetAnalogStickCalibrateParam"},
-    {0x00110000, EnableAccelerometer, "EnableAccelerometer"},
-    {0x00120000, DisableAccelerometer, "DisableAccelerometer"},
-    {0x00130000, EnableGyroscopeLow, "EnableGyroscopeLow"},
-    {0x00140000, DisableGyroscopeLow, "DisableGyroscopeLow"},
-    {0x00150000, GetGyroscopeLowRawToDpsCoefficient, "GetGyroscopeLowRawToDpsCoefficient"},
-    {0x00160000, GetGyroscopeLowCalibrateParam, "GetGyroscopeLowCalibrateParam"},
-    {0x00170000, GetSoundVolume, "GetSoundVolume"},
-};
-
-HID_SPVR_Interface::HID_SPVR_Interface() {
-    Register(FunctionTable);
+Spvr::Spvr(std::shared_ptr<Module> hid) : Module::Interface(std::move(hid), "hid:SPVR", 6) {
+    static const FunctionInfo functions[] = {
+        {0x000A0000, &Spvr::GetIPCHandles, "GetIPCHandles"},
+        {0x000B0000, nullptr, "StartAnalogStickCalibration"},
+        {0x000E0000, nullptr, "GetAnalogStickCalibrateParam"},
+        {0x00110000, &Spvr::EnableAccelerometer, "EnableAccelerometer"},
+        {0x00120000, &Spvr::DisableAccelerometer, "DisableAccelerometer"},
+        {0x00130000, &Spvr::EnableGyroscopeLow, "EnableGyroscopeLow"},
+        {0x00140000, &Spvr::DisableGyroscopeLow, "DisableGyroscopeLow"},
+        {0x00150000, &Spvr::GetGyroscopeLowRawToDpsCoefficient,
+         "GetGyroscopeLowRawToDpsCoefficient"},
+        {0x00160000, &Spvr::GetGyroscopeLowCalibrateParam, "GetGyroscopeLowCalibrateParam"},
+        {0x00170000, &Spvr::GetSoundVolume, "GetSoundVolume"},
+    };
+    RegisterHandlers(functions);
 }
 
 } // namespace HID

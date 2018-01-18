@@ -8,7 +8,7 @@ add_library(input_common STATIC
     motion_emu.cpp
     motion_emu.h
 
-    $<$<BOOL:SDL2_FOUND>:sdl/sdl.cpp sdl/sdl.h>
+    $<$<BOOL:${SDL2_FOUND}>:sdl/sdl.cpp sdl/sdl.h>
 )
 
 create_target_directory_groups(input_common)

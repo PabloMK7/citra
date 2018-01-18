@@ -3,15 +3,12 @@
 // Refer to the license.txt file included.
 
 #include <algorithm>
-#include <atomic>
 #include <cmath>
-#include <memory>
 #include "common/logging/log.h"
 #include "core/3ds.h"
 #include "core/core.h"
 #include "core/core_timing.h"
-#include "core/frontend/input.h"
-#include "core/hle/ipc.h"
+#include "core/hle/ipc_helpers.h"
 #include "core/hle/kernel/event.h"
 #include "core/hle/kernel/handle_table.h"
 #include "core/hle/kernel/shared_memory.h"
@@ -23,27 +20,7 @@
 namespace Service {
 namespace HID {
 
-// Handle to shared memory region designated to HID_User service
-static Kernel::SharedPtr<Kernel::SharedMemory> shared_mem;
-
-// Event handles
-static Kernel::SharedPtr<Kernel::Event> event_pad_or_touch_1;
-static Kernel::SharedPtr<Kernel::Event> event_pad_or_touch_2;
-static Kernel::SharedPtr<Kernel::Event> event_accelerometer;
-static Kernel::SharedPtr<Kernel::Event> event_gyroscope;
-static Kernel::SharedPtr<Kernel::Event> event_debug_pad;
-
-static u32 next_pad_index;
-static u32 next_touch_index;
-static u32 next_accelerometer_index;
-static u32 next_gyroscope_index;
-
-static int enable_accelerometer_count; // positive means enabled
-static int enable_gyroscope_count;     // positive means enabled
-
-static CoreTiming::EventType* pad_update_event;
-static CoreTiming::EventType* accelerometer_update_event;
-static CoreTiming::EventType* gyroscope_update_event;
+static std::weak_ptr<Module> current_module;
 
 // Updating period for each HID device. These empirical values are measured from a 11.2 3DS.
 constexpr u64 pad_update_ticks = BASE_CLOCK_RATE_ARM11 / 234;
@@ -52,13 +29,6 @@ constexpr u64 gyroscope_update_ticks = BASE_CLOCK_RATE_ARM11 / 101;
 
 constexpr float accelerometer_coef = 512.0f; // measured from hw test result
 constexpr float gyroscope_coef = 14.375f; // got from hwtest GetGyroscopeLowRawToDpsCoefficient call
-
-static std::atomic<bool> is_device_reload_pending;
-static std::array<std::unique_ptr<Input::ButtonDevice>, Settings::NativeButton::NUM_BUTTONS_HID>
-    buttons;
-static std::unique_ptr<Input::AnalogDevice> circle_pad;
-static std::unique_ptr<Input::MotionDevice> motion_device;
-static std::unique_ptr<Input::TouchDevice> touch_device;
 
 DirectionState GetStickDirectionState(s16 circle_pad_x, s16 circle_pad_y) {
     // 30 degree and 60 degree are angular thresholds for directions
@@ -89,7 +59,7 @@ DirectionState GetStickDirectionState(s16 circle_pad_x, s16 circle_pad_y) {
     return state;
 }
 
-static void LoadInputDevices() {
+void Module::LoadInputDevices() {
     std::transform(Settings::values.buttons.begin() + Settings::NativeButton::BUTTON_HID_BEGIN,
                    Settings::values.buttons.begin() + Settings::NativeButton::BUTTON_HID_END,
                    buttons.begin(), Input::CreateDevice<Input::ButtonDevice>);
@@ -99,16 +69,7 @@ static void LoadInputDevices() {
     touch_device = Input::CreateDevice<Input::TouchDevice>(Settings::values.touch_device);
 }
 
-static void UnloadInputDevices() {
-    for (auto& button : buttons) {
-        button.reset();
-    }
-    circle_pad.reset();
-    motion_device.reset();
-    touch_device.reset();
-}
-
-static void UpdatePadCallback(u64 userdata, int cycles_late) {
+void Module::UpdatePadCallback(u64 userdata, int cycles_late) {
     SharedMem* mem = reinterpret_cast<SharedMem*>(shared_mem->GetPointer());
 
     if (is_device_reload_pending.exchange(false))
@@ -198,7 +159,7 @@ static void UpdatePadCallback(u64 userdata, int cycles_late) {
     CoreTiming::ScheduleEvent(pad_update_ticks - cycles_late, pad_update_event);
 }
 
-static void UpdateAccelerometerCallback(u64 userdata, int cycles_late) {
+void Module::UpdateAccelerometerCallback(u64 userdata, int cycles_late) {
     SharedMem* mem = reinterpret_cast<SharedMem*>(shared_mem->GetPointer());
 
     mem->accelerometer.index = next_accelerometer_index;
@@ -240,7 +201,7 @@ static void UpdateAccelerometerCallback(u64 userdata, int cycles_late) {
     CoreTiming::ScheduleEvent(accelerometer_update_ticks - cycles_late, accelerometer_update_event);
 }
 
-static void UpdateGyroscopeCallback(u64 userdata, int cycles_late) {
+void Module::UpdateGyroscopeCallback(u64 userdata, int cycles_late) {
     SharedMem* mem = reinterpret_cast<SharedMem*>(shared_mem->GetPointer());
 
     mem->gyroscope.index = next_gyroscope_index;
@@ -273,134 +234,122 @@ static void UpdateGyroscopeCallback(u64 userdata, int cycles_late) {
     CoreTiming::ScheduleEvent(gyroscope_update_ticks - cycles_late, gyroscope_update_event);
 }
 
-void GetIPCHandles(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-
-    cmd_buff[1] = 0;          // No error
-    cmd_buff[2] = 0x14000000; // IPC Command Structure translate-header
-    // TODO(yuriks): Return error from SendSyncRequest is this fails (part of IPC marshalling)
-    cmd_buff[3] = Kernel::g_handle_table.Create(Service::HID::shared_mem).Unwrap();
-    cmd_buff[4] = Kernel::g_handle_table.Create(Service::HID::event_pad_or_touch_1).Unwrap();
-    cmd_buff[5] = Kernel::g_handle_table.Create(Service::HID::event_pad_or_touch_2).Unwrap();
-    cmd_buff[6] = Kernel::g_handle_table.Create(Service::HID::event_accelerometer).Unwrap();
-    cmd_buff[7] = Kernel::g_handle_table.Create(Service::HID::event_gyroscope).Unwrap();
-    cmd_buff[8] = Kernel::g_handle_table.Create(Service::HID::event_debug_pad).Unwrap();
+void Module::Interface::GetIPCHandles(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp{ctx, 0xA, 0, 0};
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 7);
+    rb.Push(RESULT_SUCCESS);
+    rb.PushCopyObjects(hid->shared_mem, hid->event_pad_or_touch_1, hid->event_pad_or_touch_2,
+                       hid->event_accelerometer, hid->event_gyroscope, hid->event_debug_pad);
 }
 
-void EnableAccelerometer(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
+void Module::Interface::EnableAccelerometer(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp{ctx, 0x11, 0, 0};
 
-    ++enable_accelerometer_count;
+    ++hid->enable_accelerometer_count;
 
     // Schedules the accelerometer update event if the accelerometer was just enabled
-    if (enable_accelerometer_count == 1) {
-        CoreTiming::ScheduleEvent(accelerometer_update_ticks, accelerometer_update_event);
+    if (hid->enable_accelerometer_count == 1) {
+        CoreTiming::ScheduleEvent(accelerometer_update_ticks, hid->accelerometer_update_event);
     }
 
-    cmd_buff[1] = RESULT_SUCCESS.raw;
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RESULT_SUCCESS);
 
     LOG_DEBUG(Service_HID, "called");
 }
 
-void DisableAccelerometer(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
+void Module::Interface::DisableAccelerometer(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp{ctx, 0x12, 0, 0};
 
-    --enable_accelerometer_count;
+    --hid->enable_accelerometer_count;
 
     // Unschedules the accelerometer update event if the accelerometer was just disabled
-    if (enable_accelerometer_count == 0) {
-        CoreTiming::UnscheduleEvent(accelerometer_update_event, 0);
+    if (hid->enable_accelerometer_count == 0) {
+        CoreTiming::UnscheduleEvent(hid->accelerometer_update_event, 0);
     }
 
-    cmd_buff[1] = RESULT_SUCCESS.raw;
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RESULT_SUCCESS);
 
     LOG_DEBUG(Service_HID, "called");
 }
 
-void EnableGyroscopeLow(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
+void Module::Interface::EnableGyroscopeLow(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp{ctx, 0x13, 0, 0};
 
-    ++enable_gyroscope_count;
+    ++hid->enable_gyroscope_count;
 
     // Schedules the gyroscope update event if the gyroscope was just enabled
-    if (enable_gyroscope_count == 1) {
-        CoreTiming::ScheduleEvent(gyroscope_update_ticks, gyroscope_update_event);
+    if (hid->enable_gyroscope_count == 1) {
+        CoreTiming::ScheduleEvent(gyroscope_update_ticks, hid->gyroscope_update_event);
     }
 
-    cmd_buff[1] = RESULT_SUCCESS.raw;
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RESULT_SUCCESS);
 
     LOG_DEBUG(Service_HID, "called");
 }
 
-void DisableGyroscopeLow(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
+void Module::Interface::DisableGyroscopeLow(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp{ctx, 0x14, 0, 0};
 
-    --enable_gyroscope_count;
+    --hid->enable_gyroscope_count;
 
     // Unschedules the gyroscope update event if the gyroscope was just disabled
-    if (enable_gyroscope_count == 0) {
-        CoreTiming::UnscheduleEvent(gyroscope_update_event, 0);
+    if (hid->enable_gyroscope_count == 0) {
+        CoreTiming::UnscheduleEvent(hid->gyroscope_update_event, 0);
     }
 
-    cmd_buff[1] = RESULT_SUCCESS.raw;
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RESULT_SUCCESS);
 
     LOG_DEBUG(Service_HID, "called");
 }
 
-void GetGyroscopeLowRawToDpsCoefficient(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
+void Module::Interface::GetGyroscopeLowRawToDpsCoefficient(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp{ctx, 0x15, 0, 0};
 
-    cmd_buff[1] = RESULT_SUCCESS.raw;
-
-    f32 coef = gyroscope_coef;
-    memcpy(&cmd_buff[2], &coef, 4);
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
+    rb.Push(RESULT_SUCCESS);
+    rb.PushRaw<f32>(gyroscope_coef);
 }
 
-void GetGyroscopeLowCalibrateParam(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
+void Module::Interface::GetGyroscopeLowCalibrateParam(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp{ctx, 0x16, 0, 0};
 
-    cmd_buff[1] = RESULT_SUCCESS.raw;
+    IPC::RequestBuilder rb = rp.MakeBuilder(6, 0);
+    rb.Push(RESULT_SUCCESS);
 
     const s16 param_unit = 6700; // an approximate value taken from hw
     GyroscopeCalibrateParam param = {
         {0, param_unit, -param_unit}, {0, param_unit, -param_unit}, {0, param_unit, -param_unit},
     };
-    memcpy(&cmd_buff[2], &param, sizeof(param));
+    rb.PushRaw(param);
 
     LOG_WARNING(Service_HID, "(STUBBED) called");
 }
 
-void GetSoundVolume(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
+void Module::Interface::GetSoundVolume(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp{ctx, 0x17, 0, 0};
 
     const u8 volume = 0x3F; // TODO(purpasmart): Find out if this is the max value for the volume
 
-    cmd_buff[1] = RESULT_SUCCESS.raw;
-    cmd_buff[2] = volume;
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
+    rb.Push(RESULT_SUCCESS);
+    rb.Push(volume);
 
     LOG_WARNING(Service_HID, "(STUBBED) called");
 }
 
-void Init() {
+Module::Interface::Interface(std::shared_ptr<Module> hid, const char* name, u32 max_session)
+    : ServiceFramework(name, max_session), hid(std::move(hid)) {}
+
+Module::Module() {
     using namespace Kernel;
 
-    AddService(new HID_U_Interface);
-    AddService(new HID_SPVR_Interface);
-
-    is_device_reload_pending.store(true);
-
-    using Kernel::MemoryPermission;
     shared_mem =
         SharedMemory::Create(nullptr, 0x1000, MemoryPermission::ReadWrite, MemoryPermission::Read,
-                             0, Kernel::MemoryRegion::BASE, "HID:SharedMemory");
-
-    next_pad_index = 0;
-    next_touch_index = 0;
-    next_accelerometer_index = 0;
-    next_gyroscope_index = 0;
-
-    enable_accelerometer_count = 0;
-    enable_gyroscope_count = 0;
+                             0, MemoryRegion::BASE, "HID:SharedMemory");
 
     // Create event handles
     event_pad_or_touch_1 = Event::Create(ResetType::OneShot, "HID:EventPadOrTouch1");
@@ -410,27 +359,35 @@ void Init() {
     event_debug_pad = Event::Create(ResetType::OneShot, "HID:EventDebugPad");
 
     // Register update callbacks
-    pad_update_event = CoreTiming::RegisterEvent("HID::UpdatePadCallback", UpdatePadCallback);
-    accelerometer_update_event =
-        CoreTiming::RegisterEvent("HID::UpdateAccelerometerCallback", UpdateAccelerometerCallback);
-    gyroscope_update_event =
-        CoreTiming::RegisterEvent("HID::UpdateGyroscopeCallback", UpdateGyroscopeCallback);
+    pad_update_event =
+        CoreTiming::RegisterEvent("HID::UpdatePadCallback", [this](u64 userdata, int cycles_late) {
+            UpdatePadCallback(userdata, cycles_late);
+        });
+    accelerometer_update_event = CoreTiming::RegisterEvent(
+        "HID::UpdateAccelerometerCallback", [this](u64 userdata, int cycles_late) {
+            UpdateAccelerometerCallback(userdata, cycles_late);
+        });
+    gyroscope_update_event = CoreTiming::RegisterEvent(
+        "HID::UpdateGyroscopeCallback",
+        [this](u64 userdata, int cycles_late) { UpdateGyroscopeCallback(userdata, cycles_late); });
 
     CoreTiming::ScheduleEvent(pad_update_ticks, pad_update_event);
 }
 
-void Shutdown() {
-    shared_mem = nullptr;
-    event_pad_or_touch_1 = nullptr;
-    event_pad_or_touch_2 = nullptr;
-    event_accelerometer = nullptr;
-    event_gyroscope = nullptr;
-    event_debug_pad = nullptr;
-    UnloadInputDevices();
+void Module::ReloadInputDevices() {
+    is_device_reload_pending.store(true);
 }
 
 void ReloadInputDevices() {
-    is_device_reload_pending.store(true);
+    if (auto hid = current_module.lock())
+        hid->ReloadInputDevices();
+}
+
+void InstallInterfaces(SM::ServiceManager& service_manager) {
+    auto hid = std::make_shared<Module>();
+    std::make_shared<User>(hid)->InstallAsService(service_manager);
+    std::make_shared<Spvr>(hid)->InstallAsService(service_manager);
+    current_module = hid;
 }
 
 } // namespace HID

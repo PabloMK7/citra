@@ -65,6 +65,7 @@ PicaShaderConfig PicaShaderConfig::BuildFromRegs(const Pica::Regs& regs) {
     PicaShaderConfig res;
 
     auto& state = res.state;
+    // Memset structure to zero padding bits, so that they will be deterministic when hashing
     std::memset(&state, 0, sizeof(PicaShaderConfig::State));
 
     state.scissor_test_mode = regs.rasterizer.scissor_test.mode;

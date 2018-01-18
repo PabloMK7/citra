@@ -277,7 +277,7 @@ void Init() {
     DLP::Init();
     FRD::Init();
     GSP::InstallInterfaces(*SM::g_service_manager);
-    HID::Init();
+    HID::InstallInterfaces(*SM::g_service_manager);
     IR::InstallInterfaces(*SM::g_service_manager);
     MVD::Init();
     NDM::Init();
@@ -307,7 +307,6 @@ void Shutdown() {
     NIM::Shutdown();
     NEWS::Shutdown();
     NDM::Shutdown();
-    HID::Shutdown();
     FRD::Shutdown();
     DLP::Shutdown();
     CFG::Shutdown();

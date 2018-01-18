@@ -40,6 +40,7 @@ SharedPtr<Process> Process::Create(SharedPtr<CodeSet> code_set) {
     process->codeset = std::move(code_set);
     process->flags.raw = 0;
     process->flags.memory_region.Assign(MemoryRegion::APPLICATION);
+    process->status = ProcessStatus::Created;
 
     process_list.push_back(process);
     return process;
@@ -150,6 +151,8 @@ void Process::Run(s32 main_thread_priority, u32 stack_size) {
     for (const auto& mapping : address_mappings) {
         HandleSpecialMapping(vm_manager, mapping);
     }
+
+    status = ProcessStatus::Running;
 
     vm_manager.LogLayout(Log::Level::Debug);
     Kernel::SetupMainThread(codeset->entrypoint, main_thread_priority, this);

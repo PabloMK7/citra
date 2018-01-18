@@ -90,12 +90,46 @@ file(GLOB_RECURSE THEMES ${CMAKE_SOURCE_DIR}/dist/qt_themes/*)
 
 qt5_wrap_ui(UI_HDRS ${UIS})
 
+if (ENABLE_QT_TRANSLATION)
+    set(CITRA_QT_LANGUAGES "${CMAKE_SOURCE_DIR}/dist/languages" CACHE PATH "Path to the translation bundle for the Qt frontend")
+    option(GENERATE_QT_TRANSLATION "Generate en.ts as the translation source file" OFF)
+
+    # Update source TS file if enabled
+    if (GENERATE_QT_TRANSLATION)
+        get_target_property(SRCS citra-qt SOURCES)
+        qt5_create_translation(QM_FILES ${SRCS} ${UIS} ${CITRA_QT_LANGUAGES}/en.ts)
+        add_custom_target(translation ALL DEPENDS ${CITRA_QT_LANGUAGES}/en.ts)
+    endif()
+
+    # Find all TS files except en.ts
+    file(GLOB_RECURSE LANGUAGES_TS ${CITRA_QT_LANGUAGES}/*.ts)
+    list(REMOVE_ITEM LANGUAGES_TS ${CITRA_QT_LANGUAGES}/en.ts)
+
+    # Compile TS files to QM files
+    qt5_add_translation(LANGUAGES_QM ${LANGUAGES_TS})
+
+    # Build a QRC file from the QM file list
+    set(LANGUAGES_QRC ${CMAKE_CURRENT_BINARY_DIR}/languages.qrc)
+    file(WRITE ${LANGUAGES_QRC} "<RCC><qresource prefix=\"languages\">\n")
+    foreach (QM ${LANGUAGES_QM})
+        get_filename_component(QM_FILE ${QM} NAME)
+        file(APPEND ${LANGUAGES_QRC} "<file>${QM_FILE}</file>\n")
+    endforeach (QM)
+    file(APPEND ${LANGUAGES_QRC} "</qresource></RCC>")
+
+    # Add the QRC file to package in all QM files
+    qt5_add_resources(LANGUAGES ${LANGUAGES_QRC})
+else()
+    set(LANGUAGES)
+endif()
+
 target_sources(citra-qt
     PRIVATE
         ${ICONS}
         ${THEMES}
         ${UI_HDRS}
         ${UIS}
+        ${LANGUAGES}
 )
 
 if (APPLE)

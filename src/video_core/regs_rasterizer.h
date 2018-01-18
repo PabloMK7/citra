@@ -87,6 +87,8 @@ struct RasterizerRegs {
         BitField<8, 5, Semantic> map_y;
         BitField<16, 5, Semantic> map_z;
         BitField<24, 5, Semantic> map_w;
+
+        u32 raw;
     } vs_output_attributes[7];
 
     INSERT_PADDING_WORDS(0xe);

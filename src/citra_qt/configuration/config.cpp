@@ -58,7 +58,9 @@ void Config::ReadValues() {
     }
 
     Settings::values.motion_device =
-        qt_config->value("motion_device", "engine:motion_emu,update_period:100,sensitivity:0.01")
+        qt_config
+            ->value("motion_device",
+                    "engine:motion_emu,update_period:100,sensitivity:0.01,tilt_clamp:90.0")
             .toString()
             .toStdString();
     Settings::values.touch_device =
@@ -182,6 +184,7 @@ void Config::ReadValues() {
     UISettings::values.gamedir = qt_config->value("gameListRootDir", ".").toString();
     UISettings::values.gamedir_deepscan = qt_config->value("gameListDeepScan", false).toBool();
     UISettings::values.recent_files = qt_config->value("recentFiles").toStringList();
+    UISettings::values.language = qt_config->value("language", "").toString();
     qt_config->endGroup();
 
     qt_config->beginGroup("Shortcuts");
@@ -333,6 +336,7 @@ void Config::SaveValues() {
     qt_config->setValue("gameListRootDir", UISettings::values.gamedir);
     qt_config->setValue("gameListDeepScan", UISettings::values.gamedir_deepscan);
     qt_config->setValue("recentFiles", UISettings::values.recent_files);
+    qt_config->setValue("language", UISettings::values.language);
     qt_config->endGroup();
 
     qt_config->beginGroup("Shortcuts");

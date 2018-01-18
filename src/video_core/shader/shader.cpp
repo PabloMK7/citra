@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <cinttypes>
 #include <cmath>
 #include <cstring>
 #include "common/bit_set.h"
@@ -21,32 +22,41 @@ namespace Pica {
 
 namespace Shader {
 
+void OutputVertex::ValidateSemantics(const RasterizerRegs& regs) {
+    unsigned int num_attributes = regs.vs_output_total;
+    ASSERT(num_attributes <= 7);
+    for (size_t attrib = 0; attrib < num_attributes; ++attrib) {
+        u32 output_register_map = regs.vs_output_attributes[attrib].raw;
+        for (size_t comp = 0; comp < 4; ++comp) {
+            u32 semantic = (output_register_map >> (8 * comp)) & 0x1F;
+            ASSERT_MSG(semantic < 24 || semantic == RasterizerRegs::VSOutputAttributes::INVALID,
+                       "Invalid/unknown semantic id: %" PRIu32, semantic);
+        }
+    }
+}
+
 OutputVertex OutputVertex::FromAttributeBuffer(const RasterizerRegs& regs,
                                                const AttributeBuffer& input) {
     // Setup output data
     union {
         OutputVertex ret{};
-        std::array<float24, 24> vertex_slots;
+        // Allow us to overflow OutputVertex to avoid branches, since
+        // RasterizerRegs::VSOutputAttributes::INVALID would write to slot 31, which
+        // would be out of bounds otherwise.
+        std::array<float24, 32> vertex_slots_overflow;
     };
-    static_assert(sizeof(vertex_slots) == sizeof(ret), "Struct and array have different sizes.");
 
-    unsigned int num_attributes = regs.vs_output_total;
-    ASSERT(num_attributes <= 7);
-    for (unsigned int i = 0; i < num_attributes; ++i) {
-        const auto& output_register_map = regs.vs_output_attributes[i];
+    // Assert that OutputVertex has enough space for 24 semantic registers
+    static_assert(sizeof(std::array<float24, 24>) == sizeof(ret),
+                  "Struct and array have different sizes.");
 
-        RasterizerRegs::VSOutputAttributes::Semantic semantics[4] = {
-            output_register_map.map_x, output_register_map.map_y, output_register_map.map_z,
-            output_register_map.map_w};
-
-        for (unsigned comp = 0; comp < 4; ++comp) {
-            RasterizerRegs::VSOutputAttributes::Semantic semantic = semantics[comp];
-            if (semantic < vertex_slots.size()) {
-                vertex_slots[semantic] = input.attr[i][comp];
-            } else if (semantic != RasterizerRegs::VSOutputAttributes::INVALID) {
-                LOG_ERROR(HW_GPU, "Invalid/unknown semantic id: %u", (unsigned int)semantic);
-            }
-        }
+    unsigned int num_attributes = regs.vs_output_total & 7;
+    for (size_t attrib = 0; attrib < num_attributes; ++attrib) {
+        const auto output_register_map = regs.vs_output_attributes[attrib];
+        vertex_slots_overflow[output_register_map.map_x] = input.attr[attrib][0];
+        vertex_slots_overflow[output_register_map.map_y] = input.attr[attrib][1];
+        vertex_slots_overflow[output_register_map.map_z] = input.attr[attrib][2];
+        vertex_slots_overflow[output_register_map.map_w] = input.attr[attrib][3];
     }
 
     // The hardware takes the absolute and saturates vertex colors like this, *before* doing

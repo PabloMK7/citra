@@ -277,3 +277,7 @@ void ConfigureInput::keyPressEvent(QKeyEvent* event) {
     }
     setPollingResult({}, true);
 }
+
+void ConfigureInput::retranslateUi() {
+    ui->retranslateUi(this);
+}

@@ -8,7 +8,9 @@
 #include "common/assert.h"
 #include "common/file_util.h"
 #include "common/scm_rev.h"
+#ifdef ARCHITECTURE_x86_64
 #include "common/x64/cpu_detect.h"
+#endif
 #include "core/core.h"
 #include "core/settings.h"
 #include "core/telemetry_session.h"
@@ -20,6 +22,7 @@
 
 namespace Core {
 
+#ifdef ARCHITECTURE_x86_64
 static const char* CpuVendorToStr(Common::CPUVendor vendor) {
     switch (vendor) {
     case Common::CPUVendor::INTEL:
@@ -31,6 +34,7 @@ static const char* CpuVendorToStr(Common::CPUVendor vendor) {
     }
     UNREACHABLE();
 }
+#endif
 
 static u64 GenerateTelemetryId() {
     u64 telemetry_id{};
@@ -121,7 +125,8 @@ TelemetrySession::TelemetrySession() {
     AddField(Telemetry::FieldType::App, "BuildDate", Common::g_build_date);
     AddField(Telemetry::FieldType::App, "BuildName", Common::g_build_name);
 
-    // Log user system information
+// Log user system information
+#ifdef ARCHITECTURE_x86_64
     AddField(Telemetry::FieldType::UserSystem, "CPU_Model", Common::GetCPUCaps().cpu_string);
     AddField(Telemetry::FieldType::UserSystem, "CPU_BrandString",
              Common::GetCPUCaps().brand_string);
@@ -143,6 +148,9 @@ TelemetrySession::TelemetrySession() {
              Common::GetCPUCaps().sse4_1);
     AddField(Telemetry::FieldType::UserSystem, "CPU_Extension_x64_SSE42",
              Common::GetCPUCaps().sse4_2);
+#else
+    AddField(Telemetry::FieldType::UserSystem, "CPU_Model", "Other");
+#endif
 #ifdef __APPLE__
     AddField(Telemetry::FieldType::UserSystem, "OsPlatform", "Apple");
 #elif defined(_WIN32)
