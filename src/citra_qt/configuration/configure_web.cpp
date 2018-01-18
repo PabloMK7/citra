@@ -51,7 +51,7 @@ void ConfigureWeb::applyConfiguration() {
         Settings::values.citra_username = ui->edit_username->text().toStdString();
         Settings::values.citra_token = ui->edit_token->text().toStdString();
     } else {
-        QMessageBox::warning(this, tr("Username and token not verfied"),
+        QMessageBox::warning(this, tr("Username and token not verified"),
                              tr("Username and token were not verified. The changes to your "
                                 "username and/or token have not been saved."));
     }
