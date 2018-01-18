@@ -19,6 +19,7 @@ public:
     ~ConfigureAudio();
 
     void applyConfiguration();
+    void retranslateUi();
 
 public slots:
     void updateAudioDevices(int sink_index);

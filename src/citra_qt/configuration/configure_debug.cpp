@@ -24,3 +24,7 @@ void ConfigureDebug::applyConfiguration() {
     Settings::values.gdbstub_port = ui->gdbport_spinbox->value();
     Settings::Apply();
 }
+
+void ConfigureDebug::retranslateUi() {
+    ui->retranslateUi(this);
+}

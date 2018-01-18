@@ -20,6 +20,7 @@ public:
     ~ConfigureWeb();
 
     void applyConfiguration();
+    void retranslateUi();
 
 public slots:
     void RefreshTelemetryID();

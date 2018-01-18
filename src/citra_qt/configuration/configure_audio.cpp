@@ -76,3 +76,7 @@ void ConfigureAudio::updateAudioDevices(int sink_index) {
         ui->audio_device_combo_box->addItem(device.c_str());
     }
 }
+
+void ConfigureAudio::retranslateUi() {
+    ui->retranslateUi(this);
+}

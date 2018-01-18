@@ -167,3 +167,7 @@ void ConfigureSystem::refreshConsoleID() {
     Service::CFG::UpdateConfigNANDSavegame();
     ui->label_console_id->setText("Console ID: 0x" + QString::number(console_id, 16).toUpper());
 }
+
+void ConfigureSystem::retranslateUi() {
+    ui->retranslateUi(this);
+}

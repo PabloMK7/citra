@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <QDirIterator>
 #include "citra_qt/configuration/configure_general.h"
 #include "citra_qt/ui_settings.h"
 #include "core/core.h"
@@ -12,6 +13,23 @@ ConfigureGeneral::ConfigureGeneral(QWidget* parent)
     : QWidget(parent), ui(new Ui::ConfigureGeneral) {
 
     ui->setupUi(this);
+    ui->language_combobox->addItem(tr("<System>"), QString(""));
+    ui->language_combobox->addItem(tr("English"), QString("en"));
+    QDirIterator it(":/languages", QDirIterator::NoIteratorFlags);
+    while (it.hasNext()) {
+        QString locale = it.next();
+        locale.truncate(locale.lastIndexOf('.'));
+        locale.remove(0, locale.lastIndexOf('/') + 1);
+        QString lang = QLocale::languageToString(QLocale(locale).language());
+        ui->language_combobox->addItem(lang, locale);
+    }
+
+    // Unlike other configuration changes, interface language changes need to be reflected on the
+    // interface immediately. This is done by passing a signal to the main window, and then
+    // retranslating when passing back.
+    connect(ui->language_combobox,
+            static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this,
+            &ConfigureGeneral::onLanguageChanged);
 
     for (auto theme : UISettings::themes) {
         ui->theme_combobox->addItem(theme.first, theme.second);
@@ -37,6 +55,8 @@ void ConfigureGeneral::setConfiguration() {
     ui->region_combobox->setCurrentIndex(Settings::values.region_value + 1);
 
     ui->theme_combobox->setCurrentIndex(ui->theme_combobox->findData(UISettings::values.theme));
+    ui->language_combobox->setCurrentIndex(
+        ui->language_combobox->findData(UISettings::values.language));
 }
 
 void ConfigureGeneral::applyConfiguration() {
@@ -51,4 +71,15 @@ void ConfigureGeneral::applyConfiguration() {
     Settings::values.region_value = ui->region_combobox->currentIndex() - 1;
     Settings::values.use_cpu_jit = ui->toggle_cpu_jit->isChecked();
     Settings::Apply();
+}
+
+void ConfigureGeneral::onLanguageChanged(int index) {
+    if (index == -1)
+        return;
+
+    emit languageChanged(ui->language_combobox->itemData(index).toString());
+}
+
+void ConfigureGeneral::retranslateUi() {
+    ui->retranslateUi(this);
 }

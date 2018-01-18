@@ -7,6 +7,7 @@
 #include <memory>
 #include <QMainWindow>
 #include <QTimer>
+#include <QTranslator>
 #include "core/core.h"
 #include "core/hle/service/am/am.h"
 #include "ui_main.h"
@@ -151,9 +152,12 @@ private slots:
     void OnUpdateFound(bool found, bool error);
     void OnCheckForUpdates();
     void OnOpenUpdater();
+    void OnLanguageChanged(const QString& locale);
 
 private:
     void UpdateStatusBar();
+    void LoadTranslation();
+    void SetupUIStrings();
 
     Ui::MainWindow ui;
 
@@ -191,6 +195,8 @@ private:
     bool defer_update_prompt = false;
 
     QAction* actions_recent_files[max_recent_files_item];
+
+    QTranslator translator;
 
 protected:
     void dropEvent(QDropEvent* event) override;
