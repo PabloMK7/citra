@@ -5,7 +5,13 @@
         <file alias="16x16/checked.png">icons/16x16/checked.png</file>
 
         <file alias="16x16/failed.png">icons/16x16/failed.png</file>
-      
+
+        <file alias="16x16/connected.png">icons/16x16/connected.png</file>
+
+        <file alias="16x16/disconnected.png">icons/16x16/disconnected.png</file>
+
+        <file alias="16x16/lock.png">icons/16x16/lock.png</file>
+
         <file alias="256x256/citra.png">icons/256x256/citra.png</file>
     </qresource>
 </RCC>
