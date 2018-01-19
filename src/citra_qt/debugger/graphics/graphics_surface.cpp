@@ -82,24 +82,24 @@ GraphicsSurfaceWidget::GraphicsSurfaceWidget(std::shared_ptr<Pica::DebugContext>
     surface_format_control = new QComboBox;
 
     // Color formats sorted by Pica texture format index
-    surface_format_control->addItem(tr("RGBA8"));
-    surface_format_control->addItem(tr("RGB8"));
-    surface_format_control->addItem(tr("RGB5A1"));
-    surface_format_control->addItem(tr("RGB565"));
-    surface_format_control->addItem(tr("RGBA4"));
-    surface_format_control->addItem(tr("IA8"));
-    surface_format_control->addItem(tr("RG8"));
-    surface_format_control->addItem(tr("I8"));
-    surface_format_control->addItem(tr("A8"));
-    surface_format_control->addItem(tr("IA4"));
-    surface_format_control->addItem(tr("I4"));
-    surface_format_control->addItem(tr("A4"));
-    surface_format_control->addItem(tr("ETC1"));
-    surface_format_control->addItem(tr("ETC1A4"));
-    surface_format_control->addItem(tr("D16"));
-    surface_format_control->addItem(tr("D24"));
-    surface_format_control->addItem(tr("D24X8"));
-    surface_format_control->addItem(tr("X24S8"));
+    surface_format_control->addItem("RGBA8");
+    surface_format_control->addItem("RGB8");
+    surface_format_control->addItem("RGB5A1");
+    surface_format_control->addItem("RGB565");
+    surface_format_control->addItem("RGBA4");
+    surface_format_control->addItem("IA8");
+    surface_format_control->addItem("RG8");
+    surface_format_control->addItem("I8");
+    surface_format_control->addItem("A8");
+    surface_format_control->addItem("IA4");
+    surface_format_control->addItem("I4");
+    surface_format_control->addItem("A4");
+    surface_format_control->addItem("ETC1");
+    surface_format_control->addItem("ETC1A4");
+    surface_format_control->addItem("D16");
+    surface_format_control->addItem("D24");
+    surface_format_control->addItem("D24X8");
+    surface_format_control->addItem("X24S8");
     surface_format_control->addItem(tr("Unknown"));
 
     surface_info_label = new QLabel();
