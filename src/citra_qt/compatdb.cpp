@@ -33,12 +33,12 @@ void CompatDB::Submit() {
     compatibility->addButton(ui->radioButton_IntroMenu, 4);
     compatibility->addButton(ui->radioButton_WontBoot, 5);
     switch (currentId()) {
-    case 1:
+    case CompatDBPage::SelectionPage:
         if (compatibility->checkedId() == -1) {
             button(NextButton)->setEnabled(false);
         }
         break;
-    case 2:
+    case CompatDBPage::FinalPage:
         LOG_DEBUG(Frontend, "Compatibility Rating: %d", compatibility->checkedId());
         Core::Telemetry().AddField(Telemetry::FieldType::UserFeedback, "Compatibility",
                                    compatibility->checkedId());
@@ -46,6 +46,8 @@ void CompatDB::Submit() {
         // workaround
         button(QWizard::CancelButton)->setVisible(false);
         break;
+    default:
+        LOG_ERROR(Frontend, "Unexpected page: %d", currentId());
     }
 }
 
