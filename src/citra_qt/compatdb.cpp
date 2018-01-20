@@ -24,6 +24,8 @@ CompatDB::CompatDB(QWidget* parent)
 
 CompatDB::~CompatDB() = default;
 
+enum class CompatDBPage { Intro = 0, Selection = 1, Final = 2 };
+
 void CompatDB::Submit() {
     QButtonGroup* compatibility = new QButtonGroup(this);
     compatibility->addButton(ui->radioButton_Perfect, 0);
@@ -32,13 +34,13 @@ void CompatDB::Submit() {
     compatibility->addButton(ui->radioButton_Bad, 3);
     compatibility->addButton(ui->radioButton_IntroMenu, 4);
     compatibility->addButton(ui->radioButton_WontBoot, 5);
-    switch (currentId()) {
-    case CompatDBPage::SelectionPage:
+    switch ((static_cast<CompatDBPage>(currentId()))) {
+    case CompatDBPage::Selection:
         if (compatibility->checkedId() == -1) {
             button(NextButton)->setEnabled(false);
         }
         break;
-    case CompatDBPage::FinalPage:
+    case CompatDBPage::Final:
         LOG_DEBUG(Frontend, "Compatibility Rating: %d", compatibility->checkedId());
         Core::Telemetry().AddField(Telemetry::FieldType::UserFeedback, "Compatibility",
                                    compatibility->checkedId());

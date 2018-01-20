@@ -25,5 +25,3 @@ private slots:
     void Submit();
     void EnableNext();
 };
-
-enum CompatDBPage { IntroPage = 0, SelectionPage = 1, FinalPage = 2 };
