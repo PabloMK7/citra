@@ -24,6 +24,7 @@
 #include "common/common_paths.h"
 #include "common/logging/log.h"
 #include "common/string_util.h"
+#include "core/hle/service/fs/archive.h"
 #include "core/loader/loader.h"
 
 GameList::SearchField::KeyReleaseEater::KeyReleaseEater(GameList* gamelist) {
@@ -401,8 +402,27 @@ void GameListWorker::AddFstEntriesToGameList(const std::string& dir_path, unsign
             u64 program_id = 0;
             loader->ReadProgramId(program_id);
 
+            std::vector<u8> update_smdh;
+            std::string update_path;
+            u64 update_id = 0;
+            std::unique_ptr<Loader::AppLoader> update_loader = nullptr;
+
+            if (0x4000000000000 <= program_id && program_id <= 0x40000FFFFFFFF) {
+                update_id = program_id + 0xe00000000;
+                update_path =
+                    Service::AM::GetTitleContentPath(Service::FS::MediaType::SDMC, update_id);
+                if (FileUtil::Exists(update_path)) {
+                    update_loader = Loader::GetLoader(update_path);
+                    if (update_loader) {
+                        update_loader->ReadIcon(update_smdh);
+                        update_loader->ReadProgramId(update_id);
+                    }
+                }
+            }
+
             emit EntryReady({
-                new GameListItemPath(QString::fromStdString(physical_name), smdh, program_id),
+                new GameListItemPath(QString::fromStdString(physical_name), smdh, program_id,
+                                     update_smdh),
                 new GameListItem(
                     QString::fromStdString(Loader::GetFileTypeString(loader->GetFileType()))),
                 new GameListItemSize(FileUtil::GetSize(physical_name)),
@@ -421,7 +441,22 @@ void GameListWorker::AddFstEntriesToGameList(const std::string& dir_path, unsign
 void GameListWorker::run() {
     stop_processing = false;
     watch_list.append(dir_path);
+    watch_list.append(QString::fromStdString(
+        std::string(FileUtil::GetUserPath(D_SDMC_IDX).c_str()) +
+        "Nintendo "
+        "3DS/00000000000000000000000000000000/00000000000000000000000000000000/title/00040000"));
+    watch_list.append(
+        QString::fromStdString(std::string(FileUtil::GetUserPath(D_NAND_IDX).c_str()) +
+                               "00000000000000000000000000000000/title/00040010"));
     AddFstEntriesToGameList(dir_path.toStdString(), deep_scan ? 256 : 0);
+    AddFstEntriesToGameList(
+        std::string(FileUtil::GetUserPath(D_SDMC_IDX).c_str()) +
+            "Nintendo "
+            "3DS/00000000000000000000000000000000/00000000000000000000000000000000/title/00040000",
+        true ? 256 : 0);
+    AddFstEntriesToGameList(std::string(FileUtil::GetUserPath(D_NAND_IDX).c_str()) +
+                                "00000000000000000000000000000000/title/00040010",
+                            true ? 256 : 0);
     emit Finished(watch_list);
 }
 
