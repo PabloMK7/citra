@@ -17,7 +17,7 @@ if ($ENV{CI})
       string(SUBSTRING ${WORD} 1 -1 REMAINDER)
       string(TOUPPER ${FIRST_LETTER} FIRST_LETTER)
       # this leaves a trailing space on the last word, but we actually want that
-      # because of how its styled in the title bar.
+      # because of how it's styled in the title bar.
       set(REPO_NAME "${REPO_NAME}${FIRST_LETTER}${REMAINDER} ")
     endforeach()
   endif()
