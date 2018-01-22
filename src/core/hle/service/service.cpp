@@ -285,7 +285,7 @@ void Init() {
     NFC::Init();
     NIM::Init();
     NWM::Init();
-    PTM::Init();
+    PTM::InstallInterfaces(*SM::g_service_manager);
     QTM::Init();
 
     AddService(new CSND::CSND_SND);
@@ -302,7 +302,6 @@ void Init() {
 
 /// Shutdown ServiceManager
 void Shutdown() {
-    PTM::Shutdown();
     NFC::Shutdown();
     NIM::Shutdown();
     NEWS::Shutdown();
