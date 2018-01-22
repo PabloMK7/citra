@@ -540,7 +540,8 @@ void NWM_UDS::RecvBeaconBroadcastData(Kernel::HLERequestContext& ctx) {
         out_buffer.Write(&entry, offset, sizeof(BeaconEntryHeader));
         offset += sizeof(BeaconEntryHeader);
         const unsigned char* beacon_data = beacon.data.data();
-        out_buffer.Write(const_cast<void*>(static_cast<const void*>(beacon_data)), offset, beacon.data.size());
+        out_buffer.Write(const_cast<void*>(static_cast<const void*>(beacon_data)), offset,
+                         beacon.data.size());
         offset += beacon.data.size();
 
         total_size += static_cast<u32>(sizeof(BeaconEntryHeader) + beacon.data.size());
@@ -553,9 +554,10 @@ void NWM_UDS::RecvBeaconBroadcastData(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
 
-    LOG_DEBUG(Service_NWM, "called out_buffer_size=0x%08X, wlan_comm_id=0x%08X, id=0x%08X,"
-                           "input_handle=0x%08X, unk1=0x%08X, unk2=0x%08X, offset=%d",
-                  out_buffer_size, wlan_comm_id, id, input_handle, unk1, unk2, offset);
+    LOG_DEBUG(Service_NWM,
+              "called out_buffer_size=0x%08X, wlan_comm_id=0x%08X, id=0x%08X,"
+              "input_handle=0x%08X, unk1=0x%08X, unk2=0x%08X, offset=%d",
+              out_buffer_size, wlan_comm_id, id, input_handle, unk1, unk2, offset);
 }
 
 void NWM_UDS::InitializeWithVersion(Kernel::HLERequestContext& ctx) {
@@ -595,8 +597,7 @@ void NWM_UDS::InitializeWithVersion(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
     rb.PushCopyObjects(connection_status_event);
 
-    LOG_DEBUG(Service_NWM, "called sharedmem_size=0x%08X, version=0x%08X",
-              sharedmem_size, version);
+    LOG_DEBUG(Service_NWM, "called sharedmem_size=0x%08X, version=0x%08X", sharedmem_size, version);
 }
 
 void NWM_UDS::GetConnectionStatus(Kernel::HLERequestContext& ctx) {
@@ -808,7 +809,7 @@ void NWM_UDS::BeginHostingNetwork(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
 }
 
-void NWM_UDS::UpdateNetworkAttribute(Kernel::HLERequestContext& ctx){
+void NWM_UDS::UpdateNetworkAttribute(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x07, 2, 0);
     rp.Skip(2, false);
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
@@ -825,8 +826,8 @@ void NWM_UDS::DestroyNetwork(Kernel::HLERequestContext& ctx) {
     std::lock_guard<std::mutex> lock(connection_status_mutex);
     if (connection_status.status != static_cast<u8>(NetworkStatus::ConnectedAsHost)) {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(ResultCode(ErrCodes::WrongStatus, ErrorModule::UDS,
-                           ErrorSummary::InvalidState, ErrorLevel::Status));
+        rb.Push(ResultCode(ErrCodes::WrongStatus, ErrorModule::UDS, ErrorSummary::InvalidState,
+                           ErrorLevel::Status));
         LOG_WARNING(Service_NWM, "called with status %u", connection_status.status);
         return;
     }
@@ -867,8 +868,8 @@ void NWM_UDS::DisconnectNetwork(Kernel::HLERequestContext& ctx) {
             connection_status.status = static_cast<u32>(NetworkStatus::ConnectedAsHost);
             connection_status.network_node_id = tmp_node_id;
             LOG_DEBUG(Service_NWM, "called as a host");
-            rb.Push(ResultCode(ErrCodes::WrongStatus, ErrorModule::UDS,
-                               ErrorSummary::InvalidState, ErrorLevel::Status));
+            rb.Push(ResultCode(ErrCodes::WrongStatus, ErrorModule::UDS, ErrorSummary::InvalidState,
+                               ErrorLevel::Status));
             return;
         }
         u16_le tmp_node_id = connection_status.network_node_id;
@@ -906,8 +907,9 @@ void NWM_UDS::SendTo(Kernel::HLERequestContext& ctx) {
     u32 data_size = rp.Pop<u32>();
     u32 flags = rp.Pop<u32>();
 
-    const std::vector<u8> input_buffer = rp.PopStaticBuffer();
+    std::vector<u8> input_buffer = rp.PopStaticBuffer();
     ASSERT(input_buffer.size() >= data_size);
+    input_buffer.resize(data_size);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
 
@@ -936,8 +938,9 @@ void NWM_UDS::SendTo(Kernel::HLERequestContext& ctx) {
 
     // TODO(B3N30): Increment the sequence number after each sent packet.
     u16 sequence_number = 0;
-    std::vector<u8> data_payload = GenerateDataPayload(
-        input_buffer, data_channel, dest_node_id, connection_status.network_node_id, sequence_number);
+    std::vector<u8> data_payload =
+        GenerateDataPayload(input_buffer, data_channel, dest_node_id,
+                            connection_status.network_node_id, sequence_number);
 
     // TODO(B3N30): Retrieve the MAC address of the dest_node_id and our own to encrypt
     // and encapsulate the payload.
@@ -965,6 +968,7 @@ void NWM_UDS::PullPacket(Kernel::HLERequestContext& ctx) {
     u32 max_out_buff_size_aligned = rp.Pop<u32>();
     u32 max_out_buff_size = rp.Pop<u32>();
 
+    u32 buff_size = std::min<u32>(max_out_buff_size_aligned, 0x172) << 2;
 
     std::lock_guard<std::mutex> lock(connection_status_mutex);
     if (connection_status.status != static_cast<u32>(NetworkStatus::ConnectedAsHost) &&
@@ -989,7 +993,7 @@ void NWM_UDS::PullPacket(Kernel::HLERequestContext& ctx) {
     }
 
     if (channel->second.received_packets.empty()) {
-        std::vector<u8> output_buffer(max_out_buff_size, 0);
+        std::vector<u8> output_buffer(buff_size, 0);
         IPC::RequestBuilder rb = rp.MakeBuilder(3, 2);
         rb.Push(RESULT_SUCCESS);
         rb.Push<u32>(0);
@@ -1012,11 +1016,10 @@ void NWM_UDS::PullPacket(Kernel::HLERequestContext& ctx) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(3, 2);
 
-    std::vector<u8> output_buffer(max_out_buff_size, 0);
+    std::vector<u8> output_buffer(buff_size, 0);
     // Write the actual data.
     std::memcpy(output_buffer.data(),
-                       next_packet.data() + sizeof(LLCHeader) + sizeof(SecureDataHeader),
-                       data_size);
+                next_packet.data() + sizeof(LLCHeader) + sizeof(SecureDataHeader), data_size);
 
     rb.Push(RESULT_SUCCESS);
     rb.Push<u32>(data_size);
@@ -1061,8 +1064,9 @@ void NWM_UDS::ConnectToNetwork(Kernel::HLERequestContext& ctx) {
     // Since this timing is handled by core_timing it could differ from the 'real world' time
     static constexpr u64 UDSConnectionTimeout = 300000000;
 
-    connection_event =
-        ctx.SleepClientThread(Kernel::GetCurrentThread(), "uds::ConnectToNetwork", UDSConnectionTimeout, [](Kernel::SharedPtr<Kernel::Thread> thread, Kernel::HLERequestContext& ctx,
+    connection_event = ctx.SleepClientThread(
+        Kernel::GetCurrentThread(), "uds::ConnectToNetwork", UDSConnectionTimeout,
+        [](Kernel::SharedPtr<Kernel::Thread> thread, Kernel::HLERequestContext& ctx,
            ThreadWakeupReason reason) {
             // TODO(B3N30): Add error handling for host full and timeout
             IPC::RequestBuilder rb(ctx, 0x1E, 1, 0);
@@ -1092,7 +1096,7 @@ void NWM_UDS::SetApplicationData(Kernel::HLERequestContext& ctx) {
     }
 
     network_info.application_data_size = size;
-    memcpy(network_info.application_data.data(), address.data(), size);
+    std::memcpy(network_info.application_data.data(), address.data(), size);
 
     rb.Push(RESULT_SUCCESS);
 }
@@ -1104,9 +1108,7 @@ void NWM_UDS::DecryptBeaconData(Kernel::HLERequestContext& ctx) {
     ASSERT(network_struct_buffer.size() == sizeof(NetworkInfo));
 
     const std::vector<u8> encrypted_data0_buffer = rp.PopStaticBuffer();
-
     const std::vector<u8> encrypted_data1_buffer = rp.PopStaticBuffer();
-
 
     LOG_DEBUG(Service_NWM, "called");
 
@@ -1119,13 +1121,14 @@ void NWM_UDS::DecryptBeaconData(Kernel::HLERequestContext& ctx) {
     std::memcpy(oui.data(), encrypted_data0_buffer.data(), oui.size());
     ASSERT_MSG(oui == NintendoOUI, "Unexpected OUI");
 
-    ASSERT_MSG(encrypted_data0_buffer[3] ==
-                   static_cast<u8>(NintendoTagId::EncryptedData0),
+    ASSERT_MSG(encrypted_data0_buffer[3] == static_cast<u8>(NintendoTagId::EncryptedData0),
                "Unexpected tag id");
 
     std::vector<u8> beacon_data(encrypted_data0_buffer.size() + encrypted_data1_buffer.size());
-    std::memcpy(beacon_data.data(), encrypted_data0_buffer.data() + 4, encrypted_data0_buffer.size());
-    std::memcpy(beacon_data.data() + encrypted_data0_buffer.size(), encrypted_data1_buffer.data() + 4, encrypted_data1_buffer.size());
+    std::memcpy(beacon_data.data(), encrypted_data0_buffer.data() + 4,
+                encrypted_data0_buffer.size());
+    std::memcpy(beacon_data.data() + encrypted_data0_buffer.size(),
+                encrypted_data1_buffer.data() + 4, encrypted_data1_buffer.size());
 
     // Decrypt the data
     DecryptBeacon(net_info, beacon_data);
@@ -1184,7 +1187,6 @@ static void BeaconBroadcastCallback(u64 userdata, int cycles_late) {
     CoreTiming::ScheduleEvent(msToCycles(DefaultBeaconInterval * MillisecondsPerTU) - cycles_late,
                               beacon_broadcast_event, 0);
 }
-
 
 NWM_UDS::NWM_UDS() : ServiceFramework("nwm::UDS") {
     static const FunctionInfo functions[] = {

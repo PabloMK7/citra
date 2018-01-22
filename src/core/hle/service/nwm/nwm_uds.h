@@ -103,7 +103,6 @@ public:
     ~NWM_UDS();
 
 private:
-
     void UpdateNetworkAttribute(Kernel::HLERequestContext& ctx);
 
     /**
@@ -340,7 +339,6 @@ private:
      *      1 : Result of function, 0 on success, otherwise error code
      */
     void DecryptBeaconData(Kernel::HLERequestContext& ctx);
-
 };
 
 } // namespace NWM
