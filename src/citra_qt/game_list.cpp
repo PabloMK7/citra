@@ -402,23 +402,27 @@ void GameListWorker::AddFstEntriesToGameList(const std::string& dir_path, unsign
             u64 program_id = 0;
             loader->ReadProgramId(program_id);
 
-            std::vector<u8> update_smdh;
-            std::string update_path;
-            u64 update_id = 0;
-            std::unique_ptr<Loader::AppLoader> update_loader = nullptr;
+            std::vector<u8> update_smdh = [program_id]() -> std::vector<u8> {
+                if (0x4000000000000 > program_id && program_id > 0x40000FFFFFFFF)
+                    return {};
 
-            if (0x4000000000000 <= program_id && program_id <= 0x40000FFFFFFFF) {
-                update_id = program_id + 0xe00000000;
-                update_path =
+                u64 update_id = program_id + 0xe00000000;
+                std::string update_path =
                     Service::AM::GetTitleContentPath(Service::FS::MediaType::SDMC, update_id);
-                if (FileUtil::Exists(update_path)) {
-                    update_loader = Loader::GetLoader(update_path);
-                    if (update_loader) {
-                        update_loader->ReadIcon(update_smdh);
-                        update_loader->ReadProgramId(update_id);
-                    }
-                }
-            }
+
+                if (!FileUtil::Exists(update_path))
+                    return {};
+
+                std::unique_ptr<Loader::AppLoader> update_loader = Loader::GetLoader(update_path);
+
+                if (!update_loader)
+                    return {};
+
+                std::vector<u8> update_smdh;
+                update_loader->ReadIcon(update_smdh);
+                update_loader->ReadProgramId(update_id);
+                return update_smdh;
+            }();
 
             emit EntryReady({
                 new GameListItemPath(QString::fromStdString(physical_name), smdh, program_id,
