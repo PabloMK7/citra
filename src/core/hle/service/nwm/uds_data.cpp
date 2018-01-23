@@ -187,9 +187,8 @@ static std::vector<u8> DecryptDataFrame(const std::vector<u8>& encrypted_payload
         d.SpecifyDataLengths(aad.size(), encrypted_payload.size() - 8, 0);
 
         CryptoPP::AuthenticatedDecryptionFilter df(
-            d, nullptr,
-            CryptoPP::AuthenticatedDecryptionFilter::MAC_AT_END |
-                CryptoPP::AuthenticatedDecryptionFilter::THROW_EXCEPTION);
+            d, nullptr, CryptoPP::AuthenticatedDecryptionFilter::MAC_AT_END |
+                            CryptoPP::AuthenticatedDecryptionFilter::THROW_EXCEPTION);
         // put aad
         df.ChannelPut(CryptoPP::AAD_CHANNEL, aad.data(), aad.size());
 
