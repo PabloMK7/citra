@@ -449,6 +449,10 @@ void GameListWorker::run() {
         std::string(FileUtil::GetUserPath(D_SDMC_IDX).c_str()) +
         "Nintendo "
         "3DS/00000000000000000000000000000000/00000000000000000000000000000000/title/00040000"));
+    watch_list.append(QString::fromStdString(
+        std::string(FileUtil::GetUserPath(D_SDMC_IDX).c_str()) +
+        "Nintendo "
+        "3DS/00000000000000000000000000000000/00000000000000000000000000000000/title/0004000e"));
     watch_list.append(
         QString::fromStdString(std::string(FileUtil::GetUserPath(D_NAND_IDX).c_str()) +
                                "00000000000000000000000000000000/title/00040010"));
@@ -457,10 +461,10 @@ void GameListWorker::run() {
         std::string(FileUtil::GetUserPath(D_SDMC_IDX).c_str()) +
             "Nintendo "
             "3DS/00000000000000000000000000000000/00000000000000000000000000000000/title/00040000",
-        true ? 256 : 0);
+        2);
     AddFstEntriesToGameList(std::string(FileUtil::GetUserPath(D_NAND_IDX).c_str()) +
                                 "00000000000000000000000000000000/title/00040010",
-                            true ? 256 : 0);
+                            2);
     emit Finished(watch_list);
 }
 
