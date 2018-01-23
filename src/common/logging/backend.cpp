@@ -74,6 +74,7 @@ namespace Log {
     SUB(Audio, Sink)                                                                               \
     CLS(Input)                                                                                     \
     CLS(Network)                                                                                   \
+    CLS(Movie)                                                                                     \
     CLS(Loader)                                                                                    \
     CLS(WebService)
 

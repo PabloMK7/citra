@@ -41,13 +41,16 @@
 #include "network/network.h"
 
 static void PrintHelp(const char* argv0) {
-    std::cout << "Usage: " << argv0 << " [options] <filename>\n"
-                                       "-g, --gdbport=NUMBER Enable gdb stub on port NUMBER\n"
-                                       "-i, --install=FILE    Installs a specified CIA file\n"
-                                       "-m, --multiplayer=nick:password@address:port"
-                                       " Nickname, password, address and port for multiplayer\n"
-                                       "-h, --help           Display this help and exit\n"
-                                       "-v, --version        Output version information and exit\n";
+    std::cout << "Usage: " << argv0
+              << " [options] <filename>\n"
+                 "-g, --gdbport=NUMBER Enable gdb stub on port NUMBER\n"
+                 "-i, --install=FILE    Installs a specified CIA file\n"
+                 "-m, --multiplayer=nick:password@address:port"
+                 " Nickname, password, address and port for multiplayer\n"
+                 "-r, --movie-record=[file]  Record a movie (game inputs) to the given file\n"
+                 "-p, --movie-play=[file]    Playback the movie (game inputs) from the given file\n"
+                 "-h, --help           Display this help and exit\n"
+                 "-v, --version        Output version information and exit\n";
 }
 
 static void PrintVersion() {
@@ -107,6 +110,9 @@ int main(int argc, char** argv) {
     int option_index = 0;
     bool use_gdbstub = Settings::values.use_gdbstub;
     u32 gdb_port = static_cast<u32>(Settings::values.gdbstub_port);
+    std::string movie_record;
+    std::string movie_play;
+
     char* endarg;
 #ifdef _WIN32
     int argc_w;
@@ -127,12 +133,13 @@ int main(int argc, char** argv) {
 
     static struct option long_options[] = {
         {"gdbport", required_argument, 0, 'g'},     {"install", required_argument, 0, 'i'},
-        {"multiplayer", required_argument, 0, 'm'}, {"help", no_argument, 0, 'h'},
+        {"multiplayer", required_argument, 0, 'm'}, {"movie-record", required_argument, 0, 'r'},
+        {"movie-play", required_argument, 0, 'p'},  {"help", no_argument, 0, 'h'},
         {"version", no_argument, 0, 'v'},           {0, 0, 0, 0},
     };
 
     while (optind < argc) {
-        char arg = getopt_long(argc, argv, "g:i:m:hv", long_options, &option_index);
+        char arg = getopt_long(argc, argv, "g:i:m:r:p:hv", long_options, &option_index);
         if (arg != -1) {
             switch (arg) {
             case 'g':
@@ -189,6 +196,12 @@ int main(int argc, char** argv) {
                 }
                 break;
             }
+            case 'r':
+                movie_record = optarg;
+                break;
+            case 'p':
+                movie_play = optarg;
+                break;
             case 'h':
                 PrintHelp(argv[0]);
                 return 0;
@@ -221,11 +234,18 @@ int main(int argc, char** argv) {
         return -1;
     }
 
+    if (!movie_record.empty() && !movie_play.empty()) {
+        LOG_CRITICAL(Frontend, "Cannot both play and record a movie");
+        return -1;
+    }
+
     log_filter.ParseFilterString(Settings::values.log_filter);
 
     // Apply the command line arguments
     Settings::values.gdbstub_port = gdb_port;
     Settings::values.use_gdbstub = use_gdbstub;
+    Settings::values.movie_play = std::move(movie_play);
+    Settings::values.movie_record = std::move(movie_record);
     Settings::Apply();
 
     std::unique_ptr<EmuWindow_SDL2> emu_window{std::make_unique<EmuWindow_SDL2>()};

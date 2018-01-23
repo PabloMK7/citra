@@ -130,6 +130,10 @@ struct Values {
     bool use_gdbstub;
     u16 gdbstub_port;
 
+    // Movie
+    std::string movie_play;
+    std::string movie_record;
+
     // WebService
     bool enable_telemetry;
     std::string telemetry_endpoint_url;

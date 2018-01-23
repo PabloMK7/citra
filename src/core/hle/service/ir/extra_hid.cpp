@@ -3,10 +3,10 @@
 // Refer to the license.txt file included.
 
 #include "common/alignment.h"
-#include "common/bit_field.h"
 #include "common/string_util.h"
 #include "core/core_timing.h"
 #include "core/hle/service/ir/extra_hid.h"
+#include "core/movie.h"
 #include "core/settings.h"
 
 namespace Service {
@@ -176,22 +176,6 @@ void ExtraHID::SendHIDStatus() {
     if (is_device_reload_pending.exchange(false))
         LoadInputDevices();
 
-    struct {
-        union {
-            BitField<0, 8, u32_le> header;
-            BitField<8, 12, u32_le> c_stick_x;
-            BitField<20, 12, u32_le> c_stick_y;
-        } c_stick;
-        union {
-            BitField<0, 5, u8> battery_level;
-            BitField<5, 1, u8> zl_not_held;
-            BitField<6, 1, u8> zr_not_held;
-            BitField<7, 1, u8> r_not_held;
-        } buttons;
-        u8 unknown;
-    } response;
-    static_assert(sizeof(response) == 6, "HID status response has wrong size!");
-
     constexpr int C_STICK_CENTER = 0x800;
     // TODO(wwylele): this value is not accurately measured. We currently assume that the axis can
     // take values in the whole range of a 12-bit integer.
@@ -200,6 +184,7 @@ void ExtraHID::SendHIDStatus() {
     float x, y;
     std::tie(x, y) = c_stick->GetStatus();
 
+    ExtraHIDResponse response;
     response.c_stick.header.Assign(static_cast<u8>(ResponseID::PollHID));
     response.c_stick.c_stick_x.Assign(static_cast<u32>(C_STICK_CENTER + C_STICK_RADIUS * x));
     response.c_stick.c_stick_y.Assign(static_cast<u32>(C_STICK_CENTER + C_STICK_RADIUS * y));
@@ -208,6 +193,8 @@ void ExtraHID::SendHIDStatus() {
     response.buttons.zr_not_held.Assign(!zr->GetStatus());
     response.buttons.r_not_held.Assign(1);
     response.unknown = 0;
+
+    Core::Movie::GetInstance().HandleExtraHidResponse(response);
 
     std::vector<u8> response_buffer(sizeof(response));
     memcpy(response_buffer.data(), &response, sizeof(response));
