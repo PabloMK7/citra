@@ -82,7 +82,7 @@ public:
             setData(GetDefaultIcon(true), Qt::DecorationRole);
             return;
         }
-            
+
         Loader::SMDH smdh;
         memcpy(&smdh, smdh_data.data(), sizeof(Loader::SMDH));
 
