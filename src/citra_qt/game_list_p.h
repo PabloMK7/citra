@@ -72,22 +72,20 @@ public:
     static const int ProgramIdRole = Qt::UserRole + 3;
 
     GameListItemPath() : GameListItem() {}
-    GameListItemPath(const QString& game_path, const std::vector<u8>& smdh_data, u64 program_id,
-                     const std::vector<u8>& update_smdh)
+    GameListItemPath(const QString& game_path, const std::vector<u8>& smdh_data, u64 program_id)
         : GameListItem() {
         setData(game_path, FullPathRole);
         setData(qulonglong(program_id), ProgramIdRole);
 
         Loader::SMDH smdh;
-        if (Loader::IsValidSMDH(update_smdh)) {
-            memcpy(&smdh, update_smdh.data(), sizeof(Loader::SMDH));
-        } else if (Loader::IsValidSMDH(smdh_data)) {
-            memcpy(&smdh, smdh_data.data(), sizeof(Loader::SMDH));
-        } else {
+        if (!Loader::IsValidSMDH(smdh_data)) {
             // SMDH is not valid, set a default icon
             setData(GetDefaultIcon(true), Qt::DecorationRole);
             return;
         }
+
+        memcpy(&smdh, smdh_data.data(), sizeof(Loader::SMDH));
+
         // Get icon from SMDH
         setData(GetQPixmapFromSMDH(smdh, true), Qt::DecorationRole);
 
