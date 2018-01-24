@@ -10,5 +10,5 @@
 namespace Kernel {
 /// Performs IPC command buffer translation from one process to another.
 ResultCode TranslateCommandBuffer(SharedPtr<Thread> src_thread, SharedPtr<Thread> dst_thread,
-                                  VAddr src_address, VAddr dst_address);
+                                  VAddr src_address, VAddr dst_address, bool reply);
 } // namespace Kernel
