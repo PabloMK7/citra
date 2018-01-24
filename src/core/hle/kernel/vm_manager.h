@@ -180,6 +180,21 @@ public:
     ResultVal<VMAHandle> MapMMIO(VAddr target, PAddr paddr, u32 size, MemoryState state,
                                  Memory::MMIORegionPointer mmio_handler);
 
+    /**
+     * Updates the memory state and permissions of the specified range. The range's original memory
+     * state and permissions must match the `expected` parameters.
+     *
+     * @param target The guest address of the beginning of the range.
+     * @param size The size of the range
+     * @param expected_state Expected MemoryState of the range.
+     * @param expected_perms Expected VMAPermission of the range.
+     * @param new_state New MemoryState for the range.
+     * @param new_perms New VMAPermission for the range.
+     */
+    ResultCode ChangeMemoryState(VAddr target, u32 size, MemoryState expected_state,
+                                 VMAPermission expected_perms, MemoryState new_state,
+                                 VMAPermission new_perms);
+
     /// Unmaps a range of addresses, splitting VMAs as necessary.
     ResultCode UnmapRange(VAddr target, u32 size);
 
