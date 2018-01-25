@@ -15,7 +15,6 @@
 #include "core/hle/applets/mint.h"
 #include "core/hle/applets/swkbd.h"
 #include "core/hle/result.h"
-#include "core/hle/service/apt/apt.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -43,23 +42,24 @@ static CoreTiming::EventType* applet_update_event = nullptr;
 /// The interval at which the Applet update callback will be called, 16.6ms
 static const u64 applet_update_interval_us = 16666;
 
-ResultCode Applet::Create(Service::APT::AppletId id) {
+ResultCode Applet::Create(Service::APT::AppletId id,
+                          std::weak_ptr<Service::APT::AppletManager> manager) {
     switch (id) {
     case Service::APT::AppletId::SoftwareKeyboard1:
     case Service::APT::AppletId::SoftwareKeyboard2:
-        applets[id] = std::make_shared<SoftwareKeyboard>(id);
+        applets[id] = std::make_shared<SoftwareKeyboard>(id, std::move(manager));
         break;
     case Service::APT::AppletId::Ed1:
     case Service::APT::AppletId::Ed2:
-        applets[id] = std::make_shared<MiiSelector>(id);
+        applets[id] = std::make_shared<MiiSelector>(id, std::move(manager));
         break;
     case Service::APT::AppletId::Error:
     case Service::APT::AppletId::Error2:
-        applets[id] = std::make_shared<ErrEula>(id);
+        applets[id] = std::make_shared<ErrEula>(id, std::move(manager));
         break;
     case Service::APT::AppletId::Mint:
     case Service::APT::AppletId::Mint2:
-        applets[id] = std::make_shared<Mint>(id);
+        applets[id] = std::make_shared<Mint>(id, std::move(manager));
         break;
     default:
         LOG_ERROR(Service_APT, "Could not create applet %u", static_cast<u32>(id));
@@ -108,6 +108,14 @@ ResultCode Applet::Start(const Service::APT::AppletStartupParameter& parameter) 
 
 bool Applet::IsRunning() const {
     return is_running;
+}
+
+void Applet::SendParameter(const Service::APT::MessageParameter& parameter) {
+    if (auto locked = manager.lock()) {
+        locked->CancelAndSendParameter(parameter);
+    } else {
+        LOG_ERROR(Service_APT, "called after destructing applet manager");
+    }
 }
 
 bool IsLibraryAppletRunning() {
