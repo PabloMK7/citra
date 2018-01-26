@@ -89,6 +89,14 @@ resolution_factor =
 # 0 (default): Off, 1: On
 use_vsync =
 
+# Turns on the frame limiter, which will limit frames output to the target game speed
+# 0: Off, 1: On (default)
+use_frame_limit =
+
+# Limits the speed of the game to run no faster than this value as a percentage of target speed
+# 1 - 9999: Speed limit as a percentage of target game speed. 100 (default)
+frame_limit =
+
 # The clear color for the renderer. What shows up on the sides of the bottom screen.
 # Must be in range of 0.0-1.0. Defaults to 1.0 for all.
 bg_red =
@@ -114,10 +122,6 @@ custom_bottom_left =
 custom_bottom_top =
 custom_bottom_right =
 custom_bottom_bottom =
-
-# Whether to toggle frame limiter on or off.
-# 0: Off, 1 (default): On
-toggle_framelimit =
 
 # Swaps the prominent screen with the other screen.
 # For example, if Single Screen is chosen, setting this to 1 will display the bottom screen instead of the top screen.

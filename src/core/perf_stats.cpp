@@ -75,24 +75,27 @@ double PerfStats::GetLastFrameTimeScale() {
 }
 
 void FrameLimiter::DoFrameLimiting(u64 current_system_time_us) {
-    // Max lag caused by slow frames. Can be adjusted to compensate for too many slow frames. Higher
-    // values increase the time needed to recover and limit framerate again after spikes.
-    constexpr microseconds MAX_LAG_TIME_US = 25ms;
-
-    if (!Settings::values.toggle_framelimit) {
+    if (!Settings::values.use_frame_limit) {
         return;
     }
 
     auto now = Clock::now();
+    double sleep_scale = Settings::values.frame_limit / 100.0;
 
-    frame_limiting_delta_err += microseconds(current_system_time_us - previous_system_time_us);
+    // Max lag caused by slow frames. Shouldn't be more than the length of a frame at the current
+    // speed percent or it will clamp too much and prevent this from properly limiting to that
+    // percent. High values means it'll take longer after a slow frame to recover and start limiting
+    const microseconds max_lag_time_us = duration_cast<microseconds>(
+        std::chrono::duration<double, std::chrono::microseconds::period>(25ms / sleep_scale));
+    frame_limiting_delta_err += duration_cast<microseconds>(
+        std::chrono::duration<double, std::chrono::microseconds::period>(
+            (current_system_time_us - previous_system_time_us) / sleep_scale));
     frame_limiting_delta_err -= duration_cast<microseconds>(now - previous_walltime);
     frame_limiting_delta_err =
-        MathUtil::Clamp(frame_limiting_delta_err, -MAX_LAG_TIME_US, MAX_LAG_TIME_US);
+        MathUtil::Clamp(frame_limiting_delta_err, -max_lag_time_us, max_lag_time_us);
 
     if (frame_limiting_delta_err > microseconds::zero()) {
         std::this_thread::sleep_for(frame_limiting_delta_err);
-
         auto now_after_sleep = Clock::now();
         frame_limiting_delta_err -= duration_cast<microseconds>(now_after_sleep - now);
         now = now_after_sleep;

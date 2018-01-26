@@ -44,81 +44,101 @@
          </widget>
         </item>
         <item>
-         <widget class="QCheckBox" name="toggle_framelimit">
-          <property name="text">
-           <string>Limit framerate</string>
-          </property>
-         </widget>
+         <layout class="QHBoxLayout" name="horizontalLayout_2">
+          <item>
+           <widget class="QCheckBox" name="toggle_frame_limit">
+            <property name="text">
+             <string>Limit Speed Percent</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QSpinBox" name="frame_limit">
+            <property name="suffix">
+             <string>%</string>
+            </property>
+            <property name="minimum">
+             <number>1</number>
+            </property>
+            <property name="maximum">
+             <number>9999</number>
+            </property>
+            <property name="value">
+             <number>100</number>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </item>
         <item>
-          <layout class="QHBoxLayout" name="horizontalLayout">
+         <layout class="QHBoxLayout" name="horizontalLayout">
+          <item>
+           <widget class="QLabel" name="label">
+            <property name="text">
+             <string>Internal Resolution:</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QComboBox" name="resolution_factor_combobox">
             <item>
-              <widget class="QLabel" name="label">
-                <property name="text">
-                  <string>Internal Resolution:</string>
-                </property>
-              </widget>
+             <property name="text">
+              <string>Auto (Window Size)</string>
+             </property>
             </item>
             <item>
-              <widget class="QComboBox" name="resolution_factor_combobox">
-                <item>
-                  <property name="text">
-                    <string>Auto (Window Size)</string>
-                  </property>
-                </item>
-                <item>
-                  <property name="text">
-                    <string>Native (400x240)</string>
-                  </property>
-                </item>
-                <item>
-                  <property name="text">
-                    <string>2x Native (800x480)</string>
-                  </property>
-                </item>
-                <item>
-                  <property name="text">
-                    <string>3x Native (1200x720)</string>
-                  </property>
-                </item>
-                <item>
-                  <property name="text">
-                    <string>4x Native (1600x960)</string>
-                  </property>
-                </item>
-                <item>
-                  <property name="text">
-                    <string>5x Native (2000x1200)</string>
-                  </property>
-                </item>
-                <item>
-                  <property name="text">
-                    <string>6x Native (2400x1440)</string>
-                  </property>
-                </item>
-                <item>
-                  <property name="text">
-                    <string>7x Native (2800x1680)</string>
-                  </property>
-                </item>
-                <item>
-                  <property name="text">
-                    <string>8x Native (3200x1920)</string>
-                  </property>
-                </item>
-                <item>
-                  <property name="text">
-                    <string>9x Native (3600x2160)</string>
-                  </property>
-                </item>
-                <item>
-                  <property name="text">
-                    <string>10x Native (4000x2400)</string>
-                  </property>
-                </item>
-              </widget>
+             <property name="text">
+              <string>Native (400x240)</string>
+             </property>
             </item>
-          </layout>
+            <item>
+             <property name="text">
+              <string>2x Native (800x480)</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>3x Native (1200x720)</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>4x Native (1600x960)</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>5x Native (2000x1200)</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>6x Native (2400x1440)</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>7x Native (2800x1680)</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>8x Native (3200x1920)</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>9x Native (3600x2160)</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>10x Native (4000x2400)</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+         </layout>
         </item>
        </layout>
       </widget>

@@ -22,7 +22,6 @@ extern EmuWindow* g_emu_window;                  ///< Emu window
 // qt ui)
 extern std::atomic<bool> g_hw_renderer_enabled;
 extern std::atomic<bool> g_shader_jit_enabled;
-extern std::atomic<bool> g_toggle_framelimit_enabled;
 
 /// Start the video core
 void Start();
@@ -33,4 +32,4 @@ bool Init(EmuWindow* emu_window);
 /// Shutdown the video core
 void Shutdown();
 
-} // namespace
+} // namespace VideoCore
