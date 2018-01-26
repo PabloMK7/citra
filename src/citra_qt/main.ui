@@ -45,7 +45,7 @@
      <x>0</x>
      <y>0</y>
      <width>1081</width>
-     <height>21</height>
+     <height>26</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_File">
@@ -99,6 +99,8 @@
     </property>
     <addaction name="action_Check_For_Updates"/>
     <addaction name="action_Open_Maintenance_Tool"/>
+    <addaction name="separator"/>
+    <addaction name="action_Report_Compatibility"/>
     <addaction name="separator"/>
     <addaction name="action_FAQ"/>
     <addaction name="action_About"/>
@@ -233,6 +235,18 @@
     <string>Check for Updates</string>
    </property>
   </action>
+  <action name="action_Report_Compatibility">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Report Compatibility</string>
+   </property>
+   <property name="visible">
+    <bool>false</bool>
+   </property>
+  </action>
  </widget>
  <resources/>
+ <connections/>
 </ui>

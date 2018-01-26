@@ -17,6 +17,7 @@
 #include <QtWidgets>
 #include "citra_qt/aboutdialog.h"
 #include "citra_qt/bootmanager.h"
+#include "citra_qt/compatdb.h"
 #include "citra_qt/configuration/config.h"
 #include "citra_qt/configuration/configure_dialog.h"
 #include "citra_qt/debugger/graphics/graphics.h"
@@ -146,6 +147,9 @@ GMainWindow::~GMainWindow() {
 }
 
 void GMainWindow::InitializeWidgets() {
+#ifdef CITRA_ENABLE_COMPATIBILITY_REPORTING
+    ui.action_Report_Compatibility->setVisible(true);
+#endif
     render_window = new GRenderWindow(this, emu_thread.get());
     render_window->hide();
 
@@ -380,6 +384,8 @@ void GMainWindow::ConnectMenuEvents() {
     connect(ui.action_Start, &QAction::triggered, this, &GMainWindow::OnStartGame);
     connect(ui.action_Pause, &QAction::triggered, this, &GMainWindow::OnPauseGame);
     connect(ui.action_Stop, &QAction::triggered, this, &GMainWindow::OnStopGame);
+    connect(ui.action_Report_Compatibility, &QAction::triggered, this,
+            &GMainWindow::OnMenuReportCompatibility);
     connect(ui.action_Configure, &QAction::triggered, this, &GMainWindow::OnConfigure);
 
     // View
@@ -635,6 +641,7 @@ void GMainWindow::ShutdownGame() {
     ui.action_Start->setText(tr("Start"));
     ui.action_Pause->setEnabled(false);
     ui.action_Stop->setEnabled(false);
+    ui.action_Report_Compatibility->setEnabled(false);
     render_window->hide();
     game_list->show();
     game_list->setFilterFocus();
@@ -816,6 +823,7 @@ void GMainWindow::OnStartGame() {
 
     ui.action_Pause->setEnabled(true);
     ui.action_Stop->setEnabled(true);
+    ui.action_Report_Compatibility->setEnabled(true);
 }
 
 void GMainWindow::OnPauseGame() {
@@ -828,6 +836,19 @@ void GMainWindow::OnPauseGame() {
 
 void GMainWindow::OnStopGame() {
     ShutdownGame();
+}
+
+void GMainWindow::OnMenuReportCompatibility() {
+    if (!Settings::values.citra_token.empty() && !Settings::values.citra_username.empty()) {
+        CompatDB compatdb{this};
+        compatdb.exec();
+    } else {
+        QMessageBox::critical(
+            this, tr("Missing Citra Account"),
+            tr("In order to submit a game compatibility test case, you must link your Citra "
+               "account.<br><br/>To link your Citra account, go to Emulation \> Configuration \> "
+               "Web."));
+    }
 }
 
 void GMainWindow::ToggleFullscreen() {

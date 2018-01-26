@@ -243,6 +243,9 @@ endif()
 if (ENABLE_WEB_SERVICE)
     add_definitions(-DENABLE_WEB_SERVICE)
 endif()
+if (CITRA_ENABLE_COMPATIBILITY_REPORTING)
+    add_definitions(-DCITRA_ENABLE_COMPATIBILITY_REPORTING)
+endif()
 
 # Platform-specific library requirements
 # ======================================

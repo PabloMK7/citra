@@ -11,7 +11,7 @@ echo y | sh cmake-3.9.0-Linux-x86_64.sh --prefix=cmake
 export PATH=/citra/cmake/cmake-3.9.0-Linux-x86_64/bin:$PATH
 
 mkdir build && cd build
-cmake .. -DUSE_SYSTEM_CURL=ON -DCMAKE_BUILD_TYPE=Release -DENABLE_QT_TRANSLATION=ON
+cmake .. -DUSE_SYSTEM_CURL=ON -DCMAKE_BUILD_TYPE=Release -DENABLE_QT_TRANSLATION=ON -DCITRA_ENABLE_COMPATIBILITY_REPORTING=${ENABLE_COMPATIBILITY_REPORTING:-"OFF"}
 make -j4
 
 ctest -VV -C Release
