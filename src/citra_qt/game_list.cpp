@@ -403,11 +403,11 @@ void GameListWorker::AddFstEntriesToGameList(const std::string& dir_path, unsign
                 std::vector<u8> original_smdh;
                 loader->ReadIcon(original_smdh);
 
-                if (program_id >= 0x4000000000000 && program_id <= 0x40000FFFFFFFF)
+                if (program_id < 0x00040000'00000000 || program_id > 0x00040000'FFFFFFFF)
                     return original_smdh;
 
                 std::string update_path = Service::AM::GetTitleContentPath(
-                    Service::FS::MediaType::SDMC, program_id + 0xe00000000);
+                    Service::FS::MediaType::SDMC, program_id + 0x0000000E'00000000);
 
                 if (!FileUtil::Exists(update_path))
                     return original_smdh;
