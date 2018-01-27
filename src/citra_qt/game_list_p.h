@@ -89,7 +89,7 @@ public:
         // Get icon from SMDH
         setData(GetQPixmapFromSMDH(smdh, true), Qt::DecorationRole);
 
-        // Get title form SMDH
+        // Get title from SMDH
         setData(GetQStringShortTitleFromSMDH(smdh, Loader::SMDH::TitleLanguage::English),
                 TitleRole);
     }
