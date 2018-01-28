@@ -971,6 +971,8 @@ Surface RasterizerCacheOpenGL::GetSurface(const SurfaceParams& params, ScaleMatc
     // Use GetSurfaceSubRect instead
     ASSERT(params.width == params.stride);
 
+    ASSERT(!params.is_tiled || (params.width % 8 == 0 && params.height % 8 == 0));
+
     // Check for an exact match in existing surfaces
     Surface surface =
         FindMatch<MatchFlags::Exact | MatchFlags::Invalid>(surface_cache, params, match_res_scale);
@@ -1178,8 +1180,8 @@ SurfaceSurfaceRect_Tuple RasterizerCacheOpenGL::GetFramebufferSurfaces(
     if (color_surface != nullptr && depth_surface != nullptr) {
         fb_rect = color_rect;
         // Color and Depth surfaces must have the same dimensions and offsets
-        if (color_rect.bottom != depth_rect.bottom ||
-            color_surface->height != depth_surface->height) {
+        if (color_rect.bottom != depth_rect.bottom || color_rect.top != depth_rect.top ||
+            color_rect.left != depth_rect.left || color_rect.right != depth_rect.right) {
             color_surface = GetSurface(color_params, ScaleMatch::Exact, false);
             depth_surface = GetSurface(depth_params, ScaleMatch::Exact, false);
             fb_rect = color_surface->GetScaledRect();
@@ -1189,7 +1191,6 @@ SurfaceSurfaceRect_Tuple RasterizerCacheOpenGL::GetFramebufferSurfaces(
     } else if (depth_surface != nullptr) {
         fb_rect = depth_rect;
     }
-    ASSERT(!fb_rect.left && fb_rect.right == config.GetWidth() * resolution_scale_factor);
 
     if (color_surface != nullptr) {
         ValidateSurface(color_surface, boost::icl::first(color_vp_interval),
