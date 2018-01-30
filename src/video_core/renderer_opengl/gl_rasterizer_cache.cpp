@@ -1029,6 +1029,7 @@ void RasterizerCacheOpenGL::ConvertD24S8toABGR(GLuint src_tex,
         glBufferData(GL_PIXEL_PACK_BUFFER, d24s8_abgr_buffer_size, nullptr, GL_STREAM_COPY);
     }
 
+    glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, 0, 0);
     glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, src_tex,
                            0);
     glReadPixels(static_cast<GLint>(src_rect.left), static_cast<GLint>(src_rect.bottom),
