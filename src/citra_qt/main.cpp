@@ -46,6 +46,7 @@
 #include "core/core.h"
 #include "core/file_sys/archive_source_sd_savedata.h"
 #include "core/gdbstub/gdbstub.h"
+#include "core/hle/service/fs/archive.h"
 #include "core/loader/loader.h"
 #include "core/settings.h"
 
@@ -359,8 +360,7 @@ void GMainWindow::RestoreUIState() {
 
 void GMainWindow::ConnectWidgetEvents() {
     connect(game_list, &GameList::GameChosen, this, &GMainWindow::OnGameListLoadFile);
-    connect(game_list, &GameList::OpenSaveFolderRequested, this,
-            &GMainWindow::OnGameListOpenSaveFolder);
+    connect(game_list, &GameList::OpenFolderRequested, this, &GMainWindow::OnGameListOpenFolder);
 
     connect(this, &GMainWindow::EmulationStarting, render_window,
             &GRenderWindow::OnEmulationStarting);
@@ -699,18 +699,44 @@ void GMainWindow::OnGameListLoadFile(QString game_path) {
     BootGame(game_path);
 }
 
-void GMainWindow::OnGameListOpenSaveFolder(u64 program_id) {
-    std::string sdmc_dir = FileUtil::GetUserPath(D_SDMC_IDX);
-    std::string path = FileSys::ArchiveSource_SDSaveData::GetSaveDataPathFor(sdmc_dir, program_id);
+void GMainWindow::OnGameListOpenFolder(u64 program_id, GameListOpenTarget target) {
+    std::string path;
+    std::string open_target;
+
+    switch (target) {
+    case GameListOpenTarget::SAVE_DATA: {
+        open_target = "Save Data";
+        std::string sdmc_dir = FileUtil::GetUserPath(D_SDMC_IDX);
+        path = FileSys::ArchiveSource_SDSaveData::GetSaveDataPathFor(sdmc_dir, program_id);
+        break;
+    }
+    case GameListOpenTarget::APPLICATION:
+        open_target = "Application";
+        path = Service::AM::GetTitlePath(Service::FS::MediaType::SDMC, program_id) + "content/";
+        break;
+    case GameListOpenTarget::UPDATE_DATA:
+        open_target = "Update Data";
+        path = Service::AM::GetTitlePath(Service::FS::MediaType::SDMC, program_id + 0xe00000000) +
+               "content/";
+        break;
+    default:
+        LOG_ERROR(Frontend, "Unexpected target %d", target);
+        return;
+    }
+
     QString qpath = QString::fromStdString(path);
 
     QDir dir(qpath);
     if (!dir.exists()) {
-        QMessageBox::critical(this, tr("Error Opening Save Folder"), tr("Folder does not exist!"));
+        QMessageBox::critical(
+            this, tr("Error Opening %1 Folder").arg(QString::fromStdString(open_target)),
+            tr("Folder does not exist!"));
         return;
     }
 
-    LOG_INFO(Frontend, "Opening save data path for program_id=%" PRIu64, program_id);
+    LOG_INFO(Frontend, "Opening %s path for program_id=%016" PRIx64, open_target.c_str(),
+             program_id);
+
     QDesktopServices::openUrl(QUrl::fromLocalFile(qpath));
 }
 
