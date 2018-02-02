@@ -192,7 +192,15 @@ void GMainWindow::InitializeWidgets() {
         statusBar()->addPermanentWidget(label, 0);
     }
     statusBar()->setVisible(true);
+
+    // Removes an ugly inner border from the status bar widgets under Linux
     setStyleSheet("QStatusBar::item{border: none;}");
+
+    QActionGroup* actionGroup_ScreenLayouts = new QActionGroup(this);
+    actionGroup_ScreenLayouts->addAction(ui.action_Screen_Layout_Default);
+    actionGroup_ScreenLayouts->addAction(ui.action_Screen_Layout_Single_Screen);
+    actionGroup_ScreenLayouts->addAction(ui.action_Screen_Layout_Large_Screen);
+    actionGroup_ScreenLayouts->addAction(ui.action_Screen_Layout_Side_by_Side);
 }
 
 void GMainWindow::InitializeDebugWidgets() {
@@ -269,8 +277,9 @@ void GMainWindow::InitializeRecentFileMenuActions() {
 
 void GMainWindow::InitializeHotkeys() {
     RegisterHotkey("Main Window", "Load File", QKeySequence::Open);
-    RegisterHotkey("Main Window", "Swap Screens", QKeySequence::NextChild);
     RegisterHotkey("Main Window", "Start Emulation");
+    RegisterHotkey("Main Window", "Swap Screens", QKeySequence(tr("F9")));
+    RegisterHotkey("Main Window", "Toggle Screen Layout", QKeySequence(tr("F10")));
     RegisterHotkey("Main Window", "Fullscreen", QKeySequence::FullScreen);
     RegisterHotkey("Main Window", "Exit Fullscreen", QKeySequence(Qt::Key_Escape),
                    Qt::ApplicationShortcut);
@@ -284,8 +293,10 @@ void GMainWindow::InitializeHotkeys() {
             &GMainWindow::OnMenuLoadFile);
     connect(GetHotkey("Main Window", "Start Emulation", this), &QShortcut::activated, this,
             &GMainWindow::OnStartGame);
-    connect(GetHotkey("Main Window", "Swap Screens", render_window), &QShortcut::activated, this,
-            &GMainWindow::OnSwapScreens);
+    connect(GetHotkey("Main Window", "Swap Screens", render_window), &QShortcut::activated,
+            ui.action_Screen_Layout_Swap_Screens, &QAction::trigger);
+    connect(GetHotkey("Main Window", "Toggle Screen Layout", render_window), &QShortcut::activated,
+            this, &GMainWindow::ToggleScreenLayout);
     connect(GetHotkey("Main Window", "Fullscreen", render_window), &QShortcut::activated,
             ui.action_Fullscreen, &QAction::trigger);
     connect(GetHotkey("Main Window", "Fullscreen", render_window), &QShortcut::activatedAmbiguously,
@@ -347,6 +358,7 @@ void GMainWindow::RestoreUIState() {
     ToggleWindowMode();
 
     ui.action_Fullscreen->setChecked(UISettings::values.fullscreen);
+    SyncMenuUISettings();
 
     ui.action_Display_Dock_Widget_Headers->setChecked(UISettings::values.display_titlebar);
     OnDisplayTitleBars(ui.action_Display_Dock_Widget_Headers->isChecked());
@@ -397,7 +409,20 @@ void GMainWindow::ConnectMenuEvents() {
     connect(ui.action_Show_Filter_Bar, &QAction::triggered, this, &GMainWindow::OnToggleFilterBar);
     connect(ui.action_Show_Status_Bar, &QAction::triggered, statusBar(), &QStatusBar::setVisible);
     ui.action_Fullscreen->setShortcut(GetHotkey("Main Window", "Fullscreen", this)->key());
+    ui.action_Screen_Layout_Swap_Screens->setShortcut(
+        GetHotkey("Main Window", "Swap Screens", this)->key());
+    ui.action_Screen_Layout_Swap_Screens->setShortcutContext(Qt::WidgetWithChildrenShortcut);
     connect(ui.action_Fullscreen, &QAction::triggered, this, &GMainWindow::ToggleFullscreen);
+    connect(ui.action_Screen_Layout_Default, &QAction::triggered, this,
+            &GMainWindow::ChangeScreenLayout);
+    connect(ui.action_Screen_Layout_Single_Screen, &QAction::triggered, this,
+            &GMainWindow::ChangeScreenLayout);
+    connect(ui.action_Screen_Layout_Large_Screen, &QAction::triggered, this,
+            &GMainWindow::ChangeScreenLayout);
+    connect(ui.action_Screen_Layout_Side_by_Side, &QAction::triggered, this,
+            &GMainWindow::ChangeScreenLayout);
+    connect(ui.action_Screen_Layout_Swap_Screens, &QAction::triggered, this,
+            &GMainWindow::OnSwapScreens);
 
     // Help
     connect(ui.action_FAQ, &QAction::triggered,
@@ -937,6 +962,50 @@ void GMainWindow::ToggleWindowMode() {
     }
 }
 
+void GMainWindow::ChangeScreenLayout() {
+    Settings::LayoutOption new_layout = Settings::LayoutOption::Default;
+
+    if (ui.action_Screen_Layout_Default->isChecked()) {
+        new_layout = Settings::LayoutOption::Default;
+    } else if (ui.action_Screen_Layout_Single_Screen->isChecked()) {
+        new_layout = Settings::LayoutOption::SingleScreen;
+    } else if (ui.action_Screen_Layout_Large_Screen->isChecked()) {
+        new_layout = Settings::LayoutOption::LargeScreen;
+    } else if (ui.action_Screen_Layout_Side_by_Side->isChecked()) {
+        new_layout = Settings::LayoutOption::SideScreen;
+    }
+
+    Settings::values.layout_option = new_layout;
+    Settings::Apply();
+}
+
+void GMainWindow::ToggleScreenLayout() {
+    Settings::LayoutOption new_layout = Settings::LayoutOption::Default;
+
+    switch (Settings::values.layout_option) {
+    case Settings::LayoutOption::Default:
+        new_layout = Settings::LayoutOption::SingleScreen;
+        break;
+    case Settings::LayoutOption::SingleScreen:
+        new_layout = Settings::LayoutOption::LargeScreen;
+        break;
+    case Settings::LayoutOption::LargeScreen:
+        new_layout = Settings::LayoutOption::SideScreen;
+        break;
+    case Settings::LayoutOption::SideScreen:
+        new_layout = Settings::LayoutOption::Default;
+        break;
+    }
+
+    Settings::values.layout_option = new_layout;
+    Settings::Apply();
+}
+
+void GMainWindow::OnSwapScreens() {
+    Settings::values.swap_screen = ui.action_Screen_Layout_Swap_Screens->isChecked();
+    Settings::Apply();
+}
+
 void GMainWindow::OnConfigure() {
     ConfigureDialog configureDialog(this);
     connect(&configureDialog, &ConfigureDialog::languageChanged, this,
@@ -945,6 +1014,7 @@ void GMainWindow::OnConfigure() {
     if (result == QDialog::Accepted) {
         configureDialog.applyConfiguration();
         UpdateUITheme();
+        SyncMenuUISettings();
         config->Save();
     }
 }
@@ -956,11 +1026,6 @@ void GMainWindow::OnToggleFilterBar() {
     } else {
         game_list->clearFilter();
     }
-}
-
-void GMainWindow::OnSwapScreens() {
-    Settings::values.swap_screen = !Settings::values.swap_screen;
-    Settings::Apply();
 }
 
 void GMainWindow::OnCreateGraphicsSurfaceViewer() {
@@ -1199,6 +1264,18 @@ void GMainWindow::OnLanguageChanged(const QString& locale) {
 void GMainWindow::SetupUIStrings() {
     setWindowTitle(
         tr("Citra %1| %2-%3").arg(Common::g_build_name, Common::g_scm_branch, Common::g_scm_desc));
+}
+
+void GMainWindow::SyncMenuUISettings() {
+    ui.action_Screen_Layout_Default->setChecked(Settings::values.layout_option ==
+                                                Settings::LayoutOption::Default);
+    ui.action_Screen_Layout_Single_Screen->setChecked(Settings::values.layout_option ==
+                                                      Settings::LayoutOption::SingleScreen);
+    ui.action_Screen_Layout_Large_Screen->setChecked(Settings::values.layout_option ==
+                                                     Settings::LayoutOption::LargeScreen);
+    ui.action_Screen_Layout_Side_by_Side->setChecked(Settings::values.layout_option ==
+                                                     Settings::LayoutOption::SideScreen);
+    ui.action_Screen_Layout_Swap_Screens->setChecked(Settings::values.swap_screen);
 }
 
 #ifdef main

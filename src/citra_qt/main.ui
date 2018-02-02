@@ -86,11 +86,25 @@
      <addaction name="action_Create_Pica_Surface_Viewer"/>
      <addaction name="separator"/>
     </widget>
+    <widget class="QMenu" name="menu_Screen_Layout">
+     <property name="title">
+      <string>Screen Layout</string>
+     </property>
+     <addaction name="action_Screen_Layout_Default"/>
+     <addaction name="action_Screen_Layout_Single_Screen"/>
+     <addaction name="action_Screen_Layout_Large_Screen"/>
+     <addaction name="action_Screen_Layout_Side_by_Side"/>
+     <addaction name="separator"/>
+     <addaction name="action_Screen_Layout_Swap_Screens"/>
+    </widget>
     <addaction name="action_Fullscreen"/>
     <addaction name="action_Single_Window_Mode"/>
+    <addaction name="menu_Screen_Layout"/>
+    <addaction name="separator"/>
     <addaction name="action_Display_Dock_Widget_Headers"/>
     <addaction name="action_Show_Filter_Bar"/>
     <addaction name="action_Show_Status_Bar"/>
+    <addaction name="separator"/>
     <addaction name="menu_View_Debugging"/>
    </widget>
    <widget class="QMenu" name="menu_Help">
@@ -230,6 +244,46 @@
     <string>Opens the maintenance tool to modify your Citra installation</string>
    </property>
   </action>
+   <action name="action_Screen_Layout_Default">
+     <property name="checkable">
+       <bool>true</bool>
+     </property>
+     <property name="text">
+       <string>Default</string>
+     </property>
+   </action>
+   <action name="action_Screen_Layout_Single_Screen">
+     <property name="checkable">
+       <bool>true</bool>
+     </property>
+     <property name="text">
+       <string>Single Screen</string>
+     </property>
+   </action>
+   <action name="action_Screen_Layout_Large_Screen">
+     <property name="checkable">
+       <bool>true</bool>
+     </property>
+     <property name="text">
+       <string>Large Screen</string>
+     </property>
+   </action>
+   <action name="action_Screen_Layout_Side_by_Side">
+     <property name="checkable">
+       <bool>true</bool>
+     </property>
+     <property name="text">
+       <string>Side by Side</string>
+     </property>
+   </action>
+   <action name="action_Screen_Layout_Swap_Screens">
+     <property name="checkable">
+       <bool>true</bool>
+     </property>
+     <property name="text">
+       <string>Swap Screens</string>
+     </property>
+   </action>
   <action name="action_Check_For_Updates">
    <property name="text">
     <string>Check for Updates</string>
