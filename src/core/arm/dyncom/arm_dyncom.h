@@ -35,8 +35,9 @@ public:
     u32 GetCP15Register(CP15Register reg) override;
     void SetCP15Register(CP15Register reg, u32 value) override;
 
-    void SaveContext(ThreadContext& ctx) override;
-    void LoadContext(const ThreadContext& ctx) override;
+    std::unique_ptr<ThreadContext> NewContext() const override;
+    void SaveContext(const std::unique_ptr<ThreadContext>& arg) override;
+    void LoadContext(const std::unique_ptr<ThreadContext>& arg) override;
 
     void PrepareReschedule() override;
 

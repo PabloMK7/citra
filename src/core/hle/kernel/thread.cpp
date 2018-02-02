@@ -60,7 +60,7 @@ inline static u32 const NewThreadId() {
     return next_thread_id++;
 }
 
-Thread::Thread() {}
+Thread::Thread() : context(Core::CPU().NewContext()) {}
 Thread::~Thread() {}
 
 Thread* GetCurrentThread() {
@@ -309,14 +309,13 @@ std::tuple<u32, u32, bool> GetFreeThreadLocalSlot(std::vector<std::bitset<8>>& t
  * @param entry_point Address of entry point for execution
  * @param arg User argument for thread
  */
-static void ResetThreadContext(ARM_Interface::ThreadContext& context, u32 stack_top,
-                               u32 entry_point, u32 arg) {
-    memset(&context, 0, sizeof(ARM_Interface::ThreadContext));
-
-    context.cpu_registers[0] = arg;
-    context.pc = entry_point;
-    context.sp = stack_top;
-    context.cpsr = USER32MODE | ((entry_point & 1) << 5); // Usermode and THUMB mode
+static void ResetThreadContext(const std::unique_ptr<ARM_Interface::ThreadContext>& context,
+                               u32 stack_top, u32 entry_point, u32 arg) {
+    context->Reset();
+    context->SetCpuRegister(0, arg);
+    context->SetProgramCounter(entry_point);
+    context->SetStackPointer(stack_top);
+    context->SetCpsr(USER32MODE | ((entry_point & 1) << 5)); // Usermode and THUMB mode
 }
 
 ResultVal<SharedPtr<Thread>> Thread::Create(std::string name, VAddr entry_point, u32 priority,
@@ -453,8 +452,8 @@ SharedPtr<Thread> SetupMainThread(u32 entry_point, u32 priority, SharedPtr<Proce
 
     SharedPtr<Thread> thread = std::move(thread_res).Unwrap();
 
-    thread->context.fpscr =
-        FPSCR_DEFAULT_NAN | FPSCR_FLUSH_TO_ZERO | FPSCR_ROUND_TOZERO | FPSCR_IXC; // 0x03C00010
+    thread->context->SetFpscr(FPSCR_DEFAULT_NAN | FPSCR_FLUSH_TO_ZERO | FPSCR_ROUND_TOZERO |
+                              FPSCR_IXC); // 0x03C00010
 
     // Note: The newly created thread will be run when the scheduler fires.
     return thread;
@@ -480,11 +479,11 @@ void Reschedule() {
 }
 
 void Thread::SetWaitSynchronizationResult(ResultCode result) {
-    context.cpu_registers[0] = result.raw;
+    context->SetCpuRegister(0, result.raw);
 }
 
 void Thread::SetWaitSynchronizationOutput(s32 output) {
-    context.cpu_registers[1] = output;
+    context->SetCpuRegister(1, output);
 }
 
 s32 Thread::GetWaitObjectIndex(WaitObject* object) const {

@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <cstring>
+#include <dynarmic/context.h>
 #include <dynarmic/dynarmic.h>
 #include "common/assert.h"
 #include "common/microprofile.h"
@@ -13,6 +14,59 @@
 #include "core/core_timing.h"
 #include "core/hle/kernel/svc.h"
 #include "core/memory.h"
+
+class DynarmicThreadContext final : public ARM_Interface::ThreadContext {
+public:
+    DynarmicThreadContext() {
+        Reset();
+    }
+    ~DynarmicThreadContext() override = default;
+
+    void Reset() override {
+        ctx.Regs() = {};
+        ctx.SetCpsr(0);
+        ctx.ExtRegs() = {};
+        ctx.SetFpscr(0);
+        fpexc = 0;
+    }
+
+    u32 GetCpuRegister(size_t index) const override {
+        return ctx.Regs()[index];
+    }
+    void SetCpuRegister(size_t index, u32 value) override {
+        ctx.Regs()[index] = value;
+    }
+    u32 GetCpsr() const override {
+        return ctx.Cpsr();
+    }
+    void SetCpsr(u32 value) override {
+        ctx.SetCpsr(value);
+    }
+    u32 GetFpuRegister(size_t index) const override {
+        return ctx.ExtRegs()[index];
+    }
+    void SetFpuRegister(size_t index, u32 value) override {
+        ctx.ExtRegs()[index] = value;
+    }
+    u32 GetFpscr() const override {
+        return ctx.Fpscr();
+    }
+    void SetFpscr(u32 value) override {
+        ctx.SetFpscr(value);
+    }
+    u32 GetFpexc() const override {
+        return fpexc;
+    }
+    void SetFpexc(u32 value) override {
+        fpexc = value;
+    }
+
+private:
+    friend class ARM_Dynarmic;
+
+    Dynarmic::Context ctx;
+    u32 fpexc;
+};
 
 static void InterpreterFallback(u32 pc, Dynarmic::Jit* jit, void* user_arg) {
     ARMul_State* state = static_cast<ARMul_State*>(user_arg);
@@ -30,7 +84,7 @@ static void InterpreterFallback(u32 pc, Dynarmic::Jit* jit, void* user_arg) {
     state->Reg[15] &= (is_thumb ? 0xFFFFFFFE : 0xFFFFFFFC);
 
     jit->Regs() = state->Reg;
-    jit->Cpsr() = state->Cpsr;
+    jit->SetCpsr(state->Cpsr);
     jit->ExtRegs() = state->ExtReg;
     jit->SetFpscr(state->VFP[VFP_FPSCR]);
 }
@@ -137,7 +191,7 @@ u32 ARM_Dynarmic::GetCPSR() const {
 }
 
 void ARM_Dynarmic::SetCPSR(u32 cpsr) {
-    jit->Cpsr() = cpsr;
+    jit->SetCpsr(cpsr);
 }
 
 u32 ARM_Dynarmic::GetCP15Register(CP15Register reg) {
@@ -148,30 +202,24 @@ void ARM_Dynarmic::SetCP15Register(CP15Register reg, u32 value) {
     interpreter_state->CP15[reg] = value;
 }
 
-void ARM_Dynarmic::SaveContext(ARM_Interface::ThreadContext& ctx) {
-    memcpy(ctx.cpu_registers, jit->Regs().data(), sizeof(ctx.cpu_registers));
-    memcpy(ctx.fpu_registers, jit->ExtRegs().data(), sizeof(ctx.fpu_registers));
-
-    ctx.sp = jit->Regs()[13];
-    ctx.lr = jit->Regs()[14];
-    ctx.pc = jit->Regs()[15];
-    ctx.cpsr = jit->Cpsr();
-
-    ctx.fpscr = jit->Fpscr();
-    ctx.fpexc = interpreter_state->VFP[VFP_FPEXC];
+std::unique_ptr<ARM_Interface::ThreadContext> ARM_Dynarmic::NewContext() const {
+    return std::make_unique<DynarmicThreadContext>();
 }
 
-void ARM_Dynarmic::LoadContext(const ARM_Interface::ThreadContext& ctx) {
-    memcpy(jit->Regs().data(), ctx.cpu_registers, sizeof(ctx.cpu_registers));
-    memcpy(jit->ExtRegs().data(), ctx.fpu_registers, sizeof(ctx.fpu_registers));
+void ARM_Dynarmic::SaveContext(const std::unique_ptr<ThreadContext>& arg) {
+    DynarmicThreadContext* ctx = dynamic_cast<DynarmicThreadContext*>(arg.get());
+    ASSERT(ctx);
 
-    jit->Regs()[13] = ctx.sp;
-    jit->Regs()[14] = ctx.lr;
-    jit->Regs()[15] = ctx.pc;
-    jit->Cpsr() = ctx.cpsr;
+    jit->SaveContext(ctx->ctx);
+    ctx->fpexc = interpreter_state->VFP[VFP_FPEXC];
+}
 
-    jit->SetFpscr(ctx.fpscr);
-    interpreter_state->VFP[VFP_FPEXC] = ctx.fpexc;
+void ARM_Dynarmic::LoadContext(const std::unique_ptr<ThreadContext>& arg) {
+    const DynarmicThreadContext* ctx = dynamic_cast<DynarmicThreadContext*>(arg.get());
+    ASSERT(ctx);
+
+    jit->LoadContext(ctx->ctx);
+    interpreter_state->VFP[VFP_FPEXC] = ctx->fpexc;
 }
 
 void ARM_Dynarmic::PrepareReschedule() {
