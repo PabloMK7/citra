@@ -4,37 +4,15 @@
 
 #include <cstring>
 #include "common/common_funcs.h"
-#include "common/common_types.h"
 #include "common/logging/log.h"
-#include "core/hle/ipc.h"
 #include "core/hle/ipc_helpers.h"
 #include "core/hle/kernel/event.h"
-#include "core/hle/kernel/kernel.h"
+#include "core/hle/kernel/process.h"
 #include "core/hle/service/y2r_u.h"
 #include "core/hw/y2r.h"
 
 namespace Service {
 namespace Y2R {
-
-struct ConversionParameters {
-    InputFormat input_format;
-    OutputFormat output_format;
-    Rotation rotation;
-    BlockAlignment block_alignment;
-    u16 input_line_width;
-    u16 input_lines;
-    StandardCoefficient standard_coefficient;
-    u8 padding;
-    u16 alpha;
-};
-static_assert(sizeof(ConversionParameters) == 12, "ConversionParameters struct has incorrect size");
-
-static Kernel::SharedPtr<Kernel::Event> completion_event;
-static ConversionConfiguration conversion;
-static DitheringWeightParams dithering_weight_params;
-static u32 temporal_dithering_enabled = 0;
-static u32 transfer_end_interrupt_enabled = 0;
-static u32 spacial_dithering_enabled = 0;
 
 static const CoefficientSet standard_coefficients[4] = {
     {{0x100, 0x166, 0xB6, 0x58, 0x1C5, -0x166F, 0x10EE, -0x1C5B}}, // ITU_Rec601
@@ -83,8 +61,8 @@ ResultCode ConversionConfiguration::SetStandardCoefficient(
     return RESULT_SUCCESS;
 }
 
-static void SetInputFormat(Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x1, 1, 0);
+void Y2R_U::SetInputFormat(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x1, 1, 0);
 
     conversion.input_format = rp.PopEnum<InputFormat>();
 
@@ -94,8 +72,8 @@ static void SetInputFormat(Interface* self) {
     LOG_DEBUG(Service_Y2R, "called input_format=%hhu", static_cast<u8>(conversion.input_format));
 }
 
-static void GetInputFormat(Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x2, 0, 0);
+void Y2R_U::GetInputFormat(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x2, 0, 0);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
@@ -104,8 +82,8 @@ static void GetInputFormat(Interface* self) {
     LOG_DEBUG(Service_Y2R, "called input_format=%hhu", static_cast<u8>(conversion.input_format));
 }
 
-static void SetOutputFormat(Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x3, 1, 0);
+void Y2R_U::SetOutputFormat(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x3, 1, 0);
 
     conversion.output_format = rp.PopEnum<OutputFormat>();
 
@@ -115,8 +93,8 @@ static void SetOutputFormat(Interface* self) {
     LOG_DEBUG(Service_Y2R, "called output_format=%hhu", static_cast<u8>(conversion.output_format));
 }
 
-static void GetOutputFormat(Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x4, 0, 0);
+void Y2R_U::GetOutputFormat(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x4, 0, 0);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
@@ -125,8 +103,8 @@ static void GetOutputFormat(Interface* self) {
     LOG_DEBUG(Service_Y2R, "called output_format=%hhu", static_cast<u8>(conversion.output_format));
 }
 
-static void SetRotation(Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x5, 1, 0);
+void Y2R_U::SetRotation(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x5, 1, 0);
 
     conversion.rotation = rp.PopEnum<Rotation>();
 
@@ -136,8 +114,8 @@ static void SetRotation(Interface* self) {
     LOG_DEBUG(Service_Y2R, "called rotation=%hhu", static_cast<u8>(conversion.rotation));
 }
 
-static void GetRotation(Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x6, 0, 0);
+void Y2R_U::GetRotation(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x6, 0, 0);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
@@ -146,8 +124,8 @@ static void GetRotation(Interface* self) {
     LOG_DEBUG(Service_Y2R, "called rotation=%hhu", static_cast<u8>(conversion.rotation));
 }
 
-static void SetBlockAlignment(Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x7, 1, 0);
+void Y2R_U::SetBlockAlignment(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x7, 1, 0);
 
     conversion.block_alignment = rp.PopEnum<BlockAlignment>();
 
@@ -158,8 +136,8 @@ static void SetBlockAlignment(Interface* self) {
               static_cast<u8>(conversion.block_alignment));
 }
 
-static void GetBlockAlignment(Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x8, 0, 0);
+void Y2R_U::GetBlockAlignment(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x8, 0, 0);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
@@ -169,17 +147,10 @@ static void GetBlockAlignment(Interface* self) {
               static_cast<u8>(conversion.block_alignment));
 }
 
-/**
- * Y2R_U::SetSpacialDithering service function
- *  Inputs:
- *      1 : u8, 0 = Disabled, 1 = Enabled
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- */
-static void SetSpacialDithering(Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x9, 1, 0);
+void Y2R_U::SetSpacialDithering(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x9, 1, 0);
 
-    spacial_dithering_enabled = rp.Pop<u8>() & 0xF;
+    spacial_dithering_enabled = rp.Pop<bool>();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
@@ -187,32 +158,19 @@ static void SetSpacialDithering(Interface* self) {
     LOG_WARNING(Service_Y2R, "(STUBBED) called");
 }
 
-/**
- * Y2R_U::GetSpacialDithering service function
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- *      2 : u8, 0 = Disabled, 1 = Enabled
- */
-static void GetSpacialDithering(Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0xA, 0, 0);
+void Y2R_U::GetSpacialDithering(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0xA, 0, 0);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
-    rb.Push(spacial_dithering_enabled != 0);
+    rb.Push(spacial_dithering_enabled);
 
     LOG_WARNING(Service_Y2R, "(STUBBED) called");
 }
 
-/**
- * Y2R_U::SetTemporalDithering service function
- *  Inputs:
- *      1 : u8, 0 = Disabled, 1 = Enabled
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- */
-static void SetTemporalDithering(Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0xB, 1, 0);
-    temporal_dithering_enabled = rp.Pop<u8>() & 0xF;
+void Y2R_U::SetTemporalDithering(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0xB, 1, 0);
+    temporal_dithering_enabled = rp.Pop<bool>();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
@@ -220,14 +178,8 @@ static void SetTemporalDithering(Interface* self) {
     LOG_WARNING(Service_Y2R, "(STUBBED) called");
 }
 
-/**
- * Y2R_U::GetTemporalDithering service function
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- *      2 : u8, 0 = Disabled, 1 = Enabled
- */
-static void GetTemporalDithering(Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0xC, 0, 0);
+void Y2R_U::GetTemporalDithering(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0xC, 0, 0);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
@@ -236,16 +188,9 @@ static void GetTemporalDithering(Interface* self) {
     LOG_WARNING(Service_Y2R, "(STUBBED) called");
 }
 
-/**
- * Y2R_U::SetTransferEndInterrupt service function
- *  Inputs:
- *      1 : u8, 0 = Disabled, 1 = Enabled
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- */
-static void SetTransferEndInterrupt(Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0xD, 1, 0);
-    transfer_end_interrupt_enabled = rp.Pop<u8>() & 0xF;
+void Y2R_U::SetTransferEndInterrupt(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0xD, 1, 0);
+    transfer_end_interrupt_enabled = rp.Pop<bool>();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
@@ -253,14 +198,8 @@ static void SetTransferEndInterrupt(Interface* self) {
     LOG_WARNING(Service_Y2R, "(STUBBED) called");
 }
 
-/**
- * Y2R_U::GetTransferEndInterrupt service function
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- *      2 : u8, 0 = Disabled, 1 = Enabled
- */
-static void GetTransferEndInterrupt(Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0xE, 0, 0);
+void Y2R_U::GetTransferEndInterrupt(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0xE, 0, 0);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
@@ -269,104 +208,92 @@ static void GetTransferEndInterrupt(Interface* self) {
     LOG_WARNING(Service_Y2R, "(STUBBED) called");
 }
 
-/**
- * Y2R_U::GetTransferEndEvent service function
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- *      3 : The handle of the completion event
- */
-static void GetTransferEndEvent(Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0xF, 0, 0);
+void Y2R_U::GetTransferEndEvent(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0xF, 0, 0);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
     rb.Push(RESULT_SUCCESS);
-    rb.PushCopyHandles(Kernel::g_handle_table.Create(completion_event).Unwrap());
+    rb.PushCopyObjects(completion_event);
 
     LOG_DEBUG(Service_Y2R, "called");
 }
 
-static void SetSendingY(Interface* self) {
-    // The helper should be passed by argument to the function
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x10, 4, 2);
+void Y2R_U::SetSendingY(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x10, 4, 2);
     conversion.src_Y.address = rp.Pop<u32>();
     conversion.src_Y.image_size = rp.Pop<u32>();
     conversion.src_Y.transfer_unit = rp.Pop<u32>();
     conversion.src_Y.gap = rp.Pop<u32>();
-    Kernel::Handle src_process_handle = rp.PopHandle();
+    auto process = rp.PopObject<Kernel::Process>();
+    // TODO (wwylele): pass process handle to y2r engine or convert VAddr to PAddr
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
 
     LOG_DEBUG(Service_Y2R, "called image_size=0x%08X, transfer_unit=%hu, transfer_stride=%hu, "
-                           "src_process_handle=0x%08X",
+                           "src_process_id=%u",
               conversion.src_Y.image_size, conversion.src_Y.transfer_unit, conversion.src_Y.gap,
-              src_process_handle);
+              process->process_id);
 }
 
-static void SetSendingU(Interface* self) {
-    // The helper should be passed by argument to the function
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x11, 4, 2);
+void Y2R_U::SetSendingU(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x11, 4, 2);
     conversion.src_U.address = rp.Pop<u32>();
     conversion.src_U.image_size = rp.Pop<u32>();
     conversion.src_U.transfer_unit = rp.Pop<u32>();
     conversion.src_U.gap = rp.Pop<u32>();
-    Kernel::Handle src_process_handle = rp.PopHandle();
+    auto process = rp.PopObject<Kernel::Process>();
+    // TODO (wwylele): pass the process handle to y2r engine or convert VAddr to PAddr
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
 
     LOG_DEBUG(Service_Y2R, "called image_size=0x%08X, transfer_unit=%hu, transfer_stride=%hu, "
-                           "src_process_handle=0x%08X",
+                           "src_process_id=%u",
               conversion.src_U.image_size, conversion.src_U.transfer_unit, conversion.src_U.gap,
-              src_process_handle);
+              process->process_id);
 }
 
-static void SetSendingV(Interface* self) {
-    // The helper should be passed by argument to the function
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x12, 4, 2);
+void Y2R_U::SetSendingV(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x12, 4, 2);
 
     conversion.src_V.address = rp.Pop<u32>();
     conversion.src_V.image_size = rp.Pop<u32>();
     conversion.src_V.transfer_unit = rp.Pop<u32>();
     conversion.src_V.gap = rp.Pop<u32>();
-    Kernel::Handle src_process_handle = rp.PopHandle();
+    auto process = rp.PopObject<Kernel::Process>();
+    // TODO (wwylele): pass the process handle to y2r engine or convert VAddr to PAddr
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
 
     LOG_DEBUG(Service_Y2R, "called image_size=0x%08X, transfer_unit=%hu, transfer_stride=%hu, "
-                           "src_process_handle=0x%08X",
+                           "src_process_id=%u",
               conversion.src_V.image_size, conversion.src_V.transfer_unit, conversion.src_V.gap,
-              static_cast<u32>(src_process_handle));
+              process->process_id);
 }
 
-static void SetSendingYUYV(Interface* self) {
-    // The helper should be passed by argument to the function
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x13, 4, 2);
+void Y2R_U::SetSendingYUYV(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x13, 4, 2);
 
     conversion.src_YUYV.address = rp.Pop<u32>();
     conversion.src_YUYV.image_size = rp.Pop<u32>();
     conversion.src_YUYV.transfer_unit = rp.Pop<u32>();
     conversion.src_YUYV.gap = rp.Pop<u32>();
-    Kernel::Handle src_process_handle = rp.PopHandle();
+    auto process = rp.PopObject<Kernel::Process>();
+    // TODO (wwylele): pass the process handle to y2r engine or convert VAddr to PAddr
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
 
     LOG_DEBUG(Service_Y2R, "called image_size=0x%08X, transfer_unit=%hu, transfer_stride=%hu, "
-                           "src_process_handle=0x%08X",
+                           "src_process_id=%u",
               conversion.src_YUYV.image_size, conversion.src_YUYV.transfer_unit,
-              conversion.src_YUYV.gap, static_cast<u32>(src_process_handle));
+              conversion.src_YUYV.gap, process->process_id);
 }
 
-/**
- * Y2R::IsFinishedSendingYuv service function
- * Output:
- *       1 : Result of the function, 0 on success, otherwise error code
- *       2 : u8, 0 = Not Finished, 1 = Finished
- */
-static void IsFinishedSendingYuv(Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x14, 0, 0);
+void Y2R_U::IsFinishedSendingYuv(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x14, 0, 0);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
@@ -375,14 +302,8 @@ static void IsFinishedSendingYuv(Interface* self) {
     LOG_WARNING(Service_Y2R, "(STUBBED) called");
 }
 
-/**
- * Y2R::IsFinishedSendingY service function
- * Output:
- *       1 : Result of the function, 0 on success, otherwise error code
- *       2 : u8, 0 = Not Finished, 1 = Finished
- */
-static void IsFinishedSendingY(Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x15, 0, 0);
+void Y2R_U::IsFinishedSendingY(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x15, 0, 0);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
@@ -391,14 +312,8 @@ static void IsFinishedSendingY(Interface* self) {
     LOG_WARNING(Service_Y2R, "(STUBBED) called");
 }
 
-/**
- * Y2R::IsFinishedSendingU service function
- * Output:
- *       1 : Result of the function, 0 on success, otherwise error code
- *       2 : u8, 0 = Not Finished, 1 = Finished
- */
-static void IsFinishedSendingU(Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x16, 0, 0);
+void Y2R_U::IsFinishedSendingU(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x16, 0, 0);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
@@ -407,14 +322,8 @@ static void IsFinishedSendingU(Interface* self) {
     LOG_WARNING(Service_Y2R, "(STUBBED) called");
 }
 
-/**
- * Y2R::IsFinishedSendingV service function
- * Output:
- *       1 : Result of the function, 0 on success, otherwise error code
- *       2 : u8, 0 = Not Finished, 1 = Finished
- */
-static void IsFinishedSendingV(Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x17, 0, 0);
+void Y2R_U::IsFinishedSendingV(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x17, 0, 0);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
@@ -423,32 +332,27 @@ static void IsFinishedSendingV(Interface* self) {
     LOG_WARNING(Service_Y2R, "(STUBBED) called");
 }
 
-static void SetReceiving(Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x18, 4, 2);
+void Y2R_U::SetReceiving(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x18, 4, 2);
 
     conversion.dst.address = rp.Pop<u32>();
     conversion.dst.image_size = rp.Pop<u32>();
     conversion.dst.transfer_unit = rp.Pop<u32>();
     conversion.dst.gap = rp.Pop<u32>();
-    Kernel::Handle dst_process_handle = rp.PopHandle();
+    auto dst_process = rp.PopObject<Kernel::Process>();
+    // TODO (wwylele): pass the process handle to y2r engine or convert VAddr to PAddr
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
 
     LOG_DEBUG(Service_Y2R, "called image_size=0x%08X, transfer_unit=%hu, transfer_stride=%hu, "
-                           "dst_process_handle=0x%08X",
+                           "dst_process_id=%u",
               conversion.dst.image_size, conversion.dst.transfer_unit, conversion.dst.gap,
-              static_cast<u32>(dst_process_handle));
+              static_cast<u32>(dst_process->process_id));
 }
 
-/**
- * Y2R::IsFinishedReceiving service function
- * Output:
- *       1 : Result of the function, 0 on success, otherwise error code
- *       2 : u8, 0 = Not Finished, 1 = Finished
- */
-static void IsFinishedReceiving(Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x19, 0, 0);
+void Y2R_U::IsFinishedReceiving(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x19, 0, 0);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
@@ -457,8 +361,8 @@ static void IsFinishedReceiving(Interface* self) {
     LOG_WARNING(Service_Y2R, "(STUBBED) called");
 }
 
-static void SetInputLineWidth(Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x1A, 1, 0);
+void Y2R_U::SetInputLineWidth(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x1A, 1, 0);
     u32 input_line_width = rp.Pop<u32>();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
@@ -467,8 +371,8 @@ static void SetInputLineWidth(Interface* self) {
     LOG_DEBUG(Service_Y2R, "called input_line_width=%u", input_line_width);
 }
 
-static void GetInputLineWidth(Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x1B, 0, 0);
+void Y2R_U::GetInputLineWidth(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x1B, 0, 0);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
@@ -477,8 +381,8 @@ static void GetInputLineWidth(Interface* self) {
     LOG_DEBUG(Service_Y2R, "called input_line_width=%u", conversion.input_line_width);
 }
 
-static void SetInputLines(Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x1C, 1, 0);
+void Y2R_U::SetInputLines(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x1C, 1, 0);
     u32 input_lines = rp.Pop<u32>();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
@@ -487,8 +391,8 @@ static void SetInputLines(Interface* self) {
     LOG_DEBUG(Service_Y2R, "called input_lines=%u", input_lines);
 }
 
-static void GetInputLines(Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x1D, 0, 0);
+void Y2R_U::GetInputLines(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x1D, 0, 0);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
@@ -497,8 +401,8 @@ static void GetInputLines(Interface* self) {
     LOG_DEBUG(Service_Y2R, "called input_lines=%u", conversion.input_lines);
 }
 
-static void SetCoefficient(Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x1E, 4, 0);
+void Y2R_U::SetCoefficient(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x1E, 4, 0);
 
     rp.PopRaw<CoefficientSet>(conversion.coefficients);
 
@@ -511,18 +415,18 @@ static void SetCoefficient(Interface* self) {
               conversion.coefficients[6], conversion.coefficients[7]);
 }
 
-static void GetCoefficient(Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
+void Y2R_U::GetCoefficient(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x1F, 0, 0);
 
-    cmd_buff[0] = IPC::MakeHeader(0x1F, 5, 0);
-    cmd_buff[1] = RESULT_SUCCESS.raw;
-    std::memcpy(&cmd_buff[2], conversion.coefficients.data(), sizeof(CoefficientSet));
+    IPC::RequestBuilder rb = rp.MakeBuilder(5, 0);
+    rb.Push(RESULT_SUCCESS);
+    rb.PushRaw(conversion.coefficients);
 
     LOG_DEBUG(Service_Y2R, "called");
 }
 
-static void SetStandardCoefficient(Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x20, 1, 0);
+void Y2R_U::SetStandardCoefficient(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x20, 1, 0);
     u32 index = rp.Pop<u32>();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
@@ -531,29 +435,27 @@ static void SetStandardCoefficient(Interface* self) {
     LOG_DEBUG(Service_Y2R, "called standard_coefficient=%u", index);
 }
 
-static void GetStandardCoefficient(Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-
-    u32 index = cmd_buff[1];
+void Y2R_U::GetStandardCoefficient(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x21, 1, 0);
+    u32 index = rp.Pop<u32>();
 
     if (index < ARRAY_SIZE(standard_coefficients)) {
-        cmd_buff[0] = IPC::MakeHeader(0x21, 5, 0);
-        cmd_buff[1] = RESULT_SUCCESS.raw;
-        std::memcpy(&cmd_buff[2], &standard_coefficients[index], sizeof(CoefficientSet));
+        IPC::RequestBuilder rb = rp.MakeBuilder(5, 0);
+        rb.Push(RESULT_SUCCESS);
+        rb.PushRaw(standard_coefficients[index]);
 
         LOG_DEBUG(Service_Y2R, "called standard_coefficient=%u ", index);
     } else {
-        cmd_buff[0] = IPC::MakeHeader(0x21, 1, 0);
-        cmd_buff[1] = ResultCode(ErrorDescription::InvalidEnumValue, ErrorModule::CAM,
-                                 ErrorSummary::InvalidArgument, ErrorLevel::Usage)
-                          .raw;
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(ResultCode(ErrorDescription::InvalidEnumValue, ErrorModule::CAM,
+                           ErrorSummary::InvalidArgument, ErrorLevel::Usage));
 
         LOG_ERROR(Service_Y2R, "called standard_coefficient=%u  The argument is invalid!", index);
     }
 }
 
-static void SetAlpha(Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x22, 1, 0);
+void Y2R_U::SetAlpha(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x22, 1, 0);
     conversion.alpha = rp.Pop<u32>();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
@@ -562,8 +464,8 @@ static void SetAlpha(Interface* self) {
     LOG_DEBUG(Service_Y2R, "called alpha=%hu", conversion.alpha);
 }
 
-static void GetAlpha(Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x23, 0, 0);
+void Y2R_U::GetAlpha(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x23, 0, 0);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
@@ -572,8 +474,8 @@ static void GetAlpha(Interface* self) {
     LOG_DEBUG(Service_Y2R, "called alpha=%hu", conversion.alpha);
 }
 
-static void SetDitheringWeightParams(Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x24, 8, 0); // 0x240200
+void Y2R_U::SetDitheringWeightParams(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x24, 8, 0); // 0x240200
     rp.PopRaw(dithering_weight_params);
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
@@ -581,18 +483,18 @@ static void SetDitheringWeightParams(Interface* self) {
     LOG_DEBUG(Service_Y2R, "called");
 }
 
-static void GetDitheringWeightParams(Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
+void Y2R_U::GetDitheringWeightParams(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x25, 0, 0);
 
-    cmd_buff[0] = IPC::MakeHeader(0x25, 9, 0);
-    cmd_buff[1] = RESULT_SUCCESS.raw;
-    std::memcpy(&cmd_buff[2], &dithering_weight_params, sizeof(DitheringWeightParams));
+    IPC::RequestBuilder rb = rp.MakeBuilder(9, 0);
+    rb.Push(RESULT_SUCCESS);
+    rb.PushRaw(dithering_weight_params);
 
     LOG_DEBUG(Service_Y2R, "called");
 }
 
-static void StartConversion(Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x26, 0, 0);
+void Y2R_U::StartConversion(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x26, 0, 0);
 
     // dst_image_size would seem to be perfect for this, but it doesn't include the gap :(
     u32 total_output_size =
@@ -610,8 +512,8 @@ static void StartConversion(Interface* self) {
     LOG_DEBUG(Service_Y2R, "called");
 }
 
-static void StopConversion(Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x27, 0, 0);
+void Y2R_U::StopConversion(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x27, 0, 0);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
@@ -619,14 +521,8 @@ static void StopConversion(Interface* self) {
     LOG_DEBUG(Service_Y2R, "called");
 }
 
-/**
- * Y2R_U::IsBusyConversion service function
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- *      2 : 1 if there's a conversion running, otherwise 0.
- */
-static void IsBusyConversion(Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x28, 0, 0);
+void Y2R_U::IsBusyConversion(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x28, 0, 0);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
@@ -635,11 +531,8 @@ static void IsBusyConversion(Interface* self) {
     LOG_DEBUG(Service_Y2R, "called");
 }
 
-/**
- * Y2R_U::SetPackageParameter service function
- */
-static void SetPackageParameter(Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x29, 7, 0);
+void Y2R_U::SetPackageParameter(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x29, 7, 0);
     auto params = rp.PopRaw<ConversionParameters>();
 
     conversion.input_format = params.input_format;
@@ -679,8 +572,8 @@ cleanup:
         params.padding, params.alpha);
 }
 
-static void PingProcess(Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x2A, 0, 0);
+void Y2R_U::PingProcess(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x2A, 0, 0);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
@@ -689,8 +582,8 @@ static void PingProcess(Interface* self) {
     LOG_WARNING(Service_Y2R, "(STUBBED) called");
 }
 
-static void DriverInitialize(Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x2B, 0, 0);
+void Y2R_U::DriverInitialize(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x2B, 0, 0);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
 
@@ -716,8 +609,8 @@ static void DriverInitialize(Interface* self) {
     LOG_DEBUG(Service_Y2R, "called");
 }
 
-static void DriverFinalize(Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x2C, 0, 0);
+void Y2R_U::DriverFinalize(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x2C, 0, 0);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
@@ -725,73 +618,73 @@ static void DriverFinalize(Interface* self) {
     LOG_DEBUG(Service_Y2R, "called");
 }
 
-static void GetPackageParameter(Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
+void Y2R_U::GetPackageParameter(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x2D, 0, 0);
 
-    cmd_buff[0] = IPC::MakeHeader(0x2D, 4, 0);
-    cmd_buff[1] = RESULT_SUCCESS.raw;
-    std::memcpy(&cmd_buff[2], &conversion, sizeof(ConversionParameters));
+    IPC::RequestBuilder rb = rp.MakeBuilder(4, 0);
+    rb.Push(RESULT_SUCCESS);
+    rb.PushRaw(conversion);
 
     LOG_DEBUG(Service_Y2R, "called");
 }
 
-const Interface::FunctionInfo FunctionTable[] = {
-    {0x00010040, SetInputFormat, "SetInputFormat"},
-    {0x00020000, GetInputFormat, "GetInputFormat"},
-    {0x00030040, SetOutputFormat, "SetOutputFormat"},
-    {0x00040000, GetOutputFormat, "GetOutputFormat"},
-    {0x00050040, SetRotation, "SetRotation"},
-    {0x00060000, GetRotation, "GetRotation"},
-    {0x00070040, SetBlockAlignment, "SetBlockAlignment"},
-    {0x00080000, GetBlockAlignment, "GetBlockAlignment"},
-    {0x00090040, SetSpacialDithering, "SetSpacialDithering"},
-    {0x000A0000, GetSpacialDithering, "GetSpacialDithering"},
-    {0x000B0040, SetTemporalDithering, "SetTemporalDithering"},
-    {0x000C0000, GetTemporalDithering, "GetTemporalDithering"},
-    {0x000D0040, SetTransferEndInterrupt, "SetTransferEndInterrupt"},
-    {0x000E0000, GetTransferEndInterrupt, "GetTransferEndInterrupt"},
-    {0x000F0000, GetTransferEndEvent, "GetTransferEndEvent"},
-    {0x00100102, SetSendingY, "SetSendingY"},
-    {0x00110102, SetSendingU, "SetSendingU"},
-    {0x00120102, SetSendingV, "SetSendingV"},
-    {0x00130102, SetSendingYUYV, "SetSendingYUYV"},
-    {0x00140000, IsFinishedSendingYuv, "IsFinishedSendingYuv"},
-    {0x00150000, IsFinishedSendingY, "IsFinishedSendingY"},
-    {0x00160000, IsFinishedSendingU, "IsFinishedSendingU"},
-    {0x00170000, IsFinishedSendingV, "IsFinishedSendingV"},
-    {0x00180102, SetReceiving, "SetReceiving"},
-    {0x00190000, IsFinishedReceiving, "IsFinishedReceiving"},
-    {0x001A0040, SetInputLineWidth, "SetInputLineWidth"},
-    {0x001B0000, GetInputLineWidth, "GetInputLineWidth"},
-    {0x001C0040, SetInputLines, "SetInputLines"},
-    {0x001D0000, GetInputLines, "GetInputLines"},
-    {0x001E0100, SetCoefficient, "SetCoefficient"},
-    {0x001F0000, GetCoefficient, "GetCoefficient"},
-    {0x00200040, SetStandardCoefficient, "SetStandardCoefficient"},
-    {0x00210040, GetStandardCoefficient, "GetStandardCoefficient"},
-    {0x00220040, SetAlpha, "SetAlpha"},
-    {0x00230000, GetAlpha, "GetAlpha"},
-    {0x00240200, SetDitheringWeightParams, "SetDitheringWeightParams"},
-    {0x00250000, GetDitheringWeightParams, "GetDitheringWeightParams"},
-    {0x00260000, StartConversion, "StartConversion"},
-    {0x00270000, StopConversion, "StopConversion"},
-    {0x00280000, IsBusyConversion, "IsBusyConversion"},
-    {0x002901C0, SetPackageParameter, "SetPackageParameter"},
-    {0x002A0000, PingProcess, "PingProcess"},
-    {0x002B0000, DriverInitialize, "DriverInitialize"},
-    {0x002C0000, DriverFinalize, "DriverFinalize"},
-    {0x002D0000, GetPackageParameter, "GetPackageParameter"},
-};
+Y2R_U::Y2R_U() : ServiceFramework("y2r:u", 1) {
+    static const FunctionInfo functions[] = {
+        {0x00010040, &Y2R_U::SetInputFormat, "SetInputFormat"},
+        {0x00020000, &Y2R_U::GetInputFormat, "GetInputFormat"},
+        {0x00030040, &Y2R_U::SetOutputFormat, "SetOutputFormat"},
+        {0x00040000, &Y2R_U::GetOutputFormat, "GetOutputFormat"},
+        {0x00050040, &Y2R_U::SetRotation, "SetRotation"},
+        {0x00060000, &Y2R_U::GetRotation, "GetRotation"},
+        {0x00070040, &Y2R_U::SetBlockAlignment, "SetBlockAlignment"},
+        {0x00080000, &Y2R_U::GetBlockAlignment, "GetBlockAlignment"},
+        {0x00090040, &Y2R_U::SetSpacialDithering, "SetSpacialDithering"},
+        {0x000A0000, &Y2R_U::GetSpacialDithering, "GetSpacialDithering"},
+        {0x000B0040, &Y2R_U::SetTemporalDithering, "SetTemporalDithering"},
+        {0x000C0000, &Y2R_U::GetTemporalDithering, "GetTemporalDithering"},
+        {0x000D0040, &Y2R_U::SetTransferEndInterrupt, "SetTransferEndInterrupt"},
+        {0x000E0000, &Y2R_U::GetTransferEndInterrupt, "GetTransferEndInterrupt"},
+        {0x000F0000, &Y2R_U::GetTransferEndEvent, "GetTransferEndEvent"},
+        {0x00100102, &Y2R_U::SetSendingY, "SetSendingY"},
+        {0x00110102, &Y2R_U::SetSendingU, "SetSendingU"},
+        {0x00120102, &Y2R_U::SetSendingV, "SetSendingV"},
+        {0x00130102, &Y2R_U::SetSendingYUYV, "SetSendingYUYV"},
+        {0x00140000, &Y2R_U::IsFinishedSendingYuv, "IsFinishedSendingYuv"},
+        {0x00150000, &Y2R_U::IsFinishedSendingY, "IsFinishedSendingY"},
+        {0x00160000, &Y2R_U::IsFinishedSendingU, "IsFinishedSendingU"},
+        {0x00170000, &Y2R_U::IsFinishedSendingV, "IsFinishedSendingV"},
+        {0x00180102, &Y2R_U::SetReceiving, "SetReceiving"},
+        {0x00190000, &Y2R_U::IsFinishedReceiving, "IsFinishedReceiving"},
+        {0x001A0040, &Y2R_U::SetInputLineWidth, "SetInputLineWidth"},
+        {0x001B0000, &Y2R_U::GetInputLineWidth, "GetInputLineWidth"},
+        {0x001C0040, &Y2R_U::SetInputLines, "SetInputLines"},
+        {0x001D0000, &Y2R_U::GetInputLines, "GetInputLines"},
+        {0x001E0100, &Y2R_U::SetCoefficient, "SetCoefficient"},
+        {0x001F0000, &Y2R_U::GetCoefficient, "GetCoefficient"},
+        {0x00200040, &Y2R_U::SetStandardCoefficient, "SetStandardCoefficient"},
+        {0x00210040, &Y2R_U::GetStandardCoefficient, "GetStandardCoefficient"},
+        {0x00220040, &Y2R_U::SetAlpha, "SetAlpha"},
+        {0x00230000, &Y2R_U::GetAlpha, "GetAlpha"},
+        {0x00240200, &Y2R_U::SetDitheringWeightParams, "SetDitheringWeightParams"},
+        {0x00250000, &Y2R_U::GetDitheringWeightParams, "GetDitheringWeightParams"},
+        {0x00260000, &Y2R_U::StartConversion, "StartConversion"},
+        {0x00270000, &Y2R_U::StopConversion, "StopConversion"},
+        {0x00280000, &Y2R_U::IsBusyConversion, "IsBusyConversion"},
+        {0x002901C0, &Y2R_U::SetPackageParameter, "SetPackageParameter"},
+        {0x002A0000, &Y2R_U::PingProcess, "PingProcess"},
+        {0x002B0000, &Y2R_U::DriverInitialize, "DriverInitialize"},
+        {0x002C0000, &Y2R_U::DriverFinalize, "DriverFinalize"},
+        {0x002D0000, &Y2R_U::GetPackageParameter, "GetPackageParameter"},
+    };
+    RegisterHandlers(functions);
 
-Y2R_U::Y2R_U() {
     completion_event = Kernel::Event::Create(Kernel::ResetType::OneShot, "Y2R:Completed");
-    std::memset(&conversion, 0, sizeof(conversion));
-
-    Register(FunctionTable);
 }
 
-Y2R_U::~Y2R_U() {
-    completion_event = nullptr;
+Y2R_U::~Y2R_U() = default;
+
+void InstallInterfaces(SM::ServiceManager& service_manager) {
+    std::make_shared<Y2R_U>()->InstallAsService(service_manager);
 }
 
 } // namespace Y2R
