@@ -12,7 +12,8 @@ namespace Applets {
 
 class Mint final : public Applet {
 public:
-    explicit Mint(Service::APT::AppletId id) : Applet(id) {}
+    explicit Mint(Service::APT::AppletId id, std::weak_ptr<Service::APT::AppletManager> manager)
+        : Applet(id, std::move(manager)) {}
 
     ResultCode ReceiveParameter(const Service::APT::MessageParameter& parameter) override;
     ResultCode StartImpl(const Service::APT::AppletStartupParameter& parameter) override;

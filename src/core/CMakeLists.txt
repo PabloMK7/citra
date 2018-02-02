@@ -164,6 +164,8 @@ add_library(core STATIC
     hle/service/am/am_sys.h
     hle/service/am/am_u.cpp
     hle/service/am/am_u.h
+    hle/service/apt/applet_manager.cpp
+    hle/service/apt/applet_manager.h
     hle/service/apt/apt.cpp
     hle/service/apt/apt.h
     hle/service/apt/apt_a.cpp
@@ -174,6 +176,7 @@ add_library(core STATIC
     hle/service/apt/apt_u.h
     hle/service/apt/bcfnt/bcfnt.cpp
     hle/service/apt/bcfnt/bcfnt.h
+    hle/service/apt/errors.h
     hle/service/boss/boss.cpp
     hle/service/boss/boss.h
     hle/service/boss/boss_p.cpp

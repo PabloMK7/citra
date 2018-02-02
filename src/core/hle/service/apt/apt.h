@@ -19,21 +19,6 @@ namespace APT {
 /// Each APT service can only have up to 2 sessions connected at the same time.
 static const u32 MaxAPTSessions = 2;
 
-/// Holds information about the parameters used in Send/Glance/ReceiveParameter
-struct MessageParameter {
-    u32 sender_id = 0;
-    u32 destination_id = 0;
-    u32 signal = 0;
-    Kernel::SharedPtr<Kernel::Object> object = nullptr;
-    std::vector<u8> buffer;
-};
-
-/// Holds information about the parameters used in StartLibraryApplet
-struct AppletStartupParameter {
-    Kernel::SharedPtr<Kernel::Object> object = nullptr;
-    std::vector<u8> buffer;
-};
-
 /// Used by the application to pass information about the current framebuffer to applets.
 struct CaptureBufferInfo {
     u32_le size;
@@ -48,65 +33,6 @@ struct CaptureBufferInfo {
 };
 static_assert(sizeof(CaptureBufferInfo) == 0x20, "CaptureBufferInfo struct has incorrect size");
 
-/// Signals used by APT functions
-enum class SignalType : u32 {
-    None = 0x0,
-    Wakeup = 0x1,
-    Request = 0x2,
-    Response = 0x3,
-    Exit = 0x4,
-    Message = 0x5,
-    HomeButtonSingle = 0x6,
-    HomeButtonDouble = 0x7,
-    DspSleep = 0x8,
-    DspWakeup = 0x9,
-    WakeupByExit = 0xA,
-    WakeupByPause = 0xB,
-    WakeupByCancel = 0xC,
-    WakeupByCancelAll = 0xD,
-    WakeupByPowerButtonClick = 0xE,
-    WakeupToJumpHome = 0xF,
-    RequestForSysApplet = 0x10,
-    WakeupToLaunchApplication = 0x11,
-};
-
-/// App Id's used by APT functions
-enum class AppletId : u32 {
-    None = 0,
-    AnySystemApplet = 0x100,
-    HomeMenu = 0x101,
-    AlternateMenu = 0x103,
-    Camera = 0x110,
-    FriendList = 0x112,
-    GameNotes = 0x113,
-    InternetBrowser = 0x114,
-    InstructionManual = 0x115,
-    Notifications = 0x116,
-    Miiverse = 0x117,
-    MiiversePost = 0x118,
-    AmiiboSettings = 0x119,
-    AnySysLibraryApplet = 0x200,
-    SoftwareKeyboard1 = 0x201,
-    Ed1 = 0x202,
-    PnoteApp = 0x204,
-    SnoteApp = 0x205,
-    Error = 0x206,
-    Mint = 0x207,
-    Extrapad = 0x208,
-    Memolib = 0x209,
-    Application = 0x300,
-    Tiger = 0x301,
-    AnyLibraryApplet = 0x400,
-    SoftwareKeyboard2 = 0x401,
-    Ed2 = 0x402,
-    PnoteApp2 = 0x404,
-    SnoteApp2 = 0x405,
-    Error2 = 0x406,
-    Mint2 = 0x407,
-    Extrapad2 = 0x408,
-    Memolib2 = 0x409,
-};
-
 enum class StartupArgumentType : u32 {
     OtherApp = 0,
     Restart = 1,
@@ -119,16 +45,6 @@ enum class ScreencapPostPermission : u32 {
     EnableScreenshotPostingToMiiverse = 2,
     DisableScreenshotPostingToMiiverse = 3
 };
-
-namespace ErrCodes {
-enum {
-    ParameterPresent = 2,
-    InvalidAppletSlot = 4,
-};
-} // namespace ErrCodes
-
-/// Send a parameter to the currently-running application, which will read it via ReceiveParameter
-void SendParameter(const MessageParameter& parameter);
 
 /**
  * APT::Initialize service function

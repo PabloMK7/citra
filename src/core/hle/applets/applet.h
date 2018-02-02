@@ -6,7 +6,7 @@
 
 #include <memory>
 #include "core/hle/result.h"
-#include "core/hle/service/apt/apt.h"
+#include "core/hle/service/apt/applet_manager.h"
 
 namespace HLE {
 namespace Applets {
@@ -21,7 +21,8 @@ public:
      * @param id Id of the applet to create.
      * @returns ResultCode Whether the operation was successful or not.
      */
-    static ResultCode Create(Service::APT::AppletId id);
+    static ResultCode Create(Service::APT::AppletId id,
+                             std::weak_ptr<Service::APT::AppletManager> manager);
 
     /**
      * Retrieves the Applet instance identified by the specified id.
@@ -55,7 +56,8 @@ public:
     virtual void Update() = 0;
 
 protected:
-    explicit Applet(Service::APT::AppletId id) : id(id) {}
+    Applet(Service::APT::AppletId id, std::weak_ptr<Service::APT::AppletManager> manager)
+        : id(id), manager(std::move(manager)) {}
 
     /**
      * Handles the Applet start event, triggered from the application.
@@ -69,6 +71,11 @@ protected:
 
     /// Whether this applet is currently running instead of the host application or not.
     bool is_running = false;
+
+    void SendParameter(const Service::APT::MessageParameter& parameter);
+
+private:
+    std::weak_ptr<Service::APT::AppletManager> manager;
 };
 
 /// Returns whether a library applet is currently running
