@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "core/hle/service/service.h"
+#include "core/hle/service/apt/apt.h"
 
 namespace Service {
 namespace APT {
@@ -16,13 +16,9 @@ namespace APT {
 // svcBreak when the command isn't accessible). See http://3dbrew.org/wiki/NS#APT_Services.
 
 /// Interface to "APT:U" service
-class APT_U_Interface : public Service::Interface {
+class APT_U final : public Module::Interface {
 public:
-    APT_U_Interface();
-
-    std::string GetPortName() const override {
-        return "APT:U";
-    }
+    explicit APT_U(std::shared_ptr<Module> apt);
 };
 
 } // namespace APT
