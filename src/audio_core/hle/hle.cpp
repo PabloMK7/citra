@@ -63,6 +63,8 @@ private:
 };
 
 DspHle::Impl::Impl(DspHle& parent_) : parent(parent_) {
+    dsp_memory.raw_memory.fill(0);
+
     tick_event =
         CoreTiming::RegisterEvent("AudioCore::DspHle::tick_event", [this](u64, int cycles_late) {
             this->AudioTickCallback(cycles_late);

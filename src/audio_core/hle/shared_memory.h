@@ -510,7 +510,7 @@ struct SharedMemory {
 ASSERT_DSP_STRUCT(SharedMemory, 0x8000);
 
 union DspMemory {
-    std::array<u8, 0x80000> raw_memory;
+    std::array<u8, 0x80000> raw_memory{};
     struct {
         u8 unused_0[0x50000];
         SharedMemory region_0;
