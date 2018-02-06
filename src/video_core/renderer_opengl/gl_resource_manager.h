@@ -135,7 +135,7 @@ public:
         if (handle == 0)
             return;
         glDeleteBuffers(1, &handle);
-        OpenGLState::GetCurState().OpenGLState::ResetBuffer(handle).Apply();
+        OpenGLState::GetCurState().ResetBuffer(handle).Apply();
         handle = 0;
     }
 

@@ -60,15 +60,14 @@ static constexpr FormatTuple tex_tuple = {GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE};
 static const FormatTuple& GetFormatTuple(PixelFormat pixel_format) {
     const SurfaceType type = SurfaceParams::GetFormatType(pixel_format);
     if (type == SurfaceType::Color) {
-        ASSERT((size_t)pixel_format < fb_format_tuples.size());
-        return fb_format_tuples[(unsigned int)pixel_format];
+        ASSERT(static_cast<size_t>(pixel_format) < fb_format_tuples.size());
+        return fb_format_tuples[static_cast<unsigned int>(pixel_format)];
     } else if (type == SurfaceType::Depth || type == SurfaceType::DepthStencil) {
-        size_t tuple_idx = (size_t)pixel_format - 14;
+        size_t tuple_idx = static_cast<size_t>(pixel_format) - 14;
         ASSERT(tuple_idx < depth_format_tuples.size());
         return depth_format_tuples[tuple_idx];
-    } else {
-        return tex_tuple;
     }
+    return tex_tuple;
 }
 
 template <typename Map, typename Interval>
@@ -244,7 +243,6 @@ static bool BlitTextures(GLuint src_tex, const MathUtil::Rectangle<u32>& src_rec
     state.ResetTexture(src_tex);
     state.ResetTexture(dst_tex);
 
-    // Keep track of previous framebuffer bindings
     state.draw.read_framebuffer = read_fb_handle;
     state.draw.draw_framebuffer = draw_fb_handle;
     state.Apply();
@@ -355,7 +353,7 @@ static bool FillSurface(const Surface& surface, const u8* fill_data,
                                surface->texture.handle, 0);
 
         u32 value_32bit;
-        std::memcpy(&value_32bit, fill_data, 4);
+        std::memcpy(&value_32bit, fill_data, sizeof(u32));
 
         GLfloat value_float = (value_32bit & 0xFFFFFF) / 16777215.0f; // 2^24 - 1
         GLint value_int = (value_32bit >> 24);
@@ -370,8 +368,8 @@ static bool FillSurface(const Surface& surface, const u8* fill_data,
 
 SurfaceParams SurfaceParams::FromInterval(SurfaceInterval interval) const {
     SurfaceParams params = *this;
-
-    const u32 stride_tiled_bytes = BytesInPixels(stride * (is_tiled ? 8 : 1));
+    const u32 tiled_size = is_tiled ? 8 : 1;
+    const u32 stride_tiled_bytes = BytesInPixels(stride * tiled_size);
     PAddr aligned_start =
         addr + Common::AlignDown(boost::icl::first(interval) - addr, stride_tiled_bytes);
     PAddr aligned_end =
@@ -389,9 +387,9 @@ SurfaceParams SurfaceParams::FromInterval(SurfaceInterval interval) const {
         aligned_end =
             addr + Common::AlignUp(boost::icl::last_next(interval) - addr, tiled_alignment);
         params.addr = aligned_start;
-        params.width = PixelsInBytes(aligned_end - aligned_start) / (is_tiled ? 8 : 1);
+        params.width = PixelsInBytes(aligned_end - aligned_start) / tiled_size;
         params.stride = params.width;
-        params.height = is_tiled ? 8 : 1;
+        params.height = tiled_size;
     }
     params.UpdateParams();
 
@@ -410,7 +408,7 @@ SurfaceInterval SurfaceParams::GetSubRectInterval(MathUtil::Rectangle<u32> unsca
         unscaled_rect.top = Common::AlignUp(unscaled_rect.top, 8) / 8;
     }
 
-    const u32 stride_tiled = (!is_tiled ? stride : stride * 8);
+    const u32 stride_tiled = !is_tiled ? stride : stride * 8;
 
     const u32 pixel_offset =
         stride_tiled * (!is_tiled ? unscaled_rect.bottom : (height / 8) - unscaled_rect.top) +
@@ -448,10 +446,10 @@ MathUtil::Rectangle<u32> SurfaceParams::GetScaledSubRect(const SurfaceParams& su
 }
 
 bool SurfaceParams::ExactMatch(const SurfaceParams& other_surface) const {
-    return other_surface.addr == addr && other_surface.width == width &&
-           other_surface.height == height && other_surface.stride == stride &&
-           other_surface.pixel_format == pixel_format && pixel_format != PixelFormat::Invalid &&
-           other_surface.is_tiled == is_tiled;
+    return std::tie(other_surface.addr, other_surface.width, other_surface.height,
+                    other_surface.stride, other_surface.pixel_format, other_surface.is_tiled) ==
+               std::tie(addr, width, height, stride, pixel_format, is_tiled) &&
+           pixel_format != PixelFormat::Invalid;
 }
 
 bool SurfaceParams::CanSubRect(const SurfaceParams& sub_surface) const {
@@ -483,10 +481,8 @@ bool SurfaceParams::CanTexCopy(const SurfaceParams& texcopy_params) const {
                texcopy_params.width % BytesInPixels(is_tiled ? 64 : 1) == 0 &&
                (texcopy_params.height == 1 || texcopy_params.stride == tile_stride) &&
                ((texcopy_params.addr - addr) % tile_stride) + texcopy_params.width <= tile_stride;
-    } else {
-        return FromInterval(texcopy_params.GetInterval()).GetInterval() ==
-               texcopy_params.GetInterval();
     }
+    return FromInterval(texcopy_params.GetInterval()).GetInterval() == texcopy_params.GetInterval();
 }
 
 bool CachedSurface::CanFill(const SurfaceParams& dest_surface,
@@ -688,9 +684,10 @@ void CachedSurface::FlushGLBuffer(PAddr flush_start, PAddr flush_end) {
         if (backup_bytes)
             std::memcpy(&backup_data[0], &dst_buffer[coarse_start_offset], backup_bytes);
 
-        for (u32 offset = coarse_start_offset; offset < end_offset; offset += fill_size)
+        for (u32 offset = coarse_start_offset; offset < end_offset; offset += fill_size) {
             std::memcpy(&dst_buffer[offset], &fill_data[0],
                         std::min(fill_size, end_offset - offset));
+        }
 
         if (backup_bytes)
             std::memcpy(&dst_buffer[coarse_start_offset], &backup_data[0], backup_bytes);
@@ -1350,12 +1347,11 @@ SurfaceRect_Tuple RasterizerCacheOpenGL::GetTexCopySurface(const SurfaceParams& 
 
         SurfaceParams match_subrect;
         if (params.width != params.stride) {
+            const u32 tiled_size = match_surface->is_tiled ? 8 : 1;
             match_subrect = params;
-            match_subrect.width =
-                match_surface->PixelsInBytes(params.width) / (match_surface->is_tiled ? 8 : 1);
-            match_subrect.stride =
-                match_surface->PixelsInBytes(params.stride) / (match_surface->is_tiled ? 8 : 1);
-            match_subrect.height *= (match_surface->is_tiled ? 8 : 1);
+            match_subrect.width = match_surface->PixelsInBytes(params.width) / tiled_size;
+            match_subrect.stride = match_surface->PixelsInBytes(params.stride) / tiled_size;
+            match_subrect.height *= tiled_size;
         } else {
             match_subrect = match_surface->FromInterval(params.GetInterval());
             ASSERT(match_subrect.GetInterval() == params.GetInterval());
