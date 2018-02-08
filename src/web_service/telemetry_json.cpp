@@ -80,7 +80,9 @@ void TelemetryJson::Complete() {
     SerializeSection(Telemetry::FieldType::UserFeedback, "UserFeedback");
     SerializeSection(Telemetry::FieldType::UserConfig, "UserConfig");
     SerializeSection(Telemetry::FieldType::UserSystem, "UserSystem");
-    PostJson(endpoint_url, TopSection().dump(), true, username, token);
+
+    // Send the telemetry async but don't handle the errors since they were written to the log
+    future = PostJson(endpoint_url, TopSection().dump(), true, username, token);
 }
 
 } // namespace WebService

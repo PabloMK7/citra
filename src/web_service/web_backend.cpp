@@ -9,6 +9,7 @@
 #include <cstdlib>
 #include <thread>
 #include <cpr/cpr.h>
+#include "common/announce_multiplayer_room.h"
 #include "common/logging/log.h"
 #include "web_service/web_backend.h"
 
@@ -31,17 +32,23 @@ void Win32WSAStartup() {
 #endif
 }
 
-void PostJson(const std::string& url, const std::string& data, bool allow_anonymous,
-              const std::string& username, const std::string& token) {
+std::future<Common::WebResult> PostJson(const std::string& url, const std::string& data,
+                                        bool allow_anonymous, const std::string& username,
+                                        const std::string& token) {
     if (url.empty()) {
         LOG_ERROR(WebService, "URL is invalid");
-        return;
+        return std::async(std::launch::deferred, []() {
+            return Common::WebResult{Common::WebResult::Code::InvalidURL, "URL is invalid"};
+        });
     }
 
     const bool are_credentials_provided{!token.empty() && !username.empty()};
     if (!allow_anonymous && !are_credentials_provided) {
         LOG_ERROR(WebService, "Credentials must be provided for authenticated requests");
-        return;
+        return std::async(std::launch::deferred, []() {
+            return Common::WebResult{Common::WebResult::Code::CredentialsMissing,
+                                     "Credentials needed"};
+        });
     }
 
     Win32WSAStartup();
@@ -60,23 +67,26 @@ void PostJson(const std::string& url, const std::string& data, bool allow_anonym
     }
 
     // Post JSON asynchronously
-    static std::future<void> future;
-    future = cpr::PostCallback(
+    return cpr::PostCallback(
         [](cpr::Response r) {
             if (r.error) {
-                LOG_ERROR(WebService, "POST returned cpr error: %u:%s",
+                LOG_ERROR(WebService, "POST to %s returned cpr error: %u:%s", r.url.c_str(),
                           static_cast<u32>(r.error.code), r.error.message.c_str());
-                return;
+                return Common::WebResult{Common::WebResult::Code::CprError, r.error.message};
             }
             if (r.status_code >= 400) {
-                LOG_ERROR(WebService, "POST returned error status code: %u", r.status_code);
-                return;
+                LOG_ERROR(WebService, "POST to %s returned error status code: %u", r.url.c_str(),
+                          r.status_code);
+                return Common::WebResult{Common::WebResult::Code::HttpError,
+                                         std::to_string(r.status_code)};
             }
             if (r.header["content-type"].find("application/json") == std::string::npos) {
-                LOG_ERROR(WebService, "POST returned wrong content: %s",
+                LOG_ERROR(WebService, "POST to %s returned wrong content: %s", r.url.c_str(),
                           r.header["content-type"].c_str());
-                return;
+                return Common::WebResult{Common::WebResult::Code::WrongContent,
+                                         r.header["content-type"]};
             }
+            return Common::WebResult{Common::WebResult::Code::Success, ""};
         },
         cpr::Url{url}, cpr::Body{data}, header);
 }
@@ -87,13 +97,13 @@ std::future<T> GetJson(std::function<T(const std::string&)> func, const std::str
                        const std::string& token) {
     if (url.empty()) {
         LOG_ERROR(WebService, "URL is invalid");
-        return std::async(std::launch::async, [func{std::move(func)}]() { return func(""); });
+        return std::async(std::launch::deferred, [func{std::move(func)}]() { return func(""); });
     }
 
     const bool are_credentials_provided{!token.empty() && !username.empty()};
     if (!allow_anonymous && !are_credentials_provided) {
         LOG_ERROR(WebService, "Credentials must be provided for authenticated requests");
-        return std::async(std::launch::async, [func{std::move(func)}]() { return func(""); });
+        return std::async(std::launch::deferred, [func{std::move(func)}]() { return func(""); });
     }
 
     Win32WSAStartup();
@@ -115,16 +125,17 @@ std::future<T> GetJson(std::function<T(const std::string&)> func, const std::str
     return cpr::GetCallback(
         [func{std::move(func)}](cpr::Response r) {
             if (r.error) {
-                LOG_ERROR(WebService, "GET returned cpr error: %u:%s",
+                LOG_ERROR(WebService, "GET to %s returned cpr error: %u:%s", r.url.c_str(),
                           static_cast<u32>(r.error.code), r.error.message.c_str());
                 return func("");
             }
             if (r.status_code >= 400) {
-                LOG_ERROR(WebService, "GET returned error code: %u", r.status_code);
+                LOG_ERROR(WebService, "GET to %s returned error code: %u", r.url.c_str(),
+                          r.status_code);
                 return func("");
             }
             if (r.header["content-type"].find("application/json") == std::string::npos) {
-                LOG_ERROR(WebService, "GET returned wrong content: %s",
+                LOG_ERROR(WebService, "GET to %s returned wrong content: %s", r.url.c_str(),
                           r.header["content-type"].c_str());
                 return func("");
             }
@@ -136,5 +147,52 @@ std::future<T> GetJson(std::function<T(const std::string&)> func, const std::str
 template std::future<bool> GetJson(std::function<bool(const std::string&)> func,
                                    const std::string& url, bool allow_anonymous,
                                    const std::string& username, const std::string& token);
+template std::future<AnnounceMultiplayerRoom::RoomList> GetJson(
+    std::function<AnnounceMultiplayerRoom::RoomList(const std::string&)> func,
+    const std::string& url, bool allow_anonymous, const std::string& username,
+    const std::string& token);
+
+void DeleteJson(const std::string& url, const std::string& data, const std::string& username,
+                const std::string& token) {
+    if (url.empty()) {
+        LOG_ERROR(WebService, "URL is invalid");
+        return;
+    }
+
+    if (token.empty() || username.empty()) {
+        LOG_ERROR(WebService, "Credentials must be provided for authenticated requests");
+        return;
+    }
+
+    Win32WSAStartup();
+
+    // Built request header
+    cpr::Header header = {{"Content-Type", "application/json"},
+                          {"x-username", username.c_str()},
+                          {"x-token", token.c_str()},
+                          {"api-version", API_VERSION}};
+
+    // Delete JSON asynchronously
+    static std::future<void> future;
+    future = cpr::DeleteCallback(
+        [](cpr::Response r) {
+            if (r.error) {
+                LOG_ERROR(WebService, "Delete to %s returned cpr error: %u:%s", r.url.c_str(),
+                          static_cast<u32>(r.error.code), r.error.message.c_str());
+                return;
+            }
+            if (r.status_code >= 400) {
+                LOG_ERROR(WebService, "Delete to %s returned error status code: %u", r.url.c_str(),
+                          r.status_code);
+                return;
+            }
+            if (r.header["content-type"].find("application/json") == std::string::npos) {
+                LOG_ERROR(WebService, "Delete to %s returned wrong content: %s", r.url.c_str(),
+                          r.header["content-type"].c_str());
+                return;
+            }
+        },
+        cpr::Url{url}, cpr::Body{data}, header);
+}
 
 } // namespace WebService
