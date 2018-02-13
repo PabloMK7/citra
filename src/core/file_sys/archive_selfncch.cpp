@@ -56,6 +56,17 @@ public:
         return ERROR_UNSUPPORTED_OPEN_FLAGS;
     }
 
+    u64 GetReadDelayNs(size_t length) const {
+        // The delay was measured on O3DS and O2DS with
+        // https://gist.github.com/B3n30/ac40eac20603f519ff106107f4ac9182
+        // from the results the average of each length was taken.
+        static constexpr u64 slope(94);
+        static constexpr u64 offset(582778);
+        static constexpr u64 minimum(663124);
+        u64 IPCDelayNanoseconds = std::max<u64>(static_cast<u64>(length) * slope + offset, minimum);
+        return IPCDelayNanoseconds;
+    }
+
     u64 GetSize() const override {
         return data->size();
     }

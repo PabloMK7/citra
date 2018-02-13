@@ -107,6 +107,17 @@ ResultVal<size_t> IVFCFile::Write(const u64 offset, const size_t length, const b
     return MakeResult<size_t>(0);
 }
 
+u64 IVFCFile::GetReadDelayNs(size_t length) const {
+    // The delay was measured on O3DS and O2DS with
+    // https://gist.github.com/B3n30/ac40eac20603f519ff106107f4ac9182
+    // from the results the average of each length was taken.
+    static constexpr u64 slope(94);
+    static constexpr u64 offset(582778);
+    static constexpr u64 minimum(663124);
+    u64 IPCDelayNanoseconds = std::max<u64>(static_cast<u64>(length) * slope + offset, minimum);
+    return IPCDelayNanoseconds;
+}
+
 u64 IVFCFile::GetSize() const {
     return data_size;
 }

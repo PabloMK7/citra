@@ -31,6 +31,7 @@
 #include "core/hle/ipc_helpers.h"
 #include "core/hle/kernel/client_port.h"
 #include "core/hle/kernel/client_session.h"
+#include "core/hle/kernel/event.h"
 #include "core/hle/kernel/handle_table.h"
 #include "core/hle/kernel/server_session.h"
 #include "core/hle/result.h"
@@ -121,6 +122,13 @@ void File::Read(Kernel::HLERequestContext& ctx) {
         rb.Push<u32>(*read);
     }
     rb.PushMappedBuffer(buffer);
+
+    u64 read_timeout_ns = backend->GetReadDelayNs(length);
+    ctx.SleepClientThread(Kernel::GetCurrentThread(), "file::read", read_timeout_ns,
+                          [](Kernel::SharedPtr<Kernel::Thread> thread,
+                             Kernel::HLERequestContext& ctx, ThreadWakeupReason reason) {
+                              // Nothing to do here
+                          });
 }
 
 void File::Write(Kernel::HLERequestContext& ctx) {

@@ -54,6 +54,7 @@ public:
 
     ResultVal<size_t> Read(u64 offset, size_t length, u8* buffer) const override;
     ResultVal<size_t> Write(u64 offset, size_t length, bool flush, const u8* buffer) override;
+    u64 GetReadDelayNs(size_t length) const override;
     u64 GetSize() const override;
     bool SetSize(u64 size) const override;
     bool Close() const override {
