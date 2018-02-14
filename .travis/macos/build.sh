@@ -2,7 +2,7 @@
 
 set -o pipefail
 
-export MACOSX_DEPLOYMENT_TARGET=10.9
+export MACOSX_DEPLOYMENT_TARGET=10.12
 export Qt5_DIR=$(brew --prefix)/opt/qt5
 
 mkdir build && cd build

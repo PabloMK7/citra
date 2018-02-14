@@ -1,5 +1,5 @@
-# CMake 3.6 required for FindBoost to define IMPORTED libs properly on unknown Boost versions
-cmake_minimum_required(VERSION 3.6)
+# CMake 3.8 required for 17 to be a valid value for CXX_STANDARD
+cmake_minimum_required(VERSION 3.8)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules")
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/externals/cmake-modules")
 include(DownloadExternals)
@@ -89,7 +89,7 @@ message(STATUS "Target architecture: ${ARCHITECTURE}")
 # Configure compilation flags
 # ===========================
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if (NOT MSVC)
@@ -129,9 +129,10 @@ else()
     # /permissive- - enables stricter C++ standards conformance checks
     set(CMAKE_C_FLAGS   "/W3 /MP /Zi /Zo /permissive-" CACHE STRING "" FORCE)
     # /EHsc - C++-only exception handling semantics
+    # /std:c++latest - Latest available C++ standard
     # /Zc:throwingNew - let codegen assume `operator new` will never return null
     # /Zc:inline - let codegen omit inline functions in object files
-    set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} /EHsc /Zc:throwingNew,inline" CACHE STRING "" FORCE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} /EHsc /std:c++latest /Zc:throwingNew,inline" CACHE STRING "" FORCE)
 
     # /MDd - Multi-threaded Debug Runtime DLL
     set(CMAKE_C_FLAGS_DEBUG   "/Od /MDd" CACHE STRING "" FORCE)

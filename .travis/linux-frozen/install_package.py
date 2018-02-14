@@ -35,4 +35,4 @@ def get_package(pkg, distro):
 for i in xrange(1, len(sys.argv), 3):
     get_package([sys.argv[i], sys.argv[i + 1]], sys.argv[i + 2])
 
-subprocess.check_call(['apt-get', 'install', '-y'] + deb_file_list)
+subprocess.check_call(['apt-get', 'install', '-y', '--force-yes'] + deb_file_list)

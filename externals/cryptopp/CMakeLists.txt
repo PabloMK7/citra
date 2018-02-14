@@ -157,10 +157,17 @@ set(cryptopp_SOURCES
         cryptopp/queue.cpp
         cryptopp/randpool.cpp
         cryptopp/rdtables.cpp
+        cryptopp/rijndael-simd.cpp
         cryptopp/rijndael.cpp
         cryptopp/rng.cpp
+        cryptopp/sha-simd.cpp
         cryptopp/sha.cpp
+        cryptopp/sse-simd.cpp
         )
+
+if (MINGW OR WIN32)
+    list(APPEND cryptopp_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/cryptopp/winpipes.cpp)
+endif ()
 
 if(MSVC AND NOT CRYPTOPP_DISABLE_ASM)
     if(${CMAKE_GENERATOR} MATCHES ".*ARM")
@@ -178,6 +185,16 @@ if(MSVC AND NOT CRYPTOPP_DISABLE_ASM)
         set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/cryptopp/x64masm.asm PROPERTIES COMPILE_FLAGS "/D_M_X64")
         # set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/cryptopp/rdrand.asm PROPERTIES COMPILE_FLAGS "/D_M_X64")
         enable_language(ASM_MASM)
+    endif()
+endif()
+
+if ((CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU") AND NOT CRYPTOPP_DISABLE_ASM)
+    if(${CMAKE_GENERATOR} MATCHES ".*ARM")
+        message(STATUS "Disabling ASM because ARM is specified as target platform.")
+    else()
+        set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/cryptopp/rijndael-simd.cpp PROPERTIES COMPILE_FLAGS "-msse4.1 -maes")
+        set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/cryptopp/sha-simd.cpp PROPERTIES COMPILE_FLAGS "-msse4.2 -msha")
+        set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/cryptopp/sse-simd.cpp PROPERTIES COMPILE_FLAGS "-msse2")
     endif()
 endif()
 
