@@ -52,7 +52,6 @@ void HLERequestContext::ClearIncomingObjects() {
 }
 
 const std::vector<u8>& HLERequestContext::GetStaticBuffer(u8 buffer_id) const {
-    ASSERT_MSG(!static_buffers[buffer_id].empty(), "Empty static buffer!");
     return static_buffers[buffer_id];
 }
 
