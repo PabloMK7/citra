@@ -96,8 +96,9 @@ void GMainWindow::ShowCallouts() {
 }
 
 GMainWindow::GMainWindow() : config(new Config()), emu_thread(nullptr) {
-    // register size_t to use in slots and signals
+    // register types to use in slots and signals
     qRegisterMetaType<size_t>("size_t");
+    qRegisterMetaType<Service::AM::InstallStatus>("Service::AM::InstallStatus");
 
     LoadTranslation();
 
@@ -382,6 +383,8 @@ void GMainWindow::ConnectWidgetEvents() {
     connect(&status_bar_update_timer, &QTimer::timeout, this, &GMainWindow::UpdateStatusBar);
 
     connect(this, &GMainWindow::UpdateProgress, this, &GMainWindow::OnUpdateProgress);
+    connect(this, &GMainWindow::CIAInstallReport, this, &GMainWindow::OnCIAInstallReport);
+    connect(this, &GMainWindow::CIAInstallFinished, this, &GMainWindow::OnCIAInstallFinished);
 }
 
 void GMainWindow::ConnectMenuEvents() {
@@ -791,24 +794,29 @@ void GMainWindow::OnMenuSelectGameListRoot() {
 }
 
 void GMainWindow::OnMenuInstallCIA() {
-    QString filepath = QFileDialog::getOpenFileName(
-        this, tr("Load File"), UISettings::values.roms_path,
+    QStringList filepaths = QFileDialog::getOpenFileNames(
+        this, tr("Load Files"), UISettings::values.roms_path,
         tr("3DS Installation File (*.CIA*)") + ";;" + tr("All Files (*.*)"));
-    if (filepath.isEmpty())
+    if (filepaths.isEmpty())
         return;
 
     ui.action_Install_CIA->setEnabled(false);
     progress_bar->show();
-    watcher = new QFutureWatcher<Service::AM::InstallStatus>;
-    QFuture<Service::AM::InstallStatus> f = QtConcurrent::run([&, filepath] {
-        const auto cia_progress = [&](size_t written, size_t total) {
-            emit UpdateProgress(written, total);
-        };
-        return Service::AM::InstallCIA(filepath.toStdString(), cia_progress);
+
+    QtConcurrent::run([&, filepaths] {
+        QString current_path;
+        Service::AM::InstallStatus status;
+        for (int current_index = 0; current_index < filepaths.size(); current_index++) {
+            const auto cia_progress = [&](size_t written, size_t total) {
+                emit UpdateProgress(written, total);
+            };
+            current_path = filepaths.at(current_index);
+            status = Service::AM::InstallCIA(current_path.toStdString(), cia_progress);
+            emit CIAInstallReport(status, current_path);
+        }
+        emit CIAInstallFinished();
+        return;
     });
-    connect(watcher, &QFutureWatcher<Service::AM::InstallStatus>::finished, this,
-            &GMainWindow::OnCIAInstallFinished);
-    watcher->setFuture(f);
 }
 
 void GMainWindow::OnUpdateProgress(size_t written, size_t total) {
@@ -816,32 +824,37 @@ void GMainWindow::OnUpdateProgress(size_t written, size_t total) {
     progress_bar->setValue(written);
 }
 
-void GMainWindow::OnCIAInstallFinished() {
-    progress_bar->hide();
-    progress_bar->setValue(0);
-    switch (watcher->future()) {
+void GMainWindow::OnCIAInstallReport(Service::AM::InstallStatus status, QString filepath) {
+    QString filename = QFileInfo(filepath).fileName();
+    switch (status) {
     case Service::AM::InstallStatus::Success:
-        this->statusBar()->showMessage(tr("The file has been installed successfully."));
+        this->statusBar()->showMessage(tr("%1 has been installed successfully.").arg(filename));
         break;
     case Service::AM::InstallStatus::ErrorFailedToOpenFile:
         QMessageBox::critical(this, tr("Unable to open File"),
-                              tr("Could not open the selected file"));
+                              tr("Could not open %1").arg(filename));
         break;
     case Service::AM::InstallStatus::ErrorAborted:
         QMessageBox::critical(
             this, tr("Installation aborted"),
-            tr("The installation was aborted. Please see the log for more details"));
+            tr("The installation of %1 was aborted. Please see the log for more details")
+                .arg(filename));
         break;
     case Service::AM::InstallStatus::ErrorInvalid:
-        QMessageBox::critical(this, tr("Invalid File"), tr("The selected file is not a valid CIA"));
+        QMessageBox::critical(this, tr("Invalid File"), tr("%1 is not a valid CIA").arg(filename));
         break;
     case Service::AM::InstallStatus::ErrorEncrypted:
         QMessageBox::critical(this, tr("Encrypted File"),
-                              tr("The file that you are trying to install must be decrypted "
-                                 "before being used with Citra. A real 3DS is required."));
+                              tr("%1 must be decrypted "
+                                 "before being used with Citra. A real 3DS is required.")
+                                  .arg(filename));
         break;
     }
-    delete watcher;
+}
+
+void GMainWindow::OnCIAInstallFinished() {
+    progress_bar->hide();
+    progress_bar->setValue(0);
     ui.action_Install_CIA->setEnabled(true);
 }
 
@@ -897,7 +910,8 @@ void GMainWindow::OnMenuReportCompatibility() {
         QMessageBox::critical(
             this, tr("Missing Citra Account"),
             tr("In order to submit a game compatibility test case, you must link your Citra "
-               "account.<br><br/>To link your Citra account, go to Emulation &gt; Configuration &gt; "
+               "account.<br><br/>To link your Citra account, go to Emulation &gt; Configuration "
+               "&gt; "
                "Web."));
     }
 }
@@ -1045,11 +1059,10 @@ void GMainWindow::UpdateStatusBar() {
 
     if (Settings::values.use_frame_limit) {
         emu_speed_label->setText(tr("Speed: %1% / %2%")
-                                    .arg(results.emulation_speed * 100.0, 0, 'f', 0)
-                                    .arg(Settings::values.frame_limit));
+                                     .arg(results.emulation_speed * 100.0, 0, 'f', 0)
+                                     .arg(Settings::values.frame_limit));
     } else {
-        emu_speed_label->setText(tr("Speed: %1%")
-                                    .arg(results.emulation_speed * 100.0, 0, 'f', 0));
+        emu_speed_label->setText(tr("Speed: %1%").arg(results.emulation_speed * 100.0, 0, 'f', 0));
     }
     game_fps_label->setText(tr("Game: %1 FPS").arg(results.game_fps, 0, 'f', 0));
     emu_frametime_label->setText(tr("Frame: %1 ms").arg(results.frametime * 1000.0, 0, 'f', 2));
