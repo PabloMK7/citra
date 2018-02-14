@@ -990,6 +990,60 @@ static void GetNumSeeds(Service::Interface* self) {
     rb.Push<u32>(0);
 }
 
+/**
+ * FS_User::SetSaveDataSecureValue service function.
+ *  Inputs:
+ *      0 : 0x08650140
+ *      1-2 : Secure Value
+ *      3 : Secure Value Slot
+ *      4 : Title Id
+ *      5 : Title Variation
+ *  Outputs:
+ *      0 : 0x08650140
+ *      1 : Result of function, 0 on success, otherwise error code
+ */
+static void SetSaveDataSecureValue(Service::Interface* self) {
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x865, 5, 0);
+
+    // TODO: Generate and Save the Secure Value
+
+    LOG_WARNING(Service_FS, "(STUBBED) called");
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+
+    rb.Push(RESULT_SUCCESS);
+}
+
+/**
+ * FS_User::GetSaveDataSecureValue service function.
+ *  Inputs:
+ *      0 : 0x086600C0
+ *      1 : Secure Value Slot
+ *      2 : Title Id
+ *      3 : Title Variation
+ *  Outputs:
+ *      0 : 0x086600C0
+ *      1 : Result of function, 0 on success, otherwise error code
+ *      2 : If Secure Value doesn't exist, 0, if it exists, 1
+ *      3-4 : Secure Value
+ */
+static void GetSaveDataSecureValue(Service::Interface* self) {
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x866, 3, 0);
+
+    u32 secure_value_slot = rp.Pop<u32>();
+
+    LOG_WARNING(Service_FS, "(STUBBED) called Secure Value Slot=%08X", secure_value_slot);
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(4, 0);
+
+    rb.Push(RESULT_SUCCESS);
+
+    // TODO: Implement Secure Value Lookup & Generation
+
+    rb.Push<u8>(0);
+    rb.Push<u64>(0);
+}
+
 const Interface::FunctionInfo FunctionTable[] = {
     {0x000100C6, nullptr, "Dummy1"},
     {0x040100C4, nullptr, "Control"},
@@ -1093,8 +1147,8 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x08620040, SetPriority, "SetPriority"},
     {0x08630000, GetPriority, "GetPriority"},
     {0x08640000, nullptr, "GetNandInfo"},
-    {0x08650140, nullptr, "SetSaveDataSecureValue"},
-    {0x086600C0, nullptr, "GetSaveDataSecureValue"},
+    {0x08650140, SetSaveDataSecureValue, "SetSaveDataSecureValue"},
+    {0x086600C0, GetSaveDataSecureValue, "GetSaveDataSecureValue"},
     {0x086700C4, nullptr, "ControlSecureSave"},
     {0x08680000, nullptr, "GetMediaType"},
     {0x08690000, nullptr, "GetNandEraseCount"},
