@@ -87,7 +87,7 @@ private:
     void OpenSubFile(Kernel::HLERequestContext& ctx);
 };
 
-class Directory final : public Kernel::SessionRequestHandler {
+class Directory final : public ServiceFramework<Directory> {
 public:
     Directory(std::unique_ptr<FileSys::DirectoryBackend>&& backend, const FileSys::Path& path);
     ~Directory();
@@ -100,11 +100,8 @@ public:
     std::unique_ptr<FileSys::DirectoryBackend> backend; ///< File backend interface
 
 protected:
-    void HandleSyncRequest(Kernel::SharedPtr<Kernel::ServerSession> server_session) override;
-
-    std::unique_ptr<SessionDataBase> MakeSessionData() const override {
-        return nullptr;
-    }
+    void Read(Kernel::HLERequestContext& ctx);
+    void Close(Kernel::HLERequestContext& ctx);
 };
 
 /**

@@ -303,42 +303,41 @@ Kernel::SharedPtr<Kernel::ClientSession> File::Connect() {
 
 Directory::Directory(std::unique_ptr<FileSys::DirectoryBackend>&& backend,
                      const FileSys::Path& path)
-    : path(path), backend(std::move(backend)) {}
+    : ServiceFramework("", 1), path(path), backend(std::move(backend)) {
+    static const FunctionInfo functions[] = {
+        // clang-format off
+        {0x08010042, &Directory::Read, "Read"},
+        {0x08020000, &Directory::Close, "Close"},
+        // clang-format on
+    };
+    RegisterHandlers(functions);
+}
 
 Directory::~Directory() {}
 
-void Directory::HandleSyncRequest(Kernel::SharedPtr<Kernel::ServerSession> server_session) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-    DirectoryCommand cmd = static_cast<DirectoryCommand>(cmd_buff[0]);
-    switch (cmd) {
-    // Read from directory...
-    case DirectoryCommand::Read: {
-        u32 count = cmd_buff[1];
-        u32 address = cmd_buff[3];
-        std::vector<FileSys::Entry> entries(count);
-        LOG_TRACE(Service_FS, "Read %s: count=%d", GetName().c_str(), count);
+void Directory::Read(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x0801, 1, 2);
+    u32 count = rp.Pop<u32>();
+    auto& buffer = rp.PopMappedBuffer();
+    std::vector<FileSys::Entry> entries(count);
+    LOG_TRACE(Service_FS, "Read %s: count=%u", GetName().c_str(), count);
+    // Number of entries actually read
+    u32 read = backend->Read(static_cast<u32>(entries.size()), entries.data());
+    buffer.Write(entries.data(), 0, read * sizeof(FileSys::Entry));
 
-        // Number of entries actually read
-        u32 read = backend->Read(static_cast<u32>(entries.size()), entries.data());
-        cmd_buff[2] = read;
-        Memory::WriteBlock(address, entries.data(), read * sizeof(FileSys::Entry));
-        break;
-    }
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
+    rb.Push(RESULT_SUCCESS);
+    rb.Push(read);
+    rb.PushMappedBuffer(buffer);
+}
 
-    case DirectoryCommand::Close: {
-        LOG_TRACE(Service_FS, "Close %s", GetName().c_str());
-        backend->Close();
-        break;
-    }
+void Directory::Close(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x0802, 0, 0);
+    LOG_TRACE(Service_FS, "Close %s", GetName().c_str());
+    backend->Close();
 
-    // Unknown command...
-    default:
-        LOG_ERROR(Service_FS, "Unknown command=0x%08X!", static_cast<u32>(cmd));
-        ResultCode error = UnimplementedFunction(ErrorModule::FS);
-        cmd_buff[1] = error.raw; // TODO(Link Mauve): use the correct error code for that.
-        return;
-    }
-    cmd_buff[1] = RESULT_SUCCESS.raw; // No error
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RESULT_SUCCESS);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
