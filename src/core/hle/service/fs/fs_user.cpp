@@ -693,7 +693,7 @@ void FS_USER::GetSaveDataSecureValue(Kernel::HLERequestContext& ctx) {
     rb.Push<u64>(0);      // the secure value
 }
 
-FS_USER::FS_USER() : ServiceFramework("fs:USER", 10 /*?*/) {
+FS_USER::FS_USER() : ServiceFramework("fs:USER", 30) {
     static const FunctionInfo functions[] = {
         {0x000100C6, nullptr, "Dummy1"},
         {0x040100C4, nullptr, "Control"},
