@@ -128,8 +128,6 @@ public:
     template <typename... O>
     void PushMoveObjects(Kernel::SharedPtr<O>... pointers);
 
-    void PushCurrentPIDHandle();
-
     [[deprecated]] void PushStaticBuffer(VAddr buffer_vaddr, size_t size, u8 buffer_id);
     void PushStaticBuffer(const std::vector<u8>& buffer, u8 buffer_id);
 
@@ -206,11 +204,6 @@ inline void RequestBuilder::PushCopyObjects(Kernel::SharedPtr<O>... pointers) {
 template <typename... O>
 inline void RequestBuilder::PushMoveObjects(Kernel::SharedPtr<O>... pointers) {
     PushMoveHandles(context->AddOutgoingHandle(std::move(pointers))...);
-}
-
-inline void RequestBuilder::PushCurrentPIDHandle() {
-    Push(CallingPidDesc());
-    Push(u32(0));
 }
 
 inline void RequestBuilder::PushStaticBuffer(VAddr buffer_vaddr, size_t size, u8 buffer_id) {
@@ -337,6 +330,8 @@ public:
     void PopObjects(Kernel::SharedPtr<T>&... pointers) {
         std::tie(pointers...) = PopObjects<T...>();
     }
+
+    u32 PopPID();
 
     /**
      * @brief Pops the static buffer vaddr
@@ -505,6 +500,11 @@ template <typename... T>
 inline std::tuple<Kernel::SharedPtr<T>...> RequestParser::PopObjects() {
     return detail::PopObjectsHelper<T...>(PopGenericObjects<sizeof...(T)>(),
                                           std::index_sequence_for<T...>{});
+}
+
+inline u32 RequestParser::PopPID() {
+    ASSERT(Pop<u32>() == static_cast<u32>(DescriptorType::CallingPid));
+    return Pop<u32>();
 }
 
 inline VAddr RequestParser::PopStaticBuffer(size_t* data_size) {
