@@ -534,8 +534,9 @@ ResultVal<FileSys::ArchiveFormatInfo> GetArchiveFormatInfo(ArchiveIdCode id_code
     return archive->second->GetFormatInfo(archive_path);
 }
 
-ResultCode CreateExtSaveData(MediaType media_type, u32 high, u32 low, VAddr icon_buffer,
-                             u32 icon_size, const FileSys::ArchiveFormatInfo& format_info) {
+ResultCode CreateExtSaveData(MediaType media_type, u32 high, u32 low,
+                             const std::vector<u8>& smdh_icon,
+                             const FileSys::ArchiveFormatInfo& format_info) {
     // Construct the binary path to the archive first
     FileSys::Path path =
         FileSys::ConstructExtDataBinaryPath(static_cast<u32>(media_type), high, low);
@@ -553,11 +554,6 @@ ResultCode CreateExtSaveData(MediaType media_type, u32 high, u32 low, VAddr icon
     if (result.IsError())
         return result;
 
-    if (!Memory::IsValidVirtualAddress(icon_buffer))
-        return ResultCode(-1); // TODO(Subv): Find the right error code
-
-    std::vector<u8> smdh_icon(icon_size);
-    Memory::ReadBlock(icon_buffer, smdh_icon.data(), smdh_icon.size());
     ext_savedata->WriteIcon(path, smdh_icon.data(), smdh_icon.size());
     return RESULT_SUCCESS;
 }
@@ -690,9 +686,6 @@ void UnregisterArchiveTypes() {
 /// Initialize archives
 void ArchiveInit() {
     next_handle = 1;
-
-    AddService(new FS::Interface);
-
     RegisterArchiveTypes();
 }
 

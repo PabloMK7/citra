@@ -12,23 +12,22 @@
 
 namespace FileSys {
 
-Path::Path(LowPathType type, u32 size, u32 pointer) : type(type) {
+Path::Path(LowPathType type, const std::vector<u8>& data) : type(type) {
     switch (type) {
     case LowPathType::Binary: {
-        binary.resize(size);
-        Memory::ReadBlock(pointer, binary.data(), binary.size());
+        binary = data;
         break;
     }
 
     case LowPathType::Char: {
-        string.resize(size - 1); // Data is always null-terminated.
-        Memory::ReadBlock(pointer, &string[0], string.size());
+        string.resize(data.size() - 1); // Data is always null-terminated.
+        std::memcpy(string.data(), data.data(), string.size());
         break;
     }
 
     case LowPathType::Wchar: {
-        u16str.resize(size / 2 - 1); // Data is always null-terminated.
-        Memory::ReadBlock(pointer, &u16str[0], u16str.size() * sizeof(char16_t));
+        u16str.resize(data.size() / 2 - 1); // Data is always null-terminated.
+        std::memcpy(u16str.data(), data.data(), u16str.size() * sizeof(char16_t));
         break;
     }
 

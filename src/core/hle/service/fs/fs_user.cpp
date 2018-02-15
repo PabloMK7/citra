@@ -33,48 +33,26 @@ using Kernel::SharedPtr;
 namespace Service {
 namespace FS {
 
-static u32 priority = -1; ///< For SetPriority and GetPriority service functions
+void FS_USER::Initialize(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x0801, 0, 2);
+    rp.PopPID();
 
-static ArchiveHandle MakeArchiveHandle(u32 low_word, u32 high_word) {
-    return (u64)low_word | ((u64)high_word << 32);
+    IPC::RequestBuilder rb = rp.MakeBuilder(0, 1);
+    rb.Push(RESULT_SUCCESS);
 }
 
-static void Initialize(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-
-    // TODO(Link Mauve): check the behavior when cmd_buff[1] isn't 32, as per
-    // http://3dbrew.org/wiki/FS:Initialize#Request
-    cmd_buff[1] = RESULT_SUCCESS.raw;
-}
-
-/**
- * FS_User::OpenFile service function
- *  Inputs:
- *      1 : Transaction
- *      2 : Archive handle lower word
- *      3 : Archive handle upper word
- *      4 : Low path type
- *      5 : Low path size
- *      6 : Open flags
- *      7 : Attributes
- *      8 : (LowPathSize << 14) | 2
- *      9 : Low path data pointer
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- *      3 : File handle
- */
-static void OpenFile(Service::Interface* self) {
-    // The helper should be passed by argument to the function
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), {0x080201C2});
-    rp.Pop<u32>(); // Always 0 ?
+void FS_USER::OpenFile(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x0802, 7, 2);
+    rp.Skip(1, false); // Transaction.
 
     ArchiveHandle archive_handle = rp.Pop<u64>();
     auto filename_type = rp.PopEnum<FileSys::LowPathType>();
     u32 filename_size = rp.Pop<u32>();
     FileSys::Mode mode{rp.Pop<u32>()};
     u32 attributes = rp.Pop<u32>(); // TODO(Link Mauve): do something with those attributes.
-    VAddr filename_ptr = rp.PopStaticBuffer(nullptr);
-    FileSys::Path file_path(filename_type, filename_size, filename_ptr);
+    std::vector<u8> filename = rp.PopStaticBuffer();
+    ASSERT(filename.size() == filename_size);
+    FileSys::Path file_path(filename_type, filename);
 
     LOG_DEBUG(Service_FS, "path=%s, mode=%u attrs=%u", file_path.DebugStr().c_str(), mode.hex,
               attributes);
@@ -85,34 +63,15 @@ static void OpenFile(Service::Interface* self) {
     rb.Push(file_res.Code());
     if (file_res.Succeeded()) {
         std::shared_ptr<File> file = *file_res;
-        rb.PushMoveHandles(Kernel::g_handle_table.Create(file->Connect()).Unwrap());
+        rb.PushMoveObjects(file->Connect());
     } else {
-        rb.PushMoveHandles(0);
+        rb.PushMoveObjects<Kernel::Object>(nullptr);
         LOG_ERROR(Service_FS, "failed to get a handle for file %s", file_path.DebugStr().c_str());
     }
 }
 
-/**
- * FS_User::OpenFileDirectly service function
- *  Inputs:
- *      1 : Transaction
- *      2 : Archive ID
- *      3 : Archive low path type
- *      4 : Archive low path size
- *      5 : File low path type
- *      6 : File low path size
- *      7 : Flags
- *      8 : Attributes
- *      9 : (ArchiveLowPathSize << 14) | 0x802
- *      10 : Archive low path
- *      11 : (FileLowPathSize << 14) | 2
- *      12 : File low path
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- *      3 : File handle
- */
-static void OpenFileDirectly(Service::Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x803, 8, 4);
+void FS_USER::OpenFileDirectly(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x803, 8, 4);
     rp.Skip(1, false); // Transaction
 
     auto archive_id = rp.PopEnum<FS::ArchiveIdCode>();
@@ -122,10 +81,12 @@ static void OpenFileDirectly(Service::Interface* self) {
     u32 filename_size = rp.Pop<u32>();
     FileSys::Mode mode{rp.Pop<u32>()};
     u32 attributes = rp.Pop<u32>(); // TODO(Link Mauve): do something with those attributes.
-    u32 archivename_ptr = rp.PopStaticBuffer(nullptr);
-    u32 filename_ptr = rp.PopStaticBuffer(nullptr);
-    FileSys::Path archive_path(archivename_type, archivename_size, archivename_ptr);
-    FileSys::Path file_path(filename_type, filename_size, filename_ptr);
+    std::vector<u8> archivename = rp.PopStaticBuffer();
+    std::vector<u8> filename = rp.PopStaticBuffer();
+    ASSERT(archivename.size() == archivename_size);
+    ASSERT(filename.size() == filename_size);
+    FileSys::Path archive_path(archivename_type, archivename);
+    FileSys::Path file_path(filename_type, filename);
 
     LOG_DEBUG(Service_FS, "archive_id=0x%08X archive_path=%s file_path=%s, mode=%u attributes=%u",
               static_cast<u32>(archive_id), archive_path.DebugStr().c_str(),
@@ -133,7 +94,7 @@ static void OpenFileDirectly(Service::Interface* self) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
 
-    ResultVal<ArchiveHandle> archive_handle = OpenArchive(archive_id, archive_path);
+    ResultVal<ArchiveHandle> archive_handle = Service::FS::OpenArchive(archive_id, archive_path);
     if (archive_handle.Failed()) {
         LOG_ERROR(Service_FS,
                   "Failed to get a handle for archive archive_id=0x%08X archive_path=%s",
@@ -142,41 +103,31 @@ static void OpenFileDirectly(Service::Interface* self) {
         rb.PushMoveHandles(0);
         return;
     }
-    SCOPE_EXIT({ CloseArchive(*archive_handle); });
+    SCOPE_EXIT({ Service::FS::CloseArchive(*archive_handle); });
 
     ResultVal<std::shared_ptr<File>> file_res =
         OpenFileFromArchive(*archive_handle, file_path, mode);
     rb.Push(file_res.Code());
     if (file_res.Succeeded()) {
         std::shared_ptr<File> file = *file_res;
-        rb.PushMoveHandles(Kernel::g_handle_table.Create(file->Connect()).Unwrap());
+        rb.PushMoveObjects(file->Connect());
     } else {
-        rb.PushMoveHandles(0);
+        rb.PushMoveObjects<Kernel::Object>(nullptr);
         LOG_ERROR(Service_FS, "failed to get a handle for file %s mode=%u attributes=%u",
                   file_path.DebugStr().c_str(), mode.hex, attributes);
     }
 }
 
-/*
- * FS_User::DeleteFile service function
- *  Inputs:
- *      2 : Archive handle lower word
- *      3 : Archive handle upper word
- *      4 : File path string type
- *      5 : File path string size
- *      7 : File path string data
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- */
-static void DeleteFile(Service::Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x804, 5, 2);
+void FS_USER::DeleteFile(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x804, 5, 2);
     rp.Skip(1, false); // TransactionId
     ArchiveHandle archive_handle = rp.PopRaw<ArchiveHandle>();
     auto filename_type = rp.PopEnum<FileSys::LowPathType>();
     u32 filename_size = rp.Pop<u32>();
-    u32 filename_ptr = rp.PopStaticBuffer(nullptr);
+    std::vector<u8> filename = rp.PopStaticBuffer();
+    ASSERT(filename.size() == filename_size);
 
-    FileSys::Path file_path(filename_type, filename_size, filename_ptr);
+    FileSys::Path file_path(filename_type, filename);
 
     LOG_DEBUG(Service_FS, "type=%u size=%u data=%s", static_cast<u32>(filename_type), filename_size,
               file_path.DebugStr().c_str());
@@ -185,24 +136,8 @@ static void DeleteFile(Service::Interface* self) {
     rb.Push(DeleteFileFromArchive(archive_handle, file_path));
 }
 
-/*
- * FS_User::RenameFile service function
- *  Inputs:
- *      2 : Source archive handle lower word
- *      3 : Source archive handle upper word
- *      4 : Source file path type
- *      5 : Source file path size
- *      6 : Dest archive handle lower word
- *      7 : Dest archive handle upper word
- *      8 : Dest file path type
- *      9 : Dest file path size
- *      11: Source file path string data
- *      13: Dest file path string
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- */
-static void RenameFile(Service::Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x805, 9, 4);
+void FS_USER::RenameFile(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x805, 9, 4);
     rp.Skip(1, false); // TransactionId
 
     ArchiveHandle src_archive_handle = rp.PopRaw<ArchiveHandle>();
@@ -211,11 +146,13 @@ static void RenameFile(Service::Interface* self) {
     ArchiveHandle dest_archive_handle = rp.PopRaw<ArchiveHandle>();
     auto dest_filename_type = rp.PopEnum<FileSys::LowPathType>();
     u32 dest_filename_size = rp.Pop<u32>();
-    u32 src_filename_ptr = rp.PopStaticBuffer(nullptr);
-    u32 dest_filename_ptr = rp.PopStaticBuffer(nullptr);
+    std::vector<u8> src_filename = rp.PopStaticBuffer();
+    std::vector<u8> dest_filename = rp.PopStaticBuffer();
+    ASSERT(src_filename.size() == src_filename_size);
+    ASSERT(dest_filename.size() == dest_filename_size);
 
-    FileSys::Path src_file_path(src_filename_type, src_filename_size, src_filename_ptr);
-    FileSys::Path dest_file_path(dest_filename_type, dest_filename_size, dest_filename_ptr);
+    FileSys::Path src_file_path(src_filename_type, src_filename);
+    FileSys::Path dest_file_path(dest_filename_type, dest_filename);
 
     LOG_DEBUG(Service_FS,
               "src_type=%u src_size=%u src_data=%s dest_type=%u dest_size=%u dest_data=%s",
@@ -228,27 +165,17 @@ static void RenameFile(Service::Interface* self) {
                                       dest_file_path));
 }
 
-/*
- * FS_User::DeleteDirectory service function
- *  Inputs:
- *      2 : Archive handle lower word
- *      3 : Archive handle upper word
- *      4 : Directory path string type
- *      5 : Directory path string size
- *      7 : Directory path string data
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- */
-static void DeleteDirectory(Service::Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x806, 5, 2);
+void FS_USER::DeleteDirectory(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x806, 5, 2);
 
     rp.Skip(1, false); // TransactionId
     ArchiveHandle archive_handle = rp.PopRaw<ArchiveHandle>();
     auto dirname_type = rp.PopEnum<FileSys::LowPathType>();
     u32 dirname_size = rp.Pop<u32>();
-    u32 dirname_ptr = rp.PopStaticBuffer(nullptr);
+    std::vector<u8> dirname = rp.PopStaticBuffer();
+    ASSERT(dirname.size() == dirname_size);
 
-    FileSys::Path dir_path(dirname_type, dirname_size, dirname_ptr);
+    FileSys::Path dir_path(dirname_type, dirname);
 
     LOG_DEBUG(Service_FS, "type=%u size=%u data=%s", static_cast<u32>(dirname_type), dirname_size,
               dir_path.DebugStr().c_str());
@@ -257,29 +184,17 @@ static void DeleteDirectory(Service::Interface* self) {
     rb.Push(DeleteDirectoryFromArchive(archive_handle, dir_path));
 }
 
-/*
- * FS_User::DeleteDirectoryRecursively service function
- *  Inputs:
- *      0 : Command header 0x08070142
- *      1 : Transaction
- *      2 : Archive handle lower word
- *      3 : Archive handle upper word
- *      4 : Directory path string type
- *      5 : Directory path string size
- *      7 : Directory path string data
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- */
-static void DeleteDirectoryRecursively(Service::Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x807, 5, 2);
+void FS_USER::DeleteDirectoryRecursively(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x807, 5, 2);
 
     rp.Skip(1, false); // TransactionId
     ArchiveHandle archive_handle = rp.PopRaw<ArchiveHandle>();
     auto dirname_type = rp.PopEnum<FileSys::LowPathType>();
     u32 dirname_size = rp.Pop<u32>();
-    u32 dirname_ptr = rp.PopStaticBuffer(nullptr);
+    std::vector<u8> dirname = rp.PopStaticBuffer();
+    ASSERT(dirname.size() == dirname_size);
 
-    FileSys::Path dir_path(dirname_type, dirname_size, dirname_ptr);
+    FileSys::Path dir_path(dirname_type, dirname);
 
     LOG_DEBUG(Service_FS, "type=%u size=%u data=%s", static_cast<u32>(dirname_type), dirname_size,
               dir_path.DebugStr().c_str());
@@ -288,22 +203,8 @@ static void DeleteDirectoryRecursively(Service::Interface* self) {
     rb.Push(DeleteDirectoryRecursivelyFromArchive(archive_handle, dir_path));
 }
 
-/*
- * FS_User::CreateFile service function
- *  Inputs:
- *      0 : Command header 0x08080202
- *      2 : Archive handle lower word
- *      3 : Archive handle upper word
- *      4 : File path string type
- *      5 : File path string size
- *      6 : File attributes
- *      7-8 : File size
- *      10: File path string data
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- */
-static void CreateFile(Service::Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x808, 8, 2);
+void FS_USER::CreateFile(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x808, 8, 2);
 
     rp.Skip(1, false); // TransactionId
     ArchiveHandle archive_handle = rp.PopRaw<ArchiveHandle>();
@@ -311,9 +212,10 @@ static void CreateFile(Service::Interface* self) {
     u32 filename_size = rp.Pop<u32>();
     u32 attributes = rp.Pop<u32>();
     u64 file_size = rp.Pop<u64>();
-    u32 filename_ptr = rp.PopStaticBuffer(nullptr);
+    std::vector<u8> filename = rp.PopStaticBuffer();
+    ASSERT(filename.size() == filename_size);
 
-    FileSys::Path file_path(filename_type, filename_size, filename_ptr);
+    FileSys::Path file_path(filename_type, filename);
 
     LOG_DEBUG(Service_FS, "type=%u attributes=%u size=%" PRIx64 " data=%s",
               static_cast<u32>(filename_type), attributes, file_size, file_path.DebugStr().c_str());
@@ -322,622 +224,393 @@ static void CreateFile(Service::Interface* self) {
     rb.Push(CreateFileInArchive(archive_handle, file_path, file_size));
 }
 
-/*
- * FS_User::CreateDirectory service function
- *  Inputs:
- *      2 : Archive handle lower word
- *      3 : Archive handle upper word
- *      4 : Directory path string type
- *      5 : Directory path string size
- *      8 : Directory path string data
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- */
-static void CreateDirectory(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
+void FS_USER::CreateDirectory(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x809, 6, 2);
+    rp.Skip(1, false); // TransactionId
+    ArchiveHandle archive_handle = rp.PopRaw<ArchiveHandle>();
+    auto dirname_type = rp.PopEnum<FileSys::LowPathType>();
+    u32 dirname_size = rp.Pop<u32>();
+    u32 attributes = rp.Pop<u32>();
+    std::vector<u8> dirname = rp.PopStaticBuffer();
+    ASSERT(dirname.size() == dirname_size);
+    FileSys::Path dir_path(dirname_type, dirname);
 
-    ArchiveHandle archive_handle = MakeArchiveHandle(cmd_buff[2], cmd_buff[3]);
-    auto dirname_type = static_cast<FileSys::LowPathType>(cmd_buff[4]);
-    u32 dirname_size = cmd_buff[5];
-    u32 dirname_ptr = cmd_buff[8];
-
-    FileSys::Path dir_path(dirname_type, dirname_size, dirname_ptr);
-
-    LOG_DEBUG(Service_FS, "type=%u size=%d data=%s", static_cast<u32>(dirname_type), dirname_size,
+    LOG_DEBUG(Service_FS, "type=%u size=%u data=%s", static_cast<u32>(dirname_type), dirname_size,
               dir_path.DebugStr().c_str());
 
-    cmd_buff[1] = CreateDirectoryFromArchive(archive_handle, dir_path).raw;
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(CreateDirectoryFromArchive(archive_handle, dir_path));
 }
 
-/*
- * FS_User::RenameDirectory service function
- *  Inputs:
- *      2 : Source archive handle lower word
- *      3 : Source archive handle upper word
- *      4 : Source dir path type
- *      5 : Source dir path size
- *      6 : Dest archive handle lower word
- *      7 : Dest archive handle upper word
- *      8 : Dest dir path type
- *      9 : Dest dir path size
- *      11: Source dir path string data
- *      13: Dest dir path string
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- */
-static void RenameDirectory(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
+void FS_USER::RenameDirectory(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x80A, 9, 4);
+    rp.Skip(1, false); // TransactionId
+    ArchiveHandle src_archive_handle = rp.PopRaw<ArchiveHandle>();
+    auto src_dirname_type = rp.PopEnum<FileSys::LowPathType>();
+    u32 src_dirname_size = rp.Pop<u32>();
+    ArchiveHandle dest_archive_handle = rp.PopRaw<ArchiveHandle>();
+    auto dest_dirname_type = rp.PopEnum<FileSys::LowPathType>();
+    u32 dest_dirname_size = rp.Pop<u32>();
+    std::vector<u8> src_dirname = rp.PopStaticBuffer();
+    std::vector<u8> dest_dirname = rp.PopStaticBuffer();
+    ASSERT(src_dirname.size() == src_dirname_size);
+    ASSERT(dest_dirname.size() == dest_dirname_size);
 
-    ArchiveHandle src_archive_handle = MakeArchiveHandle(cmd_buff[2], cmd_buff[3]);
-    auto src_dirname_type = static_cast<FileSys::LowPathType>(cmd_buff[4]);
-    u32 src_dirname_size = cmd_buff[5];
-    ArchiveHandle dest_archive_handle = MakeArchiveHandle(cmd_buff[6], cmd_buff[7]);
-    auto dest_dirname_type = static_cast<FileSys::LowPathType>(cmd_buff[8]);
-    u32 dest_dirname_size = cmd_buff[9];
-    u32 src_dirname_ptr = cmd_buff[11];
-    u32 dest_dirname_ptr = cmd_buff[13];
-
-    FileSys::Path src_dir_path(src_dirname_type, src_dirname_size, src_dirname_ptr);
-    FileSys::Path dest_dir_path(dest_dirname_type, dest_dirname_size, dest_dirname_ptr);
+    FileSys::Path src_dir_path(src_dirname_type, src_dirname);
+    FileSys::Path dest_dir_path(dest_dirname_type, dest_dirname);
 
     LOG_DEBUG(
         Service_FS, "src_type=%u src_size=%u src_data=%s dest_type=%u dest_size=%u dest_data=%s",
         static_cast<u32>(src_dirname_type), src_dirname_size, src_dir_path.DebugStr().c_str(),
         static_cast<u32>(dest_dirname_type), dest_dirname_size, dest_dir_path.DebugStr().c_str());
 
-    cmd_buff[1] = RenameDirectoryBetweenArchives(src_archive_handle, src_dir_path,
-                                                 dest_archive_handle, dest_dir_path)
-                      .raw;
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RenameDirectoryBetweenArchives(src_archive_handle, src_dir_path, dest_archive_handle,
+                                           dest_dir_path));
 }
 
-/**
- * FS_User::OpenDirectory service function
- *  Inputs:
- *      1 : Archive handle low word
- *      2 : Archive handle high word
- *      3 : Low path type
- *      4 : Low path size
- *      7 : (LowPathSize << 14) | 2
- *      8 : Low path data pointer
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- *      3 : Directory handle
- */
-static void OpenDirectory(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
+void FS_USER::OpenDirectory(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x80B, 4, 2);
+    auto archive_handle = rp.PopRaw<ArchiveHandle>();
+    auto dirname_type = rp.PopEnum<FileSys::LowPathType>();
+    u32 dirname_size = rp.Pop<u32>();
+    std::vector<u8> dirname = rp.PopStaticBuffer();
+    ASSERT(dirname.size() == dirname_size);
 
-    ArchiveHandle archive_handle = MakeArchiveHandle(cmd_buff[1], cmd_buff[2]);
-    auto dirname_type = static_cast<FileSys::LowPathType>(cmd_buff[3]);
-    u32 dirname_size = cmd_buff[4];
-    u32 dirname_ptr = cmd_buff[6];
-
-    FileSys::Path dir_path(dirname_type, dirname_size, dirname_ptr);
+    FileSys::Path dir_path(dirname_type, dirname);
 
     LOG_DEBUG(Service_FS, "type=%u size=%u data=%s", static_cast<u32>(dirname_type), dirname_size,
               dir_path.DebugStr().c_str());
 
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
     ResultVal<std::shared_ptr<Directory>> dir_res =
         OpenDirectoryFromArchive(archive_handle, dir_path);
-    cmd_buff[1] = dir_res.Code().raw;
+    rb.Push(dir_res.Code());
     if (dir_res.Succeeded()) {
         std::shared_ptr<Directory> directory = *dir_res;
         auto sessions = ServerSession::CreateSessionPair(directory->GetName());
         directory->ClientConnected(std::get<SharedPtr<ServerSession>>(sessions));
-
-        cmd_buff[3] =
-            Kernel::g_handle_table.Create(std::get<SharedPtr<ClientSession>>(sessions)).Unwrap();
+        rb.PushMoveObjects(std::get<SharedPtr<ClientSession>>(sessions));
     } else {
-        LOG_ERROR(Service_FS, "failed to get a handle for directory type=%d size=%d data=%s",
-                  dirname_type, dirname_size, dir_path.DebugStr().c_str());
+        LOG_ERROR(Service_FS, "failed to get a handle for directory type=%u size=%u data=%s",
+                  static_cast<u32>(dirname_type), dirname_size, dir_path.DebugStr().c_str());
+        rb.PushMoveObjects<Kernel::Object>(nullptr);
     }
 }
 
-/**
- * FS_User::OpenArchive service function
- *  Inputs:
- *      1 : Archive ID
- *      2 : Archive low path type
- *      3 : Archive low path size
- *      4 : (LowPathSize << 14) | 2
- *      5 : Archive low path
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- *      2 : Archive handle lower word (unused)
- *      3 : Archive handle upper word (same as file handle)
- */
-static void OpenArchive(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-
-    auto archive_id = static_cast<FS::ArchiveIdCode>(cmd_buff[1]);
-    auto archivename_type = static_cast<FileSys::LowPathType>(cmd_buff[2]);
-    u32 archivename_size = cmd_buff[3];
-    u32 archivename_ptr = cmd_buff[5];
-    FileSys::Path archive_path(archivename_type, archivename_size, archivename_ptr);
+void FS_USER::OpenArchive(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x80C, 3, 2);
+    auto archive_id = rp.PopEnum<FS::ArchiveIdCode>();
+    auto archivename_type = rp.PopEnum<FileSys::LowPathType>();
+    u32 archivename_size = rp.Pop<u32>();
+    std::vector<u8> archivename = rp.PopStaticBuffer();
+    ASSERT(archivename.size() == archivename_size);
+    FileSys::Path archive_path(archivename_type, archivename);
 
     LOG_DEBUG(Service_FS, "archive_id=0x%08X archive_path=%s", static_cast<u32>(archive_id),
               archive_path.DebugStr().c_str());
 
-    ResultVal<ArchiveHandle> handle = OpenArchive(archive_id, archive_path);
-    cmd_buff[1] = handle.Code().raw;
+    IPC::RequestBuilder rb = rp.MakeBuilder(3, 0);
+    ResultVal<ArchiveHandle> handle = Service::FS::OpenArchive(archive_id, archive_path);
+    rb.Push(handle.Code());
     if (handle.Succeeded()) {
-        cmd_buff[2] = *handle & 0xFFFFFFFF;
-        cmd_buff[3] = (*handle >> 32) & 0xFFFFFFFF;
+        rb.PushRaw(*handle);
     } else {
-        cmd_buff[2] = cmd_buff[3] = 0;
+        rb.Push<u64>(0);
         LOG_ERROR(Service_FS,
                   "failed to get a handle for archive archive_id=0x%08X archive_path=%s",
                   static_cast<u32>(archive_id), archive_path.DebugStr().c_str());
     }
 }
 
-/**
- * FS_User::CloseArchive service function
- *  Inputs:
- *      0 : 0x080E0080
- *      1 : Archive handle low word
- *      2 : Archive handle high word
- *  Outputs:
- *      0 : ??? TODO(yuriks): Verify return header
- *      1 : Result of function, 0 on success, otherwise error code
- */
-static void CloseArchive(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
+void FS_USER::CloseArchive(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x80E, 2, 0);
+    auto archive_handle = rp.PopRaw<ArchiveHandle>();
 
-    ArchiveHandle archive_handle = MakeArchiveHandle(cmd_buff[1], cmd_buff[2]);
-    cmd_buff[1] = CloseArchive(archive_handle).raw;
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(Service::FS::CloseArchive(archive_handle));
 }
 
-/*
- * FS_User::IsSdmcDetected service function
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- *      2 : Whether the Sdmc could be detected
- */
-static void IsSdmcDetected(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-
-    cmd_buff[1] = 0;
-    cmd_buff[2] = Settings::values.use_virtual_sd ? 1 : 0;
+void FS_USER::IsSdmcDetected(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x817, 0, 0);
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
+    rb.Push(RESULT_SUCCESS);
+    rb.Push(Settings::values.use_virtual_sd);
 }
 
-/**
- * FS_User::IsSdmcWriteable service function
- *  Outputs:
- *      0 : Command header 0x08180000
- *      1 : Result of function, 0 on success, otherwise error code
- *      2 : Whether the Sdmc is currently writeable
- */
-static void IsSdmcWriteable(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-
-    cmd_buff[1] = RESULT_SUCCESS.raw;
+void FS_USER::IsSdmcWriteable(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x818, 0, 0);
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
+    rb.Push(RESULT_SUCCESS);
     // If the SD isn't enabled, it can't be writeable...else, stubbed true
-    cmd_buff[2] = Settings::values.use_virtual_sd ? 1 : 0;
-
+    rb.Push(Settings::values.use_virtual_sd);
     LOG_DEBUG(Service_FS, " (STUBBED)");
 }
 
-/**
- * FS_User::FormatSaveData service function,
- * formats the SaveData specified by the input path.
- *  Inputs:
- *      0  : 0x084C0242
- *      1  : Archive ID
- *      2  : Archive path type
- *      3  : Archive path size
- *      4  : Size in Blocks (1 block = 512 bytes)
- *      5  : Number of directories
- *      6  : Number of files
- *      7  : Directory bucket count
- *      8  : File bucket count
- *      9  : Duplicate data
- *      10 : (PathSize << 14) | 2
- *      11 : Archive low path
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- */
-static void FormatSaveData(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
+void FS_USER::FormatSaveData(Kernel::HLERequestContext& ctx) {
     LOG_WARNING(Service_FS, "(STUBBED)");
 
-    auto archive_id = static_cast<FS::ArchiveIdCode>(cmd_buff[1]);
-    auto archivename_type = static_cast<FileSys::LowPathType>(cmd_buff[2]);
-    u32 archivename_size = cmd_buff[3];
-    u32 archivename_ptr = cmd_buff[11];
-    FileSys::Path archive_path(archivename_type, archivename_size, archivename_ptr);
+    IPC::RequestParser rp(ctx, 0x84C, 9, 2);
+    auto archive_id = rp.PopEnum<FS::ArchiveIdCode>();
+    auto archivename_type = rp.PopEnum<FileSys::LowPathType>();
+    u32 archivename_size = rp.Pop<u32>();
+    u32 block_size = rp.Pop<u32>();
+    u32 number_directories = rp.Pop<u32>();
+    u32 number_files = rp.Pop<u32>();
+    u32 directory_buckets = rp.Pop<u32>();
+    u32 file_buckets = rp.Pop<u32>();
+    bool duplicate_data = rp.Pop<bool>();
+    std::vector<u8> archivename = rp.PopStaticBuffer();
+    ASSERT(archivename.size() == archivename_size);
+    FileSys::Path archive_path(archivename_type, archivename);
 
     LOG_DEBUG(Service_FS, "archive_path=%s", archive_path.DebugStr().c_str());
 
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     if (archive_id != FS::ArchiveIdCode::SaveData) {
         LOG_ERROR(Service_FS, "tried to format an archive different than SaveData, %u",
                   static_cast<u32>(archive_id));
-        cmd_buff[1] = FileSys::ERROR_INVALID_PATH.raw;
+        rb.Push(FileSys::ERROR_INVALID_PATH);
         return;
     }
 
     if (archive_path.GetType() != FileSys::LowPathType::Empty) {
         // TODO(Subv): Implement formatting the SaveData of other games
         LOG_ERROR(Service_FS, "archive LowPath type other than empty is currently unsupported");
-        cmd_buff[1] = UnimplementedFunction(ErrorModule::FS).raw;
+        rb.Push(UnimplementedFunction(ErrorModule::FS));
         return;
     }
 
     FileSys::ArchiveFormatInfo format_info;
-    format_info.duplicate_data = cmd_buff[9] & 0xFF;
-    format_info.number_directories = cmd_buff[5];
-    format_info.number_files = cmd_buff[6];
-    format_info.total_size = cmd_buff[4] * 512;
+    format_info.duplicate_data = duplicate_data;
+    format_info.number_directories = number_directories;
+    format_info.number_files = number_files;
+    format_info.total_size = block_size * 512;
 
-    cmd_buff[1] = FormatArchive(ArchiveIdCode::SaveData, format_info).raw;
+    rb.Push(FormatArchive(ArchiveIdCode::SaveData, format_info));
 }
 
-/**
- * FS_User::FormatThisUserSaveData service function
- *  Inputs:
- *      0: 0x080F0180
- *      1  : Size in Blocks (1 block = 512 bytes)
- *      2  : Number of directories
- *      3  : Number of files
- *      4  : Directory bucket count
- *      5  : File bucket count
- *      6  : Duplicate data
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- */
-static void FormatThisUserSaveData(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
+void FS_USER::FormatThisUserSaveData(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x80F, 6, 0);
+    u32 block_size = rp.Pop<u32>();
+    u32 number_directories = rp.Pop<u32>();
+    u32 number_files = rp.Pop<u32>();
+    u32 directory_buckets = rp.Pop<u32>();
+    u32 file_buckets = rp.Pop<u32>();
+    bool duplicate_data = rp.Pop<bool>();
 
     FileSys::ArchiveFormatInfo format_info;
-    format_info.duplicate_data = cmd_buff[6] & 0xFF;
-    format_info.number_directories = cmd_buff[2];
-    format_info.number_files = cmd_buff[3];
-    format_info.total_size = cmd_buff[1] * 512;
+    format_info.duplicate_data = duplicate_data;
+    format_info.number_directories = number_directories;
+    format_info.number_files = number_files;
+    format_info.total_size = block_size * 512;
 
-    cmd_buff[1] = FormatArchive(ArchiveIdCode::SaveData, format_info).raw;
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(FormatArchive(ArchiveIdCode::SaveData, format_info));
 
     LOG_TRACE(Service_FS, "called");
 }
 
-/**
- * FS_User::GetFreeBytes service function
- *  Inputs:
- *      0: 0x08120080
- *      1: Archive handle low word
- *      2: Archive handle high word
- *  Outputs:
- *      1: Result of function, 0 on success, otherwise error code
- *      2: Free byte count low word
- *      3: Free byte count high word
- */
-static void GetFreeBytes(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-
-    ArchiveHandle archive_handle = MakeArchiveHandle(cmd_buff[1], cmd_buff[2]);
+void FS_USER::GetFreeBytes(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x812, 2, 0);
+    ArchiveHandle archive_handle = rp.PopRaw<ArchiveHandle>();
     ResultVal<u64> bytes_res = GetFreeBytesInArchive(archive_handle);
 
-    cmd_buff[1] = bytes_res.Code().raw;
+    IPC::RequestBuilder rb = rp.MakeBuilder(3, 0);
+    rb.Push(bytes_res.Code());
     if (bytes_res.Succeeded()) {
-        cmd_buff[2] = (u32)*bytes_res;
-        cmd_buff[3] = *bytes_res >> 32;
+        rb.Push<u64>(bytes_res.Unwrap());
     } else {
-        cmd_buff[2] = 0;
-        cmd_buff[3] = 0;
+        rb.Push<u64>(0);
     }
 }
 
-/**
- * FS_User::CreateExtSaveData service function
- *  Inputs:
- *      0 : 0x08510242
- *      1 : Media type (NAND / SDMC)
- *      2 : Low word of the saveid to create
- *      3 : High word of the saveid to create
- *      4 : Unknown
- *      5 : Number of directories
- *      6 : Number of files
- *      7-8 : Size limit
- *      9 : Size of the SMDH icon
- *      10: (SMDH Size << 4) | 0x0000000A
- *      11: Pointer to the SMDH icon for the new ExtSaveData
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- */
-static void CreateExtSaveData(Service::Interface* self) {
+void FS_USER::CreateExtSaveData(Kernel::HLERequestContext& ctx) {
     // TODO(Subv): Figure out the other parameters.
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-    MediaType media_type = static_cast<MediaType>(cmd_buff[1] & 0xFF);
-    u32 save_low = cmd_buff[2];
-    u32 save_high = cmd_buff[3];
-    u32 icon_size = cmd_buff[9];
-    VAddr icon_buffer = cmd_buff[11];
+    IPC::RequestParser rp(ctx, 0x0851, 9, 2);
+    MediaType media_type = static_cast<MediaType>(rp.Pop<u32>()); // the other bytes are unknown
+    u32 save_low = rp.Pop<u32>();
+    u32 save_high = rp.Pop<u32>();
+    u32 unknown = rp.Pop<u32>();
+    u32 directories = rp.Pop<u32>();
+    u32 files = rp.Pop<u32>();
+    u64 size_limit = rp.Pop<u64>();
+    u32 icon_size = rp.Pop<u32>();
+    auto icon_buffer = rp.PopMappedBuffer();
 
-    LOG_WARNING(
-        Service_FS,
-        "(STUBBED) savedata_high=%08X savedata_low=%08X cmd_buff[3]=%08X "
-        "cmd_buff[4]=%08X cmd_buff[5]=%08X cmd_buff[6]=%08X cmd_buff[7]=%08X cmd_buff[8]=%08X "
-        "icon_size=%08X icon_descriptor=%08X icon_buffer=%08X",
-        save_high, save_low, cmd_buff[3], cmd_buff[4], cmd_buff[5], cmd_buff[6], cmd_buff[7],
-        cmd_buff[8], icon_size, cmd_buff[10], icon_buffer);
+    LOG_WARNING(Service_FS, "(STUBBED) savedata_high=%08X savedata_low=%08X unknown=%08X "
+                            "files=%08X directories=%08X size_limit=%016" PRIx64 " icon_size=%08X",
+                save_high, save_low, unknown, directories, files, size_limit, icon_size);
+
+    std::vector<u8> icon(icon_size);
+    icon_buffer.Read(icon.data(), 0, icon_size);
 
     FileSys::ArchiveFormatInfo format_info;
-    format_info.number_directories = cmd_buff[5];
-    format_info.number_files = cmd_buff[6];
+    format_info.number_directories = directories;
+    format_info.number_files = files;
     format_info.duplicate_data = false;
     format_info.total_size = 0;
-    cmd_buff[1] =
-        CreateExtSaveData(media_type, save_high, save_low, icon_buffer, icon_size, format_info).raw;
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
+    rb.Push(Service::FS::CreateExtSaveData(media_type, save_high, save_low, icon, format_info));
+    rb.PushMappedBuffer(icon_buffer);
 }
 
-/**
- * FS_User::DeleteExtSaveData service function
- *  Inputs:
- *      0 : 0x08520100
- *      1 : Media type (NAND / SDMC)
- *      2 : Low word of the saveid to create
- *      3 : High word of the saveid to create
- *      4 : Unknown
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- */
-static void DeleteExtSaveData(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-    MediaType media_type = static_cast<MediaType>(cmd_buff[1] & 0xFF);
-    u32 save_low = cmd_buff[2];
-    u32 save_high = cmd_buff[3];
-    u32 unknown = cmd_buff[4]; // TODO(Subv): Figure out what this is
+void FS_USER::DeleteExtSaveData(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x852, 4, 0);
+    MediaType media_type = static_cast<MediaType>(rp.Pop<u32>()); // the other bytes are unknown
+    u32 save_low = rp.Pop<u32>();
+    u32 save_high = rp.Pop<u32>();
+    u32 unknown = rp.Pop<u32>(); // TODO(Subv): Figure out what this is
 
     LOG_WARNING(Service_FS, "(STUBBED) save_low=%08X save_high=%08X media_type=%08X unknown=%08X",
-                save_low, save_high, cmd_buff[1] & 0xFF, unknown);
+                save_low, save_high, static_cast<u32>(media_type), unknown);
 
-    cmd_buff[1] = DeleteExtSaveData(media_type, save_high, save_low).raw;
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(Service::FS::DeleteExtSaveData(media_type, save_high, save_low));
 }
 
-/**
- * FS_User::CardSlotIsInserted service function.
- *  Inputs:
- *      0 : 0x08210000
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- *      2 : Whether there is a game card inserted into the slot or not.
- */
-static void CardSlotIsInserted(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-    cmd_buff[1] = RESULT_SUCCESS.raw;
-    cmd_buff[2] = 0;
+void FS_USER::CardSlotIsInserted(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x821, 0, 0);
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
+    rb.Push(RESULT_SUCCESS);
+    rb.Push(false);
     LOG_WARNING(Service_FS, "(STUBBED) called");
 }
 
-/**
- * FS_User::DeleteSystemSaveData service function.
- *  Inputs:
- *      0 : 0x08570080
- *      1 : High word of the SystemSaveData id to delete
- *      2 : Low word of the SystemSaveData id to delete
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- */
-static void DeleteSystemSaveData(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-    u32 savedata_high = cmd_buff[1];
-    u32 savedata_low = cmd_buff[2];
+void FS_USER::DeleteSystemSaveData(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x857, 2, 0);
+    u32 savedata_high = rp.Pop<u32>();
+    u32 savedata_low = rp.Pop<u32>();
 
-    cmd_buff[1] = DeleteSystemSaveData(savedata_high, savedata_low).raw;
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(Service::FS::DeleteSystemSaveData(savedata_high, savedata_low));
 }
 
-/**
- * FS_User::CreateSystemSaveData service function.
- *  Inputs:
- *      0 : 0x08560240
- *      1 : u8 MediaType of the system save data
- *      2 : SystemSaveData id to create
- *      3 : Total size
- *      4 : Block size
- *      5 : Number of directories
- *      6 : Number of files
- *      7 : Directory bucket count
- *      8 : File bucket count
- *      9 : u8 Whether to duplicate data or not
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- */
-static void CreateSystemSaveData(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-    u32 savedata_high = cmd_buff[1];
-    u32 savedata_low = cmd_buff[2];
+void FS_USER::CreateSystemSaveData(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x856, 9, 0);
+    u32 savedata_high = rp.Pop<u32>();
+    u32 savedata_low = rp.Pop<u32>();
+    u32 total_size = rp.Pop<u32>();
+    u32 block_size = rp.Pop<u32>();
+    u32 directories = rp.Pop<u32>();
+    u32 files = rp.Pop<u32>();
+    u32 directory_buckets = rp.Pop<u32>();
+    u32 file_buckets = rp.Pop<u32>();
+    bool duplicate = rp.Pop<bool>();
 
-    LOG_WARNING(
-        Service_FS,
-        "(STUBBED) savedata_high=%08X savedata_low=%08X cmd_buff[3]=%08X "
-        "cmd_buff[4]=%08X cmd_buff[5]=%08X cmd_buff[6]=%08X cmd_buff[7]=%08X cmd_buff[8]=%08X "
-        "cmd_buff[9]=%08X",
-        savedata_high, savedata_low, cmd_buff[3], cmd_buff[4], cmd_buff[5], cmd_buff[6],
-        cmd_buff[7], cmd_buff[8], cmd_buff[9]);
+    LOG_WARNING(Service_FS,
+                "(STUBBED) savedata_high=%08X savedata_low=%08X total_size=%08X  block_size=%08X "
+                "directories=%u files=%u directory_buckets=%u file_buckets=%u duplicate=%d",
+                savedata_high, savedata_low, total_size, block_size, directories, files,
+                directory_buckets, file_buckets, duplicate);
 
-    cmd_buff[1] = CreateSystemSaveData(savedata_high, savedata_low).raw;
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(Service::FS::CreateSystemSaveData(savedata_high, savedata_low));
 }
 
-/**
- * FS_User::CreateLegacySystemSaveData service function.
- *  This function appears to be obsolete and seems to have been replaced by
- *  command 0x08560240 (CreateSystemSaveData).
- *
- *  Inputs:
- *      0 : 0x08100200
- *      1 : SystemSaveData id to create
- *      2 : Total size
- *      3 : Block size
- *      4 : Number of directories
- *      5 : Number of files
- *      6 : Directory bucket count
- *      7 : File bucket count
- *      8 : u8 Duplicate data
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- */
-static void CreateLegacySystemSaveData(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-    u32 savedata_id = cmd_buff[1];
+void FS_USER::CreateLegacySystemSaveData(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x810, 8, 0);
+    u32 savedata_id = rp.Pop<u32>();
+    u32 total_size = rp.Pop<u32>();
+    u32 block_size = rp.Pop<u32>();
+    u32 directories = rp.Pop<u32>();
+    u32 files = rp.Pop<u32>();
+    u32 directory_buckets = rp.Pop<u32>();
+    u32 file_buckets = rp.Pop<u32>();
+    bool duplicate = rp.Pop<bool>();
 
-    LOG_WARNING(
-        Service_FS,
-        "(STUBBED) savedata_id=%08X cmd_buff[3]=%08X "
-        "cmd_buff[4]=%08X cmd_buff[5]=%08X cmd_buff[6]=%08X cmd_buff[7]=%08X cmd_buff[8]=%08X "
-        "cmd_buff[9]=%08X",
-        savedata_id, cmd_buff[3], cmd_buff[4], cmd_buff[5], cmd_buff[6], cmd_buff[7], cmd_buff[8],
-        cmd_buff[9]);
+    LOG_WARNING(Service_FS,
+                "(STUBBED) savedata_id=%08X total_size=%08X block_size=%08X directories=%u "
+                "files=%u directory_buckets=%u file_buckets=%u duplicate=%d",
+                savedata_id, total_size, block_size, directories, files, directory_buckets,
+                file_buckets, duplicate);
 
-    cmd_buff[0] = IPC::MakeHeader(0x810, 0x1, 0);
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     // With this command, the SystemSaveData always has save_high = 0 (Always created in the NAND)
-    cmd_buff[1] = CreateSystemSaveData(0, savedata_id).raw;
+    rb.Push(Service::FS::CreateSystemSaveData(0, savedata_id));
 }
 
-/**
- * FS_User::InitializeWithSdkVersion service function.
- *  Inputs:
- *      0 : 0x08610042
- *      1 : Used SDK Version
- *      2 : ProcessId Header
- *      3 : placeholder for ProcessId
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- */
-static void InitializeWithSdkVersion(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
+void FS_USER::InitializeWithSdkVersion(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x861, 1, 2);
+    const u32 version = rp.Pop<u32>();
+    rp.PopPID();
 
-    const u32 version = cmd_buff[1];
-    self->SetVersion(version);
+    LOG_WARNING(Service_FS, "(STUBBED) called, version: 0x%08X", version);
 
-    if (cmd_buff[2] == IPC::CallingPidDesc()) {
-        LOG_WARNING(Service_FS, "(STUBBED) called, version: 0x%08X", version);
-        cmd_buff[1] = RESULT_SUCCESS.raw;
-    } else {
-        LOG_ERROR(Service_FS, "ProcessId Header must be 0x20");
-        cmd_buff[1] = IPC::ERR_INVALID_BUFFER_DESCRIPTOR.raw;
-    }
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RESULT_SUCCESS);
 }
 
-/**
- * FS_User::SetPriority service function.
- *  Inputs:
- *      0 : 0x08620040
- *      1 : priority
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- */
-static void SetPriority(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
+void FS_USER::SetPriority(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x862, 1, 0);
 
-    priority = cmd_buff[1];
+    priority = rp.Pop<u32>();
 
-    cmd_buff[1] = RESULT_SUCCESS.raw;
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RESULT_SUCCESS);
 
     LOG_DEBUG(Service_FS, "called priority=0x%X", priority);
 }
 
-/**
- * FS_User::GetPriority service function.
- *  Inputs:
- *      0 : 0x08630000
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- *      2 : priority
- */
-static void GetPriority(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
+void FS_USER::GetPriority(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x863, 0, 0);
 
     if (priority == -1) {
         LOG_INFO(Service_FS, "priority was not set, priority=0x%X", priority);
     }
 
-    cmd_buff[1] = RESULT_SUCCESS.raw;
-    cmd_buff[2] = priority;
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
+    rb.Push(RESULT_SUCCESS);
+    rb.Push(priority);
 
     LOG_DEBUG(Service_FS, "called priority=0x%X", priority);
 }
 
-/**
- * FS_User::GetArchiveResource service function.
- *  Inputs:
- *      0 : 0x08490040
- *      1 : Media type
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- *      2 : Sector byte-size
- *      3 : Cluster byte-size
- *      4 : Partition capacity in clusters
- *      5 : Available free space in clusters
- */
-static void GetArchiveResource(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
+void FS_USER::GetArchiveResource(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x849, 1, 0);
+    u32 system_media_type = rp.Pop<u32>();
 
-    LOG_WARNING(Service_FS, "(STUBBED) called Media type=0x%08X", cmd_buff[1]);
+    LOG_WARNING(Service_FS, "(STUBBED) called Media type=0x%08X", system_media_type);
 
-    cmd_buff[1] = RESULT_SUCCESS.raw;
-    cmd_buff[2] = 512;
-    cmd_buff[3] = 16384;
-    cmd_buff[4] = 0x80000; // 8GiB capacity
-    cmd_buff[5] = 0x80000; // 8GiB free
+    IPC::RequestBuilder rb = rp.MakeBuilder(5, 0);
+    rb.Push(RESULT_SUCCESS);
+    rb.Push<u32>(512);
+    rb.Push<u32>(16384);
+    rb.Push<u32>(0x80000); // 8GiB capacity
+    rb.Push<u32>(0x80000); // 8GiB free
 }
 
-/**
- * FS_User::GetFormatInfo service function.
- *  Inputs:
- *      0 : 0x084500C2
- *      1 : Archive ID
- *      2 : Archive path type
- *      3 : Archive path size
- *      4 : (PathSize << 14) | 2
- *      5 : Archive low path
- *  Outputs:
- *      0 : 0x08450140
- *      1 : Result of function, 0 on success, otherwise error code
- *      2 : Total size
- *      3 : Number of directories
- *      4 : Number of files
- *      5 : Duplicate data
- */
-static void GetFormatInfo(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
+void FS_USER::GetFormatInfo(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x845, 3, 2);
+    auto archive_id = rp.PopEnum<FS::ArchiveIdCode>();
+    auto archivename_type = rp.PopEnum<FileSys::LowPathType>();
+    u32 archivename_size = rp.Pop<u32>();
+    std::vector<u8> archivename = rp.PopStaticBuffer();
+    ASSERT(archivename.size() == archivename_size);
 
-    auto archive_id = static_cast<FS::ArchiveIdCode>(cmd_buff[1]);
-    auto archivename_type = static_cast<FileSys::LowPathType>(cmd_buff[2]);
-    u32 archivename_size = cmd_buff[3];
-    u32 archivename_ptr = cmd_buff[5];
-    FileSys::Path archive_path(archivename_type, archivename_size, archivename_ptr);
+    FileSys::Path archive_path(archivename_type, archivename);
 
     LOG_DEBUG(Service_FS, "archive_path=%s", archive_path.DebugStr().c_str());
 
-    cmd_buff[0] = IPC::MakeHeader(0x0845, 5, 0);
+    IPC::RequestBuilder rb = rp.MakeBuilder(5, 0);
 
     auto format_info = GetArchiveFormatInfo(archive_id, archive_path);
-
+    rb.Push(format_info.Code());
     if (format_info.Failed()) {
         LOG_ERROR(Service_FS, "Failed to retrieve the format info");
-        cmd_buff[1] = format_info.Code().raw;
+        rb.Skip(4, true);
         return;
     }
 
-    cmd_buff[1] = RESULT_SUCCESS.raw;
-    cmd_buff[2] = format_info->total_size;
-    cmd_buff[3] = format_info->number_directories;
-    cmd_buff[4] = format_info->number_files;
-    cmd_buff[5] = format_info->duplicate_data;
+    rb.Push<u32>(format_info->total_size);
+    rb.Push<u32>(format_info->number_directories);
+    rb.Push<u32>(format_info->number_files);
+    rb.Push<bool>(format_info->duplicate_data != 0);
 }
 
-/**
- * FS_User::GetProgramLaunchInfo service function.
- *  Inputs:
- *      0 : 0x082F0040
- *      1 : Process ID
- *  Outputs:
- *      0 : 0x082F0140
- *      1 : Result of function, 0 on success, otherwise error code
- *      2-3 : Program ID
- *      4 : Media type
- *      5 : Unknown
- */
-static void GetProgramLaunchInfo(Service::Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x82F, 1, 0);
+void FS_USER::GetProgramLaunchInfo(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x82F, 1, 0);
 
     u32 process_id = rp.Pop<u32>();
 
@@ -970,17 +643,8 @@ static void GetProgramLaunchInfo(Service::Interface* self) {
     rb.Push<u32>(0);
 }
 
-/**
- * FS_User::GetNumSeeds service function.
- *  Inputs:
- *      0 : 0x087D0000
- *  Outputs:
- *      0 : 0x087D0080
- *      1 : Result of function, 0 on success, otherwise error code
- *      2 : Number of seeds in the SEEDDB
- */
-static void GetNumSeeds(Service::Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x87D, 0, 0);
+void FS_USER::GetNumSeeds(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x87D, 0, 0);
 
     LOG_WARNING(Service_FS, "(STUBBED) called");
 
@@ -990,49 +654,34 @@ static void GetNumSeeds(Service::Interface* self) {
     rb.Push<u32>(0);
 }
 
-/**
- * FS_User::SetSaveDataSecureValue service function.
- *  Inputs:
- *      0 : 0x08650140
- *      1-2 : Secure Value
- *      3 : Secure Value Slot
- *      4 : Title Id
- *      5 : Title Variation
- *  Outputs:
- *      0 : 0x08650140
- *      1 : Result of function, 0 on success, otherwise error code
- */
-static void SetSaveDataSecureValue(Service::Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x865, 5, 0);
+void FS_USER::SetSaveDataSecureValue(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x865, 5, 0);
+    u64 value = rp.Pop<u64>();
+    u32 secure_value_slot = rp.Pop<u32>();
+    u32 unique_id = rp.Pop<u32>();
+    u8 title_variation = rp.Pop<u8>();
 
     // TODO: Generate and Save the Secure Value
 
-    LOG_WARNING(Service_FS, "(STUBBED) called");
+    LOG_WARNING(Service_FS, "(STUBBED) called, value=0x%016" PRIx64 " secure_value_slot=0x%08X "
+                            "unqiue_id=0x%08X title_variation=0x%02X",
+                value, secure_value_slot, unique_id, title_variation);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
 
     rb.Push(RESULT_SUCCESS);
 }
 
-/**
- * FS_User::GetSaveDataSecureValue service function.
- *  Inputs:
- *      0 : 0x086600C0
- *      1 : Secure Value Slot
- *      2 : Title Id
- *      3 : Title Variation
- *  Outputs:
- *      0 : 0x086600C0
- *      1 : Result of function, 0 on success, otherwise error code
- *      2 : If Secure Value doesn't exist, 0, if it exists, 1
- *      3-4 : Secure Value
- */
-static void GetSaveDataSecureValue(Service::Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x866, 3, 0);
+void FS_USER::GetSaveDataSecureValue(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x866, 3, 0);
 
     u32 secure_value_slot = rp.Pop<u32>();
+    u32 unique_id = rp.Pop<u32>();
+    u8 title_variation = rp.Pop<u8>();
 
-    LOG_WARNING(Service_FS, "(STUBBED) called Secure Value Slot=%08X", secure_value_slot);
+    LOG_WARNING(Service_FS,
+                "(STUBBED) called secure_value_slot=0x%08X unqiue_id=0x%08X title_variation=0x%02X",
+                secure_value_slot, unique_id, title_variation);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(4, 0);
 
@@ -1040,132 +689,129 @@ static void GetSaveDataSecureValue(Service::Interface* self) {
 
     // TODO: Implement Secure Value Lookup & Generation
 
-    rb.Push<u8>(0);
-    rb.Push<u64>(0);
+    rb.Push<bool>(false); // indicates that the secure value doesn't exist
+    rb.Push<u64>(0);      // the secure value
 }
 
-const Interface::FunctionInfo FunctionTable[] = {
-    {0x000100C6, nullptr, "Dummy1"},
-    {0x040100C4, nullptr, "Control"},
-    {0x08010002, Initialize, "Initialize"},
-    {0x080201C2, OpenFile, "OpenFile"},
-    {0x08030204, OpenFileDirectly, "OpenFileDirectly"},
-    {0x08040142, DeleteFile, "DeleteFile"},
-    {0x08050244, RenameFile, "RenameFile"},
-    {0x08060142, DeleteDirectory, "DeleteDirectory"},
-    {0x08070142, DeleteDirectoryRecursively, "DeleteDirectoryRecursively"},
-    {0x08080202, CreateFile, "CreateFile"},
-    {0x08090182, CreateDirectory, "CreateDirectory"},
-    {0x080A0244, RenameDirectory, "RenameDirectory"},
-    {0x080B0102, OpenDirectory, "OpenDirectory"},
-    {0x080C00C2, OpenArchive, "OpenArchive"},
-    {0x080D0144, nullptr, "ControlArchive"},
-    {0x080E0080, CloseArchive, "CloseArchive"},
-    {0x080F0180, FormatThisUserSaveData, "FormatThisUserSaveData"},
-    {0x08100200, CreateLegacySystemSaveData, "CreateLegacySystemSaveData"},
-    {0x08110040, nullptr, "DeleteSystemSaveData"},
-    {0x08120080, GetFreeBytes, "GetFreeBytes"},
-    {0x08130000, nullptr, "GetCardType"},
-    {0x08140000, nullptr, "GetSdmcArchiveResource"},
-    {0x08150000, nullptr, "GetNandArchiveResource"},
-    {0x08160000, nullptr, "GetSdmcFatfsError"},
-    {0x08170000, IsSdmcDetected, "IsSdmcDetected"},
-    {0x08180000, IsSdmcWriteable, "IsSdmcWritable"},
-    {0x08190042, nullptr, "GetSdmcCid"},
-    {0x081A0042, nullptr, "GetNandCid"},
-    {0x081B0000, nullptr, "GetSdmcSpeedInfo"},
-    {0x081C0000, nullptr, "GetNandSpeedInfo"},
-    {0x081D0042, nullptr, "GetSdmcLog"},
-    {0x081E0042, nullptr, "GetNandLog"},
-    {0x081F0000, nullptr, "ClearSdmcLog"},
-    {0x08200000, nullptr, "ClearNandLog"},
-    {0x08210000, CardSlotIsInserted, "CardSlotIsInserted"},
-    {0x08220000, nullptr, "CardSlotPowerOn"},
-    {0x08230000, nullptr, "CardSlotPowerOff"},
-    {0x08240000, nullptr, "CardSlotGetCardIFPowerStatus"},
-    {0x08250040, nullptr, "CardNorDirectCommand"},
-    {0x08260080, nullptr, "CardNorDirectCommandWithAddress"},
-    {0x08270082, nullptr, "CardNorDirectRead"},
-    {0x082800C2, nullptr, "CardNorDirectReadWithAddress"},
-    {0x08290082, nullptr, "CardNorDirectWrite"},
-    {0x082A00C2, nullptr, "CardNorDirectWriteWithAddress"},
-    {0x082B00C2, nullptr, "CardNorDirectRead_4xIO"},
-    {0x082C0082, nullptr, "CardNorDirectCpuWriteWithoutVerify"},
-    {0x082D0040, nullptr, "CardNorDirectSectorEraseWithoutVerify"},
-    {0x082E0040, nullptr, "GetProductInfo"},
-    {0x082F0040, GetProgramLaunchInfo, "GetProgramLaunchInfo"},
-    {0x08300182, nullptr, "CreateExtSaveData"},
-    {0x08310180, nullptr, "CreateSharedExtSaveData"},
-    {0x08320102, nullptr, "ReadExtSaveDataIcon"},
-    {0x08330082, nullptr, "EnumerateExtSaveData"},
-    {0x08340082, nullptr, "EnumerateSharedExtSaveData"},
-    {0x08350080, nullptr, "DeleteExtSaveData"},
-    {0x08360080, nullptr, "DeleteSharedExtSaveData"},
-    {0x08370040, nullptr, "SetCardSpiBaudRate"},
-    {0x08380040, nullptr, "SetCardSpiBusMode"},
-    {0x08390000, nullptr, "SendInitializeInfoTo9"},
-    {0x083A0100, nullptr, "GetSpecialContentIndex"},
-    {0x083B00C2, nullptr, "GetLegacyRomHeader"},
-    {0x083C00C2, nullptr, "GetLegacyBannerData"},
-    {0x083D0100, nullptr, "CheckAuthorityToAccessExtSaveData"},
-    {0x083E00C2, nullptr, "QueryTotalQuotaSize"},
-    {0x083F00C0, nullptr, "GetExtDataBlockSize"},
-    {0x08400040, nullptr, "AbnegateAccessRight"},
-    {0x08410000, nullptr, "DeleteSdmcRoot"},
-    {0x08420040, nullptr, "DeleteAllExtSaveDataOnNand"},
-    {0x08430000, nullptr, "InitializeCtrFileSystem"},
-    {0x08440000, nullptr, "CreateSeed"},
-    {0x084500C2, GetFormatInfo, "GetFormatInfo"},
-    {0x08460102, nullptr, "GetLegacyRomHeader2"},
-    {0x08470180, nullptr, "FormatCtrCardUserSaveData"},
-    {0x08480042, nullptr, "GetSdmcCtrRootPath"},
-    {0x08490040, GetArchiveResource, "GetArchiveResource"},
-    {0x084A0002, nullptr, "ExportIntegrityVerificationSeed"},
-    {0x084B0002, nullptr, "ImportIntegrityVerificationSeed"},
-    {0x084C0242, FormatSaveData, "FormatSaveData"},
-    {0x084D0102, nullptr, "GetLegacySubBannerData"},
-    {0x084E0342, nullptr, "UpdateSha256Context"},
-    {0x084F0102, nullptr, "ReadSpecialFile"},
-    {0x08500040, nullptr, "GetSpecialFileSize"},
-    {0x08510242, CreateExtSaveData, "CreateExtSaveData"},
-    {0x08520100, DeleteExtSaveData, "DeleteExtSaveData"},
-    {0x08530142, nullptr, "ReadExtSaveDataIcon"},
-    {0x085400C0, nullptr, "GetExtDataBlockSize"},
-    {0x08550102, nullptr, "EnumerateExtSaveData"},
-    {0x08560240, CreateSystemSaveData, "CreateSystemSaveData"},
-    {0x08570080, DeleteSystemSaveData, "DeleteSystemSaveData"},
-    {0x08580000, nullptr, "StartDeviceMoveAsSource"},
-    {0x08590200, nullptr, "StartDeviceMoveAsDestination"},
-    {0x085A00C0, nullptr, "SetArchivePriority"},
-    {0x085B0080, nullptr, "GetArchivePriority"},
-    {0x085C00C0, nullptr, "SetCtrCardLatencyParameter"},
-    {0x085D01C0, nullptr, "SetFsCompatibilityInfo"},
-    {0x085E0040, nullptr, "ResetCardCompatibilityParameter"},
-    {0x085F0040, nullptr, "SwitchCleanupInvalidSaveData"},
-    {0x08600042, nullptr, "EnumerateSystemSaveData"},
-    {0x08610042, InitializeWithSdkVersion, "InitializeWithSdkVersion"},
-    {0x08620040, SetPriority, "SetPriority"},
-    {0x08630000, GetPriority, "GetPriority"},
-    {0x08640000, nullptr, "GetNandInfo"},
-    {0x08650140, SetSaveDataSecureValue, "SetSaveDataSecureValue"},
-    {0x086600C0, GetSaveDataSecureValue, "GetSaveDataSecureValue"},
-    {0x086700C4, nullptr, "ControlSecureSave"},
-    {0x08680000, nullptr, "GetMediaType"},
-    {0x08690000, nullptr, "GetNandEraseCount"},
-    {0x086A0082, nullptr, "ReadNandReport"},
-    {0x087A0180, nullptr, "AddSeed"},
-    {0x087D0000, GetNumSeeds, "GetNumSeeds"},
-    {0x088600C0, nullptr, "CheckUpdatedDat"},
-};
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// Interface class
-
-Interface::Interface() {
-
-    priority = -1;
-    Register(FunctionTable);
+FS_USER::FS_USER() : ServiceFramework("fs:USER", 10 /*?*/) {
+    static const FunctionInfo functions[] = {
+        {0x000100C6, nullptr, "Dummy1"},
+        {0x040100C4, nullptr, "Control"},
+        {0x08010002, &FS_USER::Initialize, "Initialize"},
+        {0x080201C2, &FS_USER::OpenFile, "OpenFile"},
+        {0x08030204, &FS_USER::OpenFileDirectly, "OpenFileDirectly"},
+        {0x08040142, &FS_USER::DeleteFile, "DeleteFile"},
+        {0x08050244, &FS_USER::RenameFile, "RenameFile"},
+        {0x08060142, &FS_USER::DeleteDirectory, "DeleteDirectory"},
+        {0x08070142, &FS_USER::DeleteDirectoryRecursively, "DeleteDirectoryRecursively"},
+        {0x08080202, &FS_USER::CreateFile, "CreateFile"},
+        {0x08090182, &FS_USER::CreateDirectory, "CreateDirectory"},
+        {0x080A0244, &FS_USER::RenameDirectory, "RenameDirectory"},
+        {0x080B0102, &FS_USER::OpenDirectory, "OpenDirectory"},
+        {0x080C00C2, &FS_USER::OpenArchive, "OpenArchive"},
+        {0x080D0144, nullptr, "ControlArchive"},
+        {0x080E0080, &FS_USER::CloseArchive, "CloseArchive"},
+        {0x080F0180, &FS_USER::FormatThisUserSaveData, "FormatThisUserSaveData"},
+        {0x08100200, &FS_USER::CreateLegacySystemSaveData, "CreateLegacySystemSaveData"},
+        {0x08110040, nullptr, "DeleteSystemSaveData"},
+        {0x08120080, &FS_USER::GetFreeBytes, "GetFreeBytes"},
+        {0x08130000, nullptr, "GetCardType"},
+        {0x08140000, nullptr, "GetSdmcArchiveResource"},
+        {0x08150000, nullptr, "GetNandArchiveResource"},
+        {0x08160000, nullptr, "GetSdmcFatfsError"},
+        {0x08170000, &FS_USER::IsSdmcDetected, "IsSdmcDetected"},
+        {0x08180000, &FS_USER::IsSdmcWriteable, "IsSdmcWritable"},
+        {0x08190042, nullptr, "GetSdmcCid"},
+        {0x081A0042, nullptr, "GetNandCid"},
+        {0x081B0000, nullptr, "GetSdmcSpeedInfo"},
+        {0x081C0000, nullptr, "GetNandSpeedInfo"},
+        {0x081D0042, nullptr, "GetSdmcLog"},
+        {0x081E0042, nullptr, "GetNandLog"},
+        {0x081F0000, nullptr, "ClearSdmcLog"},
+        {0x08200000, nullptr, "ClearNandLog"},
+        {0x08210000, &FS_USER::CardSlotIsInserted, "CardSlotIsInserted"},
+        {0x08220000, nullptr, "CardSlotPowerOn"},
+        {0x08230000, nullptr, "CardSlotPowerOff"},
+        {0x08240000, nullptr, "CardSlotGetCardIFPowerStatus"},
+        {0x08250040, nullptr, "CardNorDirectCommand"},
+        {0x08260080, nullptr, "CardNorDirectCommandWithAddress"},
+        {0x08270082, nullptr, "CardNorDirectRead"},
+        {0x082800C2, nullptr, "CardNorDirectReadWithAddress"},
+        {0x08290082, nullptr, "CardNorDirectWrite"},
+        {0x082A00C2, nullptr, "CardNorDirectWriteWithAddress"},
+        {0x082B00C2, nullptr, "CardNorDirectRead_4xIO"},
+        {0x082C0082, nullptr, "CardNorDirectCpuWriteWithoutVerify"},
+        {0x082D0040, nullptr, "CardNorDirectSectorEraseWithoutVerify"},
+        {0x082E0040, nullptr, "GetProductInfo"},
+        {0x082F0040, &FS_USER::GetProgramLaunchInfo, "GetProgramLaunchInfo"},
+        {0x08300182, nullptr, "CreateExtSaveData"},
+        {0x08310180, nullptr, "CreateSharedExtSaveData"},
+        {0x08320102, nullptr, "ReadExtSaveDataIcon"},
+        {0x08330082, nullptr, "EnumerateExtSaveData"},
+        {0x08340082, nullptr, "EnumerateSharedExtSaveData"},
+        {0x08350080, nullptr, "DeleteExtSaveData"},
+        {0x08360080, nullptr, "DeleteSharedExtSaveData"},
+        {0x08370040, nullptr, "SetCardSpiBaudRate"},
+        {0x08380040, nullptr, "SetCardSpiBusMode"},
+        {0x08390000, nullptr, "SendInitializeInfoTo9"},
+        {0x083A0100, nullptr, "GetSpecialContentIndex"},
+        {0x083B00C2, nullptr, "GetLegacyRomHeader"},
+        {0x083C00C2, nullptr, "GetLegacyBannerData"},
+        {0x083D0100, nullptr, "CheckAuthorityToAccessExtSaveData"},
+        {0x083E00C2, nullptr, "QueryTotalQuotaSize"},
+        {0x083F00C0, nullptr, "GetExtDataBlockSize"},
+        {0x08400040, nullptr, "AbnegateAccessRight"},
+        {0x08410000, nullptr, "DeleteSdmcRoot"},
+        {0x08420040, nullptr, "DeleteAllExtSaveDataOnNand"},
+        {0x08430000, nullptr, "InitializeCtrFileSystem"},
+        {0x08440000, nullptr, "CreateSeed"},
+        {0x084500C2, &FS_USER::GetFormatInfo, "GetFormatInfo"},
+        {0x08460102, nullptr, "GetLegacyRomHeader2"},
+        {0x08470180, nullptr, "FormatCtrCardUserSaveData"},
+        {0x08480042, nullptr, "GetSdmcCtrRootPath"},
+        {0x08490040, &FS_USER::GetArchiveResource, "GetArchiveResource"},
+        {0x084A0002, nullptr, "ExportIntegrityVerificationSeed"},
+        {0x084B0002, nullptr, "ImportIntegrityVerificationSeed"},
+        {0x084C0242, &FS_USER::FormatSaveData, "FormatSaveData"},
+        {0x084D0102, nullptr, "GetLegacySubBannerData"},
+        {0x084E0342, nullptr, "UpdateSha256Context"},
+        {0x084F0102, nullptr, "ReadSpecialFile"},
+        {0x08500040, nullptr, "GetSpecialFileSize"},
+        {0x08510242, &FS_USER::CreateExtSaveData, "CreateExtSaveData"},
+        {0x08520100, &FS_USER::DeleteExtSaveData, "DeleteExtSaveData"},
+        {0x08530142, nullptr, "ReadExtSaveDataIcon"},
+        {0x085400C0, nullptr, "GetExtDataBlockSize"},
+        {0x08550102, nullptr, "EnumerateExtSaveData"},
+        {0x08560240, &FS_USER::CreateSystemSaveData, "CreateSystemSaveData"},
+        {0x08570080, &FS_USER::DeleteSystemSaveData, "DeleteSystemSaveData"},
+        {0x08580000, nullptr, "StartDeviceMoveAsSource"},
+        {0x08590200, nullptr, "StartDeviceMoveAsDestination"},
+        {0x085A00C0, nullptr, "SetArchivePriority"},
+        {0x085B0080, nullptr, "GetArchivePriority"},
+        {0x085C00C0, nullptr, "SetCtrCardLatencyParameter"},
+        {0x085D01C0, nullptr, "SetFsCompatibilityInfo"},
+        {0x085E0040, nullptr, "ResetCardCompatibilityParameter"},
+        {0x085F0040, nullptr, "SwitchCleanupInvalidSaveData"},
+        {0x08600042, nullptr, "EnumerateSystemSaveData"},
+        {0x08610042, &FS_USER::InitializeWithSdkVersion, "InitializeWithSdkVersion"},
+        {0x08620040, &FS_USER::SetPriority, "SetPriority"},
+        {0x08630000, &FS_USER::GetPriority, "GetPriority"},
+        {0x08640000, nullptr, "GetNandInfo"},
+        {0x08650140, &FS_USER::SetSaveDataSecureValue, "SetSaveDataSecureValue"},
+        {0x086600C0, &FS_USER::GetSaveDataSecureValue, "GetSaveDataSecureValue"},
+        {0x086700C4, nullptr, "ControlSecureSave"},
+        {0x08680000, nullptr, "GetMediaType"},
+        {0x08690000, nullptr, "GetNandEraseCount"},
+        {0x086A0082, nullptr, "ReadNandReport"},
+        {0x087A0180, nullptr, "AddSeed"},
+        {0x087D0000, &FS_USER::GetNumSeeds, "GetNumSeeds"},
+        {0x088600C0, nullptr, "CheckUpdatedDat"},
+    };
+    RegisterHandlers(functions);
 }
 
+void InstallInterfaces(SM::ServiceManager& service_manager) {
+    std::make_shared<FS_USER>()->InstallAsService(service_manager);
+}
 } // namespace FS
 } // namespace Service
