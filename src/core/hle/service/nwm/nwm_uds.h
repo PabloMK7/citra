@@ -181,6 +181,7 @@ private:
      *  Outputs:
      *      0 : Return header
      *      1 : Result of function, 0 on success, otherwise error code
+     *      2, 3: output buffer return descriptor & ptr
      */
     void RecvBeaconBroadcastData(Kernel::HLERequestContext& ctx);
 
@@ -337,6 +338,7 @@ private:
      *  Outputs:
      *      0 : Return header
      *      1 : Result of function, 0 on success, otherwise error code
+     *      2, 3: output buffer return descriptor & ptr
      */
     void DecryptBeaconData(Kernel::HLERequestContext& ctx);
 };
