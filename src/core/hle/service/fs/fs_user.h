@@ -13,6 +13,7 @@ namespace FS {
 class FS_USER final : public ServiceFramework<FS_USER> {
 public:
     FS_USER();
+
 private:
     void Initialize(Kernel::HLERequestContext& ctx);
 
@@ -58,6 +59,7 @@ private:
     /*
      * FS_User::DeleteFile service function
      *  Inputs:
+     *      1 : Transaction
      *      2 : Archive handle lower word
      *      3 : Archive handle upper word
      *      4 : File path string type
@@ -71,6 +73,7 @@ private:
     /*
      * FS_User::RenameFile service function
      *  Inputs:
+     *      1 : Transaction
      *      2 : Source archive handle lower word
      *      3 : Source archive handle upper word
      *      4 : Source file path type
@@ -89,6 +92,7 @@ private:
     /*
      * FS_User::DeleteDirectory service function
      *  Inputs:
+     *      1 : Transaction
      *      2 : Archive handle lower word
      *      3 : Archive handle upper word
      *      4 : Directory path string type
@@ -118,6 +122,7 @@ private:
      * FS_User::CreateFile service function
      *  Inputs:
      *      0 : Command header 0x08080202
+     *      1 : Transaction
      *      2 : Archive handle lower word
      *      3 : Archive handle upper word
      *      4 : File path string type
@@ -133,10 +138,12 @@ private:
     /*
      * FS_User::CreateDirectory service function
      *  Inputs:
+     *      1 : Transaction
      *      2 : Archive handle lower word
      *      3 : Archive handle upper word
      *      4 : Directory path string type
      *      5 : Directory path string size
+     *      6 : Directory attributes
      *      8 : Directory path string data
      *  Outputs:
      *      1 : Result of function, 0 on success, otherwise error code
@@ -146,6 +153,7 @@ private:
     /*
      * FS_User::RenameDirectory service function
      *  Inputs:
+     *      1 : Transaction
      *      2 : Source archive handle lower word
      *      3 : Source archive handle upper word
      *      4 : Source dir path type
@@ -198,7 +206,7 @@ private:
      *      1 : Archive handle low word
      *      2 : Archive handle high word
      *  Outputs:
-     *      0 : ??? TODO(yuriks): Verify return header
+     *      0 : 0x080E0040
      *      1 : Result of function, 0 on success, otherwise error code
      */
     void CloseArchive(Kernel::HLERequestContext& ctx);
@@ -214,7 +222,7 @@ private:
     /**
      * FS_User::IsSdmcWriteable service function
      *  Outputs:
-     *      0 : Command header 0x08180000
+     *      0 : Command header 0x08180080
      *      1 : Result of function, 0 on success, otherwise error code
      *      2 : Whether the Sdmc is currently writeable
      */
@@ -244,7 +252,7 @@ private:
     /**
      * FS_User::FormatThisUserSaveData service function
      *  Inputs:
-     *      0: 0x080F0180
+     *      0  : 0x080F0180
      *      1  : Size in Blocks (1 block = 512 bytes)
      *      2  : Number of directories
      *      3  : Number of files
