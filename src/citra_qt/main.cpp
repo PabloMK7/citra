@@ -806,10 +806,10 @@ void GMainWindow::OnMenuInstallCIA() {
     QtConcurrent::run([&, filepaths] {
         QString current_path;
         Service::AM::InstallStatus status;
+        const auto cia_progress = [&](size_t written, size_t total) {
+            emit UpdateProgress(written, total);
+        };
         for (int current_index = 0; current_index < filepaths.size(); current_index++) {
-            const auto cia_progress = [&](size_t written, size_t total) {
-                emit UpdateProgress(written, total);
-            };
             current_path = filepaths.at(current_index);
             status = Service::AM::InstallCIA(current_path.toStdString(), cia_progress);
             emit CIAInstallReport(status, current_path);
