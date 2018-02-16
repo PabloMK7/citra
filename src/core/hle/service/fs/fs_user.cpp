@@ -37,7 +37,7 @@ void FS_USER::Initialize(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x0801, 0, 2);
     rp.PopPID();
 
-    IPC::RequestBuilder rb = rp.MakeBuilder(0, 1);
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
 }
 
