@@ -483,7 +483,6 @@ void NWM_UDS::Shutdown(Kernel::HLERequestContext& ctx) {
     if (auto room_member = Network::GetRoomMember().lock())
         room_member->Unbind(wifi_packet_received);
 
-    // TODO(B3N30): Check on HW if Shutdown signals those events
     for (auto bind_node : channel_data) {
         bind_node.second.event->Signal();
     }
@@ -843,7 +842,6 @@ void NWM_UDS::DestroyNetwork(Kernel::HLERequestContext& ctx) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
 
-    // TODO(B3N30): HW test if events get signaled here.
     for (auto bind_node : channel_data) {
         bind_node.second.event->Signal();
     }
@@ -888,7 +886,6 @@ void NWM_UDS::DisconnectNetwork(Kernel::HLERequestContext& ctx) {
 
     SendPacket(deauth);
 
-    // TODO(B3N30): Check on HW if Shutdown signals those events
     for (auto bind_node : channel_data) {
         bind_node.second.event->Signal();
     }
