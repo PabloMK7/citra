@@ -37,6 +37,17 @@ union BatteryState {
     BitField<2, 3, u8> charge_level;
 };
 
+using MacAddress = std::array<u8, 6>;
+
+// Default MAC address in the nintendo 3ds range
+constexpr MacAddress DefaultMac = { 0x40, 0xF4, 0x07, 0x00, 0x00, 0x00 };
+
+enum class WifiLinkLevel : u8 {
+    POOR = 0,
+    GOOD = 1,
+    BEST = 2,
+};
+
 struct SharedPageDef {
     // Most of these names are taken from the 3dbrew page linked above.
     u32_le date_time_counter; // 0
@@ -65,5 +76,9 @@ static_assert(sizeof(SharedPageDef) == Memory::SHARED_PAGE_SIZE,
 extern SharedPageDef shared_page;
 
 void Init();
+
+void SetMacAddress(const MacAddress&);
+
+void SetWifiLinkLevel(WifiLinkLevel);
 
 } // namespace

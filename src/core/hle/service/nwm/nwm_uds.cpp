@@ -23,6 +23,7 @@
 #include "core/hle/service/nwm/uds_beacon.h"
 #include "core/hle/service/nwm/uds_connection.h"
 #include "core/hle/service/nwm/uds_data.h"
+#include "core/hle/shared_page.h"
 #include "core/memory.h"
 #include "network/network.h"
 
@@ -590,6 +591,12 @@ void NWM_UDS::InitializeWithVersion(Kernel::HLERequestContext& ctx) {
         connection_status.status = static_cast<u32>(NetworkStatus::NotConnected);
         node_info.clear();
         node_info.push_back(current_node);
+    }
+
+    if (auto room_member = Network::GetRoomMember().lock()) {
+        if (room_member->IsConnected()) {
+            SharedPage::SetMacAddress(static_cast<SharedPage::MacAddress>(room_member->GetMacAddress()));
+        }
     }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);

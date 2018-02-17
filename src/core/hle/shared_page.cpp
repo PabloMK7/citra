@@ -83,6 +83,17 @@ void Init() {
     update_time_event =
         CoreTiming::RegisterEvent("SharedPage::UpdateTimeCallback", UpdateTimeCallback);
     CoreTiming::ScheduleEvent(0, update_time_event);
+
+    SetWifiLinkLevel(WifiLinkLevel::POOR);
+    SetMacAddress(DefaultMac);
+}
+
+void SetMacAddress(const MacAddress& addr) {
+    std::memcpy(shared_page.wifi_macaddr, addr.data(), sizeof(MacAddress));
+}
+
+void SetWifiLinkLevel(WifiLinkLevel level) {
+    shared_page.wifi_link_level = static_cast<u8>(level);
 }
 
 } // namespace
