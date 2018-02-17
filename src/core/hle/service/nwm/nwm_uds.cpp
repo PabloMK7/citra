@@ -542,8 +542,7 @@ void NWM_UDS::RecvBeaconBroadcastData(Kernel::HLERequestContext& ctx) {
         out_buffer.Write(&entry, cur_buffer_size, sizeof(BeaconEntryHeader));
         cur_buffer_size += sizeof(BeaconEntryHeader);
         const unsigned char* beacon_data = beacon.data.data();
-        out_buffer.Write(beacon_data, cur_buffer_size,
-                         beacon.data.size());
+        out_buffer.Write(beacon_data, cur_buffer_size, beacon.data.size());
         cur_buffer_size += beacon.data.size();
     }
 
@@ -556,7 +555,7 @@ void NWM_UDS::RecvBeaconBroadcastData(Kernel::HLERequestContext& ctx) {
     rb.PushMappedBuffer(out_buffer);
 
     LOG_DEBUG(Service_NWM, "called out_buffer_size=0x%08X, wlan_comm_id=0x%08X, id=0x%08X,"
-              "unk1=0x%08X, unk2=0x%08X, offset=%zu",
+                            "unk1=0x%08X, unk2=0x%08X, offset=%zu",
               out_buffer_size, wlan_comm_id, id, unk1, unk2, cur_buffer_size);
 }
 
@@ -664,7 +663,8 @@ void NWM_UDS::Bind(Kernel::HLERequestContext& ctx) {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(ResultCode(ErrorDescription::NotAuthorized, ErrorModule::UDS,
                            ErrorSummary::WrongArgument, ErrorLevel::Usage));
-        LOG_WARNING(Service_NWM, "data_channel = %d, bind_node_id = %d", data_channel, bind_node_id);
+        LOG_WARNING(Service_NWM, "data_channel = %d, bind_node_id = %d", data_channel,
+                    bind_node_id);
         return;
     }
 
@@ -1123,7 +1123,8 @@ void NWM_UDS::DecryptBeaconData(Kernel::HLERequestContext& ctx) {
     ASSERT_MSG(encrypted_data0_buffer[3] == static_cast<u8>(NintendoTagId::EncryptedData0),
                "Unexpected tag id");
 
-    std::vector<u8> beacon_data(encrypted_data0_buffer.size() - 4 + encrypted_data1_buffer.size() - 4);
+    std::vector<u8> beacon_data(encrypted_data0_buffer.size() - 4 + encrypted_data1_buffer.size() -
+                                4);
     std::memcpy(beacon_data.data(), encrypted_data0_buffer.data() + 4,
                 encrypted_data0_buffer.size() - 4);
     std::memcpy(beacon_data.data() + encrypted_data0_buffer.size() - 4,
