@@ -39,13 +39,14 @@ union BatteryState {
 
 using MacAddress = std::array<u8, 6>;
 
-// Default MAC address in the nintendo 3ds range
-constexpr MacAddress DefaultMac = { 0x40, 0xF4, 0x07, 0x00, 0x00, 0x00 };
+// Default MAC address in the Nintendo 3DS range
+constexpr MacAddress DefaultMac = {0x40, 0xF4, 0x07, 0x00, 0x00, 0x00};
 
 enum class WifiLinkLevel : u8 {
-    POOR = 0,
-    GOOD = 1,
-    BEST = 2,
+    OFF = 0,
+    POOR = 1,
+    GOOD = 2,
+    BEST = 3,
 };
 
 struct SharedPageDef {
@@ -81,4 +82,4 @@ void SetMacAddress(const MacAddress&);
 
 void SetWifiLinkLevel(WifiLinkLevel);
 
-} // namespace
+} // namespace SharedPage

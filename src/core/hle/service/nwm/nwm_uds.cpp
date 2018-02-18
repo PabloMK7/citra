@@ -593,12 +593,6 @@ void NWM_UDS::InitializeWithVersion(Kernel::HLERequestContext& ctx) {
         node_info.push_back(current_node);
     }
 
-    if (auto room_member = Network::GetRoomMember().lock()) {
-        if (room_member->IsConnected()) {
-            SharedPage::SetMacAddress(static_cast<SharedPage::MacAddress>(room_member->GetMacAddress()));
-        }
-    }
-
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
     rb.Push(RESULT_SUCCESS);
     rb.PushCopyObjects(connection_status_event);
