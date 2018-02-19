@@ -809,8 +809,7 @@ void GMainWindow::OnMenuInstallCIA() {
         const auto cia_progress = [&](size_t written, size_t total) {
             emit UpdateProgress(written, total);
         };
-        for (int current_index = 0; current_index < filepaths.size(); current_index++) {
-            current_path = filepaths.at(current_index);
+        for (const auto current_path : filepaths) {
             status = Service::AM::InstallCIA(current_path.toStdString(), cia_progress);
             emit CIAInstallReport(status, current_path);
         }
