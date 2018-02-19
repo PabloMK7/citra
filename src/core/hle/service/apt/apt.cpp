@@ -202,7 +202,8 @@ void Module::Interface::GetSharedFont(Kernel::HLERequestContext& ctx) {
         } else {
             LOG_ERROR(Service_APT, "shared font file missing - go dump it from your 3ds");
             rb.Push<u32>(-1); // TODO: Find the right error code
-            rb.Skip(1 + 2, true);
+            rb.Push<u32>(0);
+            rb.PushCopyObjects<Kernel::Object>(nullptr);
             Core::System::GetInstance().SetStatus(Core::System::ResultStatus::ErrorSharedFont);
             return;
         }
