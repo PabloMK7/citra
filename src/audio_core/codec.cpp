@@ -5,12 +5,13 @@
 #include <array>
 #include <cstddef>
 #include <cstring>
-#include <vector>
+#include "audio_core/audio_types.h"
 #include "audio_core/codec.h"
 #include "common/assert.h"
 #include "common/common_types.h"
 #include "common/math_util.h"
 
+namespace AudioCore {
 namespace Codec {
 
 StereoBuffer16 DecodeADPCM(const u8* const data, const size_t sample_count,
@@ -124,4 +125,5 @@ StereoBuffer16 DecodePCM16(const unsigned num_channels, const u8* const data,
 
     return ret;
 }
-};
+} // namespace Codec
+} // namespace AudioCore

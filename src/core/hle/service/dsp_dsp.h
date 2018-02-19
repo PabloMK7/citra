@@ -7,10 +7,8 @@
 #include <string>
 #include "core/hle/service/service.h"
 
-namespace DSP {
-namespace HLE {
+namespace AudioCore {
 enum class DspPipe;
-}
 }
 
 namespace Service {
@@ -30,7 +28,7 @@ public:
  * Signal a specific DSP related interrupt of type == InterruptType::Pipe, pipe == pipe.
  * @param pipe The DSP pipe for which to signal an interrupt for.
  */
-void SignalPipeInterrupt(DSP::HLE::DspPipe pipe);
+void SignalPipeInterrupt(AudioCore::DspPipe pipe);
 
 } // namespace DSP_DSP
 } // namespace Service

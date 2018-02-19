@@ -4,7 +4,7 @@
 
 #include <array>
 #include <cstring>
-#include "audio_core/audio_core.h"
+#include "audio_core/dsp_interface.h"
 #include "common/assert.h"
 #include "common/common_types.h"
 #include "common/logging/log.h"
@@ -311,7 +311,7 @@ u8* GetPhysicalPointer(PAddr address) {
         target_pointer = vram.data() + offset_into_region;
         break;
     case DSP_RAM_PADDR:
-        target_pointer = AudioCore::GetDspMemory().data() + offset_into_region;
+        target_pointer = Core::DSP().GetDspMemory().data() + offset_into_region;
         break;
     case FCRAM_PADDR:
         for (const auto& region : Kernel::memory_regions) {

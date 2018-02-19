@@ -5,12 +5,12 @@
 #include <array>
 #include <cstddef>
 #include "audio_core/hle/common.h"
-#include "audio_core/hle/dsp.h"
 #include "audio_core/hle/filter.h"
+#include "audio_core/hle/shared_memory.h"
 #include "common/common_types.h"
 #include "common/math_util.h"
 
-namespace DSP {
+namespace AudioCore {
 namespace HLE {
 
 void SourceFilters::Reset() {
@@ -114,4 +114,4 @@ std::array<s16, 2> SourceFilters::BiquadFilter::ProcessSample(const std::array<s
 }
 
 } // namespace HLE
-} // namespace DSP
+} // namespace AudioCore

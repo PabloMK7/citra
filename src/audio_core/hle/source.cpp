@@ -12,7 +12,7 @@
 #include "common/logging/log.h"
 #include "core/memory.h"
 
-namespace DSP {
+namespace AudioCore {
 namespace HLE {
 
 SourceStatus::Status Source::Tick(SourceConfiguration::Configuration& config,
@@ -345,4 +345,4 @@ SourceStatus::Status Source::GetCurrentStatus() {
 }
 
 } // namespace HLE
-} // namespace DSP
+} // namespace AudioCore

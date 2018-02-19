@@ -5,13 +5,11 @@
 #pragma once
 
 #include <array>
-#include <deque>
+#include "audio_core/audio_types.h"
 #include "common/common_types.h"
 
+namespace AudioCore {
 namespace Codec {
-
-/// A variable length buffer of signed PCM16 stereo samples.
-using StereoBuffer16 = std::deque<std::array<s16, 2>>;
 
 /// See: Codec::DecodeADPCM
 struct ADPCMState {
@@ -48,4 +46,5 @@ StereoBuffer16 DecodePCM8(const unsigned num_channels, const u8* const data,
  */
 StereoBuffer16 DecodePCM16(const unsigned num_channels, const u8* const data,
                            const size_t sample_count);
-};
+} // namespace Codec
+} // namespace AudioCore

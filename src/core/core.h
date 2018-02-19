@@ -15,6 +15,10 @@
 class EmuWindow;
 class ARM_Interface;
 
+namespace AudioCore {
+class DspInterface;
+}
+
 namespace Core {
 
 class System {
@@ -102,6 +106,14 @@ public:
         return *cpu_core;
     }
 
+    /**
+     * Gets a reference to the emulated DSP.
+     * @returns A reference to the emulated DSP.
+     */
+    AudioCore::DspInterface& DSP() {
+        return *dsp_core;
+    }
+
     PerfStats perf_stats;
     FrameLimiter frame_limiter;
 
@@ -138,6 +150,9 @@ private:
     ///< ARM11 CPU core
     std::unique_ptr<ARM_Interface> cpu_core;
 
+    ///< DSP core
+    std::unique_ptr<AudioCore::DspInterface> dsp_core;
+
     /// When true, signals that a reschedule should happen
     bool reschedule_pending{};
 
@@ -152,6 +167,10 @@ private:
 
 inline ARM_Interface& CPU() {
     return System::GetInstance().CPU();
+}
+
+inline AudioCore::DspInterface& DSP() {
+    return System::GetInstance().DSP();
 }
 
 inline TelemetrySession& Telemetry() {
