@@ -94,7 +94,9 @@ static const std::unordered_map<int, int> error_map = {{
     {ERRNO(EMFILE), 33},
     {EMLINK, 34},
     {ERRNO(EMSGSIZE), 35},
+#ifdef EMULTIHOP
     {ERRNO(EMULTIHOP), 36},
+#endif
     {ERRNO(ENAMETOOLONG), 37},
     {ERRNO(ENETDOWN), 38},
     {ERRNO(ENETRESET), 39},
