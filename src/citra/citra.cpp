@@ -257,7 +257,12 @@ int main(int argc, char** argv) {
 
     Log::Filter log_filter;
     log_filter.ParseFilterString(Settings::values.log_filter);
-    Log::SetFilter(&log_filter);
+    Log::SetGlobalFilter(log_filter);
+
+    Log::AddBackend(std::make_unique<Log::ColorConsoleBackend>());
+    FileUtil::CreateFullPath(FileUtil::GetUserPath(D_LOGS_IDX));
+    Log::AddBackend(
+        std::make_unique<Log::FileBackend>(FileUtil::GetUserPath(D_LOGS_IDX) + LOG_FILE));
 
     // Apply the command line arguments
     Settings::values.gdbstub_port = gdb_port;
