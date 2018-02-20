@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <fmt/format.h>
 #include "common/common_types.h"
 
 namespace Log {
@@ -98,7 +99,7 @@ enum class Class : ClassType {
 };
 
 /// Logs a message to the global logger.
-void LogMessage(Class log_class, Level log_level, const char* filename, unsigned int line_nr,
+void LogMessage(Class log_class, Level log_level, const char* filename, unsigned int line_num,
                 const char* function,
 #ifdef _MSC_VER
                 _Printf_format_string_
@@ -109,6 +110,12 @@ void LogMessage(Class log_class, Level log_level, const char* filename, unsigned
     __attribute__((format(printf, 6, 7)))
 #endif
     ;
+
+/// Logs a message to the global logger, this time with 100% moar fmtlib
+void FmtLogMessage(Class log_class, Level log_level, const char* filename, unsigned int line_num,
+                   const char* function, const char* format, fmt::ArgList);
+
+FMT_VARIADIC(void, FmtLogMessage, Class, Level, const char*, unsigned int, const char*, const char*)
 
 } // namespace Log
 
@@ -132,3 +139,28 @@ void LogMessage(Class log_class, Level log_level, const char* filename, unsigned
     LOG_GENERIC(::Log::Class::log_class, ::Log::Level::Error, __VA_ARGS__)
 #define LOG_CRITICAL(log_class, ...)                                                               \
     LOG_GENERIC(::Log::Class::log_class, ::Log::Level::Critical, __VA_ARGS__)
+
+// Define the fmt lib macros
+#ifdef _DEBUG
+#define NGLOG_TRACE(log_class, fmt, ...)                                                           \
+    ::Log::FmtLogMessage(::Log::Class::log_class, ::Log::Level::Trace, __FILE__, __LINE__,         \
+                         __func__, fmt, ##__VA_ARGS__)
+#else
+#define NGLOG_TRACE(log_class, fmt, ...) (void(0))
+#endif
+
+#define NGLOG_DEBUG(log_class, fmt, ...)                                                           \
+    ::Log::FmtLogMessage(::Log::Class::log_class, ::Log::Level::Debug, __FILE__, __LINE__,         \
+                         __func__, fmt, ##__VA_ARGS__)
+#define NGLOG_INFO(log_class, fmt, ...)                                                            \
+    ::Log::FmtLogMessage(::Log::Class::log_class, ::Log::Level::Info, __FILE__, __LINE__,          \
+                         __func__, fmt, ##__VA_ARGS__)
+#define NGLOG_WARNING(log_class, fmt, ...)                                                         \
+    ::Log::FmtLogMessage(::Log::Class::log_class, ::Log::Level::Warning, __FILE__, __LINE__,       \
+                         __func__, fmt, ##__VA_ARGS__)
+#define NGLOG_ERROR(log_class, fmt, ...)                                                           \
+    ::Log::FmtLogMessage(::Log::Class::log_class, ::Log::Level::Error, __FILE__, __LINE__,         \
+                         __func__, fmt, ##__VA_ARGS__)
+#define NGLOG_CRITICAL(log_class, fmt, ...)                                                        \
+    ::Log::FmtLogMessage(::Log::Class::log_class, ::Log::Level::Critical, __FILE__, __LINE__,      \
+                         __func__, fmt, ##__VA_ARGS__)

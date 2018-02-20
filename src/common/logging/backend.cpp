@@ -4,15 +4,107 @@
 
 #include <algorithm>
 #include <array>
+#include <chrono>
 #include <cstdio>
+#include <future>
+#include <memory>
+#include <thread>
 #include "common/assert.h"
 #include "common/common_funcs.h" // snprintf compatibility define
 #include "common/logging/backend.h"
-#include "common/logging/filter.h"
 #include "common/logging/log.h"
 #include "common/logging/text_formatter.h"
+#include "common/string_util.h"
+#include "common/threadsafe_queue.h"
 
 namespace Log {
+
+/**
+ * Static state as a singleton.
+ */
+class Impl {
+public:
+    static Impl& Instance() {
+        static Impl backend;
+        return backend;
+    }
+
+    Impl(Impl const&) = delete;
+    const Impl& operator=(Impl const&) = delete;
+
+    Common::MPSCQueue<Log::Entry>& GetQueue() {
+        return message_queue;
+    }
+
+    void AddBackend(std::unique_ptr<Backend> backend) {
+        backends.push_back(std::move(backend));
+    }
+
+    void RemoveBackend(const std::string& backend_name) {
+        std::remove_if(backends.begin(), backends.end(),
+                       [&backend_name](const auto& i) { return i->GetName() == backend_name; });
+    }
+
+    const Filter& GetGlobalFilter() const {
+        return filter;
+    }
+
+    void SetGlobalFilter(const Filter& f) {
+        filter = f;
+    }
+
+    Backend* GetBackend(const std::string& backend_name) {
+        auto it = std::find_if(backends.begin(), backends.end(), [&backend_name](const auto& i) {
+            return i->GetName() == backend_name;
+        });
+        if (it == backends.end())
+            return nullptr;
+        return it->get();
+    }
+
+private:
+    Impl() : running(true) {
+        backend_thread = std::async(std::launch::async, [&] {
+            using namespace std::chrono_literals;
+            Entry entry;
+            while (running) {
+                if (!message_queue.Pop(entry)) {
+                    std::this_thread::sleep_for(1ms);
+                    continue;
+                }
+                for (const auto& backend : backends) {
+                    backend->Write(entry);
+                }
+            }
+        });
+    }
+    ~Impl() {
+        if (running) {
+            running = false;
+        }
+    }
+
+    std::atomic_bool running;
+    std::future<void> backend_thread;
+    std::vector<std::unique_ptr<Backend>> backends;
+    Common::MPSCQueue<Log::Entry> message_queue;
+    Filter filter;
+};
+
+void ConsoleBackend::Write(const Entry& entry) {
+    PrintMessage(entry);
+}
+
+void ColorConsoleBackend::Write(const Entry& entry) {
+    PrintColoredMessage(entry);
+}
+
+void FileBackend::Write(const Entry& entry) {
+    if (!file.IsOpen()) {
+        return;
+    }
+    file.WriteString(FormatLogMessage(entry) + "\n");
+}
 
 /// Macro listing all log classes. Code should define CLS and SUB as desired before invoking this.
 #define ALL_LOG_CLASSES()                                                                          \
@@ -113,45 +205,65 @@ const char* GetLevelName(Level log_level) {
 }
 
 Entry CreateEntry(Class log_class, Level log_level, const char* filename, unsigned int line_nr,
-                  const char* function, const char* format, va_list args) {
-    using std::chrono::steady_clock;
+                  const char* function, const std::string& message) {
     using std::chrono::duration_cast;
+    using std::chrono::steady_clock;
 
     static steady_clock::time_point time_origin = steady_clock::now();
-
-    std::array<char, 4 * 1024> formatting_buffer;
 
     Entry entry;
     entry.timestamp = duration_cast<std::chrono::microseconds>(steady_clock::now() - time_origin);
     entry.log_class = log_class;
     entry.log_level = log_level;
-
-    snprintf(formatting_buffer.data(), formatting_buffer.size(), "%s:%s:%u", filename, function,
-             line_nr);
-    entry.location = std::string(formatting_buffer.data());
-
-    vsnprintf(formatting_buffer.data(), formatting_buffer.size(), format, args);
-    entry.message = std::string(formatting_buffer.data());
+    entry.filename = std::string(Common::TrimSourcePath(filename));
+    entry.line_num = line_nr;
+    entry.function = std::string(function);
+    entry.message = message;
 
     return entry;
 }
 
-static Filter* filter = nullptr;
-
-void SetFilter(Filter* new_filter) {
-    filter = new_filter;
+void SetGlobalFilter(const Filter& filter) {
+    Impl::Instance().SetGlobalFilter(filter);
 }
 
-void LogMessage(Class log_class, Level log_level, const char* filename, unsigned int line_nr,
-                const char* function, const char* format, ...) {
-    if (filter != nullptr && !filter->CheckMessage(log_class, log_level))
-        return;
+void AddBackend(std::unique_ptr<Backend> backend) {
+    Impl::Instance().AddBackend(std::move(backend));
+}
 
+void RemoveBackend(const std::string& backend_name) {
+    Impl::Instance().RemoveBackend(backend_name);
+}
+
+Backend* GetBackend(const std::string& backend_name) {
+    return Impl::Instance().GetBackend(backend_name);
+}
+
+void LogMessage(Class log_class, Level log_level, const char* filename, unsigned int line_num,
+                const char* function, const char* format, ...) {
+    auto filter = Impl::Instance().GetGlobalFilter();
+    if (!filter.CheckMessage(log_class, log_level))
+        return;
+    std::array<char, 4 * 1024> formatting_buffer;
     va_list args;
     va_start(args, format);
-    Entry entry = CreateEntry(log_class, log_level, filename, line_nr, function, format, args);
+    vsnprintf(formatting_buffer.data(), formatting_buffer.size(), format, args);
     va_end(args);
+    Entry entry = CreateEntry(log_class, log_level, filename, line_num, function,
+                              std::string(formatting_buffer.data()));
 
-    PrintColoredMessage(entry);
+    Impl::Instance().GetQueue().Push(std::move(entry));
 }
+
+void FmtLogMessage(Class log_class, Level log_level, const char* filename, unsigned int line_num,
+                   const char* function, const char* format, fmt::ArgList args) {
+    auto filter = Impl::Instance().GetGlobalFilter();
+    if (!filter.CheckMessage(log_class, log_level))
+        return;
+
+    Entry entry =
+        CreateEntry(log_class, log_level, filename, line_num, function, fmt::format(format, args));
+
+    Impl::Instance().GetQueue().Push(std::move(entry));
 }
+} // namespace Log

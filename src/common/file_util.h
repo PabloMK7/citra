@@ -224,6 +224,10 @@ public:
         return WriteArray(&object, 1);
     }
 
+    size_t WriteString(const std::string& str) {
+        return WriteArray(str.c_str(), str.length());
+    }
+
     bool IsOpen() const {
         return nullptr != m_file;
     }
@@ -253,7 +257,7 @@ private:
     bool m_good = true;
 };
 
-} // namespace
+} // namespace FileUtil
 
 // To deal with Windows being dumb at unicode:
 template <typename T>

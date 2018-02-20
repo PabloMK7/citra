@@ -20,6 +20,7 @@
 #include "citra_qt/compatdb.h"
 #include "citra_qt/configuration/config.h"
 #include "citra_qt/configuration/configure_dialog.h"
+#include "citra_qt/debugger/console.h"
 #include "citra_qt/debugger/graphics/graphics.h"
 #include "citra_qt/debugger/graphics/graphics_breakpoints.h"
 #include "citra_qt/debugger/graphics/graphics_cmdlists.h"
@@ -34,6 +35,7 @@
 #include "citra_qt/main.h"
 #include "citra_qt/ui_settings.h"
 #include "citra_qt/updater/updater.h"
+#include "common/common_paths.h"
 #include "common/logging/backend.h"
 #include "common/logging/filter.h"
 #include "common/logging/log.h"
@@ -369,6 +371,7 @@ void GMainWindow::RestoreUIState() {
 
     ui.action_Show_Status_Bar->setChecked(UISettings::values.show_status_bar);
     statusBar()->setVisible(ui.action_Show_Status_Bar->isChecked());
+    Debugger::ToggleConsole();
 }
 
 void GMainWindow::ConnectWidgetEvents() {
@@ -1295,8 +1298,7 @@ void GMainWindow::SyncMenuUISettings() {
 #endif
 
 int main(int argc, char* argv[]) {
-    Log::Filter log_filter(Log::Level::Info);
-    Log::SetFilter(&log_filter);
+    Log::AddBackend(std::make_unique<Log::ColorConsoleBackend>());
 
     MicroProfileOnThreadCreate("Frontend");
     SCOPE_EXIT({ MicroProfileShutdown(); });
@@ -1314,7 +1316,12 @@ int main(int argc, char* argv[]) {
 
     GMainWindow main_window;
     // After settings have been loaded by GMainWindow, apply the filter
+    Log::Filter log_filter;
     log_filter.ParseFilterString(Settings::values.log_filter);
+    Log::SetGlobalFilter(log_filter);
+    FileUtil::CreateFullPath(FileUtil::GetUserPath(D_LOGS_IDX));
+    Log::AddBackend(
+        std::make_unique<Log::FileBackend>(FileUtil::GetUserPath(D_LOGS_IDX) + LOG_FILE));
 
     main_window.show();
     return app.exec();

@@ -202,7 +202,7 @@ bool SplitPath(const std::string& full_path, std::string* _pPath, std::string* _
 #ifdef _WIN32
                                             ":"
 #endif
-                                            );
+    );
     if (std::string::npos == dir_end)
         dir_end = 0;
     else
@@ -462,4 +462,26 @@ std::string StringFromFixedZeroTerminatedBuffer(const char* buffer, size_t max_l
 
     return std::string(buffer, len);
 }
+
+const char* TrimSourcePath(const char* path, const char* root) {
+    const char* p = path;
+
+    while (*p != '\0') {
+        const char* next_slash = p;
+        while (*next_slash != '\0' && *next_slash != '/' && *next_slash != '\\') {
+            ++next_slash;
+        }
+
+        bool is_src = Common::ComparePartialString(p, next_slash, root);
+        p = next_slash;
+
+        if (*p != '\0') {
+            ++p;
+        }
+        if (is_src) {
+            path = p;
+        }
+    }
+    return path;
 }
+} // namespace Common

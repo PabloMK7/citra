@@ -28,6 +28,8 @@ add_executable(citra-qt
     configuration/configure_system.h
     configuration/configure_web.cpp
     configuration/configure_web.h
+    debugger/console.h
+    debugger/console.cpp
     debugger/graphics/graphics.cpp
     debugger/graphics/graphics.h
     debugger/graphics/graphics_breakpoint_observer.cpp
@@ -138,6 +140,10 @@ if (APPLE)
     target_sources(citra-qt PRIVATE ${MACOSX_ICON})
     set_target_properties(citra-qt PROPERTIES MACOSX_BUNDLE TRUE)
     set_target_properties(citra-qt PROPERTIES MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/Info.plist)
+elseif(WIN32)
+    # compile as a win32 gui application instead of a console application
+    target_link_libraries(citra-qt PRIVATE Qt5::WinMain)
+    set_target_properties(citra-qt PROPERTIES LINK_FLAGS_RELEASE "/SUBSYSTEM:WINDOWS")
 endif()
 
 create_target_directory_groups(citra-qt)

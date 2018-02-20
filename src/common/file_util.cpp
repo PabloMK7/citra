@@ -715,6 +715,8 @@ const std::string& GetUserPath(const unsigned int DirIDX, const std::string& new
         paths[D_SDMC_IDX] = paths[D_USER_IDX] + SDMC_DIR DIR_SEP;
         paths[D_NAND_IDX] = paths[D_USER_IDX] + NAND_DIR DIR_SEP;
         paths[D_SYSDATA_IDX] = paths[D_USER_IDX] + SYSDATA_DIR DIR_SEP;
+        // TODO: Put the logs in a better location for each OS
+        paths[D_LOGS_IDX] = paths[D_USER_IDX] + LOG_DIR DIR_SEP;
     }
 
     if (!newPath.empty()) {
@@ -873,20 +875,19 @@ bool IOFile::Flush() {
 }
 
 bool IOFile::Resize(u64 size) {
-    if (!IsOpen() ||
-        0 !=
+    if (!IsOpen() || 0 !=
 #ifdef _WIN32
-            // ector: _chsize sucks, not 64-bit safe
-            // F|RES: changed to _chsize_s. i think it is 64-bit safe
-            _chsize_s(_fileno(m_file), size)
+                         // ector: _chsize sucks, not 64-bit safe
+                         // F|RES: changed to _chsize_s. i think it is 64-bit safe
+                         _chsize_s(_fileno(m_file), size)
 #else
-            // TODO: handle 64bit and growing
-            ftruncate(fileno(m_file), size)
+                         // TODO: handle 64bit and growing
+                         ftruncate(fileno(m_file), size)
 #endif
-            )
+    )
         m_good = false;
 
     return m_good;
 }
 
-} // namespace
+} // namespace FileUtil
