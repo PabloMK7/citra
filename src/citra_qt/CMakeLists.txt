@@ -143,7 +143,11 @@ if (APPLE)
 elseif(WIN32)
     # compile as a win32 gui application instead of a console application
     target_link_libraries(citra-qt PRIVATE Qt5::WinMain)
-    set_target_properties(citra-qt PROPERTIES LINK_FLAGS_RELEASE "/SUBSYSTEM:WINDOWS")
+    if(MSVC)
+        set_target_properties(citra-qt PROPERTIES LINK_FLAGS_RELEASE "/SUBSYSTEM:WINDOWS")
+    elseif(MINGW)
+        set_target_properties(citra-qt PROPERTIES LINK_FLAGS_RELEASE "-mwindows")
+    endif()
 endif()
 
 create_target_directory_groups(citra-qt)
