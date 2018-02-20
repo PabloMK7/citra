@@ -9,6 +9,7 @@
 #include <memory>
 #include <string>
 #include <utility>
+#include <boost/optional.hpp>
 #include "common/file_util.h"
 #include "common/logging/filter.h"
 #include "common/logging/log.h"
@@ -81,7 +82,7 @@ public:
  */
 class FileBackend : public Backend {
 public:
-    FileBackend(const std::string& filename) : file(filename, "w") {}
+    explicit FileBackend(const std::string& filename) : file(filename, "w") {}
 
     const char* GetName() const override {
         return "file";
@@ -97,7 +98,7 @@ void AddBackend(std::unique_ptr<Backend> backend);
 
 void RemoveBackend(const std::string& backend_name);
 
-Backend* GetBackend(const std::string& backend_name);
+boost::optional<Backend*> GetBackend(const std::string& backend_name);
 
 /**
  * Returns the name of the passed log class as a C-string. Subclasses are separated by periods
@@ -112,7 +113,7 @@ const char* GetLevelName(Level log_level);
 
 /// Creates a log entry by formatting the given source location, and message.
 Entry CreateEntry(Class log_class, Level log_level, const char* filename, unsigned int line_nr,
-                  const char* function, const char* format, const std::string& message);
+                  const char* function, std::string message);
 
 /**
  * The global filter will prevent any messages from even being processed if they are filtered. Each

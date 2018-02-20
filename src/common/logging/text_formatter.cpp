@@ -31,13 +31,16 @@ std::string FormatLogMessage(const Entry& entry) {
 }
 
 void PrintMessage(const Entry& entry) {
-    auto str = FormatLogMessage(entry) + "\n";
+    auto str = FormatLogMessage(entry) + '\n';
     fputs(str.c_str(), stderr);
 }
 
 void PrintColoredMessage(const Entry& entry) {
 #ifdef _WIN32
     HANDLE console_handle = GetStdHandle(STD_ERROR_HANDLE);
+    if (console_handle == INVALID_HANDLE_VALUE) {
+        return;
+    }
 
     CONSOLE_SCREEN_BUFFER_INFO original_info = {0};
     GetConsoleScreenBufferInfo(console_handle, &original_info);

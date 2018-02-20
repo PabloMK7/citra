@@ -32,8 +32,8 @@ public:
     Impl(Impl const&) = delete;
     const Impl& operator=(Impl const&) = delete;
 
-    Common::MPSCQueue<Log::Entry>& GetQueue() {
-        return message_queue;
+    void PushEntry(Entry e) {
+        message_queue.Push(std::move(e));
     }
 
     void AddBackend(std::unique_ptr<Backend> backend) {
@@ -53,17 +53,17 @@ public:
         filter = f;
     }
 
-    Backend* GetBackend(const std::string& backend_name) {
+    boost::optional<Backend*> GetBackend(const std::string& backend_name) {
         auto it = std::find_if(backends.begin(), backends.end(), [&backend_name](const auto& i) {
             return i->GetName() == backend_name;
         });
         if (it == backends.end())
-            return nullptr;
+            return boost::none;
         return it->get();
     }
 
 private:
-    Impl() : running(true) {
+    Impl() {
         backend_thread = std::async(std::launch::async, [&] {
             using namespace std::chrono_literals;
             Entry entry;
@@ -79,12 +79,10 @@ private:
         });
     }
     ~Impl() {
-        if (running) {
-            running = false;
-        }
+        running = false;
     }
 
-    std::atomic_bool running;
+    std::atomic_bool running{true};
     std::future<void> backend_thread;
     std::vector<std::unique_ptr<Backend>> backends;
     Common::MPSCQueue<Log::Entry> message_queue;
@@ -103,7 +101,7 @@ void FileBackend::Write(const Entry& entry) {
     if (!file.IsOpen()) {
         return;
     }
-    file.WriteString(FormatLogMessage(entry) + "\n");
+    file.WriteString(FormatLogMessage(entry) + '\n');
 }
 
 /// Macro listing all log classes. Code should define CLS and SUB as desired before invoking this.
@@ -205,7 +203,7 @@ const char* GetLevelName(Level log_level) {
 }
 
 Entry CreateEntry(Class log_class, Level log_level, const char* filename, unsigned int line_nr,
-                  const char* function, const std::string& message) {
+                  const char* function, std::string message) {
     using std::chrono::duration_cast;
     using std::chrono::steady_clock;
 
@@ -215,9 +213,9 @@ Entry CreateEntry(Class log_class, Level log_level, const char* filename, unsign
     entry.timestamp = duration_cast<std::chrono::microseconds>(steady_clock::now() - time_origin);
     entry.log_class = log_class;
     entry.log_level = log_level;
-    entry.filename = std::string(Common::TrimSourcePath(filename));
+    entry.filename = Common::TrimSourcePath(filename);
     entry.line_num = line_nr;
-    entry.function = std::string(function);
+    entry.function = function;
     entry.message = message;
 
     return entry;
@@ -235,7 +233,7 @@ void RemoveBackend(const std::string& backend_name) {
     Impl::Instance().RemoveBackend(backend_name);
 }
 
-Backend* GetBackend(const std::string& backend_name) {
+boost::optional<Backend*> GetBackend(const std::string& backend_name) {
     return Impl::Instance().GetBackend(backend_name);
 }
 
@@ -252,7 +250,7 @@ void LogMessage(Class log_class, Level log_level, const char* filename, unsigned
     Entry entry = CreateEntry(log_class, log_level, filename, line_num, function,
                               std::string(formatting_buffer.data()));
 
-    Impl::Instance().GetQueue().Push(std::move(entry));
+    Impl::Instance().PushEntry(std::move(entry));
 }
 
 void FmtLogMessage(Class log_class, Level log_level, const char* filename, unsigned int line_num,
@@ -264,6 +262,6 @@ void FmtLogMessage(Class log_class, Level log_level, const char* filename, unsig
     Entry entry =
         CreateEntry(log_class, log_level, filename, line_num, function, fmt::format(format, args));
 
-    Impl::Instance().GetQueue().Push(std::move(entry));
+    Impl::Instance().PushEntry(std::move(entry));
 }
 } // namespace Log
