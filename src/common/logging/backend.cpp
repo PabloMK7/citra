@@ -216,7 +216,7 @@ Entry CreateEntry(Class log_class, Level log_level, const char* filename, unsign
     entry.filename = Common::TrimSourcePath(filename);
     entry.line_num = line_nr;
     entry.function = function;
-    entry.message = message;
+    entry.message = std::move(message);
 
     return entry;
 }
