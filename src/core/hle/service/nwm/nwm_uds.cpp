@@ -555,7 +555,7 @@ void NWM_UDS::RecvBeaconBroadcastData(Kernel::HLERequestContext& ctx) {
     rb.PushMappedBuffer(out_buffer);
 
     LOG_DEBUG(Service_NWM, "called out_buffer_size=0x%08X, wlan_comm_id=0x%08X, id=0x%08X,"
-                            "unk1=0x%08X, unk2=0x%08X, offset=%zu",
+                           "unk1=0x%08X, unk2=0x%08X, offset=%zu",
               out_buffer_size, wlan_comm_id, id, unk1, unk2, cur_buffer_size);
 }
 
@@ -1061,7 +1061,7 @@ void NWM_UDS::ConnectToNetwork(Kernel::HLERequestContext& ctx) {
 
     // 300 ms
     // Since this timing is handled by core_timing it could differ from the 'real world' time
-    static constexpr u64 UDSConnectionTimeout = 300000000;
+    static constexpr std::chrono::nanoseconds UDSConnectionTimeout{300000000};
 
     connection_event = ctx.SleepClientThread(
         Kernel::GetCurrentThread(), "uds::ConnectToNetwork", UDSConnectionTimeout,
