@@ -273,6 +273,7 @@ void Init() {
     AC::InstallInterfaces(*SM::g_service_manager);
     LDR::InstallInterfaces(*SM::g_service_manager);
     MIC::InstallInterfaces(*SM::g_service_manager);
+    NWM::InstallInterfaces(*SM::g_service_manager);
 
     FS::ArchiveInit();
     ACT::Init();

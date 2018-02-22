@@ -127,7 +127,7 @@ static_assert(sizeof(BeaconData) == 0x12, "BeaconData has incorrect size.");
 /**
  * Decrypts the beacon data buffer for the network described by `network_info`.
  */
-void DecryptBeaconData(const NetworkInfo& network_info, std::vector<u8>& buffer);
+void DecryptBeacon(const NetworkInfo& network_info, std::vector<u8>& buffer);
 
 /**
  * Generates an 802.11 beacon frame starting at the management frame header.
