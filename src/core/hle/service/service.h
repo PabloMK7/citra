@@ -20,7 +20,7 @@ namespace Kernel {
 class ClientPort;
 class ServerPort;
 class ServerSession;
-}
+} // namespace Kernel
 
 namespace Service {
 
@@ -275,4 +275,4 @@ void AddNamedPort(std::string name, Kernel::SharedPtr<Kernel::ClientPort> port);
 /// Adds a service to the services table
 void AddService(Interface* interface_);
 
-} // namespace
+} // namespace Service

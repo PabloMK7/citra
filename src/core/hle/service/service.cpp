@@ -285,4 +285,4 @@ void Shutdown() {
     g_kernel_named_ports.clear();
     LOG_DEBUG(Service, "shutdown OK");
 }
-}
+} // namespace Service
