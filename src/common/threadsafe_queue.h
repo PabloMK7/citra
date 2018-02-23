@@ -9,6 +9,7 @@
 
 #include <algorithm>
 #include <atomic>
+#include <chrono>
 #include <cstddef>
 #include <mutex>
 #include "common/common_types.h"
@@ -36,6 +37,10 @@ public:
     T& Front() const {
         return read_ptr->current;
     }
+
+    /**
+     * Push data to the queue. If NeedSize=True then Push will notify the waiting consumer thread
+     */
     template <typename Arg>
     void Push(Arg&& t) {
         // create the element, add it to the queue
@@ -45,8 +50,11 @@ public:
         ElementPtr* new_ptr = new ElementPtr();
         write_ptr->next.store(new_ptr, std::memory_order_release);
         write_ptr = new_ptr;
-        if (NeedSize)
+        if (NeedSize) {
+            std::lock_guard<std::mutex> lock(size_lock);
             size++;
+            size_cv.notify_one();
+        }
     }
 
     void Pop() {
@@ -73,6 +81,25 @@ public:
         tmpptr->next.store(nullptr);
         delete tmpptr;
         return true;
+    }
+
+    /**
+     * Waits up to timeout for data to be Pushed to the queue. Push uses a condition variable to
+     * signal the waiting thread, but only if NeedSize = true. Returns false if the timeout is
+     * triggered. If the condition variable is signalled, returns the value from Pop
+     * @param T In parameter to store the value if this method returns true
+     * @param timeout Time in milliseconds to wait for a signal from a Push
+     */
+    bool PopWait(T& t, u64 timeout = 500) {
+        if (NeedSize) {
+            std::unique_lock<std::mutex> lock(size_lock);
+            if (size_cv.wait_for(lock, std::chrono::milliseconds(timeout),
+                                 [& size = size] { return size > 0; })) {
+                return Pop(t);
+            }
+            return false;
+        }
+        return Pop(t);
     }
 
     // not thread-safe
@@ -102,6 +129,9 @@ private:
     ElementPtr* write_ptr;
     ElementPtr* read_ptr;
     std::atomic<u32> size;
+
+    std::mutex size_lock;
+    std::condition_variable size_cv;
 };
 
 // a simple thread-safe,
