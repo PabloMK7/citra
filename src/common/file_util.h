@@ -156,7 +156,8 @@ void SplitFilename83(const std::string& filename, std::array<char, 9>& short_nam
 class IOFile : public NonCopyable {
 public:
     IOFile();
-    IOFile(const std::string& filename, const char openmode[]);
+    /// Opens the file. flags is for windows shared file settings and are ignored on other oses
+    IOFile(const std::string& filename, const char openmode[], int flags = 0);
 
     ~IOFile();
 
@@ -165,7 +166,7 @@ public:
 
     void Swap(IOFile& other);
 
-    bool Open(const std::string& filename, const char openmode[]);
+    bool Open(const std::string& filename, const char openmode[], int flags = 0);
     bool Close();
 
     template <typename T>

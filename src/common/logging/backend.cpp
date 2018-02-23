@@ -9,6 +9,11 @@
 #include <future>
 #include <memory>
 #include <thread>
+#ifdef _WIN32
+#include <share.h> // For _SH_DENYWR
+#else
+#define _SH_DENYWR 0
+#endif
 #include "common/assert.h"
 #include "common/common_funcs.h" // snprintf compatibility define
 #include "common/logging/backend.h"
@@ -68,8 +73,7 @@ private:
             using namespace std::chrono_literals;
             Entry entry;
             while (running) {
-                if (!message_queue.Pop(entry)) {
-                    std::this_thread::sleep_for(1ms);
+                if (!message_queue.PopWait(entry)) {
                     continue;
                 }
                 for (const auto& backend : backends) {
@@ -97,11 +101,18 @@ void ColorConsoleBackend::Write(const Entry& entry) {
     PrintColoredMessage(entry);
 }
 
+// _SH_DENYWR allows read only access to the file for other programs.
+// It is #defined to 0 on other platforms
+FileBackend::FileBackend(const std::string& filename) : file(filename, "w", _SH_DENYWR) {}
+
 void FileBackend::Write(const Entry& entry) {
     if (!file.IsOpen()) {
         return;
     }
     file.WriteString(FormatLogMessage(entry) + '\n');
+    if (entry.log_level >= Level::Error) {
+        file.Flush();
+    }
 }
 
 /// Macro listing all log classes. Code should define CLS and SUB as desired before invoking this.

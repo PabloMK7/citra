@@ -78,11 +78,12 @@ public:
 };
 
 /**
- * Backend that writes to a file passed into the constructor
+ * Backend that writes to a file passed into the constructor. If a log level is error or higher, it
+ * will flush immediately after writing
  */
 class FileBackend : public Backend {
 public:
-    explicit FileBackend(const std::string& filename) : file(filename, "w") {}
+    explicit FileBackend(const std::string& filename);
 
     const char* GetName() const override {
         return "file";
