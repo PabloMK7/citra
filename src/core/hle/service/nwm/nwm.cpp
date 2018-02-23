@@ -2,7 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <random>
+#include <cryptopp/osrng.h>
 #include "core/hle/service/nwm/nwm.h"
 #include "core/hle/service/nwm/nwm_cec.h"
 #include "core/hle/service/nwm/nwm_ext.h"
@@ -25,13 +25,11 @@ void Init() {
     AddService(new NWM_SOC);
     AddService(new NWM_TST);
 
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_int_distribution<> dis(0, std::numeric_limits<u8>::max());
+    CryptoPP::AutoSeededRandomPool rng;
     auto mac = SharedPage::DefaultMac;
-    for (int i = 3; i < sizeof(SharedPage::MacAddress); ++i) {
-        mac[i] = static_cast<u8>(dis(gen));
-    }
+    // Keep the Nintendo 3DS MAC header and randomly generate the last 3 bytes
+    rng.GenerateBlock(static_cast<CryptoPP::byte*>(mac.data() + 3), 3);
+
     if (auto room_member = Network::GetRoomMember().lock()) {
         if (room_member->IsConnected()) {
             mac = static_cast<SharedPage::MacAddress>(room_member->GetMacAddress());
