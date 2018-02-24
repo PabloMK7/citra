@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <memory>
 #include "common/common_types.h"
 #include "core/hle/result.h"
 #include "delay_generator.h"
