@@ -8,6 +8,7 @@
 #include <cstddef>
 #include "common/common_types.h"
 #include "core/hle/result.h"
+#include "delay_generator.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // FileSys namespace
@@ -43,17 +44,13 @@ public:
      * @param length Length in bytes of data read from file
      * @return Nanoseconds for the delay
      */
-    virtual u64 GetReadDelayNs(size_t length) const {
-        // Return the default delay for the case that the subclass backend didn't
-        // implement one. We take the one measured for romfs reads
-        // This should be removed as soon as every subclass backend
-        // has one implemented
-        LOG_WARNING(Service_FS, "Using default delay for read");
-        static constexpr u64 slope(94);
-        static constexpr u64 offset(582778);
-        static constexpr u64 minimum(663124);
-        u64 IPCDelayNanoseconds = std::max<u64>(static_cast<u64>(length) * slope + offset, minimum);
-        return IPCDelayNanoseconds;
+    u64 GetReadDelayNs(size_t length) {
+        if (delay_generator != nullptr) {
+            return delay_generator->GetReadDelayNs(length);
+        }
+        LOG_ERROR(Service_FS, "Delay generator was not initalized. Using default");
+        delay_generator = std::make_unique<DefaultDelayGenerator>();
+        return delay_generator->GetReadDelayNs(length);
     }
 
     /**
@@ -79,6 +76,9 @@ public:
      * Flushes the file
      */
     virtual void Flush() const = 0;
+
+protected:
+    std::unique_ptr<DelayGenerator> delay_generator;
 };
 
 } // namespace FileSys

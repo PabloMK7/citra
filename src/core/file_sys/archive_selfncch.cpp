@@ -56,17 +56,6 @@ public:
         return ERROR_UNSUPPORTED_OPEN_FLAGS;
     }
 
-    u64 GetReadDelayNs(size_t length) const {
-        // The delay was measured on O3DS and O2DS with
-        // https://gist.github.com/B3n30/ac40eac20603f519ff106107f4ac9182
-        // from the results the average of each length was taken.
-        static constexpr u64 slope(94);
-        static constexpr u64 offset(582778);
-        static constexpr u64 minimum(663124);
-        u64 IPCDelayNanoseconds = std::max<u64>(static_cast<u64>(length) * slope + offset, minimum);
-        return IPCDelayNanoseconds;
-    }
-
     u64 GetSize() const override {
         return data->size();
     }
@@ -182,8 +171,11 @@ public:
 private:
     ResultVal<std::unique_ptr<FileBackend>> OpenRomFS() const {
         if (ncch_data.romfs_file) {
-            return MakeResult<std::unique_ptr<FileBackend>>(std::make_unique<IVFCFile>(
-                ncch_data.romfs_file, ncch_data.romfs_offset, ncch_data.romfs_size));
+            std::unique_ptr<DelayGenerator> delay_generator =
+                std::make_unique<RomFSDelayGenerator>();
+            return MakeResult<std::unique_ptr<FileBackend>>(
+                std::make_unique<IVFCFile>(ncch_data.romfs_file, ncch_data.romfs_offset,
+                                           ncch_data.romfs_size, std::move(delay_generator)));
         } else {
             LOG_INFO(Service_FS, "Unable to read RomFS");
             return ERROR_ROMFS_NOT_FOUND;
@@ -192,9 +184,11 @@ private:
 
     ResultVal<std::unique_ptr<FileBackend>> OpenUpdateRomFS() const {
         if (ncch_data.update_romfs_file) {
+            std::unique_ptr<DelayGenerator> delay_generator =
+                std::make_unique<RomFSDelayGenerator>();
             return MakeResult<std::unique_ptr<FileBackend>>(std::make_unique<IVFCFile>(
                 ncch_data.update_romfs_file, ncch_data.update_romfs_offset,
-                ncch_data.update_romfs_size));
+                ncch_data.update_romfs_size, std::move(delay_generator)));
         } else {
             LOG_INFO(Service_FS, "Unable to read update RomFS");
             return ERROR_ROMFS_NOT_FOUND;
@@ -251,8 +245,9 @@ void ArchiveFactory_SelfNCCH::Register(Loader::AppLoader& app_loader) {
               program_id);
 
     if (ncch_data.find(program_id) != ncch_data.end()) {
-        LOG_WARNING(Service_FS, "Registering program %016" PRIX64
-                                " with SelfNCCH will override existing mapping",
+        LOG_WARNING(Service_FS,
+                    "Registering program %016" PRIX64
+                    " with SelfNCCH will override existing mapping",
                     program_id);
     }
 
@@ -266,9 +261,9 @@ void ArchiveFactory_SelfNCCH::Register(Loader::AppLoader& app_loader) {
     }
 
     std::shared_ptr<FileUtil::IOFile> update_romfs_file;
-    if (Loader::ResultStatus::Success ==
-        app_loader.ReadUpdateRomFS(update_romfs_file, data.update_romfs_offset,
-                                   data.update_romfs_size)) {
+    if (Loader::ResultStatus::Success == app_loader.ReadUpdateRomFS(update_romfs_file,
+                                                                    data.update_romfs_offset,
+                                                                    data.update_romfs_size)) {
 
         data.update_romfs_file = std::move(update_romfs_file);
     }

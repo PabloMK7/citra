@@ -19,6 +19,46 @@
 
 namespace FileSys {
 
+class IVFCDelayGenerator : public DelayGenerator {
+    u64 GetReadDelayNs(size_t length) override {
+        // This is the delay measured for a romfs read.
+        // For now we will take that as a default
+        static constexpr u64 slope(94);
+        static constexpr u64 offset(582778);
+        static constexpr u64 minimum(663124);
+        u64 IPCDelayNanoseconds = std::max<u64>(static_cast<u64>(length) * slope + offset, minimum);
+        return IPCDelayNanoseconds;
+    }
+};
+
+class RomFSDelayGenerator : public DelayGenerator {
+public:
+    u64 GetReadDelayNs(size_t length) override {
+        // The delay was measured on O3DS and O2DS with
+        // https://gist.github.com/B3n30/ac40eac20603f519ff106107f4ac9182
+        // from the results the average of each length was taken.
+        static constexpr u64 slope(94);
+        static constexpr u64 offset(582778);
+        static constexpr u64 minimum(663124);
+        u64 IPCDelayNanoseconds = std::max<u64>(static_cast<u64>(length) * slope + offset, minimum);
+        return IPCDelayNanoseconds;
+    }
+};
+
+class ExeFSDelayGenerator : public DelayGenerator {
+public:
+    u64 GetReadDelayNs(size_t length) override {
+        // The delay was measured on O3DS and O2DS with
+        // https://gist.github.com/B3n30/ac40eac20603f519ff106107f4ac9182
+        // from the results the average of each length was taken.
+        static constexpr u64 slope(94);
+        static constexpr u64 offset(582778);
+        static constexpr u64 minimum(663124);
+        u64 IPCDelayNanoseconds = std::max<u64>(static_cast<u64>(length) * slope + offset, minimum);
+        return IPCDelayNanoseconds;
+    }
+};
+
 /**
  * Helper which implements an interface to deal with IVFC images used in some archives
  * This should be subclassed by concrete archive types, which will provide the
@@ -50,11 +90,11 @@ protected:
 
 class IVFCFile : public FileBackend {
 public:
-    IVFCFile(std::shared_ptr<FileUtil::IOFile> file, u64 offset, u64 size);
+    IVFCFile(std::shared_ptr<FileUtil::IOFile> file, u64 offset, u64 size,
+             std::unique_ptr<DelayGenerator> delay_generator_);
 
     ResultVal<size_t> Read(u64 offset, size_t length, u8* buffer) const override;
     ResultVal<size_t> Write(u64 offset, size_t length, bool flush, const u8* buffer) override;
-    u64 GetReadDelayNs(size_t length) const override;
     u64 GetSize() const override;
     bool SetSize(u64 size) const override;
     bool Close() const override {

@@ -23,8 +23,9 @@ std::string IVFCArchive::GetName() const {
 
 ResultVal<std::unique_ptr<FileBackend>> IVFCArchive::OpenFile(const Path& path,
                                                               const Mode& mode) const {
+    std::unique_ptr<DelayGenerator> delay_generator = std::make_unique<IVFCDelayGenerator>();
     return MakeResult<std::unique_ptr<FileBackend>>(
-        std::make_unique<IVFCFile>(romfs_file, data_offset, data_size));
+        std::make_unique<IVFCFile>(romfs_file, data_offset, data_size, std::move(delay_generator)));
 }
 
 ResultCode IVFCArchive::DeleteFile(const Path& path) const {
@@ -89,8 +90,11 @@ u64 IVFCArchive::GetFreeBytes() const {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-IVFCFile::IVFCFile(std::shared_ptr<FileUtil::IOFile> file, u64 offset, u64 size)
-    : romfs_file(std::move(file)), data_offset(offset), data_size(size) {}
+IVFCFile::IVFCFile(std::shared_ptr<FileUtil::IOFile> file, u64 offset, u64 size,
+                   std::unique_ptr<DelayGenerator> delay_generator_)
+    : romfs_file(std::move(file)), data_offset(offset), data_size(size) {
+    delay_generator = std::move(delay_generator_);
+}
 
 ResultVal<size_t> IVFCFile::Read(const u64 offset, const size_t length, u8* buffer) const {
     LOG_TRACE(Service_FS, "called offset=%llu, length=%zu", offset, length);
@@ -105,17 +109,6 @@ ResultVal<size_t> IVFCFile::Write(const u64 offset, const size_t length, const b
     LOG_ERROR(Service_FS, "Attempted to write to IVFC file");
     // TODO(Subv): Find error code
     return MakeResult<size_t>(0);
-}
-
-u64 IVFCFile::GetReadDelayNs(size_t length) const {
-    // The delay was measured on O3DS and O2DS with
-    // https://gist.github.com/B3n30/ac40eac20603f519ff106107f4ac9182
-    // from the results the average of each length was taken.
-    static constexpr u64 slope(94);
-    static constexpr u64 offset(582778);
-    static constexpr u64 minimum(663124);
-    u64 IPCDelayNanoseconds = std::max<u64>(static_cast<u64>(length) * slope + offset, minimum);
-    return IPCDelayNanoseconds;
 }
 
 u64 IVFCFile::GetSize() const {

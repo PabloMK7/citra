@@ -36,20 +36,6 @@ ResultVal<size_t> DiskFile::Write(const u64 offset, const size_t length, const b
     return MakeResult<size_t>(written);
 }
 
-u64 DiskFile::GetReadDelayNs(size_t length) const {
-    // TODO(B3N30): figure out the time a 3ds needs for those write
-    // for that backend.
-    // For now take the results from the romfs test.
-    // The delay was measured on O3DS and O2DS with
-    // https://gist.github.com/B3n30/ac40eac20603f519ff106107f4ac9182
-    // from the results the average of each length was taken.
-    static constexpr u64 slope(183);
-    static constexpr u64 offset(524879);
-    static constexpr u64 minimum(631826);
-    u64 IPCDelayNanoseconds = std::max<u64>(static_cast<u64>(length) * slope + offset, minimum);
-    return IPCDelayNanoseconds;
-}
-
 u64 DiskFile::GetSize() const {
     return file->GetSize();
 }

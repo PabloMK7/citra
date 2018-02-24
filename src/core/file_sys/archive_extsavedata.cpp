@@ -27,7 +27,9 @@ namespace FileSys {
  */
 class FixSizeDiskFile : public DiskFile {
 public:
-    FixSizeDiskFile(FileUtil::IOFile&& file, const Mode& mode) : DiskFile(std::move(file), mode) {
+    FixSizeDiskFile(FileUtil::IOFile&& file, const Mode& mode,
+                    std::unique_ptr<DelayGenerator> delay_generator_)
+        : DiskFile(std::move(file), mode, std::move(delay_generator_)) {
         size = GetSize();
     }
 
@@ -51,6 +53,20 @@ public:
 
 private:
     u64 size{};
+};
+
+class ExtSaveDataDelayGenerator : public DelayGenerator {
+public:
+    u64 GetReadDelayNs(size_t length) override {
+        // This is the delay measured for a savedate read,
+        // not for extsaveData
+        // For now we will take that
+        static constexpr u64 slope(183);
+        static constexpr u64 offset(524879);
+        static constexpr u64 minimum(631826);
+        u64 IPCDelayNanoseconds = std::max<u64>(static_cast<u64>(length) * slope + offset, minimum);
+        return IPCDelayNanoseconds;
+    }
 };
 
 /**
@@ -118,7 +134,10 @@ public:
         Mode rwmode;
         rwmode.write_flag.Assign(1);
         rwmode.read_flag.Assign(1);
-        auto disk_file = std::make_unique<FixSizeDiskFile>(std::move(file), rwmode);
+        std::unique_ptr<DelayGenerator> delay_generator =
+            std::make_unique<ExtSaveDataDelayGenerator>();
+        auto disk_file =
+            std::make_unique<FixSizeDiskFile>(std::move(file), rwmode, std::move(delay_generator));
         return MakeResult<std::unique_ptr<FileBackend>>(std::move(disk_file));
     }
 

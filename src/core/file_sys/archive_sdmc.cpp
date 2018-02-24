@@ -17,6 +17,20 @@
 
 namespace FileSys {
 
+class SDMCDelayGenerator : public DelayGenerator {
+public:
+    u64 GetReadDelayNs(size_t length) override {
+        // This is the delay measured on O3DS and O2DS with
+        // https://gist.github.com/B3n30/ac40eac20603f519ff106107f4ac9182
+        // from the results the average of each length was taken.
+        static constexpr u64 slope(183);
+        static constexpr u64 offset(524879);
+        static constexpr u64 minimum(631826);
+        u64 IPCDelayNanoseconds = std::max<u64>(static_cast<u64>(length) * slope + offset, minimum);
+        return IPCDelayNanoseconds;
+    }
+};
+
 ResultVal<std::unique_ptr<FileBackend>> SDMCArchive::OpenFile(const Path& path,
                                                               const Mode& mode) const {
     Mode modified_mode;
@@ -82,7 +96,8 @@ ResultVal<std::unique_ptr<FileBackend>> SDMCArchive::OpenFileBase(const Path& pa
         return ERROR_NOT_FOUND;
     }
 
-    auto disk_file = std::make_unique<DiskFile>(std::move(file), mode);
+    std::unique_ptr<DelayGenerator> delay_generator = std::make_unique<SDMCDelayGenerator>();
+    auto disk_file = std::make_unique<DiskFile>(std::move(file), mode, std::move(delay_generator));
     return MakeResult<std::unique_ptr<FileBackend>>(std::move(disk_file));
 }
 
@@ -343,6 +358,7 @@ u64 SDMCArchive::GetFreeBytes() const {
 
 ArchiveFactory_SDMC::ArchiveFactory_SDMC(const std::string& sdmc_directory)
     : sdmc_directory(sdmc_directory) {
+
     LOG_DEBUG(Service_FS, "Directory %s set as SDMC.", sdmc_directory.c_str());
 }
 
