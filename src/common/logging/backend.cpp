@@ -84,6 +84,7 @@ private:
     }
     ~Impl() {
         running = false;
+        backend_thread.get();
     }
 
     std::atomic_bool running{true};
