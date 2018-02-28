@@ -44,7 +44,6 @@ constexpr u32 TID_HIGH_DLC = 0x0004008C;
 // CIA installation static context variables
 static bool cia_installing = false;
 
-static bool lists_initialized = false;
 static std::array<std::vector<u64_le>, 3> am_title_list;
 
 struct TitleInfo {
