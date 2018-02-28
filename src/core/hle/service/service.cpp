@@ -237,7 +237,7 @@ void Init() {
     FS::InstallInterfaces(*SM::g_service_manager);
     FS::ArchiveInit();
     ACT::Init();
-    AM::Init();
+    AM::InstallInterfaces(*SM::g_service_manager);
     APT::InstallInterfaces(*SM::g_service_manager);
     BOSS::Init();
     CAM::InstallInterfaces(*SM::g_service_manager);
@@ -280,7 +280,6 @@ void Shutdown() {
     CFG::Shutdown();
     CECD::Shutdown();
     BOSS::Shutdown();
-    AM::Shutdown();
     FS::ArchiveShutdown();
 
     SM::g_service_manager = nullptr;
