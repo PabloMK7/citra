@@ -12,7 +12,7 @@ const Interface::FunctionInfo FunctionTable[] = {
     {0x00010040, GetNumPrograms, "GetNumPrograms"},
     {0x00020082, GetProgramList, "GetProgramList"},
     {0x00030084, GetProgramInfos, "GetProgramInfos"},
-    {0x000400C0, nullptr, "DeleteUserProgram"},
+    {0x000400C0, DeleteUserProgram, "DeleteUserProgram"},
     {0x000500C0, nullptr, "GetProductCode"},
     {0x000600C0, nullptr, "GetStorageId"},
     {0x00070080, DeleteTicket, "DeleteTicket"},

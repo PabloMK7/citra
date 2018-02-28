@@ -688,6 +688,36 @@ void GetProgramInfos(Service::Interface* self) {
     rb.PushMappedBuffer(title_info_out, title_info_size, title_info_perms);
 }
 
+void DeleteUserProgram(Service::Interface* self) {
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x000400, 3, 0);
+    auto media_type = rp.PopEnum<FS::MediaType>();
+    u32 low = rp.Pop<u32>();
+    u32 high = rp.Pop<u32>();
+    u64 title_id = static_cast<u64>(low) | (static_cast<u64>(high) << 32);
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    u16 category = static_cast<u16>((title_id >> 32) & 0xFFFF);
+    u8 variation = static_cast<u8>(title_id & 0xFF);
+    if (category & CATEGORY_SYSTEM || category & CATEGORY_DLP || variation & VARIATION_SYSTEM) {
+        LOG_ERROR(Service_AM, "Trying to uninstall system app");
+        rb.Push(ResultCode(ErrCodes::TryingToUninstallSystemApp, ErrorModule::AM,
+                           ErrorSummary::InvalidArgument, ErrorLevel::Usage));
+        return;
+    }
+    LOG_INFO(Service_AM, "Deleting title 0x%016" PRIx64, title_id);
+    std::string path = GetTitlePath(media_type, title_id);
+    if (!FileUtil::Exists(path)) {
+        rb.Push(ResultCode(ErrorDescription::NotFound, ErrorModule::AM, ErrorSummary::InvalidState,
+                           ErrorLevel::Permanent));
+        LOG_ERROR(Service_AM, "Title not found");
+        return;
+    }
+    bool success = FileUtil::DeleteDirRecursively(path);
+    ScanForAllTitles();
+    rb.Push(RESULT_SUCCESS);
+    if (!success)
+        LOG_ERROR(Service_AM, "FileUtil::DeleteDirRecursively unexpectedly failed");
+}
+
 void GetDLCTitleInfos(Service::Interface* self) {
     IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x1005, 2, 4); // 0x10050084
 
@@ -1154,6 +1184,28 @@ void GetRequiredSizeFromCia(Service::Interface* self) {
     IPC::RequestBuilder rb = rp.MakeBuilder(3, 0);
     rb.Push(RESULT_SUCCESS);
     rb.Push(container.GetTitleMetadata().GetContentSizeByIndex(FileSys::TMDContentIndex::Main));
+}
+
+void DeleteProgram(Service::Interface* self) {
+    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x0410, 3, 0);
+    auto media_type = rp.PopEnum<FS::MediaType>();
+    u32 low = rp.Pop<u32>();
+    u32 high = rp.Pop<u32>();
+    u64 title_id = static_cast<u64>(low) | (static_cast<u64>(high) << 32);
+    LOG_INFO(Service_AM, "Deleting title 0x%016" PRIx64, title_id);
+    std::string path = GetTitlePath(media_type, title_id);
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    if (!FileUtil::Exists(path)) {
+        rb.Push(ResultCode(ErrorDescription::NotFound, ErrorModule::AM, ErrorSummary::InvalidState,
+                           ErrorLevel::Permanent));
+        LOG_ERROR(Service_AM, "Title not found");
+        return;
+    }
+    bool success = FileUtil::DeleteDirRecursively(path);
+    ScanForAllTitles();
+    rb.Push(RESULT_SUCCESS);
+    if (!success)
+        LOG_ERROR(Service_AM, "FileUtil::DeleteDirRecursively unexpectedly failed");
 }
 
 void GetMetaSizeFromCia(Service::Interface* self) {
