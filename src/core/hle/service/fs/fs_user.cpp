@@ -100,7 +100,7 @@ void FS_USER::OpenFileDirectly(Kernel::HLERequestContext& ctx) {
                   "Failed to get a handle for archive archive_id=0x%08X archive_path=%s",
                   static_cast<u32>(archive_id), archive_path.DebugStr().c_str());
         rb.Push(archive_handle.Code());
-        rb.PushMoveHandles(0);
+        rb.PushMoveObjects<Kernel::Object>(nullptr);
         return;
     }
     SCOPE_EXIT({ Service::FS::CloseArchive(*archive_handle); });
