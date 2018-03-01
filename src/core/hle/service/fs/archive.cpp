@@ -39,23 +39,6 @@
 #include "core/hle/service/service.h"
 #include "core/memory.h"
 
-// Specializes std::hash for ArchiveIdCode, so that we can use it in std::unordered_map.
-// Workaroung for libstdc++ bug: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=60970
-namespace std {
-template <>
-struct hash<Service::FS::ArchiveIdCode> {
-    typedef Service::FS::ArchiveIdCode argument_type;
-    typedef std::size_t result_type;
-
-    result_type operator()(const argument_type& id_code) const {
-        typedef std::underlying_type<argument_type>::type Type;
-        return std::hash<Type>()(static_cast<Type>(id_code));
-    }
-};
-} // namespace std
-
-static constexpr Kernel::Handle INVALID_HANDLE{};
-
 namespace Service {
 namespace FS {
 
@@ -320,42 +303,41 @@ Kernel::SharedPtr<Kernel::ClientSession> File::Connect() {
 
 Directory::Directory(std::unique_ptr<FileSys::DirectoryBackend>&& backend,
                      const FileSys::Path& path)
-    : path(path), backend(std::move(backend)) {}
+    : ServiceFramework("", 1), path(path), backend(std::move(backend)) {
+    static const FunctionInfo functions[] = {
+        // clang-format off
+        {0x08010042, &Directory::Read, "Read"},
+        {0x08020000, &Directory::Close, "Close"},
+        // clang-format on
+    };
+    RegisterHandlers(functions);
+}
 
 Directory::~Directory() {}
 
-void Directory::HandleSyncRequest(Kernel::SharedPtr<Kernel::ServerSession> server_session) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-    DirectoryCommand cmd = static_cast<DirectoryCommand>(cmd_buff[0]);
-    switch (cmd) {
-    // Read from directory...
-    case DirectoryCommand::Read: {
-        u32 count = cmd_buff[1];
-        u32 address = cmd_buff[3];
-        std::vector<FileSys::Entry> entries(count);
-        LOG_TRACE(Service_FS, "Read %s: count=%d", GetName().c_str(), count);
+void Directory::Read(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x0801, 1, 2);
+    u32 count = rp.Pop<u32>();
+    auto& buffer = rp.PopMappedBuffer();
+    std::vector<FileSys::Entry> entries(count);
+    LOG_TRACE(Service_FS, "Read %s: count=%u", GetName().c_str(), count);
+    // Number of entries actually read
+    u32 read = backend->Read(static_cast<u32>(entries.size()), entries.data());
+    buffer.Write(entries.data(), 0, read * sizeof(FileSys::Entry));
 
-        // Number of entries actually read
-        u32 read = backend->Read(static_cast<u32>(entries.size()), entries.data());
-        cmd_buff[2] = read;
-        Memory::WriteBlock(address, entries.data(), read * sizeof(FileSys::Entry));
-        break;
-    }
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
+    rb.Push(RESULT_SUCCESS);
+    rb.Push(read);
+    rb.PushMappedBuffer(buffer);
+}
 
-    case DirectoryCommand::Close: {
-        LOG_TRACE(Service_FS, "Close %s", GetName().c_str());
-        backend->Close();
-        break;
-    }
+void Directory::Close(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x0802, 0, 0);
+    LOG_TRACE(Service_FS, "Close %s", GetName().c_str());
+    backend->Close();
 
-    // Unknown command...
-    default:
-        LOG_ERROR(Service_FS, "Unknown command=0x%08X!", static_cast<u32>(cmd));
-        ResultCode error = UnimplementedFunction(ErrorModule::FS);
-        cmd_buff[1] = error.raw; // TODO(Link Mauve): use the correct error code for that.
-        return;
-    }
-    cmd_buff[1] = RESULT_SUCCESS.raw; // No error
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RESULT_SUCCESS);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -552,8 +534,9 @@ ResultVal<FileSys::ArchiveFormatInfo> GetArchiveFormatInfo(ArchiveIdCode id_code
     return archive->second->GetFormatInfo(archive_path);
 }
 
-ResultCode CreateExtSaveData(MediaType media_type, u32 high, u32 low, VAddr icon_buffer,
-                             u32 icon_size, const FileSys::ArchiveFormatInfo& format_info) {
+ResultCode CreateExtSaveData(MediaType media_type, u32 high, u32 low,
+                             const std::vector<u8>& smdh_icon,
+                             const FileSys::ArchiveFormatInfo& format_info) {
     // Construct the binary path to the archive first
     FileSys::Path path =
         FileSys::ConstructExtDataBinaryPath(static_cast<u32>(media_type), high, low);
@@ -571,11 +554,6 @@ ResultCode CreateExtSaveData(MediaType media_type, u32 high, u32 low, VAddr icon
     if (result.IsError())
         return result;
 
-    if (!Memory::IsValidVirtualAddress(icon_buffer))
-        return ResultCode(-1); // TODO(Subv): Find the right error code
-
-    std::vector<u8> smdh_icon(icon_size);
-    Memory::ReadBlock(icon_buffer, smdh_icon.data(), smdh_icon.size());
     ext_savedata->WriteIcon(path, smdh_icon.data(), smdh_icon.size());
     return RESULT_SUCCESS;
 }
@@ -708,9 +686,6 @@ void UnregisterArchiveTypes() {
 /// Initialize archives
 void ArchiveInit() {
     next_handle = 1;
-
-    AddService(new FS::Interface);
-
     RegisterArchiveTypes();
 }
 

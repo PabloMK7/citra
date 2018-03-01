@@ -87,7 +87,7 @@ private:
     void OpenSubFile(Kernel::HLERequestContext& ctx);
 };
 
-class Directory final : public Kernel::SessionRequestHandler {
+class Directory final : public ServiceFramework<Directory> {
 public:
     Directory(std::unique_ptr<FileSys::DirectoryBackend>&& backend, const FileSys::Path& path);
     ~Directory();
@@ -100,11 +100,8 @@ public:
     std::unique_ptr<FileSys::DirectoryBackend> backend; ///< File backend interface
 
 protected:
-    void HandleSyncRequest(Kernel::SharedPtr<Kernel::ServerSession> server_session) override;
-
-    std::unique_ptr<SessionDataBase> MakeSessionData() const override {
-        return nullptr;
-    }
+    void Read(Kernel::HLERequestContext& ctx);
+    void Close(Kernel::HLERequestContext& ctx);
 };
 
 /**
@@ -251,13 +248,13 @@ ResultVal<FileSys::ArchiveFormatInfo> GetArchiveFormatInfo(ArchiveIdCode id_code
  * @param media_type The media type of the archive to create (NAND / SDMC)
  * @param high The high word of the extdata id to create
  * @param low The low word of the extdata id to create
- * @param icon_buffer VAddr of the SMDH icon for this ExtSaveData
- * @param icon_size Size of the SMDH icon
+ * @param smdh_icon the SMDH icon for this ExtSaveData
  * @param format_info Format information about the new archive
  * @return ResultCode 0 on success or the corresponding code on error
  */
-ResultCode CreateExtSaveData(MediaType media_type, u32 high, u32 low, VAddr icon_buffer,
-                             u32 icon_size, const FileSys::ArchiveFormatInfo& format_info);
+ResultCode CreateExtSaveData(MediaType media_type, u32 high, u32 low,
+                             const std::vector<u8>& smdh_icon,
+                             const FileSys::ArchiveFormatInfo& format_info);
 
 /**
  * Deletes the SharedExtSaveData archive for the specified extdata ID

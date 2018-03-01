@@ -26,6 +26,7 @@
 #include "core/hle/service/err_f.h"
 #include "core/hle/service/frd/frd.h"
 #include "core/hle/service/fs/archive.h"
+#include "core/hle/service/fs/fs_user.h"
 #include "core/hle/service/gsp/gsp.h"
 #include "core/hle/service/gsp_lcd.h"
 #include "core/hle/service/hid/hid.h"
@@ -233,6 +234,7 @@ void Init() {
     MIC::InstallInterfaces(*SM::g_service_manager);
     NWM::InstallInterfaces(*SM::g_service_manager);
 
+    FS::InstallInterfaces(*SM::g_service_manager);
     FS::ArchiveInit();
     ACT::Init();
     AM::Init();
