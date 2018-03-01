@@ -86,6 +86,13 @@ static inline InterruptRelayQueue* GetInterruptRelayQueue(
     return reinterpret_cast<InterruptRelayQueue*>(ptr);
 }
 
+void GSP_GPU::ClientDisconnected(Kernel::SharedPtr<Kernel::ServerSession> server_session) {
+    SessionData* session_data = GetSessionData(server_session);
+    if (active_thread_id == session_data->thread_id)
+        ReleaseRight(session_data);
+    SessionRequestHandler::ClientDisconnected(server_session);
+}
+
 /**
  * Writes a single GSP GPU hardware registers with a single u32 value
  * (For internal use.)
@@ -678,13 +685,17 @@ void GSP_GPU::AcquireRight(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
 }
 
+void GSP_GPU::ReleaseRight(SessionData* session_data) {
+    ASSERT_MSG(active_thread_id == session_data->thread_id,
+               "Wrong thread tried to release GPU right");
+    active_thread_id = -1;
+}
+
 void GSP_GPU::ReleaseRight(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x17, 0, 0);
 
     SessionData* session_data = GetSessionData(ctx.Session());
-    ASSERT_MSG(active_thread_id == session_data->thread_id,
-               "Wrong thread tried to release GPU right");
-    active_thread_id = -1;
+    ReleaseRight(session_data);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);

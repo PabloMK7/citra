@@ -196,6 +196,8 @@ public:
     GSP_GPU();
     ~GSP_GPU() = default;
 
+    void ClientDisconnected(Kernel::SharedPtr<Kernel::ServerSession> server_session) override;
+
     /**
      * Signals that the specified interrupt type has occurred to userland code
      * @param interrupt_id ID of interrupt that is being signalled
@@ -333,6 +335,12 @@ private:
      *      1: Result code
      */
     void ReleaseRight(Kernel::HLERequestContext& ctx);
+
+    /**
+     * Releases rights to the GPU.
+     * Will fail if the session_data doesn't have the GPU right
+     */
+    void ReleaseRight(SessionData* session_data);
 
     /**
      * GSP_GPU::ImportDisplayCaptureInfo service function

@@ -52,14 +52,14 @@ public:
      * associated ServerSession alive for the duration of the connection.
      * @param server_session Owning pointer to the ServerSession associated with the connection.
      */
-    void ClientConnected(SharedPtr<ServerSession> server_session);
+    virtual void ClientConnected(SharedPtr<ServerSession> server_session);
 
     /**
      * Signals that a client has just disconnected from this HLE handler and releases the
      * associated ServerSession.
      * @param server_session ServerSession associated with the connection.
      */
-    void ClientDisconnected(SharedPtr<ServerSession> server_session);
+    virtual void ClientDisconnected(SharedPtr<ServerSession> server_session);
 
     /// Empty placeholder structure for services with no per-session data. The session data classes
     /// in each service must inherit from this.
