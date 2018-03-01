@@ -116,9 +116,6 @@ public:
     void PushRaw(const T& value);
 
     // TODO : ensure that translate params are added after all regular params
-    template <typename... H>
-    [[deprecated]] void PushCopyHandles(H... handles);
-
     template <typename... O>
     void PushCopyObjects(Kernel::SharedPtr<O>... pointers);
 
@@ -183,11 +180,6 @@ template <typename First, typename... Other>
 void RequestBuilder::Push(const First& first_value, const Other&... other_values) {
     Push(first_value);
     Push(other_values...);
-}
-
-template <typename... H>
-inline void RequestBuilder::PushCopyHandles(H... handles) {
-    PushCopyHLEHandles(handles...);
 }
 
 template <typename... H>
