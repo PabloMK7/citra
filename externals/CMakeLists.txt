@@ -21,6 +21,7 @@ endif()
 
 # libfmt
 add_subdirectory(fmt)
+add_library(fmt::fmt ALIAS fmt)
 
 # getopt
 if (MSVC)

@@ -7,9 +7,9 @@
 #include <array>
 #include <future>
 #include <string>
-#include <json.hpp>
 #include "common/announce_multiplayer_room.h"
 #include "common/telemetry.h"
+#include "web_service/json.h"
 
 namespace WebService {
 
