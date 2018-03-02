@@ -150,15 +150,15 @@ void ServiceFrameworkBase::ReportUnimplementedFunction(u32* cmd_buf, const Funct
     int num_params = header.normal_params_size + header.translate_params_size;
     std::string function_name = info == nullptr ? fmt::format("{:#08x}", cmd_buf[0]) : info->name;
 
-    fmt::MemoryWriter w;
-    w.write("function '{}': port='{}' cmd_buf={{[0]={:#x}", function_name, service_name,
-            cmd_buf[0]);
+    fmt::memory_buffer buf;
+    fmt::format_to(buf, "function '{}': port='{}' cmd_buf={{[0]={:#x}", function_name, service_name,
+                   cmd_buf[0]);
     for (int i = 1; i <= num_params; ++i) {
-        w.write(", [{}]={:#x}", i, cmd_buf[i]);
+        fmt::format_to(buf, ", [{}]={:#x}", i, cmd_buf[i]);
     }
-    w << '}';
+    buf.push_back('}');
 
-    LOG_ERROR(Service, "unknown / unimplemented %s", w.c_str());
+    LOG_ERROR(Service, "unknown / unimplemented %s", fmt::to_string(buf).c_str());
     // TODO(bunnei): Hack - ignore error
     cmd_buf[1] = 0;
 }
