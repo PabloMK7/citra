@@ -7,12 +7,11 @@
 namespace Service {
 namespace NEWS {
 
-const Interface::FunctionInfo FunctionTable[] = {
-    {0x000100C8, nullptr, "AddNotification"},
-};
-
-NEWS_U_Interface::NEWS_U_Interface() {
-    Register(FunctionTable);
+NEWS_U::NEWS_U() : ServiceFramework("news:u", 1) {
+    const FunctionInfo functions[] = {
+        {0x000100C8, nullptr, "AddNotification"},
+    };
+    RegisterHandlers(functions);
 }
 
 } // namespace NEWS

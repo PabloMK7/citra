@@ -4,18 +4,15 @@
 
 #pragma once
 
+#include <memory>
 #include "core/hle/service/service.h"
 
 namespace Service {
 namespace NEWS {
 
-class NEWS_U_Interface : public Service::Interface {
+class NEWS_U final : public ServiceFramework<NEWS_U> {
 public:
-    NEWS_U_Interface();
-
-    std::string GetPortName() const override {
-        return "news:u";
-    }
+    NEWS_U();
 };
 
 } // namespace NEWS

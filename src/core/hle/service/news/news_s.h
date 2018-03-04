@@ -4,18 +4,27 @@
 
 #pragma once
 
+#include <memory>
 #include "core/hle/service/service.h"
 
 namespace Service {
 namespace NEWS {
 
-class NEWS_S_Interface : public Service::Interface {
+class NEWS_S final : public ServiceFramework<NEWS_S> {
 public:
-    NEWS_S_Interface();
+    NEWS_S();
 
-    std::string GetPortName() const override {
-        return "news:s";
-    }
+private:
+    /**
+     * GetTotalNotifications service function.
+     *  Inputs:
+     *      0 : 0x00050000
+     *  Outputs:
+     *      0 : 0x00050080
+     *      1 : Result of function, 0 on success, otherwise error code
+     *      2 : Number of notifications
+     */
+    void GetTotalNotifications(Kernel::HLERequestContext& ctx);
 };
 
 } // namespace NEWS
