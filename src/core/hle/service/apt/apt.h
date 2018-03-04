@@ -14,7 +14,7 @@
 namespace Kernel {
 class Mutex;
 class SharedMemory;
-}
+} // namespace Kernel
 
 namespace Service {
 namespace APT {
@@ -212,7 +212,7 @@ public:
          * Outputs:
          *     0 : Return Header
          *     1 : Result of function, 0 on success, otherwise error code
-        */
+         */
         void SendParameter(Kernel::HLERequestContext& ctx);
 
         /**
@@ -313,7 +313,7 @@ public:
          * Outputs:
          *     0 : Return Header
          *     1 : Result of function, 0 on success, otherwise error code
-        */
+         */
         void StartApplication(Kernel::HLERequestContext& ctx);
 
         /**
@@ -421,6 +421,33 @@ public:
         void CancelLibraryApplet(Kernel::HLERequestContext& ctx);
 
         /**
+         * APT::SendCaptureBufferInfo service function
+         *  Inputs:
+         *      0 : Command header [0x00400042]
+         *      1 : Size
+         *      2 : (Size << 14) | 2
+         *      3 : void*, CaptureBufferInfo
+         *  Outputs:
+         *      0 : Header code
+         *      1 : Result code
+         */
+        void SendCaptureBufferInfo(Kernel::HLERequestContext& ctx);
+
+        /**
+         * APT::ReceiveCaptureBufferInfo service function
+         *  Inputs:
+         *      0 : Command header [0x00410040]
+         *      1 : Size
+         *      64 : Size << 14 | 2
+         *      65 : void*, CaptureBufferInfo
+         *  Outputs:
+         *      0 : Header code
+         *      1 : Result code
+         *      2 : Actual Size
+         */
+        void ReceiveCaptureBufferInfo(Kernel::HLERequestContext& ctx);
+
+        /**
          * APT::GetStartupArgument service function
          *  Inputs:
          *      1 : Parameter Size (capped to 0x300)
@@ -495,6 +522,8 @@ private:
 
     // APT::CheckNew3DSApp will check this unknown_ns_state_field to determine processing mode
     u8 unknown_ns_state_field = 0;
+
+    std::vector<u8> screen_capture_buffer;
 
     ScreencapPostPermission screen_capture_post_permission =
         ScreencapPostPermission::CleanThePermission; // TODO(JamePeng): verify the initial value

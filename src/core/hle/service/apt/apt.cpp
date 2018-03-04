@@ -550,6 +550,27 @@ void Module::Interface::CancelLibraryApplet(Kernel::HLERequestContext& ctx) {
     LOG_WARNING(Service_APT, "(STUBBED) called exiting=%d", exiting);
 }
 
+void Module::Interface::SendCaptureBufferInfo(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x40, 1, 2); // 0x00400042
+    u32 size = rp.Pop<u32>();
+    ASSERT(size == 0x20);
+    apt->screen_capture_buffer = rp.PopStaticBuffer();
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RESULT_SUCCESS);
+}
+
+void Module::Interface::ReceiveCaptureBufferInfo(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x41, 1, 0); // 0x00410040
+    u32 size = rp.Pop<u32>();
+    ASSERT(size == 0x20);
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
+    rb.Push(RESULT_SUCCESS);
+    rb.Push(static_cast<u32>(apt->screen_capture_buffer.size()));
+    rb.PushStaticBuffer(std::move(apt->screen_capture_buffer), 0);
+}
+
 void Module::Interface::SetScreenCapPostPermission(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x55, 1, 0); // 0x00550040
 
