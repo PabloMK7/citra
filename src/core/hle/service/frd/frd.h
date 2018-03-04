@@ -4,7 +4,9 @@
 
 #pragma once
 
+#include <memory>
 #include "common/common_types.h"
+#include "core/hle/service/service.h"
 
 namespace Service {
 
@@ -30,98 +32,114 @@ struct Profile {
     u32 unknown;
 };
 
-/**
- * FRD::GetMyPresence service function
- *  Inputs:
- *      64 : sizeof (MyPresence) << 14 | 2
- *      65 : Address of MyPresence structure
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- */
-void GetMyPresence(Service::Interface* self);
+class Module final {
+public:
+    Module();
+    ~Module();
 
-/**
- * FRD::GetFriendKeyList service function
- *  Inputs:
- *      1 : Unknown
- *      2 : Max friends count
- *      65 : Address of FriendKey List
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- *      2 : FriendKey count filled
- */
-void GetFriendKeyList(Service::Interface* self);
+    class Interface : public ServiceFramework<Interface> {
+    public:
+        Interface(std::shared_ptr<Module> frd, const char* name, u32 max_session);
+        ~Interface();
 
-/**
- * FRD::GetFriendProfile service function
- *  Inputs:
- *      1 : Friends count
- *      2 : Friends count << 18 | 2
- *      3 : Address of FriendKey List
- *      64 : (count * sizeof (Profile)) << 10 | 2
- *      65 : Address of Profiles List
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- */
-void GetFriendProfile(Service::Interface* self);
+    protected:
+        /**
+         * FRD::GetMyPresence service function
+         *  Inputs:
+         *      64 : sizeof (MyPresence) << 14 | 2
+         *      65 : Address of MyPresence structure
+         *  Outputs:
+         *      1 : Result of function, 0 on success, otherwise error code
+         */
+        void GetMyPresence(Kernel::HLERequestContext& ctx);
 
-/**
- * FRD::GetFriendAttributeFlags service function
- *  Inputs:
- *      1 : Friends count
- *      2 : Friends count << 18 | 2
- *      3 : Address of FriendKey List
- *      65 : Address of AttributeFlags
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- */
-void GetFriendAttributeFlags(Service::Interface* self);
+        /**
+         * FRD::GetFriendKeyList service function
+         *  Inputs:
+         *      1 : Unknown
+         *      2 : Max friends count
+         *      65 : Address of FriendKey List
+         *  Outputs:
+         *      1 : Result of function, 0 on success, otherwise error code
+         *      2 : FriendKey count filled
+         */
+        void GetFriendKeyList(Kernel::HLERequestContext& ctx);
 
-/**
- * FRD::GetMyFriendKey service function
- *  Inputs:
- *      none
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- *      2-5 : FriendKey
- */
-void GetMyFriendKey(Service::Interface* self);
+        /**
+         * FRD::GetFriendProfile service function
+         *  Inputs:
+         *      1 : Friends count
+         *      2 : Friends count << 18 | 2
+         *      3 : Address of FriendKey List
+         *      64 : (count * sizeof (Profile)) << 10 | 2
+         *      65 : Address of Profiles List
+         *  Outputs:
+         *      1 : Result of function, 0 on success, otherwise error code
+         */
+        void GetFriendProfile(Kernel::HLERequestContext& ctx);
 
-/**
- * FRD::GetMyScreenName service function
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- *      2 : UTF16 encoded name (max 11 symbols)
- */
-void GetMyScreenName(Service::Interface* self);
+        /**
+         * FRD::GetFriendAttributeFlags service function
+         *  Inputs:
+         *      1 : Friends count
+         *      2 : Friends count << 18 | 2
+         *      3 : Address of FriendKey List
+         *      65 : Address of AttributeFlags
+         *  Outputs:
+         *      1 : Result of function, 0 on success, otherwise error code
+         */
+        void GetFriendAttributeFlags(Kernel::HLERequestContext& ctx);
 
-/**
- * FRD::UnscrambleLocalFriendCode service function
- *  Inputs:
- *      1 : Friend code count
- *      2 : ((count * 12) << 14) | 0x402
- *      3 : Pointer to encoded friend codes. Each is 12 bytes large
- *      64 : ((count * 8) << 14) | 2
- *      65 : Pointer to write decoded local friend codes to. Each is 8 bytes large.
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- */
-void UnscrambleLocalFriendCode(Service::Interface* self);
+        /**
+         * FRD::GetMyFriendKey service function
+         *  Inputs:
+         *      none
+         *  Outputs:
+         *      1 : Result of function, 0 on success, otherwise error code
+         *      2-5 : FriendKey
+         */
+        void GetMyFriendKey(Kernel::HLERequestContext& ctx);
 
-/**
- * FRD::SetClientSdkVersion service function
- *  Inputs:
- *      1 : Used SDK Version
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- */
-void SetClientSdkVersion(Service::Interface* self);
+        /**
+         * FRD::GetMyScreenName service function
+         *  Outputs:
+         *      1 : Result of function, 0 on success, otherwise error code
+         *      2 : UTF16 encoded name (max 11 symbols)
+         */
+        void GetMyScreenName(Kernel::HLERequestContext& ctx);
 
-/// Initialize FRD service(s)
-void Init();
+        /**
+         * FRD::UnscrambleLocalFriendCode service function
+         *  Inputs:
+         *      1 : Friend code count
+         *      2 : ((count * 12) << 14) | 0x402
+         *      3 : Pointer to encoded friend codes. Each is 12 bytes large
+         *      64 : ((count * 8) << 14) | 2
+         *      65 : Pointer to write decoded local friend codes to. Each is 8 bytes large.
+         *  Outputs:
+         *      1 : Result of function, 0 on success, otherwise error code
+         */
+        void UnscrambleLocalFriendCode(Kernel::HLERequestContext& ctx);
 
-/// Shutdown FRD service(s)
-void Shutdown();
+        /**
+         * FRD::SetClientSdkVersion service function
+         *  Inputs:
+         *      1 : Used SDK Version
+         *  Outputs:
+         *      1 : Result of function, 0 on success, otherwise error code
+         */
+        void SetClientSdkVersion(Kernel::HLERequestContext& ctx);
+
+    private:
+        std::shared_ptr<Module> frd;
+    };
+
+private:
+    FriendKey my_friend_key = {0, 0, 0ull};
+    MyPresence my_presence = {};
+};
+
+void InstallInterfaces(SM::ServiceManager& service_manager);
 
 } // namespace FRD
 } // namespace Service
