@@ -9,13 +9,10 @@
 namespace Service {
 namespace NIM {
 
-class NIM_S_Interface : public Service::Interface {
+class NIM_S final : public ServiceFramework<NIM_S> {
 public:
-    NIM_S_Interface();
-
-    std::string GetPortName() const override {
-        return "nim:s";
-    }
+    NIM_S();
+    ~NIM_S();
 };
 
 } // namespace NIM
