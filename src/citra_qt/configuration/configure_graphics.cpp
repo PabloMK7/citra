@@ -15,7 +15,8 @@ ConfigureGraphics::ConfigureGraphics(QWidget* parent)
 
     ui->toggle_vsync->setEnabled(!Core::System::GetInstance().IsPoweredOn());
     ui->frame_limit->setEnabled(Settings::values.use_frame_limit);
-    connect(ui->toggle_frame_limit, &QCheckBox::stateChanged, ui->frame_limit, &QSpinBox::setEnabled);
+    connect(ui->toggle_frame_limit, &QCheckBox::stateChanged, ui->frame_limit,
+            &QSpinBox::setEnabled);
 
     ui->layoutBox->setEnabled(!Settings::values.custom_layout);
 }
