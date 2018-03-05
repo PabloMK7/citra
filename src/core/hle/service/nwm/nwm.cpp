@@ -32,7 +32,7 @@ void Init() {
 
     if (auto room_member = Network::GetRoomMember().lock()) {
         if (room_member->IsConnected()) {
-            mac = static_cast<SharedPage::MacAddress>(room_member->GetMacAddress());
+            mac = room_member->GetMacAddress();
         }
     }
     SharedPage::SetMacAddress(mac);
