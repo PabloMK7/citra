@@ -554,9 +554,8 @@ void NWM_UDS::RecvBeaconBroadcastData(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
     rb.PushMappedBuffer(out_buffer);
 
-    LOG_DEBUG(Service_NWM,
-              "called out_buffer_size=0x%08X, wlan_comm_id=0x%08X, id=0x%08X,"
-              "unk1=0x%08X, unk2=0x%08X, offset=%zu",
+    LOG_DEBUG(Service_NWM, "called out_buffer_size=0x%08X, wlan_comm_id=0x%08X, id=0x%08X,"
+                           "unk1=0x%08X, unk2=0x%08X, offset=%zu",
               out_buffer_size, wlan_comm_id, id, unk1, unk2, cur_buffer_size);
 }
 
