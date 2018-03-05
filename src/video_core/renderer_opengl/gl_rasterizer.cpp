@@ -1090,6 +1090,10 @@ bool RasterizerOpenGL::AccelerateTextureCopy(const GPU::Regs::DisplayTransferCon
         return false;
     }
 
+    if (dst_surface->type == SurfaceType::Texture) {
+        return false;
+    }
+
     if (!res_cache.BlitSurfaces(src_surface, src_rect, dst_surface, dst_rect)) {
         return false;
     }
