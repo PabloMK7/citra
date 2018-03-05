@@ -17,7 +17,7 @@ namespace Service {
 namespace FS {
 enum class MediaType : u32;
 }
-}
+} // namespace Service
 
 namespace FileSys {
 
@@ -51,7 +51,7 @@ protected:
 // File backend for NCCH files
 class NCCHFile : public FileBackend {
 public:
-    explicit NCCHFile(std::vector<u8> buffer);
+    explicit NCCHFile(std::vector<u8> buffer, std::unique_ptr<DelayGenerator> delay_generator_);
 
     ResultVal<size_t> Read(u64 offset, size_t length, u8* buffer) const override;
     ResultVal<size_t> Write(u64 offset, size_t length, bool flush, const u8* buffer) override;

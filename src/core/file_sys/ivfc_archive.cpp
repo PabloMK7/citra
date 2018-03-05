@@ -23,8 +23,9 @@ std::string IVFCArchive::GetName() const {
 
 ResultVal<std::unique_ptr<FileBackend>> IVFCArchive::OpenFile(const Path& path,
                                                               const Mode& mode) const {
+    std::unique_ptr<DelayGenerator> delay_generator = std::make_unique<IVFCDelayGenerator>();
     return MakeResult<std::unique_ptr<FileBackend>>(
-        std::make_unique<IVFCFile>(romfs_file, data_offset, data_size));
+        std::make_unique<IVFCFile>(romfs_file, data_offset, data_size, std::move(delay_generator)));
 }
 
 ResultCode IVFCArchive::DeleteFile(const Path& path) const {
@@ -89,8 +90,11 @@ u64 IVFCArchive::GetFreeBytes() const {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-IVFCFile::IVFCFile(std::shared_ptr<FileUtil::IOFile> file, u64 offset, u64 size)
-    : romfs_file(std::move(file)), data_offset(offset), data_size(size) {}
+IVFCFile::IVFCFile(std::shared_ptr<FileUtil::IOFile> file, u64 offset, u64 size,
+                   std::unique_ptr<DelayGenerator> delay_generator_)
+    : romfs_file(std::move(file)), data_offset(offset), data_size(size) {
+    delay_generator = std::move(delay_generator_);
+}
 
 ResultVal<size_t> IVFCFile::Read(const u64 offset, const size_t length, u8* buffer) const {
     LOG_TRACE(Service_FS, "called offset=%llu, length=%zu", offset, length);

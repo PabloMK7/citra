@@ -171,8 +171,11 @@ public:
 private:
     ResultVal<std::unique_ptr<FileBackend>> OpenRomFS() const {
         if (ncch_data.romfs_file) {
-            return MakeResult<std::unique_ptr<FileBackend>>(std::make_unique<IVFCFile>(
-                ncch_data.romfs_file, ncch_data.romfs_offset, ncch_data.romfs_size));
+            std::unique_ptr<DelayGenerator> delay_generator =
+                std::make_unique<RomFSDelayGenerator>();
+            return MakeResult<std::unique_ptr<FileBackend>>(
+                std::make_unique<IVFCFile>(ncch_data.romfs_file, ncch_data.romfs_offset,
+                                           ncch_data.romfs_size, std::move(delay_generator)));
         } else {
             LOG_INFO(Service_FS, "Unable to read RomFS");
             return ERROR_ROMFS_NOT_FOUND;
@@ -181,9 +184,11 @@ private:
 
     ResultVal<std::unique_ptr<FileBackend>> OpenUpdateRomFS() const {
         if (ncch_data.update_romfs_file) {
+            std::unique_ptr<DelayGenerator> delay_generator =
+                std::make_unique<RomFSDelayGenerator>();
             return MakeResult<std::unique_ptr<FileBackend>>(std::make_unique<IVFCFile>(
                 ncch_data.update_romfs_file, ncch_data.update_romfs_offset,
-                ncch_data.update_romfs_size));
+                ncch_data.update_romfs_size, std::move(delay_generator)));
         } else {
             LOG_INFO(Service_FS, "Unable to read update RomFS");
             return ERROR_ROMFS_NOT_FOUND;

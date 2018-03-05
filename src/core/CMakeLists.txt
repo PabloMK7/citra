@@ -57,6 +57,7 @@ add_library(core STATIC
     file_sys/disk_archive.h
     file_sys/errors.h
     file_sys/file_backend.h
+    file_sys/delay_generator.h
     file_sys/ivfc_archive.cpp
     file_sys/ivfc_archive.h
     file_sys/ncch_container.cpp

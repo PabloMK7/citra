@@ -13,6 +13,20 @@
 
 namespace FileSys {
 
+class SaveDataDelayGenerator : public DelayGenerator {
+public:
+    u64 GetReadDelayNs(size_t length) override {
+        // The delay was measured on O3DS and O2DS with
+        // https://gist.github.com/B3n30/ac40eac20603f519ff106107f4ac9182
+        // from the results the average of each length was taken.
+        static constexpr u64 slope(183);
+        static constexpr u64 offset(524879);
+        static constexpr u64 minimum(631826);
+        u64 IPCDelayNanoseconds = std::max<u64>(static_cast<u64>(length) * slope + offset, minimum);
+        return IPCDelayNanoseconds;
+    }
+};
+
 ResultVal<std::unique_ptr<FileBackend>> SaveDataArchive::OpenFile(const Path& path,
                                                                   const Mode& mode) const {
     LOG_DEBUG(Service_FS, "called path=%s mode=%01X", path.DebugStr().c_str(), mode.hex);
@@ -67,7 +81,8 @@ ResultVal<std::unique_ptr<FileBackend>> SaveDataArchive::OpenFile(const Path& pa
         return ERROR_FILE_NOT_FOUND;
     }
 
-    auto disk_file = std::make_unique<DiskFile>(std::move(file), mode);
+    std::unique_ptr<DelayGenerator> delay_generator = std::make_unique<SaveDataDelayGenerator>();
+    auto disk_file = std::make_unique<DiskFile>(std::move(file), mode, std::move(delay_generator));
     return MakeResult<std::unique_ptr<FileBackend>>(std::move(disk_file));
 }
 

@@ -4,9 +4,12 @@
 
 #pragma once
 
+#include <algorithm>
 #include <cstddef>
+#include <memory>
 #include "common/common_types.h"
 #include "core/hle/result.h"
+#include "delay_generator.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // FileSys namespace
@@ -38,6 +41,20 @@ public:
     virtual ResultVal<size_t> Write(u64 offset, size_t length, bool flush, const u8* buffer) = 0;
 
     /**
+     * Get the amount of time a 3ds needs to read those data
+     * @param length Length in bytes of data read from file
+     * @return Nanoseconds for the delay
+     */
+    u64 GetReadDelayNs(size_t length) {
+        if (delay_generator != nullptr) {
+            return delay_generator->GetReadDelayNs(length);
+        }
+        LOG_ERROR(Service_FS, "Delay generator was not initalized. Using default");
+        delay_generator = std::make_unique<DefaultDelayGenerator>();
+        return delay_generator->GetReadDelayNs(length);
+    }
+
+    /**
      * Get the size of the file in bytes
      * @return Size of the file in bytes
      */
@@ -60,6 +77,9 @@ public:
      * Flushes the file
      */
     virtual void Flush() const = 0;
+
+protected:
+    std::unique_ptr<DelayGenerator> delay_generator;
 };
 
 } // namespace FileSys
