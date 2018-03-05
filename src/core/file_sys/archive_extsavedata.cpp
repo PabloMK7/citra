@@ -64,8 +64,9 @@ public:
         static constexpr u64 slope(183);
         static constexpr u64 offset(524879);
         static constexpr u64 minimum(631826);
-        u64 IPCDelayNanoseconds = std::max<u64>(static_cast<u64>(length) * slope + offset, minimum);
-        return IPCDelayNanoseconds;
+        u64 ipc_delay_nanoseconds =
+            std::max<u64>(static_cast<u64>(length) * slope + offset, minimum);
+        return ipc_delay_nanoseconds;
     }
 };
 
