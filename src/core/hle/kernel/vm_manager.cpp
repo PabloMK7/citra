@@ -58,7 +58,6 @@ void VMManager::Reset() {
 
     page_table.pointers.fill(nullptr);
     page_table.attributes.fill(Memory::PageType::Unmapped);
-    page_table.cached_res_count.fill(0);
 
     UpdatePageTableForVMA(initial_vma);
 }

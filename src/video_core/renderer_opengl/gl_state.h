@@ -124,25 +124,40 @@ public:
         GLuint shader_program;   // GL_CURRENT_PROGRAM
     } draw;
 
+    struct {
+        bool enabled; // GL_SCISSOR_TEST
+        GLint x;
+        GLint y;
+        GLsizei width;
+        GLsizei height;
+    } scissor;
+
+    struct {
+        GLint x;
+        GLint y;
+        GLsizei width;
+        GLsizei height;
+    } viewport;
+
     std::array<bool, 2> clip_distance; // GL_CLIP_DISTANCE
 
     OpenGLState();
 
     /// Get the currently active OpenGL state
-    static const OpenGLState& GetCurState() {
+    static OpenGLState GetCurState() {
         return cur_state;
     }
 
     /// Apply this state as the current OpenGL state
     void Apply() const;
 
-    /// Resets and unbinds any references to the given resource in the current OpenGL state
-    static void ResetTexture(GLuint handle);
-    static void ResetSampler(GLuint handle);
-    static void ResetProgram(GLuint handle);
-    static void ResetBuffer(GLuint handle);
-    static void ResetVertexArray(GLuint handle);
-    static void ResetFramebuffer(GLuint handle);
+    /// Resets any references to the given resource
+    OpenGLState& ResetTexture(GLuint handle);
+    OpenGLState& ResetSampler(GLuint handle);
+    OpenGLState& ResetProgram(GLuint handle);
+    OpenGLState& ResetBuffer(GLuint handle);
+    OpenGLState& ResetVertexArray(GLuint handle);
+    OpenGLState& ResetFramebuffer(GLuint handle);
 
 private:
     static OpenGLState cur_state;

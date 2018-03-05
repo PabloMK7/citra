@@ -69,6 +69,17 @@ OpenGLState::OpenGLState() {
     draw.uniform_buffer = 0;
     draw.shader_program = 0;
 
+    scissor.enabled = false;
+    scissor.x = 0;
+    scissor.y = 0;
+    scissor.width = 0;
+    scissor.height = 0;
+
+    viewport.x = 0;
+    viewport.y = 0;
+    viewport.width = 0;
+    viewport.height = 0;
+
     clip_distance = {};
 }
 
@@ -193,7 +204,7 @@ void OpenGLState::Apply() const {
     // Lighting LUTs
     if (lighting_lut.texture_buffer != cur_state.lighting_lut.texture_buffer) {
         glActiveTexture(TextureUnits::LightingLUT.Enum());
-        glBindTexture(GL_TEXTURE_BUFFER, cur_state.lighting_lut.texture_buffer);
+        glBindTexture(GL_TEXTURE_BUFFER, lighting_lut.texture_buffer);
     }
 
     // Fog LUT
@@ -260,6 +271,26 @@ void OpenGLState::Apply() const {
         glUseProgram(draw.shader_program);
     }
 
+    // Scissor test
+    if (scissor.enabled != cur_state.scissor.enabled) {
+        if (scissor.enabled) {
+            glEnable(GL_SCISSOR_TEST);
+        } else {
+            glDisable(GL_SCISSOR_TEST);
+        }
+    }
+
+    if (scissor.x != cur_state.scissor.x || scissor.y != cur_state.scissor.y ||
+        scissor.width != cur_state.scissor.width || scissor.height != cur_state.scissor.height) {
+        glScissor(scissor.x, scissor.y, scissor.width, scissor.height);
+    }
+
+    if (viewport.x != cur_state.viewport.x || viewport.y != cur_state.viewport.y ||
+        viewport.width != cur_state.viewport.width ||
+        viewport.height != cur_state.viewport.height) {
+        glViewport(viewport.x, viewport.y, viewport.width, viewport.height);
+    }
+
     // Clip distance
     for (size_t i = 0; i < clip_distance.size(); ++i) {
         if (clip_distance[i] != cur_state.clip_distance[i]) {
@@ -274,62 +305,68 @@ void OpenGLState::Apply() const {
     cur_state = *this;
 }
 
-void OpenGLState::ResetTexture(GLuint handle) {
-    for (auto& unit : cur_state.texture_units) {
+OpenGLState& OpenGLState::ResetTexture(GLuint handle) {
+    for (auto& unit : texture_units) {
         if (unit.texture_2d == handle) {
             unit.texture_2d = 0;
         }
     }
-    if (cur_state.lighting_lut.texture_buffer == handle)
-        cur_state.lighting_lut.texture_buffer = 0;
-    if (cur_state.fog_lut.texture_buffer == handle)
-        cur_state.fog_lut.texture_buffer = 0;
-    if (cur_state.proctex_noise_lut.texture_buffer == handle)
-        cur_state.proctex_noise_lut.texture_buffer = 0;
-    if (cur_state.proctex_color_map.texture_buffer == handle)
-        cur_state.proctex_color_map.texture_buffer = 0;
-    if (cur_state.proctex_alpha_map.texture_buffer == handle)
-        cur_state.proctex_alpha_map.texture_buffer = 0;
-    if (cur_state.proctex_lut.texture_buffer == handle)
-        cur_state.proctex_lut.texture_buffer = 0;
-    if (cur_state.proctex_diff_lut.texture_buffer == handle)
-        cur_state.proctex_diff_lut.texture_buffer = 0;
+    if (lighting_lut.texture_buffer == handle)
+        lighting_lut.texture_buffer = 0;
+    if (fog_lut.texture_buffer == handle)
+        fog_lut.texture_buffer = 0;
+    if (proctex_noise_lut.texture_buffer == handle)
+        proctex_noise_lut.texture_buffer = 0;
+    if (proctex_color_map.texture_buffer == handle)
+        proctex_color_map.texture_buffer = 0;
+    if (proctex_alpha_map.texture_buffer == handle)
+        proctex_alpha_map.texture_buffer = 0;
+    if (proctex_lut.texture_buffer == handle)
+        proctex_lut.texture_buffer = 0;
+    if (proctex_diff_lut.texture_buffer == handle)
+        proctex_diff_lut.texture_buffer = 0;
+    return *this;
 }
 
-void OpenGLState::ResetSampler(GLuint handle) {
-    for (auto& unit : cur_state.texture_units) {
+OpenGLState& OpenGLState::ResetSampler(GLuint handle) {
+    for (auto& unit : texture_units) {
         if (unit.sampler == handle) {
             unit.sampler = 0;
         }
     }
+    return *this;
 }
 
-void OpenGLState::ResetProgram(GLuint handle) {
-    if (cur_state.draw.shader_program == handle) {
-        cur_state.draw.shader_program = 0;
+OpenGLState& OpenGLState::ResetProgram(GLuint handle) {
+    if (draw.shader_program == handle) {
+        draw.shader_program = 0;
     }
+    return *this;
 }
 
-void OpenGLState::ResetBuffer(GLuint handle) {
-    if (cur_state.draw.vertex_buffer == handle) {
-        cur_state.draw.vertex_buffer = 0;
+OpenGLState& OpenGLState::ResetBuffer(GLuint handle) {
+    if (draw.vertex_buffer == handle) {
+        draw.vertex_buffer = 0;
     }
-    if (cur_state.draw.uniform_buffer == handle) {
-        cur_state.draw.uniform_buffer = 0;
+    if (draw.uniform_buffer == handle) {
+        draw.uniform_buffer = 0;
     }
+    return *this;
 }
 
-void OpenGLState::ResetVertexArray(GLuint handle) {
-    if (cur_state.draw.vertex_array == handle) {
-        cur_state.draw.vertex_array = 0;
+OpenGLState& OpenGLState::ResetVertexArray(GLuint handle) {
+    if (draw.vertex_array == handle) {
+        draw.vertex_array = 0;
     }
+    return *this;
 }
 
-void OpenGLState::ResetFramebuffer(GLuint handle) {
-    if (cur_state.draw.read_framebuffer == handle) {
-        cur_state.draw.read_framebuffer = 0;
+OpenGLState& OpenGLState::ResetFramebuffer(GLuint handle) {
+    if (draw.read_framebuffer == handle) {
+        draw.read_framebuffer = 0;
     }
-    if (cur_state.draw.draw_framebuffer == handle) {
-        cur_state.draw.draw_framebuffer = 0;
+    if (draw.draw_framebuffer == handle) {
+        draw.draw_framebuffer = 0;
     }
+    return *this;
 }

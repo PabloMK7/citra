@@ -20,7 +20,6 @@ TestEnvironment::TestEnvironment(bool mutable_memory_)
 
     page_table->pointers.fill(nullptr);
     page_table->attributes.fill(Memory::PageType::Unmapped);
-    page_table->cached_res_count.fill(0);
 
     Memory::MapIoRegion(*page_table, 0x00000000, 0x80000000, test_memory);
     Memory::MapIoRegion(*page_table, 0x80000000, 0x80000000, test_memory);

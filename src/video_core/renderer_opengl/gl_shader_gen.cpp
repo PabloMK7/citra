@@ -41,7 +41,7 @@ struct LightSrc {
 };
 
 layout (std140) uniform shader_data {
-    vec2 framebuffer_scale;
+    int framebuffer_scale;
     int alphatest_ref;
     float depth_scale;
     float depth_offset;

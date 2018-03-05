@@ -75,7 +75,8 @@ void Config::ReadValues() {
     qt_config->beginGroup("Renderer");
     Settings::values.use_hw_renderer = qt_config->value("use_hw_renderer", true).toBool();
     Settings::values.use_shader_jit = qt_config->value("use_shader_jit", true).toBool();
-    Settings::values.resolution_factor = qt_config->value("resolution_factor", 1.0).toFloat();
+    Settings::values.resolution_factor =
+        static_cast<u16>(qt_config->value("resolution_factor", 1).toInt());
     Settings::values.use_vsync = qt_config->value("use_vsync", false).toBool();
     Settings::values.use_frame_limit = qt_config->value("use_frame_limit", true).toBool();
     Settings::values.frame_limit = qt_config->value("frame_limit", 100).toInt();
@@ -240,7 +241,7 @@ void Config::SaveValues() {
     qt_config->beginGroup("Renderer");
     qt_config->setValue("use_hw_renderer", Settings::values.use_hw_renderer);
     qt_config->setValue("use_shader_jit", Settings::values.use_shader_jit);
-    qt_config->setValue("resolution_factor", (double)Settings::values.resolution_factor);
+    qt_config->setValue("resolution_factor", Settings::values.resolution_factor);
     qt_config->setValue("use_vsync", Settings::values.use_vsync);
     qt_config->setValue("use_frame_limit", Settings::values.use_frame_limit);
     qt_config->setValue("frame_limit", Settings::values.frame_limit);

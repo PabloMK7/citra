@@ -96,20 +96,11 @@ static void MemoryFill(const Regs::MemoryFillConfig& config) {
     u8* start = Memory::GetPhysicalPointer(start_addr);
     u8* end = Memory::GetPhysicalPointer(end_addr);
 
-    // TODO: Consider always accelerating and returning vector of
-    //       regions that the accelerated fill did not cover to
-    //       reduce/eliminate the fill that the cpu has to do.
-    //       This would also mean that the flush below is not needed.
-    //       Fill should first flush all surfaces that touch but are
-    //       not completely within the fill range.
-    //       Then fill all completely covered surfaces, and return the
-    //       regions that were between surfaces or within the touching
-    //       ones for cpu to manually fill here.
     if (VideoCore::g_renderer->Rasterizer()->AccelerateFill(config))
         return;
 
-    Memory::RasterizerFlushAndInvalidateRegion(config.GetStartAddress(),
-                                               config.GetEndAddress() - config.GetStartAddress());
+    Memory::RasterizerInvalidateRegion(config.GetStartAddress(),
+                                       config.GetEndAddress() - config.GetStartAddress());
 
     if (config.fill_24bit) {
         // fill with 24-bit values
@@ -199,7 +190,7 @@ static void DisplayTransfer(const Regs::DisplayTransferConfig& config) {
     u32 output_size = output_width * output_height * GPU::Regs::BytesPerPixel(config.output_format);
 
     Memory::RasterizerFlushRegion(config.GetPhysicalInputAddress(), input_size);
-    Memory::RasterizerFlushAndInvalidateRegion(config.GetPhysicalOutputAddress(), output_size);
+    Memory::RasterizerInvalidateRegion(config.GetPhysicalOutputAddress(), output_size);
 
     for (u32 y = 0; y < output_height; ++y) {
         for (u32 x = 0; x < output_width; ++x) {
@@ -363,8 +354,10 @@ static void TextureCopy(const Regs::DisplayTransferConfig& config) {
 
     size_t contiguous_output_size =
         config.texture_copy.size / output_width * (output_width + output_gap);
-    Memory::RasterizerFlushAndInvalidateRegion(config.GetPhysicalOutputAddress(),
-                                               static_cast<u32>(contiguous_output_size));
+    // Only need to flush output if it has a gap
+    const auto FlushInvalidate_fn = (output_gap != 0) ? Memory::RasterizerFlushAndInvalidateRegion
+                                                      : Memory::RasterizerInvalidateRegion;
+    FlushInvalidate_fn(config.GetPhysicalOutputAddress(), static_cast<u32>(contiguous_output_size));
 
     u32 remaining_input = input_width;
     u32 remaining_output = output_width;
@@ -570,4 +563,4 @@ void Shutdown() {
     LOG_DEBUG(HW_GPU, "shutdown OK");
 }
 
-} // namespace
+} // namespace GPU

@@ -21,7 +21,7 @@ struct FramebufferLayout {
      * Returns the ration of pixel size of the top screen, compared to the native size of the 3DS
      * screen.
      */
-    float GetScalingRatio() const;
+    u16 GetScalingRatio() const;
 };
 
 /**
