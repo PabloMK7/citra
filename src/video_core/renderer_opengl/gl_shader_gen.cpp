@@ -562,6 +562,8 @@ static void WriteLighting(std::string& out, const PicaShaderConfig& config) {
            "vec3 refl_value = vec3(0.0);\n"
            "vec3 spot_dir = vec3(0.0);\n"
            "vec3 half_vector = vec3(0.0);\n"
+           "float dot_product = 0.0;\n"
+           "float clamp_highlights = 1.0;\n"
            "float geo_factor = 1.0;\n";
 
     // Compute fragment normals and tangents
@@ -680,9 +682,14 @@ static void WriteLighting(std::string& out, const PicaShaderConfig& config) {
 
         // Compute dot product of light_vector and normal, adjust if lighting is one-sided or
         // two-sided
-        std::string dot_product = light_config.two_sided_diffuse
-                                      ? "abs(dot(light_vector, normal))"
-                                      : "max(dot(light_vector, normal), 0.0)";
+        out += std::string("dot_product = ") + (light_config.two_sided_diffuse
+                                                    ? "abs(dot(light_vector, normal));\n"
+                                                    : "max(dot(light_vector, normal), 0.0);\n");
+
+        // If enabled, clamp specular component if lighting result is zero
+        if (lighting.clamp_highlights) {
+            out += "clamp_highlights = dot_product == 0.0 ? 0.0 : 1.0;\n";
+        }
 
         // If enabled, compute spot light attenuation value
         std::string spot_atten = "1.0";
@@ -706,14 +713,10 @@ static void WriteLighting(std::string& out, const PicaShaderConfig& config) {
                          std::to_string(static_cast<unsigned>(sampler)) + "," + index + ")";
         }
 
-        // If enabled, clamp specular component if lighting result is negative
-        std::string clamp_highlights =
-            lighting.clamp_highlights ? "(dot(light_vector, normal) <= 0.0 ? 0.0 : 1.0)" : "1.0";
-
         if (light_config.geometric_factor_0 || light_config.geometric_factor_1) {
             out += "geo_factor = dot(half_vector, half_vector);\n"
-                   "geo_factor = geo_factor == 0.0 ? 0.0 : min(" +
-                   dot_product + " / geo_factor, 1.0);\n";
+                   "geo_factor = geo_factor == 0.0 ? 0.0 : min("
+                   "dot_product / geo_factor, 1.0);\n";
         }
 
         // Specular 0 component
@@ -814,12 +817,12 @@ static void WriteLighting(std::string& out, const PicaShaderConfig& config) {
         }
 
         // Compute primary fragment color (diffuse lighting) function
-        out += "diffuse_sum.rgb += ((" + light_src + ".diffuse * " + dot_product + ") + " +
-               light_src + ".ambient) * " + dist_atten + " * " + spot_atten + ";\n";
+        out += "diffuse_sum.rgb += ((" + light_src + ".diffuse * dot_product) + " + light_src +
+               ".ambient) * " + dist_atten + " * " + spot_atten + ";\n";
 
         // Compute secondary fragment color (specular lighting) function
-        out += "specular_sum.rgb += (" + specular_0 + " + " + specular_1 + ") * " +
-               clamp_highlights + " * " + dist_atten + " * " + spot_atten + ";\n";
+        out += "specular_sum.rgb += (" + specular_0 + " + " + specular_1 +
+               ") * clamp_highlights * " + dist_atten + " * " + spot_atten + ";\n";
     }
 
     // Sum final lighting result

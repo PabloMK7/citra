@@ -256,21 +256,15 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(
         }
 
         auto dot_product = Math::Dot(light_vector, normal);
-
-        // Calculate clamp highlights before applying the two-sided diffuse configuration to the dot
-        // product.
-        float clamp_highlights = 1.0f;
-        if (lighting.config0.clamp_highlights) {
-            if (dot_product <= 0.0f)
-                clamp_highlights = 0.0f;
-            else
-                clamp_highlights = 1.0f;
-        }
-
         if (light_config.config.two_sided_diffuse)
             dot_product = std::abs(dot_product);
         else
             dot_product = std::max(dot_product, 0.0f);
+
+        float clamp_highlights = 1.0f;
+        if (lighting.config0.clamp_highlights) {
+            clamp_highlights = dot_product == 0.0f ? 0.0f : 1.0f;
+        }
 
         if (light_config.config.geometric_factor_0 || light_config.config.geometric_factor_1) {
             float geo_factor = half_vector.Length2();
