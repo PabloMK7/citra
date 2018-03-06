@@ -135,7 +135,7 @@ void AppLoader_NCCH::ParseRegionLockoutInfo() {
         constexpr u32 REGION_COUNT = 7;
         for (u32 region = 0; region < REGION_COUNT; ++region) {
             if (region_lockout & 1) {
-                Service::CFG::SetPreferredRegionCode(region);
+                Service::CFG::GetCurrentModule()->SetPreferredRegionCode(region);
                 break;
             }
             region_lockout >>= 1;

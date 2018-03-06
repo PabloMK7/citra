@@ -3,7 +3,6 @@
 // Refer to the license.txt file included.
 
 #include <algorithm>
-#include <array>
 #include <cryptopp/osrng.h>
 #include <cryptopp/sha.h>
 #include "common/file_util.h"
@@ -13,7 +12,6 @@
 #include "core/file_sys/archive_systemsavedata.h"
 #include "core/file_sys/errors.h"
 #include "core/file_sys/file_backend.h"
-#include "core/hle/ipc.h"
 #include "core/hle/ipc_helpers.h"
 #include "core/hle/result.h"
 #include "core/hle/service/cfg/cfg.h"
@@ -21,9 +19,6 @@
 #include "core/hle/service/cfg/cfg_nor.h"
 #include "core/hle/service/cfg/cfg_s.h"
 #include "core/hle/service/cfg/cfg_u.h"
-#include "core/hle/service/fs/archive.h"
-#include "core/hle/service/service.h"
-#include "core/memory.h"
 #include "core/settings.h"
 
 namespace Service {
@@ -113,35 +108,44 @@ static const std::array<float, 8> STEREO_CAMERA_SETTINGS = {
 static_assert(sizeof(STEREO_CAMERA_SETTINGS) == 0x20,
               "STEREO_CAMERA_SETTINGS must be exactly 0x20 bytes");
 
-static const u32 CONFIG_SAVEFILE_SIZE = 0x8000;
-static std::array<u8, CONFIG_SAVEFILE_SIZE> cfg_config_file_buffer;
-
-static Service::FS::ArchiveHandle cfg_system_save_data_archive;
 static const std::vector<u8> cfg_system_savedata_id = {
     0x00, 0x00, 0x00, 0x00, 0x17, 0x00, 0x01, 0x00,
 };
 
-static u32 preferred_region_code = 0;
+static std::weak_ptr<Module> current_cfg;
 
-void GetCountryCodeString(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-    u32 country_code_id = cmd_buff[1];
+std::shared_ptr<Module> GetCurrentModule() {
+    auto cfg = current_cfg.lock();
+    ASSERT_MSG(cfg, "No CFG module running!");
+    return cfg;
+}
 
+Module::Interface::Interface(std::shared_ptr<Module> cfg, const char* name, u32 max_session)
+    : ServiceFramework(name, max_session), cfg(std::move(cfg)) {}
+
+Module::Interface::~Interface() = default;
+
+void Module::Interface::GetCountryCodeString(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x09, 1, 0);
+    u16 country_code_id = rp.Pop<u16>();
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     if (country_code_id >= country_codes.size() || 0 == country_codes[country_code_id]) {
         LOG_ERROR(Service_CFG, "requested country code id=%d is invalid", country_code_id);
-        cmd_buff[1] = ResultCode(ErrorDescription::NotFound, ErrorModule::Config,
-                                 ErrorSummary::WrongArgument, ErrorLevel::Permanent)
-                          .raw;
+        rb.Push(ResultCode(ErrorDescription::NotFound, ErrorModule::Config,
+                           ErrorSummary::WrongArgument, ErrorLevel::Permanent));
+        rb.Skip(1, false);
         return;
     }
 
-    cmd_buff[1] = 0;
-    cmd_buff[2] = country_codes[country_code_id];
+    rb.Push(RESULT_SUCCESS);
+    // the real CFG service copies only three bytes (including the null-terminator) here
+    rb.Push<u32>(country_codes[country_code_id]);
 }
 
-void GetCountryCodeID(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-    u16 country_code = static_cast<u16>(cmd_buff[1]);
+void Module::Interface::GetCountryCodeID(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x0A, 1, 0);
+    u16 country_code = rp.Pop<u16>();
     u16 country_code_id = 0;
 
     // The following algorithm will fail if the first country code isn't 0.
@@ -154,42 +158,43 @@ void GetCountryCodeID(Service::Interface* self) {
         }
     }
 
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     if (0 == country_code_id) {
         LOG_ERROR(Service_CFG, "requested country code name=%c%c is invalid", country_code & 0xff,
                   country_code >> 8);
-        cmd_buff[1] = ResultCode(ErrorDescription::NotFound, ErrorModule::Config,
-                                 ErrorSummary::WrongArgument, ErrorLevel::Permanent)
-                          .raw;
-        cmd_buff[2] = 0xFFFF;
+        rb.Push(ResultCode(ErrorDescription::NotFound, ErrorModule::Config,
+                           ErrorSummary::WrongArgument, ErrorLevel::Permanent));
+        rb.Push<u16>(0x00FF);
         return;
     }
 
-    cmd_buff[1] = 0;
-    cmd_buff[2] = country_code_id;
+    rb.Push(RESULT_SUCCESS);
+    rb.Push<u16>(country_code_id);
 }
 
-u32 GetRegionValue() {
+u32 Module::GetRegionValue() {
     if (Settings::values.region_value == Settings::REGION_VALUE_AUTO_SELECT)
         return preferred_region_code;
 
     return Settings::values.region_value;
 }
 
-void SecureInfoGetRegion(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
+void Module::Interface::SecureInfoGetRegion(Kernel::HLERequestContext& ctx, u16 id) {
+    IPC::RequestParser rp(ctx, id, 0, 0);
 
-    cmd_buff[1] = RESULT_SUCCESS.raw;
-    cmd_buff[2] = GetRegionValue();
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
+    rb.Push(RESULT_SUCCESS);
+    rb.Push<u8>(cfg->GetRegionValue());
 }
 
-void GenHashConsoleUnique(Service::Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 0x03, 1, 0);
+void Module::Interface::GenHashConsoleUnique(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x03, 1, 0);
     const u32 app_id_salt = rp.Pop<u32>() & 0x000FFFFF;
 
     IPC::RequestBuilder rb = rp.MakeBuilder(3, 0);
 
     std::array<u8, 12> buffer;
-    const ResultCode result = GetConfigInfoBlock(ConsoleUniqueID2BlockID, 8, 2, buffer.data());
+    const ResultCode result = cfg->GetConfigInfoBlock(ConsoleUniqueID2BlockID, 8, 2, buffer.data());
     rb.Push(result);
     if (result.IsSuccess()) {
         std::memcpy(&buffer[8], &app_id_salt, sizeof(u32));
@@ -208,105 +213,94 @@ void GenHashConsoleUnique(Service::Interface* self) {
     LOG_DEBUG(Service_CFG, "called app_id_salt=0x%X", app_id_salt);
 }
 
-void GetRegionCanadaUSA(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
+void Module::Interface::GetRegionCanadaUSA(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x04, 0, 0);
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
 
-    cmd_buff[1] = RESULT_SUCCESS.raw;
+    rb.Push(RESULT_SUCCESS);
 
     u8 canada_or_usa = 1;
-    if (canada_or_usa == GetRegionValue()) {
-        cmd_buff[2] = 1;
+    if (canada_or_usa == cfg->GetRegionValue()) {
+        rb.Push(true);
     } else {
-        cmd_buff[2] = 0;
+        rb.Push(false);
     }
 }
 
-void GetSystemModel(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
+void Module::Interface::GetSystemModel(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x05, 0, 0);
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     u32 data;
 
     // TODO(Subv): Find out the correct error codes
-    cmd_buff[1] =
-        Service::CFG::GetConfigInfoBlock(ConsoleModelBlockID, 4, 0x8, reinterpret_cast<u8*>(&data))
-            .raw;
-    cmd_buff[2] = data & 0xFF;
+    rb.Push(cfg->GetConfigInfoBlock(ConsoleModelBlockID, 4, 0x8, reinterpret_cast<u8*>(&data)));
+    rb.Push<u8>(data & 0xFF);
 }
 
-void GetModelNintendo2DS(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
+void Module::Interface::GetModelNintendo2DS(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x06, 0, 0);
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     u32 data;
 
     // TODO(Subv): Find out the correct error codes
-    cmd_buff[1] =
-        Service::CFG::GetConfigInfoBlock(ConsoleModelBlockID, 4, 0x8, reinterpret_cast<u8*>(&data))
-            .raw;
-
+    rb.Push(cfg->GetConfigInfoBlock(ConsoleModelBlockID, 4, 0x8, reinterpret_cast<u8*>(&data)));
     u8 model = data & 0xFF;
-    if (model == Service::CFG::NINTENDO_2DS)
-        cmd_buff[2] = 0;
-    else
-        cmd_buff[2] = 1;
+    rb.Push(model != Service::CFG::NINTENDO_2DS);
 }
 
-void GetConfigInfoBlk2(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-    u32 size = cmd_buff[1];
-    u32 block_id = cmd_buff[2];
-    VAddr data_pointer = cmd_buff[4];
+void Module::Interface::GetConfigInfoBlk2(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x01, 2, 2);
+    u32 size = rp.Pop<u32>();
+    u32 block_id = rp.Pop<u32>();
+    auto& buffer = rp.PopMappedBuffer();
 
-    if (!Memory::IsValidVirtualAddress(data_pointer)) {
-        cmd_buff[1] = -1; // TODO(Subv): Find the right error code
-        return;
-    }
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
+    std::vector<u8> data(size);
+    rb.Push(cfg->GetConfigInfoBlock(block_id, size, 0x2, data.data()));
+    buffer.Write(data.data(), 0, data.size());
+    rb.PushMappedBuffer(buffer);
+}
+
+void Module::Interface::GetConfigInfoBlk8(Kernel::HLERequestContext& ctx, u16 id) {
+    IPC::RequestParser rp(ctx, id, 2, 2);
+    u32 size = rp.Pop<u32>();
+    u32 block_id = rp.Pop<u32>();
+    auto& buffer = rp.PopMappedBuffer();
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
+    std::vector<u8> data(size);
+    rb.Push(cfg->GetConfigInfoBlock(block_id, size, 0x8, data.data()));
+    buffer.Write(data.data(), 0, data.size());
+    rb.PushMappedBuffer(buffer);
+}
+
+void Module::Interface::SetConfigInfoBlk4(Kernel::HLERequestContext& ctx, u16 id) {
+    IPC::RequestParser rp(ctx, id, 2, 2);
+    u32 block_id = rp.Pop<u32>();
+    u32 size = rp.Pop<u32>();
+    auto& buffer = rp.PopMappedBuffer();
 
     std::vector<u8> data(size);
-    cmd_buff[1] = Service::CFG::GetConfigInfoBlock(block_id, size, 0x2, data.data()).raw;
-    Memory::WriteBlock(data_pointer, data.data(), data.size());
+    buffer.Read(data.data(), 0, data.size());
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
+    rb.Push(cfg->SetConfigInfoBlock(block_id, size, 0x4, data.data()));
+    rb.PushMappedBuffer(buffer);
 }
 
-void GetConfigInfoBlk8(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-    u32 size = cmd_buff[1];
-    u32 block_id = cmd_buff[2];
-    VAddr data_pointer = cmd_buff[4];
-
-    if (!Memory::IsValidVirtualAddress(data_pointer)) {
-        cmd_buff[1] = -1; // TODO(Subv): Find the right error code
-        return;
-    }
-
-    std::vector<u8> data(size);
-    cmd_buff[1] = Service::CFG::GetConfigInfoBlock(block_id, size, 0x8, data.data()).raw;
-    Memory::WriteBlock(data_pointer, data.data(), data.size());
+void Module::Interface::UpdateConfigNANDSavegame(Kernel::HLERequestContext& ctx, u16 id) {
+    IPC::RequestParser rp(ctx, id, 0, 0);
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(cfg->UpdateConfigNANDSavegame());
 }
 
-void SetConfigInfoBlk4(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-    u32 block_id = cmd_buff[1];
-    u32 size = cmd_buff[2];
-    VAddr data_pointer = cmd_buff[4];
-
-    if (!Memory::IsValidVirtualAddress(data_pointer)) {
-        cmd_buff[1] = -1; // TODO(Subv): Find the right error code
-        return;
-    }
-
-    std::vector<u8> data(size);
-    Memory::ReadBlock(data_pointer, data.data(), data.size());
-    cmd_buff[1] = Service::CFG::SetConfigInfoBlock(block_id, size, 0x4, data.data()).raw;
+void Module::Interface::FormatConfig(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x0806, 0, 0);
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(cfg->FormatConfig());
 }
 
-void UpdateConfigNANDSavegame(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-    cmd_buff[1] = Service::CFG::UpdateConfigNANDSavegame().raw;
-}
-
-void FormatConfig(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-    cmd_buff[1] = Service::CFG::FormatConfig().raw;
-}
-
-static ResultVal<void*> GetConfigInfoBlockPointer(u32 block_id, u32 size, u32 flag) {
+ResultVal<void*> Module::GetConfigInfoBlockPointer(u32 block_id, u32 size, u32 flag) {
     // Read the header
     SaveFileConfig* config = reinterpret_cast<SaveFileConfig*>(cfg_config_file_buffer.data());
 
@@ -346,7 +340,7 @@ static ResultVal<void*> GetConfigInfoBlockPointer(u32 block_id, u32 size, u32 fl
     return MakeResult<void*>(pointer);
 }
 
-ResultCode GetConfigInfoBlock(u32 block_id, u32 size, u32 flag, void* output) {
+ResultCode Module::GetConfigInfoBlock(u32 block_id, u32 size, u32 flag, void* output) {
     void* pointer;
     CASCADE_RESULT(pointer, GetConfigInfoBlockPointer(block_id, size, flag));
     memcpy(output, pointer, size);
@@ -354,14 +348,14 @@ ResultCode GetConfigInfoBlock(u32 block_id, u32 size, u32 flag, void* output) {
     return RESULT_SUCCESS;
 }
 
-ResultCode SetConfigInfoBlock(u32 block_id, u32 size, u32 flag, const void* input) {
+ResultCode Module::SetConfigInfoBlock(u32 block_id, u32 size, u32 flag, const void* input) {
     void* pointer;
     CASCADE_RESULT(pointer, GetConfigInfoBlockPointer(block_id, size, flag));
     memcpy(pointer, input, size);
     return RESULT_SUCCESS;
 }
 
-ResultCode CreateConfigInfoBlk(u32 block_id, u16 size, u16 flags, const void* data) {
+ResultCode Module::CreateConfigInfoBlk(u32 block_id, u16 size, u16 flags, const void* data) {
     SaveFileConfig* config = reinterpret_cast<SaveFileConfig*>(cfg_config_file_buffer.data());
     if (config->total_entries >= CONFIG_FILE_MAX_BLOCK_ENTRIES)
         return ResultCode(-1); // TODO(Subv): Find the right error code
@@ -393,12 +387,12 @@ ResultCode CreateConfigInfoBlk(u32 block_id, u16 size, u16 flags, const void* da
     return RESULT_SUCCESS;
 }
 
-ResultCode DeleteConfigNANDSaveFile() {
+ResultCode Module::DeleteConfigNANDSaveFile() {
     FileSys::Path path("/config");
     return Service::FS::DeleteFileFromArchive(cfg_system_save_data_archive, path);
 }
 
-ResultCode UpdateConfigNANDSavegame() {
+ResultCode Module::UpdateConfigNANDSavegame() {
     FileSys::Mode mode = {};
     mode.write_flag.Assign(1);
     mode.create_flag.Assign(1);
@@ -414,7 +408,7 @@ ResultCode UpdateConfigNANDSavegame() {
     return RESULT_SUCCESS;
 }
 
-ResultCode FormatConfig() {
+ResultCode Module::FormatConfig() {
     ResultCode res = DeleteConfigNANDSaveFile();
     // The delete command fails if the file doesn't exist, so we have to check that too
     if (!res.IsSuccess() && res != FileSys::ERROR_FILE_NOT_FOUND) {
@@ -533,7 +527,7 @@ ResultCode FormatConfig() {
     return RESULT_SUCCESS;
 }
 
-ResultCode LoadConfigNANDSaveFile() {
+ResultCode Module::LoadConfigNANDSaveFile() {
     // Open the SystemSaveData archive 0x00010017
     FileSys::Path archive_path(cfg_system_savedata_id);
     auto archive_result =
@@ -570,18 +564,11 @@ ResultCode LoadConfigNANDSaveFile() {
     return FormatConfig();
 }
 
-void Init() {
-    AddService(new CFG_I);
-    AddService(new CFG_NOR);
-    AddService(new CFG_S);
-    AddService(new CFG_U);
-
+Module::Module() {
     LoadConfigNANDSaveFile();
-
-    preferred_region_code = 0;
 }
 
-void Shutdown() {}
+Module::~Module() = default;
 
 /// Checks if the language is available in the chosen region, and returns a proper one
 static SystemLanguage AdjustLanguageInfoBlock(u32 region, SystemLanguage language) {
@@ -610,7 +597,7 @@ static SystemLanguage AdjustLanguageInfoBlock(u32 region, SystemLanguage languag
     return language;
 }
 
-void SetPreferredRegionCode(u32 region_code) {
+void Module::SetPreferredRegionCode(u32 region_code) {
     preferred_region_code = region_code;
     LOG_INFO(Service_CFG, "Preferred region code set to %u", preferred_region_code);
 
@@ -626,14 +613,14 @@ void SetPreferredRegionCode(u32 region_code) {
     }
 }
 
-void SetUsername(const std::u16string& name) {
+void Module::SetUsername(const std::u16string& name) {
     ASSERT(name.size() <= 10);
     UsernameBlock block{};
     name.copy(block.username, name.size());
     SetConfigInfoBlock(UsernameBlockID, sizeof(block), 4, &block);
 }
 
-std::u16string GetUsername() {
+std::u16string Module::GetUsername() {
     UsernameBlock block;
     GetConfigInfoBlock(UsernameBlockID, sizeof(block), 8, &block);
 
@@ -646,40 +633,40 @@ std::u16string GetUsername() {
     return username;
 }
 
-void SetBirthday(u8 month, u8 day) {
+void Module::SetBirthday(u8 month, u8 day) {
     BirthdayBlock block = {month, day};
     SetConfigInfoBlock(BirthdayBlockID, sizeof(block), 4, &block);
 }
 
-std::tuple<u8, u8> GetBirthday() {
+std::tuple<u8, u8> Module::GetBirthday() {
     BirthdayBlock block;
     GetConfigInfoBlock(BirthdayBlockID, sizeof(block), 8, &block);
     return std::make_tuple(block.month, block.day);
 }
 
-void SetSystemLanguage(SystemLanguage language) {
+void Module::SetSystemLanguage(SystemLanguage language) {
     u8 block = language;
     SetConfigInfoBlock(LanguageBlockID, sizeof(block), 4, &block);
 }
 
-SystemLanguage GetSystemLanguage() {
+SystemLanguage Module::GetSystemLanguage() {
     u8 block;
     GetConfigInfoBlock(LanguageBlockID, sizeof(block), 8, &block);
     return static_cast<SystemLanguage>(block);
 }
 
-void SetSoundOutputMode(SoundOutputMode mode) {
+void Module::SetSoundOutputMode(SoundOutputMode mode) {
     u8 block = mode;
     SetConfigInfoBlock(SoundOutputModeBlockID, sizeof(block), 4, &block);
 }
 
-SoundOutputMode GetSoundOutputMode() {
+SoundOutputMode Module::GetSoundOutputMode() {
     u8 block;
     GetConfigInfoBlock(SoundOutputModeBlockID, sizeof(block), 8, &block);
     return static_cast<SoundOutputMode>(block);
 }
 
-void GenerateConsoleUniqueId(u32& random_number, u64& console_id) {
+void Module::GenerateConsoleUniqueId(u32& random_number, u64& console_id) {
     CryptoPP::AutoSeededRandomPool rng;
     random_number = rng.GenerateWord32(0, 0xFFFF);
     u64_le local_friend_code_seed;
@@ -688,7 +675,7 @@ void GenerateConsoleUniqueId(u32& random_number, u64& console_id) {
     console_id = (local_friend_code_seed & 0x3FFFFFFFF) | (static_cast<u64>(random_number) << 48);
 }
 
-ResultCode SetConsoleUniqueId(u32 random_number, u64 console_id) {
+ResultCode Module::SetConsoleUniqueId(u32 random_number, u64 console_id) {
     u64_le console_id_le = console_id;
     ResultCode res =
         SetConfigInfoBlock(ConsoleUniqueID1BlockID, sizeof(console_id_le), 0xE, &console_id_le);
@@ -708,10 +695,19 @@ ResultCode SetConsoleUniqueId(u32 random_number, u64 console_id) {
     return RESULT_SUCCESS;
 }
 
-u64 GetConsoleUniqueId() {
+u64 Module::GetConsoleUniqueId() {
     u64_le console_id_le;
     GetConfigInfoBlock(ConsoleUniqueID2BlockID, sizeof(console_id_le), 0xE, &console_id_le);
     return console_id_le;
+}
+
+void InstallInterfaces(SM::ServiceManager& service_manager) {
+    auto cfg = std::make_shared<Module>();
+    std::make_shared<CFG_I>(cfg)->InstallAsService(service_manager);
+    std::make_shared<CFG_S>(cfg)->InstallAsService(service_manager);
+    std::make_shared<CFG_U>(cfg)->InstallAsService(service_manager);
+    std::make_shared<CFG_NOR>()->InstallAsService(service_manager);
+    current_cfg = cfg;
 }
 
 } // namespace CFG

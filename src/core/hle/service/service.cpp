@@ -242,7 +242,7 @@ void Init() {
     BOSS::Init();
     CAM::InstallInterfaces(*SM::g_service_manager);
     CECD::Init();
-    CFG::Init();
+    CFG::InstallInterfaces(*SM::g_service_manager);
     DLP::Init();
     FRD::InstallInterfaces(*SM::g_service_manager);
     GSP::InstallInterfaces(*SM::g_service_manager);
@@ -273,7 +273,6 @@ void Init() {
 void Shutdown() {
     NDM::Shutdown();
     DLP::Shutdown();
-    CFG::Shutdown();
     CECD::Shutdown();
     BOSS::Shutdown();
     FS::ArchiveShutdown();
