@@ -181,7 +181,6 @@ extern std::shared_ptr<DebugContext> g_debug_context; // TODO: Get rid of this g
 
 namespace DebugUtils {
 
-#define PICA_DUMP_TEXTURES 0
 #define PICA_LOG_TEV 0
 
 void DumpShader(const std::string& filename, const ShaderRegs& config,
