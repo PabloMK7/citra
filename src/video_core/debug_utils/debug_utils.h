@@ -207,8 +207,6 @@ inline bool IsPicaTracing() {
 void OnPicaRegWrite(PicaTrace::Write write);
 std::unique_ptr<PicaTrace> FinishPicaTracing();
 
-void DumpTexture(const TexturingRegs::TextureConfig& texture_config, u8* data);
-
 std::string GetTevStageConfigColorCombinerString(const TexturingRegs::TevStageConfig& tev_stage);
 std::string GetTevStageConfigAlphaCombinerString(const TexturingRegs::TevStageConfig& tev_stage);
 

@@ -166,11 +166,6 @@ set_property(DIRECTORY APPEND PROPERTY
 # System imported libraries
 # ======================
 
-find_package(PNG QUIET)
-if (NOT PNG_FOUND)
-    message(STATUS "libpng not found. Some debugging features have been disabled.")
-endif()
-
 find_package(Boost 1.63.0 QUIET)
 if (NOT Boost_FOUND)
     message(STATUS "Boost 1.63.0 or newer not found, falling back to externals")

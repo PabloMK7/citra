@@ -12,11 +12,6 @@
 #include <stdexcept>
 #include <string>
 
-#ifdef HAVE_PNG
-#include <png.h>
-#include <setjmp.h>
-#endif
-
 #include <nihstro/bit_field.h>
 #include <nihstro/float24.h>
 #include <nihstro/shader_binary.h>
@@ -24,7 +19,6 @@
 #include "common/bit_field.h"
 #include "common/color.h"
 #include "common/common_types.h"
-#include "common/file_util.h"
 #include "common/logging/log.h"
 #include "common/math_util.h"
 #include "common/vector_math.h"
@@ -316,113 +310,6 @@ std::unique_ptr<PicaTrace> FinishPicaTracing() {
     std::unique_ptr<PicaTrace> ret(std::move(pica_trace));
 
     return ret;
-}
-
-#ifdef HAVE_PNG
-// Adapter functions to libpng to write/flush to File::IOFile instances.
-static void WriteIOFile(png_structp png_ptr, png_bytep data, png_size_t length) {
-    auto* fp = static_cast<FileUtil::IOFile*>(png_get_io_ptr(png_ptr));
-    if (!fp->WriteBytes(data, length))
-        png_error(png_ptr, "Failed to write to output PNG file.");
-}
-
-static void FlushIOFile(png_structp png_ptr) {
-    auto* fp = static_cast<FileUtil::IOFile*>(png_get_io_ptr(png_ptr));
-    if (!fp->Flush())
-        png_error(png_ptr, "Failed to flush to output PNG file.");
-}
-#endif
-
-void DumpTexture(const TexturingRegs::TextureConfig& texture_config, u8* data) {
-#ifndef HAVE_PNG
-    return;
-#else
-    if (!data)
-        return;
-
-    // Write data to file
-    static int dump_index = 0;
-    std::string filename =
-        std::string("texture_dump") + std::to_string(++dump_index) + std::string(".png");
-    u32 row_stride = texture_config.width * 3;
-
-    u8* buf;
-
-    char title[] = "Citra texture dump";
-    char title_key[] = "Title";
-    png_structp png_ptr = nullptr;
-    png_infop info_ptr = nullptr;
-
-    // Open file for writing (binary mode)
-    FileUtil::IOFile fp(filename, "wb");
-
-    // Initialize write structure
-    png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
-    if (png_ptr == nullptr) {
-        LOG_ERROR(Debug_GPU, "Could not allocate write struct");
-        goto finalise;
-    }
-
-    // Initialize info structure
-    info_ptr = png_create_info_struct(png_ptr);
-    if (info_ptr == nullptr) {
-        LOG_ERROR(Debug_GPU, "Could not allocate info struct");
-        goto finalise;
-    }
-
-    // Setup Exception handling
-    if (setjmp(png_jmpbuf(png_ptr))) {
-        LOG_ERROR(Debug_GPU, "Error during png creation");
-        goto finalise;
-    }
-
-    png_set_write_fn(png_ptr, static_cast<void*>(&fp), WriteIOFile, FlushIOFile);
-
-    // Write header (8 bit color depth)
-    png_set_IHDR(png_ptr, info_ptr, texture_config.width, texture_config.height, 8,
-                 PNG_COLOR_TYPE_RGB /*_ALPHA*/, PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_BASE,
-                 PNG_FILTER_TYPE_BASE);
-
-    png_text title_text;
-    title_text.compression = PNG_TEXT_COMPRESSION_NONE;
-    title_text.key = title_key;
-    title_text.text = title;
-    png_set_text(png_ptr, info_ptr, &title_text, 1);
-
-    png_write_info(png_ptr, info_ptr);
-
-    buf = new u8[row_stride * texture_config.height];
-    for (unsigned y = 0; y < texture_config.height; ++y) {
-        for (unsigned x = 0; x < texture_config.width; ++x) {
-            Pica::Texture::TextureInfo info;
-            info.width = texture_config.width;
-            info.height = texture_config.height;
-            info.stride = row_stride;
-            info.format = g_state.regs.texturing.texture0_format;
-            Math::Vec4<u8> texture_color = Pica::Texture::LookupTexture(data, x, y, info);
-            buf[3 * x + y * row_stride] = texture_color.r();
-            buf[3 * x + y * row_stride + 1] = texture_color.g();
-            buf[3 * x + y * row_stride + 2] = texture_color.b();
-        }
-    }
-
-    // Write image data
-    for (unsigned y = 0; y < texture_config.height; ++y) {
-        u8* row_ptr = (u8*)buf + y * row_stride;
-        png_write_row(png_ptr, row_ptr);
-    }
-
-    delete[] buf;
-
-    // End write
-    png_write_end(png_ptr, nullptr);
-
-finalise:
-    if (info_ptr != nullptr)
-        png_free_data(png_ptr, info_ptr, PNG_FREE_ALL, -1);
-    if (png_ptr != nullptr)
-        png_destroy_write_struct(&png_ptr, (png_infopp) nullptr);
-#endif
 }
 
 static std::string ReplacePattern(const std::string& input, const std::string& pattern,
