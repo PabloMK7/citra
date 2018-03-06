@@ -21,7 +21,8 @@ enum SystemModel {
     NINTENDO_3DS_XL = 1,
     NEW_NINTENDO_3DS = 2,
     NINTENDO_2DS = 3,
-    NEW_NINTENDO_3DS_XL = 4
+    NEW_NINTENDO_3DS_XL = 4,
+    NEW_NINTENDO_2DS_XL = 5
 };
 
 enum SystemLanguage {
