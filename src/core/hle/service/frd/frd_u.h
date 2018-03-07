@@ -4,18 +4,14 @@
 
 #pragma once
 
-#include "core/hle/service/service.h"
+#include "core/hle/service/frd/frd.h"
 
 namespace Service {
 namespace FRD {
 
-class FRD_U_Interface : public Service::Interface {
+class FRD_U final : public Module::Interface {
 public:
-    FRD_U_Interface();
-
-    std::string GetPortName() const override {
-        return "frd:u";
-    }
+    explicit FRD_U(std::shared_ptr<Module> frd);
 };
 
 } // namespace FRD

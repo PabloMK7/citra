@@ -45,18 +45,6 @@ public:
             memset(cmdbuf + index, 0, size_in_words * sizeof(u32));
         index += size_in_words;
     }
-
-    /**
-     * @brief Retrieves the address of a static buffer, used when a buffer is needed for output
-     * @param buffer_id The index of the static buffer
-     * @param data_size If non-null, will store the size of the buffer
-     */
-    VAddr PeekStaticBuffer(u8 buffer_id, size_t* data_size = nullptr) const {
-        u32* static_buffer = cmdbuf + Kernel::kStaticBuffersOffset / sizeof(u32) + buffer_id * 2;
-        if (data_size)
-            *data_size = StaticBufferDescInfo{static_buffer[0]}.size;
-        return static_buffer[1];
-    }
 };
 
 class RequestBuilder : public RequestHelperBase {
@@ -122,7 +110,6 @@ public:
     template <typename... O>
     void PushMoveObjects(Kernel::SharedPtr<O>... pointers);
 
-    [[deprecated]] void PushStaticBuffer(VAddr buffer_vaddr, size_t size, u8 buffer_id);
     void PushStaticBuffer(const std::vector<u8>& buffer, u8 buffer_id);
 
     /// Pushes an HLE MappedBuffer interface back to unmapped the buffer.
@@ -202,11 +189,6 @@ inline void RequestBuilder::PushCopyObjects(Kernel::SharedPtr<O>... pointers) {
 template <typename... O>
 inline void RequestBuilder::PushMoveObjects(Kernel::SharedPtr<O>... pointers) {
     PushMoveHLEHandles(context->AddOutgoingHandle(std::move(pointers))...);
-}
-
-inline void RequestBuilder::PushStaticBuffer(VAddr buffer_vaddr, size_t size, u8 buffer_id) {
-    Push(StaticBufferDesc(size, buffer_id));
-    Push(buffer_vaddr);
 }
 
 inline void RequestBuilder::PushStaticBuffer(const std::vector<u8>& buffer, u8 buffer_id) {
@@ -308,18 +290,6 @@ public:
     }
 
     u32 PopPID();
-
-    /**
-     * @brief Pops the static buffer vaddr
-     * @return                  The virtual address of the buffer
-     * @param[out] data_size    If non-null, the pointed value will be set to the size of the data
-     *
-     * In real services, static buffers must be set up before any IPC request using those is sent.
-     * It is the duty of the process (usually services) to allocate and set up the receiving static
-     * buffer information. Our HLE services do not need to set up the buffers beforehand.
-     * Please note that the setup uses virtual addresses.
-     */
-    [[deprecated]] VAddr PopStaticBuffer(size_t* data_size);
 
     /**
      * @brief Pops a static buffer from the IPC request buffer.
@@ -465,14 +435,6 @@ inline std::tuple<Kernel::SharedPtr<T>...> RequestParser::PopObjects() {
 inline u32 RequestParser::PopPID() {
     ASSERT(Pop<u32>() == static_cast<u32>(DescriptorType::CallingPid));
     return Pop<u32>();
-}
-
-inline VAddr RequestParser::PopStaticBuffer(size_t* data_size) {
-    const u32 sbuffer_descriptor = Pop<u32>();
-    StaticBufferDescInfo bufferInfo{sbuffer_descriptor};
-    if (data_size != nullptr)
-        *data_size = bufferInfo.size;
-    return Pop<VAddr>();
 }
 
 inline const std::vector<u8>& RequestParser::PopStaticBuffer() {

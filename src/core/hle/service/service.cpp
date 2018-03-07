@@ -244,7 +244,7 @@ void Init() {
     CECD::Init();
     CFG::Init();
     DLP::Init();
-    FRD::Init();
+    FRD::InstallInterfaces(*SM::g_service_manager);
     GSP::InstallInterfaces(*SM::g_service_manager);
     HID::InstallInterfaces(*SM::g_service_manager);
     IR::InstallInterfaces(*SM::g_service_manager);
@@ -274,7 +274,6 @@ void Shutdown() {
     NFC::Shutdown();
     NEWS::Shutdown();
     NDM::Shutdown();
-    FRD::Shutdown();
     DLP::Shutdown();
     CFG::Shutdown();
     CECD::Shutdown();
