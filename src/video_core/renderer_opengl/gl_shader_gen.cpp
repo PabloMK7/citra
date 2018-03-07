@@ -688,7 +688,7 @@ static void WriteLighting(std::string& out, const PicaShaderConfig& config) {
 
         // If enabled, clamp specular component if lighting result is zero
         if (lighting.clamp_highlights) {
-            out += "clamp_highlights = dot_product == 0.0 ? 0.0 : 1.0;\n";
+            out += "clamp_highlights = sign(dot_product);\n";
         }
 
         // If enabled, compute spot light attenuation value
