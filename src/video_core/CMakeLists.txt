@@ -86,8 +86,3 @@ target_link_libraries(video_core PRIVATE glad nihstro-headers)
 if (ARCHITECTURE_x86_64)
     target_link_libraries(video_core PUBLIC xbyak)
 endif()
-
-if (PNG_FOUND)
-    target_link_libraries(video_core PRIVATE PNG::PNG)
-    target_compile_definitions(video_core PRIVATE HAVE_PNG)
-endif()
