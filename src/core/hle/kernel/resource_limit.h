@@ -123,4 +123,4 @@ void ResourceLimitsInit();
 // Destroys the resource limits
 void ResourceLimitsShutdown();
 
-} // namespace
+} // namespace Kernel

@@ -52,4 +52,4 @@ ResultVal<s32> Semaphore::Release(s32 release_count) {
     return MakeResult<s32>(previous_count);
 }
 
-} // namespace
+} // namespace Kernel

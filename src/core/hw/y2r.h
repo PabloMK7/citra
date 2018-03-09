@@ -8,10 +8,10 @@ namespace Service {
 namespace Y2R {
 struct ConversionConfiguration;
 }
-}
+} // namespace Service
 
 namespace HW {
 namespace Y2R {
 void PerformConversion(Service::Y2R::ConversionConfiguration& cvt);
 }
-}
+} // namespace HW

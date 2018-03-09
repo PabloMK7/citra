@@ -13,7 +13,7 @@ namespace Pica {
 namespace Shader {
 struct OutputVertex;
 }
-}
+} // namespace Pica
 
 namespace VideoCore {
 
@@ -67,4 +67,4 @@ public:
         return false;
     }
 };
-}
+} // namespace VideoCore

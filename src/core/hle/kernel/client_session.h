@@ -50,4 +50,4 @@ private:
     ~ClientSession() override;
 };
 
-} // namespace
+} // namespace Kernel

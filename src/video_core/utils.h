@@ -49,4 +49,4 @@ static inline u32 GetMortonOffset(u32 x, u32 y, u32 bytes_per_pixel) {
     return (i + offset) * bytes_per_pixel;
 }
 
-} // namespace
+} // namespace VideoCore

@@ -331,4 +331,4 @@ void Init();
 /// Shutdown hardware
 void Shutdown();
 
-} // namespace
+} // namespace GPU

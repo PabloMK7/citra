@@ -78,4 +78,4 @@ struct SMDH {
 };
 static_assert(sizeof(SMDH) == 0x36C0, "SMDH structure size is wrong");
 
-} // namespace
+} // namespace Loader

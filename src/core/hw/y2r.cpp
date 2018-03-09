@@ -378,5 +378,5 @@ void PerformConversion(ConversionConfiguration& cvt) {
                  cvt.output_format, (u8)cvt.alpha);
     }
 }
-}
-}
+} // namespace Y2R
+} // namespace HW

@@ -134,4 +134,4 @@ bool ComparePartialString(InIt begin, InIt end, const char* other) {
  * NUL-terminated then the string ends at max_len characters.
  */
 std::string StringFromFixedZeroTerminatedBuffer(const char* buffer, size_t max_len);
-}
+} // namespace Common

@@ -205,4 +205,4 @@ template void Recorder::RegisterWritten(u32, u8);
 template void Recorder::RegisterWritten(u32, u16);
 template void Recorder::RegisterWritten(u32, u32);
 template void Recorder::RegisterWritten(u32, u64);
-}
+} // namespace CiTrace

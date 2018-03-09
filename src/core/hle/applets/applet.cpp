@@ -31,7 +31,7 @@ struct hash<Service::APT::AppletId> {
         return std::hash<Type>()(static_cast<Type>(id_code));
     }
 };
-}
+} // namespace std
 
 namespace HLE {
 namespace Applets {
@@ -134,5 +134,5 @@ void Init() {
 void Shutdown() {
     CoreTiming::RemoveEvent(applet_update_event);
 }
-}
-} // namespace
+} // namespace Applets
+} // namespace HLE

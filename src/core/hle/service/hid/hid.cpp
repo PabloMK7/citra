@@ -333,7 +333,9 @@ void Module::Interface::GetGyroscopeLowCalibrateParam(Kernel::HLERequestContext&
 
     const s16 param_unit = 6700; // an approximate value taken from hw
     GyroscopeCalibrateParam param = {
-        {0, param_unit, -param_unit}, {0, param_unit, -param_unit}, {0, param_unit, -param_unit},
+        {0, param_unit, -param_unit},
+        {0, param_unit, -param_unit},
+        {0, param_unit, -param_unit},
     };
     rb.PushRaw(param);
 

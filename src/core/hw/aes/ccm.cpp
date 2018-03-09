@@ -19,10 +19,10 @@ namespace {
 
 // 3DS uses a non-standard AES-CCM algorithm, so we need to derive a sub class from the standard one
 // and override with the non-standard part.
-using CryptoPP::lword;
 using CryptoPP::AES;
-using CryptoPP::CCM_Final;
 using CryptoPP::CCM_Base;
+using CryptoPP::CCM_Final;
+using CryptoPP::lword;
 template <bool T_IsEncryption>
 class CCM_3DSVariant_Final : public CCM_Final<AES, CCM_MAC_SIZE, T_IsEncryption> {
 public:

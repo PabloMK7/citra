@@ -39,4 +39,4 @@ ResultVal<SharedPtr<ClientSession>> ClientPort::Connect() {
     return MakeResult(std::get<SharedPtr<ClientSession>>(sessions));
 }
 
-} // namespace
+} // namespace Kernel

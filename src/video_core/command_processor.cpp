@@ -311,8 +311,9 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
 
                 u8* texture_data = Memory::GetPhysicalPointer(texture.config.GetPhysicalAddress());
                 g_debug_context->recorder->MemoryAccessed(
-                    texture_data, Pica::TexturingRegs::NibblesPerPixel(texture.format) *
-                                      texture.config.width / 2 * texture.config.height,
+                    texture_data,
+                    Pica::TexturingRegs::NibblesPerPixel(texture.format) * texture.config.width /
+                        2 * texture.config.height,
                     texture.config.GetPhysicalAddress());
             }
         }

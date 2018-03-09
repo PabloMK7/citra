@@ -21,8 +21,8 @@
 #include "video_core/shader/shader.h"
 #include "video_core/shader/shader_interpreter.h"
 
-using nihstro::OpCode;
 using nihstro::Instruction;
+using nihstro::OpCode;
 using nihstro::SourceRegister;
 using nihstro::SwizzlePattern;
 
@@ -331,7 +331,7 @@ QVariant GraphicsVertexShaderModel::data(const QModelIndex& index, int role) con
         return QBrush(QColor(192, 192, 192));
     }
 
-    // TODO: Draw arrows for each "reachable" instruction to visualize control flow
+        // TODO: Draw arrows for each "reachable" instruction to visualize control flow
 
     default:
         break;

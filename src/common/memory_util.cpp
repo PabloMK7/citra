@@ -40,11 +40,12 @@ void* AllocateExecutableMemory(size_t size, bool low) {
     if (low && (!map_hint))
         map_hint = (char*)round_page(512 * 1024 * 1024); /* 0.5 GB rounded up to the next page */
 #endif
-    void* ptr = mmap(map_hint, size, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_ANON | MAP_PRIVATE
+    void* ptr = mmap(map_hint, size, PROT_READ | PROT_WRITE | PROT_EXEC,
+                     MAP_ANON | MAP_PRIVATE
 #if defined(ARCHITECTURE_X64) && defined(MAP_32BIT)
-                                                                             | (low ? MAP_32BIT : 0)
+                         | (low ? MAP_32BIT : 0)
 #endif
-                                                                             ,
+                         ,
                      -1, 0);
 #endif /* defined(_WIN32) */
 

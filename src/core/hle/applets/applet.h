@@ -86,5 +86,5 @@ void Init();
 
 /// Shuts down the HLE applets
 void Shutdown();
-}
-} // namespace
+} // namespace Applets
+} // namespace HLE

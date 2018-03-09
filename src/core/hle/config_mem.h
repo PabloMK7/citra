@@ -53,4 +53,4 @@ extern ConfigMemDef config_mem;
 
 void Init();
 
-} // namespace
+} // namespace ConfigMem

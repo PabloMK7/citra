@@ -10,7 +10,9 @@ namespace Common {
 
 TEST_CASE("ParamPackage", "[common]") {
     ParamPackage original{
-        {"abc", "xyz"}, {"def", "42"}, {"jkl", "$$:1:$2$,3"},
+        {"abc", "xyz"},
+        {"def", "42"},
+        {"jkl", "$$:1:$2$,3"},
     };
     original.Set("ghi", 3.14f);
     ParamPackage copy(original.Serialize());

@@ -28,4 +28,4 @@ void Init() {
     config_mem.firm_ctr_sdk_ver = 0x0000F297;
 }
 
-} // namespace
+} // namespace ConfigMem

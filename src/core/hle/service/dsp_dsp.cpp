@@ -236,8 +236,9 @@ static void RegisterInterruptEvents(Service::Interface* self) {
         }
 
         if (interrupt_events.HasTooManyEventsRegistered()) {
-            LOG_INFO(Service_DSP, "Ran out of space to register interrupts (Attempted to register "
-                                  "type=%u, pipe=%u, event_handle=0x%08X)",
+            LOG_INFO(Service_DSP,
+                     "Ran out of space to register interrupts (Attempted to register "
+                     "type=%u, pipe=%u, event_handle=0x%08X)",
                      type_index, pipe_index, event_handle);
             cmd_buff[1] = ResultCode(ErrorDescription::InvalidResultValue, ErrorModule::DSP,
                                      ErrorSummary::OutOfResource, ErrorLevel::Status)
@@ -294,8 +295,9 @@ static void WriteProcessPipe(Service::Interface* self) {
     AudioCore::DspPipe pipe = static_cast<AudioCore::DspPipe>(pipe_index);
 
     if (IPC::StaticBufferDesc(size, 1) != cmd_buff[3]) {
-        LOG_ERROR(Service_DSP, "IPC static buffer descriptor failed validation (0x%X). pipe=%u, "
-                               "size=0x%X, buffer=0x%08X",
+        LOG_ERROR(Service_DSP,
+                  "IPC static buffer descriptor failed validation (0x%X). pipe=%u, "
+                  "size=0x%X, buffer=0x%08X",
                   cmd_buff[3], pipe_index, size, buffer);
         cmd_buff[0] = IPC::MakeHeader(0, 1, 0);
         cmd_buff[1] = IPC::ERR_INVALID_BUFFER_DESCRIPTOR.raw;

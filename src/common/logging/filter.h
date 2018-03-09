@@ -50,4 +50,4 @@ public:
 private:
     std::array<Level, (size_t)Class::Count> class_levels;
 };
-}
+} // namespace Log

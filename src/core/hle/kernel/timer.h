@@ -76,4 +76,4 @@ void TimersInit();
 /// Tears down the timer variables
 void TimersShutdown();
 
-} // namespace
+} // namespace Kernel

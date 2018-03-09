@@ -37,7 +37,10 @@ TEST_CASE("HLERequestContext::PopulateFromIncomingCommandBuffer", "[core][kernel
 
     SECTION("translates regular params") {
         const u32_le input[]{
-            IPC::MakeHeader(0, 3, 0), 0x12345678, 0x21122112, 0xAABBCCDD,
+            IPC::MakeHeader(0, 3, 0),
+            0x12345678,
+            0x21122112,
+            0xAABBCCDD,
         };
 
         context.PopulateFromIncomingCommandBuffer(input, *process, handle_table);
@@ -52,7 +55,9 @@ TEST_CASE("HLERequestContext::PopulateFromIncomingCommandBuffer", "[core][kernel
         auto a = MakeObject();
         Handle a_handle = handle_table.Create(a).Unwrap();
         const u32_le input[]{
-            IPC::MakeHeader(0, 0, 2), IPC::MoveHandleDesc(1), a_handle,
+            IPC::MakeHeader(0, 0, 2),
+            IPC::MoveHandleDesc(1),
+            a_handle,
         };
 
         context.PopulateFromIncomingCommandBuffer(input, *process, handle_table);
@@ -66,7 +71,9 @@ TEST_CASE("HLERequestContext::PopulateFromIncomingCommandBuffer", "[core][kernel
         auto a = MakeObject();
         Handle a_handle = handle_table.Create(a).Unwrap();
         const u32_le input[]{
-            IPC::MakeHeader(0, 0, 2), IPC::CopyHandleDesc(1), a_handle,
+            IPC::MakeHeader(0, 0, 2),
+            IPC::CopyHandleDesc(1),
+            a_handle,
         };
 
         context.PopulateFromIncomingCommandBuffer(input, *process, handle_table);
@@ -96,7 +103,9 @@ TEST_CASE("HLERequestContext::PopulateFromIncomingCommandBuffer", "[core][kernel
 
     SECTION("translates null handles") {
         const u32_le input[]{
-            IPC::MakeHeader(0, 0, 2), IPC::MoveHandleDesc(1), 0,
+            IPC::MakeHeader(0, 0, 2),
+            IPC::MoveHandleDesc(1),
+            0,
         };
 
         auto result = context.PopulateFromIncomingCommandBuffer(input, *process, handle_table);
@@ -108,7 +117,9 @@ TEST_CASE("HLERequestContext::PopulateFromIncomingCommandBuffer", "[core][kernel
 
     SECTION("translates CallingPid descriptors") {
         const u32_le input[]{
-            IPC::MakeHeader(0, 0, 2), IPC::CallingPidDesc(), 0x98989898,
+            IPC::MakeHeader(0, 0, 2),
+            IPC::CallingPidDesc(),
+            0x98989898,
         };
 
         context.PopulateFromIncomingCommandBuffer(input, *process, handle_table);
@@ -126,7 +137,9 @@ TEST_CASE("HLERequestContext::PopulateFromIncomingCommandBuffer", "[core][kernel
         REQUIRE(result.Code() == RESULT_SUCCESS);
 
         const u32_le input[]{
-            IPC::MakeHeader(0, 0, 2), IPC::StaticBufferDesc(buffer->size(), 0), target_address,
+            IPC::MakeHeader(0, 0, 2),
+            IPC::StaticBufferDesc(buffer->size(), 0),
+            target_address,
         };
 
         context.PopulateFromIncomingCommandBuffer(input, *process, handle_table);
@@ -145,7 +158,9 @@ TEST_CASE("HLERequestContext::PopulateFromIncomingCommandBuffer", "[core][kernel
                                                          MemoryState::Private);
 
         const u32_le input[]{
-            IPC::MakeHeader(0, 0, 2), IPC::MappedBufferDesc(buffer->size(), IPC::R), target_address,
+            IPC::MakeHeader(0, 0, 2),
+            IPC::MappedBufferDesc(buffer->size(), IPC::R),
+            target_address,
         };
 
         context.PopulateFromIncomingCommandBuffer(input, *process, handle_table);
@@ -325,7 +340,8 @@ TEST_CASE("HLERequestContext::WriteToOutgoingCommandBuffer", "[core][kernel]") {
         REQUIRE(result.Code() == RESULT_SUCCESS);
 
         const u32_le input_cmdbuff[]{
-            IPC::MakeHeader(0, 0, 2), IPC::MappedBufferDesc(output_buffer->size(), IPC::W),
+            IPC::MakeHeader(0, 0, 2),
+            IPC::MappedBufferDesc(output_buffer->size(), IPC::W),
             target_address,
         };
 

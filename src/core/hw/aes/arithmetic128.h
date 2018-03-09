@@ -13,5 +13,5 @@ AESKey Lrot128(const AESKey& in, u32 rot);
 AESKey Add128(const AESKey& a, const AESKey& b);
 AESKey Xor128(const AESKey& a, const AESKey& b);
 
-} // namspace AES
+} // namespace AES
 } // namespace HW

@@ -183,11 +183,11 @@ static u8 NibbleToHex(u8 n) {
 }
 
 /**
-* Converts input hex string characters into an array of equivalent of u8 bytes.
-*
-* @param src Pointer to array of output hex string characters.
-* @param len Length of src array.
-*/
+ * Converts input hex string characters into an array of equivalent of u8 bytes.
+ *
+ * @param src Pointer to array of output hex string characters.
+ * @param len Length of src array.
+ */
 static u32 HexToInt(const u8* src, size_t len) {
     u32 output = 0;
     while (len-- > 0) {
@@ -1037,4 +1037,4 @@ bool GetCpuStepFlag() {
 void SetCpuStepFlag(bool is_step) {
     step_loop = is_step;
 }
-};
+}; // namespace GDBStub

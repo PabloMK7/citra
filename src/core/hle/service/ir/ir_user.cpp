@@ -251,9 +251,10 @@ void IR_USER::InitializeIrNopShared(Kernel::HLERequestContext& ctx) {
 
     rb.Push(RESULT_SUCCESS);
 
-    LOG_INFO(Service_IR, "called, shared_buff_size=%u, recv_buff_size=%u, "
-                         "recv_buff_packet_count=%u, send_buff_size=%u, "
-                         "send_buff_packet_count=%u, baud_rate=%u",
+    LOG_INFO(Service_IR,
+             "called, shared_buff_size=%u, recv_buff_size=%u, "
+             "recv_buff_packet_count=%u, send_buff_size=%u, "
+             "send_buff_packet_count=%u, baud_rate=%u",
              shared_buff_size, recv_buff_size, recv_buff_packet_count, send_buff_size,
              send_buff_packet_count, baud_rate);
 }

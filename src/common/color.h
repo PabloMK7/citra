@@ -256,4 +256,4 @@ inline void EncodeX24S8(u8 stencil, u8* bytes) {
     bytes[3] = stencil;
 }
 
-} // namespace
+} // namespace Color

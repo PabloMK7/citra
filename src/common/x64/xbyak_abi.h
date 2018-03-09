@@ -60,20 +60,41 @@ const Xbyak::Reg ABI_PARAM4 = Xbyak::util::r9;
 
 const BitSet32 ABI_ALL_CALLER_SAVED = BuildRegSet({
     // GPRs
-    Xbyak::util::rcx, Xbyak::util::rdx, Xbyak::util::r8, Xbyak::util::r9, Xbyak::util::r10,
+    Xbyak::util::rcx,
+    Xbyak::util::rdx,
+    Xbyak::util::r8,
+    Xbyak::util::r9,
+    Xbyak::util::r10,
     Xbyak::util::r11,
     // XMMs
-    Xbyak::util::xmm0, Xbyak::util::xmm1, Xbyak::util::xmm2, Xbyak::util::xmm3, Xbyak::util::xmm4,
+    Xbyak::util::xmm0,
+    Xbyak::util::xmm1,
+    Xbyak::util::xmm2,
+    Xbyak::util::xmm3,
+    Xbyak::util::xmm4,
     Xbyak::util::xmm5,
 });
 
 const BitSet32 ABI_ALL_CALLEE_SAVED = BuildRegSet({
     // GPRs
-    Xbyak::util::rbx, Xbyak::util::rsi, Xbyak::util::rdi, Xbyak::util::rbp, Xbyak::util::r12,
-    Xbyak::util::r13, Xbyak::util::r14, Xbyak::util::r15,
+    Xbyak::util::rbx,
+    Xbyak::util::rsi,
+    Xbyak::util::rdi,
+    Xbyak::util::rbp,
+    Xbyak::util::r12,
+    Xbyak::util::r13,
+    Xbyak::util::r14,
+    Xbyak::util::r15,
     // XMMs
-    Xbyak::util::xmm6, Xbyak::util::xmm7, Xbyak::util::xmm8, Xbyak::util::xmm9, Xbyak::util::xmm10,
-    Xbyak::util::xmm11, Xbyak::util::xmm12, Xbyak::util::xmm13, Xbyak::util::xmm14,
+    Xbyak::util::xmm6,
+    Xbyak::util::xmm7,
+    Xbyak::util::xmm8,
+    Xbyak::util::xmm9,
+    Xbyak::util::xmm10,
+    Xbyak::util::xmm11,
+    Xbyak::util::xmm12,
+    Xbyak::util::xmm13,
+    Xbyak::util::xmm14,
     Xbyak::util::xmm15,
 });
 
@@ -90,18 +111,40 @@ const Xbyak::Reg ABI_PARAM4 = Xbyak::util::rcx;
 
 const BitSet32 ABI_ALL_CALLER_SAVED = BuildRegSet({
     // GPRs
-    Xbyak::util::rcx, Xbyak::util::rdx, Xbyak::util::rdi, Xbyak::util::rsi, Xbyak::util::r8,
-    Xbyak::util::r9, Xbyak::util::r10, Xbyak::util::r11,
+    Xbyak::util::rcx,
+    Xbyak::util::rdx,
+    Xbyak::util::rdi,
+    Xbyak::util::rsi,
+    Xbyak::util::r8,
+    Xbyak::util::r9,
+    Xbyak::util::r10,
+    Xbyak::util::r11,
     // XMMs
-    Xbyak::util::xmm0, Xbyak::util::xmm1, Xbyak::util::xmm2, Xbyak::util::xmm3, Xbyak::util::xmm4,
-    Xbyak::util::xmm5, Xbyak::util::xmm6, Xbyak::util::xmm7, Xbyak::util::xmm8, Xbyak::util::xmm9,
-    Xbyak::util::xmm10, Xbyak::util::xmm11, Xbyak::util::xmm12, Xbyak::util::xmm13,
-    Xbyak::util::xmm14, Xbyak::util::xmm15,
+    Xbyak::util::xmm0,
+    Xbyak::util::xmm1,
+    Xbyak::util::xmm2,
+    Xbyak::util::xmm3,
+    Xbyak::util::xmm4,
+    Xbyak::util::xmm5,
+    Xbyak::util::xmm6,
+    Xbyak::util::xmm7,
+    Xbyak::util::xmm8,
+    Xbyak::util::xmm9,
+    Xbyak::util::xmm10,
+    Xbyak::util::xmm11,
+    Xbyak::util::xmm12,
+    Xbyak::util::xmm13,
+    Xbyak::util::xmm14,
+    Xbyak::util::xmm15,
 });
 
 const BitSet32 ABI_ALL_CALLEE_SAVED = BuildRegSet({
     // GPRs
-    Xbyak::util::rbx, Xbyak::util::rbp, Xbyak::util::r12, Xbyak::util::r13, Xbyak::util::r14,
+    Xbyak::util::rbx,
+    Xbyak::util::rbp,
+    Xbyak::util::r12,
+    Xbyak::util::r13,
+    Xbyak::util::r14,
     Xbyak::util::r15,
 });
 

@@ -49,4 +49,4 @@ private:
     ~Event() override;
 };
 
-} // namespace
+} // namespace Kernel

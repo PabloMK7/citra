@@ -35,4 +35,4 @@ public:
 };
 
 using MMIORegionPointer = std::shared_ptr<MMIORegion>;
-};
+}; // namespace Memory

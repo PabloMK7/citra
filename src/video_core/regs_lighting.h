@@ -39,13 +39,13 @@ struct LightingRegs {
     }
 
     /**
-    * Pica fragment lighting supports using different LUTs for each lighting component:  Reflectance
-    * R, G, and B channels, distribution function for specular components 0 and 1, fresnel factor,
-    * and spotlight attenuation.  Furthermore, which LUTs are used for each channel (or whether a
-    * channel is enabled at all) is specified by various pre-defined lighting configurations.  With
-    * configurations that require more LUTs, more cycles are required on HW to perform lighting
-    * computations.
-    */
+     * Pica fragment lighting supports using different LUTs for each lighting component: Reflectance
+     * R, G, and B channels, distribution function for specular components 0 and 1, fresnel factor,
+     * and spotlight attenuation.  Furthermore, which LUTs are used for each channel (or whether a
+     * channel is enabled at all) is specified by various pre-defined lighting configurations.  With
+     * configurations that require more LUTs, more cycles are required on HW to perform lighting
+     * computations.
+     */
     enum class LightingConfig : u32 {
         Config0 = 0, ///< Reflect Red, Distribution 0, Spotlight
         Config1 = 1, ///< Reflect Red, Fresnel, Spotlight

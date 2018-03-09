@@ -221,15 +221,19 @@ inline GLenum StencilOp(Pica::FramebufferRegs::StencilAction action) {
 
 inline GLvec4 ColorRGBA8(const u32 color) {
     return {{
-        (color >> 0 & 0xFF) / 255.0f, (color >> 8 & 0xFF) / 255.0f, (color >> 16 & 0xFF) / 255.0f,
+        (color >> 0 & 0xFF) / 255.0f,
+        (color >> 8 & 0xFF) / 255.0f,
+        (color >> 16 & 0xFF) / 255.0f,
         (color >> 24 & 0xFF) / 255.0f,
     }};
 }
 
 inline std::array<GLfloat, 3> LightColor(const Pica::LightingRegs::LightColor& color) {
     return {{
-        color.r / 255.0f, color.g / 255.0f, color.b / 255.0f,
+        color.r / 255.0f,
+        color.g / 255.0f,
+        color.b / 255.0f,
     }};
 }
 
-} // namespace
+} // namespace PicaToGL
