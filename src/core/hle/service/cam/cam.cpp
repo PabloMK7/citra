@@ -728,8 +728,9 @@ void Module::Interface::SetDetailSize(Kernel::HLERequestContext& ctx) {
         rb.Push(ERROR_INVALID_ENUM_VALUE);
     }
 
-    LOG_DEBUG(Service_CAM, "called, camera_select=%u, width=%u, height=%u, crop_x0=%u, crop_y0=%u, "
-                           "crop_x1=%u, crop_y1=%u, context_select=%u",
+    LOG_DEBUG(Service_CAM,
+              "called, camera_select=%u, width=%u, height=%u, crop_x0=%u, crop_y0=%u, "
+              "crop_x1=%u, crop_y1=%u, context_select=%u",
               camera_select.m_val, resolution.width, resolution.height, resolution.crop_x0,
               resolution.crop_y0, resolution.crop_x1, resolution.crop_y1, context_select.m_val);
 }

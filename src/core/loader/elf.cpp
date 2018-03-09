@@ -322,8 +322,9 @@ SharedPtr<CodeSet> ElfReader::LoadInto(u32 vaddr) {
             }
 
             if (codeset_segment->size != 0) {
-                LOG_ERROR(Loader, "ELF has more than one segment of the same type. Skipping extra "
-                                  "segment (id %i)",
+                LOG_ERROR(Loader,
+                          "ELF has more than one segment of the same type. Skipping extra "
+                          "segment (id %i)",
                           i);
                 continue;
             }

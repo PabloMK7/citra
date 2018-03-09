@@ -873,20 +873,19 @@ bool IOFile::Flush() {
 }
 
 bool IOFile::Resize(u64 size) {
-    if (!IsOpen() ||
-        0 !=
+    if (!IsOpen() || 0 !=
 #ifdef _WIN32
-            // ector: _chsize sucks, not 64-bit safe
-            // F|RES: changed to _chsize_s. i think it is 64-bit safe
-            _chsize_s(_fileno(m_file), size)
+                         // ector: _chsize sucks, not 64-bit safe
+                         // F|RES: changed to _chsize_s. i think it is 64-bit safe
+                         _chsize_s(_fileno(m_file), size)
 #else
-            // TODO: handle 64bit and growing
-            ftruncate(fileno(m_file), size)
+                         // TODO: handle 64bit and growing
+                         ftruncate(fileno(m_file), size)
 #endif
-            )
+    )
         m_good = false;
 
     return m_good;
 }
 
-} // namespace
+} // namespace FileUtil

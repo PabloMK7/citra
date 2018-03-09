@@ -243,6 +243,6 @@ public:
     std::map<u32, u32> ranges;
 };
 
-} // namespace
+} // namespace DebugUtils
 
-} // namespace
+} // namespace Pica

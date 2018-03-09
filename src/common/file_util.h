@@ -253,7 +253,7 @@ private:
     bool m_good = true;
 };
 
-} // namespace
+} // namespace FileUtil
 
 // To deal with Windows being dumb at unicode:
 template <typename T>

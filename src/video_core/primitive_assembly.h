@@ -54,4 +54,4 @@ private:
     bool winding = false;
 };
 
-} // namespace
+} // namespace Pica

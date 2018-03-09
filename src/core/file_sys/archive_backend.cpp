@@ -118,4 +118,4 @@ std::vector<u8> Path::AsBinary() const {
         return {};
     }
 }
-}
+} // namespace FileSys

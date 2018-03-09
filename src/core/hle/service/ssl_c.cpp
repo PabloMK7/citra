@@ -88,5 +88,5 @@ SSL_C::SSL_C() {
     Register(FunctionTable);
 }
 
-} // namespace SSL_C
+} // namespace SSL
 } // namespace Service

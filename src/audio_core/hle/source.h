@@ -5,8 +5,8 @@
 #pragma once
 
 #include <array>
-#include <queue>
 #include <vector>
+#include <queue>
 #include "audio_core/audio_types.h"
 #include "audio_core/codec.h"
 #include "audio_core/hle/common.h"

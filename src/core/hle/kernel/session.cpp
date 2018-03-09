@@ -9,4 +9,4 @@ namespace Kernel {
 
 Session::Session() {}
 Session::~Session() {}
-}
+} // namespace Kernel

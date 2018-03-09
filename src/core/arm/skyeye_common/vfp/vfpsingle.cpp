@@ -61,7 +61,9 @@
 #include "core/arm/skyeye_common/vfp/vfp_helper.h"
 
 static struct vfp_single vfp_single_default_qnan = {
-    255, 0, VFP_SINGLE_SIGNIFICAND_QNAN,
+    255,
+    0,
+    VFP_SINGLE_SIGNIFICAND_QNAN,
 };
 
 static void vfp_single_dump(const char* str, struct vfp_single* s) {

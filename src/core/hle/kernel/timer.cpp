@@ -111,4 +111,4 @@ void TimersInit() {
 
 void TimersShutdown() {}
 
-} // namespace
+} // namespace Kernel

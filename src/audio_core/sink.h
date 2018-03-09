@@ -42,4 +42,4 @@ public:
     virtual std::vector<std::string> GetDeviceList() const = 0;
 };
 
-} // namespace
+} // namespace AudioCore

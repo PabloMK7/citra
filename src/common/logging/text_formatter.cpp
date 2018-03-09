@@ -129,4 +129,4 @@ void PrintColoredMessage(const Entry& entry) {
 #undef ESC
 #endif
 }
-}
+} // namespace Log

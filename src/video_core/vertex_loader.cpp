@@ -136,8 +136,9 @@ void VertexLoader::LoadVertex(u32 base_address, int index, int vertex,
                     comp == 3 ? float24::FromFloat32(1.0f) : float24::FromFloat32(0.0f);
             }
 
-            LOG_TRACE(HW_GPU, "Loaded %d components of attribute %x for vertex %x (index %x) from "
-                              "0x%08x + 0x%08x + 0x%04x: %f %f %f %f",
+            LOG_TRACE(HW_GPU,
+                      "Loaded %d components of attribute %x for vertex %x (index %x) from "
+                      "0x%08x + 0x%08x + 0x%04x: %f %f %f %f",
                       vertex_attribute_elements[i], i, vertex, index, base_address,
                       vertex_attribute_sources[i], vertex_attribute_strides[i] * vertex,
                       input.attr[i][0].ToFloat32(), input.attr[i][1].ToFloat32(),

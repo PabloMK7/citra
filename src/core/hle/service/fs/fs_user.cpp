@@ -438,8 +438,9 @@ void FS_USER::CreateExtSaveData(Kernel::HLERequestContext& ctx) {
     u32 icon_size = rp.Pop<u32>();
     auto icon_buffer = rp.PopMappedBuffer();
 
-    LOG_WARNING(Service_FS, "(STUBBED) savedata_high=%08X savedata_low=%08X unknown=%08X "
-                            "files=%08X directories=%08X size_limit=%016" PRIx64 " icon_size=%08X",
+    LOG_WARNING(Service_FS,
+                "(STUBBED) savedata_high=%08X savedata_low=%08X unknown=%08X "
+                "files=%08X directories=%08X size_limit=%016" PRIx64 " icon_size=%08X",
                 save_high, save_low, unknown, directories, files, size_limit, icon_size);
 
     std::vector<u8> icon(icon_size);
@@ -663,8 +664,9 @@ void FS_USER::SetSaveDataSecureValue(Kernel::HLERequestContext& ctx) {
 
     // TODO: Generate and Save the Secure Value
 
-    LOG_WARNING(Service_FS, "(STUBBED) called, value=0x%016" PRIx64 " secure_value_slot=0x%08X "
-                            "unqiue_id=0x%08X title_variation=0x%02X",
+    LOG_WARNING(Service_FS,
+                "(STUBBED) called, value=0x%016" PRIx64 " secure_value_slot=0x%08X "
+                "unqiue_id=0x%08X title_variation=0x%02X",
                 value, secure_value_slot, unique_id, title_variation);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);

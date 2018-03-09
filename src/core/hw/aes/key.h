@@ -33,5 +33,5 @@ void SetNormalKey(size_t slot_id, const AESKey& key);
 bool IsNormalKeyAvailable(size_t slot_id);
 AESKey GetNormalKey(size_t slot_id);
 
-} // namspace AES
+} // namespace AES
 } // namespace HW

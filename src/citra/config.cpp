@@ -49,10 +49,18 @@ static const std::array<int, Settings::NativeButton::NumButtons> default_buttons
 
 static const std::array<std::array<int, 5>, Settings::NativeAnalog::NumAnalogs> default_analogs{{
     {
-        SDL_SCANCODE_UP, SDL_SCANCODE_DOWN, SDL_SCANCODE_LEFT, SDL_SCANCODE_RIGHT, SDL_SCANCODE_D,
+        SDL_SCANCODE_UP,
+        SDL_SCANCODE_DOWN,
+        SDL_SCANCODE_LEFT,
+        SDL_SCANCODE_RIGHT,
+        SDL_SCANCODE_D,
     },
     {
-        SDL_SCANCODE_I, SDL_SCANCODE_K, SDL_SCANCODE_J, SDL_SCANCODE_L, SDL_SCANCODE_D,
+        SDL_SCANCODE_I,
+        SDL_SCANCODE_K,
+        SDL_SCANCODE_J,
+        SDL_SCANCODE_L,
+        SDL_SCANCODE_D,
     },
 }};
 

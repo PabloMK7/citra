@@ -50,4 +50,4 @@ std::tuple<SharedPtr<ServerPort>, SharedPtr<ClientPort>> ServerPort::CreatePortP
     return std::make_tuple(std::move(server_port), std::move(client_port));
 }
 
-} // namespace
+} // namespace Kernel

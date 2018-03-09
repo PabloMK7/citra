@@ -91,4 +91,4 @@ bool GetCpuStepFlag();
  * @param is_step
  */
 void SetCpuStepFlag(bool is_step);
-}
+} // namespace GDBStub

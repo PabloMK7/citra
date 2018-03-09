@@ -29,4 +29,4 @@ void MapMemoryRegion(PageTable& page_table, VAddr base, u32 size, u8* target);
 void MapIoRegion(PageTable& page_table, VAddr base, u32 size, MMIORegionPointer mmio_handler);
 
 void UnmapRegion(PageTable& page_table, VAddr base, u32 size);
-}
+} // namespace Memory

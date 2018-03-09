@@ -197,9 +197,9 @@ static void ProcessTriangleInternal(const Vertex& v0, const Vertex& v1, const Ve
         } else {
             // check if vertex is on our left => right side
             // TODO: Not sure how likely this is to overflow
-            return (int)vtx.x < (int)line1.x +
-                                    ((int)line2.x - (int)line1.x) * ((int)vtx.y - (int)line1.y) /
-                                        ((int)line2.y - (int)line1.y);
+            return (int)vtx.x < (int)line1.x + ((int)line2.x - (int)line1.x) *
+                                                   ((int)vtx.y - (int)line1.y) /
+                                                   ((int)line2.y - (int)line1.y);
         }
     };
     int bias0 =
@@ -423,12 +423,14 @@ static void ProcessTriangleInternal(const Vertex& v0, const Vertex& v1, const Ve
             Math::Vec4<u8> secondary_fragment_color = {0, 0, 0, 0};
 
             if (!g_state.regs.lighting.disable) {
-                Math::Quaternion<float> normquat = Math::Quaternion<float>{
-                    {GetInterpolatedAttribute(v0.quat.x, v1.quat.x, v2.quat.x).ToFloat32(),
-                     GetInterpolatedAttribute(v0.quat.y, v1.quat.y, v2.quat.y).ToFloat32(),
-                     GetInterpolatedAttribute(v0.quat.z, v1.quat.z, v2.quat.z).ToFloat32()},
-                    GetInterpolatedAttribute(v0.quat.w, v1.quat.w, v2.quat.w).ToFloat32(),
-                }.Normalized();
+                Math::Quaternion<float> normquat =
+                    Math::Quaternion<float>{
+                        {GetInterpolatedAttribute(v0.quat.x, v1.quat.x, v2.quat.x).ToFloat32(),
+                         GetInterpolatedAttribute(v0.quat.y, v1.quat.y, v2.quat.y).ToFloat32(),
+                         GetInterpolatedAttribute(v0.quat.z, v1.quat.z, v2.quat.z).ToFloat32()},
+                        GetInterpolatedAttribute(v0.quat.w, v1.quat.w, v2.quat.w).ToFloat32(),
+                    }
+                        .Normalized();
 
                 Math::Vec3<float> view{
                     GetInterpolatedAttribute(v0.view.x, v1.view.x, v2.view.x).ToFloat32(),
@@ -620,8 +622,9 @@ static void ProcessTriangleInternal(const Vertex& v0, const Vertex& v1, const Ve
                 u8 new_stencil =
                     PerformStencilAction(action, old_stencil, stencil_test.reference_value);
                 if (g_state.regs.framebuffer.framebuffer.allow_depth_stencil_write != 0)
-                    SetStencil(x >> 4, y >> 4, (new_stencil & stencil_test.write_mask) |
-                                                   (old_stencil & ~stencil_test.write_mask));
+                    SetStencil(x >> 4, y >> 4,
+                               (new_stencil & stencil_test.write_mask) |
+                                   (old_stencil & ~stencil_test.write_mask));
             };
 
             if (stencil_action_enable) {

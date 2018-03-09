@@ -22,11 +22,11 @@ public:
         }
 
         /**
-        * Called when a GX command has been processed and is ready for being
-        * read via GraphicsDebugger::ReadGXCommandHistory.
-        * @param total_command_count Total number of commands in the GX history
-        * @note All methods in this class are called from the GSP thread
-        */
+         * Called when a GX command has been processed and is ready for being
+         * read via GraphicsDebugger::ReadGXCommandHistory.
+         * @param total_command_count Total number of commands in the GX history
+         * @note All methods in this class are called from the GSP thread
+         */
         virtual void GXCommandProcessed(int total_command_count) {
             const Service::GSP::Command& cmd =
                 observed->ReadGXCommandHistory(total_command_count - 1);

@@ -158,4 +158,4 @@ private:
     std::array<Queue, NUM_QUEUES> queues;
 };
 
-} // namespace
+} // namespace Common

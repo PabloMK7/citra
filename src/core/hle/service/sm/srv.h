@@ -10,7 +10,7 @@
 namespace Kernel {
 class HLERequestContext;
 class Semaphore;
-}
+} // namespace Kernel
 
 namespace Service {
 namespace SM {

@@ -19,8 +19,8 @@
 #include "video_core/shader/shader.h"
 #include "video_core/shader/shader_interpreter.h"
 
-using nihstro::OpCode;
 using nihstro::Instruction;
+using nihstro::OpCode;
 using nihstro::RegisterType;
 using nihstro::SourceRegister;
 using nihstro::SwizzlePattern;
@@ -696,6 +696,6 @@ DebugData<true> InterpreterEngine::ProduceDebugInfo(const ShaderSetup& setup,
     return debug_data;
 }
 
-} // namespace
+} // namespace Shader
 
-} // namespace
+} // namespace Pica

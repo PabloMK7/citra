@@ -662,7 +662,6 @@ static void WriteLighting(std::string& out, const PicaShaderConfig& config) {
             // LUT index is in the range of (-1.0, 1.0)
             return "LookupLightingLUTSigned(" + sampler_string + ", " + index + ")";
         }
-
     };
 
     // Write the code to emulate each enabled light

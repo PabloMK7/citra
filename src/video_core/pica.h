@@ -13,4 +13,4 @@ void Init();
 /// Shutdown Pica state
 void Shutdown();
 
-} // namespace
+} // namespace Pica

@@ -36,6 +36,6 @@ static_assert(sizeof(CommandHeader) == sizeof(u32), "CommandHeader has incorrect
 
 void ProcessCommandList(const u32* list, u32 size);
 
-} // namespace
+} // namespace CommandProcessor
 
-} // namespace
+} // namespace Pica

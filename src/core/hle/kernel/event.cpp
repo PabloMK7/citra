@@ -52,4 +52,4 @@ void Event::WakeupAllWaitingThreads() {
         signaled = false;
 }
 
-} // namespace
+} // namespace Kernel

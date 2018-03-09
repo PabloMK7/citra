@@ -45,4 +45,4 @@ void Shutdown() {
     Kernel::MemoryShutdown();
 }
 
-} // namespace
+} // namespace Kernel

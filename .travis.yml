@@ -6,8 +6,12 @@ matrix:
       dist: trusty
       addons:
         apt:
+          sources:
+            - sourceline: 'deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-6.0 main'
+              key_url: 'https://apt.llvm.org/llvm-snapshot.gpg.key'
+            - sourceline: 'deb http://ppa.launchpad.net/ubuntu-toolchain-r/test/ubuntu trusty main'
           packages:
-            - clang-format-3.9
+            - clang-format-6.0
       script: "./.travis/clang-format/script.sh"
     - os: linux
       env: NAME="linux build"

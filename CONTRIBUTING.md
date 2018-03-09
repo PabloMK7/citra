@@ -5,7 +5,17 @@
 If you believe you have a valid issue report, please post text or a screenshot from the log (the console window that opens alongside Citra) and build version (hex string visible in the titlebar and zip filename), as well as your hardware and software information if applicable.
 
 # Contributing
-Citra is a brand new project, so we have a great opportunity to keep things clean and well organized early on. As such, coding style is very important when making commits. We run clang-format on our CI to check the code. Please use it to format your code when contributing. However, it doesn't cover all the rules below. Some of them aren't very strict rules since we want to be flexible and we understand that under certain circumstances some of them can be counterproductive. Just try to follow as many of them as possible:
+
+Citra is a brand new project, so we have a great opportunity to keep things clean and well organized early on. As such, coding style is very important when making commits. We run clang-format on our CI to check the code. Please use it to format your code when contributing. However, it doesn't cover all the rules below. Some of them aren't very strict rules since we want to be flexible and we understand that under certain circumstances some of them can be counterproductive. Just try to follow as many of them as possible.
+
+# Using clang format (version 6.0)
+When generating the native build script for your toolset, cmake will try to find the correct version of clang format (or will download it on windows). Before running cmake, please install clang format version 6.0 for your platform as follows:
+
+* Windows: do nothing; cmake will download a pre built binary for MSVC and MINGW. MSVC users can additionally install a clang format Visual Studio extension to add features like format on save.
+* OSX: run `brew install clang-format`.
+* Linux: use your package manager to get an appropriate binary.
+
+If clang format is found, then cmake will add a custom build target that can be run at any time to run clang format against *all* source files and update the formatting in them. This should be used before making a pull request so that the reviewers can spend more time reviewing the code instead of having to worry about minor style violations. On MSVC, you can run clang format by building the clang-format project in the solution. On OSX, you can either use the Makefile target `make clang-format` or by building the clang-format target in XCode. For Makefile builds, you can use the clang-format target with `make clang-format`
 
 ### General Rules
 * A lot of code was taken from other projects (e.g. Dolphin, PPSSPP, Gekko, SkyEye). In general, when editing other people's code, follow the style of the module you're in (or better yet, fix the style if it drastically differs from our guide).

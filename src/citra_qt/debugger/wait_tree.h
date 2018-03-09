@@ -20,7 +20,7 @@ class Mutex;
 class Semaphore;
 class Thread;
 class Timer;
-}
+} // namespace Kernel
 
 class WaitTreeThread;
 
