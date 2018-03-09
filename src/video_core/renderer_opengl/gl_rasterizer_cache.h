@@ -322,7 +322,12 @@ public:
                                         bool load_if_create);
 
     /// Get a surface based on the texture configuration
-    Surface GetTextureSurface(const Pica::TexturingRegs::FullTextureConfig& config);
+    Surface GetTextureSurface(const Pica::TexturingRegs::FullTextureConfig& config,
+                              PAddr addr_override = 0);
+
+    /// Copy surfaces to a cubemap texture based on the texture configuration
+    void FillTextureCube(GLuint dest_handle, const Pica::TexturingRegs::FullTextureConfig& config,
+                         PAddr px, PAddr nx, PAddr py, PAddr ny, PAddr pz, PAddr nz);
 
     /// Get the color and depth surfaces based on the framebuffer configuration
     SurfaceSurfaceRect_Tuple GetFramebufferSurfaces(bool using_color_fb, bool using_depth_fb,
