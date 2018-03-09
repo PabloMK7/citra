@@ -7,11 +7,7 @@
 namespace Service {
 namespace NEWS {
 
-/// Initialize NEWS service(s)
-void Init();
-
-/// Shutdown NEWS service(s)
-void Shutdown();
+void InstallInterfaces(SM::ServiceManager& service_manager);
 
 } // namespace NEWS
 } // namespace Service
