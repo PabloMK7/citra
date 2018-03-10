@@ -10,7 +10,6 @@
 #include <utility>
 #include <vector>
 #include "core/hle/ipc.h"
-#include "core/hle/kernel/handle_table.h"
 #include "core/hle/kernel/hle_ipc.h"
 #include "core/hle/kernel/kernel.h"
 
@@ -18,7 +17,7 @@ namespace IPC {
 
 class RequestHelperBase {
 protected:
-    Kernel::HLERequestContext* context = nullptr;
+    Kernel::HLERequestContext* context;
     u32* cmdbuf;
     ptrdiff_t index = 1;
     Header header;
@@ -26,9 +25,6 @@ protected:
 public:
     RequestHelperBase(Kernel::HLERequestContext& context, Header desired_header)
         : context(&context), cmdbuf(context.CommandBuffer()), header(desired_header) {}
-
-    RequestHelperBase(u32* command_buffer, Header command_header)
-        : cmdbuf(command_buffer), header(command_header) {}
 
     /// Returns the total size of the request in words
     size_t TotalSize() const {
@@ -61,19 +57,6 @@ public:
                    unsigned translate_params_size)
         : RequestBuilder(
               context, Header{MakeHeader(command_id, normal_params_size, translate_params_size)}) {}
-
-    RequestBuilder(u32* command_buffer, Header command_header)
-        : RequestHelperBase(command_buffer, command_header) {
-        cmdbuf[0] = header.raw;
-    }
-
-    explicit RequestBuilder(u32* command_buffer, u32 command_header)
-        : RequestBuilder(command_buffer, Header{command_header}) {}
-
-    RequestBuilder(u32* command_buffer, u16 command_id, unsigned normal_params_size,
-                   unsigned translate_params_size)
-        : RequestBuilder(command_buffer,
-                         MakeHeader(command_id, normal_params_size, translate_params_size)) {}
 
     // Validate on destruction, as there shouldn't be any case where we don't want it
     ~RequestBuilder() {
@@ -217,27 +200,13 @@ public:
                         Header{MakeHeader(command_id, normal_params_size, translate_params_size)}) {
     }
 
-    RequestParser(u32* command_buffer, Header command_header)
-        : RequestHelperBase(command_buffer, command_header) {}
-
-    explicit RequestParser(u32* command_buffer, u32 command_header)
-        : RequestParser(command_buffer, Header{command_header}) {}
-
-    RequestParser(u32* command_buffer, u16 command_id, unsigned normal_params_size,
-                  unsigned translate_params_size)
-        : RequestParser(command_buffer,
-                        MakeHeader(command_id, normal_params_size, translate_params_size)) {}
-
     RequestBuilder MakeBuilder(u32 normal_params_size, u32 translate_params_size,
                                bool validateHeader = true) {
         if (validateHeader)
             ValidateHeader();
         Header builderHeader{MakeHeader(static_cast<u16>(header.command_id), normal_params_size,
                                         translate_params_size)};
-        if (context != nullptr)
-            return {*context, builderHeader};
-        else
-            return {cmdbuf, builderHeader};
+        return {*context, builderHeader};
     }
 
     template <typename T>
