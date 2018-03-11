@@ -134,13 +134,13 @@ int main(int argc, char** argv) {
         return -1;
     }
     if (preferred_game.empty()) {
-        std::cout << "prefered game is empty!\n\n";
+        std::cout << "preferred game is empty!\n\n";
         PrintHelp(argv[0]);
         return -1;
     }
     if (preferred_game_id == 0) {
-        std::cout << "prefered-game-id not set!\nThis should get set to allow users to find your "
-                     "room.\nSet with --prefered-game-id id\n\n";
+        std::cout << "preferred-game-id not set!\nThis should get set to allow users to find your "
+                     "room.\nSet with --preferred-game-id id\n\n";
     }
     if (max_members >= Network::MaxConcurrentConnections || max_members < 2) {
         std::cout << "max_members needs to be in the range 2 - "
