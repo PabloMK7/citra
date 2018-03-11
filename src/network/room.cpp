@@ -9,11 +9,28 @@
 #include <random>
 #include <sstream>
 #include <thread>
+#include "common/logging/log.h"
 #include "enet/enet.h"
 #include "network/packet.h"
 #include "network/room.h"
 
 namespace Network {
+
+std::string MacAddressToString(const MacAddress& address) {
+    std::stringstream result;
+    bool is_start = true;
+    for (const auto& octal : address) {
+        if (!is_start) {
+            result << ":";
+        }
+
+        result << std::hex << octal;
+
+        is_start = false;
+    }
+
+    return result.str();
+}
 
 class Room::RoomImpl {
 public:
@@ -318,11 +335,13 @@ void Room::RoomImpl::SendJoinSuccess(ENetPeer* client, MacAddress mac_address) {
 void Room::RoomImpl::SendCloseMessage() {
     Packet packet;
     packet << static_cast<u8>(IdCloseRoom);
-    ENetPacket* enet_packet =
-        enet_packet_create(packet.GetData(), packet.GetDataSize(), ENET_PACKET_FLAG_RELIABLE);
     std::lock_guard<std::mutex> lock(member_mutex);
-    for (auto& member : members) {
-        enet_peer_send(member.peer, 0, enet_packet);
+    if (!members.empty()) {
+        ENetPacket* enet_packet =
+            enet_packet_create(packet.GetData(), packet.GetDataSize(), ENET_PACKET_FLAG_RELIABLE);
+        for (auto& member : members) {
+            enet_peer_send(member.peer, 0, enet_packet);
+        }
     }
     enet_host_flush(server);
     for (auto& member : members) {
@@ -385,9 +404,16 @@ void Room::RoomImpl::HandleWifiPacket(const ENetEvent* event) {
 
     if (destination_address == BroadcastMac) { // Send the data to everyone except the sender
         std::lock_guard<std::mutex> lock(member_mutex);
+        bool sent_packet = false;
         for (const auto& member : members) {
-            if (member.peer != event->peer)
+            if (member.peer != event->peer) {
+                sent_packet = true;
                 enet_peer_send(member.peer, 0, enet_packet);
+            }
+        }
+
+        if (!sent_packet) {
+            enet_packet_destroy(enet_packet);
         }
     } else { // Send the data only to the destination client
         std::lock_guard<std::mutex> lock(member_mutex);
@@ -397,6 +423,11 @@ void Room::RoomImpl::HandleWifiPacket(const ENetEvent* event) {
                                    });
         if (member != members.end()) {
             enet_peer_send(member->peer, 0, enet_packet);
+        } else {
+            std::string formatted_address = MacAddressToString(destination_address);
+            LOG_ERROR(Network, "Attempting to send to unknown MAC address: %s",
+                      formatted_address.c_str());
+            enet_packet_destroy(enet_packet);
         }
     }
     enet_host_flush(server);
@@ -429,10 +460,18 @@ void Room::RoomImpl::HandleChatPacket(const ENetEvent* event) {
 
     ENetPacket* enet_packet = enet_packet_create(out_packet.GetData(), out_packet.GetDataSize(),
                                                  ENET_PACKET_FLAG_RELIABLE);
+    bool sent_packet = false;
     for (const auto& member : members) {
-        if (member.peer != event->peer)
+        if (member.peer != event->peer) {
+            sent_packet = true;
             enet_peer_send(member.peer, 0, enet_packet);
+        }
     }
+
+    if (!sent_packet) {
+        enet_packet_destroy(enet_packet);
+    }
+
     enet_host_flush(server);
 }
 
