@@ -1264,9 +1264,17 @@ void RasterizerCacheOpenGL::FillTextureCube(GLuint dest_handle,
     state.Apply();
     glActiveTexture(TextureUnits::TextureCube.Enum());
     FormatTuple format_tuple = GetFormatTuple(faces[0].surface->pixel_format);
-    for (auto& face : faces) {
-        glTexImage2D(face.gl_face, 0, format_tuple.internal_format, scaled_size, scaled_size, 0,
-                     format_tuple.format, format_tuple.type, nullptr);
+
+    GLint cur_size, cur_format;
+    glGetTexLevelParameteriv(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, GL_TEXTURE_WIDTH, &cur_size);
+    glGetTexLevelParameteriv(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, GL_TEXTURE_INTERNAL_FORMAT,
+                             &cur_format);
+
+    if (cur_size != scaled_size || cur_format != format_tuple.internal_format) {
+        for (auto& face : faces) {
+            glTexImage2D(face.gl_face, 0, format_tuple.internal_format, scaled_size, scaled_size, 0,
+                         format_tuple.format, format_tuple.type, nullptr);
+        }
     }
 
     state.draw.read_framebuffer = read_framebuffer.handle;
