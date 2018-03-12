@@ -572,6 +572,17 @@ static void ProcessTriangleInternal(const Vertex& v0, const Vertex& v1, const Ve
             }
 
             const auto& output_merger = regs.framebuffer.output_merger;
+
+            if (output_merger.fragment_operation_mode ==
+                FramebufferRegs::FragmentOperationMode::Shadow) {
+                u32 depth_int = static_cast<u32>(depth * 0xFFFFFF);
+                // use green color as the shadow intensity
+                u8 stencil = combiner_output.y;
+                DrawShadowMapPixel(x >> 4, y >> 4, depth_int, stencil);
+                // skip the normal output merger pipeline if it is in shadow mode
+                continue;
+            }
+
             // TODO: Does alpha testing happen before or after stencil?
             if (output_merger.alpha_test.enable) {
                 bool pass = false;

@@ -25,5 +25,7 @@ Math::Vec4<u8> EvaluateBlendEquation(const Math::Vec4<u8>& src, const Math::Vec4
 
 u8 LogicOp(u8 src, u8 dest, FramebufferRegs::LogicOp op);
 
+void DrawShadowMapPixel(int x, int y, u32 depth, u8 stencil);
+
 } // namespace Rasterizer
 } // namespace Pica
