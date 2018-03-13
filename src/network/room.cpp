@@ -16,22 +16,6 @@
 
 namespace Network {
 
-std::string MacAddressToString(const MacAddress& address) {
-    std::stringstream result;
-    bool is_start = true;
-    for (const auto& octal : address) {
-        if (!is_start) {
-            result << ":";
-        }
-
-        result << std::hex << octal;
-
-        is_start = false;
-    }
-
-    return result.str();
-}
-
 class Room::RoomImpl {
 public:
     // This MAC address is used to generate a 'Nintendo' like Mac address.
@@ -424,9 +408,10 @@ void Room::RoomImpl::HandleWifiPacket(const ENetEvent* event) {
         if (member != members.end()) {
             enet_peer_send(member->peer, 0, enet_packet);
         } else {
-            std::string formatted_address = MacAddressToString(destination_address);
-            LOG_ERROR(Network, "Attempting to send to unknown MAC address: %s",
-                      formatted_address.c_str());
+            LOG_ERROR(Network,
+                      "Attempting to send to unknown MAC address: %02X:%02X:%02X:%02X:%02X:%02X",
+                      destination_address[0], destination_address[1], destination_address[2],
+                      destination_address[3], destination_address[4], destination_address[5]);
             enet_packet_destroy(enet_packet);
         }
     }
