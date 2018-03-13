@@ -5,6 +5,7 @@
 #pragma once
 
 #include <cstddef>
+#include <cstring>
 #include "common/cityhash.h"
 #include "common/common_types.h"
 
@@ -32,5 +33,37 @@ static inline u64 ComputeStructHash64(const T& data) {
         "Type passed to ComputeStructHash64 must be trivially copyable and standard layout");
     return ComputeHash64(&data, sizeof(data));
 }
+
+/// A helper template that ensures the padding in a struct is initialized by memsetting to 0.
+template <typename T>
+struct HashableStruct {
+    /*
+     * We use a union because "implicitly-defined copy/move constructor for a union X copies the
+     * object representation of X." and "implicitly-defined copy assignment operator for a union X
+     * copies the object representation (3.9) of X." = Bytewise copy instead of memberwise copy.
+     * This is important because the padding bytes are included in the hash and comparison between
+     * objects.
+     */
+    union {
+        T state;
+    };
+
+    HashableStruct() {
+        // Memset structure to zero padding bits, so that they will be deterministic when hashing
+        std::memset(&state, 0, sizeof(T));
+    }
+
+    bool operator==(const HashableStruct<T>& o) const {
+        return std::memcmp(&state, &o.state, sizeof(T)) == 0;
+    };
+
+    bool operator!=(const HashableStruct<T>& o) const {
+        return !(*this == o);
+    };
+
+    size_t Hash() const {
+        return Common::ComputeStructHash64(state);
+    }
+};
 
 } // namespace Common
