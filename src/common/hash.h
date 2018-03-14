@@ -22,21 +22,23 @@ static inline u64 ComputeHash64(const void* data, size_t len) {
 }
 
 /**
- * Computes a 64-bit hash of a struct. In addition to being POD (trivially copyable and having
- * standard layout), it is also critical that either the struct includes no padding, or that any
- * padding is initialized to a known value by memsetting the struct to 0 before filling it in.
+ * Computes a 64-bit hash of a struct. In addition to being trivially copyable, it is also critical
+ * that either the struct includes no padding, or that any padding is initialized to a known value
+ * by memsetting the struct to 0 before filling it in.
  */
 template <typename T>
 static inline u64 ComputeStructHash64(const T& data) {
-    static_assert(
-        std::is_trivially_copyable<T>::value && std::is_standard_layout<T>::value,
-        "Type passed to ComputeStructHash64 must be trivially copyable and standard layout");
+    static_assert(std::is_trivially_copyable<T>(),
+                  "Type passed to ComputeStructHash64 must be trivially copyable");
     return ComputeHash64(&data, sizeof(data));
 }
 
 /// A helper template that ensures the padding in a struct is initialized by memsetting to 0.
 template <typename T>
 struct HashableStruct {
+    // In addition to being trivially copyable, T must also have a trivial default constructor,
+    // because any member initialization would be overridden by memset
+    static_assert(std::is_trivial<T>(), "Type passed to HashableStruct must be trivial");
     /*
      * We use a union because "implicitly-defined copy/move constructor for a union X copies the
      * object representation of X." and "implicitly-defined copy assignment operator for a union X
