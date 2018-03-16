@@ -265,14 +265,10 @@ void LogMessage(Class log_class, Level log_level, const char* filename, unsigned
     Impl::Instance().PushEntry(std::move(entry));
 }
 
-void FmtLogMessage(Class log_class, Level log_level, const char* filename, unsigned int line_num,
-                   const char* function, const char* format, fmt::ArgList args) {
+void LogEntry(Entry& entry) {
     auto filter = Impl::Instance().GetGlobalFilter();
-    if (!filter.CheckMessage(log_class, log_level))
+    if (!filter.CheckMessage(entry.log_class, entry.log_level))
         return;
-
-    Entry entry =
-        CreateEntry(log_class, log_level, filename, line_num, function, fmt::format(format, args));
 
     Impl::Instance().PushEntry(std::move(entry));
 }

@@ -19,26 +19,6 @@ namespace Log {
 class Filter;
 
 /**
- * A log entry. Log entries are store in a structured format to permit more varied output
- * formatting on different frontends, as well as facilitating filtering and aggregation.
- */
-struct Entry {
-    std::chrono::microseconds timestamp;
-    Class log_class;
-    Level log_level;
-    std::string filename;
-    unsigned int line_num;
-    std::string function;
-    std::string message;
-
-    Entry() = default;
-    Entry(Entry&& o) = default;
-
-    Entry& operator=(Entry&& o) = default;
-    Entry& operator=(const Entry& o) = default;
-};
-
-/**
  * Interface for logging backends. As loggers can be created and removed at runtime, this can be
  * used by a frontend for adding a custom logging backend as needed
  */
@@ -111,10 +91,6 @@ const char* GetLogClassName(Class log_class);
  * Returns the name of the passed log level as a C-string.
  */
 const char* GetLevelName(Level log_level);
-
-/// Creates a log entry by formatting the given source location, and message.
-Entry CreateEntry(Class log_class, Level log_level, const char* filename, unsigned int line_nr,
-                  const char* function, std::string message);
 
 /**
  * The global filter will prevent any messages from even being processed if they are filtered. Each
