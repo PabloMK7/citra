@@ -44,7 +44,7 @@ void ConfigureDebug::applyConfiguration() {
     Debugger::ToggleConsole();
     Log::Filter filter;
     filter.ParseFilterString(Settings::values.log_filter);
-    Log::SetGlobalFilter(filter);
+    Log::SetFilter(&filter);
     Settings::Apply();
 }
 

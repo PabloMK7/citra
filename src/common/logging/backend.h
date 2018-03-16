@@ -6,80 +6,13 @@
 
 #include <chrono>
 #include <cstdarg>
-#include <memory>
 #include <string>
 #include <utility>
-#include <boost/optional.hpp>
-#include "common/file_util.h"
-#include "common/logging/filter.h"
 #include "common/logging/log.h"
 
 namespace Log {
 
 class Filter;
-
-/**
- * Interface for logging backends. As loggers can be created and removed at runtime, this can be
- * used by a frontend for adding a custom logging backend as needed
- */
-class Backend {
-public:
-    virtual ~Backend() = default;
-    virtual void SetFilter(const Filter& new_filter) {
-        filter = new_filter;
-    }
-    virtual const char* GetName() const = 0;
-    virtual void Write(const Entry& entry) = 0;
-
-private:
-    Filter filter;
-};
-
-/**
- * Backend that writes to stderr without any color commands
- */
-class ConsoleBackend : public Backend {
-public:
-    const char* GetName() const override {
-        return "console";
-    }
-    void Write(const Entry& entry) override;
-};
-
-/**
- * Backend that writes to stderr and with color
- */
-class ColorConsoleBackend : public Backend {
-public:
-    const char* GetName() const override {
-        return "color_console";
-    }
-    void Write(const Entry& entry) override;
-};
-
-/**
- * Backend that writes to a file passed into the constructor. If a log level is error or higher, it
- * will flush immediately after writing
- */
-class FileBackend : public Backend {
-public:
-    explicit FileBackend(const std::string& filename);
-
-    const char* GetName() const override {
-        return "file";
-    }
-
-    void Write(const Entry& entry) override;
-
-private:
-    FileUtil::IOFile file;
-};
-
-void AddBackend(std::unique_ptr<Backend> backend);
-
-void RemoveBackend(const std::string& backend_name);
-
-boost::optional<Backend*> GetBackend(const std::string& backend_name);
 
 /**
  * Returns the name of the passed log class as a C-string. Subclasses are separated by periods
@@ -92,11 +25,5 @@ const char* GetLogClassName(Class log_class);
  */
 const char* GetLevelName(Level log_level);
 
-/**
- * The global filter will prevent any messages from even being processed if they are filtered. Each
- * backend can have a filter, but if the level is lower than the global filter, the backend will
- * never get the message
- */
-void SetGlobalFilter(const Filter& filter);
-
+void SetFilter(Filter* filter);
 } // namespace Log

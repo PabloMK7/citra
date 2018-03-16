@@ -1298,8 +1298,6 @@ void GMainWindow::SyncMenuUISettings() {
 #endif
 
 int main(int argc, char* argv[]) {
-    Log::AddBackend(std::make_unique<Log::ColorConsoleBackend>());
-
     MicroProfileOnThreadCreate("Frontend");
     SCOPE_EXIT({ MicroProfileShutdown(); });
 
@@ -1318,10 +1316,7 @@ int main(int argc, char* argv[]) {
     // After settings have been loaded by GMainWindow, apply the filter
     Log::Filter log_filter;
     log_filter.ParseFilterString(Settings::values.log_filter);
-    Log::SetGlobalFilter(log_filter);
-    FileUtil::CreateFullPath(FileUtil::GetUserPath(D_LOGS_IDX));
-    Log::AddBackend(
-        std::make_unique<Log::FileBackend>(FileUtil::GetUserPath(D_LOGS_IDX) + LOG_FILE));
+    Log::SetFilter(&log_filter);
 
     main_window.show();
     return app.exec();

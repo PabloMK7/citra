@@ -4,117 +4,16 @@
 
 #include <algorithm>
 #include <array>
-#include <chrono>
 #include <cstdio>
-#include <future>
-#include <memory>
-#include <thread>
-#ifdef _WIN32
-#include <share.h> // For _SH_DENYWR
-#else
-#define _SH_DENYWR 0
-#endif
 #include "common/assert.h"
 #include "common/common_funcs.h" // snprintf compatibility define
 #include "common/logging/backend.h"
+#include "common/logging/filter.h"
 #include "common/logging/log.h"
 #include "common/logging/text_formatter.h"
 #include "common/string_util.h"
-#include "common/threadsafe_queue.h"
 
 namespace Log {
-
-/**
- * Static state as a singleton.
- */
-class Impl {
-public:
-    static Impl& Instance() {
-        static Impl backend;
-        return backend;
-    }
-
-    Impl(Impl const&) = delete;
-    const Impl& operator=(Impl const&) = delete;
-
-    void PushEntry(Entry e) {
-        message_queue.Push(std::move(e));
-    }
-
-    void AddBackend(std::unique_ptr<Backend> backend) {
-        backends.push_back(std::move(backend));
-    }
-
-    void RemoveBackend(const std::string& backend_name) {
-        std::remove_if(backends.begin(), backends.end(),
-                       [&backend_name](const auto& i) { return i->GetName() == backend_name; });
-    }
-
-    const Filter& GetGlobalFilter() const {
-        return filter;
-    }
-
-    void SetGlobalFilter(const Filter& f) {
-        filter = f;
-    }
-
-    boost::optional<Backend*> GetBackend(const std::string& backend_name) {
-        auto it = std::find_if(backends.begin(), backends.end(), [&backend_name](const auto& i) {
-            return i->GetName() == backend_name;
-        });
-        if (it == backends.end())
-            return boost::none;
-        return it->get();
-    }
-
-private:
-    Impl() {
-        backend_thread = std::async(std::launch::async, [&] {
-            using namespace std::chrono_literals;
-            Entry entry;
-            while (running) {
-                if (!message_queue.PopWait(entry)) {
-                    continue;
-                }
-                for (const auto& backend : backends) {
-                    backend->Write(entry);
-                }
-            }
-        });
-    }
-    ~Impl() {
-        running = false;
-        backend_thread.get();
-    }
-
-    std::atomic_bool running{true};
-    std::future<void> backend_thread;
-    std::vector<std::unique_ptr<Backend>> backends;
-    Common::MPSCQueue<Log::Entry> message_queue;
-    Filter filter;
-};
-
-void ConsoleBackend::Write(const Entry& entry) {
-    PrintMessage(entry);
-}
-
-void ColorConsoleBackend::Write(const Entry& entry) {
-    PrintColoredMessage(entry);
-}
-
-// _SH_DENYWR allows read only access to the file for other programs.
-// It is #defined to 0 on other platforms
-FileBackend::FileBackend(const std::string& filename) : file(filename, "w", _SH_DENYWR) {}
-
-void FileBackend::Write(const Entry& entry) {
-    if (!file.IsOpen()) {
-        return;
-    }
-    file.WriteString(FormatLogMessage(entry) + '\n');
-    if (entry.log_level >= Level::Error) {
-        file.Flush();
-    }
-}
 
 /// Macro listing all log classes. Code should define CLS and SUB as desired before invoking this.
 #define ALL_LOG_CLASSES()                                                                          \
@@ -233,26 +132,15 @@ Entry CreateEntry(Class log_class, Level log_level, const char* filename, unsign
     return entry;
 }
 
-void SetGlobalFilter(const Filter& filter) {
-    Impl::Instance().SetGlobalFilter(filter);
-}
+static Filter* filter = nullptr;
 
-void AddBackend(std::unique_ptr<Backend> backend) {
-    Impl::Instance().AddBackend(std::move(backend));
-}
-
-void RemoveBackend(const std::string& backend_name) {
-    Impl::Instance().RemoveBackend(backend_name);
-}
-
-boost::optional<Backend*> GetBackend(const std::string& backend_name) {
-    return Impl::Instance().GetBackend(backend_name);
+void SetFilter(Filter* new_filter) {
+    filter = new_filter;
 }
 
 void LogMessage(Class log_class, Level log_level, const char* filename, unsigned int line_num,
                 const char* function, const char* format, ...) {
-    auto filter = Impl::Instance().GetGlobalFilter();
-    if (!filter.CheckMessage(log_class, log_level))
+    if (!filter->CheckMessage(log_class, log_level))
         return;
     std::array<char, 4 * 1024> formatting_buffer;
     va_list args;
@@ -262,14 +150,13 @@ void LogMessage(Class log_class, Level log_level, const char* filename, unsigned
     Entry entry = CreateEntry(log_class, log_level, filename, line_num, function,
                               std::string(formatting_buffer.data()));
 
-    Impl::Instance().PushEntry(std::move(entry));
+    PrintColoredMessage(entry);
 }
 
 void LogEntry(Entry& entry) {
-    auto filter = Impl::Instance().GetGlobalFilter();
-    if (!filter.CheckMessage(entry.log_class, entry.log_level))
+    if (!filter->CheckMessage(entry.log_class, entry.log_level))
         return;
 
-    Impl::Instance().PushEntry(std::move(entry));
+    PrintColoredMessage(entry);
 }
 } // namespace Log
