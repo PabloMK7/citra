@@ -224,7 +224,6 @@ void Config::ReadValues() {
     UISettings::values.confirm_before_closing = qt_config->value("confirmClose", true).toBool();
     UISettings::values.first_start = qt_config->value("firstStart", true).toBool();
     UISettings::values.callout_flags = qt_config->value("calloutFlags", 0).toUInt();
-    UISettings::values.show_console = qt_config->value("showConsole", false).toBool();
 
     qt_config->endGroup();
 }
@@ -366,7 +365,6 @@ void Config::SaveValues() {
     qt_config->setValue("confirmClose", UISettings::values.confirm_before_closing);
     qt_config->setValue("firstStart", UISettings::values.first_start);
     qt_config->setValue("calloutFlags", UISettings::values.callout_flags);
-    qt_config->setValue("showConsole", UISettings::values.show_console);
 
     qt_config->endGroup();
 }

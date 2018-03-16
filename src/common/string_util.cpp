@@ -484,4 +484,5 @@ const char* TrimSourcePath(const char* path, const char* root) {
     }
     return path;
 }
+
 } // namespace Common

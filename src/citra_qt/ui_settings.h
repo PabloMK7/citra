@@ -56,8 +56,6 @@ struct Values {
     std::vector<Shortcut> shortcuts;
 
     uint32_t callout_flags;
-
-    bool show_console;
 };
 
 extern Values values;

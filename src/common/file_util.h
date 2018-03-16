@@ -156,8 +156,7 @@ void SplitFilename83(const std::string& filename, std::array<char, 9>& short_nam
 class IOFile : public NonCopyable {
 public:
     IOFile();
-    /// Opens the file. flags is for windows shared file settings and are ignored on other oses
-    IOFile(const std::string& filename, const char openmode[], int flags = 0);
+    IOFile(const std::string& filename, const char openmode[]);
 
     ~IOFile();
 
@@ -166,7 +165,7 @@ public:
 
     void Swap(IOFile& other);
 
-    bool Open(const std::string& filename, const char openmode[], int flags = 0);
+    bool Open(const std::string& filename, const char openmode[]);
     bool Close();
 
     template <typename T>
@@ -223,10 +222,6 @@ public:
     size_t WriteObject(const T& object) {
         static_assert(!std::is_pointer<T>::value, "Given object is a pointer");
         return WriteArray(&object, 1);
-    }
-
-    size_t WriteString(const std::string& str) {
-        return WriteArray(str.c_str(), str.length());
     }
 
     bool IsOpen() const {

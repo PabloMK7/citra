@@ -129,6 +129,8 @@ struct Values {
     float bg_green;
     float bg_blue;
 
+    std::string log_filter;
+
     // Audio
     std::string sink_id;
     bool enable_audio_stretching;
@@ -141,7 +143,6 @@ struct Values {
     // Debugging
     bool use_gdbstub;
     u16 gdbstub_port;
-    std::string log_filter;
 
     // Movie
     std::string movie_play;
