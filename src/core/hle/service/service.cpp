@@ -236,7 +236,7 @@ void Init() {
 
     FS::InstallInterfaces(*SM::g_service_manager);
     FS::ArchiveInit();
-    ACT::Init();
+    ACT::InstallInterfaces(*SM::g_service_manager);
     AM::InstallInterfaces(*SM::g_service_manager);
     APT::InstallInterfaces(*SM::g_service_manager);
     BOSS::Init();
