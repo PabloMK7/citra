@@ -151,4 +151,4 @@ void ResourceLimitsInit() {
 
 void ResourceLimitsShutdown() {}
 
-} // namespace
+} // namespace Kernel

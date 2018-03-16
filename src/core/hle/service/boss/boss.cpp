@@ -111,9 +111,10 @@ void RegisterPrivateClientCert(Service::Interface* self) {
     cmd_buff[2] = (buff2_size << 4 | 0xA);
     cmd_buff[3] = buff2_addr;
 
-    LOG_WARNING(Service_BOSS, "(STUBBED) unk_param1=0x%08X, unk_param2=0x%08X, "
-                              "translation1=0x%08X, buff1_addr=0x%08X, buff1_size=0x%08X, "
-                              "translation2=0x%08X, buff2_addr=0x%08X, buff2_size=0x%08X",
+    LOG_WARNING(Service_BOSS,
+                "(STUBBED) unk_param1=0x%08X, unk_param2=0x%08X, "
+                "translation1=0x%08X, buff1_addr=0x%08X, buff1_size=0x%08X, "
+                "translation2=0x%08X, buff2_addr=0x%08X, buff2_size=0x%08X",
                 unk_param1, unk_param2, translation1, buff1_addr, buff1_size, translation2,
                 buff2_addr, buff2_size);
 }
@@ -177,8 +178,9 @@ void RegisterTask(Service::Interface* self) {
     cmd_buff[2] = (buff_size << 4 | 0xA);
     cmd_buff[3] = buff_addr;
 
-    LOG_WARNING(Service_BOSS, "(STUBBED) unk_param1=0x%08X, unk_param2=0x%08X, unk_param3=0x%08X, "
-                              "translation=0x%08X, buff_addr=0x%08X, buff_size=0x%08X",
+    LOG_WARNING(Service_BOSS,
+                "(STUBBED) unk_param1=0x%08X, unk_param2=0x%08X, unk_param3=0x%08X, "
+                "translation=0x%08X, buff_addr=0x%08X, buff_size=0x%08X",
                 unk_param1, unk_param2, unk_param3, translation, buff_addr, buff_size);
 }
 
@@ -196,8 +198,9 @@ void UnregisterTask(Service::Interface* self) {
     cmd_buff[2] = (buff_size << 4 | 0xA);
     cmd_buff[3] = buff_addr;
 
-    LOG_WARNING(Service_BOSS, "(STUBBED) unk_param1=0x%08X, unk_param2=0x%08X, translation=0x%08X, "
-                              "buff_addr=0x%08X, buff_size=0x%08X",
+    LOG_WARNING(Service_BOSS,
+                "(STUBBED) unk_param1=0x%08X, unk_param2=0x%08X, translation=0x%08X, "
+                "buff_addr=0x%08X, buff_size=0x%08X",
                 unk_param1, unk_param2, translation, buff_addr, buff_size);
 }
 
@@ -215,8 +218,9 @@ void ReconfigureTask(Service::Interface* self) {
     cmd_buff[2] = (buff_size << 4 | 0xA);
     cmd_buff[3] = buff_addr;
 
-    LOG_WARNING(Service_BOSS, "(STUBBED) unk_param1=0x%08X, unk_param2=0x%08X, translation=0x%08X, "
-                              "buff_addr=0x%08X, buff_size=0x%08X",
+    LOG_WARNING(Service_BOSS,
+                "(STUBBED) unk_param1=0x%08X, unk_param2=0x%08X, translation=0x%08X, "
+                "buff_addr=0x%08X, buff_size=0x%08X",
                 unk_param1, unk_param2, translation, buff_addr, buff_size);
 }
 
@@ -263,9 +267,10 @@ void GetNsDataIdList(Service::Interface* self) {
     cmd_buff[4] = (buff_size << 4 | 0xC);
     cmd_buff[5] = buff_addr;
 
-    LOG_WARNING(Service_BOSS, "(STUBBED) unk_param1=0x%08X, unk_param2=0x%08X, unk_param3=0x%08X, "
-                              "unk_param4=0x%08X, translation=0x%08X, "
-                              "buff_addr=0x%08X, buff_size=0x%08X",
+    LOG_WARNING(Service_BOSS,
+                "(STUBBED) unk_param1=0x%08X, unk_param2=0x%08X, unk_param3=0x%08X, "
+                "unk_param4=0x%08X, translation=0x%08X, "
+                "buff_addr=0x%08X, buff_size=0x%08X",
                 unk_param1, unk_param2, unk_param3, unk_param4, translation, buff_addr, buff_size);
 }
 
@@ -287,9 +292,10 @@ void GetOwnNsDataIdList(Service::Interface* self) {
     cmd_buff[4] = (buff_size << 4 | 0xC);
     cmd_buff[5] = buff_addr;
 
-    LOG_WARNING(Service_BOSS, "(STUBBED) unk_param1=0x%08X, unk_param2=0x%08X, unk_param3=0x%08X, "
-                              "unk_param4=0x%08X, translation=0x%08X, "
-                              "buff_addr=0x%08X, buff_size=0x%08X",
+    LOG_WARNING(Service_BOSS,
+                "(STUBBED) unk_param1=0x%08X, unk_param2=0x%08X, unk_param3=0x%08X, "
+                "unk_param4=0x%08X, translation=0x%08X, "
+                "buff_addr=0x%08X, buff_size=0x%08X",
                 unk_param1, unk_param2, unk_param3, unk_param4, translation, buff_addr, buff_size);
 }
 
@@ -311,9 +317,10 @@ void GetNewDataNsDataIdList(Service::Interface* self) {
     cmd_buff[4] = (buff_size << 4 | 0xC);
     cmd_buff[5] = buff_addr;
 
-    LOG_WARNING(Service_BOSS, "(STUBBED) unk_param1=0x%08X, unk_param2=0x%08X, unk_param3=0x%08X, "
-                              "unk_param4=0x%08X, translation=0x%08X, "
-                              "buff_addr=0x%08X, buff_size=0x%08X",
+    LOG_WARNING(Service_BOSS,
+                "(STUBBED) unk_param1=0x%08X, unk_param2=0x%08X, unk_param3=0x%08X, "
+                "unk_param4=0x%08X, translation=0x%08X, "
+                "buff_addr=0x%08X, buff_size=0x%08X",
                 unk_param1, unk_param2, unk_param3, unk_param4, translation, buff_addr, buff_size);
 }
 
@@ -335,9 +342,10 @@ void GetOwnNewDataNsDataIdList(Service::Interface* self) {
     cmd_buff[4] = (buff_size << 4 | 0xC);
     cmd_buff[5] = buff_addr;
 
-    LOG_WARNING(Service_BOSS, "(STUBBED) unk_param1=0x%08X, unk_param2=0x%08X, unk_param3=0x%08X, "
-                              "unk_param4=0x%08X, translation=0x%08X, "
-                              "buff_addr=0x%08X, buff_size=0x%08X",
+    LOG_WARNING(Service_BOSS,
+                "(STUBBED) unk_param1=0x%08X, unk_param2=0x%08X, unk_param3=0x%08X, "
+                "unk_param4=0x%08X, translation=0x%08X, "
+                "buff_addr=0x%08X, buff_size=0x%08X",
                 unk_param1, unk_param2, unk_param3, unk_param4, translation, buff_addr, buff_size);
 }
 
@@ -355,8 +363,9 @@ void SendProperty(Service::Interface* self) {
     cmd_buff[2] = (buff_size << 4 | 0xA);
     cmd_buff[3] = buff_addr;
 
-    LOG_WARNING(Service_BOSS, "(STUBBED) unk_param1=0x%08X, unk_param2=0x%08X, translation=0x%08X, "
-                              "buff_addr=0x%08X, buff_size=0x%08X",
+    LOG_WARNING(Service_BOSS,
+                "(STUBBED) unk_param1=0x%08X, unk_param2=0x%08X, translation=0x%08X, "
+                "buff_addr=0x%08X, buff_size=0x%08X",
                 unk_param1, unk_param2, translation, buff_addr, buff_size);
 }
 
@@ -373,8 +382,9 @@ void SendPropertyHandle(Service::Interface* self) {
     cmd_buff[2] = (buff_size << 4 | 0xA);
     cmd_buff[3] = buff_addr;
 
-    LOG_WARNING(Service_BOSS, "(STUBBED) unk_param1=0x%08X, translation=0x%08X, "
-                              "buff_addr=0x%08X, buff_size=0x%08X",
+    LOG_WARNING(Service_BOSS,
+                "(STUBBED) unk_param1=0x%08X, translation=0x%08X, "
+                "buff_addr=0x%08X, buff_size=0x%08X",
                 unk_param1, translation, buff_addr, buff_size);
 }
 
@@ -392,8 +402,9 @@ void ReceiveProperty(Service::Interface* self) {
     cmd_buff[2] = (buff_size << 4 | 0xC);
     cmd_buff[3] = buff_addr;
 
-    LOG_WARNING(Service_BOSS, "(STUBBED) unk_param1=0x%08X, buff_size=0x%08X, "
-                              "translation=0x%08X, buff_addr=0x%08X",
+    LOG_WARNING(Service_BOSS,
+                "(STUBBED) unk_param1=0x%08X, buff_size=0x%08X, "
+                "translation=0x%08X, buff_addr=0x%08X",
                 unk_param1, buff_size, translation, buff_addr);
 }
 
@@ -411,8 +422,9 @@ void UpdateTaskInterval(Service::Interface* self) {
     cmd_buff[2] = (buff_size << 4 | 0xA);
     cmd_buff[3] = buff_addr;
 
-    LOG_WARNING(Service_BOSS, "(STUBBED) unk_param1=0x%08X, unk_param2=0x%08X, "
-                              "translation=0x%08X, buff_addr=0x%08X, buff_size=0x%08X",
+    LOG_WARNING(Service_BOSS,
+                "(STUBBED) unk_param1=0x%08X, unk_param2=0x%08X, "
+                "translation=0x%08X, buff_addr=0x%08X, buff_size=0x%08X",
                 unk_param1, unk_param2, translation, buff_addr, buff_size);
 }
 
@@ -429,8 +441,9 @@ void UpdateTaskCount(Service::Interface* self) {
     cmd_buff[2] = (buff_size << 4 | 0xA);
     cmd_buff[3] = buff_addr;
 
-    LOG_WARNING(Service_BOSS, "(STUBBED) buff_size=0x%08X, unk_param2=0x%08X, "
-                              "translation=0x%08X, buff_addr=0x%08X",
+    LOG_WARNING(Service_BOSS,
+                "(STUBBED) buff_size=0x%08X, unk_param2=0x%08X, "
+                "translation=0x%08X, buff_addr=0x%08X",
                 buff_size, unk_param2, translation, buff_addr);
 }
 
@@ -448,8 +461,9 @@ void GetTaskInterval(Service::Interface* self) {
     cmd_buff[3] = (buff_size << 4 | 0xA);
     cmd_buff[4] = buff_addr;
 
-    LOG_WARNING(Service_BOSS, "(STUBBED) unk_param1=0x%08X, translation=0x%08X, "
-                              "buff_addr=0x%08X, buff_size=0x%08X",
+    LOG_WARNING(Service_BOSS,
+                "(STUBBED) unk_param1=0x%08X, translation=0x%08X, "
+                "buff_addr=0x%08X, buff_size=0x%08X",
                 unk_param1, translation, buff_addr, buff_size);
 }
 
@@ -467,8 +481,9 @@ void GetTaskCount(Service::Interface* self) {
     cmd_buff[3] = (buff_size << 4 | 0xA);
     cmd_buff[4] = buff_addr;
 
-    LOG_WARNING(Service_BOSS, "(STUBBED) unk_param1=0x%08X, translation=0x%08X, "
-                              "buff_addr=0x%08X, buff_size=0x%08X",
+    LOG_WARNING(Service_BOSS,
+                "(STUBBED) unk_param1=0x%08X, translation=0x%08X, "
+                "buff_addr=0x%08X, buff_size=0x%08X",
                 unk_param1, translation, buff_addr, buff_size);
 }
 
@@ -486,8 +501,9 @@ void GetTaskServiceStatus(Service::Interface* self) {
     cmd_buff[3] = (buff_size << 4 | 0xA);
     cmd_buff[4] = buff_addr;
 
-    LOG_WARNING(Service_BOSS, "(STUBBED) unk_param1=0x%08X, translation=0x%08X, "
-                              "buff_addr=0x%08X, buff_size=0x%08X",
+    LOG_WARNING(Service_BOSS,
+                "(STUBBED) unk_param1=0x%08X, translation=0x%08X, "
+                "buff_addr=0x%08X, buff_size=0x%08X",
                 unk_param1, translation, buff_addr, buff_size);
 }
 
@@ -504,8 +520,9 @@ void StartTask(Service::Interface* self) {
     cmd_buff[2] = (buff_size << 4 | 0xA);
     cmd_buff[3] = buff_addr;
 
-    LOG_WARNING(Service_BOSS, "(STUBBED) unk_param1=0x%08X, translation=0x%08X, "
-                              "buff_addr=0x%08X, buff_size=0x%08X",
+    LOG_WARNING(Service_BOSS,
+                "(STUBBED) unk_param1=0x%08X, translation=0x%08X, "
+                "buff_addr=0x%08X, buff_size=0x%08X",
                 unk_param1, translation, buff_addr, buff_size);
 }
 
@@ -522,8 +539,9 @@ void StartTaskImmediate(Service::Interface* self) {
     cmd_buff[2] = (buff_size << 4 | 0xA);
     cmd_buff[3] = buff_addr;
 
-    LOG_WARNING(Service_BOSS, "(STUBBED) unk_param1=0x%08X, translation=0x%08X, "
-                              "buff_addr=0x%08X, buff_size=0x%08X",
+    LOG_WARNING(Service_BOSS,
+                "(STUBBED) unk_param1=0x%08X, translation=0x%08X, "
+                "buff_addr=0x%08X, buff_size=0x%08X",
                 unk_param1, translation, buff_addr, buff_size);
 }
 
@@ -540,8 +558,9 @@ void CancelTask(Service::Interface* self) {
     cmd_buff[2] = (buff_size << 4 | 0xA);
     cmd_buff[3] = buff_addr;
 
-    LOG_WARNING(Service_BOSS, "(STUBBED) unk_param1=0x%08X, translation=0x%08X, "
-                              "buff_addr=0x%08X, buff_size=0x%08X",
+    LOG_WARNING(Service_BOSS,
+                "(STUBBED) unk_param1=0x%08X, translation=0x%08X, "
+                "buff_addr=0x%08X, buff_size=0x%08X",
                 unk_param1, translation, buff_addr, buff_size);
 }
 
@@ -572,8 +591,9 @@ void GetTaskState(Service::Interface* self) {
     cmd_buff[5] = (buff_size << 4 | 0xA);
     cmd_buff[6] = buff_addr;
 
-    LOG_WARNING(Service_BOSS, "(STUBBED) buff_size=0x%08X, unk_param2=0x%08X, "
-                              "translation=0x%08X, buff_addr=0x%08X",
+    LOG_WARNING(Service_BOSS,
+                "(STUBBED) buff_size=0x%08X, unk_param2=0x%08X, "
+                "translation=0x%08X, buff_addr=0x%08X",
                 buff_size, unk_param2, translation, buff_addr);
 }
 
@@ -593,8 +613,9 @@ void GetTaskResult(Service::Interface* self) {
     cmd_buff[5] = (buff_size << 4 | 0xA);
     cmd_buff[6] = buff_addr;
 
-    LOG_WARNING(Service_BOSS, "(STUBBED) unk_param1=0x%08X, translation=0x%08X, "
-                              "buff_addr=0x%08X, buff_size=0x%08X",
+    LOG_WARNING(Service_BOSS,
+                "(STUBBED) unk_param1=0x%08X, translation=0x%08X, "
+                "buff_addr=0x%08X, buff_size=0x%08X",
                 unk_param1, translation, buff_addr, buff_size);
 }
 
@@ -614,8 +635,9 @@ void GetTaskCommErrorCode(Service::Interface* self) {
     cmd_buff[5] = (buff_size << 4 | 0xA);
     cmd_buff[6] = buff_addr;
 
-    LOG_WARNING(Service_BOSS, "(STUBBED) unk_param1=0x%08X, translation=0x%08X, "
-                              "buff_addr=0x%08X, buff_size=0x%08X",
+    LOG_WARNING(Service_BOSS,
+                "(STUBBED) unk_param1=0x%08X, translation=0x%08X, "
+                "buff_addr=0x%08X, buff_size=0x%08X",
                 unk_param1, translation, buff_addr, buff_size);
 }
 
@@ -635,8 +657,9 @@ void GetTaskStatus(Service::Interface* self) {
     cmd_buff[3] = (buff_size << 4 | 0xA);
     cmd_buff[4] = buff_addr;
 
-    LOG_WARNING(Service_BOSS, "(STUBBED) unk_param1=0x%08X, unk_param2=0x%08X, unk_param3=0x%08X, "
-                              "translation=0x%08X, buff_addr=0x%08X, buff_size=0x%08X",
+    LOG_WARNING(Service_BOSS,
+                "(STUBBED) unk_param1=0x%08X, unk_param2=0x%08X, unk_param3=0x%08X, "
+                "translation=0x%08X, buff_addr=0x%08X, buff_size=0x%08X",
                 unk_param1, unk_param2, unk_param3, translation, buff_addr, buff_size);
 }
 
@@ -655,8 +678,9 @@ void GetTaskError(Service::Interface* self) {
     cmd_buff[3] = (buff_size << 4 | 0xA);
     cmd_buff[4] = buff_addr;
 
-    LOG_WARNING(Service_BOSS, "(STUBBED) unk_param1=0x%08X, unk_param2=0x%08X, translation=0x%08X, "
-                              "buff_addr=0x%08X, buff_size=0x%08X",
+    LOG_WARNING(Service_BOSS,
+                "(STUBBED) unk_param1=0x%08X, unk_param2=0x%08X, translation=0x%08X, "
+                "buff_addr=0x%08X, buff_size=0x%08X",
                 unk_param1, unk_param2, translation, buff_addr, buff_size);
 }
 
@@ -674,8 +698,9 @@ void GetTaskInfo(Service::Interface* self) {
     cmd_buff[2] = (buff_size << 4 | 0xA);
     cmd_buff[3] = buff_addr;
 
-    LOG_WARNING(Service_BOSS, "(STUBBED) unk_param1=0x%08X, unk_param2=0x%08X, translation=0x%08X, "
-                              "buff_addr=0x%08X, buff_size=0x%08X",
+    LOG_WARNING(Service_BOSS,
+                "(STUBBED) unk_param1=0x%08X, unk_param2=0x%08X, translation=0x%08X, "
+                "buff_addr=0x%08X, buff_size=0x%08X",
                 unk_param1, unk_param2, translation, buff_addr, buff_size);
 }
 
@@ -705,8 +730,9 @@ void GetNsDataHeaderInfo(Service::Interface* self) {
     cmd_buff[2] = (buff_size << 4 | 0xC);
     cmd_buff[3] = buff_addr;
 
-    LOG_WARNING(Service_BOSS, "(STUBBED) unk_param1=0x%08X, unk_param2=0x%08X, unk_param3=0x%08X, "
-                              "translation=0x%08X, buff_addr=0x%08X, buff_size=0x%08X",
+    LOG_WARNING(Service_BOSS,
+                "(STUBBED) unk_param1=0x%08X, unk_param2=0x%08X, unk_param3=0x%08X, "
+                "translation=0x%08X, buff_addr=0x%08X, buff_size=0x%08X",
                 unk_param1, unk_param2, unk_param3, translation, buff_addr, buff_size);
 }
 
@@ -728,9 +754,10 @@ void ReadNsData(Service::Interface* self) {
     cmd_buff[4] = (buff_size << 4 | 0xC);
     cmd_buff[5] = buff_addr;
 
-    LOG_WARNING(Service_BOSS, "(STUBBED) unk_param1=0x%08X, unk_param2=0x%08X, unk_param3=0x%08X, "
-                              "unk_param4=0x%08X, translation=0x%08X, "
-                              "buff_addr=0x%08X, buff_size=0x%08X",
+    LOG_WARNING(Service_BOSS,
+                "(STUBBED) unk_param1=0x%08X, unk_param2=0x%08X, unk_param3=0x%08X, "
+                "unk_param4=0x%08X, translation=0x%08X, "
+                "buff_addr=0x%08X, buff_size=0x%08X",
                 unk_param1, unk_param2, unk_param3, unk_param4, translation, buff_addr, buff_size);
 }
 
@@ -822,8 +849,9 @@ void RegisterStorageEntry(Service::Interface* self) {
     cmd_buff[0] = IPC::MakeHeader(0x2F, 0x1, 0);
     cmd_buff[1] = RESULT_SUCCESS.raw;
 
-    LOG_WARNING(Service_BOSS, "(STUBBED)  unk_param1=0x%08X, unk_param2=0x%08X, unk_param3=0x%08X, "
-                              "unk_param4=0x%08X, unk_param5=0x%08X",
+    LOG_WARNING(Service_BOSS,
+                "(STUBBED)  unk_param1=0x%08X, unk_param2=0x%08X, unk_param3=0x%08X, "
+                "unk_param4=0x%08X, unk_param5=0x%08X",
                 unk_param1, unk_param2, unk_param3, unk_param4, unk_param5);
 }
 
@@ -849,8 +877,9 @@ void SetStorageOption(Service::Interface* self) {
     cmd_buff[0] = IPC::MakeHeader(0x31, 0x1, 0);
     cmd_buff[1] = RESULT_SUCCESS.raw;
 
-    LOG_WARNING(Service_BOSS, "(STUBBED)  unk_param1=0x%08X, unk_param2=0x%08X, "
-                              "unk_param3=0x%08X, unk_param4=0x%08X",
+    LOG_WARNING(Service_BOSS,
+                "(STUBBED)  unk_param1=0x%08X, unk_param2=0x%08X, "
+                "unk_param3=0x%08X, unk_param4=0x%08X",
                 unk_param1, unk_param2, unk_param3, unk_param4);
 }
 
@@ -880,8 +909,9 @@ void StartBgImmediate(Service::Interface* self) {
     cmd_buff[2] = (buff_size << 4 | 0xA);
     cmd_buff[3] = buff_addr;
 
-    LOG_WARNING(Service_BOSS, "(STUBBED) buff_size=0x%08X, unk_param2=0x%08X, "
-                              "translation=0x%08X, buff_addr=0x%08X",
+    LOG_WARNING(Service_BOSS,
+                "(STUBBED) buff_size=0x%08X, unk_param2=0x%08X, "
+                "translation=0x%08X, buff_addr=0x%08X",
                 unk_param1, translation, buff_addr, buff_size);
 }
 
@@ -899,8 +929,9 @@ void GetTaskActivePriority(Service::Interface* self) {
     cmd_buff[3] = (buff_size << 4 | 0xA);
     cmd_buff[4] = buff_addr;
 
-    LOG_WARNING(Service_BOSS, "(STUBBED) buff_size=0x%08X, unk_param2=0x%08X, "
-                              "translation=0x%08X, buff_addr=0x%08X",
+    LOG_WARNING(Service_BOSS,
+                "(STUBBED) buff_size=0x%08X, unk_param2=0x%08X, "
+                "translation=0x%08X, buff_addr=0x%08X",
                 unk_param1, translation, buff_addr, buff_size);
 }
 
@@ -919,8 +950,9 @@ void RegisterImmediateTask(Service::Interface* self) {
     cmd_buff[3] = (buff_size << 4 | 0xA);
     cmd_buff[4] = buff_addr;
 
-    LOG_WARNING(Service_BOSS, "(STUBBED) unk_param1=0x%08X, unk_param2=0x%08X, unk_param3=0x%08X, "
-                              "translation=0x%08X, buff_addr=0x%08X, buff_size=0x%08X",
+    LOG_WARNING(Service_BOSS,
+                "(STUBBED) unk_param1=0x%08X, unk_param2=0x%08X, unk_param3=0x%08X, "
+                "translation=0x%08X, buff_addr=0x%08X, buff_size=0x%08X",
                 unk_param1, unk_param2, unk_param3, translation, buff_addr, buff_size);
 }
 
@@ -943,9 +975,10 @@ void SetTaskQuery(Service::Interface* self) {
     cmd_buff[2] = (buff2_size << 4 | 0xA);
     cmd_buff[3] = buff2_addr;
 
-    LOG_WARNING(Service_BOSS, "(STUBBED) unk_param1=0x%08X, unk_param2=0x%08X, "
-                              "translation1=0x%08X, buff1_addr=0x%08X, buff1_size=0x%08X, "
-                              "translation2=0x%08X, buff2_addr=0x%08X, buff2_size=0x%08X",
+    LOG_WARNING(Service_BOSS,
+                "(STUBBED) unk_param1=0x%08X, unk_param2=0x%08X, "
+                "translation1=0x%08X, buff1_addr=0x%08X, buff1_size=0x%08X, "
+                "translation2=0x%08X, buff2_addr=0x%08X, buff2_size=0x%08X",
                 unk_param1, unk_param2, translation1, buff1_addr, buff1_size, translation2,
                 buff2_addr, buff2_size);
 }
@@ -969,9 +1002,10 @@ void GetTaskQuery(Service::Interface* self) {
     cmd_buff[2] = (buff2_size << 4 | 0xC);
     cmd_buff[3] = buff2_addr;
 
-    LOG_WARNING(Service_BOSS, "(STUBBED) unk_param1=0x%08X, unk_param2=0x%08X, "
-                              "translation1=0x%08X, buff1_addr=0x%08X, buff1_size=0x%08X, "
-                              "translation2=0x%08X, buff2_addr=0x%08X, buff2_size=0x%08X",
+    LOG_WARNING(Service_BOSS,
+                "(STUBBED) unk_param1=0x%08X, unk_param2=0x%08X, "
+                "translation1=0x%08X, buff1_addr=0x%08X, buff1_size=0x%08X, "
+                "translation2=0x%08X, buff2_addr=0x%08X, buff2_size=0x%08X",
                 unk_param1, unk_param2, translation1, buff1_addr, buff1_size, translation2,
                 buff2_addr, buff2_size);
 }

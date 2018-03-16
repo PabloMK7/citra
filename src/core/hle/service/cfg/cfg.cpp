@@ -90,7 +90,7 @@ struct ConsoleCountryInfo {
     u8 country_code; ///< The country code of the console
 };
 static_assert(sizeof(ConsoleCountryInfo) == 4, "ConsoleCountryInfo must be exactly 4 bytes");
-}
+} // namespace
 
 static const ConsoleModelInfo CONSOLE_MODEL = {NINTENDO_3DS_XL, {0, 0, 0}};
 static const u8 CONSOLE_LANGUAGE = LANGUAGE_EN;

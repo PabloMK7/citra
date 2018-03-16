@@ -129,8 +129,8 @@ void BreakPointModel::OnResumed() {
 
 GraphicsBreakPointsWidget::GraphicsBreakPointsWidget(
     std::shared_ptr<Pica::DebugContext> debug_context, QWidget* parent)
-    : QDockWidget(tr("Pica Breakpoints"), parent),
-      Pica::DebugContext::BreakPointObserver(debug_context) {
+    : QDockWidget(tr("Pica Breakpoints"), parent), Pica::DebugContext::BreakPointObserver(
+                                                       debug_context) {
     setObjectName("PicaBreakPointsWidget");
 
     status_text = new QLabel(tr("Emulation running"));

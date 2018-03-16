@@ -87,9 +87,9 @@ public:
     }
 
     /**
-      * Gets the framebuffer layout (width, height, and screen regions)
-      * @note This method is thread-safe
-      */
+     * Gets the framebuffer layout (width, height, and screen regions)
+     * @note This method is thread-safe
+     */
     const Layout::FramebufferLayout& GetFramebufferLayout() const {
         return framebuffer_layout;
     }

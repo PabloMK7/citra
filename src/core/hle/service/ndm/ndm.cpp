@@ -21,7 +21,10 @@ enum : u32 {
 static DaemonMask daemon_bit_mask = DaemonMask::Default;
 static DaemonMask default_daemon_bit_mask = DaemonMask::Default;
 static std::array<DaemonStatus, 4> daemon_status = {
-    DaemonStatus::Idle, DaemonStatus::Idle, DaemonStatus::Idle, DaemonStatus::Idle,
+    DaemonStatus::Idle,
+    DaemonStatus::Idle,
+    DaemonStatus::Idle,
+    DaemonStatus::Idle,
 };
 static ExclusiveState exclusive_state = ExclusiveState::None;
 static u32 scan_interval = DEFAULT_SCAN_INTERVAL;

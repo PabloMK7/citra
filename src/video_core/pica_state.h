@@ -156,4 +156,4 @@ struct State {
 
 extern State g_state; ///< Current Pica state
 
-} // namespace
+} // namespace Pica

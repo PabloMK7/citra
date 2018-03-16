@@ -27,6 +27,6 @@ public:
                                      const ShaderRegs& config) const;
 };
 
-} // namespace
+} // namespace Shader
 
-} // namespace
+} // namespace Pica

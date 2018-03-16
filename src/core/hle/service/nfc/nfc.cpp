@@ -2,10 +2,8 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "core/hle/ipc.h"
 #include "core/hle/ipc_helpers.h"
 #include "core/hle/kernel/event.h"
-#include "core/hle/kernel/handle_table.h"
 #include "core/hle/service/nfc/nfc.h"
 #include "core/hle/service/nfc/nfc_m.h"
 #include "core/hle/service/nfc/nfc_u.h"
@@ -13,48 +11,46 @@
 namespace Service {
 namespace NFC {
 
-static Kernel::SharedPtr<Kernel::Event> tag_in_range_event;
-static Kernel::SharedPtr<Kernel::Event> tag_out_of_range_event;
-static TagState nfc_tag_state = TagState::NotInitialized;
-static CommunicationStatus nfc_status = CommunicationStatus::NfcInitialized;
+void Module::Interface::Initialize(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x01, 1, 0);
+    u8 param = rp.Pop<u8>();
 
-void Initialize(Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
+    nfc->nfc_tag_state = TagState::NotScanning;
 
-    u8 param = static_cast<u8>(cmd_buff[1] & 0xFF);
-
-    nfc_tag_state = TagState::NotScanning;
-
-    cmd_buff[1] = RESULT_SUCCESS.raw; // No error
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RESULT_SUCCESS);
     LOG_WARNING(Service_NFC, "(STUBBED) called, param=%u", param);
 }
 
-void Shutdown(Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
+void Module::Interface::Shutdown(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x02, 1, 0);
+    u8 param = rp.Pop<u8>();
 
-    u8 param = static_cast<u8>(cmd_buff[1] & 0xFF);
-    nfc_tag_state = TagState::NotInitialized;
+    nfc->nfc_tag_state = TagState::NotInitialized;
 
-    cmd_buff[1] = RESULT_SUCCESS.raw; // No error
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RESULT_SUCCESS);
     LOG_WARNING(Service_NFC, "(STUBBED) called, param=%u", param);
 }
 
-void StartCommunication(Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
+void Module::Interface::StartCommunication(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x03, 0, 0);
 
-    cmd_buff[1] = RESULT_SUCCESS.raw; // No error
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RESULT_SUCCESS);
     LOG_WARNING(Service_NFC, "(STUBBED) called");
 }
 
-void StopCommunication(Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
+void Module::Interface::StopCommunication(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x04, 0, 0);
 
-    cmd_buff[1] = RESULT_SUCCESS.raw; // No error
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RESULT_SUCCESS);
     LOG_WARNING(Service_NFC, "(STUBBED) called");
 }
 
-void StartTagScanning(Interface* self) {
-    IPC::RequestParser rp(Kernel::GetCommandBuffer(), 5, 1, 0); // 0x00050040
+void Module::Interface::StartTagScanning(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x05, 1, 0); // 0x00050040
     u16 in_val = rp.Pop<u16>();
 
     ResultCode result = RESULT_SUCCESS;
@@ -64,8 +60,8 @@ void StartTagScanning(Interface* self) {
                         ErrorSummary::InvalidState, ErrorLevel::Status);
 
     if (result == RESULT_SUCCESS) {
-        nfc_tag_state = TagState::TagInRange;
-        tag_in_range_event->Signal();
+        nfc->nfc_tag_state = TagState::TagInRange;
+        nfc->tag_in_range_event->Signal();
     }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
@@ -73,83 +69,90 @@ void StartTagScanning(Interface* self) {
     LOG_WARNING(Service_NFC, "(STUBBED) called, in_val=%04x", in_val);
 }
 
-void StopTagScanning(Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
+void Module::Interface::StopTagScanning(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x06, 0, 0);
 
-    nfc_tag_state = TagState::NotScanning;
+    nfc->nfc_tag_state = TagState::NotScanning;
 
-    cmd_buff[1] = RESULT_SUCCESS.raw; // No error
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RESULT_SUCCESS);
     LOG_WARNING(Service_NFC, "(STUBBED) called");
 }
 
-void LoadAmiiboData(Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
+void Module::Interface::LoadAmiiboData(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x07, 0, 0);
 
-    nfc_tag_state = TagState::TagDataLoaded;
+    nfc->nfc_tag_state = TagState::TagDataLoaded;
 
-    cmd_buff[1] = RESULT_SUCCESS.raw; // No error
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RESULT_SUCCESS);
     LOG_WARNING(Service_NFC, "(STUBBED) called");
 }
 
-void ResetTagScanState(Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
+void Module::Interface::ResetTagScanState(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x08, 0, 0);
 
-    nfc_tag_state = TagState::NotScanning;
+    nfc->nfc_tag_state = TagState::NotScanning;
 
-    cmd_buff[1] = RESULT_SUCCESS.raw; // No error
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RESULT_SUCCESS);
     LOG_WARNING(Service_NFC, "(STUBBED) called");
 }
 
-void GetTagInRangeEvent(Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
+void Module::Interface::GetTagInRangeEvent(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x0B, 0, 0);
 
-    cmd_buff[0] = IPC::MakeHeader(0xB, 1, 2);
-    cmd_buff[1] = RESULT_SUCCESS.raw;
-    cmd_buff[2] = IPC::CopyHandleDesc();
-    cmd_buff[3] = Kernel::g_handle_table.Create(tag_in_range_event).Unwrap();
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
+    rb.Push(RESULT_SUCCESS);
+    rb.PushCopyObjects(nfc->tag_in_range_event);
     LOG_WARNING(Service_NFC, "(STUBBED) called");
 }
 
-void GetTagOutOfRangeEvent(Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
+void Module::Interface::GetTagOutOfRangeEvent(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x0C, 0, 0);
 
-    cmd_buff[0] = IPC::MakeHeader(0xC, 1, 2);
-    cmd_buff[1] = RESULT_SUCCESS.raw;
-    cmd_buff[2] = IPC::CopyHandleDesc();
-    cmd_buff[3] = Kernel::g_handle_table.Create(tag_out_of_range_event).Unwrap();
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
+    rb.Push(RESULT_SUCCESS);
+    rb.PushCopyObjects(nfc->tag_out_of_range_event);
     LOG_WARNING(Service_NFC, "(STUBBED) called");
 }
 
-void GetTagState(Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
+void Module::Interface::GetTagState(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x0D, 0, 0);
 
-    cmd_buff[1] = RESULT_SUCCESS.raw; // No error
-    cmd_buff[2] = static_cast<u8>(nfc_tag_state);
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
+    rb.Push(RESULT_SUCCESS);
+    rb.PushEnum(nfc->nfc_tag_state);
     LOG_DEBUG(Service_NFC, "(STUBBED) called");
 }
 
-void CommunicationGetStatus(Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
+void Module::Interface::CommunicationGetStatus(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x0F, 0, 0);
 
-    cmd_buff[1] = RESULT_SUCCESS.raw; // No error
-    cmd_buff[2] = static_cast<u8>(nfc_status);
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
+    rb.Push(RESULT_SUCCESS);
+    rb.PushEnum(nfc->nfc_status);
     LOG_DEBUG(Service_NFC, "(STUBBED) called");
 }
 
-void Init() {
-    AddService(new NFC_M());
-    AddService(new NFC_U());
+Module::Interface::Interface(std::shared_ptr<Module> nfc, const char* name, u32 max_session)
+    : ServiceFramework(name, max_session), nfc(std::move(nfc)) {}
 
+Module::Interface::~Interface() = default;
+
+Module::Module() {
     tag_in_range_event =
         Kernel::Event::Create(Kernel::ResetType::OneShot, "NFC::tag_in_range_event");
     tag_out_of_range_event =
         Kernel::Event::Create(Kernel::ResetType::OneShot, "NFC::tag_out_range_event");
-    nfc_tag_state = TagState::NotInitialized;
 }
 
-void Shutdown() {
-    tag_in_range_event = nullptr;
-    tag_out_of_range_event = nullptr;
+Module::~Module() = default;
+
+void InstallInterfaces(SM::ServiceManager& service_manager) {
+    auto nfc = std::make_shared<Module>();
+    std::make_shared<NFC_M>(nfc)->InstallAsService(service_manager);
+    std::make_shared<NFC_U>(nfc)->InstallAsService(service_manager);
 }
 
 } // namespace NFC

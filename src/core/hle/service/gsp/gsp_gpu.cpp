@@ -261,31 +261,26 @@ ResultCode SetBufferSwap(u32 screen_id, const FrameBufferInfo& info) {
     PAddr phys_address_left = Memory::VirtualToPhysicalAddress(info.address_left);
     PAddr phys_address_right = Memory::VirtualToPhysicalAddress(info.address_right);
     if (info.active_fb == 0) {
-        WriteSingleHWReg(
-            base_address +
-                4 * static_cast<u32>(GPU_REG_INDEX(framebuffer_config[screen_id].address_left1)),
-            phys_address_left);
-        WriteSingleHWReg(
-            base_address +
-                4 * static_cast<u32>(GPU_REG_INDEX(framebuffer_config[screen_id].address_right1)),
-            phys_address_right);
+        WriteSingleHWReg(base_address + 4 * static_cast<u32>(GPU_REG_INDEX(
+                                                framebuffer_config[screen_id].address_left1)),
+                         phys_address_left);
+        WriteSingleHWReg(base_address + 4 * static_cast<u32>(GPU_REG_INDEX(
+                                                framebuffer_config[screen_id].address_right1)),
+                         phys_address_right);
     } else {
-        WriteSingleHWReg(
-            base_address +
-                4 * static_cast<u32>(GPU_REG_INDEX(framebuffer_config[screen_id].address_left2)),
-            phys_address_left);
-        WriteSingleHWReg(
-            base_address +
-                4 * static_cast<u32>(GPU_REG_INDEX(framebuffer_config[screen_id].address_right2)),
-            phys_address_right);
+        WriteSingleHWReg(base_address + 4 * static_cast<u32>(GPU_REG_INDEX(
+                                                framebuffer_config[screen_id].address_left2)),
+                         phys_address_left);
+        WriteSingleHWReg(base_address + 4 * static_cast<u32>(GPU_REG_INDEX(
+                                                framebuffer_config[screen_id].address_right2)),
+                         phys_address_right);
     }
     WriteSingleHWReg(base_address +
                          4 * static_cast<u32>(GPU_REG_INDEX(framebuffer_config[screen_id].stride)),
                      info.stride);
-    WriteSingleHWReg(
-        base_address +
-            4 * static_cast<u32>(GPU_REG_INDEX(framebuffer_config[screen_id].color_format)),
-        info.format);
+    WriteSingleHWReg(base_address + 4 * static_cast<u32>(GPU_REG_INDEX(
+                                            framebuffer_config[screen_id].color_format)),
+                     info.format);
     WriteSingleHWReg(
         base_address + 4 * static_cast<u32>(GPU_REG_INDEX(framebuffer_config[screen_id].active_fb)),
         info.shown_fb);

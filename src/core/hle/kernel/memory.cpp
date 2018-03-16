@@ -126,8 +126,9 @@ void HandleSpecialMapping(VMManager& address_space, const AddressMapping& mappin
                    mapping_limit <= area.vaddr_base + area.size;
         });
     if (area == std::end(memory_areas)) {
-        LOG_ERROR(Loader, "Unhandled special mapping: address=0x%08" PRIX32 " size=0x%" PRIX32
-                          " read_only=%d unk_flag=%d",
+        LOG_ERROR(Loader,
+                  "Unhandled special mapping: address=0x%08" PRIX32 " size=0x%" PRIX32
+                  " read_only=%d unk_flag=%d",
                   mapping.address, mapping.size, mapping.read_only, mapping.unk_flag);
         return;
     }

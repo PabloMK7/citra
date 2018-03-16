@@ -16,4 +16,4 @@ namespace GLShader {
  */
 GLuint LoadProgram(const char* vertex_shader, const char* fragment_shader);
 
-} // namespace
+} // namespace GLShader

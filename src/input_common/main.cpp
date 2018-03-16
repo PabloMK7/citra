@@ -52,7 +52,8 @@ MotionEmu* GetMotionEmu() {
 
 std::string GenerateKeyboardParam(int key_code) {
     Common::ParamPackage param{
-        {"engine", "keyboard"}, {"code", std::to_string(key_code)},
+        {"engine", "keyboard"},
+        {"code", std::to_string(key_code)},
     };
     return param.Serialize();
 }

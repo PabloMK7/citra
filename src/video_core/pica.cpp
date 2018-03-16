@@ -51,4 +51,4 @@ void State::Reset() {
     Zero(immediate);
     primitive_assembler.Reconfigure(PipelineRegs::TriangleTopology::List);
 }
-}
+} // namespace Pica

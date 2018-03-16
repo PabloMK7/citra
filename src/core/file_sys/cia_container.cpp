@@ -225,4 +225,4 @@ void CIAContainer::Print() const {
         LOG_DEBUG(Service_FS, "Content %x Offset:   0x%08" PRIx64 " bytes", i, GetContentOffset(i));
     }
 }
-}
+} // namespace FileSys

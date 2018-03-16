@@ -4,11 +4,25 @@
 
 #pragma once
 
+#include "core/hle/service/service.h"
+
 namespace Service {
 namespace ACT {
 
 /// Initializes all ACT services
-void Init();
+class Module final {
+public:
+    class Interface : public ServiceFramework<Interface> {
+    public:
+        Interface(std::shared_ptr<Module> act, const char* name);
+        ~Interface();
+
+    private:
+        std::shared_ptr<Module> act;
+    };
+};
+
+void InstallInterfaces(SM::ServiceManager& service_manager);
 
 } // namespace ACT
 } // namespace Service

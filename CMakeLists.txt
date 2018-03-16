@@ -3,15 +3,18 @@ cmake_minimum_required(VERSION 3.8)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules")
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/externals/cmake-modules")
 include(DownloadExternals)
+include(CMakeDependentOption)
 
 project(citra)
 
+# Set bundled sdl2/qt as dependent options.
+# OFF by default, but if ENABLE_SDL2 and MSVC are true then ON
 option(ENABLE_SDL2 "Enable the SDL2 frontend" ON)
-option(CITRA_USE_BUNDLED_SDL2 "Download bundled SDL2 binaries" OFF)
+CMAKE_DEPENDENT_OPTION(CITRA_USE_BUNDLED_SDL2 "Download bundled SDL2 binaries" ON "ENABLE_SDL2;MSVC" OFF)
 
 option(ENABLE_QT "Enable the Qt frontend" ON)
 option(ENABLE_QT_TRANSLATION "Enable translations for the Qt frontend" OFF)
-option(CITRA_USE_BUNDLED_QT "Download bundled Qt binaries" OFF)
+CMAKE_DEPENDENT_OPTION(CITRA_USE_BUNDLED_QT "Download bundled Qt binaries" ON "ENABLE_QT;MSVC" OFF)
 
 option(ENABLE_WEB_SERVICE "Enable web services (telemetry, etc.)" ON)
 option(CITRA_USE_BUNDLED_CURL "FOR MINGW ONLY: Download curl configured against winssl instead of openssl" OFF)
@@ -274,6 +277,53 @@ if (UNIX OR MINGW)
     endif()
 endif()
 
+# Setup a custom clang-format target (if clang-format can be found) that will run
+# against all the src files. This should be used before making a pull request.
+# =======================================================================
+
+set(CLANG_FORMAT_POSTFIX "-6.0")
+find_program(CLANG_FORMAT
+    NAMES clang-format${CLANG_FORMAT_POSTFIX}
+          clang-format
+    PATHS ${CMAKE_BINARY_DIR}/externals)
+# if find_program doesn't find it, try to download from externals
+if (NOT CLANG_FORMAT)
+    if (WIN32)
+        message(STATUS "Clang format not found! Downloading...")
+        set(CLANG_FORMAT "${CMAKE_BINARY_DIR}/externals/clang-format${CLANG_FORMAT_POSTFIX}.exe")
+        file(DOWNLOAD
+            https://github.com/yuzu-emu/ext-windows-bin/raw/master/clang-format${CLANG_FORMAT_POSTFIX}.exe
+            "${CLANG_FORMAT}" SHOW_PROGRESS
+            STATUS DOWNLOAD_SUCCESS)
+        if (NOT DOWNLOAD_SUCCESS EQUAL 0)
+            message(WARNING "Could not download clang format! Disabling the clang format target")
+            file(REMOVE ${CLANG_FORMAT})
+            unset(CLANG_FORMAT)
+        endif()
+    else()
+        message(WARNING "Clang format not found! Disabling the clang format target")
+    endif()
+endif()
+
+if (CLANG_FORMAT)
+    set(SRCS ${CMAKE_SOURCE_DIR}/src)
+    set(CCOMMENT "Running clang format against all the .h and .cpp files in src/")
+    if (WIN32)
+        add_custom_target(clang-format
+            COMMAND powershell.exe -Command "${CLANG_FORMAT} -i @(Get-ChildItem -Recurse ${SRCS}/* -Include \'*.h\', \'*.cpp\')"
+            COMMENT ${CCOMMENT})
+    elseif(MINGW)
+        add_custom_target(clang-format
+            COMMAND find `cygpath -u ${SRCS}` -iname *.h -o -iname *.cpp | xargs `cygpath -u ${CLANG_FORMAT}` -i
+            COMMENT ${CCOMMENT})
+    else()
+        add_custom_target(clang-format
+            COMMAND find ${SRCS} -iname *.h -o -iname *.cpp | xargs ${CLANG_FORMAT} -i
+            COMMENT ${CCOMMENT})
+    endif()
+    unset(SRCS)
+    unset(CCOMMENT)
+endif()
 
 # Include source code
 # ===================

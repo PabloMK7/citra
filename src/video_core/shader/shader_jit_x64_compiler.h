@@ -132,6 +132,6 @@ private:
     Xbyak::Label exp2_subroutine;
 };
 
-} // Shader
+} // namespace Shader
 
-} // Pica
+} // namespace Pica

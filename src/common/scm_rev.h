@@ -12,4 +12,4 @@ extern const char g_scm_desc[];
 extern const char g_build_name[];
 extern const char g_build_date[];
 
-} // namespace
+} // namespace Common

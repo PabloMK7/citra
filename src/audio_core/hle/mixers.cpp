@@ -115,8 +115,8 @@ void Mixers::DownmixAndMixIntoCurrentFrame(float gain, const QuadFrame32& sample
         return;
 
     case OutputFormat::Surround:
-    // TODO(merry): Implement surround sound.
-    // fallthrough
+        // TODO(merry): Implement surround sound.
+        // fallthrough
 
     case OutputFormat::Stereo:
         std::transform(

@@ -28,7 +28,7 @@ enum {
     ARMVFP3,
     ARMV6K,
 };
-}
+} // namespace
 
 // clang-format off
 const InstructionSetEncodingItem arm_instruction[] = {

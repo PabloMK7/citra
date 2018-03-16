@@ -87,8 +87,9 @@ void File::Read(Kernel::HLERequestContext& ctx) {
     offset += file->offset;
 
     if (offset + length > backend->GetSize()) {
-        LOG_ERROR(Service_FS, "Reading from out of bounds offset=0x%" PRIx64
-                              " length=0x%08X file_size=0x%" PRIx64,
+        LOG_ERROR(Service_FS,
+                  "Reading from out of bounds offset=0x%" PRIx64
+                  " length=0x%08X file_size=0x%" PRIx64,
                   offset, length, backend->GetSize());
     }
 

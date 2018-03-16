@@ -9,9 +9,15 @@
 namespace Service {
 namespace ACT {
 
-void Init() {
-    AddService(new ACT_A);
-    AddService(new ACT_U);
+Module::Interface::Interface(std::shared_ptr<Module> act, const char* name)
+    : ServiceFramework(name, 1 /* Placeholder */), act(std::move(act)) {}
+
+Module::Interface::~Interface() = default;
+
+void InstallInterfaces(SM::ServiceManager& service_manager) {
+    auto act = std::make_shared<Module>();
+    std::make_shared<ACT_A>(act)->InstallAsService(service_manager);
+    std::make_shared<ACT_U>(act)->InstallAsService(service_manager);
 }
 
 } // namespace ACT

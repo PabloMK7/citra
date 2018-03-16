@@ -48,4 +48,4 @@ std::array<u16, 0x40> SMDH::GetShortTitle(Loader::SMDH::TitleLanguage language) 
     return titles[static_cast<int>(language)].short_title;
 }
 
-} // namespace
+} // namespace Loader

@@ -47,4 +47,4 @@ private:
     ~ClientPort() override;
 };
 
-} // namespace
+} // namespace Kernel

@@ -24,4 +24,4 @@ public:
     ServerSession* server = nullptr; ///< The server endpoint of the session.
     SharedPtr<ClientPort> port;      ///< The port that this session is associated with (optional).
 };
-}
+} // namespace Kernel

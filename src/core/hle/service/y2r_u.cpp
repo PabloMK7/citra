@@ -230,8 +230,9 @@ void Y2R_U::SetSendingY(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
 
-    LOG_DEBUG(Service_Y2R, "called image_size=0x%08X, transfer_unit=%hu, transfer_stride=%hu, "
-                           "src_process_id=%u",
+    LOG_DEBUG(Service_Y2R,
+              "called image_size=0x%08X, transfer_unit=%hu, transfer_stride=%hu, "
+              "src_process_id=%u",
               conversion.src_Y.image_size, conversion.src_Y.transfer_unit, conversion.src_Y.gap,
               process->process_id);
 }
@@ -248,8 +249,9 @@ void Y2R_U::SetSendingU(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
 
-    LOG_DEBUG(Service_Y2R, "called image_size=0x%08X, transfer_unit=%hu, transfer_stride=%hu, "
-                           "src_process_id=%u",
+    LOG_DEBUG(Service_Y2R,
+              "called image_size=0x%08X, transfer_unit=%hu, transfer_stride=%hu, "
+              "src_process_id=%u",
               conversion.src_U.image_size, conversion.src_U.transfer_unit, conversion.src_U.gap,
               process->process_id);
 }
@@ -267,8 +269,9 @@ void Y2R_U::SetSendingV(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
 
-    LOG_DEBUG(Service_Y2R, "called image_size=0x%08X, transfer_unit=%hu, transfer_stride=%hu, "
-                           "src_process_id=%u",
+    LOG_DEBUG(Service_Y2R,
+              "called image_size=0x%08X, transfer_unit=%hu, transfer_stride=%hu, "
+              "src_process_id=%u",
               conversion.src_V.image_size, conversion.src_V.transfer_unit, conversion.src_V.gap,
               process->process_id);
 }
@@ -286,8 +289,9 @@ void Y2R_U::SetSendingYUYV(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
 
-    LOG_DEBUG(Service_Y2R, "called image_size=0x%08X, transfer_unit=%hu, transfer_stride=%hu, "
-                           "src_process_id=%u",
+    LOG_DEBUG(Service_Y2R,
+              "called image_size=0x%08X, transfer_unit=%hu, transfer_stride=%hu, "
+              "src_process_id=%u",
               conversion.src_YUYV.image_size, conversion.src_YUYV.transfer_unit,
               conversion.src_YUYV.gap, process->process_id);
 }
@@ -345,8 +349,9 @@ void Y2R_U::SetReceiving(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
 
-    LOG_DEBUG(Service_Y2R, "called image_size=0x%08X, transfer_unit=%hu, transfer_stride=%hu, "
-                           "dst_process_id=%u",
+    LOG_DEBUG(Service_Y2R,
+              "called image_size=0x%08X, transfer_unit=%hu, transfer_stride=%hu, "
+              "dst_process_id=%u",
               conversion.dst.image_size, conversion.dst.transfer_unit, conversion.dst.gap,
               static_cast<u32>(dst_process->process_id));
 }

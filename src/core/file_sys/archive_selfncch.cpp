@@ -245,8 +245,9 @@ void ArchiveFactory_SelfNCCH::Register(Loader::AppLoader& app_loader) {
               program_id);
 
     if (ncch_data.find(program_id) != ncch_data.end()) {
-        LOG_WARNING(Service_FS, "Registering program %016" PRIX64
-                                " with SelfNCCH will override existing mapping",
+        LOG_WARNING(Service_FS,
+                    "Registering program %016" PRIX64
+                    " with SelfNCCH will override existing mapping",
                     program_id);
     }
 
@@ -260,9 +261,9 @@ void ArchiveFactory_SelfNCCH::Register(Loader::AppLoader& app_loader) {
     }
 
     std::shared_ptr<FileUtil::IOFile> update_romfs_file;
-    if (Loader::ResultStatus::Success ==
-        app_loader.ReadUpdateRomFS(update_romfs_file, data.update_romfs_offset,
-                                   data.update_romfs_size)) {
+    if (Loader::ResultStatus::Success == app_loader.ReadUpdateRomFS(update_romfs_file,
+                                                                    data.update_romfs_offset,
+                                                                    data.update_romfs_size)) {
 
         data.update_romfs_file = std::move(update_romfs_file);
     }

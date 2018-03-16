@@ -398,7 +398,7 @@ std::array<u32, N> RequestParser::PopHLEHandles() {
 }
 
 inline Kernel::SharedPtr<Kernel::Object> RequestParser::PopGenericObject() {
-    auto[handle] = PopHLEHandles<1>();
+    auto [handle] = PopHLEHandles<1>();
     return context->GetIncomingHandle(handle);
 }
 

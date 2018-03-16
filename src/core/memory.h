@@ -37,9 +37,6 @@ enum class PageType {
     RasterizerCachedMemory,
     /// Page is mapped to a I/O region. Writing and reading to this page is handled by functions.
     Special,
-    /// Page is mapped to a I/O region, but also needs to check for rasterizer cache flushing and
-    /// invalidation
-    RasterizerCachedSpecial,
 };
 
 struct SpecialRegion {

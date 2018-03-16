@@ -165,10 +165,6 @@ T Read(const VAddr vaddr) {
     }
     case PageType::Special:
         return ReadMMIO<T>(GetMMIOHandler(vaddr), vaddr);
-    case PageType::RasterizerCachedSpecial: {
-        RasterizerFlushVirtualRegion(vaddr, sizeof(T), FlushMode::Flush);
-        return ReadMMIO<T>(GetMMIOHandler(vaddr), vaddr);
-    }
     default:
         UNREACHABLE();
     }
@@ -206,11 +202,6 @@ void Write(const VAddr vaddr, const T data) {
     case PageType::Special:
         WriteMMIO<T>(GetMMIOHandler(vaddr), vaddr, data);
         break;
-    case PageType::RasterizerCachedSpecial: {
-        RasterizerFlushVirtualRegion(vaddr, sizeof(T), FlushMode::Invalidate);
-        WriteMMIO<T>(GetMMIOHandler(vaddr), vaddr, data);
-        break;
-    }
     default:
         UNREACHABLE();
     }
@@ -367,9 +358,6 @@ void RasterizerMarkRegionCached(PAddr start, u32 size, bool cached) {
                 page_type = PageType::RasterizerCachedMemory;
                 current_page_table->pointers[vaddr >> PAGE_BITS] = nullptr;
                 break;
-            case PageType::Special:
-                page_type = PageType::RasterizerCachedSpecial;
-                break;
             default:
                 UNREACHABLE();
             }
@@ -393,9 +381,6 @@ void RasterizerMarkRegionCached(PAddr start, u32 size, bool cached) {
                 }
                 break;
             }
-            case PageType::RasterizerCachedSpecial:
-                page_type = PageType::Special;
-                break;
             default:
                 UNREACHABLE();
             }
@@ -523,14 +508,6 @@ void ReadBlock(const Kernel::Process& process, const VAddr src_addr, void* dest_
             std::memcpy(dest_buffer, GetPointerFromVMA(process, current_vaddr), copy_amount);
             break;
         }
-        case PageType::RasterizerCachedSpecial: {
-            MMIORegionPointer handler = GetMMIOHandler(page_table, current_vaddr);
-            DEBUG_ASSERT(handler);
-            RasterizerFlushVirtualRegion(current_vaddr, static_cast<u32>(copy_amount),
-                                         FlushMode::Flush);
-            handler->ReadBlock(current_vaddr, dest_buffer, copy_amount);
-            break;
-        }
         default:
             UNREACHABLE();
         }
@@ -599,14 +576,6 @@ void WriteBlock(const Kernel::Process& process, const VAddr dest_addr, const voi
             std::memcpy(GetPointerFromVMA(process, current_vaddr), src_buffer, copy_amount);
             break;
         }
-        case PageType::RasterizerCachedSpecial: {
-            MMIORegionPointer handler = GetMMIOHandler(page_table, current_vaddr);
-            DEBUG_ASSERT(handler);
-            RasterizerFlushVirtualRegion(current_vaddr, static_cast<u32>(copy_amount),
-                                         FlushMode::Invalidate);
-            handler->WriteBlock(current_vaddr, src_buffer, copy_amount);
-            break;
-        }
         default:
             UNREACHABLE();
         }
@@ -659,14 +628,6 @@ void ZeroBlock(const Kernel::Process& process, const VAddr dest_addr, const size
             std::memset(GetPointerFromVMA(process, current_vaddr), 0, copy_amount);
             break;
         }
-        case PageType::RasterizerCachedSpecial: {
-            MMIORegionPointer handler = GetMMIOHandler(page_table, current_vaddr);
-            DEBUG_ASSERT(handler);
-            RasterizerFlushVirtualRegion(current_vaddr, static_cast<u32>(copy_amount),
-                                         FlushMode::Invalidate);
-            handler->WriteBlock(current_vaddr, zeros.data(), copy_amount);
-            break;
-        }
         default:
             UNREACHABLE();
         }
@@ -716,17 +677,6 @@ void CopyBlock(const Kernel::Process& process, VAddr dest_addr, VAddr src_addr, 
             RasterizerFlushVirtualRegion(current_vaddr, static_cast<u32>(copy_amount),
                                          FlushMode::Flush);
             WriteBlock(process, dest_addr, GetPointerFromVMA(process, current_vaddr), copy_amount);
-            break;
-        }
-        case PageType::RasterizerCachedSpecial: {
-            MMIORegionPointer handler = GetMMIOHandler(page_table, current_vaddr);
-            DEBUG_ASSERT(handler);
-            RasterizerFlushVirtualRegion(current_vaddr, static_cast<u32>(copy_amount),
-                                         FlushMode::Flush);
-
-            std::vector<u8> buffer(copy_amount);
-            handler->ReadBlock(current_vaddr, buffer.data(), buffer.size());
-            WriteBlock(process, dest_addr, buffer.data(), buffer.size());
             break;
         }
         default:

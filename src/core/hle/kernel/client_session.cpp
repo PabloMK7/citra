@@ -52,4 +52,4 @@ ResultCode ClientSession::SendSyncRequest(SharedPtr<Thread> thread) {
     return server->HandleSyncRequest(std::move(thread));
 }
 
-} // namespace
+} // namespace Kernel

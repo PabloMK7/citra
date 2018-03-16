@@ -306,8 +306,9 @@ void Module::Interface::SendParameter(Kernel::HLERequestContext& ctx) {
     Kernel::SharedPtr<Kernel::Object> object = rp.PopGenericObject();
     std::vector<u8> buffer = rp.PopStaticBuffer();
 
-    LOG_DEBUG(Service_APT, "called src_app_id=0x%08X, dst_app_id=0x%08X, signal_type=0x%08X,"
-                           "buffer_size=0x%08X",
+    LOG_DEBUG(Service_APT,
+              "called src_app_id=0x%08X, dst_app_id=0x%08X, signal_type=0x%08X,"
+              "buffer_size=0x%08X",
               static_cast<u32>(src_app_id), static_cast<u32>(dst_app_id),
               static_cast<u32>(signal_type), buffer_size);
 
@@ -392,8 +393,9 @@ void Module::Interface::CancelParameter(Kernel::HLERequestContext& ctx) {
     rb.Push(apt->applet_manager->CancelParameter(check_sender, sender_appid, check_receiver,
                                                  receiver_appid));
 
-    LOG_DEBUG(Service_APT, "called check_sender=%u, sender_appid=0x%08X, "
-                           "check_receiver=%u, receiver_appid=0x%08X",
+    LOG_DEBUG(Service_APT,
+              "called check_sender=%u, sender_appid=0x%08X, "
+              "check_receiver=%u, receiver_appid=0x%08X",
               check_sender, static_cast<u32>(sender_appid), check_receiver,
               static_cast<u32>(receiver_appid));
 }

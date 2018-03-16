@@ -73,4 +73,4 @@ void Shutdown() {
     LOG_DEBUG(HW_LCD, "shutdown OK");
 }
 
-} // namespace
+} // namespace LCD

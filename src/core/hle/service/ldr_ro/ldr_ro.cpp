@@ -195,10 +195,11 @@ void RO::LoadCRO(Kernel::HLERequestContext& ctx, bool link_on_load_bug_fix) {
     VAddr crr_address = rp.Pop<u32>();
     auto process = rp.PopObject<Kernel::Process>();
 
-    LOG_DEBUG(Service_LDR, "called (%s), cro_buffer_ptr=0x%08X, cro_address=0x%08X, cro_size=0x%X, "
-                           "data_segment_address=0x%08X, zero=%d, data_segment_size=0x%X, "
-                           "bss_segment_address=0x%08X, bss_segment_size=0x%X, auto_link=%s, "
-                           "fix_level=%d, crr_address=0x%08X",
+    LOG_DEBUG(Service_LDR,
+              "called (%s), cro_buffer_ptr=0x%08X, cro_address=0x%08X, cro_size=0x%X, "
+              "data_segment_address=0x%08X, zero=%d, data_segment_size=0x%X, "
+              "bss_segment_address=0x%08X, bss_segment_size=0x%X, auto_link=%s, "
+              "fix_level=%d, crr_address=0x%08X",
               link_on_load_bug_fix ? "new" : "old", cro_buffer_ptr, cro_address, cro_size,
               data_segment_address, zero, data_segment_size, bss_segment_address, bss_segment_size,
               auto_link ? "true" : "false", fix_level, crr_address);

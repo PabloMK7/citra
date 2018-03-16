@@ -17,9 +17,9 @@
 #include "video_core/regs_rasterizer.h"
 #include "video_core/regs_shader.h"
 
+using nihstro::DestRegister;
 using nihstro::RegisterType;
 using nihstro::SourceRegister;
-using nihstro::DestRegister;
 
 namespace Pica {
 

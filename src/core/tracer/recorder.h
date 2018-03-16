@@ -63,9 +63,9 @@ private:
         CTStreamElement data;
 
         /**
-          * Extra data to store along "core" data.
-          * This is e.g. used for data used in MemoryUpdates.
-          */
+         * Extra data to store along "core" data.
+         * This is e.g. used for data used in MemoryUpdates.
+         */
         std::vector<u8> extra_data;
 
         /// Optional CRC hash (e.g. for hashing memory regions)
@@ -84,4 +84,4 @@ private:
     std::unordered_map<boost::crc_32_type::value_type /*hash*/, u32 /*file_offset*/> memory_regions;
 };
 
-} // namespace
+} // namespace CiTrace

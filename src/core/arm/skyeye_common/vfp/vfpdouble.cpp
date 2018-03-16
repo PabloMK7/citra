@@ -58,7 +58,9 @@
 #include "core/arm/skyeye_common/vfp/vfp_helper.h"
 
 static struct vfp_double vfp_double_default_qnan = {
-    2047, 0, VFP_DOUBLE_SIGNIFICAND_QNAN,
+    2047,
+    0,
+    VFP_DOUBLE_SIGNIFICAND_QNAN,
 };
 
 static void vfp_double_dump(const char* str, struct vfp_double* d) {

@@ -22,7 +22,7 @@ template <typename Func>
 ScopeExitHelper<Func> ScopeExit(Func&& func) {
     return ScopeExitHelper<Func>(std::move(func));
 }
-}
+} // namespace detail
 
 /**
  * This macro allows you to conveniently specify a block of code that will run on scope exit. Handy

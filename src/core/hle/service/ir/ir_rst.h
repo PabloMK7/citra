@@ -16,7 +16,7 @@
 namespace Kernel {
 class Event;
 class SharedMemory;
-}
+} // namespace Kernel
 
 namespace CoreTiming {
 class EventType;

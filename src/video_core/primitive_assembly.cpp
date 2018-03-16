@@ -74,4 +74,4 @@ void PrimitiveAssembler<VertexType>::Reconfigure(PipelineRegs::TriangleTopology 
 // explicitly instantiate use cases
 template struct PrimitiveAssembler<Shader::OutputVertex>;
 
-} // namespace
+} // namespace Pica

@@ -12,12 +12,12 @@ struct AccelerometerDataEntry;
 struct GyroscopeDataEntry;
 struct PadState;
 struct TouchDataEntry;
-}
+} // namespace HID
 namespace IR {
 struct ExtraHIDResponse;
 union PadState;
-}
-}
+} // namespace IR
+} // namespace Service
 
 namespace Core {
 struct CTMHeader;
@@ -27,9 +27,9 @@ enum class PlayMode;
 class Movie {
 public:
     /**
-    * Gets the instance of the Movie singleton class.
-    * @returns Reference to the instance of the Movie singleton class.
-    */
+     * Gets the instance of the Movie singleton class.
+     * @returns Reference to the instance of the Movie singleton class.
+     */
     static Movie& GetInstance() {
         return s_instance;
     }
@@ -46,33 +46,33 @@ public:
                                   s16& circle_pad_y);
 
     /**
-    * When recording: Takes a copy of the given input states so they can be used for playback
-    * When playing: Replaces the given input states with the ones stored in the playback file
-    */
+     * When recording: Takes a copy of the given input states so they can be used for playback
+     * When playing: Replaces the given input states with the ones stored in the playback file
+     */
     void HandleTouchStatus(Service::HID::TouchDataEntry& touch_data);
 
     /**
-    * When recording: Takes a copy of the given input states so they can be used for playback
-    * When playing: Replaces the given input states with the ones stored in the playback file
-    */
+     * When recording: Takes a copy of the given input states so they can be used for playback
+     * When playing: Replaces the given input states with the ones stored in the playback file
+     */
     void HandleAccelerometerStatus(Service::HID::AccelerometerDataEntry& accelerometer_data);
 
     /**
-    * When recording: Takes a copy of the given input states so they can be used for playback
-    * When playing: Replaces the given input states with the ones stored in the playback file
-    */
+     * When recording: Takes a copy of the given input states so they can be used for playback
+     * When playing: Replaces the given input states with the ones stored in the playback file
+     */
     void HandleGyroscopeStatus(Service::HID::GyroscopeDataEntry& gyroscope_data);
 
     /**
-    * When recording: Takes a copy of the given input states so they can be used for playback
-    * When playing: Replaces the given input states with the ones stored in the playback file
-    */
+     * When recording: Takes a copy of the given input states so they can be used for playback
+     * When playing: Replaces the given input states with the ones stored in the playback file
+     */
     void HandleIrRst(Service::IR::PadState& pad_state, s16& c_stick_x, s16& c_stick_y);
 
     /**
-    * When recording: Takes a copy of the given input states so they can be used for playback
-    * When playing: Replaces the given input states with the ones stored in the playback file
-    */
+     * When recording: Takes a copy of the given input states so they can be used for playback
+     * When playing: Replaces the given input states with the ones stored in the playback file
+     */
     void HandleExtraHidResponse(Service::IR::ExtraHIDResponse& extra_hid_response);
 
 private:

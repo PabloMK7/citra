@@ -97,4 +97,4 @@ struct CTStreamElement {
 };
 
 #pragma pack()
-}
+} // namespace CiTrace
