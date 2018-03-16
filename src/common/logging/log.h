@@ -142,9 +142,9 @@ void LogMessage(Class log_class, Level log_level, const char* filename, unsigned
 /// Logs a message to the global logger, this time with 100% moar fmtlib
 template <typename... Args>
 void FmtLogMessage(Class log_class, Level log_level, const char* filename, unsigned int line_num,
-                   const char* function, const char* format, const Args & ... args) {
-    Entry entry =
-        CreateEntry(log_class, log_level, filename, line_num, function, fmt::format(format, args...));
+                   const char* function, const char* format, const Args&... args) {
+    Entry entry = CreateEntry(log_class, log_level, filename, line_num, function,
+                              fmt::format(format, args...));
 
     LogEntry(entry);
 }
@@ -195,4 +195,4 @@ void FmtLogMessage(Class log_class, Level log_level, const char* filename, unsig
                          __func__, fmt, ##__VA_ARGS__)
 #define NGLOG_CRITICAL(log_class, fmt, ...)                                                        \
     ::Log::FmtLogMessage(::Log::Class::log_class, ::Log::Level::Critical, __FILE__, __LINE__,      \
-__func__, fmt, ##__VA_ARGS__)
+                         __func__, fmt, ##__VA_ARGS__)
