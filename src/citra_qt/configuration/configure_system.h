@@ -11,6 +11,12 @@ namespace Ui {
 class ConfigureSystem;
 }
 
+namespace Service {
+namespace CFG {
+class Module;
+} // namespace CFG
+} // namespace Service
+
 class ConfigureSystem : public QWidget {
     Q_OBJECT
 
@@ -32,6 +38,7 @@ private:
     std::unique_ptr<Ui::ConfigureSystem> ui;
     bool enabled;
 
+    std::shared_ptr<Service::CFG::Module> cfg;
     std::u16string username;
     int birthmonth, birthday;
     int language_index;

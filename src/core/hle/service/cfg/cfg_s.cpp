@@ -2,39 +2,38 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "core/hle/service/cfg/cfg.h"
 #include "core/hle/service/cfg/cfg_s.h"
 
 namespace Service {
 namespace CFG {
 
-const Interface::FunctionInfo FunctionTable[] = {
-    // cfg common
-    {0x00010082, GetConfigInfoBlk2, "GetConfigInfoBlk2"},
-    {0x00020000, SecureInfoGetRegion, "SecureInfoGetRegion"},
-    {0x00030040, GenHashConsoleUnique, "GenHashConsoleUnique"},
-    {0x00040000, GetRegionCanadaUSA, "GetRegionCanadaUSA"},
-    {0x00050000, GetSystemModel, "GetSystemModel"},
-    {0x00060000, GetModelNintendo2DS, "GetModelNintendo2DS"},
-    {0x00070040, nullptr, "WriteToFirstByteCfgSavegame"},
-    {0x00080080, nullptr, "GoThroughTable"},
-    {0x00090040, GetCountryCodeString, "GetCountryCodeString"},
-    {0x000A0040, GetCountryCodeID, "GetCountryCodeID"},
-    {0x000B0000, nullptr, "IsFangateSupported"},
-    // cfg:s
-    {0x04010082, GetConfigInfoBlk8, "GetConfigInfoBlk8"},
-    {0x04020082, SetConfigInfoBlk4, "SetConfigInfoBlk4"},
-    {0x04030000, UpdateConfigNANDSavegame, "UpdateConfigNANDSavegame"},
-    {0x04040042, nullptr, "GetLocalFriendCodeSeedData"},
-    {0x04050000, nullptr, "GetLocalFriendCodeSeed"},
-    {0x04060000, nullptr, "SecureInfoGetRegion"},
-    {0x04070000, nullptr, "SecureInfoGetByte101"},
-    {0x04080042, nullptr, "SecureInfoGetSerialNo"},
-    {0x04090000, nullptr, "UpdateConfigBlk00040003"},
-};
-
-CFG_S::CFG_S() {
-    Register(FunctionTable);
+CFG_S::CFG_S(std::shared_ptr<Module> cfg) : Module::Interface(std::move(cfg), "cfg:s", 23) {
+    static const FunctionInfo functions[] = {
+        // cfg common
+        {0x00010082, &CFG_S::GetConfigInfoBlk2, "GetConfigInfoBlk2"},
+        {0x00020000, &CFG_S::D<&CFG_S::SecureInfoGetRegion, 0x0002>, "SecureInfoGetRegion"},
+        {0x00030040, &CFG_S::GenHashConsoleUnique, "GenHashConsoleUnique"},
+        {0x00040000, &CFG_S::GetRegionCanadaUSA, "GetRegionCanadaUSA"},
+        {0x00050000, &CFG_S::GetSystemModel, "GetSystemModel"},
+        {0x00060000, &CFG_S::GetModelNintendo2DS, "GetModelNintendo2DS"},
+        {0x00070040, nullptr, "WriteToFirstByteCfgSavegame"},
+        {0x00080080, nullptr, "GoThroughTable"},
+        {0x00090040, &CFG_S::GetCountryCodeString, "GetCountryCodeString"},
+        {0x000A0040, &CFG_S::GetCountryCodeID, "GetCountryCodeID"},
+        {0x000B0000, nullptr, "IsFangateSupported"},
+        // cfg:s
+        {0x04010082, &CFG_S::D<&CFG_S::GetConfigInfoBlk8, 0x0401>, "GetConfigInfoBlk8"},
+        {0x04020082, &CFG_S::D<&CFG_S::SetConfigInfoBlk4, 0x0402>, "SetConfigInfoBlk4"},
+        {0x04030000, &CFG_S::D<&CFG_S::UpdateConfigNANDSavegame, 0x0403>,
+         "UpdateConfigNANDSavegame"},
+        {0x04040042, nullptr, "GetLocalFriendCodeSeedData"},
+        {0x04050000, nullptr, "GetLocalFriendCodeSeed"},
+        {0x04060000, &CFG_S::D<&CFG_S::SecureInfoGetRegion, 0x0406>, "SecureInfoGetRegion"},
+        {0x04070000, nullptr, "SecureInfoGetByte101"},
+        {0x04080042, nullptr, "SecureInfoGetSerialNo"},
+        {0x04090000, nullptr, "UpdateConfigBlk00040003"},
+    };
+    RegisterHandlers(functions);
 }
 
 } // namespace CFG

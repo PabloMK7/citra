@@ -9,13 +9,9 @@
 namespace Service {
 namespace CFG {
 
-class CFG_NOR final : public Interface {
+class CFG_NOR final : public ServiceFramework<CFG_NOR> {
 public:
     CFG_NOR();
-
-    std::string GetPortName() const override {
-        return "cfg:nor";
-    }
 };
 
 } // namespace CFG

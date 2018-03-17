@@ -103,7 +103,7 @@ static u32 DecompressLZ11(const u8* in, u8* out) {
 
 bool Module::LoadSharedFont() {
     u8 font_region_code;
-    switch (CFG::GetRegionValue()) {
+    switch (CFG::GetCurrentModule()->GetRegionValue()) {
     case 4: // CHN
         font_region_code = 2;
         break;
