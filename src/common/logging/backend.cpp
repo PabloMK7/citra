@@ -140,7 +140,7 @@ void SetFilter(Filter* new_filter) {
 
 void LogMessage(Class log_class, Level log_level, const char* filename, unsigned int line_num,
                 const char* function, const char* format, ...) {
-    if (!filter->CheckMessage(log_class, log_level))
+    if (filter != nullptr && !filter->CheckMessage(log_class, log_level))
         return;
     std::array<char, 4 * 1024> formatting_buffer;
     va_list args;
