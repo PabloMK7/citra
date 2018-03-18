@@ -40,6 +40,13 @@
 #include "core/settings.h"
 #include "network/network.h"
 
+#ifdef _WIN32
+extern "C" {
+// tells Nvidia drivers to use the dedicated GPU by default on laptops with switchable graphics
+__declspec(dllexport) unsigned long NvOptimusEnablement = 0x00000001;
+}
+#endif
+
 static void PrintHelp(const char* argv0) {
     std::cout << "Usage: " << argv0
               << " [options] <filename>\n"
