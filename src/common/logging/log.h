@@ -99,33 +99,6 @@ enum class Class : ClassType {
     Count              ///< Total number of logging classes
 };
 
-/**
- * A log entry. Log entries are store in a structured format to permit more varied output
- * formatting on different frontends, as well as facilitating filtering and aggregation.
- */
-struct Entry {
-    std::chrono::microseconds timestamp;
-    Class log_class;
-    Level log_level;
-    std::string filename;
-    unsigned int line_num;
-    std::string function;
-    std::string message;
-
-    Entry() = default;
-    Entry(Entry&& o) = default;
-
-    Entry& operator=(Entry&& o) = default;
-    Entry& operator=(const Entry& o) = default;
-};
-
-/// Creates a log entry by formatting the given source location, and message.
-Entry CreateEntry(Class log_class, Level log_level, const char* filename, unsigned int line_nr,
-                  const char* function, std::string message);
-
-// Logs an Entry
-void LogEntry(Entry& entry);
-
 /// Logs a message to the global logger.
 void LogMessage(Class log_class, Level log_level, const char* filename, unsigned int line_num,
                 const char* function,
@@ -139,14 +112,14 @@ void LogMessage(Class log_class, Level log_level, const char* filename, unsigned
 #endif
     ;
 
-/// Logs a message to the global logger, this time with 100% moar fmtlib
+/// Logs a message to the global logger, using fmt
+void LogMessage(Class log_class, Level log_level, const char* filename, unsigned int line_num,
+                const char* function, const char* format, const fmt::format_args& args);
+
 template <typename... Args>
 void FmtLogMessage(Class log_class, Level log_level, const char* filename, unsigned int line_num,
                    const char* function, const char* format, const Args&... args) {
-    Entry entry = CreateEntry(log_class, log_level, filename, line_num, function,
-                              fmt::format(format, args...));
-
-    LogEntry(entry);
+    LogMessage(log_class, log_level, filename, line_num, function, format, fmt::make_args(args...));
 }
 
 } // namespace Log
