@@ -165,6 +165,8 @@ add_definitions(-DSINGLETHREADED)
 set_property(DIRECTORY APPEND PROPERTY
     COMPILE_DEFINITIONS $<$<CONFIG:Debug>:_DEBUG> $<$<NOT:$<CONFIG:Debug>>:NDEBUG>)
 
+math(EXPR EMU_ARCH_BITS ${CMAKE_SIZEOF_VOID_P}*8)
+add_definitions(-DEMU_ARCH_BITS=${EMU_ARCH_BITS})
 
 # System imported libraries
 # ======================

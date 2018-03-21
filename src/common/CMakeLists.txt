@@ -60,7 +60,6 @@ add_library(common STATIC
     misc.cpp
     param_package.cpp
     param_package.h
-    platform.h
     quaternion.h
     scm_rev.cpp
     scm_rev.h
