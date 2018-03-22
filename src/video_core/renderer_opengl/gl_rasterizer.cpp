@@ -30,7 +30,8 @@ MICROPROFILE_DEFINE(OpenGL_Drawing, "OpenGL", "Drawing", MP_RGB(128, 128, 192));
 MICROPROFILE_DEFINE(OpenGL_Blits, "OpenGL", "Blits", MP_RGB(100, 100, 255));
 MICROPROFILE_DEFINE(OpenGL_CacheManagement, "OpenGL", "Cache Mgmt", MP_RGB(100, 255, 100));
 
-RasterizerOpenGL::RasterizerOpenGL() : shader_dirty(true) {
+RasterizerOpenGL::RasterizerOpenGL()
+    : shader_dirty(true), vertex_buffer(GL_ARRAY_BUFFER, VERTEX_BUFFER_SIZE) {
     // Clipping plane 0 is always enabled for PICA fixed clip plane z <= 0
     state.clip_distance[0] = true;
 
@@ -46,13 +47,11 @@ RasterizerOpenGL::RasterizerOpenGL() : shader_dirty(true) {
     texture_cube.Create();
 
     // Generate VBO, VAO and UBO
-    vertex_buffer = OGLStreamBuffer::MakeBuffer(GLAD_GL_ARB_buffer_storage, GL_ARRAY_BUFFER);
-    vertex_buffer->Create(VERTEX_BUFFER_SIZE, VERTEX_BUFFER_SIZE / 2);
     vertex_array.Create();
     uniform_buffer.Create();
 
     state.draw.vertex_array = vertex_array.handle;
-    state.draw.vertex_buffer = vertex_buffer->GetHandle();
+    state.draw.vertex_buffer = vertex_buffer.GetHandle();
     state.draw.uniform_buffer = uniform_buffer.handle;
     state.Apply();
 
@@ -499,14 +498,16 @@ void RasterizerOpenGL::DrawTriangles() {
     state.Apply();
 
     // Draw the vertex batch
-    size_t max_vertices = 3 * (VERTEX_BUFFER_SIZE / (3 * sizeof(HardwareVertex)));
+    size_t max_vertices = 3 * (vertex_buffer.GetSize() / (3 * sizeof(HardwareVertex)));
     for (size_t base_vertex = 0; base_vertex < vertex_batch.size(); base_vertex += max_vertices) {
         size_t vertices = std::min(max_vertices, vertex_batch.size() - base_vertex);
         size_t vertex_size = vertices * sizeof(HardwareVertex);
-        auto map = vertex_buffer->Map(vertex_size, 1);
-        memcpy(map.first, vertex_batch.data() + base_vertex, vertex_size);
-        vertex_buffer->Unmap();
-        glDrawArrays(GL_TRIANGLES, map.second / sizeof(HardwareVertex), (GLsizei)vertices);
+        u8* vbo;
+        GLintptr offset;
+        std::tie(vbo, offset, std::ignore) = vertex_buffer.Map(vertex_size, sizeof(HardwareVertex));
+        memcpy(vbo, vertex_batch.data() + base_vertex, vertex_size);
+        vertex_buffer.Unmap(vertex_size);
+        glDrawArrays(GL_TRIANGLES, offset / sizeof(HardwareVertex), (GLsizei)vertices);
     }
 
     // Disable scissor test

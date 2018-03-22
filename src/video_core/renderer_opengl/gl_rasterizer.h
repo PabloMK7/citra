@@ -239,8 +239,8 @@ private:
 
     std::array<SamplerInfo, 3> texture_samplers;
     OGLVertexArray vertex_array;
-    static constexpr size_t VERTEX_BUFFER_SIZE = 128 * 1024 * 1024;
-    std::unique_ptr<OGLStreamBuffer> vertex_buffer;
+    static constexpr size_t VERTEX_BUFFER_SIZE = 32 * 1024 * 1024;
+    OGLStreamBuffer vertex_buffer;
     OGLBuffer uniform_buffer;
     OGLFramebuffer framebuffer;
 

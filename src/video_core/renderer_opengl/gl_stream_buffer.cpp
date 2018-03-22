@@ -9,174 +9,81 @@
 #include "video_core/renderer_opengl/gl_state.h"
 #include "video_core/renderer_opengl/gl_stream_buffer.h"
 
-class OrphanBuffer : public OGLStreamBuffer {
-public:
-    explicit OrphanBuffer(GLenum target) : OGLStreamBuffer(target) {}
-    ~OrphanBuffer() override;
+OGLStreamBuffer::OGLStreamBuffer(GLenum target, GLsizeiptr size, bool prefer_coherent)
+    : gl_target(target), buffer_size(size) {
+    gl_buffer.Create();
+    glBindBuffer(gl_target, gl_buffer.handle);
 
-private:
-    void Create(size_t size, size_t sync_subdivide) override;
-    void Release() override;
+    if (GLAD_GL_ARB_buffer_storage) {
+        persistent = true;
+        coherent = prefer_coherent;
+        GLbitfield flags =
+            GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | (coherent ? GL_MAP_COHERENT_BIT : 0);
+        glBufferStorage(gl_target, buffer_size, nullptr, flags);
+        mapped_ptr = static_cast<u8*>(glMapBufferRange(
+            gl_target, 0, buffer_size, flags | (coherent ? 0 : GL_MAP_FLUSH_EXPLICIT_BIT)));
+    } else {
+        glBufferData(gl_target, buffer_size, nullptr, GL_STREAM_DRAW);
+    }
+}
 
-    std::pair<u8*, GLintptr> Map(size_t size, size_t alignment) override;
-    void Unmap() override;
-
-    std::vector<u8> data;
-};
-
-class StorageBuffer : public OGLStreamBuffer {
-public:
-    explicit StorageBuffer(GLenum target) : OGLStreamBuffer(target) {}
-    ~StorageBuffer() override;
-
-private:
-    void Create(size_t size, size_t sync_subdivide) override;
-    void Release() override;
-
-    std::pair<u8*, GLintptr> Map(size_t size, size_t alignment) override;
-    void Unmap() override;
-
-    struct Fence {
-        OGLSync sync;
-        size_t offset;
-    };
-    std::deque<Fence> head;
-    std::deque<Fence> tail;
-
-    u8* mapped_ptr;
-};
-
-OGLStreamBuffer::OGLStreamBuffer(GLenum target) {
-    gl_target = target;
+OGLStreamBuffer::~OGLStreamBuffer() {
+    if (persistent) {
+        glBindBuffer(gl_target, gl_buffer.handle);
+        glUnmapBuffer(gl_target);
+    }
+    gl_buffer.Release();
 }
 
 GLuint OGLStreamBuffer::GetHandle() const {
     return gl_buffer.handle;
 }
 
-std::unique_ptr<OGLStreamBuffer> OGLStreamBuffer::MakeBuffer(bool storage_buffer, GLenum target) {
-    if (storage_buffer) {
-        return std::make_unique<StorageBuffer>(target);
-    }
-    return std::make_unique<OrphanBuffer>(target);
+GLsizeiptr OGLStreamBuffer::GetSize() const {
+    return buffer_size;
 }
 
-OrphanBuffer::~OrphanBuffer() {
-    Release();
-}
-
-void OrphanBuffer::Create(size_t size, size_t /*sync_subdivide*/) {
-    buffer_pos = 0;
-    buffer_size = size;
-    data.resize(buffer_size);
-
-    if (gl_buffer.handle == 0) {
-        gl_buffer.Create();
-        glBindBuffer(gl_target, gl_buffer.handle);
-    }
-
-    glBufferData(gl_target, static_cast<GLsizeiptr>(buffer_size), nullptr, GL_STREAM_DRAW);
-}
-
-void OrphanBuffer::Release() {
-    gl_buffer.Release();
-}
-
-std::pair<u8*, GLintptr> OrphanBuffer::Map(size_t size, size_t alignment) {
-    buffer_pos = Common::AlignUp(buffer_pos, alignment);
-
-    if (buffer_pos + size > buffer_size) {
-        Create(std::max(buffer_size, size), 0);
-    }
-
-    mapped_size = size;
-    return std::make_pair(&data[buffer_pos], static_cast<GLintptr>(buffer_pos));
-}
-
-void OrphanBuffer::Unmap() {
-    glBufferSubData(gl_target, static_cast<GLintptr>(buffer_pos),
-                    static_cast<GLsizeiptr>(mapped_size), &data[buffer_pos]);
-    buffer_pos += mapped_size;
-}
-
-StorageBuffer::~StorageBuffer() {
-    Release();
-}
-
-void StorageBuffer::Create(size_t size, size_t sync_subdivide) {
-    if (gl_buffer.handle != 0)
-        return;
-
-    buffer_pos = 0;
-    buffer_size = size;
-    buffer_sync_subdivide = std::max<size_t>(sync_subdivide, 1);
-
-    gl_buffer.Create();
-    glBindBuffer(gl_target, gl_buffer.handle);
-
-    glBufferStorage(gl_target, static_cast<GLsizeiptr>(buffer_size), nullptr,
-                    GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT);
-    mapped_ptr = reinterpret_cast<u8*>(
-        glMapBufferRange(gl_target, 0, static_cast<GLsizeiptr>(buffer_size),
-                         GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_FLUSH_EXPLICIT_BIT));
-}
-
-void StorageBuffer::Release() {
-    if (gl_buffer.handle == 0)
-        return;
-
-    glUnmapBuffer(gl_target);
-
-    gl_buffer.Release();
-    head.clear();
-    tail.clear();
-}
-
-std::pair<u8*, GLintptr> StorageBuffer::Map(size_t size, size_t alignment) {
+std::tuple<u8*, GLintptr, bool> OGLStreamBuffer::Map(GLsizeiptr size, GLintptr alignment) {
     ASSERT(size <= buffer_size);
-
-    OGLSync sync;
-
-    buffer_pos = Common::AlignUp(buffer_pos, alignment);
-    size_t effective_offset = Common::AlignDown(buffer_pos, buffer_sync_subdivide);
-
-    if (!head.empty() &&
-        (effective_offset > head.back().offset || buffer_pos + size > buffer_size)) {
-        ASSERT(head.back().sync.handle == 0);
-        head.back().sync.Create();
-    }
-
-    if (buffer_pos + size > buffer_size) {
-        if (!tail.empty()) {
-            std::swap(sync, tail.back().sync);
-            tail.clear();
-        }
-        std::swap(tail, head);
-        buffer_pos = 0;
-        effective_offset = 0;
-    }
-
-    while (!tail.empty() && buffer_pos + size > tail.front().offset) {
-        std::swap(sync, tail.front().sync);
-        tail.pop_front();
-    }
-
-    if (sync.handle != 0) {
-        glClientWaitSync(sync.handle, GL_SYNC_FLUSH_COMMANDS_BIT, GL_TIMEOUT_IGNORED);
-        sync.Release();
-    }
-
-    if (head.empty() || effective_offset > head.back().offset) {
-        head.emplace_back();
-        head.back().offset = effective_offset;
-    }
-
+    ASSERT(alignment <= buffer_size);
     mapped_size = size;
-    return std::make_pair(&mapped_ptr[buffer_pos], static_cast<GLintptr>(buffer_pos));
+
+    if (alignment > 0) {
+        buffer_pos = Common::AlignUp<size_t>(buffer_pos, alignment);
+    }
+
+    bool invalidate = false;
+    if (buffer_pos + size > buffer_size) {
+        buffer_pos = 0;
+        invalidate = true;
+
+        if (persistent) {
+            glUnmapBuffer(gl_target);
+        }
+    }
+
+    if (invalidate | !persistent) {
+        GLbitfield flags = GL_MAP_WRITE_BIT | (persistent ? GL_MAP_PERSISTENT_BIT : 0) |
+                           (coherent ? GL_MAP_COHERENT_BIT : GL_MAP_FLUSH_EXPLICIT_BIT) |
+                           (invalidate ? GL_MAP_INVALIDATE_BUFFER_BIT : GL_MAP_UNSYNCHRONIZED_BIT);
+        mapped_ptr = static_cast<u8*>(
+            glMapBufferRange(gl_target, buffer_pos, buffer_size - buffer_pos, flags));
+        mapped_offset = buffer_pos;
+    }
+
+    return std::make_tuple(mapped_ptr + buffer_pos - mapped_offset, buffer_pos, invalidate);
 }
 
-void StorageBuffer::Unmap() {
-    glFlushMappedBufferRange(gl_target, static_cast<GLintptr>(buffer_pos),
-                             static_cast<GLsizeiptr>(mapped_size));
-    buffer_pos += mapped_size;
+void OGLStreamBuffer::Unmap(GLsizeiptr size) {
+    ASSERT(size <= mapped_size);
+
+    if (!coherent) {
+        glFlushMappedBufferRange(gl_target, buffer_pos - mapped_offset, size);
+    }
+
+    if (!persistent) {
+        glUnmapBuffer(gl_target);
+    }
+
+    buffer_pos += size;
 }
