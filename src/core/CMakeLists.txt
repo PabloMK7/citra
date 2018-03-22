@@ -68,6 +68,10 @@ add_library(core STATIC
     file_sys/savedata_archive.h
     file_sys/title_metadata.cpp
     file_sys/title_metadata.h
+    frontend/applet/interface.cpp
+    frontend/applet/interface.h
+    frontend/applet/swkbd.cpp
+    frontend/applet/swkbd.h
     frontend/camera/blank_camera.cpp
     frontend/camera/blank_camera.h
     frontend/camera/factory.cpp

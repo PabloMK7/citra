@@ -96,6 +96,9 @@ struct Values {
     std::string motion_device;
     std::string touch_device;
 
+    // Frontend Devices
+    std::string applet_swkbd;
+
     // Core
     bool use_cpu_jit;
 
