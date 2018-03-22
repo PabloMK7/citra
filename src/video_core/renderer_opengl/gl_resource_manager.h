@@ -225,39 +225,6 @@ public:
     GLuint handle = 0;
 };
 
-class OGLSync : private NonCopyable {
-public:
-    OGLSync() = default;
-
-    OGLSync(OGLSync&& o) : handle(std::exchange(o.handle, nullptr)) {}
-
-    ~OGLSync() {
-        Release();
-    }
-    OGLSync& operator=(OGLSync&& o) {
-        Release();
-        handle = std::exchange(o.handle, nullptr);
-        return *this;
-    }
-
-    /// Creates a new internal OpenGL resource and stores the handle
-    void Create() {
-        if (handle != 0)
-            return;
-        handle = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
-    }
-
-    /// Deletes the internal OpenGL resource
-    void Release() {
-        if (handle == 0)
-            return;
-        glDeleteSync(handle);
-        handle = 0;
-    }
-
-    GLsync handle = 0;
-};
-
 class OGLVertexArray : private NonCopyable {
 public:
     OGLVertexArray() = default;
