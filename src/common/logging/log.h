@@ -4,7 +4,6 @@
 
 #pragma once
 
-#include <chrono>
 #include <fmt/format.h>
 #include "common/common_types.h"
 
