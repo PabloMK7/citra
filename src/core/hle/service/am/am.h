@@ -52,7 +52,10 @@ enum class InstallStatus : u32 {
     ErrorEncrypted,
 };
 
-// Progress callback for InstallCIA, recieves bytes written and total bytes
+// Title ID valid length
+constexpr size_t TITLE_ID_VALID_LENGTH = 16;
+
+// Progress callback for InstallCIA, receives bytes written and total bytes
 using ProgressCallback = void(size_t, size_t);
 
 // A file handled returned for CIAs to be written into and subsequently installed.
