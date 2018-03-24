@@ -26,8 +26,7 @@ install:
   - git submodule update --init --recursive
   - ps: |
         if ($env:BUILD_TYPE -eq 'mingw') {
-          $dependencies = "mingw64/mingw-w64-x86_64-qt5",
-                          "mingw64/mingw-w64-x86_64-curl"
+          $dependencies = "mingw64/mingw-w64-x86_64-qt5"
           # redirect err to null to prevent warnings from becoming errors
           # workaround to prevent pacman from failing due to cyclical dependencies
           C:\msys64\usr\bin\bash -lc "pacman --noconfirm -S mingw64/mingw-w64-x86_64-freetype mingw64/mingw-w64-x86_64-fontconfig" 2> $null
@@ -44,9 +43,9 @@ before_build:
         $COMPAT = if ($env:ENABLE_COMPATIBILITY_REPORTING -eq $null) {0} else {$env:ENABLE_COMPATIBILITY_REPORTING}
         if ($env:BUILD_TYPE -eq 'msvc') {
           # redirect stderr and change the exit code to prevent powershell from cancelling the build if cmake prints a warning
-          cmd /C 'cmake -G "Visual Studio 15 2017 Win64" -DCITRA_USE_BUNDLED_QT=1 -DCITRA_USE_BUNDLED_SDL2=1 -DCMAKE_USE_OPENSSL=0 -DCITRA_ENABLE_COMPATIBILITY_REPORTING=${COMPAT} .. 2>&1 && exit 0'
+          cmd /C 'cmake -G "Visual Studio 15 2017 Win64" -DCITRA_USE_BUNDLED_QT=1 -DCITRA_USE_BUNDLED_SDL2=1 -DCITRA_ENABLE_COMPATIBILITY_REPORTING=${COMPAT} .. 2>&1 && exit 0'
         } else {
-          C:\msys64\usr\bin\bash.exe -lc "cmake -G 'MSYS Makefiles' -DUSE_SYSTEM_CURL=1 -DCITRA_USE_BUNDLED_CURL=1 -DCMAKE_BUILD_TYPE=Release -DENABLE_QT_TRANSLATION=ON -DCITRA_ENABLE_COMPATIBILITY_REPORTING=${COMPAT} .. 2>&1"
+          C:\msys64\usr\bin\bash.exe -lc "cmake -G 'MSYS Makefiles' -DCMAKE_BUILD_TYPE=Release -DENABLE_QT_TRANSLATION=ON -DCITRA_ENABLE_COMPATIBILITY_REPORTING=${COMPAT} .. 2>&1"
         }
   - cd ..
 
@@ -114,14 +113,12 @@ after_build:
 
           # copy the compiled binaries and other release files to the release folder
           Get-ChildItem "$CMAKE_BINARY_DIR" -Recurse -Filter "citra*.exe" | Copy-Item -destination $RELEASE_DIST
-          # copy the libcurl dll
-          Get-ChildItem "$CMAKE_BINARY_DIR" -Recurse -Filter "libcurl.dll" | Copy-Item -destination $RELEASE_DIST
           Copy-Item -path "$CMAKE_SOURCE_DIR/license.txt" -destination $RELEASE_DIST
           Copy-Item -path "$CMAKE_SOURCE_DIR/README.md" -destination $RELEASE_DIST
 
           # copy all the dll dependencies to the release folder
           . "./.appveyor/UtilityFunctions.ps1"
-          $DLLSearchPath = "$CMAKE_BINARY_DIR\externals\curl-7_55_1\lib;C:\msys64\mingw64\bin;$env:PATH"
+          $DLLSearchPath = "C:\msys64\mingw64\bin;$env:PATH"
           $MingwDLLs = RecursivelyGetDeps $DLLSearchPath "$RELEASE_DIST\citra.exe"
           $MingwDLLs += RecursivelyGetDeps $DLLSearchPath  "$RELEASE_DIST\citra-qt.exe"
           Write-Host "Detected the following dependencies:"

@@ -25,9 +25,9 @@
 [submodule "enet"]
     path = externals/enet
     url = https://github.com/lsalzman/enet.git
-[submodule "cpr"]
-    path = externals/cpr
-    url = https://github.com/whoshuu/cpr.git
 [submodule "inih"]
     path = externals/inih/inih
     url = https://github.com/benhoyt/inih.git
+[submodule "libressl"]
+    path = externals/libressl
+    url = https://github.com/citra-emu/ext-libressl-portable.git

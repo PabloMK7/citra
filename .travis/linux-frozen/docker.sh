@@ -3,7 +3,7 @@
 cd /citra
 
 apt-get update
-apt-get install -y build-essential wget git python-launchpadlib libssl-dev
+apt-get install -y build-essential wget git python-launchpadlib
 
 # Install specific versions of packages with their dependencies
 # The apt repositories remove older versions regularly, so we can't use
@@ -12,7 +12,6 @@ apt-get install -y build-essential wget git python-launchpadlib libssl-dev
     libsdl2-dev 2.0.7+dfsg1-3ubuntu1 bionic          \
     qtbase5-dev 5.9.3+dfsg-0ubuntu2 bionic           \
     libqt5opengl5-dev 5.9.3+dfsg-0ubuntu2 bionic     \
-    libcurl4-openssl-dev 7.58.0-2ubuntu1 bionic      \
     libicu57 57.1-6ubuntu0.2 bionic
 
 # Get a recent version of CMake
@@ -21,7 +20,7 @@ echo y | sh cmake-3.10.1-Linux-x86_64.sh --prefix=cmake
 export PATH=/citra/cmake/cmake-3.10.1-Linux-x86_64/bin:$PATH
 
 mkdir build && cd build
-cmake .. -DUSE_SYSTEM_CURL=ON -DCMAKE_BUILD_TYPE=Release -DCITRA_ENABLE_COMPATIBILITY_REPORTING=${ENABLE_COMPATIBILITY_REPORTING:-"OFF"}
+cmake .. -DCMAKE_BUILD_TYPE=Release -DCITRA_ENABLE_COMPATIBILITY_REPORTING=${ENABLE_COMPATIBILITY_REPORTING:-"OFF"}
 make -j4
 
 ctest -VV -C Release

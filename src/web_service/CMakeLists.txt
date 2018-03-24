@@ -11,4 +11,8 @@ add_library(web_service STATIC
 
 create_target_directory_groups(web_service)
 
-target_link_libraries(web_service PUBLIC common cpr json-headers)
+get_directory_property(OPENSSL_LIBS
+        DIRECTORY ${CMAKE_SOURCE_DIR}/externals/libressl
+        DEFINITION OPENSSL_LIBS)
+add_definitions(-DCPPHTTPLIB_OPENSSL_SUPPORT)
+target_link_libraries(web_service PUBLIC common json-headers ${OPENSSL_LIBS} httplib lurlparser)

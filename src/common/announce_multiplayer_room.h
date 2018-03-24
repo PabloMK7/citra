@@ -17,7 +17,7 @@ struct WebResult {
         Success,
         InvalidURL,
         CredentialsMissing,
-        CprError,
+        LibError,
         HttpError,
         WrongContent,
         NoWebservice,
