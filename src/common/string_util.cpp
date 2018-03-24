@@ -189,7 +189,7 @@ bool TryParse(const std::string& str, bool* const output) {
 }
 
 std::string StringFromBool(bool value) {
-    return value ? "True" : "False";
+    return value;
 }
 
 bool SplitPath(const std::string& full_path, std::string* _pPath, std::string* _pFilename,

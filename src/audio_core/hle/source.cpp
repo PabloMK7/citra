@@ -182,14 +182,14 @@ void Source::ParseConfig(SourceConfiguration::Configuration& config,
             play_position,
             false,
         });
-        NGLOG_TRACE(Audio_DSP, "enqueuing embedded addr={0:#010x} len={} id={} start={}",
+        NGLOG_TRACE(Audio_DSP, "enqueuing embedded addr={:#010x} len={} id={} start={}",
                     config.physical_address, config.length, config.buffer_id,
                     static_cast<u32>(config.play_position));
     }
 
     if (config.loop_related_dirty && config.loop_related != 0) {
         config.loop_related_dirty.Assign(0);
-        NGLOG_WARNING(Audio_DSP, "Unhandled complex loop with loop_related={0:#010x}",
+        NGLOG_WARNING(Audio_DSP, "Unhandled complex loop with loop_related={:#010x}",
                       static_cast<u32>(config.loop_related));
     }
 
@@ -212,7 +212,7 @@ void Source::ParseConfig(SourceConfiguration::Configuration& config,
                     {}, // 0 in u32_dsp
                     false,
                 });
-                NGLOG_TRACE(Audio_DSP, "enqueuing queued {} addr={0:#010x} len={} id={}", i,
+                NGLOG_TRACE(Audio_DSP, "enqueuing queued {} addr={:#010x} len={} id={}", i,
                             b.physical_address, b.length, b.buffer_id);
             }
         }
@@ -220,7 +220,7 @@ void Source::ParseConfig(SourceConfiguration::Configuration& config,
     }
 
     if (config.dirty_raw) {
-        NGLOG_DEBUG(Audio_DSP, "source_id={} remaining_dirty={}", source_id, config.dirty_raw);
+        NGLOG_DEBUG(Audio_DSP, "source_id={} remaining_dirty={:x}", source_id, config.dirty_raw);
     }
 
     config.dirty_raw = 0;
@@ -305,7 +305,7 @@ bool Source::DequeueBuffer() {
         }
     } else {
         NGLOG_WARNING(Audio_DSP,
-                      "source_id={} buffer_id={} length={}: Invalid physical address {0:#010x}",
+                      "source_id={} buffer_id={} length={}: Invalid physical address {:#010x}",
                       source_id, buf.buffer_id, buf.length, buf.physical_address);
         state.current_buffer.clear();
         return true;
@@ -323,7 +323,7 @@ bool Source::DequeueBuffer() {
     }
 
     NGLOG_TRACE(Audio_DSP, "source_id={} buffer_id={} from_queue={} current_buffer.size()={}",
-                source_id, buf.buffer_id, buf.from_queue ? "true" : "false",
+                source_id, buf.buffer_id, buf.from_queue,
                 state.current_buffer.size());
     return true;
 }

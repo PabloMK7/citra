@@ -80,7 +80,7 @@ void Mixers::ParseConfig(DspConfiguration& config) {
     }
 
     if (config.dirty_raw) {
-        NGLOG_DEBUG(Audio_DSP, "mixers remaining_dirty={}", config.dirty_raw);
+        NGLOG_DEBUG(Audio_DSP, "mixers remaining_dirty={:x}", config.dirty_raw);
     }
 
     config.dirty_raw = 0;

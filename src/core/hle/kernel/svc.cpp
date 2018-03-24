@@ -827,7 +827,7 @@ static ResultCode CreateMutex(Handle* out_handle, u32 initial_locked) {
     CASCADE_RESULT(*out_handle, g_handle_table.Create(std::move(mutex)));
 
     LOG_TRACE(Kernel_SVC, "called initial_locked=%s : created handle=0x%08X",
-              initial_locked ? "true" : "false", *out_handle);
+              initial_locked, *out_handle);
 
     return RESULT_SUCCESS;
 }
