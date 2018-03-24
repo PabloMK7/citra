@@ -323,8 +323,7 @@ bool Source::DequeueBuffer() {
     }
 
     NGLOG_TRACE(Audio_DSP, "source_id={} buffer_id={} from_queue={} current_buffer.size()={}",
-                source_id, buf.buffer_id, buf.from_queue,
-                state.current_buffer.size());
+                source_id, buf.buffer_id, buf.from_queue, state.current_buffer.size());
     return true;
 }
 

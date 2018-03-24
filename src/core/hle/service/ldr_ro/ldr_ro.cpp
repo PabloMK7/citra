@@ -202,7 +202,7 @@ void RO::LoadCRO(Kernel::HLERequestContext& ctx, bool link_on_load_bug_fix) {
               "fix_level=%d, crr_address=0x%08X",
               link_on_load_bug_fix ? "new" : "old", cro_buffer_ptr, cro_address, cro_size,
               data_segment_address, zero, data_segment_size, bss_segment_address, bss_segment_size,
-              auto_link, fix_level, crr_address);
+              auto_link ? "true" : "false", fix_level, crr_address);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
 
