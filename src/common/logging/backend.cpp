@@ -11,6 +11,7 @@
 #include "common/logging/filter.h"
 #include "common/logging/log.h"
 #include "common/logging/text_formatter.h"
+#include "common/string_util.h"
 
 namespace Log {
 
@@ -113,25 +114,20 @@ const char* GetLevelName(Level log_level) {
 }
 
 Entry CreateEntry(Class log_class, Level log_level, const char* filename, unsigned int line_nr,
-                  const char* function, const char* format, va_list args) {
+                  const char* function, std::string message) {
     using std::chrono::duration_cast;
     using std::chrono::steady_clock;
 
     static steady_clock::time_point time_origin = steady_clock::now();
 
-    std::array<char, 4 * 1024> formatting_buffer;
-
     Entry entry;
     entry.timestamp = duration_cast<std::chrono::microseconds>(steady_clock::now() - time_origin);
     entry.log_class = log_class;
     entry.log_level = log_level;
-
-    snprintf(formatting_buffer.data(), formatting_buffer.size(), "%s:%s:%u", filename, function,
-             line_nr);
-    entry.location = std::string(formatting_buffer.data());
-
-    vsnprintf(formatting_buffer.data(), formatting_buffer.size(), format, args);
-    entry.message = std::string(formatting_buffer.data());
+    entry.filename = Common::TrimSourcePath(filename);
+    entry.line_num = line_nr;
+    entry.function = function;
+    entry.message = std::move(message);
 
     return entry;
 }
@@ -142,15 +138,27 @@ void SetFilter(Filter* new_filter) {
     filter = new_filter;
 }
 
-void LogMessage(Class log_class, Level log_level, const char* filename, unsigned int line_nr,
+void LogMessage(Class log_class, Level log_level, const char* filename, unsigned int line_num,
                 const char* function, const char* format, ...) {
-    if (filter != nullptr && !filter->CheckMessage(log_class, log_level))
+    if (filter && !filter->CheckMessage(log_class, log_level))
         return;
-
+    std::array<char, 4 * 1024> formatting_buffer;
     va_list args;
     va_start(args, format);
-    Entry entry = CreateEntry(log_class, log_level, filename, line_nr, function, format, args);
+    vsnprintf(formatting_buffer.data(), formatting_buffer.size(), format, args);
     va_end(args);
+    Entry entry = CreateEntry(log_class, log_level, filename, line_num, function,
+                              std::string(formatting_buffer.data()));
+
+    PrintColoredMessage(entry);
+}
+
+void LogMessage(Class log_class, Level log_level, const char* filename, unsigned int line_num,
+                const char* function, const char* format, const fmt::format_args& args) {
+    if (filter && !filter->CheckMessage(log_class, log_level))
+        return;
+    Entry entry =
+        CreateEntry(log_class, log_level, filename, line_num, function, fmt::vformat(format, args));
 
     PrintColoredMessage(entry);
 }

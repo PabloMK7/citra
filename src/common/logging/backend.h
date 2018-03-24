@@ -22,13 +22,16 @@ struct Entry {
     std::chrono::microseconds timestamp;
     Class log_class;
     Level log_level;
-    std::string location;
+    std::string filename;
+    unsigned int line_num;
+    std::string function;
     std::string message;
 
     Entry() = default;
     Entry(Entry&& o) = default;
 
     Entry& operator=(Entry&& o) = default;
+    Entry& operator=(const Entry& o) = default;
 };
 
 /**
@@ -44,7 +47,7 @@ const char* GetLevelName(Level log_level);
 
 /// Creates a log entry by formatting the given source location, and message.
 Entry CreateEntry(Class log_class, Level log_level, const char* filename, unsigned int line_nr,
-                  const char* function, const char* format, va_list args);
+                  const char* function, std::string message);
 
 void SetFilter(Filter* filter);
 } // namespace Log

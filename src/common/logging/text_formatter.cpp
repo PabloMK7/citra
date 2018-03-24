@@ -18,50 +18,29 @@
 
 namespace Log {
 
-// TODO(bunnei): This should be moved to a generic path manipulation library
-const char* TrimSourcePath(const char* path, const char* root) {
-    const char* p = path;
-
-    while (*p != '\0') {
-        const char* next_slash = p;
-        while (*next_slash != '\0' && *next_slash != '/' && *next_slash != '\\') {
-            ++next_slash;
-        }
-
-        bool is_src = Common::ComparePartialString(p, next_slash, root);
-        p = next_slash;
-
-        if (*p != '\0') {
-            ++p;
-        }
-        if (is_src) {
-            path = p;
-        }
-    }
-    return path;
-}
-
-void FormatLogMessage(const Entry& entry, char* out_text, size_t text_len) {
+std::string FormatLogMessage(const Entry& entry) {
     unsigned int time_seconds = static_cast<unsigned int>(entry.timestamp.count() / 1000000);
     unsigned int time_fractional = static_cast<unsigned int>(entry.timestamp.count() % 1000000);
 
     const char* class_name = GetLogClassName(entry.log_class);
     const char* level_name = GetLevelName(entry.log_level);
 
-    snprintf(out_text, text_len, "[%4u.%06u] %s <%s> %s: %s", time_seconds, time_fractional,
-             class_name, level_name, TrimSourcePath(entry.location.c_str()), entry.message.c_str());
+    return fmt::format("[{:4d}.{:06d}] {} <{}> {}:{}:{}: {}", time_seconds, time_fractional,
+                       class_name, level_name, entry.filename, entry.function, entry.line_num,
+                       entry.message);
 }
 
 void PrintMessage(const Entry& entry) {
-    std::array<char, 4 * 1024> format_buffer;
-    FormatLogMessage(entry, format_buffer.data(), format_buffer.size());
-    fputs(format_buffer.data(), stderr);
-    fputc('\n', stderr);
+    auto str = FormatLogMessage(entry) + '\n';
+    fputs(str.c_str(), stderr);
 }
 
 void PrintColoredMessage(const Entry& entry) {
 #ifdef _WIN32
-    static HANDLE console_handle = GetStdHandle(STD_ERROR_HANDLE);
+    HANDLE console_handle = GetStdHandle(STD_ERROR_HANDLE);
+    if (console_handle == INVALID_HANDLE_VALUE) {
+        return;
+    }
 
     CONSOLE_SCREEN_BUFFER_INFO original_info = {0};
     GetConsoleScreenBufferInfo(console_handle, &original_info);
