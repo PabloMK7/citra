@@ -5,6 +5,7 @@
 #include <array>
 #include <functional>
 #include <string>
+#include <boost/optional.hpp>
 #include "common/common_types.h"
 #include "video_core/shader/shader.h"
 
@@ -18,9 +19,11 @@ using RegGetter = std::function<std::string(u32)>;
 
 std::string GetCommonDeclarations();
 
-std::string DecompileProgram(const ProgramCode& program_code, const SwizzleData& swizzle_data,
-                             u32 main_offset, const RegGetter& inputreg_getter,
-                             const RegGetter& outputreg_getter, bool sanitize_mul, bool is_gs);
+boost::optional<std::string> DecompileProgram(const ProgramCode& program_code,
+                                              const SwizzleData& swizzle_data, u32 main_offset,
+                                              const RegGetter& inputreg_getter,
+                                              const RegGetter& outputreg_getter, bool sanitize_mul,
+                                              bool is_gs);
 
 } // namespace Decompiler
 } // namespace Shader

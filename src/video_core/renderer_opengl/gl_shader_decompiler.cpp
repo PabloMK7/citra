@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <exception>
 #include <set>
 #include <string>
 #include <nihstro/shader_bytecode.h>
@@ -20,6 +21,11 @@ using nihstro::SourceRegister;
 using nihstro::SwizzlePattern;
 
 constexpr u32 PROGRAM_END = MAX_PROGRAM_CODE_LENGTH;
+
+class DecompileFail : public std::runtime_error {
+public:
+    using std::runtime_error::runtime_error;
+};
 
 /// Describes the behaviour of code path of a given entry point and a return point.
 enum class ExitMethod {
@@ -54,7 +60,8 @@ public:
 
         // Recursively finds all subroutines.
         const Subroutine& program_main = AddSubroutine(main_offset, PROGRAM_END);
-        ASSERT(program_main.exit_method == ExitMethod::AlwaysEnd);
+        if (program_main.exit_method != ExitMethod::AlwaysEnd)
+            throw DecompileFail("Program does not always end");
     }
 
     std::set<Subroutine> GetSubroutines() {
@@ -74,6 +81,8 @@ private:
 
         Subroutine subroutine{begin, end};
         subroutine.exit_method = Scan(begin, end, subroutine.labels);
+        if (subroutine.exit_method == ExitMethod::Undetermined)
+            throw DecompileFail("Recursive function detected");
         return *subroutines.insert(std::move(subroutine)).first;
     }
 
@@ -187,7 +196,7 @@ private:
 class ShaderWriter {
 public:
     void AddLine(const std::string& text) {
-        ASSERT(scope >= 0);
+        DEBUG_ASSERT(scope >= 0);
         if (!text.empty()) {
             shader_source += std::string(static_cast<size_t>(scope) * 4, ' ');
         }
@@ -377,7 +386,7 @@ private:
         if (reg.empty() || dest_mask_num_components == 0) {
             return;
         }
-        ASSERT(value_num_components >= dest_num_components || value_num_components == 1);
+        DEBUG_ASSERT(value_num_components >= dest_num_components || value_num_components == 1);
 
         std::string dest = reg + (dest_num_components != 1 ? dest_mask_swizzle : "");
 
@@ -560,7 +569,7 @@ private:
                 LOG_ERROR(HW_GPU, "Unhandled arithmetic instruction: 0x%02x (%s): 0x%08x",
                           (int)instr.opcode.Value().EffectiveOpCode(),
                           instr.opcode.Value().GetInfo().name, instr.hex);
-                DEBUG_ASSERT(false);
+                throw DecompileFail("Unhandled instruction");
                 break;
             }
             }
@@ -604,6 +613,7 @@ private:
                 LOG_ERROR(HW_GPU, "Unhandled multiply-add instruction: 0x%02x (%s): 0x%08x",
                           (int)instr.opcode.Value().EffectiveOpCode(),
                           instr.opcode.Value().GetInfo().name, instr.hex);
+                throw DecompileFail("Unhandled instruction");
             }
             break;
         }
@@ -757,6 +767,7 @@ private:
                 LOG_ERROR(HW_GPU, "Unhandled instruction: 0x%02x (%s): 0x%08x",
                           (int)instr.opcode.Value().EffectiveOpCode(),
                           instr.opcode.Value().GetInfo().name, instr.hex);
+                throw DecompileFail("Unhandled instruction");
                 break;
             }
             }
@@ -862,7 +873,7 @@ private:
             --shader.scope;
             shader.AddLine("}\n");
 
-            ASSERT(shader.scope == 0);
+            DEBUG_ASSERT(shader.scope == 0);
         }
     }
 
@@ -892,14 +903,21 @@ bool exec_shader();
 )";
 }
 
-std::string DecompileProgram(const ProgramCode& program_code, const SwizzleData& swizzle_data,
-                             u32 main_offset, const RegGetter& inputreg_getter,
-                             const RegGetter& outputreg_getter, bool sanitize_mul, bool is_gs) {
+boost::optional<std::string> DecompileProgram(const ProgramCode& program_code,
+                                              const SwizzleData& swizzle_data, u32 main_offset,
+                                              const RegGetter& inputreg_getter,
+                                              const RegGetter& outputreg_getter, bool sanitize_mul,
+                                              bool is_gs) {
 
-    auto subroutines = ControlFlowAnalyzer(program_code, main_offset).GetSubroutines();
-    GLSLGenerator generator(subroutines, program_code, swizzle_data, main_offset, inputreg_getter,
-                            outputreg_getter, sanitize_mul, is_gs);
-    return generator.GetShaderCode();
+    try {
+        auto subroutines = ControlFlowAnalyzer(program_code, main_offset).GetSubroutines();
+        GLSLGenerator generator(subroutines, program_code, swizzle_data, main_offset,
+                                inputreg_getter, outputreg_getter, sanitize_mul, is_gs);
+        return generator.GetShaderCode();
+    } catch (const DecompileFail& exception) {
+        LOG_ERROR(HW_GPU, "Shader decompilation failed: %s", exception.what());
+        return boost::none;
+    }
 }
 
 } // namespace Decompiler
