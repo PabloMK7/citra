@@ -42,10 +42,7 @@ struct Subroutine {
     std::set<u32> labels;   ///< Addresses refereced by JMP instructions.
 
     bool operator<(const Subroutine& rhs) const {
-        if (begin == rhs.begin) {
-            return end < rhs.end;
-        }
-        return begin < rhs.begin;
+        return std::tie(begin, end) < std::tie(rhs.begin, rhs.end);
     }
 };
 
@@ -122,8 +119,7 @@ private:
         if (!inserted)
             return exit_method;
 
-        u32 offset = begin;
-        for (u32 offset = begin; offset < (begin > end ? PROGRAM_END : end); ++offset) {
+        for (u32 offset = begin; offset != end && offset != PROGRAM_END; ++offset) {
             const Instruction instr = {program_code[offset]};
             switch (instr.opcode.Value()) {
             case OpCode::Id::END: {
@@ -294,7 +290,7 @@ private:
             UNREACHABLE();
             return "";
         }
-    };
+    }
 
     /// Generates code representing a source register.
     std::string GetSourceRegister(const SourceRegister& source_reg,
@@ -317,7 +313,7 @@ private:
             UNREACHABLE();
             return "";
         }
-    };
+    }
 
     /// Generates code representing a destination register.
     std::string GetDestRegister(const DestRegister& dest_reg) const {
@@ -332,7 +328,7 @@ private:
             UNREACHABLE();
             return "";
         }
-    };
+    }
 
     /// Generates code representing a bool uniform
     std::string GetUniformBool(u32 index) const {
@@ -341,7 +337,7 @@ private:
             return "((gl_PrimitiveIDIn == 0) || uniforms.b[15])";
         }
         return "uniforms.b[" + std::to_string(index) + "]";
-    };
+    }
 
     /**
      * Adds code that calls a subroutine.
@@ -356,7 +352,7 @@ private:
         } else {
             shader.AddLine(subroutine.GetName() + "();");
         }
-    };
+    }
 
     /**
      * Writes code that does an assignment operation.
@@ -395,7 +391,7 @@ private:
         }
 
         shader.AddLine(dest + " = " + src + ";");
-    };
+    }
 
     /**
      * Compiles a single instruction from PICA to GLSL.
@@ -769,7 +765,7 @@ private:
         }
         }
         return offset + 1;
-    };
+    }
 
     /**
      * Compiles a range of instructions from PICA to GLSL.
@@ -783,7 +779,7 @@ private:
             program_counter = CompileInstr(program_counter);
         }
         return program_counter;
-    };
+    }
 
     void Generate() {
         if (sanitize_mul) {
