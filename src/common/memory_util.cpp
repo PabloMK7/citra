@@ -55,7 +55,7 @@ void* AllocateExecutableMemory(size_t size, bool low) {
     if (ptr == MAP_FAILED) {
         ptr = nullptr;
 #endif
-        LOG_ERROR(Common_Memory, "Failed to allocate executable memory");
+        NGLOG_ERROR(Common_Memory, "Failed to allocate executable memory");
     }
 #if !defined(_WIN32) && defined(ARCHITECTURE_X64) && !defined(MAP_32BIT)
     else {
@@ -68,7 +68,7 @@ void* AllocateExecutableMemory(size_t size, bool low) {
 
 #if EMU_ARCH_BITS == 64
     if ((u64)ptr >= 0x80000000 && low == true)
-        LOG_ERROR(Common_Memory, "Executable memory ended up above 2GB!");
+        NGLOG_ERROR(Common_Memory, "Executable memory ended up above 2GB!");
 #endif
 
     return ptr;
@@ -85,7 +85,7 @@ void* AllocateMemoryPages(size_t size) {
 #endif
 
     if (ptr == nullptr)
-        LOG_ERROR(Common_Memory, "Failed to allocate raw memory");
+        NGLOG_ERROR(Common_Memory, "Failed to allocate raw memory");
 
     return ptr;
 }
@@ -99,12 +99,12 @@ void* AllocateAlignedMemory(size_t size, size_t alignment) {
     ptr = memalign(alignment, size);
 #else
     if (posix_memalign(&ptr, alignment, size) != 0)
-        LOG_ERROR(Common_Memory, "Failed to allocate aligned memory");
+        NGLOG_ERROR(Common_Memory, "Failed to allocate aligned memory");
 #endif
 #endif
 
     if (ptr == nullptr)
-        LOG_ERROR(Common_Memory, "Failed to allocate aligned memory");
+        NGLOG_ERROR(Common_Memory, "Failed to allocate aligned memory");
 
     return ptr;
 }
@@ -113,7 +113,7 @@ void FreeMemoryPages(void* ptr, size_t size) {
     if (ptr) {
 #ifdef _WIN32
         if (!VirtualFree(ptr, 0, MEM_RELEASE))
-            LOG_ERROR(Common_Memory, "FreeMemoryPages failed!\n%s", GetLastErrorMsg());
+            NGLOG_ERROR(Common_Memory, "FreeMemoryPages failed!\n{}", GetLastErrorMsg());
 #else
         munmap(ptr, size);
 #endif
@@ -134,7 +134,7 @@ void WriteProtectMemory(void* ptr, size_t size, bool allowExecute) {
 #ifdef _WIN32
     DWORD oldValue;
     if (!VirtualProtect(ptr, size, allowExecute ? PAGE_EXECUTE_READ : PAGE_READONLY, &oldValue))
-        LOG_ERROR(Common_Memory, "WriteProtectMemory failed!\n%s", GetLastErrorMsg());
+        NGLOG_ERROR(Common_Memory, "WriteProtectMemory failed!\n{}", GetLastErrorMsg());
 #else
     mprotect(ptr, size, allowExecute ? (PROT_READ | PROT_EXEC) : PROT_READ);
 #endif
@@ -145,7 +145,7 @@ void UnWriteProtectMemory(void* ptr, size_t size, bool allowExecute) {
     DWORD oldValue;
     if (!VirtualProtect(ptr, size, allowExecute ? PAGE_EXECUTE_READWRITE : PAGE_READWRITE,
                         &oldValue))
-        LOG_ERROR(Common_Memory, "UnWriteProtectMemory failed!\n%s", GetLastErrorMsg());
+        NGLOG_ERROR(Common_Memory, "UnWriteProtectMemory failed!\n{}", GetLastErrorMsg());
 #else
     mprotect(ptr, size,
              allowExecute ? (PROT_READ | PROT_WRITE | PROT_EXEC) : PROT_WRITE | PROT_READ);

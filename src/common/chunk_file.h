@@ -159,8 +159,8 @@ public:
             Do(foundVersion);
 
         if (error == ERROR_FAILURE || foundVersion < minVer || foundVersion > ver) {
-            LOG_ERROR(Common, "Savestate failure: wrong version %d found for %s", foundVersion,
-                      title);
+            NGLOG_ERROR(Common, "Savestate failure: wrong version {} found for {}", foundVersion,
+                        title);
             SetError(ERROR_FAILURE);
             return PointerWrapSection(*this, -1, title);
         }
@@ -466,7 +466,7 @@ public:
         } break;
 
         default:
-            LOG_ERROR(Common, "Savestate error: invalid mode %d.", mode);
+            NGLOG_ERROR(Common, "Savestate error: invalid mode {}.", mode);
         }
     }
 
@@ -607,10 +607,10 @@ public:
         u32 cookie = arbitraryNumber;
         Do(cookie);
         if (mode == PointerWrap::MODE_READ && cookie != arbitraryNumber) {
-            LOG_ERROR(Common,
-                      "After \"%s\", found %d (0x%X) instead of save marker %d (0x%X). "
-                      "Aborting savestate load...",
-                      prevName, cookie, cookie, arbitraryNumber, arbitraryNumber);
+            NGLOG_ERROR(Common,
+                        "After \"{}\", found {} ({:#X}) instead of save marker {} ({:#X}). "
+                        "Aborting savestate load...",
+                        prevName, cookie, cookie, arbitraryNumber, arbitraryNumber);
             SetError(ERROR_FAILURE);
         }
     }
