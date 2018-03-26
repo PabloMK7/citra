@@ -595,9 +595,11 @@ void GraphicsVertexShaderWidget::OnCycleIndexChanged(int index) {
                     .arg(record.conditional_code[1] ? "true" : "false");
 
     if (record.mask & Pica::Shader::DebugDataRecord::COND_BOOL_IN)
-        text += tr("Static Condition: %1\n").arg(record.cond_bool);
+        text += tr("Static Condition: %1\n").arg(record.cond_bool ? "true" : "false");
     if (record.mask & Pica::Shader::DebugDataRecord::COND_CMP_IN)
-        text += tr("Dynamic Conditions: %1, %2\n").arg(record.cond_cmp[0]).arg(record.cond_cmp[1]);
+        text += tr("Dynamic Conditions: %1, %2\n")
+                    .arg(record.cond_cmp[0] ? "true" : "false")
+                    .arg(record.cond_cmp[1] ? "true" : "false");
     if (record.mask & Pica::Shader::DebugDataRecord::LOOP_INT_IN)
         text += tr("Loop Parameters: %1 (repeats), %2 (initializer), %3 (increment), %4\n")
                     .arg(record.loop_int.x)
