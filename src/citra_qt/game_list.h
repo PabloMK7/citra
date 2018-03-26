@@ -51,7 +51,7 @@ public:
             QString edit_filter_text_old;
 
         protected:
-            bool eventFilter(QObject* obj, QEvent* event);
+            bool eventFilter(QObject* obj, QEvent* event) override;
         };
         QHBoxLayout* layout_filter = nullptr;
         QTreeView* tree_view = nullptr;
