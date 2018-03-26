@@ -766,7 +766,7 @@ void GMainWindow::OnGameListOpenFolder(u64 program_id, GameListOpenTarget target
         return;
     }
 
-    NGLOG_INFO(Frontend, "Opening {} path for program_id={:016}", open_target, program_id);
+    NGLOG_INFO(Frontend, "Opening {} path for program_id={:016x}", open_target, program_id);
 
     QDesktopServices::openUrl(QUrl::fromLocalFile(qpath));
 }
