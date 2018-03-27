@@ -348,7 +348,7 @@ u64 GetSize(const std::string& filename) {
     if (stat(filename.c_str(), &buf) == 0)
 #endif
     {
-        NGLOG_TRACE(Common_Filesystem, "{}: {}", filename, (long long)buf.st_size);
+        NGLOG_TRACE(Common_Filesystem, "{}: {}", filename, buf.st_size);
         return buf.st_size;
     }
 
