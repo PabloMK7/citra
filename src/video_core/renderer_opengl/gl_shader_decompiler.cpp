@@ -3,8 +3,11 @@
 // Refer to the license.txt file included.
 
 #include <exception>
+#include <map>
 #include <set>
 #include <string>
+#include <tuple>
+#include <utility>
 #include <nihstro/shader_bytecode.h>
 #include "common/assert.h"
 #include "common/common_types.h"
@@ -64,7 +67,7 @@ public:
             throw DecompileFail("Program does not always end");
     }
 
-    std::set<Subroutine> GetSubroutines() {
+    std::set<Subroutine> MoveSubroutines() {
         return std::move(subroutines);
     }
 
@@ -203,7 +206,7 @@ public:
         shader_source += text + '\n';
     }
 
-    std::string GetResult() {
+    std::string MoveResult() {
         return std::move(shader_source);
     }
 
@@ -256,8 +259,8 @@ public:
         Generate();
     }
 
-    std::string GetShaderCode() {
-        return shader.GetResult();
+    std::string MoveShaderCode() {
+        return shader.MoveResult();
     }
 
 private:
@@ -910,10 +913,10 @@ boost::optional<std::string> DecompileProgram(const ProgramCode& program_code,
                                               bool is_gs) {
 
     try {
-        auto subroutines = ControlFlowAnalyzer(program_code, main_offset).GetSubroutines();
+        auto subroutines = ControlFlowAnalyzer(program_code, main_offset).MoveSubroutines();
         GLSLGenerator generator(subroutines, program_code, swizzle_data, main_offset,
                                 inputreg_getter, outputreg_getter, sanitize_mul, is_gs);
-        return generator.GetShaderCode();
+        return generator.MoveShaderCode();
     } catch (const DecompileFail& exception) {
         LOG_ERROR(HW_GPU, "Shader decompilation failed: %s", exception.what());
         return boost::none;
