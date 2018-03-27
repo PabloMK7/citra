@@ -211,8 +211,7 @@ XMLParseResult UpdaterPrivate::ParseResult(const QByteArray& output,
     }
 
     if (reader.hasError()) {
-        LOG_ERROR(Frontend, "Cannot read xml for update: %s",
-                  reader.errorString().toStdString().c_str());
+        NGLOG_ERROR(Frontend, "Cannot read xml for update: {}", reader.errorString().toStdString());
         return XMLParseResult::InvalidXML;
     }
 
@@ -276,18 +275,18 @@ void UpdaterPrivate::LaunchWithArguments(const QStringList& args) {
     QFileInfo tool_info(QCoreApplication::applicationDirPath(), tool_path);
 
     if (!QProcess::startDetached(tool_info.absoluteFilePath(), args, tool_info.absolutePath())) {
-        LOG_WARNING(Frontend, "Unable to start program %s",
-                    tool_info.absoluteFilePath().toStdString().c_str());
+        NGLOG_WARNING(Frontend, "Unable to start program {}",
+                      tool_info.absoluteFilePath().toStdString());
     }
 }
 
 void UpdaterPrivate::LaunchUI() {
-    LOG_INFO(Frontend, "Launching update UI...");
+    NGLOG_INFO(Frontend, "Launching update UI...");
     LaunchWithArguments(run_arguments);
 }
 
 void UpdaterPrivate::SilentlyUpdate() {
-    LOG_INFO(Frontend, "Launching silent update...");
+    NGLOG_INFO(Frontend, "Launching silent update...");
     LaunchWithArguments(silent_arguments);
 }
 
