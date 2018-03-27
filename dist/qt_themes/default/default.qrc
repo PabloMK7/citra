@@ -1,0 +1,11 @@
+<RCC>
+    <qresource prefix="icons/default">
+        <file alias="index.theme">icons/index.theme</file>
+      
+        <file alias="16x16/checked.png">icons/16x16/checked.png</file>
+
+        <file alias="16x16/failed.png">icons/16x16/failed.png</file>
+      
+        <file alias="256x256/citra.png">icons/256x256/citra.png</file>
+    </qresource>
+</RCC>

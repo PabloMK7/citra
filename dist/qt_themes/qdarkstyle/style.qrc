@@ -1,4 +1,7 @@
 <RCC>
+  <qresource prefix="icons/qdarkstyle">
+    <file alias="index.theme">icons/index.theme</file>
+  </qresource>
   <qresource prefix="qss_icons">
     <file>rc/up_arrow_disabled.png</file>
     <file>rc/Hmovetoolbar.png</file>

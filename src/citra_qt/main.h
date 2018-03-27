@@ -206,6 +206,9 @@ private:
 
     QTranslator translator;
 
+    // stores default icon theme search paths for the platform
+    QStringList default_theme_paths;
+
 protected:
     void dropEvent(QDropEvent* event) override;
     void dragEnterEvent(QDragEnterEvent* event) override;
