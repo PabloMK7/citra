@@ -525,7 +525,7 @@ void Module::Interface::FinishPreloadingLibraryApplet(Kernel::HLERequestContext&
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(apt->applet_manager->FinishPreloadingLibraryApplet(applet_id));
 
-    LOG_WARNING(Service_APT, "(STUBBED) called, applet_id=%03X", static_cast<u32>(applet_id));
+    NGLOG_WARNING(Service_APT, "(STUBBED) called, applet_id={:#05X}", static_cast<u32>(applet_id));
 }
 
 void Module::Interface::StartLibraryApplet(Kernel::HLERequestContext& ctx) {
