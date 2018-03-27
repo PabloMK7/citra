@@ -30,7 +30,7 @@ const SinkDetails& GetSinkDetails(std::string sink_id) {
 
     if (sink_id == "auto" || iter == g_sink_details.end()) {
         if (sink_id != "auto") {
-            LOG_ERROR(Audio, "AudioCore::SelectSink given invalid sink_id %s", sink_id.c_str());
+            NGLOG_ERROR(Audio, "AudioCore::SelectSink given invalid sink_id {}", sink_id);
         }
         // Auto-select.
         // g_sink_details is ordered in terms of desirability, with the best choice at the front.
