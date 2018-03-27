@@ -32,7 +32,7 @@ public:
     }
 
     void ValidateHeader() {
-        DEBUG_ASSERT_MSG(index == TotalSize(), "Operations do not match the header (cmd 0x%x)",
+        DEBUG_ASSERT_MSG(index == TotalSize(), "Operations do not match the header (cmd {:#x})",
                          header.raw);
     }
 

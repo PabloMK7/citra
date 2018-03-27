@@ -751,7 +751,7 @@ static ResultCode CreateThread(Handle* out_handle, u32 priority, u32 entry_point
         break;
     default:
         // TODO(bunnei): Implement support for other processor IDs
-        ASSERT_MSG(false, "Unsupported thread processor ID: %d", processor_id);
+        ASSERT_MSG(false, "Unsupported thread processor ID: {}", processor_id);
         break;
     }
 
@@ -865,7 +865,7 @@ static ResultCode GetProcessIdOfThread(u32* process_id, Handle thread_handle) {
 
     const SharedPtr<Process> process = thread->owner_process;
 
-    ASSERT_MSG(process != nullptr, "Invalid parent process for thread=0x%08X", thread_handle);
+    ASSERT_MSG(process != nullptr, "Invalid parent process for thread={:#X}", thread_handle);
 
     *process_id = process->process_id;
     return RESULT_SUCCESS;

@@ -651,12 +651,12 @@ static const std::string GetUserDirectory(const std::string& envvar) {
         else if (envvar == "XDG_CACHE_HOME")
             subdirectory = DIR_SEP ".cache";
         else
-            ASSERT_MSG(false, "Unknown XDG variable %s.", envvar.c_str());
+            ASSERT_MSG(false, "Unknown XDG variable {}.", envvar);
         user_dir = GetHomeDirectory() + subdirectory;
     }
 
-    ASSERT_MSG(!user_dir.empty(), "User directory %s musn’t be empty.", envvar.c_str());
-    ASSERT_MSG(user_dir[0] == '/', "User directory %s must be absolute.", envvar.c_str());
+    ASSERT_MSG(!user_dir.empty(), "User directory {} musn’t be empty.", envvar);
+    ASSERT_MSG(user_dir[0] == '/', "User directory {} must be absolute.", envvar);
 
     return user_dir;
 }

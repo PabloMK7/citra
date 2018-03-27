@@ -708,7 +708,7 @@ unsigned int GraphicsSurfaceWidget::NibblesPerPixel(GraphicsSurfaceWidget::Forma
     default:
         UNREACHABLE_MSG("GraphicsSurfaceWidget::BytesPerPixel: this should not be reached as this "
                         "function should be given a format which is in "
-                        "GraphicsSurfaceWidget::Format. Instead got %i",
+                        "GraphicsSurfaceWidget::Format. Instead got {}",
                         static_cast<int>(format));
         return 0;
     }

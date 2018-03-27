@@ -154,7 +154,7 @@ ResultCode HLERequestContext::PopulateFromIncomingCommandBuffer(const u32_le* sr
             break;
         }
         default:
-            UNIMPLEMENTED_MSG("Unsupported handle translation: 0x%08X", descriptor);
+            UNIMPLEMENTED_MSG("Unsupported handle translation: {:#X}", descriptor);
         }
     }
 
@@ -218,7 +218,7 @@ ResultCode HLERequestContext::WriteToOutgoingCommandBuffer(u32_le* dst_cmdbuf, P
             break;
         }
         default:
-            UNIMPLEMENTED_MSG("Unsupported handle translation: 0x%08X", descriptor);
+            UNIMPLEMENTED_MSG("Unsupported handle translation: {:#X}", descriptor);
         }
     }
 

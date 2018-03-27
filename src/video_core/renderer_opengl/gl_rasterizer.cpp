@@ -1281,7 +1281,7 @@ void RasterizerOpenGL::SetShader() {
             glGetActiveUniformBlockiv(current_shader->shader.handle, block_index,
                                       GL_UNIFORM_BLOCK_DATA_SIZE, &block_size);
             ASSERT_MSG(block_size == sizeof(UniformData),
-                       "Uniform block size did not match! Got %d, expected %zu",
+                       "Uniform block size did not match! Got {}, expected {}",
                        static_cast<int>(block_size), sizeof(UniformData));
             glUniformBlockBinding(current_shader->shader.handle, block_index, 0);
 

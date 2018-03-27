@@ -132,7 +132,7 @@ void Mixers::DownmixAndMixIntoCurrentFrame(float gain, const QuadFrame32& sample
         return;
     }
 
-    UNREACHABLE_MSG("Invalid output_format %zu", static_cast<size_t>(state.output_format));
+    UNREACHABLE_MSG("Invalid output_format {}", static_cast<size_t>(state.output_format));
 }
 
 void Mixers::AuxReturn(const IntermediateMixSamples& read_samples) {

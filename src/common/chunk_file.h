@@ -198,7 +198,7 @@ public:
             for (int i = 0; i < size; i++) {
                 DEBUG_ASSERT_MSG(
                     ((u8*)data)[i] == (*ptr)[i],
-                    "Savestate verification failure: %d (0x%X) (at %p) != %d (0x%X) (at %p).\n",
+                    "Savestate verification failure: {} ({:#X}) (at {}) != {} ({:#X}) (at {}).\n",
                     ((u8*)data)[i], ((u8*)data)[i], &((u8*)data)[i], (*ptr)[i], (*ptr)[i],
                     &(*ptr)[i]);
             }
@@ -224,7 +224,7 @@ public:
             for (int i = 0; i < size; i++) {
                 DEBUG_ASSERT_MSG(
                     ((u8*)data)[i] == (*ptr)[i],
-                    "Savestate verification failure: %d (0x%X) (at %p) != %d (0x%X) (at %p).\n",
+                    "Savestate verification failure: {} ({#:X}) (at {}) != {} ({:#X}) (at {}).\n",
                     ((u8*)data)[i], ((u8*)data)[i], &((u8*)data)[i], (*ptr)[i], (*ptr)[i],
                     &(*ptr)[i]);
             }
@@ -486,8 +486,8 @@ public:
             break;
         case MODE_VERIFY:
             DEBUG_ASSERT_MSG((x == (char*)*ptr),
-                             "Savestate verification failure: \"%s\" != \"%s\" (at %p).\n",
-                             x.c_str(), (char*)*ptr, ptr);
+                             "Savestate verification failure: \"{}\" != \"{}\" (at {}).\n", x,
+                             (char*)*ptr, ptr);
             break;
         }
         (*ptr) += stringLen;
@@ -508,8 +508,8 @@ public:
             break;
         case MODE_VERIFY:
             DEBUG_ASSERT_MSG((x == (wchar_t*)*ptr),
-                             "Savestate verification failure: \"%ls\" != \"%ls\" (at %p).\n",
-                             x.c_str(), (wchar_t*)*ptr, ptr);
+                             "Savestate verification failure: \"{}\" != \"{}\" (at {}).\n", x,
+                             (wchar_t*)*ptr, ptr);
             break;
         }
         (*ptr) += stringLen;

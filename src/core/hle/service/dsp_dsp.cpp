@@ -51,7 +51,7 @@ public:
         }
         }
 
-        UNREACHABLE_MSG("Invalid interrupt type = %zu", static_cast<size_t>(type));
+        UNREACHABLE_MSG("Invalid interrupt type = {}", static_cast<size_t>(type));
     }
 
     bool HasTooManyEventsRegistered() const {
@@ -219,7 +219,7 @@ static void RegisterInterruptEvents(Service::Interface* self) {
     u32 event_handle = cmd_buff[4];
 
     ASSERT_MSG(type_index < NUM_INTERRUPT_TYPE && pipe_index < AudioCore::num_dsp_pipe,
-               "Invalid type or pipe: type = %u, pipe = %u", type_index, pipe_index);
+               "Invalid type or pipe: type = {}, pipe = {}", type_index, pipe_index);
 
     InterruptType type = static_cast<InterruptType>(cmd_buff[1]);
     DspPipe pipe = static_cast<DspPipe>(cmd_buff[2]);
@@ -305,7 +305,7 @@ static void WriteProcessPipe(Service::Interface* self) {
     }
 
     ASSERT_MSG(Memory::IsValidVirtualAddress(buffer),
-               "Invalid Buffer: pipe=%u, size=0x%X, buffer=0x%08X", pipe_index, size, buffer);
+               "Invalid Buffer: pipe={}, size={:#X}, buffer={:#010X}", pipe_index, size, buffer);
 
     std::vector<u8> message(size);
     for (u32 i = 0; i < size; i++) {
@@ -363,8 +363,8 @@ static void ReadPipeIfPossible(Service::Interface* self) {
     AudioCore::DspPipe pipe = static_cast<AudioCore::DspPipe>(pipe_index);
 
     ASSERT_MSG(Memory::IsValidVirtualAddress(addr),
-               "Invalid addr: pipe=0x%08X, unknown=0x%08X, size=0x%X, buffer=0x%08X", pipe_index,
-               unknown, size, addr);
+               "Invalid addr: pipe={:#010X}, unknown={:#010X}, size={:#X}, buffer={:#010X}",
+               pipe_index, unknown, size, addr);
 
     cmd_buff[0] = IPC::MakeHeader(0x10, 1, 2);
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
@@ -407,8 +407,8 @@ static void ReadPipe(Service::Interface* self) {
     AudioCore::DspPipe pipe = static_cast<AudioCore::DspPipe>(pipe_index);
 
     ASSERT_MSG(Memory::IsValidVirtualAddress(addr),
-               "Invalid addr: pipe=0x%08X, unknown=0x%08X, size=0x%X, buffer=0x%08X", pipe_index,
-               unknown, size, addr);
+               "Invalid addr: pipe={:#010X}, unknown={:#010X}, size={:#X}, buffer={:#010X}",
+               pipe_index, unknown, size, addr);
 
     if (Core::DSP().GetPipeReadableSize(pipe) >= size) {
         std::vector<u8> response = Core::DSP().PipeRead(pipe, size);
@@ -508,7 +508,7 @@ static void RecvData(Service::Interface* self) {
 
     u32 register_number = cmd_buff[1];
 
-    ASSERT_MSG(register_number == 0, "Unknown register_number %u", register_number);
+    ASSERT_MSG(register_number == 0, "Unknown register_number {}", register_number);
 
     // Application reads this after requesting DSP shutdown, to verify the DSP has indeed shutdown
     // or slept.
@@ -547,7 +547,7 @@ static void RecvDataIsReady(Service::Interface* self) {
 
     u32 register_number = cmd_buff[1];
 
-    ASSERT_MSG(register_number == 0, "Unknown register_number %u", register_number);
+    ASSERT_MSG(register_number == 0, "Unknown register_number {}", register_number);
 
     cmd_buff[0] = IPC::MakeHeader(0x2, 2, 0);
     cmd_buff[1] = RESULT_SUCCESS.raw;

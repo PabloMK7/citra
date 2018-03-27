@@ -118,7 +118,7 @@ void SRV::GetServiceHandle(Kernel::HLERequestContext& ctx) {
     } else if (session.Code() == Kernel::ERR_MAX_CONNECTIONS_REACHED && wait_until_available) {
         LOG_WARNING(Service_SRV, "called service=%s -> ERR_MAX_CONNECTIONS_REACHED", name.c_str());
         // TODO(Subv): Put the caller guest thread to sleep until this port becomes available again.
-        UNIMPLEMENTED_MSG("Unimplemented wait until port %s is available.", name.c_str());
+        UNIMPLEMENTED_MSG("Unimplemented wait until port {} is available.", name);
     } else {
         LOG_ERROR(Service_SRV, "called service=%s -> error 0x%08X", name.c_str(),
                   session.Code().raw);

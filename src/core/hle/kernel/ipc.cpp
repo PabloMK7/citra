@@ -199,7 +199,7 @@ ResultCode TranslateCommandBuffer(SharedPtr<Thread> src_thread, SharedPtr<Thread
             break;
         }
         default:
-            UNIMPLEMENTED_MSG("Unsupported handle translation: 0x%08X", descriptor);
+            UNIMPLEMENTED_MSG("Unsupported handle translation: {:#X}", descriptor);
         }
     }
 
