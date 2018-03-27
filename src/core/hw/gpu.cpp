@@ -40,7 +40,7 @@ inline void Read(T& var, const u32 raw_addr) {
 
     // Reads other than u32 are untested, so I'd rather have them abort than silently fail
     if (index >= Regs::NumIds() || !std::is_same<T, u32>::value) {
-        LOG_ERROR(HW_GPU, "unknown Read%lu @ 0x%08X", sizeof(var) * 8, addr);
+        NGLOG_ERROR(HW_GPU, "unknown Read{} @ {:#010X}", sizeof(var) * 8, addr);
         return;
     }
 
@@ -65,7 +65,8 @@ static Math::Vec4<u8> DecodePixel(Regs::PixelFormat input_format, const u8* src_
         return Color::DecodeRGBA4(src_pixel);
 
     default:
-        LOG_ERROR(HW_GPU, "Unknown source framebuffer format %x", static_cast<u32>(input_format));
+        NGLOG_ERROR(HW_GPU, "Unknown source framebuffer format {:x}",
+                    static_cast<u32>(input_format));
         return {0, 0, 0, 0};
     }
 }
@@ -79,17 +80,18 @@ static void MemoryFill(const Regs::MemoryFillConfig& config) {
 
     // TODO: do hwtest with these cases
     if (!Memory::IsValidPhysicalAddress(start_addr)) {
-        LOG_CRITICAL(HW_GPU, "invalid start address 0x%08X", start_addr);
+        NGLOG_CRITICAL(HW_GPU, "invalid start address {:#010X}", start_addr);
         return;
     }
 
     if (!Memory::IsValidPhysicalAddress(end_addr)) {
-        LOG_CRITICAL(HW_GPU, "invalid end address 0x%08X", end_addr);
+        NGLOG_CRITICAL(HW_GPU, "invalid end address {:#010X}", end_addr);
         return;
     }
 
     if (end_addr <= start_addr) {
-        LOG_CRITICAL(HW_GPU, "invalid memory range from 0x%08X to 0x%08X", start_addr, end_addr);
+        NGLOG_CRITICAL(HW_GPU, "invalid memory range from {:#010X} to {:#010X}", start_addr,
+                       end_addr);
         return;
     }
 
@@ -131,32 +133,32 @@ static void DisplayTransfer(const Regs::DisplayTransferConfig& config) {
 
     // TODO: do hwtest with these cases
     if (!Memory::IsValidPhysicalAddress(src_addr)) {
-        LOG_CRITICAL(HW_GPU, "invalid input address 0x%08X", src_addr);
+        NGLOG_CRITICAL(HW_GPU, "invalid input address {:#010X}", src_addr);
         return;
     }
 
     if (!Memory::IsValidPhysicalAddress(dst_addr)) {
-        LOG_CRITICAL(HW_GPU, "invalid output address 0x%08X", dst_addr);
+        NGLOG_CRITICAL(HW_GPU, "invalid output address {:#010X}", dst_addr);
         return;
     }
 
     if (config.input_width == 0) {
-        LOG_CRITICAL(HW_GPU, "zero input width");
+        NGLOG_CRITICAL(HW_GPU, "zero input width");
         return;
     }
 
     if (config.input_height == 0) {
-        LOG_CRITICAL(HW_GPU, "zero input height");
+        NGLOG_CRITICAL(HW_GPU, "zero input height");
         return;
     }
 
     if (config.output_width == 0) {
-        LOG_CRITICAL(HW_GPU, "zero output width");
+        NGLOG_CRITICAL(HW_GPU, "zero output width");
         return;
     }
 
     if (config.output_height == 0) {
-        LOG_CRITICAL(HW_GPU, "zero output height");
+        NGLOG_CRITICAL(HW_GPU, "zero output height");
         return;
     }
 
@@ -167,14 +169,14 @@ static void DisplayTransfer(const Regs::DisplayTransferConfig& config) {
     u8* dst_pointer = Memory::GetPhysicalPointer(dst_addr);
 
     if (config.scaling > config.ScaleXY) {
-        LOG_CRITICAL(HW_GPU, "Unimplemented display transfer scaling mode %u",
-                     config.scaling.Value());
+        NGLOG_CRITICAL(HW_GPU, "Unimplemented display transfer scaling mode {}",
+                       config.scaling.Value());
         UNIMPLEMENTED();
         return;
     }
 
     if (config.input_linear && config.scaling != config.NoScale) {
-        LOG_CRITICAL(HW_GPU, "Scaling is only implemented on tiled input");
+        NGLOG_CRITICAL(HW_GPU, "Scaling is only implemented on tiled input");
         UNIMPLEMENTED();
         return;
     }
@@ -293,8 +295,8 @@ static void DisplayTransfer(const Regs::DisplayTransferConfig& config) {
                 break;
 
             default:
-                LOG_ERROR(HW_GPU, "Unknown destination framebuffer format %x",
-                          static_cast<u32>(config.output_format.Value()));
+                NGLOG_ERROR(HW_GPU, "Unknown destination framebuffer format {:x}",
+                            static_cast<u32>(config.output_format.Value()));
                 break;
             }
         }
@@ -307,12 +309,12 @@ static void TextureCopy(const Regs::DisplayTransferConfig& config) {
 
     // TODO: do hwtest with invalid addresses
     if (!Memory::IsValidPhysicalAddress(src_addr)) {
-        LOG_CRITICAL(HW_GPU, "invalid input address 0x%08X", src_addr);
+        NGLOG_CRITICAL(HW_GPU, "invalid input address {:#010X}", src_addr);
         return;
     }
 
     if (!Memory::IsValidPhysicalAddress(dst_addr)) {
-        LOG_CRITICAL(HW_GPU, "invalid output address 0x%08X", dst_addr);
+        NGLOG_CRITICAL(HW_GPU, "invalid output address {:#010X}", dst_addr);
         return;
     }
 
@@ -325,7 +327,7 @@ static void TextureCopy(const Regs::DisplayTransferConfig& config) {
     u32 remaining_size = Common::AlignDown(config.texture_copy.size, 16);
 
     if (remaining_size == 0) {
-        LOG_CRITICAL(HW_GPU, "zero size. Real hardware freezes on this.");
+        NGLOG_CRITICAL(HW_GPU, "zero size. Real hardware freezes on this.");
         return;
     }
 
@@ -338,12 +340,12 @@ static void TextureCopy(const Regs::DisplayTransferConfig& config) {
     u32 output_width = output_gap == 0 ? remaining_size : config.texture_copy.output_width * 16;
 
     if (input_width == 0) {
-        LOG_CRITICAL(HW_GPU, "zero input width. Real hardware freezes on this.");
+        NGLOG_CRITICAL(HW_GPU, "zero input width. Real hardware freezes on this.");
         return;
     }
 
     if (output_width == 0) {
-        LOG_CRITICAL(HW_GPU, "zero output width. Real hardware freezes on this.");
+        NGLOG_CRITICAL(HW_GPU, "zero output width. Real hardware freezes on this.");
         return;
     }
 
@@ -390,7 +392,8 @@ inline void Write(u32 addr, const T data) {
 
     // Writes other than u32 are untested, so I'd rather have them abort than silently fail
     if (index >= Regs::NumIds() || !std::is_same<T, u32>::value) {
-        LOG_ERROR(HW_GPU, "unknown Write%lu 0x%08X @ 0x%08X", sizeof(data) * 8, (u32)data, addr);
+        NGLOG_ERROR(HW_GPU, "unknown Write{} {:#010X} @ {:#010X}", sizeof(data) * 8, (u32)data,
+                    addr);
         return;
     }
 
@@ -406,8 +409,8 @@ inline void Write(u32 addr, const T data) {
 
         if (config.trigger) {
             MemoryFill(config);
-            LOG_TRACE(HW_GPU, "MemoryFill from 0x%08x to 0x%08x", config.GetStartAddress(),
-                      config.GetEndAddress());
+            NGLOG_TRACE(HW_GPU, "MemoryFill from {:#010X} to {:#010X}", config.GetStartAddress(),
+                        config.GetEndAddress());
 
             // It seems that it won't signal interrupt if "address_start" is zero.
             // TODO: hwtest this
@@ -439,22 +442,23 @@ inline void Write(u32 addr, const T data) {
 
             if (config.is_texture_copy) {
                 TextureCopy(config);
-                LOG_TRACE(HW_GPU,
-                          "TextureCopy: 0x%X bytes from 0x%08X(%u+%u)-> "
-                          "0x%08X(%u+%u), flags 0x%08X",
-                          config.texture_copy.size, config.GetPhysicalInputAddress(),
-                          config.texture_copy.input_width * 16, config.texture_copy.input_gap * 16,
-                          config.GetPhysicalOutputAddress(), config.texture_copy.output_width * 16,
-                          config.texture_copy.output_gap * 16, config.flags);
+                NGLOG_TRACE(HW_GPU,
+                            "TextureCopy: {:#X} bytes from {:#010X}({}+{})-> "
+                            "{:#010X}({}+{}), flags {:#010X}",
+                            config.texture_copy.size, config.GetPhysicalInputAddress(),
+                            config.texture_copy.input_width * 16,
+                            config.texture_copy.input_gap * 16, config.GetPhysicalOutputAddress(),
+                            config.texture_copy.output_width * 16,
+                            config.texture_copy.output_gap * 16, config.flags);
             } else {
                 DisplayTransfer(config);
-                LOG_TRACE(HW_GPU,
-                          "DisplayTransfer: 0x%08x(%ux%u)-> "
-                          "0x%08x(%ux%u), dst format %x, flags 0x%08X",
-                          config.GetPhysicalInputAddress(), config.input_width.Value(),
-                          config.input_height.Value(), config.GetPhysicalOutputAddress(),
-                          config.output_width.Value(), config.output_height.Value(),
-                          config.output_format.Value(), config.flags);
+                NGLOG_TRACE(HW_GPU,
+                            "DisplayTransfer: {:#010X}({}x{})-> "
+                            "{:#010X}({}x{}), dst format {:x}, flags {:#010X}",
+                            config.GetPhysicalInputAddress(), config.input_width.Value(),
+                            config.input_height.Value(), config.GetPhysicalOutputAddress(),
+                            config.output_width.Value(), config.output_height.Value(),
+                            static_cast<u32>(config.output_format.Value()), config.flags);
             }
 
             g_regs.display_transfer_config.trigger = 0;
@@ -557,12 +561,12 @@ void Init() {
     vblank_event = CoreTiming::RegisterEvent("GPU::VBlankCallback", VBlankCallback);
     CoreTiming::ScheduleEvent(frame_ticks, vblank_event);
 
-    LOG_DEBUG(HW_GPU, "initialized OK");
+    NGLOG_DEBUG(HW_GPU, "initialized OK");
 }
 
 /// Shutdown hardware
 void Shutdown() {
-    LOG_DEBUG(HW_GPU, "shutdown OK");
+    NGLOG_DEBUG(HW_GPU, "shutdown OK");
 }
 
 } // namespace GPU

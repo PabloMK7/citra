@@ -91,7 +91,7 @@ void LoadPresetKeys() {
         std::vector<std::string> parts;
         Common::SplitString(line, '=', parts);
         if (parts.size() != 2) {
-            LOG_ERROR(HW_AES, "Failed to parse %s", line.c_str());
+            NGLOG_ERROR(HW_AES, "Failed to parse {}", line);
             continue;
         }
 
@@ -100,7 +100,7 @@ void LoadPresetKeys() {
         try {
             key = HexToKey(parts[1]);
         } catch (const std::logic_error& e) {
-            LOG_ERROR(HW_AES, "Invalid key %s: %s", parts[1].c_str(), e.what());
+            NGLOG_ERROR(HW_AES, "Invalid key {}: {}", parts[1], e.what());
             continue;
         }
 
@@ -112,12 +112,12 @@ void LoadPresetKeys() {
         size_t slot_id;
         char key_type;
         if (std::sscanf(name.c_str(), "slot0x%zXKey%c", &slot_id, &key_type) != 2) {
-            LOG_ERROR(HW_AES, "Invalid key name %s", name.c_str());
+            NGLOG_ERROR(HW_AES, "Invalid key name {}", name);
             continue;
         }
 
         if (slot_id >= MaxKeySlotID) {
-            LOG_ERROR(HW_AES, "Out of range slot ID 0x%zX", slot_id);
+            NGLOG_ERROR(HW_AES, "Out of range slot ID {:#X}", slot_id);
             continue;
         }
 
@@ -132,7 +132,7 @@ void LoadPresetKeys() {
             key_slots.at(slot_id).SetNormalKey(key);
             break;
         default:
-            LOG_ERROR(HW_AES, "Invalid key type %c", key_type);
+            NGLOG_ERROR(HW_AES, "Invalid key type {}", key_type);
             break;
         }
     }

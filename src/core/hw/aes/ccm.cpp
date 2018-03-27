@@ -46,7 +46,7 @@ public:
 std::vector<u8> EncryptSignCCM(const std::vector<u8>& pdata, const CCMNonce& nonce,
                                size_t slot_id) {
     if (!IsNormalKeyAvailable(slot_id)) {
-        LOG_ERROR(HW_AES, "Key slot %zu not available. Will use zero key.", slot_id);
+        NGLOG_ERROR(HW_AES, "Key slot {} not available. Will use zero key.", slot_id);
     }
     const AESKey normal = GetNormalKey(slot_id);
     std::vector<u8> cipher(pdata.size() + CCM_MAC_SIZE);
@@ -59,7 +59,7 @@ std::vector<u8> EncryptSignCCM(const std::vector<u8>& pdata, const CCMNonce& non
                                  new CryptoPP::AuthenticatedEncryptionFilter(
                                      e, new CryptoPP::ArraySink(cipher.data(), cipher.size())));
     } catch (const CryptoPP::Exception& e) {
-        LOG_ERROR(HW_AES, "FAILED with: %s", e.what());
+        NGLOG_ERROR(HW_AES, "FAILED with: {}", e.what());
     }
     return cipher;
 }
@@ -67,7 +67,7 @@ std::vector<u8> EncryptSignCCM(const std::vector<u8>& pdata, const CCMNonce& non
 std::vector<u8> DecryptVerifyCCM(const std::vector<u8>& cipher, const CCMNonce& nonce,
                                  size_t slot_id) {
     if (!IsNormalKeyAvailable(slot_id)) {
-        LOG_ERROR(HW_AES, "Key slot %zu not available. Will use zero key.", slot_id);
+        NGLOG_ERROR(HW_AES, "Key slot {} not available. Will use zero key.", slot_id);
     }
     const AESKey normal = GetNormalKey(slot_id);
     const std::size_t pdata_size = cipher.size() - CCM_MAC_SIZE;
@@ -81,11 +81,11 @@ std::vector<u8> DecryptVerifyCCM(const std::vector<u8>& cipher, const CCMNonce& 
             d, new CryptoPP::ArraySink(pdata.data(), pdata_size));
         CryptoPP::ArraySource as(cipher.data(), cipher.size(), true, new CryptoPP::Redirector(df));
         if (!df.GetLastResult()) {
-            LOG_ERROR(HW_AES, "FAILED");
+            NGLOG_ERROR(HW_AES, "FAILED");
             return {};
         }
     } catch (const CryptoPP::Exception& e) {
-        LOG_ERROR(HW_AES, "FAILED with: %s", e.what());
+        NGLOG_ERROR(HW_AES, "FAILED with: {}", e.what());
         return {};
     }
     return pdata;
