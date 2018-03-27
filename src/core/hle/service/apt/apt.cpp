@@ -417,7 +417,7 @@ void Module::Interface::PrepareToStartApplication(Kernel::HLERequestContext& ctx
 
     NGLOG_WARNING(Service_APT,
                   "(STUBBED) called title_info1={:#010X}, title_info2={:#010X}, title_info3={:#010X},"
-                  "title_info4={:#010X}, flags={:#010X},
+                  "title_info4={:#010X}, flags={:#010X}",
                   title_info1, title_info2, title_info3, title_info4, flags);
 }
 
