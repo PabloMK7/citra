@@ -37,7 +37,8 @@ __declspec(noinline, noreturn)
 #define ASSERT_MSG(_a_, ...)                                                                       \
     do                                                                                             \
         if (!(_a_)) {                                                                              \
-            assert_noinline_call([&] { NGLOG_CRITICAL(Debug, "Assertion Failed!" __VA_ARGS__); }); \
+            assert_noinline_call(                                                                  \
+                [&] { NGLOG_CRITICAL(Debug, "Assertion Failed!\n" __VA_ARGS__); });                \
         }                                                                                          \
     while (0)
 
