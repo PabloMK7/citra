@@ -865,7 +865,7 @@ static ResultCode GetProcessIdOfThread(u32* process_id, Handle thread_handle) {
 
     const SharedPtr<Process> process = thread->owner_process;
 
-    ASSERT_MSG(process != nullptr, "Invalid parent process for thread={:#X}", thread_handle);
+    ASSERT_MSG(process != nullptr, "Invalid parent process for thread={:#010X}", thread_handle);
 
     *process_id = process->process_id;
     return RESULT_SUCCESS;
