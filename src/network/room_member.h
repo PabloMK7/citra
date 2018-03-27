@@ -21,7 +21,8 @@ struct WifiPacket {
         Data,
         Authentication,
         AssociationResponse,
-        Deauthentication
+        Deauthentication,
+        NodeMap
     };
     PacketType type;      ///< The type of 802.11 frame.
     std::vector<u8> data; ///< Raw 802.11 frame data, starting at the management frame header

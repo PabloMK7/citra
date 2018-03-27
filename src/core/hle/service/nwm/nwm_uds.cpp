@@ -144,11 +144,48 @@ void SendPacket(Network::WifiPacket& packet) {
 static u16 GetNextAvailableNodeId() {
     for (u16 index = 0; index < connection_status.max_nodes; ++index) {
         if ((connection_status.node_bitmask & (1 << index)) == 0)
-            return index;
+            return index + 1;
     }
 
     // Any connection attempts to an already full network should have been refused.
     ASSERT_MSG(false, "No available connection slots in the network");
+}
+
+static void BroadcastNodeMap() {
+    // Note: This is not how UDS on a 3ds does it but it shouldn't be
+    // necessary for citra
+    Network::WifiPacket packet;
+    packet.channel = network_channel;
+    packet.type = Network::WifiPacket::PacketType::NodeMap;
+    packet.destination_address = Network::BroadcastMac;
+    size_t size = node_map.size();
+    packet.data.resize(sizeof(size) + (sizeof(Network::MacAddress) + sizeof(u32)) * size);
+    std::memcpy(packet.data.data(), &size, sizeof(size));
+    size_t offset = sizeof(size);
+    for (const auto& node : node_map) {
+        std::memcpy(packet.data.data() + offset, node.first.data(), sizeof(node.first));
+        std::memcpy(packet.data.data() + offset + sizeof(node.first), &node.second,
+                    sizeof(node.second));
+        offset += sizeof(Network::MacAddress) + sizeof(u32);
+    }
+
+    SendPacket(packet);
+}
+
+static void HandleNodeMapPacket(const Network::WifiPacket& packet) {
+    std::lock_guard<std::mutex> lock(connection_status_mutex);
+    node_map.clear();
+    size_t num_entries;
+    Network::MacAddress address;
+    u32 id;
+    std::memcpy(&num_entries, packet.data.data(), sizeof(num_entries));
+    size_t offset = sizeof(num_entries);
+    for (size_t i = 0; i < num_entries; ++i) {
+        std::memcpy(&address, packet.data.data() + offset, sizeof(address));
+        std::memcpy(&id, packet.data.data() + offset + sizeof(address), sizeof(id));
+        node_map[address] = id;
+        offset += sizeof(address) + sizeof(id);
+    }
 }
 
 // Inserts the received beacon frame in the beacon queue and removes any older beacons if the size
@@ -217,11 +254,11 @@ static void HandleEAPoLPacket(const Network::WifiPacket& packet) {
 
         // Get an unused network node id
         u16 node_id = GetNextAvailableNodeId();
-        node.network_node_id = node_id + 1;
+        node.network_node_id = node_id;
 
-        connection_status.node_bitmask |= 1 << node_id;
-        connection_status.changed_nodes |= 1 << node_id;
-        connection_status.nodes[node_id] = node.network_node_id;
+        connection_status.node_bitmask |= 1 << (node_id - 1);
+        connection_status.changed_nodes |= 1 << (node_id - 1);
+        connection_status.nodes[node_id - 1] = node.network_node_id;
         connection_status.total_nodes++;
 
         u8 current_nodes = network_info.total_nodes;
@@ -229,7 +266,9 @@ static void HandleEAPoLPacket(const Network::WifiPacket& packet) {
 
         network_info.total_nodes++;
 
-        node_map[packet.transmitter_address] = node_id;
+        node_map[packet.transmitter_address] = node.network_node_id;
+
+        BroadcastNodeMap();
 
         // Send the EAPoL-Logoff packet.
         using Network::WifiPacket;
@@ -243,8 +282,7 @@ static void HandleEAPoLPacket(const Network::WifiPacket& packet) {
         eapol_logoff.type = WifiPacket::PacketType::Data;
 
         SendPacket(eapol_logoff);
-        // TODO(B3N30): Broadcast updated node list
-        // The 3ds does this presumably to support spectators.
+
         connection_status_event->Signal();
     } else {
         if (connection_status.status != static_cast<u32>(NetworkStatus::Connecting)) {
@@ -433,12 +471,12 @@ void HandleDeauthenticationFrame(const Network::WifiPacket& packet) {
 
     u16 node_id = node_map[packet.transmitter_address];
     auto node = std::find_if(node_info.begin(), node_info.end(), [&node_id](const NodeInfo& info) {
-        return info.network_node_id == node_id + 1;
+        return info.network_node_id == node_id;
     });
     ASSERT(node != node_info.end());
 
-    connection_status.node_bitmask &= ~(1 << node_id);
-    connection_status.changed_nodes |= 1 << node_id;
+    connection_status.node_bitmask &= ~(1 << (node_id - 1));
+    connection_status.changed_nodes |= 1 << (node_id - 1);
     connection_status.total_nodes--;
 
     network_info.total_nodes--;
@@ -474,6 +512,9 @@ void OnWifiPacketReceived(const Network::WifiPacket& packet) {
     case Network::WifiPacket::PacketType::Deauthentication:
         HandleDeauthenticationFrame(packet);
         break;
+    case Network::WifiPacket::PacketType::NodeMap:
+        HandleNodeMapPacket(packet);
+        break;
     }
 }
 
@@ -487,6 +528,7 @@ void NWM_UDS::Shutdown(Kernel::HLERequestContext& ctx) {
         bind_node.second.event->Signal();
     }
     channel_data.clear();
+    node_map.clear();
 
     recv_buffer_memory.reset();
 
@@ -813,6 +855,7 @@ void NWM_UDS::BeginHostingNetwork(Kernel::HLERequestContext& ctx) {
 void NWM_UDS::UpdateNetworkAttribute(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x07, 2, 0);
     rp.Skip(2, false);
+    LOG_WARNING(Service_NWM, "stubbed");
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
 }
@@ -839,6 +882,7 @@ void NWM_UDS::DestroyNetwork(Kernel::HLERequestContext& ctx) {
     connection_status = {};
     connection_status.status = static_cast<u32>(NetworkStatus::NotConnected);
     connection_status.network_node_id = tmp_node_id;
+    node_map.clear();
     connection_status_event->Signal();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
@@ -867,6 +911,7 @@ void NWM_UDS::DisconnectNetwork(Kernel::HLERequestContext& ctx) {
             connection_status = {};
             connection_status.status = static_cast<u32>(NetworkStatus::ConnectedAsHost);
             connection_status.network_node_id = tmp_node_id;
+            node_map.clear();
             LOG_DEBUG(Service_NWM, "called as a host");
             rb.Push(ResultCode(ErrCodes::WrongStatus, ErrorModule::UDS, ErrorSummary::InvalidState,
                                ErrorLevel::Status));
@@ -876,6 +921,7 @@ void NWM_UDS::DisconnectNetwork(Kernel::HLERequestContext& ctx) {
         connection_status = {};
         connection_status.status = static_cast<u32>(NetworkStatus::NotConnected);
         connection_status.network_node_id = tmp_node_id;
+        node_map.clear();
         connection_status_event->Signal();
 
         deauth.channel = network_channel;
@@ -904,7 +950,10 @@ void NWM_UDS::SendTo(Kernel::HLERequestContext& ctx) {
     u8 data_channel = rp.Pop<u8>();
     rp.Skip(1, false);
     u32 data_size = rp.Pop<u32>();
-    u32 flags = rp.Pop<u32>();
+    u8 flags = rp.Pop<u8>();
+
+    // There should never be a dest_node_id of 0
+    ASSERT(dest_node_id != 0);
 
     std::vector<u8> input_buffer = rp.PopStaticBuffer();
     ASSERT(input_buffer.size() >= data_size);
@@ -921,12 +970,37 @@ void NWM_UDS::SendTo(Kernel::HLERequestContext& ctx) {
     }
 
     if (dest_node_id == connection_status.network_node_id) {
+        LOG_ERROR(Service_NWM, "tried to send packet to itself");
         rb.Push(ResultCode(ErrorDescription::NotFound, ErrorModule::UDS,
                            ErrorSummary::WrongArgument, ErrorLevel::Status));
         return;
     }
 
-    // TODO(B3N30): Do something with the flags.
+    Network::MacAddress dest_address;
+
+    if (flags >> 2) {
+        LOG_ERROR(Service_NWM, "Unexpected flags 0x%02X", flags);
+    }
+
+    if ((flags & (0x1 << 1)) || dest_node_id == 0xFFFF) {
+        // Broadcast
+        dest_address = Network::BroadcastMac;
+    } else if (dest_node_id != 1) {
+        // Send to specific client
+        auto destination =
+            std::find_if(node_map.begin(), node_map.end(),
+                         [dest_node_id](const auto& node) { return node.second == dest_node_id; });
+        if (destination == node_map.end()) {
+            LOG_ERROR(Service_NWM, "tried to send packet to unknown dest id %u", dest_node_id);
+            rb.Push(ResultCode(ErrorDescription::NotFound, ErrorModule::UDS,
+                               ErrorSummary::WrongArgument, ErrorLevel::Status));
+            return;
+        }
+        dest_address = destination->first;
+    } else {
+        // Send message to host
+        dest_address = network_info.host_mac_address;
+    }
 
     constexpr size_t MaxSize = 0x5C6;
     if (data_size > MaxSize) {
@@ -945,12 +1019,8 @@ void NWM_UDS::SendTo(Kernel::HLERequestContext& ctx) {
     // and encapsulate the payload.
 
     Network::WifiPacket packet;
-    // Data frames are sent to the host, who then decides where to route it to. If we're the host,
-    // just directly broadcast the frame.
-    if (connection_status.status == static_cast<u32>(NetworkStatus::ConnectedAsHost))
-        packet.destination_address = Network::BroadcastMac;
-    else
-        packet.destination_address = network_info.host_mac_address;
+
+    packet.destination_address = dest_address;
     packet.channel = network_channel;
     packet.data = std::move(data_payload);
     packet.type = Network::WifiPacket::PacketType::Data;
