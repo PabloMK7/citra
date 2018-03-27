@@ -91,6 +91,7 @@ if (NOT MSVC)
 
     if (MINGW)
         add_definitions(-DMINGW_HAS_SECURE_API)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -gdwarf")
 
         if (MINGW_STATIC_BUILD)
             add_definitions(-DQT_STATICPLUGIN)
