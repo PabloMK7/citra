@@ -46,7 +46,7 @@ protected:
 
 class DiskDirectory : public DirectoryBackend {
 public:
-    DiskDirectory(const std::string& path);
+    explicit DiskDirectory(const std::string& path);
 
     ~DiskDirectory() override {
         Close();
