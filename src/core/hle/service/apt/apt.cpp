@@ -490,7 +490,7 @@ void Module::Interface::PrepareToStartLibraryApplet(Kernel::HLERequestContext& c
     IPC::RequestParser rp(ctx, 0x18, 1, 0); // 0x180040
     AppletId applet_id = rp.PopEnum<AppletId>();
 
-    NGLOG_DEBUG(Service_APT, "called, applet_id={:#010X}", static_cast<u32>(applet_id));
+    NGLOG_DEBUG(Service_APT, "called, applet_id={:08X}", static_cast<u32>(applet_id));
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(apt->applet_manager->PrepareToStartLibraryApplet(applet_id));
@@ -514,7 +514,7 @@ void Module::Interface::PreloadLibraryApplet(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x16, 1, 0); // 0x160040
     AppletId applet_id = rp.PopEnum<AppletId>();
 
-    NGLOG_DEBUG(Service_APT, "called, applet_id={:#010X}", static_cast<u32>(applet_id));
+    NGLOG_DEBUG(Service_APT, "called, applet_id={:08X}", static_cast<u32>(applet_id));
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(apt->applet_manager->PreloadLibraryApplet(applet_id));
@@ -538,7 +538,7 @@ void Module::Interface::StartLibraryApplet(Kernel::HLERequestContext& ctx) {
     Kernel::SharedPtr<Kernel::Object> object = rp.PopGenericObject();
     std::vector<u8> buffer = rp.PopStaticBuffer();
 
-    NGLOG_DEBUG(Service_APT, "called applet_id={:#010X}", static_cast<u32>(applet_id));
+    NGLOG_DEBUG(Service_APT, "called, applet_id={:08X}", static_cast<u32>(applet_id));
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(apt->applet_manager->StartLibraryApplet(applet_id, object, buffer));
