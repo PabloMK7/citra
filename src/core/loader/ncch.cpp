@@ -156,7 +156,7 @@ ResultStatus AppLoader_NCCH::Load(Kernel::SharedPtr<Kernel::Process>& process) {
     ReadProgramId(ncch_program_id);
     std::string program_id{Common::StringFromFormat("%016" PRIX64, ncch_program_id)};
 
-    LOG_INFO(Loader, "Program ID: %s", program_id.c_str());
+    NGLOG_INFO(Loader, "Program ID: {}", program_id);
 
     update_ncch.OpenFile(Service::AM::GetTitleContentPath(Service::FS::MediaType::SDMC,
                                                           ncch_program_id | UPDATE_MASK));

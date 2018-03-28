@@ -272,18 +272,18 @@ const char* ElfReader::GetSectionName(int section) const {
 }
 
 SharedPtr<CodeSet> ElfReader::LoadInto(u32 vaddr) {
-    LOG_DEBUG(Loader, "String section: %i", header->e_shstrndx);
+    NGLOG_DEBUG(Loader, "String section: {}", header->e_shstrndx);
 
     // Should we relocate?
     relocate = (header->e_type != ET_EXEC);
 
     if (relocate) {
-        LOG_DEBUG(Loader, "Relocatable module");
+        NGLOG_DEBUG(Loader, "Relocatable module");
         entryPoint += vaddr;
     } else {
-        LOG_DEBUG(Loader, "Prerelocated executable");
+        NGLOG_DEBUG(Loader, "Prerelocated executable");
     }
-    LOG_DEBUG(Loader, "%i segments:", header->e_phnum);
+    NGLOG_DEBUG(Loader, "{} segments:", header->e_phnum);
 
     // First pass : Get the bits into RAM
     u32 base_addr = relocate ? vaddr : 0;
@@ -303,8 +303,8 @@ SharedPtr<CodeSet> ElfReader::LoadInto(u32 vaddr) {
 
     for (unsigned int i = 0; i < header->e_phnum; ++i) {
         Elf32_Phdr* p = &segments[i];
-        LOG_DEBUG(Loader, "Type: %i Vaddr: %08X Filesz: %8X Memsz: %8X ", p->p_type, p->p_vaddr,
-                  p->p_filesz, p->p_memsz);
+        NGLOG_DEBUG(Loader, "Type: {} Vaddr: {:08X} Filesz: {:08X} Memsz: {:08X} ", p->p_type,
+                    p->p_vaddr, p->p_filesz, p->p_memsz);
 
         if (p->p_type == PT_LOAD) {
             CodeSet::Segment* codeset_segment;
@@ -316,16 +316,16 @@ SharedPtr<CodeSet> ElfReader::LoadInto(u32 vaddr) {
             } else if (permission_flags == (PF_R | PF_W)) {
                 codeset_segment = &codeset->data;
             } else {
-                LOG_ERROR(Loader, "Unexpected ELF PT_LOAD segment id %u with flags %X", i,
-                          p->p_flags);
+                NGLOG_ERROR(Loader, "Unexpected ELF PT_LOAD segment id {} with flags {:X}", i,
+                            p->p_flags);
                 continue;
             }
 
             if (codeset_segment->size != 0) {
-                LOG_ERROR(Loader,
-                          "ELF has more than one segment of the same type. Skipping extra "
-                          "segment (id %i)",
-                          i);
+                NGLOG_ERROR(Loader,
+                            "ELF has more than one segment of the same type. Skipping extra "
+                            "segment (id {})",
+                            i);
                 continue;
             }
 
@@ -344,7 +344,7 @@ SharedPtr<CodeSet> ElfReader::LoadInto(u32 vaddr) {
     codeset->entrypoint = base_addr + header->e_entry;
     codeset->memory = std::make_shared<std::vector<u8>>(std::move(program_image));
 
-    LOG_DEBUG(Loader, "Done loading.");
+    NGLOG_DEBUG(Loader, "Done loading.");
 
     return codeset;
 }
