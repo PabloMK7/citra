@@ -52,7 +52,7 @@ public:
         Close();
     }
 
-    u32 Read(const u32 count, Entry* entries) override;
+    u32 Read(u32 count, Entry* entries) override;
 
     bool Close() const override {
         return true;
