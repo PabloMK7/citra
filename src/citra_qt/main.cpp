@@ -304,10 +304,13 @@ void GMainWindow::InitializeRecentFileMenuActions() {
 void GMainWindow::InitializeHotkeys() {
     RegisterHotkey("Main Window", "Load File", QKeySequence::Open);
     RegisterHotkey("Main Window", "Start Emulation");
-    RegisterHotkey("Main Window", "Swap Screens", QKeySequence("F9"));
-    RegisterHotkey("Main Window", "Toggle Screen Layout", QKeySequence("F10"));
+    RegisterHotkey("Main Window", "Continue/Pause", QKeySequence(Qt::Key_F4));
+    RegisterHotkey("Main Window", "Swap Screens", QKeySequence(tr("F9")));
+    RegisterHotkey("Main Window", "Toggle Screen Layout", QKeySequence(tr("F10")));
     RegisterHotkey("Main Window", "Fullscreen", QKeySequence::FullScreen);
     RegisterHotkey("Main Window", "Exit Fullscreen", QKeySequence(Qt::Key_Escape),
+                   Qt::ApplicationShortcut);
+    RegisterHotkey("Main Window", "Toggle Speed Limit", QKeySequence("CTRL+Z"),
                    Qt::ApplicationShortcut);
     RegisterHotkey("Main Window", "Increase Speed Limit", QKeySequence("+"),
                    Qt::ApplicationShortcut);
@@ -319,6 +322,15 @@ void GMainWindow::InitializeHotkeys() {
             &GMainWindow::OnMenuLoadFile);
     connect(GetHotkey("Main Window", "Start Emulation", this), &QShortcut::activated, this,
             &GMainWindow::OnStartGame);
+    connect(GetHotkey("Main Window", "Continue/Pause", this), &QShortcut::activated, this, [&] {
+        if (emulation_running) {
+            if (emu_thread->IsRunning()) {
+                OnPauseGame();
+            } else {
+                OnStartGame();
+            }
+        }
+    });
     connect(GetHotkey("Main Window", "Swap Screens", render_window), &QShortcut::activated,
             ui.action_Screen_Layout_Swap_Screens, &QAction::trigger);
     connect(GetHotkey("Main Window", "Toggle Screen Layout", render_window), &QShortcut::activated,
@@ -332,6 +344,10 @@ void GMainWindow::InitializeHotkeys() {
             ui.action_Fullscreen->setChecked(false);
             ToggleFullscreen();
         }
+    });
+    connect(GetHotkey("Main Window", "Toggle Speed Limit", this), &QShortcut::activated, this, [&] {
+        Settings::values.use_frame_limit = !Settings::values.use_frame_limit;
+        UpdateStatusBar();
     });
     constexpr u16 SPEED_LIMIT_STEP = 5;
     connect(GetHotkey("Main Window", "Increase Speed Limit", this), &QShortcut::activated, this,
