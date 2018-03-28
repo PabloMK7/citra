@@ -32,8 +32,8 @@ void Module::Interface::Initialize(Kernel::HLERequestContext& ctx) {
     AppletId app_id = rp.PopEnum<AppletId>();
     u32 attributes = rp.Pop<u32>();
 
-    NGLOG_DEBUG(Service_APT, "called app_id={:#010X}, attributes={:#010X}", static_cast<u32>(app_id),
-                attributes);
+    NGLOG_DEBUG(Service_APT, "called app_id={:#010X}, attributes={:#010X}",
+                static_cast<u32>(app_id), attributes);
 
     auto result = apt->applet_manager->Initialize(app_id, attributes);
     if (result.Failed()) {
@@ -329,8 +329,8 @@ void Module::Interface::ReceiveParameter(Kernel::HLERequestContext& ctx) {
     AppletId app_id = rp.PopEnum<AppletId>();
     u32 buffer_size = rp.Pop<u32>();
 
-    NGLOG_DEBUG(Service_APT, "called app_id={:#010X}, buffer_size={:#010X}", static_cast<u32>(app_id),
-              buffer_size);
+    NGLOG_DEBUG(Service_APT, "called app_id={:#010X}, buffer_size={:#010X}",
+                static_cast<u32>(app_id), buffer_size);
 
     auto next_parameter = apt->applet_manager->ReceiveParameter(app_id);
 
@@ -357,8 +357,8 @@ void Module::Interface::GlanceParameter(Kernel::HLERequestContext& ctx) {
     AppletId app_id = rp.PopEnum<AppletId>();
     u32 buffer_size = rp.Pop<u32>();
 
-    NGLOG_DEBUG(Service_APT, "called app_id={:#010X}, buffer_size={:#010X}", static_cast<u32>(app_id),
-                buffer_size);
+    NGLOG_DEBUG(Service_APT, "called app_id={:#010X}, buffer_size={:#010X}",
+                static_cast<u32>(app_id), buffer_size);
 
     auto next_parameter = apt->applet_manager->GlanceParameter(app_id);
 
@@ -415,10 +415,11 @@ void Module::Interface::PrepareToStartApplication(Kernel::HLERequestContext& ctx
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS); // No error
 
-    NGLOG_WARNING(Service_APT,
-                  "(STUBBED) called title_info1={:#010X}, title_info2={:#010X}, title_info3={:#010X},"
-                  "title_info4={:#010X}, flags={:#010X}",
-                  title_info1, title_info2, title_info3, title_info4, flags);
+    NGLOG_WARNING(
+        Service_APT,
+        "(STUBBED) called title_info1={:#010X}, title_info2={:#010X}, title_info3={:#010X},"
+        "title_info4={:#010X}, flags={:#010X}",
+        title_info1, title_info2, title_info3, title_info4, flags);
 }
 
 void Module::Interface::StartApplication(Kernel::HLERequestContext& ctx) {
@@ -466,7 +467,8 @@ void Module::Interface::SetAppCpuTimeLimit(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS); // No error
 
-    NGLOG_WARNING(Service_APT, "(STUBBED) called, cpu_percent={}, value={}", apt->cpu_percent, value);
+    NGLOG_WARNING(Service_APT, "(STUBBED) called, cpu_percent={}, value={}", apt->cpu_percent,
+                  value);
 }
 
 void Module::Interface::GetAppCpuTimeLimit(Kernel::HLERequestContext& ctx) {
@@ -622,15 +624,16 @@ void Module::Interface::GetStartupArgument(Kernel::HLERequestContext& ctx) {
 
     if (parameter_size >= 0x300) {
         NGLOG_ERROR(
-              Service_APT,
-              "Parameter size is outside the valid range (capped to 0x300): parameter_size={:#010X}",
-              parameter_size);
+            Service_APT,
+            "Parameter size is outside the valid range (capped to 0x300): parameter_size={:#010X}",
+            parameter_size);
         return;
     }
 
     std::vector<u8> parameter(parameter_size, 0);
 
-    NGLOG_WARNING(Service_APT, "(STUBBED) called, startup_argument_type={}, parameter_size={:#010X}",
+    NGLOG_WARNING(Service_APT,
+                  "(STUBBED) called, startup_argument_type={}, parameter_size={:#010X}",
                   static_cast<u32>(startup_argument_type), parameter_size);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
@@ -655,7 +658,8 @@ void Module::Interface::Wrap(Kernel::HLERequestContext& ctx) {
     ASSERT_MSG(output_size == input_size + HW::AES::CCM_MAC_SIZE,
                "input_size (%d) doesn't match to output_size (%d)", input_size, output_size);
 
-    NGLOG_DEBUG(Service_APT, "called, output_size={}, input_size={}, nonce_offset={}, nonce_size={}",
+    NGLOG_DEBUG(Service_APT,
+                "called, output_size={}, input_size={}, nonce_offset={}, nonce_size={}",
                 output_size, input_size, nonce_offset, nonce_size);
 
     // Note: This weird nonce size modification is verified against real 3DS
@@ -700,7 +704,8 @@ void Module::Interface::Unwrap(Kernel::HLERequestContext& ctx) {
     ASSERT_MSG(output_size == input_size - HW::AES::CCM_MAC_SIZE,
                "input_size (%d) doesn't match to output_size (%d)", input_size, output_size);
 
-    NGLOG_DEBUG(Service_APT, "called, output_size={}, input_size={}, nonce_offset={}, nonce_size={}",
+    NGLOG_DEBUG(Service_APT,
+                "called, output_size={}, input_size={}, nonce_offset={}, nonce_size={}",
                 output_size, input_size, nonce_offset, nonce_size);
 
     // Note: This weird nonce size modification is verified against real 3DS
