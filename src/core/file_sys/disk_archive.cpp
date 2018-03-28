@@ -52,7 +52,7 @@ bool DiskFile::Close() const {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-DiskDirectory::DiskDirectory(const std::string& path) : directory() {
+DiskDirectory::DiskDirectory(const std::string& path) {
     unsigned size = FileUtil::ScanDirectoryTree(path, directory);
     directory.size = size;
     directory.isDirectory = true;
