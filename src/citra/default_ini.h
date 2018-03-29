@@ -60,6 +60,7 @@ c_stick=
 #  - "motion_emu" (default) for emulating motion input from mouse input. Required parameters:
 #      - "update_period": update period in milliseconds (default to 100)
 #      - "sensitivity": the coefficient converting mouse movement to tilting angle (default to 0.01)
+#      - "tilt_clamp": the max value of the tilt angle in degrees (default to 90)
 motion_device=
 
 # for touch input, the following devices are available:
