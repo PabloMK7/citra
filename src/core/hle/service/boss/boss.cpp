@@ -399,8 +399,8 @@ void ReceiveProperty(Service::Interface* self) {
     cmd_buff[0] = IPC::MakeHeader(0x16, 0x2, 0x2);
     cmd_buff[1] = RESULT_SUCCESS.raw;
     cmd_buff[2] = 0; // stub 0 (32 bit value)
-    cmd_buff[2] = (buff_size << 4 | 0xC);
-    cmd_buff[3] = buff_addr;
+    cmd_buff[3] = (buff_size << 4 | 0xC);
+    cmd_buff[4] = buff_addr;
 
     LOG_WARNING(Service_BOSS,
                 "(STUBBED) unk_param1=0x%08X, buff_size=0x%08X, "
