@@ -103,9 +103,9 @@ inline GLenum BlendEquation(Pica::FramebufferRegs::BlendEquation equation) {
 
     // Range check table for input
     if (static_cast<size_t>(equation) >= ARRAY_SIZE(blend_equation_table)) {
-        LOG_CRITICAL(Render_OpenGL, "Unknown blend equation %u", static_cast<u32>(equation));
-        UNREACHABLE();
+        LOG_ERROR(Render_OpenGL, "Unknown blend equation %u", static_cast<u32>(equation));
 
+        // This return value is hwtested, not just a stub
         return GL_FUNC_ADD;
     }
 
