@@ -69,7 +69,7 @@ int main(int argc, char** argv) {
     std::string token;
     std::string announce_url;
     u64 preferred_game_id = 0;
-    u16 port = Network::DefaultRoomPort;
+    u32 port = Network::DefaultRoomPort;
     u32 max_members = 16;
 
     static struct option long_options[] = {
