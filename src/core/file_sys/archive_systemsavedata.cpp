@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <algorithm>
+#include <cstring>
 #include <memory>
 #include <vector>
 #include "common/common_types.h"
@@ -19,10 +20,11 @@
 namespace FileSys {
 
 std::string GetSystemSaveDataPath(const std::string& mount_point, const Path& path) {
-    std::vector<u8> vec_data = path.AsBinary();
-    const u32* data = reinterpret_cast<const u32*>(vec_data.data());
-    u32 save_low = data[1];
-    u32 save_high = data[0];
+    const std::vector<u8> vec_data = path.AsBinary();
+    u32 save_low;
+    u32 save_high;
+    std::memcpy(&save_low, &vec_data[4], sizeof(u32));
+    std::memcpy(&save_high, &vec_data[0], sizeof(u32));
     return Common::StringFromFormat("%s%08X/%08X/", mount_point.c_str(), save_low, save_high);
 }
 
