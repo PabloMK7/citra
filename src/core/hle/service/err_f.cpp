@@ -200,6 +200,7 @@ void ERR_F::ThrowFatalError(Kernel::HLERequestContext& ctx) {
         case ExceptionType::PrefetchAbort:
             LOG_CRITICAL(Service_ERR, "IFSR: 0x%08X", errtype.exception_data.exception_info.sr);
             LOG_CRITICAL(Service_ERR, "r15: 0x%08X", errtype.exception_data.exception_info.ar);
+            break;
         case ExceptionType::DataAbort:
             LOG_CRITICAL(Service_ERR, "DFSR: 0x%08X", errtype.exception_data.exception_info.sr);
             LOG_CRITICAL(Service_ERR, "DFAR: 0x%08X", errtype.exception_data.exception_info.ar);
