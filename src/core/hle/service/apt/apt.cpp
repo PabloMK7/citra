@@ -200,7 +200,7 @@ void Module::Interface::GetSharedFont(Kernel::HLERequestContext& ctx) {
             NGLOG_WARNING(Service_APT, "Loaded shared font by legacy method");
             apt->shared_font_loaded = true;
         } else {
-            LOG_ERROR(Service_APT, "shared font file missing - go dump it from your 3ds");
+            NGLOG_ERROR(Service_APT, "shared font file missing - go dump it from your 3ds");
             rb.Push<u32>(-1); // TODO: Find the right error code
             rb.Push<u32>(0);
             rb.PushCopyObjects<Kernel::Object>(nullptr);
