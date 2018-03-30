@@ -224,8 +224,9 @@ void GMainWindow::InitializeWidgets() {
     announce_multiplayer_session->BindErrorCallback(
         [this](const Common::WebResult& result) { emit AnnounceFailed(result); });
     connect(this, &GMainWindow::AnnounceFailed, this, &GMainWindow::OnAnnounceFailed);
-    network_status = new ClickableLabel();
-    network_status->setToolTip(tr("Current connection status"));
+    network_status_text = new ClickableLabel(this);
+    network_status_icon = new ClickableLabel(this);
+    network_status_text->setToolTip(tr("Current connection status"));
 
     for (auto& label : {emu_speed_label, game_fps_label, emu_frametime_label}) {
         label->setVisible(false);
@@ -233,9 +234,10 @@ void GMainWindow::InitializeWidgets() {
         label->setContentsMargins(4, 0, 4, 0);
         statusBar()->addPermanentWidget(label, 0);
     }
-    statusBar()->addPermanentWidget(network_status, 0);
-    network_status->setPixmap(QIcon::fromTheme("disconnected").pixmap(16));
-    network_status->setText(tr("Not Connected. Join a room for online play!"));
+    statusBar()->addPermanentWidget(network_status_text, 0);
+    statusBar()->addPermanentWidget(network_status_icon, 0);
+    network_status_icon->setPixmap(QIcon::fromTheme("disconnected").pixmap(16));
+    network_status_text->setText(tr("Not Connected. Click here to find a room!"));
     statusBar()->setVisible(true);
 
     // Removes an ugly inner border from the status bar widgets under Linux
@@ -430,7 +432,8 @@ void GMainWindow::ConnectWidgetEvents() {
     connect(this, &GMainWindow::CIAInstallReport, this, &GMainWindow::OnCIAInstallReport);
     connect(this, &GMainWindow::CIAInstallFinished, this, &GMainWindow::OnCIAInstallFinished);
 
-    connect(network_status, &ClickableLabel::clicked, this, &GMainWindow::OnOpenNetworkRoom);
+    connect(network_status_text, &ClickableLabel::clicked, this, &GMainWindow::OnOpenNetworkRoom);
+    connect(network_status_icon, &ClickableLabel::clicked, this, &GMainWindow::OnOpenNetworkRoom);
 }
 
 void GMainWindow::ConnectMenuEvents() {
@@ -931,13 +934,13 @@ void GMainWindow::OnMenuRecentFile() {
 void GMainWindow::OnNetworkStateChanged(const Network::RoomMember::State& state) {
     LOG_INFO(Frontend, "network state change");
     if (state == Network::RoomMember::State::Joined) {
-        network_status->setPixmap(QIcon::fromTheme("connected").pixmap(16));
-        network_status->setText(tr("Connected"));
+        network_status_icon->setPixmap(QIcon::fromTheme("connected").pixmap(16));
+        network_status_text->setText(tr("Connected"));
         ui.action_Chat->setEnabled(true);
         return;
     }
-    network_status->setPixmap(QIcon::fromTheme("disconnected").pixmap(16));
-    network_status->setText(tr("Not Connected"));
+    network_status_icon->setPixmap(QIcon::fromTheme("disconnected").pixmap(16));
+    network_status_text->setText(tr("Not Connected"));
     ui.action_Chat->setDisabled(true);
 
     ChangeRoomState();
