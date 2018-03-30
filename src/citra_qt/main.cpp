@@ -112,6 +112,9 @@ GMainWindow::GMainWindow() : config(new Config()), emu_thread(nullptr) {
     ui.setupUi(this);
     statusBar()->hide();
 
+    default_theme_paths = QIcon::themeSearchPaths();
+    UpdateUITheme();
+
     InitializeWidgets();
     InitializeDebugWidgets();
     InitializeRecentFileMenuActions();
@@ -129,9 +132,6 @@ GMainWindow::GMainWindow() : config(new Config()), emu_thread(nullptr) {
     show();
 
     game_list->PopulateAsync(UISettings::values.gamedir, UISettings::values.gamedir_deepscan);
-
-    default_theme_paths = QIcon::themeSearchPaths();
-    UpdateUITheme();
 
     // Show one-time "callout" messages to the user
     ShowCallouts();
@@ -1249,6 +1249,7 @@ void GMainWindow::UpdateUITheme() {
         QIcon::setThemeName(":/icons/default");
     }
     QIcon::setThemeSearchPaths(theme_paths);
+    emit UpdateThemedIcons();
 }
 
 void GMainWindow::LoadTranslation() {

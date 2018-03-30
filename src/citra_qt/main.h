@@ -74,6 +74,8 @@ signals:
     void UpdateProgress(size_t written, size_t total);
     void CIAInstallReport(Service::AM::InstallStatus status, QString filepath);
     void CIAInstallFinished();
+    // Signal that tells widgets to update icons to use the current theme
+    void UpdateThemedIcons();
 
 private:
     void InitializeWidgets();
