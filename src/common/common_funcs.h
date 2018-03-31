@@ -4,7 +4,7 @@
 
 #pragma once
 
-#if !defined(ARCHITECTURE_x86_64) && !defined(_M_ARM)
+#if !defined(ARCHITECTURE_x86_64) && !defined(ARCHITECTURE_ARM)
 #include <cstdlib> // for exit
 #endif
 #include "common/common_types.h"
@@ -32,7 +32,7 @@
 
 #ifdef ARCHITECTURE_x86_64
 #define Crash() __asm__ __volatile__("int $3")
-#elif defined(_M_ARM)
+#elif defined(ARCHITECTURE_ARM)
 #define Crash() __asm__ __volatile__("trap")
 #else
 #define Crash() exit(1)
