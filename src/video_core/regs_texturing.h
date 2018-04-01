@@ -158,7 +158,12 @@ struct TexturingRegs {
         return address * 8;
     }
 
-    INSERT_PADDING_WORDS(0x3);
+    union {
+        BitField<0, 1, u32> orthographic; // 0: enable perspective divide
+        BitField<1, 23, u32> bias;        // 23-bit fraction
+    } shadow;
+
+    INSERT_PADDING_WORDS(0x2);
     BitField<0, 4, TextureFormat> texture0_format;
     BitField<0, 1, u32> fragment_lighting_enable;
     INSERT_PADDING_WORDS(0x1);

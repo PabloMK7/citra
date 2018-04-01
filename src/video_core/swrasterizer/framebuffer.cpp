@@ -359,5 +359,54 @@ u8 LogicOp(u8 src, u8 dest, FramebufferRegs::LogicOp op) {
     UNREACHABLE();
 };
 
+// Decode/Encode for shadow map format. It is similar to D24S8 format, but the depth field is in
+// big-endian
+static const Math::Vec2<u32> DecodeD24S8Shadow(const u8* bytes) {
+    return {static_cast<u32>((bytes[0] << 16) | (bytes[1] << 8) | bytes[2]), bytes[3]};
+}
+
+static void EncodeD24X8Shadow(u32 depth, u8* bytes) {
+    bytes[2] = depth & 0xFF;
+    bytes[1] = (depth >> 8) & 0xFF;
+    bytes[0] = (depth >> 16) & 0xFF;
+}
+
+static void EncodeX24S8Shadow(u8 stencil, u8* bytes) {
+    bytes[3] = stencil;
+}
+
+void DrawShadowMapPixel(int x, int y, u32 depth, u8 stencil) {
+    const auto& framebuffer = g_state.regs.framebuffer.framebuffer;
+    const auto& shadow = g_state.regs.framebuffer.shadow;
+    const PAddr addr = framebuffer.GetColorBufferPhysicalAddress();
+
+    y = framebuffer.height - y;
+
+    const u32 coarse_y = y & ~7;
+    u32 bytes_per_pixel = 4;
+    u32 dst_offset = VideoCore::GetMortonOffset(x, y, bytes_per_pixel) +
+                     coarse_y * framebuffer.width * bytes_per_pixel;
+    u8* dst_pixel = Memory::GetPhysicalPointer(addr) + dst_offset;
+
+    auto ref = DecodeD24S8Shadow(dst_pixel);
+    u32 ref_z = ref.x;
+    u32 ref_s = ref.y;
+
+    if (depth < ref_z) {
+        if (stencil == 0) {
+            EncodeD24X8Shadow(depth, dst_pixel);
+        } else {
+            float16 constant = float16::FromRaw(shadow.constant);
+            float16 linear = float16::FromRaw(shadow.linear);
+            float16 x = float16::FromFloat32(static_cast<float>(depth) / ref_z);
+            float16 stencil_new = float16::FromFloat32(stencil) / (constant + linear * x);
+            stencil = static_cast<u8>(MathUtil::Clamp(stencil_new.ToFloat32(), 0.0f, 255.0f));
+
+            if (stencil < ref_s)
+                EncodeX24S8Shadow(stencil, dst_pixel);
+        }
+    }
+}
+
 } // namespace Rasterizer
 } // namespace Pica

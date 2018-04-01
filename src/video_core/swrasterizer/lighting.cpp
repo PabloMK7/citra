@@ -25,6 +25,16 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(
     const Math::Quaternion<float>& normquat, const Math::Vec3<float>& view,
     const Math::Vec4<u8> (&texture_color)[4]) {
 
+    Math::Vec4<float> shadow;
+    if (lighting.config0.enable_shadow) {
+        shadow = texture_color[lighting.config0.shadow_selector].Cast<float>() / 255.0f;
+        if (lighting.config0.shadow_invert) {
+            shadow = Math::MakeVec(1.0f, 1.0f, 1.0f, 1.0f) - shadow;
+        }
+    } else {
+        shadow = Math::MakeVec(1.0f, 1.0f, 1.0f, 1.0f);
+    }
+
     Math::Vec3<float> surface_normal;
     Math::Vec3<float> surface_tangent;
 
@@ -278,11 +288,38 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(
         }
 
         auto diffuse =
-            light_config.diffuse.ToVec3f() * dot_product + light_config.ambient.ToVec3f();
-        diffuse_sum += Math::MakeVec(diffuse * dist_atten * spot_atten, 0.0f);
+            (light_config.diffuse.ToVec3f() * dot_product + light_config.ambient.ToVec3f()) *
+            dist_atten * spot_atten;
+        auto specular = (specular_0 + specular_1) * clamp_highlights * dist_atten * spot_atten;
 
-        specular_sum += Math::MakeVec(
-            (specular_0 + specular_1) * clamp_highlights * dist_atten * spot_atten, 0.0f);
+        if (!lighting.IsShadowDisabled(num)) {
+            if (lighting.config0.shadow_primary) {
+                diffuse = diffuse * shadow.xyz();
+            }
+            if (lighting.config0.shadow_secondary) {
+                specular = specular * shadow.xyz();
+            }
+        }
+
+        diffuse_sum += Math::MakeVec(diffuse, 0.0f);
+        specular_sum += Math::MakeVec(specular, 0.0f);
+    }
+
+    if (lighting.config0.shadow_alpha) {
+        // Alpha shadow also uses the Fresnel selecotr to determine which alpha to apply
+        // Enabled for diffuse lighting alpha component
+        if (lighting.config0.fresnel_selector ==
+                LightingRegs::LightingFresnelSelector::PrimaryAlpha ||
+            lighting.config0.fresnel_selector == LightingRegs::LightingFresnelSelector::Both) {
+            diffuse_sum.a() *= shadow.w;
+        }
+
+        // Enabled for the specular lighting alpha component
+        if (lighting.config0.fresnel_selector ==
+                LightingRegs::LightingFresnelSelector::SecondaryAlpha ||
+            lighting.config0.fresnel_selector == LightingRegs::LightingFresnelSelector::Both) {
+            specular_sum.a() *= shadow.w;
+        }
     }
 
     diffuse_sum += Math::MakeVec(lighting.global_ambient.ToVec3f(), 0.0f);

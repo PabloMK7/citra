@@ -15,6 +15,12 @@
 namespace Pica {
 
 struct FramebufferRegs {
+    enum class FragmentOperationMode : u32 {
+        Default = 0,
+        Gas = 1,
+        Shadow = 3,
+    };
+
     enum class LogicOp : u32 {
         Clear = 0,
         And = 1,
@@ -84,6 +90,7 @@ struct FramebufferRegs {
 
     struct {
         union {
+            BitField<0, 2, FragmentOperationMode> fragment_operation_mode;
             // If false, logic blending is used
             BitField<8, 1, u32> alphablend_enable;
         };
@@ -274,7 +281,14 @@ struct FramebufferRegs {
         ASSERT_MSG(false, "Unknown depth format %u", static_cast<u32>(format));
     }
 
-    INSERT_PADDING_WORDS(0x20);
+    INSERT_PADDING_WORDS(0x10); // Gas related registers
+
+    union {
+        BitField<0, 16, u32> constant; // float1.5.10
+        BitField<16, 16, u32> linear;  // float1.5.10
+    } shadow;
+
+    INSERT_PADDING_WORDS(0xF);
 };
 
 static_assert(sizeof(FramebufferRegs) == 0x40 * sizeof(u32),

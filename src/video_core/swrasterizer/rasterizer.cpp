@@ -74,8 +74,9 @@ static int SignedArea(const Math::Vec2<Fix12P4>& vtx1, const Math::Vec2<Fix12P4>
 };
 
 /// Convert a 3D vector for cube map coordinates to 2D texture coordinates along with the face name
-static std::tuple<float24, float24, PAddr> ConvertCubeCoord(float24 u, float24 v, float24 w,
-                                                            const TexturingRegs& regs) {
+static std::tuple<float24, float24, float24, PAddr> ConvertCubeCoord(float24 u, float24 v,
+                                                                     float24 w,
+                                                                     const TexturingRegs& regs) {
     const float abs_u = std::abs(u.ToFloat32());
     const float abs_v = std::abs(v.ToFloat32());
     const float abs_w = std::abs(w.ToFloat32());
@@ -112,8 +113,9 @@ static std::tuple<float24, float24, PAddr> ConvertCubeCoord(float24 u, float24 v
         x = u;
         z = w;
     }
+    float24 z_abs = float24::FromFloat32(std::abs(z.ToFloat32()));
     const float24 half = float24::FromFloat32(0.5f);
-    return std::make_tuple(x / z * half + half, y / z * half + half, addr);
+    return std::make_tuple(x / z * half + half, y / z * half + half, z_abs, addr);
 }
 
 MICROPROFILE_DEFINE(GPU_Rasterization, "GPU", "Rasterization", MP_RGB(50, 50, 240));
@@ -331,19 +333,32 @@ static void ProcessTriangleInternal(const Vertex& v0, const Vertex& v1, const Ve
                 // Only unit 0 respects the texturing type (according to 3DBrew)
                 // TODO: Refactor so cubemaps and shadowmaps can be handled
                 PAddr texture_address = texture.config.GetPhysicalAddress();
+                float24 shadow_z;
                 if (i == 0) {
                     switch (texture.config.type) {
                     case TexturingRegs::TextureConfig::Texture2D:
                         break;
+                    case TexturingRegs::TextureConfig::ShadowCube:
                     case TexturingRegs::TextureConfig::TextureCube: {
                         auto w = GetInterpolatedAttribute(v0.tc0_w, v1.tc0_w, v2.tc0_w);
-                        std::tie(u, v, texture_address) = ConvertCubeCoord(u, v, w, regs.texturing);
+                        std::tie(u, v, shadow_z, texture_address) =
+                            ConvertCubeCoord(u, v, w, regs.texturing);
                         break;
                     }
                     case TexturingRegs::TextureConfig::Projection2D: {
                         auto tc0_w = GetInterpolatedAttribute(v0.tc0_w, v1.tc0_w, v2.tc0_w);
                         u /= tc0_w;
                         v /= tc0_w;
+                        break;
+                    }
+                    case TexturingRegs::TextureConfig::Shadow2D: {
+                        auto tc0_w = GetInterpolatedAttribute(v0.tc0_w, v1.tc0_w, v2.tc0_w);
+                        if (!regs.texturing.shadow.orthographic) {
+                            u /= tc0_w;
+                            v /= tc0_w;
+                        }
+
+                        shadow_z = float24::FromFloat32(std::abs(tc0_w.ToFloat32()));
                         break;
                     }
                     default:
@@ -393,6 +408,22 @@ static void ProcessTriangleInternal(const Vertex& v0, const Vertex& v1, const Ve
 
                     // TODO: Apply the min and mag filters to the texture
                     texture_color[i] = Texture::LookupTexture(texture_data, s, t, info);
+                }
+
+                if (i == 0 && (texture.config.type == TexturingRegs::TextureConfig::Shadow2D ||
+                               texture.config.type == TexturingRegs::TextureConfig::ShadowCube)) {
+
+                    s32 z_int = static_cast<s32>(std::min(shadow_z.ToFloat32(), 1.0f) * 0xFFFFFF);
+                    z_int -= regs.texturing.shadow.bias << 1;
+                    auto& color = texture_color[i];
+                    s32 z_ref = (color.w << 16) | (color.z << 8) | color.y;
+                    u8 density;
+                    if (z_ref >= z_int) {
+                        density = color.x;
+                    } else {
+                        density = 0;
+                    }
+                    texture_color[i] = {density, density, density, density};
                 }
             }
 
@@ -541,6 +572,17 @@ static void ProcessTriangleInternal(const Vertex& v0, const Vertex& v1, const Ve
             }
 
             const auto& output_merger = regs.framebuffer.output_merger;
+
+            if (output_merger.fragment_operation_mode ==
+                FramebufferRegs::FragmentOperationMode::Shadow) {
+                u32 depth_int = static_cast<u32>(depth * 0xFFFFFF);
+                // use green color as the shadow intensity
+                u8 stencil = combiner_output.y;
+                DrawShadowMapPixel(x >> 4, y >> 4, depth_int, stencil);
+                // skip the normal output merger pipeline if it is in shadow mode
+                continue;
+            }
+
             // TODO: Does alpha testing happen before or after stencil?
             if (output_merger.alpha_test.enable) {
                 bool pass = false;

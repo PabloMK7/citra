@@ -187,9 +187,15 @@ struct LightingRegs {
     BitField<0, 3, u32> max_light_index; // Number of enabled lights - 1
 
     union {
+        BitField<0, 1, u32> enable_shadow;
         BitField<2, 2, LightingFresnelSelector> fresnel_selector;
         BitField<4, 4, LightingConfig> config;
+        BitField<16, 1, u32> shadow_primary;
+        BitField<17, 1, u32> shadow_secondary;
+        BitField<18, 1, u32> shadow_invert;
+        BitField<19, 1, u32> shadow_alpha;
         BitField<22, 2, u32> bump_selector; // 0: Texture 0, 1: Texture 1, 2: Texture 2
+        BitField<24, 2, u32> shadow_selector;
         BitField<27, 1, u32> clamp_highlights;
         BitField<28, 2, LightingBumpMode> bump_mode;
         BitField<30, 1, u32> disable_bump_renorm;
@@ -197,6 +203,9 @@ struct LightingRegs {
 
     union {
         u32 raw;
+
+        // Each bit specifies whether shadow should be applied for the corresponding light.
+        BitField<0, 8, u32> disable_shadow;
 
         // Each bit specifies whether spot light attenuation should be applied for the corresponding
         // light.
@@ -222,6 +231,10 @@ struct LightingRegs {
 
     bool IsSpotAttenDisabled(unsigned index) const {
         return (config1.disable_spot_atten & (1 << index)) != 0;
+    }
+
+    bool IsShadowDisabled(unsigned index) const {
+        return (config1.disable_shadow & (1 << index)) != 0;
     }
 
     union {
