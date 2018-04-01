@@ -31,7 +31,7 @@ class Lobby : public QDialog {
 public:
     explicit Lobby(QWidget* parent, QStandardItemModel* list,
                    std::shared_ptr<Core::AnnounceMultiplayerSession> session);
-    ~Lobby();
+    ~Lobby() = default;
 
 public slots:
     /**

@@ -14,6 +14,7 @@
 #include "citra_qt/main.h"
 #include "citra_qt/multiplayer/host_room.h"
 #include "citra_qt/multiplayer/message.h"
+#include "citra_qt/multiplayer/state.h"
 #include "citra_qt/multiplayer/validation.h"
 #include "citra_qt/ui_settings.h"
 #include "common/logging/log.h"
@@ -136,8 +137,8 @@ void HostRoomWindow::OnConnection() {
                     LOG_ERROR(Network, "Starting announce session failed");
                 }
             }
-            auto parent = static_cast<GMainWindow*>(parentWidget());
-            parent->ChangeRoomState();
+            auto parent = static_cast<MultiplayerState*>(parentWidget());
+            // parent->ChangeRoomState();
             parent->OnOpenNetworkRoom();
             close();
             emit Closed();

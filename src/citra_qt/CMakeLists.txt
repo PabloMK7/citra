@@ -69,6 +69,8 @@ add_executable(citra-qt
     multiplayer/lobby.cpp
     multiplayer/message.h
     multiplayer/message.cpp
+    multiplayer/state.cpp
+    multiplayer/state.h
     multiplayer/validation.h
     ui_settings.cpp
     ui_settings.h

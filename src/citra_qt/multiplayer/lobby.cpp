@@ -11,6 +11,7 @@
 #include "citra_qt/multiplayer/lobby.h"
 #include "citra_qt/multiplayer/lobby_p.h"
 #include "citra_qt/multiplayer/message.h"
+#include "citra_qt/multiplayer/state.h"
 #include "citra_qt/multiplayer/validation.h"
 #include "citra_qt/ui_settings.h"
 #include "common/logging/log.h"
@@ -51,9 +52,9 @@ Lobby::Lobby(QWidget* parent, QStandardItemModel* list,
     ui->nickname->setText(UISettings::values.nickname);
 
     // UI Buttons
-    GMainWindow* p = reinterpret_cast<GMainWindow*>(parent);
+    MultiplayerState* p = reinterpret_cast<MultiplayerState*>(parent);
     connect(ui->refresh_list, &QPushButton::pressed, this, &Lobby::RefreshLobby);
-    connect(ui->chat, &QPushButton::pressed, p, &GMainWindow::OnOpenNetworkRoom);
+    connect(ui->chat, &QPushButton::pressed, p, &MultiplayerState::OnOpenNetworkRoom);
     connect(ui->games_owned, &QCheckBox::stateChanged, proxy,
             &LobbyFilterProxyModel::SetFilterOwned);
     connect(ui->hide_full, &QCheckBox::stateChanged, proxy, &LobbyFilterProxyModel::SetFilterFull);
@@ -64,7 +65,7 @@ Lobby::Lobby(QWidget* parent, QStandardItemModel* list,
     // Actions
     connect(this, &Lobby::LobbyRefreshed, this, &Lobby::OnRefreshLobby);
     // TODO(jroweboy): change this slot to OnConnected?
-    connect(this, &Lobby::Connected, p, &GMainWindow::OnOpenNetworkRoom);
+    connect(this, &Lobby::Connected, p, &MultiplayerState::OnOpenNetworkRoom);
 
     // setup the callbacks for network updates
     if (auto member = Network::GetRoomMember().lock()) {
@@ -89,8 +90,6 @@ Lobby::Lobby(QWidget* parent, QStandardItemModel* list,
     }
     ui->chat->setDisabled(true);
 }
-
-Lobby::~Lobby() {}
 
 const QString Lobby::PasswordPrompt() {
     bool ok;
@@ -305,7 +304,7 @@ void Lobby::OnConnection() {
             ShowError(NetworkMessage::UNABLE_TO_CONNECT);
             break;
         case Network::RoomMember::State::Joining:
-            auto parent = static_cast<GMainWindow*>(parentWidget());
+            auto parent = static_cast<MultiplayerState*>(parentWidget());
             parent->OnOpenNetworkRoom();
             close();
             break;

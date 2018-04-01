@@ -29,6 +29,7 @@ class GraphicsTracingWidget;
 class GraphicsVertexShaderWidget;
 class GRenderWindow;
 class MicroProfileDialog;
+class MultiplayerState;
 class ProfilerWidget;
 template <typename>
 class QFutureWatcher;
@@ -36,16 +37,6 @@ class QProgressBar;
 class RegistersWidget;
 class Updater;
 class WaitTreeWidget;
-
-// Multiplayer forward declarations
-class Lobby;
-class HostRoomWindow;
-class ClientRoomWindow;
-class DirectConnectWindow;
-
-namespace Core {
-class AnnounceMultiplayerSession;
-}
 
 class GMainWindow : public QMainWindow {
     Q_OBJECT
@@ -93,16 +84,6 @@ signals:
     void CIAInstallFinished();
     // Signal that tells widgets to update icons to use the current theme
     void UpdateThemedIcons();
-
-    void NetworkStateChanged(const Network::RoomMember::State&);
-    void AnnounceFailed(const Common::WebResult&);
-
-public slots:
-    void OnViewLobby();
-    void OnCreateRoom();
-    void OnCloseRoom();
-    void OnOpenNetworkRoom();
-    void OnDirectConnectToRoom();
 
 private:
     void InitializeWidgets();
@@ -173,8 +154,6 @@ private slots:
     /// Called whenever a user selects the "File->Select Game List Root" menu item
     void OnMenuSelectGameListRoot();
     void OnMenuRecentFile();
-    void OnNetworkStateChanged(const Network::RoomMember::State& state);
-    void OnAnnounceFailed(const Common::WebResult&);
     void OnConfigure();
     void OnToggleFilterBar();
     void OnDisplayTitleBars(bool);
@@ -211,12 +190,10 @@ private:
     QLabel* emu_speed_label = nullptr;
     QLabel* game_fps_label = nullptr;
     QLabel* emu_frametime_label = nullptr;
-    ClickableLabel* network_status_icon = nullptr;
-    ClickableLabel* network_status_text = nullptr;
     QTimer status_bar_update_timer;
 
+    MultiplayerState* multiplayer_state = nullptr;
     std::unique_ptr<Config> config;
-    std::shared_ptr<Core::AnnounceMultiplayerSession> announce_multiplayer_session;
 
     // Whether emulation is currently running in Citra.
     bool emulation_running = false;
@@ -237,14 +214,6 @@ private:
     bool explicit_update_check = false;
     bool defer_update_prompt = false;
 
-    // Multiplayer windows
-    Lobby* lobby = nullptr;
-    HostRoomWindow* host_room = nullptr;
-    ClientRoomWindow* client_room = nullptr;
-    DirectConnectWindow* direct_connect = nullptr;
-
-    Network::RoomMember::CallbackHandle<Network::RoomMember::State> state_callback_handle;
-
     QAction* actions_recent_files[max_recent_files_item];
 
     QTranslator translator;
@@ -260,4 +229,3 @@ protected:
 
 Q_DECLARE_METATYPE(size_t);
 Q_DECLARE_METATYPE(Service::AM::InstallStatus);
-Q_DECLARE_METATYPE(Common::WebResult);
