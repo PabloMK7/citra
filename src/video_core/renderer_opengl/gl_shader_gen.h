@@ -76,7 +76,8 @@ struct PicaShaderConfigState {
         bool clamp_highlights;
 
         Pica::LightingRegs::LightingConfig config;
-        Pica::LightingRegs::LightingFresnelSelector fresnel_selector;
+        bool enable_primary_alpha;
+        bool enable_secondary_alpha;
 
         struct {
             bool enable;

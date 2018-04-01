@@ -59,16 +59,6 @@ struct LightingRegs {
                      ///< NOTE: '8' is intentional, '7' does not appear to be a valid configuration
     };
 
-    /// Selects which lighting components are affected by fresnel
-    enum class LightingFresnelSelector : u32 {
-        None = 0,           ///< Fresnel is disabled
-        PrimaryAlpha = 1,   ///< Primary (diffuse) lighting alpha is affected by fresnel
-        SecondaryAlpha = 2, ///< Secondary (specular) lighting alpha is affected by fresnel
-        Both =
-            PrimaryAlpha |
-            SecondaryAlpha, ///< Both primary and secondary lighting alphas are affected by fresnel
-    };
-
     /// Factor used to scale the output of a lighting LUT
     enum class LightingScale : u32 {
         Scale1 = 0, ///< Scale is 1x
@@ -188,7 +178,8 @@ struct LightingRegs {
 
     union {
         BitField<0, 1, u32> enable_shadow;
-        BitField<2, 2, LightingFresnelSelector> fresnel_selector;
+        BitField<2, 1, u32> enable_primary_alpha;
+        BitField<3, 1, u32> enable_secondary_alpha;
         BitField<4, 4, LightingConfig> config;
         BitField<16, 1, u32> shadow_primary;
         BitField<17, 1, u32> shadow_secondary;

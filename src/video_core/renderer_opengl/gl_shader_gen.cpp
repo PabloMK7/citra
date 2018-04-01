@@ -154,7 +154,8 @@ PicaShaderConfig PicaShaderConfig::BuildFromRegs(const Pica::Regs& regs) {
     state.lighting.lut_rb.scale = regs.lighting.lut_scale.GetScale(regs.lighting.lut_scale.rb);
 
     state.lighting.config = regs.lighting.config0.config;
-    state.lighting.fresnel_selector = regs.lighting.config0.fresnel_selector;
+    state.lighting.enable_primary_alpha = regs.lighting.config0.enable_primary_alpha;
+    state.lighting.enable_secondary_alpha = regs.lighting.config0.enable_secondary_alpha;
     state.lighting.bump_mode = regs.lighting.config0.bump_mode;
     state.lighting.bump_selector = regs.lighting.config0.bump_selector;
     state.lighting.bump_renorm = regs.lighting.config0.disable_bump_renorm == 0;
@@ -803,15 +804,12 @@ static void WriteLighting(std::string& out, const PicaShaderConfig& config) {
             value = "(" + std::to_string(lighting.lut_fr.scale) + " * " + value + ")";
 
             // Enabled for diffuse lighting alpha component
-            if (lighting.fresnel_selector == LightingRegs::LightingFresnelSelector::PrimaryAlpha ||
-                lighting.fresnel_selector == LightingRegs::LightingFresnelSelector::Both) {
+            if (lighting.enable_primary_alpha) {
                 out += "diffuse_sum.a = " + value + ";\n";
             }
 
             // Enabled for the specular lighting alpha component
-            if (lighting.fresnel_selector ==
-                    LightingRegs::LightingFresnelSelector::SecondaryAlpha ||
-                lighting.fresnel_selector == LightingRegs::LightingFresnelSelector::Both) {
+            if (lighting.enable_secondary_alpha) {
                 out += "specular_sum.a = " + value + ";\n";
             }
         }

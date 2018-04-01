@@ -251,16 +251,12 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(
                             lighting.lut_scale.fr, LightingRegs::LightingSampler::Fresnel);
 
             // Enabled for diffuse lighting alpha component
-            if (lighting.config0.fresnel_selector ==
-                    LightingRegs::LightingFresnelSelector::PrimaryAlpha ||
-                lighting.config0.fresnel_selector == LightingRegs::LightingFresnelSelector::Both) {
+            if (lighting.config0.enable_primary_alpha) {
                 diffuse_sum.a() = lut_value;
             }
 
             // Enabled for the specular lighting alpha component
-            if (lighting.config0.fresnel_selector ==
-                    LightingRegs::LightingFresnelSelector::SecondaryAlpha ||
-                lighting.config0.fresnel_selector == LightingRegs::LightingFresnelSelector::Both) {
+            if (lighting.config0.enable_secondary_alpha) {
                 specular_sum.a() = lut_value;
             }
         }
@@ -308,16 +304,12 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(
     if (lighting.config0.shadow_alpha) {
         // Alpha shadow also uses the Fresnel selecotr to determine which alpha to apply
         // Enabled for diffuse lighting alpha component
-        if (lighting.config0.fresnel_selector ==
-                LightingRegs::LightingFresnelSelector::PrimaryAlpha ||
-            lighting.config0.fresnel_selector == LightingRegs::LightingFresnelSelector::Both) {
+        if (lighting.config0.enable_primary_alpha) {
             diffuse_sum.a() *= shadow.w;
         }
 
         // Enabled for the specular lighting alpha component
-        if (lighting.config0.fresnel_selector ==
-                LightingRegs::LightingFresnelSelector::SecondaryAlpha ||
-            lighting.config0.fresnel_selector == LightingRegs::LightingFresnelSelector::Both) {
+        if (lighting.config0.enable_secondary_alpha) {
             specular_sum.a() *= shadow.w;
         }
     }
