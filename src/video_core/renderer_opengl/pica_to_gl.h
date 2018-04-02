@@ -31,7 +31,7 @@ inline GLenum TextureFilterMode(Pica::TexturingRegs::TextureConfig::TextureFilte
 
     // Range check table for input
     if (index >= filter_mode_table.size()) {
-        LOG_CRITICAL(Render_OpenGL, "Unknown texture filtering mode %zu", index);
+        NGLOG_CRITICAL(Render_OpenGL, "Unknown texture filtering mode {}", index);
         UNREACHABLE();
 
         return GL_LINEAR;
@@ -41,7 +41,7 @@ inline GLenum TextureFilterMode(Pica::TexturingRegs::TextureConfig::TextureFilte
 
     // Check for dummy values indicating an unknown mode
     if (gl_mode == 0) {
-        LOG_CRITICAL(Render_OpenGL, "Unknown texture filtering mode %zu", index);
+        NGLOG_CRITICAL(Render_OpenGL, "Unknown texture filtering mode {}", index);
         UNIMPLEMENTED();
 
         return GL_LINEAR;
@@ -68,7 +68,7 @@ inline GLenum WrapMode(Pica::TexturingRegs::TextureConfig::WrapMode mode) {
 
     // Range check table for input
     if (index >= wrap_mode_table.size()) {
-        LOG_CRITICAL(Render_OpenGL, "Unknown texture wrap mode %zu", index);
+        NGLOG_CRITICAL(Render_OpenGL, "Unknown texture wrap mode {}", index);
         UNREACHABLE();
 
         return GL_CLAMP_TO_EDGE;
@@ -78,14 +78,14 @@ inline GLenum WrapMode(Pica::TexturingRegs::TextureConfig::WrapMode mode) {
         Core::Telemetry().AddField(Telemetry::FieldType::Session,
                                    "VideoCore_Pica_UnsupportedTextureWrapMode",
                                    static_cast<u32>(index));
-        LOG_WARNING(Render_OpenGL, "Using texture wrap mode %zu", index);
+        NGLOG_WARNING(Render_OpenGL, "Using texture wrap mode {}", index);
     }
 
     GLenum gl_mode = wrap_mode_table[index];
 
     // Check for dummy values indicating an unknown mode
     if (gl_mode == 0) {
-        LOG_CRITICAL(Render_OpenGL, "Unknown texture wrap mode %zu", index);
+        NGLOG_CRITICAL(Render_OpenGL, "Unknown texture wrap mode {}", index);
         UNIMPLEMENTED();
 
         return GL_CLAMP_TO_EDGE;
@@ -107,7 +107,7 @@ inline GLenum BlendEquation(Pica::FramebufferRegs::BlendEquation equation) {
 
     // Range check table for input
     if (index >= blend_equation_table.size()) {
-        LOG_CRITICAL(Render_OpenGL, "Unknown blend equation %zu", index);
+        NGLOG_CRITICAL(Render_OpenGL, "Unknown blend equation {}", index);
 
         // This return value is hwtested, not just a stub
         return GL_FUNC_ADD;
@@ -139,7 +139,7 @@ inline GLenum BlendFunc(Pica::FramebufferRegs::BlendFactor factor) {
 
     // Range check table for input
     if (index >= blend_func_table.size()) {
-        LOG_CRITICAL(Render_OpenGL, "Unknown blend factor %zu", index);
+        NGLOG_CRITICAL(Render_OpenGL, "Unknown blend factor {}", index);
         UNREACHABLE();
 
         return GL_ONE;
@@ -172,7 +172,7 @@ inline GLenum LogicOp(Pica::FramebufferRegs::LogicOp op) {
 
     // Range check table for input
     if (index >= logic_op_table.size()) {
-        LOG_CRITICAL(Render_OpenGL, "Unknown logic op %zu", index);
+        NGLOG_CRITICAL(Render_OpenGL, "Unknown logic op {}", index);
         UNREACHABLE();
 
         return GL_COPY;
@@ -197,7 +197,7 @@ inline GLenum CompareFunc(Pica::FramebufferRegs::CompareFunc func) {
 
     // Range check table for input
     if (index >= compare_func_table.size()) {
-        LOG_CRITICAL(Render_OpenGL, "Unknown compare function %zu", index);
+        NGLOG_CRITICAL(Render_OpenGL, "Unknown compare function {}", index);
         UNREACHABLE();
 
         return GL_ALWAYS;
@@ -222,7 +222,7 @@ inline GLenum StencilOp(Pica::FramebufferRegs::StencilAction action) {
 
     // Range check table for input
     if (index >= stencil_op_table.size()) {
-        LOG_CRITICAL(Render_OpenGL, "Unknown stencil op %zu", index);
+        NGLOG_CRITICAL(Render_OpenGL, "Unknown stencil op {}", index);
         UNREACHABLE();
 
         return GL_KEEP;
