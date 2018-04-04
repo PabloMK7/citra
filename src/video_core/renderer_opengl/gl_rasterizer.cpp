@@ -174,6 +174,12 @@ RasterizerOpenGL::RasterizerOpenGL() : shader_dirty(true) {
 
     glEnable(GL_BLEND);
 
+    SyncEntireState();
+}
+
+RasterizerOpenGL::~RasterizerOpenGL() {}
+
+void RasterizerOpenGL::SyncEntireState() {
     // Sync fixed function OpenGL state
     SyncClipEnabled();
     SyncCullMode();
@@ -211,8 +217,6 @@ RasterizerOpenGL::RasterizerOpenGL() : shader_dirty(true) {
     SyncFogColor();
     SyncProcTexNoise();
 }
-
-RasterizerOpenGL::~RasterizerOpenGL() {}
 
 /**
  * This is a helper function to resolve an issue when interpolating opposite quaternions. See below
