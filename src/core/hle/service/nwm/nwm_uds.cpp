@@ -240,9 +240,11 @@ static void HandleEAPoLPacket(const Network::WifiPacket& packet) {
                                      network_info.max_nodes, network_info.total_nodes);
         // TODO(Subv): Encrypt the packet.
 
+        //TODO(B3N30): send the eapol packet just to the new client and implement a proper
+        // broadcast packet for all other clients
         // On a 3ds the eapol packet is only sent to packet.transmitter_address
         // while a packet containing the node information is broadcasted
-        // For now we will bradcast the eapol packet instead
+        // For now we will broadcast the eapol packet instead
         eapol_logoff.destination_address = Network::BroadcastMac;
         eapol_logoff.type = WifiPacket::PacketType::Data;
 
@@ -281,7 +283,7 @@ static void HandleEAPoLPacket(const Network::WifiPacket& packet) {
     } else if (connection_status.status == static_cast<u32>(NetworkStatus::ConnectedAsClient)) {
         // On a 3ds this packet wouldn't be addressed to already connected clients
         // We use this information because in the current implementation the host
-        // isn't broadcsting the node information
+        // isn't broadcasting the node information
         auto logoff = ParseEAPoLLogoffFrame(packet.data);
 
         network_info.total_nodes = logoff.connected_nodes;
@@ -290,7 +292,7 @@ static void HandleEAPoLPacket(const Network::WifiPacket& packet) {
         node_info.clear();
         node_info.reserve(network_info.max_nodes);
         for (size_t index = 0; index < logoff.connected_nodes; ++index) {
-            if (!(connection_status.node_bitmask & 1 << index)) {
+            if ((connection_status.node_bitmask & (1 << index)) == 0) {
                 connection_status.changed_nodes |= 1 << index;
             }
             connection_status.nodes[index] = logoff.nodes[index].network_node_id;
