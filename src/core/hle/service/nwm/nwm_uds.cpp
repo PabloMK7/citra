@@ -278,18 +278,19 @@ static void HandleEAPoLPacket(const Network::WifiPacket& packet) {
             GenerateEAPoLLogoffFrame(packet.transmitter_address, node.network_node_id, node_info,
                                      network_info.max_nodes, network_info.total_nodes);
         // TODO(Subv): Encrypt the packet.
-        eapol_logoff.destination_address = packet.transmitter_address;
+
+        // TODO(B3N30): send the eapol packet just to the new client and implement a proper
+        // broadcast packet for all other clients
+        // On a 3ds the eapol packet is only sent to packet.transmitter_address
+        // while a packet containing the node information is broadcasted
+        // For now we will broadcast the eapol packet instead
+        eapol_logoff.destination_address = Network::BroadcastMac;
         eapol_logoff.type = WifiPacket::PacketType::Data;
 
         SendPacket(eapol_logoff);
 
         connection_status_event->Signal();
-    } else {
-        if (connection_status.status != static_cast<u32>(NetworkStatus::Connecting)) {
-            LOG_DEBUG(Service_NWM, "Connection sequence aborted, because connection status is %u",
-                      connection_status.status);
-            return;
-        }
+    } else if (connection_status.status == static_cast<u32>(NetworkStatus::Connecting)) {
         auto logoff = ParseEAPoLLogoffFrame(packet.data);
 
         network_info.host_mac_address = packet.transmitter_address;
@@ -317,6 +318,26 @@ static void HandleEAPoLPacket(const Network::WifiPacket& packet) {
         // otherwise it might cause deadlocks
         connection_status_event->Signal();
         connection_event->Signal();
+    } else if (connection_status.status == static_cast<u32>(NetworkStatus::ConnectedAsClient)) {
+        // On a 3ds this packet wouldn't be addressed to already connected clients
+        // We use this information because in the current implementation the host
+        // isn't broadcasting the node information
+        auto logoff = ParseEAPoLLogoffFrame(packet.data);
+
+        network_info.total_nodes = logoff.connected_nodes;
+        connection_status.total_nodes = logoff.connected_nodes;
+
+        node_info.clear();
+        node_info.reserve(network_info.max_nodes);
+        for (size_t index = 0; index < logoff.connected_nodes; ++index) {
+            if ((connection_status.node_bitmask & (1 << index)) == 0) {
+                connection_status.changed_nodes |= 1 << index;
+            }
+            connection_status.nodes[index] = logoff.nodes[index].network_node_id;
+            connection_status.node_bitmask |= 1 << index;
+            node_info.emplace_back(DeserializeNodeInfo(logoff.nodes[index]));
+        }
+        connection_status_event->Signal();
     }
 }
 
