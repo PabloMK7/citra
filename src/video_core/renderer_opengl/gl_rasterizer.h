@@ -162,6 +162,9 @@ private:
     static_assert(sizeof(UniformData) < 16384,
                   "UniformData structure must be less than 16kb as per the OpenGL spec");
 
+    /// Syncs entire status to match PICA registers
+    void SyncEntireState();
+
     /// Syncs the clip enabled status to match the PICA register
     void SyncClipEnabled();
 
