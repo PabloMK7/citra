@@ -79,6 +79,8 @@ void HostRoomWindow::Host() {
                 return;
             } else {
                 member->Leave();
+                auto parent = static_cast<MultiplayerState*>(parentWidget());
+                parent->OnCloseRoom();
             }
         }
         ui->host->setDisabled(true);

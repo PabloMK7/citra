@@ -35,7 +35,7 @@ Lobby::Lobby(QWidget* parent, QStandardItemModel* list,
     proxy->setFilterCaseSensitivity(Qt::CaseInsensitive);
     proxy->setSortLocaleAware(true);
     ui->room_list->setModel(proxy);
-    ui->room_list->header()->setSectionResizeMode(QHeaderView::ResizeToContents);
+    ui->room_list->header()->setSectionResizeMode(QHeaderView::Interactive);
     ui->room_list->header()->stretchLastSection();
     ui->room_list->setAlternatingRowColors(true);
     ui->room_list->setSelectionMode(QHeaderView::SingleSelection);
@@ -45,7 +45,7 @@ Lobby::Lobby(QWidget* parent, QStandardItemModel* list,
     ui->room_list->setSortingEnabled(true);
     ui->room_list->setEditTriggers(QHeaderView::NoEditTriggers);
     ui->room_list->setExpandsOnDoubleClick(false);
-    ui->room_list->setUniformRowHeights(true);
+    // ui->room_list->setUniformRowHeights(true);
     ui->room_list->setContextMenuPolicy(Qt::CustomContextMenu);
 
     ui->nickname->setValidator(Validation::nickname);
@@ -61,6 +61,7 @@ Lobby::Lobby(QWidget* parent, QStandardItemModel* list,
     connect(ui->search, &QLineEdit::textChanged, proxy,
             &LobbyFilterProxyModel::setFilterFixedString);
     connect(ui->room_list, &QTreeView::doubleClicked, this, &Lobby::OnJoinRoom);
+    connect(ui->room_list, &QTreeView::clicked, this, &Lobby::OnExpandRoom);
 
     // Actions
     connect(this, &Lobby::LobbyRefreshed, this, &Lobby::OnRefreshLobby);
@@ -99,6 +100,11 @@ const QString Lobby::PasswordPrompt() {
     return ok ? text : QString();
 }
 
+void Lobby::OnExpandRoom(const QModelIndex& index) {
+    QModelIndex member_index = proxy->index(index.row(), Column::MEMBER);
+    auto member_list = proxy->data(member_index, LobbyItemMemberList::MemberListRole).toList();
+}
+
 void Lobby::OnJoinRoom(const QModelIndex& index) {
     if (!ui->nickname->hasAcceptableInput()) {
         NetworkMessage::ShowError(NetworkMessage::USERNAME_NOT_VALID);
@@ -123,7 +129,6 @@ void Lobby::OnJoinRoom(const QModelIndex& index) {
     // attempt to connect in a different thread
     QFuture<void> f = QtConcurrent::run([&, password] {
         if (auto room_member = Network::GetRoomMember().lock()) {
-
             QModelIndex connection_index = proxy->index(index.row(), Column::HOST);
             const std::string nickname = ui->nickname->text().toStdString();
             const std::string ip =
@@ -161,7 +166,6 @@ void Lobby::ResetModel() {
     model->setHeaderData(Column::GAME_NAME, Qt::Horizontal, tr("Preferred Game"), Qt::DisplayRole);
     model->setHeaderData(Column::HOST, Qt::Horizontal, tr("Host"), Qt::DisplayRole);
     model->setHeaderData(Column::MEMBER, Qt::Horizontal, tr("Players"), Qt::DisplayRole);
-    ui->room_list->header()->stretchLastSection();
 }
 
 void Lobby::RefreshLobby() {
@@ -181,7 +185,7 @@ void Lobby::OnRefreshLobby() {
         // find the icon for the game if this person owns that game.
         QPixmap smdh_icon;
         for (int r = 0; r < game_list->rowCount(); ++r) {
-            auto index = QModelIndex(game_list->index(r, 0));
+            auto index = game_list->index(r, 0);
             auto game_id = game_list->data(index, GameListItemPath::ProgramIdRole).toULongLong();
             if (game_id != 0 && room.preferred_game_id == game_id) {
                 smdh_icon = game_list->data(index, Qt::DecorationRole).value<QPixmap>();
@@ -196,17 +200,41 @@ void Lobby::OnRefreshLobby() {
             members.append(var);
         }
 
-        model->appendRow(QList<QStandardItem*>(
-            {new LobbyItemPassword(room.has_password),
-             new LobbyItemName(QString::fromStdString(room.name)),
-             new LobbyItemGame(room.preferred_game_id, QString::fromStdString(room.preferred_game),
-                               smdh_icon),
-             new LobbyItemHost(QString::fromStdString(room.owner), QString::fromStdString(room.ip),
-                               room.port),
-             new LobbyItemMemberList(members, room.max_player)}));
+        auto first_item = new LobbyItemPassword(room.has_password);
+        auto row = QList<QStandardItem*>({
+            first_item,
+            new LobbyItemName(QString::fromStdString(room.name)),
+            new LobbyItemGame(room.preferred_game_id, QString::fromStdString(room.preferred_game),
+                              smdh_icon),
+            new LobbyItemHost(QString::fromStdString(room.owner), QString::fromStdString(room.ip),
+                              room.port),
+            new LobbyItemMemberList(members, room.max_player),
+        });
+        model->appendRow(row);
+        // To make the rows expandable, add the member data as a child of the first column of the
+        // rows with people in them and have qt set them to colspan after the model is finished
+        // resetting
+        if (room.members.size() > 0) {
+            first_item->appendRow(new LobbyItemExpandedMemberList(members));
+        }
     }
+    ui->room_list->setModel(model);
+
+    // Reenable the refresh button and resize the columns
     ui->refresh_list->setEnabled(true);
     ui->refresh_list->setText(tr("Refresh List"));
+    ui->room_list->header()->stretchLastSection();
+    for (int i = 0; i < Column::TOTAL - 1; ++i) {
+        ui->room_list->resizeColumnToContents(i);
+    }
+
+    // Set the member list child items to span all columns
+    for (int i = 0; i < model->rowCount(); i++) {
+        auto parent = model->item(i, 0);
+        if (parent->hasChildren()) {
+            ui->room_list->setFirstColumnSpanned(0, parent->index(), true);
+        }
+    }
 }
 
 LobbyFilterProxyModel::LobbyFilterProxyModel(QWidget* parent, QStandardItemModel* list)

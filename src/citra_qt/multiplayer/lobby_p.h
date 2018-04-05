@@ -23,16 +23,17 @@ enum List {
 
 class LobbyItem : public QStandardItem {
 public:
-    LobbyItem() : QStandardItem() {}
-    LobbyItem(const QString& string) : QStandardItem(string) {}
+    LobbyItem() = default;
+    explicit LobbyItem(const QString& string) : QStandardItem(string) {}
     virtual ~LobbyItem() override {}
 };
 
 class LobbyItemPassword : public LobbyItem {
 public:
     static const int PasswordRole = Qt::UserRole + 1;
-    LobbyItemPassword() : LobbyItem() {}
-    LobbyItemPassword(const bool has_password) : LobbyItem() {
+
+    LobbyItemPassword() = default;
+    explicit LobbyItemPassword(const bool has_password) : LobbyItem() {
         setData(has_password, PasswordRole);
     }
 
@@ -52,8 +53,9 @@ public:
 class LobbyItemName : public LobbyItem {
 public:
     static const int NameRole = Qt::UserRole + 1;
-    LobbyItemName() : LobbyItem() {}
-    LobbyItemName(QString name) : LobbyItem() {
+
+    LobbyItemName() = default;
+    explicit LobbyItemName(QString name) : LobbyItem() {
         setData(name, NameRole);
     }
 
@@ -74,8 +76,8 @@ public:
     static const int GameNameRole = Qt::UserRole + 2;
     static const int GameIconRole = Qt::UserRole + 3;
 
-    LobbyItemGame() : LobbyItem() {}
-    LobbyItemGame(u64 title_id, QString game_name, QPixmap smdh_icon) : LobbyItem() {
+    LobbyItemGame() = default;
+    explicit LobbyItemGame(u64 title_id, QString game_name, QPixmap smdh_icon) : LobbyItem() {
         setData(static_cast<unsigned long long>(title_id), TitleIDRole);
         setData(game_name, GameNameRole);
         if (!smdh_icon.isNull()) {
@@ -109,8 +111,8 @@ public:
     static const int HostIPRole = Qt::UserRole + 2;
     static const int HostPortRole = Qt::UserRole + 3;
 
-    LobbyItemHost() : LobbyItem() {}
-    LobbyItemHost(QString username, QString ip, u16 port) : LobbyItem() {
+    LobbyItemHost() = default;
+    explicit LobbyItemHost(QString username, QString ip, u16 port) : LobbyItem() {
         setData(username, HostUsernameRole);
         setData(ip, HostIPRole);
         setData(port, HostPortRole);
@@ -132,15 +134,15 @@ public:
 
 class LobbyMember {
 public:
-    LobbyMember() {}
+    LobbyMember() = default;
     LobbyMember(const LobbyMember& other) {
         username = other.username;
         title_id = other.title_id;
         game_name = other.game_name;
     }
-    LobbyMember(const QString username, u64 title_id, const QString game_name)
+    explicit LobbyMember(const QString username, u64 title_id, const QString game_name)
         : username(username), title_id(title_id), game_name(game_name) {}
-    ~LobbyMember() {}
+    ~LobbyMember() = default;
 
     QString GetUsername() const {
         return username;
@@ -165,8 +167,8 @@ public:
     static const int MemberListRole = Qt::UserRole + 1;
     static const int MaxPlayerRole = Qt::UserRole + 2;
 
-    LobbyItemMemberList() : LobbyItem() {}
-    LobbyItemMemberList(QList<QVariant> members, u32 max_players) : LobbyItem() {
+    LobbyItemMemberList() = default;
+    explicit LobbyItemMemberList(QList<QVariant> members, u32 max_players) : LobbyItem() {
         setData(members, MemberListRole);
         setData(max_players, MaxPlayerRole);
     }
@@ -185,5 +187,36 @@ public:
         int left_members = data(MemberListRole).toList().size();
         int right_members = other.data(MemberListRole).toList().size();
         return left_members < right_members;
+    }
+};
+
+/**
+ * Member information for when a lobby is expanded in the UI
+ */
+class LobbyItemExpandedMemberList : public LobbyItem {
+public:
+    static const int MemberListRole = Qt::UserRole + 1;
+
+    LobbyItemExpandedMemberList() = default;
+    explicit LobbyItemExpandedMemberList(QList<QVariant> members) : LobbyItem() {
+        setData(members, MemberListRole);
+    }
+
+    QVariant data(int role) const override {
+        if (role != Qt::DisplayRole) {
+            return LobbyItem::data(role);
+        }
+        auto members = data(MemberListRole).toList();
+        QString out = QObject::tr("Current Players in the room");
+        for (const auto& member : members) {
+            const auto& m = member.value<LobbyMember>();
+            if (m.GetGameName().isEmpty()) {
+                out += QString(QObject::tr("\n%1 is not playing a game")).arg(m.GetUsername());
+            } else {
+                out += QString(QObject::tr("\n%1 is playing %2"))
+                           .arg(m.GetUsername(), m.GetGameName());
+            }
+        }
+        return out;
     }
 };

@@ -20,13 +20,13 @@ MultiplayerState::MultiplayerState(QWidget* parent, QStandardItemModel* game_lis
     : QWidget(parent), game_list_model(game_list_model) {
     if (auto member = Network::GetRoomMember().lock()) {
         // register the network structs to use in slots and signals
-        qRegisterMetaType<Network::RoomMember::State>();
         state_callback_handle = member->BindOnStateChanged(
             [this](const Network::RoomMember::State& state) { emit NetworkStateChanged(state); });
         connect(this, &MultiplayerState::NetworkStateChanged, this,
                 &MultiplayerState::OnNetworkStateChanged);
     }
 
+    qRegisterMetaType<Network::RoomMember::State>();
     qRegisterMetaType<Common::WebResult>();
     announce_multiplayer_session = std::make_shared<Core::AnnounceMultiplayerSession>();
     announce_multiplayer_session->BindErrorCallback(
@@ -91,11 +91,6 @@ static void BringWidgetToFront(QWidget* widget) {
 void MultiplayerState::OnViewLobby() {
     if (lobby == nullptr) {
         lobby = new Lobby(this, game_list_model, announce_multiplayer_session);
-        connect(lobby, &Lobby::Closed, [&] {
-            LOG_INFO(Frontend, "Destroying lobby");
-            // lobby->close();
-            lobby = nullptr;
-        });
     }
     BringWidgetToFront(lobby);
 }
@@ -103,11 +98,6 @@ void MultiplayerState::OnViewLobby() {
 void MultiplayerState::OnCreateRoom() {
     if (host_room == nullptr) {
         host_room = new HostRoomWindow(this, game_list_model, announce_multiplayer_session);
-        connect(host_room, &HostRoomWindow::Closed, [&] {
-            // host_room->close();
-            LOG_INFO(Frontend, "Destroying host room");
-            host_room = nullptr;
-        });
     }
     BringWidgetToFront(host_room);
 }
@@ -118,7 +108,6 @@ void MultiplayerState::OnCloseRoom() {
             if (NetworkMessage::WarnCloseRoom()) {
                 room->Destroy();
                 announce_multiplayer_session->Stop();
-                // host_room->close();
             }
         }
     }
@@ -129,11 +118,6 @@ void MultiplayerState::OnOpenNetworkRoom() {
         if (member->IsConnected()) {
             if (client_room == nullptr) {
                 client_room = new ClientRoomWindow(this);
-                connect(client_room, &ClientRoomWindow::Closed, [&] {
-                    LOG_INFO(Frontend, "Destroying client room");
-                    // client_room->close();
-                    client_room = nullptr;
-                });
             }
             BringWidgetToFront(client_room);
             return;
@@ -147,11 +131,6 @@ void MultiplayerState::OnOpenNetworkRoom() {
 void MultiplayerState::OnDirectConnectToRoom() {
     if (direct_connect == nullptr) {
         direct_connect = new DirectConnectWindow(this);
-        connect(direct_connect, &DirectConnectWindow::Closed, [&] {
-            LOG_INFO(Frontend, "Destroying direct connect");
-            // direct_connect->close();
-            direct_connect = nullptr;
-        });
     }
     BringWidgetToFront(direct_connect);
 }

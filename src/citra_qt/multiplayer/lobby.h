@@ -47,6 +47,14 @@ private slots:
     void OnRefreshLobby();
 
     /**
+     * Handler for single clicking on a room in the list. Expands the treeitem to show player
+     * information for the people in the room
+     *
+     * index - The row of the proxy model that the user wants to join.
+     */
+    void OnExpandRoom(const QModelIndex&);
+
+    /**
      * Handler for double clicking on a room in the list. Gathers the host ip and port and attempts
      * to connect. Will also prompt for a password in case one is required.
      *
@@ -99,7 +107,7 @@ private:
 
     std::future<AnnounceMultiplayerRoom::RoomList> room_list_future;
     std::weak_ptr<Core::AnnounceMultiplayerSession> announce_multiplayer_session;
-    std::unique_ptr<Ui::Lobby> ui;
+    Ui::Lobby* ui;
     QFutureWatcher<void>* watcher;
 };
 
