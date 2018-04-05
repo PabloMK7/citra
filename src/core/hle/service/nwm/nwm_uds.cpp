@@ -240,7 +240,7 @@ static void HandleEAPoLPacket(const Network::WifiPacket& packet) {
                                      network_info.max_nodes, network_info.total_nodes);
         // TODO(Subv): Encrypt the packet.
 
-        //TODO(B3N30): send the eapol packet just to the new client and implement a proper
+        // TODO(B3N30): send the eapol packet just to the new client and implement a proper
         // broadcast packet for all other clients
         // On a 3ds the eapol packet is only sent to packet.transmitter_address
         // while a packet containing the node information is broadcasted
