@@ -207,15 +207,19 @@ public:
             return LobbyItem::data(role);
         }
         auto members = data(MemberListRole).toList();
-        QString out = QObject::tr("Current Players in the room");
+        QString out;
+        bool first = true;
         for (const auto& member : members) {
+            if (!first)
+                out += '\n';
             const auto& m = member.value<LobbyMember>();
             if (m.GetGameName().isEmpty()) {
-                out += QString(QObject::tr("\n%1 is not playing a game")).arg(m.GetUsername());
+                out += QString(QObject::tr("%1 is not playing a game")).arg(m.GetUsername());
             } else {
-                out += QString(QObject::tr("\n%1 is playing %2"))
-                           .arg(m.GetUsername(), m.GetGameName());
+                out +=
+                    QString(QObject::tr("%1 is playing %2")).arg(m.GetUsername(), m.GetGameName());
             }
+            first = false;
         }
         return out;
     }
