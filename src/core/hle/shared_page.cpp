@@ -85,7 +85,7 @@ void Init() {
         CoreTiming::RegisterEvent("SharedPage::UpdateTimeCallback", UpdateTimeCallback);
     CoreTiming::ScheduleEvent(0, update_time_event);
 
-    float_le slidestate =
+    float slidestate =
         Settings::values.toggle_3d ? (float_le)Settings::values.factor_3d / 100 : 0.0f;
     shared_page.sliderstate_3d = slidestate;
 }
@@ -100,10 +100,6 @@ void SetWifiLinkLevel(WifiLinkLevel level) {
 
 void Set3DLed(u8 state) {
     shared_page.ledstate_3d = state;
-}
-
-void Set3DSliderState(float_le state) {
-    shared_page.sliderstate_3d = state;
 }
 
 } // namespace SharedPage

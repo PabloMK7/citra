@@ -84,6 +84,4 @@ void SetWifiLinkLevel(WifiLinkLevel);
 
 void Set3DLed(u8);
 
-void Set3DSliderState(float_le);
-
 } // namespace SharedPage
