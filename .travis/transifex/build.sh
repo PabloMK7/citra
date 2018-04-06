@@ -1,6 +1,4 @@
-#!/bin/bash -ex
+#!/bin/bash -e
 
-mkdir build && cd build
-cmake .. -DENABLE_QT_TRANSLATION=ON -DGENERATE_QT_TRANSLATION=ON -DCMAKE_BUILD_TYPE=Release
-make translation
-
+echo "+docker run -e TRANSIFEX_API_TOKEN=[REDACTED] -v $(pwd):/citra alpine /bin/sh -e /citra/.travis/transifex/docker.sh"
+docker run -e TRANSIFEX_API_TOKEN="${TRANSIFEX_API_TOKEN}" -v "$(pwd)":/citra alpine /bin/sh -e /citra/.travis/transifex/docker.sh
