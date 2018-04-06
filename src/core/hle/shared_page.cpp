@@ -97,4 +97,8 @@ void Set3DLed(u8 state) {
     shared_page.ledstate_3d = state;
 }
 
+void Set3DSliderState(float_le state) {
+    shared_page.sliderstate_3d = state;
+}
+
 } // namespace SharedPage
