@@ -40,6 +40,8 @@ void ConfigureGraphics::setConfiguration() {
     ui->toggle_vsync->setChecked(Settings::values.use_vsync);
     ui->toggle_frame_limit->setChecked(Settings::values.use_frame_limit);
     ui->frame_limit->setValue(Settings::values.frame_limit);
+    ui->factor_3d->setValue(Settings::values.factor_3d);
+    ui->toggle_3d->setChecked(Settings::values.toggle_3d);
     ui->layout_combobox->setCurrentIndex(static_cast<int>(Settings::values.layout_option));
     ui->swap_screen->setChecked(Settings::values.swap_screen);
 }
@@ -55,6 +57,8 @@ void ConfigureGraphics::applyConfiguration() {
     Settings::values.use_vsync = ui->toggle_vsync->isChecked();
     Settings::values.use_frame_limit = ui->toggle_frame_limit->isChecked();
     Settings::values.frame_limit = ui->frame_limit->value();
+    Settings::values.factor_3d = ui->factor_3d->value();
+    Settings::values.toggle_3d = ui->toggle_3d->isChecked();
     Settings::values.layout_option =
         static_cast<Settings::LayoutOption>(ui->layout_combobox->currentIndex());
     Settings::values.swap_screen = ui->swap_screen->isChecked();

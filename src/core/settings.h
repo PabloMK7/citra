@@ -132,6 +132,9 @@ struct Values {
     float bg_green;
     float bg_blue;
 
+    bool toggle_3d;
+    u8 factor_3d;
+
     // Audio
     std::string sink_id;
     bool enable_audio_stretching;
