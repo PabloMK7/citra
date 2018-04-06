@@ -8,6 +8,7 @@
 #include "core/core_timing.h"
 #include "core/hle/service/ptm/ptm.h"
 #include "core/hle/shared_page.h"
+#include "core/settings.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -83,6 +84,10 @@ void Init() {
     update_time_event =
         CoreTiming::RegisterEvent("SharedPage::UpdateTimeCallback", UpdateTimeCallback);
     CoreTiming::ScheduleEvent(0, update_time_event);
+
+    float_le slidestate =
+        Settings::values.toggle_3d ? (float_le)Settings::values.factor_3d / 100 : 0.0f;
+    shared_page.sliderstate_3d = slidestate;
 }
 
 void SetMacAddress(const MacAddress& addr) {
