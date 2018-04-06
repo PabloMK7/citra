@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <algorithm>
+#include <array>
 #include <atomic>
 #include <cstring>
 #include <iterator>
@@ -1192,9 +1193,13 @@ SurfaceRect_Tuple RasterizerCacheOpenGL::GetSurfaceSubRect(const SurfaceParams& 
 }
 
 Surface RasterizerCacheOpenGL::GetTextureSurface(
-    const Pica::TexturingRegs::FullTextureConfig& config) {
+    const Pica::TexturingRegs::FullTextureConfig& config, PAddr addr_override) {
     Pica::Texture::TextureInfo info =
         Pica::Texture::TextureInfo::FromPicaRegister(config.config, config.format);
+
+    if (addr_override != 0) {
+        info.physical_address = addr_override;
+    }
 
     SurfaceParams params;
     params.addr = info.physical_address;
@@ -1221,6 +1226,78 @@ Surface RasterizerCacheOpenGL::GetTextureSurface(
     }
 
     return GetSurface(params, ScaleMatch::Ignore, true);
+}
+
+void RasterizerCacheOpenGL::FillTextureCube(GLuint dest_handle,
+                                            const Pica::TexturingRegs::FullTextureConfig& config,
+                                            PAddr px, PAddr nx, PAddr py, PAddr ny, PAddr pz,
+                                            PAddr nz) {
+    ASSERT(config.config.width == config.config.height);
+    struct FaceTuple {
+        PAddr address;
+        GLenum gl_face;
+        Surface surface;
+    };
+    std::array<FaceTuple, 6> faces{{
+        {px, GL_TEXTURE_CUBE_MAP_POSITIVE_X},
+        {nx, GL_TEXTURE_CUBE_MAP_NEGATIVE_X},
+        {py, GL_TEXTURE_CUBE_MAP_POSITIVE_Y},
+        {ny, GL_TEXTURE_CUBE_MAP_NEGATIVE_Y},
+        {pz, GL_TEXTURE_CUBE_MAP_POSITIVE_Z},
+        {nz, GL_TEXTURE_CUBE_MAP_NEGATIVE_Z},
+    }};
+
+    u16 res_scale = 1;
+    for (auto& face : faces) {
+        face.surface = GetTextureSurface(config, face.address);
+        res_scale = std::max(res_scale, face.surface->res_scale);
+    }
+
+    u32 scaled_size = res_scale * config.config.width;
+
+    OpenGLState state = OpenGLState::GetCurState();
+
+    OpenGLState prev_state = state;
+    SCOPE_EXIT({ prev_state.Apply(); });
+
+    state.texture_cube_unit.texture_cube = dest_handle;
+    state.Apply();
+    glActiveTexture(TextureUnits::TextureCube.Enum());
+    FormatTuple format_tuple = GetFormatTuple(faces[0].surface->pixel_format);
+
+    GLint cur_size, cur_format;
+    glGetTexLevelParameteriv(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, GL_TEXTURE_WIDTH, &cur_size);
+    glGetTexLevelParameteriv(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, GL_TEXTURE_INTERNAL_FORMAT,
+                             &cur_format);
+
+    if (cur_size != scaled_size || cur_format != format_tuple.internal_format) {
+        for (auto& face : faces) {
+            glTexImage2D(face.gl_face, 0, format_tuple.internal_format, scaled_size, scaled_size, 0,
+                         format_tuple.format, format_tuple.type, nullptr);
+        }
+    }
+
+    state.draw.read_framebuffer = read_framebuffer.handle;
+    state.draw.draw_framebuffer = draw_framebuffer.handle;
+    state.ResetTexture(dest_handle);
+
+    for (auto& face : faces) {
+        state.ResetTexture(face.surface->texture.handle);
+        state.Apply();
+        glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
+                               face.surface->texture.handle, 0);
+        glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, 0,
+                               0);
+
+        glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, face.gl_face, dest_handle,
+                               0);
+        glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, 0,
+                               0);
+
+        auto src_rect = face.surface->GetScaledRect();
+        glBlitFramebuffer(src_rect.left, src_rect.bottom, src_rect.right, src_rect.top, 0, 0,
+                          scaled_size, scaled_size, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+    }
 }
 
 SurfaceSurfaceRect_Tuple RasterizerCacheOpenGL::GetFramebufferSurfaces(

@@ -292,6 +292,10 @@ private:
     OGLBuffer uniform_buffer;
     OGLFramebuffer framebuffer;
 
+    // TODO (wwylele): consider caching texture cube in the rasterizer cache
+    OGLTexture texture_cube;
+    SamplerInfo texture_cube_sampler;
+
     OGLBuffer lighting_lut_buffer;
     OGLTexture lighting_lut;
     std::array<std::array<GLvec2, 256>, Pica::LightingRegs::NumLightingSampler> lighting_lut_data{};

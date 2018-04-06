@@ -40,6 +40,12 @@ RasterizerOpenGL::RasterizerOpenGL() : shader_dirty(true) {
         state.texture_units[i].sampler = texture_samplers[i].sampler.handle;
     }
 
+    // Create cubemap texture and sampler objects
+    texture_cube_sampler.Create();
+    state.texture_cube_unit.sampler = texture_cube_sampler.sampler.handle;
+    texture_cube.Create();
+    state.texture_cube_unit.texture_cube = texture_cube.handle;
+
     // Generate VBO, VAO and UBO
     vertex_buffer = OGLStreamBuffer::MakeBuffer(GLAD_GL_ARB_buffer_storage, GL_ARRAY_BUFFER);
     vertex_buffer->Create(VERTEX_BUFFER_SIZE, VERTEX_BUFFER_SIZE / 2);
@@ -380,6 +386,25 @@ void RasterizerOpenGL::DrawTriangles() {
         const auto& texture = pica_textures[texture_index];
 
         if (texture.enabled) {
+            if (texture_index == 0) {
+                using TextureType = Pica::TexturingRegs::TextureConfig::TextureType;
+                switch (texture.config.type.Value()) {
+                case TextureType::TextureCube:
+                    using CubeFace = Pica::TexturingRegs::CubeFace;
+                    res_cache.FillTextureCube(
+                        texture_cube.handle, texture,
+                        regs.texturing.GetCubePhysicalAddress(CubeFace::PositiveX),
+                        regs.texturing.GetCubePhysicalAddress(CubeFace::NegativeX),
+                        regs.texturing.GetCubePhysicalAddress(CubeFace::PositiveY),
+                        regs.texturing.GetCubePhysicalAddress(CubeFace::NegativeY),
+                        regs.texturing.GetCubePhysicalAddress(CubeFace::PositiveZ),
+                        regs.texturing.GetCubePhysicalAddress(CubeFace::NegativeZ));
+                    texture_cube_sampler.SyncWithConfig(texture.config);
+                    state.texture_units[texture_index].texture_2d = 0;
+                    continue; // Texture unit 0 setup finished. Continue to next unit
+                }
+            }
+
             texture_samplers[texture_index].SyncWithConfig(texture.config);
             Surface surface = res_cache.GetTextureSurface(texture);
             if (surface != nullptr) {
@@ -1258,6 +1283,10 @@ void RasterizerOpenGL::SetShader() {
         uniform_tex = glGetUniformLocation(shader->shader.handle, "tex[2]");
         if (uniform_tex != -1) {
             glUniform1i(uniform_tex, TextureUnits::PicaTexture(2).id);
+        }
+        uniform_tex = glGetUniformLocation(shader->shader.handle, "tex_cube");
+        if (uniform_tex != -1) {
+            glUniform1i(uniform_tex, TextureUnits::TextureCube.id);
         }
 
         // Set the texture samplers to correspond to different lookup table texture units
