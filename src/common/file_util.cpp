@@ -371,12 +371,12 @@ u64 GetSize(FILE* f) {
     // can't use off_t here because it can be 32-bit
     u64 pos = ftello(f);
     if (fseeko(f, 0, SEEK_END) != 0) {
-        NGLOG_ERROR(Common_Filesystem, "GetSize: seek failed {}: {}", f, GetLastErrorMsg());
+        NGLOG_ERROR(Common_Filesystem, "GetSize: seek failed {}: {}", (void*)f, GetLastErrorMsg());
         return 0;
     }
     u64 size = ftello(f);
     if ((size != pos) && (fseeko(f, pos, SEEK_SET) != 0)) {
-        NGLOG_ERROR(Common_Filesystem, "GetSize: seek failed {}: {}", f, GetLastErrorMsg());
+        NGLOG_ERROR(Common_Filesystem, "GetSize: seek failed {}: {}", (void*)f, GetLastErrorMsg());
         return 0;
     }
     return size;
