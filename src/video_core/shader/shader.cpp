@@ -2,7 +2,6 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <cinttypes>
 #include <cmath>
 #include <cstring>
 #include "common/bit_set.h"
@@ -30,7 +29,7 @@ void OutputVertex::ValidateSemantics(const RasterizerRegs& regs) {
         for (size_t comp = 0; comp < 4; ++comp) {
             u32 semantic = (output_register_map >> (8 * comp)) & 0x1F;
             ASSERT_MSG(semantic < 24 || semantic == RasterizerRegs::VSOutputAttributes::INVALID,
-                       "Invalid/unknown semantic id: %" PRIu32, semantic);
+                       "Invalid/unknown semantic id: {}", semantic);
         }
     }
 }

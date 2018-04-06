@@ -265,7 +265,7 @@ struct FramebufferRegs {
             return 4;
         }
 
-        ASSERT_MSG(false, "Unknown depth format %u", static_cast<u32>(format));
+        ASSERT_MSG(false, "Unknown depth format {}", static_cast<u32>(format));
     }
 
     // Returns the number of bits per depth component of the specified depth format
@@ -278,7 +278,7 @@ struct FramebufferRegs {
             return 24;
         }
 
-        ASSERT_MSG(false, "Unknown depth format %u", static_cast<u32>(format));
+        ASSERT_MSG(false, "Unknown depth format {}", static_cast<u32>(format));
     }
 
     INSERT_PADDING_WORDS(0x10); // Gas related registers

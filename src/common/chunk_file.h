@@ -159,8 +159,8 @@ public:
             Do(foundVersion);
 
         if (error == ERROR_FAILURE || foundVersion < minVer || foundVersion > ver) {
-            LOG_ERROR(Common, "Savestate failure: wrong version %d found for %s", foundVersion,
-                      title);
+            NGLOG_ERROR(Common, "Savestate failure: wrong version {} found for {}", foundVersion,
+                        title);
             SetError(ERROR_FAILURE);
             return PointerWrapSection(*this, -1, title);
         }
@@ -198,7 +198,7 @@ public:
             for (int i = 0; i < size; i++) {
                 DEBUG_ASSERT_MSG(
                     ((u8*)data)[i] == (*ptr)[i],
-                    "Savestate verification failure: %d (0x%X) (at %p) != %d (0x%X) (at %p).\n",
+                    "Savestate verification failure: {} ({:#X}) (at {}) != {} ({:#X}) (at {}).\n",
                     ((u8*)data)[i], ((u8*)data)[i], &((u8*)data)[i], (*ptr)[i], (*ptr)[i],
                     &(*ptr)[i]);
             }
@@ -224,7 +224,7 @@ public:
             for (int i = 0; i < size; i++) {
                 DEBUG_ASSERT_MSG(
                     ((u8*)data)[i] == (*ptr)[i],
-                    "Savestate verification failure: %d (0x%X) (at %p) != %d (0x%X) (at %p).\n",
+                    "Savestate verification failure: {} ({#:X}) (at {}) != {} ({:#X}) (at {}).\n",
                     ((u8*)data)[i], ((u8*)data)[i], &((u8*)data)[i], (*ptr)[i], (*ptr)[i],
                     &(*ptr)[i]);
             }
@@ -466,7 +466,7 @@ public:
         } break;
 
         default:
-            LOG_ERROR(Common, "Savestate error: invalid mode %d.", mode);
+            NGLOG_ERROR(Common, "Savestate error: invalid mode {}.", mode);
         }
     }
 
@@ -486,8 +486,8 @@ public:
             break;
         case MODE_VERIFY:
             DEBUG_ASSERT_MSG((x == (char*)*ptr),
-                             "Savestate verification failure: \"%s\" != \"%s\" (at %p).\n",
-                             x.c_str(), (char*)*ptr, ptr);
+                             "Savestate verification failure: \"{}\" != \"{}\" (at {}).\n", x,
+                             (char*)*ptr, ptr);
             break;
         }
         (*ptr) += stringLen;
@@ -508,8 +508,8 @@ public:
             break;
         case MODE_VERIFY:
             DEBUG_ASSERT_MSG((x == (wchar_t*)*ptr),
-                             "Savestate verification failure: \"%ls\" != \"%ls\" (at %p).\n",
-                             x.c_str(), (wchar_t*)*ptr, ptr);
+                             "Savestate verification failure: \"{}\" != \"{}\" (at {}).\n", x,
+                             (wchar_t*)*ptr, ptr);
             break;
         }
         (*ptr) += stringLen;
@@ -607,10 +607,10 @@ public:
         u32 cookie = arbitraryNumber;
         Do(cookie);
         if (mode == PointerWrap::MODE_READ && cookie != arbitraryNumber) {
-            LOG_ERROR(Common,
-                      "After \"%s\", found %d (0x%X) instead of save marker %d (0x%X). "
-                      "Aborting savestate load...",
-                      prevName, cookie, cookie, arbitraryNumber, arbitraryNumber);
+            NGLOG_ERROR(Common,
+                        "After \"{}\", found {} ({:#X}) instead of save marker {} ({:#X}). "
+                        "Aborting savestate load...",
+                        prevName, cookie, cookie, arbitraryNumber, arbitraryNumber);
             SetError(ERROR_FAILURE);
         }
     }

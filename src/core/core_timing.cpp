@@ -74,9 +74,9 @@ EventType* RegisterEvent(const std::string& name, TimedCallback callback) {
     // check for existing type with same name.
     // we want event type names to remain unique so that we can use them for serialization.
     ASSERT_MSG(event_types.find(name) == event_types.end(),
-               "CoreTiming Event \"%s\" is already registered. Events should only be registered "
+               "CoreTiming Event \"{}\" is already registered. Events should only be registered "
                "during Init to avoid breaking save states.",
-               name.c_str());
+               name);
 
     auto info = event_types.emplace(name, EventType{callback, nullptr});
     EventType* event_type = &info.first->second;

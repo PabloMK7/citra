@@ -46,7 +46,7 @@ static void MapPages(PageTable& page_table, u32 base, u32 size, u8* memory, Page
 
     u32 end = base + size;
     while (base != end) {
-        ASSERT_MSG(base < PAGE_TABLE_NUM_ENTRIES, "out of range mapping at %08X", base);
+        ASSERT_MSG(base < PAGE_TABLE_NUM_ENTRIES, "out of range mapping at {:08X}", base);
 
         page_table.attributes[base] = type;
         page_table.pointers[base] = memory;
@@ -58,22 +58,22 @@ static void MapPages(PageTable& page_table, u32 base, u32 size, u8* memory, Page
 }
 
 void MapMemoryRegion(PageTable& page_table, VAddr base, u32 size, u8* target) {
-    ASSERT_MSG((size & PAGE_MASK) == 0, "non-page aligned size: %08X", size);
-    ASSERT_MSG((base & PAGE_MASK) == 0, "non-page aligned base: %08X", base);
+    ASSERT_MSG((size & PAGE_MASK) == 0, "non-page aligned size: {:08X}", size);
+    ASSERT_MSG((base & PAGE_MASK) == 0, "non-page aligned base: {:08X}", base);
     MapPages(page_table, base / PAGE_SIZE, size / PAGE_SIZE, target, PageType::Memory);
 }
 
 void MapIoRegion(PageTable& page_table, VAddr base, u32 size, MMIORegionPointer mmio_handler) {
-    ASSERT_MSG((size & PAGE_MASK) == 0, "non-page aligned size: %08X", size);
-    ASSERT_MSG((base & PAGE_MASK) == 0, "non-page aligned base: %08X", base);
+    ASSERT_MSG((size & PAGE_MASK) == 0, "non-page aligned size: {:08X}", size);
+    ASSERT_MSG((base & PAGE_MASK) == 0, "non-page aligned base: {:08X}", base);
     MapPages(page_table, base / PAGE_SIZE, size / PAGE_SIZE, nullptr, PageType::Special);
 
     page_table.special_regions.emplace_back(SpecialRegion{base, size, mmio_handler});
 }
 
 void UnmapRegion(PageTable& page_table, VAddr base, u32 size) {
-    ASSERT_MSG((size & PAGE_MASK) == 0, "non-page aligned size: %08X", size);
-    ASSERT_MSG((base & PAGE_MASK) == 0, "non-page aligned base: %08X", base);
+    ASSERT_MSG((size & PAGE_MASK) == 0, "non-page aligned size: {:08X}", size);
+    ASSERT_MSG((base & PAGE_MASK) == 0, "non-page aligned base: {:08X}", base);
     MapPages(page_table, base / PAGE_SIZE, size / PAGE_SIZE, nullptr, PageType::Unmapped);
 }
 
@@ -123,7 +123,7 @@ static MMIORegionPointer GetMMIOHandler(const PageTable& page_table, VAddr vaddr
             return region.handler;
         }
     }
-    ASSERT_MSG(false, "Mapped IO page without a handler @ %08X", vaddr);
+    ASSERT_MSG(false, "Mapped IO page without a handler @ {:08X}", vaddr);
     return nullptr; // Should never happen
 }
 
@@ -154,7 +154,7 @@ T Read(const VAddr vaddr) {
         LOG_ERROR(HW_Memory, "unmapped Read%lu @ 0x%08X", sizeof(T) * 8, vaddr);
         return 0;
     case PageType::Memory:
-        ASSERT_MSG(false, "Mapped memory page without a pointer @ %08X", vaddr);
+        ASSERT_MSG(false, "Mapped memory page without a pointer @ {:08X}", vaddr);
         break;
     case PageType::RasterizerCachedMemory: {
         RasterizerFlushVirtualRegion(vaddr, sizeof(T), FlushMode::Flush);
@@ -192,7 +192,7 @@ void Write(const VAddr vaddr, const T data) {
                   vaddr);
         return;
     case PageType::Memory:
-        ASSERT_MSG(false, "Mapped memory page without a pointer @ %08X", vaddr);
+        ASSERT_MSG(false, "Mapped memory page without a pointer @ {:08X}", vaddr);
         break;
     case PageType::RasterizerCachedMemory: {
         RasterizerFlushVirtualRegion(vaddr, sizeof(T), FlushMode::Invalidate);

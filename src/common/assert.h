@@ -30,14 +30,15 @@ __declspec(noinline, noreturn)
 #define ASSERT(_a_)                                                                                \
     do                                                                                             \
         if (!(_a_)) {                                                                              \
-            assert_noinline_call([] { LOG_CRITICAL(Debug, "Assertion Failed!"); });                \
+            assert_noinline_call([] { NGLOG_CRITICAL(Debug, "Assertion Failed!"); });              \
         }                                                                                          \
     while (0)
 
 #define ASSERT_MSG(_a_, ...)                                                                       \
     do                                                                                             \
         if (!(_a_)) {                                                                              \
-            assert_noinline_call([&] { LOG_CRITICAL(Debug, "Assertion Failed!\n" __VA_ARGS__); }); \
+            assert_noinline_call(                                                                  \
+                [&] { NGLOG_CRITICAL(Debug, "Assertion Failed!\n" __VA_ARGS__); });                \
         }                                                                                          \
     while (0)
 
@@ -52,5 +53,5 @@ __declspec(noinline, noreturn)
 #define DEBUG_ASSERT_MSG(_a_, _desc_, ...)
 #endif
 
-#define UNIMPLEMENTED() LOG_CRITICAL(Debug, "Unimplemented code!")
+#define UNIMPLEMENTED() NGLOG_CRITICAL(Debug, "Unimplemented code!")
 #define UNIMPLEMENTED_MSG(_a_, ...) ASSERT_MSG(false, _a_, __VA_ARGS__)
