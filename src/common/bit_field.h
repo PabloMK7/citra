@@ -125,7 +125,7 @@ private:
     using StorageTypeWithEndian = typename AddEndian<StorageType, EndianTag>::type;
 
 public:
-    BitField& operator=(const BitField&) = default;
+    constexpr BitField& operator=(const BitField&) = default;
 
     /// Constants to allow limited introspection of fields if needed
     static constexpr std::size_t position = Position;
@@ -166,15 +166,15 @@ public:
     // so that we can use this within unions
     constexpr BitField() = default;
 
-    FORCE_INLINE operator T() const {
+    constexpr FORCE_INLINE operator T() const {
         return Value();
     }
 
-    FORCE_INLINE void Assign(const T& value) {
+    constexpr FORCE_INLINE void Assign(const T& value) {
         storage = (static_cast<StorageType>(storage) & ~mask) | FormatValue(value);
     }
 
-    FORCE_INLINE T Value() const {
+    constexpr T Value() const {
         return ExtractValue(storage);
     }
 
