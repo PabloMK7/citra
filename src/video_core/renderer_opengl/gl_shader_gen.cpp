@@ -509,9 +509,10 @@ static void WriteTevStage(std::string& out, const PicaShaderConfig& config, unsi
         AppendColorModifier(out, config, stage.color_modifier3, stage.color_source3, index_name);
         out += ");\n";
 
-        out += "vec3 color_output_" + index_name + " = ";
+        // Round the output of each TEV stage to maintain the PICA's 8 bits of precision
+        out += "vec3 color_output_" + index_name + " = byteround(";
         AppendColorCombiner(out, stage.color_op, "color_results_" + index_name);
-        out += ";\n";
+        out += ");\n";
 
         if (stage.color_op == TevStageConfig::Operation::Dot3_RGBA) {
             // result of Dot3_RGBA operation is also placed to the alpha component
@@ -528,9 +529,9 @@ static void WriteTevStage(std::string& out, const PicaShaderConfig& config, unsi
                                 index_name);
             out += ");\n";
 
-            out += "float alpha_output_" + index_name + " = ";
+            out += "float alpha_output_" + index_name + " = byteround(";
             AppendAlphaCombiner(out, stage.alpha_op, "alpha_results_" + index_name);
-            out += ";\n";
+            out += ");\n";
         }
 
         out += "last_tex_env_out = vec4("
@@ -1099,6 +1100,22 @@ float LookupLightingLUTSigned(int lut_index, float pos) {
     return LookupLightingLUT(lut_index, index, delta);
 }
 
+float byteround(float x) {
+    return round(x * 255.0) / 255.0;
+}
+
+vec2 byteround(vec2 x) {
+    return round(x * 255.0) / 255.0;
+}
+
+vec3 byteround(vec3 x) {
+    return round(x * 255.0) / 255.0;
+}
+
+vec4 byteround(vec4 x) {
+    return round(x * 255.0) / 255.0;
+}
+
 )";
 
     if (config.state.proctex.enable)
@@ -1108,7 +1125,7 @@ float LookupLightingLUTSigned(int lut_index, float pos) {
     // This maintains the PICA's 8 bits of precision
     out += R"(
 void main() {
-vec4 rounded_primary_color = round(primary_color * 255.0) / 255.0;
+vec4 rounded_primary_color = byteround(primary_color);
 vec4 primary_fragment_color = vec4(0.0);
 vec4 secondary_fragment_color = vec4(0.0);
 )";
@@ -1183,7 +1200,8 @@ vec4 secondary_fragment_color = vec4(0.0);
     }
 
     out += "gl_FragDepth = depth;\n";
-    out += "color = last_tex_env_out;\n";
+    // Round the final fragment color to maintain the PICA's 8 bits of precision
+    out += "color = byteround(last_tex_env_out);\n";
 
     out += "}";
 
