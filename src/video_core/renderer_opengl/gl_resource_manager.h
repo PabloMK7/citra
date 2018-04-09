@@ -5,6 +5,7 @@
 #pragma once
 
 #include <utility>
+#include <vector>
 #include <glad/glad.h>
 #include "common/common_types.h"
 #include "video_core/renderer_opengl/gl_shader_util.h"
@@ -96,11 +97,53 @@ public:
         return *this;
     }
 
-    /// Creates a new internal OpenGL resource and stores the handle
-    void Create(const char* vert_shader, const char* frag_shader) {
+    void Create(const char* source, GLenum type) {
         if (handle != 0)
             return;
-        handle = GLShader::LoadProgram(vert_shader, frag_shader);
+        if (source == nullptr)
+            return;
+        handle = GLShader::LoadShader(source, type);
+    }
+
+    void Release() {
+        if (handle == 0)
+            return;
+        glDeleteShader(handle);
+        handle = 0;
+    }
+
+    GLuint handle = 0;
+};
+
+class OGLProgram : private NonCopyable {
+public:
+    OGLProgram() = default;
+
+    OGLProgram(OGLProgram&& o) : handle(std::exchange(o.handle, 0)) {}
+
+    ~OGLProgram() {
+        Release();
+    }
+
+    OGLProgram& operator=(OGLProgram&& o) {
+        Release();
+        handle = std::exchange(o.handle, 0);
+        return *this;
+    }
+
+    /// Creates a new program from given shader objects
+    void Create(bool separable_program, const std::vector<GLuint>& shaders) {
+        if (handle != 0)
+            return;
+        handle = GLShader::LoadProgram(separable_program, shaders);
+    }
+
+    /// Creates a new program from given shader soruce code
+    void Create(const char* vert_shader, const char* frag_shader) {
+        OGLShader vert, frag;
+        vert.Create(vert_shader, GL_VERTEX_SHADER);
+        frag.Create(frag_shader, GL_FRAGMENT_SHADER);
+        Create(false, {vert.handle, frag.handle});
     }
 
     /// Deletes the internal OpenGL resource
