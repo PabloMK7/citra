@@ -119,8 +119,8 @@ void Lobby::OnJoinRoom(const QModelIndex& index) {
     }
 
     // Get a password to pass if the room is password protected
-    QModelIndex password_index = proxy->index(index.row(), Column::PASSWORD);
-    bool has_password = proxy->data(password_index, LobbyItemPassword::PasswordRole).toBool();
+    QModelIndex password_index = proxy->index(index.row(), Column::ROOM_NAME);
+    bool has_password = proxy->data(password_index, LobbyItemName::PasswordRole).toBool();
     const std::string password = has_password ? PasswordPrompt().toStdString() : "";
     if (has_password && password.empty()) {
         return;
@@ -161,7 +161,7 @@ void Lobby::OnStateChanged(const Network::RoomMember::State& state) {
 void Lobby::ResetModel() {
     model->clear();
     model->insertColumns(0, Column::TOTAL);
-    model->setHeaderData(Column::PASSWORD, Qt::Horizontal, tr("Password"), Qt::DisplayRole);
+    model->setHeaderData(Column::EXPAND, Qt::Horizontal, "", Qt::DisplayRole);
     model->setHeaderData(Column::ROOM_NAME, Qt::Horizontal, tr("Room Name"), Qt::DisplayRole);
     model->setHeaderData(Column::GAME_NAME, Qt::Horizontal, tr("Preferred Game"), Qt::DisplayRole);
     model->setHeaderData(Column::HOST, Qt::Horizontal, tr("Host"), Qt::DisplayRole);
@@ -200,10 +200,10 @@ void Lobby::OnRefreshLobby() {
             members.append(var);
         }
 
-        auto first_item = new LobbyItemPassword(room.has_password);
+        auto first_item = new LobbyItem();
         auto row = QList<QStandardItem*>({
             first_item,
-            new LobbyItemName(QString::fromStdString(room.name)),
+            new LobbyItemName(room.has_password, QString::fromStdString(room.name)),
             new LobbyItemGame(room.preferred_game_id, QString::fromStdString(room.preferred_game),
                               smdh_icon),
             new LobbyItemHost(QString::fromStdString(room.owner), QString::fromStdString(room.ip),

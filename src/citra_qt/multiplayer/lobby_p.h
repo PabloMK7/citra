@@ -12,7 +12,7 @@
 
 namespace Column {
 enum List {
-    PASSWORD,
+    EXPAND,
     ROOM_NAME,
     GAME_NAME,
     HOST,
@@ -28,43 +28,28 @@ public:
     virtual ~LobbyItem() override {}
 };
 
-class LobbyItemPassword : public LobbyItem {
+class LobbyItemName : public LobbyItem {
 public:
-    static const int PasswordRole = Qt::UserRole + 1;
+    static const int NameRole = Qt::UserRole + 1;
+    static const int PasswordRole = Qt::UserRole + 2;
 
-    LobbyItemPassword() = default;
-    explicit LobbyItemPassword(const bool has_password) : LobbyItem() {
+    LobbyItemName() = default;
+    explicit LobbyItemName(bool has_password, QString name) : LobbyItem() {
+        setData(name, NameRole);
         setData(has_password, PasswordRole);
     }
 
     QVariant data(int role) const override {
-        if (role != Qt::DecorationRole) {
-            return LobbyItem::data(role);
+        if (role == Qt::DecorationRole) {
+            bool has_password = data(PasswordRole).toBool();
+            return has_password ? QIcon::fromTheme("lock").pixmap(16) : QIcon();
         }
-        bool has_password = data(PasswordRole).toBool();
-        return has_password ? QIcon(":/icons/lock.png") : QIcon();
-    }
-
-    bool operator<(const QStandardItem& other) const override {
-        return data(PasswordRole).toBool() < other.data(PasswordRole).toBool();
-    }
-};
-
-class LobbyItemName : public LobbyItem {
-public:
-    static const int NameRole = Qt::UserRole + 1;
-
-    LobbyItemName() = default;
-    explicit LobbyItemName(QString name) : LobbyItem() {
-        setData(name, NameRole);
-    }
-
-    QVariant data(int role) const override {
         if (role != Qt::DisplayRole) {
             return LobbyItem::data(role);
         }
         return data(NameRole).toString();
     }
+
     bool operator<(const QStandardItem& other) const override {
         return data(NameRole).toString().localeAwareCompare(other.data(NameRole).toString()) < 0;
     }

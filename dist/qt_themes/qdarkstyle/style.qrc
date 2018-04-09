@@ -1,6 +1,7 @@
 <RCC>
   <qresource prefix="icons/qdarkstyle">
     <file alias="index.theme">icons/index.theme</file>
+    <file alias="16x16/lock.png">icons/16x16/lock.png</file>
   </qresource>
   <qresource prefix="qss_icons">
     <file>rc/up_arrow_disabled.png</file>
