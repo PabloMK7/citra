@@ -110,7 +110,7 @@ bg_green =
 layout_option =
 
 # Toggle custom layout (using the settings below) on or off.
-# 0 (default): Off , 1: On
+# 0 (default): Off, 1: On
 custom_layout =
 
 # Screen placement when using Custom layout option
