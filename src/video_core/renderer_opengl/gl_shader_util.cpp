@@ -10,66 +10,67 @@
 
 namespace GLShader {
 
-GLuint LoadProgram(const char* vertex_shader, const char* fragment_shader) {
+GLuint LoadShader(const char* source, GLenum type) {
+    const char* debug_type;
+    switch (type) {
+    case GL_VERTEX_SHADER:
+        debug_type = "vertex";
+        break;
+    case GL_GEOMETRY_SHADER:
+        debug_type = "geometry";
+        break;
+    case GL_FRAGMENT_SHADER:
+        debug_type = "fragment";
+        break;
+    default:
+        UNREACHABLE();
+    }
 
-    // Create the shaders
-    GLuint vertex_shader_id = glCreateShader(GL_VERTEX_SHADER);
-    GLuint fragment_shader_id = glCreateShader(GL_FRAGMENT_SHADER);
+    GLuint shader_id = glCreateShader(type);
+    glShaderSource(shader_id, 1, &source, nullptr);
+    NGLOG_DEBUG(Render_OpenGL, "Compiling {} shader...", debug_type);
+    glCompileShader(shader_id);
 
     GLint result = GL_FALSE;
-    int info_log_length;
-
-    // Compile Vertex Shader
-    LOG_DEBUG(Render_OpenGL, "Compiling vertex shader...");
-
-    glShaderSource(vertex_shader_id, 1, &vertex_shader, nullptr);
-    glCompileShader(vertex_shader_id);
-
-    // Check Vertex Shader
-    glGetShaderiv(vertex_shader_id, GL_COMPILE_STATUS, &result);
-    glGetShaderiv(vertex_shader_id, GL_INFO_LOG_LENGTH, &info_log_length);
+    GLint info_log_length;
+    glGetShaderiv(shader_id, GL_COMPILE_STATUS, &result);
+    glGetShaderiv(shader_id, GL_INFO_LOG_LENGTH, &info_log_length);
 
     if (info_log_length > 1) {
-        std::vector<char> vertex_shader_error(info_log_length);
-        glGetShaderInfoLog(vertex_shader_id, info_log_length, nullptr, &vertex_shader_error[0]);
+        std::vector<char> shader_error(info_log_length);
+        glGetShaderInfoLog(shader_id, info_log_length, nullptr, &shader_error[0]);
         if (result == GL_TRUE) {
-            LOG_DEBUG(Render_OpenGL, "%s", &vertex_shader_error[0]);
+            NGLOG_DEBUG(Render_OpenGL, "{}", &shader_error[0]);
         } else {
-            LOG_ERROR(Render_OpenGL, "Error compiling vertex shader:\n%s", &vertex_shader_error[0]);
+            NGLOG_ERROR(Render_OpenGL, "Error compiling {} shader:\n{}", debug_type,
+                        &shader_error[0]);
+            NGLOG_ERROR(Render_OpenGL, "Shader source code:\n{}", source);
         }
     }
+    return shader_id;
+}
 
-    // Compile Fragment Shader
-    LOG_DEBUG(Render_OpenGL, "Compiling fragment shader...");
-
-    glShaderSource(fragment_shader_id, 1, &fragment_shader, nullptr);
-    glCompileShader(fragment_shader_id);
-
-    // Check Fragment Shader
-    glGetShaderiv(fragment_shader_id, GL_COMPILE_STATUS, &result);
-    glGetShaderiv(fragment_shader_id, GL_INFO_LOG_LENGTH, &info_log_length);
-
-    if (info_log_length > 1) {
-        std::vector<char> fragment_shader_error(info_log_length);
-        glGetShaderInfoLog(fragment_shader_id, info_log_length, nullptr, &fragment_shader_error[0]);
-        if (result == GL_TRUE) {
-            LOG_DEBUG(Render_OpenGL, "%s", &fragment_shader_error[0]);
-        } else {
-            LOG_ERROR(Render_OpenGL, "Error compiling fragment shader:\n%s",
-                      &fragment_shader_error[0]);
-        }
-    }
-
+GLuint LoadProgram(bool separable_program, const std::vector<GLuint>& shaders) {
     // Link the program
-    LOG_DEBUG(Render_OpenGL, "Linking program...");
+    NGLOG_DEBUG(Render_OpenGL, "Linking program...");
 
     GLuint program_id = glCreateProgram();
-    glAttachShader(program_id, vertex_shader_id);
-    glAttachShader(program_id, fragment_shader_id);
+
+    for (GLuint shader : shaders) {
+        if (shader != 0) {
+            glAttachShader(program_id, shader);
+        }
+    }
+
+    if (separable_program) {
+        glProgramParameteri(program_id, GL_PROGRAM_SEPARABLE, GL_TRUE);
+    }
 
     glLinkProgram(program_id);
 
     // Check the program
+    GLint result = GL_FALSE;
+    GLint info_log_length;
     glGetProgramiv(program_id, GL_LINK_STATUS, &result);
     glGetProgramiv(program_id, GL_INFO_LOG_LENGTH, &info_log_length);
 
@@ -77,21 +78,19 @@ GLuint LoadProgram(const char* vertex_shader, const char* fragment_shader) {
         std::vector<char> program_error(info_log_length);
         glGetProgramInfoLog(program_id, info_log_length, nullptr, &program_error[0]);
         if (result == GL_TRUE) {
-            LOG_DEBUG(Render_OpenGL, "%s", &program_error[0]);
+            NGLOG_DEBUG(Render_OpenGL, "{}", &program_error[0]);
         } else {
-            LOG_ERROR(Render_OpenGL, "Error linking shader:\n%s", &program_error[0]);
+            NGLOG_ERROR(Render_OpenGL, "Error linking shader:\n{}", &program_error[0]);
         }
     }
 
-    // If the program linking failed at least one of the shaders was probably bad
-    if (result == GL_FALSE) {
-        LOG_ERROR(Render_OpenGL, "Vertex shader:\n%s", vertex_shader);
-        LOG_ERROR(Render_OpenGL, "Fragment shader:\n%s", fragment_shader);
-    }
     ASSERT_MSG(result == GL_TRUE, "Shader not linked");
 
-    glDeleteShader(vertex_shader_id);
-    glDeleteShader(fragment_shader_id);
+    for (GLuint shader : shaders) {
+        if (shader != 0) {
+            glDetachShader(program_id, shader);
+        }
+    }
 
     return program_id;
 }
