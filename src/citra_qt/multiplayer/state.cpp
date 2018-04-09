@@ -104,11 +104,12 @@ void MultiplayerState::OnCreateRoom() {
 
 void MultiplayerState::OnCloseRoom() {
     if (auto room = Network::GetRoom().lock()) {
-        if (room->GetState() == Network::Room::State::Open) {
-            if (NetworkMessage::WarnCloseRoom()) {
-                room->Destroy();
-                announce_multiplayer_session->Stop();
-            }
+        if (room->GetState() != Network::Room::State::Open) {
+            return;
+        }
+        if (NetworkMessage::WarnCloseRoom()) {
+            room->Destroy();
+            announce_multiplayer_session->Stop();
         }
     }
 }

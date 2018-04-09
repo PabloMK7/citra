@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <array>
 #include <future>
 #include <QColor>
 #include <QImage>
@@ -10,7 +11,6 @@
 #include <QMetaType>
 #include <QTime>
 #include <QtConcurrent/QtConcurrentRun>
-
 #include "citra_qt/game_list_p.h"
 #include "citra_qt/multiplayer/chat_room.h"
 #include "citra_qt/multiplayer/message.h"
@@ -36,10 +36,10 @@ public:
     }
 
 private:
-    ChatMessage() {}
-    const QList<QString> player_color = {
+    static constexpr std::array<const char*, 16> player_color = {
         {"#0000FF", "#FF0000", "#8A2BE2", "#FF69B4", "#1E90FF", "#008000", "#00FF7F", "#B22222",
          "#DAA520", "#FF4500", "#2E8B57", "#5F9EA0", "#D2691E", "#9ACD32", "#FF7F50", "FFFF00"}};
+
     QString timestamp;
     QString nickname;
     QString message;
@@ -49,7 +49,7 @@ class StatusMessage {
 public:
     explicit StatusMessage(const QString& msg, QTime ts = {}) {
         /// Convert the time to their default locale defined format
-        static QLocale locale;
+        QLocale locale;
         timestamp = locale.toString(ts.isValid() ? ts : QTime::currentTime(), QLocale::ShortFormat);
         message = msg;
     }
@@ -65,7 +65,7 @@ private:
     QString message;
 };
 
-ChatRoom::ChatRoom(QWidget* parent) : ui(new Ui::ChatRoom) {
+ChatRoom::ChatRoom(QWidget* parent) : QWidget(parent), ui(new Ui::ChatRoom) {
     ui->setupUi(this);
 
     // set the item_model for player_view
@@ -159,28 +159,29 @@ void ChatRoom::OnChatReceive(const Network::ChatEntry& chat) {
 
 void ChatRoom::OnSendChat() {
     if (auto room = Network::GetRoomMember().lock()) {
-        if (room->GetState() == Network::RoomMember::State::Joined) {
-            auto message = ui->chat_message->text().toStdString();
-            if (!ValidateMessage(message)) {
-                return;
-            }
-            auto nick = room->GetNickname();
-            Network::ChatEntry chat{nick, message};
-
-            auto members = room->GetMemberInformation();
-            auto it = std::find_if(members.begin(), members.end(),
-                                   [&chat](const Network::RoomMember::MemberInformation& member) {
-                                       return member.nickname == chat.nickname;
-                                   });
-            if (it == members.end()) {
-                LOG_INFO(Network, "Chat message received from unknown player");
-            }
-            auto player = std::distance(members.begin(), it);
-            ChatMessage m(chat);
-            room->SendChatMessage(message);
-            AppendChatMessage(m.GetPlayerChatMessage(player));
-            ui->chat_message->clear();
+        if (room->GetState() != Network::RoomMember::State::Joined) {
+            return;
         }
+        auto message = ui->chat_message->text().toStdString();
+        if (!ValidateMessage(message)) {
+            return;
+        }
+        auto nick = room->GetNickname();
+        Network::ChatEntry chat{nick, message};
+
+        auto members = room->GetMemberInformation();
+        auto it = std::find_if(members.begin(), members.end(),
+                               [&chat](const Network::RoomMember::MemberInformation& member) {
+                                   return member.nickname == chat.nickname;
+                               });
+        if (it == members.end()) {
+            LOG_INFO(Network, "Chat message received from unknown player");
+        }
+        auto player = std::distance(members.begin(), it);
+        ChatMessage m(chat);
+        room->SendChatMessage(message);
+        AppendChatMessage(m.GetPlayerChatMessage(player));
+        ui->chat_message->clear();
     }
 }
 
@@ -188,11 +189,11 @@ void ChatRoom::SetPlayerList(const Network::RoomMember::MemberList& member_list)
     // TODO(B3N30): Remember which row is selected
     player_list->removeRows(0, player_list->rowCount());
     for (const auto& member : member_list) {
-        if (member.nickname == "")
+        if (member.nickname.empty())
             continue;
         QList<QStandardItem*> l;
         std::vector<std::string> elements = {member.nickname, member.game_info.name};
-        for (auto& item : elements) {
+        for (const auto& item : elements) {
             QStandardItem* child = new QStandardItem(QString::fromStdString(item));
             child->setEditable(false);
             l.append(child);

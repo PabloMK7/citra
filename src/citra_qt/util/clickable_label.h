@@ -6,14 +6,13 @@
 
 #include <QLabel>
 #include <QWidget>
-#include <Qt>
 
 class ClickableLabel : public QLabel {
     Q_OBJECT
 
 public:
-    explicit ClickableLabel(QWidget* parent = Q_NULLPTR, Qt::WindowFlags f = Qt::WindowFlags());
-    ~ClickableLabel();
+    explicit ClickableLabel(QWidget* parent = nullptr, Qt::WindowFlags f = Qt::WindowFlags());
+    ~ClickableLabel() = default;
 
 signals:
     void clicked();

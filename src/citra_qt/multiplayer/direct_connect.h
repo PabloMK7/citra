@@ -30,7 +30,6 @@ private slots:
 
 private:
     void Connect();
-    void ClearAllError();
     void BeginConnecting();
     void EndConnecting();
 

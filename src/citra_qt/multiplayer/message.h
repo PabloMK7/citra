@@ -4,12 +4,14 @@
 
 #pragma once
 
+#include <utility>
+
 namespace NetworkMessage {
 
 class ConnectionError {
 
 public:
-    explicit ConnectionError(const std::string& str) : err(str) {}
+    explicit ConnectionError(std::string str) : err(std::move(str)) {}
     const std::string& GetString() const {
         return err;
     }

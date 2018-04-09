@@ -19,7 +19,7 @@
 #include "network/network.h"
 #include "ui_direct_connect.h"
 
-enum class ConnectionType : u8 { TRAVERSAL_SERVER, IP };
+enum class ConnectionType : u8 { TraversalServer, IP };
 
 DirectConnectWindow::DirectConnectWindow(QWidget* parent)
     : QDialog(parent, Qt::WindowTitleHint | Qt::WindowCloseButtonHint | Qt::WindowSystemMenuHint),
@@ -44,36 +44,28 @@ DirectConnectWindow::DirectConnectWindow(QWidget* parent)
 }
 
 void DirectConnectWindow::Connect() {
-    ClearAllError();
-    bool isValid = true;
     if (!ui->nickname->hasAcceptableInput()) {
-        isValid = false;
-        ShowError(NetworkMessage::USERNAME_NOT_VALID);
+        NetworkMessage::ShowError(NetworkMessage::USERNAME_NOT_VALID);
+        return;
     }
     if (const auto member = Network::GetRoomMember().lock()) {
-        if (member->IsConnected()) {
-            if (!NetworkMessage::WarnDisconnect()) {
-                return;
-            }
+        if (member->IsConnected() && !NetworkMessage::WarnDisconnect()) {
+            return;
         }
     }
     switch (static_cast<ConnectionType>(ui->connection_type->currentIndex())) {
-    case ConnectionType::TRAVERSAL_SERVER:
+    case ConnectionType::TraversalServer:
         break;
     case ConnectionType::IP:
         if (!ui->ip->hasAcceptableInput()) {
-            isValid = false;
             NetworkMessage::ShowError(NetworkMessage::IP_ADDRESS_NOT_VALID);
+            return;
         }
         if (!ui->port->hasAcceptableInput()) {
-            isValid = false;
             NetworkMessage::ShowError(NetworkMessage::PORT_NOT_VALID);
+            return;
         }
         break;
-    }
-
-    if (!isValid) {
-        return;
     }
 
     // Store settings
@@ -97,8 +89,6 @@ void DirectConnectWindow::Connect() {
     // and disable widgets and display a connecting while we wait
     BeginConnecting();
 }
-
-void DirectConnectWindow::ClearAllError() {}
 
 void DirectConnectWindow::BeginConnecting() {
     ui->connect->setEnabled(false);

@@ -45,7 +45,7 @@ signals:
     void ChatReceived(const Network::ChatEntry&);
 
 private:
-    const u32 max_chat_lines = 1000;
+    static constexpr u32 max_chat_lines = 1000;
     void AppendChatMessage(const QString&);
     bool ValidateMessage(const std::string&);
     QStandardItemModel* player_list;
