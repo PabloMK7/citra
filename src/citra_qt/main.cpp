@@ -173,6 +173,7 @@ void GMainWindow::InitializeWidgets() {
     ui.horizontalLayout->addWidget(game_list);
 
     multiplayer_state = new MultiplayerState(this, game_list->GetModel());
+    multiplayer_state->setVisible(false);
 
     // Setup updater
     updater = new Updater(this);
