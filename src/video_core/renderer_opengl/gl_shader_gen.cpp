@@ -61,6 +61,37 @@ layout (std140) uniform shader_data {
 };
 )";
 
+static std::string GetVertexInterfaceDeclaration(bool is_output, bool separable_shader) {
+    std::string out;
+
+    auto append_variable = [&](const char* var, int location) {
+        if (separable_shader) {
+            out += "layout (location=" + std::to_string(location) + ") ";
+        }
+        out += std::string(is_output ? "out " : "in ") + var + ";\n";
+    };
+
+    append_variable("vec4 primary_color", ATTRIBUTE_COLOR);
+    append_variable("vec2 texcoord0", ATTRIBUTE_TEXCOORD0);
+    append_variable("vec2 texcoord1", ATTRIBUTE_TEXCOORD1);
+    append_variable("vec2 texcoord2", ATTRIBUTE_TEXCOORD2);
+    append_variable("float texcoord0_w", ATTRIBUTE_TEXCOORD0_W);
+    append_variable("vec4 normquat", ATTRIBUTE_NORMQUAT);
+    append_variable("vec3 view", ATTRIBUTE_VIEW);
+
+    if (is_output && separable_shader) {
+        // gl_PerVertex redeclaration is required for separate shader object
+        out += R"(
+out gl_PerVertex {
+    vec4 gl_Position;
+    float gl_ClipDistance[2];
+};
+)";
+    }
+
+    return out;
+}
+
 PicaShaderConfig PicaShaderConfig::BuildFromRegs(const Pica::Regs& regs) {
     PicaShaderConfig res;
 
@@ -206,11 +237,11 @@ static std::string SampleTexture(const PicaShaderConfig& config, unsigned textur
         // Only unit 0 respects the texturing type
         switch (state.texture0_type) {
         case TexturingRegs::TextureConfig::Texture2D:
-            return "texture(tex[0], texcoord[0])";
+            return "texture(tex0, texcoord0)";
         case TexturingRegs::TextureConfig::Projection2D:
-            return "textureProj(tex[0], vec3(texcoord[0], texcoord0_w))";
+            return "textureProj(tex0, vec3(texcoord0, texcoord0_w))";
         case TexturingRegs::TextureConfig::TextureCube:
-            return "texture(tex_cube, vec3(texcoord[0], texcoord0_w))";
+            return "texture(tex_cube, vec3(texcoord0, texcoord0_w))";
         case TexturingRegs::TextureConfig::Shadow2D:
         case TexturingRegs::TextureConfig::ShadowCube:
             NGLOG_CRITICAL(HW_GPU, "Unhandled shadow texture");
@@ -220,15 +251,15 @@ static std::string SampleTexture(const PicaShaderConfig& config, unsigned textur
             LOG_CRITICAL(HW_GPU, "Unhandled texture type %x",
                          static_cast<int>(state.texture0_type));
             UNIMPLEMENTED();
-            return "texture(tex[0], texcoord[0])";
+            return "texture(tex0, texcoord0)";
         }
     case 1:
-        return "texture(tex[1], texcoord[1])";
+        return "texture(tex1, texcoord1)";
     case 2:
         if (state.texture2_use_coord1)
-            return "texture(tex[2], texcoord[1])";
+            return "texture(tex2, texcoord1)";
         else
-            return "texture(tex[2], texcoord[2])";
+            return "texture(tex2, texcoord2)";
     case 3:
         if (state.proctex.enable) {
             return "ProcTex()";
@@ -1019,7 +1050,12 @@ float ProcTexNoiseCoef(vec2 x) {
     }
 
     out += "vec4 ProcTex() {\n";
-    out += "vec2 uv = abs(texcoord[" + std::to_string(config.state.proctex.coord) + "]);\n";
+    if (config.state.proctex.coord < 3) {
+        out += "vec2 uv = abs(texcoord" + std::to_string(config.state.proctex.coord) + ");\n";
+    } else {
+        NGLOG_CRITICAL(Render_OpenGL, "Unexpected proctex.coord >= 3");
+        out += "vec2 uv = abs(texcoord0);\n";
+    }
 
     // Get shift offset before noise generation
     out += "float u_shift = ";
@@ -1084,23 +1120,24 @@ float ProcTexNoiseCoef(vec2 x) {
     }
 }
 
-std::string GenerateFragmentShader(const PicaShaderConfig& config) {
+std::string GenerateFragmentShader(const PicaShaderConfig& config, bool separable_shader) {
     const auto& state = config.state;
 
-    std::string out = R"(
-#version 330 core
+    std::string out = "#version 330 core\n";
+    if (separable_shader) {
+        out += "#extension GL_ARB_separate_shader_objects : enable\n";
+    }
 
-in vec4 primary_color;
-in vec2 texcoord[3];
-in float texcoord0_w;
-in vec4 normquat;
-in vec3 view;
+    out += GetVertexInterfaceDeclaration(false, separable_shader);
 
+    out += R"(
 in vec4 gl_FragCoord;
 
 out vec4 color;
 
-uniform sampler2D tex[3];
+uniform sampler2D tex0;
+uniform sampler2D tex1;
+uniform sampler2D tex2;
 uniform samplerCube tex_cube;
 uniform samplerBuffer lighting_lut;
 uniform samplerBuffer fog_lut;
@@ -1228,8 +1265,11 @@ vec4 secondary_fragment_color = vec4(0.0);
     return out;
 }
 
-std::string GenerateVertexShader() {
+std::string GenerateTrivialVertexShader(bool separable_shader) {
     std::string out = "#version 330 core\n";
+    if (separable_shader) {
+        out += "#extension GL_ARB_separate_shader_objects : enable\n";
+    }
 
     out += "layout(location = " + std::to_string((int)ATTRIBUTE_POSITION) +
            ") in vec4 vert_position;\n";
@@ -1246,14 +1286,7 @@ std::string GenerateVertexShader() {
            ") in vec4 vert_normquat;\n";
     out += "layout(location = " + std::to_string((int)ATTRIBUTE_VIEW) + ") in vec3 vert_view;\n";
 
-    out += R"(
-out vec4 primary_color;
-out vec2 texcoord[3];
-out float texcoord0_w;
-out vec4 normquat;
-out vec3 view;
-
-)";
+    out += GetVertexInterfaceDeclaration(true, separable_shader);
 
     out += UniformBlockDef;
 
@@ -1261,9 +1294,9 @@ out vec3 view;
 
 void main() {
     primary_color = vert_color;
-    texcoord[0] = vert_texcoord0;
-    texcoord[1] = vert_texcoord1;
-    texcoord[2] = vert_texcoord2;
+    texcoord0 = vert_texcoord0;
+    texcoord1 = vert_texcoord1;
+    texcoord2 = vert_texcoord2;
     texcoord0_w = vert_texcoord0_w;
     normquat = vert_normquat;
     view = vert_view;
