@@ -66,6 +66,7 @@ struct PicaShaderConfigState {
             bool spot_atten_enable;
             bool geometric_factor_0;
             bool geometric_factor_1;
+            bool shadow_enable;
         } light[8];
 
         bool enable;
@@ -76,7 +77,15 @@ struct PicaShaderConfigState {
         bool clamp_highlights;
 
         Pica::LightingRegs::LightingConfig config;
-        Pica::LightingRegs::LightingFresnelSelector fresnel_selector;
+        bool enable_primary_alpha;
+        bool enable_secondary_alpha;
+
+        bool enable_shadow;
+        bool shadow_primary;
+        bool shadow_secondary;
+        bool shadow_invert;
+        bool shadow_alpha;
+        unsigned shadow_selector;
 
         struct {
             bool enable;

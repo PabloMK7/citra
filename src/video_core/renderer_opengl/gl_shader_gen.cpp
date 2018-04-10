@@ -115,6 +115,7 @@ PicaShaderConfig PicaShaderConfig::BuildFromRegs(const Pica::Regs& regs) {
             !regs.lighting.IsDistAttenDisabled(num);
         state.lighting.light[light_index].spot_atten_enable =
             !regs.lighting.IsSpotAttenDisabled(num);
+        state.lighting.light[light_index].shadow_enable = !regs.lighting.IsShadowDisabled(num);
     }
 
     state.lighting.lut_d0.enable = regs.lighting.config1.disable_lut_d0 == 0;
@@ -154,11 +155,19 @@ PicaShaderConfig PicaShaderConfig::BuildFromRegs(const Pica::Regs& regs) {
     state.lighting.lut_rb.scale = regs.lighting.lut_scale.GetScale(regs.lighting.lut_scale.rb);
 
     state.lighting.config = regs.lighting.config0.config;
-    state.lighting.fresnel_selector = regs.lighting.config0.fresnel_selector;
+    state.lighting.enable_primary_alpha = regs.lighting.config0.enable_primary_alpha;
+    state.lighting.enable_secondary_alpha = regs.lighting.config0.enable_secondary_alpha;
     state.lighting.bump_mode = regs.lighting.config0.bump_mode;
     state.lighting.bump_selector = regs.lighting.config0.bump_selector;
     state.lighting.bump_renorm = regs.lighting.config0.disable_bump_renorm == 0;
     state.lighting.clamp_highlights = regs.lighting.config0.clamp_highlights != 0;
+
+    state.lighting.enable_shadow = regs.lighting.config0.enable_shadow != 0;
+    state.lighting.shadow_primary = regs.lighting.config0.shadow_primary != 0;
+    state.lighting.shadow_secondary = regs.lighting.config0.shadow_secondary != 0;
+    state.lighting.shadow_invert = regs.lighting.config0.shadow_invert != 0;
+    state.lighting.shadow_alpha = regs.lighting.config0.shadow_alpha != 0;
+    state.lighting.shadow_selector = regs.lighting.config0.shadow_selector;
 
     state.proctex.enable = regs.texturing.main_config.texture3_enable;
     if (state.proctex.enable) {
@@ -202,6 +211,11 @@ static std::string SampleTexture(const PicaShaderConfig& config, unsigned textur
             return "textureProj(tex[0], vec3(texcoord[0], texcoord0_w))";
         case TexturingRegs::TextureConfig::TextureCube:
             return "texture(tex_cube, vec3(texcoord[0], texcoord0_w))";
+        case TexturingRegs::TextureConfig::Shadow2D:
+        case TexturingRegs::TextureConfig::ShadowCube:
+            NGLOG_CRITICAL(HW_GPU, "Unhandled shadow texture");
+            UNIMPLEMENTED();
+            return "vec4(1.0)"; // stubbed to avoid rendering with wrong shadow
         default:
             LOG_CRITICAL(HW_GPU, "Unhandled texture type %x",
                          static_cast<int>(state.texture0_type));
@@ -605,6 +619,17 @@ static void WriteLighting(std::string& out, const PicaShaderConfig& config) {
     out += "vec3 normal = quaternion_rotate(normalized_normquat, surface_normal);\n";
     out += "vec3 tangent = quaternion_rotate(normalized_normquat, surface_tangent);\n";
 
+    if (lighting.enable_shadow) {
+        std::string shadow_texture = SampleTexture(config, lighting.shadow_selector);
+        if (lighting.shadow_invert) {
+            out += "vec4 shadow = vec4(1.0) - " + shadow_texture + ";\n";
+        } else {
+            out += "vec4 shadow = " + shadow_texture + ";\n";
+        }
+    } else {
+        out += "vec4 shadow = vec4(1.0);\n";
+    }
+
     // Samples the specified lookup table for specular lighting
     auto GetLutValue = [&lighting](LightingRegs::LightingSampler sampler, unsigned light_num,
                                    LightingRegs::LightingLutInput input, bool abs) {
@@ -803,26 +828,39 @@ static void WriteLighting(std::string& out, const PicaShaderConfig& config) {
             value = "(" + std::to_string(lighting.lut_fr.scale) + " * " + value + ")";
 
             // Enabled for diffuse lighting alpha component
-            if (lighting.fresnel_selector == LightingRegs::LightingFresnelSelector::PrimaryAlpha ||
-                lighting.fresnel_selector == LightingRegs::LightingFresnelSelector::Both) {
+            if (lighting.enable_primary_alpha) {
                 out += "diffuse_sum.a = " + value + ";\n";
             }
 
             // Enabled for the specular lighting alpha component
-            if (lighting.fresnel_selector ==
-                    LightingRegs::LightingFresnelSelector::SecondaryAlpha ||
-                lighting.fresnel_selector == LightingRegs::LightingFresnelSelector::Both) {
+            if (lighting.enable_secondary_alpha) {
                 out += "specular_sum.a = " + value + ";\n";
             }
         }
 
+        bool shadow_primary_enable = lighting.shadow_primary && light_config.shadow_enable;
+        bool shadow_secondary_enable = lighting.shadow_secondary && light_config.shadow_enable;
+        std::string shadow_primary = shadow_primary_enable ? " * shadow.rgb" : "";
+        std::string shadow_secondary = shadow_secondary_enable ? " * shadow.rgb" : "";
+
         // Compute primary fragment color (diffuse lighting) function
         out += "diffuse_sum.rgb += ((" + light_src + ".diffuse * dot_product) + " + light_src +
-               ".ambient) * " + dist_atten + " * " + spot_atten + ";\n";
+               ".ambient) * " + dist_atten + " * " + spot_atten + shadow_primary + ";\n";
 
         // Compute secondary fragment color (specular lighting) function
         out += "specular_sum.rgb += (" + specular_0 + " + " + specular_1 +
-               ") * clamp_highlights * " + dist_atten + " * " + spot_atten + ";\n";
+               ") * clamp_highlights * " + dist_atten + " * " + spot_atten + shadow_secondary +
+               ";\n";
+    }
+
+    // Apply shadow attenuation to alpha components if enabled
+    if (lighting.shadow_alpha) {
+        if (lighting.enable_primary_alpha) {
+            out += "diffuse_sum.a *= shadow.a;\n";
+        }
+        if (lighting.enable_secondary_alpha) {
+            out += "specular_sum.a *= shadow.a;\n";
+        }
     }
 
     // Sum final lighting result
