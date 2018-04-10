@@ -379,6 +379,9 @@ private:
      */
     void StoreDataCache(Kernel::HLERequestContext& ctx);
 
+    /// Force the 3D LED State (0 = On, Non-Zero = Off)
+    void SetLedForceOff(Kernel::HLERequestContext& ctx);
+
     /// Returns the session data for the specified registered thread id, or nullptr if not found.
     SessionData* FindRegisteredThreadData(u32 thread_id);
 

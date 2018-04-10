@@ -82,4 +82,6 @@ void SetMacAddress(const MacAddress&);
 
 void SetWifiLinkLevel(WifiLinkLevel);
 
+void Set3DLed(u8);
+
 } // namespace SharedPage

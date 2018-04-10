@@ -13,6 +13,7 @@
 #include "core/hle/kernel/shared_memory.h"
 #include "core/hle/result.h"
 #include "core/hle/service/gsp/gsp_gpu.h"
+#include "core/hle/shared_page.h"
 #include "core/hw/gpu.h"
 #include "core/hw/hw.h"
 #include "core/hw/lcd.h"
@@ -712,6 +713,17 @@ void GSP_GPU::StoreDataCache(Kernel::HLERequestContext& ctx) {
               size, process->process_id);
 }
 
+void GSP_GPU::SetLedForceOff(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x1C, 1, 0);
+
+    u8 state = rp.Pop<u8>();
+    SharedPage::Set3DLed(state);
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RESULT_SUCCESS);
+    LOG_DEBUG(Service_GSP, "(STUBBED) called");
+}
+
 SessionData* GSP_GPU::FindRegisteredThreadData(u32 thread_id) {
     for (auto& session_info : connected_sessions) {
         SessionData* data = static_cast<SessionData*>(session_info.data.get());
@@ -752,7 +764,7 @@ GSP_GPU::GSP_GPU() : ServiceFramework("gsp::Gpu", 2) {
         {0x00190000, nullptr, "SaveVramSysArea"},
         {0x001A0000, nullptr, "RestoreVramSysArea"},
         {0x001B0000, nullptr, "ResetGpuCore"},
-        {0x001C0040, nullptr, "SetLedForceOff"},
+        {0x001C0040, &GSP_GPU::SetLedForceOff, "SetLedForceOff"},
         {0x001D0040, nullptr, "SetTestCommand"},
         {0x001E0080, nullptr, "SetInternalPriorities"},
         {0x001F0082, &GSP_GPU::StoreDataCache, "StoreDataCache"},
