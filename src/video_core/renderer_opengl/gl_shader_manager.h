@@ -32,6 +32,8 @@ struct UniformData {
     GLint alphatest_ref;
     GLfloat depth_scale;
     GLfloat depth_offset;
+    GLfloat shadow_bias_constant;
+    GLfloat shadow_bias_linear;
     GLint scissor_x1;
     GLint scissor_y1;
     GLint scissor_x2;
@@ -48,7 +50,7 @@ struct UniformData {
 };
 
 static_assert(
-    sizeof(UniformData) == 0x460,
+    sizeof(UniformData) == 0x470,
     "The size of the UniformData structure has changed, update the structure in the shader");
 static_assert(sizeof(UniformData) < 16384,
               "UniformData structure must be less than 16kb as per the OpenGL spec");
