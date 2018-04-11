@@ -25,6 +25,7 @@ matrix:
       install: "./.travis/linux/deps.sh"
       script: "./.travis/linux/build.sh"
       after_success: "./.travis/linux/upload.sh"
+      cache: ccache
     - if: branch = master AND type = push
       os: linux
       env: NAME="transifex push"
@@ -40,11 +41,13 @@ matrix:
       install: "./.travis/macos/deps.sh"
       script: "./.travis/macos/build.sh"
       after_success: "./.travis/macos/upload.sh"
+      cache: ccache
     - os: linux
       env: NAME="linux build (frozen versions of dependencies)"
       sudo: required
       dist: trusty
       services: docker
+      cache: ccache
       script: "./.travis/linux-frozen/build.sh"
 
 deploy:
