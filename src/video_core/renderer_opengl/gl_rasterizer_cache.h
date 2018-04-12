@@ -326,7 +326,7 @@ public:
                               PAddr addr_override = 0);
 
     /// Copy surfaces to a cubemap texture based on the texture configuration
-    void FillTextureCube(GLuint dest_handle, const Pica::TexturingRegs::FullTextureConfig& config,
+    bool FillTextureCube(GLuint dest_handle, const Pica::TexturingRegs::FullTextureConfig& config,
                          PAddr px, PAddr nx, PAddr py, PAddr ny, PAddr pz, PAddr nz);
 
     /// Get the color and depth surfaces based on the framebuffer configuration

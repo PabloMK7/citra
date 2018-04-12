@@ -1228,7 +1228,7 @@ Surface RasterizerCacheOpenGL::GetTextureSurface(
     return GetSurface(params, ScaleMatch::Ignore, true);
 }
 
-void RasterizerCacheOpenGL::FillTextureCube(GLuint dest_handle,
+bool RasterizerCacheOpenGL::FillTextureCube(GLuint dest_handle,
                                             const Pica::TexturingRegs::FullTextureConfig& config,
                                             PAddr px, PAddr nx, PAddr py, PAddr ny, PAddr pz,
                                             PAddr nz) {
@@ -1250,6 +1250,8 @@ void RasterizerCacheOpenGL::FillTextureCube(GLuint dest_handle,
     u16 res_scale = 1;
     for (auto& face : faces) {
         face.surface = GetTextureSurface(config, face.address);
+        if (face.surface == nullptr)
+            return false;
         res_scale = std::max(res_scale, face.surface->res_scale);
     }
 
@@ -1298,6 +1300,8 @@ void RasterizerCacheOpenGL::FillTextureCube(GLuint dest_handle,
         glBlitFramebuffer(src_rect.left, src_rect.bottom, src_rect.right, src_rect.top, 0, 0,
                           scaled_size, scaled_size, GL_COLOR_BUFFER_BIT, GL_LINEAR);
     }
+
+    return true;
 }
 
 SurfaceSurfaceRect_Tuple RasterizerCacheOpenGL::GetFramebufferSurfaces(

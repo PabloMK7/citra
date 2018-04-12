@@ -44,7 +44,6 @@ RasterizerOpenGL::RasterizerOpenGL() : shader_dirty(true) {
     texture_cube_sampler.Create();
     state.texture_cube_unit.sampler = texture_cube_sampler.sampler.handle;
     texture_cube.Create();
-    state.texture_cube_unit.texture_cube = texture_cube.handle;
 
     // Generate VBO, VAO and UBO
     vertex_buffer = OGLStreamBuffer::MakeBuffer(GLAD_GL_ARB_buffer_storage, GL_ARRAY_BUFFER);
@@ -391,14 +390,19 @@ void RasterizerOpenGL::DrawTriangles() {
                 switch (texture.config.type.Value()) {
                 case TextureType::TextureCube:
                     using CubeFace = Pica::TexturingRegs::CubeFace;
-                    res_cache.FillTextureCube(
-                        texture_cube.handle, texture,
-                        regs.texturing.GetCubePhysicalAddress(CubeFace::PositiveX),
-                        regs.texturing.GetCubePhysicalAddress(CubeFace::NegativeX),
-                        regs.texturing.GetCubePhysicalAddress(CubeFace::PositiveY),
-                        regs.texturing.GetCubePhysicalAddress(CubeFace::NegativeY),
-                        regs.texturing.GetCubePhysicalAddress(CubeFace::PositiveZ),
-                        regs.texturing.GetCubePhysicalAddress(CubeFace::NegativeZ));
+                    if (res_cache.FillTextureCube(
+                            texture_cube.handle, texture,
+                            regs.texturing.GetCubePhysicalAddress(CubeFace::PositiveX),
+                            regs.texturing.GetCubePhysicalAddress(CubeFace::NegativeX),
+                            regs.texturing.GetCubePhysicalAddress(CubeFace::PositiveY),
+                            regs.texturing.GetCubePhysicalAddress(CubeFace::NegativeY),
+                            regs.texturing.GetCubePhysicalAddress(CubeFace::PositiveZ),
+                            regs.texturing.GetCubePhysicalAddress(CubeFace::NegativeZ))) {
+                        state.texture_cube_unit.texture_cube = texture_cube.handle;
+                    } else {
+                        // Can occur when texture addr is null or its memory is unmapped/invalid
+                        state.texture_cube_unit.texture_cube = 0;
+                    }
                     texture_cube_sampler.SyncWithConfig(texture.config);
                     state.texture_units[texture_index].texture_2d = 0;
                     continue; // Texture unit 0 setup finished. Continue to next unit
@@ -506,6 +510,7 @@ void RasterizerOpenGL::DrawTriangles() {
     for (unsigned texture_index = 0; texture_index < pica_textures.size(); ++texture_index) {
         state.texture_units[texture_index].texture_2d = 0;
     }
+    state.texture_cube_unit.texture_cube = 0;
     state.Apply();
 
     // Mark framebuffer surfaces as dirty
