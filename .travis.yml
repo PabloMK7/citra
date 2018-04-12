@@ -48,6 +48,19 @@ matrix:
       services: docker
       cache: ccache
       script: "./.travis/linux-frozen/build.sh"
+    - os: linux
+      env: NAME="linux build (MinGW)"
+      sudo: required
+      dist: trusty
+      services: docker
+      addons:
+        apt:
+          packages:
+            - p7zip-full
+      install: "./.travis/linux-mingw/deps.sh"
+      script: "./.travis/linux-mingw/build.sh"
+      after_success: "./.travis/linux-mingw/upload.sh"
+      cache: ccache
 
 deploy:
   provider: releases
