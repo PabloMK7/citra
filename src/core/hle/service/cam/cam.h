@@ -18,7 +18,7 @@ class CameraInterface;
 }
 
 namespace CoreTiming {
-class EventType;
+struct EventType;
 }
 
 namespace Kernel {
