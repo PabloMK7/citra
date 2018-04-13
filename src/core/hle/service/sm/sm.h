@@ -52,7 +52,5 @@ private:
     std::unordered_map<std::string, Kernel::SharedPtr<Kernel::ClientPort>> registered_services;
 };
 
-extern std::shared_ptr<ServiceManager> g_service_manager;
-
 } // namespace SM
 } // namespace Service

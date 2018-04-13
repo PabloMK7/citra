@@ -7,6 +7,7 @@
 #include "common/assert.h"
 #include "common/logging/log.h"
 #include "common/string_util.h"
+#include "core/core.h"
 #include "core/hle/ipc.h"
 #include "core/hle/kernel/client_port.h"
 #include "core/hle/kernel/handle_table.h"
@@ -214,48 +215,47 @@ static void AddNamedPort(Interface* interface_) {
 }
 
 void AddService(Interface* interface_) {
-    auto server_port =
-        SM::g_service_manager
-            ->RegisterService(interface_->GetPortName(), interface_->GetMaxSessions())
-            .Unwrap();
+    auto server_port = Core::System::GetInstance()
+                           .ServiceManager()
+                           .RegisterService(interface_->GetPortName(), interface_->GetMaxSessions())
+                           .Unwrap();
     server_port->SetHleHandler(std::shared_ptr<Interface>(interface_));
 }
 
 /// Initialize ServiceManager
-void Init() {
-    SM::g_service_manager = std::make_shared<SM::ServiceManager>();
-    SM::ServiceManager::InstallInterfaces(SM::g_service_manager);
+void Init(std::shared_ptr<SM::ServiceManager>& sm) {
+    SM::ServiceManager::InstallInterfaces(sm);
 
     ERR::InstallInterfaces();
 
-    PXI::InstallInterfaces(*SM::g_service_manager);
-    NS::InstallInterfaces(*SM::g_service_manager);
-    AC::InstallInterfaces(*SM::g_service_manager);
-    LDR::InstallInterfaces(*SM::g_service_manager);
-    MIC::InstallInterfaces(*SM::g_service_manager);
-    NWM::InstallInterfaces(*SM::g_service_manager);
+    PXI::InstallInterfaces(*sm);
+    NS::InstallInterfaces(*sm);
+    AC::InstallInterfaces(*sm);
+    LDR::InstallInterfaces(*sm);
+    MIC::InstallInterfaces(*sm);
+    NWM::InstallInterfaces(*sm);
 
-    FS::InstallInterfaces(*SM::g_service_manager);
+    FS::InstallInterfaces(*sm);
     FS::ArchiveInit();
-    ACT::InstallInterfaces(*SM::g_service_manager);
-    AM::InstallInterfaces(*SM::g_service_manager);
-    APT::InstallInterfaces(*SM::g_service_manager);
+    ACT::InstallInterfaces(*sm);
+    AM::InstallInterfaces(*sm);
+    APT::InstallInterfaces(*sm);
     BOSS::Init();
-    CAM::InstallInterfaces(*SM::g_service_manager);
+    CAM::InstallInterfaces(*sm);
     CECD::Init();
-    CFG::InstallInterfaces(*SM::g_service_manager);
+    CFG::InstallInterfaces(*sm);
     DLP::Init();
-    FRD::InstallInterfaces(*SM::g_service_manager);
-    GSP::InstallInterfaces(*SM::g_service_manager);
-    HID::InstallInterfaces(*SM::g_service_manager);
-    IR::InstallInterfaces(*SM::g_service_manager);
+    FRD::InstallInterfaces(*sm);
+    GSP::InstallInterfaces(*sm);
+    HID::InstallInterfaces(*sm);
+    IR::InstallInterfaces(*sm);
     MVD::Init();
     NDM::Init();
-    NEWS::InstallInterfaces(*SM::g_service_manager);
-    NFC::InstallInterfaces(*SM::g_service_manager);
-    NIM::InstallInterfaces(*SM::g_service_manager);
+    NEWS::InstallInterfaces(*sm);
+    NFC::InstallInterfaces(*sm);
+    NIM::InstallInterfaces(*sm);
     NWM::Init();
-    PTM::InstallInterfaces(*SM::g_service_manager);
+    PTM::InstallInterfaces(*sm);
     QTM::Init();
 
     AddService(new CSND::CSND_SND);
@@ -265,7 +265,7 @@ void Init() {
     AddService(new PM::PM_APP);
     AddService(new SOC::SOC_U);
     AddService(new SSL::SSL_C);
-    Y2R::InstallInterfaces(*SM::g_service_manager);
+    Y2R::InstallInterfaces(*sm);
 
     LOG_DEBUG(Service, "initialized OK");
 }
@@ -278,7 +278,6 @@ void Shutdown() {
     BOSS::Shutdown();
     FS::ArchiveShutdown();
 
-    SM::g_service_manager = nullptr;
     g_kernel_named_ports.clear();
     LOG_DEBUG(Service, "shutdown OK");
 }

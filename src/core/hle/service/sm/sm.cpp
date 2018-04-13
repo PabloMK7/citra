@@ -67,7 +67,5 @@ ResultVal<Kernel::SharedPtr<Kernel::ClientSession>> ServiceManager::ConnectToSer
     return client_port->Connect();
 }
 
-std::shared_ptr<ServiceManager> g_service_manager;
-
 } // namespace SM
 } // namespace Service
