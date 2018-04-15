@@ -3,7 +3,7 @@
 cd /citra
 
 apt-get update
-apt-get install -y build-essential wget git python-launchpadlib
+apt-get install -y build-essential wget git python-launchpadlib ccache
 
 # Install specific versions of packages with their dependencies
 # The apt repositories remove older versions regularly, so we can't use
@@ -20,7 +20,7 @@ echo y | sh cmake-3.10.1-Linux-x86_64.sh --prefix=cmake
 export PATH=/citra/cmake/cmake-3.10.1-Linux-x86_64/bin:$PATH
 
 mkdir build && cd build
-cmake .. -DCMAKE_BUILD_TYPE=Release -DCITRA_ENABLE_COMPATIBILITY_REPORTING=${ENABLE_COMPATIBILITY_REPORTING:-"OFF"}
+cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=/usr/lib/ccache/gcc -DCMAKE_CXX_COMPILER=/usr/lib/ccache/g++ -DCITRA_ENABLE_COMPATIBILITY_REPORTING=${ENABLE_COMPATIBILITY_REPORTING:-"OFF"}
 make -j4
 
 ctest -VV -C Release
