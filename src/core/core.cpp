@@ -15,10 +15,12 @@
 #include "core/core.h"
 #include "core/core_timing.h"
 #include "core/gdbstub/gdbstub.h"
+#include "core/hle/kernel/client_port.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/process.h"
 #include "core/hle/kernel/thread.h"
 #include "core/hle/service/service.h"
+#include "core/hle/service/sm/sm.h"
 #include "core/hw/hw.h"
 #include "core/loader/loader.h"
 #include "core/memory_setup.h"
@@ -168,10 +170,11 @@ System::ResultStatus System::Init(EmuWindow* emu_window, u32 system_mode) {
     dsp_core->EnableStretching(Settings::values.enable_audio_stretching);
 
     telemetry_session = std::make_unique<Core::TelemetrySession>();
+    service_manager = std::make_shared<Service::SM::ServiceManager>();
 
     HW::Init();
     Kernel::Init(system_mode);
-    Service::Init();
+    Service::Init(service_manager);
     GDBStub::Init();
     Movie::GetInstance().Init();
 
@@ -186,6 +189,14 @@ System::ResultStatus System::Init(EmuWindow* emu_window, u32 system_mode) {
     perf_stats.BeginSystemFrame();
 
     return ResultStatus::Success;
+}
+
+Service::SM::ServiceManager& System::ServiceManager() {
+    return *service_manager;
+}
+
+const Service::SM::ServiceManager& System::ServiceManager() const {
+    return *service_manager;
 }
 
 void System::Shutdown() {
@@ -205,11 +216,12 @@ void System::Shutdown() {
     Service::Shutdown();
     Kernel::Shutdown();
     HW::Shutdown();
-    telemetry_session = nullptr;
-    dsp_core = nullptr;
-    cpu_core = nullptr;
+    telemetry_session.reset();
+    service_manager.reset();
+    dsp_core.reset();
+    cpu_core.reset();
     CoreTiming::Shutdown();
-    app_loader = nullptr;
+    app_loader.reset();
 
     if (auto room_member = Network::GetRoomMember().lock()) {
         Network::GameInfo game_info{};
