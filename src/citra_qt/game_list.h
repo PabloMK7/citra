@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <unordered_map>
 #include <QString>
 #include <QWidget>
 #include "common/common_types.h"
@@ -29,6 +30,7 @@ class GameList : public QWidget {
 public:
     enum {
         COLUMN_NAME,
+        COLUMN_COMPATIBILITY,
         COLUMN_FILE_TYPE,
         COLUMN_SIZE,
         COLUMN_COUNT, // Number of columns
@@ -68,6 +70,7 @@ public:
     void setFilterFocus();
     void setFilterVisible(bool visibility);
 
+    void LoadCompatibilityList();
     void PopulateAsync(const QString& dir_path, bool deep_scan);
 
     void SaveInterfaceLayout();
@@ -100,6 +103,7 @@ private:
     QStandardItemModel* item_model = nullptr;
     GameListWorker* current_worker = nullptr;
     QFileSystemWatcher* watcher = nullptr;
+    std::unordered_map<std::string, QString> compatibility_list;
 };
 
 Q_DECLARE_METATYPE(GameListOpenTarget);
