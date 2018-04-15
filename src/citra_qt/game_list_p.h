@@ -5,11 +5,16 @@
 #pragma once
 
 #include <atomic>
+#include <map>
+#include <unordered_map>
 #include <QImage>
+#include <QObject>
+#include <QPainter>
 #include <QRunnable>
 #include <QStandardItem>
 #include <QString>
 #include "citra_qt/util/util.h"
+#include "common/logging/log.h"
 #include "common/string_util.h"
 #include "core/loader/smdh.h"
 
@@ -40,6 +45,23 @@ static QPixmap GetDefaultIcon(bool large) {
 }
 
 /**
+ * Creates a circle pixmap from a specified color
+ * @param color The color the pixmap shall have
+ * @return QPixmap circle pixmap
+ */
+static QPixmap CreateCirclePixmapFromColor(const QColor& color) {
+    QPixmap circle_pixmap(16, 16);
+    circle_pixmap.fill(Qt::transparent);
+
+    QPainter painter(&circle_pixmap);
+    painter.setPen(color);
+    painter.setBrush(color);
+    painter.drawEllipse(0, 0, 15, 15);
+
+    return circle_pixmap;
+}
+
+/**
  * Gets the short game title from SMDH data.
  * @param smdh SMDH data
  * @param language title language
@@ -50,8 +72,25 @@ static QString GetQStringShortTitleFromSMDH(const Loader::SMDH& smdh,
     return QString::fromUtf16(smdh.GetShortTitle(language).data());
 }
 
-class GameListItem : public QStandardItem {
+struct CompatStatus {
+    QString color;
+    QString text;
+    QString tooltip;
+};
 
+// When this is put in a class, MSVS builds crash when closing Citra
+// clang-format off
+const static inline std::map<QString, CompatStatus> status_data = {
+{ "0", { "#5c93ed", GameList::tr("Perfect"),    GameList::tr("Game functions flawless with no audio or graphical glitches, all tested functionality works as intended without\nany workarounds needed.") } },
+{ "1", { "#47d35c", GameList::tr("Great"),      GameList::tr("Game functions with minor graphical or audio glitches and is playable from start to finish. May require some\nworkarounds.") } },
+{ "2", { "#94b242", GameList::tr("Okay"),       GameList::tr("Game functions with major graphical or audio glitches, but game is playable from start to finish with\nworkarounds.") } },
+{ "3", { "#f2d624", GameList::tr("Bad"),        GameList::tr("Game functions, but with major graphical or audio glitches. Unable to progress in specific areas due to glitches\neven with workarounds.") } },
+{ "4", { "#FF0000", GameList::tr("Intro/Menu"), GameList::tr("Game is completely unplayable due to major graphical or audio glitches. Unable to progress past the Start\nScreen.") } },
+{ "5", { "#828282", GameList::tr("Won't Boot"), GameList::tr("The game crashes when attempting to startup.") } },
+{ "99",{ "#000000", GameList::tr("Not Tested"), GameList::tr("The game has not yet been tested.") } }, };
+// clang-format on
+
+class GameListItem : public QStandardItem {
 public:
     GameListItem() : QStandardItem() {}
     GameListItem(const QString& string) : QStandardItem(string) {}
@@ -65,7 +104,6 @@ public:
  * If this class receives valid SMDH data, it will also display game icons and titles.
  */
 class GameListItemPath : public GameListItem {
-
 public:
     static const int FullPathRole = Qt::UserRole + 1;
     static const int TitleRole = Qt::UserRole + 2;
@@ -107,13 +145,34 @@ public:
     }
 };
 
+class GameListItemCompat : public GameListItem {
+public:
+    static const int CompatNumberRole = Qt::UserRole + 1;
+    GameListItemCompat() = default;
+    explicit GameListItemCompat(const QString compatiblity) {
+        auto iterator = status_data.find(compatiblity);
+        if (iterator == status_data.end()) {
+            NGLOG_WARNING(Frontend, "Invalid compatibility number {}", compatiblity.toStdString());
+            return;
+        }
+        CompatStatus status = iterator->second;
+        setData(compatiblity, CompatNumberRole);
+        setText(status.text);
+        setToolTip(status.tooltip);
+        setData(CreateCirclePixmapFromColor(status.color), Qt::DecorationRole);
+    }
+
+    bool operator<(const QStandardItem& other) const override {
+        return data(CompatNumberRole) < other.data(CompatNumberRole);
+    }
+};
+
 /**
  * A specialization of GameListItem for size values.
  * This class ensures that for every numerical size value it holds (in bytes), a correct
  * human-readable string representation will be displayed to the user.
  */
 class GameListItemSize : public GameListItem {
-
 public:
     static const int SizeRole = Qt::UserRole + 1;
 
@@ -152,8 +211,10 @@ class GameListWorker : public QObject, public QRunnable {
     Q_OBJECT
 
 public:
-    GameListWorker(QString dir_path, bool deep_scan)
-        : QObject(), QRunnable(), dir_path(dir_path), deep_scan(deep_scan) {}
+    GameListWorker(QString dir_path, bool deep_scan,
+                   const std::unordered_map<std::string, QString>& compatibility_list)
+        : QObject(), QRunnable(), dir_path(dir_path), deep_scan(deep_scan),
+          compatibility_list(compatibility_list) {}
 
 public slots:
     /// Starts the processing of directory tree information.
@@ -179,6 +240,7 @@ private:
     QStringList watch_list;
     QString dir_path;
     bool deep_scan;
+    const std::unordered_map<std::string, QString>& compatibility_list;
     std::atomic_bool stop_processing;
 
     void AddFstEntriesToGameList(const std::string& dir_path, unsigned int recursion = 0);
