@@ -286,8 +286,8 @@ void GMainWindow::InitializeRecentFileMenuActions() {
 void GMainWindow::InitializeHotkeys() {
     RegisterHotkey("Main Window", "Load File", QKeySequence::Open);
     RegisterHotkey("Main Window", "Start Emulation");
-    RegisterHotkey("Main Window", "Swap Screens", QKeySequence(tr("F9")));
-    RegisterHotkey("Main Window", "Toggle Screen Layout", QKeySequence(tr("F10")));
+    RegisterHotkey("Main Window", "Swap Screens", QKeySequence("F9"));
+    RegisterHotkey("Main Window", "Toggle Screen Layout", QKeySequence("F10"));
     RegisterHotkey("Main Window", "Fullscreen", QKeySequence::FullScreen);
     RegisterHotkey("Main Window", "Exit Fullscreen", QKeySequence(Qt::Key_Escape),
                    Qt::ApplicationShortcut);
