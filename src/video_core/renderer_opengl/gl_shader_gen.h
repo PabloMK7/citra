@@ -9,7 +9,9 @@
 #include <functional>
 #include <string>
 #include <type_traits>
+#include "common/hash.h"
 #include "video_core/regs.h"
+#include "video_core/shader/shader.h"
 
 namespace GLShader {
 
@@ -132,18 +134,21 @@ struct PicaShaderConfig : Common::HashableStruct<PicaShaderConfigState> {
 };
 
 /**
- * Generates the GLSL vertex shader program source code for the current Pica state
+ * Generates the GLSL vertex shader program source code that accepts vertices from software shader
+ * and directly passes them to the fragment shader.
+ * @param separable_shader generates shader that can be used for separate shader object
  * @returns String of the shader source code
  */
-std::string GenerateVertexShader();
+std::string GenerateTrivialVertexShader(bool separable_shader);
 
 /**
  * Generates the GLSL fragment shader program source code for the current Pica state
  * @param config ShaderCacheKey object generated for the current Pica state, used for the shader
  *               configuration (NOTE: Use state in this struct only, not the Pica registers!)
+ * @param separable_shader generates shader that can be used for separate shader object
  * @returns String of the shader source code
  */
-std::string GenerateFragmentShader(const PicaShaderConfig& config);
+std::string GenerateFragmentShader(const PicaShaderConfig& config, bool separable_shader);
 
 } // namespace GLShader
 

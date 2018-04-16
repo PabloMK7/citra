@@ -377,7 +377,7 @@ private:
     OGLVertexArray attributeless_vao;
     OGLBuffer d24s8_abgr_buffer;
     GLsizeiptr d24s8_abgr_buffer_size;
-    OGLShader d24s8_abgr_shader;
+    OGLProgram d24s8_abgr_shader;
     GLint d24s8_abgr_tbo_size_u_id;
     GLint d24s8_abgr_viewport_u_id;
 };
