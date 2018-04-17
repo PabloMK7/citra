@@ -172,7 +172,8 @@ void GMainWindow::InitializeWidgets() {
     game_list = new GameList(this);
     ui.horizontalLayout->addWidget(game_list);
 
-    multiplayer_state = new MultiplayerState(this, game_list->GetModel());
+    multiplayer_state = new MultiplayerState(this, game_list->GetModel(), ui.action_Leave_Room,
+                                             ui.action_Show_Room);
     multiplayer_state->setVisible(false);
 
     // Setup updater
@@ -436,11 +437,11 @@ void GMainWindow::ConnectMenuEvents() {
             &MultiplayerState::OnViewLobby);
     connect(ui.action_Start_Room, &QAction::triggered, multiplayer_state,
             &MultiplayerState::OnCreateRoom);
-    connect(ui.action_Stop_Room, &QAction::triggered, multiplayer_state,
+    connect(ui.action_Leave_Room, &QAction::triggered, multiplayer_state,
             &MultiplayerState::OnCloseRoom);
     connect(ui.action_Connect_To_Room, &QAction::triggered, multiplayer_state,
             &MultiplayerState::OnDirectConnectToRoom);
-    connect(ui.action_Chat, &QAction::triggered, multiplayer_state,
+    connect(ui.action_Show_Room, &QAction::triggered, multiplayer_state,
             &MultiplayerState::OnOpenNetworkRoom);
 
     ui.action_Fullscreen->setShortcut(GetHotkey("Main Window", "Fullscreen", this)->key());
@@ -1329,18 +1330,6 @@ void GMainWindow::SyncMenuUISettings() {
     ui.action_Screen_Layout_Side_by_Side->setChecked(Settings::values.layout_option ==
                                                      Settings::LayoutOption::SideScreen);
     ui.action_Screen_Layout_Swap_Screens->setChecked(Settings::values.swap_screen);
-}
-
-void GMainWindow::ChangeRoomState() {
-    if (auto room = Network::GetRoom().lock()) {
-        if (room->GetState() == Network::Room::State::Open) {
-            ui.action_Start_Room->setDisabled(true);
-            ui.action_Stop_Room->setEnabled(true);
-            return;
-        }
-        ui.action_Start_Room->setEnabled(true);
-        ui.action_Stop_Room->setDisabled(true);
-    }
 }
 
 #ifdef main

@@ -68,8 +68,6 @@ private slots:
      */
     void OnConnection();
 
-    void OnStateChanged(const Network::RoomMember::State&);
-
 signals:
     /**
      * Signalled when the latest lobby data is retrieved.

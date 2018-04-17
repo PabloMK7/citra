@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>455</width>
-    <height>239</height>
+    <height>161</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -18,28 +18,6 @@
     <layout class="QVBoxLayout" name="verticalLayout_3">
      <item>
       <layout class="QVBoxLayout" name="verticalLayout_2">
-       <item>
-        <widget class="QGroupBox" name="instructions_2">
-         <property name="title">
-          <string>Instructions</string>
-         </property>
-         <layout class="QVBoxLayout" name="verticalLayout_4">
-          <item>
-           <widget class="QLabel" name="instructions">
-            <property name="text">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Directly connect to a friend by &lt;span style=&quot; font-weight:600;&quot;&gt;Traversal server&lt;/span&gt; or by&lt;span style=&quot; font-weight:600;&quot;&gt; IP address&lt;/span&gt;. &lt;/p&gt;&lt;p&gt;To use the &lt;span style=&quot; font-weight:600;&quot;&gt;Traversal Server&lt;/span&gt;, ask the game host for their &amp;quot;&lt;span style=&quot; font-weight:600;&quot;&gt;Host Code&lt;/span&gt;&amp;quot; which will be visible on the create room screen after it is created.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-            </property>
-            <property name="textFormat">
-             <enum>Qt::RichText</enum>
-            </property>
-            <property name="wordWrap">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </widget>
-       </item>
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout">
          <property name="spacing">
