@@ -166,11 +166,11 @@ public:
     // so that we can use this within unions
     constexpr BitField() = default;
 
-    constexpr FORCE_INLINE operator T() const {
+    constexpr operator T() const {
         return Value();
     }
 
-    constexpr FORCE_INLINE void Assign(const T& value) {
+    constexpr void Assign(const T& value) {
         storage = (static_cast<StorageType>(storage) & ~mask) | FormatValue(value);
     }
 
@@ -191,12 +191,9 @@ private:
     static_assert(position < 8 * sizeof(T), "Invalid position");
     static_assert(bits <= 8 * sizeof(T), "Invalid number of bits");
     static_assert(bits > 0, "Invalid number of bits");
-    static_assert(std::is_pod<T>::value, "Invalid base type");
+    static_assert(std::is_trivially_copyable_v<T>, "T must be trivially copyable in a BitField");
 };
 #pragma pack()
-
-static_assert(std::is_trivially_copyable<BitField<0, 1, unsigned>>::value,
-              "BitField must be trivially copyable");
 
 template <std::size_t Position, std::size_t Bits, typename T>
 using BitFieldBE = BitField<Position, Bits, T, BETag>;
