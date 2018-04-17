@@ -173,27 +173,29 @@ struct GSUnitState : public UnitState {
     GSEmitter emitter;
 };
 
-struct ShaderSetup {
-    struct {
-        // The float uniforms are accessed by the shader JIT using SSE instructions, and are
-        // therefore required to be 16-byte aligned.
-        alignas(16) Math::Vec4<float24> f[96];
+struct Uniforms {
+    // The float uniforms are accessed by the shader JIT using SSE instructions, and are
+    // therefore required to be 16-byte aligned.
+    alignas(16) Math::Vec4<float24> f[96];
 
-        std::array<bool, 16> b;
-        std::array<Math::Vec4<u8>, 4> i;
-    } uniforms;
+    std::array<bool, 16> b;
+    std::array<Math::Vec4<u8>, 4> i;
 
     static size_t GetFloatUniformOffset(unsigned index) {
-        return offsetof(ShaderSetup, uniforms.f) + index * sizeof(Math::Vec4<float24>);
+        return offsetof(Uniforms, f) + index * sizeof(Math::Vec4<float24>);
     }
 
     static size_t GetBoolUniformOffset(unsigned index) {
-        return offsetof(ShaderSetup, uniforms.b) + index * sizeof(bool);
+        return offsetof(Uniforms, b) + index * sizeof(bool);
     }
 
     static size_t GetIntUniformOffset(unsigned index) {
-        return offsetof(ShaderSetup, uniforms.i) + index * sizeof(Math::Vec4<u8>);
+        return offsetof(Uniforms, i) + index * sizeof(Math::Vec4<u8>);
     }
+};
+
+struct ShaderSetup {
+    Uniforms uniforms;
 
     std::array<u32, MAX_PROGRAM_CODE_LENGTH> program_code;
     std::array<u32, MAX_SWIZZLE_DATA_LENGTH> swizzle_data;

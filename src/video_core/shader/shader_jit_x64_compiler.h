@@ -34,7 +34,7 @@ public:
     JitShader();
 
     void Run(const ShaderSetup& setup, UnitState& state, unsigned offset) const {
-        program(&setup, &state, instruction_labels[offset].getAddress());
+        program(&setup.uniforms, &state, instruction_labels[offset].getAddress());
     }
 
     void Compile(const std::array<u32, MAX_PROGRAM_CODE_LENGTH>* program_code,

@@ -104,7 +104,7 @@ const JitFunction instr_table[64] = {
 // purposes, as documented below:
 
 /// Pointer to the uniform memory
-static const Reg64 SETUP = r9;
+static const Reg64 UNIFORMS = r9;
 /// The two 32-bit VS address offset registers set by the MOVA instruction
 static const Reg64 ADDROFFS_REG_0 = r10;
 static const Reg64 ADDROFFS_REG_1 = r11;
@@ -139,7 +139,7 @@ static const Xmm NEGBIT = xmm15;
 // Scratch registers, e.g., SRC1 and SCRATCH, have to be saved on the side if needed
 static const BitSet32 persistent_regs = BuildRegSet({
     // Pointers to register blocks
-    SETUP,
+    UNIFORMS,
     STATE,
     // Cached registers
     ADDROFFS_REG_0,
@@ -184,8 +184,8 @@ void JitShader::Compile_SwizzleSrc(Instruction instr, unsigned src_num, SourceRe
     size_t src_offset;
 
     if (src_reg.GetRegisterType() == RegisterType::FloatUniform) {
-        src_ptr = SETUP;
-        src_offset = ShaderSetup::GetFloatUniformOffset(src_reg.GetIndex());
+        src_ptr = UNIFORMS;
+        src_offset = Uniforms::GetFloatUniformOffset(src_reg.GetIndex());
     } else {
         src_ptr = STATE;
         src_offset = UnitState::InputOffset(src_reg);
@@ -354,8 +354,8 @@ void JitShader::Compile_EvaluateCondition(Instruction instr) {
 }
 
 void JitShader::Compile_UniformCondition(Instruction instr) {
-    size_t offset = ShaderSetup::GetBoolUniformOffset(instr.flow_control.bool_uniform_id);
-    cmp(byte[SETUP + offset], 0);
+    size_t offset = Uniforms::GetBoolUniformOffset(instr.flow_control.bool_uniform_id);
+    cmp(byte[UNIFORMS + offset], 0);
 }
 
 BitSet32 JitShader::PersistentCallerSavedRegs() {
@@ -713,8 +713,8 @@ void JitShader::Compile_LOOP(Instruction instr) {
     // This decodes the fields from the integer uniform at index instr.flow_control.int_uniform_id.
     // The Y (LOOPCOUNT_REG) and Z (LOOPINC) component are kept multiplied by 16 (Left shifted by
     // 4 bits) to be used as an offset into the 16-byte vector registers later
-    size_t offset = ShaderSetup::GetIntUniformOffset(instr.flow_control.int_uniform_id);
-    mov(LOOPCOUNT, dword[SETUP + offset]);
+    size_t offset = Uniforms::GetIntUniformOffset(instr.flow_control.int_uniform_id);
+    mov(LOOPCOUNT, dword[UNIFORMS + offset]);
     mov(LOOPCOUNT_REG, LOOPCOUNT);
     shr(LOOPCOUNT_REG, 4);
     and_(LOOPCOUNT_REG, 0xFF0); // Y-component is the start
@@ -882,7 +882,7 @@ void JitShader::Compile(const std::array<u32, MAX_PROGRAM_CODE_LENGTH>* program_
     ABI_PushRegistersAndAdjustStack(*this, ABI_ALL_CALLEE_SAVED, 8, 16);
     mov(qword[rsp + 8], 0xFFFFFFFFFFFFFFFFULL);
 
-    mov(SETUP, ABI_PARAM1);
+    mov(UNIFORMS, ABI_PARAM1);
     mov(STATE, ABI_PARAM2);
 
     // Zero address/loop  registers
