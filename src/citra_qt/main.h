@@ -55,9 +55,10 @@ public:
     void filterBarSetChecked(bool state);
     void UpdateUITheme();
 
-    GameList* game_list;
     GMainWindow();
     ~GMainWindow();
+
+    GameList* game_list;
 
 signals:
 
@@ -179,8 +180,6 @@ private:
     Ui::MainWindow ui;
 
     GRenderWindow* render_window;
-
-    QFutureWatcher<Service::AM::InstallStatus>* watcher = nullptr;
 
     // Status bar elements
     QProgressBar* progress_bar = nullptr;

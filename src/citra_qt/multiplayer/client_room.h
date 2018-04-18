@@ -34,5 +34,5 @@ private:
     void UpdateView();
 
     QStandardItemModel* player_list;
-    Ui::ClientRoom* ui;
+    std::unique_ptr<Ui::ClientRoom> ui;
 };

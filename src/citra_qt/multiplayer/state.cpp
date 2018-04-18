@@ -82,11 +82,14 @@ void MultiplayerState::OnNetworkStateChanged(const Network::RoomMember::State& s
 
 void MultiplayerState::OnAnnounceFailed(const Common::WebResult& result) {
     announce_multiplayer_session->Stop();
-    QMessageBox::warning(this, tr("Error"),
-                         tr("Failed to announce the room to the public lobby.\nThe room will not "
-                            "get listed publicly.\nError: ") +
-                             QString::fromStdString(result.result_string),
-                         QMessageBox::Ok);
+    QMessageBox::warning(
+        this, tr("Error"),
+        tr("Failed to announce the room to the public lobby. In order to host a room publicly, you "
+           "must have a valid Citra account configured in Emulation -> Configure -> Web. If you do "
+           "not want to publish a room in the public lobby, then select Unlisted instead.\n"
+           "Debug Message: ") +
+            QString::fromStdString(result.result_string),
+        QMessageBox::Ok);
 }
 
 static void BringWidgetToFront(QWidget* widget) {

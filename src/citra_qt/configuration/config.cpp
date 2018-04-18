@@ -238,8 +238,12 @@ void Config::ReadValues() {
     UISettings::values.port = qt_config->value("port", Network::DefaultRoomPort).toString();
     UISettings::values.room_nickname = qt_config->value("room_nickname", "").toString();
     UISettings::values.room_name = qt_config->value("room_name", "").toString();
-    UISettings::values.room_port = qt_config->value("room_port", 24872).toString();
-    UISettings::values.host_type = qt_config->value("host_type", 0).toString();
+    UISettings::values.room_port = qt_config->value("room_port", "24872").toString();
+    bool ok;
+    UISettings::values.host_type = qt_config->value("host_type", 0).toUInt(&ok);
+    if (!ok) {
+        UISettings::values.host_type = 0;
+    }
     UISettings::values.max_player = qt_config->value("max_player", 8).toUInt();
     UISettings::values.game_id = qt_config->value("game_id", 0).toULongLong();
     qt_config->endGroup();

@@ -26,13 +26,13 @@
 HostRoomWindow::HostRoomWindow(QWidget* parent, QStandardItemModel* list,
                                std::shared_ptr<Core::AnnounceMultiplayerSession> session)
     : QDialog(parent, Qt::WindowTitleHint | Qt::WindowCloseButtonHint | Qt::WindowSystemMenuHint),
-      ui(new Ui::HostRoom), announce_multiplayer_session(session), game_list(list) {
+      ui(std::make_unique<Ui::HostRoom>()), announce_multiplayer_session(session), game_list(list) {
     ui->setupUi(this);
 
     // set up validation for all of the fields
-    ui->room_name->setValidator(Validation::room_name);
-    ui->username->setValidator(Validation::nickname);
-    ui->port->setValidator(Validation::port);
+    ui->room_name->setValidator(Validation::get().room_name);
+    ui->username->setValidator(Validation::get().nickname);
+    ui->port->setValidator(Validation::get().port);
     ui->port->setPlaceholderText(QString::number(Network::DefaultRoomPort));
 
     // Create a proxy to the game list to display the list of preferred games
@@ -49,8 +49,8 @@ HostRoomWindow::HostRoomWindow(QWidget* parent, QStandardItemModel* list,
     ui->room_name->setText(UISettings::values.room_name);
     ui->port->setText(UISettings::values.room_port);
     ui->max_player->setValue(UISettings::values.max_player);
-    int index = ui->host_type->findData(UISettings::values.host_type);
-    if (index != -1) {
+    int index = UISettings::values.host_type;
+    if (index < ui->host_type->count()) {
         ui->host_type->setCurrentIndex(index);
     }
     index = ui->game_list->findData(UISettings::values.game_id, GameListItemPath::ProgramIdRole);
@@ -94,7 +94,7 @@ void HostRoomWindow::Host() {
                                         ui->max_player->value(), game_name.toStdString(), game_id);
             if (!created) {
                 NetworkMessage::ShowError(NetworkMessage::COULD_NOT_CREATE_ROOM);
-                LOG_ERROR(Network, "Could not create room!");
+                NGLOG_ERROR(Network, "Could not create room!");
                 ui->host->setEnabled(true);
                 return;
             }
@@ -109,7 +109,7 @@ void HostRoomWindow::Host() {
             ui->game_list->currentData(GameListItemPath::ProgramIdRole).toLongLong();
         UISettings::values.max_player = ui->max_player->value();
 
-        UISettings::values.host_type = ui->host_type->currentText();
+        UISettings::values.host_type = ui->host_type->currentIndex();
         UISettings::values.room_port = (ui->port->isModified() && !ui->port->text().isEmpty())
                                            ? ui->port->text()
                                            : QString::number(Network::DefaultRoomPort);
@@ -136,7 +136,7 @@ void HostRoomWindow::OnConnection() {
                 if (auto session = announce_multiplayer_session.lock()) {
                     session->Start();
                 } else {
-                    LOG_ERROR(Network, "Starting announce session failed");
+                    NGLOG_ERROR(Network, "Starting announce session failed");
                 }
             }
             auto parent = static_cast<MultiplayerState*>(parentWidget());

@@ -7,22 +7,38 @@
 #include <QRegExp>
 #include <QValidator>
 
-namespace Validation {
-/// room name can be alphanumeric and " " "_" "." and "-"
-static const QRegExp room_name_regex("^[a-zA-Z0-9._- ]+$");
-static const QValidator* room_name = new QRegExpValidator(room_name_regex);
+class Validation {
+public:
+    static Validation get() {
+        static Validation validation;
+        return validation;
+    }
 
-/// nickname can be alphanumeric and " " "_" "." and "-"
-static const QRegExp nickname_regex("^[a-zA-Z0-9._- ]+$");
-static const QValidator* nickname = new QRegExpValidator(nickname_regex);
+    ~Validation() {
+        delete room_name;
+        delete nickname;
+        delete ip;
+        delete port;
+    }
 
-/// ipv4 address only
-// TODO remove this when we support hostnames in direct connect
-static const QRegExp ip_regex(
-    "(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|"
-    "2[0-4][0-9]|25[0-5])");
-static const QValidator* ip = new QRegExpValidator(ip_regex);
+    /// room name can be alphanumeric and " " "_" "." and "-"
+    QRegExp room_name_regex = QRegExp("^[a-zA-Z0-9._- ]+$");
+    const QValidator* room_name = new QRegExpValidator(room_name_regex);
 
-/// port must be between 0 and 65535
-static const QValidator* port = new QIntValidator(0, 65535);
-}; // namespace Validation
+    /// nickname can be alphanumeric and " " "_" "." and "-"
+    QRegExp nickname_regex = QRegExp("^[a-zA-Z0-9._- ]+$");
+    const QValidator* nickname = new QRegExpValidator(nickname_regex);
+
+    /// ipv4 address only
+    // TODO remove this when we support hostnames in direct connect
+    QRegExp ip_regex = QRegExp(
+        "(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|"
+        "2[0-4][0-9]|25[0-5])");
+    const QValidator* ip = new QRegExpValidator(ip_regex);
+
+    /// port must be between 0 and 65535
+    const QValidator* port = new QIntValidator(0, 65535);
+
+private:
+    Validation() = default;
+};

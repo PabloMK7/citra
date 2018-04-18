@@ -52,7 +52,7 @@ private:
     std::weak_ptr<Core::AnnounceMultiplayerSession> announce_multiplayer_session;
     QStandardItemModel* game_list;
     ComboBoxProxyModel* proxy;
-    Ui::HostRoom* ui;
+    std::unique_ptr<Ui::HostRoom> ui;
 };
 
 /**

@@ -23,7 +23,7 @@ enum class ConnectionType : u8 { TraversalServer, IP };
 
 DirectConnectWindow::DirectConnectWindow(QWidget* parent)
     : QDialog(parent, Qt::WindowTitleHint | Qt::WindowCloseButtonHint | Qt::WindowSystemMenuHint),
-      ui(new Ui::DirectConnect) {
+      ui(std::make_unique<Ui::DirectConnect>()) {
 
     ui->setupUi(this);
 
@@ -31,11 +31,11 @@ DirectConnectWindow::DirectConnectWindow(QWidget* parent)
     watcher = new QFutureWatcher<void>;
     connect(watcher, &QFutureWatcher<void>::finished, this, &DirectConnectWindow::OnConnection);
 
-    ui->nickname->setValidator(Validation::nickname);
+    ui->nickname->setValidator(Validation::get().nickname);
     ui->nickname->setText(UISettings::values.nickname);
-    ui->ip->setValidator(Validation::ip);
+    ui->ip->setValidator(Validation::get().ip);
     ui->ip->setText(UISettings::values.ip);
-    ui->port->setValidator(Validation::port);
+    ui->port->setValidator(Validation::get().port);
     ui->port->setText(UISettings::values.port);
 
     // TODO(jroweboy): Show or hide the connection options based on the current value of the combo

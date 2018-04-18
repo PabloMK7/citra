@@ -65,7 +65,7 @@ struct Values {
     QString room_name;
     quint32 max_player;
     QString room_port;
-    QString host_type;
+    uint host_type;
     qulonglong game_id;
 };
 

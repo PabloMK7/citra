@@ -19,20 +19,22 @@ const ConnectionError PORT_NOT_VALID(QT_TR_NOOP("Port must be a number between 0
 const ConnectionError NO_INTERNET(
     QT_TR_NOOP("Unable to find an internet connection. Check your internet settings."));
 const ConnectionError UNABLE_TO_CONNECT(
-    QT_TR_NOOP("Unable to connect to the host. Verify that the connection settings are correct."));
+    QT_TR_NOOP("Unable to connect to the host. Verify that the connection settings are correct. If "
+               "you still cannot connect, contact the room host and verify that the host is "
+               "properly configured with the external port forwarded."));
 const ConnectionError COULD_NOT_CREATE_ROOM(
     QT_TR_NOOP("Creating a room failed. Please retry. Restarting Citra might be necessary."));
 const ConnectionError HOST_BANNED(
     QT_TR_NOOP("The host of the room has banned you. Speak with the host to unban you "
                "or try a different room."));
 const ConnectionError WRONG_VERSION(
-    QT_TR_NOOP("You are using a different version of Citra-Local-Wifi(tm) then the room "
-               "you are trying to connect to."));
-const ConnectionError WRONG_PASSWORD(QT_TR_NOOP("Wrong password."));
+    QT_TR_NOOP("Version mismatch! Please update to the latest version of citra. If the problem "
+               "persists, contact the room host and ask them to update the server."));
+const ConnectionError WRONG_PASSWORD(QT_TR_NOOP("Incorrect password."));
 const ConnectionError GENERIC_ERROR(QT_TR_NOOP("An error occured."));
 const ConnectionError LOST_CONNECTION(QT_TR_NOOP("Connection to room lost. Try to reconnect."));
 const ConnectionError MAC_COLLISION(
-    QT_TR_NOOP("MAC-Address is already in use. Please choose another."));
+    QT_TR_NOOP("MAC address is already in use. Please choose another."));
 
 static bool WarnMessage(const std::string& title, const std::string& text) {
     return QMessageBox::Ok == QMessageBox::warning(nullptr, QObject::tr(title.c_str()),

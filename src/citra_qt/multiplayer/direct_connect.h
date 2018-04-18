@@ -34,5 +34,5 @@ private:
     void EndConnecting();
 
     QFutureWatcher<void>* watcher;
-    Ui::DirectConnect* ui;
+    std::unique_ptr<Ui::DirectConnect> ui;
 };
