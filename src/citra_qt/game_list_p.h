@@ -7,6 +7,7 @@
 #include <atomic>
 #include <map>
 #include <unordered_map>
+#include <QCoreApplication>
 #include <QImage>
 #include <QObject>
 #include <QPainter>
