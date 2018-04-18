@@ -17,6 +17,7 @@
 #include "citra_qt/ui_settings.h"
 #include "core/settings.h"
 #include "network/network.h"
+#include "ui_direct_connect.h"
 
 enum class ConnectionType : u8 { TraversalServer, IP };
 
@@ -30,17 +31,19 @@ DirectConnectWindow::DirectConnectWindow(QWidget* parent)
     watcher = new QFutureWatcher<void>;
     connect(watcher, &QFutureWatcher<void>::finished, this, &DirectConnectWindow::OnConnection);
 
-    ui->nickname->setValidator(Validation::get().nickname);
+    ui->nickname->setValidator(validation.GetNickname());
     ui->nickname->setText(UISettings::values.nickname);
-    ui->ip->setValidator(Validation::get().ip);
+    ui->ip->setValidator(validation.GetIP());
     ui->ip->setText(UISettings::values.ip);
-    ui->port->setValidator(Validation::get().port);
+    ui->port->setValidator(validation.GetPort());
     ui->port->setText(UISettings::values.port);
 
     // TODO(jroweboy): Show or hide the connection options based on the current value of the combo
     // box. Add this back in when the traversal server support is added.
     connect(ui->connect, &QPushButton::pressed, this, &DirectConnectWindow::Connect);
 }
+
+DirectConnectWindow::~DirectConnectWindow() = default;
 
 void DirectConnectWindow::Connect() {
     if (!ui->nickname->hasAcceptableInput()) {

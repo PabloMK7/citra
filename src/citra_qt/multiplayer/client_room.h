@@ -5,13 +5,17 @@
 #pragma once
 
 #include "citra_qt/multiplayer/chat_room.h"
-#include "ui_client_room.h"
+
+namespace Ui {
+class ClientRoom;
+}
 
 class ClientRoomWindow : public QDialog {
     Q_OBJECT
 
 public:
     explicit ClientRoomWindow(QWidget* parent);
+    ~ClientRoomWindow();
 
 public slots:
     void OnRoomUpdate(const Network::RoomInformation&);

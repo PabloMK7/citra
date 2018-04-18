@@ -16,6 +16,7 @@
 #include "citra_qt/multiplayer/message.h"
 #include "common/logging/log.h"
 #include "core/announce_multiplayer_session.h"
+#include "ui_chat_room.h"
 
 class ChatMessage {
 public:
@@ -101,6 +102,8 @@ ChatRoom::ChatRoom(QWidget* parent) : QWidget(parent), ui(std::make_unique<Ui::C
     connect(ui->chat_message, &QLineEdit::textChanged, this, &::ChatRoom::OnChatTextChanged);
     connect(ui->send_message, &QPushButton::pressed, this, &ChatRoom::OnSendChat);
 }
+
+ChatRoom::~ChatRoom() = default;
 
 void ChatRoom::Clear() {
     ui->chat_history->clear();

@@ -10,8 +10,12 @@
 #include <QStandardItemModel>
 #include <QVariant>
 #include "citra_qt/multiplayer/chat_room.h"
+#include "citra_qt/multiplayer/validation.h"
 #include "network/network.h"
-#include "ui_host_room.h"
+
+namespace Ui {
+class HostRoom;
+}
 
 namespace Core {
 class AnnounceMultiplayerSession;
@@ -28,6 +32,7 @@ class HostRoomWindow : public QDialog {
 public:
     explicit HostRoomWindow(QWidget* parent, QStandardItemModel* list,
                             std::shared_ptr<Core::AnnounceMultiplayerSession> session);
+    ~HostRoomWindow();
 
 signals:
     /**
@@ -50,6 +55,7 @@ private:
     QStandardItemModel* game_list;
     ComboBoxProxyModel* proxy;
     std::unique_ptr<Ui::HostRoom> ui;
+    Validation validation;
 };
 
 /**

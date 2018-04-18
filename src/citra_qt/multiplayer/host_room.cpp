@@ -20,6 +20,7 @@
 #include "common/logging/log.h"
 #include "core/announce_multiplayer_session.h"
 #include "core/settings.h"
+#include "ui_host_room.h"
 
 HostRoomWindow::HostRoomWindow(QWidget* parent, QStandardItemModel* list,
                                std::shared_ptr<Core::AnnounceMultiplayerSession> session)
@@ -28,9 +29,9 @@ HostRoomWindow::HostRoomWindow(QWidget* parent, QStandardItemModel* list,
     ui->setupUi(this);
 
     // set up validation for all of the fields
-    ui->room_name->setValidator(Validation::get().room_name);
-    ui->username->setValidator(Validation::get().nickname);
-    ui->port->setValidator(Validation::get().port);
+    ui->room_name->setValidator(validation.GetRoomName());
+    ui->username->setValidator(validation.GetNickname());
+    ui->port->setValidator(validation.GetPort());
     ui->port->setPlaceholderText(QString::number(Network::DefaultRoomPort));
 
     // Create a proxy to the game list to display the list of preferred games
@@ -56,6 +57,8 @@ HostRoomWindow::HostRoomWindow(QWidget* parent, QStandardItemModel* list,
         ui->game_list->setCurrentIndex(index);
     }
 }
+
+HostRoomWindow::~HostRoomWindow() = default;
 
 void HostRoomWindow::Host() {
     if (!ui->username->hasAcceptableInput()) {

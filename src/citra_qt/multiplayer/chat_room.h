@@ -10,7 +10,10 @@
 #include <QStandardItemModel>
 #include <QVariant>
 #include "network/network.h"
-#include "ui_chat_room.h"
+
+namespace Ui {
+class ChatRoom;
+}
 
 namespace Core {
 class AnnounceMultiplayerSession;
@@ -29,6 +32,7 @@ public:
     void SetPlayerList(const Network::RoomMember::MemberList& member_list);
     void Clear();
     void AppendStatusMessage(const QString& msg);
+    ~ChatRoom();
 
 public slots:
     void OnRoomUpdate(const Network::RoomInformation& info);

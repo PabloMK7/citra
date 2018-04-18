@@ -47,7 +47,7 @@ Lobby::Lobby(QWidget* parent, QStandardItemModel* list,
     ui->room_list->setExpandsOnDoubleClick(false);
     ui->room_list->setContextMenuPolicy(Qt::CustomContextMenu);
 
-    ui->nickname->setValidator(Validation::get().nickname);
+    ui->nickname->setValidator(validation.GetNickname());
     ui->nickname->setText(UISettings::values.nickname);
 
     // UI Buttons
@@ -189,7 +189,6 @@ void Lobby::OnRefreshLobby() {
             first_item->appendRow(new LobbyItemExpandedMemberList(members));
         }
     }
-    proxy->setSourceModel(model);
 
     // Reenable the refresh button and resize the columns
     ui->refresh_list->setEnabled(true);
@@ -200,10 +199,10 @@ void Lobby::OnRefreshLobby() {
     }
 
     // Set the member list child items to span all columns
-    for (int i = 0; i < model->rowCount(); i++) {
+    for (int i = 0; i < proxy->rowCount(); i++) {
         auto parent = model->item(i, 0);
         if (parent->hasChildren()) {
-            ui->room_list->setFirstColumnSpanned(0, parent->index(), true);
+            ui->room_list->setFirstColumnSpanned(0, proxy->index(i, 0), true);
         }
     }
 }

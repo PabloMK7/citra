@@ -10,6 +10,7 @@
 #include <QFutureWatcher>
 #include <QSortFilterProxyModel>
 #include <QStandardItemModel>
+#include "citra_qt/multiplayer/validation.h"
 #include "common/announce_multiplayer_room.h"
 #include "core/announce_multiplayer_session.h"
 #include "network/network.h"
@@ -104,6 +105,7 @@ private:
     std::weak_ptr<Core::AnnounceMultiplayerSession> announce_multiplayer_session;
     std::unique_ptr<Ui::Lobby> ui;
     QFutureWatcher<void>* watcher;
+    Validation validation;
 };
 
 /**
