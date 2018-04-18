@@ -112,9 +112,9 @@ void MultiplayerState::OnCreateRoom() {
     BringWidgetToFront(host_room);
 }
 
-void MultiplayerState::OnCloseRoom() {
+bool MultiplayerState::OnCloseRoom() {
     if (!NetworkMessage::WarnCloseRoom())
-        return;
+        return false;
     if (auto room = Network::GetRoom().lock()) {
         // if you are in a room, leave it
         if (auto member = Network::GetRoomMember().lock()) {
@@ -123,11 +123,12 @@ void MultiplayerState::OnCloseRoom() {
 
         // if you are hosting a room, also stop hosting
         if (room->GetState() != Network::Room::State::Open) {
-            return;
+            return true;
         }
         room->Destroy();
         announce_multiplayer_session->Stop();
     }
+    return true;
 }
 
 void MultiplayerState::OnOpenNetworkRoom() {

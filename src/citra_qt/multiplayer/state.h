@@ -42,7 +42,7 @@ public slots:
     void OnNetworkStateChanged(const Network::RoomMember::State& state);
     void OnViewLobby();
     void OnCreateRoom();
-    void OnCloseRoom();
+    bool OnCloseRoom();
     void OnOpenNetworkRoom();
     void OnDirectConnectToRoom();
     void OnAnnounceFailed(const Common::WebResult&);

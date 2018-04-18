@@ -75,13 +75,10 @@ void HostRoomWindow::Host() {
     }
     if (auto member = Network::GetRoomMember().lock()) {
         if (member->IsConnected()) {
-            if (!NetworkMessage::WarnDisconnect()) {
+            auto parent = static_cast<MultiplayerState*>(parentWidget());
+            if (!parent->OnCloseRoom()) {
                 close();
                 return;
-            } else {
-                member->Leave();
-                auto parent = static_cast<MultiplayerState*>(parentWidget());
-                parent->OnCloseRoom();
             }
         }
         ui->host->setDisabled(true);
