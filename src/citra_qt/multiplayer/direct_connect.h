@@ -7,10 +7,7 @@
 #include <memory>
 #include <QDialog>
 #include <QFutureWatcher>
-
-namespace Ui {
-class DirectConnect;
-}
+#include "ui_direct_connect.h"
 
 class DirectConnectWindow : public QDialog {
     Q_OBJECT

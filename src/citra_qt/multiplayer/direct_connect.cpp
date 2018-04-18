@@ -17,7 +17,6 @@
 #include "citra_qt/ui_settings.h"
 #include "core/settings.h"
 #include "network/network.h"
-#include "ui_direct_connect.h"
 
 enum class ConnectionType : u8 { TraversalServer, IP };
 

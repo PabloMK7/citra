@@ -20,8 +20,6 @@
 #include "common/logging/log.h"
 #include "core/announce_multiplayer_session.h"
 #include "core/settings.h"
-#include "ui_chat_room.h"
-#include "ui_host_room.h"
 
 HostRoomWindow::HostRoomWindow(QWidget* parent, QStandardItemModel* list,
                                std::shared_ptr<Core::AnnounceMultiplayerSession> session)

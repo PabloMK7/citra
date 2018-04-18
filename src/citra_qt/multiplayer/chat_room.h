@@ -10,10 +10,7 @@
 #include <QStandardItemModel>
 #include <QVariant>
 #include "network/network.h"
-
-namespace Ui {
-class ChatRoom;
-} // namespace Ui
+#include "ui_chat_room.h"
 
 namespace Core {
 class AnnounceMultiplayerSession;

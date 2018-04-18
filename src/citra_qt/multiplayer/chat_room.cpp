@@ -16,7 +16,6 @@
 #include "citra_qt/multiplayer/message.h"
 #include "common/logging/log.h"
 #include "core/announce_multiplayer_session.h"
-#include "ui_chat_room.h"
 
 class ChatMessage {
 public:

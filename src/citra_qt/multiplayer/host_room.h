@@ -11,10 +11,7 @@
 #include <QVariant>
 #include "citra_qt/multiplayer/chat_room.h"
 #include "network/network.h"
-
-namespace Ui {
-class HostRoom;
-} // namespace Ui
+#include "ui_host_room.h"
 
 namespace Core {
 class AnnounceMultiplayerSession;

@@ -17,7 +17,6 @@
 #include "common/logging/log.h"
 #include "core/settings.h"
 #include "network/network.h"
-#include "ui_lobby.h"
 
 Lobby::Lobby(QWidget* parent, QStandardItemModel* list,
              std::shared_ptr<Core::AnnounceMultiplayerSession> session)

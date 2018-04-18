@@ -15,7 +15,6 @@
 #include "citra_qt/multiplayer/message.h"
 #include "common/logging/log.h"
 #include "core/announce_multiplayer_session.h"
-#include "ui_client_room.h"
 
 ClientRoomWindow::ClientRoomWindow(QWidget* parent)
     : QDialog(parent, Qt::WindowTitleHint | Qt::WindowCloseButtonHint | Qt::WindowSystemMenuHint),
