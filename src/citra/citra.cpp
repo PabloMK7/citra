@@ -57,6 +57,7 @@ static void PrintHelp(const char* argv0) {
                  " Nickname, password, address and port for multiplayer\n"
                  "-r, --movie-record=[file]  Record a movie (game inputs) to the given file\n"
                  "-p, --movie-play=[file]    Playback the movie (game inputs) from the given file\n"
+                 "-f, --fullscreen     Start in fullscreen mode\n"
                  "-h, --help           Display this help and exit\n"
                  "-v, --version        Output version information and exit\n";
 }
@@ -134,20 +135,26 @@ int main(int argc, char** argv) {
     std::string filepath;
 
     bool use_multiplayer = false;
+    bool fullscreen = false;
     std::string nickname{};
     std::string password{};
     std::string address{};
     u16 port = Network::DefaultRoomPort;
 
     static struct option long_options[] = {
-        {"gdbport", required_argument, 0, 'g'},     {"install", required_argument, 0, 'i'},
-        {"multiplayer", required_argument, 0, 'm'}, {"movie-record", required_argument, 0, 'r'},
-        {"movie-play", required_argument, 0, 'p'},  {"help", no_argument, 0, 'h'},
-        {"version", no_argument, 0, 'v'},           {0, 0, 0, 0},
+        {"gdbport", required_argument, 0, 'g'},
+        {"install", required_argument, 0, 'i'},
+        {"multiplayer", required_argument, 0, 'm'},
+        {"movie-record", required_argument, 0, 'r'},
+        {"movie-play", required_argument, 0, 'p'},
+        {"fullscreen", no_argument, 0, 'f'},
+        {"help", no_argument, 0, 'h'},
+        {"version", no_argument, 0, 'v'},
+        {0, 0, 0, 0},
     };
 
     while (optind < argc) {
-        char arg = getopt_long(argc, argv, "g:i:m:r:p:hv", long_options, &option_index);
+        char arg = getopt_long(argc, argv, "g:i:m:r:p:fhv", long_options, &option_index);
         if (arg != -1) {
             switch (arg) {
             case 'g':
@@ -210,6 +217,10 @@ int main(int argc, char** argv) {
             case 'p':
                 movie_play = optarg;
                 break;
+            case 'f':
+                fullscreen = true;
+                NGLOG_INFO(Frontend, "Starting in fullscreen mode...");
+                break;
             case 'h':
                 PrintHelp(argv[0]);
                 return 0;
@@ -255,7 +266,7 @@ int main(int argc, char** argv) {
     Settings::values.movie_record = std::move(movie_record);
     Settings::Apply();
 
-    std::unique_ptr<EmuWindow_SDL2> emu_window{std::make_unique<EmuWindow_SDL2>()};
+    std::unique_ptr<EmuWindow_SDL2> emu_window{std::make_unique<EmuWindow_SDL2>(fullscreen)};
 
     Core::System& system{Core::System::GetInstance()};
 

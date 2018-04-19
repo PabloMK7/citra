@@ -12,7 +12,7 @@ struct SDL_Window;
 
 class EmuWindow_SDL2 : public EmuWindow {
 public:
-    EmuWindow_SDL2();
+    explicit EmuWindow_SDL2(bool fullscreen);
     ~EmuWindow_SDL2();
 
     /// Swap buffers to display the next frame
@@ -42,6 +42,9 @@ private:
 
     /// Called by PollEvents when any event that may cause the window to be resized occurs
     void OnResize();
+
+    /// Called when user passes the fullscreen parameter flag
+    void Fullscreen();
 
     /// Called when a configuration change affects the minimal size of the window
     void OnMinimalClientAreaChangeRequest(
