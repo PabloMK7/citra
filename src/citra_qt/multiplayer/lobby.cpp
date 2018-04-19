@@ -56,8 +56,7 @@ Lobby::Lobby(QWidget* parent, QStandardItemModel* list,
     connect(ui->games_owned, &QCheckBox::stateChanged, proxy,
             &LobbyFilterProxyModel::SetFilterOwned);
     connect(ui->hide_full, &QCheckBox::stateChanged, proxy, &LobbyFilterProxyModel::SetFilterFull);
-    connect(ui->search, &QLineEdit::textChanged, proxy,
-            &LobbyFilterProxyModel::setFilterFixedString);
+    connect(ui->search, &QLineEdit::textChanged, proxy, &LobbyFilterProxyModel::SetFilterSearch);
     connect(ui->room_list, &QTreeView::doubleClicked, this, &Lobby::OnJoinRoom);
     connect(ui->room_list, &QTreeView::clicked, this, &Lobby::OnExpandRoom);
 
@@ -86,7 +85,12 @@ void Lobby::OnExpandRoom(const QModelIndex& index) {
     auto member_list = proxy->data(member_index, LobbyItemMemberList::MemberListRole).toList();
 }
 
-void Lobby::OnJoinRoom(const QModelIndex& index) {
+void Lobby::OnJoinRoom(const QModelIndex& source) {
+    QModelIndex index = source;
+    // If the user double clicks on a child row (aka the player list) then use the parent instead
+    if (source.parent() != QModelIndex()) {
+        index = source.parent();
+    }
     if (!ui->nickname->hasAcceptableInput()) {
         NetworkMessage::ShowError(NetworkMessage::USERNAME_NOT_VALID);
         return;
@@ -213,6 +217,11 @@ LobbyFilterProxyModel::LobbyFilterProxyModel(QWidget* parent, QStandardItemModel
 bool LobbyFilterProxyModel::filterAcceptsRow(int sourceRow, const QModelIndex& sourceParent) const {
     // Prioritize filters by fastest to compute
 
+    // pass over any child rows (aka row that shows the players in the room)
+    if (sourceParent != QModelIndex()) {
+        return true;
+    }
+
     // filter by filled rooms
     if (filter_full) {
         QModelIndex member_list = sourceModel()->index(sourceRow, Column::MEMBER, sourceParent);
@@ -226,23 +235,22 @@ bool LobbyFilterProxyModel::filterAcceptsRow(int sourceRow, const QModelIndex& s
     }
 
     // filter by search parameters
-    auto search_param = filterRegExp();
-    if (!search_param.isEmpty()) {
+    if (!filter_search.isEmpty()) {
         QModelIndex game_name = sourceModel()->index(sourceRow, Column::GAME_NAME, sourceParent);
         QModelIndex room_name = sourceModel()->index(sourceRow, Column::ROOM_NAME, sourceParent);
         QModelIndex host_name = sourceModel()->index(sourceRow, Column::HOST, sourceParent);
         bool preferred_game_match = sourceModel()
                                         ->data(game_name, LobbyItemGame::GameNameRole)
                                         .toString()
-                                        .contains(search_param);
+                                        .contains(filter_search, filterCaseSensitivity());
         bool room_name_match = sourceModel()
                                    ->data(room_name, LobbyItemName::NameRole)
                                    .toString()
-                                   .contains(search_param);
+                                   .contains(filter_search, filterCaseSensitivity());
         bool username_match = sourceModel()
                                   ->data(host_name, LobbyItemHost::HostUsernameRole)
                                   .toString()
-                                  .contains(search_param);
+                                  .contains(filter_search, filterCaseSensitivity());
         if (!preferred_game_match && !room_name_match && !username_match) {
             return false;
         }
@@ -286,6 +294,11 @@ void LobbyFilterProxyModel::SetFilterOwned(bool filter) {
 
 void LobbyFilterProxyModel::SetFilterFull(bool filter) {
     filter_full = filter;
+    invalidate();
+}
+
+void LobbyFilterProxyModel::SetFilterSearch(const QString& filter) {
+    filter_search = filter;
     invalidate();
 }
 
