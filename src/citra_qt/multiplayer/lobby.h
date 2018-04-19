@@ -60,28 +60,11 @@ private slots:
      */
     void OnJoinRoom(const QModelIndex&);
 
-    /**
-     * Handler for connection status changes. Launches the client room window if successful or
-     * displays an error
-     */
-    void OnConnection();
-
 signals:
     /**
      * Signalled when the latest lobby data is retrieved.
      */
     void LobbyRefreshed();
-
-    /**
-     * Signalled when the status for room connection changes.
-     */
-    void Connected();
-
-    /**
-     * Signalled by this widget when it is closing itself and destroying any state such as
-     * connections that it might have.
-     */
-    void Closed();
 
     void StateChanged(const Network::RoomMember::State&);
 
@@ -106,6 +89,7 @@ private:
     std::unique_ptr<Ui::Lobby> ui;
     QFutureWatcher<void>* watcher;
     Validation validation;
+    bool joining = false;
 };
 
 /**

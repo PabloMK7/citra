@@ -26,7 +26,7 @@ Lobby::Lobby(QWidget* parent, QStandardItemModel* list,
 
     // setup the watcher for background connections
     watcher = new QFutureWatcher<void>;
-    connect(watcher, &QFutureWatcher<void>::finished, this, &Lobby::OnConnection);
+    connect(watcher, &QFutureWatcher<void>::finished, [&] { joining = false; });
 
     model = new QStandardItemModel(ui->room_list);
     proxy = new LobbyFilterProxyModel(this, game_list);
@@ -62,8 +62,6 @@ Lobby::Lobby(QWidget* parent, QStandardItemModel* list,
 
     // Actions
     connect(this, &Lobby::LobbyRefreshed, this, &Lobby::OnRefreshLobby);
-    // TODO(jroweboy): change this slot to OnConnected?
-    connect(this, &Lobby::Connected, p, &MultiplayerState::OnOpenNetworkRoom);
 
     // manually start a refresh when the window is opening
     // TODO(jroweboy): if this refresh is slow for people with bad internet, then don't do it as
@@ -86,6 +84,10 @@ void Lobby::OnExpandRoom(const QModelIndex& index) {
 }
 
 void Lobby::OnJoinRoom(const QModelIndex& source) {
+    if (joining) {
+        return;
+    }
+    joining = true;
     QModelIndex index = source;
     // If the user double clicks on a child row (aka the player list) then use the parent instead
     if (source.parent() != QModelIndex()) {
@@ -300,25 +302,4 @@ void LobbyFilterProxyModel::SetFilterFull(bool filter) {
 void LobbyFilterProxyModel::SetFilterSearch(const QString& filter) {
     filter_search = filter;
     invalidate();
-}
-
-void Lobby::OnConnection() {
-    if (auto room_member = Network::GetRoomMember().lock()) {
-        switch (room_member->GetState()) {
-        case Network::RoomMember::State::CouldNotConnect:
-            ShowError(NetworkMessage::UNABLE_TO_CONNECT);
-            break;
-        case Network::RoomMember::State::NameCollision:
-            ShowError(NetworkMessage::USERNAME_IN_USE);
-            break;
-        case Network::RoomMember::State::Error:
-            ShowError(NetworkMessage::UNABLE_TO_CONNECT);
-            break;
-        case Network::RoomMember::State::Joining:
-            auto parent = static_cast<MultiplayerState*>(parentWidget());
-            parent->OnOpenNetworkRoom();
-            close();
-            break;
-        }
-    }
 }

@@ -66,45 +66,31 @@ void MultiplayerState::Close() {
 }
 
 void MultiplayerState::OnNetworkStateChanged(const Network::RoomMember::State& state) {
-    NGLOG_DEBUG(Frontend, "Network state change");
+    NGLOG_DEBUG(Frontend, "Network State: {}", Network::GetStateStr(state));
     bool is_connected = false;
     switch (state) {
-    case Network::RoomMember::State::Idle:
-        NGLOG_DEBUG(Network, "State: Idle");
-        break;
-    case Network::RoomMember::State::Joining:
-        NGLOG_DEBUG(Network, "State: Joining");
-        break;
     case Network::RoomMember::State::LostConnection:
         NetworkMessage::ShowError(NetworkMessage::LOST_CONNECTION);
-        NGLOG_DEBUG(Network, "State: LostConnection");
         break;
     case Network::RoomMember::State::CouldNotConnect:
         NetworkMessage::ShowError(NetworkMessage::UNABLE_TO_CONNECT);
-        NGLOG_DEBUG(Network, "State: CouldNotConnect");
         break;
     case Network::RoomMember::State::NameCollision:
         NetworkMessage::ShowError(NetworkMessage::USERNAME_IN_USE);
-        NGLOG_DEBUG(Network, "State: NameCollision");
         break;
     case Network::RoomMember::State::MacCollision:
         NetworkMessage::ShowError(NetworkMessage::MAC_COLLISION);
-        NGLOG_DEBUG(Network, "State: MacCollision");
         break;
     case Network::RoomMember::State::WrongPassword:
         NetworkMessage::ShowError(NetworkMessage::WRONG_PASSWORD);
-        NGLOG_DEBUG(Network, "State: WrongPassword");
         break;
     case Network::RoomMember::State::WrongVersion:
         NetworkMessage::ShowError(NetworkMessage::WRONG_VERSION);
-        NGLOG_DEBUG(Network, "State: WrongVersion");
         break;
     case Network::RoomMember::State::Error:
         NetworkMessage::ShowError(NetworkMessage::UNABLE_TO_CONNECT);
-        NGLOG_DEBUG(Network, "State: GenericError");
         break;
     case Network::RoomMember::State::Joined:
-        NGLOG_DEBUG(Network, "State: Joined");
         is_connected = true;
         OnOpenNetworkRoom();
         break;

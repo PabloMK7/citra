@@ -406,6 +406,8 @@ void RoomMember::Join(const std::string& nick, const char* server_addr, u16 serv
         ASSERT_MSG(room_member_impl->client != nullptr, "Could not create client");
     }
 
+    room_member_impl->SetState(State::Joining);
+
     ENetAddress address{};
     enet_address_set_host(&address, server_addr);
     address.port = server_port;
@@ -421,7 +423,6 @@ void RoomMember::Join(const std::string& nick, const char* server_addr, u16 serv
     int net = enet_host_service(room_member_impl->client, &event, ConnectionTimeoutMs);
     if (net > 0 && event.type == ENET_EVENT_TYPE_CONNECT) {
         room_member_impl->nickname = nick;
-        room_member_impl->SetState(State::Joining);
         room_member_impl->StartLoop();
         room_member_impl->SendJoinRequest(nick, preferred_mac, password);
         SendGameInfo(room_member_impl->current_game_info);
