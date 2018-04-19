@@ -187,4 +187,30 @@ private:
     std::unique_ptr<RoomMemberImpl> room_member_impl;
 };
 
+static const char* GetStateStr(const RoomMember::State& s) {
+    switch (s) {
+    case RoomMember::State::Idle:
+        return "Idle";
+    case RoomMember::State::Error:
+        return "Error";
+    case RoomMember::State::Joining:
+        return "Joining";
+    case RoomMember::State::Joined:
+        return "Joined";
+    case RoomMember::State::LostConnection:
+        return "LostConnection";
+    case RoomMember::State::NameCollision:
+        return "NameCollision";
+    case RoomMember::State::MacCollision:
+        return "MacCollision";
+    case RoomMember::State::WrongVersion:
+        return "WrongVersion";
+    case RoomMember::State::WrongPassword:
+        return "WrongPassword";
+    case RoomMember::State::CouldNotConnect:
+        return "CouldNotConnect";
+    }
+    return "Unknown";
+}
+
 } // namespace Network

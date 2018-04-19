@@ -76,6 +76,8 @@ public:
     void SaveInterfaceLayout();
     void LoadInterfaceLayout();
 
+    QStandardItemModel* GetModel() const;
+
     static const QStringList supported_file_extensions;
 
 signals:

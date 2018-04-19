@@ -374,6 +374,10 @@ void GameList::LoadCompatibilityList() {
     }
 }
 
+QStandardItemModel* GameList::GetModel() const {
+    return item_model;
+}
+
 void GameList::PopulateAsync(const QString& dir_path, bool deep_scan) {
     if (!FileUtil::Exists(dir_path.toStdString()) ||
         !FileUtil::IsDirectory(dir_path.toStdString())) {

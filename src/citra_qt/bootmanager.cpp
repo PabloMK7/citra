@@ -108,12 +108,10 @@ GRenderWindow::GRenderWindow(QWidget* parent, EmuThread* emu_thread)
     setWindowTitle(QString::fromStdString(window_title));
 
     InputCommon::Init();
-    Network::Init();
 }
 
 GRenderWindow::~GRenderWindow() {
     InputCommon::Shutdown();
-    Network::Shutdown();
 }
 
 void GRenderWindow::moveContext() {

@@ -56,11 +56,29 @@ add_executable(citra-qt
     hotkeys.h
     main.cpp
     main.h
+    multiplayer/chat_room.h
+    multiplayer/chat_room.cpp
+    multiplayer/client_room.h
+    multiplayer/client_room.cpp
+    multiplayer/direct_connect.h
+    multiplayer/direct_connect.cpp
+    multiplayer/host_room.h
+    multiplayer/host_room.cpp
+    multiplayer/lobby.h
+    multiplayer/lobby_p.h
+    multiplayer/lobby.cpp
+    multiplayer/message.h
+    multiplayer/message.cpp
+    multiplayer/state.cpp
+    multiplayer/state.h
+    multiplayer/validation.h
     ui_settings.cpp
     ui_settings.h
     updater/updater.cpp
     updater/updater.h
     updater/updater_p.h
+    util/clickable_label.h
+    util/clickable_label.cpp
     util/spinbox.cpp
     util/spinbox.h
     util/util.cpp
@@ -79,6 +97,11 @@ set(UIS
     configuration/configure_system.ui
     configuration/configure_web.ui
     debugger/registers.ui
+    multiplayer/direct_connect.ui
+    multiplayer/lobby.ui
+    multiplayer/chat_room.ui
+    multiplayer/client_room.ui
+    multiplayer/host_room.ui
     aboutdialog.ui
     hotkeys.ui
     main.ui
