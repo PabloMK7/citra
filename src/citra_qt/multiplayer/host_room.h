@@ -34,13 +34,6 @@ public:
                             std::shared_ptr<Core::AnnounceMultiplayerSession> session);
     ~HostRoomWindow();
 
-signals:
-    /**
-     * Signalled by this widget when it is closing itself and destroying any state such as
-     * connections that it might have.
-     */
-    void Closed();
-
 private slots:
     /**
      * Handler for connection status changes. Launches the chat window if successful or

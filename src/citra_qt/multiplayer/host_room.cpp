@@ -119,17 +119,8 @@ void HostRoomWindow::Host() {
 void HostRoomWindow::OnConnection() {
     ui->host->setEnabled(true);
     if (auto room_member = Network::GetRoomMember().lock()) {
-        switch (room_member->GetState()) {
-        case Network::RoomMember::State::CouldNotConnect:
-            ShowError(NetworkMessage::UNABLE_TO_CONNECT);
-            break;
-        case Network::RoomMember::State::NameCollision:
-            ShowError(NetworkMessage::USERNAME_IN_USE);
-            break;
-        case Network::RoomMember::State::Error:
-            ShowError(NetworkMessage::UNABLE_TO_CONNECT);
-            break;
-        case Network::RoomMember::State::Joining:
+        if (room_member->GetState() == Network::RoomMember::State::Joining) {
+            // Start the announce session if they chose Public
             if (ui->host_type->currentIndex() == 0) {
                 if (auto session = announce_multiplayer_session.lock()) {
                     session->Start();
@@ -137,12 +128,7 @@ void HostRoomWindow::OnConnection() {
                     NGLOG_ERROR(Network, "Starting announce session failed");
                 }
             }
-            auto parent = static_cast<MultiplayerState*>(parentWidget());
-            // parent->ChangeRoomState();
-            parent->OnOpenNetworkRoom();
             close();
-            emit Closed();
-            break;
         }
     }
 }

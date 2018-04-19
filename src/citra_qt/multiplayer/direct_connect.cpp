@@ -105,20 +105,8 @@ void DirectConnectWindow::EndConnecting() {
 void DirectConnectWindow::OnConnection() {
     EndConnecting();
 
-    bool isConnected = true;
     if (auto room_member = Network::GetRoomMember().lock()) {
-        switch (room_member->GetState()) {
-        case Network::RoomMember::State::CouldNotConnect:
-            isConnected = false;
-            ShowError(NetworkMessage::UNABLE_TO_CONNECT);
-            break;
-        case Network::RoomMember::State::NameCollision:
-            isConnected = false;
-            ShowError(NetworkMessage::USERNAME_IN_USE);
-            break;
-        case Network::RoomMember::State::Joining:
-            auto parent = static_cast<MultiplayerState*>(parentWidget());
-            parent->OnOpenNetworkRoom();
+        if (room_member->GetState() == Network::RoomMember::State::Joined) {
             close();
         }
     }

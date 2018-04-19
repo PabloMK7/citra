@@ -22,11 +22,6 @@ public slots:
     void OnStateChange(const Network::RoomMember::State&);
 
 signals:
-    /**
-     * Signalled by this widget when it is closing itself and destroying any state such as
-     * connections that it might have.
-     */
-    void Closed();
     void RoomInformationChanged(const Network::RoomInformation&);
     void StateChanged(const Network::RoomMember::State&);
 

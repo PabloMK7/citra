@@ -49,44 +49,9 @@ void ClientRoomWindow::OnRoomUpdate(const Network::RoomInformation& info) {
 }
 
 void ClientRoomWindow::OnStateChange(const Network::RoomMember::State& state) {
-    switch (state) {
-    case Network::RoomMember::State::Idle:
-        NGLOG_INFO(Network, "State: Idle");
-        break;
-    case Network::RoomMember::State::Joining:
-        NGLOG_INFO(Network, "State: Joining");
-        break;
-    case Network::RoomMember::State::Joined:
-        NGLOG_INFO(Network, "State: Joined");
+    if (state == Network::RoomMember::State::Joined) {
         ui->chat->Clear();
         ui->chat->AppendStatusMessage(tr("Connected"));
-        break;
-    case Network::RoomMember::State::LostConnection:
-        NetworkMessage::ShowError(NetworkMessage::LOST_CONNECTION);
-        NGLOG_INFO(Network, "State: LostConnection");
-        break;
-    case Network::RoomMember::State::CouldNotConnect:
-        NetworkMessage::ShowError(NetworkMessage::UNABLE_TO_CONNECT);
-        NGLOG_INFO(Network, "State: CouldNotConnect");
-        break;
-    case Network::RoomMember::State::NameCollision:
-        NetworkMessage::ShowError(NetworkMessage::USERNAME_IN_USE);
-        NGLOG_INFO(Network, "State: NameCollision");
-        break;
-    case Network::RoomMember::State::MacCollision:
-        NetworkMessage::ShowError(NetworkMessage::MAC_COLLISION);
-        NGLOG_INFO(Network, "State: MacCollision");
-        break;
-    case Network::RoomMember::State::WrongPassword:
-        NetworkMessage::ShowError(NetworkMessage::WRONG_PASSWORD);
-        NGLOG_INFO(Network, "State: WrongPassword");
-        break;
-    case Network::RoomMember::State::WrongVersion:
-        NetworkMessage::ShowError(NetworkMessage::WRONG_VERSION);
-        NGLOG_INFO(Network, "State: WrongVersion");
-        break;
-    default:
-        break;
     }
     UpdateView();
 }
@@ -99,7 +64,6 @@ void ClientRoomWindow::Disconnect() {
         member->Leave();
         ui->chat->AppendStatusMessage(tr("Disconnected"));
         close();
-        emit Closed();
     }
 }
 
@@ -120,6 +84,4 @@ void ClientRoomWindow::UpdateView() {
     }
     // TODO(B3N30): can't get RoomMember*, show error and close window
     close();
-    emit Closed();
-    return;
 }
