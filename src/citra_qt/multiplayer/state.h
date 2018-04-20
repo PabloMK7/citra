@@ -5,6 +5,7 @@
 #pragma once
 
 #include <QWidget>
+#include "core/announce_multiplayer_session.h"
 #include "network/network.h"
 
 class QStandardItemModel;

@@ -13,6 +13,7 @@
 #include "citra_qt/game_list_p.h"
 #include "citra_qt/multiplayer/client_room.h"
 #include "citra_qt/multiplayer/message.h"
+#include "citra_qt/multiplayer/state.h"
 #include "common/logging/log.h"
 #include "core/announce_multiplayer_session.h"
 #include "ui_client_room.h"
@@ -57,11 +58,8 @@ void ClientRoomWindow::OnStateChange(const Network::RoomMember::State& state) {
 }
 
 void ClientRoomWindow::Disconnect() {
-    if (!NetworkMessage::WarnDisconnect()) {
-        return;
-    }
-    if (auto member = Network::GetRoomMember().lock()) {
-        member->Leave();
+    auto parent = static_cast<MultiplayerState*>(parentWidget());
+    if (!parent->OnCloseRoom()) {
         ui->chat->AppendStatusMessage(tr("Disconnected"));
         close();
     }
