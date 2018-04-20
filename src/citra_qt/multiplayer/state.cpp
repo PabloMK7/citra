@@ -102,6 +102,9 @@ void MultiplayerState::OnNetworkStateChanged(const Network::RoomMember::State& s
     case Network::RoomMember::State::MacCollision:
         NetworkMessage::ShowError(NetworkMessage::MAC_COLLISION);
         break;
+    case Network::RoomMember::State::RoomIsFull:
+        NetworkMessage::ShowError(NetworkMessage::ROOM_IS_FULL);
+        break;
     case Network::RoomMember::State::WrongPassword:
         NetworkMessage::ShowError(NetworkMessage::WRONG_PASSWORD);
         break;

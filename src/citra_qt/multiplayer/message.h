@@ -27,6 +27,7 @@ extern const ConnectionError IP_ADDRESS_NOT_VALID;
 extern const ConnectionError PORT_NOT_VALID;
 extern const ConnectionError NO_INTERNET;
 extern const ConnectionError UNABLE_TO_CONNECT;
+extern const ConnectionError ROOM_IS_FULL;
 extern const ConnectionError COULD_NOT_CREATE_ROOM;
 extern const ConnectionError HOST_BANNED;
 extern const ConnectionError WRONG_VERSION;

@@ -69,6 +69,11 @@ public:
     bool IsValidMacAddress(const MacAddress& address) const;
 
     /**
+     * Sends a ID_ROOM_IS_FULL message telling the client that the room is full.
+     */
+    void SendRoomIsFull(ENetPeer* client);
+
+    /**
      * Sends a ID_ROOM_NAME_COLLISION message telling the client that the name is invalid.
      */
     void SendNameCollision(ENetPeer* client);
@@ -193,6 +198,13 @@ void Room::RoomImpl::StartLoop() {
 }
 
 void Room::RoomImpl::HandleJoinRequest(const ENetEvent* event) {
+    {
+        std::lock_guard<std::mutex> lock(member_mutex);
+        if (members.size() >= room_information.member_slots) {
+            SendRoomIsFull(event->peer);
+            return;
+        }
+    }
     Packet packet;
     packet.Append(event->packet->data, event->packet->dataLength);
     packet.IgnoreBytes(sizeof(u8)); // Ignore the message type
@@ -288,6 +300,16 @@ void Room::RoomImpl::SendMacCollision(ENetPeer* client) {
 void Room::RoomImpl::SendWrongPassword(ENetPeer* client) {
     Packet packet;
     packet << static_cast<u8>(IdWrongPassword);
+
+    ENetPacket* enet_packet =
+        enet_packet_create(packet.GetData(), packet.GetDataSize(), ENET_PACKET_FLAG_RELIABLE);
+    enet_peer_send(client, 0, enet_packet);
+    enet_host_flush(server);
+}
+
+void Room::RoomImpl::SendRoomIsFull(ENetPeer* client) {
+    Packet packet;
+    packet << static_cast<u8>(IdRoomIsFull);
 
     ENetPacket* enet_packet =
         enet_packet_create(packet.GetData(), packet.GetDataSize(), ENET_PACKET_FLAG_RELIABLE);
@@ -527,7 +549,9 @@ bool Room::Create(const std::string& name, const std::string& server_address, u1
     }
     address.port = server_port;
 
-    room_impl->server = enet_host_create(&address, max_connections, NumChannels, 0, 0);
+    // In order to send the room is full message to the connecting client, we need to leave one slot
+    // open so enet won't reject the incoming connection without telling us
+    room_impl->server = enet_host_create(&address, max_connections + 1, NumChannels, 0, 0);
     if (!room_impl->server) {
         return false;
     }

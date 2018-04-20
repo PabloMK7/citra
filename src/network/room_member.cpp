@@ -154,6 +154,9 @@ void RoomMember::RoomMemberImpl::MemberLoop() {
                     HandleJoinPacket(&event); // Get the MAC Address for the client
                     SetState(State::Joined);
                     break;
+                case IdRoomIsFull:
+                    SetState(State::RoomIsFull);
+                    break;
                 case IdNameCollision:
                     SetState(State::NameCollision);
                     break;

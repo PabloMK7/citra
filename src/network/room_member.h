@@ -54,11 +54,12 @@ public:
         LostConnection, ///< Connection closed
 
         // Reasons why connection was rejected
-        NameCollision,  ///< Somebody is already using this name
-        MacCollision,   ///< Somebody is already using that mac-address
-        WrongVersion,   ///< The room version is not the same as for this RoomMember
-        WrongPassword,  ///< The password doesn't match the one from the Room
-        CouldNotConnect ///< The room is not responding to a connection attempt
+        NameCollision,   ///< Somebody is already using this name
+        MacCollision,    ///< Somebody is already using that mac-address
+        WrongVersion,    ///< The room version is not the same as for this RoomMember
+        WrongPassword,   ///< The password doesn't match the one from the Room
+        CouldNotConnect, ///< The room is not responding to a connection attempt
+        RoomIsFull       ///< Room is already at the maximum number of players
     };
 
     struct MemberInformation {

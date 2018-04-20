@@ -22,6 +22,8 @@ const ConnectionError UNABLE_TO_CONNECT(
     QT_TR_NOOP("Unable to connect to the host. Verify that the connection settings are correct. If "
                "you still cannot connect, contact the room host and verify that the host is "
                "properly configured with the external port forwarded."));
+const ConnectionError ROOM_IS_FULL(
+    QT_TR_NOOP("Unable to connect to the room because it is already full."));
 const ConnectionError COULD_NOT_CREATE_ROOM(
     QT_TR_NOOP("Creating a room failed. Please retry. Restarting Citra might be necessary."));
 const ConnectionError HOST_BANNED(

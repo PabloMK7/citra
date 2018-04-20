@@ -57,7 +57,8 @@ enum RoomMessageTypes : u8 {
     IdMacCollision,
     IdVersionMismatch,
     IdWrongPassword,
-    IdCloseRoom
+    IdCloseRoom,
+    IdRoomIsFull,
 };
 
 /// This is what a server [person creating a server] would use.
