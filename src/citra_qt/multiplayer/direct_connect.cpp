@@ -51,8 +51,14 @@ void DirectConnectWindow::Connect() {
         return;
     }
     if (const auto member = Network::GetRoomMember().lock()) {
-        if (member->IsConnected() && !NetworkMessage::WarnDisconnect()) {
+        // Prevent the user from trying to join a room while they are already joining.
+        if (member->GetState() == Network::RoomMember::State::Joining) {
             return;
+        } else if (member->GetState() == Network::RoomMember::State::Joined) {
+            // And ask if they want to leave the room if they are already in one.
+            if (!NetworkMessage::WarnDisconnect()) {
+                return;
+            }
         }
     }
     switch (static_cast<ConnectionType>(ui->connection_type->currentIndex())) {

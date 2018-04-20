@@ -26,7 +26,6 @@ Lobby::Lobby(QWidget* parent, QStandardItemModel* list,
 
     // setup the watcher for background connections
     watcher = new QFutureWatcher<void>;
-    connect(watcher, &QFutureWatcher<void>::finished, [&] { joining = false; });
 
     model = new QStandardItemModel(ui->room_list);
     proxy = new LobbyFilterProxyModel(this, game_list);
@@ -51,7 +50,6 @@ Lobby::Lobby(QWidget* parent, QStandardItemModel* list,
     ui->nickname->setText(UISettings::values.nickname);
 
     // UI Buttons
-    MultiplayerState* p = reinterpret_cast<MultiplayerState*>(parent);
     connect(ui->refresh_list, &QPushButton::pressed, this, &Lobby::RefreshLobby);
     connect(ui->games_owned, &QCheckBox::stateChanged, proxy,
             &LobbyFilterProxyModel::SetFilterOwned);
@@ -84,10 +82,17 @@ void Lobby::OnExpandRoom(const QModelIndex& index) {
 }
 
 void Lobby::OnJoinRoom(const QModelIndex& source) {
-    if (joining) {
-        return;
+    if (const auto member = Network::GetRoomMember().lock()) {
+        // Prevent the user from trying to join a room while they are already joining.
+        if (member->GetState() == Network::RoomMember::State::Joining) {
+            return;
+        } else if (member->GetState() == Network::RoomMember::State::Joined) {
+            // And ask if they want to leave the room if they are already in one.
+            if (!NetworkMessage::WarnDisconnect()) {
+                return;
+            }
+        }
     }
-    joining = true;
     QModelIndex index = source;
     // If the user double clicks on a child row (aka the player list) then use the parent instead
     if (source.parent() != QModelIndex()) {
@@ -96,13 +101,6 @@ void Lobby::OnJoinRoom(const QModelIndex& source) {
     if (!ui->nickname->hasAcceptableInput()) {
         NetworkMessage::ShowError(NetworkMessage::USERNAME_NOT_VALID);
         return;
-    }
-    if (const auto member = Network::GetRoomMember().lock()) {
-        if (member->IsConnected()) {
-            if (!NetworkMessage::WarnDisconnect()) {
-                return;
-            }
-        }
     }
 
     // Get a password to pass if the room is password protected
