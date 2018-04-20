@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>345</width>
-    <height>493</height>
+    <height>504</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -28,13 +28,6 @@
            <widget class="QCheckBox" name="toggle_check_exit">
             <property name="text">
              <string>Confirm exit while emulation is running</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="toggle_deepscan">
-            <property name="text">
-             <string>Search sub-directories for games</string>
             </property>
            </widget>
           </item>

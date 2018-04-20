@@ -143,7 +143,7 @@ GMainWindow::GMainWindow() : config(new Config()), emu_thread(nullptr) {
     show();
 
     game_list->LoadCompatibilityList();
-    game_list->PopulateAsync(UISettings::values.gamedir, UISettings::values.gamedir_deepscan);
+    game_list->PopulateAsync(UISettings::values.game_dirs);
 
     // Show one-time "callout" messages to the user
     ShowCallouts();
@@ -176,6 +176,10 @@ void GMainWindow::InitializeWidgets() {
 
     game_list = new GameList(this);
     ui.horizontalLayout->addWidget(game_list);
+
+    game_list_placeholder = new GameListPlaceholder(this);
+    ui.horizontalLayout->addWidget(game_list_placeholder);
+    game_list_placeholder->setVisible(false);
 
     multiplayer_state = new MultiplayerState(this, game_list->GetModel(), ui.action_Leave_Room,
                                              ui.action_Show_Room);
@@ -399,9 +403,14 @@ void GMainWindow::RestoreUIState() {
 
 void GMainWindow::ConnectWidgetEvents() {
     connect(game_list, &GameList::GameChosen, this, &GMainWindow::OnGameListLoadFile);
+    connect(game_list, &GameList::OpenDirectory, this, &GMainWindow::OnGameListOpenDirectory);
     connect(game_list, &GameList::OpenFolderRequested, this, &GMainWindow::OnGameListOpenFolder);
     connect(game_list, &GameList::NavigateToGamedbEntryRequested, this,
             &GMainWindow::OnGameListNavigateToGamedbEntry);
+    connect(game_list, &GameList::AddDirectory, this, &GMainWindow::OnGameListAddDirectory);
+    connect(game_list_placeholder, &GameListPlaceholder::AddDirectory, this,
+            &GMainWindow::OnGameListAddDirectory);
+    connect(game_list, &GameList::ShowList, this, &GMainWindow::OnGameListShowList);
 
     connect(this, &GMainWindow::EmulationStarting, render_window,
             &GRenderWindow::OnEmulationStarting);
@@ -419,8 +428,6 @@ void GMainWindow::ConnectMenuEvents() {
     // File
     connect(ui.action_Load_File, &QAction::triggered, this, &GMainWindow::OnMenuLoadFile);
     connect(ui.action_Install_CIA, &QAction::triggered, this, &GMainWindow::OnMenuInstallCIA);
-    connect(ui.action_Select_Game_List_Root, &QAction::triggered, this,
-            &GMainWindow::OnMenuSelectGameListRoot);
     connect(ui.action_Exit, &QAction::triggered, this, &QMainWindow::close);
 
     // Emulation
@@ -672,6 +679,7 @@ void GMainWindow::BootGame(const QString& filename) {
     registersWidget->OnDebugModeEntered();
     if (ui.action_Single_Window_Mode->isChecked()) {
         game_list->hide();
+        game_list_placeholder->hide();
     }
     status_bar_update_timer.start(2000);
 
@@ -713,7 +721,10 @@ void GMainWindow::ShutdownGame() {
     ui.action_Stop->setEnabled(false);
     ui.action_Report_Compatibility->setEnabled(false);
     render_window->hide();
-    game_list->show();
+    if (game_list->isEmpty())
+        game_list_placeholder->show();
+    else
+        game_list->show();
     game_list->setFilterFocus();
 
     // Disable status bar updates
@@ -828,6 +839,48 @@ void GMainWindow::OnGameListNavigateToGamedbEntry(
     QDesktopServices::openUrl(QUrl("https://citra-emu.org/game/" + directory));
 }
 
+void GMainWindow::OnGameListOpenDirectory(QString directory) {
+    QString path;
+    if (directory == "INSTALLED") {
+        path =
+            QString::fromStdString(FileUtil::GetUserPath(D_SDMC_IDX).c_str() +
+                                   std::string("Nintendo "
+                                               "3DS/00000000000000000000000000000000/"
+                                               "00000000000000000000000000000000/title/00040000"));
+    } else if (directory == "SYSTEM") {
+        path =
+            QString::fromStdString(FileUtil::GetUserPath(D_NAND_IDX).c_str() +
+                                   std::string("00000000000000000000000000000000/title/00040010"));
+    } else {
+        path = directory;
+    }
+    if (!QFileInfo::exists(path)) {
+        QMessageBox::critical(this, tr("Error Opening %1").arg(path), tr("Folder does not exist!"));
+        return;
+    }
+    QDesktopServices::openUrl(QUrl::fromLocalFile(path));
+}
+
+void GMainWindow::OnGameListAddDirectory() {
+    QString dir_path = QFileDialog::getExistingDirectory(this, tr("Select Directory"));
+    if (dir_path.isEmpty())
+        return;
+    UISettings::GameDir game_dir{dir_path, false, true};
+    if (!UISettings::values.game_dirs.contains(game_dir)) {
+        UISettings::values.game_dirs.append(game_dir);
+        game_list->PopulateAsync(UISettings::values.game_dirs);
+    } else {
+        NGLOG_WARNING(Frontend, "Selected directory is already in the game list");
+    }
+}
+
+void GMainWindow::OnGameListShowList(bool show) {
+    if (emulation_running && ui.action_Single_Window_Mode->isChecked())
+        return;
+    game_list->setVisible(show);
+    game_list_placeholder->setVisible(!show);
+};
+
 void GMainWindow::OnMenuLoadFile() {
     QString extensions;
     for (const auto& piece : game_list->supported_file_extensions)
@@ -842,14 +895,6 @@ void GMainWindow::OnMenuLoadFile() {
         UISettings::values.roms_path = QFileInfo(filename).path();
 
         BootGame(filename);
-    }
-}
-
-void GMainWindow::OnMenuSelectGameListRoot() {
-    QString dir_path = QFileDialog::getExistingDirectory(this, tr("Select Directory"));
-    if (!dir_path.isEmpty()) {
-        UISettings::values.gamedir = dir_path;
-        game_list->PopulateAsync(dir_path, UISettings::values.gamedir_deepscan);
     }
 }
 
@@ -1089,6 +1134,7 @@ void GMainWindow::OnConfigure() {
     if (result == QDialog::Accepted) {
         configureDialog.applyConfiguration();
         UpdateUITheme();
+        emit UpdateThemedIcons();
         SyncMenuUISettings();
         config->Save();
     }
@@ -1308,7 +1354,6 @@ void GMainWindow::UpdateUITheme() {
         QIcon::setThemeName(":/icons/default");
     }
     QIcon::setThemeSearchPaths(theme_paths);
-    emit UpdateThemedIcons();
 }
 
 void GMainWindow::LoadTranslation() {

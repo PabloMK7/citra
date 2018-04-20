@@ -60,7 +60,6 @@
     <addaction name="action_Load_File"/>
     <addaction name="action_Install_CIA"/>
     <addaction name="separator"/>
-    <addaction name="action_Select_Game_List_Root"/>
     <addaction name="menu_recent_files"/>
     <addaction name="separator"/>
     <addaction name="action_Exit"/>
