@@ -43,7 +43,6 @@ bool GameList::SearchField::KeyReleaseEater::eventFilter(QObject* obj, QEvent* e
         return QObject::eventFilter(obj, event);
 
     QKeyEvent* keyEvent = static_cast<QKeyEvent*>(event);
-    int rowCount = gamelist->tree_view->model()->rowCount();
     QString edit_filter_text = gamelist->search_field->edit_filter->text().toLower();
 
     // If the searchfield's text hasn't changed special function keys get checked
@@ -65,19 +64,8 @@ bool GameList::SearchField::KeyReleaseEater::eventFilter(QObject* obj, QEvent* e
         // If there is only one result launch this game
         case Qt::Key_Return:
         case Qt::Key_Enter: {
-            QStandardItemModel* item_model = new QStandardItemModel(gamelist->tree_view);
-            QModelIndex root_index = item_model->invisibleRootItem()->index();
-            QStandardItem* child_file;
-            QString file_path;
-            int resultCount = 0;
-            for (int i = 0; i < rowCount; ++i) {
-                if (!gamelist->tree_view->isRowHidden(i, root_index)) {
-                    ++resultCount;
-                    child_file = gamelist->item_model->item(i, 0);
-                    file_path = child_file->data(GameListItemPath::FullPathRole).toString();
-                }
-            }
-            if (resultCount == 1) {
+            if (gamelist->search_field->visible == 1) {
+                QString file_path = gamelist->getLastFilterResultItem();
                 // To avoid loading error dialog loops while confirming them using enter
                 // Also users usually want to run a diffrent game after closing one
                 gamelist->search_field->edit_filter->setText("");
@@ -97,6 +85,9 @@ bool GameList::SearchField::KeyReleaseEater::eventFilter(QObject* obj, QEvent* e
 }
 
 void GameList::SearchField::setFilterResult(int visible, int total) {
+    this->visible = visible;
+    this->total = total;
+
     QString result_of_text = tr("of");
     QString result_text;
     if (total == 1) {
@@ -106,6 +97,25 @@ void GameList::SearchField::setFilterResult(int visible, int total) {
     }
     label_filter_result->setText(
         QString("%1 %2 %3 %4").arg(visible).arg(result_of_text).arg(total).arg(result_text));
+}
+
+QString GameList::getLastFilterResultItem() {
+    QStandardItem* folder;
+    QStandardItem* child;
+    QString file_path;
+    int folderCount = item_model->rowCount();
+    for (int i = 0; i < folderCount; ++i) {
+        folder = item_model->item(i, 0);
+        QModelIndex folder_index = folder->index();
+        int childrenCount = folder->rowCount();
+        for (int j = 0; j < childrenCount; ++j) {
+            if (!tree_view->isRowHidden(j, folder_index)) {
+                child = folder->child(j, 0);
+                file_path = child->data(GameListItemPath::FullPathRole).toString();
+            }
+        }
+    }
+    return file_path;
 }
 
 void GameList::SearchField::clear() {
@@ -163,43 +173,55 @@ bool GameList::containsAllWords(QString haystack, QString userinput) {
 
 // Event in order to filter the gamelist after editing the searchfield
 void GameList::onTextChanged(const QString& newText) {
-    int rowCount = tree_view->model()->rowCount();
+    int folderCount = tree_view->model()->rowCount();
     QString edit_filter_text = newText.toLower();
-
+    QStandardItem* folder;
+    QStandardItem* child;
+    int childrenTotal = 0;
     QModelIndex root_index = item_model->invisibleRootItem()->index();
 
     // If the searchfield is empty every item is visible
     // Otherwise the filter gets applied
     if (edit_filter_text.isEmpty()) {
-        for (int i = 0; i < rowCount; ++i) {
-            tree_view->setRowHidden(i, root_index, false);
+        for (int i = 0; i < folderCount; ++i) {
+            folder = item_model->item(i, 0);
+            QModelIndex folder_index = folder->index();
+            int childrenCount = folder->rowCount();
+            for (int j = 0; j < childrenCount; ++j) {
+                ++childrenTotal;
+                tree_view->setRowHidden(j, folder_index, false);
+            }
         }
-        search_field->setFilterResult(rowCount, rowCount);
+        search_field->setFilterResult(childrenTotal, childrenTotal);
     } else {
-        QStandardItem* child_file;
         QString file_path, file_name, file_title, file_programmid;
         int result_count = 0;
-        for (int i = 0; i < rowCount; ++i) {
-            child_file = item_model->item(i, 0);
-            file_path = child_file->data(GameListItemPath::FullPathRole).toString().toLower();
-            file_name = file_path.mid(file_path.lastIndexOf("/") + 1);
-            file_title = child_file->data(GameListItemPath::TitleRole).toString().toLower();
-            file_programmid =
-                child_file->data(GameListItemPath::ProgramIdRole).toString().toLower();
+        for (int i = 0; i < folderCount; ++i) {
+            folder = item_model->item(i, 0);
+            QModelIndex folder_index = folder->index();
+            int childrenCount = folder->rowCount();
+            for (int j = 0; j < childrenCount; ++j) {
+                ++childrenTotal;
+                child = folder->child(j, 0);
+                file_path = child->data(GameListItemPath::FullPathRole).toString().toLower();
+                file_name = file_path.mid(file_path.lastIndexOf("/") + 1);
+                file_title = child->data(GameListItemPath::TitleRole).toString().toLower();
+                file_programmid = child->data(GameListItemPath::ProgramIdRole).toString().toLower();
 
-            // Only items which filename in combination with its title contains all words
-            // that are in the searchfield will be visible in the gamelist
-            // The search is case insensitive because of toLower()
-            // I decided not to use Qt::CaseInsensitive in containsAllWords to prevent
-            // multiple conversions of edit_filter_text for each game in the gamelist
-            if (containsAllWords(file_name.append(" ").append(file_title), edit_filter_text) ||
-                (file_programmid.count() == 16 && edit_filter_text.contains(file_programmid))) {
-                tree_view->setRowHidden(i, root_index, false);
-                ++result_count;
-            } else {
-                tree_view->setRowHidden(i, root_index, true);
+                // Only items which filename in combination with its title contains all words
+                // that are in the searchfield will be visible in the gamelist
+                // The search is case insensitive because of toLower()
+                // I decided not to use Qt::CaseInsensitive in containsAllWords to prevent
+                // multiple conversions of edit_filter_text for each game in the gamelist
+                if (containsAllWords(file_name.append(" ").append(file_title), edit_filter_text) ||
+                    (file_programmid.count() == 16 && edit_filter_text.contains(file_programmid))) {
+                    tree_view->setRowHidden(j, folder_index, false);
+                    ++result_count;
+                } else {
+                    tree_view->setRowHidden(j, folder_index, true);
+                }
+                search_field->setFilterResult(result_count, childrenTotal);
             }
-            search_field->setFilterResult(result_count, rowCount);
         }
     }
 }
@@ -305,9 +327,16 @@ void GameList::DonePopulating(QStringList watch_list) {
         QCoreApplication::processEvents();
     }
     tree_view->setEnabled(true);
-    int rowCount = tree_view->model()->rowCount();
-    search_field->setFilterResult(rowCount, rowCount);
-    if (rowCount > 0) {
+    int folderCount = tree_view->model()->rowCount();
+    int childrenTotal = 0;
+    for (int i = 0; i < folderCount; ++i) {
+        int childrenCount = item_model->item(i, 0)->rowCount();
+        for (int j = 0; j < childrenCount; ++j) {
+            ++childrenTotal;
+        }
+    }
+    search_field->setFilterResult(childrenTotal, childrenTotal);
+    if (childrenTotal > 0) {
         search_field->setFocus();
     }
 }
@@ -410,6 +439,7 @@ void GameList::PopulateAsync(const QString& dir_path, bool deep_scan) {
     tree_view->setEnabled(false);
     // Delete any rows that might already exist if we're repopulating
     item_model->removeRows(0, item_model->rowCount());
+    search_field->clear();
 
     emit ShouldCancelWorker();
 
@@ -453,8 +483,7 @@ static bool HasSupportedFileExtension(const std::string& file_name) {
 void GameList::RefreshGameDirectory() {
     if (!UISettings::values.gamedir.isEmpty() && current_worker != nullptr) {
         NGLOG_INFO(Frontend, "Change detected in the games directory. Reloading game list.");
-        search_field->clear();
-        PopulateAsync(UISettings::values.gamedir, UISettings::values.gamedir_deepscan);
+        PopulateAsync(UISettings::values.gamedirs);
     }
 }
 

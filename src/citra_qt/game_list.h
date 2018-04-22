@@ -39,6 +39,8 @@ public:
 
     class SearchField : public QWidget {
     public:
+        int visible;
+        int total;
         void setFilterResult(int visible, int total);
         void clear();
         void setFocus();
@@ -67,6 +69,7 @@ public:
     explicit GameList(GMainWindow* parent = nullptr);
     ~GameList() override;
 
+    QString getLastFilterResultItem();
     void clearFilter();
     void setFilterFocus();
     void setFilterVisible(bool visibility);
