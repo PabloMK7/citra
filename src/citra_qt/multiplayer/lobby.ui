@@ -80,7 +80,7 @@
          <item>
           <widget class="QCheckBox" name="hide_full">
            <property name="text">
-            <string>Hide Full Games</string>
+            <string>Hide Full Rooms</string>
            </property>
           </widget>
          </item>
