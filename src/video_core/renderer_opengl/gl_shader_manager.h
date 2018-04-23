@@ -10,7 +10,7 @@
 #include "video_core/renderer_opengl/gl_shader_gen.h"
 #include "video_core/renderer_opengl/pica_to_gl.h"
 
-enum class UniformBindings : GLuint { Common };
+enum class UniformBindings : GLuint { Common, VS, GS };
 
 struct LightSrc {
     alignas(16) GLvec3 specular_0;
@@ -53,17 +53,57 @@ static_assert(
 static_assert(sizeof(UniformData) < 16384,
               "UniformData structure must be less than 16kb as per the OpenGL spec");
 
+/// Uniform struct for the Uniform Buffer Object that contains PICA vertex/geometry shader uniforms.
+// NOTE: the same rule from UniformData also applies here.
+struct PicaUniformsData {
+    void SetFromRegs(const Pica::ShaderRegs& regs, const Pica::Shader::ShaderSetup& setup);
+
+    struct BoolAligned {
+        alignas(16) GLint b;
+    };
+
+    std::array<BoolAligned, 16> bools;
+    alignas(16) std::array<GLuvec4, 4> i;
+    alignas(16) std::array<GLvec4, 96> f;
+};
+
+struct VSUniformData {
+    PicaUniformsData uniforms;
+};
+static_assert(
+    sizeof(VSUniformData) == 1856,
+    "The size of the VSUniformData structure has changed, update the structure in the shader");
+static_assert(sizeof(VSUniformData) < 16384,
+              "VSUniformData structure must be less than 16kb as per the OpenGL spec");
+
+struct GSUniformData {
+    PicaUniformsData uniforms;
+};
+static_assert(
+    sizeof(GSUniformData) == 1856,
+    "The size of the GSUniformData structure has changed, update the structure in the shader");
+static_assert(sizeof(GSUniformData) < 16384,
+              "GSUniformData structure must be less than 16kb as per the OpenGL spec");
+
 /// A class that manage different shader stages and configures them with given config data.
 class ShaderProgramManager {
 public:
     explicit ShaderProgramManager(bool separable);
     ~ShaderProgramManager();
 
+    bool UseProgrammableVertexShader(const GLShader::PicaVSConfig& config,
+                                     const Pica::Shader::ShaderSetup setup);
+
     void UseTrivialVertexShader();
+
+    bool UseProgrammableGeometryShader(const GLShader::PicaGSConfig& config,
+                                       const Pica::Shader::ShaderSetup setup);
+
+    void UseFixedGeometryShader(const GLShader::PicaFixedGSConfig& config);
 
     void UseTrivialGeometryShader();
 
-    void UseFragmentShader(const GLShader::PicaShaderConfig& config);
+    void UseFragmentShader(const GLShader::PicaFSConfig& config);
 
     void ApplyTo(OpenGLState& state);
 
