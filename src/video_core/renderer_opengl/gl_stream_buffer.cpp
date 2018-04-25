@@ -14,16 +14,25 @@ OGLStreamBuffer::OGLStreamBuffer(GLenum target, GLsizeiptr size, bool prefer_coh
     gl_buffer.Create();
     glBindBuffer(gl_target, gl_buffer.handle);
 
+    GLsizeiptr allocate_size = size;
+    if (target == GL_ARRAY_BUFFER) {
+        // On AMD GPU there is a strange crash in indexed drawing. The crash happens when the buffer
+        // read position is near the end and the crash looks like an out-of-bound access. Doubling
+        // the allocation size for the vertex buffer seems to avoid the crash.
+        // TODO (wwylele): investigate what actually happens here.
+        allocate_size *= 2;
+    }
+
     if (GLAD_GL_ARB_buffer_storage) {
         persistent = true;
         coherent = prefer_coherent;
         GLbitfield flags =
             GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | (coherent ? GL_MAP_COHERENT_BIT : 0);
-        glBufferStorage(gl_target, buffer_size, nullptr, flags);
+        glBufferStorage(gl_target, allocate_size, nullptr, flags);
         mapped_ptr = static_cast<u8*>(glMapBufferRange(
             gl_target, 0, buffer_size, flags | (coherent ? 0 : GL_MAP_FLUSH_EXPLICIT_BIT)));
     } else {
-        glBufferData(gl_target, buffer_size, nullptr, GL_STREAM_DRAW);
+        glBufferData(gl_target, allocate_size, nullptr, GL_STREAM_DRAW);
     }
 }
 
