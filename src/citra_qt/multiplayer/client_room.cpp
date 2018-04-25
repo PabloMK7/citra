@@ -59,7 +59,7 @@ void ClientRoomWindow::OnStateChange(const Network::RoomMember::State& state) {
 
 void ClientRoomWindow::Disconnect() {
     auto parent = static_cast<MultiplayerState*>(parentWidget());
-    if (!parent->OnCloseRoom()) {
+    if (parent->OnCloseRoom()) {
         ui->chat->AppendStatusMessage(tr("Disconnected"));
         close();
     }

@@ -14,9 +14,6 @@ class HostRoomWindow;
 class ClientRoomWindow;
 class DirectConnectWindow;
 class ClickableLabel;
-namespace Core {
-class AnnounceMultiplayerSession;
-}
 
 class MultiplayerState : public QWidget {
     Q_OBJECT;
