@@ -44,7 +44,7 @@ static bool WarnMessage(const std::string& title, const std::string& text) {
 }
 
 void ShowError(const ConnectionError& e) {
-    QMessageBox::critical(nullptr, QObject::tr("Error"), QString::fromStdString(e.GetString()));
+    QMessageBox::critical(nullptr, QObject::tr("Error"), QObject::tr(e.GetString().c_str()));
 }
 
 bool WarnCloseRoom() {
