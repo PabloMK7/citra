@@ -89,7 +89,6 @@ private:
     std::unique_ptr<Ui::Lobby> ui;
     QFutureWatcher<void>* watcher;
     Validation validation;
-    bool joining = false;
 };
 
 /**

@@ -74,7 +74,9 @@ void HostRoomWindow::Host() {
         return;
     }
     if (auto member = Network::GetRoomMember().lock()) {
-        if (member->IsConnected()) {
+        if (member->GetState() == Network::RoomMember::State::Joining) {
+            return;
+        } else if (member->GetState() == Network::RoomMember::State::Joined) {
             auto parent = static_cast<MultiplayerState*>(parentWidget());
             if (!parent->OnCloseRoom()) {
                 close();

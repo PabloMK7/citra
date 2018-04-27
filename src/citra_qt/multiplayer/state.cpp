@@ -147,6 +147,7 @@ bool MultiplayerState::OnCloseRoom() {
         // if you are in a room, leave it
         if (auto member = Network::GetRoomMember().lock()) {
             member->Leave();
+            NGLOG_DEBUG(Frontend, "Left the room (as a client)");
         }
 
         // if you are hosting a room, also stop hosting
@@ -155,6 +156,7 @@ bool MultiplayerState::OnCloseRoom() {
         }
         room->Destroy();
         announce_multiplayer_session->Stop();
+        NGLOG_DEBUG(Frontend, "Closed the room (as a server)");
     }
     return true;
 }
