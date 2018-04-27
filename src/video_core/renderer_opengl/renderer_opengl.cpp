@@ -163,6 +163,9 @@ void RendererOpenGL::SwapBuffers() {
 void RendererOpenGL::LoadFBToScreenInfo(const GPU::Regs::FramebufferConfig& framebuffer,
                                         ScreenInfo& screen_info, bool right_eye) {
 
+    if (framebuffer.address_right1 == 0 || framebuffer.address_right2 == 0)
+        right_eye = false;
+
     const PAddr framebuffer_addr =
         framebuffer.active_fb == 0
             ? (!right_eye ? framebuffer.address_left1 : framebuffer.address_right1)
