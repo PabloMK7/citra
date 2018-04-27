@@ -4,13 +4,12 @@
 
 #include "audio_core/dsp_interface.h"
 #include "core/core.h"
+#include "core/frontend/emu_window.h"
 #include "core/gdbstub/gdbstub.h"
 #include "core/hle/service/hid/hid.h"
 #include "core/hle/service/ir/ir.h"
 #include "core/settings.h"
 #include "video_core/video_core.h"
-
-#include "core/frontend/emu_window.h"
 
 namespace Settings {
 

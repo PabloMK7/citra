@@ -4,16 +4,143 @@
 
 #include <algorithm>
 #include <array>
+#include <chrono>
+#include <condition_variable>
 #include <cstdio>
+#include <memory>
+#include <thread>
+#ifdef _WIN32
+#include <share.h> // For _SH_DENYWR
+#else
+#define _SH_DENYWR 0
+#endif
 #include "common/assert.h"
 #include "common/common_funcs.h" // snprintf compatibility define
 #include "common/logging/backend.h"
-#include "common/logging/filter.h"
 #include "common/logging/log.h"
 #include "common/logging/text_formatter.h"
 #include "common/string_util.h"
+#include "common/threadsafe_queue.h"
 
 namespace Log {
+
+/**
+ * Static state as a singleton.
+ */
+class Impl {
+public:
+    static Impl& Instance() {
+        static Impl backend;
+        return backend;
+    }
+
+    Impl(Impl const&) = delete;
+    const Impl& operator=(Impl const&) = delete;
+
+    void PushEntry(Entry e) {
+        std::lock_guard<std::mutex> lock(message_mutex);
+        message_queue.Push(std::move(e));
+        message_cv.notify_one();
+    }
+
+    void AddBackend(std::unique_ptr<Backend> backend) {
+        std::lock_guard<std::mutex> lock(writing_mutex);
+        backends.push_back(std::move(backend));
+    }
+
+    void RemoveBackend(const std::string& backend_name) {
+        std::lock_guard<std::mutex> lock(writing_mutex);
+        auto it = std::remove_if(backends.begin(), backends.end(), [&backend_name](const auto& i) {
+            return !strcmp(i->GetName(), backend_name.c_str());
+        });
+        backends.erase(it, backends.end());
+    }
+
+    const Filter& GetGlobalFilter() const {
+        return filter;
+    }
+
+    void SetGlobalFilter(const Filter& f) {
+        filter = f;
+    }
+
+    Backend* GetBackend(const std::string& backend_name) {
+        auto it = std::find_if(backends.begin(), backends.end(), [&backend_name](const auto& i) {
+            return !strcmp(i->GetName(), backend_name.c_str());
+        });
+        if (it == backends.end())
+            return nullptr;
+        return it->get();
+    }
+
+private:
+    Impl() {
+        backend_thread = std::thread([&] {
+            Entry entry;
+            auto write_logs = [&](Entry& e) {
+                std::lock_guard<std::mutex> lock(writing_mutex);
+                for (const auto& backend : backends) {
+                    backend->Write(e);
+                }
+            };
+            while (true) {
+                std::unique_lock<std::mutex> lock(message_mutex);
+                message_cv.wait(lock, [&] { return !running || message_queue.Pop(entry); });
+                if (!running) {
+                    break;
+                }
+                write_logs(entry);
+            }
+            // Drain the logging queue. Only writes out up to MAX_LOGS_TO_WRITE to prevent a case
+            // where a system is repeatedly spamming logs even on close.
+            constexpr int MAX_LOGS_TO_WRITE = 100;
+            int logs_written = 0;
+            while (logs_written++ < MAX_LOGS_TO_WRITE && message_queue.Pop(entry)) {
+                write_logs(entry);
+            }
+        });
+    }
+
+    ~Impl() {
+        running = false;
+        message_cv.notify_one();
+        backend_thread.join();
+    }
+
+    std::atomic_bool running{true};
+    std::mutex message_mutex, writing_mutex;
+    std::condition_variable message_cv;
+    std::thread backend_thread;
+    std::vector<std::unique_ptr<Backend>> backends;
+    Common::MPSCQueue<Log::Entry> message_queue;
+    Filter filter;
+};
+
+void ConsoleBackend::Write(const Entry& entry) {
+    PrintMessage(entry);
+}
+
+void ColorConsoleBackend::Write(const Entry& entry) {
+    PrintColoredMessage(entry);
+}
+
+// _SH_DENYWR allows read only access to the file for other programs.
+// It is #defined to 0 on other platforms
+FileBackend::FileBackend(const std::string& filename)
+    : file(filename, "w", _SH_DENYWR), bytes_written(0) {}
+
+void FileBackend::Write(const Entry& entry) {
+    // prevent logs from going over the maximum size (in case its spamming and the user doesn't
+    // know)
+    constexpr size_t MAX_BYTES_WRITTEN = 50 * 1024L * 1024L;
+    if (!file.IsOpen() || bytes_written > MAX_BYTES_WRITTEN) {
+        return;
+    }
+    bytes_written += file.WriteString(FormatLogMessage(entry) + '\n');
+    if (entry.log_level >= Level::Error) {
+        file.Flush();
+    }
+}
 
 /// Macro listing all log classes. Code should define CLS and SUB as desired before invoking this.
 #define ALL_LOG_CLASSES()                                                                          \
@@ -132,15 +259,26 @@ Entry CreateEntry(Class log_class, Level log_level, const char* filename, unsign
     return entry;
 }
 
-static Filter* filter = nullptr;
+void SetGlobalFilter(const Filter& filter) {
+    Impl::Instance().SetGlobalFilter(filter);
+}
 
-void SetFilter(Filter* new_filter) {
-    filter = new_filter;
+void AddBackend(std::unique_ptr<Backend> backend) {
+    Impl::Instance().AddBackend(std::move(backend));
+}
+
+void RemoveBackend(const std::string& backend_name) {
+    Impl::Instance().RemoveBackend(backend_name);
+}
+
+Backend* GetBackend(const std::string& backend_name) {
+    return Impl::Instance().GetBackend(backend_name);
 }
 
 void LogMessage(Class log_class, Level log_level, const char* filename, unsigned int line_num,
                 const char* function, const char* format, ...) {
-    if (filter && !filter->CheckMessage(log_class, log_level))
+    auto filter = Impl::Instance().GetGlobalFilter();
+    if (!filter.CheckMessage(log_class, log_level))
         return;
     std::array<char, 4 * 1024> formatting_buffer;
     va_list args;
@@ -150,17 +288,19 @@ void LogMessage(Class log_class, Level log_level, const char* filename, unsigned
     Entry entry = CreateEntry(log_class, log_level, filename, line_num, function,
                               std::string(formatting_buffer.data()));
 
-    PrintColoredMessage(entry);
+    Impl::Instance().PushEntry(std::move(entry));
 }
 
 void FmtLogMessageImpl(Class log_class, Level log_level, const char* filename,
                        unsigned int line_num, const char* function, const char* format,
                        const fmt::format_args& args) {
-    if (filter && !filter->CheckMessage(log_class, log_level))
+    auto filter = Impl::Instance().GetGlobalFilter();
+    if (!filter.CheckMessage(log_class, log_level))
         return;
+
     Entry entry =
         CreateEntry(log_class, log_level, filename, line_num, function, fmt::vformat(format, args));
 
-    PrintColoredMessage(entry);
+    Impl::Instance().PushEntry(std::move(entry));
 }
 } // namespace Log

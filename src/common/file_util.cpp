@@ -713,6 +713,8 @@ const std::string& GetUserPath(const unsigned int DirIDX, const std::string& new
         paths[D_SDMC_IDX] = paths[D_USER_IDX] + SDMC_DIR DIR_SEP;
         paths[D_NAND_IDX] = paths[D_USER_IDX] + NAND_DIR DIR_SEP;
         paths[D_SYSDATA_IDX] = paths[D_USER_IDX] + SYSDATA_DIR DIR_SEP;
+        // TODO: Put the logs in a better location for each OS
+        paths[D_LOGS_IDX] = paths[D_USER_IDX] + LOG_DIR DIR_SEP;
     }
 
     if (!newPath.empty()) {
@@ -799,8 +801,8 @@ void SplitFilename83(const std::string& filename, std::array<char, 9>& short_nam
 
 IOFile::IOFile() {}
 
-IOFile::IOFile(const std::string& filename, const char openmode[]) {
-    Open(filename, openmode);
+IOFile::IOFile(const std::string& filename, const char openmode[], int flags) {
+    Open(filename, openmode, flags);
 }
 
 IOFile::~IOFile() {
@@ -821,11 +823,16 @@ void IOFile::Swap(IOFile& other) {
     std::swap(m_good, other.m_good);
 }
 
-bool IOFile::Open(const std::string& filename, const char openmode[]) {
+bool IOFile::Open(const std::string& filename, const char openmode[], int flags) {
     Close();
 #ifdef _WIN32
-    _wfopen_s(&m_file, Common::UTF8ToUTF16W(filename).c_str(),
-              Common::UTF8ToUTF16W(openmode).c_str());
+    if (flags != 0) {
+        m_file = _wfsopen(Common::UTF8ToUTF16W(filename).c_str(),
+                          Common::UTF8ToUTF16W(openmode).c_str(), flags);
+    } else {
+        _wfopen_s(&m_file, Common::UTF8ToUTF16W(filename).c_str(),
+                  Common::UTF8ToUTF16W(openmode).c_str());
+    }
 #else
     m_file = fopen(filename.c_str(), openmode);
 #endif

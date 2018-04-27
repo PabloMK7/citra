@@ -67,6 +67,9 @@ struct Values {
     QString room_port;
     uint host_type;
     qulonglong game_id;
+
+    // logging
+    bool show_console;
 };
 
 extern Values values;
