@@ -1338,8 +1338,6 @@ void GMainWindow::SyncMenuUISettings() {
 #endif
 
 int main(int argc, char* argv[]) {
-    Log::AddBackend(std::make_unique<Log::ColorConsoleBackend>());
-
     MicroProfileOnThreadCreate("Frontend");
     SCOPE_EXIT({ MicroProfileShutdown(); });
 
