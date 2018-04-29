@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <memory>
 #include <vector>
+#include <fmt/format.h>
 #include "common/common_types.h"
 #include "common/file_util.h"
 #include "common/logging/log.h"
@@ -165,16 +166,15 @@ std::string GetExtSaveDataPath(const std::string& mount_point, const Path& path)
     ExtSaveDataArchivePath path_data;
     std::memcpy(&path_data, vec_data.data(), sizeof(path_data));
 
-    return Common::StringFromFormat("%s%08X/%08X/", mount_point.c_str(), path_data.save_high,
-                                    path_data.save_low);
+    return fmt::format("{}{:08x}/{:08x}/", mount_point.c_str(), path_data.save_high,
+                       path_data.save_low);
 }
 
 std::string GetExtDataContainerPath(const std::string& mount_point, bool shared) {
     if (shared)
-        return Common::StringFromFormat("%sdata/%s/extdata/", mount_point.c_str(), SYSTEM_ID);
+        return fmt::format("{}data/{}/extdata/", mount_point.c_str(), SYSTEM_ID);
 
-    return Common::StringFromFormat("%sNintendo 3DS/%s/%s/extdata/", mount_point.c_str(), SYSTEM_ID,
-                                    SDCARD_ID);
+    return fmt::format("{}Nintendo 3DS/{}/{}/extdata/", mount_point.c_str(), SYSTEM_ID, SDCARD_ID);
 }
 
 Path ConstructExtDataBinaryPath(u32 media_type, u32 high, u32 low) {

@@ -8,6 +8,7 @@
 #include <cstring>
 #include <locale>
 #include <memory>
+#include <fmt/format.h>
 #include "common/logging/log.h"
 #include "common/string_util.h"
 #include "common/swap.h"
@@ -156,7 +157,7 @@ ResultStatus AppLoader_NCCH::Load(Kernel::SharedPtr<Kernel::Process>& process) {
         return result;
 
     ReadProgramId(ncch_program_id);
-    std::string program_id{Common::StringFromFormat("%016" PRIX64, ncch_program_id)};
+    std::string program_id{fmt::format("{:016X}", ncch_program_id)};
 
     LOG_INFO(Loader, "Program ID: {}", program_id);
 

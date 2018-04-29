@@ -14,6 +14,7 @@
 #include <QtConcurrent/QtConcurrentRun>
 #include <QtGui>
 #include <QtWidgets>
+#include <fmt/format.h>
 #include "citra_qt/aboutdialog.h"
 #include "citra_qt/applets/swkbd.h"
 #include "citra_qt/bootmanager.h"

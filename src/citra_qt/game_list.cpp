@@ -20,6 +20,7 @@
 #include <QThreadPool>
 #include <QToolButton>
 #include <QTreeView>
+#include <fmt/format.h>
 #include "citra_qt/game_list.h"
 #include "citra_qt/game_list_p.h"
 #include "citra_qt/main.h"
