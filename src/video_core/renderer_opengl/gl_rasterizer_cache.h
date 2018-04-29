@@ -5,6 +5,7 @@
 #pragma once
 
 #include <array>
+#include <list>
 #include <memory>
 #include <set>
 #include <tuple>
@@ -17,6 +18,8 @@
 #ifdef __GNUC__
 #pragma GCC diagnostic pop
 #endif
+#include <unordered_map>
+#include <boost/functional/hash.hpp>
 #include <glad/glad.h>
 #include "common/assert.h"
 #include "common/common_funcs.h"
@@ -26,6 +29,7 @@
 #include "video_core/regs_framebuffer.h"
 #include "video_core/regs_texturing.h"
 #include "video_core/renderer_opengl/gl_resource_manager.h"
+#include "video_core/texture/texture_decode.h"
 
 struct CachedSurface;
 using Surface = std::shared_ptr<CachedSurface>;
@@ -253,7 +257,41 @@ struct SurfaceParams {
     SurfaceType type = SurfaceType::Invalid;
 };
 
-struct CachedSurface : SurfaceParams {
+/**
+ * A watcher that notifies whether a cached surface has been changed. This is useful for caching
+ * surface collection objects, including texture cube and mipmap.
+ */
+struct SurfaceWatcher {
+public:
+    explicit SurfaceWatcher(std::weak_ptr<CachedSurface>&& surface) : surface(std::move(surface)) {}
+
+    /**
+     * Checks whether the surface has been changed.
+     * @return false if the surface content has been changed since last Validate() call or has been
+     * destroyed; otherwise true
+     */
+    bool IsValid() const {
+        return !surface.expired() && valid;
+    }
+
+    /// Marks that the content of the referencing surface has been updated to the watcher user.
+    void Validate() {
+        ASSERT(!surface.expired());
+        valid = true;
+    }
+
+    /// Gets the referencing surface. Returns null if the surface has been destroyed
+    Surface Get() const {
+        return surface.lock();
+    }
+
+private:
+    friend struct CachedSurface;
+    std::weak_ptr<CachedSurface> surface;
+    bool valid = false;
+};
+
+struct CachedSurface : SurfaceParams, std::enable_shared_from_this<CachedSurface> {
     bool CanFill(const SurfaceParams& dest_surface, SurfaceInterval fill_interval) const;
     bool CanCopy(const SurfaceParams& dest_surface, SurfaceInterval copy_interval) const;
 
@@ -294,6 +332,72 @@ struct CachedSurface : SurfaceParams {
                          GLuint draw_fb_handle);
     void DownloadGLTexture(const MathUtil::Rectangle<u32>& rect, GLuint read_fb_handle,
                            GLuint draw_fb_handle);
+
+    std::shared_ptr<SurfaceWatcher> CreateWatcher() {
+        auto watcher = std::make_shared<SurfaceWatcher>(weak_from_this());
+        watchers.push_front(watcher);
+        return watcher;
+    }
+
+    void InvalidateAllWatcher() {
+        for (const auto& watcher : watchers) {
+            if (auto locked = watcher.lock()) {
+                locked->valid = false;
+            }
+        }
+    }
+
+private:
+    std::list<std::weak_ptr<SurfaceWatcher>> watchers;
+};
+
+struct TextureCubeConfig {
+    PAddr px;
+    PAddr nx;
+    PAddr py;
+    PAddr ny;
+    PAddr pz;
+    PAddr nz;
+    u32 width;
+    Pica::TexturingRegs::TextureFormat format;
+
+    bool operator==(const TextureCubeConfig& rhs) const {
+        return std::tie(px, nx, py, ny, pz, nz, width, format) ==
+               std::tie(rhs.px, rhs.nx, rhs.py, rhs.ny, rhs.pz, rhs.nz, rhs.width, rhs.format);
+    }
+
+    bool operator!=(const TextureCubeConfig& rhs) const {
+        return !(*this == rhs);
+    }
+};
+
+namespace std {
+template <>
+struct hash<TextureCubeConfig> {
+    size_t operator()(const TextureCubeConfig& config) const {
+        std::size_t hash = 0;
+        boost::hash_combine(hash, config.px);
+        boost::hash_combine(hash, config.nx);
+        boost::hash_combine(hash, config.py);
+        boost::hash_combine(hash, config.ny);
+        boost::hash_combine(hash, config.pz);
+        boost::hash_combine(hash, config.nz);
+        boost::hash_combine(hash, config.width);
+        boost::hash_combine(hash, static_cast<u32>(config.format));
+        return hash;
+    }
+};
+} // namespace std
+
+struct CachedTextureCube {
+    OGLTexture texture;
+    u16 res_scale = 1;
+    std::shared_ptr<SurfaceWatcher> px;
+    std::shared_ptr<SurfaceWatcher> nx;
+    std::shared_ptr<SurfaceWatcher> py;
+    std::shared_ptr<SurfaceWatcher> ny;
+    std::shared_ptr<SurfaceWatcher> pz;
+    std::shared_ptr<SurfaceWatcher> nz;
 };
 
 class RasterizerCacheOpenGL : NonCopyable {
@@ -322,12 +426,11 @@ public:
                                         bool load_if_create);
 
     /// Get a surface based on the texture configuration
-    Surface GetTextureSurface(const Pica::TexturingRegs::FullTextureConfig& config,
-                              PAddr addr_override = 0);
+    Surface GetTextureSurface(const Pica::TexturingRegs::FullTextureConfig& config);
+    Surface GetTextureSurface(const Pica::Texture::TextureInfo& info);
 
-    /// Copy surfaces to a cubemap texture based on the texture configuration
-    bool FillTextureCube(GLuint dest_handle, const Pica::TexturingRegs::FullTextureConfig& config,
-                         PAddr px, PAddr nx, PAddr py, PAddr ny, PAddr pz, PAddr nz);
+    /// Get a texture cube based on the texture configuration
+    const CachedTextureCube& GetTextureCube(const TextureCubeConfig& config);
 
     /// Get the color and depth surfaces based on the framebuffer configuration
     SurfaceSurfaceRect_Tuple GetFramebufferSurfaces(bool using_color_fb, bool using_depth_fb,
@@ -380,4 +483,6 @@ private:
     OGLProgram d24s8_abgr_shader;
     GLint d24s8_abgr_tbo_size_u_id;
     GLint d24s8_abgr_viewport_u_id;
+
+    std::unordered_map<TextureCubeConfig, CachedTextureCube> texture_cube_cache;
 };
