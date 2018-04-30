@@ -27,6 +27,7 @@ void to_json(nlohmann::json& json, const Room& room) {
     json["id"] = room.UID;
     json["port"] = room.port;
     json["name"] = room.name;
+    json["description"] = room.description;
     json["preferredGameName"] = room.preferred_game;
     json["preferredGameId"] = room.preferred_game_id;
     json["maxPlayers"] = room.max_player;
@@ -41,6 +42,12 @@ void to_json(nlohmann::json& json, const Room& room) {
 void from_json(const nlohmann::json& json, Room& room) {
     room.ip = json.at("address").get<std::string>();
     room.name = json.at("name").get<std::string>();
+    try {
+        room.description = json.at("description").get<std::string>();
+    } catch (const nlohmann::detail::out_of_range& e) {
+        room.description = "";
+        LOG_DEBUG(Network, "Room \'{}\' doesn't contain a description", room.name);
+    }
     room.owner = json.at("owner").get<std::string>();
     room.port = json.at("port").get<u16>();
     room.preferred_game = json.at("preferredGameName").get<std::string>();
@@ -59,11 +66,13 @@ void from_json(const nlohmann::json& json, Room& room) {
 
 namespace WebService {
 
-void RoomJson::SetRoomInformation(const std::string& uid, const std::string& name, const u16 port,
+void RoomJson::SetRoomInformation(const std::string& uid, const std::string& name,
+                                  const std::string& description, const u16 port,
                                   const u32 max_player, const u32 net_version,
                                   const bool has_password, const std::string& preferred_game,
                                   const u64 preferred_game_id) {
     room.name = name;
+    room.description = description;
     room.UID = uid;
     room.port = port;
     room.max_player = max_player;

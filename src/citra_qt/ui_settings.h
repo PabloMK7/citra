@@ -109,6 +109,7 @@ struct Values {
     QString room_port;
     uint host_type;
     qulonglong game_id;
+    QString room_description;
 
     // logging
     bool show_console;

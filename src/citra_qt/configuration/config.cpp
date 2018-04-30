@@ -329,6 +329,7 @@ void Config::ReadValues() {
     }
     UISettings::values.max_player = ReadSetting("max_player", 8).toUInt();
     UISettings::values.game_id = ReadSetting("game_id", 0).toULongLong();
+    UISettings::values.room_description = ReadSetting("room_description", "").toString();
     qt_config->endGroup();
 
     qt_config->endGroup();
@@ -533,6 +534,7 @@ void Config::SaveValues() {
     WriteSetting("host_type", UISettings::values.host_type, 0);
     WriteSetting("max_player", UISettings::values.max_player, 8);
     WriteSetting("game_id", UISettings::values.game_id, 0);
+    WriteSetting("room_description", UISettings::values.room_description, "");
     qt_config->endGroup();
 
     qt_config->endGroup();

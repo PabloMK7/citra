@@ -124,6 +124,7 @@ public:
      * The packet has the structure:
      * <MessageID>ID_ROOM_INFORMATION
      * <String> room_name
+     * <String> room_description
      * <u32> member_slots: The max number of clients allowed in this room
      * <String> uid
      * <u16> port
@@ -404,6 +405,7 @@ void Room::RoomImpl::BroadcastRoomInformation() {
     Packet packet;
     packet << static_cast<u8>(IdRoomInformation);
     packet << room_information.name;
+    packet << room_information.description;
     packet << room_information.member_slots;
     packet << room_information.uid;
     packet << room_information.port;
@@ -584,9 +586,10 @@ Room::Room() : room_impl{std::make_unique<RoomImpl>()} {}
 
 Room::~Room() = default;
 
-bool Room::Create(const std::string& name, const std::string& server_address, u16 server_port,
-                  const std::string& password, const u32 max_connections,
-                  const std::string& preferred_game, u64 preferred_game_id) {
+bool Room::Create(const std::string& name, const std::string& description,
+                  const std::string& server_address, u16 server_port, const std::string& password,
+                  const u32 max_connections, const std::string& preferred_game,
+                  u64 preferred_game_id) {
     ENetAddress address;
     address.host = ENET_HOST_ANY;
     if (!server_address.empty()) {
@@ -603,6 +606,7 @@ bool Room::Create(const std::string& name, const std::string& server_address, u1
     room_impl->state = State::Open;
 
     room_impl->room_information.name = name;
+    room_impl->room_information.description = description;
     room_impl->room_information.member_slots = max_connections;
     room_impl->room_information.port = server_port;
     room_impl->room_information.preferred_game = preferred_game;

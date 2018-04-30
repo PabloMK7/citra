@@ -55,6 +55,31 @@ public:
     }
 };
 
+class LobbyItemDescription : public LobbyItem {
+public:
+    static const int DescriptionRole = Qt::UserRole + 1;
+
+    LobbyItemDescription() = default;
+    explicit LobbyItemDescription(QString description) {
+        setData(description, DescriptionRole);
+    }
+
+    QVariant data(int role) const override {
+        if (role != Qt::DisplayRole) {
+            return LobbyItem::data(role);
+        }
+        auto description = data(DescriptionRole).toString();
+        description.prepend("Description: ");
+        return description;
+    }
+
+    bool operator<(const QStandardItem& other) const override {
+        return data(DescriptionRole)
+                   .toString()
+                   .localeAwareCompare(other.data(DescriptionRole).toString()) < 0;
+    }
+};
+
 class LobbyItemGame : public LobbyItem {
 public:
     static const int TitleIDRole = Qt::UserRole + 1;

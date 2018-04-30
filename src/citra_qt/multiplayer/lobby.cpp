@@ -212,7 +212,11 @@ void Lobby::OnRefreshLobby() {
         // To make the rows expandable, add the member data as a child of the first column of the
         // rows with people in them and have qt set them to colspan after the model is finished
         // resetting
-        if (room.members.size() > 0) {
+        if (!room.description.empty()) {
+            first_item->appendRow(
+                new LobbyItemDescription(QString::fromStdString(room.description)));
+        }
+        if (!room.members.empty()) {
             first_item->appendRow(new LobbyItemExpandedMemberList(members));
         }
     }
@@ -228,8 +232,8 @@ void Lobby::OnRefreshLobby() {
     // Set the member list child items to span all columns
     for (int i = 0; i < proxy->rowCount(); i++) {
         auto parent = model->item(i, 0);
-        if (parent->hasChildren()) {
-            ui->room_list->setFirstColumnSpanned(0, proxy->index(i, 0), true);
+        for (int j = 0; j < parent->rowCount(); j++) {
+            ui->room_list->setFirstColumnSpanned(j, proxy->index(i, 0), true);
         }
     }
 }

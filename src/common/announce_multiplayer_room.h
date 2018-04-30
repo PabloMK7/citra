@@ -23,6 +23,7 @@ struct Room {
         u64 game_id;
     };
     std::string name;
+    std::string description;
     std::string UID;
     std::string owner;
     std::string ip;
@@ -49,13 +50,15 @@ public:
      * Sets the Information that gets used for the announce
      * @param uid The Id of the room
      * @param name The name of the room
+     * @param description The room description
      * @param port The port of the room
      * @param net_version The version of the libNetwork that gets used
      * @param has_password True if the room is passowrd protected
      * @param preferred_game The preferred game of the room
      * @param preferred_game_id The title id of the preferred game
      */
-    virtual void SetRoomInformation(const std::string& uid, const std::string& name, const u16 port,
+    virtual void SetRoomInformation(const std::string& uid, const std::string& name,
+                                    const std::string& description, const u16 port,
                                     const u32 max_player, const u32 net_version,
                                     const bool has_password, const std::string& preferred_game,
                                     const u64 preferred_game_id) = 0;
@@ -100,7 +103,8 @@ class NullBackend : public Backend {
 public:
     ~NullBackend() = default;
     void SetRoomInformation(const std::string& /*uid*/, const std::string& /*name*/,
-                            const u16 /*port*/, const u32 /*max_player*/, const u32 /*net_version*/,
+                            const std::string& /*description*/, const u16 /*port*/,
+                            const u32 /*max_player*/, const u32 /*net_version*/,
                             const bool /*has_password*/, const std::string& /*preferred_game*/,
                             const u64 /*preferred_game_id*/) override {}
     void AddPlayer(const std::string& /*nickname*/, const MacAddress& /*mac_address*/,

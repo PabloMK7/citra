@@ -230,11 +230,13 @@ void RoomMember::RoomMemberImpl::HandleRoomInformationPacket(const ENetEvent* ev
 
     RoomInformation info{};
     packet >> info.name;
+    packet >> info.description;
     packet >> info.member_slots;
     packet >> info.uid;
     packet >> info.port;
     packet >> info.preferred_game;
     room_information.name = info.name;
+    room_information.description = info.description;
     room_information.member_slots = info.member_slots;
     room_information.port = info.port;
     room_information.preferred_game = info.preferred_game;

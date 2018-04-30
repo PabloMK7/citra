@@ -25,6 +25,7 @@ constexpr std::size_t NumChannels = 1; // Number of channels used for the connec
 
 struct RoomInformation {
     std::string name;           ///< Name of the server
+    std::string description;    ///< Server description
     u32 member_slots;           ///< Maximum number of members in this room
     std::string uid;            ///< The unique ID of the room
     u16 port;                   ///< The port of this room
@@ -103,8 +104,9 @@ public:
      * Creates the socket for this room. Will bind to default address if
      * server is empty string.
      */
-    bool Create(const std::string& name, const std::string& server = "",
-                u16 server_port = DefaultRoomPort, const std::string& password = "",
+    bool Create(const std::string& name, const std::string& description = "",
+                const std::string& server = "", u16 server_port = DefaultRoomPort,
+                const std::string& password = "",
                 const u32 max_connections = MaxConcurrentConnections,
                 const std::string& preferred_game = "", u64 preferred_game_id = 0);
 

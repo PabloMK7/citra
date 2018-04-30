@@ -22,6 +22,13 @@
         <number>0</number>
        </property>
        <item>
+        <widget class="QLabel" name="description">
+         <property name="text">
+          <string>Room Description</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <spacer name="horizontalSpacer">
          <property name="orientation">
           <enum>Qt::Horizontal</enum>

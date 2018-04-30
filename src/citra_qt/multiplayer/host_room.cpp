@@ -70,6 +70,7 @@ HostRoomWindow::HostRoomWindow(QWidget* parent, QStandardItemModel* list,
     if (index != -1) {
         ui->game_list->setCurrentIndex(index);
     }
+    ui->room_description->setText(UISettings::values.room_description);
 }
 
 HostRoomWindow::~HostRoomWindow() = default;
@@ -108,8 +109,10 @@ void HostRoomWindow::Host() {
         auto port = ui->port->isModified() ? ui->port->text().toInt() : Network::DefaultRoomPort;
         auto password = ui->password->text().toStdString();
         if (auto room = Network::GetRoom().lock()) {
-            bool created = room->Create(ui->room_name->text().toStdString(), "", port, password,
-                                        ui->max_player->value(), game_name.toStdString(), game_id);
+            bool created =
+                room->Create(ui->room_name->text().toStdString(),
+                             ui->room_description->toPlainText().toStdString(), "", port, password,
+                             ui->max_player->value(), game_name.toStdString(), game_id);
             if (!created) {
                 NetworkMessage::ShowError(NetworkMessage::COULD_NOT_CREATE_ROOM);
                 LOG_ERROR(Network, "Could not create room!");
@@ -132,6 +135,7 @@ void HostRoomWindow::Host() {
         UISettings::values.room_port = (ui->port->isModified() && !ui->port->text().isEmpty())
                                            ? ui->port->text()
                                            : QString::number(Network::DefaultRoomPort);
+        UISettings::values.room_description = ui->room_description->toPlainText();
         Settings::Apply();
         OnConnection();
     }

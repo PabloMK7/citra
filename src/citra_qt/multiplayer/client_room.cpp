@@ -82,6 +82,7 @@ void ClientRoomWindow::UpdateView() {
                                .arg(QString::fromStdString(information.name))
                                .arg(memberlist.size())
                                .arg(information.member_slots));
+            ui->description->setText(QString::fromStdString(information.description));
             return;
         }
     }

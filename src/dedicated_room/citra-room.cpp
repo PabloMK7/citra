@@ -36,6 +36,7 @@ static void PrintHelp(const char* argv0) {
     std::cout << "Usage: " << argv0
               << " [options] <filename>\n"
                  "--room-name         The name of the room\n"
+                 "--room-description  The room description\n"
                  "--port              The port used for the room\n"
                  "--max_members       The maximum number of players for this room\n"
                  "--password          The password for the room\n"
@@ -63,6 +64,7 @@ int main(int argc, char** argv) {
     gladLoadGL();
 
     std::string room_name;
+    std::string room_description;
     std::string password;
     std::string preferred_game;
     std::string username;
@@ -74,6 +76,7 @@ int main(int argc, char** argv) {
 
     static struct option long_options[] = {
         {"room-name", required_argument, 0, 'n'},
+        {"room-description", required_argument, 0, 'd'},
         {"port", required_argument, 0, 'p'},
         {"max_members", required_argument, 0, 'm'},
         {"password", required_argument, 0, 'w'},
@@ -88,11 +91,14 @@ int main(int argc, char** argv) {
     };
 
     while (optind < argc) {
-        char arg = getopt_long(argc, argv, "n:p:m:w:g:u:t:a:i:hv", long_options, &option_index);
+        char arg = getopt_long(argc, argv, "n:d:p:m:w:g:u:t:a:i:hv", long_options, &option_index);
         if (arg != -1) {
             switch (arg) {
             case 'n':
                 room_name.assign(optarg);
+                break;
+            case 'd':
+                room_description.assign(optarg);
                 break;
             case 'p':
                 port = strtoul(optarg, &endarg, 0);
@@ -175,8 +181,8 @@ int main(int argc, char** argv) {
 
     Network::Init();
     if (std::shared_ptr<Network::Room> room = Network::GetRoom().lock()) {
-        if (!room->Create(room_name, "", port, password, max_members, preferred_game,
-                          preferred_game_id)) {
+        if (!room->Create(room_name, room_description, "", port, password, max_members,
+                          preferred_game, preferred_game_id)) {
             std::cout << "Failed to create room: \n\n";
             return -1;
         }
