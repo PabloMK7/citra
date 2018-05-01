@@ -72,7 +72,7 @@ QString Lobby::PasswordPrompt() {
     bool ok;
     const QString text =
         QInputDialog::getText(this, tr("Password Required to Join"), tr("Password:"),
-                              QLineEdit::Normal, tr("Password"), &ok);
+                              QLineEdit::Password, "", &ok);
     return ok ? text : QString();
 }
 
