@@ -48,4 +48,20 @@ std::array<u16, 0x40> SMDH::GetShortTitle(Loader::SMDH::TitleLanguage language) 
     return titles[static_cast<int>(language)].short_title;
 }
 
+SMDH::GameRegion SMDH::GetRegion() const {
+    if (region_lockout == 0x7fffffff) {
+        return GameRegion::RegionFree;
+    }
+
+    constexpr u32 REGION_COUNT = 7;
+    u32 region = 0;
+    for (; region < REGION_COUNT; ++region) {
+        if (region_lockout & (1 << region)) {
+            return static_cast<GameRegion>(region);
+        }
+    }
+
+    return GameRegion::Invalid;
+}
+
 } // namespace Loader
