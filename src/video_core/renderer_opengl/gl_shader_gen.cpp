@@ -7,6 +7,7 @@
 #include <cstring>
 #include "common/assert.h"
 #include "common/bit_field.h"
+#include "common/bit_set.h"
 #include "common/logging/log.h"
 #include "core/core.h"
 #include "video_core/regs_framebuffer.h"
@@ -14,6 +15,7 @@
 #include "video_core/regs_rasterizer.h"
 #include "video_core/regs_texturing.h"
 #include "video_core/renderer_opengl/gl_rasterizer.h"
+#include "video_core/renderer_opengl/gl_shader_decompiler.h"
 #include "video_core/renderer_opengl/gl_shader_gen.h"
 #include "video_core/renderer_opengl/gl_shader_util.h"
 
@@ -22,6 +24,7 @@ using Pica::LightingRegs;
 using Pica::RasterizerRegs;
 using Pica::TexturingRegs;
 using TevStageConfig = TexturingRegs::TevStageConfig;
+using VSOutputAttributes = RasterizerRegs::VSOutputAttributes;
 
 namespace GLShader {
 
@@ -92,8 +95,8 @@ out gl_PerVertex {
     return out;
 }
 
-PicaShaderConfig PicaShaderConfig::BuildFromRegs(const Pica::Regs& regs) {
-    PicaShaderConfig res;
+PicaFSConfig PicaFSConfig::BuildFromRegs(const Pica::Regs& regs) {
+    PicaFSConfig res;
 
     auto& state = res.state;
 
@@ -219,6 +222,59 @@ PicaShaderConfig PicaShaderConfig::BuildFromRegs(const Pica::Regs& regs) {
     return res;
 }
 
+void PicaShaderConfigCommon::Init(const Pica::ShaderRegs& regs, Pica::Shader::ShaderSetup& setup) {
+    program_hash = setup.GetProgramCodeHash();
+    swizzle_hash = setup.GetSwizzleDataHash();
+    main_offset = regs.main_offset;
+    sanitize_mul = false; // TODO (wwylele): stubbed now. Should sync with user settings
+
+    num_outputs = 0;
+    output_map.fill(16);
+
+    for (int reg : Common::BitSet<u32>(regs.output_mask)) {
+        output_map[reg] = num_outputs++;
+    }
+}
+
+void PicaGSConfigCommonRaw::Init(const Pica::Regs& regs) {
+    vs_output_attributes = Common::BitSet<u32>(regs.vs.output_mask).Count();
+    gs_output_attributes = vs_output_attributes;
+
+    semantic_maps.fill({16, 0});
+    for (u32 attrib = 0; attrib < regs.rasterizer.vs_output_total; ++attrib) {
+        std::array<VSOutputAttributes::Semantic, 4> semantics = {
+            regs.rasterizer.vs_output_attributes[attrib].map_x,
+            regs.rasterizer.vs_output_attributes[attrib].map_y,
+            regs.rasterizer.vs_output_attributes[attrib].map_z,
+            regs.rasterizer.vs_output_attributes[attrib].map_w};
+        for (u32 comp = 0; comp < 4; ++comp) {
+            const auto semantic = semantics[comp];
+            if (static_cast<size_t>(semantic) < 24) {
+                semantic_maps[static_cast<size_t>(semantic)] = {attrib, comp};
+            } else if (semantic != VSOutputAttributes::INVALID) {
+                NGLOG_ERROR(Render_OpenGL, "Invalid/unknown semantic id: {}",
+                            static_cast<u32>(semantic));
+            }
+        }
+    }
+}
+
+void PicaGSConfigRaw::Init(const Pica::Regs& regs, Pica::Shader::ShaderSetup& setup) {
+    PicaShaderConfigCommon::Init(regs.gs, setup);
+    PicaGSConfigCommonRaw::Init(regs);
+
+    num_inputs = regs.gs.max_input_attribute_index + 1;
+    input_map.fill(16);
+
+    for (u32 attr = 0; attr < num_inputs; ++attr) {
+        input_map[regs.gs.GetRegisterForAttribute(attr)] = attr;
+    }
+
+    attributes_per_vertex = regs.pipeline.vs_outmap_total_minus_1_a + 1;
+
+    gs_output_attributes = num_outputs;
+}
+
 /// Detects if a TEV stage is configured to be skipped (to avoid generating unnecessary code)
 static bool IsPassThroughTevStage(const TevStageConfig& stage) {
     return (stage.color_op == TevStageConfig::Operation::Replace &&
@@ -230,7 +286,7 @@ static bool IsPassThroughTevStage(const TevStageConfig& stage) {
             stage.GetColorMultiplier() == 1 && stage.GetAlphaMultiplier() == 1);
 }
 
-static std::string SampleTexture(const PicaShaderConfig& config, unsigned texture_unit) {
+static std::string SampleTexture(const PicaFSConfig& config, unsigned texture_unit) {
     const auto& state = config.state;
     switch (texture_unit) {
     case 0:
@@ -274,7 +330,7 @@ static std::string SampleTexture(const PicaShaderConfig& config, unsigned textur
 }
 
 /// Writes the specified TEV stage source component(s)
-static void AppendSource(std::string& out, const PicaShaderConfig& config,
+static void AppendSource(std::string& out, const PicaFSConfig& config,
                          TevStageConfig::Source source, const std::string& index_name) {
     const auto& state = config.state;
     using Source = TevStageConfig::Source;
@@ -317,7 +373,7 @@ static void AppendSource(std::string& out, const PicaShaderConfig& config,
 }
 
 /// Writes the color components to use for the specified TEV stage color modifier
-static void AppendColorModifier(std::string& out, const PicaShaderConfig& config,
+static void AppendColorModifier(std::string& out, const PicaFSConfig& config,
                                 TevStageConfig::ColorModifier modifier,
                                 TevStageConfig::Source source, const std::string& index_name) {
     using ColorModifier = TevStageConfig::ColorModifier;
@@ -375,7 +431,7 @@ static void AppendColorModifier(std::string& out, const PicaShaderConfig& config
 }
 
 /// Writes the alpha component to use for the specified TEV stage alpha modifier
-static void AppendAlphaModifier(std::string& out, const PicaShaderConfig& config,
+static void AppendAlphaModifier(std::string& out, const PicaFSConfig& config,
                                 TevStageConfig::AlphaModifier modifier,
                                 TevStageConfig::Source source, const std::string& index_name) {
     using AlphaModifier = TevStageConfig::AlphaModifier;
@@ -540,7 +596,7 @@ static void AppendAlphaTestCondition(std::string& out, FramebufferRegs::CompareF
 }
 
 /// Writes the code to emulate the specified TEV stage
-static void WriteTevStage(std::string& out, const PicaShaderConfig& config, unsigned index) {
+static void WriteTevStage(std::string& out, const PicaFSConfig& config, unsigned index) {
     const auto stage =
         static_cast<const TexturingRegs::TevStageConfig>(config.state.tev_stages[index]);
     if (!IsPassThroughTevStage(stage)) {
@@ -598,7 +654,7 @@ static void WriteTevStage(std::string& out, const PicaShaderConfig& config, unsi
 }
 
 /// Writes the code to emulate fragment lighting
-static void WriteLighting(std::string& out, const PicaShaderConfig& config) {
+static void WriteLighting(std::string& out, const PicaFSConfig& config) {
     const auto& lighting = config.state.lighting;
 
     // Define lighting globals
@@ -994,7 +1050,7 @@ void AppendProcTexCombineAndMap(std::string& out, ProcTexCombiner combiner,
     out += "ProcTexLookupLUT(" + map_lut + ", " + combined + ")";
 }
 
-void AppendProcTexSampler(std::string& out, const PicaShaderConfig& config) {
+void AppendProcTexSampler(std::string& out, const PicaFSConfig& config) {
     // LUT sampling uitlity
     // For NoiseLUT/ColorMap/AlphaMap, coord=0.0 is lut[0], coord=127.0/128.0 is lut[127] and
     // coord=1.0 is lut[127]+lut_diff[127]. For other indices, the result is interpolated using
@@ -1121,7 +1177,7 @@ float ProcTexNoiseCoef(vec2 x) {
     }
 }
 
-std::string GenerateFragmentShader(const PicaShaderConfig& config, bool separable_shader) {
+std::string GenerateFragmentShader(const PicaFSConfig& config, bool separable_shader) {
     const auto& state = config.state;
 
     std::string out = "#version 330 core\n";
@@ -1323,6 +1379,298 @@ void main() {
     gl_ClipDistance[1] = dot(clip_coef, vert_position);
 }
 )";
+
+    return out;
+}
+
+boost::optional<std::string> GenerateVertexShader(const Pica::Shader::ShaderSetup& setup,
+                                                  const PicaVSConfig& config,
+                                                  bool separable_shader) {
+    std::string out = "#version 330 core\n";
+    if (separable_shader) {
+        out += "#extension GL_ARB_separate_shader_objects : enable\n";
+    }
+
+    out += Pica::Shader::Decompiler::GetCommonDeclarations();
+
+    std::array<bool, 16> used_regs{};
+    auto get_input_reg = [&](u32 reg) -> std::string {
+        ASSERT(reg < 16);
+        used_regs[reg] = true;
+        return "vs_in_reg" + std::to_string(reg);
+    };
+
+    auto get_output_reg = [&](u32 reg) -> std::string {
+        ASSERT(reg < 16);
+        if (config.state.output_map[reg] < config.state.num_outputs) {
+            return "vs_out_attr" + std::to_string(config.state.output_map[reg]);
+        }
+        return "";
+    };
+
+    auto program_source_opt = Pica::Shader::Decompiler::DecompileProgram(
+        setup.program_code, setup.swizzle_data, config.state.main_offset, get_input_reg,
+        get_output_reg, config.state.sanitize_mul, false);
+
+    if (!program_source_opt)
+        return boost::none;
+
+    std::string& program_source = program_source_opt.get();
+
+    out += R"(
+#define uniforms vs_uniforms
+layout (std140) uniform vs_config {
+    pica_uniforms uniforms;
+};
+
+)";
+    // input attributes declaration
+    for (std::size_t i = 0; i < used_regs.size(); ++i) {
+        if (used_regs[i]) {
+            out += "layout(location = " + std::to_string(i) + ") in vec4 vs_in_reg" +
+                   std::to_string(i) + ";\n";
+        }
+    }
+    out += "\n";
+
+    // output attributes declaration
+    for (u32 i = 0; i < config.state.num_outputs; ++i) {
+        out += (separable_shader ? "layout(location = " + std::to_string(i) + ")" : std::string{}) +
+               " out vec4 vs_out_attr" + std::to_string(i) + ";\n";
+    }
+
+    out += "\nvoid main() {\n";
+    for (u32 i = 0; i < config.state.num_outputs; ++i) {
+        out += "    vs_out_attr" + std::to_string(i) + " = vec4(0.0, 0.0, 0.0, 1.0);\n";
+    }
+    out += "\n    exec_shader();\n}\n\n";
+
+    out += program_source;
+
+    return out;
+}
+
+static std::string GetGSCommonSource(const PicaGSConfigCommonRaw& config, bool separable_shader) {
+    std::string out = GetVertexInterfaceDeclaration(true, separable_shader);
+    out += UniformBlockDef;
+    out += Pica::Shader::Decompiler::GetCommonDeclarations();
+
+    out += '\n';
+    for (u32 i = 0; i < config.vs_output_attributes; ++i) {
+        out += (separable_shader ? "layout(location = " + std::to_string(i) + ")" : std::string{}) +
+               " in vec4 vs_out_attr" + std::to_string(i) + "[];\n";
+    }
+
+    out += R"(
+#define uniforms gs_uniforms
+layout (std140) uniform gs_config {
+    pica_uniforms uniforms;
+};
+
+struct Vertex {
+)";
+    out += "    vec4 attributes[" + std::to_string(config.gs_output_attributes) + "];\n";
+    out += "};\n\n";
+
+    auto semantic = [&config](VSOutputAttributes::Semantic slot_semantic) -> std::string {
+        u32 slot = static_cast<u32>(slot_semantic);
+        u32 attrib = config.semantic_maps[slot].attribute_index;
+        u32 comp = config.semantic_maps[slot].component_index;
+        if (attrib < config.gs_output_attributes) {
+            return "vtx.attributes[" + std::to_string(attrib) + "]." + "xyzw"[comp];
+        }
+        return "0.0";
+    };
+
+    out += "vec4 GetVertexQuaternion(Vertex vtx) {\n";
+    out += "    return vec4(" + semantic(VSOutputAttributes::QUATERNION_X) + ", " +
+           semantic(VSOutputAttributes::QUATERNION_Y) + ", " +
+           semantic(VSOutputAttributes::QUATERNION_Z) + ", " +
+           semantic(VSOutputAttributes::QUATERNION_W) + ");\n";
+    out += "}\n\n";
+
+    out += "void EmitVtx(Vertex vtx, bool quats_opposite) {\n";
+    out += "    vec4 vtx_pos = vec4(" + semantic(VSOutputAttributes::POSITION_X) + ", " +
+           semantic(VSOutputAttributes::POSITION_Y) + ", " +
+           semantic(VSOutputAttributes::POSITION_Z) + ", " +
+           semantic(VSOutputAttributes::POSITION_W) + ");\n";
+    out += "    gl_Position = vtx_pos;\n";
+    out += "    gl_ClipDistance[0] = -vtx_pos.z;\n"; // fixed PICA clipping plane z <= 0
+    out += "    gl_ClipDistance[1] = dot(clip_coef, vtx_pos);\n\n";
+
+    out += "    vec4 vtx_quat = GetVertexQuaternion(vtx);\n";
+    out += "    normquat = mix(vtx_quat, -vtx_quat, bvec4(quats_opposite));\n\n";
+
+    out += "    vec4 vtx_color = vec4(" + semantic(VSOutputAttributes::COLOR_R) + ", " +
+           semantic(VSOutputAttributes::COLOR_G) + ", " + semantic(VSOutputAttributes::COLOR_B) +
+           ", " + semantic(VSOutputAttributes::COLOR_A) + ");\n";
+    out += "    primary_color = min(abs(vtx_color), vec4(1.0));\n\n";
+
+    out += "    texcoord0 = vec2(" + semantic(VSOutputAttributes::TEXCOORD0_U) + ", " +
+           semantic(VSOutputAttributes::TEXCOORD0_V) + ");\n";
+    out += "    texcoord1 = vec2(" + semantic(VSOutputAttributes::TEXCOORD1_U) + ", " +
+           semantic(VSOutputAttributes::TEXCOORD1_V) + ");\n\n";
+
+    out += "    texcoord0_w = " + semantic(VSOutputAttributes::TEXCOORD0_W) + ";\n";
+    out += "    view = vec3(" + semantic(VSOutputAttributes::VIEW_X) + ", " +
+           semantic(VSOutputAttributes::VIEW_Y) + ", " + semantic(VSOutputAttributes::VIEW_Z) +
+           ");\n\n";
+
+    out += "    texcoord2 = vec2(" + semantic(VSOutputAttributes::TEXCOORD2_U) + ", " +
+           semantic(VSOutputAttributes::TEXCOORD2_V) + ");\n\n";
+
+    out += "    EmitVertex();\n";
+    out += "}\n";
+
+    out += R"(
+bool AreQuaternionsOpposite(vec4 qa, vec4 qb) {
+    return (dot(qa, qb) < 0.0);
+}
+
+void EmitPrim(Vertex vtx0, Vertex vtx1, Vertex vtx2) {
+    EmitVtx(vtx0, false);
+    EmitVtx(vtx1, AreQuaternionsOpposite(GetVertexQuaternion(vtx0), GetVertexQuaternion(vtx1)));
+    EmitVtx(vtx2, AreQuaternionsOpposite(GetVertexQuaternion(vtx0), GetVertexQuaternion(vtx2)));
+    EndPrimitive();
+}
+)";
+
+    return out;
+};
+
+std::string GenerateFixedGeometryShader(const PicaFixedGSConfig& config, bool separable_shader) {
+    std::string out = "#version 330 core\n";
+    if (separable_shader) {
+        out += "#extension GL_ARB_separate_shader_objects : enable\n\n";
+    }
+
+    out += R"(
+layout(triangles) in;
+layout(triangle_strip, max_vertices = 3) out;
+
+)";
+
+    out += GetGSCommonSource(config.state, separable_shader);
+
+    out += R"(
+void main() {
+    Vertex prim_buffer[3];
+)";
+    for (u32 vtx = 0; vtx < 3; ++vtx) {
+        out += "    prim_buffer[" + std::to_string(vtx) + "].attributes = vec4[" +
+               std::to_string(config.state.gs_output_attributes) + "](";
+        for (u32 i = 0; i < config.state.vs_output_attributes; ++i) {
+            out += std::string(i == 0 ? "" : ", ") + "vs_out_attr" + std::to_string(i) + "[" +
+                   std::to_string(vtx) + "]";
+        }
+        out += ");\n";
+    }
+    out += "    EmitPrim(prim_buffer[0], prim_buffer[1], prim_buffer[2]);\n";
+    out += "}\n";
+
+    return out;
+}
+
+boost::optional<std::string> GenerateGeometryShader(const Pica::Shader::ShaderSetup& setup,
+                                                    const PicaGSConfig& config,
+                                                    bool separable_shader) {
+    std::string out = "#version 330 core\n";
+    if (separable_shader) {
+        out += "#extension GL_ARB_separate_shader_objects : enable\n";
+    }
+
+    if (config.state.num_inputs % config.state.attributes_per_vertex != 0)
+        return boost::none;
+
+    switch (config.state.num_inputs / config.state.attributes_per_vertex) {
+    case 1:
+        out += "layout(points) in;\n";
+        break;
+    case 2:
+        out += "layout(lines) in;\n";
+        break;
+    case 4:
+        out += "layout(lines_adjacency) in;\n";
+        break;
+    case 3:
+        out += "layout(triangles) in;\n";
+        break;
+    case 6:
+        out += "layout(triangles_adjacency) in;\n";
+        break;
+    default:
+        return boost::none;
+    }
+    out += "layout(triangle_strip, max_vertices = 30) out;\n\n";
+
+    out += GetGSCommonSource(config.state, separable_shader);
+
+    auto get_input_reg = [&](u32 reg) -> std::string {
+        ASSERT(reg < 16);
+        u32 attr = config.state.input_map[reg];
+        if (attr < config.state.num_inputs) {
+            return "vs_out_attr" + std::to_string(attr % config.state.attributes_per_vertex) + "[" +
+                   std::to_string(attr / config.state.attributes_per_vertex) + "]";
+        }
+        return "vec4(0.0, 0.0, 0.0, 1.0)";
+    };
+
+    auto get_output_reg = [&](u32 reg) -> std::string {
+        ASSERT(reg < 16);
+        if (config.state.output_map[reg] < config.state.num_outputs) {
+            return "output_buffer.attributes[" + std::to_string(config.state.output_map[reg]) + "]";
+        }
+        return "";
+    };
+
+    auto program_source_opt = Pica::Shader::Decompiler::DecompileProgram(
+        setup.program_code, setup.swizzle_data, config.state.main_offset, get_input_reg,
+        get_output_reg, config.state.sanitize_mul, true);
+
+    if (!program_source_opt)
+        return boost::none;
+
+    std::string& program_source = program_source_opt.get();
+
+    out += R"(
+Vertex output_buffer;
+Vertex prim_buffer[3];
+uint vertex_id = 0u;
+bool prim_emit = false;
+bool winding = false;
+
+void setemit(uint vertex_id_, bool prim_emit_, bool winding_) {
+    vertex_id = vertex_id_;
+    prim_emit = prim_emit_;
+    winding = winding_;
+}
+
+void emit() {
+    prim_buffer[vertex_id] = output_buffer;
+
+    if (prim_emit) {
+        if (winding) {
+            EmitPrim(prim_buffer[1], prim_buffer[0], prim_buffer[2]);
+            winding = false;
+        } else {
+            EmitPrim(prim_buffer[0], prim_buffer[1], prim_buffer[2]);
+        }
+    }
+}
+
+void main() {
+)";
+    for (u32 i = 0; i < config.state.num_outputs; ++i) {
+        out +=
+            "    output_buffer.attributes[" + std::to_string(i) + "] = vec4(0.0, 0.0, 0.0, 1.0);\n";
+    }
+
+    // execute shader
+    out += "\n    exec_shader();\n\n";
+
+    out += "}\n\n";
+
+    out += program_source;
 
     return out;
 }

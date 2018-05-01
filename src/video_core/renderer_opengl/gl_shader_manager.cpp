@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <algorithm>
 #include <unordered_map>
 #include <boost/functional/hash.hpp>
 #include <boost/variant.hpp>
@@ -23,6 +24,8 @@ static void SetShaderUniformBlockBinding(GLuint shader, const char* name, Unifor
 static void SetShaderUniformBlockBindings(GLuint shader) {
     SetShaderUniformBlockBinding(shader, "shader_data", UniformBindings::Common,
                                  sizeof(UniformData));
+    SetShaderUniformBlockBinding(shader, "vs_config", UniformBindings::VS, sizeof(VSUniformData));
+    SetShaderUniformBlockBinding(shader, "gs_config", UniformBindings::GS, sizeof(GSUniformData));
 }
 
 static void SetShaderSamplerBinding(GLuint shader, const char* name,
@@ -55,6 +58,21 @@ static void SetShaderSamplerBindings(GLuint shader) {
 
     cur_state.draw.shader_program = old_program;
     cur_state.Apply();
+}
+
+void PicaUniformsData::SetFromRegs(const Pica::ShaderRegs& regs,
+                                   const Pica::Shader::ShaderSetup& setup) {
+    std::transform(std::begin(setup.uniforms.b), std::end(setup.uniforms.b), std::begin(bools),
+                   [](bool value) -> BoolAligned { return {value ? GL_TRUE : GL_FALSE}; });
+    std::transform(std::begin(regs.int_uniforms), std::end(regs.int_uniforms), std::begin(i),
+                   [](const auto& value) -> GLuvec4 {
+                       return {value.x.Value(), value.y.Value(), value.z.Value(), value.w.Value()};
+                   });
+    std::transform(std::begin(setup.uniforms.f), std::end(setup.uniforms.f), std::begin(f),
+                   [](const auto& value) -> GLvec4 {
+                       return {value.x.ToFloat32(), value.y.ToFloat32(), value.z.ToFloat32(),
+                               value.w.ToFloat32()};
+                   });
 }
 
 /**
@@ -128,13 +146,70 @@ private:
     std::unordered_map<KeyConfigType, OGLShaderStage> shaders;
 };
 
+// This is a cache designed for shaders translated from PICA shaders. The first cache matches the
+// config structure like a normal cache does. On cache miss, the second cache matches the generated
+// GLSL code. The configuration is like this because there might be leftover code in the PICA shader
+// program buffer from the previous shader, which is hashed into the config, resulting several
+// different config values from the same shader program.
+template <typename KeyConfigType,
+          boost::optional<std::string> (*CodeGenerator)(const Pica::Shader::ShaderSetup&,
+                                                        const KeyConfigType&, bool),
+          GLenum ShaderType>
+class ShaderDoubleCache {
+public:
+    explicit ShaderDoubleCache(bool separable) : separable(separable) {}
+    GLuint Get(const KeyConfigType& key, const Pica::Shader::ShaderSetup& setup) {
+        auto map_it = shader_map.find(key);
+        if (map_it == shader_map.end()) {
+            auto program_opt = CodeGenerator(setup, key, separable);
+            if (!program_opt) {
+                shader_map[key] = nullptr;
+                return 0;
+            }
+
+            std::string& program = program_opt.get();
+            auto [iter, new_shader] = shader_cache.emplace(program, OGLShaderStage{separable});
+            OGLShaderStage& cached_shader = iter->second;
+            if (new_shader) {
+                cached_shader.Create(program.c_str(), ShaderType);
+            }
+            shader_map[key] = &cached_shader;
+            return cached_shader.GetHandle();
+        }
+
+        if (map_it->second == nullptr) {
+            return 0;
+        }
+
+        return map_it->second->GetHandle();
+    }
+
+private:
+    bool separable;
+    std::unordered_map<KeyConfigType, OGLShaderStage*> shader_map;
+    std::unordered_map<std::string, OGLShaderStage> shader_cache;
+};
+
+using ProgrammableVertexShaders =
+    ShaderDoubleCache<GLShader::PicaVSConfig, &GLShader::GenerateVertexShader, GL_VERTEX_SHADER>;
+
+using ProgrammableGeometryShaders =
+    ShaderDoubleCache<GLShader::PicaGSConfig, &GLShader::GenerateGeometryShader,
+                      GL_GEOMETRY_SHADER>;
+
+using FixedGeometryShaders =
+    ShaderCache<GLShader::PicaFixedGSConfig, &GLShader::GenerateFixedGeometryShader,
+                GL_GEOMETRY_SHADER>;
+
 using FragmentShaders =
-    ShaderCache<GLShader::PicaShaderConfig, &GLShader::GenerateFragmentShader, GL_FRAGMENT_SHADER>;
+    ShaderCache<GLShader::PicaFSConfig, &GLShader::GenerateFragmentShader, GL_FRAGMENT_SHADER>;
 
 class ShaderProgramManager::Impl {
 public:
     explicit Impl(bool separable)
-        : separable(separable), trivial_vertex_shader(separable), fragment_shaders(separable) {
+        : separable(separable), programmable_vertex_shaders(separable),
+          trivial_vertex_shader(separable), programmable_geometry_shaders(separable),
+          fixed_geometry_shaders(separable), fragment_shaders(separable) {
         if (separable)
             pipeline.Create();
     }
@@ -165,7 +240,11 @@ public:
 
     ShaderTuple current;
 
+    ProgrammableVertexShaders programmable_vertex_shaders;
     TrivialVertexShader trivial_vertex_shader;
+
+    ProgrammableGeometryShaders programmable_geometry_shaders;
+    FixedGeometryShaders fixed_geometry_shaders;
 
     FragmentShaders fragment_shaders;
 
@@ -179,15 +258,37 @@ ShaderProgramManager::ShaderProgramManager(bool separable)
 
 ShaderProgramManager::~ShaderProgramManager() = default;
 
+bool ShaderProgramManager::UseProgrammableVertexShader(const GLShader::PicaVSConfig& config,
+                                                       const Pica::Shader::ShaderSetup setup) {
+    GLuint handle = impl->programmable_vertex_shaders.Get(config, setup);
+    if (handle == 0)
+        return false;
+    impl->current.vs = handle;
+    return true;
+}
+
 void ShaderProgramManager::UseTrivialVertexShader() {
     impl->current.vs = impl->trivial_vertex_shader.Get();
+}
+
+bool ShaderProgramManager::UseProgrammableGeometryShader(const GLShader::PicaGSConfig& config,
+                                                         const Pica::Shader::ShaderSetup setup) {
+    GLuint handle = impl->programmable_geometry_shaders.Get(config, setup);
+    if (handle == 0)
+        return false;
+    impl->current.gs = handle;
+    return true;
+}
+
+void ShaderProgramManager::UseFixedGeometryShader(const GLShader::PicaFixedGSConfig& config) {
+    impl->current.gs = impl->fixed_geometry_shaders.Get(config);
 }
 
 void ShaderProgramManager::UseTrivialGeometryShader() {
     impl->current.gs = 0;
 }
 
-void ShaderProgramManager::UseFragmentShader(const GLShader::PicaShaderConfig& config) {
+void ShaderProgramManager::UseFragmentShader(const GLShader::PicaFSConfig& config) {
     impl->current.fs = impl->fragment_shaders.Get(config);
 }
 

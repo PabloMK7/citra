@@ -1266,7 +1266,7 @@ void RasterizerOpenGL::SamplerInfo::SyncWithConfig(
 }
 
 void RasterizerOpenGL::SetShader() {
-    auto config = GLShader::PicaShaderConfig::BuildFromRegs(Pica::g_state.regs);
+    auto config = GLShader::PicaFSConfig::BuildFromRegs(Pica::g_state.regs);
     shader_program_manager->UseFragmentShader(config);
 }
 
