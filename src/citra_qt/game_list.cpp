@@ -231,6 +231,7 @@ GameList::GameList(GMainWindow* parent) : QWidget{parent} {
     item_model->insertColumns(0, COLUMN_COUNT);
     item_model->setHeaderData(COLUMN_NAME, Qt::Horizontal, "Name");
     item_model->setHeaderData(COLUMN_COMPATIBILITY, Qt::Horizontal, "Compatibility");
+    item_model->setHeaderData(COLUMN_REGION, Qt::Horizontal, "Region");
     item_model->setHeaderData(COLUMN_FILE_TYPE, Qt::Horizontal, "File type");
     item_model->setHeaderData(COLUMN_SIZE, Qt::Horizontal, "Size");
 
@@ -492,6 +493,7 @@ void GameListWorker::AddFstEntriesToGameList(const std::string& dir_path, unsign
             emit EntryReady({
                 new GameListItemPath(QString::fromStdString(physical_name), smdh, program_id),
                 new GameListItemCompat(compatibility),
+                new GameListItemRegion(smdh),
                 new GameListItem(
                     QString::fromStdString(Loader::GetFileTypeString(loader->GetFileType()))),
                 new GameListItemSize(FileUtil::GetSize(physical_name)),

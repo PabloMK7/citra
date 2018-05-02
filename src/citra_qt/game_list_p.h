@@ -73,6 +73,38 @@ static QString GetQStringShortTitleFromSMDH(const Loader::SMDH& smdh,
     return QString::fromUtf16(smdh.GetShortTitle(language).data());
 }
 
+/**
+ * Gets the game region from SMDH data.
+ * @param smdh SMDH data
+ * @return QString region
+ */
+static QString GetRegionFromSMDH(const Loader::SMDH& smdh) {
+    const Loader::SMDH::GameRegion region = smdh.GetRegion();
+
+    switch (region) {
+    case Loader::SMDH::GameRegion::Invalid:
+        return QObject::tr("Invalid region");
+    case Loader::SMDH::GameRegion::Japan:
+        return QObject::tr("Japan");
+    case Loader::SMDH::GameRegion::NorthAmerica:
+        return QObject::tr("North America");
+    case Loader::SMDH::GameRegion::Europe:
+        return QObject::tr("Europe");
+    case Loader::SMDH::GameRegion::Australia:
+        return QObject::tr("Australia");
+    case Loader::SMDH::GameRegion::China:
+        return QObject::tr("China");
+    case Loader::SMDH::GameRegion::Korea:
+        return QObject::tr("Korea");
+    case Loader::SMDH::GameRegion::Taiwan:
+        return QObject::tr("Taiwan");
+    case Loader::SMDH::GameRegion::RegionFree:
+        return QObject::tr("Region free");
+    default:
+        return QObject::tr("Invalid Region");
+    }
+}
+
 struct CompatStatus {
     QString color;
     const char* text;
@@ -165,6 +197,22 @@ public:
 
     bool operator<(const QStandardItem& other) const override {
         return data(CompatNumberRole) < other.data(CompatNumberRole);
+    }
+};
+
+class GameListItemRegion : public GameListItem {
+public:
+    GameListItemRegion() = default;
+    explicit GameListItemRegion(const std::vector<u8>& smdh_data) {
+        if (!Loader::IsValidSMDH(smdh_data)) {
+            setText(QObject::tr("Invalid region"));
+            return;
+        }
+
+        Loader::SMDH smdh;
+        memcpy(&smdh, smdh_data.data(), sizeof(Loader::SMDH));
+
+        setText(GetRegionFromSMDH(smdh));
     }
 };
 
