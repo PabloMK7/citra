@@ -13,7 +13,7 @@ AM_NET::AM_NET(std::shared_ptr<Module> am) : Module::Interface(std::move(am), "a
         {0x00020082, &AM_NET::GetProgramList, "GetProgramList"},
         {0x00030084, &AM_NET::GetProgramInfos, "GetProgramInfos"},
         {0x000400C0, &AM_NET::DeleteUserProgram, "DeleteUserProgram"},
-        {0x000500C0, nullptr, "GetProductCode"},
+        {0x000500C0, &AM_NET::GetProductCode, "GetProductCode"},
         {0x000600C0, nullptr, "GetStorageId"},
         {0x00070080, &AM_NET::DeleteTicket, "DeleteTicket"},
         {0x00080000, &AM_NET::GetNumTickets, "GetNumTickets"},

@@ -712,6 +712,32 @@ void Module::Interface::DeleteUserProgram(Kernel::HLERequestContext& ctx) {
         LOG_ERROR(Service_AM, "FileUtil::DeleteDirRecursively unexpectedly failed");
 }
 
+void Module::Interface::GetProductCode(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x0005, 3, 0);
+    FS::MediaType media_type = rp.PopEnum<FS::MediaType>();
+    u64 title_id = rp.Pop<u64>();
+    std::string path = GetTitleContentPath(media_type, title_id);
+
+    if (!FileUtil::Exists(path)) {
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(ResultCode(ErrorDescription::NotFound, ErrorModule::AM, ErrorSummary::InvalidState,
+                           ErrorLevel::Permanent));
+    } else {
+        struct ProductCode {
+            u8 code[0x10];
+        };
+
+        ProductCode product_code;
+
+        IPC::RequestBuilder rb = rp.MakeBuilder(6, 0);
+        FileSys::NCCHContainer ncch(path);
+        ncch.Load();
+        std::memcpy(&product_code.code, &ncch.ncch_header.product_code, 0x10);
+        rb.Push(RESULT_SUCCESS);
+        rb.PushRaw(product_code);
+    }
+}
+
 void Module::Interface::GetDLCTitleInfos(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x1005, 2, 4); // 0x10050084
 

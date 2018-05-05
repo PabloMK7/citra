@@ -13,7 +13,7 @@ AM_U::AM_U(std::shared_ptr<Module> am) : Module::Interface(std::move(am), "am:u"
         {0x00020082, &AM_U::GetProgramList, "GetProgramList"},
         {0x00030084, &AM_U::GetProgramInfos, "GetProgramInfos"},
         {0x000400C0, &AM_U::DeleteUserProgram, "DeleteUserProgram"},
-        {0x000500C0, nullptr, "GetProductCode"},
+        {0x000500C0, &AM_U::GetProductCode, "GetProductCode"},
         {0x000600C0, nullptr, "GetStorageId"},
         {0x00070080, &AM_U::DeleteTicket, "DeleteTicket"},
         {0x00080000, &AM_U::GetNumTickets, "GetNumTickets"},
