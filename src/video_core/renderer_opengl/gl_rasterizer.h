@@ -215,6 +215,9 @@ private:
     /// Syncs the specified light's distance attenuation scale to match the PICA register
     void SyncLightDistanceAttenuationScale(int light_index);
 
+    /// Upload the uniform blocks to the uniform buffer object
+    void UploadUniforms();
+
     OpenGLState state;
 
     RasterizerCacheOpenGL res_cache;
@@ -237,12 +240,17 @@ private:
 
     std::unique_ptr<ShaderProgramManager> shader_program_manager;
 
+    // They shall be big enough for about one frame.
+    static constexpr size_t VERTEX_BUFFER_SIZE = 32 * 1024 * 1024;
+    static constexpr size_t UNIFORM_BUFFER_SIZE = 2 * 1024 * 1024;
+
     std::array<SamplerInfo, 3> texture_samplers;
     OGLVertexArray vertex_array;
-    static constexpr size_t VERTEX_BUFFER_SIZE = 32 * 1024 * 1024;
     OGLStreamBuffer vertex_buffer;
-    OGLBuffer uniform_buffer;
+    OGLStreamBuffer uniform_buffer;
     OGLFramebuffer framebuffer;
+    GLint uniform_buffer_alignment;
+    size_t uniform_size_aligned_fs;
 
     // TODO (wwylele): consider caching texture cube in the rasterizer cache
     OGLTexture texture_cube;
