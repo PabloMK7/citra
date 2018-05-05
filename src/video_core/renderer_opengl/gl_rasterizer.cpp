@@ -45,7 +45,6 @@ RasterizerOpenGL::RasterizerOpenGL()
     // Create cubemap texture and sampler objects
     texture_cube_sampler.Create();
     state.texture_cube_unit.sampler = texture_cube_sampler.sampler.handle;
-    texture_cube.Create();
 
     // Generate VBO, VAO and UBO
     vertex_array.Create();
@@ -393,19 +392,18 @@ void RasterizerOpenGL::DrawTriangles() {
                 switch (texture.config.type.Value()) {
                 case TextureType::TextureCube:
                     using CubeFace = Pica::TexturingRegs::CubeFace;
-                    if (res_cache.FillTextureCube(
-                            texture_cube.handle, texture,
-                            regs.texturing.GetCubePhysicalAddress(CubeFace::PositiveX),
-                            regs.texturing.GetCubePhysicalAddress(CubeFace::NegativeX),
-                            regs.texturing.GetCubePhysicalAddress(CubeFace::PositiveY),
-                            regs.texturing.GetCubePhysicalAddress(CubeFace::NegativeY),
-                            regs.texturing.GetCubePhysicalAddress(CubeFace::PositiveZ),
-                            regs.texturing.GetCubePhysicalAddress(CubeFace::NegativeZ))) {
-                        state.texture_cube_unit.texture_cube = texture_cube.handle;
-                    } else {
-                        // Can occur when texture addr is null or its memory is unmapped/invalid
-                        state.texture_cube_unit.texture_cube = 0;
-                    }
+                    TextureCubeConfig config;
+                    config.px = regs.texturing.GetCubePhysicalAddress(CubeFace::PositiveX);
+                    config.nx = regs.texturing.GetCubePhysicalAddress(CubeFace::NegativeX);
+                    config.py = regs.texturing.GetCubePhysicalAddress(CubeFace::PositiveY);
+                    config.ny = regs.texturing.GetCubePhysicalAddress(CubeFace::NegativeY);
+                    config.pz = regs.texturing.GetCubePhysicalAddress(CubeFace::PositiveZ);
+                    config.nz = regs.texturing.GetCubePhysicalAddress(CubeFace::NegativeZ);
+                    config.width = texture.config.width;
+                    config.format = texture.format;
+                    state.texture_cube_unit.texture_cube =
+                        res_cache.GetTextureCube(config).texture.handle;
+
                     texture_cube_sampler.SyncWithConfig(texture.config);
                     state.texture_units[texture_index].texture_2d = 0;
                     continue; // Texture unit 0 setup finished. Continue to next unit

@@ -252,8 +252,6 @@ private:
     GLint uniform_buffer_alignment;
     size_t uniform_size_aligned_fs;
 
-    // TODO (wwylele): consider caching texture cube in the rasterizer cache
-    OGLTexture texture_cube;
     SamplerInfo texture_cube_sampler;
 
     OGLBuffer lighting_lut_buffer;
