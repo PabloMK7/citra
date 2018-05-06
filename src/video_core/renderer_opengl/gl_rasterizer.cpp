@@ -783,9 +783,6 @@ bool RasterizerOpenGL::Draw(bool accelerate, bool is_indexed) {
         }
     }
 
-    // Disable scissor test
-    state.scissor.enabled = false;
-
     vertex_batch.clear();
 
     // Unbind textures for potential future use as framebuffer attachments
