@@ -120,12 +120,12 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../../src/citra_qt/multiplayer/chat_room.ui" line="40"/>
         <source>Send Chat Message</source>
-        <translation type="unfinished"/>
+        <translation>보내는 채팅 메시지</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/chat_room.ui" line="47"/>
         <source>Send Message</source>
-        <translation type="unfinished"/>
+        <translation>메시지 보내기</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/chat_room.cpp" line="81"/>
@@ -143,7 +143,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../../src/citra_qt/multiplayer/client_room.ui" line="14"/>
         <source>Room Window</source>
-        <translation type="unfinished"/>
+        <translation>Room Window</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/client_room.ui" line="40"/>
@@ -154,17 +154,17 @@ p, li { white-space: pre-wrap; }
 <context>
     <name>ClientRoomWindow</name>
     <message>
-        <location filename="../../src/citra_qt/multiplayer/client_room.cpp" line="54"/>
+        <location filename="../../src/citra_qt/multiplayer/client_room.cpp" line="55"/>
         <source>Connected</source>
         <translation>연결됨</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/multiplayer/client_room.cpp" line="65"/>
+        <location filename="../../src/citra_qt/multiplayer/client_room.cpp" line="63"/>
         <source>Disconnected</source>
         <translation>연결되지 않음</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/multiplayer/client_room.cpp" line="78"/>
+        <location filename="../../src/citra_qt/multiplayer/client_room.cpp" line="76"/>
         <source>%1 (%2/%3 members) - connected</source>
         <translation>%1 (%2/%3 멤버) - 연결됨</translation>
     </message>
@@ -185,7 +185,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../../src/citra_qt/compatdb.ui" line="36"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;Should you choose to submit a test case to the &lt;/span&gt;&lt;a href=&quot;https://citra-emu.org/game/&quot;&gt;&lt;span style=&quot; font-size:10pt; text-decoration: underline; color:#0000ff;&quot;&gt;Citra Compatibility List&lt;/span&gt;&lt;/a&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;, The following information will be collected and displayed on the site:&lt;/span&gt;&lt;/p&gt;&lt;ul style=&quot;margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;&quot;&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Hardware Information (CPU / GPU / Operating System)&lt;/li&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Which version of Citra you are running&lt;/li&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;The connected Citra account&lt;/li&gt;&lt;/ul&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"/>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;&lt;a href=&quot;https://citra-emu.org/game/&quot;&gt;&lt;span style=&quot; font-size:10pt; text-decoration: underline; color:#0000ff;&quot;&gt;Citra 호환성 리스트에&lt;/span&gt;&lt;/a&gt; 제출할 테스트 케이스를 선택해야 합니다&lt;/span&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;, 다음 정보가 수집되어 사이트에 표시됩니다:&lt;/span&gt;&lt;/p&gt;&lt;ul style=&quot;margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;&quot;&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;하드웨어 정보 (CPU/GPU/운영 체제)&lt;/li&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;당신이 실행중인 Citra의 버전&lt;/li&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;연결된 Citra 계정&lt;/li&gt;&lt;/ul&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/compatdb.ui" line="72"/>
@@ -255,7 +255,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../../src/citra_qt/compatdb.ui" line="206"/>
         <source>Thank you for your submission!</source>
-        <translation>당신의 제출에 대해 감사합니다!</translation>
+        <translation>제출해주셔서 감사합니다!</translation>
     </message>
 </context>
 <context>
@@ -312,6 +312,26 @@ p, li { white-space: pre-wrap; }
         <location filename="../../src/citra_qt/configuration/configure_debug.ui" line="57"/>
         <source>Port:</source>
         <translation>포트:</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/configuration/configure_debug.ui" line="78"/>
+        <source>Logging</source>
+        <translation>로깅</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/configuration/configure_debug.ui" line="86"/>
+        <source>Global Log Filter</source>
+        <translation>글로벌 로그 필터</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/configuration/configure_debug.ui" line="100"/>
+        <source>Show Log Console (Windows Only)</source>
+        <translation>로그 콘솔 표시 (Windows에만 해당)</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/configuration/configure_debug.ui" line="107"/>
+        <source>Open Log Location</source>
+        <translation>로그 위치 열기</translation>
     </message>
 </context>
 <context>
@@ -447,7 +467,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../../src/citra_qt/configuration/configure_general.cpp" line="17"/>
         <source>English</source>
-        <translation>영어</translation>
+        <translation>English</translation>
     </message>
 </context>
 <context>
@@ -480,7 +500,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="51"/>
         <source>Limit Speed Percent</source>
-        <translation>스피드 퍼센트 제한</translation>
+        <translation>속도 퍼센트 제한</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="58"/>
@@ -1100,12 +1120,12 @@ p, li { white-space: pre-wrap; }
 <context>
     <name>DirectConnectWindow</name>
     <message>
-        <location filename="../../src/citra_qt/multiplayer/direct_connect.cpp" line="97"/>
+        <location filename="../../src/citra_qt/multiplayer/direct_connect.cpp" line="103"/>
         <source>Connecting</source>
         <translation>연결중</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/multiplayer/direct_connect.cpp" line="102"/>
+        <location filename="../../src/citra_qt/multiplayer/direct_connect.cpp" line="108"/>
         <source>Connect</source>
         <translation>연결</translation>
     </message>
@@ -1113,289 +1133,289 @@ p, li { white-space: pre-wrap; }
 <context>
     <name>GMainWindow</name>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="90"/>
+        <location filename="../../src/citra_qt/main.cpp" line="92"/>
         <source>To help improve Citra, the Citra Team collects anonymous usage data. No private or personally identifying information is collected. This data helps us to understand how people use Citra and prioritize our efforts. Furthermore, it helps us to more easily identify emulation bugs and performance issues. This data includes:&lt;ul&gt;&lt;li&gt;Information about the version of Citra you are using&lt;/li&gt;&lt;li&gt;Performance data about the games you play&lt;/li&gt;&lt;li&gt;Your configuration settings&lt;/li&gt;&lt;li&gt;Information about your computer hardware&lt;/li&gt;&lt;li&gt;Emulation errors and crash information&lt;/li&gt;&lt;/ul&gt;By default, this feature is enabled. To disable this feature, click &apos;Emulation&apos; from the menu and then select &apos;Configure...&apos;. Then, on the &apos;Web&apos; tab, uncheck &apos;Share anonymous usage data with the Citra team&apos;. &lt;br/&gt;&lt;br/&gt;By using this software, you agree to the above terms.&lt;br/&gt;&lt;br/&gt;&lt;a href=&apos;https://citra-emu.org/entry/telemetry-and-why-thats-a-good-thing/&apos;&gt;Learn more&lt;/a&gt;</source>
         <translation>Citra를 개선하기 위해 Citra팀은 익명데이터를 수집합니다. 어떠한 개인적인 혹은 개인적으로 식별될 수 있는 정보는 수집되지 않습니다. 이 데이터는 어떤 사람이 Citra를 사용하는지 이해하고 우리의 노력을 우선시하는데 도움을 줍니다. 게다가, 이것은 에뮬레이션 버그와 퍼포먼스 이슈를 파악하는데 도움을 줍니다. 이 정보는 다음을 포함합니다:&lt;ul&gt;&lt;li&gt;이용하는 Citra의 버전&lt;/li&gt;&lt;li&gt;플레이하는 게임의 퍼포먼스 데이터&lt;/li&gt;&lt;li&gt;설정 &lt;/li&gt;&lt;li&gt;하드웨어 종류&lt;/li&gt;&lt;li&gt;에뮬레이션 에러와 크래시 정보&lt;/li&gt;&lt;/ul&gt;기본적으로, 이 기능은 활성화 되어 있습니다. 이 기능을 비활성화하기 위해서 메뉴에서 &apos;에뮬레이션&apos;을 클릭하고 &apos;설정...&apos;을 선택하세요.  그리고 &apos;웹&apos; 탭에서, &apos;Citra팀과 익명 사용 데이터 공유하겠습니다&apos;를 체크를 해제하세요. &lt;br/&gt;&lt;br/&gt;이 소프트웨어를 사용하므로써, 당신은 이 조항에 동의합니다.&lt;br/&gt;&lt;br/&gt;&lt;a href=&apos;https://citra-emu.org/entry/telemetry-and-why-thats-a-good-thing/&apos;&gt;더 알아보기&lt;/a&gt;</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="195"/>
+        <location filename="../../src/citra_qt/main.cpp" line="199"/>
         <source>Current emulation speed. Values higher or lower than 100% indicate emulation is running faster or slower than a 3DS.</source>
         <translation>현재 에뮬레이션 속도. 100%보다 높거나 낮은 값은 에뮬레이션이 3DS보다 빠르거나 느린 것을 나타냅니다.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="198"/>
+        <location filename="../../src/citra_qt/main.cpp" line="202"/>
         <source>How many frames per second the game is currently displaying. This will vary from game to game and scene to scene.</source>
         <translation>게임이 현재 표시하고있는 초당 프레임 수입니다. 이것은 게임마다 다르며 장면마다 다릅니다.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="202"/>
+        <location filename="../../src/citra_qt/main.cpp" line="206"/>
         <source>Time taken to emulate a 3DS frame, not counting framelimiting or v-sync. For full-speed emulation this should be at most 16.67 ms.</source>
         <translation>3DS 프레임을 에뮬레이션 하는 데 걸린 시간, 프레임제한 또는 v-동기화를 카운트하지 않음. 최대 속도 에뮬레이션의 경우, 이는 최대 16.67 ms여야 합니다.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="429"/>
+        <location filename="../../src/citra_qt/main.cpp" line="434"/>
         <source>CTRL+F</source>
         <translation>CTRL+F</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="538"/>
+        <location filename="../../src/citra_qt/main.cpp" line="543"/>
         <source>Update available!</source>
         <translation>업데이트가 사용가능합니다!</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="539"/>
+        <location filename="../../src/citra_qt/main.cpp" line="544"/>
         <source>An update for Citra is available. Do you wish to install it now?&lt;br /&gt;&lt;br /&gt;This &lt;b&gt;will&lt;/b&gt; terminate emulation, if it is running.</source>
         <translation>Citra에 대한 업데이트를 사용할 수 있습니다. 지금 설치하시겠습니까? 만약 에뮬레이션을 실행중이면 에뮬레이션이 종료됩니다.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="550"/>
+        <location filename="../../src/citra_qt/main.cpp" line="555"/>
         <source>No update found</source>
         <translation>업데이트를 찾을 수 없음</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="550"/>
+        <location filename="../../src/citra_qt/main.cpp" line="555"/>
         <source>No update has been found for Citra.</source>
         <translation>Citra의 업데이트를 찾을 수 없습니다</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="567"/>
+        <location filename="../../src/citra_qt/main.cpp" line="572"/>
         <source>Error while initializing OpenGL 3.3 Core!</source>
         <translation>OpenGL 3.3 Core를 초기화하는 동안 오류가 발생했습니다!</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="568"/>
+        <location filename="../../src/citra_qt/main.cpp" line="573"/>
         <source>Your GPU may not support OpenGL 3.3, or you do not have the latest graphics driver.</source>
         <translation>GPU가 OpenGL 3.3을 지원하지 않거나 최신 그래픽 드라이버가 설치되지 않았을 수 있습니다.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="581"/>
-        <location filename="../../src/citra_qt/main.cpp" line="587"/>
-        <location filename="../../src/citra_qt/main.cpp" line="593"/>
-        <location filename="../../src/citra_qt/main.cpp" line="606"/>
-        <location filename="../../src/citra_qt/main.cpp" line="625"/>
+        <location filename="../../src/citra_qt/main.cpp" line="586"/>
+        <location filename="../../src/citra_qt/main.cpp" line="592"/>
+        <location filename="../../src/citra_qt/main.cpp" line="598"/>
+        <location filename="../../src/citra_qt/main.cpp" line="611"/>
+        <location filename="../../src/citra_qt/main.cpp" line="630"/>
         <source>Error while loading ROM!</source>
         <translation>ROM을 로드하는 중 오류가 발생했습니다!</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="582"/>
-        <location filename="../../src/citra_qt/main.cpp" line="607"/>
+        <location filename="../../src/citra_qt/main.cpp" line="587"/>
+        <location filename="../../src/citra_qt/main.cpp" line="612"/>
         <source>The ROM format is not supported.</source>
         <translation>지원되지 않는 ROM 형식입니다</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="588"/>
+        <location filename="../../src/citra_qt/main.cpp" line="593"/>
         <source>Could not determine the system mode.</source>
         <translation>시스템 모드를 결정할 수 없습니다.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="594"/>
+        <location filename="../../src/citra_qt/main.cpp" line="599"/>
         <source>The game that you are trying to load must be decrypted before being used with Citra. A real 3DS is required.&lt;br/&gt;&lt;br/&gt;For more information on dumping and decrypting games, please see the following wiki pages: &lt;ul&gt;&lt;li&gt;&lt;a href=&apos;https://citra-emu.org/wiki/dumping-game-cartridges/&apos;&gt;Dumping Game Cartridges&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a href=&apos;https://citra-emu.org/wiki/dumping-installed-titles/&apos;&gt;Dumping Installed Titles&lt;/a&gt;&lt;/li&gt;&lt;/ul&gt;</source>
         <translation>당신이 로드하고자 하는 게임은 CItra에서 사용되기전에 암호화가 해독되어야합니다. 실제 3DS가 필요합니다.&lt;br/&gt;&lt;br/&gt;게임 덤프 및 암호 해독에 대한 자세한 내용은 다음 위키 페이지를 참조하십시오:&lt;ul&gt;&lt;li&gt;&lt;a href=&apos;https://citra-emu.org/wiki/dumping-game-cartridges/&apos;&gt;Dumping Game Cartridges&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a href=&apos;https://citra-emu.org/wiki/dumping-installed-titles/&apos;&gt;Dumping Installed Titles&lt;/a&gt;&lt;/li&gt;&lt;/ul&gt;</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="612"/>
+        <location filename="../../src/citra_qt/main.cpp" line="617"/>
         <source>An error occured in the video core.</source>
         <translation>비디오 코어에 오류가 발생했습니다.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="613"/>
+        <location filename="../../src/citra_qt/main.cpp" line="618"/>
         <source>Citra has encountered an error while running the video core, please see the log for more details.For more information on accessing the log, please see the following page: &lt;a href=&apos;https://community.citra-emu.org/t/how-to-upload-the-log-file/296&apos;&gt;How to Upload the Log File&lt;/a&gt;.Ensure that you have the latest graphics drivers for your GPU.</source>
         <translation>Citra에 치명적인 오류가 발생했습니다. 자세한 내용은 로그를 참조하십시오. 로그 액세스에 대한 자세한 내용은 다음 페이지를 참조하십시오.&lt;a href=&apos;https://community.citra-emu.org/t/how-to-upload-the-log-file/296&apos;&gt; 로그 파일 업로드 방법:&lt;/a&gt;&lt;br/&gt;&lt;br/&gt;게임 목록으로 다시 돌아가시겠습니까? 지속적인 에뮬레이션을 수행하면 충돌, 손상된 저장 데이터 또는 기타 버그가 발생할 수 있습니다.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="626"/>
+        <location filename="../../src/citra_qt/main.cpp" line="631"/>
         <source>An unknown error occured. Please see the log for more details.</source>
         <translation>알 수 없는 오류가 발생했습니다. 자세한 내용은 로그를 참조하십시오.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="699"/>
+        <location filename="../../src/citra_qt/main.cpp" line="704"/>
         <source>Start</source>
         <translation>시작</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="790"/>
+        <location filename="../../src/citra_qt/main.cpp" line="795"/>
         <source>Error Opening %1 Folder</source>
         <translation>%1  폴더 오픈 에러</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="791"/>
+        <location filename="../../src/citra_qt/main.cpp" line="796"/>
         <source>Folder does not exist!</source>
         <translation>폴더가 존재하지 않습니다!</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="805"/>
+        <location filename="../../src/citra_qt/main.cpp" line="810"/>
         <source>3DS Executable</source>
         <translation>3DS 실행파일</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="806"/>
-        <location filename="../../src/citra_qt/main.cpp" line="828"/>
+        <location filename="../../src/citra_qt/main.cpp" line="811"/>
+        <location filename="../../src/citra_qt/main.cpp" line="833"/>
         <source>All Files (*.*)</source>
         <translation>모든파일 (*.*)</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="808"/>
+        <location filename="../../src/citra_qt/main.cpp" line="813"/>
         <source>Load File</source>
         <translation>파일 열기</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="818"/>
+        <location filename="../../src/citra_qt/main.cpp" line="823"/>
         <source>Select Directory</source>
         <translation>디렉토리 선택</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="827"/>
+        <location filename="../../src/citra_qt/main.cpp" line="832"/>
         <source>Load Files</source>
         <translation>파일 열기</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="828"/>
+        <location filename="../../src/citra_qt/main.cpp" line="833"/>
         <source>3DS Installation File (*.CIA*)</source>
         <translation>3DS 설치파일 (*.CIA*)</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="859"/>
+        <location filename="../../src/citra_qt/main.cpp" line="864"/>
         <source>%1 has been installed successfully.</source>
         <translation>%1가 성공적으로 설치되었습니다.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="862"/>
+        <location filename="../../src/citra_qt/main.cpp" line="867"/>
         <source>Unable to open File</source>
         <translation>파일을 열 수 없음</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="863"/>
+        <location filename="../../src/citra_qt/main.cpp" line="868"/>
         <source>Could not open %1</source>
         <translation>%1를 열수 없음</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="867"/>
+        <location filename="../../src/citra_qt/main.cpp" line="872"/>
         <source>Installation aborted</source>
         <translation>설치가 중단됨</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="868"/>
+        <location filename="../../src/citra_qt/main.cpp" line="873"/>
         <source>The installation of %1 was aborted. Please see the log for more details</source>
         <translation>%1의 설치가 중단되었습니다. 자세한 내용은 로그를 참조하십시오.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="872"/>
+        <location filename="../../src/citra_qt/main.cpp" line="877"/>
         <source>Invalid File</source>
         <translation>올바르지 않은 파일</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="872"/>
+        <location filename="../../src/citra_qt/main.cpp" line="877"/>
         <source>%1 is not a valid CIA</source>
         <translation>%1은 올바른 CIA가 아닙니다</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="875"/>
+        <location filename="../../src/citra_qt/main.cpp" line="880"/>
         <source>Encrypted File</source>
         <translation>암호화된 파일</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="876"/>
+        <location filename="../../src/citra_qt/main.cpp" line="881"/>
         <source>%1 must be decrypted before being used with Citra. A real 3DS is required.</source>
         <translation>%1 은 Citra에서 사용되기전에 디크립트되어야 합니다. 실제 3DS가 필요합니다.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="899"/>
+        <location filename="../../src/citra_qt/main.cpp" line="904"/>
         <source>File not found</source>
         <translation>파일을 찾을 수 없음</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="900"/>
+        <location filename="../../src/citra_qt/main.cpp" line="905"/>
         <source>File &quot;%1&quot; not found</source>
         <translation>파일 &quot;%1&quot;을 찾을 수 없음</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="914"/>
+        <location filename="../../src/citra_qt/main.cpp" line="919"/>
         <source>Continue</source>
         <translation>계속</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="939"/>
+        <location filename="../../src/citra_qt/main.cpp" line="944"/>
         <source>Missing Citra Account</source>
-        <translation type="unfinished"/>
+        <translation>Citra 계정 없음</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="940"/>
+        <location filename="../../src/citra_qt/main.cpp" line="945"/>
         <source>In order to submit a game compatibility test case, you must link your Citra account.&lt;br&gt;&lt;br/&gt;To link your Citra account, go to Emulation &amp;gt; Configuration &amp;gt; Web.</source>
         <translation>게임 호환성 테스트 케이스를 제출하려면 Citra 계정을 연결해야합니다.&lt;br/&gt;Citra 계정을 연결하려면, 에뮬레이션&amp;gt; 설정&amp;gt; 웹으로 이동하세요.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="1090"/>
+        <location filename="../../src/citra_qt/main.cpp" line="1095"/>
         <source>Speed: %1% / %2%</source>
-        <translation>스피드: %1% / %2%</translation>
+        <translation>속도: %1% / %2%</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="1094"/>
+        <location filename="../../src/citra_qt/main.cpp" line="1099"/>
         <source>Speed: %1%</source>
-        <translation>스피드: %1%</translation>
+        <translation>속도: %1%</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="1096"/>
+        <location filename="../../src/citra_qt/main.cpp" line="1101"/>
         <source>Game: %1 FPS</source>
         <translation>게임: %1 FPS</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="1097"/>
+        <location filename="../../src/citra_qt/main.cpp" line="1102"/>
         <source>Frame: %1 ms</source>
         <translation>프레임: %1 ms</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="1108"/>
+        <location filename="../../src/citra_qt/main.cpp" line="1113"/>
         <source>The game you are trying to load requires additional files from your 3DS to be dumped before playing.&lt;br/&gt;&lt;br/&gt;For more information on dumping these files, please see the following wiki page: &lt;a href=&apos;https://citra-emu.org/wiki/dumping-system-archives-and-the-shared-fonts-from-a-3ds-console/&apos;&gt;Dumping System Archives and the Shared Fonts from a 3DS Console&lt;/a&gt;.&lt;br/&gt;&lt;br/&gt;Would you like to quit back to the game list? Continuing emulation may result in crashes, corrupted save data, or other bugs.</source>
         <translation>로드하려는 게임을 실행하려면 먼저 3DS의 추가 파일을 덤프 해야 합니다.&lt;br/&gt;&lt;br/&gt;이러한 파일 덤프에 대한 자세한 내용은 다음 위키 페이지를 참조하십시오: &lt;a href=&apos;https://citra-emu.org/wiki/dumping-system-archives-and-the-shared-fonts-from-a-3ds-console/&apos;&gt;Dumping System Archives and the Shared Fonts from a 3DS Console&lt;/a&gt;.&lt;br/&gt;&lt;br/&gt;게임 목록으로 돌아가시겠습니까? 지속적인 에뮬레이션을 수행하면 충돌, 손상된 저장 데이터 또는 기타 버그가 발생할 수 있습니다.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="1120"/>
+        <location filename="../../src/citra_qt/main.cpp" line="1125"/>
         <source>: %1. </source>
         <translation>: %1. </translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="1126"/>
+        <location filename="../../src/citra_qt/main.cpp" line="1131"/>
         <source>System Archive Not Found</source>
         <translation>System Archive를 찾을수 없음 </translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="1133"/>
+        <location filename="../../src/citra_qt/main.cpp" line="1138"/>
         <source>Citra was unable to locate the 3DS shared fonts. </source>
         <translation>Citra는 3DS shared fonts를 찾을 수 없었습니다.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="1135"/>
+        <location filename="../../src/citra_qt/main.cpp" line="1140"/>
         <source>Shared Fonts Not Found</source>
         <translation>Shared Fonts를 찾을수 없음 </translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="1143"/>
+        <location filename="../../src/citra_qt/main.cpp" line="1148"/>
         <source>Fatal Error</source>
         <translation>치명적인 에러</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="1144"/>
+        <location filename="../../src/citra_qt/main.cpp" line="1149"/>
         <source>Citra has encountered a fatal error, please see the log for more details. For more information on accessing the log, please see the following page: &lt;a href=&apos;https://community.citra-emu.org/t/how-to-upload-the-log-file/296&apos;&gt;How to Upload the Log File&lt;/a&gt;.&lt;br/&gt;&lt;br/&gt;Would you like to quit back to the game list? Continuing emulation may result in crashes, corrupted save data, or other bugs.</source>
         <translation>Citra에 치명적인 오류가 발생했습니다. 자세한 내용은 로그를 참조하십시오. 로그 액세스에 대한 자세한 내용은 다음 페이지를 참조하십시오.&lt;a href=&apos;https://community.citra-emu.org/t/how-to-upload-the-log-file/296&apos;&gt; 로그 파일 업로드 방법:&lt;/a&gt;&lt;br/&gt;&lt;br/&gt;게임 목록으로 다시 돌아가시겠습니까? 지속적인 에뮬레이션을 수행하면 충돌, 손상된 저장 데이터 또는 기타 버그가 발생할 수 있습니다.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="1178"/>
-        <location filename="../../src/citra_qt/main.cpp" line="1245"/>
+        <location filename="../../src/citra_qt/main.cpp" line="1183"/>
+        <location filename="../../src/citra_qt/main.cpp" line="1250"/>
         <source>Citra</source>
         <translation>Citra</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="1178"/>
+        <location filename="../../src/citra_qt/main.cpp" line="1183"/>
         <source>Are you sure you want to close Citra?</source>
         <translation>Citra를 종료하시겠습니까?</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="1246"/>
+        <location filename="../../src/citra_qt/main.cpp" line="1251"/>
         <source>Are you sure you want to stop the emulation? Any unsaved progress will be lost.</source>
         <translation>에뮬레이션을 중지하시겠습니까? 저장되지 않은 진행이 손실됩니다.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="1318"/>
+        <location filename="../../src/citra_qt/main.cpp" line="1323"/>
         <source>Citra %1| %2-%3</source>
         <translation>Citra %1| %2-%3</translation>
     </message>
@@ -1458,81 +1478,81 @@ p, li { white-space: pre-wrap; }
 <context>
     <name>GameList</name>
     <message>
-        <location filename="../../src/citra_qt/game_list_p.h" line="85"/>
+        <location filename="../../src/citra_qt/game_list_p.h" line="117"/>
         <source>Perfect</source>
         <translation>완벽함</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list_p.h" line="85"/>
+        <location filename="../../src/citra_qt/game_list_p.h" line="117"/>
         <source>Game functions flawless with no audio or graphical glitches, all tested functionality works as intended without
 any workarounds needed.</source>
         <translation>오디오 또는 그래픽 글리치가 없이 게임이 완벽하게 작동하며, 테스트된 모든 기능이 특별한 해결방안 없이 의도대로 작동합니다.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list_p.h" line="86"/>
+        <location filename="../../src/citra_qt/game_list_p.h" line="118"/>
         <source>Great</source>
         <translation>좋음</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list_p.h" line="86"/>
+        <location filename="../../src/citra_qt/game_list_p.h" line="118"/>
         <source>Game functions with minor graphical or audio glitches and is playable from start to finish. May require some
 workarounds.</source>
-        <translation>게임은 사소한 그래픽문제나 오디오 글리치와 함꼐 처음부터 끝까지 진행가능합니다. 
+        <translation>게임은 사소한 그래픽문제나 오디오 글리치와 함께 처음부터 끝까지 진행가능합니다. 
 몇가지 해결방안이 필요할 수 있습니다.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list_p.h" line="87"/>
+        <location filename="../../src/citra_qt/game_list_p.h" line="119"/>
         <source>Okay</source>
         <translation>양호</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list_p.h" line="87"/>
+        <location filename="../../src/citra_qt/game_list_p.h" line="119"/>
         <source>Game functions with major graphical or audio glitches, but game is playable from start to finish with
 workarounds.</source>
-        <translation>게임은 주요 그래픽문제나 오디오 글리치와 함꼐 처음부터 끝까지 진행가능합니다. 
+        <translation>게임은 주요 그래픽문제나 오디오 글리치와 함께 처음부터 끝까지 진행가능합니다. 
 몇가지 해결방안이 필요할 수 있습니다.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list_p.h" line="88"/>
+        <location filename="../../src/citra_qt/game_list_p.h" line="120"/>
         <source>Bad</source>
         <translation>나쁨</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list_p.h" line="88"/>
+        <location filename="../../src/citra_qt/game_list_p.h" line="120"/>
         <source>Game functions, but with major graphical or audio glitches. Unable to progress in specific areas due to glitches
 even with workarounds.</source>
         <translation>게임은 작동하지만 주요 그래픽이나 오디오 글리치가 있습니다. 특별한 해결방안에도 불구하고 
 특정한 지역에서 글리치로 인해 진행이 불가능합니다</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list_p.h" line="89"/>
+        <location filename="../../src/citra_qt/game_list_p.h" line="121"/>
         <source>Intro/Menu</source>
         <translation>인트로/메뉴</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list_p.h" line="89"/>
+        <location filename="../../src/citra_qt/game_list_p.h" line="121"/>
         <source>Game is completely unplayable due to major graphical or audio glitches. Unable to progress past the Start
 Screen.</source>
         <translation>주요 그래픽 또는 오디오 결함으로 인해 게임을 완전히 재생할 수 없습니다. 시작화면을 
 지날 수 없습니다</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list_p.h" line="90"/>
+        <location filename="../../src/citra_qt/game_list_p.h" line="122"/>
         <source>Won&apos;t Boot</source>
         <translation>실행불가</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list_p.h" line="90"/>
+        <location filename="../../src/citra_qt/game_list_p.h" line="122"/>
         <source>The game crashes when attempting to startup.</source>
         <translation>시작할 때 게임이 충돌합니다.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list_p.h" line="91"/>
+        <location filename="../../src/citra_qt/game_list_p.h" line="123"/>
         <source>Not Tested</source>
         <translation>테스트되지 않음</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list_p.h" line="91"/>
+        <location filename="../../src/citra_qt/game_list_p.h" line="123"/>
         <source>The game has not yet been tested.</source>
         <translation>이 게임은 아직 테스트되지 않았습니다.</translation>
     </message>
@@ -1559,20 +1579,20 @@ Screen.</source>
     <message>
         <location filename="../../src/citra_qt/game_list.cpp" line="128"/>
         <source>Enter pattern to filter</source>
-        <translation type="unfinished"/>
+        <translation>검색 필터 입력</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="324"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="325"/>
         <source>Open Save Data Location</source>
         <translation>세이브 데이터 위치 열기</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="325"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="326"/>
         <source>Open Application Location</source>
         <translation>어플리케이션 위치 열기</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="326"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="327"/>
         <source>Open Update Data Location</source>
         <translation>업데이트 데이터 위치 열기</translation>
     </message>
@@ -1938,7 +1958,7 @@ Screen.</source>
     <message>
         <location filename="../../src/citra_qt/multiplayer/host_room.ui" line="101"/>
         <source>(Leave blank for open game)</source>
-        <translation type="unfinished"/>
+        <translation>(공개된 게임을 원하면 비워두세요)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/host_room.ui" line="118"/>
@@ -2005,47 +2025,42 @@ Screen.</source>
         <translation>로비 새로고침</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/multiplayer/lobby.cpp" line="76"/>
+        <location filename="../../src/citra_qt/multiplayer/lobby.cpp" line="73"/>
         <source>Password Required to Join</source>
         <translation>참가시 비밀번호 필요</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/multiplayer/lobby.cpp" line="76"/>
+        <location filename="../../src/citra_qt/multiplayer/lobby.cpp" line="74"/>
         <source>Password:</source>
         <translation>비밀번호:</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/multiplayer/lobby.cpp" line="77"/>
-        <source>Password</source>
-        <translation>비밀번호</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/lobby.cpp" line="142"/>
+        <location filename="../../src/citra_qt/multiplayer/lobby.cpp" line="139"/>
         <source>Room Name</source>
         <translation>방 이름</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/multiplayer/lobby.cpp" line="143"/>
+        <location filename="../../src/citra_qt/multiplayer/lobby.cpp" line="140"/>
         <source>Preferred Game</source>
         <translation>선호되는 게임</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/multiplayer/lobby.cpp" line="144"/>
+        <location filename="../../src/citra_qt/multiplayer/lobby.cpp" line="141"/>
         <source>Host</source>
         <translation>호스트</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/multiplayer/lobby.cpp" line="145"/>
+        <location filename="../../src/citra_qt/multiplayer/lobby.cpp" line="142"/>
         <source>Players</source>
-        <translation>플레이어들</translation>
+        <translation>플레이어</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/multiplayer/lobby.cpp" line="153"/>
+        <location filename="../../src/citra_qt/multiplayer/lobby.cpp" line="150"/>
         <source>Refreshing</source>
         <translation>새로고침중</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/multiplayer/lobby.cpp" line="201"/>
+        <location filename="../../src/citra_qt/multiplayer/lobby.cpp" line="198"/>
         <source>Refresh List</source>
         <translation>리스트 새로고침</translation>
     </message>
@@ -2215,12 +2230,12 @@ Screen.</source>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="293"/>
         <source>Modify Citra Install</source>
-        <translation>Citra 설치 수정</translation>
+        <translation>Citra 설치 변경</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="296"/>
         <source>Opens the maintenance tool to modify your Citra installation</source>
-        <translation>Citra 설치 수정을 위한 유지보수 도구 열기</translation>
+        <translation>Citra 설치 변경을 위한 유지보수 도구 열기</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="304"/>
@@ -2336,27 +2351,27 @@ Debug Message: </translation>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="22"/>
         <source>Unable to connect to the host. Verify that the connection settings are correct. If you still cannot connect, contact the room host and verify that the host is properly configured with the external port forwarded.</source>
-        <translation type="unfinished"/>
+        <translation>호스트에 연결할 수 없습니다. 연결 설정이 올바른지 확인하십시오. 그래도 연결할 수 없으면 방의 호스트에게 문의하여 호스트가 외부 포트포워딩을 올바르게 구성되었는지 확인하십시오.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="26"/>
         <source>Creating a room failed. Please retry. Restarting Citra might be necessary.</source>
-        <translation type="unfinished"/>
+        <translation>방 생성해 실패하였습니다. 다시 시도해주세요. Citra를 다시 시작해야 할 수 있습니다.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="28"/>
         <source>The host of the room has banned you. Speak with the host to unban you or try a different room.</source>
-        <translation type="unfinished"/>
+        <translation>방의 호스트가 당신을 밴했습니다. 호스트에게 언밴을 요청하거나 다른 방을 시도하세요.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="31"/>
         <source>Version mismatch! Please update to the latest version of Citra. If the problem persists, contact the room host and ask them to update the server.</source>
-        <translation type="unfinished"/>
+        <translation>버전 불일치! Citra의 최신 버전으로 업데이트하십시오. 문제가 계속되면 방의 호스트에게 문의하여 서버를 업데이트하도록 요청하십시오.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="33"/>
         <source>Incorrect password.</source>
-        <translation>올바르지않은 비밀번호</translation>
+        <translation>올바르지 않은 비밀번호</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="35"/>
@@ -2366,32 +2381,32 @@ Debug Message: </translation>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="36"/>
         <source>Connection to room lost. Try to reconnect.</source>
-        <translation type="unfinished"/>
+        <translation>방 연결이 끊어졌습니다. 다시 연결하십시오.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="38"/>
         <source>MAC address is already in use. Please choose another.</source>
-        <translation type="unfinished"/>
+        <translation>MAC 어드레스가 이미 사용되고 있습니다. 다른 것을 선택해 주세요.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="52"/>
         <source>Leave Room</source>
-        <translation type="unfinished"/>
+        <translation>방 나가기</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="53"/>
         <source>You are about to close the room. Any network connections will be closed.</source>
-        <translation type="unfinished"/>
+        <translation>방을 닫으려고 합니다. 모든 네트워크 연결이 닫힙니다.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="58"/>
         <source>Disconnect</source>
-        <translation type="unfinished"/>
+        <translation>연결끊기</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="59"/>
         <source>You are about to leave the room. Any network connections will be closed.</source>
-        <translation type="unfinished"/>
+        <translation>방을 닫으려고 합니다. 모든 네트워크 연결이 닫힙니다.</translation>
     </message>
 </context>
 <context>
@@ -2404,11 +2419,62 @@ Debug Message: </translation>
     <message>
         <location filename="../../src/citra_qt/multiplayer/lobby_p.h" line="198"/>
         <source>%1 is not playing a game</source>
-        <translation type="unfinished"/>
+        <translation>%1 은 게임을 플레이 중이지 않음</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/lobby_p.h" line="201"/>
         <source>%1 is playing %2</source>
+        <translation>%1 는 %2를 플레이중</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/game_list_p.h" line="86"/>
+        <location filename="../../src/citra_qt/game_list_p.h" line="208"/>
+        <source>Invalid region</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/game_list_p.h" line="88"/>
+        <source>Japan</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/game_list_p.h" line="90"/>
+        <source>North America</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/game_list_p.h" line="92"/>
+        <source>Europe</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/game_list_p.h" line="94"/>
+        <source>Australia</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/game_list_p.h" line="96"/>
+        <source>China</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/game_list_p.h" line="98"/>
+        <source>Korea</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/game_list_p.h" line="100"/>
+        <source>Taiwan</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/game_list_p.h" line="102"/>
+        <source>Region free</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/game_list_p.h" line="104"/>
+        <source>Invalid Region</source>
         <translation type="unfinished"/>
     </message>
     <message>

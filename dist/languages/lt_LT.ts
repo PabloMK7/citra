@@ -154,19 +154,19 @@ p, li { white-space: pre-wrap; }
 <context>
     <name>ClientRoomWindow</name>
     <message>
-        <location filename="../../src/citra_qt/multiplayer/client_room.cpp" line="54"/>
+        <location filename="../../src/citra_qt/multiplayer/client_room.cpp" line="55"/>
         <source>Connected</source>
         <translation>Prisijungta</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/multiplayer/client_room.cpp" line="65"/>
+        <location filename="../../src/citra_qt/multiplayer/client_room.cpp" line="63"/>
         <source>Disconnected</source>
         <translation>Atsijungta</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/multiplayer/client_room.cpp" line="78"/>
+        <location filename="../../src/citra_qt/multiplayer/client_room.cpp" line="76"/>
         <source>%1 (%2/%3 members) - connected</source>
-        <translation>%1 (%2/%3 vartotojai) - prisijungę</translation>
+        <translation>%1 (%2/%3 vartotojai) - prisijungta</translation>
     </message>
 </context>
 <context>
@@ -190,22 +190,22 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../../src/citra_qt/compatdb.ui" line="72"/>
         <source>Perfect</source>
-        <translation>Puikiai</translation>
+        <translation>Tobulai</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/compatdb.ui" line="79"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Game functions flawlessly with no audio or graphical glitches.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Žaidimas veikia nuostabiai be jokių garso ar vaizdo trikdžių.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Žaidimas veikia nuostabiai, be jokių garso ar vaizdo trikdžių.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/compatdb.ui" line="89"/>
         <source>Great </source>
-        <translation>Labai gerai</translation>
+        <translation>Puikiai</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/compatdb.ui" line="96"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Game functions with minor graphical or audio glitches and is playable from start to finish. May require some workarounds.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Žaidimas veikia su mažais garso arba vaizdo trikdžiais ir gali būti žaidžiamas nuo pradžios iki galo. Gali reikalauti keletą apėjimų.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Žaidimas veikia su smulkiais garso arba vaizdo trikdžiais ir yra galimas žaisti nuo pradžios iki galo. Gali reikalauti keleto problemų apėjimų.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/compatdb.ui" line="106"/>
@@ -215,7 +215,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../../src/citra_qt/compatdb.ui" line="113"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Game functions with major graphical or audio glitches, but game is playable from start to finish with workarounds.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Žaidimas veikia su dideliais garso arba vaizdo trikdžiais, bet žaidimas gali būti žaidžiamas nuo pradžios iki galo su apėjimais.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Žaidimas veikia su dideliais garso arba vaizdo trikdžiais, bet žaidimas galimas žaisti nuo pradžios iki galo su problemų apėjimais.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/compatdb.ui" line="123"/>
@@ -225,7 +225,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../../src/citra_qt/compatdb.ui" line="130"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Game functions, but with major graphical or audio glitches. Unable to progress in specific areas due to glitches even with workarounds.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Žaidimas veikia, bet su dideliais garso arba vaizdo trikdžiais. Neįmanoma pereiti keletos vietų net ir su apėjimais.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Žaidimas veikia, bet su dideliais garso arba vaizdo trikdžiais. Neįmanoma pereiti keleto vietų net ir su problemų apėjimais.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/compatdb.ui" line="140"/>
@@ -245,12 +245,12 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../../src/citra_qt/compatdb.ui" line="170"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The game crashes when attempting to startup.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Žaidimas netikėtai išsijungia pasileidžiant.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Žaidimas netikėtai išsijungia jam bandant pasileisti.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/compatdb.ui" line="182"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Independent of speed or performance, how well does this game play from start to finish on this version of Citra?&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Neskaitant jūsų greičio ar FPS, kaip šis žaidimas žaidžiasi nuo pradžios iki galo šitoje „Citra&quot; versijoje?&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Neįskaitant jūsų greičio ar FPS, kaip šis žaidimas žaidžiasi nuo pradžios iki galo šitoje „Citra&quot; versijoje?&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/compatdb.ui" line="206"/>
@@ -312,6 +312,26 @@ p, li { white-space: pre-wrap; }
         <location filename="../../src/citra_qt/configuration/configure_debug.ui" line="57"/>
         <source>Port:</source>
         <translation>Įvadas:</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/configuration/configure_debug.ui" line="78"/>
+        <source>Logging</source>
+        <translation>Žurnalas</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/configuration/configure_debug.ui" line="86"/>
+        <source>Global Log Filter</source>
+        <translation>Žurnalo filtras</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/configuration/configure_debug.ui" line="100"/>
+        <source>Show Log Console (Windows Only)</source>
+        <translation>Rodyti žurnalo langą (tik Windows sistemoms)</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/configuration/configure_debug.ui" line="107"/>
+        <source>Open Log Location</source>
+        <translation>Atidaryti žurnalo vietą</translation>
     </message>
 </context>
 <context>
@@ -480,7 +500,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="51"/>
         <source>Limit Speed Percent</source>
-        <translation>Riboti emuliacijos greitį</translation>
+        <translation>Riboti emuliacijos greitį procentais</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="58"/>
@@ -1074,7 +1094,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../../src/citra_qt/multiplayer/direct_connect.ui" line="80"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Port number the host is listening on&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Prievado numeris kuris klauso serverio&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Prievado numeris, kuris klauso serverio&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/direct_connect.ui" line="86"/>
@@ -1100,12 +1120,12 @@ p, li { white-space: pre-wrap; }
 <context>
     <name>DirectConnectWindow</name>
     <message>
-        <location filename="../../src/citra_qt/multiplayer/direct_connect.cpp" line="97"/>
+        <location filename="../../src/citra_qt/multiplayer/direct_connect.cpp" line="103"/>
         <source>Connecting</source>
         <translation>Jungiamasi</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/multiplayer/direct_connect.cpp" line="102"/>
+        <location filename="../../src/citra_qt/multiplayer/direct_connect.cpp" line="108"/>
         <source>Connect</source>
         <translation>Prisijungti</translation>
     </message>
@@ -1113,289 +1133,289 @@ p, li { white-space: pre-wrap; }
 <context>
     <name>GMainWindow</name>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="90"/>
+        <location filename="../../src/citra_qt/main.cpp" line="92"/>
         <source>To help improve Citra, the Citra Team collects anonymous usage data. No private or personally identifying information is collected. This data helps us to understand how people use Citra and prioritize our efforts. Furthermore, it helps us to more easily identify emulation bugs and performance issues. This data includes:&lt;ul&gt;&lt;li&gt;Information about the version of Citra you are using&lt;/li&gt;&lt;li&gt;Performance data about the games you play&lt;/li&gt;&lt;li&gt;Your configuration settings&lt;/li&gt;&lt;li&gt;Information about your computer hardware&lt;/li&gt;&lt;li&gt;Emulation errors and crash information&lt;/li&gt;&lt;/ul&gt;By default, this feature is enabled. To disable this feature, click &apos;Emulation&apos; from the menu and then select &apos;Configure...&apos;. Then, on the &apos;Web&apos; tab, uncheck &apos;Share anonymous usage data with the Citra team&apos;. &lt;br/&gt;&lt;br/&gt;By using this software, you agree to the above terms.&lt;br/&gt;&lt;br/&gt;&lt;a href=&apos;https://citra-emu.org/entry/telemetry-and-why-thats-a-good-thing/&apos;&gt;Learn more&lt;/a&gt;</source>
         <translation>Kad padėti patobulinti „Citra“, „Citra“ komanda renka anonimiškus naudojimo duomenis. Jokia privati ar asmeninė informacija nėra renkama. Šie duomenys mums padeda sužinoti, kaip vartotojai naudoja „Citra“ ir teikia pirmenybę mūsų pastangoms. Ji taip pat padeda lengviau išsiaiškinti emuliacijos klaidas ir našumo problemas. Šie duomenys yra sudaryti iš:&lt;ul&gt;&lt;li&gt;Informacijos apie jūsų „Citra“ versiją&lt;/li&gt;&lt;li&gt;Našumo duomenų iš žaidimų, kuriuos žaidžiate&lt;/li&gt;&lt;li&gt;Jūsų konfigūracijos nustatymų&lt;/li&gt;&lt;li&gt;Informacijos apie jūsų kompiuterio įrangą&lt;/li&gt;&lt;li&gt;Emuliacijos klaidų ir netikėtų išjungimų informacijos&lt;/li&gt;&lt;/ul&gt;Ši funkcija yra šiuo metu įjungta. Kad išjungti, paspauskite „Emuliacija“ meniu viršuje ir pasirinkite „Konfigūruoti...“. Tada, „Tinklo tarnyba“ skiltyje atžymėkite „Pasidalinti anonimiškais naudojimo duomenimis su „Citra“ komanda“.&lt;br/&gt;&lt;br/&gt;Naudodami šią programą, jūs sutinkate su aukščiau pateiktomis sąlygomis.&lt;br/&gt;&lt;br/&gt;&lt;a href=&apos;https://citra-emu.org/entry/telemetry-and-why-thats-a-good-thing/&apos;&gt;Sužinoti daugiau&lt;/a&gt;</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="195"/>
+        <location filename="../../src/citra_qt/main.cpp" line="199"/>
         <source>Current emulation speed. Values higher or lower than 100% indicate emulation is running faster or slower than a 3DS.</source>
         <translation>Dabartinės emuliacijos greitis. Reikšmės žemiau ar aukščiau 100% parodo, kad emuliacija veikia greičiau ar lėčiau negu 3DS.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="198"/>
+        <location filename="../../src/citra_qt/main.cpp" line="202"/>
         <source>How many frames per second the game is currently displaying. This will vary from game to game and scene to scene.</source>
         <translation>Kiek FPS žaidimas šiuo metu atvaizduoja. Tai gali keistis nuo žaidimo ir scenos.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="202"/>
+        <location filename="../../src/citra_qt/main.cpp" line="206"/>
         <source>Time taken to emulate a 3DS frame, not counting framelimiting or v-sync. For full-speed emulation this should be at most 16.67 ms.</source>
         <translation>Laikas, kuris buvo sunaudotas atvaizduoti 1 3DS kadrą, neskaičiuojant FPS ribojimo ar V-Sync. Pilno greičio emuliacijai reikalinga daugiausia 16.67 ms reikšmė.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="429"/>
+        <location filename="../../src/citra_qt/main.cpp" line="434"/>
         <source>CTRL+F</source>
         <translation>Ctrl+F</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="538"/>
+        <location filename="../../src/citra_qt/main.cpp" line="543"/>
         <source>Update available!</source>
         <translation>Pasiekiamas atnaujinimas!</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="539"/>
+        <location filename="../../src/citra_qt/main.cpp" line="544"/>
         <source>An update for Citra is available. Do you wish to install it now?&lt;br /&gt;&lt;br /&gt;This &lt;b&gt;will&lt;/b&gt; terminate emulation, if it is running.</source>
         <translation>Pasiekiamas „Citra“ atnaujinimas. Ar norite atnaujinti programą dabar?&lt;br /&gt;&lt;br /&gt;Tai &lt;b&gt;sustabdys emuliaciją&lt;/b&gt;, jeigu ji veikia. </translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="550"/>
+        <location filename="../../src/citra_qt/main.cpp" line="555"/>
         <source>No update found</source>
         <translation>Atnaujinimų nerasta</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="550"/>
+        <location filename="../../src/citra_qt/main.cpp" line="555"/>
         <source>No update has been found for Citra.</source>
         <translation>„Citra“ atnaujinimų nebuvo rasta.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="567"/>
+        <location filename="../../src/citra_qt/main.cpp" line="572"/>
         <source>Error while initializing OpenGL 3.3 Core!</source>
         <translation>Klaida inicijuojant OpenGL 3.3 branduolį!</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="568"/>
+        <location filename="../../src/citra_qt/main.cpp" line="573"/>
         <source>Your GPU may not support OpenGL 3.3, or you do not have the latest graphics driver.</source>
         <translation>Jūsų vaizdo plokštė nepalaiko OpenGL 3.3, arba neturite naujausių vaizdo tvarkyklių.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="581"/>
-        <location filename="../../src/citra_qt/main.cpp" line="587"/>
-        <location filename="../../src/citra_qt/main.cpp" line="593"/>
-        <location filename="../../src/citra_qt/main.cpp" line="606"/>
-        <location filename="../../src/citra_qt/main.cpp" line="625"/>
+        <location filename="../../src/citra_qt/main.cpp" line="586"/>
+        <location filename="../../src/citra_qt/main.cpp" line="592"/>
+        <location filename="../../src/citra_qt/main.cpp" line="598"/>
+        <location filename="../../src/citra_qt/main.cpp" line="611"/>
+        <location filename="../../src/citra_qt/main.cpp" line="630"/>
         <source>Error while loading ROM!</source>
         <translation>Klaida įkraunant atvaizdą!</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="582"/>
-        <location filename="../../src/citra_qt/main.cpp" line="607"/>
+        <location filename="../../src/citra_qt/main.cpp" line="587"/>
+        <location filename="../../src/citra_qt/main.cpp" line="612"/>
         <source>The ROM format is not supported.</source>
         <translation>Atvaizdo formatas nepalaikomas.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="588"/>
+        <location filename="../../src/citra_qt/main.cpp" line="593"/>
         <source>Could not determine the system mode.</source>
         <translation>Klaida nustatant sisteminį režimą.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="594"/>
+        <location filename="../../src/citra_qt/main.cpp" line="599"/>
         <source>The game that you are trying to load must be decrypted before being used with Citra. A real 3DS is required.&lt;br/&gt;&lt;br/&gt;For more information on dumping and decrypting games, please see the following wiki pages: &lt;ul&gt;&lt;li&gt;&lt;a href=&apos;https://citra-emu.org/wiki/dumping-game-cartridges/&apos;&gt;Dumping Game Cartridges&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a href=&apos;https://citra-emu.org/wiki/dumping-installed-titles/&apos;&gt;Dumping Installed Titles&lt;/a&gt;&lt;/li&gt;&lt;/ul&gt;</source>
         <translation>Žaidimas, kurį įkraunate, turi būti iššifruotas prieš naudojant jį su „Citra“. Tikra 3DS konsolė yra būtina.&lt;br/&gt;&lt;br/&gt;Jei reikia daugiau informacijos apie žaidimų kopijavimą ir iššifravimą, pasižiūrėkite wiki puslapius: &lt;ul&gt;&lt;li&gt;&lt;a href=&apos;https://citra-emu.org/wiki/dumping-game-cartridges/&apos;&gt;Žaidimų kortelių kopijavimas&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a href=&apos;https://citra-emu.org/wiki/dumping-installed-titles/&apos;&gt;Įdiegtų žaidimų kopijavimas&lt;/a&gt;&lt;/li&gt;&lt;/ul&gt;</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="612"/>
+        <location filename="../../src/citra_qt/main.cpp" line="617"/>
         <source>An error occured in the video core.</source>
         <translation>Klaida vaizdo branduolyje.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="613"/>
+        <location filename="../../src/citra_qt/main.cpp" line="618"/>
         <source>Citra has encountered an error while running the video core, please see the log for more details.For more information on accessing the log, please see the following page: &lt;a href=&apos;https://community.citra-emu.org/t/how-to-upload-the-log-file/296&apos;&gt;How to Upload the Log File&lt;/a&gt;.Ensure that you have the latest graphics drivers for your GPU.</source>
         <translation>„Citra“ susidūrė su klaida vaizdo branduolyje, pasižiūrėkite į žurnalą dėl daugiau informacijos. Jei reikia daugiau informacijos apie žurnalo pasiekiamumą, pasižiūrėkite šį puslapį: &lt;a href=&apos;https://community.citra-emu.org/t/how-to-upload-the-log-file/296&apos;&gt;Kaip įkelti žurnalo failą&lt;/a&gt;. Įsitikinkite, kad turite naujausias vaizdo tvarkykles jūsų vaizdo plokštei.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="626"/>
+        <location filename="../../src/citra_qt/main.cpp" line="631"/>
         <source>An unknown error occured. Please see the log for more details.</source>
         <translation>Įvyko nežinoma klaida. Pasižiūrėkite į žurnalą dėl daugiau informacijos.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="699"/>
+        <location filename="../../src/citra_qt/main.cpp" line="704"/>
         <source>Start</source>
         <translation>Pradėti</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="790"/>
+        <location filename="../../src/citra_qt/main.cpp" line="795"/>
         <source>Error Opening %1 Folder</source>
         <translation>Klaida atidarant %1 aplanką</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="791"/>
+        <location filename="../../src/citra_qt/main.cpp" line="796"/>
         <source>Folder does not exist!</source>
         <translation>Aplankas neegzistuoja!</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="805"/>
+        <location filename="../../src/citra_qt/main.cpp" line="810"/>
         <source>3DS Executable</source>
         <translation>3DS taik. programa</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="806"/>
-        <location filename="../../src/citra_qt/main.cpp" line="828"/>
+        <location filename="../../src/citra_qt/main.cpp" line="811"/>
+        <location filename="../../src/citra_qt/main.cpp" line="833"/>
         <source>All Files (*.*)</source>
         <translation>Visi failai (*.*)</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="808"/>
+        <location filename="../../src/citra_qt/main.cpp" line="813"/>
         <source>Load File</source>
         <translation>Įkrauti failą</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="818"/>
+        <location filename="../../src/citra_qt/main.cpp" line="823"/>
         <source>Select Directory</source>
         <translation>Pasirinkti katalogą</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="827"/>
+        <location filename="../../src/citra_qt/main.cpp" line="832"/>
         <source>Load Files</source>
         <translation>Įkrauti failus</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="828"/>
+        <location filename="../../src/citra_qt/main.cpp" line="833"/>
         <source>3DS Installation File (*.CIA*)</source>
         <translation>3DS instaliacijos failas (*.cia*)</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="859"/>
+        <location filename="../../src/citra_qt/main.cpp" line="864"/>
         <source>%1 has been installed successfully.</source>
         <translation>%1 buvo įdiegtas sėkmingai.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="862"/>
+        <location filename="../../src/citra_qt/main.cpp" line="867"/>
         <source>Unable to open File</source>
         <translation>Negalima atverti failo</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="863"/>
+        <location filename="../../src/citra_qt/main.cpp" line="868"/>
         <source>Could not open %1</source>
-        <translation>Negalima atverti %1</translation>
+        <translation>Nepavyko atverti %1</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="867"/>
+        <location filename="../../src/citra_qt/main.cpp" line="872"/>
         <source>Installation aborted</source>
         <translation>Instaliacija nutraukta</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="868"/>
+        <location filename="../../src/citra_qt/main.cpp" line="873"/>
         <source>The installation of %1 was aborted. Please see the log for more details</source>
         <translation>Failo %1 instaliacija buvo nutraukta. Pasižiūrėkite į žurnalą dėl daugiau informacijos</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="872"/>
+        <location filename="../../src/citra_qt/main.cpp" line="877"/>
         <source>Invalid File</source>
         <translation>Klaidingas failas</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="872"/>
+        <location filename="../../src/citra_qt/main.cpp" line="877"/>
         <source>%1 is not a valid CIA</source>
         <translation>%1 nėra tinkamas CIA</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="875"/>
+        <location filename="../../src/citra_qt/main.cpp" line="880"/>
         <source>Encrypted File</source>
         <translation>Šifruotas failas</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="876"/>
+        <location filename="../../src/citra_qt/main.cpp" line="881"/>
         <source>%1 must be decrypted before being used with Citra. A real 3DS is required.</source>
         <translation>%1 turi būti iššifruotas prieš naudojant jį su „Citra“. Tikra 3DS konsolė yra būtina. </translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="899"/>
+        <location filename="../../src/citra_qt/main.cpp" line="904"/>
         <source>File not found</source>
         <translation>Failas nerastas</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="900"/>
+        <location filename="../../src/citra_qt/main.cpp" line="905"/>
         <source>File &quot;%1&quot; not found</source>
         <translation>Failas &quot;%1&quot; nerastas</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="914"/>
+        <location filename="../../src/citra_qt/main.cpp" line="919"/>
         <source>Continue</source>
         <translation>Tęsti</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="939"/>
+        <location filename="../../src/citra_qt/main.cpp" line="944"/>
         <source>Missing Citra Account</source>
         <translation>Nėra „Citra“ paskyros</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="940"/>
+        <location filename="../../src/citra_qt/main.cpp" line="945"/>
         <source>In order to submit a game compatibility test case, you must link your Citra account.&lt;br&gt;&lt;br/&gt;To link your Citra account, go to Emulation &amp;gt; Configuration &amp;gt; Web.</source>
         <translation>Jūs turite prijungti savo „Citra“ paskyrą prieš pateikiant savo žaidimo suderinamumo testavimą.&lt;br&gt;&lt;br/&gt;Kad tai padarytumėte, eikite į Emuliacija &amp;gt; Konfigūracija &amp;gt; Tinklo tarnyba.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="1090"/>
+        <location filename="../../src/citra_qt/main.cpp" line="1095"/>
         <source>Speed: %1% / %2%</source>
         <translation>Greitis: %1% / %2%</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="1094"/>
+        <location filename="../../src/citra_qt/main.cpp" line="1099"/>
         <source>Speed: %1%</source>
         <translation>Greitis: %1%</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="1096"/>
+        <location filename="../../src/citra_qt/main.cpp" line="1101"/>
         <source>Game: %1 FPS</source>
         <translation>Žaidimas: %1 FPS</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="1097"/>
+        <location filename="../../src/citra_qt/main.cpp" line="1102"/>
         <source>Frame: %1 ms</source>
         <translation>Kadras: %1 ms</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="1108"/>
+        <location filename="../../src/citra_qt/main.cpp" line="1113"/>
         <source>The game you are trying to load requires additional files from your 3DS to be dumped before playing.&lt;br/&gt;&lt;br/&gt;For more information on dumping these files, please see the following wiki page: &lt;a href=&apos;https://citra-emu.org/wiki/dumping-system-archives-and-the-shared-fonts-from-a-3ds-console/&apos;&gt;Dumping System Archives and the Shared Fonts from a 3DS Console&lt;/a&gt;.&lt;br/&gt;&lt;br/&gt;Would you like to quit back to the game list? Continuing emulation may result in crashes, corrupted save data, or other bugs.</source>
         <translation>Žaidimas, kurį bandote įkrauti, reikalauja papildomų kopijuotų failų iš 3DS prieš žaidžiant.&lt;br/&gt;&lt;br/&gt;Jei reikia daugiau informacijos apie šių failų kopijavimą, pasižiūrėkite šį wiki puslapį: &lt;a href=&apos;https://citra-emu.org/wiki/dumping-system-archives-and-the-shared-fonts-from-a-3ds-console/&apos;&gt;Sisteminių archyvų ir bendrų šriftų kopijavimas iš 3DS konsolės&lt;/a&gt;.&lt;br/&gt;&lt;br/&gt;Ar norite išeiti į žaidimų sąrašą? Tęsdami emuliaciją, galite susidurti su netikėtais išjungimais, sugadintais išsaugojimais ar kitomis klaidomis.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="1120"/>
+        <location filename="../../src/citra_qt/main.cpp" line="1125"/>
         <source>: %1. </source>
         <translation>: %1.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="1126"/>
+        <location filename="../../src/citra_qt/main.cpp" line="1131"/>
         <source>System Archive Not Found</source>
         <translation>Sisteminis archyvas nerastas</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="1133"/>
+        <location filename="../../src/citra_qt/main.cpp" line="1138"/>
         <source>Citra was unable to locate the 3DS shared fonts. </source>
         <translation>„Citra“ negalėjo surasti bendrų 3DS šriftų.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="1135"/>
+        <location filename="../../src/citra_qt/main.cpp" line="1140"/>
         <source>Shared Fonts Not Found</source>
         <translation>Bendri šriftai nerasti</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="1143"/>
+        <location filename="../../src/citra_qt/main.cpp" line="1148"/>
         <source>Fatal Error</source>
         <translation>Nepataisoma klaida</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="1144"/>
+        <location filename="../../src/citra_qt/main.cpp" line="1149"/>
         <source>Citra has encountered a fatal error, please see the log for more details. For more information on accessing the log, please see the following page: &lt;a href=&apos;https://community.citra-emu.org/t/how-to-upload-the-log-file/296&apos;&gt;How to Upload the Log File&lt;/a&gt;.&lt;br/&gt;&lt;br/&gt;Would you like to quit back to the game list? Continuing emulation may result in crashes, corrupted save data, or other bugs.</source>
         <translation>„Citra“ susidūrė su nepataisoma klaida, pasižiūrėkite į žurnalą dėl daugiau informacijos. Jei reikia daugiau informacijos apie žurnalo pasiekiamumą, pasižiūrėkite šį puslapį: &lt;a href=&apos;https://community.citra-emu.org/t/how-to-upload-the-log-file/296&apos;&gt;Kaip įkelti žurnalo failą&lt;/a&gt;.&lt;br/&gt;&lt;br/&gt;Ar norite išeiti į žaidimų sąrašą? Tęsdami emuliaciją, galite susidurti su netikėtais išjungimais, sugadintais išsaugojimais ar kitomis klaidomis.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="1178"/>
-        <location filename="../../src/citra_qt/main.cpp" line="1245"/>
+        <location filename="../../src/citra_qt/main.cpp" line="1183"/>
+        <location filename="../../src/citra_qt/main.cpp" line="1250"/>
         <source>Citra</source>
         <translation>„Citra“</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="1178"/>
+        <location filename="../../src/citra_qt/main.cpp" line="1183"/>
         <source>Are you sure you want to close Citra?</source>
         <translation>Ar tikrai norite uždaryti „Citra“?</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="1246"/>
+        <location filename="../../src/citra_qt/main.cpp" line="1251"/>
         <source>Are you sure you want to stop the emulation? Any unsaved progress will be lost.</source>
         <translation>Ar tikrai norite sustabdyti emuliaciją? Visi neišsaugoti duomenys bus prarasti.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="1318"/>
+        <location filename="../../src/citra_qt/main.cpp" line="1323"/>
         <source>Citra %1| %2-%3</source>
         <translation>„Citra“ %1| %2-%3</translation>
     </message>
@@ -1458,77 +1478,77 @@ p, li { white-space: pre-wrap; }
 <context>
     <name>GameList</name>
     <message>
-        <location filename="../../src/citra_qt/game_list_p.h" line="85"/>
+        <location filename="../../src/citra_qt/game_list_p.h" line="117"/>
         <source>Perfect</source>
+        <translation>Tobulai</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/game_list_p.h" line="117"/>
+        <source>Game functions flawless with no audio or graphical glitches, all tested functionality works as intended without
+any workarounds needed.</source>
+        <translation>Žaidimas veikia nuostabiai be jokių garso ar vaizdo trikdžių, visos išbandytos funkcijos veikia kaip numatyta be problemų apėjimų.</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/game_list_p.h" line="118"/>
+        <source>Great</source>
         <translation>Puikiai</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list_p.h" line="85"/>
-        <source>Game functions flawless with no audio or graphical glitches, all tested functionality works as intended without
-any workarounds needed.</source>
-        <translation>Žaidimas veikia nuostabiai be jokių garso ar vaizdo trikdžių, visos išbandytos funkcijos veikia kaip buvo numatyta be apėjimų.</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/game_list_p.h" line="86"/>
-        <source>Great</source>
-        <translation>Labai gerai</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/game_list_p.h" line="86"/>
+        <location filename="../../src/citra_qt/game_list_p.h" line="118"/>
         <source>Game functions with minor graphical or audio glitches and is playable from start to finish. May require some
 workarounds.</source>
-        <translation>Žaidimas veikia su mažais garso arba vaizdo trikdžiais ir gali būti pereitas nuo pradžios iki galo. Gali reikalauti keletą apėjimų.</translation>
+        <translation>Žaidimas veikia su smulkiais garso arba vaizdo trikdžiais ir gali būti pereitas nuo pradžios iki galo. Gali reikalauti keleto problemų apėjimų.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list_p.h" line="87"/>
+        <location filename="../../src/citra_qt/game_list_p.h" line="119"/>
         <source>Okay</source>
         <translation>Gerai</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list_p.h" line="87"/>
+        <location filename="../../src/citra_qt/game_list_p.h" line="119"/>
         <source>Game functions with major graphical or audio glitches, but game is playable from start to finish with
 workarounds.</source>
-        <translation>Žaidimas veikia su dideliais garso arba vaizdo trikdžiais, bet žaidimas gali būti pereitas nuo pradžios iki galo su apėjimais.</translation>
+        <translation>Žaidimas veikia su dideliais garso arba vaizdo trikdžiais, bet žaidimas gali būti pereitas nuo pradžios iki galo su problemų apėjimais.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list_p.h" line="88"/>
+        <location filename="../../src/citra_qt/game_list_p.h" line="120"/>
         <source>Bad</source>
         <translation>Blogai</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list_p.h" line="88"/>
+        <location filename="../../src/citra_qt/game_list_p.h" line="120"/>
         <source>Game functions, but with major graphical or audio glitches. Unable to progress in specific areas due to glitches
 even with workarounds.</source>
-        <translation>Žaidimas veikia, bet su dideliais garso arba vaizdo trikdžiais. Neįmanoma pereiti keletos vietų net su apėjimais.</translation>
+        <translation>Žaidimas veikia, bet su dideliais garso arba vaizdo trikdžiais. Neįmanoma pereiti keleto vietų net su problemų apėjimais.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list_p.h" line="89"/>
+        <location filename="../../src/citra_qt/game_list_p.h" line="121"/>
         <source>Intro/Menu</source>
         <translation>Rodo tik pradžios ekraną</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list_p.h" line="89"/>
+        <location filename="../../src/citra_qt/game_list_p.h" line="121"/>
         <source>Game is completely unplayable due to major graphical or audio glitches. Unable to progress past the Start
 Screen.</source>
-        <translation>Žaidimas yra pilnai nepereinamas dėl didelių garso ar vaizdo trikdžių. Neįmanoma žaisti pratęsti žaidimo toliau kaip pradžios ekranas.</translation>
+        <translation>Žaidimas yra visiškai negalimas žaisti dėl didelių garso ar vaizdo trikdžių. Neįmanoma pratęsti žaidimo toliau negu pradžios ekranas.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list_p.h" line="90"/>
+        <location filename="../../src/citra_qt/game_list_p.h" line="122"/>
         <source>Won&apos;t Boot</source>
         <translation>Nepasileidžia</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list_p.h" line="90"/>
+        <location filename="../../src/citra_qt/game_list_p.h" line="122"/>
         <source>The game crashes when attempting to startup.</source>
         <translation>Žaidimas netikėtai išsijungia pasileidžiant.</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list_p.h" line="91"/>
+        <location filename="../../src/citra_qt/game_list_p.h" line="123"/>
         <source>Not Tested</source>
         <translation>Neišbandytas</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list_p.h" line="91"/>
+        <location filename="../../src/citra_qt/game_list_p.h" line="123"/>
         <source>The game has not yet been tested.</source>
         <translation>Žaidimas dar nebuvo testuotas.</translation>
     </message>
@@ -1558,17 +1578,17 @@ Screen.</source>
         <translation>Įveskite raktinius žodžius filtravimui</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="324"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="325"/>
         <source>Open Save Data Location</source>
         <translation>Atidaryti išsaugojimo duomenų vietą</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="325"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="326"/>
         <source>Open Application Location</source>
         <translation>Atidaryti programos vietą</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="326"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="327"/>
         <source>Open Update Data Location</source>
         <translation>Atidaryti atnaujinimo duomenų vietą</translation>
     </message>
@@ -1924,7 +1944,7 @@ Screen.</source>
     <message>
         <location filename="../../src/citra_qt/multiplayer/host_room.ui" line="61"/>
         <source>Max Players</source>
-        <translation>Daugiausiai žaidėjų</translation>
+        <translation>Daugiausia žaidėjų</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/host_room.ui" line="91"/>
@@ -1934,7 +1954,7 @@ Screen.</source>
     <message>
         <location filename="../../src/citra_qt/multiplayer/host_room.ui" line="101"/>
         <source>(Leave blank for open game)</source>
-        <translation>(palikite tuščią jei nesvarbu)</translation>
+        <translation>(palikite tuščią, jei nesvarbu)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/host_room.ui" line="118"/>
@@ -1988,7 +2008,7 @@ Screen.</source>
     <message>
         <location filename="../../src/citra_qt/multiplayer/lobby.ui" line="76"/>
         <source>Games I Own</source>
-        <translation>Žaidimai kuriuos turiu</translation>
+        <translation>Žaidimai, kuriuos turiu</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/lobby.ui" line="83"/>
@@ -1998,50 +2018,45 @@ Screen.</source>
     <message>
         <location filename="../../src/citra_qt/multiplayer/lobby.ui" line="103"/>
         <source>Refresh Lobby</source>
-        <translation>Atnaujinti serverius</translation>
+        <translation>Atnaujinti sąrašą</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/multiplayer/lobby.cpp" line="76"/>
+        <location filename="../../src/citra_qt/multiplayer/lobby.cpp" line="73"/>
         <source>Password Required to Join</source>
         <translation>Reikalingas slaptažodis</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/multiplayer/lobby.cpp" line="76"/>
+        <location filename="../../src/citra_qt/multiplayer/lobby.cpp" line="74"/>
         <source>Password:</source>
         <translation>Slaptažodis:</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/multiplayer/lobby.cpp" line="77"/>
-        <source>Password</source>
-        <translation>Slaptažodis</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/multiplayer/lobby.cpp" line="142"/>
+        <location filename="../../src/citra_qt/multiplayer/lobby.cpp" line="139"/>
         <source>Room Name</source>
         <translation>Serverio pavadinimas</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/multiplayer/lobby.cpp" line="143"/>
+        <location filename="../../src/citra_qt/multiplayer/lobby.cpp" line="140"/>
         <source>Preferred Game</source>
         <translation>Pageidautinas žaidimas</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/multiplayer/lobby.cpp" line="144"/>
+        <location filename="../../src/citra_qt/multiplayer/lobby.cpp" line="141"/>
         <source>Host</source>
         <translation>Vartotojas</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/multiplayer/lobby.cpp" line="145"/>
+        <location filename="../../src/citra_qt/multiplayer/lobby.cpp" line="142"/>
         <source>Players</source>
         <translation>Žaidėjų skaičius</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/multiplayer/lobby.cpp" line="153"/>
+        <location filename="../../src/citra_qt/multiplayer/lobby.cpp" line="150"/>
         <source>Refreshing</source>
         <translation>Atnaujinama</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/multiplayer/lobby.cpp" line="201"/>
+        <location filename="../../src/citra_qt/multiplayer/lobby.cpp" line="198"/>
         <source>Refresh List</source>
         <translation>Atnaujinti sąrašą</translation>
     </message>
@@ -2086,7 +2101,7 @@ Screen.</source>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="115"/>
         <source>Multiplayer</source>
-        <translation>Multiplayer</translation>
+        <translation>Kelių žaidėjų režimas</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="126"/>
@@ -2272,7 +2287,7 @@ Screen.</source>
     <message>
         <location filename="../../src/citra_qt/multiplayer/state.cpp" line="42"/>
         <source>Not Connected. Click here to find a room!</source>
-        <translation>Neprisijungta. Paspausk čia kad susirastum serverį!</translation>
+        <translation>Neprisijungta. Paspauskite čia, kad susirastumėte serverį!</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/state.cpp" line="100"/>
@@ -2337,7 +2352,7 @@ Derinimo pranešimas:</translation>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="26"/>
         <source>Creating a room failed. Please retry. Restarting Citra might be necessary.</source>
-        <translation>Nepavyko sukurti serverio. Pabandykite iš naujo. Gali tekti perkrauti Citra.</translation>
+        <translation>Nepavyko sukurti serverio. Pabandykite iš naujo. Gali tekti perkrauti „Citra“.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="28"/>
@@ -2347,7 +2362,7 @@ Derinimo pranešimas:</translation>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="31"/>
         <source>Version mismatch! Please update to the latest version of Citra. If the problem persists, contact the room host and ask them to update the server.</source>
-        <translation>Versijų nesutapimas! Prašome atnaujinti Citra į naujausią versiją. Jeigu problema išlieka, susisiekite su serverio administratoriumi ir pasakykite kad atnaujintų serverį.</translation>
+        <translation>Versijų nesutapimas! Prašome atnaujinti „Citra“ į naujausią versiją. Jeigu problema išlieka, susisiekite su serverio administratoriumi ir pasakykite kad atnaujintų serverį.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="33"/>
@@ -2406,6 +2421,57 @@ Derinimo pranešimas:</translation>
         <location filename="../../src/citra_qt/multiplayer/lobby_p.h" line="201"/>
         <source>%1 is playing %2</source>
         <translation>%1 žaidžia %2</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/game_list_p.h" line="86"/>
+        <location filename="../../src/citra_qt/game_list_p.h" line="208"/>
+        <source>Invalid region</source>
+        <translation>Klaidingas regionas</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/game_list_p.h" line="88"/>
+        <source>Japan</source>
+        <translation>Japonija</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/game_list_p.h" line="90"/>
+        <source>North America</source>
+        <translation>Šiaurės Amerika</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/game_list_p.h" line="92"/>
+        <source>Europe</source>
+        <translation>Europa</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/game_list_p.h" line="94"/>
+        <source>Australia</source>
+        <translation>Australija</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/game_list_p.h" line="96"/>
+        <source>China</source>
+        <translation>Kinija</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/game_list_p.h" line="98"/>
+        <source>Korea</source>
+        <translation>Korėja</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/game_list_p.h" line="100"/>
+        <source>Taiwan</source>
+        <translation>Taivanas</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/game_list_p.h" line="102"/>
+        <source>Region free</source>
+        <translation>Be regiono</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/game_list_p.h" line="104"/>
+        <source>Invalid Region</source>
+        <translation>Klaidingas regionas</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="26"/>
