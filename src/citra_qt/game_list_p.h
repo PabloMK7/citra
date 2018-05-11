@@ -260,8 +260,9 @@ class GameListWorker : public QObject, public QRunnable {
     Q_OBJECT
 
 public:
-    GameListWorker(QString dir_path, bool deep_scan,
-                   const std::unordered_map<std::string, QString>& compatibility_list)
+    GameListWorker(
+        QString dir_path, bool deep_scan,
+        const std::unordered_map<std::string, std::pair<QString, QString>>& compatibility_list)
         : QObject(), QRunnable(), dir_path(dir_path), deep_scan(deep_scan),
           compatibility_list(compatibility_list) {}
 
@@ -289,7 +290,7 @@ private:
     QStringList watch_list;
     QString dir_path;
     bool deep_scan;
-    const std::unordered_map<std::string, QString>& compatibility_list;
+    const std::unordered_map<std::string, std::pair<QString, QString>>& compatibility_list;
     std::atomic_bool stop_processing;
 
     void AddFstEntriesToGameList(const std::string& dir_path, unsigned int recursion = 0);

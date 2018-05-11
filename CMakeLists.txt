@@ -48,7 +48,7 @@ configure_file(${CMAKE_SOURCE_DIR}/dist/compatibility_list/compatibility_list.qr
 if (ENABLE_COMPATIBILITY_LIST_DOWNLOAD AND NOT EXISTS ${CMAKE_BINARY_DIR}/dist/compatibility_list/compatibility_list.json)
     message(STATUS "Downloading compatibility list for citra...")
     file(DOWNLOAD
-        https://api.citra-emu.org/gamedb/titleid/
+        https://api.citra-emu.org/gamedb/
         "${CMAKE_BINARY_DIR}/dist/compatibility_list/compatibility_list.json" SHOW_PROGRESS)
 endif()
 

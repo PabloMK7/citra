@@ -7,6 +7,7 @@
 #include <thread>
 #include <glad/glad.h>
 #define QT_NO_OPENGL
+#include <cinttypes>
 #include <QDesktopWidget>
 #include <QFileDialog>
 #include <QFutureWatcher>
@@ -399,6 +400,8 @@ void GMainWindow::RestoreUIState() {
 void GMainWindow::ConnectWidgetEvents() {
     connect(game_list, &GameList::GameChosen, this, &GMainWindow::OnGameListLoadFile);
     connect(game_list, &GameList::OpenFolderRequested, this, &GMainWindow::OnGameListOpenFolder);
+    connect(game_list, &GameList::NavigateToGamedbEntryRequested, this,
+            &GMainWindow::OnGameListNavigateToGamedbEntry);
 
     connect(this, &GMainWindow::EmulationStarting, render_window,
             &GRenderWindow::OnEmulationStarting);
@@ -804,6 +807,25 @@ void GMainWindow::OnGameListOpenFolder(u64 program_id, GameListOpenTarget target
     NGLOG_INFO(Frontend, "Opening {} path for program_id={:016x}", open_target, program_id);
 
     QDesktopServices::openUrl(QUrl::fromLocalFile(qpath));
+}
+
+void GMainWindow::OnGameListNavigateToGamedbEntry(
+    u64 program_id,
+    std::unordered_map<std::string, std::pair<QString, QString>>& compatibility_list) {
+
+    auto it = std::find_if(
+        compatibility_list.begin(), compatibility_list.end(),
+        [program_id](const std::pair<std::string, std::pair<QString, QString>>& element) {
+            std::string pid = Common::StringFromFormat("%016" PRIX64, program_id);
+            return element.first == pid;
+        });
+
+    QString directory = "";
+
+    if (it != compatibility_list.end())
+        directory = it->second.second;
+
+    QDesktopServices::openUrl(QUrl("https://citra-emu.org/game/" + directory));
 }
 
 void GMainWindow::OnMenuLoadFile() {

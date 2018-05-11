@@ -8,6 +8,7 @@
 #include <QFileSystemWatcher>
 #include <QHBoxLayout>
 #include <QHeaderView>
+#include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QKeyEvent>
@@ -325,12 +326,20 @@ void GameList::PopupContextMenu(const QPoint& menu_location) {
     QAction* open_save_location = context_menu.addAction(tr("Open Save Data Location"));
     QAction* open_application_location = context_menu.addAction(tr("Open Application Location"));
     QAction* open_update_location = context_menu.addAction(tr("Open Update Data Location"));
+    QAction* navigate_to_gamedb_entry = context_menu.addAction(tr("Navigate to GameDB entry"));
 
     open_save_location->setEnabled(program_id != 0);
     open_application_location->setVisible(FileUtil::Exists(
         Service::AM::GetTitleContentPath(Service::FS::MediaType::SDMC, program_id)));
     open_update_location->setEnabled(0x00040000'00000000 <= program_id &&
                                      program_id <= 0x00040000'FFFFFFFF);
+    auto it = std::find_if(
+        compatibility_list.begin(), compatibility_list.end(),
+        [program_id](const std::pair<std::string, std::pair<QString, QString>>& element) {
+            std::string pid = Common::StringFromFormat("%016" PRIX64, program_id);
+            return element.first == pid;
+        });
+    navigate_to_gamedb_entry->setVisible(it != compatibility_list.end());
 
     connect(open_save_location, &QAction::triggered,
             [&]() { emit OpenFolderRequested(program_id, GameListOpenTarget::SAVE_DATA); });
@@ -338,6 +347,8 @@ void GameList::PopupContextMenu(const QPoint& menu_location) {
             [&]() { emit OpenFolderRequested(program_id, GameListOpenTarget::APPLICATION); });
     connect(open_update_location, &QAction::triggered,
             [&]() { emit OpenFolderRequested(program_id, GameListOpenTarget::UPDATE_DATA); });
+    connect(navigate_to_gamedb_entry, &QAction::triggered,
+            [&]() { emit NavigateToGamedbEntryRequested(program_id, compatibility_list); });
 
     context_menu.exec(tree_view->viewport()->mapToGlobal(menu_location));
 }
@@ -363,14 +374,23 @@ void GameList::LoadCompatibilityList() {
 
     const QString string_content = content;
     QJsonDocument json = QJsonDocument::fromJson(string_content.toUtf8());
-    QJsonObject list = json.object();
-    QStringList game_ids = list.keys();
-    for (QString id : game_ids) {
-        QJsonObject game = list[id].toObject();
+    QJsonArray arr = json.array();
 
-        if (game.contains("compatibility") && game["compatibility"].isString()) {
-            QString compatibility = game["compatibility"].toString();
-            compatibility_list.insert(std::make_pair(id.toUpper().toStdString(), compatibility));
+    for (const QJsonValue& value : arr) {
+        QJsonObject game = value.toObject();
+
+        if (game.contains("compatibility") && game["compatibility"].isDouble()) {
+            int compatibility = game["compatibility"].toInt();
+            QString directory = game["directory"].toString();
+            QJsonArray ids = game["releases"].toArray();
+
+            for (const QJsonValue& value : ids) {
+                QJsonObject object = value.toObject();
+                QString id = object["id"].toString();
+                compatibility_list.insert(
+                    std::make_pair(id.toUpper().toStdString(),
+                                   std::make_pair(QString::number(compatibility), directory)));
+            }
         }
     }
 }
@@ -478,17 +498,17 @@ void GameListWorker::AddFstEntriesToGameList(const std::string& dir_path, unsign
                 return update_smdh;
             }();
 
-            auto it = std::find_if(compatibility_list.begin(), compatibility_list.end(),
-                                   [program_id](const std::pair<std::string, QString>& element) {
-                                       std::string pid =
-                                           Common::StringFromFormat("%016" PRIX64, program_id);
-                                       return element.first == pid;
-                                   });
+            auto it = std::find_if(
+                compatibility_list.begin(), compatibility_list.end(),
+                [program_id](const std::pair<std::string, std::pair<QString, QString>>& element) {
+                    std::string pid = Common::StringFromFormat("%016" PRIX64, program_id);
+                    return element.first == pid;
+                });
 
             // The game list uses this as compatibility number for untested games
             QString compatibility("99");
             if (it != compatibility_list.end())
-                compatibility = it->second;
+                compatibility = it->second.first;
 
             emit EntryReady({
                 new GameListItemPath(QString::fromStdString(physical_name), smdh, program_id),
