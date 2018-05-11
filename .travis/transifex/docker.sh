@@ -7,7 +7,7 @@ set -x
 
 echo -e "\e[1m\e[33mInstalling dependencies...\e[0m"
 apk update
-apk add build-base cmake python3-dev qt5-qttools-dev
+apk add build-base cmake python3-dev qt5-qttools-dev qtmultimedia5-dev
 
 pip3 install transifex-client
 
