@@ -24,6 +24,7 @@ void ConfigureDialog::applyConfiguration() {
     ui->inputTab->applyConfiguration();
     ui->graphicsTab->applyConfiguration();
     ui->audioTab->applyConfiguration();
+    ui->cameraTab->applyConfiguration();
     ui->debugTab->applyConfiguration();
     ui->webTab->applyConfiguration();
     Settings::Apply();
@@ -37,6 +38,7 @@ void ConfigureDialog::onLanguageChanged(const QString& locale) {
     ui->inputTab->retranslateUi();
     ui->graphicsTab->retranslateUi();
     ui->audioTab->retranslateUi();
+    ui->cameraTab->applyConfiguration();
     ui->debugTab->retranslateUi();
     ui->webTab->retranslateUi();
 }

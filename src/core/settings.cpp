@@ -35,6 +35,7 @@ void Apply() {
 
     Service::HID::ReloadInputDevices();
     Service::IR::ReloadInputDevices();
+    Service::CAM::ReloadCameraDevices();
 }
 
 } // namespace Settings

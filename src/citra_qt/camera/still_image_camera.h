@@ -1,16 +1,20 @@
-// Copyright 2016 Citra Emulator Project
+// Copyright 2018 Citra Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
 #pragma once
 
-#include "core/frontend/camera/factory.h"
+#include <vector>
+#include <QImage>
+#include "citra_qt/camera/camera_util.h"
+#include "citra_qt/camera/qt_camera_factory.h"
 #include "core/frontend/camera/interface.h"
 
 namespace Camera {
 
-class BlankCamera final : public CameraInterface {
+class StillImageCamera final : public CameraInterface {
 public:
+    StillImageCamera(QImage image);
     void StartCapture() override;
     void StopCapture() override;
     void SetResolution(const Service::CAM::Resolution&) override;
@@ -22,9 +26,18 @@ public:
     bool IsPreviewAvailable() override;
 
 private:
-    int width = 0;
-    int height = 0;
-    bool output_rgb = false;
+    QImage image;
+    int width, height;
+    bool output_rgb;
+    bool flip_horizontal, flip_vertical;
+};
+
+class StillImageCameraFactory final : public QtCameraFactory {
+public:
+    std::unique_ptr<CameraInterface> Create(const std::string& config) const override;
+
+private:
+    static const std::string getFilePath();
 };
 
 } // namespace Camera

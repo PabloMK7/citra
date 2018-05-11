@@ -110,6 +110,7 @@ after_build:
 
           mkdir $RELEASE_DIST
           mkdir $RELEASE_DIST/platforms
+          mkdir $RELEASE_DIST/mediaservice
           mkdir $RELEASE_DIST/styles
 
           # copy the compiled binaries and other release files to the release folder
@@ -130,6 +131,9 @@ after_build:
 
           # copy the qt windows plugin dll to platforms
           Copy-Item -path "C:/msys64/mingw64/share/qt5/plugins/platforms/qwindows.dll" -force -destination "$RELEASE_DIST/platforms"
+
+          # copy the qt mediaservice plugin dll
+          Copy-Item -path "C:/msys64/mingw64/share/qt5/plugins/mediaservice/dsengine.dll" -force -destination "$RELEASE_DIST/mediaservice"
 
           # copy the qt windows vista style dll to platforms
           Copy-Item -path "C:/msys64/mingw64/share/qt5/plugins/styles/qwindowsvistastyle.dll" -force -destination "$RELEASE_DIST/styles"

@@ -16,6 +16,8 @@
 #include <QtWidgets>
 #include "citra_qt/aboutdialog.h"
 #include "citra_qt/bootmanager.h"
+#include "citra_qt/camera/qt_multimedia_camera.h"
+#include "citra_qt/camera/still_image_camera.h"
 #include "citra_qt/compatdb.h"
 #include "citra_qt/configuration/config.h"
 #include "citra_qt/configuration/configure_dialog.h"
@@ -696,6 +698,8 @@ void GMainWindow::ShutdownGame() {
     emu_thread->wait();
     emu_thread = nullptr;
 
+    Camera::QtMultimediaCameraHandler::ReleaseHandlers();
+
     // The emulation is stopped, so closing the window or not does not matter anymore
     disconnect(render_window, &GRenderWindow::Closed, this, &GMainWindow::OnStopGame);
 
@@ -910,6 +914,7 @@ void GMainWindow::OnMenuRecentFile() {
 }
 
 void GMainWindow::OnStartGame() {
+    Camera::QtMultimediaCameraHandler::ResumeCameras();
     emu_thread->SetRunning(true);
     qRegisterMetaType<Core::System::ResultStatus>("Core::System::ResultStatus");
     qRegisterMetaType<std::string>("std::string");
@@ -925,7 +930,7 @@ void GMainWindow::OnStartGame() {
 
 void GMainWindow::OnPauseGame() {
     emu_thread->SetRunning(false);
-
+    Camera::QtMultimediaCameraHandler::StopCameras();
     ui.action_Start->setEnabled(true);
     ui.action_Pause->setEnabled(false);
     ui.action_Stop->setEnabled(true);
@@ -1362,6 +1367,11 @@ int main(int argc, char* argv[]) {
     FileUtil::CreateFullPath(FileUtil::GetUserPath(D_LOGS_IDX));
     Log::AddBackend(
         std::make_unique<Log::FileBackend>(FileUtil::GetUserPath(D_LOGS_IDX) + LOG_FILE));
+
+    // Register CameraFactory
+    Camera::RegisterFactory("image", std::make_unique<Camera::StillImageCameraFactory>());
+    Camera::RegisterFactory("qt", std::make_unique<Camera::QtMultimediaCameraFactory>());
+    Camera::QtMultimediaCameraHandler::Init();
 
     main_window.show();
     return app.exec();

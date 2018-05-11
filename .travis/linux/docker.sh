@@ -3,7 +3,7 @@
 cd /citra
 
 apt-get update
-apt-get install -y build-essential libsdl2-dev qtbase5-dev libqt5opengl5-dev qttools5-dev qttools5-dev-tools wget git ccache
+apt-get install -y build-essential libsdl2-dev qtbase5-dev libqt5opengl5-dev qtmultimedia5-dev qttools5-dev qttools5-dev-tools wget git ccache
 
 # Get a recent version of CMake
 wget https://cmake.org/files/v3.10/cmake-3.10.1-Linux-x86_64.sh

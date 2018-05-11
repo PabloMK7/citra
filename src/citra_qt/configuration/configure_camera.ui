@@ -1,0 +1,257 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<ui version="4.0">
+  <class>ConfigureCamera</class>
+  <widget class="QWidget" name="ConfigureCamera">
+    <layout class="QVBoxLayout" name="verticalLayout">
+      <item>
+        <widget class="QGroupBox" name="groupBox">
+          <property name="title">
+            <string>Camera</string>
+          </property>
+          <layout class="QVBoxLayout" name="verticalLayout_2">
+            <item>
+              <layout class="QHBoxLayout" name="horizontalLayout">
+                <item>
+                  <widget class="QLabel" name="camera_selection_label">
+                    <property name="toolTip">
+                      <string>Select the camera to configure</string>
+                    </property>
+                    <property name="text">
+                      <string>Camera to configure:</string>
+                    </property>
+                  </widget>
+                </item>
+                <item>
+                  <widget class="QComboBox" name="camera_selection">
+                    <property name="toolTip">
+                      <string>Select the camera to configure</string>
+                    </property>
+                    <item>
+                      <property name="text">
+                        <string>Front</string>
+                      </property>
+                    </item>
+                    <item>
+                      <property name="text">
+                        <string>Rear</string>
+                      </property>
+                    </item>
+                  </widget>
+                </item>
+              </layout>
+            </item>
+            <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_2">
+                <item>
+                  <widget class="QLabel" name="camera_mode_label">
+                    <property name="toolTip">
+                      <string>Select the camera mode (single or double)</string>
+                    </property>
+                    <property name="text">
+                      <string>Camera mode:</string>
+                    </property>
+                  </widget>
+                </item>
+                <item>
+                  <widget class="QComboBox" name="camera_mode">
+                    <property name="toolTip">
+                      <string>Select the camera mode (single or double)</string>
+                    </property>
+                    <item>
+                      <property name="text">
+                        <string>Single (2D)</string>
+                      </property>
+                    </item>
+                    <item>
+                      <property name="text">
+                        <string>Double (3D)</string>
+                      </property>
+                    </item>
+                  </widget>
+                </item>
+              </layout>
+            </item>
+            <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_3">
+                <item>
+                  <widget class="QLabel" name="camera_position_label">
+                    <property name="toolTip">
+                      <string>Select the position of camera to configure</string>
+                    </property>
+                    <property name="text">
+                      <string>Camera position:</string>
+                    </property>
+                  </widget>
+                </item>
+                <item>
+                  <widget class="QComboBox" name="camera_position">
+                    <property name="toolTip">
+                      <string>Select the position of camera to configure</string>
+                    </property>
+                    <item>
+                      <property name="text">
+                        <string>Left</string>
+                      </property>
+                    </item>
+                    <item>
+                      <property name="text">
+                        <string>Right</string>
+                      </property>
+                    </item>
+                  </widget>
+                </item>
+              </layout>
+            </item>
+          </layout>
+        </widget>
+      </item>
+      <item>
+        <widget class="QGroupBox" name="configurationBox">
+          <property name="title">
+            <string>Configuration</string>
+          </property>
+          <layout class="QVBoxLayout" name="verticalLayout_configuration">
+            <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_4">
+                <item>
+                  <widget class="QLabel" name="image_source_label">
+                    <property name="toolTip">
+                      <string>Select where the image of the emulated camera come from. It may be an image or a real camera.</string>
+                    </property>
+                    <property name="text">
+                      <string>Camera Image Source:</string>
+                    </property>
+                  </widget>
+                </item>
+                <item>
+                  <widget class="QComboBox" name="image_source">
+                    <property name="toolTip">
+                      <string>Select where the image of the emulated camera come from. It may be an image or a real camera.</string>
+                    </property>
+                    <item>
+                      <property name="text">
+                        <string>Blank (blank)</string>
+                      </property>
+                    </item>
+                    <item>
+                      <property name="text">
+                        <string>Still Image (image)</string>
+                      </property>
+                    </item>
+                    <item>
+                      <property name="text">
+                        <string>System Camera (qt)</string>
+                      </property>
+                    </item>
+                  </widget>
+                </item>
+              </layout>
+            </item>
+            <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_6">
+                <item>
+                  <widget class="QLabel" name="camera_file_label">
+                    <property name="frameShape">
+                      <enum>QFrame::NoFrame</enum>
+                    </property>
+                    <property name="text">
+                      <string>File:</string>
+                    </property>
+                  </widget>
+                </item>
+                <item>
+                  <widget class="QLineEdit" name="camera_file"/>
+                </item>
+                <item>
+                  <widget class="QToolButton" name="toolButton">
+                    <property name="text">
+                      <string>...</string>
+                    </property>
+                  </widget>
+                </item>
+              </layout>
+            </item>
+            <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_7">
+                <item>
+                  <widget class="QLabel" name="system_camera_label">
+                    <property name="frameShape">
+                      <enum>QFrame::NoFrame</enum>
+                    </property>
+                    <property name="text">
+                      <string>Camera:</string>
+                    </property>
+                  </widget>
+                </item>
+                <item>
+                  <widget class="QComboBox" name="system_camera">
+                    <item>
+                      <property name="text">
+                        <string>&lt;Default&gt;</string>
+                      </property>
+                    </item>
+                  </widget>
+                </item>
+              </layout>
+            </item>
+            <item>
+              <widget class="QCheckBox" name="prompt_before_load">
+                <property name="text">
+                  <string>Prompt before load</string>
+                </property>
+              </widget>
+            </item>
+          </layout>
+        </widget>
+      </item>
+      <item>
+        <widget class="QGroupBox" name="previewBox">
+          <property name="title">
+            <string>Preview</string>
+          </property>
+          <layout class="QVBoxLayout" name="verticalLayout_3">
+            <item>
+              <widget class="QLabel" name="preview_box">
+                <property name="baseSize">
+                  <size>
+                    <width>512</width>
+                    <height>384</height>
+                  </size>
+                </property>
+                <property name="toolTip">
+                  <string>Resolution: 512*384</string>
+                </property>
+                <property name="text">
+                  <string/>
+                </property>
+              </widget>
+            </item>
+            <item>
+              <widget class="QPushButton" name="preview_button">
+                <property name="text">
+                  <string>Click to preview</string>
+                </property>
+              </widget>
+            </item>
+          </layout>
+        </widget>
+      </item>
+      <item>
+        <spacer>
+          <property name="orientation">
+            <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+            <size>
+              <width>20</width>
+              <height>40</height>
+            </size>
+          </property>
+        </spacer>
+      </item>
+    </layout>
+  </widget>
+  <resources/>
+  <connections/>
+</ui>

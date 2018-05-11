@@ -240,6 +240,7 @@ class Module final {
 public:
     Module();
     ~Module();
+    void ReloadCameraDevices();
 
     class Interface : public ServiceFramework<Interface> {
     public:
@@ -771,10 +772,16 @@ private:
         void Clear();
     };
 
+    void LoadCameraImplementation(CameraConfig& camera, int camera_id);
+
     std::array<CameraConfig, NumCameras> cameras;
     std::array<PortConfig, 2> ports;
     CoreTiming::EventType* completion_event_callback;
+    std::atomic<bool> is_camera_reload_pending{false};
 };
+
+/// Reload camera devices. Used when input configuration changed
+void ReloadCameraDevices();
 
 void InstallInterfaces(SM::ServiceManager& service_manager);
 

@@ -50,12 +50,26 @@ public:
     virtual void SetFormat(Service::CAM::OutputFormat format) = 0;
 
     /**
+     * Sets the recommended framerate of the camera.
+     * @param frame_rate Recommended framerate
+     */
+    virtual void SetFrameRate(Service::CAM::FrameRate frame_rate) = 0;
+
+    /**
      * Receives a frame from the camera.
      * This function should be only called between a StartCapture call and a StopCapture call.
      * @returns A std::vector<u16> containing pixels. The total size of the vector is width * height
      *     where width and height are set by a call to SetResolution.
      */
-    virtual std::vector<u16> ReceiveFrame() const = 0;
+    virtual std::vector<u16> ReceiveFrame() = 0;
+
+    /**
+     * Test if the camera is opened successfully and can receive a preview frame. Only used for
+     * preview. This function should be only called between a StartCapture call and a StopCapture
+     * call.
+     * @returns true if the camera is opened successfully and false otherwise
+     */
+    virtual bool IsPreviewAvailable() = 0;
 };
 
 } // namespace Camera

@@ -23,9 +23,13 @@ void BlankCamera::SetFlip(Service::CAM::Flip) {}
 
 void BlankCamera::SetEffect(Service::CAM::Effect) {}
 
-std::vector<u16> BlankCamera::ReceiveFrame() const {
+std::vector<u16> BlankCamera::ReceiveFrame() {
     // Note: 0x80008000 stands for two black pixels in YUV422
     return std::vector<u16>(width * height, output_rgb ? 0 : 0x8000);
+}
+
+bool BlankCamera::IsPreviewAvailable() {
+    return true;
 }
 
 } // namespace Camera
