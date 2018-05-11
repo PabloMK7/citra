@@ -66,5 +66,10 @@ public:
                                    ScreenInfo& screen_info) {
         return false;
     }
+
+    /// Attempt to draw using hardware shaders
+    virtual bool AccelerateDrawBatch(bool is_indexed) {
+        return false;
+    }
 };
 } // namespace VideoCore
