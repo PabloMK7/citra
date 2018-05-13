@@ -77,6 +77,18 @@ use_cpu_jit =
 # 0: Software, 1 (default): Hardware
 use_hw_renderer =
 
+# Whether to use hardware shaders to emulate 3DS shaders
+# 0: Software, 1 (default): Hardware
+use_hw_shader =
+
+# Whether to use accurate multiplication in hardware shaders
+# 0: Off (Default. Faster, but causes issues in some games) 1: On (Slower, but correct)
+shaders_accurate_mul =
+
+# Whether to fallback to software for geometry shaders
+# 0: Off (Faster, but causes issues in some games) 1: On (Default. Slower, but correct)
+shaders_accurate_gs =
+
 # Whether to use the Just-In-Time (JIT) compiler for shader emulation
 # 0: Interpreter (slow), 1 (default): JIT (fast)
 use_shader_jit =
