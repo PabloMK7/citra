@@ -49,7 +49,7 @@ matrix:
       cache: ccache
       script: "./.travis/linux-frozen/build.sh"
     - os: linux
-      env: NAME="linux build (MinGW)"
+      env: NAME="MinGW build"
       sudo: required
       dist: trusty
       services: docker
