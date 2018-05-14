@@ -274,8 +274,6 @@ add_library(core STATIC
     hle/service/mvd/mvd.h
     hle/service/mvd/mvd_std.cpp
     hle/service/mvd/mvd_std.h
-    hle/service/ndm/ndm.cpp
-    hle/service/ndm/ndm.h
     hle/service/ndm/ndm_u.cpp
     hle/service/ndm/ndm_u.h
     hle/service/news/news.cpp
