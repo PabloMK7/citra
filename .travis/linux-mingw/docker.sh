@@ -29,7 +29,8 @@ mkdir package
 QT_PLATFORM_DLL_PATH='/usr/x86_64-w64-mingw32/lib/qt5/plugins/platforms/'
 find build/ -name "citra*.exe" -exec cp {} 'package' \;
 
-cp "${QT_PLATFORM_DLL_PATH}/qwindows.dll" package/
+mkdir package/platforms
+cp "${QT_PLATFORM_DLL_PATH}/qwindows.dll" package/platforms/
 
 
 for i in package/*.exe; do
