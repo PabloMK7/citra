@@ -31,6 +31,7 @@ find build/ -name "citra*.exe" -exec cp {} 'package' \;
 
 mkdir package/platforms
 cp "${QT_PLATFORM_DLL_PATH}/qwindows.dll" package/platforms/
+cp -r "${QT_PLATFORM_DLL_PATH}/../mediaservice/" package/
 
 
 for i in package/*.exe; do
