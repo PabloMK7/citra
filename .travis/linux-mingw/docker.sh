@@ -12,6 +12,8 @@ apt-get install -y ${MINGW_PACKAGES}
 
 # fix a problem in current MinGW headers
 wget -q https://github.com/Alexpux/mingw-w64/raw/d0d7f784833bbb0b2d279310ddc6afb52fe47a46/mingw-w64-headers/crt/errno.h -O /usr/x86_64-w64-mingw32/include/errno.h
+# override Travis CI unreasonable ccache size
+echo 'max_size = 3.0G' > "$HOME/.ccache/ccache.conf"
 
 mkdir build && cd build
 cmake .. -DCMAKE_TOOLCHAIN_FILE="$(pwd)/../CMakeModules/MinGWCross.cmake" -DUSE_CCACHE=ON -DCMAKE_BUILD_TYPE=Release -DENABLE_QT_TRANSLATION=ON -DCITRA_ENABLE_COMPATIBILITY_REPORTING=${ENABLE_COMPATIBILITY_REPORTING:-"OFF"} -DENABLE_COMPATIBILITY_LIST_DOWNLOAD=ON
