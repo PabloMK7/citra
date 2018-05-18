@@ -438,8 +438,7 @@ bool RasterizerOpenGL::AccelerateDrawBatch(bool is_indexed) {
     if (!SetupGeometryShader())
         return false;
 
-    Draw(true, is_indexed);
-    return true;
+    return Draw(true, is_indexed);
 }
 
 static GLenum GetCurrentPrimitiveMode(bool use_gs) {
@@ -475,11 +474,16 @@ static GLenum GetCurrentPrimitiveMode(bool use_gs) {
     }
 }
 
-void RasterizerOpenGL::AccelerateDrawBatchInternal(bool is_indexed, bool use_gs) {
+bool RasterizerOpenGL::AccelerateDrawBatchInternal(bool is_indexed, bool use_gs) {
     const auto& regs = Pica::g_state.regs;
     GLenum primitive_mode = GetCurrentPrimitiveMode(use_gs);
 
     auto [vs_input_index_min, vs_input_index_max, vs_input_size] = AnalyzeVertexArray(is_indexed);
+
+    if (vs_input_size > VERTEX_BUFFER_SIZE) {
+        NGLOG_WARNING(Render_OpenGL, "Too large vertex input size {}", vs_input_size);
+        return false;
+    }
 
     state.draw.vertex_buffer = vertex_buffer.GetHandle();
     state.Apply();
@@ -496,6 +500,12 @@ void RasterizerOpenGL::AccelerateDrawBatchInternal(bool is_indexed, bool use_gs)
     if (is_indexed) {
         bool index_u16 = regs.pipeline.index_array.format != 0;
         std::size_t index_buffer_size = regs.pipeline.num_vertices * (index_u16 ? 2 : 1);
+
+        if (index_buffer_size > INDEX_BUFFER_SIZE) {
+            NGLOG_WARNING(Render_OpenGL, "Too large index input size {}", index_buffer_size);
+            return false;
+        }
+
         const u8* index_data =
             Memory::GetPhysicalPointer(regs.pipeline.vertex_attributes.GetPhysicalBaseAddress() +
                                        regs.pipeline.index_array.offset);
@@ -510,6 +520,7 @@ void RasterizerOpenGL::AccelerateDrawBatchInternal(bool is_indexed, bool use_gs)
     } else {
         glDrawArrays(primitive_mode, 0, regs.pipeline.num_vertices);
     }
+    return true;
 }
 
 void RasterizerOpenGL::DrawTriangles() {
@@ -518,7 +529,7 @@ void RasterizerOpenGL::DrawTriangles() {
     Draw(false, false);
 }
 
-void RasterizerOpenGL::Draw(bool accelerate, bool is_indexed) {
+bool RasterizerOpenGL::Draw(bool accelerate, bool is_indexed) {
     MICROPROFILE_SCOPE(OpenGL_Drawing);
     const auto& regs = Pica::g_state.regs;
 
@@ -746,8 +757,9 @@ void RasterizerOpenGL::Draw(bool accelerate, bool is_indexed) {
     state.Apply();
 
     // Draw the vertex batch
+    bool succeeded = true;
     if (accelerate) {
-        AccelerateDrawBatchInternal(is_indexed, use_gs);
+        succeeded = AccelerateDrawBatchInternal(is_indexed, use_gs);
     } else {
         state.draw.vertex_array = sw_vao.handle;
         state.draw.vertex_buffer = vertex_buffer.GetHandle();
@@ -798,6 +810,8 @@ void RasterizerOpenGL::Draw(bool accelerate, bool is_indexed) {
         res_cache.InvalidateRegion(boost::icl::first(interval), boost::icl::length(interval),
                                    depth_surface);
     }
+
+    return succeeded;
 }
 
 void RasterizerOpenGL::NotifyPicaRegisterChanged(u32 id) {

@@ -221,10 +221,10 @@ private:
     void UploadUniforms(bool accelerate_draw, bool use_gs);
 
     /// Generic draw function for DrawTriangles and AccelerateDrawBatch
-    void Draw(bool accelerate, bool is_indexed);
+    bool Draw(bool accelerate, bool is_indexed);
 
     /// Internal implementation for AccelerateDrawBatch
-    void AccelerateDrawBatchInternal(bool is_indexed, bool use_gs);
+    bool AccelerateDrawBatchInternal(bool is_indexed, bool use_gs);
 
     struct VertexArrayInfo {
         u32 vs_input_index_min;
