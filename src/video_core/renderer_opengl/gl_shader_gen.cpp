@@ -1640,6 +1640,24 @@ uint vertex_id = 0u;
 bool prim_emit = false;
 bool winding = false;
 
+void setemit(uint vertex_id_, bool prim_emit_, bool winding_);
+void emit();
+
+void main() {
+)";
+    for (u32 i = 0; i < config.state.num_outputs; ++i) {
+        out +=
+            "    output_buffer.attributes[" + std::to_string(i) + "] = vec4(0.0, 0.0, 0.0, 1.0);\n";
+    }
+
+    // execute shader
+    out += "\n    exec_shader();\n\n";
+
+    out += "}\n\n";
+
+    // Put the definition of setemit and emit after main to avoid spurious warning about
+    // uninitialized output_buffer in some drivers
+    out += R"(
 void setemit(uint vertex_id_, bool prim_emit_, bool winding_) {
     vertex_id = vertex_id_;
     prim_emit = prim_emit_;
@@ -1658,18 +1676,7 @@ void emit() {
         }
     }
 }
-
-void main() {
 )";
-    for (u32 i = 0; i < config.state.num_outputs; ++i) {
-        out +=
-            "    output_buffer.attributes[" + std::to_string(i) + "] = vec4(0.0, 0.0, 0.0, 1.0);\n";
-    }
-
-    // execute shader
-    out += "\n    exec_shader();\n\n";
-
-    out += "}\n\n";
 
     out += program_source;
 
