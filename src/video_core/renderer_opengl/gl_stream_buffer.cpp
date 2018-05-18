@@ -17,9 +17,10 @@ OGLStreamBuffer::OGLStreamBuffer(GLenum target, GLsizeiptr size, bool prefer_coh
     GLsizeiptr allocate_size = size;
     if (target == GL_ARRAY_BUFFER) {
         // On AMD GPU there is a strange crash in indexed drawing. The crash happens when the buffer
-        // read position is near the end and the crash looks like an out-of-bound access. Doubling
-        // the allocation size for the vertex buffer seems to avoid the crash.
-        // TODO (wwylele): investigate what actually happens here.
+        // read position is near the end and is an out-of-bound access to the vertex buffer. This is
+        // probably a bug in the driver and is related to the usage of vec3<byte> attributes in the
+        // vertex array. Doubling the allocation size for the vertex buffer seems to avoid the
+        // crash.
         allocate_size *= 2;
     }
 
