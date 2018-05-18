@@ -18,6 +18,7 @@
 #include "video_core/renderer_opengl/gl_shader_decompiler.h"
 #include "video_core/renderer_opengl/gl_shader_gen.h"
 #include "video_core/renderer_opengl/gl_shader_util.h"
+#include "video_core/video_core.h"
 
 using Pica::FramebufferRegs;
 using Pica::LightingRegs;
@@ -226,7 +227,7 @@ void PicaShaderConfigCommon::Init(const Pica::ShaderRegs& regs, Pica::Shader::Sh
     program_hash = setup.GetProgramCodeHash();
     swizzle_hash = setup.GetSwizzleDataHash();
     main_offset = regs.main_offset;
-    sanitize_mul = false; // TODO (wwylele): stubbed now. Should sync with user settings
+    sanitize_mul = VideoCore::g_hw_shader_accurate_mul;
 
     num_outputs = 0;
     output_map.fill(16);

@@ -50,6 +50,7 @@ public:
     bool AccelerateFill(const GPU::Regs::MemoryFillConfig& config) override;
     bool AccelerateDisplay(const GPU::Regs::FramebufferConfig& config, PAddr framebuffer_addr,
                            u32 pixel_stride, ScreenInfo& screen_info) override;
+    bool AccelerateDrawBatch(bool is_indexed) override;
 
 private:
     struct SamplerInfo {
@@ -73,6 +74,7 @@ private:
 
     /// Structure that the hardware rendered vertices are composed of
     struct HardwareVertex {
+        HardwareVertex() = default;
         HardwareVertex(const Pica::Shader::OutputVertex& v, bool flip_quaternion) {
             position[0] = v.pos.x.ToFloat32();
             position[1] = v.pos.y.ToFloat32();
@@ -216,7 +218,32 @@ private:
     void SyncLightDistanceAttenuationScale(int light_index);
 
     /// Upload the uniform blocks to the uniform buffer object
-    void UploadUniforms();
+    void UploadUniforms(bool accelerate_draw, bool use_gs);
+
+    /// Generic draw function for DrawTriangles and AccelerateDrawBatch
+    bool Draw(bool accelerate, bool is_indexed);
+
+    /// Internal implementation for AccelerateDrawBatch
+    bool AccelerateDrawBatchInternal(bool is_indexed, bool use_gs);
+
+    struct VertexArrayInfo {
+        u32 vs_input_index_min;
+        u32 vs_input_index_max;
+        u32 vs_input_size;
+    };
+
+    /// Retrieve the range and the size of the input vertex
+    VertexArrayInfo AnalyzeVertexArray(bool is_indexed);
+
+    /// Setup vertex array for AccelerateDrawBatch
+    void SetupVertexArray(u8* array_ptr, GLintptr buffer_offset, GLuint vs_input_index_min,
+                          GLuint vs_input_index_max);
+
+    /// Setup vertex shader for AccelerateDrawBatch
+    bool SetupVertexShader();
+
+    /// Setup geometry shader for AccelerateDrawBatch
+    bool SetupGeometryShader();
 
     OpenGLState state;
 
@@ -242,14 +269,21 @@ private:
 
     // They shall be big enough for about one frame.
     static constexpr size_t VERTEX_BUFFER_SIZE = 32 * 1024 * 1024;
+    static constexpr size_t INDEX_BUFFER_SIZE = 1 * 1024 * 1024;
     static constexpr size_t UNIFORM_BUFFER_SIZE = 2 * 1024 * 1024;
 
+    OGLVertexArray sw_vao; // VAO for software shader draw
+    OGLVertexArray hw_vao; // VAO for hardware shader / accelerate draw
+    std::array<bool, 16> hw_vao_enabled_attributes{};
+
     std::array<SamplerInfo, 3> texture_samplers;
-    OGLVertexArray vertex_array;
     OGLStreamBuffer vertex_buffer;
     OGLStreamBuffer uniform_buffer;
+    OGLStreamBuffer index_buffer;
     OGLFramebuffer framebuffer;
     GLint uniform_buffer_alignment;
+    size_t uniform_size_aligned_vs;
+    size_t uniform_size_aligned_gs;
     size_t uniform_size_aligned_fs;
 
     SamplerInfo texture_cube_sampler;
