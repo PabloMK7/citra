@@ -135,36 +135,6 @@ RasterizerOpenGL::RasterizerOpenGL()
     glActiveTexture(TextureUnits::TextureBufferLUT_RGBA.Enum());
     glTexBuffer(GL_TEXTURE_BUFFER, GL_RGBA32F, texture_buffer.GetHandle());
 
-    // Setup the noise LUT for proctex
-    proctex_noise_lut.Create();
-    state.proctex_noise_lut.texture_buffer = proctex_noise_lut.handle;
-    state.Apply();
-    proctex_noise_lut_buffer.Create();
-    glBindBuffer(GL_TEXTURE_BUFFER, proctex_noise_lut_buffer.handle);
-    glBufferData(GL_TEXTURE_BUFFER, sizeof(GLfloat) * 2 * 128, nullptr, GL_DYNAMIC_DRAW);
-    glActiveTexture(TextureUnits::ProcTexNoiseLUT.Enum());
-    glTexBuffer(GL_TEXTURE_BUFFER, GL_RG32F, proctex_noise_lut_buffer.handle);
-
-    // Setup the color map for proctex
-    proctex_color_map.Create();
-    state.proctex_color_map.texture_buffer = proctex_color_map.handle;
-    state.Apply();
-    proctex_color_map_buffer.Create();
-    glBindBuffer(GL_TEXTURE_BUFFER, proctex_color_map_buffer.handle);
-    glBufferData(GL_TEXTURE_BUFFER, sizeof(GLfloat) * 2 * 128, nullptr, GL_DYNAMIC_DRAW);
-    glActiveTexture(TextureUnits::ProcTexColorMap.Enum());
-    glTexBuffer(GL_TEXTURE_BUFFER, GL_RG32F, proctex_color_map_buffer.handle);
-
-    // Setup the alpha map for proctex
-    proctex_alpha_map.Create();
-    state.proctex_alpha_map.texture_buffer = proctex_alpha_map.handle;
-    state.Apply();
-    proctex_alpha_map_buffer.Create();
-    glBindBuffer(GL_TEXTURE_BUFFER, proctex_alpha_map_buffer.handle);
-    glBufferData(GL_TEXTURE_BUFFER, sizeof(GLfloat) * 2 * 128, nullptr, GL_DYNAMIC_DRAW);
-    glActiveTexture(TextureUnits::ProcTexAlphaMap.Enum());
-    glTexBuffer(GL_TEXTURE_BUFFER, GL_RG32F, proctex_alpha_map_buffer.handle);
-
     // Setup the LUT for proctex
     proctex_lut.Create();
     state.proctex_lut.texture_buffer = proctex_lut.handle;
@@ -1987,39 +1957,41 @@ void RasterizerOpenGL::SyncAndUploadLUTs() {
     }
 
     // helper function for SyncProcTexNoiseLUT/ColorMap/AlphaMap
-    auto SyncProcTexValueLUT = [](const std::array<Pica::State::ProcTex::ValueEntry, 128>& lut,
-                                  std::array<GLvec2, 128>& lut_data, GLuint buffer) {
+    auto SyncProcTexValueLUT = [this, buffer, offset, invalidate, &bytes_used](
+                                   const std::array<Pica::State::ProcTex::ValueEntry, 128>& lut,
+                                   std::array<GLvec2, 128>& lut_data, GLint& lut_offset) {
         std::array<GLvec2, 128> new_data;
         std::transform(lut.begin(), lut.end(), new_data.begin(), [](const auto& entry) {
             return GLvec2{entry.ToFloat(), entry.DiffToFloat()};
         });
 
-        if (new_data != lut_data) {
+        if (new_data != lut_data || invalidate) {
             lut_data = new_data;
-            glBindBuffer(GL_TEXTURE_BUFFER, buffer);
-            glBufferSubData(GL_TEXTURE_BUFFER, 0, new_data.size() * sizeof(GLvec2),
-                            new_data.data());
+            std::memcpy(buffer + bytes_used, new_data.data(), new_data.size() * sizeof(GLvec2));
+            lut_offset = (offset + bytes_used) / sizeof(GLvec2);
+            uniform_block_data.dirty = true;
+            bytes_used += new_data.size() * sizeof(GLvec2);
         }
     };
 
     // Sync the proctex noise lut
-    if (uniform_block_data.proctex_noise_lut_dirty) {
+    if (uniform_block_data.proctex_noise_lut_dirty || invalidate) {
         SyncProcTexValueLUT(Pica::g_state.proctex.noise_table, proctex_noise_lut_data,
-                            proctex_noise_lut_buffer.handle);
+                            uniform_block_data.data.proctex_noise_lut_offset);
         uniform_block_data.proctex_noise_lut_dirty = false;
     }
 
     // Sync the proctex color map
-    if (uniform_block_data.proctex_color_map_dirty) {
+    if (uniform_block_data.proctex_color_map_dirty || invalidate) {
         SyncProcTexValueLUT(Pica::g_state.proctex.color_map_table, proctex_color_map_data,
-                            proctex_color_map_buffer.handle);
+                            uniform_block_data.data.proctex_color_map_offset);
         uniform_block_data.proctex_color_map_dirty = false;
     }
 
     // Sync the proctex alpha map
-    if (uniform_block_data.proctex_alpha_map_dirty) {
+    if (uniform_block_data.proctex_alpha_map_dirty || invalidate) {
         SyncProcTexValueLUT(Pica::g_state.proctex.alpha_map_table, proctex_alpha_map_data,
-                            proctex_alpha_map_buffer.handle);
+                            uniform_block_data.data.proctex_alpha_map_offset);
         uniform_block_data.proctex_alpha_map_dirty = false;
     }
 

@@ -1113,8 +1113,8 @@ float ProcTexNoiseCoef(vec2 x) {
     float g2 = ProcTexNoiseRand2D(point + vec2(0.0, 1.0)) * (frac.x + frac.y - 1.0);
     float g3 = ProcTexNoiseRand2D(point + vec2(1.0, 1.0)) * (frac.x + frac.y - 2.0);
 
-    float x_noise = ProcTexLookupLUT(proctex_noise_lut, proctex_noise_lut_offset, frac.x);
-    float y_noise = ProcTexLookupLUT(proctex_noise_lut, proctex_noise_lut_offset, frac.y);
+    float x_noise = ProcTexLookupLUT(texture_buffer_lut_rg, proctex_noise_lut_offset, frac.x);
+    float y_noise = ProcTexLookupLUT(texture_buffer_lut_rg, proctex_noise_lut_offset, frac.y);
     float x0 = mix(g0, g1, x_noise);
     float x1 = mix(g2, g3, x_noise);
     return mix(x0, x1, y_noise);
@@ -1156,7 +1156,7 @@ float ProcTexNoiseCoef(vec2 x) {
 
     // Combine and map
     out += "float lut_coord = ";
-    AppendProcTexCombineAndMap(out, config.state.proctex.color_combiner, "proctex_color_map",
+    AppendProcTexCombineAndMap(out, config.state.proctex.color_combiner, "texture_buffer_lut_rg",
                                "proctex_color_map_offset");
     out += ";\n";
 
@@ -1188,8 +1188,8 @@ float ProcTexNoiseCoef(vec2 x) {
         // Note: in separate alpha mode, the alpha channel skips the color LUT look up stage. It
         // uses the output of CombineAndMap directly instead.
         out += "float final_alpha = ";
-        AppendProcTexCombineAndMap(out, config.state.proctex.alpha_combiner, "proctex_alpha_map",
-                                   "proctex_alpha_map_offset");
+        AppendProcTexCombineAndMap(out, config.state.proctex.alpha_combiner,
+                                   "texture_buffer_lut_rg", "proctex_alpha_map_offset");
         out += ";\n";
         out += "return vec4(final_color.xyz, final_alpha);\n}\n";
     } else {
@@ -1224,9 +1224,6 @@ uniform sampler2D tex2;
 uniform samplerCube tex_cube;
 uniform samplerBuffer texture_buffer_lut_rg;
 uniform samplerBuffer texture_buffer_lut_rgba;
-uniform samplerBuffer proctex_noise_lut;
-uniform samplerBuffer proctex_color_map;
-uniform samplerBuffer proctex_alpha_map;
 uniform samplerBuffer proctex_lut;
 uniform samplerBuffer proctex_diff_lut;
 

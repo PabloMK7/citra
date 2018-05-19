@@ -20,9 +20,6 @@ constexpr TextureUnit PicaTexture(int unit) {
     return TextureUnit{unit};
 }
 
-constexpr TextureUnit ProcTexNoiseLUT{5};
-constexpr TextureUnit ProcTexColorMap{6};
-constexpr TextureUnit ProcTexAlphaMap{7};
 constexpr TextureUnit ProcTexLUT{8};
 constexpr TextureUnit ProcTexDiffLUT{9};
 constexpr TextureUnit TextureCube{10};
@@ -110,18 +107,6 @@ public:
     struct {
         GLuint texture_buffer; // GL_TEXTURE_BINDING_BUFFER
     } texture_buffer_lut_rgba;
-
-    struct {
-        GLuint texture_buffer; // GL_TEXTURE_BINDING_BUFFER
-    } proctex_noise_lut;
-
-    struct {
-        GLuint texture_buffer; // GL_TEXTURE_BINDING_BUFFER
-    } proctex_color_map;
-
-    struct {
-        GLuint texture_buffer; // GL_TEXTURE_BINDING_BUFFER
-    } proctex_alpha_map;
 
     struct {
         GLuint texture_buffer; // GL_TEXTURE_BINDING_BUFFER

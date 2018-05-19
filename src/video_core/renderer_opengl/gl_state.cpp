@@ -60,9 +60,6 @@ OpenGLState::OpenGLState() {
 
     proctex_lut.texture_buffer = 0;
     proctex_diff_lut.texture_buffer = 0;
-    proctex_color_map.texture_buffer = 0;
-    proctex_alpha_map.texture_buffer = 0;
-    proctex_noise_lut.texture_buffer = 0;
 
     image_shadow_buffer = 0;
     image_shadow_texture_px = 0;
@@ -233,24 +230,6 @@ void OpenGLState::Apply() const {
         glBindTexture(GL_TEXTURE_BUFFER, texture_buffer_lut_rgba.texture_buffer);
     }
 
-    // ProcTex Noise LUT
-    if (proctex_noise_lut.texture_buffer != cur_state.proctex_noise_lut.texture_buffer) {
-        glActiveTexture(TextureUnits::ProcTexNoiseLUT.Enum());
-        glBindTexture(GL_TEXTURE_BUFFER, proctex_noise_lut.texture_buffer);
-    }
-
-    // ProcTex Color Map
-    if (proctex_color_map.texture_buffer != cur_state.proctex_color_map.texture_buffer) {
-        glActiveTexture(TextureUnits::ProcTexColorMap.Enum());
-        glBindTexture(GL_TEXTURE_BUFFER, proctex_color_map.texture_buffer);
-    }
-
-    // ProcTex Alpha Map
-    if (proctex_alpha_map.texture_buffer != cur_state.proctex_alpha_map.texture_buffer) {
-        glActiveTexture(TextureUnits::ProcTexAlphaMap.Enum());
-        glBindTexture(GL_TEXTURE_BUFFER, proctex_alpha_map.texture_buffer);
-    }
-
     // ProcTex LUT
     if (proctex_lut.texture_buffer != cur_state.proctex_lut.texture_buffer) {
         glActiveTexture(TextureUnits::ProcTexLUT.Enum());
@@ -378,12 +357,6 @@ OpenGLState& OpenGLState::ResetTexture(GLuint handle) {
         texture_buffer_lut_rg.texture_buffer = 0;
     if (texture_buffer_lut_rgba.texture_buffer == handle)
         texture_buffer_lut_rgba.texture_buffer = 0;
-    if (proctex_noise_lut.texture_buffer == handle)
-        proctex_noise_lut.texture_buffer = 0;
-    if (proctex_color_map.texture_buffer == handle)
-        proctex_color_map.texture_buffer = 0;
-    if (proctex_alpha_map.texture_buffer == handle)
-        proctex_alpha_map.texture_buffer = 0;
     if (proctex_lut.texture_buffer == handle)
         proctex_lut.texture_buffer = 0;
     if (proctex_diff_lut.texture_buffer == handle)
