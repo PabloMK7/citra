@@ -52,7 +52,7 @@ const std::string StillImageCameraFactory::getFilePath() {
         temp_filters << QString("*." + QString(type));
     }
 
-    QString filter = QObject::tr("Supported image files (") + temp_filters.join(" ") + ")";
+    QString filter = QObject::tr("Supported image files (%1)").arg(temp_filters.join(" "));
 
     return QFileDialog::getOpenFileName(nullptr, QObject::tr("Open File"), ".", filter)
         .toStdString();

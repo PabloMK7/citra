@@ -14,10 +14,10 @@ std::unique_ptr<CameraInterface> QtCameraFactory::CreatePreview(const std::strin
     if (camera->IsPreviewAvailable()) {
         return camera;
     }
-    QMessageBox::critical(nullptr, QObject::tr("Error"),
-                          QObject::tr("Couldn't load ") +
-                              (config.empty() ? QObject::tr("the camera") : "") +
-                              QString::fromStdString(config));
+    QMessageBox::critical(
+        nullptr, QObject::tr("Error"),
+        (config.empty() ? QObject::tr("Couldn't load the camera")
+                        : QObject::tr("Couldn't load %1").arg(QString::fromStdString(config))));
     return nullptr;
 }
 
