@@ -28,6 +28,8 @@ constexpr TextureUnit ProcTexAlphaMap{7};
 constexpr TextureUnit ProcTexLUT{8};
 constexpr TextureUnit ProcTexDiffLUT{9};
 constexpr TextureUnit TextureCube{10};
+constexpr TextureUnit TextureBufferLUT_RG{11};
+constexpr TextureUnit TextureBufferLUT_RGBA{12};
 
 } // namespace TextureUnits
 
@@ -102,6 +104,14 @@ public:
         GLuint texture_cube; // GL_TEXTURE_BINDING_CUBE_MAP
         GLuint sampler;      // GL_SAMPLER_BINDING
     } texture_cube_unit;
+
+    struct {
+        GLuint texture_buffer; // GL_TEXTURE_BINDING_BUFFER
+    } texture_buffer_lut_rg;
+
+    struct {
+        GLuint texture_buffer; // GL_TEXTURE_BINDING_BUFFER
+    } texture_buffer_lut_rgba;
 
     struct {
         GLuint texture_buffer; // GL_TEXTURE_BINDING_BUFFER

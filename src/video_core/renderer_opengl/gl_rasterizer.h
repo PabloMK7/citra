@@ -266,6 +266,7 @@ private:
     static constexpr size_t VERTEX_BUFFER_SIZE = 32 * 1024 * 1024;
     static constexpr size_t INDEX_BUFFER_SIZE = 1 * 1024 * 1024;
     static constexpr size_t UNIFORM_BUFFER_SIZE = 2 * 1024 * 1024;
+    static constexpr size_t TEXTURE_BUFFER_SIZE = 1 * 1024 * 1024;
 
     OGLVertexArray sw_vao; // VAO for software shader draw
     OGLVertexArray hw_vao; // VAO for hardware shader / accelerate draw
@@ -275,6 +276,7 @@ private:
     OGLStreamBuffer vertex_buffer;
     OGLStreamBuffer uniform_buffer;
     OGLStreamBuffer index_buffer;
+    OGLStreamBuffer texture_buffer;
     OGLFramebuffer framebuffer;
     GLint uniform_buffer_alignment;
     size_t uniform_size_aligned_vs;
@@ -282,6 +284,9 @@ private:
     size_t uniform_size_aligned_fs;
 
     SamplerInfo texture_cube_sampler;
+
+    OGLTexture texture_buffer_lut_rg;
+    OGLTexture texture_buffer_lut_rgba;
 
     OGLBuffer lighting_lut_buffer;
     OGLTexture lighting_lut;

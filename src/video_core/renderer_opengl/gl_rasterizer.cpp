@@ -37,7 +37,8 @@ MICROPROFILE_DEFINE(OpenGL_CacheManagement, "OpenGL", "Cache Mgmt", MP_RGB(100, 
 RasterizerOpenGL::RasterizerOpenGL()
     : shader_dirty(true), vertex_buffer(GL_ARRAY_BUFFER, VERTEX_BUFFER_SIZE),
       uniform_buffer(GL_UNIFORM_BUFFER, UNIFORM_BUFFER_SIZE),
-      index_buffer(GL_ELEMENT_ARRAY_BUFFER, INDEX_BUFFER_SIZE) {
+      index_buffer(GL_ELEMENT_ARRAY_BUFFER, INDEX_BUFFER_SIZE),
+      texture_buffer(GL_TEXTURE_BUFFER, TEXTURE_BUFFER_SIZE) {
 
     allow_shadow = GLAD_GL_ARB_shader_image_load_store && GLAD_GL_ARB_shader_image_size &&
                    GLAD_GL_ARB_framebuffer_no_attachments;
@@ -124,6 +125,17 @@ RasterizerOpenGL::RasterizerOpenGL()
 
     // Create render framebuffer
     framebuffer.Create();
+
+    // Allocate and bind texture buffer lut textures
+    texture_buffer_lut_rg.Create();
+    texture_buffer_lut_rgba.Create();
+    state.texture_buffer_lut_rg.texture_buffer = texture_buffer_lut_rg.handle;
+    state.texture_buffer_lut_rgba.texture_buffer = texture_buffer_lut_rgba.handle;
+    state.Apply();
+    glActiveTexture(TextureUnits::TextureBufferLUT_RG.Enum());
+    glTexBuffer(GL_TEXTURE_BUFFER, GL_RG32F, texture_buffer.GetHandle());
+    glActiveTexture(TextureUnits::TextureBufferLUT_RGBA.Enum());
+    glTexBuffer(GL_TEXTURE_BUFFER, GL_RGBA32F, texture_buffer.GetHandle());
 
     // Allocate and bind lighting lut textures
     lighting_lut.Create();
@@ -1931,6 +1943,12 @@ void RasterizerOpenGL::SyncShadowBias() {
 }
 
 void RasterizerOpenGL::SyncAndUploadLUTs() {
+    constexpr size_t max_size = sizeof(GLvec2) * 256 * Pica::LightingRegs::NumLightingSampler +
+                                sizeof(GLvec2) * 128 +     // fog
+                                sizeof(GLvec2) * 128 * 3 + // proctex: noise + color + alpha
+                                sizeof(GLvec4) * 256 +     // proctex
+                                sizeof(GLvec4) * 256;      // proctex diff
+
     // Sync the lighting luts
     for (unsigned index = 0; index < uniform_block_data.lut_dirty.size(); index++) {
         if (uniform_block_data.lut_dirty[index]) {
