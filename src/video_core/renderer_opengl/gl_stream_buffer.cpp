@@ -87,7 +87,7 @@ std::tuple<u8*, GLintptr, bool> OGLStreamBuffer::Map(GLsizeiptr size, GLintptr a
 void OGLStreamBuffer::Unmap(GLsizeiptr size) {
     ASSERT(size <= mapped_size);
 
-    if (!coherent) {
+    if (!coherent && size > 0) {
         glFlushMappedBufferRange(gl_target, buffer_pos - mapped_offset, size);
     }
 
