@@ -76,6 +76,9 @@ RasterizerOpenGL::RasterizerOpenGL()
     uniform_block_data.proctex_lut_dirty = true;
     uniform_block_data.proctex_diff_lut_dirty = true;
 
+    for (int i = 0; i < 24; i++)
+      uniform_block_data.data.lighting_lut_offset[i / 4][i % 4] = 256 * i;
+
     glGetIntegerv(GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT, &uniform_buffer_alignment);
     uniform_size_aligned_vs =
         Common::AlignUp<size_t>(sizeof(VSUniformData), uniform_buffer_alignment);
