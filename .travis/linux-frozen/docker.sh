@@ -16,12 +16,8 @@ apt-get install -y build-essential wget git python-launchpadlib ccache
     qt5-qmltooling-plugins 5.9.3-0ubuntu1 bionic     \
     qtdeclarative5-dev 5.9.3-0ubuntu1 bionic         \
     qtmultimedia5-dev 5.9.3-0ubuntu3 bionic          \
-    libicu57 57.1-6ubuntu0.2 bionic
-
-# Get a recent version of CMake
-wget https://cmake.org/files/v3.10/cmake-3.10.1-Linux-x86_64.sh
-echo y | sh cmake-3.10.1-Linux-x86_64.sh --prefix=cmake
-export PATH=/citra/cmake/cmake-3.10.1-Linux-x86_64/bin:$PATH
+    libicu57 57.1-6ubuntu0.2 bionic                  \
+    cmake 3.10.2-1ubuntu2 bionic
 
 mkdir build && cd build
 cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=/usr/lib/ccache/gcc -DCMAKE_CXX_COMPILER=/usr/lib/ccache/g++ -DCITRA_ENABLE_COMPATIBILITY_REPORTING=${ENABLE_COMPATIBILITY_REPORTING:-"OFF"} -DENABLE_COMPATIBILITY_LIST_DOWNLOAD=ON
