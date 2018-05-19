@@ -1224,7 +1224,6 @@ uniform sampler2D tex2;
 uniform samplerCube tex_cube;
 uniform samplerBuffer texture_buffer_lut_rg;
 uniform samplerBuffer texture_buffer_lut_rgba;
-uniform samplerBuffer fog_lut;
 uniform samplerBuffer proctex_noise_lut;
 uniform samplerBuffer proctex_color_map;
 uniform samplerBuffer proctex_alpha_map;
@@ -1494,7 +1493,8 @@ vec4 secondary_fragment_color = vec4(0.0);
         // Generate clamped fog factor from LUT for given fog index
         out += "float fog_i = clamp(floor(fog_index), 0.0, 127.0);\n";
         out += "float fog_f = fog_index - fog_i;\n";
-        out += "vec2 fog_lut_entry = texelFetch(fog_lut, int(fog_i) + fog_lut_offset).rg;\n";
+        out += "vec2 fog_lut_entry = texelFetch(texture_buffer_lut_rg, int(fog_i) + "
+               "fog_lut_offset).rg;\n";
         out += "float fog_factor = fog_lut_entry.r + fog_lut_entry.g * fog_f;\n";
         out += "fog_factor = clamp(fog_factor, 0.0, 1.0);\n";
 

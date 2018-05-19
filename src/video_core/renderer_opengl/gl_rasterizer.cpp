@@ -135,16 +135,6 @@ RasterizerOpenGL::RasterizerOpenGL()
     glActiveTexture(TextureUnits::TextureBufferLUT_RGBA.Enum());
     glTexBuffer(GL_TEXTURE_BUFFER, GL_RGBA32F, texture_buffer.GetHandle());
 
-    // Setup the LUT for the fog
-    fog_lut.Create();
-    state.fog_lut.texture_buffer = fog_lut.handle;
-    state.Apply();
-    fog_lut_buffer.Create();
-    glBindBuffer(GL_TEXTURE_BUFFER, fog_lut_buffer.handle);
-    glBufferData(GL_TEXTURE_BUFFER, sizeof(GLfloat) * 2 * 128, nullptr, GL_DYNAMIC_DRAW);
-    glActiveTexture(TextureUnits::FogLUT.Enum());
-    glTexBuffer(GL_TEXTURE_BUFFER, GL_RG32F, fog_lut_buffer.handle);
-
     // Setup the noise LUT for proctex
     proctex_noise_lut.Create();
     state.proctex_noise_lut.texture_buffer = proctex_noise_lut.handle;
@@ -1978,7 +1968,7 @@ void RasterizerOpenGL::SyncAndUploadLUTs() {
     uniform_block_data.lighting_lut_dirty_any = false;
 
     // Sync the fog lut
-    if (uniform_block_data.fog_lut_dirty) {
+    if (uniform_block_data.fog_lut_dirty || invalidate) {
         std::array<GLvec2, 128> new_data;
 
         std::transform(Pica::g_state.fog.lut.begin(), Pica::g_state.fog.lut.end(), new_data.begin(),
@@ -1986,11 +1976,12 @@ void RasterizerOpenGL::SyncAndUploadLUTs() {
                            return GLvec2{entry.ToFloat(), entry.DiffToFloat()};
                        });
 
-        if (new_data != fog_lut_data) {
+        if (new_data != fog_lut_data || invalidate) {
             fog_lut_data = new_data;
-            glBindBuffer(GL_TEXTURE_BUFFER, fog_lut_buffer.handle);
-            glBufferSubData(GL_TEXTURE_BUFFER, 0, new_data.size() * sizeof(GLvec2),
-                            new_data.data());
+            std::memcpy(buffer + bytes_used, new_data.data(), new_data.size() * sizeof(GLvec2));
+            uniform_block_data.data.fog_lut_offset = (offset + bytes_used) / sizeof(GLvec2);
+            uniform_block_data.dirty = true;
+            bytes_used += new_data.size() * sizeof(GLvec2);
         }
         uniform_block_data.fog_lut_dirty = false;
     }
