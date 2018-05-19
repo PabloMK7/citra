@@ -67,7 +67,8 @@ RasterizerOpenGL::RasterizerOpenGL()
 
     uniform_block_data.dirty = true;
 
-    uniform_block_data.lut_dirty.fill(true);
+    uniform_block_data.lighting_lut_dirty.fill(true);
+    uniform_block_data.lighting_lut_dirty_any = true;
 
     uniform_block_data.fog_lut_dirty = true;
 
@@ -1382,7 +1383,8 @@ void RasterizerOpenGL::NotifyPicaRegisterChanged(u32 id) {
     case PICA_REG_INDEX_WORKAROUND(lighting.lut_data[6], 0x1ce):
     case PICA_REG_INDEX_WORKAROUND(lighting.lut_data[7], 0x1cf): {
         auto& lut_config = regs.lighting.lut_config;
-        uniform_block_data.lut_dirty[lut_config.type] = true;
+        uniform_block_data.lighting_lut_dirty[lut_config.type] = true;
+        uniform_block_data.lighting_lut_dirty_any = true;
         break;
     }
     }
@@ -1950,24 +1952,27 @@ void RasterizerOpenGL::SyncAndUploadLUTs() {
                                 sizeof(GLvec4) * 256;      // proctex diff
 
     // Sync the lighting luts
-    for (unsigned index = 0; index < uniform_block_data.lut_dirty.size(); index++) {
-        if (uniform_block_data.lut_dirty[index]) {
-            std::array<GLvec2, 256> new_data;
-            const auto& source_lut = Pica::g_state.lighting.luts[index];
-            std::transform(source_lut.begin(), source_lut.end(), new_data.begin(),
-                           [](const auto& entry) {
-                               return GLvec2{entry.ToFloat(), entry.DiffToFloat()};
-                           });
+    if (uniform_block_data.lighting_lut_dirty_any) {
+        for (unsigned index = 0; index < uniform_block_data.lighting_lut_dirty.size(); index++) {
+            if (uniform_block_data.lighting_lut_dirty[index]) {
+                std::array<GLvec2, 256> new_data;
+                const auto& source_lut = Pica::g_state.lighting.luts[index];
+                std::transform(source_lut.begin(), source_lut.end(), new_data.begin(),
+                               [](const auto& entry) {
+                                   return GLvec2{entry.ToFloat(), entry.DiffToFloat()};
+                               });
 
-            if (new_data != lighting_lut_data[index]) {
-                lighting_lut_data[index] = new_data;
-                glBindBuffer(GL_TEXTURE_BUFFER, lighting_lut_buffer.handle);
-                glBufferSubData(GL_TEXTURE_BUFFER, index * new_data.size() * sizeof(GLvec2),
-                                new_data.size() * sizeof(GLvec2), new_data.data());
+                if (new_data != lighting_lut_data[index]) {
+                    lighting_lut_data[index] = new_data;
+                    glBindBuffer(GL_TEXTURE_BUFFER, lighting_lut_buffer.handle);
+                    glBufferSubData(GL_TEXTURE_BUFFER, index * new_data.size() * sizeof(GLvec2),
+                                    new_data.size() * sizeof(GLvec2), new_data.data());
+                }
+                uniform_block_data.lighting_lut_dirty[index] = false;
             }
-            uniform_block_data.lut_dirty[index] = false;
         }
     }
+    uniform_block_data.lighting_lut_dirty_any = false;
 
     // Sync the fog lut
     if (uniform_block_data.fog_lut_dirty) {

@@ -250,7 +250,8 @@ private:
 
     struct {
         UniformData data;
-        std::array<bool, Pica::LightingRegs::NumLightingSampler> lut_dirty;
+        std::array<bool, Pica::LightingRegs::NumLightingSampler> lighting_lut_dirty;
+        bool lighting_lut_dirty_any;
         bool fog_lut_dirty;
         bool proctex_noise_lut_dirty;
         bool proctex_color_map_dirty;
