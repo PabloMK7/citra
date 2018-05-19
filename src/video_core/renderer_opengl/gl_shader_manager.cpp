@@ -57,8 +57,6 @@ static void SetShaderSamplerBindings(GLuint shader) {
     // Set the texture samplers to correspond to different lookup table texture units
     SetShaderSamplerBinding(shader, "texture_buffer_lut_rg", TextureUnits::TextureBufferLUT_RG);
     SetShaderSamplerBinding(shader, "texture_buffer_lut_rgba", TextureUnits::TextureBufferLUT_RGBA);
-    SetShaderSamplerBinding(shader, "proctex_lut", TextureUnits::ProcTexLUT);
-    SetShaderSamplerBinding(shader, "proctex_diff_lut", TextureUnits::ProcTexDiffLUT);
 
     SetShaderImageBinding(shader, "shadow_buffer", ImageUnits::ShadowBuffer);
     SetShaderImageBinding(shader, "shadow_texture_px", ImageUnits::ShadowTexturePX);

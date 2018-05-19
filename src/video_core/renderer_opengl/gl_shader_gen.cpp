@@ -1171,15 +1171,16 @@ float ProcTexNoiseCoef(vec2 x) {
         out += "int lut_index_i = int(lut_coord) + " +
                std::to_string(config.state.proctex.lut_offset) + ";\n";
         out += "float lut_index_f = fract(lut_coord);\n";
-        out += "vec4 final_color = texelFetch(proctex_lut, lut_index_i + proctex_lut_offset) + "
+        out += "vec4 final_color = texelFetch(texture_buffer_lut_rgba, lut_index_i + "
+               "proctex_lut_offset) + "
                "lut_index_f * "
-               "texelFetch(proctex_diff_lut, lut_index_i + proctex_diff_lut_offset);\n";
+               "texelFetch(texture_buffer_lut_rgba, lut_index_i + proctex_diff_lut_offset);\n";
         break;
     case ProcTexFilter::Nearest:
     case ProcTexFilter::NearestMipmapLinear:
     case ProcTexFilter::NearestMipmapNearest:
         out += "lut_coord += " + std::to_string(config.state.proctex.lut_offset) + ";\n";
-        out += "vec4 final_color = texelFetch(proctex_lut, int(round(lut_coord)) + "
+        out += "vec4 final_color = texelFetch(texture_buffer_lut_rgba, int(round(lut_coord)) + "
                "proctex_lut_offset);\n";
         break;
     }
@@ -1224,8 +1225,6 @@ uniform sampler2D tex2;
 uniform samplerCube tex_cube;
 uniform samplerBuffer texture_buffer_lut_rg;
 uniform samplerBuffer texture_buffer_lut_rgba;
-uniform samplerBuffer proctex_lut;
-uniform samplerBuffer proctex_diff_lut;
 
 #if ALLOW_SHADOW
 layout(r32ui) uniform readonly uimage2D shadow_texture_px;

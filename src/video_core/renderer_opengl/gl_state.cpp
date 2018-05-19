@@ -58,9 +58,6 @@ OpenGLState::OpenGLState() {
     texture_buffer_lut_rg.texture_buffer = 0;
     texture_buffer_lut_rgba.texture_buffer = 0;
 
-    proctex_lut.texture_buffer = 0;
-    proctex_diff_lut.texture_buffer = 0;
-
     image_shadow_buffer = 0;
     image_shadow_texture_px = 0;
     image_shadow_texture_nx = 0;
@@ -230,18 +227,6 @@ void OpenGLState::Apply() const {
         glBindTexture(GL_TEXTURE_BUFFER, texture_buffer_lut_rgba.texture_buffer);
     }
 
-    // ProcTex LUT
-    if (proctex_lut.texture_buffer != cur_state.proctex_lut.texture_buffer) {
-        glActiveTexture(TextureUnits::ProcTexLUT.Enum());
-        glBindTexture(GL_TEXTURE_BUFFER, proctex_lut.texture_buffer);
-    }
-
-    // ProcTex Diff LUT
-    if (proctex_diff_lut.texture_buffer != cur_state.proctex_diff_lut.texture_buffer) {
-        glActiveTexture(TextureUnits::ProcTexDiffLUT.Enum());
-        glBindTexture(GL_TEXTURE_BUFFER, proctex_diff_lut.texture_buffer);
-    }
-
     // Shadow Images
     if (image_shadow_buffer != cur_state.image_shadow_buffer) {
         glBindImageTexture(ImageUnits::ShadowBuffer, image_shadow_buffer, 0, GL_FALSE, 0,
@@ -357,10 +342,6 @@ OpenGLState& OpenGLState::ResetTexture(GLuint handle) {
         texture_buffer_lut_rg.texture_buffer = 0;
     if (texture_buffer_lut_rgba.texture_buffer == handle)
         texture_buffer_lut_rgba.texture_buffer = 0;
-    if (proctex_lut.texture_buffer == handle)
-        proctex_lut.texture_buffer = 0;
-    if (proctex_diff_lut.texture_buffer == handle)
-        proctex_diff_lut.texture_buffer = 0;
     if (image_shadow_buffer == handle)
         image_shadow_buffer = 0;
     if (image_shadow_texture_px == handle)

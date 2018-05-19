@@ -135,26 +135,6 @@ RasterizerOpenGL::RasterizerOpenGL()
     glActiveTexture(TextureUnits::TextureBufferLUT_RGBA.Enum());
     glTexBuffer(GL_TEXTURE_BUFFER, GL_RGBA32F, texture_buffer.GetHandle());
 
-    // Setup the LUT for proctex
-    proctex_lut.Create();
-    state.proctex_lut.texture_buffer = proctex_lut.handle;
-    state.Apply();
-    proctex_lut_buffer.Create();
-    glBindBuffer(GL_TEXTURE_BUFFER, proctex_lut_buffer.handle);
-    glBufferData(GL_TEXTURE_BUFFER, sizeof(GLfloat) * 4 * 256, nullptr, GL_DYNAMIC_DRAW);
-    glActiveTexture(TextureUnits::ProcTexLUT.Enum());
-    glTexBuffer(GL_TEXTURE_BUFFER, GL_RGBA32F, proctex_lut_buffer.handle);
-
-    // Setup the difference LUT for proctex
-    proctex_diff_lut.Create();
-    state.proctex_diff_lut.texture_buffer = proctex_diff_lut.handle;
-    state.Apply();
-    proctex_diff_lut_buffer.Create();
-    glBindBuffer(GL_TEXTURE_BUFFER, proctex_diff_lut_buffer.handle);
-    glBufferData(GL_TEXTURE_BUFFER, sizeof(GLfloat) * 4 * 256, nullptr, GL_DYNAMIC_DRAW);
-    glActiveTexture(TextureUnits::ProcTexDiffLUT.Enum());
-    glTexBuffer(GL_TEXTURE_BUFFER, GL_RGBA32F, proctex_diff_lut_buffer.handle);
-
     // Bind index buffer for hardware shader path
     state.draw.vertex_array = hw_vao.handle;
     state.Apply();
@@ -1996,7 +1976,7 @@ void RasterizerOpenGL::SyncAndUploadLUTs() {
     }
 
     // Sync the proctex lut
-    if (uniform_block_data.proctex_lut_dirty) {
+    if (uniform_block_data.proctex_lut_dirty || invalidate) {
         std::array<GLvec4, 256> new_data;
 
         std::transform(Pica::g_state.proctex.color_table.begin(),
@@ -2006,17 +1986,18 @@ void RasterizerOpenGL::SyncAndUploadLUTs() {
                            return GLvec4{rgba.r(), rgba.g(), rgba.b(), rgba.a()};
                        });
 
-        if (new_data != proctex_lut_data) {
+        if (new_data != proctex_lut_data || invalidate) {
             proctex_lut_data = new_data;
-            glBindBuffer(GL_TEXTURE_BUFFER, proctex_lut_buffer.handle);
-            glBufferSubData(GL_TEXTURE_BUFFER, 0, new_data.size() * sizeof(GLvec4),
-                            new_data.data());
+            std::memcpy(buffer + bytes_used, new_data.data(), new_data.size() * sizeof(GLvec4));
+            uniform_block_data.data.proctex_lut_offset = (offset + bytes_used) / sizeof(GLvec4);
+            uniform_block_data.dirty = true;
+            bytes_used += new_data.size() * sizeof(GLvec4);
         }
         uniform_block_data.proctex_lut_dirty = false;
     }
 
     // Sync the proctex difference lut
-    if (uniform_block_data.proctex_diff_lut_dirty) {
+    if (uniform_block_data.proctex_diff_lut_dirty || invalidate) {
         std::array<GLvec4, 256> new_data;
 
         std::transform(Pica::g_state.proctex.color_diff_table.begin(),
@@ -2026,11 +2007,13 @@ void RasterizerOpenGL::SyncAndUploadLUTs() {
                            return GLvec4{rgba.r(), rgba.g(), rgba.b(), rgba.a()};
                        });
 
-        if (new_data != proctex_diff_lut_data) {
+        if (new_data != proctex_diff_lut_data || invalidate) {
             proctex_diff_lut_data = new_data;
-            glBindBuffer(GL_TEXTURE_BUFFER, proctex_diff_lut_buffer.handle);
-            glBufferSubData(GL_TEXTURE_BUFFER, 0, new_data.size() * sizeof(GLvec4),
-                            new_data.data());
+            std::memcpy(buffer + bytes_used, new_data.data(), new_data.size() * sizeof(GLvec4));
+            uniform_block_data.data.proctex_diff_lut_offset =
+                (offset + bytes_used) / sizeof(GLvec4);
+            uniform_block_data.dirty = true;
+            bytes_used += new_data.size() * sizeof(GLvec4);
         }
         uniform_block_data.proctex_diff_lut_dirty = false;
     }

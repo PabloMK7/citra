@@ -294,13 +294,7 @@ private:
     std::array<GLvec2, 128> proctex_noise_lut_data{};
     std::array<GLvec2, 128> proctex_color_map_data{};
     std::array<GLvec2, 128> proctex_alpha_map_data{};
-
-    OGLBuffer proctex_lut_buffer;
-    OGLTexture proctex_lut;
     std::array<GLvec4, 256> proctex_lut_data{};
-
-    OGLBuffer proctex_diff_lut_buffer;
-    OGLTexture proctex_diff_lut;
     std::array<GLvec4, 256> proctex_diff_lut_data{};
 
     bool allow_shadow;
