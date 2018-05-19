@@ -148,17 +148,9 @@ private:
 
     /// Syncs the fog states to match the PICA register
     void SyncFogColor();
-    void SyncFogLUT();
 
     /// Sync the procedural texture noise configuration to match the PICA register
     void SyncProcTexNoise();
-
-    /// Sync the procedural texture lookup tables
-    void SyncProcTexNoiseLUT();
-    void SyncProcTexColorMap();
-    void SyncProcTexAlphaMap();
-    void SyncProcTexLUT();
-    void SyncProcTexDiffLUT();
 
     /// Syncs the alpha test states to match the PICA register
     void SyncAlphaTest();
@@ -189,9 +181,6 @@ private:
 
     /// Syncs the lighting global ambient color to match the PICA register
     void SyncGlobalAmbient();
-
-    /// Syncs the lighting lookup tables
-    void SyncLightingLUT(unsigned index);
 
     /// Syncs the specified light's specular 0 color to match the PICA register
     void SyncLightSpecular0(int light_index);
