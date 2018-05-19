@@ -806,49 +806,8 @@ bool RasterizerOpenGL::Draw(bool accelerate, bool is_indexed) {
         shader_dirty = false;
     }
 
-    // Sync the lighting luts
-    for (unsigned index = 0; index < uniform_block_data.lut_dirty.size(); index++) {
-        if (uniform_block_data.lut_dirty[index]) {
-            SyncLightingLUT(index);
-            uniform_block_data.lut_dirty[index] = false;
-        }
-    }
-
-    // Sync the fog lut
-    if (uniform_block_data.fog_lut_dirty) {
-        SyncFogLUT();
-        uniform_block_data.fog_lut_dirty = false;
-    }
-
-    // Sync the proctex noise lut
-    if (uniform_block_data.proctex_noise_lut_dirty) {
-        SyncProcTexNoiseLUT();
-        uniform_block_data.proctex_noise_lut_dirty = false;
-    }
-
-    // Sync the proctex color map
-    if (uniform_block_data.proctex_color_map_dirty) {
-        SyncProcTexColorMap();
-        uniform_block_data.proctex_color_map_dirty = false;
-    }
-
-    // Sync the proctex alpha map
-    if (uniform_block_data.proctex_alpha_map_dirty) {
-        SyncProcTexAlphaMap();
-        uniform_block_data.proctex_alpha_map_dirty = false;
-    }
-
-    // Sync the proctex lut
-    if (uniform_block_data.proctex_lut_dirty) {
-        SyncProcTexLUT();
-        uniform_block_data.proctex_lut_dirty = false;
-    }
-
-    // Sync the proctex difference lut
-    if (uniform_block_data.proctex_diff_lut_dirty) {
-        SyncProcTexDiffLUT();
-        uniform_block_data.proctex_diff_lut_dirty = false;
-    }
+    // Sync the LUTs within the texture buffer
+    SyncAndUploadLUTs();
 
     // Sync the uniform data
     const bool use_gs = regs.pipeline.use_gs == Pica::PipelineRegs::UseGS::Yes;
@@ -2062,6 +2021,52 @@ void RasterizerOpenGL::SyncShadowBias() {
         uniform_block_data.data.shadow_bias_constant = constant;
         uniform_block_data.data.shadow_bias_linear = linear;
         uniform_block_data.dirty = true;
+    }
+}
+
+void RasterizerOpenGL::SyncAndUploadLUTs() {
+    // Sync the lighting luts
+    for (unsigned index = 0; index < uniform_block_data.lut_dirty.size(); index++) {
+        if (uniform_block_data.lut_dirty[index]) {
+            SyncLightingLUT(index);
+            uniform_block_data.lut_dirty[index] = false;
+        }
+    }
+
+    // Sync the fog lut
+    if (uniform_block_data.fog_lut_dirty) {
+        SyncFogLUT();
+        uniform_block_data.fog_lut_dirty = false;
+    }
+
+    // Sync the proctex noise lut
+    if (uniform_block_data.proctex_noise_lut_dirty) {
+        SyncProcTexNoiseLUT();
+        uniform_block_data.proctex_noise_lut_dirty = false;
+    }
+
+    // Sync the proctex color map
+    if (uniform_block_data.proctex_color_map_dirty) {
+        SyncProcTexColorMap();
+        uniform_block_data.proctex_color_map_dirty = false;
+    }
+
+    // Sync the proctex alpha map
+    if (uniform_block_data.proctex_alpha_map_dirty) {
+        SyncProcTexAlphaMap();
+        uniform_block_data.proctex_alpha_map_dirty = false;
+    }
+
+    // Sync the proctex lut
+    if (uniform_block_data.proctex_lut_dirty) {
+        SyncProcTexLUT();
+        uniform_block_data.proctex_lut_dirty = false;
+    }
+
+    // Sync the proctex difference lut
+    if (uniform_block_data.proctex_diff_lut_dirty) {
+        SyncProcTexDiffLUT();
+        uniform_block_data.proctex_diff_lut_dirty = false;
     }
 }
 

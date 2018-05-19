@@ -220,6 +220,9 @@ private:
     /// Syncs the shadow rendering bias to match the PICA register
     void SyncShadowBias();
 
+    /// Syncs and uploads the lighting, fog and proctex LUTs
+    void SyncAndUploadLUTs();
+
     /// Upload the uniform blocks to the uniform buffer object
     void UploadUniforms(bool accelerate_draw, bool use_gs);
 
