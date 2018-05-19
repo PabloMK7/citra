@@ -289,8 +289,6 @@ private:
     OGLTexture texture_buffer_lut_rg;
     OGLTexture texture_buffer_lut_rgba;
 
-    OGLBuffer lighting_lut_buffer;
-    OGLTexture lighting_lut;
     std::array<std::array<GLvec2, 256>, Pica::LightingRegs::NumLightingSampler> lighting_lut_data{};
 
     OGLBuffer fog_lut_buffer;

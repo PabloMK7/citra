@@ -1224,7 +1224,6 @@ uniform sampler2D tex2;
 uniform samplerCube tex_cube;
 uniform samplerBuffer texture_buffer_lut_rg;
 uniform samplerBuffer texture_buffer_lut_rgba;
-uniform samplerBuffer lighting_lut;
 uniform samplerBuffer fog_lut;
 uniform samplerBuffer proctex_noise_lut;
 uniform samplerBuffer proctex_color_map;
@@ -1252,7 +1251,7 @@ vec3 quaternion_rotate(vec4 q, vec3 v) {
 }
 
 float LookupLightingLUT(int lut_index, int index, float delta) {
-    vec2 entry = texelFetch(lighting_lut, lighting_lut_offset[lut_index >> 2][lut_index & 3] + index).rg;
+    vec2 entry = texelFetch(texture_buffer_lut_rg, lighting_lut_offset[lut_index >> 2][lut_index & 3] + index).rg;
     return entry.r + entry.g * delta;
 }
 

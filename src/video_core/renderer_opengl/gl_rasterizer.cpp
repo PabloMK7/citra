@@ -78,9 +78,6 @@ RasterizerOpenGL::RasterizerOpenGL()
     uniform_block_data.proctex_lut_dirty = true;
     uniform_block_data.proctex_diff_lut_dirty = true;
 
-    for (int i = 0; i < 24; i++)
-      uniform_block_data.data.lighting_lut_offset[i / 4][i % 4] = 256 * i;
-
     glGetIntegerv(GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT, &uniform_buffer_alignment);
     uniform_size_aligned_vs =
         Common::AlignUp<size_t>(sizeof(VSUniformData), uniform_buffer_alignment);
@@ -137,18 +134,6 @@ RasterizerOpenGL::RasterizerOpenGL()
     glTexBuffer(GL_TEXTURE_BUFFER, GL_RG32F, texture_buffer.GetHandle());
     glActiveTexture(TextureUnits::TextureBufferLUT_RGBA.Enum());
     glTexBuffer(GL_TEXTURE_BUFFER, GL_RGBA32F, texture_buffer.GetHandle());
-
-    // Allocate and bind lighting lut textures
-    lighting_lut.Create();
-    state.lighting_lut.texture_buffer = lighting_lut.handle;
-    state.Apply();
-    lighting_lut_buffer.Create();
-    glBindBuffer(GL_TEXTURE_BUFFER, lighting_lut_buffer.handle);
-    glBufferData(GL_TEXTURE_BUFFER,
-                 sizeof(GLfloat) * 2 * 256 * Pica::LightingRegs::NumLightingSampler, nullptr,
-                 GL_DYNAMIC_DRAW);
-    glActiveTexture(TextureUnits::LightingLUT.Enum());
-    glTexBuffer(GL_TEXTURE_BUFFER, GL_RG32F, lighting_lut_buffer.handle);
 
     // Setup the LUT for the fog
     fog_lut.Create();
@@ -1951,10 +1936,25 @@ void RasterizerOpenGL::SyncAndUploadLUTs() {
                                 sizeof(GLvec4) * 256 +     // proctex
                                 sizeof(GLvec4) * 256;      // proctex diff
 
+    if (!uniform_block_data.lighting_lut_dirty_any && !uniform_block_data.fog_lut_dirty &&
+        !uniform_block_data.proctex_noise_lut_dirty &&
+        !uniform_block_data.proctex_color_map_dirty &&
+        !uniform_block_data.proctex_alpha_map_dirty && !uniform_block_data.proctex_lut_dirty &&
+        !uniform_block_data.proctex_diff_lut_dirty) {
+        return;
+    }
+
+    u8* buffer;
+    GLintptr offset;
+    bool invalidate;
+    size_t bytes_used = 0;
+    glBindBuffer(GL_TEXTURE_BUFFER, texture_buffer.GetHandle());
+    std::tie(buffer, offset, invalidate) = texture_buffer.Map(max_size, sizeof(GLvec4));
+
     // Sync the lighting luts
-    if (uniform_block_data.lighting_lut_dirty_any) {
+    if (uniform_block_data.lighting_lut_dirty_any || invalidate) {
         for (unsigned index = 0; index < uniform_block_data.lighting_lut_dirty.size(); index++) {
-            if (uniform_block_data.lighting_lut_dirty[index]) {
+            if (uniform_block_data.lighting_lut_dirty[index] || invalidate) {
                 std::array<GLvec2, 256> new_data;
                 const auto& source_lut = Pica::g_state.lighting.luts[index];
                 std::transform(source_lut.begin(), source_lut.end(), new_data.begin(),
@@ -1962,11 +1962,14 @@ void RasterizerOpenGL::SyncAndUploadLUTs() {
                                    return GLvec2{entry.ToFloat(), entry.DiffToFloat()};
                                });
 
-                if (new_data != lighting_lut_data[index]) {
+                if (new_data != lighting_lut_data[index] || invalidate) {
                     lighting_lut_data[index] = new_data;
-                    glBindBuffer(GL_TEXTURE_BUFFER, lighting_lut_buffer.handle);
-                    glBufferSubData(GL_TEXTURE_BUFFER, index * new_data.size() * sizeof(GLvec2),
-                                    new_data.size() * sizeof(GLvec2), new_data.data());
+                    std::memcpy(buffer + bytes_used, new_data.data(),
+                                new_data.size() * sizeof(GLvec2));
+                    uniform_block_data.data.lighting_lut_offset[index / 4][index % 4] =
+                        (offset + bytes_used) / sizeof(GLvec2);
+                    uniform_block_data.dirty = true;
+                    bytes_used += new_data.size() * sizeof(GLvec2);
                 }
                 uniform_block_data.lighting_lut_dirty[index] = false;
             }
@@ -2068,6 +2071,8 @@ void RasterizerOpenGL::SyncAndUploadLUTs() {
         }
         uniform_block_data.proctex_diff_lut_dirty = false;
     }
+
+    texture_buffer.Unmap(bytes_used);
 }
 
 void RasterizerOpenGL::UploadUniforms(bool accelerate_draw, bool use_gs) {
