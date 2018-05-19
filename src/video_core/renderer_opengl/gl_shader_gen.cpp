@@ -1025,7 +1025,7 @@ void AppendProcTexClamp(std::string& out, const std::string& var, ProcTexClamp m
 }
 
 void AppendProcTexCombineAndMap(std::string& out, ProcTexCombiner combiner,
-                                const std::string& map_lut, const std::string& offset) {
+                                const std::string& offset) {
     std::string combined;
     switch (combiner) {
     case ProcTexCombiner::U:
@@ -1063,7 +1063,7 @@ void AppendProcTexCombineAndMap(std::string& out, ProcTexCombiner combiner,
         combined = "0.0";
         break;
     }
-    out += "ProcTexLookupLUT(" + map_lut + ", " + offset + ", " + combined + ")";
+    out += "ProcTexLookupLUT(" + offset + ", " + combined + ")";
 }
 
 void AppendProcTexSampler(std::string& out, const PicaFSConfig& config) {
@@ -1072,12 +1072,12 @@ void AppendProcTexSampler(std::string& out, const PicaFSConfig& config) {
     // coord=1.0 is lut[127]+lut_diff[127]. For other indices, the result is interpolated using
     // value entries and difference entries.
     out += R"(
-float ProcTexLookupLUT(samplerBuffer lut, int offset, float coord) {
+float ProcTexLookupLUT(int offset, float coord) {
     coord *= 128;
     float index_i = clamp(floor(coord), 0.0, 127.0);
     float index_f = coord - index_i; // fract() cannot be used here because 128.0 needs to be
                                      // extracted as index_i = 127.0 and index_f = 1.0
-    vec2 entry = texelFetch(lut, int(index_i) + offset).rg;
+    vec2 entry = texelFetch(texture_buffer_lut_rg, int(index_i) + offset).rg;
     return clamp(entry.r + entry.g * index_f, 0.0, 1.0);
 }
     )";
@@ -1113,8 +1113,8 @@ float ProcTexNoiseCoef(vec2 x) {
     float g2 = ProcTexNoiseRand2D(point + vec2(0.0, 1.0)) * (frac.x + frac.y - 1.0);
     float g3 = ProcTexNoiseRand2D(point + vec2(1.0, 1.0)) * (frac.x + frac.y - 2.0);
 
-    float x_noise = ProcTexLookupLUT(texture_buffer_lut_rg, proctex_noise_lut_offset, frac.x);
-    float y_noise = ProcTexLookupLUT(texture_buffer_lut_rg, proctex_noise_lut_offset, frac.y);
+    float x_noise = ProcTexLookupLUT(proctex_noise_lut_offset, frac.x);
+    float y_noise = ProcTexLookupLUT(proctex_noise_lut_offset, frac.y);
     float x0 = mix(g0, g1, x_noise);
     float x1 = mix(g2, g3, x_noise);
     return mix(x0, x1, y_noise);
@@ -1156,7 +1156,7 @@ float ProcTexNoiseCoef(vec2 x) {
 
     // Combine and map
     out += "float lut_coord = ";
-    AppendProcTexCombineAndMap(out, config.state.proctex.color_combiner, "texture_buffer_lut_rg",
+    AppendProcTexCombineAndMap(out, config.state.proctex.color_combiner,
                                "proctex_color_map_offset");
     out += ";\n";
 
@@ -1190,7 +1190,7 @@ float ProcTexNoiseCoef(vec2 x) {
         // uses the output of CombineAndMap directly instead.
         out += "float final_alpha = ";
         AppendProcTexCombineAndMap(out, config.state.proctex.alpha_combiner,
-                                   "texture_buffer_lut_rg", "proctex_alpha_map_offset");
+                                   "proctex_alpha_map_offset");
         out += ";\n";
         out += "return vec4(final_color.xyz, final_alpha);\n}\n";
     } else {
