@@ -9,7 +9,12 @@
 
 namespace Camera {
 
-StillImageCamera::StillImageCamera(QImage image_) : image(std::move(image_)) {}
+StillImageCamera::StillImageCamera(QImage image_, const Service::CAM::Flip& flip)
+    : image(std::move(image_)) {
+    using namespace Service::CAM;
+    flip_horizontal = basic_flip_horizontal = (flip == Flip::Horizontal) || (flip == Flip::Reverse);
+    flip_vertical = basic_flip_vertical = (flip == Flip::Vertical) || (flip == Flip::Reverse);
+}
 
 void StillImageCamera::StartCapture() {}
 
@@ -26,8 +31,8 @@ void StillImageCamera::SetResolution(const Service::CAM::Resolution& resolution)
 
 void StillImageCamera::SetFlip(Service::CAM::Flip flip) {
     using namespace Service::CAM;
-    flip_horizontal = (flip == Flip::Horizontal) || (flip == Flip::Reverse);
-    flip_vertical = (flip == Flip::Vertical) || (flip == Flip::Reverse);
+    flip_horizontal = basic_flip_horizontal ^ (flip == Flip::Horizontal || flip == Flip::Reverse);
+    flip_vertical = basic_flip_vertical ^ (flip == Flip::Vertical || flip == Flip::Reverse);
 }
 
 void StillImageCamera::SetEffect(Service::CAM::Effect effect) {
@@ -58,7 +63,8 @@ const std::string StillImageCameraFactory::getFilePath() {
         .toStdString();
 }
 
-std::unique_ptr<CameraInterface> StillImageCameraFactory::Create(const std::string& config) const {
+std::unique_ptr<CameraInterface> StillImageCameraFactory::Create(
+    const std::string& config, const Service::CAM::Flip& flip) const {
     std::string real_config = config;
     if (config.empty()) {
         real_config = getFilePath();
@@ -67,7 +73,7 @@ std::unique_ptr<CameraInterface> StillImageCameraFactory::Create(const std::stri
     if (image.isNull()) {
         NGLOG_ERROR(Service_CAM, "Couldn't load image \"{}\"", real_config.c_str());
     }
-    return std::make_unique<StillImageCamera>(image);
+    return std::make_unique<StillImageCamera>(image, flip);
 }
 
 } // namespace Camera

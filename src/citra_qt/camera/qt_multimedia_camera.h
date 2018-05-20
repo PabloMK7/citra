@@ -38,7 +38,7 @@ class QtMultimediaCameraHandler;
 /// This class is only an interface. It just calls QtMultimediaCameraHandler.
 class QtMultimediaCamera final : public CameraInterface {
 public:
-    QtMultimediaCamera(const std::string& camera_name);
+    QtMultimediaCamera(const std::string& camera_name, const Service::CAM::Flip& flip);
     ~QtMultimediaCamera();
     void StartCapture() override;
     void StopCapture() override;
@@ -55,11 +55,13 @@ private:
     int width, height;
     bool output_rgb;
     bool flip_horizontal, flip_vertical;
+    bool basic_flip_horizontal, basic_flip_vertical;
 };
 
 class QtMultimediaCameraFactory final : public QtCameraFactory {
 public:
-    std::unique_ptr<CameraInterface> Create(const std::string& config) const override;
+    std::unique_ptr<CameraInterface> Create(const std::string& config,
+                                            const Service::CAM::Flip& flip) const override;
 };
 
 class QtMultimediaCameraHandler final : public QObject {

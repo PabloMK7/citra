@@ -11,8 +11,8 @@ namespace Camera {
 
 // Base class for camera factories of citra_qt
 class QtCameraFactory : public CameraFactory {
-    std::unique_ptr<CameraInterface> CreatePreview(const std::string& config, int width,
-                                                   int height) const override;
+    std::unique_ptr<CameraInterface> CreatePreview(const std::string& config, int width, int height,
+                                                   const Service::CAM::Flip& flip) const override;
 };
 
 } // namespace Camera

@@ -46,7 +46,8 @@ bool QtCameraSurface::present(const QVideoFrame& frame) {
     return true;
 }
 
-QtMultimediaCamera::QtMultimediaCamera(const std::string& camera_name)
+QtMultimediaCamera::QtMultimediaCamera(const std::string& camera_name,
+                                       const Service::CAM::Flip& flip)
     : handler(QtMultimediaCameraHandler::GetHandler()) {
     if (handler->thread() == QThread::currentThread()) {
         handler->CreateCamera(camera_name);
@@ -54,6 +55,9 @@ QtMultimediaCamera::QtMultimediaCamera(const std::string& camera_name)
         QMetaObject::invokeMethod(handler.get(), "CreateCamera", Qt::BlockingQueuedConnection,
                                   Q_ARG(const std::string&, camera_name));
     }
+    using namespace Service::CAM;
+    flip_horizontal = basic_flip_horizontal = (flip == Flip::Horizontal) || (flip == Flip::Reverse);
+    flip_vertical = basic_flip_vertical = (flip == Flip::Vertical) || (flip == Flip::Reverse);
 }
 
 QtMultimediaCamera::~QtMultimediaCamera() {
@@ -107,8 +111,8 @@ void QtMultimediaCamera::SetResolution(const Service::CAM::Resolution& resolutio
 
 void QtMultimediaCamera::SetFlip(Service::CAM::Flip flip) {
     using namespace Service::CAM;
-    flip_horizontal = (flip == Flip::Horizontal) || (flip == Flip::Reverse);
-    flip_vertical = (flip == Flip::Vertical) || (flip == Flip::Reverse);
+    flip_horizontal = basic_flip_horizontal ^ (flip == Flip::Horizontal || flip == Flip::Reverse);
+    flip_vertical = basic_flip_vertical ^ (flip == Flip::Vertical || flip == Flip::Reverse);
 }
 
 void QtMultimediaCamera::SetEffect(Service::CAM::Effect effect) {
@@ -128,8 +132,8 @@ bool QtMultimediaCamera::IsPreviewAvailable() {
 }
 
 std::unique_ptr<CameraInterface> QtMultimediaCameraFactory::Create(
-    const std::string& config) const {
-    return std::make_unique<QtMultimediaCamera>(config);
+    const std::string& config, const Service::CAM::Flip& flip) const {
+    return std::make_unique<QtMultimediaCamera>(config, flip);
 }
 
 std::array<std::shared_ptr<QtMultimediaCameraHandler>, 3> QtMultimediaCameraHandler::handlers;

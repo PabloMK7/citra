@@ -47,6 +47,7 @@ private:
     std::unique_ptr<Ui::ConfigureCamera> ui;
     std::array<std::string, 3> camera_name;
     std::array<std::string, 3> camera_config;
+    std::array<int, 3> camera_flip;
     int timer_id = 0;
     int preview_width = 0;
     int preview_height = 0;

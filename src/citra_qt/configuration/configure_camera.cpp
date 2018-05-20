@@ -27,14 +27,7 @@ ConfigureCamera::ConfigureCamera(QWidget* parent)
     // Load settings
     camera_name = Settings::values.camera_name;
     camera_config = Settings::values.camera_config;
-    for (auto&& item : camera_name) {
-        if (item == "opencv") {
-            QMessageBox::critical(this, tr("Error"),
-                                  tr("Sorry, Citra has removed support for OpenCV cameras.\n\nYour "
-                                     "existing OpenCV cameras have been replaced with Blank."));
-            item = "blank";
-        }
-    }
+    camera_flip = Settings::values.camera_flip;
     QList<QCameraInfo> cameras = QCameraInfo::availableCameras();
     for (const QCameraInfo& cameraInfo : cameras) {
         ui->system_camera->addItem(cameraInfo.deviceName());
@@ -98,6 +91,8 @@ void ConfigureCamera::connectEvents() {
     connect(ui->system_camera,
             static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this,
             [=] { stopPreviewing(); });
+    connect(ui->camera_flip, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
+            this, [=] { stopPreviewing(); });
 }
 
 void ConfigureCamera::updateCameraMode() {
@@ -148,6 +143,8 @@ void ConfigureCamera::updateImageSourceUI() {
     }
     ui->system_camera_label->setHidden(image_source != 2);
     ui->system_camera->setHidden(image_source != 2);
+    ui->camera_flip_label->setHidden(image_source == 0);
+    ui->camera_flip->setHidden(image_source == 0);
 }
 
 void ConfigureCamera::recordConfig() {
@@ -166,10 +163,12 @@ void ConfigureCamera::recordConfig() {
     if (current_selected == CameraPosition::RearBoth) {
         camera_name[0] = camera_name[2] = implementation;
         camera_config[0] = camera_config[2] = config;
+        camera_flip[0] = camera_flip[2] = ui->camera_flip->currentIndex();
     } else if (current_selected != CameraPosition::Null) {
         int index = static_cast<int>(current_selected);
         camera_name[index] = implementation;
         camera_config[index] = config;
+        camera_flip[index] = ui->camera_flip->currentIndex();
     }
     current_selected = getCameraSelection();
 }
@@ -187,9 +186,9 @@ void ConfigureCamera::startPreviewing() {
     ui->preview_box->setToolTip(tr("Resolution: ") + QString::number(preview_width) + "*" +
                                 QString::number(preview_height));
     // Load previewing camera
-    previewing_camera =
-        Camera::CreateCameraPreview(camera_name[camera_selection], camera_config[camera_selection],
-                                    preview_width, preview_height);
+    previewing_camera = Camera::CreateCameraPreview(
+        camera_name[camera_selection], camera_config[camera_selection], preview_width,
+        preview_height, static_cast<Service::CAM::Flip>(camera_flip[camera_selection]));
     if (!previewing_camera) {
         stopPreviewing();
         return;
@@ -262,6 +261,7 @@ void ConfigureCamera::setConfiguration() {
     } else {
         ui->camera_file->setText(QString::fromStdString(camera_config[index]));
     }
+    ui->camera_flip->setCurrentIndex(camera_flip[index]);
     updateImageSourceUI();
 }
 
@@ -288,6 +288,7 @@ void ConfigureCamera::applyConfiguration() {
     stopPreviewing();
     Settings::values.camera_name = camera_name;
     Settings::values.camera_config = camera_config;
+    Settings::values.camera_flip = camera_flip;
     Settings::Apply();
 }
 

@@ -14,7 +14,7 @@ namespace Camera {
 
 class StillImageCamera final : public CameraInterface {
 public:
-    StillImageCamera(QImage image);
+    StillImageCamera(QImage image, const Service::CAM::Flip& flip);
     void StartCapture() override;
     void StopCapture() override;
     void SetResolution(const Service::CAM::Resolution&) override;
@@ -30,11 +30,13 @@ private:
     int width, height;
     bool output_rgb;
     bool flip_horizontal, flip_vertical;
+    bool basic_flip_horizontal, basic_flip_vertical;
 };
 
 class StillImageCameraFactory final : public QtCameraFactory {
 public:
-    std::unique_ptr<CameraInterface> Create(const std::string& config) const override;
+    std::unique_ptr<CameraInterface> Create(const std::string& config,
+                                            const Service::CAM::Flip& flip) const override;
 
 private:
     static const std::string getFilePath();
