@@ -161,8 +161,7 @@ QVariant ComboBoxProxyModel::data(const QModelIndex& idx, int role) const {
 }
 
 bool ComboBoxProxyModel::lessThan(const QModelIndex& left, const QModelIndex& right) const {
-    // TODO(jroweboy): Sort by game title not filename
-    auto leftData = left.data(Qt::DisplayRole).toString();
-    auto rightData = right.data(Qt::DisplayRole).toString();
+    auto leftData = left.data(GameListItemPath::TitleRole).toString();
+    auto rightData = right.data(GameListItemPath::TitleRole).toString();
     return leftData.compare(rightData) < 0;
 }
