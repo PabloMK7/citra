@@ -96,7 +96,6 @@ private:
     void InitializeWidgets();
     void InitializeDebugWidgets();
     void InitializeRecentFileMenuActions();
-    void InitializeHotkeys();
 
     void SetDefaultUIGeometry();
     void SyncMenuUISettings();
@@ -171,6 +170,7 @@ private slots:
     void OnOpenCitraFolder();
     void OnToggleFilterBar();
     void OnDisplayTitleBars(bool);
+    void InitializeHotkeys();
     void ToggleFullscreen();
     void ChangeScreenLayout();
     void ToggleScreenLayout();

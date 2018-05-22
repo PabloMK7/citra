@@ -32,10 +32,6 @@ void ConfigureGeneral::setConfiguration() {
     ui->region_combobox->setCurrentIndex(Settings::values.region_value + 1);
 }
 
-void ConfigureGeneral::PopulateHotkeyList(const HotkeyRegistry& registry) {
-    ui->hotkeysDialog->Populate(registry);
-}
-
 void ConfigureGeneral::ResetDefaults() {
     QMessageBox::StandardButton answer = QMessageBox::question(
         this, tr("Citra"),
@@ -60,5 +56,4 @@ void ConfigureGeneral::applyConfiguration() {
 
 void ConfigureGeneral::retranslateUi() {
     ui->retranslateUi(this);
-    ui->hotkeysDialog->retranslateUi();
 }

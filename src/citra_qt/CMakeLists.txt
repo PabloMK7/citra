@@ -41,6 +41,8 @@ add_executable(citra-qt
     configuration/configure_general.h
     configuration/configure_graphics.cpp
     configuration/configure_graphics.h
+    configuration/configure_hotkeys.cpp
+    configuration/configure_hotkeys.h
     configuration/configure_input.cpp
     configuration/configure_input.h
     configuration/configure_motion_touch.cpp
@@ -109,8 +111,10 @@ add_executable(citra-qt
     updater/updater.cpp
     updater/updater.h
     updater/updater_p.h
-    util/clickable_label.h
     util/clickable_label.cpp
+    util/clickable_label.h
+    util/sequence_dialog/sequence_dialog.cpp
+    util/sequence_dialog/sequence_dialog.h
     util/spinbox.cpp
     util/spinbox.h
     util/util.cpp
@@ -126,6 +130,7 @@ set(UIS
     configuration/configure_debug.ui
     configuration/configure_general.ui
     configuration/configure_graphics.ui
+    configuration/configure_hotkeys.ui
     configuration/configure_input.ui
     configuration/configure_motion_touch.ui
     configuration/configure_system.ui
@@ -140,7 +145,6 @@ set(UIS
     multiplayer/moderation_dialog.ui
     aboutdialog.ui
     cheats.ui
-    hotkeys.ui
     main.ui
     compatdb.ui
 )

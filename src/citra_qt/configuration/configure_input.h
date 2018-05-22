@@ -11,6 +11,7 @@
 #include <string>
 #include <unordered_map>
 #include <QKeyEvent>
+#include <QKeySequence>
 #include <QWidget>
 #include "common/param_package.h"
 #include "core/settings.h"
@@ -38,6 +39,13 @@ public:
 
     /// Load configuration settings.
     void loadConfiguration();
+    void EmitInputKeysChanged();
+
+public slots:
+    void OnHotkeysChanged(QList<QKeySequence> new_key_list);
+
+signals:
+    void InputKeysChanged(QList<QKeySequence> new_key_list);
 
     // Save the current input profile index
     void ApplyProfile();
@@ -72,9 +80,15 @@ private:
 
     std::vector<std::unique_ptr<InputCommon::Polling::DevicePoller>> device_pollers;
 
+    /// Keys currently registered as hotkeys
+    QList<QKeySequence> hotkey_list;
+
     /// A flag to indicate if keyboard keys are okay when configuring an input. If this is false,
     /// keyboard events are ignored.
     bool want_keyboard_keys = false;
+
+    /// Generates list of all used keys
+    QList<QKeySequence> GetUsedKeyboardKeys();
 
     /// Restore all buttons to their default values.
     void restoreDefaults();
@@ -88,6 +102,9 @@ private:
     void handleClick(QPushButton* button,
                      std::function<void(const Common::ParamPackage&)> new_input_setter,
                      InputCommon::Polling::DeviceType type);
+
+    /// The key code of the previous state of the key being currently bound.
+    int previous_key_code;
 
     /// Finish polling and configure input using the input_setter
     void setPollingResult(const Common::ParamPackage& params, bool abort);
