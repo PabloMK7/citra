@@ -25,7 +25,7 @@
 HostRoomWindow::HostRoomWindow(QWidget* parent, QStandardItemModel* list,
                                std::shared_ptr<Core::AnnounceMultiplayerSession> session)
     : QDialog(parent, Qt::WindowTitleHint | Qt::WindowCloseButtonHint | Qt::WindowSystemMenuHint),
-      ui(std::make_unique<Ui::HostRoom>()), announce_multiplayer_session(session), game_list(list) {
+      ui(std::make_unique<Ui::HostRoom>()), announce_multiplayer_session(session) {
     ui->setupUi(this);
 
     // set up validation for all of the fields
@@ -35,6 +35,15 @@ HostRoomWindow::HostRoomWindow(QWidget* parent, QStandardItemModel* list,
     ui->port->setPlaceholderText(QString::number(Network::DefaultRoomPort));
 
     // Create a proxy to the game list to display the list of preferred games
+    game_list = new QStandardItemModel;
+
+    for (int i = 0; i < list->rowCount(); i++) {
+        auto parent = list->item(i, 0);
+        for (int j = 0; j < parent->rowCount(); j++) {
+            game_list->appendRow(parent->child(j)->clone());
+        }
+    }
+
     proxy = new ComboBoxProxyModel;
     proxy->setSourceModel(game_list);
     proxy->sort(0, Qt::AscendingOrder);
