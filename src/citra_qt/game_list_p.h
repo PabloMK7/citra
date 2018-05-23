@@ -182,8 +182,9 @@ public:
                     .replace("\\", "\\\\"));
             if (installed_system_pattern.exactMatch(QString::fromStdString(path))) {
                 // Use a different mechanism for system / installed titles showing program ID
-                second_name =
-                    "000" + QString::number(data(ProgramIdRole).toULongLong(), 16).toUpper();
+                second_name = "000" +
+                              QString::number(data(ProgramIdRole).toULongLong(), 16).toUpper() +
+                              "-" + QString::fromStdString(filename);
             }
             return title + (title.isEmpty() ? "" : "\n     ") + second_name;
         } else {
