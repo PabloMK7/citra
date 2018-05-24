@@ -118,6 +118,8 @@ if (NOT MSVC)
 else()
     # Silence "deprecation" warnings
     add_definitions(/D_CRT_SECURE_NO_WARNINGS /D_CRT_NONSTDC_NO_DEPRECATE /D_SCL_SECURE_NO_WARNINGS)
+    # Avoid non-compliant standard library extensions
+    add_definitions(/D_CRT_DECLARE_NONSTDC_NAMES)
     # Avoid windows.h junk
     add_definitions(/DNOMINMAX)
     # Avoid windows.h from including some usually unused libs like winsocks.h, since this might cause some redefinition errors.
