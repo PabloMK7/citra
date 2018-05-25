@@ -13,6 +13,7 @@ namespace AudioCore {
 
 struct CubebSink::Impl {
     unsigned int sample_rate = 0;
+    std::vector<std::string> device_list;
 
     cubeb* ctx = nullptr;
     cubeb_stream* stream = nullptr;
@@ -56,10 +57,12 @@ CubebSink::CubebSink() : impl(std::make_unique<Impl>()) {
 
         for (size_t i = 0; i < collection.count; i++) {
             const cubeb_device_info& device = collection.device[i];
-            device_list.emplace_back(device.friendly_name);
+            if (device.friendly_name) {
+                impl->device_list.emplace_back(device.friendly_name);
 
-            if (target_device_name && strcmp(target_device_name, device.friendly_name) == 0) {
-                output_device = device.devid;
+                if (target_device_name && strcmp(target_device_name, device.friendly_name) == 0) {
+                    output_device = device.devid;
+                }
             }
         }
 
@@ -99,7 +102,7 @@ unsigned int CubebSink::GetNativeSampleRate() const {
 }
 
 std::vector<std::string> CubebSink::GetDeviceList() const {
-    return device_list;
+    return impl->device_list;
 }
 
 void CubebSink::EnqueueSamples(const s16* samples, size_t sample_count) {
