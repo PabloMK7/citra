@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <QButtonGroup>
 #include <QMessageBox>
 #include <QPushButton>
 #include "citra_qt/compatdb.h"
