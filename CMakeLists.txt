@@ -18,6 +18,8 @@ CMAKE_DEPENDENT_OPTION(CITRA_USE_BUNDLED_QT "Download bundled Qt binaries" ON "E
 
 option(ENABLE_WEB_SERVICE "Enable web services (telemetry, etc.)" ON)
 
+option(ENABLE_CUBEB "Enables the cubeb audio backend" ON)
+
 if(NOT EXISTS ${CMAKE_SOURCE_DIR}/.git/hooks/pre-commit)
     message(STATUS "Copying pre-commit hook")
     file(COPY hooks/pre-commit
