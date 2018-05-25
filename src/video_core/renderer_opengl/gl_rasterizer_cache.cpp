@@ -259,16 +259,10 @@ static void AllocateTextureCube(GLuint texture, const FormatTuple& format_tuple,
 static bool BlitTextures(GLuint src_tex, const MathUtil::Rectangle<u32>& src_rect, GLuint dst_tex,
                          const MathUtil::Rectangle<u32>& dst_rect, SurfaceType type,
                          GLuint read_fb_handle, GLuint draw_fb_handle) {
-    OpenGLState state = OpenGLState::GetCurState();
-
-    OpenGLState prev_state = state;
+    OpenGLState prev_state = OpenGLState::GetCurState();
     SCOPE_EXIT({ prev_state.Apply(); });
 
-    // Make sure textures aren't bound to texture units, since going to bind them to framebuffer
-    // components
-    state.ResetTexture(src_tex);
-    state.ResetTexture(dst_tex);
-
+    OpenGLState state;
     state.draw.read_framebuffer = read_fb_handle;
     state.draw.draw_framebuffer = draw_fb_handle;
     state.Apply();
@@ -318,13 +312,10 @@ static bool BlitTextures(GLuint src_tex, const MathUtil::Rectangle<u32>& src_rec
 
 static bool FillSurface(const Surface& surface, const u8* fill_data,
                         const MathUtil::Rectangle<u32>& fill_rect, GLuint draw_fb_handle) {
-    OpenGLState state = OpenGLState::GetCurState();
-
-    OpenGLState prev_state = state;
+    OpenGLState prev_state = OpenGLState::GetCurState();
     SCOPE_EXIT({ prev_state.Apply(); });
 
-    state.ResetTexture(surface->texture.handle);
-
+    OpenGLState state;
     state.scissor.enabled = true;
     state.scissor.x = static_cast<GLint>(fill_rect.left);
     state.scissor.y = static_cast<GLint>(fill_rect.bottom);
@@ -1310,11 +1301,10 @@ const CachedTextureCube& RasterizerCacheOpenGL::GetTextureCube(const TextureCube
 
     u32 scaled_size = cube.res_scale * config.width;
 
-    OpenGLState state = OpenGLState::GetCurState();
-
-    OpenGLState prev_state = state;
+    OpenGLState prev_state = OpenGLState::GetCurState();
     SCOPE_EXIT({ prev_state.Apply(); });
 
+    OpenGLState state;
     state.draw.read_framebuffer = read_framebuffer.handle;
     state.draw.draw_framebuffer = draw_framebuffer.handle;
     state.ResetTexture(cube.texture.handle);
