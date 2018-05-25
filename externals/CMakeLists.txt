@@ -80,5 +80,6 @@ endif()
 
 # Cubeb
 if(ENABLE_CUBEB)
+    set(BUILD_TESTS OFF CACHE BOOL "")
     add_subdirectory(cubeb)
 endif()
