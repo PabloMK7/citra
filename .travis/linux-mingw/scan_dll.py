@@ -16,6 +16,8 @@ DLL_PATH = [
     '/usr/lib/gcc/x86_64-w64-mingw32/7.3-posix/'
 ]
 
+missing = []
+
 
 def parse_imports(file_name):
     results = []
@@ -56,7 +58,8 @@ def parse_imports_recursive(file_name, path_list=[]):
             # find the requested dll in the provided paths
             full_path = find_dll(dep)
             if not full_path:
-                raise Exception('Cannot find %s!' % dep)
+                missing.append(dep)
+                continue
             full_list.append(dep)
             q.put(full_path)
             path_list.append(full_path)
@@ -94,6 +97,9 @@ def main():
         return 1
     print('Scanning dependencies...')
     deploy(to_deploy, tgt_dir)
+    if missing:
+        print('Following DLLs are not found: %s' % ('\n'.join(missing)))
+    return 0
 
 
 if __name__ == '__main__':
