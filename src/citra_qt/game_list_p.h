@@ -173,7 +173,7 @@ public:
                               &extension);
             QString title = data(TitleRole).toString();
             QString second_name = QString::fromStdString(filename + extension);
-            QRegExp installed_system_pattern(
+            static QRegExp installed_system_pattern(
                 QString::fromStdString(
                     FileUtil::GetUserPath(D_SDMC_IDX) +
                     "Nintendo "
@@ -182,9 +182,10 @@ public:
                     .replace("\\", "\\\\"));
             if (installed_system_pattern.exactMatch(QString::fromStdString(path))) {
                 // Use a different mechanism for system / installed titles showing program ID
-                second_name = "000" +
-                              QString::number(data(ProgramIdRole).toULongLong(), 16).toUpper() +
-                              "-" + QString::fromStdString(filename);
+                second_name = QString("%1-%2")
+                                  .arg(data(ProgramIdRole).toULongLong(), 16, 16, QChar('0'))
+                                  .toUpper()
+                                  .arg(QString::fromStdString(filename));
             }
             return title + (title.isEmpty() ? "" : "\n     ") + second_name;
         } else {
