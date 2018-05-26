@@ -31,7 +31,7 @@ public:
      * @param flip The image flip to apply
      * @returns a unique_ptr to the created camera object.
      * Note: The default implementation for this is to call Create(). Derived classes may have other
-     *       Implementations. For example, A dialog may be used instead of LOG_ERROR when error
+     *       Implementations. For example, A dialog may be used instead of NGLOG_ERROR when error
      * occurs.
      */
     virtual std::unique_ptr<CameraInterface> CreatePreview(const std::string& config, int width,
