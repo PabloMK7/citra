@@ -7,30 +7,22 @@
 #include <vector>
 #include <QImage>
 #include "citra_qt/camera/camera_util.h"
-#include "citra_qt/camera/qt_camera_factory.h"
+#include "citra_qt/camera/qt_camera_base.h"
 #include "core/frontend/camera/interface.h"
 
 namespace Camera {
 
-class StillImageCamera final : public CameraInterface {
+class StillImageCamera final : public QtCameraInterface {
 public:
     StillImageCamera(QImage image, const Service::CAM::Flip& flip);
     void StartCapture() override;
     void StopCapture() override;
-    void SetResolution(const Service::CAM::Resolution&) override;
-    void SetFlip(Service::CAM::Flip) override;
-    void SetEffect(Service::CAM::Effect) override;
-    void SetFormat(Service::CAM::OutputFormat) override;
     void SetFrameRate(Service::CAM::FrameRate frame_rate) override {}
-    std::vector<u16> ReceiveFrame() override;
+    QImage QtReceiveFrame() override;
     bool IsPreviewAvailable() override;
 
 private:
     QImage image;
-    int width, height;
-    bool output_rgb;
-    bool flip_horizontal, flip_vertical;
-    bool basic_flip_horizontal, basic_flip_vertical;
 };
 
 class StillImageCameraFactory final : public QtCameraFactory {

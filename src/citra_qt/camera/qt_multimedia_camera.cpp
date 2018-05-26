@@ -48,16 +48,13 @@ bool QtCameraSurface::present(const QVideoFrame& frame) {
 
 QtMultimediaCamera::QtMultimediaCamera(const std::string& camera_name,
                                        const Service::CAM::Flip& flip)
-    : handler(QtMultimediaCameraHandler::GetHandler()) {
+    : QtCameraInterface(flip), handler(QtMultimediaCameraHandler::GetHandler()) {
     if (handler->thread() == QThread::currentThread()) {
         handler->CreateCamera(camera_name);
     } else {
         QMetaObject::invokeMethod(handler.get(), "CreateCamera", Qt::BlockingQueuedConnection,
                                   Q_ARG(const std::string&, camera_name));
     }
-    using namespace Service::CAM;
-    flip_horizontal = basic_flip_horizontal = (flip == Flip::Horizontal) || (flip == Flip::Reverse);
-    flip_vertical = basic_flip_vertical = (flip == Flip::Vertical) || (flip == Flip::Reverse);
 }
 
 QtMultimediaCamera::~QtMultimediaCamera() {
@@ -75,10 +72,6 @@ void QtMultimediaCamera::StartCapture() {
 
 void QtMultimediaCamera::StopCapture() {
     handler->StopCamera();
-}
-
-void QtMultimediaCamera::SetFormat(Service::CAM::OutputFormat output_format) {
-    output_rgb = output_format == Service::CAM::OutputFormat::RGB565;
 }
 
 void QtMultimediaCamera::SetFrameRate(Service::CAM::FrameRate frame_rate) {
@@ -104,27 +97,9 @@ void QtMultimediaCamera::SetFrameRate(Service::CAM::FrameRate frame_rate) {
     handler->settings.setMinimumFrameRate(framerate.maximumFrameRate);
 }
 
-void QtMultimediaCamera::SetResolution(const Service::CAM::Resolution& resolution) {
-    width = resolution.width;
-    height = resolution.height;
-}
-
-void QtMultimediaCamera::SetFlip(Service::CAM::Flip flip) {
-    using namespace Service::CAM;
-    flip_horizontal = basic_flip_horizontal ^ (flip == Flip::Horizontal || flip == Flip::Reverse);
-    flip_vertical = basic_flip_vertical ^ (flip == Flip::Vertical || flip == Flip::Reverse);
-}
-
-void QtMultimediaCamera::SetEffect(Service::CAM::Effect effect) {
-    if (effect != Service::CAM::Effect::None) {
-        NGLOG_ERROR(Service_CAM, "Unimplemented effect {}", static_cast<int>(effect));
-    }
-}
-
-std::vector<u16> QtMultimediaCamera::ReceiveFrame() {
+QImage QtMultimediaCamera::QtReceiveFrame() {
     QMutexLocker locker(&handler->camera_surface.mutex);
-    return CameraUtil::ProcessImage(handler->camera_surface.current_frame, width, height,
-                                    output_rgb, flip_horizontal, flip_vertical);
+    return handler->camera_surface.current_frame;
 }
 
 bool QtMultimediaCamera::IsPreviewAvailable() {

@@ -10,40 +10,14 @@
 namespace Camera {
 
 StillImageCamera::StillImageCamera(QImage image_, const Service::CAM::Flip& flip)
-    : image(std::move(image_)) {
-    using namespace Service::CAM;
-    flip_horizontal = basic_flip_horizontal = (flip == Flip::Horizontal) || (flip == Flip::Reverse);
-    flip_vertical = basic_flip_vertical = (flip == Flip::Vertical) || (flip == Flip::Reverse);
-}
+    : QtCameraInterface(flip), image(std::move(image_)) {}
 
 void StillImageCamera::StartCapture() {}
 
 void StillImageCamera::StopCapture() {}
 
-void StillImageCamera::SetFormat(Service::CAM::OutputFormat output_format) {
-    output_rgb = output_format == Service::CAM::OutputFormat::RGB565;
-}
-
-void StillImageCamera::SetResolution(const Service::CAM::Resolution& resolution) {
-    width = resolution.width;
-    height = resolution.height;
-}
-
-void StillImageCamera::SetFlip(Service::CAM::Flip flip) {
-    using namespace Service::CAM;
-    flip_horizontal = basic_flip_horizontal ^ (flip == Flip::Horizontal || flip == Flip::Reverse);
-    flip_vertical = basic_flip_vertical ^ (flip == Flip::Vertical || flip == Flip::Reverse);
-}
-
-void StillImageCamera::SetEffect(Service::CAM::Effect effect) {
-    if (effect != Service::CAM::Effect::None) {
-        NGLOG_ERROR(Service_CAM, "Unimplemented effect {}", static_cast<int>(effect));
-    }
-}
-
-std::vector<u16> StillImageCamera::ReceiveFrame() {
-    return CameraUtil::ProcessImage(image, width, height, output_rgb, flip_horizontal,
-                                    flip_vertical);
+QImage StillImageCamera::QtReceiveFrame() {
+    return image;
 }
 
 bool StillImageCamera::IsPreviewAvailable() {

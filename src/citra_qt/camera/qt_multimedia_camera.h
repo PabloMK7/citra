@@ -13,7 +13,7 @@
 #include <QImage>
 #include <QMutex>
 #include "citra_qt/camera/camera_util.h"
-#include "citra_qt/camera/qt_camera_factory.h"
+#include "citra_qt/camera/qt_camera_base.h"
 #include "core/frontend/camera/interface.h"
 
 class GMainWindow;
@@ -36,26 +36,18 @@ private:
 class QtMultimediaCameraHandler;
 
 /// This class is only an interface. It just calls QtMultimediaCameraHandler.
-class QtMultimediaCamera final : public CameraInterface {
+class QtMultimediaCamera final : public QtCameraInterface {
 public:
     QtMultimediaCamera(const std::string& camera_name, const Service::CAM::Flip& flip);
     ~QtMultimediaCamera();
     void StartCapture() override;
     void StopCapture() override;
-    void SetResolution(const Service::CAM::Resolution&) override;
-    void SetFlip(Service::CAM::Flip) override;
-    void SetEffect(Service::CAM::Effect) override;
-    void SetFormat(Service::CAM::OutputFormat) override;
     void SetFrameRate(Service::CAM::FrameRate frame_rate) override;
-    std::vector<u16> ReceiveFrame() override;
+    QImage QtReceiveFrame() override;
     bool IsPreviewAvailable() override;
 
 private:
     std::shared_ptr<QtMultimediaCameraHandler> handler;
-    int width, height;
-    bool output_rgb;
-    bool flip_horizontal, flip_vertical;
-    bool basic_flip_horizontal, basic_flip_vertical;
 };
 
 class QtMultimediaCameraFactory final : public QtCameraFactory {
