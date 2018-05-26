@@ -69,7 +69,7 @@ inline u32 swap32(u32 _data) {
 inline u64 swap64(u64 _data) {
     return _byteswap_uint64(_data);
 }
-#elif ARCHITECTURE_ARM
+#elif defined(ARCHITECTURE_ARM) && (__ARM_ARCH >= 6)
 inline u16 swap16(u16 _data) {
     u32 data = _data;
     __asm__("rev16 %0, %1\n" : "=l"(data) : "l"(data));
