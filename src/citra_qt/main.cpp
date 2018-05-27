@@ -137,8 +137,8 @@ GMainWindow::GMainWindow() : config(new Config()), emu_thread(nullptr) {
     ConnectWidgetEvents();
 
     SetupUIStrings();
-    NGLOG_INFO(Frontend, "Citra Version: {} | {}-{}", Common::g_build_name, Common::g_scm_branch,
-               Common::g_scm_desc);
+    NGLOG_INFO(Frontend, "Citra Version: {} | {}-{}", Common::g_build_fullname,
+               Common::g_scm_branch, Common::g_scm_desc);
 
     show();
 
@@ -1407,8 +1407,8 @@ void GMainWindow::OnLanguageChanged(const QString& locale) {
 }
 
 void GMainWindow::SetupUIStrings() {
-    setWindowTitle(
-        tr("Citra %1| %2-%3").arg(Common::g_build_name, Common::g_scm_branch, Common::g_scm_desc));
+    setWindowTitle(tr("Citra %1| %2-%3")
+                       .arg(Common::g_build_fullname, Common::g_scm_branch, Common::g_scm_desc));
 }
 
 void GMainWindow::SyncMenuUISettings() {
