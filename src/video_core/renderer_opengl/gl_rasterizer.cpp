@@ -676,6 +676,7 @@ bool RasterizerOpenGL::Draw(bool accelerate, bool is_indexed) {
                     state.texture_units[texture_index].texture_2d = 0;
                     continue; // Texture unit 0 setup finished. Continue to next unit
                 }
+                state.texture_cube_unit.texture_cube = 0;
             }
 
             texture_samplers[texture_index].SyncWithConfig(texture.config);
@@ -784,13 +785,6 @@ bool RasterizerOpenGL::Draw(bool accelerate, bool is_indexed) {
     }
 
     vertex_batch.clear();
-
-    // Unbind textures for potential future use as framebuffer attachments
-    for (unsigned texture_index = 0; texture_index < pica_textures.size(); ++texture_index) {
-        state.texture_units[texture_index].texture_2d = 0;
-    }
-    state.texture_cube_unit.texture_cube = 0;
-    state.Apply();
 
     // Mark framebuffer surfaces as dirty
     MathUtil::Rectangle<u32> draw_rect_unscaled{
