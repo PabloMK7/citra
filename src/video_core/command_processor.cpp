@@ -351,12 +351,12 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
         // Simple circular-replacement vertex cache
         // The size has been tuned for optimal balance between hit-rate and the cost of lookup
         const size_t VERTEX_CACHE_SIZE = 32;
+        std::array<bool, VERTEX_CACHE_SIZE> vertex_cache_valid{};
         std::array<u16, VERTEX_CACHE_SIZE> vertex_cache_ids;
         std::array<Shader::AttributeBuffer, VERTEX_CACHE_SIZE> vertex_cache;
         Shader::AttributeBuffer vs_output;
 
         unsigned int vertex_cache_pos = 0;
-        vertex_cache_ids.fill(-1);
 
         auto* shader_engine = Shader::GetEngine();
         Shader::UnitState shader_unit;
@@ -374,10 +374,6 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
                 is_indexed ? (index_u16 ? index_address_16[index] : index_address_8[index])
                            : (index + regs.pipeline.vertex_offset);
 
-            // -1 is a common special value used for primitive restart. Since it's unknown if
-            // the PICA supports it, and it would mess up the caching, guard against it here.
-            ASSERT(vertex != -1);
-
             bool vertex_cache_hit = false;
 
             if (is_indexed) {
@@ -393,7 +389,7 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
                 }
 
                 for (unsigned int i = 0; i < VERTEX_CACHE_SIZE; ++i) {
-                    if (vertex == vertex_cache_ids[i]) {
+                    if (vertex_cache_valid[i] && vertex == vertex_cache_ids[i]) {
                         vs_output = vertex_cache[i];
                         vertex_cache_hit = true;
                         break;
@@ -416,6 +412,7 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
 
                 if (is_indexed) {
                     vertex_cache[vertex_cache_pos] = vs_output;
+                    vertex_cache_valid[vertex_cache_pos] = true;
                     vertex_cache_ids[vertex_cache_pos] = vertex;
                     vertex_cache_pos = (vertex_cache_pos + 1) % VERTEX_CACHE_SIZE;
                 }
