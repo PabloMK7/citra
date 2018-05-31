@@ -786,6 +786,13 @@ bool RasterizerOpenGL::Draw(bool accelerate, bool is_indexed) {
 
     vertex_batch.clear();
 
+    // Reset textures in rasterizer state context because the rasterizer cache might delete them
+    for (unsigned texture_index = 0; texture_index < pica_textures.size(); ++texture_index) {
+        state.texture_units[texture_index].texture_2d = 0;
+    }
+    state.texture_cube_unit.texture_cube = 0;
+    state.Apply();
+
     // Mark framebuffer surfaces as dirty
     MathUtil::Rectangle<u32> draw_rect_unscaled{
         draw_rect.left / res_scale, draw_rect.top / res_scale, draw_rect.right / res_scale,
