@@ -77,3 +77,9 @@ if (ENABLE_WEB_SERVICE)
     add_library(json-headers INTERFACE)
     target_include_directories(json-headers INTERFACE ./json)
 endif()
+
+# Cubeb
+if(ENABLE_CUBEB)
+    set(BUILD_TESTS OFF CACHE BOOL "")
+    add_subdirectory(cubeb)
+endif()
