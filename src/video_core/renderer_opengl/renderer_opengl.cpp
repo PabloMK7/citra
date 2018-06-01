@@ -401,23 +401,32 @@ void RendererOpenGL::DrawScreens() {
     glUniform1i(uniform_color_texture, 0);
 
     if (layout.top_screen_enabled) {
-        DrawSingleScreenRotated(screen_infos[0], (float)top_screen.left, (float)top_screen.top,
-                                (float)top_screen.GetWidth(), (float)top_screen.GetHeight());
-        if (Settings::values.toggle_3d) {
-            DrawSingleScreenRotated(
-                screen_infos[1], ((float)top_screen.left * 3) + (float)top_screen.GetWidth(),
-                (float)top_screen.top, (float)top_screen.GetWidth(), (float)top_screen.GetHeight());
+        if (!Settings::values.toggle_3d) {
+            DrawSingleScreenRotated(screen_infos[0], (float)top_screen.left, (float)top_screen.top,
+                                    (float)top_screen.GetWidth(), (float)top_screen.GetHeight());
+        } else {
+            DrawSingleScreenRotated(screen_infos[0], (float)top_screen.left / 2,
+                                    (float)top_screen.top, (float)top_screen.GetWidth() / 2,
+                                    (float)top_screen.GetHeight());
+            DrawSingleScreenRotated(screen_infos[1],
+                                    ((float)top_screen.left / 2) + ((float)layout.width / 2),
+                                    (float)top_screen.top, (float)top_screen.GetWidth() / 2,
+                                    (float)top_screen.GetHeight());
         }
     }
     if (layout.bottom_screen_enabled) {
-        DrawSingleScreenRotated(screen_infos[2], (float)bottom_screen.left,
-                                (float)bottom_screen.top, (float)bottom_screen.GetWidth(),
-                                (float)bottom_screen.GetHeight());
-        if (Settings::values.toggle_3d) {
-            DrawSingleScreenRotated(
-                screen_infos[2], ((float)bottom_screen.left * 3) + (float)bottom_screen.GetWidth(),
-                (float)bottom_screen.top, (float)bottom_screen.GetWidth(),
-                (float)bottom_screen.GetHeight());
+        if (!Settings::values.toggle_3d) {
+            DrawSingleScreenRotated(screen_infos[2], (float)bottom_screen.left,
+                                    (float)bottom_screen.top, (float)bottom_screen.GetWidth(),
+                                    (float)bottom_screen.GetHeight());
+        } else {
+            DrawSingleScreenRotated(screen_infos[2], (float)bottom_screen.left / 2,
+                                    (float)bottom_screen.top, (float)bottom_screen.GetWidth() / 2,
+                                    (float)bottom_screen.GetHeight());
+            DrawSingleScreenRotated(screen_infos[2],
+                                    ((float)bottom_screen.left / 2) + ((float)layout.width / 2),
+                                    (float)bottom_screen.top, (float)bottom_screen.GetWidth() / 2,
+                                    (float)bottom_screen.GetHeight());
         }
     }
 
