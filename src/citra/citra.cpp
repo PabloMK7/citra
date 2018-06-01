@@ -199,7 +199,7 @@ int main(int argc, char** argv) {
                 address = match[3];
                 if (!match[4].str().empty())
                     port = std::stoi(match[4]);
-                std::regex nickname_re("^[a-zA-Z0-9._- ]+$");
+                std::regex nickname_re("^[a-zA-Z0-9._\\- ]+$");
                 if (!std::regex_match(nickname, nickname_re)) {
                     std::cout
                         << "Nickname is not valid. Must be 4 to 20 alphanumeric characters.\n";
