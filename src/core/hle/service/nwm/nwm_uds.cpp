@@ -613,7 +613,7 @@ void NWM_UDS::RecvBeaconBroadcastData(Kernel::HLERequestContext& ctx) {
     data_reply_header.total_size = cur_buffer_size;
     out_buffer.Write(&data_reply_header, 0, sizeof(BeaconDataReplyHeader));
 
-    IPC::RequestBuilder rb = rp.MakeBuilder(1, 1);
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
     rb.Push(RESULT_SUCCESS);
     rb.PushMappedBuffer(out_buffer);
 
