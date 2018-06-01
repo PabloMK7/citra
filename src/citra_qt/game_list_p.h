@@ -15,6 +15,7 @@
 #include <QStandardItem>
 #include <QString>
 #include "citra_qt/util/util.h"
+#include "common/file_util.h"
 #include "common/logging/log.h"
 #include "common/string_util.h"
 #include "core/loader/smdh.h"
@@ -167,11 +168,26 @@ public:
 
     QVariant data(int role) const override {
         if (role == Qt::DisplayRole) {
-            std::string filename;
-            Common::SplitPath(data(FullPathRole).toString().toStdString(), nullptr, &filename,
-                              nullptr);
+            std::string path, filename, extension;
+            Common::SplitPath(data(FullPathRole).toString().toStdString(), &path, &filename,
+                              &extension);
             QString title = data(TitleRole).toString();
-            return QString::fromStdString(filename) + (title.isEmpty() ? "" : "\n    " + title);
+            QString second_name = QString::fromStdString(filename + extension);
+            static QRegExp installed_system_pattern(
+                QString::fromStdString(
+                    FileUtil::GetUserPath(D_SDMC_IDX) +
+                    "Nintendo "
+                    "3DS/00000000000000000000000000000000/00000000000000000000000000000000/"
+                    "title/000400(0|1)0/[0-9a-f]{8}/content/")
+                    .replace("\\", "\\\\"));
+            if (installed_system_pattern.exactMatch(QString::fromStdString(path))) {
+                // Use a different mechanism for system / installed titles showing program ID
+                second_name = QString("%1-%2")
+                                  .arg(data(ProgramIdRole).toULongLong(), 16, 16, QChar('0'))
+                                  .toUpper()
+                                  .arg(QString::fromStdString(filename));
+            }
+            return title + (title.isEmpty() ? "" : "\n     ") + second_name;
         } else {
             return GameListItem::data(role);
         }
