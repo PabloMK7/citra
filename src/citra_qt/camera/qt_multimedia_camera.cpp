@@ -48,7 +48,7 @@ bool QtCameraSurface::present(const QVideoFrame& frame) {
 
 QtMultimediaCamera::QtMultimediaCamera(const std::string& camera_name,
                                        const Service::CAM::Flip& flip)
-    : QtCameraInterface(flip), handler(QtMultimediaCameraHandler::GetHandler()) {
+    : QtCameraInterface(flip), handler(QtMultimediaCameraHandler::GetHandler(camera_name)) {
     if (handler->thread() == QThread::currentThread()) {
         handler->CreateCamera(camera_name);
     } else {
@@ -94,7 +94,7 @@ void QtMultimediaCamera::SetFrameRate(Service::CAM::FrameRate frame_rate) {
     auto framerate = FrameRateList[static_cast<int>(frame_rate)];
 
     handler->settings.setMinimumFrameRate(framerate.minimumFrameRate);
-    handler->settings.setMinimumFrameRate(framerate.maximumFrameRate);
+    handler->settings.setMaximumFrameRate(framerate.maximumFrameRate);
 }
 
 QImage QtMultimediaCamera::QtReceiveFrame() {
@@ -115,17 +115,25 @@ std::array<std::shared_ptr<QtMultimediaCameraHandler>, 3> QtMultimediaCameraHand
 
 std::array<bool, 3> QtMultimediaCameraHandler::status;
 
+std::unordered_map<std::string, std::shared_ptr<QtMultimediaCameraHandler>>
+    QtMultimediaCameraHandler::loaded;
+
 void QtMultimediaCameraHandler::Init() {
     for (auto& handler : handlers) {
         handler = std::make_shared<QtMultimediaCameraHandler>();
     }
 }
 
-std::shared_ptr<QtMultimediaCameraHandler> QtMultimediaCameraHandler::GetHandler() {
+std::shared_ptr<QtMultimediaCameraHandler> QtMultimediaCameraHandler::GetHandler(
+    const std::string& camera_name) {
+    if (loaded.count(camera_name)) {
+        return loaded.at(camera_name);
+    }
     for (int i = 0; i < handlers.size(); i++) {
         if (!status[i]) {
             NGLOG_INFO(Service_CAM, "Successfully got handler {}", i);
             status[i] = true;
+            loaded.emplace(camera_name, handlers[i]);
             return handlers[i];
         }
     }
@@ -140,6 +148,12 @@ void QtMultimediaCameraHandler::ReleaseHandler(
             NGLOG_INFO(Service_CAM, "Successfully released handler {}", i);
             status[i] = false;
             handlers[i]->started = false;
+            for (auto it = loaded.begin(); it != loaded.end(); it++) {
+                if (it->second == handlers[i]) {
+                    loaded.erase(it);
+                    break;
+                }
+            }
             break;
         }
     }

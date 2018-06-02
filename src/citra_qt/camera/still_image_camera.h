@@ -31,7 +31,7 @@ public:
                                             const Service::CAM::Flip& flip) const override;
 
 private:
-    static const std::string getFilePath();
+    static const std::string GetFilePath();
 };
 
 } // namespace Camera

@@ -6,6 +6,7 @@
 
 #include <array>
 #include <string>
+#include <unordered_map>
 #include <vector>
 #include <QAbstractVideoSurface>
 #include <QCamera>
@@ -62,7 +63,7 @@ class QtMultimediaCameraHandler final : public QObject {
 public:
     /// Creates the global handler. Must be called in UI thread.
     static void Init();
-    static std::shared_ptr<QtMultimediaCameraHandler> GetHandler();
+    static std::shared_ptr<QtMultimediaCameraHandler> GetHandler(const std::string& camera_name);
     static void ReleaseHandler(const std::shared_ptr<QtMultimediaCameraHandler>& handler);
 
     /**
@@ -92,6 +93,7 @@ private:
 
     static std::array<std::shared_ptr<QtMultimediaCameraHandler>, 3> handlers;
     static std::array<bool, 3> status;
+    static std::unordered_map<std::string, std::shared_ptr<QtMultimediaCameraHandler>> loaded;
 
     friend class QtMultimediaCamera; // For access to camera_surface (and camera)
 };
