@@ -5,6 +5,7 @@
 #include <QFileDialog>
 #include <QImageReader>
 #include <QMessageBox>
+#include <QThread>
 #include "citra_qt/camera/still_image_camera.h"
 
 namespace Camera {
@@ -24,7 +25,7 @@ bool StillImageCamera::IsPreviewAvailable() {
     return !image.isNull();
 }
 
-const std::string StillImageCameraFactory::GetFilePath() {
+const std::string StillImageCameraFactory::GetFilePath() const {
     QList<QByteArray> types = QImageReader::supportedImageFormats();
     QList<QString> temp_filters;
     for (QByteArray type : types) {
@@ -36,11 +37,18 @@ const std::string StillImageCameraFactory::GetFilePath() {
         .toStdString();
 }
 
-std::unique_ptr<CameraInterface> StillImageCameraFactory::Create(
-    const std::string& config, const Service::CAM::Flip& flip) const {
+std::unique_ptr<CameraInterface> StillImageCameraFactory::Create(const std::string& config,
+                                                                 const Service::CAM::Flip& flip) {
     std::string real_config = config;
     if (config.empty()) {
-        real_config = GetFilePath();
+        // call GetFilePath() in UI thread (note: StillImageCameraFactory itself is initialized in
+        // UI thread, so we can just pass in "this" here)
+        if (thread() == QThread::currentThread()) {
+            real_config = GetFilePath();
+        } else {
+            QMetaObject::invokeMethod(this, "GetFilePath", Qt::BlockingQueuedConnection,
+                                      Q_RETURN_ARG(std::string, real_config));
+        }
     }
     QImage image(QString::fromStdString(real_config));
     if (image.isNull()) {

@@ -40,8 +40,9 @@ std::vector<u16> QtCameraInterface::ReceiveFrame() {
                                     flip_vertical);
 }
 
-std::unique_ptr<CameraInterface> QtCameraFactory::CreatePreview(
-    const std::string& config, int width, int height, const Service::CAM::Flip& flip) const {
+std::unique_ptr<CameraInterface> QtCameraFactory::CreatePreview(const std::string& config,
+                                                                int width, int height,
+                                                                const Service::CAM::Flip& flip) {
     std::unique_ptr<CameraInterface> camera = Create(config, flip);
 
     if (camera->IsPreviewAvailable()) {

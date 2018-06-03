@@ -106,8 +106,8 @@ bool QtMultimediaCamera::IsPreviewAvailable() {
     return handler->CameraAvailable();
 }
 
-std::unique_ptr<CameraInterface> QtMultimediaCameraFactory::Create(
-    const std::string& config, const Service::CAM::Flip& flip) const {
+std::unique_ptr<CameraInterface> QtMultimediaCameraFactory::Create(const std::string& config,
+                                                                   const Service::CAM::Flip& flip) {
     return std::make_unique<QtMultimediaCamera>(config, flip);
 }
 

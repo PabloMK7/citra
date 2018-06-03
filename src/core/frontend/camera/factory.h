@@ -22,7 +22,7 @@ public:
      * @returns a unique_ptr to the created camera object.
      */
     virtual std::unique_ptr<CameraInterface> Create(const std::string& config,
-                                                    const Service::CAM::Flip& flip) const = 0;
+                                                    const Service::CAM::Flip& flip) = 0;
 
     /**
      * Creates a camera object for preview based on the configuration string.
@@ -36,7 +36,7 @@ public:
      */
     virtual std::unique_ptr<CameraInterface> CreatePreview(const std::string& config, int width,
                                                            int height,
-                                                           const Service::CAM::Flip& flip) const {
+                                                           const Service::CAM::Flip& flip) {
         return Create(config, flip);
     }
 };

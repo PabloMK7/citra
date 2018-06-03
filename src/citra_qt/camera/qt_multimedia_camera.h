@@ -54,7 +54,7 @@ private:
 class QtMultimediaCameraFactory final : public QtCameraFactory {
 public:
     std::unique_ptr<CameraInterface> Create(const std::string& config,
-                                            const Service::CAM::Flip& flip) const override;
+                                            const Service::CAM::Flip& flip) override;
 };
 
 class QtMultimediaCameraHandler final : public QObject {

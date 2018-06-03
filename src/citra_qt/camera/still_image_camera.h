@@ -25,13 +25,14 @@ private:
     QImage image;
 };
 
-class StillImageCameraFactory final : public QtCameraFactory {
+class StillImageCameraFactory final : public QObject, public QtCameraFactory {
+    Q_OBJECT
+
 public:
     std::unique_ptr<CameraInterface> Create(const std::string& config,
-                                            const Service::CAM::Flip& flip) const override;
+                                            const Service::CAM::Flip& flip) override;
 
-private:
-    static const std::string GetFilePath();
+    Q_INVOKABLE const std::string GetFilePath() const;
 };
 
 } // namespace Camera
