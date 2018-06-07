@@ -38,12 +38,12 @@ public:
 
     ResultVal<size_t> Read(u64 offset, size_t length, u8* buffer) const override {
         if (offset != 0) {
-            LOG_ERROR(Service_FS, "offset must be zero!");
+            NGLOG_ERROR(Service_FS, "offset must be zero!");
             return ERROR_UNSUPPORTED_OPEN_FLAGS;
         }
 
         if (length != data->size()) {
-            LOG_ERROR(Service_FS, "size must match the file size!");
+            NGLOG_ERROR(Service_FS, "size must match the file size!");
             return ERROR_INCORRECT_EXEFS_READ_SIZE;
         }
 
@@ -52,7 +52,7 @@ public:
     }
 
     ResultVal<size_t> Write(u64 offset, size_t length, bool flush, const u8* buffer) override {
-        LOG_ERROR(Service_FS, "The file is read-only!");
+        NGLOG_ERROR(Service_FS, "The file is read-only!");
         return ERROR_UNSUPPORTED_OPEN_FLAGS;
     }
 
@@ -88,13 +88,13 @@ public:
         // Note: SelfNCCHArchive doesn't check the open mode.
 
         if (path.GetType() != LowPathType::Binary) {
-            LOG_ERROR(Service_FS, "Path need to be Binary");
+            NGLOG_ERROR(Service_FS, "Path need to be Binary");
             return ERROR_INVALID_PATH;
         }
 
         std::vector<u8> binary = path.AsBinary();
         if (binary.size() != sizeof(SelfNCCHFilePath)) {
-            LOG_ERROR(Service_FS, "Wrong path size %zu", binary.size());
+            NGLOG_ERROR(Service_FS, "Wrong path size {}", binary.size());
             return ERROR_INVALID_PATH;
         }
 
@@ -109,7 +109,7 @@ public:
             return OpenRomFS();
 
         case SelfNCCHFilePathType::Code:
-            LOG_ERROR(Service_FS, "Reading the code section is not supported!");
+            NGLOG_ERROR(Service_FS, "Reading the code section is not supported!");
             return ERROR_COMMAND_NOT_ALLOWED;
 
         case SelfNCCHFilePathType::ExeFS: {
@@ -119,48 +119,48 @@ public:
             return OpenExeFS(filename);
         }
         default:
-            LOG_ERROR(Service_FS, "Unknown file type %u!", static_cast<u32>(file_path.type));
+            NGLOG_ERROR(Service_FS, "Unknown file type {}!", static_cast<u32>(file_path.type));
             return ERROR_INVALID_PATH;
         }
     }
 
     ResultCode DeleteFile(const Path& path) const override {
-        LOG_ERROR(Service_FS, "Unsupported");
+        NGLOG_ERROR(Service_FS, "Unsupported");
         return ERROR_UNSUPPORTED_OPEN_FLAGS;
     }
 
     ResultCode RenameFile(const Path& src_path, const Path& dest_path) const override {
-        LOG_ERROR(Service_FS, "Unsupported");
+        NGLOG_ERROR(Service_FS, "Unsupported");
         return ERROR_UNSUPPORTED_OPEN_FLAGS;
     }
 
     ResultCode DeleteDirectory(const Path& path) const override {
-        LOG_ERROR(Service_FS, "Unsupported");
+        NGLOG_ERROR(Service_FS, "Unsupported");
         return ERROR_UNSUPPORTED_OPEN_FLAGS;
     }
 
     ResultCode DeleteDirectoryRecursively(const Path& path) const override {
-        LOG_ERROR(Service_FS, "Unsupported");
+        NGLOG_ERROR(Service_FS, "Unsupported");
         return ERROR_UNSUPPORTED_OPEN_FLAGS;
     }
 
     ResultCode CreateFile(const Path& path, u64 size) const override {
-        LOG_ERROR(Service_FS, "Unsupported");
+        NGLOG_ERROR(Service_FS, "Unsupported");
         return ERROR_UNSUPPORTED_OPEN_FLAGS;
     }
 
     ResultCode CreateDirectory(const Path& path) const override {
-        LOG_ERROR(Service_FS, "Unsupported");
+        NGLOG_ERROR(Service_FS, "Unsupported");
         return ERROR_UNSUPPORTED_OPEN_FLAGS;
     }
 
     ResultCode RenameDirectory(const Path& src_path, const Path& dest_path) const override {
-        LOG_ERROR(Service_FS, "Unsupported");
+        NGLOG_ERROR(Service_FS, "Unsupported");
         return ERROR_UNSUPPORTED_OPEN_FLAGS;
     }
 
     ResultVal<std::unique_ptr<DirectoryBackend>> OpenDirectory(const Path& path) const override {
-        LOG_ERROR(Service_FS, "Unsupported");
+        NGLOG_ERROR(Service_FS, "Unsupported");
         return ERROR_UNSUPPORTED_OPEN_FLAGS;
     }
 
@@ -177,7 +177,7 @@ private:
                 std::make_unique<IVFCFile>(ncch_data.romfs_file, ncch_data.romfs_offset,
                                            ncch_data.romfs_size, std::move(delay_generator)));
         } else {
-            LOG_INFO(Service_FS, "Unable to read RomFS");
+            NGLOG_INFO(Service_FS, "Unable to read RomFS");
             return ERROR_ROMFS_NOT_FOUND;
         }
     }
@@ -190,7 +190,7 @@ private:
                 ncch_data.update_romfs_file, ncch_data.update_romfs_offset,
                 ncch_data.update_romfs_size, std::move(delay_generator)));
         } else {
-            LOG_INFO(Service_FS, "Unable to read update RomFS");
+            NGLOG_INFO(Service_FS, "Unable to read update RomFS");
             return ERROR_ROMFS_NOT_FOUND;
         }
     }
@@ -202,7 +202,7 @@ private:
                     std::make_unique<ExeFSSectionFile>(ncch_data.icon));
             }
 
-            LOG_WARNING(Service_FS, "Unable to read icon");
+            NGLOG_WARNING(Service_FS, "Unable to read icon");
             return ERROR_EXEFS_SECTION_NOT_FOUND;
         }
 
@@ -212,7 +212,7 @@ private:
                     std::make_unique<ExeFSSectionFile>(ncch_data.logo));
             }
 
-            LOG_WARNING(Service_FS, "Unable to read logo");
+            NGLOG_WARNING(Service_FS, "Unable to read logo");
             return ERROR_EXEFS_SECTION_NOT_FOUND;
         }
 
@@ -222,11 +222,11 @@ private:
                     std::make_unique<ExeFSSectionFile>(ncch_data.banner));
             }
 
-            LOG_WARNING(Service_FS, "Unable to read banner");
+            NGLOG_WARNING(Service_FS, "Unable to read banner");
             return ERROR_EXEFS_SECTION_NOT_FOUND;
         }
 
-        LOG_ERROR(Service_FS, "Unknown ExeFS section %s!", filename.c_str());
+        NGLOG_ERROR(Service_FS, "Unknown ExeFS section {}!", filename);
         return ERROR_INVALID_PATH;
     }
 
@@ -236,19 +236,17 @@ private:
 void ArchiveFactory_SelfNCCH::Register(Loader::AppLoader& app_loader) {
     u64 program_id = 0;
     if (app_loader.ReadProgramId(program_id) != Loader::ResultStatus::Success) {
-        LOG_WARNING(
+        NGLOG_WARNING(
             Service_FS,
             "Could not read program id when registering with SelfNCCH, this might be a 3dsx file");
     }
 
-    LOG_DEBUG(Service_FS, "Registering program %016" PRIX64 " with the SelfNCCH archive factory",
-              program_id);
+    NGLOG_DEBUG(Service_FS, "Registering program {} with the SelfNCCH archive factory", program_id);
 
     if (ncch_data.find(program_id) != ncch_data.end()) {
-        LOG_WARNING(Service_FS,
-                    "Registering program %016" PRIX64
-                    " with SelfNCCH will override existing mapping",
-                    program_id);
+        NGLOG_WARNING(Service_FS,
+                      "Registering program {} with SelfNCCH will override existing mapping",
+                      program_id);
     }
 
     NCCHData& data = ncch_data[program_id];
@@ -289,12 +287,12 @@ ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_SelfNCCH::Open(const P
 }
 
 ResultCode ArchiveFactory_SelfNCCH::Format(const Path&, const FileSys::ArchiveFormatInfo&) {
-    LOG_ERROR(Service_FS, "Attempted to format a SelfNCCH archive.");
+    NGLOG_ERROR(Service_FS, "Attempted to format a SelfNCCH archive.");
     return ERROR_INVALID_PATH;
 }
 
 ResultVal<ArchiveFormatInfo> ArchiveFactory_SelfNCCH::GetFormatInfo(const Path&) const {
-    LOG_ERROR(Service_FS, "Attempted to get format info of a SelfNCCH archive");
+    NGLOG_ERROR(Service_FS, "Attempted to get format info of a SelfNCCH archive");
     return ERROR_INVALID_PATH;
 }
 
