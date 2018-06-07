@@ -59,7 +59,7 @@ template <typename InputDeviceType>
 void RegisterFactory(const std::string& name, std::shared_ptr<Factory<InputDeviceType>> factory) {
     auto pair = std::make_pair(name, std::move(factory));
     if (!Impl::FactoryList<InputDeviceType>::list.insert(std::move(pair)).second) {
-        LOG_ERROR(Input, "Factory %s already registered", name.c_str());
+        NGLOG_ERROR(Input, "Factory {} already registered", name);
     }
 }
 
@@ -71,7 +71,7 @@ void RegisterFactory(const std::string& name, std::shared_ptr<Factory<InputDevic
 template <typename InputDeviceType>
 void UnregisterFactory(const std::string& name) {
     if (Impl::FactoryList<InputDeviceType>::list.erase(name) == 0) {
-        LOG_ERROR(Input, "Factory %s not registered", name.c_str());
+        NGLOG_ERROR(Input, "Factory {} not registered", name);
     }
 }
 
@@ -88,7 +88,7 @@ std::unique_ptr<InputDeviceType> CreateDevice(const std::string& params) {
     const auto pair = factory_list.find(engine);
     if (pair == factory_list.end()) {
         if (engine != "null") {
-            LOG_ERROR(Input, "Unknown engine name: %s", engine.c_str());
+            NGLOG_ERROR(Input, "Unknown engine name: {}", engine);
         }
         return std::make_unique<InputDeviceType>();
     }

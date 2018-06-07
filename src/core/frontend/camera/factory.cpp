@@ -24,7 +24,7 @@ std::unique_ptr<CameraInterface> CreateCamera(const std::string& name, const std
     }
 
     if (name != "blank") {
-        LOG_ERROR(Service_CAM, "Unknown camera \"%s\"", name.c_str());
+        NGLOG_ERROR(Service_CAM, "Unknown camera \"{}\"", name);
     }
     return std::make_unique<BlankCamera>();
 }
@@ -38,7 +38,7 @@ std::unique_ptr<CameraInterface> CreateCameraPreview(const std::string& name,
     }
 
     if (name != "blank") {
-        LOG_ERROR(Service_CAM, "Unknown camera \"%s\"", name.c_str());
+        NGLOG_ERROR(Service_CAM, "Unknown camera \"{}\"", name);
     }
     return std::make_unique<BlankCamera>();
 }
