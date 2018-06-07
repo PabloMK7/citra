@@ -15,6 +15,7 @@ namespace Camera {
 class StillImageCamera final : public QtCameraInterface {
 public:
     StillImageCamera(QImage image, const Service::CAM::Flip& flip);
+    ~StillImageCamera();
     void StartCapture() override;
     void StopCapture() override;
     void SetFrameRate(Service::CAM::FrameRate frame_rate) override {}
@@ -33,6 +34,12 @@ public:
                                             const Service::CAM::Flip& flip) override;
 
     Q_INVOKABLE const std::string GetFilePath() const;
+
+private:
+    /// Record the path chosen to avoid multiple prompt problem
+    static std::string last_path;
+
+    friend class StillImageCamera;
 };
 
 } // namespace Camera
