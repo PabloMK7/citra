@@ -241,11 +241,12 @@ void ArchiveFactory_SelfNCCH::Register(Loader::AppLoader& app_loader) {
             "Could not read program id when registering with SelfNCCH, this might be a 3dsx file");
     }
 
-    NGLOG_DEBUG(Service_FS, "Registering program {} with the SelfNCCH archive factory", program_id);
+    NGLOG_DEBUG(Service_FS, "Registering program {:016X} with the SelfNCCH archive factory",
+                program_id);
 
     if (ncch_data.find(program_id) != ncch_data.end()) {
         NGLOG_WARNING(Service_FS,
-                      "Registering program {} with SelfNCCH will override existing mapping",
+                      "Registering program {:016X} with SelfNCCH will override existing mapping",
                       program_id);
     }
 

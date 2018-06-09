@@ -38,7 +38,7 @@ PageTable* GetCurrentPageTable() {
 }
 
 static void MapPages(PageTable& page_table, u32 base, u32 size, u8* memory, PageType type) {
-    NGLOG_DEBUG(HW_Memory, "Mapping {} onto {:08X}-{:08X}", memory, base * PAGE_SIZE,
+    NGLOG_DEBUG(HW_Memory, "Mapping {} onto {:08X}-{:08X}", (void*)memory, base * PAGE_SIZE,
                 (base + size) * PAGE_SIZE);
 
     RasterizerFlushVirtualRegion(base << PAGE_BITS, size * PAGE_SIZE,
