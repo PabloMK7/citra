@@ -13,8 +13,8 @@ add_executable(citra-qt
     camera/camera_util.h
     camera/still_image_camera.cpp
     camera/still_image_camera.h
-    camera/qt_camera_factory.cpp
-    camera/qt_camera_factory.h
+    camera/qt_camera_base.cpp
+    camera/qt_camera_base.h
     camera/qt_multimedia_camera.cpp
     camera/qt_multimedia_camera.h
     citra-qt.rc

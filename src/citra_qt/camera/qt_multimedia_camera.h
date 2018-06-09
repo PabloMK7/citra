@@ -6,6 +6,7 @@
 
 #include <array>
 #include <string>
+#include <unordered_map>
 #include <vector>
 #include <QAbstractVideoSurface>
 #include <QCamera>
@@ -13,7 +14,7 @@
 #include <QImage>
 #include <QMutex>
 #include "citra_qt/camera/camera_util.h"
-#include "citra_qt/camera/qt_camera_factory.h"
+#include "citra_qt/camera/qt_camera_base.h"
 #include "core/frontend/camera/interface.h"
 
 class GMainWindow;
@@ -36,30 +37,24 @@ private:
 class QtMultimediaCameraHandler;
 
 /// This class is only an interface. It just calls QtMultimediaCameraHandler.
-class QtMultimediaCamera final : public CameraInterface {
+class QtMultimediaCamera final : public QtCameraInterface {
 public:
-    QtMultimediaCamera(const std::string& camera_name);
+    QtMultimediaCamera(const std::string& camera_name, const Service::CAM::Flip& flip);
     ~QtMultimediaCamera();
     void StartCapture() override;
     void StopCapture() override;
-    void SetResolution(const Service::CAM::Resolution&) override;
-    void SetFlip(Service::CAM::Flip) override;
-    void SetEffect(Service::CAM::Effect) override;
-    void SetFormat(Service::CAM::OutputFormat) override;
     void SetFrameRate(Service::CAM::FrameRate frame_rate) override;
-    std::vector<u16> ReceiveFrame() override;
+    QImage QtReceiveFrame() override;
     bool IsPreviewAvailable() override;
 
 private:
     std::shared_ptr<QtMultimediaCameraHandler> handler;
-    int width, height;
-    bool output_rgb;
-    bool flip_horizontal, flip_vertical;
 };
 
 class QtMultimediaCameraFactory final : public QtCameraFactory {
 public:
-    std::unique_ptr<CameraInterface> Create(const std::string& config) const override;
+    std::unique_ptr<CameraInterface> Create(const std::string& config,
+                                            const Service::CAM::Flip& flip) override;
 };
 
 class QtMultimediaCameraHandler final : public QObject {
@@ -68,7 +63,7 @@ class QtMultimediaCameraHandler final : public QObject {
 public:
     /// Creates the global handler. Must be called in UI thread.
     static void Init();
-    static std::shared_ptr<QtMultimediaCameraHandler> GetHandler();
+    static std::shared_ptr<QtMultimediaCameraHandler> GetHandler(const std::string& camera_name);
     static void ReleaseHandler(const std::shared_ptr<QtMultimediaCameraHandler>& handler);
 
     /**
@@ -98,6 +93,7 @@ private:
 
     static std::array<std::shared_ptr<QtMultimediaCameraHandler>, 3> handlers;
     static std::array<bool, 3> status;
+    static std::unordered_map<std::string, std::shared_ptr<QtMultimediaCameraHandler>> loaded;
 
     friend class QtMultimediaCamera; // For access to camera_surface (and camera)
 };

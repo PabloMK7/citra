@@ -17,28 +17,29 @@ void RegisterFactory(const std::string& name, std::unique_ptr<CameraFactory> fac
     factories[name] = std::move(factory);
 }
 
-std::unique_ptr<CameraInterface> CreateCamera(const std::string& name, const std::string& config) {
+std::unique_ptr<CameraInterface> CreateCamera(const std::string& name, const std::string& config,
+                                              const Service::CAM::Flip& flip) {
     auto pair = factories.find(name);
     if (pair != factories.end()) {
-        return pair->second->Create(config);
+        return pair->second->Create(config, flip);
     }
 
     if (name != "blank") {
-        LOG_ERROR(Service_CAM, "Unknown camera \"%s\"", name.c_str());
+        NGLOG_ERROR(Service_CAM, "Unknown camera {}", name);
     }
     return std::make_unique<BlankCamera>();
 }
 
 std::unique_ptr<CameraInterface> CreateCameraPreview(const std::string& name,
                                                      const std::string& config, int width,
-                                                     int height) {
+                                                     int height, const Service::CAM::Flip& flip) {
     auto pair = factories.find(name);
     if (pair != factories.end()) {
-        return pair->second->CreatePreview(config, width, height);
+        return pair->second->CreatePreview(config, width, height, flip);
     }
 
     if (name != "blank") {
-        LOG_ERROR(Service_CAM, "Unknown camera \"%s\"", name.c_str());
+        NGLOG_ERROR(Service_CAM, "Unknown camera {}", name);
     }
     return std::make_unique<BlankCamera>();
 }

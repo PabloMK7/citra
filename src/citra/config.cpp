@@ -155,14 +155,20 @@ void Config::ReadValues() {
         sdl2_config->Get("Camera", "camera_outer_right_name", "blank");
     Settings::values.camera_config[OuterRightCamera] =
         sdl2_config->Get("Camera", "camera_outer_right_config", "");
+    Settings::values.camera_flip[OuterRightCamera] =
+        sdl2_config->GetInteger("Camera", "camera_outer_right_flip", 0);
     Settings::values.camera_name[InnerCamera] =
         sdl2_config->Get("Camera", "camera_inner_name", "blank");
     Settings::values.camera_config[InnerCamera] =
         sdl2_config->Get("Camera", "camera_inner_config", "");
+    Settings::values.camera_flip[InnerCamera] =
+        sdl2_config->GetInteger("Camera", "camera_inner_flip", 0);
     Settings::values.camera_name[OuterLeftCamera] =
         sdl2_config->Get("Camera", "camera_outer_left_name", "blank");
     Settings::values.camera_config[OuterLeftCamera] =
         sdl2_config->Get("Camera", "camera_outer_left_config", "");
+    Settings::values.camera_flip[OuterLeftCamera] =
+        sdl2_config->GetInteger("Camera", "camera_outer_left_flip", 0);
 
     // Miscellaneous
     Settings::values.log_filter = sdl2_config->Get("Miscellaneous", "log_filter", "*:Info");
