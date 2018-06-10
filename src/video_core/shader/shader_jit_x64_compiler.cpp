@@ -580,6 +580,18 @@ void JitShader::Compile_RSQ(Instruction instr) {
 void JitShader::Compile_NOP(Instruction instr) {}
 
 void JitShader::Compile_END(Instruction instr) {
+    // Save conditional code
+    mov(byte[STATE + offsetof(UnitState, conditional_code[0])], COND0.cvt8());
+    mov(byte[STATE + offsetof(UnitState, conditional_code[1])], COND1.cvt8());
+
+    // Save address/loop registers
+    sar(ADDROFFS_REG_0, 4);
+    sar(ADDROFFS_REG_1, 4);
+    sar(LOOPCOUNT_REG, 4);
+    mov(dword[STATE + offsetof(UnitState, address_registers[0])], ADDROFFS_REG_0.cvt32());
+    mov(dword[STATE + offsetof(UnitState, address_registers[1])], ADDROFFS_REG_1.cvt32());
+    mov(dword[STATE + offsetof(UnitState, address_registers[2])], LOOPCOUNT_REG);
+
     ABI_PopRegistersAndAdjustStack(*this, ABI_ALL_CALLEE_SAVED, 8, 16);
     ret();
 }
@@ -896,10 +908,17 @@ void JitShader::Compile(const std::array<u32, MAX_PROGRAM_CODE_LENGTH>* program_
     mov(UNIFORMS, ABI_PARAM1);
     mov(STATE, ABI_PARAM2);
 
-    // Zero address/loop  registers
-    xor_(ADDROFFS_REG_0.cvt32(), ADDROFFS_REG_0.cvt32());
-    xor_(ADDROFFS_REG_1.cvt32(), ADDROFFS_REG_1.cvt32());
-    xor_(LOOPCOUNT_REG, LOOPCOUNT_REG);
+    // Load address/loop registers
+    movsxd(ADDROFFS_REG_0, dword[STATE + offsetof(UnitState, address_registers[0])]);
+    movsxd(ADDROFFS_REG_1, dword[STATE + offsetof(UnitState, address_registers[1])]);
+    mov(LOOPCOUNT_REG, dword[STATE + offsetof(UnitState, address_registers[2])]);
+    shl(ADDROFFS_REG_0, 4);
+    shl(ADDROFFS_REG_1, 4);
+    shl(LOOPCOUNT_REG, 4);
+
+    // Load conditional code
+    mov(COND0, byte[STATE + offsetof(UnitState, conditional_code[0])]);
+    mov(COND1, byte[STATE + offsetof(UnitState, conditional_code[1])]);
 
     // Used to set a register to one
     static const __m128 one = {1.f, 1.f, 1.f, 1.f};
