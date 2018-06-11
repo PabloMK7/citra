@@ -46,8 +46,9 @@ bool QtCameraSurface::present(const QVideoFrame& frame) {
     return true;
 }
 
-QtMultimediaCamera::QtMultimediaCamera(const std::string& camera_name)
-    : handler(QtMultimediaCameraHandler::GetHandler()) {
+QtMultimediaCamera::QtMultimediaCamera(const std::string& camera_name,
+                                       const Service::CAM::Flip& flip)
+    : QtCameraInterface(flip), handler(QtMultimediaCameraHandler::GetHandler(camera_name)) {
     if (handler->thread() == QThread::currentThread()) {
         handler->CreateCamera(camera_name);
     } else {
@@ -73,10 +74,6 @@ void QtMultimediaCamera::StopCapture() {
     handler->StopCamera();
 }
 
-void QtMultimediaCamera::SetFormat(Service::CAM::OutputFormat output_format) {
-    output_rgb = output_format == Service::CAM::OutputFormat::RGB565;
-}
-
 void QtMultimediaCamera::SetFrameRate(Service::CAM::FrameRate frame_rate) {
     const std::array<QCamera::FrameRateRange, 13> FrameRateList = {
         /* Rate_15 */ QCamera::FrameRateRange(15, 15),
@@ -96,45 +93,32 @@ void QtMultimediaCamera::SetFrameRate(Service::CAM::FrameRate frame_rate) {
 
     auto framerate = FrameRateList[static_cast<int>(frame_rate)];
 
-    handler->settings.setMinimumFrameRate(framerate.minimumFrameRate);
-    handler->settings.setMinimumFrameRate(framerate.maximumFrameRate);
-}
-
-void QtMultimediaCamera::SetResolution(const Service::CAM::Resolution& resolution) {
-    width = resolution.width;
-    height = resolution.height;
-}
-
-void QtMultimediaCamera::SetFlip(Service::CAM::Flip flip) {
-    using namespace Service::CAM;
-    flip_horizontal = (flip == Flip::Horizontal) || (flip == Flip::Reverse);
-    flip_vertical = (flip == Flip::Vertical) || (flip == Flip::Reverse);
-}
-
-void QtMultimediaCamera::SetEffect(Service::CAM::Effect effect) {
-    if (effect != Service::CAM::Effect::None) {
-        NGLOG_ERROR(Service_CAM, "Unimplemented effect {}", static_cast<int>(effect));
+    if (handler->camera->supportedViewfinderFrameRateRanges().contains(framerate)) {
+        handler->settings.setMinimumFrameRate(framerate.minimumFrameRate);
+        handler->settings.setMaximumFrameRate(framerate.maximumFrameRate);
     }
 }
 
-std::vector<u16> QtMultimediaCamera::ReceiveFrame() {
+QImage QtMultimediaCamera::QtReceiveFrame() {
     QMutexLocker locker(&handler->camera_surface.mutex);
-    return CameraUtil::ProcessImage(handler->camera_surface.current_frame, width, height,
-                                    output_rgb, flip_horizontal, flip_vertical);
+    return handler->camera_surface.current_frame;
 }
 
 bool QtMultimediaCamera::IsPreviewAvailable() {
     return handler->CameraAvailable();
 }
 
-std::unique_ptr<CameraInterface> QtMultimediaCameraFactory::Create(
-    const std::string& config) const {
-    return std::make_unique<QtMultimediaCamera>(config);
+std::unique_ptr<CameraInterface> QtMultimediaCameraFactory::Create(const std::string& config,
+                                                                   const Service::CAM::Flip& flip) {
+    return std::make_unique<QtMultimediaCamera>(config, flip);
 }
 
 std::array<std::shared_ptr<QtMultimediaCameraHandler>, 3> QtMultimediaCameraHandler::handlers;
 
 std::array<bool, 3> QtMultimediaCameraHandler::status;
+
+std::unordered_map<std::string, std::shared_ptr<QtMultimediaCameraHandler>>
+    QtMultimediaCameraHandler::loaded;
 
 void QtMultimediaCameraHandler::Init() {
     for (auto& handler : handlers) {
@@ -142,11 +126,16 @@ void QtMultimediaCameraHandler::Init() {
     }
 }
 
-std::shared_ptr<QtMultimediaCameraHandler> QtMultimediaCameraHandler::GetHandler() {
+std::shared_ptr<QtMultimediaCameraHandler> QtMultimediaCameraHandler::GetHandler(
+    const std::string& camera_name) {
+    if (loaded.count(camera_name)) {
+        return loaded.at(camera_name);
+    }
     for (int i = 0; i < handlers.size(); i++) {
         if (!status[i]) {
             NGLOG_INFO(Service_CAM, "Successfully got handler {}", i);
             status[i] = true;
+            loaded.emplace(camera_name, handlers[i]);
             return handlers[i];
         }
     }
@@ -161,6 +150,12 @@ void QtMultimediaCameraHandler::ReleaseHandler(
             NGLOG_INFO(Service_CAM, "Successfully released handler {}", i);
             status[i] = false;
             handlers[i]->started = false;
+            for (auto it = loaded.begin(); it != loaded.end(); it++) {
+                if (it->second == handlers[i]) {
+                    loaded.erase(it);
+                    break;
+                }
+            }
             break;
         }
     }
@@ -178,6 +173,7 @@ void QtMultimediaCameraHandler::CreateCamera(const std::string& camera_name) {
     settings.setMinimumFrameRate(30);
     settings.setMaximumFrameRate(30);
     camera->setViewfinder(&camera_surface);
+    camera->load();
 }
 
 void QtMultimediaCameraHandler::StopCamera() {

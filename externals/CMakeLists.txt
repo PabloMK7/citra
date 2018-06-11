@@ -81,5 +81,5 @@ endif()
 # Cubeb
 if(ENABLE_CUBEB)
     set(BUILD_TESTS OFF CACHE BOOL "")
-    add_subdirectory(cubeb)
+    add_subdirectory(cubeb EXCLUDE_FROM_ALL)
 endif()

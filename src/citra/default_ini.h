@@ -178,13 +178,19 @@ camera_outer_right_name =
 # A config string for the right outer camera. Its meaning is defined by the camera engine
 camera_outer_right_config =
 
+# The image flip to apply
+# 0: None (default), 1: Horizontal, 2: Vertical, 3: Reverse
+camera_outer_right_flip =
+
 # ... for the left outer camera
 camera_outer_left_name =
 camera_outer_left_config =
+camera_outer_left_flip =
 
 # ... for the inner camera
 camera_inner_name =
 camera_inner_config =
+camera_inner_flip =
 
 [Miscellaneous]
 # A filter which removes logs below a certain logging level.

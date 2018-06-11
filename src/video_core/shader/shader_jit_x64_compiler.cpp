@@ -33,70 +33,70 @@ namespace Shader {
 typedef void (JitShader::*JitFunction)(Instruction instr);
 
 const JitFunction instr_table[64] = {
-    &JitShader::Compile_ADD,   // add
-    &JitShader::Compile_DP3,   // dp3
-    &JitShader::Compile_DP4,   // dp4
-    &JitShader::Compile_DPH,   // dph
-    nullptr,                   // unknown
-    &JitShader::Compile_EX2,   // ex2
-    &JitShader::Compile_LG2,   // lg2
-    nullptr,                   // unknown
-    &JitShader::Compile_MUL,   // mul
-    &JitShader::Compile_SGE,   // sge
-    &JitShader::Compile_SLT,   // slt
-    &JitShader::Compile_FLR,   // flr
-    &JitShader::Compile_MAX,   // max
-    &JitShader::Compile_MIN,   // min
-    &JitShader::Compile_RCP,   // rcp
-    &JitShader::Compile_RSQ,   // rsq
-    nullptr,                   // unknown
-    nullptr,                   // unknown
-    &JitShader::Compile_MOVA,  // mova
-    &JitShader::Compile_MOV,   // mov
-    nullptr,                   // unknown
-    nullptr,                   // unknown
-    nullptr,                   // unknown
-    nullptr,                   // unknown
-    &JitShader::Compile_DPH,   // dphi
-    nullptr,                   // unknown
-    &JitShader::Compile_SGE,   // sgei
-    &JitShader::Compile_SLT,   // slti
-    nullptr,                   // unknown
-    nullptr,                   // unknown
-    nullptr,                   // unknown
-    nullptr,                   // unknown
-    nullptr,                   // unknown
-    &JitShader::Compile_NOP,   // nop
-    &JitShader::Compile_END,   // end
-    nullptr,                   // break
-    &JitShader::Compile_CALL,  // call
-    &JitShader::Compile_CALLC, // callc
-    &JitShader::Compile_CALLU, // callu
-    &JitShader::Compile_IF,    // ifu
-    &JitShader::Compile_IF,    // ifc
-    &JitShader::Compile_LOOP,  // loop
-    &JitShader::Compile_EMIT,  // emit
-    &JitShader::Compile_SETE,  // sete
-    &JitShader::Compile_JMP,   // jmpc
-    &JitShader::Compile_JMP,   // jmpu
-    &JitShader::Compile_CMP,   // cmp
-    &JitShader::Compile_CMP,   // cmp
-    &JitShader::Compile_MAD,   // madi
-    &JitShader::Compile_MAD,   // madi
-    &JitShader::Compile_MAD,   // madi
-    &JitShader::Compile_MAD,   // madi
-    &JitShader::Compile_MAD,   // madi
-    &JitShader::Compile_MAD,   // madi
-    &JitShader::Compile_MAD,   // madi
-    &JitShader::Compile_MAD,   // madi
-    &JitShader::Compile_MAD,   // mad
-    &JitShader::Compile_MAD,   // mad
-    &JitShader::Compile_MAD,   // mad
-    &JitShader::Compile_MAD,   // mad
-    &JitShader::Compile_MAD,   // mad
-    &JitShader::Compile_MAD,   // mad
-    &JitShader::Compile_MAD,   // mad
-    &JitShader::Compile_MAD,   // mad
+    &JitShader::Compile_ADD,    // add
+    &JitShader::Compile_DP3,    // dp3
+    &JitShader::Compile_DP4,    // dp4
+    &JitShader::Compile_DPH,    // dph
+    nullptr,                    // unknown
+    &JitShader::Compile_EX2,    // ex2
+    &JitShader::Compile_LG2,    // lg2
+    nullptr,                    // unknown
+    &JitShader::Compile_MUL,    // mul
+    &JitShader::Compile_SGE,    // sge
+    &JitShader::Compile_SLT,    // slt
+    &JitShader::Compile_FLR,    // flr
+    &JitShader::Compile_MAX,    // max
+    &JitShader::Compile_MIN,    // min
+    &JitShader::Compile_RCP,    // rcp
+    &JitShader::Compile_RSQ,    // rsq
+    nullptr,                    // unknown
+    nullptr,                    // unknown
+    &JitShader::Compile_MOVA,   // mova
+    &JitShader::Compile_MOV,    // mov
+    nullptr,                    // unknown
+    nullptr,                    // unknown
+    nullptr,                    // unknown
+    nullptr,                    // unknown
+    &JitShader::Compile_DPH,    // dphi
+    nullptr,                    // unknown
+    &JitShader::Compile_SGE,    // sgei
+    &JitShader::Compile_SLT,    // slti
+    nullptr,                    // unknown
+    nullptr,                    // unknown
+    nullptr,                    // unknown
+    nullptr,                    // unknown
+    nullptr,                    // unknown
+    &JitShader::Compile_NOP,    // nop
+    &JitShader::Compile_END,    // end
+    &JitShader::Compile_BREAKC, // breakc
+    &JitShader::Compile_CALL,   // call
+    &JitShader::Compile_CALLC,  // callc
+    &JitShader::Compile_CALLU,  // callu
+    &JitShader::Compile_IF,     // ifu
+    &JitShader::Compile_IF,     // ifc
+    &JitShader::Compile_LOOP,   // loop
+    &JitShader::Compile_EMIT,   // emit
+    &JitShader::Compile_SETE,   // sete
+    &JitShader::Compile_JMP,    // jmpc
+    &JitShader::Compile_JMP,    // jmpu
+    &JitShader::Compile_CMP,    // cmp
+    &JitShader::Compile_CMP,    // cmp
+    &JitShader::Compile_MAD,    // madi
+    &JitShader::Compile_MAD,    // madi
+    &JitShader::Compile_MAD,    // madi
+    &JitShader::Compile_MAD,    // madi
+    &JitShader::Compile_MAD,    // madi
+    &JitShader::Compile_MAD,    // madi
+    &JitShader::Compile_MAD,    // madi
+    &JitShader::Compile_MAD,    // madi
+    &JitShader::Compile_MAD,    // mad
+    &JitShader::Compile_MAD,    // mad
+    &JitShader::Compile_MAD,    // mad
+    &JitShader::Compile_MAD,    // mad
+    &JitShader::Compile_MAD,    // mad
+    &JitShader::Compile_MAD,    // mad
+    &JitShader::Compile_MAD,    // mad
+    &JitShader::Compile_MAD,    // mad
 };
 
 // The following is used to alias some commonly used registers. Generally, RAX-RDX and XMM0-XMM3 can
@@ -580,8 +580,28 @@ void JitShader::Compile_RSQ(Instruction instr) {
 void JitShader::Compile_NOP(Instruction instr) {}
 
 void JitShader::Compile_END(Instruction instr) {
+    // Save conditional code
+    mov(byte[STATE + offsetof(UnitState, conditional_code[0])], COND0.cvt8());
+    mov(byte[STATE + offsetof(UnitState, conditional_code[1])], COND1.cvt8());
+
+    // Save address/loop registers
+    sar(ADDROFFS_REG_0, 4);
+    sar(ADDROFFS_REG_1, 4);
+    sar(LOOPCOUNT_REG, 4);
+    mov(dword[STATE + offsetof(UnitState, address_registers[0])], ADDROFFS_REG_0.cvt32());
+    mov(dword[STATE + offsetof(UnitState, address_registers[1])], ADDROFFS_REG_1.cvt32());
+    mov(dword[STATE + offsetof(UnitState, address_registers[2])], LOOPCOUNT_REG);
+
     ABI_PopRegistersAndAdjustStack(*this, ABI_ALL_CALLEE_SAVED, 8, 16);
     ret();
+}
+
+void JitShader::Compile_BREAKC(Instruction instr) {
+    Compile_Assert(looping, "BREAKC must be inside a LOOP");
+    if (looping) {
+        Compile_EvaluateCondition(instr);
+        jnz(*loop_break_label);
+    }
 }
 
 void JitShader::Compile_CALL(Instruction instr) {
@@ -727,11 +747,14 @@ void JitShader::Compile_LOOP(Instruction instr) {
     Label l_loop_start;
     L(l_loop_start);
 
+    loop_break_label = Xbyak::Label();
     Compile_Block(instr.flow_control.dest_offset + 1);
 
     add(LOOPCOUNT_REG, LOOPINC); // Increment LOOPCOUNT_REG by Z-component
     sub(LOOPCOUNT, 1);           // Increment loop count by 1
     jnz(l_loop_start);           // Loop if not equal
+    L(*loop_break_label);
+    loop_break_label = boost::none;
 
     looping = false;
 }
@@ -885,10 +908,17 @@ void JitShader::Compile(const std::array<u32, MAX_PROGRAM_CODE_LENGTH>* program_
     mov(UNIFORMS, ABI_PARAM1);
     mov(STATE, ABI_PARAM2);
 
-    // Zero address/loop  registers
-    xor_(ADDROFFS_REG_0.cvt32(), ADDROFFS_REG_0.cvt32());
-    xor_(ADDROFFS_REG_1.cvt32(), ADDROFFS_REG_1.cvt32());
-    xor_(LOOPCOUNT_REG, LOOPCOUNT_REG);
+    // Load address/loop registers
+    movsxd(ADDROFFS_REG_0, dword[STATE + offsetof(UnitState, address_registers[0])]);
+    movsxd(ADDROFFS_REG_1, dword[STATE + offsetof(UnitState, address_registers[1])]);
+    mov(LOOPCOUNT_REG, dword[STATE + offsetof(UnitState, address_registers[2])]);
+    shl(ADDROFFS_REG_0, 4);
+    shl(ADDROFFS_REG_1, 4);
+    shl(LOOPCOUNT_REG, 4);
+
+    // Load conditional code
+    mov(COND0, byte[STATE + offsetof(UnitState, conditional_code[0])]);
+    mov(COND1, byte[STATE + offsetof(UnitState, conditional_code[1])]);
 
     // Used to set a register to one
     static const __m128 one = {1.f, 1.f, 1.f, 1.f};

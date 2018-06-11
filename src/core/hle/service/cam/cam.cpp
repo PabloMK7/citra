@@ -1041,8 +1041,9 @@ void Module::ReloadCameraDevices() {
 }
 
 void Module::LoadCameraImplementation(CameraConfig& camera, int camera_id) {
-    camera.impl = Camera::CreateCamera(Settings::values.camera_name[camera_id],
-                                       Settings::values.camera_config[camera_id]);
+    camera.impl = Camera::CreateCamera(
+        Settings::values.camera_name[camera_id], Settings::values.camera_config[camera_id],
+        static_cast<Service::CAM::Flip>(Settings::values.camera_flip[camera_id]));
     camera.impl->SetFlip(camera.contexts[0].flip);
     camera.impl->SetEffect(camera.contexts[0].effect);
     camera.impl->SetFormat(camera.contexts[0].format);

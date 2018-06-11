@@ -140,6 +140,7 @@ struct Values {
     // Camera
     std::array<std::string, Service::CAM::NumCameras> camera_name;
     std::array<std::string, Service::CAM::NumCameras> camera_config;
+    std::array<int, Service::CAM::NumCameras> camera_flip;
 
     // Debugging
     bool use_gdbstub;
