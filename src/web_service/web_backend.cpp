@@ -31,14 +31,12 @@ std::unique_ptr<httplib::Client> GetClientFor(const LUrlParser::clParseURL& pars
         if (!parsedUrl.GetPort(&port)) {
             port = HTTP_PORT;
         }
-        return std::make_unique<hl::Client>(parsedUrl.m_Host.c_str(), port, TIMEOUT_SECONDS,
-                                            hl::HttpVersion::v1_1);
+        return std::make_unique<hl::Client>(parsedUrl.m_Host.c_str(), port, TIMEOUT_SECONDS);
     } else if (parsedUrl.m_Scheme == "https") {
         if (!parsedUrl.GetPort(&port)) {
             port = HTTPS_PORT;
         }
-        return std::make_unique<hl::SSLClient>(parsedUrl.m_Host.c_str(), port, TIMEOUT_SECONDS,
-                                               hl::HttpVersion::v1_1);
+        return std::make_unique<hl::SSLClient>(parsedUrl.m_Host.c_str(), port, TIMEOUT_SECONDS);
     } else {
         NGLOG_ERROR(WebService, "Bad URL scheme {}", parsedUrl.m_Scheme);
         return nullptr;
