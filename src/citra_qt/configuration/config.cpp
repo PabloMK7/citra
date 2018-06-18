@@ -100,6 +100,8 @@ void Config::ReadValues() {
     qt_config->endGroup();
 
     qt_config->beginGroup("Layout");
+    Settings::values.toggle_3d = qt_config->value("toggle_3d", false).toBool();
+    Settings::values.factor_3d = qt_config->value("factor_3d", 0).toInt();
     Settings::values.layout_option =
         static_cast<Settings::LayoutOption>(qt_config->value("layout_option").toInt());
     Settings::values.swap_screen = qt_config->value("swap_screen", false).toBool();
@@ -323,6 +325,8 @@ void Config::SaveValues() {
     qt_config->endGroup();
 
     qt_config->beginGroup("Layout");
+    qt_config->setValue("toggle_3d", Settings::values.toggle_3d);
+    qt_config->setValue("factor_3d", Settings::values.factor_3d);
     qt_config->setValue("layout_option", static_cast<int>(Settings::values.layout_option));
     qt_config->setValue("swap_screen", Settings::values.swap_screen);
     qt_config->setValue("custom_layout", Settings::values.custom_layout);

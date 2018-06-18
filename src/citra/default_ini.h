@@ -116,6 +116,14 @@ bg_red =
 bg_blue =
 bg_green =
 
+# Toggles Stereoscopic 3D
+# 0 (default): Off, 1: On
+toggle_3d =
+
+# Change 3D Intensity
+# 0 - 100: Intensity. 0 (default)
+factor_3d =
+
 [Layout]
 # Layout for the screen inside the render window.
 # 0 (default): Default Top Bottom Screen, 1: Single Screen Only, 2: Large Screen Small Screen, 3: Side by Side
