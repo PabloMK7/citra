@@ -7,6 +7,7 @@
 #include <array>
 #include <vector>
 #include <QByteArray>
+#include <QMetaType>
 #include <QString>
 #include <QStringList>
 
@@ -18,6 +19,18 @@ using Shortcut = std::pair<QString, ContextualShortcut>;
 static const std::array<std::pair<QString, QString>, 2> themes = {
     {std::make_pair(QString("Default"), QString("default")),
      std::make_pair(QString("Dark"), QString("qdarkstyle"))}};
+
+struct GameDir {
+    QString path;
+    bool deep_scan;
+    bool expanded;
+    bool operator==(const GameDir& rhs) const {
+        return path == rhs.path;
+    };
+    bool operator!=(const GameDir& rhs) const {
+        return !operator==(rhs);
+    };
+};
 
 struct Values {
     QByteArray geometry;
@@ -45,8 +58,9 @@ struct Values {
 
     QString roms_path;
     QString symbols_path;
-    QString gamedir;
-    bool gamedir_deepscan;
+    QString game_dir_deprecated;
+    bool game_dir_deprecated_deepscan;
+    QList<UISettings::GameDir> game_dirs;
     QStringList recent_files;
     QString language;
 
@@ -74,3 +88,5 @@ struct Values {
 
 extern Values values;
 } // namespace UISettings
+
+Q_DECLARE_METATYPE(UISettings::GameDir*);
