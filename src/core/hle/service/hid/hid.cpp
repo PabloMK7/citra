@@ -266,7 +266,7 @@ void Module::Interface::EnableAccelerometer(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
 
-    LOG_DEBUG(Service_HID, "called");
+    NGLOG_DEBUG(Service_HID, "called");
 }
 
 void Module::Interface::DisableAccelerometer(Kernel::HLERequestContext& ctx) {
@@ -282,7 +282,7 @@ void Module::Interface::DisableAccelerometer(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
 
-    LOG_DEBUG(Service_HID, "called");
+    NGLOG_DEBUG(Service_HID, "called");
 }
 
 void Module::Interface::EnableGyroscopeLow(Kernel::HLERequestContext& ctx) {
@@ -298,7 +298,7 @@ void Module::Interface::EnableGyroscopeLow(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
 
-    LOG_DEBUG(Service_HID, "called");
+    NGLOG_DEBUG(Service_HID, "called");
 }
 
 void Module::Interface::DisableGyroscopeLow(Kernel::HLERequestContext& ctx) {
@@ -314,7 +314,7 @@ void Module::Interface::DisableGyroscopeLow(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
 
-    LOG_DEBUG(Service_HID, "called");
+    NGLOG_DEBUG(Service_HID, "called");
 }
 
 void Module::Interface::GetGyroscopeLowRawToDpsCoefficient(Kernel::HLERequestContext& ctx) {
@@ -339,7 +339,7 @@ void Module::Interface::GetGyroscopeLowCalibrateParam(Kernel::HLERequestContext&
     };
     rb.PushRaw(param);
 
-    LOG_WARNING(Service_HID, "(STUBBED) called");
+    NGLOG_WARNING(Service_HID, "(STUBBED) called");
 }
 
 void Module::Interface::GetSoundVolume(Kernel::HLERequestContext& ctx) {
@@ -351,7 +351,7 @@ void Module::Interface::GetSoundVolume(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
     rb.Push(volume);
 
-    LOG_WARNING(Service_HID, "(STUBBED) called");
+    NGLOG_WARNING(Service_HID, "(STUBBED) called");
 }
 
 Module::Interface::Interface(std::shared_ptr<Module> hid, const char* name, u32 max_session)
