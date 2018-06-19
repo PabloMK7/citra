@@ -12,8 +12,9 @@ AboutDialog::AboutDialog(QWidget* parent)
       ui(new Ui::AboutDialog) {
     ui->setupUi(this);
     ui->labelLogo->setPixmap(QIcon::fromTheme("citra").pixmap(200));
-    ui->labelBuildInfo->setText(ui->labelBuildInfo->text().arg(
-        Common::g_build_name, Common::g_scm_branch, Common::g_scm_desc));
+    ui->labelBuildInfo->setText(
+        ui->labelBuildInfo->text().arg(Common::g_build_name, Common::g_scm_branch,
+                                       Common::g_scm_desc, QString(Common::g_build_date).left(10)));
 }
 
 AboutDialog::~AboutDialog() {
