@@ -122,7 +122,7 @@ void IR_RST::Initialize(Kernel::HLERequestContext& ctx) {
     raw_c_stick = rp.Pop<bool>();
 
     if (raw_c_stick)
-        LOG_ERROR(Service_IR, "raw C-stick data is not implemented!");
+        NGLOG_ERROR(Service_IR, "raw C-stick data is not implemented!");
 
     next_pad_index = 0;
     is_device_reload_pending.store(true);
@@ -131,7 +131,7 @@ void IR_RST::Initialize(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
 
-    LOG_DEBUG(Service_IR, "called. update_period=%d, raw_c_stick=%d", update_period, raw_c_stick);
+    NGLOG_DEBUG(Service_IR, "called. update_period={}, raw_c_stick={}", update_period, raw_c_stick);
 }
 
 void IR_RST::Shutdown(Kernel::HLERequestContext& ctx) {
@@ -142,7 +142,7 @@ void IR_RST::Shutdown(Kernel::HLERequestContext& ctx) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
-    LOG_DEBUG(Service_IR, "called");
+    NGLOG_DEBUG(Service_IR, "called");
 }
 
 IR_RST::IR_RST() : ServiceFramework("ir:rst", 1) {
