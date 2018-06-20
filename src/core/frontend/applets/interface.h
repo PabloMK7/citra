@@ -16,6 +16,7 @@ enum class AppletType {
 class AppletConfig {};
 class AppletData {};
 
+// TODO(jroweboy) add ability to draw to framebuffer
 class AppletInterface {
 public:
     virtual ~AppletInterface() = default;
@@ -24,12 +25,7 @@ public:
      * On applet start, the applet specific configuration will be passed in along with the
      * framebuffer.
      */
-    // virtual void Setup(const Config* /*,  framebuffer */) = 0;
-
-    /**
-     * Called on a fixed schedule to have the applet update any state such as the framebuffer.
-     */
-    virtual void Update() = 0;
+    virtual void Setup(const AppletConfig*) = 0;
 
     /**
      * Checked every update to see if the applet is still running. When the applet is done, the core
@@ -39,9 +35,14 @@ public:
         return running;
     }
 
-private:
-    // framebuffer;
-    std::atomic_bool running = false;
+    /**
+     * Called by the core to receive the result data of this applet.
+     * Frontend implementation **should** block until the data is ready.
+     */
+    virtual const AppletData* ReceiveData() = 0;
+
+protected:
+    std::atomic<bool> running = false;
 };
 
 /**

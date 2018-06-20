@@ -2,13 +2,16 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "core/frontend/applet/swkbd.h"
+#include "common/assert.h"
+#include "common/logging/log.h"
+#include "core/frontend/applets/swkbd.h"
 
 namespace Frontend {
 
 ValidationError SoftwareKeyboard::ValidateFilters(const std::string& input) {
     if (config.filters.prevent_digit) {
-        if (std::any_of(input.begin(), input.end(), std::isdigit)) {
+        if (std::any_of(input.begin(), input.end(),
+                        [](unsigned char c) { return std::isdigit(c); })) {
             return ValidationError::DigitNotAllowed;
         }
     }
@@ -22,7 +25,7 @@ ValidationError SoftwareKeyboard::ValidateFilters(const std::string& input) {
             return ValidationError::PercentNotAllowed;
         }
     }
-    if (config.filter.prevent_backslash) {
+    if (config.filters.prevent_backslash) {
         if (input.find('\\') != std::string::npos) {
             return ValidationError::BackslashNotAllowed;
         }
@@ -35,7 +38,7 @@ ValidationError SoftwareKeyboard::ValidateFilters(const std::string& input) {
         // TODO: check the callback
         LOG_INFO(Frontend, "App requested a swkbd callback, but its not implemented.");
     }
-    return valid;
+    return ValidationError::None;
 }
 
 ValidationError SoftwareKeyboard::ValidateInput(const std::string& input) {
@@ -49,9 +52,12 @@ ValidationError SoftwareKeyboard::ValidateInput(const std::string& input) {
         return ValidationError::MaxLengthExceeded;
     }
 
-    auto is_blank = [&] { return std::all_of(input.begin(), input.end(), std::isspace); };
+    auto is_blank = [&] {
+        return std::all_of(input.begin(), input.end(),
+                           [](unsigned char c) { return std::isspace(c); });
+    };
     auto is_empty = [&] { return input.empty(); };
-    switch (config.valid_input) {
+    switch (config.accept_mode) {
     case AcceptedInput::FixedLength:
         if (input.size() != config.max_text_length) {
             return ValidationError::FixedLengthRequired;
@@ -80,12 +86,12 @@ ValidationError SoftwareKeyboard::ValidateInput(const std::string& input) {
     default:
         // TODO(jroweboy): What does hardware do in this case?
         NGLOG_CRITICAL(Frontend, "Application requested unknown validation method. Method: {}",
-                       static_cast<u32>(config.valid_input));
+                       static_cast<u32>(config.accept_mode));
         UNREACHABLE();
     }
 
     return ValidationError::None;
-} // namespace Frontend
+}
 
 ValidationError SoftwareKeyboard::ValidateButton(u8 button) {
     switch (config.button_config) {
@@ -112,12 +118,12 @@ ValidationError SoftwareKeyboard::ValidateButton(u8 button) {
     return ValidationError::None;
 }
 
-ValidationError Finalize(cosnt std::string& text, u8 button) {
+ValidationError SoftwareKeyboard::Finalize(const std::string& text, u8 button) {
     ValidationError error;
-    if ((error = ValidateInput(text)) != ValidationError::NONE) {
+    if ((error = ValidateInput(text)) != ValidationError::None) {
         return error;
     }
-    if ((error = ValidateButton(button)) != ValidationError::NONE) {
+    if ((error = ValidateButton(button)) != ValidationError::None) {
         return error;
     }
     data = {text, button};

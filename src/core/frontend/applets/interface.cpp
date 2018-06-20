@@ -3,7 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <unordered_map>
-#include "core/frontend/interface.h"
+#include "core/frontend/applets/interface.h"
 
 namespace Frontend {
 
@@ -15,6 +15,10 @@ void RegisterFrontendApplet(std::shared_ptr<AppletInterface> applet, AppletType 
 
 void UnregisterFrontendApplet(AppletType type) {
     registered_applets.erase(type);
+}
+
+std::shared_ptr<AppletInterface> GetRegisteredApplet(AppletType type) {
+    return registered_applets.at(type);
 }
 
 } // namespace Frontend

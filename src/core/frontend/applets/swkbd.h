@@ -4,8 +4,12 @@
 
 #pragma once
 
+#include <codecvt>
+#include <locale>
 #include <unordered_map>
-#include "core/frontend/applet/interface.h"
+#include <utility>
+#include <vector>
+#include "core/frontend/applets/interface.h"
 
 namespace Frontend {
 
@@ -38,8 +42,8 @@ static const std::unordered_map<ButtonConfig, std::vector<std::string>> DEFAULT_
 };
 
 /// Configuration thats relevent to frontend implementation of applets. Anything missing that we
-/// later learn is needed can be added here and filled in by the backed HLE applet
-struct KeyboardConfig {
+/// later learn is needed can be added here and filled in by the backend HLE applet
+struct KeyboardConfig : public AppletConfig {
     ButtonConfig button_config;
     AcceptedInput accept_mode;   /// What kinds of input are accepted (blank/empty/fixed width)
     bool multiline_mode;         /// True if the keyboard accepts multiple lines of input
@@ -49,19 +53,23 @@ struct KeyboardConfig {
     bool has_custom_button_text; /// If true, use the button_text instead
     std::vector<std::string> button_text; /// Contains the button text that the caller provides
     struct Filters {
-        bool prevent_digit;   /// Disallow the use of more than a certain number of digits (TODO how
-                              /// many is a certain number)
-        bool prevent_at;      /// Disallow the use of the @ sign.
-        bool prevent_percent; /// Disallow the use of the % sign.
+        bool prevent_digit;     /// Disallow the use of more than a certain number of digits
+                                /// TODO: how many is a certain number
+        bool prevent_at;        /// Disallow the use of the @ sign.
+        bool prevent_percent;   /// Disallow the use of the % sign.
         bool prevent_backslash; /// Disallow the use of the \ sign.
         bool prevent_profanity; /// Disallow profanity using Nintendo's profanity filter.
         bool enable_callback;   /// Use a callback in order to check the input.
     } filters;
 };
 
-struct KeyboardData {
+class KeyboardData : public AppletData {
+public:
     std::string text;
-    u8 button;
+    u8 button{};
+
+    KeyboardData(std::string text, u8 button) : text(std::move(text)), button(button) {}
+    KeyboardData() = default;
 };
 
 enum class ValidationError {
@@ -77,13 +85,20 @@ enum class ValidationError {
     CallbackFailed,
     // Allowed Input Type
     FixedLengthRequired,
+    MaxLengthExceeded,
     BlankInputNotAllowed,
     EmptyInputNotAllowed,
 };
 
 class SoftwareKeyboard : public AppletInterface {
 public:
-    explict SoftwareKeyboard(KeyboardConfig config) : AppletInterface(), config(config) {}
+    explicit SoftwareKeyboard() : AppletInterface() {}
+    const AppletData* ReceiveData() override {
+        return &data;
+    }
+    void Setup(const AppletConfig* config) override {
+        this->config = KeyboardConfig(*static_cast<const KeyboardConfig*>(config));
+    }
 
 protected:
     /**
@@ -109,13 +124,9 @@ protected:
      * Runs all validation phases. If successful, stores the data so that the HLE applet in core can
      * send this to the calling application
      */
-    ValidationError Finialize(const std::string&, u8 button);
+    ValidationError Finalize(const std::string& text, u8 button);
 
 private:
-    KeyboardData ReceiveData() override {
-        return data;
-    }
-
     KeyboardConfig config;
     KeyboardData data;
 };

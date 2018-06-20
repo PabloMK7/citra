@@ -48,6 +48,9 @@ enum class Class : ClassType {
     Debug_GDBStub,     ///< GDB Stub
     Kernel,            ///< The HLE implementation of the CTR kernel
     Kernel_SVC,        ///< Kernel system calls
+    Applet,            ///< HLE implementation of system applets. Each applet
+                       ///  should have its own subclass.
+    Applet_SWKBD,      ///< The Software Keyboard applet
     Service,           ///< HLE implementation of system services. Each major service
                        ///  should have its own subclass.
     Service_SRV,       ///< The SRV (Service Directory) implementation

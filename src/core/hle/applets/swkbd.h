@@ -6,7 +6,7 @@
 
 #include "common/common_funcs.h"
 #include "common/common_types.h"
-#include "core/frontend/applet/swkbd.h"
+#include "core/frontend/applets/swkbd.h"
 #include "core/hle/applets/applet.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/shared_memory.h"
@@ -197,6 +197,8 @@ public:
     void Finalize();
 
 private:
+    Frontend::KeyboardConfig ToFrontendConfig(SoftwareKeyboardConfig config);
+
     /// This SharedMemory will be created when we receive the LibAppJustStarted message.
     /// It holds the framebuffer info retrieved by the application with
     /// GSPGPU::ImportDisplayCaptureInfo
@@ -207,6 +209,8 @@ private:
 
     /// Configuration of this instance of the SoftwareKeyboard, as received from the application
     SoftwareKeyboardConfig config;
+
+    std::shared_ptr<Frontend::AppletInterface> frontend_applet;
 };
 } // namespace Applets
 } // namespace HLE
