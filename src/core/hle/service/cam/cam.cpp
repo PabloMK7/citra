@@ -86,8 +86,8 @@ void Module::CompletionEventCallBack(u64 port_id, int) {
         const int original_height = camera.contexts[camera.current_context].resolution.height;
         if (port.x1 <= port.x0 || port.y1 <= port.y0 || port.x1 > original_width ||
             port.y1 > original_height) {
-            LOG_ERROR(Service_CAM, "Invalid trimming coordinates x0=%u, y0=%u, x1=%u, y1=%u",
-                      port.x0, port.y0, port.x1, port.y1);
+            NGLOG_ERROR(Service_CAM, "Invalid trimming coordinates x0={}, y0={}, x1={}, y1={}",
+                        port.x0, port.y0, port.x1, port.y1);
             trim_width = 0;
             trim_height = 0;
         } else {
@@ -97,8 +97,8 @@ void Module::CompletionEventCallBack(u64 port_id, int) {
 
         u32 trim_size = (port.x1 - port.x0) * (port.y1 - port.y0) * 2;
         if (port.dest_size != trim_size) {
-            LOG_ERROR(Service_CAM, "The destination size (%u) doesn't match the source (%u)!",
-                      port.dest_size, trim_size);
+            NGLOG_ERROR(Service_CAM, "The destination size ({}) doesn't match the source ({})!",
+                        port.dest_size, trim_size);
         }
 
         const u32 src_offset = port.y0 * original_width + port.x0;
@@ -124,8 +124,8 @@ void Module::CompletionEventCallBack(u64 port_id, int) {
     } else {
         std::size_t buffer_size = buffer.size() * sizeof(u16);
         if (port.dest_size != buffer_size) {
-            LOG_ERROR(Service_CAM, "The destination size (%u) doesn't match the source (%zu)!",
-                      port.dest_size, buffer_size);
+            NGLOG_ERROR(Service_CAM, "The destination size ({}) doesn't match the source ({})!",
+                        port.dest_size, buffer_size);
         }
         Memory::WriteBlock(*port.dest_process, port.dest, buffer.data(),
                            std::min<size_t>(port.dest_size, buffer_size));
@@ -161,7 +161,7 @@ void Module::StartReceiving(int port_id) {
 void Module::CancelReceiving(int port_id) {
     if (!ports[port_id].is_receiving)
         return;
-    LOG_WARNING(Service_CAM, "tries to cancel an ongoing receiving process.");
+    NGLOG_WARNING(Service_CAM, "tries to cancel an ongoing receiving process.");
     CoreTiming::UnscheduleEvent(completion_event_callback, port_id);
     ports[port_id].capture_result.wait();
     ports[port_id].is_receiving = false;
@@ -212,7 +212,7 @@ void Module::Interface::StartCapture(Kernel::HLERequestContext& ctx) {
                 if (!cam->ports[i].is_active) {
                     // This doesn't return an error, but seems to put the camera in an undefined
                     // state
-                    LOG_ERROR(Service_CAM, "port %u hasn't been activated", i);
+                    NGLOG_ERROR(Service_CAM, "port {} hasn't been activated", i);
                 } else {
                     cam->cameras[cam->ports[i].camera_id].impl->StartCapture();
                     cam->ports[i].is_busy = true;
@@ -222,16 +222,16 @@ void Module::Interface::StartCapture(Kernel::HLERequestContext& ctx) {
                     }
                 }
             } else {
-                LOG_WARNING(Service_CAM, "port %u already started", i);
+                NGLOG_WARNING(Service_CAM, "port {} already started", i);
             }
         }
         rb.Push(RESULT_SUCCESS);
     } else {
-        LOG_ERROR(Service_CAM, "invalid port_select=%u", port_select.m_val);
+        NGLOG_ERROR(Service_CAM, "invalid port_select={}", port_select.m_val);
         rb.Push(ERROR_INVALID_ENUM_VALUE);
     }
 
-    LOG_DEBUG(Service_CAM, "called, port_select=%u", port_select.m_val);
+    NGLOG_DEBUG(Service_CAM, "called, port_select={}", port_select.m_val);
 }
 
 void Module::Interface::StopCapture(Kernel::HLERequestContext& ctx) {
@@ -247,16 +247,16 @@ void Module::Interface::StopCapture(Kernel::HLERequestContext& ctx) {
                 cam->cameras[cam->ports[i].camera_id].impl->StopCapture();
                 cam->ports[i].is_busy = false;
             } else {
-                LOG_WARNING(Service_CAM, "port %u already stopped", i);
+                NGLOG_WARNING(Service_CAM, "port {} already stopped", i);
             }
         }
         rb.Push(RESULT_SUCCESS);
     } else {
-        LOG_ERROR(Service_CAM, "invalid port_select=%u", port_select.m_val);
+        NGLOG_ERROR(Service_CAM, "invalid port_select={}", port_select.m_val);
         rb.Push(ERROR_INVALID_ENUM_VALUE);
     }
 
-    LOG_DEBUG(Service_CAM, "called, port_select=%u", port_select.m_val);
+    NGLOG_DEBUG(Service_CAM, "called, port_select={}", port_select.m_val);
 }
 
 void Module::Interface::IsBusy(Kernel::HLERequestContext& ctx) {
@@ -274,12 +274,12 @@ void Module::Interface::IsBusy(Kernel::HLERequestContext& ctx) {
         rb.Push(RESULT_SUCCESS);
         rb.Push(is_busy);
     } else {
-        LOG_ERROR(Service_CAM, "invalid port_select=%u", port_select.m_val);
+        NGLOG_ERROR(Service_CAM, "invalid port_select={}", port_select.m_val);
         rb.Push(ERROR_INVALID_ENUM_VALUE);
         rb.Skip(1, false);
     }
 
-    LOG_DEBUG(Service_CAM, "called, port_select=%u", port_select.m_val);
+    NGLOG_DEBUG(Service_CAM, "called, port_select={}", port_select.m_val);
 }
 
 void Module::Interface::ClearBuffer(Kernel::HLERequestContext& ctx) {
@@ -289,7 +289,7 @@ void Module::Interface::ClearBuffer(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
 
-    LOG_WARNING(Service_CAM, "(STUBBED) called, port_select=%u", port_select.m_val);
+    NGLOG_WARNING(Service_CAM, "(STUBBED) called, port_select={}", port_select.m_val);
 }
 
 void Module::Interface::GetVsyncInterruptEvent(Kernel::HLERequestContext& ctx) {
@@ -302,12 +302,12 @@ void Module::Interface::GetVsyncInterruptEvent(Kernel::HLERequestContext& ctx) {
         rb.Push(RESULT_SUCCESS);
         rb.PushCopyObjects(cam->ports[port].vsync_interrupt_event);
     } else {
-        LOG_ERROR(Service_CAM, "invalid port_select=%u", port_select.m_val);
+        NGLOG_ERROR(Service_CAM, "invalid port_select={}", port_select.m_val);
         rb.Push(ERROR_INVALID_ENUM_VALUE);
         rb.PushCopyObjects<Kernel::Object>(nullptr);
     }
 
-    LOG_WARNING(Service_CAM, "(STUBBED) called, port_select=%u", port_select.m_val);
+    NGLOG_WARNING(Service_CAM, "(STUBBED) called, port_select={}", port_select.m_val);
 }
 
 void Module::Interface::GetBufferErrorInterruptEvent(Kernel::HLERequestContext& ctx) {
@@ -320,12 +320,12 @@ void Module::Interface::GetBufferErrorInterruptEvent(Kernel::HLERequestContext& 
         rb.Push(RESULT_SUCCESS);
         rb.PushCopyObjects(cam->ports[port].buffer_error_interrupt_event);
     } else {
-        LOG_ERROR(Service_CAM, "invalid port_select=%u", port_select.m_val);
+        NGLOG_ERROR(Service_CAM, "invalid port_select={}", port_select.m_val);
         rb.Push(ERROR_INVALID_ENUM_VALUE);
         rb.PushCopyObjects<Kernel::Object>(nullptr);
     }
 
-    LOG_WARNING(Service_CAM, "(STUBBED) called, port_select=%u", port_select.m_val);
+    NGLOG_WARNING(Service_CAM, "(STUBBED) called, port_select={}", port_select.m_val);
 }
 
 void Module::Interface::SetReceiving(Kernel::HLERequestContext& ctx) {
@@ -355,13 +355,13 @@ void Module::Interface::SetReceiving(Kernel::HLERequestContext& ctx) {
         rb.Push(RESULT_SUCCESS);
         rb.PushCopyObjects(port.completion_event);
     } else {
-        LOG_ERROR(Service_CAM, "invalid port_select=%u", port_select.m_val);
+        NGLOG_ERROR(Service_CAM, "invalid port_select={}", port_select.m_val);
         rb.Push(ERROR_INVALID_ENUM_VALUE);
         rb.PushCopyObjects<Kernel::Object>(nullptr);
     }
 
-    LOG_DEBUG(Service_CAM, "called, addr=0x%X, port_select=%u, image_size=%u, trans_unit=%u", dest,
-              port_select.m_val, image_size, trans_unit);
+    NGLOG_DEBUG(Service_CAM, "called, addr=0x{:X}, port_select={}, image_size={}, trans_unit={}",
+                dest, port_select.m_val, image_size, trans_unit);
 }
 
 void Module::Interface::IsFinishedReceiving(Kernel::HLERequestContext& ctx) {
@@ -375,12 +375,12 @@ void Module::Interface::IsFinishedReceiving(Kernel::HLERequestContext& ctx) {
         rb.Push(RESULT_SUCCESS);
         rb.Push(!is_busy);
     } else {
-        LOG_ERROR(Service_CAM, "invalid port_select=%u", port_select.m_val);
+        NGLOG_ERROR(Service_CAM, "invalid port_select={}", port_select.m_val);
         rb.Push(ERROR_INVALID_ENUM_VALUE);
         rb.Skip(1, false);
     }
 
-    LOG_DEBUG(Service_CAM, "called, port_select=%u", port_select.m_val);
+    NGLOG_DEBUG(Service_CAM, "called, port_select={}", port_select.m_val);
 }
 
 void Module::Interface::SetTransferLines(Kernel::HLERequestContext& ctx) {
@@ -397,12 +397,12 @@ void Module::Interface::SetTransferLines(Kernel::HLERequestContext& ctx) {
         }
         rb.Push(RESULT_SUCCESS);
     } else {
-        LOG_ERROR(Service_CAM, "invalid port_select=%u", port_select.m_val);
+        NGLOG_ERROR(Service_CAM, "invalid port_select={}", port_select.m_val);
         rb.Push(ERROR_INVALID_ENUM_VALUE);
     }
 
-    LOG_WARNING(Service_CAM, "(STUBBED) called, port_select=%u, lines=%u, width=%u, height=%u",
-                port_select.m_val, transfer_lines, width, height);
+    NGLOG_WARNING(Service_CAM, "(STUBBED) called, port_select={}, lines={}, width={}, height={}",
+                  port_select.m_val, transfer_lines, width, height);
 }
 
 void Module::Interface::GetMaxLines(Kernel::HLERequestContext& ctx) {
@@ -435,7 +435,7 @@ void Module::Interface::GetMaxLines(Kernel::HLERequestContext& ctx) {
         rb.Push(lines);
     }
 
-    LOG_DEBUG(Service_CAM, "called, width=%u, height=%u", width, height);
+    NGLOG_DEBUG(Service_CAM, "called, width={}, height={}", width, height);
 }
 
 void Module::Interface::SetTransferBytes(Kernel::HLERequestContext& ctx) {
@@ -452,12 +452,12 @@ void Module::Interface::SetTransferBytes(Kernel::HLERequestContext& ctx) {
         }
         rb.Push(RESULT_SUCCESS);
     } else {
-        LOG_ERROR(Service_CAM, "invalid port_select=%u", port_select.m_val);
+        NGLOG_ERROR(Service_CAM, "invalid port_select={}", port_select.m_val);
         rb.Push(ERROR_INVALID_ENUM_VALUE);
     }
 
-    LOG_WARNING(Service_CAM, "(STUBBED)called, port_select=%u, bytes=%u, width=%u, height=%u",
-                port_select.m_val, transfer_bytes, width, height);
+    NGLOG_WARNING(Service_CAM, "(STUBBED)called, port_select={}, bytes={}, width={}, height={}",
+                  port_select.m_val, transfer_bytes, width, height);
 }
 
 void Module::Interface::GetTransferBytes(Kernel::HLERequestContext& ctx) {
@@ -470,12 +470,12 @@ void Module::Interface::GetTransferBytes(Kernel::HLERequestContext& ctx) {
         rb.Push(RESULT_SUCCESS);
         rb.Push(cam->ports[port].transfer_bytes);
     } else {
-        LOG_ERROR(Service_CAM, "invalid port_select=%u", port_select.m_val);
+        NGLOG_ERROR(Service_CAM, "invalid port_select={}", port_select.m_val);
         rb.Push(ERROR_INVALID_ENUM_VALUE);
         rb.Skip(1, false);
     }
 
-    LOG_WARNING(Service_CAM, "(STUBBED)called, port_select=%u", port_select.m_val);
+    NGLOG_WARNING(Service_CAM, "(STUBBED)called, port_select={}", port_select.m_val);
 }
 
 void Module::Interface::GetMaxBytes(Kernel::HLERequestContext& ctx) {
@@ -502,7 +502,7 @@ void Module::Interface::GetMaxBytes(Kernel::HLERequestContext& ctx) {
         rb.Push(bytes);
     }
 
-    LOG_DEBUG(Service_CAM, "called, width=%u, height=%u", width, height);
+    NGLOG_DEBUG(Service_CAM, "called, width={}, height={}", width, height);
 }
 
 void Module::Interface::SetTrimming(Kernel::HLERequestContext& ctx) {
@@ -517,11 +517,11 @@ void Module::Interface::SetTrimming(Kernel::HLERequestContext& ctx) {
         }
         rb.Push(RESULT_SUCCESS);
     } else {
-        LOG_ERROR(Service_CAM, "invalid port_select=%u", port_select.m_val);
+        NGLOG_ERROR(Service_CAM, "invalid port_select={}", port_select.m_val);
         rb.Push(ERROR_INVALID_ENUM_VALUE);
     }
 
-    LOG_DEBUG(Service_CAM, "called, port_select=%u, trim=%d", port_select.m_val, trim);
+    NGLOG_DEBUG(Service_CAM, "called, port_select={}, trim={}", port_select.m_val, trim);
 }
 
 void Module::Interface::IsTrimming(Kernel::HLERequestContext& ctx) {
@@ -534,12 +534,12 @@ void Module::Interface::IsTrimming(Kernel::HLERequestContext& ctx) {
         rb.Push(RESULT_SUCCESS);
         rb.Push(cam->ports[port].is_trimming);
     } else {
-        LOG_ERROR(Service_CAM, "invalid port_select=%u", port_select.m_val);
+        NGLOG_ERROR(Service_CAM, "invalid port_select={}", port_select.m_val);
         rb.Push(ERROR_INVALID_ENUM_VALUE);
         rb.Skip(1, false);
     }
 
-    LOG_DEBUG(Service_CAM, "called, port_select=%u", port_select.m_val);
+    NGLOG_DEBUG(Service_CAM, "called, port_select={}", port_select.m_val);
 }
 
 void Module::Interface::SetTrimmingParams(Kernel::HLERequestContext& ctx) {
@@ -560,12 +560,12 @@ void Module::Interface::SetTrimmingParams(Kernel::HLERequestContext& ctx) {
         }
         rb.Push(RESULT_SUCCESS);
     } else {
-        LOG_ERROR(Service_CAM, "invalid port_select=%u", port_select.m_val);
+        NGLOG_ERROR(Service_CAM, "invalid port_select={}", port_select.m_val);
         rb.Push(ERROR_INVALID_ENUM_VALUE);
     }
 
-    LOG_DEBUG(Service_CAM, "called, port_select=%u, x0=%u, y0=%u, x1=%u, y1=%u", port_select.m_val,
-              x0, y0, x1, y1);
+    NGLOG_DEBUG(Service_CAM, "called, port_select={}, x0={}, y0={}, x1={}, y1={}",
+                port_select.m_val, x0, y0, x1, y1);
 }
 
 void Module::Interface::GetTrimmingParams(Kernel::HLERequestContext& ctx) {
@@ -581,12 +581,12 @@ void Module::Interface::GetTrimmingParams(Kernel::HLERequestContext& ctx) {
         rb.Push(cam->ports[port].x1);
         rb.Push(cam->ports[port].y1);
     } else {
-        LOG_ERROR(Service_CAM, "invalid port_select=%u", port_select.m_val);
+        NGLOG_ERROR(Service_CAM, "invalid port_select={}", port_select.m_val);
         rb.Push(ERROR_INVALID_ENUM_VALUE);
         rb.Skip(4, false);
     }
 
-    LOG_DEBUG(Service_CAM, "called, port_select=%u", port_select.m_val);
+    NGLOG_DEBUG(Service_CAM, "called, port_select={}", port_select.m_val);
 }
 
 void Module::Interface::SetTrimmingParamsCenter(Kernel::HLERequestContext& ctx) {
@@ -607,12 +607,12 @@ void Module::Interface::SetTrimmingParamsCenter(Kernel::HLERequestContext& ctx) 
         }
         rb.Push(RESULT_SUCCESS);
     } else {
-        LOG_ERROR(Service_CAM, "invalid port_select=%u", port_select.m_val);
+        NGLOG_ERROR(Service_CAM, "invalid port_select={}", port_select.m_val);
         rb.Push(ERROR_INVALID_ENUM_VALUE);
     }
 
-    LOG_DEBUG(Service_CAM, "called, port_select=%u, trim_w=%u, trim_h=%u, cam_w=%u, cam_h=%u",
-              port_select.m_val, trim_w, trim_h, cam_w, cam_h);
+    NGLOG_DEBUG(Service_CAM, "called, port_select={}, trim_w={}, trim_h={}, cam_w={}, cam_h={}",
+                port_select.m_val, trim_w, trim_h, cam_w, cam_h);
 }
 
 void Module::Interface::Activate(Kernel::HLERequestContext& ctx) {
@@ -632,7 +632,7 @@ void Module::Interface::Activate(Kernel::HLERequestContext& ctx) {
             }
             rb.Push(RESULT_SUCCESS);
         } else if (camera_select[0] && camera_select[1]) {
-            LOG_ERROR(Service_CAM, "camera 0 and 1 can't be both activated");
+            NGLOG_ERROR(Service_CAM, "camera 0 and 1 can't be both activated");
             rb.Push(ERROR_INVALID_ENUM_VALUE);
         } else {
             if (camera_select[0]) {
@@ -647,11 +647,11 @@ void Module::Interface::Activate(Kernel::HLERequestContext& ctx) {
             rb.Push(RESULT_SUCCESS);
         }
     } else {
-        LOG_ERROR(Service_CAM, "invalid camera_select=%u", camera_select.m_val);
+        NGLOG_ERROR(Service_CAM, "invalid camera_select={}", camera_select.m_val);
         rb.Push(ERROR_INVALID_ENUM_VALUE);
     }
 
-    LOG_DEBUG(Service_CAM, "called, camera_select=%u", camera_select.m_val);
+    NGLOG_DEBUG(Service_CAM, "called, camera_select={}", camera_select.m_val);
 }
 
 void Module::Interface::SwitchContext(Kernel::HLERequestContext& ctx) {
@@ -672,13 +672,13 @@ void Module::Interface::SwitchContext(Kernel::HLERequestContext& ctx) {
         }
         rb.Push(RESULT_SUCCESS);
     } else {
-        LOG_ERROR(Service_CAM, "invalid camera_select=%u, context_select=%u", camera_select.m_val,
-                  context_select.m_val);
+        NGLOG_ERROR(Service_CAM, "invalid camera_select={}, context_select={}", camera_select.m_val,
+                    context_select.m_val);
         rb.Push(ERROR_INVALID_ENUM_VALUE);
     }
 
-    LOG_DEBUG(Service_CAM, "called, camera_select=%u, context_select=%u", camera_select.m_val,
-              context_select.m_val);
+    NGLOG_DEBUG(Service_CAM, "called, camera_select={}, context_select={}", camera_select.m_val,
+                context_select.m_val);
 }
 
 void Module::Interface::FlipImage(Kernel::HLERequestContext& ctx) {
@@ -699,13 +699,13 @@ void Module::Interface::FlipImage(Kernel::HLERequestContext& ctx) {
         }
         rb.Push(RESULT_SUCCESS);
     } else {
-        LOG_ERROR(Service_CAM, "invalid camera_select=%u, context_select=%u", camera_select.m_val,
-                  context_select.m_val);
+        NGLOG_ERROR(Service_CAM, "invalid camera_select={}, context_select={}", camera_select.m_val,
+                    context_select.m_val);
         rb.Push(ERROR_INVALID_ENUM_VALUE);
     }
 
-    LOG_DEBUG(Service_CAM, "called, camera_select=%u, flip=%d, context_select=%u",
-              camera_select.m_val, static_cast<int>(flip), context_select.m_val);
+    NGLOG_DEBUG(Service_CAM, "called, camera_select={}, flip={}, context_select={}",
+                camera_select.m_val, static_cast<int>(flip), context_select.m_val);
 }
 
 void Module::Interface::SetDetailSize(Kernel::HLERequestContext& ctx) {
@@ -732,16 +732,16 @@ void Module::Interface::SetDetailSize(Kernel::HLERequestContext& ctx) {
         }
         rb.Push(RESULT_SUCCESS);
     } else {
-        LOG_ERROR(Service_CAM, "invalid camera_select=%u, context_select=%u", camera_select.m_val,
-                  context_select.m_val);
+        NGLOG_ERROR(Service_CAM, "invalid camera_select={}, context_select={}", camera_select.m_val,
+                    context_select.m_val);
         rb.Push(ERROR_INVALID_ENUM_VALUE);
     }
 
-    LOG_DEBUG(Service_CAM,
-              "called, camera_select=%u, width=%u, height=%u, crop_x0=%u, crop_y0=%u, "
-              "crop_x1=%u, crop_y1=%u, context_select=%u",
-              camera_select.m_val, resolution.width, resolution.height, resolution.crop_x0,
-              resolution.crop_y0, resolution.crop_x1, resolution.crop_y1, context_select.m_val);
+    NGLOG_DEBUG(Service_CAM,
+                "called, camera_select={}, width={}, height={}, crop_x0={}, crop_y0={}, "
+                "crop_x1={}, crop_y1={}, context_select={}",
+                camera_select.m_val, resolution.width, resolution.height, resolution.crop_x0,
+                resolution.crop_y0, resolution.crop_x1, resolution.crop_y1, context_select.m_val);
 }
 
 void Module::Interface::SetSize(Kernel::HLERequestContext& ctx) {
@@ -762,13 +762,13 @@ void Module::Interface::SetSize(Kernel::HLERequestContext& ctx) {
         }
         rb.Push(RESULT_SUCCESS);
     } else {
-        LOG_ERROR(Service_CAM, "invalid camera_select=%u, context_select=%u", camera_select.m_val,
-                  context_select.m_val);
+        NGLOG_ERROR(Service_CAM, "invalid camera_select={}, context_select={}", camera_select.m_val,
+                    context_select.m_val);
         rb.Push(ERROR_INVALID_ENUM_VALUE);
     }
 
-    LOG_DEBUG(Service_CAM, "called, camera_select=%u, size=%u, context_select=%u",
-              camera_select.m_val, size, context_select.m_val);
+    NGLOG_DEBUG(Service_CAM, "called, camera_select={}, size={}, context_select={}",
+                camera_select.m_val, size, context_select.m_val);
 }
 
 void Module::Interface::SetFrameRate(Kernel::HLERequestContext& ctx) {
@@ -784,12 +784,12 @@ void Module::Interface::SetFrameRate(Kernel::HLERequestContext& ctx) {
         }
         rb.Push(RESULT_SUCCESS);
     } else {
-        LOG_ERROR(Service_CAM, "invalid camera_select=%u", camera_select.m_val);
+        NGLOG_ERROR(Service_CAM, "invalid camera_select={}", camera_select.m_val);
         rb.Push(ERROR_INVALID_ENUM_VALUE);
     }
 
-    LOG_WARNING(Service_CAM, "(STUBBED) called, camera_select=%u, frame_rate=%d",
-                camera_select.m_val, static_cast<int>(frame_rate));
+    NGLOG_WARNING(Service_CAM, "(STUBBED) called, camera_select={}, frame_rate={}",
+                  camera_select.m_val, static_cast<int>(frame_rate));
 }
 
 void Module::Interface::SetEffect(Kernel::HLERequestContext& ctx) {
@@ -810,13 +810,13 @@ void Module::Interface::SetEffect(Kernel::HLERequestContext& ctx) {
         }
         rb.Push(RESULT_SUCCESS);
     } else {
-        LOG_ERROR(Service_CAM, "invalid camera_select=%u, context_select=%u", camera_select.m_val,
-                  context_select.m_val);
+        NGLOG_ERROR(Service_CAM, "invalid camera_select={}, context_select={}", camera_select.m_val,
+                    context_select.m_val);
         rb.Push(ERROR_INVALID_ENUM_VALUE);
     }
 
-    LOG_DEBUG(Service_CAM, "called, camera_select=%u, effect=%d, context_select=%u",
-              camera_select.m_val, static_cast<int>(effect), context_select.m_val);
+    NGLOG_DEBUG(Service_CAM, "called, camera_select={}, effect={}, context_select={}",
+                camera_select.m_val, static_cast<int>(effect), context_select.m_val);
 }
 
 void Module::Interface::SetOutputFormat(Kernel::HLERequestContext& ctx) {
@@ -837,13 +837,13 @@ void Module::Interface::SetOutputFormat(Kernel::HLERequestContext& ctx) {
         }
         rb.Push(RESULT_SUCCESS);
     } else {
-        LOG_ERROR(Service_CAM, "invalid camera_select=%u, context_select=%u", camera_select.m_val,
-                  context_select.m_val);
+        NGLOG_ERROR(Service_CAM, "invalid camera_select={}, context_select={}", camera_select.m_val,
+                    context_select.m_val);
         rb.Push(ERROR_INVALID_ENUM_VALUE);
     }
 
-    LOG_DEBUG(Service_CAM, "called, camera_select=%u, format=%d, context_select=%u",
-              camera_select.m_val, static_cast<int>(format), context_select.m_val);
+    NGLOG_DEBUG(Service_CAM, "called, camera_select={}, format={}, context_select={}",
+                camera_select.m_val, static_cast<int>(format), context_select.m_val);
 }
 
 void Module::Interface::SynchronizeVsyncTiming(Kernel::HLERequestContext& ctx) {
@@ -854,8 +854,8 @@ void Module::Interface::SynchronizeVsyncTiming(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
 
-    LOG_WARNING(Service_CAM, "(STUBBED) called, camera_select1=%u, camera_select2=%u",
-                camera_select1, camera_select2);
+    NGLOG_WARNING(Service_CAM, "(STUBBED) called, camera_select1={}, camera_select2={}",
+                  camera_select1, camera_select2);
 }
 
 void Module::Interface::GetStereoCameraCalibrationData(Kernel::HLERequestContext& ctx) {
@@ -881,7 +881,7 @@ void Module::Interface::GetStereoCameraCalibrationData(Kernel::HLERequestContext
     rb.Push(RESULT_SUCCESS);
     rb.PushRaw(data);
 
-    LOG_TRACE(Service_CAM, "called");
+    NGLOG_TRACE(Service_CAM, "called");
 }
 
 void Module::Interface::SetPackageParameterWithoutContext(Kernel::HLERequestContext& ctx) {
@@ -893,7 +893,7 @@ void Module::Interface::SetPackageParameterWithoutContext(Kernel::HLERequestCont
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
 
-    LOG_WARNING(Service_CAM, "(STUBBED) called");
+    NGLOG_WARNING(Service_CAM, "(STUBBED) called");
 }
 
 template <typename PackageParameterType>
@@ -918,8 +918,8 @@ ResultCode Module::SetPackageParameter(const PackageParameterType& package) {
         }
         return RESULT_SUCCESS;
     } else {
-        LOG_ERROR(Service_CAM, "invalid camera_select=%u, context_select=%u", package.camera_select,
-                  package.context_select);
+        NGLOG_ERROR(Service_CAM, "invalid camera_select={}, context_select={}",
+                    package.camera_select, package.context_select);
         return ERROR_INVALID_ENUM_VALUE;
     }
 }
@@ -938,7 +938,7 @@ void Module::Interface::SetPackageParameterWithContext(Kernel::HLERequestContext
     ResultCode result = cam->SetPackageParameter(package);
     rb.Push(result);
 
-    LOG_DEBUG(Service_CAM, "called");
+    NGLOG_DEBUG(Service_CAM, "called");
 }
 
 void Module::Interface::SetPackageParameterWithContextDetail(Kernel::HLERequestContext& ctx) {
@@ -951,7 +951,7 @@ void Module::Interface::SetPackageParameterWithContextDetail(Kernel::HLERequestC
     ResultCode result = cam->SetPackageParameter(package);
     rb.Push(result);
 
-    LOG_DEBUG(Service_CAM, "called");
+    NGLOG_DEBUG(Service_CAM, "called");
 }
 
 void Module::Interface::GetSuitableY2rStandardCoefficient(Kernel::HLERequestContext& ctx) {
@@ -960,7 +960,7 @@ void Module::Interface::GetSuitableY2rStandardCoefficient(Kernel::HLERequestCont
     rb.Push(RESULT_SUCCESS);
     rb.Push<u32>(0);
 
-    LOG_WARNING(Service_CAM, "(STUBBED) called");
+    NGLOG_WARNING(Service_CAM, "(STUBBED) called");
 }
 
 void Module::Interface::PlayShutterSound(Kernel::HLERequestContext& ctx) {
@@ -970,7 +970,7 @@ void Module::Interface::PlayShutterSound(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
 
-    LOG_WARNING(Service_CAM, "(STUBBED) called, sound_id=%d", sound_id);
+    NGLOG_WARNING(Service_CAM, "(STUBBED) called, sound_id={}", sound_id);
 }
 
 void Module::Interface::DriverInitialize(Kernel::HLERequestContext& ctx) {
@@ -998,7 +998,7 @@ void Module::Interface::DriverInitialize(Kernel::HLERequestContext& ctx) {
 
     rb.Push(RESULT_SUCCESS);
 
-    LOG_DEBUG(Service_CAM, "called");
+    NGLOG_DEBUG(Service_CAM, "called");
 }
 
 void Module::Interface::DriverFinalize(Kernel::HLERequestContext& ctx) {
@@ -1014,7 +1014,7 @@ void Module::Interface::DriverFinalize(Kernel::HLERequestContext& ctx) {
 
     rb.Push(RESULT_SUCCESS);
 
-    LOG_DEBUG(Service_CAM, "called");
+    NGLOG_DEBUG(Service_CAM, "called");
 }
 
 Module::Module() {
