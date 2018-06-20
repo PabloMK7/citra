@@ -2,13 +2,16 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <algorithm>
+#include <cctype>
 #include "common/assert.h"
 #include "common/logging/log.h"
+#include "core/core.h"
 #include "core/frontend/applets/swkbd.h"
 
 namespace Frontend {
 
-ValidationError SoftwareKeyboard::ValidateFilters(const std::string& input) {
+ValidationError SoftwareKeyboard::ValidateFilters(const std::string& input) const {
     if (config.filters.prevent_digit) {
         if (std::any_of(input.begin(), input.end(),
                         [](unsigned char c) { return std::isdigit(c); })) {
@@ -41,7 +44,7 @@ ValidationError SoftwareKeyboard::ValidateFilters(const std::string& input) {
     return ValidationError::None;
 }
 
-ValidationError SoftwareKeyboard::ValidateInput(const std::string& input) {
+ValidationError SoftwareKeyboard::ValidateInput(const std::string& input) const {
     ValidationError error;
     if ((error = ValidateFilters(input)) != ValidationError::None) {
         return error;
@@ -52,11 +55,9 @@ ValidationError SoftwareKeyboard::ValidateInput(const std::string& input) {
         return ValidationError::MaxLengthExceeded;
     }
 
-    auto is_blank = [&] {
-        return std::all_of(input.begin(), input.end(),
-                           [](unsigned char c) { return std::isspace(c); });
-    };
-    auto is_empty = [&] { return input.empty(); };
+    bool is_blank =
+        std::all_of(input.begin(), input.end(), [](unsigned char c) { return std::isspace(c); });
+    bool is_empty = input.empty();
     switch (config.accept_mode) {
     case AcceptedInput::FixedLength:
         if (input.size() != config.max_text_length) {
@@ -64,20 +65,20 @@ ValidationError SoftwareKeyboard::ValidateInput(const std::string& input) {
         }
         break;
     case AcceptedInput::NotEmptyAndNotBlank:
-        if (is_blank()) {
+        if (is_blank) {
             return ValidationError::BlankInputNotAllowed;
         }
-        if (is_empty()) {
+        if (is_empty) {
             return ValidationError::EmptyInputNotAllowed;
         }
         break;
     case AcceptedInput::NotBlank:
-        if (is_blank()) {
+        if (is_blank) {
             return ValidationError::BlankInputNotAllowed;
         }
         break;
     case AcceptedInput::NotEmpty:
-        if (is_empty()) {
+        if (is_empty) {
             return ValidationError::EmptyInputNotAllowed;
         }
         break;
@@ -85,15 +86,15 @@ ValidationError SoftwareKeyboard::ValidateInput(const std::string& input) {
         return ValidationError::None;
     default:
         // TODO(jroweboy): What does hardware do in this case?
-        NGLOG_CRITICAL(Frontend, "Application requested unknown validation method. Method: {}",
-                       static_cast<u32>(config.accept_mode));
+        LOG_CRITICAL(Frontend, "Application requested unknown validation method. Method: {}",
+                     static_cast<u32>(config.accept_mode));
         UNREACHABLE();
     }
 
     return ValidationError::None;
 }
 
-ValidationError SoftwareKeyboard::ValidateButton(u8 button) {
+ValidationError SoftwareKeyboard::ValidateButton(u8 button) const {
     switch (config.button_config) {
     case ButtonConfig::None:
         return ValidationError::None;
@@ -127,7 +128,32 @@ ValidationError SoftwareKeyboard::Finalize(const std::string& text, u8 button) {
         return error;
     }
     data = {text, button};
-    running = false;
+}
+
+void DefaultCitraKeyboard::Setup(const Frontend::KeyboardConfig* config) {
+    SoftwareKeyboard::Setup(config);
+    switch (this->config.button_config) {
+    case ButtonConfig::None:
+    case ButtonConfig::Single:
+        Finalize("Citra", 0);
+        break;
+    case ButtonConfig::Dual:
+        Finalize("Citra", 1);
+        break;
+    case ButtonConfig::Triple:
+        Finalize("Citra", 2);
+        break;
+    default:
+        UNREACHABLE();
+    }
+}
+
+void RegisterSoftwareKeyboard(std::shared_ptr<SoftwareKeyboard> applet) {
+    Core::System::GetInstance().RegisterSoftwareKeyboard(applet);
+}
+
+std::shared_ptr<SoftwareKeyboard> GetRegisteredSoftwareKeyboard() {
+    return Core::System::GetInstance().GetSoftwareKeyboard();
 }
 
 } // namespace Frontend

@@ -7,6 +7,8 @@ add_executable(citra-qt
     Info.plist
     aboutdialog.cpp
     aboutdialog.h
+    applets/swkbd.cpp
+    applets/swkbd.h
     bootmanager.cpp
     bootmanager.h
     camera/camera_util.cpp

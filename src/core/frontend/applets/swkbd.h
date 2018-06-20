@@ -4,18 +4,15 @@
 
 #pragma once
 
-#include <codecvt>
-#include <locale>
 #include <unordered_map>
 #include <utility>
 #include <vector>
 #include "common/assert.h"
-#include "core/frontend/applets/interface.h"
 
 namespace Frontend {
 
 enum class AcceptedInput {
-    Anything = 0,        /// All inputs are accepted.
+    Anything,            /// All inputs are accepted.
     NotEmpty,            /// Empty inputs are not accepted.
     NotEmptyAndNotBlank, /// Empty or blank inputs (consisting solely of whitespace) are not
                          /// accepted.
@@ -26,25 +23,20 @@ enum class AcceptedInput {
 };
 
 enum class ButtonConfig {
-    Single = 0, /// Ok button
-    Dual,       /// Cancel | Ok buttons
-    Triple,     /// Cancel | I Forgot | Ok buttons
-    None,       /// No button (returned by swkbdInputText in special cases)
+    Single, /// Ok button
+    Dual,   /// Cancel | Ok buttons
+    Triple, /// Cancel | I Forgot | Ok buttons
+    None,   /// No button (returned by swkbdInputText in special cases)
 };
 
 /// Default English button text mappings. Frontends may need to copy this to internationalize it.
-static const char* BUTTON_OKAY = "Ok";
-static const char* BUTTON_CANCEL = "Cancel";
-static const char* BUTTON_FORGOT = "I Forgot";
-static const std::unordered_map<ButtonConfig, std::vector<std::string>> DEFAULT_BUTTON_MAPPING = {
-    {ButtonConfig::Single, {BUTTON_OKAY}},
-    {ButtonConfig::Dual, {BUTTON_CANCEL, BUTTON_OKAY}},
-    {ButtonConfig::Triple, {BUTTON_CANCEL, BUTTON_FORGOT, BUTTON_OKAY}},
-};
+constexpr char BUTTON_OKAY[] = "Ok";
+constexpr char BUTTON_CANCEL[] = "Cancel";
+constexpr char BUTTON_FORGOT[] = "I Forgot";
 
 /// Configuration thats relevent to frontend implementation of applets. Anything missing that we
 /// later learn is needed can be added here and filled in by the backend HLE applet
-struct KeyboardConfig : public AppletConfig {
+struct KeyboardConfig {
     ButtonConfig button_config;
     AcceptedInput accept_mode;   /// What kinds of input are accepted (blank/empty/fixed width)
     bool multiline_mode;         /// True if the keyboard accepts multiple lines of input
@@ -61,16 +53,13 @@ struct KeyboardConfig : public AppletConfig {
         bool prevent_backslash; /// Disallow the use of the \ sign.
         bool prevent_profanity; /// Disallow profanity using Nintendo's profanity filter.
         bool enable_callback;   /// Use a callback in order to check the input.
-    } filters;
+    };
+    Filters filters;
 };
 
-class KeyboardData : public AppletData {
-public:
+struct KeyboardData {
     std::string text;
     u8 button{};
-
-    KeyboardData(std::string text, u8 button) : text(std::move(text)), button(button) {}
-    KeyboardData() = default;
 };
 
 enum class ValidationError {
@@ -91,35 +80,33 @@ enum class ValidationError {
     EmptyInputNotAllowed,
 };
 
-class SoftwareKeyboard : public AppletInterface {
+class SoftwareKeyboard {
 public:
-    explicit SoftwareKeyboard() : AppletInterface() {}
-    void Setup(const AppletConfig* config) override {
-        this->config = KeyboardConfig(*static_cast<const KeyboardConfig*>(config));
+    virtual void Setup(const KeyboardConfig* config) {
+        this->config = KeyboardConfig(*config);
     }
-    const AppletData* ReceiveData() override {
+    const KeyboardData* ReceiveData() {
         return &data;
     }
 
-protected:
     /**
      * Validates if the provided string breaks any of the filter rules. This is meant to be called
      * whenever the user input changes to check to see if the new input is valid. Frontends can
      * decide if they want to check the input continuously or once before submission
      */
-    ValidationError ValidateFilters(const std::string& input);
+    ValidationError ValidateFilters(const std::string& input) const;
 
     /**
      * Validates the the provided string doesn't break any extra rules like "input must not be
      * empty". This will be called by Finalize but can be called earlier if the frontend needs
      */
-    ValidationError ValidateInput(const std::string& input);
+    ValidationError ValidateInput(const std::string& input) const;
 
     /**
      * Verifies that the selected button is valid. This should be used as the last check before
      * closing.
      */
-    ValidationError ValidateButton(u8 button);
+    ValidationError ValidateButton(u8 button) const;
 
     /**
      * Runs all validation phases. If successful, stores the data so that the HLE applet in core can
@@ -127,29 +114,18 @@ protected:
      */
     ValidationError Finalize(const std::string& text, u8 button);
 
+protected:
     KeyboardConfig config;
     KeyboardData data;
 };
 
 class DefaultCitraKeyboard final : public SoftwareKeyboard {
 public:
-    void Setup(const AppletConfig* config) override {
-        SoftwareKeyboard::Setup(config);
-        switch (this->config.button_config) {
-        case ButtonConfig::None:
-        case ButtonConfig::Single:
-            Finalize("Citra", 0);
-            break;
-        case ButtonConfig::Dual:
-            Finalize("Citra", 1);
-            break;
-        case ButtonConfig::Triple:
-            Finalize("Citra", 2);
-            break;
-        default:
-            UNREACHABLE();
-        }
-    }
+    void Setup(const KeyboardConfig* config) override;
 };
+
+void RegisterSoftwareKeyboard(std::shared_ptr<SoftwareKeyboard> applet);
+
+std::shared_ptr<SoftwareKeyboard> GetRegisteredSoftwareKeyboard();
 
 } // namespace Frontend

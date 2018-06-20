@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <algorithm>
 #include <cstring>
 #include <string>
 #include "common/assert.h"
@@ -70,7 +71,7 @@ ResultCode SoftwareKeyboard::StartImpl(Service::APT::AppletStartupParameter cons
     DrawScreenKeyboard();
 
     using namespace Frontend;
-    frontend_applet = GetRegisteredApplet(AppletType::SoftwareKeyboard);
+    frontend_applet = GetRegisteredSoftwareKeyboard();
     if (frontend_applet) {
         KeyboardConfig frontend_config = ToFrontendConfig(config);
         frontend_applet->Setup(&frontend_config);
@@ -82,38 +83,38 @@ ResultCode SoftwareKeyboard::StartImpl(Service::APT::AppletStartupParameter cons
 
 void SoftwareKeyboard::Update() {
     using namespace Frontend;
-    KeyboardData data(*static_cast<const KeyboardData*>(frontend_applet->ReceiveData()));
+    KeyboardData data(*frontend_applet->ReceiveData());
     std::u16string text = Common::UTF8ToUTF16(data.text);
     memcpy(text_memory->GetPointer(), text.c_str(), text.length() * sizeof(char16_t));
     switch (config.num_buttons_m1) {
-    case SoftwareKeyboardButtonConfig::SINGLE_BUTTON:
-        config.return_code = SoftwareKeyboardResult::D0_CLICK;
+    case SoftwareKeyboardButtonConfig::SingleButton:
+        config.return_code = SoftwareKeyboardResult::D0Click;
         break;
-    case SoftwareKeyboardButtonConfig::DUAL_BUTTON:
+    case SoftwareKeyboardButtonConfig::DualButton:
         if (data.button == 0)
-            config.return_code = SoftwareKeyboardResult::D1_CLICK0;
+            config.return_code = SoftwareKeyboardResult::D1Click0;
         else
-            config.return_code = SoftwareKeyboardResult::D1_CLICK1;
+            config.return_code = SoftwareKeyboardResult::D1Click1;
         break;
-    case SoftwareKeyboardButtonConfig::TRIPLE_BUTTON:
+    case SoftwareKeyboardButtonConfig::TripleButton:
         if (data.button == 0)
-            config.return_code = SoftwareKeyboardResult::D2_CLICK0;
+            config.return_code = SoftwareKeyboardResult::D2Click0;
         else if (data.button == 1)
-            config.return_code = SoftwareKeyboardResult::D2_CLICK1;
+            config.return_code = SoftwareKeyboardResult::D2Click1;
         else
-            config.return_code = SoftwareKeyboardResult::D2_CLICK2;
+            config.return_code = SoftwareKeyboardResult::D2Click2;
         break;
-    case SoftwareKeyboardButtonConfig::NO_BUTTON:
+    case SoftwareKeyboardButtonConfig::NoButton:
         // TODO: find out what is actually returned
-        config.return_code = SoftwareKeyboardResult::NONE;
+        config.return_code = SoftwareKeyboardResult::None;
         break;
     default:
-        NGLOG_CRITICAL(Applet_SWKBD, "Unknown button config {}",
-                       static_cast<int>(config.num_buttons_m1));
+        LOG_CRITICAL(Applet_SWKBD, "Unknown button config {}",
+                     static_cast<int>(config.num_buttons_m1));
         UNREACHABLE();
     }
 
-    config.text_length = static_cast<u16>(text.size() + 1);
+    config.text_length = static_cast<u16>(text.size());
     config.text_offset = 0;
 
     // TODO(Subv): We're finalizing the applet immediately after it's started,
@@ -122,13 +123,7 @@ void SoftwareKeyboard::Update() {
 }
 
 void SoftwareKeyboard::DrawScreenKeyboard() {
-    auto bottom_screen = Service::GSP::GetFrameBufferInfo(0, 1);
-    auto info = bottom_screen->framebuffer_info[bottom_screen->index];
-
-    // TODO(Subv): Draw the HLE keyboard, for now just zero-fill the framebuffer
-    Memory::ZeroBlock(info.address_left, info.stride * 320);
-
-    Service::GSP::SetBufferSwap(1, info);
+    // TODO(Subv): Draw the HLE keyboard, for now just do nothing
 }
 
 void SoftwareKeyboard::Finalize() {
@@ -144,7 +139,8 @@ void SoftwareKeyboard::Finalize() {
     is_running = false;
 }
 
-Frontend::KeyboardConfig SoftwareKeyboard::ToFrontendConfig(SoftwareKeyboardConfig config) {
+Frontend::KeyboardConfig SoftwareKeyboard::ToFrontendConfig(
+    const SoftwareKeyboardConfig& config) const {
     using namespace Frontend;
     KeyboardConfig frontend_config;
     frontend_config.button_config = static_cast<ButtonConfig>(config.num_buttons_m1);
@@ -152,32 +148,33 @@ Frontend::KeyboardConfig SoftwareKeyboard::ToFrontendConfig(SoftwareKeyboardConf
     frontend_config.multiline_mode = config.multiline;
     frontend_config.max_text_length = config.max_text_length;
     frontend_config.max_digits = config.max_digits;
-    std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> convert;
-    frontend_config.hint_text =
-        convert.to_bytes(reinterpret_cast<const char16_t*>(config.hint_text.data()));
+    std::u16string buffer(config.hint_text.size(), 0);
+    std::memcpy(buffer.data(), config.hint_text.data(), config.hint_text.size() * sizeof(u16));
+    frontend_config.hint_text = Common::UTF16ToUTF8(buffer);
     frontend_config.has_custom_button_text =
-        std::all_of(config.button_text.begin(), config.button_text.end(),
-                    [](std::array<u16, HLE::Applets::MAX_BUTTON_TEXT_LEN + 1> x) {
-                        return std::all_of(x.begin(), x.end(), [](u16 x) { return x == 0; });
-                    });
+        !std::all_of(config.button_text.begin(), config.button_text.end(),
+                     [](std::array<u16, HLE::Applets::MAX_BUTTON_TEXT_LEN + 1> x) {
+                         return std::all_of(x.begin(), x.end(), [](u16 x) { return x == 0; });
+                     });
     if (frontend_config.has_custom_button_text) {
         for (const auto& text : config.button_text) {
-            frontend_config.button_text.push_back(
-                convert.to_bytes(reinterpret_cast<const char16_t*>(text.data())));
+            buffer.resize(text.size());
+            std::memcpy(buffer.data(), text.data(), text.size() * sizeof(u16));
+            frontend_config.button_text.push_back(Common::UTF16ToUTF8(buffer));
         }
     }
     frontend_config.filters.prevent_digit =
-        static_cast<bool>(config.filter_flags & SoftwareKeyboardFilter::DIGITS);
+        static_cast<bool>(config.filter_flags & SoftwareKeyboardFilter::Digits);
     frontend_config.filters.prevent_at =
-        static_cast<bool>(config.filter_flags & SoftwareKeyboardFilter::AT);
+        static_cast<bool>(config.filter_flags & SoftwareKeyboardFilter::At);
     frontend_config.filters.prevent_percent =
-        static_cast<bool>(config.filter_flags & SoftwareKeyboardFilter::PERCENT);
+        static_cast<bool>(config.filter_flags & SoftwareKeyboardFilter::Percent);
     frontend_config.filters.prevent_backslash =
-        static_cast<bool>(config.filter_flags & SoftwareKeyboardFilter::BACKSLASH);
+        static_cast<bool>(config.filter_flags & SoftwareKeyboardFilter::Backslash);
     frontend_config.filters.prevent_profanity =
-        static_cast<bool>(config.filter_flags & SoftwareKeyboardFilter::PROFANITY);
+        static_cast<bool>(config.filter_flags & SoftwareKeyboardFilter::Profanity);
     frontend_config.filters.enable_callback =
-        static_cast<bool>(config.filter_flags & SoftwareKeyboardFilter::CALLBACK);
+        static_cast<bool>(config.filter_flags & SoftwareKeyboardFilter::Callback);
     return frontend_config;
 }
 } // namespace Applets

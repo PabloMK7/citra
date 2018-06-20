@@ -3,11 +3,10 @@
 // Refer to the license.txt file included.
 
 #include "core/frontend/applets/default_applets.h"
-#include "core/frontend/applets/interface.h"
 #include "core/frontend/applets/swkbd.h"
 
 namespace Frontend {
 void RegisterDefaultApplets() {
-    RegisterFrontendApplet(std::make_shared<DefaultCitraKeyboard>(), AppletType::SoftwareKeyboard);
+    RegisterSoftwareKeyboard(std::make_shared<DefaultCitraKeyboard>());
 }
 } // namespace Frontend

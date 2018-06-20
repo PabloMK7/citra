@@ -16,6 +16,7 @@
 #include <QtGui>
 #include <QtWidgets>
 #include "citra_qt/aboutdialog.h"
+#include "citra_qt/applets/swkbd.h"
 #include "citra_qt/bootmanager.h"
 #include "citra_qt/camera/qt_multimedia_camera.h"
 #include "citra_qt/camera/still_image_camera.h"
@@ -1470,6 +1471,7 @@ int main(int argc, char* argv[]) {
 
     // Register frontend applets
     Frontend::RegisterDefaultApplets();
+    Frontend::RegisterSoftwareKeyboard(std::make_shared<QtKeyboard>(main_window));
 
     main_window.show();
     return app.exec();

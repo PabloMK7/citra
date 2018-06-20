@@ -27,97 +27,97 @@ constexpr int MAX_CALLBACK_MSG_LEN = 256;
 
 /// Keyboard types
 enum class SoftwareKeyboardType : u32 {
-    NORMAL = 0, ///< Normal keyboard with several pages (QWERTY/accents/symbol/mobile)
-    QWERTY,     ///< QWERTY keyboard only.
-    NUMPAD,     ///< Number pad.
-    WESTERN,    ///< On JPN systems, a text keyboard without Japanese input capabilities,
-                /// otherwise same as SWKBD_TYPE_NORMAL.
+    Normal,  ///< Normal keyboard with several pages (QWERTY/accents/symbol/mobile)
+    QWERTY,  ///< QWERTY keyboard only.
+    NumPad,  ///< Number pad.
+    Western, ///< On JPN systems, a text keyboard without Japanese input capabilities,
+             /// otherwise same as SWKBD_TYPE_NORMAL.
 };
 
 /// Keyboard dialog buttons.
 enum class SoftwareKeyboardButtonConfig : u32 {
-    SINGLE_BUTTON = 0, ///< Ok button
-    DUAL_BUTTON,       ///< Cancel | Ok buttons
-    TRIPLE_BUTTON,     ///< Cancel | I Forgot | Ok buttons
-    NO_BUTTON,         ///< No button (returned by swkbdInputText in special cases)
+    SingleButton, ///< Ok button
+    DualButton,   ///< Cancel | Ok buttons
+    TripleButton, ///< Cancel | I Forgot | Ok buttons
+    NoButton,     ///< No button (returned by swkbdInputText in special cases)
 };
 
 /// Accepted input types.
 enum class SoftwareKeyboardValidInput : u32 {
-    ANYTHING = 0,      ///< All inputs are accepted.
-    NOTEMPTY,          ///< Empty inputs are not accepted.
-    NOTEMPTY_NOTBLANK, ///< Empty or blank inputs (consisting solely of whitespace) are not
-                       /// accepted.
-    NOTBLANK, ///< Blank inputs (consisting solely of whitespace) are not accepted, but empty
+    Anything,         ///< All inputs are accepted.
+    NotEmpty,         ///< Empty inputs are not accepted.
+    NotEmptyNotBlank, ///< Empty or blank inputs (consisting solely of whitespace) are not
+                      /// accepted.
+    NotBlank, ///< Blank inputs (consisting solely of whitespace) are not accepted, but empty
               /// inputs are.
-    FIXEDLEN, ///< The input must have a fixed length (specified by maxTextLength in
+    FixedLen, ///< The input must have a fixed length (specified by maxTextLength in
               /// swkbdInit).
 };
 
 /// Keyboard password modes.
 enum class SoftwareKeyboardPasswordMode : u32 {
-    NONE = 0,   ///< Characters are not concealed.
-    HIDE,       ///< Characters are concealed immediately.
-    HIDE_DELAY, ///< Characters are concealed a second after they've been typed.
+    None,      ///< Characters are not concealed.
+    Hide,      ///< Characters are concealed immediately.
+    HideDelay, ///< Characters are concealed a second after they've been typed.
 };
 
 /// Keyboard input filtering flags. Allows the caller to specify what input is explicitly not
 /// allowed
 namespace SoftwareKeyboardFilter {
 enum Filter {
-    DIGITS = 1,         ///< Disallow the use of more than a certain number of digits (0 or more)
-    AT = 1 << 1,        ///< Disallow the use of the @ sign.
-    PERCENT = 1 << 2,   ///< Disallow the use of the % sign.
-    BACKSLASH = 1 << 3, ///< Disallow the use of the \ sign.
-    PROFANITY = 1 << 4, ///< Disallow profanity using Nintendo's profanity filter.
-    CALLBACK = 1 << 5,  ///< Use a callback in order to check the input.
+    Digits = 1,         ///< Disallow the use of more than a certain number of digits (0 or more)
+    At = 1 << 1,        ///< Disallow the use of the @ sign.
+    Percent = 1 << 2,   ///< Disallow the use of the % sign.
+    Backslash = 1 << 3, ///< Disallow the use of the \ sign.
+    Profanity = 1 << 4, ///< Disallow profanity using Nintendo's profanity filter.
+    Callback = 1 << 5,  ///< Use a callback in order to check the input.
 };
 } // namespace SoftwareKeyboardFilter
 
 /// Keyboard features.
 namespace SoftwareKeyboardFeature {
 enum Feature {
-    PARENTAL = 1,               ///< Parental PIN mode.
-    DARKEN_TOP_SCREEN = 1 << 1, ///< Darken the top screen when the keyboard is shown.
-    PREDICTIVE_INPUT =
-        1 << 2,           ///< Enable predictive input (necessary for Kanji input in JPN systems).
-    MULTILINE = 1 << 3,   ///< Enable multiline input.
-    FIXED_WIDTH = 1 << 4, ///< Enable fixed-width mode.
-    ALLOW_HOME = 1 << 5,  ///< Allow the usage of the HOME button.
-    ALLOW_RESET = 1 << 6, ///< Allow the usage of a software-reset combination.
-    ALLOW_POWER = 1 << 7, ///< Allow the usage of the POWER button.
-    DEFAULT_QWERTY = 1 << 9, ///< Default to the QWERTY page when the keyboard is shown.
+    Parental = 1,             ///< Parental PIN mode.
+    DarkenTopScreen = 1 << 1, ///< Darken the top screen when the keyboard is shown.
+    PredictiveInput =
+        1 << 2,             ///< Enable predictive input (necessary for Kanji input in JPN systems).
+    Multiline = 1 << 3,     ///< Enable multiline input.
+    FixedWidth = 1 << 4,    ///< Enable fixed-width mode.
+    AllowHome = 1 << 5,     ///< Allow the usage of the HOME button.
+    AllowReset = 1 << 6,    ///< Allow the usage of a software-reset combination.
+    AllowPower = 1 << 7,    ///< Allow the usage of the POWER button.
+    DefaultQWERTY = 1 << 9, ///< Default to the QWERTY page when the keyboard is shown.
 };
 } // namespace SoftwareKeyboardFeature
 
 /// Keyboard filter callback return values.
 enum class SoftwareKeyboardCallbackResult : u32 {
-    OK = 0,   ///< Specifies that the input is valid.
-    CLOSE,    ///< Displays an error message, then closes the keyboard.
-    CONTINUE, ///< Displays an error message and continues displaying the keyboard.
+    OK,       ///< Specifies that the input is valid.
+    Close,    ///< Displays an error message, then closes the keyboard.
+    Continue, ///< Displays an error message and continues displaying the keyboard.
 };
 
 /// Keyboard return values.
 enum class SoftwareKeyboardResult : s32 {
-    NONE = -1,          ///< Dummy/unused.
-    INVALID_INPUT = -2, ///< Invalid parameters to swkbd.
-    OUTOFMEM = -3,      ///< Out of memory.
+    None = -1,         ///< Dummy/unused.
+    InvalidInput = -2, ///< Invalid parameters to swkbd.
+    OutOfMem = -3,     ///< Out of memory.
 
-    D0_CLICK = 0, ///< The button was clicked in 1-button dialogs.
-    D1_CLICK0,    ///< The left button was clicked in 2-button dialogs.
-    D1_CLICK1,    ///< The right button was clicked in 2-button dialogs.
-    D2_CLICK0,    ///< The left button was clicked in 3-button dialogs.
-    D2_CLICK1,    ///< The middle button was clicked in 3-button dialogs.
-    D2_CLICK2,    ///< The right button was clicked in 3-button dialogs.
+    D0Click = 0, ///< The button was clicked in 1-button dialogs.
+    D1Click0,    ///< The left button was clicked in 2-button dialogs.
+    D1Click1,    ///< The right button was clicked in 2-button dialogs.
+    D2Click0,    ///< The left button was clicked in 3-button dialogs.
+    D2Click1,    ///< The middle button was clicked in 3-button dialogs.
+    D2Click2,    ///< The right button was clicked in 3-button dialogs.
 
-    HOMEPRESSED = 10, ///< The HOME button was pressed.
-    RESETPRESSED,     ///< The soft-reset key combination was pressed.
-    POWERPRESSED,     ///< The POWER button was pressed.
+    HomePressed = 10, ///< The HOME button was pressed.
+    ResetPressed,     ///< The soft-reset key combination was pressed.
+    PowerPressed,     ///< The POWER button was pressed.
 
-    PARENTAL_OK = 20, ///< The parental PIN was verified successfully.
-    PARENTAL_FAIL,    ///< The parental PIN was incorrect.
+    ParentalOK = 20, ///< The parental PIN was verified successfully.
+    ParentalFail,    ///< The parental PIN was incorrect.
 
-    BANNED_INPUT = 30, ///< The filter callback returned SoftwareKeyboardCallback::CLOSE.
+    BannedInput = 30, ///< The filter callback returned SoftwareKeyboardCallback::CLOSE.
 };
 
 struct SoftwareKeyboardConfig {
@@ -195,7 +195,7 @@ public:
     void Finalize();
 
 private:
-    Frontend::KeyboardConfig ToFrontendConfig(SoftwareKeyboardConfig config);
+    Frontend::KeyboardConfig ToFrontendConfig(const SoftwareKeyboardConfig& config) const;
 
     /// This SharedMemory will be created when we receive the LibAppJustStarted message.
     /// It holds the framebuffer info retrieved by the application with
@@ -208,7 +208,7 @@ private:
     /// Configuration of this instance of the SoftwareKeyboard, as received from the application
     SoftwareKeyboardConfig config;
 
-    std::shared_ptr<Frontend::AppletInterface> frontend_applet;
+    std::shared_ptr<Frontend::SoftwareKeyboard> frontend_applet;
 };
 } // namespace Applets
 } // namespace HLE
