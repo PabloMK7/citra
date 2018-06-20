@@ -54,7 +54,7 @@ static void Initialize(Interface* self) {
     cmd_buff[3] = Kernel::g_handle_table.Create(mutex).Unwrap();
     cmd_buff[4] = Kernel::g_handle_table.Create(shared_memory).Unwrap();
 
-    LOG_WARNING(Service_CSND, "(STUBBED) called");
+    NGLOG_WARNING(Service_CSND, "(STUBBED) called");
 }
 
 /**
@@ -71,7 +71,7 @@ static void Shutdown(Interface* self) {
     mutex = nullptr;
 
     cmd_buff[1] = RESULT_SUCCESS.raw;
-    LOG_WARNING(Service_CSND, "(STUBBED) called");
+    NGLOG_WARNING(Service_CSND, "(STUBBED) called");
 }
 
 /**
@@ -88,7 +88,7 @@ static void ExecuteCommands(Interface* self) {
 
     if (shared_memory == nullptr) {
         cmd_buff[1] = 1;
-        LOG_ERROR(Service_CSND, "called, shared memory not allocated");
+        NGLOG_ERROR(Service_CSND, "called, shared memory not allocated");
         return;
     }
 
@@ -102,7 +102,7 @@ static void ExecuteCommands(Interface* self) {
 
     cmd_buff[1] = RESULT_SUCCESS.raw;
 
-    LOG_WARNING(Service_CSND, "(STUBBED) called, addr=0x%08X", addr);
+    NGLOG_WARNING(Service_CSND, "(STUBBED) called, addr=0x{:08X}", addr);
 }
 
 /**
@@ -117,7 +117,7 @@ static void AcquireSoundChannels(Interface* self) {
     u32* cmd_buff = Kernel::GetCommandBuffer();
     cmd_buff[1] = RESULT_SUCCESS.raw;
     cmd_buff[2] = 0xFFFFFF00;
-    LOG_WARNING(Service_CSND, "(STUBBED) called");
+    NGLOG_WARNING(Service_CSND, "(STUBBED) called");
 }
 
 const Interface::FunctionInfo FunctionTable[] = {
