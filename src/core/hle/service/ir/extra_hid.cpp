@@ -165,8 +165,8 @@ void ExtraHID::OnDisconnect() {
 
 void ExtraHID::HandleConfigureHIDPollingRequest(const std::vector<u8>& request) {
     if (request.size() != 3) {
-        LOG_ERROR(Service_IR, "Wrong request size (%zu): %s", request.size(),
-                  Common::ArrayToString(request.data(), request.size()).c_str());
+        NGLOG_ERROR(Service_IR, "Wrong request size ({}): {}", request.size(),
+                    Common::ArrayToString(request.data(), request.size()));
         return;
     }
 
@@ -187,8 +187,8 @@ void ExtraHID::HandleReadCalibrationDataRequest(const std::vector<u8>& request_b
                   "ReadCalibrationDataRequest has wrong size");
 
     if (request_buf.size() != sizeof(ReadCalibrationDataRequest)) {
-        LOG_ERROR(Service_IR, "Wrong request size (%zu): %s", request_buf.size(),
-                  Common::ArrayToString(request_buf.data(), request_buf.size()).c_str());
+        NGLOG_ERROR(Service_IR, "Wrong request size ({}): {}", request_buf.size(),
+                    Common::ArrayToString(request_buf.data(), request_buf.size()));
         return;
     }
 
@@ -199,8 +199,8 @@ void ExtraHID::HandleReadCalibrationDataRequest(const std::vector<u8>& request_b
     const u16 size = Common::AlignDown(request.size, 16);
 
     if (offset + size > calibration_data.size()) {
-        LOG_ERROR(Service_IR, "Read beyond the end of calibration data! (offset=%u, size=%u)",
-                  offset, size);
+        NGLOG_ERROR(Service_IR, "Read beyond the end of calibration data! (offset={}, size={})",
+                    offset, size);
         return;
     }
 
@@ -222,8 +222,8 @@ void ExtraHID::OnReceive(const std::vector<u8>& data) {
         HandleReadCalibrationDataRequest(data);
         break;
     default:
-        LOG_ERROR(Service_IR, "Unknown request: %s",
-                  Common::ArrayToString(data.data(), data.size()).c_str());
+        NGLOG_ERROR(Service_IR, "Unknown request: {}",
+                    Common::ArrayToString(data.data(), data.size()));
         break;
     }
 }
