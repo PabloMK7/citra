@@ -321,7 +321,7 @@ static std::string SampleTexture(const PicaFSConfig& config, unsigned texture_un
         if (state.proctex.enable) {
             return "ProcTex()";
         } else {
-            LOG_ERROR(Render_OpenGL, "Using Texture3 without enabling it");
+            NGLOG_DEBUG(Render_OpenGL, "Using Texture3 without enabling it");
             return "vec4(0.0)";
         }
     default:
