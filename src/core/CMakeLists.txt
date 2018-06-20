@@ -68,6 +68,8 @@ add_library(core STATIC
     file_sys/savedata_archive.h
     file_sys/title_metadata.cpp
     file_sys/title_metadata.h
+    frontend/applets/default_applets.cpp
+    frontend/applets/default_applets.h
     frontend/applets/interface.cpp
     frontend/applets/interface.h
     frontend/applets/swkbd.cpp

@@ -9,6 +9,7 @@
 #include <unordered_map>
 #include <utility>
 #include <vector>
+#include "common/assert.h"
 #include "core/frontend/applets/interface.h"
 
 namespace Frontend {
@@ -93,11 +94,11 @@ enum class ValidationError {
 class SoftwareKeyboard : public AppletInterface {
 public:
     explicit SoftwareKeyboard() : AppletInterface() {}
-    const AppletData* ReceiveData() override {
-        return &data;
-    }
     void Setup(const AppletConfig* config) override {
         this->config = KeyboardConfig(*static_cast<const KeyboardConfig*>(config));
+    }
+    const AppletData* ReceiveData() override {
+        return &data;
     }
 
 protected:
@@ -126,9 +127,29 @@ protected:
      */
     ValidationError Finalize(const std::string& text, u8 button);
 
-private:
     KeyboardConfig config;
     KeyboardData data;
+};
+
+class DefaultCitraKeyboard final : public SoftwareKeyboard {
+public:
+    void Setup(const AppletConfig* config) override {
+        SoftwareKeyboard::Setup(config);
+        switch (this->config.button_config) {
+        case ButtonConfig::None:
+        case ButtonConfig::Single:
+            Finalize("Citra", 0);
+            break;
+        case ButtonConfig::Dual:
+            Finalize("Citra", 1);
+            break;
+        case ButtonConfig::Triple:
+            Finalize("Citra", 2);
+            break;
+        default:
+            UNREACHABLE();
+        }
+    }
 };
 
 } // namespace Frontend

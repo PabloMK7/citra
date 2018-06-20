@@ -174,8 +174,6 @@ struct SoftwareKeyboardConfig {
  */
 static_assert(sizeof(SoftwareKeyboardConfig) == 0x400, "Software Keyboard Config size is wrong");
 
-class DefaultCitraKeyboard : Frontend::AppletInterface {};
-
 class SoftwareKeyboard final : public Applet {
 public:
     SoftwareKeyboard(Service::APT::AppletId id, std::weak_ptr<Service::APT::AppletManager> manager)

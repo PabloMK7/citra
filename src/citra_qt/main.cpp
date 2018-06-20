@@ -50,6 +50,7 @@
 #include "common/string_util.h"
 #include "core/core.h"
 #include "core/file_sys/archive_source_sd_savedata.h"
+#include "core/frontend/applets/default_applets.h"
 #include "core/gdbstub/gdbstub.h"
 #include "core/hle/service/fs/archive.h"
 #include "core/loader/loader.h"
@@ -1466,6 +1467,9 @@ int main(int argc, char* argv[]) {
     Camera::RegisterFactory("image", std::make_unique<Camera::StillImageCameraFactory>());
     Camera::RegisterFactory("qt", std::make_unique<Camera::QtMultimediaCameraFactory>());
     Camera::QtMultimediaCameraHandler::Init();
+
+    // Register frontend applets
+    Frontend::RegisterDefaultApplets();
 
     main_window.show();
     return app.exec();
