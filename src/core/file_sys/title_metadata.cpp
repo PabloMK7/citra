@@ -45,7 +45,7 @@ Loader::ResultStatus TitleMetadata::Load(const std::string& file_path) {
 
     Loader::ResultStatus result = Load(file_data);
     if (result != Loader::ResultStatus::Success)
-        LOG_ERROR(Service_FS, "Failed to load TMD from file %s!", file_path.c_str());
+        NGLOG_ERROR(Service_FS, "Failed to load TMD from file {}!", file_path);
 
     return result;
 }
@@ -75,8 +75,8 @@ Loader::ResultStatus TitleMetadata::Load(const std::vector<u8> file_data, size_t
     size_t expected_size =
         body_start + sizeof(Body) + tmd_body.content_count * sizeof(ContentChunk);
     if (total_size < expected_size) {
-        LOG_ERROR(Service_FS, "Malformed TMD, expected size 0x%zx, got 0x%zx!", expected_size,
-                  total_size);
+        NGLOG_ERROR(Service_FS, "Malformed TMD, expected size 0x{:x}, got 0x{:x}!", expected_size,
+                    total_size);
         return Loader::ResultStatus::ErrorInvalidFormat;
     }
 
@@ -209,17 +209,17 @@ void TitleMetadata::AddContentChunk(const ContentChunk& chunk) {
 }
 
 void TitleMetadata::Print() const {
-    LOG_DEBUG(Service_FS, "%u chunks", static_cast<u32>(tmd_body.content_count));
+    NGLOG_DEBUG(Service_FS, "{} chunks", static_cast<u32>(tmd_body.content_count));
 
     // Content info describes ranges of content chunks
-    LOG_DEBUG(Service_FS, "Content info:");
+    NGLOG_DEBUG(Service_FS, "Content info:");
     for (size_t i = 0; i < tmd_body.contentinfo.size(); i++) {
         if (tmd_body.contentinfo[i].command_count == 0)
             break;
 
-        LOG_DEBUG(Service_FS, "    Index %04X, Command Count %04X",
-                  static_cast<u32>(tmd_body.contentinfo[i].index),
-                  static_cast<u32>(tmd_body.contentinfo[i].command_count));
+        NGLOG_DEBUG(Service_FS, "    Index {:04X}, Command Count {:04X}",
+                    static_cast<u32>(tmd_body.contentinfo[i].index),
+                    static_cast<u32>(tmd_body.contentinfo[i].command_count));
     }
 
     // For each content info, print their content chunk range
@@ -230,16 +230,16 @@ void TitleMetadata::Print() const {
         if (count == 0)
             continue;
 
-        LOG_DEBUG(Service_FS, "Content chunks for content info index %zu:", i);
+        NGLOG_DEBUG(Service_FS, "Content chunks for content info index {}:", i);
         for (u16 j = index; j < index + count; j++) {
             // Don't attempt to print content we don't have
             if (j > tmd_body.content_count)
                 break;
 
             const ContentChunk& chunk = tmd_chunks[j];
-            LOG_DEBUG(Service_FS, "    ID %08X, Index %04X, Type %04x, Size %016" PRIX64,
-                      static_cast<u32>(chunk.id), static_cast<u32>(chunk.index),
-                      static_cast<u32>(chunk.type), static_cast<u64>(chunk.size));
+            NGLOG_DEBUG(Service_FS, "    ID {:08X}, Index {:04X}, Type {:04x}, Size {:016X}",
+                        static_cast<u32>(chunk.id), static_cast<u32>(chunk.index),
+                        static_cast<u32>(chunk.type), static_cast<u64>(chunk.size));
         }
     }
 }

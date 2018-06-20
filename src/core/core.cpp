@@ -57,7 +57,7 @@ System::ResultStatus System::RunLoop(bool tight_loop) {
     // If we don't have a currently active thread then don't execute instructions,
     // instead advance to the next event and try to yield to the next thread
     if (Kernel::GetCurrentThread() == nullptr) {
-        LOG_TRACE(Core_ARM11, "Idling");
+        NGLOG_TRACE(Core_ARM11, "Idling");
         CoreTiming::Idle();
         CoreTiming::Advance();
         PrepareReschedule();
@@ -84,15 +84,15 @@ System::ResultStatus System::Load(EmuWindow* emu_window, const std::string& file
     app_loader = Loader::GetLoader(filepath);
 
     if (!app_loader) {
-        LOG_CRITICAL(Core, "Failed to obtain loader for %s!", filepath.c_str());
+        NGLOG_CRITICAL(Core, "Failed to obtain loader for {}!", filepath);
         return ResultStatus::ErrorGetLoader;
     }
     std::pair<boost::optional<u32>, Loader::ResultStatus> system_mode =
         app_loader->LoadKernelSystemMode();
 
     if (system_mode.second != Loader::ResultStatus::Success) {
-        LOG_CRITICAL(Core, "Failed to determine system mode (Error %i)!",
-                     static_cast<int>(system_mode.second));
+        NGLOG_CRITICAL(Core, "Failed to determine system mode (Error {})!",
+                       static_cast<int>(system_mode.second));
 
         switch (system_mode.second) {
         case Loader::ResultStatus::ErrorEncrypted:
@@ -106,15 +106,15 @@ System::ResultStatus System::Load(EmuWindow* emu_window, const std::string& file
 
     ResultStatus init_result{Init(emu_window, system_mode.first.get())};
     if (init_result != ResultStatus::Success) {
-        LOG_CRITICAL(Core, "Failed to initialize system (Error %u)!",
-                     static_cast<u32>(init_result));
+        NGLOG_CRITICAL(Core, "Failed to initialize system (Error {})!",
+                       static_cast<u32>(init_result));
         System::Shutdown();
         return init_result;
     }
 
     const Loader::ResultStatus load_result{app_loader->Load(Kernel::g_current_process)};
     if (Loader::ResultStatus::Success != load_result) {
-        LOG_CRITICAL(Core, "Failed to load ROM (Error %u)!", static_cast<u32>(load_result));
+        NGLOG_CRITICAL(Core, "Failed to load ROM (Error {})!", static_cast<u32>(load_result));
         System::Shutdown();
 
         switch (load_result) {
@@ -150,7 +150,7 @@ void System::Reschedule() {
 }
 
 System::ResultStatus System::Init(EmuWindow* emu_window, u32 system_mode) {
-    LOG_DEBUG(HW_Memory, "initialized OK");
+    NGLOG_DEBUG(HW_Memory, "initialized OK");
 
     CoreTiming::Init();
 
@@ -159,7 +159,7 @@ System::ResultStatus System::Init(EmuWindow* emu_window, u32 system_mode) {
         cpu_core = std::make_unique<ARM_Dynarmic>(USER32MODE);
 #else
         cpu_core = std::make_unique<ARM_DynCom>(USER32MODE);
-        LOG_WARNING(Core, "CPU JIT requested, but Dynarmic not available");
+        NGLOG_WARNING(Core, "CPU JIT requested, but Dynarmic not available");
 #endif
     } else {
         cpu_core = std::make_unique<ARM_DynCom>(USER32MODE);
@@ -182,7 +182,7 @@ System::ResultStatus System::Init(EmuWindow* emu_window, u32 system_mode) {
         return ResultStatus::ErrorVideoCore;
     }
 
-    LOG_DEBUG(Core, "Initialized OK");
+    NGLOG_DEBUG(Core, "Initialized OK");
 
     // Reset counters and set time origin to current frame
     GetAndResetPerfStats();
@@ -228,7 +228,7 @@ void System::Shutdown() {
         room_member->SendGameInfo(game_info);
     }
 
-    LOG_DEBUG(Core, "Shutdown OK");
+    NGLOG_DEBUG(Core, "Shutdown OK");
 }
 
 } // namespace Core

@@ -29,22 +29,22 @@ public:
 
 ResultVal<std::unique_ptr<FileBackend>> SaveDataArchive::OpenFile(const Path& path,
                                                                   const Mode& mode) const {
-    LOG_DEBUG(Service_FS, "called path=%s mode=%01X", path.DebugStr().c_str(), mode.hex);
+    NGLOG_DEBUG(Service_FS, "called path={} mode={:01X}", path.DebugStr(), mode.hex);
 
     const PathParser path_parser(path);
 
     if (!path_parser.IsValid()) {
-        LOG_ERROR(Service_FS, "Invalid path %s", path.DebugStr().c_str());
+        NGLOG_ERROR(Service_FS, "Invalid path {}", path.DebugStr());
         return ERROR_INVALID_PATH;
     }
 
     if (mode.hex == 0) {
-        LOG_ERROR(Service_FS, "Empty open mode");
+        NGLOG_ERROR(Service_FS, "Empty open mode");
         return ERROR_UNSUPPORTED_OPEN_FLAGS;
     }
 
     if (mode.create_flag && !mode.write_flag) {
-        LOG_ERROR(Service_FS, "Create flag set but write flag not set");
+        NGLOG_ERROR(Service_FS, "Create flag set but write flag not set");
         return ERROR_UNSUPPORTED_OPEN_FLAGS;
     }
 
@@ -52,19 +52,19 @@ ResultVal<std::unique_ptr<FileBackend>> SaveDataArchive::OpenFile(const Path& pa
 
     switch (path_parser.GetHostStatus(mount_point)) {
     case PathParser::InvalidMountPoint:
-        LOG_CRITICAL(Service_FS, "(unreachable) Invalid mount point %s", mount_point.c_str());
+        NGLOG_CRITICAL(Service_FS, "(unreachable) Invalid mount point {}", mount_point);
         return ERROR_FILE_NOT_FOUND;
     case PathParser::PathNotFound:
-        LOG_ERROR(Service_FS, "Path not found %s", full_path.c_str());
+        NGLOG_ERROR(Service_FS, "Path not found {}", full_path);
         return ERROR_PATH_NOT_FOUND;
     case PathParser::FileInPath:
     case PathParser::DirectoryFound:
-        LOG_ERROR(Service_FS, "Unexpected file or directory in %s", full_path.c_str());
+        NGLOG_ERROR(Service_FS, "Unexpected file or directory in {}", full_path);
         return ERROR_UNEXPECTED_FILE_OR_DIRECTORY;
     case PathParser::NotFound:
         if (!mode.create_flag) {
-            LOG_ERROR(Service_FS, "Non-existing file %s can't be open without mode create.",
-                      full_path.c_str());
+            NGLOG_ERROR(Service_FS, "Non-existing file {} can't be open without mode create.",
+                        full_path);
             return ERROR_FILE_NOT_FOUND;
         } else {
             // Create the file
@@ -77,7 +77,7 @@ ResultVal<std::unique_ptr<FileBackend>> SaveDataArchive::OpenFile(const Path& pa
 
     FileUtil::IOFile file(full_path, mode.write_flag ? "r+b" : "rb");
     if (!file.IsOpen()) {
-        LOG_CRITICAL(Service_FS, "(unreachable) Unknown error opening %s", full_path.c_str());
+        NGLOG_CRITICAL(Service_FS, "(unreachable) Unknown error opening {}", full_path);
         return ERROR_FILE_NOT_FOUND;
     }
 
@@ -90,7 +90,7 @@ ResultCode SaveDataArchive::DeleteFile(const Path& path) const {
     const PathParser path_parser(path);
 
     if (!path_parser.IsValid()) {
-        LOG_ERROR(Service_FS, "Invalid path %s", path.DebugStr().c_str());
+        NGLOG_ERROR(Service_FS, "Invalid path {}", path.DebugStr());
         return ERROR_INVALID_PATH;
     }
 
@@ -98,15 +98,15 @@ ResultCode SaveDataArchive::DeleteFile(const Path& path) const {
 
     switch (path_parser.GetHostStatus(mount_point)) {
     case PathParser::InvalidMountPoint:
-        LOG_CRITICAL(Service_FS, "(unreachable) Invalid mount point %s", mount_point.c_str());
+        NGLOG_CRITICAL(Service_FS, "(unreachable) Invalid mount point {}", mount_point);
         return ERROR_FILE_NOT_FOUND;
     case PathParser::PathNotFound:
-        LOG_ERROR(Service_FS, "Path not found %s", full_path.c_str());
+        NGLOG_ERROR(Service_FS, "Path not found {}", full_path);
         return ERROR_PATH_NOT_FOUND;
     case PathParser::FileInPath:
     case PathParser::DirectoryFound:
     case PathParser::NotFound:
-        LOG_ERROR(Service_FS, "File not found %s", full_path.c_str());
+        NGLOG_ERROR(Service_FS, "File not found {}", full_path);
         return ERROR_FILE_NOT_FOUND;
     case PathParser::FileFound:
         break; // Expected 'success' case
@@ -116,7 +116,7 @@ ResultCode SaveDataArchive::DeleteFile(const Path& path) const {
         return RESULT_SUCCESS;
     }
 
-    LOG_CRITICAL(Service_FS, "(unreachable) Unknown error deleting %s", full_path.c_str());
+    NGLOG_CRITICAL(Service_FS, "(unreachable) Unknown error deleting {}", full_path);
     return ERROR_FILE_NOT_FOUND;
 }
 
@@ -125,14 +125,14 @@ ResultCode SaveDataArchive::RenameFile(const Path& src_path, const Path& dest_pa
 
     // TODO: Verify these return codes with HW
     if (!path_parser_src.IsValid()) {
-        LOG_ERROR(Service_FS, "Invalid src path %s", src_path.DebugStr().c_str());
+        NGLOG_ERROR(Service_FS, "Invalid src path {}", src_path.DebugStr());
         return ERROR_INVALID_PATH;
     }
 
     const PathParser path_parser_dest(dest_path);
 
     if (!path_parser_dest.IsValid()) {
-        LOG_ERROR(Service_FS, "Invalid dest path %s", dest_path.DebugStr().c_str());
+        NGLOG_ERROR(Service_FS, "Invalid dest path {}", dest_path.DebugStr());
         return ERROR_INVALID_PATH;
     }
 
@@ -155,7 +155,7 @@ static ResultCode DeleteDirectoryHelper(const Path& path, const std::string& mou
     const PathParser path_parser(path);
 
     if (!path_parser.IsValid()) {
-        LOG_ERROR(Service_FS, "Invalid path %s", path.DebugStr().c_str());
+        NGLOG_ERROR(Service_FS, "Invalid path {}", path.DebugStr());
         return ERROR_INVALID_PATH;
     }
 
@@ -166,15 +166,15 @@ static ResultCode DeleteDirectoryHelper(const Path& path, const std::string& mou
 
     switch (path_parser.GetHostStatus(mount_point)) {
     case PathParser::InvalidMountPoint:
-        LOG_CRITICAL(Service_FS, "(unreachable) Invalid mount point %s", mount_point.c_str());
+        NGLOG_CRITICAL(Service_FS, "(unreachable) Invalid mount point {}", mount_point);
         return ERROR_PATH_NOT_FOUND;
     case PathParser::PathNotFound:
     case PathParser::NotFound:
-        LOG_ERROR(Service_FS, "Path not found %s", full_path.c_str());
+        NGLOG_ERROR(Service_FS, "Path not found {}", full_path);
         return ERROR_PATH_NOT_FOUND;
     case PathParser::FileInPath:
     case PathParser::FileFound:
-        LOG_ERROR(Service_FS, "Unexpected file or directory %s", full_path.c_str());
+        NGLOG_ERROR(Service_FS, "Unexpected file or directory {}", full_path);
         return ERROR_UNEXPECTED_FILE_OR_DIRECTORY;
     case PathParser::DirectoryFound:
         break; // Expected 'success' case
@@ -184,7 +184,7 @@ static ResultCode DeleteDirectoryHelper(const Path& path, const std::string& mou
         return RESULT_SUCCESS;
     }
 
-    LOG_ERROR(Service_FS, "Directory not empty %s", full_path.c_str());
+    NGLOG_ERROR(Service_FS, "Directory not empty {}", full_path);
     return ERROR_DIRECTORY_NOT_EMPTY;
 }
 
@@ -201,7 +201,7 @@ ResultCode SaveDataArchive::CreateFile(const FileSys::Path& path, u64 size) cons
     const PathParser path_parser(path);
 
     if (!path_parser.IsValid()) {
-        LOG_ERROR(Service_FS, "Invalid path %s", path.DebugStr().c_str());
+        NGLOG_ERROR(Service_FS, "Invalid path {}", path.DebugStr());
         return ERROR_INVALID_PATH;
     }
 
@@ -209,17 +209,17 @@ ResultCode SaveDataArchive::CreateFile(const FileSys::Path& path, u64 size) cons
 
     switch (path_parser.GetHostStatus(mount_point)) {
     case PathParser::InvalidMountPoint:
-        LOG_CRITICAL(Service_FS, "(unreachable) Invalid mount point %s", mount_point.c_str());
+        NGLOG_CRITICAL(Service_FS, "(unreachable) Invalid mount point {}", mount_point);
         return ERROR_FILE_NOT_FOUND;
     case PathParser::PathNotFound:
-        LOG_ERROR(Service_FS, "Path not found %s", full_path.c_str());
+        NGLOG_ERROR(Service_FS, "Path not found {}", full_path);
         return ERROR_PATH_NOT_FOUND;
     case PathParser::FileInPath:
-        LOG_ERROR(Service_FS, "Unexpected file in path %s", full_path.c_str());
+        NGLOG_ERROR(Service_FS, "Unexpected file in path {}", full_path);
         return ERROR_UNEXPECTED_FILE_OR_DIRECTORY;
     case PathParser::DirectoryFound:
     case PathParser::FileFound:
-        LOG_ERROR(Service_FS, "%s already exists", full_path.c_str());
+        NGLOG_ERROR(Service_FS, "{} already exists", full_path);
         return ERROR_FILE_ALREADY_EXISTS;
     case PathParser::NotFound:
         break; // Expected 'success' case
@@ -237,7 +237,7 @@ ResultCode SaveDataArchive::CreateFile(const FileSys::Path& path, u64 size) cons
         return RESULT_SUCCESS;
     }
 
-    LOG_ERROR(Service_FS, "Too large file");
+    NGLOG_ERROR(Service_FS, "Too large file");
     return ResultCode(ErrorDescription::TooLarge, ErrorModule::FS, ErrorSummary::OutOfResource,
                       ErrorLevel::Info);
 }
@@ -246,7 +246,7 @@ ResultCode SaveDataArchive::CreateDirectory(const Path& path) const {
     const PathParser path_parser(path);
 
     if (!path_parser.IsValid()) {
-        LOG_ERROR(Service_FS, "Invalid path %s", path.DebugStr().c_str());
+        NGLOG_ERROR(Service_FS, "Invalid path {}", path.DebugStr());
         return ERROR_INVALID_PATH;
     }
 
@@ -254,17 +254,17 @@ ResultCode SaveDataArchive::CreateDirectory(const Path& path) const {
 
     switch (path_parser.GetHostStatus(mount_point)) {
     case PathParser::InvalidMountPoint:
-        LOG_CRITICAL(Service_FS, "(unreachable) Invalid mount point %s", mount_point.c_str());
+        NGLOG_CRITICAL(Service_FS, "(unreachable) Invalid mount point {}", mount_point);
         return ERROR_FILE_NOT_FOUND;
     case PathParser::PathNotFound:
-        LOG_ERROR(Service_FS, "Path not found %s", full_path.c_str());
+        NGLOG_ERROR(Service_FS, "Path not found {}", full_path);
         return ERROR_PATH_NOT_FOUND;
     case PathParser::FileInPath:
-        LOG_ERROR(Service_FS, "Unexpected file in path %s", full_path.c_str());
+        NGLOG_ERROR(Service_FS, "Unexpected file in path {}", full_path);
         return ERROR_UNEXPECTED_FILE_OR_DIRECTORY;
     case PathParser::DirectoryFound:
     case PathParser::FileFound:
-        LOG_ERROR(Service_FS, "%s already exists", full_path.c_str());
+        NGLOG_ERROR(Service_FS, "{} already exists", full_path);
         return ERROR_DIRECTORY_ALREADY_EXISTS;
     case PathParser::NotFound:
         break; // Expected 'success' case
@@ -274,7 +274,7 @@ ResultCode SaveDataArchive::CreateDirectory(const Path& path) const {
         return RESULT_SUCCESS;
     }
 
-    LOG_CRITICAL(Service_FS, "(unreachable) Unknown error creating %s", mount_point.c_str());
+    NGLOG_CRITICAL(Service_FS, "(unreachable) Unknown error creating {}", mount_point);
     return ResultCode(ErrorDescription::NoData, ErrorModule::FS, ErrorSummary::Canceled,
                       ErrorLevel::Status);
 }
@@ -284,14 +284,14 @@ ResultCode SaveDataArchive::RenameDirectory(const Path& src_path, const Path& de
 
     // TODO: Verify these return codes with HW
     if (!path_parser_src.IsValid()) {
-        LOG_ERROR(Service_FS, "Invalid src path %s", src_path.DebugStr().c_str());
+        NGLOG_ERROR(Service_FS, "Invalid src path {}", src_path.DebugStr());
         return ERROR_INVALID_PATH;
     }
 
     const PathParser path_parser_dest(dest_path);
 
     if (!path_parser_dest.IsValid()) {
-        LOG_ERROR(Service_FS, "Invalid dest path %s", dest_path.DebugStr().c_str());
+        NGLOG_ERROR(Service_FS, "Invalid dest path {}", dest_path.DebugStr());
         return ERROR_INVALID_PATH;
     }
 
@@ -313,7 +313,7 @@ ResultVal<std::unique_ptr<DirectoryBackend>> SaveDataArchive::OpenDirectory(
     const PathParser path_parser(path);
 
     if (!path_parser.IsValid()) {
-        LOG_ERROR(Service_FS, "Invalid path %s", path.DebugStr().c_str());
+        NGLOG_ERROR(Service_FS, "Invalid path {}", path.DebugStr());
         return ERROR_INVALID_PATH;
     }
 
@@ -321,15 +321,15 @@ ResultVal<std::unique_ptr<DirectoryBackend>> SaveDataArchive::OpenDirectory(
 
     switch (path_parser.GetHostStatus(mount_point)) {
     case PathParser::InvalidMountPoint:
-        LOG_CRITICAL(Service_FS, "(unreachable) Invalid mount point %s", mount_point.c_str());
+        NGLOG_CRITICAL(Service_FS, "(unreachable) Invalid mount point {}", mount_point);
         return ERROR_FILE_NOT_FOUND;
     case PathParser::PathNotFound:
     case PathParser::NotFound:
-        LOG_ERROR(Service_FS, "Path not found %s", full_path.c_str());
+        NGLOG_ERROR(Service_FS, "Path not found {}", full_path);
         return ERROR_PATH_NOT_FOUND;
     case PathParser::FileInPath:
     case PathParser::FileFound:
-        LOG_ERROR(Service_FS, "Unexpected file in path %s", full_path.c_str());
+        NGLOG_ERROR(Service_FS, "Unexpected file in path {}", full_path);
         return ERROR_UNEXPECTED_FILE_OR_DIRECTORY;
     case PathParser::DirectoryFound:
         break; // Expected 'success' case

@@ -49,7 +49,7 @@ public:
         if (delay_generator != nullptr) {
             return delay_generator->GetReadDelayNs(length);
         }
-        LOG_ERROR(Service_FS, "Delay generator was not initalized. Using default");
+        NGLOG_ERROR(Service_FS, "Delay generator was not initalized. Using default");
         delay_generator = std::make_unique<DefaultDelayGenerator>();
         return delay_generator->GetReadDelayNs(length);
     }

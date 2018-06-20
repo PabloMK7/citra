@@ -87,22 +87,22 @@ public:
 
     ResultVal<std::unique_ptr<FileBackend>> OpenFile(const Path& path,
                                                      const Mode& mode) const override {
-        LOG_DEBUG(Service_FS, "called path=%s mode=%01X", path.DebugStr().c_str(), mode.hex);
+        NGLOG_DEBUG(Service_FS, "called path={} mode={:01X}", path.DebugStr(), mode.hex);
 
         const PathParser path_parser(path);
 
         if (!path_parser.IsValid()) {
-            LOG_ERROR(Service_FS, "Invalid path %s", path.DebugStr().c_str());
+            NGLOG_ERROR(Service_FS, "Invalid path {}", path.DebugStr());
             return ERROR_INVALID_PATH;
         }
 
         if (mode.hex == 0) {
-            LOG_ERROR(Service_FS, "Empty open mode");
+            NGLOG_ERROR(Service_FS, "Empty open mode");
             return ERROR_UNSUPPORTED_OPEN_FLAGS;
         }
 
         if (mode.create_flag) {
-            LOG_ERROR(Service_FS, "Create flag is not supported");
+            NGLOG_ERROR(Service_FS, "Create flag is not supported");
             return ERROR_UNSUPPORTED_OPEN_FLAGS;
         }
 
@@ -110,17 +110,17 @@ public:
 
         switch (path_parser.GetHostStatus(mount_point)) {
         case PathParser::InvalidMountPoint:
-            LOG_CRITICAL(Service_FS, "(unreachable) Invalid mount point %s", mount_point.c_str());
+            NGLOG_CRITICAL(Service_FS, "(unreachable) Invalid mount point {}", mount_point);
             return ERROR_FILE_NOT_FOUND;
         case PathParser::PathNotFound:
-            LOG_ERROR(Service_FS, "Path not found %s", full_path.c_str());
+            NGLOG_ERROR(Service_FS, "Path not found {}", full_path);
             return ERROR_PATH_NOT_FOUND;
         case PathParser::FileInPath:
         case PathParser::DirectoryFound:
-            LOG_ERROR(Service_FS, "Unexpected file or directory in %s", full_path.c_str());
+            NGLOG_ERROR(Service_FS, "Unexpected file or directory in {}", full_path);
             return ERROR_UNEXPECTED_FILE_OR_DIRECTORY;
         case PathParser::NotFound:
-            LOG_ERROR(Service_FS, "%s not found", full_path.c_str());
+            NGLOG_ERROR(Service_FS, "{} not found", full_path);
             return ERROR_FILE_NOT_FOUND;
         case PathParser::FileFound:
             break; // Expected 'success' case
@@ -128,7 +128,7 @@ public:
 
         FileUtil::IOFile file(full_path, "r+b");
         if (!file.IsOpen()) {
-            LOG_CRITICAL(Service_FS, "(unreachable) Unknown error opening %s", full_path.c_str());
+            NGLOG_CRITICAL(Service_FS, "(unreachable) Unknown error opening {}", full_path);
             return ERROR_FILE_NOT_FOUND;
         }
 
@@ -144,7 +144,7 @@ public:
 
     ResultCode CreateFile(const Path& path, u64 size) const override {
         if (size == 0) {
-            LOG_ERROR(Service_FS, "Zero-size file is not supported");
+            NGLOG_ERROR(Service_FS, "Zero-size file is not supported");
             return ERROR_UNSUPPORTED_OPEN_FLAGS;
         }
         return SaveDataArchive::CreateFile(path, size);
@@ -192,12 +192,12 @@ Path ConstructExtDataBinaryPath(u32 media_type, u32 high, u32 low) {
 ArchiveFactory_ExtSaveData::ArchiveFactory_ExtSaveData(const std::string& mount_location,
                                                        bool shared)
     : shared(shared), mount_point(GetExtDataContainerPath(mount_location, shared)) {
-    LOG_DEBUG(Service_FS, "Directory %s set as base for ExtSaveData.", mount_point.c_str());
+    NGLOG_DEBUG(Service_FS, "Directory {} set as base for ExtSaveData.", mount_point);
 }
 
 bool ArchiveFactory_ExtSaveData::Initialize() {
     if (!FileUtil::CreateFullPath(mount_point)) {
-        LOG_ERROR(Service_FS, "Unable to create ExtSaveData base path.");
+        NGLOG_ERROR(Service_FS, "Unable to create ExtSaveData base path.");
         return false;
     }
 
@@ -266,7 +266,7 @@ ResultVal<ArchiveFormatInfo> ArchiveFactory_ExtSaveData::GetFormatInfo(const Pat
     FileUtil::IOFile file(metadata_path, "rb");
 
     if (!file.IsOpen()) {
-        LOG_ERROR(Service_FS, "Could not open metadata information for archive");
+        NGLOG_ERROR(Service_FS, "Could not open metadata information for archive");
         // TODO(Subv): Verify error code
         return ERR_NOT_FORMATTED;
     }
