@@ -137,8 +137,8 @@ GMainWindow::GMainWindow() : config(new Config()), emu_thread(nullptr) {
     ConnectWidgetEvents();
 
     SetupUIStrings();
-    NGLOG_INFO(Frontend, "Citra Version: {} | {}-{}", Common::g_build_name, Common::g_scm_branch,
-               Common::g_scm_desc);
+    NGLOG_INFO(Frontend, "Citra Version: {} | {}-{}", Common::g_build_fullname,
+               Common::g_scm_branch, Common::g_scm_desc);
 
     show();
 
@@ -606,6 +606,10 @@ bool GMainWindow::LoadROM(const QString& filename) {
     Core::System& system{Core::System::GetInstance()};
 
     const Core::System::ResultStatus result{system.Load(render_window, filename.toStdString())};
+    std::string title;
+    system.GetAppLoader().ReadTitle(title);
+    game_title = QString::fromStdString(title);
+    SetupUIStrings();
 
     if (result != Core::System::ResultStatus::Success) {
         switch (result) {
@@ -755,6 +759,9 @@ void GMainWindow::ShutdownGame() {
     if (defer_update_prompt) {
         ShowUpdatePrompt();
     }
+
+    game_title.clear();
+    SetupUIStrings();
 }
 
 void GMainWindow::StoreRecentFile(const QString& filename) {
@@ -1407,8 +1414,11 @@ void GMainWindow::OnLanguageChanged(const QString& locale) {
 }
 
 void GMainWindow::SetupUIStrings() {
-    setWindowTitle(
-        tr("Citra %1| %2-%3").arg(Common::g_build_name, Common::g_scm_branch, Common::g_scm_desc));
+    if (game_title.isEmpty()) {
+        setWindowTitle(tr("Citra %1").arg(Common::g_build_fullname));
+    } else {
+        setWindowTitle(tr("Citra %1| %2").arg(Common::g_build_fullname, game_title));
+    }
 }
 
 void GMainWindow::SyncMenuUISettings() {
