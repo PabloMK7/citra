@@ -567,14 +567,13 @@ cleanup:
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(result);
 
-    NGLOG_DEBUG(
-          Service_Y2R,
-          "called input_format={} output_format={} rotation={} block_alignment={} "
-          "input_line_width={} input_lines={} standard_coefficient={} reserved={} alpha={:X}",
-          static_cast<u8>(params.input_format), static_cast<u8>(params.output_format),
-          static_cast<u8>(params.rotation), static_cast<u8>(params.block_alignment),
-          params.input_line_width, params.input_lines, static_cast<u8>(params.standard_coefficient),
-          params.padding, params.alpha);
+    NGLOG_DEBUG(Service_Y2R,
+                "called input_format={} output_format={} rotation={} block_alignment={} "
+                "input_line_width={} input_lines={} standard_coefficient={} reserved={} alpha={:X}",
+                static_cast<u8>(params.input_format), static_cast<u8>(params.output_format),
+                static_cast<u8>(params.rotation), static_cast<u8>(params.block_alignment),
+                params.input_line_width, params.input_lines,
+                static_cast<u8>(params.standard_coefficient), params.padding, params.alpha);
 }
 
 void Y2R_U::PingProcess(Kernel::HLERequestContext& ctx) {
