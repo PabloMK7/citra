@@ -69,7 +69,7 @@ void Y2R_U::SetInputFormat(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
 
-    LOG_DEBUG(Service_Y2R, "called input_format=%hhu", static_cast<u8>(conversion.input_format));
+    NGLOG_DEBUG(Service_Y2R, "called input_format={}", static_cast<u8>(conversion.input_format));
 }
 
 void Y2R_U::GetInputFormat(Kernel::HLERequestContext& ctx) {
@@ -79,7 +79,7 @@ void Y2R_U::GetInputFormat(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
     rb.PushEnum(conversion.input_format);
 
-    LOG_DEBUG(Service_Y2R, "called input_format=%hhu", static_cast<u8>(conversion.input_format));
+    NGLOG_DEBUG(Service_Y2R, "called input_format={}", static_cast<u8>(conversion.input_format));
 }
 
 void Y2R_U::SetOutputFormat(Kernel::HLERequestContext& ctx) {
@@ -90,7 +90,7 @@ void Y2R_U::SetOutputFormat(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
 
-    LOG_DEBUG(Service_Y2R, "called output_format=%hhu", static_cast<u8>(conversion.output_format));
+    NGLOG_DEBUG(Service_Y2R, "called output_format={}", static_cast<u8>(conversion.output_format));
 }
 
 void Y2R_U::GetOutputFormat(Kernel::HLERequestContext& ctx) {
@@ -100,7 +100,7 @@ void Y2R_U::GetOutputFormat(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
     rb.PushEnum(conversion.output_format);
 
-    LOG_DEBUG(Service_Y2R, "called output_format=%hhu", static_cast<u8>(conversion.output_format));
+    NGLOG_DEBUG(Service_Y2R, "called output_format={}", static_cast<u8>(conversion.output_format));
 }
 
 void Y2R_U::SetRotation(Kernel::HLERequestContext& ctx) {
@@ -111,7 +111,7 @@ void Y2R_U::SetRotation(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
 
-    LOG_DEBUG(Service_Y2R, "called rotation=%hhu", static_cast<u8>(conversion.rotation));
+    NGLOG_DEBUG(Service_Y2R, "called rotation={}", static_cast<u8>(conversion.rotation));
 }
 
 void Y2R_U::GetRotation(Kernel::HLERequestContext& ctx) {
@@ -121,7 +121,7 @@ void Y2R_U::GetRotation(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
     rb.PushEnum(conversion.rotation);
 
-    LOG_DEBUG(Service_Y2R, "called rotation=%hhu", static_cast<u8>(conversion.rotation));
+    NGLOG_DEBUG(Service_Y2R, "called rotation={}", static_cast<u8>(conversion.rotation));
 }
 
 void Y2R_U::SetBlockAlignment(Kernel::HLERequestContext& ctx) {
@@ -132,8 +132,8 @@ void Y2R_U::SetBlockAlignment(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
 
-    LOG_DEBUG(Service_Y2R, "called block_alignment=%hhu",
-              static_cast<u8>(conversion.block_alignment));
+    NGLOG_DEBUG(Service_Y2R, "called block_alignment={}",
+                static_cast<u8>(conversion.block_alignment));
 }
 
 void Y2R_U::GetBlockAlignment(Kernel::HLERequestContext& ctx) {
@@ -143,8 +143,8 @@ void Y2R_U::GetBlockAlignment(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
     rb.PushEnum(conversion.block_alignment);
 
-    LOG_DEBUG(Service_Y2R, "called block_alignment=%hhu",
-              static_cast<u8>(conversion.block_alignment));
+    NGLOG_DEBUG(Service_Y2R, "called block_alignment={}",
+                static_cast<u8>(conversion.block_alignment));
 }
 
 void Y2R_U::SetSpacialDithering(Kernel::HLERequestContext& ctx) {
@@ -155,7 +155,7 @@ void Y2R_U::SetSpacialDithering(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
 
-    LOG_WARNING(Service_Y2R, "(STUBBED) called");
+    NGLOG_WARNING(Service_Y2R, "(STUBBED) called");
 }
 
 void Y2R_U::GetSpacialDithering(Kernel::HLERequestContext& ctx) {
@@ -165,7 +165,7 @@ void Y2R_U::GetSpacialDithering(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
     rb.Push(spacial_dithering_enabled);
 
-    LOG_WARNING(Service_Y2R, "(STUBBED) called");
+    NGLOG_WARNING(Service_Y2R, "(STUBBED) called");
 }
 
 void Y2R_U::SetTemporalDithering(Kernel::HLERequestContext& ctx) {
@@ -175,7 +175,7 @@ void Y2R_U::SetTemporalDithering(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
 
-    LOG_WARNING(Service_Y2R, "(STUBBED) called");
+    NGLOG_WARNING(Service_Y2R, "(STUBBED) called");
 }
 
 void Y2R_U::GetTemporalDithering(Kernel::HLERequestContext& ctx) {
@@ -185,7 +185,7 @@ void Y2R_U::GetTemporalDithering(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
     rb.Push(temporal_dithering_enabled);
 
-    LOG_WARNING(Service_Y2R, "(STUBBED) called");
+    NGLOG_WARNING(Service_Y2R, "(STUBBED) called");
 }
 
 void Y2R_U::SetTransferEndInterrupt(Kernel::HLERequestContext& ctx) {
@@ -195,7 +195,7 @@ void Y2R_U::SetTransferEndInterrupt(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
 
-    LOG_WARNING(Service_Y2R, "(STUBBED) called");
+    NGLOG_WARNING(Service_Y2R, "(STUBBED) called");
 }
 
 void Y2R_U::GetTransferEndInterrupt(Kernel::HLERequestContext& ctx) {
@@ -205,7 +205,7 @@ void Y2R_U::GetTransferEndInterrupt(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
     rb.Push(transfer_end_interrupt_enabled);
 
-    LOG_WARNING(Service_Y2R, "(STUBBED) called");
+    NGLOG_WARNING(Service_Y2R, "(STUBBED) called");
 }
 
 void Y2R_U::GetTransferEndEvent(Kernel::HLERequestContext& ctx) {
@@ -215,7 +215,7 @@ void Y2R_U::GetTransferEndEvent(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
     rb.PushCopyObjects(completion_event);
 
-    LOG_DEBUG(Service_Y2R, "called");
+    NGLOG_DEBUG(Service_Y2R, "called");
 }
 
 void Y2R_U::SetSendingY(Kernel::HLERequestContext& ctx) {
@@ -230,11 +230,11 @@ void Y2R_U::SetSendingY(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
 
-    LOG_DEBUG(Service_Y2R,
-              "called image_size=0x%08X, transfer_unit=%hu, transfer_stride=%hu, "
-              "src_process_id=%u",
-              conversion.src_Y.image_size, conversion.src_Y.transfer_unit, conversion.src_Y.gap,
-              process->process_id);
+    NGLOG_DEBUG(Service_Y2R,
+                "called image_size=0x{:08X}, transfer_unit={}, transfer_stride={}, "
+                "src_process_id={}",
+                conversion.src_Y.image_size, conversion.src_Y.transfer_unit, conversion.src_Y.gap,
+                process->process_id);
 }
 
 void Y2R_U::SetSendingU(Kernel::HLERequestContext& ctx) {
@@ -249,11 +249,11 @@ void Y2R_U::SetSendingU(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
 
-    LOG_DEBUG(Service_Y2R,
-              "called image_size=0x%08X, transfer_unit=%hu, transfer_stride=%hu, "
-              "src_process_id=%u",
-              conversion.src_U.image_size, conversion.src_U.transfer_unit, conversion.src_U.gap,
-              process->process_id);
+    NGLOG_DEBUG(Service_Y2R,
+                "called image_size=0x{:08X}, transfer_unit={}, transfer_stride={}, "
+                "src_process_id={}",
+                conversion.src_U.image_size, conversion.src_U.transfer_unit, conversion.src_U.gap,
+                process->process_id);
 }
 
 void Y2R_U::SetSendingV(Kernel::HLERequestContext& ctx) {
@@ -269,11 +269,11 @@ void Y2R_U::SetSendingV(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
 
-    LOG_DEBUG(Service_Y2R,
-              "called image_size=0x%08X, transfer_unit=%hu, transfer_stride=%hu, "
-              "src_process_id=%u",
-              conversion.src_V.image_size, conversion.src_V.transfer_unit, conversion.src_V.gap,
-              process->process_id);
+    NGLOG_DEBUG(Service_Y2R,
+                "called image_size=0x{:08X}, transfer_unit={}, transfer_stride={}, "
+                "src_process_id={}",
+                conversion.src_V.image_size, conversion.src_V.transfer_unit, conversion.src_V.gap,
+                process->process_id);
 }
 
 void Y2R_U::SetSendingYUYV(Kernel::HLERequestContext& ctx) {
@@ -289,11 +289,11 @@ void Y2R_U::SetSendingYUYV(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
 
-    LOG_DEBUG(Service_Y2R,
-              "called image_size=0x%08X, transfer_unit=%hu, transfer_stride=%hu, "
-              "src_process_id=%u",
-              conversion.src_YUYV.image_size, conversion.src_YUYV.transfer_unit,
-              conversion.src_YUYV.gap, process->process_id);
+    NGLOG_DEBUG(Service_Y2R,
+                "called image_size=0x{:08X}, transfer_unit={}, transfer_stride={}, "
+                "src_process_id={}",
+                conversion.src_YUYV.image_size, conversion.src_YUYV.transfer_unit,
+                conversion.src_YUYV.gap, process->process_id);
 }
 
 void Y2R_U::IsFinishedSendingYuv(Kernel::HLERequestContext& ctx) {
@@ -303,7 +303,7 @@ void Y2R_U::IsFinishedSendingYuv(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
     rb.Push<u8>(1);
 
-    LOG_WARNING(Service_Y2R, "(STUBBED) called");
+    NGLOG_WARNING(Service_Y2R, "(STUBBED) called");
 }
 
 void Y2R_U::IsFinishedSendingY(Kernel::HLERequestContext& ctx) {
@@ -313,7 +313,7 @@ void Y2R_U::IsFinishedSendingY(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
     rb.Push<u8>(1);
 
-    LOG_WARNING(Service_Y2R, "(STUBBED) called");
+    NGLOG_WARNING(Service_Y2R, "(STUBBED) called");
 }
 
 void Y2R_U::IsFinishedSendingU(Kernel::HLERequestContext& ctx) {
@@ -323,7 +323,7 @@ void Y2R_U::IsFinishedSendingU(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
     rb.Push<u8>(1);
 
-    LOG_WARNING(Service_Y2R, "(STUBBED) called");
+    NGLOG_WARNING(Service_Y2R, "(STUBBED) called");
 }
 
 void Y2R_U::IsFinishedSendingV(Kernel::HLERequestContext& ctx) {
@@ -333,7 +333,7 @@ void Y2R_U::IsFinishedSendingV(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
     rb.Push<u8>(1);
 
-    LOG_WARNING(Service_Y2R, "(STUBBED) called");
+    NGLOG_WARNING(Service_Y2R, "(STUBBED) called");
 }
 
 void Y2R_U::SetReceiving(Kernel::HLERequestContext& ctx) {
@@ -349,11 +349,11 @@ void Y2R_U::SetReceiving(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
 
-    LOG_DEBUG(Service_Y2R,
-              "called image_size=0x%08X, transfer_unit=%hu, transfer_stride=%hu, "
-              "dst_process_id=%u",
-              conversion.dst.image_size, conversion.dst.transfer_unit, conversion.dst.gap,
-              static_cast<u32>(dst_process->process_id));
+    NGLOG_DEBUG(Service_Y2R,
+                "called image_size=0x{:08X}, transfer_unit={}, transfer_stride={}, "
+                "dst_process_id={}",
+                conversion.dst.image_size, conversion.dst.transfer_unit, conversion.dst.gap,
+                static_cast<u32>(dst_process->process_id));
 }
 
 void Y2R_U::IsFinishedReceiving(Kernel::HLERequestContext& ctx) {
@@ -363,7 +363,7 @@ void Y2R_U::IsFinishedReceiving(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
     rb.Push<u8>(1);
 
-    LOG_WARNING(Service_Y2R, "(STUBBED) called");
+    NGLOG_WARNING(Service_Y2R, "(STUBBED) called");
 }
 
 void Y2R_U::SetInputLineWidth(Kernel::HLERequestContext& ctx) {
@@ -373,7 +373,7 @@ void Y2R_U::SetInputLineWidth(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(conversion.SetInputLineWidth(input_line_width));
 
-    LOG_DEBUG(Service_Y2R, "called input_line_width=%u", input_line_width);
+    NGLOG_DEBUG(Service_Y2R, "called input_line_width={}", input_line_width);
 }
 
 void Y2R_U::GetInputLineWidth(Kernel::HLERequestContext& ctx) {
@@ -383,7 +383,7 @@ void Y2R_U::GetInputLineWidth(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
     rb.Push(conversion.input_line_width);
 
-    LOG_DEBUG(Service_Y2R, "called input_line_width=%u", conversion.input_line_width);
+    NGLOG_DEBUG(Service_Y2R, "called input_line_width={}", conversion.input_line_width);
 }
 
 void Y2R_U::SetInputLines(Kernel::HLERequestContext& ctx) {
@@ -393,7 +393,7 @@ void Y2R_U::SetInputLines(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(conversion.SetInputLines(input_lines));
 
-    LOG_DEBUG(Service_Y2R, "called input_lines=%u", input_lines);
+    NGLOG_DEBUG(Service_Y2R, "called input_lines={}", input_lines);
 }
 
 void Y2R_U::GetInputLines(Kernel::HLERequestContext& ctx) {
@@ -403,7 +403,7 @@ void Y2R_U::GetInputLines(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
     rb.Push(static_cast<u32>(conversion.input_lines));
 
-    LOG_DEBUG(Service_Y2R, "called input_lines=%u", conversion.input_lines);
+    NGLOG_DEBUG(Service_Y2R, "called input_lines={}", conversion.input_lines);
 }
 
 void Y2R_U::SetCoefficient(Kernel::HLERequestContext& ctx) {
@@ -414,10 +414,10 @@ void Y2R_U::SetCoefficient(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
 
-    LOG_DEBUG(Service_Y2R, "called coefficients=[%hX, %hX, %hX, %hX, %hX, %hX, %hX, %hX]",
-              conversion.coefficients[0], conversion.coefficients[1], conversion.coefficients[2],
-              conversion.coefficients[3], conversion.coefficients[4], conversion.coefficients[5],
-              conversion.coefficients[6], conversion.coefficients[7]);
+    NGLOG_DEBUG(Service_Y2R, "called coefficients=[{:X}, {:X}, {:X}, {:X}, {:X}, {:X}, {:X}, {:X}]",
+                conversion.coefficients[0], conversion.coefficients[1], conversion.coefficients[2],
+                conversion.coefficients[3], conversion.coefficients[4], conversion.coefficients[5],
+                conversion.coefficients[6], conversion.coefficients[7]);
 }
 
 void Y2R_U::GetCoefficient(Kernel::HLERequestContext& ctx) {
@@ -427,7 +427,7 @@ void Y2R_U::GetCoefficient(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
     rb.PushRaw(conversion.coefficients);
 
-    LOG_DEBUG(Service_Y2R, "called");
+    NGLOG_DEBUG(Service_Y2R, "called");
 }
 
 void Y2R_U::SetStandardCoefficient(Kernel::HLERequestContext& ctx) {
@@ -437,7 +437,7 @@ void Y2R_U::SetStandardCoefficient(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(conversion.SetStandardCoefficient(static_cast<StandardCoefficient>(index)));
 
-    LOG_DEBUG(Service_Y2R, "called standard_coefficient=%u", index);
+    NGLOG_DEBUG(Service_Y2R, "called standard_coefficient={}", index);
 }
 
 void Y2R_U::GetStandardCoefficient(Kernel::HLERequestContext& ctx) {
@@ -449,13 +449,13 @@ void Y2R_U::GetStandardCoefficient(Kernel::HLERequestContext& ctx) {
         rb.Push(RESULT_SUCCESS);
         rb.PushRaw(standard_coefficients[index]);
 
-        LOG_DEBUG(Service_Y2R, "called standard_coefficient=%u ", index);
+        NGLOG_DEBUG(Service_Y2R, "called standard_coefficient={} ", index);
     } else {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(ResultCode(ErrorDescription::InvalidEnumValue, ErrorModule::CAM,
                            ErrorSummary::InvalidArgument, ErrorLevel::Usage));
 
-        LOG_ERROR(Service_Y2R, "called standard_coefficient=%u  The argument is invalid!", index);
+        NGLOG_ERROR(Service_Y2R, "called standard_coefficient={}  The argument is invalid!", index);
     }
 }
 
@@ -466,7 +466,7 @@ void Y2R_U::SetAlpha(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
 
-    LOG_DEBUG(Service_Y2R, "called alpha=%hu", conversion.alpha);
+    NGLOG_DEBUG(Service_Y2R, "called alpha={}", conversion.alpha);
 }
 
 void Y2R_U::GetAlpha(Kernel::HLERequestContext& ctx) {
@@ -476,7 +476,7 @@ void Y2R_U::GetAlpha(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
     rb.Push(conversion.alpha);
 
-    LOG_DEBUG(Service_Y2R, "called alpha=%hu", conversion.alpha);
+    NGLOG_DEBUG(Service_Y2R, "called alpha={}", conversion.alpha);
 }
 
 void Y2R_U::SetDitheringWeightParams(Kernel::HLERequestContext& ctx) {
@@ -485,7 +485,7 @@ void Y2R_U::SetDitheringWeightParams(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
 
-    LOG_DEBUG(Service_Y2R, "called");
+    NGLOG_DEBUG(Service_Y2R, "called");
 }
 
 void Y2R_U::GetDitheringWeightParams(Kernel::HLERequestContext& ctx) {
@@ -495,7 +495,7 @@ void Y2R_U::GetDitheringWeightParams(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
     rb.PushRaw(dithering_weight_params);
 
-    LOG_DEBUG(Service_Y2R, "called");
+    NGLOG_DEBUG(Service_Y2R, "called");
 }
 
 void Y2R_U::StartConversion(Kernel::HLERequestContext& ctx) {
@@ -514,7 +514,7 @@ void Y2R_U::StartConversion(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
 
-    LOG_DEBUG(Service_Y2R, "called");
+    NGLOG_DEBUG(Service_Y2R, "called");
 }
 
 void Y2R_U::StopConversion(Kernel::HLERequestContext& ctx) {
@@ -523,7 +523,7 @@ void Y2R_U::StopConversion(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
 
-    LOG_DEBUG(Service_Y2R, "called");
+    NGLOG_DEBUG(Service_Y2R, "called");
 }
 
 void Y2R_U::IsBusyConversion(Kernel::HLERequestContext& ctx) {
@@ -533,7 +533,7 @@ void Y2R_U::IsBusyConversion(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
     rb.Push<u8>(0); // StartConversion always finishes immediately
 
-    LOG_DEBUG(Service_Y2R, "called");
+    NGLOG_DEBUG(Service_Y2R, "called");
 }
 
 void Y2R_U::SetPackageParameter(Kernel::HLERequestContext& ctx) {
@@ -567,14 +567,14 @@ cleanup:
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(result);
 
-    LOG_DEBUG(
-        Service_Y2R,
-        "called input_format=%hhu output_format=%hhu rotation=%hhu block_alignment=%hhu "
-        "input_line_width=%hu input_lines=%hu standard_coefficient=%hhu reserved=%hhu alpha=%hX",
-        static_cast<u8>(params.input_format), static_cast<u8>(params.output_format),
-        static_cast<u8>(params.rotation), static_cast<u8>(params.block_alignment),
-        params.input_line_width, params.input_lines, static_cast<u8>(params.standard_coefficient),
-        params.padding, params.alpha);
+    NGLOG_DEBUG(
+          Service_Y2R,
+          "called input_format={} output_format={} rotation={} block_alignment={} "
+          "input_line_width={} input_lines={} standard_coefficient={} reserved={} alpha={:X}",
+          static_cast<u8>(params.input_format), static_cast<u8>(params.output_format),
+          static_cast<u8>(params.rotation), static_cast<u8>(params.block_alignment),
+          params.input_line_width, params.input_lines, static_cast<u8>(params.standard_coefficient),
+          params.padding, params.alpha);
 }
 
 void Y2R_U::PingProcess(Kernel::HLERequestContext& ctx) {
@@ -584,7 +584,7 @@ void Y2R_U::PingProcess(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
     rb.Push<u8>(0);
 
-    LOG_WARNING(Service_Y2R, "(STUBBED) called");
+    NGLOG_WARNING(Service_Y2R, "(STUBBED) called");
 }
 
 void Y2R_U::DriverInitialize(Kernel::HLERequestContext& ctx) {
@@ -611,7 +611,7 @@ void Y2R_U::DriverInitialize(Kernel::HLERequestContext& ctx) {
 
     rb.Push(RESULT_SUCCESS);
 
-    LOG_DEBUG(Service_Y2R, "called");
+    NGLOG_DEBUG(Service_Y2R, "called");
 }
 
 void Y2R_U::DriverFinalize(Kernel::HLERequestContext& ctx) {
@@ -620,7 +620,7 @@ void Y2R_U::DriverFinalize(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
 
-    LOG_DEBUG(Service_Y2R, "called");
+    NGLOG_DEBUG(Service_Y2R, "called");
 }
 
 void Y2R_U::GetPackageParameter(Kernel::HLERequestContext& ctx) {
@@ -630,7 +630,7 @@ void Y2R_U::GetPackageParameter(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
     rb.PushRaw(conversion);
 
-    LOG_DEBUG(Service_Y2R, "called");
+    NGLOG_DEBUG(Service_Y2R, "called");
 }
 
 Y2R_U::Y2R_U() : ServiceFramework("y2r:u", 1) {
