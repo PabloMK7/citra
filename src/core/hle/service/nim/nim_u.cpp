@@ -31,7 +31,7 @@ void NIM_U::CheckForSysUpdateEvent(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
     rb.Push(RESULT_SUCCESS);
     rb.PushCopyObjects(nim_system_update_event);
-    LOG_TRACE(Service_NIM, "called");
+    NGLOG_TRACE(Service_NIM, "called");
 }
 
 void NIM_U::CheckSysUpdateAvailable(Kernel::HLERequestContext& ctx) {
@@ -41,7 +41,7 @@ void NIM_U::CheckSysUpdateAvailable(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
     rb.Push(false); // No update available
 
-    LOG_WARNING(Service_NIM, "(STUBBED) called");
+    NGLOG_WARNING(Service_NIM, "(STUBBED) called");
 }
 
 } // namespace NIM
