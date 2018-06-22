@@ -58,9 +58,10 @@ enum ControlMemoryOperation {
 /// Map application or GSP heap memory
 static ResultCode ControlMemory(u32* out_addr, u32 operation, u32 addr0, u32 addr1, u32 size,
                                 u32 permissions) {
-    LOG_DEBUG(Kernel_SVC,
-              "called operation=0x%08X, addr0=0x%08X, addr1=0x%08X, size=0x%X, permissions=0x%08X",
-              operation, addr0, addr1, size, permissions);
+    NGLOG_DEBUG(Kernel_SVC,
+                "called operation=0x{:08X}, addr0=0x{:08X}, addr1=0x{:08X}, "
+                "size=0x{:X}, permissions=0x{:08X}",
+                operation, addr0, addr1, size, permissions);
 
     if ((addr0 & Memory::PAGE_MASK) != 0 || (addr1 & Memory::PAGE_MASK) != 0) {
         return ERR_MISALIGNED_ADDRESS;
@@ -73,8 +74,8 @@ static ResultCode ControlMemory(u32* out_addr, u32 operation, u32 addr0, u32 add
     operation &= ~MEMOP_REGION_MASK;
 
     if (region != 0) {
-        LOG_WARNING(Kernel_SVC, "ControlMemory with specified region not supported, region=%X",
-                    region);
+        NGLOG_WARNING(Kernel_SVC, "ControlMemory with specified region not supported, region={:X}",
+                      region);
     }
 
     if ((permissions & (u32)MemoryPermission::ReadWrite) != permissions) {
@@ -134,7 +135,7 @@ static ResultCode ControlMemory(u32* out_addr, u32 operation, u32 addr0, u32 add
     }
 
     default:
-        LOG_ERROR(Kernel_SVC, "unknown operation=0x%08X", operation);
+        NGLOG_ERROR(Kernel_SVC, "unknown operation=0x{:08X}", operation);
         return ERR_INVALID_COMBINATION;
     }
 
@@ -144,7 +145,7 @@ static ResultCode ControlMemory(u32* out_addr, u32 operation, u32 addr0, u32 add
 }
 
 static void ExitProcess() {
-    LOG_INFO(Kernel_SVC, "Process %u exiting", g_current_process->process_id);
+    NGLOG_INFO(Kernel_SVC, "Process {} exiting", g_current_process->process_id);
 
     ASSERT_MSG(g_current_process->status == ProcessStatus::Running, "Process has already exited");
 
@@ -175,9 +176,10 @@ static void ExitProcess() {
 
 /// Maps a memory block to specified address
 static ResultCode MapMemoryBlock(Handle handle, u32 addr, u32 permissions, u32 other_permissions) {
-    LOG_TRACE(Kernel_SVC,
-              "called memblock=0x%08X, addr=0x%08X, mypermissions=0x%08X, otherpermission=%d",
-              handle, addr, permissions, other_permissions);
+    NGLOG_TRACE(Kernel_SVC,
+                "called memblock=0x{:08X}, addr=0x{:08X}, mypermissions=0x{:08X}, "
+                "otherpermission={}",
+                handle, addr, permissions, other_permissions);
 
     SharedPtr<SharedMemory> shared_memory = g_handle_table.Get<SharedMemory>(handle);
     if (shared_memory == nullptr)
@@ -196,14 +198,14 @@ static ResultCode MapMemoryBlock(Handle handle, u32 addr, u32 permissions, u32 o
         return shared_memory->Map(g_current_process.get(), addr, permissions_type,
                                   static_cast<MemoryPermission>(other_permissions));
     default:
-        LOG_ERROR(Kernel_SVC, "unknown permissions=0x%08X", permissions);
+        NGLOG_ERROR(Kernel_SVC, "unknown permissions=0x{:08X}", permissions);
     }
 
     return ERR_INVALID_COMBINATION;
 }
 
 static ResultCode UnmapMemoryBlock(Handle handle, u32 addr) {
-    LOG_TRACE(Kernel_SVC, "called memblock=0x%08X, addr=0x%08X", handle, addr);
+    NGLOG_TRACE(Kernel_SVC, "called memblock=0x{:08X}, addr=0x{:08X}", handle, addr);
 
     // TODO(Subv): Return E0A01BF5 if the address is not in the application's heap
 
@@ -225,11 +227,11 @@ static ResultCode ConnectToPort(Handle* out_handle, VAddr port_name_address) {
     if (port_name.size() > PortNameMaxLength)
         return ERR_PORT_NAME_TOO_LONG;
 
-    LOG_TRACE(Kernel_SVC, "called port_name=%s", port_name.c_str());
+    NGLOG_TRACE(Kernel_SVC, "called port_name={}", port_name);
 
     auto it = Service::g_kernel_named_ports.find(port_name);
     if (it == Service::g_kernel_named_ports.end()) {
-        LOG_WARNING(Kernel_SVC, "tried to connect to unknown port: %s", port_name.c_str());
+        NGLOG_WARNING(Kernel_SVC, "tried to connect to unknown port: {}", port_name);
         return ERR_NOT_FOUND;
     }
 
@@ -250,7 +252,7 @@ static ResultCode SendSyncRequest(Handle handle) {
         return ERR_INVALID_HANDLE;
     }
 
-    LOG_TRACE(Kernel_SVC, "called handle=0x%08X(%s)", handle, session->GetName().c_str());
+    NGLOG_TRACE(Kernel_SVC, "called handle=0x{:08X}({})", handle, session->GetName());
 
     Core::System::GetInstance().PrepareReschedule();
 
@@ -259,7 +261,7 @@ static ResultCode SendSyncRequest(Handle handle) {
 
 /// Close a handle
 static ResultCode CloseHandle(Handle handle) {
-    LOG_TRACE(Kernel_SVC, "Closing handle 0x%08X", handle);
+    NGLOG_TRACE(Kernel_SVC, "Closing handle 0x{:08X}", handle);
     return g_handle_table.Close(handle);
 }
 
@@ -271,8 +273,8 @@ static ResultCode WaitSynchronization1(Handle handle, s64 nano_seconds) {
     if (object == nullptr)
         return ERR_INVALID_HANDLE;
 
-    LOG_TRACE(Kernel_SVC, "called handle=0x%08X(%s:%s), nanoseconds=%lld", handle,
-              object->GetTypeName().c_str(), object->GetName().c_str(), nano_seconds);
+    NGLOG_TRACE(Kernel_SVC, "called handle=0x{:08X}({}:{}), nanoseconds={}", handle,
+                object->GetTypeName(), object->GetName(), nano_seconds);
 
     if (object->ShouldWait(thread)) {
 
@@ -615,15 +617,16 @@ static ResultCode ReplyAndReceive(s32* index, VAddr handles_address, s32 handle_
 static ResultCode CreateAddressArbiter(Handle* out_handle) {
     SharedPtr<AddressArbiter> arbiter = AddressArbiter::Create();
     CASCADE_RESULT(*out_handle, g_handle_table.Create(std::move(arbiter)));
-    LOG_TRACE(Kernel_SVC, "returned handle=0x%08X", *out_handle);
+    NGLOG_TRACE(Kernel_SVC, "returned handle=0x{:08X}", *out_handle);
     return RESULT_SUCCESS;
 }
 
 /// Arbitrate address
 static ResultCode ArbitrateAddress(Handle handle, u32 address, u32 type, u32 value,
                                    s64 nanoseconds) {
-    LOG_TRACE(Kernel_SVC, "called handle=0x%08X, address=0x%08X, type=0x%08X, value=0x%08X", handle,
-              address, type, value);
+    NGLOG_TRACE(Kernel_SVC,
+                "called handle=0x{:08X}, address=0x{:08X}, type=0x{:08X}, value=0x{:08X}",
+                handle, address, type, value);
 
     SharedPtr<AddressArbiter> arbiter = g_handle_table.Get<AddressArbiter>(handle);
     if (arbiter == nullptr)
@@ -639,7 +642,7 @@ static ResultCode ArbitrateAddress(Handle handle, u32 address, u32 type, u32 val
 }
 
 static void Break(u8 break_reason) {
-    LOG_CRITICAL(Debug_Emulated, "Emulated program broke execution!");
+    NGLOG_CRITICAL(Debug_Emulated, "Emulated program broke execution!");
     std::string reason_str;
     switch (break_reason) {
     case 0:
@@ -655,19 +658,19 @@ static void Break(u8 break_reason) {
         reason_str = "UNKNOWN";
         break;
     }
-    LOG_CRITICAL(Debug_Emulated, "Break reason: %s", reason_str.c_str());
+    NGLOG_CRITICAL(Debug_Emulated, "Break reason: {}", reason_str);
 }
 
 /// Used to output a message on a debug hardware unit - does nothing on a retail unit
 static void OutputDebugString(VAddr address, int len) {
     std::vector<char> string(len);
     Memory::ReadBlock(address, string.data(), len);
-    LOG_DEBUG(Debug_Emulated, "%.*s", len, string.data());
+    NGLOG_DEBUG(Debug_Emulated, "{:.{}}", string.data(), len);
 }
 
 /// Get resource limit
 static ResultCode GetResourceLimit(Handle* resource_limit, Handle process_handle) {
-    LOG_TRACE(Kernel_SVC, "called process=0x%08X", process_handle);
+    NGLOG_TRACE(Kernel_SVC, "called process=0x{:08X}", process_handle);
 
     SharedPtr<Process> process = g_handle_table.Get<Process>(process_handle);
     if (process == nullptr)
@@ -681,8 +684,8 @@ static ResultCode GetResourceLimit(Handle* resource_limit, Handle process_handle
 /// Get resource limit current values
 static ResultCode GetResourceLimitCurrentValues(VAddr values, Handle resource_limit_handle,
                                                 VAddr names, u32 name_count) {
-    LOG_TRACE(Kernel_SVC, "called resource_limit=%08X, names=%08X, name_count=%d",
-              resource_limit_handle, names, name_count);
+    NGLOG_TRACE(Kernel_SVC, "called resource_limit={:08X}, names={:08X}, name_count={}",
+                resource_limit_handle, names, name_count);
 
     SharedPtr<ResourceLimit> resource_limit =
         g_handle_table.Get<ResourceLimit>(resource_limit_handle);
@@ -701,8 +704,8 @@ static ResultCode GetResourceLimitCurrentValues(VAddr values, Handle resource_li
 /// Get resource limit max values
 static ResultCode GetResourceLimitLimitValues(VAddr values, Handle resource_limit_handle,
                                               VAddr names, u32 name_count) {
-    LOG_TRACE(Kernel_SVC, "called resource_limit=%08X, names=%08X, name_count=%d",
-              resource_limit_handle, names, name_count);
+    NGLOG_TRACE(Kernel_SVC, "called resource_limit={:08X}, names={:08X}, name_count={}",
+                resource_limit_handle, names, name_count);
 
     SharedPtr<ResourceLimit> resource_limit =
         g_handle_table.Get<ResourceLimit>(resource_limit_handle);
@@ -742,12 +745,12 @@ static ResultCode CreateThread(Handle* out_handle, u32 priority, u32 entry_point
     case THREADPROCESSORID_0:
         break;
     case THREADPROCESSORID_ALL:
-        LOG_INFO(Kernel_SVC,
-                 "Newly created thread is allowed to be run in any Core, unimplemented.");
+        NGLOG_INFO(Kernel_SVC,
+                   "Newly created thread is allowed to be run in any Core, unimplemented.");
         break;
     case THREADPROCESSORID_1:
-        LOG_ERROR(Kernel_SVC,
-                  "Newly created thread must run in the SysCore (Core1), unimplemented.");
+        NGLOG_ERROR(Kernel_SVC,
+                    "Newly created thread must run in the SysCore (Core1), unimplemented.");
         break;
     default:
         // TODO(bunnei): Implement support for other processor IDs
@@ -766,17 +769,17 @@ static ResultCode CreateThread(Handle* out_handle, u32 priority, u32 entry_point
 
     Core::System::GetInstance().PrepareReschedule();
 
-    LOG_TRACE(Kernel_SVC,
-              "called entrypoint=0x%08X (%s), arg=0x%08X, stacktop=0x%08X, "
-              "threadpriority=0x%08X, processorid=0x%08X : created handle=0x%08X",
-              entry_point, name.c_str(), arg, stack_top, priority, processor_id, *out_handle);
+    NGLOG_TRACE(Kernel_SVC,
+                "called entrypoint=0x{:08X} ({}), arg=0x{:08X}, stacktop=0x{:08X}, "
+                "threadpriority=0x{:08X}, processorid=0x{:08X} : created handle=0x{:08X}",
+                entry_point, name, arg, stack_top, priority, processor_id, *out_handle);
 
     return RESULT_SUCCESS;
 }
 
 /// Called when a thread exits
 static void ExitThread() {
-    LOG_TRACE(Kernel_SVC, "called, pc=0x%08X", Core::CPU().GetPC());
+    NGLOG_TRACE(Kernel_SVC, "called, pc=0x{:08X}", Core::CPU().GetPC());
 
     ExitCurrentThread();
     Core::System::GetInstance().PrepareReschedule();
@@ -826,15 +829,15 @@ static ResultCode CreateMutex(Handle* out_handle, u32 initial_locked) {
     mutex->name = Common::StringFromFormat("mutex-%08x", Core::CPU().GetReg(14));
     CASCADE_RESULT(*out_handle, g_handle_table.Create(std::move(mutex)));
 
-    LOG_TRACE(Kernel_SVC, "called initial_locked=%s : created handle=0x%08X",
-              initial_locked ? "true" : "false", *out_handle);
+    NGLOG_TRACE(Kernel_SVC, "called initial_locked={} : created handle=0x{:08X}",
+                initial_locked ? "true" : "false", *out_handle);
 
     return RESULT_SUCCESS;
 }
 
 /// Release a mutex
 static ResultCode ReleaseMutex(Handle handle) {
-    LOG_TRACE(Kernel_SVC, "called handle=0x%08X", handle);
+    NGLOG_TRACE(Kernel_SVC, "called handle=0x{:08X}", handle);
 
     SharedPtr<Mutex> mutex = g_handle_table.Get<Mutex>(handle);
     if (mutex == nullptr)
@@ -845,7 +848,7 @@ static ResultCode ReleaseMutex(Handle handle) {
 
 /// Get the ID of the specified process
 static ResultCode GetProcessId(u32* process_id, Handle process_handle) {
-    LOG_TRACE(Kernel_SVC, "called process=0x%08X", process_handle);
+    NGLOG_TRACE(Kernel_SVC, "called process=0x{:08X}", process_handle);
 
     const SharedPtr<Process> process = g_handle_table.Get<Process>(process_handle);
     if (process == nullptr)
@@ -857,7 +860,7 @@ static ResultCode GetProcessId(u32* process_id, Handle process_handle) {
 
 /// Get the ID of the process that owns the specified thread
 static ResultCode GetProcessIdOfThread(u32* process_id, Handle thread_handle) {
-    LOG_TRACE(Kernel_SVC, "called thread=0x%08X", thread_handle);
+    NGLOG_TRACE(Kernel_SVC, "called thread=0x{:08X}", thread_handle);
 
     const SharedPtr<Thread> thread = g_handle_table.Get<Thread>(thread_handle);
     if (thread == nullptr)
@@ -873,7 +876,7 @@ static ResultCode GetProcessIdOfThread(u32* process_id, Handle thread_handle) {
 
 /// Get the ID for the specified thread.
 static ResultCode GetThreadId(u32* thread_id, Handle handle) {
-    LOG_TRACE(Kernel_SVC, "called thread=0x%08X", handle);
+    NGLOG_TRACE(Kernel_SVC, "called thread=0x{:08X}", handle);
 
     const SharedPtr<Thread> thread = g_handle_table.Get<Thread>(handle);
     if (thread == nullptr)
@@ -889,14 +892,14 @@ static ResultCode CreateSemaphore(Handle* out_handle, s32 initial_count, s32 max
     semaphore->name = Common::StringFromFormat("semaphore-%08x", Core::CPU().GetReg(14));
     CASCADE_RESULT(*out_handle, g_handle_table.Create(std::move(semaphore)));
 
-    LOG_TRACE(Kernel_SVC, "called initial_count=%d, max_count=%d, created handle=0x%08X",
-              initial_count, max_count, *out_handle);
+    NGLOG_TRACE(Kernel_SVC, "called initial_count={}, max_count={}, created handle=0x{:08X}",
+                initial_count, max_count, *out_handle);
     return RESULT_SUCCESS;
 }
 
 /// Releases a certain number of slots in a semaphore
 static ResultCode ReleaseSemaphore(s32* count, Handle handle, s32 release_count) {
-    LOG_TRACE(Kernel_SVC, "called release_count=%d, handle=0x%08X", release_count, handle);
+    NGLOG_TRACE(Kernel_SVC, "called release_count={}, handle=0x{:08X}", release_count, handle);
 
     SharedPtr<Semaphore> semaphore = g_handle_table.Get<Semaphore>(handle);
     if (semaphore == nullptr)
@@ -925,7 +928,7 @@ static ResultCode QueryProcessMemory(MemoryInfo* memory_info, PageInfo* page_inf
     memory_info->state = static_cast<u32>(vma->second.meminfo_state);
 
     page_info->flags = 0;
-    LOG_TRACE(Kernel_SVC, "called process=0x%08X addr=0x%08X", process_handle, addr);
+    NGLOG_TRACE(Kernel_SVC, "called process=0x{:08X} addr=0x{:08X}", process_handle, addr);
     return RESULT_SUCCESS;
 }
 
@@ -940,21 +943,21 @@ static ResultCode CreateEvent(Handle* out_handle, u32 reset_type) {
     evt->name = Common::StringFromFormat("event-%08x", Core::CPU().GetReg(14));
     CASCADE_RESULT(*out_handle, g_handle_table.Create(std::move(evt)));
 
-    LOG_TRACE(Kernel_SVC, "called reset_type=0x%08X : created handle=0x%08X", reset_type,
-              *out_handle);
+    NGLOG_TRACE(Kernel_SVC, "called reset_type=0x{:08X} : created handle=0x{:08X}", reset_type,
+                *out_handle);
     return RESULT_SUCCESS;
 }
 
 /// Duplicates a kernel handle
 static ResultCode DuplicateHandle(Handle* out, Handle handle) {
     CASCADE_RESULT(*out, g_handle_table.Duplicate(handle));
-    LOG_TRACE(Kernel_SVC, "duplicated 0x%08X to 0x%08X", handle, *out);
+    NGLOG_TRACE(Kernel_SVC, "duplicated 0x{:08X} to 0x{:08X}", handle, *out);
     return RESULT_SUCCESS;
 }
 
 /// Signals an event
 static ResultCode SignalEvent(Handle handle) {
-    LOG_TRACE(Kernel_SVC, "called event=0x%08X", handle);
+    NGLOG_TRACE(Kernel_SVC, "called event=0x{:08X}", handle);
 
     SharedPtr<Event> evt = g_handle_table.Get<Event>(handle);
     if (evt == nullptr)
@@ -967,7 +970,7 @@ static ResultCode SignalEvent(Handle handle) {
 
 /// Clears an event
 static ResultCode ClearEvent(Handle handle) {
-    LOG_TRACE(Kernel_SVC, "called event=0x%08X", handle);
+    NGLOG_TRACE(Kernel_SVC, "called event=0x{:08X}", handle);
 
     SharedPtr<Event> evt = g_handle_table.Get<Event>(handle);
     if (evt == nullptr)
@@ -983,14 +986,14 @@ static ResultCode CreateTimer(Handle* out_handle, u32 reset_type) {
     timer->name = Common::StringFromFormat("timer-%08x", Core::CPU().GetReg(14));
     CASCADE_RESULT(*out_handle, g_handle_table.Create(std::move(timer)));
 
-    LOG_TRACE(Kernel_SVC, "called reset_type=0x%08X : created handle=0x%08X", reset_type,
-              *out_handle);
+    NGLOG_TRACE(Kernel_SVC, "called reset_type=0x{:08X} : created handle=0x{:08X}", reset_type,
+                *out_handle);
     return RESULT_SUCCESS;
 }
 
 /// Clears a timer
 static ResultCode ClearTimer(Handle handle) {
-    LOG_TRACE(Kernel_SVC, "called timer=0x%08X", handle);
+    NGLOG_TRACE(Kernel_SVC, "called timer=0x{:08X}", handle);
 
     SharedPtr<Timer> timer = g_handle_table.Get<Timer>(handle);
     if (timer == nullptr)
@@ -1002,7 +1005,7 @@ static ResultCode ClearTimer(Handle handle) {
 
 /// Starts a timer
 static ResultCode SetTimer(Handle handle, s64 initial, s64 interval) {
-    LOG_TRACE(Kernel_SVC, "called timer=0x%08X", handle);
+    NGLOG_TRACE(Kernel_SVC, "called timer=0x{:08X}", handle);
 
     if (initial < 0 || interval < 0) {
         return ERR_OUT_OF_RANGE_KERNEL;
@@ -1019,7 +1022,7 @@ static ResultCode SetTimer(Handle handle, s64 initial, s64 interval) {
 
 /// Cancels a timer
 static ResultCode CancelTimer(Handle handle) {
-    LOG_TRACE(Kernel_SVC, "called timer=0x%08X", handle);
+    NGLOG_TRACE(Kernel_SVC, "called timer=0x{:08X}", handle);
 
     SharedPtr<Timer> timer = g_handle_table.Get<Timer>(handle);
     if (timer == nullptr)
@@ -1032,7 +1035,7 @@ static ResultCode CancelTimer(Handle handle) {
 
 /// Sleep the current thread
 static void SleepThread(s64 nanoseconds) {
-    LOG_TRACE(Kernel_SVC, "called nanoseconds=%lld", nanoseconds);
+    NGLOG_TRACE(Kernel_SVC, "called nanoseconds={}", nanoseconds);
 
     // Don't attempt to yield execution if there are no available threads to run,
     // this way we avoid a useless reschedule to the idle thread.
@@ -1103,7 +1106,7 @@ static ResultCode CreateMemoryBlock(Handle* out_handle, u32 addr, u32 size, u32 
                              static_cast<MemoryPermission>(other_permission), addr, region);
     CASCADE_RESULT(*out_handle, g_handle_table.Create(std::move(shared_memory)));
 
-    LOG_WARNING(Kernel_SVC, "called addr=0x%08X", addr);
+    NGLOG_WARNING(Kernel_SVC, "called addr=0x{:08X}", addr);
     return RESULT_SUCCESS;
 }
 
@@ -1120,7 +1123,7 @@ static ResultCode CreatePort(Handle* server_port, Handle* client_port, VAddr nam
     CASCADE_RESULT(*server_port,
                    g_handle_table.Create(std::move(std::get<SharedPtr<ServerPort>>(ports))));
 
-    LOG_TRACE(Kernel_SVC, "called max_sessions=%u", max_sessions);
+    NGLOG_TRACE(Kernel_SVC, "called max_sessions={}", max_sessions);
     return RESULT_SUCCESS;
 }
 
@@ -1143,7 +1146,7 @@ static ResultCode CreateSession(Handle* server_session, Handle* client_session) 
     auto& client = std::get<SharedPtr<ClientSession>>(sessions);
     CASCADE_RESULT(*client_session, g_handle_table.Create(std::move(client)));
 
-    LOG_TRACE(Kernel_SVC, "called");
+    NGLOG_TRACE(Kernel_SVC, "called");
     return RESULT_SUCCESS;
 }
 
@@ -1158,7 +1161,7 @@ static ResultCode AcceptSession(Handle* out_server_session, Handle server_port_h
 }
 
 static ResultCode GetSystemInfo(s64* out, u32 type, s32 param) {
-    LOG_TRACE(Kernel_SVC, "called type=%u param=%d", type, param);
+    NGLOG_TRACE(Kernel_SVC, "called type={} param={}", type, param);
 
     switch ((SystemInfoType)type) {
     case SystemInfoType::REGION_MEMORY_USAGE:
@@ -1178,20 +1181,20 @@ static ResultCode GetSystemInfo(s64* out, u32 type, s32 param) {
             *out = GetMemoryRegion(MemoryRegion::BASE)->used;
             break;
         default:
-            LOG_ERROR(Kernel_SVC, "unknown GetSystemInfo type=0 region: param=%d", param);
+            NGLOG_ERROR(Kernel_SVC, "unknown GetSystemInfo type=0 region: param={}", param);
             *out = 0;
             break;
         }
         break;
     case SystemInfoType::KERNEL_ALLOCATED_PAGES:
-        LOG_ERROR(Kernel_SVC, "unimplemented GetSystemInfo type=2 param=%d", param);
+        NGLOG_ERROR(Kernel_SVC, "unimplemented GetSystemInfo type=2 param={}", param);
         *out = 0;
         break;
     case SystemInfoType::KERNEL_SPAWNED_PIDS:
         *out = 5;
         break;
     default:
-        LOG_ERROR(Kernel_SVC, "unknown GetSystemInfo type=%u param=%d", type, param);
+        NGLOG_ERROR(Kernel_SVC, "unknown GetSystemInfo type={} param={}", type, param);
         *out = 0;
         break;
     }
@@ -1201,7 +1204,7 @@ static ResultCode GetSystemInfo(s64* out, u32 type, s32 param) {
 }
 
 static ResultCode GetProcessInfo(s64* out, Handle process_handle, u32 type) {
-    LOG_TRACE(Kernel_SVC, "called process=0x%08X type=%u", process_handle, type);
+    NGLOG_TRACE(Kernel_SVC, "called process=0x{:08X} type={}", process_handle, type);
 
     SharedPtr<Process> process = g_handle_table.Get<Process>(process_handle);
     if (process == nullptr)
@@ -1214,7 +1217,7 @@ static ResultCode GetProcessInfo(s64* out, Handle process_handle, u32 type) {
         // what's the difference between them.
         *out = process->heap_used + process->linear_heap_used + process->misc_memory_used;
         if (*out % Memory::PAGE_SIZE != 0) {
-            LOG_ERROR(Kernel_SVC, "called, memory size not page-aligned");
+            NGLOG_ERROR(Kernel_SVC, "called, memory size not page-aligned");
             return ERR_MISALIGNED_SIZE;
         }
         break;
@@ -1226,7 +1229,7 @@ static ResultCode GetProcessInfo(s64* out, Handle process_handle, u32 type) {
     case 7:
     case 8:
         // These are valid, but not implemented yet
-        LOG_ERROR(Kernel_SVC, "unimplemented GetProcessInfo type=%u", type);
+        NGLOG_ERROR(Kernel_SVC, "unimplemented GetProcessInfo type={}", type);
         break;
     case 20:
         *out = Memory::FCRAM_PADDR - process->GetLinearHeapAreaAddress();
@@ -1235,10 +1238,10 @@ static ResultCode GetProcessInfo(s64* out, Handle process_handle, u32 type) {
     case 22:
     case 23:
         // These return a different error value than higher invalid values
-        LOG_ERROR(Kernel_SVC, "unknown GetProcessInfo type=%u", type);
+        NGLOG_ERROR(Kernel_SVC, "unknown GetProcessInfo type={}", type);
         return ERR_NOT_IMPLEMENTED;
     default:
-        LOG_ERROR(Kernel_SVC, "unknown GetProcessInfo type=%u", type);
+        NGLOG_ERROR(Kernel_SVC, "unknown GetProcessInfo type={}", type);
         return ERR_INVALID_ENUM_VALUE;
     }
 
@@ -1386,7 +1389,7 @@ static const FunctionDef SVC_Table[] = {
 
 static const FunctionDef* GetSVCInfo(u32 func_num) {
     if (func_num >= ARRAY_SIZE(SVC_Table)) {
-        LOG_ERROR(Kernel_SVC, "unknown svc=0x%02X", func_num);
+        NGLOG_ERROR(Kernel_SVC, "unknown svc=0x{:02X}", func_num);
         return nullptr;
     }
     return &SVC_Table[func_num];
@@ -1408,7 +1411,7 @@ void CallSVC(u32 immediate) {
         if (info->func) {
             info->func();
         } else {
-            LOG_ERROR(Kernel_SVC, "unimplemented SVC function %s(..)", info->name);
+            NGLOG_ERROR(Kernel_SVC, "unimplemented SVC function {}(..)", info->name);
         }
     }
 }

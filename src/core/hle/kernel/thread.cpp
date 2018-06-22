@@ -191,7 +191,7 @@ void ExitCurrentThread() {
 static void ThreadWakeupCallback(u64 thread_handle, int cycles_late) {
     SharedPtr<Thread> thread = wakeup_callback_handle_table.Get<Thread>((Handle)thread_handle);
     if (thread == nullptr) {
-        LOG_CRITICAL(Kernel, "Callback fired for invalid thread %08X", (Handle)thread_handle);
+        NGLOG_CRITICAL(Kernel, "Callback fired for invalid thread {:08X}", (Handle)thread_handle);
         return;
     }
 
@@ -264,16 +264,16 @@ void Thread::ResumeFromWait() {
 static void DebugThreadQueue() {
     Thread* thread = GetCurrentThread();
     if (!thread) {
-        LOG_DEBUG(Kernel, "Current: NO CURRENT THREAD");
+        NGLOG_DEBUG(Kernel, "Current: NO CURRENT THREAD");
     } else {
-        LOG_DEBUG(Kernel, "0x%02X %u (current)", thread->current_priority,
-                  GetCurrentThread()->GetObjectId());
+        NGLOG_DEBUG(Kernel, "0x{:02X} {} (current)", thread->current_priority,
+                    GetCurrentThread()->GetObjectId());
     }
 
     for (auto& t : thread_list) {
         u32 priority = ready_queue.contains(t.get());
         if (priority != -1) {
-            LOG_DEBUG(Kernel, "0x%02X %u", priority, t->GetObjectId());
+            NGLOG_DEBUG(Kernel, "0x{:02X} {}", priority, t->GetObjectId());
         }
     }
 }
@@ -324,19 +324,19 @@ ResultVal<SharedPtr<Thread>> Thread::Create(std::string name, VAddr entry_point,
                                             SharedPtr<Process> owner_process) {
     // Check if priority is in ranged. Lowest priority -> highest priority id.
     if (priority > THREADPRIO_LOWEST) {
-        LOG_ERROR(Kernel_SVC, "Invalid thread priority: %d", priority);
+        NGLOG_ERROR(Kernel_SVC, "Invalid thread priority: {}", priority);
         return ERR_OUT_OF_RANGE;
     }
 
     if (processor_id > THREADPROCESSORID_MAX) {
-        LOG_ERROR(Kernel_SVC, "Invalid processor id: %d", processor_id);
+        NGLOG_ERROR(Kernel_SVC, "Invalid processor id: {}", processor_id);
         return ERR_OUT_OF_RANGE_KERNEL;
     }
 
     // TODO(yuriks): Other checks, returning 0xD9001BEA
 
     if (!Memory::IsValidVirtualAddress(*owner_process, entry_point)) {
-        LOG_ERROR(Kernel_SVC, "(name=%s): invalid entry %08x", name.c_str(), entry_point);
+        NGLOG_ERROR(Kernel_SVC, "(name={}): invalid entry {:08x}", name, entry_point);
         // TODO: Verify error
         return ResultCode(ErrorDescription::InvalidAddress, ErrorModule::Kernel,
                           ErrorSummary::InvalidArgument, ErrorLevel::Permanent);
@@ -375,8 +375,8 @@ ResultVal<SharedPtr<Thread>> Thread::Create(std::string name, VAddr entry_point,
         auto& linheap_memory = memory_region->linear_heap_memory;
 
         if (linheap_memory->size() + Memory::PAGE_SIZE > memory_region->size) {
-            LOG_ERROR(Kernel_SVC,
-                      "Not enough space in region to allocate a new TLS page for thread");
+            NGLOG_ERROR(Kernel_SVC,
+                        "Not enough space in region to allocate a new TLS page for thread");
             return ERR_OUT_OF_MEMORY;
         }
 
@@ -469,11 +469,11 @@ void Reschedule() {
     Thread* next = PopNextReadyThread();
 
     if (cur && next) {
-        LOG_TRACE(Kernel, "context switch %u -> %u", cur->GetObjectId(), next->GetObjectId());
+        NGLOG_TRACE(Kernel, "context switch {} -> {}", cur->GetObjectId(), next->GetObjectId());
     } else if (cur) {
-        LOG_TRACE(Kernel, "context switch %u -> idle", cur->GetObjectId());
+        NGLOG_TRACE(Kernel, "context switch {} -> idle", cur->GetObjectId());
     } else if (next) {
-        LOG_TRACE(Kernel, "context switch idle -> %u", next->GetObjectId());
+        NGLOG_TRACE(Kernel, "context switch idle -> {}", next->GetObjectId());
     }
 
     SwitchContext(next);
