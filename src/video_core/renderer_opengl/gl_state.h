@@ -20,9 +20,9 @@ constexpr TextureUnit PicaTexture(int unit) {
     return TextureUnit{unit};
 }
 
-constexpr TextureUnit TextureCube{10};
-constexpr TextureUnit TextureBufferLUT_RG{11};
-constexpr TextureUnit TextureBufferLUT_RGBA{12};
+constexpr TextureUnit TextureCube{3};
+constexpr TextureUnit TextureBufferLUT_RG{4};
+constexpr TextureUnit TextureBufferLUT_RGBA{5};
 
 } // namespace TextureUnits
 
