@@ -17,7 +17,7 @@ static void IsChild(Interface* self) {
     cmd_buff[1] = RESULT_SUCCESS.raw;
     cmd_buff[2] = 0;
 
-    LOG_WARNING(Service_DLP, "(STUBBED) called");
+    NGLOG_WARNING(Service_DLP, "(STUBBED) called");
 }
 
 const Interface::FunctionInfo FunctionTable[] = {
