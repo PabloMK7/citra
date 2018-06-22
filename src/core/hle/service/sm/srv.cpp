@@ -45,7 +45,7 @@ void SRV::RegisterClient(Kernel::HLERequestContext& ctx) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
-    LOG_WARNING(Service_SRV, "(STUBBED) called");
+    NGLOG_WARNING(Service_SRV, "(STUBBED) called");
 }
 
 /**
@@ -67,7 +67,7 @@ void SRV::EnableNotification(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
     rb.Push(RESULT_SUCCESS);
     rb.PushCopyObjects(notification_semaphore);
-    LOG_WARNING(Service_SRV, "(STUBBED) called");
+    NGLOG_WARNING(Service_SRV, "(STUBBED) called");
 }
 
 /**
@@ -92,7 +92,7 @@ void SRV::GetServiceHandle(Kernel::HLERequestContext& ctx) {
     if (name_len > Service::kMaxPortSize) {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(ERR_INVALID_NAME_SIZE);
-        LOG_ERROR(Service_SRV, "called name_len=0x%zX -> ERR_INVALID_NAME_SIZE", name_len);
+        NGLOG_ERROR(Service_SRV, "called name_len=0x{:X} -> ERR_INVALID_NAME_SIZE", name_len);
         return;
     }
     std::string name(name_buf.data(), name_len);
@@ -103,25 +103,24 @@ void SRV::GetServiceHandle(Kernel::HLERequestContext& ctx) {
     if (client_port.Failed()) {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(client_port.Code());
-        LOG_ERROR(Service_SRV, "called service=%s -> error 0x%08X", name.c_str(),
-                  client_port.Code().raw);
+        NGLOG_ERROR(Service_SRV, "called service={} -> error 0x{:08X}", name,
+                    client_port.Code().raw);
         return;
     }
 
     auto session = client_port.Unwrap()->Connect();
     if (session.Succeeded()) {
-        LOG_DEBUG(Service_SRV, "called service=%s -> session=%u", name.c_str(),
-                  (*session)->GetObjectId());
+        NGLOG_DEBUG(Service_SRV, "called service={} -> session={}", name,
+                    (*session)->GetObjectId());
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
         rb.Push(session.Code());
         rb.PushMoveObjects(std::move(session).Unwrap());
     } else if (session.Code() == Kernel::ERR_MAX_CONNECTIONS_REACHED && wait_until_available) {
-        LOG_WARNING(Service_SRV, "called service=%s -> ERR_MAX_CONNECTIONS_REACHED", name.c_str());
+        NGLOG_WARNING(Service_SRV, "called service={} -> ERR_MAX_CONNECTIONS_REACHED", name);
         // TODO(Subv): Put the caller guest thread to sleep until this port becomes available again.
         UNIMPLEMENTED_MSG("Unimplemented wait until port {} is available.", name);
     } else {
-        LOG_ERROR(Service_SRV, "called service=%s -> error 0x%08X", name.c_str(),
-                  session.Code().raw);
+        NGLOG_ERROR(Service_SRV, "called service={} -> error 0x{:08X}", name, session.Code().raw);
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(session.Code());
     }
@@ -142,7 +141,7 @@ void SRV::Subscribe(Kernel::HLERequestContext& ctx) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
-    LOG_WARNING(Service_SRV, "(STUBBED) called, notification_id=0x%X", notification_id);
+    NGLOG_WARNING(Service_SRV, "(STUBBED) called, notification_id=0x{:X}", notification_id);
 }
 
 /**
@@ -160,7 +159,7 @@ void SRV::Unsubscribe(Kernel::HLERequestContext& ctx) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
-    LOG_WARNING(Service_SRV, "(STUBBED) called, notification_id=0x%X", notification_id);
+    NGLOG_WARNING(Service_SRV, "(STUBBED) called, notification_id=0x{:X}", notification_id);
 }
 
 /**
@@ -180,8 +179,8 @@ void SRV::PublishToSubscriber(Kernel::HLERequestContext& ctx) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
-    LOG_WARNING(Service_SRV, "(STUBBED) called, notification_id=0x%X, flags=%u", notification_id,
-                flags);
+    NGLOG_WARNING(Service_SRV, "(STUBBED) called, notification_id=0x{:X}, flags={}",
+                  notification_id, flags);
 }
 
 void SRV::RegisterService(Kernel::HLERequestContext& ctx) {
@@ -198,7 +197,7 @@ void SRV::RegisterService(Kernel::HLERequestContext& ctx) {
     if (port.Failed()) {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(port.Code());
-        LOG_ERROR(Service_SRV, "called service=%s -> error 0x%08X", name.c_str(), port.Code().raw);
+        NGLOG_ERROR(Service_SRV, "called service={} -> error 0x{:08X}", name, port.Code().raw);
         return;
     }
 
