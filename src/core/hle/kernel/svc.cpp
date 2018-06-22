@@ -625,8 +625,8 @@ static ResultCode CreateAddressArbiter(Handle* out_handle) {
 static ResultCode ArbitrateAddress(Handle handle, u32 address, u32 type, u32 value,
                                    s64 nanoseconds) {
     NGLOG_TRACE(Kernel_SVC,
-                "called handle=0x{:08X}, address=0x{:08X}, type=0x{:08X}, value=0x{:08X}",
-                handle, address, type, value);
+                "called handle=0x{:08X}, address=0x{:08X}, type=0x{:08X}, value=0x{:08X}", handle,
+                address, type, value);
 
     SharedPtr<AddressArbiter> arbiter = g_handle_table.Get<AddressArbiter>(handle);
     if (arbiter == nullptr)
