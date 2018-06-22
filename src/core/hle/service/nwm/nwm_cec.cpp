@@ -7,12 +7,11 @@
 namespace Service {
 namespace NWM {
 
-const Interface::FunctionInfo FunctionTable[] = {
-    {0x000D0082, nullptr, "SendProbeRequest"},
-};
-
-NWM_CEC::NWM_CEC() {
-    Register(FunctionTable);
+NWM_CEC::NWM_CEC() : ServiceFramework("nwm::CEC") {
+    static const FunctionInfo functions[] = {
+        {0x000D0082, nullptr, "SendProbeRequest"},
+    };
+    RegisterHandlers(functions);
 }
 
 } // namespace NWM

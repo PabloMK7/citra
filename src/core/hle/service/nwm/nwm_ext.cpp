@@ -7,12 +7,11 @@
 namespace Service {
 namespace NWM {
 
-const Interface::FunctionInfo FunctionTable[] = {
-    {0x00080040, nullptr, "ControlWirelessEnabled"},
-};
-
-NWM_EXT::NWM_EXT() {
-    Register(FunctionTable);
+NWM_EXT::NWM_EXT() : ServiceFramework("nwm::EXT") {
+    static const FunctionInfo functions[] = {
+        {0x00080040, nullptr, "ControlWirelessEnabled"},
+    };
+    RegisterHandlers(functions);
 }
 
 } // namespace NWM

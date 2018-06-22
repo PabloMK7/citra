@@ -10,7 +10,6 @@ namespace Service {
 namespace NWM {
 
 /// Initialize all NWM services
-void Init();
 void InstallInterfaces(SM::ServiceManager& service_manager);
 
 } // namespace NWM

@@ -9,13 +9,9 @@
 namespace Service {
 namespace NWM {
 
-class NWM_TST final : public Interface {
+class NWM_TST final : public ServiceFramework<NWM_TST> {
 public:
     NWM_TST();
-
-    std::string GetPortName() const override {
-        return "nwm::TST";
-    }
 };
 
 } // namespace NWM

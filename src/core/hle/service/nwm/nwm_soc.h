@@ -9,13 +9,9 @@
 namespace Service {
 namespace NWM {
 
-class NWM_SOC final : public Interface {
+class NWM_SOC final : public ServiceFramework<NWM_SOC> {
 public:
     NWM_SOC();
-
-    std::string GetPortName() const override {
-        return "nwm::SOC";
-    }
 };
 
 } // namespace NWM

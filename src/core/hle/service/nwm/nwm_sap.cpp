@@ -7,13 +7,12 @@
 namespace Service {
 namespace NWM {
 
-/*
-const Interface::FunctionInfo FunctionTable[] = {
-};
-*/
-
-NWM_SAP::NWM_SAP() {
-    // Register(FunctionTable);
+NWM_SAP::NWM_SAP() : ServiceFramework("nwm::SAP") {
+    /*
+    static const FunctionInfo functions[] = {
+    };
+    RegisterHandlers(functions);
+    */
 }
 
 } // namespace NWM

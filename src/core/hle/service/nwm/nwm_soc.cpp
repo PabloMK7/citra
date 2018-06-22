@@ -7,13 +7,12 @@
 namespace Service {
 namespace NWM {
 
-/*
-const Interface::FunctionInfo FunctionTable[] = {
-};
-*/
-
-NWM_SOC::NWM_SOC() {
-    // Register(FunctionTable);
+NWM_SOC::NWM_SOC() : ServiceFramework("nwm::SOC") {
+    /*
+    static const FunctionInfo functions[] = {
+    };
+    RegisterHandlers(functions);
+    */
 }
 
 } // namespace NWM

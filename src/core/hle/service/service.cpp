@@ -252,7 +252,6 @@ void Init(std::shared_ptr<SM::ServiceManager>& sm) {
     NEWS::InstallInterfaces(*sm);
     NFC::InstallInterfaces(*sm);
     NIM::InstallInterfaces(*sm);
-    NWM::Init();
     PTM::InstallInterfaces(*sm);
     QTM::Init();
 
