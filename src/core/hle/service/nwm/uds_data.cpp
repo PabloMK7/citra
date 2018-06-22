@@ -209,7 +209,7 @@ static std::vector<u8> DecryptDataFrame(const std::vector<u8>& encrypted_payload
         df.Get(pdata.data(), size);
         return pdata;
     } catch (CryptoPP::Exception&) {
-        LOG_ERROR(Service_NWM, "failed to decrypt");
+        NGLOG_ERROR(Service_NWM, "failed to decrypt");
     }
 
     return {};
@@ -263,7 +263,7 @@ static std::vector<u8> EncryptDataFrame(const std::vector<u8>& payload,
         df.Get(cipher.data(), size);
         return cipher;
     } catch (CryptoPP::Exception&) {
-        LOG_ERROR(Service_NWM, "failed to encrypt");
+        NGLOG_ERROR(Service_NWM, "failed to encrypt");
     }
 
     return {};
