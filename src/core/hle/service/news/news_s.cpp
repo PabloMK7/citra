@@ -11,7 +11,7 @@ namespace NEWS {
 void NEWS_S::GetTotalNotifications(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x5, 0, 0);
 
-    LOG_WARNING(Service, "(STUBBED) called");
+    NGLOG_WARNING(Service, "(STUBBED) called");
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
 
