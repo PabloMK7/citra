@@ -143,8 +143,8 @@ ResultVal<size_t> CIAFile::WriteContentData(u64 offset, size_t length, const u8*
             // Keep tabs on how much of this content ID has been written so new range_min
             // values can be calculated.
             content_written[i] += available_to_write;
-            LOG_DEBUG(Service_AM, "Wrote %" PRIx64 " to content %u, total %" PRIx64,
-                      available_to_write, i, content_written[i]);
+            NGLOG_DEBUG(Service_AM, "Wrote {:x} to content {}, total {:x}", available_to_write, i,
+                        content_written[i]);
         }
     }
 
@@ -234,7 +234,7 @@ bool CIAFile::Close() const {
 
     // Install aborted
     if (!complete) {
-        LOG_ERROR(Service_AM, "CIAFile closed prematurely, aborting install...");
+        NGLOG_ERROR(Service_AM, "CIAFile closed prematurely, aborting install...");
         FileUtil::DeleteDir(GetTitlePath(media_type, container.GetTitleMetadata().GetTitleID()));
         return true;
     }
@@ -277,10 +277,10 @@ void CIAFile::Flush() const {}
 
 InstallStatus InstallCIA(const std::string& path,
                          std::function<ProgressCallback>&& update_callback) {
-    LOG_INFO(Service_AM, "Installing %s...", path.c_str());
+    NGLOG_INFO(Service_AM, "Installing {}...", path);
 
     if (!FileUtil::Exists(path)) {
-        LOG_ERROR(Service_AM, "File %s does not exist!", path.c_str());
+        NGLOG_ERROR(Service_AM, "File {} does not exist!", path);
         return InstallStatus::ErrorFileNotFound;
     }
 
@@ -292,7 +292,7 @@ InstallStatus InstallCIA(const std::string& path,
         for (size_t i = 0; i < container.GetTitleMetadata().GetContentCount(); i++) {
             if (container.GetTitleMetadata().GetContentTypeByIndex(i) &
                 FileSys::TMDContentTypeFlag::Encrypted) {
-                LOG_ERROR(Service_AM, "File %s is encrypted! Aborting...", path.c_str());
+                NGLOG_ERROR(Service_AM, "File {} is encrypted! Aborting...", path);
                 return InstallStatus::ErrorEncrypted;
             }
         }
@@ -311,19 +311,19 @@ InstallStatus InstallCIA(const std::string& path,
             if (update_callback)
                 update_callback(total_bytes_read, file.GetSize());
             if (result.Failed()) {
-                LOG_ERROR(Service_AM, "CIA file installation aborted with error code %08x",
-                          result.Code().raw);
+                NGLOG_ERROR(Service_AM, "CIA file installation aborted with error code {:08x}",
+                            result.Code().raw);
                 return InstallStatus::ErrorAborted;
             }
             total_bytes_read += bytes_read;
         }
         installFile.Close();
 
-        LOG_INFO(Service_AM, "Installed %s successfully.", path.c_str());
+        NGLOG_INFO(Service_AM, "Installed {} successfully.", path);
         return InstallStatus::Success;
     }
 
-    LOG_ERROR(Service_AM, "CIA file %s is invalid!", path.c_str());
+    NGLOG_ERROR(Service_AM, "CIA file {} is invalid!", path);
     return InstallStatus::ErrorInvalid;
 }
 
@@ -345,7 +345,7 @@ std::string GetTitleMetadataPath(Service::FS::MediaType media_type, u64 tid, boo
     std::string content_path = GetTitlePath(media_type, tid) + "content/";
 
     if (media_type == Service::FS::MediaType::GameCard) {
-        LOG_ERROR(Service_AM, "Invalid request for nonexistent gamecard title metadata!");
+        NGLOG_ERROR(Service_AM, "Invalid request for nonexistent gamecard title metadata!");
         return "";
     }
 
@@ -385,8 +385,8 @@ std::string GetTitleContentPath(Service::FS::MediaType media_type, u64 tid, u16 
 
     if (media_type == Service::FS::MediaType::GameCard) {
         // TODO(shinyquagsire23): get current app file if TID matches?
-        LOG_ERROR(Service_AM, "Request for gamecard partition %u content path unimplemented!",
-                  static_cast<u32>(index));
+        NGLOG_ERROR(Service_AM, "Request for gamecard partition {} content path unimplemented!",
+                    static_cast<u32>(index));
         return "";
     }
 
@@ -420,7 +420,7 @@ std::string GetTitlePath(Service::FS::MediaType media_type, u64 tid) {
 
     if (media_type == Service::FS::MediaType::GameCard) {
         // TODO(shinyquagsire23): get current app path if TID matches?
-        LOG_ERROR(Service_AM, "Request for gamecard title path unimplemented!");
+        NGLOG_ERROR(Service_AM, "Request for gamecard title path unimplemented!");
         return "";
     }
 
@@ -439,7 +439,7 @@ std::string GetMediaTitlePath(Service::FS::MediaType media_type) {
 
     if (media_type == Service::FS::MediaType::GameCard) {
         // TODO(shinyquagsire23): get current app parent folder if TID matches?
-        LOG_ERROR(Service_AM, "Request for gamecard parent path unimplemented!");
+        NGLOG_ERROR(Service_AM, "Request for gamecard parent path unimplemented!");
         return "";
     }
 
@@ -607,8 +607,8 @@ void Module::Interface::DeleteContents(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
     rb.Push(RESULT_SUCCESS);
     rb.PushMappedBuffer(content_ids_in);
-    LOG_WARNING(Service_AM, "(STUBBED) media_type=%u, title_id=0x%016" PRIx64 ", content_count=%u",
-                media_type, title_id, content_count);
+    NGLOG_WARNING(Service_AM, "(STUBBED) media_type={}, title_id=0x{:016x}, content_count={}",
+                  media_type, title_id, content_count);
 }
 
 void Module::Interface::GetProgramList(Kernel::HLERequestContext& ctx) {
@@ -692,24 +692,24 @@ void Module::Interface::DeleteUserProgram(Kernel::HLERequestContext& ctx) {
     u16 category = static_cast<u16>((title_id >> 32) & 0xFFFF);
     u8 variation = static_cast<u8>(title_id & 0xFF);
     if (category & CATEGORY_SYSTEM || category & CATEGORY_DLP || variation & VARIATION_SYSTEM) {
-        LOG_ERROR(Service_AM, "Trying to uninstall system app");
+        NGLOG_ERROR(Service_AM, "Trying to uninstall system app");
         rb.Push(ResultCode(ErrCodes::TryingToUninstallSystemApp, ErrorModule::AM,
                            ErrorSummary::InvalidArgument, ErrorLevel::Usage));
         return;
     }
-    LOG_INFO(Service_AM, "Deleting title 0x%016" PRIx64, title_id);
+    NGLOG_INFO(Service_AM, "Deleting title 0x{:016x}", title_id);
     std::string path = GetTitlePath(media_type, title_id);
     if (!FileUtil::Exists(path)) {
         rb.Push(ResultCode(ErrorDescription::NotFound, ErrorModule::AM, ErrorSummary::InvalidState,
                            ErrorLevel::Permanent));
-        LOG_ERROR(Service_AM, "Title not found");
+        NGLOG_ERROR(Service_AM, "Title not found");
         return;
     }
     bool success = FileUtil::DeleteDirRecursively(path);
     am->ScanForAllTitles();
     rb.Push(RESULT_SUCCESS);
     if (!success)
-        LOG_ERROR(Service_AM, "FileUtil::DeleteDirRecursively unexpectedly failed");
+        NGLOG_ERROR(Service_AM, "FileUtil::DeleteDirRecursively unexpectedly failed");
 }
 
 void Module::Interface::GetProductCode(Kernel::HLERequestContext& ctx) {
@@ -827,9 +827,9 @@ void Module::Interface::ListDataTitleTicketInfos(Kernel::HLERequestContext& ctx)
     rb.Push(ticket_count);
     rb.PushMappedBuffer(ticket_info_out);
 
-    LOG_WARNING(Service_AM,
-                "(STUBBED) ticket_count=0x%08X, title_id=0x%016" PRIx64 ", start_index=0x%08X",
-                ticket_count, title_id, start_index);
+    NGLOG_WARNING(Service_AM,
+                  "(STUBBED) ticket_count=0x{:08X}, title_id=0x{:016x}, start_index=0x{:08X}",
+                  ticket_count, title_id, start_index);
 }
 
 void Module::Interface::GetDLCContentInfoCount(Kernel::HLERequestContext& ctx) {
@@ -857,8 +857,8 @@ void Module::Interface::GetDLCContentInfoCount(Kernel::HLERequestContext& ctx) {
         rb.Push<u32>(tmd.GetContentCount());
     } else {
         rb.Push<u32>(1); // Number of content infos plus one
-        LOG_WARNING(Service_AM, "(STUBBED) called media_type=%u, title_id=0x%016" PRIx64,
-                    static_cast<u32>(media_type), title_id);
+        NGLOG_WARNING(Service_AM, "(STUBBED) called media_type={}, title_id=0x{:016x}",
+                      static_cast<u32>(media_type), title_id);
     }
 }
 
@@ -868,7 +868,7 @@ void Module::Interface::DeleteTicket(Kernel::HLERequestContext& ctx) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
-    LOG_WARNING(Service_AM, "(STUBBED) called title_id=0x%016" PRIx64 "", title_id);
+    NGLOG_WARNING(Service_AM, "(STUBBED) called title_id=0x{:016x}", title_id);
 }
 
 void Module::Interface::GetNumTickets(Kernel::HLERequestContext& ctx) {
@@ -878,7 +878,7 @@ void Module::Interface::GetNumTickets(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
     rb.Push(ticket_count);
-    LOG_WARNING(Service_AM, "(STUBBED) called ticket_count=0x%08x", ticket_count);
+    NGLOG_WARNING(Service_AM, "(STUBBED) called ticket_count=0x{:08x}", ticket_count);
 }
 
 void Module::Interface::GetTicketList(Kernel::HLERequestContext& ctx) {
@@ -891,8 +891,8 @@ void Module::Interface::GetTicketList(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
     rb.Push(ticket_list_count);
     rb.PushMappedBuffer(ticket_tids_out);
-    LOG_WARNING(Service_AM, "(STUBBED) ticket_list_count=0x%08x, ticket_index=0x%08x",
-                ticket_list_count, ticket_index);
+    NGLOG_WARNING(Service_AM, "(STUBBED) ticket_list_count=0x{:08x}, ticket_index=0x{:08x}",
+                  ticket_list_count, ticket_index);
 }
 
 void Module::Interface::QueryAvailableTitleDatabase(Kernel::HLERequestContext& ctx) {
@@ -903,7 +903,7 @@ void Module::Interface::QueryAvailableTitleDatabase(Kernel::HLERequestContext& c
     rb.Push(RESULT_SUCCESS); // No error
     rb.Push(true);
 
-    LOG_WARNING(Service_AM, "(STUBBED) media_type=%u", media_type);
+    NGLOG_WARNING(Service_AM, "(STUBBED) media_type={}", media_type);
 }
 
 void Module::Interface::CheckContentRights(Kernel::HLERequestContext& ctx) {
@@ -919,7 +919,7 @@ void Module::Interface::CheckContentRights(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS); // No error
     rb.Push(has_rights);
 
-    LOG_WARNING(Service_AM, "(STUBBED) tid=%016" PRIx64 ", content_index=%u", tid, content_index);
+    NGLOG_WARNING(Service_AM, "(STUBBED) tid={:016x}, content_index={}", tid, content_index);
 }
 
 void Module::Interface::CheckContentRightsIgnorePlatform(Kernel::HLERequestContext& ctx) {
@@ -935,7 +935,7 @@ void Module::Interface::CheckContentRightsIgnorePlatform(Kernel::HLERequestConte
     rb.Push(RESULT_SUCCESS); // No error
     rb.Push(has_rights);
 
-    LOG_WARNING(Service_AM, "(STUBBED) tid=%016" PRIx64 ", content_index=%u", tid, content_index);
+    NGLOG_WARNING(Service_AM, "(STUBBED) tid={:016x}, content_index={}", tid, content_index);
 }
 
 void Module::Interface::BeginImportProgram(Kernel::HLERequestContext& ctx) {
@@ -961,7 +961,7 @@ void Module::Interface::BeginImportProgram(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS); // No error
     rb.PushCopyObjects(file->Connect());
 
-    LOG_WARNING(Service_AM, "(STUBBED) media_type=%u", static_cast<u32>(media_type));
+    NGLOG_WARNING(Service_AM, "(STUBBED) media_type={}", static_cast<u32>(media_type));
 }
 
 void Module::Interface::EndImportProgram(Kernel::HLERequestContext& ctx) {
@@ -981,13 +981,13 @@ ResultVal<std::shared_ptr<Service::FS::File>> GetFileFromSession(
     // cast to File. For AM on 3DS, invalid handles actually hang the system.
 
     if (file_session->parent == nullptr) {
-        LOG_WARNING(Service_AM, "Invalid file handle!");
+        NGLOG_WARNING(Service_AM, "Invalid file handle!");
         return Kernel::ERR_INVALID_HANDLE;
     }
 
     Kernel::SharedPtr<Kernel::ServerSession> server = file_session->parent->server;
     if (server == nullptr) {
-        LOG_WARNING(Service_AM, "File handle ServerSession disconnected!");
+        NGLOG_WARNING(Service_AM, "File handle ServerSession disconnected!");
         return Kernel::ERR_SESSION_CLOSED_BY_REMOTE;
     }
 
@@ -998,13 +998,13 @@ ResultVal<std::shared_ptr<Service::FS::File>> GetFileFromSession(
         if (file != nullptr)
             return MakeResult<std::shared_ptr<Service::FS::File>>(file);
 
-        LOG_ERROR(Service_AM, "Failed to cast handle to FSFile!");
+        NGLOG_ERROR(Service_AM, "Failed to cast handle to FSFile!");
         return Kernel::ERR_INVALID_HANDLE;
     }
 
     // Probably the best bet if someone is LLEing the fs service is to just have them LLE AM
     // while they're at it, so not implemented.
-    LOG_ERROR(Service_AM, "Given file handle does not have an HLE handler!");
+    NGLOG_ERROR(Service_AM, "Given file handle does not have an HLE handler!");
     return Kernel::ERR_NOT_IMPLEMENTED;
 }
 
@@ -1201,20 +1201,20 @@ void Module::Interface::DeleteProgram(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x0410, 3, 0);
     auto media_type = rp.PopEnum<FS::MediaType>();
     u64 title_id = rp.Pop<u64>();
-    LOG_INFO(Service_AM, "Deleting title 0x%016" PRIx64, title_id);
+    NGLOG_INFO(Service_AM, "Deleting title 0x{:016x}", title_id);
     std::string path = GetTitlePath(media_type, title_id);
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     if (!FileUtil::Exists(path)) {
         rb.Push(ResultCode(ErrorDescription::NotFound, ErrorModule::AM, ErrorSummary::InvalidState,
                            ErrorLevel::Permanent));
-        LOG_ERROR(Service_AM, "Title not found");
+        NGLOG_ERROR(Service_AM, "Title not found");
         return;
     }
     bool success = FileUtil::DeleteDirRecursively(path);
     am->ScanForAllTitles();
     rb.Push(RESULT_SUCCESS);
     if (!success)
-        LOG_ERROR(Service_AM, "FileUtil::DeleteDirRecursively unexpectedly failed");
+        NGLOG_ERROR(Service_AM, "FileUtil::DeleteDirRecursively unexpectedly failed");
 }
 
 void Module::Interface::GetMetaSizeFromCia(Kernel::HLERequestContext& ctx) {
