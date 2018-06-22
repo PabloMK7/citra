@@ -11,7 +11,7 @@ namespace Applets {
 
 ResultCode Mint::ReceiveParameter(const Service::APT::MessageParameter& parameter) {
     if (parameter.signal != Service::APT::SignalType::Request) {
-        LOG_ERROR(Service_APT, "unsupported signal %u", static_cast<u32>(parameter.signal));
+        NGLOG_ERROR(Service_APT, "unsupported signal {}", static_cast<u32>(parameter.signal));
         UNIMPLEMENTED();
         // TODO(Subv): Find the right error code
         return ResultCode(-1);
