@@ -463,7 +463,7 @@ static void Fcntl(Interface* self) {
         }
 #endif
     } else {
-        LOG_ERROR(Service_SOC, "Unsupported command (%d) in fcntl call", ctr_cmd);
+        NGLOG_ERROR(Service_SOC, "Unsupported command ({}) in fcntl call", ctr_cmd);
         posix_ret = TranslateError(EINVAL); // TODO: Find the correct error
         return;
     }
