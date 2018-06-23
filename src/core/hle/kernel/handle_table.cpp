@@ -25,7 +25,7 @@ ResultVal<Handle> HandleTable::Create(SharedPtr<Object> obj) {
 
     u16 slot = next_free_slot;
     if (slot >= generations.size()) {
-        LOG_ERROR(Kernel, "Unable to allocate Handle, too many slots in use.");
+        NGLOG_ERROR(Kernel, "Unable to allocate Handle, too many slots in use.");
         return ERR_OUT_OF_HANDLES;
     }
     next_free_slot = generations[slot];
@@ -47,7 +47,7 @@ ResultVal<Handle> HandleTable::Create(SharedPtr<Object> obj) {
 ResultVal<Handle> HandleTable::Duplicate(Handle handle) {
     SharedPtr<Object> object = GetGeneric(handle);
     if (object == nullptr) {
-        LOG_ERROR(Kernel, "Tried to duplicate invalid handle: %08X", handle);
+        NGLOG_ERROR(Kernel, "Tried to duplicate invalid handle: {:08X}", handle);
         return ERR_INVALID_HANDLE;
     }
     return Create(std::move(object));

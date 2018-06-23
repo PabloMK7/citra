@@ -77,7 +77,7 @@ void Timer::WakeupAllWaitingThreads() {
 }
 
 void Timer::Signal(int cycles_late) {
-    LOG_TRACE(Kernel, "Timer %u fired", GetObjectId());
+    NGLOG_TRACE(Kernel, "Timer {} fired", GetObjectId());
 
     signaled = true;
 
@@ -97,7 +97,7 @@ static void TimerCallback(u64 timer_handle, int cycles_late) {
         timer_callback_handle_table.Get<Timer>(static_cast<Handle>(timer_handle));
 
     if (timer == nullptr) {
-        LOG_CRITICAL(Kernel, "Callback fired for invalid timer %08" PRIx64, timer_handle);
+        NGLOG_CRITICAL(Kernel, "Callback fired for invalid timer {:08x}", timer_handle);
         return;
     }
 

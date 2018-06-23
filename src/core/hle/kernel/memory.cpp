@@ -115,8 +115,8 @@ void HandleSpecialMapping(VMManager& address_space, const AddressMapping& mappin
 
     VAddr mapping_limit = mapping.address + mapping.size;
     if (mapping_limit < mapping.address) {
-        LOG_CRITICAL(Loader, "Mapping size overflowed: address=0x%08" PRIX32 " size=0x%" PRIX32,
-                     mapping.address, mapping.size);
+        NGLOG_CRITICAL(Loader, "Mapping size overflowed: address=0x{:08X} size=0x{:X}",
+                       mapping.address, mapping.size);
         return;
     }
 
@@ -126,17 +126,17 @@ void HandleSpecialMapping(VMManager& address_space, const AddressMapping& mappin
                    mapping_limit <= area.vaddr_base + area.size;
         });
     if (area == std::end(memory_areas)) {
-        LOG_ERROR(Loader,
-                  "Unhandled special mapping: address=0x%08" PRIX32 " size=0x%" PRIX32
-                  " read_only=%d unk_flag=%d",
-                  mapping.address, mapping.size, mapping.read_only, mapping.unk_flag);
+        NGLOG_ERROR(Loader,
+                    "Unhandled special mapping: address=0x{:08X} size=0x{:X}"
+                    " read_only={} unk_flag={}",
+                    mapping.address, mapping.size, mapping.read_only, mapping.unk_flag);
         return;
     }
 
     u32 offset_into_region = mapping.address - area->vaddr_base;
     if (area->paddr_base == IO_AREA_PADDR) {
-        LOG_ERROR(Loader, "MMIO mappings are not supported yet. phys_addr=0x%08" PRIX32,
-                  area->paddr_base + offset_into_region);
+        NGLOG_ERROR(Loader, "MMIO mappings are not supported yet. phys_addr=0x{:08X}",
+                    area->paddr_base + offset_into_region);
         return;
     }
 

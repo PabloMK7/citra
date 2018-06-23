@@ -147,6 +147,9 @@ void FmtLogMessage(Class log_class, Level log_level, const char* filename, unsig
     LOG_GENERIC(::Log::Class::log_class, ::Log::Level::Critical, __VA_ARGS__)
 
 // Define the fmt lib macros
+#define NGLOG_GENERIC(log_class, log_level, ...)                                                   \
+    ::Log::FmtLogMessage(log_class, log_level, __FILE__, __LINE__, __func__, __VA_ARGS__)
+
 #ifdef _DEBUG
 #define NGLOG_TRACE(log_class, ...)                                                                \
     ::Log::FmtLogMessage(::Log::Class::log_class, ::Log::Level::Trace, __FILE__, __LINE__,         \
