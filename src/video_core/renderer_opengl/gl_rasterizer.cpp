@@ -37,7 +37,8 @@ MICROPROFILE_DEFINE(OpenGL_CacheManagement, "OpenGL", "Cache Mgmt", MP_RGB(100, 
 RasterizerOpenGL::RasterizerOpenGL()
     : shader_dirty(true), vertex_buffer(GL_ARRAY_BUFFER, VERTEX_BUFFER_SIZE),
       uniform_buffer(GL_UNIFORM_BUFFER, UNIFORM_BUFFER_SIZE),
-      index_buffer(GL_ELEMENT_ARRAY_BUFFER, INDEX_BUFFER_SIZE) {
+      index_buffer(GL_ELEMENT_ARRAY_BUFFER, INDEX_BUFFER_SIZE),
+      texture_buffer(GL_TEXTURE_BUFFER, TEXTURE_BUFFER_SIZE) {
 
     allow_shadow = GLAD_GL_ARB_shader_image_load_store && GLAD_GL_ARB_shader_image_size &&
                    GLAD_GL_ARB_framebuffer_no_attachments;
@@ -66,7 +67,8 @@ RasterizerOpenGL::RasterizerOpenGL()
 
     uniform_block_data.dirty = true;
 
-    uniform_block_data.lut_dirty.fill(true);
+    uniform_block_data.lighting_lut_dirty.fill(true);
+    uniform_block_data.lighting_lut_dirty_any = true;
 
     uniform_block_data.fog_lut_dirty = true;
 
@@ -122,77 +124,16 @@ RasterizerOpenGL::RasterizerOpenGL()
     // Create render framebuffer
     framebuffer.Create();
 
-    // Allocate and bind lighting lut textures
-    lighting_lut.Create();
-    state.lighting_lut.texture_buffer = lighting_lut.handle;
+    // Allocate and bind texture buffer lut textures
+    texture_buffer_lut_rg.Create();
+    texture_buffer_lut_rgba.Create();
+    state.texture_buffer_lut_rg.texture_buffer = texture_buffer_lut_rg.handle;
+    state.texture_buffer_lut_rgba.texture_buffer = texture_buffer_lut_rgba.handle;
     state.Apply();
-    lighting_lut_buffer.Create();
-    glBindBuffer(GL_TEXTURE_BUFFER, lighting_lut_buffer.handle);
-    glBufferData(GL_TEXTURE_BUFFER,
-                 sizeof(GLfloat) * 2 * 256 * Pica::LightingRegs::NumLightingSampler, nullptr,
-                 GL_DYNAMIC_DRAW);
-    glActiveTexture(TextureUnits::LightingLUT.Enum());
-    glTexBuffer(GL_TEXTURE_BUFFER, GL_RG32F, lighting_lut_buffer.handle);
-
-    // Setup the LUT for the fog
-    fog_lut.Create();
-    state.fog_lut.texture_buffer = fog_lut.handle;
-    state.Apply();
-    fog_lut_buffer.Create();
-    glBindBuffer(GL_TEXTURE_BUFFER, fog_lut_buffer.handle);
-    glBufferData(GL_TEXTURE_BUFFER, sizeof(GLfloat) * 2 * 128, nullptr, GL_DYNAMIC_DRAW);
-    glActiveTexture(TextureUnits::FogLUT.Enum());
-    glTexBuffer(GL_TEXTURE_BUFFER, GL_RG32F, fog_lut_buffer.handle);
-
-    // Setup the noise LUT for proctex
-    proctex_noise_lut.Create();
-    state.proctex_noise_lut.texture_buffer = proctex_noise_lut.handle;
-    state.Apply();
-    proctex_noise_lut_buffer.Create();
-    glBindBuffer(GL_TEXTURE_BUFFER, proctex_noise_lut_buffer.handle);
-    glBufferData(GL_TEXTURE_BUFFER, sizeof(GLfloat) * 2 * 128, nullptr, GL_DYNAMIC_DRAW);
-    glActiveTexture(TextureUnits::ProcTexNoiseLUT.Enum());
-    glTexBuffer(GL_TEXTURE_BUFFER, GL_RG32F, proctex_noise_lut_buffer.handle);
-
-    // Setup the color map for proctex
-    proctex_color_map.Create();
-    state.proctex_color_map.texture_buffer = proctex_color_map.handle;
-    state.Apply();
-    proctex_color_map_buffer.Create();
-    glBindBuffer(GL_TEXTURE_BUFFER, proctex_color_map_buffer.handle);
-    glBufferData(GL_TEXTURE_BUFFER, sizeof(GLfloat) * 2 * 128, nullptr, GL_DYNAMIC_DRAW);
-    glActiveTexture(TextureUnits::ProcTexColorMap.Enum());
-    glTexBuffer(GL_TEXTURE_BUFFER, GL_RG32F, proctex_color_map_buffer.handle);
-
-    // Setup the alpha map for proctex
-    proctex_alpha_map.Create();
-    state.proctex_alpha_map.texture_buffer = proctex_alpha_map.handle;
-    state.Apply();
-    proctex_alpha_map_buffer.Create();
-    glBindBuffer(GL_TEXTURE_BUFFER, proctex_alpha_map_buffer.handle);
-    glBufferData(GL_TEXTURE_BUFFER, sizeof(GLfloat) * 2 * 128, nullptr, GL_DYNAMIC_DRAW);
-    glActiveTexture(TextureUnits::ProcTexAlphaMap.Enum());
-    glTexBuffer(GL_TEXTURE_BUFFER, GL_RG32F, proctex_alpha_map_buffer.handle);
-
-    // Setup the LUT for proctex
-    proctex_lut.Create();
-    state.proctex_lut.texture_buffer = proctex_lut.handle;
-    state.Apply();
-    proctex_lut_buffer.Create();
-    glBindBuffer(GL_TEXTURE_BUFFER, proctex_lut_buffer.handle);
-    glBufferData(GL_TEXTURE_BUFFER, sizeof(GLfloat) * 4 * 256, nullptr, GL_DYNAMIC_DRAW);
-    glActiveTexture(TextureUnits::ProcTexLUT.Enum());
-    glTexBuffer(GL_TEXTURE_BUFFER, GL_RGBA32F, proctex_lut_buffer.handle);
-
-    // Setup the difference LUT for proctex
-    proctex_diff_lut.Create();
-    state.proctex_diff_lut.texture_buffer = proctex_diff_lut.handle;
-    state.Apply();
-    proctex_diff_lut_buffer.Create();
-    glBindBuffer(GL_TEXTURE_BUFFER, proctex_diff_lut_buffer.handle);
-    glBufferData(GL_TEXTURE_BUFFER, sizeof(GLfloat) * 4 * 256, nullptr, GL_DYNAMIC_DRAW);
-    glActiveTexture(TextureUnits::ProcTexDiffLUT.Enum());
-    glTexBuffer(GL_TEXTURE_BUFFER, GL_RGBA32F, proctex_diff_lut_buffer.handle);
+    glActiveTexture(TextureUnits::TextureBufferLUT_RG.Enum());
+    glTexBuffer(GL_TEXTURE_BUFFER, GL_RG32F, texture_buffer.GetHandle());
+    glActiveTexture(TextureUnits::TextureBufferLUT_RGBA.Enum());
+    glTexBuffer(GL_TEXTURE_BUFFER, GL_RGBA32F, texture_buffer.GetHandle());
 
     // Bind index buffer for hardware shader path
     state.draw.vertex_array = hw_vao.handle;
@@ -803,49 +744,8 @@ bool RasterizerOpenGL::Draw(bool accelerate, bool is_indexed) {
         shader_dirty = false;
     }
 
-    // Sync the lighting luts
-    for (unsigned index = 0; index < uniform_block_data.lut_dirty.size(); index++) {
-        if (uniform_block_data.lut_dirty[index]) {
-            SyncLightingLUT(index);
-            uniform_block_data.lut_dirty[index] = false;
-        }
-    }
-
-    // Sync the fog lut
-    if (uniform_block_data.fog_lut_dirty) {
-        SyncFogLUT();
-        uniform_block_data.fog_lut_dirty = false;
-    }
-
-    // Sync the proctex noise lut
-    if (uniform_block_data.proctex_noise_lut_dirty) {
-        SyncProcTexNoiseLUT();
-        uniform_block_data.proctex_noise_lut_dirty = false;
-    }
-
-    // Sync the proctex color map
-    if (uniform_block_data.proctex_color_map_dirty) {
-        SyncProcTexColorMap();
-        uniform_block_data.proctex_color_map_dirty = false;
-    }
-
-    // Sync the proctex alpha map
-    if (uniform_block_data.proctex_alpha_map_dirty) {
-        SyncProcTexAlphaMap();
-        uniform_block_data.proctex_alpha_map_dirty = false;
-    }
-
-    // Sync the proctex lut
-    if (uniform_block_data.proctex_lut_dirty) {
-        SyncProcTexLUT();
-        uniform_block_data.proctex_lut_dirty = false;
-    }
-
-    // Sync the proctex difference lut
-    if (uniform_block_data.proctex_diff_lut_dirty) {
-        SyncProcTexDiffLUT();
-        uniform_block_data.proctex_diff_lut_dirty = false;
-    }
+    // Sync the LUTs within the texture buffer
+    SyncAndUploadLUTs();
 
     // Sync the uniform data
     const bool use_gs = regs.pipeline.use_gs == Pica::PipelineRegs::UseGS::Yes;
@@ -1408,7 +1308,8 @@ void RasterizerOpenGL::NotifyPicaRegisterChanged(u32 id) {
     case PICA_REG_INDEX_WORKAROUND(lighting.lut_data[6], 0x1ce):
     case PICA_REG_INDEX_WORKAROUND(lighting.lut_data[7], 0x1cf): {
         auto& lut_config = regs.lighting.lut_config;
-        uniform_block_data.lut_dirty[lut_config.type] = true;
+        uniform_block_data.lighting_lut_dirty[lut_config.type] = true;
+        uniform_block_data.lighting_lut_dirty_any = true;
         break;
     }
     }
@@ -1763,21 +1664,6 @@ void RasterizerOpenGL::SyncFogColor() {
     uniform_block_data.dirty = true;
 }
 
-void RasterizerOpenGL::SyncFogLUT() {
-    std::array<GLvec2, 128> new_data;
-
-    std::transform(Pica::g_state.fog.lut.begin(), Pica::g_state.fog.lut.end(), new_data.begin(),
-                   [](const auto& entry) {
-                       return GLvec2{entry.ToFloat(), entry.DiffToFloat()};
-                   });
-
-    if (new_data != fog_lut_data) {
-        fog_lut_data = new_data;
-        glBindBuffer(GL_TEXTURE_BUFFER, fog_lut_buffer.handle);
-        glBufferSubData(GL_TEXTURE_BUFFER, 0, new_data.size() * sizeof(GLvec2), new_data.data());
-    }
-}
-
 void RasterizerOpenGL::SyncProcTexNoise() {
     const auto& regs = Pica::g_state.regs.texturing;
     uniform_block_data.data.proctex_noise_f = {
@@ -1794,70 +1680,6 @@ void RasterizerOpenGL::SyncProcTexNoise() {
     };
 
     uniform_block_data.dirty = true;
-}
-
-// helper function for SyncProcTexNoiseLUT/ColorMap/AlphaMap
-static void SyncProcTexValueLUT(const std::array<Pica::State::ProcTex::ValueEntry, 128>& lut,
-                                std::array<GLvec2, 128>& lut_data, GLuint buffer) {
-    std::array<GLvec2, 128> new_data;
-    std::transform(lut.begin(), lut.end(), new_data.begin(), [](const auto& entry) {
-        return GLvec2{entry.ToFloat(), entry.DiffToFloat()};
-    });
-
-    if (new_data != lut_data) {
-        lut_data = new_data;
-        glBindBuffer(GL_TEXTURE_BUFFER, buffer);
-        glBufferSubData(GL_TEXTURE_BUFFER, 0, new_data.size() * sizeof(GLvec2), new_data.data());
-    }
-}
-
-void RasterizerOpenGL::SyncProcTexNoiseLUT() {
-    SyncProcTexValueLUT(Pica::g_state.proctex.noise_table, proctex_noise_lut_data,
-                        proctex_noise_lut_buffer.handle);
-}
-
-void RasterizerOpenGL::SyncProcTexColorMap() {
-    SyncProcTexValueLUT(Pica::g_state.proctex.color_map_table, proctex_color_map_data,
-                        proctex_color_map_buffer.handle);
-}
-
-void RasterizerOpenGL::SyncProcTexAlphaMap() {
-    SyncProcTexValueLUT(Pica::g_state.proctex.alpha_map_table, proctex_alpha_map_data,
-                        proctex_alpha_map_buffer.handle);
-}
-
-void RasterizerOpenGL::SyncProcTexLUT() {
-    std::array<GLvec4, 256> new_data;
-
-    std::transform(Pica::g_state.proctex.color_table.begin(),
-                   Pica::g_state.proctex.color_table.end(), new_data.begin(),
-                   [](const auto& entry) {
-                       auto rgba = entry.ToVector() / 255.0f;
-                       return GLvec4{rgba.r(), rgba.g(), rgba.b(), rgba.a()};
-                   });
-
-    if (new_data != proctex_lut_data) {
-        proctex_lut_data = new_data;
-        glBindBuffer(GL_TEXTURE_BUFFER, proctex_lut_buffer.handle);
-        glBufferSubData(GL_TEXTURE_BUFFER, 0, new_data.size() * sizeof(GLvec4), new_data.data());
-    }
-}
-
-void RasterizerOpenGL::SyncProcTexDiffLUT() {
-    std::array<GLvec4, 256> new_data;
-
-    std::transform(Pica::g_state.proctex.color_diff_table.begin(),
-                   Pica::g_state.proctex.color_diff_table.end(), new_data.begin(),
-                   [](const auto& entry) {
-                       auto rgba = entry.ToVector() / 255.0f;
-                       return GLvec4{rgba.r(), rgba.g(), rgba.b(), rgba.a()};
-                   });
-
-    if (new_data != proctex_diff_lut_data) {
-        proctex_diff_lut_data = new_data;
-        glBindBuffer(GL_TEXTURE_BUFFER, proctex_diff_lut_buffer.handle);
-        glBufferSubData(GL_TEXTURE_BUFFER, 0, new_data.size() * sizeof(GLvec4), new_data.data());
-    }
 }
 
 void RasterizerOpenGL::SyncAlphaTest() {
@@ -1957,21 +1779,6 @@ void RasterizerOpenGL::SyncGlobalAmbient() {
     }
 }
 
-void RasterizerOpenGL::SyncLightingLUT(unsigned lut_index) {
-    std::array<GLvec2, 256> new_data;
-    const auto& source_lut = Pica::g_state.lighting.luts[lut_index];
-    std::transform(source_lut.begin(), source_lut.end(), new_data.begin(), [](const auto& entry) {
-        return GLvec2{entry.ToFloat(), entry.DiffToFloat()};
-    });
-
-    if (new_data != lighting_lut_data[lut_index]) {
-        lighting_lut_data[lut_index] = new_data;
-        glBindBuffer(GL_TEXTURE_BUFFER, lighting_lut_buffer.handle);
-        glBufferSubData(GL_TEXTURE_BUFFER, lut_index * new_data.size() * sizeof(GLvec2),
-                        new_data.size() * sizeof(GLvec2), new_data.data());
-    }
-}
-
 void RasterizerOpenGL::SyncLightSpecular0(int light_index) {
     auto color = PicaToGL::LightColor(Pica::g_state.regs.lighting.light[light_index].specular_0);
     if (color != uniform_block_data.data.light_src[light_index].specular_0) {
@@ -2060,6 +1867,158 @@ void RasterizerOpenGL::SyncShadowBias() {
         uniform_block_data.data.shadow_bias_linear = linear;
         uniform_block_data.dirty = true;
     }
+}
+
+void RasterizerOpenGL::SyncAndUploadLUTs() {
+    constexpr size_t max_size = sizeof(GLvec2) * 256 * Pica::LightingRegs::NumLightingSampler +
+                                sizeof(GLvec2) * 128 +     // fog
+                                sizeof(GLvec2) * 128 * 3 + // proctex: noise + color + alpha
+                                sizeof(GLvec4) * 256 +     // proctex
+                                sizeof(GLvec4) * 256;      // proctex diff
+
+    if (!uniform_block_data.lighting_lut_dirty_any && !uniform_block_data.fog_lut_dirty &&
+        !uniform_block_data.proctex_noise_lut_dirty &&
+        !uniform_block_data.proctex_color_map_dirty &&
+        !uniform_block_data.proctex_alpha_map_dirty && !uniform_block_data.proctex_lut_dirty &&
+        !uniform_block_data.proctex_diff_lut_dirty) {
+        return;
+    }
+
+    u8* buffer;
+    GLintptr offset;
+    bool invalidate;
+    size_t bytes_used = 0;
+    glBindBuffer(GL_TEXTURE_BUFFER, texture_buffer.GetHandle());
+    std::tie(buffer, offset, invalidate) = texture_buffer.Map(max_size, sizeof(GLvec4));
+
+    // Sync the lighting luts
+    if (uniform_block_data.lighting_lut_dirty_any || invalidate) {
+        for (unsigned index = 0; index < uniform_block_data.lighting_lut_dirty.size(); index++) {
+            if (uniform_block_data.lighting_lut_dirty[index] || invalidate) {
+                std::array<GLvec2, 256> new_data;
+                const auto& source_lut = Pica::g_state.lighting.luts[index];
+                std::transform(source_lut.begin(), source_lut.end(), new_data.begin(),
+                               [](const auto& entry) {
+                                   return GLvec2{entry.ToFloat(), entry.DiffToFloat()};
+                               });
+
+                if (new_data != lighting_lut_data[index] || invalidate) {
+                    lighting_lut_data[index] = new_data;
+                    std::memcpy(buffer + bytes_used, new_data.data(),
+                                new_data.size() * sizeof(GLvec2));
+                    uniform_block_data.data.lighting_lut_offset[index / 4][index % 4] =
+                        (offset + bytes_used) / sizeof(GLvec2);
+                    uniform_block_data.dirty = true;
+                    bytes_used += new_data.size() * sizeof(GLvec2);
+                }
+                uniform_block_data.lighting_lut_dirty[index] = false;
+            }
+        }
+    }
+    uniform_block_data.lighting_lut_dirty_any = false;
+
+    // Sync the fog lut
+    if (uniform_block_data.fog_lut_dirty || invalidate) {
+        std::array<GLvec2, 128> new_data;
+
+        std::transform(Pica::g_state.fog.lut.begin(), Pica::g_state.fog.lut.end(), new_data.begin(),
+                       [](const auto& entry) {
+                           return GLvec2{entry.ToFloat(), entry.DiffToFloat()};
+                       });
+
+        if (new_data != fog_lut_data || invalidate) {
+            fog_lut_data = new_data;
+            std::memcpy(buffer + bytes_used, new_data.data(), new_data.size() * sizeof(GLvec2));
+            uniform_block_data.data.fog_lut_offset = (offset + bytes_used) / sizeof(GLvec2);
+            uniform_block_data.dirty = true;
+            bytes_used += new_data.size() * sizeof(GLvec2);
+        }
+        uniform_block_data.fog_lut_dirty = false;
+    }
+
+    // helper function for SyncProcTexNoiseLUT/ColorMap/AlphaMap
+    auto SyncProcTexValueLUT = [this, buffer, offset, invalidate, &bytes_used](
+                                   const std::array<Pica::State::ProcTex::ValueEntry, 128>& lut,
+                                   std::array<GLvec2, 128>& lut_data, GLint& lut_offset) {
+        std::array<GLvec2, 128> new_data;
+        std::transform(lut.begin(), lut.end(), new_data.begin(), [](const auto& entry) {
+            return GLvec2{entry.ToFloat(), entry.DiffToFloat()};
+        });
+
+        if (new_data != lut_data || invalidate) {
+            lut_data = new_data;
+            std::memcpy(buffer + bytes_used, new_data.data(), new_data.size() * sizeof(GLvec2));
+            lut_offset = (offset + bytes_used) / sizeof(GLvec2);
+            uniform_block_data.dirty = true;
+            bytes_used += new_data.size() * sizeof(GLvec2);
+        }
+    };
+
+    // Sync the proctex noise lut
+    if (uniform_block_data.proctex_noise_lut_dirty || invalidate) {
+        SyncProcTexValueLUT(Pica::g_state.proctex.noise_table, proctex_noise_lut_data,
+                            uniform_block_data.data.proctex_noise_lut_offset);
+        uniform_block_data.proctex_noise_lut_dirty = false;
+    }
+
+    // Sync the proctex color map
+    if (uniform_block_data.proctex_color_map_dirty || invalidate) {
+        SyncProcTexValueLUT(Pica::g_state.proctex.color_map_table, proctex_color_map_data,
+                            uniform_block_data.data.proctex_color_map_offset);
+        uniform_block_data.proctex_color_map_dirty = false;
+    }
+
+    // Sync the proctex alpha map
+    if (uniform_block_data.proctex_alpha_map_dirty || invalidate) {
+        SyncProcTexValueLUT(Pica::g_state.proctex.alpha_map_table, proctex_alpha_map_data,
+                            uniform_block_data.data.proctex_alpha_map_offset);
+        uniform_block_data.proctex_alpha_map_dirty = false;
+    }
+
+    // Sync the proctex lut
+    if (uniform_block_data.proctex_lut_dirty || invalidate) {
+        std::array<GLvec4, 256> new_data;
+
+        std::transform(Pica::g_state.proctex.color_table.begin(),
+                       Pica::g_state.proctex.color_table.end(), new_data.begin(),
+                       [](const auto& entry) {
+                           auto rgba = entry.ToVector() / 255.0f;
+                           return GLvec4{rgba.r(), rgba.g(), rgba.b(), rgba.a()};
+                       });
+
+        if (new_data != proctex_lut_data || invalidate) {
+            proctex_lut_data = new_data;
+            std::memcpy(buffer + bytes_used, new_data.data(), new_data.size() * sizeof(GLvec4));
+            uniform_block_data.data.proctex_lut_offset = (offset + bytes_used) / sizeof(GLvec4);
+            uniform_block_data.dirty = true;
+            bytes_used += new_data.size() * sizeof(GLvec4);
+        }
+        uniform_block_data.proctex_lut_dirty = false;
+    }
+
+    // Sync the proctex difference lut
+    if (uniform_block_data.proctex_diff_lut_dirty || invalidate) {
+        std::array<GLvec4, 256> new_data;
+
+        std::transform(Pica::g_state.proctex.color_diff_table.begin(),
+                       Pica::g_state.proctex.color_diff_table.end(), new_data.begin(),
+                       [](const auto& entry) {
+                           auto rgba = entry.ToVector() / 255.0f;
+                           return GLvec4{rgba.r(), rgba.g(), rgba.b(), rgba.a()};
+                       });
+
+        if (new_data != proctex_diff_lut_data || invalidate) {
+            proctex_diff_lut_data = new_data;
+            std::memcpy(buffer + bytes_used, new_data.data(), new_data.size() * sizeof(GLvec4));
+            uniform_block_data.data.proctex_diff_lut_offset =
+                (offset + bytes_used) / sizeof(GLvec4);
+            uniform_block_data.dirty = true;
+            bytes_used += new_data.size() * sizeof(GLvec4);
+        }
+        uniform_block_data.proctex_diff_lut_dirty = false;
+    }
+
+    texture_buffer.Unmap(bytes_used);
 }
 
 void RasterizerOpenGL::UploadUniforms(bool accelerate_draw, bool use_gs) {

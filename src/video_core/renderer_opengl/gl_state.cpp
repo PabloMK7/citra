@@ -55,15 +55,8 @@ OpenGLState::OpenGLState() {
     texture_cube_unit.texture_cube = 0;
     texture_cube_unit.sampler = 0;
 
-    lighting_lut.texture_buffer = 0;
-
-    fog_lut.texture_buffer = 0;
-
-    proctex_lut.texture_buffer = 0;
-    proctex_diff_lut.texture_buffer = 0;
-    proctex_color_map.texture_buffer = 0;
-    proctex_alpha_map.texture_buffer = 0;
-    proctex_noise_lut.texture_buffer = 0;
+    texture_buffer_lut_rg.texture_buffer = 0;
+    texture_buffer_lut_rgba.texture_buffer = 0;
 
     image_shadow_buffer = 0;
     image_shadow_texture_px = 0;
@@ -221,46 +214,17 @@ void OpenGLState::Apply() const {
         glBindSampler(TextureUnits::TextureCube.id, texture_cube_unit.sampler);
     }
 
-    // Lighting LUTs
-    if (lighting_lut.texture_buffer != cur_state.lighting_lut.texture_buffer) {
-        glActiveTexture(TextureUnits::LightingLUT.Enum());
-        glBindTexture(GL_TEXTURE_BUFFER, lighting_lut.texture_buffer);
+    // Texture buffer LUTs
+    if (texture_buffer_lut_rg.texture_buffer != cur_state.texture_buffer_lut_rg.texture_buffer) {
+        glActiveTexture(TextureUnits::TextureBufferLUT_RG.Enum());
+        glBindTexture(GL_TEXTURE_BUFFER, texture_buffer_lut_rg.texture_buffer);
     }
 
-    // Fog LUT
-    if (fog_lut.texture_buffer != cur_state.fog_lut.texture_buffer) {
-        glActiveTexture(TextureUnits::FogLUT.Enum());
-        glBindTexture(GL_TEXTURE_BUFFER, fog_lut.texture_buffer);
-    }
-
-    // ProcTex Noise LUT
-    if (proctex_noise_lut.texture_buffer != cur_state.proctex_noise_lut.texture_buffer) {
-        glActiveTexture(TextureUnits::ProcTexNoiseLUT.Enum());
-        glBindTexture(GL_TEXTURE_BUFFER, proctex_noise_lut.texture_buffer);
-    }
-
-    // ProcTex Color Map
-    if (proctex_color_map.texture_buffer != cur_state.proctex_color_map.texture_buffer) {
-        glActiveTexture(TextureUnits::ProcTexColorMap.Enum());
-        glBindTexture(GL_TEXTURE_BUFFER, proctex_color_map.texture_buffer);
-    }
-
-    // ProcTex Alpha Map
-    if (proctex_alpha_map.texture_buffer != cur_state.proctex_alpha_map.texture_buffer) {
-        glActiveTexture(TextureUnits::ProcTexAlphaMap.Enum());
-        glBindTexture(GL_TEXTURE_BUFFER, proctex_alpha_map.texture_buffer);
-    }
-
-    // ProcTex LUT
-    if (proctex_lut.texture_buffer != cur_state.proctex_lut.texture_buffer) {
-        glActiveTexture(TextureUnits::ProcTexLUT.Enum());
-        glBindTexture(GL_TEXTURE_BUFFER, proctex_lut.texture_buffer);
-    }
-
-    // ProcTex Diff LUT
-    if (proctex_diff_lut.texture_buffer != cur_state.proctex_diff_lut.texture_buffer) {
-        glActiveTexture(TextureUnits::ProcTexDiffLUT.Enum());
-        glBindTexture(GL_TEXTURE_BUFFER, proctex_diff_lut.texture_buffer);
+    // Texture buffer LUTs
+    if (texture_buffer_lut_rgba.texture_buffer !=
+        cur_state.texture_buffer_lut_rgba.texture_buffer) {
+        glActiveTexture(TextureUnits::TextureBufferLUT_RGBA.Enum());
+        glBindTexture(GL_TEXTURE_BUFFER, texture_buffer_lut_rgba.texture_buffer);
     }
 
     // Shadow Images
@@ -374,20 +338,10 @@ OpenGLState& OpenGLState::ResetTexture(GLuint handle) {
     }
     if (texture_cube_unit.texture_cube == handle)
         texture_cube_unit.texture_cube = 0;
-    if (lighting_lut.texture_buffer == handle)
-        lighting_lut.texture_buffer = 0;
-    if (fog_lut.texture_buffer == handle)
-        fog_lut.texture_buffer = 0;
-    if (proctex_noise_lut.texture_buffer == handle)
-        proctex_noise_lut.texture_buffer = 0;
-    if (proctex_color_map.texture_buffer == handle)
-        proctex_color_map.texture_buffer = 0;
-    if (proctex_alpha_map.texture_buffer == handle)
-        proctex_alpha_map.texture_buffer = 0;
-    if (proctex_lut.texture_buffer == handle)
-        proctex_lut.texture_buffer = 0;
-    if (proctex_diff_lut.texture_buffer == handle)
-        proctex_diff_lut.texture_buffer = 0;
+    if (texture_buffer_lut_rg.texture_buffer == handle)
+        texture_buffer_lut_rg.texture_buffer = 0;
+    if (texture_buffer_lut_rgba.texture_buffer == handle)
+        texture_buffer_lut_rgba.texture_buffer = 0;
     if (image_shadow_buffer == handle)
         image_shadow_buffer = 0;
     if (image_shadow_texture_px == handle)

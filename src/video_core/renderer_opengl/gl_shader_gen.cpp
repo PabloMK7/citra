@@ -32,6 +32,7 @@ namespace GLShader {
 static const std::string UniformBlockDef = R"(
 #define NUM_TEV_STAGES 6
 #define NUM_LIGHTS 8
+#define NUM_LIGHTING_SAMPLERS 24
 
 struct LightSrc {
     vec3 specular_0;
@@ -55,6 +56,13 @@ layout (std140) uniform shader_data {
     int scissor_y1;
     int scissor_x2;
     int scissor_y2;
+    int fog_lut_offset;
+    int proctex_noise_lut_offset;
+    int proctex_color_map_offset;
+    int proctex_alpha_map_offset;
+    int proctex_lut_offset;
+    int proctex_diff_lut_offset;
+    ivec4 lighting_lut_offset[NUM_LIGHTING_SAMPLERS / 4];
     vec3 fog_color;
     vec2 proctex_noise_f;
     vec2 proctex_noise_a;
@@ -1017,7 +1025,7 @@ void AppendProcTexClamp(std::string& out, const std::string& var, ProcTexClamp m
 }
 
 void AppendProcTexCombineAndMap(std::string& out, ProcTexCombiner combiner,
-                                const std::string& map_lut) {
+                                const std::string& offset) {
     std::string combined;
     switch (combiner) {
     case ProcTexCombiner::U:
@@ -1055,7 +1063,7 @@ void AppendProcTexCombineAndMap(std::string& out, ProcTexCombiner combiner,
         combined = "0.0";
         break;
     }
-    out += "ProcTexLookupLUT(" + map_lut + ", " + combined + ")";
+    out += "ProcTexLookupLUT(" + offset + ", " + combined + ")";
 }
 
 void AppendProcTexSampler(std::string& out, const PicaFSConfig& config) {
@@ -1064,12 +1072,12 @@ void AppendProcTexSampler(std::string& out, const PicaFSConfig& config) {
     // coord=1.0 is lut[127]+lut_diff[127]. For other indices, the result is interpolated using
     // value entries and difference entries.
     out += R"(
-float ProcTexLookupLUT(samplerBuffer lut, float coord) {
+float ProcTexLookupLUT(int offset, float coord) {
     coord *= 128;
     float index_i = clamp(floor(coord), 0.0, 127.0);
     float index_f = coord - index_i; // fract() cannot be used here because 128.0 needs to be
                                      // extracted as index_i = 127.0 and index_f = 1.0
-    vec2 entry = texelFetch(lut, int(index_i)).rg;
+    vec2 entry = texelFetch(texture_buffer_lut_rg, int(index_i) + offset).rg;
     return clamp(entry.r + entry.g * index_f, 0.0, 1.0);
 }
     )";
@@ -1105,8 +1113,8 @@ float ProcTexNoiseCoef(vec2 x) {
     float g2 = ProcTexNoiseRand2D(point + vec2(0.0, 1.0)) * (frac.x + frac.y - 1.0);
     float g3 = ProcTexNoiseRand2D(point + vec2(1.0, 1.0)) * (frac.x + frac.y - 2.0);
 
-    float x_noise = ProcTexLookupLUT(proctex_noise_lut, frac.x);
-    float y_noise = ProcTexLookupLUT(proctex_noise_lut, frac.y);
+    float x_noise = ProcTexLookupLUT(proctex_noise_lut_offset, frac.x);
+    float y_noise = ProcTexLookupLUT(proctex_noise_lut_offset, frac.y);
     float x0 = mix(g0, g1, x_noise);
     float x1 = mix(g2, g3, x_noise);
     return mix(x0, x1, y_noise);
@@ -1148,7 +1156,8 @@ float ProcTexNoiseCoef(vec2 x) {
 
     // Combine and map
     out += "float lut_coord = ";
-    AppendProcTexCombineAndMap(out, config.state.proctex.color_combiner, "proctex_color_map");
+    AppendProcTexCombineAndMap(out, config.state.proctex.color_combiner,
+                               "proctex_color_map_offset");
     out += ";\n";
 
     // Look up color
@@ -1162,14 +1171,17 @@ float ProcTexNoiseCoef(vec2 x) {
         out += "int lut_index_i = int(lut_coord) + " +
                std::to_string(config.state.proctex.lut_offset) + ";\n";
         out += "float lut_index_f = fract(lut_coord);\n";
-        out += "vec4 final_color = texelFetch(proctex_lut, lut_index_i) + lut_index_f * "
-               "texelFetch(proctex_diff_lut, lut_index_i);\n";
+        out += "vec4 final_color = texelFetch(texture_buffer_lut_rgba, lut_index_i + "
+               "proctex_lut_offset) + "
+               "lut_index_f * "
+               "texelFetch(texture_buffer_lut_rgba, lut_index_i + proctex_diff_lut_offset);\n";
         break;
     case ProcTexFilter::Nearest:
     case ProcTexFilter::NearestMipmapLinear:
     case ProcTexFilter::NearestMipmapNearest:
         out += "lut_coord += " + std::to_string(config.state.proctex.lut_offset) + ";\n";
-        out += "vec4 final_color = texelFetch(proctex_lut, int(round(lut_coord)));\n";
+        out += "vec4 final_color = texelFetch(texture_buffer_lut_rgba, int(round(lut_coord)) + "
+               "proctex_lut_offset);\n";
         break;
     }
 
@@ -1177,7 +1189,8 @@ float ProcTexNoiseCoef(vec2 x) {
         // Note: in separate alpha mode, the alpha channel skips the color LUT look up stage. It
         // uses the output of CombineAndMap directly instead.
         out += "float final_alpha = ";
-        AppendProcTexCombineAndMap(out, config.state.proctex.alpha_combiner, "proctex_alpha_map");
+        AppendProcTexCombineAndMap(out, config.state.proctex.alpha_combiner,
+                                   "proctex_alpha_map_offset");
         out += ";\n";
         out += "return vec4(final_color.xyz, final_alpha);\n}\n";
     } else {
@@ -1210,13 +1223,8 @@ uniform sampler2D tex0;
 uniform sampler2D tex1;
 uniform sampler2D tex2;
 uniform samplerCube tex_cube;
-uniform samplerBuffer lighting_lut;
-uniform samplerBuffer fog_lut;
-uniform samplerBuffer proctex_noise_lut;
-uniform samplerBuffer proctex_color_map;
-uniform samplerBuffer proctex_alpha_map;
-uniform samplerBuffer proctex_lut;
-uniform samplerBuffer proctex_diff_lut;
+uniform samplerBuffer texture_buffer_lut_rg;
+uniform samplerBuffer texture_buffer_lut_rgba;
 
 #if ALLOW_SHADOW
 layout(r32ui) uniform readonly uimage2D shadow_texture_px;
@@ -1238,7 +1246,7 @@ vec3 quaternion_rotate(vec4 q, vec3 v) {
 }
 
 float LookupLightingLUT(int lut_index, int index, float delta) {
-    vec2 entry = texelFetch(lighting_lut, lut_index * 256 + index).rg;
+    vec2 entry = texelFetch(texture_buffer_lut_rg, lighting_lut_offset[lut_index >> 2][lut_index & 3] + index).rg;
     return entry.r + entry.g * delta;
 }
 
@@ -1481,7 +1489,8 @@ vec4 secondary_fragment_color = vec4(0.0);
         // Generate clamped fog factor from LUT for given fog index
         out += "float fog_i = clamp(floor(fog_index), 0.0, 127.0);\n";
         out += "float fog_f = fog_index - fog_i;\n";
-        out += "vec2 fog_lut_entry = texelFetch(fog_lut, int(fog_i)).rg;\n";
+        out += "vec2 fog_lut_entry = texelFetch(texture_buffer_lut_rg, int(fog_i) + "
+               "fog_lut_offset).rg;\n";
         out += "float fog_factor = fog_lut_entry.r + fog_lut_entry.g * fog_f;\n";
         out += "fog_factor = clamp(fog_factor, 0.0, 1.0);\n";
 

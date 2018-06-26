@@ -148,17 +148,9 @@ private:
 
     /// Syncs the fog states to match the PICA register
     void SyncFogColor();
-    void SyncFogLUT();
 
     /// Sync the procedural texture noise configuration to match the PICA register
     void SyncProcTexNoise();
-
-    /// Sync the procedural texture lookup tables
-    void SyncProcTexNoiseLUT();
-    void SyncProcTexColorMap();
-    void SyncProcTexAlphaMap();
-    void SyncProcTexLUT();
-    void SyncProcTexDiffLUT();
 
     /// Syncs the alpha test states to match the PICA register
     void SyncAlphaTest();
@@ -190,9 +182,6 @@ private:
     /// Syncs the lighting global ambient color to match the PICA register
     void SyncGlobalAmbient();
 
-    /// Syncs the lighting lookup tables
-    void SyncLightingLUT(unsigned index);
-
     /// Syncs the specified light's specular 0 color to match the PICA register
     void SyncLightSpecular0(int light_index);
 
@@ -219,6 +208,9 @@ private:
 
     /// Syncs the shadow rendering bias to match the PICA register
     void SyncShadowBias();
+
+    /// Syncs and uploads the lighting, fog and proctex LUTs
+    void SyncAndUploadLUTs();
 
     /// Upload the uniform blocks to the uniform buffer object
     void UploadUniforms(bool accelerate_draw, bool use_gs);
@@ -258,7 +250,8 @@ private:
 
     struct {
         UniformData data;
-        std::array<bool, Pica::LightingRegs::NumLightingSampler> lut_dirty;
+        std::array<bool, Pica::LightingRegs::NumLightingSampler> lighting_lut_dirty;
+        bool lighting_lut_dirty_any;
         bool fog_lut_dirty;
         bool proctex_noise_lut_dirty;
         bool proctex_color_map_dirty;
@@ -274,6 +267,7 @@ private:
     static constexpr size_t VERTEX_BUFFER_SIZE = 32 * 1024 * 1024;
     static constexpr size_t INDEX_BUFFER_SIZE = 1 * 1024 * 1024;
     static constexpr size_t UNIFORM_BUFFER_SIZE = 2 * 1024 * 1024;
+    static constexpr size_t TEXTURE_BUFFER_SIZE = 1 * 1024 * 1024;
 
     OGLVertexArray sw_vao; // VAO for software shader draw
     OGLVertexArray hw_vao; // VAO for hardware shader / accelerate draw
@@ -283,6 +277,7 @@ private:
     OGLStreamBuffer vertex_buffer;
     OGLStreamBuffer uniform_buffer;
     OGLStreamBuffer index_buffer;
+    OGLStreamBuffer texture_buffer;
     OGLFramebuffer framebuffer;
     GLint uniform_buffer_alignment;
     size_t uniform_size_aligned_vs;
@@ -291,32 +286,15 @@ private:
 
     SamplerInfo texture_cube_sampler;
 
-    OGLBuffer lighting_lut_buffer;
-    OGLTexture lighting_lut;
+    OGLTexture texture_buffer_lut_rg;
+    OGLTexture texture_buffer_lut_rgba;
+
     std::array<std::array<GLvec2, 256>, Pica::LightingRegs::NumLightingSampler> lighting_lut_data{};
-
-    OGLBuffer fog_lut_buffer;
-    OGLTexture fog_lut;
     std::array<GLvec2, 128> fog_lut_data{};
-
-    OGLBuffer proctex_noise_lut_buffer;
-    OGLTexture proctex_noise_lut;
     std::array<GLvec2, 128> proctex_noise_lut_data{};
-
-    OGLBuffer proctex_color_map_buffer;
-    OGLTexture proctex_color_map;
     std::array<GLvec2, 128> proctex_color_map_data{};
-
-    OGLBuffer proctex_alpha_map_buffer;
-    OGLTexture proctex_alpha_map;
     std::array<GLvec2, 128> proctex_alpha_map_data{};
-
-    OGLBuffer proctex_lut_buffer;
-    OGLTexture proctex_lut;
     std::array<GLvec4, 256> proctex_lut_data{};
-
-    OGLBuffer proctex_diff_lut_buffer;
-    OGLTexture proctex_diff_lut;
     std::array<GLvec4, 256> proctex_diff_lut_data{};
 
     bool allow_shadow;
