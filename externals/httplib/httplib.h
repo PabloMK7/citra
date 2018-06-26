@@ -34,6 +34,10 @@
 #undef min
 #undef max
 
+#ifndef strcasecmp
+#define strcasecmp _stricmp
+#endif
+
 typedef SOCKET socket_t;
 #else
 #include <pthread.h>
@@ -44,14 +48,17 @@ typedef SOCKET socket_t;
 #include <arpa/inet.h>
 #include <signal.h>
 #include <sys/socket.h>
+#include <sys/select.h>
 
 typedef int socket_t;
+#define INVALID_SOCKET (-1)
 #endif
 
 #include <fstream>
 #include <functional>
 #include <map>
 #include <memory>
+#include <mutex>
 #include <regex>
 #include <string>
 #include <thread>
@@ -70,7 +77,6 @@ typedef int socket_t;
 /*
  * Configuration
  */
-#define CPPHTTPLIB_KEEPALIVE_MAX_COUNT 5
 #define CPPHTTPLIB_KEEPALIVE_TIMEOUT_SECOND 5
 #define CPPHTTPLIB_KEEPALIVE_TIMEOUT_USECOND 0
 
@@ -114,6 +120,7 @@ typedef std::multimap<std::string, MultipartFile> MultipartFiles;
 struct Request {
     std::string    version;
     std::string    method;
+    std::string    target;
     std::string    path;
     Headers        headers;
     std::string    body;
@@ -144,7 +151,7 @@ struct Response {
     std::string get_header_value(const char* key) const;
     void set_header(const char* key, const char* val);
 
-    void set_redirect(const char* url);
+    void set_redirect(const char* uri);
     void set_content(const char* s, size_t n, const char* content_type);
     void set_content(const std::string& s, const char* content_type);
 
@@ -157,6 +164,7 @@ public:
     virtual int read(char* ptr, size_t size) = 0;
     virtual int write(const char* ptr, size_t size1) = 0;
     virtual int write(const char* ptr) = 0;
+    virtual std::string get_remote_addr() = 0;
 
     template <typename ...Args>
     void write_format(const char* fmt, const Args& ...args);
@@ -170,6 +178,7 @@ public:
     virtual int read(char* ptr, size_t size);
     virtual int write(const char* ptr, size_t size);
     virtual int write(const char* ptr);
+    virtual std::string get_remote_addr();
 
 private:
     socket_t sock_;
@@ -180,19 +189,28 @@ public:
     typedef std::function<void (const Request&, Response&)> Handler;
     typedef std::function<void (const Request&, const Response&)> Logger;
 
-    Server(HttpVersion http_version = HttpVersion::v1_0);
+    Server();
 
     virtual ~Server();
 
     virtual bool is_valid() const;
 
-    Server& get(const char* pattern, Handler handler);
-    Server& post(const char* pattern, Handler handler);
+    Server& Get(const char* pattern, Handler handler);
+    Server& Post(const char* pattern, Handler handler);
+
+    Server& Put(const char* pattern, Handler handler);
+    Server& Delete(const char* pattern, Handler handler);
+    Server& Options(const char* pattern, Handler handler);
 
     bool set_base_dir(const char* path);
 
     void set_error_handler(Handler handler);
     void set_logger(Logger logger);
+
+    void set_keep_alive_max_count(size_t count);
+
+    int bind_to_any_port(const char* host, int socket_flags = 0);
+    bool listen_after_bind();
 
     bool listen(const char* host, int port, int socket_flags = 0);
 
@@ -200,14 +218,16 @@ public:
     void stop();
 
 protected:
-    bool process_request(Stream& strm, bool last_connection);
+    bool process_request(Stream& strm, bool last_connection, bool& connection_close);
 
-    const HttpVersion http_version_;
+    size_t keep_alive_max_count_;
 
 private:
     typedef std::vector<std::pair<std::regex, Handler>> Handlers;
 
     socket_t create_server_socket(const char* host, int port, int socket_flags) const;
+    int bind_internal(const char* host, int port, int socket_flags);
+    bool listen_internal();
 
     bool routing(Request& req, Response& res);
     bool handle_file_request(Request& req, Response& res);
@@ -218,12 +238,20 @@ private:
 
     virtual bool read_and_close_socket(socket_t sock);
 
+    bool        is_running_;
     socket_t    svr_sock_;
     std::string base_dir_;
     Handlers    get_handlers_;
     Handlers    post_handlers_;
+    Handlers    put_handlers_;
+    Handlers    delete_handlers_;
+    Handlers    options_handlers_;
     Handler     error_handler_;
     Logger      logger_;
+
+    // TODO: Use thread pool...
+    std::mutex  running_threads_mutex_;
+    int         running_threads_;
 };
 
 class Client {
@@ -231,34 +259,41 @@ public:
     Client(
             const char* host,
             int port = 80,
-            size_t timeout_sec = 300,
-            HttpVersion http_version = HttpVersion::v1_0);
+            size_t timeout_sec = 300);
 
     virtual ~Client();
 
     virtual bool is_valid() const;
 
-    std::shared_ptr<Response> get(const char* path, Progress progress = nullptr);
-    std::shared_ptr<Response> get(const char* path, const Headers& headers, Progress progress = nullptr);
+    std::shared_ptr<Response> Get(const char* path, Progress progress = nullptr);
+    std::shared_ptr<Response> Get(const char* path, const Headers& headers, Progress progress = nullptr);
 
-    std::shared_ptr<Response> head(const char* path);
-    std::shared_ptr<Response> head(const char* path, const Headers& headers);
+    std::shared_ptr<Response> Head(const char* path);
+    std::shared_ptr<Response> Head(const char* path, const Headers& headers);
 
-    std::shared_ptr<Response> post(const char* path, const std::string& body, const char* content_type);
-    std::shared_ptr<Response> post(const char* path, const Headers& headers, const std::string& body, const char* content_type);
+    std::shared_ptr<Response> Post(const char* path, const std::string& body, const char* content_type);
+    std::shared_ptr<Response> Post(const char* path, const Headers& headers, const std::string& body, const char* content_type);
 
-    std::shared_ptr<Response> post(const char* path, const Params& params);
-    std::shared_ptr<Response> post(const char* path, const Headers& headers, const Params& params);
+    std::shared_ptr<Response> Post(const char* path, const Params& params);
+    std::shared_ptr<Response> Post(const char* path, const Headers& headers, const Params& params);
+
+    std::shared_ptr<Response> Put(const char* path, const std::string& body, const char* content_type);
+    std::shared_ptr<Response> Put(const char* path, const Headers& headers, const std::string& body, const char* content_type);
+
+    std::shared_ptr<Response> Delete(const char* path);
+    std::shared_ptr<Response> Delete(const char* path, const Headers& headers);
+
+    std::shared_ptr<Response> Options(const char* path);
+    std::shared_ptr<Response> Options(const char* path, const Headers& headers);
 
     bool send(Request& req, Response& res);
 
 protected:
-    bool process_request(Stream& strm, Request& req, Response& res);
+    bool process_request(Stream& strm, Request& req, Response& res, bool& connection_close);
 
     const std::string host_;
     const int         port_;
     size_t            timeout_sec_;
-    const HttpVersion http_version_;
     const std::string host_and_port_;
 
 private:
@@ -272,22 +307,23 @@ private:
 #ifdef CPPHTTPLIB_OPENSSL_SUPPORT
 class SSLSocketStream : public Stream {
 public:
-    SSLSocketStream(SSL* ssl);
+    SSLSocketStream(socket_t sock, SSL* ssl);
     virtual ~SSLSocketStream();
 
     virtual int read(char* ptr, size_t size);
     virtual int write(const char* ptr, size_t size);
     virtual int write(const char* ptr);
+    virtual std::string get_remote_addr();
 
 private:
+    socket_t sock_;
     SSL* ssl_;
 };
 
 class SSLServer : public Server {
 public:
     SSLServer(
-        const char* cert_path, const char* private_key_path,
-        HttpVersion http_version = HttpVersion::v1_0);
+            const char* cert_path, const char* private_key_path);
 
     virtual ~SSLServer();
 
@@ -297,15 +333,15 @@ private:
     virtual bool read_and_close_socket(socket_t sock);
 
     SSL_CTX* ctx_;
+    std::mutex ctx_mutex_;
 };
 
 class SSLClient : public Client {
 public:
     SSLClient(
-        const char* host,
-        int port = 80,
-        size_t timeout_sec = 300,
-        HttpVersion http_version = HttpVersion::v1_0);
+            const char* host,
+            int port = 80,
+            size_t timeout_sec = 300);
 
     virtual ~SSLClient();
 
@@ -315,6 +351,7 @@ private:
     virtual bool read_and_close_socket(socket_t sock, Request& req, Response& res);
 
     SSL_CTX* ctx_;
+    std::mutex ctx_mutex_;
 };
 #endif
 
@@ -322,8 +359,6 @@ private:
  * Implementation
  */
 namespace detail {
-
-static std::vector<const char*> http_version_strings = { "HTTP/1.0", "HTTP/1.1" };
 
 template <class Fn>
 void split(const char* b, const char* e, char d, Fn fn)
@@ -433,49 +468,60 @@ inline int select_read(socket_t sock, size_t sec, size_t usec)
     return select(sock + 1, &fds, NULL, NULL, &tv);
 }
 
-inline bool is_socket_writable(socket_t sock, size_t sec, size_t usec)
+inline bool wait_until_socket_is_ready(socket_t sock, size_t sec, size_t usec)
 {
-    fd_set fdsw;
-    FD_ZERO(&fdsw);
-    FD_SET(sock, &fdsw);
+    fd_set fdsr;
+    FD_ZERO(&fdsr);
+    FD_SET(sock, &fdsr);
 
-    fd_set fdse;
-    FD_ZERO(&fdse);
-    FD_SET(sock, &fdse);
+    auto fdsw = fdsr;
+    auto fdse = fdsr;
 
     timeval tv;
     tv.tv_sec = sec;
     tv.tv_usec = usec;
 
-    if (select(sock + 1, NULL, &fdsw, &fdse, &tv) <= 0) {
+    if (select(sock + 1, &fdsr, &fdsw, &fdse, &tv) < 0) {
+        return false;
+    } else if (FD_ISSET(sock, &fdsr) || FD_ISSET(sock, &fdsw)) {
+        int error = 0;
+        socklen_t len = sizeof(error);
+        if (getsockopt(sock, SOL_SOCKET, SO_ERROR, (char*)&error, &len) < 0 || error) {
+            return false;
+        }
+    } else {
         return false;
     }
 
-    return FD_ISSET(sock, &fdsw) != 0;
+    return true;
 }
 
 template <typename T>
-inline bool read_and_close_socket(socket_t sock, bool keep_alive, T callback)
+inline bool read_and_close_socket(socket_t sock, size_t keep_alive_max_count, T callback)
 {
     bool ret = false;
 
-    if (keep_alive) {
-        auto count = CPPHTTPLIB_KEEPALIVE_MAX_COUNT;
+    if (keep_alive_max_count > 0) {
+        auto count = keep_alive_max_count;
         while (count > 0 &&
                detail::select_read(sock,
                                    CPPHTTPLIB_KEEPALIVE_TIMEOUT_SECOND,
                                    CPPHTTPLIB_KEEPALIVE_TIMEOUT_USECOND) > 0) {
-            auto last_connection = count == 1;
             SocketStream strm(sock);
-            ret = callback(strm, last_connection);
-            if (!ret) {
+            auto last_connection = count == 1;
+            auto connection_close = false;
+
+            ret = callback(strm, last_connection, connection_close);
+            if (!ret || connection_close) {
                 break;
             }
+
             count--;
         }
     } else {
         SocketStream strm(sock);
-        ret = callback(strm, true);
+        auto dummy_connection_close = false;
+        ret = callback(strm, true, dummy_connection_close);
     }
 
     close_socket(sock);
@@ -515,13 +561,13 @@ socket_t create_socket(const char* host, int port, Fn fn, int socket_flags = 0)
     auto service = std::to_string(port);
 
     if (getaddrinfo(host, service.c_str(), &hints, &result)) {
-        return -1;
+        return INVALID_SOCKET;
     }
 
     for (auto rp = result; rp; rp = rp->ai_next) {
         // Create a socket
         auto sock = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
-        if (sock == -1) {
+        if (sock == INVALID_SOCKET) {
             continue;
         }
 
@@ -539,7 +585,7 @@ socket_t create_socket(const char* host, int port, Fn fn, int socket_flags = 0)
     }
 
     freeaddrinfo(result);
-    return -1;
+    return INVALID_SOCKET;
 }
 
 inline void set_nonblocking(socket_t sock, bool nonblocking)
@@ -560,6 +606,22 @@ inline bool is_connection_error()
 #else
     return errno != EINPROGRESS;
 #endif
+}
+
+inline std::string get_remote_addr(socket_t sock) {
+    struct sockaddr_storage addr;
+    socklen_t len = sizeof(addr);
+
+    if (!getpeername(sock, (struct sockaddr*)&addr, &len)) {
+        char ipstr[NI_MAXHOST];
+
+        if (!getnameinfo((struct sockaddr*)&addr, len,
+                         ipstr, sizeof(ipstr), nullptr, 0, NI_NUMERICHOST)) {
+            return ipstr;
+        }
+    }
+
+    return std::string();
 }
 
 inline bool is_file(const std::string& path)
@@ -670,8 +732,14 @@ inline const char* status_message(int status)
 {
     switch (status) {
         case 200: return "OK";
+        case 301: return "Moved Permanently";
+        case 302: return "Found";
+        case 303: return "See Other";
+        case 304: return "Not Modified";
         case 400: return "Bad Request";
+        case 403: return "Forbidden";
         case 404: return "Not Found";
+        case 415: return "Unsupported Media Type";
         default:
         case 500: return "Internal Server Error";
     }
@@ -722,13 +790,12 @@ inline bool read_headers(Stream& strm, Headers& headers)
     return true;
 }
 
-template <typename T>
-bool read_content_with_length(Stream& strm, T& x, size_t len, Progress progress)
+inline bool read_content_with_length(Stream& strm, std::string& out, size_t len, Progress progress)
 {
-    x.body.assign(len, 0);
+    out.assign(len, 0);
     size_t r = 0;
     while (r < len){
-        auto n = strm.read(&x.body[r], len - r);
+        auto n = strm.read(&out[r], len - r);
         if (n <= 0) {
             return false;
         }
@@ -743,8 +810,7 @@ bool read_content_with_length(Stream& strm, T& x, size_t len, Progress progress)
     return true;
 }
 
-template <typename T>
-bool read_content_without_length(Stream& strm, T& x)
+inline bool read_content_without_length(Stream& strm, std::string& out)
 {
     for (;;) {
         char byte;
@@ -754,14 +820,13 @@ bool read_content_without_length(Stream& strm, T& x)
         } else if (n == 0) {
             return true;
         }
-        x.body += byte;
+        out += byte;
     }
 
     return true;
 }
 
-template <typename T>
-bool read_content_chunked(Stream& strm, T& x)
+inline bool read_content_chunked(Stream& strm, std::string& out)
 {
     const auto bufsiz = 16;
     char buf[bufsiz];
@@ -775,10 +840,8 @@ bool read_content_chunked(Stream& strm, T& x)
     auto chunk_len = std::stoi(reader.ptr(), 0, 16);
 
     while (chunk_len > 0){
-        std::string chunk(chunk_len, 0);
-
-        auto n = strm.read(&chunk[0], chunk_len);
-        if (n <= 0) {
+        std::string chunk;
+        if (!read_content_with_length(strm, chunk, chunk_len, nullptr)) {
             return false;
         }
 
@@ -790,13 +853,19 @@ bool read_content_chunked(Stream& strm, T& x)
             break;
         }
 
-        x.body += chunk;
+        out += chunk;
 
         if (!reader.getline()) {
             return false;
         }
 
         chunk_len = std::stoi(reader.ptr(), 0, 16);
+    }
+
+    if (chunk_len == 0) {
+        // Reader terminator after chunks
+        if (!reader.getline() || strcmp(reader.ptr(), "\r\n"))
+            return false;
     }
 
     return true;
@@ -808,14 +877,14 @@ bool read_content(Stream& strm, T& x, Progress progress = Progress())
     auto len = get_header_value_int(x.headers, "Content-Length", 0);
 
     if (len) {
-        return read_content_with_length(strm, x, len, progress);
+        return read_content_with_length(strm, x.body, len, progress);
     } else {
         const auto& encoding = get_header_value(x.headers, "Transfer-Encoding", "");
 
-        if (!strcmp(encoding, "chunked")) {
-            return read_content_chunked(strm, x);
+        if (!strcasecmp(encoding, "chunked")) {
+            return read_content_chunked(strm, x.body);
         } else {
-            return read_content_without_length(strm, x);
+            return read_content_without_length(strm, x.body);
         }
     }
 
@@ -874,8 +943,12 @@ inline bool is_hex(char c, int& v)
     return false;
 }
 
-inline bool from_hex_to_i(const std::string& s, int i, int cnt, int& val)
+inline bool from_hex_to_i(const std::string& s, size_t i, size_t cnt, int& val)
 {
+    if (i >= s.size()) {
+        return false;
+    }
+
     val = 0;
     for (; cnt; i++, cnt--) {
         if (!s[i]) {
@@ -928,9 +1001,9 @@ inline std::string decode_url(const std::string& s)
 {
     std::string result;
 
-    for (int i = 0; s[i]; i++) {
-        if (s[i] == '%') {
-            if (s[i + 1] && s[i + 1] == 'u') {
+    for (size_t i = 0; i < s.size(); i++) {
+        if (s[i] == '%' && i + 1 < s.size()) {
+            if (s[i + 1] == 'u') {
                 int val = 0;
                 if (from_hex_to_i(s, i + 2, 4, val)) {
                     // 4 digits Unicode codes
@@ -997,10 +1070,11 @@ inline bool parse_multipart_formdata(
     static std::string crlf = "\r\n";
 
     static std::regex re_content_type(
-            "Content-Type: (.*?)");
+            "Content-Type: (.*?)", std::regex_constants::icase);
 
     static std::regex re_content_disposition(
-            "Content-Disposition: form-data; name=\"(.*?)\"(?:; filename=\"(.*?)\")?");
+            "Content-Disposition: form-data; name=\"(.*?)\"(?:; filename=\"(.*?)\")?",
+            std::regex_constants::icase);
 
     auto dash_boundary = dash + boundary;
 
@@ -1116,18 +1190,8 @@ inline bool can_compress(const std::string& content_type) {
         content_type == "application/xhtml+xml";
 }
 
-inline void compress(const Request& req, Response& res)
+inline void compress(std::string& content)
 {
-    // TODO: Server version is HTTP/1.1 and 'Accpet-Encoding' has gzip, not gzip;q=0
-    const auto& encodings = req.get_header_value("Accept-Encoding");
-    if (encodings.find("gzip") == std::string::npos) {
-        return;
-    }
-
-    if (!can_compress(res.get_header_value("Content-Type"))) {
-        return;
-    }
-
     z_stream strm;
     strm.zalloc = Z_NULL;
     strm.zfree = Z_NULL;
@@ -1138,8 +1202,8 @@ inline void compress(const Request& req, Response& res)
         return;
     }
 
-    strm.avail_in = res.body.size();
-    strm.next_in = (Bytef *)res.body.data();
+    strm.avail_in = content.size();
+    strm.next_in = (Bytef *)content.data();
 
     std::string compressed;
 
@@ -1152,10 +1216,43 @@ inline void compress(const Request& req, Response& res)
         compressed.append(buff, bufsiz - strm.avail_out);
     } while (strm.avail_out == 0);
 
-    res.set_header("Content-Encoding", "gzip");
-    res.body.swap(compressed);
+    content.swap(compressed);
 
     deflateEnd(&strm);
+}
+
+inline void decompress(std::string& content)
+{
+    z_stream strm;
+    strm.zalloc = Z_NULL;
+    strm.zfree = Z_NULL;
+    strm.opaque = Z_NULL;
+
+    // 15 is the value of wbits, which should be at the maximum possible value to ensure
+    // that any gzip stream can be decoded. The offset of 16 specifies that the stream
+    // to decompress will be formatted with a gzip wrapper.
+    auto ret = inflateInit2(&strm, 16 + 15);
+    if (ret != Z_OK) {
+        return;
+    }
+
+    strm.avail_in = content.size();
+    strm.next_in = (Bytef *)content.data();
+
+    std::string decompressed;
+
+    const auto bufsiz = 16384;
+    char buff[bufsiz];
+    do {
+        strm.avail_out = bufsiz;
+        strm.next_out = (Bytef *)buff;
+        inflate(&strm, Z_NO_FLUSH);
+        decompressed.append(buff, bufsiz - strm.avail_out);
+    } while (strm.avail_out == 0);
+
+    content.swap(decompressed);
+
+    inflateEnd(&strm);
 }
 #endif
 
@@ -1320,10 +1417,16 @@ inline int SocketStream::write(const char* ptr)
     return write(ptr, strlen(ptr));
 }
 
+inline std::string SocketStream::get_remote_addr() {
+    return detail::get_remote_addr(sock_);
+}
+
 // HTTP server implementation
-inline Server::Server(HttpVersion http_version)
-        : http_version_(http_version)
-        , svr_sock_(-1)
+inline Server::Server()
+        : keep_alive_max_count_(5)
+        , is_running_(false)
+        , svr_sock_(INVALID_SOCKET)
+        , running_threads_(0)
 {
 #ifndef _WIN32
     signal(SIGPIPE, SIG_IGN);
@@ -1334,15 +1437,33 @@ inline Server::~Server()
 {
 }
 
-inline Server& Server::get(const char* pattern, Handler handler)
+inline Server& Server::Get(const char* pattern, Handler handler)
 {
     get_handlers_.push_back(std::make_pair(std::regex(pattern), handler));
     return *this;
 }
 
-inline Server& Server::post(const char* pattern, Handler handler)
+inline Server& Server::Post(const char* pattern, Handler handler)
 {
     post_handlers_.push_back(std::make_pair(std::regex(pattern), handler));
+    return *this;
+}
+
+inline Server& Server::Put(const char* pattern, Handler handler)
+{
+    put_handlers_.push_back(std::make_pair(std::regex(pattern), handler));
+    return *this;
+}
+
+inline Server& Server::Delete(const char* pattern, Handler handler)
+{
+    delete_handlers_.push_back(std::make_pair(std::regex(pattern), handler));
+    return *this;
+}
+
+inline Server& Server::Options(const char* pattern, Handler handler)
+{
+    options_handlers_.push_back(std::make_pair(std::regex(pattern), handler));
     return *this;
 }
 
@@ -1365,77 +1486,57 @@ inline void Server::set_logger(Logger logger)
     logger_ = logger;
 }
 
+inline void Server::set_keep_alive_max_count(size_t count)
+{
+    keep_alive_max_count_ = count;
+}
+
+inline int Server::bind_to_any_port(const char* host, int socket_flags)
+{
+    return bind_internal(host, 0, socket_flags);
+}
+
+inline bool Server::listen_after_bind() {
+    return listen_internal();
+}
+
 inline bool Server::listen(const char* host, int port, int socket_flags)
 {
-    if (!is_valid()) {
+    if (bind_internal(host, port, socket_flags) < 0)
         return false;
-    }
-
-    svr_sock_ = create_server_socket(host, port, socket_flags);
-    if (svr_sock_ == -1) {
-        return false;
-    }
-
-    auto ret = true;
-
-    for (;;) {
-        auto val = detail::select_read(svr_sock_, 0, 100000);
-
-        if (val == 0) { // Timeout
-            if (svr_sock_ == -1) {
-                // The server socket was closed by 'stop' method.
-                break;
-            }
-            continue;
-        }
-
-        socket_t sock = accept(svr_sock_, NULL, NULL);
-
-        if (sock == -1) {
-            if (svr_sock_ != -1) {
-                detail::close_socket(svr_sock_);
-                ret = false;
-            } else {
-                ; // The server socket was closed by user.
-            }
-            break;
-        }
-
-        // TODO: Use thread pool...
-        std::thread([=]() {
-            read_and_close_socket(sock);
-        }).detach();
-    }
-
-    return ret;
+    return listen_internal();
 }
 
 inline bool Server::is_running() const
 {
-    return svr_sock_ != -1;
+    return is_running_;
 }
 
 inline void Server::stop()
 {
-    detail::shutdown_socket(svr_sock_);
-    detail::close_socket(svr_sock_);
-    svr_sock_ = -1;
+    if (is_running_) {
+        assert(svr_sock_ != INVALID_SOCKET);
+        detail::shutdown_socket(svr_sock_);
+        detail::close_socket(svr_sock_);
+        svr_sock_ = INVALID_SOCKET;
+    }
 }
 
 inline bool Server::parse_request_line(const char* s, Request& req)
 {
-    static std::regex re("(GET|HEAD|POST) ([^?]+)(?:\\?(.+?))? (HTTP/1\\.[01])\r\n");
+    static std::regex re("(GET|HEAD|POST|PUT|DELETE|OPTIONS) (([^?]+)(?:\\?(.+?))?) (HTTP/1\\.[01])\r\n");
 
     std::cmatch m;
     if (std::regex_match(s, m, re)) {
         req.version = std::string(m[4]);
         req.method = std::string(m[1]);
-        req.path = detail::decode_url(m[2]);
+        req.target = std::string(m[2]);
+        req.path = detail::decode_url(m[3]);
 
         // Parse query text
-        auto len = std::distance(m[3].first, m[3].second);
+        auto len = std::distance(m[4].first, m[4].second);
         if (len > 0) {
-            detail::parse_query_text(m[3], req.params);
+            detail::parse_query_text(m[4], req.params);
         }
 
         return true;
@@ -1453,19 +1554,26 @@ inline void Server::write_response(Stream& strm, bool last_connection, const Req
     }
 
     // Response line
-    strm.write_format("%s %d %s\r\n",
-                      detail::http_version_strings[static_cast<size_t>(http_version_)],
+    strm.write_format("HTTP/1.1 %d %s\r\n",
                       res.status,
                       detail::status_message(res.status));
 
     // Headers
-    if (!res.has_header("Connection") && (last_connection || req.version == "HTTP/1.0")) {
+    if (last_connection ||
+        req.version == "HTTP/1.0" ||
+        req.get_header_value("Connection") == "close") {
         res.set_header("Connection", "close");
     }
 
     if (!res.body.empty()) {
 #ifdef CPPHTTPLIB_ZLIB_SUPPORT
-        detail::compress(req, res);
+        // TODO: 'Accpet-Encoding' has gzip, not gzip;q=0
+        const auto& encodings = req.get_header_value("Accept-Encoding");
+        if (encodings.find("gzip") != std::string::npos &&
+            detail::can_compress(res.get_header_value("Content-Type"))) {
+            detail::compress(res.body);
+            res.set_header("Content-Encoding", "gzip");
+        }
 #endif
 
         if (!res.has_header("Content-Type")) {
@@ -1526,6 +1634,94 @@ inline socket_t Server::create_server_socket(const char* host, int port, int soc
                                  }, socket_flags);
 }
 
+inline int Server::bind_internal(const char* host, int port, int socket_flags)
+{
+    if (!is_valid()) {
+        return -1;
+    }
+
+    svr_sock_ = create_server_socket(host, port, socket_flags);
+    if (svr_sock_ == INVALID_SOCKET) {
+        return -1;
+    }
+
+    if (port == 0) {
+        struct sockaddr_storage address;
+        socklen_t len = sizeof(address);
+        if (getsockname(svr_sock_, reinterpret_cast<struct sockaddr *>(&address), &len) == -1) {
+            return -1;
+        }
+        if (address.ss_family == AF_INET) {
+            return ntohs(reinterpret_cast<struct sockaddr_in*>(&address)->sin_port);
+        } else if (address.ss_family == AF_INET6) {
+            return ntohs(reinterpret_cast<struct sockaddr_in6*>(&address)->sin6_port);
+        } else {
+            return -1;
+        }
+    } else {
+        return port;
+    }
+}
+
+inline bool Server::listen_internal()
+{
+    auto ret = true;
+
+    is_running_ = true;
+
+    for (;;) {
+        auto val = detail::select_read(svr_sock_, 0, 100000);
+
+        if (val == 0) { // Timeout
+            if (svr_sock_ == INVALID_SOCKET) {
+                // The server socket was closed by 'stop' method.
+                break;
+            }
+            continue;
+        }
+
+        socket_t sock = accept(svr_sock_, NULL, NULL);
+
+        if (sock == INVALID_SOCKET) {
+            if (svr_sock_ != INVALID_SOCKET) {
+                detail::close_socket(svr_sock_);
+                ret = false;
+            } else {
+                ; // The server socket was closed by user.
+            }
+            break;
+        }
+
+        // TODO: Use thread pool...
+        std::thread([=]() {
+            {
+                std::lock_guard<std::mutex> guard(running_threads_mutex_);
+                running_threads_++;
+            }
+
+            read_and_close_socket(sock);
+
+            {
+                std::lock_guard<std::mutex> guard(running_threads_mutex_);
+                running_threads_--;
+            }
+        }).detach();
+    }
+
+    // TODO: Use thread pool...
+    for (;;) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        std::lock_guard<std::mutex> guard(running_threads_mutex_);
+        if (!running_threads_) {
+            break;
+        }
+    }
+
+    is_running_ = false;
+
+    return ret;
+}
+
 inline bool Server::routing(Request& req, Response& res)
 {
     if (req.method == "GET" && handle_file_request(req, res)) {
@@ -1536,6 +1732,12 @@ inline bool Server::routing(Request& req, Response& res)
         return dispatch_request(req, res, get_handlers_);
     } else if (req.method == "POST") {
         return dispatch_request(req, res, post_handlers_);
+    } else if (req.method == "PUT") {
+        return dispatch_request(req, res, put_handlers_);
+    } else if (req.method == "DELETE") {
+        return dispatch_request(req, res, delete_handlers_);
+    } else if (req.method == "OPTIONS") {
+        return dispatch_request(req, res, options_handlers_);
     }
     return false;
 }
@@ -1554,7 +1756,7 @@ inline bool Server::dispatch_request(Request& req, Response& res, Handlers& hand
     return false;
 }
 
-inline bool Server::process_request(Stream& strm, bool last_connection)
+inline bool Server::process_request(Stream& strm, bool last_connection, bool& connection_close)
 {
     const auto bufsiz = 2048;
     char buf[bufsiz];
@@ -1569,7 +1771,7 @@ inline bool Server::process_request(Stream& strm, bool last_connection)
     Request req;
     Response res;
 
-    res.version = detail::http_version_strings[static_cast<size_t>(http_version_)];
+    res.version = "HTTP/1.1";
 
     // Request line and headers
     if (!parse_request_line(reader.ptr(), req) || !detail::read_headers(strm, req.headers)) {
@@ -1580,11 +1782,14 @@ inline bool Server::process_request(Stream& strm, bool last_connection)
 
     auto ret = true;
     if (req.get_header_value("Connection") == "close") {
-        ret = false;
+        // ret = false;
+        connection_close = true;
     }
 
+    req.set_header("REMOTE_ADDR", strm.get_remote_addr().c_str());
+
     // Body
-    if (req.method == "POST") {
+    if (req.method == "POST" || req.method == "PUT") {
         if (!detail::read_content(strm, req)) {
             res.status = 400;
             write_response(strm, last_connection, req, res);
@@ -1592,6 +1797,16 @@ inline bool Server::process_request(Stream& strm, bool last_connection)
         }
 
         const auto& content_type = req.get_header_value("Content-Type");
+
+        if (req.get_header_value("Content-Encoding") == "gzip") {
+#ifdef CPPHTTPLIB_ZLIB_SUPPORT
+            detail::decompress(req.body);
+#else
+            res.status = 415;
+            write_response(strm, last_connection, req, res);
+            return ret;
+#endif
+        }
 
         if (!content_type.find("application/x-www-form-urlencoded")) {
             detail::parse_query_text(req.body, req.params);
@@ -1625,23 +1840,20 @@ inline bool Server::is_valid() const
 
 inline bool Server::read_and_close_socket(socket_t sock)
 {
-    auto keep_alive = http_version_ == HttpVersion::v1_1;
-
     return detail::read_and_close_socket(
             sock,
-            keep_alive,
-            [this](Stream& strm, bool last_connection) {
-                return process_request(strm, last_connection);
+            keep_alive_max_count_,
+            [this](Stream& strm, bool last_connection, bool& connection_close) {
+                return process_request(strm, last_connection, connection_close);
             });
 }
 
 // HTTP client implementation
 inline Client::Client(
-        const char* host, int port, size_t timeout_sec, HttpVersion http_version)
+        const char* host, int port, size_t timeout_sec)
         : host_(host)
         , port_(port)
         , timeout_sec_(timeout_sec)
-        , http_version_(http_version)
         , host_and_port_(host_ + ":" + std::to_string(port_))
 {
 }
@@ -1662,13 +1874,16 @@ inline socket_t Client::create_client_socket() const
                                      detail::set_nonblocking(sock, true);
 
                                      auto ret = connect(sock, ai.ai_addr, ai.ai_addrlen);
-                                     if (ret == -1 && detail::is_connection_error()) {
-                                         return false;
+                                     if (ret < 0) {
+                                         if (detail::is_connection_error() ||
+                                             !detail::wait_until_socket_is_ready(sock, timeout_sec_, 0)) {
+                                             detail::close_socket(sock);
+                                             return false;
+                                         }
                                      }
 
                                      detail::set_nonblocking(sock, false);
-
-                                     return detail::is_socket_writable(sock, timeout_sec_, 0);
+                                     return true;
                                  });
 }
 
@@ -1683,11 +1898,12 @@ inline bool Client::read_response_line(Stream& strm, Response& res)
         return false;
     }
 
-    const static std::regex re("HTTP/1\\.[01] (\\d+?) .+\r\n");
+    const static std::regex re("(HTTP/1\\.[01]) (\\d+?) .+\r\n");
 
     std::cmatch m;
     if (std::regex_match(reader.ptr(), m, re)) {
-        res.status = std::stoi(std::string(m[1]));
+        res.version = std::string(m[1]);
+        res.status = std::stoi(std::string(m[2]));
     }
 
     return true;
@@ -1700,7 +1916,7 @@ inline bool Client::send(Request& req, Response& res)
     }
 
     auto sock = create_client_socket();
-    if (sock == -1) {
+    if (sock == INVALID_SOCKET) {
         return false;
     }
 
@@ -1712,10 +1928,9 @@ inline void Client::write_request(Stream& strm, Request& req)
     auto path = detail::encode_url(req.path);
 
     // Request line
-    strm.write_format("%s %s %s\r\n",
+    strm.write_format("%s %s HTTP/1.1\r\n",
                       req.method.c_str(),
-                      path.c_str(),
-                      detail::http_version_strings[static_cast<size_t>(http_version_)]);
+                      path.c_str());
 
     // Headers
     req.set_header("Host", host_and_port_.c_str());
@@ -1728,11 +1943,10 @@ inline void Client::write_request(Stream& strm, Request& req)
         req.set_header("User-Agent", "cpp-httplib/0.2");
     }
 
-    // TODO: if (!req.has_header("Connection") &&
-    //           (last_connection || http_version_ == detail::HttpVersion::v1_0)) {
-    if (!req.has_header("Connection")) {
-        req.set_header("Connection", "close");
-    }
+    // TODO: Support KeepAlive connection
+    // if (!req.has_header("Connection")) {
+    req.set_header("Connection", "close");
+    // }
 
     if (!req.body.empty()) {
         if (!req.has_header("Content-Type")) {
@@ -1756,7 +1970,7 @@ inline void Client::write_request(Stream& strm, Request& req)
     }
 }
 
-inline bool Client::process_request(Stream& strm, Request& req, Response& res)
+inline bool Client::process_request(Stream& strm, Request& req, Response& res, bool& connection_close)
 {
     // Send request
     write_request(strm, req);
@@ -1766,12 +1980,22 @@ inline bool Client::process_request(Stream& strm, Request& req, Response& res)
         return false;
     }
 
-    // TODO: Check if 'Connection' header is 'close' or HTTP version is 1.0, then close socket...
+    if (res.get_header_value("Connection") == "close" || res.version == "HTTP/1.0") {
+        connection_close = true;
+    }
 
     // Body
     if (req.method != "HEAD") {
         if (!detail::read_content(strm, res, req.progress)) {
             return false;
+        }
+
+        if (res.get_header_value("Content-Encoding") == "gzip") {
+#ifdef CPPHTTPLIB_ZLIB_SUPPORT
+            detail::decompress(res.body);
+#else
+            return false;
+#endif
         }
     }
 
@@ -1780,17 +2004,20 @@ inline bool Client::process_request(Stream& strm, Request& req, Response& res)
 
 inline bool Client::read_and_close_socket(socket_t sock, Request& req, Response& res)
 {
-    return detail::read_and_close_socket(sock, false, [&](Stream& strm, bool /*last_connection*/) {
-        return process_request(strm, req, res);
-    });
+    return detail::read_and_close_socket(
+            sock,
+            0,
+            [&](Stream& strm, bool /*last_connection*/, bool& connection_close) {
+                return process_request(strm, req, res, connection_close);
+            });
 }
 
-inline std::shared_ptr<Response> Client::get(const char* path, Progress progress)
+inline std::shared_ptr<Response> Client::Get(const char* path, Progress progress)
 {
-    return get(path, Headers(), progress);
+    return Get(path, Headers(), progress);
 }
 
-inline std::shared_ptr<Response> Client::get(const char* path, const Headers& headers, Progress progress)
+inline std::shared_ptr<Response> Client::Get(const char* path, const Headers& headers, Progress progress)
 {
     Request req;
     req.method = "GET";
@@ -1803,12 +2030,12 @@ inline std::shared_ptr<Response> Client::get(const char* path, const Headers& he
     return send(req, *res) ? res : nullptr;
 }
 
-inline std::shared_ptr<Response> Client::head(const char* path)
+inline std::shared_ptr<Response> Client::Head(const char* path)
 {
-    return head(path, Headers());
+    return Head(path, Headers());
 }
 
-inline std::shared_ptr<Response> Client::head(const char* path, const Headers& headers)
+inline std::shared_ptr<Response> Client::Head(const char* path, const Headers& headers)
 {
     Request req;
     req.method = "HEAD";
@@ -1820,13 +2047,13 @@ inline std::shared_ptr<Response> Client::head(const char* path, const Headers& h
     return send(req, *res) ? res : nullptr;
 }
 
-inline std::shared_ptr<Response> Client::post(
+inline std::shared_ptr<Response> Client::Post(
         const char* path, const std::string& body, const char* content_type)
 {
-    return post(path, Headers(), body, content_type);
+    return Post(path, Headers(), body, content_type);
 }
 
-inline std::shared_ptr<Response> Client::post(
+inline std::shared_ptr<Response> Client::Post(
         const char* path, const Headers& headers, const std::string& body, const char* content_type)
 {
     Request req;
@@ -1842,12 +2069,12 @@ inline std::shared_ptr<Response> Client::post(
     return send(req, *res) ? res : nullptr;
 }
 
-inline std::shared_ptr<Response> Client::post(const char* path, const Params& params)
+inline std::shared_ptr<Response> Client::Post(const char* path, const Params& params)
 {
-    return post(path, Headers(), params);
+    return Post(path, Headers(), params);
 }
 
-inline std::shared_ptr<Response> Client::post(const char* path, const Headers& headers, const Params& params)
+inline std::shared_ptr<Response> Client::Post(const char* path, const Headers& headers, const Params& params)
 {
     std::string query;
     for (auto it = params.begin(); it != params.end(); ++it) {
@@ -1859,7 +2086,63 @@ inline std::shared_ptr<Response> Client::post(const char* path, const Headers& h
         query += it->second;
     }
 
-    return post(path, headers, query, "application/x-www-form-urlencoded");
+    return Post(path, headers, query, "application/x-www-form-urlencoded");
+}
+
+inline std::shared_ptr<Response> Client::Put(
+        const char* path, const std::string& body, const char* content_type)
+{
+    return Put(path, Headers(), body, content_type);
+}
+
+inline std::shared_ptr<Response> Client::Put(
+        const char* path, const Headers& headers, const std::string& body, const char* content_type)
+{
+    Request req;
+    req.method = "PUT";
+    req.headers = headers;
+    req.path = path;
+
+    req.headers.emplace("Content-Type", content_type);
+    req.body = body;
+
+    auto res = std::make_shared<Response>();
+
+    return send(req, *res) ? res : nullptr;
+}
+
+inline std::shared_ptr<Response> Client::Delete(const char* path)
+{
+    return Delete(path, Headers());
+}
+
+inline std::shared_ptr<Response> Client::Delete(const char* path, const Headers& headers)
+{
+    Request req;
+    req.method = "DELETE";
+    req.path = path;
+    req.headers = headers;
+
+    auto res = std::make_shared<Response>();
+
+    return send(req, *res) ? res : nullptr;
+}
+
+inline std::shared_ptr<Response> Client::Options(const char* path)
+{
+    return Options(path, Headers());
+}
+
+inline std::shared_ptr<Response> Client::Options(const char* path, const Headers& headers)
+{
+    Request req;
+    req.method = "OPTIONS";
+    req.path = path;
+    req.headers = headers;
+
+    auto res = std::make_shared<Response>();
+
+    return send(req, *res) ? res : nullptr;
 }
 
 /*
@@ -1870,13 +2153,21 @@ namespace detail {
 
 template <typename U, typename V, typename T>
 inline bool read_and_close_socket_ssl(
-    socket_t sock, bool keep_alive,
-    SSL_CTX* ctx, U SSL_connect_or_accept, V setup,
-    T callback)
+        socket_t sock, size_t keep_alive_max_count,
+        // TODO: OpenSSL 1.0.2 occasionally crashes...
+        // The upcoming 1.1.0 is going to be thread safe.
+        SSL_CTX* ctx, std::mutex& ctx_mutex,
+        U SSL_connect_or_accept, V setup,
+        T callback)
 {
-    auto ssl = SSL_new(ctx);
-    if (!ssl) {
-        return false;
+    SSL* ssl = nullptr;
+    {
+        std::lock_guard<std::mutex> guard(ctx_mutex);
+
+        ssl = SSL_new(ctx);
+        if (!ssl) {
+            return false;
+        }
     }
 
     auto bio = BIO_new_socket(sock, BIO_NOCLOSE);
@@ -1888,28 +2179,38 @@ inline bool read_and_close_socket_ssl(
 
     bool ret = false;
 
-    if (keep_alive) {
-        auto count = CPPHTTPLIB_KEEPALIVE_MAX_COUNT;
+    if (keep_alive_max_count > 0) {
+        auto count = keep_alive_max_count;
         while (count > 0 &&
                detail::select_read(sock,
-                   CPPHTTPLIB_KEEPALIVE_TIMEOUT_SECOND,
-                   CPPHTTPLIB_KEEPALIVE_TIMEOUT_USECOND) > 0) {
+                                   CPPHTTPLIB_KEEPALIVE_TIMEOUT_SECOND,
+                                   CPPHTTPLIB_KEEPALIVE_TIMEOUT_USECOND) > 0) {
+            SSLSocketStream strm(sock, ssl);
             auto last_connection = count == 1;
-            SSLSocketStream strm(ssl);
-            ret = callback(strm, last_connection);
-            if (!ret) {
+            auto connection_close = false;
+
+            ret = callback(strm, last_connection, connection_close);
+            if (!ret || connection_close) {
                 break;
             }
+
             count--;
         }
     } else {
-        SSLSocketStream strm(ssl);
-        ret = callback(strm, true);
+        SSLSocketStream strm(sock, ssl);
+        auto dummy_connection_close = false;
+        ret = callback(strm, true, dummy_connection_close);
     }
 
     SSL_shutdown(ssl);
-    SSL_free(ssl);
+
+    {
+        std::lock_guard<std::mutex> guard(ctx_mutex);
+        SSL_free(ssl);
+    }
+
     close_socket(sock);
+
     return ret;
 }
 
@@ -1926,7 +2227,8 @@ static SSLInit sslinit_;
 } // namespace detail
 
 // SSL socket stream implementation
-inline SSLSocketStream::SSLSocketStream(SSL* ssl): ssl_(ssl)
+inline SSLSocketStream::SSLSocketStream(socket_t sock, SSL* ssl)
+        : sock_(sock), ssl_(ssl)
 {
 }
 
@@ -1949,9 +2251,12 @@ inline int SSLSocketStream::write(const char* ptr)
     return write(ptr, strlen(ptr));
 }
 
+inline std::string SSLSocketStream::get_remote_addr() {
+    return detail::get_remote_addr(sock_);
+}
+
 // SSL HTTP server implementation
-inline SSLServer::SSLServer(const char* cert_path, const char* private_key_path, HttpVersion http_version)
-    : Server(http_version)
+inline SSLServer::SSLServer(const char* cert_path, const char* private_key_path)
 {
     ctx_ = SSL_CTX_new(SSLv23_server_method());
 
@@ -1987,23 +2292,20 @@ inline bool SSLServer::is_valid() const
 
 inline bool SSLServer::read_and_close_socket(socket_t sock)
 {
-    auto keep_alive = http_version_ == HttpVersion::v1_1;
-
     return detail::read_and_close_socket_ssl(
-        sock,
-        keep_alive,
-        ctx_,
-        SSL_accept,
-        [](SSL* /*ssl*/) {},
-        [this](Stream& strm, bool last_connection) {
-            return process_request(strm, last_connection);
-        });
+            sock,
+            keep_alive_max_count_,
+            ctx_, ctx_mutex_,
+            SSL_accept,
+            [](SSL* /*ssl*/) {},
+            [this](Stream& strm, bool last_connection, bool& connection_close) {
+                return process_request(strm, last_connection, connection_close);
+            });
 }
 
 // SSL HTTP client implementation
-inline SSLClient::SSLClient(
-    const char* host, int port, size_t timeout_sec, HttpVersion http_version)
-    : Client(host, port, timeout_sec, http_version)
+inline SSLClient::SSLClient(const char* host, int port, size_t timeout_sec)
+        : Client(host, port, timeout_sec)
 {
     ctx_ = SSL_CTX_new(SSLv23_client_method());
 }
@@ -2023,14 +2325,15 @@ inline bool SSLClient::is_valid() const
 inline bool SSLClient::read_and_close_socket(socket_t sock, Request& req, Response& res)
 {
     return is_valid() && detail::read_and_close_socket_ssl(
-        sock, false,
-        ctx_, SSL_connect,
-        [&](SSL* ssl) {
-            SSL_set_tlsext_host_name(ssl, host_.c_str());
-        },
-        [&](Stream& strm, bool /*last_connection*/) {
-            return process_request(strm, req, res);
-        });
+            sock, 0,
+            ctx_, ctx_mutex_,
+            SSL_connect,
+            [&](SSL* ssl) {
+                SSL_set_tlsext_host_name(ssl, host_.c_str());
+            },
+            [&](Stream& strm, bool /*last_connection*/, bool& connection_close) {
+                return process_request(strm, req, res, connection_close);
+            });
 }
 #endif
 
