@@ -606,10 +606,6 @@ bool GMainWindow::LoadROM(const QString& filename) {
     Core::System& system{Core::System::GetInstance()};
 
     const Core::System::ResultStatus result{system.Load(render_window, filename.toStdString())};
-    std::string title;
-    system.GetAppLoader().ReadTitle(title);
-    game_title = QString::fromStdString(title);
-    SetupUIStrings();
 
     if (result != Core::System::ResultStatus::Success) {
         switch (result) {
@@ -665,6 +661,11 @@ bool GMainWindow::LoadROM(const QString& filename) {
         }
         return false;
     }
+
+    std::string title;
+    system.GetAppLoader().ReadTitle(title);
+    game_title = QString::fromStdString(title);
+    SetupUIStrings();
 
     Core::Telemetry().AddField(Telemetry::FieldType::App, "Frontend", "Qt");
     return true;
