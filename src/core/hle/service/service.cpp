@@ -30,7 +30,7 @@
 #include "core/hle/service/fs/archive.h"
 #include "core/hle/service/fs/fs_user.h"
 #include "core/hle/service/gsp/gsp.h"
-#include "core/hle/service/gsp_lcd.h"
+#include "core/hle/service/gsp/gsp_lcd.h"
 #include "core/hle/service/hid/hid.h"
 #include "core/hle/service/http_c.h"
 #include "core/hle/service/ir/ir.h"

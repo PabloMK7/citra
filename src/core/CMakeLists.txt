@@ -242,8 +242,8 @@ add_library(core STATIC
     hle/service/gsp/gsp.h
     hle/service/gsp/gsp_gpu.cpp
     hle/service/gsp/gsp_gpu.h
-    hle/service/gsp_lcd.cpp
-    hle/service/gsp_lcd.h
+    hle/service/gsp/gsp_lcd.cpp
+    hle/service/gsp/gsp_lcd.h
     hle/service/hid/hid.cpp
     hle/service/hid/hid.h
     hle/service/hid/hid_spvr.cpp
