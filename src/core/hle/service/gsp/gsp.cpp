@@ -11,7 +11,6 @@ namespace Service {
 namespace GSP {
 
 static std::weak_ptr<GSP_GPU> gsp_gpu;
-static std::weak_ptr<GSP_LCD> gsp_lcd;
 
 FrameBufferUpdate* GetFrameBufferInfo(u32 thread_id, u32 screen_index) {
     auto gpu = gsp_gpu.lock();
@@ -30,9 +29,7 @@ void InstallInterfaces(SM::ServiceManager& service_manager) {
     gpu->InstallAsService(service_manager);
     gsp_gpu = gpu;
 
-    auto lcd = std::make_shared<GSP_LCD>();
-    lcd->InstallAsService(service_manager);
-    gsp_lcd = lcd;
+    std::make_shared<GSP_LCD>()->InstallAsService(service_manager);
 }
 
 } // namespace GSP
