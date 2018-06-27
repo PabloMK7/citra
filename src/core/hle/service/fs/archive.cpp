@@ -370,7 +370,7 @@ static ArchiveBackend* GetArchive(ArchiveHandle handle) {
 }
 
 ResultVal<ArchiveHandle> OpenArchive(ArchiveIdCode id_code, FileSys::Path& archive_path) {
-    NGLOG_TRACE(Service_FS, "Opening archive with id code 0x{:08X}", id_code);
+    NGLOG_TRACE(Service_FS, "Opening archive with id code 0x{:08X}", static_cast<u32>(id_code));
 
     auto itr = id_code_map.find(id_code);
     if (itr == id_code_map.end()) {
