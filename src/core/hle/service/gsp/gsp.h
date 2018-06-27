@@ -9,6 +9,7 @@
 #include "common/common_types.h"
 #include "core/hle/result.h"
 #include "core/hle/service/gsp/gsp_gpu.h"
+#include "core/hle/service/gsp/gsp_lcd.h"
 
 namespace Service {
 namespace GSP {
