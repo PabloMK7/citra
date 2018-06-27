@@ -309,7 +309,7 @@ void GSP_GPU::SetBufferSwap(Kernel::HLERequestContext& ctx) {
 }
 
 void GSP_GPU::FlushDataCache(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x9, 2, 2);
+    IPC::RequestParser rp(ctx, 0x8, 2, 2);
     u32 address = rp.Pop<u32>();
     u32 size = rp.Pop<u32>();
     auto process = rp.PopObject<Kernel::Process>();
