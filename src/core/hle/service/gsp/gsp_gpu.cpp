@@ -323,6 +323,21 @@ void GSP_GPU::FlushDataCache(Kernel::HLERequestContext& ctx) {
                 address, size, process->process_id);
 }
 
+void GSP_GPU::InvalidateDataCache(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x9, 2, 2);
+    u32 address = rp.Pop<u32>();
+    u32 size = rp.Pop<u32>();
+    auto process = rp.PopObject<Kernel::Process>();
+
+    // TODO(purpasmart96): Verify return header on HW
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RESULT_SUCCESS);
+
+    NGLOG_DEBUG(Service_GSP, "(STUBBED) called address=0x{:08X}, size=0x{:08X}, process={}",
+                address, size, process->process_id);
+}
+
 void GSP_GPU::SetAxiConfigQoSMode(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x10, 1, 0);
     u32 mode = rp.Pop<u32>();
@@ -747,7 +762,7 @@ GSP_GPU::GSP_GPU() : ServiceFramework("gsp::Gpu", 2) {
         {0x00060082, nullptr, "SetCommandList"},
         {0x000700C2, nullptr, "RequestDma"},
         {0x00080082, &GSP_GPU::FlushDataCache, "FlushDataCache"},
-        {0x00090082, nullptr, "InvalidateDataCache"},
+        {0x00090082, &GSP_GPU::InvalidateDataCache, "InvalidateDataCache"},
         {0x000A0044, nullptr, "RegisterInterruptEvents"},
         {0x000B0040, &GSP_GPU::SetLcdForceBlack, "SetLcdForceBlack"},
         {0x000C0000, &GSP_GPU::TriggerCmdReqQueue, "TriggerCmdReqQueue"},

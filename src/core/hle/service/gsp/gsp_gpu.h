@@ -280,6 +280,21 @@ private:
     void FlushDataCache(Kernel::HLERequestContext& ctx);
 
     /**
+     * GSP_GPU::InvalidateDataCache service function
+     *
+     * This Function is a no-op, We aren't emulating the CPU cache any time soon.
+     *
+     *  Inputs:
+     *      1 : Address
+     *      2 : Size
+     *      3 : Value 0, some descriptor for the KProcess Handle
+     *      4 : KProcess handle
+     *  Outputs:
+     *      1 : Result of function, 0 on success, otherwise error code
+     */
+    void InvalidateDataCache(Kernel::HLERequestContext& ctx);
+
+    /**
      * GSP_GPU::SetLcdForceBlack service function
      *
      * Enable or disable REG_LCDCOLORFILL with the color black.
