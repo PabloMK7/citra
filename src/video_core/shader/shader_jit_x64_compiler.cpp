@@ -161,7 +161,7 @@ static const u8 NO_SRC_REG_SWIZZLE = 0x1b;
 static const u8 NO_DEST_REG_MASK = 0xf;
 
 static void LogCritical(const char* msg) {
-    LOG_CRITICAL(HW_GPU, "%s", msg);
+    NGLOG_CRITICAL(HW_GPU, "{}", msg);
 }
 
 void JitShader::Compile_Assert(bool condition, const char* msg) {
@@ -858,8 +858,8 @@ void JitShader::Compile_NextInstr() {
         ((*this).*instr_func)(instr);
     } else {
         // Unhandled instruction
-        LOG_CRITICAL(HW_GPU, "Unhandled instruction: 0x%02x (0x%08x)",
-                     static_cast<u32>(instr.opcode.Value().EffectiveOpCode()), instr.hex);
+        NGLOG_CRITICAL(HW_GPU, "Unhandled instruction: 0x{:02x} (0x{:08x})",
+                       static_cast<u32>(instr.opcode.Value().EffectiveOpCode()), instr.hex);
     }
 }
 
@@ -945,7 +945,7 @@ void JitShader::Compile(const std::array<u32, MAX_PROGRAM_CODE_LENGTH>* program_
     ready();
 
     ASSERT_MSG(getSize() <= MAX_SHADER_SIZE, "Compiled a shader that exceeds the allocated size!");
-    LOG_DEBUG(HW_GPU, "Compiled shader size=%lu", getSize());
+    NGLOG_DEBUG(HW_GPU, "Compiled shader size={}", getSize());
 }
 
 JitShader::JitShader() : Xbyak::CodeGenerator(MAX_SHADER_SIZE) {

@@ -68,8 +68,8 @@ static void WriteUniformIntReg(Shader::ShaderSetup& setup, unsigned index,
                                const Math::Vec4<u8>& values) {
     ASSERT(index < setup.uniforms.i.size());
     setup.uniforms.i[index] = values;
-    LOG_TRACE(HW_GPU, "Set %s integer uniform %d to %02x %02x %02x %02x",
-              GetShaderSetupTypeName(setup), index, values.x, values.y, values.z, values.w);
+    NGLOG_TRACE(HW_GPU, "Set {} integer uniform {} to {:02x} {:02x} {:02x} {:02x}",
+                GetShaderSetupTypeName(setup), index, values.x, values.y, values.z, values.w);
 }
 
 static void WriteUniformFloatReg(ShaderRegs& config, Shader::ShaderSetup& setup,
@@ -90,8 +90,8 @@ static void WriteUniformFloatReg(ShaderRegs& config, Shader::ShaderSetup& setup,
         auto& uniform = setup.uniforms.f[uniform_setup.index];
 
         if (uniform_setup.index >= 96) {
-            LOG_ERROR(HW_GPU, "Invalid %s float uniform index %d", GetShaderSetupTypeName(setup),
-                      (int)uniform_setup.index);
+            NGLOG_ERROR(HW_GPU, "Invalid {} float uniform index {}", GetShaderSetupTypeName(setup),
+                        (int)uniform_setup.index);
         } else {
 
             // NOTE: The destination component order indeed is "backwards"
@@ -108,10 +108,10 @@ static void WriteUniformFloatReg(ShaderRegs& config, Shader::ShaderSetup& setup,
                 uniform.x = float24::FromRaw(uniform_write_buffer[2] & 0xFFFFFF);
             }
 
-            LOG_TRACE(HW_GPU, "Set %s float uniform %x to (%f %f %f %f)",
-                      GetShaderSetupTypeName(setup), (int)uniform_setup.index,
-                      uniform.x.ToFloat32(), uniform.y.ToFloat32(), uniform.z.ToFloat32(),
-                      uniform.w.ToFloat32());
+            NGLOG_TRACE(HW_GPU, "Set {} float uniform {:x} to ({} {} {} {})",
+                        GetShaderSetupTypeName(setup), (int)uniform_setup.index,
+                        uniform.x.ToFloat32(), uniform.y.ToFloat32(), uniform.z.ToFloat32(),
+                        uniform.w.ToFloat32());
 
             // TODO: Verify that this actually modifies the register!
             uniform_setup.index.Assign(uniform_setup.index + 1);
@@ -123,9 +123,10 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
     auto& regs = g_state.regs;
 
     if (id >= Regs::NUM_REGS) {
-        LOG_ERROR(HW_GPU,
-                  "Commandlist tried to write to invalid register 0x%03X (value: %08X, mask: %X)",
-                  id, value, mask);
+        NGLOG_ERROR(
+            HW_GPU,
+            "Commandlist tried to write to invalid register 0x{:03X} (value: {:08X}, mask: {:X})",
+            id, value, mask);
         return;
     }
 
@@ -183,7 +184,7 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
             auto& setup = regs.pipeline.vs_default_attributes_setup;
 
             if (setup.index >= 16) {
-                LOG_ERROR(HW_GPU, "Invalid VS default attribute index %d", (int)setup.index);
+                NGLOG_ERROR(HW_GPU, "Invalid VS default attribute index {}", (int)setup.index);
                 break;
             }
 
@@ -197,9 +198,9 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
                                            ((default_attr_write_buffer[2] >> 24) & 0xFF));
             attribute.x = float24::FromRaw(default_attr_write_buffer[2] & 0xFFFFFF);
 
-            LOG_TRACE(HW_GPU, "Set default VS attribute %x to (%f %f %f %f)", (int)setup.index,
-                      attribute.x.ToFloat32(), attribute.y.ToFloat32(), attribute.z.ToFloat32(),
-                      attribute.w.ToFloat32());
+            NGLOG_TRACE(HW_GPU, "Set default VS attribute {:x} to ({} {} {} {})", (int)setup.index,
+                        attribute.x.ToFloat32(), attribute.y.ToFloat32(), attribute.z.ToFloat32(),
+                        attribute.w.ToFloat32());
 
             // TODO: Verify that this actually modifies the register!
             if (setup.index < 15) {
@@ -473,7 +474,7 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
     case PICA_REG_INDEX_WORKAROUND(gs.program.set_word[7], 0x2a3): {
         u32& offset = g_state.regs.gs.program.offset;
         if (offset >= 4096) {
-            LOG_ERROR(HW_GPU, "Invalid GS program offset %u", offset);
+            NGLOG_ERROR(HW_GPU, "Invalid GS program offset {}", offset);
         } else {
             g_state.gs.program_code[offset] = value;
             g_state.gs.MarkProgramCodeDirty();
@@ -492,7 +493,7 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
     case PICA_REG_INDEX_WORKAROUND(gs.swizzle_patterns.set_word[7], 0x2ad): {
         u32& offset = g_state.regs.gs.swizzle_patterns.offset;
         if (offset >= g_state.gs.swizzle_data.size()) {
-            LOG_ERROR(HW_GPU, "Invalid GS swizzle pattern offset %u", offset);
+            NGLOG_ERROR(HW_GPU, "Invalid GS swizzle pattern offset {}", offset);
         } else {
             g_state.gs.swizzle_data[offset] = value;
             g_state.gs.MarkSwizzleDataDirty();
@@ -542,7 +543,7 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
     case PICA_REG_INDEX_WORKAROUND(vs.program.set_word[7], 0x2d3): {
         u32& offset = g_state.regs.vs.program.offset;
         if (offset >= 512) {
-            LOG_ERROR(HW_GPU, "Invalid VS program offset %u", offset);
+            NGLOG_ERROR(HW_GPU, "Invalid VS program offset {}", offset);
         } else {
             g_state.vs.program_code[offset] = value;
             g_state.vs.MarkProgramCodeDirty();
@@ -565,7 +566,7 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
     case PICA_REG_INDEX_WORKAROUND(vs.swizzle_patterns.set_word[7], 0x2dd): {
         u32& offset = g_state.regs.vs.swizzle_patterns.offset;
         if (offset >= g_state.vs.swizzle_data.size()) {
-            LOG_ERROR(HW_GPU, "Invalid VS swizzle pattern offset %u", offset);
+            NGLOG_ERROR(HW_GPU, "Invalid VS swizzle pattern offset {}", offset);
         } else {
             g_state.vs.swizzle_data[offset] = value;
             g_state.vs.MarkSwizzleDataDirty();

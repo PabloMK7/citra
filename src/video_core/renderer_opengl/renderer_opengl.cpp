@@ -171,9 +171,9 @@ void RendererOpenGL::LoadFBToScreenInfo(const GPU::Regs::FramebufferConfig& fram
             ? (!right_eye ? framebuffer.address_left1 : framebuffer.address_right1)
             : (!right_eye ? framebuffer.address_left2 : framebuffer.address_right2);
 
-    LOG_TRACE(Render_OpenGL, "0x%08x bytes from 0x%08x(%dx%d), fmt %x",
-              framebuffer.stride * framebuffer.height, framebuffer_addr, (int)framebuffer.width,
-              (int)framebuffer.height, (int)framebuffer.format);
+    NGLOG_TRACE(Render_OpenGL, "0x{:08x} bytes from 0x{:08x}({}x{}), fmt {:x}",
+                framebuffer.stride * framebuffer.height, framebuffer_addr, (int)framebuffer.width,
+                (int)framebuffer.height, (int)framebuffer.format);
 
     int bpp = GPU::Regs::BytesPerPixel(framebuffer.color_format);
     size_t pixel_stride = framebuffer.stride / bpp;
@@ -494,8 +494,8 @@ static void APIENTRY DebugHandler(GLenum source, GLenum type, GLuint id, GLenum 
         level = Log::Level::Debug;
         break;
     }
-    LOG_GENERIC(Log::Class::Render_OpenGL, level, "%s %s %d: %s", GetSource(source), GetType(type),
-                id, message);
+    NGLOG_GENERIC(Log::Class::Render_OpenGL, level, "{} {} {}: {}", GetSource(source),
+                  GetType(type), id, message);
 }
 
 /// Initialize the renderer
@@ -511,9 +511,9 @@ bool RendererOpenGL::Init() {
     const char* gpu_vendor{reinterpret_cast<char const*>(glGetString(GL_VENDOR))};
     const char* gpu_model{reinterpret_cast<char const*>(glGetString(GL_RENDERER))};
 
-    LOG_INFO(Render_OpenGL, "GL_VERSION: %s", gl_version);
-    LOG_INFO(Render_OpenGL, "GL_VENDOR: %s", gpu_vendor);
-    LOG_INFO(Render_OpenGL, "GL_RENDERER: %s", gpu_model);
+    NGLOG_INFO(Render_OpenGL, "GL_VERSION: {}", gl_version);
+    NGLOG_INFO(Render_OpenGL, "GL_VENDOR: {}", gpu_vendor);
+    NGLOG_INFO(Render_OpenGL, "GL_RENDERER: {}", gpu_model);
 
     Core::Telemetry().AddField(Telemetry::FieldType::UserSystem, "GPU_Vendor", gpu_vendor);
     Core::Telemetry().AddField(Telemetry::FieldType::UserSystem, "GPU_Model", gpu_model);

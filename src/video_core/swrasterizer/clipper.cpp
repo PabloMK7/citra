@@ -173,19 +173,20 @@ void ProcessTriangle(const OutputVertex& v0, const OutputVertex& v1, const Outpu
 
         InitScreenCoordinates(vtx2);
 
-        LOG_TRACE(Render_Software,
-                  "Triangle %lu/%lu at position (%.3f, %.3f, %.3f, %.3f), "
-                  "(%.3f, %.3f, %.3f, %.3f), (%.3f, %.3f, %.3f, %.3f) and "
-                  "screen position (%.2f, %.2f, %.2f), (%.2f, %.2f, %.2f), (%.2f, %.2f, %.2f)",
-                  i + 1, output_list->size() - 2, vtx0.pos.x.ToFloat32(), vtx0.pos.y.ToFloat32(),
-                  vtx0.pos.z.ToFloat32(), vtx0.pos.w.ToFloat32(), vtx1.pos.x.ToFloat32(),
-                  vtx1.pos.y.ToFloat32(), vtx1.pos.z.ToFloat32(), vtx1.pos.w.ToFloat32(),
-                  vtx2.pos.x.ToFloat32(), vtx2.pos.y.ToFloat32(), vtx2.pos.z.ToFloat32(),
-                  vtx2.pos.w.ToFloat32(), vtx0.screenpos.x.ToFloat32(),
-                  vtx0.screenpos.y.ToFloat32(), vtx0.screenpos.z.ToFloat32(),
-                  vtx1.screenpos.x.ToFloat32(), vtx1.screenpos.y.ToFloat32(),
-                  vtx1.screenpos.z.ToFloat32(), vtx2.screenpos.x.ToFloat32(),
-                  vtx2.screenpos.y.ToFloat32(), vtx2.screenpos.z.ToFloat32());
+        NGLOG_TRACE(
+            Render_Software,
+            "Triangle {}/{} at position ({:.3}, {:.3}, {:.3}, {:.3f}), "
+            "({:.3}, {:.3}, {:.3}, {:.3}), ({:.3}, {:.3}, {:.3}, {:.3}) and "
+            "screen position ({:.2}, {:.2}, {:.2}), ({:.2}, {:.2}, {:.2}), ({:.2}, {:.2}, {:.2})",
+            i + 1, output_list->size() - 2, vtx0.pos.x.ToFloat32(), vtx0.pos.y.ToFloat32(),
+            vtx0.pos.z.ToFloat32(), vtx0.pos.w.ToFloat32(), vtx1.pos.x.ToFloat32(),
+            vtx1.pos.y.ToFloat32(), vtx1.pos.z.ToFloat32(), vtx1.pos.w.ToFloat32(),
+            vtx2.pos.x.ToFloat32(), vtx2.pos.y.ToFloat32(), vtx2.pos.z.ToFloat32(),
+            vtx2.pos.w.ToFloat32(), vtx0.screenpos.x.ToFloat32(), vtx0.screenpos.y.ToFloat32(),
+            vtx0.screenpos.z.ToFloat32(), vtx1.screenpos.x.ToFloat32(),
+            vtx1.screenpos.y.ToFloat32(), vtx1.screenpos.z.ToFloat32(),
+            vtx2.screenpos.x.ToFloat32(), vtx2.screenpos.y.ToFloat32(),
+            vtx2.screenpos.z.ToFloat32());
 
         Rasterizer::ProcessTriangle(vtx0, vtx1, vtx2);
     }
