@@ -113,6 +113,7 @@ after_build:
           mkdir $RELEASE_DIST/platforms
           mkdir $RELEASE_DIST/mediaservice
           mkdir $RELEASE_DIST/styles
+          mkdir $RELEASE_DIST/imageformats
 
           # copy the compiled binaries and other release files to the release folder
           Get-ChildItem "$CMAKE_BINARY_DIR" -Recurse -Filter "citra*.exe" | Copy-Item -destination $RELEASE_DIST
@@ -138,6 +139,9 @@ after_build:
 
           # copy the qt windows vista style dll to platforms
           Copy-Item -path "C:/msys64/mingw64/share/qt5/plugins/styles/qwindowsvistastyle.dll" -force -destination "$RELEASE_DIST/styles"
+
+          # copy the qt imageformats plugin dlls to imageformats
+          Get-ChildItem "C:/msys64/mingw64/share/qt5/plugins/imageformats" -Exclude "*d.dll" | Copy-Item -force -destination "$RELEASE_DIST/imageformats"
 
           # process PDBs
           . "./.appveyor/ProcessPdb.ps1"
