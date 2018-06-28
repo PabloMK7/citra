@@ -109,7 +109,7 @@ static void ConvertProcessAddressFromDspDram(Service::Interface* self) {
     // always zero).
     cmd_buff[2] = (addr << 1) + (Memory::DSP_RAM_VADDR + 0x40000);
 
-    LOG_DEBUG(Service_DSP, "addr=0x%08X", addr);
+    NGLOG_DEBUG(Service_DSP, "addr=0x{:08X}", addr);
 }
 
 /**
@@ -146,17 +146,17 @@ static void LoadComponent(Service::Interface* self) {
     std::vector<u8> component_data(size);
     Memory::ReadBlock(buffer, component_data.data(), component_data.size());
 
-    LOG_INFO(Service_DSP, "Firmware hash: %#" PRIx64,
-             Common::ComputeHash64(component_data.data(), component_data.size()));
+    NGLOG_INFO(Service_DSP, "Firmware hash: {:#018x}",
+               Common::ComputeHash64(component_data.data(), component_data.size()));
     // Some versions of the firmware have the location of DSP structures listed here.
     if (size > 0x37C) {
-        LOG_INFO(Service_DSP, "Structures hash: %#" PRIx64,
-                 Common::ComputeHash64(component_data.data() + 0x340, 60));
+        NGLOG_INFO(Service_DSP, "Structures hash: {:#018x}",
+                   Common::ComputeHash64(component_data.data() + 0x340, 60));
     }
-
-    LOG_WARNING(Service_DSP,
-                "(STUBBED) called size=0x%X, prog_mask=0x%08X, data_mask=0x%08X, buffer=0x%08X",
-                size, prog_mask, data_mask, buffer);
+    NGLOG_WARNING(
+        Service_DSP,
+        "(STUBBED) called size=0x{:X}, prog_mask=0x{:08X}, data_mask=0x{:08X}, buffer=0x{:08X}",
+        size, prog_mask, data_mask, buffer);
 }
 
 /**
@@ -173,7 +173,7 @@ static void GetSemaphoreEventHandle(Service::Interface* self) {
     // cmd_buff[2] not set
     cmd_buff[3] = Kernel::g_handle_table.Create(semaphore_event).Unwrap(); // Event handle
 
-    LOG_WARNING(Service_DSP, "(STUBBED) called");
+    NGLOG_WARNING(Service_DSP, "(STUBBED) called");
 }
 
 /**
@@ -198,8 +198,8 @@ static void FlushDataCache(Service::Interface* self) {
     cmd_buff[0] = IPC::MakeHeader(0x13, 1, 0);
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
 
-    LOG_TRACE(Service_DSP, "called address=0x%08X, size=0x%X, process=0x%08X", address, size,
-              process);
+    NGLOG_TRACE(Service_DSP, "called address=0x{:08X}, size=0x{:X}, process=0x{:08X}", address,
+                size, process);
 }
 
 /**
@@ -230,16 +230,16 @@ static void RegisterInterruptEvents(Service::Interface* self) {
         auto evt = Kernel::g_handle_table.Get<Kernel::Event>(cmd_buff[4]);
 
         if (!evt) {
-            LOG_INFO(Service_DSP, "Invalid event handle! type=%u, pipe=%u, event_handle=0x%08X",
-                     type_index, pipe_index, event_handle);
+            NGLOG_INFO(Service_DSP, "Invalid event handle! type={}, pipe={}, event_handle=0x{:08X}",
+                       type_index, pipe_index, event_handle);
             ASSERT(false); // TODO: This should really be handled at an IPC translation layer.
         }
 
         if (interrupt_events.HasTooManyEventsRegistered()) {
-            LOG_INFO(Service_DSP,
-                     "Ran out of space to register interrupts (Attempted to register "
-                     "type=%u, pipe=%u, event_handle=0x%08X)",
-                     type_index, pipe_index, event_handle);
+            NGLOG_INFO(Service_DSP,
+                       "Ran out of space to register interrupts (Attempted to register "
+                       "type={}, pipe={}, event_handle=0x{:08X})",
+                       type_index, pipe_index, event_handle);
             cmd_buff[1] = ResultCode(ErrorDescription::InvalidResultValue, ErrorModule::DSP,
                                      ErrorSummary::OutOfResource, ErrorLevel::Status)
                               .raw;
@@ -247,13 +247,13 @@ static void RegisterInterruptEvents(Service::Interface* self) {
         }
 
         interrupt_events.Get(type, pipe) = evt;
-        LOG_INFO(Service_DSP, "Registered type=%u, pipe=%u, event_handle=0x%08X", type_index,
-                 pipe_index, event_handle);
+        NGLOG_INFO(Service_DSP, "Registered type={}, pipe={}, event_handle=0x{:08X}", type_index,
+                   pipe_index, event_handle);
         cmd_buff[1] = RESULT_SUCCESS.raw;
     } else {
         interrupt_events.Get(type, pipe) = nullptr;
-        LOG_INFO(Service_DSP, "Unregistered interrupt=%u, channel=%u, event_handle=0x%08X",
-                 type_index, pipe_index, event_handle);
+        NGLOG_INFO(Service_DSP, "Unregistered interrupt={}, channel={}, event_handle=0x{:08X}",
+                   type_index, pipe_index, event_handle);
         cmd_buff[1] = RESULT_SUCCESS.raw;
     }
 }
@@ -271,7 +271,7 @@ static void SetSemaphore(Service::Interface* self) {
     cmd_buff[0] = IPC::MakeHeader(0x7, 1, 0);
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
 
-    LOG_WARNING(Service_DSP, "(STUBBED) called");
+    NGLOG_WARNING(Service_DSP, "(STUBBED) called");
 }
 
 /**
@@ -295,10 +295,10 @@ static void WriteProcessPipe(Service::Interface* self) {
     AudioCore::DspPipe pipe = static_cast<AudioCore::DspPipe>(pipe_index);
 
     if (IPC::StaticBufferDesc(size, 1) != cmd_buff[3]) {
-        LOG_ERROR(Service_DSP,
-                  "IPC static buffer descriptor failed validation (0x%X). pipe=%u, "
-                  "size=0x%X, buffer=0x%08X",
-                  cmd_buff[3], pipe_index, size, buffer);
+        NGLOG_ERROR(Service_DSP,
+                    "IPC static buffer descriptor failed validation (0x{:X}). pipe={}, "
+                    "size=0x{:X}, buffer=0x{:08X}",
+                    cmd_buff[3], pipe_index, size, buffer);
         cmd_buff[0] = IPC::MakeHeader(0, 1, 0);
         cmd_buff[1] = IPC::ERR_INVALID_BUFFER_DESCRIPTOR.raw;
         return;
@@ -335,7 +335,7 @@ static void WriteProcessPipe(Service::Interface* self) {
     cmd_buff[0] = IPC::MakeHeader(0xD, 1, 0);
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
 
-    LOG_DEBUG(Service_DSP, "pipe=%u, size=0x%X, buffer=0x%08X", pipe_index, size, buffer);
+    NGLOG_DEBUG(Service_DSP, "pipe={}, size=0x{:X}, buffer=0x{:08X}", pipe_index, size, buffer);
 }
 
 /**
@@ -380,9 +380,10 @@ static void ReadPipeIfPossible(Service::Interface* self) {
     cmd_buff[3] = IPC::StaticBufferDesc(size, 0);
     cmd_buff[4] = addr;
 
-    LOG_DEBUG(Service_DSP,
-              "pipe=%u, unknown=0x%08X, size=0x%X, buffer=0x%08X, return cmd_buff[2]=0x%08X",
-              pipe_index, unknown, size, addr, cmd_buff[2]);
+    NGLOG_DEBUG(
+        Service_DSP,
+        "pipe={}, unknown=0x{:08X}, size=0x{:X}, buffer=0x{:08X}, return cmd_buff[2]=0x{:08X}",
+        pipe_index, unknown, size, addr, cmd_buff[2]);
 }
 
 /**
@@ -425,9 +426,10 @@ static void ReadPipe(Service::Interface* self) {
         UNREACHABLE();
     }
 
-    LOG_DEBUG(Service_DSP,
-              "pipe=%u, unknown=0x%08X, size=0x%X, buffer=0x%08X, return cmd_buff[2]=0x%08X",
-              pipe_index, unknown, size, addr, cmd_buff[2]);
+    NGLOG_DEBUG(
+        Service_DSP,
+        "pipe={}, unknown=0x{:08X}, size=0x{:X}, buffer=0x{:08X}, return cmd_buff[2]=0x{:08X}",
+        pipe_index, unknown, size, addr, cmd_buff[2]);
 }
 
 /**
@@ -451,8 +453,8 @@ static void GetPipeReadableSize(Service::Interface* self) {
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
     cmd_buff[2] = static_cast<u32>(Core::DSP().GetPipeReadableSize(pipe));
 
-    LOG_DEBUG(Service_DSP, "pipe=%u, unknown=0x%08X, return cmd_buff[2]=0x%08X", pipe_index,
-              unknown, cmd_buff[2]);
+    NGLOG_DEBUG(Service_DSP, "pipe={}, unknown=0x{:08X}, return cmd_buff[2]=0x{:08X}", pipe_index,
+                unknown, cmd_buff[2]);
 }
 
 /**
@@ -470,7 +472,7 @@ static void SetSemaphoreMask(Service::Interface* self) {
     cmd_buff[0] = IPC::MakeHeader(0x17, 1, 0);
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
 
-    LOG_WARNING(Service_DSP, "(STUBBED) called mask=0x%08X", mask);
+    NGLOG_WARNING(Service_DSP, "(STUBBED) called mask=0x{:08X}", mask);
 }
 
 /**
@@ -489,7 +491,7 @@ static void GetHeadphoneStatus(Service::Interface* self) {
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
     cmd_buff[2] = 0;                  // Not using headphones
 
-    LOG_DEBUG(Service_DSP, "called");
+    NGLOG_DEBUG(Service_DSP, "called");
 }
 
 /**
@@ -528,7 +530,7 @@ static void RecvData(Service::Interface* self) {
         break;
     }
 
-    LOG_DEBUG(Service_DSP, "register_number=%u", register_number);
+    NGLOG_DEBUG(Service_DSP, "register_number={}", register_number);
 }
 
 /**
@@ -553,7 +555,7 @@ static void RecvDataIsReady(Service::Interface* self) {
     cmd_buff[1] = RESULT_SUCCESS.raw;
     cmd_buff[2] = 1; // Ready to read
 
-    LOG_DEBUG(Service_DSP, "register_number=%u", register_number);
+    NGLOG_DEBUG(Service_DSP, "register_number={}", register_number);
 }
 
 const Interface::FunctionInfo FunctionTable[] = {
