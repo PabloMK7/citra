@@ -9,13 +9,10 @@
 namespace Service {
 namespace GSP {
 
-class GSP_LCD final : public Interface {
+class GSP_LCD final : public ServiceFramework<GSP_LCD> {
 public:
     GSP_LCD();
-
-    std::string GetPortName() const override {
-        return "gsp::Lcd";
-    }
+    ~GSP_LCD() = default;
 };
 
 } // namespace GSP

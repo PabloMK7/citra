@@ -27,8 +27,9 @@ void SignalInterrupt(InterruptId interrupt_id) {
 void InstallInterfaces(SM::ServiceManager& service_manager) {
     auto gpu = std::make_shared<GSP_GPU>();
     gpu->InstallAsService(service_manager);
-
     gsp_gpu = gpu;
+
+    std::make_shared<GSP_LCD>()->InstallAsService(service_manager);
 }
 
 } // namespace GSP
