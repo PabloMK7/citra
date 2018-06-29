@@ -183,7 +183,7 @@ void ARMul_State::ResetMPCoreCP15Registers() {
 
 static void CheckMemoryBreakpoint(u32 address, GDBStub::BreakpointType type) {
     if (GDBStub::IsServerEnabled() && GDBStub::CheckBreakpoint(address, type)) {
-        NGLOG_DEBUG(Debug, "Found memory breakpoint @ {:08x}", address);
+        LOG_DEBUG(Debug, "Found memory breakpoint @ {:08x}", address);
         GDBStub::Break(true);
     }
 }
@@ -428,7 +428,7 @@ u32 ARMul_State::ReadCP15Register(u32 crn, u32 opcode_1, u32 crm, u32 opcode_2) 
         }
     }
 
-    NGLOG_ERROR(Core_ARM11, "MRC CRn={}, CRm={}, OP1={} OP2={} is not implemented. Returning zero.",
+    LOG_ERROR(Core_ARM11, "MRC CRn={}, CRm={}, OP1={} OP2={} is not implemented. Returning zero.",
                 crn, crm, opcode_1, opcode_2);
     return 0;
 }

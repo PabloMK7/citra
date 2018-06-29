@@ -31,9 +31,9 @@ bool Init(EmuWindow* emu_window) {
     g_renderer = std::make_unique<RendererOpenGL>();
     g_renderer->SetWindow(g_emu_window);
     if (g_renderer->Init()) {
-        NGLOG_DEBUG(Render, "initialized OK");
+        LOG_DEBUG(Render, "initialized OK");
     } else {
-        NGLOG_ERROR(Render, "initialization failed !");
+        LOG_ERROR(Render, "initialization failed !");
         return false;
     }
     return true;
@@ -45,7 +45,7 @@ void Shutdown() {
 
     g_renderer.reset();
 
-    NGLOG_DEBUG(Render, "shutdown OK");
+    LOG_DEBUG(Render, "shutdown OK");
 }
 
 } // namespace VideoCore

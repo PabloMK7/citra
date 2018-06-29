@@ -67,7 +67,7 @@ u32 DiskDirectory::Read(const u32 count, Entry* entries) {
         const std::string& filename = file.virtualName;
         Entry& entry = entries[entries_read];
 
-        NGLOG_TRACE(Service_FS, "File {}: size={} dir={}", filename, file.size, file.isDirectory);
+        LOG_TRACE(Service_FS, "File {}: size={} dir={}", filename, file.size, file.isDirectory);
 
         // TODO(Link Mauve): use a proper conversion to UTF-16.
         for (size_t j = 0; j < FILENAME_LENGTH; ++j) {

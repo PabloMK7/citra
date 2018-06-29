@@ -84,19 +84,19 @@ std::vector<u8> DspHle::Impl::PipeRead(DspPipe pipe_number, u32 length) {
     const size_t pipe_index = static_cast<size_t>(pipe_number);
 
     if (pipe_index >= num_dsp_pipe) {
-        NGLOG_ERROR(Audio_DSP, "pipe_number = {} invalid", pipe_index);
+        LOG_ERROR(Audio_DSP, "pipe_number = {} invalid", pipe_index);
         return {};
     }
 
     if (length > UINT16_MAX) { // Can only read at most UINT16_MAX from the pipe
-        NGLOG_ERROR(Audio_DSP, "length of {} greater than max of {}", length, UINT16_MAX);
+        LOG_ERROR(Audio_DSP, "length of {} greater than max of {}", length, UINT16_MAX);
         return {};
     }
 
     std::vector<u8>& data = pipe_data[pipe_index];
 
     if (length > data.size()) {
-        NGLOG_WARNING(
+        LOG_WARNING(
             Audio_DSP,
             "pipe_number = {} is out of data, application requested read of {} but {} remain",
             pipe_index, length, data.size());
@@ -115,7 +115,7 @@ size_t DspHle::Impl::GetPipeReadableSize(DspPipe pipe_number) const {
     const size_t pipe_index = static_cast<size_t>(pipe_number);
 
     if (pipe_index >= num_dsp_pipe) {
-        NGLOG_ERROR(Audio_DSP, "pipe_number = {} invalid", pipe_index);
+        LOG_ERROR(Audio_DSP, "pipe_number = {} invalid", pipe_index);
         return 0;
     }
 
@@ -126,7 +126,7 @@ void DspHle::Impl::PipeWrite(DspPipe pipe_number, const std::vector<u8>& buffer)
     switch (pipe_number) {
     case DspPipe::Audio: {
         if (buffer.size() != 4) {
-            NGLOG_ERROR(Audio_DSP, "DspPipe::Audio: Unexpected buffer length {} was written",
+            LOG_ERROR(Audio_DSP, "DspPipe::Audio: Unexpected buffer length {} was written",
                         buffer.size());
             return;
         }
@@ -146,28 +146,28 @@ void DspHle::Impl::PipeWrite(DspPipe pipe_number, const std::vector<u8>& buffer)
 
         switch (static_cast<StateChange>(buffer[0])) {
         case StateChange::Initialize:
-            NGLOG_INFO(Audio_DSP, "Application has requested initialization of DSP hardware");
+            LOG_INFO(Audio_DSP, "Application has requested initialization of DSP hardware");
             ResetPipes();
             AudioPipeWriteStructAddresses();
             dsp_state = DspState::On;
             break;
         case StateChange::Shutdown:
-            NGLOG_INFO(Audio_DSP, "Application has requested shutdown of DSP hardware");
+            LOG_INFO(Audio_DSP, "Application has requested shutdown of DSP hardware");
             dsp_state = DspState::Off;
             break;
         case StateChange::Wakeup:
-            NGLOG_INFO(Audio_DSP, "Application has requested wakeup of DSP hardware");
+            LOG_INFO(Audio_DSP, "Application has requested wakeup of DSP hardware");
             ResetPipes();
             AudioPipeWriteStructAddresses();
             dsp_state = DspState::On;
             break;
         case StateChange::Sleep:
-            NGLOG_INFO(Audio_DSP, "Application has requested sleep of DSP hardware");
+            LOG_INFO(Audio_DSP, "Application has requested sleep of DSP hardware");
             UNIMPLEMENTED();
             dsp_state = DspState::Sleeping;
             break;
         default:
-            NGLOG_ERROR(Audio_DSP,
+            LOG_ERROR(Audio_DSP,
                         "Application has requested unknown state transition of DSP hardware {}",
                         buffer[0]);
             dsp_state = DspState::Off;
@@ -177,7 +177,7 @@ void DspHle::Impl::PipeWrite(DspPipe pipe_number, const std::vector<u8>& buffer)
         return;
     }
     default:
-        NGLOG_CRITICAL(Audio_DSP, "pipe_number = {} unimplemented",
+        LOG_CRITICAL(Audio_DSP, "pipe_number = {} unimplemented",
                        static_cast<size_t>(pipe_number));
         UNIMPLEMENTED();
         return;

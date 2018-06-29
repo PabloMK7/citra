@@ -18,7 +18,7 @@ namespace FileSys {
 ResultVal<std::unique_ptr<FileBackend>> SDMCWriteOnlyArchive::OpenFile(const Path& path,
                                                                        const Mode& mode) const {
     if (mode.read_flag) {
-        NGLOG_ERROR(Service_FS, "Read flag is not supported");
+        LOG_ERROR(Service_FS, "Read flag is not supported");
         return ERROR_INVALID_READ_FLAG;
     }
     return SDMCArchive::OpenFileBase(path, mode);
@@ -26,23 +26,23 @@ ResultVal<std::unique_ptr<FileBackend>> SDMCWriteOnlyArchive::OpenFile(const Pat
 
 ResultVal<std::unique_ptr<DirectoryBackend>> SDMCWriteOnlyArchive::OpenDirectory(
     const Path& path) const {
-    NGLOG_ERROR(Service_FS, "Not supported");
+    LOG_ERROR(Service_FS, "Not supported");
     return ERROR_UNSUPPORTED_OPEN_FLAGS;
 }
 
 ArchiveFactory_SDMCWriteOnly::ArchiveFactory_SDMCWriteOnly(const std::string& mount_point)
     : sdmc_directory(mount_point) {
-    NGLOG_DEBUG(Service_FS, "Directory {} set as SDMCWriteOnly.", sdmc_directory);
+    LOG_DEBUG(Service_FS, "Directory {} set as SDMCWriteOnly.", sdmc_directory);
 }
 
 bool ArchiveFactory_SDMCWriteOnly::Initialize() {
     if (!Settings::values.use_virtual_sd) {
-        NGLOG_WARNING(Service_FS, "SDMC disabled by config.");
+        LOG_WARNING(Service_FS, "SDMC disabled by config.");
         return false;
     }
 
     if (!FileUtil::CreateFullPath(sdmc_directory)) {
-        NGLOG_ERROR(Service_FS, "Unable to create SDMC path.");
+        LOG_ERROR(Service_FS, "Unable to create SDMC path.");
         return false;
     }
 
@@ -57,13 +57,13 @@ ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_SDMCWriteOnly::Open(co
 ResultCode ArchiveFactory_SDMCWriteOnly::Format(const Path& path,
                                                 const FileSys::ArchiveFormatInfo& format_info) {
     // TODO(wwylele): hwtest this
-    NGLOG_ERROR(Service_FS, "Attempted to format a SDMC write-only archive.");
+    LOG_ERROR(Service_FS, "Attempted to format a SDMC write-only archive.");
     return ResultCode(-1);
 }
 
 ResultVal<ArchiveFormatInfo> ArchiveFactory_SDMCWriteOnly::GetFormatInfo(const Path& path) const {
     // TODO(Subv): Implement
-    NGLOG_ERROR(Service_FS, "Unimplemented GetFormatInfo archive {}", GetName());
+    LOG_ERROR(Service_FS, "Unimplemented GetFormatInfo archive {}", GetName());
     return ResultCode(-1);
 }
 

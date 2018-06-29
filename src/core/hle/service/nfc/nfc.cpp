@@ -19,7 +19,7 @@ void Module::Interface::Initialize(Kernel::HLERequestContext& ctx) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
-    NGLOG_WARNING(Service_NFC, "(STUBBED) called, param={}", param);
+    LOG_WARNING(Service_NFC, "(STUBBED) called, param={}", param);
 }
 
 void Module::Interface::Shutdown(Kernel::HLERequestContext& ctx) {
@@ -30,7 +30,7 @@ void Module::Interface::Shutdown(Kernel::HLERequestContext& ctx) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
-    NGLOG_WARNING(Service_NFC, "(STUBBED) called, param={}", param);
+    LOG_WARNING(Service_NFC, "(STUBBED) called, param={}", param);
 }
 
 void Module::Interface::StartCommunication(Kernel::HLERequestContext& ctx) {
@@ -38,7 +38,7 @@ void Module::Interface::StartCommunication(Kernel::HLERequestContext& ctx) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
-    NGLOG_WARNING(Service_NFC, "(STUBBED) called");
+    LOG_WARNING(Service_NFC, "(STUBBED) called");
 }
 
 void Module::Interface::StopCommunication(Kernel::HLERequestContext& ctx) {
@@ -46,7 +46,7 @@ void Module::Interface::StopCommunication(Kernel::HLERequestContext& ctx) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
-    NGLOG_WARNING(Service_NFC, "(STUBBED) called");
+    LOG_WARNING(Service_NFC, "(STUBBED) called");
 }
 
 void Module::Interface::StartTagScanning(Kernel::HLERequestContext& ctx) {
@@ -66,7 +66,7 @@ void Module::Interface::StartTagScanning(Kernel::HLERequestContext& ctx) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(result);
-    NGLOG_WARNING(Service_NFC, "(STUBBED) called, in_val={:04x}", in_val);
+    LOG_WARNING(Service_NFC, "(STUBBED) called, in_val={:04x}", in_val);
 }
 
 void Module::Interface::StopTagScanning(Kernel::HLERequestContext& ctx) {
@@ -76,7 +76,7 @@ void Module::Interface::StopTagScanning(Kernel::HLERequestContext& ctx) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
-    NGLOG_WARNING(Service_NFC, "(STUBBED) called");
+    LOG_WARNING(Service_NFC, "(STUBBED) called");
 }
 
 void Module::Interface::LoadAmiiboData(Kernel::HLERequestContext& ctx) {
@@ -86,7 +86,7 @@ void Module::Interface::LoadAmiiboData(Kernel::HLERequestContext& ctx) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
-    NGLOG_WARNING(Service_NFC, "(STUBBED) called");
+    LOG_WARNING(Service_NFC, "(STUBBED) called");
 }
 
 void Module::Interface::ResetTagScanState(Kernel::HLERequestContext& ctx) {
@@ -96,7 +96,7 @@ void Module::Interface::ResetTagScanState(Kernel::HLERequestContext& ctx) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
-    NGLOG_WARNING(Service_NFC, "(STUBBED) called");
+    LOG_WARNING(Service_NFC, "(STUBBED) called");
 }
 
 void Module::Interface::GetTagInRangeEvent(Kernel::HLERequestContext& ctx) {
@@ -105,7 +105,7 @@ void Module::Interface::GetTagInRangeEvent(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
     rb.Push(RESULT_SUCCESS);
     rb.PushCopyObjects(nfc->tag_in_range_event);
-    NGLOG_WARNING(Service_NFC, "(STUBBED) called");
+    LOG_WARNING(Service_NFC, "(STUBBED) called");
 }
 
 void Module::Interface::GetTagOutOfRangeEvent(Kernel::HLERequestContext& ctx) {
@@ -114,7 +114,7 @@ void Module::Interface::GetTagOutOfRangeEvent(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
     rb.Push(RESULT_SUCCESS);
     rb.PushCopyObjects(nfc->tag_out_of_range_event);
-    NGLOG_WARNING(Service_NFC, "(STUBBED) called");
+    LOG_WARNING(Service_NFC, "(STUBBED) called");
 }
 
 void Module::Interface::GetTagState(Kernel::HLERequestContext& ctx) {
@@ -123,7 +123,7 @@ void Module::Interface::GetTagState(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
     rb.PushEnum(nfc->nfc_tag_state);
-    NGLOG_DEBUG(Service_NFC, "(STUBBED) called");
+    LOG_DEBUG(Service_NFC, "(STUBBED) called");
 }
 
 void Module::Interface::CommunicationGetStatus(Kernel::HLERequestContext& ctx) {
@@ -132,7 +132,7 @@ void Module::Interface::CommunicationGetStatus(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
     rb.PushEnum(nfc->nfc_status);
-    NGLOG_DEBUG(Service_NFC, "(STUBBED) called");
+    LOG_DEBUG(Service_NFC, "(STUBBED) called");
 }
 
 Module::Interface::Interface(std::shared_ptr<Module> nfc, const char* name, u32 max_session)

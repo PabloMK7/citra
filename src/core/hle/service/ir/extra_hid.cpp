@@ -165,7 +165,7 @@ void ExtraHID::OnDisconnect() {
 
 void ExtraHID::HandleConfigureHIDPollingRequest(const std::vector<u8>& request) {
     if (request.size() != 3) {
-        NGLOG_ERROR(Service_IR, "Wrong request size ({}): {}", request.size(),
+        LOG_ERROR(Service_IR, "Wrong request size ({}): {}", request.size(),
                     Common::ArrayToString(request.data(), request.size()));
         return;
     }
@@ -187,7 +187,7 @@ void ExtraHID::HandleReadCalibrationDataRequest(const std::vector<u8>& request_b
                   "ReadCalibrationDataRequest has wrong size");
 
     if (request_buf.size() != sizeof(ReadCalibrationDataRequest)) {
-        NGLOG_ERROR(Service_IR, "Wrong request size ({}): {}", request_buf.size(),
+        LOG_ERROR(Service_IR, "Wrong request size ({}): {}", request_buf.size(),
                     Common::ArrayToString(request_buf.data(), request_buf.size()));
         return;
     }
@@ -199,7 +199,7 @@ void ExtraHID::HandleReadCalibrationDataRequest(const std::vector<u8>& request_b
     const u16 size = Common::AlignDown(request.size, 16);
 
     if (offset + size > calibration_data.size()) {
-        NGLOG_ERROR(Service_IR, "Read beyond the end of calibration data! (offset={}, size={})",
+        LOG_ERROR(Service_IR, "Read beyond the end of calibration data! (offset={}, size={})",
                     offset, size);
         return;
     }
@@ -222,7 +222,7 @@ void ExtraHID::OnReceive(const std::vector<u8>& data) {
         HandleReadCalibrationDataRequest(data);
         break;
     default:
-        NGLOG_ERROR(Service_IR, "Unknown request: {}",
+        LOG_ERROR(Service_IR, "Unknown request: {}",
                     Common::ArrayToString(data.data(), data.size()));
         break;
     }

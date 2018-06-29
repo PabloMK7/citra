@@ -363,7 +363,7 @@ static void ProcessTriangleInternal(const Vertex& v0, const Vertex& v1, const Ve
                     }
                     default:
                         // TODO: Change to LOG_ERROR when more types are handled.
-                        NGLOG_DEBUG(HW_GPU, "Unhandled texture type {:x}",
+                        LOG_DEBUG(HW_GPU, "Unhandled texture type {:x}",
                                     (int)texture.config.type);
                         UNIMPLEMENTED();
                         break;
@@ -513,7 +513,7 @@ static void ProcessTriangleInternal(const Vertex& v0, const Vertex& v1, const Ve
                         return combiner_output;
 
                     default:
-                        NGLOG_ERROR(HW_GPU, "Unknown color combiner source {}", (int)source);
+                        LOG_ERROR(HW_GPU, "Unknown color combiner source {}", (int)source);
                         UNIMPLEMENTED();
                         return {0, 0, 0, 0};
                     }
@@ -844,7 +844,7 @@ static void ProcessTriangleInternal(const Vertex& v0, const Vertex& v1, const Ve
                         return std::min(combiner_output.a(), static_cast<u8>(255 - dest.a()));
 
                     default:
-                        NGLOG_CRITICAL(HW_GPU, "Unknown blend factor {:x}",
+                        LOG_CRITICAL(HW_GPU, "Unknown blend factor {:x}",
                                        static_cast<u32>(factor));
                         UNIMPLEMENTED();
                         break;

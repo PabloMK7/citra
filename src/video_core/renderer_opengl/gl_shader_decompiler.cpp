@@ -546,9 +546,9 @@ private:
                 const CompareOp op_y = instr.common.compare_op.y.Value();
 
                 if (cmp_ops.find(op_x) == cmp_ops.end()) {
-                    NGLOG_ERROR(HW_GPU, "Unknown compare mode {:x}", static_cast<int>(op_x));
+                    LOG_ERROR(HW_GPU, "Unknown compare mode {:x}", static_cast<int>(op_x));
                 } else if (cmp_ops.find(op_y) == cmp_ops.end()) {
-                    NGLOG_ERROR(HW_GPU, "Unknown compare mode {:x}", static_cast<int>(op_y));
+                    LOG_ERROR(HW_GPU, "Unknown compare mode {:x}", static_cast<int>(op_y));
                 } else if (op_x != op_y) {
                     shader.AddLine("conditional_code.x = " + src1 + ".x " +
                                    cmp_ops.find(op_x)->second.first + " " + src2 + ".x;");
@@ -572,7 +572,7 @@ private:
             }
 
             default: {
-                NGLOG_ERROR(HW_GPU, "Unhandled arithmetic instruction: 0x{:02x} ({}): 0x{:08x}",
+                LOG_ERROR(HW_GPU, "Unhandled arithmetic instruction: 0x{:02x} ({}): 0x{:08x}",
                             (int)instr.opcode.Value().EffectiveOpCode(),
                             instr.opcode.Value().GetInfo().name, instr.hex);
                 throw DecompileFail("Unhandled instruction");
@@ -616,7 +616,7 @@ private:
                     SetDest(swizzle, dest_reg, src1 + " * " + src2 + " + " + src3, 4, 4);
                 }
             } else {
-                NGLOG_ERROR(HW_GPU, "Unhandled multiply-add instruction: 0x{:02x} ({}): 0x{:08x}",
+                LOG_ERROR(HW_GPU, "Unhandled multiply-add instruction: 0x{:02x} ({}): 0x{:08x}",
                             (int)instr.opcode.Value().EffectiveOpCode(),
                             instr.opcode.Value().GetInfo().name, instr.hex);
                 throw DecompileFail("Unhandled instruction");
@@ -770,7 +770,7 @@ private:
             }
 
             default: {
-                NGLOG_ERROR(HW_GPU, "Unhandled instruction: 0x{:02x} ({}): 0x{:08x}",
+                LOG_ERROR(HW_GPU, "Unhandled instruction: 0x{:02x} ({}): 0x{:08x}",
                             (int)instr.opcode.Value().EffectiveOpCode(),
                             instr.opcode.Value().GetInfo().name, instr.hex);
                 throw DecompileFail("Unhandled instruction");
@@ -921,7 +921,7 @@ boost::optional<std::string> DecompileProgram(const ProgramCode& program_code,
                                 inputreg_getter, outputreg_getter, sanitize_mul, is_gs);
         return generator.MoveShaderCode();
     } catch (const DecompileFail& exception) {
-        NGLOG_INFO(HW_GPU, "Shader decompilation failed: {}", exception.what());
+        LOG_INFO(HW_GPU, "Shader decompilation failed: {}", exception.what());
         return boost::none;
     }
 }

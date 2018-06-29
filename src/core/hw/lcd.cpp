@@ -21,7 +21,7 @@ inline void Read(T& var, const u32 raw_addr) {
 
     // Reads other than u32 are untested, so I'd rather have them abort than silently fail
     if (index >= 0x400 || !std::is_same<T, u32>::value) {
-        NGLOG_ERROR(HW_LCD, "unknown Read{} @ {:#010X}", sizeof(var) * 8, addr);
+        LOG_ERROR(HW_LCD, "unknown Read{} @ {:#010X}", sizeof(var) * 8, addr);
         return;
     }
 
@@ -35,7 +35,7 @@ inline void Write(u32 addr, const T data) {
 
     // Writes other than u32 are untested, so I'd rather have them abort than silently fail
     if (index >= 0x400 || !std::is_same<T, u32>::value) {
-        NGLOG_ERROR(HW_LCD, "unknown Write{} {:#010X} @ {:#010X}", sizeof(data) * 8, (u32)data,
+        LOG_ERROR(HW_LCD, "unknown Write{} {:#010X} @ {:#010X}", sizeof(data) * 8, (u32)data,
                     addr);
         return;
     }
@@ -66,12 +66,12 @@ template void Write<u8>(u32 addr, const u8 data);
 /// Initialize hardware
 void Init() {
     memset(&g_regs, 0, sizeof(g_regs));
-    NGLOG_DEBUG(HW_LCD, "initialized OK");
+    LOG_DEBUG(HW_LCD, "initialized OK");
 }
 
 /// Shutdown hardware
 void Shutdown() {
-    NGLOG_DEBUG(HW_LCD, "shutdown OK");
+    LOG_DEBUG(HW_LCD, "shutdown OK");
 }
 
 } // namespace LCD

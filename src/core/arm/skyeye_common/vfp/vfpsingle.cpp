@@ -66,7 +66,7 @@ static struct vfp_single vfp_single_default_qnan = {
 };
 
 static void vfp_single_dump(const char* str, struct vfp_single* s) {
-    NGLOG_TRACE(Core_ARM11, "{}: sign={} exponent={} significand={:08x}", str, s->sign != 0,
+    LOG_TRACE(Core_ARM11, "{}: sign={} exponent={} significand={:08x}", str, s->sign != 0,
                 s->exponent, s->significand);
 }
 
@@ -168,7 +168,7 @@ u32 vfp_single_normaliseround(ARMul_State* state, int sd, struct vfp_single* vs,
     } else if ((rmode == FPSCR_ROUND_PLUSINF) ^ (vs->sign != 0))
         incr = (1 << (VFP_SINGLE_LOW_BITS + 1)) - 1;
 
-    NGLOG_TRACE(Core_ARM11, "rounding increment = 0x{:08x}", incr);
+    LOG_TRACE(Core_ARM11, "rounding increment = 0x{:08x}", incr);
 
     /*
      * Is our rounding going to overflow?
@@ -223,7 +223,7 @@ pack:
     vfp_single_dump("pack: final", vs);
     {
         s32 d = vfp_single_pack(vs);
-        NGLOG_TRACE(Core_ARM11, "{}: d(s{})={:08x} exceptions={:08x}", func, sd, d, exceptions);
+        LOG_TRACE(Core_ARM11, "{}: d(s{})={:08x} exceptions={:08x}", func, sd, d, exceptions);
         vfp_put_float(state, d, sd);
     }
 
@@ -306,7 +306,7 @@ u32 vfp_estimate_sqrt_significand(u32 exponent, u32 significand) {
     u32 z, a;
 
     if ((significand & 0xc0000000) != 0x40000000) {
-        NGLOG_TRACE(Core_ARM11, "invalid significand");
+        LOG_TRACE(Core_ARM11, "invalid significand");
     }
 
     a = significand << 1;
@@ -396,7 +396,7 @@ static u32 vfp_single_fsqrt(ARMul_State* state, int sd, int unused, s32 m, u32 f
             term = (u64)vsd.significand * vsd.significand;
             rem = ((u64)vsm.significand << 32) - term;
 
-            NGLOG_TRACE(Core_ARM11, "term={} rem={}", term, rem);
+            LOG_TRACE(Core_ARM11, "term={} rem={}", term, rem);
 
             while (rem < 0) {
                 vsd.significand -= 1;
@@ -635,7 +635,7 @@ static u32 vfp_single_ftoui(ARMul_State* state, int sd, int unused, s32 m, u32 f
         }
     }
 
-    NGLOG_TRACE(Core_ARM11, "ftoui: d(s{})={:08x} exceptions={:08x}", sd, d, exceptions);
+    LOG_TRACE(Core_ARM11, "ftoui: d(s{})={:08x} exceptions={:08x}", sd, d, exceptions);
 
     vfp_put_float(state, d, sd);
 
@@ -716,7 +716,7 @@ static u32 vfp_single_ftosi(ARMul_State* state, int sd, int unused, s32 m, u32 f
         }
     }
 
-    NGLOG_TRACE(Core_ARM11, "ftosi: d(s{})={:08x} exceptions={:08x}", sd, d, exceptions);
+    LOG_TRACE(Core_ARM11, "ftosi: d(s{})={:08x} exceptions={:08x}", sd, d, exceptions);
 
     vfp_put_float(state, (s32)d, sd);
 
@@ -803,7 +803,7 @@ static u32 vfp_single_add(struct vfp_single* vsd, struct vfp_single* vsn, struct
     u32 exp_diff, m_sig;
 
     if (vsn->significand & 0x80000000 || vsm->significand & 0x80000000) {
-        NGLOG_WARNING(Core_ARM11, "bad FP values");
+        LOG_WARNING(Core_ARM11, "bad FP values");
         vfp_single_dump("VSN", vsn);
         vfp_single_dump("VSM", vsm);
     }
@@ -868,7 +868,7 @@ static u32 vfp_single_multiply(struct vfp_single* vsd, struct vfp_single* vsn,
      */
     if (vsn->exponent < vsm->exponent) {
         std::swap(vsm, vsn);
-        NGLOG_TRACE(Core_ARM11, "swapping M <-> N");
+        LOG_TRACE(Core_ARM11, "swapping M <-> N");
     }
 
     vsd->sign = vsn->sign ^ vsm->sign;
@@ -920,7 +920,7 @@ static u32 vfp_single_multiply_accumulate(ARMul_State* state, int sd, int sn, s3
     s32 v;
 
     v = vfp_get_float(state, sn);
-    NGLOG_TRACE(Core_ARM11, "s{} = {:08x}", sn, v);
+    LOG_TRACE(Core_ARM11, "s{} = {:08x}", sn, v);
     exceptions |= vfp_single_unpack(&vsn, v, fpscr);
     if (vsn.exponent == 0 && vsn.significand)
         vfp_single_normalise_denormal(&vsn);
@@ -935,7 +935,7 @@ static u32 vfp_single_multiply_accumulate(ARMul_State* state, int sd, int sn, s3
         vsp.sign = vfp_sign_negate(vsp.sign);
 
     v = vfp_get_float(state, sd);
-    NGLOG_TRACE(Core_ARM11, "s{} = {:08x}", sd, v);
+    LOG_TRACE(Core_ARM11, "s{} = {:08x}", sd, v);
     exceptions |= vfp_single_unpack(&vsn, v, fpscr);
     if (vsn.exponent == 0 && vsn.significand != 0)
         vfp_single_normalise_denormal(&vsn);
@@ -956,7 +956,7 @@ static u32 vfp_single_multiply_accumulate(ARMul_State* state, int sd, int sn, s3
  * sd = sd + (sn * sm)
  */
 static u32 vfp_single_fmac(ARMul_State* state, int sd, int sn, s32 m, u32 fpscr) {
-    NGLOG_TRACE(Core_ARM11, "s{} = {:08x}", sn, sd);
+    LOG_TRACE(Core_ARM11, "s{} = {:08x}", sn, sd);
     return vfp_single_multiply_accumulate(state, sd, sn, m, fpscr, 0, "fmac");
 }
 
@@ -965,7 +965,7 @@ static u32 vfp_single_fmac(ARMul_State* state, int sd, int sn, s32 m, u32 fpscr)
  */
 static u32 vfp_single_fnmac(ARMul_State* state, int sd, int sn, s32 m, u32 fpscr) {
     // TODO: this one has its arguments inverted, investigate.
-    NGLOG_TRACE(Core_ARM11, "s{} = {:08x}", sd, sn);
+    LOG_TRACE(Core_ARM11, "s{} = {:08x}", sd, sn);
     return vfp_single_multiply_accumulate(state, sd, sn, m, fpscr, NEG_MULTIPLY, "fnmac");
 }
 
@@ -973,7 +973,7 @@ static u32 vfp_single_fnmac(ARMul_State* state, int sd, int sn, s32 m, u32 fpscr
  * sd = -sd + (sn * sm)
  */
 static u32 vfp_single_fmsc(ARMul_State* state, int sd, int sn, s32 m, u32 fpscr) {
-    NGLOG_TRACE(Core_ARM11, "s{} = {:08x}", sn, sd);
+    LOG_TRACE(Core_ARM11, "s{} = {:08x}", sn, sd);
     return vfp_single_multiply_accumulate(state, sd, sn, m, fpscr, NEG_SUBTRACT, "fmsc");
 }
 
@@ -981,7 +981,7 @@ static u32 vfp_single_fmsc(ARMul_State* state, int sd, int sn, s32 m, u32 fpscr)
  * sd = -sd - (sn * sm)
  */
 static u32 vfp_single_fnmsc(ARMul_State* state, int sd, int sn, s32 m, u32 fpscr) {
-    NGLOG_TRACE(Core_ARM11, "s{} = {:08x}", sn, sd);
+    LOG_TRACE(Core_ARM11, "s{} = {:08x}", sn, sd);
     return vfp_single_multiply_accumulate(state, sd, sn, m, fpscr, NEG_SUBTRACT | NEG_MULTIPLY,
                                           "fnmsc");
 }
@@ -994,7 +994,7 @@ static u32 vfp_single_fmul(ARMul_State* state, int sd, int sn, s32 m, u32 fpscr)
     u32 exceptions = 0;
     s32 n = vfp_get_float(state, sn);
 
-    NGLOG_TRACE(Core_ARM11, "s{} = {:08x}", sn, n);
+    LOG_TRACE(Core_ARM11, "s{} = {:08x}", sn, n);
 
     exceptions |= vfp_single_unpack(&vsn, n, fpscr);
     if (vsn.exponent == 0 && vsn.significand)
@@ -1016,7 +1016,7 @@ static u32 vfp_single_fnmul(ARMul_State* state, int sd, int sn, s32 m, u32 fpscr
     u32 exceptions = 0;
     s32 n = vfp_get_float(state, sn);
 
-    NGLOG_TRACE(Core_ARM11, "s{} = {:08x}", sn, n);
+    LOG_TRACE(Core_ARM11, "s{} = {:08x}", sn, n);
 
     exceptions |= vfp_single_unpack(&vsn, n, fpscr);
     if (vsn.exponent == 0 && vsn.significand)
@@ -1039,7 +1039,7 @@ static u32 vfp_single_fadd(ARMul_State* state, int sd, int sn, s32 m, u32 fpscr)
     u32 exceptions = 0;
     s32 n = vfp_get_float(state, sn);
 
-    NGLOG_TRACE(Core_ARM11, "s{} = {:08x}", sn, n);
+    LOG_TRACE(Core_ARM11, "s{} = {:08x}", sn, n);
 
     /*
      * Unpack and normalise denormals.
@@ -1061,7 +1061,7 @@ static u32 vfp_single_fadd(ARMul_State* state, int sd, int sn, s32 m, u32 fpscr)
  * sd = sn - sm
  */
 static u32 vfp_single_fsub(ARMul_State* state, int sd, int sn, s32 m, u32 fpscr) {
-    NGLOG_TRACE(Core_ARM11, "s{} = {:08x}", sn, sd);
+    LOG_TRACE(Core_ARM11, "s{} = {:08x}", sn, sd);
     /*
      * Subtraction is addition with one sign inverted. Unpack the second operand to perform FTZ if
      * necessary, we can't let fadd do this because a denormal in m might get flushed to +0 in FTZ
@@ -1090,7 +1090,7 @@ static u32 vfp_single_fdiv(ARMul_State* state, int sd, int sn, s32 m, u32 fpscr)
     s32 n = vfp_get_float(state, sn);
     int tm, tn;
 
-    NGLOG_TRACE(Core_ARM11, "s{} = {:08x}", sn, n);
+    LOG_TRACE(Core_ARM11, "s{} = {:08x}", sn, n);
 
     exceptions |= vfp_single_unpack(&vsn, n, fpscr);
     exceptions |= vfp_single_unpack(&vsm, m, fpscr);
@@ -1230,10 +1230,10 @@ u32 vfp_single_cpdo(ARMul_State* state, u32 inst, u32 fpscr) {
     else
         veclen = fpscr & FPSCR_LENGTH_MASK;
 
-    NGLOG_TRACE(Core_ARM11, "vecstride={} veclen={}", vecstride, (veclen >> FPSCR_LENGTH_BIT) + 1);
+    LOG_TRACE(Core_ARM11, "vecstride={} veclen={}", vecstride, (veclen >> FPSCR_LENGTH_BIT) + 1);
 
     if (!fop->fn) {
-        NGLOG_CRITICAL(Core_ARM11, "could not find single op {}, inst=0x{:x}@0x{:x}",
+        LOG_CRITICAL(Core_ARM11, "could not find single op {}, inst=0x{:x}@0x{:x}",
                        FEXT_TO_IDX(inst), inst, state->Reg[15]);
         Crash();
         goto invalid;
@@ -1246,14 +1246,14 @@ u32 vfp_single_cpdo(ARMul_State* state, u32 inst, u32 fpscr) {
 
         type = (fop->flags & OP_DD) ? 'd' : 's';
         if (op == FOP_EXT)
-            NGLOG_TRACE(Core_ARM11, "itr{} ({}{}) = op[{}] (s{}={:08x})",
+            LOG_TRACE(Core_ARM11, "itr{} ({}{}) = op[{}] (s{}={:08x})",
                         vecitr >> FPSCR_LENGTH_BIT, type, dest, sn, sm, m);
         else
-            NGLOG_TRACE(Core_ARM11, "itr{} ({}{}) = (s{}) op[{}] (s{}={:08x})",
+            LOG_TRACE(Core_ARM11, "itr{} ({}{}) = (s{}) op[{}] (s{}={:08x})",
                         vecitr >> FPSCR_LENGTH_BIT, type, dest, sn, FOP_TO_IDX(op), sm, m);
 
         except = fop->fn(state, dest, sn, m, fpscr);
-        NGLOG_TRACE(Core_ARM11, "itr{}: exceptions={:08x}", vecitr >> FPSCR_LENGTH_BIT, except);
+        LOG_TRACE(Core_ARM11, "itr{}: exceptions={:08x}", vecitr >> FPSCR_LENGTH_BIT, except);
 
         exceptions |= except & ~VFP_NAN_FLAG;
 

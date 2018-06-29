@@ -269,7 +269,7 @@ void PicaGSConfigCommonRaw::Init(const Pica::Regs& regs) {
             if (static_cast<size_t>(semantic) < 24) {
                 semantic_maps[static_cast<size_t>(semantic)] = {attrib, comp};
             } else if (semantic != VSOutputAttributes::INVALID) {
-                NGLOG_ERROR(Render_OpenGL, "Invalid/unknown semantic id: {}",
+                LOG_ERROR(Render_OpenGL, "Invalid/unknown semantic id: {}",
                             static_cast<u32>(semantic));
             }
         }
@@ -320,7 +320,7 @@ static std::string SampleTexture(const PicaFSConfig& config, unsigned texture_un
         case TexturingRegs::TextureConfig::ShadowCube:
             return "shadowTextureCube(texcoord0, texcoord0_w)";
         default:
-            NGLOG_CRITICAL(HW_GPU, "Unhandled texture type {:x}",
+            LOG_CRITICAL(HW_GPU, "Unhandled texture type {:x}",
                            static_cast<int>(state.texture0_type));
             UNIMPLEMENTED();
             return "texture(tex0, texcoord0)";
@@ -336,7 +336,7 @@ static std::string SampleTexture(const PicaFSConfig& config, unsigned texture_un
         if (state.proctex.enable) {
             return "ProcTex()";
         } else {
-            NGLOG_DEBUG(Render_OpenGL, "Using Texture3 without enabling it");
+            LOG_DEBUG(Render_OpenGL, "Using Texture3 without enabling it");
             return "vec4(0.0)";
         }
     default:
@@ -383,7 +383,7 @@ static void AppendSource(std::string& out, const PicaFSConfig& config,
         break;
     default:
         out += "vec4(0.0)";
-        NGLOG_CRITICAL(Render_OpenGL, "Unknown source op {}", static_cast<u32>(source));
+        LOG_CRITICAL(Render_OpenGL, "Unknown source op {}", static_cast<u32>(source));
         break;
     }
 }
@@ -441,7 +441,7 @@ static void AppendColorModifier(std::string& out, const PicaFSConfig& config,
         break;
     default:
         out += "vec3(0.0)";
-        NGLOG_CRITICAL(Render_OpenGL, "Unknown color modifier op {}", static_cast<u32>(modifier));
+        LOG_CRITICAL(Render_OpenGL, "Unknown color modifier op {}", static_cast<u32>(modifier));
         break;
     }
 }
@@ -490,7 +490,7 @@ static void AppendAlphaModifier(std::string& out, const PicaFSConfig& config,
         break;
     default:
         out += "0.0";
-        NGLOG_CRITICAL(Render_OpenGL, "Unknown alpha modifier op {}", static_cast<u32>(modifier));
+        LOG_CRITICAL(Render_OpenGL, "Unknown alpha modifier op {}", static_cast<u32>(modifier));
         break;
     }
 }
@@ -534,7 +534,7 @@ static void AppendColorCombiner(std::string& out, TevStageConfig::Operation oper
         break;
     default:
         out += "vec3(0.0)";
-        NGLOG_CRITICAL(Render_OpenGL, "Unknown color combiner operation: {}",
+        LOG_CRITICAL(Render_OpenGL, "Unknown color combiner operation: {}",
                        static_cast<u32>(operation));
         break;
     }
@@ -575,7 +575,7 @@ static void AppendAlphaCombiner(std::string& out, TevStageConfig::Operation oper
         break;
     default:
         out += "0.0";
-        NGLOG_CRITICAL(Render_OpenGL, "Unknown alpha combiner operation: {}",
+        LOG_CRITICAL(Render_OpenGL, "Unknown alpha combiner operation: {}",
                        static_cast<u32>(operation));
         break;
     }
@@ -606,7 +606,7 @@ static void AppendAlphaTestCondition(std::string& out, FramebufferRegs::CompareF
 
     default:
         out += "false";
-        NGLOG_CRITICAL(Render_OpenGL, "Unknown alpha test condition {}", static_cast<u32>(func));
+        LOG_CRITICAL(Render_OpenGL, "Unknown alpha test condition {}", static_cast<u32>(func));
         break;
     }
 }
@@ -776,7 +776,7 @@ static void WriteLighting(std::string& out, const PicaFSConfig& config) {
             break;
 
         default:
-            NGLOG_CRITICAL(HW_GPU, "Unknown lighting LUT input {}\n", (int)input);
+            LOG_CRITICAL(HW_GPU, "Unknown lighting LUT input {}\n", (int)input);
             UNIMPLEMENTED();
             index = "0.0";
             break;
@@ -992,7 +992,7 @@ void AppendProcTexShiftOffset(std::string& out, const std::string& v, ProcTexShi
         out += offset + " * (((int(" + v + ") + 1) / 2) % 2)";
         break;
     default:
-        NGLOG_CRITICAL(HW_GPU, "Unknown shift mode {}", static_cast<u32>(mode));
+        LOG_CRITICAL(HW_GPU, "Unknown shift mode {}", static_cast<u32>(mode));
         out += "0";
         break;
     }
@@ -1018,7 +1018,7 @@ void AppendProcTexClamp(std::string& out, const std::string& var, ProcTexClamp m
         out += var + " = " + var + " > 0.5 ? 1.0 : 0.0;\n";
         break;
     default:
-        NGLOG_CRITICAL(HW_GPU, "Unknown clamp mode {}", static_cast<u32>(mode));
+        LOG_CRITICAL(HW_GPU, "Unknown clamp mode {}", static_cast<u32>(mode));
         out += var + " = " + "min(" + var + ", 1.0);\n";
         break;
     }
@@ -1059,7 +1059,7 @@ void AppendProcTexCombineAndMap(std::string& out, ProcTexCombiner combiner,
         combined = "min(((u + v) * 0.5 + sqrt(u * u + v * v)) * 0.5, 1.0)";
         break;
     default:
-        NGLOG_CRITICAL(HW_GPU, "Unknown combiner {}", static_cast<u32>(combiner));
+        LOG_CRITICAL(HW_GPU, "Unknown combiner {}", static_cast<u32>(combiner));
         combined = "0.0";
         break;
     }
@@ -1126,7 +1126,7 @@ float ProcTexNoiseCoef(vec2 x) {
     if (config.state.proctex.coord < 3) {
         out += "vec2 uv = abs(texcoord" + std::to_string(config.state.proctex.coord) + ");\n";
     } else {
-        NGLOG_CRITICAL(Render_OpenGL, "Unexpected proctex.coord >= 3");
+        LOG_CRITICAL(Render_OpenGL, "Unexpected proctex.coord >= 3");
         out += "vec2 uv = abs(texcoord0);\n";
     }
 
@@ -1499,7 +1499,7 @@ vec4 secondary_fragment_color = vec4(0.0);
     } else if (state.fog_mode == TexturingRegs::FogMode::Gas) {
         Core::Telemetry().AddField(Telemetry::FieldType::Session, "VideoCore_Pica_UseGasMode",
                                    true);
-        NGLOG_CRITICAL(Render_OpenGL, "Unimplemented gas mode");
+        LOG_CRITICAL(Render_OpenGL, "Unimplemented gas mode");
         out += "discard; }";
         return out;
     }

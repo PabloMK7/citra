@@ -40,7 +40,7 @@ std::string GetSaveDataMetadataPath(const std::string& mount_location, u64 progr
 
 ArchiveSource_SDSaveData::ArchiveSource_SDSaveData(const std::string& sdmc_directory)
     : mount_point(GetSaveDataContainerPath(sdmc_directory)) {
-    NGLOG_DEBUG(Service_FS, "Directory {} set as SaveData.", mount_point);
+    LOG_DEBUG(Service_FS, "Directory {} set as SaveData.", mount_point);
 }
 
 ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveSource_SDSaveData::Open(u64 program_id) {
@@ -79,7 +79,7 @@ ResultVal<ArchiveFormatInfo> ArchiveSource_SDSaveData::GetFormatInfo(u64 program
     FileUtil::IOFile file(metadata_path, "rb");
 
     if (!file.IsOpen()) {
-        NGLOG_ERROR(Service_FS, "Could not open metadata information for archive");
+        LOG_ERROR(Service_FS, "Could not open metadata information for archive");
         // TODO(Subv): Verify error code
         return ERR_NOT_FORMATTED;
     }

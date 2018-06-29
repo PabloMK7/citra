@@ -41,14 +41,14 @@ struct MIC_U::Impl {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(RESULT_SUCCESS);
 
-        NGLOG_WARNING(Service_MIC, "called, size=0x{:X}", size);
+        LOG_WARNING(Service_MIC, "called, size=0x{:X}", size);
     }
 
     void UnmapSharedMem(Kernel::HLERequestContext& ctx) {
         IPC::RequestParser rp{ctx, 0x02, 0, 0};
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(RESULT_SUCCESS);
-        NGLOG_WARNING(Service_MIC, "called");
+        LOG_WARNING(Service_MIC, "called");
     }
 
     void StartSampling(Kernel::HLERequestContext& ctx) {
@@ -63,7 +63,7 @@ struct MIC_U::Impl {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(RESULT_SUCCESS);
         is_sampling = true;
-        NGLOG_WARNING(Service_MIC,
+        LOG_WARNING(Service_MIC,
                       "(STUBBED) called, encoding={}, sample_rate={}, "
                       "audio_buffer_offset={}, audio_buffer_size={}, audio_buffer_loop={}",
                       static_cast<u32>(encoding), static_cast<u32>(sample_rate),
@@ -76,7 +76,7 @@ struct MIC_U::Impl {
 
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(RESULT_SUCCESS);
-        NGLOG_WARNING(Service_MIC, "(STUBBED) called, sample_rate={}",
+        LOG_WARNING(Service_MIC, "(STUBBED) called, sample_rate={}",
                       static_cast<u32>(sample_rate));
     }
 
@@ -85,7 +85,7 @@ struct MIC_U::Impl {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(RESULT_SUCCESS);
         is_sampling = false;
-        NGLOG_WARNING(Service_MIC, "(STUBBED) called");
+        LOG_WARNING(Service_MIC, "(STUBBED) called");
     }
 
     void IsSampling(Kernel::HLERequestContext& ctx) {
@@ -93,7 +93,7 @@ struct MIC_U::Impl {
         IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
         rb.Push(RESULT_SUCCESS);
         rb.Push<bool>(is_sampling);
-        NGLOG_WARNING(Service_MIC, "(STUBBED) called");
+        LOG_WARNING(Service_MIC, "(STUBBED) called");
     }
 
     void GetBufferFullEvent(Kernel::HLERequestContext& ctx) {
@@ -101,7 +101,7 @@ struct MIC_U::Impl {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
         rb.Push(RESULT_SUCCESS);
         rb.PushCopyObjects(buffer_full_event);
-        NGLOG_WARNING(Service_MIC, "(STUBBED) called");
+        LOG_WARNING(Service_MIC, "(STUBBED) called");
     }
 
     void SetGain(Kernel::HLERequestContext& ctx) {
@@ -110,7 +110,7 @@ struct MIC_U::Impl {
 
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(RESULT_SUCCESS);
-        NGLOG_WARNING(Service_MIC, "(STUBBED) called, mic_gain={}", mic_gain);
+        LOG_WARNING(Service_MIC, "(STUBBED) called, mic_gain={}", mic_gain);
     }
 
     void GetGain(Kernel::HLERequestContext& ctx) {
@@ -119,7 +119,7 @@ struct MIC_U::Impl {
         IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
         rb.Push(RESULT_SUCCESS);
         rb.Push<u8>(mic_gain);
-        NGLOG_WARNING(Service_MIC, "(STUBBED) called");
+        LOG_WARNING(Service_MIC, "(STUBBED) called");
     }
 
     void SetPower(Kernel::HLERequestContext& ctx) {
@@ -128,7 +128,7 @@ struct MIC_U::Impl {
 
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(RESULT_SUCCESS);
-        NGLOG_WARNING(Service_MIC, "(STUBBED) called, mic_power={}", mic_power);
+        LOG_WARNING(Service_MIC, "(STUBBED) called, mic_power={}", mic_power);
     }
 
     void GetPower(Kernel::HLERequestContext& ctx) {
@@ -136,7 +136,7 @@ struct MIC_U::Impl {
         IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
         rb.Push(RESULT_SUCCESS);
         rb.Push<u8>(mic_power);
-        NGLOG_WARNING(Service_MIC, "(STUBBED) called");
+        LOG_WARNING(Service_MIC, "(STUBBED) called");
     }
 
     void SetIirFilterMic(Kernel::HLERequestContext& ctx) {
@@ -147,7 +147,7 @@ struct MIC_U::Impl {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
         rb.Push(RESULT_SUCCESS);
         rb.PushMappedBuffer(buffer);
-        NGLOG_WARNING(Service_MIC, "(STUBBED) called, size=0x{:X}, buffer=0x{:08X}", size,
+        LOG_WARNING(Service_MIC, "(STUBBED) called, size=0x{:X}, buffer=0x{:08X}", size,
                       buffer.GetId());
     }
 
@@ -157,7 +157,7 @@ struct MIC_U::Impl {
 
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(RESULT_SUCCESS);
-        NGLOG_WARNING(Service_MIC, "(STUBBED) called, clamp={}", clamp);
+        LOG_WARNING(Service_MIC, "(STUBBED) called, clamp={}", clamp);
     }
 
     void GetClamp(Kernel::HLERequestContext& ctx) {
@@ -165,7 +165,7 @@ struct MIC_U::Impl {
         IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
         rb.Push(RESULT_SUCCESS);
         rb.Push<bool>(clamp);
-        NGLOG_WARNING(Service_MIC, "(STUBBED) called");
+        LOG_WARNING(Service_MIC, "(STUBBED) called");
     }
 
     void SetAllowShellClosed(Kernel::HLERequestContext& ctx) {
@@ -174,14 +174,14 @@ struct MIC_U::Impl {
 
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(RESULT_SUCCESS);
-        NGLOG_WARNING(Service_MIC, "(STUBBED) called, allow_shell_closed={}", allow_shell_closed);
+        LOG_WARNING(Service_MIC, "(STUBBED) called, allow_shell_closed={}", allow_shell_closed);
     }
 
     void SetClientVersion(Kernel::HLERequestContext& ctx) {
         IPC::RequestParser rp{ctx, 0x10, 1, 0};
 
         const u32 version = rp.Pop<u32>();
-        NGLOG_WARNING(Service_MIC, "(STUBBED) called, version: 0x{:08X}", version);
+        LOG_WARNING(Service_MIC, "(STUBBED) called, version: 0x{:08X}", version);
 
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(RESULT_SUCCESS);

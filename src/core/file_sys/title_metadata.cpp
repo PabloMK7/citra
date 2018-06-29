@@ -45,7 +45,7 @@ Loader::ResultStatus TitleMetadata::Load(const std::string& file_path) {
 
     Loader::ResultStatus result = Load(file_data);
     if (result != Loader::ResultStatus::Success)
-        NGLOG_ERROR(Service_FS, "Failed to load TMD from file {}!", file_path);
+        LOG_ERROR(Service_FS, "Failed to load TMD from file {}!", file_path);
 
     return result;
 }
@@ -75,7 +75,7 @@ Loader::ResultStatus TitleMetadata::Load(const std::vector<u8> file_data, size_t
     size_t expected_size =
         body_start + sizeof(Body) + tmd_body.content_count * sizeof(ContentChunk);
     if (total_size < expected_size) {
-        NGLOG_ERROR(Service_FS, "Malformed TMD, expected size 0x{:x}, got 0x{:x}!", expected_size,
+        LOG_ERROR(Service_FS, "Malformed TMD, expected size 0x{:x}, got 0x{:x}!", expected_size,
                     total_size);
         return Loader::ResultStatus::ErrorInvalidFormat;
     }
@@ -209,15 +209,15 @@ void TitleMetadata::AddContentChunk(const ContentChunk& chunk) {
 }
 
 void TitleMetadata::Print() const {
-    NGLOG_DEBUG(Service_FS, "{} chunks", static_cast<u32>(tmd_body.content_count));
+    LOG_DEBUG(Service_FS, "{} chunks", static_cast<u32>(tmd_body.content_count));
 
     // Content info describes ranges of content chunks
-    NGLOG_DEBUG(Service_FS, "Content info:");
+    LOG_DEBUG(Service_FS, "Content info:");
     for (size_t i = 0; i < tmd_body.contentinfo.size(); i++) {
         if (tmd_body.contentinfo[i].command_count == 0)
             break;
 
-        NGLOG_DEBUG(Service_FS, "    Index {:04X}, Command Count {:04X}",
+        LOG_DEBUG(Service_FS, "    Index {:04X}, Command Count {:04X}",
                     static_cast<u32>(tmd_body.contentinfo[i].index),
                     static_cast<u32>(tmd_body.contentinfo[i].command_count));
     }
@@ -230,14 +230,14 @@ void TitleMetadata::Print() const {
         if (count == 0)
             continue;
 
-        NGLOG_DEBUG(Service_FS, "Content chunks for content info index {}:", i);
+        LOG_DEBUG(Service_FS, "Content chunks for content info index {}:", i);
         for (u16 j = index; j < index + count; j++) {
             // Don't attempt to print content we don't have
             if (j > tmd_body.content_count)
                 break;
 
             const ContentChunk& chunk = tmd_chunks[j];
-            NGLOG_DEBUG(Service_FS, "    ID {:08X}, Index {:04X}, Type {:04x}, Size {:016X}",
+            LOG_DEBUG(Service_FS, "    ID {:08X}, Index {:04X}, Type {:04x}, Size {:016X}",
                         static_cast<u32>(chunk.id), static_cast<u32>(chunk.index),
                         static_cast<u32>(chunk.type), static_cast<u64>(chunk.size));
         }

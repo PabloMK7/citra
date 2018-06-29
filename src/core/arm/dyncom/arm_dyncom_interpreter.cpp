@@ -231,7 +231,7 @@ static unsigned int DPO(RotateRightByRegister)(ARMul_State* cpu, unsigned int sh
 }
 
 #define DEBUG_MSG                                                                                  \
-    NGLOG_DEBUG(Core_ARM11, "inst is {:x}", inst);                                                 \
+    LOG_DEBUG(Core_ARM11, "inst is {:x}", inst);                                                 \
     CITRA_IGNORE_EXIT(0)
 
 #define LnSWoUB(s) glue(LnSWoUB, s)
@@ -770,7 +770,7 @@ static ThumbDecodeStatus DecodeThumbInstruction(u32 inst, u32 addr, u32* arm_ins
                 inst_index = table_length - 4;
                 *ptr_inst_base = arm_instruction_trans[inst_index](tinstr, inst_index);
             } else {
-                NGLOG_ERROR(Core_ARM11, "thumb decoder error");
+                LOG_ERROR(Core_ARM11, "thumb decoder error");
             }
             break;
         case 28:
@@ -828,9 +828,9 @@ static unsigned int InterpreterTranslateInstruction(const ARMul_State* cpu, cons
 
     int idx;
     if (DecodeARMInstruction(inst, &idx) == ARMDecodeStatus::FAILURE) {
-        NGLOG_ERROR(Core_ARM11, "Decode failure.\tPC: [{:#010X}]\tInstruction: {:08X}", phys_addr,
+        LOG_ERROR(Core_ARM11, "Decode failure.\tPC: [{:#010X}]\tInstruction: {:08X}", phys_addr,
                     inst);
-        NGLOG_ERROR(Core_ARM11, "cpsr={:#X}, cpu->TFlag={}, r15={:#010X}", cpu->Cpsr, cpu->TFlag,
+        LOG_ERROR(Core_ARM11, "cpsr={:#X}, cpu->TFlag={}, r15={:#010X}", cpu->Cpsr, cpu->TFlag,
                     cpu->Reg[15]);
         CITRA_IGNORE_EXIT(-1);
     }
@@ -1802,7 +1802,7 @@ BIC_INST : {
 BKPT_INST : {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         bkpt_inst* const inst_cream = (bkpt_inst*)inst_base->component;
-        NGLOG_DEBUG(Core_ARM11, "Breakpoint instruction hit. Immediate: {:#010X}", inst_cream->imm);
+        LOG_DEBUG(Core_ARM11, "Breakpoint instruction hit. Immediate: {:#010X}", inst_cream->imm);
     }
     cpu->Reg[15] += cpu->GetInstructionSize();
     INC_PC(sizeof(bkpt_inst));
@@ -2017,7 +2017,7 @@ EOR_INST : {
 }
 LDC_INST : {
     // Instruction not implemented
-    // NGLOG_CRITICAL(Core_ARM11, "unimplemented instruction");
+    // LOG_CRITICAL(Core_ARM11, "unimplemented instruction");
     cpu->Reg[15] += cpu->GetInstructionSize();
     INC_PC(sizeof(ldc_inst));
     FETCH_INST;
@@ -2368,7 +2368,7 @@ MCRR_INST : {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         mcrr_inst* const inst_cream = (mcrr_inst*)inst_base->component;
 
-        NGLOG_ERROR(Core_ARM11,
+        LOG_ERROR(Core_ARM11,
                     "MCRR executed | Coprocessor: {}, CRm {}, opc1: {}, Rt: {}, Rt2: {}",
                     inst_cream->cp_num, inst_cream->crm, inst_cream->opcode_1, inst_cream->rt,
                     inst_cream->rt2);
@@ -2452,7 +2452,7 @@ MRRC_INST : {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         mcrr_inst* const inst_cream = (mcrr_inst*)inst_base->component;
 
-        NGLOG_ERROR(Core_ARM11,
+        LOG_ERROR(Core_ARM11,
                     "MRRC executed | Coprocessor: {}, CRm {}, opc1: {}, Rt: {}, Rt2: {}",
                     inst_cream->cp_num, inst_cream->crm, inst_cream->opcode_1, inst_cream->rt,
                     inst_cream->rt2);
@@ -3080,7 +3080,7 @@ SETEND_INST : {
     else
         cpu->Cpsr &= ~(1 << 9);
 
-    NGLOG_WARNING(Core_ARM11, "SETEND {} executed", big_endian ? "BE" : "LE");
+    LOG_WARNING(Core_ARM11, "SETEND {} executed", big_endian ? "BE" : "LE");
 
     cpu->Reg[15] += cpu->GetInstructionSize();
     INC_PC(sizeof(setend_inst));
@@ -3091,7 +3091,7 @@ SETEND_INST : {
 SEV_INST : {
     // Stubbed, as SEV is a hint instruction.
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
-        NGLOG_TRACE(Core_ARM11, "SEV executed.");
+        LOG_TRACE(Core_ARM11, "SEV executed.");
     }
 
     cpu->Reg[15] += cpu->GetInstructionSize();
@@ -3541,7 +3541,7 @@ SSAT16_INST : {
 
 STC_INST : {
     // Instruction not implemented
-    // NGLOG_CRITICAL(Core_ARM11, "unimplemented instruction");
+    // LOG_CRITICAL(Core_ARM11, "unimplemented instruction");
     cpu->Reg[15] += cpu->GetInstructionSize();
     INC_PC(sizeof(stc_inst));
     FETCH_INST;
@@ -4537,7 +4537,7 @@ UXTB16_INST : {
 WFE_INST : {
     // Stubbed, as WFE is a hint instruction.
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
-        NGLOG_TRACE(Core_ARM11, "WFE executed.");
+        LOG_TRACE(Core_ARM11, "WFE executed.");
     }
 
     cpu->Reg[15] += cpu->GetInstructionSize();
@@ -4549,7 +4549,7 @@ WFE_INST : {
 WFI_INST : {
     // Stubbed, as WFI is a hint instruction.
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
-        NGLOG_TRACE(Core_ARM11, "WFI executed.");
+        LOG_TRACE(Core_ARM11, "WFI executed.");
     }
 
     cpu->Reg[15] += cpu->GetInstructionSize();
@@ -4561,7 +4561,7 @@ WFI_INST : {
 YIELD_INST : {
     // Stubbed, as YIELD is a hint instruction.
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
-        NGLOG_TRACE(Core_ARM11, "YIELD executed.");
+        LOG_TRACE(Core_ARM11, "YIELD executed.");
     }
 
     cpu->Reg[15] += cpu->GetInstructionSize();

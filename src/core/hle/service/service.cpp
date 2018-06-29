@@ -94,14 +94,14 @@ void Interface::HandleSyncRequest(SharedPtr<ServerSession> server_session) {
         std::string function_name = (itr == m_functions.end())
                                         ? Common::StringFromFormat("0x%08X", cmd_buff[0])
                                         : itr->second.name;
-        NGLOG_ERROR(Service, "unknown / unimplemented {}",
+        LOG_ERROR(Service, "unknown / unimplemented {}",
                     MakeFunctionString(function_name.c_str(), GetPortName().c_str(), cmd_buff));
 
         // TODO(bunnei): Hack - ignore error
         cmd_buff[1] = 0;
         return;
     }
-    NGLOG_TRACE(Service, "{}",
+    LOG_TRACE(Service, "{}",
                 MakeFunctionString(itr->second.name, GetPortName().c_str(), cmd_buff));
 
     itr->second.func(this);
@@ -159,7 +159,7 @@ void ServiceFrameworkBase::ReportUnimplementedFunction(u32* cmd_buf, const Funct
     }
     buf.push_back('}');
 
-    NGLOG_ERROR(Service, "unknown / unimplemented {}", fmt::to_string(buf));
+    LOG_ERROR(Service, "unknown / unimplemented {}", fmt::to_string(buf));
     // TODO(bunnei): Hack - ignore error
     cmd_buf[1] = 0;
 }
@@ -180,7 +180,7 @@ void ServiceFrameworkBase::HandleSyncRequest(SharedPtr<ServerSession> server_ses
     context.PopulateFromIncomingCommandBuffer(cmd_buf, *Kernel::g_current_process,
                                               Kernel::g_handle_table);
 
-    NGLOG_TRACE(Service, "{}", MakeFunctionString(info->name, GetServiceName().c_str(), cmd_buf));
+    LOG_TRACE(Service, "{}", MakeFunctionString(info->name, GetServiceName().c_str(), cmd_buf));
     handler_invoker(this, info->handler_callback, context);
 
     auto thread = Kernel::GetCurrentThread();
@@ -264,7 +264,7 @@ void Init(std::shared_ptr<SM::ServiceManager>& sm) {
     SSL::InstallInterfaces(*sm);
     Y2R::InstallInterfaces(*sm);
 
-    NGLOG_DEBUG(Service, "initialized OK");
+    LOG_DEBUG(Service, "initialized OK");
 }
 
 /// Shutdown ServiceManager
@@ -275,6 +275,6 @@ void Shutdown() {
     FS::ArchiveShutdown();
 
     g_kernel_named_ports.clear();
-    NGLOG_DEBUG(Service, "shutdown OK");
+    LOG_DEBUG(Service, "shutdown OK");
 }
 } // namespace Service

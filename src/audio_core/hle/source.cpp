@@ -54,34 +54,34 @@ void Source::ParseConfig(SourceConfiguration::Configuration& config,
     if (config.reset_flag) {
         config.reset_flag.Assign(0);
         Reset();
-        NGLOG_TRACE(Audio_DSP, "source_id={} reset", source_id);
+        LOG_TRACE(Audio_DSP, "source_id={} reset", source_id);
     }
 
     if (config.partial_reset_flag) {
         config.partial_reset_flag.Assign(0);
         state.input_queue = std::priority_queue<Buffer, std::vector<Buffer>, BufferOrder>{};
-        NGLOG_TRACE(Audio_DSP, "source_id={} partial_reset", source_id);
+        LOG_TRACE(Audio_DSP, "source_id={} partial_reset", source_id);
     }
 
     if (config.enable_dirty) {
         config.enable_dirty.Assign(0);
         state.enabled = config.enable != 0;
-        NGLOG_TRACE(Audio_DSP, "source_id={} enable={}", source_id, state.enabled);
+        LOG_TRACE(Audio_DSP, "source_id={} enable={}", source_id, state.enabled);
     }
 
     if (config.sync_dirty) {
         config.sync_dirty.Assign(0);
         state.sync = config.sync;
-        NGLOG_TRACE(Audio_DSP, "source_id={} sync={}", source_id, state.sync);
+        LOG_TRACE(Audio_DSP, "source_id={} sync={}", source_id, state.sync);
     }
 
     if (config.rate_multiplier_dirty) {
         config.rate_multiplier_dirty.Assign(0);
         state.rate_multiplier = config.rate_multiplier;
-        NGLOG_TRACE(Audio_DSP, "source_id={} rate={}", source_id, state.rate_multiplier);
+        LOG_TRACE(Audio_DSP, "source_id={} rate={}", source_id, state.rate_multiplier);
 
         if (state.rate_multiplier <= 0) {
-            NGLOG_ERROR(Audio_DSP, "Was given an invalid rate multiplier: source_id={} rate={}",
+            LOG_ERROR(Audio_DSP, "Was given an invalid rate multiplier: source_id={} rate={}",
                         source_id, state.rate_multiplier);
             state.rate_multiplier = 1.0f;
             // Note: Actual firmware starts producing garbage if this occurs.
@@ -93,68 +93,68 @@ void Source::ParseConfig(SourceConfiguration::Configuration& config,
         std::transform(adpcm_coeffs, adpcm_coeffs + state.adpcm_coeffs.size(),
                        state.adpcm_coeffs.begin(),
                        [](const auto& coeff) { return static_cast<s16>(coeff); });
-        NGLOG_TRACE(Audio_DSP, "source_id={} adpcm update", source_id);
+        LOG_TRACE(Audio_DSP, "source_id={} adpcm update", source_id);
     }
 
     if (config.gain_0_dirty) {
         config.gain_0_dirty.Assign(0);
         std::transform(config.gain[0], config.gain[0] + state.gain[0].size(), state.gain[0].begin(),
                        [](const auto& coeff) { return static_cast<float>(coeff); });
-        NGLOG_TRACE(Audio_DSP, "source_id={} gain 0 update", source_id);
+        LOG_TRACE(Audio_DSP, "source_id={} gain 0 update", source_id);
     }
 
     if (config.gain_1_dirty) {
         config.gain_1_dirty.Assign(0);
         std::transform(config.gain[1], config.gain[1] + state.gain[1].size(), state.gain[1].begin(),
                        [](const auto& coeff) { return static_cast<float>(coeff); });
-        NGLOG_TRACE(Audio_DSP, "source_id={} gain 1 update", source_id);
+        LOG_TRACE(Audio_DSP, "source_id={} gain 1 update", source_id);
     }
 
     if (config.gain_2_dirty) {
         config.gain_2_dirty.Assign(0);
         std::transform(config.gain[2], config.gain[2] + state.gain[2].size(), state.gain[2].begin(),
                        [](const auto& coeff) { return static_cast<float>(coeff); });
-        NGLOG_TRACE(Audio_DSP, "source_id={} gain 2 update", source_id);
+        LOG_TRACE(Audio_DSP, "source_id={} gain 2 update", source_id);
     }
 
     if (config.filters_enabled_dirty) {
         config.filters_enabled_dirty.Assign(0);
         state.filters.Enable(config.simple_filter_enabled.ToBool(),
                              config.biquad_filter_enabled.ToBool());
-        NGLOG_TRACE(Audio_DSP, "source_id={} enable_simple={} enable_biquad={}", source_id,
+        LOG_TRACE(Audio_DSP, "source_id={} enable_simple={} enable_biquad={}", source_id,
                     config.simple_filter_enabled.Value(), config.biquad_filter_enabled.Value());
     }
 
     if (config.simple_filter_dirty) {
         config.simple_filter_dirty.Assign(0);
         state.filters.Configure(config.simple_filter);
-        NGLOG_TRACE(Audio_DSP, "source_id={} simple filter update", source_id);
+        LOG_TRACE(Audio_DSP, "source_id={} simple filter update", source_id);
     }
 
     if (config.biquad_filter_dirty) {
         config.biquad_filter_dirty.Assign(0);
         state.filters.Configure(config.biquad_filter);
-        NGLOG_TRACE(Audio_DSP, "source_id={} biquad filter update", source_id);
+        LOG_TRACE(Audio_DSP, "source_id={} biquad filter update", source_id);
     }
 
     if (config.interpolation_dirty) {
         config.interpolation_dirty.Assign(0);
         state.interpolation_mode = config.interpolation_mode;
-        NGLOG_TRACE(Audio_DSP, "source_id={} interpolation_mode={}", source_id,
+        LOG_TRACE(Audio_DSP, "source_id={} interpolation_mode={}", source_id,
                     static_cast<size_t>(state.interpolation_mode));
     }
 
     if (config.format_dirty || config.embedded_buffer_dirty) {
         config.format_dirty.Assign(0);
         state.format = config.format;
-        NGLOG_TRACE(Audio_DSP, "source_id={} format={}", source_id,
+        LOG_TRACE(Audio_DSP, "source_id={} format={}", source_id,
                     static_cast<size_t>(state.format));
     }
 
     if (config.mono_or_stereo_dirty || config.embedded_buffer_dirty) {
         config.mono_or_stereo_dirty.Assign(0);
         state.mono_or_stereo = config.mono_or_stereo;
-        NGLOG_TRACE(Audio_DSP, "source_id={} mono_or_stereo={}", source_id,
+        LOG_TRACE(Audio_DSP, "source_id={} mono_or_stereo={}", source_id,
                     static_cast<size_t>(state.mono_or_stereo));
     }
 
@@ -182,14 +182,14 @@ void Source::ParseConfig(SourceConfiguration::Configuration& config,
             play_position,
             false,
         });
-        NGLOG_TRACE(Audio_DSP, "enqueuing embedded addr={:#010x} len={} id={} start={}",
+        LOG_TRACE(Audio_DSP, "enqueuing embedded addr={:#010x} len={} id={} start={}",
                     config.physical_address, config.length, config.buffer_id,
                     static_cast<u32>(config.play_position));
     }
 
     if (config.loop_related_dirty && config.loop_related != 0) {
         config.loop_related_dirty.Assign(0);
-        NGLOG_WARNING(Audio_DSP, "Unhandled complex loop with loop_related={:#010x}",
+        LOG_WARNING(Audio_DSP, "Unhandled complex loop with loop_related={:#010x}",
                       static_cast<u32>(config.loop_related));
     }
 
@@ -212,7 +212,7 @@ void Source::ParseConfig(SourceConfiguration::Configuration& config,
                     {}, // 0 in u32_dsp
                     false,
                 });
-                NGLOG_TRACE(Audio_DSP, "enqueuing queued {} addr={:#010x} len={} id={}", i,
+                LOG_TRACE(Audio_DSP, "enqueuing queued {} addr={:#010x} len={} id={}", i,
                             b.physical_address, b.length, b.buffer_id);
             }
         }
@@ -220,7 +220,7 @@ void Source::ParseConfig(SourceConfiguration::Configuration& config,
     }
 
     if (config.dirty_raw) {
-        NGLOG_DEBUG(Audio_DSP, "source_id={} remaining_dirty={:x}", source_id, config.dirty_raw);
+        LOG_DEBUG(Audio_DSP, "source_id={} remaining_dirty={:x}", source_id, config.dirty_raw);
     }
 
     config.dirty_raw = 0;
@@ -255,7 +255,7 @@ void Source::GenerateFrame() {
             break;
         case InterpolationMode::Polyphase:
             // TODO(merry): Implement polyphase interpolation
-            NGLOG_DEBUG(Audio_DSP, "Polyphase interpolation unimplemented; falling back to linear");
+            LOG_DEBUG(Audio_DSP, "Polyphase interpolation unimplemented; falling back to linear");
             AudioInterp::Linear(state.interp_state, state.current_buffer, state.rate_multiplier,
                                 current_frame, frame_position);
             break;
@@ -304,7 +304,7 @@ bool Source::DequeueBuffer() {
             break;
         }
     } else {
-        NGLOG_WARNING(Audio_DSP,
+        LOG_WARNING(Audio_DSP,
                       "source_id={} buffer_id={} length={}: Invalid physical address {:#010x}",
                       source_id, buf.buffer_id, buf.length, buf.physical_address);
         state.current_buffer.clear();
@@ -322,7 +322,7 @@ bool Source::DequeueBuffer() {
         state.input_queue.push(buf);
     }
 
-    NGLOG_TRACE(Audio_DSP, "source_id={} buffer_id={} from_queue={} current_buffer.size()={}",
+    LOG_TRACE(Audio_DSP, "source_id={} buffer_id={} from_queue={} current_buffer.size()={}",
                 source_id, buf.buffer_id, buf.from_queue, state.current_buffer.size());
     return true;
 }

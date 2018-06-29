@@ -69,38 +69,38 @@ static void PrintVersion() {
 static void OnStateChanged(const Network::RoomMember::State& state) {
     switch (state) {
     case Network::RoomMember::State::Idle:
-        NGLOG_DEBUG(Network, "Network is idle");
+        LOG_DEBUG(Network, "Network is idle");
         break;
     case Network::RoomMember::State::Joining:
-        NGLOG_DEBUG(Network, "Connection sequence to room started");
+        LOG_DEBUG(Network, "Connection sequence to room started");
         break;
     case Network::RoomMember::State::Joined:
-        NGLOG_DEBUG(Network, "Successfully joined to the room");
+        LOG_DEBUG(Network, "Successfully joined to the room");
         break;
     case Network::RoomMember::State::LostConnection:
-        NGLOG_DEBUG(Network, "Lost connection to the room");
+        LOG_DEBUG(Network, "Lost connection to the room");
         break;
     case Network::RoomMember::State::CouldNotConnect:
-        NGLOG_ERROR(Network, "State: CouldNotConnect");
+        LOG_ERROR(Network, "State: CouldNotConnect");
         exit(1);
         break;
     case Network::RoomMember::State::NameCollision:
-        NGLOG_ERROR(
+        LOG_ERROR(
             Network,
             "You tried to use the same nickname then another user that is connected to the Room");
         exit(1);
         break;
     case Network::RoomMember::State::MacCollision:
-        NGLOG_ERROR(Network, "You tried to use the same MAC-Address then another user that is "
+        LOG_ERROR(Network, "You tried to use the same MAC-Address then another user that is "
                              "connected to the Room");
         exit(1);
         break;
     case Network::RoomMember::State::WrongPassword:
-        NGLOG_ERROR(Network, "Room replied with: Wrong password");
+        LOG_ERROR(Network, "Room replied with: Wrong password");
         exit(1);
         break;
     case Network::RoomMember::State::WrongVersion:
-        NGLOG_ERROR(Network,
+        LOG_ERROR(Network,
                     "You are using a different version then the room you are trying to connect to");
         exit(1);
         break;
@@ -128,7 +128,7 @@ int main(int argc, char** argv) {
     auto argv_w = CommandLineToArgvW(GetCommandLineW(), &argc_w);
 
     if (argv_w == nullptr) {
-        NGLOG_CRITICAL(Frontend, "Failed to get command line arguments");
+        LOG_CRITICAL(Frontend, "Failed to get command line arguments");
         return -1;
     }
 #endif
@@ -170,7 +170,7 @@ int main(int argc, char** argv) {
                 break;
             case 'i': {
                 const auto cia_progress = [](size_t written, size_t total) {
-                    NGLOG_INFO(Frontend, "{:02d}%", (written * 100 / total));
+                    LOG_INFO(Frontend, "{:02d}%", (written * 100 / total));
                 };
                 if (Service::AM::InstallCIA(std::string(optarg), cia_progress) !=
                     Service::AM::InstallStatus::Success)
@@ -219,7 +219,7 @@ int main(int argc, char** argv) {
                 break;
             case 'f':
                 fullscreen = true;
-                NGLOG_INFO(Frontend, "Starting in fullscreen mode...");
+                LOG_INFO(Frontend, "Starting in fullscreen mode...");
                 break;
             case 'h':
                 PrintHelp(argv[0]);
@@ -246,12 +246,12 @@ int main(int argc, char** argv) {
     SCOPE_EXIT({ MicroProfileShutdown(); });
 
     if (filepath.empty()) {
-        NGLOG_CRITICAL(Frontend, "Failed to load ROM: No ROM specified");
+        LOG_CRITICAL(Frontend, "Failed to load ROM: No ROM specified");
         return -1;
     }
 
     if (!movie_record.empty() && !movie_play.empty()) {
-        NGLOG_CRITICAL(Frontend, "Cannot both play and record a movie");
+        LOG_CRITICAL(Frontend, "Cannot both play and record a movie");
         return -1;
     }
 
@@ -281,28 +281,28 @@ int main(int argc, char** argv) {
 
     switch (load_result) {
     case Core::System::ResultStatus::ErrorGetLoader:
-        NGLOG_CRITICAL(Frontend, "Failed to obtain loader for {}!", filepath);
+        LOG_CRITICAL(Frontend, "Failed to obtain loader for {}!", filepath);
         return -1;
     case Core::System::ResultStatus::ErrorLoader:
-        NGLOG_CRITICAL(Frontend, "Failed to load ROM!");
+        LOG_CRITICAL(Frontend, "Failed to load ROM!");
         return -1;
     case Core::System::ResultStatus::ErrorLoader_ErrorEncrypted:
-        NGLOG_CRITICAL(Frontend, "The game that you are trying to load must be decrypted before "
+        LOG_CRITICAL(Frontend, "The game that you are trying to load must be decrypted before "
                                  "being used with Citra. \n\n For more information on dumping and "
                                  "decrypting games, please refer to: "
                                  "https://citra-emu.org/wiki/dumping-game-cartridges/");
         return -1;
     case Core::System::ResultStatus::ErrorLoader_ErrorInvalidFormat:
-        NGLOG_CRITICAL(Frontend, "Error while loading ROM: The ROM format is not supported.");
+        LOG_CRITICAL(Frontend, "Error while loading ROM: The ROM format is not supported.");
         return -1;
     case Core::System::ResultStatus::ErrorNotInitialized:
-        NGLOG_CRITICAL(Frontend, "CPUCore not initialized");
+        LOG_CRITICAL(Frontend, "CPUCore not initialized");
         return -1;
     case Core::System::ResultStatus::ErrorSystemMode:
-        NGLOG_CRITICAL(Frontend, "Failed to determine system mode!");
+        LOG_CRITICAL(Frontend, "Failed to determine system mode!");
         return -1;
     case Core::System::ResultStatus::ErrorVideoCore:
-        NGLOG_CRITICAL(Frontend, "VideoCore not initialized");
+        LOG_CRITICAL(Frontend, "VideoCore not initialized");
         return -1;
     case Core::System::ResultStatus::Success:
         break; // Expected case
@@ -314,11 +314,11 @@ int main(int argc, char** argv) {
         if (auto member = Network::GetRoomMember().lock()) {
             member->BindOnChatMessageRecieved(OnMessageReceived);
             member->BindOnStateChanged(OnStateChanged);
-            NGLOG_DEBUG(Network, "Start connection to {}:{} with nickname {}", address, port,
+            LOG_DEBUG(Network, "Start connection to {}:{} with nickname {}", address, port,
                         nickname);
             member->Join(nickname, address.c_str(), port, 0, Network::NoPreferredMac, password);
         } else {
-            NGLOG_ERROR(Network, "Could not access RoomMember");
+            LOG_ERROR(Network, "Could not access RoomMember");
             return 0;
         }
     }

@@ -37,7 +37,7 @@ void VertexLoader::Setup(const PipelineRegs& regs) {
         // TODO: What happens if a loader overwrites a previous one's data?
         for (unsigned component = 0; component < loader_config.component_count; ++component) {
             if (component >= 12) {
-                NGLOG_ERROR(
+                LOG_ERROR(
                     HW_GPU,
                     "Overflow in the vertex attribute loader {} trying to load component {}",
                     loader, component);
@@ -137,7 +137,7 @@ void VertexLoader::LoadVertex(u32 base_address, int index, int vertex,
                     comp == 3 ? float24::FromFloat32(1.0f) : float24::FromFloat32(0.0f);
             }
 
-            NGLOG_TRACE(HW_GPU,
+            LOG_TRACE(HW_GPU,
                         "Loaded {} components of attribute {:x} for vertex {:x} (index {:x}) from "
                         "0x{:08x} + 0x{:08x} + 0x{:04x}: {} {} {} {}",
                         vertex_attribute_elements[i], i, vertex, index, base_address,
@@ -147,7 +147,7 @@ void VertexLoader::LoadVertex(u32 base_address, int index, int vertex,
         } else if (vertex_attribute_is_default[i]) {
             // Load the default attribute if we're configured to do so
             input.attr[i] = g_state.input_default_attributes.attr[i];
-            NGLOG_TRACE(
+            LOG_TRACE(
                 HW_GPU,
                 "Loaded default attribute {:x} for vertex {:x} (index {:x}): ({}, {}, {}, {})", i,
                 vertex, index, input.attr[i][0].ToFloat32(), input.attr[i][1].ToFloat32(),

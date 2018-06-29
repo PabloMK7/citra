@@ -408,7 +408,7 @@ void Room::RoomImpl::HandleWifiPacket(const ENetEvent* event) {
         if (member != members.end()) {
             enet_peer_send(member->peer, 0, enet_packet);
         } else {
-            NGLOG_ERROR(Network,
+            LOG_ERROR(Network,
                         "Attempting to send to unknown MAC address: "
                         "{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}",
                         destination_address[0], destination_address[1], destination_address[2],

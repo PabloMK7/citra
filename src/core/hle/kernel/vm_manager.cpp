@@ -260,7 +260,7 @@ void VMManager::RefreshMemoryBlockMappings(const std::vector<u8>* block) {
 void VMManager::LogLayout(Log::Level log_level) const {
     for (const auto& p : vma_map) {
         const VirtualMemoryArea& vma = p.second;
-        NGLOG_GENERIC(::Log::Class::Kernel, log_level, "{:08X} - {:08X}  size: {:8X} {}{}{} {}",
+        LOG_GENERIC(::Log::Class::Kernel, log_level, "{:08X} - {:08X}  size: {:8X} {}{}{} {}",
                       vma.base, vma.base + vma.size, vma.size,
                       (u8)vma.permissions & (u8)VMAPermission::Read ? 'R' : '-',
                       (u8)vma.permissions & (u8)VMAPermission::Write ? 'W' : '-',

@@ -65,7 +65,7 @@ OutputVertex OutputVertex::FromAttributeBuffer(const RasterizerRegs& regs,
         ret.color[i] = float24::FromFloat32(c < 1.0f ? c : 1.0f);
     }
 
-    NGLOG_TRACE(HW_GPU,
+    LOG_TRACE(HW_GPU,
                 "Output vertex: pos({:.2}, {:.2}, {:.2}, {:.2}), quat({:.2}, {:.2}, {:.2}, {:.2}), "
                 "col({:.2}, {:.2}, {:.2}, {:.2}), tc0({:.2}, {:.2}), view({:.2}, {:.2}, {:.2})",
                 ret.pos.x.ToFloat32(), ret.pos.y.ToFloat32(), ret.pos.z.ToFloat32(),

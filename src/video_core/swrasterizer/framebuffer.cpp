@@ -57,7 +57,7 @@ void DrawPixel(int x, int y, const Math::Vec4<u8>& color) {
         break;
 
     default:
-        NGLOG_CRITICAL(Render_Software, "Unknown framebuffer color format {:x}",
+        LOG_CRITICAL(Render_Software, "Unknown framebuffer color format {:x}",
                        static_cast<u32>(framebuffer.color_format.Value()));
         UNIMPLEMENTED();
     }
@@ -93,7 +93,7 @@ const Math::Vec4<u8> GetPixel(int x, int y) {
         return Color::DecodeRGBA4(src_pixel);
 
     default:
-        NGLOG_CRITICAL(Render_Software, "Unknown framebuffer color format {:x}",
+        LOG_CRITICAL(Render_Software, "Unknown framebuffer color format {:x}",
                        static_cast<u32>(framebuffer.color_format.Value()));
         UNIMPLEMENTED();
     }
@@ -123,7 +123,7 @@ u32 GetDepth(int x, int y) {
     case FramebufferRegs::DepthFormat::D24S8:
         return Color::DecodeD24S8(src_pixel).x;
     default:
-        NGLOG_CRITICAL(HW_GPU, "Unimplemented depth format {}",
+        LOG_CRITICAL(HW_GPU, "Unimplemented depth format {}",
                        static_cast<u32>(framebuffer.depth_format.Value()));
         UNIMPLEMENTED();
         return 0;
@@ -149,7 +149,7 @@ u8 GetStencil(int x, int y) {
         return Color::DecodeD24S8(src_pixel).y;
 
     default:
-        NGLOG_WARNING(
+        LOG_WARNING(
             HW_GPU,
             "GetStencil called for function which doesn't have a stencil component (format {})",
             static_cast<u32>(framebuffer.depth_format.Value()));
@@ -185,7 +185,7 @@ void SetDepth(int x, int y, u32 value) {
         break;
 
     default:
-        NGLOG_CRITICAL(HW_GPU, "Unimplemented depth format {}",
+        LOG_CRITICAL(HW_GPU, "Unimplemented depth format {}",
                        static_cast<u32>(framebuffer.depth_format.Value()));
         UNIMPLEMENTED();
         break;
@@ -217,7 +217,7 @@ void SetStencil(int x, int y, u8 value) {
         break;
 
     default:
-        NGLOG_CRITICAL(HW_GPU, "Unimplemented depth format {}",
+        LOG_CRITICAL(HW_GPU, "Unimplemented depth format {}",
                        static_cast<u32>(framebuffer.depth_format.Value()));
         UNIMPLEMENTED();
         break;
@@ -253,7 +253,7 @@ u8 PerformStencilAction(FramebufferRegs::StencilAction action, u8 old_stencil, u
         return old_stencil - 1;
 
     default:
-        NGLOG_CRITICAL(HW_GPU, "Unknown stencil action {:x}", (int)action);
+        LOG_CRITICAL(HW_GPU, "Unknown stencil action {:x}", (int)action);
         UNIMPLEMENTED();
         return 0;
     }
@@ -297,7 +297,7 @@ Math::Vec4<u8> EvaluateBlendEquation(const Math::Vec4<u8>& src, const Math::Vec4
         break;
 
     default:
-        NGLOG_CRITICAL(HW_GPU, "Unknown RGB blend equation 0x{:x}", static_cast<u8>(equation));
+        LOG_CRITICAL(HW_GPU, "Unknown RGB blend equation 0x{:x}", static_cast<u8>(equation));
         UNIMPLEMENTED();
     }
 

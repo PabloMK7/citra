@@ -43,7 +43,7 @@ RasterizerOpenGL::RasterizerOpenGL()
     allow_shadow = GLAD_GL_ARB_shader_image_load_store && GLAD_GL_ARB_shader_image_size &&
                    GLAD_GL_ARB_framebuffer_no_attachments;
     if (!allow_shadow) {
-        NGLOG_WARNING(
+        LOG_WARNING(
             Render_OpenGL,
             "Shadow might not be able to render because of unsupported OpenGL extensions.");
     }
@@ -432,7 +432,7 @@ bool RasterizerOpenGL::AccelerateDrawBatchInternal(bool is_indexed, bool use_gs)
     auto [vs_input_index_min, vs_input_index_max, vs_input_size] = AnalyzeVertexArray(is_indexed);
 
     if (vs_input_size > VERTEX_BUFFER_SIZE) {
-        NGLOG_WARNING(Render_OpenGL, "Too large vertex input size {}", vs_input_size);
+        LOG_WARNING(Render_OpenGL, "Too large vertex input size {}", vs_input_size);
         return false;
     }
 
@@ -453,7 +453,7 @@ bool RasterizerOpenGL::AccelerateDrawBatchInternal(bool is_indexed, bool use_gs)
         std::size_t index_buffer_size = regs.pipeline.num_vertices * (index_u16 ? 2 : 1);
 
         if (index_buffer_size > INDEX_BUFFER_SIZE) {
-            NGLOG_WARNING(Render_OpenGL, "Too large index input size {}", index_buffer_size);
+            LOG_WARNING(Render_OpenGL, "Too large index input size {}", index_buffer_size);
             return false;
         }
 
@@ -1600,7 +1600,7 @@ void RasterizerOpenGL::SyncCullMode() {
         break;
 
     default:
-        NGLOG_CRITICAL(Render_OpenGL, "Unknown cull mode {}",
+        LOG_CRITICAL(Render_OpenGL, "Unknown cull mode {}",
                        static_cast<u32>(regs.rasterizer.cull_mode.Value()));
         UNIMPLEMENTED();
         break;

@@ -31,7 +31,7 @@ void Module::Interface::GetMyPresence(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
     rb.PushStaticBuffer(buffer, 0);
 
-    NGLOG_WARNING(Service_FRD, "(STUBBED) called");
+    LOG_WARNING(Service_FRD, "(STUBBED) called");
 }
 
 void Module::Interface::GetFriendKeyList(Kernel::HLERequestContext& ctx) {
@@ -46,7 +46,7 @@ void Module::Interface::GetFriendKeyList(Kernel::HLERequestContext& ctx) {
     rb.Push<u32>(0); // 0 friends
     rb.PushStaticBuffer(buffer, 0);
 
-    NGLOG_WARNING(Service_FRD, "(STUBBED) called, unknown={}, frd_count={}", unknown, frd_count);
+    LOG_WARNING(Service_FRD, "(STUBBED) called, unknown={}, frd_count={}", unknown, frd_count);
 }
 
 void Module::Interface::GetFriendProfile(Kernel::HLERequestContext& ctx) {
@@ -61,7 +61,7 @@ void Module::Interface::GetFriendProfile(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
     rb.PushStaticBuffer(buffer, 0);
 
-    NGLOG_WARNING(Service_FRD, "(STUBBED) called, count={}", count);
+    LOG_WARNING(Service_FRD, "(STUBBED) called, count={}", count);
 }
 
 void Module::Interface::GetFriendAttributeFlags(Kernel::HLERequestContext& ctx) {
@@ -76,7 +76,7 @@ void Module::Interface::GetFriendAttributeFlags(Kernel::HLERequestContext& ctx) 
     rb.Push(RESULT_SUCCESS);
     rb.PushStaticBuffer(buffer, 0);
 
-    NGLOG_WARNING(Service_FRD, "(STUBBED) called, count={}", count);
+    LOG_WARNING(Service_FRD, "(STUBBED) called, count={}", count);
 }
 
 void Module::Interface::GetMyFriendKey(Kernel::HLERequestContext& ctx) {
@@ -85,7 +85,7 @@ void Module::Interface::GetMyFriendKey(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
     rb.PushRaw(frd->my_friend_key);
 
-    NGLOG_WARNING(Service_FRD, "(STUBBED) called");
+    LOG_WARNING(Service_FRD, "(STUBBED) called");
 }
 
 void Module::Interface::GetMyScreenName(Kernel::HLERequestContext& ctx) {
@@ -102,7 +102,7 @@ void Module::Interface::GetMyScreenName(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
     rb.PushRaw(screen_name);
 
-    NGLOG_WARNING(Service_FRD, "(STUBBED) called");
+    LOG_WARNING(Service_FRD, "(STUBBED) called");
 }
 
 void Module::Interface::UnscrambleLocalFriendCode(Kernel::HLERequestContext& ctx) {
@@ -130,7 +130,7 @@ void Module::Interface::UnscrambleLocalFriendCode(Kernel::HLERequestContext& ctx
     // scambled_friend_code[5]; unscrambled_friend_code[3] = scambled_friend_code[3] ^
     // scambled_friend_code[5];
 
-    NGLOG_WARNING(Service_FRD, "(STUBBED) called");
+    LOG_WARNING(Service_FRD, "(STUBBED) called");
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
     rb.Push(RESULT_SUCCESS);
     rb.PushStaticBuffer(unscrambled_friend_codes, 0);
@@ -144,7 +144,7 @@ void Module::Interface::SetClientSdkVersion(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
 
-    NGLOG_WARNING(Service_FRD, "(STUBBED) called, version: 0x{:08X}", version);
+    LOG_WARNING(Service_FRD, "(STUBBED) called, version: 0x{:08X}", version);
 }
 
 Module::Module() = default;

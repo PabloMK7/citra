@@ -150,7 +150,7 @@ void ChatRoom::OnChatReceive(const Network::ChatEntry& chat) {
                                    return member.nickname == chat.nickname;
                                });
         if (it == members.end()) {
-            NGLOG_INFO(Network, "Chat message received from unknown player. Ignoring it.");
+            LOG_INFO(Network, "Chat message received from unknown player. Ignoring it.");
             return;
         }
         auto player = std::distance(members.begin(), it);
@@ -177,7 +177,7 @@ void ChatRoom::OnSendChat() {
                                    return member.nickname == chat.nickname;
                                });
         if (it == members.end()) {
-            NGLOG_INFO(Network, "Cannot find self in the player list when sending a message.");
+            LOG_INFO(Network, "Cannot find self in the player list when sending a message.");
         }
         auto player = std::distance(members.begin(), it);
         ChatMessage m(chat);

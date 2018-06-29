@@ -31,7 +31,7 @@ void Module::Interface::GetAdapterState(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
     rb.Push(ptm->battery_is_charging);
 
-    NGLOG_WARNING(Service_PTM, "(STUBBED) called");
+    LOG_WARNING(Service_PTM, "(STUBBED) called");
 }
 
 void Module::Interface::GetShellState(Kernel::HLERequestContext& ctx) {
@@ -49,7 +49,7 @@ void Module::Interface::GetBatteryLevel(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
     rb.Push(static_cast<u32>(ChargeLevels::CompletelyFull)); // Set to a completely full battery
 
-    NGLOG_WARNING(Service_PTM, "(STUBBED) called");
+    LOG_WARNING(Service_PTM, "(STUBBED) called");
 }
 
 void Module::Interface::GetBatteryChargeState(Kernel::HLERequestContext& ctx) {
@@ -59,7 +59,7 @@ void Module::Interface::GetBatteryChargeState(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
     rb.Push(ptm->battery_is_charging);
 
-    NGLOG_WARNING(Service_PTM, "(STUBBED) called");
+    LOG_WARNING(Service_PTM, "(STUBBED) called");
 }
 
 void Module::Interface::GetPedometerState(Kernel::HLERequestContext& ctx) {
@@ -69,7 +69,7 @@ void Module::Interface::GetPedometerState(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
     rb.Push(ptm->pedometer_is_counting);
 
-    NGLOG_WARNING(Service_PTM, "(STUBBED) called");
+    LOG_WARNING(Service_PTM, "(STUBBED) called");
 }
 
 void Module::Interface::GetStepHistory(Kernel::HLERequestContext& ctx) {
@@ -92,7 +92,7 @@ void Module::Interface::GetStepHistory(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
     rb.PushMappedBuffer(buffer);
 
-    NGLOG_WARNING(Service_PTM, "(STUBBED) called, from time(raw): 0x{:x}, for {} hours", start_time,
+    LOG_WARNING(Service_PTM, "(STUBBED) called, from time(raw): 0x{:x}, for {} hours", start_time,
                   hours);
 }
 
@@ -103,7 +103,7 @@ void Module::Interface::GetTotalStepCount(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
     rb.Push<u32>(0);
 
-    NGLOG_WARNING(Service_PTM, "(STUBBED) called");
+    LOG_WARNING(Service_PTM, "(STUBBED) called");
 }
 
 void Module::Interface::GetSoftwareClosedFlag(Kernel::HLERequestContext& ctx) {
@@ -113,14 +113,14 @@ void Module::Interface::GetSoftwareClosedFlag(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
     rb.Push(false);
 
-    NGLOG_WARNING(Service_PTM, "(STUBBED) called");
+    LOG_WARNING(Service_PTM, "(STUBBED) called");
 }
 
 void CheckNew3DS(IPC::RequestBuilder& rb) {
     const bool is_new_3ds = Settings::values.is_new_3ds;
 
     if (is_new_3ds) {
-        NGLOG_CRITICAL(Service_PTM,
+        LOG_CRITICAL(Service_PTM,
                        "The option 'is_new_3ds' is enabled as part of the 'System' "
                        "settings. Citra does not fully support New 3DS emulation yet!");
     }
@@ -128,7 +128,7 @@ void CheckNew3DS(IPC::RequestBuilder& rb) {
     rb.Push(RESULT_SUCCESS);
     rb.Push(is_new_3ds);
 
-    NGLOG_WARNING(Service_PTM, "(STUBBED) called isNew3DS = 0x{:08x}",
+    LOG_WARNING(Service_PTM, "(STUBBED) called isNew3DS = 0x{:08x}",
                   static_cast<u32>(is_new_3ds));
 }
 

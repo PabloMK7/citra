@@ -53,7 +53,7 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(
             surface_normal = Math::MakeVec(0.0f, 0.0f, 1.0f);
             surface_tangent = perturbation;
         } else {
-            NGLOG_ERROR(HW_GPU, "Unknown bump mode {}",
+            LOG_ERROR(HW_GPU, "Unknown bump mode {}",
                         static_cast<u32>(lighting.config0.bump_mode.Value()));
         }
     } else {
@@ -143,7 +143,7 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(
                 }
                 break;
             default:
-                NGLOG_CRITICAL(HW_GPU, "Unknown lighting LUT input {}\n", static_cast<u32>(input));
+                LOG_CRITICAL(HW_GPU, "Unknown lighting LUT input {}\n", static_cast<u32>(input));
                 UNIMPLEMENTED();
                 result = 0.0f;
             }

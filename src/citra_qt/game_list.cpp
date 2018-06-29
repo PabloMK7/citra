@@ -533,18 +533,18 @@ void GameList::LoadCompatibilityList() {
     QFile compat_list{":compatibility_list/compatibility_list.json"};
 
     if (!compat_list.open(QFile::ReadOnly | QFile::Text)) {
-        NGLOG_ERROR(Frontend, "Unable to open game compatibility list");
+        LOG_ERROR(Frontend, "Unable to open game compatibility list");
         return;
     }
 
     if (compat_list.size() == 0) {
-        NGLOG_ERROR(Frontend, "Game compatibility list is empty");
+        LOG_ERROR(Frontend, "Game compatibility list is empty");
         return;
     }
 
     const QByteArray content = compat_list.readAll();
     if (content.isEmpty()) {
-        NGLOG_ERROR(Frontend, "Unable to completely read game compatibility list");
+        LOG_ERROR(Frontend, "Unable to completely read game compatibility list");
         return;
     }
 
@@ -624,7 +624,7 @@ static bool HasSupportedFileExtension(const std::string& file_name) {
 
 void GameList::RefreshGameDirectory() {
     if (!UISettings::values.game_dirs.isEmpty() && current_worker != nullptr) {
-        NGLOG_INFO(Frontend, "Change detected in the games directory. Reloading game list.");
+        LOG_INFO(Frontend, "Change detected in the games directory. Reloading game list.");
         PopulateAsync(UISettings::values.game_dirs);
     }
 }

@@ -36,7 +36,7 @@ inline void Read(T& var, const u32 addr) {
         LCD::Read(var, addr);
         break;
     default:
-        NGLOG_ERROR(HW_Memory, "unknown Read{} @ {:#010X}", sizeof(var) * 8, addr);
+        LOG_ERROR(HW_Memory, "unknown Read{} @ {:#010X}", sizeof(var) * 8, addr);
     }
 }
 
@@ -65,7 +65,7 @@ inline void Write(u32 addr, const T data) {
         LCD::Write(addr, data);
         break;
     default:
-        NGLOG_ERROR(HW_Memory, "unknown Write{} {:#010X} @ {:#010X}", sizeof(data) * 8, (u32)data,
+        LOG_ERROR(HW_Memory, "unknown Write{} {:#010X} @ {:#010X}", sizeof(data) * 8, (u32)data,
                     addr);
     }
 }
@@ -90,13 +90,13 @@ void Init() {
     AES::InitKeys();
     GPU::Init();
     LCD::Init();
-    NGLOG_DEBUG(HW, "initialized OK");
+    LOG_DEBUG(HW, "initialized OK");
 }
 
 /// Shutdown hardware
 void Shutdown() {
     GPU::Shutdown();
     LCD::Shutdown();
-    NGLOG_DEBUG(HW, "shutdown OK");
+    LOG_DEBUG(HW, "shutdown OK");
 }
 } // namespace HW

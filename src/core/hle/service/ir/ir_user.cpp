@@ -183,7 +183,7 @@ private:
 
 /// Wraps the payload into packet and puts it to the receive buffer
 void IR_USER::PutToReceive(const std::vector<u8>& payload) {
-    NGLOG_TRACE(Service_IR, "called, data={}",
+    LOG_TRACE(Service_IR, "called, data={}",
                 Common::ArrayToString(payload.data(), payload.size()));
     size_t size = payload.size();
 
@@ -225,7 +225,7 @@ void IR_USER::PutToReceive(const std::vector<u8>& payload) {
     if (receive_buffer->Put(packet)) {
         receive_event->Signal();
     } else {
-        NGLOG_ERROR(Service_IR, "receive buffer is full!");
+        LOG_ERROR(Service_IR, "receive buffer is full!");
     }
 }
 
@@ -251,7 +251,7 @@ void IR_USER::InitializeIrNopShared(Kernel::HLERequestContext& ctx) {
 
     rb.Push(RESULT_SUCCESS);
 
-    NGLOG_INFO(Service_IR,
+    LOG_INFO(Service_IR,
                "called, shared_buff_size={}, recv_buff_size={}, "
                "recv_buff_packet_count={}, send_buff_size={}, "
                "send_buff_packet_count={}, baud_rate={}",
@@ -275,7 +275,7 @@ void IR_USER::RequireConnection(Kernel::HLERequestContext& ctx) {
         connected_device->OnConnect();
         conn_status_event->Signal();
     } else {
-        NGLOG_WARNING(Service_IR, "unknown device id {}. Won't connect.", device_id);
+        LOG_WARNING(Service_IR, "unknown device id {}. Won't connect.", device_id);
         shared_memory_ptr[offsetof(SharedMemoryHeader, connection_status)] = 1;
         shared_memory_ptr[offsetof(SharedMemoryHeader, trying_to_connect_status)] = 2;
     }
@@ -283,7 +283,7 @@ void IR_USER::RequireConnection(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
 
-    NGLOG_INFO(Service_IR, "called, device_id = {}", device_id);
+    LOG_INFO(Service_IR, "called, device_id = {}", device_id);
 }
 
 void IR_USER::GetReceiveEvent(Kernel::HLERequestContext& ctx) {
@@ -292,7 +292,7 @@ void IR_USER::GetReceiveEvent(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
     rb.PushCopyObjects(receive_event);
 
-    NGLOG_INFO(Service_IR, "called");
+    LOG_INFO(Service_IR, "called");
 }
 
 void IR_USER::GetSendEvent(Kernel::HLERequestContext& ctx) {
@@ -301,7 +301,7 @@ void IR_USER::GetSendEvent(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
     rb.PushCopyObjects(send_event);
 
-    NGLOG_INFO(Service_IR, "called");
+    LOG_INFO(Service_IR, "called");
 }
 
 void IR_USER::Disconnect(Kernel::HLERequestContext& ctx) {
@@ -318,7 +318,7 @@ void IR_USER::Disconnect(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb(ctx, 0x09, 1, 0);
     rb.Push(RESULT_SUCCESS);
 
-    NGLOG_INFO(Service_IR, "called");
+    LOG_INFO(Service_IR, "called");
 }
 
 void IR_USER::GetConnectionStatusEvent(Kernel::HLERequestContext& ctx) {
@@ -327,7 +327,7 @@ void IR_USER::GetConnectionStatusEvent(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
     rb.PushCopyObjects(conn_status_event);
 
-    NGLOG_INFO(Service_IR, "called");
+    LOG_INFO(Service_IR, "called");
 }
 
 void IR_USER::FinalizeIrNop(Kernel::HLERequestContext& ctx) {
@@ -342,7 +342,7 @@ void IR_USER::FinalizeIrNop(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb(ctx, 0x02, 1, 0);
     rb.Push(RESULT_SUCCESS);
 
-    NGLOG_INFO(Service_IR, "called");
+    LOG_INFO(Service_IR, "called");
 }
 
 void IR_USER::SendIrNop(Kernel::HLERequestContext& ctx) {
@@ -357,12 +357,12 @@ void IR_USER::SendIrNop(Kernel::HLERequestContext& ctx) {
         send_event->Signal();
         rb.Push(RESULT_SUCCESS);
     } else {
-        NGLOG_ERROR(Service_IR, "not connected");
+        LOG_ERROR(Service_IR, "not connected");
         rb.Push(ResultCode(static_cast<ErrorDescription>(13), ErrorModule::IR,
                            ErrorSummary::InvalidState, ErrorLevel::Status));
     }
 
-    NGLOG_TRACE(Service_IR, "called, data={}", Common::ArrayToString(buffer.data(), size));
+    LOG_TRACE(Service_IR, "called, data={}", Common::ArrayToString(buffer.data(), size));
 }
 
 void IR_USER::ReleaseReceivedData(Kernel::HLERequestContext& ctx) {
@@ -374,12 +374,12 @@ void IR_USER::ReleaseReceivedData(Kernel::HLERequestContext& ctx) {
     if (receive_buffer->Release(count)) {
         rb.Push(RESULT_SUCCESS);
     } else {
-        NGLOG_ERROR(Service_IR, "failed to release {} packets", count);
+        LOG_ERROR(Service_IR, "failed to release {} packets", count);
         rb.Push(ResultCode(ErrorDescription::NoData, ErrorModule::IR, ErrorSummary::NotFound,
                            ErrorLevel::Status));
     }
 
-    NGLOG_TRACE(Service_IR, "called, count={}", count);
+    LOG_TRACE(Service_IR, "called, count={}", count);
 }
 
 IR_USER::IR_USER() : ServiceFramework("ir:USER", 1) {

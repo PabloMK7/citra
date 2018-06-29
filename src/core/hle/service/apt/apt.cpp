@@ -32,7 +32,7 @@ void Module::Interface::Initialize(Kernel::HLERequestContext& ctx) {
     AppletId app_id = rp.PopEnum<AppletId>();
     u32 attributes = rp.Pop<u32>();
 
-    NGLOG_DEBUG(Service_APT, "called app_id={:#010X}, attributes={:#010X}",
+    LOG_DEBUG(Service_APT, "called app_id={:#010X}, attributes={:#010X}",
                 static_cast<u32>(app_id), attributes);
 
     auto result = apt->applet_manager->Initialize(app_id, attributes);
@@ -197,10 +197,10 @@ void Module::Interface::GetSharedFont(Kernel::HLERequestContext& ctx) {
         if (apt->LoadSharedFont()) {
             apt->shared_font_loaded = true;
         } else if (apt->LoadLegacySharedFont()) {
-            NGLOG_WARNING(Service_APT, "Loaded shared font by legacy method");
+            LOG_WARNING(Service_APT, "Loaded shared font by legacy method");
             apt->shared_font_loaded = true;
         } else {
-            NGLOG_ERROR(Service_APT, "shared font file missing - go dump it from your 3ds");
+            LOG_ERROR(Service_APT, "shared font file missing - go dump it from your 3ds");
             rb.Push<u32>(-1); // TODO: Find the right error code
             rb.Push<u32>(0);
             rb.PushCopyObjects<Kernel::Object>(nullptr);
@@ -231,7 +231,7 @@ void Module::Interface::NotifyToWait(Kernel::HLERequestContext& ctx) {
     u32 app_id = rp.Pop<u32>();
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS); // No error
-    NGLOG_WARNING(Service_APT, "(STUBBED) app_id={}", app_id);
+    LOG_WARNING(Service_APT, "(STUBBED) app_id={}", app_id);
 }
 
 void Module::Interface::GetLockHandle(Kernel::HLERequestContext& ctx) {
@@ -252,14 +252,14 @@ void Module::Interface::GetLockHandle(Kernel::HLERequestContext& ctx) {
     rb.Push<u32>(0);            // Least significant bit = power button state
     rb.PushCopyObjects(apt->lock);
 
-    NGLOG_WARNING(Service_APT, "(STUBBED) called applet_attributes={:#010X}", applet_attributes);
+    LOG_WARNING(Service_APT, "(STUBBED) called applet_attributes={:#010X}", applet_attributes);
 }
 
 void Module::Interface::Enable(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x3, 1, 0); // 0x30040
     u32 attributes = rp.Pop<u32>();
 
-    NGLOG_DEBUG(Service_APT, "called attributes={:#010X}", attributes);
+    LOG_DEBUG(Service_APT, "called attributes={:#010X}", attributes);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(apt->applet_manager->Enable(attributes));
@@ -275,7 +275,7 @@ void Module::Interface::GetAppletManInfo(Kernel::HLERequestContext& ctx) {
     rb.Push(static_cast<u32>(AppletId::HomeMenu));    // Home menu AppID
     rb.Push(static_cast<u32>(AppletId::Application)); // TODO(purpasmart96): Do this correctly
 
-    NGLOG_WARNING(Service_APT, "(STUBBED) called unk={:#010X}", unk);
+    LOG_WARNING(Service_APT, "(STUBBED) called unk={:#010X}", unk);
 }
 
 void Module::Interface::IsRegistered(Kernel::HLERequestContext& ctx) {
@@ -285,7 +285,7 @@ void Module::Interface::IsRegistered(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS); // No error
     rb.Push(apt->applet_manager->IsRegistered(app_id));
 
-    NGLOG_DEBUG(Service_APT, "called app_id={:#010X}", static_cast<u32>(app_id));
+    LOG_DEBUG(Service_APT, "called app_id={:#010X}", static_cast<u32>(app_id));
 }
 
 void Module::Interface::InquireNotification(Kernel::HLERequestContext& ctx) {
@@ -294,7 +294,7 @@ void Module::Interface::InquireNotification(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);                     // No error
     rb.Push(static_cast<u32>(SignalType::None)); // Signal type
-    NGLOG_WARNING(Service_APT, "(STUBBED) called app_id={:#010X}", app_id);
+    LOG_WARNING(Service_APT, "(STUBBED) called app_id={:#010X}", app_id);
 }
 
 void Module::Interface::SendParameter(Kernel::HLERequestContext& ctx) {
@@ -306,7 +306,7 @@ void Module::Interface::SendParameter(Kernel::HLERequestContext& ctx) {
     Kernel::SharedPtr<Kernel::Object> object = rp.PopGenericObject();
     std::vector<u8> buffer = rp.PopStaticBuffer();
 
-    NGLOG_DEBUG(Service_APT,
+    LOG_DEBUG(Service_APT,
                 "called src_app_id={:#010X}, dst_app_id={:#010X}, signal_type={:#010X},"
                 "buffer_size={:#010X}",
                 static_cast<u32>(src_app_id), static_cast<u32>(dst_app_id),
@@ -329,7 +329,7 @@ void Module::Interface::ReceiveParameter(Kernel::HLERequestContext& ctx) {
     AppletId app_id = rp.PopEnum<AppletId>();
     u32 buffer_size = rp.Pop<u32>();
 
-    NGLOG_DEBUG(Service_APT, "called app_id={:#010X}, buffer_size={:#010X}",
+    LOG_DEBUG(Service_APT, "called app_id={:#010X}, buffer_size={:#010X}",
                 static_cast<u32>(app_id), buffer_size);
 
     auto next_parameter = apt->applet_manager->ReceiveParameter(app_id);
@@ -357,7 +357,7 @@ void Module::Interface::GlanceParameter(Kernel::HLERequestContext& ctx) {
     AppletId app_id = rp.PopEnum<AppletId>();
     u32 buffer_size = rp.Pop<u32>();
 
-    NGLOG_DEBUG(Service_APT, "called app_id={:#010X}, buffer_size={:#010X}",
+    LOG_DEBUG(Service_APT, "called app_id={:#010X}, buffer_size={:#010X}",
                 static_cast<u32>(app_id), buffer_size);
 
     auto next_parameter = apt->applet_manager->GlanceParameter(app_id);
@@ -393,7 +393,7 @@ void Module::Interface::CancelParameter(Kernel::HLERequestContext& ctx) {
     rb.Push(apt->applet_manager->CancelParameter(check_sender, sender_appid, check_receiver,
                                                  receiver_appid));
 
-    NGLOG_DEBUG(Service_APT,
+    LOG_DEBUG(Service_APT,
                 "called check_sender={}, sender_appid={:#010X}, "
                 "check_receiver={}, receiver_appid={:#010X}",
                 check_sender, static_cast<u32>(sender_appid), check_receiver,
@@ -415,7 +415,7 @@ void Module::Interface::PrepareToStartApplication(Kernel::HLERequestContext& ctx
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS); // No error
 
-    NGLOG_WARNING(
+    LOG_WARNING(
         Service_APT,
         "(STUBBED) called title_info1={:#010X}, title_info2={:#010X}, title_info3={:#010X},"
         "title_info4={:#010X}, flags={:#010X}",
@@ -433,7 +433,7 @@ void Module::Interface::StartApplication(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS); // No error
 
-    NGLOG_WARNING(Service_APT,
+    LOG_WARNING(Service_APT,
                   "(STUBBED) called buffer1_size={:#010X}, buffer2_size={:#010X}, flag={:#010X}",
                   buffer1_size, buffer2_size, flag);
 }
@@ -450,7 +450,7 @@ void Module::Interface::AppletUtility(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS); // No error
 
-    NGLOG_WARNING(Service_APT,
+    LOG_WARNING(Service_APT,
                   "(STUBBED) called command={:#010X}, input_size={:#010X}, output_size={:#010X}",
                   utility_command, input_size, output_size);
 }
@@ -461,13 +461,13 @@ void Module::Interface::SetAppCpuTimeLimit(Kernel::HLERequestContext& ctx) {
     apt->cpu_percent = rp.Pop<u32>();
 
     if (value != 1) {
-        NGLOG_ERROR(Service_APT, "This value should be one, but is actually {}!", value);
+        LOG_ERROR(Service_APT, "This value should be one, but is actually {}!", value);
     }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS); // No error
 
-    NGLOG_WARNING(Service_APT, "(STUBBED) called, cpu_percent={}, value={}", apt->cpu_percent,
+    LOG_WARNING(Service_APT, "(STUBBED) called, cpu_percent={}, value={}", apt->cpu_percent,
                   value);
 }
 
@@ -476,21 +476,21 @@ void Module::Interface::GetAppCpuTimeLimit(Kernel::HLERequestContext& ctx) {
     u32 value = rp.Pop<u32>();
 
     if (value != 1) {
-        NGLOG_ERROR(Service_APT, "This value should be one, but is actually {}!", value);
+        LOG_ERROR(Service_APT, "This value should be one, but is actually {}!", value);
     }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS); // No error
     rb.Push(apt->cpu_percent);
 
-    NGLOG_WARNING(Service_APT, "(STUBBED) called, value={}", value);
+    LOG_WARNING(Service_APT, "(STUBBED) called, value={}", value);
 }
 
 void Module::Interface::PrepareToStartLibraryApplet(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x18, 1, 0); // 0x180040
     AppletId applet_id = rp.PopEnum<AppletId>();
 
-    NGLOG_DEBUG(Service_APT, "called, applet_id={:08X}", static_cast<u32>(applet_id));
+    LOG_DEBUG(Service_APT, "called, applet_id={:08X}", static_cast<u32>(applet_id));
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(apt->applet_manager->PrepareToStartLibraryApplet(applet_id));
@@ -507,14 +507,14 @@ void Module::Interface::PrepareToStartNewestHomeMenu(Kernel::HLERequestContext& 
     rb.Push(ResultCode(ErrorDescription::AlreadyExists, ErrorModule::Applet,
                        ErrorSummary::InvalidState, ErrorLevel::Status));
 
-    NGLOG_DEBUG(Service_APT, "called");
+    LOG_DEBUG(Service_APT, "called");
 }
 
 void Module::Interface::PreloadLibraryApplet(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x16, 1, 0); // 0x160040
     AppletId applet_id = rp.PopEnum<AppletId>();
 
-    NGLOG_DEBUG(Service_APT, "called, applet_id={:08X}", static_cast<u32>(applet_id));
+    LOG_DEBUG(Service_APT, "called, applet_id={:08X}", static_cast<u32>(applet_id));
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(apt->applet_manager->PreloadLibraryApplet(applet_id));
@@ -527,7 +527,7 @@ void Module::Interface::FinishPreloadingLibraryApplet(Kernel::HLERequestContext&
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(apt->applet_manager->FinishPreloadingLibraryApplet(applet_id));
 
-    NGLOG_WARNING(Service_APT, "(STUBBED) called, applet_id={:#05X}", static_cast<u32>(applet_id));
+    LOG_WARNING(Service_APT, "(STUBBED) called, applet_id={:#05X}", static_cast<u32>(applet_id));
 }
 
 void Module::Interface::StartLibraryApplet(Kernel::HLERequestContext& ctx) {
@@ -538,7 +538,7 @@ void Module::Interface::StartLibraryApplet(Kernel::HLERequestContext& ctx) {
     Kernel::SharedPtr<Kernel::Object> object = rp.PopGenericObject();
     std::vector<u8> buffer = rp.PopStaticBuffer();
 
-    NGLOG_DEBUG(Service_APT, "called, applet_id={:08X}", static_cast<u32>(applet_id));
+    LOG_DEBUG(Service_APT, "called, applet_id={:08X}", static_cast<u32>(applet_id));
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(apt->applet_manager->StartLibraryApplet(applet_id, object, buffer));
@@ -551,7 +551,7 @@ void Module::Interface::CancelLibraryApplet(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push<u32>(1); // TODO: Find the return code meaning
 
-    NGLOG_WARNING(Service_APT, "(STUBBED) called exiting={}", exiting);
+    LOG_WARNING(Service_APT, "(STUBBED) called exiting={}", exiting);
 }
 
 void Module::Interface::SendCaptureBufferInfo(Kernel::HLERequestContext& ctx) {
@@ -582,7 +582,7 @@ void Module::Interface::SetScreenCapPostPermission(Kernel::HLERequestContext& ct
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS); // No error
-    NGLOG_WARNING(Service_APT, "(STUBBED) called, screen_capture_post_permission={}",
+    LOG_WARNING(Service_APT, "(STUBBED) called, screen_capture_post_permission={}",
                   static_cast<u32>(apt->screen_capture_post_permission));
 }
 
@@ -592,7 +592,7 @@ void Module::Interface::GetScreenCapPostPermission(Kernel::HLERequestContext& ct
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS); // No error
     rb.Push(static_cast<u32>(apt->screen_capture_post_permission));
-    NGLOG_WARNING(Service_APT, "(STUBBED) called, screen_capture_post_permission={}",
+    LOG_WARNING(Service_APT, "(STUBBED) called, screen_capture_post_permission={}",
                   static_cast<u32>(apt->screen_capture_post_permission));
 }
 
@@ -600,7 +600,7 @@ void Module::Interface::GetAppletInfo(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x6, 1, 0); // 0x60040
     auto app_id = rp.PopEnum<AppletId>();
 
-    NGLOG_DEBUG(Service_APT, "called, app_id={}", static_cast<u32>(app_id));
+    LOG_DEBUG(Service_APT, "called, app_id={}", static_cast<u32>(app_id));
 
     auto info = apt->applet_manager->GetAppletInfo(app_id);
     if (info.Failed()) {
@@ -623,7 +623,7 @@ void Module::Interface::GetStartupArgument(Kernel::HLERequestContext& ctx) {
     StartupArgumentType startup_argument_type = static_cast<StartupArgumentType>(rp.Pop<u8>());
 
     if (parameter_size >= 0x300) {
-        NGLOG_ERROR(
+        LOG_ERROR(
             Service_APT,
             "Parameter size is outside the valid range (capped to 0x300): parameter_size={:#010X}",
             parameter_size);
@@ -632,7 +632,7 @@ void Module::Interface::GetStartupArgument(Kernel::HLERequestContext& ctx) {
 
     std::vector<u8> parameter(parameter_size, 0);
 
-    NGLOG_WARNING(Service_APT,
+    LOG_WARNING(Service_APT,
                   "(STUBBED) called, startup_argument_type={}, parameter_size={:#010X}",
                   static_cast<u32>(startup_argument_type), parameter_size);
 
@@ -658,7 +658,7 @@ void Module::Interface::Wrap(Kernel::HLERequestContext& ctx) {
     ASSERT_MSG(output_size == input_size + HW::AES::CCM_MAC_SIZE,
                "input_size ({}) doesn't match to output_size ({})", input_size, output_size);
 
-    NGLOG_DEBUG(Service_APT,
+    LOG_DEBUG(Service_APT,
                 "called, output_size={}, input_size={}, nonce_offset={}, nonce_size={}",
                 output_size, input_size, nonce_offset, nonce_size);
 
@@ -704,7 +704,7 @@ void Module::Interface::Unwrap(Kernel::HLERequestContext& ctx) {
     ASSERT_MSG(output_size == input_size - HW::AES::CCM_MAC_SIZE,
                "input_size ({}) doesn't match to output_size ({})", input_size, output_size);
 
-    NGLOG_DEBUG(Service_APT,
+    LOG_DEBUG(Service_APT,
                 "called, output_size={}, input_size={}, nonce_offset={}, nonce_size={}",
                 output_size, input_size, nonce_offset, nonce_size);
 
@@ -730,7 +730,7 @@ void Module::Interface::Unwrap(Kernel::HLERequestContext& ctx) {
                      pdata.size() - nonce_offset);
         rb.Push(RESULT_SUCCESS);
     } else {
-        NGLOG_ERROR(Service_APT, "Failed to decrypt data");
+        LOG_ERROR(Service_APT, "Failed to decrypt data");
         rb.Push(ResultCode(static_cast<ErrorDescription>(1), ErrorModule::PS,
                            ErrorSummary::WrongArgument, ErrorLevel::Status));
     }
@@ -751,7 +751,7 @@ void Module::Interface::CheckNew3DSApp(Kernel::HLERequestContext& ctx) {
         PTM::CheckNew3DS(rb);
     }
 
-    NGLOG_WARNING(Service_APT, "(STUBBED) called");
+    LOG_WARNING(Service_APT, "(STUBBED) called");
 }
 
 void Module::Interface::CheckNew3DS(Kernel::HLERequestContext& ctx) {
@@ -760,7 +760,7 @@ void Module::Interface::CheckNew3DS(Kernel::HLERequestContext& ctx) {
 
     PTM::CheckNew3DS(rb);
 
-    NGLOG_WARNING(Service_APT, "(STUBBED) called");
+    LOG_WARNING(Service_APT, "(STUBBED) called");
 }
 
 Module::Interface::Interface(std::shared_ptr<Module> apt, const char* name, u32 max_session)

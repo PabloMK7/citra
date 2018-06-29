@@ -29,49 +29,49 @@ ResultVal<std::unique_ptr<FileBackend>> IVFCArchive::OpenFile(const Path& path,
 }
 
 ResultCode IVFCArchive::DeleteFile(const Path& path) const {
-    NGLOG_CRITICAL(Service_FS, "Attempted to delete a file from an IVFC archive ({}).", GetName());
+    LOG_CRITICAL(Service_FS, "Attempted to delete a file from an IVFC archive ({}).", GetName());
     // TODO(Subv): Verify error code
     return ResultCode(ErrorDescription::NoData, ErrorModule::FS, ErrorSummary::Canceled,
                       ErrorLevel::Status);
 }
 
 ResultCode IVFCArchive::RenameFile(const Path& src_path, const Path& dest_path) const {
-    NGLOG_CRITICAL(Service_FS, "Attempted to rename a file within an IVFC archive ({}).",
+    LOG_CRITICAL(Service_FS, "Attempted to rename a file within an IVFC archive ({}).",
                    GetName());
     // TODO(wwylele): Use correct error code
     return ResultCode(-1);
 }
 
 ResultCode IVFCArchive::DeleteDirectory(const Path& path) const {
-    NGLOG_CRITICAL(Service_FS, "Attempted to delete a directory from an IVFC archive ({}).",
+    LOG_CRITICAL(Service_FS, "Attempted to delete a directory from an IVFC archive ({}).",
                    GetName());
     // TODO(wwylele): Use correct error code
     return ResultCode(-1);
 }
 
 ResultCode IVFCArchive::DeleteDirectoryRecursively(const Path& path) const {
-    NGLOG_CRITICAL(Service_FS, "Attempted to delete a directory from an IVFC archive ({}).",
+    LOG_CRITICAL(Service_FS, "Attempted to delete a directory from an IVFC archive ({}).",
                    GetName());
     // TODO(wwylele): Use correct error code
     return ResultCode(-1);
 }
 
 ResultCode IVFCArchive::CreateFile(const Path& path, u64 size) const {
-    NGLOG_CRITICAL(Service_FS, "Attempted to create a file in an IVFC archive ({}).", GetName());
+    LOG_CRITICAL(Service_FS, "Attempted to create a file in an IVFC archive ({}).", GetName());
     // TODO: Verify error code
     return ResultCode(ErrorDescription::NotAuthorized, ErrorModule::FS, ErrorSummary::NotSupported,
                       ErrorLevel::Permanent);
 }
 
 ResultCode IVFCArchive::CreateDirectory(const Path& path) const {
-    NGLOG_CRITICAL(Service_FS, "Attempted to create a directory in an IVFC archive ({}).",
+    LOG_CRITICAL(Service_FS, "Attempted to create a directory in an IVFC archive ({}).",
                    GetName());
     // TODO(wwylele): Use correct error code
     return ResultCode(-1);
 }
 
 ResultCode IVFCArchive::RenameDirectory(const Path& src_path, const Path& dest_path) const {
-    NGLOG_CRITICAL(Service_FS, "Attempted to rename a file within an IVFC archive ({}).",
+    LOG_CRITICAL(Service_FS, "Attempted to rename a file within an IVFC archive ({}).",
                    GetName());
     // TODO(wwylele): Use correct error code
     return ResultCode(-1);
@@ -82,7 +82,7 @@ ResultVal<std::unique_ptr<DirectoryBackend>> IVFCArchive::OpenDirectory(const Pa
 }
 
 u64 IVFCArchive::GetFreeBytes() const {
-    NGLOG_WARNING(Service_FS, "Attempted to get the free space in an IVFC archive");
+    LOG_WARNING(Service_FS, "Attempted to get the free space in an IVFC archive");
     return 0;
 }
 
@@ -95,7 +95,7 @@ IVFCFile::IVFCFile(std::shared_ptr<FileUtil::IOFile> file, u64 offset, u64 size,
 }
 
 ResultVal<size_t> IVFCFile::Read(const u64 offset, const size_t length, u8* buffer) const {
-    NGLOG_TRACE(Service_FS, "called offset={}, length={}", offset, length);
+    LOG_TRACE(Service_FS, "called offset={}, length={}", offset, length);
     romfs_file->Seek(data_offset + offset, SEEK_SET);
     size_t read_length = (size_t)std::min((u64)length, data_size - offset);
 
@@ -104,7 +104,7 @@ ResultVal<size_t> IVFCFile::Read(const u64 offset, const size_t length, u8* buff
 
 ResultVal<size_t> IVFCFile::Write(const u64 offset, const size_t length, const bool flush,
                                   const u8* buffer) {
-    NGLOG_ERROR(Service_FS, "Attempted to write to IVFC file");
+    LOG_ERROR(Service_FS, "Attempted to write to IVFC file");
     // TODO(Subv): Find error code
     return MakeResult<size_t>(0);
 }
@@ -114,7 +114,7 @@ u64 IVFCFile::GetSize() const {
 }
 
 bool IVFCFile::SetSize(const u64 size) const {
-    NGLOG_ERROR(Service_FS, "Attempted to set the size of an IVFC file");
+    LOG_ERROR(Service_FS, "Attempted to set the size of an IVFC file");
     return false;
 }
 

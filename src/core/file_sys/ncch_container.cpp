@@ -110,11 +110,11 @@ Loader::ResultStatus NCCHContainer::OpenFile(const std::string& filepath, u32 nc
     file = FileUtil::IOFile(filepath, "rb");
 
     if (!file.IsOpen()) {
-        NGLOG_WARNING(Service_FS, "Failed to open {}", filepath);
+        LOG_WARNING(Service_FS, "Failed to open {}", filepath);
         return Loader::ResultStatus::Error;
     }
 
-    NGLOG_DEBUG(Service_FS, "Opened {}", filepath);
+    LOG_DEBUG(Service_FS, "Opened {}", filepath);
     return Loader::ResultStatus::Success;
 }
 
@@ -131,7 +131,7 @@ Loader::ResultStatus NCCHContainer::Load() {
 
         // Skip NCSD header and load first NCCH (NCSD is just a container of NCCH files)...
         if (Loader::MakeMagic('N', 'C', 'S', 'D') == ncch_header.magic) {
-            NGLOG_DEBUG(Service_FS, "Only loading the first (bootable) NCCH within the NCSD file!");
+            LOG_DEBUG(Service_FS, "Only loading the first (bootable) NCCH within the NCSD file!");
             ncch_offset += 0x4000;
             file.Seek(ncch_offset, SEEK_SET);
             file.ReadBytes(&ncch_header, sizeof(NCCH_Header));
@@ -159,23 +159,23 @@ Loader::ResultStatus NCCHContainer::Load() {
             u8 resource_limit_category =
                 exheader_header.arm11_system_local_caps.resource_limit_category;
 
-            NGLOG_DEBUG(Service_FS, "Name:                        {}",
+            LOG_DEBUG(Service_FS, "Name:                        {}",
                         exheader_header.codeset_info.name);
-            NGLOG_DEBUG(Service_FS, "Program ID:                  {:016X}", ncch_header.program_id);
-            NGLOG_DEBUG(Service_FS, "Code compressed:             {}",
+            LOG_DEBUG(Service_FS, "Program ID:                  {:016X}", ncch_header.program_id);
+            LOG_DEBUG(Service_FS, "Code compressed:             {}",
                         is_compressed ? "yes" : "no");
-            NGLOG_DEBUG(Service_FS, "Entry point:                 0x{:08X}", entry_point);
-            NGLOG_DEBUG(Service_FS, "Code size:                   0x{:08X}", code_size);
-            NGLOG_DEBUG(Service_FS, "Stack size:                  0x{:08X}", stack_size);
-            NGLOG_DEBUG(Service_FS, "Bss size:                    0x{:08X}", bss_size);
-            NGLOG_DEBUG(Service_FS, "Core version:                {}", core_version);
-            NGLOG_DEBUG(Service_FS, "Thread priority:             0x{:X}", priority);
-            NGLOG_DEBUG(Service_FS, "Resource limit category:     {}", resource_limit_category);
-            NGLOG_DEBUG(Service_FS, "System Mode:                 {}",
+            LOG_DEBUG(Service_FS, "Entry point:                 0x{:08X}", entry_point);
+            LOG_DEBUG(Service_FS, "Code size:                   0x{:08X}", code_size);
+            LOG_DEBUG(Service_FS, "Stack size:                  0x{:08X}", stack_size);
+            LOG_DEBUG(Service_FS, "Bss size:                    0x{:08X}", bss_size);
+            LOG_DEBUG(Service_FS, "Core version:                {}", core_version);
+            LOG_DEBUG(Service_FS, "Thread priority:             0x{:X}", priority);
+            LOG_DEBUG(Service_FS, "Resource limit category:     {}", resource_limit_category);
+            LOG_DEBUG(Service_FS, "System Mode:                 {}",
                         static_cast<int>(exheader_header.arm11_system_local_caps.system_mode));
 
             if (exheader_header.system_info.jump_id != ncch_header.program_id) {
-                NGLOG_ERROR(Service_FS,
+                LOG_ERROR(Service_FS,
                             "ExHeader Program ID mismatch: the ROM is probably encrypted.");
                 return Loader::ResultStatus::ErrorEncrypted;
             }
@@ -188,8 +188,8 @@ Loader::ResultStatus NCCHContainer::Load() {
             exefs_offset = ncch_header.exefs_offset * kBlockSize;
             u32 exefs_size = ncch_header.exefs_size * kBlockSize;
 
-            NGLOG_DEBUG(Service_FS, "ExeFS offset:                0x{:08X}", exefs_offset);
-            NGLOG_DEBUG(Service_FS, "ExeFS size:                  0x{:08X}", exefs_size);
+            LOG_DEBUG(Service_FS, "ExeFS offset:                0x{:08X}", exefs_offset);
+            LOG_DEBUG(Service_FS, "ExeFS size:                  0x{:08X}", exefs_size);
 
             file.Seek(exefs_offset + ncch_offset, SEEK_SET);
             if (file.ReadBytes(&exefs_header, sizeof(ExeFs_Header)) != sizeof(ExeFs_Header))
@@ -227,7 +227,7 @@ Loader::ResultStatus NCCHContainer::LoadOverrides() {
         exefs_file = FileUtil::IOFile(exefs_override, "rb");
 
         if (exefs_file.ReadBytes(&exefs_header, sizeof(ExeFs_Header)) == sizeof(ExeFs_Header)) {
-            NGLOG_DEBUG(Service_FS, "Loading ExeFS section from {}", exefs_override);
+            LOG_DEBUG(Service_FS, "Loading ExeFS section from {}", exefs_override);
             exefs_offset = 0;
             is_tainted = true;
             has_exefs = true;
@@ -239,7 +239,7 @@ Loader::ResultStatus NCCHContainer::LoadOverrides() {
     }
 
     if (is_tainted)
-        NGLOG_WARNING(Service_FS,
+        LOG_WARNING(Service_FS,
                       "Loaded NCCH {} is tainted, application behavior may not be as expected!",
                       filepath);
 
@@ -267,12 +267,12 @@ Loader::ResultStatus NCCHContainer::LoadSectionExeFS(const char* name, std::vect
             file.Seek(ncch_offset + logo_offset, SEEK_SET);
 
             if (file.ReadBytes(buffer.data(), logo_size) != logo_size) {
-                NGLOG_ERROR(Service_FS, "Could not read NCCH logo");
+                LOG_ERROR(Service_FS, "Could not read NCCH logo");
                 return Loader::ResultStatus::Error;
             }
             return Loader::ResultStatus::Success;
         } else {
-            NGLOG_INFO(Service_FS, "Attempting to load logo from the ExeFS");
+            LOG_INFO(Service_FS, "Attempting to load logo from the ExeFS");
         }
     }
 
@@ -280,14 +280,14 @@ Loader::ResultStatus NCCHContainer::LoadSectionExeFS(const char* name, std::vect
     if (!exefs_file.IsOpen())
         return Loader::ResultStatus::Error;
 
-    NGLOG_DEBUG(Service_FS, "{} sections:", kMaxSections);
+    LOG_DEBUG(Service_FS, "{} sections:", kMaxSections);
     // Iterate through the ExeFs archive until we find a section with the specified name...
     for (unsigned section_number = 0; section_number < kMaxSections; section_number++) {
         const auto& section = exefs_header.section[section_number];
 
         // Load the specified section...
         if (strcmp(section.name, name) == 0) {
-            NGLOG_DEBUG(Service_FS, "{} - offset: 0x{:08X}, size: 0x{:08X}, name: {}",
+            LOG_DEBUG(Service_FS, "{} - offset: 0x{:08X}, size: 0x{:08X}, name: {}",
                         section_number, section.offset, section.size, section.name);
 
             s64 section_offset =
@@ -348,7 +348,7 @@ Loader::ResultStatus NCCHContainer::LoadOverrideExeFSSection(const char* name,
 
         section_file.Seek(0, SEEK_SET);
         if (section_file.ReadBytes(&buffer[0], section_size) == section_size) {
-            NGLOG_WARNING(Service_FS, "File {} overriding built-in ExeFS file", section_override);
+            LOG_WARNING(Service_FS, "File {} overriding built-in ExeFS file", section_override);
             return Loader::ResultStatus::Success;
         }
     }
@@ -365,7 +365,7 @@ Loader::ResultStatus NCCHContainer::ReadRomFS(std::shared_ptr<FileUtil::IOFile>&
         return Loader::ResultStatus::Success;
 
     if (!has_romfs) {
-        NGLOG_DEBUG(Service_FS, "RomFS requested from NCCH which has no RomFS");
+        LOG_DEBUG(Service_FS, "RomFS requested from NCCH which has no RomFS");
         return Loader::ResultStatus::ErrorNotUsed;
     }
 
@@ -375,8 +375,8 @@ Loader::ResultStatus NCCHContainer::ReadRomFS(std::shared_ptr<FileUtil::IOFile>&
     u32 romfs_offset = ncch_offset + (ncch_header.romfs_offset * kBlockSize) + 0x1000;
     u32 romfs_size = (ncch_header.romfs_size * kBlockSize) - 0x1000;
 
-    NGLOG_DEBUG(Service_FS, "RomFS offset:           0x{:08X}", romfs_offset);
-    NGLOG_DEBUG(Service_FS, "RomFS size:             0x{:08X}", romfs_size);
+    LOG_DEBUG(Service_FS, "RomFS offset:           0x{:08X}", romfs_offset);
+    LOG_DEBUG(Service_FS, "RomFS size:             0x{:08X}", romfs_size);
 
     if (file.GetSize() < romfs_offset + romfs_size)
         return Loader::ResultStatus::Error;
@@ -399,7 +399,7 @@ Loader::ResultStatus NCCHContainer::ReadOverrideRomFS(std::shared_ptr<FileUtil::
     if (FileUtil::Exists(split_filepath)) {
         romfs_file = std::make_shared<FileUtil::IOFile>(split_filepath, "rb");
         if (romfs_file->IsOpen()) {
-            NGLOG_WARNING(Service_FS, "File {} overriding built-in RomFS", split_filepath);
+            LOG_WARNING(Service_FS, "File {} overriding built-in RomFS", split_filepath);
             offset = 0;
             size = romfs_file->GetSize();
             return Loader::ResultStatus::Success;

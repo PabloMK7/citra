@@ -178,7 +178,7 @@ void DumpShader(const std::string& filename, const ShaderRegs& config,
                 }
             } catch (const std::out_of_range&) {
                 DEBUG_ASSERT_MSG(false, "Unknown output attribute mapping");
-                NGLOG_ERROR(HW_GPU,
+                LOG_ERROR(HW_GPU,
                             "Unknown output attribute mapping: {:03x}, {:03x}, {:03x}, {:03x}",
                             (int)output_attributes[i].map_x.Value(),
                             (int)output_attributes[i].map_y.Value(),
@@ -278,7 +278,7 @@ bool g_is_pica_tracing = false;
 
 void StartPicaTracing() {
     if (g_is_pica_tracing) {
-        NGLOG_WARNING(HW_GPU, "StartPicaTracing called even though tracing already running!");
+        LOG_WARNING(HW_GPU, "StartPicaTracing called even though tracing already running!");
         return;
     }
 
@@ -299,7 +299,7 @@ void OnPicaRegWrite(PicaTrace::Write write) {
 
 std::unique_ptr<PicaTrace> FinishPicaTracing() {
     if (!g_is_pica_tracing) {
-        NGLOG_WARNING(HW_GPU, "FinishPicaTracing called even though tracing isn't running!");
+        LOG_WARNING(HW_GPU, "FinishPicaTracing called even though tracing isn't running!");
         return {};
     }
 
@@ -457,7 +457,7 @@ void DumpTevStageConfig(const std::array<TexturingRegs::TevStageConfig, 6>& stag
                       GetTevStageConfigColorCombinerString(tev_stage) + "   " +
                       GetTevStageConfigAlphaCombinerString(tev_stage) + "\n";
     }
-    NGLOG_TRACE(HW_GPU, "{}", stage_info);
+    LOG_TRACE(HW_GPU, "{}", stage_info);
 }
 
 } // namespace DebugUtils

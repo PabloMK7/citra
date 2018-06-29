@@ -272,18 +272,18 @@ const char* ElfReader::GetSectionName(int section) const {
 }
 
 SharedPtr<CodeSet> ElfReader::LoadInto(u32 vaddr) {
-    NGLOG_DEBUG(Loader, "String section: {}", header->e_shstrndx);
+    LOG_DEBUG(Loader, "String section: {}", header->e_shstrndx);
 
     // Should we relocate?
     relocate = (header->e_type != ET_EXEC);
 
     if (relocate) {
-        NGLOG_DEBUG(Loader, "Relocatable module");
+        LOG_DEBUG(Loader, "Relocatable module");
         entryPoint += vaddr;
     } else {
-        NGLOG_DEBUG(Loader, "Prerelocated executable");
+        LOG_DEBUG(Loader, "Prerelocated executable");
     }
-    NGLOG_DEBUG(Loader, "{} segments:", header->e_phnum);
+    LOG_DEBUG(Loader, "{} segments:", header->e_phnum);
 
     // First pass : Get the bits into RAM
     u32 base_addr = relocate ? vaddr : 0;
@@ -303,7 +303,7 @@ SharedPtr<CodeSet> ElfReader::LoadInto(u32 vaddr) {
 
     for (unsigned int i = 0; i < header->e_phnum; ++i) {
         Elf32_Phdr* p = &segments[i];
-        NGLOG_DEBUG(Loader, "Type: {} Vaddr: {:08X} Filesz: {:08X} Memsz: {:08X} ", p->p_type,
+        LOG_DEBUG(Loader, "Type: {} Vaddr: {:08X} Filesz: {:08X} Memsz: {:08X} ", p->p_type,
                     p->p_vaddr, p->p_filesz, p->p_memsz);
 
         if (p->p_type == PT_LOAD) {
@@ -316,13 +316,13 @@ SharedPtr<CodeSet> ElfReader::LoadInto(u32 vaddr) {
             } else if (permission_flags == (PF_R | PF_W)) {
                 codeset_segment = &codeset->data;
             } else {
-                NGLOG_ERROR(Loader, "Unexpected ELF PT_LOAD segment id {} with flags {:X}", i,
+                LOG_ERROR(Loader, "Unexpected ELF PT_LOAD segment id {} with flags {:X}", i,
                             p->p_flags);
                 continue;
             }
 
             if (codeset_segment->size != 0) {
-                NGLOG_ERROR(Loader,
+                LOG_ERROR(Loader,
                             "ELF has more than one segment of the same type. Skipping extra "
                             "segment (id {})",
                             i);
@@ -344,7 +344,7 @@ SharedPtr<CodeSet> ElfReader::LoadInto(u32 vaddr) {
     codeset->entrypoint = base_addr + header->e_entry;
     codeset->memory = std::make_shared<std::vector<u8>>(std::move(program_image));
 
-    NGLOG_DEBUG(Loader, "Done loading.");
+    LOG_DEBUG(Loader, "Done loading.");
 
     return codeset;
 }

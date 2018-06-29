@@ -42,7 +42,7 @@ void CompatDB::Submit() {
         }
         break;
     case CompatDBPage::Final:
-        NGLOG_DEBUG(Frontend, "Compatibility Rating: {}", compatibility->checkedId());
+        LOG_DEBUG(Frontend, "Compatibility Rating: {}", compatibility->checkedId());
         Core::Telemetry().AddField(Telemetry::FieldType::UserFeedback, "Compatibility",
                                    compatibility->checkedId());
         // older versions of QT don't support the "NoCancelButtonOnLastPage" option, this is a
@@ -50,7 +50,7 @@ void CompatDB::Submit() {
         button(QWizard::CancelButton)->setVisible(false);
         break;
     default:
-        NGLOG_ERROR(Frontend, "Unexpected page: {}", currentId());
+        LOG_ERROR(Frontend, "Unexpected page: {}", currentId());
     }
 }
 

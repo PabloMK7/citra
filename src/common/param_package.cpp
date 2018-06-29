@@ -25,7 +25,7 @@ ParamPackage::ParamPackage(const std::string& serialized) {
         std::vector<std::string> key_value;
         Common::SplitString(pair, KEY_VALUE_SEPARATOR, key_value);
         if (key_value.size() != 2) {
-            NGLOG_ERROR(Common, "invalid key pair {}", pair);
+            LOG_ERROR(Common, "invalid key pair {}", pair);
             continue;
         }
 
@@ -64,7 +64,7 @@ std::string ParamPackage::Serialize() const {
 std::string ParamPackage::Get(const std::string& key, const std::string& default_value) const {
     auto pair = data.find(key);
     if (pair == data.end()) {
-        NGLOG_DEBUG(Common, "key {} not found", key);
+        LOG_DEBUG(Common, "key {} not found", key);
         return default_value;
     }
 
@@ -74,14 +74,14 @@ std::string ParamPackage::Get(const std::string& key, const std::string& default
 int ParamPackage::Get(const std::string& key, int default_value) const {
     auto pair = data.find(key);
     if (pair == data.end()) {
-        NGLOG_DEBUG(Common, "key {} not found", key);
+        LOG_DEBUG(Common, "key {} not found", key);
         return default_value;
     }
 
     try {
         return std::stoi(pair->second);
     } catch (const std::logic_error&) {
-        NGLOG_ERROR(Common, "failed to convert {} to int", pair->second);
+        LOG_ERROR(Common, "failed to convert {} to int", pair->second);
         return default_value;
     }
 }
@@ -89,14 +89,14 @@ int ParamPackage::Get(const std::string& key, int default_value) const {
 float ParamPackage::Get(const std::string& key, float default_value) const {
     auto pair = data.find(key);
     if (pair == data.end()) {
-        NGLOG_DEBUG(Common, "key {} not found", key);
+        LOG_DEBUG(Common, "key {} not found", key);
         return default_value;
     }
 
     try {
         return std::stof(pair->second);
     } catch (const std::logic_error&) {
-        NGLOG_ERROR(Common, "failed to convert {} to float", pair->second);
+        LOG_ERROR(Common, "failed to convert {} to float", pair->second);
         return default_value;
     }
 }

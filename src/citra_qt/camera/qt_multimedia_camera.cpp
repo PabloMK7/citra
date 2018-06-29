@@ -133,13 +133,13 @@ std::shared_ptr<QtMultimediaCameraHandler> QtMultimediaCameraHandler::GetHandler
     }
     for (int i = 0; i < handlers.size(); i++) {
         if (!status[i]) {
-            NGLOG_INFO(Service_CAM, "Successfully got handler {}", i);
+            LOG_INFO(Service_CAM, "Successfully got handler {}", i);
             status[i] = true;
             loaded.emplace(camera_name, handlers[i]);
             return handlers[i];
         }
     }
-    NGLOG_CRITICAL(Service_CAM, "All handlers taken up");
+    LOG_CRITICAL(Service_CAM, "All handlers taken up");
     return nullptr;
 }
 
@@ -147,7 +147,7 @@ void QtMultimediaCameraHandler::ReleaseHandler(
     const std::shared_ptr<Camera::QtMultimediaCameraHandler>& handler) {
     for (int i = 0; i < handlers.size(); i++) {
         if (handlers[i] == handler) {
-            NGLOG_INFO(Service_CAM, "Successfully released handler {}", i);
+            LOG_INFO(Service_CAM, "Successfully released handler {}", i);
             status[i] = false;
             handlers[i]->started = false;
             for (auto it = loaded.begin(); it != loaded.end(); it++) {
@@ -192,7 +192,7 @@ bool QtMultimediaCameraHandler::CameraAvailable() const {
 }
 
 void QtMultimediaCameraHandler::StopCameras() {
-    NGLOG_INFO(Service_CAM, "Stopping all cameras");
+    LOG_INFO(Service_CAM, "Stopping all cameras");
     for (auto& handler : handlers) {
         if (handler && handler->started) {
             handler->StopCamera();
@@ -210,7 +210,7 @@ void QtMultimediaCameraHandler::ResumeCameras() {
 
 void QtMultimediaCameraHandler::ReleaseHandlers() {
     StopCameras();
-    NGLOG_INFO(Service_CAM, "Releasing all handlers");
+    LOG_INFO(Service_CAM, "Releasing all handlers");
     for (int i = 0; i < handlers.size(); i++) {
         status[i] = false;
         handlers[i]->started = false;

@@ -15,12 +15,12 @@ static std::shared_ptr<Room> g_room;              ///< Room (Server) for network
 
 bool Init() {
     if (enet_initialize() != 0) {
-        NGLOG_ERROR(Network, "Error initalizing ENet");
+        LOG_ERROR(Network, "Error initalizing ENet");
         return false;
     }
     g_room = std::make_shared<Room>();
     g_room_member = std::make_shared<RoomMember>();
-    NGLOG_DEBUG(Network, "initialized OK");
+    LOG_DEBUG(Network, "initialized OK");
     return true;
 }
 
@@ -44,7 +44,7 @@ void Shutdown() {
         g_room.reset();
     }
     enet_deinitialize();
-    NGLOG_DEBUG(Network, "shutdown OK");
+    LOG_DEBUG(Network, "shutdown OK");
 }
 
 } // namespace Network

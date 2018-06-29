@@ -232,7 +232,7 @@ public:
 
         auto iterator = status_data.find(compatiblity);
         if (iterator == status_data.end()) {
-            NGLOG_WARNING(Frontend, "Invalid compatibility number {}", compatiblity.toStdString());
+            LOG_WARNING(Frontend, "Invalid compatibility number {}", compatiblity.toStdString());
             return;
         }
         CompatStatus status = iterator->second;

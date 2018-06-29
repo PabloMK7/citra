@@ -49,13 +49,13 @@ static_assert(sizeof(NCCHFilePath) == 0x14, "NCCHFilePath has wrong size!");
 ResultVal<std::unique_ptr<FileBackend>> NCCHArchive::OpenFile(const Path& path,
                                                               const Mode& mode) const {
     if (path.GetType() != LowPathType::Binary) {
-        NGLOG_ERROR(Service_FS, "Path need to be Binary");
+        LOG_ERROR(Service_FS, "Path need to be Binary");
         return ERROR_INVALID_PATH;
     }
 
     std::vector<u8> binary = path.AsBinary();
     if (binary.size() != sizeof(NCCHFilePath)) {
-        NGLOG_ERROR(Service_FS, "Wrong path size {}", binary.size());
+        LOG_ERROR(Service_FS, "Wrong path size {}", binary.size());
         return ERROR_INVALID_PATH;
     }
 
@@ -89,7 +89,7 @@ ResultVal<std::unique_ptr<FileBackend>> NCCHArchive::OpenFile(const Path& path,
         std::unique_ptr<DelayGenerator> delay_generator = std::make_unique<ExeFSDelayGenerator>();
         file = std::make_unique<NCCHFile>(std::move(buffer), std::move(delay_generator));
     } else {
-        NGLOG_ERROR(Service_FS, "Unknown NCCH archive type {}!", openfile_path.filepath_type);
+        LOG_ERROR(Service_FS, "Unknown NCCH archive type {}!", openfile_path.filepath_type);
         result = Loader::ResultStatus::Error;
     }
 
@@ -106,7 +106,7 @@ ResultVal<std::unique_ptr<FileBackend>> NCCHArchive::OpenFile(const Path& path,
         u32 high = static_cast<u32>(title_id >> 32);
         u32 low = static_cast<u32>(title_id & 0xFFFFFFFF);
 
-        NGLOG_DEBUG(Service_FS, "Full Path: {}. Category: 0x{:X}. Path: 0x{:X}.", path.DebugStr(),
+        LOG_DEBUG(Service_FS, "Full Path: {}. Category: 0x{:X}. Path: 0x{:X}.", path.DebugStr(),
                     high, low);
 
         std::string archive_name;
@@ -121,7 +121,7 @@ ResultVal<std::unique_ptr<FileBackend>> NCCHArchive::OpenFile(const Path& path,
         }
 
         if (!archive_name.empty()) {
-            NGLOG_ERROR(Service_FS, "Failed to get a handle for shared data archive: {}. ",
+            LOG_ERROR(Service_FS, "Failed to get a handle for shared data archive: {}. ",
                         archive_name);
             Core::System::GetInstance().SetStatus(Core::System::ResultStatus::ErrorSystemFiles,
                                                   archive_name.c_str());
@@ -133,63 +133,63 @@ ResultVal<std::unique_ptr<FileBackend>> NCCHArchive::OpenFile(const Path& path,
 }
 
 ResultCode NCCHArchive::DeleteFile(const Path& path) const {
-    NGLOG_CRITICAL(Service_FS, "Attempted to delete a file from an NCCH archive ({}).", GetName());
+    LOG_CRITICAL(Service_FS, "Attempted to delete a file from an NCCH archive ({}).", GetName());
     // TODO(Subv): Verify error code
     return ResultCode(ErrorDescription::NoData, ErrorModule::FS, ErrorSummary::Canceled,
                       ErrorLevel::Status);
 }
 
 ResultCode NCCHArchive::RenameFile(const Path& src_path, const Path& dest_path) const {
-    NGLOG_CRITICAL(Service_FS, "Attempted to rename a file within an NCCH archive ({}).",
+    LOG_CRITICAL(Service_FS, "Attempted to rename a file within an NCCH archive ({}).",
                    GetName());
     // TODO(wwylele): Use correct error code
     return ResultCode(-1);
 }
 
 ResultCode NCCHArchive::DeleteDirectory(const Path& path) const {
-    NGLOG_CRITICAL(Service_FS, "Attempted to delete a directory from an NCCH archive ({}).",
+    LOG_CRITICAL(Service_FS, "Attempted to delete a directory from an NCCH archive ({}).",
                    GetName());
     // TODO(wwylele): Use correct error code
     return ResultCode(-1);
 }
 
 ResultCode NCCHArchive::DeleteDirectoryRecursively(const Path& path) const {
-    NGLOG_CRITICAL(Service_FS, "Attempted to delete a directory from an NCCH archive ({}).",
+    LOG_CRITICAL(Service_FS, "Attempted to delete a directory from an NCCH archive ({}).",
                    GetName());
     // TODO(wwylele): Use correct error code
     return ResultCode(-1);
 }
 
 ResultCode NCCHArchive::CreateFile(const Path& path, u64 size) const {
-    NGLOG_CRITICAL(Service_FS, "Attempted to create a file in an NCCH archive ({}).", GetName());
+    LOG_CRITICAL(Service_FS, "Attempted to create a file in an NCCH archive ({}).", GetName());
     // TODO: Verify error code
     return ResultCode(ErrorDescription::NotAuthorized, ErrorModule::FS, ErrorSummary::NotSupported,
                       ErrorLevel::Permanent);
 }
 
 ResultCode NCCHArchive::CreateDirectory(const Path& path) const {
-    NGLOG_CRITICAL(Service_FS, "Attempted to create a directory in an NCCH archive ({}).",
+    LOG_CRITICAL(Service_FS, "Attempted to create a directory in an NCCH archive ({}).",
                    GetName());
     // TODO(wwylele): Use correct error code
     return ResultCode(-1);
 }
 
 ResultCode NCCHArchive::RenameDirectory(const Path& src_path, const Path& dest_path) const {
-    NGLOG_CRITICAL(Service_FS, "Attempted to rename a file within an NCCH archive ({}).",
+    LOG_CRITICAL(Service_FS, "Attempted to rename a file within an NCCH archive ({}).",
                    GetName());
     // TODO(wwylele): Use correct error code
     return ResultCode(-1);
 }
 
 ResultVal<std::unique_ptr<DirectoryBackend>> NCCHArchive::OpenDirectory(const Path& path) const {
-    NGLOG_CRITICAL(Service_FS, "Attempted to open a directory within an NCCH archive ({}).",
+    LOG_CRITICAL(Service_FS, "Attempted to open a directory within an NCCH archive ({}).",
                    GetName().c_str());
     // TODO(shinyquagsire23): Use correct error code
     return ResultCode(-1);
 }
 
 u64 NCCHArchive::GetFreeBytes() const {
-    NGLOG_WARNING(Service_FS, "Attempted to get the free space in an NCCH archive");
+    LOG_WARNING(Service_FS, "Attempted to get the free space in an NCCH archive");
     return 0;
 }
 
@@ -201,7 +201,7 @@ NCCHFile::NCCHFile(std::vector<u8> buffer, std::unique_ptr<DelayGenerator> delay
 }
 
 ResultVal<size_t> NCCHFile::Read(const u64 offset, const size_t length, u8* buffer) const {
-    NGLOG_TRACE(Service_FS, "called offset={}, length={}", offset, length);
+    LOG_TRACE(Service_FS, "called offset={}, length={}", offset, length);
     size_t length_left = static_cast<size_t>(data_size - offset);
     size_t read_length = static_cast<size_t>(std::min(length, length_left));
 
@@ -214,7 +214,7 @@ ResultVal<size_t> NCCHFile::Read(const u64 offset, const size_t length, u8* buff
 
 ResultVal<size_t> NCCHFile::Write(const u64 offset, const size_t length, const bool flush,
                                   const u8* buffer) {
-    NGLOG_ERROR(Service_FS, "Attempted to write to NCCH file");
+    LOG_ERROR(Service_FS, "Attempted to write to NCCH file");
     // TODO(shinyquagsire23): Find error code
     return MakeResult<size_t>(0);
 }
@@ -224,7 +224,7 @@ u64 NCCHFile::GetSize() const {
 }
 
 bool NCCHFile::SetSize(const u64 size) const {
-    NGLOG_ERROR(Service_FS, "Attempted to set the size of an NCCH file");
+    LOG_ERROR(Service_FS, "Attempted to set the size of an NCCH file");
     return false;
 }
 
@@ -234,13 +234,13 @@ ArchiveFactory_NCCH::ArchiveFactory_NCCH() {}
 
 ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_NCCH::Open(const Path& path) {
     if (path.GetType() != LowPathType::Binary) {
-        NGLOG_ERROR(Service_FS, "Path need to be Binary");
+        LOG_ERROR(Service_FS, "Path need to be Binary");
         return ERROR_INVALID_PATH;
     }
 
     std::vector<u8> binary = path.AsBinary();
     if (binary.size() != sizeof(NCCHArchivePath)) {
-        NGLOG_ERROR(Service_FS, "Wrong path size {}", binary.size());
+        LOG_ERROR(Service_FS, "Wrong path size {}", binary.size());
         return ERROR_INVALID_PATH;
     }
 
@@ -254,7 +254,7 @@ ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_NCCH::Open(const Path&
 
 ResultCode ArchiveFactory_NCCH::Format(const Path& path,
                                        const FileSys::ArchiveFormatInfo& format_info) {
-    NGLOG_ERROR(Service_FS, "Attempted to format a NCCH archive.");
+    LOG_ERROR(Service_FS, "Attempted to format a NCCH archive.");
     // TODO: Verify error code
     return ResultCode(ErrorDescription::NotAuthorized, ErrorModule::FS, ErrorSummary::NotSupported,
                       ErrorLevel::Permanent);
@@ -262,7 +262,7 @@ ResultCode ArchiveFactory_NCCH::Format(const Path& path,
 
 ResultVal<ArchiveFormatInfo> ArchiveFactory_NCCH::GetFormatInfo(const Path& path) const {
     // TODO(Subv): Implement
-    NGLOG_ERROR(Service_FS, "Unimplemented GetFormatInfo archive {}", GetName());
+    LOG_ERROR(Service_FS, "Unimplemented GetFormatInfo archive {}", GetName());
     return ResultCode(-1);
 }
 
