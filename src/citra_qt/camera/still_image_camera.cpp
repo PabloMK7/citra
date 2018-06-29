@@ -62,7 +62,7 @@ std::unique_ptr<CameraInterface> StillImageCameraFactory::Create(const std::stri
     }
     QImage image(QString::fromStdString(real_config));
     if (image.isNull()) {
-        NGLOG_ERROR(Service_CAM, "Couldn't load image \"{}\"", real_config.c_str());
+        LOG_ERROR(Service_CAM, "Couldn't load image \"{}\"", real_config.c_str());
     }
     return std::make_unique<StillImageCamera>(image, flip);
 }

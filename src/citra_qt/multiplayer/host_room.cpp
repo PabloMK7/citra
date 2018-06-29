@@ -103,7 +103,7 @@ void HostRoomWindow::Host() {
                                         ui->max_player->value(), game_name.toStdString(), game_id);
             if (!created) {
                 NetworkMessage::ShowError(NetworkMessage::COULD_NOT_CREATE_ROOM);
-                NGLOG_ERROR(Network, "Could not create room!");
+                LOG_ERROR(Network, "Could not create room!");
                 ui->host->setEnabled(true);
                 return;
             }
@@ -136,7 +136,7 @@ void HostRoomWindow::OnConnection() {
                 if (auto session = announce_multiplayer_session.lock()) {
                     session->Start();
                 } else {
-                    NGLOG_ERROR(Network, "Starting announce session failed");
+                    LOG_ERROR(Network, "Starting announce session failed");
                 }
             }
             close();

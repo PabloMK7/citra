@@ -48,7 +48,7 @@ int GetWrappedTexCoord(TexturingRegs::TextureConfig::WrapMode mode, int val, uns
     }
 
     default:
-        NGLOG_ERROR(HW_GPU, "Unknown texture coordinate wrapping mode {:x}", (int)mode);
+        LOG_ERROR(HW_GPU, "Unknown texture coordinate wrapping mode {:x}", (int)mode);
         UNIMPLEMENTED();
         return 0;
     }
@@ -197,7 +197,7 @@ Math::Vec3<u8> ColorCombine(TevStageConfig::Operation op, const Math::Vec3<u8> i
         return {(u8)result, (u8)result, (u8)result};
     }
     default:
-        NGLOG_ERROR(HW_GPU, "Unknown color combiner operation {}", (int)op);
+        LOG_ERROR(HW_GPU, "Unknown color combiner operation {}", (int)op);
         UNIMPLEMENTED();
         return {0, 0, 0};
     }
@@ -234,7 +234,7 @@ u8 AlphaCombine(TevStageConfig::Operation op, const std::array<u8, 3>& input) {
         return (std::min(255, (input[0] + input[1])) * input[2]) / 255;
 
     default:
-        NGLOG_ERROR(HW_GPU, "Unknown alpha combiner operation {}", (int)op);
+        LOG_ERROR(HW_GPU, "Unknown alpha combiner operation {}", (int)op);
         UNIMPLEMENTED();
         return 0;
     }

@@ -48,7 +48,7 @@ void PrimitiveAssembler<VertexType>::SubmitVertex(const VertexType& vtx,
         break;
 
     default:
-        NGLOG_ERROR(HW_GPU, "Unknown triangle topology {:x}:", (int)topology);
+        LOG_ERROR(HW_GPU, "Unknown triangle topology {:x}:", (int)topology);
         break;
     }
 }

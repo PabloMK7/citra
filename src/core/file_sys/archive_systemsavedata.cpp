@@ -72,7 +72,7 @@ ResultCode ArchiveFactory_SystemSaveData::Format(const Path& path,
 
 ResultVal<ArchiveFormatInfo> ArchiveFactory_SystemSaveData::GetFormatInfo(const Path& path) const {
     // TODO(Subv): Implement
-    NGLOG_ERROR(Service_FS, "Unimplemented GetFormatInfo archive {}", GetName());
+    LOG_ERROR(Service_FS, "Unimplemented GetFormatInfo archive {}", GetName());
     return ResultCode(-1);
 }
 

@@ -173,7 +173,7 @@ void ProcessTriangle(const OutputVertex& v0, const OutputVertex& v1, const Outpu
 
         InitScreenCoordinates(vtx2);
 
-        NGLOG_TRACE(
+        LOG_TRACE(
             Render_Software,
             "Triangle {}/{} at position ({:.3}, {:.3}, {:.3}, {:.3f}), "
             "({:.3}, {:.3}, {:.3}, {:.3}), ({:.3}, {:.3}, {:.3}, {:.3}) and "

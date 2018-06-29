@@ -70,7 +70,7 @@ std::string Path::AsString() const {
     case LowPathType::Binary:
     default:
         // TODO(yuriks): Add assert
-        NGLOG_ERROR(Service_FS, "LowPathType cannot be converted to string!");
+        LOG_ERROR(Service_FS, "LowPathType cannot be converted to string!");
         return {};
     }
 }
@@ -86,7 +86,7 @@ std::u16string Path::AsU16Str() const {
     case LowPathType::Invalid:
     case LowPathType::Binary:
         // TODO(yuriks): Add assert
-        NGLOG_ERROR(Service_FS, "LowPathType cannot be converted to u16string!");
+        LOG_ERROR(Service_FS, "LowPathType cannot be converted to u16string!");
         return {};
     }
 
@@ -114,7 +114,7 @@ std::vector<u8> Path::AsBinary() const {
     case LowPathType::Invalid:
     default:
         // TODO(yuriks): Add assert
-        NGLOG_ERROR(Service_FS, "LowPathType cannot be converted to binary!");
+        LOG_ERROR(Service_FS, "LowPathType cannot be converted to binary!");
         return {};
     }
 }

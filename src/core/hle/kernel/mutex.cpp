@@ -63,7 +63,7 @@ ResultCode Mutex::Release(Thread* thread) {
     // We can only release the mutex if it's held by the calling thread.
     if (thread != holding_thread) {
         if (holding_thread) {
-            NGLOG_ERROR(
+            LOG_ERROR(
                 Kernel,
                 "Tried to release a mutex (owned by thread id {}) from a different thread id {}",
                 holding_thread->thread_id, thread->thread_id);

@@ -16,7 +16,7 @@ Kernel::SharedPtr<Kernel::Process> LaunchTitle(FS::MediaType media_type, u64 tit
     auto loader = Loader::GetLoader(path);
 
     if (!loader) {
-        NGLOG_WARNING(Service_NS, "Could not find .app for title 0x{:016x}", title_id);
+        LOG_WARNING(Service_NS, "Could not find .app for title 0x{:016x}", title_id);
         return nullptr;
     }
 
@@ -24,7 +24,7 @@ Kernel::SharedPtr<Kernel::Process> LaunchTitle(FS::MediaType media_type, u64 tit
     Loader::ResultStatus result = loader->Load(process);
 
     if (result != Loader::ResultStatus::Success) {
-        NGLOG_WARNING(Service_NS, "Error loading .app for title 0x{:016x}", title_id);
+        LOG_WARNING(Service_NS, "Error loading .app for title 0x{:016x}", title_id);
         return nullptr;
     }
 

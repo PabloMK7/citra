@@ -73,12 +73,12 @@ void File::Read(Kernel::HLERequestContext& ctx) {
     u64 offset = rp.Pop<u64>();
     u32 length = rp.Pop<u32>();
     auto& buffer = rp.PopMappedBuffer();
-    NGLOG_TRACE(Service_FS, "Read {}: offset=0x{:x} length=0x{:08X}", GetName(), offset, length);
+    LOG_TRACE(Service_FS, "Read {}: offset=0x{:x} length=0x{:08X}", GetName(), offset, length);
 
     const FileSessionSlot* file = GetSessionData(ctx.Session());
 
     if (file->subfile && length > file->size) {
-        NGLOG_WARNING(Service_FS, "Trying to read beyond the subfile size, truncating");
+        LOG_WARNING(Service_FS, "Trying to read beyond the subfile size, truncating");
         length = file->size;
     }
 
@@ -86,9 +86,9 @@ void File::Read(Kernel::HLERequestContext& ctx) {
     offset += file->offset;
 
     if (offset + length > backend->GetSize()) {
-        NGLOG_ERROR(Service_FS,
-                    "Reading from out of bounds offset=0x{:x} length=0x{:08X} file_size=0x{:x}",
-                    offset, length, backend->GetSize());
+        LOG_ERROR(Service_FS,
+                  "Reading from out of bounds offset=0x{:x} length=0x{:08X} file_size=0x{:x}",
+                  offset, length, backend->GetSize());
     }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
@@ -119,8 +119,8 @@ void File::Write(Kernel::HLERequestContext& ctx) {
     u32 length = rp.Pop<u32>();
     u32 flush = rp.Pop<u32>();
     auto& buffer = rp.PopMappedBuffer();
-    NGLOG_TRACE(Service_FS, "Write {}: offset=0x{:x} length={}, flush=0x{:x}", GetName(), offset,
-                length, flush);
+    LOG_TRACE(Service_FS, "Write {}: offset=0x{:x} length={}, flush=0x{:x}", GetName(), offset,
+              length, flush);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
 
@@ -181,8 +181,8 @@ void File::Close(Kernel::HLERequestContext& ctx) {
 
     // TODO(Subv): Only close the backend if this client is the only one left.
     if (connected_sessions.size() > 1)
-        NGLOG_WARNING(Service_FS, "Closing File backend but {} clients still connected",
-                      connected_sessions.size());
+        LOG_WARNING(Service_FS, "Closing File backend but {} clients still connected",
+                    connected_sessions.size());
 
     backend->Close();
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
@@ -226,7 +226,7 @@ void File::GetPriority(Kernel::HLERequestContext& ctx) {
 }
 
 void File::OpenLinkFile(Kernel::HLERequestContext& ctx) {
-    NGLOG_WARNING(Service_FS, "(STUBBED) File command OpenLinkFile {}", GetName());
+    LOG_WARNING(Service_FS, "(STUBBED) File command OpenLinkFile {}", GetName());
     using Kernel::ClientSession;
     using Kernel::ServerSession;
     using Kernel::SharedPtr;
@@ -327,7 +327,7 @@ void Directory::Read(Kernel::HLERequestContext& ctx) {
     u32 count = rp.Pop<u32>();
     auto& buffer = rp.PopMappedBuffer();
     std::vector<FileSys::Entry> entries(count);
-    NGLOG_TRACE(Service_FS, "Read {}: count={}", GetName(), count);
+    LOG_TRACE(Service_FS, "Read {}: count={}", GetName(), count);
     // Number of entries actually read
     u32 read = backend->Read(static_cast<u32>(entries.size()), entries.data());
     buffer.Write(entries.data(), 0, read * sizeof(FileSys::Entry));
@@ -340,7 +340,7 @@ void Directory::Read(Kernel::HLERequestContext& ctx) {
 
 void Directory::Close(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x0802, 0, 0);
-    NGLOG_TRACE(Service_FS, "Close {}", GetName());
+    LOG_TRACE(Service_FS, "Close {}", GetName());
     backend->Close();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
@@ -370,7 +370,7 @@ static ArchiveBackend* GetArchive(ArchiveHandle handle) {
 }
 
 ResultVal<ArchiveHandle> OpenArchive(ArchiveIdCode id_code, FileSys::Path& archive_path) {
-    NGLOG_TRACE(Service_FS, "Opening archive with id code 0x{:08X}", static_cast<u32>(id_code));
+    LOG_TRACE(Service_FS, "Opening archive with id code 0x{:08X}", static_cast<u32>(id_code));
 
     auto itr = id_code_map.find(id_code);
     if (itr == id_code_map.end()) {
@@ -404,8 +404,8 @@ ResultCode RegisterArchiveType(std::unique_ptr<FileSys::ArchiveFactory>&& factor
     ASSERT_MSG(inserted, "Tried to register more than one archive with same id code");
 
     auto& archive = result.first->second;
-    NGLOG_DEBUG(Service_FS, "Registered archive {} with id code 0x{:08X}", archive->GetName(),
-                static_cast<u32>(id_code));
+    LOG_DEBUG(Service_FS, "Registered archive {} with id code 0x{:08X}", archive->GetName(),
+              static_cast<u32>(id_code));
     return RESULT_SUCCESS;
 }
 
@@ -576,7 +576,7 @@ ResultCode DeleteExtSaveData(MediaType media_type, u32 high, u32 low) {
     } else if (media_type == MediaType::SDMC) {
         media_type_directory = FileUtil::GetUserPath(D_SDMC_IDX);
     } else {
-        NGLOG_ERROR(Service_FS, "Unsupported media type {}", static_cast<u32>(media_type));
+        LOG_ERROR(Service_FS, "Unsupported media type {}", static_cast<u32>(media_type));
         return ResultCode(-1); // TODO(Subv): Find the right error code
     }
 
@@ -623,14 +623,14 @@ void RegisterArchiveTypes() {
     if (sdmc_factory->Initialize())
         RegisterArchiveType(std::move(sdmc_factory), ArchiveIdCode::SDMC);
     else
-        NGLOG_ERROR(Service_FS, "Can't instantiate SDMC archive with path {}", sdmc_directory);
+        LOG_ERROR(Service_FS, "Can't instantiate SDMC archive with path {}", sdmc_directory);
 
     auto sdmcwo_factory = std::make_unique<FileSys::ArchiveFactory_SDMCWriteOnly>(sdmc_directory);
     if (sdmcwo_factory->Initialize())
         RegisterArchiveType(std::move(sdmcwo_factory), ArchiveIdCode::SDMCWriteOnly);
     else
-        NGLOG_ERROR(Service_FS, "Can't instantiate SDMCWriteOnly archive with path {}",
-                    sdmc_directory);
+        LOG_ERROR(Service_FS, "Can't instantiate SDMCWriteOnly archive with path {}",
+                  sdmc_directory);
 
     // Create the SaveData archive
     auto sd_savedata_source = std::make_shared<FileSys::ArchiveSource_SDSaveData>(sdmc_directory);
@@ -650,16 +650,16 @@ void RegisterArchiveTypes() {
     if (extsavedata_factory->Initialize())
         RegisterArchiveType(std::move(extsavedata_factory), ArchiveIdCode::ExtSaveData);
     else
-        NGLOG_ERROR(Service_FS, "Can't instantiate ExtSaveData archive with path {}",
-                    extsavedata_factory->GetMountPoint());
+        LOG_ERROR(Service_FS, "Can't instantiate ExtSaveData archive with path {}",
+                  extsavedata_factory->GetMountPoint());
 
     auto sharedextsavedata_factory =
         std::make_unique<FileSys::ArchiveFactory_ExtSaveData>(nand_directory, true);
     if (sharedextsavedata_factory->Initialize())
         RegisterArchiveType(std::move(sharedextsavedata_factory), ArchiveIdCode::SharedExtSaveData);
     else
-        NGLOG_ERROR(Service_FS, "Can't instantiate SharedExtSaveData archive with path {}",
-                    sharedextsavedata_factory->GetMountPoint());
+        LOG_ERROR(Service_FS, "Can't instantiate SharedExtSaveData archive with path {}",
+                  sharedextsavedata_factory->GetMountPoint());
 
     // Create the NCCH archive, basically a small variation of the RomFS archive
     auto savedatacheck_factory = std::make_unique<FileSys::ArchiveFactory_NCCH>();
@@ -676,9 +676,8 @@ void RegisterArchiveTypes() {
 void RegisterSelfNCCH(Loader::AppLoader& app_loader) {
     auto itr = id_code_map.find(ArchiveIdCode::SelfNCCH);
     if (itr == id_code_map.end()) {
-        NGLOG_ERROR(
-            Service_FS,
-            "Could not register a new NCCH because the SelfNCCH archive hasn't been created");
+        LOG_ERROR(Service_FS,
+                  "Could not register a new NCCH because the SelfNCCH archive hasn't been created");
         return;
     }
 

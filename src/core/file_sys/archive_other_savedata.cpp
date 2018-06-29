@@ -23,14 +23,14 @@ namespace {
 template <typename T>
 ResultVal<std::tuple<MediaType, u64>> ParsePath(const Path& path, T program_id_reader) {
     if (path.GetType() != LowPathType::Binary) {
-        NGLOG_ERROR(Service_FS, "Wrong path type {}", static_cast<int>(path.GetType()));
+        LOG_ERROR(Service_FS, "Wrong path type {}", static_cast<int>(path.GetType()));
         return ERROR_INVALID_PATH;
     }
 
     std::vector<u8> vec_data = path.AsBinary();
 
     if (vec_data.size() != 12) {
-        NGLOG_ERROR(Service_FS, "Wrong path length {}", vec_data.size());
+        LOG_ERROR(Service_FS, "Wrong path length {}", vec_data.size());
         return ERROR_INVALID_PATH;
     }
 
@@ -38,7 +38,7 @@ ResultVal<std::tuple<MediaType, u64>> ParsePath(const Path& path, T program_id_r
     auto media_type = static_cast<MediaType>(data[0]);
 
     if (media_type != MediaType::SDMC && media_type != MediaType::GameCard) {
-        NGLOG_ERROR(Service_FS, "Unsupported media type {}", static_cast<u32>(media_type));
+        LOG_ERROR(Service_FS, "Unsupported media type {}", static_cast<u32>(media_type));
 
         // Note: this is strange, but the error code was verified with a real 3DS
         return ERROR_UNSUPPORTED_OPEN_FLAGS;
@@ -70,7 +70,7 @@ ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_OtherSaveDataPermitted
     CASCADE_RESULT(std::tie(media_type, program_id), ParsePathPermitted(path));
 
     if (media_type == MediaType::GameCard) {
-        NGLOG_WARNING(Service_FS, "(stubbed) Unimplemented media type GameCard");
+        LOG_WARNING(Service_FS, "(stubbed) Unimplemented media type GameCard");
         return ERROR_GAMECARD_NOT_INSERTED;
     }
 
@@ -79,7 +79,7 @@ ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_OtherSaveDataPermitted
 
 ResultCode ArchiveFactory_OtherSaveDataPermitted::Format(
     const Path& path, const FileSys::ArchiveFormatInfo& format_info) {
-    NGLOG_ERROR(Service_FS, "Attempted to format a OtherSaveDataPermitted archive.");
+    LOG_ERROR(Service_FS, "Attempted to format a OtherSaveDataPermitted archive.");
     return ERROR_INVALID_PATH;
 }
 
@@ -90,7 +90,7 @@ ResultVal<ArchiveFormatInfo> ArchiveFactory_OtherSaveDataPermitted::GetFormatInf
     CASCADE_RESULT(std::tie(media_type, program_id), ParsePathPermitted(path));
 
     if (media_type == MediaType::GameCard) {
-        NGLOG_WARNING(Service_FS, "(stubbed) Unimplemented media type GameCard");
+        LOG_WARNING(Service_FS, "(stubbed) Unimplemented media type GameCard");
         return ERROR_GAMECARD_NOT_INSERTED;
     }
 
@@ -108,7 +108,7 @@ ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_OtherSaveDataGeneral::
     CASCADE_RESULT(std::tie(media_type, program_id), ParsePathGeneral(path));
 
     if (media_type == MediaType::GameCard) {
-        NGLOG_WARNING(Service_FS, "(stubbed) Unimplemented media type GameCard");
+        LOG_WARNING(Service_FS, "(stubbed) Unimplemented media type GameCard");
         return ERROR_GAMECARD_NOT_INSERTED;
     }
 
@@ -122,7 +122,7 @@ ResultCode ArchiveFactory_OtherSaveDataGeneral::Format(
     CASCADE_RESULT(std::tie(media_type, program_id), ParsePathGeneral(path));
 
     if (media_type == MediaType::GameCard) {
-        NGLOG_WARNING(Service_FS, "(stubbed) Unimplemented media type GameCard");
+        LOG_WARNING(Service_FS, "(stubbed) Unimplemented media type GameCard");
         return ERROR_GAMECARD_NOT_INSERTED;
     }
 
@@ -136,7 +136,7 @@ ResultVal<ArchiveFormatInfo> ArchiveFactory_OtherSaveDataGeneral::GetFormatInfo(
     CASCADE_RESULT(std::tie(media_type, program_id), ParsePathGeneral(path));
 
     if (media_type == MediaType::GameCard) {
-        NGLOG_WARNING(Service_FS, "(stubbed) Unimplemented media type GameCard");
+        LOG_WARNING(Service_FS, "(stubbed) Unimplemented media type GameCard");
         return ERROR_GAMECARD_NOT_INSERTED;
     }
 

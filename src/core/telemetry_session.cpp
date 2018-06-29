@@ -50,14 +50,14 @@ u64 GetTelemetryId() {
     if (FileUtil::Exists(filename)) {
         FileUtil::IOFile file(filename, "rb");
         if (!file.IsOpen()) {
-            NGLOG_ERROR(Core, "failed to open telemetry_id: {}", filename);
+            LOG_ERROR(Core, "failed to open telemetry_id: {}", filename);
             return {};
         }
         file.ReadBytes(&telemetry_id, sizeof(u64));
     } else {
         FileUtil::IOFile file(filename, "wb");
         if (!file.IsOpen()) {
-            NGLOG_ERROR(Core, "failed to open telemetry_id: {}", filename);
+            LOG_ERROR(Core, "failed to open telemetry_id: {}", filename);
             return {};
         }
         telemetry_id = GenerateTelemetryId();
@@ -73,7 +73,7 @@ u64 RegenerateTelemetryId() {
 
     FileUtil::IOFile file(filename, "wb");
     if (!file.IsOpen()) {
-        NGLOG_ERROR(Core, "failed to open telemetry_id: {}", filename);
+        LOG_ERROR(Core, "failed to open telemetry_id: {}", filename);
         return {};
     }
     file.WriteBytes(&new_telemetry_id, sizeof(u64));

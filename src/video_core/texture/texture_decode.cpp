@@ -206,7 +206,7 @@ Math::Vec4<u8> LookupTexelInTile(const u8* source, unsigned int x, unsigned int 
     }
 
     default:
-        NGLOG_ERROR(HW_GPU, "Unknown texture format: {:x}", (u32)info.format);
+        LOG_ERROR(HW_GPU, "Unknown texture format: {:x}", (u32)info.format);
         DEBUG_ASSERT(false);
         return {};
     }

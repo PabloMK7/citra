@@ -32,7 +32,7 @@ public:
     explicit SDLJoystick(int joystick_index)
         : joystick{SDL_JoystickOpen(joystick_index), SDL_JoystickClose} {
         if (!joystick) {
-            NGLOG_ERROR(Input, "failed to open joystick {}", joystick_index);
+            LOG_ERROR(Input, "failed to open joystick {}", joystick_index);
         }
     }
 
@@ -204,7 +204,7 @@ public:
                 trigger_if_greater = false;
             } else {
                 trigger_if_greater = true;
-                NGLOG_ERROR(Input, "Unknown direction {}", direction_name);
+                LOG_ERROR(Input, "Unknown direction {}", direction_name);
             }
             return std::make_unique<SDLAxisButton>(GetJoystick(joystick_index), axis, threshold,
                                                    trigger_if_greater);
@@ -235,7 +235,7 @@ public:
 
 void Init() {
     if (SDL_Init(SDL_INIT_JOYSTICK) < 0) {
-        NGLOG_CRITICAL(Input, "SDL_Init(SDL_INIT_JOYSTICK) failed with: {}", SDL_GetError());
+        LOG_CRITICAL(Input, "SDL_Init(SDL_INIT_JOYSTICK) failed with: {}", SDL_GetError());
     } else {
         using namespace Input;
         RegisterFactory<ButtonDevice>("sdl", std::make_shared<SDLButtonFactory>());

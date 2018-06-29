@@ -66,7 +66,7 @@ void MultiplayerState::Close() {
 }
 
 void MultiplayerState::OnNetworkStateChanged(const Network::RoomMember::State& state) {
-    NGLOG_DEBUG(Frontend, "Network State: {}", Network::GetStateStr(state));
+    LOG_DEBUG(Frontend, "Network State: {}", Network::GetStateStr(state));
     bool is_connected = false;
     switch (state) {
     case Network::RoomMember::State::LostConnection:
@@ -147,7 +147,7 @@ bool MultiplayerState::OnCloseRoom() {
         // if you are in a room, leave it
         if (auto member = Network::GetRoomMember().lock()) {
             member->Leave();
-            NGLOG_DEBUG(Frontend, "Left the room (as a client)");
+            LOG_DEBUG(Frontend, "Left the room (as a client)");
         }
 
         // if you are hosting a room, also stop hosting
@@ -156,7 +156,7 @@ bool MultiplayerState::OnCloseRoom() {
         }
         room->Destroy();
         announce_multiplayer_session->Stop();
-        NGLOG_DEBUG(Frontend, "Closed the room (as a server)");
+        LOG_DEBUG(Frontend, "Closed the room (as a server)");
     }
     return true;
 }

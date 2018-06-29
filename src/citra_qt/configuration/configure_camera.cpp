@@ -139,7 +139,7 @@ void ConfigureCamera::updateImageSourceUI() {
         }
         break;
     default:
-        NGLOG_ERROR(Service_CAM, "Unknown image source {}", image_source);
+        LOG_ERROR(Service_CAM, "Unknown image source {}", image_source);
     }
     ui->system_camera_label->setHidden(image_source != 2);
     ui->system_camera->setHidden(image_source != 2);
@@ -302,7 +302,7 @@ ConfigureCamera::CameraPosition ConfigureCamera::getCameraSelection() {
                                                               : CameraPosition::RearRight;
         }
     default:
-        NGLOG_ERROR(Frontend, "Unknown camera selection");
+        LOG_ERROR(Frontend, "Unknown camera selection");
         return CameraPosition::Front;
     }
 }

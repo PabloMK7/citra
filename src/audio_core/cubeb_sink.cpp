@@ -27,7 +27,7 @@ struct CubebSink::Impl {
 
 CubebSink::CubebSink() : impl(std::make_unique<Impl>()) {
     if (cubeb_init(&impl->ctx, "Citra", nullptr) != CUBEB_OK) {
-        NGLOG_CRITICAL(Audio_Sink, "cubeb_init failed");
+        LOG_CRITICAL(Audio_Sink, "cubeb_init failed");
         return;
     }
 
@@ -44,11 +44,11 @@ CubebSink::CubebSink() : impl(std::make_unique<Impl>()) {
 
     u32 minimum_latency = 0;
     if (cubeb_get_min_latency(impl->ctx, &params, &minimum_latency) != CUBEB_OK)
-        NGLOG_CRITICAL(Audio_Sink, "Error getting minimum latency");
+        LOG_CRITICAL(Audio_Sink, "Error getting minimum latency");
 
     cubeb_device_collection collection;
     if (cubeb_enumerate_devices(impl->ctx, CUBEB_DEVICE_TYPE_OUTPUT, &collection) != CUBEB_OK) {
-        NGLOG_WARNING(Audio_Sink, "Audio output device enumeration not supported");
+        LOG_WARNING(Audio_Sink, "Audio output device enumeration not supported");
     } else {
         if (collection.count >= 1 && Settings::values.audio_device_id != "auto" &&
             !Settings::values.audio_device_id.empty()) {
@@ -72,12 +72,12 @@ CubebSink::CubebSink() : impl(std::make_unique<Impl>()) {
     if (cubeb_stream_init(impl->ctx, &impl->stream, "Citra Audio Output", nullptr, nullptr,
                           output_device, &params, std::max(512u, minimum_latency),
                           &Impl::DataCallback, &Impl::StateCallback, impl.get()) != CUBEB_OK) {
-        NGLOG_CRITICAL(Audio_Sink, "Error initializing cubeb stream");
+        LOG_CRITICAL(Audio_Sink, "Error initializing cubeb stream");
         return;
     }
 
     if (cubeb_stream_start(impl->stream) != CUBEB_OK) {
-        NGLOG_CRITICAL(Audio_Sink, "Error starting cubeb stream");
+        LOG_CRITICAL(Audio_Sink, "Error starting cubeb stream");
         return;
     }
 }
@@ -87,7 +87,7 @@ CubebSink::~CubebSink() {
         return;
 
     if (cubeb_stream_stop(impl->stream) != CUBEB_OK) {
-        NGLOG_CRITICAL(Audio_Sink, "Error stopping cubeb stream");
+        LOG_CRITICAL(Audio_Sink, "Error stopping cubeb stream");
     }
 
     cubeb_stream_destroy(impl->stream);

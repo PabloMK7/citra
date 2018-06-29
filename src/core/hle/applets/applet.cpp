@@ -62,7 +62,7 @@ ResultCode Applet::Create(Service::APT::AppletId id,
         applets[id] = std::make_shared<Mint>(id, std::move(manager));
         break;
     default:
-        NGLOG_ERROR(Service_APT, "Could not create applet {}", static_cast<u32>(id));
+        LOG_ERROR(Service_APT, "Could not create applet {}", static_cast<u32>(id));
         // TODO(Subv): Find the right error code
         return ResultCode(ErrorDescription::NotFound, ErrorModule::Applet,
                           ErrorSummary::NotSupported, ErrorLevel::Permanent);
@@ -114,7 +114,7 @@ void Applet::SendParameter(const Service::APT::MessageParameter& parameter) {
     if (auto locked = manager.lock()) {
         locked->CancelAndSendParameter(parameter);
     } else {
-        NGLOG_ERROR(Service_APT, "called after destructing applet manager");
+        LOG_ERROR(Service_APT, "called after destructing applet manager");
     }
 }
 
