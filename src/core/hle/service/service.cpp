@@ -261,7 +261,7 @@ void Init(std::shared_ptr<SM::ServiceManager>& sm) {
     AddService(new HTTP::HTTP_C);
     AddService(new PM::PM_APP);
     AddService(new SOC::SOC_U);
-    AddService(new SSL::SSL_C);
+    SSL::InstallInterfaces(*sm);
     Y2R::InstallInterfaces(*sm);
 
     NGLOG_DEBUG(Service, "initialized OK");
