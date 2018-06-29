@@ -43,7 +43,7 @@
 #include "core/hle/service/nim/nim.h"
 #include "core/hle/service/ns/ns.h"
 #include "core/hle/service/nwm/nwm.h"
-#include "core/hle/service/pm_app.h"
+#include "core/hle/service/pm/pm.h"
 #include "core/hle/service/ptm/ptm.h"
 #include "core/hle/service/pxi/pxi.h"
 #include "core/hle/service/qtm/qtm.h"
@@ -259,7 +259,7 @@ void Init(std::shared_ptr<SM::ServiceManager>& sm) {
     AddService(new CSND::CSND_SND);
     AddService(new DSP_DSP::Interface);
     AddService(new HTTP::HTTP_C);
-    AddService(new PM::PM_APP);
+    PM::InstallInterfaces(*sm);
     AddService(new SOC::SOC_U);
     SSL::InstallInterfaces(*sm);
     Y2R::InstallInterfaces(*sm);

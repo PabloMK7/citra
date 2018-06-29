@@ -1,4 +1,4 @@
-// Copyright 2014 Citra Emulator Project
+// Copyright 2018 Citra Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -9,14 +9,8 @@
 namespace Service {
 namespace PM {
 
-class PM_APP final : public Interface {
-public:
-    PM_APP();
-
-    std::string GetPortName() const override {
-        return "pm:app";
-    }
-};
+/// Initializes the PM services.
+void InstallInterfaces(SM::ServiceManager& service_manager);
 
 } // namespace PM
 } // namespace Service
