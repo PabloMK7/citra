@@ -9,13 +9,10 @@
 namespace Service {
 namespace DLP {
 
-class DLP_FKCL_Interface final : public Interface {
+class DLP_FKCL final : public ServiceFramework<DLP_FKCL> {
 public:
-    DLP_FKCL_Interface();
-
-    std::string GetPortName() const override {
-        return "dlp:FKCL";
-    }
+    DLP_FKCL();
+    ~DLP_FKCL() = default;
 };
 
 } // namespace DLP

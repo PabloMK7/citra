@@ -4,14 +4,13 @@
 
 #pragma once
 
+#include "core/hle/service/service.h"
+
 namespace Service {
 namespace DLP {
 
 /// Initializes the DLP services.
-void Init();
-
-/// Shuts down the DLP services.
-void Shutdown();
+void InstallInterfaces(SM::ServiceManager& service_manager);
 
 } // namespace DLP
 } // namespace Service
