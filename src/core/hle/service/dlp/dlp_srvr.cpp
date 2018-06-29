@@ -16,7 +16,7 @@ void DLP_SRVR::IsChild(Kernel::HLERequestContext& ctx) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
-    rb.PushRaw(0);
+    rb.Push(false);
 
     NGLOG_WARNING(Service_DLP, "(STUBBED) called");
 }
