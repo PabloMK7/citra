@@ -76,7 +76,7 @@ Loader::ResultStatus TitleMetadata::Load(const std::vector<u8> file_data, size_t
         body_start + sizeof(Body) + tmd_body.content_count * sizeof(ContentChunk);
     if (total_size < expected_size) {
         LOG_ERROR(Service_FS, "Malformed TMD, expected size 0x{:x}, got 0x{:x}!", expected_size,
-                    total_size);
+                  total_size);
         return Loader::ResultStatus::ErrorInvalidFormat;
     }
 
@@ -218,8 +218,8 @@ void TitleMetadata::Print() const {
             break;
 
         LOG_DEBUG(Service_FS, "    Index {:04X}, Command Count {:04X}",
-                    static_cast<u32>(tmd_body.contentinfo[i].index),
-                    static_cast<u32>(tmd_body.contentinfo[i].command_count));
+                  static_cast<u32>(tmd_body.contentinfo[i].index),
+                  static_cast<u32>(tmd_body.contentinfo[i].command_count));
     }
 
     // For each content info, print their content chunk range
@@ -238,8 +238,8 @@ void TitleMetadata::Print() const {
 
             const ContentChunk& chunk = tmd_chunks[j];
             LOG_DEBUG(Service_FS, "    ID {:08X}, Index {:04X}, Type {:04x}, Size {:016X}",
-                        static_cast<u32>(chunk.id), static_cast<u32>(chunk.index),
-                        static_cast<u32>(chunk.type), static_cast<u64>(chunk.size));
+                      static_cast<u32>(chunk.id), static_cast<u32>(chunk.index),
+                      static_cast<u32>(chunk.type), static_cast<u64>(chunk.size));
         }
     }
 }

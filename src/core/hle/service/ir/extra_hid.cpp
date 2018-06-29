@@ -166,7 +166,7 @@ void ExtraHID::OnDisconnect() {
 void ExtraHID::HandleConfigureHIDPollingRequest(const std::vector<u8>& request) {
     if (request.size() != 3) {
         LOG_ERROR(Service_IR, "Wrong request size ({}): {}", request.size(),
-                    Common::ArrayToString(request.data(), request.size()));
+                  Common::ArrayToString(request.data(), request.size()));
         return;
     }
 
@@ -188,7 +188,7 @@ void ExtraHID::HandleReadCalibrationDataRequest(const std::vector<u8>& request_b
 
     if (request_buf.size() != sizeof(ReadCalibrationDataRequest)) {
         LOG_ERROR(Service_IR, "Wrong request size ({}): {}", request_buf.size(),
-                    Common::ArrayToString(request_buf.data(), request_buf.size()));
+                  Common::ArrayToString(request_buf.data(), request_buf.size()));
         return;
     }
 
@@ -200,7 +200,7 @@ void ExtraHID::HandleReadCalibrationDataRequest(const std::vector<u8>& request_b
 
     if (offset + size > calibration_data.size()) {
         LOG_ERROR(Service_IR, "Read beyond the end of calibration data! (offset={}, size={})",
-                    offset, size);
+                  offset, size);
         return;
     }
 
@@ -223,7 +223,7 @@ void ExtraHID::OnReceive(const std::vector<u8>& data) {
         break;
     default:
         LOG_ERROR(Service_IR, "Unknown request: {}",
-                    Common::ArrayToString(data.data(), data.size()));
+                  Common::ArrayToString(data.data(), data.size()));
         break;
     }
 }

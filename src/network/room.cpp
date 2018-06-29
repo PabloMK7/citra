@@ -409,10 +409,10 @@ void Room::RoomImpl::HandleWifiPacket(const ENetEvent* event) {
             enet_peer_send(member->peer, 0, enet_packet);
         } else {
             LOG_ERROR(Network,
-                        "Attempting to send to unknown MAC address: "
-                        "{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}",
-                        destination_address[0], destination_address[1], destination_address[2],
-                        destination_address[3], destination_address[4], destination_address[5]);
+                      "Attempting to send to unknown MAC address: "
+                      "{:02X}:{:02X}:{:02X}:{:02X}:{:02X}:{:02X}",
+                      destination_address[0], destination_address[1], destination_address[2],
+                      destination_address[3], destination_address[4], destination_address[5]);
             enet_packet_destroy(enet_packet);
         }
     }

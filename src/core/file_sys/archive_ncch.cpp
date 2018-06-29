@@ -107,7 +107,7 @@ ResultVal<std::unique_ptr<FileBackend>> NCCHArchive::OpenFile(const Path& path,
         u32 low = static_cast<u32>(title_id & 0xFFFFFFFF);
 
         LOG_DEBUG(Service_FS, "Full Path: {}. Category: 0x{:X}. Path: 0x{:X}.", path.DebugStr(),
-                    high, low);
+                  high, low);
 
         std::string archive_name;
         if (high == shared_data_archive) {
@@ -122,7 +122,7 @@ ResultVal<std::unique_ptr<FileBackend>> NCCHArchive::OpenFile(const Path& path,
 
         if (!archive_name.empty()) {
             LOG_ERROR(Service_FS, "Failed to get a handle for shared data archive: {}. ",
-                        archive_name);
+                      archive_name);
             Core::System::GetInstance().SetStatus(Core::System::ResultStatus::ErrorSystemFiles,
                                                   archive_name.c_str());
         }
@@ -140,22 +140,21 @@ ResultCode NCCHArchive::DeleteFile(const Path& path) const {
 }
 
 ResultCode NCCHArchive::RenameFile(const Path& src_path, const Path& dest_path) const {
-    LOG_CRITICAL(Service_FS, "Attempted to rename a file within an NCCH archive ({}).",
-                   GetName());
+    LOG_CRITICAL(Service_FS, "Attempted to rename a file within an NCCH archive ({}).", GetName());
     // TODO(wwylele): Use correct error code
     return ResultCode(-1);
 }
 
 ResultCode NCCHArchive::DeleteDirectory(const Path& path) const {
     LOG_CRITICAL(Service_FS, "Attempted to delete a directory from an NCCH archive ({}).",
-                   GetName());
+                 GetName());
     // TODO(wwylele): Use correct error code
     return ResultCode(-1);
 }
 
 ResultCode NCCHArchive::DeleteDirectoryRecursively(const Path& path) const {
     LOG_CRITICAL(Service_FS, "Attempted to delete a directory from an NCCH archive ({}).",
-                   GetName());
+                 GetName());
     // TODO(wwylele): Use correct error code
     return ResultCode(-1);
 }
@@ -168,22 +167,20 @@ ResultCode NCCHArchive::CreateFile(const Path& path, u64 size) const {
 }
 
 ResultCode NCCHArchive::CreateDirectory(const Path& path) const {
-    LOG_CRITICAL(Service_FS, "Attempted to create a directory in an NCCH archive ({}).",
-                   GetName());
+    LOG_CRITICAL(Service_FS, "Attempted to create a directory in an NCCH archive ({}).", GetName());
     // TODO(wwylele): Use correct error code
     return ResultCode(-1);
 }
 
 ResultCode NCCHArchive::RenameDirectory(const Path& src_path, const Path& dest_path) const {
-    LOG_CRITICAL(Service_FS, "Attempted to rename a file within an NCCH archive ({}).",
-                   GetName());
+    LOG_CRITICAL(Service_FS, "Attempted to rename a file within an NCCH archive ({}).", GetName());
     // TODO(wwylele): Use correct error code
     return ResultCode(-1);
 }
 
 ResultVal<std::unique_ptr<DirectoryBackend>> NCCHArchive::OpenDirectory(const Path& path) const {
     LOG_CRITICAL(Service_FS, "Attempted to open a directory within an NCCH archive ({}).",
-                   GetName().c_str());
+                 GetName().c_str());
     // TODO(shinyquagsire23): Use correct error code
     return ResultCode(-1);
 }

@@ -67,7 +67,7 @@ static struct vfp_single vfp_single_default_qnan = {
 
 static void vfp_single_dump(const char* str, struct vfp_single* s) {
     LOG_TRACE(Core_ARM11, "{}: sign={} exponent={} significand={:08x}", str, s->sign != 0,
-                s->exponent, s->significand);
+              s->exponent, s->significand);
 }
 
 static void vfp_single_normalise_denormal(struct vfp_single* vs) {
@@ -1234,7 +1234,7 @@ u32 vfp_single_cpdo(ARMul_State* state, u32 inst, u32 fpscr) {
 
     if (!fop->fn) {
         LOG_CRITICAL(Core_ARM11, "could not find single op {}, inst=0x{:x}@0x{:x}",
-                       FEXT_TO_IDX(inst), inst, state->Reg[15]);
+                     FEXT_TO_IDX(inst), inst, state->Reg[15]);
         Crash();
         goto invalid;
     }
@@ -1246,11 +1246,11 @@ u32 vfp_single_cpdo(ARMul_State* state, u32 inst, u32 fpscr) {
 
         type = (fop->flags & OP_DD) ? 'd' : 's';
         if (op == FOP_EXT)
-            LOG_TRACE(Core_ARM11, "itr{} ({}{}) = op[{}] (s{}={:08x})",
-                        vecitr >> FPSCR_LENGTH_BIT, type, dest, sn, sm, m);
+            LOG_TRACE(Core_ARM11, "itr{} ({}{}) = op[{}] (s{}={:08x})", vecitr >> FPSCR_LENGTH_BIT,
+                      type, dest, sn, sm, m);
         else
             LOG_TRACE(Core_ARM11, "itr{} ({}{}) = (s{}) op[{}] (s{}={:08x})",
-                        vecitr >> FPSCR_LENGTH_BIT, type, dest, sn, FOP_TO_IDX(op), sm, m);
+                      vecitr >> FPSCR_LENGTH_BIT, type, dest, sn, FOP_TO_IDX(op), sm, m);
 
         except = fop->fn(state, dest, sn, m, fpscr);
         LOG_TRACE(Core_ARM11, "itr{}: exceptions={:08x}", vecitr >> FPSCR_LENGTH_BIT, except);

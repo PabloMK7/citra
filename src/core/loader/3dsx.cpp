@@ -173,7 +173,7 @@ static THREEDSX_Error Load3DSXFile(FileUtil::IOFile& file, u32 base_addr,
                      current_inprogress < remaining && pos < end_pos; current_inprogress++) {
                     const auto& table = reloc_table[current_inprogress];
                     LOG_TRACE(Loader, "(t={},skip={},patch={})", current_segment_reloc_table,
-                                static_cast<u32>(table.skip), static_cast<u32>(table.patch));
+                              static_cast<u32>(table.skip), static_cast<u32>(table.patch));
                     pos += table.skip;
                     s32 num_patches = table.patch;
                     while (0 < num_patches && pos < end_pos) {
@@ -183,7 +183,7 @@ static THREEDSX_Error Load3DSXFile(FileUtil::IOFile& file, u32 base_addr,
                         u32 sub_type = orig_data >> (32 - 4);
                         u32 addr = TranslateAddr(orig_data & ~0xF0000000, &loadinfo, offsets);
                         LOG_TRACE(Loader, "Patching {:08X} <-- rel({:08X},{}) ({:08X})", in_addr,
-                                    addr, current_segment_reloc_table, *pos);
+                                  addr, current_segment_reloc_table, *pos);
                         switch (current_segment_reloc_table) {
                         case 0: {
                             if (sub_type != 0)
@@ -237,7 +237,7 @@ static THREEDSX_Error Load3DSXFile(FileUtil::IOFile& file, u32 base_addr,
     LOG_DEBUG(Loader, "code size:   {:#X}", loadinfo.seg_sizes[0]);
     LOG_DEBUG(Loader, "rodata size: {:#X}", loadinfo.seg_sizes[1]);
     LOG_DEBUG(Loader, "data size:   {:#X} (including {:#X} of bss)", loadinfo.seg_sizes[2],
-                hdr.bss_size);
+              hdr.bss_size);
 
     *out_codeset = code_set;
     return ERROR_NONE;

@@ -160,10 +160,9 @@ Loader::ResultStatus NCCHContainer::Load() {
                 exheader_header.arm11_system_local_caps.resource_limit_category;
 
             LOG_DEBUG(Service_FS, "Name:                        {}",
-                        exheader_header.codeset_info.name);
+                      exheader_header.codeset_info.name);
             LOG_DEBUG(Service_FS, "Program ID:                  {:016X}", ncch_header.program_id);
-            LOG_DEBUG(Service_FS, "Code compressed:             {}",
-                        is_compressed ? "yes" : "no");
+            LOG_DEBUG(Service_FS, "Code compressed:             {}", is_compressed ? "yes" : "no");
             LOG_DEBUG(Service_FS, "Entry point:                 0x{:08X}", entry_point);
             LOG_DEBUG(Service_FS, "Code size:                   0x{:08X}", code_size);
             LOG_DEBUG(Service_FS, "Stack size:                  0x{:08X}", stack_size);
@@ -172,11 +171,11 @@ Loader::ResultStatus NCCHContainer::Load() {
             LOG_DEBUG(Service_FS, "Thread priority:             0x{:X}", priority);
             LOG_DEBUG(Service_FS, "Resource limit category:     {}", resource_limit_category);
             LOG_DEBUG(Service_FS, "System Mode:                 {}",
-                        static_cast<int>(exheader_header.arm11_system_local_caps.system_mode));
+                      static_cast<int>(exheader_header.arm11_system_local_caps.system_mode));
 
             if (exheader_header.system_info.jump_id != ncch_header.program_id) {
                 LOG_ERROR(Service_FS,
-                            "ExHeader Program ID mismatch: the ROM is probably encrypted.");
+                          "ExHeader Program ID mismatch: the ROM is probably encrypted.");
                 return Loader::ResultStatus::ErrorEncrypted;
             }
 
@@ -240,8 +239,8 @@ Loader::ResultStatus NCCHContainer::LoadOverrides() {
 
     if (is_tainted)
         LOG_WARNING(Service_FS,
-                      "Loaded NCCH {} is tainted, application behavior may not be as expected!",
-                      filepath);
+                    "Loaded NCCH {} is tainted, application behavior may not be as expected!",
+                    filepath);
 
     return Loader::ResultStatus::Success;
 }
@@ -287,8 +286,8 @@ Loader::ResultStatus NCCHContainer::LoadSectionExeFS(const char* name, std::vect
 
         // Load the specified section...
         if (strcmp(section.name, name) == 0) {
-            LOG_DEBUG(Service_FS, "{} - offset: 0x{:08X}, size: 0x{:08X}, name: {}",
-                        section_number, section.offset, section.size, section.name);
+            LOG_DEBUG(Service_FS, "{} - offset: 0x{:08X}, size: 0x{:08X}, name: {}", section_number,
+                      section.offset, section.size, section.name);
 
             s64 section_offset =
                 (section.offset + exefs_offset + sizeof(ExeFs_Header) + ncch_offset);

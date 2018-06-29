@@ -429,7 +429,7 @@ u32 ARMul_State::ReadCP15Register(u32 crn, u32 opcode_1, u32 crm, u32 opcode_2) 
     }
 
     LOG_ERROR(Core_ARM11, "MRC CRn={}, CRm={}, OP1={} OP2={} is not implemented. Returning zero.",
-                crn, crm, opcode_1, opcode_2);
+              crn, crm, opcode_1, opcode_2);
     return 0;
 }
 

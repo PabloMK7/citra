@@ -37,10 +37,9 @@ void VertexLoader::Setup(const PipelineRegs& regs) {
         // TODO: What happens if a loader overwrites a previous one's data?
         for (unsigned component = 0; component < loader_config.component_count; ++component) {
             if (component >= 12) {
-                LOG_ERROR(
-                    HW_GPU,
-                    "Overflow in the vertex attribute loader {} trying to load component {}",
-                    loader, component);
+                LOG_ERROR(HW_GPU,
+                          "Overflow in the vertex attribute loader {} trying to load component {}",
+                          loader, component);
                 continue;
             }
 
@@ -138,12 +137,12 @@ void VertexLoader::LoadVertex(u32 base_address, int index, int vertex,
             }
 
             LOG_TRACE(HW_GPU,
-                        "Loaded {} components of attribute {:x} for vertex {:x} (index {:x}) from "
-                        "0x{:08x} + 0x{:08x} + 0x{:04x}: {} {} {} {}",
-                        vertex_attribute_elements[i], i, vertex, index, base_address,
-                        vertex_attribute_sources[i], vertex_attribute_strides[i] * vertex,
-                        input.attr[i][0].ToFloat32(), input.attr[i][1].ToFloat32(),
-                        input.attr[i][2].ToFloat32(), input.attr[i][3].ToFloat32());
+                      "Loaded {} components of attribute {:x} for vertex {:x} (index {:x}) from "
+                      "0x{:08x} + 0x{:08x} + 0x{:04x}: {} {} {} {}",
+                      vertex_attribute_elements[i], i, vertex, index, base_address,
+                      vertex_attribute_sources[i], vertex_attribute_strides[i] * vertex,
+                      input.attr[i][0].ToFloat32(), input.attr[i][1].ToFloat32(),
+                      input.attr[i][2].ToFloat32(), input.attr[i][3].ToFloat32());
         } else if (vertex_attribute_is_default[i]) {
             // Load the default attribute if we're configured to do so
             input.attr[i] = g_state.input_default_attributes.attr[i];

@@ -103,15 +103,13 @@ void SRV::GetServiceHandle(Kernel::HLERequestContext& ctx) {
     if (client_port.Failed()) {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(client_port.Code());
-        LOG_ERROR(Service_SRV, "called service={} -> error 0x{:08X}", name,
-                    client_port.Code().raw);
+        LOG_ERROR(Service_SRV, "called service={} -> error 0x{:08X}", name, client_port.Code().raw);
         return;
     }
 
     auto session = client_port.Unwrap()->Connect();
     if (session.Succeeded()) {
-        LOG_DEBUG(Service_SRV, "called service={} -> session={}", name,
-                    (*session)->GetObjectId());
+        LOG_DEBUG(Service_SRV, "called service={} -> session={}", name, (*session)->GetObjectId());
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
         rb.Push(session.Code());
         rb.PushMoveObjects(std::move(session).Unwrap());
@@ -179,8 +177,8 @@ void SRV::PublishToSubscriber(Kernel::HLERequestContext& ctx) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
-    LOG_WARNING(Service_SRV, "(STUBBED) called, notification_id=0x{:X}, flags={}",
-                  notification_id, flags);
+    LOG_WARNING(Service_SRV, "(STUBBED) called, notification_id=0x{:X}, flags={}", notification_id,
+                flags);
 }
 
 void SRV::RegisterService(Kernel::HLERequestContext& ctx) {

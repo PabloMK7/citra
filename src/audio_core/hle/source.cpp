@@ -82,7 +82,7 @@ void Source::ParseConfig(SourceConfiguration::Configuration& config,
 
         if (state.rate_multiplier <= 0) {
             LOG_ERROR(Audio_DSP, "Was given an invalid rate multiplier: source_id={} rate={}",
-                        source_id, state.rate_multiplier);
+                      source_id, state.rate_multiplier);
             state.rate_multiplier = 1.0f;
             // Note: Actual firmware starts producing garbage if this occurs.
         }
@@ -122,7 +122,7 @@ void Source::ParseConfig(SourceConfiguration::Configuration& config,
         state.filters.Enable(config.simple_filter_enabled.ToBool(),
                              config.biquad_filter_enabled.ToBool());
         LOG_TRACE(Audio_DSP, "source_id={} enable_simple={} enable_biquad={}", source_id,
-                    config.simple_filter_enabled.Value(), config.biquad_filter_enabled.Value());
+                  config.simple_filter_enabled.Value(), config.biquad_filter_enabled.Value());
     }
 
     if (config.simple_filter_dirty) {
@@ -141,21 +141,21 @@ void Source::ParseConfig(SourceConfiguration::Configuration& config,
         config.interpolation_dirty.Assign(0);
         state.interpolation_mode = config.interpolation_mode;
         LOG_TRACE(Audio_DSP, "source_id={} interpolation_mode={}", source_id,
-                    static_cast<size_t>(state.interpolation_mode));
+                  static_cast<size_t>(state.interpolation_mode));
     }
 
     if (config.format_dirty || config.embedded_buffer_dirty) {
         config.format_dirty.Assign(0);
         state.format = config.format;
         LOG_TRACE(Audio_DSP, "source_id={} format={}", source_id,
-                    static_cast<size_t>(state.format));
+                  static_cast<size_t>(state.format));
     }
 
     if (config.mono_or_stereo_dirty || config.embedded_buffer_dirty) {
         config.mono_or_stereo_dirty.Assign(0);
         state.mono_or_stereo = config.mono_or_stereo;
         LOG_TRACE(Audio_DSP, "source_id={} mono_or_stereo={}", source_id,
-                    static_cast<size_t>(state.mono_or_stereo));
+                  static_cast<size_t>(state.mono_or_stereo));
     }
 
     u32_dsp play_position = {};
@@ -183,14 +183,14 @@ void Source::ParseConfig(SourceConfiguration::Configuration& config,
             false,
         });
         LOG_TRACE(Audio_DSP, "enqueuing embedded addr={:#010x} len={} id={} start={}",
-                    config.physical_address, config.length, config.buffer_id,
-                    static_cast<u32>(config.play_position));
+                  config.physical_address, config.length, config.buffer_id,
+                  static_cast<u32>(config.play_position));
     }
 
     if (config.loop_related_dirty && config.loop_related != 0) {
         config.loop_related_dirty.Assign(0);
         LOG_WARNING(Audio_DSP, "Unhandled complex loop with loop_related={:#010x}",
-                      static_cast<u32>(config.loop_related));
+                    static_cast<u32>(config.loop_related));
     }
 
     if (config.buffer_queue_dirty) {
@@ -213,7 +213,7 @@ void Source::ParseConfig(SourceConfiguration::Configuration& config,
                     false,
                 });
                 LOG_TRACE(Audio_DSP, "enqueuing queued {} addr={:#010x} len={} id={}", i,
-                            b.physical_address, b.length, b.buffer_id);
+                          b.physical_address, b.length, b.buffer_id);
             }
         }
         config.buffers_dirty = 0;
@@ -305,8 +305,8 @@ bool Source::DequeueBuffer() {
         }
     } else {
         LOG_WARNING(Audio_DSP,
-                      "source_id={} buffer_id={} length={}: Invalid physical address {:#010x}",
-                      source_id, buf.buffer_id, buf.length, buf.physical_address);
+                    "source_id={} buffer_id={} length={}: Invalid physical address {:#010x}",
+                    source_id, buf.buffer_id, buf.length, buf.physical_address);
         state.current_buffer.clear();
         return true;
     }
@@ -323,7 +323,7 @@ bool Source::DequeueBuffer() {
     }
 
     LOG_TRACE(Audio_DSP, "source_id={} buffer_id={} from_queue={} current_buffer.size()={}",
-                source_id, buf.buffer_id, buf.from_queue, state.current_buffer.size());
+              source_id, buf.buffer_id, buf.from_queue, state.current_buffer.size());
     return true;
 }
 

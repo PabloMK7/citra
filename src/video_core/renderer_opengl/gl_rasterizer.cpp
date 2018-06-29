@@ -43,9 +43,8 @@ RasterizerOpenGL::RasterizerOpenGL()
     allow_shadow = GLAD_GL_ARB_shader_image_load_store && GLAD_GL_ARB_shader_image_size &&
                    GLAD_GL_ARB_framebuffer_no_attachments;
     if (!allow_shadow) {
-        LOG_WARNING(
-            Render_OpenGL,
-            "Shadow might not be able to render because of unsupported OpenGL extensions.");
+        LOG_WARNING(Render_OpenGL,
+                    "Shadow might not be able to render because of unsupported OpenGL extensions.");
     }
 
     // Clipping plane 0 is always enabled for PICA fixed clip plane z <= 0
@@ -1601,7 +1600,7 @@ void RasterizerOpenGL::SyncCullMode() {
 
     default:
         LOG_CRITICAL(Render_OpenGL, "Unknown cull mode {}",
-                       static_cast<u32>(regs.rasterizer.cull_mode.Value()));
+                     static_cast<u32>(regs.rasterizer.cull_mode.Value()));
         UNIMPLEMENTED();
         break;
     }

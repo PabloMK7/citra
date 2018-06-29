@@ -183,8 +183,7 @@ private:
 
 /// Wraps the payload into packet and puts it to the receive buffer
 void IR_USER::PutToReceive(const std::vector<u8>& payload) {
-    LOG_TRACE(Service_IR, "called, data={}",
-                Common::ArrayToString(payload.data(), payload.size()));
+    LOG_TRACE(Service_IR, "called, data={}", Common::ArrayToString(payload.data(), payload.size()));
     size_t size = payload.size();
 
     std::vector<u8> packet;
@@ -252,11 +251,11 @@ void IR_USER::InitializeIrNopShared(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
 
     LOG_INFO(Service_IR,
-               "called, shared_buff_size={}, recv_buff_size={}, "
-               "recv_buff_packet_count={}, send_buff_size={}, "
-               "send_buff_packet_count={}, baud_rate={}",
-               shared_buff_size, recv_buff_size, recv_buff_packet_count, send_buff_size,
-               send_buff_packet_count, baud_rate);
+             "called, shared_buff_size={}, recv_buff_size={}, "
+             "recv_buff_packet_count={}, send_buff_size={}, "
+             "send_buff_packet_count={}, baud_rate={}",
+             shared_buff_size, recv_buff_size, recv_buff_packet_count, send_buff_size,
+             send_buff_packet_count, baud_rate);
 }
 
 void IR_USER::RequireConnection(Kernel::HLERequestContext& ctx) {

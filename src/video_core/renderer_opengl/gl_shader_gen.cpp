@@ -270,7 +270,7 @@ void PicaGSConfigCommonRaw::Init(const Pica::Regs& regs) {
                 semantic_maps[static_cast<size_t>(semantic)] = {attrib, comp};
             } else if (semantic != VSOutputAttributes::INVALID) {
                 LOG_ERROR(Render_OpenGL, "Invalid/unknown semantic id: {}",
-                            static_cast<u32>(semantic));
+                          static_cast<u32>(semantic));
             }
         }
     }
@@ -321,7 +321,7 @@ static std::string SampleTexture(const PicaFSConfig& config, unsigned texture_un
             return "shadowTextureCube(texcoord0, texcoord0_w)";
         default:
             LOG_CRITICAL(HW_GPU, "Unhandled texture type {:x}",
-                           static_cast<int>(state.texture0_type));
+                         static_cast<int>(state.texture0_type));
             UNIMPLEMENTED();
             return "texture(tex0, texcoord0)";
         }
@@ -535,7 +535,7 @@ static void AppendColorCombiner(std::string& out, TevStageConfig::Operation oper
     default:
         out += "vec3(0.0)";
         LOG_CRITICAL(Render_OpenGL, "Unknown color combiner operation: {}",
-                       static_cast<u32>(operation));
+                     static_cast<u32>(operation));
         break;
     }
     out += ", vec3(0.0), vec3(1.0))"; // Clamp result to 0.0, 1.0
@@ -576,7 +576,7 @@ static void AppendAlphaCombiner(std::string& out, TevStageConfig::Operation oper
     default:
         out += "0.0";
         LOG_CRITICAL(Render_OpenGL, "Unknown alpha combiner operation: {}",
-                       static_cast<u32>(operation));
+                     static_cast<u32>(operation));
         break;
     }
     out += ", 0.0, 1.0)";

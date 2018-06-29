@@ -231,7 +231,7 @@ static unsigned int DPO(RotateRightByRegister)(ARMul_State* cpu, unsigned int sh
 }
 
 #define DEBUG_MSG                                                                                  \
-    LOG_DEBUG(Core_ARM11, "inst is {:x}", inst);                                                 \
+    LOG_DEBUG(Core_ARM11, "inst is {:x}", inst);                                                   \
     CITRA_IGNORE_EXIT(0)
 
 #define LnSWoUB(s) glue(LnSWoUB, s)
@@ -829,9 +829,9 @@ static unsigned int InterpreterTranslateInstruction(const ARMul_State* cpu, cons
     int idx;
     if (DecodeARMInstruction(inst, &idx) == ARMDecodeStatus::FAILURE) {
         LOG_ERROR(Core_ARM11, "Decode failure.\tPC: [{:#010X}]\tInstruction: {:08X}", phys_addr,
-                    inst);
+                  inst);
         LOG_ERROR(Core_ARM11, "cpsr={:#X}, cpu->TFlag={}, r15={:#010X}", cpu->Cpsr, cpu->TFlag,
-                    cpu->Reg[15]);
+                  cpu->Reg[15]);
         CITRA_IGNORE_EXIT(-1);
     }
     inst_base = arm_instruction_trans[idx](inst, idx);
@@ -2368,10 +2368,9 @@ MCRR_INST : {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         mcrr_inst* const inst_cream = (mcrr_inst*)inst_base->component;
 
-        LOG_ERROR(Core_ARM11,
-                    "MCRR executed | Coprocessor: {}, CRm {}, opc1: {}, Rt: {}, Rt2: {}",
-                    inst_cream->cp_num, inst_cream->crm, inst_cream->opcode_1, inst_cream->rt,
-                    inst_cream->rt2);
+        LOG_ERROR(Core_ARM11, "MCRR executed | Coprocessor: {}, CRm {}, opc1: {}, Rt: {}, Rt2: {}",
+                  inst_cream->cp_num, inst_cream->crm, inst_cream->opcode_1, inst_cream->rt,
+                  inst_cream->rt2);
     }
 
     cpu->Reg[15] += cpu->GetInstructionSize();
@@ -2452,10 +2451,9 @@ MRRC_INST : {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         mcrr_inst* const inst_cream = (mcrr_inst*)inst_base->component;
 
-        LOG_ERROR(Core_ARM11,
-                    "MRRC executed | Coprocessor: {}, CRm {}, opc1: {}, Rt: {}, Rt2: {}",
-                    inst_cream->cp_num, inst_cream->crm, inst_cream->opcode_1, inst_cream->rt,
-                    inst_cream->rt2);
+        LOG_ERROR(Core_ARM11, "MRRC executed | Coprocessor: {}, CRm {}, opc1: {}, Rt: {}, Rt2: {}",
+                  inst_cream->cp_num, inst_cream->crm, inst_cream->opcode_1, inst_cream->rt,
+                  inst_cream->rt2);
     }
 
     cpu->Reg[15] += cpu->GetInstructionSize();

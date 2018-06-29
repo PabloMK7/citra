@@ -65,7 +65,7 @@ static struct vfp_double vfp_double_default_qnan = {
 
 static void vfp_double_dump(const char* str, struct vfp_double* d) {
     LOG_TRACE(Core_ARM11, "VFP: {}: sign={} exponent={} significand={:016llx}", str, d->sign != 0,
-                d->exponent, d->significand);
+              d->exponent, d->significand);
 }
 
 static void vfp_double_normalise_denormal(struct vfp_double* vd) {
@@ -222,7 +222,7 @@ pack:
     {
         s64 d = vfp_double_pack(vd);
         LOG_TRACE(Core_ARM11, "VFP: {}: d(d{})={:016llx} exceptions={:08x}", func, dd, d,
-                    exceptions);
+                  exceptions);
         vfp_put_double(state, d, dd);
     }
     return exceptions;
@@ -390,8 +390,7 @@ static u32 vfp_compare(ARMul_State* state, int dd, int signal_on_qnan, s64 m, u3
     s64 d;
     u32 ret = 0;
 
-    LOG_TRACE(Core_ARM11, "In {}, state=0x{}, fpscr=0x{:x}", __FUNCTION__, fmt::ptr(state),
-                fpscr);
+    LOG_TRACE(Core_ARM11, "In {}, state=0x{}, fpscr=0x{:x}", __FUNCTION__, fmt::ptr(state), fpscr);
     if (vfp_double_packed_exponent(m) == 2047 && vfp_double_packed_mantissa(m)) {
         ret |= FPSCR_CFLAG | FPSCR_VFLAG;
         if (signal_on_qnan ||
@@ -1210,7 +1209,7 @@ u32 vfp_double_cpdo(ARMul_State* state, u32 inst, u32 fpscr) {
         veclen = fpscr & FPSCR_LENGTH_MASK;
 
     LOG_TRACE(Core_ARM11, "VFP: vecstride={} veclen={}", vecstride,
-                (veclen >> FPSCR_LENGTH_BIT) + 1);
+              (veclen >> FPSCR_LENGTH_BIT) + 1);
 
     if (!fop->fn) {
         LOG_TRACE(Core_ARM11, "VFP: could not find double op {}", FEXT_TO_IDX(inst));
@@ -1224,14 +1223,13 @@ u32 vfp_double_cpdo(ARMul_State* state, u32 inst, u32 fpscr) {
         type = (fop->flags & OP_SD) ? 's' : 'd';
         if (op == FOP_EXT)
             LOG_TRACE(Core_ARM11, "VFP: itr{} ({}{}) = op[{}] (d{})", vecitr >> FPSCR_LENGTH_BIT,
-                        type, dest, dn, dm);
+                      type, dest, dn, dm);
         else
             LOG_TRACE(Core_ARM11, "VFP: itr{} ({}{}) = (d{}) op[{}] (d{})",
-                        vecitr >> FPSCR_LENGTH_BIT, type, dest, dn, FOP_TO_IDX(op), dm);
+                      vecitr >> FPSCR_LENGTH_BIT, type, dest, dn, FOP_TO_IDX(op), dm);
 
         except = fop->fn(state, dest, dn, dm, fpscr);
-        LOG_TRACE(Core_ARM11, "VFP: itr{}: exceptions={:08x}", vecitr >> FPSCR_LENGTH_BIT,
-                    except);
+        LOG_TRACE(Core_ARM11, "VFP: itr{}: exceptions={:08x}", vecitr >> FPSCR_LENGTH_BIT, except);
 
         exceptions |= except & ~VFP_NAN_FLAG;
 

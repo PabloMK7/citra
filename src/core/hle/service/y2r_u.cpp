@@ -133,7 +133,7 @@ void Y2R_U::SetBlockAlignment(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
 
     LOG_DEBUG(Service_Y2R, "called block_alignment={}",
-                static_cast<u8>(conversion.block_alignment));
+              static_cast<u8>(conversion.block_alignment));
 }
 
 void Y2R_U::GetBlockAlignment(Kernel::HLERequestContext& ctx) {
@@ -144,7 +144,7 @@ void Y2R_U::GetBlockAlignment(Kernel::HLERequestContext& ctx) {
     rb.PushEnum(conversion.block_alignment);
 
     LOG_DEBUG(Service_Y2R, "called block_alignment={}",
-                static_cast<u8>(conversion.block_alignment));
+              static_cast<u8>(conversion.block_alignment));
 }
 
 void Y2R_U::SetSpacialDithering(Kernel::HLERequestContext& ctx) {
@@ -231,10 +231,10 @@ void Y2R_U::SetSendingY(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
 
     LOG_DEBUG(Service_Y2R,
-                "called image_size=0x{:08X}, transfer_unit={}, transfer_stride={}, "
-                "src_process_id={}",
-                conversion.src_Y.image_size, conversion.src_Y.transfer_unit, conversion.src_Y.gap,
-                process->process_id);
+              "called image_size=0x{:08X}, transfer_unit={}, transfer_stride={}, "
+              "src_process_id={}",
+              conversion.src_Y.image_size, conversion.src_Y.transfer_unit, conversion.src_Y.gap,
+              process->process_id);
 }
 
 void Y2R_U::SetSendingU(Kernel::HLERequestContext& ctx) {
@@ -250,10 +250,10 @@ void Y2R_U::SetSendingU(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
 
     LOG_DEBUG(Service_Y2R,
-                "called image_size=0x{:08X}, transfer_unit={}, transfer_stride={}, "
-                "src_process_id={}",
-                conversion.src_U.image_size, conversion.src_U.transfer_unit, conversion.src_U.gap,
-                process->process_id);
+              "called image_size=0x{:08X}, transfer_unit={}, transfer_stride={}, "
+              "src_process_id={}",
+              conversion.src_U.image_size, conversion.src_U.transfer_unit, conversion.src_U.gap,
+              process->process_id);
 }
 
 void Y2R_U::SetSendingV(Kernel::HLERequestContext& ctx) {
@@ -270,10 +270,10 @@ void Y2R_U::SetSendingV(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
 
     LOG_DEBUG(Service_Y2R,
-                "called image_size=0x{:08X}, transfer_unit={}, transfer_stride={}, "
-                "src_process_id={}",
-                conversion.src_V.image_size, conversion.src_V.transfer_unit, conversion.src_V.gap,
-                process->process_id);
+              "called image_size=0x{:08X}, transfer_unit={}, transfer_stride={}, "
+              "src_process_id={}",
+              conversion.src_V.image_size, conversion.src_V.transfer_unit, conversion.src_V.gap,
+              process->process_id);
 }
 
 void Y2R_U::SetSendingYUYV(Kernel::HLERequestContext& ctx) {
@@ -290,10 +290,10 @@ void Y2R_U::SetSendingYUYV(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
 
     LOG_DEBUG(Service_Y2R,
-                "called image_size=0x{:08X}, transfer_unit={}, transfer_stride={}, "
-                "src_process_id={}",
-                conversion.src_YUYV.image_size, conversion.src_YUYV.transfer_unit,
-                conversion.src_YUYV.gap, process->process_id);
+              "called image_size=0x{:08X}, transfer_unit={}, transfer_stride={}, "
+              "src_process_id={}",
+              conversion.src_YUYV.image_size, conversion.src_YUYV.transfer_unit,
+              conversion.src_YUYV.gap, process->process_id);
 }
 
 void Y2R_U::IsFinishedSendingYuv(Kernel::HLERequestContext& ctx) {
@@ -350,10 +350,10 @@ void Y2R_U::SetReceiving(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
 
     LOG_DEBUG(Service_Y2R,
-                "called image_size=0x{:08X}, transfer_unit={}, transfer_stride={}, "
-                "dst_process_id={}",
-                conversion.dst.image_size, conversion.dst.transfer_unit, conversion.dst.gap,
-                static_cast<u32>(dst_process->process_id));
+              "called image_size=0x{:08X}, transfer_unit={}, transfer_stride={}, "
+              "dst_process_id={}",
+              conversion.dst.image_size, conversion.dst.transfer_unit, conversion.dst.gap,
+              static_cast<u32>(dst_process->process_id));
 }
 
 void Y2R_U::IsFinishedReceiving(Kernel::HLERequestContext& ctx) {
@@ -415,9 +415,9 @@ void Y2R_U::SetCoefficient(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
 
     LOG_DEBUG(Service_Y2R, "called coefficients=[{:X}, {:X}, {:X}, {:X}, {:X}, {:X}, {:X}, {:X}]",
-                conversion.coefficients[0], conversion.coefficients[1], conversion.coefficients[2],
-                conversion.coefficients[3], conversion.coefficients[4], conversion.coefficients[5],
-                conversion.coefficients[6], conversion.coefficients[7]);
+              conversion.coefficients[0], conversion.coefficients[1], conversion.coefficients[2],
+              conversion.coefficients[3], conversion.coefficients[4], conversion.coefficients[5],
+              conversion.coefficients[6], conversion.coefficients[7]);
 }
 
 void Y2R_U::GetCoefficient(Kernel::HLERequestContext& ctx) {
@@ -568,12 +568,12 @@ cleanup:
     rb.Push(result);
 
     LOG_DEBUG(Service_Y2R,
-                "called input_format={} output_format={} rotation={} block_alignment={} "
-                "input_line_width={} input_lines={} standard_coefficient={} reserved={} alpha={:X}",
-                static_cast<u8>(params.input_format), static_cast<u8>(params.output_format),
-                static_cast<u8>(params.rotation), static_cast<u8>(params.block_alignment),
-                params.input_line_width, params.input_lines,
-                static_cast<u8>(params.standard_coefficient), params.padding, params.alpha);
+              "called input_format={} output_format={} rotation={} block_alignment={} "
+              "input_line_width={} input_lines={} standard_coefficient={} reserved={} alpha={:X}",
+              static_cast<u8>(params.input_format), static_cast<u8>(params.output_format),
+              static_cast<u8>(params.rotation), static_cast<u8>(params.block_alignment),
+              params.input_line_width, params.input_lines,
+              static_cast<u8>(params.standard_coefficient), params.padding, params.alpha);
 }
 
 void Y2R_U::PingProcess(Kernel::HLERequestContext& ctx) {

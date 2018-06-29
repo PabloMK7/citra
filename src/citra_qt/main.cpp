@@ -137,8 +137,8 @@ GMainWindow::GMainWindow() : config(new Config()), emu_thread(nullptr) {
     ConnectWidgetEvents();
 
     SetupUIStrings();
-    LOG_INFO(Frontend, "Citra Version: {} | {}-{}", Common::g_build_fullname,
-               Common::g_scm_branch, Common::g_scm_desc);
+    LOG_INFO(Frontend, "Citra Version: {} | {}-{}", Common::g_build_fullname, Common::g_scm_branch,
+             Common::g_scm_desc);
 
     show();
 

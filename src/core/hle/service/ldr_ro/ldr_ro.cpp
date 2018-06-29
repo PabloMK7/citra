@@ -58,9 +58,8 @@ void RO::Initialize(Kernel::HLERequestContext& ctx) {
     // All other service functions below have the same issue.
     auto process = rp.PopObject<Kernel::Process>();
 
-    LOG_DEBUG(Service_LDR,
-                "called, crs_buffer_ptr=0x{:08X}, crs_address=0x{:08X}, crs_size=0x{:X}",
-                crs_buffer_ptr, crs_address, crs_size);
+    LOG_DEBUG(Service_LDR, "called, crs_buffer_ptr=0x{:08X}, crs_address=0x{:08X}, crs_size=0x{:X}",
+              crs_buffer_ptr, crs_address, crs_size);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
 
@@ -167,7 +166,7 @@ void RO::LoadCRR(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
 
     LOG_WARNING(Service_LDR, "(STUBBED) called, crr_buffer_ptr=0x{:08X}, crr_size=0x{:08X}",
-                  crr_buffer_ptr, crr_size);
+                crr_buffer_ptr, crr_size);
 }
 
 void RO::UnloadCRR(Kernel::HLERequestContext& ctx) {
@@ -197,13 +196,13 @@ void RO::LoadCRO(Kernel::HLERequestContext& ctx, bool link_on_load_bug_fix) {
     auto process = rp.PopObject<Kernel::Process>();
 
     LOG_DEBUG(Service_LDR,
-                "called ({}), cro_buffer_ptr=0x{:08X}, cro_address=0x{:08X}, cro_size=0x{:X}, "
-                "data_segment_address=0x{:08X}, zero={}, data_segment_size=0x{:X}, "
-                "bss_segment_address=0x{:08X}, bss_segment_size=0x{:X}, auto_link={}, "
-                "fix_level={}, crr_address=0x{:08X}",
-                link_on_load_bug_fix ? "new" : "old", cro_buffer_ptr, cro_address, cro_size,
-                data_segment_address, zero, data_segment_size, bss_segment_address,
-                bss_segment_size, auto_link ? "true" : "false", fix_level, crr_address);
+              "called ({}), cro_buffer_ptr=0x{:08X}, cro_address=0x{:08X}, cro_size=0x{:X}, "
+              "data_segment_address=0x{:08X}, zero={}, data_segment_size=0x{:X}, "
+              "bss_segment_address=0x{:08X}, bss_segment_size=0x{:X}, auto_link={}, "
+              "fix_level={}, crr_address=0x{:08X}",
+              link_on_load_bug_fix ? "new" : "old", cro_buffer_ptr, cro_address, cro_size,
+              data_segment_address, zero, data_segment_size, bss_segment_address, bss_segment_size,
+              auto_link ? "true" : "false", fix_level, crr_address);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
 
@@ -373,7 +372,7 @@ void RO::LoadCRO(Kernel::HLERequestContext& ctx, bool link_on_load_bug_fix) {
     Core::CPU().InvalidateCacheRange(cro_address, cro_size);
 
     LOG_INFO(Service_LDR, "CRO \"{}\" loaded at 0x{:08X}, fixed_end=0x{:08X}", cro.ModuleName(),
-               cro_address, cro_address + fix_size);
+             cro_address, cro_address + fix_size);
 
     rb.Push(RESULT_SUCCESS, fix_size);
 }
@@ -386,7 +385,7 @@ void RO::UnloadCRO(Kernel::HLERequestContext& ctx) {
     auto process = rp.PopObject<Kernel::Process>();
 
     LOG_DEBUG(Service_LDR, "called, cro_address=0x{:08X}, zero={}, cro_buffer_ptr=0x{:08X}",
-                cro_address, zero, cro_buffer_ptr);
+              cro_address, zero, cro_buffer_ptr);
 
     CROHelper cro(cro_address);
 

@@ -147,11 +147,11 @@ static void LoadComponent(Service::Interface* self) {
     Memory::ReadBlock(buffer, component_data.data(), component_data.size());
 
     LOG_INFO(Service_DSP, "Firmware hash: {:#018x}",
-               Common::ComputeHash64(component_data.data(), component_data.size()));
+             Common::ComputeHash64(component_data.data(), component_data.size()));
     // Some versions of the firmware have the location of DSP structures listed here.
     if (size > 0x37C) {
         LOG_INFO(Service_DSP, "Structures hash: {:#018x}",
-                   Common::ComputeHash64(component_data.data() + 0x340, 60));
+                 Common::ComputeHash64(component_data.data() + 0x340, 60));
     }
     LOG_WARNING(
         Service_DSP,
@@ -198,8 +198,8 @@ static void FlushDataCache(Service::Interface* self) {
     cmd_buff[0] = IPC::MakeHeader(0x13, 1, 0);
     cmd_buff[1] = RESULT_SUCCESS.raw; // No error
 
-    LOG_TRACE(Service_DSP, "called address=0x{:08X}, size=0x{:X}, process=0x{:08X}", address,
-                size, process);
+    LOG_TRACE(Service_DSP, "called address=0x{:08X}, size=0x{:X}, process=0x{:08X}", address, size,
+              process);
 }
 
 /**
@@ -231,15 +231,15 @@ static void RegisterInterruptEvents(Service::Interface* self) {
 
         if (!evt) {
             LOG_INFO(Service_DSP, "Invalid event handle! type={}, pipe={}, event_handle=0x{:08X}",
-                       type_index, pipe_index, event_handle);
+                     type_index, pipe_index, event_handle);
             ASSERT(false); // TODO: This should really be handled at an IPC translation layer.
         }
 
         if (interrupt_events.HasTooManyEventsRegistered()) {
             LOG_INFO(Service_DSP,
-                       "Ran out of space to register interrupts (Attempted to register "
-                       "type={}, pipe={}, event_handle=0x{:08X})",
-                       type_index, pipe_index, event_handle);
+                     "Ran out of space to register interrupts (Attempted to register "
+                     "type={}, pipe={}, event_handle=0x{:08X})",
+                     type_index, pipe_index, event_handle);
             cmd_buff[1] = ResultCode(ErrorDescription::InvalidResultValue, ErrorModule::DSP,
                                      ErrorSummary::OutOfResource, ErrorLevel::Status)
                               .raw;
@@ -248,12 +248,12 @@ static void RegisterInterruptEvents(Service::Interface* self) {
 
         interrupt_events.Get(type, pipe) = evt;
         LOG_INFO(Service_DSP, "Registered type={}, pipe={}, event_handle=0x{:08X}", type_index,
-                   pipe_index, event_handle);
+                 pipe_index, event_handle);
         cmd_buff[1] = RESULT_SUCCESS.raw;
     } else {
         interrupt_events.Get(type, pipe) = nullptr;
         LOG_INFO(Service_DSP, "Unregistered interrupt={}, channel={}, event_handle=0x{:08X}",
-                   type_index, pipe_index, event_handle);
+                 type_index, pipe_index, event_handle);
         cmd_buff[1] = RESULT_SUCCESS.raw;
     }
 }
@@ -296,9 +296,9 @@ static void WriteProcessPipe(Service::Interface* self) {
 
     if (IPC::StaticBufferDesc(size, 1) != cmd_buff[3]) {
         LOG_ERROR(Service_DSP,
-                    "IPC static buffer descriptor failed validation (0x{:X}). pipe={}, "
-                    "size=0x{:X}, buffer=0x{:08X}",
-                    cmd_buff[3], pipe_index, size, buffer);
+                  "IPC static buffer descriptor failed validation (0x{:X}). pipe={}, "
+                  "size=0x{:X}, buffer=0x{:08X}",
+                  cmd_buff[3], pipe_index, size, buffer);
         cmd_buff[0] = IPC::MakeHeader(0, 1, 0);
         cmd_buff[1] = IPC::ERR_INVALID_BUFFER_DESCRIPTOR.raw;
         return;
@@ -454,7 +454,7 @@ static void GetPipeReadableSize(Service::Interface* self) {
     cmd_buff[2] = static_cast<u32>(Core::DSP().GetPipeReadableSize(pipe));
 
     LOG_DEBUG(Service_DSP, "pipe={}, unknown=0x{:08X}, return cmd_buff[2]=0x{:08X}", pipe_index,
-                unknown, cmd_buff[2]);
+              unknown, cmd_buff[2]);
 }
 
 /**

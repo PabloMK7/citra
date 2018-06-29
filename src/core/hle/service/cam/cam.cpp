@@ -87,7 +87,7 @@ void Module::CompletionEventCallBack(u64 port_id, int) {
         if (port.x1 <= port.x0 || port.y1 <= port.y0 || port.x1 > original_width ||
             port.y1 > original_height) {
             LOG_ERROR(Service_CAM, "Invalid trimming coordinates x0={}, y0={}, x1={}, y1={}",
-                        port.x0, port.y0, port.x1, port.y1);
+                      port.x0, port.y0, port.x1, port.y1);
             trim_width = 0;
             trim_height = 0;
         } else {
@@ -98,7 +98,7 @@ void Module::CompletionEventCallBack(u64 port_id, int) {
         u32 trim_size = (port.x1 - port.x0) * (port.y1 - port.y0) * 2;
         if (port.dest_size != trim_size) {
             LOG_ERROR(Service_CAM, "The destination size ({}) doesn't match the source ({})!",
-                        port.dest_size, trim_size);
+                      port.dest_size, trim_size);
         }
 
         const u32 src_offset = port.y0 * original_width + port.x0;
@@ -125,7 +125,7 @@ void Module::CompletionEventCallBack(u64 port_id, int) {
         std::size_t buffer_size = buffer.size() * sizeof(u16);
         if (port.dest_size != buffer_size) {
             LOG_ERROR(Service_CAM, "The destination size ({}) doesn't match the source ({})!",
-                        port.dest_size, buffer_size);
+                      port.dest_size, buffer_size);
         }
         Memory::WriteBlock(*port.dest_process, port.dest, buffer.data(),
                            std::min<size_t>(port.dest_size, buffer_size));
@@ -361,7 +361,7 @@ void Module::Interface::SetReceiving(Kernel::HLERequestContext& ctx) {
     }
 
     LOG_DEBUG(Service_CAM, "called, addr=0x{:X}, port_select={}, image_size={}, trans_unit={}",
-                dest, port_select.m_val, image_size, trans_unit);
+              dest, port_select.m_val, image_size, trans_unit);
 }
 
 void Module::Interface::IsFinishedReceiving(Kernel::HLERequestContext& ctx) {
@@ -402,7 +402,7 @@ void Module::Interface::SetTransferLines(Kernel::HLERequestContext& ctx) {
     }
 
     LOG_WARNING(Service_CAM, "(STUBBED) called, port_select={}, lines={}, width={}, height={}",
-                  port_select.m_val, transfer_lines, width, height);
+                port_select.m_val, transfer_lines, width, height);
 }
 
 void Module::Interface::GetMaxLines(Kernel::HLERequestContext& ctx) {
@@ -457,7 +457,7 @@ void Module::Interface::SetTransferBytes(Kernel::HLERequestContext& ctx) {
     }
 
     LOG_WARNING(Service_CAM, "(STUBBED)called, port_select={}, bytes={}, width={}, height={}",
-                  port_select.m_val, transfer_bytes, width, height);
+                port_select.m_val, transfer_bytes, width, height);
 }
 
 void Module::Interface::GetTransferBytes(Kernel::HLERequestContext& ctx) {
@@ -564,8 +564,8 @@ void Module::Interface::SetTrimmingParams(Kernel::HLERequestContext& ctx) {
         rb.Push(ERROR_INVALID_ENUM_VALUE);
     }
 
-    LOG_DEBUG(Service_CAM, "called, port_select={}, x0={}, y0={}, x1={}, y1={}",
-                port_select.m_val, x0, y0, x1, y1);
+    LOG_DEBUG(Service_CAM, "called, port_select={}, x0={}, y0={}, x1={}, y1={}", port_select.m_val,
+              x0, y0, x1, y1);
 }
 
 void Module::Interface::GetTrimmingParams(Kernel::HLERequestContext& ctx) {
@@ -612,7 +612,7 @@ void Module::Interface::SetTrimmingParamsCenter(Kernel::HLERequestContext& ctx) 
     }
 
     LOG_DEBUG(Service_CAM, "called, port_select={}, trim_w={}, trim_h={}, cam_w={}, cam_h={}",
-                port_select.m_val, trim_w, trim_h, cam_w, cam_h);
+              port_select.m_val, trim_w, trim_h, cam_w, cam_h);
 }
 
 void Module::Interface::Activate(Kernel::HLERequestContext& ctx) {
@@ -673,12 +673,12 @@ void Module::Interface::SwitchContext(Kernel::HLERequestContext& ctx) {
         rb.Push(RESULT_SUCCESS);
     } else {
         LOG_ERROR(Service_CAM, "invalid camera_select={}, context_select={}", camera_select.m_val,
-                    context_select.m_val);
+                  context_select.m_val);
         rb.Push(ERROR_INVALID_ENUM_VALUE);
     }
 
     LOG_DEBUG(Service_CAM, "called, camera_select={}, context_select={}", camera_select.m_val,
-                context_select.m_val);
+              context_select.m_val);
 }
 
 void Module::Interface::FlipImage(Kernel::HLERequestContext& ctx) {
@@ -700,12 +700,12 @@ void Module::Interface::FlipImage(Kernel::HLERequestContext& ctx) {
         rb.Push(RESULT_SUCCESS);
     } else {
         LOG_ERROR(Service_CAM, "invalid camera_select={}, context_select={}", camera_select.m_val,
-                    context_select.m_val);
+                  context_select.m_val);
         rb.Push(ERROR_INVALID_ENUM_VALUE);
     }
 
     LOG_DEBUG(Service_CAM, "called, camera_select={}, flip={}, context_select={}",
-                camera_select.m_val, static_cast<int>(flip), context_select.m_val);
+              camera_select.m_val, static_cast<int>(flip), context_select.m_val);
 }
 
 void Module::Interface::SetDetailSize(Kernel::HLERequestContext& ctx) {
@@ -733,15 +733,15 @@ void Module::Interface::SetDetailSize(Kernel::HLERequestContext& ctx) {
         rb.Push(RESULT_SUCCESS);
     } else {
         LOG_ERROR(Service_CAM, "invalid camera_select={}, context_select={}", camera_select.m_val,
-                    context_select.m_val);
+                  context_select.m_val);
         rb.Push(ERROR_INVALID_ENUM_VALUE);
     }
 
     LOG_DEBUG(Service_CAM,
-                "called, camera_select={}, width={}, height={}, crop_x0={}, crop_y0={}, "
-                "crop_x1={}, crop_y1={}, context_select={}",
-                camera_select.m_val, resolution.width, resolution.height, resolution.crop_x0,
-                resolution.crop_y0, resolution.crop_x1, resolution.crop_y1, context_select.m_val);
+              "called, camera_select={}, width={}, height={}, crop_x0={}, crop_y0={}, "
+              "crop_x1={}, crop_y1={}, context_select={}",
+              camera_select.m_val, resolution.width, resolution.height, resolution.crop_x0,
+              resolution.crop_y0, resolution.crop_x1, resolution.crop_y1, context_select.m_val);
 }
 
 void Module::Interface::SetSize(Kernel::HLERequestContext& ctx) {
@@ -763,12 +763,12 @@ void Module::Interface::SetSize(Kernel::HLERequestContext& ctx) {
         rb.Push(RESULT_SUCCESS);
     } else {
         LOG_ERROR(Service_CAM, "invalid camera_select={}, context_select={}", camera_select.m_val,
-                    context_select.m_val);
+                  context_select.m_val);
         rb.Push(ERROR_INVALID_ENUM_VALUE);
     }
 
     LOG_DEBUG(Service_CAM, "called, camera_select={}, size={}, context_select={}",
-                camera_select.m_val, size, context_select.m_val);
+              camera_select.m_val, size, context_select.m_val);
 }
 
 void Module::Interface::SetFrameRate(Kernel::HLERequestContext& ctx) {
@@ -789,7 +789,7 @@ void Module::Interface::SetFrameRate(Kernel::HLERequestContext& ctx) {
     }
 
     LOG_WARNING(Service_CAM, "(STUBBED) called, camera_select={}, frame_rate={}",
-                  camera_select.m_val, static_cast<int>(frame_rate));
+                camera_select.m_val, static_cast<int>(frame_rate));
 }
 
 void Module::Interface::SetEffect(Kernel::HLERequestContext& ctx) {
@@ -811,12 +811,12 @@ void Module::Interface::SetEffect(Kernel::HLERequestContext& ctx) {
         rb.Push(RESULT_SUCCESS);
     } else {
         LOG_ERROR(Service_CAM, "invalid camera_select={}, context_select={}", camera_select.m_val,
-                    context_select.m_val);
+                  context_select.m_val);
         rb.Push(ERROR_INVALID_ENUM_VALUE);
     }
 
     LOG_DEBUG(Service_CAM, "called, camera_select={}, effect={}, context_select={}",
-                camera_select.m_val, static_cast<int>(effect), context_select.m_val);
+              camera_select.m_val, static_cast<int>(effect), context_select.m_val);
 }
 
 void Module::Interface::SetOutputFormat(Kernel::HLERequestContext& ctx) {
@@ -838,12 +838,12 @@ void Module::Interface::SetOutputFormat(Kernel::HLERequestContext& ctx) {
         rb.Push(RESULT_SUCCESS);
     } else {
         LOG_ERROR(Service_CAM, "invalid camera_select={}, context_select={}", camera_select.m_val,
-                    context_select.m_val);
+                  context_select.m_val);
         rb.Push(ERROR_INVALID_ENUM_VALUE);
     }
 
     LOG_DEBUG(Service_CAM, "called, camera_select={}, format={}, context_select={}",
-                camera_select.m_val, static_cast<int>(format), context_select.m_val);
+              camera_select.m_val, static_cast<int>(format), context_select.m_val);
 }
 
 void Module::Interface::SynchronizeVsyncTiming(Kernel::HLERequestContext& ctx) {
@@ -855,7 +855,7 @@ void Module::Interface::SynchronizeVsyncTiming(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
 
     LOG_WARNING(Service_CAM, "(STUBBED) called, camera_select1={}, camera_select2={}",
-                  camera_select1, camera_select2);
+                camera_select1, camera_select2);
 }
 
 void Module::Interface::GetStereoCameraCalibrationData(Kernel::HLERequestContext& ctx) {
@@ -918,8 +918,8 @@ ResultCode Module::SetPackageParameter(const PackageParameterType& package) {
         }
         return RESULT_SUCCESS;
     } else {
-        LOG_ERROR(Service_CAM, "invalid camera_select={}, context_select={}",
-                    package.camera_select, package.context_select);
+        LOG_ERROR(Service_CAM, "invalid camera_select={}, context_select={}", package.camera_select,
+                  package.context_select);
         return ERROR_INVALID_ENUM_VALUE;
     }
 }

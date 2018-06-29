@@ -59,9 +59,9 @@ enum ControlMemoryOperation {
 static ResultCode ControlMemory(u32* out_addr, u32 operation, u32 addr0, u32 addr1, u32 size,
                                 u32 permissions) {
     LOG_DEBUG(Kernel_SVC,
-                "called operation=0x{:08X}, addr0=0x{:08X}, addr1=0x{:08X}, "
-                "size=0x{:X}, permissions=0x{:08X}",
-                operation, addr0, addr1, size, permissions);
+              "called operation=0x{:08X}, addr0=0x{:08X}, addr1=0x{:08X}, "
+              "size=0x{:X}, permissions=0x{:08X}",
+              operation, addr0, addr1, size, permissions);
 
     if ((addr0 & Memory::PAGE_MASK) != 0 || (addr1 & Memory::PAGE_MASK) != 0) {
         return ERR_MISALIGNED_ADDRESS;
@@ -75,7 +75,7 @@ static ResultCode ControlMemory(u32* out_addr, u32 operation, u32 addr0, u32 add
 
     if (region != 0) {
         LOG_WARNING(Kernel_SVC, "ControlMemory with specified region not supported, region={:X}",
-                      region);
+                    region);
     }
 
     if ((permissions & (u32)MemoryPermission::ReadWrite) != permissions) {
@@ -177,9 +177,9 @@ static void ExitProcess() {
 /// Maps a memory block to specified address
 static ResultCode MapMemoryBlock(Handle handle, u32 addr, u32 permissions, u32 other_permissions) {
     LOG_TRACE(Kernel_SVC,
-                "called memblock=0x{:08X}, addr=0x{:08X}, mypermissions=0x{:08X}, "
-                "otherpermission={}",
-                handle, addr, permissions, other_permissions);
+              "called memblock=0x{:08X}, addr=0x{:08X}, mypermissions=0x{:08X}, "
+              "otherpermission={}",
+              handle, addr, permissions, other_permissions);
 
     SharedPtr<SharedMemory> shared_memory = g_handle_table.Get<SharedMemory>(handle);
     if (shared_memory == nullptr)
@@ -274,7 +274,7 @@ static ResultCode WaitSynchronization1(Handle handle, s64 nano_seconds) {
         return ERR_INVALID_HANDLE;
 
     LOG_TRACE(Kernel_SVC, "called handle=0x{:08X}({}:{}), nanoseconds={}", handle,
-                object->GetTypeName(), object->GetName(), nano_seconds);
+              object->GetTypeName(), object->GetName(), nano_seconds);
 
     if (object->ShouldWait(thread)) {
 
@@ -624,9 +624,8 @@ static ResultCode CreateAddressArbiter(Handle* out_handle) {
 /// Arbitrate address
 static ResultCode ArbitrateAddress(Handle handle, u32 address, u32 type, u32 value,
                                    s64 nanoseconds) {
-    LOG_TRACE(Kernel_SVC,
-                "called handle=0x{:08X}, address=0x{:08X}, type=0x{:08X}, value=0x{:08X}", handle,
-                address, type, value);
+    LOG_TRACE(Kernel_SVC, "called handle=0x{:08X}, address=0x{:08X}, type=0x{:08X}, value=0x{:08X}",
+              handle, address, type, value);
 
     SharedPtr<AddressArbiter> arbiter = g_handle_table.Get<AddressArbiter>(handle);
     if (arbiter == nullptr)
@@ -685,7 +684,7 @@ static ResultCode GetResourceLimit(Handle* resource_limit, Handle process_handle
 static ResultCode GetResourceLimitCurrentValues(VAddr values, Handle resource_limit_handle,
                                                 VAddr names, u32 name_count) {
     LOG_TRACE(Kernel_SVC, "called resource_limit={:08X}, names={:08X}, name_count={}",
-                resource_limit_handle, names, name_count);
+              resource_limit_handle, names, name_count);
 
     SharedPtr<ResourceLimit> resource_limit =
         g_handle_table.Get<ResourceLimit>(resource_limit_handle);
@@ -705,7 +704,7 @@ static ResultCode GetResourceLimitCurrentValues(VAddr values, Handle resource_li
 static ResultCode GetResourceLimitLimitValues(VAddr values, Handle resource_limit_handle,
                                               VAddr names, u32 name_count) {
     LOG_TRACE(Kernel_SVC, "called resource_limit={:08X}, names={:08X}, name_count={}",
-                resource_limit_handle, names, name_count);
+              resource_limit_handle, names, name_count);
 
     SharedPtr<ResourceLimit> resource_limit =
         g_handle_table.Get<ResourceLimit>(resource_limit_handle);
@@ -746,11 +745,11 @@ static ResultCode CreateThread(Handle* out_handle, u32 priority, u32 entry_point
         break;
     case THREADPROCESSORID_ALL:
         LOG_INFO(Kernel_SVC,
-                   "Newly created thread is allowed to be run in any Core, unimplemented.");
+                 "Newly created thread is allowed to be run in any Core, unimplemented.");
         break;
     case THREADPROCESSORID_1:
         LOG_ERROR(Kernel_SVC,
-                    "Newly created thread must run in the SysCore (Core1), unimplemented.");
+                  "Newly created thread must run in the SysCore (Core1), unimplemented.");
         break;
     default:
         // TODO(bunnei): Implement support for other processor IDs
@@ -770,9 +769,9 @@ static ResultCode CreateThread(Handle* out_handle, u32 priority, u32 entry_point
     Core::System::GetInstance().PrepareReschedule();
 
     LOG_TRACE(Kernel_SVC,
-                "called entrypoint=0x{:08X} ({}), arg=0x{:08X}, stacktop=0x{:08X}, "
-                "threadpriority=0x{:08X}, processorid=0x{:08X} : created handle=0x{:08X}",
-                entry_point, name, arg, stack_top, priority, processor_id, *out_handle);
+              "called entrypoint=0x{:08X} ({}), arg=0x{:08X}, stacktop=0x{:08X}, "
+              "threadpriority=0x{:08X}, processorid=0x{:08X} : created handle=0x{:08X}",
+              entry_point, name, arg, stack_top, priority, processor_id, *out_handle);
 
     return RESULT_SUCCESS;
 }
@@ -830,7 +829,7 @@ static ResultCode CreateMutex(Handle* out_handle, u32 initial_locked) {
     CASCADE_RESULT(*out_handle, g_handle_table.Create(std::move(mutex)));
 
     LOG_TRACE(Kernel_SVC, "called initial_locked={} : created handle=0x{:08X}",
-                initial_locked ? "true" : "false", *out_handle);
+              initial_locked ? "true" : "false", *out_handle);
 
     return RESULT_SUCCESS;
 }
@@ -893,7 +892,7 @@ static ResultCode CreateSemaphore(Handle* out_handle, s32 initial_count, s32 max
     CASCADE_RESULT(*out_handle, g_handle_table.Create(std::move(semaphore)));
 
     LOG_TRACE(Kernel_SVC, "called initial_count={}, max_count={}, created handle=0x{:08X}",
-                initial_count, max_count, *out_handle);
+              initial_count, max_count, *out_handle);
     return RESULT_SUCCESS;
 }
 
@@ -944,7 +943,7 @@ static ResultCode CreateEvent(Handle* out_handle, u32 reset_type) {
     CASCADE_RESULT(*out_handle, g_handle_table.Create(std::move(evt)));
 
     LOG_TRACE(Kernel_SVC, "called reset_type=0x{:08X} : created handle=0x{:08X}", reset_type,
-                *out_handle);
+              *out_handle);
     return RESULT_SUCCESS;
 }
 
@@ -987,7 +986,7 @@ static ResultCode CreateTimer(Handle* out_handle, u32 reset_type) {
     CASCADE_RESULT(*out_handle, g_handle_table.Create(std::move(timer)));
 
     LOG_TRACE(Kernel_SVC, "called reset_type=0x{:08X} : created handle=0x{:08X}", reset_type,
-                *out_handle);
+              *out_handle);
     return RESULT_SUCCESS;
 }
 

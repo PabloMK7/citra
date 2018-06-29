@@ -92,7 +92,7 @@ static void OnStateChanged(const Network::RoomMember::State& state) {
         break;
     case Network::RoomMember::State::MacCollision:
         LOG_ERROR(Network, "You tried to use the same MAC-Address then another user that is "
-                             "connected to the Room");
+                           "connected to the Room");
         exit(1);
         break;
     case Network::RoomMember::State::WrongPassword:
@@ -101,7 +101,7 @@ static void OnStateChanged(const Network::RoomMember::State& state) {
         break;
     case Network::RoomMember::State::WrongVersion:
         LOG_ERROR(Network,
-                    "You are using a different version then the room you are trying to connect to");
+                  "You are using a different version then the room you are trying to connect to");
         exit(1);
         break;
     default:
@@ -288,9 +288,9 @@ int main(int argc, char** argv) {
         return -1;
     case Core::System::ResultStatus::ErrorLoader_ErrorEncrypted:
         LOG_CRITICAL(Frontend, "The game that you are trying to load must be decrypted before "
-                                 "being used with Citra. \n\n For more information on dumping and "
-                                 "decrypting games, please refer to: "
-                                 "https://citra-emu.org/wiki/dumping-game-cartridges/");
+                               "being used with Citra. \n\n For more information on dumping and "
+                               "decrypting games, please refer to: "
+                               "https://citra-emu.org/wiki/dumping-game-cartridges/");
         return -1;
     case Core::System::ResultStatus::ErrorLoader_ErrorInvalidFormat:
         LOG_CRITICAL(Frontend, "Error while loading ROM: The ROM format is not supported.");
@@ -315,7 +315,7 @@ int main(int argc, char** argv) {
             member->BindOnChatMessageRecieved(OnMessageReceived);
             member->BindOnStateChanged(OnStateChanged);
             LOG_DEBUG(Network, "Start connection to {}:{} with nickname {}", address, port,
-                        nickname);
+                      nickname);
             member->Join(nickname, address.c_str(), port, 0, Network::NoPreferredMac, password);
         } else {
             LOG_ERROR(Network, "Could not access RoomMember");

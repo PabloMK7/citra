@@ -32,8 +32,8 @@ void Module::Interface::Initialize(Kernel::HLERequestContext& ctx) {
     AppletId app_id = rp.PopEnum<AppletId>();
     u32 attributes = rp.Pop<u32>();
 
-    LOG_DEBUG(Service_APT, "called app_id={:#010X}, attributes={:#010X}",
-                static_cast<u32>(app_id), attributes);
+    LOG_DEBUG(Service_APT, "called app_id={:#010X}, attributes={:#010X}", static_cast<u32>(app_id),
+              attributes);
 
     auto result = apt->applet_manager->Initialize(app_id, attributes);
     if (result.Failed()) {
@@ -307,10 +307,10 @@ void Module::Interface::SendParameter(Kernel::HLERequestContext& ctx) {
     std::vector<u8> buffer = rp.PopStaticBuffer();
 
     LOG_DEBUG(Service_APT,
-                "called src_app_id={:#010X}, dst_app_id={:#010X}, signal_type={:#010X},"
-                "buffer_size={:#010X}",
-                static_cast<u32>(src_app_id), static_cast<u32>(dst_app_id),
-                static_cast<u32>(signal_type), buffer_size);
+              "called src_app_id={:#010X}, dst_app_id={:#010X}, signal_type={:#010X},"
+              "buffer_size={:#010X}",
+              static_cast<u32>(src_app_id), static_cast<u32>(dst_app_id),
+              static_cast<u32>(signal_type), buffer_size);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
 
@@ -329,8 +329,8 @@ void Module::Interface::ReceiveParameter(Kernel::HLERequestContext& ctx) {
     AppletId app_id = rp.PopEnum<AppletId>();
     u32 buffer_size = rp.Pop<u32>();
 
-    LOG_DEBUG(Service_APT, "called app_id={:#010X}, buffer_size={:#010X}",
-                static_cast<u32>(app_id), buffer_size);
+    LOG_DEBUG(Service_APT, "called app_id={:#010X}, buffer_size={:#010X}", static_cast<u32>(app_id),
+              buffer_size);
 
     auto next_parameter = apt->applet_manager->ReceiveParameter(app_id);
 
@@ -357,8 +357,8 @@ void Module::Interface::GlanceParameter(Kernel::HLERequestContext& ctx) {
     AppletId app_id = rp.PopEnum<AppletId>();
     u32 buffer_size = rp.Pop<u32>();
 
-    LOG_DEBUG(Service_APT, "called app_id={:#010X}, buffer_size={:#010X}",
-                static_cast<u32>(app_id), buffer_size);
+    LOG_DEBUG(Service_APT, "called app_id={:#010X}, buffer_size={:#010X}", static_cast<u32>(app_id),
+              buffer_size);
 
     auto next_parameter = apt->applet_manager->GlanceParameter(app_id);
 
@@ -394,10 +394,10 @@ void Module::Interface::CancelParameter(Kernel::HLERequestContext& ctx) {
                                                  receiver_appid));
 
     LOG_DEBUG(Service_APT,
-                "called check_sender={}, sender_appid={:#010X}, "
-                "check_receiver={}, receiver_appid={:#010X}",
-                check_sender, static_cast<u32>(sender_appid), check_receiver,
-                static_cast<u32>(receiver_appid));
+              "called check_sender={}, sender_appid={:#010X}, "
+              "check_receiver={}, receiver_appid={:#010X}",
+              check_sender, static_cast<u32>(sender_appid), check_receiver,
+              static_cast<u32>(receiver_appid));
 }
 
 void Module::Interface::PrepareToStartApplication(Kernel::HLERequestContext& ctx) {
@@ -415,11 +415,10 @@ void Module::Interface::PrepareToStartApplication(Kernel::HLERequestContext& ctx
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS); // No error
 
-    LOG_WARNING(
-        Service_APT,
-        "(STUBBED) called title_info1={:#010X}, title_info2={:#010X}, title_info3={:#010X},"
-        "title_info4={:#010X}, flags={:#010X}",
-        title_info1, title_info2, title_info3, title_info4, flags);
+    LOG_WARNING(Service_APT,
+                "(STUBBED) called title_info1={:#010X}, title_info2={:#010X}, title_info3={:#010X},"
+                "title_info4={:#010X}, flags={:#010X}",
+                title_info1, title_info2, title_info3, title_info4, flags);
 }
 
 void Module::Interface::StartApplication(Kernel::HLERequestContext& ctx) {
@@ -434,8 +433,8 @@ void Module::Interface::StartApplication(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS); // No error
 
     LOG_WARNING(Service_APT,
-                  "(STUBBED) called buffer1_size={:#010X}, buffer2_size={:#010X}, flag={:#010X}",
-                  buffer1_size, buffer2_size, flag);
+                "(STUBBED) called buffer1_size={:#010X}, buffer2_size={:#010X}, flag={:#010X}",
+                buffer1_size, buffer2_size, flag);
 }
 
 void Module::Interface::AppletUtility(Kernel::HLERequestContext& ctx) {
@@ -451,8 +450,8 @@ void Module::Interface::AppletUtility(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS); // No error
 
     LOG_WARNING(Service_APT,
-                  "(STUBBED) called command={:#010X}, input_size={:#010X}, output_size={:#010X}",
-                  utility_command, input_size, output_size);
+                "(STUBBED) called command={:#010X}, input_size={:#010X}, output_size={:#010X}",
+                utility_command, input_size, output_size);
 }
 
 void Module::Interface::SetAppCpuTimeLimit(Kernel::HLERequestContext& ctx) {
@@ -467,8 +466,7 @@ void Module::Interface::SetAppCpuTimeLimit(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS); // No error
 
-    LOG_WARNING(Service_APT, "(STUBBED) called, cpu_percent={}, value={}", apt->cpu_percent,
-                  value);
+    LOG_WARNING(Service_APT, "(STUBBED) called, cpu_percent={}, value={}", apt->cpu_percent, value);
 }
 
 void Module::Interface::GetAppCpuTimeLimit(Kernel::HLERequestContext& ctx) {
@@ -583,7 +581,7 @@ void Module::Interface::SetScreenCapPostPermission(Kernel::HLERequestContext& ct
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS); // No error
     LOG_WARNING(Service_APT, "(STUBBED) called, screen_capture_post_permission={}",
-                  static_cast<u32>(apt->screen_capture_post_permission));
+                static_cast<u32>(apt->screen_capture_post_permission));
 }
 
 void Module::Interface::GetScreenCapPostPermission(Kernel::HLERequestContext& ctx) {
@@ -593,7 +591,7 @@ void Module::Interface::GetScreenCapPostPermission(Kernel::HLERequestContext& ct
     rb.Push(RESULT_SUCCESS); // No error
     rb.Push(static_cast<u32>(apt->screen_capture_post_permission));
     LOG_WARNING(Service_APT, "(STUBBED) called, screen_capture_post_permission={}",
-                  static_cast<u32>(apt->screen_capture_post_permission));
+                static_cast<u32>(apt->screen_capture_post_permission));
 }
 
 void Module::Interface::GetAppletInfo(Kernel::HLERequestContext& ctx) {
@@ -632,9 +630,8 @@ void Module::Interface::GetStartupArgument(Kernel::HLERequestContext& ctx) {
 
     std::vector<u8> parameter(parameter_size, 0);
 
-    LOG_WARNING(Service_APT,
-                  "(STUBBED) called, startup_argument_type={}, parameter_size={:#010X}",
-                  static_cast<u32>(startup_argument_type), parameter_size);
+    LOG_WARNING(Service_APT, "(STUBBED) called, startup_argument_type={}, parameter_size={:#010X}",
+                static_cast<u32>(startup_argument_type), parameter_size);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
     rb.Push(RESULT_SUCCESS);
@@ -658,9 +655,8 @@ void Module::Interface::Wrap(Kernel::HLERequestContext& ctx) {
     ASSERT_MSG(output_size == input_size + HW::AES::CCM_MAC_SIZE,
                "input_size ({}) doesn't match to output_size ({})", input_size, output_size);
 
-    LOG_DEBUG(Service_APT,
-                "called, output_size={}, input_size={}, nonce_offset={}, nonce_size={}",
-                output_size, input_size, nonce_offset, nonce_size);
+    LOG_DEBUG(Service_APT, "called, output_size={}, input_size={}, nonce_offset={}, nonce_size={}",
+              output_size, input_size, nonce_offset, nonce_size);
 
     // Note: This weird nonce size modification is verified against real 3DS
     nonce_size = std::min<u32>(nonce_size & ~3, HW::AES::CCM_NONCE_SIZE);
@@ -704,9 +700,8 @@ void Module::Interface::Unwrap(Kernel::HLERequestContext& ctx) {
     ASSERT_MSG(output_size == input_size - HW::AES::CCM_MAC_SIZE,
                "input_size ({}) doesn't match to output_size ({})", input_size, output_size);
 
-    LOG_DEBUG(Service_APT,
-                "called, output_size={}, input_size={}, nonce_offset={}, nonce_size={}",
-                output_size, input_size, nonce_offset, nonce_size);
+    LOG_DEBUG(Service_APT, "called, output_size={}, input_size={}, nonce_offset={}, nonce_size={}",
+              output_size, input_size, nonce_offset, nonce_size);
 
     // Note: This weird nonce size modification is verified against real 3DS
     nonce_size = std::min<u32>(nonce_size & ~3, HW::AES::CCM_NONCE_SIZE);

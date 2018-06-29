@@ -35,8 +35,7 @@ inline void Write(u32 addr, const T data) {
 
     // Writes other than u32 are untested, so I'd rather have them abort than silently fail
     if (index >= 0x400 || !std::is_same<T, u32>::value) {
-        LOG_ERROR(HW_LCD, "unknown Write{} {:#010X} @ {:#010X}", sizeof(data) * 8, (u32)data,
-                    addr);
+        LOG_ERROR(HW_LCD, "unknown Write{} {:#010X} @ {:#010X}", sizeof(data) * 8, (u32)data, addr);
         return;
     }
 

@@ -69,7 +69,7 @@ void Mixers::ParseConfig(DspConfiguration& config) {
         config.output_format_dirty.Assign(0);
         state.output_format = config.output_format;
         LOG_TRACE(Audio_DSP, "mixers output_format = {}",
-                    static_cast<size_t>(config.output_format));
+                  static_cast<size_t>(config.output_format));
     }
 
     if (config.headphones_connected_dirty) {

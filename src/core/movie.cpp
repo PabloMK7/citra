@@ -139,8 +139,8 @@ void Movie::Play(Service::HID::PadState& pad_state, s16& circle_pad_x, s16& circ
 
     if (s.type != ControllerStateType::PadAndCircle) {
         LOG_ERROR(Movie,
-                    "Expected to read type {}, but found {}. Your playback will be out of sync",
-                    static_cast<int>(ControllerStateType::PadAndCircle), static_cast<int>(s.type));
+                  "Expected to read type {}, but found {}. Your playback will be out of sync",
+                  static_cast<int>(ControllerStateType::PadAndCircle), static_cast<int>(s.type));
         return;
     }
 
@@ -168,8 +168,8 @@ void Movie::Play(Service::HID::TouchDataEntry& touch_data) {
 
     if (s.type != ControllerStateType::Touch) {
         LOG_ERROR(Movie,
-                    "Expected to read type {}, but found {}. Your playback will be out of sync",
-                    static_cast<int>(ControllerStateType::Touch), static_cast<int>(s.type));
+                  "Expected to read type {}, but found {}. Your playback will be out of sync",
+                  static_cast<int>(ControllerStateType::Touch), static_cast<int>(s.type));
         return;
     }
 
@@ -185,8 +185,8 @@ void Movie::Play(Service::HID::AccelerometerDataEntry& accelerometer_data) {
 
     if (s.type != ControllerStateType::Accelerometer) {
         LOG_ERROR(Movie,
-                    "Expected to read type {}, but found {}. Your playback will be out of sync",
-                    static_cast<int>(ControllerStateType::Accelerometer), static_cast<int>(s.type));
+                  "Expected to read type {}, but found {}. Your playback will be out of sync",
+                  static_cast<int>(ControllerStateType::Accelerometer), static_cast<int>(s.type));
         return;
     }
 
@@ -202,8 +202,8 @@ void Movie::Play(Service::HID::GyroscopeDataEntry& gyroscope_data) {
 
     if (s.type != ControllerStateType::Gyroscope) {
         LOG_ERROR(Movie,
-                    "Expected to read type {}, but found {}. Your playback will be out of sync",
-                    static_cast<int>(ControllerStateType::Gyroscope), static_cast<int>(s.type));
+                  "Expected to read type {}, but found {}. Your playback will be out of sync",
+                  static_cast<int>(ControllerStateType::Gyroscope), static_cast<int>(s.type));
         return;
     }
 
@@ -219,8 +219,8 @@ void Movie::Play(Service::IR::PadState& pad_state, s16& c_stick_x, s16& c_stick_
 
     if (s.type != ControllerStateType::IrRst) {
         LOG_ERROR(Movie,
-                    "Expected to read type {}, but found {}. Your playback will be out of sync",
-                    static_cast<int>(ControllerStateType::IrRst), static_cast<int>(s.type));
+                  "Expected to read type {}, but found {}. Your playback will be out of sync",
+                  static_cast<int>(ControllerStateType::IrRst), static_cast<int>(s.type));
         return;
     }
 
@@ -351,8 +351,8 @@ bool Movie::ValidateHeader(const CTMHeader& header) {
     revision = Common::ToLower(revision);
 
     if (revision != Common::g_scm_rev) {
-        LOG_WARNING(
-            Movie, "This movie was created on a different version of Citra, playback may desync");
+        LOG_WARNING(Movie,
+                    "This movie was created on a different version of Citra, playback may desync");
     }
 
     u64 program_id;
@@ -408,7 +408,7 @@ void Movie::Init() {
             }
         } else {
             LOG_ERROR(Movie, "Failed to playback movie: Unable to open '{}'",
-                        Settings::values.movie_play);
+                      Settings::values.movie_play);
         }
     }
 

@@ -134,11 +134,11 @@ static std::string GetCurrentSystemTime() {
 static void LogGenericInfo(const ErrInfo::ErrInfoCommon& errinfo_common) {
     LOG_CRITICAL(Service_ERR, "PID: 0x{:08X}", errinfo_common.pid);
     LOG_CRITICAL(Service_ERR, "REV: 0x{:08X}_0x{:08X}", errinfo_common.rev_high,
-                   errinfo_common.rev_low);
+                 errinfo_common.rev_low);
     LOG_CRITICAL(Service_ERR, "TID: 0x{:08X}_0x{:08X}", errinfo_common.title_id_high,
-                   errinfo_common.title_id_low);
+                 errinfo_common.title_id_low);
     LOG_CRITICAL(Service_ERR, "AID: 0x{:08X}_0x{:08X}", errinfo_common.app_title_id_high,
-                   errinfo_common.app_title_id_low);
+                 errinfo_common.app_title_id_low);
     LOG_CRITICAL(Service_ERR, "ADR: 0x{:08X}", errinfo_common.pc_address);
 
     ResultCode result_code{errinfo_common.result_code};
@@ -154,8 +154,7 @@ void ERR_F::ThrowFatalError(Kernel::HLERequestContext& ctx) {
 
     LOG_CRITICAL(Service_ERR, "Fatal error");
     const ErrInfo errinfo = rp.PopRaw<ErrInfo>();
-    LOG_CRITICAL(Service_ERR, "Fatal error type: {}",
-                   GetErrType(errinfo.errinfo_common.specifier));
+    LOG_CRITICAL(Service_ERR, "Fatal error type: {}", GetErrType(errinfo.errinfo_common.specifier));
     Core::System::GetInstance().SetStatus(Core::System::ResultStatus::ErrorUnknown);
 
     // Generic Info
@@ -178,23 +177,23 @@ void ERR_F::ThrowFatalError(Kernel::HLERequestContext& ctx) {
              ++index) {
             if (index < 13) {
                 LOG_DEBUG(Service_ERR, "r{}=0x{:08X}", index,
-                            errtype.exception_data.exception_context.arm_regs.at(index));
+                          errtype.exception_data.exception_context.arm_regs.at(index));
             } else if (index == 13) {
                 LOG_CRITICAL(Service_ERR, "SP=0x{:08X}",
-                               errtype.exception_data.exception_context.arm_regs.at(index));
+                             errtype.exception_data.exception_context.arm_regs.at(index));
             } else if (index == 14) {
                 LOG_CRITICAL(Service_ERR, "LR=0x{:08X}",
-                               errtype.exception_data.exception_context.arm_regs.at(index));
+                             errtype.exception_data.exception_context.arm_regs.at(index));
             } else if (index == 15) {
                 LOG_CRITICAL(Service_ERR, "PC=0x{:08X}",
-                               errtype.exception_data.exception_context.arm_regs.at(index));
+                             errtype.exception_data.exception_context.arm_regs.at(index));
             }
         }
         LOG_CRITICAL(Service_ERR, "CPSR=0x{:08X}", errtype.exception_data.exception_context.cpsr);
 
         // Exception Info
         LOG_CRITICAL(Service_ERR, "EXCEPTION TYPE: {}",
-                       GetExceptionType(errtype.exception_data.exception_info.exception_type));
+                     GetExceptionType(errtype.exception_data.exception_info.exception_type));
         switch (static_cast<ExceptionType>(errtype.exception_data.exception_info.exception_type)) {
         case ExceptionType::PrefetchAbort:
             LOG_CRITICAL(Service_ERR, "IFSR: 0x{:08X}", errtype.exception_data.exception_info.sr);
@@ -206,11 +205,11 @@ void ERR_F::ThrowFatalError(Kernel::HLERequestContext& ctx) {
             break;
         case ExceptionType::VectorFP:
             LOG_CRITICAL(Service_ERR, "FPEXC: 0x{:08X}",
-                           errtype.exception_data.exception_info.fpinst);
+                         errtype.exception_data.exception_info.fpinst);
             LOG_CRITICAL(Service_ERR, "FINST: 0x{:08X}",
-                           errtype.exception_data.exception_info.fpinst);
+                         errtype.exception_data.exception_info.fpinst);
             LOG_CRITICAL(Service_ERR, "FINST2: 0x{:08X}",
-                           errtype.exception_data.exception_info.fpinst2);
+                         errtype.exception_data.exception_info.fpinst2);
             break;
         case ExceptionType::Undefined:
             break; // Not logging exception_info for this case

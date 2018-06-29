@@ -267,7 +267,7 @@ static void DebugThreadQueue() {
         LOG_DEBUG(Kernel, "Current: NO CURRENT THREAD");
     } else {
         LOG_DEBUG(Kernel, "0x{:02X} {} (current)", thread->current_priority,
-                    GetCurrentThread()->GetObjectId());
+                  GetCurrentThread()->GetObjectId());
     }
 
     for (auto& t : thread_list) {
@@ -376,7 +376,7 @@ ResultVal<SharedPtr<Thread>> Thread::Create(std::string name, VAddr entry_point,
 
         if (linheap_memory->size() + Memory::PAGE_SIZE > memory_region->size) {
             LOG_ERROR(Kernel_SVC,
-                        "Not enough space in region to allocate a new TLS page for thread");
+                      "Not enough space in region to allocate a new TLS page for thread");
             return ERR_OUT_OF_MEMORY;
         }
 

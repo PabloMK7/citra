@@ -276,7 +276,7 @@ void UpdaterPrivate::LaunchWithArguments(const QStringList& args) {
 
     if (!QProcess::startDetached(tool_info.absoluteFilePath(), args, tool_info.absolutePath())) {
         LOG_WARNING(Frontend, "Unable to start program {}",
-                      tool_info.absoluteFilePath().toStdString());
+                    tool_info.absoluteFilePath().toStdString());
     }
 }
 

@@ -134,8 +134,8 @@ EmuWindow_SDL2::EmuWindow_SDL2(bool fullscreen) {
     OnMinimalClientAreaChangeRequest(GetActiveConfig().min_client_area_size);
     SDL_PumpEvents();
     SDL_GL_SetSwapInterval(Settings::values.use_vsync);
-    LOG_INFO(Frontend, "Citra Version: {} | {}-{}", Common::g_build_fullname,
-               Common::g_scm_branch, Common::g_scm_desc);
+    LOG_INFO(Frontend, "Citra Version: {} | {}-{}", Common::g_build_fullname, Common::g_scm_branch,
+             Common::g_scm_desc);
 
     DoneCurrent();
 }

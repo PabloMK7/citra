@@ -69,7 +69,7 @@ static void WriteUniformIntReg(Shader::ShaderSetup& setup, unsigned index,
     ASSERT(index < setup.uniforms.i.size());
     setup.uniforms.i[index] = values;
     LOG_TRACE(HW_GPU, "Set {} integer uniform {} to {:02x} {:02x} {:02x} {:02x}",
-                GetShaderSetupTypeName(setup), index, values.x, values.y, values.z, values.w);
+              GetShaderSetupTypeName(setup), index, values.x, values.y, values.z, values.w);
 }
 
 static void WriteUniformFloatReg(ShaderRegs& config, Shader::ShaderSetup& setup,
@@ -91,7 +91,7 @@ static void WriteUniformFloatReg(ShaderRegs& config, Shader::ShaderSetup& setup,
 
         if (uniform_setup.index >= 96) {
             LOG_ERROR(HW_GPU, "Invalid {} float uniform index {}", GetShaderSetupTypeName(setup),
-                        (int)uniform_setup.index);
+                      (int)uniform_setup.index);
         } else {
 
             // NOTE: The destination component order indeed is "backwards"
@@ -109,9 +109,9 @@ static void WriteUniformFloatReg(ShaderRegs& config, Shader::ShaderSetup& setup,
             }
 
             LOG_TRACE(HW_GPU, "Set {} float uniform {:x} to ({} {} {} {})",
-                        GetShaderSetupTypeName(setup), (int)uniform_setup.index,
-                        uniform.x.ToFloat32(), uniform.y.ToFloat32(), uniform.z.ToFloat32(),
-                        uniform.w.ToFloat32());
+                      GetShaderSetupTypeName(setup), (int)uniform_setup.index,
+                      uniform.x.ToFloat32(), uniform.y.ToFloat32(), uniform.z.ToFloat32(),
+                      uniform.w.ToFloat32());
 
             // TODO: Verify that this actually modifies the register!
             uniform_setup.index.Assign(uniform_setup.index + 1);
@@ -199,8 +199,8 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
             attribute.x = float24::FromRaw(default_attr_write_buffer[2] & 0xFFFFFF);
 
             LOG_TRACE(HW_GPU, "Set default VS attribute {:x} to ({} {} {} {})", (int)setup.index,
-                        attribute.x.ToFloat32(), attribute.y.ToFloat32(), attribute.z.ToFloat32(),
-                        attribute.w.ToFloat32());
+                      attribute.x.ToFloat32(), attribute.y.ToFloat32(), attribute.z.ToFloat32(),
+                      attribute.w.ToFloat32());
 
             // TODO: Verify that this actually modifies the register!
             if (setup.index < 15) {

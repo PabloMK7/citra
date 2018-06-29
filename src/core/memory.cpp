@@ -39,7 +39,7 @@ PageTable* GetCurrentPageTable() {
 
 static void MapPages(PageTable& page_table, u32 base, u32 size, u8* memory, PageType type) {
     LOG_DEBUG(HW_Memory, "Mapping {} onto {:08X}-{:08X}", (void*)memory, base * PAGE_SIZE,
-                (base + size) * PAGE_SIZE);
+              (base + size) * PAGE_SIZE);
 
     RasterizerFlushVirtualRegion(base << PAGE_BITS, size * PAGE_SIZE,
                                  FlushMode::FlushAndInvalidate);
@@ -189,7 +189,7 @@ void Write(const VAddr vaddr, const T data) {
     switch (type) {
     case PageType::Unmapped:
         LOG_ERROR(HW_Memory, "unmapped Write{} 0x{:08X} @ 0x{:08X}", sizeof(data) * 8, (u32)data,
-                    vaddr);
+                  vaddr);
         return;
     case PageType::Memory:
         ASSERT_MSG(false, "Mapped memory page without a pointer @ {:08X}", vaddr);
@@ -340,8 +340,8 @@ void RasterizerMarkRegionCached(PAddr start, u32 size, bool cached) {
         // parts of the texture.
         if (!maybe_vaddr) {
             LOG_ERROR(HW_Memory,
-                        "Trying to flush a cached region to an invalid physical address {:08X}",
-                        paddr);
+                      "Trying to flush a cached region to an invalid physical address {:08X}",
+                      paddr);
             continue;
         }
         VAddr vaddr = *maybe_vaddr;
@@ -486,8 +486,8 @@ void ReadBlock(const Kernel::Process& process, const VAddr src_addr, void* dest_
         switch (page_table.attributes[page_index]) {
         case PageType::Unmapped: {
             LOG_ERROR(HW_Memory,
-                        "unmapped ReadBlock @ 0x{:08X} (start address = 0x{:08X}, size = {})",
-                        current_vaddr, src_addr, size);
+                      "unmapped ReadBlock @ 0x{:08X} (start address = 0x{:08X}, size = {})",
+                      current_vaddr, src_addr, size);
             std::memset(dest_buffer, 0, copy_amount);
             break;
         }
@@ -555,8 +555,8 @@ void WriteBlock(const Kernel::Process& process, const VAddr dest_addr, const voi
         switch (page_table.attributes[page_index]) {
         case PageType::Unmapped: {
             LOG_ERROR(HW_Memory,
-                        "unmapped WriteBlock @ 0x{:08X} (start address = 0x{:08X}, size = {})",
-                        current_vaddr, dest_addr, size);
+                      "unmapped WriteBlock @ 0x{:08X} (start address = 0x{:08X}, size = {})",
+                      current_vaddr, dest_addr, size);
             break;
         }
         case PageType::Memory: {
@@ -608,8 +608,8 @@ void ZeroBlock(const Kernel::Process& process, const VAddr dest_addr, const size
         switch (page_table.attributes[page_index]) {
         case PageType::Unmapped: {
             LOG_ERROR(HW_Memory,
-                        "unmapped ZeroBlock @ 0x{:08X} (start address = 0x{:08X}, size = {})",
-                        current_vaddr, dest_addr, size);
+                      "unmapped ZeroBlock @ 0x{:08X} (start address = 0x{:08X}, size = {})",
+                      current_vaddr, dest_addr, size);
             break;
         }
         case PageType::Memory: {
@@ -658,8 +658,8 @@ void CopyBlock(const Kernel::Process& process, VAddr dest_addr, VAddr src_addr, 
         switch (page_table.attributes[page_index]) {
         case PageType::Unmapped: {
             LOG_ERROR(HW_Memory,
-                        "unmapped CopyBlock @ 0x{:08X} (start address = 0x{:08X}, size = {})",
-                        current_vaddr, src_addr, size);
+                      "unmapped CopyBlock @ 0x{:08X} (start address = 0x{:08X}, size = {})",
+                      current_vaddr, src_addr, size);
             ZeroBlock(process, dest_addr, copy_amount);
             break;
         }

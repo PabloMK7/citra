@@ -257,7 +257,7 @@ bool Rename(const std::string& srcFilename, const std::string& destFilename) {
         return true;
 #endif
     LOG_ERROR(Common_Filesystem, "failed {} --> {}: {}", srcFilename, destFilename,
-                GetLastErrorMsg());
+              GetLastErrorMsg());
     return false;
 }
 
@@ -270,7 +270,7 @@ bool Copy(const std::string& srcFilename, const std::string& destFilename) {
         return true;
 
     LOG_ERROR(Common_Filesystem, "failed {} --> {}: {}", srcFilename, destFilename,
-                GetLastErrorMsg());
+              GetLastErrorMsg());
     return false;
 #else
 
@@ -283,7 +283,7 @@ bool Copy(const std::string& srcFilename, const std::string& destFilename) {
     FILE* input = fopen(srcFilename.c_str(), "rb");
     if (!input) {
         LOG_ERROR(Common_Filesystem, "opening input failed {} --> {}: {}", srcFilename,
-                    destFilename, GetLastErrorMsg());
+                  destFilename, GetLastErrorMsg());
         return false;
     }
 
@@ -292,7 +292,7 @@ bool Copy(const std::string& srcFilename, const std::string& destFilename) {
     if (!output) {
         fclose(input);
         LOG_ERROR(Common_Filesystem, "opening output failed {} --> {}: {}", srcFilename,
-                    destFilename, GetLastErrorMsg());
+                  destFilename, GetLastErrorMsg());
         return false;
     }
 
@@ -303,7 +303,7 @@ bool Copy(const std::string& srcFilename, const std::string& destFilename) {
         if (rnum != BSIZE) {
             if (ferror(input) != 0) {
                 LOG_ERROR(Common_Filesystem, "failed reading from source, {} --> {}: {}",
-                            srcFilename, destFilename, GetLastErrorMsg());
+                          srcFilename, destFilename, GetLastErrorMsg());
                 goto bail;
             }
         }
@@ -312,7 +312,7 @@ bool Copy(const std::string& srcFilename, const std::string& destFilename) {
         size_t wnum = fwrite(buffer, sizeof(char), rnum, output);
         if (wnum != rnum) {
             LOG_ERROR(Common_Filesystem, "failed writing to output, {} --> {}: {}", srcFilename,
-                        destFilename, GetLastErrorMsg());
+                      destFilename, GetLastErrorMsg());
             goto bail;
         }
     }

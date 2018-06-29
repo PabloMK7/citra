@@ -179,11 +179,11 @@ void DumpShader(const std::string& filename, const ShaderRegs& config,
             } catch (const std::out_of_range&) {
                 DEBUG_ASSERT_MSG(false, "Unknown output attribute mapping");
                 LOG_ERROR(HW_GPU,
-                            "Unknown output attribute mapping: {:03x}, {:03x}, {:03x}, {:03x}",
-                            (int)output_attributes[i].map_x.Value(),
-                            (int)output_attributes[i].map_y.Value(),
-                            (int)output_attributes[i].map_z.Value(),
-                            (int)output_attributes[i].map_w.Value());
+                          "Unknown output attribute mapping: {:03x}, {:03x}, {:03x}, {:03x}",
+                          (int)output_attributes[i].map_x.Value(),
+                          (int)output_attributes[i].map_y.Value(),
+                          (int)output_attributes[i].map_z.Value(),
+                          (int)output_attributes[i].map_w.Value());
             }
         }
     }

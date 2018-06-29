@@ -87,8 +87,8 @@ void File::Read(Kernel::HLERequestContext& ctx) {
 
     if (offset + length > backend->GetSize()) {
         LOG_ERROR(Service_FS,
-                    "Reading from out of bounds offset=0x{:x} length=0x{:08X} file_size=0x{:x}",
-                    offset, length, backend->GetSize());
+                  "Reading from out of bounds offset=0x{:x} length=0x{:08X} file_size=0x{:x}",
+                  offset, length, backend->GetSize());
     }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
@@ -120,7 +120,7 @@ void File::Write(Kernel::HLERequestContext& ctx) {
     u32 flush = rp.Pop<u32>();
     auto& buffer = rp.PopMappedBuffer();
     LOG_TRACE(Service_FS, "Write {}: offset=0x{:x} length={}, flush=0x{:x}", GetName(), offset,
-                length, flush);
+              length, flush);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
 
@@ -182,7 +182,7 @@ void File::Close(Kernel::HLERequestContext& ctx) {
     // TODO(Subv): Only close the backend if this client is the only one left.
     if (connected_sessions.size() > 1)
         LOG_WARNING(Service_FS, "Closing File backend but {} clients still connected",
-                      connected_sessions.size());
+                    connected_sessions.size());
 
     backend->Close();
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
@@ -405,7 +405,7 @@ ResultCode RegisterArchiveType(std::unique_ptr<FileSys::ArchiveFactory>&& factor
 
     auto& archive = result.first->second;
     LOG_DEBUG(Service_FS, "Registered archive {} with id code 0x{:08X}", archive->GetName(),
-                static_cast<u32>(id_code));
+              static_cast<u32>(id_code));
     return RESULT_SUCCESS;
 }
 
@@ -630,7 +630,7 @@ void RegisterArchiveTypes() {
         RegisterArchiveType(std::move(sdmcwo_factory), ArchiveIdCode::SDMCWriteOnly);
     else
         LOG_ERROR(Service_FS, "Can't instantiate SDMCWriteOnly archive with path {}",
-                    sdmc_directory);
+                  sdmc_directory);
 
     // Create the SaveData archive
     auto sd_savedata_source = std::make_shared<FileSys::ArchiveSource_SDSaveData>(sdmc_directory);
@@ -651,7 +651,7 @@ void RegisterArchiveTypes() {
         RegisterArchiveType(std::move(extsavedata_factory), ArchiveIdCode::ExtSaveData);
     else
         LOG_ERROR(Service_FS, "Can't instantiate ExtSaveData archive with path {}",
-                    extsavedata_factory->GetMountPoint());
+                  extsavedata_factory->GetMountPoint());
 
     auto sharedextsavedata_factory =
         std::make_unique<FileSys::ArchiveFactory_ExtSaveData>(nand_directory, true);
@@ -659,7 +659,7 @@ void RegisterArchiveTypes() {
         RegisterArchiveType(std::move(sharedextsavedata_factory), ArchiveIdCode::SharedExtSaveData);
     else
         LOG_ERROR(Service_FS, "Can't instantiate SharedExtSaveData archive with path {}",
-                    sharedextsavedata_factory->GetMountPoint());
+                  sharedextsavedata_factory->GetMountPoint());
 
     // Create the NCCH archive, basically a small variation of the RomFS archive
     auto savedatacheck_factory = std::make_unique<FileSys::ArchiveFactory_NCCH>();
@@ -676,9 +676,8 @@ void RegisterArchiveTypes() {
 void RegisterSelfNCCH(Loader::AppLoader& app_loader) {
     auto itr = id_code_map.find(ArchiveIdCode::SelfNCCH);
     if (itr == id_code_map.end()) {
-        LOG_ERROR(
-            Service_FS,
-            "Could not register a new NCCH because the SelfNCCH archive hasn't been created");
+        LOG_ERROR(Service_FS,
+                  "Could not register a new NCCH because the SelfNCCH archive hasn't been created");
         return;
     }
 

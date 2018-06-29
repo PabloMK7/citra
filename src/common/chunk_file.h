@@ -160,7 +160,7 @@ public:
 
         if (error == ERROR_FAILURE || foundVersion < minVer || foundVersion > ver) {
             LOG_ERROR(Common, "Savestate failure: wrong version {} found for {}", foundVersion,
-                        title);
+                      title);
             SetError(ERROR_FAILURE);
             return PointerWrapSection(*this, -1, title);
         }
@@ -608,9 +608,9 @@ public:
         Do(cookie);
         if (mode == PointerWrap::MODE_READ && cookie != arbitraryNumber) {
             LOG_ERROR(Common,
-                        "After \"{}\", found {} ({:#X}) instead of save marker {} ({:#X}). "
-                        "Aborting savestate load...",
-                        prevName, cookie, cookie, arbitraryNumber, arbitraryNumber);
+                      "After \"{}\", found {} ({:#X}) instead of save marker {} ({:#X}). "
+                      "Aborting savestate load...",
+                      prevName, cookie, cookie, arbitraryNumber, arbitraryNumber);
             SetError(ERROR_FAILURE);
         }
     }

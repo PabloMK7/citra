@@ -95,14 +95,13 @@ void Interface::HandleSyncRequest(SharedPtr<ServerSession> server_session) {
                                         ? Common::StringFromFormat("0x%08X", cmd_buff[0])
                                         : itr->second.name;
         LOG_ERROR(Service, "unknown / unimplemented {}",
-                    MakeFunctionString(function_name.c_str(), GetPortName().c_str(), cmd_buff));
+                  MakeFunctionString(function_name.c_str(), GetPortName().c_str(), cmd_buff));
 
         // TODO(bunnei): Hack - ignore error
         cmd_buff[1] = 0;
         return;
     }
-    LOG_TRACE(Service, "{}",
-                MakeFunctionString(itr->second.name, GetPortName().c_str(), cmd_buff));
+    LOG_TRACE(Service, "{}", MakeFunctionString(itr->second.name, GetPortName().c_str(), cmd_buff));
 
     itr->second.func(this);
 }

@@ -239,7 +239,7 @@ static void HandleEAPoLPacket(const Network::WifiPacket& packet) {
     if (GetEAPoLFrameType(packet.data) == EAPoLStartMagic) {
         if (connection_status.status != static_cast<u32>(NetworkStatus::ConnectedAsHost)) {
             LOG_DEBUG(Service_NWM, "Connection sequence aborted, because connection status is {}",
-                        connection_status.status);
+                      connection_status.status);
             return;
         }
 
@@ -426,7 +426,7 @@ void SendAssociationResponseFrame(const MacAddress& address) {
         std::lock_guard<std::mutex> lock(connection_status_mutex);
         if (connection_status.status != static_cast<u32>(NetworkStatus::ConnectedAsHost)) {
             LOG_ERROR(Service_NWM, "Connection sequence aborted, because connection status is {}",
-                        connection_status.status);
+                      connection_status.status);
             return;
         }
 
@@ -458,8 +458,8 @@ void HandleAuthenticationFrame(const Network::WifiPacket& packet) {
             std::lock_guard<std::mutex> lock(connection_status_mutex);
             if (connection_status.status != static_cast<u32>(NetworkStatus::ConnectedAsHost)) {
                 LOG_ERROR(Service_NWM,
-                            "Connection sequence aborted, because connection status is {}",
-                            connection_status.status);
+                          "Connection sequence aborted, because connection status is {}",
+                          connection_status.status);
                 return;
             }
 
@@ -618,9 +618,9 @@ void NWM_UDS::RecvBeaconBroadcastData(Kernel::HLERequestContext& ctx) {
     rb.PushMappedBuffer(out_buffer);
 
     LOG_DEBUG(Service_NWM,
-                "called out_buffer_size=0x{:08X}, wlan_comm_id=0x{:08X}, id=0x{:08X},"
-                "unk1=0x{:08X}, unk2=0x{:08X}, offset={}",
-                out_buffer_size, wlan_comm_id, id, unk1, unk2, cur_buffer_size);
+              "called out_buffer_size=0x{:08X}, wlan_comm_id=0x{:08X}, id=0x{:08X},"
+              "unk1=0x{:08X}, unk2=0x{:08X}, offset={}",
+              out_buffer_size, wlan_comm_id, id, unk1, unk2, cur_buffer_size);
 }
 
 void NWM_UDS::InitializeWithVersion(Kernel::HLERequestContext& ctx) {
@@ -661,7 +661,7 @@ void NWM_UDS::InitializeWithVersion(Kernel::HLERequestContext& ctx) {
     rb.PushCopyObjects(connection_status_event);
 
     LOG_DEBUG(Service_NWM, "called sharedmem_size=0x{:08X}, version=0x{:08X}", sharedmem_size,
-                version);
+              version);
 }
 
 void NWM_UDS::GetConnectionStatus(Kernel::HLERequestContext& ctx) {
@@ -729,7 +729,7 @@ void NWM_UDS::Bind(Kernel::HLERequestContext& ctx) {
         rb.Push(ResultCode(ErrorDescription::NotAuthorized, ErrorModule::UDS,
                            ErrorSummary::WrongArgument, ErrorLevel::Usage));
         LOG_WARNING(Service_NWM, "data_channel = {}, bind_node_id = {}", data_channel,
-                      bind_node_id);
+                    bind_node_id);
         return;
     }
 

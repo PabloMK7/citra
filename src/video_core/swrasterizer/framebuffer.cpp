@@ -58,7 +58,7 @@ void DrawPixel(int x, int y, const Math::Vec4<u8>& color) {
 
     default:
         LOG_CRITICAL(Render_Software, "Unknown framebuffer color format {:x}",
-                       static_cast<u32>(framebuffer.color_format.Value()));
+                     static_cast<u32>(framebuffer.color_format.Value()));
         UNIMPLEMENTED();
     }
 }
@@ -94,7 +94,7 @@ const Math::Vec4<u8> GetPixel(int x, int y) {
 
     default:
         LOG_CRITICAL(Render_Software, "Unknown framebuffer color format {:x}",
-                       static_cast<u32>(framebuffer.color_format.Value()));
+                     static_cast<u32>(framebuffer.color_format.Value()));
         UNIMPLEMENTED();
     }
 
@@ -124,7 +124,7 @@ u32 GetDepth(int x, int y) {
         return Color::DecodeD24S8(src_pixel).x;
     default:
         LOG_CRITICAL(HW_GPU, "Unimplemented depth format {}",
-                       static_cast<u32>(framebuffer.depth_format.Value()));
+                     static_cast<u32>(framebuffer.depth_format.Value()));
         UNIMPLEMENTED();
         return 0;
     }
@@ -186,7 +186,7 @@ void SetDepth(int x, int y, u32 value) {
 
     default:
         LOG_CRITICAL(HW_GPU, "Unimplemented depth format {}",
-                       static_cast<u32>(framebuffer.depth_format.Value()));
+                     static_cast<u32>(framebuffer.depth_format.Value()));
         UNIMPLEMENTED();
         break;
     }
@@ -218,7 +218,7 @@ void SetStencil(int x, int y, u8 value) {
 
     default:
         LOG_CRITICAL(HW_GPU, "Unimplemented depth format {}",
-                       static_cast<u32>(framebuffer.depth_format.Value()));
+                     static_cast<u32>(framebuffer.depth_format.Value()));
         UNIMPLEMENTED();
         break;
     }

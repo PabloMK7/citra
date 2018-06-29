@@ -64,7 +64,7 @@ ResultVal<std::unique_ptr<FileBackend>> SaveDataArchive::OpenFile(const Path& pa
     case PathParser::NotFound:
         if (!mode.create_flag) {
             LOG_ERROR(Service_FS, "Non-existing file {} can't be open without mode create.",
-                        full_path);
+                      full_path);
             return ERROR_FILE_NOT_FOUND;
         } else {
             // Create the file

@@ -242,12 +242,12 @@ void ArchiveFactory_SelfNCCH::Register(Loader::AppLoader& app_loader) {
     }
 
     LOG_DEBUG(Service_FS, "Registering program {:016X} with the SelfNCCH archive factory",
-                program_id);
+              program_id);
 
     if (ncch_data.find(program_id) != ncch_data.end()) {
         LOG_WARNING(Service_FS,
-                      "Registering program {:016X} with SelfNCCH will override existing mapping",
-                      program_id);
+                    "Registering program {:016X} with SelfNCCH will override existing mapping",
+                    program_id);
     }
 
     NCCHData& data = ncch_data[program_id];

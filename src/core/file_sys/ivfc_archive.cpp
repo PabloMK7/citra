@@ -36,22 +36,21 @@ ResultCode IVFCArchive::DeleteFile(const Path& path) const {
 }
 
 ResultCode IVFCArchive::RenameFile(const Path& src_path, const Path& dest_path) const {
-    LOG_CRITICAL(Service_FS, "Attempted to rename a file within an IVFC archive ({}).",
-                   GetName());
+    LOG_CRITICAL(Service_FS, "Attempted to rename a file within an IVFC archive ({}).", GetName());
     // TODO(wwylele): Use correct error code
     return ResultCode(-1);
 }
 
 ResultCode IVFCArchive::DeleteDirectory(const Path& path) const {
     LOG_CRITICAL(Service_FS, "Attempted to delete a directory from an IVFC archive ({}).",
-                   GetName());
+                 GetName());
     // TODO(wwylele): Use correct error code
     return ResultCode(-1);
 }
 
 ResultCode IVFCArchive::DeleteDirectoryRecursively(const Path& path) const {
     LOG_CRITICAL(Service_FS, "Attempted to delete a directory from an IVFC archive ({}).",
-                   GetName());
+                 GetName());
     // TODO(wwylele): Use correct error code
     return ResultCode(-1);
 }
@@ -64,15 +63,13 @@ ResultCode IVFCArchive::CreateFile(const Path& path, u64 size) const {
 }
 
 ResultCode IVFCArchive::CreateDirectory(const Path& path) const {
-    LOG_CRITICAL(Service_FS, "Attempted to create a directory in an IVFC archive ({}).",
-                   GetName());
+    LOG_CRITICAL(Service_FS, "Attempted to create a directory in an IVFC archive ({}).", GetName());
     // TODO(wwylele): Use correct error code
     return ResultCode(-1);
 }
 
 ResultCode IVFCArchive::RenameDirectory(const Path& src_path, const Path& dest_path) const {
-    LOG_CRITICAL(Service_FS, "Attempted to rename a file within an IVFC archive ({}).",
-                   GetName());
+    LOG_CRITICAL(Service_FS, "Attempted to rename a file within an IVFC archive ({}).", GetName());
     // TODO(wwylele): Use correct error code
     return ResultCode(-1);
 }

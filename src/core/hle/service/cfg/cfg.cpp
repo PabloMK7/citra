@@ -161,7 +161,7 @@ void Module::Interface::GetCountryCodeID(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     if (0 == country_code_id) {
         LOG_ERROR(Service_CFG, "requested country code name={}{} is invalid",
-                    static_cast<char>(country_code & 0xff), static_cast<char>(country_code >> 8));
+                  static_cast<char>(country_code & 0xff), static_cast<char>(country_code >> 8));
         rb.Push(ResultCode(ErrorDescription::NotFound, ErrorModule::Config,
                            ErrorSummary::WrongArgument, ErrorLevel::Permanent));
         rb.Push<u16>(0x00FF);
@@ -310,21 +310,21 @@ ResultVal<void*> Module::GetConfigInfoBlockPointer(u32 block_id, u32 size, u32 f
 
     if (itr == std::end(config->block_entries)) {
         LOG_ERROR(Service_CFG, "Config block 0x{:X} with flags {} and size {} was not found",
-                    block_id, flag, size);
+                  block_id, flag, size);
         return ResultCode(ErrorDescription::NotFound, ErrorModule::Config,
                           ErrorSummary::WrongArgument, ErrorLevel::Permanent);
     }
 
     if ((itr->flags & flag) == 0) {
         LOG_ERROR(Service_CFG, "Invalid flag {} for config block 0x{:X} with size {}", flag,
-                    block_id, size);
+                  block_id, size);
         return ResultCode(ErrorDescription::NotAuthorized, ErrorModule::Config,
                           ErrorSummary::WrongArgument, ErrorLevel::Permanent);
     }
 
     if (itr->size != size) {
         LOG_ERROR(Service_CFG, "Invalid size {} for config block 0x{:X} with flags {}", size,
-                    block_id, flag);
+                  block_id, flag);
         return ResultCode(ErrorDescription::InvalidSize, ErrorModule::Config,
                           ErrorSummary::WrongArgument, ErrorLevel::Permanent);
     }
@@ -607,7 +607,7 @@ void Module::SetPreferredRegionCode(u32 region_code) {
             AdjustLanguageInfoBlock(region_code, current_language);
         if (current_language != adjusted_language) {
             LOG_WARNING(Service_CFG, "System language {} does not fit the region. Adjusted to {}",
-                          static_cast<int>(current_language), static_cast<int>(adjusted_language));
+                        static_cast<int>(current_language), static_cast<int>(adjusted_language));
             SetSystemLanguage(adjusted_language);
         }
     }

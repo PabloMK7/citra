@@ -120,10 +120,9 @@ static ResultCode WriteHWRegs(u32 base_address, u32 size_in_bytes, const std::ve
     const u32 max_size_in_bytes = 0x80;
 
     if (base_address & 3 || base_address >= 0x420000) {
-        LOG_ERROR(
-            Service_GSP,
-            "Write address was out of range or misaligned! (address=0x{:08x}, size=0x{:08x})",
-            base_address, size_in_bytes);
+        LOG_ERROR(Service_GSP,
+                  "Write address was out of range or misaligned! (address=0x{:08x}, size=0x{:08x})",
+                  base_address, size_in_bytes);
         return ERR_REGS_OUTOFRANGE_OR_MISALIGNED;
     } else if (size_in_bytes <= max_size_in_bytes) {
         if (size_in_bytes & 3) {
@@ -165,10 +164,9 @@ static ResultCode WriteHWRegsWithMask(u32 base_address, u32 size_in_bytes,
     const u32 max_size_in_bytes = 0x80;
 
     if (base_address & 3 || base_address >= 0x420000) {
-        LOG_ERROR(
-            Service_GSP,
-            "Write address was out of range or misaligned! (address=0x{:08x}, size=0x{:08x})",
-            base_address, size_in_bytes);
+        LOG_ERROR(Service_GSP,
+                  "Write address was out of range or misaligned! (address=0x{:08x}, size=0x{:08x})",
+                  base_address, size_in_bytes);
         return ERR_REGS_OUTOFRANGE_OR_MISALIGNED;
     } else if (size_in_bytes <= max_size_in_bytes) {
         if (size_in_bytes & 3) {
@@ -319,8 +317,8 @@ void GSP_GPU::FlushDataCache(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
 
-    LOG_DEBUG(Service_GSP, "(STUBBED) called address=0x{:08X}, size=0x{:08X}, process={}",
-                address, size, process->process_id);
+    LOG_DEBUG(Service_GSP, "(STUBBED) called address=0x{:08X}, size=0x{:08X}, process={}", address,
+              size, process->process_id);
 }
 
 void GSP_GPU::InvalidateDataCache(Kernel::HLERequestContext& ctx) {
@@ -334,8 +332,8 @@ void GSP_GPU::InvalidateDataCache(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
 
-    LOG_DEBUG(Service_GSP, "(STUBBED) called address=0x{:08X}, size=0x{:08X}, process={}",
-                address, size, process->process_id);
+    LOG_DEBUG(Service_GSP, "(STUBBED) called address=0x{:08X}, size=0x{:08X}, process={}", address,
+              size, process->process_id);
 }
 
 void GSP_GPU::SetAxiConfigQoSMode(Kernel::HLERequestContext& ctx) {
@@ -680,7 +678,7 @@ void GSP_GPU::AcquireRight(Kernel::HLERequestContext& ctx) {
     SessionData* session_data = GetSessionData(ctx.Session());
 
     LOG_WARNING(Service_GSP, "called flag={:08X} process={} thread_id={}", flag,
-                  process->process_id, session_data->thread_id);
+                process->process_id, session_data->thread_id);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
 
@@ -726,8 +724,8 @@ void GSP_GPU::StoreDataCache(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
 
-    LOG_DEBUG(Service_GSP, "(STUBBED) called address=0x{:08X}, size=0x{:08X}, process={}",
-                address, size, process->process_id);
+    LOG_DEBUG(Service_GSP, "(STUBBED) called address=0x{:08X}, size=0x{:08X}, process={}", address,
+              size, process->process_id);
 }
 
 void GSP_GPU::SetLedForceOff(Kernel::HLERequestContext& ctx) {

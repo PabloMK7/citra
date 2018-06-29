@@ -65,8 +65,7 @@ static Math::Vec4<u8> DecodePixel(Regs::PixelFormat input_format, const u8* src_
         return Color::DecodeRGBA4(src_pixel);
 
     default:
-        LOG_ERROR(HW_GPU, "Unknown source framebuffer format {:x}",
-                    static_cast<u32>(input_format));
+        LOG_ERROR(HW_GPU, "Unknown source framebuffer format {:x}", static_cast<u32>(input_format));
         return {0, 0, 0, 0};
     }
 }
@@ -91,7 +90,7 @@ static void MemoryFill(const Regs::MemoryFillConfig& config) {
 
     if (end_addr <= start_addr) {
         LOG_CRITICAL(HW_GPU, "invalid memory range from {:#010X} to {:#010X}", start_addr,
-                       end_addr);
+                     end_addr);
         return;
     }
 
@@ -170,7 +169,7 @@ static void DisplayTransfer(const Regs::DisplayTransferConfig& config) {
 
     if (config.scaling > config.ScaleXY) {
         LOG_CRITICAL(HW_GPU, "Unimplemented display transfer scaling mode {}",
-                       config.scaling.Value());
+                     config.scaling.Value());
         UNIMPLEMENTED();
         return;
     }
@@ -296,7 +295,7 @@ static void DisplayTransfer(const Regs::DisplayTransferConfig& config) {
 
             default:
                 LOG_ERROR(HW_GPU, "Unknown destination framebuffer format {:x}",
-                            static_cast<u32>(config.output_format.Value()));
+                          static_cast<u32>(config.output_format.Value()));
                 break;
             }
         }
@@ -392,8 +391,7 @@ inline void Write(u32 addr, const T data) {
 
     // Writes other than u32 are untested, so I'd rather have them abort than silently fail
     if (index >= Regs::NumIds() || !std::is_same<T, u32>::value) {
-        LOG_ERROR(HW_GPU, "unknown Write{} {:#010X} @ {:#010X}", sizeof(data) * 8, (u32)data,
-                    addr);
+        LOG_ERROR(HW_GPU, "unknown Write{} {:#010X} @ {:#010X}", sizeof(data) * 8, (u32)data, addr);
         return;
     }
 
@@ -410,7 +408,7 @@ inline void Write(u32 addr, const T data) {
         if (config.trigger) {
             MemoryFill(config);
             LOG_TRACE(HW_GPU, "MemoryFill from {:#010X} to {:#010X}", config.GetStartAddress(),
-                        config.GetEndAddress());
+                      config.GetEndAddress());
 
             // It seems that it won't signal interrupt if "address_start" is zero.
             // TODO: hwtest this
@@ -443,22 +441,21 @@ inline void Write(u32 addr, const T data) {
             if (config.is_texture_copy) {
                 TextureCopy(config);
                 LOG_TRACE(HW_GPU,
-                            "TextureCopy: {:#X} bytes from {:#010X}({}+{})-> "
-                            "{:#010X}({}+{}), flags {:#010X}",
-                            config.texture_copy.size, config.GetPhysicalInputAddress(),
-                            config.texture_copy.input_width * 16,
-                            config.texture_copy.input_gap * 16, config.GetPhysicalOutputAddress(),
-                            config.texture_copy.output_width * 16,
-                            config.texture_copy.output_gap * 16, config.flags);
+                          "TextureCopy: {:#X} bytes from {:#010X}({}+{})-> "
+                          "{:#010X}({}+{}), flags {:#010X}",
+                          config.texture_copy.size, config.GetPhysicalInputAddress(),
+                          config.texture_copy.input_width * 16, config.texture_copy.input_gap * 16,
+                          config.GetPhysicalOutputAddress(), config.texture_copy.output_width * 16,
+                          config.texture_copy.output_gap * 16, config.flags);
             } else {
                 DisplayTransfer(config);
                 LOG_TRACE(HW_GPU,
-                            "DisplayTransfer: {:#010X}({}x{})-> "
-                            "{:#010X}({}x{}), dst format {:x}, flags {:#010X}",
-                            config.GetPhysicalInputAddress(), config.input_width.Value(),
-                            config.input_height.Value(), config.GetPhysicalOutputAddress(),
-                            config.output_width.Value(), config.output_height.Value(),
-                            static_cast<u32>(config.output_format.Value()), config.flags);
+                          "DisplayTransfer: {:#010X}({}x{})-> "
+                          "{:#010X}({}x{}), dst format {:x}, flags {:#010X}",
+                          config.GetPhysicalInputAddress(), config.input_width.Value(),
+                          config.input_height.Value(), config.GetPhysicalOutputAddress(),
+                          config.output_width.Value(), config.output_height.Value(),
+                          static_cast<u32>(config.output_format.Value()), config.flags);
             }
 
             g_regs.display_transfer_config.trigger = 0;

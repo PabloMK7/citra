@@ -66,7 +66,7 @@ inline void Write(u32 addr, const T data) {
         break;
     default:
         LOG_ERROR(HW_Memory, "unknown Write{} {:#010X} @ {:#010X}", sizeof(data) * 8, (u32)data,
-                    addr);
+                  addr);
     }
 }
 

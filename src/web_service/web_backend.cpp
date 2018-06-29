@@ -104,7 +104,7 @@ std::future<Common::WebResult> PostJson(const std::string& url, const std::strin
 
         if (response.status >= 400) {
             LOG_ERROR(WebService, "POST to {} returned error status code: {}", url,
-                        response.status);
+                      response.status);
             return Common::WebResult{Common::WebResult::Code::HttpError,
                                      std::to_string(response.status)};
         }
@@ -114,7 +114,7 @@ std::future<Common::WebResult> PostJson(const std::string& url, const std::strin
         if (content_type == response.headers.end() ||
             content_type->second.find("application/json") == std::string::npos) {
             LOG_ERROR(WebService, "POST to {} returned wrong content: {}", url,
-                        content_type->second);
+                      content_type->second);
             return Common::WebResult{Common::WebResult::Code::WrongContent, content_type->second};
         }
 
@@ -175,8 +175,7 @@ std::future<T> GetJson(std::function<T(const std::string&)> func, const std::str
         }
 
         if (response.status >= 400) {
-            LOG_ERROR(WebService, "GET to {} returned error status code: {}", url,
-                        response.status);
+            LOG_ERROR(WebService, "GET to {} returned error status code: {}", url, response.status);
             return func("");
         }
 
@@ -185,7 +184,7 @@ std::future<T> GetJson(std::function<T(const std::string&)> func, const std::str
         if (content_type == response.headers.end() ||
             content_type->second.find("application/json") == std::string::npos) {
             LOG_ERROR(WebService, "GET to {} returned wrong content: {}", url,
-                        content_type->second);
+                      content_type->second);
             return func("");
         }
 
@@ -248,7 +247,7 @@ void DeleteJson(const std::string& url, const std::string& data, const std::stri
 
         if (response.status >= 400) {
             LOG_ERROR(WebService, "DELETE to {} returned error status code: {}", url,
-                        response.status);
+                      response.status);
             return;
         }
 
@@ -257,7 +256,7 @@ void DeleteJson(const std::string& url, const std::string& data, const std::stri
         if (content_type == response.headers.end() ||
             content_type->second.find("application/json") == std::string::npos) {
             LOG_ERROR(WebService, "DELETE to {} returned wrong content: {}", url,
-                        content_type->second);
+                      content_type->second);
             return;
         }
 

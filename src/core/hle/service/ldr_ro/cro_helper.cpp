@@ -551,7 +551,7 @@ ResultCode CROHelper::ApplyStaticAnonymousSymbolToCRS(VAddr crs_address) {
     CROHelper crs(crs_address);
     u32 offset_export_num = GetField(StaticAnonymousSymbolNum);
     LOG_INFO(Service_LDR, "CRO \"{}\" exports {} static anonymous symbols", ModuleName(),
-               offset_export_num);
+             offset_export_num);
     for (u32 i = 0; i < offset_export_num; ++i) {
         StaticAnonymousSymbolEntry entry;
         GetEntry(i, entry);
@@ -564,7 +564,7 @@ ResultCode CROHelper::ApplyStaticAnonymousSymbolToCRS(VAddr crs_address) {
 
         u32 symbol_address = SegmentTagToAddress(entry.symbol_position);
         LOG_TRACE(Service_LDR, "CRO \"{}\" exports 0x{:08X} to the static module", ModuleName(),
-                    symbol_address);
+                  symbol_address);
         ResultCode result = crs.ApplyRelocationBatch(batch_address, symbol_address);
         if (result.IsError()) {
             LOG_ERROR(Service_LDR, "Error applying relocation batch {:08X}", result.raw);
@@ -604,7 +604,7 @@ ResultCode CROHelper::ApplyInternalRelocations(u32 old_data_segment_address) {
         SegmentEntry symbol_segment;
         GetEntry(relocation.symbol_segment, symbol_segment);
         LOG_TRACE(Service_LDR, "Internally relocates 0x{:08X} with 0x{:08X}", target_address,
-                    symbol_segment.offset);
+                  symbol_segment.offset);
         ResultCode result = ApplyRelocation(target_address, relocation.type, relocation.addend,
                                             symbol_segment.offset, target_addressB);
         if (result.IsError()) {
@@ -765,12 +765,12 @@ ResultCode CROHelper::ApplyImportNamedSymbol(VAddr crs_address) {
 
                     if (symbol_address != 0) {
                         LOG_TRACE(Service_LDR, "CRO \"{}\" imports \"{}\" from \"{}\"",
-                                    ModuleName(), symbol_name, source.ModuleName());
+                                  ModuleName(), symbol_name, source.ModuleName());
 
                         ResultCode result = ApplyRelocationBatch(relocation_addr, symbol_address);
                         if (result.IsError()) {
                             LOG_ERROR(Service_LDR, "Error applying relocation batch {:08X}",
-                                        result.raw);
+                                      result.raw);
                             return result;
                         }
 
@@ -860,7 +860,7 @@ ResultCode CROHelper::ApplyModuleImport(VAddr crs_address) {
             ForEachAutoLinkCRO(crs_address, [&](CROHelper source) -> ResultVal<bool> {
                 if (want_cro_name == source.ModuleName()) {
                     LOG_INFO(Service_LDR, "CRO \"{}\" imports {} indexed symbols from \"{}\"",
-                               ModuleName(), entry.import_indexed_symbol_num, source.ModuleName());
+                             ModuleName(), entry.import_indexed_symbol_num, source.ModuleName());
                     for (u32 j = 0; j < entry.import_indexed_symbol_num; ++j) {
                         ImportIndexedSymbolEntry im;
                         entry.GetImportIndexedSymbolEntry(j, im);
@@ -872,13 +872,12 @@ ResultCode CROHelper::ApplyModuleImport(VAddr crs_address) {
                             ApplyRelocationBatch(im.relocation_batch_offset, symbol_address);
                         if (result.IsError()) {
                             LOG_ERROR(Service_LDR, "Error applying relocation batch {:08X}",
-                                        result.raw);
+                                      result.raw);
                             return result;
                         }
                     }
                     LOG_INFO(Service_LDR, "CRO \"{}\" imports {} anonymous symbols from \"{}\"",
-                               ModuleName(), entry.import_anonymous_symbol_num,
-                               source.ModuleName());
+                             ModuleName(), entry.import_anonymous_symbol_num, source.ModuleName());
                     for (u32 j = 0; j < entry.import_anonymous_symbol_num; ++j) {
                         ImportAnonymousSymbolEntry im;
                         entry.GetImportAnonymousSymbolEntry(j, im);
@@ -888,7 +887,7 @@ ResultCode CROHelper::ApplyModuleImport(VAddr crs_address) {
                             ApplyRelocationBatch(im.relocation_batch_offset, symbol_address);
                         if (result.IsError()) {
                             LOG_ERROR(Service_LDR, "Error applying relocation batch {:08X}",
-                                        result.raw);
+                                      result.raw);
                             return result;
                         }
                     }
@@ -905,7 +904,7 @@ ResultCode CROHelper::ApplyModuleImport(VAddr crs_address) {
 
 ResultCode CROHelper::ApplyExportNamedSymbol(CROHelper target) {
     LOG_DEBUG(Service_LDR, "CRO \"{}\" exports named symbols to \"{}\"", ModuleName(),
-                target.ModuleName());
+              target.ModuleName());
     u32 target_import_strings_size = target.GetField(ImportStringsSize);
     u32 target_symbol_import_num = target.GetField(ImportNamedSymbolNum);
     for (u32 i = 0; i < target_symbol_import_num; ++i) {
@@ -934,7 +933,7 @@ ResultCode CROHelper::ApplyExportNamedSymbol(CROHelper target) {
 
 ResultCode CROHelper::ResetExportNamedSymbol(CROHelper target) {
     LOG_DEBUG(Service_LDR, "CRO \"{}\" unexports named symbols to \"{}\"", ModuleName(),
-                target.ModuleName());
+              target.ModuleName());
     u32 unresolved_symbol = target.GetOnUnresolvedAddress();
     u32 target_import_strings_size = target.GetField(ImportStringsSize);
     u32 target_symbol_import_num = target.GetField(ImportNamedSymbolNum);
@@ -975,7 +974,7 @@ ResultCode CROHelper::ApplyModuleExport(CROHelper target) {
             continue;
 
         LOG_INFO(Service_LDR, "CRO \"{}\" exports {} indexed symbols to \"{}\"", module_name,
-                   entry.import_indexed_symbol_num, target.ModuleName());
+                 entry.import_indexed_symbol_num, target.ModuleName());
         for (u32 j = 0; j < entry.import_indexed_symbol_num; ++j) {
             ImportIndexedSymbolEntry im;
             entry.GetImportIndexedSymbolEntry(j, im);
@@ -992,7 +991,7 @@ ResultCode CROHelper::ApplyModuleExport(CROHelper target) {
         }
 
         LOG_INFO(Service_LDR, "CRO \"{}\" exports {} anonymous symbols to \"{}\"", module_name,
-                   entry.import_anonymous_symbol_num, target.ModuleName());
+                 entry.import_anonymous_symbol_num, target.ModuleName());
         for (u32 j = 0; j < entry.import_anonymous_symbol_num; ++j) {
             ImportAnonymousSymbolEntry im;
             entry.GetImportAnonymousSymbolEntry(j, im);
@@ -1024,7 +1023,7 @@ ResultCode CROHelper::ResetModuleExport(CROHelper target) {
             continue;
 
         LOG_DEBUG(Service_LDR, "CRO \"{}\" unexports indexed symbols to \"{}\"", module_name,
-                    target.ModuleName());
+                  target.ModuleName());
         for (u32 j = 0; j < entry.import_indexed_symbol_num; ++j) {
             ImportIndexedSymbolEntry im;
             entry.GetImportIndexedSymbolEntry(j, im);
@@ -1037,7 +1036,7 @@ ResultCode CROHelper::ResetModuleExport(CROHelper target) {
         }
 
         LOG_DEBUG(Service_LDR, "CRO \"{}\" unexports anonymous symbols to \"{}\"", module_name,
-                    target.ModuleName());
+                  target.ModuleName());
         for (u32 j = 0; j < entry.import_anonymous_symbol_num; ++j) {
             ImportAnonymousSymbolEntry im;
             entry.GetImportAnonymousSymbolEntry(j, im);
@@ -1070,12 +1069,12 @@ ResultCode CROHelper::ApplyExitRelocations(VAddr crs_address) {
 
                     if (symbol_address != 0) {
                         LOG_DEBUG(Service_LDR, "CRO \"{}\" import exit function from \"{}\"",
-                                    ModuleName(), source.ModuleName());
+                                  ModuleName(), source.ModuleName());
 
                         ResultCode result = ApplyRelocationBatch(relocation_addr, symbol_address);
                         if (result.IsError()) {
                             LOG_ERROR(Service_LDR, "Error applying relocation batch {:08X}",
-                                        result.raw);
+                                      result.raw);
                             return result;
                         }
 

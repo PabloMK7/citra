@@ -66,7 +66,7 @@ bool Filter::ParseFilterRule(const std::string::const_iterator begin,
     auto level_separator = std::find(begin, end, ':');
     if (level_separator == end) {
         LOG_ERROR(Log, "Invalid log filter. Must specify a log level after `:`: {}",
-                    std::string(begin, end));
+                  std::string(begin, end));
         return false;
     }
 

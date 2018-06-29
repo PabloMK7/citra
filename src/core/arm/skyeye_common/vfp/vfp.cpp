@@ -107,7 +107,7 @@ u64 vfp_get_double(ARMul_State* state, unsigned int reg) {
 
 void vfp_put_double(ARMul_State* state, u64 val, unsigned int reg) {
     LOG_TRACE(Core_ARM11, "VFP put double: s[{}-{}] <= [{:08x}-{:08x}]", reg * 2 + 1, reg * 2,
-                (u32)(val >> 32), (u32)(val & 0xffffffff));
+              (u32)(val >> 32), (u32)(val & 0xffffffff));
     state->ExtReg[reg * 2] = (u32)(val & 0xffffffff);
     state->ExtReg[reg * 2 + 1] = (u32)(val >> 32);
 }

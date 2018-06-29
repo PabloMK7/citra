@@ -302,7 +302,7 @@ static void RemoveBreakpoint(BreakpointType type, PAddr addr) {
     auto bp = p.find(addr);
     if (bp != p.end()) {
         LOG_DEBUG(Debug_GDBStub, "gdb: removed a breakpoint: {:08x} bytes at {:08x} of type {}\n",
-                    bp->second.len, bp->second.addr, static_cast<int>(type));
+                  bp->second.len, bp->second.addr, static_cast<int>(type));
         p.erase(addr);
     }
 }
@@ -348,8 +348,8 @@ bool CheckBreakpoint(PAddr addr, BreakpointType type) {
 
         if (bp->second.active && (addr >= bp->second.addr && addr < bp->second.addr + len)) {
             LOG_DEBUG(Debug_GDBStub,
-                        "Found breakpoint type {} @ {:08x}, range: {:08x} - {:08x} ({} bytes)\n",
-                        static_cast<int>(type), addr, bp->second.addr, bp->second.addr + len, len);
+                      "Found breakpoint type {} @ {:08x}, range: {:08x} - {:08x} ({} bytes)\n",
+                      static_cast<int>(type), addr, bp->second.addr, bp->second.addr + len, len);
             return true;
         }
     }
@@ -740,7 +740,7 @@ static bool CommitBreakpoint(BreakpointType type, PAddr addr, u32 len) {
     p.insert({addr, breakpoint});
 
     LOG_DEBUG(Debug_GDBStub, "gdb: added {} breakpoint: {:08x} bytes at {:08x}\n",
-                static_cast<int>(type), breakpoint.len, breakpoint.addr);
+              static_cast<int>(type), breakpoint.len, breakpoint.addr);
 
     return true;
 }
