@@ -6,18 +6,15 @@
 #include "core/hle/service/dlp/dlp_clnt.h"
 #include "core/hle/service/dlp/dlp_fkcl.h"
 #include "core/hle/service/dlp/dlp_srvr.h"
-#include "core/hle/service/service.h"
 
 namespace Service {
 namespace DLP {
 
-void Init() {
-    AddService(new DLP_CLNT_Interface);
-    AddService(new DLP_FKCL_Interface);
-    AddService(new DLP_SRVR_Interface);
+void InstallInterfaces(SM::ServiceManager& service_manager) {
+    std::make_shared<DLP_CLNT>()->InstallAsService(service_manager);
+    std::make_shared<DLP_FKCL>()->InstallAsService(service_manager);
+    std::make_shared<DLP_SRVR>()->InstallAsService(service_manager);
 }
-
-void Shutdown() {}
 
 } // namespace DLP
 } // namespace Service

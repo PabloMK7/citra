@@ -9,13 +9,13 @@
 namespace Service {
 namespace DLP {
 
-class DLP_SRVR_Interface final : public Interface {
+class DLP_SRVR final : public ServiceFramework<DLP_SRVR> {
 public:
-    DLP_SRVR_Interface();
+    DLP_SRVR();
+    ~DLP_SRVR() = default;
 
-    std::string GetPortName() const override {
-        return "dlp:SRVR";
-    }
+private:
+    void IsChild(Kernel::HLERequestContext& ctx);
 };
 
 } // namespace DLP
