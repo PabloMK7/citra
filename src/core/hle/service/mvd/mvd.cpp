@@ -4,13 +4,12 @@
 
 #include "core/hle/service/mvd/mvd.h"
 #include "core/hle/service/mvd/mvd_std.h"
-#include "core/hle/service/service.h"
 
 namespace Service {
 namespace MVD {
 
-void Init() {
-    AddService(new MVD_STD());
+void InstallInterfaces(SM::ServiceManager& service_manager) {
+    std::make_shared<MVD_STD>()->InstallAsService(service_manager);
 }
 
 } // namespace MVD
