@@ -342,6 +342,8 @@ add_library(core STATIC
     hle/service/pxi/pxi.h
     hle/service/qtm/qtm.cpp
     hle/service/qtm/qtm.h
+    hle/service/qtm/qtm_c.cpp
+    hle/service/qtm/qtm_c.h
     hle/service/qtm/qtm_s.cpp
     hle/service/qtm/qtm_s.h
     hle/service/qtm/qtm_sp.cpp

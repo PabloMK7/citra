@@ -3,22 +3,22 @@
 // Refer to the license.txt file included.
 
 #include "core/hle/ipc_helpers.h"
-#include "core/hle/service/qtm/qtm_sp.h"
+#include "core/hle/service/qtm/qtm_c.h"
 
 namespace Service {
 namespace QTM {
 
-QTM_SP::QTM_SP() : ServiceFramework("qtm:sp", 2) {
+QTM_C::QTM_C() : ServiceFramework("qtm:c", 2) {
     static const FunctionInfo functions[] = {
         // clang-format off
-        // qtm common commands
-        {0x00010080, nullptr, "GetHeadtrackingInfoRaw"},
-        {0x00020080, nullptr, "GetHeadtrackingInfo"},
+        // qtm calibration commands
+        {0x00010000, nullptr, "InitializeHardwareCheck"},
+        {0x00050040, nullptr, "SetIrLedCheck"},
         // clang-format on
     };
 
     RegisterHandlers(functions);
-}
+};
 
 } // namespace QTM
 } // namespace Service

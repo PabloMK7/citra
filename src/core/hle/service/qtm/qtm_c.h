@@ -9,10 +9,10 @@
 namespace Service {
 namespace QTM {
 
-class QTM_S final : public ServiceFramework<QTM_S> {
+class QTM_C final : public ServiceFramework<QTM_C> {
 public:
-    QTM_S();
-    ~QTM_S() = default;
+    QTM_C();
+    ~QTM_C() = default;
 };
 
 } // namespace QTM

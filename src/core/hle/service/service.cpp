@@ -254,7 +254,7 @@ void Init(std::shared_ptr<SM::ServiceManager>& sm) {
     NIM::InstallInterfaces(*sm);
     NWM::Init();
     PTM::InstallInterfaces(*sm);
-    QTM::Init();
+    QTM::InstallInterfaces(*sm);
 
     AddService(new CSND::CSND_SND);
     AddService(new DSP_DSP::Interface);
