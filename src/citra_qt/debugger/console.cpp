@@ -14,6 +14,16 @@
 
 namespace Debugger {
 void ToggleConsole() {
+    static bool first_call = true, console_shown = true;
+    if (!first_call) {
+        if (console_shown == UISettings::values.show_console) {
+            return;
+        } else {
+            console_shown = UISettings::values.show_console;
+        }
+    } else {
+        first_call = false;
+    }
 #ifdef _WIN32
     FILE* temp;
     if (UISettings::values.show_console) {
