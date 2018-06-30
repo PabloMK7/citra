@@ -16,7 +16,7 @@ static void SetShaderUniformBlockBinding(GLuint shader, const char* name, Unifor
     }
     GLint ub_size = 0;
     glGetActiveUniformBlockiv(shader, ub_index, GL_UNIFORM_BLOCK_DATA_SIZE, &ub_size);
-    ASSERT_MSG(ub_size == expected_size, "Uniform block size did not match! Got %d, expected %zu",
+    ASSERT_MSG(ub_size == expected_size, "Uniform block size did not match! Got {}, expected {}",
                static_cast<int>(ub_size), expected_size);
     glUniformBlockBinding(shader, ub_index, static_cast<GLuint>(binding));
 }
