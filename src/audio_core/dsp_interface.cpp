@@ -7,6 +7,7 @@
 #include "audio_core/sink.h"
 #include "audio_core/sink_details.h"
 #include "common/assert.h"
+#include "core/settings.h"
 
 namespace AudioCore {
 
@@ -39,9 +40,16 @@ void DspInterface::EnableStretching(bool enable) {
     perform_time_stretching = enable;
 }
 
-void DspInterface::OutputFrame(const StereoFrame16& frame) {
+void DspInterface::OutputFrame(StereoFrame16& frame) {
     if (!sink)
         return;
+
+    // Implementation of the hardware volume slider with a dynamic range of 60 dB
+    float volume_scale_factor = std::exp(6.90775 * Settings::values.volume) * 0.001;
+    for (size_t i = 0; i < frame.size(); i++) {
+        frame[i][0] = static_cast<s16>(frame[i][0] * volume_scale_factor);
+        frame[i][1] = static_cast<s16>(frame[i][1] * volume_scale_factor);
+    }
 
     if (perform_time_stretching) {
         time_stretcher.AddSamples(&frame[0][0], frame.size());
