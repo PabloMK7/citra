@@ -44,8 +44,10 @@ void CSND_SND::Initialize(Kernel::HLERequestContext& ctx) {
 void CSND_SND::Shutdown(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x02, 0, 0);
 
-    if (shared_memory) shared_memory = nullptr;
-    if (mutex) mutex = nullptr;
+    if (mutex)
+        mutex = nullptr;
+    if (shared_memory)
+        shared_memory = nullptr;
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
@@ -87,6 +89,54 @@ void CSND_SND::AcquireSoundChannels(Kernel::HLERequestContext& ctx) {
     LOG_WARNING(Service_CSND, "(STUBBED) called");
 }
 
+void CSND_SND::ReleaseSoundChannels(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x06, 0, 0);
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RESULT_SUCCESS);
+
+    LOG_WARNING(Service_CSND, "(STUBBED) called");
+}
+
+void CSND_SND::FlushDataCache(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x9, 2, 2);
+    u32 address = rp.Pop<u32>();
+    u32 size = rp.Pop<u32>();
+    auto process = rp.PopObject<Kernel::Process>();
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RESULT_SUCCESS);
+
+    LOG_DEBUG(Service_CSND, "(STUBBED) called address=0x{:08X}, size=0x{:08X}, process={}", address,
+              size, process->process_id);
+}
+
+void CSND_SND::StoreDataCache(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0xA, 2, 2);
+    u32 address = rp.Pop<u32>();
+    u32 size = rp.Pop<u32>();
+    auto process = rp.PopObject<Kernel::Process>();
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RESULT_SUCCESS);
+
+    LOG_DEBUG(Service_CSND, "(STUBBED) called address=0x{:08X}, size=0x{:08X}, process={}", address,
+              size, process->process_id);
+}
+
+void CSND_SND::InvalidateDataCache(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0xB, 2, 2);
+    u32 address = rp.Pop<u32>();
+    u32 size = rp.Pop<u32>();
+    auto process = rp.PopObject<Kernel::Process>();
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RESULT_SUCCESS);
+
+    LOG_DEBUG(Service_CSND, "(STUBBED) called address=0x{:08X}, size=0x{:08X}, process={}", address,
+              size, process->process_id);
+}
+
 CSND_SND::CSND_SND() : ServiceFramework("csnd:SND", 4) {
     static const FunctionInfo functions[] = {
         // clang-format off
@@ -95,12 +145,12 @@ CSND_SND::CSND_SND() : ServiceFramework("csnd:SND", 4) {
         {0x00030040, &CSND_SND::ExecuteCommands, "ExecuteCommands"},
         {0x00040080, nullptr, "ExecuteType1Commands"},
         {0x00050000, &CSND_SND::AcquireSoundChannels, "AcquireSoundChannels"},
-        {0x00060000, nullptr, "ReleaseSoundChannels"},
+        {0x00060000, &CSND_SND::ReleaseSoundChannels, "ReleaseSoundChannels"},
         {0x00070000, nullptr, "AcquireCaptureDevice"},
         {0x00080040, nullptr, "ReleaseCaptureDevice"},
-        {0x00090082, nullptr, "FlushDataCache"},
-        {0x000A0082, nullptr, "StoreDataCache"},
-        {0x000B0082, nullptr, "InvalidateDataCache"},
+        {0x00090082, &CSND_SND::FlushDataCache, "FlushDataCache"},
+        {0x000A0082, &CSND_SND::StoreDataCache, "StoreDataCache"},
+        {0x000B0082, &CSND_SND::InvalidateDataCache, "InvalidateDataCache"},
         {0x000C0000, nullptr, "Reset"},
         // clang-format on
     };
