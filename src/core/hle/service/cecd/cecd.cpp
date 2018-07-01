@@ -10,7 +10,6 @@
 #include "core/hle/service/cecd/cecd_s.h"
 #include "core/hle/service/cecd/cecd_u.h"
 
-
 namespace Service {
 namespace CECD {
 
