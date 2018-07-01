@@ -36,9 +36,10 @@ void CSND_SND::Initialize(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
     rb.PushCopyObjects(mutex, shared_memory);
 
-    LOG_WARNING(Service_CSND, "(STUBBED) called, size=0x{:08X} "
-                              "offset0=0x{:08X} offset1=0x{:08X} offset2=0x{:08X} offset3=0x{:08X}",
-                              size, offset0, offset1, offset2, offset3);
+    LOG_WARNING(Service_CSND,
+                "(STUBBED) called, size=0x{:08X} "
+                "offset0=0x{:08X} offset1=0x{:08X} offset2=0x{:08X} offset3=0x{:08X}",
+                size, offset0, offset1, offset2, offset3);
 }
 
 void CSND_SND::Shutdown(Kernel::HLERequestContext& ctx) {
