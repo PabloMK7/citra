@@ -2,14 +2,9 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <cstring>
 #include "common/alignment.h"
-#include "core/hle/ipc.h"
-#include "core/hle/kernel/handle_table.h"
-#include "core/hle/kernel/mutex.h"
-#include "core/hle/kernel/shared_memory.h"
+#include "core/hle/ipc_helpers.h"
 #include "core/hle/service/csnd_snd.h"
-#include "core/memory.h"
 
 namespace Service {
 namespace CSND {
@@ -23,120 +18,98 @@ struct Type0Command {
 };
 static_assert(sizeof(Type0Command) == 0x20, "Type0Command structure size is wrong");
 
-static Kernel::SharedPtr<Kernel::SharedMemory> shared_memory = nullptr;
-static Kernel::SharedPtr<Kernel::Mutex> mutex = nullptr;
-
-/**
- * CSND_SND::Initialize service function
- *  Inputs:
- *      0 : Header Code[0x00010140]
- *      1 : Shared memory block size, for mem-block creation
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- *      2 : Handle-list header
- *      3 : Mutex handle
- *      4 : Shared memory block handle
- */
-static void Initialize(Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-
-    u32 size = Common::AlignUp(cmd_buff[1], Memory::PAGE_SIZE);
+void CSND_SND::Initialize(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x01, 5, 0);
+    u32 size = Common::AlignUp(rp.Pop<u32>(), Memory::PAGE_SIZE);
+    VAddr offset0 = rp.Pop<u32>();
+    VAddr offset1 = rp.Pop<u32>();
+    VAddr offset2 = rp.Pop<u32>();
+    VAddr offset3 = rp.Pop<u32>();
 
     using Kernel::MemoryPermission;
+    mutex = Kernel::Mutex::Create(false, "CSND:mutex");
     shared_memory = Kernel::SharedMemory::Create(nullptr, size, MemoryPermission::ReadWrite,
                                                  MemoryPermission::ReadWrite, 0,
                                                  Kernel::MemoryRegion::BASE, "CSND:SharedMemory");
 
-    mutex = Kernel::Mutex::Create(false, "CSND:mutex");
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 3);
+    rb.Push(RESULT_SUCCESS);
+    rb.PushCopyObjects(mutex, shared_memory);
 
-    cmd_buff[1] = RESULT_SUCCESS.raw;
-    cmd_buff[2] = IPC::CopyHandleDesc(2);
-    cmd_buff[3] = Kernel::g_handle_table.Create(mutex).Unwrap();
-    cmd_buff[4] = Kernel::g_handle_table.Create(shared_memory).Unwrap();
+    LOG_WARNING(Service_CSND, "(STUBBED) called, size=0x{:08X} "
+                              "offset0=0x{:08X} offset1=0x{:08X} offset2=0x{:08X} offset3=0x{:08X}",
+                              size, offset0, offset1, offset2, offset3);
+}
+
+void CSND_SND::Shutdown(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x02, 0, 0);
+
+    if (shared_memory) shared_memory = nullptr;
+    if (mutex) mutex = nullptr;
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RESULT_SUCCESS);
 
     LOG_WARNING(Service_CSND, "(STUBBED) called");
 }
 
-/**
- * CSND_SND::Shutdown service function
- *  Inputs:
- *      0 : Header Code[0x00020000]
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- */
-static void Shutdown(Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
+void CSND_SND::ExecuteCommands(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x03, 1, 0);
+    VAddr addr = rp.Pop<u32>();
 
-    shared_memory = nullptr;
-    mutex = nullptr;
-
-    cmd_buff[1] = RESULT_SUCCESS.raw;
-    LOG_WARNING(Service_CSND, "(STUBBED) called");
-}
-
-/**
- * CSND_SND::ExecuteCommands service function
- *  Inputs:
- *      0 : Header Code[0x00030040]
- *      1 : Command offset in shared memory.
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- *      2 : Available channel bit mask
- */
-static void ExecuteCommands(Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-
-    if (shared_memory == nullptr) {
-        cmd_buff[1] = 1;
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
+    if (!shared_memory) {
+        rb.Push<u32>(1);
+        rb.Skip(1, false);
         LOG_ERROR(Service_CSND, "called, shared memory not allocated");
-        return;
+    } else {
+        u8* ptr = shared_memory->GetPointer(addr);
+        Type0Command command;
+
+        std::memcpy(&command, ptr, sizeof(Type0Command));
+        command.finished |= 1;
+        std::memcpy(ptr, &command, sizeof(Type0Command));
+
+        rb.Push(RESULT_SUCCESS);
+        rb.Push<u32>(0xFFFFFF00);
     }
-
-    VAddr addr = cmd_buff[1];
-    u8* ptr = shared_memory->GetPointer(addr);
-
-    Type0Command command;
-    std::memcpy(&command, ptr, sizeof(Type0Command));
-    command.finished |= 1;
-    std::memcpy(ptr, &command, sizeof(Type0Command));
-
-    cmd_buff[1] = RESULT_SUCCESS.raw;
 
     LOG_WARNING(Service_CSND, "(STUBBED) called, addr=0x{:08X}", addr);
 }
 
-/**
- * CSND_SND::AcquireSoundChannels service function
- *  Inputs:
- *      0 : Header Code[0x00050000]
- *  Outputs:
- *      1 : Result of function, 0 on success, otherwise error code
- *      2 : Available channel bit mask
- */
-static void AcquireSoundChannels(Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-    cmd_buff[1] = RESULT_SUCCESS.raw;
-    cmd_buff[2] = 0xFFFFFF00;
+void CSND_SND::AcquireSoundChannels(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x05, 0, 0);
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
+    rb.Push(RESULT_SUCCESS);
+    rb.Push<u32>(0xFFFFFF00);
+
     LOG_WARNING(Service_CSND, "(STUBBED) called");
 }
 
-const Interface::FunctionInfo FunctionTable[] = {
-    {0x00010140, Initialize, "Initialize"},
-    {0x00020000, Shutdown, "Shutdown"},
-    {0x00030040, ExecuteCommands, "ExecuteCommands"},
-    {0x00040080, nullptr, "ExecuteType1Commands"},
-    {0x00050000, AcquireSoundChannels, "AcquireSoundChannels"},
-    {0x00060000, nullptr, "ReleaseSoundChannels"},
-    {0x00070000, nullptr, "AcquireCaptureDevice"},
-    {0x00080040, nullptr, "ReleaseCaptureDevice"},
-    {0x00090082, nullptr, "FlushDataCache"},
-    {0x000A0082, nullptr, "StoreDataCache"},
-    {0x000B0082, nullptr, "InvalidateDataCache"},
-    {0x000C0000, nullptr, "Reset"},
+CSND_SND::CSND_SND() : ServiceFramework("csnd:SND", 4) {
+    static const FunctionInfo functions[] = {
+        // clang-format off
+        {0x00010140, &CSND_SND::Initialize, "Initialize"},
+        {0x00020000, &CSND_SND::Shutdown, "Shutdown"},
+        {0x00030040, &CSND_SND::ExecuteCommands, "ExecuteCommands"},
+        {0x00040080, nullptr, "ExecuteType1Commands"},
+        {0x00050000, &CSND_SND::AcquireSoundChannels, "AcquireSoundChannels"},
+        {0x00060000, nullptr, "ReleaseSoundChannels"},
+        {0x00070000, nullptr, "AcquireCaptureDevice"},
+        {0x00080040, nullptr, "ReleaseCaptureDevice"},
+        {0x00090082, nullptr, "FlushDataCache"},
+        {0x000A0082, nullptr, "StoreDataCache"},
+        {0x000B0082, nullptr, "InvalidateDataCache"},
+        {0x000C0000, nullptr, "Reset"},
+        // clang-format on
+    };
+
+    RegisterHandlers(functions);
 };
 
-CSND_SND::CSND_SND() {
-    Register(FunctionTable);
+void InstallInterfaces(SM::ServiceManager& service_manager) {
+    std::make_shared<CSND_SND>()->InstallAsService(service_manager);
 }
 
 } // namespace CSND
