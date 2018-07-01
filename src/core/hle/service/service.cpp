@@ -239,7 +239,7 @@ void Init(std::shared_ptr<SM::ServiceManager>& sm) {
     APT::InstallInterfaces(*sm);
     BOSS::Init();
     CAM::InstallInterfaces(*sm);
-    CECD::Init();
+    CECD::InstallInterfaces(*sm);
     CFG::InstallInterfaces(*sm);
     DLP::InstallInterfaces(*sm);
     FRD::InstallInterfaces(*sm);
@@ -268,7 +268,6 @@ void Init(std::shared_ptr<SM::ServiceManager>& sm) {
 
 /// Shutdown ServiceManager
 void Shutdown() {
-    CECD::Shutdown();
     BOSS::Shutdown();
     FS::ArchiveShutdown();
 
