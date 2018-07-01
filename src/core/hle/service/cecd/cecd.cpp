@@ -18,7 +18,7 @@ void Module::Interface::GetCecStateAbbreviated(Kernel::HLERequestContext& ctx) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
-    rb.Push<u32>(static_cast<u32>(CecStateAbbreviated::CEC_STATE_ABBREV_IDLE));
+    rb.PushEnum(CecStateAbbreviated::CEC_STATE_ABBREV_IDLE);
 
     LOG_WARNING(Service_CECD, "(STUBBED) called");
 }

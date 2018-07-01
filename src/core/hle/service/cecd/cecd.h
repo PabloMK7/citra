@@ -10,7 +10,7 @@
 namespace Service {
 namespace CECD {
 
-enum class CecStateAbbreviated {
+enum class CecStateAbbreviated : u32 {
     CEC_STATE_ABBREV_IDLE = 1,      ///< Corresponds to CEC_STATE_IDLE
     CEC_STATE_ABBREV_NOT_LOCAL = 2, ///< Corresponds to CEC_STATEs *FINISH*, *POST, and OVER_BOSS
     CEC_STATE_ABBREV_SCANNING = 3,  ///< Corresponds to CEC_STATE_SCANNING
