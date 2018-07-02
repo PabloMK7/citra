@@ -3,64 +3,61 @@
 // Refer to the license.txt file included.
 
 #include "common/logging/log.h"
-#include "core/hle/ipc.h"
-#include "core/hle/kernel/event.h"
-#include "core/hle/kernel/handle_table.h"
+#include "core/hle/ipc_helpers.h"
 #include "core/hle/result.h"
 #include "core/hle/service/cecd/cecd.h"
 #include "core/hle/service/cecd/cecd_ndm.h"
 #include "core/hle/service/cecd/cecd_s.h"
 #include "core/hle/service/cecd/cecd_u.h"
-#include "core/hle/service/service.h"
 
 namespace Service {
 namespace CECD {
 
-static Kernel::SharedPtr<Kernel::Event> cecinfo_event;
-static Kernel::SharedPtr<Kernel::Event> change_state_event;
+void Module::Interface::GetCecStateAbbreviated(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x0E, 0, 0);
 
-void GetCecStateAbbreviated(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-
-    cmd_buff[1] = RESULT_SUCCESS.raw; // No error
-    cmd_buff[2] = static_cast<u32>(CecStateAbbreviated::CEC_STATE_ABBREV_IDLE);
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
+    rb.Push(RESULT_SUCCESS);
+    rb.PushEnum(CecStateAbbreviated::CEC_STATE_ABBREV_IDLE);
 
     LOG_WARNING(Service_CECD, "(STUBBED) called");
 }
 
-void GetCecInfoEventHandle(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
+void Module::Interface::GetCecInfoEventHandle(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x0F, 0, 0);
 
-    cmd_buff[1] = RESULT_SUCCESS.raw;                                    // No error
-    cmd_buff[3] = Kernel::g_handle_table.Create(cecinfo_event).Unwrap(); // Event handle
-
-    LOG_WARNING(Service_CECD, "(STUBBED) called");
-}
-
-void GetChangeStateEventHandle(Service::Interface* self) {
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-
-    cmd_buff[1] = RESULT_SUCCESS.raw;                                         // No error
-    cmd_buff[3] = Kernel::g_handle_table.Create(change_state_event).Unwrap(); // Event handle
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
+    rb.Push(RESULT_SUCCESS);
+    rb.PushCopyObjects(cecd->cecinfo_event);
 
     LOG_WARNING(Service_CECD, "(STUBBED) called");
 }
 
-void Init() {
-    AddService(new CECD_NDM);
-    AddService(new CECD_S);
-    AddService(new CECD_U);
+void Module::Interface::GetChangeStateEventHandle(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x10, 0, 0);
 
-    cecinfo_event = Kernel::Event::Create(Kernel::ResetType::OneShot, "CECD::cecinfo_event");
-    change_state_event =
-        Kernel::Event::Create(Kernel::ResetType::OneShot, "CECD::change_state_event");
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
+    rb.Push(RESULT_SUCCESS);
+    rb.PushCopyObjects(cecd->change_state_event);
+
+    LOG_WARNING(Service_CECD, "(STUBBED) called");
 }
 
-void Shutdown() {
-    cecinfo_event = nullptr;
-    change_state_event = nullptr;
+Module::Interface::Interface(std::shared_ptr<Module> cecd, const char* name, u32 max_session)
+    : ServiceFramework(name, max_session), cecd(std::move(cecd)) {}
+
+Module::Module() {
+    using namespace Kernel;
+    cecinfo_event = Event::Create(Kernel::ResetType::OneShot, "CECD::cecinfo_event");
+    change_state_event = Event::Create(Kernel::ResetType::OneShot, "CECD::change_state_event");
+}
+
+void InstallInterfaces(SM::ServiceManager& service_manager) {
+    auto cecd = std::make_shared<Module>();
+    std::make_shared<CECD_NDM>(cecd)->InstallAsService(service_manager);
+    std::make_shared<CECD_S>(cecd)->InstallAsService(service_manager);
+    std::make_shared<CECD_U>(cecd)->InstallAsService(service_manager);
 }
 
 } // namespace CECD
-
 } // namespace Service

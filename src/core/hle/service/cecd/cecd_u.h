@@ -4,18 +4,14 @@
 
 #pragma once
 
-#include "core/hle/service/service.h"
+#include "core/hle/service/cecd/cecd.h"
 
 namespace Service {
 namespace CECD {
 
-class CECD_U : public Interface {
+class CECD_U final : public Module::Interface {
 public:
-    CECD_U();
-
-    std::string GetPortName() const override {
-        return "cecd:u";
-    }
+    explicit CECD_U(std::shared_ptr<Module> cecd);
 };
 
 } // namespace CECD
