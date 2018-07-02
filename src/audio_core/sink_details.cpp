@@ -21,12 +21,12 @@ namespace AudioCore {
 // g_sink_details is ordered in terms of desirability, with the best choice at the top.
 const std::vector<SinkDetails> g_sink_details = {
 #ifdef HAVE_CUBEB
-    {"cubeb", []() { return std::make_unique<CubebSink>(); }},
+    {"cubeb", &std::make_unique<CubebSink>},
 #endif
 #ifdef HAVE_SDL2
-    {"sdl2", []() { return std::make_unique<SDL2Sink>(); }},
+    {"sdl2", &std::make_unique<SDL2Sink>},
 #endif
-    {"null", []() { return std::make_unique<NullSink>(); }},
+    {"null", &std::make_unique<NullSink>},
 };
 
 const SinkDetails& GetSinkDetails(std::string sink_id) {
