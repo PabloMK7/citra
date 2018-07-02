@@ -18,9 +18,9 @@ DspInterface::~DspInterface() {
     }
 }
 
-void DspInterface::SetSink(const std::string& sink_id) {
+void DspInterface::SetSink(const std::string& sink_id, const std::string& audio_device) {
     const SinkDetails& sink_details = GetSinkDetails(sink_id);
-    sink = sink_details.factory();
+    sink = sink_details.factory(audio_device);
     time_stretcher.SetOutputSampleRate(sink->GetNativeSampleRate());
 }
 
