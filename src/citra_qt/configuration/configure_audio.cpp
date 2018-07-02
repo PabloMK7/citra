@@ -61,7 +61,6 @@ void ConfigureAudio::applyConfiguration() {
     Settings::values.audio_device_id =
         ui->audio_device_combo_box->itemText(ui->audio_device_combo_box->currentIndex())
             .toStdString();
-    Settings::Apply();
 }
 
 void ConfigureAudio::updateAudioDevices(int sink_index) {

@@ -68,7 +68,6 @@ void ConfigureGeneral::applyConfiguration() {
 
     Settings::values.region_value = ui->region_combobox->currentIndex() - 1;
     Settings::values.use_cpu_jit = ui->toggle_cpu_jit->isChecked();
-    Settings::Apply();
 }
 
 void ConfigureGeneral::onLanguageChanged(int index) {

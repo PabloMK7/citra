@@ -61,7 +61,6 @@ void ConfigureWeb::applyConfiguration() {
                              tr("Username and token were not verified. The changes to your "
                                 "username and/or token have not been saved."));
     }
-    Settings::Apply();
 }
 
 void ConfigureWeb::RefreshTelemetryID() {
