@@ -114,10 +114,6 @@ size_t SDL2Sink::SamplesInQueue() const {
     return total_size;
 }
 
-void SDL2Sink::SetDevice(int device_id) {
-    this->device_id = device_id;
-}
-
 void SDL2Sink::Impl::Callback(void* impl_, u8* buffer, int buffer_size_in_bytes) {
     Impl* impl = reinterpret_cast<Impl*>(impl_);
 

@@ -120,8 +120,6 @@ size_t CubebSink::SamplesInQueue() const {
     return impl->queue.size() / 2;
 }
 
-void CubebSink::SetDevice(int device_id) {}
-
 long CubebSink::Impl::DataCallback(cubeb_stream* stream, void* user_data, const void* input_buffer,
                                    void* output_buffer, long num_frames) {
     Impl* impl = static_cast<Impl*>(user_data);

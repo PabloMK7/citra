@@ -22,12 +22,10 @@ public:
     size_t SamplesInQueue() const override;
 
     std::vector<std::string> GetDeviceList() const override;
-    void SetDevice(int device_id) override;
 
 private:
     struct Impl;
     std::unique_ptr<Impl> impl;
-    int device_id;
     std::vector<std::string> device_list;
 };
 
