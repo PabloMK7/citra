@@ -1446,7 +1446,6 @@ int main(int argc, char* argv[]) {
     QCoreApplication::setOrganizationName("Citra team");
     QCoreApplication::setApplicationName("Citra");
 
-    QApplication::setAttribute(Qt::AA_X11InitThreads);
     QApplication app(argc, argv);
 
     // Qt changes the locale and causes issues in float conversion using std::to_string() when
