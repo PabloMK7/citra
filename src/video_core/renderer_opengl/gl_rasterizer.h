@@ -69,9 +69,13 @@ private:
     private:
         TextureConfig::TextureFilter mag_filter;
         TextureConfig::TextureFilter min_filter;
+        TextureConfig::TextureFilter mip_filter;
         TextureConfig::WrapMode wrap_s;
         TextureConfig::WrapMode wrap_t;
         u32 border_color;
+        u32 lod_min;
+        u32 lod_max;
+        s32 lod_bias;
     };
 
     /// Structure that the hardware rendered vertices are composed of
