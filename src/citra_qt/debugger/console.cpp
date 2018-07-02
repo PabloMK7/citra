@@ -20,7 +20,7 @@ void ToggleConsole() {
     } else {
         console_shown = UISettings::values.show_console;
     }
-    
+
 #ifdef _WIN32
     FILE* temp;
     if (UISettings::values.show_console) {
