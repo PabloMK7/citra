@@ -1153,10 +1153,12 @@ void GMainWindow::OnConfigure() {
     ConfigureDialog configureDialog(this);
     connect(&configureDialog, &ConfigureDialog::languageChanged, this,
             &GMainWindow::OnLanguageChanged);
+    auto old_theme = UISettings::values.theme;
     auto result = configureDialog.exec();
     if (result == QDialog::Accepted) {
         configureDialog.applyConfiguration();
-        UpdateUITheme();
+        if (UISettings::values.theme != old_theme)
+            UpdateUITheme();
         emit UpdateThemedIcons();
         SyncMenuUISettings();
         config->Save();

@@ -186,8 +186,6 @@ void ConfigureInput::applyConfiguration() {
                    [](const Common::ParamPackage& param) { return param.Serialize(); });
     std::transform(analogs_param.begin(), analogs_param.end(), Settings::values.analogs.begin(),
                    [](const Common::ParamPackage& param) { return param.Serialize(); });
-
-    Settings::Apply();
 }
 
 void ConfigureInput::loadConfiguration() {

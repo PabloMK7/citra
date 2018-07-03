@@ -44,7 +44,6 @@ void ConfigureDebug::applyConfiguration() {
     Log::Filter filter;
     filter.ParseFilterString(Settings::values.log_filter);
     Log::SetGlobalFilter(filter);
-    Settings::Apply();
 }
 
 void ConfigureDebug::retranslateUi() {
