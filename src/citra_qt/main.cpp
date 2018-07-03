@@ -931,6 +931,7 @@ void GMainWindow::OnMenuInstallCIA() {
 
     ui.action_Install_CIA->setEnabled(false);
     progress_bar->show();
+    progress_bar->setMaximum(INT_MAX);
 
     QtConcurrent::run([&, filepaths] {
         QString current_path;
@@ -947,8 +948,8 @@ void GMainWindow::OnMenuInstallCIA() {
 }
 
 void GMainWindow::OnUpdateProgress(size_t written, size_t total) {
-    progress_bar->setMaximum(total);
-    progress_bar->setValue(written);
+    progress_bar->setValue(
+        static_cast<int>(INT_MAX * (static_cast<double>(written) / static_cast<double>(total))));
 }
 
 void GMainWindow::OnCIAInstallReport(Service::AM::InstallStatus status, QString filepath) {
