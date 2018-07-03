@@ -50,7 +50,6 @@ private:
      *      1 : Command offset in shared memory.
      *  Outputs:
      *      1 : Result of function, 0 on success, otherwise error code
-     *      2 : Available channel bit mask
      */
     void ExecuteCommands(Kernel::HLERequestContext& ctx);
 

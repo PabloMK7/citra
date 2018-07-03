@@ -21,10 +21,10 @@ static_assert(sizeof(Type0Command) == 0x20, "Type0Command structure size is wron
 void CSND_SND::Initialize(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x01, 5, 0);
     u32 size = Common::AlignUp(rp.Pop<u32>(), Memory::PAGE_SIZE);
-    VAddr offset0 = rp.Pop<u32>();
-    VAddr offset1 = rp.Pop<u32>();
-    VAddr offset2 = rp.Pop<u32>();
-    VAddr offset3 = rp.Pop<u32>();
+    u32 offset0 = rp.Pop<u32>();
+    u32 offset1 = rp.Pop<u32>();
+    u32 offset2 = rp.Pop<u32>();
+    u32 offset3 = rp.Pop<u32>();
 
     using Kernel::MemoryPermission;
     mutex = Kernel::Mutex::Create(false, "CSND:mutex");
@@ -58,12 +58,11 @@ void CSND_SND::Shutdown(Kernel::HLERequestContext& ctx) {
 
 void CSND_SND::ExecuteCommands(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x03, 1, 0);
-    VAddr addr = rp.Pop<u32>();
+    u32 addr = rp.Pop<u32>();
 
-    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     if (!shared_memory) {
         rb.Push<u32>(1);
-        rb.Skip(1, false);
         LOG_ERROR(Service_CSND, "called, shared memory not allocated");
     } else {
         u8* ptr = shared_memory->GetPointer(addr);
@@ -74,7 +73,6 @@ void CSND_SND::ExecuteCommands(Kernel::HLERequestContext& ctx) {
         std::memcpy(ptr, &command, sizeof(Type0Command));
 
         rb.Push(RESULT_SUCCESS);
-        rb.Push<u32>(0xFFFFFF00);
     }
 
     LOG_WARNING(Service_CSND, "(STUBBED) called, addr=0x{:08X}", addr);
@@ -101,7 +99,7 @@ void CSND_SND::ReleaseSoundChannels(Kernel::HLERequestContext& ctx) {
 
 void CSND_SND::FlushDataCache(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x9, 2, 2);
-    u32 address = rp.Pop<u32>();
+    VAddr address = rp.Pop<u32>();
     u32 size = rp.Pop<u32>();
     auto process = rp.PopObject<Kernel::Process>();
 
@@ -114,7 +112,7 @@ void CSND_SND::FlushDataCache(Kernel::HLERequestContext& ctx) {
 
 void CSND_SND::StoreDataCache(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0xA, 2, 2);
-    u32 address = rp.Pop<u32>();
+    VAddr address = rp.Pop<u32>();
     u32 size = rp.Pop<u32>();
     auto process = rp.PopObject<Kernel::Process>();
 
@@ -127,7 +125,7 @@ void CSND_SND::StoreDataCache(Kernel::HLERequestContext& ctx) {
 
 void CSND_SND::InvalidateDataCache(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0xB, 2, 2);
-    u32 address = rp.Pop<u32>();
+    VAddr address = rp.Pop<u32>();
     u32 size = rp.Pop<u32>();
     auto process = rp.PopObject<Kernel::Process>();
 
