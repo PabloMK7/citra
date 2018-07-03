@@ -101,8 +101,17 @@
         </item>
         <item>
          <widget class="QLabel" name="volume_indicator">
+          <property name="minimumSize">
+           <size>
+            <width>32</width>
+            <height>0</height>
+           </size>
+          </property>
           <property name="text">
            <string>0 %</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
           </property>
          </widget>
         </item>
