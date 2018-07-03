@@ -943,7 +943,6 @@ void GMainWindow::OnMenuInstallCIA() {
             emit CIAInstallReport(status, current_path);
         }
         emit CIAInstallFinished();
-        return;
     });
 }
 
