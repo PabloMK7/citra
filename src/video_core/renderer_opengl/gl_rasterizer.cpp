@@ -186,6 +186,7 @@ void RasterizerOpenGL::SyncEntireState() {
 
     SyncFogColor();
     SyncProcTexNoise();
+    SyncProcTexBias();
     SyncShadowBias();
 }
 
@@ -894,6 +895,7 @@ void RasterizerOpenGL::NotifyPicaRegisterChanged(u32 id) {
     case PICA_REG_INDEX(texturing.proctex):
     case PICA_REG_INDEX(texturing.proctex_lut):
     case PICA_REG_INDEX(texturing.proctex_lut_offset):
+        SyncProcTexBias();
         shader_dirty = true;
         break;
 
@@ -1677,6 +1679,15 @@ void RasterizerOpenGL::SyncProcTexNoise() {
         Pica::float16::FromRaw(regs.proctex_noise_u.phase).ToFloat32(),
         Pica::float16::FromRaw(regs.proctex_noise_v.phase).ToFloat32(),
     };
+
+    uniform_block_data.dirty = true;
+}
+
+void RasterizerOpenGL::SyncProcTexBias() {
+    const auto& regs = Pica::g_state.regs.texturing;
+    uniform_block_data.data.proctex_bias =
+        Pica::float16::FromRaw(regs.proctex.bias_low | (regs.proctex_lut.bias_high << 8))
+            .ToFloat32();
 
     uniform_block_data.dirty = true;
 }

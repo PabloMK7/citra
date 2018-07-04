@@ -251,11 +251,18 @@ struct TexturingRegs {
 
     union {
         BitField<0, 3, ProcTexFilter> filter;
+        BitField<3, 4, u32> lod_min;
+        BitField<7, 4, u32> lod_max;
         BitField<11, 8, u32> width;
         BitField<19, 8, u32> bias_high; // TODO: unimplemented
     } proctex_lut;
 
-    BitField<0, 8, u32> proctex_lut_offset;
+    union {
+        BitField<0, 8, u32> level0;
+        BitField<8, 8, u32> level1;
+        BitField<16, 8, u32> level2;
+        BitField<24, 8, u32> level3;
+    } proctex_lut_offset;
 
     INSERT_PADDING_WORDS(0x1);
 

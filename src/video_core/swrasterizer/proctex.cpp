@@ -185,7 +185,7 @@ Math::Vec4<u8> ProcTex(float u, float v, TexturingRegs regs, State::ProcTex stat
 
     // Look up the color
     // For the color lut, coord=0.0 is lut[offset] and coord=1.0 is lut[offset+width-1]
-    const u32 offset = regs.proctex_lut_offset;
+    const u32 offset = regs.proctex_lut_offset.level0;
     const u32 width = regs.proctex_lut.width;
     const float index = offset + (lut_coord * (width - 1));
     Math::Vec4<u8> final_color;
