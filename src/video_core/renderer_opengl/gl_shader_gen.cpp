@@ -317,8 +317,9 @@ static std::string SampleTexture(const PicaFSConfig& config, unsigned texture_un
         // Only unit 0 respects the texturing type
         switch (state.texture0_type) {
         case TexturingRegs::TextureConfig::Texture2D:
-            return "texture(tex0, texcoord0)";
+            return "textureLod(tex0, texcoord0, getLod(texcoord0 * textureSize(tex0, 0)))";
         case TexturingRegs::TextureConfig::Projection2D:
+            // TODO (wwylele): find the exact LOD formula for projection texture
             return "textureProj(tex0, vec3(texcoord0, texcoord0_w))";
         case TexturingRegs::TextureConfig::TextureCube:
             return "texture(tex_cube, vec3(texcoord0, texcoord0_w))";
@@ -335,12 +336,12 @@ static std::string SampleTexture(const PicaFSConfig& config, unsigned texture_un
             return "texture(tex0, texcoord0)";
         }
     case 1:
-        return "texture(tex1, texcoord1)";
+        return "textureLod(tex1, texcoord1, getLod(texcoord1 * textureSize(tex1, 0)))";
     case 2:
         if (state.texture2_use_coord1)
-            return "texture(tex2, texcoord1)";
+            return "textureLod(tex2, texcoord1, getLod(texcoord1 * textureSize(tex2, 0)))";
         else
-            return "texture(tex2, texcoord2)";
+            return "textureLod(tex2, texcoord2, getLod(texcoord2 * textureSize(tex2, 0)))";
     case 3:
         if (state.proctex.enable) {
             return "ProcTex()";
@@ -1331,6 +1332,15 @@ vec3 byteround(vec3 x) {
 
 vec4 byteround(vec4 x) {
     return round(x * 255.0) * (1.0 / 255.0);
+}
+
+// PICA's LOD formula for 2D textures.
+// This LOD formula is the same as the LOD lower limit defined in OpenGL.
+// f(x, y) >= max{m_u, m_v, m_w}
+// (See OpenGL 4.6 spec, 8.14.1 - Scale Factor and Level-of-Detail)
+float getLod(vec2 coord) {
+    vec2 d = max(abs(dFdx(coord)), abs(dFdy(coord)));
+    return log2(max(d.x, d.y));
 }
 
 #if ALLOW_SHADOW
