@@ -34,7 +34,7 @@ find build/ -name "citra*.exe" -exec cp {} 'package' \;
 mkdir package/platforms
 cp "${QT_PLATFORM_DLL_PATH}/qwindows.dll" package/platforms/
 cp -r "${QT_PLATFORM_DLL_PATH}/../mediaservice/" package/
-
+rm -f package/mediaservice/*d.dll
 
 for i in package/*.exe; do
   # we need to process pdb here, however, cv2pdb
