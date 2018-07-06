@@ -86,6 +86,7 @@ Loader::ResultStatus TitleMetadata::Load(const std::vector<u8> file_data, size_t
         memcpy(&chunk, &file_data[offset + body_end + (i * sizeof(ContentChunk))],
                sizeof(ContentChunk));
         tmd_chunks.push_back(chunk);
+        content_index_to_index[chunk.index] = tmd_chunks.size() - 1;
     }
 
     return Loader::ResultStatus::Success;
@@ -180,12 +181,24 @@ u32 TitleMetadata::GetContentIDByIndex(u16 index) const {
     return tmd_chunks[index].id;
 }
 
+u16 TitleMetadata::GetContentIndexByIndex(u16 index) const {
+    return tmd_chunks[index].index;
+}
+
 u16 TitleMetadata::GetContentTypeByIndex(u16 index) const {
     return tmd_chunks[index].type;
 }
 
 u64 TitleMetadata::GetContentSizeByIndex(u16 index) const {
     return tmd_chunks[index].size;
+}
+
+bool TitleMetadata::ContentIndexExists(u16 contentIndex) const {
+    return content_index_to_index.find(contentIndex) != content_index_to_index.end();
+}
+
+u16 TitleMetadata::ContentIndexToIndex(u16 contentIndex) const {
+    return content_index_to_index.at(contentIndex);
 }
 
 void TitleMetadata::SetTitleID(u64 title_id) {
@@ -206,6 +219,7 @@ void TitleMetadata::SetSystemVersion(u64 version) {
 
 void TitleMetadata::AddContentChunk(const ContentChunk& chunk) {
     tmd_chunks.push_back(chunk);
+    content_index_to_index[chunk.index] = tmd_chunks.size() - 1;
 }
 
 void TitleMetadata::Print() const {

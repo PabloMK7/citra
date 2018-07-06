@@ -5,6 +5,7 @@
 #pragma once
 
 #include <array>
+#include <map>
 #include <string>
 #include <vector>
 #include "common/common_types.h"
@@ -106,8 +107,11 @@ public:
     u32 GetManualContentID() const;
     u32 GetDLPContentID() const;
     u32 GetContentIDByIndex(u16 index) const;
+    u16 GetContentIndexByIndex(u16 index) const;
     u16 GetContentTypeByIndex(u16 index) const;
     u64 GetContentSizeByIndex(u16 index) const;
+    bool ContentIndexExists(u16 contentIndex) const;
+    u16 ContentIndexToIndex(u16 contentIndex) const;
 
     void SetTitleID(u64 title_id);
     void SetTitleType(u32 type);
@@ -122,6 +126,7 @@ private:
     u32_be signature_type;
     std::vector<u8> tmd_signature;
     std::vector<ContentChunk> tmd_chunks;
+    std::map<u16, size_t> content_index_to_index;
 };
 
 } // namespace FileSys

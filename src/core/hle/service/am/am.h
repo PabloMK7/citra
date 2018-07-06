@@ -124,7 +124,7 @@ std::string GetTitleMetadataPath(Service::FS::MediaType media_type, u64 tid, boo
  * @returns string path to the .app file
  */
 std::string GetTitleContentPath(Service::FS::MediaType media_type, u64 tid, u16 index = 0,
-                                bool update = false);
+                                bool update = false, bool contentIndex = false);
 
 /**
  * Get the folder for a title's installed content.
