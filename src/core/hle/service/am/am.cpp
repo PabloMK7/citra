@@ -540,7 +540,7 @@ void Module::Interface::FindDLCContentInfos(Kernel::HLERequestContext& ctx) {
             u16 index = tmd.ContentIndexToIndex(content_requested[i]);
 
             ContentInfo content_info = {};
-            content_info.index = static_cast<u16>(i);
+            content_info.index = content_requested[i];
             content_info.type = tmd.GetContentTypeByIndex(index);
             content_info.content_id = tmd.GetContentIDByIndex(index);
             content_info.size = tmd.GetContentSizeByIndex(index);
@@ -594,7 +594,7 @@ void Module::Interface::ListDLCContentInfos(Kernel::HLERequestContext& ctx) {
             u64 romfs_offset = 0;
 
             ContentInfo content_info = {};
-            content_info.index = static_cast<u16>(i);
+            content_info.index = tmd.GetContentIndexByIndex(i);
             content_info.type = tmd.GetContentTypeByIndex(i);
             content_info.content_id = tmd.GetContentIDByIndex(i);
             content_info.size = tmd.GetContentSizeByIndex(i);
