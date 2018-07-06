@@ -589,7 +589,7 @@ void Module::Interface::ListDLCContentInfos(Kernel::HLERequestContext& ctx) {
     if (tmd.Load(tmd_path) == Loader::ResultStatus::Success) {
         copied = std::min(content_count, static_cast<u32>(tmd.GetContentCount()));
         std::size_t write_offset = 0;
-        for (u32 i = start_index; i < copied; i++) {
+        for (u32 i = start_index; i < start_index + copied; i++) {
             std::shared_ptr<FileUtil::IOFile> romfs_file;
             u64 romfs_offset = 0;
 
