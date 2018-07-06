@@ -121,6 +121,7 @@ std::string GetTitleMetadataPath(Service::FS::MediaType media_type, u64 tid, boo
  * @param tid the title ID to get
  * @param index the content index to get
  * @param update set true if the incoming TMD should be used instead of the current TMD
+ * @param contentIndex set true if the supplied index is a 3DS content index value instead of a raw index.
  * @returns string path to the .app file
  */
 std::string GetTitleContentPath(Service::FS::MediaType media_type, u64 tid, u16 index = 0,
