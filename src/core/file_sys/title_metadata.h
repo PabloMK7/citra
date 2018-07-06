@@ -5,8 +5,8 @@
 #pragma once
 
 #include <array>
-#include <map>
 #include <string>
+#include <unordered_map>
 #include <vector>
 #include "common/common_types.h"
 #include "common/swap.h"
@@ -126,7 +126,7 @@ private:
     u32_be signature_type;
     std::vector<u8> tmd_signature;
     std::vector<ContentChunk> tmd_chunks;
-    std::map<u16, size_t> content_index_to_index;
+    std::unordered_map<u16, size_t> content_index_to_index;
 };
 
 } // namespace FileSys

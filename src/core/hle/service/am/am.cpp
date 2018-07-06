@@ -399,8 +399,12 @@ std::string GetTitleContentPath(Service::FS::MediaType media_type, u64 tid, u16 
     u32 content_id = 0;
     FileSys::TitleMetadata tmd;
     if (tmd.Load(tmd_path) == Loader::ResultStatus::Success) {
-        if(contentIndex && tmd.ContentIndexExists(index)) {
-            index = tmd.ContentIndexToIndex(index);
+        if(contentIndex) {
+            if(tmd.ContentIndexExists(index)) {
+                index = tmd.ContentIndexToIndex(index);
+            } else {
+                LOG_ERROR(Service_AM, "Attempted to get path for non-existent content index {:04x}.", index);
+            }
         }
 
         content_id = tmd.GetContentIDByIndex(index);
@@ -530,6 +534,8 @@ void Module::Interface::FindDLCContentInfos(Kernel::HLERequestContext& ctx) {
             u64 romfs_offset = 0;
 
             if (!tmd.ContentIndexExists(content_requested[i])) {
+                LOG_ERROR(Service_AM, "Attempted to get info for non-existent content index {:04x}.", content_requested[i]);
+
                 IPC::RequestBuilder rb = rp.MakeBuilder(1, 4);
                 rb.Push<u32>(-1); // TODO: Find the right error code
                 rb.PushMappedBuffer(content_requested_in);
