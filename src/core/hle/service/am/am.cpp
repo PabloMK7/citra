@@ -49,12 +49,16 @@ struct TitleInfo {
 
 static_assert(sizeof(TitleInfo) == 0x18, "Title info structure size is wrong");
 
+constexpr u8 OWNERSHIP_DOWNLOADED = 0x01;
+constexpr u8 OWNERSHIP_OWNED = 0x02;
+
 struct ContentInfo {
     u16_le index;
     u16_le type;
     u32_le content_id;
     u64_le size;
-    u64_le romfs_size;
+    u8 ownership;
+    INSERT_PADDING_BYTES(0x7);
 };
 
 static_assert(sizeof(ContentInfo) == 0x18, "Content info structure size is wrong");
@@ -520,17 +524,17 @@ void Module::Interface::FindDLCContentInfos(Kernel::HLERequestContext& ctx) {
         for (size_t i = 0; i < content_count; i++) {
             std::shared_ptr<FileUtil::IOFile> romfs_file;
             u64 romfs_offset = 0;
-            u64 romfs_size = 0;
-
-            FileSys::NCCHContainer ncch_container(GetTitleContentPath(media_type, title_id, i));
-            ncch_container.ReadRomFS(romfs_file, romfs_offset, romfs_size);
 
             ContentInfo content_info = {};
             content_info.index = static_cast<u16>(i);
             content_info.type = tmd.GetContentTypeByIndex(content_requested[i]);
             content_info.content_id = tmd.GetContentIDByIndex(content_requested[i]);
             content_info.size = tmd.GetContentSizeByIndex(content_requested[i]);
-            content_info.romfs_size = romfs_size;
+            content_info.ownership = OWNERSHIP_OWNED; // TODO: Pull this from the ticket.
+
+            if (FileUtil::Exists(GetTitleContentPath(media_type, title_id, content_requested[i]))) {
+                content_info.ownership |= OWNERSHIP_DOWNLOADED;
+            }
 
             content_info_out.Write(&content_info, write_offset, sizeof(ContentInfo));
             write_offset += sizeof(ContentInfo);
@@ -574,17 +578,17 @@ void Module::Interface::ListDLCContentInfos(Kernel::HLERequestContext& ctx) {
         for (u32 i = start_index; i < copied; i++) {
             std::shared_ptr<FileUtil::IOFile> romfs_file;
             u64 romfs_offset = 0;
-            u64 romfs_size = 0;
-
-            FileSys::NCCHContainer ncch_container(GetTitleContentPath(media_type, title_id, i));
-            ncch_container.ReadRomFS(romfs_file, romfs_offset, romfs_size);
 
             ContentInfo content_info = {};
             content_info.index = static_cast<u16>(i);
             content_info.type = tmd.GetContentTypeByIndex(i);
             content_info.content_id = tmd.GetContentIDByIndex(i);
             content_info.size = tmd.GetContentSizeByIndex(i);
-            content_info.romfs_size = romfs_size;
+            content_info.ownership = OWNERSHIP_OWNED; // TODO: Pull this from the ticket.
+
+            if (FileUtil::Exists(GetTitleContentPath(media_type, title_id, i))) {
+                content_info.ownership |= OWNERSHIP_DOWNLOADED;
+            }
 
             content_info_out.Write(&content_info, write_offset, sizeof(ContentInfo));
             write_offset += sizeof(ContentInfo);
