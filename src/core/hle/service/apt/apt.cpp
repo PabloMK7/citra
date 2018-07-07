@@ -620,12 +620,12 @@ void Module::Interface::GetStartupArgument(Kernel::HLERequestContext& ctx) {
     u32 parameter_size = rp.Pop<u32>();
     StartupArgumentType startup_argument_type = static_cast<StartupArgumentType>(rp.Pop<u8>());
 
-    if (parameter_size >= 0x300) {
+    if (parameter_size > 0x300) {
+        parameter_size = 0x300;
         LOG_ERROR(
             Service_APT,
             "Parameter size is outside the valid range (capped to 0x300): parameter_size={:#010X}",
             parameter_size);
-        return;
     }
 
     std::vector<u8> parameter(parameter_size, 0);
