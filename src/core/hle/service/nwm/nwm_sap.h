@@ -9,13 +9,9 @@
 namespace Service {
 namespace NWM {
 
-class NWM_SAP final : public Interface {
+class NWM_SAP final : public ServiceFramework<NWM_SAP> {
 public:
     NWM_SAP();
-
-    std::string GetPortName() const override {
-        return "nwm::SAP";
-    }
 };
 
 } // namespace NWM

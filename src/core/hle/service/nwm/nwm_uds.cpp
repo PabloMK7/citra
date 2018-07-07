@@ -11,6 +11,7 @@
 #include <mutex>
 #include <unordered_map>
 #include <vector>
+#include <cryptopp/osrng.h>
 #include "common/common_types.h"
 #include "common/logging/log.h"
 #include "core/core_timing.h"
@@ -23,6 +24,7 @@
 #include "core/hle/service/nwm/uds_beacon.h"
 #include "core/hle/service/nwm/uds_connection.h"
 #include "core/hle/service/nwm/uds_data.h"
+#include "core/hle/shared_page.h"
 #include "core/memory.h"
 #include "network/network.h"
 
@@ -1320,6 +1322,19 @@ NWM_UDS::NWM_UDS() : ServiceFramework("nwm::UDS") {
 
     beacon_broadcast_event =
         CoreTiming::RegisterEvent("UDS::BeaconBroadcastCallback", BeaconBroadcastCallback);
+
+    CryptoPP::AutoSeededRandomPool rng;
+    auto mac = SharedPage::DefaultMac;
+    // Keep the Nintendo 3DS MAC header and randomly generate the last 3 bytes
+    rng.GenerateBlock(static_cast<CryptoPP::byte*>(mac.data() + 3), 3);
+
+    if (auto room_member = Network::GetRoomMember().lock()) {
+        if (room_member->IsConnected()) {
+            mac = room_member->GetMacAddress();
+        }
+    }
+    SharedPage::SetMacAddress(mac);
+    SharedPage::SetWifiLinkLevel(SharedPage::WifiLinkLevel::BEST);
 }
 
 NWM_UDS::~NWM_UDS() {

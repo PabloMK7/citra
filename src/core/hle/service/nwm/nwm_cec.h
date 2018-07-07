@@ -9,13 +9,9 @@
 namespace Service {
 namespace NWM {
 
-class NWM_CEC final : public Interface {
+class NWM_CEC final : public ServiceFramework<NWM_CEC> {
 public:
     NWM_CEC();
-
-    std::string GetPortName() const override {
-        return "nwm::CEC";
-    }
 };
 
 } // namespace NWM

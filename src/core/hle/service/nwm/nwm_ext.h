@@ -9,13 +9,9 @@
 namespace Service {
 namespace NWM {
 
-class NWM_EXT final : public Interface {
+class NWM_EXT final : public ServiceFramework<NWM_EXT> {
 public:
     NWM_EXT();
-
-    std::string GetPortName() const override {
-        return "nwm::EXT";
-    }
 };
 
 } // namespace NWM
