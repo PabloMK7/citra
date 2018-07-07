@@ -319,6 +319,8 @@ static std::string SampleTexture(const PicaFSConfig& config, unsigned texture_un
             return "shadowTexture(texcoord0, texcoord0_w)";
         case TexturingRegs::TextureConfig::ShadowCube:
             return "shadowTextureCube(texcoord0, texcoord0_w)";
+        case TexturingRegs::TextureConfig::Disabled:
+            return "vec4(0.0)";
         default:
             LOG_CRITICAL(HW_GPU, "Unhandled texture type {:x}",
                          static_cast<int>(state.texture0_type));
