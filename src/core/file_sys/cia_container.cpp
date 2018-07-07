@@ -201,7 +201,7 @@ u64 CIAContainer::GetTotalContentSize() const {
 
 u64 CIAContainer::GetContentSize(u16 index) const {
     // If the content doesn't exist in the CIA, it doesn't have a size.
-    if (!cia_header.isContentPresent(cia_tmd.GetContentIndexByIndex(index)))
+    if (!cia_header.isContentPresent(index))
         return 0;
 
     return cia_tmd.GetContentSizeByIndex(index);

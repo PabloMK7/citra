@@ -63,7 +63,7 @@ ResultVal<std::unique_ptr<FileBackend>> NCCHArchive::OpenFile(const Path& path,
     std::memcpy(&openfile_path, binary.data(), sizeof(NCCHFilePath));
 
     std::string file_path =
-        Service::AM::GetTitleContentPath(media_type, title_id, openfile_path.content_index, false, true);
+        Service::AM::GetTitleContentPath(media_type, title_id, openfile_path.content_index);
     auto ncch_container = NCCHContainer(file_path);
 
     Loader::ResultStatus result;
