@@ -175,6 +175,9 @@ private slots:
     void HideFullscreen();
     void ToggleWindowMode();
     void OnCreateGraphicsSurfaceViewer();
+    void OnRecordMovie();
+    void OnPlayMovie();
+    void OnStopRecordingPlayback();
     void OnCoreError(Core::System::ResultStatus, std::string);
     /// Called whenever a user selects Help->About Citra
     void OnMenuAboutCitra();
@@ -184,6 +187,7 @@ private slots:
     void OnLanguageChanged(const QString& locale);
 
 private:
+    Q_INVOKABLE void OnMoviePlaybackCompleted();
     void UpdateStatusBar();
     void LoadTranslation();
     void SetupUIStrings();

@@ -57,6 +57,7 @@
 #include "core/gdbstub/gdbstub.h"
 #include "core/hle/service/fs/archive.h"
 #include "core/loader/loader.h"
+#include "core/movie.h"
 #include "core/settings.h"
 
 #ifdef USE_DISCORD_PRESENCE
@@ -522,6 +523,12 @@ void GMainWindow::ConnectMenuEvents() {
     connect(ui.action_Screen_Layout_Swap_Screens, &QAction::triggered, this,
             &GMainWindow::OnSwapScreens);
 
+    // Movie
+    connect(ui.action_Record_Movie, &QAction::triggered, this, &GMainWindow::OnRecordMovie);
+    connect(ui.action_Play_Movie, &QAction::triggered, this, &GMainWindow::OnPlayMovie);
+    connect(ui.action_Stop_Recording_Playback, &QAction::triggered, this,
+            &GMainWindow::OnStopRecordingPlayback);
+
     // Help
     connect(ui.action_FAQ, &QAction::triggered,
             []() { QDesktopServices::openUrl(QUrl("https://citra-emu.org/wiki/faq/")); });
@@ -757,6 +764,12 @@ void GMainWindow::BootGame(const QString& filename) {
 
 void GMainWindow::ShutdownGame() {
     discord_rpc->Pause();
+
+    const bool was_recording = Core::Movie::GetInstance().IsRecordingInput();
+    Core::Movie::GetInstance().Shutdown();
+    if (was_recording) {
+        QMessageBox::information(this, "Movie Saved", "The movie is successfully saved.");
+    }
     emu_thread->RequestStop();
 
     // Release emu threads from any breakpoints
@@ -785,6 +798,9 @@ void GMainWindow::ShutdownGame() {
     ui.action_Pause->setEnabled(false);
     ui.action_Stop->setEnabled(false);
     ui.action_Restart->setEnabled(false);
+    ui.action_Record_Movie->setEnabled(false);
+    ui.action_Play_Movie->setEnabled(false);
+    ui.action_Stop_Recording_Playback->setEnabled(false);
     ui.action_Report_Compatibility->setEnabled(false);
     render_window->hide();
     if (game_list->isEmpty())
@@ -1059,6 +1075,9 @@ void GMainWindow::OnStartGame() {
     ui.action_Pause->setEnabled(true);
     ui.action_Stop->setEnabled(true);
     ui.action_Restart->setEnabled(true);
+    ui.action_Record_Movie->setEnabled(true);
+    ui.action_Play_Movie->setEnabled(true);
+    ui.action_Stop_Recording_Playback->setEnabled(false);
     ui.action_Report_Compatibility->setEnabled(true);
 
     discord_rpc->Update();
@@ -1225,6 +1244,77 @@ void GMainWindow::OnCreateGraphicsSurfaceViewer() {
     addDockWidget(Qt::RightDockWidgetArea, graphicsSurfaceViewerWidget);
     // TODO: Maybe graphicsSurfaceViewerWidget->setFloating(true);
     graphicsSurfaceViewerWidget->show();
+}
+
+void GMainWindow::OnRecordMovie() {
+    const QString path =
+        QFileDialog::getSaveFileName(this, tr("Record Movie"), "", tr("Citra TAS Movie (*.ctm)"));
+    if (path.isEmpty())
+        return;
+    Core::Movie::GetInstance().StartRecording(path.toStdString());
+    ui.action_Record_Movie->setEnabled(false);
+    ui.action_Play_Movie->setEnabled(false);
+    ui.action_Stop_Recording_Playback->setEnabled(true);
+}
+
+void GMainWindow::OnPlayMovie() {
+    const QString path =
+        QFileDialog::getOpenFileName(this, tr("Play Movie"), "", tr("Citra TAS Movie (*.ctm)"));
+    if (path.isEmpty())
+        return;
+    using namespace Core;
+    Movie::ValidationResult result = Core::Movie::GetInstance().ValidateMovie(path.toStdString());
+    const QString revision_dismatch_text =
+        tr("The movie file you are trying to load was created on a different revision of Citra."
+           "<br/>Citra has had some changes during the time, and the playback may desync or not "
+           "work as expected."
+           "<br/><br/>Are you sure you still want to load the movie file?");
+    const QString game_dismatch_text =
+        tr("The movie file you are trying to load was recorded with a different game."
+           "<br/>The playback may not work as expected, and it may cause unexpected results."
+           "<br/><br/>Are you sure you still want to load the movie file?");
+    const QString invalid_movie_text =
+        tr("The movie file you are trying to load is invalid."
+           "<br/>Either the file is corrupted, or Citra has had made some major changes to the "
+           "Movie module."
+           "<br/>Please choose a different movie file and try again.");
+    int answer;
+    switch (result) {
+    case Movie::ValidationResult::RevisionDismatch:
+        answer = QMessageBox::question(this, tr("Revision Dismatch"), revision_dismatch_text,
+                                       QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
+        if (answer != QMessageBox::Yes)
+            return;
+        break;
+    case Movie::ValidationResult::GameDismatch:
+        answer = QMessageBox::question(this, tr("Game Dismatch"), game_dismatch_text,
+                                       QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
+        if (answer != QMessageBox::Yes)
+            return;
+        break;
+    case Movie::ValidationResult::Invalid:
+        QMessageBox::critical(this, tr("Invalid Movie File"), invalid_movie_text);
+        return;
+    default:
+        break;
+    }
+    Movie::GetInstance().StartPlayback(path.toStdString(), [this] {
+        QMetaObject::invokeMethod(this, "OnMoviePlaybackCompleted");
+    });
+    ui.action_Record_Movie->setEnabled(false);
+    ui.action_Play_Movie->setEnabled(false);
+    ui.action_Stop_Recording_Playback->setEnabled(true);
+}
+
+void GMainWindow::OnStopRecordingPlayback() {
+    const bool was_recording = Core::Movie::GetInstance().IsRecordingInput();
+    Core::Movie::GetInstance().Shutdown();
+    if (was_recording) {
+        QMessageBox::information(this, tr("Movie Saved"), tr("The movie is successfully saved."));
+    }
+    ui.action_Record_Movie->setEnabled(true);
+    ui.action_Play_Movie->setEnabled(true);
+    ui.action_Stop_Recording_Playback->setEnabled(false);
 }
 
 void GMainWindow::UpdateStatusBar() {
@@ -1460,6 +1550,13 @@ void GMainWindow::OnLanguageChanged(const QString& locale) {
 
     if (emulation_running)
         ui.action_Start->setText(tr("Continue"));
+}
+
+void GMainWindow::OnMoviePlaybackCompleted() {
+    QMessageBox::information(this, tr("Playback Completed"), tr("Movie playback completed."));
+    ui.action_Record_Movie->setEnabled(true);
+    ui.action_Play_Movie->setEnabled(true);
+    ui.action_Stop_Recording_Playback->setEnabled(false);
 }
 
 void GMainWindow::SetupUIStrings() {
