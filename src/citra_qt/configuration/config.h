@@ -17,6 +17,10 @@ class Config {
 
     void ReadValues();
     void SaveValues();
+    QVariant ReadSetting(const QString& name);
+    QVariant ReadSetting(const QString& name, const QVariant& default_value);
+    void WriteSetting(const QString& name, const QVariant& value);
+    void WriteSetting(const QString& name, const QVariant& value, const QVariant& default_value);
 
 public:
     Config();
