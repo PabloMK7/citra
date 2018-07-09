@@ -1807,6 +1807,7 @@ void RasterizerCacheOpenGL::InvalidateRegion(PAddr addr, u32 size, const Surface
 
             const auto interval = cached_surface->GetInterval() & invalid_interval;
             cached_surface->invalid_regions.insert(interval);
+            cached_surface->InvalidateAllWatcher();
 
             // Remove only "empty" fill surfaces to avoid destroying and recreating OGL textures
             if (cached_surface->type == SurfaceType::Fill &&
