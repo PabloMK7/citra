@@ -14,6 +14,8 @@ QtKeyboardValidator::QtKeyboardValidator(QtKeyboard* keyboard_) : keyboard(keybo
 
 QtKeyboardValidator::State QtKeyboardValidator::validate(QString& input, int& pos) const {
     if (keyboard->ValidateFilters(input.toStdString()) == Frontend::ValidationError::None) {
+        if (input.size() > keyboard->config.max_text_length)
+            return State::Invalid;
         return State::Acceptable;
     } else {
         return State::Invalid;
