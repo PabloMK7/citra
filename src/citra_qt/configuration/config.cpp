@@ -461,6 +461,10 @@ void Config::SaveValues() {
     qt_config->endGroup();
 }
 
+void Config::LogSetting(const QString& name, const QVariant& value) {
+    LOG_INFO(Config, "{}: {}", name.toStdString(), value.toString().toStdString());
+}
+
 void Config::Reload() {
     ReadValues();
     Settings::Apply();
@@ -468,6 +472,48 @@ void Config::Reload() {
 
 void Config::Save() {
     SaveValues();
+}
+
+void Config::LogSettings() {
+    LOG_INFO(Config, "Citra Configuration:");
+    LogSetting("Core_UseCpuJit", Settings::values.use_cpu_jit);
+    LogSetting("Renderer_UseHwRenderer", Settings::values.use_hw_renderer);
+    LogSetting("Renderer_UseHwShader", Settings::values.use_hw_shader);
+    LogSetting("Renderer_ShadersAccurateGs", Settings::values.shaders_accurate_gs);
+    LogSetting("Renderer_ShadersAccurateMul", Settings::values.shaders_accurate_mul);
+    LogSetting("Renderer_UseShaderJit", Settings::values.use_shader_jit);
+    LogSetting("Renderer_UseResolutionFactor", Settings::values.resolution_factor);
+    LogSetting("Renderer_UseVsync", Settings::values.use_vsync);
+    LogSetting("Renderer_UseFrameLimit", Settings::values.use_frame_limit);
+    LogSetting("Renderer_FrameLimit", Settings::values.frame_limit);
+    LogSetting("Layout_Toggle3d", Settings::values.toggle_3d);
+    LogSetting("Layout_Factor3d", Settings::values.factor_3d);
+    LogSetting("Layout_LayoutOption", static_cast<int>(Settings::values.layout_option));
+    LogSetting("Layout_SwapScreen", Settings::values.swap_screen);
+    LogSetting("Audio_OutputEngine", QString::fromStdString(Settings::values.sink_id));
+    LogSetting("Audio_EnableAudioStretching", Settings::values.enable_audio_stretching);
+    LogSetting("Audio_OutputDevice", QString::fromStdString(Settings::values.audio_device_id));
+    using namespace Service::CAM;
+    LogSetting("Camera_OuterRightName",
+               QString::fromStdString(Settings::values.camera_name[OuterRightCamera]));
+    LogSetting("Camera_OuterRightConfig",
+               QString::fromStdString(Settings::values.camera_config[OuterRightCamera]));
+    LogSetting("Camera_OuterRightFlip", Settings::values.camera_flip[OuterRightCamera]);
+    LogSetting("Camera_InnerName",
+               QString::fromStdString(Settings::values.camera_name[InnerCamera]));
+    LogSetting("Camera_InnerConfig",
+               QString::fromStdString(Settings::values.camera_config[InnerCamera]));
+    LogSetting("Camera_InnerFlip", Settings::values.camera_flip[InnerCamera]);
+    LogSetting("Camera_OuterLeftName",
+               QString::fromStdString(Settings::values.camera_name[OuterLeftCamera]));
+    LogSetting("Camera_OuterLeftConfig",
+               QString::fromStdString(Settings::values.camera_config[OuterLeftCamera]));
+    LogSetting("Camera_OuterLeftFlip", Settings::values.camera_flip[OuterLeftCamera]);
+    LogSetting("DataStorage_UseVirtualSd", Settings::values.use_virtual_sd);
+    LogSetting("System_IsNew3ds", Settings::values.is_new_3ds);
+    LogSetting("System_RegionValue", Settings::values.region_value);
+    LogSetting("Debugging_UseGdbstub", Settings::values.use_gdbstub);
+    LogSetting("Debugging_GdbstubPort", Settings::values.gdbstub_port);
 }
 
 Config::~Config() {
