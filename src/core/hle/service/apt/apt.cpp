@@ -623,11 +623,11 @@ void Module::Interface::GetStartupArgument(Kernel::HLERequestContext& ctx) {
     const u32 max_parameter_size{0x1000};
 
     if (parameter_size > max_parameter_size) {
-        parameter_size = max_parameter_size;
         LOG_ERROR(Service_APT,
                   "Parameter size is outside the valid range (capped to {:#010X}): "
                   "parameter_size={:#010X}",
                   max_parameter_size, parameter_size);
+        parameter_size = max_parameter_size;
     }
 
     std::vector<u8> parameter(parameter_size, 0);
