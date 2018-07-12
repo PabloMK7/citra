@@ -12,7 +12,7 @@ namespace AudioCore {
 
 class CubebSink final : public Sink {
 public:
-    CubebSink();
+    explicit CubebSink(std::string device_id);
     ~CubebSink() override;
 
     unsigned int GetNativeSampleRate() const override;
@@ -21,12 +21,11 @@ public:
 
     size_t SamplesInQueue() const override;
 
-    std::vector<std::string> GetDeviceList() const override;
-    void SetDevice(int device_id) override;
-
 private:
     struct Impl;
     std::unique_ptr<Impl> impl;
 };
+
+std::vector<std::string> ListCubebSinkDevices();
 
 } // namespace AudioCore

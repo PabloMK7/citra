@@ -61,7 +61,7 @@ public:
     virtual std::array<u8, Memory::DSP_RAM_SIZE>& GetDspMemory() = 0;
 
     /// Select the sink to use based on sink id.
-    void SetSink(const std::string& sink_id);
+    void SetSink(const std::string& sink_id, const std::string& audio_device);
     /// Get the current sink
     Sink& GetSink();
     /// Enable/Disable audio stretching.

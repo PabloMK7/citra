@@ -32,7 +32,7 @@ void Apply() {
     }
 
     if (Core::System::GetInstance().IsPoweredOn()) {
-        Core::DSP().SetSink(values.sink_id);
+        Core::DSP().SetSink(values.sink_id, values.audio_device_id);
         Core::DSP().EnableStretching(values.enable_audio_stretching);
     }
 
