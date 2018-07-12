@@ -31,9 +31,11 @@ mkdir package
 QT_PLATFORM_DLL_PATH='/usr/x86_64-w64-mingw32/lib/qt5/plugins/platforms/'
 find build/ -name "citra*.exe" -exec cp {} 'package' \;
 
+# copy Qt plugins
 mkdir package/platforms
 cp "${QT_PLATFORM_DLL_PATH}/qwindows.dll" package/platforms/
-cp -r "${QT_PLATFORM_DLL_PATH}/../mediaservice/" package/
+cp -rv "${QT_PLATFORM_DLL_PATH}/../mediaservice/" package/
+cp -rv "${QT_PLATFORM_DLL_PATH}/../imageformats/" package/
 rm -f package/mediaservice/*d.dll
 
 for i in package/*.exe; do
