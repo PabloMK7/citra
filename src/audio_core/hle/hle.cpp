@@ -13,7 +13,7 @@
 #include "common/common_types.h"
 #include "common/logging/log.h"
 #include "core/core_timing.h"
-#include "core/hle/service/dsp_dsp.h"
+#include "core/hle/service/dsp/dsp_dsp.h"
 
 namespace AudioCore {
 
@@ -231,7 +231,7 @@ void DspHle::Impl::AudioPipeWriteStructAddresses() {
         WriteU16(DspPipe::Audio, addr);
     }
     // Signal that we have data on this pipe.
-    Service::DSP_DSP::SignalPipeInterrupt(DspPipe::Audio);
+    Service::DSP::SignalPipeInterrupt(DspPipe::Audio);
 }
 
 size_t DspHle::Impl::CurrentRegionIndex() const {
@@ -307,9 +307,9 @@ bool DspHle::Impl::Tick() {
 void DspHle::Impl::AudioTickCallback(int cycles_late) {
     if (Tick()) {
         // TODO(merry): Signal all the other interrupts as appropriate.
-        Service::DSP_DSP::SignalPipeInterrupt(DspPipe::Audio);
+        Service::DSP::SignalPipeInterrupt(DspPipe::Audio);
         // HACK(merry): Added to prevent regressions. Will remove soon.
-        Service::DSP_DSP::SignalPipeInterrupt(DspPipe::Binary);
+        Service::DSP::SignalPipeInterrupt(DspPipe::Binary);
     }
 
     // Reschedule recurrent event

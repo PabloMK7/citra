@@ -24,7 +24,7 @@
 #include "core/hle/service/cfg/cfg.h"
 #include "core/hle/service/csnd_snd.h"
 #include "core/hle/service/dlp/dlp.h"
-#include "core/hle/service/dsp_dsp.h"
+#include "core/hle/service/dsp/dsp_dsp.h"
 #include "core/hle/service/err_f.h"
 #include "core/hle/service/frd/frd.h"
 #include "core/hle/service/fs/archive.h"
@@ -242,6 +242,7 @@ void Init(std::shared_ptr<SM::ServiceManager>& sm) {
     CECD::InstallInterfaces(*sm);
     CFG::InstallInterfaces(*sm);
     DLP::InstallInterfaces(*sm);
+    DSP::InstallInterfaces(*sm);
     FRD::InstallInterfaces(*sm);
     GSP::InstallInterfaces(*sm);
     HID::InstallInterfaces(*sm);
@@ -255,7 +256,6 @@ void Init(std::shared_ptr<SM::ServiceManager>& sm) {
     QTM::InstallInterfaces(*sm);
 
     CSND::InstallInterfaces(*sm);
-    AddService(new DSP_DSP::Interface);
     AddService(new HTTP::HTTP_C);
     PM::InstallInterfaces(*sm);
     AddService(new SOC::SOC_U);

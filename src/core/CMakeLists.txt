@@ -224,8 +224,8 @@ add_library(core STATIC
     hle/service/dlp/dlp_fkcl.h
     hle/service/dlp/dlp_srvr.cpp
     hle/service/dlp/dlp_srvr.h
-    hle/service/dsp_dsp.cpp
-    hle/service/dsp_dsp.h
+    hle/service/dsp/dsp_dsp.cpp
+    hle/service/dsp/dsp_dsp.h
     hle/service/err_f.cpp
     hle/service/err_f.h
     hle/service/frd/frd.cpp
