@@ -9,6 +9,8 @@
 
 namespace AudioCore {
 
+constexpr char auto_device_name[] = "auto";
+
 /**
  * This class is an interface for an audio sink. An audio sink accepts samples in stereo signed
  * PCM16 format to be output. Sinks *do not* handle resampling and expect the correct sample rate.

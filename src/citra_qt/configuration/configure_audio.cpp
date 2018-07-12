@@ -66,7 +66,7 @@ void ConfigureAudio::applyConfiguration() {
 
 void ConfigureAudio::updateAudioDevices(int sink_index) {
     ui->audio_device_combo_box->clear();
-    ui->audio_device_combo_box->addItem("auto");
+    ui->audio_device_combo_box->addItem(AudioCore::auto_device_name);
 
     std::string sink_id = ui->output_sink_combo_box->itemText(sink_index).toStdString();
     std::vector<std::string> device_list = AudioCore::GetSinkDetails(sink_id).list_devices();
