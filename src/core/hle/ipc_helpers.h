@@ -113,6 +113,11 @@ inline void RequestBuilder::Push(u32 value) {
     cmdbuf[index++] = value;
 }
 
+template <>
+inline void RequestBuilder::Push(s32 value) {
+    cmdbuf[index++] = static_cast<u32>(value);
+}
+
 template <typename T>
 void RequestBuilder::PushRaw(const T& value) {
     static_assert(std::is_trivially_copyable<T>(), "Raw types should be trivially copyable");
@@ -328,6 +333,12 @@ inline u64 RequestParser::Pop() {
     const u64 lsw = Pop<u32>();
     const u64 msw = Pop<u32>();
     return msw << 32 | lsw;
+}
+
+template <>
+inline s32 RequestParser::Pop() {
+    s32_le data = PopRaw<s32_le>();
+    return data;
 }
 
 template <>
