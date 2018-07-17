@@ -28,6 +28,7 @@ void ConfigureDialog::applyConfiguration() {
     ui->debugTab->applyConfiguration();
     ui->webTab->applyConfiguration();
     Settings::Apply();
+    Config::LogSettings();
 }
 
 void ConfigureDialog::onLanguageChanged(const QString& locale) {

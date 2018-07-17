@@ -139,7 +139,7 @@ GMainWindow::GMainWindow() : config(new Config()), emu_thread(nullptr) {
     SetupUIStrings();
     LOG_INFO(Frontend, "Citra Version: {} | {}-{}", Common::g_build_fullname, Common::g_scm_branch,
              Common::g_scm_desc);
-    config->LogSettings();
+    Config::LogSettings();
 
     show();
 

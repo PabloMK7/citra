@@ -17,7 +17,7 @@ class Config {
 
     void ReadValues();
     void SaveValues();
-    void LogSetting(const QString& name, const QVariant& value);
+    static void LogSetting(const QString& name, const QVariant& value);
 
 public:
     Config();
@@ -25,7 +25,7 @@ public:
 
     void Reload();
     void Save();
-    void LogSettings();
+    static void LogSettings();
 
     static const std::array<int, Settings::NativeButton::NumButtons> default_buttons;
     static const std::array<std::array<int, 5>, Settings::NativeAnalog::NumAnalogs> default_analogs;
