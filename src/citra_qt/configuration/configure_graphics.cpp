@@ -2,6 +2,9 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#ifdef __APPLE__
+#include <QMessageBox>
+#endif
 #include "citra_qt/configuration/configure_graphics.h"
 #include "core/core.h"
 #include "core/settings.h"
@@ -26,6 +29,18 @@ ConfigureGraphics::ConfigureGraphics(QWidget* parent)
     ui->hw_shader_group->setEnabled(ui->toggle_hw_shader->isChecked());
     connect(ui->toggle_hw_shader, &QCheckBox::stateChanged, ui->hw_shader_group,
             &QWidget::setEnabled);
+#ifdef __APPLE__
+    connect(ui->toggle_hw_shader, &QCheckBox::stateChanged, this, [this](int state) {
+        if (state == Qt::Checked) {
+            QMessageBox::warning(
+                this, tr("Hardware Shader Warning"),
+                tr("Hardware Shader support is broken on macOS, and will cause graphical issues "
+                   "like showing a black screen.<br><br>The option is only there for "
+                   "test/development purposes. If you experience graphical issues with Hardware "
+                   "Shader, please turn it off."));
+        }
+    });
+#endif
 }
 
 ConfigureGraphics::~ConfigureGraphics() {}
