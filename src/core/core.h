@@ -7,6 +7,7 @@
 #include <memory>
 #include <string>
 #include "common/common_types.h"
+#include "core/frontend/applets/swkbd.h"
 #include "core/loader/loader.h"
 #include "core/memory.h"
 #include "core/perf_stats.h"
@@ -150,6 +151,14 @@ public:
         return *app_loader;
     }
 
+    /// Frontend Applets
+
+    void RegisterSoftwareKeyboard(std::shared_ptr<Frontend::SoftwareKeyboard> swkbd);
+
+    std::shared_ptr<Frontend::SoftwareKeyboard> GetSoftwareKeyboard() const {
+        return registered_swkbd;
+    }
+
 private:
     /**
      * Initialize the emulated system.
@@ -179,6 +188,9 @@ private:
 
     /// Service manager
     std::shared_ptr<Service::SM::ServiceManager> service_manager;
+
+    /// Frontend applets
+    std::shared_ptr<Frontend::SoftwareKeyboard> registered_swkbd;
 
     static System s_instance;
 

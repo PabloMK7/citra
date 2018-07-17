@@ -199,6 +199,10 @@ const Service::SM::ServiceManager& System::ServiceManager() const {
     return *service_manager;
 }
 
+void System::RegisterSoftwareKeyboard(std::shared_ptr<Frontend::SoftwareKeyboard> swkbd) {
+    registered_swkbd = std::move(swkbd);
+}
+
 void System::Shutdown() {
     // Log last frame performance stats
     auto perf_results = GetAndResetPerfStats();

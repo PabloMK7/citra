@@ -35,6 +35,7 @@
 #include "common/string_util.h"
 #include "core/core.h"
 #include "core/file_sys/cia_container.h"
+#include "core/frontend/applets/default_applets.h"
 #include "core/gdbstub/gdbstub.h"
 #include "core/hle/service/am/am.h"
 #include "core/loader/loader.h"
@@ -270,6 +271,9 @@ int main(int argc, char** argv) {
     Settings::values.movie_play = std::move(movie_play);
     Settings::values.movie_record = std::move(movie_record);
     Settings::Apply();
+
+    // Register frontend applets
+    Frontend::RegisterDefaultApplets();
 
     std::unique_ptr<EmuWindow_SDL2> emu_window{std::make_unique<EmuWindow_SDL2>(fullscreen)};
 

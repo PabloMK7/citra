@@ -16,6 +16,7 @@
 #include <QtGui>
 #include <QtWidgets>
 #include "citra_qt/aboutdialog.h"
+#include "citra_qt/applets/swkbd.h"
 #include "citra_qt/bootmanager.h"
 #include "citra_qt/camera/qt_multimedia_camera.h"
 #include "citra_qt/camera/still_image_camera.h"
@@ -50,6 +51,7 @@
 #include "common/string_util.h"
 #include "core/core.h"
 #include "core/file_sys/archive_source_sd_savedata.h"
+#include "core/frontend/applets/default_applets.h"
 #include "core/gdbstub/gdbstub.h"
 #include "core/hle/service/fs/archive.h"
 #include "core/loader/loader.h"
@@ -1467,6 +1469,10 @@ int main(int argc, char* argv[]) {
     Camera::RegisterFactory("image", std::make_unique<Camera::StillImageCameraFactory>());
     Camera::RegisterFactory("qt", std::make_unique<Camera::QtMultimediaCameraFactory>());
     Camera::QtMultimediaCameraHandler::Init();
+
+    // Register frontend applets
+    Frontend::RegisterDefaultApplets();
+    Frontend::RegisterSoftwareKeyboard(std::make_shared<QtKeyboard>(main_window));
 
     main_window.show();
     return app.exec();
