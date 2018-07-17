@@ -448,6 +448,34 @@ private:
     void GetProgramLaunchInfo(Kernel::HLERequestContext& ctx);
 
     /**
+     * FS_User::Obsoleted_3_0_CreateExtSaveData service function.
+     *  Inputs:
+     *      0 : 0x08300182
+     *      1 : Media type
+     *      2 : Low word of the saveid to create
+     *      3 : High word of the saveid to create
+     *      4 : Size of the SMDH icon
+     *      5 : Number of directories
+     *      6 : Number of files
+     *      7 : (SMDH Size << 4) | 0x0000000A
+     *      8 : Pointer to the SMDH icon for the new ExtSaveData
+     *  Outputs:
+     *      1 : Result of function, 0 on success, otherwise error code
+     */
+    void ObsoletedCreateExtSaveData(Kernel::HLERequestContext& ctx);
+
+    /**
+     * FS_User::Obsoleted_3_0_DeleteExtSaveData service function.
+     *  Inputs:
+     *      0 : 0x08350080
+     *      1 : Media type
+     *      2 : Save ID Low (high is always 0x00000000)
+     *  Outputs:
+     *      1 : Result of function, 0 on success, otherwise error code
+     */
+    void ObsoletedDeleteExtSaveData(Kernel::HLERequestContext& ctx);
+
+    /**
      * FS_User::GetNumSeeds service function.
      *  Inputs:
      *      0 : 0x087D0000

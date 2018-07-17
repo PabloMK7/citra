@@ -436,11 +436,6 @@ void FS_USER::CreateExtSaveData(Kernel::HLERequestContext& ctx) {
     u32 icon_size = rp.Pop<u32>();
     auto icon_buffer = rp.PopMappedBuffer();
 
-    LOG_WARNING(Service_FS,
-                "(STUBBED) savedata_high={:08X} savedata_low={:08X} unknown={:08X} "
-                "files={:08X} directories={:08X} size_limit={:016x} icon_size={:08X}",
-                save_high, save_low, unknown, directories, files, size_limit, icon_size);
-
     std::vector<u8> icon(icon_size);
     icon_buffer.Read(icon.data(), 0, icon_size);
 
@@ -453,6 +448,11 @@ void FS_USER::CreateExtSaveData(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
     rb.Push(Service::FS::CreateExtSaveData(media_type, save_high, save_low, icon, format_info));
     rb.PushMappedBuffer(icon_buffer);
+
+    LOG_DEBUG(Service_FS,
+              "called, savedata_high={:08X} savedata_low={:08X} unknown={:08X} "
+              "files={:08X} directories={:08X} size_limit={:016x} icon_size={:08X}",
+              save_high, save_low, unknown, directories, files, size_limit, icon_size);
 }
 
 void FS_USER::DeleteExtSaveData(Kernel::HLERequestContext& ctx) {
@@ -462,12 +462,12 @@ void FS_USER::DeleteExtSaveData(Kernel::HLERequestContext& ctx) {
     u32 save_high = rp.Pop<u32>();
     u32 unknown = rp.Pop<u32>(); // TODO(Subv): Figure out what this is
 
-    LOG_WARNING(Service_FS,
-                "(STUBBED) save_low={:08X} save_high={:08X} media_type={:08X} unknown={:08X}",
-                save_low, save_high, static_cast<u32>(media_type), unknown);
-
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(Service::FS::DeleteExtSaveData(media_type, save_high, save_low));
+
+    LOG_DEBUG(Service_FS,
+              "called, save_low={:08X} save_high={:08X} media_type={:08X} unknown={:08X}", save_low,
+              save_high, static_cast<u32>(media_type), unknown);
 }
 
 void FS_USER::CardSlotIsInserted(Kernel::HLERequestContext& ctx) {
@@ -644,6 +644,47 @@ void FS_USER::GetProgramLaunchInfo(Kernel::HLERequestContext& ctx) {
     rb.Push<u32>(0);
 }
 
+void FS_USER::ObsoletedCreateExtSaveData(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x830, 6, 2);
+    MediaType media_type = static_cast<MediaType>(rp.Pop<u8>());
+    u32 save_low = rp.Pop<u32>();
+    u32 save_high = rp.Pop<u32>();
+    u32 icon_size = rp.Pop<u32>();
+    u32 directories = rp.Pop<u32>();
+    u32 files = rp.Pop<u32>();
+    auto icon_buffer = rp.PopMappedBuffer();
+
+    std::vector<u8> icon(icon_size);
+    icon_buffer.Read(icon.data(), 0, icon_size);
+
+    FileSys::ArchiveFormatInfo format_info;
+    format_info.number_directories = directories;
+    format_info.number_files = files;
+    format_info.duplicate_data = false;
+    format_info.total_size = 0;
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
+    rb.Push(Service::FS::CreateExtSaveData(media_type, save_high, save_low, icon, format_info));
+    rb.PushMappedBuffer(icon_buffer);
+
+    LOG_DEBUG(Service_FS,
+              "called, savedata_high={:08X} savedata_low={:08X} "
+              "icon_size={:08X} files={:08X} directories={:08X}",
+              save_high, save_low, icon_size, directories, files);
+}
+
+void FS_USER::ObsoletedDeleteExtSaveData(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x835, 2, 0);
+    MediaType media_type = static_cast<MediaType>(rp.Pop<u8>());
+    u32 save_low = rp.Pop<u32>();
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(Service::FS::DeleteExtSaveData(media_type, 0, save_low));
+
+    LOG_DEBUG(Service_FS, "called, save_low={:08X} media_type={:08X}", save_low,
+              static_cast<u32>(media_type));
+}
+
 void FS_USER::GetNumSeeds(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x87D, 0, 0);
 
@@ -747,12 +788,12 @@ FS_USER::FS_USER() : ServiceFramework("fs:USER", 30) {
         {0x082D0040, nullptr, "CardNorDirectSectorEraseWithoutVerify"},
         {0x082E0040, nullptr, "GetProductInfo"},
         {0x082F0040, &FS_USER::GetProgramLaunchInfo, "GetProgramLaunchInfo"},
-        {0x08300182, nullptr, "CreateExtSaveData"},
+        {0x08300182, &FS_USER::ObsoletedCreateExtSaveData, "Obsoleted_3_0_CreateExtSaveData"},
         {0x08310180, nullptr, "CreateSharedExtSaveData"},
         {0x08320102, nullptr, "ReadExtSaveDataIcon"},
         {0x08330082, nullptr, "EnumerateExtSaveData"},
         {0x08340082, nullptr, "EnumerateSharedExtSaveData"},
-        {0x08350080, nullptr, "DeleteExtSaveData"},
+        {0x08350080, &FS_USER::ObsoletedDeleteExtSaveData, "Obsoleted_3_0_DeleteExtSaveData"},
         {0x08360080, nullptr, "DeleteSharedExtSaveData"},
         {0x08370040, nullptr, "SetCardSpiBaudRate"},
         {0x08380040, nullptr, "SetCardSpiBusMode"},
