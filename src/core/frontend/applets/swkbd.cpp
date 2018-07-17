@@ -6,8 +6,10 @@
 #include <cctype>
 #include "common/assert.h"
 #include "common/logging/log.h"
+#include "common/string_util.h"
 #include "core/core.h"
 #include "core/frontend/applets/swkbd.h"
+#include "core/hle/service/cfg/cfg.h"
 
 namespace Frontend {
 
@@ -130,18 +132,19 @@ ValidationError SoftwareKeyboard::Finalize(const std::string& text, u8 button) {
     data = {text, button};
 }
 
-void DefaultCitraKeyboard::Setup(const Frontend::KeyboardConfig* config) {
+void DefaultKeyboard::Setup(const Frontend::KeyboardConfig* config) {
     SoftwareKeyboard::Setup(config);
+    std::string username = Common::UTF16ToUTF8(Service::CFG::GetCurrentModule()->GetUsername());
     switch (this->config.button_config) {
     case ButtonConfig::None:
     case ButtonConfig::Single:
-        Finalize("Citra", 0);
+        Finalize(username, 0);
         break;
     case ButtonConfig::Dual:
-        Finalize("Citra", 1);
+        Finalize(username, 1);
         break;
     case ButtonConfig::Triple:
-        Finalize("Citra", 2);
+        Finalize(username, 2);
         break;
     default:
         UNREACHABLE();

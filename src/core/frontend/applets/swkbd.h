@@ -119,7 +119,7 @@ protected:
     KeyboardData data;
 };
 
-class DefaultCitraKeyboard final : public SoftwareKeyboard {
+class DefaultKeyboard final : public SoftwareKeyboard {
 public:
     void Setup(const KeyboardConfig* config) override;
 };

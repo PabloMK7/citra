@@ -7,6 +7,6 @@
 
 namespace Frontend {
 void RegisterDefaultApplets() {
-    RegisterSoftwareKeyboard(std::make_shared<DefaultCitraKeyboard>());
+    RegisterSoftwareKeyboard(std::make_shared<DefaultKeyboard>());
 }
 } // namespace Frontend
