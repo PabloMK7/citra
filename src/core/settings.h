@@ -168,4 +168,5 @@ struct Values {
 static constexpr int REGION_VALUE_AUTO_SELECT = -1;
 
 void Apply();
+void LogSettings();
 } // namespace Settings

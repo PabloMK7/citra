@@ -139,7 +139,6 @@ GMainWindow::GMainWindow() : config(new Config()), emu_thread(nullptr) {
     SetupUIStrings();
     LOG_INFO(Frontend, "Citra Version: {} | {}-{}", Common::g_build_fullname, Common::g_scm_branch,
              Common::g_scm_desc);
-    Config::LogSettings();
 
     show();
 
@@ -1463,6 +1462,7 @@ int main(int argc, char* argv[]) {
     FileUtil::CreateFullPath(FileUtil::GetUserPath(D_LOGS_IDX));
     Log::AddBackend(
         std::make_unique<Log::FileBackend>(FileUtil::GetUserPath(D_LOGS_IDX) + LOG_FILE));
+    Settings::LogSettings();
 
     // Register CameraFactory
     Camera::RegisterFactory("image", std::make_unique<Camera::StillImageCameraFactory>());
