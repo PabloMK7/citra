@@ -48,6 +48,10 @@ Lobby::Lobby(QWidget* parent, QStandardItemModel* list,
 
     ui->nickname->setValidator(validation.GetNickname());
     ui->nickname->setText(UISettings::values.nickname);
+    if (ui->nickname->text().isEmpty() && !Settings::values.citra_username.empty()) {
+        // Use Citra Web Service user name as nickname by default
+        ui->nickname->setText(QString::fromStdString(Settings::values.citra_username));
+    }
 
     // UI Buttons
     connect(ui->refresh_list, &QPushButton::pressed, this, &Lobby::RefreshLobby);

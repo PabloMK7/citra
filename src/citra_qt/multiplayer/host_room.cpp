@@ -54,6 +54,10 @@ HostRoomWindow::HostRoomWindow(QWidget* parent, QStandardItemModel* list,
 
     // Restore the settings:
     ui->username->setText(UISettings::values.room_nickname);
+    if (ui->username->text().isEmpty() && !Settings::values.citra_username.empty()) {
+        // Use Citra Web Service user name as nickname by default
+        ui->username->setText(QString::fromStdString(Settings::values.citra_username));
+    }
     ui->room_name->setText(UISettings::values.room_name);
     ui->port->setText(UISettings::values.room_port);
     ui->max_player->setValue(UISettings::values.max_player);
