@@ -84,11 +84,11 @@ public:
         return value;
     }
 
-    inline bool operator==(const Field<T>& other) {
+    bool operator==(const Field& other) const {
         return (type == other.type) && (name == other.name) && (value == other.value);
     }
 
-    inline bool operator!=(const Field<T>& other) {
+    bool operator!=(const Field& other) const {
         return !(*this == other);
     }
 
