@@ -83,7 +83,14 @@ void Config::ReadValues() {
 
     qt_config->beginGroup("Renderer");
     Settings::values.use_hw_renderer = qt_config->value("use_hw_renderer", true).toBool();
+#ifdef __APPLE__
+    // Hardware shader is broken on macos thanks to poor drivers.
+    // We still want to provide this option for test/development purposes, but disable it by
+    // default.
+    Settings::values.use_hw_shader = qt_config->value("use_hw_shader", false).toBool();
+#else
     Settings::values.use_hw_shader = qt_config->value("use_hw_shader", true).toBool();
+#endif
     Settings::values.shaders_accurate_gs = qt_config->value("shaders_accurate_gs", true).toBool();
     Settings::values.shaders_accurate_mul =
         qt_config->value("shaders_accurate_mul", false).toBool();
