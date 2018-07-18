@@ -666,6 +666,17 @@ SoundOutputMode Module::GetSoundOutputMode() {
     return static_cast<SoundOutputMode>(block);
 }
 
+void Module::SetCountryCode(u8 country_code) {
+    ConsoleCountryInfo block = {{0, 0, 0}, country_code};
+    SetConfigInfoBlock(CountryInfoBlockID, sizeof(block), 4, &block);
+}
+
+u8 Module::GetCountryCode() {
+    ConsoleCountryInfo block;
+    GetConfigInfoBlock(CountryInfoBlockID, sizeof(block), 8, &block);
+    return block.country_code;
+}
+
 void Module::GenerateConsoleUniqueId(u32& random_number, u64& console_id) {
     CryptoPP::AutoSeededRandomPool rng;
     random_number = rng.GenerateWord32(0, 0xFFFF);
