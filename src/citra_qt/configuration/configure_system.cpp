@@ -170,7 +170,8 @@ void ConfigureSystem::refreshConsoleID() {
     cfg->GenerateConsoleUniqueId(random_number, console_id);
     cfg->SetConsoleUniqueId(random_number, console_id);
     cfg->UpdateConfigNANDSavegame();
-    ui->label_console_id->setText("Console ID: 0x" + QString::number(console_id, 16).toUpper());
+    ui->label_console_id->setText(
+        tr("Console ID: 0x%1").arg(QString::number(console_id, 16).toUpper()));
 }
 
 void ConfigureSystem::retranslateUi() {
