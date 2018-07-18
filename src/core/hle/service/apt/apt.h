@@ -410,6 +410,49 @@ public:
         void StartLibraryApplet(Kernel::HLERequestContext& ctx);
 
         /**
+         * APT::CloseApplication service function
+         *  Inputs:
+         *      0 : Command header [0x00270044]
+         *      1 : Parameters Size
+         *      2 : 0x0
+         *      3 : Handle Parameter
+         *      4 : (Parameters Size << 14) | 2
+         *      5 : void*, Parameters
+         *  Outputs:
+         *      1 : Result of function, 0 on success, otherwise error code
+         */
+        void CloseApplication(Kernel::HLERequestContext& ctx);
+
+        /**
+         * APT::PrepareToDoApplicationJump service function
+         *  Inputs:
+         *      0 : Command header [0x00310100]
+         *      1 : Flags
+         *      2 : Program ID low
+         *      3 : Program ID high
+         *      4 : Media type
+         *  Outputs:
+         *      1 : Result of function, 0 on success, otherwise error code
+         * @param ctx
+         */
+        void PrepareToDoApplicationJump(Kernel::HLERequestContext& ctx);
+
+        /**
+         * APT::DoApplicationJump service function
+         *  Inputs:
+         *      0 : Command header [0x00320084]
+         *      1 : Parameter Size (capped to 0x300)
+         *      2 : HMAC Size (capped to 0x20)
+         *      3 : (Parameter Size << 14) | 2
+         *      4 : void*, Parameter
+         *      5 : (HMAC Size << 14) | 0x802
+         *      6 : void*, HMAC
+         *  Outputs:
+         *      1 : Result of function, 0 on success, otherwise error code
+         */
+        void DoApplicationJump(Kernel::HLERequestContext& ctx);
+
+        /**
          * APT::CancelLibraryApplet service function
          *  Inputs:
          *      0 : Command header [0x003B0040]
@@ -533,6 +576,7 @@ public:
 
     private:
         std::shared_ptr<Module> apt;
+        bool application_reset_prepared{};
     };
 
 private:
