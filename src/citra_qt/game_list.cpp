@@ -31,10 +31,7 @@
 #include "core/hle/service/fs/archive.h"
 #include "core/loader/loader.h"
 
-GameList::SearchField::KeyReleaseEater::KeyReleaseEater(GameList* gamelist) {
-    this->gamelist = gamelist;
-    edit_filter_text_old = "";
-}
+GameList::SearchField::KeyReleaseEater::KeyReleaseEater(GameList* gamelist) : gamelist{gamelist} {}
 
 // EventFilter in order to process systemkeys while editing the searchfield
 bool GameList::SearchField::KeyReleaseEater::eventFilter(QObject* obj, QEvent* event) {
