@@ -19,6 +19,7 @@
 #include "core/hle/service/am/am.h"
 #include "core/hle/service/fs/archive.h"
 #include "core/loader/loader.h"
+#include "shared_font.app.romfs.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // FileSys namespace
@@ -102,6 +103,7 @@ ResultVal<std::unique_ptr<FileBackend>> NCCHArchive::OpenFile(const Path& path,
         constexpr u32 mii_data = 0x00010202;
         constexpr u32 region_manifest = 0x00010402;
         constexpr u32 ng_word_list = 0x00010302;
+        constexpr u32 shared_font = 0x00014002;
 
         u32 high = static_cast<u32>(title_id >> 32);
         u32 low = static_cast<u32>(title_id & 0xFFFFFFFF);
@@ -115,6 +117,20 @@ ResultVal<std::unique_ptr<FileBackend>> NCCHArchive::OpenFile(const Path& path,
                 archive_name = "Mii Data";
             else if (low == region_manifest)
                 archive_name = "Region manifest";
+            else if (low == shared_font) {
+                LOG_WARNING(
+                    Service_FS,
+                    "Shared Font file missing. Loading open source replacement from memory");
+                std::vector<u8> shared_font_file;
+                shared_font_file.assign(SHARED_FONT_DATA, SHARED_FONT_DATA + SHARED_FONT_DATA_len);
+                u64 romfs_offset = 0;
+                u64 romfs_size = shared_font_file.size();
+                std::unique_ptr<DelayGenerator> delay_generator =
+                    std::make_unique<RomFSDelayGenerator>();
+                file = std::make_unique<IVFCFileInMemory>(std::move(shared_font_file), romfs_offset,
+                                                          romfs_size, std::move(delay_generator));
+                return MakeResult<std::unique_ptr<FileBackend>>(std::move(file));
+            }
         } else if (high == system_data_archive) {
             if (low == ng_word_list)
                 archive_name = "NG bad word list";

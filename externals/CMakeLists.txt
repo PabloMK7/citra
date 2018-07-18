@@ -42,6 +42,9 @@ target_include_directories(microprofile INTERFACE ./microprofile)
 add_library(nihstro-headers INTERFACE)
 target_include_directories(nihstro-headers INTERFACE ./nihstro/include)
 
+# Open Source Archives
+add_subdirectory(open_source_archives)
+
 # SoundTouch
 add_subdirectory(soundtouch)
 # The SoundTouch target doesn't export the necessary include paths as properties by default

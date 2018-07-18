@@ -115,4 +115,36 @@ bool IVFCFile::SetSize(const u64 size) const {
     return false;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+IVFCFileInMemory::IVFCFileInMemory(std::vector<u8> bytes, u64 offset, u64 size,
+                                   std::unique_ptr<DelayGenerator> delay_generator_)
+    : romfs_file(std::move(bytes)), data_offset(offset), data_size(size) {
+    delay_generator = std::move(delay_generator_);
+}
+
+ResultVal<size_t> IVFCFileInMemory::Read(const u64 offset, const size_t length, u8* buffer) const {
+    LOG_TRACE(Service_FS, "called offset={}, length={}", offset, length);
+    size_t read_length = (size_t)std::min((u64)length, data_size - offset);
+
+    std::memcpy(buffer, romfs_file.data() + data_offset + offset, read_length);
+    return MakeResult<size_t>(read_length);
+}
+
+ResultVal<size_t> IVFCFileInMemory::Write(const u64 offset, const size_t length, const bool flush,
+                                          const u8* buffer) {
+    LOG_ERROR(Service_FS, "Attempted to write to IVFC file");
+    // TODO(Subv): Find error code
+    return MakeResult<size_t>(0);
+}
+
+u64 IVFCFileInMemory::GetSize() const {
+    return data_size;
+}
+
+bool IVFCFileInMemory::SetSize(const u64 size) const {
+    LOG_ERROR(Service_FS, "Attempted to set the size of an IVFC file");
+    return false;
+}
+
 } // namespace FileSys

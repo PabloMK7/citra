@@ -7,6 +7,7 @@
 #include <cstddef>
 #include <memory>
 #include <string>
+#include <vector>
 #include "common/common_types.h"
 #include "common/file_util.h"
 #include "core/file_sys/archive_backend.h"
@@ -116,6 +117,26 @@ public:
     bool Close() const override {
         return false;
     }
+};
+
+class IVFCFileInMemory : public FileBackend {
+public:
+    IVFCFileInMemory(std::vector<u8> bytes, u64 offset, u64 size,
+                     std::unique_ptr<DelayGenerator> delay_generator_);
+
+    ResultVal<size_t> Read(u64 offset, size_t length, u8* buffer) const override;
+    ResultVal<size_t> Write(u64 offset, size_t length, bool flush, const u8* buffer) override;
+    u64 GetSize() const override;
+    bool SetSize(u64 size) const override;
+    bool Close() const override {
+        return false;
+    }
+    void Flush() const override {}
+
+private:
+    std::vector<u8> romfs_file;
+    u64 data_offset;
+    u64 data_size;
 };
 
 } // namespace FileSys
