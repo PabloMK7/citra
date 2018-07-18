@@ -58,21 +58,11 @@ public:
     Field(FieldType type, std::string name, T&& value)
         : name(std::move(name)), type(type), value(std::move(value)) {}
 
-    Field(const Field& other) : Field(other.type, other.name, other.value) {}
+    Field(const Field& other) = default;
+    Field& operator=(const Field& other) = default;
 
-    Field& operator=(const Field& other) {
-        type = other.type;
-        name = other.name;
-        value = other.value;
-        return *this;
-    }
-
-    Field& operator=(Field&& other) {
-        type = other.type;
-        name = std::move(other.name);
-        value = std::move(other.value);
-        return *this;
-    }
+    Field(Field&&) = default;
+    Field& operator=(Field&& other) = default;
 
     void Accept(VisitorInterface& visitor) const override;
 
