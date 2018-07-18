@@ -1,11 +1,18 @@
-<?xml version="1.0" encoding="utf-8"?>
-
+<?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
  <class>ConfigureAudio</class>
  <widget class="QWidget" name="ConfigureAudio">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>188</width>
+    <height>246</height>
+   </rect>
+  </property>
   <layout class="QVBoxLayout">
    <item>
-    <widget class="QGroupBox">
+    <widget class="QGroupBox" name="groupBox">
      <property name="title">
       <string>Audio</string>
      </property>
@@ -13,39 +20,99 @@
       <item>
        <layout class="QHBoxLayout">
         <item>
-         <widget class="QLabel">
+         <widget class="QLabel" name="label">
           <property name="text">
            <string>Output Engine:</string>
           </property>
          </widget>
         </item>
         <item>
-         <widget class="QComboBox" name="output_sink_combo_box">
-         </widget>
+         <widget class="QComboBox" name="output_sink_combo_box"/>
         </item>
        </layout>
       </item>
       <item>
        <widget class="QCheckBox" name="toggle_audio_stretching">
-        <property name="text">
-         <string>Enable audio stretching</string>
-        </property>
         <property name="toolTip">
          <string>This post-processing effect adjusts audio speed to match emulation speed and helps prevent audio stutter. This however increases audio latency.</string>
+        </property>
+        <property name="text">
+         <string>Enable audio stretching</string>
         </property>
        </widget>
       </item>
       <item>
        <layout class="QHBoxLayout">
         <item>
-         <widget class="QLabel">
+         <widget class="QLabel" name="label">
           <property name="text">
            <string>Audio Device:</string>
           </property>
          </widget>
         </item>
         <item>
-         <widget class="QComboBox" name="audio_device_combo_box">
+         <widget class="QComboBox" name="audio_device_combo_box"/>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_2">
+        <property name="topMargin">
+         <number>0</number>
+        </property>
+        <item>
+         <widget class="QLabel" name="label">
+          <property name="text">
+           <string>Volume:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QSlider" name="volume_slider">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="maximum">
+           <number>100</number>
+          </property>
+          <property name="pageStep">
+           <number>10</number>
+          </property>
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="volume_indicator">
+          <property name="minimumSize">
+           <size>
+            <width>32</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>0 %</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
          </widget>
         </item>
        </layout>
@@ -60,14 +127,14 @@
      </property>
      <property name="sizeHint" stdset="0">
       <size>
-       <width>20</width>
-       <height>40</height>
+       <width>167</width>
+       <height>55</height>
       </size>
      </property>
     </spacer>
    </item>
   </layout>
  </widget>
- <resources />
- <connections />
+ <resources/>
+ <connections/>
 </ui>

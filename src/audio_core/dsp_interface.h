@@ -68,7 +68,7 @@ public:
     void EnableStretching(bool enable);
 
 protected:
-    void OutputFrame(const StereoFrame16& frame);
+    void OutputFrame(StereoFrame16& frame);
 
 private:
     void FlushResidualStretcherAudio();
