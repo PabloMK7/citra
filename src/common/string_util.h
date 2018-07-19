@@ -69,9 +69,6 @@ static bool TryParse(const std::string& str, N* const output) {
         return false;
 }
 
-// TODO: kill this
-bool AsciiToHex(const char* _szValue, u32& result);
-
 std::string TabsToSpaces(int tab_size, const std::string& in);
 
 void SplitString(const std::string& str, char delim, std::vector<std::string>& output);

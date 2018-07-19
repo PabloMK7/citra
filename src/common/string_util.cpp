@@ -36,18 +36,6 @@ std::string ToUpper(std::string str) {
     return str;
 }
 
-// faster than sscanf
-bool AsciiToHex(const char* _szValue, u32& result) {
-    char* endptr = nullptr;
-    const u32 value = strtoul(_szValue, &endptr, 16);
-
-    if (!endptr || *endptr)
-        return false;
-
-    result = value;
-    return true;
-}
-
 bool CharArrayFromFormatV(char* out, int outsize, const char* format, va_list args) {
     int writtenCount;
 
