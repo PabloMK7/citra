@@ -177,7 +177,7 @@ protected:
     }
 
 public:
-    T const swap() const {
+    T swap() const {
         return swap(value);
     }
     swap_struct_t() = default;
