@@ -167,7 +167,7 @@ inline double swapd(double f) {
 
 template <typename T, typename F>
 struct swap_struct_t {
-    typedef swap_struct_t<T, F> swapped_t;
+    using swapped_t = swap_struct_t;
 
 protected:
     T value = T();
@@ -606,51 +606,51 @@ struct swap_double_t {
 };
 
 #if COMMON_LITTLE_ENDIAN
-typedef u32 u32_le;
-typedef u16 u16_le;
-typedef u64 u64_le;
+using u16_le = u16;
+using u32_le = u32;
+using u64_le = u64;
 
-typedef s32 s32_le;
-typedef s16 s16_le;
-typedef s64 s64_le;
+using s16_le = s16;
+using s32_le = s32;
+using s64_le = s64;
 
-typedef float float_le;
-typedef double double_le;
+using float_le = float;
+using double_le = double;
 
-typedef swap_struct_t<u64, swap_64_t<u64>> u64_be;
-typedef swap_struct_t<s64, swap_64_t<s64>> s64_be;
+using u64_be = swap_struct_t<u64, swap_64_t<u64>>;
+using s64_be = swap_struct_t<s64, swap_64_t<s64>>;
 
-typedef swap_struct_t<u32, swap_32_t<u32>> u32_be;
-typedef swap_struct_t<s32, swap_32_t<s32>> s32_be;
+using u32_be = swap_struct_t<u32, swap_32_t<u32>>;
+using s32_be = swap_struct_t<s32, swap_32_t<s32>>;
 
-typedef swap_struct_t<u16, swap_16_t<u16>> u16_be;
-typedef swap_struct_t<s16, swap_16_t<s16>> s16_be;
+using u16_be = swap_struct_t<u16, swap_16_t<u16>>;
+using s16_be = swap_struct_t<s16, swap_16_t<s16>>;
 
-typedef swap_struct_t<float, swap_float_t<float>> float_be;
-typedef swap_struct_t<double, swap_double_t<double>> double_be;
+using float_be = swap_struct_t<float, swap_float_t<float>>;
+using double_be = swap_struct_t<double, swap_double_t<double>>;
 #else
 
-typedef swap_struct_t<u64, swap_64_t<u64>> u64_le;
-typedef swap_struct_t<s64, swap_64_t<s64>> s64_le;
+using u64_le = swap_struct_t<u64, swap_64_t<u64>>;
+using s64_le = swap_struct_t<s64, swap_64_t<s64>>;
 
-typedef swap_struct_t<u32, swap_32_t<u32>> u32_le;
-typedef swap_struct_t<s32, swap_32_t<s32>> s32_le;
+using u32_le = swap_struct_t<u32, swap_32_t<u32>>;
+using s32_le = swap_struct_t<s32, swap_32_t<s32>>;
 
-typedef swap_struct_t<u16, swap_16_t<u16>> u16_le;
-typedef swap_struct_t<s16, swap_16_t<s16>> s16_le;
+using u16_le = swap_struct_t<u16, swap_16_t<u16>>;
+using s16_le = swap_struct_t<s16, swap_16_t<s16>>;
 
-typedef swap_struct_t<float, swap_float_t<float>> float_le;
-typedef swap_struct_t<double, swap_double_t<double>> double_le;
+using float_le = swap_struct_t<float, swap_float_t<float>>;
+using double_le = swap_struct_t<double, swap_double_t<double>>;
 
-typedef u32 u32_be;
-typedef u16 u16_be;
-typedef u64 u64_be;
+using u16_be = u16;
+using u32_be = u32;
+using u64_be = u64;
 
-typedef s32 s32_be;
-typedef s16 s16_be;
-typedef s64 s64_be;
+using s16_be = s16;
+using s32_be = s32;
+using s64_be = s64;
 
-typedef float float_be;
-typedef double double_be;
+using float_be = float;
+using double_be = double;
 
 #endif
