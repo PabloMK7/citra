@@ -52,27 +52,14 @@ public:
 template <typename T>
 class Field : public FieldInterface {
 public:
-    Field(FieldType type, std::string name, const T& value)
-        : name(std::move(name)), type(type), value(value) {}
-
-    Field(FieldType type, std::string name, T&& value)
+    Field(FieldType type, std::string name, T value)
         : name(std::move(name)), type(type), value(std::move(value)) {}
 
-    Field(const Field& other) : Field(other.type, other.name, other.value) {}
+    Field(const Field& other) = default;
+    Field& operator=(const Field& other) = default;
 
-    Field& operator=(const Field& other) {
-        type = other.type;
-        name = other.name;
-        value = other.value;
-        return *this;
-    }
-
-    Field& operator=(Field&& other) {
-        type = other.type;
-        name = std::move(other.name);
-        value = std::move(other.value);
-        return *this;
-    }
+    Field(Field&&) = default;
+    Field& operator=(Field&& other) = default;
 
     void Accept(VisitorInterface& visitor) const override;
 
@@ -94,11 +81,11 @@ public:
         return value;
     }
 
-    inline bool operator==(const Field<T>& other) {
+    bool operator==(const Field& other) const {
         return (type == other.type) && (name == other.name) && (value == other.value);
     }
 
-    inline bool operator!=(const Field<T>& other) {
+    bool operator!=(const Field& other) const {
         return !(*this == other);
     }
 
