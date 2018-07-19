@@ -185,39 +185,39 @@ public:
 
     template <typename S>
     swapped_t& operator=(const S& source) {
-        value = swap((T)source);
+        value = swap(static_cast<T>(source));
         return *this;
     }
 
     operator s8() const {
-        return (s8)swap();
+        return static_cast<s8>(swap());
     }
     operator u8() const {
-        return (u8)swap();
+        return static_cast<u8>(swap());
     }
     operator s16() const {
-        return (s16)swap();
+        return static_cast<s16>(swap());
     }
     operator u16() const {
-        return (u16)swap();
+        return static_cast<u16>(swap());
     }
     operator s32() const {
-        return (s32)swap();
+        return static_cast<s32>(swap());
     }
     operator u32() const {
-        return (u32)swap();
+        return static_cast<u32>(swap());
     }
     operator s64() const {
-        return (s64)swap();
+        return static_cast<s64>(swap());
     }
     operator u64() const {
-        return (u64)swap();
+        return static_cast<u64>(swap());
     }
     operator float() const {
-        return (float)swap();
+        return static_cast<float>(swap());
     }
     operator double() const {
-        return (double)swap();
+        return static_cast<double>(swap());
     }
 
     // +v
@@ -253,7 +253,7 @@ public:
     }
     template <typename S>
     swapped_t operator+(const S& i) const {
-        return swap() + (T)i;
+        return swap() + static_cast<T>(i);
     }
     // v - 5
     swapped_t operator-(const swapped_t& i) const {
@@ -261,7 +261,7 @@ public:
     }
     template <typename S>
     swapped_t operator-(const S& i) const {
-        return swap() - (T)i;
+        return swap() - static_cast<T>(i);
     }
 
     // v += 5
@@ -271,7 +271,7 @@ public:
     }
     template <typename S>
     swapped_t& operator+=(const S& i) {
-        value = swap(swap() + (T)i);
+        value = swap(swap() + static_cast<T>(i));
         return *this;
     }
     // v -= 5
@@ -281,7 +281,7 @@ public:
     }
     template <typename S>
     swapped_t& operator-=(const S& i) {
-        value = swap(swap() - (T)i);
+        value = swap(swap() - static_cast<T>(i));
         return *this;
     }
 
@@ -541,7 +541,7 @@ S operator&(const S& i, const swap_struct_t<T, F> v) {
 
 template <typename S, typename T, typename F>
 S operator&(const swap_struct_t<T, F> v, const S& i) {
-    return (S)(v.swap() & i);
+    return static_cast<S>(v.swap() & i);
 }
 
 // Comparaison
