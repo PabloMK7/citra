@@ -36,40 +36,6 @@
 #define Crash() exit(1)
 #endif
 
-// GCC 4.8 defines all the rotate functions now
-// Small issue with GCC's lrotl/lrotr intrinsics is they are still 32bit while we require 64bit
-#ifdef _rotl
-#define rotl _rotl
-#else
-inline u32 rotl(u32 x, int shift) {
-    shift &= 31;
-    if (!shift)
-        return x;
-    return (x << shift) | (x >> (32 - shift));
-}
-#endif
-
-#ifdef _rotr
-#define rotr _rotr
-#else
-inline u32 rotr(u32 x, int shift) {
-    shift &= 31;
-    if (!shift)
-        return x;
-    return (x >> shift) | (x << (32 - shift));
-}
-#endif
-
-inline u64 _rotl64(u64 x, unsigned int shift) {
-    unsigned int n = shift % 64;
-    return (x << n) | (x >> (64 - n));
-}
-
-inline u64 _rotr64(u64 x, unsigned int shift) {
-    unsigned int n = shift % 64;
-    return (x >> n) | (x << (64 - n));
-}
-
 #else // _MSC_VER
 
 #if (_MSC_VER < 1900)
@@ -84,10 +50,6 @@ extern "C" {
 __declspec(dllimport) void __stdcall DebugBreak(void);
 }
 #define Crash() DebugBreak()
-
-// cstdlib provides these on MSVC
-#define rotr _rotr
-#define rotl _rotl
 
 #endif // _MSC_VER ndef
 
