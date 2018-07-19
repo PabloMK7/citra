@@ -107,7 +107,12 @@ struct PicaFSConfigState {
         bool noise_enable;
         Pica::TexturingRegs::ProcTexShift u_shift, v_shift;
         u32 lut_width;
-        u32 lut_offset;
+        u32 lut_offset0;
+        u32 lut_offset1;
+        u32 lut_offset2;
+        u32 lut_offset3;
+        u32 lod_min;
+        u32 lod_max;
         Pica::TexturingRegs::ProcTexFilter lut_filter;
     } proctex;
 
