@@ -130,6 +130,7 @@ ValidationError SoftwareKeyboard::Finalize(const std::string& text, u8 button) {
         return error;
     }
     data = {text, button};
+    return ValidationError::None;
 }
 
 void DefaultKeyboard::Setup(const Frontend::KeyboardConfig* config) {
