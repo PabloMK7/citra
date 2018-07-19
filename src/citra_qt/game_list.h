@@ -115,7 +115,6 @@ private:
     void DonePopulating(QStringList watch_list);
 
     void RefreshGameDirectory();
-    bool containsAllWords(QString haystack, QString userinput);
 
     void PopupContextMenu(const QPoint& menu_location);
     void AddGamePopup(QMenu& context_menu, u64 program_id);
