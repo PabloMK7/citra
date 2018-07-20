@@ -103,15 +103,15 @@ float ParamPackage::Get(const std::string& key, float default_value) const {
 }
 
 void ParamPackage::Set(const std::string& key, const std::string& value) {
-    data[key] = value;
+    data.insert_or_assign(key, value);
 }
 
 void ParamPackage::Set(const std::string& key, int value) {
-    data[key] = std::to_string(value);
+    data.insert_or_assign(key, std::to_string(value));
 }
 
 void ParamPackage::Set(const std::string& key, float value) {
-    data[key] = std::to_string(value);
+    data.insert_or_assign(key, std::to_string(value));
 }
 
 bool ParamPackage::Has(const std::string& key) const {
