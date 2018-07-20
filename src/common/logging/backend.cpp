@@ -3,18 +3,19 @@
 // Refer to the license.txt file included.
 
 #include <algorithm>
-#include <array>
+#include <atomic>
 #include <chrono>
 #include <condition_variable>
 #include <memory>
+#include <mutex>
 #include <thread>
+#include <vector>
 #ifdef _WIN32
 #include <share.h> // For _SH_DENYWR
 #else
 #define _SH_DENYWR 0
 #endif
 #include "common/assert.h"
-#include "common/common_funcs.h" // snprintf compatibility define
 #include "common/logging/backend.h"
 #include "common/logging/log.h"
 #include "common/logging/text_formatter.h"
