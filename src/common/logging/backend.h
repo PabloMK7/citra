@@ -8,6 +8,7 @@
 #include <cstdarg>
 #include <memory>
 #include <string>
+#include <string_view>
 #include <utility>
 #include "common/file_util.h"
 #include "common/logging/filter.h"
@@ -107,9 +108,9 @@ private:
 
 void AddBackend(std::unique_ptr<Backend> backend);
 
-void RemoveBackend(const std::string& backend_name);
+void RemoveBackend(std::string_view backend_name);
 
-Backend* GetBackend(const std::string& backend_name);
+Backend* GetBackend(std::string_view backend_name);
 
 /**
  * Returns the name of the passed log class as a C-string. Subclasses are separated by periods
