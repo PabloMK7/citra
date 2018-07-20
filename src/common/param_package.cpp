@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <array>
+#include <utility>
 #include <vector>
 #include "common/logging/log.h"
 #include "common/param_package.h"
@@ -36,7 +37,7 @@ ParamPackage::ParamPackage(const std::string& serialized) {
             part = Common::ReplaceAll(part, ESCAPE_CHARACTER_ESCAPE, {ESCAPE_CHARACTER});
         }
 
-        Set(key_value[0], key_value[1]);
+        Set(key_value[0], std::move(key_value[1]));
     }
 }
 
@@ -102,8 +103,8 @@ float ParamPackage::Get(const std::string& key, float default_value) const {
     }
 }
 
-void ParamPackage::Set(const std::string& key, const std::string& value) {
-    data.insert_or_assign(key, value);
+void ParamPackage::Set(const std::string& key, std::string value) {
+    data.insert_or_assign(key, std::move(value));
 }
 
 void ParamPackage::Set(const std::string& key, int value) {
