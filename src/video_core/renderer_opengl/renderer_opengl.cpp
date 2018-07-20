@@ -505,7 +505,7 @@ static void APIENTRY DebugHandler(GLenum source, GLenum type, GLuint id, GLenum 
 }
 
 /// Initialize the renderer
-bool RendererOpenGL::Init() {
+Core::System::ResultStatus RendererOpenGL::Init() {
     render_window->MakeCurrent();
 
     if (GLAD_GL_KHR_debug) {
@@ -525,15 +525,19 @@ bool RendererOpenGL::Init() {
     Core::Telemetry().AddField(Telemetry::FieldType::UserSystem, "GPU_Model", gpu_model);
     Core::Telemetry().AddField(Telemetry::FieldType::UserSystem, "GPU_OpenGL_Version", gl_version);
 
+    if (gpu_vendor == "GDI Generic") {
+        return Core::System::ResultStatus::ErrorVideoCore_ErrorGenericDrivers;
+    }
+
     if (!GLAD_GL_VERSION_3_3) {
-        return false;
+        return Core::System::ResultStatus::ErrorVideoCore_ErrorBelowGL33;
     }
 
     InitOpenGLObjects();
 
     RefreshRasterizerSetting();
 
-    return true;
+    return Core::System::ResultStatus::Success;
 }
 
 /// Shutdown the renderer

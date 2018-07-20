@@ -46,12 +46,16 @@ public:
         ErrorSystemMode,            ///< Error determining the system mode
         ErrorLoader,                ///< Error loading the specified application
         ErrorLoader_ErrorEncrypted, ///< Error loading the specified application due to encryption
-        ErrorLoader_ErrorInvalidFormat, ///< Error loading the specified application due to an
-                                        /// invalid format
-        ErrorSystemFiles,               ///< Error in finding system files
-        ErrorSharedFont,                ///< Error in finding shared font
-        ErrorVideoCore,                 ///< Error in the video core
-        ErrorUnknown                    ///< Any other error
+        ErrorLoader_ErrorInvalidFormat,     ///< Error loading the specified application due to an
+                                            /// invalid format
+        ErrorSystemFiles,                   ///< Error in finding system files
+        ErrorSharedFont,                    ///< Error in finding shared font
+        ErrorVideoCore,                     ///< Error in the video core
+        ErrorVideoCore_ErrorGenericDrivers, ///< Error in the video core due to the user having
+                                            /// generic drivers installed
+        ErrorVideoCore_ErrorBelowGL33,      ///< Error in the video core due to the user not having
+                                            /// OpenGL 3.3 or higher
+        ErrorUnknown                        ///< Any other error
     };
 
     /**

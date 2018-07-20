@@ -6,6 +6,7 @@
 
 #include <memory>
 #include "common/common_types.h"
+#include "core/core.h"
 #include "video_core/rasterizer_interface.h"
 
 class EmuWindow;
@@ -27,7 +28,7 @@ public:
     virtual void SetWindow(EmuWindow* window) = 0;
 
     /// Initialize the renderer
-    virtual bool Init() = 0;
+    virtual Core::System::ResultStatus Init() = 0;
 
     /// Shutdown the renderer
     virtual void ShutDown() = 0;
