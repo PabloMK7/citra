@@ -31,16 +31,16 @@ enum ThreadProcessorId : s32 {
 };
 
 enum ThreadStatus {
-    THREADSTATUS_RUNNING,        ///< Currently running
-    THREADSTATUS_READY,          ///< Ready to run
-    THREADSTATUS_WAIT_ARB,       ///< Waiting on an address arbiter
-    THREADSTATUS_WAIT_SLEEP,     ///< Waiting due to a SleepThread SVC
-    THREADSTATUS_WAIT_IPC,       ///< Waiting for the reply from an IPC request
-    THREADSTATUS_WAIT_SYNCH_ANY, ///< Waiting due to WaitSynch1 or WaitSynchN with wait_all = false
-    THREADSTATUS_WAIT_SYNCH_ALL, ///< Waiting due to WaitSynchronizationN with wait_all = true
-    THREADSTATUS_WAIT_HLE_EVENT, ///< Waiting due to an HLE handler pausing the thread
-    THREADSTATUS_DORMANT,        ///< Created but not yet made ready
-    THREADSTATUS_DEAD            ///< Run to completion, or forcefully terminated
+    Running,      ///< Currently running
+    Ready,        ///< Ready to run
+    WaitArb,      ///< Waiting on an address arbiter
+    WaitSleep,    ///< Waiting due to a SleepThread SVC
+    WaitIPC,      ///< Waiting for the reply from an IPC request
+    WaitSynchAny, ///< Waiting due to WaitSynch1 or WaitSynchN with wait_all = false
+    WaitSynchAll, ///< Waiting due to WaitSynchronizationN with wait_all = true
+    WaitHleEvent, ///< Waiting due to an HLE handler pausing the thread
+    Dormant,      ///< Created but not yet made ready
+    Dead          ///< Run to completion, or forcefully terminated
 };
 
 enum class ThreadWakeupReason {
@@ -178,16 +178,16 @@ public:
      * with wait_all = true.
      */
     bool IsSleepingOnWaitAll() const {
-        return status == THREADSTATUS_WAIT_SYNCH_ALL;
+        return status == ThreadStatus::WaitSynchAll;
     }
 
     std::unique_ptr<ARM_Interface::ThreadContext> context;
 
     u32 thread_id;
 
-    u32 status;
-    u32 entry_point;
-    u32 stack_top;
+    ThreadStatus status;
+    VAddr entry_point;
+    VAddr stack_top;
 
     u32 nominal_priority; ///< Nominal thread priority, as set by the emulated application
     u32 current_priority; ///< Current thread priority, can be temporarily changed
