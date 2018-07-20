@@ -12,10 +12,11 @@ namespace Common {
 
 constexpr char KEY_VALUE_SEPARATOR = ':';
 constexpr char PARAM_SEPARATOR = ',';
+
 constexpr char ESCAPE_CHARACTER = '$';
-const std::string KEY_VALUE_SEPARATOR_ESCAPE{ESCAPE_CHARACTER, '0'};
-const std::string PARAM_SEPARATOR_ESCAPE{ESCAPE_CHARACTER, '1'};
-const std::string ESCAPE_CHARACTER_ESCAPE{ESCAPE_CHARACTER, '2'};
+constexpr char KEY_VALUE_SEPARATOR_ESCAPE[] = "$0";
+constexpr char PARAM_SEPARATOR_ESCAPE[] = "$1";
+constexpr char ESCAPE_CHARACTER_ESCAPE[] = "$2";
 
 ParamPackage::ParamPackage(const std::string& serialized) {
     std::vector<std::string> pairs;
