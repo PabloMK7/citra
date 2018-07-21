@@ -256,7 +256,7 @@ void Init(std::shared_ptr<SM::ServiceManager>& sm) {
     QTM::InstallInterfaces(*sm);
 
     CSND::InstallInterfaces(*sm);
-    AddService(new HTTP::HTTP_C);
+    HTTP::InstallInterfaces(*sm);
     PM::InstallInterfaces(*sm);
     AddService(new SOC::SOC_U);
     SSL::InstallInterfaces(*sm);

@@ -9,14 +9,12 @@
 namespace Service {
 namespace HTTP {
 
-class HTTP_C final : public Interface {
+class HTTP_C final : public ServiceFramework<HTTP_C> {
 public:
     HTTP_C();
-
-    std::string GetPortName() const override {
-        return "http:C";
-    }
 };
+
+void InstallInterfaces(SM::ServiceManager& service_manager);
 
 } // namespace HTTP
 } // namespace Service
