@@ -172,13 +172,13 @@ public:
             QString second_name = QString::fromStdString(filename + extension);
             static QRegExp installed_pattern(
                 QString::fromStdString(
-                    FileUtil::GetUserPath(D_SDMC_IDX) +
+                    FileUtil::GetUserPath(FileUtil::UserPath::SDMCDir) +
                     "Nintendo "
                     "3DS/00000000000000000000000000000000/00000000000000000000000000000000/"
                     "title/0004000(0|e)/[0-9a-f]{8}/content/")
                     .replace("\\", "\\\\"));
             static QRegExp system_pattern(
-                QString::fromStdString(FileUtil::GetUserPath(D_NAND_IDX) +
+                QString::fromStdString(FileUtil::GetUserPath(FileUtil::UserPath::NANDDir) +
                                        "00000000000000000000000000000000/"
                                        "title/00040010/[0-9a-f]{8}/content/")
                     .replace("\\", "\\\\"));

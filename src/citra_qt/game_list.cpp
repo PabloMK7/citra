@@ -715,17 +715,19 @@ void GameListWorker::run() {
     stop_processing = false;
     for (UISettings::GameDir& game_dir : game_dirs) {
         if (game_dir.path == "INSTALLED") {
-            QString path = QString::fromStdString(FileUtil::GetUserPath(D_SDMC_IDX)) +
-                           "Nintendo "
-                           "3DS/00000000000000000000000000000000/"
-                           "00000000000000000000000000000000/title/00040000";
+            QString path =
+                QString::fromStdString(FileUtil::GetUserPath(FileUtil::UserPath::SDMCDir)) +
+                "Nintendo "
+                "3DS/00000000000000000000000000000000/"
+                "00000000000000000000000000000000/title/00040000";
             watch_list.append(path);
             GameListDir* game_list_dir = new GameListDir(game_dir, GameListItemType::InstalledDir);
             emit DirEntryReady({game_list_dir});
             AddFstEntriesToGameList(path.toStdString(), 2, game_list_dir);
         } else if (game_dir.path == "SYSTEM") {
-            QString path = QString::fromStdString(FileUtil::GetUserPath(D_NAND_IDX)) +
-                           "00000000000000000000000000000000/title/00040010";
+            QString path =
+                QString::fromStdString(FileUtil::GetUserPath(FileUtil::UserPath::NANDDir)) +
+                "00000000000000000000000000000000/title/00040010";
             watch_list.append(path);
             GameListDir* game_list_dir = new GameListDir(game_dir, GameListItemType::SystemDir);
             emit DirEntryReady({game_list_dir});

@@ -45,7 +45,8 @@ static u64 GenerateTelemetryId() {
 
 u64 GetTelemetryId() {
     u64 telemetry_id{};
-    const std::string filename{FileUtil::GetUserPath(D_CONFIG_IDX) + "telemetry_id"};
+    const std::string filename{FileUtil::GetUserPath(FileUtil::UserPath::ConfigDir) +
+                               "telemetry_id"};
 
     if (FileUtil::Exists(filename)) {
         FileUtil::IOFile file(filename, "rb");
@@ -69,7 +70,8 @@ u64 GetTelemetryId() {
 
 u64 RegenerateTelemetryId() {
     const u64 new_telemetry_id{GenerateTelemetryId()};
-    const std::string filename{FileUtil::GetUserPath(D_CONFIG_IDX) + "telemetry_id"};
+    const std::string filename{FileUtil::GetUserPath(FileUtil::UserPath::ConfigDir) +
+                               "telemetry_id"};
 
     FileUtil::IOFile file(filename, "wb");
     if (!file.IsOpen()) {
