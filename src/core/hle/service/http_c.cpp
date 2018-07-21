@@ -9,9 +9,26 @@
 namespace Service {
 namespace HTTP {
 
+void HTTP_C::Initialize(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x1, 1, 4);
+    const u32 shmem_size = rp.Pop<u32>();
+    rp.PopPID();
+    shared_memory = rp.PopObject<Kernel::SharedMemory>();
+    if (shared_memory) {
+        shared_memory->name = "HTTP_C:shared_memory";
+    }
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    // This returns 0xd8a0a046 if no network connection is available.
+    // Just assume we are always connected.
+    rb.Push(RESULT_SUCCESS);
+
+    LOG_WARNING(Service_HTTP, "(STUBBED) called, shared memory size: {}", shmem_size);
+}
+
 HTTP_C::HTTP_C() : ServiceFramework("http:C", 32) {
     static const FunctionInfo functions[] = {
-        {0x00010044, nullptr, "Initialize"},
+        {0x00010044, &HTTP_C::Initialize, "Initialize"},
         {0x00020082, nullptr, "CreateContext"},
         {0x00030040, nullptr, "CloseContext"},
         {0x00040040, nullptr, "CancelConnection"},
