@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <chrono>
 #include <string>
 #include "common/common_types.h"
 
@@ -18,24 +19,22 @@ public:
 
     // The time difference is always returned in milliseconds, regardless of alternative internal
     // representation
-    u64 GetTimeDifference();
+    std::chrono::milliseconds GetTimeDifference();
     void AddTimeDifference();
 
-    static void IncreaseResolution();
-    static void RestoreResolution();
-    static u64 GetTimeSinceJan1970();
-    static u64 GetLocalTimeSinceJan1970();
+    static std::chrono::seconds GetTimeSinceJan1970();
+    static std::chrono::seconds GetLocalTimeSinceJan1970();
     static double GetDoubleTime();
 
     static std::string GetTimeFormatted();
     std::string GetTimeElapsedFormatted() const;
-    u64 GetTimeElapsed();
+    std::chrono::milliseconds GetTimeElapsed();
 
-    static u32 GetTimeMs();
+    static std::chrono::milliseconds GetTimeMs();
 
 private:
-    u64 m_LastTime;
-    u64 m_StartTime;
+    std::chrono::milliseconds m_LastTime;
+    std::chrono::milliseconds m_StartTime;
     bool m_Running;
 };
 
