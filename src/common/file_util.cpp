@@ -478,7 +478,7 @@ unsigned ScanDirectoryTree(const std::string& directory, FSTEntry& parent_entry,
         (*num_entries_out)++;
 
         // Push into the tree
-        parent_entry.children.push_back(entry);
+        parent_entry.children.push_back(std::move(entry));
         return true;
     };
 
