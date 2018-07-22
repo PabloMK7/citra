@@ -33,9 +33,11 @@ public:
     bool Empty() const {
         return !read_ptr->next.load();
     }
+
     T& Front() const {
         return read_ptr->current;
     }
+
     template <typename Arg>
     void Push(Arg&& t) {
         // create the element, add it to the queue
@@ -108,15 +110,41 @@ private:
 // single reader, multiple writer queue
 
 template <typename T, bool NeedSize = true>
-class MPSCQueue : public SPSCQueue<T, NeedSize> {
+class MPSCQueue {
 public:
+    u32 Size() const {
+        return spsc_queue.Size();
+    }
+
+    bool Empty() const {
+        return spsc_queue.Empty();
+    }
+
+    T& Front() const {
+        return spsc_queue.Front();
+    }
+
     template <typename Arg>
     void Push(Arg&& t) {
         std::lock_guard<std::mutex> lock(write_lock);
-        SPSCQueue<T, NeedSize>::Push(t);
+        spsc_queue.Push(t);
+    }
+
+    void Pop() {
+        return spsc_queue.Pop();
+    }
+
+    bool Pop(T& t) {
+        return spsc_queue.Pop(t);
+    }
+
+    // not thread-safe
+    void Clear() {
+        spsc_queue.Clear();
     }
 
 private:
+    SPSCQueue<T, NeedSize> spsc_queue;
     std::mutex write_lock;
 };
 } // namespace Common
