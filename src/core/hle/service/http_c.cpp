@@ -12,6 +12,17 @@
 namespace Service {
 namespace HTTP {
 
+namespace ErrCodes {
+enum {
+    InvalidRequestMethod = 32,
+    InvalidContext = 102,
+};
+}
+
+const ResultCode ERROR_CONTEXT_ERROR = // 0xD8A0A066
+    ResultCode(ErrCodes::InvalidContext, ErrorModule::HTTP, ErrorSummary::InvalidState,
+               ErrorLevel::Permanent);
+
 enum class RequestMethod : u8 {
     None = 0x0,
     Get = 0x1,
@@ -128,9 +139,15 @@ void HTTP_C::CreateContext(Kernel::HLERequestContext& ctx) {
     LOG_DEBUG(Service_HTTP, "called, url_size={}, url={}, method={}", url_size, url,
               static_cast<u32>(method));
 
-    // TODO(Subv): Find the right error code for this case.
-    ASSERT_MSG(method == RequestMethod::None && static_cast<u32>(method) < TotalRequestMethods,
-               "Invalid request method {}", static_cast<u32>(method));
+    if (method == RequestMethod::None || static_cast<u32>(method) >= TotalRequestMethods) {
+        LOG_ERROR(Service_HTTP, "invalid request method={}", static_cast<u32>(method));
+
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
+        rb.Push(ResultCode(ErrCodes::InvalidContext, ErrorModule::HTTP, ErrorSummary::InvalidState,
+                           ErrorLevel::Permanent));
+        rb.PushMappedBuffer(buffer);
+        return;
+    }
 
     Context context{};
     context.url = std::move(url);
