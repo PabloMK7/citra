@@ -13,6 +13,7 @@ namespace Service {
 namespace HTTP {
 
 enum class RequestMethod : u8 {
+    None = 0x0,
     Get = 0x1,
     Post = 0x2,
     Head = 0x3,
@@ -21,6 +22,9 @@ enum class RequestMethod : u8 {
     PostEmpty = 0x6,
     PutEmpty = 0x7,
 };
+
+/// The number of request methods, any valid method must be less than this.
+constexpr u32 TotalRequestMethods = 8;
 
 enum class RequestState : u8 {
     NotStarted = 0x1,             // Request has not started yet.
@@ -112,10 +116,41 @@ void HTTP_C::Initialize(Kernel::HLERequestContext& ctx) {
     LOG_WARNING(Service_HTTP, "(STUBBED) called, shared memory size: {}", shmem_size);
 }
 
+void HTTP_C::CreateContext(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x2, 2, 2);
+    const u32 url_size = rp.Pop<u32>();
+    std::string url(url_size, '\0');
+    RequestMethod method = rp.PopEnum<RequestMethod>();
+
+    Kernel::MappedBuffer& buffer = rp.PopMappedBuffer();
+    buffer.Read(&url[0], 0, url_size - 1);
+
+    LOG_DEBUG(Service_HTTP, "called, url_size={}, url={}, method={}", url_size, url,
+              static_cast<u32>(method));
+
+    // TODO(Subv): Find the right error code for this case.
+    ASSERT_MSG(method == RequestMethod::None && static_cast<u32>(method) < TotalRequestMethods,
+               "Invalid request method {}", static_cast<u32>(method));
+
+    Context context{};
+    context.url = std::move(url);
+    context.method = method;
+    context.state = RequestState::NotStarted;
+    // TODO(Subv): Find a correct default value for this field.
+    context.socket_buffer_size = 0;
+    context.handle = ++context_counter;
+    contexts[context_counter] = std::move(context);
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
+    rb.Push(RESULT_SUCCESS);
+    rb.Push<u32>(context_counter);
+    rb.PushMappedBuffer(buffer);
+}
+
 HTTP_C::HTTP_C() : ServiceFramework("http:C", 32) {
     static const FunctionInfo functions[] = {
         {0x00010044, &HTTP_C::Initialize, "Initialize"},
-        {0x00020082, nullptr, "CreateContext"},
+        {0x00020082, &HTTP_C::CreateContext, "CreateContext"},
         {0x00030040, nullptr, "CloseContext"},
         {0x00040040, nullptr, "CancelConnection"},
         {0x00050040, nullptr, "GetRequestState"},

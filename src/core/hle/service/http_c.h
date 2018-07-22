@@ -32,6 +32,19 @@ private:
      */
     void Initialize(Kernel::HLERequestContext& ctx);
 
+    /**
+     * HTTP_C::CreateContext service function
+     *  Inputs:
+     *      1 : URL buffer size, including null-terminator
+     *      2 : RequestMethod
+     *      3 : (URLSize << 4) | 10
+     *      4 : URL data pointer
+     *  Outputs:
+     *      1 : Result of function, 0 on success, otherwise error code
+     *      2 : HTTP context handle
+     */
+    void CreateContext(Kernel::HLERequestContext& ctx);
+
     Kernel::SharedPtr<Kernel::SharedMemory> shared_memory = nullptr;
 
     std::unordered_map<u32, Context> contexts;
