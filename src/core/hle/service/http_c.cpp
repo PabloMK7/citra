@@ -98,6 +98,29 @@ void HTTP_C::CloseContext(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
 }
 
+void HTTP_C::InitializeConnectionSession(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x8, 1, 2);
+    const u32 context_handle = rp.Pop<u32>();
+    rp.PopPID();
+
+    auto itr = contexts.find(context_handle);
+    if (itr == contexts.end()) {
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(ERROR_CONTEXT_ERROR);
+        LOG_ERROR(Service_HTTP, "called, context {} not found", context_handle);
+        return;
+    }
+
+    // TODO(Subv): What happens if you try to initalize a context that's currently being used?
+    ASSERT(itr->second.state == RequestState::NotStarted);
+
+    // TODO(B3N30): Check what gets initalized
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RESULT_SUCCESS);
+    LOG_WARNING(Service_HTTP, "(STUBBED) called, context_id={}", context_handle);
+}
+
 void HTTP_C::AddRequestHeader(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x11, 3, 4);
     const u32 context_handle = rp.Pop<u32>();
@@ -123,7 +146,7 @@ void HTTP_C::AddRequestHeader(Kernel::HLERequestContext& ctx) {
                             return m.name == name;
                         }) == itr->second.headers.end());
 
-    itr->second.headers.push_back(Context::RequestHeader{name, value});
+    itr->second.headers.emplace_back(name, value);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
     rb.Push(RESULT_SUCCESS);
@@ -142,7 +165,7 @@ HTTP_C::HTTP_C() : ServiceFramework("http:C", 32) {
         {0x00050040, nullptr, "GetRequestState"},
         {0x00060040, nullptr, "GetDownloadSizeState"},
         {0x00070040, nullptr, "GetRequestError"},
-        {0x00080042, nullptr, "InitializeConnectionSession"},
+        {0x00080042, &HTTP_C::InitializeConnectionSession, "InitializeConnectionSession"},
         {0x00090040, nullptr, "BeginRequest"},
         {0x000A0040, nullptr, "BeginRequestAsync"},
         {0x000B0082, nullptr, "ReceiveData"},
