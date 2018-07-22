@@ -2,12 +2,35 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <vector>
 #include "core/hle/ipc_helpers.h"
 #include "core/hle/kernel/ipc.h"
 #include "core/hle/service/http_c.h"
 
 namespace Service {
 namespace HTTP {
+
+/// Represents a client certificate along with its private key, stored as a byte array of DER data.
+/// There can only be at most one client certificate context attached to an HTTP context at any
+/// given time.
+struct ClientCertContext {
+    u32 handle;
+    std::vector<u8> certificate;
+    std::vector<u8> private_key;
+};
+
+/// Represents a root certificate chain, it contains a list of DER-encoded certificates for
+/// verifying HTTP requests. An HTTP context can have at most one root certificate chain attached to
+/// it, but the chain may contain an arbitrary number of certificates in it.
+struct RootCertChain {
+    struct RootCACert {
+        u32 handle;
+        std::vector<u8> certificate;
+    };
+
+    u32 handle;
+    std::vector<RootCACert> certificates;
+};
 
 void HTTP_C::Initialize(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x1, 1, 4);
