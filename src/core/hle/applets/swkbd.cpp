@@ -148,8 +148,13 @@ Frontend::KeyboardConfig SoftwareKeyboard::ToFrontendConfig(
     frontend_config.multiline_mode = config.multiline;
     frontend_config.max_text_length = config.max_text_length;
     frontend_config.max_digits = config.max_digits;
-    std::u16string buffer(config.hint_text.size(), 0);
-    std::memcpy(buffer.data(), config.hint_text.data(), config.hint_text.size() * sizeof(u16));
+
+    size_t text_size = config.hint_text.size();
+    const auto text_end = std::find(config.hint_text.begin(), config.hint_text.end(), u'\0');
+    if (text_end != config.hint_text.end())
+        text_size = std::distance(config.hint_text.begin(), text_end);
+    std::u16string buffer(text_size, 0);
+    std::memcpy(buffer.data(), config.hint_text.data(), text_size * sizeof(u16));
     frontend_config.hint_text = Common::UTF16ToUTF8(buffer);
     frontend_config.has_custom_button_text =
         !std::all_of(config.button_text.begin(), config.button_text.end(),
@@ -158,8 +163,13 @@ Frontend::KeyboardConfig SoftwareKeyboard::ToFrontendConfig(
                      });
     if (frontend_config.has_custom_button_text) {
         for (const auto& text : config.button_text) {
-            buffer.resize(text.size());
-            std::memcpy(buffer.data(), text.data(), text.size() * sizeof(u16));
+            text_size = text.size();
+            const auto text_end = std::find(text.begin(), text.end(), u'\0');
+            if (text_end != text.end())
+                text_size = std::distance(text.begin(), text_end);
+
+            buffer.resize(text_size);
+            std::memcpy(buffer.data(), text.data(), text_size * sizeof(u16));
             frontend_config.button_text.push_back(Common::UTF16ToUTF8(buffer));
         }
     }
