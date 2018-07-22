@@ -188,6 +188,41 @@ void HTTP_C::CloseContext(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
 }
 
+void HTTP_C::AddRequestHeader(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x11, 3, 4);
+    const u32 context_handle = rp.Pop<u32>();
+    const u32 name_size = rp.Pop<u32>();
+    const u32 value_size = rp.Pop<u32>();
+    const std::vector<u8> name_buffer = rp.PopStaticBuffer();
+    Kernel::MappedBuffer& value_buffer = rp.PopMappedBuffer();
+    const std::string name(name_buffer.begin(), name_buffer.end() - 1);
+    std::string value(value_size - 1, '\0');
+    value_buffer.Read(&value[0], 0, value_size - 1);
+
+    auto itr = contexts.find(context_handle);
+    if (itr == contexts.end()) {
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(ERROR_CONTEXT_ERROR);
+        LOG_ERROR(Service_HTTP, "called, context {} not found", context_handle);
+        return;
+    }
+
+    ASSERT(itr->second.state == RequestState::NotStarted);
+    ASSERT(std::find_if(itr->second.headers.begin(), itr->second.headers.end(),
+                        [&name](const Context::RequestHeader& m) -> bool {
+                            return m.name == name;
+                        }) == itr->second.headers.end());
+
+    itr->second.headers.push_back(Context::RequestHeader{name, value});
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
+    rb.Push(RESULT_SUCCESS);
+    rb.PushMappedBuffer(value_buffer);
+
+    LOG_WARNING(Service_HTTP, "called, name={}, value={}, context_handle={}", name, value,
+                context_handle);
+}
+
 HTTP_C::HTTP_C() : ServiceFramework("http:C", 32) {
     static const FunctionInfo functions[] = {
         {0x00010044, &HTTP_C::Initialize, "Initialize"},
@@ -206,7 +241,7 @@ HTTP_C::HTTP_C() : ServiceFramework("http:C", 32) {
         {0x000E0040, nullptr, "SetProxyDefault"},
         {0x000F00C4, nullptr, "SetBasicAuthorization"},
         {0x00100080, nullptr, "SetSocketBufferSize"},
-        {0x001100C4, nullptr, "AddRequestHeader"},
+        {0x001100C4, &HTTP_C::AddRequestHeader, "AddRequestHeader"},
         {0x001200C4, nullptr, "AddPostDataAscii"},
         {0x001300C4, nullptr, "AddPostDataBinary"},
         {0x00140082, nullptr, "AddPostDataRaw"},

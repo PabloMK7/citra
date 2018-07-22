@@ -54,6 +54,21 @@ private:
      */
     void CloseContext(Kernel::HLERequestContext& ctx);
 
+    /**
+     * HTTP_C::AddRequestHeader service function
+     *  Inputs:
+     * 1 : Context handle
+     * 2 : Header name buffer size, including null-terminator.
+     * 3 : Header value buffer size, including null-terminator.
+     * 4 : (HeaderNameSize<<14) | 0xC02
+     * 5 : Header name data pointer
+     * 6 : (HeaderValueSize<<4) | 10
+     * 7 : Header value data pointer
+     *  Outputs:
+     *      1 : Result of function, 0 on success, otherwise error code
+     */
+    void AddRequestHeader(Kernel::HLERequestContext& ctx);
+
     Kernel::SharedPtr<Kernel::SharedMemory> shared_memory = nullptr;
 
     std::unordered_map<u32, Context> contexts;
