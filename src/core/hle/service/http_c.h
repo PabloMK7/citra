@@ -59,7 +59,15 @@ struct RootCertChain {
 };
 
 /// Represents an HTTP context.
-struct Context {
+class Context final {
+public:
+    Context() = default;
+    Context(const Context&) = delete;
+    Context& operator=(const Context&) = delete;
+
+    Context(Context&& other) = default;
+    Context& operator=(Context&&) = default;
+
     struct Proxy {
         std::string url;
         std::string username;
@@ -73,6 +81,7 @@ struct Context {
     };
 
     struct RequestHeader {
+        RequestHeader(std::string name, std::string value) : name(name), value(value){};
         std::string name;
         std::string value;
     };
