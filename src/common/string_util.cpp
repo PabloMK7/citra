@@ -236,15 +236,14 @@ void SplitString(const std::string& str, const char delim, std::vector<std::stri
     output.pop_back();
 }
 
-std::string TabsToSpaces(int tab_size, const std::string& in) {
-    const std::string spaces(tab_size, ' ');
-    std::string out(in);
-
+std::string TabsToSpaces(int tab_size, std::string in) {
     size_t i = 0;
-    while (out.npos != (i = out.find('\t')))
-        out.replace(i, 1, spaces);
 
-    return out;
+    while ((i = in.find('\t')) != std::string::npos) {
+        in.replace(i, 1, tab_size, ' ');
+    }
+
+    return in;
 }
 
 std::string ReplaceAll(std::string result, const std::string& src, const std::string& dest) {
