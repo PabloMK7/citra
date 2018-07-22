@@ -288,31 +288,37 @@ std::u16string UTF8ToUTF16(const std::string& input) {
 }
 
 static std::wstring CPToUTF16(u32 code_page, const std::string& input) {
-    auto const size =
+    const auto size =
         MultiByteToWideChar(code_page, 0, input.data(), static_cast<int>(input.size()), nullptr, 0);
 
-    std::wstring output;
-    output.resize(size);
+    if (size == 0) {
+        return L"";
+    }
 
-    if (size == 0 ||
-        size != MultiByteToWideChar(code_page, 0, input.data(), static_cast<int>(input.size()),
-                                    &output[0], static_cast<int>(output.size())))
+    std::wstring output(size, L'\0');
+
+    if (size != MultiByteToWideChar(code_page, 0, input.data(), static_cast<int>(input.size()),
+                                    &output[0], static_cast<int>(output.size()))) {
         output.clear();
+    }
 
     return output;
 }
 
 std::string UTF16ToUTF8(const std::wstring& input) {
-    auto const size = WideCharToMultiByte(CP_UTF8, 0, input.data(), static_cast<int>(input.size()),
+    const auto size = WideCharToMultiByte(CP_UTF8, 0, input.data(), static_cast<int>(input.size()),
                                           nullptr, 0, nullptr, nullptr);
+    if (size == 0) {
+        return "";
+    }
 
-    std::string output;
-    output.resize(size);
+    std::string output(size, '\0');
 
-    if (size == 0 ||
-        size != WideCharToMultiByte(CP_UTF8, 0, input.data(), static_cast<int>(input.size()),
-                                    &output[0], static_cast<int>(output.size()), nullptr, nullptr))
+    if (size != WideCharToMultiByte(CP_UTF8, 0, input.data(), static_cast<int>(input.size()),
+                                    &output[0], static_cast<int>(output.size()), nullptr,
+                                    nullptr)) {
         output.clear();
+    }
 
     return output;
 }
@@ -333,8 +339,6 @@ std::string CP1252ToUTF8(const std::string& input) {
 
 template <typename T>
 static std::string CodeToUTF8(const char* fromcode, const std::basic_string<T>& input) {
-    std::string result;
-
     iconv_t const conv_desc = iconv_open("UTF-8", fromcode);
     if ((iconv_t)(-1) == conv_desc) {
         LOG_ERROR(Common, "Iconv initialization failure [{}]: {}", fromcode, strerror(errno));
@@ -346,8 +350,7 @@ static std::string CodeToUTF8(const char* fromcode, const std::basic_string<T>& 
     // Multiply by 4, which is the max number of bytes to encode a codepoint
     const size_t out_buffer_size = 4 * in_bytes;
 
-    std::string out_buffer;
-    out_buffer.resize(out_buffer_size);
+    std::string out_buffer(out_buffer_size, '\0');
 
     auto src_buffer = &input[0];
     size_t src_bytes = in_bytes;
@@ -372,6 +375,7 @@ static std::string CodeToUTF8(const char* fromcode, const std::basic_string<T>& 
         }
     }
 
+    std::string result;
     out_buffer.resize(out_buffer_size - dst_bytes);
     out_buffer.swap(result);
 
@@ -381,8 +385,6 @@ static std::string CodeToUTF8(const char* fromcode, const std::basic_string<T>& 
 }
 
 std::u16string UTF8ToUTF16(const std::string& input) {
-    std::u16string result;
-
     iconv_t const conv_desc = iconv_open("UTF-16LE", "UTF-8");
     if ((iconv_t)(-1) == conv_desc) {
         LOG_ERROR(Common, "Iconv initialization failure [UTF-8]: {}", strerror(errno));
@@ -394,8 +396,7 @@ std::u16string UTF8ToUTF16(const std::string& input) {
     // Multiply by 4, which is the max number of bytes to encode a codepoint
     const size_t out_buffer_size = 4 * sizeof(char16_t) * in_bytes;
 
-    std::u16string out_buffer;
-    out_buffer.resize(out_buffer_size);
+    std::u16string out_buffer(out_buffer_size, char16_t{});
 
     char* src_buffer = const_cast<char*>(&input[0]);
     size_t src_bytes = in_bytes;
@@ -420,6 +421,7 @@ std::u16string UTF8ToUTF16(const std::string& input) {
         }
     }
 
+    std::u16string result;
     out_buffer.resize(out_buffer_size - dst_bytes);
     out_buffer.swap(result);
 
