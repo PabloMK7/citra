@@ -2,13 +2,33 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <string>
 #include <vector>
+#include <boost/optional.hpp>
 #include "core/hle/ipc_helpers.h"
 #include "core/hle/kernel/ipc.h"
 #include "core/hle/service/http_c.h"
 
 namespace Service {
 namespace HTTP {
+
+enum class RequestMethod : u8 {
+    Get = 0x1,
+    Post = 0x2,
+    Head = 0x3,
+    Put = 0x4,
+    Delete = 0x5,
+    PostEmpty = 0x6,
+    PutEmpty = 0x7,
+};
+
+enum class RequestState : u8 {
+    NotStarted = 0x1,             // Request has not started yet.
+    InProgress = 0x5,             // Request in progress, sending request over the network.
+    ReadyToDownloadContent = 0x7, // Ready to download the content. (needs verification)
+    ReadyToDownload = 0x8,        // Ready to download?
+    TimedOut = 0xA,               // Request timed out?
+};
 
 /// Represents a client certificate along with its private key, stored as a byte array of DER data.
 /// There can only be at most one client certificate context attached to an HTTP context at any
@@ -30,6 +50,49 @@ struct RootCertChain {
 
     u32 handle;
     std::vector<RootCACert> certificates;
+};
+
+/// Represents an HTTP context.
+struct Context {
+    struct Proxy {
+        std::string url;
+        std::string username;
+        std::string password;
+        u16 port;
+    };
+
+    struct BasicAuth {
+        std::string username;
+        std::string password;
+    };
+
+    struct RequestHeader {
+        std::string name;
+        std::string value;
+    };
+
+    struct PostData {
+        // TODO(Subv): Support Binary and Raw POST elements.
+        std::string name;
+        std::string value;
+    };
+
+    struct SSLConfig {
+        u32 options;
+        std::weak_ptr<ClientCertContext> client_cert_ctx;
+        std::weak_ptr<RootCertChain> root_ca_chain;
+    };
+
+    u32 handle;
+    std::string url;
+    RequestMethod method;
+    RequestState state = RequestState::NotStarted;
+    boost::optional<Proxy> proxy;
+    boost::optional<BasicAuth> basic_auth;
+    SSLConfig ssl_config{};
+    u32 socket_buffer_size;
+    std::vector<RequestHeader> headers;
+    std::vector<PostData> post_data;
 };
 
 void HTTP_C::Initialize(Kernel::HLERequestContext& ctx) {

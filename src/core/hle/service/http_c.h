@@ -4,11 +4,15 @@
 
 #pragma once
 
+#include <unordered_map>
 #include "core/hle/kernel/shared_memory.h"
 #include "core/hle/service/service.h"
 
 namespace Service {
 namespace HTTP {
+
+struct Context;
+struct ClientCertContext;
 
 class HTTP_C final : public ServiceFramework<HTTP_C> {
 public:
@@ -29,6 +33,12 @@ private:
     void Initialize(Kernel::HLERequestContext& ctx);
 
     Kernel::SharedPtr<Kernel::SharedMemory> shared_memory = nullptr;
+
+    std::unordered_map<u32, Context> contexts;
+    u32 context_counter = 0;
+
+    std::unordered_map<u32, ClientCertContext> client_certs;
+    u32 client_certs_counter = 0;
 };
 
 void InstallInterfaces(SM::ServiceManager& service_manager);
