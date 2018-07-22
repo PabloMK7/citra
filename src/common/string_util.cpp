@@ -230,8 +230,9 @@ void SplitString(const std::string& str, const char delim, std::vector<std::stri
     std::istringstream iss(str);
     output.resize(1);
 
-    while (std::getline(iss, *output.rbegin(), delim))
-        output.push_back("");
+    while (std::getline(iss, *output.rbegin(), delim)) {
+        output.emplace_back();
+    }
 
     output.pop_back();
 }
