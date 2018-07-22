@@ -164,11 +164,35 @@ void HTTP_C::CreateContext(Kernel::HLERequestContext& ctx) {
     rb.PushMappedBuffer(buffer);
 }
 
+void HTTP_C::CloseContext(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x3, 2, 0);
+
+    u32 context_handle = rp.Pop<u32>();
+
+    LOG_WARNING(Service_HTTP, "(STUBBED) called, handle={}", context_handle);
+
+    auto itr = contexts.find(context_handle);
+    if (itr == contexts.end()) {
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(ERROR_CONTEXT_ERROR);
+        LOG_ERROR(Service_HTTP, "called, context {} not found", context_handle);
+        return;
+    }
+
+    // TODO(Subv): What happens if you try to close a context that's currently being used?
+    ASSERT(itr->second.state == RequestState::NotStarted);
+
+    contexts.erase(itr);
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RESULT_SUCCESS);
+}
+
 HTTP_C::HTTP_C() : ServiceFramework("http:C", 32) {
     static const FunctionInfo functions[] = {
         {0x00010044, &HTTP_C::Initialize, "Initialize"},
         {0x00020082, &HTTP_C::CreateContext, "CreateContext"},
-        {0x00030040, nullptr, "CloseContext"},
+        {0x00030040, &HTTP_C::CloseContext, "CloseContext"},
         {0x00040040, nullptr, "CancelConnection"},
         {0x00050040, nullptr, "GetRequestState"},
         {0x00060040, nullptr, "GetDownloadSizeState"},

@@ -45,6 +45,15 @@ private:
      */
     void CreateContext(Kernel::HLERequestContext& ctx);
 
+    /**
+     * HTTP_C::CreateContext service function
+     *  Inputs:
+     *      1 : Context handle
+     *  Outputs:
+     *      1 : Result of function, 0 on success, otherwise error code
+     */
+    void CloseContext(Kernel::HLERequestContext& ctx);
+
     Kernel::SharedPtr<Kernel::SharedMemory> shared_memory = nullptr;
 
     std::unordered_map<u32, Context> contexts;
