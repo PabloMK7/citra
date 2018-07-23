@@ -49,7 +49,6 @@ add_library(common STATIC
     chunk_file.h
     cityhash.cpp
     cityhash.h
-    code_block.h
     color.h
     common_funcs.h
     common_paths.h
