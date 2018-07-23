@@ -441,8 +441,8 @@ void GameList::AddGamePopup(QMenu& context_menu, u64 program_id) {
     open_save_location->setEnabled(program_id != 0);
     open_application_location->setVisible(FileUtil::Exists(
         Service::AM::GetTitleContentPath(Service::FS::MediaType::SDMC, program_id)));
-    open_update_location->setEnabled(0x00040000'00000000 <= program_id &&
-                                     program_id <= 0x00040000'FFFFFFFF);
+    open_update_location->setEnabled(0x0004000000000000 <= program_id &&
+                                     program_id <= 0x00040000FFFFFFFF);
     auto it = std::find_if(
         compatibility_list.begin(), compatibility_list.end(),
         [program_id](const std::pair<std::string, std::pair<QString, QString>>& element) {
@@ -651,11 +651,11 @@ void GameListWorker::AddFstEntriesToGameList(const std::string& dir_path, unsign
                 std::vector<u8> original_smdh;
                 loader->ReadIcon(original_smdh);
 
-                if (program_id < 0x00040000'00000000 || program_id > 0x00040000'FFFFFFFF)
+                if (program_id < 0x0004000000000000 || program_id > 0x00040000FFFFFFFF)
                     return original_smdh;
 
                 std::string update_path = Service::AM::GetTitleContentPath(
-                    Service::FS::MediaType::SDMC, program_id + 0x0000000E'00000000);
+                    Service::FS::MediaType::SDMC, program_id + 0x0000000E00000000);
 
                 if (!FileUtil::Exists(update_path))
                     return original_smdh;
