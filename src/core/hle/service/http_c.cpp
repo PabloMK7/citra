@@ -59,14 +59,13 @@ void HTTP_C::CreateContext(Kernel::HLERequestContext& ctx) {
         return;
     }
 
-    ++context_counter;
-    contexts.emplace(context_counter, Context());
+    contexts.emplace(++context_counter, Context());
     contexts[context_counter].url = std::move(url);
     contexts[context_counter].method = method;
     contexts[context_counter].state = RequestState::NotStarted;
     // TODO(Subv): Find a correct default value for this field.
     contexts[context_counter].socket_buffer_size = 0;
-    contexts[context_counter].handle = ++context_counter;
+    contexts[context_counter].handle = context_counter;
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
     rb.Push(RESULT_SUCCESS);
