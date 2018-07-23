@@ -57,7 +57,7 @@ FileType GuessFromExtension(const std::string& extension_) {
     if (extension == ".cci" || extension == ".3ds")
         return FileType::CCI;
 
-    if (extension == ".cxi")
+    if (extension == ".cxi" || extension == ".app")
         return FileType::CXI;
 
     if (extension == ".3dsx")
