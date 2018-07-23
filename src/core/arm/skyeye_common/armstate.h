@@ -221,7 +221,7 @@ public:
     u32 TFlag; // Thumb state
 
     unsigned long long NumInstrs; // The number of instructions executed
-    unsigned NumInstrsToExecute;
+    u64 NumInstrsToExecute;
 
     unsigned NresetSig; // Reset the processor
     unsigned NfiqSig;

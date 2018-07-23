@@ -76,7 +76,7 @@ void Timer::WakeupAllWaitingThreads() {
         signaled = false;
 }
 
-void Timer::Signal(int cycles_late) {
+void Timer::Signal(s64 cycles_late) {
     LOG_TRACE(Kernel, "Timer {} fired", GetObjectId());
 
     signaled = true;
@@ -92,7 +92,7 @@ void Timer::Signal(int cycles_late) {
 }
 
 /// The timer callback event, called when a timer is fired
-static void TimerCallback(u64 timer_handle, int cycles_late) {
+static void TimerCallback(u64 timer_handle, s64 cycles_late) {
     SharedPtr<Timer> timer =
         timer_callback_handle_table.Get<Timer>(static_cast<Handle>(timer_handle));
 

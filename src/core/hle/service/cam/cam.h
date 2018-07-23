@@ -710,7 +710,7 @@ public:
     };
 
 private:
-    void CompletionEventCallBack(u64 port_id, int);
+    void CompletionEventCallBack(u64 port_id, s64);
 
     // Starts a receiving process on the specified port. This can only be called when is_busy = true
     // and is_receiving = false.

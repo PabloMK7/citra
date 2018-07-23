@@ -48,7 +48,7 @@ void IR_RST::UnloadInputDevices() {
     c_stick = nullptr;
 }
 
-void IR_RST::UpdateCallback(u64 userdata, int cycles_late) {
+void IR_RST::UpdateCallback(u64 userdata, s64 cycles_late) {
     SharedMem* mem = reinterpret_cast<SharedMem*>(shared_memory->GetPointer());
 
     if (is_device_reload_pending.exchange(false))
@@ -155,7 +155,7 @@ IR_RST::IR_RST() : ServiceFramework("ir:rst", 1) {
     update_event = Event::Create(ResetType::OneShot, "IRRST:UpdateEvent");
 
     update_callback_id =
-        CoreTiming::RegisterEvent("IRRST:UpdateCallBack", [this](u64 userdata, int cycles_late) {
+        CoreTiming::RegisterEvent("IRRST:UpdateCallBack", [this](u64 userdata, s64 cycles_late) {
             UpdateCallback(userdata, cycles_late);
         });
 

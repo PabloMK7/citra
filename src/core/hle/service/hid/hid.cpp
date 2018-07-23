@@ -71,7 +71,7 @@ void Module::LoadInputDevices() {
     touch_device = Input::CreateDevice<Input::TouchDevice>(Settings::values.touch_device);
 }
 
-void Module::UpdatePadCallback(u64 userdata, int cycles_late) {
+void Module::UpdatePadCallback(u64 userdata, s64 cycles_late) {
     SharedMem* mem = reinterpret_cast<SharedMem*>(shared_mem->GetPointer());
 
     if (is_device_reload_pending.exchange(false))
@@ -166,7 +166,7 @@ void Module::UpdatePadCallback(u64 userdata, int cycles_late) {
     CoreTiming::ScheduleEvent(pad_update_ticks - cycles_late, pad_update_event);
 }
 
-void Module::UpdateAccelerometerCallback(u64 userdata, int cycles_late) {
+void Module::UpdateAccelerometerCallback(u64 userdata, s64 cycles_late) {
     SharedMem* mem = reinterpret_cast<SharedMem*>(shared_mem->GetPointer());
 
     mem->accelerometer.index = next_accelerometer_index;
@@ -210,7 +210,7 @@ void Module::UpdateAccelerometerCallback(u64 userdata, int cycles_late) {
     CoreTiming::ScheduleEvent(accelerometer_update_ticks - cycles_late, accelerometer_update_event);
 }
 
-void Module::UpdateGyroscopeCallback(u64 userdata, int cycles_late) {
+void Module::UpdateGyroscopeCallback(u64 userdata, s64 cycles_late) {
     SharedMem* mem = reinterpret_cast<SharedMem*>(shared_mem->GetPointer());
 
     mem->gyroscope.index = next_gyroscope_index;
@@ -371,16 +371,16 @@ Module::Module() {
 
     // Register update callbacks
     pad_update_event =
-        CoreTiming::RegisterEvent("HID::UpdatePadCallback", [this](u64 userdata, int cycles_late) {
+        CoreTiming::RegisterEvent("HID::UpdatePadCallback", [this](u64 userdata, s64 cycles_late) {
             UpdatePadCallback(userdata, cycles_late);
         });
     accelerometer_update_event = CoreTiming::RegisterEvent(
-        "HID::UpdateAccelerometerCallback", [this](u64 userdata, int cycles_late) {
+        "HID::UpdateAccelerometerCallback", [this](u64 userdata, s64 cycles_late) {
             UpdateAccelerometerCallback(userdata, cycles_late);
         });
     gyroscope_update_event = CoreTiming::RegisterEvent(
         "HID::UpdateGyroscopeCallback",
-        [this](u64 userdata, int cycles_late) { UpdateGyroscopeCallback(userdata, cycles_late); });
+        [this](u64 userdata, s64 cycles_late) { UpdateGyroscopeCallback(userdata, cycles_late); });
 
     CoreTiming::ScheduleEvent(pad_update_ticks, pad_update_event);
 }

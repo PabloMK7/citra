@@ -24,7 +24,7 @@ class SharedMemory;
 } // namespace Kernel
 
 namespace CoreTiming {
-class EventType;
+struct EventType;
 };
 
 namespace Service {
@@ -297,9 +297,9 @@ public:
 
 private:
     void LoadInputDevices();
-    void UpdatePadCallback(u64 userdata, int cycles_late);
-    void UpdateAccelerometerCallback(u64 userdata, int cycles_late);
-    void UpdateGyroscopeCallback(u64 userdata, int cycles_late);
+    void UpdatePadCallback(u64 userdata, s64 cycles_late);
+    void UpdateAccelerometerCallback(u64 userdata, s64 cycles_late);
+    void UpdateGyroscopeCallback(u64 userdata, s64 cycles_late);
 
     // Handle to shared memory region designated to HID_User service
     Kernel::SharedPtr<Kernel::SharedMemory> shared_mem;

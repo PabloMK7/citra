@@ -43,7 +43,7 @@ private:
 
     StereoFrame16 GenerateCurrentFrame();
     bool Tick();
-    void AudioTickCallback(int cycles_late);
+    void AudioTickCallback(s64 cycles_late);
 
     DspState dsp_state = DspState::Off;
     std::array<std::vector<u8>, num_dsp_pipe> pipe_data;
@@ -66,7 +66,7 @@ DspHle::Impl::Impl(DspHle& parent_) : parent(parent_) {
     dsp_memory.raw_memory.fill(0);
 
     tick_event =
-        CoreTiming::RegisterEvent("AudioCore::DspHle::tick_event", [this](u64, int cycles_late) {
+        CoreTiming::RegisterEvent("AudioCore::DspHle::tick_event", [this](u64, s64 cycles_late) {
             this->AudioTickCallback(cycles_late);
         });
     CoreTiming::ScheduleEvent(audio_frame_ticks, tick_event);
@@ -304,7 +304,7 @@ bool DspHle::Impl::Tick() {
     return true;
 }
 
-void DspHle::Impl::AudioTickCallback(int cycles_late) {
+void DspHle::Impl::AudioTickCallback(s64 cycles_late) {
     if (Tick()) {
         // TODO(merry): Signal all the other interrupts as appropriate.
         Service::DSP::SignalPipeInterrupt(DspPipe::Audio);

@@ -79,7 +79,7 @@ std::shared_ptr<Applet> Applet::Get(Service::APT::AppletId id) {
 }
 
 /// Handles updating the current Applet every time it's called.
-static void AppletUpdateEvent(u64 applet_id, int cycles_late) {
+static void AppletUpdateEvent(u64 applet_id, s64 cycles_late) {
     Service::APT::AppletId id = static_cast<Service::APT::AppletId>(applet_id);
     std::shared_ptr<Applet> applet = Applet::Get(id);
     ASSERT_MSG(applet != nullptr, "Applet doesn't exist! applet_id={:08X}", static_cast<u32>(id));

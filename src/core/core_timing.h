@@ -128,7 +128,7 @@ namespace CoreTiming {
 void Init();
 void Shutdown();
 
-typedef std::function<void(u64 userdata, int cycles_late)> TimedCallback;
+typedef std::function<void(u64 userdata, s64 cycles_late)> TimedCallback;
 
 /**
  * This should only be called from the emu thread, if you are calling it any other thread, you are
@@ -186,6 +186,6 @@ void ForceExceptionCheck(s64 cycles);
 
 u64 GetGlobalTimeUs();
 
-int GetDowncount();
+s64 GetDowncount();
 
 } // namespace CoreTiming

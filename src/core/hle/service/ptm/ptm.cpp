@@ -77,7 +77,6 @@ void Module::Interface::GetStepHistory(Kernel::HLERequestContext& ctx) {
 
     u32 hours = rp.Pop<u32>();
     u64 start_time = rp.Pop<u64>();
-    size_t steps_buff_size;
     auto& buffer = rp.PopMappedBuffer();
     ASSERT_MSG(sizeof(u16) * hours == buffer.GetSize(),
                "Buffer for steps count has incorrect size");

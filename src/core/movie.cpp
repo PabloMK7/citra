@@ -242,12 +242,15 @@ void Movie::Play(Service::IR::ExtraHIDResponse& extra_hid_response) {
         return;
     }
 
-    extra_hid_response.buttons.battery_level.Assign(s.extra_hid_response.battery_level);
+    extra_hid_response.buttons.battery_level.Assign(
+        static_cast<u8>(s.extra_hid_response.battery_level));
     extra_hid_response.c_stick.c_stick_x.Assign(s.extra_hid_response.c_stick_x);
     extra_hid_response.c_stick.c_stick_y.Assign(s.extra_hid_response.c_stick_y);
-    extra_hid_response.buttons.r_not_held.Assign(s.extra_hid_response.r_not_held);
-    extra_hid_response.buttons.zl_not_held.Assign(s.extra_hid_response.zl_not_held);
-    extra_hid_response.buttons.zr_not_held.Assign(s.extra_hid_response.zr_not_held);
+    extra_hid_response.buttons.r_not_held.Assign(static_cast<u8>(s.extra_hid_response.r_not_held));
+    extra_hid_response.buttons.zl_not_held.Assign(
+        static_cast<u8>(s.extra_hid_response.zl_not_held));
+    extra_hid_response.buttons.zr_not_held.Assign(
+        static_cast<u8>(s.extra_hid_response.zr_not_held));
 }
 
 void Movie::Record(const ControllerState& controller_state) {

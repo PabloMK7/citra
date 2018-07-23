@@ -99,7 +99,7 @@ static void AddTicks(u64 ticks) {
 }
 
 static u64 GetTicksRemaining() {
-    int ticks = CoreTiming::GetDowncount();
+    s64 ticks = CoreTiming::GetDowncount();
     return static_cast<u64>(ticks <= 0 ? 0 : ticks);
 }
 

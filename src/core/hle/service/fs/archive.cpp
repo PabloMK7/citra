@@ -79,7 +79,7 @@ void File::Read(Kernel::HLERequestContext& ctx) {
 
     if (file->subfile && length > file->size) {
         LOG_WARNING(Service_FS, "Trying to read beyond the subfile size, truncating");
-        length = file->size;
+        length = static_cast<u32>(file->size);
     }
 
     // This file session might have a specific offset from where to start reading, apply it.
@@ -101,7 +101,7 @@ void File::Read(Kernel::HLERequestContext& ctx) {
     } else {
         buffer.Write(data.data(), 0, *read);
         rb.Push(RESULT_SUCCESS);
-        rb.Push<u32>(*read);
+        rb.Push<u32>(static_cast<u32>(*read));
     }
     rb.PushMappedBuffer(buffer);
 
@@ -142,7 +142,7 @@ void File::Write(Kernel::HLERequestContext& ctx) {
         rb.Push<u32>(0);
     } else {
         rb.Push(RESULT_SUCCESS);
-        rb.Push<u32>(*written);
+        rb.Push<u32>(static_cast<u32>(*written));
     }
     rb.PushMappedBuffer(buffer);
 }
