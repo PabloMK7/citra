@@ -40,10 +40,11 @@ void HTTP_C::Initialize(Kernel::HLERequestContext& ctx) {
 void HTTP_C::CreateContext(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x2, 2, 2);
     const u32 url_size = rp.Pop<u32>();
-    std::string url(url_size, '\0');
     RequestMethod method = rp.PopEnum<RequestMethod>();
-
     Kernel::MappedBuffer& buffer = rp.PopMappedBuffer();
+
+    // Copy the buffer into a string without the \0 at the end of the buffer
+    std::string url(url_size, '\0');
     buffer.Read(&url[0], 0, url_size - 1);
 
     LOG_DEBUG(Service_HTTP, "called, url_size={}, url={}, method={}", url_size, url,
@@ -74,7 +75,7 @@ void HTTP_C::CreateContext(Kernel::HLERequestContext& ctx) {
 }
 
 void HTTP_C::CloseContext(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x3, 2, 0);
+    IPC::RequestParser rp(ctx, 0x3, 1, 0);
 
     u32 context_handle = rp.Pop<u32>();
 
@@ -104,7 +105,11 @@ void HTTP_C::AddRequestHeader(Kernel::HLERequestContext& ctx) {
     const u32 value_size = rp.Pop<u32>();
     const std::vector<u8> name_buffer = rp.PopStaticBuffer();
     Kernel::MappedBuffer& value_buffer = rp.PopMappedBuffer();
+
+    // Copy the name_buffer into a string without the \0 at the end
     const std::string name(name_buffer.begin(), name_buffer.end() - 1);
+
+    // Copy thr value_buffer into a string without the \0 at the end
     std::string value(value_size - 1, '\0');
     value_buffer.Read(&value[0], 0, value_size - 1);
 
