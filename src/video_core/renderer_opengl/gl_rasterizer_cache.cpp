@@ -1300,6 +1300,7 @@ SurfaceRect_Tuple RasterizerCacheOpenGL::GetSurfaceSubRect(const SurfaceParams& 
 
             // Delete the expanded surface, this can't be done safely yet
             // because it may still be in use
+            surface->UnlinkAllWatcher(); // unlink watchers as if this surface is already deleted
             remove_surfaces.emplace(surface);
 
             surface = new_surface;

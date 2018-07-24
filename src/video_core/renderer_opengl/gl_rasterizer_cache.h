@@ -397,6 +397,16 @@ struct CachedSurface : SurfaceParams, std::enable_shared_from_this<CachedSurface
         }
     }
 
+    void UnlinkAllWatcher() {
+        for (const auto& watcher : watchers) {
+            if (auto locked = watcher.lock()) {
+                locked->valid = false;
+                locked->surface.reset();
+            }
+        }
+        watchers.clear();
+    }
+
 private:
     std::list<std::weak_ptr<SurfaceWatcher>> watchers;
 };
