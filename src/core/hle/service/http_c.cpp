@@ -54,8 +54,7 @@ void HTTP_C::CreateContext(Kernel::HLERequestContext& ctx) {
         LOG_ERROR(Service_HTTP, "invalid request method={}", static_cast<u32>(method));
 
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
-        rb.Push(ResultCode(ErrCodes::InvalidContext, ErrorModule::HTTP, ErrorSummary::InvalidState,
-                           ErrorLevel::Permanent));
+        rb.Push(ERROR_CONTEXT_ERROR);
         rb.PushMappedBuffer(buffer);
         return;
     }
