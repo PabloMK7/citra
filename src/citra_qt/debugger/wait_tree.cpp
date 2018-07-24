@@ -5,6 +5,7 @@
 #include "citra_qt/debugger/wait_tree.h"
 #include "citra_qt/util/util.h"
 
+#include "common/assert.h"
 #include "core/hle/kernel/event.h"
 #include "core/hle/kernel/mutex.h"
 #include "core/hle/kernel/semaphore.h"
@@ -117,6 +118,8 @@ QString WaitTreeWaitObject::GetResetTypeQString(Kernel::ResetType reset_type) {
     case Kernel::ResetType::Pulse:
         return tr("pulse");
     }
+    UNREACHABLE();
+    return {};
 }
 
 WaitTreeObjectList::WaitTreeObjectList(
