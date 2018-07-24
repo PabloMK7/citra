@@ -128,6 +128,8 @@ public:
     ResultCode FinishPreloadingLibraryApplet(AppletId applet_id);
     ResultCode StartLibraryApplet(AppletId applet_id, Kernel::SharedPtr<Kernel::Object> object,
                                   const std::vector<u8>& buffer);
+    ResultCode PrepareToCloseLibraryApplet(bool not_pause, bool exiting, bool jump_home);
+    ResultCode CloseLibraryApplet(Kernel::SharedPtr<Kernel::Object> object, std::vector<u8> buffer);
 
     struct AppletInfo {
         u64 title_id;
@@ -164,6 +166,12 @@ private:
         AppletAttributes attributes;
         Kernel::SharedPtr<Kernel::Event> notification_event;
         Kernel::SharedPtr<Kernel::Event> parameter_event;
+
+        void Reset() {
+            applet_id = AppletId::None;
+            registered = false;
+            attributes.raw = 0;
+        }
     };
 
     // Holds data about the concurrently running applets in the system.
@@ -172,6 +180,9 @@ private:
     // This overload returns nullptr if no applet with the specified id has been started.
     AppletSlotData* GetAppletSlotData(AppletId id);
     AppletSlotData* GetAppletSlotData(AppletAttributes attributes);
+
+    // Command that will be sent to the application when a library applet calls CloseLibraryApplet.
+    SignalType library_applet_closing_command;
 };
 
 } // namespace APT

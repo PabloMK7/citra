@@ -421,6 +421,34 @@ public:
         void CancelLibraryApplet(Kernel::HLERequestContext& ctx);
 
         /**
+         * APT::PrepareToCloseLibraryApplet service function
+         *  Inputs:
+         *      0 : Command header [0x002500C0]
+         *      1 : bool, Not pause
+         *      2 : bool, Caller exiting
+         *      3 : bool, Jump to home
+         *  Outputs:
+         *      0 : Header code
+         *      1 : Result code
+         */
+        void PrepareToCloseLibraryApplet(Kernel::HLERequestContext& ctx);
+
+        /**
+         * APT::CloseLibraryApplet service function
+         *  Inputs:
+         *      0 : Command header [0x00280044]
+         *      1 : Buffer size
+         *      2 : 0x0
+         *      3 : Object handle
+         *      4 : (Size << 14) | 2
+         *      5 : Input buffer virtual address
+         *  Outputs:
+         *      0 : Header code
+         *      1 : Result code
+         */
+        void CloseLibraryApplet(Kernel::HLERequestContext& ctx);
+
+        /**
          * APT::SendCaptureBufferInfo service function
          *  Inputs:
          *      0 : Command header [0x00400042]
