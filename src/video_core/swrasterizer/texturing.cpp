@@ -6,7 +6,6 @@
 
 #include "common/assert.h"
 #include "common/common_types.h"
-#include "common/math_util.h"
 #include "common/vector_math.h"
 #include "video_core/regs_texturing.h"
 #include "video_core/swrasterizer/texturing.h"
@@ -148,9 +147,9 @@ Math::Vec3<u8> ColorCombine(TevStageConfig::Operation op, const Math::Vec3<u8> i
         // (byte) 128 is correct
         auto result =
             input[0].Cast<int>() + input[1].Cast<int>() - Math::MakeVec<int>(128, 128, 128);
-        result.r() = MathUtil::Clamp<int>(result.r(), 0, 255);
-        result.g() = MathUtil::Clamp<int>(result.g(), 0, 255);
-        result.b() = MathUtil::Clamp<int>(result.b(), 0, 255);
+        result.r() = std::clamp<int>(result.r(), 0, 255);
+        result.g() = std::clamp<int>(result.g(), 0, 255);
+        result.b() = std::clamp<int>(result.b(), 0, 255);
         return result.Cast<u8>();
     }
 
@@ -218,7 +217,7 @@ u8 AlphaCombine(TevStageConfig::Operation op, const std::array<u8, 3>& input) {
     case Operation::AddSigned: {
         // TODO(bunnei): Verify that the color conversion from (float) 0.5f to (byte) 128 is correct
         auto result = static_cast<int>(input[0]) + static_cast<int>(input[1]) - 128;
-        return static_cast<u8>(MathUtil::Clamp<int>(result, 0, 255));
+        return static_cast<u8>(std::clamp<int>(result, 0, 255));
     }
 
     case Operation::Lerp:

@@ -4,7 +4,6 @@
 
 #include "audio_core/interpolate.h"
 #include "common/assert.h"
-#include "common/math_util.h"
 
 namespace AudioCore {
 namespace AudioInterp {
@@ -63,8 +62,8 @@ void Linear(State& state, StereoBuffer16& input, float rate, StereoFrame16& outp
     StepOverSamples(state, input, rate, output, outputi,
                     [](u64 fraction, const auto& x0, const auto& x1, const auto& x2) {
                         // This is a saturated subtraction. (Verified by black-box fuzzing.)
-                        s64 delta0 = MathUtil::Clamp<s64>(x1[0] - x0[0], -32768, 32767);
-                        s64 delta1 = MathUtil::Clamp<s64>(x1[1] - x0[1], -32768, 32767);
+                        s64 delta0 = std::clamp<s64>(x1[0] - x0[0], -32768, 32767);
+                        s64 delta1 = std::clamp<s64>(x1[1] - x0[1], -32768, 32767);
 
                         return std::array<s16, 2>{
                             static_cast<s16>(x0[0] + fraction * delta0 / scale_factor),

@@ -5,7 +5,6 @@
 #include <cstring>
 #include <QImage>
 #include "citra_qt/camera/camera_util.h"
-#include "common/math_util.h"
 #include "core/frontend/camera/factory.h"
 #include "core/frontend/camera/interface.h"
 
@@ -191,9 +190,10 @@ std::vector<u16> Rgb2Yuv(const QImage& source, int width, int height) {
             if (write) {
                 pu = (pu + u) / 2;
                 pv = (pv + v) / 2;
-                using MathUtil::Clamp;
-                *(dest++) = static_cast<u16>(Clamp(py, 0, 0xFF) | (Clamp(pu, 0, 0xFF) << 8));
-                *(dest++) = static_cast<u16>(Clamp(y, 0, 0xFF) | (Clamp(pv, 0, 0xFF) << 8));
+                *(dest++) =
+                    static_cast<u16>(std::clamp(py, 0, 0xFF) | (std::clamp(pu, 0, 0xFF) << 8));
+                *(dest++) =
+                    static_cast<u16>(std::clamp(y, 0, 0xFF) | (std::clamp(pv, 0, 0xFF) << 8));
             } else {
                 py = y;
                 pu = u;

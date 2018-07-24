@@ -9,7 +9,6 @@
 #include "audio_core/codec.h"
 #include "common/assert.h"
 #include "common/common_types.h"
-#include "common/math_util.h"
 
 namespace AudioCore {
 namespace Codec {
@@ -51,7 +50,7 @@ StereoBuffer16 DecodeADPCM(const u8* const data, const size_t sample_count,
             // Filter: y[n] = x[n] + 0.5 + c1 * y[n-1] + c2 * y[n-2]
             int val = ((xn << 11) + 0x400 + coef1 * yn1 + coef2 * yn2) >> 11;
             // Clamp to output range.
-            val = MathUtil::Clamp(val, -32768, 32767);
+            val = std::clamp(val, -32768, 32767);
             // Advance output feedback.
             yn2 = yn1;
             yn1 = val;

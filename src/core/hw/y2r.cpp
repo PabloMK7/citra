@@ -9,7 +9,6 @@
 #include "common/assert.h"
 #include "common/color.h"
 #include "common/common_types.h"
-#include "common/math_util.h"
 #include "common/vector_math.h"
 #include "core/hle/service/y2r_u.h"
 #include "core/hw/y2r.h"
@@ -70,10 +69,9 @@ static void ConvertYUVToRGB(InputFormat input_format, const u8* input_Y, const u
             unsigned int tile = x / 8;
             unsigned int tile_x = x % 8;
             u32* out = &output[tile][y * 8 + tile_x];
-
-            using MathUtil::Clamp;
-            *out = ((u32)Clamp(r >> 5, 0, 0xFF) << 24) | ((u32)Clamp(g >> 5, 0, 0xFF) << 16) |
-                   ((u32)Clamp(b >> 5, 0, 0xFF) << 8);
+            *out = ((u32)std::clamp(r >> 5, 0, 0xFF) << 24) |
+                   ((u32)std::clamp(g >> 5, 0, 0xFF) << 16) |
+                   ((u32)std::clamp(b >> 5, 0, 0xFF) << 8);
         }
     }
 }

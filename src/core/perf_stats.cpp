@@ -5,7 +5,6 @@
 #include <chrono>
 #include <mutex>
 #include <thread>
-#include "common/math_util.h"
 #include "core/hw/gpu.h"
 #include "core/perf_stats.h"
 #include "core/settings.h"
@@ -92,7 +91,7 @@ void FrameLimiter::DoFrameLimiting(u64 current_system_time_us) {
             (current_system_time_us - previous_system_time_us) / sleep_scale));
     frame_limiting_delta_err -= duration_cast<microseconds>(now - previous_walltime);
     frame_limiting_delta_err =
-        MathUtil::Clamp(frame_limiting_delta_err, -max_lag_time_us, max_lag_time_us);
+        std::clamp(frame_limiting_delta_err, -max_lag_time_us, max_lag_time_us);
 
     if (frame_limiting_delta_err > microseconds::zero()) {
         std::this_thread::sleep_for(frame_limiting_delta_err);

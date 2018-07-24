@@ -10,7 +10,6 @@
 #include "audio_core/time_stretch.h"
 #include "common/common_types.h"
 #include "common/logging/log.h"
-#include "common/math_util.h"
 
 using steady_clock = std::chrono::steady_clock;
 
@@ -20,7 +19,7 @@ constexpr double MIN_RATIO = 0.1;
 constexpr double MAX_RATIO = 100.0;
 
 static double ClampRatio(double ratio) {
-    return MathUtil::Clamp(ratio, MIN_RATIO, MAX_RATIO);
+    return std::clamp(ratio, MIN_RATIO, MAX_RATIO);
 }
 
 constexpr double MIN_DELAY_TIME = 0.05;            // Units: seconds
