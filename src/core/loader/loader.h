@@ -84,7 +84,7 @@ constexpr u32 MakeMagic(char a, char b, char c, char d) {
 /// Interface for loading an application
 class AppLoader : NonCopyable {
 public:
-    AppLoader(FileUtil::IOFile&& file) : file(std::move(file)) {}
+    explicit AppLoader(FileUtil::IOFile&& file) : file(std::move(file)) {}
     virtual ~AppLoader() {}
 
     /**

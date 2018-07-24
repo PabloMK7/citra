@@ -32,7 +32,7 @@ public:
      * Recorder constructor
      * @param initial_state Initial recorder state
      */
-    Recorder(const InitialState& initial_state);
+    explicit Recorder(const InitialState& initial_state);
 
     /// Finish recording of this Citrace and save it using the given filename.
     void Finish(const std::string& filename);
