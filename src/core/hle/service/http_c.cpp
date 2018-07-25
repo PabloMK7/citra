@@ -11,6 +11,7 @@ namespace HTTP {
 
 namespace ErrCodes {
 enum {
+    InvalidRequestState = 22,
     TooManyContexts = 26,
     InvalidRequestMethod = 32,
     ContextNotFound = 100,
@@ -209,19 +210,49 @@ void HTTP_C::AddRequestHeader(Kernel::HLERequestContext& ctx) {
     // Copy the name_buffer into a string without the \0 at the end
     const std::string name(name_buffer.begin(), name_buffer.end() - 1);
 
-    // Copy thr value_buffer into a string without the \0 at the end
+    // Copy the value_buffer into a string without the \0 at the end
     std::string value(value_size - 1, '\0');
     value_buffer.Read(&value[0], 0, value_size - 1);
 
-    auto itr = contexts.find(context_handle);
-    if (itr == contexts.end()) {
-        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    auto* session_data = GetSessionData(ctx.Session());
+    ASSERT(session_data);
+
+    if (!session_data->initialized) {
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
         rb.Push(ERROR_STATE_ERROR);
-        LOG_ERROR(Service_HTTP, "called, context {} not found", context_handle);
+        rb.PushMappedBuffer(value_buffer);
         return;
     }
 
-    ASSERT(itr->second.state == RequestState::NotStarted);
+    // This command can only be called with a bound context
+    if (session_data->current_http_context == boost::none) {
+        LOG_ERROR(Service_HTTP, "Command called without a bound context");
+
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
+        rb.Push(ResultCode(ErrorDescription::NotImplemented, ErrorModule::HTTP,
+                           ErrorSummary::Internal, ErrorLevel::Permanent));
+        rb.PushMappedBuffer(value_buffer);
+        return;
+    }
+
+    if (session_data->current_http_context != context_handle) {
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
+        rb.Push(ERROR_STATE_ERROR);
+        rb.PushMappedBuffer(value_buffer);
+        return;
+    }
+
+    auto itr = contexts.find(context_handle);
+    ASSERT(itr != contexts.end());
+
+    if (itr->second.state != RequestState::NotStarted) {
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
+        rb.Push(ResultCode(ErrCodes::InvalidRequestState, ErrorModule::HTTP,
+                           ErrorSummary::InvalidState, ErrorLevel::Permanent));
+        rb.PushMappedBuffer(value_buffer);
+        return;
+    }
+
     ASSERT(std::find_if(itr->second.headers.begin(), itr->second.headers.end(),
                         [&name](const Context::RequestHeader& m) -> bool {
                             return m.name == name;
@@ -233,7 +264,7 @@ void HTTP_C::AddRequestHeader(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
     rb.PushMappedBuffer(value_buffer);
 
-    LOG_WARNING(Service_HTTP, "called, name={}, value={}, context_handle={}", name, value,
+    LOG_DEBUG(Service_HTTP, "called, name={}, value={}, context_handle={}", name, value,
                 context_handle);
 }
 
