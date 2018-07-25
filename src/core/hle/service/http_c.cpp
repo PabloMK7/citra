@@ -11,13 +11,18 @@ namespace HTTP {
 
 namespace ErrCodes {
 enum {
+    TooManyContexts = 26,
     InvalidRequestMethod = 32,
-    InvalidContext = 102,
+
+    /// This error is returned in multiple situations: when trying to initialize an
+    /// already-initialized session, or when using the wrong context handle in a context-bound
+    /// session
+    SessionStateError = 102,
 };
 }
 
-const ResultCode ERROR_CONTEXT_ERROR = // 0xD8A0A066
-    ResultCode(ErrCodes::InvalidContext, ErrorModule::HTTP, ErrorSummary::InvalidState,
+const ResultCode ERROR_STATE_ERROR = // 0xD8A0A066
+    ResultCode(ErrCodes::SessionStateError, ErrorModule::HTTP, ErrorSummary::InvalidState,
                ErrorLevel::Permanent);
 
 void HTTP_C::Initialize(Kernel::HLERequestContext& ctx) {
@@ -29,12 +34,23 @@ void HTTP_C::Initialize(Kernel::HLERequestContext& ctx) {
         shared_memory->name = "HTTP_C:shared_memory";
     }
 
+    LOG_WARNING(Service_HTTP, "(STUBBED) called, shared memory size: {}", shmem_size);
+
+    auto* session_data = GetSessionData(ctx.Session());
+    ASSERT(session_data);
+
+    if (session_data->initialized) {
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(ERROR_STATE_ERROR);
+        return;
+    }
+
+    session_data->initialized = true;
+
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     // This returns 0xd8a0a046 if no network connection is available.
     // Just assume we are always connected.
     rb.Push(RESULT_SUCCESS);
-
-    LOG_WARNING(Service_HTTP, "(STUBBED) called, shared memory size: {}", shmem_size);
 }
 
 void HTTP_C::CreateContext(Kernel::HLERequestContext& ctx) {
@@ -50,11 +66,38 @@ void HTTP_C::CreateContext(Kernel::HLERequestContext& ctx) {
     LOG_DEBUG(Service_HTTP, "called, url_size={}, url={}, method={}", url_size, url,
               static_cast<u32>(method));
 
+    auto* session_data = GetSessionData(ctx.Session());
+    ASSERT(session_data);
+
+    // This command can only be called without a bound session.
+    if (session_data->current_http_context != boost::none) {
+        LOG_ERROR(Service_HTTP, "Command called with a bound context");
+
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
+        rb.Push(ResultCode(ErrorDescription::NotImplemented, ErrorModule::HTTP,
+                           ErrorSummary::Internal, ErrorLevel::Permanent));
+        rb.PushMappedBuffer(buffer);
+        return;
+    }
+
+    static constexpr size_t MaxConcurrentHTTPContexts = 8;
+    if (session_data->num_http_contexts >= MaxConcurrentHTTPContexts) {
+        // There can only be 8 HTTP contexts open at the same time for any particular session.
+        LOG_ERROR(Service_HTTP, "Tried to open too many HTTP contexts");
+
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
+        rb.Push(ResultCode(ErrCodes::TooManyContexts, ErrorModule::HTTP, ErrorSummary::InvalidState,
+                           ErrorLevel::Permanent));
+        rb.PushMappedBuffer(buffer);
+        return;
+    }
+
     if (method == RequestMethod::None || static_cast<u32>(method) >= TotalRequestMethods) {
         LOG_ERROR(Service_HTTP, "invalid request method={}", static_cast<u32>(method));
 
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
-        rb.Push(ERROR_CONTEXT_ERROR);
+        rb.Push(ResultCode(ErrCodes::InvalidRequestMethod, ErrorModule::HTTP,
+                           ErrorSummary::InvalidState, ErrorLevel::Permanent));
         rb.PushMappedBuffer(buffer);
         return;
     }
@@ -66,6 +109,8 @@ void HTTP_C::CreateContext(Kernel::HLERequestContext& ctx) {
     // TODO(Subv): Find a correct default value for this field.
     contexts[context_counter].socket_buffer_size = 0;
     contexts[context_counter].handle = context_counter;
+
+    session_data->num_http_contexts++;
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
     rb.Push(RESULT_SUCCESS);
@@ -80,10 +125,17 @@ void HTTP_C::CloseContext(Kernel::HLERequestContext& ctx) {
 
     LOG_WARNING(Service_HTTP, "(STUBBED) called, handle={}", context_handle);
 
+    auto* session_data = GetSessionData(ctx.Session());
+    ASSERT(session_data);
+
+    ASSERT_MSG(session_data->current_http_context == boost::none,
+               "Unimplemented CloseContext on context-bound session");
+
     auto itr = contexts.find(context_handle);
     if (itr == contexts.end()) {
+        // The real HTTP module just silently fails in this case.
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(ERROR_CONTEXT_ERROR);
+        rb.Push(RESULT_SUCCESS);
         LOG_ERROR(Service_HTTP, "called, context {} not found", context_handle);
         return;
     }
@@ -91,7 +143,10 @@ void HTTP_C::CloseContext(Kernel::HLERequestContext& ctx) {
     // TODO(Subv): What happens if you try to close a context that's currently being used?
     ASSERT(itr->second.state == RequestState::NotStarted);
 
+    // TODO(Subv): Make sure that only the session that created the context can close it.
+
     contexts.erase(itr);
+    session_data->num_http_contexts--;
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
@@ -115,7 +170,7 @@ void HTTP_C::AddRequestHeader(Kernel::HLERequestContext& ctx) {
     auto itr = contexts.find(context_handle);
     if (itr == contexts.end()) {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-        rb.Push(ERROR_CONTEXT_ERROR);
+        rb.Push(ERROR_STATE_ERROR);
         LOG_ERROR(Service_HTTP, "called, context {} not found", context_handle);
         return;
     }

@@ -41,7 +41,8 @@ enum class RequestState : u8 {
 /// There can only be at most one client certificate context attached to an HTTP context at any
 /// given time.
 struct ClientCertContext {
-    u32 handle;
+    using Handle = u32;
+    Handle handle;
     std::vector<u8> certificate;
     std::vector<u8> private_key;
 };
@@ -51,17 +52,21 @@ struct ClientCertContext {
 /// it, but the chain may contain an arbitrary number of certificates in it.
 struct RootCertChain {
     struct RootCACert {
-        u32 handle;
+        using Handle = u32;
+        Handle handle;
         std::vector<u8> certificate;
     };
 
-    u32 handle;
+    using Handle = u32;
+    Handle handle;
     std::vector<RootCACert> certificates;
 };
 
 /// Represents an HTTP context.
 class Context final {
 public:
+    using Handle = u32;
+
     Context() = default;
     Context(const Context&) = delete;
     Context& operator=(const Context&) = delete;
@@ -99,7 +104,7 @@ public:
         std::weak_ptr<RootCertChain> root_ca_chain;
     };
 
-    u32 handle;
+    Handle handle;
     std::string url;
     RequestMethod method;
     RequestState state = RequestState::NotStarted;
@@ -111,7 +116,22 @@ public:
     std::vector<PostData> post_data;
 };
 
-class HTTP_C final : public ServiceFramework<HTTP_C> {
+struct SessionData : public Kernel::SessionRequestHandler::SessionDataBase {
+    /// The HTTP context that is currently bound to this session, this can be empty if no context
+    /// has been bound. Certain commands can only be called on a session with a bound context.
+    boost::optional<Context::Handle> current_http_context;
+
+    /// Number of HTTP contexts that are currently opened in this session.
+    u32 num_http_contexts = 0;
+    /// Number of ClientCert contexts that are currently opened in this session.
+    u32 num_client_certs = 0;
+
+    /// Whether this session has been initialized in some way, be it via Initialize or
+    /// InitializeConnectionSession.
+    bool initialized = false;
+};
+
+class HTTP_C final : public ServiceFramework<HTTP_C, SessionData> {
 public:
     HTTP_C();
 
@@ -168,11 +188,17 @@ private:
 
     Kernel::SharedPtr<Kernel::SharedMemory> shared_memory = nullptr;
 
-    std::unordered_map<u32, Context> contexts;
-    u32 context_counter = 0;
+    /// The next handle number to use when a new HTTP context is created.
+    Context::Handle context_counter = 0;
 
-    std::unordered_map<u32, ClientCertContext> client_certs;
-    u32 client_certs_counter = 0;
+    /// The next handle number to use when a new ClientCert context is created.
+    ClientCertContext::Handle client_certs_counter = 0;
+
+    /// Global list of HTTP contexts currently opened.
+    std::unordered_map<Context::Handle, Context> contexts;
+
+    /// Global list of  ClientCert contexts currently opened.
+    std::unordered_map<ClientCertContext::Handle, ClientCertContext> client_certs;
 };
 
 void InstallInterfaces(SM::ServiceManager& service_manager);
