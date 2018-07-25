@@ -2,12 +2,12 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <algorithm>
 #include <cctype>
 #include <cerrno>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <boost/range/algorithm/transform.hpp>
 #include "common/common_paths.h"
 #include "common/logging/log.h"
 #include "common/string_util.h"
@@ -24,13 +24,15 @@ namespace Common {
 
 /// Make a string lowercase
 std::string ToLower(std::string str) {
-    boost::transform(str, str.begin(), ::tolower);
+    std::transform(str.begin(), str.end(), str.begin(),
+                   [](unsigned char c) { return std::tolower(c); });
     return str;
 }
 
 /// Make a string uppercase
 std::string ToUpper(std::string str) {
-    boost::transform(str, str.begin(), ::toupper);
+    std::transform(str.begin(), str.end(), str.begin(),
+                   [](unsigned char c) { return std::toupper(c); });
     return str;
 }
 
