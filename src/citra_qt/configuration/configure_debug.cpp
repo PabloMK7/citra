@@ -22,6 +22,7 @@ ConfigureDebug::ConfigureDebug(QWidget* parent) : QWidget(parent), ui(new Ui::Co
         QString path = QString::fromStdString(FileUtil::GetUserPath(D_LOGS_IDX));
         QDesktopServices::openUrl(QUrl::fromLocalFile(path));
     });
+    ui->toggle_cpu_jit->setEnabled(!Core::System::GetInstance().IsPoweredOn());
 }
 
 ConfigureDebug::~ConfigureDebug() {}
@@ -33,6 +34,7 @@ void ConfigureDebug::setConfiguration() {
     ui->toggle_console->setEnabled(!Core::System::GetInstance().IsPoweredOn());
     ui->toggle_console->setChecked(UISettings::values.show_console);
     ui->log_filter_edit->setText(QString::fromStdString(Settings::values.log_filter));
+    ui->toggle_cpu_jit->setChecked(Settings::values.use_cpu_jit);
 }
 
 void ConfigureDebug::applyConfiguration() {
@@ -44,6 +46,7 @@ void ConfigureDebug::applyConfiguration() {
     Log::Filter filter;
     filter.ParseFilterString(Settings::values.log_filter);
     Log::SetGlobalFilter(filter);
+    Settings::values.use_cpu_jit = ui->toggle_cpu_jit->isChecked();
 }
 
 void ConfigureDebug::retranslateUi() {
