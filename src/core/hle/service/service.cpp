@@ -44,6 +44,7 @@
 #include "core/hle/service/ns/ns.h"
 #include "core/hle/service/nwm/nwm.h"
 #include "core/hle/service/pm/pm.h"
+#include "core/hle/service/ps/ps_ps.h"
 #include "core/hle/service/ptm/ptm.h"
 #include "core/hle/service/pxi/pxi.h"
 #include "core/hle/service/qtm/qtm.h"
@@ -225,6 +226,7 @@ void Init(std::shared_ptr<SM::ServiceManager>& sm) {
 
     ERR::InstallInterfaces();
 
+    PS::InstallInterfaces(*sm);
     PXI::InstallInterfaces(*sm);
     NS::InstallInterfaces(*sm);
     AC::InstallInterfaces(*sm);

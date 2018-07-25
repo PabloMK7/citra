@@ -332,6 +332,8 @@ add_library(core STATIC
     hle/service/pm/pm_app.h
     hle/service/pm/pm_dbg.cpp
     hle/service/pm/pm_dbg.h
+    hle/service/ps/ps_ps.cpp
+    hle/service/ps/ps_ps.h
     hle/service/ptm/ptm.cpp
     hle/service/ptm/ptm.h
     hle/service/ptm/ptm_gets.cpp
