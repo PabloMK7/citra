@@ -172,6 +172,17 @@ private:
     void CloseContext(Kernel::HLERequestContext& ctx);
 
     /**
+     * HTTP_C::InitializeConnectionSession service function
+     *  Inputs:
+     *      1 : HTTP context handle
+     *      2 : 0x20, processID translate-header for the ARM11-kernel
+     *      3 : processID set by the ARM11-kernel
+     *  Outputs:
+     *      1 : Result of function, 0 on success, otherwise error code
+     */
+    void InitializeConnectionSession(Kernel::HLERequestContext& ctx);
+
+    /**
      * HTTP_C::AddRequestHeader service function
      *  Inputs:
      * 1 : Context handle

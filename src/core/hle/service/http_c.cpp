@@ -13,6 +13,7 @@ namespace ErrCodes {
 enum {
     TooManyContexts = 26,
     InvalidRequestMethod = 32,
+    ContextNotFound = 100,
 
     /// This error is returned in multiple situations: when trying to initialize an
     /// already-initialized session, or when using the wrong context handle in a context-bound
@@ -28,7 +29,7 @@ const ResultCode ERROR_STATE_ERROR = // 0xD8A0A066
 void HTTP_C::Initialize(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x1, 1, 4);
     const u32 shmem_size = rp.Pop<u32>();
-    rp.PopPID();
+    u32 pid = rp.PopPID();
     shared_memory = rp.PopObject<Kernel::SharedMemory>();
     if (shared_memory) {
         shared_memory->name = "HTTP_C:shared_memory";
@@ -53,6 +54,38 @@ void HTTP_C::Initialize(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
 }
 
+void HTTP_C::InitializeConnectionSession(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x8, 1, 2);
+    const u32 context_handle = rp.Pop<u32>();
+    u32 pid = rp.PopPID();
+
+    auto* session_data = GetSessionData(ctx.Session());
+    ASSERT(session_data);
+
+    if (session_data->initialized) {
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(ERROR_STATE_ERROR);
+        return;
+    }
+
+    // TODO(Subv): Check that the input PID matches the PID that created the context.
+    auto itr = contexts.find(context_handle);
+    if (itr == contexts.end()) {
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(ResultCode(ErrCodes::ContextNotFound, ErrorModule::HTTP, ErrorSummary::InvalidState,
+                           ErrorLevel::Permanent));
+        return;
+    }
+
+    session_data->initialized = true;
+    // Bind the context to the current session.
+    session_data->current_http_context = context_handle;
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RESULT_SUCCESS);
+    LOG_DEBUG(Service_HTTP, "called, context_id={}", context_handle);
+}
+
 void HTTP_C::CreateContext(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x2, 2, 2);
     const u32 url_size = rp.Pop<u32>();
@@ -68,6 +101,13 @@ void HTTP_C::CreateContext(Kernel::HLERequestContext& ctx) {
 
     auto* session_data = GetSessionData(ctx.Session());
     ASSERT(session_data);
+
+    if (!session_data->initialized) {
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
+        rb.Push(ERROR_STATE_ERROR);
+        rb.PushMappedBuffer(buffer);
+        return;
+    }
 
     // This command can only be called without a bound session.
     if (session_data->current_http_context != boost::none) {
@@ -127,6 +167,12 @@ void HTTP_C::CloseContext(Kernel::HLERequestContext& ctx) {
 
     auto* session_data = GetSessionData(ctx.Session());
     ASSERT(session_data);
+
+    if (!session_data->initialized) {
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(ERROR_STATE_ERROR);
+        return;
+    }
 
     ASSERT_MSG(session_data->current_http_context == boost::none,
                "Unimplemented CloseContext on context-bound session");
@@ -200,7 +246,7 @@ HTTP_C::HTTP_C() : ServiceFramework("http:C", 32) {
         {0x00050040, nullptr, "GetRequestState"},
         {0x00060040, nullptr, "GetDownloadSizeState"},
         {0x00070040, nullptr, "GetRequestError"},
-        {0x00080042, nullptr, "InitializeConnectionSession"},
+        {0x00080042, &HTTP_C::InitializeConnectionSession, "InitializeConnectionSession"},
         {0x00090040, nullptr, "BeginRequest"},
         {0x000A0040, nullptr, "BeginRequestAsync"},
         {0x000B0082, nullptr, "ReceiveData"},
