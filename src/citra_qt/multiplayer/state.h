@@ -36,6 +36,8 @@ public:
         return status_icon;
     }
 
+    void retranslateUi();
+
 public slots:
     void OnNetworkStateChanged(const Network::RoomMember::State& state);
     void OnViewLobby();
@@ -60,6 +62,7 @@ private:
     QAction* leave_room;
     QAction* show_room;
     std::shared_ptr<Core::AnnounceMultiplayerSession> announce_multiplayer_session;
+    Network::RoomMember::State current_state = Network::RoomMember::State::Uninitialized;
     Network::RoomMember::CallbackHandle<Network::RoomMember::State> state_callback_handle;
 };
 

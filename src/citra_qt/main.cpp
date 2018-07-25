@@ -1415,6 +1415,7 @@ void GMainWindow::OnLanguageChanged(const QString& locale) {
     UISettings::values.language = locale;
     LoadTranslation();
     ui.retranslateUi(this);
+    RetranslateStatusBar();
     SetupUIStrings();
 }
 
@@ -1436,6 +1437,21 @@ void GMainWindow::SyncMenuUISettings() {
     ui.action_Screen_Layout_Side_by_Side->setChecked(Settings::values.layout_option ==
                                                      Settings::LayoutOption::SideScreen);
     ui.action_Screen_Layout_Swap_Screens->setChecked(Settings::values.swap_screen);
+}
+
+void GMainWindow::RetranslateStatusBar() {
+    if (emu_thread)
+        UpdateStatusBar();
+
+    emu_speed_label->setToolTip(tr("Current emulation speed. Values higher or lower than 100% "
+                                   "indicate emulation is running faster or slower than a 3DS."));
+    game_fps_label->setToolTip(tr("How many frames per second the game is currently displaying. "
+                                  "This will vary from game to game and scene to scene."));
+    emu_frametime_label->setToolTip(
+        tr("Time taken to emulate a 3DS frame, not counting framelimiting or v-sync. For "
+           "full-speed emulation this should be at most 16.67 ms."));
+
+    multiplayer_state->retranslateUi();
 }
 
 #ifdef main
