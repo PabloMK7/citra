@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <algorithm>
 #include <chrono>
 #include <mutex>
 #include <thread>
@@ -45,7 +46,7 @@ public:
             } else {
                 tilt_direction = mouse_move.Cast<float>();
                 tilt_angle = std::clamp(tilt_direction.Normalize() * sensitivity, 0.0f,
-                                             MathUtil::PI * this->tilt_clamp / 180.0f);
+                                        MathUtil::PI * this->tilt_clamp / 180.0f);
             }
         }
     }

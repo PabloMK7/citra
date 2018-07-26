@@ -3,7 +3,6 @@
 // Refer to the license.txt file included.
 
 #include <algorithm>
-
 #include "common/assert.h"
 #include "common/common_types.h"
 #include "common/vector_math.h"

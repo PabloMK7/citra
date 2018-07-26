@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <algorithm>
 #include <memory>
 #include <string>
 #include <tuple>
@@ -534,17 +535,17 @@ bool RasterizerOpenGL::Draw(bool accelerate, bool is_indexed) {
 
     MathUtil::Rectangle<u32> draw_rect{
         static_cast<u32>(std::clamp<s32>(static_cast<s32>(surfaces_rect.left) +
-                                                  viewport_rect_unscaled.left * res_scale,
-                                              surfaces_rect.left, surfaces_rect.right)), // Left
+                                             viewport_rect_unscaled.left * res_scale,
+                                         surfaces_rect.left, surfaces_rect.right)), // Left
         static_cast<u32>(std::clamp<s32>(static_cast<s32>(surfaces_rect.bottom) +
-                                                  viewport_rect_unscaled.top * res_scale,
-                                              surfaces_rect.bottom, surfaces_rect.top)), // Top
+                                             viewport_rect_unscaled.top * res_scale,
+                                         surfaces_rect.bottom, surfaces_rect.top)), // Top
         static_cast<u32>(std::clamp<s32>(static_cast<s32>(surfaces_rect.left) +
-                                                  viewport_rect_unscaled.right * res_scale,
-                                              surfaces_rect.left, surfaces_rect.right)), // Right
+                                             viewport_rect_unscaled.right * res_scale,
+                                         surfaces_rect.left, surfaces_rect.right)), // Right
         static_cast<u32>(std::clamp<s32>(static_cast<s32>(surfaces_rect.bottom) +
-                                                  viewport_rect_unscaled.bottom * res_scale,
-                                              surfaces_rect.bottom, surfaces_rect.top))}; // Bottom
+                                             viewport_rect_unscaled.bottom * res_scale,
+                                         surfaces_rect.bottom, surfaces_rect.top))}; // Bottom
 
     // Bind the framebuffer surfaces
     state.draw.draw_framebuffer = framebuffer.handle;
