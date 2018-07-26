@@ -685,13 +685,14 @@ bool GMainWindow::LoadROM(const QString& filename) {
 
         case Core::System::ResultStatus::ErrorVideoCore_ErrorGenericDrivers:
             QMessageBox::critical(
-                this, tr("An error occured in the video core."),
-                tr("You are running default Windows drivers for your GPU. You need to install the "
+                this, tr("Video Core Error!"),
+                tr("An error occured in the video core. You are running default Windows drivers "
+                   "for your GPU. You need to install the "
                    "proper drivers for your graphics card from the manufacturer's website."));
             break;
 
         case Core::System::ResultStatus::ErrorVideoCore_ErrorBelowGL33:
-            QMessageBox::critical(this, tr("Error while initializing OpenGL 3.3 Core!"),
+            QMessageBox::critical(this, tr("OpenGL 3.3 Unsupported"),
                                   tr("Your GPU may not support OpenGL 3.3, or you do not "
                                      "have the latest graphics driver."));
             break;
