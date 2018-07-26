@@ -53,8 +53,6 @@ static bool MatchName(const u8* buffer, u32 name_length, const std::u16string& n
     return name == std::u16string(name_buffer.begin(), name_buffer.end());
 }
 
-RomFSFile::RomFSFile() : data(nullptr), length(0) {}
-
 RomFSFile::RomFSFile(const u8* data, u64 length) : data(data), length(length) {}
 
 const u8* RomFSFile::Data() const {

@@ -12,14 +12,14 @@ namespace RomFS {
 
 class RomFSFile {
 public:
-    RomFSFile();
+    RomFSFile() = default;
     RomFSFile(const u8* data, u64 length);
     const u8* Data() const;
     u64 Length() const;
 
 private:
-    const u8* data;
-    u64 length;
+    const u8* data = nullptr;
+    u64 length = 0;
 };
 
 /**
