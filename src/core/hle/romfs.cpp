@@ -53,7 +53,24 @@ static bool MatchName(const u8* buffer, u32 name_length, const std::u16string& n
     return name == std::u16string(name_buffer.begin(), name_buffer.end());
 }
 
+RomFSFile::RomFSFile() : data(nullptr), length(0) {}
+
+RomFSFile::RomFSFile(const u8* data, u64 length) : data(data), length(length) {}
+
+const u8* RomFSFile::Data() const {
+    return data;
+}
+
+u64 RomFSFile::Length() const {
+    return length;
+}
+
 const u8* GetFilePointer(const u8* romfs, const std::vector<std::u16string>& path) {
+    RomFSFile file = GetFile(romfs, path);
+    return file.Data();
+}
+
+const RomFSFile GetFile(const u8* romfs, const std::vector<std::u16string>& path) {
     constexpr u32 INVALID_FIELD = 0xFFFFFFFF;
 
     // Split path into directory names and file name
@@ -73,7 +90,7 @@ const u8* GetFilePointer(const u8* romfs, const std::vector<std::u16string>& pat
         child_dir_offset = dir.first_child_dir_offset;
         while (true) {
             if (child_dir_offset == INVALID_FIELD) {
-                return nullptr;
+                return RomFSFile();
             }
             const u8* current_child_dir = romfs + header.dir_table_offset + child_dir_offset;
             std::memcpy(&dir, current_child_dir, sizeof(dir));
@@ -92,11 +109,12 @@ const u8* GetFilePointer(const u8* romfs, const std::vector<std::u16string>& pat
         const u8* current_file = romfs + header.file_table_offset + file_offset;
         std::memcpy(&file, current_file, sizeof(file));
         if (MatchName(current_file + sizeof(file), file.name_length, file_name)) {
-            return romfs + header.data_offset + file.data_offset;
+            RomFSFile res(romfs + header.data_offset + file.data_offset, file.data_length);
+            return res;
         }
         file_offset = file.next_file_offset;
     }
-    return nullptr;
+    return RomFSFile();
 }
 
 } // namespace RomFS

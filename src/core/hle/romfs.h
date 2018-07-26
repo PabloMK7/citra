@@ -10,6 +10,18 @@
 
 namespace RomFS {
 
+class RomFSFile {
+public:
+    RomFSFile();
+    RomFSFile(const u8* data, u64 length);
+    const u8* Data() const;
+    u64 Length() const;
+
+private:
+    const u8* data;
+    u64 length;
+};
+
 /**
  * Gets the pointer to a file in a RomFS image.
  * @param romfs The pointer to the RomFS image
@@ -18,5 +30,14 @@ namespace RomFS {
  * @todo reimplement this with a full RomFS manager
  */
 const u8* GetFilePointer(const u8* romfs, const std::vector<std::u16string>& path);
+
+/**
+ * Gets a RomFSFile class to a file in a RomFS image.
+ * @param romfs The pointer to the RomFS image
+ * @param path A vector containing the directory names and file name of the path to the file
+ * @return the RomFSFile to the file
+ * @todo reimplement this with a full RomFS manager
+ */
+const RomFSFile GetFile(const u8* romfs, const std::vector<std::u16string>& path);
 
 } // namespace RomFS
