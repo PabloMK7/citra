@@ -23,15 +23,6 @@ private:
 };
 
 /**
- * Gets the pointer to a file in a RomFS image.
- * @param romfs The pointer to the RomFS image
- * @param path A vector containing the directory names and file name of the path to the file
- * @return the pointer to the file
- * @todo reimplement this with a full RomFS manager
- */
-const u8* GetFilePointer(const u8* romfs, const std::vector<std::u16string>& path);
-
-/**
  * Gets a RomFSFile class to a file in a RomFS image.
  * @param romfs The pointer to the RomFS image
  * @param path A vector containing the directory names and file name of the path to the file

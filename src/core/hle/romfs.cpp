@@ -65,11 +65,6 @@ u64 RomFSFile::Length() const {
     return length;
 }
 
-const u8* GetFilePointer(const u8* romfs, const std::vector<std::u16string>& path) {
-    RomFSFile file = GetFile(romfs, path);
-    return file.Data();
-}
-
 const RomFSFile GetFile(const u8* romfs, const std::vector<std::u16string>& path) {
     constexpr u32 INVALID_FIELD = 0xFFFFFFFF;
 
@@ -109,8 +104,7 @@ const RomFSFile GetFile(const u8* romfs, const std::vector<std::u16string>& path
         const u8* current_file = romfs + header.file_table_offset + file_offset;
         std::memcpy(&file, current_file, sizeof(file));
         if (MatchName(current_file + sizeof(file), file.name_length, file_name)) {
-            RomFSFile res(romfs + header.data_offset + file.data_offset, file.data_length);
-            return res;
+            return RomFSFile(romfs + header.data_offset + file.data_offset, file.data_length);
         }
         file_offset = file.next_file_offset;
     }
