@@ -31,10 +31,10 @@
 #include "core/hle/service/fs/archive.h"
 #include "core/loader/loader.h"
 
-GameList::SearchField::KeyReleaseEater::KeyReleaseEater(GameList* gamelist) : gamelist{gamelist} {}
+GameListSearchField::KeyReleaseEater::KeyReleaseEater(GameList* gamelist) : gamelist{gamelist} {}
 
 // EventFilter in order to process systemkeys while editing the searchfield
-bool GameList::SearchField::KeyReleaseEater::eventFilter(QObject* obj, QEvent* event) {
+bool GameListSearchField::KeyReleaseEater::eventFilter(QObject* obj, QEvent* event) {
     // If it isn't a KeyRelease event then continue with standard event processing
     if (event->type() != QEvent::KeyRelease)
         return QObject::eventFilter(obj, event);
@@ -82,7 +82,7 @@ bool GameList::SearchField::KeyReleaseEater::eventFilter(QObject* obj, QEvent* e
     return QObject::eventFilter(obj, event);
 }
 
-void GameList::SearchField::setFilterResult(int visible, int total) {
+void GameListSearchField::setFilterResult(int visible, int total) {
     this->visible = visible;
     this->total = total;
 
@@ -116,17 +116,17 @@ QString GameList::getLastFilterResultItem() {
     return file_path;
 }
 
-void GameList::SearchField::clear() {
+void GameListSearchField::clear() {
     edit_filter->setText("");
 }
 
-void GameList::SearchField::setFocus() {
+void GameListSearchField::setFocus() {
     if (edit_filter->isVisible()) {
         edit_filter->setFocus();
     }
 }
 
-GameList::SearchField::SearchField(GameList* parent) : QWidget{parent} {
+GameListSearchField::GameListSearchField(GameList* parent) : QWidget{parent} {
     KeyReleaseEater* keyReleaseEater = new KeyReleaseEater(parent);
     layout_filter = new QHBoxLayout;
     layout_filter->setMargin(8);
@@ -271,7 +271,7 @@ GameList::GameList(GMainWindow* parent) : QWidget{parent} {
     this->main_window = parent;
     layout = new QVBoxLayout;
     tree_view = new QTreeView;
-    search_field = new SearchField(this);
+    search_field = new GameListSearchField(this);
     item_model = new QStandardItemModel(tree_view);
     tree_view->setModel(item_model);
 

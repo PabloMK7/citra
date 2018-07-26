@@ -15,6 +15,7 @@
 #include <QRunnable>
 #include <QStandardItem>
 #include <QString>
+#include <QWidget>
 #include "citra_qt/ui_settings.h"
 #include "citra_qt/util/util.h"
 #include "common/file_util.h"
@@ -407,4 +408,46 @@ private:
 
     void AddFstEntriesToGameList(const std::string& dir_path, unsigned int recursion,
                                  GameListDir* parent_dir);
+};
+
+class GameList;
+class QHBoxLayout;
+class QTreeView;
+class QLabel;
+class QLineEdit;
+class QToolButton;
+
+class GameListSearchField : public QWidget {
+    Q_OBJECT
+
+public:
+    explicit GameListSearchField(GameList* parent = nullptr);
+
+    void setFilterResult(int visible, int total);
+
+    void clear();
+    void setFocus();
+
+    int visible;
+    int total;
+
+private:
+    class KeyReleaseEater : public QObject {
+    public:
+        explicit KeyReleaseEater(GameList* gamelist);
+
+    private:
+        GameList* gamelist = nullptr;
+        QString edit_filter_text_old;
+
+    protected:
+        // EventFilter in order to process systemkeys while editing the searchfield
+        bool eventFilter(QObject* obj, QEvent* event) override;
+    };
+    QHBoxLayout* layout_filter = nullptr;
+    QTreeView* tree_view = nullptr;
+    QLabel* label_filter = nullptr;
+    QLineEdit* edit_filter = nullptr;
+    QLabel* label_filter_result = nullptr;
+    QToolButton* button_filter_close = nullptr;
 };
