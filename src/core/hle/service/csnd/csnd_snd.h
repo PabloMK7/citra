@@ -54,6 +54,17 @@ private:
     void ExecuteCommands(Kernel::HLERequestContext& ctx);
 
     /**
+     * CSND_SND::ExecuteType1Commands service function
+     *  Inputs:
+     *      0 : Header Code[0x00040080]
+     *      1 : unknown
+     *      2 : unknown
+     *  Outputs:
+     *      1 : Result of function, 0 on success, otherwise error code
+     */
+    void ExecuteType1Commands(Kernel::HLERequestContext& ctx);
+
+    /**
      * CSND_SND::AcquireSoundChannels service function
      *  Inputs:
      *      0 : Header Code[0x00050000]
@@ -71,6 +82,28 @@ private:
      *      1 : Result of function, 0 on success, otherwise error code
      */
     void ReleaseSoundChannels(Kernel::HLERequestContext& ctx);
+
+    /**
+     * CSND_SND::AcquireCapUnit service function
+     *     This function tries to acquire one capture device (max: 2).
+     *     Returns index of which capture device was acquired.
+     *  Inputs:
+     *      0 : Header Code[0x00070000]
+     *  Outputs:
+     *      1 : Result of function, 0 on success, otherwise error code
+     *      2 : Capture Unit
+     */
+    void AcquireCapUnit(Kernel::HLERequestContext& ctx);
+
+    /**
+     * CSND_SND::ReleaseCapUnit service function
+     *  Inputs:
+     *      0 : Header Code[0x00080040]
+     *      1 : Capture Unit
+     *  Outputs:
+     *      1 : Result of function, 0 on success, otherwise error code
+     */
+    void ReleaseCapUnit(Kernel::HLERequestContext& ctx);
 
     /**
      * CSND_SND::FlushDataCache service function
@@ -120,8 +153,29 @@ private:
      */
     void InvalidateDataCache(Kernel::HLERequestContext& ctx);
 
+    /**
+     * CSND_SND::Reset service function
+     *  Inputs:
+     *      0 : Header Code[0x000C0000]
+     *  Outputs:
+     *      1 : Result of function, 0 on success, otherwise error code
+     */
+    void Reset(Kernel::HLERequestContext& ctx);
+
+    struct Type0Command {
+        // command id and next command offset
+        u32 command_id;
+        u32 finished;
+        u32 flags;
+        u8 parameters[20];
+    };
+    static_assert(sizeof(Type0Command) == 0x20, "Type0Command structure size is wrong");
+
     Kernel::SharedPtr<Kernel::Mutex> mutex = nullptr;
     Kernel::SharedPtr<Kernel::SharedMemory> shared_memory = nullptr;
+
+    static constexpr u32 MaxCaptureUnits = 2;
+    std::array<bool, MaxCaptureUnits> capture_units = {false, false};
 };
 
 /// Initializes the CSND_SND Service

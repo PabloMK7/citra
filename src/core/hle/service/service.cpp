@@ -22,7 +22,7 @@
 #include "core/hle/service/cam/cam.h"
 #include "core/hle/service/cecd/cecd.h"
 #include "core/hle/service/cfg/cfg.h"
-#include "core/hle/service/csnd_snd.h"
+#include "core/hle/service/csnd/csnd_snd.h"
 #include "core/hle/service/dlp/dlp.h"
 #include "core/hle/service/dsp/dsp_dsp.h"
 #include "core/hle/service/err_f.h"

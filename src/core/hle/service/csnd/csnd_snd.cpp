@@ -4,27 +4,19 @@
 
 #include "common/alignment.h"
 #include "core/hle/ipc_helpers.h"
-#include "core/hle/service/csnd_snd.h"
+#include "core/hle/result.h"
+#include "core/hle/service/csnd/csnd_snd.h"
 
 namespace Service {
 namespace CSND {
 
-struct Type0Command {
-    // command id and next command offset
-    u32 command_id;
-    u32 finished;
-    u32 flags;
-    u8 parameters[20];
-};
-static_assert(sizeof(Type0Command) == 0x20, "Type0Command structure size is wrong");
-
 void CSND_SND::Initialize(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x01, 5, 0);
-    u32 size = Common::AlignUp(rp.Pop<u32>(), Memory::PAGE_SIZE);
-    u32 offset0 = rp.Pop<u32>();
-    u32 offset1 = rp.Pop<u32>();
-    u32 offset2 = rp.Pop<u32>();
-    u32 offset3 = rp.Pop<u32>();
+    const u32 size = Common::AlignUp(rp.Pop<u32>(), Memory::PAGE_SIZE);
+    const u32 offset0 = rp.Pop<u32>();
+    const u32 offset1 = rp.Pop<u32>();
+    const u32 offset2 = rp.Pop<u32>();
+    const u32 offset3 = rp.Pop<u32>();
 
     using Kernel::MemoryPermission;
     mutex = Kernel::Mutex::Create(false, "CSND:mutex");
@@ -58,7 +50,7 @@ void CSND_SND::Shutdown(Kernel::HLERequestContext& ctx) {
 
 void CSND_SND::ExecuteCommands(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x03, 1, 0);
-    u32 addr = rp.Pop<u32>();
+    const u32 addr = rp.Pop<u32>();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     if (!shared_memory) {
@@ -97,43 +89,88 @@ void CSND_SND::ReleaseSoundChannels(Kernel::HLERequestContext& ctx) {
     LOG_WARNING(Service_CSND, "(STUBBED) called");
 }
 
-void CSND_SND::FlushDataCache(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x9, 2, 2);
-    VAddr address = rp.Pop<u32>();
-    u32 size = rp.Pop<u32>();
-    auto process = rp.PopObject<Kernel::Process>();
+void CSND_SND::AcquireCapUnit(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x7, 0, 0);
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
+    if (capture_units[0] && capture_units[1]) {
+        LOG_WARNING(Service_CSND, "No more capture units available");
+        rb.Push(ResultCode(ErrorDescription::InvalidResultValue, ErrorModule::CSND,
+                           ErrorSummary::OutOfResource, ErrorLevel::Status));
+        rb.Skip(1, false);
+        return;
+    }
+    rb.Push(RESULT_SUCCESS);
+
+    if (capture_units[0]) {
+        capture_units[1] = true;
+        rb.Push<u32>(1);
+    } else {
+        capture_units[0] = true;
+        rb.Push<u32>(0);
+    }
+
+    LOG_WARNING(Service_CSND, "(STUBBED) called");
+}
+
+void CSND_SND::ReleaseCapUnit(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x8, 1, 0);
+    const u32 index = rp.Pop<u32>();
+
+    capture_units[index] = false;
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
 
-    LOG_DEBUG(Service_CSND, "(STUBBED) called address=0x{:08X}, size=0x{:08X}, process={}", address,
+    LOG_WARNING(Service_CSND, "(STUBBED) called, capture_unit_index={}", index);
+}
+
+void CSND_SND::FlushDataCache(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x9, 2, 2);
+    const VAddr address = rp.Pop<u32>();
+    const u32 size = rp.Pop<u32>();
+    const auto process = rp.PopObject<Kernel::Process>();
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RESULT_SUCCESS);
+
+    LOG_TRACE(Service_CSND, "(STUBBED) called address=0x{:08X}, size=0x{:08X}, process={}", address,
               size, process->process_id);
 }
 
 void CSND_SND::StoreDataCache(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0xA, 2, 2);
-    VAddr address = rp.Pop<u32>();
-    u32 size = rp.Pop<u32>();
-    auto process = rp.PopObject<Kernel::Process>();
+    const VAddr address = rp.Pop<u32>();
+    const u32 size = rp.Pop<u32>();
+    const auto process = rp.PopObject<Kernel::Process>();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
 
-    LOG_DEBUG(Service_CSND, "(STUBBED) called address=0x{:08X}, size=0x{:08X}, process={}", address,
+    LOG_TRACE(Service_CSND, "(STUBBED) called address=0x{:08X}, size=0x{:08X}, process={}", address,
               size, process->process_id);
 }
 
 void CSND_SND::InvalidateDataCache(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0xB, 2, 2);
-    VAddr address = rp.Pop<u32>();
-    u32 size = rp.Pop<u32>();
-    auto process = rp.PopObject<Kernel::Process>();
+    const VAddr address = rp.Pop<u32>();
+    const u32 size = rp.Pop<u32>();
+    const auto process = rp.PopObject<Kernel::Process>();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
 
-    LOG_DEBUG(Service_CSND, "(STUBBED) called address=0x{:08X}, size=0x{:08X}, process={}", address,
+    LOG_TRACE(Service_CSND, "(STUBBED) called address=0x{:08X}, size=0x{:08X}, process={}", address,
               size, process->process_id);
+}
+
+void CSND_SND::Reset(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0xC, 0, 0);
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RESULT_SUCCESS);
+
+    LOG_WARNING(Service_CSND, "(STUBBED) called");
 }
 
 CSND_SND::CSND_SND() : ServiceFramework("csnd:SND", 4) {
@@ -145,12 +182,12 @@ CSND_SND::CSND_SND() : ServiceFramework("csnd:SND", 4) {
         {0x00040080, nullptr, "ExecuteType1Commands"},
         {0x00050000, &CSND_SND::AcquireSoundChannels, "AcquireSoundChannels"},
         {0x00060000, &CSND_SND::ReleaseSoundChannels, "ReleaseSoundChannels"},
-        {0x00070000, nullptr, "AcquireCaptureDevice"},
-        {0x00080040, nullptr, "ReleaseCaptureDevice"},
+        {0x00070000, &CSND_SND::AcquireCapUnit, "AcquireCapUnit"},
+        {0x00080040, &CSND_SND::ReleaseCapUnit, "ReleaseCapUnit"},
         {0x00090082, &CSND_SND::FlushDataCache, "FlushDataCache"},
         {0x000A0082, &CSND_SND::StoreDataCache, "StoreDataCache"},
         {0x000B0082, &CSND_SND::InvalidateDataCache, "InvalidateDataCache"},
-        {0x000C0000, nullptr, "Reset"},
+        {0x000C0000, &CSND_SND::Reset, "Reset"},
         // clang-format on
     };
 

@@ -218,8 +218,8 @@ add_library(core STATIC
     hle/service/cfg/cfg_s.h
     hle/service/cfg/cfg_u.cpp
     hle/service/cfg/cfg_u.h
-    hle/service/csnd_snd.cpp
-    hle/service/csnd_snd.h
+    hle/service/csnd/csnd_snd.cpp
+    hle/service/csnd/csnd_snd.h
     hle/service/dlp/dlp.cpp
     hle/service/dlp/dlp.h
     hle/service/dlp/dlp_clnt.cpp
