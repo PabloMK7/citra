@@ -102,7 +102,7 @@ private:
     void BootGame(const QString& filename);
     void ShutdownGame();
 
-    void ShowCallouts();
+    void ShowTelemetryCallout();
     void ShowUpdaterWidgets();
     void ShowUpdatePrompt();
     void ShowNoUpdatePrompt();
