@@ -4,18 +4,14 @@
 
 #pragma once
 
-#include "core/hle/service/service.h"
+#include "core/hle/service/boss/boss.h"
 
 namespace Service {
 namespace BOSS {
 
-class BOSS_U_Interface : public Service::Interface {
+class BOSS_U final : public Module::Interface {
 public:
-    BOSS_U_Interface();
-
-    std::string GetPortName() const override {
-        return "boss:U";
-    }
+    explicit BOSS_U(std::shared_ptr<Module> boss);
 };
 
 } // namespace BOSS

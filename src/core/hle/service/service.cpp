@@ -239,7 +239,7 @@ void Init(std::shared_ptr<SM::ServiceManager>& sm) {
     ACT::InstallInterfaces(*sm);
     AM::InstallInterfaces(*sm);
     APT::InstallInterfaces(*sm);
-    BOSS::Init();
+    BOSS::InstallInterfaces(*sm);
     CAM::InstallInterfaces(*sm);
     CECD::InstallInterfaces(*sm);
     CFG::InstallInterfaces(*sm);
@@ -269,7 +269,6 @@ void Init(std::shared_ptr<SM::ServiceManager>& sm) {
 
 /// Shutdown ServiceManager
 void Shutdown() {
-    BOSS::Shutdown();
     FS::ArchiveShutdown();
 
     g_kernel_named_ports.clear();
