@@ -1425,6 +1425,9 @@ void GMainWindow::OnLanguageChanged(const QString& locale) {
     ui.retranslateUi(this);
     RetranslateStatusBar();
     SetupUIStrings();
+
+    if (emulation_running)
+        ui.action_Start->setText(tr("Continue"));
 }
 
 void GMainWindow::SetupUIStrings() {
