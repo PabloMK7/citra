@@ -1480,6 +1480,7 @@ int main(int argc, char* argv[]) {
     FileUtil::CreateFullPath(FileUtil::GetUserPath(D_LOGS_IDX));
     Log::AddBackend(
         std::make_unique<Log::FileBackend>(FileUtil::GetUserPath(D_LOGS_IDX) + LOG_FILE));
+    Settings::LogSettings();
 
     // Register CameraFactory
     Camera::RegisterFactory("image", std::make_unique<Camera::StillImageCameraFactory>());
