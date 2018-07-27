@@ -134,6 +134,14 @@ void MultiplayerState::OnAnnounceFailed(const Common::WebResult& result) {
         QMessageBox::Ok);
 }
 
+void MultiplayerState::UpdateThemedIcons() {
+    if (current_state == Network::RoomMember::State::Joined) {
+        status_icon->setPixmap(QIcon::fromTheme("connected").pixmap(16));
+    } else {
+        status_icon->setPixmap(QIcon::fromTheme("disconnected").pixmap(16));
+    }
+}
+
 static void BringWidgetToFront(QWidget* widget) {
     widget->show();
     widget->activateWindow();
