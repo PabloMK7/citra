@@ -28,18 +28,6 @@ inline u32* GetCommandBuffer(const int offset = 0) {
                                     offset);
 }
 
-/// Offset into static buffers, relative to command buffer header
-static const int kStaticBuffersOffset = 0x100;
-
-/**
- * Returns a pointer to the static buffers area in the current thread's TLS
- * TODO(Subv): cf. GetCommandBuffer
- * @param offset Optional offset into static buffers area (in bytes)
- * @return Pointer to static buffers area
- */
-inline u32* GetStaticBuffers(const int offset = 0) {
-    return GetCommandBuffer(kStaticBuffersOffset + offset);
-}
 } // namespace Kernel
 
 namespace IPC {

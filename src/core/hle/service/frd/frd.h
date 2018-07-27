@@ -10,8 +10,6 @@
 
 namespace Service {
 
-class Interface;
-
 namespace FRD {
 
 struct FriendKey {
