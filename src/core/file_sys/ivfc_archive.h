@@ -13,6 +13,7 @@
 #include "core/file_sys/archive_backend.h"
 #include "core/file_sys/directory_backend.h"
 #include "core/file_sys/file_backend.h"
+#include "core/file_sys/romfs_reader.h"
 #include "core/hle/result.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -67,7 +68,7 @@ public:
  */
 class IVFCArchive : public ArchiveBackend {
 public:
-    IVFCArchive(std::shared_ptr<FileUtil::IOFile> file, u64 offset, u64 size);
+    IVFCArchive(std::shared_ptr<RomFSReader> file);
 
     std::string GetName() const override;
 
@@ -84,15 +85,12 @@ public:
     u64 GetFreeBytes() const override;
 
 protected:
-    std::shared_ptr<FileUtil::IOFile> romfs_file;
-    u64 data_offset;
-    u64 data_size;
+    std::shared_ptr<RomFSReader> romfs_file;
 };
 
 class IVFCFile : public FileBackend {
 public:
-    IVFCFile(std::shared_ptr<FileUtil::IOFile> file, u64 offset, u64 size,
-             std::unique_ptr<DelayGenerator> delay_generator_);
+    IVFCFile(std::shared_ptr<RomFSReader> file, std::unique_ptr<DelayGenerator> delay_generator_);
 
     ResultVal<size_t> Read(u64 offset, size_t length, u8* buffer) const override;
     ResultVal<size_t> Write(u64 offset, size_t length, bool flush, const u8* buffer) override;
@@ -104,9 +102,7 @@ public:
     void Flush() const override {}
 
 private:
-    std::shared_ptr<FileUtil::IOFile> romfs_file;
-    u64 data_offset;
-    u64 data_size;
+    std::shared_ptr<RomFSReader> romfs_file;
 };
 
 class IVFCDirectory : public DirectoryBackend {

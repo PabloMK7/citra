@@ -13,6 +13,7 @@
 #include <boost/optional.hpp>
 #include "common/common_types.h"
 #include "common/file_util.h"
+#include "core/file_sys/romfs_reader.h"
 #include "core/hle/kernel/kernel.h"
 
 namespace Kernel {
@@ -160,12 +161,9 @@ public:
      * Get the RomFS of the application
      * Since the RomFS can be huge, we return a file reference instead of copying to a buffer
      * @param romfs_file The file containing the RomFS
-     * @param offset The offset the romfs begins on
-     * @param size The size of the romfs
      * @return ResultStatus result of function
      */
-    virtual ResultStatus ReadRomFS(std::shared_ptr<FileUtil::IOFile>& romfs_file, u64& offset,
-                                   u64& size) {
+    virtual ResultStatus ReadRomFS(std::shared_ptr<FileSys::RomFSReader>& romfs_file) {
         return ResultStatus::ErrorNotImplemented;
     }
 
@@ -173,12 +171,9 @@ public:
      * Get the update RomFS of the application
      * Since the RomFS can be huge, we return a file reference instead of copying to a buffer
      * @param romfs_file The file containing the RomFS
-     * @param offset The offset the romfs begins on
-     * @param size The size of the romfs
      * @return ResultStatus result of function
      */
-    virtual ResultStatus ReadUpdateRomFS(std::shared_ptr<FileUtil::IOFile>& romfs_file, u64& offset,
-                                         u64& size) {
+    virtual ResultStatus ReadUpdateRomFS(std::shared_ptr<FileSys::RomFSReader>& romfs_file) {
         return ResultStatus::ErrorNotImplemented;
     }
 

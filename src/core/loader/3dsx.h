@@ -35,8 +35,7 @@ public:
 
     ResultStatus ReadIcon(std::vector<u8>& buffer) override;
 
-    ResultStatus ReadRomFS(std::shared_ptr<FileUtil::IOFile>& romfs_file, u64& offset,
-                           u64& size) override;
+    ResultStatus ReadRomFS(std::shared_ptr<FileSys::RomFSReader>& romfs_file) override;
 
 private:
     std::string filename;

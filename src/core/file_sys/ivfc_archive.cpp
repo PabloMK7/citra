@@ -14,8 +14,7 @@
 
 namespace FileSys {
 
-IVFCArchive::IVFCArchive(std::shared_ptr<FileUtil::IOFile> file, u64 offset, u64 size)
-    : romfs_file(std::move(file)), data_offset(offset), data_size(size) {}
+IVFCArchive::IVFCArchive(std::shared_ptr<RomFSReader> file) : romfs_file(std::move(file)) {}
 
 std::string IVFCArchive::GetName() const {
     return "IVFC";
@@ -25,7 +24,7 @@ ResultVal<std::unique_ptr<FileBackend>> IVFCArchive::OpenFile(const Path& path,
                                                               const Mode& mode) const {
     std::unique_ptr<DelayGenerator> delay_generator = std::make_unique<IVFCDelayGenerator>();
     return MakeResult<std::unique_ptr<FileBackend>>(
-        std::make_unique<IVFCFile>(romfs_file, data_offset, data_size, std::move(delay_generator)));
+        std::make_unique<IVFCFile>(romfs_file, std::move(delay_generator)));
 }
 
 ResultCode IVFCArchive::DeleteFile(const Path& path) const {
@@ -85,18 +84,15 @@ u64 IVFCArchive::GetFreeBytes() const {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-IVFCFile::IVFCFile(std::shared_ptr<FileUtil::IOFile> file, u64 offset, u64 size,
+IVFCFile::IVFCFile(std::shared_ptr<RomFSReader> file,
                    std::unique_ptr<DelayGenerator> delay_generator_)
-    : romfs_file(std::move(file)), data_offset(offset), data_size(size) {
+    : romfs_file(std::move(file)) {
     delay_generator = std::move(delay_generator_);
 }
 
 ResultVal<size_t> IVFCFile::Read(const u64 offset, const size_t length, u8* buffer) const {
     LOG_TRACE(Service_FS, "called offset={}, length={}", offset, length);
-    romfs_file->Seek(data_offset + offset, SEEK_SET);
-    size_t read_length = (size_t)std::min((u64)length, data_size - offset);
-
-    return MakeResult<size_t>(romfs_file->ReadBytes(buffer, read_length));
+    return MakeResult<size_t>(romfs_file->ReadFile(offset, length, buffer));
 }
 
 ResultVal<size_t> IVFCFile::Write(const u64 offset, const size_t length, const bool flush,
@@ -107,7 +103,7 @@ ResultVal<size_t> IVFCFile::Write(const u64 offset, const size_t length, const b
 }
 
 u64 IVFCFile::GetSize() const {
-    return data_size;
+    return romfs_file->GetSize();
 }
 
 bool IVFCFile::SetSize(const u64 size) const {
