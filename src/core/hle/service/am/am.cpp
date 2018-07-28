@@ -49,12 +49,16 @@ struct TitleInfo {
 
 static_assert(sizeof(TitleInfo) == 0x18, "Title info structure size is wrong");
 
+constexpr u8 OWNERSHIP_DOWNLOADED = 0x01;
+constexpr u8 OWNERSHIP_OWNED = 0x02;
+
 struct ContentInfo {
     u16_le index;
     u16_le type;
     u32_le content_id;
     u64_le size;
-    u64_le romfs_size;
+    u8 ownership;
+    INSERT_PADDING_BYTES(0x7);
 };
 
 static_assert(sizeof(ContentInfo) == 0x18, "Content info structure size is wrong");
@@ -395,7 +399,12 @@ std::string GetTitleContentPath(Service::FS::MediaType media_type, u64 tid, u16 
     u32 content_id = 0;
     FileSys::TitleMetadata tmd;
     if (tmd.Load(tmd_path) == Loader::ResultStatus::Success) {
-        content_id = tmd.GetContentIDByIndex(index);
+        if (index < tmd.GetContentCount()) {
+            content_id = tmd.GetContentIDByIndex(index);
+        } else {
+            LOG_ERROR(Service_AM, "Attempted to get path for non-existent content index {:04x}.",
+                      index);
+        }
 
         // TODO(shinyquagsire23): how does DLC actually get this folder on hardware?
         // For now, check if the second (index 1) content has the optional flag set, for most
@@ -520,17 +529,30 @@ void Module::Interface::FindDLCContentInfos(Kernel::HLERequestContext& ctx) {
         for (size_t i = 0; i < content_count; i++) {
             std::shared_ptr<FileUtil::IOFile> romfs_file;
             u64 romfs_offset = 0;
-            u64 romfs_size = 0;
 
-            FileSys::NCCHContainer ncch_container(GetTitleContentPath(media_type, title_id, i));
-            ncch_container.ReadRomFS(romfs_file, romfs_offset, romfs_size);
+            if (content_requested[i] >= tmd.GetContentCount()) {
+                LOG_ERROR(Service_AM,
+                          "Attempted to get info for non-existent content index {:04x}.",
+                          content_requested[i]);
+
+                IPC::RequestBuilder rb = rp.MakeBuilder(1, 4);
+                rb.Push<u32>(-1); // TODO(Steveice10): Find the right error code
+                rb.PushMappedBuffer(content_requested_in);
+                rb.PushMappedBuffer(content_info_out);
+                return;
+            }
 
             ContentInfo content_info = {};
-            content_info.index = static_cast<u16>(i);
+            content_info.index = content_requested[i];
             content_info.type = tmd.GetContentTypeByIndex(content_requested[i]);
             content_info.content_id = tmd.GetContentIDByIndex(content_requested[i]);
             content_info.size = tmd.GetContentSizeByIndex(content_requested[i]);
-            content_info.romfs_size = romfs_size;
+            content_info.ownership =
+                OWNERSHIP_OWNED; // TODO(Steveice10): Pull this from the ticket.
+
+            if (FileUtil::Exists(GetTitleContentPath(media_type, title_id, content_requested[i]))) {
+                content_info.ownership |= OWNERSHIP_DOWNLOADED;
+            }
 
             content_info_out.Write(&content_info, write_offset, sizeof(ContentInfo));
             write_offset += sizeof(ContentInfo);
@@ -571,20 +593,21 @@ void Module::Interface::ListDLCContentInfos(Kernel::HLERequestContext& ctx) {
     if (tmd.Load(tmd_path) == Loader::ResultStatus::Success) {
         copied = std::min(content_count, static_cast<u32>(tmd.GetContentCount()));
         std::size_t write_offset = 0;
-        for (u32 i = start_index; i < copied; i++) {
+        for (u32 i = start_index; i < start_index + copied; i++) {
             std::shared_ptr<FileUtil::IOFile> romfs_file;
             u64 romfs_offset = 0;
-            u64 romfs_size = 0;
-
-            FileSys::NCCHContainer ncch_container(GetTitleContentPath(media_type, title_id, i));
-            ncch_container.ReadRomFS(romfs_file, romfs_offset, romfs_size);
 
             ContentInfo content_info = {};
             content_info.index = static_cast<u16>(i);
             content_info.type = tmd.GetContentTypeByIndex(i);
             content_info.content_id = tmd.GetContentIDByIndex(i);
             content_info.size = tmd.GetContentSizeByIndex(i);
-            content_info.romfs_size = romfs_size;
+            content_info.ownership =
+                OWNERSHIP_OWNED; // TODO(Steveice10): Pull this from the ticket.
+
+            if (FileUtil::Exists(GetTitleContentPath(media_type, title_id, i))) {
+                content_info.ownership |= OWNERSHIP_DOWNLOADED;
+            }
 
             content_info_out.Write(&content_info, write_offset, sizeof(ContentInfo));
             write_offset += sizeof(ContentInfo);
