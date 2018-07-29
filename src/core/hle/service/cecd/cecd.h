@@ -6,6 +6,7 @@
 
 #include "core/hle/kernel/event.h"
 #include "core/hle/service/service.h"
+#include "core/hle/service/fs/archive.h"
 
 namespace Service {
 namespace CECD {
@@ -13,7 +14,7 @@ namespace CECD {
 class Module final {
 public:
     Module();
-    ~Module() = default;
+    ~Module();
 
     enum class CecStateAbbreviated : u32 {
         CEC_STATE_ABBREV_IDLE = 1,      /// Relates to CEC_STATE_IDLE
@@ -46,6 +47,23 @@ public:
         CEC_COMMAND_OVER_BOSS_FORCE = 0x13,
         CEC_COMMAND_OVER_BOSS_FORCE_WAIT = 0x14,
         CEC_COMMAND_END = 0x15,
+    };
+
+    enum class CecDataPathType : u32 {
+        CEC_PATH_MBOX_LIST = 1,
+        CEC_PATH_MBOX_INFO = 2,
+        CEC_PATH_INBOX_INFO = 3,
+        CEC_PATH_OUTBOX_INFO = 4,
+        CEC_PATH_OUTBOX_INDEX = 5,
+        CEC_PATH_INBOX_MSG = 6,
+        CEC_PATH_OUTBOX_MSG = 7,
+        CEC_PATH_ROOT_DIR = 10,
+        CEC_PATH_MBOX_DIR = 11,
+        CEC_PATH_INBOX_DIR = 12,
+        CEC_PATH_OUTBOX_DIR = 13,
+        CEC_MBOX_DATA = 100,
+        CEC_MBOX_ICON = 101,
+        CEC_MBOX_TITLE = 110,
     };
 
     class Interface : public ServiceFramework<Interface> {
@@ -361,6 +379,15 @@ public:
     };
 
 private:
+    std::string GetCecDataPathTypeAsString(const CecDataPathType type, const u32 program_id,
+                                           const std::vector<u8>& message_id = std::vector<u8>());
+
+    const std::vector<u8> cecd_system_savedata_id = {
+        0x00, 0x00, 0x00, 0x00, 0x26, 0x00, 0x01, 0x00
+    };
+
+    Service::FS::ArchiveHandle cecd_system_save_data_archive;
+
     Kernel::SharedPtr<Kernel::Event> cecinfo_event;
     Kernel::SharedPtr<Kernel::Event> change_state_event;
 };
