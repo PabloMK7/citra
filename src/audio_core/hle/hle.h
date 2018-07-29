@@ -28,7 +28,7 @@ public:
 
     std::array<u8, Memory::DSP_RAM_SIZE>& GetDspMemory() override;
 
-    void SetDspToInterrupt(std::shared_ptr<Service::DSP::DSP_DSP> dsp) override;
+    void SetServiceToInterrupt(std::weak_ptr<Service::DSP::DSP_DSP> dsp) override;
 
 private:
     struct Impl;

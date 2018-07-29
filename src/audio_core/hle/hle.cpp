@@ -34,7 +34,7 @@ public:
 
     std::array<u8, Memory::DSP_RAM_SIZE>& GetDspMemory();
 
-    void SetDspToInterrupt(std::shared_ptr<DSP_DSP> dsp);
+    void SetServiceToInterrupt(std::weak_ptr<DSP_DSP> dsp);
 
 private:
     void ResetPipes();
@@ -65,7 +65,7 @@ private:
     DspHle& parent;
     CoreTiming::EventType* tick_event;
 
-    std::shared_ptr<DSP_DSP> dsp_dsp;
+    std::weak_ptr<DSP_DSP> dsp_dsp;
 };
 
 DspHle::Impl::Impl(DspHle& parent_) : parent(parent_) {
@@ -193,7 +193,7 @@ std::array<u8, Memory::DSP_RAM_SIZE>& DspHle::Impl::GetDspMemory() {
     return dsp_memory.raw_memory;
 }
 
-void DspHle::Impl::SetDspToInterrupt(std::shared_ptr<DSP_DSP> dsp) {
+void DspHle::Impl::SetServiceToInterrupt(std::weak_ptr<DSP_DSP> dsp) {
     dsp_dsp = std::move(dsp);
 }
 
@@ -241,8 +241,9 @@ void DspHle::Impl::AudioPipeWriteStructAddresses() {
         WriteU16(DspPipe::Audio, addr);
     }
     // Signal that we have data on this pipe.
-    if (dsp_dsp)
-        dsp_dsp->SignalInterrupt(InterruptType::Pipe, DspPipe::Audio);
+    if (auto service = dsp_dsp.lock()) {
+        service->SignalInterrupt(InterruptType::Pipe, DspPipe::Audio);
+    }
 }
 
 size_t DspHle::Impl::CurrentRegionIndex() const {
@@ -318,10 +319,10 @@ bool DspHle::Impl::Tick() {
 void DspHle::Impl::AudioTickCallback(int cycles_late) {
     if (Tick()) {
         // TODO(merry): Signal all the other interrupts as appropriate.
-        if (dsp_dsp) {
-            dsp_dsp->SignalInterrupt(InterruptType::Pipe, DspPipe::Audio);
+        if (auto service = dsp_dsp.lock()) {
+            service->SignalInterrupt(InterruptType::Pipe, DspPipe::Audio);
             // HACK(merry): Added to prevent regressions. Will remove soon.
-            dsp_dsp->SignalInterrupt(InterruptType::Pipe, DspPipe::Binary);
+            service->SignalInterrupt(InterruptType::Pipe, DspPipe::Binary);
         }
     }
 
@@ -352,8 +353,8 @@ std::array<u8, Memory::DSP_RAM_SIZE>& DspHle::GetDspMemory() {
     return impl->GetDspMemory();
 }
 
-void DspHle::SetDspToInterrupt(std::shared_ptr<DSP_DSP> dsp) {
-    impl->SetDspToInterrupt(std::move(dsp));
+void DspHle::SetServiceToInterrupt(std::weak_ptr<DSP_DSP> dsp) {
+    impl->SetServiceToInterrupt(std::move(dsp));
 }
 
 } // namespace AudioCore

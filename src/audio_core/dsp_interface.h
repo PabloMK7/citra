@@ -67,7 +67,7 @@ public:
     virtual std::array<u8, Memory::DSP_RAM_SIZE>& GetDspMemory() = 0;
 
     /// Sets the dsp class that we trigger interrupts for
-    virtual void SetDspToInterrupt(std::shared_ptr<Service::DSP::DSP_DSP> dsp) = 0;
+    virtual void SetServiceToInterrupt(std::weak_ptr<Service::DSP::DSP_DSP> dsp) = 0;
 
     /// Select the sink to use based on sink id.
     void SetSink(const std::string& sink_id, const std::string& audio_device);

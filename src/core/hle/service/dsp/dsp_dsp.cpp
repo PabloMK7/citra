@@ -403,7 +403,7 @@ DSP_DSP::~DSP_DSP() {
 void InstallInterfaces(SM::ServiceManager& service_manager) {
     auto dsp = std::make_shared<DSP_DSP>();
     dsp->InstallAsService(service_manager);
-    Core::DSP().SetDspToInterrupt(std::move(dsp));
+    Core::DSP().SetServiceToInterrupt(std::move(dsp));
 }
 
 } // namespace DSP
