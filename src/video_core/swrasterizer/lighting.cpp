@@ -143,7 +143,7 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(
                 }
                 break;
             default:
-                LOG_CRITICAL(HW_GPU, "Unknown lighting LUT input {}\n", static_cast<u32>(input));
+                LOG_CRITICAL(HW_GPU, "Unknown lighting LUT input {}", static_cast<u32>(input));
                 UNIMPLEMENTED();
                 result = 0.0f;
             }
