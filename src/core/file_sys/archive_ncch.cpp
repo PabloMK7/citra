@@ -7,6 +7,7 @@
 #include <memory>
 #include <utility>
 #include <vector>
+#include "bad_word_list.app.romfs.h"
 #include "common/common_types.h"
 #include "common/file_util.h"
 #include "common/logging/log.h"
@@ -121,8 +122,8 @@ ResultVal<std::unique_ptr<FileBackend>> NCCHArchive::OpenFile(const Path& path,
                 LOG_WARNING(
                     Service_FS,
                     "Shared Font file missing. Loading open source replacement from memory");
-                std::vector<u8> shared_font_file;
-                shared_font_file.assign(SHARED_FONT_DATA, SHARED_FONT_DATA + SHARED_FONT_DATA_len);
+                const std::vector<u8> shared_font_file(std::begin(SHARED_FONT_DATA),
+                                                       std::end(SHARED_FONT_DATA));
                 u64 romfs_offset = 0;
                 u64 romfs_size = shared_font_file.size();
                 std::unique_ptr<DelayGenerator> delay_generator =
@@ -133,7 +134,18 @@ ResultVal<std::unique_ptr<FileBackend>> NCCHArchive::OpenFile(const Path& path,
             }
         } else if (high == system_data_archive) {
             if (low == ng_word_list)
-                archive_name = "NG bad word list";
+                LOG_WARNING(
+                    Service_FS,
+                    "Bad Word List file missing. Loading open source replacement from memory");
+            const std::vector<u8> bad_word_list_file(std::begin(BAD_WORD_LIST_DATA),
+                                                     std::end(BAD_WORD_LIST_DATA));
+            u64 romfs_offset = 0;
+            u64 romfs_size = bad_word_list_file.size();
+            std::unique_ptr<DelayGenerator> delay_generator =
+                std::make_unique<RomFSDelayGenerator>();
+            file = std::make_unique<IVFCFileInMemory>(std::move(bad_word_list_file), romfs_offset,
+                                                      romfs_size, std::move(delay_generator));
+            return MakeResult<std::unique_ptr<FileBackend>>(std::move(file));
         }
 
         if (!archive_name.empty()) {
