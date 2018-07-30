@@ -384,12 +384,12 @@ bool CreateEmptyFile(const std::string& filename) {
     return true;
 }
 
-bool ForeachDirectoryEntry(unsigned* num_entries_out, const std::string& directory,
+bool ForeachDirectoryEntry(u64* num_entries_out, const std::string& directory,
                            DirectoryEntryCallable callback) {
     LOG_TRACE(Common_Filesystem, "directory {}", directory);
 
     // How many files + directories we found
-    unsigned found_entries = 0;
+    u64 found_entries = 0;
 
     // Save the status of callback function
     bool callback_error = false;
@@ -419,7 +419,7 @@ bool ForeachDirectoryEntry(unsigned* num_entries_out, const std::string& directo
         if (virtual_name == "." || virtual_name == "..")
             continue;
 
-        unsigned ret_entries = 0;
+        u64 ret_entries = 0;
         if (!callback(&ret_entries, directory, virtual_name)) {
             callback_error = true;
             break;
@@ -443,9 +443,9 @@ bool ForeachDirectoryEntry(unsigned* num_entries_out, const std::string& directo
     return true;
 }
 
-unsigned ScanDirectoryTree(const std::string& directory, FSTEntry& parent_entry,
-                           unsigned int recursion) {
-    const auto callback = [recursion, &parent_entry](unsigned* num_entries_out,
+u64 ScanDirectoryTree(const std::string& directory, FSTEntry& parent_entry,
+                      unsigned int recursion) {
+    const auto callback = [recursion, &parent_entry](u64* num_entries_out,
                                                      const std::string& directory,
                                                      const std::string& virtual_name) -> bool {
         FSTEntry entry;
@@ -457,7 +457,7 @@ unsigned ScanDirectoryTree(const std::string& directory, FSTEntry& parent_entry,
             // is a directory, lets go inside if we didn't recurse to often
             if (recursion > 0) {
                 entry.size = ScanDirectoryTree(entry.physicalName, entry, recursion - 1);
-                *num_entries_out += (int)entry.size;
+                *num_entries_out += entry.size;
             } else {
                 entry.size = 0;
             }
@@ -468,16 +468,16 @@ unsigned ScanDirectoryTree(const std::string& directory, FSTEntry& parent_entry,
         (*num_entries_out)++;
 
         // Push into the tree
-        parent_entry.children.push_back(entry);
+        parent_entry.children.push_back(std::move(entry));
         return true;
     };
 
-    unsigned num_entries;
+    u64 num_entries;
     return ForeachDirectoryEntry(&num_entries, directory, callback) ? num_entries : 0;
 }
 
 bool DeleteDirRecursively(const std::string& directory, unsigned int recursion) {
-    const auto callback = [recursion](unsigned* num_entries_out, const std::string& directory,
+    const auto callback = [recursion](u64* num_entries_out, const std::string& directory,
                                       const std::string& virtual_name) -> bool {
         std::string new_path = directory + DIR_SEP_CHR + virtual_name;
 
