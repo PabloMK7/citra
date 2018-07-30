@@ -46,6 +46,7 @@ public slots:
     void OnOpenNetworkRoom();
     void OnDirectConnectToRoom();
     void OnAnnounceFailed(const Common::WebResult&);
+    void UpdateThemedIcons();
 
 signals:
     void NetworkStateChanged(const Network::RoomMember::State&);
