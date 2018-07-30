@@ -3,18 +3,19 @@
 // Refer to the license.txt file included.
 
 #include <algorithm>
-#include <array>
+#include <atomic>
 #include <chrono>
 #include <condition_variable>
 #include <memory>
+#include <mutex>
 #include <thread>
+#include <vector>
 #ifdef _WIN32
 #include <share.h> // For _SH_DENYWR
 #else
 #define _SH_DENYWR 0
 #endif
 #include "common/assert.h"
-#include "common/common_funcs.h" // snprintf compatibility define
 #include "common/logging/backend.h"
 #include "common/logging/log.h"
 #include "common/logging/text_formatter.h"
@@ -47,11 +48,11 @@ public:
         backends.push_back(std::move(backend));
     }
 
-    void RemoveBackend(const std::string& backend_name) {
+    void RemoveBackend(std::string_view backend_name) {
         std::lock_guard<std::mutex> lock(writing_mutex);
-        auto it = std::remove_if(backends.begin(), backends.end(), [&backend_name](const auto& i) {
-            return !strcmp(i->GetName(), backend_name.c_str());
-        });
+        const auto it =
+            std::remove_if(backends.begin(), backends.end(),
+                           [&backend_name](const auto& i) { return backend_name == i->GetName(); });
         backends.erase(it, backends.end());
     }
 
@@ -63,10 +64,10 @@ public:
         filter = f;
     }
 
-    Backend* GetBackend(const std::string& backend_name) {
-        auto it = std::find_if(backends.begin(), backends.end(), [&backend_name](const auto& i) {
-            return !strcmp(i->GetName(), backend_name.c_str());
-        });
+    Backend* GetBackend(std::string_view backend_name) {
+        const auto it =
+            std::find_if(backends.begin(), backends.end(),
+                         [&backend_name](const auto& i) { return backend_name == i->GetName(); });
         if (it == backends.end())
             return nullptr;
         return it->get();
@@ -268,11 +269,11 @@ void AddBackend(std::unique_ptr<Backend> backend) {
     Impl::Instance().AddBackend(std::move(backend));
 }
 
-void RemoveBackend(const std::string& backend_name) {
+void RemoveBackend(std::string_view backend_name) {
     Impl::Instance().RemoveBackend(backend_name);
 }
 
-Backend* GetBackend(const std::string& backend_name) {
+Backend* GetBackend(std::string_view backend_name) {
     return Impl::Instance().GetBackend(backend_name);
 }
 
