@@ -581,7 +581,7 @@ std::string GetBundleDirectory() {
 #endif
 
 #ifdef _WIN32
-std::string& GetExeDirectory() {
+const std::string& GetExeDirectory() {
     static std::string exe_path;
     if (exe_path.empty()) {
         wchar_t wchar_exe_path[2048];

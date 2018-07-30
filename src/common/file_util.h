@@ -133,7 +133,7 @@ std::string GetBundleDirectory();
 #endif
 
 #ifdef _WIN32
-std::string& GetExeDirectory();
+const std::string& GetExeDirectory();
 std::string AppDataRoamingDirectory();
 #endif
 
