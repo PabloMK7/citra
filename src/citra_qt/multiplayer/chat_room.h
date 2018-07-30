@@ -5,6 +5,7 @@
 #pragma once
 
 #include <memory>
+#include <unordered_set>
 #include <QDialog>
 #include <QSortFilterProxyModel>
 #include <QStandardItemModel>
@@ -39,6 +40,7 @@ public slots:
     void OnChatReceive(const Network::ChatEntry&);
     void OnSendChat();
     void OnChatTextChanged();
+    void PopupContextMenu(const QPoint& menu_location);
     void Disable();
     void Enable();
 
@@ -51,6 +53,7 @@ private:
     bool ValidateMessage(const std::string&);
     QStandardItemModel* player_list;
     std::unique_ptr<Ui::ChatRoom> ui;
+    std::unordered_set<std::string> block_list;
 };
 
 Q_DECLARE_METATYPE(Network::ChatEntry);

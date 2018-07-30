@@ -8,6 +8,8 @@
 #include <QImage>
 #include <QList>
 #include <QLocale>
+#include <QMenu>
+#include <QMessageBox>
 #include <QMetaType>
 #include <QTime>
 #include <QtConcurrent/QtConcurrentRun>
@@ -77,6 +79,7 @@ ChatRoom::ChatRoom(QWidget* parent) : QWidget(parent), ui(std::make_unique<Ui::C
 
     player_list = new QStandardItemModel(ui->player_view);
     ui->player_view->setModel(player_list);
+    ui->player_view->setContextMenuPolicy(Qt::CustomContextMenu);
     player_list->insertColumns(0, COLUMN_COUNT);
     player_list->setHeaderData(COLUMN_NAME, Qt::Horizontal, tr("Name"));
     player_list->setHeaderData(COLUMN_GAME, Qt::Horizontal, tr("Game"));
@@ -98,6 +101,8 @@ ChatRoom::ChatRoom(QWidget* parent) : QWidget(parent), ui(std::make_unique<Ui::C
     }
 
     // Connect all the widgets to the appropriate events
+    connect(ui->player_view, &QTreeView::customContextMenuRequested, this,
+            &ChatRoom::PopupContextMenu);
     connect(ui->chat_message, &QLineEdit::returnPressed, ui->send_message, &QPushButton::pressed);
     connect(ui->chat_message, &QLineEdit::textChanged, this, &::ChatRoom::OnChatTextChanged);
     connect(ui->send_message, &QPushButton::pressed, this, &ChatRoom::OnSendChat);
@@ -107,6 +112,7 @@ ChatRoom::~ChatRoom() = default;
 
 void ChatRoom::Clear() {
     ui->chat_history->clear();
+    block_list.clear();
 }
 
 void ChatRoom::AppendStatusMessage(const QString& msg) {
@@ -151,6 +157,11 @@ void ChatRoom::OnChatReceive(const Network::ChatEntry& chat) {
                                });
         if (it == members.end()) {
             LOG_INFO(Network, "Chat message received from unknown player. Ignoring it.");
+            return;
+        }
+        if (block_list.count(chat.nickname)) {
+            LOG_INFO(Network, "Chat message received from blocked player {}. Ignoring it.",
+                     chat.nickname);
             return;
         }
         auto player = std::distance(members.begin(), it);
@@ -208,4 +219,40 @@ void ChatRoom::SetPlayerList(const Network::RoomMember::MemberList& member_list)
 void ChatRoom::OnChatTextChanged() {
     if (ui->chat_message->text().length() > Network::MaxMessageSize)
         ui->chat_message->setText(ui->chat_message->text().left(Network::MaxMessageSize));
+}
+
+void ChatRoom::PopupContextMenu(const QPoint& menu_location) {
+    QModelIndex item = ui->player_view->indexAt(menu_location);
+    if (!item.isValid())
+        return;
+
+    std::string nickname = player_list->item(item.row())->text().toStdString();
+    if (auto room = Network::GetRoomMember().lock()) {
+        // You can't block yourself
+        if (nickname == room->GetNickname())
+            return;
+    }
+
+    QMenu context_menu;
+    QAction* block_action = context_menu.addAction(tr("Block Player"));
+
+    block_action->setCheckable(true);
+    block_action->setChecked(block_list.count(nickname) > 0);
+
+    connect(block_action, &QAction::triggered, [this, nickname] {
+        if (block_list.count(nickname)) {
+            block_list.erase(nickname);
+        } else {
+            QMessageBox::StandardButton result = QMessageBox::question(
+                this, tr("Block Player"),
+                tr("When you block a player, you will no longer receive chat messages from "
+                   "them.<br><br>Are you sure you would like to block %1?")
+                    .arg(QString::fromStdString(nickname)),
+                QMessageBox::Yes | QMessageBox::No);
+            if (result == QMessageBox::Yes)
+                block_list.emplace(nickname);
+        }
+    });
+
+    context_menu.exec(ui->player_view->viewport()->mapToGlobal(menu_location));
 }
