@@ -167,7 +167,7 @@ inline double swapd(double f) {
 
 template <typename T, typename F>
 struct swap_struct_t {
-    typedef swap_struct_t<T, F> swapped_t;
+    using swapped_t = swap_struct_t;
 
 protected:
     T value = T();
@@ -177,7 +177,7 @@ protected:
     }
 
 public:
-    T const swap() const {
+    T swap() const {
         return swap(value);
     }
     swap_struct_t() = default;
@@ -185,39 +185,39 @@ public:
 
     template <typename S>
     swapped_t& operator=(const S& source) {
-        value = swap((T)source);
+        value = swap(static_cast<T>(source));
         return *this;
     }
 
     operator s8() const {
-        return (s8)swap();
+        return static_cast<s8>(swap());
     }
     operator u8() const {
-        return (u8)swap();
+        return static_cast<u8>(swap());
     }
     operator s16() const {
-        return (s16)swap();
+        return static_cast<s16>(swap());
     }
     operator u16() const {
-        return (u16)swap();
+        return static_cast<u16>(swap());
     }
     operator s32() const {
-        return (s32)swap();
+        return static_cast<s32>(swap());
     }
     operator u32() const {
-        return (u32)swap();
+        return static_cast<u32>(swap());
     }
     operator s64() const {
-        return (s64)swap();
+        return static_cast<s64>(swap());
     }
     operator u64() const {
-        return (u64)swap();
+        return static_cast<u64>(swap());
     }
     operator float() const {
-        return (float)swap();
+        return static_cast<float>(swap());
     }
     operator double() const {
-        return (double)swap();
+        return static_cast<double>(swap());
     }
 
     // +v
@@ -253,7 +253,7 @@ public:
     }
     template <typename S>
     swapped_t operator+(const S& i) const {
-        return swap() + (T)i;
+        return swap() + static_cast<T>(i);
     }
     // v - 5
     swapped_t operator-(const swapped_t& i) const {
@@ -261,7 +261,7 @@ public:
     }
     template <typename S>
     swapped_t operator-(const S& i) const {
-        return swap() - (T)i;
+        return swap() - static_cast<T>(i);
     }
 
     // v += 5
@@ -271,7 +271,7 @@ public:
     }
     template <typename S>
     swapped_t& operator+=(const S& i) {
-        value = swap(swap() + (T)i);
+        value = swap(swap() + static_cast<T>(i));
         return *this;
     }
     // v -= 5
@@ -281,7 +281,7 @@ public:
     }
     template <typename S>
     swapped_t& operator-=(const S& i) {
-        value = swap(swap() - (T)i);
+        value = swap(swap() - static_cast<T>(i));
         return *this;
     }
 
@@ -541,7 +541,7 @@ S operator&(const S& i, const swap_struct_t<T, F> v) {
 
 template <typename S, typename T, typename F>
 S operator&(const swap_struct_t<T, F> v, const S& i) {
-    return (S)(v.swap() & i);
+    return static_cast<S>(v.swap() & i);
 }
 
 // Comparaison
@@ -606,51 +606,51 @@ struct swap_double_t {
 };
 
 #if COMMON_LITTLE_ENDIAN
-typedef u32 u32_le;
-typedef u16 u16_le;
-typedef u64 u64_le;
+using u16_le = u16;
+using u32_le = u32;
+using u64_le = u64;
 
-typedef s32 s32_le;
-typedef s16 s16_le;
-typedef s64 s64_le;
+using s16_le = s16;
+using s32_le = s32;
+using s64_le = s64;
 
-typedef float float_le;
-typedef double double_le;
+using float_le = float;
+using double_le = double;
 
-typedef swap_struct_t<u64, swap_64_t<u64>> u64_be;
-typedef swap_struct_t<s64, swap_64_t<s64>> s64_be;
+using u64_be = swap_struct_t<u64, swap_64_t<u64>>;
+using s64_be = swap_struct_t<s64, swap_64_t<s64>>;
 
-typedef swap_struct_t<u32, swap_32_t<u32>> u32_be;
-typedef swap_struct_t<s32, swap_32_t<s32>> s32_be;
+using u32_be = swap_struct_t<u32, swap_32_t<u32>>;
+using s32_be = swap_struct_t<s32, swap_32_t<s32>>;
 
-typedef swap_struct_t<u16, swap_16_t<u16>> u16_be;
-typedef swap_struct_t<s16, swap_16_t<s16>> s16_be;
+using u16_be = swap_struct_t<u16, swap_16_t<u16>>;
+using s16_be = swap_struct_t<s16, swap_16_t<s16>>;
 
-typedef swap_struct_t<float, swap_float_t<float>> float_be;
-typedef swap_struct_t<double, swap_double_t<double>> double_be;
+using float_be = swap_struct_t<float, swap_float_t<float>>;
+using double_be = swap_struct_t<double, swap_double_t<double>>;
 #else
 
-typedef swap_struct_t<u64, swap_64_t<u64>> u64_le;
-typedef swap_struct_t<s64, swap_64_t<s64>> s64_le;
+using u64_le = swap_struct_t<u64, swap_64_t<u64>>;
+using s64_le = swap_struct_t<s64, swap_64_t<s64>>;
 
-typedef swap_struct_t<u32, swap_32_t<u32>> u32_le;
-typedef swap_struct_t<s32, swap_32_t<s32>> s32_le;
+using u32_le = swap_struct_t<u32, swap_32_t<u32>>;
+using s32_le = swap_struct_t<s32, swap_32_t<s32>>;
 
-typedef swap_struct_t<u16, swap_16_t<u16>> u16_le;
-typedef swap_struct_t<s16, swap_16_t<s16>> s16_le;
+using u16_le = swap_struct_t<u16, swap_16_t<u16>>;
+using s16_le = swap_struct_t<s16, swap_16_t<s16>>;
 
-typedef swap_struct_t<float, swap_float_t<float>> float_le;
-typedef swap_struct_t<double, swap_double_t<double>> double_le;
+using float_le = swap_struct_t<float, swap_float_t<float>>;
+using double_le = swap_struct_t<double, swap_double_t<double>>;
 
-typedef u32 u32_be;
-typedef u16 u16_be;
-typedef u64 u64_be;
+using u16_be = u16;
+using u32_be = u32;
+using u64_be = u64;
 
-typedef s32 s32_be;
-typedef s16 s16_be;
-typedef s64 s64_be;
+using s16_be = s16;
+using s32_be = s32;
+using s64_be = s64;
 
-typedef float float_be;
-typedef double double_be;
+using float_be = float;
+using double_be = double;
 
 #endif
