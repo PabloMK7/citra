@@ -81,42 +81,6 @@ static std::string MakeFunctionString(const char* name, const char* port_name,
     return function_string;
 }
 
-Interface::Interface(u32 max_sessions) : max_sessions(max_sessions) {}
-Interface::~Interface() = default;
-
-void Interface::HandleSyncRequest(SharedPtr<ServerSession> server_session) {
-    // TODO(Subv): Make use of the server_session in the HLE service handlers to distinguish which
-    // session triggered each command.
-
-    u32* cmd_buff = Kernel::GetCommandBuffer();
-    auto itr = m_functions.find(cmd_buff[0]);
-
-    if (itr == m_functions.end() || itr->second.func == nullptr) {
-        std::string function_name = (itr == m_functions.end())
-                                        ? Common::StringFromFormat("0x%08X", cmd_buff[0])
-                                        : itr->second.name;
-        LOG_ERROR(Service, "unknown / unimplemented {}",
-                  MakeFunctionString(function_name.c_str(), GetPortName().c_str(), cmd_buff));
-
-        // TODO(bunnei): Hack - ignore error
-        cmd_buff[1] = 0;
-        return;
-    }
-    LOG_TRACE(Service, "{}", MakeFunctionString(itr->second.name, GetPortName().c_str(), cmd_buff));
-
-    itr->second.func(this);
-}
-
-void Interface::Register(const FunctionInfo* functions, size_t n) {
-    m_functions.reserve(n);
-    for (size_t i = 0; i < n; ++i) {
-        // Usually this array is sorted by id already, so hint to instead at the end
-        m_functions.emplace_hint(m_functions.cend(), functions[i].id, functions[i]);
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
 ServiceFrameworkBase::ServiceFrameworkBase(const char* service_name, u32 max_sessions,
                                            InvokerFn* handler_invoker)
     : service_name(service_name), max_sessions(max_sessions), handler_invoker(handler_invoker) {}
@@ -200,24 +164,6 @@ void ServiceFrameworkBase::HandleSyncRequest(SharedPtr<ServerSession> server_ses
 // TODO(yuriks): Move to kernel
 void AddNamedPort(std::string name, SharedPtr<ClientPort> port) {
     g_kernel_named_ports.emplace(std::move(name), std::move(port));
-}
-
-static void AddNamedPort(Interface* interface_) {
-    SharedPtr<ServerPort> server_port;
-    SharedPtr<ClientPort> client_port;
-    std::tie(server_port, client_port) =
-        ServerPort::CreatePortPair(interface_->GetMaxSessions(), interface_->GetPortName());
-
-    server_port->SetHleHandler(std::shared_ptr<Interface>(interface_));
-    AddNamedPort(interface_->GetPortName(), std::move(client_port));
-}
-
-void AddService(Interface* interface_) {
-    auto server_port = Core::System::GetInstance()
-                           .ServiceManager()
-                           .RegisterService(interface_->GetPortName(), interface_->GetMaxSessions())
-                           .Unwrap();
-    server_port->SetHleHandler(std::shared_ptr<Interface>(interface_));
 }
 
 /// Initialize ServiceManager
