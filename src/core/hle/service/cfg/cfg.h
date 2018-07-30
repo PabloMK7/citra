@@ -358,6 +358,18 @@ public:
     SoundOutputMode GetSoundOutputMode();
 
     /**
+     * Sets the country code in config savegame.
+     * @param country_code the country code to set
+     */
+    void SetCountryCode(u8 country_code);
+
+    /**
+     * Gets the country code from config savegame.
+     * @returns the country code
+     */
+    u8 GetCountryCode();
+
+    /**
      * Generates a new random console unique id.
      * @param random_number a random generated 16bit number stored at 0x90002, used for generating
      * the

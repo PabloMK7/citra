@@ -25,6 +25,196 @@ static const std::array<int, 12> days_in_month = {{
     31,
 }};
 
+static const std::array<const char*, 187> country_names = {
+    "",
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Japan"),
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Anguilla"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Antigua and Barbuda"), // 0-9
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Argentina"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Aruba"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Bahamas"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Barbados"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Belize"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Bolivia"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Brazil"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "British Virgin Islands"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Canada"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Cayman Islands"), // 10-19
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Chile"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Colombia"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Costa Rica"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Dominica"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Dominican Republic"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Ecuador"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "El Salvador"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "French Guiana"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Grenada"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Guadeloupe"), // 20-29
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Guatemala"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Guyana"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Haiti"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Honduras"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Jamaica"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Martinique"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Mexico"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Montserrat"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Netherlands Antilles"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Nicaragua"), // 30-39
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Panama"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Paraguay"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Peru"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Saint Kitts and Nevis"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Saint Lucia"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Saint Vincent and the Grenadines"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Suriname"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Trinidad and Tobago"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Turks and Caicos Islands"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "United States"), // 40-49
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Uruguay"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "US Virgin Islands"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Venezuela"),
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "", // 50-59
+    "",
+    "",
+    "",
+    "",
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Albania"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Australia"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Austria"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Belgium"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Bosnia and Herzegovina"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Botswana"), // 60-69
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Bulgaria"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Croatia"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Cyprus"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Czech Republic"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Denmark"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Estonia"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Finland"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "France"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Germany"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Greece"), // 70-79
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Hungary"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Iceland"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Ireland"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Italy"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Latvia"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Lesotho"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Liechtenstein"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Lithuania"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Luxembourg"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Macedonia"), // 80-89
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Malta"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Montenegro"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Mozambique"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Namibia"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Netherlands"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "New Zealand"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Norway"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Poland"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Portugal"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Romania"), // 90-99
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Russia"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Serbia"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Slovakia"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Slovenia"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "South Africa"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Spain"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Swaziland"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Sweden"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Switzerland"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Turkey"), // 100-109
+    QT_TRANSLATE_NOOP("ConfigureSystem", "United Kingdom"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Zambia"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Zimbabwe"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Azerbaijan"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Mauritania"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Mali"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Niger"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Chad"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Sudan"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Eritrea"), // 110-119
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Djibouti"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Somalia"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Andorra"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Gibraltar"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Guernsey"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Isle of Man"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Jersey"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Monaco"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Taiwan"),
+    "", // 120-129
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    QT_TRANSLATE_NOOP("ConfigureSystem", "South Korea"),
+    "",
+    "",
+    "", // 130-139
+    "",
+    "",
+    "",
+    "",
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Hong Kong"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Macau"),
+    "",
+    "",
+    "",
+    "", // 140-149
+    "",
+    "",
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Indonesia"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Singapore"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Thailand"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Philippines"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Malaysia"),
+    "",
+    "",
+    "", // 150-159
+    QT_TRANSLATE_NOOP("ConfigureSystem", "China"),
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    QT_TRANSLATE_NOOP("ConfigureSystem", "United Arab Emirates"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "India"), // 160-169
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Egypt"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Oman"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Qatar"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Kuwait"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Saudi Arabia"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Syria"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Bahrain"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Jordan"),
+    "",
+    "", // 170-179
+    "",
+    "",
+    "",
+    "",
+    QT_TRANSLATE_NOOP("ConfigureSystem", "San Marino"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Vatican City"),
+    QT_TRANSLATE_NOOP("ConfigureSystem", "Bermuda"), // 180-186
+};
+
 ConfigureSystem::ConfigureSystem(QWidget* parent) : QWidget(parent), ui(new Ui::ConfigureSystem) {
     ui->setupUi(this);
     connect(ui->combo_birthmonth,
@@ -32,6 +222,11 @@ ConfigureSystem::ConfigureSystem(QWidget* parent) : QWidget(parent), ui(new Ui::
             &ConfigureSystem::updateBirthdayComboBox);
     connect(ui->button_regenerate_console_id, &QPushButton::clicked, this,
             &ConfigureSystem::refreshConsoleID);
+    for (u8 i = 0; i < country_names.size(); i++) {
+        if (country_names.at(i) != "") {
+            ui->combo_country->addItem(tr(country_names.at(i)), i);
+        }
+    }
 
     this->setConfiguration();
 }
@@ -81,6 +276,10 @@ void ConfigureSystem::ReadSystemSettings() {
     sound_index = cfg->GetSoundOutputMode();
     ui->combo_sound->setCurrentIndex(sound_index);
 
+    // set the country code
+    country_code = cfg->GetCountryCode();
+    ui->combo_country->setCurrentIndex(ui->combo_country->findData(country_code));
+
     // set the console id
     u64 console_id = cfg->GetConsoleUniqueId();
     ui->label_console_id->setText(
@@ -122,6 +321,13 @@ void ConfigureSystem::applyConfiguration() {
     int new_sound = ui->combo_sound->currentIndex();
     if (sound_index != new_sound) {
         cfg->SetSoundOutputMode(static_cast<Service::CFG::SoundOutputMode>(new_sound));
+        modified = true;
+    }
+
+    // apply country
+    u8 new_country = static_cast<u8>(ui->combo_country->currentData().toInt());
+    if (country_code != new_country) {
+        cfg->SetCountryCode(new_country);
         modified = true;
     }
 
