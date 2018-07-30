@@ -222,7 +222,7 @@ protected:
      * @param max_sessions Maximum number of sessions that can be
      * connected to this service at the same time.
      */
-    ServiceFramework(const char* service_name, u32 max_sessions = DefaultMaxSessions)
+    explicit ServiceFramework(const char* service_name, u32 max_sessions = DefaultMaxSessions)
         : ServiceFrameworkBase(service_name, max_sessions, Invoker) {}
 
     /// Registers handlers in the service.
