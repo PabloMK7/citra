@@ -2,6 +2,8 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <array>
+#include <memory>
 #include "common/assert.h"
 #include "common/common_funcs.h"
 #include "common/common_paths.h"
@@ -273,14 +275,10 @@ bool Copy(const std::string& srcFilename, const std::string& destFilename) {
               GetLastErrorMsg());
     return false;
 #else
-
-// buffer size
-#define BSIZE 1024
-
-    char buffer[BSIZE];
+    using CFilePointer = std::unique_ptr<FILE, decltype(&std::fclose)>;
 
     // Open input file
-    FILE* input = fopen(srcFilename.c_str(), "rb");
+    CFilePointer input{fopen(srcFilename.c_str(), "rb"), std::fclose};
     if (!input) {
         LOG_ERROR(Common_Filesystem, "opening input failed {} --> {}: {}", srcFilename,
                   destFilename, GetLastErrorMsg());
@@ -288,44 +286,36 @@ bool Copy(const std::string& srcFilename, const std::string& destFilename) {
     }
 
     // open output file
-    FILE* output = fopen(destFilename.c_str(), "wb");
+    CFilePointer output{fopen(destFilename.c_str(), "wb"), std::fclose};
     if (!output) {
-        fclose(input);
         LOG_ERROR(Common_Filesystem, "opening output failed {} --> {}: {}", srcFilename,
                   destFilename, GetLastErrorMsg());
         return false;
     }
 
     // copy loop
-    while (!feof(input)) {
+    std::array<char, 1024> buffer;
+    while (!feof(input.get())) {
         // read input
-        size_t rnum = fread(buffer, sizeof(char), BSIZE, input);
-        if (rnum != BSIZE) {
-            if (ferror(input) != 0) {
+        size_t rnum = fread(buffer.data(), sizeof(char), buffer.size(), input.get());
+        if (rnum != buffer.size()) {
+            if (ferror(input.get()) != 0) {
                 LOG_ERROR(Common_Filesystem, "failed reading from source, {} --> {}: {}",
                           srcFilename, destFilename, GetLastErrorMsg());
-                goto bail;
+                return false;
             }
         }
 
         // write output
-        size_t wnum = fwrite(buffer, sizeof(char), rnum, output);
+        size_t wnum = fwrite(buffer.data(), sizeof(char), rnum, output.get());
         if (wnum != rnum) {
             LOG_ERROR(Common_Filesystem, "failed writing to output, {} --> {}: {}", srcFilename,
                       destFilename, GetLastErrorMsg());
-            goto bail;
+            return false;
         }
     }
-    // close files
-    fclose(input);
-    fclose(output);
+
     return true;
-bail:
-    if (input)
-        fclose(input);
-    if (output)
-        fclose(output);
-    return false;
 #endif
 }
 
