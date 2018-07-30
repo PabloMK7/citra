@@ -18,6 +18,7 @@
 #include "common/bit_field.h"
 #include "common/color.h"
 #include "common/logging/log.h"
+#include "common/math_util.h"
 #include "common/microprofile.h"
 #include "common/scope_exit.h"
 #include "common/vector_math.h"
