@@ -271,12 +271,6 @@ Thread* GetCurrentThread();
 void WaitCurrentThread_Sleep();
 
 /**
- * Waits the current thread from an ArbitrateAddress call
- * @param wait_address Arbitration address used to resume from wait
- */
-void WaitCurrentThread_ArbitrateAddress(VAddr wait_address);
-
-/**
  * Stops the current thread and removes it from the thread_list
  */
 void ExitCurrentThread();
