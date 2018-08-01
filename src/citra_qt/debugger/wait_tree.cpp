@@ -301,11 +301,11 @@ std::vector<std::unique_ptr<WaitTreeItem>> WaitTreeTimer::GetChildren() const {
     const auto& timer = static_cast<const Kernel::Timer&>(object);
 
     list.push_back(std::make_unique<WaitTreeText>(
-        tr("reset type = %1").arg(GetResetTypeQString(timer.reset_type))));
+        tr("reset type = %1").arg(GetResetTypeQString(timer.GetResetType()))));
     list.push_back(
-        std::make_unique<WaitTreeText>(tr("initial delay = %1").arg(timer.initial_delay)));
+        std::make_unique<WaitTreeText>(tr("initial delay = %1").arg(timer.GetInitialDelay())));
     list.push_back(
-        std::make_unique<WaitTreeText>(tr("interval delay = %1").arg(timer.interval_delay)));
+        std::make_unique<WaitTreeText>(tr("interval delay = %1").arg(timer.GetIntervalDelay())));
     return list;
 }
 

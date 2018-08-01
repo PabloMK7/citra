@@ -981,8 +981,9 @@ static ResultCode ClearEvent(Handle handle) {
 
 /// Creates a timer
 static ResultCode CreateTimer(Handle* out_handle, u32 reset_type) {
-    SharedPtr<Timer> timer = Timer::Create(static_cast<ResetType>(reset_type));
-    timer->name = Common::StringFromFormat("timer-%08x", Core::CPU().GetReg(14));
+    SharedPtr<Timer> timer =
+        Timer::Create(static_cast<ResetType>(reset_type),
+                      Common::StringFromFormat("timer-%08x", Core::CPU().GetReg(14)));
     CASCADE_RESULT(*out_handle, g_handle_table.Create(std::move(timer)));
 
     LOG_TRACE(Kernel_SVC, "called reset_type=0x{:08X} : created handle=0x{:08X}", reset_type,
