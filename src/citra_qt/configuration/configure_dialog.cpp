@@ -39,7 +39,7 @@ void ConfigureDialog::onLanguageChanged(const QString& locale) {
     ui->inputTab->retranslateUi();
     ui->graphicsTab->retranslateUi();
     ui->audioTab->retranslateUi();
-    ui->cameraTab->applyConfiguration();
+    ui->cameraTab->retranslateUi();
     ui->debugTab->retranslateUi();
     ui->webTab->retranslateUi();
 }
