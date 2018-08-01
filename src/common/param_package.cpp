@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <array>
+#include <utility>
 #include <vector>
 #include "common/logging/log.h"
 #include "common/param_package.h"
@@ -12,10 +13,11 @@ namespace Common {
 
 constexpr char KEY_VALUE_SEPARATOR = ':';
 constexpr char PARAM_SEPARATOR = ',';
+
 constexpr char ESCAPE_CHARACTER = '$';
-const std::string KEY_VALUE_SEPARATOR_ESCAPE{ESCAPE_CHARACTER, '0'};
-const std::string PARAM_SEPARATOR_ESCAPE{ESCAPE_CHARACTER, '1'};
-const std::string ESCAPE_CHARACTER_ESCAPE{ESCAPE_CHARACTER, '2'};
+constexpr char KEY_VALUE_SEPARATOR_ESCAPE[] = "$0";
+constexpr char PARAM_SEPARATOR_ESCAPE[] = "$1";
+constexpr char ESCAPE_CHARACTER_ESCAPE[] = "$2";
 
 ParamPackage::ParamPackage(const std::string& serialized) {
     std::vector<std::string> pairs;
@@ -35,7 +37,7 @@ ParamPackage::ParamPackage(const std::string& serialized) {
             part = Common::ReplaceAll(part, ESCAPE_CHARACTER_ESCAPE, {ESCAPE_CHARACTER});
         }
 
-        Set(key_value[0], key_value[1]);
+        Set(key_value[0], std::move(key_value[1]));
     }
 }
 
@@ -101,16 +103,16 @@ float ParamPackage::Get(const std::string& key, float default_value) const {
     }
 }
 
-void ParamPackage::Set(const std::string& key, const std::string& value) {
-    data[key] = value;
+void ParamPackage::Set(const std::string& key, std::string value) {
+    data.insert_or_assign(key, std::move(value));
 }
 
 void ParamPackage::Set(const std::string& key, int value) {
-    data[key] = std::to_string(value);
+    data.insert_or_assign(key, std::to_string(value));
 }
 
 void ParamPackage::Set(const std::string& key, float value) {
-    data[key] = std::to_string(value);
+    data.insert_or_assign(key, std::to_string(value));
 }
 
 bool ParamPackage::Has(const std::string& key) const {
