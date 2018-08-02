@@ -9,13 +9,14 @@
 #include "video_core/renderer_opengl/gl_state.h"
 #include "video_core/renderer_opengl/gl_stream_buffer.h"
 
-OGLStreamBuffer::OGLStreamBuffer(GLenum target, GLsizeiptr size, bool prefer_coherent)
+OGLStreamBuffer::OGLStreamBuffer(GLenum target, GLsizeiptr size, bool array_buffer_for_amd,
+                                 bool prefer_coherent)
     : gl_target(target), buffer_size(size) {
     gl_buffer.Create();
     glBindBuffer(gl_target, gl_buffer.handle);
 
     GLsizeiptr allocate_size = size;
-    if (target == GL_ARRAY_BUFFER) {
+    if (array_buffer_for_amd) {
         // On AMD GPU there is a strange crash in indexed drawing. The crash happens when the buffer
         // read position is near the end and is an out-of-bound access to the vertex buffer. This is
         // probably a bug in the driver and is related to the usage of vec3<byte> attributes in the

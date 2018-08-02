@@ -34,11 +34,17 @@ MICROPROFILE_DEFINE(OpenGL_Drawing, "OpenGL", "Drawing", MP_RGB(128, 128, 192));
 MICROPROFILE_DEFINE(OpenGL_Blits, "OpenGL", "Blits", MP_RGB(100, 100, 255));
 MICROPROFILE_DEFINE(OpenGL_CacheManagement, "OpenGL", "Cache Mgmt", MP_RGB(100, 255, 100));
 
+static bool IsVendorAmd() {
+    std::string gpu_vendor{reinterpret_cast<char const*>(glGetString(GL_VENDOR))};
+    return gpu_vendor == "ATI Technologies Inc." || gpu_vendor == "Advanced Micro Devices, Inc.";
+}
+
 RasterizerOpenGL::RasterizerOpenGL()
-    : shader_dirty(true), vertex_buffer(GL_ARRAY_BUFFER, VERTEX_BUFFER_SIZE),
-      uniform_buffer(GL_UNIFORM_BUFFER, UNIFORM_BUFFER_SIZE),
-      index_buffer(GL_ELEMENT_ARRAY_BUFFER, INDEX_BUFFER_SIZE),
-      texture_buffer(GL_TEXTURE_BUFFER, TEXTURE_BUFFER_SIZE) {
+    : is_amd(IsVendorAmd()), shader_dirty(true),
+      vertex_buffer(GL_ARRAY_BUFFER, VERTEX_BUFFER_SIZE, is_amd),
+      uniform_buffer(GL_UNIFORM_BUFFER, UNIFORM_BUFFER_SIZE, false),
+      index_buffer(GL_ELEMENT_ARRAY_BUFFER, INDEX_BUFFER_SIZE, false),
+      texture_buffer(GL_TEXTURE_BUFFER, TEXTURE_BUFFER_SIZE, false) {
 
     allow_shadow = GLAD_GL_ARB_shader_image_load_store && GLAD_GL_ARB_shader_image_size &&
                    GLAD_GL_ARB_framebuffer_no_attachments;
@@ -145,7 +151,7 @@ RasterizerOpenGL::RasterizerOpenGL()
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer.GetHandle());
 
     shader_program_manager =
-        std::make_unique<ShaderProgramManager>(GLAD_GL_ARB_separate_shader_objects);
+        std::make_unique<ShaderProgramManager>(GLAD_GL_ARB_separate_shader_objects, is_amd);
 
     glEnable(GL_BLEND);
 
