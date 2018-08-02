@@ -2,12 +2,11 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <algorithm>
 #include <cstddef>
-
 #include "audio_core/hle/mixers.h"
 #include "common/assert.h"
 #include "common/logging/log.h"
-#include "common/math_util.h"
 
 namespace AudioCore {
 namespace HLE {
@@ -87,7 +86,7 @@ void Mixers::ParseConfig(DspConfiguration& config) {
 }
 
 static s16 ClampToS16(s32 value) {
-    return static_cast<s16>(MathUtil::Clamp(value, -32768, 32767));
+    return static_cast<s16>(std::clamp(value, -32768, 32767));
 }
 
 static std::array<s16, 2> AddAndClampToS16(const std::array<s16, 2>& a,

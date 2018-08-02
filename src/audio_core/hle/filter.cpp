@@ -2,13 +2,13 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <algorithm>
 #include <array>
 #include <cstddef>
 #include "audio_core/hle/common.h"
 #include "audio_core/hle/filter.h"
 #include "audio_core/hle/shared_memory.h"
 #include "common/common_types.h"
-#include "common/math_util.h"
 
 namespace AudioCore {
 namespace HLE {
@@ -68,7 +68,7 @@ std::array<s16, 2> SourceFilters::SimpleFilter::ProcessSample(const std::array<s
     std::array<s16, 2> y0;
     for (size_t i = 0; i < 2; i++) {
         const s32 tmp = (b0 * x0[i] + a1 * y1[i]) >> 15;
-        y0[i] = MathUtil::Clamp(tmp, -32768, 32767);
+        y0[i] = std::clamp(tmp, -32768, 32767);
     }
 
     y1 = y0;
@@ -102,7 +102,7 @@ std::array<s16, 2> SourceFilters::BiquadFilter::ProcessSample(const std::array<s
     std::array<s16, 2> y0;
     for (size_t i = 0; i < 2; i++) {
         const s32 tmp = (b0 * x0[i] + b1 * x1[i] + b2 * x2[i] + a1 * y1[i] + a2 * y2[i]) >> 14;
-        y0[i] = MathUtil::Clamp(tmp, -32768, 32767);
+        y0[i] = std::clamp(tmp, -32768, 32767);
     }
 
     x2 = x1;

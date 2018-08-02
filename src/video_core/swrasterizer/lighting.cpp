@@ -2,7 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "common/math_util.h"
+#include <algorithm>
 #include "video_core/swrasterizer/lighting.h"
 
 namespace Pica {
@@ -96,10 +96,10 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(
             size_t lut =
                 static_cast<size_t>(LightingRegs::LightingSampler::DistanceAttenuation) + num;
 
-            float sample_loc = MathUtil::Clamp(scale * distance + bias, 0.0f, 1.0f);
+            float sample_loc = std::clamp(scale * distance + bias, 0.0f, 1.0f);
 
             u8 lutindex =
-                static_cast<u8>(MathUtil::Clamp(std::floor(sample_loc * 256.0f), 0.0f, 255.0f));
+                static_cast<u8>(std::clamp(std::floor(sample_loc * 256.0f), 0.0f, 255.0f));
             float delta = sample_loc * 256 - lutindex;
             dist_atten = LookupLightingLut(lighting_state, lut, lutindex, delta);
         }
@@ -158,11 +158,11 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(
                     result = std::max(result, 0.0f);
 
                 float flr = std::floor(result * 256.0f);
-                index = static_cast<u8>(MathUtil::Clamp(flr, 0.0f, 255.0f));
+                index = static_cast<u8>(std::clamp(flr, 0.0f, 255.0f));
                 delta = result * 256 - index;
             } else {
                 float flr = std::floor(result * 128.0f);
-                s8 signed_index = static_cast<s8>(MathUtil::Clamp(flr, -128.0f, 127.0f));
+                s8 signed_index = static_cast<s8>(std::clamp(flr, -128.0f, 127.0f));
                 delta = result * 128.0f - signed_index;
                 index = static_cast<u8>(signed_index);
             }
@@ -316,15 +316,15 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(
 
     diffuse_sum += Math::MakeVec(lighting.global_ambient.ToVec3f(), 0.0f);
 
-    auto diffuse = Math::MakeVec<float>(MathUtil::Clamp(diffuse_sum.x, 0.0f, 1.0f) * 255,
-                                        MathUtil::Clamp(diffuse_sum.y, 0.0f, 1.0f) * 255,
-                                        MathUtil::Clamp(diffuse_sum.z, 0.0f, 1.0f) * 255,
-                                        MathUtil::Clamp(diffuse_sum.w, 0.0f, 1.0f) * 255)
+    auto diffuse = Math::MakeVec<float>(std::clamp(diffuse_sum.x, 0.0f, 1.0f) * 255,
+                                        std::clamp(diffuse_sum.y, 0.0f, 1.0f) * 255,
+                                        std::clamp(diffuse_sum.z, 0.0f, 1.0f) * 255,
+                                        std::clamp(diffuse_sum.w, 0.0f, 1.0f) * 255)
                        .Cast<u8>();
-    auto specular = Math::MakeVec<float>(MathUtil::Clamp(specular_sum.x, 0.0f, 1.0f) * 255,
-                                         MathUtil::Clamp(specular_sum.y, 0.0f, 1.0f) * 255,
-                                         MathUtil::Clamp(specular_sum.z, 0.0f, 1.0f) * 255,
-                                         MathUtil::Clamp(specular_sum.w, 0.0f, 1.0f) * 255)
+    auto specular = Math::MakeVec<float>(std::clamp(specular_sum.x, 0.0f, 1.0f) * 255,
+                                         std::clamp(specular_sum.y, 0.0f, 1.0f) * 255,
+                                         std::clamp(specular_sum.z, 0.0f, 1.0f) * 255,
+                                         std::clamp(specular_sum.w, 0.0f, 1.0f) * 255)
                         .Cast<u8>();
     return std::make_tuple(diffuse, specular);
 }

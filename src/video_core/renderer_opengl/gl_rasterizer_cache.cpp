@@ -1359,14 +1359,11 @@ SurfaceSurfaceRect_Tuple RasterizerCacheOpenGL::GetFramebufferSurfaces(
     }
 
     MathUtil::Rectangle<u32> viewport_clamped{
+        static_cast<u32>(std::clamp(viewport_rect.left, 0, static_cast<s32>(config.GetWidth()))),
+        static_cast<u32>(std::clamp(viewport_rect.top, 0, static_cast<s32>(config.GetHeight()))),
+        static_cast<u32>(std::clamp(viewport_rect.right, 0, static_cast<s32>(config.GetWidth()))),
         static_cast<u32>(
-            MathUtil::Clamp(viewport_rect.left, 0, static_cast<s32>(config.GetWidth()))),
-        static_cast<u32>(
-            MathUtil::Clamp(viewport_rect.top, 0, static_cast<s32>(config.GetHeight()))),
-        static_cast<u32>(
-            MathUtil::Clamp(viewport_rect.right, 0, static_cast<s32>(config.GetWidth()))),
-        static_cast<u32>(
-            MathUtil::Clamp(viewport_rect.bottom, 0, static_cast<s32>(config.GetHeight())))};
+            std::clamp(viewport_rect.bottom, 0, static_cast<s32>(config.GetHeight())))};
 
     // get color and depth surfaces
     SurfaceParams color_params;

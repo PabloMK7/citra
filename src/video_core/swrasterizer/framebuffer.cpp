@@ -3,12 +3,10 @@
 // Refer to the license.txt file included.
 
 #include <algorithm>
-
 #include "common/assert.h"
 #include "common/color.h"
 #include "common/common_types.h"
 #include "common/logging/log.h"
-#include "common/math_util.h"
 #include "common/vector_math.h"
 #include "core/hw/gpu.h"
 #include "core/memory.h"
@@ -301,8 +299,8 @@ Math::Vec4<u8> EvaluateBlendEquation(const Math::Vec4<u8>& src, const Math::Vec4
         UNIMPLEMENTED();
     }
 
-    return Math::Vec4<u8>(MathUtil::Clamp(result.r(), 0, 255), MathUtil::Clamp(result.g(), 0, 255),
-                          MathUtil::Clamp(result.b(), 0, 255), MathUtil::Clamp(result.a(), 0, 255));
+    return Math::Vec4<u8>(std::clamp(result.r(), 0, 255), std::clamp(result.g(), 0, 255),
+                          std::clamp(result.b(), 0, 255), std::clamp(result.a(), 0, 255));
 };
 
 u8 LogicOp(u8 src, u8 dest, FramebufferRegs::LogicOp op) {
@@ -400,7 +398,7 @@ void DrawShadowMapPixel(int x, int y, u32 depth, u8 stencil) {
             float16 linear = float16::FromRaw(shadow.linear);
             float16 x = float16::FromFloat32(static_cast<float>(depth) / ref_z);
             float16 stencil_new = float16::FromFloat32(stencil) / (constant + linear * x);
-            stencil = static_cast<u8>(MathUtil::Clamp(stencil_new.ToFloat32(), 0.0f, 255.0f));
+            stencil = static_cast<u8>(std::clamp(stencil_new.ToFloat32(), 0.0f, 255.0f));
 
             if (stencil < ref_s)
                 EncodeX24S8Shadow(stencil, dst_pixel);

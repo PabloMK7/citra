@@ -2,11 +2,11 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <algorithm>
 #include <array>
 #include "common/bit_field.h"
 #include "common/color.h"
 #include "common/common_types.h"
-#include "common/math_util.h"
 #include "common/vector_math.h"
 #include "video_core/texture/etc1.h"
 
@@ -110,9 +110,9 @@ union ETC1Tile {
         if (GetNegationFlag(texel))
             modifier *= -1;
 
-        ret.r() = MathUtil::Clamp(ret.r() + modifier, 0, 255);
-        ret.g() = MathUtil::Clamp(ret.g() + modifier, 0, 255);
-        ret.b() = MathUtil::Clamp(ret.b() + modifier, 0, 255);
+        ret.r() = std::clamp(ret.r() + modifier, 0, 255);
+        ret.g() = std::clamp(ret.g() + modifier, 0, 255);
+        ret.b() = std::clamp(ret.b() + modifier, 0, 255);
 
         return ret.Cast<u8>();
     }
