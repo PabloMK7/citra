@@ -146,7 +146,7 @@ ExtraHID::ExtraHID(SendFunc send_func) : IRDevice(send_func) {
     }};
 
     hid_polling_callback_id =
-        CoreTiming::RegisterEvent("ExtraHID::SendHIDStatus", [this](u64, int cycles_late) {
+        CoreTiming::RegisterEvent("ExtraHID::SendHIDStatus", [this](u64, s64 cycles_late) {
             SendHIDStatus();
             CoreTiming::ScheduleEvent(msToCycles(hid_period) - cycles_late,
                                       hid_polling_callback_id);

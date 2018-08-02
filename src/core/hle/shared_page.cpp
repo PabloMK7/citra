@@ -52,7 +52,7 @@ static u64 GetSystemTime() {
     return console_time;
 }
 
-static void UpdateTimeCallback(u64 userdata, int cycles_late) {
+static void UpdateTimeCallback(u64 userdata, s64 cycles_late) {
     DateTime& date_time =
         shared_page.date_time_counter % 2 ? shared_page.date_time_0 : shared_page.date_time_1;
 

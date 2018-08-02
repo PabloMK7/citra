@@ -73,7 +73,7 @@ Loader::ResultStatus TitleMetadata::Load(const std::vector<u8> file_data, size_t
     memcpy(&tmd_body, &file_data[offset + body_start], sizeof(TitleMetadata::Body));
 
     size_t expected_size =
-        body_start + sizeof(Body) + tmd_body.content_count * sizeof(ContentChunk);
+        body_start + sizeof(Body) + static_cast<u16>(tmd_body.content_count) * sizeof(ContentChunk);
     if (total_size < expected_size) {
         LOG_ERROR(Service_FS, "Malformed TMD, expected size 0x{:x}, got 0x{:x}!", expected_size,
                   total_size);

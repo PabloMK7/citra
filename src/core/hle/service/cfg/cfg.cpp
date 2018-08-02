@@ -184,7 +184,7 @@ void Module::Interface::SecureInfoGetRegion(Kernel::HLERequestContext& ctx, u16 
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
-    rb.Push<u8>(cfg->GetRegionValue());
+    rb.Push<u8>(static_cast<u8>(cfg->GetRegionValue()));
 }
 
 void Module::Interface::GenHashConsoleUnique(Kernel::HLERequestContext& ctx) {

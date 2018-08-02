@@ -80,7 +80,7 @@ static u8 network_channel = DefaultNetworkChannel;
 static NetworkInfo network_info;
 
 // Mapping of mac addresses to their respective node_ids.
-static std::map<MacAddress, u32> node_map;
+static std::map<MacAddress, u16> node_map;
 
 // Event that will generate and send the 802.11 beacon frames.
 static CoreTiming::EventType* beacon_broadcast_event;
@@ -179,7 +179,7 @@ static void HandleNodeMapPacket(const Network::WifiPacket& packet) {
     node_map.clear();
     size_t num_entries;
     Network::MacAddress address;
-    u32 id;
+    u16 id;
     std::memcpy(&num_entries, packet.data.data(), sizeof(num_entries));
     size_t offset = sizeof(num_entries);
     for (size_t i = 0; i < num_entries; ++i) {
@@ -612,7 +612,7 @@ void NWM_UDS::RecvBeaconBroadcastData(Kernel::HLERequestContext& ctx) {
     }
 
     // Update the total size in the structure and write it to the buffer again.
-    data_reply_header.total_size = cur_buffer_size;
+    data_reply_header.total_size = static_cast<u32>(cur_buffer_size);
     out_buffer.Write(&data_reply_header, 0, sizeof(BeaconDataReplyHeader));
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
@@ -1189,7 +1189,7 @@ void NWM_UDS::SetApplicationData(Kernel::HLERequestContext& ctx) {
         return;
     }
 
-    network_info.application_data_size = size;
+    network_info.application_data_size = static_cast<u8>(size);
     std::memcpy(network_info.application_data.data(), application_data.data(), size);
 
     rb.Push(RESULT_SUCCESS);
@@ -1262,7 +1262,7 @@ void NWM_UDS::DecryptBeaconData(Kernel::HLERequestContext& ctx) {
 }
 
 // Sends a 802.11 beacon frame with information about the current network.
-static void BeaconBroadcastCallback(u64 userdata, int cycles_late) {
+static void BeaconBroadcastCallback(u64 userdata, s64 cycles_late) {
     // Don't do anything if we're not actually hosting a network
     if (connection_status.status != static_cast<u32>(NetworkStatus::ConnectedAsHost))
         return;

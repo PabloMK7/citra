@@ -1,4 +1,8 @@
 #pragma once
+#ifdef _MSC_VER
+// nonstandard extension used: zero-sized array in struct/union
+#pragma warning(disable : 4200)
+#endif
 
 #include <cstddef>
 #include "common/common_types.h"

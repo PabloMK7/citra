@@ -232,7 +232,7 @@ bool CIAFile::SetSize(u64 size) const {
 bool CIAFile::Close() const {
     bool complete = true;
     for (size_t i = 0; i < container.GetTitleMetadata().GetContentCount(); i++) {
-        if (content_written[i] < container.GetContentSize(i))
+        if (content_written[i] < container.GetContentSize(static_cast<u16>(i)))
             complete = false;
     }
 
@@ -294,7 +294,7 @@ InstallStatus InstallCIA(const std::string& path,
             Service::AM::GetTitleMediaType(container.GetTitleMetadata().GetTitleID()));
 
         for (size_t i = 0; i < container.GetTitleMetadata().GetContentCount(); i++) {
-            if (container.GetTitleMetadata().GetContentTypeByIndex(i) &
+            if (container.GetTitleMetadata().GetContentTypeByIndex(static_cast<u16>(i)) &
                 FileSys::TMDContentTypeFlag::Encrypted) {
                 LOG_ERROR(Service_AM, "File {} is encrypted! Aborting...", path);
                 return InstallStatus::ErrorEncrypted;
@@ -493,7 +493,7 @@ void Module::Interface::GetNumPrograms(Kernel::HLERequestContext& ctx) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
-    rb.Push<u32>(am->am_title_list[media_type].size());
+    rb.Push<u32>(static_cast<u32>(am->am_title_list[media_type].size()));
 }
 
 void Module::Interface::FindDLCContentInfos(Kernel::HLERequestContext& ctx) {
@@ -877,7 +877,7 @@ void Module::Interface::GetDLCContentInfoCount(Kernel::HLERequestContext& ctx) {
 
     FileSys::TitleMetadata tmd;
     if (tmd.Load(tmd_path) == Loader::ResultStatus::Success) {
-        rb.Push<u32>(tmd.GetContentCount());
+        rb.Push<u32>(static_cast<u32>(tmd.GetContentCount()));
     } else {
         rb.Push<u32>(1); // Number of content infos plus one
         LOG_WARNING(Service_AM, "(STUBBED) called media_type={}, title_id=0x{:016x}",

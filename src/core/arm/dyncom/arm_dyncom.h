@@ -42,7 +42,7 @@ public:
     void PrepareReschedule() override;
 
 private:
-    void ExecuteInstructions(int num_instructions);
+    void ExecuteInstructions(u64 num_instructions);
 
     std::unique_ptr<ARMul_State> state;
 };

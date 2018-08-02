@@ -120,7 +120,7 @@ ResultCode TranslateCommandBuffer(SharedPtr<Thread> src_thread, SharedPtr<Thread
             IPC::MappedBufferDescInfo descInfo{descriptor};
             VAddr source_address = cmd_buf[i];
 
-            size_t size = descInfo.size;
+            u32 size = static_cast<u32>(descInfo.size);
             IPC::MappedBufferPermissions permissions = descInfo.perms;
 
             VAddr page_start = Common::AlignDown(source_address, Memory::PAGE_SIZE);
@@ -182,17 +182,18 @@ ResultCode TranslateCommandBuffer(SharedPtr<Thread> src_thread, SharedPtr<Thread
                     Common::AlignUp(source_address, Memory::PAGE_SIZE) - source_address;
                 // If the data fits in one page we can just copy the required size instead of the
                 // entire page.
-                size_t read_size = num_pages == 1 ? size : difference_to_page;
+                size_t read_size = num_pages == 1 ? static_cast<size_t>(size) : difference_to_page;
 
                 Memory::ReadBlock(*src_process, source_address, buffer->data() + page_offset,
                                   read_size);
 
                 // Map the page into the target process' address space.
-                target_address = dst_process->vm_manager
-                                     .MapMemoryBlockToBase(
-                                         Memory::IPC_MAPPING_VADDR, Memory::IPC_MAPPING_SIZE,
-                                         buffer, 0, buffer->size(), Kernel::MemoryState::Shared)
-                                     .Unwrap();
+                target_address =
+                    dst_process->vm_manager
+                        .MapMemoryBlockToBase(Memory::IPC_MAPPING_VADDR, Memory::IPC_MAPPING_SIZE,
+                                              buffer, 0, static_cast<u32>(buffer->size()),
+                                              Kernel::MemoryState::Shared)
+                        .Unwrap();
             }
 
             cmd_buf[i++] = target_address + page_offset;

@@ -19,7 +19,7 @@ class SharedMemory;
 } // namespace Kernel
 
 namespace CoreTiming {
-class EventType;
+struct EventType;
 };
 
 namespace Service {
@@ -76,7 +76,7 @@ private:
 
     void LoadInputDevices();
     void UnloadInputDevices();
-    void UpdateCallback(u64 userdata, int cycles_late);
+    void UpdateCallback(u64 userdata, s64 cycles_late);
 
     Kernel::SharedPtr<Kernel::Event> update_event;
     Kernel::SharedPtr<Kernel::SharedMemory> shared_memory;

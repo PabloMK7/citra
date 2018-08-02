@@ -19,8 +19,8 @@
 namespace CoreTiming {
 
 static s64 global_timer;
-static int slice_length;
-static int downcount;
+static s64 slice_length;
+static s64 downcount;
 
 struct EventType {
     TimedCallback callback;
@@ -180,10 +180,8 @@ void RemoveNormalAndThreadsafeEvent(const EventType* event_type) {
 void ForceExceptionCheck(s64 cycles) {
     cycles = std::max<s64>(0, cycles);
     if (downcount > cycles) {
-        // downcount is always (much) smaller than MAX_INT so we can safely cast cycles to an int
-        // here. Account for cycles already executed by adjusting the g.slice_length
-        slice_length -= downcount - static_cast<int>(cycles);
-        downcount = static_cast<int>(cycles);
+        slice_length -= downcount - cycles;
+        downcount = cycles;
     }
 }
 
@@ -198,7 +196,7 @@ void MoveEvents() {
 void Advance() {
     MoveEvents();
 
-    int cycles_executed = slice_length - downcount;
+    s64 cycles_executed = slice_length - downcount;
     global_timer += cycles_executed;
     slice_length = MAX_SLICE_LENGTH;
 
@@ -231,7 +229,7 @@ u64 GetGlobalTimeUs() {
     return GetTicks() * 1000000 / BASE_CLOCK_RATE_ARM11;
 }
 
-int GetDowncount() {
+s64 GetDowncount() {
     return downcount;
 }
 

@@ -74,7 +74,7 @@ void Module::PortConfig::Clear() {
     transfer_bytes = 256;
 }
 
-void Module::CompletionEventCallBack(u64 port_id, int) {
+void Module::CompletionEventCallBack(u64 port_id, s64) {
     PortConfig& port = ports[port_id];
     const CameraConfig& camera = cameras[port.camera_id];
     const auto buffer = port.capture_result.get();
@@ -1028,7 +1028,7 @@ Module::Module() {
     }
     completion_event_callback = CoreTiming::RegisterEvent(
         "CAM::CompletionEventCallBack",
-        [this](u64 userdata, int cycles_late) { CompletionEventCallBack(userdata, cycles_late); });
+        [this](u64 userdata, s64 cycles_late) { CompletionEventCallBack(userdata, cycles_late); });
 }
 
 Module::~Module() {
