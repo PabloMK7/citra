@@ -291,8 +291,8 @@ ResultVal<VMManager::VMAIter> VMManager::CarveVMA(VAddr base, u32 size) {
         return ERR_INVALID_ADDRESS_STATE;
     }
 
-    u32 start_in_vma = base - vma.base;
-    u32 end_in_vma = start_in_vma + size;
+    VAddr start_in_vma = base - vma.base;
+    VAddr end_in_vma = start_in_vma + size;
 
     if (end_in_vma > vma.size) {
         // Requested allocation doesn't fit inside VMA
