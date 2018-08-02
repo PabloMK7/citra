@@ -564,7 +564,7 @@ static void ReadRegisters() {
 
     u8* bufptr = buffer;
 
-    for (int reg = 0; reg <= R15_REGISTER; reg++) {
+    for (u32 reg = 0; reg <= R15_REGISTER; reg++) {
         IntToGdbHex(bufptr + reg * CHAR_BIT, Core::CPU().GetReg(reg));
     }
 
@@ -574,7 +574,7 @@ static void ReadRegisters() {
 
     bufptr += CHAR_BIT;
 
-    for (int reg = 0; reg <= 31; reg++) {
+    for (u32 reg = 0; reg <= 31; reg++) {
         IntToGdbHex(bufptr + reg * CHAR_BIT, Core::CPU().GetVFPReg(reg));
     }
 
@@ -618,7 +618,7 @@ static void WriteRegisters() {
     if (command_buffer[0] != 'G')
         return SendReply("E01");
 
-    for (int i = 0, reg = 0; reg <= FPSCR_REGISTER; i++, reg++) {
+    for (u32 i = 0, reg = 0; reg <= FPSCR_REGISTER; i++, reg++) {
         if (reg <= R15_REGISTER) {
             Core::CPU().SetReg(reg, GdbHexToInt(buffer_ptr + i * CHAR_BIT));
         } else if (reg == CPSR_REGISTER) {
