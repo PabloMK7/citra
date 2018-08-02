@@ -76,4 +76,5 @@ void ConfigureGeneral::onLanguageChanged(int index) {
 
 void ConfigureGeneral::retranslateUi() {
     ui->retranslateUi(this);
+    ui->hotkeysDialog->retranslateUi();
 }

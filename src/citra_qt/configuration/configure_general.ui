@@ -181,7 +181,7 @@
         <item>
          <layout class="QVBoxLayout" name="verticalLayout_4">
           <item>
-           <widget class="GHotkeysDialog" name="widget" native="true"/>
+           <widget class="GHotkeysDialog" name="hotkeysDialog" native="true"/>
           </item>
          </layout>
         </item>

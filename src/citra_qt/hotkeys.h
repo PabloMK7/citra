@@ -58,6 +58,7 @@ class GHotkeysDialog : public QWidget {
 
 public:
     explicit GHotkeysDialog(QWidget* parent = nullptr);
+    void retranslateUi();
 
 private:
     Ui::hotkeys ui;
