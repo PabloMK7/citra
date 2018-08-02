@@ -21,8 +21,6 @@ enum class DspPipe;
 namespace Service {
 namespace DSP {
 
-static std::weak_ptr<DSP_DSP> dsp_dsp;
-
 void DSP_DSP::RecvData(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x01, 1, 0);
     const u32 register_number = rp.Pop<u32>();
@@ -313,6 +311,10 @@ void DSP_DSP::ForceHeadphoneOut(Kernel::HLERequestContext& ctx) {
     LOG_DEBUG(Service_DSP, "(STUBBED) called, force={}", force);
 }
 
+// DSP Interrupts:
+// The audio-pipe interrupt occurs every frame tick. Userland programs normally have a thread
+// that's waiting for an interrupt event. Immediately after this interrupt event, userland
+// normally updates the state in the next region and increments the relevant frame counter by two.
 void DSP_DSP::SignalInterrupt(InterruptType type, DspPipe pipe) {
     LOG_DEBUG(Service_DSP, "called, type={}, pipe={}", static_cast<u32>(type),
               static_cast<u32>(pipe));
@@ -398,20 +400,10 @@ DSP_DSP::~DSP_DSP() {
     pipes = {};
 }
 
-// DSP Interrupts:
-// The audio-pipe interrupt occurs every frame tick. Userland programs normally have a thread
-// that's waiting for an interrupt event. Immediately after this interrupt event, userland
-// normally updates the state in the next region and increments the relevant frame counter by two.
-void SignalPipeInterrupt(DspPipe pipe) {
-    auto dsp = dsp_dsp.lock();
-    ASSERT(dsp != nullptr);
-    return dsp->SignalInterrupt(InterruptType::Pipe, pipe);
-}
-
 void InstallInterfaces(SM::ServiceManager& service_manager) {
     auto dsp = std::make_shared<DSP_DSP>();
     dsp->InstallAsService(service_manager);
-    dsp_dsp = dsp;
+    Core::DSP().SetServiceToInterrupt(std::move(dsp));
 }
 
 } // namespace DSP

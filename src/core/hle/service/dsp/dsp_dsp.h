@@ -251,12 +251,6 @@ private:
     std::array<Kernel::SharedPtr<Kernel::Event>, AudioCore::num_dsp_pipe> pipes = {{}};
 };
 
-/**
- * Signal a specific DSP related interrupt of type == InterruptType::Pipe, pipe == pipe.
- * @param pipe The DSP pipe for which to signal an interrupt for.
- */
-void SignalPipeInterrupt(AudioCore::DspPipe pipe);
-
 void InstallInterfaces(SM::ServiceManager& service_manager);
 
 } // namespace DSP

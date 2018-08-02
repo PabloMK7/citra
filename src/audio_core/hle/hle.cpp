@@ -13,7 +13,9 @@
 #include "common/common_types.h"
 #include "common/logging/log.h"
 #include "core/core_timing.h"
-#include "core/hle/service/dsp/dsp_dsp.h"
+
+using InterruptType = Service::DSP::DSP_DSP::InterruptType;
+using Service::DSP::DSP_DSP;
 
 namespace AudioCore {
 
@@ -31,6 +33,8 @@ public:
     void PipeWrite(DspPipe pipe_number, const std::vector<u8>& buffer);
 
     std::array<u8, Memory::DSP_RAM_SIZE>& GetDspMemory();
+
+    void SetServiceToInterrupt(std::weak_ptr<DSP_DSP> dsp);
 
 private:
     void ResetPipes();
@@ -60,6 +64,8 @@ private:
 
     DspHle& parent;
     CoreTiming::EventType* tick_event;
+
+    std::weak_ptr<DSP_DSP> dsp_dsp;
 };
 
 DspHle::Impl::Impl(DspHle& parent_) : parent(parent_) {
@@ -187,6 +193,10 @@ std::array<u8, Memory::DSP_RAM_SIZE>& DspHle::Impl::GetDspMemory() {
     return dsp_memory.raw_memory;
 }
 
+void DspHle::Impl::SetServiceToInterrupt(std::weak_ptr<DSP_DSP> dsp) {
+    dsp_dsp = std::move(dsp);
+}
+
 void DspHle::Impl::ResetPipes() {
     for (auto& data : pipe_data) {
         data.clear();
@@ -231,7 +241,9 @@ void DspHle::Impl::AudioPipeWriteStructAddresses() {
         WriteU16(DspPipe::Audio, addr);
     }
     // Signal that we have data on this pipe.
-    Service::DSP::SignalPipeInterrupt(DspPipe::Audio);
+    if (auto service = dsp_dsp.lock()) {
+        service->SignalInterrupt(InterruptType::Pipe, DspPipe::Audio);
+    }
 }
 
 size_t DspHle::Impl::CurrentRegionIndex() const {
@@ -307,9 +319,11 @@ bool DspHle::Impl::Tick() {
 void DspHle::Impl::AudioTickCallback(int cycles_late) {
     if (Tick()) {
         // TODO(merry): Signal all the other interrupts as appropriate.
-        Service::DSP::SignalPipeInterrupt(DspPipe::Audio);
-        // HACK(merry): Added to prevent regressions. Will remove soon.
-        Service::DSP::SignalPipeInterrupt(DspPipe::Binary);
+        if (auto service = dsp_dsp.lock()) {
+            service->SignalInterrupt(InterruptType::Pipe, DspPipe::Audio);
+            // HACK(merry): Added to prevent regressions. Will remove soon.
+            service->SignalInterrupt(InterruptType::Pipe, DspPipe::Binary);
+        }
     }
 
     // Reschedule recurrent event
@@ -337,6 +351,10 @@ void DspHle::PipeWrite(DspPipe pipe_number, const std::vector<u8>& buffer) {
 
 std::array<u8, Memory::DSP_RAM_SIZE>& DspHle::GetDspMemory() {
     return impl->GetDspMemory();
+}
+
+void DspHle::SetServiceToInterrupt(std::weak_ptr<DSP_DSP> dsp) {
+    impl->SetServiceToInterrupt(std::move(dsp));
 }
 
 } // namespace AudioCore
