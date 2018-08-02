@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <QColorDialog>
 #ifdef __APPLE__
 #include <QMessageBox>
 #endif
@@ -41,6 +42,14 @@ ConfigureGraphics::ConfigureGraphics(QWidget* parent)
         }
     });
 #endif
+    connect(ui->bg_button, &QPushButton::clicked, this, [this] {
+        const QColor new_bg_color = QColorDialog::getColor(bg_color);
+        if (!new_bg_color.isValid())
+            return;
+        bg_color = new_bg_color;
+        ui->bg_button->setStyleSheet(
+            QString("QPushButton { background-color: %1 }").arg(bg_color.name()));
+    });
 }
 
 ConfigureGraphics::~ConfigureGraphics() {}
@@ -59,6 +68,10 @@ void ConfigureGraphics::setConfiguration() {
     ui->toggle_3d->setChecked(Settings::values.toggle_3d);
     ui->layout_combobox->setCurrentIndex(static_cast<int>(Settings::values.layout_option));
     ui->swap_screen->setChecked(Settings::values.swap_screen);
+    bg_color = QColor::fromRgbF(Settings::values.bg_red, Settings::values.bg_green,
+                                Settings::values.bg_blue);
+    ui->bg_button->setStyleSheet(
+        QString("QPushButton { background-color: %1 }").arg(bg_color.name()));
 }
 
 void ConfigureGraphics::applyConfiguration() {
@@ -77,6 +90,9 @@ void ConfigureGraphics::applyConfiguration() {
     Settings::values.layout_option =
         static_cast<Settings::LayoutOption>(ui->layout_combobox->currentIndex());
     Settings::values.swap_screen = ui->swap_screen->isChecked();
+    Settings::values.bg_red = static_cast<float>(bg_color.redF());
+    Settings::values.bg_green = static_cast<float>(bg_color.greenF());
+    Settings::values.bg_blue = static_cast<float>(bg_color.blueF());
 }
 
 void ConfigureGraphics::retranslateUi() {
