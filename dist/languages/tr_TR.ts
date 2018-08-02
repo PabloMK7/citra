@@ -1,20 +1,20 @@
-<?xml version="1.0" ?><!DOCTYPE TS><TS language="es_ES" version="2.1">
+<?xml version="1.0" ?><!DOCTYPE TS><TS language="tr_TR" version="2.1">
 <context>
     <name>ARMRegisters</name>
     <message>
         <location filename="../../src/citra_qt/debugger/registers.ui" line="14"/>
         <source>ARM Registers</source>
-        <translation>Registros de ARM</translation>
+        <translation>ARM Registers</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/registers.ui" line="25"/>
         <source>Register</source>
-        <translation>Registro</translation>
+        <translation>Register</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/registers.ui" line="30"/>
         <source>Value</source>
-        <translation>Valor</translation>
+        <translation>Value</translation>
     </message>
 </context>
 <context>
@@ -22,7 +22,7 @@
     <message>
         <location filename="../../src/citra_qt/aboutdialog.ui" line="14"/>
         <source>About Citra</source>
-        <translation>Acerca de Citra</translation>
+        <translation>Citra Hakkında</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/aboutdialog.ui" line="30"/>
@@ -52,19 +52,19 @@ p, li { white-space: pre-wrap; }
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:&apos;Ubuntu&apos;; font-size:11pt; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:12pt;&quot;&gt;Citra es un emulador de 3DS gratuito y de código abierto licenciado bajo GPLv2.0 o versiones posteriores.&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:12pt;&quot;&gt;Citra GPLv2.0 veya daha ileri sürümleri altında lisanslanmış ücretsiz ve açık kaynaklı 3DS emülatörüdür.&lt;/span&gt;&lt;/p&gt;
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:&apos;MS Shell Dlg 2&apos;; font-size:8pt;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:12pt;&quot;&gt;Este software no debe ser usado para jugar juegos que no tengas de manera legal.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:12pt;&quot;&gt;Bu yazılım yasal olarak elde edilmemiş oyunları oynamakta kullanılmamalıdır.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/aboutdialog.ui" line="118"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;a href=&quot;https://citra-emu.org/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#039be5;&quot;&gt;Website&lt;/span&gt;&lt;/a&gt; | &lt;a href=&quot;https://community.citra-emu.org/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#039be5;&quot;&gt;Forum&lt;/span&gt;&lt;/a&gt; | &lt;a href=&quot;https://github.com/citra-emu&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#039be5;&quot;&gt;Source Code&lt;/span&gt;&lt;/a&gt; | &lt;a href=&quot;https://github.com/citra-emu/citra/graphs/contributors&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#039be5;&quot;&gt;Contributors&lt;/span&gt;&lt;/a&gt; | &lt;a href=&quot;https://github.com/citra-emu/citra/blob/master/license.txt&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#039be5;&quot;&gt;License&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;a href=&quot;https://citra-emu.org/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#039be5;&quot;&gt;Página web&lt;/span&gt;&lt;/a&gt; | &lt;a href=&quot;https://community.citra-emu.org/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#039be5;&quot;&gt;Foro&lt;/span&gt;&lt;/a&gt; | &lt;a href=&quot;https://github.com/citra-emu&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#039be5;&quot;&gt;Código Fuente&lt;/span&gt;&lt;/a&gt; | &lt;a href=&quot;https://github.com/citra-emu/citra/graphs/contributors&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#039be5;&quot;&gt;Colaboradores&lt;/span&gt;&lt;/a&gt; | &lt;a href=&quot;https://github.com/citra-emu/citra/blob/master/license.txt&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#039be5;&quot;&gt;Licencia&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;a href=&quot;https://citra-emu.org/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#039be5;&quot;&gt;Web Sitesi&lt;/span&gt;&lt;/a&gt; | &lt;a href=&quot;https://community.citra-emu.org/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#039be5;&quot;&gt;Forum&lt;/span&gt;&lt;/a&gt; | &lt;a href=&quot;https://github.com/citra-emu&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#039be5;&quot;&gt;Kaynak Kodu&lt;/span&gt;&lt;/a&gt; | &lt;a href=&quot;https://github.com/citra-emu/citra/graphs/contributors&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#039be5;&quot;&gt;Katkıda Bulunanlar&lt;/span&gt;&lt;/a&gt; | &lt;a href=&quot;https://github.com/citra-emu/citra/blob/master/license.txt&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#039be5;&quot;&gt;Lisans&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/aboutdialog.ui" line="134"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:7pt;&quot;&gt;&amp;quot;3DS&amp;quot; is a trademark of Nintendo. Citra is not affiliated with Nintendo in any way.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:7pt;&quot;&gt;&amp;quot;3DS&amp;quot; es una marca registrada de Nintendo. Citra no está afiliada con Nintendo.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:7pt;&quot;&gt;&amp;quot;3DS&amp;quot; Nintendo&apos;nun ticari markasıdır. Citra, Nintendo&apos;ya herhangi bir şekilde bağlı değildir.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
 </context>
 <context>
@@ -72,42 +72,42 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_breakpoints.cpp" line="34"/>
         <source>Pica command loaded</source>
-        <translation>Comando de Pica cargado</translation>
+        <translation>Pica command loaded</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_breakpoints.cpp" line="35"/>
         <source>Pica command processed</source>
-        <translation>Comando de Pica procesado</translation>
+        <translation>Pica command processed</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_breakpoints.cpp" line="36"/>
         <source>Incoming primitive batch</source>
-        <translation>Iniciando lote primitivo</translation>
+        <translation>Incoming primitive batch</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_breakpoints.cpp" line="37"/>
         <source>Finished primitive batch</source>
-        <translation>Lote primitivo terminado</translation>
+        <translation>Finished primitive batch</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_breakpoints.cpp" line="38"/>
         <source>Vertex shader invocation</source>
-        <translation>Invocación del Sombreado de vértices</translation>
+        <translation>Vertex shader invocation</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_breakpoints.cpp" line="40"/>
         <source>Incoming display transfer</source>
-        <translation>Iniciando transferencia de pantalla</translation>
+        <translation>Incoming display transfer</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_breakpoints.cpp" line="41"/>
         <source>GSP command processed</source>
-        <translation>Comando de GSP procesado</translation>
+        <translation>GSP command processed</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_breakpoints.cpp" line="42"/>
         <source>Buffers swapped</source>
-        <translation>Buffers intercambiados</translation>
+        <translation>Buffers swapped</translation>
     </message>
 </context>
 <context>
@@ -115,27 +115,27 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../../src/citra_qt/multiplayer/chat_room.ui" line="14"/>
         <source>Room Window</source>
-        <translation>Ventana de Sala</translation>
+        <translation>Oda Penceresi</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/chat_room.ui" line="40"/>
         <source>Send Chat Message</source>
-        <translation>Enviar Mensaje de Chat</translation>
+        <translation>Sohbet Mesajı Gönder</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/chat_room.ui" line="47"/>
         <source>Send Message</source>
-        <translation>Enviar Mensaje</translation>
+        <translation>Mesaj Gönder</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/chat_room.cpp" line="81"/>
         <source>Name</source>
-        <translation>Nombre</translation>
+        <translation>İsim</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/chat_room.cpp" line="82"/>
         <source>Game</source>
-        <translation>Juego</translation>
+        <translation>Oyun</translation>
     </message>
 </context>
 <context>
@@ -143,12 +143,12 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../../src/citra_qt/multiplayer/client_room.ui" line="14"/>
         <source>Room Window</source>
-        <translation>Ventana de Sala</translation>
+        <translation>Oda Penceresi</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/client_room.ui" line="40"/>
         <source>Leave Room</source>
-        <translation>Abandonar la Sala</translation>
+        <translation>Odadan Ayrıl</translation>
     </message>
 </context>
 <context>
@@ -156,17 +156,17 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../../src/citra_qt/multiplayer/client_room.cpp" line="55"/>
         <source>Connected</source>
-        <translation>Conectado</translation>
+        <translation>Bağlanıldı</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/client_room.cpp" line="63"/>
         <source>Disconnected</source>
-        <translation>Desconectado</translation>
+        <translation>Bağlantı Kesildi</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/client_room.cpp" line="76"/>
         <source>%1 (%2/%3 members) - connected</source>
-        <translation>%1 (%2/%3 miembros) - conectado</translation>
+        <translation>%1 (%2/%3 kullanıcı) - bağlandı</translation>
     </message>
 </context>
 <context>
@@ -174,88 +174,88 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../../src/citra_qt/compatdb.ui" line="20"/>
         <source>Report Compatibility</source>
-        <translation>Informar de compatibilidad</translation>
+        <translation>Uyumluluk Bildir</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/compatdb.ui" line="27"/>
         <location filename="../../src/citra_qt/compatdb.ui" line="63"/>
         <source>Report Game Compatibility</source>
-        <translation>Informar de compatibilidad de juegos</translation>
+        <translation>Oyun Uyumluluğu Bildir</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/compatdb.ui" line="36"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;Should you choose to submit a test case to the &lt;/span&gt;&lt;a href=&quot;https://citra-emu.org/game/&quot;&gt;&lt;span style=&quot; font-size:10pt; text-decoration: underline; color:#0000ff;&quot;&gt;Citra Compatibility List&lt;/span&gt;&lt;/a&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;, The following information will be collected and displayed on the site:&lt;/span&gt;&lt;/p&gt;&lt;ul style=&quot;margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;&quot;&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Hardware Information (CPU / GPU / Operating System)&lt;/li&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Which version of Citra you are running&lt;/li&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;The connected Citra account&lt;/li&gt;&lt;/ul&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;En caso de que decida enviar una prueba a &lt;/span&gt;&lt;a href=&quot;https://citra-emu.org/game/&quot;&gt;&lt;span style=&quot; font-size:10pt; text-decoration: underline; color:#0000ff;&quot;&gt;Lista de compatibilidad de Citra&lt;/span&gt;&lt;/a&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;, La siguiente información será recopilada y mostrada en el sitio web:&lt;/span&gt;&lt;/p&gt;&lt;ul style=&quot;margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;&quot;&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Información del Hardware (CPU / GPU / Sistema Operativo)&lt;/li&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Que versión de Citra está utilizando&lt;/li&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;La cuenta de Citra vinculada&lt;/li&gt;&lt;/ul&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;Eğer &lt;/span&gt;&lt;a href=&quot;https://citra-emu.org/game/&quot;&gt;&lt;span style=&quot; font-size:10pt; text-decoration: underline; color:#0000ff;&quot;&gt;Citra Uyumluluk Listesi&apos;ne&lt;/span&gt;&lt;/a&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt; test çalışması göndermek isterseniz, belirtilen bilgiler toplanacak ve sitede gösterilecektir:&lt;/span&gt;&lt;/p&gt;&lt;ul style=&quot;margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;&quot;&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Donanım Bilgisi(CPU/GPU/İşletim Sistemi)&lt;/li&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Hangi Citra versiyonunun kullanıldığı&lt;/li&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Bağlı Citra hesabı&lt;/li&gt;&lt;/ul&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/compatdb.ui" line="72"/>
         <source>Perfect</source>
-        <translation>Perfecto</translation>
+        <translation>Mükemmel</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/compatdb.ui" line="79"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Game functions flawlessly with no audio or graphical glitches.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;El juego funciona a la perfección sin problemas de audio o gráficos.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Oyun grafik veya ses hataları olmadan sorunsuz çalışıyor.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/compatdb.ui" line="89"/>
         <source>Great </source>
-        <translation>Excelente</translation>
+        <translation>Çok İyi</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/compatdb.ui" line="96"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Game functions with minor graphical or audio glitches and is playable from start to finish. May require some workarounds.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;El juego funciona con pequeños problemas gráficos o de audio y es jugable de principio a fin. Podría requerir de soluciones temporales.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Oyun küçük grafik veya ses hatalarıyla çalışıyor ve baştan sona kadar oynanabilir. Bazı geçici çözümler gerektirebilir.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/compatdb.ui" line="106"/>
         <source>Okay</source>
-        <translation>Bien</translation>
+        <translation>Yeterli</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/compatdb.ui" line="113"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Game functions with major graphical or audio glitches, but game is playable from start to finish with workarounds.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;El juego funciona con importantes problemas gráficos o de audio, pero el juego es jugable de principio a fin con soluciones temporales.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Oyun büyük grafik veya ses hatalarıyla çalışıyor fakat geçici çözümler ile baştan sona kadar oynanabilir.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/compatdb.ui" line="123"/>
         <source>Bad</source>
-        <translation>Mal</translation>
+        <translation>Kötü</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/compatdb.ui" line="130"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Game functions, but with major graphical or audio glitches. Unable to progress in specific areas due to glitches even with workarounds.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;El juego funciona, pero con notables problemas gráficos o de audio. Es imposible avanzar en zonas específicas debido a fallos incluso con soluciones temporales.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Oyun çalışıyor fakat büyük grafik veya ses hatalarına sahip. Geçici çözümlerle bile belirli alanlar geçilemiyor.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/compatdb.ui" line="140"/>
         <source>Intro/Menu</source>
-        <translation>Intro/Menú</translation>
+        <translation>İntro/Menü</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/compatdb.ui" line="147"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Game is completely unplayable due to major graphical or audio glitches. Unable to progress past the Start Screen.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;No es posible jugar al juego debido a importantes problemas gráficos o de audio. Es imposible avanzar más allá de la pantalla de inicio.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Oyun grafik ve ses hatalarından dolayı oynanılamıyor. Başlangıç ekranını geçemiyorsunuz.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/compatdb.ui" line="157"/>
         <source>Won&apos;t Boot</source>
-        <translation>No inicia</translation>
+        <translation>Açılmıyor</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/compatdb.ui" line="170"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The game crashes when attempting to startup.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;El juego se bloquea al intentar iniciarse.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Oyun açılmaya çalışıldığında çöküyor.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/compatdb.ui" line="182"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Independent of speed or performance, how well does this game play from start to finish on this version of Citra?&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Independientemente de la velocidad o el rendimiento, ¿cómo definiría su experiencia con el juego de principio a fin en esta versión de Citra?&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Hız ve performanstan bağımsız olarak, bu oyun baştan sona Citra&apos;nın bu versiyonunda ne kadar iyi oynanıyor?&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/compatdb.ui" line="206"/>
         <source>Thank you for your submission!</source>
-        <translation>¡Gracias por su colaboración!</translation>
+        <translation>Gönderiniz için teşekkürler!</translation>
     </message>
 </context>
 <context>
@@ -263,32 +263,32 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../../src/citra_qt/configuration/configure_audio.ui" line="17"/>
         <source>Audio</source>
-        <translation>Audio</translation>
+        <translation>Ses</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_audio.ui" line="25"/>
         <source>Output Engine:</source>
-        <translation>Motor de salida:</translation>
+        <translation>Çıktı Motoru:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_audio.ui" line="37"/>
         <source>This post-processing effect adjusts audio speed to match emulation speed and helps prevent audio stutter. This however increases audio latency.</source>
-        <translation>Este efecto de post-procesado ajusta la velocidad del audio para igualarla a la del emulador y ayuda a prevenir parones de audio, pero aumenta la latencia de éste.</translation>
+        <translation>Bu post-processing efekti ses hızını emülasyon hızına eşleşmesi için ayarlar ve ses takılmasını önlemeye yardımcı olur. Ancak bu ses gecikmesini arttırır.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_audio.ui" line="40"/>
         <source>Enable audio stretching</source>
-        <translation>Activar extensión de audio</translation>
+        <translation>Ses gerdirmeyi etkinleştir</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_audio.ui" line="49"/>
         <source>Audio Device:</source>
-        <translation>Dispositivo de Audio:</translation>
+        <translation>Ses Cihazı:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_audio.ui" line="66"/>
         <source>Volume:</source>
-        <translation>Volumen:</translation>
+        <translation>Ses:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_audio.ui" line="111"/>
@@ -307,111 +307,111 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="14"/>
         <source>Form</source>
-        <translation>Formulario</translation>
+        <translation>Form</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="20"/>
         <source>Camera</source>
-        <translation>Cámara</translation>
+        <translation>Kamera</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="28"/>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="38"/>
         <source>Select the camera to configure</source>
-        <translation>Seleccione la cámara que desea configurar</translation>
+        <translation>Yapılandırılacak kamerayı seçin</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="31"/>
         <source>Camera to configure:</source>
-        <translation>Configurar la cámara:</translation>
+        <translation>Yapılandırılacak kamera:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="42"/>
         <source>Front</source>
-        <translation>Frontal</translation>
+        <translation>Ön</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="47"/>
         <source>Rear</source>
-        <translation>Trasera</translation>
+        <translation>Arka</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="59"/>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="69"/>
         <source>Select the camera mode (single or double)</source>
-        <translation>Seleccione el modo de cámara (única o doble)</translation>
+        <translation>Kamera modunu seçin (tek veya çift)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="62"/>
         <source>Camera mode:</source>
-        <translation>Modo de cámara:</translation>
+        <translation>Kamera modu:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="73"/>
         <source>Single (2D)</source>
-        <translation>Única (2D)</translation>
+        <translation>Tek (2D)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="78"/>
         <source>Double (3D)</source>
-        <translation>Doble (3D)</translation>
+        <translation>Çift (3D)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="90"/>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="100"/>
         <source>Select the position of camera to configure</source>
-        <translation>Seleccione la posición de la cámara que desea configurar</translation>
+        <translation>Yapılandırılacak kamera konumunu seçin</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="93"/>
         <source>Camera position:</source>
-        <translation>Posición de cámara:</translation>
+        <translation>Kamera konumu:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="104"/>
         <source>Left</source>
-        <translation>Izquierda</translation>
+        <translation>Sol</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="109"/>
         <source>Right</source>
-        <translation>Derecha</translation>
+        <translation>Sağ</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="122"/>
         <source>Configuration</source>
-        <translation>Configuración</translation>
+        <translation>Yapılandırma</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="130"/>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="140"/>
         <source>Select where the image of the emulated camera comes from. It may be an image or a real camera.</source>
-        <translation>Selecciona el lugar de donde proviene la imagen de la cámara emulada. Puede ser una imagen o una cámara real.</translation>
+        <translation>Emülasyon yapılmış kameranın görüntüsünün nereden geldiğini seçin. Bir resim veya gerçek bir kamera olabilir.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="133"/>
         <source>Camera Image Source:</source>
-        <translation>Fuente de la Imagen de la Cámara:</translation>
+        <translation>Kamera Görüntü Kaynağı:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="144"/>
         <source>Blank (blank)</source>
-        <translation>Vacío (nada)</translation>
+        <translation>Boş (boş)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="149"/>
         <source>Still Image (image)</source>
-        <translation>Imagen Fija (imagen)</translation>
+        <translation>Hareketsiz Görüntü (görüntü)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="154"/>
         <source>System Camera (qt)</source>
-        <translation>Cámara del Sistema (qt)</translation>
+        <translation>Sistem Kamerası (qt)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="169"/>
         <source>File:</source>
-        <translation>Archivo:</translation>
+        <translation>Dosya:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="179"/>
@@ -422,12 +422,12 @@ p, li { white-space: pre-wrap; }
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="193"/>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="215"/>
         <source>Select the system camera to use</source>
-        <translation>Seleccione la cámara del sistema que será usada</translation>
+        <translation>Kullanılacak sistem kamerasını seçin</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="196"/>
         <source>Camera:</source>
-        <translation>Cámara:</translation>
+        <translation>Kamera:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="219"/>
@@ -438,72 +438,72 @@ p, li { white-space: pre-wrap; }
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="234"/>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="259"/>
         <source>Select the image flip to apply</source>
-        <translation>Seleccione la rotación de imagen</translation>
+        <translation>Uygulanacak görüntü çevirmeyi seçin</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="237"/>
         <source>Flip:</source>
-        <translation>Rotación:</translation>
+        <translation>Çevir:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="263"/>
         <source>None</source>
-        <translation>Ninguna</translation>
+        <translation>Hiçbiri</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="268"/>
         <source>Horizontal</source>
-        <translation>Horizontal</translation>
+        <translation>Yatay</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="273"/>
         <source>Vertical</source>
-        <translation>Vertical</translation>
+        <translation>Dikey</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="278"/>
         <source>Reverse</source>
-        <translation>Invertida</translation>
+        <translation>Ters</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="288"/>
         <source>Select an image file every time before the camera is loaded</source>
-        <translation>Seleccione una imagen antes de que la cámara se ejecute</translation>
+        <translation>Kamera yüklenmeden önce her zaman bir görüntü dosyası seçilsin</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="291"/>
         <source>Prompt before load</source>
-        <translation>Preguntar antes de cargar</translation>
+        <translation>Yüklemeden önce sor</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="301"/>
         <source>Preview</source>
-        <translation>Vista previa</translation>
+        <translation>Önizleme</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="313"/>
         <source>Resolution: 512*384</source>
-        <translation>Resolución: 512*384</translation>
+        <translation>Çözünürlük: 512*384</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.ui" line="323"/>
         <source>Click to preview</source>
-        <translation>Haga clic para ver la vista previa</translation>
+        <translation>Önizlemek için tıklayın </translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.cpp" line="186"/>
         <source>Resolution: </source>
-        <translation>Resolución:</translation>
+        <translation>Çözünürlük:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.cpp" line="275"/>
         <source>Supported image files (%1)</source>
-        <translation>Archivos de imagen soportados (%1)</translation>
+        <translation>Desteklenen görüntü dosyaları (%1)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_camera.cpp" line="276"/>
         <source>Open File</source>
-        <translation>Abrir Archivo</translation>
+        <translation>Dosya Aç</translation>
     </message>
 </context>
 <context>
@@ -511,7 +511,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../../src/citra_qt/configuration/configure_debug.ui" line="14"/>
         <source>Form</source>
-        <translation>Formulario</translation>
+        <translation>Form</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_debug.ui" line="22"/>
@@ -521,37 +521,37 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../../src/citra_qt/configuration/configure_debug.ui" line="28"/>
         <source>The GDB Stub only works correctly when the CPU JIT is off.</source>
-        <translation>El Stub de GDB sólo funciona correctamente cuando la opción CPU JIT está desactivada.</translation>
+        <translation>GDB Stub sadece CPU JIT kapalıyken düzgün çalışır.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_debug.ui" line="37"/>
         <source>Enable GDB Stub</source>
-        <translation>Activar Stub de GDB</translation>
+        <translation>GDB Stub&apos;ı etkinleştir</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_debug.ui" line="57"/>
         <source>Port:</source>
-        <translation>Puerto:</translation>
+        <translation>Port:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_debug.ui" line="78"/>
         <source>Logging</source>
-        <translation>Registro</translation>
+        <translation>Kütük tutma</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_debug.ui" line="86"/>
         <source>Global Log Filter</source>
-        <translation>Filtro de Registro Global</translation>
+        <translation>Evrensel Kütük Filtresi</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_debug.ui" line="100"/>
         <source>Show Log Console (Windows Only)</source>
-        <translation>Mostrar Consola del Registro (Sólo Windows)</translation>
+        <translation>Kütük Konsolunu Göster(Sadece Windows)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_debug.ui" line="107"/>
         <source>Open Log Location</source>
-        <translation>Abrir Localización del Registro</translation>
+        <translation>Kütük Konumunu Aç</translation>
     </message>
 </context>
 <context>
@@ -559,47 +559,47 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../../src/citra_qt/configuration/configure.ui" line="14"/>
         <source>Citra Configuration</source>
-        <translation>Configuración de Citra</translation>
+        <translation>Citra Yapılandırması</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure.ui" line="24"/>
         <source>General</source>
-        <translation>General</translation>
+        <translation>Genel</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure.ui" line="29"/>
         <source>System</source>
-        <translation>Sistema</translation>
+        <translation>Sistem</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure.ui" line="34"/>
         <source>Input</source>
-        <translation>Controles</translation>
+        <translation>Girdi</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure.ui" line="39"/>
         <source>Graphics</source>
-        <translation>Gráficos</translation>
+        <translation>Grafikler</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure.ui" line="44"/>
         <source>Audio</source>
-        <translation>Audio</translation>
+        <translation>Ses</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure.ui" line="49"/>
         <source>Camera</source>
-        <translation>Cámara</translation>
+        <translation>Kamera</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure.ui" line="54"/>
         <source>Debug</source>
-        <translation>Depuración</translation>
+        <translation>Hata Ayıklama</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure.ui" line="59"/>
         <source>Web</source>
-        <translation>Web</translation>
+        <translation>Ağ</translation>
     </message>
 </context>
 <context>
@@ -607,62 +607,62 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../../src/citra_qt/configuration/configure_general.ui" line="14"/>
         <source>Form</source>
-        <translation>Formulario</translation>
+        <translation>Form</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_general.ui" line="22"/>
         <source>General</source>
-        <translation>General</translation>
+        <translation>Genel</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_general.ui" line="30"/>
         <source>Confirm exit while emulation is running</source>
-        <translation>Confirmar salida durante la emulación</translation>
+        <translation>Emülasyon devam ederken çıkışı onaylayın</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_general.ui" line="39"/>
         <source>Interface language</source>
-        <translation>Idioma de la interfaz</translation>
+        <translation>Arayüz dili</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_general.ui" line="56"/>
         <source>Updates</source>
-        <translation>Actualizaciones</translation>
+        <translation>Güncellemeler</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_general.ui" line="64"/>
         <source>Check for updates on start</source>
-        <translation>Buscar actualizaciones al iniciar</translation>
+        <translation>Açılışta güncellemeleri kontrol et</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_general.ui" line="71"/>
         <source>Silently auto update after closing</source>
-        <translation>Actualizar automáticamente de forma silenciosa después de cerrar</translation>
+        <translation>Kapandıktan sonra arkaplanda otomatik güncelle</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_general.ui" line="83"/>
         <source>Performance</source>
-        <translation>Rendimiento</translation>
+        <translation>Performans</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_general.ui" line="91"/>
         <source>Enable CPU JIT</source>
-        <translation>Activar CPU JIT</translation>
+        <translation>CPU JIT&apos;i etkinleştir</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_general.ui" line="103"/>
         <source>Emulation</source>
-        <translation>Emulación</translation>
+        <translation>Emülasyon</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_general.ui" line="113"/>
         <source>Region:</source>
-        <translation>Región:</translation>
+        <translation>Bölge:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_general.ui" line="121"/>
         <source>Auto-select</source>
-        <translation>Auto-elegir</translation>
+        <translation>Otomatik seç</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_general.ui" line="171"/>
@@ -677,7 +677,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../../src/citra_qt/configuration/configure_general.ui" line="198"/>
         <source>Hotkeys</source>
-        <translation>Teclas de atajo:</translation>
+        <translation>Kısayollar</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_general.cpp" line="16"/>
@@ -687,7 +687,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../../src/citra_qt/configuration/configure_general.cpp" line="17"/>
         <source>English</source>
-        <translation>Inglés</translation>
+        <translation>İngilizce</translation>
     </message>
 </context>
 <context>
@@ -695,22 +695,22 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="14"/>
         <source>Form</source>
-        <translation>Formulario</translation>
+        <translation>Form</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="20"/>
         <source>General</source>
-        <translation>General</translation>
+        <translation>Genel</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="26"/>
         <source>Enable V-Sync</source>
-        <translation>Activar Sincronización Vertical</translation>
+        <translation>V-Sync&apos;i Etkinleştir</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="35"/>
         <source>Limit Speed Percent</source>
-        <translation>Limitar velocidad</translation>
+        <translation>Hız Yüzdesini Sınırlandır</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="42"/>
@@ -721,167 +721,167 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="63"/>
         <source>Renderer</source>
-        <translation>Renderizador</translation>
+        <translation>İşleyici</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="69"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Use OpenGL to accelerate rendering.&lt;/p&gt;&lt;p&gt;Disable to debug graphics-related problem.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Utiliza OpenGL para acelerar el renderizado.&lt;/p&gt;&lt;p&gt;Desactívalo para depurar problemas relacionados con los gráficos.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Grafik işlemeyi hızlandırmak için OpenGL kullanılsın.&lt;/p&gt;&lt;p&gt;Grafik sorunlarını ayıklamak için devre dışı bırakın.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="72"/>
         <source>Enable Hardware Renderer</source>
-        <translation>Activar Renderizador de Hardware</translation>
+        <translation>Donanımsal İşlemeyi Etkinleştir</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="96"/>
         <source>Internal Resolution</source>
-        <translation>Resolución Interna</translation>
+        <translation>Dahili Çözünürlük</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="104"/>
         <source>Auto (Window Size)</source>
-        <translation>Auto (Tamaño de Ventana)</translation>
+        <translation>Otomatik (Pencere Boyutu)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="109"/>
         <source>Native (400x240)</source>
-        <translation>Nativo (400x240)</translation>
+        <translation>Doğal (400x240)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="114"/>
         <source>2x Native (800x480)</source>
-        <translation>2x Nativo (800x480)</translation>
+        <translation>2x Doğal (800x480)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="119"/>
         <source>3x Native (1200x720)</source>
-        <translation>3x Nativo (1200x720)</translation>
+        <translation>3x Doğal (1200x720)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="124"/>
         <source>4x Native (1600x960)</source>
-        <translation>4x Nativo (1600x960)</translation>
+        <translation>4x Doğal (1600x960)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="129"/>
         <source>5x Native (2000x1200)</source>
-        <translation>5x Nativo (2000x1200)</translation>
+        <translation>5x Doğal (2000x1200)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="134"/>
         <source>6x Native (2400x1440)</source>
-        <translation>6x Nativo (2400x1440)</translation>
+        <translation>6x Doğal (2400x1440)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="139"/>
         <source>7x Native (2800x1680)</source>
-        <translation>7x Nativo (2800x1680)</translation>
+        <translation>7x Doğal (2800x1680)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="144"/>
         <source>8x Native (3200x1920)</source>
-        <translation>8x Nativo (3200x1920)</translation>
+        <translation>8x Doğal (3200x1920)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="149"/>
         <source>9x Native (3600x2160)</source>
-        <translation>9x Nativo (3600x2160)</translation>
+        <translation>9x Doğal (3600x2160)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="154"/>
         <source>10x Native (4000x2400)</source>
-        <translation>10x Nativo (4000x2400)</translation>
+        <translation>10x Doğal (4000x2400)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="164"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Use OpenGL to accelerate shader emulation.&lt;/p&gt;&lt;p&gt;Requires a relatively powerful GPU for better performance.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Utiliza OpenGL para acelerar la emulación del sombreado.&lt;/p&gt;&lt;p&gt;Se requiere una GPU relativamente potente para un mejor rendimiento.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Shader emülasyonunu hızlandırmak için OpenGL kullanılsın.&lt;/p&gt;&lt;p&gt;Daha iyi bir performans için güçlü bir GPU gerekir.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="167"/>
         <source>Enable Hardware Shader</source>
-        <translation>Activar Sombreador de Hardware</translation>
+        <translation>Donanımsal Shader&apos;ı Etkinleştir</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="189"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Correctly handle all edge cases in multiplication operation in shaders. &lt;/p&gt;&lt;p&gt;Some games requires this to be enabled for the hardware shader to render properly.&lt;/p&gt;&lt;p&gt;However this would reduce performance in most games.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Éste maneja correctamente todos los casos extremos en la multiplicación dentro de las sombras.&lt;/p&gt;&lt;p&gt;Algunos juegos necesitan ésto activado en el renderizador de hardware para que se interpreten correctamente.&lt;/p&gt;&lt;p&gt;Sin embargo, ésto podría reducir el rendimiento en varios juegos.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Shader&apos;larda çoğaltma işleminde tüm kenarlar doğru şekilde işlenilsin. &lt;/p&gt;&lt;p&gt;Bazı oyunlar donanımsal shader&apos;ın düzgün işleyebilmesi için bunun etkin olmasını gerektirir. &lt;/p&gt;&lt;p&gt;Ancak bu çoğu oyunda performansı düşürür.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="192"/>
         <source>Accurate Multiplication</source>
-        <translation>Multiplicación Precisa</translation>
+        <translation>İsabetli Çoğaltma</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="199"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Force to fall back to software shader emulation when geometry shaders are used. &lt;/p&gt;&lt;p&gt;Some games require this to be enabled for the hardware shader to render properly.&lt;/p&gt;&lt;p&gt;However this might reduce performance in some games&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Activa forzosamente la emulación del sombreador de software cuando se usan sombreadores de geometría. &lt;/p&gt;&lt;p&gt;Algunos juegos necesitan ésto activado en el renderizador de hardware para que se vean correctamente.&lt;/p&gt;&lt;p&gt;Sin embargo, ésto podría reducir el rendimiento en algunos juegos.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Geometri shader&apos;ları kullanıldığında, yazılımsal shader emülasyonuna geri dönmeye zorla. &lt;/p&gt;&lt;p&gt;Bazı oyunlar donanımsal shader&apos;ın düzgün işleyebilmesi için bunun etkin olmasını gerektirir. &lt;/p&gt;&lt;p&gt;Ancak bu bazı oyunlarda performansı düşürebilir&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="202"/>
         <source>Accurate Geometry Shader</source>
-        <translation>Sombreador de Geometría Preciso</translation>
+        <translation>İsabetli Geometri Shader</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="215"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Use the JIT engine instead of the interpreter for software shader emulation. &lt;/p&gt;&lt;p&gt;Enable this for better performance.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Usa el motor de JIT en vez del interpretador para la emulación del sombreador de software.&lt;/p&gt;&lt;p&gt;Actívalo para obtener un mejor rendimiento.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Yazılımsal Shader emülasyonu için yorumlayıcı yerine JIT motoru kullanılsın. &lt;/p&gt;&lt;p&gt;Daha iyi performans için bunu etkinleştirin.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="218"/>
         <source>Enable Shader JIT</source>
-        <translation>Activar Sombreado JIT</translation>
+        <translation>Shader JIT&apos;i etkinleştir</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="228"/>
         <source>Layout</source>
-        <translation>Estilo</translation>
+        <translation>Düzen</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="236"/>
         <source>Enable Stereoscopic 3D</source>
-        <translation>Activar Estereoscopía 3D</translation>
+        <translation>Stereoskopik 3D&apos;yi etkinleştir</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="263"/>
         <source>Screen Layout:</source>
-        <translation>Estilo de Pantalla:</translation>
+        <translation>Ekran Düzeni:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="271"/>
         <source>Default</source>
-        <translation>Por defecto</translation>
+        <translation>Varsayılan</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="276"/>
         <source>Single Screen</source>
-        <translation>Pantalla Única</translation>
+        <translation>Tek Ekran</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="281"/>
         <source>Large Screen</source>
-        <translation>Pantalla Amplia</translation>
+        <translation>Büyük Ekran</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="286"/>
         <source>Side by Side</source>
-        <translation>Conjunta</translation>
+        <translation>Yan Yana</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="296"/>
         <source>Swap Screens</source>
-        <translation>Intercambiar Pantallas</translation>
+        <translation>Ekranları değiştir</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.cpp" line="36"/>
         <source>Hardware Shader Warning</source>
-        <translation>Aviso del Sombreador de Hardware</translation>
+        <translation>Donanımsal Shader Uyarısı</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.cpp" line="37"/>
         <source>Hardware Shader support is broken on macOS, and will cause graphical issues like showing a black screen.&lt;br&gt;&lt;br&gt;The option is only there for test/development purposes. If you experience graphical issues with Hardware Shader, please turn it off.</source>
-        <translation>El Sombreador de Hardware no funciona correctamente en MacOS, y puede causar errores gráficos como mostrar pantallas negras.&lt;br&gt;&lt;br&gt;La opción sólo está ahí con fines de prueba y desarrollo. Si experimentas errores gráficos con el Sombreador de Hardware, desactívalo.</translation>
+        <translation>Donanımsal Shader desteği macOS&apos;da bozuk, bu yüzden siyah ekran göstermek gibi grafiksel sorunlar oluşabilir.&lt;br&gt;&lt;br&gt;Bu seçenek sadece deneme/geliştirme amaçları içindir. Eğer Donanımsal Shader desteği ile grafik sorunları yaşıyorsanız lütfen kapatın.</translation>
     </message>
 </context>
 <context>
@@ -894,7 +894,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="22"/>
         <source>Face Buttons</source>
-        <translation>Botones Frontales</translation>
+        <translation>Ön Tuşlar</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="36"/>
@@ -919,40 +919,40 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="109"/>
         <source>Directional Pad</source>
-        <translation>Pad de Control</translation>
+        <translation>Yön Tuşları </translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="123"/>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="340"/>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="427"/>
         <source>Up:</source>
-        <translation>Arriba:</translation>
+        <translation>Yukarı:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="141"/>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="358"/>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="445"/>
         <source>Down:</source>
-        <translation>Abajo</translation>
+        <translation>Aşağı:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="159"/>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="304"/>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="391"/>
         <source>Left:</source>
-        <translation>Izquierda:</translation>
+        <translation>Sol:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="177"/>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="322"/>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="409"/>
         <source>Right:</source>
-        <translation>Derecha:</translation>
+        <translation>Sağ:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="196"/>
         <source>Shoulder Buttons</source>
-        <translation>Botones Traseros</translation>
+        <translation>Omuz Tuşları</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="210"/>
@@ -977,24 +977,24 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="283"/>
         <source>Circle Pad</source>
-        <translation>Pad Circular</translation>
+        <translation>Circle Pad</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="295"/>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="461"/>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="230"/>
         <source>Set Analog Stick</source>
-        <translation>Configurar Palanca Analógica</translation>
+        <translation>Analog Çubuğunu Ayarla</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="377"/>
         <source>C-Stick</source>
-        <translation>Palanca C</translation>
+        <translation>C-Stick</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="471"/>
         <source>Misc.</source>
-        <translation>Varios</translation>
+        <translation>Çeşitli</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="485"/>
@@ -1019,12 +1019,12 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="596"/>
         <source>Restore Defaults</source>
-        <translation>Restablecer</translation>
+        <translation>Varsayılanlara Dön</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="237"/>
         <source>[press key]</source>
-        <translation>[pulsa un botón]</translation>
+        <translation>[tuşa bas]</translation>
     </message>
 </context>
 <context>
@@ -1032,157 +1032,157 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="14"/>
         <source>Form</source>
-        <translation>Formulario</translation>
+        <translation>Form</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="22"/>
         <source>System Settings</source>
-        <translation>Configuración de la Consola</translation>
+        <translation>Sistem Ayarları</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="28"/>
         <source>Username</source>
-        <translation>Nombre</translation>
+        <translation>Kullanıcı Adı</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="48"/>
         <source>Birthday</source>
-        <translation>Cumpleaños</translation>
+        <translation>Doğum Günü</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="58"/>
         <source>January</source>
-        <translation>Enero</translation>
+        <translation>Ocak</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="63"/>
         <source>February</source>
-        <translation>Febrero</translation>
+        <translation>Şubat</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="68"/>
         <source>March</source>
-        <translation>Marzo</translation>
+        <translation>Mart</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="73"/>
         <source>April</source>
-        <translation>Abril</translation>
+        <translation>Nisan</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="78"/>
         <source>May</source>
-        <translation>Mayo</translation>
+        <translation>Mayıs</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="83"/>
         <source>June</source>
-        <translation>Junio</translation>
+        <translation>Haziran</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="88"/>
         <source>July</source>
-        <translation>Julio</translation>
+        <translation>Temmuz</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="93"/>
         <source>August</source>
-        <translation>Agosto</translation>
+        <translation>Ağustos</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="98"/>
         <source>September</source>
-        <translation>Septiembre</translation>
+        <translation>Eylül</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="103"/>
         <source>October</source>
-        <translation>Octubre</translation>
+        <translation>Ekim</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="108"/>
         <source>November</source>
-        <translation>Noviembre</translation>
+        <translation>Kasım</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="113"/>
         <source>December</source>
-        <translation>Diciembre</translation>
+        <translation>Aralık</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="126"/>
         <source>Language</source>
-        <translation>Idioma</translation>
+        <translation>Dil</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="133"/>
         <source>Note: this can be overridden when region setting is auto-select</source>
-        <translation>Nota: puede ser sobreescrito cuando la región es auto-seleccionada</translation>
+        <translation>Not: Bölge ayarı otomatik seç ise bu geçersiz kılınabilir.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="137"/>
         <source>Japanese (日本語)</source>
-        <translation>Japonés (日本語)</translation>
+        <translation>Japonca (日本語)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="142"/>
         <source>English</source>
-        <translation>Inglés (English)</translation>
+        <translation>İngilizce</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="147"/>
         <source>French (français)</source>
-        <translation>Francés (français)</translation>
+        <translation>Fransızca (français)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="152"/>
         <source>German (Deutsch)</source>
-        <translation>Alemán (Deutsch)</translation>
+        <translation>Almanca (Deutsch)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="157"/>
         <source>Italian (italiano)</source>
-        <translation>Italiano (italiano)</translation>
+        <translation>İtalyanca (italiano)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="162"/>
         <source>Spanish (español)</source>
-        <translation>Español</translation>
+        <translation>İspanyolca (español)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="167"/>
         <source>Simplified Chinese (简体中文)</source>
-        <translation>Chino Simplificado (简体中文)</translation>
+        <translation>Basitleştirilmiş Çince (简体中文)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="172"/>
         <source>Korean (한국어)</source>
-        <translation>Coreano (한국어)</translation>
+        <translation>Korece (한국어)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="177"/>
         <source>Dutch (Nederlands)</source>
-        <translation>Neerlandés (Nederlands)</translation>
+        <translation>Felemenkçe (Nederlands)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="182"/>
         <source>Portuguese (português)</source>
-        <translation>Portugués (português)</translation>
+        <translation>Portekizce (português)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="187"/>
         <source>Russian (Русский)</source>
-        <translation>Ruso (Русский)</translation>
+        <translation>Rusça (Русский)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="192"/>
         <source>Traditional Chinese (正體中文)</source>
-        <translation>Chino Tradicional (正體中文)</translation>
+        <translation>Geleneksel Çince (正體中文)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="200"/>
         <source>Sound output mode</source>
-        <translation>Modo de salida del audio</translation>
+        <translation>Ses Çıkış Modu</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="208"/>
@@ -1192,43 +1192,43 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="213"/>
         <source>Stereo</source>
-        <translation>Estéreo</translation>
+        <translation>Stereo</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="218"/>
         <source>Surround</source>
-        <translation>Envolvente</translation>
+        <translation>Surround</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="226"/>
         <source>Console ID:</source>
-        <translation>ID de Consola:</translation>
+        <translation>Konsol ID:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="242"/>
         <source>Regenerate</source>
-        <translation>Regenerar</translation>
+        <translation>Yeniden Oluştur</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="252"/>
         <source>System settings are available only when game is not running.</source>
-        <translation>La Configuración de la Consola sólo está disponible cuando no se está emulando ningún juego.</translation>
+        <translation>Sistem ayarlarına sadece oyun çalışmıyorken erişilebilir.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="87"/>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="174"/>
         <source>Console ID: 0x%1</source>
-        <translation>ID de Consola: 0x%1</translation>
+        <translation>Konsol ID: 0x%1</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="160"/>
         <source>This will replace your current virtual 3DS with a new one. Your current virtual 3DS will not be recoverable. This might have unexpected effects in games. This might fail, if you use an outdated config savegame. Continue?</source>
-        <translation>Esto reemplazará tu 3DS virtual con una nueva. Tu 3DS virtual actual será irrecuperable. Esto puede tener efectos inesperados en ciertos juegos. Si usas un archivo de configuración anticuado, esto puede fallar. ¿Desea continuar?</translation>
+        <translation>Bu mevcut sanal 3DS&apos;nizi yenisiyle değiştirecektir. Mevcut sanal 3DS&apos;niz geri alınamayacaktır. Bu oyunlarda beklenmedik etkilere sebep olabilir. Eğer eski yapılandırmalı oyun kayıtı kullanırsanız bu başarısız olabilir. Devam edilsin mi?</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="164"/>
         <source>Warning</source>
-        <translation>Advertencia</translation>
+        <translation>Uyarı</translation>
     </message>
 </context>
 <context>
@@ -1236,28 +1236,28 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../../src/citra_qt/configuration/configure_web.ui" line="14"/>
         <source>Form</source>
-        <translation>Formulario</translation>
+        <translation>Form</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_web.ui" line="22"/>
         <source>Citra Web Service</source>
-        <translation>Servicio Web de Citra</translation>
+        <translation>Citra Ağ Servisi</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_web.ui" line="28"/>
         <source>By providing your username and token, you agree to allow Citra to collect additional usage data, which may include user identifying information.</source>
-        <translation>Al dar tu nombre de usuario y tu token, das tu consentimiento a que Citra recopile datos de uso adicionales, que pueden incluir información que identifique al usuario.</translation>
+        <translation>Kullanıcı adınızı ve tokeninizi sağlayarak Citra&apos;nın ek kullanım verilerini toplamasına izin vermeyi kabul ediyorsunuz, bu kullanıcı tanımlayıcı bilgileri de içerebilir.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_web.ui" line="46"/>
         <location filename="../../src/citra_qt/configuration/configure_web.cpp" line="94"/>
         <source>Verify</source>
-        <translation>Verificar</translation>
+        <translation>Doğrula</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_web.ui" line="53"/>
         <source>Sign up</source>
-        <translation>Registrarse</translation>
+        <translation>Kaydol</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_web.ui" line="67"/>
@@ -1267,83 +1267,83 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../../src/citra_qt/configuration/configure_web.ui" line="78"/>
         <source>Username: </source>
-        <translation>Nombre de usuario:</translation>
+        <translation>Kullanıcı Adı:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_web.ui" line="99"/>
         <source>What is my token?</source>
-        <translation>¿Cuál es mi token?</translation>
+        <translation>Tokenim nedir?</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_web.ui" line="124"/>
         <source>Telemetry</source>
-        <translation>Telemetría</translation>
+        <translation>Telemetri</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_web.ui" line="130"/>
         <source>Share anonymous usage data with the Citra team</source>
-        <translation>Compartir datos de uso anónimos con el equipo de Citra</translation>
+        <translation>Citra ekibiyle anonim kullanım verilerini paylaş</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_web.ui" line="137"/>
         <source>Learn more</source>
-        <translation>Más Información</translation>
+        <translation>Daha fazla bilgi edinin</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_web.ui" line="146"/>
         <source>Telemetry ID:</source>
-        <translation>ID de Telemetría:</translation>
+        <translation>Telemetri ID:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_web.ui" line="162"/>
         <source>Regenerate</source>
-        <translation>Regenerar</translation>
+        <translation>Yeniden Oluştur</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_web.cpp" line="28"/>
         <source>&lt;a href=&apos;https://citra-emu.org/entry/telemetry-and-why-thats-a-good-thing/&apos;&gt;&lt;span style=&quot;text-decoration: underline; color:#039be5;&quot;&gt;Learn more&lt;/span&gt;&lt;/a&gt;</source>
-        <translation>&lt;a href=&apos;https://citra-emu.org/entry/telemetry-and-why-thats-a-good-thing/&apos;&gt;&lt;span style=&quot;text-decoration: underline; color:#039be5;&quot;&gt;Más información&lt;/span&gt;&lt;/a&gt;</translation>
+        <translation>&lt;a href=&apos;https://citra-emu.org/entry/telemetry-and-why-thats-a-good-thing/&apos;&gt;&lt;span style=&quot;text-decoration: underline; color:#039be5;&quot;&gt;Daha fazla bilgi edinin&lt;/span&gt;&lt;/a&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_web.cpp" line="36"/>
         <source>&lt;a href=&apos;https://services.citra-emu.org/&apos;&gt;&lt;span style=&quot;text-decoration: underline; color:#039be5;&quot;&gt;Sign up&lt;/span&gt;&lt;/a&gt;</source>
-        <translation>&lt;a href=&apos;https://services.citra-emu.org/&apos;&gt;&lt;span style=&quot;text-decoration: underline; color:#039be5;&quot;&gt;Regístrate&lt;/span&gt;&lt;/a&gt;</translation>
+        <translation>&lt;a href=&apos;https://services.citra-emu.org/&apos;&gt;&lt;span style=&quot;text-decoration: underline; color:#039be5;&quot;&gt;Kaydol &lt;/span&gt;&lt;/a&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_web.cpp" line="40"/>
         <source>&lt;a href=&apos;https://citra-emu.org/wiki/citra-web-service/&apos;&gt;&lt;span style=&quot;text-decoration: underline; color:#039be5;&quot;&gt;What is my token?&lt;/span&gt;&lt;/a&gt;</source>
-        <translation>&lt;a href=&apos;https://citra-emu.org/wiki/citra-web-service/&apos;&gt;&lt;span style=&quot;text-decoration: underline; color:#039be5;&quot;&gt;¿Cuál es mi token?&lt;/span&gt;&lt;/a&gt;</translation>
+        <translation>&lt;a href=&apos;https://citra-emu.org/wiki/citra-web-service/&apos;&gt;&lt;span style=&quot;text-decoration: underline; color:#039be5;&quot;&gt;Tokenim nedir?&lt;/span&gt;&lt;/a&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_web.cpp" line="50"/>
         <location filename="../../src/citra_qt/configuration/configure_web.cpp" line="69"/>
         <source>Telemetry ID: 0x%1</source>
-        <translation>ID de Telemetría: 0x%1</translation>
+        <translation>Telemetri ID: 0x%1</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_web.cpp" line="60"/>
         <source>Username and token not verified</source>
-        <translation>Nombre de usuario y token no verificados</translation>
+        <translation>Kullanıcı Adı ve Token doğrulanmadı</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_web.cpp" line="61"/>
         <source>Username and token were not verified. The changes to your username and/or token have not been saved.</source>
-        <translation>El nombre de usuario y el token no han sido verificados. Los cambios de tu nombre de usuario y/o del token no han sido guardados.</translation>
+        <translation>Kullanıcı adı ve token doğrulanamadı. Kullanıcı adınıza ve/veya tokeninize yapılan değişiklikler kaydedilmedi.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_web.cpp" line="89"/>
         <source>Verifying</source>
-        <translation>Verificando</translation>
+        <translation>Doğrulanıyor</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_web.cpp" line="103"/>
         <source>Verification failed</source>
-        <translation>La verificación falló</translation>
+        <translation>Doğrulama başarısız oldu</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_web.cpp" line="104"/>
         <source>Verification failed. Check that you have entered your username and token correctly, and that your internet connection is working.</source>
-        <translation>La verificación falló. Comprueba que has introducido tu nombre de usuario y tu token correctamente, y que tu conexión internet funcione correctamente.</translation>
+        <translation>Doğrulama başarısız oldu. Kullanıcı adınızı ve tokeninizi doğru girdiğinizden ve internet bağlantınızın çalıştığından emin olun.</translation>
     </message>
 </context>
 <context>
@@ -1351,12 +1351,12 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../../src/citra_qt/multiplayer/direct_connect.ui" line="14"/>
         <source>Direct Connect</source>
-        <translation>Conexión Directa</translation>
+        <translation>Direkt Bağlantı</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/direct_connect.ui" line="33"/>
         <source>IP Address</source>
-        <translation>Dirección IP</translation>
+        <translation>IP Adresi</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/direct_connect.ui" line="56"/>
@@ -1366,17 +1366,17 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../../src/citra_qt/multiplayer/direct_connect.ui" line="63"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;IPv4 address of the host&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Dirección IPv4 del host&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Sunucunun IPv4 adresi&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/direct_connect.ui" line="73"/>
         <source>Port</source>
-        <translation>Puerto</translation>
+        <translation>Port</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/direct_connect.ui" line="80"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Port number the host is listening on&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Número de puerto que está escuchando el host&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Sunucunun dinlediği port numarası&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/direct_connect.ui" line="86"/>
@@ -1386,17 +1386,17 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../../src/citra_qt/multiplayer/direct_connect.ui" line="100"/>
         <source>Nickname</source>
-        <translation>Apodo</translation>
+        <translation>Takma ad</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/direct_connect.ui" line="114"/>
         <source>Password</source>
-        <translation>Contraseña</translation>
+        <translation>Şifre</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/direct_connect.ui" line="156"/>
         <source>Connect</source>
-        <translation>Conectar</translation>
+        <translation>Bağlan</translation>
     </message>
 </context>
 <context>
@@ -1404,12 +1404,12 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../../src/citra_qt/multiplayer/direct_connect.cpp" line="107"/>
         <source>Connecting</source>
-        <translation>Conectando</translation>
+        <translation>Bağlanılıyor</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/direct_connect.cpp" line="112"/>
         <source>Connect</source>
-        <translation>Conectar</translation>
+        <translation>Bağlan</translation>
     </message>
 </context>
 <context>
@@ -1417,22 +1417,22 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="97"/>
         <source>To help improve Citra, the Citra Team collects anonymous usage data. No private or personally identifying information is collected. This data helps us to understand how people use Citra and prioritize our efforts. Furthermore, it helps us to more easily identify emulation bugs and performance issues. This data includes:&lt;ul&gt;&lt;li&gt;Information about the version of Citra you are using&lt;/li&gt;&lt;li&gt;Performance data about the games you play&lt;/li&gt;&lt;li&gt;Your configuration settings&lt;/li&gt;&lt;li&gt;Information about your computer hardware&lt;/li&gt;&lt;li&gt;Emulation errors and crash information&lt;/li&gt;&lt;/ul&gt;By default, this feature is enabled. To disable this feature, click &apos;Emulation&apos; from the menu and then select &apos;Configure...&apos;. Then, on the &apos;Web&apos; tab, uncheck &apos;Share anonymous usage data with the Citra team&apos;. &lt;br/&gt;&lt;br/&gt;By using this software, you agree to the above terms.&lt;br/&gt;&lt;br/&gt;&lt;a href=&apos;https://citra-emu.org/entry/telemetry-and-why-thats-a-good-thing/&apos;&gt;Learn more&lt;/a&gt;</source>
-        <translation>Para ayudar a mejorar Citra, el Equipo de Citra reúne datos de uso anónimos. Ningún dato personal ni privado es recogido. Esos datos nos ayuda a entender cómo la gente usa Citra y así priorizar nuestros esfuerzos. También nos ayuda a identificar bugs de emulación y problemas de rendimiento más fácilmente. Estos datos incluyen: &lt;ul&gt;&lt;li&gt;Información de la versión de Citra usada&lt;/li&gt;&lt;li&gt;Datos de rendimiento acerca del juego al que se esté jugando&lt;/li&gt;&lt;li&gt;Tu configuración&lt;/li&gt;&lt;li&gt;Información sobre tu hardware&lt;/li&gt;&lt;li&gt;Errores de emulación e información de cuelgues&lt;/li&gt;&lt;/ul&gt;Por defecto, esta característica está activada. Para desactivarla, ve a &apos;Emulación&apos; del menú y luego elige &apos;Configurar...&quot;. Luego, en la pestaña &apos;Web&apos;, desactiva la opción &apos;Compartir datos de uso anónimos con el equipo de Citra&apos;.&lt;br/&gt;&lt;br/&gt;Al usar este software, estás de acuerdo con los términos de arriba.&lt;br/&gt;&lt;br/&gt;&lt;a href=&apos;https://citra-emu.org/entry/telemetry-and-why-thats-a-good-thing/&apos;&gt;Más Información&lt;/a&gt;</translation>
+        <translation>Citra&apos;yı iyileştirmeye yardımcı olmak için Citra Ekibi anonim kullanım verileri toplar. Özel veya kişisel hiçbir veri toplanmaz. Bu veriler bize insanların Citrayı nasıl kullandığını anlamamıza ve uğraşlarımızı önceliklendirmemize yardımcı olur. Topladığımız veriler:&lt;ul&gt;&lt;li&gt;Kullandığınız Citra versiyonu hakkındaki bilgiler&lt;/li&gt;&lt;li&gt;Oynadığınız oyunlar hakkındaki performans verileri&lt;li&gt;Yapılandırma ayarlarınız&lt;/li&gt;&lt;li&gt;Bilgisayar donanımınız hakkındaki bilgiler&lt;/li&gt;&lt;li&gt;Emülasyon hataları ve çökme bilgileri&lt;/li&gt;&lt;/ul&gt;Varsayılan olarak, bu özellik etkinleştirilmiştir. Bu özelliği devre dışı bırakmak için menüden &apos;Emülasyon&apos; kısmına tıklayın ve &apos;Yapılandır...&apos; seçeneğini seçin. Sonra, &apos;Ağ&apos; sekmesinden &apos;Citra ekibiyle anonim kullanım verilerini paylaş&apos; seçeneğini devre dışı bırakın. &lt;br/&gt;&lt;br/&gt;Bu yazılımı kullanarak yukarıdaki koşulları kabul etmiş olursunuz.&lt;br/&gt;&lt;br/&gt;&lt;a href=&apos;https://citra-emu.org/entry/telemetry-and-why-thats-a-good-thing/&apos;&gt;Daha fazla bilgi edinin&lt;/a&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="208"/>
         <source>Current emulation speed. Values higher or lower than 100% indicate emulation is running faster or slower than a 3DS.</source>
-        <translation>La velocidad de emulación actual. Valores mayores o menores de 100% indican que la velocidad de emulación funciona más rápida o lentamente que en una 3DS.</translation>
+        <translation>Geçerli emülasyon hızı. 100%&apos;den az veya çok olan değerler emülasyonun bir 3DS&apos;den daha yavaş veya daha hızlı çalıştığını gösterir.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="211"/>
         <source>How many frames per second the game is currently displaying. This will vary from game to game and scene to scene.</source>
-        <translation>Los fotogramas por segundo que está mostrando el juego. Variarán de juego en juego y de escena a escena.</translation>
+        <translation>Oyunun şu anda saniye başına kaç kare gösterdiği. Bu oyundan oyuna ve sahneden sahneye farklılık gösterebilir.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="215"/>
         <source>Time taken to emulate a 3DS frame, not counting framelimiting or v-sync. For full-speed emulation this should be at most 16.67 ms.</source>
-        <translation>El tiempo que lleva emular un fotograma de 3DS, sin tener en cuenta el limitador de fotogramas, ni la sincronización vertical. Para una emulación óptima, este valor no debe superar los 16.67 ms.</translation>
+        <translation>Bir 3DS karesini emüle etmekte geçen zaman, karelimitleme ve v-sync hariç. Tam hız emülasyon için bu en çok 16,67 ms. olmalı.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="314"/>
@@ -1452,32 +1452,32 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="573"/>
         <source>Update available!</source>
-        <translation>¡Actualización disponible!</translation>
+        <translation>Güncelleme mevcut!</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="574"/>
         <source>An update for Citra is available. Do you wish to install it now?&lt;br /&gt;&lt;br /&gt;This &lt;b&gt;will&lt;/b&gt; terminate emulation, if it is running.</source>
-        <translation>Hay una actualización disponible para Citra. ¿Deseas instalarla en estos momentos?&lt;br /&gt;&lt;br /&gt;Esto &lt;b&gt;interrumpirá&lt;/b&gt; la emulación, si se está ejecutando.</translation>
+        <translation>Citra için bir güncelleme mevcut. Şimdi yüklemek ister misiniz?&lt;br /&gt;&lt;br /&gt;Bu, eğer devam ediyorsa, emülasyonu &lt;b&gt;sona erdirir&lt;/b&gt;.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="585"/>
         <source>No update found</source>
-        <translation>No se han encontrado actualizaciones</translation>
+        <translation>Güncelleme bulunamadı</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="585"/>
         <source>No update has been found for Citra.</source>
-        <translation>No se han encontrado actualizaciones para Citra</translation>
+        <translation>Citra için güncelleme bulunamadı</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="602"/>
         <source>Error while initializing OpenGL 3.3 Core!</source>
-        <translation>¡Error al iniciar el núcleo OpenGL 3.3!</translation>
+        <translation>OpenGL 3.3 çekirdeği başlatılırken hata oluştu!</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="603"/>
         <source>Your GPU may not support OpenGL 3.3, or you do not have the latest graphics driver.</source>
-        <translation>Tu tarjeta gráfica no soporta OpenGL 3.3, o no tienes los últimos controladores gráficos para tu tarjeta.</translation>
+        <translation>Ekran kartınız OpenGL 3.3 desteklemiyor olabilir veya güncel grafik sürücüsüne sahip değilsiniz.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="616"/>
@@ -1486,185 +1486,185 @@ p, li { white-space: pre-wrap; }
         <location filename="../../src/citra_qt/main.cpp" line="641"/>
         <location filename="../../src/citra_qt/main.cpp" line="660"/>
         <source>Error while loading ROM!</source>
-        <translation>¡Error al cargar la ROM!</translation>
+        <translation>ROM yüklenirken hata oluştu!</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="617"/>
         <location filename="../../src/citra_qt/main.cpp" line="642"/>
         <source>The ROM format is not supported.</source>
-        <translation>Este formato de ROM no está soportado.</translation>
+        <translation>Bu ROM biçimi desteklenmiyor.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="623"/>
         <source>Could not determine the system mode.</source>
-        <translation>No se pudo determinar el modo del sistema.</translation>
+        <translation>Sistem modu belirlenemedi.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="629"/>
         <source>The game that you are trying to load must be decrypted before being used with Citra. A real 3DS is required.&lt;br/&gt;&lt;br/&gt;For more information on dumping and decrypting games, please see the following wiki pages: &lt;ul&gt;&lt;li&gt;&lt;a href=&apos;https://citra-emu.org/wiki/dumping-game-cartridges/&apos;&gt;Dumping Game Cartridges&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a href=&apos;https://citra-emu.org/wiki/dumping-installed-titles/&apos;&gt;Dumping Installed Titles&lt;/a&gt;&lt;/li&gt;&lt;/ul&gt;</source>
-        <translation>El juego que estás intentando cargar debe ser desencriptado antes de ser usado con Citra. Se necesita una 3DS real.&lt;br/&gt;&lt;br/&gt;Para más información sobre volcar y desencriptar juegos, mira las siguientes páginas de la wiki: &lt;ul&gt;&lt;li&gt;&lt;a href=&apos;https://citra-emu.org/wiki/dumping-game-cartridges/&apos;&gt;Volcar Cartuchos de Juego&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a href=&apos;https://citra-emu.org/wiki/dumping-installed-titles/&apos;&gt;Volcar Títulos Instalados&lt;/a&gt;&lt;/li&gt;&lt;/ul&gt;</translation>
+        <translation>Yüklemeye çalıştığınız oyun Citra ile kullanılmadan önce deşifre edilmelidir. Gerçek bir 3DS gereklidir. &lt;br/&gt;&lt;br/&gt;Oyunları deşifre etme ve yedekleme hakkında daha fazla bilgi için lütfen belirtilen viki sayfalarına bakın: &lt;ul&gt;&lt;li&gt;&lt;a href=&apos;https://citra-emu.org/wiki/dumping-game-cartridges/&apos;&gt;Oyun Kartuşlarını Yedekleme&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a href=&apos;https://citra-emu.org/wiki/dumping-installed-titles/&apos;&gt;Yüklenmiş Oyunları Yedekleme&lt;/a&gt;&lt;/li&gt;&lt;/ul&gt;</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="647"/>
         <source>An error occured in the video core.</source>
-        <translation>Un error ha ocurrido en el núcleo de vídeo.</translation>
+        <translation>Video çekirdeğinde bir hata oluştu.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="648"/>
         <source>Citra has encountered an error while running the video core, please see the log for more details.For more information on accessing the log, please see the following page: &lt;a href=&apos;https://community.citra-emu.org/t/how-to-upload-the-log-file/296&apos;&gt;How to Upload the Log File&lt;/a&gt;.Ensure that you have the latest graphics drivers for your GPU.</source>
-        <translation>Citra ha encontrado un error durante la ejecución del núcleo de vídeo, por favor, revisa el registro para ver más detalles. Para más información sobre cómo acceder al log, mira la siguiente página: &lt;a href=&apos;https://community.citra-emu.org/t/how-to-upload-the-log-file/296&apos;&gt;Cómo subir el Archivo del Log&lt;/a&gt;. Asegúrate de tener los últimos drivers para tu tarjeta gráfica.</translation>
+        <translation>Citra video çekirdeğini çalıştırırken bir sorunla karşılaştı, lütfen daha fazla detay için kütüğe bakınız. Kütüğe erişim hakkında daha fazla bilgi için lütfen bu sayfaya bakın: &lt;a href=&apos;https://community.citra-emu.org/t/how-to-upload-the-log-file/296&apos;&gt;Kütük Dosyasını Nasıl Yüklerim?&lt;/a&gt;. Ekran kartınız için güncel grafik sürücüsüne sahip olduğunuzdan emin olun.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="661"/>
         <source>An unknown error occured. Please see the log for more details.</source>
-        <translation>Un error desconocido ha ocurrido. Por favor, mira el log para más detalles.</translation>
+        <translation>Bilinmeyen bir hata meydana geldi. Lütfen daha fazla detay için kütüğe bakınız.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="742"/>
         <source>Start</source>
-        <translation>Iniciar</translation>
+        <translation>Başlat</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="839"/>
         <source>Error Opening %1 Folder</source>
-        <translation>Error al abrir la carpeta %1</translation>
+        <translation>%1 Klasörü Açılırken Hata Oluştu</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="840"/>
         <location filename="../../src/citra_qt/main.cpp" line="884"/>
         <source>Folder does not exist!</source>
-        <translation>¡La carpeta no existe!</translation>
+        <translation>Klasör mevcut değil!</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="884"/>
         <source>Error Opening %1</source>
-        <translation>Error al abrir %1</translation>
+        <translation>%1 Açılırken Hata Oluştu</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="891"/>
         <source>Select Directory</source>
-        <translation>Seleccionar directorio</translation>
+        <translation>Dizin Seç</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="915"/>
         <source>3DS Executable</source>
-        <translation>Ejecutable de 3DS</translation>
+        <translation>3DS Çalıştırılabilir Dosyası</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="916"/>
         <location filename="../../src/citra_qt/main.cpp" line="930"/>
         <source>All Files (*.*)</source>
-        <translation>Todos los archivos (*.*)</translation>
+        <translation>Tüm Dosyalar (*.*)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="918"/>
         <source>Load File</source>
-        <translation>Cargar Archivo</translation>
+        <translation>Dosya Yükle</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="929"/>
         <source>Load Files</source>
-        <translation>Cargar archivos</translation>
+        <translation>Dosyaları Yükle</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="930"/>
         <source>3DS Installation File (*.CIA*)</source>
-        <translation>Archivo de Instalación de 3DS (*.CIA*)</translation>
+        <translation>3DS Kurulum Dosyası (*.CIA*)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="961"/>
         <source>%1 has been installed successfully.</source>
-        <translation>%1 ha sido instalado con éxito.</translation>
+        <translation>%1 başarıyla yüklendi.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="964"/>
         <source>Unable to open File</source>
-        <translation>No se pudo abrir el Archivo</translation>
+        <translation>Dosya açılamıyor</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="965"/>
         <source>Could not open %1</source>
-        <translation>No se pudo abrir %1</translation>
+        <translation>%1 açılamıyor</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="969"/>
         <source>Installation aborted</source>
-        <translation>Instalación interrumpida</translation>
+        <translation>Yükleme iptal edildi</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="970"/>
         <source>The installation of %1 was aborted. Please see the log for more details</source>
-        <translation>La instalación de %1 ha sido cancelada. Por favor, consulte los registros para más información.</translation>
+        <translation>%1&apos;in yüklemesi iptal edildi. Daha fazla detay için lütfen kütüğe bakınız.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="974"/>
         <source>Invalid File</source>
-        <translation>Archivo no válido</translation>
+        <translation>Geçersiz Dosya</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="974"/>
         <source>%1 is not a valid CIA</source>
-        <translation>%1 no es un archivo CIA válido</translation>
+        <translation>%1 geçerli bir CIA dosyası değil</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="977"/>
         <source>Encrypted File</source>
-        <translation>Archivo Encriptado</translation>
+        <translation>Şifrelenmiş Dosya</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="978"/>
         <source>%1 must be decrypted before being used with Citra. A real 3DS is required.</source>
-        <translation>%1 debe ser desencriptado antes de ser usado en Citra. Se requiere de una 3DS real.</translation>
+        <translation>%1 Citra ile kullanılmadan önce deşifre edilmelidir. Gerçek bir 3DS gereklidir.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="1001"/>
         <source>File not found</source>
-        <translation>Archivo no encontrado</translation>
+        <translation>Dosya bulunamadı</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="1002"/>
         <source>File &quot;%1&quot; not found</source>
-        <translation>Archivo &quot;%1&quot; no encontrado</translation>
+        <translation>&quot;%1&quot; Dosyası bulunamadı</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="1017"/>
         <source>Continue</source>
-        <translation>Continuar</translation>
+        <translation>Devam</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="1042"/>
         <source>Missing Citra Account</source>
-        <translation>Falta la cuenta de Citra</translation>
+        <translation>Citra Hesabı Eksik</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="1043"/>
         <source>In order to submit a game compatibility test case, you must link your Citra account.&lt;br&gt;&lt;br/&gt;To link your Citra account, go to Emulation &amp;gt; Configuration &amp;gt; Web.</source>
-        <translation>Para enviar una prueba de compatibilidad de juegos, es necesario vincular tu cuenta de Citra.&lt;br&gt;&lt;br/&gt;Para vincular tu cuenta de Citra, ve a Emulación &amp;gt; Configuración &amp;gt; Web.</translation>
+        <translation>Oyun uyumluluğu test çalışması göndermek için Citra hesabınızı bağlamalısınız.&lt;br&gt;&lt;br/&gt;Citra hesabını bağlamak için Emülasyon &amp;gt; Yapılandırma &amp;gt; Ağ gidin.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="1196"/>
         <source>Speed: %1% / %2%</source>
-        <translation>Velocidad: %1% / %2%</translation>
+        <translation>Hız: %1% / %2%</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="1200"/>
         <source>Speed: %1%</source>
-        <translation>Velocidad: %1%</translation>
+        <translation>Hız: %1%</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="1202"/>
         <source>Game: %1 FPS</source>
-        <translation>Juego: %1 FPS</translation>
+        <translation>Oyun: %1 FPS</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="1203"/>
         <source>Frame: %1 ms</source>
-        <translation>Frame: %1 ms</translation>
+        <translation>Kare: %1 ms</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="1214"/>
         <source>The game you are trying to load requires additional files from your 3DS to be dumped before playing.&lt;br/&gt;&lt;br/&gt;For more information on dumping these files, please see the following wiki page: &lt;a href=&apos;https://citra-emu.org/wiki/dumping-system-archives-and-the-shared-fonts-from-a-3ds-console/&apos;&gt;Dumping System Archives and the Shared Fonts from a 3DS Console&lt;/a&gt;.&lt;br/&gt;&lt;br/&gt;Would you like to quit back to the game list? Continuing emulation may result in crashes, corrupted save data, or other bugs.</source>
-        <translation>El juego que estás intentando cargar requiere archivos extra que debes volcar de tu 3DS antes de jugar.&lt;br/&gt;&lt;br/&gt;Para más información sobre cómo volcar éstos, mira la siguiente página de la wiki:&lt;a href=&apos;https://citra-emu.org/wiki/dumping-system-archives-and-the-shared-fonts-from-a-3ds-console/&apos;&gt;Volcar Archivos de Sistema y las Fuentes Compartidas de una 3DS&lt;/a&gt;.&lt;br/&gt;&lt;br/&gt;¿Quieres volver a la lista de juegos? Seguir con la emulación puede resultar en cuelgues, archivos de guardado corruptos u otros bugs.</translation>
+        <translation>Yüklemeye çalıştığınız oyun oynanmadan önce 3DS&apos;nizden ek dosyaların kopyalanmasını gerektiriyor.&lt;br/&gt;&lt;br/&gt;Bu dosyaları kopyalama hakkında daha fazla bilgi için lütfen bu wiki sayfasına bakın: &lt;a href=&apos;https://citra-emu.org/wiki/dumping-system-archives-and-the-shared-fonts-from-a-3ds-console/&apos;&gt;3DS Konsolundan Sistem Arşivlerini ve Paylaşılan Yazı Tiplerini Kopyalama&lt;/a&gt;.&lt;br/&gt;&lt;br/&gt;Oyun listesine geri dönmek ister misiniz? Emülasyona devam etmek çökmelere, bozuk kayıt verisine ya da farklı hatalara sebep olabilir.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="1226"/>
@@ -1674,27 +1674,27 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="1232"/>
         <source>System Archive Not Found</source>
-        <translation>Archivo de Sistema no encontrado</translation>
+        <translation>Sistem Arşivi Bulunamadı</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="1239"/>
         <source>Citra was unable to locate the 3DS shared fonts. </source>
-        <translation>Citra no pudo encontrar las Fuentes Compartidas de la 3DS.</translation>
+        <translation>Citra paylaşılan 3DS yazı tiplerini bulamadı.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="1241"/>
         <source>Shared Fonts Not Found</source>
-        <translation>Fuentes Compartidas no encontradas</translation>
+        <translation>Paylaşılan Yazı Tipleri Bulunamadı</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="1249"/>
         <source>Fatal Error</source>
-        <translation>Error Fatal</translation>
+        <translation>Önemli Hata</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="1250"/>
         <source>Citra has encountered a fatal error, please see the log for more details. For more information on accessing the log, please see the following page: &lt;a href=&apos;https://community.citra-emu.org/t/how-to-upload-the-log-file/296&apos;&gt;How to Upload the Log File&lt;/a&gt;.&lt;br/&gt;&lt;br/&gt;Would you like to quit back to the game list? Continuing emulation may result in crashes, corrupted save data, or other bugs.</source>
-        <translation>Citra ha encontrado un error fatal, por favor, consulte el registro para más detalles. Para más información sobre cómo acceder a los registros, por favor, mira la siguiente página: &lt;a href=&apos;https://community.citra-emu.org/t/how-to-upload-the-log-file/296&apos;&gt;Cómo subir el Archivo del Log&lt;/a&gt;.&lt;br/&gt;&lt;br/&gt;¿Quieres volver a la lista de juegos? Continuar con la emulación puede provocar caídas, archivos de guardado corruptos u otros errores.</translation>
+        <translation>Citra önemli bir hata ile karşılaştı, daha fazla detay için lütfen kütüğe bakınız. Kütüğe erişim hakkında daha fazla bilgi için lütfen bu sayfaya bakın: &lt;a href=&apos;https://community.citra-emu.org/t/how-to-upload-the-log-file/296&apos;&gt;Kütük Dosyasını Nasıl Yüklerim&lt;/a&gt;.&lt;br/&gt;&lt;br/&gt;Oyun listesine geri dönmek ister misiniz? Emülasyona devam etmek çökmelere, bozuk kayıt verisine ya da farklı hatalara sebep olabilir.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="1284"/>
@@ -1705,12 +1705,12 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="1284"/>
         <source>Are you sure you want to close Citra?</source>
-        <translation>¿Estás seguro de querer cerrar Citra?</translation>
+        <translation>Citrayı kapatmak istediğinden emin misin?</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="1352"/>
         <source>Are you sure you want to stop the emulation? Any unsaved progress will be lost.</source>
-        <translation>¿Estás seguro de querer parar la emulación? Cualquier progreso no guardado se perderá.</translation>
+        <translation>Emülasyonu durdurmak istediğinden emin misin? Kaydedilmemiş ilerlemeler kaybolacak.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.cpp" line="1423"/>
@@ -1728,22 +1728,22 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_cmdlists.cpp" line="96"/>
         <source>Command Name</source>
-        <translation>Nombre del Comando</translation>
+        <translation>Command Name</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_cmdlists.cpp" line="98"/>
         <source>Register</source>
-        <translation>Registro</translation>
+        <translation>Register</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_cmdlists.cpp" line="100"/>
         <source>Mask</source>
-        <translation>Máscara</translation>
+        <translation>Mask</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_cmdlists.cpp" line="102"/>
         <source>New Value</source>
-        <translation>Nuevo Valor</translation>
+        <translation>New Value</translation>
     </message>
 </context>
 <context>
@@ -1751,23 +1751,23 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_cmdlists.cpp" line="184"/>
         <source>Pica Command List</source>
-        <translation>Lista de Comandos de Pica</translation>
+        <translation>Pica Command List</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_cmdlists.cpp" line="202"/>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_cmdlists.cpp" line="233"/>
         <source>Start Tracing</source>
-        <translation>Empezar Rastreo</translation>
+        <translation>Start Tracing</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_cmdlists.cpp" line="203"/>
         <source>Copy All</source>
-        <translation>Copiar Todo</translation>
+        <translation>Copy All</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_cmdlists.cpp" line="229"/>
         <source>Finish Tracing</source>
-        <translation>Terminar el Rastreo</translation>
+        <translation>Finish Tracing</translation>
     </message>
 </context>
 <context>
@@ -1775,7 +1775,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics.cpp" line="67"/>
         <source>Graphics Debugger</source>
-        <translation>Depurador de Gráficos</translation>
+        <translation>Graphics Debugger</translation>
     </message>
 </context>
 <context>
@@ -1783,127 +1783,122 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../../src/citra_qt/game_list_p.h" line="130"/>
         <source>Perfect</source>
-        <translation>Perfecto</translation>
+        <translation>Mükemmel</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list_p.h" line="130"/>
         <source>Game functions flawless with no audio or graphical glitches, all tested functionality works as intended without
 any workarounds needed.</source>
-        <translation>El juego funciona a la perfección, sin problemas de audio o gráficos, todas las funcionalidades probadas funcionan según lo previsto sin
-la necesidad de soluciones temporales.</translation>
+        <translation>Oyun grafik veya ses hataları olmadan sorunsuz çalışıyor, test edilen tüm işlevler olması gerektiği gibi çalışıyor.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list_p.h" line="131"/>
         <source>Great</source>
-        <translation>Excelente</translation>
+        <translation>Çok İyi</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list_p.h" line="131"/>
         <source>Game functions with minor graphical or audio glitches and is playable from start to finish. May require some
 workarounds.</source>
-        <translation>El juego funciona con pequeños problemas gráficos o de audio y es jugable de principio a fin. Podría requerir de
-soluciones temporales.</translation>
+        <translation>Oyun küçük grafik veya ses hatalarıyla çalışıyor ve baştan sona kadar oynanabilir. Bazı geçici çözümler gerektirebilir.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list_p.h" line="132"/>
         <source>Okay</source>
-        <translation>Bien</translation>
+        <translation>Yeterli</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list_p.h" line="132"/>
         <source>Game functions with major graphical or audio glitches, but game is playable from start to finish with
 workarounds.</source>
-        <translation>El juego funciona con importantes problemas gráficos o de audio, pero el juego es jugable de principio a fin con 
-soluciones temporales.</translation>
+        <translation>Oyun büyük grafik veya ses hatalarıyla çalışıyor fakat geçici çözümler ile baştan sona kadar oynanabilir.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list_p.h" line="133"/>
         <source>Bad</source>
-        <translation>Mal</translation>
+        <translation>Kötü</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list_p.h" line="133"/>
         <source>Game functions, but with major graphical or audio glitches. Unable to progress in specific areas due to glitches
 even with workarounds.</source>
-        <translation>El juego funciona, pero con notables problemas gráficos o de audio. Es imposible avanzar en zonas específicas debido a
-fallos incluso con soluciones temporales.</translation>
+        <translation>Oyun çalışıyor fakat büyük grafik veya ses hatalarına sahip. Geçici çözümlerle bile belirli alanlar geçilemiyor.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list_p.h" line="134"/>
         <source>Intro/Menu</source>
-        <translation>Intro/Menú</translation>
+        <translation>Intro/Menü</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list_p.h" line="134"/>
         <source>Game is completely unplayable due to major graphical or audio glitches. Unable to progress past the Start
 Screen.</source>
-        <translation>No es posible jugar al juego debido a importantes problemas gráficos o de audio. Es imposible avanzar
-más allá de la pantalla de inicio.</translation>
+        <translation>Oyun grafik ve ses hatalarından dolayı oynanılamıyor. Başlangıç ekranını geçemiyorsunuz.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list_p.h" line="135"/>
         <source>Won&apos;t Boot</source>
-        <translation>No carga</translation>
+        <translation>Açılmıyor</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list_p.h" line="135"/>
         <source>The game crashes when attempting to startup.</source>
-        <translation>El juego se bloquea al intentar iniciarse.</translation>
+        <translation>Oyun açılmaya çalışıldığında çöküyor.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list_p.h" line="136"/>
         <source>Not Tested</source>
-        <translation>Sin probar</translation>
+        <translation>Test Edilmedi</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list_p.h" line="136"/>
         <source>The game has not yet been tested.</source>
-        <translation>El juego todavía no ha sido probado.</translation>
+        <translation>Bu oyun henüz test edilmemiş.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list.cpp" line="89"/>
         <source>of</source>
-        <translation>de</translation>
+        <translation>tane</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list.cpp" line="92"/>
         <source>result</source>
-        <translation>resultado</translation>
+        <translation>sonuçtan</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list.cpp" line="94"/>
         <source>results</source>
-        <translation>resultados</translation>
+        <translation>sonuçtan</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list.cpp" line="134"/>
         <source>Filter:</source>
-        <translation>Filtrar:</translation>
+        <translation>Filtre:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list.cpp" line="137"/>
         <source>Enter pattern to filter</source>
-        <translation>Introduzca un patrón para filtrar</translation>
+        <translation>Filtrelemek için kelime girin</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list.cpp" line="436"/>
         <source>Open Save Data Location</source>
-        <translation>Abrir ubicación de los archivos de guardado</translation>
+        <translation>Kayıt Dosyası Konumunu Aç</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list.cpp" line="437"/>
         <source>Open Application Location</source>
-        <translation>Abrir ubicación de la aplicación</translation>
+        <translation>Uygulama Konumunu Aç</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list.cpp" line="438"/>
         <source>Open Update Data Location</source>
-        <translation>Abrir ubicación de los archivos de actualización</translation>
+        <translation>Güncelleme Dosyası Konumunu Aç</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list.cpp" line="439"/>
         <source>Navigate to GameDB entry</source>
-        <translation>Ir a la base de datos de los juegos</translation>
+        <translation>Oyun Veritabanı Girdisine Git</translation>
     </message>
 </context>
 <context>
@@ -1917,17 +1912,17 @@ más allá de la pantalla de inicio.</translation>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_breakpoints.cpp" line="136"/>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_breakpoints.cpp" line="198"/>
         <source>Emulation running</source>
-        <translation>Ejecutando emulación</translation>
+        <translation>Emulation running</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_breakpoints.cpp" line="137"/>
         <source>Resume</source>
-        <translation>Reanudar</translation>
+        <translation>Resume</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_breakpoints.cpp" line="188"/>
         <source>Emulation halted at breakpoint</source>
-        <translation>Emulación parada en un breakpoint</translation>
+        <translation>Emulation halted at breakpoint</translation>
     </message>
 </context>
 <context>
@@ -1935,77 +1930,77 @@ más allá de la pantalla de inicio.</translation>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_surface.cpp" line="49"/>
         <source>Pica Surface Viewer</source>
-        <translation>Observador de Superficie de Pica</translation>
+        <translation>Pica Surface Viewer</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_surface.cpp" line="54"/>
         <source>Color Buffer</source>
-        <translation>Buffer de Color</translation>
+        <translation>Color Buffer</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_surface.cpp" line="55"/>
         <source>Depth Buffer</source>
-        <translation>Buffer de Profundidad</translation>
+        <translation>Depth Buffer</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_surface.cpp" line="56"/>
         <source>Stencil Buffer</source>
-        <translation>Buffer de Esténcil</translation>
+        <translation>Stencil Buffer</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_surface.cpp" line="57"/>
         <source>Texture 0</source>
-        <translation>Textura 0</translation>
+        <translation>Texture 0</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_surface.cpp" line="58"/>
         <source>Texture 1</source>
-        <translation>Textura 1</translation>
+        <translation>Texture 1</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_surface.cpp" line="59"/>
         <source>Texture 2</source>
-        <translation>Textura 2</translation>
+        <translation>Texture 2</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_surface.cpp" line="60"/>
         <source>Custom</source>
-        <translation>Personalizada</translation>
+        <translation>Custom</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_surface.cpp" line="103"/>
         <source>Unknown</source>
-        <translation>Desconocido</translation>
+        <translation>Unknown</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_surface.cpp" line="118"/>
         <source>Save</source>
-        <translation>Guardar</translation>
+        <translation>Save</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_surface.cpp" line="144"/>
         <source>Source:</source>
-        <translation>Fuente:</translation>
+        <translation>Source:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_surface.cpp" line="150"/>
         <source>Physical Address:</source>
-        <translation>Dirección Física:</translation>
+        <translation>Physical Address:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_surface.cpp" line="156"/>
         <source>Width:</source>
-        <translation>Anchura:</translation>
+        <translation>Width:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_surface.cpp" line="162"/>
         <source>Height:</source>
-        <translation>Altura:</translation>
+        <translation>Height:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_surface.cpp" line="168"/>
         <source>Format:</source>
-        <translation>Formato:</translation>
+        <translation>Format:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_surface.cpp" line="180"/>
@@ -2020,22 +2015,22 @@ más allá de la pantalla de inicio.</translation>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_surface.cpp" line="280"/>
         <source>Pixel out of bounds</source>
-        <translation>Píxel fuera de los límites</translation>
+        <translation>Pixel out of bounds</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_surface.cpp" line="287"/>
         <source>(unable to access pixel data)</source>
-        <translation>(no se puede acceder a los datos del píxel)</translation>
+        <translation>(unable to access pixel data)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_surface.cpp" line="555"/>
         <source>(invalid surface address)</source>
-        <translation>(dirección de superficie no válida)</translation>
+        <translation>(invalid surface address)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_surface.cpp" line="565"/>
         <source>(unknown surface format)</source>
-        <translation>(formato de superficie desconocido)</translation>
+        <translation>(unknown surface format)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_surface.cpp" line="658"/>
@@ -2045,12 +2040,12 @@ más allá de la pantalla de inicio.</translation>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_surface.cpp" line="659"/>
         <source>Binary data (*.bin)</source>
-        <translation>Archivo binario (*.bin)</translation>
+        <translation>Binary data (*.bin)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_surface.cpp" line="663"/>
         <source>Save Surface</source>
-        <translation>Guardar Superficie</translation>
+        <translation>Save Surface</translation>
     </message>
 </context>
 <context>
@@ -2058,42 +2053,42 @@ más allá de la pantalla de inicio.</translation>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_tracing.cpp" line="25"/>
         <source>CiTrace Recorder</source>
-        <translation>Grabador CiTrace</translation>
+        <translation>CiTrace Recorder</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_tracing.cpp" line="29"/>
         <source>Start Recording</source>
-        <translation>Empezar grabación</translation>
+        <translation>Start Recording</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_tracing.cpp" line="31"/>
         <source>Stop and Save</source>
-        <translation>Parar y Guardar</translation>
+        <translation>Stop and Save</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_tracing.cpp" line="32"/>
         <source>Abort Recording</source>
-        <translation>Abortar Grabación</translation>
+        <translation>Abort Recording</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_tracing.cpp" line="112"/>
         <source>Save CiTrace</source>
-        <translation>Guardar CiTrace</translation>
+        <translation>Save CiTrace</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_tracing.cpp" line="113"/>
         <source>CiTrace File (*.ctf)</source>
-        <translation>Archivo CiTrace (*.ctf)</translation>
+        <translation>CiTrace File (*.ctf)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_tracing.cpp" line="162"/>
         <source>CiTracing still active</source>
-        <translation>CiTracing sigue activo</translation>
+        <translation>CiTracing still active</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_tracing.cpp" line="163"/>
         <source>A CiTrace is still being recorded. Do you want to save it? If not, all recorded data will be discarded.</source>
-        <translation>Un CiTrace sigue grabándose. ¿Deseas guardarlo? Si no, todos los datos grabados serán descartados.</translation>
+        <translation>A CiTrace is still being recorded. Do you want to save it? If not, all recorded data will be discarded.</translation>
     </message>
 </context>
 <context>
@@ -2111,7 +2106,7 @@ más allá de la pantalla de inicio.</translation>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_vertex_shader.cpp" line="49"/>
         <source>Disassembly</source>
-        <translation>Desmontado</translation>
+        <translation>Disassembly</translation>
     </message>
 </context>
 <context>
@@ -2119,37 +2114,37 @@ más allá de la pantalla de inicio.</translation>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_vertex_shader.cpp" line="345"/>
         <source>Save Shader Dump</source>
-        <translation>Guardar Volcado de Sombra</translation>
+        <translation>Save Shader Dump</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_vertex_shader.cpp" line="345"/>
         <source>Shader Binary (*.shbin)</source>
-        <translation>Binario de Sombra (*.shbin)</translation>
+        <translation>Shader Binary (*.shbin)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_vertex_shader.cpp" line="380"/>
         <source>(data only available at vertex shader invocation breakpoints)</source>
-        <translation>(datos sólo disponibles en los puntos de la invocación del sombreado de vértices)</translation>
+        <translation>(data only available at vertex shader invocation breakpoints)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_vertex_shader.cpp" line="390"/>
         <source>Dump</source>
-        <translation>Volcar</translation>
+        <translation>Dump</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_vertex_shader.cpp" line="412"/>
         <source>Input Data</source>
-        <translation>Datos de Entrada</translation>
+        <translation>Input Data</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_vertex_shader.cpp" line="426"/>
         <source>Attribute %1</source>
-        <translation>Atributo %1</translation>
+        <translation>Attribute %1</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_vertex_shader.cpp" line="453"/>
         <source>Cycle Index:</source>
-        <translation>Índice de Ciclo:</translation>
+        <translation>Cycle Index:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_vertex_shader.cpp" line="558"/>
@@ -2190,41 +2185,41 @@ más allá de la pantalla de inicio.</translation>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_vertex_shader.cpp" line="589"/>
         <source>Address Registers: %1, %2
 </source>
-        <translation>Registros de Dirección: %1, %2
+        <translation>Address Registers: %1, %2
 </translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_vertex_shader.cpp" line="593"/>
         <source>Compare Result: %1, %2
 </source>
-        <translation>Comparar Resultados: %1, %2
+        <translation>Compare Result: %1, %2
 </translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_vertex_shader.cpp" line="598"/>
         <source>Static Condition: %1
 </source>
-        <translation>Condición Estática: %1
+        <translation>Static Condition: %1
 </translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_vertex_shader.cpp" line="600"/>
         <source>Dynamic Conditions: %1, %2
 </source>
-        <translation>Condiciones Dinámicas: %1, %2
+        <translation>Dynamic Conditions: %1, %2
 </translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_vertex_shader.cpp" line="604"/>
         <source>Loop Parameters: %1 (repeats), %2 (initializer), %3 (increment), %4
 </source>
-        <translation>Parámetros de Bucle: %1 (repeticiones), %2 (inicializador), %3 (incremental), %4
+        <translation>Loop Parameters: %1 (repeats), %2 (initializer), %3 (increment), %4
 </translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_vertex_shader.cpp" line="611"/>
         <source>Instruction offset: 0x%1</source>
-        <translation>Instrucción offset: 0x%1</translation>
+        <translation>Instruction offset: 0x%1</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_vertex_shader.cpp" line="613"/>
@@ -2234,7 +2229,7 @@ más allá de la pantalla de inicio.</translation>
     <message>
         <location filename="../../src/citra_qt/debugger/graphics/graphics_vertex_shader.cpp" line="615"/>
         <source> (last instruction)</source>
-        <translation>(última instrucción)</translation>
+        <translation> (last instruction)</translation>
     </message>
 </context>
 <context>
@@ -2242,57 +2237,57 @@ más allá de la pantalla de inicio.</translation>
     <message>
         <location filename="../../src/citra_qt/multiplayer/host_room.ui" line="14"/>
         <source>Create Room</source>
-        <translation>Crear Sala</translation>
+        <translation>Oda Oluştur</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/host_room.ui" line="37"/>
         <source>Room Name</source>
-        <translation>Nombre de la Sala</translation>
+        <translation>Oda İsmi</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/host_room.ui" line="51"/>
         <source>Preferred Game</source>
-        <translation>Juego Preferente</translation>
+        <translation>Öncelikli Oyun</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/host_room.ui" line="61"/>
         <source>Max Players</source>
-        <translation>Máxima Capacidad</translation>
+        <translation>Max Oyuncu</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/host_room.ui" line="91"/>
         <source>Username</source>
-        <translation>Usuario</translation>
+        <translation>Kullanıcı Adı</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/host_room.ui" line="101"/>
         <source>(Leave blank for open game)</source>
-        <translation>(Dejar en blanco si la sala es pública)</translation>
+        <translation>(Herkese açık oyun için boş bırakın)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/host_room.ui" line="118"/>
         <source>Password</source>
-        <translation>Contraseña</translation>
+        <translation>Şifre</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/host_room.ui" line="125"/>
         <source>Port</source>
-        <translation>Puerto</translation>
+        <translation>Port</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/host_room.ui" line="156"/>
         <source>Public</source>
-        <translation>Pública</translation>
+        <translation>Herkese Açık</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/host_room.ui" line="161"/>
         <source>Unlisted</source>
-        <translation>Privada</translation>
+        <translation>Liste dışı</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/host_room.ui" line="169"/>
         <source>Host Room</source>
-        <translation>Crear Sala</translation>
+        <translation>Oda Oluştur</translation>
     </message>
 </context>
 <context>
@@ -2300,78 +2295,78 @@ más allá de la pantalla de inicio.</translation>
     <message>
         <location filename="../../src/citra_qt/multiplayer/lobby.ui" line="14"/>
         <source>Public Room Browser</source>
-        <translation>Navegador de Salas Públicas</translation>
+        <translation>Herkese Açık Oda Tarayıcısı</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/lobby.ui" line="32"/>
         <location filename="../../src/citra_qt/multiplayer/lobby.ui" line="39"/>
         <source>Nickname</source>
-        <translation>Apodo</translation>
+        <translation>Takma ad</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/lobby.ui" line="59"/>
         <source>Filters</source>
-        <translation>Filtros</translation>
+        <translation>Filtreler</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/lobby.ui" line="66"/>
         <source>Search</source>
-        <translation>Buscar</translation>
+        <translation>Arama</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/lobby.ui" line="76"/>
         <source>Games I Own</source>
-        <translation>Juegos Que Tengo</translation>
+        <translation>Sahip Olduğum Oyunlar</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/lobby.ui" line="83"/>
         <source>Hide Full Rooms</source>
-        <translation>Ocultar Salas Llenas</translation>
+        <translation>Dolu Odaları Gizle</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/lobby.ui" line="103"/>
         <source>Refresh Lobby</source>
-        <translation>Actualizar Lobby</translation>
+        <translation>Lobiyi Yenile</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/lobby.cpp" line="77"/>
         <source>Password Required to Join</source>
-        <translation>Contraseña Necesaria para Unirse</translation>
+        <translation>Katılmak İçin Şifre Gerekiyor</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/lobby.cpp" line="78"/>
         <source>Password:</source>
-        <translation>Contraseña:</translation>
+        <translation>Şifre:</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/lobby.cpp" line="143"/>
         <source>Room Name</source>
-        <translation>Nombre de Sala</translation>
+        <translation>Oda İsmi</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/lobby.cpp" line="144"/>
         <source>Preferred Game</source>
-        <translation>Juego Preferente</translation>
+        <translation>Öncelikli Oyun</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/lobby.cpp" line="145"/>
         <source>Host</source>
-        <translation>Host</translation>
+        <translation>Sunucu</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/lobby.cpp" line="146"/>
         <source>Players</source>
-        <translation>Jugadores</translation>
+        <translation>Oyuncular</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/lobby.cpp" line="154"/>
         <source>Refreshing</source>
-        <translation>Actualizando</translation>
+        <translation>Yenileniyor</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/lobby.cpp" line="202"/>
         <source>Refresh List</source>
-        <translation>Actualizar Lista</translation>
+        <translation>Listeyi Yenile</translation>
     </message>
 </context>
 <context>
@@ -2384,202 +2379,202 @@ más allá de la pantalla de inicio.</translation>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="53"/>
         <source>&amp;File</source>
-        <translation>&amp;Archivo</translation>
+        <translation>&amp;Dosya</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="57"/>
         <source>Recent Files</source>
-        <translation>Archivos Recientes</translation>
+        <translation>Son Kullanılan Dosyalar</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="69"/>
         <source>&amp;Emulation</source>
-        <translation>&amp;Emulación</translation>
+        <translation>&amp;Emülasyon</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="79"/>
         <source>&amp;View</source>
-        <translation>&amp;Ver</translation>
+        <translation>&amp;Görünüm</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="83"/>
         <source>Debugging</source>
-        <translation>Depuración</translation>
+        <translation>Hata Ayıklama</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="90"/>
         <source>Screen Layout</source>
-        <translation>Estilo de pantalla</translation>
+        <translation>Ekran Düzeni</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="114"/>
         <source>Multiplayer</source>
-        <translation>Multijugador</translation>
+        <translation>Çok Oyunculu</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="125"/>
         <source>&amp;Help</source>
-        <translation>&amp;Ayuda</translation>
+        <translation>&amp;Yardım</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="143"/>
         <source>Load File...</source>
-        <translation>Cargar Archivo...</translation>
+        <translation>Dosya Yükle...</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="148"/>
         <source>Install CIA...</source>
-        <translation>Instalar CIA...</translation>
+        <translation>CIA Yükle...</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="153"/>
         <source>Load Symbol Map...</source>
-        <translation>Cargar Mapa de Símbolos...</translation>
+        <translation>Load Symbol Map...</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="158"/>
         <source>E&amp;xit</source>
-        <translation>S&amp;alir</translation>
+        <translation>&amp;Çıkış</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="166"/>
         <source>&amp;Start</source>
-        <translation>&amp;Iniciar</translation>
+        <translation>B&amp;aşlat</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="174"/>
         <source>&amp;Pause</source>
-        <translation>&amp;Pausar</translation>
+        <translation>&amp;Duraklat</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="182"/>
         <source>&amp;Stop</source>
-        <translation>&amp;Parar</translation>
+        <translation>Du&amp;rdur</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="187"/>
         <source>FAQ</source>
-        <translation>FAQ</translation>
+        <translation>S.S.S</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="192"/>
         <source>About Citra</source>
-        <translation>Acerca de Citra</translation>
+        <translation>Citra Hakkında</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="200"/>
         <source>Single Window Mode</source>
-        <translation>Modo Ventana Única</translation>
+        <translation>Tek Pencere Modu</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="205"/>
         <source>Configure...</source>
-        <translation>Configurar...</translation>
+        <translation>Yapılandır...</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="213"/>
         <source>Display Dock Widget Headers</source>
-        <translation>Mostrar Títulos de Widgets del Dock</translation>
+        <translation>Dock Widget&apos;ı Başlıklarını Göster</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="221"/>
         <source>Show Filter Bar</source>
-        <translation>Mostrar Barra de Filtro</translation>
+        <translation>Filtre Çubuğunu Göster</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="229"/>
         <source>Show Status Bar</source>
-        <translation>Mostrar Barra de Estado</translation>
+        <translation>Durum Çubuğunu Göster</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="234"/>
         <source>Select Game Directory...</source>
-        <translation>Seleccionar Directorio de Juego...</translation>
+        <translation>Oyun Dizinini Seç...</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="237"/>
         <source>Selects a folder to display in the game list</source>
-        <translation>Selecciona una carpeta para mostrar en la lista de juegos</translation>
+        <translation>Oyun listesinde görüntülenecek bir klasör seçer</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="242"/>
         <source>Create Pica Surface Viewer</source>
-        <translation>Crear Observador de Superficie de Pica</translation>
+        <translation>Create Pica Surface Viewer</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="250"/>
         <source>Browse Public Game Lobby</source>
-        <translation>Buscar Salas Públicas</translation>
+        <translation>Herkese Açık Oyun Lobisi Ara</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="258"/>
         <source>Create Room</source>
-        <translation>Crear Sala</translation>
+        <translation>Oda Oluştur</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="266"/>
         <source>Leave Room</source>
-        <translation>Abandonar Sala</translation>
+        <translation>Odadan Ayrıl</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="271"/>
         <source>Direct Connect to Room</source>
-        <translation>Conectar Directamente a Sala</translation>
+        <translation>Odaya Doğrudan Bağlan</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="279"/>
         <source>Show Current Room</source>
-        <translation>Mostrar Sala Actual</translation>
+        <translation>Mevcut Odayı Göster</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="287"/>
         <source>Fullscreen</source>
-        <translation>Pantalla Completa</translation>
+        <translation>Tam ekran</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="292"/>
         <source>Modify Citra Install</source>
-        <translation>Modificar Instalación de Citra</translation>
+        <translation>Citra Kurulumunu Değiştir</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="295"/>
         <source>Opens the maintenance tool to modify your Citra installation</source>
-        <translation>Abre la herramienta de mantenimiento para modificar tu traducción de Citra</translation>
+        <translation>Citra kurulumunu değiştirmek için bakım aracını açar</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="303"/>
         <source>Default</source>
-        <translation>Por defecto</translation>
+        <translation>Varsayılan</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="311"/>
         <source>Single Screen</source>
-        <translation>Pantalla única</translation>
+        <translation>Tek Ekran</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="319"/>
         <source>Large Screen</source>
-        <translation>Pantalla amplia</translation>
+        <translation>Büyük Ekran</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="327"/>
         <source>Side by Side</source>
-        <translation>Conjunta</translation>
+        <translation>Yan Yana</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="335"/>
         <source>Swap Screens</source>
-        <translation>Intercambiar pantallas</translation>
+        <translation>Ekranları değiştir</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="340"/>
         <source>Check for Updates</source>
-        <translation>Buscar Actualizaciones</translation>
+        <translation>Güncellemeleri Kontrol Et</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="348"/>
         <source>Report Compatibility</source>
-        <translation>Informar de compatibilidad</translation>
+        <translation>Uyumluluk Bildir</translation>
     </message>
 </context>
 <context>
@@ -2595,34 +2590,34 @@ más allá de la pantalla de inicio.</translation>
     <message>
         <location filename="../../src/citra_qt/multiplayer/state.cpp" line="41"/>
         <source>Current connection status</source>
-        <translation>Estado actual de conexión</translation>
+        <translation>Mevcut bağlantı durumu</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/state.cpp" line="42"/>
         <source>Not Connected. Click here to find a room!</source>
-        <translation>No estás conectado. ¡Haz clic aquí para encontrar una sala!</translation>
+        <translation>Bağlı Değil. Oda bulmak için buraya tıklayın!</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/state.cpp" line="100"/>
         <source>Connected</source>
-        <translation>Conectado</translation>
+        <translation>Bağlanıldı</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/state.cpp" line="105"/>
         <source>Not Connected</source>
-        <translation>No conectado</translation>
+        <translation>Bağlı Değil</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/state.cpp" line="114"/>
         <source>Error</source>
-        <translation>Error</translation>
+        <translation>Hata</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/state.cpp" line="115"/>
         <source>Failed to announce the room to the public lobby. In order to host a room publicly, you must have a valid Citra account configured in Emulation -&gt; Configure -&gt; Web. If you do not want to publish a room in the public lobby, then select Unlisted instead.
 Debug Message: </source>
-        <translation>No se ha podido anunciar la sala en el lobby público. Para ser el anfitrión de una sala pública, debes tener una cuenta de Citra válida configurada en Emulación -&gt; Configurar -&gt; Web. Si no deseas publicar una sala en el lobby público, entonces seleccione Privada.
-Mensaje de Depuración:</translation>
+        <translation>Oda herkese açık lobiye yayınlanamadı. Herkese açık bir oda açmak için, Emülasyon -&gt; Yapılandırma -&gt; Ağ içinde geçerli bir Citra hesabı yapılandırılmış olmalı. Eğer herkese açık lobide oda yayınlamak istemiyorsanız, yerine Liste Dışı&apos;nı seçin.
+Hata Ayıklama Mesajı: </translation>
     </message>
 </context>
 <context>
@@ -2630,92 +2625,92 @@ Mensaje de Depuración:</translation>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="12"/>
         <source>Username is not valid. Must be 4 to 20 alphanumeric characters.</source>
-        <translation>El nombre de usuario no es válido. Debe tener entre 4 y 20 caracteres alfanuméricos.</translation>
+        <translation>Kullanıcı adı geçerli değil. 4 ile 20 arası alfanümerik karakterden oluşmalı.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="14"/>
         <source>Room name is not valid. Must be 4 to 20 alphanumeric characters.</source>
-        <translation>El nombre de la sala no es válido. Debe tener entre 4 y 20 caracteres alfanuméricos.</translation>
+        <translation>Oda adı geçerli değil. 4 ile 20 arası alfanümerik karakterden oluşmalı.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="16"/>
         <source>Username is already in use. Please choose another.</source>
-        <translation>El nombre de usuario ya está en uso. Por favor, elige otro.</translation>
+        <translation>Kullanıcı adı zaten kullanılıyor. Lütfen başka seçin.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="17"/>
         <source>IP is not a valid IPv4 address.</source>
-        <translation>La IP no es una dirección IPv4 válida.</translation>
+        <translation>IP geçerli bir IPv4 adresi değil.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="18"/>
         <source>Port must be a number between 0 to 65535.</source>
-        <translation>El puerto debe ser un número entre 0 y 65535.</translation>
+        <translation>Port 0 ile 65535 arası bir sayı olmalıdır.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="20"/>
         <source>Unable to find an internet connection. Check your internet settings.</source>
-        <translation>No se ha podido encontrar una conexión a Internet. Revisa tu configuración de Internet.</translation>
+        <translation>İnternet bağlantısı bulunamadı. İnternet ayarlarınızı kontrol edin.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="22"/>
         <source>Unable to connect to the host. Verify that the connection settings are correct. If you still cannot connect, contact the room host and verify that the host is properly configured with the external port forwarded.</source>
-        <translation>No se pudo conectar con el anfitrión. Asegúrate de que la configuración de Internet es correcta. Si aún no puedes conectarte, contacta con el anfitrión de la sala y asegúrate de que éste está configurado correctamente con el puerto externo de reenvío.</translation>
+        <translation>Sunucuya bağlanılamıyor. Bağlantı ayarlarının doğru olduğundan emin olun. Eğer hala bağlanamıyorsanız, oda sahibi ile iletişime geçin ve sunucunun harici port yönledirme ile uygun şekilde yapılandırıldığını doğrulayın.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="26"/>
         <source>Creating a room failed. Please retry. Restarting Citra might be necessary.</source>
-        <translation>No se pudo crear una sala. Por favor, reinténtalo. Puede que se necesite reiniciar Citra.</translation>
+        <translation>Oda oluşturma başarısız oldu. Lütfen tekrar deneyin. Citra&apos;yı yeniden başlatmak gerekli olabilir.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="28"/>
         <source>The host of the room has banned you. Speak with the host to unban you or try a different room.</source>
-        <translation>El anfitrión de la sala te ha baneado. Póngase en contacto con el anfitrión para que te desbanee o prueba en otra sala.</translation>
+        <translation>Oda sahibi sizi yasakladı. Yasağınızı kaldırması için oda sahibiyle konuşun ya da farklı bir oda deneyin.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="31"/>
         <source>Version mismatch! Please update to the latest version of Citra. If the problem persists, contact the room host and ask them to update the server.</source>
-        <translation>¡Versión incompatible! Por favor, actualice a la última versión de Citra. Si el problema persiste, póngase en contacto con el anfitrión de la sala y pide que actualicen el servidor.</translation>
+        <translation>Versiyonlar uyumsuz! Lütfen Citra&apos;nın en son sürümüne güncelleyin. Eğer sorun devam ederse oda sahibiyle iletişime geçip sunucuyu güncellemesini isteyin.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="33"/>
         <source>Incorrect password.</source>
-        <translation>Contraseña incorrecta.</translation>
+        <translation>Geçersiz şifre.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="35"/>
         <source>An unknown error occured. If this error continues to occur, please open an issue</source>
-        <translation>Error desconocido. Si este error sigue ocurriendo, por favor, háznoslo saber.</translation>
+        <translation>Bilinmeyen bir hata meydana geldi. Eğer bu hata gerçekleşmeye devam ederse, lütfen bir sorun kaydı açın.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="36"/>
         <source>Connection to room lost. Try to reconnect.</source>
-        <translation>Se ha perdido la conexión a la sala. Intenta reconectarte a ella.</translation>
+        <translation>Odaya olan bağlantı kesildi. Tekrar bağlanmayı deneyin.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="38"/>
         <source>MAC address is already in use. Please choose another.</source>
-        <translation>Esta dirección MAC ya está en uso. Por favor, escoge otra.</translation>
+        <translation>MAC adresi zaten kullanılıyor. Lütfen başka seçin.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="52"/>
         <source>Leave Room</source>
-        <translation>Abandonar Sala</translation>
+        <translation>Odadan Ayrıl</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="53"/>
         <source>You are about to close the room. Any network connections will be closed.</source>
-        <translation>Estás a punto de cerrar la sala. Cualquier conexión de red será interrumpida.</translation>
+        <translation>Odayı kapatmak üzeresiniz. Tüm ağ bağlantıları kapanacaktır.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="58"/>
         <source>Disconnect</source>
-        <translation>Desconectar</translation>
+        <translation>Bağlantıyı kes</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="59"/>
         <source>You are about to leave the room. Any network connections will be closed.</source>
-        <translation>Estás a punto de abandonar la sala. Cualquier conexión de red será interrumpida.</translation>
+        <translation>Odadan çıkmak üzeresiniz. Tüm ağ bağlantıları kapanacaktır.</translation>
     </message>
 </context>
 <context>
@@ -2724,68 +2719,68 @@ Mensaje de Depuración:</translation>
         <location filename="../../src/citra_qt/multiplayer/message.cpp" line="47"/>
         <location filename="../../src/citra_qt/camera/qt_camera_base.cpp" line="52"/>
         <source>Error</source>
-        <translation>Error</translation>
+        <translation>Hata</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/lobby_p.h" line="198"/>
         <source>%1 is not playing a game</source>
-        <translation>%1 no está jugando a ningún juego</translation>
+        <translation>%1 bir oyun oynamıyor</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/multiplayer/lobby_p.h" line="201"/>
         <source>%1 is playing %2</source>
-        <translation>%1 está jugando a %2</translation>
+        <translation>%1 %2 oynuyor</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list_p.h" line="99"/>
         <location filename="../../src/citra_qt/game_list_p.h" line="261"/>
         <source>Invalid region</source>
-        <translation>Región no válida</translation>
+        <translation>Geçersiz Bölge</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list_p.h" line="101"/>
         <source>Japan</source>
-        <translation>Japón</translation>
+        <translation>Japonya</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list_p.h" line="103"/>
         <source>North America</source>
-        <translation>Norteamérica</translation>
+        <translation>Kuzey Amerika</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list_p.h" line="105"/>
         <source>Europe</source>
-        <translation>Europa</translation>
+        <translation>Avrupa</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list_p.h" line="107"/>
         <source>Australia</source>
-        <translation>Australia</translation>
+        <translation>Avustralya</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list_p.h" line="109"/>
         <source>China</source>
-        <translation>China</translation>
+        <translation>Çin</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list_p.h" line="111"/>
         <source>Korea</source>
-        <translation>Corea</translation>
+        <translation>Kore</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list_p.h" line="113"/>
         <source>Taiwan</source>
-        <translation>Taiwán</translation>
+        <translation>Tayvan</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list_p.h" line="115"/>
         <source>Region free</source>
-        <translation>Region free</translation>
+        <translation>Bölge kilitsiz</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/game_list_p.h" line="117"/>
         <source>Invalid Region</source>
-        <translation>Región no válida</translation>
+        <translation>Geçersiz Bölge</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="26"/>
@@ -2806,7 +2801,7 @@ Mensaje de Depuración:</translation>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="51"/>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="75"/>
         <source>[not set]</source>
-        <translation>[no establecido]</translation>
+        <translation>[ayarlanmadı]</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="55"/>
@@ -2817,54 +2812,54 @@ Mensaje de Depuración:</translation>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="57"/>
         <source> Hat %1 %2</source>
-        <translation> Rotación %1 %2</translation>
+        <translation> Hat %1 %2</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="61"/>
         <source> Axis %1%2</source>
-        <translation> Axis %1%2</translation>
+        <translation>%1%2 Ekseni</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="65"/>
         <source> Button %1</source>
-        <translation> Botón %1</translation>
+        <translation>%1 Tuşu</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="69"/>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="91"/>
         <source>[unknown]</source>
-        <translation>[desconocido]</translation>
+        <translation>[bilinmiyor]</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="80"/>
         <source>[unused]</source>
-        <translation>[sin usar]</translation>
+        <translation>[kullanılmıyor]</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="85"/>
         <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="87"/>
         <source> Axis %1</source>
-        <translation> Axis %1</translation>
+        <translation>%1 Ekseni</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/camera/qt_camera_base.cpp" line="53"/>
         <source>Couldn&apos;t load the camera</source>
-        <translation>La cámara no se pudo cargar</translation>
+        <translation>Kamera yüklenemedi</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/camera/qt_camera_base.cpp" line="54"/>
         <source>Couldn&apos;t load %1</source>
-        <translation>No se pudo cargar %1</translation>
+        <translation>%1 yüklenemedi</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/camera/still_image_camera.cpp" line="44"/>
         <source>Supported image files (%1)</source>
-        <translation>Archivos de imagen soportados (%1)</translation>
+        <translation>Desteklenen görüntü dosyaları (%1)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/camera/still_image_camera.cpp" line="46"/>
         <source>Open File</source>
-        <translation>Abrir Archivo</translation>
+        <translation>Dosya Aç</translation>
     </message>
 </context>
 <context>
@@ -2872,27 +2867,27 @@ Mensaje de Depuración:</translation>
     <message>
         <location filename="../../src/citra_qt/applets/swkbd.cpp" line="99"/>
         <source>Text length is not correct (should be %1 characters)</source>
-        <translation>La longitud del texto no es correcta (debe ser de %1 caracteres)</translation>
+        <translation>Metin uzunluğu uygun değil (%1 karakter olmalı)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/applets/swkbd.cpp" line="102"/>
         <source>Text is too long (should be no more than %1 characters)</source>
-        <translation>Texto demasiado largo (límite de %1 caracteres)</translation>
+        <translation>Metin çok uzun (%1 karakterden daha uzun olmamalı)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/applets/swkbd.cpp" line="104"/>
         <source>Blank input is not allowed</source>
-        <translation>¡No puedes dejarlo en blanco!</translation>
+        <translation>Boş girdiye izin verilmiyor.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/applets/swkbd.cpp" line="105"/>
         <source>Empty input is not allowed</source>
-        <translation>¡No puedes dejarlo vacío!</translation>
+        <translation>Boş girdiye izin verilmiyor.</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/applets/swkbd.cpp" line="107"/>
         <source>Validation error</source>
-        <translation>Error de validación</translation>
+        <translation>Doğrulama hatası</translation>
     </message>
 </context>
 <context>
@@ -2900,37 +2895,37 @@ Mensaje de Depuración:</translation>
     <message>
         <location filename="../../src/citra_qt/debugger/registers.cpp" line="15"/>
         <source>Registers</source>
-        <translation>Registros</translation>
+        <translation>Registers</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/registers.cpp" line="16"/>
         <source>VFP Registers</source>
-        <translation>Registros VFP</translation>
+        <translation>VFP Registers</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/registers.cpp" line="18"/>
         <source>VFP System Registers</source>
-        <translation>Registro de Sistema VFP</translation>
+        <translation>VFP System Registers</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/registers.cpp" line="167"/>
         <source>Vector Length</source>
-        <translation>Longitud del Vector</translation>
+        <translation>Vector Length</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/registers.cpp" line="168"/>
         <source>Vector Stride</source>
-        <translation>Paso de Vector</translation>
+        <translation>Vector Stride</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/registers.cpp" line="169"/>
         <source>Rounding Mode</source>
-        <translation>Modo Aproximado</translation>
+        <translation>Rounding Mode</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/debugger/registers.cpp" line="182"/>
         <source>Vector Iteration Count</source>
-        <translation>Cuenta de Iteraciones del Vector</translation>
+        <translation>Vector Iteration Count</translation>
     </message>
 </context>
 <context>
@@ -3150,7 +3145,7 @@ Mensaje de Depuración:</translation>
     <message>
         <location filename="../../src/citra_qt/debugger/wait_tree.cpp" line="399"/>
         <source>Wait Tree</source>
-        <translation>Árbol de Espera</translation>
+        <translation>Wait Tree</translation>
     </message>
 </context>
 <context>
@@ -3158,22 +3153,22 @@ Mensaje de Depuración:</translation>
     <message>
         <location filename="../../src/citra_qt/hotkeys.ui" line="14"/>
         <source>Hotkey Settings</source>
-        <translation>Configuración de Teclas de Atajo</translation>
+        <translation>Kısayol Ayarları</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/hotkeys.ui" line="27"/>
         <source>Action</source>
-        <translation>Acción</translation>
+        <translation>Eylem</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/hotkeys.ui" line="32"/>
         <source>Hotkey</source>
-        <translation>Tecla de Atajo</translation>
+        <translation>Kısayol</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/hotkeys.ui" line="37"/>
         <source>Context</source>
-        <translation>Contexto</translation>
+        <translation>Durum</translation>
     </message>
 </context>
 </TS>

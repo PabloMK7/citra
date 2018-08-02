@@ -261,29 +261,45 @@ p, li { white-space: pre-wrap; }
 <context>
     <name>ConfigureAudio</name>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_audio.ui" line="10"/>
+        <location filename="../../src/citra_qt/configuration/configure_audio.ui" line="17"/>
         <source>Audio</source>
         <translation>音效</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_audio.ui" line="18"/>
+        <location filename="../../src/citra_qt/configuration/configure_audio.ui" line="25"/>
         <source>Output Engine:</source>
         <translation>輸出引擎：</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_audio.ui" line="31"/>
-        <source>Enable audio stretching</source>
-        <translation>啟用音訊延展</translation>
-    </message>
-    <message>
-        <location filename="../../src/citra_qt/configuration/configure_audio.ui" line="34"/>
+        <location filename="../../src/citra_qt/configuration/configure_audio.ui" line="37"/>
         <source>This post-processing effect adjusts audio speed to match emulation speed and helps prevent audio stutter. This however increases audio latency.</source>
         <translation>讓音訊速度與遊戲的模擬速度透過後處理效果同步，這有助於防止音訊斷斷續續，但是也增加了音訊延遲。</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_audio.ui" line="43"/>
+        <location filename="../../src/citra_qt/configuration/configure_audio.ui" line="40"/>
+        <source>Enable audio stretching</source>
+        <translation>啟用音訊延展</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/configuration/configure_audio.ui" line="49"/>
         <source>Audio Device:</source>
         <translation>音效裝置：</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/configuration/configure_audio.ui" line="66"/>
+        <source>Volume:</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/configuration/configure_audio.ui" line="111"/>
+        <source>0 %</source>
+        <translation>0 %</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/configuration/configure_audio.cpp" line="23"/>
+        <location filename="../../src/citra_qt/configuration/configure_audio.cpp" line="60"/>
+        <source>%1 %</source>
+        <translation>%1 %</translation>
     </message>
 </context>
 <context>
@@ -480,12 +496,12 @@ p, li { white-space: pre-wrap; }
         <translation>解析度：</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_camera.cpp" line="278"/>
+        <location filename="../../src/citra_qt/configuration/configure_camera.cpp" line="275"/>
         <source>Supported image files (%1)</source>
         <translation>支援的圖片格式 (%1)</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_camera.cpp" line="280"/>
+        <location filename="../../src/citra_qt/configuration/configure_camera.cpp" line="276"/>
         <source>Open File</source>
         <translation>開啟檔案</translation>
     </message>
@@ -656,7 +672,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../../src/citra_qt/configuration/configure_general.ui" line="181"/>
         <source>Theme:</source>
-        <translation>主題：</translation>
+        <translation>面版主題：</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_general.ui" line="198"/>
@@ -855,7 +871,17 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../../src/citra_qt/configuration/configure_graphics.ui" line="296"/>
         <source>Swap Screens</source>
-        <translation>交換畫面位置</translation>
+        <translation>交換上下畫面</translation>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/configuration/configure_graphics.cpp" line="36"/>
+        <source>Hardware Shader Warning</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/configuration/configure_graphics.cpp" line="37"/>
+        <source>Hardware Shader support is broken on macOS, and will cause graphical issues like showing a black screen.&lt;br&gt;&lt;br&gt;The option is only there for test/development purposes. If you experience graphical issues with Hardware Shader, please turn it off.</source>
+        <translation type="unfinished"/>
     </message>
 </context>
 <context>
@@ -956,7 +982,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="295"/>
         <location filename="../../src/citra_qt/configuration/configure_input.ui" line="461"/>
-        <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="232"/>
+        <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="230"/>
         <source>Set Analog Stick</source>
         <translation>設定類比搖桿</translation>
     </message>
@@ -996,7 +1022,7 @@ p, li { white-space: pre-wrap; }
         <translation>還原預設</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="239"/>
+        <location filename="../../src/citra_qt/configuration/configure_input.cpp" line="237"/>
         <source>[press key]</source>
         <translation>[ 請輸入按鍵 ]</translation>
     </message>
@@ -1101,7 +1127,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="142"/>
         <source>English</source>
-        <translation>英文</translation>
+        <translation>英文 (English)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.ui" line="147"/>
@@ -1190,6 +1216,7 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="87"/>
+        <location filename="../../src/citra_qt/configuration/configure_system.cpp" line="174"/>
         <source>Console ID: 0x%1</source>
         <translation>裝置 ID：0x%1</translation>
     </message>
@@ -1223,7 +1250,7 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_web.ui" line="46"/>
-        <location filename="../../src/citra_qt/configuration/configure_web.cpp" line="95"/>
+        <location filename="../../src/citra_qt/configuration/configure_web.cpp" line="94"/>
         <source>Verify</source>
         <translation>驗證</translation>
     </message>
@@ -1289,7 +1316,7 @@ p, li { white-space: pre-wrap; }
     </message>
     <message>
         <location filename="../../src/citra_qt/configuration/configure_web.cpp" line="50"/>
-        <location filename="../../src/citra_qt/configuration/configure_web.cpp" line="70"/>
+        <location filename="../../src/citra_qt/configuration/configure_web.cpp" line="69"/>
         <source>Telemetry ID: 0x%1</source>
         <translation>遙測 ID：0x%1</translation>
     </message>
@@ -1304,17 +1331,17 @@ p, li { white-space: pre-wrap; }
         <translation>尚未驗證使用者名稱和權杖，您修改的使用者名稱或權杖尚未儲存。</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_web.cpp" line="90"/>
+        <location filename="../../src/citra_qt/configuration/configure_web.cpp" line="89"/>
         <source>Verifying</source>
         <translation>驗證中</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_web.cpp" line="104"/>
+        <location filename="../../src/citra_qt/configuration/configure_web.cpp" line="103"/>
         <source>Verification failed</source>
         <translation>驗證失敗</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/configuration/configure_web.cpp" line="105"/>
+        <location filename="../../src/citra_qt/configuration/configure_web.cpp" line="104"/>
         <source>Verification failed. Check that you have entered your username and token correctly, and that your internet connection is working.</source>
         <translation>驗證失敗，請檢查您輸入的使用者名稱和權杖是否正確，且確認網路連線正常。</translation>
     </message>
@@ -1375,12 +1402,12 @@ p, li { white-space: pre-wrap; }
 <context>
     <name>DirectConnectWindow</name>
     <message>
-        <location filename="../../src/citra_qt/multiplayer/direct_connect.cpp" line="103"/>
+        <location filename="../../src/citra_qt/multiplayer/direct_connect.cpp" line="107"/>
         <source>Connecting</source>
         <translation>連線中</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/multiplayer/direct_connect.cpp" line="108"/>
+        <location filename="../../src/citra_qt/multiplayer/direct_connect.cpp" line="112"/>
         <source>Connect</source>
         <translation>連線</translation>
     </message>
@@ -1388,310 +1415,312 @@ p, li { white-space: pre-wrap; }
 <context>
     <name>GMainWindow</name>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="95"/>
+        <location filename="../../src/citra_qt/main.cpp" line="97"/>
         <source>To help improve Citra, the Citra Team collects anonymous usage data. No private or personally identifying information is collected. This data helps us to understand how people use Citra and prioritize our efforts. Furthermore, it helps us to more easily identify emulation bugs and performance issues. This data includes:&lt;ul&gt;&lt;li&gt;Information about the version of Citra you are using&lt;/li&gt;&lt;li&gt;Performance data about the games you play&lt;/li&gt;&lt;li&gt;Your configuration settings&lt;/li&gt;&lt;li&gt;Information about your computer hardware&lt;/li&gt;&lt;li&gt;Emulation errors and crash information&lt;/li&gt;&lt;/ul&gt;By default, this feature is enabled. To disable this feature, click &apos;Emulation&apos; from the menu and then select &apos;Configure...&apos;. Then, on the &apos;Web&apos; tab, uncheck &apos;Share anonymous usage data with the Citra team&apos;. &lt;br/&gt;&lt;br/&gt;By using this software, you agree to the above terms.&lt;br/&gt;&lt;br/&gt;&lt;a href=&apos;https://citra-emu.org/entry/telemetry-and-why-thats-a-good-thing/&apos;&gt;Learn more&lt;/a&gt;</source>
         <translation>為了改進 Citra，Citra 團隊只收集了匿名的使用資料，不收集任何隱私或個人身份資訊。這些資料幫助我們了解人們如何使用 Citra，並排定工作的優先順序。此外，它也幫助我們更容易辨識 bug 和效能問題。這些資料包括：&lt;ul&gt;&lt;li&gt;目前使用的 Citra 版本&lt;/li&gt;&lt;li&gt;目前遊戲的效能數據&lt;/li&gt;&lt;li&gt;您的設定&lt;/li&gt;&lt;li&gt;您電腦的硬體資訊&lt;/li&gt;&lt;li&gt;模擬錯誤和當機資訊&lt;/li&gt;&lt;/ul&gt;預設為啟用本功能，若要停用，請點擊介面上方：模擬 &amp;gt; 設定…，然後在「網路」標籤頁中取消勾選「分享匿名使用資料給 Citra 團隊」。&lt;br/&gt;&lt;br/&gt;使用本軟體，即代表您同意上述條款。&lt;br/&gt;&lt;br/&gt;&lt;a href=&apos;https://citra-emu.org/entry/telemetry-and-why-thats-a-good-thing/&apos;&gt;了解更多&lt;/a&gt;</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="206"/>
+        <location filename="../../src/citra_qt/main.cpp" line="208"/>
         <source>Current emulation speed. Values higher or lower than 100% indicate emulation is running faster or slower than a 3DS.</source>
-        <translation>目前模擬速度，「高於/低於」100% 代表模擬速度比 3DS 實機「更快/更慢」。</translation>
+        <translation>目前模擬速度，
+「高於/低於」100% 代表模擬速度比 3DS 實機「更快/更慢」。</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="209"/>
+        <location filename="../../src/citra_qt/main.cpp" line="211"/>
         <source>How many frames per second the game is currently displaying. This will vary from game to game and scene to scene.</source>
         <translation>遊戲目前的 FPS，不同的遊戲和場景會有不同數值。</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="213"/>
+        <location filename="../../src/citra_qt/main.cpp" line="215"/>
         <source>Time taken to emulate a 3DS frame, not counting framelimiting or v-sync. For full-speed emulation this should be at most 16.67 ms.</source>
-        <translation>不計算影格限制或垂直同步時，模擬一個 3DS 影格所花的時間。全速模擬時，這個數值最多應為 16.67 毫秒。</translation>
+        <translation>不計算影格限制或垂直同步時，
+模擬一個 3DS 影格所花的時間。全速模擬時，這個數值最多應為 16.67 毫秒。</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="312"/>
+        <location filename="../../src/citra_qt/main.cpp" line="314"/>
         <source>F9</source>
         <translation>F9</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="313"/>
+        <location filename="../../src/citra_qt/main.cpp" line="315"/>
         <source>F10</source>
         <translation>F10</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="462"/>
+        <location filename="../../src/citra_qt/main.cpp" line="464"/>
         <source>CTRL+F</source>
         <translation>CTRL+F</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="571"/>
+        <location filename="../../src/citra_qt/main.cpp" line="573"/>
         <source>Update available!</source>
         <translation>有新的版本！</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="572"/>
+        <location filename="../../src/citra_qt/main.cpp" line="574"/>
         <source>An update for Citra is available. Do you wish to install it now?&lt;br /&gt;&lt;br /&gt;This &lt;b&gt;will&lt;/b&gt; terminate emulation, if it is running.</source>
         <translation>Citra 有新的版本，您想要馬上安裝嗎？&lt;br /&gt;&lt;br /&gt;如果模擬器正在執行，將會造成&lt;b&gt;模擬中斷&lt;/b&gt;。</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="583"/>
+        <location filename="../../src/citra_qt/main.cpp" line="585"/>
         <source>No update found</source>
         <translation>找不到新的版本</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="583"/>
+        <location filename="../../src/citra_qt/main.cpp" line="585"/>
         <source>No update has been found for Citra.</source>
         <translation>找不到新版的 Citra。</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="600"/>
+        <location filename="../../src/citra_qt/main.cpp" line="602"/>
         <source>Error while initializing OpenGL 3.3 Core!</source>
         <translation>初始化 OpenGL 3.3 核心時出現錯誤！</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="601"/>
+        <location filename="../../src/citra_qt/main.cpp" line="603"/>
         <source>Your GPU may not support OpenGL 3.3, or you do not have the latest graphics driver.</source>
         <translation>您的 GPU 可能沒有安裝最新的驅動程式，或者它不支援 OpenGL 3.3。確定支援後，請嘗試更新 GPU 驅動程式再執行模擬器；若不支援，則代表您的硬體不符合 Citra 的最低需求。</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="614"/>
-        <location filename="../../src/citra_qt/main.cpp" line="620"/>
-        <location filename="../../src/citra_qt/main.cpp" line="626"/>
-        <location filename="../../src/citra_qt/main.cpp" line="639"/>
-        <location filename="../../src/citra_qt/main.cpp" line="658"/>
+        <location filename="../../src/citra_qt/main.cpp" line="616"/>
+        <location filename="../../src/citra_qt/main.cpp" line="622"/>
+        <location filename="../../src/citra_qt/main.cpp" line="628"/>
+        <location filename="../../src/citra_qt/main.cpp" line="641"/>
+        <location filename="../../src/citra_qt/main.cpp" line="660"/>
         <source>Error while loading ROM!</source>
         <translation>讀取 ROM 時出現錯誤！</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="615"/>
-        <location filename="../../src/citra_qt/main.cpp" line="640"/>
+        <location filename="../../src/citra_qt/main.cpp" line="617"/>
+        <location filename="../../src/citra_qt/main.cpp" line="642"/>
         <source>The ROM format is not supported.</source>
         <translation>Citra 不支援這個 ROM 的格式，常見的可執行格式為 .3ds、.cci…等。</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="621"/>
+        <location filename="../../src/citra_qt/main.cpp" line="623"/>
         <source>Could not determine the system mode.</source>
         <translation>無法判定系統模式。</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="627"/>
+        <location filename="../../src/citra_qt/main.cpp" line="629"/>
         <source>The game that you are trying to load must be decrypted before being used with Citra. A real 3DS is required.&lt;br/&gt;&lt;br/&gt;For more information on dumping and decrypting games, please see the following wiki pages: &lt;ul&gt;&lt;li&gt;&lt;a href=&apos;https://citra-emu.org/wiki/dumping-game-cartridges/&apos;&gt;Dumping Game Cartridges&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a href=&apos;https://citra-emu.org/wiki/dumping-installed-titles/&apos;&gt;Dumping Installed Titles&lt;/a&gt;&lt;/li&gt;&lt;/ul&gt;</source>
         <translation>這個遊戲沒有解密，Citra 只能執行已解密的遊戲。正規的解密方式需要 3DS 實機。&lt;br/&gt;&lt;br/&gt;關於遊戲傾印和解密，請參考以下 wiki 網頁：&lt;ul&gt;&lt;li&gt;&lt;a href=&apos;https://citra-emu.org/wiki/dumping-game-cartridges/&apos;&gt;傾印遊戲卡帶&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a href=&apos;https://citra-emu.org/wiki/dumping-installed-titles/&apos;&gt;傾印已安裝的遊戲&lt;/a&gt;&lt;/li&gt;&lt;/ul&gt;</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="645"/>
+        <location filename="../../src/citra_qt/main.cpp" line="647"/>
         <source>An error occured in the video core.</source>
         <translation>視訊核心出現錯誤。</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="646"/>
+        <location filename="../../src/citra_qt/main.cpp" line="648"/>
         <source>Citra has encountered an error while running the video core, please see the log for more details.For more information on accessing the log, please see the following page: &lt;a href=&apos;https://community.citra-emu.org/t/how-to-upload-the-log-file/296&apos;&gt;How to Upload the Log File&lt;/a&gt;.Ensure that you have the latest graphics drivers for your GPU.</source>
         <translation>Citra 執行視訊核心時出現錯誤，請參閱日誌了解細節。關於日誌檔案，請參考以下網頁：&lt;a href=&apos;https://community.citra-emu.org/t/how-to-upload-the-log-file/296&apos;&gt;日誌檔案位置與上傳&lt;/a&gt;。&lt;b&gt;請確定您已安裝了最新的 GPU 驅動程式。&lt;/b&gt;</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="659"/>
+        <location filename="../../src/citra_qt/main.cpp" line="661"/>
         <source>An unknown error occured. Please see the log for more details.</source>
         <translation>出現未知的錯誤，請參閱日誌了解細節。</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="740"/>
+        <location filename="../../src/citra_qt/main.cpp" line="742"/>
         <source>Start</source>
         <translation>開始</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="837"/>
+        <location filename="../../src/citra_qt/main.cpp" line="839"/>
         <source>Error Opening %1 Folder</source>
         <translation>開啟 %1 資料夾時錯誤</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="838"/>
-        <location filename="../../src/citra_qt/main.cpp" line="882"/>
+        <location filename="../../src/citra_qt/main.cpp" line="840"/>
+        <location filename="../../src/citra_qt/main.cpp" line="884"/>
         <source>Folder does not exist!</source>
         <translation>資料夾不存在！</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="882"/>
+        <location filename="../../src/citra_qt/main.cpp" line="884"/>
         <source>Error Opening %1</source>
         <translation>開啟 %1 時錯誤</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="889"/>
+        <location filename="../../src/citra_qt/main.cpp" line="891"/>
         <source>Select Directory</source>
         <translation>選擇目錄</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="913"/>
+        <location filename="../../src/citra_qt/main.cpp" line="915"/>
         <source>3DS Executable</source>
         <translation>3DS 可執行檔案</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="914"/>
-        <location filename="../../src/citra_qt/main.cpp" line="928"/>
+        <location filename="../../src/citra_qt/main.cpp" line="916"/>
+        <location filename="../../src/citra_qt/main.cpp" line="930"/>
         <source>All Files (*.*)</source>
         <translation>所有檔案 (*.*)</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="916"/>
+        <location filename="../../src/citra_qt/main.cpp" line="918"/>
         <source>Load File</source>
         <translation>讀取檔案</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="927"/>
+        <location filename="../../src/citra_qt/main.cpp" line="929"/>
         <source>Load Files</source>
         <translation>讀取多個檔案</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="928"/>
+        <location filename="../../src/citra_qt/main.cpp" line="930"/>
         <source>3DS Installation File (*.CIA*)</source>
         <translation>3DS 安裝檔 (*.CIA)</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="959"/>
+        <location filename="../../src/citra_qt/main.cpp" line="961"/>
         <source>%1 has been installed successfully.</source>
         <translation>已成功安裝 %1。</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="962"/>
+        <location filename="../../src/citra_qt/main.cpp" line="964"/>
         <source>Unable to open File</source>
         <translation>無法開啟檔案</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="963"/>
+        <location filename="../../src/citra_qt/main.cpp" line="965"/>
         <source>Could not open %1</source>
         <translation>無法開啟 %1</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="967"/>
+        <location filename="../../src/citra_qt/main.cpp" line="969"/>
         <source>Installation aborted</source>
         <translation>安裝中斷</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="968"/>
+        <location filename="../../src/citra_qt/main.cpp" line="970"/>
         <source>The installation of %1 was aborted. Please see the log for more details</source>
         <translation>安裝 %1 時中斷，請參閱日誌了解細節。</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="972"/>
+        <location filename="../../src/citra_qt/main.cpp" line="974"/>
         <source>Invalid File</source>
         <translation>無效的檔案</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="972"/>
+        <location filename="../../src/citra_qt/main.cpp" line="974"/>
         <source>%1 is not a valid CIA</source>
         <translation>%1 不是有效的 CIA 檔案</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="975"/>
+        <location filename="../../src/citra_qt/main.cpp" line="977"/>
         <source>Encrypted File</source>
         <translation>檔案未解密</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="976"/>
+        <location filename="../../src/citra_qt/main.cpp" line="978"/>
         <source>%1 must be decrypted before being used with Citra. A real 3DS is required.</source>
         <translation>%1 需要先解密才能在 Citra 執行，正規的解密方式需要 3DS 實機。</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="999"/>
+        <location filename="../../src/citra_qt/main.cpp" line="1001"/>
         <source>File not found</source>
         <translation>找不到檔案</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="1000"/>
+        <location filename="../../src/citra_qt/main.cpp" line="1002"/>
         <source>File &quot;%1&quot; not found</source>
         <translation>找不到「%1」</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="1015"/>
+        <location filename="../../src/citra_qt/main.cpp" line="1017"/>
         <source>Continue</source>
         <translation>繼續</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="1040"/>
+        <location filename="../../src/citra_qt/main.cpp" line="1042"/>
         <source>Missing Citra Account</source>
         <translation>找不到 Citra 帳號</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="1041"/>
+        <location filename="../../src/citra_qt/main.cpp" line="1043"/>
         <source>In order to submit a game compatibility test case, you must link your Citra account.&lt;br&gt;&lt;br/&gt;To link your Citra account, go to Emulation &amp;gt; Configuration &amp;gt; Web.</source>
         <translation>提交遊戲相容性測試樣本前，必須連結您的 Citra 帳號。&lt;br&gt;&lt;br/&gt;請點擊介面上方：模擬 &amp;gt; 設定…，然後在「網路」標籤頁中連結您的帳號。</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="1192"/>
+        <location filename="../../src/citra_qt/main.cpp" line="1196"/>
         <source>Speed: %1% / %2%</source>
         <translation>速度：%1% / %2%</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="1196"/>
+        <location filename="../../src/citra_qt/main.cpp" line="1200"/>
         <source>Speed: %1%</source>
         <translation>速度：%1%</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="1198"/>
+        <location filename="../../src/citra_qt/main.cpp" line="1202"/>
         <source>Game: %1 FPS</source>
         <translation>FPS：%1</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="1199"/>
+        <location filename="../../src/citra_qt/main.cpp" line="1203"/>
         <source>Frame: %1 ms</source>
         <translation>影格：%1 ms</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="1210"/>
+        <location filename="../../src/citra_qt/main.cpp" line="1214"/>
         <source>The game you are trying to load requires additional files from your 3DS to be dumped before playing.&lt;br/&gt;&lt;br/&gt;For more information on dumping these files, please see the following wiki page: &lt;a href=&apos;https://citra-emu.org/wiki/dumping-system-archives-and-the-shared-fonts-from-a-3ds-console/&apos;&gt;Dumping System Archives and the Shared Fonts from a 3DS Console&lt;/a&gt;.&lt;br/&gt;&lt;br/&gt;Would you like to quit back to the game list? Continuing emulation may result in crashes, corrupted save data, or other bugs.</source>
         <translation>您讀取的遊戲需要 3DS 實機傾印的系統檔案才能執行。&lt;br/&gt;&lt;br/&gt;關於傾印系統檔案，請參考以下 wiki 網頁：&lt;a href=&apos;https://citra-emu.org/wiki/dumping-system-archives-and-the-shared-fonts-from-a-3ds-console/&apos;&gt;從 3DS 實機傾印系統檔案和共享字體&lt;/a&gt;。&lt;br/&gt;&lt;br/&gt;您想回到遊戲列表嗎？繼續模擬可能造成當機、存檔不完整或其他錯誤。</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="1222"/>
+        <location filename="../../src/citra_qt/main.cpp" line="1226"/>
         <source>: %1. </source>
         <translation>: %1. </translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="1228"/>
+        <location filename="../../src/citra_qt/main.cpp" line="1232"/>
         <source>System Archive Not Found</source>
         <translation>找不到系統檔案</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="1235"/>
+        <location filename="../../src/citra_qt/main.cpp" line="1239"/>
         <source>Citra was unable to locate the 3DS shared fonts. </source>
         <translation>Citra 找不到 3DS 的共享字體。</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="1237"/>
+        <location filename="../../src/citra_qt/main.cpp" line="1241"/>
         <source>Shared Fonts Not Found</source>
         <translation>找不到共享字體</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="1245"/>
+        <location filename="../../src/citra_qt/main.cpp" line="1249"/>
         <source>Fatal Error</source>
         <translation>嚴重錯誤</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="1246"/>
+        <location filename="../../src/citra_qt/main.cpp" line="1250"/>
         <source>Citra has encountered a fatal error, please see the log for more details. For more information on accessing the log, please see the following page: &lt;a href=&apos;https://community.citra-emu.org/t/how-to-upload-the-log-file/296&apos;&gt;How to Upload the Log File&lt;/a&gt;.&lt;br/&gt;&lt;br/&gt;Would you like to quit back to the game list? Continuing emulation may result in crashes, corrupted save data, or other bugs.</source>
         <translation>Citra 出現一個嚴重的錯誤，請參閱日誌了解細節。關於日誌檔案，請參考以下網頁：&lt;a href=&apos;https://community.citra-emu.org/t/how-to-upload-the-log-file/296&apos;&gt;日誌檔案位置與上傳&lt;/a&gt;。&lt;br/&gt;&lt;br/&gt;您想回到遊戲列表嗎？繼續模擬可能造成當機、存檔不完整或其他錯誤。</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="1280"/>
-        <location filename="../../src/citra_qt/main.cpp" line="1347"/>
+        <location filename="../../src/citra_qt/main.cpp" line="1284"/>
+        <location filename="../../src/citra_qt/main.cpp" line="1351"/>
         <source>Citra</source>
         <translation>Citra</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="1280"/>
+        <location filename="../../src/citra_qt/main.cpp" line="1284"/>
         <source>Are you sure you want to close Citra?</source>
         <translation>您確定要關閉 Citra 嗎？</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="1348"/>
+        <location filename="../../src/citra_qt/main.cpp" line="1352"/>
         <source>Are you sure you want to stop the emulation? Any unsaved progress will be lost.</source>
         <translation>您確定要停止模擬嗎？您將會失去所有未儲存的遊戲進度。</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="1419"/>
+        <location filename="../../src/citra_qt/main.cpp" line="1423"/>
         <source>Citra %1</source>
         <translation>Citra %1</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/main.cpp" line="1421"/>
+        <location filename="../../src/citra_qt/main.cpp" line="1425"/>
         <source>Citra %1| %2</source>
         <translation>Citra %1| %2</translation>
     </message>
@@ -1834,47 +1863,47 @@ Screen.</source>
         <translation>遊戲尚未收集到測試樣本。</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="92"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="89"/>
         <source>of</source>
         <translation>/</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="95"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="92"/>
         <source>result</source>
         <translation>項符合</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="97"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="94"/>
         <source>results</source>
         <translation>項符合</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="137"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="134"/>
         <source>Filter:</source>
         <translation>項目篩選</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="140"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="137"/>
         <source>Enter pattern to filter</source>
         <translation>輸入項目關鍵字</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="437"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="436"/>
         <source>Open Save Data Location</source>
         <translation>開啟存檔位置</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="438"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="437"/>
         <source>Open Application Location</source>
         <translation>開啟應用程式位置</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="439"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="438"/>
         <source>Open Update Data Location</source>
         <translation>開啟更新檔位置</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/game_list.cpp" line="440"/>
+        <location filename="../../src/citra_qt/game_list.cpp" line="439"/>
         <source>Navigate to GameDB entry</source>
         <translation>開啟遊戲相容性網頁</translation>
     </message>
@@ -2307,42 +2336,42 @@ Screen.</source>
         <translation>重新整理</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/multiplayer/lobby.cpp" line="73"/>
+        <location filename="../../src/citra_qt/multiplayer/lobby.cpp" line="77"/>
         <source>Password Required to Join</source>
         <translation>需要密碼</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/multiplayer/lobby.cpp" line="74"/>
+        <location filename="../../src/citra_qt/multiplayer/lobby.cpp" line="78"/>
         <source>Password:</source>
         <translation>密碼：</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/multiplayer/lobby.cpp" line="139"/>
+        <location filename="../../src/citra_qt/multiplayer/lobby.cpp" line="143"/>
         <source>Room Name</source>
         <translation>房間名稱</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/multiplayer/lobby.cpp" line="140"/>
+        <location filename="../../src/citra_qt/multiplayer/lobby.cpp" line="144"/>
         <source>Preferred Game</source>
         <translation>首選遊戲</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/multiplayer/lobby.cpp" line="141"/>
+        <location filename="../../src/citra_qt/multiplayer/lobby.cpp" line="145"/>
         <source>Host</source>
         <translation>建立者</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/multiplayer/lobby.cpp" line="142"/>
+        <location filename="../../src/citra_qt/multiplayer/lobby.cpp" line="146"/>
         <source>Players</source>
         <translation>玩家數</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/multiplayer/lobby.cpp" line="150"/>
+        <location filename="../../src/citra_qt/multiplayer/lobby.cpp" line="154"/>
         <source>Refreshing</source>
         <translation>正在重新整理</translation>
     </message>
     <message>
-        <location filename="../../src/citra_qt/multiplayer/lobby.cpp" line="198"/>
+        <location filename="../../src/citra_qt/multiplayer/lobby.cpp" line="202"/>
         <source>Refresh List</source>
         <translation>重新整理</translation>
     </message>
@@ -2387,7 +2416,7 @@ Screen.</source>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="114"/>
         <source>Multiplayer</source>
-        <translation>多人遊戲</translation>
+        <translation>多人連線 (&amp;M)</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="125"/>
@@ -2542,7 +2571,7 @@ Screen.</source>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="335"/>
         <source>Swap Screens</source>
-        <translation>交換畫面位置</translation>
+        <translation>交換上下畫面</translation>
     </message>
     <message>
         <location filename="../../src/citra_qt/main.ui" line="340"/>
@@ -2838,6 +2867,34 @@ Debug Message: </source>
         <location filename="../../src/citra_qt/camera/still_image_camera.cpp" line="46"/>
         <source>Open File</source>
         <translation>開啟檔案</translation>
+    </message>
+</context>
+<context>
+    <name>QtKeyboardDialog</name>
+    <message>
+        <location filename="../../src/citra_qt/applets/swkbd.cpp" line="99"/>
+        <source>Text length is not correct (should be %1 characters)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/applets/swkbd.cpp" line="102"/>
+        <source>Text is too long (should be no more than %1 characters)</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/applets/swkbd.cpp" line="104"/>
+        <source>Blank input is not allowed</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/applets/swkbd.cpp" line="105"/>
+        <source>Empty input is not allowed</source>
+        <translation type="unfinished"/>
+    </message>
+    <message>
+        <location filename="../../src/citra_qt/applets/swkbd.cpp" line="107"/>
+        <source>Validation error</source>
+        <translation type="unfinished"/>
     </message>
 </context>
 <context>
