@@ -286,7 +286,8 @@ static void DebugThreadQueue() {
  * slot: The index of the first free slot in the indicated page.
  * alloc_needed: Whether there's a need to allocate a new TLS page (All pages are full).
  */
-static std::tuple<u32, u32, bool> GetFreeThreadLocalSlot(std::vector<std::bitset<8>>& tls_slots) {
+static std::tuple<u32, u32, bool> GetFreeThreadLocalSlot(
+    const std::vector<std::bitset<8>>& tls_slots) {
     // Iterate over all the allocated pages, and try to find one where not all slots are used.
     for (unsigned page = 0; page < tls_slots.size(); ++page) {
         const auto& page_tls_slots = tls_slots[page];
