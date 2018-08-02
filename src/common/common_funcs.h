@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include <string>
+
 #if !defined(ARCHITECTURE_x86_64)
 #include <cstdlib> // for exit
 #endif
@@ -57,4 +59,4 @@ __declspec(dllimport) void __stdcall DebugBreak(void);
 // Call directly after the command or use the error num.
 // This function might change the error code.
 // Defined in Misc.cpp.
-const char* GetLastErrorMsg();
+std::string GetLastErrorMsg();
