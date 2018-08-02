@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <algorithm>
 #include <iterator>
 #include "common/assert.h"
 #include "core/hle/kernel/errors.h"
@@ -322,10 +323,9 @@ ResultVal<VMManager::VMAIter> VMManager::CarveVMARange(VAddr target, u32 size) {
 
     VMAIter begin_vma = StripIterConstness(FindVMA(target));
     const VMAIter i_end = vma_map.lower_bound(target_end);
-    for (auto i = begin_vma; i != i_end; ++i) {
-        if (i->second.type == VMAType::Free) {
-            return ERR_INVALID_ADDRESS_STATE;
-        }
+    if (std::any_of(begin_vma, i_end,
+                    [](const auto& entry) { return entry.second.type == VMAType::Free; })) {
+        return ERR_INVALID_ADDRESS_STATE;
     }
 
     if (target != begin_vma->second.base) {
