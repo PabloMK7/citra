@@ -123,6 +123,8 @@ add_library(core STATIC
     hle/kernel/memory.h
     hle/kernel/mutex.cpp
     hle/kernel/mutex.h
+    hle/kernel/object.cpp
+    hle/kernel/object.h
     hle/kernel/process.cpp
     hle/kernel/process.h
     hle/kernel/resource_limit.cpp

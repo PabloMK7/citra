@@ -9,7 +9,7 @@
 #include <QTreeView>
 #include <boost/container/flat_set.hpp>
 #include "core/core.h"
-#include "core/hle/kernel/kernel.h"
+#include "core/hle/kernel/object.h"
 
 class EmuThread;
 
