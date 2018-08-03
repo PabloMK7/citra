@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <array>
 #include <bitset>
 #include <cstddef>
 #include <memory>
@@ -101,7 +102,7 @@ struct CodeSet final : public Object {
 
     std::shared_ptr<std::vector<u8>> memory;
 
-    Segment segments[3];
+    std::array<Segment, 3> segments;
     VAddr entrypoint;
 
     /// Name of the process
