@@ -14,7 +14,7 @@ public:
     explicit KeyButton(std::shared_ptr<KeyButtonList> key_button_list_)
         : key_button_list(key_button_list_) {}
 
-    ~KeyButton();
+    ~KeyButton() override;
 
     bool GetStatus() const override {
         return status.load();

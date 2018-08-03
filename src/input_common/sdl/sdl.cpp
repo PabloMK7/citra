@@ -314,10 +314,6 @@ namespace Polling {
 
 class SDLPoller : public InputCommon::Polling::DevicePoller {
 public:
-    SDLPoller() = default;
-
-    ~SDLPoller() = default;
-
     void Start() override {
         // SDL joysticks must be opened, otherwise they don't generate events
         SDL_JoystickUpdate();
@@ -341,10 +337,6 @@ private:
 
 class SDLButtonPoller final : public SDLPoller {
 public:
-    SDLButtonPoller() = default;
-
-    ~SDLButtonPoller() = default;
-
     Common::ParamPackage GetNextInput() override {
         SDL_Event event;
         while (SDL_PollEvent(&event)) {
@@ -364,10 +356,6 @@ public:
 
 class SDLAnalogPoller final : public SDLPoller {
 public:
-    SDLAnalogPoller() = default;
-
-    ~SDLAnalogPoller() = default;
-
     void Start() override {
         SDLPoller::Start();
 
