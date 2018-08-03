@@ -86,16 +86,15 @@ public slots:
     void OnSurfacePickerYChanged(int new_value);
     void OnUpdate();
 
-private slots:
+signals:
+    void Update();
+
+private:
     void OnBreakPointHit(Pica::DebugContext::Event event, void* data) override;
     void OnResumed() override;
 
     void SaveSurface();
 
-signals:
-    void Update();
-
-private:
     QComboBox* surface_source_list;
     CSpinBox* surface_address_control;
     QSpinBox* surface_width_control;

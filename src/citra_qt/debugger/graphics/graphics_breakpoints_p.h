@@ -25,7 +25,6 @@ public:
 
     bool setData(const QModelIndex& index, const QVariant& value, int role = Qt::EditRole) override;
 
-public slots:
     void OnBreakPointHit(Pica::DebugContext::Event event);
     void OnResumed();
 

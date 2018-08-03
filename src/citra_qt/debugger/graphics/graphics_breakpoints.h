@@ -26,18 +26,17 @@ public:
     void OnPicaBreakPointHit(Pica::DebugContext::Event event, void* data) override;
     void OnPicaResume() override;
 
-public slots:
-    void OnBreakPointHit(Pica::DebugContext::Event event, void* data);
-    void OnItemDoubleClicked(const QModelIndex&);
-    void OnResumeRequested();
-    void OnResumed();
-
 signals:
     void Resumed();
     void BreakPointHit(Pica::DebugContext::Event event, void* data);
     void BreakPointsChanged(const QModelIndex& topLeft, const QModelIndex& bottomRight);
 
 private:
+    void OnBreakPointHit(Pica::DebugContext::Event event, void* data);
+    void OnItemDoubleClicked(const QModelIndex&);
+    void OnResumeRequested();
+    void OnResumed();
+
     QLabel* status_text;
     QPushButton* resume_button;
 
