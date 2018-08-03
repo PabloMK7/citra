@@ -320,6 +320,7 @@ void GMainWindow::InitializeHotkeys() {
     RegisterHotkey("Main Window", "Load File", QKeySequence::Open);
     RegisterHotkey("Main Window", "Start Emulation");
     RegisterHotkey("Main Window", "Continue/Pause", QKeySequence(Qt::Key_F4));
+    RegisterHotkey("Main Window", "Restart", QKeySequence(Qt::Key_F5));
     RegisterHotkey("Main Window", "Swap Screens", QKeySequence(tr("F9")));
     RegisterHotkey("Main Window", "Toggle Screen Layout", QKeySequence(tr("F10")));
     RegisterHotkey("Main Window", "Fullscreen", QKeySequence::FullScreen);
@@ -345,6 +346,11 @@ void GMainWindow::InitializeHotkeys() {
                 OnStartGame();
             }
         }
+    });
+    connect(GetHotkey("Main Window", "Restart", this), &QShortcut::activated, this, [&] {
+        if (!Core::System::GetInstance().IsPoweredOn())
+            return;
+        BootGame(QString(UISettings::values.recent_files.first()));
     });
     connect(GetHotkey("Main Window", "Swap Screens", render_window), &QShortcut::activated,
             ui.action_Screen_Layout_Swap_Screens, &QAction::trigger);
@@ -462,6 +468,8 @@ void GMainWindow::ConnectMenuEvents() {
     connect(ui.action_Start, &QAction::triggered, this, &GMainWindow::OnStartGame);
     connect(ui.action_Pause, &QAction::triggered, this, &GMainWindow::OnPauseGame);
     connect(ui.action_Stop, &QAction::triggered, this, &GMainWindow::OnStopGame);
+    connect(ui.action_Restart, &QAction::triggered, this,
+            [&] { BootGame(QString(UISettings::values.recent_files.first())); });
     connect(ui.action_Report_Compatibility, &QAction::triggered, this,
             &GMainWindow::OnMenuReportCompatibility);
     connect(ui.action_Configure, &QAction::triggered, this, &GMainWindow::OnConfigure);
@@ -752,6 +760,7 @@ void GMainWindow::ShutdownGame() {
     ui.action_Start->setText(tr("Start"));
     ui.action_Pause->setEnabled(false);
     ui.action_Stop->setEnabled(false);
+    ui.action_Restart->setEnabled(false);
     ui.action_Report_Compatibility->setEnabled(false);
     render_window->hide();
     if (game_list->isEmpty())
@@ -1028,6 +1037,7 @@ void GMainWindow::OnStartGame() {
 
     ui.action_Pause->setEnabled(true);
     ui.action_Stop->setEnabled(true);
+    ui.action_Restart->setEnabled(true);
     ui.action_Report_Compatibility->setEnabled(true);
 }
 
