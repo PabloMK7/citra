@@ -310,11 +310,11 @@ SharedPtr<CodeSet> ElfReader::LoadInto(u32 vaddr) {
             CodeSet::Segment* codeset_segment;
             u32 permission_flags = p->p_flags & (PF_R | PF_W | PF_X);
             if (permission_flags == (PF_R | PF_X)) {
-                codeset_segment = &codeset->code;
+                codeset_segment = &codeset->CodeSegment();
             } else if (permission_flags == (PF_R)) {
-                codeset_segment = &codeset->rodata;
+                codeset_segment = &codeset->RODataSegment();
             } else if (permission_flags == (PF_R | PF_W)) {
-                codeset_segment = &codeset->data;
+                codeset_segment = &codeset->DataSegment();
             } else {
                 LOG_ERROR(Loader, "Unexpected ELF PT_LOAD segment id {} with flags {:X}", i,
                           p->p_flags);
