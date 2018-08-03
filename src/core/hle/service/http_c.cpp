@@ -36,7 +36,7 @@ void HTTP_C::Initialize(Kernel::HLERequestContext& ctx) {
         shared_memory->name = "HTTP_C:shared_memory";
     }
 
-    LOG_WARNING(Service_HTTP, "(STUBBED) called, shared memory size: {}", shmem_size);
+    LOG_WARNING(Service_HTTP, "(STUBBED) called, shared memory size: {} pid: {}", shmem_size, pid);
 
     auto* session_data = GetSessionData(ctx.Session());
     ASSERT(session_data);
@@ -57,7 +57,7 @@ void HTTP_C::Initialize(Kernel::HLERequestContext& ctx) {
 
 void HTTP_C::InitializeConnectionSession(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x8, 1, 2);
-    const u32 context_handle = rp.Pop<u32>();
+    const Context::Handle context_handle = rp.Pop<u32>();
     u32 pid = rp.PopPID();
 
     auto* session_data = GetSessionData(ctx.Session());
@@ -84,7 +84,7 @@ void HTTP_C::InitializeConnectionSession(Kernel::HLERequestContext& ctx) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
-    LOG_DEBUG(Service_HTTP, "called, context_id={}", context_handle);
+    LOG_DEBUG(Service_HTTP, "called, context_id={} pid={}", context_handle, pid);
 }
 
 void HTTP_C::CreateContext(Kernel::HLERequestContext& ctx) {
@@ -265,7 +265,7 @@ void HTTP_C::AddRequestHeader(Kernel::HLERequestContext& ctx) {
     rb.PushMappedBuffer(value_buffer);
 
     LOG_DEBUG(Service_HTTP, "called, name={}, value={}, context_handle={}", name, value,
-                context_handle);
+              context_handle);
 }
 
 HTTP_C::HTTP_C() : ServiceFramework("http:C", 32) {
