@@ -261,7 +261,7 @@ endif()
 # ======================================
 
 IF (APPLE)
-    FIND_LIBRARY(COCOA_LIBRARY Cocoa)           # Umbrella framework for everything GUI-related
+    find_library(COCOA_LIBRARY Cocoa)           # Umbrella framework for everything GUI-related
     set(PLATFORM_LIBRARIES ${COCOA_LIBRARY} ${IOKIT_LIBRARY} ${COREVIDEO_LIBRARY})
 
     if (CMAKE_CXX_COMPILER_ID STREQUAL Clang)
