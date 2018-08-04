@@ -384,6 +384,12 @@ void RendererOpenGL::DrawSingleScreenRotated(const ScreenInfo& screen_info, floa
  * Draws the emulated screens to the emulator window.
  */
 void RendererOpenGL::DrawScreens() {
+    if (VideoCore::g_renderer_bg_color_update_requested.exchange(false)) {
+        // Update background color before drawing
+        glClearColor(Settings::values.bg_red, Settings::values.bg_green, Settings::values.bg_blue,
+                     0.0f);
+    }
+
     auto layout = render_window->GetFramebufferLayout();
     const auto& top_screen = layout.top_screen;
     const auto& bottom_screen = layout.bottom_screen;
