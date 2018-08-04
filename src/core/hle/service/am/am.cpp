@@ -404,6 +404,7 @@ std::string GetTitleContentPath(Service::FS::MediaType media_type, u64 tid, u16 
         } else {
             LOG_ERROR(Service_AM, "Attempted to get path for non-existent content index {:04x}.",
                       index);
+            return "";
         }
 
         // TODO(shinyquagsire23): how does DLC actually get this folder on hardware?
