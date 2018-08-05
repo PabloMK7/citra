@@ -39,36 +39,38 @@
 #include "core/loader/loader.h"
 #include "core/memory.h"
 
-const int GDB_BUFFER_SIZE = 10000;
+namespace GDBStub {
+namespace {
+constexpr int GDB_BUFFER_SIZE = 10000;
 
-const char GDB_STUB_START = '$';
-const char GDB_STUB_END = '#';
-const char GDB_STUB_ACK = '+';
-const char GDB_STUB_NACK = '-';
+constexpr char GDB_STUB_START = '$';
+constexpr char GDB_STUB_END = '#';
+constexpr char GDB_STUB_ACK = '+';
+constexpr char GDB_STUB_NACK = '-';
 
 #ifndef SIGTRAP
-const u32 SIGTRAP = 5;
+constexpr u32 SIGTRAP = 5;
 #endif
 
 #ifndef SIGTERM
-const u32 SIGTERM = 15;
+constexpr u32 SIGTERM = 15;
 #endif
 
 #ifndef MSG_WAITALL
-const u32 MSG_WAITALL = 8;
+constexpr u32 MSG_WAITALL = 8;
 #endif
 
-const u32 SP_REGISTER = 13;
-const u32 LR_REGISTER = 14;
-const u32 PC_REGISTER = 15;
-const u32 CPSR_REGISTER = 25;
-const u32 D0_REGISTER = 26;
-const u32 FPSCR_REGISTER = 42;
+constexpr u32 SP_REGISTER = 13;
+constexpr u32 LR_REGISTER = 14;
+constexpr u32 PC_REGISTER = 15;
+constexpr u32 CPSR_REGISTER = 25;
+constexpr u32 D0_REGISTER = 26;
+constexpr u32 FPSCR_REGISTER = 42;
 
 // For sample XML files see the GDB source /gdb/features
 // GDB also wants the l character at the start
 // This XML defines what the registers are for this specific ARM device
-static const char* target_xml =
+constexpr char target_xml[] =
     R"(l<?xml version="1.0"?>
 <!DOCTYPE target SYSTEM "gdb-target.dtd">
 <target version="1.0">
@@ -118,29 +120,27 @@ static const char* target_xml =
 </target>
 )";
 
-namespace GDBStub {
+int gdbserver_socket = -1;
 
-static int gdbserver_socket = -1;
+u8 command_buffer[GDB_BUFFER_SIZE];
+u32 command_length;
 
-static u8 command_buffer[GDB_BUFFER_SIZE];
-static u32 command_length;
-
-static u32 latest_signal = 0;
-static bool memory_break = false;
+u32 latest_signal = 0;
+bool memory_break = false;
 
 static Kernel::Thread* current_thread = nullptr;
 
 // Binding to a port within the reserved ports range (0-1023) requires root permissions,
 // so default to a port outside of that range.
-static u16 gdbstub_port = 24689;
+u16 gdbstub_port = 24689;
 
-static bool halt_loop = true;
-static bool step_loop = false;
-static bool send_trap = false;
+bool halt_loop = true;
+bool step_loop = false;
+bool send_trap = false;
 
 // If set to false, the server will never be started and no
 // gdbstub-related functions will be executed.
-static std::atomic<bool> server_enabled(false);
+std::atomic<bool> server_enabled(false);
 
 #ifdef _WIN32
 WSADATA InitData;
@@ -153,9 +153,11 @@ struct Breakpoint {
     std::array<u8, 4> inst;
 };
 
-static std::map<u32, Breakpoint> breakpoints_execute;
-static std::map<u32, Breakpoint> breakpoints_read;
-static std::map<u32, Breakpoint> breakpoints_write;
+std::map<u32, Breakpoint> breakpoints_execute;
+std::map<u32, Breakpoint> breakpoints_read;
+std::map<u32, Breakpoint> breakpoints_write;
+
+} // Anonymous namespace
 
 static Kernel::Thread* FindThreadById(int id) {
     const auto& threads = Kernel::GetThreadList();
