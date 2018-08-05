@@ -148,7 +148,7 @@ WSADATA InitData;
 
 struct Breakpoint {
     bool active;
-    PAddr addr;
+    VAddr addr;
     u32 len;
     std::array<u8, 4> inst;
 };
@@ -397,7 +397,7 @@ static std::map<u32, Breakpoint>& GetBreakpointList(BreakpointType type) {
  * @param type Type of breakpoint.
  * @param addr Address of breakpoint.
  */
-static void RemoveBreakpoint(BreakpointType type, PAddr addr) {
+static void RemoveBreakpoint(BreakpointType type, VAddr addr) {
     std::map<u32, Breakpoint>& p = GetBreakpointList(type);
 
     auto bp = p.find(addr);
@@ -410,7 +410,7 @@ static void RemoveBreakpoint(BreakpointType type, PAddr addr) {
     }
 }
 
-BreakpointAddress GetNextBreakpointFromAddress(PAddr addr, BreakpointType type) {
+BreakpointAddress GetNextBreakpointFromAddress(VAddr addr, BreakpointType type) {
     std::map<u32, Breakpoint>& p = GetBreakpointList(type);
     auto next_breakpoint = p.lower_bound(addr);
     BreakpointAddress breakpoint;
@@ -426,7 +426,7 @@ BreakpointAddress GetNextBreakpointFromAddress(PAddr addr, BreakpointType type) 
     return breakpoint;
 }
 
-bool CheckBreakpoint(PAddr addr, BreakpointType type) {
+bool CheckBreakpoint(VAddr addr, BreakpointType type) {
     if (!IsConnected()) {
         return false;
     }
@@ -895,7 +895,7 @@ static void Continue() {
  * @param addr Address of breakpoint.
  * @param len Length of breakpoint.
  */
-static bool CommitBreakpoint(BreakpointType type, PAddr addr, u32 len) {
+static bool CommitBreakpoint(BreakpointType type, VAddr addr, u32 len) {
     std::map<u32, Breakpoint>& p = GetBreakpointList(type);
 
     Breakpoint breakpoint;
@@ -939,7 +939,7 @@ static void AddBreakpoint() {
 
     auto start_offset = command_buffer + 3;
     auto addr_pos = std::find(start_offset, command_buffer + command_length, ',');
-    PAddr addr = HexToInt(start_offset, static_cast<u32>(addr_pos - start_offset));
+    VAddr addr = HexToInt(start_offset, static_cast<u32>(addr_pos - start_offset));
 
     start_offset = addr_pos + 1;
     u32 len =
@@ -988,7 +988,7 @@ static void RemoveBreakpoint() {
 
     auto start_offset = command_buffer + 3;
     auto addr_pos = std::find(start_offset, command_buffer + command_length, ',');
-    PAddr addr = HexToInt(start_offset, static_cast<u32>(addr_pos - start_offset));
+    VAddr addr = HexToInt(start_offset, static_cast<u32>(addr_pos - start_offset));
 
     if (type == BreakpointType::Access) {
         // Access is made up of Read and Write types, so add both breakpoints
