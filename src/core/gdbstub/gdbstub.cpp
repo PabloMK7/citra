@@ -153,9 +153,10 @@ struct Breakpoint {
     std::array<u8, 4> inst;
 };
 
-std::map<u32, Breakpoint> breakpoints_execute;
-std::map<u32, Breakpoint> breakpoints_read;
-std::map<u32, Breakpoint> breakpoints_write;
+using BreakpointMap = std::map<VAddr, Breakpoint>;
+BreakpointMap breakpoints_execute;
+BreakpointMap breakpoints_read;
+BreakpointMap breakpoints_write;
 } // Anonymous namespace
 
 static Kernel::Thread* FindThreadById(int id) {
@@ -375,11 +376,11 @@ static u8 CalculateChecksum(const u8* buffer, size_t length) {
 }
 
 /**
- * Get the list of breakpoints for a given breakpoint type.
+ * Get the map of breakpoints for a given breakpoint type.
  *
- * @param type Type of breakpoint list.
+ * @param type Type of breakpoint map.
  */
-static std::map<u32, Breakpoint>& GetBreakpointList(BreakpointType type) {
+static BreakpointMap& GetBreakpointMap(BreakpointType type) {
     switch (type) {
     case BreakpointType::Execute:
         return breakpoints_execute;
@@ -399,21 +400,23 @@ static std::map<u32, Breakpoint>& GetBreakpointList(BreakpointType type) {
  * @param addr Address of breakpoint.
  */
 static void RemoveBreakpoint(BreakpointType type, VAddr addr) {
-    std::map<u32, Breakpoint>& p = GetBreakpointList(type);
+    BreakpointMap& p = GetBreakpointMap(type);
 
-    auto bp = p.find(addr);
-    if (bp != p.end()) {
-        LOG_DEBUG(Debug_GDBStub, "gdb: removed a breakpoint: {:08x} bytes at {:08x} of type {}\n",
-                  bp->second.len, bp->second.addr, static_cast<int>(type));
-        Memory::WriteBlock(bp->second.addr, bp->second.inst.data(), bp->second.inst.size());
-        Core::CPU().ClearInstructionCache();
-        p.erase(addr);
+    const auto bp = p.find(addr);
+    if (bp == p.end()) {
+        return;
     }
+
+    LOG_DEBUG(Debug_GDBStub, "gdb: removed a breakpoint: {:08x} bytes at {:08x} of type {}",
+              bp->second.len, bp->second.addr, static_cast<int>(type));
+    Memory::WriteBlock(bp->second.addr, bp->second.inst.data(), bp->second.inst.size());
+    Core::CPU().ClearInstructionCache();
+    p.erase(addr);
 }
 
 BreakpointAddress GetNextBreakpointFromAddress(VAddr addr, BreakpointType type) {
-    std::map<u32, Breakpoint>& p = GetBreakpointList(type);
-    auto next_breakpoint = p.lower_bound(addr);
+    const BreakpointMap& p = GetBreakpointMap(type);
+    const auto next_breakpoint = p.lower_bound(addr);
     BreakpointAddress breakpoint;
 
     if (next_breakpoint != p.end()) {
@@ -432,30 +435,33 @@ bool CheckBreakpoint(VAddr addr, BreakpointType type) {
         return false;
     }
 
-    std::map<u32, Breakpoint>& p = GetBreakpointList(type);
+    const BreakpointMap& p = GetBreakpointMap(type);
+    const auto bp = p.find(addr);
 
-    auto bp = p.find(addr);
-    if (bp != p.end()) {
-        u32 len = bp->second.len;
+    if (bp == p.end()) {
+        return false;
+    }
 
-        // IDA Pro defaults to 4-byte breakpoints for all non-hardware breakpoints
-        // no matter if it's a 4-byte or 2-byte instruction. When you execute a
-        // Thumb instruction with a 4-byte breakpoint set, it will set a breakpoint on
-        // two instructions instead of the single instruction you placed the breakpoint
-        // on. So, as a way to make sure that execution breakpoints are only breaking
-        // on the instruction that was specified, set the length of an execution
-        // breakpoint to 1. This should be fine since the CPU should never begin executing
-        // an instruction anywhere except the beginning of the instruction.
-        if (type == BreakpointType::Execute) {
-            len = 1;
-        }
+    u32 len = bp->second.len;
 
-        if (bp->second.active && (addr >= bp->second.addr && addr < bp->second.addr + len)) {
-            LOG_DEBUG(Debug_GDBStub,
-                      "Found breakpoint type {} @ {:08x}, range: {:08x} - {:08x} ({} bytes)\n",
-                      static_cast<int>(type), addr, bp->second.addr, bp->second.addr + len, len);
-            return true;
-        }
+    // IDA Pro defaults to 4-byte breakpoints for all non-hardware breakpoints
+    // no matter if it's a 4-byte or 2-byte instruction. When you execute a
+    // Thumb instruction with a 4-byte breakpoint set, it will set a breakpoint on
+    // two instructions instead of the single instruction you placed the breakpoint
+    // on. So, as a way to make sure that execution breakpoints are only breaking
+    // on the instruction that was specified, set the length of an execution
+    // breakpoint to 1. This should be fine since the CPU should never begin executing
+    // an instruction anywhere except the beginning of the instruction.
+    if (type == BreakpointType::Execute) {
+        len = 1;
+    }
+
+    if (bp->second.active && (addr >= bp->second.addr && addr < bp->second.addr + len)) {
+        LOG_DEBUG(Debug_GDBStub,
+                  "Found breakpoint type {} @ {:08x}, range: {:08x}"
+                  " - {:08x} ({:x} bytes)",
+                  static_cast<int>(type), addr, bp->second.addr, bp->second.addr + len, len);
+        return true;
     }
 
     return false;
@@ -897,7 +903,7 @@ static void Continue() {
  * @param len Length of breakpoint.
  */
 static bool CommitBreakpoint(BreakpointType type, VAddr addr, u32 len) {
-    std::map<u32, Breakpoint>& p = GetBreakpointList(type);
+    BreakpointMap& p = GetBreakpointMap(type);
 
     Breakpoint breakpoint;
     breakpoint.active = true;
