@@ -121,14 +121,16 @@ inline u64 cyclesToMs(s64 cycles) {
 
 namespace CoreTiming {
 
+struct EventType;
+
+using TimedCallback = std::function<void(u64 userdata, int cycles_late)>;
+
 /**
  * CoreTiming begins at the boundary of timing slice -1. An initial call to Advance() is
  * required to end slice -1 and start slice 0 before the first cycle of code is executed.
  */
 void Init();
 void Shutdown();
-
-typedef std::function<void(u64 userdata, s64 cycles_late)> TimedCallback;
 
 /**
  * This should only be called from the emu thread, if you are calling it any other thread, you are
@@ -137,8 +139,6 @@ typedef std::function<void(u64 userdata, s64 cycles_late)> TimedCallback;
 u64 GetTicks();
 u64 GetIdleTicks();
 void AddTicks(u64 ticks);
-
-struct EventType;
 
 /**
  * Returns the event_type identifier. if name is not unique, it will assert.
