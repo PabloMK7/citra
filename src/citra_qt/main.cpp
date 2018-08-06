@@ -312,6 +312,14 @@ void GMainWindow::InitializeRecentFileMenuActions() {
 
         ui.menu_recent_files->addAction(actions_recent_files[i]);
     }
+    ui.menu_recent_files->addSeparator();
+    QAction* action_clear_recent_files = new QAction(this);
+    action_clear_recent_files->setText(tr("Clear Recent Files"));
+    connect(action_clear_recent_files, &QAction::triggered, this, [this] {
+        UISettings::values.recent_files.clear();
+        UpdateRecentFiles();
+    });
+    ui.menu_recent_files->addAction(action_clear_recent_files);
 
     UpdateRecentFiles();
 }
@@ -347,10 +355,10 @@ void GMainWindow::InitializeHotkeys() {
             }
         }
     });
-    connect(GetHotkey("Main Window", "Restart", this), &QShortcut::activated, this, [&] {
+    connect(GetHotkey("Main Window", "Restart", this), &QShortcut::activated, this, [this] {
         if (!Core::System::GetInstance().IsPoweredOn())
             return;
-        BootGame(QString(UISettings::values.recent_files.first()));
+        BootGame(QString(game_path));
     });
     connect(GetHotkey("Main Window", "Swap Screens", render_window), &QShortcut::activated,
             ui.action_Screen_Layout_Swap_Screens, &QAction::trigger);
@@ -468,8 +476,7 @@ void GMainWindow::ConnectMenuEvents() {
     connect(ui.action_Start, &QAction::triggered, this, &GMainWindow::OnStartGame);
     connect(ui.action_Pause, &QAction::triggered, this, &GMainWindow::OnPauseGame);
     connect(ui.action_Stop, &QAction::triggered, this, &GMainWindow::OnStopGame);
-    connect(ui.action_Restart, &QAction::triggered, this,
-            [&] { BootGame(QString(UISettings::values.recent_files.first())); });
+    connect(ui.action_Restart, &QAction::triggered, this, [this] { BootGame(QString(game_path)); });
     connect(ui.action_Report_Compatibility, &QAction::triggered, this,
             &GMainWindow::OnMenuReportCompatibility);
     connect(ui.action_Configure, &QAction::triggered, this, &GMainWindow::OnConfigure);
@@ -687,6 +694,8 @@ bool GMainWindow::LoadROM(const QString& filename) {
     game_title = QString::fromStdString(title);
     SetupUIStrings();
 
+    game_path = filename;
+
     Core::Telemetry().AddField(Telemetry::FieldType::App, "Frontend", "Qt");
     return true;
 }
@@ -784,6 +793,8 @@ void GMainWindow::ShutdownGame() {
 
     game_title.clear();
     SetupUIStrings();
+
+    game_path.clear();
 }
 
 void GMainWindow::StoreRecentFile(const QString& filename) {
