@@ -4,11 +4,14 @@
 
 #include "citra_qt/configuration/config.h"
 #include "citra_qt/configuration/configure_dialog.h"
+#include "citra_qt/hotkeys.h"
 #include "core/settings.h"
 #include "ui_configure.h"
 
-ConfigureDialog::ConfigureDialog(QWidget* parent) : QDialog(parent), ui(new Ui::ConfigureDialog) {
+ConfigureDialog::ConfigureDialog(QWidget* parent, const HotkeyRegistry& registry)
+    : QDialog(parent), ui(new Ui::ConfigureDialog) {
     ui->setupUi(this);
+    ui->generalTab->PopulateHotkeyList(registry);
     this->setConfiguration();
     connect(ui->generalTab, &ConfigureGeneral::languageChanged, this,
             &ConfigureDialog::onLanguageChanged);
