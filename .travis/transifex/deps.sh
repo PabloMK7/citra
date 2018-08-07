@@ -1,3 +1,3 @@
 #!/bin/bash -ex
 
-docker pull alpine:latest
+docker pull citraemu/build-environments:linux-transifex

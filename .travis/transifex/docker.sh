@@ -5,12 +5,6 @@ echo $'[https://www.transifex.com]\nhostname = https://www.transifex.com\nuserna
 
 set -x
 
-echo -e "\e[1m\e[33mInstalling dependencies...\e[0m"
-apk update
-apk add build-base cmake python3-dev qt5-qttools-dev qt5-qtmultimedia-dev
-
-pip3 install --upgrade pip transifex-client
-
 cat << 'EOF' > /usr/bin/tx
 #!/usr/bin/python3
 

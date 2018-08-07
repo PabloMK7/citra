@@ -1,3 +1,3 @@
 #!/bin/sh -ex
 
-docker pull ubuntu:18.04
+docker pull citraemu/build-environments:linux-fresh
