@@ -8,6 +8,7 @@
 #include <cstdio>
 #include <fstream>
 #include <functional>
+#include <limits>
 #include <string>
 #include <type_traits>
 #include <vector>
@@ -183,7 +184,7 @@ public:
 
         if (!IsOpen()) {
             m_good = false;
-            return -1;
+            return std::numeric_limits<size_t>::max();
         }
 
         size_t items_read = std::fread(data, sizeof(T), length, m_file);
@@ -204,7 +205,7 @@ public:
 
         if (!IsOpen()) {
             m_good = false;
-            return -1;
+            return std::numeric_limits<size_t>::max();
         }
 
         size_t items_written = std::fwrite(data, sizeof(T), length, m_file);
