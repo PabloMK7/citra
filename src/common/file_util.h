@@ -174,8 +174,8 @@ public:
     bool Close();
 
     template <typename T>
-    size_t ReadArray(T* data, size_t length) {
-        static_assert(std::is_trivially_copyable<T>(),
+    size_t ReadArray(T* data, size_t length) const {
+        static_assert(std::is_trivially_copyable_v<T>,
                       "Given array does not consist of trivially copyable objects");
 
         if (!IsOpen()) {
@@ -192,7 +192,7 @@ public:
 
     template <typename T>
     size_t WriteArray(const T* data, size_t length) {
-        static_assert(std::is_trivially_copyable<T>(),
+        static_assert(std::is_trivially_copyable_v<T>,
                       "Given array does not consist of trivially copyable objects");
 
         if (!IsOpen()) {
@@ -207,17 +207,21 @@ public:
         return items_written;
     }
 
-    size_t ReadBytes(void* data, size_t length) {
+    template <typename T>
+    size_t ReadBytes(T* data, size_t length) const {
+        static_assert(std::is_trivially_copyable_v<T>, "T must be trivially copyable");
         return ReadArray(reinterpret_cast<char*>(data), length);
     }
 
-    size_t WriteBytes(const void* data, size_t length) {
+    template <typename T>
+    size_t WriteBytes(const T* data, size_t length) {
+        static_assert(std::is_trivially_copyable_v<T>, "T must be trivially copyable");
         return WriteArray(reinterpret_cast<const char*>(data), length);
     }
 
     template <typename T>
     size_t WriteObject(const T& object) {
-        static_assert(!std::is_pointer<T>::value, "Given object is a pointer");
+        static_assert(!std::is_pointer_v<T>, "WriteObject arguments must not be a pointer");
         return WriteArray(&object, 1);
     }
 

@@ -34,7 +34,7 @@ inline bool IsWithin2G(const Xbyak::CodeGenerator& code, uintptr_t target) {
 
 template <typename T>
 inline void CallFarFunction(Xbyak::CodeGenerator& code, const T f) {
-    static_assert(std::is_pointer<T>(), "Argument must be a (function) pointer.");
+    static_assert(std::is_pointer_v<T>, "Argument must be a (function) pointer.");
     size_t addr = reinterpret_cast<size_t>(f);
     if (IsWithin2G(code, addr)) {
         code.call(f);
