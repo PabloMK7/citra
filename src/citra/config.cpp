@@ -12,6 +12,7 @@
 #include "common/param_package.h"
 #include "core/settings.h"
 #include "input_common/main.h"
+#include "input_common/udp/client.h"
 
 Config::Config() {
     // TODO: Don't hardcode the path; let the frontend decide where to put the config files.
@@ -89,6 +90,10 @@ void Config::ReadValues() {
                          "engine:motion_emu,update_period:100,sensitivity:0.01,tilt_clamp:90.0");
     Settings::values.touch_device =
         sdl2_config->Get("Controls", "touch_device", "engine:emu_window");
+    Settings::values.udp_input_address =
+        sdl2_config->Get("Controls", "udp_input_address", InputCommon::CemuhookUDP::DEFAULT_ADDR);
+    Settings::values.udp_input_port = static_cast<u16>(sdl2_config->GetInteger(
+        "Controls", "udp_input_port", InputCommon::CemuhookUDP::DEFAULT_PORT));
 
     // Core
     Settings::values.use_cpu_jit = sdl2_config->GetBoolean("Core", "use_cpu_jit", true);
