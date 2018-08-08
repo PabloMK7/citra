@@ -117,10 +117,6 @@ public:
 
     // Only implemented for T=float
     float Length() const;
-    void SetLength(const float l);
-    Vec2 WithLength(const float l) const;
-    float Distance2To(Vec2& other);
-    Vec2 Normalized() const;
     float Normalize(); // returns the previous length, which is often useful
 
     constexpr T& operator[](std::size_t i) {
@@ -212,10 +208,6 @@ public:
         return Vec3<T2>(static_cast<T2>(x), static_cast<T2>(y), static_cast<T2>(z));
     }
 
-    // Only implemented for T=int and T=float
-    static Vec3 FromRGB(unsigned int rgb);
-    unsigned int ToRGB() const; // alpha bits set to zero
-
     static constexpr Vec3 AssignToAll(const T& f) {
         return Vec3(f, f, f);
     }
@@ -278,9 +270,6 @@ public:
 
     // Only implemented for T=float
     float Length() const;
-    void SetLength(const float l);
-    Vec3 WithLength(const float l) const;
-    float Distance2To(Vec3& other);
     Vec3 Normalized() const;
     float Normalize(); // returns the previous length, which is often useful
 
@@ -430,10 +419,6 @@ public:
                         static_cast<T2>(w));
     }
 
-    // Only implemented for T=int and T=float
-    static Vec4 FromRGBA(unsigned int rgba);
-    unsigned int ToRGBA() const;
-
     static constexpr Vec4 AssignToAll(const T& f) {
         return Vec4(f, f, f, f);
     }
@@ -496,14 +481,6 @@ public:
     constexpr T Length2() const {
         return x * x + y * y + z * z + w * w;
     }
-
-    // Only implemented for T=float
-    float Length() const;
-    void SetLength(const float l);
-    Vec4 WithLength(const float l) const;
-    float Distance2To(Vec4& other);
-    Vec4 Normalized() const;
-    float Normalize(); // returns the previous length, which is often useful
 
     constexpr T& operator[](std::size_t i) {
         return *((&x) + i);
