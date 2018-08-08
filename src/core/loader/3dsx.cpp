@@ -283,8 +283,7 @@ ResultStatus AppLoader_THREEDSX::Load(Kernel::SharedPtr<Kernel::Process>& proces
     return ResultStatus::Success;
 }
 
-ResultStatus AppLoader_THREEDSX::ReadRomFS(std::shared_ptr<FileUtil::IOFile>& romfs_file,
-                                           u64& offset, u64& size) {
+ResultStatus AppLoader_THREEDSX::ReadRomFS(std::shared_ptr<FileSys::RomFSReader>& romfs_file) {
     if (!file.IsOpen())
         return ResultStatus::Error;
 
@@ -307,12 +306,12 @@ ResultStatus AppLoader_THREEDSX::ReadRomFS(std::shared_ptr<FileUtil::IOFile>& ro
         LOG_DEBUG(Loader, "RomFS size:             {:#010X}", romfs_size);
 
         // We reopen the file, to allow its position to be independent from file's
-        romfs_file = std::make_shared<FileUtil::IOFile>(filepath, "rb");
-        if (!romfs_file->IsOpen())
+        FileUtil::IOFile romfs_file_inner(filepath, "rb");
+        if (!romfs_file_inner.IsOpen())
             return ResultStatus::Error;
 
-        offset = romfs_offset;
-        size = romfs_size;
+        romfs_file = std::make_shared<FileSys::RomFSReader>(std::move(romfs_file_inner),
+                                                            romfs_offset, romfs_size);
 
         return ResultStatus::Success;
     }

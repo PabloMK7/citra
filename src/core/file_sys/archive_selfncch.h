@@ -22,13 +22,8 @@ struct NCCHData {
     std::shared_ptr<std::vector<u8>> icon;
     std::shared_ptr<std::vector<u8>> logo;
     std::shared_ptr<std::vector<u8>> banner;
-    std::shared_ptr<FileUtil::IOFile> romfs_file;
-    u64 romfs_offset = 0;
-    u64 romfs_size = 0;
-
-    std::shared_ptr<FileUtil::IOFile> update_romfs_file;
-    u64 update_romfs_offset = 0;
-    u64 update_romfs_size = 0;
+    std::shared_ptr<RomFSReader> romfs_file;
+    std::shared_ptr<RomFSReader> update_romfs_file;
 };
 
 /// File system interface to the SelfNCCH archive

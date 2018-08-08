@@ -56,13 +56,6 @@ struct KeySlot {
 
 std::array<KeySlot, KeySlotID::MaxKeySlotID> key_slots;
 
-void ClearAllKeys() {
-    for (KeySlot& slot : key_slots) {
-        slot.Clear();
-    }
-    generator_constant.reset();
-}
-
 AESKey HexToKey(const std::string& hex) {
     if (hex.size() < 32) {
         throw std::invalid_argument("hex string is too short");
@@ -141,8 +134,11 @@ void LoadPresetKeys() {
 } // namespace
 
 void InitKeys() {
-    ClearAllKeys();
+    static bool initialized = false;
+    if (initialized)
+        return;
     LoadPresetKeys();
+    initialized = true;
 }
 
 void SetGeneratorConstant(const AESKey& key) {

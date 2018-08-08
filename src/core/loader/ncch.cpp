@@ -211,17 +211,15 @@ ResultStatus AppLoader_NCCH::ReadProgramId(u64& out_program_id) {
     return ResultStatus::Success;
 }
 
-ResultStatus AppLoader_NCCH::ReadRomFS(std::shared_ptr<FileUtil::IOFile>& romfs_file, u64& offset,
-                                       u64& size) {
-    return base_ncch.ReadRomFS(romfs_file, offset, size);
+ResultStatus AppLoader_NCCH::ReadRomFS(std::shared_ptr<FileSys::RomFSReader>& romfs_file) {
+    return base_ncch.ReadRomFS(romfs_file);
 }
 
-ResultStatus AppLoader_NCCH::ReadUpdateRomFS(std::shared_ptr<FileUtil::IOFile>& romfs_file,
-                                             u64& offset, u64& size) {
-    ResultStatus result = update_ncch.ReadRomFS(romfs_file, offset, size);
+ResultStatus AppLoader_NCCH::ReadUpdateRomFS(std::shared_ptr<FileSys::RomFSReader>& romfs_file) {
+    ResultStatus result = update_ncch.ReadRomFS(romfs_file);
 
     if (result != ResultStatus::Success)
-        return base_ncch.ReadRomFS(romfs_file, offset, size);
+        return base_ncch.ReadRomFS(romfs_file);
 
     return ResultStatus::Success;
 }

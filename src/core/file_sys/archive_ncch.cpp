@@ -74,14 +74,11 @@ ResultVal<std::unique_ptr<FileBackend>> NCCHArchive::OpenFile(const Path& path,
     // NCCH RomFS
     NCCHFilePathType filepath_type = static_cast<NCCHFilePathType>(openfile_path.filepath_type);
     if (filepath_type == NCCHFilePathType::RomFS) {
-        std::shared_ptr<FileUtil::IOFile> romfs_file;
-        u64 romfs_offset = 0;
-        u64 romfs_size = 0;
+        std::shared_ptr<RomFSReader> romfs_file;
 
-        result = ncch_container.ReadRomFS(romfs_file, romfs_offset, romfs_size);
+        result = ncch_container.ReadRomFS(romfs_file);
         std::unique_ptr<DelayGenerator> delay_generator = std::make_unique<RomFSDelayGenerator>();
-        file = std::make_unique<IVFCFile>(std::move(romfs_file), romfs_offset, romfs_size,
-                                          std::move(delay_generator));
+        file = std::make_unique<IVFCFile>(std::move(romfs_file), std::move(delay_generator));
     } else if (filepath_type == NCCHFilePathType::Code ||
                filepath_type == NCCHFilePathType::ExeFS) {
         std::vector<u8> buffer;

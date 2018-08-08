@@ -64,6 +64,8 @@ add_library(core STATIC
     file_sys/ncch_container.h
     file_sys/path_parser.cpp
     file_sys/path_parser.h
+    file_sys/romfs_reader.cpp
+    file_sys/romfs_reader.h
     file_sys/savedata_archive.cpp
     file_sys/savedata_archive.h
     file_sys/title_metadata.cpp

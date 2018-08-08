@@ -13,6 +13,7 @@
 #include "common/file_util.h"
 #include "common/swap.h"
 #include "core/core.h"
+#include "core/file_sys/romfs_reader.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 /// NCCH header (Note: "NCCH" appears to be a publicly unknown acronym)
@@ -32,7 +33,28 @@ struct NCCH_Header {
     u8 extended_header_hash[0x20];
     u32_le extended_header_size;
     u8 reserved_2[4];
-    u8 flags[8];
+    u8 reserved_flag[3];
+    u8 secondary_key_slot;
+    u8 platform;
+    enum class ContentType : u8 {
+        Application = 0,
+        SystemUpdate = 1,
+        Manual = 2,
+        Child = 3,
+        Trial = 4,
+    };
+    union {
+        BitField<0, 1, u8> is_data;
+        BitField<1, 1, u8> is_executable;
+        BitField<2, 3, ContentType> content_type;
+    };
+    u8 content_unit_size;
+    union {
+        BitField<0, 1, u8> fixed_key;
+        BitField<1, 1, u8> no_romfs;
+        BitField<2, 1, u8> no_crypto;
+        BitField<5, 1, u8> seed_crypto;
+    };
     u32_le plain_region_offset;
     u32_le plain_region_size;
     u32_le logo_region_offset;
@@ -211,8 +233,7 @@ public:
      * @param size The size of the romfs
      * @return ResultStatus result of function
      */
-    Loader::ResultStatus ReadRomFS(std::shared_ptr<FileUtil::IOFile>& romfs_file, u64& offset,
-                                   u64& size);
+    Loader::ResultStatus ReadRomFS(std::shared_ptr<RomFSReader>& romfs_file);
 
     /**
      * Get the override RomFS of the NCCH container
@@ -222,8 +243,7 @@ public:
      * @param size The size of the romfs
      * @return ResultStatus result of function
      */
-    Loader::ResultStatus ReadOverrideRomFS(std::shared_ptr<FileUtil::IOFile>& romfs_file,
-                                           u64& offset, u64& size);
+    Loader::ResultStatus ReadOverrideRomFS(std::shared_ptr<RomFSReader>& romfs_file);
 
     /**
      * Get the Program ID of the NCCH container
@@ -262,6 +282,14 @@ private:
     bool is_tainted = false; // Are there parts of this container being overridden?
     bool is_loaded = false;
     bool is_compressed = false;
+
+    bool is_encrypted = false;
+    // for decrypting exheader, exefs header and icon/banner section
+    std::array<u8, 16> primary_key{};
+    std::array<u8, 16> secondary_key{}; // for decrypting romfs and .code section
+    std::array<u8, 16> exheader_ctr{};
+    std::array<u8, 16> exefs_ctr{};
+    std::array<u8, 16> romfs_ctr{};
 
     u32 ncch_offset = 0; // Offset to NCCH header, can be 0 for NCCHs or non-zero for CIAs/NCSDs
     u32 exefs_offset = 0;
