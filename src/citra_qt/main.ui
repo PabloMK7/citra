@@ -254,7 +254,7 @@
   </action>
   <action name="action_Record_Movie">
    <property name="enabled">
-    <bool>false</bool>
+    <bool>true</bool>
    </property>
    <property name="text">
     <string>Record Movie</string>
@@ -262,7 +262,7 @@
   </action>
   <action name="action_Play_Movie">
    <property name="enabled">
-    <bool>false</bool>
+    <bool>true</bool>
    </property>
    <property name="text">
     <string>Play Movie</string>

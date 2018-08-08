@@ -187,6 +187,7 @@ private slots:
     void OnLanguageChanged(const QString& locale);
 
 private:
+    bool ValidateMovie(const QString& path, u64 program_id = 0);
     Q_INVOKABLE void OnMoviePlaybackCompleted();
     void UpdateStatusBar();
     void LoadTranslation();
@@ -217,6 +218,10 @@ private:
     QString game_title;
     // The path to the game currently running
     QString game_path;
+
+    // Movie
+    bool movie_record_on_start = false;
+    QString movie_record_path;
 
     // Debugger panes
     ProfilerWidget* profilerWidget;

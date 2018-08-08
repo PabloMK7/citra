@@ -44,7 +44,8 @@ public:
     void StartPlayback(const std::string& movie_file,
                        std::function<void()> completion_callback = {});
     void StartRecording(const std::string& movie_file);
-    ValidationResult ValidateMovie(const std::string& movie_file) const;
+    ValidationResult ValidateMovie(const std::string& movie_file, u64 program_id = 0) const;
+    u64 GetMovieProgramID(const std::string& movie_file) const;
 
     void Shutdown();
 
@@ -111,7 +112,7 @@ private:
     void Record(const Service::IR::PadState& pad_state, const s16& c_stick_x, const s16& c_stick_y);
     void Record(const Service::IR::ExtraHIDResponse& extra_hid_response);
 
-    ValidationResult ValidateHeader(const CTMHeader& header) const;
+    ValidationResult ValidateHeader(const CTMHeader& header, u64 program_id = 0) const;
 
     void SaveMovie();
 

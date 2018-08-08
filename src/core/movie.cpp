@@ -344,7 +344,7 @@ void Movie::Record(const Service::IR::ExtraHIDResponse& extra_hid_response) {
     Record(s);
 }
 
-Movie::ValidationResult Movie::ValidateHeader(const CTMHeader& header) const {
+Movie::ValidationResult Movie::ValidateHeader(const CTMHeader& header, u64 program_id) const {
     if (header_magic_bytes != header.filetype) {
         LOG_ERROR(Movie, "Playback file does not have valid header");
         return ValidationResult::Invalid;
@@ -354,8 +354,8 @@ Movie::ValidationResult Movie::ValidateHeader(const CTMHeader& header) const {
         Common::ArrayToString(header.revision.data(), header.revision.size(), 21, false);
     revision = Common::ToLower(revision);
 
-    u64 program_id;
-    Core::System::GetInstance().GetAppLoader().ReadProgramId(program_id);
+    if (!program_id)
+        Core::System::GetInstance().GetAppLoader().ReadProgramId(program_id);
     if (program_id != header.program_id) {
         LOG_WARNING(Movie, "This movie was recorded using a ROM with a different program id");
         return ValidationResult::GameDismatch;
@@ -424,7 +424,7 @@ void Movie::StartRecording(const std::string& movie_file) {
     record_movie_file = movie_file;
 }
 
-Movie::ValidationResult Movie::ValidateMovie(const std::string& movie_file) const {
+Movie::ValidationResult Movie::ValidateMovie(const std::string& movie_file, u64 program_id) const {
     LOG_INFO(Movie, "Validating Movie file '{}'", movie_file);
     FileUtil::IOFile save_record(movie_file, "rb");
     const u64 size = save_record.GetSize();
@@ -435,7 +435,25 @@ Movie::ValidationResult Movie::ValidateMovie(const std::string& movie_file) cons
 
     CTMHeader header;
     save_record.ReadArray(&header, 1);
-    return ValidateHeader(header);
+    return ValidateHeader(header, program_id);
+}
+
+u64 Movie::GetMovieProgramID(const std::string& movie_file) const {
+    FileUtil::IOFile save_record(movie_file, "rb");
+    const u64 size = save_record.GetSize();
+
+    if (!save_record || size <= sizeof(CTMHeader)) {
+        return 0;
+    }
+
+    CTMHeader header;
+    save_record.ReadArray(&header, 1);
+
+    if (header_magic_bytes != header.filetype) {
+        return 0;
+    }
+
+    return static_cast<u64>(header.program_id);
 }
 
 void Movie::Shutdown() {
