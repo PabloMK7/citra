@@ -42,6 +42,7 @@ void HTTP_C::Initialize(Kernel::HLERequestContext& ctx) {
     ASSERT(session_data);
 
     if (session_data->initialized) {
+        LOG_ERROR(Service_HTTP, "Tried to initialize an already initialized session");
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(ERROR_STATE_ERROR);
         return;
@@ -64,6 +65,7 @@ void HTTP_C::InitializeConnectionSession(Kernel::HLERequestContext& ctx) {
     ASSERT(session_data);
 
     if (session_data->initialized) {
+        LOG_ERROR(Service_HTTP, "Tried to initialize an already initialized session");
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(ERROR_STATE_ERROR);
         return;
@@ -104,6 +106,7 @@ void HTTP_C::CreateContext(Kernel::HLERequestContext& ctx) {
     ASSERT(session_data);
 
     if (!session_data->initialized) {
+        LOG_ERROR(Service_HTTP, "Tried to create a context on an uninitialized session");
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
         rb.Push(ERROR_STATE_ERROR);
         rb.PushMappedBuffer(buffer);
@@ -170,6 +173,7 @@ void HTTP_C::CloseContext(Kernel::HLERequestContext& ctx) {
     ASSERT(session_data);
 
     if (!session_data->initialized) {
+        LOG_ERROR(Service_HTTP, "Tried to close a context on an uninitialized session");
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(ERROR_STATE_ERROR);
         return;
@@ -218,6 +222,7 @@ void HTTP_C::AddRequestHeader(Kernel::HLERequestContext& ctx) {
     ASSERT(session_data);
 
     if (!session_data->initialized) {
+        LOG_ERROR(Service_HTTP, "Tried to add a request header on an uninitialized session");
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
         rb.Push(ERROR_STATE_ERROR);
         rb.PushMappedBuffer(value_buffer);
@@ -236,6 +241,10 @@ void HTTP_C::AddRequestHeader(Kernel::HLERequestContext& ctx) {
     }
 
     if (session_data->current_http_context != context_handle) {
+        LOG_ERROR(Service_HTTP,
+                  "Tried to add a request header on a mismatched session input context={} session "
+                  "context={}",
+                  context_handle, session_data->current_http_context.get());
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
         rb.Push(ERROR_STATE_ERROR);
         rb.PushMappedBuffer(value_buffer);
@@ -246,6 +255,8 @@ void HTTP_C::AddRequestHeader(Kernel::HLERequestContext& ctx) {
     ASSERT(itr != contexts.end());
 
     if (itr->second.state != RequestState::NotStarted) {
+        LOG_ERROR(Service_HTTP,
+                  "Tried to add a request header on a context that has already been started.");
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
         rb.Push(ResultCode(ErrCodes::InvalidRequestState, ErrorModule::HTTP,
                            ErrorSummary::InvalidState, ErrorLevel::Permanent));
