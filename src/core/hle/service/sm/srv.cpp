@@ -3,7 +3,6 @@
 // Refer to the license.txt file included.
 
 #include <tuple>
-#include <unordered_map>
 #include "common/common_types.h"
 #include "common/logging/log.h"
 #include "core/hle/ipc.h"
@@ -24,9 +23,6 @@ namespace Service {
 namespace SM {
 
 constexpr int MAX_PENDING_NOTIFICATIONS = 16;
-
-static std::unordered_map<std::string, Kernel::SharedPtr<Kernel::Event>>
-    get_service_handle_delayed_map;
 
 /**
  * SRV::RegisterClient service function
@@ -136,7 +132,7 @@ void SRV::GetServiceHandle(Kernel::HLERequestContext& ctx) {
             Kernel::SharedPtr<Kernel::Event> get_service_handle_event =
                 ctx.SleepClientThread(Kernel::GetCurrentThread(), "GetServiceHandle",
                                       std::chrono::nanoseconds(-1), get_handle);
-            get_service_handle_delayed_map[name] = get_service_handle_event;
+            get_service_handle_delayed_map[name] = std::move(get_service_handle_event);
             return;
         } else {
             IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
@@ -232,17 +228,16 @@ void SRV::RegisterService(Kernel::HLERequestContext& ctx) {
 
     auto port = service_manager->RegisterService(name, max_sessions);
 
-    if (get_service_handle_delayed_map.find(name) != get_service_handle_delayed_map.end()) {
-        std::lock_guard<std::recursive_mutex> lock(HLE::g_hle_lock);
-        get_service_handle_delayed_map.at(name)->Signal();
-        get_service_handle_delayed_map.erase(name);
-    }
-
     if (port.Failed()) {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(port.Code());
         LOG_ERROR(Service_SRV, "called service={} -> error 0x{:08X}", name, port.Code().raw);
         return;
+    }
+
+    if (get_service_handle_delayed_map.find(name) != get_service_handle_delayed_map.end()) {
+        get_service_handle_delayed_map.at(name)->Signal();
+        get_service_handle_delayed_map.erase(name);
     }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);

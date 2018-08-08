@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <unordered_map>
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/service/service.h"
 
@@ -32,6 +33,8 @@ private:
 
     std::shared_ptr<ServiceManager> service_manager;
     Kernel::SharedPtr<Kernel::Semaphore> notification_semaphore;
+    std::unordered_map<std::string, Kernel::SharedPtr<Kernel::Event>>
+        get_service_handle_delayed_map;
 };
 
 } // namespace SM
