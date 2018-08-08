@@ -55,6 +55,15 @@ public:
         is_set = false;
     }
 
+    template <class Duration>
+    bool WaitFor(const std::chrono::duration<Duration>& time) {
+        std::unique_lock<std::mutex> lk(mutex);
+        if (!condvar.wait_for(lk, time, [this] { return is_set; }))
+            return false;
+        is_set = false;
+        return true;
+    }
+
     template <class Clock, class Duration>
     bool WaitUntil(const std::chrono::time_point<Clock, Duration>& time) {
         std::unique_lock<std::mutex> lk(mutex);

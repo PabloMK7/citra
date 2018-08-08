@@ -16,6 +16,7 @@ class State {
 public:
     State();
     ~State();
+    void ReloadUDPClient();
 
 private:
     std::unique_ptr<Client> client;

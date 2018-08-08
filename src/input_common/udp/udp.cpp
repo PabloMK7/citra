@@ -85,6 +85,11 @@ State::~State() {
     Input::UnregisterFactory<Input::MotionDevice>("cemuhookudp");
 }
 
+void State::ReloadUDPClient() {
+    client->ReloadSocket(Settings::values.udp_input_address, Settings::values.udp_input_port,
+                         Settings::values.udp_pad_index);
+}
+
 std::unique_ptr<State> Init() {
     return std::make_unique<State>();
 }
