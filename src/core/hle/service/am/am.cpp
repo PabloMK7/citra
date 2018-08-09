@@ -404,6 +404,7 @@ std::string GetTitleContentPath(Service::FS::MediaType media_type, u64 tid, u16 
         } else {
             LOG_ERROR(Service_AM, "Attempted to get path for non-existent content index {:04x}.",
                       index);
+            return "";
         }
 
         // TODO(shinyquagsire23): how does DLC actually get this folder on hardware?
@@ -591,9 +592,10 @@ void Module::Interface::ListDLCContentInfos(Kernel::HLERequestContext& ctx) {
     u32 copied = 0;
     FileSys::TitleMetadata tmd;
     if (tmd.Load(tmd_path) == Loader::ResultStatus::Success) {
-        copied = std::min(content_count, static_cast<u32>(tmd.GetContentCount()));
+        u32 end_index =
+            std::min(start_index + content_count, static_cast<u32>(tmd.GetContentCount()));
         std::size_t write_offset = 0;
-        for (u32 i = start_index; i < start_index + copied; i++) {
+        for (u32 i = start_index; i < end_index; i++) {
             std::shared_ptr<FileUtil::IOFile> romfs_file;
             u64 romfs_offset = 0;
 
@@ -611,6 +613,7 @@ void Module::Interface::ListDLCContentInfos(Kernel::HLERequestContext& ctx) {
 
             content_info_out.Write(&content_info, write_offset, sizeof(ContentInfo));
             write_offset += sizeof(ContentInfo);
+            copied++;
         }
     }
 
