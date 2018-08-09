@@ -41,7 +41,7 @@ const ResultCode ERROR_NOT_IMPLEMENTED = // 0xD960A3F4
 const ResultCode ERROR_TOO_MANY_CLIENT_CERTS = // 0xD8A0A0CB
     ResultCode(ErrCodes::TooManyClientCerts, ErrorModule::HTTP, ErrorSummary::InvalidState,
                ErrorLevel::Permanent);
-const ResultCode ERROR_WRONG_CERT_ID = // 0xD8A0A0CB
+const ResultCode ERROR_WRONG_CERT_ID = // 0xD8E0B839
     ResultCode(57, ErrorModule::SSL, ErrorSummary::InvalidArgument, ErrorLevel::Permanent);
 
 void HTTP_C::Initialize(Kernel::HLERequestContext& ctx) {
