@@ -27,12 +27,22 @@ enum {
     /// already-initialized session, or when using the wrong context handle in a context-bound
     /// session
     SessionStateError = 102,
+    TooManyClientCerts = 203,
+    NotImplemented = 1012,
 };
 }
 
 const ResultCode ERROR_STATE_ERROR = // 0xD8A0A066
     ResultCode(ErrCodes::SessionStateError, ErrorModule::HTTP, ErrorSummary::InvalidState,
                ErrorLevel::Permanent);
+const ResultCode ERROR_NOT_IMPLEMENTED = // 0xD960A3F4
+    ResultCode(ErrCodes::NotImplemented, ErrorModule::HTTP, ErrorSummary::Internal,
+               ErrorLevel::Permanent);
+const ResultCode ERROR_TOO_MANY_CLIENT_CERTS = // 0xD8A0A0CB
+    ResultCode(ErrCodes::TooManyClientCerts, ErrorModule::HTTP, ErrorSummary::InvalidState,
+               ErrorLevel::Permanent);
+const ResultCode ERROR_WRONG_CERT_ID = // 0xD8A0A0CB
+    ResultCode(57, ErrorModule::SSL, ErrorSummary::InvalidArgument, ErrorLevel::Permanent);
 
 void HTTP_C::Initialize(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x1, 1, 4);
@@ -56,6 +66,7 @@ void HTTP_C::Initialize(Kernel::HLERequestContext& ctx) {
     }
 
     session_data->initialized = true;
+    session_data->session_id = ++session_counter;
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     // This returns 0xd8a0a046 if no network connection is available.
@@ -88,6 +99,7 @@ void HTTP_C::InitializeConnectionSession(Kernel::HLERequestContext& ctx) {
     }
 
     session_data->initialized = true;
+    session_data->session_id = ++session_counter;
     // Bind the context to the current session.
     session_data->current_http_context = context_handle;
 
@@ -160,6 +172,7 @@ void HTTP_C::CreateContext(Kernel::HLERequestContext& ctx) {
     // TODO(Subv): Find a correct default value for this field.
     contexts[context_counter].socket_buffer_size = 0;
     contexts[context_counter].handle = context_counter;
+    contexts[context_counter].session_id = session_data->session_id;
 
     session_data->num_http_contexts++;
 
@@ -284,6 +297,163 @@ void HTTP_C::AddRequestHeader(Kernel::HLERequestContext& ctx) {
 
     LOG_DEBUG(Service_HTTP, "called, name={}, value={}, context_handle={}", name, value,
               context_handle);
+}
+
+void HTTP_C::OpenClientCertContext(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x32, 2, 4);
+    u32 cert_size = rp.Pop<u32>();
+    u32 key_size = rp.Pop<u32>();
+    Kernel::MappedBuffer& cert_buffer = rp.PopMappedBuffer();
+    Kernel::MappedBuffer& key_buffer = rp.PopMappedBuffer();
+
+    auto* session_data = GetSessionData(ctx.Session());
+    ASSERT(session_data);
+
+    if (!session_data->initialized) {
+        LOG_ERROR(Service_HTTP, "Command called without Initialize");
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 4);
+        rb.Push(ERROR_STATE_ERROR);
+        rb.PushMappedBuffer(cert_buffer);
+        rb.PushMappedBuffer(key_buffer);
+        return;
+    }
+
+    if (session_data->current_http_context != boost::none) {
+        LOG_ERROR(Service_HTTP, "Command called with a bound context");
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 4);
+        rb.Push(ERROR_NOT_IMPLEMENTED);
+        rb.PushMappedBuffer(cert_buffer);
+        rb.PushMappedBuffer(key_buffer);
+        return;
+    }
+
+    if (session_data->num_client_certs >= 2) {
+        LOG_ERROR(Service_HTTP, "tried to load more then 2 client certs");
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 4);
+        rb.Push(ERROR_TOO_MANY_CLIENT_CERTS);
+        rb.PushMappedBuffer(cert_buffer);
+        rb.PushMappedBuffer(key_buffer);
+        return;
+    }
+
+    ++client_certs_counter;
+    client_certs[client_certs_counter].handle = client_certs_counter;
+    client_certs[client_certs_counter].certificate.resize(cert_size);
+    cert_buffer.Read(&client_certs[client_certs_counter].certificate[0], 0, cert_size);
+    client_certs[client_certs_counter].private_key.resize(key_size);
+    cert_buffer.Read(&client_certs[client_certs_counter].private_key[0], 0, key_size);
+    client_certs[client_certs_counter].session_id = session_data->session_id;
+
+    ++session_data->num_client_certs;
+
+    LOG_DEBUG(Service_HTTP, "called, cert_size {}, key_size {}", cert_size, key_size);
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 4);
+    rb.Push(RESULT_SUCCESS);
+    rb.PushMappedBuffer(cert_buffer);
+    rb.PushMappedBuffer(key_buffer);
+}
+
+void HTTP_C::OpenDefaultClientCertContext(Kernel::HLERequestContext& ctx) {
+    constexpr u8 default_cert_id = 0x40;
+    IPC::RequestParser rp(ctx, 0x33, 1, 0);
+    u8 cert_id = rp.Pop<u8>();
+
+    auto* session_data = GetSessionData(ctx.Session());
+    ASSERT(session_data);
+
+    if (!session_data->initialized) {
+        LOG_ERROR(Service_HTTP, "Command called without Initialize");
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(ERROR_STATE_ERROR);
+        return;
+    }
+
+    if (session_data->current_http_context != boost::none) {
+        LOG_ERROR(Service_HTTP, "Command called with a bound context");
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(ERROR_NOT_IMPLEMENTED);
+        return;
+    }
+
+    if (session_data->num_client_certs >= 2) {
+        LOG_ERROR(Service_HTTP, "tried to load more then 2 client certs");
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(ERROR_TOO_MANY_CLIENT_CERTS);
+        return;
+    }
+
+    if (cert_id != default_cert_id) {
+        LOG_ERROR(Service_HTTP, "called with invalid cert_id {}", cert_id);
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(ERROR_WRONG_CERT_ID);
+        return;
+    }
+
+    if (!ClCertA.init) {
+        LOG_ERROR(Service_HTTP, "called but ClCertA is missing");
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(static_cast<ResultCode>(-1));
+        return;
+    }
+
+    auto it = std::find_if(client_certs.begin(), client_certs.end(),
+                           [default_cert_id, &session_data](const auto& i) {
+                               return default_cert_id == i.second.cert_id &&
+                                      session_data->session_id == i.second.session_id;
+                           });
+
+    if (it != client_certs.end()) {
+        IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
+        rb.Push(RESULT_SUCCESS);
+        rb.Push<u32>(it->first);
+
+        LOG_DEBUG(Service_HTTP, "called, with an already loaded cert_id={}", cert_id);
+        return;
+    }
+
+    ++client_certs_counter;
+    client_certs[client_certs_counter].handle = client_certs_counter;
+    client_certs[client_certs_counter].certificate = ClCertA.certificate;
+    client_certs[client_certs_counter].private_key = ClCertA.private_key;
+    client_certs[client_certs_counter].session_id = session_data->session_id;
+    ++session_data->num_client_certs;
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
+    rb.Push(RESULT_SUCCESS);
+    rb.Push<u32>(client_certs_counter);
+
+    LOG_DEBUG(Service_HTTP, "called, cert_id={}", cert_id);
+}
+
+void HTTP_C::CloseClientCertContext(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x34, 1, 0);
+    ClientCertContext::Handle cert_handle = rp.Pop<u32>();
+
+    auto* session_data = GetSessionData(ctx.Session());
+    ASSERT(session_data);
+
+    if (client_certs.find(cert_handle) == client_certs.end()) {
+        LOG_ERROR(Service_HTTP, "Command called with a unkown client cert handle {}", cert_handle);
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        // This just return success without doing anything
+        rb.Push(RESULT_SUCCESS);
+        return;
+    }
+
+    if (client_certs[cert_handle].session_id != session_data->session_id) {
+        LOG_ERROR(Service_HTTP, "called from another main session");
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        // This just return success without doing anything
+        rb.Push(RESULT_SUCCESS);
+        return;
+    }
+
+    client_certs.erase(cert_handle);
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RESULT_SUCCESS);
+
+    LOG_DEBUG(Service_HTTP, "called, cert_handle={}", cert_handle);
 }
 
 void HTTP_C::DecryptClCertA() {
@@ -417,9 +587,9 @@ HTTP_C::HTTP_C() : ServiceFramework("http:C", 32) {
         {0x002F0082, nullptr, "RootCertChainAddCert"},
         {0x00300080, nullptr, "RootCertChainAddDefaultCert"},
         {0x00310080, nullptr, "RootCertChainRemoveCert"},
-        {0x00320084, nullptr, "OpenClientCertContext"},
-        {0x00330040, nullptr, "OpenDefaultClientCertContext"},
-        {0x00340040, nullptr, "CloseClientCertContext"},
+        {0x00320084, &HTTP_C::OpenClientCertContext, "OpenClientCertContext"},
+        {0x00330040, &HTTP_C::OpenDefaultClientCertContext, "OpenDefaultClientCertContext"},
+        {0x00340040, &HTTP_C::CloseClientCertContext, "CloseClientCertContext"},
         {0x00350186, nullptr, "SetDefaultProxy"},
         {0x00360000, nullptr, "ClearDNSCache"},
         {0x00370080, nullptr, "SetKeepAlive"},
