@@ -27,12 +27,6 @@
 
 namespace FileSys {
 
-enum class NCCHFilePathType : u32 {
-    RomFS = 0,
-    Code = 1,
-    ExeFS = 2,
-};
-
 struct NCCHArchivePath {
     u64_le tid;
     u32_le media_type;
@@ -47,6 +41,28 @@ struct NCCHFilePath {
     std::array<char, 8> exefs_filepath;
 };
 static_assert(sizeof(NCCHFilePath) == 0x14, "NCCHFilePath has wrong size!");
+
+Path MakeNCCHArchivePath(u64 tid, Service::FS::MediaType media_type) {
+    NCCHArchivePath path;
+    path.tid = static_cast<u64_le>(tid);
+    path.media_type = static_cast<u32_le>(media_type);
+    path.unknown = 0;
+    std::vector<u8> archive(sizeof(path));
+    std::memcpy(&archive[0], &path, sizeof(path));
+    return FileSys::Path(archive);
+}
+
+Path MakeNCCHFilePath(NCCHFileOpenType open_type, u32 content_index, NCCHFilePathType filepath_type,
+                      std::array<char, 8>& exefs_filepath) {
+    NCCHFilePath path;
+    path.open_type = static_cast<u32_le>(open_type);
+    path.content_index = static_cast<u32_le>(content_index);
+    path.filepath_type = static_cast<u32_le>(filepath_type);
+    path.exefs_filepath = exefs_filepath;
+    std::vector<u8> file(sizeof(path));
+    std::memcpy(&file[0], &path, sizeof(path));
+    return FileSys::Path(file);
+}
 
 ResultVal<std::unique_ptr<FileBackend>> NCCHArchive::OpenFile(const Path& path,
                                                               const Mode& mode) const {

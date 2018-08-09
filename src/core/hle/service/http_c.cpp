@@ -2,9 +2,16 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <cryptopp/aes.h>
+#include <cryptopp/modes.h>
+#include "core/file_sys/archive_ncch.h"
+#include "core/file_sys/file_backend.h"
 #include "core/hle/ipc_helpers.h"
 #include "core/hle/kernel/ipc.h"
+#include "core/hle/romfs.h"
+#include "core/hle/service/fs/archive.h"
 #include "core/hle/service/http_c.h"
+#include "core/hw/aes/key.h"
 
 namespace Service {
 namespace HTTP {
@@ -279,6 +286,87 @@ void HTTP_C::AddRequestHeader(Kernel::HLERequestContext& ctx) {
               context_handle);
 }
 
+void HTTP_C::DecryptClCertA() {
+    static constexpr u32 iv_length = 16;
+
+    FileSys::Path archive_path =
+        FileSys::MakeNCCHArchivePath(0x0004001b00010002, Service::FS::MediaType::NAND);
+    auto archive_result = Service::FS::OpenArchive(Service::FS::ArchiveIdCode::NCCH, archive_path);
+    if (archive_result.Failed()) {
+        LOG_ERROR(Service_HTTP, "ClCertA archive missing");
+        return;
+    }
+
+    std::array<char, 8> exefs_filepath;
+    FileSys::Path file_path = FileSys::MakeNCCHFilePath(
+        FileSys::NCCHFileOpenType::NCCHData, 0, FileSys::NCCHFilePathType::RomFS, exefs_filepath);
+    FileSys::Mode open_mode = {};
+    open_mode.read_flag.Assign(1);
+    auto file_result = Service::FS::OpenFileFromArchive(*archive_result, file_path, open_mode);
+    if (file_result.Failed()) {
+        LOG_ERROR(Service_HTTP, "ClCertA file missing");
+        return;
+    }
+
+    auto romfs = std::move(file_result).Unwrap();
+    std::vector<u8> romfs_buffer(romfs->backend->GetSize());
+    romfs->backend->Read(0, romfs_buffer.size(), romfs_buffer.data());
+    romfs->backend->Close();
+
+    if (!HW::AES::IsNormalKeyAvailable(HW::AES::KeySlotID::SSLKey)) {
+        LOG_ERROR(Service_HTTP, "NormalKey in KeySlot 0x0D missing");
+        return;
+    }
+    HW::AES::AESKey key = HW::AES::GetNormalKey(HW::AES::KeySlotID::SSLKey);
+
+    const RomFS::RomFSFile cert_file =
+        RomFS::GetFile(romfs_buffer.data(), {u"ctr-common-1-cert.bin"});
+    if (cert_file.Length() == 0) {
+        LOG_ERROR(Service_HTTP, "ctr-common-1-cert.bin missing");
+        return;
+    }
+    if (cert_file.Length() <= iv_length) {
+        LOG_ERROR(Service_HTTP, "ctr-common-1-cert.bin size is too small. Size: {}",
+                  cert_file.Length());
+        return;
+    }
+
+    std::vector<u8> cert_data(cert_file.Length() - iv_length);
+
+    using CryptoPP::AES;
+    CryptoPP::CBC_Mode<AES>::Decryption aes_cert;
+    std::array<u8, iv_length> cert_iv;
+    std::memcpy(cert_iv.data(), cert_file.Data(), iv_length);
+    aes_cert.SetKeyWithIV(key.data(), AES::BLOCKSIZE, cert_iv.data());
+    aes_cert.ProcessData(cert_data.data(), cert_file.Data() + iv_length,
+                         cert_file.Length() - iv_length);
+
+    const RomFS::RomFSFile key_file =
+        RomFS::GetFile(romfs_buffer.data(), {u"ctr-common-1-key.bin"});
+    if (key_file.Length() == 0) {
+        LOG_ERROR(Service_HTTP, "ctr-common-1-key.bin missing");
+        return;
+    }
+    if (key_file.Length() <= iv_length) {
+        LOG_ERROR(Service_HTTP, "ctr-common-1-key.bin size is too small. Size: {}",
+                  key_file.Length());
+        return;
+    }
+
+    std::vector<u8> key_data(key_file.Length() - iv_length);
+
+    CryptoPP::CBC_Mode<AES>::Decryption aes_key;
+    std::array<u8, iv_length> key_iv;
+    std::memcpy(key_iv.data(), key_file.Data(), iv_length);
+    aes_key.SetKeyWithIV(key.data(), AES::BLOCKSIZE, key_iv.data());
+    aes_key.ProcessData(key_data.data(), key_file.Data() + iv_length,
+                        key_file.Length() - iv_length);
+
+    ClCertA.certificate = std::move(cert_data);
+    ClCertA.private_key = std::move(key_data);
+    ClCertA.init = true;
+}
+
 HTTP_C::HTTP_C() : ServiceFramework("http:C", 32) {
     static const FunctionInfo functions[] = {
         {0x00010044, &HTTP_C::Initialize, "Initialize"},
@@ -339,6 +427,8 @@ HTTP_C::HTTP_C() : ServiceFramework("http:C", 32) {
         {0x00390000, nullptr, "Finalize"},
     };
     RegisterHandlers(functions);
+
+    DecryptClCertA();
 }
 
 void InstallInterfaces(SM::ServiceManager& service_manager) {
