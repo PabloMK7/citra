@@ -227,6 +227,7 @@ log_filter = *:Info
 # Port for listening to GDB connections.
 use_gdbstub=false
 gdbstub_port=24689
+# To LLE a service module add "LLE\<module name>=true"
 
 [WebService]
 # Whether or not to enable telemetry

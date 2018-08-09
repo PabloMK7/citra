@@ -64,6 +64,58 @@ namespace Service {
 
 std::unordered_map<std::string, SharedPtr<ClientPort>> g_kernel_named_ports;
 
+const std::array<ServiceModuleInfo, 40> service_module_map{
+    {{"FS", 0x00040130'00001102, FS::InstallInterfaces},
+     {"PM", 0x00040130'00001202, PM::InstallInterfaces},
+     {"LDR", 0x00040130'00003702, LDR::InstallInterfaces},
+     {"PXI", 0x00040130'00001402, PXI::InstallInterfaces},
+
+     {"ERR", 0x00040030'00008A02, [](SM::ServiceManager& sm) { ERR::InstallInterfaces(); }},
+     {"AC", 0x00040130'00002402, AC::InstallInterfaces},
+     {"ACT", 0x00040130'00003802, ACT::InstallInterfaces},
+     {"AM", 0x00040130'00001502, AM::InstallInterfaces},
+     {"BOSS", 0x00040130'00003402, BOSS::InstallInterfaces},
+     {"CAM", 0x00040130'00001602,
+      [](SM::ServiceManager& sm) {
+          CAM::InstallInterfaces(sm);
+          Y2R::InstallInterfaces(sm);
+      }},
+     {"CECD", 0x00040130'00002602, CECD::InstallInterfaces},
+     {"CFG", 0x00040130'00001702, CFG::InstallInterfaces},
+     {"DLP", 0x00040130'00002802, DLP::InstallInterfaces},
+     {"DSP", 0x00040130'00001A02, DSP::InstallInterfaces},
+     {"FRD", 0x00040130'00003202, FRD::InstallInterfaces},
+     {"GSP", 0x00040130'00001C02, GSP::InstallInterfaces},
+     {"HID", 0x00040130'00001D02, HID::InstallInterfaces},
+     {"IR", 0x00040130'00003302, IR::InstallInterfaces},
+     {"MIC", 0x00040130'00002002, MIC::InstallInterfaces},
+     {"MVD", 0x00040130'20004102, MVD::InstallInterfaces},
+     {"NDM", 0x00040130'00002B02, NDM::InstallInterfaces},
+     {"NEWS", 0x00040130'00003502, NEWS::InstallInterfaces},
+     {"NFC", 0x00040130'00004002, NFC::InstallInterfaces},
+     {"NIM", 0x00040130'00002C02, NIM::InstallInterfaces},
+     {"NS", 0x00040130'00008002,
+      [](SM::ServiceManager& sm) {
+          NS::InstallInterfaces(sm);
+          APT::InstallInterfaces(sm);
+      }},
+     {"NWM", 0x00040130'00002D02, NWM::InstallInterfaces},
+     {"PTM", 0x00040130'00002202, PTM::InstallInterfaces},
+     {"QTM", 0x00040130'00004202, QTM::InstallInterfaces},
+     {"CSND", 0x00040130'00002702, CSND::InstallInterfaces},
+     {"HTTP", 0x00040130'00002902, HTTP::InstallInterfaces},
+     {"SOC", 0x00040130'00002E02, SOC::InstallInterfaces},
+     {"SSL", 0x00040130'00002F02, SSL::InstallInterfaces},
+     // no HLE implementation
+     {"CDC", 0x00040130'00001802, nullptr},
+     {"GPIO", 0x00040130'00001B02, nullptr},
+     {"I2C", 0x00040130'00001E02, nullptr},
+     {"MCU", 0x00040130'00001F02, nullptr},
+     {"MP", 0x00040130'00002A02, nullptr},
+     {"PDN", 0x00040130'00002102, nullptr},
+     {"PS", 0x00040130'00003102, nullptr},
+     {"SPI", 0x00040130'00002302, nullptr}}};
+
 /**
  * Creates a function string for logging, complete with the name (or header code, depending
  * on what's passed in) the port name, and all the cmd_buff arguments.
@@ -166,50 +218,32 @@ void AddNamedPort(std::string name, SharedPtr<ClientPort> port) {
     g_kernel_named_ports.emplace(std::move(name), std::move(port));
 }
 
+static bool AttemptLLE(const ServiceModuleInfo& service_module) {
+    if (!Settings::values.lle_modules.at(service_module.name))
+        return false;
+    std::unique_ptr<Loader::AppLoader> loader =
+        Loader::GetLoader(AM::GetTitleContentPath(FS::MediaType::NAND, service_module.title_id));
+    if (!loader) {
+        LOG_ERROR(Service,
+                  "Service module \"{}\" could not be loaded; Defaulting to HLE implementation.",
+                  service_module.name);
+        return false;
+    }
+    SharedPtr<Kernel::Process> process;
+    loader->Load(process);
+    LOG_DEBUG(Service, "Service module \"{}\" has been successfully loaded.", service_module.name);
+    return true;
+}
+
 /// Initialize ServiceManager
 void Init(std::shared_ptr<SM::ServiceManager>& sm) {
+    FS::ArchiveInit();
     SM::ServiceManager::InstallInterfaces(sm);
 
-    ERR::InstallInterfaces();
-
-    PS::InstallInterfaces(*sm);
-    PXI::InstallInterfaces(*sm);
-    NS::InstallInterfaces(*sm);
-    AC::InstallInterfaces(*sm);
-    LDR::InstallInterfaces(*sm);
-    MIC::InstallInterfaces(*sm);
-    NWM::InstallInterfaces(*sm);
-
-    FS::InstallInterfaces(*sm);
-    FS::ArchiveInit();
-    ACT::InstallInterfaces(*sm);
-    AM::InstallInterfaces(*sm);
-    APT::InstallInterfaces(*sm);
-    BOSS::InstallInterfaces(*sm);
-    CAM::InstallInterfaces(*sm);
-    CECD::InstallInterfaces(*sm);
-    CFG::InstallInterfaces(*sm);
-    DLP::InstallInterfaces(*sm);
-    DSP::InstallInterfaces(*sm);
-    FRD::InstallInterfaces(*sm);
-    GSP::InstallInterfaces(*sm);
-    HID::InstallInterfaces(*sm);
-    IR::InstallInterfaces(*sm);
-    MVD::InstallInterfaces(*sm);
-    NDM::InstallInterfaces(*sm);
-    NEWS::InstallInterfaces(*sm);
-    NFC::InstallInterfaces(*sm);
-    NIM::InstallInterfaces(*sm);
-    PTM::InstallInterfaces(*sm);
-    QTM::InstallInterfaces(*sm);
-
-    CSND::InstallInterfaces(*sm);
-    HTTP::InstallInterfaces(*sm);
-    PM::InstallInterfaces(*sm);
-    SOC::InstallInterfaces(*sm);
-    SSL::InstallInterfaces(*sm);
-    Y2R::InstallInterfaces(*sm);
-
+    for (const auto& service_module : service_module_map) {
+        if (!AttemptLLE(service_module) && service_module.init_function != nullptr)
+            service_module.init_function(*sm);
+    }
     LOG_DEBUG(Service, "initialized OK");
 }
 

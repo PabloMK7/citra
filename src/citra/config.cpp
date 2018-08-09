@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <memory>
+#include <unordered_map>
 #include <SDL.h>
 #include <inih/cpp/INIReader.h>
 #include "citra/config.h"
@@ -10,6 +11,7 @@
 #include "common/file_util.h"
 #include "common/logging/log.h"
 #include "common/param_package.h"
+#include "core/hle/service/service.h"
 #include "core/settings.h"
 #include "input_common/main.h"
 #include "input_common/udp/client.h"
@@ -194,6 +196,11 @@ void Config::ReadValues() {
     Settings::values.use_gdbstub = sdl2_config->GetBoolean("Debugging", "use_gdbstub", false);
     Settings::values.gdbstub_port =
         static_cast<u16>(sdl2_config->GetInteger("Debugging", "gdbstub_port", 24689));
+
+    for (const auto& service_module : Service::service_module_map) {
+        bool use_lle = sdl2_config->GetBoolean("Debugging", "LLE\\" + service_module.name, false);
+        Settings::values.lle_modules.emplace(service_module.name, use_lle);
+    }
 
     // Web Service
     Settings::values.enable_telemetry =

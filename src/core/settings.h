@@ -6,6 +6,7 @@
 
 #include <array>
 #include <string>
+#include <unordered_map>
 #include "common/common_types.h"
 #include "core/hle/service/cam/cam.h"
 
@@ -152,6 +153,7 @@ struct Values {
     bool use_gdbstub;
     u16 gdbstub_port;
     std::string log_filter;
+    std::unordered_map<std::string, bool> lle_modules;
 
     // Movie
     std::string movie_play;

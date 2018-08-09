@@ -60,6 +60,8 @@ add_executable(citra-qt
     debugger/graphics/graphics_tracing.h
     debugger/graphics/graphics_vertex_shader.cpp
     debugger/graphics/graphics_vertex_shader.h
+    debugger/lle_service_modules.cpp
+    debugger/lle_service_modules.h
     debugger/profiler.cpp
     debugger/profiler.h
     debugger/registers.cpp

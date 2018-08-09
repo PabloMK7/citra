@@ -30,6 +30,7 @@
 #include "citra_qt/debugger/graphics/graphics_surface.h"
 #include "citra_qt/debugger/graphics/graphics_tracing.h"
 #include "citra_qt/debugger/graphics/graphics_vertex_shader.h"
+#include "citra_qt/debugger/lle_service_modules.h"
 #include "citra_qt/debugger/profiler.h"
 #include "citra_qt/debugger/registers.h"
 #include "citra_qt/debugger/wait_tree.h"
@@ -304,6 +305,15 @@ void GMainWindow::InitializeDebugWidgets() {
             &WaitTreeWidget::OnEmulationStarting);
     connect(this, &GMainWindow::EmulationStopping, waitTreeWidget,
             &WaitTreeWidget::OnEmulationStopping);
+
+    lleServiceModulesWidget = new LLEServiceModulesWidget(this);
+    addDockWidget(Qt::RightDockWidgetArea, lleServiceModulesWidget);
+    lleServiceModulesWidget->hide();
+    debug_menu->addAction(lleServiceModulesWidget->toggleViewAction());
+    connect(this, &GMainWindow::EmulationStarting,
+            [this] { lleServiceModulesWidget->setDisabled(true); });
+    connect(this, &GMainWindow::EmulationStopping, waitTreeWidget,
+            [this] { lleServiceModulesWidget->setDisabled(false); });
 }
 
 void GMainWindow::InitializeRecentFileMenuActions() {
