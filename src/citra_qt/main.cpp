@@ -109,6 +109,8 @@ void GMainWindow::ShowCallouts() {
     ShowCalloutMessage(telemetry_message, CalloutFlag::Telemetry);
 }
 
+const int GMainWindow::max_recent_files_item;
+
 GMainWindow::GMainWindow() : config(new Config()), emu_thread(nullptr) {
     Log::Filter log_filter;
     log_filter.ParseFilterString(Settings::values.log_filter);
@@ -808,11 +810,11 @@ void GMainWindow::StoreRecentFile(const QString& filename) {
 }
 
 void GMainWindow::UpdateRecentFiles() {
-    unsigned int num_recent_files =
-        std::min(UISettings::values.recent_files.size(), static_cast<int>(max_recent_files_item));
+    const int num_recent_files =
+        std::min(UISettings::values.recent_files.size(), max_recent_files_item);
 
-    for (unsigned int i = 0; i < num_recent_files; i++) {
-        QString text = QString("&%1. %2").arg(i + 1).arg(
+    for (int i = 0; i < num_recent_files; i++) {
+        const QString text = QString("&%1. %2").arg(i + 1).arg(
             QFileInfo(UISettings::values.recent_files[i]).fileName());
         actions_recent_files[i]->setText(text);
         actions_recent_files[i]->setData(UISettings::values.recent_files[i]);
@@ -824,12 +826,8 @@ void GMainWindow::UpdateRecentFiles() {
         actions_recent_files[j]->setVisible(false);
     }
 
-    // Grey out the recent files menu if the list is empty
-    if (num_recent_files == 0) {
-        ui.menu_recent_files->setEnabled(false);
-    } else {
-        ui.menu_recent_files->setEnabled(true);
-    }
+    // Enable the recent files menu if the list isn't empty
+    ui.menu_recent_files->setEnabled(num_recent_files != 0);
 }
 
 void GMainWindow::OnGameListLoadFile(QString game_path) {
