@@ -449,6 +449,7 @@ void HTTP_C::CloseClientCertContext(Kernel::HLERequestContext& ctx) {
     }
 
     client_certs.erase(cert_handle);
+    session_data->num_client_certs--;
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
