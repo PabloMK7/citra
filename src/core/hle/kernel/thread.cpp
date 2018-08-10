@@ -286,13 +286,14 @@ static void DebugThreadQueue() {
  * slot: The index of the first free slot in the indicated page.
  * alloc_needed: Whether there's a need to allocate a new TLS page (All pages are full).
  */
-std::tuple<u32, u32, bool> GetFreeThreadLocalSlot(std::vector<std::bitset<8>>& tls_slots) {
+static std::tuple<std::size_t, std::size_t, bool> GetFreeThreadLocalSlot(
+    const std::vector<std::bitset<8>>& tls_slots) {
     // Iterate over all the allocated pages, and try to find one where not all slots are used.
-    for (unsigned page = 0; page < tls_slots.size(); ++page) {
+    for (std::size_t page = 0; page < tls_slots.size(); ++page) {
         const auto& page_tls_slots = tls_slots[page];
         if (!page_tls_slots.all()) {
             // We found a page with at least one free slot, find which slot it is
-            for (unsigned slot = 0; slot < page_tls_slots.size(); ++slot) {
+            for (std::size_t slot = 0; slot < page_tls_slots.size(); ++slot) {
                 if (!page_tls_slots.test(slot)) {
                     return std::make_tuple(page, slot, false);
                 }
@@ -362,11 +363,8 @@ ResultVal<SharedPtr<Thread>> Thread::Create(std::string name, VAddr entry_point,
 
     // Find the next available TLS index, and mark it as used
     auto& tls_slots = owner_process->tls_slots;
-    bool needs_allocation = true;
-    u32 available_page; // Which allocated page has free space
-    u32 available_slot; // Which slot within the page is free
 
-    std::tie(available_page, available_slot, needs_allocation) = GetFreeThreadLocalSlot(tls_slots);
+    auto [available_page, available_slot, needs_allocation] = GetFreeThreadLocalSlot(tls_slots);
 
     if (needs_allocation) {
         // There are no already-allocated pages with free slots, lets allocate a new one.
@@ -388,7 +386,7 @@ ResultVal<SharedPtr<Thread>> Thread::Create(std::string name, VAddr entry_point,
         owner_process->linear_heap_used += Memory::PAGE_SIZE;
 
         tls_slots.emplace_back(0); // The page is completely available at the start
-        available_page = static_cast<u32>(tls_slots.size() - 1);
+        available_page = tls_slots.size() - 1;
         available_slot = 0; // Use the first slot in the new page
 
         auto& vm_manager = owner_process->vm_manager;
