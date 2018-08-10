@@ -98,6 +98,7 @@ struct Values {
     std::string touch_device;
     std::string udp_input_address;
     u16 udp_input_port;
+    u8 udp_pad_index;
 
     // Core
     bool use_cpu_jit;

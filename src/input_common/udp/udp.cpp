@@ -70,8 +70,9 @@ private:
 
 State::State() {
     auto status = std::make_shared<DeviceStatus>();
-    client = std::make_unique<Client>(status, Settings::values.udp_input_address,
-                                      Settings::values.udp_input_port);
+    client =
+        std::make_unique<Client>(status, Settings::values.udp_input_address,
+                                 Settings::values.udp_input_port, Settings::values.udp_pad_index);
 
     Input::RegisterFactory<Input::TouchDevice>("cemuhookudp",
                                                std::make_shared<UDPTouchFactory>(status));
