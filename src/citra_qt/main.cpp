@@ -1030,9 +1030,8 @@ void GMainWindow::OnMenuRecentFile() {
     QAction* action = qobject_cast<QAction*>(sender());
     assert(action);
 
-    QString filename = action->data().toString();
-    QFileInfo file_info(filename);
-    if (file_info.exists()) {
+    const QString filename = action->data().toString();
+    if (QFileInfo::exists(filename)) {
         BootGame(filename);
     } else {
         // Display an error message and remove the file from the list.
@@ -1402,15 +1401,14 @@ void GMainWindow::UpdateUITheme() {
     QStringList theme_paths(default_theme_paths);
     if (UISettings::values.theme != UISettings::themes[0].second &&
         !UISettings::values.theme.isEmpty()) {
-        QString theme_uri(":" + UISettings::values.theme + "/style.qss");
+        const QString theme_uri(":" + UISettings::values.theme + "/style.qss");
         QFile f(theme_uri);
-        if (!f.exists()) {
-            LOG_ERROR(Frontend, "Unable to set style, stylesheet file not found");
-        } else {
-            f.open(QFile::ReadOnly | QFile::Text);
+        if (f.open(QFile::ReadOnly | QFile::Text)) {
             QTextStream ts(&f);
             qApp->setStyleSheet(ts.readAll());
             GMainWindow::setStyleSheet(ts.readAll());
+        } else {
+            LOG_ERROR(Frontend, "Unable to set style, stylesheet file not found");
         }
         theme_paths.append(QStringList{":/icons/default", ":/icons/" + UISettings::values.theme});
         QIcon::setThemeName(":/icons/" + UISettings::values.theme);
