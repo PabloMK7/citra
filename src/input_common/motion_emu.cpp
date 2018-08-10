@@ -133,7 +133,7 @@ public:
         device = std::make_shared<MotionEmuDevice>(update_millisecond, sensitivity, tilt_clamp);
     }
 
-    std::tuple<Math::Vec3<float>, Math::Vec3<float>> GetStatus() const {
+    std::tuple<Math::Vec3<float>, Math::Vec3<float>> GetStatus() const override {
         return device->GetStatus();
     }
 

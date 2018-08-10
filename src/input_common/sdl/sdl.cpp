@@ -82,7 +82,7 @@ private:
 class SDLButton final : public Input::ButtonDevice {
 public:
     explicit SDLButton(std::shared_ptr<SDLJoystick> joystick_, int button_)
-        : joystick(joystick_), button(button_) {}
+        : joystick(std::move(joystick_)), button(button_) {}
 
     bool GetStatus() const override {
         return joystick->GetButton(button);
@@ -96,7 +96,7 @@ private:
 class SDLDirectionButton final : public Input::ButtonDevice {
 public:
     explicit SDLDirectionButton(std::shared_ptr<SDLJoystick> joystick_, int hat_, Uint8 direction_)
-        : joystick(joystick_), hat(hat_), direction(direction_) {}
+        : joystick(std::move(joystick_)), hat(hat_), direction(direction_) {}
 
     bool GetStatus() const override {
         return joystick->GetHatDirection(hat, direction);
@@ -112,7 +112,7 @@ class SDLAxisButton final : public Input::ButtonDevice {
 public:
     explicit SDLAxisButton(std::shared_ptr<SDLJoystick> joystick_, int axis_, float threshold_,
                            bool trigger_if_greater_)
-        : joystick(joystick_), axis(axis_), threshold(threshold_),
+        : joystick(std::move(joystick_)), axis(axis_), threshold(threshold_),
           trigger_if_greater(trigger_if_greater_) {}
 
     bool GetStatus() const override {
@@ -132,7 +132,7 @@ private:
 class SDLAnalog final : public Input::AnalogDevice {
 public:
     SDLAnalog(std::shared_ptr<SDLJoystick> joystick_, int axis_x_, int axis_y_)
-        : joystick(joystick_), axis_x(axis_x_), axis_y(axis_y_) {}
+        : joystick(std::move(joystick_)), axis_x(axis_x_), axis_y(axis_y_) {}
 
     std::tuple<float, float> GetStatus() const override {
         return joystick->GetAnalog(axis_x, axis_y);
@@ -314,10 +314,6 @@ namespace Polling {
 
 class SDLPoller : public InputCommon::Polling::DevicePoller {
 public:
-    SDLPoller() = default;
-
-    ~SDLPoller() = default;
-
     void Start() override {
         // SDL joysticks must be opened, otherwise they don't generate events
         SDL_JoystickUpdate();
@@ -341,10 +337,6 @@ private:
 
 class SDLButtonPoller final : public SDLPoller {
 public:
-    SDLButtonPoller() = default;
-
-    ~SDLButtonPoller() = default;
-
     Common::ParamPackage GetNextInput() override {
         SDL_Event event;
         while (SDL_PollEvent(&event)) {
@@ -364,10 +356,6 @@ public:
 
 class SDLAnalogPoller final : public SDLPoller {
 public:
-    SDLAnalogPoller() = default;
-
-    ~SDLAnalogPoller() = default;
-
     void Start() override {
         SDLPoller::Start();
 
