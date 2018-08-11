@@ -9,6 +9,7 @@
 #include <QTimer>
 #include "citra_qt/configuration/config.h"
 #include "citra_qt/configuration/configure_input.h"
+#include "citra_qt/configuration/configure_motion_touch.h"
 #include "common/param_package.h"
 
 const std::array<std::string, ConfigureInput::ANALOG_SUB_BUTTONS_NUM>
@@ -159,6 +160,10 @@ ConfigureInput::ConfigureInput(QWidget* parent)
         });
     }
 
+    connect(ui->buttonMotionTouch, &QPushButton::released, [this] {
+        QDialog* motion_touch_dialog = new ConfigureMotionTouch(this);
+        return motion_touch_dialog->exec();
+    });
     connect(ui->buttonRestoreDefaults, &QPushButton::released, [this]() { restoreDefaults(); });
 
     timeout_timer->setSingleShot(true);
