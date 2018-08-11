@@ -17,6 +17,7 @@
  *   ScheduleEvent(periodInCycles - cyclesLate, callback, "whatever")
  */
 
+#include <chrono>
 #include <functional>
 #include <limits>
 #include <string>
@@ -184,7 +185,7 @@ void ClearPendingEvents();
 
 void ForceExceptionCheck(s64 cycles);
 
-u64 GetGlobalTimeUs();
+std::chrono::microseconds GetGlobalTimeUs();
 
 s64 GetDowncount();
 
