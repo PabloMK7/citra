@@ -45,7 +45,7 @@ struct DeviceStatus {
 class Client {
 public:
     explicit Client(std::shared_ptr<DeviceStatus> status, const std::string& host = DEFAULT_ADDR,
-                    u16 port = DEFAULT_PORT, u32 client_id = 24872);
+                    u16 port = DEFAULT_PORT, u8 pad_index = 0, u32 client_id = 24872);
     ~Client();
 
 private:
