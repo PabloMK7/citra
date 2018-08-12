@@ -298,7 +298,7 @@ void Module::Interface::GetSystemInfo(Kernel::HLERequestContext& ctx) {
         dest_buffer.Write(buffer.data(), 0, buffer.size());
         break;
     default:
-        LOG_ERROR(Service_CECD, "Unknown system info type {}", static_cast<u32>(info_type));
+        LOG_ERROR(Service_CECD, "Unknown system info type={}", static_cast<u32>(info_type));
     }
 
     rb.Push(RESULT_SUCCESS);
@@ -454,10 +454,18 @@ void Module::Interface::OpenAndRead(Kernel::HLERequestContext& ctx) {
             LOG_ERROR(Service_CECD, "Failed to open file: {}", path.AsString());
 
             if (path_type == CecDataPathType::CEC_PATH_MBOX_INFO) {
+                const FileSys::Path root_dir_path(
+                    cecd->GetCecDataPathTypeAsString(CecDataPathType::CEC_PATH_ROOT_DIR,
+                                                     ncch_program_id)
+                        .data());
                 const FileSys::Path mbox_path(
                     cecd->GetCecDataPathTypeAsString(CecDataPathType::CEC_PATH_MBOX_DIR,
                                                      ncch_program_id)
                         .data());
+
+                /// Just in case the root dir /CEC doesn't exist, we try to create it first
+                Service::FS::CreateDirectoryFromArchive(cecd->cecd_system_save_data_archive,
+                                                        root_dir_path);
                 Service::FS::CreateDirectoryFromArchive(cecd->cecd_system_save_data_archive,
                                                         mbox_path);
             }
@@ -565,6 +573,61 @@ Module::Module() {
         // Open it again to get a valid archive now that the folder exists
         archive_result =
             Service::FS::OpenArchive(Service::FS::ArchiveIdCode::SystemSaveData, archive_path);
+
+        /// Now that the archive is formatted, we need to create the root CEC directory,
+        /// eventlog.dat, and CEC/MBoxList____
+        const FileSys::Path root_dir_path(
+            GetCecDataPathTypeAsString(CecDataPathType::CEC_PATH_ROOT_DIR, 0).data());
+        Service::FS::CreateDirectoryFromArchive(*archive_result, root_dir_path);
+
+        FileSys::Mode mode;
+        mode.write_flag.Assign(1);
+        mode.create_flag.Assign(1);
+
+        /// eventlog.dat resides in the root of the archive beside the CEC directory
+        /// Initially created, at offset 0x0, are bytes 0x01 0x41 0x12, followed by
+        /// zeroes until offset 0x1000, where it changes to 0xDD until the end of file
+        /// at offset 0x30d53
+        FileSys::Path eventlog_path("/eventlog.dat");
+
+        auto eventlog_result =
+            Service::FS::OpenFileFromArchive(*archive_result, eventlog_path, mode);
+
+        constexpr u32 eventlog_size = 0x30d54;
+        auto eventlog = eventlog_result.Unwrap();
+        std::vector<u8> eventlog_buffer(eventlog_size);
+
+        std::memset(&eventlog_buffer[0], 0, 0x1000);
+        eventlog_buffer[0] = 0x01;
+        eventlog_buffer[1] = 0x41;
+        eventlog_buffer[2] = 0x12;
+        std::memset(&eventlog_buffer[0x1000], 0xDD, eventlog_size - 0x1000);
+
+        eventlog->backend->Write(0, eventlog_size, true, eventlog_buffer.data()).Unwrap();
+        eventlog->backend->Close();
+
+        /// MBoxList____ resides within the root CEC/ directory.
+        /// Initially created, at offset 0x0, are bytes 0x68 0x68 0x00 0x00 0x01, with 0x6868 'hh',
+        /// being the magic number. The rest of the file is filled with zeroes, until the end of
+        /// file at offset 0x18b
+        FileSys::Path mboxlist_path(
+            GetCecDataPathTypeAsString(CecDataPathType::CEC_PATH_MBOX_LIST, 0).data());
+
+        auto mboxlist_result =
+            Service::FS::OpenFileFromArchive(*archive_result, mboxlist_path, mode);
+
+        constexpr u32 mboxlist_size = 0x18c;
+        auto mboxlist = mboxlist_result.Unwrap();
+        std::vector<u8> mboxlist_buffer(mboxlist_size);
+
+        std::memset(&mboxlist_buffer[0], 0, mboxlist_size);
+        mboxlist_buffer[0] = 0x68;
+        mboxlist_buffer[1] = 0x68;
+        /// mboxlist_buffer[2-3] are already zeroed
+        mboxlist_buffer[4] = 0x01;
+
+        mboxlist->backend->Write(0, mboxlist_size, true, mboxlist_buffer.data()).Unwrap();
+        mboxlist->backend->Close();
     }
     ASSERT_MSG(archive_result.Succeeded(), "Could not open the CECD SystemSaveData archive!");
 

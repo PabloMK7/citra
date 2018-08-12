@@ -46,7 +46,6 @@ public:
      * CecDataPathType possible missing values; need to figure out placement
      *
      * data:/CEC/TMP
-     * utBox__
      * data:/CEC/test
      */
     enum class CecDataPathType : u32 {
