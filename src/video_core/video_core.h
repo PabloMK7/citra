@@ -9,7 +9,10 @@
 #include "core/core.h"
 #include "core/frontend/emu_window.h"
 
+namespace Frontend {
 class EmuWindow;
+}
+
 class RendererBase;
 
 namespace Memory {
@@ -40,7 +43,7 @@ extern Layout::FramebufferLayout g_screenshot_framebuffer_layout;
 extern Memory::MemorySystem* g_memory;
 
 /// Initialize the video core
-Core::System::ResultStatus Init(EmuWindow& emu_window, Memory::MemorySystem& memory);
+Core::System::ResultStatus Init(Frontend::EmuWindow& emu_window, Memory::MemorySystem& memory);
 
 /// Shutdown the video core
 void Shutdown();

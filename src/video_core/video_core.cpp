@@ -33,7 +33,7 @@ Layout::FramebufferLayout g_screenshot_framebuffer_layout;
 Memory::MemorySystem* g_memory;
 
 /// Initialize the video core
-Core::System::ResultStatus Init(EmuWindow& emu_window, Memory::MemorySystem& memory) {
+Core::System::ResultStatus Init(Frontend::EmuWindow& emu_window, Memory::MemorySystem& memory) {
     g_memory = &memory;
     Pica::Init();
 
