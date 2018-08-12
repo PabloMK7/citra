@@ -764,15 +764,7 @@ void GMainWindow::BootGame(const QString& filename) {
 
 void GMainWindow::ShutdownGame() {
     discord_rpc->Pause();
-
-    const bool was_recording = Core::Movie::GetInstance().IsRecordingInput();
-    Core::Movie::GetInstance().Shutdown();
-    if (was_recording) {
-        QMessageBox::information(this, "Movie Saved", "The movie is successfully saved.");
-        ui.action_Record_Movie->setEnabled(true);
-        ui.action_Play_Movie->setEnabled(true);
-        ui.action_Stop_Recording_Playback->setEnabled(false);
-    }
+    OnStopRecordingPlayback();
     emu_thread->RequestStop();
 
     // Release emu threads from any breakpoints
@@ -1252,9 +1244,11 @@ void GMainWindow::OnCreateGraphicsSurfaceViewer() {
 
 void GMainWindow::OnRecordMovie() {
     const QString path =
-        QFileDialog::getSaveFileName(this, tr("Record Movie"), "", tr("Citra TAS Movie (*.ctm)"));
+        QFileDialog::getSaveFileName(this, tr("Record Movie"), UISettings::values.movie_record_path,
+                                     tr("Citra TAS Movie (*.ctm)"));
     if (path.isEmpty())
         return;
+    UISettings::values.movie_record_path = QFileInfo(path).path();
     if (emulation_running) {
         Core::Movie::GetInstance().StartRecording(path.toStdString());
     } else {
@@ -1311,9 +1305,11 @@ bool GMainWindow::ValidateMovie(const QString& path, u64 program_id) {
 
 void GMainWindow::OnPlayMovie() {
     const QString path =
-        QFileDialog::getOpenFileName(this, tr("Play Movie"), "", tr("Citra TAS Movie (*.ctm)"));
+        QFileDialog::getOpenFileName(this, tr("Play Movie"), UISettings::values.movie_playback_path,
+                                     tr("Citra TAS Movie (*.ctm)"));
     if (path.isEmpty())
         return;
+    UISettings::values.movie_playback_path = QFileInfo(path).path();
 
     if (emulation_running) {
         if (!ValidateMovie(path))
