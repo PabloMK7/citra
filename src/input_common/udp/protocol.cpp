@@ -31,7 +31,7 @@ namespace Response {
  */
 boost::optional<Type> Validate(u8* data, size_t size) {
     if (size < sizeof(Header)) {
-        LOG_ERROR(Input, "Invalid UDP packet received");
+        LOG_DEBUG(Input, "Invalid UDP packet received");
         return boost::none;
     }
     Header header;
