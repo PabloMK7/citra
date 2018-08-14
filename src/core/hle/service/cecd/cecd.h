@@ -534,6 +534,8 @@ private:
     std::string GetCecDataPathTypeAsString(const CecDataPathType type, const u32 program_id,
                                            const std::vector<u8>& msg_id = std::vector<u8>()) const;
 
+    void CreateAndPopulateMBoxDirectory(const u32 ncch_program_id);
+
     Service::FS::ArchiveHandle cecd_system_save_data_archive;
 
     Kernel::SharedPtr<Kernel::Event> cecinfo_event;

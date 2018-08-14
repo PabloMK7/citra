@@ -400,6 +400,18 @@ void Module::Interface::OpenAndWrite(Kernel::HLERequestContext& ctx) {
             rb.Push(RESULT_SUCCESS);
         } else {
             LOG_ERROR(Service_CECD, "Failed to open file: {}", path.AsString());
+
+            /// We need to check if the MBox /CEC/<id> directory even exists...
+            /// If it doesn't, we create and populate it.
+            const FileSys::Path mbox_path(
+                cecd->GetCecDataPathTypeAsString(CecDataPathType::CEC_PATH_MBOX_DIR,
+                                                 ncch_program_id)
+                    .data());
+            auto mbox_result = Service::FS::OpenDirectoryFromArchive(
+                cecd->cecd_system_save_data_archive, mbox_path);
+            if (mbox_result.Failed())
+                cecd->CreateAndPopulateMBoxDirectory(ncch_program_id);
+
             rb.Push(ResultCode(ErrorDescription::NoData, ErrorModule::CEC, ErrorSummary::NotFound,
                                ErrorLevel::Status));
         }
@@ -453,22 +465,19 @@ void Module::Interface::OpenAndRead(Kernel::HLERequestContext& ctx) {
         } else {
             LOG_ERROR(Service_CECD, "Failed to open file: {}", path.AsString());
 
-            if (path_type == CecDataPathType::CEC_PATH_MBOX_INFO) {
-                const FileSys::Path root_dir_path(
-                    cecd->GetCecDataPathTypeAsString(CecDataPathType::CEC_PATH_ROOT_DIR,
-                                                     ncch_program_id)
-                        .data());
-                const FileSys::Path mbox_path(
-                    cecd->GetCecDataPathTypeAsString(CecDataPathType::CEC_PATH_MBOX_DIR,
-                                                     ncch_program_id)
-                        .data());
+            /// We need to check if the MBox /CEC/<id> directory even exists...
+            /// If it doesn't, we create and populate it.
+            const FileSys::Path mbox_path(
+                cecd->GetCecDataPathTypeAsString(CecDataPathType::CEC_PATH_MBOX_DIR,
+                                                 ncch_program_id)
+                    .data());
+            auto mbox_result = Service::FS::OpenDirectoryFromArchive(
+                cecd->cecd_system_save_data_archive, mbox_path);
+            if (mbox_result.Failed())
+                cecd->CreateAndPopulateMBoxDirectory(ncch_program_id);
 
-                /// Just in case the root dir /CEC doesn't exist, we try to create it first
-                Service::FS::CreateDirectoryFromArchive(cecd->cecd_system_save_data_archive,
-                                                        root_dir_path);
-                Service::FS::CreateDirectoryFromArchive(cecd->cecd_system_save_data_archive,
-                                                        mbox_path);
-            }
+            /// Since the directories/files didn't exist before, we still push a failure
+            /// A second attempt will then be called, and now everything exists.
             rb.Push(ResultCode(ErrorDescription::NoData, ErrorModule::CEC, ErrorSummary::NotFound,
                                ErrorLevel::Status));
             rb.Push<u32>(0); /// No bytes read
@@ -542,6 +551,151 @@ std::string Module::GetCecDataPathTypeAsString(const CecDataPathType type, const
         return Common::StringFromFormat("/CEC/%08x/MBoxData.%03d", program_id,
                                         static_cast<u32>(type) - 100);
     }
+}
+
+void Module::CreateAndPopulateMBoxDirectory(const u32 ncch_program_id) {
+    const FileSys::Path root_dir_path(
+        GetCecDataPathTypeAsString(CecDataPathType::CEC_PATH_ROOT_DIR, ncch_program_id).data());
+    const FileSys::Path mbox_path(
+        GetCecDataPathTypeAsString(CecDataPathType::CEC_PATH_MBOX_DIR, ncch_program_id).data());
+    const FileSys::Path inbox_path(
+        GetCecDataPathTypeAsString(CecDataPathType::CEC_PATH_INBOX_DIR, ncch_program_id).data());
+    const FileSys::Path outbox_path(
+        GetCecDataPathTypeAsString(CecDataPathType::CEC_PATH_OUTBOX_DIR, ncch_program_id).data());
+
+    /// Just in case the root dir /CEC doesn't exist, we try to create it first
+    Service::FS::CreateDirectoryFromArchive(cecd_system_save_data_archive, root_dir_path);
+    Service::FS::CreateDirectoryFromArchive(cecd_system_save_data_archive, mbox_path);
+    Service::FS::CreateDirectoryFromArchive(cecd_system_save_data_archive, inbox_path);
+    Service::FS::CreateDirectoryFromArchive(cecd_system_save_data_archive, outbox_path);
+
+    /// Now that the directories have been created, we can create the required files
+    FileSys::Mode mode;
+    mode.write_flag.Assign(1);
+    mode.create_flag.Assign(1);
+
+    /// MBoxInfo____ resides in the MBox /CEC/<id> directory,
+    /// The Magic number is 0x6363 'cc', and has size 0x60
+    FileSys::Path mbox_info_path(
+        GetCecDataPathTypeAsString(CecDataPathType::CEC_PATH_MBOX_INFO, ncch_program_id).data());
+
+    auto mbox_info_result =
+        Service::FS::OpenFileFromArchive(cecd_system_save_data_archive, mbox_info_path, mode);
+
+    constexpr u32 mbox_info_size = 0x60;
+    auto mbox_info = mbox_info_result.Unwrap();
+    std::vector<u8> mbox_info_buffer(mbox_info_size);
+
+    std::memset(&mbox_info_buffer[0], 0, mbox_info_size);
+    mbox_info_buffer[0] = 0x63;
+    mbox_info_buffer[1] = 0x63;
+
+    mbox_info->backend->Write(0, mbox_info_size, true, mbox_info_buffer.data());
+    mbox_info->backend->Close();
+
+    /// BoxInfo_____ resides in both the InBox and OutBox directories,
+    /// The Magic number is 0x6262 'bb', and has size 0x20
+    FileSys::Path inbox_info_path(
+        GetCecDataPathTypeAsString(CecDataPathType::CEC_PATH_INBOX_INFO, ncch_program_id).data());
+
+    auto inbox_info_result =
+        Service::FS::OpenFileFromArchive(cecd_system_save_data_archive, inbox_info_path, mode);
+
+    constexpr u32 inbox_info_size = 0x20;
+    auto inbox_info = inbox_info_result.Unwrap();
+    std::vector<u8> inbox_info_buffer(inbox_info_size);
+
+    std::memset(&inbox_info_buffer[0], 0, inbox_info_size);
+    inbox_info_buffer[0] = 0x62;
+    inbox_info_buffer[1] = 0x62;
+
+    inbox_info->backend->Write(0, inbox_info_size, true, inbox_info_buffer.data());
+    inbox_info->backend->Close();
+
+    /// BoxInfo_____ resides in both the InBox and OutBox directories,
+    /// The Magic number is 0x6262 'bb', and has size 0x20-byte header, and an array of 0x70-byte
+    /// entries. Each entry is a copy of the message header.
+    FileSys::Path outbox_info_path(
+        GetCecDataPathTypeAsString(CecDataPathType::CEC_PATH_OUTBOX_INFO, ncch_program_id).data());
+
+    auto outbox_info_result =
+        Service::FS::OpenFileFromArchive(cecd_system_save_data_archive, outbox_info_path, mode);
+
+    constexpr u32 outbox_info_size = 0x20;
+    auto outbox_info = outbox_info_result.Unwrap();
+    std::vector<u8> outbox_info_buffer(outbox_info_size);
+
+    std::memset(&outbox_info_buffer[0], 0, outbox_info_size);
+    outbox_info_buffer[0] = 0x62;
+    outbox_info_buffer[1] = 0x62;
+
+    outbox_info->backend->Write(0, outbox_info_size, true, outbox_info_buffer.data());
+    outbox_info->backend->Close();
+
+    /// OBIndex_____ resides in the OutBox directory,
+    /// Unknown...
+    FileSys::Path outbox_index_path(
+        GetCecDataPathTypeAsString(CecDataPathType::CEC_PATH_OUTBOX_INDEX, ncch_program_id).data());
+
+    auto outbox_index_result =
+        Service::FS::OpenFileFromArchive(cecd_system_save_data_archive, outbox_index_path, mode);
+
+    constexpr u32 outbox_index_size = 0x32;
+    auto outbox_index = outbox_index_result.Unwrap();
+    std::vector<u8> outbox_index_buffer(outbox_index_size);
+
+    std::memset(&outbox_index_buffer[0], 0, outbox_index_size);
+
+    outbox_index->backend->Write(0, outbox_index_size, true, outbox_index_buffer.data());
+    outbox_index->backend->Close();
+
+    /// MBoxData.001 resides in the MBox /CEC/<id> directory and contains the icon of the app
+    FileSys::Path mbox_icon_path(
+        GetCecDataPathTypeAsString(CecDataPathType::CEC_MBOX_ICON, ncch_program_id).data());
+
+    auto mbox_icon_result =
+        Service::FS::OpenFileFromArchive(cecd_system_save_data_archive, mbox_icon_path, mode);
+
+    constexpr u32 mbox_icon_size = 0x1200;
+    auto mbox_icon = mbox_icon_result.Unwrap();
+    std::vector<u8> mbox_icon_buffer(mbox_icon_size);
+
+    std::memset(&mbox_icon_buffer[0], 0, mbox_icon_size);
+
+    mbox_icon->backend->Write(0, mbox_icon_size, true, mbox_icon_buffer.data());
+    mbox_icon->backend->Close();
+
+    /// MBoxData.010 resides in the MBox /CEC/<id> directory and contains the title of the app
+    /// in null-terminated UTF-16 string.
+    FileSys::Path mbox_title_path(
+        GetCecDataPathTypeAsString(CecDataPathType::CEC_MBOX_TITLE, ncch_program_id).data());
+
+    auto mbox_title_result =
+        Service::FS::OpenFileFromArchive(cecd_system_save_data_archive, mbox_title_path, mode);
+
+    constexpr u32 mbox_title_size = 0x32;
+    auto mbox_title = mbox_title_result.Unwrap();
+    std::vector<u8> mbox_title_buffer(mbox_title_size);
+
+    std::memset(&mbox_title_buffer[0], 0, mbox_title_size);
+
+    mbox_title->backend->Write(0, mbox_title_size, true, mbox_title_buffer.data());
+    mbox_title->backend->Close();
+
+    /// MBoxData.050 resides in the MBox /CEC/<id> directory and contains the program id of the app
+    FileSys::Path mbox_program_id_path(
+        GetCecDataPathTypeAsString(CecDataPathType::CEC_MBOX_PROGRAM_ID, ncch_program_id).data());
+
+    auto mbox_program_id_result =
+        Service::FS::OpenFileFromArchive(cecd_system_save_data_archive, mbox_program_id_path, mode);
+    auto mbox_program_id = mbox_program_id_result.Unwrap();
+
+    std::vector<u8> program_id_buffer(8);
+    u64_le le_program_id = Kernel::g_current_process->codeset->program_id;
+    std::memcpy(program_id_buffer.data(), &le_program_id, sizeof(u64));
+
+    mbox_program_id->backend->Write(0, sizeof(u64), true, program_id_buffer.data());
+    mbox_program_id->backend->Close();
 }
 
 Module::SessionData::SessionData() {}
