@@ -594,7 +594,8 @@ void Module::CreateAndPopulateMBoxDirectory(const u32 ncch_program_id) {
     mbox_info->backend->Close();
 
     /// BoxInfo_____ resides in both the InBox and OutBox directories,
-    /// The Magic number is 0x6262 'bb', and has size 0x20
+    /// The Magic number is 0x6262 'bb', and has size 0x20-byte header, and an array of 0x70-byte
+    /// entries. Each entry is a copy of the message header.
     FileSys::Path inbox_info_path(
         GetCecDataPathTypeAsString(CecDataPathType::CEC_PATH_INBOX_INFO, ncch_program_id).data());
 
@@ -605,11 +606,19 @@ void Module::CreateAndPopulateMBoxDirectory(const u32 ncch_program_id) {
     auto inbox_info = inbox_info_result.Unwrap();
     std::vector<u8> inbox_info_buffer(inbox_info_size);
 
-    std::memset(&inbox_info_buffer[0], 0, inbox_info_size);
-    inbox_info_buffer[0] = 0x62;
-    inbox_info_buffer[1] = 0x62;
+    CecInOutBoxInfoHeader inbox_info_header = {};
+    std::memset(&inbox_info_header, 0, sizeof(CecInOutBoxInfoHeader));
 
-    inbox_info->backend->Write(0, inbox_info_size, true, inbox_info_buffer.data());
+    inbox_info_header.magic = 0x6262;
+    inbox_info_header.box_info_size = 0x20;
+    inbox_info_header.max_box_size = 0xC3000;
+    inbox_info_header.box_size = 0x00;
+    inbox_info_header.max_message_num = 0x0A;
+    inbox_info_header.message_num = 0x00;
+    inbox_info_header.max_batch_size = 0x0A;
+    inbox_info_header.max_message_size = 0x019000;
+
+    inbox_info->backend->Write(0, inbox_info_size, true, (u8*)&inbox_info_header);
     inbox_info->backend->Close();
 
     /// BoxInfo_____ resides in both the InBox and OutBox directories,
@@ -625,26 +634,36 @@ void Module::CreateAndPopulateMBoxDirectory(const u32 ncch_program_id) {
     auto outbox_info = outbox_info_result.Unwrap();
     std::vector<u8> outbox_info_buffer(outbox_info_size);
 
-    std::memset(&outbox_info_buffer[0], 0, outbox_info_size);
-    outbox_info_buffer[0] = 0x62;
-    outbox_info_buffer[1] = 0x62;
+    CecInOutBoxInfoHeader outbox_info_header = {};
+    std::memset(&outbox_info_header, 0, sizeof(CecInOutBoxInfoHeader));
 
-    outbox_info->backend->Write(0, outbox_info_size, true, outbox_info_buffer.data());
+    outbox_info_header.magic = 0x6262;
+    outbox_info_header.box_info_size = 0x20;
+    outbox_info_header.max_box_size = 0xC000;
+    outbox_info_header.box_size = 0x00;
+    outbox_info_header.max_message_num = 0x01;
+    outbox_info_header.message_num = 0x00;
+    outbox_info_header.max_batch_size = 0x01;
+    outbox_info_header.max_message_size = 0x019000;
+
+    outbox_info->backend->Write(0, outbox_info_size, true, (u8*)&outbox_info_header);
     outbox_info->backend->Close();
 
     /// OBIndex_____ resides in the OutBox directory,
-    /// Unknown...
+    /// The magic number is 0x6767 'gg', and the total size is 0x10
     FileSys::Path outbox_index_path(
         GetCecDataPathTypeAsString(CecDataPathType::CEC_PATH_OUTBOX_INDEX, ncch_program_id).data());
 
     auto outbox_index_result =
         Service::FS::OpenFileFromArchive(cecd_system_save_data_archive, outbox_index_path, mode);
 
-    constexpr u32 outbox_index_size = 0x32;
+    constexpr u32 outbox_index_size = 0x10;
     auto outbox_index = outbox_index_result.Unwrap();
     std::vector<u8> outbox_index_buffer(outbox_index_size);
 
     std::memset(&outbox_index_buffer[0], 0, outbox_index_size);
+    outbox_index_buffer[0] = 0x67;
+    outbox_index_buffer[1] = 0x67;
 
     outbox_index->backend->Write(0, outbox_index_size, true, outbox_index_buffer.data());
     outbox_index->backend->Close();
