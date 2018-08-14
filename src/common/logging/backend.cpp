@@ -280,13 +280,14 @@ Backend* GetBackend(std::string_view backend_name) {
 void FmtLogMessageImpl(Class log_class, Level log_level, const char* filename,
                        unsigned int line_num, const char* function, const char* format,
                        const fmt::format_args& args) {
-    auto filter = Impl::Instance().GetGlobalFilter();
+    auto& instance = Impl::Instance();
+    const auto& filter = instance.GetGlobalFilter();
     if (!filter.CheckMessage(log_class, log_level))
         return;
 
     Entry entry =
         CreateEntry(log_class, log_level, filename, line_num, function, fmt::vformat(format, args));
 
-    Impl::Instance().PushEntry(std::move(entry));
+    instance.PushEntry(std::move(entry));
 }
 } // namespace Log
