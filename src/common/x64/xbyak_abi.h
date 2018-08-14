@@ -9,8 +9,7 @@
 #include "common/assert.h"
 #include "common/bit_set.h"
 
-namespace Common {
-namespace X64 {
+namespace Common::X64 {
 
 int RegToIndex(const Xbyak::Reg& reg) {
     using Kind = Xbyak::Reg::Kind;
@@ -217,5 +216,4 @@ void ABI_PopRegistersAndAdjustStack(Xbyak::CodeGenerator& code, BitSet32 regs, s
     }
 }
 
-} // namespace X64
-} // namespace Common
+} // namespace Common::X64
