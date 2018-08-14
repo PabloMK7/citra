@@ -184,4 +184,16 @@ struct NullVisitor : public VisitorInterface {
     }
 };
 
+/// Appends build-specific information to the given FieldCollection,
+/// such as branch name, revision hash, etc.
+void AppendBuildInfo(FieldCollection& fc);
+
+/// Appends CPU-specific information to the given FieldCollection,
+/// such as instruction set extensions, etc.
+void AppendCPUInfo(FieldCollection& fc);
+
+/// Appends OS-specific information to the given FieldCollection,
+/// such as platform name, etc.
+void AppendOSInfo(FieldCollection& fc);
+
 } // namespace Telemetry
