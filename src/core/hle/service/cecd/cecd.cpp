@@ -5,6 +5,7 @@
 #include "common/file_util.h"
 #include "common/logging/log.h"
 #include "common/string_util.h"
+#include "core/core.h"
 #include "core/file_sys/archive_systemsavedata.h"
 #include "core/file_sys/directory_backend.h"
 #include "core/file_sys/errors.h"
@@ -16,6 +17,7 @@
 #include "core/hle/service/cecd/cecd_ndm.h"
 #include "core/hle/service/cecd/cecd_s.h"
 #include "core/hle/service/cecd/cecd_u.h"
+#include "core/loader/smdh.h"
 
 namespace Service {
 namespace CECD {
@@ -675,13 +677,13 @@ void Module::CreateAndPopulateMBoxDirectory(const u32 ncch_program_id) {
     auto mbox_icon_result =
         Service::FS::OpenFileFromArchive(cecd_system_save_data_archive, mbox_icon_path, mode);
 
-    constexpr u32 mbox_icon_size = 0x1200;
+    std::vector<u8> mbox_icon_buffer;
+    Core::System::GetInstance().GetAppLoader().ReadIcon(mbox_icon_buffer);
+
+    const u32 mbox_icon_size = mbox_icon_buffer.size() - 0x24C0; // offset where icon starts
     auto mbox_icon = mbox_icon_result.Unwrap();
-    std::vector<u8> mbox_icon_buffer(mbox_icon_size);
 
-    std::memset(&mbox_icon_buffer[0], 0, mbox_icon_size);
-
-    mbox_icon->backend->Write(0, mbox_icon_size, true, mbox_icon_buffer.data());
+    mbox_icon->backend->Write(0, mbox_icon_size, true, &mbox_icon_buffer[0x24C0]);
     mbox_icon->backend->Close();
 
     /// MBoxData.010 resides in the MBox /CEC/<id> directory and contains the title of the app
@@ -692,11 +694,16 @@ void Module::CreateAndPopulateMBoxDirectory(const u32 ncch_program_id) {
     auto mbox_title_result =
         Service::FS::OpenFileFromArchive(cecd_system_save_data_archive, mbox_title_path, mode);
 
-    constexpr u32 mbox_title_size = 0x32;
+    std::string title_name;
+    Core::System::GetInstance().GetAppLoader().ReadTitle(title_name);
+
+    std::u16string program_name = Common::UTF8ToUTF16(title_name + '\0');
+
+    const u32 mbox_title_size = program_name.size();
     auto mbox_title = mbox_title_result.Unwrap();
     std::vector<u8> mbox_title_buffer(mbox_title_size);
 
-    std::memset(&mbox_title_buffer[0], 0, mbox_title_size);
+    std::memcpy(mbox_title_buffer.data(), program_name.data(), mbox_title_size);
 
     mbox_title->backend->Write(0, mbox_title_size, true, mbox_title_buffer.data());
     mbox_title->backend->Close();
