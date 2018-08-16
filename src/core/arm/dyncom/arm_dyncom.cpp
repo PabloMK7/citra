@@ -147,7 +147,7 @@ void ARM_DynCom::ExecuteInstructions(u64 num_instructions) {
     state->NumInstrsToExecute = num_instructions;
     unsigned ticks_executed = InterpreterMainLoop(state.get());
     CoreTiming::AddTicks(ticks_executed);
-    state.get()->ServeBreak();
+    state->ServeBreak();
 }
 
 std::unique_ptr<ARM_Interface::ThreadContext> ARM_DynCom::NewContext() const {

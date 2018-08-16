@@ -215,8 +215,8 @@ static void FpuWrite(std::size_t id, u64 val, Kernel::Thread* thread = nullptr) 
     }
 
     if (id >= D0_REGISTER && id < FPSCR_REGISTER) {
-        thread->context->SetFpuRegister(2 * (id - D0_REGISTER), (u32)val);
-        thread->context->SetFpuRegister(2 * (id - D0_REGISTER) + 1, val >> 32);
+        thread->context->SetFpuRegister(2 * (id - D0_REGISTER), static_cast<u32>(val));
+        thread->context->SetFpuRegister(2 * (id - D0_REGISTER) + 1, static_cast<u32>(val >> 32));
     } else if (id == FPSCR_REGISTER) {
         return thread->context->SetFpscr(static_cast<u32>(val));
     }

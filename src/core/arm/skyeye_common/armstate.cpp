@@ -597,16 +597,18 @@ void ARMul_State::WriteCP15Register(u32 value, u32 crn, u32 opcode_1, u32 crm, u
 }
 
 void ARMul_State::ServeBreak() {
-    if (GDBStub::IsServerEnabled()) {
-        if (last_bkpt_hit) {
-            Reg[15] = last_bkpt.address;
-        }
-        Kernel::Thread* thread = Kernel::GetCurrentThread();
-        Core::CPU().SaveContext(thread->context);
-        if (last_bkpt_hit || GDBStub::GetCpuStepFlag()) {
-            last_bkpt_hit = false;
-            GDBStub::Break();
-            GDBStub::SendTrap(thread, 5);
-        }
+    if (!GDBStub::IsServerEnabled()) {
+        return;
+    }
+
+    if (last_bkpt_hit) {
+        Reg[15] = last_bkpt.address;
+    }
+    Kernel::Thread* thread = Kernel::GetCurrentThread();
+    Core::CPU().SaveContext(thread->context);
+    if (last_bkpt_hit || GDBStub::GetCpuStepFlag()) {
+        last_bkpt_hit = false;
+        GDBStub::Break();
+        GDBStub::SendTrap(thread, 5);
     }
 }
