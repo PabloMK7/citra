@@ -1,0 +1,14 @@
+[Icon Theme]
+Name=colorful
+Comment=Colorful theme
+Inherits=default
+Directories=16x16,48x48,256x256
+ 
+[16x16]
+Size=16
+
+[48x48]
+Size=48
+
+[256x256]
+Size=256

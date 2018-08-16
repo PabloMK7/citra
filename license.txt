@@ -341,16 +341,26 @@ Public License instead of this License.
 
 The icons used in this project have the following licenses:
 
-Icon Name               | License       | Origin/Author
----                     | ---           | ---
-checked.png             | Free for non-commercial use
-connected.png           | CC BY-ND 3.0  | https://icons8.com
-disconnected.png        | CC BY-ND 3.0  | https://icons8.com
-failed.png              | Free for non-commercial use
-lock.png                | CC BY-ND 3.0  | https://icons8.com
-plus_folder.png         | CC0 1.0       | Designed by BreadFish64 from the Citra team
-bad_folder.png          | CC0 1.0       | Designed by BreadFish64 from the Citra team
-chip.png                | CC0 1.0       | Designed by BreadFish64 from the Citra team
-folder.png              | CC0 1.0       | Designed by BreadFish64 from the Citra team
-plus.png                | CC0 1.0       | Designed by BreadFish64 from the Citra team
-sd_card.png             | CC0 1.0       | Designed by BreadFish64 from the Citra team
+Icon Name (Themes they are used in)         | License       | Origin/Author
+---                                         | ---           | ---
+checked.png                                 | Free for non-commercial use
+connected.png                               | CC BY-ND 3.0  | https://icons8.com
+disconnected.png                            | CC BY-ND 3.0  | https://icons8.com
+failed.png                                  | Free for non-commercial use
+lock.png                                    | CC BY-ND 3.0  | https://icons8.com
+plus_folder.png (Default, Dark)             | CC0 1.0       | Designed by BreadFish64 from the Citra team
+bad_folder.png (Default, Dark)              | CC0 1.0       | Designed by BreadFish64 from the Citra team
+chip.png (Default, Dark)                    | CC0 1.0       | Designed by BreadFish64 from the Citra team
+folder.png (Default, Dark)                  | CC0 1.0       | Designed by BreadFish64 from the Citra team
+plus.png (Default, Dark)                    | CC0 1.0       | Designed by BreadFish64 from the Citra team
+sd_card.png (Default, Dark)                 | CC0 1.0       | Designed by BreadFish64 from the Citra team
+plus_folder.png (Colorful, Colorful Dark)   | CC BY-ND 3.0  | https://icons8.com
+bad_folder.png (Colorful, Colorful Dark)    | CC BY-ND 3.0  | https://icons8.com
+chip.png (Colorful, Colorful Dark)          | CC BY-ND 3.0  | https://icons8.com
+folder.png (Colorful, Colorful Dark)        | CC BY-ND 3.0  | https://icons8.com
+plus.png (Colorful, Colorful Dark)          | CC BY-ND 3.0  | https://icons8.com
+sd_card.png (Colorful, Colorful Dark)       | CC BY-ND 3.0  | https://icons8.com
+
+Note:
+Some icons are different in different themes, and they are separately listed
+only when they have different licenses/origins.

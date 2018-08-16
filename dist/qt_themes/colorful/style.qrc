@@ -1,0 +1,17 @@
+<RCC>
+    <qresource prefix="icons/colorful">
+        <file alias="index.theme">icons/index.theme</file>
+        <file alias="16x16/connected.png">icons/16x16/connected.png</file>
+        <file alias="16x16/disconnected.png">icons/16x16/disconnected.png</file>
+        <file alias="16x16/lock.png">icons/16x16/lock.png</file>
+        <file alias="48x48/bad_folder.png">icons/48x48/bad_folder.png</file>
+        <file alias="48x48/chip.png">icons/48x48/chip.png</file>
+        <file alias="48x48/folder.png">icons/48x48/folder.png</file>
+        <file alias="48x48/plus.png">icons/48x48/plus.png</file>
+        <file alias="48x48/sd_card.png">icons/48x48/sd_card.png</file>
+        <file alias="256x256/plus_folder.png">icons/256x256/plus_folder.png</file>
+    </qresource>
+    <qresource prefix="colorful">
+        <file>style.qss</file>
+    </qresource>
+</RCC>
