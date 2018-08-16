@@ -35,6 +35,7 @@
 #include "core/arm/arm_interface.h"
 #include "core/core.h"
 #include "core/gdbstub/gdbstub.h"
+#include "core/hle/kernel/process.h"
 #include "core/loader/loader.h"
 #include "core/memory.h"
 
@@ -57,9 +58,12 @@ const u32 SIGTERM = 15;
 const u32 MSG_WAITALL = 8;
 #endif
 
-const u32 R15_REGISTER = 15;
+const u32 SP_REGISTER = 13;
+const u32 LR_REGISTER = 14;
+const u32 PC_REGISTER = 15;
 const u32 CPSR_REGISTER = 25;
-const u32 FPSCR_REGISTER = 58;
+const u32 D0_REGISTER = 26;
+const u32 FPSCR_REGISTER = 42;
 
 // For sample XML files see the GDB source /gdb/features
 // GDB also wants the l character at the start
@@ -122,8 +126,9 @@ static u8 command_buffer[GDB_BUFFER_SIZE];
 static u32 command_length;
 
 static u32 latest_signal = 0;
-static bool step_break = false;
 static bool memory_break = false;
+
+Kernel::Thread* current_thread = nullptr;
 
 // Binding to a port within the reserved ports range (0-1023) requires root permissions,
 // so default to a port outside of that range.
@@ -131,6 +136,7 @@ static u16 gdbstub_port = 24689;
 
 static bool halt_loop = true;
 static bool step_loop = false;
+static bool send_trap = false;
 
 // If set to false, the server will never be started and no
 // gdbstub-related functions will be executed.
@@ -144,11 +150,78 @@ struct Breakpoint {
     bool active;
     PAddr addr;
     u32 len;
+    std::array<u8, 4> inst;
 };
 
 static std::map<u32, Breakpoint> breakpoints_execute;
 static std::map<u32, Breakpoint> breakpoints_read;
 static std::map<u32, Breakpoint> breakpoints_write;
+
+static Kernel::Thread* FindThreadById(int id) {
+    const auto& threads = Kernel::GetThreadList();
+    for (auto& thread : threads) {
+        if (thread->GetThreadId() == static_cast<u32>(id)) {
+            return thread.get();
+        }
+    }
+    return nullptr;
+}
+
+static u32 RegRead(std::size_t id, Kernel::Thread* thread = nullptr) {
+    if (!thread) {
+        return 0;
+    }
+
+    if (id <= PC_REGISTER) {
+        return thread->context.get()->GetCpuRegister(id);
+    } else if (id == CPSR_REGISTER) {
+        return thread->context.get()->GetCpsr();
+    } else {
+        return 0;
+    }
+}
+
+static void RegWrite(std::size_t id, u32 val, Kernel::Thread* thread = nullptr) {
+    if (!thread) {
+        return;
+    }
+
+    if (id <= PC_REGISTER) {
+        return thread->context.get()->SetCpuRegister(id, val);
+    } else if (id == CPSR_REGISTER) {
+        return thread->context.get()->SetCpsr(val);
+    }
+}
+
+static u64 FpuRead(std::size_t id, Kernel::Thread* thread = nullptr) {
+    if (!thread) {
+        return 0;
+    }
+
+    if (id >= D0_REGISTER && id < FPSCR_REGISTER) {
+        u64 ret = thread->context.get()->GetFpuRegister(2 * (id - D0_REGISTER));
+        ret |= static_cast<u64>(thread->context.get()->GetFpuRegister(2 * (id - D0_REGISTER) + 1))
+               << 32;
+        return ret;
+    } else if (id == FPSCR_REGISTER) {
+        return thread->context.get()->GetFpscr();
+    } else {
+        return 0;
+    }
+}
+
+static void FpuWrite(std::size_t id, u64 val, Kernel::Thread* thread = nullptr) {
+    if (!thread) {
+        return;
+    }
+
+    if (id >= D0_REGISTER && id < FPSCR_REGISTER) {
+        thread->context.get()->SetFpuRegister(2 * (id - D0_REGISTER), (u32)val);
+        thread->context.get()->SetFpuRegister(2 * (id - D0_REGISTER) + 1, val >> 32);
+    } else if (id == FPSCR_REGISTER) {
+        return thread->context.get()->SetFpscr(static_cast<u32>(val));
+    }
+}
 
 /**
  * Turns hex string character into the equivalent byte.
@@ -178,7 +251,7 @@ static u8 NibbleToHex(u8 n) {
     if (n < 0xA) {
         return '0' + n;
     } else {
-        return 'A' + n - 0xA;
+        return 'a' + n - 0xA;
     }
 }
 
@@ -255,6 +328,35 @@ static u32 GdbHexToInt(const u8* src) {
     return output;
 }
 
+/**
+ * Convert a u64 into a gdb-formatted hex string.
+ *
+ * @param dest Pointer to buffer to store output hex string characters.
+ * @param v    Value to convert.
+ */
+static void LongToGdbHex(u8* dest, u64 v) {
+    for (int i = 0; i < 16; i += 2) {
+        dest[i + 1] = NibbleToHex(static_cast<u8>(v >> (4 * i)));
+        dest[i] = NibbleToHex(static_cast<u8>(v >> (4 * (i + 1))));
+    }
+}
+
+/**
+ * Convert a gdb-formatted hex string into a u64.
+ *
+ * @param src Pointer to hex string.
+ */
+static u64 GdbHexToLong(const u8* src) {
+    u64 output = 0;
+
+    for (int i = 0; i < 16; i += 2) {
+        output = (output << 4) | HexCharToValue(src[15 - i - 1]);
+        output = (output << 4) | HexCharToValue(src[15 - i]);
+    }
+
+    return output;
+}
+
 /// Read a byte from the gdb client.
 static u8 ReadByte() {
     u8 c;
@@ -303,6 +405,8 @@ static void RemoveBreakpoint(BreakpointType type, PAddr addr) {
     if (bp != p.end()) {
         LOG_DEBUG(Debug_GDBStub, "gdb: removed a breakpoint: {:08x} bytes at {:08x} of type {}\n",
                   bp->second.len, bp->second.addr, static_cast<int>(type));
+        Memory::WriteBlock(bp->second.addr, bp->second.inst.data(), bp->second.inst.size());
+        Core::CPU().ClearInstructionCache();
         p.erase(addr);
     }
 }
@@ -419,10 +523,32 @@ static void HandleQuery() {
         SendReply("T0");
     } else if (strncmp(query, "Supported", strlen("Supported")) == 0) {
         // PacketSize needs to be large enough for target xml
-        SendReply("PacketSize=800;qXfer:features:read+");
+        SendReply("PacketSize=2000;qXfer:features:read+;qXfer:threads:read+");
     } else if (strncmp(query, "Xfer:features:read:target.xml:",
                        strlen("Xfer:features:read:target.xml:")) == 0) {
         SendReply(target_xml);
+    } else if (strncmp(query, "fThreadInfo", strlen("fThreadInfo")) == 0) {
+        std::string val = "m";
+        const auto& threads = Kernel::GetThreadList();
+        for (const auto& thread : threads) {
+            val += fmt::format("{:x}", thread->GetThreadId());
+            val += ",";
+        }
+        val.pop_back();
+        SendReply(val.c_str());
+    } else if (strncmp(query, "sThreadInfo", strlen("sThreadInfo")) == 0) {
+        SendReply("l");
+    } else if (strncmp(query, "Xfer:threads:read", strlen("Xfer:threads:read")) == 0) {
+        std::string buffer;
+        buffer += "l<?xml version=\"1.0\"?>";
+        buffer += "<threads>";
+        const auto& threads = Kernel::GetThreadList();
+        for (const auto& thread : threads) {
+            buffer += fmt::format(R"*(<thread id="{:x}" name="Thread {:x}"></thread>)*",
+                                  thread->GetThreadId(), thread->GetThreadId());
+        }
+        buffer += "</threads>";
+        SendReply(buffer.c_str());
     } else {
         SendReply("");
     }
@@ -430,11 +556,34 @@ static void HandleQuery() {
 
 /// Handle set thread command from gdb client.
 static void HandleSetThread() {
-    if (memcmp(command_buffer, "Hg0", 3) == 0 || memcmp(command_buffer, "Hc-1", 4) == 0 ||
-        memcmp(command_buffer, "Hc0", 4) == 0 || memcmp(command_buffer, "Hc1", 4) == 0) {
-        return SendReply("OK");
+    int thread_id = -1;
+    if (command_buffer[2] != '-') {
+        thread_id = static_cast<int>(HexToInt(command_buffer + 2, command_length - 2));
     }
+    if (thread_id >= 1) {
+        current_thread = FindThreadById(thread_id);
+    }
+    if (!current_thread) {
+        thread_id = 1;
+        current_thread = FindThreadById(thread_id);
+    }
+    if (current_thread) {
+        SendReply("OK");
+        return;
+    }
+    SendReply("E01");
+}
 
+/// Handle thread alive command from gdb client.
+static void HandleThreadAlive() {
+    int thread_id = static_cast<int>(HexToInt(command_buffer + 1, command_length - 1));
+    if (thread_id == 0) {
+        thread_id = 1;
+    }
+    if (FindThreadById(thread_id)) {
+        SendReply("OK");
+        return;
+    }
     SendReply("E01");
 }
 
@@ -443,16 +592,31 @@ static void HandleSetThread() {
  *
  * @param signal Signal to be sent to client.
  */
-static void SendSignal(u32 signal) {
+static void SendSignal(Kernel::Thread* thread, u32 signal, bool full = true) {
     if (gdbserver_socket == -1) {
         return;
     }
 
     latest_signal = signal;
 
-    std::string buffer =
-        Common::StringFromFormat("T%02x%02x:%08x;%02x:%08x;", latest_signal, 15,
-                                 htonl(Core::CPU().GetPC()), 13, htonl(Core::CPU().GetReg(13)));
+    if (!thread) {
+        full = false;
+    }
+
+    std::string buffer;
+    if (full) {
+        buffer = Common::StringFromFormat("T%02x%02x:%08x;%02x:%08x;%02x:%08x", latest_signal,
+                                          PC_REGISTER, htonl(Core::CPU().GetPC()), SP_REGISTER,
+                                          htonl(Core::CPU().GetReg(SP_REGISTER)), LR_REGISTER,
+                                          htonl(Core::CPU().GetReg(LR_REGISTER)));
+    } else {
+        buffer = Common::StringFromFormat("T%02x", latest_signal);
+    }
+
+    if (thread) {
+        buffer += Common::StringFromFormat(";thread:%x;", thread->GetThreadId());
+    }
+
     LOG_DEBUG(Debug_GDBStub, "Response: {}", buffer);
     SendReply(buffer.c_str());
 }
@@ -469,7 +633,7 @@ static void ReadCommand() {
     } else if (c == 0x03) {
         LOG_INFO(Debug_GDBStub, "gdb: found break command\n");
         halt_loop = true;
-        SendSignal(SIGTRAP);
+        SendSignal(current_thread, SIGTRAP);
         return;
     } else if (c != GDB_STUB_START) {
         LOG_DEBUG(Debug_GDBStub, "gdb: read invalid byte {:02x}\n", c);
@@ -539,17 +703,14 @@ static void ReadRegister() {
         id |= HexCharToValue(command_buffer[2]);
     }
 
-    if (id <= R15_REGISTER) {
-        IntToGdbHex(reply, Core::CPU().GetReg(id));
+    if (id <= PC_REGISTER) {
+        IntToGdbHex(reply, RegRead(id, current_thread));
     } else if (id == CPSR_REGISTER) {
-        IntToGdbHex(reply, Core::CPU().GetCPSR());
-    } else if (id > CPSR_REGISTER && id < FPSCR_REGISTER) {
-        IntToGdbHex(reply, Core::CPU().GetVFPReg(
-                               id - CPSR_REGISTER -
-                               1)); // VFP registers should start at 26, so one after CSPR_REGISTER
+        IntToGdbHex(reply, RegRead(id, current_thread));
+    } else if (id >= D0_REGISTER && id < FPSCR_REGISTER) {
+        LongToGdbHex(reply, FpuRead(id, current_thread));
     } else if (id == FPSCR_REGISTER) {
-        IntToGdbHex(reply, Core::CPU().GetVFPSystemReg(VFP_FPSCR)); // Get FPSCR
-        IntToGdbHex(reply + 8, 0);
+        IntToGdbHex(reply, static_cast<u32>(FpuRead(id, current_thread)));
     } else {
         return SendReply("E01");
     }
@@ -564,23 +725,23 @@ static void ReadRegisters() {
 
     u8* bufptr = buffer;
 
-    for (u32 reg = 0; reg <= R15_REGISTER; reg++) {
-        IntToGdbHex(bufptr + reg * CHAR_BIT, Core::CPU().GetReg(reg));
+    for (u32 reg = 0; reg <= PC_REGISTER; reg++) {
+        IntToGdbHex(bufptr + reg * 8, RegRead(reg, current_thread));
     }
 
-    bufptr += (16 * CHAR_BIT);
+    bufptr += 16 * 8;
 
-    IntToGdbHex(bufptr, Core::CPU().GetCPSR());
+    IntToGdbHex(bufptr, RegRead(CPSR_REGISTER, current_thread));
 
-    bufptr += CHAR_BIT;
+    bufptr += 8;
 
-    for (u32 reg = 0; reg <= 31; reg++) {
-        IntToGdbHex(bufptr + reg * CHAR_BIT, Core::CPU().GetVFPReg(reg));
+    for (u32 reg = D0_REGISTER; reg < FPSCR_REGISTER; reg++) {
+        LongToGdbHex(bufptr + reg * 16, FpuRead(reg, current_thread));
     }
 
-    bufptr += (32 * CHAR_BIT);
+    bufptr += 16 * 16;
 
-    IntToGdbHex(bufptr, Core::CPU().GetVFPSystemReg(VFP_FPSCR));
+    IntToGdbHex(bufptr, static_cast<u32>(FpuRead(FPSCR_REGISTER, current_thread)));
 
     SendReply(reinterpret_cast<char*>(buffer));
 }
@@ -596,17 +757,19 @@ static void WriteRegister() {
         id |= HexCharToValue(command_buffer[2]);
     }
 
-    if (id <= R15_REGISTER) {
-        Core::CPU().SetReg(id, GdbHexToInt(buffer_ptr));
+    if (id <= PC_REGISTER) {
+        RegWrite(id, GdbHexToInt(buffer_ptr), current_thread);
     } else if (id == CPSR_REGISTER) {
-        Core::CPU().SetCPSR(GdbHexToInt(buffer_ptr));
-    } else if (id > CPSR_REGISTER && id < FPSCR_REGISTER) {
-        Core::CPU().SetVFPReg(id - CPSR_REGISTER - 1, GdbHexToInt(buffer_ptr));
+        RegWrite(id, GdbHexToInt(buffer_ptr), current_thread);
+    } else if (id >= D0_REGISTER && id < FPSCR_REGISTER) {
+        FpuWrite(id, GdbHexToLong(buffer_ptr), current_thread);
     } else if (id == FPSCR_REGISTER) {
-        Core::CPU().SetVFPSystemReg(VFP_FPSCR, GdbHexToInt(buffer_ptr));
+        FpuWrite(id, GdbHexToInt(buffer_ptr), current_thread);
     } else {
         return SendReply("E01");
     }
+
+    Core::CPU().LoadContext(current_thread->context);
 
     SendReply("OK");
 }
@@ -619,22 +782,24 @@ static void WriteRegisters() {
         return SendReply("E01");
 
     for (u32 i = 0, reg = 0; reg <= FPSCR_REGISTER; i++, reg++) {
-        if (reg <= R15_REGISTER) {
-            Core::CPU().SetReg(reg, GdbHexToInt(buffer_ptr + i * CHAR_BIT));
+        if (reg <= PC_REGISTER) {
+            RegWrite(reg, GdbHexToInt(buffer_ptr + i * 8));
         } else if (reg == CPSR_REGISTER) {
-            Core::CPU().SetCPSR(GdbHexToInt(buffer_ptr + i * CHAR_BIT));
+            RegWrite(reg, GdbHexToInt(buffer_ptr + i * 8));
         } else if (reg == CPSR_REGISTER - 1) {
             // Dummy FPA register, ignore
         } else if (reg < CPSR_REGISTER) {
             // Dummy FPA registers, ignore
             i += 2;
-        } else if (reg > CPSR_REGISTER && reg < FPSCR_REGISTER) {
-            Core::CPU().SetVFPReg(reg - CPSR_REGISTER - 1, GdbHexToInt(buffer_ptr + i * CHAR_BIT));
+        } else if (reg >= D0_REGISTER && reg < FPSCR_REGISTER) {
+            FpuWrite(reg, GdbHexToLong(buffer_ptr + i * 16));
             i++; // Skip padding
         } else if (reg == FPSCR_REGISTER) {
-            Core::CPU().SetVFPSystemReg(VFP_FPSCR, GdbHexToInt(buffer_ptr + i * CHAR_BIT));
+            FpuWrite(reg, GdbHexToInt(buffer_ptr + i * 8));
         }
     }
+
+    Core::CPU().LoadContext(current_thread->context);
 
     SendReply("OK");
 }
@@ -687,24 +852,26 @@ static void WriteMemory() {
 
     GdbHexToMem(data.data(), len_pos + 1, len);
     Memory::WriteBlock(addr, data.data(), len);
+    Core::CPU().ClearInstructionCache();
     SendReply("OK");
 }
 
 void Break(bool is_memory_break) {
-    if (!halt_loop) {
-        halt_loop = true;
-        SendSignal(SIGTRAP);
-    }
+    send_trap = true;
 
     memory_break = is_memory_break;
 }
 
 /// Tell the CPU that it should perform a single step.
 static void Step() {
+    if (command_length > 1) {
+        RegWrite(PC_REGISTER, GdbHexToInt(command_buffer + 1), current_thread);
+        Core::CPU().LoadContext(current_thread->context);
+    }
     step_loop = true;
     halt_loop = true;
-    step_break = true;
-    SendSignal(SIGTRAP);
+    send_trap = true;
+    Core::CPU().ClearInstructionCache();
 }
 
 bool IsMemoryBreak() {
@@ -718,9 +885,9 @@ bool IsMemoryBreak() {
 /// Tell the CPU to continue executing.
 static void Continue() {
     memory_break = false;
-    step_break = false;
     step_loop = false;
     halt_loop = false;
+    Core::CPU().ClearInstructionCache();
 }
 
 /**
@@ -737,6 +904,10 @@ static bool CommitBreakpoint(BreakpointType type, PAddr addr, u32 len) {
     breakpoint.active = true;
     breakpoint.addr = addr;
     breakpoint.len = len;
+    Memory::ReadBlock(addr, breakpoint.inst.data(), breakpoint.inst.size());
+    static constexpr std::array<u8, 4> btrap{0x70, 0x00, 0x20, 0xe1};
+    Memory::WriteBlock(addr, btrap.data(), btrap.size());
+    Core::CPU().ClearInstructionCache();
     p.insert({addr, breakpoint});
 
     LOG_DEBUG(Debug_GDBStub, "gdb: added {} breakpoint: {:08x} bytes at {:08x}\n",
@@ -857,7 +1028,7 @@ void HandlePacket() {
         HandleSetThread();
         break;
     case '?':
-        SendSignal(latest_signal);
+        SendSignal(current_thread, latest_signal);
         break;
     case 'k':
         Shutdown();
@@ -893,6 +1064,9 @@ void HandlePacket() {
         break;
     case 'Z':
         AddBreakpoint();
+        break;
+    case 'T':
+        HandleThreadAlive();
         break;
     default:
         SendReply("");
@@ -1037,5 +1211,16 @@ bool GetCpuStepFlag() {
 
 void SetCpuStepFlag(bool is_step) {
     step_loop = is_step;
+}
+
+void SendTrap(Kernel::Thread* thread, int trap) {
+    if (send_trap) {
+        if (!halt_loop || current_thread == thread) {
+            current_thread = thread;
+            SendSignal(thread, trap);
+        }
+        halt_loop = true;
+        send_trap = false;
+    }
 }
 }; // namespace GDBStub
