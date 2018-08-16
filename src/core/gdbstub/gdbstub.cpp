@@ -128,7 +128,7 @@ static u32 command_length;
 static u32 latest_signal = 0;
 static bool memory_break = false;
 
-Kernel::Thread* current_thread = nullptr;
+static Kernel::Thread* current_thread = nullptr;
 
 // Binding to a port within the reserved ports range (0-1023) requires root permissions,
 // so default to a port outside of that range.
@@ -173,9 +173,9 @@ static u32 RegRead(std::size_t id, Kernel::Thread* thread = nullptr) {
     }
 
     if (id <= PC_REGISTER) {
-        return thread->context.get()->GetCpuRegister(id);
+        return thread->context->GetCpuRegister(id);
     } else if (id == CPSR_REGISTER) {
-        return thread->context.get()->GetCpsr();
+        return thread->context->GetCpsr();
     } else {
         return 0;
     }
@@ -187,9 +187,9 @@ static void RegWrite(std::size_t id, u32 val, Kernel::Thread* thread = nullptr) 
     }
 
     if (id <= PC_REGISTER) {
-        return thread->context.get()->SetCpuRegister(id, val);
+        return thread->context->SetCpuRegister(id, val);
     } else if (id == CPSR_REGISTER) {
-        return thread->context.get()->SetCpsr(val);
+        return thread->context->SetCpsr(val);
     }
 }
 
@@ -199,12 +199,11 @@ static u64 FpuRead(std::size_t id, Kernel::Thread* thread = nullptr) {
     }
 
     if (id >= D0_REGISTER && id < FPSCR_REGISTER) {
-        u64 ret = thread->context.get()->GetFpuRegister(2 * (id - D0_REGISTER));
-        ret |= static_cast<u64>(thread->context.get()->GetFpuRegister(2 * (id - D0_REGISTER) + 1))
-               << 32;
+        u64 ret = thread->context->GetFpuRegister(2 * (id - D0_REGISTER));
+        ret |= static_cast<u64>(thread->context->GetFpuRegister(2 * (id - D0_REGISTER) + 1)) << 32;
         return ret;
     } else if (id == FPSCR_REGISTER) {
-        return thread->context.get()->GetFpscr();
+        return thread->context->GetFpscr();
     } else {
         return 0;
     }
@@ -216,10 +215,10 @@ static void FpuWrite(std::size_t id, u64 val, Kernel::Thread* thread = nullptr) 
     }
 
     if (id >= D0_REGISTER && id < FPSCR_REGISTER) {
-        thread->context.get()->SetFpuRegister(2 * (id - D0_REGISTER), (u32)val);
-        thread->context.get()->SetFpuRegister(2 * (id - D0_REGISTER) + 1, val >> 32);
+        thread->context->SetFpuRegister(2 * (id - D0_REGISTER), (u32)val);
+        thread->context->SetFpuRegister(2 * (id - D0_REGISTER) + 1, val >> 32);
     } else if (id == FPSCR_REGISTER) {
-        return thread->context.get()->SetFpscr(static_cast<u32>(val));
+        return thread->context->SetFpscr(static_cast<u32>(val));
     }
 }
 
@@ -531,8 +530,7 @@ static void HandleQuery() {
         std::string val = "m";
         const auto& threads = Kernel::GetThreadList();
         for (const auto& thread : threads) {
-            val += fmt::format("{:x}", thread->GetThreadId());
-            val += ",";
+            val += fmt::format("{:x},", thread->GetThreadId());
         }
         val.pop_back();
         SendReply(val.c_str());
@@ -1214,13 +1212,15 @@ void SetCpuStepFlag(bool is_step) {
 }
 
 void SendTrap(Kernel::Thread* thread, int trap) {
-    if (send_trap) {
-        if (!halt_loop || current_thread == thread) {
-            current_thread = thread;
-            SendSignal(thread, trap);
-        }
-        halt_loop = true;
-        send_trap = false;
+    if (!send_trap) {
+        return;
     }
+
+    if (!halt_loop || current_thread == thread) {
+        current_thread = thread;
+        SendSignal(thread, trap);
+    }
+    halt_loop = true;
+    send_trap = false;
 }
 }; // namespace GDBStub

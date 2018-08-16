@@ -21,7 +21,6 @@
 #include <unordered_map>
 #include "common/common_types.h"
 #include "core/arm/skyeye_common/arm_regformat.h"
-#include "core/core.h"
 #include "core/gdbstub/gdbstub.h"
 
 // Signal levels
@@ -196,20 +195,7 @@ public:
         last_bkpt_hit = true;
     }
 
-    void ServeBreak() {
-        if (GDBStub::IsServerEnabled()) {
-            if (last_bkpt_hit) {
-                Reg[15] = last_bkpt.address;
-            }
-            Kernel::Thread* thread = Kernel::GetCurrentThread();
-            Core::CPU().SaveContext(thread->context);
-            if (last_bkpt_hit || GDBStub::GetCpuStepFlag()) {
-                last_bkpt_hit = false;
-                GDBStub::Break();
-                GDBStub::SendTrap(thread, 5);
-            }
-        }
-    }
+    void ServeBreak();
 
     std::array<u32, 16> Reg{}; // The current register file
     std::array<u32, 2> Reg_usr{};
