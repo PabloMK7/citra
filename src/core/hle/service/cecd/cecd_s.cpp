@@ -12,11 +12,11 @@ CECD_S::CECD_S(std::shared_ptr<Module> cecd)
     static const FunctionInfo functions[] = {
         // cecd:u shared commands
         // clang-format off
-        {0x000100C2, &CECD_S::OpenRawFile, "OpenRawFile"},
-        {0x00020042, &CECD_S::ReadRawFile, "ReadRawFile"},
+        {0x000100C2, &CECD_S::Open, "Open"},
+        {0x00020042, &CECD_S::ReadFile, "ReadFile"},
         {0x00030104, &CECD_S::ReadMessage, "ReadMessage"},
         {0x00040106, &CECD_S::ReadMessageWithHMAC, "ReadMessageWithHMAC"},
-        {0x00050042, &CECD_S::WriteRawFile, "WriteRawFile"},
+        {0x00050042, &CECD_S::WriteFile, "WriteFile"},
         {0x00060104, &CECD_S::WriteMessage, "WriteMessage"},
         {0x00070106, &CECD_S::WriteMessageWithHMAC, "WriteMessageWithHMAC"},
         {0x00080102, &CECD_S::Delete, "Delete"},

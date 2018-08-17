@@ -109,7 +109,7 @@ public:
     enum class CecSystemInfoType : u32 { EulaVersion = 1, Eula = 2, ParentControl = 3 };
 
     struct CecInOutBoxInfoHeader {
-        u16_le magic; // bb
+        u16_le magic; // 0x6262 'bb'
         u16_le padding;
         u32_le box_info_size;
         u32_le max_box_size;
@@ -121,6 +121,36 @@ public:
     };
     static_assert(sizeof(CecInOutBoxInfoHeader) == 0x20,
                   "CecInOutBoxInfoHeader struct has incorrect size.");
+
+    struct CecMBoxInfoHeader {
+        u16_le magic; // 0x6363 'cc'
+        u16_le padding;
+        u32_le program_id;
+        u32_le private_id;
+        u8 flag;
+        u8 flag2;
+        u16_le padding2;
+        u8 hmac_key[32];
+        u32_le padding3;
+        /// year, 4 bytes, month 1 byte, day 1 byte, hour 1 byte, minute 1 byte
+        struct Time {
+            u32_le year;
+            u8 month;
+            u8 day;
+            u8 hour;
+            u8 minute;
+            u8 second;
+            u8 millisecond;
+            u8 microsecond;
+            u8 padding;
+        } last_accessed;
+        u32_le padding4;
+        Time last_received;
+        u32_le padding5;
+        Time unknown_time;
+    };
+    static_assert(sizeof(CecMBoxInfoHeader) == 0x60,
+                  "CecMBoxInfoHeader struct has incorrect size.");
 
     struct CecMessageHeader {
         u16_le magic; // ``
@@ -163,8 +193,8 @@ public:
         u32 raw;
         BitField<1, 1, u32> read;
         BitField<2, 1, u32> write;
-        BitField<3, 1, u32> make_dir;
-        BitField<4, 1, u32> skip_check; /// or is it check/test?
+        BitField<3, 1, u32> create;
+        BitField<4, 1, u32> check; /// or is it check/test?
         BitField<30, 1, u32> unk_flag;
     };
 
@@ -199,7 +229,7 @@ public:
 
     protected:
         /**
-         * CECD::OpenRawFile service function
+         * CECD::Open service function
          *  Inputs:
          *      0 : Header Code[0x000100C2]
          *      1 : NCCH Program ID
@@ -211,10 +241,10 @@ public:
          *      1 : Result of function, 0 on success, otherwise error code
          *      2 : File size?
          */
-        void OpenRawFile(Kernel::HLERequestContext& ctx);
+        void Open(Kernel::HLERequestContext& ctx);
 
         /**
-         * CECD::ReadRawFile service function
+         * CECD::ReadFile service function
          *  Inputs:
          *      0 : Header Code[0x00020042]
          *      1 : Buffer size (unused)
@@ -226,7 +256,7 @@ public:
          *      3 : Descriptor for mapping a write-only buffer in the target process
          *      4 : Buffer address
          */
-        void ReadRawFile(Kernel::HLERequestContext& ctx);
+        void ReadFile(Kernel::HLERequestContext& ctx);
 
         /**
          * CECD::ReadMessage service function
@@ -277,7 +307,7 @@ public:
         void ReadMessageWithHMAC(Kernel::HLERequestContext& ctx);
 
         /**
-         * CECD::WriteRawFile service function
+         * CECD::WriteFile service function
          *  Inputs:
          *      0 : Header Code[0x00050042]
          *      1 : Buffer size(unused)
@@ -288,7 +318,7 @@ public:
          *      2 : Descriptor for mapping a read-only buffer in the target process
          *      3 : Buffer address
          */
-        void WriteRawFile(Kernel::HLERequestContext& ctx);
+        void WriteFile(Kernel::HLERequestContext& ctx);
 
         /**
          * CECD::WriteMessage service function
@@ -534,7 +564,9 @@ private:
     std::string GetCecDataPathTypeAsString(const CecDataPathType type, const u32 program_id,
                                            const std::vector<u8>& msg_id = std::vector<u8>()) const;
 
-    void CreateAndPopulateMBoxDirectory(const u32 ncch_program_id);
+    // void CreateAndPopulateMBoxDirectory(const u32 ncch_program_id);
+    void CheckAndUpdateFile(const CecDataPathType path_type, const u32 ncch_program_id,
+                            std::vector<u8>& file_buffer);
 
     Service::FS::ArchiveHandle cecd_system_save_data_archive;
 
