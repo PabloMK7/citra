@@ -482,7 +482,7 @@ static void APIENTRY DebugHandler(GLenum source, GLenum type, GLuint id, GLenum 
     Log::Level level;
     switch (severity) {
     case GL_DEBUG_SEVERITY_HIGH:
-        level = Log::Level::Error;
+        level = Log::Level::Critical;
         break;
     case GL_DEBUG_SEVERITY_MEDIUM:
         level = Log::Level::Warning;
