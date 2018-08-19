@@ -152,6 +152,25 @@ public:
     static_assert(sizeof(CecMBoxInfoHeader) == 0x60,
                   "CecMBoxInfoHeader struct has incorrect size.");
 
+    struct CecMBoxListBoxes {
+        struct Box {
+            u32_le ncch_program_id;
+            u32_le padding;
+            u64_le padding2;
+        } box[24];
+    };
+    static_assert(sizeof(CecMBoxListBoxes) == 0x180, "CecMBoxListBoxes struct has incorrect size.");
+
+    struct CecMBoxListHeader {
+        u16_le magic; // 0x6868 'hh'
+        u16_le padding;
+        u16_le version; /// 0x01 00, maybe activated flag?
+        u16_le padding2;
+        u16_le num_boxes; /// 24 max?
+        u16_le padding3;
+    };
+    static_assert(sizeof(CecMBoxListHeader) == 0xC, "CecMBoxListHeader struct has incorrect size.");
+
     struct CecMessageHeader {
         u16_le magic; // ``
         u16_le padding;
@@ -182,6 +201,14 @@ public:
     };
     static_assert(sizeof(CecMessageHeader) == 0x70, "CecMessageHeader struct has incorrect size.");
 
+    struct CecOBIndexHeader {
+        u16_le magic; /// 0x6767 'gg'
+        u16_le padding;
+        u32_le message_num;
+        /// Array? of messageid's 8 bytes each, same as CecMessageHeader.message_id[8]
+    };
+    static_assert(sizeof(CecOBIndexHeader) == 0x08, "CecOBIndexHeader struct has incorrect size.");
+
     enum class CecNdmStatus : u32 {
         NDM_STATUS_WORKING = 0,
         NDM_STATUS_IDLE = 1,
@@ -191,10 +218,11 @@ public:
 
     union CecOpenMode {
         u32 raw;
-        BitField<1, 1, u32> read;
-        BitField<2, 1, u32> write;
-        BitField<3, 1, u32> create;
-        BitField<4, 1, u32> check; /// or is it check/test?
+        BitField<0, 1, u32> unknown; /// 1 delete?
+        BitField<1, 1, u32> read;    /// 2
+        BitField<2, 1, u32> write;   /// 4
+        BitField<3, 1, u32> create;  /// 8
+        BitField<4, 1, u32> check;   /// 16
         BitField<30, 1, u32> unk_flag;
     };
 
@@ -563,6 +591,8 @@ private:
 
     std::string GetCecDataPathTypeAsString(const CecDataPathType type, const u32 program_id,
                                            const std::vector<u8>& msg_id = std::vector<u8>()) const;
+
+    std::string GetCecCommandAsString(const CecCommand command) const;
 
     // void CreateAndPopulateMBoxDirectory(const u32 ncch_program_id);
     void CheckAndUpdateFile(const CecDataPathType path_type, const u32 ncch_program_id,

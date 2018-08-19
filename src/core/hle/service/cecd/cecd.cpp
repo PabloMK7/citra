@@ -70,6 +70,7 @@ void Module::Interface::Open(Kernel::HLERequestContext& ctx) {
             auto directory = dir_result.Unwrap();
             rb.Push(RESULT_SUCCESS);
             rb.Push<u32>(directory->backend->Read(0, nullptr)); /// Entry count
+            directory->backend->Close();
         }
         break;
     }
@@ -92,13 +93,17 @@ void Module::Interface::Open(Kernel::HLERequestContext& ctx) {
             u64_le le_program_id = Kernel::g_current_process->codeset->program_id;
             std::memcpy(program_id.data(), &le_program_id, sizeof(u64));
             session_data->file->backend->Write(0, sizeof(u64), true, program_id.data());
+            session_data->file->backend->Close();
         }
     }
     }
 
     LOG_DEBUG(Service_CECD,
-              "called, ncch_program_id={:#010x}, path_type={:#04x}, open_mode={:#010x}, path={}",
-              ncch_program_id, static_cast<u32>(path_type), open_mode.raw, path.AsString());
+              "called, ncch_program_id={:#010x}, path_type={:#04x}, path={}, "
+              "open_mode: raw={:#x}, unknown={}, read={}, write={}, create={}, check={}",
+              ncch_program_id, static_cast<u32>(path_type), path.AsString(), open_mode.raw,
+              open_mode.unknown, open_mode.read, open_mode.write, open_mode.create,
+              open_mode.check);
 }
 
 void Module::Interface::ReadFile(Kernel::HLERequestContext& ctx) {
@@ -107,6 +112,14 @@ void Module::Interface::ReadFile(Kernel::HLERequestContext& ctx) {
     auto& write_buffer = rp.PopMappedBuffer();
 
     SessionData* session_data = GetSessionData(ctx.Session());
+    LOG_DEBUG(Service_CECD,
+              "SessionData: ncch_program_id={:#010x}, data_path_type={:#04x}, "
+              "path={}, open_mode: raw={:#x}, unknown={}, read={}, write={}, create={}, check={}",
+              session_data->ncch_program_id, static_cast<u32>(session_data->data_path_type),
+              session_data->path.AsString(), session_data->open_mode.raw,
+              session_data->open_mode.unknown, session_data->open_mode.read,
+              session_data->open_mode.write, session_data->open_mode.create,
+              session_data->open_mode.check);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
     switch (session_data->data_path_type) {
@@ -131,7 +144,7 @@ void Module::Interface::ReadFile(Kernel::HLERequestContext& ctx) {
     }
     rb.PushMappedBuffer(write_buffer);
 
-    LOG_DEBUG(Service_CECD, "called, write_buffer_size={:#010x}, path={}", write_buffer_size,
+    LOG_DEBUG(Service_CECD, "called, write_buffer_size={:#x}, path={}", write_buffer_size,
               session_data->path.AsString());
 }
 
@@ -183,8 +196,10 @@ void Module::Interface::ReadMessage(Kernel::HLERequestContext& ctx) {
     rb.PushMappedBuffer(message_id_buffer);
     rb.PushMappedBuffer(write_buffer);
 
-    LOG_WARNING(Service_CECD, "(STUBBED) called, ncch_program_id={:#010x}, is_outbox={}",
-                ncch_program_id, is_outbox);
+    LOG_DEBUG(
+        Service_CECD,
+        "called, ncch_program_id={:#010x}, is_outbox={}, message_id_size={:#x}, buffer_size={:#x}",
+        ncch_program_id, is_outbox, message_id_size, buffer_size);
 }
 
 void Module::Interface::ReadMessageWithHMAC(Kernel::HLERequestContext& ctx) {
@@ -238,8 +253,10 @@ void Module::Interface::ReadMessageWithHMAC(Kernel::HLERequestContext& ctx) {
     rb.PushMappedBuffer(hmac_key_buffer);
     rb.PushMappedBuffer(write_buffer);
 
-    LOG_WARNING(Service_CECD, "(STUBBED) called, ncch_program_id={:#010x}, is_outbox={}",
-                ncch_program_id, is_outbox);
+    LOG_DEBUG(
+        Service_CECD,
+        "called, ncch_program_id={:#010x}, is_outbox={}, message_id_size={:#x}, buffer_size={:#x}",
+        ncch_program_id, is_outbox, message_id_size, buffer_size);
 }
 
 void Module::Interface::WriteFile(Kernel::HLERequestContext& ctx) {
@@ -248,6 +265,14 @@ void Module::Interface::WriteFile(Kernel::HLERequestContext& ctx) {
     auto& read_buffer = rp.PopMappedBuffer();
 
     SessionData* session_data = GetSessionData(ctx.Session());
+    LOG_DEBUG(Service_CECD,
+              "SessionData: ncch_program_id={:#010x}, data_path_type={:#04x}, "
+              "path={}, open_mode: raw={:#x}, unknown={}, read={}, write={}, create={}, check={}",
+              session_data->ncch_program_id, static_cast<u32>(session_data->data_path_type),
+              session_data->path.AsString(), session_data->open_mode.raw,
+              session_data->open_mode.unknown, session_data->open_mode.read,
+              session_data->open_mode.write, session_data->open_mode.create,
+              session_data->open_mode.check);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
     switch (session_data->data_path_type) {
@@ -275,7 +300,7 @@ void Module::Interface::WriteFile(Kernel::HLERequestContext& ctx) {
     }
     rb.PushMappedBuffer(read_buffer);
 
-    LOG_DEBUG(Service_CECD, "called, read_buffer_size={:#010x}", read_buffer_size);
+    LOG_DEBUG(Service_CECD, "called, read_buffer_size={:#x}", read_buffer_size);
 }
 
 void Module::Interface::WriteMessage(Kernel::HLERequestContext& ctx) {
@@ -327,8 +352,10 @@ void Module::Interface::WriteMessage(Kernel::HLERequestContext& ctx) {
     rb.PushMappedBuffer(read_buffer);
     rb.PushMappedBuffer(message_id_buffer);
 
-    LOG_WARNING(Service_CECD, "(STUBBED) called, ncch_program_id={:#010x}, is_outbox={}",
-                ncch_program_id, is_outbox);
+    LOG_DEBUG(
+        Service_CECD,
+        "called, ncch_program_id={:#010x}, is_outbox={}, message_id_size={:#x}, buffer_size={:#x}",
+        ncch_program_id, is_outbox, message_id_size, buffer_size);
 }
 
 void Module::Interface::WriteMessageWithHMAC(Kernel::HLERequestContext& ctx) {
@@ -382,11 +409,13 @@ void Module::Interface::WriteMessageWithHMAC(Kernel::HLERequestContext& ctx) {
     rb.PushMappedBuffer(hmac_key_buffer);
     rb.PushMappedBuffer(message_id_buffer);
 
-    LOG_WARNING(Service_CECD, "(STUBBED) called, ncch_program_id={:#010x}, is_outbox={}",
-                ncch_program_id, is_outbox);
+    LOG_DEBUG(
+        Service_CECD,
+        "called, ncch_program_id={:#010x}, is_outbox={}, message_id_size={:#x}, buffer_size={:#x}",
+        ncch_program_id, is_outbox, message_id_size, buffer_size);
 }
 
-void Module::Interface::Delete(Kernel::HLERequestContext& ctx) {
+void Module::Interface::Delete(Kernel::HLERequestContext& ctx) { /// DeleteMessage?
     IPC::RequestParser rp(ctx, 0x08, 4, 2);
     const u32 ncch_program_id = rp.Pop<u32>();
     const CecDataPathType path_type = rp.PopEnum<CecDataPathType>();
@@ -403,25 +432,58 @@ void Module::Interface::Delete(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
     rb.PushMappedBuffer(message_id_buffer);
 
-    LOG_WARNING(Service_CECD,
-                "(STUBBED) called, ncch_program_id={:#010x}, path_type={:#04x}, is_outbox={}",
-                ncch_program_id, static_cast<u32>(path_type), is_outbox);
+    LOG_DEBUG(Service_CECD,
+              "called, ncch_program_id={:#010x}, path_type={:#04x}, "
+              "is_outbox={}, message_id_size={:#x}",
+              ncch_program_id, static_cast<u32>(path_type), is_outbox, message_id_size);
 }
 
-void Module::Interface::Cecd_0x000900C2(Kernel::HLERequestContext& ctx) { /// DeleteFile?
+void Module::Interface::Cecd_0x000900C2(Kernel::HLERequestContext& ctx) { /// Update Index/List?
     IPC::RequestParser rp(ctx, 0x09, 3, 2);
     const u32 ncch_program_id = rp.Pop<u32>();
-    const u32 size = rp.Pop<u32>();
+    const u32 buffer_size = rp.Pop<u32>();
     const u32 option = rp.Pop<u32>();
     auto& message_id_buffer = rp.PopMappedBuffer();
+
+    if (buffer_size > 0) {
+        FileSys::Path path("/Cecd_0x000900C2.out");
+        FileSys::Mode mode;
+        mode.write_flag.Assign(1);
+        mode.create_flag.Assign(1);
+
+        auto file_result =
+            Service::FS::OpenFileFromArchive(cecd->cecd_system_save_data_archive, path, mode);
+        if (file_result.Succeeded()) {
+            auto file = file_result.Unwrap();
+            std::vector<u8> buffer(buffer_size);
+            message_id_buffer.Read(buffer.data(), 0, buffer_size);
+
+            file->backend->Write(0, buffer_size, true, buffer.data());
+            file->backend->Close();
+        }
+    }
+
+    SessionData* session_data = GetSessionData(ctx.Session());
+    if (session_data->file)
+        LOG_DEBUG(
+            Service_CECD,
+            "SessionData: ncch_program_id={:#010x}, data_path_type={:#04x}, "
+            "path={}, open_mode: raw={:#x}, unknown={}, read={}, write={}, create={}, check={}",
+            session_data->ncch_program_id, static_cast<u32>(session_data->data_path_type),
+            session_data->path.AsString(), session_data->open_mode.raw,
+            session_data->open_mode.unknown, session_data->open_mode.read,
+            session_data->open_mode.write, session_data->open_mode.create,
+            session_data->open_mode.check);
+
+    if (session_data->file)
+        session_data->file->backend->Close();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
     rb.Push(RESULT_SUCCESS);
     rb.PushMappedBuffer(message_id_buffer);
 
-    LOG_WARNING(Service_CECD,
-                "(STUBBED) called, ncch_program_id={:#010x}, size={:#010x}, option={:#010x}",
-                ncch_program_id, size, option);
+    LOG_DEBUG(Service_CECD, "called, ncch_program_id={:#010x}, buffer_size={:#x}, option={:#x}",
+              ncch_program_id, buffer_size, option);
 }
 
 void Module::Interface::GetSystemInfo(Kernel::HLERequestContext& ctx) {
@@ -449,7 +511,7 @@ void Module::Interface::GetSystemInfo(Kernel::HLERequestContext& ctx) {
         dest_buffer.Write(buffer.data(), 0, buffer.size());
         break;
     default:
-        LOG_ERROR(Service_CECD, "Unknown system info type={}", static_cast<u32>(info_type));
+        LOG_ERROR(Service_CECD, "Unknown system info type={:#x}", static_cast<u32>(info_type));
     }
 
     rb.Push(RESULT_SUCCESS);
@@ -457,8 +519,7 @@ void Module::Interface::GetSystemInfo(Kernel::HLERequestContext& ctx) {
     rb.PushMappedBuffer(dest_buffer);
 
     LOG_DEBUG(Service_CECD,
-              "called, dest_buffer_size={:#010x}, info_type={:#010x}, "
-              "param_buffer_size={:#010x}",
+              "called, dest_buffer_size={:#x}, info_type={:#x}, param_buffer_size={:#x}",
               dest_buffer_size, static_cast<u32>(info_type), param_buffer_size);
 }
 
@@ -469,7 +530,7 @@ void Module::Interface::RunCommand(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
 
-    LOG_WARNING(Service_CECD, "(STUBBED) called, command={}", static_cast<u32>(command));
+    LOG_WARNING(Service_CECD, "(STUBBED) called, command={}", cecd->GetCecCommandAsString(command));
 }
 
 void Module::Interface::RunCommandAlt(Kernel::HLERequestContext& ctx) {
@@ -479,7 +540,7 @@ void Module::Interface::RunCommandAlt(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
 
-    LOG_WARNING(Service_CECD, "(STUBBED) called, command={}", static_cast<u32>(command));
+    LOG_WARNING(Service_CECD, "(STUBBED) called, command={}", cecd->GetCecCommandAsString(command));
 }
 
 void Module::Interface::GetCecStateAbbreviated(Kernel::HLERequestContext& ctx) {
@@ -554,8 +615,6 @@ void Module::Interface::OpenAndWrite(Kernel::HLERequestContext& ctx) {
 
             rb.Push(RESULT_SUCCESS);
         } else {
-            LOG_DEBUG(Service_CECD, "Failed to open file: {}", path.AsString());
-
             rb.Push(ResultCode(ErrorDescription::NoData, ErrorModule::CEC, ErrorSummary::NotFound,
                                ErrorLevel::Status));
         }
@@ -563,8 +622,11 @@ void Module::Interface::OpenAndWrite(Kernel::HLERequestContext& ctx) {
     rb.PushMappedBuffer(read_buffer);
 
     LOG_DEBUG(Service_CECD,
-              "called, ncch_program_id={:#010x}, path_type={:#04x}, open_mode={:#010x}, path={}",
-              ncch_program_id, static_cast<u32>(path_type), open_mode.raw, path.AsString());
+              "called, ncch_program_id={:#010x}, path_type={:#04x}, path={}, buffer_size={:#x} "
+              "open_mode: raw={:#x}, unknown={}, read={}, write={}, create={}, check={}",
+              ncch_program_id, static_cast<u32>(path_type), path.AsString(), buffer_size,
+              open_mode.raw, open_mode.unknown, open_mode.read, open_mode.write, open_mode.create,
+              open_mode.check);
 }
 
 void Module::Interface::OpenAndRead(Kernel::HLERequestContext& ctx) {
@@ -605,8 +667,6 @@ void Module::Interface::OpenAndRead(Kernel::HLERequestContext& ctx) {
             rb.Push(RESULT_SUCCESS);
             rb.Push<u32>(bytes_read);
         } else {
-            LOG_DEBUG(Service_CECD, "Failed to open file: {}", path.AsString());
-
             rb.Push(ResultCode(ErrorDescription::NoData, ErrorModule::CEC, ErrorSummary::NotFound,
                                ErrorLevel::Status));
             rb.Push<u32>(0); /// No bytes read
@@ -615,8 +675,11 @@ void Module::Interface::OpenAndRead(Kernel::HLERequestContext& ctx) {
     rb.PushMappedBuffer(write_buffer);
 
     LOG_DEBUG(Service_CECD,
-              "called, ncch_program_id={:#010x}, path_type={:#04x}, open_mode={:#010x}, path={}",
-              ncch_program_id, static_cast<u32>(path_type), open_mode.raw, path.AsString());
+              "called, ncch_program_id={:#010x}, path_type={:#04x}, path={}, buffer_size={:#x} "
+              "open_mode: raw={:#x}, unknown={}, read={}, write={}, create={}, check={}",
+              ncch_program_id, static_cast<u32>(path_type), path.AsString(), buffer_size,
+              open_mode.raw, open_mode.unknown, open_mode.read, open_mode.write, open_mode.create,
+              open_mode.check);
 }
 
 std::string Module::EncodeBase64(const std::vector<u8>& in, const std::string& dictionary) const {
@@ -682,27 +745,125 @@ std::string Module::GetCecDataPathTypeAsString(const CecDataPathType type, const
     }
 }
 
+std::string Module::GetCecCommandAsString(const CecCommand command) const {
+    switch (command) {
+    case CecCommand::CEC_COMMAND_NONE:
+        return "NONE";
+    case CecCommand::CEC_COMMAND_START:
+        return "START";
+    case CecCommand::CEC_COMMAND_RESET_START:
+        return "RESET_START";
+    case CecCommand::CEC_COMMAND_READYSCAN:
+        return "READYSCAN";
+    case CecCommand::CEC_COMMAND_READYSCANWAIT:
+        return "READYSCANWAIT";
+    case CecCommand::CEC_COMMAND_STARTSCAN:
+        return "STARTSCAN";
+    case CecCommand::CEC_COMMAND_RESCAN:
+        return "RESCAN";
+    case CecCommand::CEC_COMMAND_NDM_RESUME:
+        return "RESUME";
+    case CecCommand::CEC_COMMAND_NDM_SUSPEND:
+        return "NDM_SUSPEND";
+    case CecCommand::CEC_COMMAND_NDM_SUSPEND_IMMEDIATE:
+        return "NDM_SUSPEND_IMMEDIATE";
+    case CecCommand::CEC_COMMAND_STOPWAIT:
+        return "STOPWAIT";
+    case CecCommand::CEC_COMMAND_STOP:
+        return "STOP";
+    case CecCommand::CEC_COMMAND_STOP_FORCE:
+        return "STOP_FORCE";
+    case CecCommand::CEC_COMMAND_STOP_FORCE_WAIT:
+        return "STOP_FORCE_WAIT";
+    case CecCommand::CEC_COMMAND_RESET_FILTER:
+        return "RESET_FILTER";
+    case CecCommand::CEC_COMMAND_DAEMON_STOP:
+        return "DAEMON_STOP";
+    case CecCommand::CEC_COMMAND_DAEMON_START:
+        return "DAEMON_START";
+    case CecCommand::CEC_COMMAND_EXIT:
+        return "EXIT";
+    case CecCommand::CEC_COMMAND_OVER_BOSS:
+        return "OVER_BOSS";
+    case CecCommand::CEC_COMMAND_OVER_BOSS_FORCE:
+        return "OVER_BOSS_FORCE";
+    case CecCommand::CEC_COMMAND_OVER_BOSS_FORCE_WAIT:
+        return "OVER_BOSS_FORCE_WAIT";
+    case CecCommand::CEC_COMMAND_END:
+        return "END";
+    default:
+        return "Unknown";
+    }
+}
+
 void Module::CheckAndUpdateFile(const CecDataPathType path_type, const u32 ncch_program_id,
                                 std::vector<u8>& file_buffer) {
+    const u32 file_size = file_buffer.size();
+
     switch (path_type) {
-    case CecDataPathType::CEC_PATH_MBOX_LIST:
+    case CecDataPathType::CEC_PATH_MBOX_LIST: {
+        CecMBoxListHeader mbox_list_header = {};
+        CecMBoxListBoxes mbox_list_boxes = {};
+        std::memcpy(&mbox_list_header, file_buffer.data(), sizeof(CecMBoxListHeader));
+        std::memcpy(&mbox_list_boxes, &file_buffer[0xC], sizeof(CecMBoxListBoxes));
+
+        if (file_size != 0x18C) { /// 0x18C CecMBoxListHeader + CecMBoxListBoxes
+            LOG_DEBUG(Service_CECD, "CecMBoxListHeader size is incorrect: {}", file_size);
+        }
+
+        if (mbox_list_header.magic != 0x6868) { /// 'hh'
+            if (mbox_list_header.magic == 0)
+                LOG_DEBUG(Service_CECD, "CecMBoxListHeader magic number is not set");
+            else
+                LOG_DEBUG(Service_CECD, "CecMBoxListHeader magic number is incorrect: {}",
+                          mbox_list_header.magic);
+            mbox_list_header.magic = 0x6868;
+        }
+
+        if (mbox_list_header.version != 0x01) { /// Not quite sure if it is a version
+            if (mbox_list_header.version == 0)
+                LOG_DEBUG(Service_CECD, "CecMBoxListHeader version is not set");
+            else
+                LOG_DEBUG(Service_CECD, "CecMBoxListHeader version is incorrect: {}",
+                          mbox_list_header.version);
+            mbox_list_header.version = 0x01;
+        }
+
+        if (mbox_list_header.num_boxes > 24) {
+            LOG_DEBUG(Service_CECD, "CecMBoxListHeader number of boxes is too large: {}",
+                      mbox_list_header.num_boxes);
+        }
+
+        std::memcpy(file_buffer.data(), &mbox_list_header, sizeof(CecMBoxListHeader));
+        std::memcpy(&file_buffer[0xC], &mbox_list_boxes, sizeof(CecMBoxListBoxes));
         break;
+    }
     case CecDataPathType::CEC_PATH_MBOX_INFO: {
         CecMBoxInfoHeader mbox_info_header = {};
         std::memcpy(&mbox_info_header, file_buffer.data(), sizeof(CecMBoxInfoHeader));
 
-        if (file_buffer.size() != sizeof(CecMBoxInfoHeader)) { /// 0x60
-            LOG_DEBUG(Service_CECD, "CecMBoxInfoHeader size is incorrect");
+        if (file_size != sizeof(CecMBoxInfoHeader)) { /// 0x60
+            LOG_DEBUG(Service_CECD, "CecMBoxInfoHeader size is incorrect: {}", file_size);
         }
 
         if (mbox_info_header.magic != 0x6363) { /// 'cc'
-            LOG_DEBUG(Service_CECD, "CecMBoxInfoHeader magic number is incorrect");
+            if (mbox_info_header.magic == 0)
+                LOG_DEBUG(Service_CECD, "CecMBoxInfoHeader magic number is not set");
+            else
+                LOG_DEBUG(Service_CECD, "CecMBoxInfoHeader magic number is incorrect: {}",
+                          mbox_info_header.magic);
+            mbox_info_header.magic = 0x6363;
         }
 
-        if (mbox_info_header.program_id != static_cast<u32_le>(ncch_program_id)) {
-            LOG_DEBUG(Service_CECD, "CecMBoxInfoHeader program id does not match current id");
+        if (mbox_info_header.program_id != ncch_program_id) {
+            if (mbox_info_header.program_id == 0)
+                LOG_DEBUG(Service_CECD, "CecMBoxInfoHeader program id is not set");
+            else
+                LOG_DEBUG(Service_CECD, "CecMBoxInfoHeader program id doesn't match current id: {}",
+                          mbox_info_header.program_id);
         }
 
+        std::memcpy(file_buffer.data(), &mbox_info_header, sizeof(CecMBoxInfoHeader));
         break;
     }
     case CecDataPathType::CEC_PATH_INBOX_INFO: {
@@ -710,30 +871,48 @@ void Module::CheckAndUpdateFile(const CecDataPathType path_type, const u32 ncch_
         std::memcpy(&inbox_info_header, file_buffer.data(), sizeof(CecInOutBoxInfoHeader));
 
         if (inbox_info_header.magic != 0x6262) { /// 'bb'
-            LOG_DEBUG(Service_CECD, "CecInBoxInfoHeader magic number is incorrect");
+            if (inbox_info_header.magic == 0)
+                LOG_DEBUG(Service_CECD, "CecInBoxInfoHeader magic number is not set");
+            else
+                LOG_DEBUG(Service_CECD, "CecInBoxInfoHeader magic number is incorrect: {}",
+                          inbox_info_header.magic);
             inbox_info_header.magic = 0x6262;
         }
 
-        if (inbox_info_header.box_info_size != file_buffer.size()) {
-            LOG_DEBUG(Service_CECD, "CecInBoxInfoHeader box info size is incorrect");
+        if (inbox_info_header.box_info_size != file_size) {
+            if (inbox_info_header.box_info_size == 0)
+                LOG_DEBUG(Service_CECD, "CecInBoxInfoHeader box info size is not set");
+            else
+                LOG_DEBUG(Service_CECD, "CecInBoxInfoHeader box info size is incorrect:",
+                          inbox_info_header.box_info_size);
             inbox_info_header.box_info_size = sizeof(CecInOutBoxInfoHeader);
         }
 
-        if (inbox_info_header.max_box_size > 0x100000) {
-            LOG_DEBUG(Service_CECD, "CecInBoxInfoHeader max box size is incorrect");
+        if (inbox_info_header.max_box_size == 0) {
+            LOG_DEBUG(Service_CECD, "CecInBoxInfoHeader max box size is not set");
+        } else if (inbox_info_header.max_box_size > 0x100000) {
+            LOG_DEBUG(Service_CECD, "CecInBoxInfoHeader max box size is too large: {}",
+                      inbox_info_header.max_box_size);
         }
 
-        if (inbox_info_header.max_message_num > 99) {
-            LOG_DEBUG(Service_CECD, "CecInBoxInfoHeader max box size is incorrect");
+        if (inbox_info_header.max_message_num == 0) {
+            LOG_DEBUG(Service_CECD, "CecInBoxInfoHeader max message number is not set");
+        } else if (inbox_info_header.max_message_num > 99) {
+            LOG_DEBUG(Service_CECD, "CecInBoxInfoHeader max message number is too large: {}",
+                      inbox_info_header.max_message_num);
         }
 
-        if (inbox_info_header.max_message_size >= 0x019000) {
-            LOG_DEBUG(Service_CECD, "CecInBoxInfoHeader max message size is incorrect");
+        if (inbox_info_header.max_message_size == 0) {
+            LOG_DEBUG(Service_CECD, "CecInBoxInfoHeader max message size is not set");
+        } else if (inbox_info_header.max_message_size > 0x019000) {
+            LOG_DEBUG(Service_CECD, "CecInBoxInfoHeader max message size is too large");
         }
 
         if (inbox_info_header.max_batch_size == 0) {
             LOG_DEBUG(Service_CECD, "CecInBoxInfoHeader max batch size is not set");
             inbox_info_header.max_batch_size = inbox_info_header.max_message_num;
+        } else if (inbox_info_header.max_batch_size != inbox_info_header.max_message_num) {
+            LOG_DEBUG(Service_CECD, "CecInBoxInfoHeader max batch size != max message number");
         }
 
         std::memcpy(file_buffer.data(), &inbox_info_header, sizeof(CecInOutBoxInfoHeader));
@@ -744,37 +923,81 @@ void Module::CheckAndUpdateFile(const CecDataPathType path_type, const u32 ncch_
         std::memcpy(&outbox_info_header, file_buffer.data(), sizeof(CecInOutBoxInfoHeader));
 
         if (outbox_info_header.magic != 0x6262) { /// 'bb'
-            LOG_DEBUG(Service_CECD, "CecOutBoxInfoHeader magic number is incorrect");
+            if (outbox_info_header.magic == 0)
+                LOG_DEBUG(Service_CECD, "CecOutBoxInfoHeader magic number is not set");
+            else
+                LOG_DEBUG(Service_CECD, "CecOutBoxInfoHeader magic number is incorrect: {}",
+                          outbox_info_header.magic);
             outbox_info_header.magic = 0x6262;
         }
 
-        if (outbox_info_header.box_info_size != file_buffer.size()) {
-            LOG_DEBUG(Service_CECD, "CecOutBoxInfoHeader box info size is incorrect");
+        if (outbox_info_header.box_info_size != file_size) {
+            if (outbox_info_header.box_info_size == 0)
+                LOG_DEBUG(Service_CECD, "CecOutBoxInfoHeader box info size is not set");
+            else
+                LOG_DEBUG(Service_CECD, "CecOutBoxInfoHeader box info size is incorrect:",
+                          outbox_info_header.box_info_size);
             outbox_info_header.box_info_size = sizeof(CecInOutBoxInfoHeader);
         }
 
-        if (outbox_info_header.max_box_size > 0x100000) {
-            LOG_DEBUG(Service_CECD, "CecOutBoxInfoHeader max box size is incorrect");
+        if (outbox_info_header.max_box_size == 0) {
+            LOG_DEBUG(Service_CECD, "CecOutBoxInfoHeader max box size is not set");
+        } else if (outbox_info_header.max_box_size > 0x100000) {
+            LOG_DEBUG(Service_CECD, "CecOutBoxInfoHeader max box size is too large");
         }
 
-        if (outbox_info_header.max_message_num > 99) {
-            LOG_DEBUG(Service_CECD, "CecOutBoxInfoHeader max box size is incorrect");
+        if (outbox_info_header.max_message_num == 0) {
+            LOG_DEBUG(Service_CECD, "CecOutBoxInfoHeader max message number is not set");
+        } else if (outbox_info_header.max_message_num > 99) {
+            LOG_DEBUG(Service_CECD, "CecOutBoxInfoHeader max message number is too large");
         }
 
-        if (outbox_info_header.max_message_size >= 0x019000) {
-            LOG_DEBUG(Service_CECD, "CecOutBoxInfoHeader max message size is incorrect");
+        if (outbox_info_header.max_message_size == 0) {
+            LOG_DEBUG(Service_CECD, "CecOutBoxInfoHeader max message size is not set");
+        } else if (outbox_info_header.max_message_size > 0x019000) {
+            LOG_DEBUG(Service_CECD, "CecOutBoxInfoHeader max message size is too large");
         }
 
         if (outbox_info_header.max_batch_size == 0) {
             LOG_DEBUG(Service_CECD, "CecOutBoxInfoHeader max batch size is not set");
             outbox_info_header.max_batch_size = outbox_info_header.max_message_num;
+        } else if (outbox_info_header.max_batch_size != outbox_info_header.max_message_num) {
+            LOG_DEBUG(Service_CECD, "CecOutBoxInfoHeader max batch size != max message number");
         }
 
         std::memcpy(file_buffer.data(), &outbox_info_header, sizeof(CecInOutBoxInfoHeader));
         break;
     }
-    case CecDataPathType::CEC_PATH_OUTBOX_INDEX:
+    case CecDataPathType::CEC_PATH_OUTBOX_INDEX: {
+        CecOBIndexHeader obindex_header = {};
+        std::memcpy(&obindex_header, file_buffer.data(), sizeof(CecOBIndexHeader));
+
+        if (file_size < sizeof(CecOBIndexHeader)) { /// 0x08, minimum size
+            LOG_DEBUG(Service_CECD, "CecOBIndexHeader size is too small: {}", file_size);
+        }
+
+        if (obindex_header.magic != 0x6767) { /// 'gg'
+            if (obindex_header.magic == 0)
+                LOG_DEBUG(Service_CECD, "CecOBIndexHeader magic number is not set");
+            else
+                LOG_DEBUG(Service_CECD, "CecOBIndexHeader magic number is incorrect: {}",
+                          obindex_header.magic);
+            obindex_header.magic = 0x6767;
+        }
+
+        if (obindex_header.message_num == 0) {
+            if (file_size > sizeof(CecOBIndexHeader)) {
+                LOG_DEBUG(Service_CECD, "CecOBIndexHeader message number is not set");
+                obindex_header.message_num = (file_size % 8) - 1; /// 8 byte message id - 1 header
+            }
+        } else if (obindex_header.message_num != (file_size % 8) - 1) {
+            LOG_DEBUG(Service_CECD, "CecOBIndexHeader message number is incorrect: {}",
+                      obindex_header.message_num);
+        }
+
+        std::memcpy(file_buffer.data(), &obindex_header, sizeof(CecOBIndexHeader));
         break;
+    }
     case CecDataPathType::CEC_PATH_INBOX_MSG:
         break;
     case CecDataPathType::CEC_PATH_OUTBOX_MSG:
@@ -790,83 +1013,6 @@ void Module::CheckAndUpdateFile(const CecDataPathType path_type, const u32 ncch_
     default: {}
     }
 }
-/*
-    /// MBoxInfo____ resides in the MBox /CEC/<id> directory,
-    /// The Magic number is 0x6363 'cc', and has size 0x60
-    constexpr u32 mbox_info_size = 0x60;
-    auto mbox_info = mbox_info_result.Unwrap();
-    std::vector<u8> mbox_info_buffer(mbox_info_size);
-    u32_le le_ncch_program_id = ncch_program_id;
-
-    CecMBoxInfoHeader mbox_info_header = {};
-    std::memset(&mbox_info_header, 0, sizeof(CecMBoxInfoHeader));
-
-    auto now = std::chrono::system_clock::now();
-    std::time_t now_time_t = std::chrono::system_clock::to_time_t(now);
-    std::tm* now_tm = std::localtime(&now_time_t);
-
-    mbox_info_header.magic = 0x6363;
-    /// mbox_info_header.padding already zeroed
-    mbox_info_header.title_id = ncch_program_id;
-    /// mbox_info_header.private_id = unknown...
-    mbox_info_header.flag = 0x00; /// unknown
-    mbox_info_header.flag2 = 0x01; /// unknown
-    /// mbox_info_header.padding2 already zeroed
-    /// mbox_info_header.hmac_key = unknown...
-    /// mbox_info_header.padding3 already zeroed
-    mbox_info_header.last_accessed.year = static_cast<u32_le>(1900 + now_tm->tm_year);
-    mbox_info_header.last_accessed.month = static_cast<u8>(1 + now_tm->tm_mon);
-    mbox_info_header.last_accessed.day = static_cast<u8>(now_tm->tm_mday);
-    mbox_info_header.last_accessed.hour = static_cast<u8>(now_tm->tm_hour);
-    mbox_info_header.last_accessed.minute = static_cast<u8>(now_tm->tm_min);
-    mbox_info_header.last_accessed.second = static_cast<u8>(now_tm->tm_sec);
-    /// mbox_info_header.padding4 already zeroed
-    /// mbox_info_header.last_received = zeroed until receive?
-    /// mbox_info_header.padding5 already zeroed
-    /// mbox_info_header.unknown_time, might be sent-time, might be padding?
-
-    /// BoxInfo_____ resides in both the InBox and OutBox directories,
-    /// The Magic number is 0x6262 'bb', and has size 0x20-byte header, and an array of 0x70-byte
-    /// entries. Each entry is a copy of the message header.
-
-    /// BoxInfo_____ resides in both the InBox and OutBox directories,
-    /// The Magic number is 0x6262 'bb', and has size 0x20-byte header, and an array of 0x70-byte
-    /// entries. Each entry is a copy of the message header.
-
-    /// OBIndex_____ resides in the OutBox directory,
-    /// The magic number is 0x6767 'gg', and the total size is 0x10
-
-    /// MBoxData.001 resides in the MBox /CEC/<id> directory and contains the icon of the app
-    std::vector<u8> mbox_icon_buffer;
-    Core::System::GetInstance().GetAppLoader().ReadIcon(mbox_icon_buffer);
-
-    const u32 mbox_icon_size = mbox_icon_buffer.size() - 0x24C0; // offset where icon starts
-    auto mbox_icon = mbox_icon_result.Unwrap();
-
-    mbox_icon->backend->Write(0, mbox_icon_size, true, &mbox_icon_buffer[0x24C0]);
-    mbox_icon->backend->Close();
-
-    /// MBoxData.010 resides in the MBox /CEC/<id> directory and contains the title of the app
-    /// in null-terminated UTF-16 string.
-    std::string title_name;
-    Core::System::GetInstance().GetAppLoader().ReadTitle(title_name);
-
-    std::u16string program_name = Common::UTF8ToUTF16(title_name + '\0');
-
-    const u32 mbox_title_size = program_name.size();
-    auto mbox_title = mbox_title_result.Unwrap();
-    std::vector<u8> mbox_title_buffer(mbox_title_size);
-    std::memcpy(mbox_title_buffer.data(), program_name.data(), mbox_title_size);
-
-    /// MBoxData.050 resides in the MBox /CEC/<id> directory and contains the program id of the app
-    std::vector<u8> program_id_buffer(8);
-    u64_le le_program_id = Kernel::g_current_process->codeset->program_id;
-    std::memcpy(program_id_buffer.data(), &le_program_id, sizeof(u64));
-
-    mbox_program_id->backend->Write(0, sizeof(u64), true, program_id_buffer.data());
-    mbox_program_id->backend->Close();
-}
-*/
 
 Module::SessionData::SessionData() {}
 
@@ -930,32 +1076,28 @@ Module::Module() {
         eventlog->backend->Write(0, eventlog_size, true, eventlog_buffer.data());
         eventlog->backend->Close();
 
-        /*
-                /// MBoxList____ resides within the root CEC/ directory.
-                /// Initially created, at offset 0x0, are bytes 0x68 0x68 0x00 0x00 0x01, with
-           0x6868 'hh',
-                /// being the magic number. The rest of the file is filled with zeroes, until the
-           end of
-                /// file at offset 0x18b
-                FileSys::Path mboxlist_path(
-                    GetCecDataPathTypeAsString(CecDataPathType::CEC_PATH_MBOX_LIST, 0).data());
+        /// MBoxList____ resides within the root CEC/ directory.
+        /// Initially created, at offset 0x0, are bytes 0x68 0x68 0x00 0x00 0x01, with 0x6868 'hh',
+        /// being the magic number. The rest of the file is filled with zeroes, until the end of
+        /// file at offset 0x18b
+        FileSys::Path mboxlist_path(
+            GetCecDataPathTypeAsString(CecDataPathType::CEC_PATH_MBOX_LIST, 0).data());
 
-                auto mboxlist_result =
-                    Service::FS::OpenFileFromArchive(*archive_result, mboxlist_path, mode);
+        auto mboxlist_result =
+            Service::FS::OpenFileFromArchive(*archive_result, mboxlist_path, mode);
 
-                constexpr u32 mboxlist_size = 0x18c;
-                auto mboxlist = mboxlist_result.Unwrap();
-                std::vector<u8> mboxlist_buffer(mboxlist_size);
+        constexpr u32 mboxlist_size = 0x18c;
+        auto mboxlist = mboxlist_result.Unwrap();
+        std::vector<u8> mboxlist_buffer(mboxlist_size);
 
-                std::memset(&mboxlist_buffer[0], 0, mboxlist_size);
-                mboxlist_buffer[0] = 0x68;
-                mboxlist_buffer[1] = 0x68;
-                /// mboxlist_buffer[2-3] are already zeroed
-                mboxlist_buffer[4] = 0x01;
+        std::memset(&mboxlist_buffer[0], 0, mboxlist_size);
+        mboxlist_buffer[0] = 0x68;
+        mboxlist_buffer[1] = 0x68;
+        /// mboxlist_buffer[2-3] are already zeroed
+        mboxlist_buffer[4] = 0x01;
 
-                mboxlist->backend->Write(0, mboxlist_size, true, mboxlist_buffer.data());
-                mboxlist->backend->Close();
-        */
+        mboxlist->backend->Write(0, mboxlist_size, true, mboxlist_buffer.data());
+        mboxlist->backend->Close();
     }
     ASSERT_MSG(archive_result.Succeeded(), "Could not open the CECD SystemSaveData archive!");
 
