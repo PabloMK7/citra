@@ -68,6 +68,7 @@ add_executable(citra-qt
     debugger/registers.h
     debugger/wait_tree.cpp
     debugger/wait_tree.h
+    discord.h
     game_list.cpp
     game_list.h
     game_list_p.h
@@ -200,6 +201,15 @@ create_target_directory_groups(citra-qt)
 target_link_libraries(citra-qt PRIVATE audio_core common core input_common network video_core)
 target_link_libraries(citra-qt PRIVATE Boost::boost glad nihstro-headers Qt5::OpenGL Qt5::Widgets Qt5::Multimedia)
 target_link_libraries(citra-qt PRIVATE ${PLATFORM_LIBRARIES} Threads::Threads)
+
+if (USE_DISCORD_PRESENCE)
+    target_sources(citra-qt PUBLIC
+        discord_impl.cpp
+        discord_impl.h
+    )
+    target_link_libraries(citra-qt PRIVATE discord-rpc)
+    target_compile_definitions(citra-qt PRIVATE -DUSE_DISCORD_PRESENCE)
+endif()
 
 if(UNIX AND NOT APPLE)
     install(TARGETS citra-qt RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}/bin")

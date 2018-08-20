@@ -34,3 +34,6 @@
 [submodule "cubeb"]
     path = externals/cubeb
     url = https://github.com/kinetiknz/cubeb.git
+[submodule "discord-rpc"]
+    path = externals/discord-rpc
+    url = https://github.com/discordapp/discord-rpc.git

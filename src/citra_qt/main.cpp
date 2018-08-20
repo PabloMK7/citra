@@ -34,6 +34,7 @@
 #include "citra_qt/debugger/profiler.h"
 #include "citra_qt/debugger/registers.h"
 #include "citra_qt/debugger/wait_tree.h"
+#include "citra_qt/discord.h"
 #include "citra_qt/game_list.h"
 #include "citra_qt/hotkeys.h"
 #include "citra_qt/main.h"
@@ -57,6 +58,10 @@
 #include "core/hle/service/fs/archive.h"
 #include "core/loader/loader.h"
 #include "core/settings.h"
+
+#ifdef USE_DISCORD_PRESENCE
+#include "citra_qt/discord_impl.h"
+#endif
 
 #ifdef QT_STATICPLUGIN
 Q_IMPORT_PLUGIN(QWindowsIntegrationPlugin);
@@ -119,6 +124,9 @@ GMainWindow::GMainWindow() : config(new Config()), emu_thread(nullptr) {
 
     default_theme_paths = QIcon::themeSearchPaths();
     UpdateUITheme();
+
+    SetDiscordEnabled(UISettings::values.enable_discord_presence);
+    discord_rpc->Update();
 
     Network::Init();
 
@@ -748,6 +756,7 @@ void GMainWindow::BootGame(const QString& filename) {
 }
 
 void GMainWindow::ShutdownGame() {
+    discord_rpc->Pause();
     emu_thread->RequestStop();
 
     // Release emu threads from any breakpoints
@@ -762,6 +771,8 @@ void GMainWindow::ShutdownGame() {
     // Wait for emulation thread to complete and delete it
     emu_thread->wait();
     emu_thread = nullptr;
+
+    discord_rpc->Update();
 
     Camera::QtMultimediaCameraHandler::ReleaseHandlers();
 
@@ -1049,6 +1060,8 @@ void GMainWindow::OnStartGame() {
     ui.action_Stop->setEnabled(true);
     ui.action_Restart->setEnabled(true);
     ui.action_Report_Compatibility->setEnabled(true);
+
+    discord_rpc->Update();
 }
 
 void GMainWindow::OnPauseGame() {
@@ -1184,11 +1197,14 @@ void GMainWindow::OnConfigure() {
     connect(&configureDialog, &ConfigureDialog::languageChanged, this,
             &GMainWindow::OnLanguageChanged);
     auto old_theme = UISettings::values.theme;
+    const bool old_discord_presence = UISettings::values.enable_discord_presence;
     auto result = configureDialog.exec();
     if (result == QDialog::Accepted) {
         configureDialog.applyConfiguration();
         if (UISettings::values.theme != old_theme)
             UpdateUITheme();
+        if (UISettings::values.enable_discord_presence != old_discord_presence)
+            SetDiscordEnabled(UISettings::values.enable_discord_presence);
         emit UpdateThemedIcons();
         SyncMenuUISettings();
         config->Save();
@@ -1479,6 +1495,19 @@ void GMainWindow::RetranslateStatusBar() {
            "full-speed emulation this should be at most 16.67 ms."));
 
     multiplayer_state->retranslateUi();
+}
+
+void GMainWindow::SetDiscordEnabled(bool state) {
+#ifdef USE_DISCORD_PRESENCE
+    if (state) {
+        discord_rpc = std::make_unique<DiscordRPC::DiscordImpl>();
+    } else {
+        discord_rpc = std::make_unique<DiscordRPC::NullImpl>();
+    }
+#else
+    discord_rpc = std::make_unique<DiscordRPC::NullImpl>();
+#endif
+    discord_rpc->Update();
 }
 
 #ifdef main

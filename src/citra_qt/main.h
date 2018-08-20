@@ -38,6 +38,9 @@ class QProgressBar;
 class RegistersWidget;
 class Updater;
 class WaitTreeWidget;
+namespace DiscordRPC {
+class DiscordInterface;
+}
 
 class GMainWindow : public QMainWindow {
     Q_OBJECT
@@ -61,6 +64,7 @@ public:
     ~GMainWindow();
 
     GameList* game_list;
+    std::unique_ptr<DiscordRPC::DiscordInterface> discord_rpc;
 
 signals:
 
@@ -108,6 +112,7 @@ private:
     void ShowUpdatePrompt();
     void ShowNoUpdatePrompt();
     void CheckForUpdates();
+    void SetDiscordEnabled(bool state);
 
     /**
      * Stores the filename in the recently loaded files list.

@@ -58,6 +58,9 @@ struct Values {
     bool update_on_close;
     bool check_for_update_on_start;
 
+    // Discord RPC
+    bool enable_discord_presence;
+
     QString roms_path;
     QString symbols_path;
     QString game_dir_deprecated;

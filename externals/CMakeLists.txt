@@ -62,6 +62,18 @@ endif()
 add_subdirectory(enet)
 target_include_directories(enet INTERFACE ./enet/include)
 
+# Cubeb
+if (ENABLE_CUBEB)
+    set(BUILD_TESTS OFF CACHE BOOL "")
+    add_subdirectory(cubeb EXCLUDE_FROM_ALL)
+endif()
+
+# DiscordRPC
+if (USE_DISCORD_PRESENCE)
+    add_subdirectory(discord-rpc)
+    target_include_directories(discord-rpc INTERFACE ./discord-rpc/include)
+endif()
+
 if (ENABLE_WEB_SERVICE)
     # LibreSSL
     set(LIBRESSL_SKIP_INSTALL ON CACHE BOOL "")
@@ -79,10 +91,4 @@ if (ENABLE_WEB_SERVICE)
     # JSON
     add_library(json-headers INTERFACE)
     target_include_directories(json-headers INTERFACE ./json)
-endif()
-
-# Cubeb
-if(ENABLE_CUBEB)
-    set(BUILD_TESTS OFF CACHE BOOL "")
-    add_subdirectory(cubeb EXCLUDE_FROM_ALL)
 endif()

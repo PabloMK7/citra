@@ -171,6 +171,22 @@
     </layout>
    </item>
    <item>
+     <widget class="QGroupBox" name="discord_group">
+      <property name="title">
+       <string>Discord Presence</string>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout_21">
+       <item>
+        <widget class="QCheckBox" name="toggle_discordrpc">
+         <property name="text">
+          <string>Show Current Game in your Discord Status</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+   </item>
+   <item>
     <spacer name="verticalSpacer">
      <property name="orientation">
       <enum>Qt::Vertical</enum>
