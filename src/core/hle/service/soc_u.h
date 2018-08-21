@@ -30,6 +30,7 @@ private:
     void GetHostId(Kernel::HLERequestContext& ctx);
     void Close(Kernel::HLERequestContext& ctx);
     void SendTo(Kernel::HLERequestContext& ctx);
+    void RecvFromOther(Kernel::HLERequestContext& ctx);
     void RecvFrom(Kernel::HLERequestContext& ctx);
     void Poll(Kernel::HLERequestContext& ctx);
     void GetSockName(Kernel::HLERequestContext& ctx);
