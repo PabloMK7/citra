@@ -587,6 +587,8 @@ void SOC_U::RecvFrom(Kernel::HLERequestContext& ctx) {
     if (ret >= 0 && src_addr_len > 0) {
         ctr_src_addr = CTRSockAddr::FromPlatform(src_addr);
         std::memcpy(addr_buff.data(), &ctr_src_addr, sizeof(ctr_src_addr));
+    }else {
+        addr_buff.resize(0);
     }
 
     s32 total_received = ret;
