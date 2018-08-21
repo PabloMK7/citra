@@ -178,8 +178,7 @@ public:
         return ExtractValue(storage);
     }
 
-    // TODO: we may want to change this to explicit operator bool() if it's bug-free in VS2015
-    FORCE_INLINE bool ToBool() const {
+    constexpr explicit operator bool() const {
         return Value() != 0;
     }
 
