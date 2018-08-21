@@ -565,6 +565,43 @@ void SOC_U::SendTo(Kernel::HLERequestContext& ctx) {
     rb.Push(ret);
 }
 
+void SOC_U::RecvFromOther(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x7, 4, 4);
+    u32 socket_handle = rp.Pop<u32>();
+    u32 len = rp.Pop<u32>();
+    u32 flags = rp.Pop<u32>();
+    u32 addr_len = rp.Pop<u32>();
+    rp.PopPID();
+    auto& buffer = rp.PopMappedBuffer();
+
+    CTRSockAddr ctr_src_addr;
+    std::vector<u8> output_buff(len);
+    std::vector<u8> addr_buff(sizeof(ctr_src_addr));
+    sockaddr src_addr;
+    socklen_t src_addr_len = sizeof(src_addr);
+    s32 ret = ::recvfrom(socket_handle, reinterpret_cast<char*>(output_buff.data()), len, flags,
+                         &src_addr, &src_addr_len);
+
+    if (ret >= 0 && src_addr_len > 0) {
+        ctr_src_addr = CTRSockAddr::FromPlatform(src_addr);
+        std::memcpy(addr_buff.data(), &ctr_src_addr, sizeof(ctr_src_addr));
+    } else {
+        addr_buff.resize(0);
+    }
+
+    if (ret == SOCKET_ERROR_VALUE) {
+        ret = TranslateError(GET_ERRNO);
+    } else {
+        buffer.Write(output_buff.data(), 0, ret);
+    }
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 4);
+    rb.Push(RESULT_SUCCESS);
+    rb.Push(ret);
+    rb.PushStaticBuffer(addr_buff, 1);
+    rb.PushMappedBuffer(buffer);
+}
+
 void SOC_U::RecvFrom(Kernel::HLERequestContext& ctx) {
     // TODO(Subv): Calling this function on a blocking socket will block the emu thread,
     // preventing graceful shutdown when closing the emulator, this can be fixed by always
@@ -816,7 +853,7 @@ SOC_U::SOC_U() : ServiceFramework("soc:U") {
         {0x00040082, &SOC_U::Accept, "Accept"},
         {0x00050084, &SOC_U::Bind, "Bind"},
         {0x00060084, &SOC_U::Connect, "Connect"},
-        {0x00070104, nullptr, "recvfrom_other"},
+        {0x00070104, &SOC_U::RecvFromOther, "recvfrom_other"},
         {0x00080102, &SOC_U::RecvFrom, "RecvFrom"},
         {0x00090106, nullptr, "sendto_other"},
         {0x000A0106, &SOC_U::SendTo, "SendTo"},
