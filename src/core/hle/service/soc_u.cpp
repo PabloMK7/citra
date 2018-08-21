@@ -393,6 +393,7 @@ void SOC_U::Fcntl(Kernel::HLERequestContext& ctx) {
     u32 socket_handle = rp.Pop<u32>();
     u32 ctr_cmd = rp.Pop<u32>();
     u32 ctr_arg = rp.Pop<u32>();
+    rp.PopPID();
 
     u32 posix_ret = 0; // TODO: Check what hardware returns for F_SETFL (unspecified by POSIX)
     SCOPE_EXIT({
