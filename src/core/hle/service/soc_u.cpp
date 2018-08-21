@@ -579,7 +579,7 @@ void SOC_U::RecvFromOther(Kernel::HLERequestContext& ctx) {
     std::vector<u8> addr_buff(sizeof(ctr_src_addr));
     sockaddr src_addr;
     socklen_t src_addr_len = sizeof(src_addr);
-    
+
     s32 ret = -1;
     if (addr_len > 0) {
         ret = ::recvfrom(socket_handle, reinterpret_cast<char*>(output_buff.data()), len, flags,
