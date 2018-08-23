@@ -152,24 +152,17 @@ public:
     static_assert(sizeof(CecMBoxInfoHeader) == 0x60,
                   "CecMBoxInfoHeader struct has incorrect size.");
 
-    struct CecMBoxListBoxes {
-        struct Box {
-            u32_le ncch_program_id;
-            u32_le padding;
-            u64_le padding2;
-        } box[24];
-    };
-    static_assert(sizeof(CecMBoxListBoxes) == 0x180, "CecMBoxListBoxes struct has incorrect size.");
-
     struct CecMBoxListHeader {
         u16_le magic; // 0x6868 'hh'
         u16_le padding;
         u16_le version; /// 0x01 00, maybe activated flag?
         u16_le padding2;
-        u16_le num_boxes; /// 24 max?
+        u16_le num_boxes; /// 24 max
         u16_le padding3;
+        u8 box_names[16 * 24]; /// 16 char names, 24 boxes
     };
-    static_assert(sizeof(CecMBoxListHeader) == 0xC, "CecMBoxListHeader struct has incorrect size.");
+    static_assert(sizeof(CecMBoxListHeader) == 0x18C,
+                  "CecMBoxListHeader struct has incorrect size.");
 
     struct CecMessageHeader {
         u16_le magic; // ``
@@ -222,7 +215,7 @@ public:
         BitField<1, 1, u32> read;    /// 2
         BitField<2, 1, u32> write;   /// 4
         BitField<3, 1, u32> create;  /// 8
-        BitField<4, 1, u32> check;   /// 16
+        BitField<4, 1, u32> check;   /// 16 maybe validate sig?
         BitField<30, 1, u32> unk_flag;
     };
 
@@ -579,12 +572,12 @@ public:
     };
 
 private:
-    const std::vector<u8> cecd_system_savedata_id = {0x00, 0x00, 0x00, 0x00,
-                                                     0x26, 0x00, 0x01, 0x00};
-
     /// String used by cecd for base64 encoding found in the sysmodule disassembly
     const std::string base64_dict =
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-";
+
+    const std::vector<u8> cecd_system_savedata_id = {0x00, 0x00, 0x00, 0x00,
+                                                     0x26, 0x00, 0x01, 0x00};
 
     /// Encoding function used for the message id
     std::string EncodeBase64(const std::vector<u8>& in, const std::string& dictionary) const;
@@ -594,7 +587,6 @@ private:
 
     std::string GetCecCommandAsString(const CecCommand command) const;
 
-    // void CreateAndPopulateMBoxDirectory(const u32 ncch_program_id);
     void CheckAndUpdateFile(const CecDataPathType path_type, const u32 ncch_program_id,
                             std::vector<u8>& file_buffer);
 

@@ -67,9 +67,17 @@ void Module::Interface::Open(Kernel::HLERequestContext& ctx) {
             }
             rb.Push<u32>(0); /// Zero entries
         } else {
+            constexpr u32 max_entries = 32; /// reasonable value, just over max boxes 24
             auto directory = dir_result.Unwrap();
+
+            /// Actual reading into vector seems to be required for entry count
+            std::vector<FileSys::Entry> entries(max_entries);
+            const u32 entry_count = directory->backend->Read(max_entries, entries.data());
+
+            LOG_DEBUG(Service_CECD, "Number of entries found in = {}", entry_count);
+
             rb.Push(RESULT_SUCCESS);
-            rb.Push<u32>(directory->backend->Read(0, nullptr)); /// Entry count
+            rb.Push<u32>(entry_count); /// Entry count
             directory->backend->Close();
         }
         break;
@@ -423,19 +431,49 @@ void Module::Interface::Delete(Kernel::HLERequestContext& ctx) { /// DeleteMessa
     const u32 message_id_size = rp.Pop<u32>();
     auto& message_id_buffer = rp.PopMappedBuffer();
 
-    if (is_outbox) {
-
-    } else { /// otherwise inbox
-    }
+    FileSys::Path path(cecd->GetCecDataPathTypeAsString(path_type, ncch_program_id).data());
+    FileSys::Mode mode;
+    mode.write_flag.Assign(1);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
-    rb.Push(RESULT_SUCCESS);
+    switch (path_type) {
+    case CecDataPathType::CEC_PATH_ROOT_DIR:
+    case CecDataPathType::CEC_PATH_MBOX_DIR:
+    case CecDataPathType::CEC_PATH_INBOX_DIR:
+    case CecDataPathType::CEC_PATH_OUTBOX_DIR:
+        rb.Push(Service::FS::DeleteDirectoryRecursivelyFromArchive(
+            cecd->cecd_system_save_data_archive, path));
+        break;
+    default: /// If not directory, then it is a file
+        if (message_id_size == 0) {
+            rb.Push(Service::FS::DeleteFileFromArchive(cecd->cecd_system_save_data_archive, path));
+        } else {
+            std::vector<u8> id_buffer(message_id_size);
+            message_id_buffer.Read(id_buffer.data(), 0, message_id_size);
+
+            FileSys::Path message_path;
+            if (is_outbox) {
+                message_path =
+                    cecd->GetCecDataPathTypeAsString(CecDataPathType::CEC_PATH_OUTBOX_MSG,
+                                                     ncch_program_id, id_buffer)
+                        .data();
+            } else { /// otherwise inbox
+                message_path = cecd->GetCecDataPathTypeAsString(CecDataPathType::CEC_PATH_INBOX_MSG,
+                                                                ncch_program_id, id_buffer)
+                                   .data();
+            }
+            rb.Push(Service::FS::DeleteFileFromArchive(cecd->cecd_system_save_data_archive,
+                                                       message_path));
+        }
+    }
+
     rb.PushMappedBuffer(message_id_buffer);
 
     LOG_DEBUG(Service_CECD,
-              "called, ncch_program_id={:#010x}, path_type={:#04x}, "
+              "called, ncch_program_id={:#010x}, path_type={:#04x}, path={}, "
               "is_outbox={}, message_id_size={:#x}",
-              ncch_program_id, static_cast<u32>(path_type), is_outbox, message_id_size);
+              ncch_program_id, static_cast<u32>(path_type), path.AsString(), is_outbox,
+              message_id_size);
 }
 
 void Module::Interface::Cecd_0x000900C2(Kernel::HLERequestContext& ctx) { /// Update Index/List?
@@ -798,25 +836,28 @@ std::string Module::GetCecCommandAsString(const CecCommand command) const {
 
 void Module::CheckAndUpdateFile(const CecDataPathType path_type, const u32 ncch_program_id,
                                 std::vector<u8>& file_buffer) {
+    constexpr u32 max_num_boxes = 24;
+    constexpr u32 name_size = 16;      /// fixed size 16 characters long
+    constexpr u32 valid_name_size = 8; /// 8 characters are valid, the rest are null
     const u32 file_size = file_buffer.size();
 
     switch (path_type) {
     case CecDataPathType::CEC_PATH_MBOX_LIST: {
         CecMBoxListHeader mbox_list_header = {};
-        CecMBoxListBoxes mbox_list_boxes = {};
         std::memcpy(&mbox_list_header, file_buffer.data(), sizeof(CecMBoxListHeader));
-        std::memcpy(&mbox_list_boxes, &file_buffer[0xC], sizeof(CecMBoxListBoxes));
 
-        if (file_size != 0x18C) { /// 0x18C CecMBoxListHeader + CecMBoxListBoxes
+        if (file_size != sizeof(CecMBoxListHeader)) { /// 0x18C
             LOG_DEBUG(Service_CECD, "CecMBoxListHeader size is incorrect: {}", file_size);
         }
 
         if (mbox_list_header.magic != 0x6868) { /// 'hh'
-            if (mbox_list_header.magic == 0)
+            if (mbox_list_header.magic == 0 || mbox_list_header.magic == 0xFFFF) {
                 LOG_DEBUG(Service_CECD, "CecMBoxListHeader magic number is not set");
-            else
+            } else {
                 LOG_DEBUG(Service_CECD, "CecMBoxListHeader magic number is incorrect: {}",
                           mbox_list_header.magic);
+            }
+            std::memset(&mbox_list_header, 0, sizeof(CecMBoxListHeader));
             mbox_list_header.magic = 0x6868;
         }
 
@@ -832,10 +873,69 @@ void Module::CheckAndUpdateFile(const CecDataPathType path_type, const u32 ncch_
         if (mbox_list_header.num_boxes > 24) {
             LOG_DEBUG(Service_CECD, "CecMBoxListHeader number of boxes is too large: {}",
                       mbox_list_header.num_boxes);
-        }
+        } else {
+            std::vector<u8> name_buffer(name_size);
+            std::memset(name_buffer.data(), 0, name_size);
 
+            if (ncch_program_id != 0) {
+                std::string name = Common::StringFromFormat("%08x", ncch_program_id);
+                std::memcpy(name_buffer.data(), name.data(), name.size());
+
+                bool already_activated = false;
+                for (auto i = 0; i < mbox_list_header.num_boxes; i++) {
+                    LOG_DEBUG(Service_CECD, "{}", i);
+                    /// Box names start at offset 0xC, are 16 char long, first 8 id, last 8 null
+                    if (std::memcmp(name_buffer.data(), &mbox_list_header.box_names[i * name_size],
+                                    valid_name_size) == 0) {
+                        LOG_DEBUG(Service_CECD, "Title already activated");
+                        already_activated = true;
+                    }
+                };
+
+                if (!already_activated) {
+                    if (mbox_list_header.num_boxes < max_num_boxes) { /// max boxes
+                        LOG_DEBUG(Service_CECD, "Adding title to mboxlist____: {}", name);
+                        std::memcpy(
+                            &mbox_list_header.box_names[mbox_list_header.num_boxes * name_size],
+                            name_buffer.data(), name_size);
+                        mbox_list_header.num_boxes++;
+                    }
+                }
+            } else { /// ncch_program_id == 0, remove/update activated boxes
+                /// We need to read the /CEC directory to find out which titles, if any,
+                /// are activated. The num_of_titles = (total_read_count) - 1, to adjust for
+                /// the MBoxList____ file that is present in the directory as well.
+                FileSys::Path root_path(
+                    GetCecDataPathTypeAsString(CecDataPathType::CEC_PATH_ROOT_DIR, 0).data());
+
+                auto dir_result =
+                    Service::FS::OpenDirectoryFromArchive(cecd_system_save_data_archive, root_path);
+
+                auto root_dir = dir_result.Unwrap();
+                std::vector<FileSys::Entry> entries(max_num_boxes + 1); // + 1 mboxlist
+                const u32 entry_count = root_dir->backend->Read(max_num_boxes + 1, entries.data());
+                root_dir->backend->Close();
+
+                LOG_DEBUG(Service_CECD, "Number of entries found in /CEC = {}", entry_count);
+
+                std::string mbox_list_name("MBoxList____");
+                std::string file_name;
+                std::u16string u16_filename;
+
+                /// Loop through entries but don't add mboxlist____ to itself.
+                for (auto i = 0; i < entry_count; i++) {
+                    u16_filename = std::u16string(entries[i].filename);
+                    file_name = Common::UTF16ToUTF8(u16_filename);
+
+                    if (mbox_list_name.compare(file_name) != 0) {
+                        LOG_DEBUG(Service_CECD, "Adding title to mboxlist____: {}", file_name);
+                        std::memcpy(&mbox_list_header.box_names[16 * mbox_list_header.num_boxes++],
+                                    file_name.data(), valid_name_size);
+                    }
+                }
+            }
+        }
         std::memcpy(file_buffer.data(), &mbox_list_header, sizeof(CecMBoxListHeader));
-        std::memcpy(&file_buffer[0xC], &mbox_list_boxes, sizeof(CecMBoxListBoxes));
         break;
     }
     case CecDataPathType::CEC_PATH_MBOX_INFO: {
