@@ -6,6 +6,7 @@
 
 #include <functional>
 #include <memory>
+#include <utility>
 #include <vector>
 
 namespace AudioCore {
@@ -13,16 +14,18 @@ namespace AudioCore {
 class Sink;
 
 struct SinkDetails {
-    SinkDetails(const char* id_, std::function<std::unique_ptr<Sink>(std::string)> factory_,
-                std::function<std::vector<std::string>()> list_devices_)
-        : id(id_), factory(factory_), list_devices(list_devices_) {}
+    using FactoryFn = std::function<std::unique_ptr<Sink>(std::string)>;
+    using ListDevicesFn = std::function<std::vector<std::string>()>;
+
+    SinkDetails(const char* id_, FactoryFn factory_, ListDevicesFn list_devices_)
+        : id(id_), factory(std::move(factory_)), list_devices(std::move(list_devices_)) {}
 
     /// Name for this sink.
     const char* id;
     /// A method to call to construct an instance of this type of sink.
-    std::function<std::unique_ptr<Sink>(std::string device_id)> factory;
+    FactoryFn factory;
     /// A method to call to list available devices.
-    std::function<std::vector<std::string>()> list_devices;
+    ListDevicesFn list_devices;
 };
 
 extern const std::vector<SinkDetails> g_sink_details;
