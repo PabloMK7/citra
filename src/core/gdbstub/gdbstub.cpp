@@ -156,7 +156,6 @@ struct Breakpoint {
 std::map<u32, Breakpoint> breakpoints_execute;
 std::map<u32, Breakpoint> breakpoints_read;
 std::map<u32, Breakpoint> breakpoints_write;
-
 } // Anonymous namespace
 
 static Kernel::Thread* FindThreadById(int id) {
