@@ -14,7 +14,7 @@ ConfigureDialog::ConfigureDialog(QWidget* parent) : QDialog(parent), ui(new Ui::
             &ConfigureDialog::onLanguageChanged);
 }
 
-ConfigureDialog::~ConfigureDialog() {}
+ConfigureDialog::~ConfigureDialog() = default;
 
 void ConfigureDialog::setConfiguration() {}
 

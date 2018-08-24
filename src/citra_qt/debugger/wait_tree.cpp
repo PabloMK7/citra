@@ -13,7 +13,7 @@
 #include "core/hle/kernel/timer.h"
 #include "core/hle/kernel/wait_object.h"
 
-WaitTreeItem::~WaitTreeItem() {}
+WaitTreeItem::~WaitTreeItem() = default;
 
 QColor WaitTreeItem::GetColor() const {
     return QColor(Qt::GlobalColor::black);

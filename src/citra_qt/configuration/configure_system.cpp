@@ -231,7 +231,7 @@ ConfigureSystem::ConfigureSystem(QWidget* parent) : QWidget(parent), ui(new Ui::
     this->setConfiguration();
 }
 
-ConfigureSystem::~ConfigureSystem() {}
+ConfigureSystem::~ConfigureSystem() = default;
 
 void ConfigureSystem::setConfiguration() {
     enabled = !Core::System::GetInstance().IsPoweredOn();

@@ -20,11 +20,11 @@ class SurfacePicture : public QLabel {
 public:
     explicit SurfacePicture(QWidget* parent = nullptr,
                             GraphicsSurfaceWidget* surface_widget = nullptr);
-    ~SurfacePicture();
+    ~SurfacePicture() override;
 
 protected slots:
-    virtual void mouseMoveEvent(QMouseEvent* event);
-    virtual void mousePressEvent(QMouseEvent* event);
+    void mouseMoveEvent(QMouseEvent* event) override;
+    void mousePressEvent(QMouseEvent* event) override;
 
 private:
     GraphicsSurfaceWidget* surface_widget;

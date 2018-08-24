@@ -52,7 +52,7 @@ ConfigureGraphics::ConfigureGraphics(QWidget* parent)
     });
 }
 
-ConfigureGraphics::~ConfigureGraphics() {}
+ConfigureGraphics::~ConfigureGraphics() = default;
 
 void ConfigureGraphics::setConfiguration() {
     ui->toggle_hw_renderer->setChecked(Settings::values.use_hw_renderer);

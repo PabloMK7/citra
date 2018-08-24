@@ -40,7 +40,7 @@ ConfigureGeneral::ConfigureGeneral(QWidget* parent)
     ui->updateBox->setVisible(UISettings::values.updater_found);
 }
 
-ConfigureGeneral::~ConfigureGeneral() {}
+ConfigureGeneral::~ConfigureGeneral() = default;
 
 void ConfigureGeneral::setConfiguration() {
     ui->toggle_check_exit->setChecked(UISettings::values.confirm_before_closing);
