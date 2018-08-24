@@ -47,7 +47,7 @@ public:
     void SetWindow(EmuWindow* window) override;
 
     /// Initialize the renderer
-    bool Init() override;
+    Core::System::ResultStatus Init() override;
 
     /// Shutdown the renderer
     void ShutDown() override;

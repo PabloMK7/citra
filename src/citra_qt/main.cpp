@@ -626,10 +626,12 @@ bool GMainWindow::LoadROM(const QString& filename) {
     render_window->InitRenderTarget();
     render_window->MakeCurrent();
 
+    const char* below_gl33_title = "OpenGL 3.3 Unsupported";
+    const char* below_gl33_message = "Your GPU may not support OpenGL 3.3, or you do not "
+                                     "have the latest graphics driver.";
+
     if (!gladLoadGL()) {
-        QMessageBox::critical(this, tr("OpenGL 3.3 Unsupported"),
-                              tr("Your GPU may not support OpenGL 3.3, or you do not "
-                                 "have the latest graphics driver."));
+        QMessageBox::critical(this, tr(below_gl33_title), tr(below_gl33_message));
         return false;
     }
 
@@ -689,7 +691,18 @@ bool GMainWindow::LoadROM(const QString& filename) {
                    "the "
                    "log</a> for more details. "
                    "Ensure that you have the latest graphics drivers for your GPU."));
+            break;
 
+        case Core::System::ResultStatus::ErrorVideoCore_ErrorGenericDrivers:
+            QMessageBox::critical(
+                this, tr("Video Core Error"),
+                tr("You are running default Windows drivers "
+                   "for your GPU. You need to install the "
+                   "proper drivers for your graphics card from the manufacturer's website."));
+            break;
+
+        case Core::System::ResultStatus::ErrorVideoCore_ErrorBelowGL33:
+            QMessageBox::critical(this, tr(below_gl33_title), tr(below_gl33_message));
             break;
 
         default:
