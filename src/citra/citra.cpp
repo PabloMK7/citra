@@ -281,7 +281,7 @@ int main(int argc, char** argv) {
 
     SCOPE_EXIT({ system.Shutdown(); });
 
-    const Core::System::ResultStatus load_result{system.Load(emu_window.get(), filepath)};
+    const Core::System::ResultStatus load_result{system.Load(*emu_window, filepath)};
 
     switch (load_result) {
     case Core::System::ResultStatus::ErrorGetLoader:

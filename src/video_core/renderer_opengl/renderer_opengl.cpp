@@ -94,7 +94,7 @@ static std::array<GLfloat, 3 * 2> MakeOrthographicMatrix(const float width, cons
     return matrix;
 }
 
-RendererOpenGL::RendererOpenGL() = default;
+RendererOpenGL::RendererOpenGL(EmuWindow& window) : RendererBase{window} {}
 RendererOpenGL::~RendererOpenGL() = default;
 
 /// Swap buffers (render frame)
@@ -143,8 +143,8 @@ void RendererOpenGL::SwapBuffers() {
     Core::System::GetInstance().perf_stats.EndSystemFrame();
 
     // Swap buffers
-    render_window->PollEvents();
-    render_window->SwapBuffers();
+    render_window.PollEvents();
+    render_window.SwapBuffers();
 
     Core::System::GetInstance().frame_limiter.DoFrameLimiting(CoreTiming::GetGlobalTimeUs());
     Core::System::GetInstance().perf_stats.BeginSystemFrame();
@@ -390,7 +390,7 @@ void RendererOpenGL::DrawScreens() {
                      0.0f);
     }
 
-    auto layout = render_window->GetFramebufferLayout();
+    auto layout = render_window.GetFramebufferLayout();
     const auto& top_screen = layout.top_screen;
     const auto& bottom_screen = layout.bottom_screen;
 
@@ -441,14 +441,6 @@ void RendererOpenGL::DrawScreens() {
 
 /// Updates the framerate
 void RendererOpenGL::UpdateFramerate() {}
-
-/**
- * Set the emulator window to use for renderer
- * @param window EmuWindow handle to emulator window to use for rendering
- */
-void RendererOpenGL::SetWindow(EmuWindow* window) {
-    render_window = window;
-}
 
 static const char* GetSource(GLenum source) {
 #define RET(s)                                                                                     \
@@ -506,7 +498,7 @@ static void APIENTRY DebugHandler(GLenum source, GLenum type, GLuint id, GLenum 
 
 /// Initialize the renderer
 Core::System::ResultStatus RendererOpenGL::Init() {
-    render_window->MakeCurrent();
+    render_window.MakeCurrent();
 
     if (GLAD_GL_KHR_debug) {
         glEnable(GL_DEBUG_OUTPUT);
