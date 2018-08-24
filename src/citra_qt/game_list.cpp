@@ -185,9 +185,7 @@ void GameList::onTextChanged(const QString& newText) {
     int folderCount = tree_view->model()->rowCount();
     QString edit_filter_text = newText.toLower();
     QStandardItem* folder;
-    QStandardItem* child;
     int childrenTotal = 0;
-    QModelIndex root_index = item_model->invisibleRootItem()->index();
 
     // If the searchfield is empty every item is visible
     // Otherwise the filter gets applied
@@ -203,7 +201,6 @@ void GameList::onTextChanged(const QString& newText) {
         }
         search_field->setFilterResult(childrenTotal, childrenTotal);
     } else {
-        QString file_path, file_name, file_title, file_programmid;
         int result_count = 0;
         for (int i = 0; i < folderCount; ++i) {
             folder = item_model->item(i, 0);
@@ -211,11 +208,14 @@ void GameList::onTextChanged(const QString& newText) {
             int childrenCount = folder->rowCount();
             for (int j = 0; j < childrenCount; ++j) {
                 ++childrenTotal;
-                child = folder->child(j, 0);
-                file_path = child->data(GameListItemPath::FullPathRole).toString().toLower();
-                file_name = file_path.mid(file_path.lastIndexOf("/") + 1);
-                file_title = child->data(GameListItemPath::TitleRole).toString().toLower();
-                file_programmid = child->data(GameListItemPath::ProgramIdRole).toString().toLower();
+                const QStandardItem* child = folder->child(j, 0);
+                const QString file_path =
+                    child->data(GameListItemPath::FullPathRole).toString().toLower();
+                QString file_name = file_path.mid(file_path.lastIndexOf("/") + 1);
+                const QString file_title =
+                    child->data(GameListItemPath::TitleRole).toString().toLower();
+                const QString file_programmid =
+                    child->data(GameListItemPath::ProgramIdRole).toString().toLower();
 
                 // Only items which filename in combination with its title contains all words
                 // that are in the searchfield will be visible in the gamelist
