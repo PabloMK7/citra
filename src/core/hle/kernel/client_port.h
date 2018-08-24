@@ -37,14 +37,20 @@ public:
      */
     ResultVal<SharedPtr<ClientSession>> Connect();
 
-    SharedPtr<ServerPort> server_port; ///< ServerPort associated with this client port.
-    u32 max_sessions;    ///< Maximum number of simultaneous sessions the port can have
-    u32 active_sessions; ///< Number of currently open sessions to this port
-    std::string name;    ///< Name of client port (optional)
+    /**
+     * Signifies that a previously active connection has been closed,
+     * decreasing the total number of active connections to this port.
+     */
+    void ConnectionClosed();
 
 private:
     ClientPort();
     ~ClientPort() override;
+
+    SharedPtr<ServerPort> server_port; ///< ServerPort associated with this client port.
+    u32 max_sessions = 0;    ///< Maximum number of simultaneous sessions the port can have
+    u32 active_sessions = 0; ///< Number of currently open sessions to this port
+    std::string name;        ///< Name of client port (optional)
 };
 
 } // namespace Kernel

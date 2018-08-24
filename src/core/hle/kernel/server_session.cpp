@@ -20,7 +20,7 @@ ServerSession::~ServerSession() {
 
     // Decrease the port's connection count.
     if (parent->port)
-        parent->port->active_sessions--;
+        parent->port->ConnectionClosed();
 
     // TODO(Subv): Wake up all the ClientSession's waiting threads and set
     // the SendSyncRequest result to 0xC920181A.
