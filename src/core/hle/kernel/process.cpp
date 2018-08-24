@@ -133,9 +133,9 @@ void Process::Run(s32 main_thread_priority, u32 stack_size) {
     };
 
     // Map CodeSet segments
-    MapSegment(codeset->code, VMAPermission::ReadExecute, MemoryState::Code);
-    MapSegment(codeset->rodata, VMAPermission::Read, MemoryState::Code);
-    MapSegment(codeset->data, VMAPermission::ReadWrite, MemoryState::Private);
+    MapSegment(codeset->CodeSegment(), VMAPermission::ReadExecute, MemoryState::Code);
+    MapSegment(codeset->RODataSegment(), VMAPermission::Read, MemoryState::Code);
+    MapSegment(codeset->DataSegment(), VMAPermission::ReadWrite, MemoryState::Private);
 
     // Allocate and map stack
     vm_manager

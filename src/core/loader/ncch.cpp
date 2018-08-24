@@ -76,14 +76,15 @@ ResultStatus AppLoader_NCCH::LoadExec(Kernel::SharedPtr<Kernel::Process>& proces
 
         SharedPtr<CodeSet> codeset = CodeSet::Create(process_name, program_id);
 
-        codeset->code.offset = 0;
-        codeset->code.addr = overlay_ncch->exheader_header.codeset_info.text.address;
-        codeset->code.size =
+        codeset->CodeSegment().offset = 0;
+        codeset->CodeSegment().addr = overlay_ncch->exheader_header.codeset_info.text.address;
+        codeset->CodeSegment().size =
             overlay_ncch->exheader_header.codeset_info.text.num_max_pages * Memory::PAGE_SIZE;
 
-        codeset->rodata.offset = codeset->code.offset + codeset->code.size;
-        codeset->rodata.addr = overlay_ncch->exheader_header.codeset_info.ro.address;
-        codeset->rodata.size =
+        codeset->RODataSegment().offset =
+            codeset->CodeSegment().offset + codeset->CodeSegment().size;
+        codeset->RODataSegment().addr = overlay_ncch->exheader_header.codeset_info.ro.address;
+        codeset->RODataSegment().size =
             overlay_ncch->exheader_header.codeset_info.ro.num_max_pages * Memory::PAGE_SIZE;
 
         // TODO(yuriks): Not sure if the bss size is added to the page-aligned .data size or just
@@ -91,13 +92,14 @@ ResultStatus AppLoader_NCCH::LoadExec(Kernel::SharedPtr<Kernel::Process>& proces
         u32 bss_page_size = (overlay_ncch->exheader_header.codeset_info.bss_size + 0xFFF) & ~0xFFF;
         code.resize(code.size() + bss_page_size, 0);
 
-        codeset->data.offset = codeset->rodata.offset + codeset->rodata.size;
-        codeset->data.addr = overlay_ncch->exheader_header.codeset_info.data.address;
-        codeset->data.size =
+        codeset->DataSegment().offset =
+            codeset->RODataSegment().offset + codeset->RODataSegment().size;
+        codeset->DataSegment().addr = overlay_ncch->exheader_header.codeset_info.data.address;
+        codeset->DataSegment().size =
             overlay_ncch->exheader_header.codeset_info.data.num_max_pages * Memory::PAGE_SIZE +
             bss_page_size;
 
-        codeset->entrypoint = codeset->code.addr;
+        codeset->entrypoint = codeset->CodeSegment().addr;
         codeset->memory = std::make_shared<std::vector<u8>>(std::move(code));
 
         process = Kernel::Process::Create(std::move(codeset));
