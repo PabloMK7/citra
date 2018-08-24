@@ -3,7 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <vector>
-#include <catch.hpp>
+#include <catch2/catch.hpp>
 #include "core/hle/kernel/errors.h"
 #include "core/hle/kernel/memory.h"
 #include "core/hle/kernel/vm_manager.h"

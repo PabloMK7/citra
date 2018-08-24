@@ -2,7 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <catch.hpp>
+#include <catch2/catch.hpp>
 #include <glad/glad.h>
 
 // This is not an actual test, but a work-around for issue #2183.

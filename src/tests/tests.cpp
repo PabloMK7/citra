@@ -3,7 +3,7 @@
 // Refer to the license.txt file included.
 
 #define CATCH_CONFIG_MAIN
-#include <catch.hpp>
+#include <catch2/catch.hpp>
 
 // Catch provides the main function since we've given it the
 // CATCH_CONFIG_MAIN preprocessor directive.

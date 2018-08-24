@@ -2,7 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <catch.hpp>
+#include <catch2/catch.hpp>
 #include "core/hle/ipc.h"
 #include "core/hle/kernel/client_port.h"
 #include "core/hle/kernel/client_session.h"

@@ -5,7 +5,7 @@
 #include <algorithm>
 #include <cmath>
 #include <memory>
-#include <catch.hpp>
+#include <catch2/catch.hpp>
 #include <nihstro/inline_assembly.h>
 #include "video_core/shader/shader_jit_x64_compiler.h"
 

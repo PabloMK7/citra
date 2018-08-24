@@ -2,7 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <catch.hpp>
+#include <catch2/catch.hpp>
 
 #include "core/arm/dyncom/arm_dyncom.h"
 #include "core/core_timing.h"
