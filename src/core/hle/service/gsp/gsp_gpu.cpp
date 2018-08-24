@@ -354,7 +354,7 @@ void GSP_GPU::RegisterInterruptRelayQueue(Kernel::HLERequestContext& ctx) {
     // TODO(mailwl): return right error code instead assert
     ASSERT_MSG((interrupt_event != nullptr), "handle is not valid!");
 
-    interrupt_event->name = "GSP_GSP_GPU::interrupt_event";
+    interrupt_event->SetName("GSP_GSP_GPU::interrupt_event");
 
     SessionData* session_data = GetSessionData(ctx.Session());
     session_data->interrupt_event = std::move(interrupt_event);

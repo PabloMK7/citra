@@ -37,7 +37,7 @@ void Module::Interface::ConnectAsync(Kernel::HLERequestContext& ctx) {
     ac->connect_event = rp.PopObject<Kernel::Event>();
 
     if (ac->connect_event) {
-        ac->connect_event->name = "AC:connect_event";
+        ac->connect_event->SetName("AC:connect_event");
         ac->connect_event->Signal();
         ac->ac_connected = true;
     }
@@ -67,7 +67,7 @@ void Module::Interface::CloseAsync(Kernel::HLERequestContext& ctx) {
     }
 
     if (ac->close_event) {
-        ac->close_event->name = "AC:close_event";
+        ac->close_event->SetName("AC:close_event");
         ac->close_event->Signal();
     }
 
@@ -134,7 +134,7 @@ void Module::Interface::RegisterDisconnectEvent(Kernel::HLERequestContext& ctx) 
 
     ac->disconnect_event = rp.PopObject<Kernel::Event>();
     if (ac->disconnect_event) {
-        ac->disconnect_event->name = "AC:disconnect_event";
+        ac->disconnect_event->SetName("AC:disconnect_event");
     }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
