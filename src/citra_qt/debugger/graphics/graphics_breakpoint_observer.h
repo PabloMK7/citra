@@ -23,11 +23,11 @@ public:
     void OnPicaBreakPointHit(Pica::DebugContext::Event event, void* data) override;
     void OnPicaResume() override;
 
-private slots:
-    virtual void OnBreakPointHit(Pica::DebugContext::Event event, void* data) = 0;
-    virtual void OnResumed() = 0;
-
 signals:
     void Resumed();
     void BreakPointHit(Pica::DebugContext::Event event, void* data);
+
+private:
+    virtual void OnBreakPointHit(Pica::DebugContext::Event event, void* data) = 0;
+    virtual void OnResumed() = 0;
 };
