@@ -125,8 +125,8 @@ public:
     }
 
     void ExceptionRaised(VAddr pc, Dynarmic::A32::Exception exception) override {
-        ASSERT_MSG(false, "ExceptionRaised(exception = {}, pc = {:X})",
-                   static_cast<size_t>(exception), pc);
+        ASSERT_MSG(false, "ExceptionRaised(exception = {}, pc = {:08X}, code = {:08X})",
+                   static_cast<size_t>(exception), pc, MemoryReadCode(pc));
     }
 
     void AddTicks(std::uint64_t ticks) override {
