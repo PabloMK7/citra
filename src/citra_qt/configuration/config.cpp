@@ -191,17 +191,8 @@ void Config::ReadValues() {
 
     qt_config->beginGroup("WebService");
     Settings::values.enable_telemetry = ReadSetting("enable_telemetry", true).toBool();
-    Settings::values.telemetry_endpoint_url =
-        ReadSetting("telemetry_endpoint_url", "https://services.citra-emu.org/api/telemetry")
-            .toString()
-            .toStdString();
-    Settings::values.verify_endpoint_url =
-        ReadSetting("verify_endpoint_url", "https://services.citra-emu.org/api/profile")
-            .toString()
-            .toStdString();
-    Settings::values.announce_multiplayer_room_endpoint_url =
-        ReadSetting("announce_multiplayer_room_endpoint_url",
-                    "https://services.citra-emu.org/api/multiplayer/rooms")
+    Settings::values.web_services_endpoint_url =
+        ReadSetting("web_services_endpoint_url", "https://api.citra-emu.org")
             .toString()
             .toStdString();
     Settings::values.citra_username = ReadSetting("citra_username").toString().toStdString();
@@ -435,16 +426,9 @@ void Config::SaveValues() {
 
     qt_config->beginGroup("WebService");
     WriteSetting("enable_telemetry", Settings::values.enable_telemetry, true);
-    WriteSetting("telemetry_endpoint_url",
-                 QString::fromStdString(Settings::values.telemetry_endpoint_url),
-                 "https://services.citra-emu.org/api/telemetry");
-    WriteSetting("verify_endpoint_url",
-                 QString::fromStdString(Settings::values.verify_endpoint_url),
-                 "https://services.citra-emu.org/api/profile");
-    WriteSetting("announce_multiplayer_room_endpoint_url",
-                 QString::fromStdString(Settings::values.announce_multiplayer_room_endpoint_url),
-                 "https://services.citra-emu.org/"
-                 "api/multiplayer/rooms");
+    WriteSetting("web_services_endpoint_url",
+                 QString::fromStdString(Settings::values.web_services_endpoint_url),
+                 "https://api.citra-emu.org");
     WriteSetting("citra_username", QString::fromStdString(Settings::values.citra_username));
     WriteSetting("citra_token", QString::fromStdString(Settings::values.citra_token));
     qt_config->endGroup();

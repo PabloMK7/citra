@@ -22,7 +22,7 @@ static constexpr std::chrono::seconds announce_time_interval(15);
 AnnounceMultiplayerSession::AnnounceMultiplayerSession() {
 #ifdef ENABLE_WEB_SERVICE
     backend = std::make_unique<WebService::RoomJson>(
-        Settings::values.announce_multiplayer_room_endpoint_url, Settings::values.citra_username,
+        Settings::values.web_services_endpoint_url + "/lobby", Settings::values.citra_username,
         Settings::values.citra_token);
 #else
     backend = std::make_unique<AnnounceMultiplayerRoom::NullBackend>();
