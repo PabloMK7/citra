@@ -24,6 +24,7 @@ struct WebResult {
     };
     Code result_code;
     std::string result_string;
+    std::string returned_data;
 };
 } // namespace Common
 

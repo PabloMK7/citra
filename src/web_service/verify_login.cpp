@@ -26,7 +26,8 @@ std::future<bool> VerifyLogin(std::string& username, std::string& token,
 
         return username == *iter;
     };
-    return GetJson<bool>(get_func, endpoint_url, false, username, token);
+    UpdateCoreJWT(true, username, token);
+    return GetJson<bool>(get_func, endpoint_url, false);
 }
 
 } // namespace WebService

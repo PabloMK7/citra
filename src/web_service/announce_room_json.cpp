@@ -84,7 +84,7 @@ void RoomJson::AddPlayer(const std::string& nickname,
 
 std::future<Common::WebResult> RoomJson::Announce() {
     nlohmann::json json = room;
-    return PostJson(endpoint_url, json.dump(), false, username, token);
+    return PostJson(endpoint_url, json.dump(), false);
 }
 
 void RoomJson::ClearPlayers() {
@@ -99,14 +99,13 @@ std::future<AnnounceMultiplayerRoom::RoomList> RoomJson::GetRoomList(std::functi
         func();
         return room_list;
     };
-    return GetJson<AnnounceMultiplayerRoom::RoomList>(DeSerialize, endpoint_url, true, username,
-                                                      token);
+    return GetJson<AnnounceMultiplayerRoom::RoomList>(DeSerialize, endpoint_url, true);
 }
 
 void RoomJson::Delete() {
     nlohmann::json json;
     json["id"] = room.UID;
-    DeleteJson(endpoint_url, json.dump(), username, token);
+    DeleteJson(endpoint_url, json.dump());
 }
 
 } // namespace WebService
