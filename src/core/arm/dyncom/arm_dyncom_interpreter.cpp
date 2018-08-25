@@ -956,7 +956,7 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
     if (GDBStub::IsServerEnabled()) {                                                              \
         if (GDBStub::IsMemoryBreak() || (breakpoint_data.type != GDBStub::BreakpointType::None &&  \
                                          PC == breakpoint_data.address)) {                         \
-            GDBStub::Break();                                                                      \
+            cpu->RecordBreak(breakpoint_data);                                                     \
             goto END;                                                                              \
         }                                                                                          \
     }

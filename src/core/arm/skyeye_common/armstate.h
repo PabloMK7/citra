@@ -21,6 +21,7 @@
 #include <unordered_map>
 #include "common/common_types.h"
 #include "core/arm/skyeye_common/arm_regformat.h"
+#include "core/gdbstub/gdbstub.h"
 
 // Signal levels
 enum { LOW = 0, HIGH = 1, LOWHIGH = 1, HIGHLOW = 2 };
@@ -189,6 +190,13 @@ public:
         return TFlag ? 2 : 4;
     }
 
+    void RecordBreak(GDBStub::BreakpointAddress bkpt) {
+        last_bkpt = bkpt;
+        last_bkpt_hit = true;
+    }
+
+    void ServeBreak();
+
     std::array<u32, 16> Reg{}; // The current register file
     std::array<u32, 2> Reg_usr{};
     std::array<u32, 2> Reg_svc{};   // R13_SVC R14_SVC
@@ -246,4 +254,7 @@ private:
 
     u32 exclusive_tag; // The address for which the local monitor is in exclusive access mode
     bool exclusive_state;
+
+    GDBStub::BreakpointAddress last_bkpt{};
+    bool last_bkpt_hit;
 };
