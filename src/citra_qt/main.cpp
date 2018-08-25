@@ -329,69 +329,73 @@ void GMainWindow::InitializeRecentFileMenuActions() {
 }
 
 void GMainWindow::InitializeHotkeys() {
-    RegisterHotkey("Main Window", "Load File", QKeySequence::Open);
-    RegisterHotkey("Main Window", "Start Emulation");
-    RegisterHotkey("Main Window", "Continue/Pause", QKeySequence(Qt::Key_F4));
-    RegisterHotkey("Main Window", "Restart", QKeySequence(Qt::Key_F5));
-    RegisterHotkey("Main Window", "Swap Screens", QKeySequence(tr("F9")));
-    RegisterHotkey("Main Window", "Toggle Screen Layout", QKeySequence(tr("F10")));
-    RegisterHotkey("Main Window", "Fullscreen", QKeySequence::FullScreen);
-    RegisterHotkey("Main Window", "Exit Fullscreen", QKeySequence(Qt::Key_Escape),
-                   Qt::ApplicationShortcut);
-    RegisterHotkey("Main Window", "Toggle Speed Limit", QKeySequence("CTRL+Z"),
-                   Qt::ApplicationShortcut);
-    RegisterHotkey("Main Window", "Increase Speed Limit", QKeySequence("+"),
-                   Qt::ApplicationShortcut);
-    RegisterHotkey("Main Window", "Decrease Speed Limit", QKeySequence("-"),
-                   Qt::ApplicationShortcut);
-    LoadHotkeys();
+    hotkey_registry.RegisterHotkey("Main Window", "Load File", QKeySequence::Open);
+    hotkey_registry.RegisterHotkey("Main Window", "Start Emulation");
+    hotkey_registry.RegisterHotkey("Main Window", "Continue/Pause", QKeySequence(Qt::Key_F4));
+    hotkey_registry.RegisterHotkey("Main Window", "Restart", QKeySequence(Qt::Key_F5));
+    hotkey_registry.RegisterHotkey("Main Window", "Swap Screens", QKeySequence(tr("F9")));
+    hotkey_registry.RegisterHotkey("Main Window", "Toggle Screen Layout", QKeySequence(tr("F10")));
+    hotkey_registry.RegisterHotkey("Main Window", "Fullscreen", QKeySequence::FullScreen);
+    hotkey_registry.RegisterHotkey("Main Window", "Exit Fullscreen", QKeySequence(Qt::Key_Escape),
+                                   Qt::ApplicationShortcut);
+    hotkey_registry.RegisterHotkey("Main Window", "Toggle Speed Limit", QKeySequence("CTRL+Z"),
+                                   Qt::ApplicationShortcut);
+    hotkey_registry.RegisterHotkey("Main Window", "Increase Speed Limit", QKeySequence("+"),
+                                   Qt::ApplicationShortcut);
+    hotkey_registry.RegisterHotkey("Main Window", "Decrease Speed Limit", QKeySequence("-"),
+                                   Qt::ApplicationShortcut);
+    hotkey_registry.LoadHotkeys();
 
-    connect(GetHotkey("Main Window", "Load File", this), &QShortcut::activated, this,
-            &GMainWindow::OnMenuLoadFile);
-    connect(GetHotkey("Main Window", "Start Emulation", this), &QShortcut::activated, this,
-            &GMainWindow::OnStartGame);
-    connect(GetHotkey("Main Window", "Continue/Pause", this), &QShortcut::activated, this, [&] {
-        if (emulation_running) {
-            if (emu_thread->IsRunning()) {
-                OnPauseGame();
-            } else {
-                OnStartGame();
-            }
-        }
-    });
-    connect(GetHotkey("Main Window", "Restart", this), &QShortcut::activated, this, [this] {
-        if (!Core::System::GetInstance().IsPoweredOn())
-            return;
-        BootGame(QString(game_path));
-    });
-    connect(GetHotkey("Main Window", "Swap Screens", render_window), &QShortcut::activated,
-            ui.action_Screen_Layout_Swap_Screens, &QAction::trigger);
-    connect(GetHotkey("Main Window", "Toggle Screen Layout", render_window), &QShortcut::activated,
-            this, &GMainWindow::ToggleScreenLayout);
-    connect(GetHotkey("Main Window", "Fullscreen", render_window), &QShortcut::activated,
-            ui.action_Fullscreen, &QAction::trigger);
-    connect(GetHotkey("Main Window", "Fullscreen", render_window), &QShortcut::activatedAmbiguously,
-            ui.action_Fullscreen, &QAction::trigger);
-    connect(GetHotkey("Main Window", "Exit Fullscreen", this), &QShortcut::activated, this, [&] {
-        if (emulation_running) {
-            ui.action_Fullscreen->setChecked(false);
-            ToggleFullscreen();
-        }
-    });
-    connect(GetHotkey("Main Window", "Toggle Speed Limit", this), &QShortcut::activated, this, [&] {
-        Settings::values.use_frame_limit = !Settings::values.use_frame_limit;
-        UpdateStatusBar();
-    });
+    connect(hotkey_registry.GetHotkey("Main Window", "Load File", this), &QShortcut::activated,
+            this, &GMainWindow::OnMenuLoadFile);
+    connect(hotkey_registry.GetHotkey("Main Window", "Start Emulation", this),
+            &QShortcut::activated, this, &GMainWindow::OnStartGame);
+    connect(hotkey_registry.GetHotkey("Main Window", "Continue/Pause", this), &QShortcut::activated,
+            this, [&] {
+                if (emulation_running) {
+                    if (emu_thread->IsRunning()) {
+                        OnPauseGame();
+                    } else {
+                        OnStartGame();
+                    }
+                }
+            });
+    connect(hotkey_registry.GetHotkey("Main Window", "Restart", this), &QShortcut::activated, this,
+            [this] {
+                if (!Core::System::GetInstance().IsPoweredOn())
+                    return;
+                BootGame(QString(game_path));
+            });
+    connect(hotkey_registry.GetHotkey("Main Window", "Swap Screens", render_window),
+            &QShortcut::activated, ui.action_Screen_Layout_Swap_Screens, &QAction::trigger);
+    connect(hotkey_registry.GetHotkey("Main Window", "Toggle Screen Layout", render_window),
+            &QShortcut::activated, this, &GMainWindow::ToggleScreenLayout);
+    connect(hotkey_registry.GetHotkey("Main Window", "Fullscreen", render_window),
+            &QShortcut::activated, ui.action_Fullscreen, &QAction::trigger);
+    connect(hotkey_registry.GetHotkey("Main Window", "Fullscreen", render_window),
+            &QShortcut::activatedAmbiguously, ui.action_Fullscreen, &QAction::trigger);
+    connect(hotkey_registry.GetHotkey("Main Window", "Exit Fullscreen", this),
+            &QShortcut::activated, this, [&] {
+                if (emulation_running) {
+                    ui.action_Fullscreen->setChecked(false);
+                    ToggleFullscreen();
+                }
+            });
+    connect(hotkey_registry.GetHotkey("Main Window", "Toggle Speed Limit", this),
+            &QShortcut::activated, this, [&] {
+                Settings::values.use_frame_limit = !Settings::values.use_frame_limit;
+                UpdateStatusBar();
+            });
     constexpr u16 SPEED_LIMIT_STEP = 5;
-    connect(GetHotkey("Main Window", "Increase Speed Limit", this), &QShortcut::activated, this,
-            [&] {
+    connect(hotkey_registry.GetHotkey("Main Window", "Increase Speed Limit", this),
+            &QShortcut::activated, this, [&] {
                 if (Settings::values.frame_limit < 9999 - SPEED_LIMIT_STEP) {
                     Settings::values.frame_limit += SPEED_LIMIT_STEP;
                     UpdateStatusBar();
                 }
             });
-    connect(GetHotkey("Main Window", "Decrease Speed Limit", this), &QShortcut::activated, this,
-            [&] {
+    connect(hotkey_registry.GetHotkey("Main Window", "Decrease Speed Limit", this),
+            &QShortcut::activated, this, [&] {
                 if (Settings::values.frame_limit > SPEED_LIMIT_STEP) {
                     Settings::values.frame_limit -= SPEED_LIMIT_STEP;
                     UpdateStatusBar();
@@ -506,9 +510,10 @@ void GMainWindow::ConnectMenuEvents() {
     connect(ui.action_Show_Room, &QAction::triggered, multiplayer_state,
             &MultiplayerState::OnOpenNetworkRoom);
 
-    ui.action_Fullscreen->setShortcut(GetHotkey("Main Window", "Fullscreen", this)->key());
+    ui.action_Fullscreen->setShortcut(
+        hotkey_registry.GetHotkey("Main Window", "Fullscreen", this)->key());
     ui.action_Screen_Layout_Swap_Screens->setShortcut(
-        GetHotkey("Main Window", "Swap Screens", this)->key());
+        hotkey_registry.GetHotkey("Main Window", "Swap Screens", this)->key());
     ui.action_Screen_Layout_Swap_Screens->setShortcutContext(Qt::WidgetWithChildrenShortcut);
     connect(ui.action_Fullscreen, &QAction::triggered, this, &GMainWindow::ToggleFullscreen);
     connect(ui.action_Screen_Layout_Default, &QAction::triggered, this,
@@ -1206,7 +1211,7 @@ void GMainWindow::OnSwapScreens() {
 }
 
 void GMainWindow::OnConfigure() {
-    ConfigureDialog configureDialog(this);
+    ConfigureDialog configureDialog(this, hotkey_registry);
     connect(&configureDialog, &ConfigureDialog::languageChanged, this,
             &GMainWindow::OnLanguageChanged);
     auto old_theme = UISettings::values.theme;
@@ -1364,7 +1369,7 @@ void GMainWindow::closeEvent(QCloseEvent* event) {
     UISettings::values.first_start = false;
 
     game_list->SaveInterfaceLayout();
-    SaveHotkeys();
+    hotkey_registry.SaveHotkeys();
 
     // Shutdown session if the emu thread is active...
     if (emu_thread != nullptr)

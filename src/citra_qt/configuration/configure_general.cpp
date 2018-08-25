@@ -56,6 +56,10 @@ void ConfigureGeneral::setConfiguration() {
         ui->language_combobox->findData(UISettings::values.language));
 }
 
+void ConfigureGeneral::PopulateHotkeyList(const HotkeyRegistry& registry) {
+    ui->hotkeysDialog->Populate(registry);
+}
+
 void ConfigureGeneral::applyConfiguration() {
     UISettings::values.confirm_before_closing = ui->toggle_check_exit->isChecked();
     UISettings::values.theme =
