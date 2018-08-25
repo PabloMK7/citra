@@ -74,7 +74,7 @@ void Module::Interface::Open(Kernel::HLERequestContext& ctx) {
             std::vector<FileSys::Entry> entries(max_entries);
             const u32 entry_count = directory->backend->Read(max_entries, entries.data());
 
-            LOG_DEBUG(Service_CECD, "Number of entries found in = {}", entry_count);
+            LOG_DEBUG(Service_CECD, "Number of entries found: {}", entry_count);
 
             rb.Push(RESULT_SUCCESS);
             rb.Push<u32>(entry_count); /// Entry count
@@ -114,7 +114,7 @@ void Module::Interface::Open(Kernel::HLERequestContext& ctx) {
               open_mode.check);
 }
 
-void Module::Interface::ReadFile(Kernel::HLERequestContext& ctx) {
+void Module::Interface::Read(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x02, 1, 2);
     const u32 write_buffer_size = rp.Pop<u32>();
     auto& write_buffer = rp.PopMappedBuffer();
@@ -267,7 +267,7 @@ void Module::Interface::ReadMessageWithHMAC(Kernel::HLERequestContext& ctx) {
         ncch_program_id, is_outbox, message_id_size, buffer_size);
 }
 
-void Module::Interface::WriteFile(Kernel::HLERequestContext& ctx) {
+void Module::Interface::Write(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x05, 1, 2);
     const u32 read_buffer_size = rp.Pop<u32>();
     auto& read_buffer = rp.PopMappedBuffer();
@@ -476,7 +476,7 @@ void Module::Interface::Delete(Kernel::HLERequestContext& ctx) { /// DeleteMessa
               message_id_size);
 }
 
-void Module::Interface::Cecd_0x000900C2(Kernel::HLERequestContext& ctx) { /// Update Index/List?
+void Module::Interface::SetData(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x09, 3, 2);
     const u32 ncch_program_id = rp.Pop<u32>();
     const u32 buffer_size = rp.Pop<u32>();
@@ -484,7 +484,7 @@ void Module::Interface::Cecd_0x000900C2(Kernel::HLERequestContext& ctx) { /// Up
     auto& message_id_buffer = rp.PopMappedBuffer();
 
     if (buffer_size > 0) {
-        FileSys::Path path("/Cecd_0x000900C2.out");
+        FileSys::Path path("/SetData.out");
         FileSys::Mode mode;
         mode.write_flag.Assign(1);
         mode.create_flag.Assign(1);
@@ -503,7 +503,7 @@ void Module::Interface::Cecd_0x000900C2(Kernel::HLERequestContext& ctx) { /// Up
 
     SessionData* session_data = GetSessionData(ctx.Session());
     if (session_data->file)
-        LOG_DEBUG(
+        LOG_TRACE(
             Service_CECD,
             "SessionData: ncch_program_id={:#010x}, data_path_type={:#04x}, "
             "path={}, open_mode: raw={:#x}, unknown={}, read={}, write={}, create={}, check={}",
@@ -524,7 +524,7 @@ void Module::Interface::Cecd_0x000900C2(Kernel::HLERequestContext& ctx) { /// Up
               ncch_program_id, buffer_size, option);
 }
 
-void Module::Interface::GetSystemInfo(Kernel::HLERequestContext& ctx) {
+void Module::Interface::ReadData(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x0A, 3, 4);
     const u32 dest_buffer_size = rp.Pop<u32>();
     const CecSystemInfoType info_type = rp.PopEnum<CecSystemInfoType>();
@@ -561,7 +561,7 @@ void Module::Interface::GetSystemInfo(Kernel::HLERequestContext& ctx) {
               dest_buffer_size, static_cast<u32>(info_type), param_buffer_size);
 }
 
-void Module::Interface::RunCommand(Kernel::HLERequestContext& ctx) {
+void Module::Interface::Start(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x0B, 1, 0);
     const CecCommand command = rp.PopEnum<CecCommand>();
 
@@ -571,7 +571,7 @@ void Module::Interface::RunCommand(Kernel::HLERequestContext& ctx) {
     LOG_WARNING(Service_CECD, "(STUBBED) called, command={}", cecd->GetCecCommandAsString(command));
 }
 
-void Module::Interface::RunCommandAlt(Kernel::HLERequestContext& ctx) {
+void Module::Interface::Stop(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x0C, 1, 0);
     const CecCommand command = rp.PopEnum<CecCommand>();
 
@@ -581,12 +581,26 @@ void Module::Interface::RunCommandAlt(Kernel::HLERequestContext& ctx) {
     LOG_WARNING(Service_CECD, "(STUBBED) called, command={}", cecd->GetCecCommandAsString(command));
 }
 
-void Module::Interface::GetCecStateAbbreviated(Kernel::HLERequestContext& ctx) {
+void Module::Interface::GetCecInfoBuffer(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x0D, 2, 2);
+    const u32 buffer_size = rp.Pop<u32>();
+    const u32 possible_info_type = rp.Pop<u32>();
+    auto& buffer = rp.PopMappedBuffer();
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
+    rb.Push(RESULT_SUCCESS);
+    rb.PushMappedBuffer(buffer);
+
+    LOG_DEBUG(Service_CECD, "called, buffer_size={}, possible_info_type={}", buffer_size,
+              possible_info_type);
+}
+
+void Module::Interface::GetCecdState(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x0E, 0, 0);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
-    rb.PushEnum(CecStateAbbreviated::CEC_STATE_ABBREV_IDLE);
+    rb.PushEnum(CecdState::NDM_STATUS_IDLE);
 
     LOG_WARNING(Service_CECD, "(STUBBED) called");
 }
@@ -916,7 +930,7 @@ void Module::CheckAndUpdateFile(const CecDataPathType path_type, const u32 ncch_
                 const u32 entry_count = root_dir->backend->Read(max_num_boxes + 1, entries.data());
                 root_dir->backend->Close();
 
-                LOG_DEBUG(Service_CECD, "Number of entries found in /CEC = {}", entry_count);
+                LOG_DEBUG(Service_CECD, "Number of entries found in /CEC: {}", entry_count);
 
                 std::string mbox_list_name("MBoxList____");
                 std::string file_name;
