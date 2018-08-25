@@ -2,9 +2,9 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#ifndef ABOUTDIALOG_H
-#define ABOUTDIALOG_H
+#pragma once
 
+#include <memory>
 #include <QDialog>
 
 namespace Ui {
@@ -19,7 +19,5 @@ public:
     ~AboutDialog() override;
 
 private:
-    Ui::AboutDialog* ui;
+    std::unique_ptr<Ui::AboutDialog> ui;
 };
-
-#endif // ABOUTDIALOG_H
