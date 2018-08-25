@@ -6,7 +6,7 @@
 
 #include <vector>
 #include "common/common_types.h"
-#include "core/hle/kernel/kernel.h"
+#include "core/hle/kernel/object.h"
 #include "core/hle/result.h"
 
 // Address arbiters are an underlying kernel synchronization object that can be created/used via

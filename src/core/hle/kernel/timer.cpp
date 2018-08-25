@@ -7,7 +7,7 @@
 #include "common/logging/log.h"
 #include "core/core_timing.h"
 #include "core/hle/kernel/handle_table.h"
-#include "core/hle/kernel/kernel.h"
+#include "core/hle/kernel/object.h"
 #include "core/hle/kernel/thread.h"
 #include "core/hle/kernel/timer.h"
 

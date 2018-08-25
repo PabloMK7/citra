@@ -4,9 +4,11 @@
 
 #pragma once
 
+#include <memory>
 #include <string>
 #include <unordered_map>
-#include "core/hle/kernel/kernel.h"
+
+#include "core/hle/kernel/object.h"
 #include "core/hle/result.h"
 #include "core/hle/service/service.h"
 

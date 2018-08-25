@@ -14,7 +14,7 @@
 #include "common/common_types.h"
 #include "common/swap.h"
 #include "core/hle/ipc.h"
-#include "core/hle/kernel/kernel.h"
+#include "core/hle/kernel/object.h"
 #include "core/hle/kernel/server_session.h"
 
 namespace Service {

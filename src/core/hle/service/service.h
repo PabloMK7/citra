@@ -10,10 +10,9 @@
 #include <string>
 #include <unordered_map>
 #include <boost/container/flat_map.hpp>
-#include "common/bit_field.h"
 #include "common/common_types.h"
 #include "core/hle/kernel/hle_ipc.h"
-#include "core/hle/kernel/kernel.h"
+#include "core/hle/kernel/object.h"
 #include "core/hle/service/sm/sm.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
