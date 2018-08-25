@@ -12,8 +12,8 @@
 #include <boost/container/flat_map.hpp>
 #include "common/common_types.h"
 #include "core/hle/kernel/hle_ipc.h"
-#include "core/hle/service/sm/sm.h"
 #include "core/hle/kernel/object.h"
+#include "core/hle/service/sm/sm.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Namespace Service
