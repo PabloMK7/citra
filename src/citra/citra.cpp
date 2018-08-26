@@ -39,6 +39,7 @@
 #include "core/gdbstub/gdbstub.h"
 #include "core/hle/service/am/am.h"
 #include "core/loader/loader.h"
+#include "core/movie.h"
 #include "core/settings.h"
 #include "network/network.h"
 
@@ -268,8 +269,6 @@ int main(int argc, char** argv) {
     // Apply the command line arguments
     Settings::values.gdbstub_port = gdb_port;
     Settings::values.use_gdbstub = use_gdbstub;
-    Settings::values.movie_play = std::move(movie_play);
-    Settings::values.movie_record = std::move(movie_record);
     Settings::Apply();
 
     // Register frontend applets
@@ -327,9 +326,18 @@ int main(int argc, char** argv) {
         }
     }
 
+    if (!movie_play.empty()) {
+        Core::Movie::GetInstance().StartPlayback(movie_play);
+    }
+    if (!movie_record.empty()) {
+        Core::Movie::GetInstance().StartRecording(movie_record);
+    }
+
     while (emu_window->IsOpen()) {
         system.RunLoop();
     }
+
+    Core::Movie::GetInstance().Shutdown();
 
     return 0;
 }

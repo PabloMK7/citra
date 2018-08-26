@@ -57,6 +57,7 @@
 #include "core/gdbstub/gdbstub.h"
 #include "core/hle/service/fs/archive.h"
 #include "core/loader/loader.h"
+#include "core/movie.h"
 #include "core/settings.h"
 
 #ifdef USE_DISCORD_PRESENCE
@@ -527,6 +528,12 @@ void GMainWindow::ConnectMenuEvents() {
     connect(ui.action_Screen_Layout_Swap_Screens, &QAction::triggered, this,
             &GMainWindow::OnSwapScreens);
 
+    // Movie
+    connect(ui.action_Record_Movie, &QAction::triggered, this, &GMainWindow::OnRecordMovie);
+    connect(ui.action_Play_Movie, &QAction::triggered, this, &GMainWindow::OnPlayMovie);
+    connect(ui.action_Stop_Recording_Playback, &QAction::triggered, this,
+            &GMainWindow::OnStopRecordingPlayback);
+
     // Help
     connect(ui.action_FAQ, &QAction::triggered,
             []() { QDesktopServices::openUrl(QUrl("https://citra-emu.org/wiki/faq/")); });
@@ -775,6 +782,7 @@ void GMainWindow::BootGame(const QString& filename) {
 
 void GMainWindow::ShutdownGame() {
     discord_rpc->Pause();
+    OnStopRecordingPlayback();
     emu_thread->RequestStop();
 
     // Release emu threads from any breakpoints
@@ -1066,6 +1074,13 @@ void GMainWindow::OnMenuRecentFile() {
 
 void GMainWindow::OnStartGame() {
     Camera::QtMultimediaCameraHandler::ResumeCameras();
+
+    if (movie_record_on_start) {
+        Core::Movie::GetInstance().StartRecording(movie_record_path.toStdString());
+        movie_record_on_start = false;
+        movie_record_path.clear();
+    }
+
     emu_thread->SetRunning(true);
     qRegisterMetaType<Core::System::ResultStatus>("Core::System::ResultStatus");
     qRegisterMetaType<std::string>("std::string");
@@ -1243,6 +1258,127 @@ void GMainWindow::OnCreateGraphicsSurfaceViewer() {
     addDockWidget(Qt::RightDockWidgetArea, graphicsSurfaceViewerWidget);
     // TODO: Maybe graphicsSurfaceViewerWidget->setFloating(true);
     graphicsSurfaceViewerWidget->show();
+}
+
+void GMainWindow::OnRecordMovie() {
+    const QString path =
+        QFileDialog::getSaveFileName(this, tr("Record Movie"), UISettings::values.movie_record_path,
+                                     tr("Citra TAS Movie (*.ctm)"));
+    if (path.isEmpty())
+        return;
+    UISettings::values.movie_record_path = QFileInfo(path).path();
+    if (emulation_running) {
+        Core::Movie::GetInstance().StartRecording(path.toStdString());
+    } else {
+        movie_record_on_start = true;
+        movie_record_path = path;
+        QMessageBox::information(this, tr("Record Movie"),
+                                 tr("Recording will start once you boot a game."));
+    }
+    ui.action_Record_Movie->setEnabled(false);
+    ui.action_Play_Movie->setEnabled(false);
+    ui.action_Stop_Recording_Playback->setEnabled(true);
+}
+
+bool GMainWindow::ValidateMovie(const QString& path, u64 program_id) {
+    using namespace Core;
+    Movie::ValidationResult result =
+        Core::Movie::GetInstance().ValidateMovie(path.toStdString(), program_id);
+    const QString revision_dismatch_text =
+        tr("The movie file you are trying to load was created on a different revision of Citra."
+           "<br/>Citra has had some changes during the time, and the playback may desync or not "
+           "work as expected."
+           "<br/><br/>Are you sure you still want to load the movie file?");
+    const QString game_dismatch_text =
+        tr("The movie file you are trying to load was recorded with a different game."
+           "<br/>The playback may not work as expected, and it may cause unexpected results."
+           "<br/><br/>Are you sure you still want to load the movie file?");
+    const QString invalid_movie_text =
+        tr("The movie file you are trying to load is invalid."
+           "<br/>Either the file is corrupted, or Citra has had made some major changes to the "
+           "Movie module."
+           "<br/>Please choose a different movie file and try again.");
+    int answer;
+    switch (result) {
+    case Movie::ValidationResult::RevisionDismatch:
+        answer = QMessageBox::question(this, tr("Revision Dismatch"), revision_dismatch_text,
+                                       QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
+        if (answer != QMessageBox::Yes)
+            return false;
+        break;
+    case Movie::ValidationResult::GameDismatch:
+        answer = QMessageBox::question(this, tr("Game Dismatch"), game_dismatch_text,
+                                       QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
+        if (answer != QMessageBox::Yes)
+            return false;
+        break;
+    case Movie::ValidationResult::Invalid:
+        QMessageBox::critical(this, tr("Invalid Movie File"), invalid_movie_text);
+        return false;
+    default:
+        break;
+    }
+    return true;
+}
+
+void GMainWindow::OnPlayMovie() {
+    const QString path =
+        QFileDialog::getOpenFileName(this, tr("Play Movie"), UISettings::values.movie_playback_path,
+                                     tr("Citra TAS Movie (*.ctm)"));
+    if (path.isEmpty())
+        return;
+    UISettings::values.movie_playback_path = QFileInfo(path).path();
+
+    if (emulation_running) {
+        if (!ValidateMovie(path))
+            return;
+    } else {
+        const QString invalid_movie_text =
+            tr("The movie file you are trying to load is invalid."
+               "<br/>Either the file is corrupted, or Citra has had made some major changes to the "
+               "Movie module."
+               "<br/>Please choose a different movie file and try again.");
+        u64 program_id = Core::Movie::GetInstance().GetMovieProgramID(path.toStdString());
+        if (!program_id) {
+            QMessageBox::critical(this, tr("Invalid Movie File"), invalid_movie_text);
+            return;
+        }
+        QString game_path = game_list->FindGameByProgramID(program_id);
+        if (game_path.isEmpty()) {
+            QMessageBox::warning(this, tr("Game Not Found"),
+                                 tr("The movie you are trying to play is from a game that is not "
+                                    "in the game list. If you own the game, please add the game "
+                                    "folder to the game list and try to play the movie again."));
+            return;
+        }
+        if (!ValidateMovie(path, program_id))
+            return;
+        BootGame(game_path);
+    }
+    Core::Movie::GetInstance().StartPlayback(path.toStdString(), [this] {
+        QMetaObject::invokeMethod(this, "OnMoviePlaybackCompleted");
+    });
+    ui.action_Record_Movie->setEnabled(false);
+    ui.action_Play_Movie->setEnabled(false);
+    ui.action_Stop_Recording_Playback->setEnabled(true);
+}
+
+void GMainWindow::OnStopRecordingPlayback() {
+    if (movie_record_on_start) {
+        QMessageBox::information(this, tr("Record Movie"), tr("Movie recording cancelled."));
+        movie_record_on_start = false;
+        movie_record_path.clear();
+    } else {
+        const bool was_recording = Core::Movie::GetInstance().IsRecordingInput();
+        Core::Movie::GetInstance().Shutdown();
+        if (was_recording) {
+            QMessageBox::information(this, tr("Movie Saved"),
+                                     tr("The movie is successfully saved."));
+        }
+    }
+    ui.action_Record_Movie->setEnabled(true);
+    ui.action_Play_Movie->setEnabled(true);
+    ui.action_Stop_Recording_Playback->setEnabled(false);
 }
 
 void GMainWindow::UpdateStatusBar() {
@@ -1478,6 +1614,13 @@ void GMainWindow::OnLanguageChanged(const QString& locale) {
 
     if (emulation_running)
         ui.action_Start->setText(tr("Continue"));
+}
+
+void GMainWindow::OnMoviePlaybackCompleted() {
+    QMessageBox::information(this, tr("Playback Completed"), tr("Movie playback completed."));
+    ui.action_Record_Movie->setEnabled(true);
+    ui.action_Play_Movie->setEnabled(true);
+    ui.action_Stop_Recording_Playback->setEnabled(false);
 }
 
 void GMainWindow::SetupUIStrings() {

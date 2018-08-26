@@ -107,6 +107,14 @@
     <addaction name="separator"/>
     <addaction name="menu_View_Debugging"/>
    </widget>
+   <widget class="QMenu" name="menu_Movie">
+    <property name="title">
+     <string>Movie</string>
+    </property>
+    <addaction name="action_Record_Movie"/>
+    <addaction name="action_Play_Movie"/>
+    <addaction name="action_Stop_Recording_Playback"/>
+   </widget>
    <widget class="QMenu" name="menu_Multiplayer">
     <property name="enabled">
      <bool>true</bool>
@@ -136,6 +144,7 @@
    <addaction name="menu_File"/>
    <addaction name="menu_Emulation"/>
    <addaction name="menu_View"/>
+   <addaction name="menu_Movie"/>
    <addaction name="menu_Multiplayer"/>
    <addaction name="menu_Help"/>
   </widget>
@@ -241,6 +250,30 @@
   <action name="action_Create_Pica_Surface_Viewer">
    <property name="text">
     <string>Create Pica Surface Viewer</string>
+   </property>
+  </action>
+  <action name="action_Record_Movie">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Record Movie</string>
+   </property>
+  </action>
+  <action name="action_Play_Movie">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Play Movie</string>
+   </property>
+  </action>
+  <action name="action_Stop_Recording_Playback">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Stop Recording / Playback</string>
    </property>
   </action>
   <action name="action_View_Lobby">

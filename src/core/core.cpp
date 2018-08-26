@@ -179,7 +179,6 @@ System::ResultStatus System::Init(EmuWindow* emu_window, u32 system_mode) {
     Kernel::Init(system_mode);
     Service::Init(service_manager);
     GDBStub::Init();
-    Movie::GetInstance().Init();
 
     ResultStatus result = VideoCore::Init(emu_window);
     if (result != ResultStatus::Success) {
@@ -218,7 +217,6 @@ void System::Shutdown() {
                          perf_results.frametime * 1000.0);
 
     // Shutdown emulation session
-    Movie::GetInstance().Shutdown();
     GDBStub::Shutdown();
     VideoCore::Shutdown();
     Service::Shutdown();

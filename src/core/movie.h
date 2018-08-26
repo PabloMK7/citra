@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <functional>
 #include "common/common_types.h"
 
 namespace Service {
@@ -26,6 +27,12 @@ enum class PlayMode;
 
 class Movie {
 public:
+    enum class ValidationResult {
+        OK,
+        RevisionDismatch,
+        GameDismatch,
+        Invalid,
+    };
     /**
      * Gets the instance of the Movie singleton class.
      * @returns Reference to the instance of the Movie singleton class.
@@ -34,7 +41,11 @@ public:
         return s_instance;
     }
 
-    void Init();
+    void StartPlayback(const std::string& movie_file,
+                       std::function<void()> completion_callback = {});
+    void StartRecording(const std::string& movie_file);
+    ValidationResult ValidateMovie(const std::string& movie_file, u64 program_id = 0) const;
+    u64 GetMovieProgramID(const std::string& movie_file) const;
 
     void Shutdown();
 
@@ -74,13 +85,11 @@ public:
      * When playing: Replaces the given input states with the ones stored in the playback file
      */
     void HandleExtraHidResponse(Service::IR::ExtraHIDResponse& extra_hid_response);
+    bool IsPlayingInput() const;
+    bool IsRecordingInput() const;
 
 private:
     static Movie s_instance;
-
-    bool IsPlayingInput();
-
-    bool IsRecordingInput();
 
     void CheckInputEnd();
 
@@ -103,12 +112,14 @@ private:
     void Record(const Service::IR::PadState& pad_state, const s16& c_stick_x, const s16& c_stick_y);
     void Record(const Service::IR::ExtraHIDResponse& extra_hid_response);
 
-    bool ValidateHeader(const CTMHeader& header);
+    ValidationResult ValidateHeader(const CTMHeader& header, u64 program_id = 0) const;
 
     void SaveMovie();
 
     PlayMode play_mode;
+    std::string record_movie_file;
     std::vector<u8> recorded_input;
+    std::function<void()> playback_completion_callback;
     size_t current_byte = 0;
 };
 } // namespace Core

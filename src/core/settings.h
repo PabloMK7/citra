@@ -156,10 +156,6 @@ struct Values {
     std::string log_filter;
     std::unordered_map<std::string, bool> lle_modules;
 
-    // Movie
-    std::string movie_play;
-    std::string movie_record;
-
     // WebService
     bool enable_telemetry;
     std::string telemetry_endpoint_url;

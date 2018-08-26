@@ -628,6 +628,24 @@ void GameList::RefreshGameDirectory() {
     }
 }
 
+QString GameList::FindGameByProgramID(u64 program_id) {
+    return FindGameByProgramID(item_model->invisibleRootItem(), program_id);
+}
+
+QString GameList::FindGameByProgramID(QStandardItem* current_item, u64 program_id) {
+    if (current_item->type() == static_cast<int>(GameListItemType::Game) &&
+        current_item->data(GameListItemPath::ProgramIdRole).toULongLong() == program_id) {
+        return current_item->data(GameListItemPath::FullPathRole).toString();
+    } else if (current_item->hasChildren()) {
+        for (int child_id = 0; child_id < current_item->rowCount(); child_id++) {
+            QString path = FindGameByProgramID(current_item->child(child_id, 0), program_id);
+            if (!path.isEmpty())
+                return path;
+        }
+    }
+    return "";
+}
+
 void GameListWorker::AddFstEntriesToGameList(const std::string& dir_path, unsigned int recursion,
                                              GameListDir* parent_dir) {
     const auto callback = [this, recursion, parent_dir](u64* num_entries_out,
