@@ -17,7 +17,6 @@ class RendererBase;
 namespace VideoCore {
 
 extern std::unique_ptr<RendererBase> g_renderer; ///< Renderer plugin
-extern EmuWindow* g_emu_window;                  ///< Emu window
 
 // TODO: Wrap these in a user settings struct along with any other graphics settings (often set from
 // qt ui)
@@ -29,7 +28,7 @@ extern std::atomic<bool> g_hw_shader_accurate_mul;
 extern std::atomic<bool> g_renderer_bg_color_update_requested;
 
 /// Initialize the video core
-Core::System::ResultStatus Init(EmuWindow* emu_window);
+Core::System::ResultStatus Init(EmuWindow& emu_window);
 
 /// Shutdown the video core
 void Shutdown();

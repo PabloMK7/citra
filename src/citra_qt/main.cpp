@@ -649,7 +649,7 @@ bool GMainWindow::LoadROM(const QString& filename) {
 
     Core::System& system{Core::System::GetInstance()};
 
-    const Core::System::ResultStatus result{system.Load(render_window, filename.toStdString())};
+    const Core::System::ResultStatus result{system.Load(*render_window, filename.toStdString())};
 
     if (result != Core::System::ResultStatus::Success) {
         switch (result) {

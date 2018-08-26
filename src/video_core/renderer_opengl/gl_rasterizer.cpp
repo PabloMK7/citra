@@ -40,12 +40,12 @@ static bool IsVendorAmd() {
     return gpu_vendor == "ATI Technologies Inc." || gpu_vendor == "Advanced Micro Devices, Inc.";
 }
 
-RasterizerOpenGL::RasterizerOpenGL()
+RasterizerOpenGL::RasterizerOpenGL(EmuWindow& window)
     : is_amd(IsVendorAmd()), shader_dirty(true),
       vertex_buffer(GL_ARRAY_BUFFER, VERTEX_BUFFER_SIZE, is_amd),
       uniform_buffer(GL_UNIFORM_BUFFER, UNIFORM_BUFFER_SIZE, false),
       index_buffer(GL_ELEMENT_ARRAY_BUFFER, INDEX_BUFFER_SIZE, false),
-      texture_buffer(GL_TEXTURE_BUFFER, TEXTURE_BUFFER_SIZE, false) {
+      texture_buffer(GL_TEXTURE_BUFFER, TEXTURE_BUFFER_SIZE, false), emu_window{window} {
 
     allow_shadow = GLAD_GL_ARB_shader_image_load_store && GLAD_GL_ARB_shader_image_size &&
                    GLAD_GL_ARB_framebuffer_no_attachments;

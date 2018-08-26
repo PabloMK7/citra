@@ -14,7 +14,6 @@
 
 namespace VideoCore {
 
-EmuWindow* g_emu_window = nullptr;        ///< Frontend emulator window
 std::unique_ptr<RendererBase> g_renderer; ///< Renderer plugin
 
 std::atomic<bool> g_hw_renderer_enabled;
@@ -25,12 +24,10 @@ std::atomic<bool> g_hw_shader_accurate_mul;
 std::atomic<bool> g_renderer_bg_color_update_requested;
 
 /// Initialize the video core
-Core::System::ResultStatus Init(EmuWindow* emu_window) {
+Core::System::ResultStatus Init(EmuWindow& emu_window) {
     Pica::Init();
 
-    g_emu_window = emu_window;
-    g_renderer = std::make_unique<RendererOpenGL>();
-    g_renderer->SetWindow(g_emu_window);
+    g_renderer = std::make_unique<RendererOpenGL>(emu_window);
     Core::System::ResultStatus result = g_renderer->Init();
 
     if (result != Core::System::ResultStatus::Success) {
