@@ -39,6 +39,8 @@ add_executable(citra-qt
     configuration/configure_graphics.h
     configuration/configure_input.cpp
     configuration/configure_input.h
+    configuration/configure_motion_touch.cpp
+    configuration/configure_motion_touch.h
     configuration/configure_system.cpp
     configuration/configure_system.h
     configuration/configure_web.cpp
@@ -115,6 +117,7 @@ set(UIS
     configuration/configure_general.ui
     configuration/configure_graphics.ui
     configuration/configure_input.ui
+    configuration/configure_motion_touch.ui
     configuration/configure_system.ui
     configuration/configure_web.ui
     debugger/registers.ui

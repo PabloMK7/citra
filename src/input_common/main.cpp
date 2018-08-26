@@ -76,6 +76,11 @@ std::string GenerateAnalogParamFromKeys(int key_up, int key_down, int key_left, 
     return circle_pad_param.Serialize();
 }
 
+void ReloadInputDevices() {
+    if (udp)
+        udp->ReloadUDPClient();
+}
+
 namespace Polling {
 
 std::vector<std::unique_ptr<DevicePoller>> GetPollers(DeviceType type) {

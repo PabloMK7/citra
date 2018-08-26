@@ -37,6 +37,9 @@ std::string GenerateKeyboardParam(int key_code);
 std::string GenerateAnalogParamFromKeys(int key_up, int key_down, int key_left, int key_right,
                                         int key_modifier, float modifier_scale);
 
+/// Reloads the input devices
+void ReloadInputDevices();
+
 namespace Polling {
 
 enum class DeviceType { Button, Analog };
