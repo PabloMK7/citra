@@ -7,6 +7,7 @@
 #include <atomic>
 #include <map>
 #include <unordered_map>
+#include <utility>
 #include <QCoreApplication>
 #include <QFileInfo>
 #include <QImage>
@@ -142,11 +143,10 @@ public:
     // used to access type from item index
     static const int TypeRole = Qt::UserRole + 1;
     static const int SortRole = Qt::UserRole + 2;
-    GameListItem() : QStandardItem() {}
-    GameListItem(const QString& string) : QStandardItem(string) {
+    GameListItem() = default;
+    explicit GameListItem(const QString& string) : QStandardItem(string) {
         setData(string, SortRole);
     }
-    virtual ~GameListItem() override {}
 };
 
 /**
@@ -161,9 +161,8 @@ public:
     static const int FullPathRole = SortRole + 1;
     static const int ProgramIdRole = SortRole + 2;
 
-    GameListItemPath() : GameListItem() {}
-    GameListItemPath(const QString& game_path, const std::vector<u8>& smdh_data, u64 program_id)
-        : GameListItem() {
+    GameListItemPath() = default;
+    GameListItemPath(const QString& game_path, const std::vector<u8>& smdh_data, u64 program_id) {
         setData(type(), TypeRole);
         setData(game_path, FullPathRole);
         setData(qulonglong(program_id), ProgramIdRole);
@@ -284,8 +283,8 @@ class GameListItemSize : public GameListItem {
 public:
     static const int SizeRole = SortRole;
 
-    GameListItemSize() : GameListItem() {}
-    GameListItemSize(const qulonglong size_bytes) : GameListItem() {
+    GameListItemSize() = default;
+    explicit GameListItemSize(const qulonglong size_bytes) {
         setData(type(), TypeRole);
         setData(size_bytes, SizeRole);
     }
@@ -376,7 +375,7 @@ public:
     explicit GameListWorker(
         QList<UISettings::GameDir>& game_dirs,
         const std::unordered_map<std::string, std::pair<QString, QString>>& compatibility_list)
-        : QObject(), QRunnable(), game_dirs(game_dirs), compatibility_list(compatibility_list) {}
+        : game_dirs(game_dirs), compatibility_list(compatibility_list) {}
 
 public slots:
     /// Starts the processing of directory tree information.

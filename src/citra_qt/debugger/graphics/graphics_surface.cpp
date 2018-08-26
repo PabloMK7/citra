@@ -24,7 +24,8 @@
 
 SurfacePicture::SurfacePicture(QWidget* parent, GraphicsSurfaceWidget* surface_widget_)
     : QLabel(parent), surface_widget(surface_widget_) {}
-SurfacePicture::~SurfacePicture() {}
+
+SurfacePicture::~SurfacePicture() = default;
 
 void SurfacePicture::mousePressEvent(QMouseEvent* event) {
     // Only do something while the left mouse button is held down

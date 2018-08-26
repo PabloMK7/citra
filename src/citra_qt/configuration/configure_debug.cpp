@@ -25,7 +25,7 @@ ConfigureDebug::ConfigureDebug(QWidget* parent) : QWidget(parent), ui(new Ui::Co
     ui->toggle_cpu_jit->setEnabled(!Core::System::GetInstance().IsPoweredOn());
 }
 
-ConfigureDebug::~ConfigureDebug() {}
+ConfigureDebug::~ConfigureDebug() = default;
 
 void ConfigureDebug::setConfiguration() {
     ui->toggle_gdbstub->setChecked(Settings::values.use_gdbstub);

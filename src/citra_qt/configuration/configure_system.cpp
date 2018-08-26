@@ -235,7 +235,7 @@ ConfigureSystem::ConfigureSystem(QWidget* parent) : QWidget(parent), ui(new Ui::
     ConfigureTime();
 }
 
-ConfigureSystem::~ConfigureSystem() {}
+ConfigureSystem::~ConfigureSystem() = default;
 
 void ConfigureSystem::setConfiguration() {
     enabled = !Core::System::GetInstance().IsPoweredOn();
