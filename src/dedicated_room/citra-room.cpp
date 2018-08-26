@@ -166,7 +166,7 @@ int main(int argc, char** argv) {
     }
     if (announce) {
         std::cout << "Hosting a public room\n\n";
-        Settings::values.announce_multiplayer_room_endpoint_url = announce_url;
+        Settings::values.web_services_endpoint_url = announce_url;
         Settings::values.citra_username = username;
         Settings::values.citra_token = token;
     }
