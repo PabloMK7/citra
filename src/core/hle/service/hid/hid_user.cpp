@@ -9,6 +9,8 @@ namespace HID {
 
 User::User(std::shared_ptr<Module> hid) : Module::Interface(std::move(hid), "hid:USER", 6) {
     static const FunctionInfo functions[] = {
+        {0x00010200, nullptr, "CalibrateTouchScreen"},
+        {0x00020000, nullptr, "UpdateTouchConfig"},
         {0x000A0000, &User::GetIPCHandles, "GetIPCHandles"},
         {0x000B0000, nullptr, "StartAnalogStickCalibration"},
         {0x000E0000, nullptr, "GetAnalogStickCalibrateParam"},
