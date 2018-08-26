@@ -19,7 +19,15 @@ constexpr char KEY_VALUE_SEPARATOR_ESCAPE[] = "$0";
 constexpr char PARAM_SEPARATOR_ESCAPE[] = "$1";
 constexpr char ESCAPE_CHARACTER_ESCAPE[] = "$2";
 
+/// A placeholder for empty param packages to avoid empty strings
+/// (they may be recognized as "not set" by some frontend libraries like qt)
+constexpr char EMPTY_PLACEHOLDER[] = "[empty]";
+
 ParamPackage::ParamPackage(const std::string& serialized) {
+    if (serialized == EMPTY_PLACEHOLDER) {
+        return;
+    }
+
     std::vector<std::string> pairs;
     Common::SplitString(serialized, PARAM_SEPARATOR, pairs);
 
@@ -45,7 +53,7 @@ ParamPackage::ParamPackage(std::initializer_list<DataType::value_type> list) : d
 
 std::string ParamPackage::Serialize() const {
     if (data.empty())
-        return "";
+        return EMPTY_PLACEHOLDER;
 
     std::string result;
 
@@ -117,6 +125,14 @@ void ParamPackage::Set(const std::string& key, float value) {
 
 bool ParamPackage::Has(const std::string& key) const {
     return data.find(key) != data.end();
+}
+
+void ParamPackage::Erase(const std::string& key) {
+    data.erase(key);
+}
+
+void ParamPackage::Clear() {
+    data.clear();
 }
 
 } // namespace Common
