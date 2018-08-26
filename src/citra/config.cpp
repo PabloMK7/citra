@@ -2,7 +2,9 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <iomanip>
 #include <memory>
+#include <sstream>
 #include <unordered_map>
 #include <SDL.h>
 #include <inih/cpp/INIReader.h>
@@ -167,6 +169,28 @@ void Config::ReadValues() {
     Settings::values.is_new_3ds = sdl2_config->GetBoolean("System", "is_new_3ds", false);
     Settings::values.region_value =
         sdl2_config->GetInteger("System", "region_value", Settings::REGION_VALUE_AUTO_SELECT);
+    Settings::values.init_clock =
+        static_cast<Settings::InitClock>(sdl2_config->GetInteger("System", "init_clock", 1));
+    {
+        std::tm t;
+        t.tm_sec = 1;
+        t.tm_min = 0;
+        t.tm_hour = 0;
+        t.tm_mday = 1;
+        t.tm_mon = 0;
+        t.tm_year = 100;
+        t.tm_isdst = 0;
+        std::istringstream string_stream(
+            sdl2_config->Get("System", "init_time", "2000-01-01 00:00:01"));
+        string_stream >> std::get_time(&t, "%Y-%m-%d %H:%M:%S");
+        if (string_stream.fail()) {
+            LOG_ERROR(Config, "Failed To parse init_time. Using 2000-01-01 00:00:01");
+        }
+        Settings::values.init_time =
+            std::chrono::duration_cast<std::chrono::seconds>(
+                std::chrono::system_clock::from_time_t(std::mktime(&t)).time_since_epoch())
+                .count();
+    }
 
     // Camera
     using namespace Service::CAM;

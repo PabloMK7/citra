@@ -19,7 +19,6 @@ unsigned int Object::next_object_id;
 /// Initialize the kernel
 void Init(u32 system_mode) {
     ConfigMem::Init();
-    SharedPage::Init();
 
     Kernel::MemoryInit(system_mode);
 

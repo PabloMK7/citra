@@ -232,13 +232,45 @@
          </widget>
         </item>
         <item row="5" column="0">
+         <widget class="QLabel" name="label_init_clock">
+          <property name="text">
+           <string>Clock</string>
+          </property>
+         </widget>
+        </item>
+        <item row="5" column="1">
+         <widget class="QComboBox" name="combo_init_clock">
+          <item>
+           <property name="text">
+            <string>System Clock</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Fixed Time</string>
+           </property>
+          </item>
+         </widget>
+        </item>
+        <item row="6" column="0">
+         <widget class="QLabel" name="label_init_time">
+          <property name="text">
+           <string>Startup time</string>
+          </property>
+         </widget>
+        </item>
+        <item row="6" column="1">
+         <widget class="QDateTimeEdit" name="edit_init_time">
+         </widget>
+        </item>
+        <item row="7" column="0">
          <widget class="QLabel" name="label_console_id">
           <property name="text">
            <string>Console ID:</string>
           </property>
          </widget>
         </item>
-        <item row="5" column="1">
+        <item row="7" column="1">
          <widget class="QPushButton" name="button_regenerate_console_id">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">

@@ -11,11 +11,11 @@
 #include "common/assert.h"
 #include "common/common_types.h"
 #include "common/logging/log.h"
+#include "core/core.h"
 #include "core/hle/config_mem.h"
 #include "core/hle/kernel/memory.h"
 #include "core/hle/kernel/vm_manager.h"
 #include "core/hle/result.h"
-#include "core/hle/shared_page.h"
 #include "core/memory.h"
 #include "core/memory_setup.h"
 
@@ -160,11 +160,14 @@ void MapSharedPages(VMManager& address_space) {
                            .Unwrap();
     address_space.Reprotect(cfg_mem_vma, VMAPermission::Read);
 
-    auto shared_page_vma = address_space
-                               .MapBackingMemory(Memory::SHARED_PAGE_VADDR,
-                                                 reinterpret_cast<u8*>(&SharedPage::shared_page),
-                                                 Memory::SHARED_PAGE_SIZE, MemoryState::Shared)
-                               .Unwrap();
+    auto shared_page_vma =
+        address_space
+            .MapBackingMemory(
+                Memory::SHARED_PAGE_VADDR,
+                reinterpret_cast<u8*>(
+                    &Core::System::GetInstance().GetSharedPageHandler()->GetSharedPage()),
+                Memory::SHARED_PAGE_SIZE, MemoryState::Shared)
+            .Unwrap();
     address_space.Reprotect(shared_page_vma, VMAPermission::Read);
 }
 

@@ -10,6 +10,9 @@
  * write access, according to 3dbrew; this is not emulated)
  */
 
+#include <chrono>
+#include <ctime>
+#include <memory>
 #include "common/bit_field.h"
 #include "common/common_funcs.h"
 #include "common/common_types.h"
@@ -17,6 +20,10 @@
 #include "core/memory.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
+
+namespace CoreTiming {
+struct EventType;
+}
 
 namespace SharedPage {
 
@@ -74,14 +81,25 @@ struct SharedPageDef {
 static_assert(sizeof(SharedPageDef) == Memory::SHARED_PAGE_SIZE,
               "Shared page structure size is wrong");
 
-extern SharedPageDef shared_page;
+class Handler {
+public:
+    Handler();
 
-void Init();
+    void SetMacAddress(const MacAddress&);
 
-void SetMacAddress(const MacAddress&);
+    void SetWifiLinkLevel(WifiLinkLevel);
 
-void SetWifiLinkLevel(WifiLinkLevel);
+    void Set3DLed(u8);
 
-void Set3DLed(u8);
+    SharedPageDef& GetSharedPage();
+
+private:
+    u64 GetSystemTime() const;
+    void UpdateTimeCallback(u64 userdata, int cycles_late);
+    CoreTiming::EventType* update_time_event;
+    std::chrono::seconds init_time;
+
+    SharedPageDef shared_page;
+};
 
 } // namespace SharedPage
