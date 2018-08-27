@@ -204,7 +204,8 @@ void Module::Interface::GetSharedFont(Kernel::HLERequestContext& ctx) {
             rb.Push<u32>(-1); // TODO: Find the right error code
             rb.Push<u32>(0);
             rb.PushCopyObjects<Kernel::Object>(nullptr);
-            Core::System::GetInstance().SetStatus(Core::System::ResultStatus::ErrorSharedFont);
+            Core::System::GetInstance().SetStatus(Core::System::ResultStatus::ErrorSystemFiles,
+                                                  "Shared fonts");
             return;
         }
     }

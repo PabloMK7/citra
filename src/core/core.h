@@ -50,7 +50,6 @@ public:
         ErrorLoader_ErrorInvalidFormat,     ///< Error loading the specified application due to an
                                             /// invalid format
         ErrorSystemFiles,                   ///< Error in finding system files
-        ErrorSharedFont,                    ///< Error in finding shared font
         ErrorVideoCore,                     ///< Error in the video core
         ErrorVideoCore_ErrorGenericDrivers, ///< Error in the video core due to the user having
                                             /// generic drivers installed
