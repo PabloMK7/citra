@@ -25,8 +25,8 @@ std::string UpdateCoreJWT(bool force_new_token, const std::string& username,
     static std::string jwt;
     if (jwt.empty() || force_new_token) {
         if (!username.empty() && !token.empty()) {
-            std::future<Common::WebResult> future =
-                PostJson("https://api.citra-emu.org/jwt/internal", username, token);
+            std::future<Common::WebResult> future = PostJson(
+                Settings::values.web_services_endpoint_url + "/jwt/internal", username, token);
             jwt = future.get().returned_data;
         }
     }
