@@ -19,19 +19,19 @@ namespace FileSys {
 namespace {
 
 std::string GetSaveDataContainerPath(const std::string& sdmc_directory) {
-    return fmt::format("{}Nintendo 3DS/{}/{}/title/", sdmc_directory.c_str(), SYSTEM_ID, SDCARD_ID);
+    return fmt::format("{}Nintendo 3DS/{}/{}/title/", sdmc_directory, SYSTEM_ID, SDCARD_ID);
 }
 
 std::string GetSaveDataPath(const std::string& mount_location, u64 program_id) {
     u32 high = static_cast<u32>(program_id >> 32);
     u32 low = static_cast<u32>(program_id & 0xFFFFFFFF);
-    return fmt::format("{}{:08x}/{:08x}/data/00000001/", mount_location.c_str(), high, low);
+    return fmt::format("{}{:08x}/{:08x}/data/00000001/", mount_location, high, low);
 }
 
 std::string GetSaveDataMetadataPath(const std::string& mount_location, u64 program_id) {
     u32 high = static_cast<u32>(program_id >> 32);
     u32 low = static_cast<u32>(program_id & 0xFFFFFFFF);
-    return fmt::format("{}{:08x}/{:08x}/data/00000001.metadata", mount_location.c_str(), high, low);
+    return fmt::format("{}{:08x}/{:08x}/data/00000001.metadata", mount_location, high, low);
 }
 
 } // namespace

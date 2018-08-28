@@ -418,7 +418,7 @@ std::string GetTitleContentPath(Service::FS::MediaType media_type, u64 tid, u16 
         }
     }
 
-    return fmt::format("{}{:08x}.app", content_path.c_str(), content_id);
+    return fmt::format("{}{:08x}.app", content_path, content_id);
 }
 
 std::string GetTitlePath(Service::FS::MediaType media_type, u64 tid) {
@@ -426,7 +426,7 @@ std::string GetTitlePath(Service::FS::MediaType media_type, u64 tid) {
     u32 low = static_cast<u32>(tid & 0xFFFFFFFF);
 
     if (media_type == Service::FS::MediaType::NAND || media_type == Service::FS::MediaType::SDMC)
-        return fmt::format("{}{:08x}/{:08x}/", GetMediaTitlePath(media_type).c_str(), high, low);
+        return fmt::format("{}{:08x}/{:08x}/", GetMediaTitlePath(media_type), high, low);
 
     if (media_type == Service::FS::MediaType::GameCard) {
         // TODO(shinyquagsire23): get current app path if TID matches?
@@ -439,10 +439,10 @@ std::string GetTitlePath(Service::FS::MediaType media_type, u64 tid) {
 
 std::string GetMediaTitlePath(Service::FS::MediaType media_type) {
     if (media_type == Service::FS::MediaType::NAND)
-        return fmt::format("{}{}/title/", FileUtil::GetUserPath(D_NAND_IDX).c_str(), SYSTEM_ID);
+        return fmt::format("{}{}/title/", FileUtil::GetUserPath(D_NAND_IDX), SYSTEM_ID);
 
     if (media_type == Service::FS::MediaType::SDMC)
-        return fmt::format("{}Nintendo 3DS/{}/{}/title/", FileUtil::GetUserPath(D_SDMC_IDX).c_str(),
+        return fmt::format("{}Nintendo 3DS/{}/{}/title/", FileUtil::GetUserPath(D_SDMC_IDX),
                            SYSTEM_ID, SDCARD_ID);
 
     if (media_type == Service::FS::MediaType::GameCard) {
