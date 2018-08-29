@@ -3,11 +3,8 @@
 // Refer to the license.txt file included.
 
 #include <ctime>
-
 #include <fmt/format.h>
-
 #include "common/common_types.h"
-#include "common/string_util.h"
 #include "common/timer.h"
 
 namespace Common {

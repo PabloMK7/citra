@@ -6,7 +6,6 @@
 #include <fmt/format.h>
 #include "common/assert.h"
 #include "common/logging/log.h"
-#include "common/string_util.h"
 #include "core/core.h"
 #include "core/hle/ipc.h"
 #include "core/hle/kernel/client_port.h"

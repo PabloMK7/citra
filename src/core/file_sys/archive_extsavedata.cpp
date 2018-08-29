@@ -9,7 +9,6 @@
 #include "common/common_types.h"
 #include "common/file_util.h"
 #include "common/logging/log.h"
-#include "common/string_util.h"
 #include "core/file_sys/archive_extsavedata.h"
 #include "core/file_sys/disk_archive.h"
 #include "core/file_sys/errors.h"

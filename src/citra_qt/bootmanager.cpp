@@ -3,13 +3,11 @@
 #include <QKeyEvent>
 #include <QScreen>
 #include <QWindow>
-
 #include <fmt/format.h>
 
 #include "citra_qt/bootmanager.h"
 #include "common/microprofile.h"
 #include "common/scm_rev.h"
-#include "common/string_util.h"
 #include "core/3ds.h"
 #include "core/core.h"
 #include "core/settings.h"

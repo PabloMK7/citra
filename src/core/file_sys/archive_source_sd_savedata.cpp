@@ -5,7 +5,6 @@
 #include <fmt/format.h>
 #include "common/file_util.h"
 #include "common/logging/log.h"
-#include "common/string_util.h"
 #include "core/file_sys/archive_source_sd_savedata.h"
 #include "core/file_sys/errors.h"
 #include "core/file_sys/savedata_archive.h"

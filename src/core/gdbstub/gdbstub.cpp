@@ -32,7 +32,6 @@
 #endif
 
 #include "common/logging/log.h"
-#include "common/string_util.h"
 #include "core/arm/arm_interface.h"
 #include "core/core.h"
 #include "core/gdbstub/gdbstub.h"
