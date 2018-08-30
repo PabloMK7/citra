@@ -5,7 +5,6 @@
 #include "common/file_util.h"
 #include "common/logging/log.h"
 #include "common/string_util.h"
-#include "fmt/format.h"
 #include "core/file_sys/archive_systemsavedata.h"
 #include "core/file_sys/directory_backend.h"
 #include "core/file_sys/errors.h"
@@ -17,6 +16,7 @@
 #include "core/hle/service/cecd/cecd_ndm.h"
 #include "core/hle/service/cecd/cecd_s.h"
 #include "core/hle/service/cecd/cecd_u.h"
+#include "fmt/format.h"
 
 namespace Service {
 namespace CECD {
