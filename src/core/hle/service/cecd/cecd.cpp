@@ -2,12 +2,10 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <chrono>
-#include <ctime>
 #include "common/file_util.h"
 #include "common/logging/log.h"
 #include "common/string_util.h"
-#include "core/core.h"
+#include "fmt/format.h"
 #include "core/file_sys/archive_systemsavedata.h"
 #include "core/file_sys/directory_backend.h"
 #include "core/file_sys/errors.h"
@@ -19,7 +17,6 @@
 #include "core/hle/service/cecd/cecd_ndm.h"
 #include "core/hle/service/cecd/cecd_s.h"
 #include "core/hle/service/cecd/cecd_u.h"
-#include "core/loader/smdh.h"
 
 namespace Service {
 namespace CECD {
@@ -767,33 +764,32 @@ std::string Module::GetCecDataPathTypeAsString(const CecDataPathType type, const
     case CecDataPathType::CEC_PATH_MBOX_LIST:
         return "/CEC/MBoxList____";
     case CecDataPathType::CEC_PATH_MBOX_INFO:
-        return Common::StringFromFormat("/CEC/%08x/MBoxInfo____", program_id);
+        return fmt::format("/CEC/{:08x}/MBoxInfo____", program_id);
     case CecDataPathType::CEC_PATH_INBOX_INFO:
-        return Common::StringFromFormat("/CEC/%08x/InBox___/BoxInfo_____", program_id);
+        return fmt::format("/CEC/{:08x}/InBox___/BoxInfo_____", program_id);
     case CecDataPathType::CEC_PATH_OUTBOX_INFO:
-        return Common::StringFromFormat("/CEC/%08x/OutBox__/BoxInfo_____", program_id);
+        return fmt::format("/CEC/{:08x}/OutBox__/BoxInfo_____", program_id);
     case CecDataPathType::CEC_PATH_OUTBOX_INDEX:
-        return Common::StringFromFormat("/CEC/%08x/OutBox__/OBIndex_____", program_id);
+        return fmt::format("/CEC/{:08x}/OutBox__/OBIndex_____", program_id);
     case CecDataPathType::CEC_PATH_INBOX_MSG:
-        return Common::StringFromFormat("/CEC/%08x/InBox___/_%08x", program_id,
-                                        EncodeBase64(msg_id, base64_dict).data());
+        return fmt::format("/CEC/{:08x}/InBox___/_{}", program_id,
+                           EncodeBase64(msg_id, base64_dict));
     case CecDataPathType::CEC_PATH_OUTBOX_MSG:
-        return Common::StringFromFormat("/CEC/%08x/OutBox__/_%08x", program_id,
-                                        EncodeBase64(msg_id, base64_dict).data());
+        return fmt::format("/CEC/{:08x}/OutBox__/_{}", program_id,
+                           EncodeBase64(msg_id, base64_dict));
     case CecDataPathType::CEC_PATH_ROOT_DIR:
         return "/CEC";
     case CecDataPathType::CEC_PATH_MBOX_DIR:
-        return Common::StringFromFormat("/CEC/%08x", program_id);
+        return fmt::format("/CEC/{:08x}", program_id);
     case CecDataPathType::CEC_PATH_INBOX_DIR:
-        return Common::StringFromFormat("/CEC/%08x/InBox___", program_id);
+        return fmt::format("/CEC/{:08x}/InBox___", program_id);
     case CecDataPathType::CEC_PATH_OUTBOX_DIR:
-        return Common::StringFromFormat("/CEC/%08x/OutBox__", program_id);
+        return fmt::format("/CEC/{:08x}/OutBox__", program_id);
     case CecDataPathType::CEC_MBOX_DATA:
     case CecDataPathType::CEC_MBOX_ICON:
     case CecDataPathType::CEC_MBOX_TITLE:
     default:
-        return Common::StringFromFormat("/CEC/%08x/MBoxData.%03d", program_id,
-                                        static_cast<u32>(type) - 100);
+        return fmt::format("/CEC/{:08x}/MBoxData.{:03}", program_id, static_cast<u32>(type) - 100);
     }
 }
 
@@ -892,7 +888,7 @@ void Module::CheckAndUpdateFile(const CecDataPathType path_type, const u32 ncch_
             std::memset(name_buffer.data(), 0, name_size);
 
             if (ncch_program_id != 0) {
-                std::string name = Common::StringFromFormat("%08x", ncch_program_id);
+                std::string name = fmt::format("{:08x}", ncch_program_id);
                 std::memcpy(name_buffer.data(), name.data(), name.size());
 
                 bool already_activated = false;
@@ -1171,7 +1167,7 @@ Module::Module() {
         /// eventlog.dat resides in the root of the archive beside the CEC directory
         /// Initially created, at offset 0x0, are bytes 0x01 0x41 0x12, followed by
         /// zeroes until offset 0x1000, where it changes to 0xDD until the end of file
-        /// at offset 0x30d53
+        /// at offset 0x30d53. Not sure why the 0xDD...
         FileSys::Path eventlog_path("/eventlog.dat");
 
         auto eventlog_result =
