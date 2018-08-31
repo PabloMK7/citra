@@ -9,10 +9,9 @@
 #include "common/assert.h"
 #include "common/bit_set.h"
 
-namespace Common {
-namespace X64 {
+namespace Common::X64 {
 
-int RegToIndex(const Xbyak::Reg& reg) {
+inline int RegToIndex(const Xbyak::Reg& reg) {
     using Kind = Xbyak::Reg::Kind;
     ASSERT_MSG((reg.getKind() & (Kind::REG | Kind::XMM)) != 0,
                "RegSet only support GPRs and XMM registers.");
@@ -152,8 +151,8 @@ constexpr size_t ABI_SHADOW_SPACE = 0;
 
 #endif
 
-void ABI_CalculateFrameSize(BitSet32 regs, size_t rsp_alignment, size_t needed_frame_size,
-                            s32* out_subtraction, s32* out_xmm_offset) {
+inline void ABI_CalculateFrameSize(BitSet32 regs, size_t rsp_alignment, size_t needed_frame_size,
+                                   s32* out_subtraction, s32* out_xmm_offset) {
     int count = (regs & ABI_ALL_GPRS).Count();
     rsp_alignment -= count * 8;
     size_t subtraction = 0;
@@ -174,8 +173,8 @@ void ABI_CalculateFrameSize(BitSet32 regs, size_t rsp_alignment, size_t needed_f
     *out_xmm_offset = (s32)(subtraction - xmm_base_subtraction);
 }
 
-size_t ABI_PushRegistersAndAdjustStack(Xbyak::CodeGenerator& code, BitSet32 regs,
-                                       size_t rsp_alignment, size_t needed_frame_size = 0) {
+inline size_t ABI_PushRegistersAndAdjustStack(Xbyak::CodeGenerator& code, BitSet32 regs,
+                                              size_t rsp_alignment, size_t needed_frame_size = 0) {
     s32 subtraction, xmm_offset;
     ABI_CalculateFrameSize(regs, rsp_alignment, needed_frame_size, &subtraction, &xmm_offset);
 
@@ -195,8 +194,8 @@ size_t ABI_PushRegistersAndAdjustStack(Xbyak::CodeGenerator& code, BitSet32 regs
     return ABI_SHADOW_SPACE;
 }
 
-void ABI_PopRegistersAndAdjustStack(Xbyak::CodeGenerator& code, BitSet32 regs, size_t rsp_alignment,
-                                    size_t needed_frame_size = 0) {
+inline void ABI_PopRegistersAndAdjustStack(Xbyak::CodeGenerator& code, BitSet32 regs,
+                                           size_t rsp_alignment, size_t needed_frame_size = 0) {
     s32 subtraction, xmm_offset;
     ABI_CalculateFrameSize(regs, rsp_alignment, needed_frame_size, &subtraction, &xmm_offset);
 
@@ -217,5 +216,4 @@ void ABI_PopRegistersAndAdjustStack(Xbyak::CodeGenerator& code, BitSet32 regs, s
     }
 }
 
-} // namespace X64
-} // namespace Common
+} // namespace Common::X64

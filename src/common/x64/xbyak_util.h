@@ -8,8 +8,7 @@
 #include <xbyak.h>
 #include "common/x64/xbyak_abi.h"
 
-namespace Common {
-namespace X64 {
+namespace Common::X64 {
 
 // Constants for use with cmpps/cmpss
 enum {
@@ -45,5 +44,4 @@ inline void CallFarFunction(Xbyak::CodeGenerator& code, const T f) {
     }
 }
 
-} // namespace X64
-} // namespace Common
+} // namespace Common::X64
