@@ -420,7 +420,7 @@ void Module::Interface::WriteMessageWithHMAC(Kernel::HLERequestContext& ctx) {
         ncch_program_id, is_outbox, message_id_size, buffer_size);
 }
 
-void Module::Interface::Delete(Kernel::HLERequestContext& ctx) { /// DeleteMessage?
+void Module::Interface::Delete(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x08, 4, 2);
     const u32 ncch_program_id = rp.Pop<u32>();
     const CecDataPathType path_type = rp.PopEnum<CecDataPathType>();
@@ -1167,7 +1167,8 @@ Module::Module() {
         /// eventlog.dat resides in the root of the archive beside the CEC directory
         /// Initially created, at offset 0x0, are bytes 0x01 0x41 0x12, followed by
         /// zeroes until offset 0x1000, where it changes to 0xDD until the end of file
-        /// at offset 0x30d53. Not sure why the 0xDD...
+        /// at offset 0x30d53. 0xDD means that the cec module hasn't written data to that
+        /// region yet.
         FileSys::Path eventlog_path("/eventlog.dat");
 
         auto eventlog_result =
@@ -1181,7 +1182,6 @@ Module::Module() {
         eventlog_buffer[0] = 0x01;
         eventlog_buffer[1] = 0x41;
         eventlog_buffer[2] = 0x12;
-        std::memset(&eventlog_buffer[0x1000], 0xDD, eventlog_size - 0x1000);
 
         eventlog->backend->Write(0, eventlog_size, true, eventlog_buffer.data());
         eventlog->backend->Close();
