@@ -183,6 +183,7 @@ private slots:
     void OnRecordMovie();
     void OnPlayMovie();
     void OnStopRecordingPlayback();
+    void OnCaptureScreenshot();
     void OnCoreError(Core::System::ResultStatus, std::string);
     /// Called whenever a user selects Help->About Citra
     void OnMenuAboutCitra();

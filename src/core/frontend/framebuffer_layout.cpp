@@ -191,4 +191,50 @@ FramebufferLayout CustomFrameLayout(unsigned width, unsigned height) {
     res.bottom_screen = bot_screen;
     return res;
 }
+
+FramebufferLayout FrameLayoutFromResolutionScale(u16 res_scale) {
+    FramebufferLayout layout;
+    if (Settings::values.custom_layout == true) {
+        layout = CustomFrameLayout(
+            std::max(Settings::values.custom_top_right, Settings::values.custom_bottom_right),
+            std::max(Settings::values.custom_top_bottom, Settings::values.custom_bottom_bottom));
+    } else {
+        int width, height;
+        switch (Settings::values.layout_option) {
+        case Settings::LayoutOption::SingleScreen:
+            if (Settings::values.swap_screen) {
+                width = Core::kScreenBottomWidth * res_scale;
+                height = Core::kScreenBottomHeight * res_scale;
+            } else {
+                width = Core::kScreenTopWidth * res_scale;
+                height = Core::kScreenTopHeight * res_scale;
+            }
+            layout = SingleFrameLayout(width, height, Settings::values.swap_screen);
+            break;
+        case Settings::LayoutOption::LargeScreen:
+            if (Settings::values.swap_screen) {
+                width = (Core::kScreenBottomWidth + Core::kScreenTopWidth / 4) * res_scale;
+                height = Core::kScreenBottomHeight * res_scale;
+            } else {
+                width = (Core::kScreenTopWidth + Core::kScreenBottomWidth / 4) * res_scale;
+                height = Core::kScreenTopHeight * res_scale;
+            }
+            layout = LargeFrameLayout(width, height, Settings::values.swap_screen);
+            break;
+        case Settings::LayoutOption::SideScreen:
+            width = (Core::kScreenTopWidth + Core::kScreenBottomWidth) * res_scale;
+            height = Core::kScreenTopHeight * res_scale;
+            layout = SideFrameLayout(width, height, Settings::values.swap_screen);
+            break;
+        case Settings::LayoutOption::Default:
+        default:
+            width = Core::kScreenTopWidth * res_scale;
+            height = (Core::kScreenTopHeight + Core::kScreenBottomHeight) * res_scale;
+            layout = DefaultFrameLayout(width, height, Settings::values.swap_screen);
+            break;
+        }
+    }
+    return layout;
+}
+
 } // namespace Layout

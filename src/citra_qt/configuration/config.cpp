@@ -206,6 +206,8 @@ void Config::ReadValues() {
     UISettings::values.theme = ReadSetting("theme", UISettings::themes[0].second).toString();
     UISettings::values.enable_discord_presence =
         ReadSetting("enable_discord_presence", true).toBool();
+    UISettings::values.screenshot_resolution_factor =
+        static_cast<u16>(ReadSetting("screenshot_resolution_factor", 0).toUInt());
 
     qt_config->beginGroup("Updater");
     UISettings::values.check_for_update_on_start =
@@ -251,6 +253,7 @@ void Config::ReadValues() {
     UISettings::values.symbols_path = ReadSetting("symbolsPath").toString();
     UISettings::values.movie_record_path = ReadSetting("movieRecordPath").toString();
     UISettings::values.movie_playback_path = ReadSetting("moviePlaybackPath").toString();
+    UISettings::values.screenshot_path = ReadSetting("screenshotPath").toString();
     UISettings::values.game_dir_deprecated = ReadSetting("gameListRootDir", ".").toString();
     UISettings::values.game_dir_deprecated_deepscan =
         ReadSetting("gameListDeepScan", false).toBool();
@@ -460,6 +463,8 @@ void Config::SaveValues() {
     qt_config->beginGroup("UI");
     WriteSetting("theme", UISettings::values.theme, UISettings::themes[0].second);
     WriteSetting("enable_discord_presence", UISettings::values.enable_discord_presence, true);
+    WriteSetting("screenshot_resolution_factor", UISettings::values.screenshot_resolution_factor,
+                 0);
 
     qt_config->beginGroup("Updater");
     WriteSetting("check_for_update_on_start", UISettings::values.check_for_update_on_start, true);
@@ -487,6 +492,7 @@ void Config::SaveValues() {
     WriteSetting("symbolsPath", UISettings::values.symbols_path);
     WriteSetting("movieRecordPath", UISettings::values.movie_record_path);
     WriteSetting("moviePlaybackPath", UISettings::values.movie_playback_path);
+    WriteSetting("screenshotPath", UISettings::values.screenshot_path);
     qt_config->beginWriteArray("gamedirs");
     for (int i = 0; i < UISettings::values.game_dirs.size(); ++i) {
         qt_config->setArrayIndex(i);

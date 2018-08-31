@@ -131,6 +131,8 @@
     <addaction name="separator"/>
     <addaction name="action_Enable_Frame_Advancing"/>
     <addaction name="action_Advance_Frame"/>
+    <addaction name="separator"/>
+    <addaction name="action_Capture_Screenshot"/>
    </widget>
    <widget class="QMenu" name="menu_Multiplayer">
     <property name="enabled">
@@ -313,6 +315,14 @@
    </property>
    <property name="text">
     <string>Advance Frame</string>
+   </property>
+  </action>
+  <action name="action_Capture_Screenshot">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Capture Screenshot</string>
    </property>
   </action>
   <action name="action_View_Lobby">
