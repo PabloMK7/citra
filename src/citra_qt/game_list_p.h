@@ -12,7 +12,6 @@
 #include <QFileInfo>
 #include <QImage>
 #include <QObject>
-#include <QPainter>
 #include <QRunnable>
 #include <QStandardItem>
 #include <QString>
@@ -60,21 +59,15 @@ static QPixmap GetDefaultIcon(bool large) {
     return icon;
 }
 
-/**
- * Creates a circle pixmap from a specified color
- * @param color The color the pixmap shall have
- * @return QPixmap circle pixmap
- */
-static QPixmap CreateCirclePixmapFromColor(const QColor& color) {
-    QPixmap circle_pixmap(16, 16);
-    circle_pixmap.fill(Qt::transparent);
-
-    QPainter painter(&circle_pixmap);
-    painter.setPen(color);
-    painter.setBrush(color);
-    painter.drawEllipse(0, 0, 15, 15);
-
-    return circle_pixmap;
+static auto FindMatchingCompatibilityEntry(
+    const std::unordered_map<std::string, std::pair<QString, QString>>& compatibility_list,
+    u64 program_id) {
+    return std::find_if(
+        compatibility_list.begin(), compatibility_list.end(),
+        [program_id](const std::pair<std::string, std::pair<QString, QString>>& element) {
+            std::string pid = fmt::format("{:016X}", program_id);
+            return element.first == pid;
+        });
 }
 
 /**
@@ -119,24 +112,6 @@ static QString GetRegionFromSMDH(const Loader::SMDH& smdh) {
         return QObject::tr("Invalid Region");
     }
 }
-
-struct CompatStatus {
-    QString color;
-    const char* text;
-    const char* tooltip;
-};
-
-// When this is put in a class, MSVS builds crash when closing Citra
-// clang-format off
-const static inline std::map<QString, CompatStatus> status_data = {
-{ "0", { "#5c93ed", QT_TRANSLATE_NOOP("GameList", "Perfect"),    QT_TRANSLATE_NOOP("GameList", "Game functions flawless with no audio or graphical glitches, all tested functionality works as intended without\nany workarounds needed.") } },
-{ "1", { "#47d35c", QT_TRANSLATE_NOOP("GameList", "Great"),      QT_TRANSLATE_NOOP("GameList", "Game functions with minor graphical or audio glitches and is playable from start to finish. May require some\nworkarounds.") } },
-{ "2", { "#94b242", QT_TRANSLATE_NOOP("GameList", "Okay"),       QT_TRANSLATE_NOOP("GameList", "Game functions with major graphical or audio glitches, but game is playable from start to finish with\nworkarounds.") } },
-{ "3", { "#f2d624", QT_TRANSLATE_NOOP("GameList", "Bad"),        QT_TRANSLATE_NOOP("GameList", "Game functions, but with major graphical or audio glitches. Unable to progress in specific areas due to glitches\neven with workarounds.") } },
-{ "4", { "#FF0000", QT_TRANSLATE_NOOP("GameList", "Intro/Menu"), QT_TRANSLATE_NOOP("GameList", "Game is completely unplayable due to major graphical or audio glitches. Unable to progress past the Start\nScreen.") } },
-{ "5", { "#828282", QT_TRANSLATE_NOOP("GameList", "Won't Boot"), QT_TRANSLATE_NOOP("GameList", "The game crashes when attempting to startup.") } },
-{ "99",{ "#000000", QT_TRANSLATE_NOOP("GameList", "Not Tested"), QT_TRANSLATE_NOOP("GameList", "The game has not yet been tested.") } }, };
-// clang-format on
 
 class GameListItem : public QStandardItem {
 public:
@@ -223,12 +198,28 @@ public:
 };
 
 class GameListItemCompat : public GameListItem {
+    Q_DECLARE_TR_FUNCTIONS(GameListItemCompat)
 public:
     static const int CompatNumberRole = SortRole;
-
     GameListItemCompat() = default;
-    explicit GameListItemCompat(const QString compatiblity) {
+    explicit GameListItemCompat(const QString& compatiblity) {
         setData(type(), TypeRole);
+
+        struct CompatStatus {
+            QString color;
+            const char* text;
+            const char* tooltip;
+        };
+        // clang-format off
+        static const std::map<QString, CompatStatus> status_data = {
+        {"0",  {"#5c93ed", QT_TR_NOOP("Perfect"),    QT_TR_NOOP("Game functions flawless with no audio or graphical glitches, all tested functionality works as intended without\nany workarounds needed.")}},
+        {"1",  {"#47d35c", QT_TR_NOOP("Great"),      QT_TR_NOOP("Game functions with minor graphical or audio glitches and is playable from start to finish. May require some\nworkarounds.")}},
+        {"2",  {"#94b242", QT_TR_NOOP("Okay"),       QT_TR_NOOP("Game functions with major graphical or audio glitches, but game is playable from start to finish with\nworkarounds.")}},
+        {"3",  {"#f2d624", QT_TR_NOOP("Bad"),        QT_TR_NOOP("Game functions, but with major graphical or audio glitches. Unable to progress in specific areas due to glitches\neven with workarounds.")}},
+        {"4",  {"#ff0000", QT_TR_NOOP("Intro/Menu"), QT_TR_NOOP("Game is completely unplayable due to major graphical or audio glitches. Unable to progress past the Start\nScreen.")}},
+        {"5",  {"#828282", QT_TR_NOOP("Won't Boot"), QT_TR_NOOP("The game crashes when attempting to startup.")}},
+        {"99", {"#000000", QT_TR_NOOP("Not Tested"), QT_TR_NOOP("The game has not yet been tested.")}}};
+        // clang-format on
 
         auto iterator = status_data.find(compatiblity);
         if (iterator == status_data.end()) {
@@ -237,8 +228,8 @@ public:
         }
         CompatStatus status = iterator->second;
         setData(compatiblity, CompatNumberRole);
-        setText(QCoreApplication::translate("GameList", status.text));
-        setToolTip(QCoreApplication::translate("GameList", status.tooltip));
+        setText(QObject::tr(status.text));
+        setToolTip(QObject::tr(status.tooltip));
         setData(CreateCirclePixmapFromColor(status.color), Qt::DecorationRole);
     }
 

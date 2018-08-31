@@ -2,7 +2,6 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <cinttypes>
 #include <QApplication>
 #include <QFileInfo>
 #include <QFileSystemWatcher>
@@ -443,12 +442,7 @@ void GameList::AddGamePopup(QMenu& context_menu, u64 program_id) {
         Service::AM::GetTitleContentPath(Service::FS::MediaType::SDMC, program_id)));
     open_update_location->setEnabled(0x0004000000000000 <= program_id &&
                                      program_id <= 0x00040000FFFFFFFF);
-    auto it = std::find_if(
-        compatibility_list.begin(), compatibility_list.end(),
-        [program_id](const std::pair<std::string, std::pair<QString, QString>>& element) {
-            std::string pid = Common::StringFromFormat("%016" PRIX64, program_id);
-            return element.first == pid;
-        });
+    auto it = FindMatchingCompatibilityEntry(compatibility_list, program_id);
     navigate_to_gamedb_entry->setVisible(it != compatibility_list.end());
 
     connect(open_save_location, &QAction::triggered, [this, program_id] {
@@ -537,7 +531,7 @@ void GameList::LoadCompatibilityList() {
     }
 
     if (compat_list.size() == 0) {
-        LOG_ERROR(Frontend, "Game compatibility list is empty");
+        LOG_WARNING(Frontend, "Game compatibility list is empty");
         return;
     }
 
@@ -562,9 +556,9 @@ void GameList::LoadCompatibilityList() {
             for (const QJsonValue& value : ids) {
                 QJsonObject object = value.toObject();
                 QString id = object["id"].toString();
-                compatibility_list.insert(
-                    std::make_pair(id.toUpper().toStdString(),
-                                   std::make_pair(QString::number(compatibility), directory)));
+                compatibility_list.emplace(
+                    id.toUpper().toStdString(),
+                    std::make_pair(QString::number(compatibility), directory));
             }
         }
     }
@@ -688,12 +682,7 @@ void GameListWorker::AddFstEntriesToGameList(const std::string& dir_path, unsign
                 return update_smdh;
             }();
 
-            auto it = std::find_if(
-                compatibility_list.begin(), compatibility_list.end(),
-                [program_id](const std::pair<std::string, std::pair<QString, QString>>& element) {
-                    std::string pid = Common::StringFromFormat("%016" PRIX64, program_id);
-                    return element.first == pid;
-                });
+            auto it = FindMatchingCompatibilityEntry(compatibility_list, program_id);
 
             // The game list uses this as compatibility number for untested games
             QString compatibility("99");

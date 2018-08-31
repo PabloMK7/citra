@@ -7,7 +7,6 @@
 #include <thread>
 #include <glad/glad.h>
 #define QT_NO_OPENGL
-#include <cinttypes>
 #include <QDesktopWidget>
 #include <QFileDialog>
 #include <QFutureWatcher>
@@ -59,6 +58,7 @@
 #include "core/loader/loader.h"
 #include "core/movie.h"
 #include "core/settings.h"
+#include "game_list_p.h"
 
 #ifdef USE_DISCORD_PRESENCE
 #include "citra_qt/discord_impl.h"
@@ -917,14 +917,9 @@ void GMainWindow::OnGameListNavigateToGamedbEntry(
     u64 program_id,
     std::unordered_map<std::string, std::pair<QString, QString>>& compatibility_list) {
 
-    auto it = std::find_if(
-        compatibility_list.begin(), compatibility_list.end(),
-        [program_id](const std::pair<std::string, std::pair<QString, QString>>& element) {
-            std::string pid = Common::StringFromFormat("%016" PRIX64, program_id);
-            return element.first == pid;
-        });
+    auto it = FindMatchingCompatibilityEntry(compatibility_list, program_id);
 
-    QString directory = "";
+    QString directory;
 
     if (it != compatibility_list.end())
         directory = it->second.second;
