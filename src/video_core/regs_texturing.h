@@ -181,9 +181,9 @@ struct TexturingRegs {
     };
     const std::array<FullTextureConfig, 3> GetTextures() const {
         return {{
-            {main_config.texture0_enable.ToBool(), texture0, texture0_format},
-            {main_config.texture1_enable.ToBool(), texture1, texture1_format},
-            {main_config.texture2_enable.ToBool(), texture2, texture2_format},
+            {static_cast<bool>(main_config.texture0_enable), texture0, texture0_format},
+            {static_cast<bool>(main_config.texture1_enable), texture1, texture1_format},
+            {static_cast<bool>(main_config.texture2_enable), texture2, texture2_format},
         }};
     }
 
