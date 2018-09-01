@@ -1158,8 +1158,7 @@ float ProcTexNoiseCoef(vec2 x) {
     case ProcTexFilter::NearestMipmapLinear:
     case ProcTexFilter::NearestMipmapNearest:
         out += "lut_coord += lut_offset;\n";
-        // Note: float->int conversion here is indeed floor, not round
-        out += "return texelFetch(texture_buffer_lut_rgba, int(lut_coord) + "
+        out += "return texelFetch(texture_buffer_lut_rgba, int(round(lut_coord)) + "
                "proctex_lut_offset);\n";
         break;
     }
