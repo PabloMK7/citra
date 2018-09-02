@@ -101,8 +101,7 @@ void SRV::GetServiceHandle(Kernel::HLERequestContext& ctx) {
     // TODO(yuriks): Permission checks go here
 
     auto get_handle = [name, this](Kernel::SharedPtr<Kernel::Thread> thread,
-                                                         Kernel::HLERequestContext& ctx,
-                                                         ThreadWakeupReason reason) {
+                                   Kernel::HLERequestContext& ctx, ThreadWakeupReason reason) {
         LOG_ERROR(Service_SRV, "called service={} wakeup", name);
         auto client_port = service_manager->GetServicePort(name);
 
