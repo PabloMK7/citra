@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <atomic>
 #include <string>
 #include <utility>
 
@@ -48,8 +49,8 @@ public:
     virtual ~Object();
 
     /// Returns a unique identifier for the object. For debugging purposes only.
-    unsigned int GetObjectId() const {
-        return object_id;
+    u32 GetObjectId() const {
+        return object_id.load(std::memory_order_relaxed);
     }
 
     virtual std::string GetTypeName() const {
@@ -67,23 +68,23 @@ public:
     bool IsWaitable() const;
 
 public:
-    static unsigned int next_object_id;
+    static std::atomic<u32> next_object_id;
 
 private:
     friend void intrusive_ptr_add_ref(Object*);
     friend void intrusive_ptr_release(Object*);
 
-    unsigned int ref_count = 0;
-    unsigned int object_id = next_object_id++;
+    std::atomic<u32> ref_count{0};
+    std::atomic<u32> object_id{next_object_id++};
 };
 
 // Special functions used by boost::instrusive_ptr to do automatic ref-counting
 inline void intrusive_ptr_add_ref(Object* object) {
-    ++object->ref_count;
+    object->ref_count.fetch_add(1, std::memory_order_relaxed);
 }
 
 inline void intrusive_ptr_release(Object* object) {
-    if (--object->ref_count == 0) {
+    if (object->ref_count.fetch_sub(1, std::memory_order_acq_rel) == 1) {
         delete object;
     }
 }
