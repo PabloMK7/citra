@@ -122,6 +122,7 @@ Loader::ResultStatus NCCHContainer::OpenFile(const std::string& filepath, u32 nc
 }
 
 Loader::ResultStatus NCCHContainer::Load() {
+    LOG_INFO(Service_FS, "Loading NCCH from file {}", filepath);
     if (is_loaded)
         return Loader::ResultStatus::Success;
 
