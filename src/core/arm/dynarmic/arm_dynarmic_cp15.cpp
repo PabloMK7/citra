@@ -6,9 +6,9 @@
 #include "core/arm/skyeye_common/arm_regformat.h"
 #include "core/arm/skyeye_common/armstate.h"
 
-using Callback = Dynarmic::Coprocessor::Callback;
-using CallbackOrAccessOneWord = Dynarmic::Coprocessor::CallbackOrAccessOneWord;
-using CallbackOrAccessTwoWords = Dynarmic::Coprocessor::CallbackOrAccessTwoWords;
+using Callback = Dynarmic::A32::Coprocessor::Callback;
+using CallbackOrAccessOneWord = Dynarmic::A32::Coprocessor::CallbackOrAccessOneWord;
+using CallbackOrAccessTwoWords = Dynarmic::A32::Coprocessor::CallbackOrAccessTwoWords;
 
 DynarmicCP15::DynarmicCP15(const std::shared_ptr<ARMul_State>& state) : interpreter_state(state) {}
 

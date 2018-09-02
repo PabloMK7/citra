@@ -5,13 +5,15 @@
 #pragma once
 
 #include <memory>
-#include <dynarmic/coprocessor.h>
+#include <dynarmic/A32/coprocessor.h>
 #include "common/common_types.h"
 
 struct ARMul_State;
 
-class DynarmicCP15 final : public Dynarmic::Coprocessor {
+class DynarmicCP15 final : public Dynarmic::A32::Coprocessor {
 public:
+    using CoprocReg = Dynarmic::A32::CoprocReg;
+
     explicit DynarmicCP15(const std::shared_ptr<ARMul_State>&);
     ~DynarmicCP15() override;
 
