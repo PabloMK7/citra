@@ -119,8 +119,8 @@ void Source::ParseConfig(SourceConfiguration::Configuration& config,
 
     if (config.filters_enabled_dirty) {
         config.filters_enabled_dirty.Assign(0);
-        state.filters.Enable(config.simple_filter_enabled.ToBool(),
-                             config.biquad_filter_enabled.ToBool());
+        state.filters.Enable(static_cast<bool>(config.simple_filter_enabled),
+                             static_cast<bool>(config.biquad_filter_enabled));
         LOG_TRACE(Audio_DSP, "source_id={} enable_simple={} enable_biquad={}", source_id,
                   config.simple_filter_enabled.Value(), config.biquad_filter_enabled.Value());
     }
@@ -173,8 +173,8 @@ void Source::ParseConfig(SourceConfiguration::Configuration& config,
             config.length,
             static_cast<u8>(config.adpcm_ps),
             {config.adpcm_yn[0], config.adpcm_yn[1]},
-            config.adpcm_dirty.ToBool(),
-            config.is_looping.ToBool(),
+            static_cast<bool>(config.adpcm_dirty),
+            static_cast<bool>(config.is_looping),
             config.buffer_id,
             state.mono_or_stereo,
             state.format,
