@@ -100,7 +100,7 @@ void SRV::GetServiceHandle(Kernel::HLERequestContext& ctx) {
 
     // TODO(yuriks): Permission checks go here
 
-    auto get_handle = [name, this, wait_until_available](Kernel::SharedPtr<Kernel::Thread> thread,
+    auto get_handle = [name, this](Kernel::SharedPtr<Kernel::Thread> thread,
                                                          Kernel::HLERequestContext& ctx,
                                                          ThreadWakeupReason reason) {
         LOG_ERROR(Service_SRV, "called service={} wakeup", name);
@@ -113,11 +113,9 @@ void SRV::GetServiceHandle(Kernel::HLERequestContext& ctx) {
             IPC::RequestBuilder rb(ctx, 0x5, 1, 2);
             rb.Push(session.Code());
             rb.PushMoveObjects(std::move(session).Unwrap());
-        } else if (session.Code() == Kernel::ERR_MAX_CONNECTIONS_REACHED && wait_until_available) {
-            LOG_WARNING(Service_SRV, "called service={} -> ERR_MAX_CONNECTIONS_REACHED", name);
-            // TODO(Subv): Put the caller guest thread to sleep until this port becomes available
-            // again.
-            UNIMPLEMENTED_MSG("Unimplemented wait until port {} is available.", name);
+        } else if (session.Code() == Kernel::ERR_MAX_CONNECTIONS_REACHED) {
+            LOG_ERROR(Service_SRV, "called service={} -> ERR_MAX_CONNECTIONS_REACHED", name);
+            UNREACHABLE();
         } else {
             LOG_ERROR(Service_SRV, "called service={} -> error 0x{:08X}", name, session.Code().raw);
             IPC::RequestBuilder rb(ctx, 0x5, 1, 0);
@@ -127,8 +125,8 @@ void SRV::GetServiceHandle(Kernel::HLERequestContext& ctx) {
 
     auto client_port = service_manager->GetServicePort(name);
     if (client_port.Failed()) {
-        if (wait_until_available) {
-            LOG_ERROR(Service_SRV, "called service={} delayed", name);
+        if (wait_until_available && client_port.Code() == ERR_SERVICE_NOT_REGISTERED) {
+            LOG_INFO(Service_SRV, "called service={} delayed", name);
             Kernel::SharedPtr<Kernel::Event> get_service_handle_event =
                 ctx.SleepClientThread(Kernel::GetCurrentThread(), "GetServiceHandle",
                                       std::chrono::nanoseconds(-1), get_handle);
@@ -235,9 +233,10 @@ void SRV::RegisterService(Kernel::HLERequestContext& ctx) {
         return;
     }
 
-    if (get_service_handle_delayed_map.find(name) != get_service_handle_delayed_map.end()) {
-        get_service_handle_delayed_map.at(name)->Signal();
-        get_service_handle_delayed_map.erase(name);
+    auto it = get_service_handle_delayed_map.find(name);
+    if (it != get_service_handle_delayed_map.end()) {
+        it->second->Signal();
+        get_service_handle_delayed_map.erase(it);
     }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
