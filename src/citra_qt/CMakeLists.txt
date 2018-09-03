@@ -133,8 +133,8 @@ set(UIS
 )
 
 file(GLOB COMPAT_LIST
-            ${CMAKE_BINARY_DIR}/dist/compatibility_list/compatibility_list.qrc
-            ${CMAKE_BINARY_DIR}/dist/compatibility_list/compatibility_list.json)
+     ${CMAKE_BINARY_DIR}/dist/compatibility_list/compatibility_list.qrc
+     ${CMAKE_BINARY_DIR}/dist/compatibility_list/compatibility_list.json)
 file(GLOB_RECURSE ICONS ${CMAKE_SOURCE_DIR}/dist/icons/*)
 file(GLOB_RECURSE THEMES ${CMAKE_SOURCE_DIR}/dist/qt_themes/*)
 

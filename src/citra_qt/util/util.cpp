@@ -4,6 +4,7 @@
 
 #include <array>
 #include <cmath>
+#include <QPainter>
 #include "citra_qt/util/util.h"
 
 QFont GetMonospaceFont() {
@@ -23,4 +24,14 @@ QString ReadableByteSize(qulonglong size) {
     return QString("%L1 %2")
         .arg(size / std::pow(1024, digit_groups), 0, 'f', 1)
         .arg(units[digit_groups]);
+}
+
+QPixmap CreateCirclePixmapFromColor(const QColor& color) {
+    QPixmap circle_pixmap(16, 16);
+    circle_pixmap.fill(Qt::transparent);
+    QPainter painter(&circle_pixmap);
+    painter.setPen(color);
+    painter.setBrush(color);
+    painter.drawEllipse(0, 0, 15, 15);
+    return circle_pixmap;
 }
