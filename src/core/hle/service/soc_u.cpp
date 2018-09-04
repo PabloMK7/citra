@@ -603,7 +603,7 @@ void SOC_U::RecvFromOther(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 4);
     rb.Push(RESULT_SUCCESS);
     rb.Push(ret);
-    rb.PushStaticBuffer(addr_buff, 1);
+    rb.PushStaticBuffer(addr_buff, 0);
     rb.PushMappedBuffer(buffer);
 }
 
