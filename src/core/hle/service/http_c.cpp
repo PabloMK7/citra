@@ -309,52 +309,37 @@ void HTTP_C::OpenClientCertContext(Kernel::HLERequestContext& ctx) {
     auto* session_data = GetSessionData(ctx.Session());
     ASSERT(session_data);
 
+    ResultCode result(RESULT_SUCCESS);
+
     if (!session_data->initialized) {
         LOG_ERROR(Service_HTTP, "Command called without Initialize");
-        IPC::RequestBuilder rb = rp.MakeBuilder(1, 4);
-        rb.Push(ERROR_STATE_ERROR);
-        rb.PushMappedBuffer(cert_buffer);
-        rb.PushMappedBuffer(key_buffer);
-        return;
-    }
-
-    if (session_data->current_http_context != boost::none) {
+        result = ERROR_STATE_ERROR;
+    } else if (session_data->current_http_context != boost::none) {
         LOG_ERROR(Service_HTTP, "Command called with a bound context");
-        IPC::RequestBuilder rb = rp.MakeBuilder(1, 4);
-        rb.Push(ERROR_NOT_IMPLEMENTED);
-        rb.PushMappedBuffer(cert_buffer);
-        rb.PushMappedBuffer(key_buffer);
-        return;
-    }
-
-    if (session_data->num_client_certs >= 2) {
+        result = ERROR_NOT_IMPLEMENTED;
+    } else if (session_data->num_client_certs >= 2) {
         LOG_ERROR(Service_HTTP, "tried to load more then 2 client certs");
-        IPC::RequestBuilder rb = rp.MakeBuilder(1, 4);
-        rb.Push(ERROR_TOO_MANY_CLIENT_CERTS);
-        rb.PushMappedBuffer(cert_buffer);
-        rb.PushMappedBuffer(key_buffer);
-        return;
+        result = ERROR_TOO_MANY_CLIENT_CERTS;
+    } else {
+        ++client_certs_counter;
+        client_certs[client_certs_counter].handle = client_certs_counter;
+        client_certs[client_certs_counter].certificate.resize(cert_size);
+        cert_buffer.Read(&client_certs[client_certs_counter].certificate[0], 0, cert_size);
+        client_certs[client_certs_counter].private_key.resize(key_size);
+        cert_buffer.Read(&client_certs[client_certs_counter].private_key[0], 0, key_size);
+        client_certs[client_certs_counter].session_id = session_data->session_id;
+
+        ++session_data->num_client_certs;
     }
-
-    ++client_certs_counter;
-    client_certs[client_certs_counter].handle = client_certs_counter;
-    client_certs[client_certs_counter].certificate.resize(cert_size);
-    cert_buffer.Read(&client_certs[client_certs_counter].certificate[0], 0, cert_size);
-    client_certs[client_certs_counter].private_key.resize(key_size);
-    cert_buffer.Read(&client_certs[client_certs_counter].private_key[0], 0, key_size);
-    client_certs[client_certs_counter].session_id = session_data->session_id;
-
-    ++session_data->num_client_certs;
 
     LOG_DEBUG(Service_HTTP, "called, cert_size {}, key_size {}", cert_size, key_size);
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 4);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(result);
     rb.PushMappedBuffer(cert_buffer);
     rb.PushMappedBuffer(key_buffer);
 }
 
 void HTTP_C::OpenDefaultClientCertContext(Kernel::HLERequestContext& ctx) {
-    constexpr u8 default_cert_id = 0x40;
     IPC::RequestParser rp(ctx, 0x33, 1, 0);
     u8 cert_id = rp.Pop<u8>();
 
@@ -382,6 +367,7 @@ void HTTP_C::OpenDefaultClientCertContext(Kernel::HLERequestContext& ctx) {
         return;
     }
 
+    constexpr u8 default_cert_id = 0x40;
     if (cert_id != default_cert_id) {
         LOG_ERROR(Service_HTTP, "called with invalid cert_id {}", cert_id);
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
@@ -396,11 +382,11 @@ void HTTP_C::OpenDefaultClientCertContext(Kernel::HLERequestContext& ctx) {
         return;
     }
 
-    auto it = std::find_if(client_certs.begin(), client_certs.end(),
-                           [default_cert_id, &session_data](const auto& i) {
-                               return default_cert_id == i.second.cert_id &&
-                                      session_data->session_id == i.second.session_id;
-                           });
+    const auto& it = std::find_if(client_certs.begin(), client_certs.end(),
+                                  [default_cert_id, &session_data](const auto& i) {
+                                      return default_cert_id == i.second.cert_id &&
+                                             session_data->session_id == i.second.session_id;
+                                  });
 
     if (it != client_certs.end()) {
         IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
