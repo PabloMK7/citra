@@ -19,15 +19,6 @@ enum class ResultStatus;
 
 namespace FileSys {
 
-enum TMDSignatureType : u32 {
-    Rsa4096Sha1 = 0x10000,
-    Rsa2048Sha1 = 0x10001,
-    EllipticSha1 = 0x10002,
-    Rsa4096Sha256 = 0x10003,
-    Rsa2048Sha256 = 0x10004,
-    EcdsaSha256 = 0x10005
-};
-
 enum TMDContentTypeFlag : u16 {
     Encrypted = 1 << 0,
     Disc = 1 << 2,
@@ -108,6 +99,7 @@ public:
     u32 GetContentIDByIndex(u16 index) const;
     u16 GetContentTypeByIndex(u16 index) const;
     u64 GetContentSizeByIndex(u16 index) const;
+    std::array<u8, 16> GetContentCTRByIndex(u16 index) const;
 
     void SetTitleID(u64 title_id);
     void SetTitleType(u32 type);

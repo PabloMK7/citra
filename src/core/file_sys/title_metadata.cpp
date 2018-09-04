@@ -7,6 +7,7 @@
 #include "common/alignment.h"
 #include "common/file_util.h"
 #include "common/logging/log.h"
+#include "core/file_sys/cia_common.h"
 #include "core/file_sys/title_metadata.h"
 #include "core/loader/loader.h"
 
@@ -14,24 +15,6 @@
 // FileSys namespace
 
 namespace FileSys {
-
-static u32 GetSignatureSize(u32 signature_type) {
-    switch (signature_type) {
-    case Rsa4096Sha1:
-    case Rsa4096Sha256:
-        return 0x200;
-
-    case Rsa2048Sha1:
-    case Rsa2048Sha256:
-        return 0x100;
-
-    case EllipticSha1:
-    case EcdsaSha256:
-        return 0x3C;
-    }
-
-    return 0;
-}
 
 Loader::ResultStatus TitleMetadata::Load(const std::string& file_path) {
     FileUtil::IOFile file(file_path, "rb");
@@ -186,6 +169,12 @@ u16 TitleMetadata::GetContentTypeByIndex(u16 index) const {
 
 u64 TitleMetadata::GetContentSizeByIndex(u16 index) const {
     return tmd_chunks[index].size;
+}
+
+std::array<u8, 16> TitleMetadata::GetContentCTRByIndex(u16 index) const {
+    std::array<u8, 16> ctr{};
+    std::memcpy(ctr.data(), &tmd_chunks[index].index, sizeof(u16));
+    return ctr;
 }
 
 void TitleMetadata::SetTitleID(u64 title_id) {
