@@ -111,12 +111,6 @@
 template <std::size_t Position, std::size_t Bits, typename T>
 struct BitField {
 private:
-    // We hide the copy assigment operator here, because the default copy
-    // assignment would copy the full storage value, rather than just the bits
-    // relevant to this particular bit field.
-    // We don't delete it because we want BitField to be trivially copyable.
-    BitField& operator=(const BitField&) = default;
-
     // StorageType is T for non-enum types and the underlying type of T if
     // T is an enumeration. Note that T is wrapped within an enable_if in the
     // former case to workaround compile errors which arise when using
@@ -128,6 +122,8 @@ private:
     using StorageTypeU = std::make_unsigned_t<StorageType>;
 
 public:
+    BitField& operator=(const BitField&) = default;
+
     /// Constants to allow limited introspection of fields if needed
     static constexpr size_t position = Position;
     static constexpr size_t bits = Bits;

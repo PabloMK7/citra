@@ -28,7 +28,7 @@ static inline u64 ComputeHash64(const void* data, size_t len) {
  */
 template <typename T>
 static inline u64 ComputeStructHash64(const T& data) {
-    static_assert(std::is_trivially_copyable<T>(),
+    static_assert(std::is_trivially_copyable_v<T>,
                   "Type passed to ComputeStructHash64 must be trivially copyable");
     return ComputeHash64(&data, sizeof(data));
 }
@@ -38,7 +38,7 @@ template <typename T>
 struct HashableStruct {
     // In addition to being trivially copyable, T must also have a trivial default constructor,
     // because any member initialization would be overridden by memset
-    static_assert(std::is_trivial<T>(), "Type passed to HashableStruct must be trivial");
+    static_assert(std::is_trivial_v<T>, "Type passed to HashableStruct must be trivial");
     /*
      * We use a union because "implicitly-defined copy/move constructor for a union X copies the
      * object representation of X." and "implicitly-defined copy assignment operator for a union X
