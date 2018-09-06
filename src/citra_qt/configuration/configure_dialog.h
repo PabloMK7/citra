@@ -21,6 +21,8 @@ public:
     ~ConfigureDialog();
 
     void applyConfiguration();
+    void UpdateVisibleTabs();
+    void PopulateSelectionList();
 
 private slots:
     void onLanguageChanged(const QString& locale);
