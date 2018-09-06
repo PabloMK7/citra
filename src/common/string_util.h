@@ -4,7 +4,6 @@
 
 #pragma once
 
-#include <cstdarg>
 #include <cstddef>
 #include <iomanip>
 #include <sstream>
@@ -20,19 +19,6 @@ std::string ToLower(std::string str);
 /// Make a string uppercase
 std::string ToUpper(std::string str);
 
-std::string StringFromFormat(const char* format, ...);
-// Cheap!
-bool CharArrayFromFormatV(char* out, int outsize, const char* format, va_list args);
-
-template <size_t Count>
-inline void CharArrayFromFormat(char (&out)[Count], const char* format, ...) {
-    va_list args;
-    va_start(args, format);
-    CharArrayFromFormatV(out, Count, format, args);
-    va_end(args);
-}
-
-// Good
 std::string ArrayToString(const u8* data, size_t size, int line_len = 20, bool spaces = true);
 
 std::string StripSpaces(const std::string& s);

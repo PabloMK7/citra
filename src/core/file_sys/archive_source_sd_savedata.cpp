@@ -2,9 +2,9 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <fmt/format.h>
 #include "common/file_util.h"
 #include "common/logging/log.h"
-#include "common/string_util.h"
 #include "core/file_sys/archive_source_sd_savedata.h"
 #include "core/file_sys/errors.h"
 #include "core/file_sys/savedata_archive.h"
@@ -18,22 +18,19 @@ namespace FileSys {
 namespace {
 
 std::string GetSaveDataContainerPath(const std::string& sdmc_directory) {
-    return Common::StringFromFormat("%sNintendo 3DS/%s/%s/title/", sdmc_directory.c_str(),
-                                    SYSTEM_ID, SDCARD_ID);
+    return fmt::format("{}Nintendo 3DS/{}/{}/title/", sdmc_directory, SYSTEM_ID, SDCARD_ID);
 }
 
 std::string GetSaveDataPath(const std::string& mount_location, u64 program_id) {
     u32 high = static_cast<u32>(program_id >> 32);
     u32 low = static_cast<u32>(program_id & 0xFFFFFFFF);
-    return Common::StringFromFormat("%s%08x/%08x/data/00000001/", mount_location.c_str(), high,
-                                    low);
+    return fmt::format("{}{:08x}/{:08x}/data/00000001/", mount_location, high, low);
 }
 
 std::string GetSaveDataMetadataPath(const std::string& mount_location, u64 program_id) {
     u32 high = static_cast<u32>(program_id >> 32);
     u32 low = static_cast<u32>(program_id & 0xFFFFFFFF);
-    return Common::StringFromFormat("%s%08x/%08x/data/00000001.metadata", mount_location.c_str(),
-                                    high, low);
+    return fmt::format("{}{:08x}/{:08x}/data/00000001.metadata", mount_location, high, low);
 }
 
 } // namespace

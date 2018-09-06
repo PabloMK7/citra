@@ -14,6 +14,7 @@
 #include <map>
 #include <numeric>
 #include <fcntl.h>
+#include <fmt/format.h>
 
 #ifdef _WIN32
 #include <winsock2.h>
@@ -31,7 +32,6 @@
 #endif
 
 #include "common/logging/log.h"
-#include "common/string_util.h"
 #include "core/arm/arm_interface.h"
 #include "core/core.h"
 #include "core/gdbstub/gdbstub.h"
@@ -610,16 +610,17 @@ static void SendSignal(Kernel::Thread* thread, u32 signal, bool full = true) {
 
     std::string buffer;
     if (full) {
-        buffer = Common::StringFromFormat("T%02x%02x:%08x;%02x:%08x;%02x:%08x", latest_signal,
-                                          PC_REGISTER, htonl(Core::CPU().GetPC()), SP_REGISTER,
-                                          htonl(Core::CPU().GetReg(SP_REGISTER)), LR_REGISTER,
-                                          htonl(Core::CPU().GetReg(LR_REGISTER)));
+
+        buffer = fmt::format("T{:02x}{:02x}:{:08x};{:02x}:{:08x};{:02x}:{:08x}", latest_signal,
+                             PC_REGISTER, htonl(Core::CPU().GetPC()), SP_REGISTER,
+                             htonl(Core::CPU().GetReg(SP_REGISTER)), LR_REGISTER,
+                             htonl(Core::CPU().GetReg(LR_REGISTER)));
     } else {
-        buffer = Common::StringFromFormat("T%02x", latest_signal);
+        buffer = fmt::format("T{:02x}", latest_signal);
     }
 
     if (thread) {
-        buffer += Common::StringFromFormat(";thread:%x;", thread->GetThreadId());
+        buffer += fmt::format(";thread:{:x};", thread->GetThreadId());
     }
 
     LOG_DEBUG(Debug_GDBStub, "Response: {}", buffer);

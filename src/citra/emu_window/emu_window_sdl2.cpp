@@ -7,11 +7,11 @@
 #include <string>
 #define SDL_MAIN_HANDLED
 #include <SDL.h>
+#include <fmt/format.h>
 #include <glad/glad.h>
 #include "citra/emu_window/emu_window_sdl2.h"
 #include "common/logging/log.h"
 #include "common/scm_rev.h"
-#include "common/string_util.h"
 #include "core/3ds.h"
 #include "core/settings.h"
 #include "input_common/keyboard.h"
@@ -100,8 +100,8 @@ EmuWindow_SDL2::EmuWindow_SDL2(bool fullscreen) {
     SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 0);
 
-    std::string window_title = Common::StringFromFormat(
-        "Citra %s| %s-%s ", Common::g_build_fullname, Common::g_scm_branch, Common::g_scm_desc);
+    std::string window_title = fmt::format("Citra {} | {}-{}", Common::g_build_fullname,
+                                           Common::g_scm_branch, Common::g_scm_desc);
     render_window =
         SDL_CreateWindow(window_title.c_str(),
                          SDL_WINDOWPOS_UNDEFINED, // x position

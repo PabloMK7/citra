@@ -5,10 +5,10 @@
 #include <algorithm>
 #include <cinttypes>
 #include <map>
+#include <fmt/format.h>
 #include "common/logging/log.h"
 #include "common/microprofile.h"
 #include "common/scope_exit.h"
-#include "common/string_util.h"
 #include "core/arm/arm_interface.h"
 #include "core/core_timing.h"
 #include "core/hle/function_wrappers.h"
@@ -723,7 +723,7 @@ static ResultCode GetResourceLimitLimitValues(VAddr values, Handle resource_limi
 /// Creates a new thread
 static ResultCode CreateThread(Handle* out_handle, u32 priority, u32 entry_point, u32 arg,
                                u32 stack_top, s32 processor_id) {
-    std::string name = Common::StringFromFormat("unknown-%08" PRIX32, entry_point);
+    std::string name = fmt::format("unknown-{:08X}", entry_point);
 
     if (priority > THREADPRIO_LOWEST) {
         return ERR_OUT_OF_RANGE;
@@ -825,7 +825,7 @@ static ResultCode SetThreadPriority(Handle handle, u32 priority) {
 /// Create a mutex
 static ResultCode CreateMutex(Handle* out_handle, u32 initial_locked) {
     SharedPtr<Mutex> mutex = Mutex::Create(initial_locked != 0);
-    mutex->name = Common::StringFromFormat("mutex-%08x", Core::CPU().GetReg(14));
+    mutex->name = fmt::format("mutex-{:08x}", Core::CPU().GetReg(14));
     CASCADE_RESULT(*out_handle, g_handle_table.Create(std::move(mutex)));
 
     LOG_TRACE(Kernel_SVC, "called initial_locked={} : created handle=0x{:08X}",
@@ -888,7 +888,7 @@ static ResultCode GetThreadId(u32* thread_id, Handle handle) {
 /// Creates a semaphore
 static ResultCode CreateSemaphore(Handle* out_handle, s32 initial_count, s32 max_count) {
     CASCADE_RESULT(SharedPtr<Semaphore> semaphore, Semaphore::Create(initial_count, max_count));
-    semaphore->name = Common::StringFromFormat("semaphore-%08x", Core::CPU().GetReg(14));
+    semaphore->name = fmt::format("semaphore-{:08x}", Core::CPU().GetReg(14));
     CASCADE_RESULT(*out_handle, g_handle_table.Create(std::move(semaphore)));
 
     LOG_TRACE(Kernel_SVC, "called initial_count={}, max_count={}, created handle=0x{:08X}",
@@ -938,9 +938,8 @@ static ResultCode QueryMemory(MemoryInfo* memory_info, PageInfo* page_info, u32 
 
 /// Create an event
 static ResultCode CreateEvent(Handle* out_handle, u32 reset_type) {
-    SharedPtr<Event> evt =
-        Event::Create(static_cast<ResetType>(reset_type),
-                      Common::StringFromFormat("event-%08x", Core::CPU().GetReg(14)));
+    SharedPtr<Event> evt = Event::Create(static_cast<ResetType>(reset_type),
+                                         fmt::format("event-{:08x}", Core::CPU().GetReg(14)));
     CASCADE_RESULT(*out_handle, g_handle_table.Create(std::move(evt)));
 
     LOG_TRACE(Kernel_SVC, "called reset_type=0x{:08X} : created handle=0x{:08X}", reset_type,
@@ -982,9 +981,8 @@ static ResultCode ClearEvent(Handle handle) {
 
 /// Creates a timer
 static ResultCode CreateTimer(Handle* out_handle, u32 reset_type) {
-    SharedPtr<Timer> timer =
-        Timer::Create(static_cast<ResetType>(reset_type),
-                      Common::StringFromFormat("timer-%08x", Core::CPU().GetReg(14)));
+    SharedPtr<Timer> timer = Timer::Create(static_cast<ResetType>(reset_type),
+                                           fmt ::format("timer-{:08x}", Core::CPU().GetReg(14)));
     CASCADE_RESULT(*out_handle, g_handle_table.Create(std::move(timer)));
 
     LOG_TRACE(Kernel_SVC, "called reset_type=0x{:08X} : created handle=0x{:08X}", reset_type,

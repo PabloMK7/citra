@@ -3,8 +3,8 @@
 // Refer to the license.txt file included.
 
 #include <ctime>
+#include <fmt/format.h>
 #include "common/common_types.h"
-#include "common/string_util.h"
 #include "common/timer.h"
 
 namespace Common {
@@ -91,9 +91,8 @@ std::string Timer::GetTimeElapsedFormatted() const {
     // Hours
     std::chrono::hours Hours = std::chrono::duration_cast<std::chrono::hours>(Milliseconds);
 
-    std::string TmpStr =
-        StringFromFormat("%02d:%02d:%02d:%03d", Hours.count(), Minutes.count() % 60,
-                         Seconds.count() % 60, Milliseconds.count() % 1000);
+    std::string TmpStr = fmt::format("{:02}:{:02}:{:02}:{:03}", Hours.count(), Minutes.count() % 60,
+                                     Seconds.count() % 60, Milliseconds.count() % 1000);
     return TmpStr;
 }
 
@@ -135,7 +134,7 @@ std::string Timer::GetTimeFormatted() {
     strftime(tmp, 6, "%M:%S", gmTime);
 
     u64 milliseconds = static_cast<u64>(GetTimeMs().count()) % 1000;
-    return StringFromFormat("%s:%03d", tmp, milliseconds);
+    return fmt::format("{}:{:03}", tmp, milliseconds);
 }
 
 // Returns a timestamp with decimals for precise time comparisons

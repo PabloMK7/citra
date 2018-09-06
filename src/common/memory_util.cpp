@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <fmt/format.h>
 #include "common/logging/log.h"
 #include "common/memory_util.h"
 
@@ -167,8 +168,7 @@ std::string MemUsage() {
         return "MemUsage Error";
 
     if (GetProcessMemoryInfo(hProcess, &pmc, sizeof(pmc)))
-        Ret = Common::StringFromFormat(
-            "%s K", Common::ThousandSeparate(pmc.WorkingSetSize / 1024, 7).c_str());
+        Ret = fmt::format("{} K", Common::ThousandSeparate(pmc.WorkingSetSize / 1024, 7));
 
     CloseHandle(hProcess);
     return Ret;

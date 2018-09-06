@@ -3,11 +3,11 @@
 #include <QKeyEvent>
 #include <QScreen>
 #include <QWindow>
+#include <fmt/format.h>
 
 #include "citra_qt/bootmanager.h"
 #include "common/microprofile.h"
 #include "common/scm_rev.h"
-#include "common/string_util.h"
 #include "core/3ds.h"
 #include "core/core.h"
 #include "core/settings.h"
@@ -103,8 +103,8 @@ private:
 GRenderWindow::GRenderWindow(QWidget* parent, EmuThread* emu_thread)
     : QWidget(parent), child(nullptr), emu_thread(emu_thread) {
 
-    std::string window_title = Common::StringFromFormat("Citra %s| %s-%s", Common::g_build_name,
-                                                        Common::g_scm_branch, Common::g_scm_desc);
+    std::string window_title = fmt::format("Citra {} | {}-{}", Common::g_build_name,
+                                           Common::g_scm_branch, Common::g_scm_desc);
     setWindowTitle(QString::fromStdString(window_title));
 
     InputCommon::Init();

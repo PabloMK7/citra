@@ -6,6 +6,7 @@
 #include <cinttypes>
 #include <cstddef>
 #include <cstring>
+#include <fmt/format.h>
 #include "common/file_util.h"
 #include "common/logging/log.h"
 #include "common/string_util.h"
@@ -380,7 +381,7 @@ std::string GetTitleMetadataPath(Service::FS::MediaType media_type, u64 tid, boo
     if (base_id == update_id)
         update_id++;
 
-    return content_path + Common::StringFromFormat("%08x.tmd", (update ? update_id : base_id));
+    return content_path + fmt::format("{:08x}.tmd", (update ? update_id : base_id));
 }
 
 std::string GetTitleContentPath(Service::FS::MediaType media_type, u64 tid, u16 index,
@@ -417,7 +418,7 @@ std::string GetTitleContentPath(Service::FS::MediaType media_type, u64 tid, u16 
         }
     }
 
-    return Common::StringFromFormat("%s%08x.app", content_path.c_str(), content_id);
+    return fmt::format("{}{:08x}.app", content_path, content_id);
 }
 
 std::string GetTitlePath(Service::FS::MediaType media_type, u64 tid) {
@@ -425,8 +426,7 @@ std::string GetTitlePath(Service::FS::MediaType media_type, u64 tid) {
     u32 low = static_cast<u32>(tid & 0xFFFFFFFF);
 
     if (media_type == Service::FS::MediaType::NAND || media_type == Service::FS::MediaType::SDMC)
-        return Common::StringFromFormat("%s%08x/%08x/", GetMediaTitlePath(media_type).c_str(), high,
-                                        low);
+        return fmt::format("{}{:08x}/{:08x}/", GetMediaTitlePath(media_type), high, low);
 
     if (media_type == Service::FS::MediaType::GameCard) {
         // TODO(shinyquagsire23): get current app path if TID matches?
@@ -439,13 +439,11 @@ std::string GetTitlePath(Service::FS::MediaType media_type, u64 tid) {
 
 std::string GetMediaTitlePath(Service::FS::MediaType media_type) {
     if (media_type == Service::FS::MediaType::NAND)
-        return Common::StringFromFormat("%s%s/title/", FileUtil::GetUserPath(D_NAND_IDX).c_str(),
-                                        SYSTEM_ID);
+        return fmt::format("{}{}/title/", FileUtil::GetUserPath(D_NAND_IDX), SYSTEM_ID);
 
     if (media_type == Service::FS::MediaType::SDMC)
-        return Common::StringFromFormat("%sNintendo 3DS/%s/%s/title/",
-                                        FileUtil::GetUserPath(D_SDMC_IDX).c_str(), SYSTEM_ID,
-                                        SDCARD_ID);
+        return fmt::format("{}Nintendo 3DS/{}/{}/title/", FileUtil::GetUserPath(D_SDMC_IDX),
+                           SYSTEM_ID, SDCARD_ID);
 
     if (media_type == Service::FS::MediaType::GameCard) {
         // TODO(shinyquagsire23): get current app parent folder if TID matches?

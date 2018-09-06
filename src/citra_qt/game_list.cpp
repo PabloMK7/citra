@@ -20,13 +20,13 @@
 #include <QThreadPool>
 #include <QToolButton>
 #include <QTreeView>
+#include <fmt/format.h>
 #include "citra_qt/game_list.h"
 #include "citra_qt/game_list_p.h"
 #include "citra_qt/main.h"
 #include "citra_qt/ui_settings.h"
 #include "common/common_paths.h"
 #include "common/logging/log.h"
-#include "common/string_util.h"
 #include "core/hle/service/fs/archive.h"
 #include "core/loader/loader.h"
 
