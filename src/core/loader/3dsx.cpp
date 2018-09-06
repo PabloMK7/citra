@@ -129,7 +129,7 @@ static THREEDSX_Error Load3DSXFile(FileUtil::IOFile& file, u32 base_addr,
     // Read the relocation headers
     std::vector<u32> relocs(n_reloc_tables * NUM_SEGMENTS);
     for (unsigned int current_segment = 0; current_segment < NUM_SEGMENTS; ++current_segment) {
-        size_t size = n_reloc_tables * sizeof(u32);
+        std::size_t size = n_reloc_tables * sizeof(u32);
         if (file.ReadBytes(&relocs[current_segment * n_reloc_tables], size) != size)
             return ERROR_READ;
     }

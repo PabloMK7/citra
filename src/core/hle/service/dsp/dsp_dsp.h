@@ -18,11 +18,11 @@ public:
     ~DSP_DSP();
 
     /// There are three types of interrupts
-    static constexpr size_t NUM_INTERRUPT_TYPE = 3;
+    static constexpr std::size_t NUM_INTERRUPT_TYPE = 3;
     enum class InterruptType : u32 { Zero = 0, One = 1, Pipe = 2 };
 
     /// Actual service implementation only has 6 'slots' for interrupts.
-    static constexpr size_t max_number_of_interrupt_events = 6;
+    static constexpr std::size_t max_number_of_interrupt_events = 6;
 
     /// Signal interrupt on pipe
     void SignalInterrupt(InterruptType type, AudioCore::DspPipe pipe);

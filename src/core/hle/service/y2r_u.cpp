@@ -51,7 +51,7 @@ ResultCode ConversionConfiguration::SetInputLines(u16 lines) {
 
 ResultCode ConversionConfiguration::SetStandardCoefficient(
     StandardCoefficient standard_coefficient) {
-    size_t index = static_cast<size_t>(standard_coefficient);
+    std::size_t index = static_cast<std::size_t>(standard_coefficient);
     if (index >= ARRAY_SIZE(standard_coefficients)) {
         return ResultCode(ErrorDescription::InvalidEnumValue, ErrorModule::CAM,
                           ErrorSummary::InvalidArgument, ErrorLevel::Usage); // 0xE0E053ED

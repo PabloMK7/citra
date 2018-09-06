@@ -174,16 +174,16 @@ public:
     bool Close();
 
     template <typename T>
-    size_t ReadArray(T* data, size_t length) {
+    std::size_t ReadArray(T* data, std::size_t length) {
         static_assert(std::is_trivially_copyable_v<T>,
                       "Given array does not consist of trivially copyable objects");
 
         if (!IsOpen()) {
             m_good = false;
-            return std::numeric_limits<size_t>::max();
+            return std::numeric_limits<std::size_t>::max();
         }
 
-        size_t items_read = std::fread(data, sizeof(T), length, m_file);
+        std::size_t items_read = std::fread(data, sizeof(T), length, m_file);
         if (items_read != length)
             m_good = false;
 
@@ -191,16 +191,16 @@ public:
     }
 
     template <typename T>
-    size_t WriteArray(const T* data, size_t length) {
+    std::size_t WriteArray(const T* data, std::size_t length) {
         static_assert(std::is_trivially_copyable_v<T>,
                       "Given array does not consist of trivially copyable objects");
 
         if (!IsOpen()) {
             m_good = false;
-            return std::numeric_limits<size_t>::max();
+            return std::numeric_limits<std::size_t>::max();
         }
 
-        size_t items_written = std::fwrite(data, sizeof(T), length, m_file);
+        std::size_t items_written = std::fwrite(data, sizeof(T), length, m_file);
         if (items_written != length)
             m_good = false;
 
@@ -208,24 +208,24 @@ public:
     }
 
     template <typename T>
-    size_t ReadBytes(T* data, size_t length) {
+    std::size_t ReadBytes(T* data, std::size_t length) {
         static_assert(std::is_trivially_copyable_v<T>, "T must be trivially copyable");
         return ReadArray(reinterpret_cast<char*>(data), length);
     }
 
     template <typename T>
-    size_t WriteBytes(const T* data, size_t length) {
+    std::size_t WriteBytes(const T* data, std::size_t length) {
         static_assert(std::is_trivially_copyable_v<T>, "T must be trivially copyable");
         return WriteArray(reinterpret_cast<const char*>(data), length);
     }
 
     template <typename T>
-    size_t WriteObject(const T& object) {
+    std::size_t WriteObject(const T& object) {
         static_assert(!std::is_pointer_v<T>, "WriteObject arguments must not be a pointer");
         return WriteArray(&object, 1);
     }
 
-    size_t WriteString(const std::string& str) {
+    std::size_t WriteString(const std::string& str) {
         return WriteArray(str.c_str(), str.length());
     }
 

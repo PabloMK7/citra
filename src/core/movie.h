@@ -120,6 +120,6 @@ private:
     std::string record_movie_file;
     std::vector<u8> recorded_input;
     std::function<void()> playback_completion_callback;
-    size_t current_byte = 0;
+    std::size_t current_byte = 0;
 };
 } // namespace Core

@@ -149,7 +149,7 @@ Frontend::KeyboardConfig SoftwareKeyboard::ToFrontendConfig(
     frontend_config.max_text_length = config.max_text_length;
     frontend_config.max_digits = config.max_digits;
 
-    size_t text_size = config.hint_text.size();
+    std::size_t text_size = config.hint_text.size();
     const auto text_end = std::find(config.hint_text.begin(), config.hint_text.end(), u'\0');
     if (text_end != config.hint_text.end())
         text_size = std::distance(config.hint_text.begin(), text_end);

@@ -23,11 +23,11 @@ namespace FileSys {
 
 class FileBackend;
 
-constexpr size_t CIA_CONTENT_MAX_COUNT = 0x10000;
-constexpr size_t CIA_CONTENT_BITS_SIZE = (CIA_CONTENT_MAX_COUNT / 8);
-constexpr size_t CIA_HEADER_SIZE = 0x2020;
-constexpr size_t CIA_DEPENDENCY_SIZE = 0x300;
-constexpr size_t CIA_METADATA_SIZE = 0x400;
+constexpr std::size_t CIA_CONTENT_MAX_COUNT = 0x10000;
+constexpr std::size_t CIA_CONTENT_BITS_SIZE = (CIA_CONTENT_MAX_COUNT / 8);
+constexpr std::size_t CIA_HEADER_SIZE = 0x2020;
+constexpr std::size_t CIA_DEPENDENCY_SIZE = 0x300;
+constexpr std::size_t CIA_METADATA_SIZE = 0x400;
 
 /**
  * Helper which implements an interface to read and write CTR Installable Archive (CIA) files.
@@ -43,9 +43,9 @@ public:
     Loader::ResultStatus Load(const std::vector<u8>& header_data);
 
     // Load parts of CIAs (for CIAs streamed in)
-    Loader::ResultStatus LoadHeader(const std::vector<u8>& header_data, size_t offset = 0);
-    Loader::ResultStatus LoadTitleMetadata(const std::vector<u8>& tmd_data, size_t offset = 0);
-    Loader::ResultStatus LoadMetadata(const std::vector<u8>& meta_data, size_t offset = 0);
+    Loader::ResultStatus LoadHeader(const std::vector<u8>& header_data, std::size_t offset = 0);
+    Loader::ResultStatus LoadTitleMetadata(const std::vector<u8>& tmd_data, std::size_t offset = 0);
+    Loader::ResultStatus LoadMetadata(const std::vector<u8>& meta_data, std::size_t offset = 0);
 
     const TitleMetadata& GetTitleMetadata() const;
     std::array<u64, 0x30>& GetDependencies();

@@ -23,7 +23,7 @@ public:
     DspState GetDspState() const override;
 
     std::vector<u8> PipeRead(DspPipe pipe_number, u32 length) override;
-    size_t GetPipeReadableSize(DspPipe pipe_number) const override;
+    std::size_t GetPipeReadableSize(DspPipe pipe_number) const override;
     void PipeWrite(DspPipe pipe_number, const std::vector<u8>& buffer) override;
 
     std::array<u8, Memory::DSP_RAM_SIZE>& GetDspMemory() override;

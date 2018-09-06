@@ -46,8 +46,8 @@ SharedPtr<Process> Process::Create(SharedPtr<CodeSet> code_set) {
     return process;
 }
 
-void Process::ParseKernelCaps(const u32* kernel_caps, size_t len) {
-    for (size_t i = 0; i < len; ++i) {
+void Process::ParseKernelCaps(const u32* kernel_caps, std::size_t len) {
+    for (std::size_t i = 0; i < len; ++i) {
         u32 descriptor = kernel_caps[i];
         u32 type = descriptor >> 20;
 
@@ -253,7 +253,7 @@ ResultVal<VAddr> Process::LinearAllocate(VAddr target, u32 size, VMAPermission p
 
     // TODO(yuriks): As is, this lets processes map memory allocated by other processes from the
     // same region. It is unknown if or how the 3DS kernel checks against this.
-    size_t offset = target - GetLinearHeapBase();
+    std::size_t offset = target - GetLinearHeapBase();
     CASCADE_RESULT(auto vma, vm_manager.MapMemoryBlock(target, linheap_memory, offset, size,
                                                        MemoryState::Continuous));
     vm_manager.Reprotect(vma, perms);

@@ -491,8 +491,8 @@ typedef arm_inst* ARM_INST_PTR;
 typedef ARM_INST_PTR (*transop_fp_t)(unsigned int, int);
 
 extern const transop_fp_t arm_instruction_trans[];
-extern const size_t arm_instruction_trans_len;
+extern const std::size_t arm_instruction_trans_len;
 
 #define TRANS_CACHE_SIZE (64 * 1024 * 2000)
 extern char trans_cache_buf[TRANS_CACHE_SIZE];
-extern size_t trans_cache_buf_top;
+extern std::size_t trans_cache_buf_top;

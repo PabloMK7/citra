@@ -293,7 +293,7 @@ ThumbDecodeStatus TranslateThumbInstruction(u32 addr, u32 instr, u32* ainstr, u3
                 0xE6FF0FB0, // REVSH
             };
 
-            size_t subset_index = BITS(tinstr, 6, 7);
+            std::size_t subset_index = BITS(tinstr, 6, 7);
 
             if (subset_index == 2) {
                 valid = ThumbDecodeStatus::UNDEFINED;

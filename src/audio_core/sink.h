@@ -29,7 +29,7 @@ public:
      * @param samples Samples in interleaved stereo PCM16 format.
      * @param sample_count Number of samples.
      */
-    virtual void EnqueueSamples(const s16* samples, size_t sample_count) = 0;
+    virtual void EnqueueSamples(const s16* samples, std::size_t sample_count) = 0;
 
     /// Samples enqueued that have not been played yet.
     virtual std::size_t SamplesInQueue() const = 0;

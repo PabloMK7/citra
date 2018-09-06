@@ -14,7 +14,7 @@
 namespace FileSys {
 
 // Structure of a directory entry, from http://3dbrew.org/wiki/FSDir:Read#Entry_format
-const size_t FILENAME_LENGTH = 0x20C / 2;
+const std::size_t FILENAME_LENGTH = 0x20C / 2;
 struct Entry {
     char16_t filename[FILENAME_LENGTH]; // Entry name (UTF-16, null-terminated)
     std::array<char, 9> short_name; // 8.3 file name ('longfilename' -> 'LONGFI~1', null-terminated)

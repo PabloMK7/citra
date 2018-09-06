@@ -74,7 +74,7 @@ namespace FileUtil {
 // Modifies argument.
 static void StripTailDirSlashes(std::string& fname) {
     if (fname.length() > 1) {
-        size_t i = fname.length();
+        std::size_t i = fname.length();
         while (i > 0 && fname[i - 1] == DIR_SEP_CHR)
             --i;
         fname.resize(i);
@@ -199,7 +199,7 @@ bool CreateFullPath(const std::string& fullPath) {
         return true;
     }
 
-    size_t position = 0;
+    std::size_t position = 0;
     while (true) {
         // Find next sub path
         position = fullPath.find(DIR_SEP_CHR, position);
@@ -297,7 +297,7 @@ bool Copy(const std::string& srcFilename, const std::string& destFilename) {
     std::array<char, 1024> buffer;
     while (!feof(input.get())) {
         // read input
-        size_t rnum = fread(buffer.data(), sizeof(char), buffer.size(), input.get());
+        std::size_t rnum = fread(buffer.data(), sizeof(char), buffer.size(), input.get());
         if (rnum != buffer.size()) {
             if (ferror(input.get()) != 0) {
                 LOG_ERROR(Common_Filesystem, "failed reading from source, {} --> {}: {}",
@@ -307,7 +307,7 @@ bool Copy(const std::string& srcFilename, const std::string& destFilename) {
         }
 
         // write output
-        size_t wnum = fwrite(buffer.data(), sizeof(char), rnum, output.get());
+        std::size_t wnum = fwrite(buffer.data(), sizeof(char), rnum, output.get());
         if (wnum != rnum) {
             LOG_ERROR(Common_Filesystem, "failed writing to output, {} --> {}: {}", srcFilename,
                       destFilename, GetLastErrorMsg());

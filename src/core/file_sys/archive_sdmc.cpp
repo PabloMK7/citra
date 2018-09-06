@@ -19,7 +19,7 @@ namespace FileSys {
 
 class SDMCDelayGenerator : public DelayGenerator {
 public:
-    u64 GetReadDelayNs(size_t length) override {
+    u64 GetReadDelayNs(std::size_t length) override {
         // This is the delay measured on O3DS and O2DS with
         // https://gist.github.com/B3n30/ac40eac20603f519ff106107f4ac9182
         // from the results the average of each length was taken.

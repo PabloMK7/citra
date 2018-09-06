@@ -22,7 +22,7 @@
 namespace FileSys {
 
 class IVFCDelayGenerator : public DelayGenerator {
-    u64 GetReadDelayNs(size_t length) override {
+    u64 GetReadDelayNs(std::size_t length) override {
         // This is the delay measured for a romfs read.
         // For now we will take that as a default
         static constexpr u64 slope(94);
@@ -35,7 +35,7 @@ class IVFCDelayGenerator : public DelayGenerator {
 
 class RomFSDelayGenerator : public DelayGenerator {
 public:
-    u64 GetReadDelayNs(size_t length) override {
+    u64 GetReadDelayNs(std::size_t length) override {
         // The delay was measured on O3DS and O2DS with
         // https://gist.github.com/B3n30/ac40eac20603f519ff106107f4ac9182
         // from the results the average of each length was taken.
@@ -49,7 +49,7 @@ public:
 
 class ExeFSDelayGenerator : public DelayGenerator {
 public:
-    u64 GetReadDelayNs(size_t length) override {
+    u64 GetReadDelayNs(std::size_t length) override {
         // The delay was measured on O3DS and O2DS with
         // https://gist.github.com/B3n30/ac40eac20603f519ff106107f4ac9182
         // from the results the average of each length was taken.
@@ -92,8 +92,9 @@ class IVFCFile : public FileBackend {
 public:
     IVFCFile(std::shared_ptr<RomFSReader> file, std::unique_ptr<DelayGenerator> delay_generator_);
 
-    ResultVal<size_t> Read(u64 offset, size_t length, u8* buffer) const override;
-    ResultVal<size_t> Write(u64 offset, size_t length, bool flush, const u8* buffer) override;
+    ResultVal<std::size_t> Read(u64 offset, std::size_t length, u8* buffer) const override;
+    ResultVal<std::size_t> Write(u64 offset, std::size_t length, bool flush,
+                                 const u8* buffer) override;
     u64 GetSize() const override;
     bool SetSize(u64 size) const override;
     bool Close() const override {
@@ -120,8 +121,9 @@ public:
     IVFCFileInMemory(std::vector<u8> bytes, u64 offset, u64 size,
                      std::unique_ptr<DelayGenerator> delay_generator_);
 
-    ResultVal<size_t> Read(u64 offset, size_t length, u8* buffer) const override;
-    ResultVal<size_t> Write(u64 offset, size_t length, bool flush, const u8* buffer) override;
+    ResultVal<std::size_t> Read(u64 offset, std::size_t length, u8* buffer) const override;
+    ResultVal<std::size_t> Write(u64 offset, std::size_t length, bool flush,
+                                 const u8* buffer) override;
     u64 GetSize() const override;
     bool SetSize(u64 size) const override;
     bool Close() const override {

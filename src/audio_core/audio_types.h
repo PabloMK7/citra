@@ -26,7 +26,7 @@ using QuadFrame32 = std::array<std::array<s32, 4>, samples_per_frame>;
 /// A variable length buffer of signed PCM16 stereo samples.
 using StereoBuffer16 = std::deque<std::array<s16, 2>>;
 
-constexpr size_t num_dsp_pipe = 8;
+constexpr std::size_t num_dsp_pipe = 8;
 enum class DspPipe {
     Debug = 0,
     Dma = 1,

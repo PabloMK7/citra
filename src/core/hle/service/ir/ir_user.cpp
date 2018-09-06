@@ -105,7 +105,7 @@ public:
         SetPacketInfo(info.end_index, packet_info);
 
         // writes packet data
-        for (size_t i = 0; i < packet.size(); ++i) {
+        for (std::size_t i = 0; i < packet.size(); ++i) {
             *GetDataBufferPointer((write_offset + i) % max_data_size) = packet[i];
         }
 
@@ -184,7 +184,7 @@ private:
 /// Wraps the payload into packet and puts it to the receive buffer
 void IR_USER::PutToReceive(const std::vector<u8>& payload) {
     LOG_TRACE(Service_IR, "called, data={}", Common::ArrayToString(payload.data(), payload.size()));
-    size_t size = payload.size();
+    std::size_t size = payload.size();
 
     std::vector<u8> packet;
 

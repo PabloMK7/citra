@@ -90,13 +90,13 @@ private:
         Request::PortInfo port_info{1, {pad_index, 0, 0, 0}};
         auto port_message = Request::Create(port_info, client_id);
         std::memcpy(&send_buffer1, &port_message, PORT_INFO_SIZE);
-        size_t len = socket.send_to(boost::asio::buffer(send_buffer1), send_endpoint);
+        std::size_t len = socket.send_to(boost::asio::buffer(send_buffer1), send_endpoint);
 
         // Send a request for getting pad data for the pad
         Request::PadData pad_data{Request::PadData::Flags::Id, pad_index, EMPTY_MAC_ADDRESS};
         auto pad_message = Request::Create(pad_data, client_id);
         std::memcpy(send_buffer2.data(), &pad_message, PAD_DATA_SIZE);
-        size_t len2 = socket.send_to(boost::asio::buffer(send_buffer2), send_endpoint);
+        std::size_t len2 = socket.send_to(boost::asio::buffer(send_buffer2), send_endpoint);
         StartSend(timer.expiry());
     }
 
@@ -108,8 +108,8 @@ private:
     u32 client_id;
     u8 pad_index;
 
-    static constexpr size_t PORT_INFO_SIZE = sizeof(Message<Request::PortInfo>);
-    static constexpr size_t PAD_DATA_SIZE = sizeof(Message<Request::PadData>);
+    static constexpr std::size_t PORT_INFO_SIZE = sizeof(Message<Request::PortInfo>);
+    static constexpr std::size_t PAD_DATA_SIZE = sizeof(Message<Request::PadData>);
     std::array<u8, PORT_INFO_SIZE> send_buffer1;
     std::array<u8, PAD_DATA_SIZE> send_buffer2;
     udp::endpoint send_endpoint;

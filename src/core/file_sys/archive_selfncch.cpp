@@ -36,7 +36,7 @@ class ExeFSSectionFile final : public FileBackend {
 public:
     explicit ExeFSSectionFile(std::shared_ptr<std::vector<u8>> data_) : data(std::move(data_)) {}
 
-    ResultVal<size_t> Read(u64 offset, size_t length, u8* buffer) const override {
+    ResultVal<std::size_t> Read(u64 offset, std::size_t length, u8* buffer) const override {
         if (offset != 0) {
             LOG_ERROR(Service_FS, "offset must be zero!");
             return ERROR_UNSUPPORTED_OPEN_FLAGS;
@@ -48,10 +48,11 @@ public:
         }
 
         std::memcpy(buffer, data->data(), data->size());
-        return MakeResult<size_t>(data->size());
+        return MakeResult<std::size_t>(data->size());
     }
 
-    ResultVal<size_t> Write(u64 offset, size_t length, bool flush, const u8* buffer) override {
+    ResultVal<std::size_t> Write(u64 offset, std::size_t length, bool flush,
+                                 const u8* buffer) override {
         LOG_ERROR(Service_FS, "The file is read-only!");
         return ERROR_UNSUPPORTED_OPEN_FLAGS;
     }

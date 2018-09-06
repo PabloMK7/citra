@@ -27,7 +27,7 @@ public:
      * @param sample_buffer Buffer of samples in interleaved stereo PCM16 format.
      * @param num_samples Number of samples.
      */
-    void AddSamples(const s16* sample_buffer, size_t num_samples);
+    void AddSamples(const s16* sample_buffer, std::size_t num_samples);
 
     /// Flush audio remaining in internal buffers.
     void Flush();
@@ -42,7 +42,7 @@ public:
      * played yet.
      * @return Samples to play in interleaved stereo PCM16 format.
      */
-    std::vector<s16> Process(size_t sample_delay);
+    std::vector<s16> Process(std::size_t sample_delay);
 
 private:
     struct Impl;
@@ -52,7 +52,7 @@ private:
     double CalculateCurrentRatio();
     /// INTERNAL: If we have too many or too few samples downstream, nudge ratio in the appropriate
     /// direction.
-    double CorrectForUnderAndOverflow(double ratio, size_t sample_delay) const;
+    double CorrectForUnderAndOverflow(double ratio, std::size_t sample_delay) const;
     /// INTERNAL: Gets the time-stretched samples from SoundTouch.
     std::vector<s16> GetSamples();
 };

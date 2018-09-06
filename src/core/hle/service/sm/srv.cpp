@@ -85,7 +85,7 @@ void SRV::EnableNotification(Kernel::HLERequestContext& ctx) {
 void SRV::GetServiceHandle(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x5, 4, 0);
     auto name_buf = rp.PopRaw<std::array<char, 8>>();
-    size_t name_len = rp.Pop<u32>();
+    std::size_t name_len = rp.Pop<u32>();
     u32 flags = rp.Pop<u32>();
 
     bool wait_until_available = (flags & 1) == 0;
@@ -218,7 +218,7 @@ void SRV::RegisterService(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x3, 4, 0);
 
     auto name_buf = rp.PopRaw<std::array<char, 8>>();
-    size_t name_len = rp.Pop<u32>();
+    std::size_t name_len = rp.Pop<u32>();
     u32 max_sessions = rp.Pop<u32>();
 
     std::string name(name_buf.data(), std::min(name_len, name_buf.size()));

@@ -394,8 +394,8 @@ Loader::ResultStatus NCCHContainer::LoadSectionExeFS(const char* name, std::vect
     // instead of the ExeFS.
     if (std::strcmp(name, "logo") == 0) {
         if (ncch_header.logo_region_offset && ncch_header.logo_region_size) {
-            size_t logo_offset = ncch_header.logo_region_offset * kBlockSize;
-            size_t logo_size = ncch_header.logo_region_size * kBlockSize;
+            std::size_t logo_offset = ncch_header.logo_region_offset * kBlockSize;
+            std::size_t logo_size = ncch_header.logo_region_size * kBlockSize;
 
             buffer.resize(logo_size);
             file.Seek(ncch_offset + logo_offset, SEEK_SET);

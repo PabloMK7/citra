@@ -8,14 +8,14 @@ namespace FileSys {
 
 class DelayGenerator {
 public:
-    virtual u64 GetReadDelayNs(size_t length) = 0;
+    virtual u64 GetReadDelayNs(std::size_t length) = 0;
 
     // TODO (B3N30): Add getter for all other file/directory io operations
 };
 
 class DefaultDelayGenerator : public DelayGenerator {
 public:
-    u64 GetReadDelayNs(size_t length) override {
+    u64 GetReadDelayNs(std::size_t length) override {
         // This is the delay measured for a romfs read.
         // For now we will take that as a default
         static constexpr u64 slope(94);

@@ -114,8 +114,8 @@ static void MemoryFill(const Regs::MemoryFillConfig& config) {
         // fill with 32-bit values
         if (end > start) {
             u32 value = config.value_32bit;
-            size_t len = (end - start) / sizeof(u32);
-            for (size_t i = 0; i < len; ++i)
+            std::size_t len = (end - start) / sizeof(u32);
+            for (std::size_t i = 0; i < len; ++i)
                 memcpy(&start[i * sizeof(u32)], &value, sizeof(u32));
         }
     } else {
@@ -348,12 +348,12 @@ static void TextureCopy(const Regs::DisplayTransferConfig& config) {
         return;
     }
 
-    size_t contiguous_input_size =
+    std::size_t contiguous_input_size =
         config.texture_copy.size / input_width * (input_width + input_gap);
     Memory::RasterizerFlushRegion(config.GetPhysicalInputAddress(),
                                   static_cast<u32>(contiguous_input_size));
 
-    size_t contiguous_output_size =
+    std::size_t contiguous_output_size =
         config.texture_copy.size / output_width * (output_width + output_gap);
     // Only need to flush output if it has a gap
     const auto FlushInvalidate_fn = (output_gap != 0) ? Memory::RasterizerFlushAndInvalidateRegion

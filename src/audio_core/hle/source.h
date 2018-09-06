@@ -28,7 +28,7 @@ namespace HLE {
  */
 class Source final {
 public:
-    explicit Source(size_t source_id_) : source_id(source_id_) {
+    explicit Source(std::size_t source_id_) : source_id(source_id_) {
         Reset();
     }
 
@@ -52,10 +52,10 @@ public:
      * @param dest The QuadFrame32 to mix into.
      * @param intermediate_mix_id The id of the intermediate mix whose gains we are using.
      */
-    void MixInto(QuadFrame32& dest, size_t intermediate_mix_id) const;
+    void MixInto(QuadFrame32& dest, std::size_t intermediate_mix_id) const;
 
 private:
-    const size_t source_id;
+    const std::size_t source_id;
     StereoFrame16 current_frame;
 
     using Format = SourceConfiguration::Configuration::Format;

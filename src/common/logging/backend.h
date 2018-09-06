@@ -101,7 +101,7 @@ public:
 
 private:
     FileUtil::IOFile file;
-    size_t bytes_written;
+    std::size_t bytes_written;
 };
 
 void AddBackend(std::unique_ptr<Backend> backend);

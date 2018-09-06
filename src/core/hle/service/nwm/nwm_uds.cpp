@@ -100,7 +100,7 @@ static std::mutex beacon_mutex;
 
 // Number of beacons to store before we start dropping the old ones.
 // TODO(Subv): Find a more accurate value for this limit.
-constexpr size_t MaxBeaconFrames = 15;
+constexpr std::size_t MaxBeaconFrames = 15;
 
 // List of the last <MaxBeaconFrames> beacons received from the network.
 static std::list<Network::WifiPacket> received_beacons;
@@ -160,11 +160,11 @@ static void BroadcastNodeMap() {
     packet.channel = network_channel;
     packet.type = Network::WifiPacket::PacketType::NodeMap;
     packet.destination_address = Network::BroadcastMac;
-    size_t size = node_map.size();
+    std::size_t size = node_map.size();
     using node_t = decltype(node_map)::value_type;
     packet.data.resize(sizeof(size) + (sizeof(node_t::first) + sizeof(node_t::second)) * size);
     std::memcpy(packet.data.data(), &size, sizeof(size));
-    size_t offset = sizeof(size);
+    std::size_t offset = sizeof(size);
     for (const auto& node : node_map) {
         std::memcpy(packet.data.data() + offset, node.first.data(), sizeof(node.first));
         std::memcpy(packet.data.data() + offset + sizeof(node.first), &node.second,
@@ -178,12 +178,12 @@ static void BroadcastNodeMap() {
 static void HandleNodeMapPacket(const Network::WifiPacket& packet) {
     std::lock_guard<std::mutex> lock(connection_status_mutex);
     node_map.clear();
-    size_t num_entries;
+    std::size_t num_entries;
     Network::MacAddress address;
     u16 id;
     std::memcpy(&num_entries, packet.data.data(), sizeof(num_entries));
-    size_t offset = sizeof(num_entries);
-    for (size_t i = 0; i < num_entries; ++i) {
+    std::size_t offset = sizeof(num_entries);
+    for (std::size_t i = 0; i < num_entries; ++i) {
         std::memcpy(&address, packet.data.data() + offset, sizeof(address));
         std::memcpy(&id, packet.data.data() + offset + sizeof(address), sizeof(id));
         node_map[address] = id;
@@ -306,7 +306,7 @@ static void HandleEAPoLPacket(const Network::WifiPacket& packet) {
 
         node_info.clear();
         node_info.reserve(network_info.max_nodes);
-        for (size_t index = 0; index < logoff.connected_nodes; ++index) {
+        for (std::size_t index = 0; index < logoff.connected_nodes; ++index) {
             connection_status.node_bitmask |= 1 << index;
             connection_status.changed_nodes |= 1 << index;
             connection_status.nodes[index] = logoff.nodes[index].network_node_id;
@@ -332,7 +332,7 @@ static void HandleEAPoLPacket(const Network::WifiPacket& packet) {
 
         node_info.clear();
         node_info.reserve(network_info.max_nodes);
-        for (size_t index = 0; index < logoff.connected_nodes; ++index) {
+        for (std::size_t index = 0; index < logoff.connected_nodes; ++index) {
             if ((connection_status.node_bitmask & (1 << index)) == 0) {
                 connection_status.changed_nodes |= 1 << index;
             }
@@ -584,7 +584,7 @@ void NWM_UDS::RecvBeaconBroadcastData(Kernel::HLERequestContext& ctx) {
     Kernel::MappedBuffer out_buffer = rp.PopMappedBuffer();
     ASSERT(out_buffer.GetSize() == out_buffer_size);
 
-    size_t cur_buffer_size = sizeof(BeaconDataReplyHeader);
+    std::size_t cur_buffer_size = sizeof(BeaconDataReplyHeader);
 
     // Retrieve all beacon frames that were received from the desired mac address.
     auto beacons = GetReceivedBeacons(mac_address);
@@ -736,7 +736,7 @@ void NWM_UDS::Bind(Kernel::HLERequestContext& ctx) {
         return;
     }
 
-    constexpr size_t MaxBindNodes = 16;
+    constexpr std::size_t MaxBindNodes = 16;
     if (channel_data.size() >= MaxBindNodes) {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(ResultCode(ErrorDescription::OutOfMemory, ErrorModule::UDS,
@@ -1027,7 +1027,7 @@ void NWM_UDS::SendTo(Kernel::HLERequestContext& ctx) {
         dest_address = network_info.host_mac_address;
     }
 
-    constexpr size_t MaxSize = 0x5C6;
+    constexpr std::size_t MaxSize = 0x5C6;
     if (data_size > MaxSize) {
         rb.Push(ResultCode(ErrorDescription::TooLarge, ErrorModule::UDS,
                            ErrorSummary::WrongArgument, ErrorLevel::Usage));

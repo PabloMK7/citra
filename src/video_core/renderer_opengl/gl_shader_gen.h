@@ -261,28 +261,28 @@ std::string GenerateFragmentShader(const PicaFSConfig& config, bool separable_sh
 namespace std {
 template <>
 struct hash<GLShader::PicaFSConfig> {
-    size_t operator()(const GLShader::PicaFSConfig& k) const {
+    std::size_t operator()(const GLShader::PicaFSConfig& k) const {
         return k.Hash();
     }
 };
 
 template <>
 struct hash<GLShader::PicaVSConfig> {
-    size_t operator()(const GLShader::PicaVSConfig& k) const {
+    std::size_t operator()(const GLShader::PicaVSConfig& k) const {
         return k.Hash();
     }
 };
 
 template <>
 struct hash<GLShader::PicaFixedGSConfig> {
-    size_t operator()(const GLShader::PicaFixedGSConfig& k) const {
+    std::size_t operator()(const GLShader::PicaFixedGSConfig& k) const {
         return k.Hash();
     }
 };
 
 template <>
 struct hash<GLShader::PicaGSConfig> {
-    size_t operator()(const GLShader::PicaGSConfig& k) const {
+    std::size_t operator()(const GLShader::PicaGSConfig& k) const {
         return k.Hash();
     }
 };

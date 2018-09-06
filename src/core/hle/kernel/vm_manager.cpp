@@ -73,7 +73,7 @@ VMManager::VMAHandle VMManager::FindVMA(VAddr target) const {
 
 ResultVal<VMManager::VMAHandle> VMManager::MapMemoryBlock(VAddr target,
                                                           std::shared_ptr<std::vector<u8>> block,
-                                                          size_t offset, u32 size,
+                                                          std::size_t offset, u32 size,
                                                           MemoryState state) {
     ASSERT(block != nullptr);
     ASSERT(offset + size <= block->size());
@@ -95,7 +95,7 @@ ResultVal<VMManager::VMAHandle> VMManager::MapMemoryBlock(VAddr target,
 
 ResultVal<VAddr> VMManager::MapMemoryBlockToBase(VAddr base, u32 region_size,
                                                  std::shared_ptr<std::vector<u8>> block,
-                                                 size_t offset, u32 size, MemoryState state) {
+                                                 std::size_t offset, u32 size, MemoryState state) {
 
     // Find the first Free VMA.
     VMAHandle vma_handle = std::find_if(vma_map.begin(), vma_map.end(), [&](const auto& vma) {

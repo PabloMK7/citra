@@ -50,8 +50,8 @@ Loader::ResultStatus TitleMetadata::Load(const std::string& file_path) {
     return result;
 }
 
-Loader::ResultStatus TitleMetadata::Load(const std::vector<u8> file_data, size_t offset) {
-    size_t total_size = static_cast<size_t>(file_data.size() - offset);
+Loader::ResultStatus TitleMetadata::Load(const std::vector<u8> file_data, std::size_t offset) {
+    std::size_t total_size = static_cast<std::size_t>(file_data.size() - offset);
     if (total_size < sizeof(u32_be))
         return Loader::ResultStatus::Error;
 
@@ -61,8 +61,8 @@ Loader::ResultStatus TitleMetadata::Load(const std::vector<u8> file_data, size_t
     u32 signature_size = GetSignatureSize(signature_type);
 
     // The TMD body start position is rounded to the nearest 0x40 after the signature
-    size_t body_start = Common::AlignUp(signature_size + sizeof(u32), 0x40);
-    size_t body_end = body_start + sizeof(Body);
+    std::size_t body_start = Common::AlignUp(signature_size + sizeof(u32), 0x40);
+    std::size_t body_end = body_start + sizeof(Body);
 
     if (total_size < body_end)
         return Loader::ResultStatus::Error;
@@ -72,7 +72,7 @@ Loader::ResultStatus TitleMetadata::Load(const std::vector<u8> file_data, size_t
     memcpy(tmd_signature.data(), &file_data[offset + sizeof(u32_be)], signature_size);
     memcpy(&tmd_body, &file_data[offset + body_start], sizeof(TitleMetadata::Body));
 
-    size_t expected_size =
+    std::size_t expected_size =
         body_start + sizeof(Body) + static_cast<u16>(tmd_body.content_count) * sizeof(ContentChunk);
     if (total_size < expected_size) {
         LOG_ERROR(Service_FS, "Malformed TMD, expected size 0x{:x}, got 0x{:x}!", expected_size,
@@ -106,7 +106,7 @@ Loader::ResultStatus TitleMetadata::Save(const std::string& file_path) {
         return Loader::ResultStatus::Error;
 
     // The TMD body start position is rounded to the nearest 0x40 after the signature
-    size_t body_start = Common::AlignUp(signature_size + sizeof(u32), 0x40);
+    std::size_t body_start = Common::AlignUp(signature_size + sizeof(u32), 0x40);
     file.Seek(body_start, SEEK_SET);
 
     // Update our TMD body values and hashes
@@ -126,7 +126,7 @@ Loader::ResultStatus TitleMetadata::Save(const std::string& file_path) {
     chunk_hash.Final(tmd_body.contentinfo[0].hash.data());
 
     CryptoPP::SHA256 contentinfo_hash;
-    for (size_t i = 0; i < tmd_body.contentinfo.size(); i++) {
+    for (std::size_t i = 0; i < tmd_body.contentinfo.size(); i++) {
         chunk_hash.Update(reinterpret_cast<u8*>(&tmd_body.contentinfo[i]), sizeof(ContentInfo));
     }
     chunk_hash.Final(tmd_body.contentinfo_hash.data());
@@ -213,7 +213,7 @@ void TitleMetadata::Print() const {
 
     // Content info describes ranges of content chunks
     LOG_DEBUG(Service_FS, "Content info:");
-    for (size_t i = 0; i < tmd_body.contentinfo.size(); i++) {
+    for (std::size_t i = 0; i < tmd_body.contentinfo.size(); i++) {
         if (tmd_body.contentinfo[i].command_count == 0)
             break;
 
@@ -223,7 +223,7 @@ void TitleMetadata::Print() const {
     }
 
     // For each content info, print their content chunk range
-    for (size_t i = 0; i < tmd_body.contentinfo.size(); i++) {
+    for (std::size_t i = 0; i < tmd_body.contentinfo.size(); i++) {
         u16 index = static_cast<u16>(tmd_body.contentinfo[i].index);
         u16 count = static_cast<u16>(tmd_body.contentinfo[i].command_count);
 

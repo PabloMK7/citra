@@ -297,7 +297,7 @@ SharedPtr<CodeSet> ElfReader::LoadInto(u32 vaddr) {
     }
 
     std::vector<u8> program_image(total_image_size);
-    size_t current_image_position = 0;
+    std::size_t current_image_position = 0;
 
     SharedPtr<CodeSet> codeset = CodeSet::Create("", 0);
 
@@ -386,7 +386,7 @@ ResultStatus AppLoader_ELF::Load(Kernel::SharedPtr<Kernel::Process>& process) {
     // Reset read pointer in case this file has been read before.
     file.Seek(0, SEEK_SET);
 
-    size_t size = file.GetSize();
+    std::size_t size = file.GetSize();
     std::unique_ptr<u8[]> buffer(new u8[size]);
     if (file.ReadBytes(&buffer[0], size) != size)
         return ResultStatus::Error;

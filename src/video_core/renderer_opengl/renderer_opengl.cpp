@@ -176,7 +176,7 @@ void RendererOpenGL::LoadFBToScreenInfo(const GPU::Regs::FramebufferConfig& fram
               (int)framebuffer.height, (int)framebuffer.format);
 
     int bpp = GPU::Regs::BytesPerPixel(framebuffer.color_format);
-    size_t pixel_stride = framebuffer.stride / bpp;
+    std::size_t pixel_stride = framebuffer.stride / bpp;
 
     // OpenGL only supports specifying a stride in units of pixels, not bytes, unfortunately
     ASSERT(pixel_stride * bpp == framebuffer.stride);

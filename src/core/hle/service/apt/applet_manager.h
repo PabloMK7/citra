@@ -146,7 +146,7 @@ private:
     /// TODO(Subv): Use std::optional once we migrate to C++17.
     boost::optional<MessageParameter> next_parameter;
 
-    static constexpr size_t NumAppletSlot = 4;
+    static constexpr std::size_t NumAppletSlot = 4;
 
     enum class AppletSlot : u8 {
         Application,

@@ -83,7 +83,7 @@ private:
     ServiceFrameworkBase(const char* service_name, u32 max_sessions, InvokerFn* handler_invoker);
     ~ServiceFrameworkBase();
 
-    void RegisterHandlersBase(const FunctionInfoBase* functions, size_t n);
+    void RegisterHandlersBase(const FunctionInfoBase* functions, std::size_t n);
     void ReportUnimplementedFunction(u32* cmd_buf, const FunctionInfoBase* info);
 
     /// Identifier string used to connect to the service.
@@ -147,7 +147,7 @@ protected:
         : ServiceFrameworkBase(service_name, max_sessions, Invoker) {}
 
     /// Registers handlers in the service.
-    template <size_t N>
+    template <std::size_t N>
     void RegisterHandlers(const FunctionInfo (&functions)[N]) {
         RegisterHandlers(functions, N);
     }
@@ -156,7 +156,7 @@ protected:
      * Registers handlers in the service. Usually prefer using the other RegisterHandlers
      * overload in order to avoid needing to specify the array size.
      */
-    void RegisterHandlers(const FunctionInfo* functions, size_t n) {
+    void RegisterHandlers(const FunctionInfo* functions, std::size_t n) {
         RegisterHandlersBase(functions, n);
     }
 

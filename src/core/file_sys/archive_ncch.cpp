@@ -238,23 +238,24 @@ NCCHFile::NCCHFile(std::vector<u8> buffer, std::unique_ptr<DelayGenerator> delay
     delay_generator = std::move(delay_generator_);
 }
 
-ResultVal<size_t> NCCHFile::Read(const u64 offset, const size_t length, u8* buffer) const {
+ResultVal<std::size_t> NCCHFile::Read(const u64 offset, const std::size_t length,
+                                      u8* buffer) const {
     LOG_TRACE(Service_FS, "called offset={}, length={}", offset, length);
-    size_t length_left = static_cast<size_t>(data_size - offset);
-    size_t read_length = static_cast<size_t>(std::min(length, length_left));
+    std::size_t length_left = static_cast<std::size_t>(data_size - offset);
+    std::size_t read_length = static_cast<std::size_t>(std::min(length, length_left));
 
-    size_t available_size = static_cast<size_t>(file_buffer.size() - offset);
-    size_t copy_size = std::min(length, available_size);
+    std::size_t available_size = static_cast<std::size_t>(file_buffer.size() - offset);
+    std::size_t copy_size = std::min(length, available_size);
     memcpy(buffer, file_buffer.data() + offset, copy_size);
 
-    return MakeResult<size_t>(copy_size);
+    return MakeResult<std::size_t>(copy_size);
 }
 
-ResultVal<size_t> NCCHFile::Write(const u64 offset, const size_t length, const bool flush,
-                                  const u8* buffer) {
+ResultVal<std::size_t> NCCHFile::Write(const u64 offset, const std::size_t length, const bool flush,
+                                       const u8* buffer) {
     LOG_ERROR(Service_FS, "Attempted to write to NCCH file");
     // TODO(shinyquagsire23): Find error code
-    return MakeResult<size_t>(0);
+    return MakeResult<std::size_t>(0);
 }
 
 u64 NCCHFile::GetSize() const {

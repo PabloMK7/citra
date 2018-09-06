@@ -25,7 +25,7 @@ namespace Memory {
 const u32 PAGE_SIZE = 0x1000;
 const u32 PAGE_MASK = PAGE_SIZE - 1;
 const int PAGE_BITS = 12;
-const size_t PAGE_TABLE_NUM_ENTRIES = 1 << (32 - PAGE_BITS);
+const std::size_t PAGE_TABLE_NUM_ENTRIES = 1 << (32 - PAGE_BITS);
 
 enum class PageType {
     /// Page is unmapped and should cause an access error.
@@ -196,15 +196,15 @@ void Write16(VAddr addr, u16 data);
 void Write32(VAddr addr, u32 data);
 void Write64(VAddr addr, u64 data);
 
-void ReadBlock(const Kernel::Process& process, VAddr src_addr, void* dest_buffer, size_t size);
-void ReadBlock(VAddr src_addr, void* dest_buffer, size_t size);
+void ReadBlock(const Kernel::Process& process, VAddr src_addr, void* dest_buffer, std::size_t size);
+void ReadBlock(VAddr src_addr, void* dest_buffer, std::size_t size);
 void WriteBlock(const Kernel::Process& process, VAddr dest_addr, const void* src_buffer,
-                size_t size);
-void WriteBlock(VAddr dest_addr, const void* src_buffer, size_t size);
-void ZeroBlock(const Kernel::Process& process, VAddr dest_addr, const size_t size);
-void ZeroBlock(VAddr dest_addr, const size_t size);
-void CopyBlock(const Kernel::Process& process, VAddr dest_addr, VAddr src_addr, size_t size);
-void CopyBlock(VAddr dest_addr, VAddr src_addr, size_t size);
+                std::size_t size);
+void WriteBlock(VAddr dest_addr, const void* src_buffer, std::size_t size);
+void ZeroBlock(const Kernel::Process& process, VAddr dest_addr, const std::size_t size);
+void ZeroBlock(VAddr dest_addr, const std::size_t size);
+void CopyBlock(const Kernel::Process& process, VAddr dest_addr, VAddr src_addr, std::size_t size);
+void CopyBlock(VAddr dest_addr, VAddr src_addr, std::size_t size);
 
 u8* GetPointer(VAddr vaddr);
 

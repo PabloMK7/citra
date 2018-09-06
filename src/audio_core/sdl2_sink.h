@@ -17,9 +17,9 @@ public:
 
     unsigned int GetNativeSampleRate() const override;
 
-    void EnqueueSamples(const s16* samples, size_t sample_count) override;
+    void EnqueueSamples(const s16* samples, std::size_t sample_count) override;
 
-    size_t SamplesInQueue() const override;
+    std::size_t SamplesInQueue() const override;
 
 private:
     struct Impl;

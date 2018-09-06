@@ -272,10 +272,10 @@ private:
     std::unique_ptr<ShaderProgramManager> shader_program_manager;
 
     // They shall be big enough for about one frame.
-    static constexpr size_t VERTEX_BUFFER_SIZE = 32 * 1024 * 1024;
-    static constexpr size_t INDEX_BUFFER_SIZE = 1 * 1024 * 1024;
-    static constexpr size_t UNIFORM_BUFFER_SIZE = 2 * 1024 * 1024;
-    static constexpr size_t TEXTURE_BUFFER_SIZE = 1 * 1024 * 1024;
+    static constexpr std::size_t VERTEX_BUFFER_SIZE = 32 * 1024 * 1024;
+    static constexpr std::size_t INDEX_BUFFER_SIZE = 1 * 1024 * 1024;
+    static constexpr std::size_t UNIFORM_BUFFER_SIZE = 2 * 1024 * 1024;
+    static constexpr std::size_t TEXTURE_BUFFER_SIZE = 1 * 1024 * 1024;
 
     OGLVertexArray sw_vao; // VAO for software shader draw
     OGLVertexArray hw_vao; // VAO for hardware shader / accelerate draw
@@ -288,9 +288,9 @@ private:
     OGLStreamBuffer texture_buffer;
     OGLFramebuffer framebuffer;
     GLint uniform_buffer_alignment;
-    size_t uniform_size_aligned_vs;
-    size_t uniform_size_aligned_gs;
-    size_t uniform_size_aligned_fs;
+    std::size_t uniform_size_aligned_vs;
+    std::size_t uniform_size_aligned_gs;
+    std::size_t uniform_size_aligned_fs;
 
     SamplerInfo texture_cube_sampler;
 

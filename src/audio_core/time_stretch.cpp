@@ -23,9 +23,9 @@ static double ClampRatio(double ratio) {
     return std::clamp(ratio, MIN_RATIO, MAX_RATIO);
 }
 
-constexpr double MIN_DELAY_TIME = 0.05;            // Units: seconds
-constexpr double MAX_DELAY_TIME = 0.25;            // Units: seconds
-constexpr size_t DROP_FRAMES_SAMPLE_DELAY = 16000; // Units: samples
+constexpr double MIN_DELAY_TIME = 0.05;                 // Units: seconds
+constexpr double MAX_DELAY_TIME = 0.25;                 // Units: seconds
+constexpr std::size_t DROP_FRAMES_SAMPLE_DELAY = 16000; // Units: samples
 
 constexpr double SMOOTHING_FACTOR = 0.007;
 
@@ -33,14 +33,14 @@ struct TimeStretcher::Impl {
     soundtouch::SoundTouch soundtouch;
 
     steady_clock::time_point frame_timer = steady_clock::now();
-    size_t samples_queued = 0;
+    std::size_t samples_queued = 0;
 
     double smoothed_ratio = 1.0;
 
     double sample_rate = static_cast<double>(native_sample_rate);
 };
 
-std::vector<s16> TimeStretcher::Process(size_t samples_in_queue) {
+std::vector<s16> TimeStretcher::Process(std::size_t samples_in_queue) {
     // This is a very simple algorithm without any fancy control theory. It works and is stable.
 
     double ratio = CalculateCurrentRatio();
@@ -76,7 +76,7 @@ void TimeStretcher::SetOutputSampleRate(unsigned int sample_rate) {
     impl->soundtouch.setRate(static_cast<double>(native_sample_rate) / impl->sample_rate);
 }
 
-void TimeStretcher::AddSamples(const s16* buffer, size_t num_samples) {
+void TimeStretcher::AddSamples(const s16* buffer, std::size_t num_samples) {
     impl->soundtouch.putSamples(buffer, static_cast<uint>(num_samples));
     impl->samples_queued += num_samples;
 }
@@ -115,9 +115,11 @@ double TimeStretcher::CalculateCurrentRatio() {
     return ratio;
 }
 
-double TimeStretcher::CorrectForUnderAndOverflow(double ratio, size_t sample_delay) const {
-    const size_t min_sample_delay = static_cast<size_t>(MIN_DELAY_TIME * impl->sample_rate);
-    const size_t max_sample_delay = static_cast<size_t>(MAX_DELAY_TIME * impl->sample_rate);
+double TimeStretcher::CorrectForUnderAndOverflow(double ratio, std::size_t sample_delay) const {
+    const std::size_t min_sample_delay =
+        static_cast<std::size_t>(MIN_DELAY_TIME * impl->sample_rate);
+    const std::size_t max_sample_delay =
+        static_cast<std::size_t>(MAX_DELAY_TIME * impl->sample_rate);
 
     if (sample_delay < min_sample_delay) {
         // Make the ratio bigger.
@@ -133,7 +135,7 @@ double TimeStretcher::CorrectForUnderAndOverflow(double ratio, size_t sample_del
 std::vector<s16> TimeStretcher::GetSamples() {
     uint available = impl->soundtouch.numSamples();
 
-    std::vector<s16> output(static_cast<size_t>(available) * 2);
+    std::vector<s16> output(static_cast<std::size_t>(available) * 2);
 
     impl->soundtouch.receiveSamples(output.data(), available);
 

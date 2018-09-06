@@ -20,12 +20,12 @@ public:
         virtual ~ThreadContext() = default;
 
         virtual void Reset() = 0;
-        virtual u32 GetCpuRegister(size_t index) const = 0;
-        virtual void SetCpuRegister(size_t index, u32 value) = 0;
+        virtual u32 GetCpuRegister(std::size_t index) const = 0;
+        virtual void SetCpuRegister(std::size_t index, u32 value) = 0;
         virtual u32 GetCpsr() const = 0;
         virtual void SetCpsr(u32 value) = 0;
-        virtual u32 GetFpuRegister(size_t index) const = 0;
-        virtual void SetFpuRegister(size_t index, u32 value) = 0;
+        virtual u32 GetFpuRegister(std::size_t index) const = 0;
+        virtual void SetFpuRegister(std::size_t index, u32 value) = 0;
         virtual u32 GetFpscr() const = 0;
         virtual void SetFpscr(u32 value) = 0;
         virtual u32 GetFpexc() const = 0;
@@ -67,7 +67,7 @@ public:
      * @param start_address The starting address of the range to invalidate.
      * @param length The length (in bytes) of the range to invalidate.
      */
-    virtual void InvalidateCacheRange(u32 start_address, size_t length) = 0;
+    virtual void InvalidateCacheRange(u32 start_address, std::size_t length) = 0;
 
     /// Notify CPU emulation that page tables have changed
     virtual void PageTableChanged() = 0;

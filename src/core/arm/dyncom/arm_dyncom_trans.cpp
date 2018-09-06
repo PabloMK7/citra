@@ -9,8 +9,8 @@
 char trans_cache_buf[TRANS_CACHE_SIZE];
 size_t trans_cache_buf_top = 0;
 
-static void* AllocBuffer(size_t size) {
-    size_t start = trans_cache_buf_top;
+static void* AllocBuffer(std::size_t size) {
+    std::size_t start = trans_cache_buf_top;
     trans_cache_buf_top += size;
     ASSERT_MSG(trans_cache_buf_top <= TRANS_CACHE_SIZE, "Translation cache is full!");
     return static_cast<void*>(&trans_cache_buf[start]);
@@ -2015,4 +2015,4 @@ const transop_fp_t arm_instruction_trans[] = {
     INTERPRETER_TRANSLATE(blx_1_thumb),
 };
 
-const size_t arm_instruction_trans_len = sizeof(arm_instruction_trans) / sizeof(transop_fp_t);
+const std::size_t arm_instruction_trans_len = sizeof(arm_instruction_trans) / sizeof(transop_fp_t);

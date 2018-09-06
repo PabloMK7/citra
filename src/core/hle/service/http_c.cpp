@@ -131,7 +131,7 @@ void HTTP_C::CreateContext(Kernel::HLERequestContext& ctx) {
         return;
     }
 
-    static constexpr size_t MaxConcurrentHTTPContexts = 8;
+    static constexpr std::size_t MaxConcurrentHTTPContexts = 8;
     if (session_data->num_http_contexts >= MaxConcurrentHTTPContexts) {
         // There can only be 8 HTTP contexts open at the same time for any particular session.
         LOG_ERROR(Service_HTTP, "Tried to open too many HTTP contexts");

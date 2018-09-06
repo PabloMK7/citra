@@ -37,11 +37,12 @@ public:
         return false;
     }
 
-    ResultVal<size_t> Write(u64 offset, size_t length, bool flush, const u8* buffer) override {
+    ResultVal<std::size_t> Write(u64 offset, std::size_t length, bool flush,
+                                 const u8* buffer) override {
         if (offset > size) {
             return ERR_WRITE_BEYOND_END;
         } else if (offset == size) {
-            return MakeResult<size_t>(0);
+            return MakeResult<std::size_t>(0);
         }
 
         if (offset + length > size) {
@@ -57,7 +58,7 @@ private:
 
 class ExtSaveDataDelayGenerator : public DelayGenerator {
 public:
-    u64 GetReadDelayNs(size_t length) override {
+    u64 GetReadDelayNs(std::size_t length) override {
         // This is the delay measured for a savedate read,
         // not for extsaveData
         // For now we will take that
@@ -275,7 +276,7 @@ ResultVal<ArchiveFormatInfo> ArchiveFactory_ExtSaveData::GetFormatInfo(const Pat
 }
 
 void ArchiveFactory_ExtSaveData::WriteIcon(const Path& path, const u8* icon_data,
-                                           size_t icon_size) {
+                                           std::size_t icon_size) {
     std::string game_path = FileSys::GetExtSaveDataPath(GetMountPoint(), path);
     FileUtil::IOFile icon_file(game_path + "icon", "wb");
     icon_file.WriteBytes(icon_data, icon_size);

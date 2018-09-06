@@ -18,8 +18,8 @@ using TextureFormat = Pica::TexturingRegs::TextureFormat;
 namespace Pica {
 namespace Texture {
 
-constexpr size_t TILE_SIZE = 8 * 8;
-constexpr size_t ETC1_SUBTILES = 2 * 2;
+constexpr std::size_t TILE_SIZE = 8 * 8;
+constexpr std::size_t ETC1_SUBTILES = 2 * 2;
 
 size_t CalculateTileSize(TextureFormat format) {
     switch (format) {
@@ -177,7 +177,7 @@ Math::Vec4<u8> LookupTexelInTile(const u8* source, unsigned int x, unsigned int 
     case TextureFormat::ETC1:
     case TextureFormat::ETC1A4: {
         bool has_alpha = (info.format == TextureFormat::ETC1A4);
-        size_t subtile_size = has_alpha ? 16 : 8;
+        std::size_t subtile_size = has_alpha ? 16 : 8;
 
         // ETC1 further subdivides each 8x8 tile into four 4x4 subtiles
         constexpr unsigned int subtile_width = 4;

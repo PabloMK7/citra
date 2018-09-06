@@ -128,7 +128,7 @@ static ResultCode WriteHWRegs(u32 base_address, u32 size_in_bytes, const std::ve
             LOG_ERROR(Service_GSP, "Misaligned size 0x{:08x}", size_in_bytes);
             return ERR_REGS_MISALIGNED;
         } else {
-            size_t offset = 0;
+            std::size_t offset = 0;
             while (size_in_bytes > 0) {
                 u32 value;
                 std::memcpy(&value, &data[offset], sizeof(u32));
@@ -172,7 +172,7 @@ static ResultCode WriteHWRegsWithMask(u32 base_address, u32 size_in_bytes,
             LOG_ERROR(Service_GSP, "Misaligned size 0x{:08x}", size_in_bytes);
             return ERR_REGS_MISALIGNED;
         } else {
-            size_t offset = 0;
+            std::size_t offset = 0;
             while (size_in_bytes > 0) {
                 const u32 reg_address = base_address + REGS_BEGIN;
 

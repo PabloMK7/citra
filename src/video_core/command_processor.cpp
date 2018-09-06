@@ -351,7 +351,7 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
 
         // Simple circular-replacement vertex cache
         // The size has been tuned for optimal balance between hit-rate and the cost of lookup
-        const size_t VERTEX_CACHE_SIZE = 32;
+        const std::size_t VERTEX_CACHE_SIZE = 32;
         std::array<bool, VERTEX_CACHE_SIZE> vertex_cache_valid{};
         std::array<u16, VERTEX_CACHE_SIZE> vertex_cache_ids;
         std::array<Shader::AttributeBuffer, VERTEX_CACHE_SIZE> vertex_cache;

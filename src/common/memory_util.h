@@ -7,13 +7,13 @@
 #include <cstddef>
 #include <string>
 
-void* AllocateExecutableMemory(size_t size, bool low = true);
-void* AllocateMemoryPages(size_t size);
-void FreeMemoryPages(void* ptr, size_t size);
-void* AllocateAlignedMemory(size_t size, size_t alignment);
+void* AllocateExecutableMemory(std::size_t size, bool low = true);
+void* AllocateMemoryPages(std::size_t size);
+void FreeMemoryPages(void* ptr, std::size_t size);
+void* AllocateAlignedMemory(std::size_t size, std::size_t alignment);
 void FreeAlignedMemory(void* ptr);
-void WriteProtectMemory(void* ptr, size_t size, bool executable = false);
-void UnWriteProtectMemory(void* ptr, size_t size, bool allowExecute = false);
+void WriteProtectMemory(void* ptr, std::size_t size, bool executable = false);
+void UnWriteProtectMemory(void* ptr, std::size_t size, bool allowExecute = false);
 std::string MemUsage();
 
 inline int GetPageSize() {

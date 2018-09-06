@@ -533,7 +533,7 @@ void Module::Interface::StartLibraryApplet(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x1E, 2, 4); // 0x1E0084
     AppletId applet_id = rp.PopEnum<AppletId>();
 
-    size_t buffer_size = rp.Pop<u32>();
+    std::size_t buffer_size = rp.Pop<u32>();
     Kernel::SharedPtr<Kernel::Object> object = rp.PopGenericObject();
     std::vector<u8> buffer = rp.PopStaticBuffer();
 

@@ -74,7 +74,7 @@ unsigned int SDL2Sink::GetNativeSampleRate() const {
     return impl->sample_rate;
 }
 
-void SDL2Sink::EnqueueSamples(const s16* samples, size_t sample_count) {
+void SDL2Sink::EnqueueSamples(const s16* samples, std::size_t sample_count) {
     if (impl->audio_device_id <= 0)
         return;
 
@@ -89,12 +89,13 @@ size_t SDL2Sink::SamplesInQueue() const {
 
     SDL_LockAudioDevice(impl->audio_device_id);
 
-    size_t total_size = std::accumulate(impl->queue.begin(), impl->queue.end(),
-                                        static_cast<size_t>(0), [](size_t sum, const auto& buffer) {
-                                            // Division by two because each stereo sample is made of
-                                            // two s16.
-                                            return sum + buffer.size() / 2;
-                                        });
+    std::size_t total_size =
+        std::accumulate(impl->queue.begin(), impl->queue.end(), static_cast<std::size_t>(0),
+                        [](std::size_t sum, const auto& buffer) {
+                            // Division by two because each stereo sample is made of
+                            // two s16.
+                            return sum + buffer.size() / 2;
+                        });
 
     SDL_UnlockAudioDevice(impl->audio_device_id);
 
@@ -104,8 +105,8 @@ size_t SDL2Sink::SamplesInQueue() const {
 void SDL2Sink::Impl::Callback(void* impl_, u8* buffer, int buffer_size_in_bytes) {
     Impl* impl = reinterpret_cast<Impl*>(impl_);
 
-    size_t remaining_size = static_cast<size_t>(buffer_size_in_bytes) /
-                            sizeof(s16); // Keep track of size in 16-bit increments.
+    std::size_t remaining_size = static_cast<std::size_t>(buffer_size_in_bytes) /
+                                 sizeof(s16); // Keep track of size in 16-bit increments.
 
     while (remaining_size > 0 && !impl->queue.empty()) {
         if (impl->queue.front().size() <= remaining_size) {

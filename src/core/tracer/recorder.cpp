@@ -76,7 +76,7 @@ void Recorder::Finish(const std::string& filename) {
     try {
         // Open file and write header
         FileUtil::IOFile file(filename, "wb");
-        size_t written = file.WriteObject(header);
+        std::size_t written = file.WriteObject(header);
         if (written != 1 || file.Tell() != initial.gpu_registers)
             throw "Failed to write header";
 

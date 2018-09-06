@@ -42,7 +42,8 @@ QVariant BreakPointModel::data(const QModelIndex& index, int role) const {
                 {Pica::DebugContext::Event::BufferSwapped, tr("Buffers swapped")},
             };
 
-            DEBUG_ASSERT(map.size() == static_cast<size_t>(Pica::DebugContext::Event::NumEvents));
+            DEBUG_ASSERT(map.size() ==
+                         static_cast<std::size_t>(Pica::DebugContext::Event::NumEvents));
             return (map.find(event) != map.end()) ? map.at(event) : QString();
         }
 

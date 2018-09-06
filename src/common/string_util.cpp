@@ -37,7 +37,7 @@ std::string ToUpper(std::string str) {
 }
 
 // For Debugging. Read out an u8 array.
-std::string ArrayToString(const u8* data, size_t size, int line_len, bool spaces) {
+std::string ArrayToString(const u8* data, std::size_t size, int line_len, bool spaces) {
     std::ostringstream oss;
     oss << std::setfill('0') << std::hex;
 
@@ -56,7 +56,7 @@ std::string ArrayToString(const u8* data, size_t size, int line_len, bool spaces
 
 // Turns "  hej " into "hej". Also handles tabs.
 std::string StripSpaces(const std::string& str) {
-    const size_t s = str.find_first_not_of(" \t\r\n");
+    const std::size_t s = str.find_first_not_of(" \t\r\n");
 
     if (str.npos != s)
         return str.substr(s, str.find_last_not_of(" \t\r\n") - s + 1);
@@ -117,10 +117,10 @@ bool SplitPath(const std::string& full_path, std::string* _pPath, std::string* _
     if (full_path.empty())
         return false;
 
-    size_t dir_end = full_path.find_last_of("/"
+    std::size_t dir_end = full_path.find_last_of("/"
 // windows needs the : included for something like just "C:" to be considered a directory
 #ifdef _WIN32
-                                            ":"
+                                                 ":"
 #endif
     );
     if (std::string::npos == dir_end)
@@ -128,7 +128,7 @@ bool SplitPath(const std::string& full_path, std::string* _pPath, std::string* _
     else
         dir_end += 1;
 
-    size_t fname_end = full_path.rfind('.');
+    std::size_t fname_end = full_path.rfind('.');
     if (fname_end < dir_end || std::string::npos == fname_end)
         fname_end = full_path.size();
 
@@ -168,7 +168,7 @@ void SplitString(const std::string& str, const char delim, std::vector<std::stri
 }
 
 std::string TabsToSpaces(int tab_size, std::string in) {
-    size_t i = 0;
+    std::size_t i = 0;
 
     while ((i = in.find('\t')) != std::string::npos) {
         in.replace(i, 1, tab_size, ' ');
@@ -178,7 +178,7 @@ std::string TabsToSpaces(int tab_size, std::string in) {
 }
 
 std::string ReplaceAll(std::string result, const std::string& src, const std::string& dest) {
-    size_t pos = 0;
+    std::size_t pos = 0;
 
     if (src == dest)
         return result;
@@ -276,22 +276,22 @@ static std::string CodeToUTF8(const char* fromcode, const std::basic_string<T>& 
         return {};
     }
 
-    const size_t in_bytes = sizeof(T) * input.size();
+    const std::size_t in_bytes = sizeof(T) * input.size();
     // Multiply by 4, which is the max number of bytes to encode a codepoint
-    const size_t out_buffer_size = 4 * in_bytes;
+    const std::size_t out_buffer_size = 4 * in_bytes;
 
     std::string out_buffer(out_buffer_size, '\0');
 
     auto src_buffer = &input[0];
-    size_t src_bytes = in_bytes;
+    std::size_t src_bytes = in_bytes;
     auto dst_buffer = &out_buffer[0];
-    size_t dst_bytes = out_buffer.size();
+    std::size_t dst_bytes = out_buffer.size();
 
     while (0 != src_bytes) {
-        size_t const iconv_result =
+        std::size_t const iconv_result =
             iconv(conv_desc, (char**)(&src_buffer), &src_bytes, &dst_buffer, &dst_bytes);
 
-        if (static_cast<size_t>(-1) == iconv_result) {
+        if (static_cast<std::size_t>(-1) == iconv_result) {
             if (EILSEQ == errno || EINVAL == errno) {
                 // Try to skip the bad character
                 if (0 != src_bytes) {
@@ -322,22 +322,22 @@ std::u16string UTF8ToUTF16(const std::string& input) {
         return {};
     }
 
-    const size_t in_bytes = sizeof(char) * input.size();
+    const std::size_t in_bytes = sizeof(char) * input.size();
     // Multiply by 4, which is the max number of bytes to encode a codepoint
-    const size_t out_buffer_size = 4 * sizeof(char16_t) * in_bytes;
+    const std::size_t out_buffer_size = 4 * sizeof(char16_t) * in_bytes;
 
     std::u16string out_buffer(out_buffer_size, char16_t{});
 
     char* src_buffer = const_cast<char*>(&input[0]);
-    size_t src_bytes = in_bytes;
+    std::size_t src_bytes = in_bytes;
     char* dst_buffer = (char*)(&out_buffer[0]);
-    size_t dst_bytes = out_buffer.size();
+    std::size_t dst_bytes = out_buffer.size();
 
     while (0 != src_bytes) {
-        size_t const iconv_result =
+        std::size_t const iconv_result =
             iconv(conv_desc, &src_buffer, &src_bytes, &dst_buffer, &dst_bytes);
 
-        if (static_cast<size_t>(-1) == iconv_result) {
+        if (static_cast<std::size_t>(-1) == iconv_result) {
             if (EILSEQ == errno || EINVAL == errno) {
                 // Try to skip the bad character
                 if (0 != src_bytes) {
@@ -377,8 +377,8 @@ std::string SHIFTJISToUTF8(const std::string& input) {
 
 #endif
 
-std::string StringFromFixedZeroTerminatedBuffer(const char* buffer, size_t max_len) {
-    size_t len = 0;
+std::string StringFromFixedZeroTerminatedBuffer(const char* buffer, std::size_t max_len) {
+    std::size_t len = 0;
     while (len < max_len && buffer[len] != '\0')
         ++len;
 

@@ -17,7 +17,7 @@ namespace Common {
  * @param len Length of data (in bytes) to compute hash over
  * @returns 64-bit hash value that was computed over the data block
  */
-static inline u64 ComputeHash64(const void* data, size_t len) {
+static inline u64 ComputeHash64(const void* data, std::size_t len) {
     return CityHash64(static_cast<const char*>(data), len);
 }
 
@@ -63,7 +63,7 @@ struct HashableStruct {
         return !(*this == o);
     };
 
-    size_t Hash() const {
+    std::size_t Hash() const {
         return Common::ComputeStructHash64(state);
     }
 };

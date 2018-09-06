@@ -315,7 +315,7 @@ std::unique_ptr<PicaTrace> FinishPicaTracing() {
 
 static std::string ReplacePattern(const std::string& input, const std::string& pattern,
                                   const std::string& replacement) {
-    size_t start = input.find(pattern);
+    std::size_t start = input.find(pattern);
     if (start == std::string::npos)
         return input;
 
@@ -451,7 +451,7 @@ std::string GetTevStageConfigAlphaCombinerString(const TexturingRegs::TevStageCo
 
 void DumpTevStageConfig(const std::array<TexturingRegs::TevStageConfig, 6>& stages) {
     std::string stage_info = "Tev setup:\n";
-    for (size_t index = 0; index < stages.size(); ++index) {
+    for (std::size_t index = 0; index < stages.size(); ++index) {
         const auto& tev_stage = stages[index];
         stage_info += "Stage " + std::to_string(index) + ": " +
                       GetTevStageConfigColorCombinerString(tev_stage) + "   " +

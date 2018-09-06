@@ -37,15 +37,15 @@ namespace Pica {
 #else
 // NOTE: Yeah, hacking in a static_assert here just to workaround the lacking MSVC compiler
 //       really is this annoying. This macro just forwards its first argument to PICA_REG_INDEX
-//       and then performs a (no-op) cast to size_t iff the second argument matches the expected
-//       field offset. Otherwise, the compiler will fail to compile this code.
+//       and then performs a (no-op) cast to std::size_t iff the second argument matches the
+//       expected field offset. Otherwise, the compiler will fail to compile this code.
 #define PICA_REG_INDEX_WORKAROUND(field_name, backup_workaround_index)                             \
     ((typename std::enable_if<backup_workaround_index == PICA_REG_INDEX(field_name),               \
-                              size_t>::type) PICA_REG_INDEX(field_name))
+                              std::size_t>::type) PICA_REG_INDEX(field_name))
 #endif // _MSC_VER
 
 struct Regs {
-    static constexpr size_t NUM_REGS = 0x300;
+    static constexpr std::size_t NUM_REGS = 0x300;
 
     union {
         struct {

@@ -74,12 +74,13 @@ struct TicketInfo {
 
 static_assert(sizeof(TicketInfo) == 0x18, "Ticket info structure size is wrong");
 
-ResultVal<size_t> CIAFile::Read(u64 offset, size_t length, u8* buffer) const {
+ResultVal<std::size_t> CIAFile::Read(u64 offset, std::size_t length, u8* buffer) const {
     UNIMPLEMENTED();
-    return MakeResult<size_t>(length);
+    return MakeResult<std::size_t>(length);
 }
 
-ResultVal<size_t> CIAFile::WriteTitleMetadata(u64 offset, size_t length, const u8* buffer) {
+ResultVal<std::size_t> CIAFile::WriteTitleMetadata(u64 offset, std::size_t length,
+                                                   const u8* buffer) {
     container.LoadTitleMetadata(data, container.GetTitleMetadataOffset());
     FileSys::TitleMetadata tmd = container.GetTitleMetadata();
     tmd.Print();
@@ -111,10 +112,10 @@ ResultVal<size_t> CIAFile::WriteTitleMetadata(u64 offset, size_t length, const u
     content_written.resize(container.GetTitleMetadata().GetContentCount());
     install_state = CIAInstallState::TMDLoaded;
 
-    return MakeResult<size_t>(length);
+    return MakeResult<std::size_t>(length);
 }
 
-ResultVal<size_t> CIAFile::WriteContentData(u64 offset, size_t length, const u8* buffer) {
+ResultVal<std::size_t> CIAFile::WriteContentData(u64 offset, std::size_t length, const u8* buffer) {
     // Data is not being buffered, so we have to keep track of how much of each <ID>.app
     // has been written since we might get a written buffer which contains multiple .app
     // contents or only part of a larger .app's contents.
@@ -153,10 +154,11 @@ ResultVal<size_t> CIAFile::WriteContentData(u64 offset, size_t length, const u8*
         }
     }
 
-    return MakeResult<size_t>(length);
+    return MakeResult<std::size_t>(length);
 }
 
-ResultVal<size_t> CIAFile::Write(u64 offset, size_t length, bool flush, const u8* buffer) {
+ResultVal<std::size_t> CIAFile::Write(u64 offset, std::size_t length, bool flush,
+                                      const u8* buffer) {
     written += length;
 
     // TODO(shinyquagsire23): Can we assume that things will only be written in sequence?
@@ -168,9 +170,9 @@ ResultVal<size_t> CIAFile::Write(u64 offset, size_t length, bool flush, const u8
     // content sizes so it ends up becoming a problem of keeping track of how much has been
     // written and what we have been able to pick up.
     if (install_state == CIAInstallState::InstallStarted) {
-        size_t buf_copy_size = std::min(length, FileSys::CIA_HEADER_SIZE);
-        size_t buf_max_size =
-            std::min(static_cast<size_t>(offset + length), FileSys::CIA_HEADER_SIZE);
+        std::size_t buf_copy_size = std::min(length, FileSys::CIA_HEADER_SIZE);
+        std::size_t buf_max_size =
+            std::min(static_cast<std::size_t>(offset + length), FileSys::CIA_HEADER_SIZE);
         data.resize(buf_max_size);
         memcpy(data.data() + offset, buffer, buf_copy_size);
 
@@ -184,18 +186,18 @@ ResultVal<size_t> CIAFile::Write(u64 offset, size_t length, bool flush, const u8
 
     // If we don't have a header yet, we can't pull offsets of other sections
     if (install_state == CIAInstallState::InstallStarted)
-        return MakeResult<size_t>(length);
+        return MakeResult<std::size_t>(length);
 
     // If we have been given data before (or including) .app content, pull it into
     // our buffer, but only pull *up to* the content offset, no further.
     if (offset < container.GetContentOffset()) {
-        size_t buf_loaded = data.size();
-        size_t copy_offset = std::max(static_cast<size_t>(offset), buf_loaded);
-        size_t buf_offset = buf_loaded - offset;
-        size_t buf_copy_size =
-            std::min(length, static_cast<size_t>(container.GetContentOffset() - offset)) -
+        std::size_t buf_loaded = data.size();
+        std::size_t copy_offset = std::max(static_cast<std::size_t>(offset), buf_loaded);
+        std::size_t buf_offset = buf_loaded - offset;
+        std::size_t buf_copy_size =
+            std::min(length, static_cast<std::size_t>(container.GetContentOffset() - offset)) -
             buf_loaded;
-        size_t buf_max_size = std::min(offset + length, container.GetContentOffset());
+        std::size_t buf_max_size = std::min(offset + length, container.GetContentOffset());
         data.resize(buf_max_size);
         memcpy(data.data() + copy_offset, buffer + buf_offset, buf_copy_size);
     }
@@ -212,14 +214,14 @@ ResultVal<size_t> CIAFile::Write(u64 offset, size_t length, bool flush, const u8
 
     // Content data sizes can only be retrieved from TMD data
     if (install_state != CIAInstallState::TMDLoaded)
-        return MakeResult<size_t>(length);
+        return MakeResult<std::size_t>(length);
 
     // From this point forward, data will no longer be buffered in data
     auto result = WriteContentData(offset, length, buffer);
     if (result.Failed())
         return result;
 
-    return MakeResult<size_t>(length);
+    return MakeResult<std::size_t>(length);
 }
 
 u64 CIAFile::GetSize() const {
@@ -232,7 +234,7 @@ bool CIAFile::SetSize(u64 size) const {
 
 bool CIAFile::Close() const {
     bool complete = true;
-    for (size_t i = 0; i < container.GetTitleMetadata().GetContentCount(); i++) {
+    for (std::size_t i = 0; i < container.GetTitleMetadata().GetContentCount(); i++) {
         if (content_written[i] < container.GetContentSize(static_cast<u16>(i)))
             complete = false;
     }
@@ -294,7 +296,7 @@ InstallStatus InstallCIA(const std::string& path,
         Service::AM::CIAFile installFile(
             Service::AM::GetTitleMediaType(container.GetTitleMetadata().GetTitleID()));
 
-        for (size_t i = 0; i < container.GetTitleMetadata().GetContentCount(); i++) {
+        for (std::size_t i = 0; i < container.GetTitleMetadata().GetContentCount(); i++) {
             if (container.GetTitleMetadata().GetContentTypeByIndex(static_cast<u16>(i)) &
                 FileSys::TMDContentTypeFlag::Encrypted) {
                 LOG_ERROR(Service_AM, "File {} is encrypted! Aborting...", path);
@@ -307,9 +309,9 @@ InstallStatus InstallCIA(const std::string& path,
             return InstallStatus::ErrorFailedToOpenFile;
 
         std::array<u8, 0x10000> buffer;
-        size_t total_bytes_read = 0;
+        std::size_t total_bytes_read = 0;
         while (total_bytes_read != file.GetSize()) {
-            size_t bytes_read = file.ReadBytes(buffer.data(), buffer.size());
+            std::size_t bytes_read = file.ReadBytes(buffer.data(), buffer.size());
             auto result = installFile.Write(static_cast<u64>(total_bytes_read), bytes_read, true,
                                             static_cast<u8*>(buffer.data()));
 
@@ -525,7 +527,7 @@ void Module::Interface::FindDLCContentInfos(Kernel::HLERequestContext& ctx) {
     if (tmd.Load(tmd_path) == Loader::ResultStatus::Success) {
         std::size_t write_offset = 0;
         // Get info for each content index requested
-        for (size_t i = 0; i < content_count; i++) {
+        for (std::size_t i = 0; i < content_count; i++) {
             std::shared_ptr<FileUtil::IOFile> romfs_file;
             u64 romfs_offset = 0;
 

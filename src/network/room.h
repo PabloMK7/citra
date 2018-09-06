@@ -21,7 +21,7 @@ constexpr u32 MaxMessageSize = 500;
 /// Maximum number of concurrent connections allowed to this room.
 static constexpr u32 MaxConcurrentConnections = 254;
 
-constexpr size_t NumChannels = 1; // Number of channels used for the connection
+constexpr std::size_t NumChannels = 1; // Number of channels used for the connection
 
 struct RoomInformation {
     std::string name;           ///< Name of the server

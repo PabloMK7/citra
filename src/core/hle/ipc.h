@@ -33,10 +33,10 @@ inline u32* GetCommandBuffer(const int offset = 0) {
 namespace IPC {
 
 /// Size of the command buffer area, in 32-bit words.
-constexpr size_t COMMAND_BUFFER_LENGTH = 0x100 / sizeof(u32);
+constexpr std::size_t COMMAND_BUFFER_LENGTH = 0x100 / sizeof(u32);
 
 // Maximum number of static buffers per thread.
-constexpr size_t MAX_STATIC_BUFFERS = 16;
+constexpr std::size_t MAX_STATIC_BUFFERS = 16;
 
 // These errors are commonly returned by invalid IPC translations, so alias them here for
 // convenience.
@@ -113,7 +113,7 @@ union StaticBufferDescInfo {
     BitField<14, 18, u32> size;
 };
 
-inline u32 StaticBufferDesc(size_t size, u8 buffer_id) {
+inline u32 StaticBufferDesc(std::size_t size, u8 buffer_id) {
     StaticBufferDescInfo info{};
     info.descriptor_type.Assign(StaticBuffer);
     info.buffer_id.Assign(buffer_id);
@@ -151,7 +151,7 @@ union MappedBufferDescInfo {
     BitField<4, 28, u32> size;
 };
 
-inline u32 MappedBufferDesc(size_t size, MappedBufferPermissions perms) {
+inline u32 MappedBufferDesc(std::size_t size, MappedBufferPermissions perms) {
     MappedBufferDescInfo info{};
     info.flags.Assign(MappedBuffer);
     info.perms.Assign(perms);

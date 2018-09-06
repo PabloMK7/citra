@@ -27,10 +27,10 @@ public:
         fpexc = 0;
     }
 
-    u32 GetCpuRegister(size_t index) const override {
+    u32 GetCpuRegister(std::size_t index) const override {
         return cpu_registers[index];
     }
-    void SetCpuRegister(size_t index, u32 value) override {
+    void SetCpuRegister(std::size_t index, u32 value) override {
         cpu_registers[index] = value;
     }
     u32 GetCpsr() const override {
@@ -39,10 +39,10 @@ public:
     void SetCpsr(u32 value) override {
         cpsr = value;
     }
-    u32 GetFpuRegister(size_t index) const override {
+    u32 GetFpuRegister(std::size_t index) const override {
         return fpu_registers[index];
     }
-    void SetFpuRegister(size_t index, u32 value) override {
+    void SetFpuRegister(std::size_t index, u32 value) override {
         fpu_registers[index] = value;
     }
     u32 GetFpscr() const override {
@@ -87,7 +87,7 @@ void ARM_DynCom::ClearInstructionCache() {
     trans_cache_buf_top = 0;
 }
 
-void ARM_DynCom::InvalidateCacheRange(u32, size_t) {
+void ARM_DynCom::InvalidateCacheRange(u32, std::size_t) {
     ClearInstructionCache();
 }
 
