@@ -5,6 +5,7 @@
 #pragma once
 
 #include "common/bit_field.h"
+#include "common/common_funcs.h"
 #include "core/hle/kernel/event.h"
 #include "core/hle/service/fs/archive.h"
 #include "core/hle/service/service.h"
@@ -18,28 +19,28 @@ public:
     ~Module();
 
     enum class CecCommand : u32 {
-        CEC_COMMAND_NONE = 0,
-        CEC_COMMAND_START = 1,
-        CEC_COMMAND_RESET_START = 2,
-        CEC_COMMAND_READYSCAN = 3,
-        CEC_COMMAND_READYSCANWAIT = 4,
-        CEC_COMMAND_STARTSCAN = 5,
-        CEC_COMMAND_RESCAN = 6,
-        CEC_COMMAND_NDM_RESUME = 7,
-        CEC_COMMAND_NDM_SUSPEND = 8,
-        CEC_COMMAND_NDM_SUSPEND_IMMEDIATE = 9,
-        CEC_COMMAND_STOPWAIT = 0x0A,
-        CEC_COMMAND_STOP = 0x0B,
-        CEC_COMMAND_STOP_FORCE = 0x0C,
-        CEC_COMMAND_STOP_FORCE_WAIT = 0x0D,
-        CEC_COMMAND_RESET_FILTER = 0x0E,
-        CEC_COMMAND_DAEMON_STOP = 0x0F,
-        CEC_COMMAND_DAEMON_START = 0x10,
-        CEC_COMMAND_EXIT = 0x11,
-        CEC_COMMAND_OVER_BOSS = 0x12,
-        CEC_COMMAND_OVER_BOSS_FORCE = 0x13,
-        CEC_COMMAND_OVER_BOSS_FORCE_WAIT = 0x14,
-        CEC_COMMAND_END = 0x15,
+        NONE = 0,
+        START = 1,
+        RESET_START = 2,
+        READYSCAN = 3,
+        READYSCANWAIT = 4,
+        STARTSCAN = 5,
+        RESCAN = 6,
+        NDM_RESUME = 7,
+        NDM_SUSPEND = 8,
+        NDM_SUSPEND_IMMEDIATE = 9,
+        STOPWAIT = 0x0A,
+        STOP = 0x0B,
+        STOP_FORCE = 0x0C,
+        STOP_FORCE_WAIT = 0x0D,
+        RESET_FILTER = 0x0E,
+        DAEMON_STOP = 0x0F,
+        DAEMON_START = 0x10,
+        EXIT = 0x11,
+        OVER_BOSS = 0x12,
+        OVER_BOSS_FORCE = 0x13,
+        OVER_BOSS_FORCE_WAIT = 0x14,
+        END = 0x15,
     };
 
     /**
@@ -49,59 +50,59 @@ public:
      * data:/CEC/test
      */
     enum class CecDataPathType : u32 {
-        CEC_PATH_INVALID = 0,
-        CEC_PATH_MBOX_LIST = 1,    /// data:/CEC/MBoxList____
-        CEC_PATH_MBOX_INFO = 2,    /// data:/CEC/<id>/MBoxInfo____
-        CEC_PATH_INBOX_INFO = 3,   /// data:/CEC/<id>/InBox___/BoxInfo_____
-        CEC_PATH_OUTBOX_INFO = 4,  /// data:/CEC/<id>/OutBox__/BoxInfo_____
-        CEC_PATH_OUTBOX_INDEX = 5, /// data:/CEC/<id>/OutBox__/OBIndex_____
-        CEC_PATH_INBOX_MSG = 6,    /// data:/CEC/<id>/InBox___/_<message_id>
-        CEC_PATH_OUTBOX_MSG = 7,   /// data:/CEC/<id>/OutBox__/_<message_id>
-        CEC_PATH_ROOT_DIR = 10,    /// data:/CEC
-        CEC_PATH_MBOX_DIR = 11,    /// data:/CEC/<id>
-        CEC_PATH_INBOX_DIR = 12,   /// data:/CEC/<id>/InBox___
-        CEC_PATH_OUTBOX_DIR = 13,  /// data:/CEC/<id>/OutBox__
-        CEC_MBOX_DATA = 100,       /// data:/CEC/<id>/MBoxData.0<i-100>
-        CEC_MBOX_ICON = 101,       /// data:/CEC/<id>/MBoxData.001
-        CEC_MBOX_TITLE = 110,      /// data:/CEC/<id>/MBoxData.010
-        CEC_MBOX_PROGRAM_ID = 150, /// data:/CEC/<id>/MBoxData.050
+        INVALID = 0,
+        MBOX_LIST = 1,         /// data:/CEC/MBoxList____
+        MBOX_INFO = 2,         /// data:/CEC/<id>/MBoxInfo____
+        INBOX_INFO = 3,        /// data:/CEC/<id>/InBox___/BoxInfo_____
+        OUTBOX_INFO = 4,       /// data:/CEC/<id>/OutBox__/BoxInfo_____
+        OUTBOX_INDEX = 5,      /// data:/CEC/<id>/OutBox__/OBIndex_____
+        INBOX_MSG = 6,         /// data:/CEC/<id>/InBox___/_<message_id>
+        OUTBOX_MSG = 7,        /// data:/CEC/<id>/OutBox__/_<message_id>
+        ROOT_DIR = 10,         /// data:/CEC
+        MBOX_DIR = 11,         /// data:/CEC/<id>
+        INBOX_DIR = 12,        /// data:/CEC/<id>/InBox___
+        OUTBOX_DIR = 13,       /// data:/CEC/<id>/OutBox__
+        MBOX_DATA = 100,       /// data:/CEC/<id>/MBoxData.0<i-100>
+        MBOX_ICON = 101,       /// data:/CEC/<id>/MBoxData.001
+        MBOX_TITLE = 110,      /// data:/CEC/<id>/MBoxData.010
+        MBOX_PROGRAM_ID = 150, /// data:/CEC/<id>/MBoxData.050
     };
 
     enum class CecState : u32 {
-        CEC_STATE_NONE = 0,
-        CEC_STATE_INIT = 1,
-        CEC_STATE_WIRELESS_PARAM_SETUP = 2,
-        CEC_STATE_WIRELESS_READY = 3,
-        CEC_STATE_WIRELESS_START_CONFIG = 4,
-        CEC_STATE_SCAN = 5,
-        CEC_STATE_SCANNING = 6,
-        CEC_STATE_CONNECT = 7,
-        CEC_STATE_CONNECTING = 8,
-        CEC_STATE_CONNECTED = 9,
-        CEC_STATE_CONNECT_TCP = 10,
-        CEC_STATE_CONNECTING_TCP = 11,
-        CEC_STATE_CONNECTED_TCP = 12,
-        CEC_STATE_NEGOTIATION = 13,
-        CEC_STATE_SEND_RECV_START = 14,
-        CEC_STATE_SEND_RECV_INIT = 15,
-        CEC_STATE_SEND_READY = 16,
-        CEC_STATE_RECEIVE_READY = 17,
-        CEC_STATE_RECEIVE = 18,
-        CEC_STATE_CONNECTION_FINISH_TCP = 19,
-        CEC_STATE_CONNECTION_FINISH = 20,
-        CEC_STATE_SEND_POST = 21,
-        CEC_STATE_RECEIVE_POST = 22,
-        CEC_STATE_FINISHING = 23,
-        CEC_STATE_FINISH = 24,
-        CEC_STATE_OVER_BOSS = 25,
-        CEC_STATE_IDLE = 26
+        NONE = 0,
+        INIT = 1,
+        WIRELESS_PARAM_SETUP = 2,
+        WIRELESS_READY = 3,
+        WIRELESS_START_CONFIG = 4,
+        SCAN = 5,
+        SCANNING = 6,
+        CONNECT = 7,
+        CONNECTING = 8,
+        CONNECTED = 9,
+        CONNECT_TCP = 10,
+        CONNECTING_TCP = 11,
+        CONNECTED_TCP = 12,
+        NEGOTIATION = 13,
+        SEND_RECV_START = 14,
+        SEND_RECV_INIT = 15,
+        SEND_READY = 16,
+        RECEIVE_READY = 17,
+        RECEIVE = 18,
+        CONNECTION_FINISH_TCP = 19,
+        CONNECTION_FINISH = 20,
+        SEND_POST = 21,
+        RECEIVE_POST = 22,
+        FINISHING = 23,
+        FINISH = 24,
+        OVER_BOSS = 25,
+        IDLE = 26
     };
 
     enum class CecSystemInfoType : u32 { EulaVersion = 1, Eula = 2, ParentControl = 3 };
 
     struct CecInOutBoxInfoHeader {
         u16_le magic; // 0x6262 'bb'
-        u16_le padding;
+        INSERT_PADDING_BYTES(2);
         u32_le box_info_size;
         u32_le max_box_size;
         u32_le box_size;
@@ -115,15 +116,14 @@ public:
 
     struct CecMBoxInfoHeader {
         u16_le magic; // 0x6363 'cc'
-        u16_le padding;
+        INSERT_PADDING_BYTES(2);
         u32_le program_id;
         u32_le private_id;
         u8 flag;
         u8 flag2;
-        u16_le padding2;
-        u8 hmac_key[32];
-        u32_le padding3;
-        /// year, 4 bytes, month 1 byte, day 1 byte, hour 1 byte, minute 1 byte
+        INSERT_PADDING_BYTES(2);
+        std::array<u8, 32> hmac_key;
+        INSERT_PADDING_BYTES(4);
         struct Time {
             u32_le year;
             u8 month;
@@ -135,9 +135,9 @@ public:
             u8 microsecond;
             u8 padding;
         } last_accessed;
-        u32_le padding4;
+        INSERT_PADDING_BYTES(4);
         Time last_received;
-        u32_le padding5;
+        INSERT_PADDING_BYTES(4);
         Time unknown_time;
     };
     static_assert(sizeof(CecMBoxInfoHeader) == 0x60,
@@ -145,19 +145,19 @@ public:
 
     struct CecMBoxListHeader {
         u16_le magic; // 0x6868 'hh'
-        u16_le padding;
-        u16_le version; /// 0x01 00, maybe activated flag?
-        u16_le padding2;
-        u16_le num_boxes; /// 24 max
-        u16_le padding3;
-        u8 box_names[16 * 24]; /// 16 char names, 24 boxes
+        INSERT_PADDING_BYTES(2);
+        u16_le version; // 0x01 00, maybe activated flag?
+        INSERT_PADDING_BYTES(2);
+        u16_le num_boxes; // 24 max
+        INSERT_PADDING_BYTES(2);
+        std::array<std::array<u8, 16>, 24> box_names; // 16 char names, 24 boxes
     };
     static_assert(sizeof(CecMBoxListHeader) == 0x18C,
                   "CecMBoxListHeader struct has incorrect size.");
 
     struct CecMessageHeader {
-        u16_le magic; // ``
-        u16_le padding;
+        u16_le magic; // 0x6060 ``
+        INSERT_PADDING_BYTES(2);
         u32_le message_size;
         u32_le header_size;
         u32_le body_size;
@@ -167,9 +167,9 @@ public:
         u32_le batch_id;
         u32_le unknown_id;
 
-        u8 message_id[8];
+        std::array<u8, 8> message_id;
         u32_le version;
-        u8 message_id_2[8];
+        std::array<u8, 8> message_id_2;
         u8 flag;
         u8 send_method;
         u8 is_unopen;
@@ -177,7 +177,15 @@ public:
         u64_le sender_id;
         u64_le sender_id2;
         struct Time {
-            u32_le a, b, c;
+            u32_le year;
+            u8 month;
+            u8 day;
+            u8 hour;
+            u8 minute;
+            u8 second;
+            u8 millisecond;
+            u8 microsecond;
+            u8 padding;
         } send_time, recv_time, create_time;
         u8 send_count;
         u8 foward_count;
@@ -186,10 +194,10 @@ public:
     static_assert(sizeof(CecMessageHeader) == 0x70, "CecMessageHeader struct has incorrect size.");
 
     struct CecOBIndexHeader {
-        u16_le magic; /// 0x6767 'gg'
-        u16_le padding;
+        u16_le magic; // 0x6767 'gg'
+        INSERT_PADDING_BYTES(2);
         u32_le message_num;
-        /// Array? of messageid's 8 bytes each, same as CecMessageHeader.message_id[8]
+        // Array of messageid's 8 bytes each, same as CecMessageHeader.message_id[8]
     };
     static_assert(sizeof(CecOBIndexHeader) == 0x08, "CecOBIndexHeader struct has incorrect size.");
 
@@ -202,11 +210,11 @@ public:
 
     union CecOpenMode {
         u32 raw;
-        BitField<0, 1, u32> unknown; /// 1 delete?
-        BitField<1, 1, u32> read;    /// 2
-        BitField<2, 1, u32> write;   /// 4
-        BitField<3, 1, u32> create;  /// 8
-        BitField<4, 1, u32> check;   /// 16 maybe validate sig?
+        BitField<0, 1, u32> unknown; // 1 delete?
+        BitField<1, 1, u32> read;    // 2
+        BitField<2, 1, u32> write;   // 4
+        BitField<3, 1, u32> create;  // 8
+        BitField<4, 1, u32> check;   // 16 maybe validate sig?
         BitField<30, 1, u32> unk_flag;
     };
 
