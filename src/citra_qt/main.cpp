@@ -1402,14 +1402,15 @@ void GMainWindow::UpdateStatusBar() {
 void GMainWindow::OnCoreError(Core::System::ResultStatus result, std::string details) {
     QMessageBox::StandardButton answer;
     QString status_message;
-    const QString common_message =
-        tr("%1 is missing. Please <a "
-           "href='https://citra-emu.org/wiki/"
-           "dumping-system-archives-and-the-shared-fonts-from-a-3ds-console/'>dump your "
-           "system archives</a>.<br/>Continuing emulation may result in crashes and bugs.");
+
     QString title, message;
-    switch (result) {
-    case Core::System::ResultStatus::ErrorSystemFiles: {
+    if (result == Core::System::ResultStatus::ErrorSystemFiles) {
+        const QString common_message =
+            tr("%1 is missing. Please <a "
+               "href='https://citra-emu.org/wiki/"
+               "dumping-system-archives-and-the-shared-fonts-from-a-3ds-console/'>dump your "
+               "system archives</a>.<br/>Continuing emulation may result in crashes and bugs.");
+
         if (!details.empty()) {
             message = common_message.arg(QString::fromStdString(details));
         } else {
@@ -1418,18 +1419,7 @@ void GMainWindow::OnCoreError(Core::System::ResultStatus result, std::string det
 
         title = tr("System Archive Not Found");
         status_message = "System Archive Missing";
-        break;
-    }
-
-    case Core::System::ResultStatus::ErrorSharedFont: {
-        message = tr("Shared fonts not found. ");
-        message.append(common_message);
-        title = tr("Shared Fonts Not Found");
-        status_message = "Shared Font Missing";
-        break;
-    }
-
-    default:
+    } else {
         title = tr("Fatal Error");
         message =
             tr("A fatal error occured. "
@@ -1437,7 +1427,6 @@ void GMainWindow::OnCoreError(Core::System::ResultStatus result, std::string det
                "the log</a> for details."
                "<br/>Continuing emulation may result in crashes and bugs.");
         status_message = "Fatal Error encountered";
-        break;
     }
 
     QMessageBox message_box;
