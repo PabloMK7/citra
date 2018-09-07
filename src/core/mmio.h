@@ -24,14 +24,14 @@ public:
     virtual u32 Read32(VAddr addr) = 0;
     virtual u64 Read64(VAddr addr) = 0;
 
-    virtual bool ReadBlock(VAddr src_addr, void* dest_buffer, size_t size) = 0;
+    virtual bool ReadBlock(VAddr src_addr, void* dest_buffer, std::size_t size) = 0;
 
     virtual void Write8(VAddr addr, u8 data) = 0;
     virtual void Write16(VAddr addr, u16 data) = 0;
     virtual void Write32(VAddr addr, u32 data) = 0;
     virtual void Write64(VAddr addr, u64 data) = 0;
 
-    virtual bool WriteBlock(VAddr dest_addr, const void* src_buffer, size_t size) = 0;
+    virtual bool WriteBlock(VAddr dest_addr, const void* src_buffer, std::size_t size) = 0;
 };
 
 using MMIORegionPointer = std::shared_ptr<MMIORegion>;

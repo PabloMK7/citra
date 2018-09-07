@@ -100,13 +100,13 @@ ResultCode HLERequestContext::PopulateFromIncomingCommandBuffer(const u32_le* sr
                                                                 HandleTable& src_table) {
     IPC::Header header{src_cmdbuf[0]};
 
-    size_t untranslated_size = 1u + header.normal_params_size;
-    size_t command_size = untranslated_size + header.translate_params_size;
+    std::size_t untranslated_size = 1u + header.normal_params_size;
+    std::size_t command_size = untranslated_size + header.translate_params_size;
     ASSERT(command_size <= IPC::COMMAND_BUFFER_LENGTH); // TODO(yuriks): Return error
 
     std::copy_n(src_cmdbuf, untranslated_size, cmd_buf.begin());
 
-    size_t i = untranslated_size;
+    std::size_t i = untranslated_size;
     while (i < command_size) {
         u32 descriptor = cmd_buf[i] = src_cmdbuf[i];
         i += 1;
@@ -165,13 +165,13 @@ ResultCode HLERequestContext::WriteToOutgoingCommandBuffer(u32_le* dst_cmdbuf, P
                                                            HandleTable& dst_table) const {
     IPC::Header header{cmd_buf[0]};
 
-    size_t untranslated_size = 1u + header.normal_params_size;
-    size_t command_size = untranslated_size + header.translate_params_size;
+    std::size_t untranslated_size = 1u + header.normal_params_size;
+    std::size_t command_size = untranslated_size + header.translate_params_size;
     ASSERT(command_size <= IPC::COMMAND_BUFFER_LENGTH);
 
     std::copy_n(cmd_buf.begin(), untranslated_size, dst_cmdbuf);
 
-    size_t i = untranslated_size;
+    std::size_t i = untranslated_size;
     while (i < command_size) {
         u32 descriptor = dst_cmdbuf[i] = cmd_buf[i];
         i += 1;
@@ -201,7 +201,8 @@ ResultCode HLERequestContext::WriteToOutgoingCommandBuffer(u32_le* dst_cmdbuf, P
             // Grab the address that the target thread set up to receive the response static buffer
             // and write our data there. The static buffers area is located right after the command
             // buffer area.
-            size_t static_buffer_offset = IPC::COMMAND_BUFFER_LENGTH + 2 * buffer_info.buffer_id;
+            std::size_t static_buffer_offset =
+                IPC::COMMAND_BUFFER_LENGTH + 2 * buffer_info.buffer_id;
             IPC::StaticBufferDescInfo target_descriptor{dst_cmdbuf[static_buffer_offset]};
             VAddr target_address = dst_cmdbuf[static_buffer_offset + 1];
 
@@ -237,13 +238,13 @@ MappedBuffer::MappedBuffer(const Process& process, u32 descriptor, VAddr address
     perms = desc.perms;
 }
 
-void MappedBuffer::Read(void* dest_buffer, size_t offset, size_t size) {
+void MappedBuffer::Read(void* dest_buffer, std::size_t offset, std::size_t size) {
     ASSERT(perms & IPC::R);
     ASSERT(offset + size <= this->size);
     Memory::ReadBlock(*process, address + static_cast<VAddr>(offset), dest_buffer, size);
 }
 
-void MappedBuffer::Write(const void* src_buffer, size_t offset, size_t size) {
+void MappedBuffer::Write(const void* src_buffer, std::size_t offset, std::size_t size) {
     ASSERT(perms & IPC::W);
     ASSERT(offset + size <= this->size);
     Memory::WriteBlock(*process, address + static_cast<VAddr>(offset), src_buffer, size);

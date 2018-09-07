@@ -118,7 +118,7 @@ struct UnitState {
 
     GSEmitter* emitter_ptr;
 
-    static size_t InputOffset(const SourceRegister& reg) {
+    static std::size_t InputOffset(const SourceRegister& reg) {
         switch (reg.GetRegisterType()) {
         case RegisterType::Input:
             return offsetof(UnitState, registers.input) +
@@ -134,7 +134,7 @@ struct UnitState {
         }
     }
 
-    static size_t OutputOffset(const DestRegister& reg) {
+    static std::size_t OutputOffset(const DestRegister& reg) {
         switch (reg.GetRegisterType()) {
         case RegisterType::Output:
             return offsetof(UnitState, registers.output) +
@@ -182,15 +182,15 @@ struct Uniforms {
     std::array<bool, 16> b;
     std::array<Math::Vec4<u8>, 4> i;
 
-    static size_t GetFloatUniformOffset(unsigned index) {
+    static std::size_t GetFloatUniformOffset(unsigned index) {
         return offsetof(Uniforms, f) + index * sizeof(Math::Vec4<float24>);
     }
 
-    static size_t GetBoolUniformOffset(unsigned index) {
+    static std::size_t GetBoolUniformOffset(unsigned index) {
         return offsetof(Uniforms, b) + index * sizeof(bool);
     }
 
-    static size_t GetIntUniformOffset(unsigned index) {
+    static std::size_t GetIntUniformOffset(unsigned index) {
         return offsetof(Uniforms, i) + index * sizeof(Math::Vec4<u8>);
     }
 };

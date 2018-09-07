@@ -54,7 +54,7 @@ public:
      * @return The amount of data remaning in the pipe. This is the maximum length PipeRead will
      * return.
      */
-    virtual size_t GetPipeReadableSize(DspPipe pipe_number) const = 0;
+    virtual std::size_t GetPipeReadableSize(DspPipe pipe_number) const = 0;
 
     /**
      * Write to a DSP pipe.

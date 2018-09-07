@@ -24,8 +24,8 @@ ResultCode TranslateCommandBuffer(SharedPtr<Thread> src_thread, SharedPtr<Thread
     // TODO(Subv): Replace by Memory::Read32 when possible.
     Memory::ReadBlock(*src_process, src_address, &header.raw, sizeof(header.raw));
 
-    size_t untranslated_size = 1u + header.normal_params_size;
-    size_t command_size = untranslated_size + header.translate_params_size;
+    std::size_t untranslated_size = 1u + header.normal_params_size;
+    std::size_t command_size = untranslated_size + header.translate_params_size;
 
     // Note: The real kernel does not check that the command length fits into the IPC buffer area.
     ASSERT(command_size <= IPC::COMMAND_BUFFER_LENGTH);
@@ -33,7 +33,7 @@ ResultCode TranslateCommandBuffer(SharedPtr<Thread> src_thread, SharedPtr<Thread
     std::array<u32, IPC::COMMAND_BUFFER_LENGTH> cmd_buf;
     Memory::ReadBlock(*src_process, src_address, cmd_buf.data(), command_size * sizeof(u32));
 
-    size_t i = untranslated_size;
+    std::size_t i = untranslated_size;
     while (i < command_size) {
         u32 descriptor = cmd_buf[i];
         i += 1;
@@ -178,11 +178,12 @@ ResultCode TranslateCommandBuffer(SharedPtr<Thread> src_thread, SharedPtr<Thread
                 auto buffer = std::make_shared<std::vector<u8>>(Memory::PAGE_SIZE);
 
                 // Number of bytes until the next page.
-                size_t difference_to_page =
+                std::size_t difference_to_page =
                     Common::AlignUp(source_address, Memory::PAGE_SIZE) - source_address;
                 // If the data fits in one page we can just copy the required size instead of the
                 // entire page.
-                size_t read_size = num_pages == 1 ? static_cast<size_t>(size) : difference_to_page;
+                std::size_t read_size =
+                    num_pages == 1 ? static_cast<std::size_t>(size) : difference_to_page;
 
                 Memory::ReadBlock(*src_process, source_address, buffer->data() + page_offset,
                                   read_size);

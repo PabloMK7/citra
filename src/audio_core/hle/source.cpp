@@ -26,12 +26,12 @@ SourceStatus::Status Source::Tick(SourceConfiguration::Configuration& config,
     return GetCurrentStatus();
 }
 
-void Source::MixInto(QuadFrame32& dest, size_t intermediate_mix_id) const {
+void Source::MixInto(QuadFrame32& dest, std::size_t intermediate_mix_id) const {
     if (!state.enabled)
         return;
 
     const std::array<float, 4>& gains = state.gain.at(intermediate_mix_id);
-    for (size_t samplei = 0; samplei < samples_per_frame; samplei++) {
+    for (std::size_t samplei = 0; samplei < samples_per_frame; samplei++) {
         // Conversion from stereo (current_frame) to quadraphonic (dest) occurs here.
         dest[samplei][0] += static_cast<s32>(gains[0] * current_frame[samplei][0]);
         dest[samplei][1] += static_cast<s32>(gains[1] * current_frame[samplei][1]);
@@ -141,21 +141,21 @@ void Source::ParseConfig(SourceConfiguration::Configuration& config,
         config.interpolation_dirty.Assign(0);
         state.interpolation_mode = config.interpolation_mode;
         LOG_TRACE(Audio_DSP, "source_id={} interpolation_mode={}", source_id,
-                  static_cast<size_t>(state.interpolation_mode));
+                  static_cast<std::size_t>(state.interpolation_mode));
     }
 
     if (config.format_dirty || config.embedded_buffer_dirty) {
         config.format_dirty.Assign(0);
         state.format = config.format;
         LOG_TRACE(Audio_DSP, "source_id={} format={}", source_id,
-                  static_cast<size_t>(state.format));
+                  static_cast<std::size_t>(state.format));
     }
 
     if (config.mono_or_stereo_dirty || config.embedded_buffer_dirty) {
         config.mono_or_stereo_dirty.Assign(0);
         state.mono_or_stereo = config.mono_or_stereo;
         LOG_TRACE(Audio_DSP, "source_id={} mono_or_stereo={}", source_id,
-                  static_cast<size_t>(state.mono_or_stereo));
+                  static_cast<std::size_t>(state.mono_or_stereo));
     }
 
     u32_dsp play_position = {};
@@ -195,7 +195,7 @@ void Source::ParseConfig(SourceConfiguration::Configuration& config,
 
     if (config.buffer_queue_dirty) {
         config.buffer_queue_dirty.Assign(0);
-        for (size_t i = 0; i < 4; i++) {
+        for (std::size_t i = 0; i < 4; i++) {
             if (config.buffers_dirty & (1 << i)) {
                 const auto& b = config.buffers[i];
                 state.input_queue.emplace(Buffer{
@@ -236,7 +236,7 @@ void Source::GenerateFrame() {
         return;
     }
 
-    size_t frame_position = 0;
+    std::size_t frame_position = 0;
 
     state.current_sample_number = state.next_sample_number;
     while (frame_position < current_frame.size()) {

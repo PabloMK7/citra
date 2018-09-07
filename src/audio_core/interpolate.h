@@ -32,7 +32,8 @@ struct State {
  * @param output The resampled audio buffer.
  * @param outputi The index of output to start writing to.
  */
-void None(State& state, StereoBuffer16& input, float rate, StereoFrame16& output, size_t& outputi);
+void None(State& state, StereoBuffer16& input, float rate, StereoFrame16& output,
+          std::size_t& outputi);
 
 /**
  * Linear interpolation. This is equivalent to a first-order hold. There is a two-sample predelay.
@@ -44,7 +45,7 @@ void None(State& state, StereoBuffer16& input, float rate, StereoFrame16& output
  * @param outputi The index of output to start writing to.
  */
 void Linear(State& state, StereoBuffer16& input, float rate, StereoFrame16& output,
-            size_t& outputi);
+            std::size_t& outputi);
 
 } // namespace AudioInterp
 } // namespace AudioCore

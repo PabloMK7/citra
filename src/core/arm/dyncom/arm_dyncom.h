@@ -19,7 +19,7 @@ public:
     void Step() override;
 
     void ClearInstructionCache() override;
-    void InvalidateCacheRange(u32 start_address, size_t length) override;
+    void InvalidateCacheRange(u32 start_address, std::size_t length) override;
     void PageTableChanged() override;
 
     void SetPC(u32 pc) override;

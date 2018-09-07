@@ -7,8 +7,8 @@
 
 namespace Pica {
 
-static float LookupLightingLut(const Pica::State::Lighting& lighting, size_t lut_index, u8 index,
-                               float delta) {
+static float LookupLightingLut(const Pica::State::Lighting& lighting, std::size_t lut_index,
+                               u8 index, float delta) {
     ASSERT_MSG(lut_index < lighting.luts.size(), "Out of range lut");
     ASSERT_MSG(index < lighting.luts[lut_index].size(), "Out of range index");
 
@@ -93,8 +93,8 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(
             auto distance = (-view - position).Length();
             float scale = Pica::float20::FromRaw(light_config.dist_atten_scale).ToFloat32();
             float bias = Pica::float20::FromRaw(light_config.dist_atten_bias).ToFloat32();
-            size_t lut =
-                static_cast<size_t>(LightingRegs::LightingSampler::DistanceAttenuation) + num;
+            std::size_t lut =
+                static_cast<std::size_t>(LightingRegs::LightingSampler::DistanceAttenuation) + num;
 
             float sample_loc = std::clamp(scale * distance + bias, 0.0f, 1.0f);
 
@@ -168,8 +168,8 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(
             }
 
             float scale = lighting.lut_scale.GetScale(scale_enum);
-            return scale *
-                   LookupLightingLut(lighting_state, static_cast<size_t>(sampler), index, delta);
+            return scale * LookupLightingLut(lighting_state, static_cast<std::size_t>(sampler),
+                                             index, delta);
         };
 
         // If enabled, compute spot light attenuation value

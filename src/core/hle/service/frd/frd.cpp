@@ -106,8 +106,8 @@ void Module::Interface::GetMyScreenName(Kernel::HLERequestContext& ctx) {
 }
 
 void Module::Interface::UnscrambleLocalFriendCode(Kernel::HLERequestContext& ctx) {
-    const size_t scrambled_friend_code_size = 12;
-    const size_t friend_code_size = 8;
+    const std::size_t scrambled_friend_code_size = 12;
+    const std::size_t friend_code_size = 8;
 
     IPC::RequestParser rp(ctx, 0x1C, 1, 2);
     const u32 friend_code_count = rp.Pop<u32>();

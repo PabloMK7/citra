@@ -30,10 +30,10 @@ public:
         fpexc = 0;
     }
 
-    u32 GetCpuRegister(size_t index) const override {
+    u32 GetCpuRegister(std::size_t index) const override {
         return ctx.Regs()[index];
     }
-    void SetCpuRegister(size_t index, u32 value) override {
+    void SetCpuRegister(std::size_t index, u32 value) override {
         ctx.Regs()[index] = value;
     }
     u32 GetCpsr() const override {
@@ -42,10 +42,10 @@ public:
     void SetCpsr(u32 value) override {
         ctx.SetCpsr(value);
     }
-    u32 GetFpuRegister(size_t index) const override {
+    u32 GetFpuRegister(std::size_t index) const override {
         return ctx.ExtRegs()[index];
     }
-    void SetFpuRegister(size_t index, u32 value) override {
+    void SetFpuRegister(std::size_t index, u32 value) override {
         ctx.ExtRegs()[index] = value;
     }
     u32 GetFpscr() const override {
@@ -99,7 +99,7 @@ public:
         Memory::Write64(vaddr, value);
     }
 
-    void InterpreterFallback(VAddr pc, size_t num_instructions) override {
+    void InterpreterFallback(VAddr pc, std::size_t num_instructions) override {
         parent.interpreter_state->Reg = parent.jit->Regs();
         parent.interpreter_state->Cpsr = parent.jit->Cpsr();
         parent.interpreter_state->Reg[15] = pc;
@@ -126,7 +126,7 @@ public:
 
     void ExceptionRaised(VAddr pc, Dynarmic::A32::Exception exception) override {
         ASSERT_MSG(false, "ExceptionRaised(exception = {}, pc = {:08X}, code = {:08X})",
-                   static_cast<size_t>(exception), pc, MemoryReadCode(pc));
+                   static_cast<std::size_t>(exception), pc, MemoryReadCode(pc));
     }
 
     void AddTicks(std::uint64_t ticks) override {
@@ -253,7 +253,7 @@ void ARM_Dynarmic::ClearInstructionCache() {
     interpreter_state->instruction_cache.clear();
 }
 
-void ARM_Dynarmic::InvalidateCacheRange(u32 start_address, size_t length) {
+void ARM_Dynarmic::InvalidateCacheRange(u32 start_address, std::size_t length) {
     jit->InvalidateCacheRange(start_address, length);
 }
 

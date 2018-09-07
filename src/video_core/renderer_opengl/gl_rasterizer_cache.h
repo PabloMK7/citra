@@ -115,8 +115,8 @@ struct SurfaceParams {
             32, // D24S8
         };
 
-        assert(static_cast<size_t>(format) < bpp_table.size());
-        return bpp_table[static_cast<size_t>(format)];
+        assert(static_cast<std::size_t>(format) < bpp_table.size());
+        return bpp_table[static_cast<std::size_t>(format)];
     }
     unsigned int GetFormatBpp() const {
         return GetFormatBpp(pixel_format);
@@ -321,7 +321,7 @@ struct CachedSurface : SurfaceParams, std::enable_shared_from_this<CachedSurface
     }
 
     std::unique_ptr<u8[]> gl_buffer;
-    size_t gl_buffer_size = 0;
+    std::size_t gl_buffer_size = 0;
 
     // Read/Write data in 3DS memory to/from gl_buffer
     void LoadGLBuffer(PAddr load_start, PAddr load_end);
@@ -374,7 +374,7 @@ struct TextureCubeConfig {
 namespace std {
 template <>
 struct hash<TextureCubeConfig> {
-    size_t operator()(const TextureCubeConfig& config) const {
+    std::size_t operator()(const TextureCubeConfig& config) const {
         std::size_t hash = 0;
         boost::hash_combine(hash, config.px);
         boost::hash_combine(hash, config.nx);

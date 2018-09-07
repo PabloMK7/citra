@@ -94,7 +94,7 @@ void File::Read(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
 
     std::vector<u8> data(length);
-    ResultVal<size_t> read = backend->Read(offset, data.size(), data.data());
+    ResultVal<std::size_t> read = backend->Read(offset, data.size(), data.data());
     if (read.Failed()) {
         rb.Push(read.Code());
         rb.Push<u32>(0);
@@ -136,7 +136,7 @@ void File::Write(Kernel::HLERequestContext& ctx) {
 
     std::vector<u8> data(length);
     buffer.Read(data.data(), 0, data.size());
-    ResultVal<size_t> written = backend->Write(offset, data.size(), flush != 0, data.data());
+    ResultVal<std::size_t> written = backend->Write(offset, data.size(), flush != 0, data.data());
     if (written.Failed()) {
         rb.Push(written.Code());
         rb.Push<u32>(0);
@@ -268,7 +268,7 @@ void File::OpenSubFile(Kernel::HLERequestContext& ctx) {
         return;
     }
 
-    size_t end = offset + size;
+    std::size_t end = offset + size;
 
     // TODO(Subv): Check for overflow and return ERR_WRITE_BEYOND_END
 

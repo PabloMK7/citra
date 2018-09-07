@@ -9,7 +9,7 @@
 #include "video_core/renderer_opengl/gl_shader_manager.h"
 
 static void SetShaderUniformBlockBinding(GLuint shader, const char* name, UniformBindings binding,
-                                         size_t expected_size) {
+                                         std::size_t expected_size) {
     GLuint ub_index = glGetUniformBlockIndex(shader, name);
     if (ub_index == GL_INVALID_INDEX) {
         return;

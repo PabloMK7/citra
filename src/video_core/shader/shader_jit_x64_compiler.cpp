@@ -166,7 +166,7 @@ static void LogCritical(const char* msg) {
 
 void JitShader::Compile_Assert(bool condition, const char* msg) {
     if (!condition) {
-        mov(ABI_PARAM1, reinterpret_cast<size_t>(msg));
+        mov(ABI_PARAM1, reinterpret_cast<std::size_t>(msg));
         CallFarFunction(*this, LogCritical);
     }
 }
@@ -181,7 +181,7 @@ void JitShader::Compile_Assert(bool condition, const char* msg) {
 void JitShader::Compile_SwizzleSrc(Instruction instr, unsigned src_num, SourceRegister src_reg,
                                    Xmm dest) {
     Reg64 src_ptr;
-    size_t src_offset;
+    std::size_t src_offset;
 
     if (src_reg.GetRegisterType() == RegisterType::FloatUniform) {
         src_ptr = UNIFORMS;
@@ -266,7 +266,7 @@ void JitShader::Compile_DestEnable(Instruction instr, Xmm src) {
 
     SwizzlePattern swiz = {(*swizzle_data)[operand_desc_id]};
 
-    size_t dest_offset_disp = UnitState::OutputOffset(dest);
+    std::size_t dest_offset_disp = UnitState::OutputOffset(dest);
 
     // If all components are enabled, write the result to the destination register
     if (swiz.dest_mask == NO_DEST_REG_MASK) {
@@ -354,7 +354,7 @@ void JitShader::Compile_EvaluateCondition(Instruction instr) {
 }
 
 void JitShader::Compile_UniformCondition(Instruction instr) {
-    size_t offset = Uniforms::GetBoolUniformOffset(instr.flow_control.bool_uniform_id);
+    std::size_t offset = Uniforms::GetBoolUniformOffset(instr.flow_control.bool_uniform_id);
     cmp(byte[UNIFORMS + offset], 0);
 }
 
@@ -733,7 +733,7 @@ void JitShader::Compile_LOOP(Instruction instr) {
     // This decodes the fields from the integer uniform at index instr.flow_control.int_uniform_id.
     // The Y (LOOPCOUNT_REG) and Z (LOOPINC) component are kept multiplied by 16 (Left shifted by
     // 4 bits) to be used as an offset into the 16-byte vector registers later
-    size_t offset = Uniforms::GetIntUniformOffset(instr.flow_control.int_uniform_id);
+    std::size_t offset = Uniforms::GetIntUniformOffset(instr.flow_control.int_uniform_id);
     mov(LOOPCOUNT, dword[UNIFORMS + offset]);
     mov(LOOPCOUNT_REG, LOOPCOUNT);
     shr(LOOPCOUNT_REG, 4);
@@ -789,7 +789,7 @@ void JitShader::Compile_EMIT(Instruction instr) {
     jnz(have_emitter);
 
     ABI_PushRegistersAndAdjustStack(*this, PersistentCallerSavedRegs(), 0);
-    mov(ABI_PARAM1, reinterpret_cast<size_t>("Execute EMIT on VS"));
+    mov(ABI_PARAM1, reinterpret_cast<std::size_t>("Execute EMIT on VS"));
     CallFarFunction(*this, LogCritical);
     ABI_PopRegistersAndAdjustStack(*this, PersistentCallerSavedRegs(), 0);
     jmp(end);
@@ -811,7 +811,7 @@ void JitShader::Compile_SETE(Instruction instr) {
     jnz(have_emitter);
 
     ABI_PushRegistersAndAdjustStack(*this, PersistentCallerSavedRegs(), 0);
-    mov(ABI_PARAM1, reinterpret_cast<size_t>("Execute SETEMIT on VS"));
+    mov(ABI_PARAM1, reinterpret_cast<std::size_t>("Execute SETEMIT on VS"));
     CallFarFunction(*this, LogCritical);
     ABI_PopRegistersAndAdjustStack(*this, PersistentCallerSavedRegs(), 0);
     jmp(end);
@@ -866,7 +866,7 @@ void JitShader::Compile_NextInstr() {
 void JitShader::FindReturnOffsets() {
     return_offsets.clear();
 
-    for (size_t offset = 0; offset < program_code->size(); ++offset) {
+    for (std::size_t offset = 0; offset < program_code->size(); ++offset) {
         Instruction instr = {(*program_code)[offset]};
 
         switch (instr.opcode.Value()) {
@@ -922,12 +922,12 @@ void JitShader::Compile(const std::array<u32, MAX_PROGRAM_CODE_LENGTH>* program_
 
     // Used to set a register to one
     static const __m128 one = {1.f, 1.f, 1.f, 1.f};
-    mov(rax, reinterpret_cast<size_t>(&one));
+    mov(rax, reinterpret_cast<std::size_t>(&one));
     movaps(ONE, xword[rax]);
 
     // Used to negate registers
     static const __m128 neg = {-0.f, -0.f, -0.f, -0.f};
-    mov(rax, reinterpret_cast<size_t>(&neg));
+    mov(rax, reinterpret_cast<std::size_t>(&neg));
     movaps(NEGBIT, xword[rax]);
 
     // Jump to start of the shader program

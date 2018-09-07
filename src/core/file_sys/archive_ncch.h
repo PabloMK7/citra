@@ -72,8 +72,9 @@ class NCCHFile : public FileBackend {
 public:
     explicit NCCHFile(std::vector<u8> buffer, std::unique_ptr<DelayGenerator> delay_generator_);
 
-    ResultVal<size_t> Read(u64 offset, size_t length, u8* buffer) const override;
-    ResultVal<size_t> Write(u64 offset, size_t length, bool flush, const u8* buffer) override;
+    ResultVal<std::size_t> Read(u64 offset, std::size_t length, u8* buffer) const override;
+    ResultVal<std::size_t> Write(u64 offset, std::size_t length, bool flush,
+                                 const u8* buffer) override;
     u64 GetSize() const override;
     bool SetSize(u64 size) const override;
     bool Close() const override {

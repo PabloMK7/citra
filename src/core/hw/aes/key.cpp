@@ -62,7 +62,7 @@ AESKey HexToKey(const std::string& hex) {
     }
 
     AESKey key;
-    for (size_t i = 0; i < key.size(); ++i) {
+    for (std::size_t i = 0; i < key.size(); ++i) {
         key[i] = static_cast<u8>(std::stoi(hex.substr(i * 2, 2), 0, 16));
     }
 
@@ -102,7 +102,7 @@ void LoadPresetKeys() {
             continue;
         }
 
-        size_t slot_id;
+        std::size_t slot_id;
         char key_type;
         if (std::sscanf(name.c_str(), "slot0x%zXKey%c", &slot_id, &key_type) != 2) {
             LOG_ERROR(HW_AES, "Invalid key name {}", name);
@@ -145,23 +145,23 @@ void SetGeneratorConstant(const AESKey& key) {
     generator_constant = key;
 }
 
-void SetKeyX(size_t slot_id, const AESKey& key) {
+void SetKeyX(std::size_t slot_id, const AESKey& key) {
     key_slots.at(slot_id).SetKeyX(key);
 }
 
-void SetKeyY(size_t slot_id, const AESKey& key) {
+void SetKeyY(std::size_t slot_id, const AESKey& key) {
     key_slots.at(slot_id).SetKeyY(key);
 }
 
-void SetNormalKey(size_t slot_id, const AESKey& key) {
+void SetNormalKey(std::size_t slot_id, const AESKey& key) {
     key_slots.at(slot_id).SetNormalKey(key);
 }
 
-bool IsNormalKeyAvailable(size_t slot_id) {
+bool IsNormalKeyAvailable(std::size_t slot_id) {
     return key_slots.at(slot_id).normal.is_initialized();
 }
 
-AESKey GetNormalKey(size_t slot_id) {
+AESKey GetNormalKey(std::size_t slot_id) {
     return key_slots.at(slot_id).normal.value_or(AESKey{});
 }
 

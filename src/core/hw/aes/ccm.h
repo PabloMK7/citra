@@ -12,8 +12,8 @@
 namespace HW {
 namespace AES {
 
-constexpr size_t CCM_NONCE_SIZE = 12;
-constexpr size_t CCM_MAC_SIZE = 16;
+constexpr std::size_t CCM_NONCE_SIZE = 12;
+constexpr std::size_t CCM_MAC_SIZE = 16;
 
 using CCMNonce = std::array<u8, CCM_NONCE_SIZE>;
 
@@ -24,7 +24,8 @@ using CCMNonce = std::array<u8, CCM_NONCE_SIZE>;
  * @param slot_id The slot ID of the key to use for encryption
  * @returns a vector of u8 containing the encrypted data with MAC at the end
  */
-std::vector<u8> EncryptSignCCM(const std::vector<u8>& pdata, const CCMNonce& nonce, size_t slot_id);
+std::vector<u8> EncryptSignCCM(const std::vector<u8>& pdata, const CCMNonce& nonce,
+                               std::size_t slot_id);
 
 /**
  * Decrypts and verify the MAC of the given data using AES-CCM algorithm.
@@ -34,7 +35,7 @@ std::vector<u8> EncryptSignCCM(const std::vector<u8>& pdata, const CCMNonce& non
  * @returns a vector of u8 containing the decrypted data; an empty vector if the verification fails
  */
 std::vector<u8> DecryptVerifyCCM(const std::vector<u8>& cipher, const CCMNonce& nonce,
-                                 size_t slot_id);
+                                 std::size_t slot_id);
 
 } // namespace AES
 } // namespace HW

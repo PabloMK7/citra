@@ -30,11 +30,11 @@ constexpr float SCREEN_REFRESH_RATE = 60;
 #else
 // NOTE: Yeah, hacking in a static_assert here just to workaround the lacking MSVC compiler
 //       really is this annoying. This macro just forwards its first argument to GPU_REG_INDEX
-//       and then performs a (no-op) cast to size_t iff the second argument matches the expected
-//       field offset. Otherwise, the compiler will fail to compile this code.
+//       and then performs a (no-op) cast to std::size_t iff the second argument matches the
+//       expected field offset. Otherwise, the compiler will fail to compile this code.
 #define GPU_REG_INDEX_WORKAROUND(field_name, backup_workaround_index)                              \
-    ((typename std::enable_if<backup_workaround_index == GPU_REG_INDEX(field_name), size_t>::type) \
-         GPU_REG_INDEX(field_name))
+    ((typename std::enable_if<backup_workaround_index == GPU_REG_INDEX(field_name),                \
+                              std::size_t>::type) GPU_REG_INDEX(field_name))
 #endif
 
 // MMIO region 0x1EFxxxxx
@@ -268,7 +268,7 @@ struct Regs {
 
     INSERT_PADDING_WORDS(0x9c3);
 
-    static constexpr size_t NumIds() {
+    static constexpr std::size_t NumIds() {
         return sizeof(Regs) / sizeof(u32);
     }
 

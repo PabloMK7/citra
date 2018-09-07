@@ -18,7 +18,7 @@ constexpr u64 scale_mask = scale_factor - 1;
 /// Three adjacent samples are passed to fn each step.
 template <typename Function>
 static void StepOverSamples(State& state, StereoBuffer16& input, float rate, StereoFrame16& output,
-                            size_t& outputi, Function fn) {
+                            std::size_t& outputi, Function fn) {
     ASSERT(rate > 0);
 
     if (input.empty())
@@ -28,10 +28,10 @@ static void StepOverSamples(State& state, StereoBuffer16& input, float rate, Ste
 
     const u64 step_size = static_cast<u64>(rate * scale_factor);
     u64 fposition = state.fposition;
-    size_t inputi = 0;
+    std::size_t inputi = 0;
 
     while (outputi < output.size()) {
-        inputi = static_cast<size_t>(fposition / scale_factor);
+        inputi = static_cast<std::size_t>(fposition / scale_factor);
 
         if (inputi + 2 >= input.size()) {
             inputi = input.size() - 2;
@@ -51,14 +51,15 @@ static void StepOverSamples(State& state, StereoBuffer16& input, float rate, Ste
     input.erase(input.begin(), std::next(input.begin(), inputi + 2));
 }
 
-void None(State& state, StereoBuffer16& input, float rate, StereoFrame16& output, size_t& outputi) {
+void None(State& state, StereoBuffer16& input, float rate, StereoFrame16& output,
+          std::size_t& outputi) {
     StepOverSamples(
         state, input, rate, output, outputi,
         [](u64 fraction, const auto& x0, const auto& x1, const auto& x2) { return x0; });
 }
 
 void Linear(State& state, StereoBuffer16& input, float rate, StereoFrame16& output,
-            size_t& outputi) {
+            std::size_t& outputi) {
     // Note on accuracy: Some values that this produces are +/- 1 from the actual firmware.
     StepOverSamples(state, input, rate, output, outputi,
                     [](u64 fraction, const auto& x0, const auto& x1, const auto& x2) {

@@ -203,7 +203,7 @@ static std::vector<u8> DecryptDataFrame(const std::vector<u8>& encrypted_payload
         df.ChannelMessageEnd(CryptoPP::DEFAULT_CHANNEL);
         df.SetRetrievalChannel(CryptoPP::DEFAULT_CHANNEL);
 
-        size_t size = df.MaxRetrievable();
+        std::size_t size = df.MaxRetrievable();
 
         std::vector<u8> pdata(size);
         df.Get(pdata.data(), size);
@@ -257,7 +257,7 @@ static std::vector<u8> EncryptDataFrame(const std::vector<u8>& payload,
 
         df.SetRetrievalChannel(CryptoPP::DEFAULT_CHANNEL);
 
-        size_t size = df.MaxRetrievable();
+        std::size_t size = df.MaxRetrievable();
 
         std::vector<u8> cipher(size);
         df.Get(cipher.data(), size);
@@ -357,7 +357,7 @@ std::vector<u8> GenerateEAPoLLogoffFrame(const MacAddress& mac_address, u16 netw
     eapol_logoff.connected_nodes = total_nodes;
     eapol_logoff.max_nodes = max_nodes;
 
-    for (size_t index = 0; index < total_nodes; ++index) {
+    for (std::size_t index = 0; index < total_nodes; ++index) {
         const auto& node_info = nodes[index];
         auto& node = eapol_logoff.nodes[index];
 

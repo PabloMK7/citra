@@ -150,7 +150,7 @@ struct TexturingRegs {
         if (face != CubeFace::PositiveX) {
             // Bits [22:27] from the main texture address is shared with all cubemap additional
             // addresses.
-            auto& face_addr = cube_address[static_cast<size_t>(face) - 1];
+            auto& face_addr = cube_address[static_cast<std::size_t>(face) - 1];
             address &= ~face_addr.mask;
             address |= face_addr;
         }

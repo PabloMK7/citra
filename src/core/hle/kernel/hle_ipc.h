@@ -98,9 +98,9 @@ public:
     MappedBuffer(const Process& process, u32 descriptor, VAddr address, u32 id);
 
     // interface for service
-    void Read(void* dest_buffer, size_t offset, size_t size);
-    void Write(const void* src_buffer, size_t offset, size_t size);
-    size_t GetSize() const {
+    void Read(void* dest_buffer, std::size_t offset, std::size_t size);
+    void Write(const void* src_buffer, std::size_t offset, std::size_t size);
+    std::size_t GetSize() const {
         return size;
     }
 
@@ -118,7 +118,7 @@ private:
     u32 id;
     VAddr address;
     const Process* process;
-    size_t size;
+    std::size_t size;
     IPC::MappedBufferPermissions perms;
 };
 

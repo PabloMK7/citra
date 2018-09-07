@@ -330,16 +330,16 @@ Kernel::SharedPtr<Kernel::Event>& DSP_DSP::GetInterruptEvent(InterruptType type,
     case InterruptType::One:
         return interrupt_one;
     case InterruptType::Pipe: {
-        const size_t pipe_index = static_cast<size_t>(pipe);
+        const std::size_t pipe_index = static_cast<std::size_t>(pipe);
         ASSERT(pipe_index < AudioCore::num_dsp_pipe);
         return pipes[pipe_index];
     }
     }
-    UNREACHABLE_MSG("Invalid interrupt type = {}", static_cast<size_t>(type));
+    UNREACHABLE_MSG("Invalid interrupt type = {}", static_cast<std::size_t>(type));
 }
 
 bool DSP_DSP::HasTooManyEventsRegistered() const {
-    size_t number =
+    std::size_t number =
         std::count_if(pipes.begin(), pipes.end(), [](const auto& evt) { return evt != nullptr; });
 
     if (interrupt_zero != nullptr)

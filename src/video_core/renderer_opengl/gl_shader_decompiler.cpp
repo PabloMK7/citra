@@ -201,7 +201,7 @@ public:
     void AddLine(const std::string& text) {
         DEBUG_ASSERT(scope >= 0);
         if (!text.empty()) {
-            shader_source += std::string(static_cast<size_t>(scope) * 4, ' ');
+            shader_source += std::string(static_cast<std::size_t>(scope) * 4, ' ');
         }
         shader_source += text + '\n';
     }
@@ -418,9 +418,10 @@ private:
     u32 CompileInstr(u32 offset) {
         const Instruction instr = {program_code[offset]};
 
-        size_t swizzle_offset = instr.opcode.Value().GetInfo().type == OpCode::Type::MultiplyAdd
-                                    ? instr.mad.operand_desc_id
-                                    : instr.common.operand_desc_id;
+        std::size_t swizzle_offset =
+            instr.opcode.Value().GetInfo().type == OpCode::Type::MultiplyAdd
+                ? instr.mad.operand_desc_id
+                : instr.common.operand_desc_id;
         const SwizzlePattern swizzle = {swizzle_data[swizzle_offset]};
 
         shader.AddLine("// " + std::to_string(offset) + ": " + instr.opcode.Value().GetInfo().name);

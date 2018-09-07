@@ -171,7 +171,7 @@ int main(int argc, char** argv) {
                 }
                 break;
             case 'i': {
-                const auto cia_progress = [](size_t written, size_t total) {
+                const auto cia_progress = [](std::size_t written, std::size_t total) {
                     LOG_INFO(Frontend, "{:02d}%", (written * 100 / total));
                 };
                 if (Service::AM::InstallCIA(std::string(optarg), cia_progress) !=

@@ -28,7 +28,7 @@ public:
      * @param buffer Buffer to read data into
      * @return Number of bytes read, or error code
      */
-    virtual ResultVal<size_t> Read(u64 offset, size_t length, u8* buffer) const = 0;
+    virtual ResultVal<std::size_t> Read(u64 offset, std::size_t length, u8* buffer) const = 0;
 
     /**
      * Write data to the file
@@ -38,14 +38,15 @@ public:
      * @param buffer Buffer to read data from
      * @return Number of bytes written, or error code
      */
-    virtual ResultVal<size_t> Write(u64 offset, size_t length, bool flush, const u8* buffer) = 0;
+    virtual ResultVal<std::size_t> Write(u64 offset, std::size_t length, bool flush,
+                                         const u8* buffer) = 0;
 
     /**
      * Get the amount of time a 3ds needs to read those data
      * @param length Length in bytes of data read from file
      * @return Nanoseconds for the delay
      */
-    u64 GetReadDelayNs(size_t length) {
+    u64 GetReadDelayNs(std::size_t length) {
         if (delay_generator != nullptr) {
             return delay_generator->GetReadDelayNs(length);
         }

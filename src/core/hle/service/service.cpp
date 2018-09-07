@@ -152,9 +152,9 @@ void ServiceFrameworkBase::InstallAsNamedPort() {
     AddNamedPort(service_name, std::move(client_port));
 }
 
-void ServiceFrameworkBase::RegisterHandlersBase(const FunctionInfoBase* functions, size_t n) {
+void ServiceFrameworkBase::RegisterHandlersBase(const FunctionInfoBase* functions, std::size_t n) {
     handlers.reserve(handlers.size() + n);
-    for (size_t i = 0; i < n; ++i) {
+    for (std::size_t i = 0; i < n; ++i) {
         // Usually this array is sorted by id already, so hint to insert at the end
         handlers.emplace_hint(handlers.cend(), functions[i].expected_header, functions[i]);
     }

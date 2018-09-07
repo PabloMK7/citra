@@ -35,7 +35,7 @@ inline GLenum TextureFilterMode(Pica::TexturingRegs::TextureConfig::TextureFilte
         GL_LINEAR,  // TextureFilter::Linear
     }};
 
-    const auto index = static_cast<size_t>(mode);
+    const auto index = static_cast<std::size_t>(mode);
 
     // Range check table for input
     if (index >= filter_mode_table.size()) {
@@ -72,7 +72,7 @@ inline GLenum WrapMode(Pica::TexturingRegs::TextureConfig::WrapMode mode) {
         GL_REPEAT,          // WrapMode::Repeat3
     }};
 
-    const auto index = static_cast<size_t>(mode);
+    const auto index = static_cast<std::size_t>(mode);
 
     // Range check table for input
     if (index >= wrap_mode_table.size()) {
@@ -111,7 +111,7 @@ inline GLenum BlendEquation(Pica::FramebufferRegs::BlendEquation equation) {
         GL_MAX,                   // BlendEquation::Max
     }};
 
-    const auto index = static_cast<size_t>(equation);
+    const auto index = static_cast<std::size_t>(equation);
 
     // Range check table for input
     if (index >= blend_equation_table.size()) {
@@ -143,7 +143,7 @@ inline GLenum BlendFunc(Pica::FramebufferRegs::BlendFactor factor) {
         GL_SRC_ALPHA_SATURATE,       // BlendFactor::SourceAlphaSaturate
     }};
 
-    const auto index = static_cast<size_t>(factor);
+    const auto index = static_cast<std::size_t>(factor);
 
     // Range check table for input
     if (index >= blend_func_table.size()) {
@@ -176,7 +176,7 @@ inline GLenum LogicOp(Pica::FramebufferRegs::LogicOp op) {
         GL_OR_INVERTED,   // OrInverted
     }};
 
-    const auto index = static_cast<size_t>(op);
+    const auto index = static_cast<std::size_t>(op);
 
     // Range check table for input
     if (index >= logic_op_table.size()) {
@@ -201,7 +201,7 @@ inline GLenum CompareFunc(Pica::FramebufferRegs::CompareFunc func) {
         GL_GEQUAL,   // CompareFunc::GreaterThanOrEqual
     }};
 
-    const auto index = static_cast<size_t>(func);
+    const auto index = static_cast<std::size_t>(func);
 
     // Range check table for input
     if (index >= compare_func_table.size()) {
@@ -226,7 +226,7 @@ inline GLenum StencilOp(Pica::FramebufferRegs::StencilAction action) {
         GL_DECR_WRAP, // StencilAction::DecrementWrap
     }};
 
-    const auto index = static_cast<size_t>(action);
+    const auto index = static_cast<std::size_t>(action);
 
     // Range check table for input
     if (index >= stencil_op_table.size()) {

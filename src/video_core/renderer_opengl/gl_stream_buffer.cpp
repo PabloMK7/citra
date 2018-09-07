@@ -60,7 +60,7 @@ std::tuple<u8*, GLintptr, bool> OGLStreamBuffer::Map(GLsizeiptr size, GLintptr a
     mapped_size = size;
 
     if (alignment > 0) {
-        buffer_pos = Common::AlignUp<size_t>(buffer_pos, alignment);
+        buffer_pos = Common::AlignUp<std::size_t>(buffer_pos, alignment);
     }
 
     bool invalidate = false;

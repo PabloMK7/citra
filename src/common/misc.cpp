@@ -16,7 +16,7 @@
 // Call directly after the command or use the error num.
 // This function might change the error code.
 std::string GetLastErrorMsg() {
-    static const size_t buff_size = 255;
+    static const std::size_t buff_size = 255;
     char err_str[buff_size];
 
 #ifdef _WIN32

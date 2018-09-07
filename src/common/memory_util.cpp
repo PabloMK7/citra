@@ -26,7 +26,7 @@
 // This is purposely not a full wrapper for virtualalloc/mmap, but it
 // provides exactly the primitive operations that Dolphin needs.
 
-void* AllocateExecutableMemory(size_t size, bool low) {
+void* AllocateExecutableMemory(std::size_t size, bool low) {
 #if defined(_WIN32)
     void* ptr = VirtualAlloc(nullptr, size, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
 #else
@@ -75,7 +75,7 @@ void* AllocateExecutableMemory(size_t size, bool low) {
     return ptr;
 }
 
-void* AllocateMemoryPages(size_t size) {
+void* AllocateMemoryPages(std::size_t size) {
 #ifdef _WIN32
     void* ptr = VirtualAlloc(nullptr, size, MEM_COMMIT, PAGE_READWRITE);
 #else
@@ -91,7 +91,7 @@ void* AllocateMemoryPages(size_t size) {
     return ptr;
 }
 
-void* AllocateAlignedMemory(size_t size, size_t alignment) {
+void* AllocateAlignedMemory(std::size_t size, std::size_t alignment) {
 #ifdef _WIN32
     void* ptr = _aligned_malloc(size, alignment);
 #else
@@ -110,7 +110,7 @@ void* AllocateAlignedMemory(size_t size, size_t alignment) {
     return ptr;
 }
 
-void FreeMemoryPages(void* ptr, size_t size) {
+void FreeMemoryPages(void* ptr, std::size_t size) {
     if (ptr) {
 #ifdef _WIN32
         if (!VirtualFree(ptr, 0, MEM_RELEASE))
@@ -131,7 +131,7 @@ void FreeAlignedMemory(void* ptr) {
     }
 }
 
-void WriteProtectMemory(void* ptr, size_t size, bool allowExecute) {
+void WriteProtectMemory(void* ptr, std::size_t size, bool allowExecute) {
 #ifdef _WIN32
     DWORD oldValue;
     if (!VirtualProtect(ptr, size, allowExecute ? PAGE_EXECUTE_READ : PAGE_READONLY, &oldValue))
@@ -141,7 +141,7 @@ void WriteProtectMemory(void* ptr, size_t size, bool allowExecute) {
 #endif
 }
 
-void UnWriteProtectMemory(void* ptr, size_t size, bool allowExecute) {
+void UnWriteProtectMemory(void* ptr, std::size_t size, bool allowExecute) {
 #ifdef _WIN32
     DWORD oldValue;
     if (!VirtualProtect(ptr, size, allowExecute ? PAGE_EXECUTE_READWRITE : PAGE_READWRITE,

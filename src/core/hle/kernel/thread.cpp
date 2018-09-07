@@ -378,7 +378,7 @@ ResultVal<SharedPtr<Thread>> Thread::Create(std::string name, VAddr entry_point,
             return ERR_OUT_OF_MEMORY;
         }
 
-        size_t offset = linheap_memory->size();
+        std::size_t offset = linheap_memory->size();
 
         // Allocate some memory from the end of the linear heap for this region.
         linheap_memory->insert(linheap_memory->end(), Memory::PAGE_SIZE, 0);

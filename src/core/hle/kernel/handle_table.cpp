@@ -66,7 +66,7 @@ ResultCode HandleTable::Close(Handle handle) {
 }
 
 bool HandleTable::IsValid(Handle handle) const {
-    size_t slot = GetSlot(handle);
+    std::size_t slot = GetSlot(handle);
     u16 generation = GetGeneration(handle);
 
     return slot < MAX_COUNT && objects[slot] != nullptr && generations[slot] == generation;

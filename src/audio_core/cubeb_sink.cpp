@@ -95,7 +95,7 @@ unsigned int CubebSink::GetNativeSampleRate() const {
     return impl->sample_rate;
 }
 
-void CubebSink::EnqueueSamples(const s16* samples, size_t sample_count) {
+void CubebSink::EnqueueSamples(const s16* samples, std::size_t sample_count) {
     if (!impl->ctx)
         return;
 
@@ -123,7 +123,8 @@ long CubebSink::Impl::DataCallback(cubeb_stream* stream, void* user_data, const 
 
     std::lock_guard lock{impl->queue_mutex};
 
-    size_t frames_to_write = std::min(impl->queue.size() / 2, static_cast<size_t>(num_frames));
+    std::size_t frames_to_write =
+        std::min(impl->queue.size() / 2, static_cast<std::size_t>(num_frames));
 
     memcpy(buffer, impl->queue.data(), frames_to_write * sizeof(s16) * 2);
     impl->queue.erase(impl->queue.begin(), impl->queue.begin() + frames_to_write * 2);
@@ -152,7 +153,7 @@ std::vector<std::string> ListCubebSinkDevices() {
     if (cubeb_enumerate_devices(ctx, CUBEB_DEVICE_TYPE_OUTPUT, &collection) != CUBEB_OK) {
         LOG_WARNING(Audio_Sink, "Audio output device enumeration not supported");
     } else {
-        for (size_t i = 0; i < collection.count; i++) {
+        for (std::size_t i = 0; i < collection.count; i++) {
             const cubeb_device_info& device = collection.device[i];
             if (device.friendly_name) {
                 device_list.emplace_back(device.friendly_name);

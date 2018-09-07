@@ -129,7 +129,7 @@ PicaFSConfig PicaFSConfig::BuildFromRegs(const Pica::Regs& regs) {
     // shader uniform instead.
     const auto& tev_stages = regs.texturing.GetTevStages();
     DEBUG_ASSERT(state.tev_stages.size() == tev_stages.size());
-    for (size_t i = 0; i < tev_stages.size(); i++) {
+    for (std::size_t i = 0; i < tev_stages.size(); i++) {
         const auto& tev_stage = tev_stages[i];
         state.tev_stages[i].sources_raw = tev_stage.sources_raw;
         state.tev_stages[i].modifiers_raw = tev_stage.modifiers_raw;
@@ -272,8 +272,8 @@ void PicaGSConfigCommonRaw::Init(const Pica::Regs& regs) {
             regs.rasterizer.vs_output_attributes[attrib].map_w};
         for (u32 comp = 0; comp < 4; ++comp) {
             const auto semantic = semantics[comp];
-            if (static_cast<size_t>(semantic) < 24) {
-                semantic_maps[static_cast<size_t>(semantic)] = {attrib, comp};
+            if (static_cast<std::size_t>(semantic) < 24) {
+                semantic_maps[static_cast<std::size_t>(semantic)] = {attrib, comp};
             } else if (semantic != VSOutputAttributes::INVALID) {
                 LOG_ERROR(Render_OpenGL, "Invalid/unknown semantic id: {}",
                           static_cast<u32>(semantic));
@@ -1516,7 +1516,7 @@ vec4 secondary_fragment_color = vec4(0.0);
     out += "vec4 next_combiner_buffer = tev_combiner_buffer_color;\n";
     out += "vec4 last_tex_env_out = vec4(0.0);\n";
 
-    for (size_t index = 0; index < state.tev_stages.size(); ++index)
+    for (std::size_t index = 0; index < state.tev_stages.size(); ++index)
         WriteTevStage(out, config, (unsigned)index);
 
     if (state.alpha_test_func != FramebufferRegs::CompareFunc::Always) {

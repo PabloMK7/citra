@@ -61,10 +61,10 @@ static constexpr FormatTuple tex_tuple = {GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE};
 static const FormatTuple& GetFormatTuple(PixelFormat pixel_format) {
     const SurfaceType type = SurfaceParams::GetFormatType(pixel_format);
     if (type == SurfaceType::Color) {
-        ASSERT(static_cast<size_t>(pixel_format) < fb_format_tuples.size());
+        ASSERT(static_cast<std::size_t>(pixel_format) < fb_format_tuples.size());
         return fb_format_tuples[static_cast<unsigned int>(pixel_format)];
     } else if (type == SurfaceType::Depth || type == SurfaceType::DepthStencil) {
-        size_t tuple_idx = static_cast<size_t>(pixel_format) - 14;
+        std::size_t tuple_idx = static_cast<std::size_t>(pixel_format) - 14;
         ASSERT(tuple_idx < depth_format_tuples.size());
         return depth_format_tuples[tuple_idx];
     }
@@ -669,13 +669,13 @@ void CachedSurface::LoadGLBuffer(PAddr load_start, PAddr load_end) {
                 for (unsigned x = rect.left; x < rect.right; ++x) {
                     auto vec4 =
                         Pica::Texture::LookupTexture(texture_src_data, x, height - 1 - y, tex_info);
-                    const size_t offset = (x + (width * y)) * 4;
+                    const std::size_t offset = (x + (width * y)) * 4;
                     std::memcpy(&gl_buffer[offset], vec4.AsArray(), 4);
                 }
             }
         } else {
-            morton_to_gl_fns[static_cast<size_t>(pixel_format)](stride, height, &gl_buffer[0], addr,
-                                                                load_start, load_end);
+            morton_to_gl_fns[static_cast<std::size_t>(pixel_format)](stride, height, &gl_buffer[0],
+                                                                     addr, load_start, load_end);
         }
     }
 }
@@ -720,8 +720,8 @@ void CachedSurface::FlushGLBuffer(PAddr flush_start, PAddr flush_end) {
         ASSERT(type == SurfaceType::Color);
         std::memcpy(dst_buffer + start_offset, &gl_buffer[start_offset], flush_end - flush_start);
     } else {
-        gl_to_morton_fns[static_cast<size_t>(pixel_format)](stride, height, &gl_buffer[0], addr,
-                                                            flush_start, flush_end);
+        gl_to_morton_fns[static_cast<std::size_t>(pixel_format)](stride, height, &gl_buffer[0],
+                                                                 addr, flush_start, flush_end);
     }
 }
 
@@ -738,7 +738,7 @@ void CachedSurface::UploadGLTexture(const MathUtil::Rectangle<u32>& rect, GLuint
     // Load data from memory to the surface
     GLint x0 = static_cast<GLint>(rect.left);
     GLint y0 = static_cast<GLint>(rect.bottom);
-    size_t buffer_offset = (y0 * stride + x0) * GetGLBytesPerPixel(pixel_format);
+    std::size_t buffer_offset = (y0 * stride + x0) * GetGLBytesPerPixel(pixel_format);
 
     const FormatTuple& tuple = GetFormatTuple(pixel_format);
     GLuint target_tex = texture.handle;
@@ -811,7 +811,8 @@ void CachedSurface::DownloadGLTexture(const MathUtil::Rectangle<u32>& rect, GLui
     // Ensure no bad interactions with GL_PACK_ALIGNMENT
     ASSERT(stride * GetGLBytesPerPixel(pixel_format) % 4 == 0);
     glPixelStorei(GL_PACK_ROW_LENGTH, static_cast<GLint>(stride));
-    size_t buffer_offset = (rect.bottom * stride + rect.left) * GetGLBytesPerPixel(pixel_format);
+    std::size_t buffer_offset =
+        (rect.bottom * stride + rect.left) * GetGLBytesPerPixel(pixel_format);
 
     // If not 1x scale, blit scaled texture to a new 1x texture and use that to flush
     if (res_scale != 1) {

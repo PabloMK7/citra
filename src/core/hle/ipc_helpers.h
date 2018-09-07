@@ -27,7 +27,7 @@ public:
         : context(&context), cmdbuf(context.CommandBuffer()), header(desired_header) {}
 
     /// Returns the total size of the request in words
-    size_t TotalSize() const {
+    std::size_t TotalSize() const {
         return 1 /* command header */ + header.normal_params_size + header.translate_params_size;
     }
 
@@ -398,7 +398,7 @@ inline std::array<Kernel::SharedPtr<Kernel::Object>, N> RequestParser::PopGeneri
 }
 
 namespace detail {
-template <typename... T, size_t... I>
+template <typename... T, std::size_t... I>
 std::tuple<Kernel::SharedPtr<T>...> PopObjectsHelper(
     std::array<Kernel::SharedPtr<Kernel::Object>, sizeof...(T)>&& pointers,
     std::index_sequence<I...>) {

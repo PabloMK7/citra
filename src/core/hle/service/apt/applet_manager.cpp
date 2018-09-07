@@ -19,11 +19,11 @@ struct AppletTitleData {
     std::array<AppletId, 2> applet_ids;
 
     // There's a specific TitleId per region for each applet.
-    static constexpr size_t NumRegions = 7;
+    static constexpr std::size_t NumRegions = 7;
     std::array<u64, NumRegions> title_ids;
 };
 
-static constexpr size_t NumApplets = 29;
+static constexpr std::size_t NumApplets = 29;
 static constexpr std::array<AppletTitleData, NumApplets> applet_titleids = {{
     {AppletId::HomeMenu, AppletId::None, 0x4003000008202, 0x4003000008F02, 0x4003000009802,
      0x4003000008202, 0x400300000A102, 0x400300000A902, 0x400300000B102},
@@ -84,7 +84,7 @@ static u64 GetTitleIdForApplet(AppletId id) {
 
 AppletManager::AppletSlotData* AppletManager::GetAppletSlotData(AppletId id) {
     auto GetSlot = [this](AppletSlot slot) -> AppletSlotData* {
-        return &applet_slots[static_cast<size_t>(slot)];
+        return &applet_slots[static_cast<std::size_t>(slot)];
     };
 
     if (id == AppletId::Application) {
@@ -160,9 +160,9 @@ AppletManager::AppletSlotData* AppletManager::GetAppletSlotData(AppletAttributes
     // The Home Menu is a system applet, however, it has its own applet slot so that it can run
     // concurrently with other system applets.
     if (slot == AppletSlot::SystemApplet && attributes.is_home_menu)
-        return &applet_slots[static_cast<size_t>(AppletSlot::HomeMenu)];
+        return &applet_slots[static_cast<std::size_t>(AppletSlot::HomeMenu)];
 
-    return &applet_slots[static_cast<size_t>(slot)];
+    return &applet_slots[static_cast<std::size_t>(slot)];
 }
 
 void AppletManager::CancelAndSendParameter(const MessageParameter& parameter) {
@@ -314,7 +314,7 @@ ResultCode AppletManager::PrepareToStartLibraryApplet(AppletId applet_id) {
                           ErrorSummary::InvalidState, ErrorLevel::Status);
     }
 
-    const auto& slot = applet_slots[static_cast<size_t>(AppletSlot::LibraryApplet)];
+    const auto& slot = applet_slots[static_cast<std::size_t>(AppletSlot::LibraryApplet)];
 
     if (slot.registered) {
         return ResultCode(ErrorDescription::AlreadyExists, ErrorModule::Applet,
@@ -341,7 +341,7 @@ ResultCode AppletManager::PrepareToStartLibraryApplet(AppletId applet_id) {
 }
 
 ResultCode AppletManager::PreloadLibraryApplet(AppletId applet_id) {
-    const auto& slot = applet_slots[static_cast<size_t>(AppletSlot::LibraryApplet)];
+    const auto& slot = applet_slots[static_cast<std::size_t>(AppletSlot::LibraryApplet)];
 
     if (slot.registered) {
         return ResultCode(ErrorDescription::AlreadyExists, ErrorModule::Applet,
@@ -369,7 +369,7 @@ ResultCode AppletManager::PreloadLibraryApplet(AppletId applet_id) {
 
 ResultCode AppletManager::FinishPreloadingLibraryApplet(AppletId applet_id) {
     // TODO(Subv): This function should fail depending on the applet preparation state.
-    auto& slot = applet_slots[static_cast<size_t>(AppletSlot::LibraryApplet)];
+    auto& slot = applet_slots[static_cast<std::size_t>(AppletSlot::LibraryApplet)];
     slot.loaded = true;
     return RESULT_SUCCESS;
 }
@@ -417,7 +417,7 @@ ResultCode AppletManager::PrepareToCloseLibraryApplet(bool not_pause, bool exiti
 
 ResultCode AppletManager::CloseLibraryApplet(Kernel::SharedPtr<Kernel::Object> object,
                                              std::vector<u8> buffer) {
-    auto& slot = applet_slots[static_cast<size_t>(AppletSlot::LibraryApplet)];
+    auto& slot = applet_slots[static_cast<std::size_t>(AppletSlot::LibraryApplet)];
 
     MessageParameter param;
     // TODO(Subv): The destination id should be the "current applet slot id", which changes
@@ -467,7 +467,7 @@ ResultVal<AppletManager::AppletInfo> AppletManager::GetAppletInfo(AppletId app_i
 }
 
 AppletManager::AppletManager() {
-    for (size_t slot = 0; slot < applet_slots.size(); ++slot) {
+    for (std::size_t slot = 0; slot < applet_slots.size(); ++slot) {
         auto& slot_data = applet_slots[slot];
         slot_data.slot = static_cast<AppletSlot>(slot);
         slot_data.applet_id = AppletId::None;

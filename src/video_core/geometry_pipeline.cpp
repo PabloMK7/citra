@@ -44,7 +44,7 @@ public:
         ASSERT(regs.pipeline.variable_primitive == 0);
         ASSERT(regs.gs.input_to_uniform == 0);
         vs_output_num = regs.pipeline.vs_outmap_total_minus_1_a + 1;
-        size_t gs_input_num = regs.gs.max_input_attribute_index + 1;
+        std::size_t gs_input_num = regs.gs.max_input_attribute_index + 1;
         ASSERT(gs_input_num % vs_output_num == 0);
         buffer_cur = attribute_buffer.attr;
         buffer_end = attribute_buffer.attr + gs_input_num;
@@ -157,7 +157,7 @@ public:
         ASSERT(regs.gs.input_to_uniform == 1);
         vs_output_num = regs.pipeline.vs_outmap_total_minus_1_a + 1;
         ASSERT(vs_output_num == regs.pipeline.gs_config.stride_minus_1 + 1);
-        size_t vertex_num = regs.pipeline.gs_config.fixed_vertex_num_minus_1 + 1;
+        std::size_t vertex_num = regs.pipeline.gs_config.fixed_vertex_num_minus_1 + 1;
         buffer_cur = buffer_begin = setup.uniforms.f + regs.pipeline.gs_config.start_index;
         buffer_end = buffer_begin + vs_output_num * vertex_num;
     }

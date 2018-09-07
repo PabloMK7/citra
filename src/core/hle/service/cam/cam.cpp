@@ -128,7 +128,7 @@ void Module::CompletionEventCallBack(u64 port_id, s64) {
                       port.dest_size, buffer_size);
         }
         Memory::WriteBlock(*port.dest_process, port.dest, buffer.data(),
-                           std::min<size_t>(port.dest_size, buffer_size));
+                           std::min<std::size_t>(port.dest_size, buffer_size));
     }
 
     port.is_receiving = false;

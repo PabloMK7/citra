@@ -85,7 +85,7 @@ signals:
      */
     void EmulationStopping();
 
-    void UpdateProgress(size_t written, size_t total);
+    void UpdateProgress(std::size_t written, std::size_t total);
     void CIAInstallReport(Service::AM::InstallStatus status, QString filepath);
     void CIAInstallFinished();
     // Signal that tells widgets to update icons to use the current theme
@@ -161,7 +161,7 @@ private slots:
     void OnGameListShowList(bool show);
     void OnMenuLoadFile();
     void OnMenuInstallCIA();
-    void OnUpdateProgress(size_t written, size_t total);
+    void OnUpdateProgress(std::size_t written, std::size_t total);
     void OnCIAInstallReport(Service::AM::InstallStatus status, QString filepath);
     void OnCIAInstallFinished();
     void OnMenuRecentFile();
@@ -255,5 +255,5 @@ protected:
     void dragMoveEvent(QDragMoveEvent* event) override;
 };
 
-Q_DECLARE_METATYPE(size_t);
+Q_DECLARE_METATYPE(std::size_t);
 Q_DECLARE_METATYPE(Service::AM::InstallStatus);

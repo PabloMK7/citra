@@ -24,7 +24,7 @@ namespace Pica {
 namespace Shader {
 
 /// Memory allocated for each compiled shader
-constexpr size_t MAX_SHADER_SIZE = MAX_PROGRAM_CODE_LENGTH * 64;
+constexpr std::size_t MAX_SHADER_SIZE = MAX_PROGRAM_CODE_LENGTH * 64;
 
 /**
  * This class implements the shader JIT compiler. It recompiles a Pica shader program into x86_64
