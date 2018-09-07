@@ -124,6 +124,15 @@ int main(int argc, char** argv) {
     std::string movie_record;
     std::string movie_play;
 
+    Log::Filter log_filter;
+    log_filter.ParseFilterString(Settings::values.log_filter);
+    Log::SetGlobalFilter(log_filter);
+
+    Log::AddBackend(std::make_unique<Log::ColorConsoleBackend>());
+    FileUtil::CreateFullPath(FileUtil::GetUserPath(D_LOGS_IDX));
+    Log::AddBackend(
+        std::make_unique<Log::FileBackend>(FileUtil::GetUserPath(D_LOGS_IDX) + LOG_FILE));
+
     char* endarg;
 #ifdef _WIN32
     int argc_w;
@@ -256,15 +265,6 @@ int main(int argc, char** argv) {
         LOG_CRITICAL(Frontend, "Cannot both play and record a movie");
         return -1;
     }
-
-    Log::Filter log_filter;
-    log_filter.ParseFilterString(Settings::values.log_filter);
-    Log::SetGlobalFilter(log_filter);
-
-    Log::AddBackend(std::make_unique<Log::ColorConsoleBackend>());
-    FileUtil::CreateFullPath(FileUtil::GetUserPath(D_LOGS_IDX));
-    Log::AddBackend(
-        std::make_unique<Log::FileBackend>(FileUtil::GetUserPath(D_LOGS_IDX) + LOG_FILE));
 
     // Apply the command line arguments
     Settings::values.gdbstub_port = gdb_port;
