@@ -47,10 +47,10 @@ void Module::Interface::Open(Kernel::HLERequestContext& ctx) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     switch (path_type) {
-    case CecDataPathType::ROOT_DIR:
-    case CecDataPathType::MBOX_DIR:
-    case CecDataPathType::INBOX_DIR:
-    case CecDataPathType::OUTBOX_DIR: {
+    case CecDataPathType::RootDir:
+    case CecDataPathType::MboxDir:
+    case CecDataPathType::InboxDir:
+    case CecDataPathType::OutboxDir: {
         auto dir_result =
             Service::FS::OpenDirectoryFromArchive(cecd->cecd_system_save_data_archive, path);
         if (dir_result.Failed()) {
@@ -93,7 +93,7 @@ void Module::Interface::Open(Kernel::HLERequestContext& ctx) {
             rb.Push<u32>(session_data->file->backend->GetSize()); // Return file size
         }
 
-        if (path_type == CecDataPathType::MBOX_PROGRAM_ID) {
+        if (path_type == CecDataPathType::MboxProgramId) {
             std::vector<u8> program_id(8);
             u64_le le_program_id = Kernel::g_current_process->codeset->program_id;
             std::memcpy(program_id.data(), &le_program_id, sizeof(u64));
@@ -128,10 +128,10 @@ void Module::Interface::Read(Kernel::HLERequestContext& ctx) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
     switch (session_data->data_path_type) {
-    case CecDataPathType::ROOT_DIR:
-    case CecDataPathType::MBOX_DIR:
-    case CecDataPathType::INBOX_DIR:
-    case CecDataPathType::OUTBOX_DIR:
+    case CecDataPathType::RootDir:
+    case CecDataPathType::MboxDir:
+    case CecDataPathType::InboxDir:
+    case CecDataPathType::OutboxDir:
         rb.Push(ResultCode(ErrorDescription::NotAuthorized, ErrorModule::CEC,
                            ErrorSummary::NotFound, ErrorLevel::Status));
         rb.Push<u32>(0); // No bytes read
@@ -169,8 +169,8 @@ void Module::Interface::ReadMessage(Kernel::HLERequestContext& ctx) {
     message_id_buffer.Read(id_buffer.data(), 0, message_id_size);
 
     FileSys::Path message_path =
-        cecd->GetCecDataPathTypeAsString(is_outbox ? CecDataPathType::OUTBOX_MSG
-                                                   : CecDataPathType::INBOX_MSG,
+        cecd->GetCecDataPathTypeAsString(is_outbox ? CecDataPathType::OutboxMsg
+                                                   : CecDataPathType::InboxMsg,
                                          ncch_program_id, id_buffer)
             .data();
 
@@ -221,8 +221,8 @@ void Module::Interface::ReadMessageWithHMAC(Kernel::HLERequestContext& ctx) {
     message_id_buffer.Read(id_buffer.data(), 0, message_id_size);
 
     FileSys::Path message_path =
-        cecd->GetCecDataPathTypeAsString(is_outbox ? CecDataPathType::OUTBOX_MSG
-                                                   : CecDataPathType::INBOX_MSG,
+        cecd->GetCecDataPathTypeAsString(is_outbox ? CecDataPathType::OutboxMsg
+                                                   : CecDataPathType::InboxMsg,
                                          ncch_program_id, id_buffer)
             .data();
 
@@ -273,10 +273,10 @@ void Module::Interface::Write(Kernel::HLERequestContext& ctx) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
     switch (session_data->data_path_type) {
-    case CecDataPathType::ROOT_DIR:
-    case CecDataPathType::MBOX_DIR:
-    case CecDataPathType::INBOX_DIR:
-    case CecDataPathType::OUTBOX_DIR:
+    case CecDataPathType::RootDir:
+    case CecDataPathType::MboxDir:
+    case CecDataPathType::InboxDir:
+    case CecDataPathType::OutboxDir:
         rb.Push(ResultCode(ErrorDescription::NotAuthorized, ErrorModule::CEC,
                            ErrorSummary::NotFound, ErrorLevel::Status));
         break;
@@ -317,8 +317,8 @@ void Module::Interface::WriteMessage(Kernel::HLERequestContext& ctx) {
     message_id_buffer.Read(id_buffer.data(), 0, message_id_size);
 
     FileSys::Path message_path =
-        cecd->GetCecDataPathTypeAsString(is_outbox ? CecDataPathType::OUTBOX_MSG
-                                                   : CecDataPathType::INBOX_MSG,
+        cecd->GetCecDataPathTypeAsString(is_outbox ? CecDataPathType::OutboxMsg
+                                                   : CecDataPathType::InboxMsg,
                                          ncch_program_id, id_buffer)
             .data();
 
@@ -370,8 +370,8 @@ void Module::Interface::WriteMessageWithHMAC(Kernel::HLERequestContext& ctx) {
     message_id_buffer.Read(id_buffer.data(), 0, message_id_size);
 
     FileSys::Path message_path =
-        cecd->GetCecDataPathTypeAsString(is_outbox ? CecDataPathType::OUTBOX_MSG
-                                                   : CecDataPathType::INBOX_MSG,
+        cecd->GetCecDataPathTypeAsString(is_outbox ? CecDataPathType::OutboxMsg
+                                                   : CecDataPathType::InboxMsg,
                                          ncch_program_id, id_buffer)
             .data();
 
@@ -418,10 +418,10 @@ void Module::Interface::Delete(Kernel::HLERequestContext& ctx) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
     switch (path_type) {
-    case CecDataPathType::ROOT_DIR:
-    case CecDataPathType::MBOX_DIR:
-    case CecDataPathType::INBOX_DIR:
-    case CecDataPathType::OUTBOX_DIR:
+    case CecDataPathType::RootDir:
+    case CecDataPathType::MboxDir:
+    case CecDataPathType::InboxDir:
+    case CecDataPathType::OutboxDir:
         rb.Push(Service::FS::DeleteDirectoryRecursivelyFromArchive(
             cecd->cecd_system_save_data_archive, path));
         break;
@@ -433,8 +433,8 @@ void Module::Interface::Delete(Kernel::HLERequestContext& ctx) {
             message_id_buffer.Read(id_buffer.data(), 0, message_id_size);
 
             FileSys::Path message_path =
-                cecd->GetCecDataPathTypeAsString(is_outbox ? CecDataPathType::OUTBOX_MSG
-                                                           : CecDataPathType::INBOX_MSG,
+                cecd->GetCecDataPathTypeAsString(is_outbox ? CecDataPathType::OutboxMsg
+                                                           : CecDataPathType::InboxMsg,
                                                  ncch_program_id, id_buffer)
                     .data();
             rb.Push(Service::FS::DeleteFileFromArchive(cecd->cecd_system_save_data_archive,
@@ -557,7 +557,7 @@ void Module::Interface::GetCecdState(Kernel::HLERequestContext& ctx) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
-    rb.PushEnum(CecdState::NDM_STATUS_IDLE);
+    rb.PushEnum(CecdState::NdmStatusIdle);
 
     LOG_WARNING(Service_CECD, "(STUBBED) called");
 }
@@ -599,10 +599,10 @@ void Module::Interface::OpenAndWrite(Kernel::HLERequestContext& ctx) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
     switch (path_type) {
-    case CecDataPathType::ROOT_DIR:
-    case CecDataPathType::MBOX_DIR:
-    case CecDataPathType::INBOX_DIR:
-    case CecDataPathType::OUTBOX_DIR:
+    case CecDataPathType::RootDir:
+    case CecDataPathType::MboxDir:
+    case CecDataPathType::InboxDir:
+    case CecDataPathType::OutboxDir:
         rb.Push(ResultCode(ErrorDescription::NotAuthorized, ErrorModule::CEC,
                            ErrorSummary::NotFound, ErrorLevel::Status));
         break;
@@ -654,10 +654,10 @@ void Module::Interface::OpenAndRead(Kernel::HLERequestContext& ctx) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
     switch (path_type) {
-    case CecDataPathType::ROOT_DIR:
-    case CecDataPathType::MBOX_DIR:
-    case CecDataPathType::INBOX_DIR:
-    case CecDataPathType::OUTBOX_DIR:
+    case CecDataPathType::RootDir:
+    case CecDataPathType::MboxDir:
+    case CecDataPathType::InboxDir:
+    case CecDataPathType::OutboxDir:
         rb.Push(ResultCode(ErrorDescription::NotAuthorized, ErrorModule::CEC,
                            ErrorSummary::NotFound, ErrorLevel::Status));
         rb.Push<u32>(0); // No entries read
@@ -721,33 +721,33 @@ std::string Module::EncodeBase64(const std::vector<u8>& in, const std::string& d
 std::string Module::GetCecDataPathTypeAsString(const CecDataPathType type, const u32 program_id,
                                                const std::vector<u8>& msg_id) const {
     switch (type) {
-    case CecDataPathType::MBOX_LIST:
+    case CecDataPathType::MboxList:
         return "/CEC/MBoxList____";
-    case CecDataPathType::MBOX_INFO:
+    case CecDataPathType::MboxInfo:
         return fmt::format("/CEC/{:08x}/MBoxInfo____", program_id);
-    case CecDataPathType::INBOX_INFO:
+    case CecDataPathType::InboxInfo:
         return fmt::format("/CEC/{:08x}/InBox___/BoxInfo_____", program_id);
-    case CecDataPathType::OUTBOX_INFO:
+    case CecDataPathType::OutboxInfo:
         return fmt::format("/CEC/{:08x}/OutBox__/BoxInfo_____", program_id);
-    case CecDataPathType::OUTBOX_INDEX:
+    case CecDataPathType::OutboxIndex:
         return fmt::format("/CEC/{:08x}/OutBox__/OBIndex_____", program_id);
-    case CecDataPathType::INBOX_MSG:
+    case CecDataPathType::InboxMsg:
         return fmt::format("/CEC/{:08x}/InBox___/_{}", program_id,
                            EncodeBase64(msg_id, base64_dict));
-    case CecDataPathType::OUTBOX_MSG:
+    case CecDataPathType::OutboxMsg:
         return fmt::format("/CEC/{:08x}/OutBox__/_{}", program_id,
                            EncodeBase64(msg_id, base64_dict));
-    case CecDataPathType::ROOT_DIR:
+    case CecDataPathType::RootDir:
         return "/CEC";
-    case CecDataPathType::MBOX_DIR:
+    case CecDataPathType::MboxDir:
         return fmt::format("/CEC/{:08x}", program_id);
-    case CecDataPathType::INBOX_DIR:
+    case CecDataPathType::InboxDir:
         return fmt::format("/CEC/{:08x}/InBox___", program_id);
-    case CecDataPathType::OUTBOX_DIR:
+    case CecDataPathType::OutboxDir:
         return fmt::format("/CEC/{:08x}/OutBox__", program_id);
-    case CecDataPathType::MBOX_DATA:
-    case CecDataPathType::MBOX_ICON:
-    case CecDataPathType::MBOX_TITLE:
+    case CecDataPathType::MboxData:
+    case CecDataPathType::MboxIcon:
+    case CecDataPathType::MboxTitle:
     default:
         return fmt::format("/CEC/{:08x}/MBoxData.{:03}", program_id, static_cast<u32>(type) - 100);
     }
@@ -755,50 +755,50 @@ std::string Module::GetCecDataPathTypeAsString(const CecDataPathType type, const
 
 std::string Module::GetCecCommandAsString(const CecCommand command) const {
     switch (command) {
-    case CecCommand::NONE:
-        return "NONE";
-    case CecCommand::START:
-        return "START";
-    case CecCommand::RESET_START:
-        return "RESET_START";
-    case CecCommand::READYSCAN:
-        return "READYSCAN";
-    case CecCommand::READYSCANWAIT:
-        return "READYSCANWAIT";
-    case CecCommand::STARTSCAN:
-        return "STARTSCAN";
-    case CecCommand::RESCAN:
-        return "RESCAN";
-    case CecCommand::NDM_RESUME:
-        return "RESUME";
-    case CecCommand::NDM_SUSPEND:
-        return "NDM_SUSPEND";
-    case CecCommand::NDM_SUSPEND_IMMEDIATE:
-        return "NDM_SUSPEND_IMMEDIATE";
-    case CecCommand::STOPWAIT:
-        return "STOPWAIT";
-    case CecCommand::STOP:
-        return "STOP";
-    case CecCommand::STOP_FORCE:
-        return "STOP_FORCE";
-    case CecCommand::STOP_FORCE_WAIT:
-        return "STOP_FORCE_WAIT";
-    case CecCommand::RESET_FILTER:
-        return "RESET_FILTER";
-    case CecCommand::DAEMON_STOP:
-        return "DAEMON_STOP";
-    case CecCommand::DAEMON_START:
-        return "DAEMON_START";
-    case CecCommand::EXIT:
-        return "EXIT";
-    case CecCommand::OVER_BOSS:
-        return "OVER_BOSS";
-    case CecCommand::OVER_BOSS_FORCE:
-        return "OVER_BOSS_FORCE";
-    case CecCommand::OVER_BOSS_FORCE_WAIT:
-        return "OVER_BOSS_FORCE_WAIT";
-    case CecCommand::END:
-        return "END";
+    case CecCommand::None:
+        return "None";
+    case CecCommand::Start:
+        return "Start";
+    case CecCommand::ResetStart:
+        return "ResetStart";
+    case CecCommand::ReadyScan:
+        return "ReadyScan";
+    case CecCommand::ReadyScanWait:
+        return "ReadyScanWait";
+    case CecCommand::StartScan:
+        return "StartScan";
+    case CecCommand::Rescan:
+        return "Rescan";
+    case CecCommand::NdmResume:
+        return "NdmResume";
+    case CecCommand::NdmSuspend:
+        return "NdmSuspend";
+    case CecCommand::NdmSuspendImmediate:
+        return "NdmSuspendImmediate";
+    case CecCommand::StopWait:
+        return "StopWait";
+    case CecCommand::Stop:
+        return "Stop";
+    case CecCommand::StopForce:
+        return "StopForce";
+    case CecCommand::StopForceWait:
+        return "StopForceWait";
+    case CecCommand::ResetFilter:
+        return "ResetFilter";
+    case CecCommand::DaemonStop:
+        return "DaemonStop";
+    case CecCommand::DaemonStart:
+        return "DaemonStart";
+    case CecCommand::Exit:
+        return "Exit";
+    case CecCommand::OverBoss:
+        return "OverBoss";
+    case CecCommand::OverBossForce:
+        return "OverBossForce";
+    case CecCommand::OverBossForceWait:
+        return "OverBossForceWait";
+    case CecCommand::End:
+        return "End";
     default:
         return "Unknown";
     }
@@ -812,7 +812,7 @@ void Module::CheckAndUpdateFile(const CecDataPathType path_type, const u32 ncch_
     const u32 file_size = file_buffer.size();
 
     switch (path_type) {
-    case CecDataPathType::MBOX_LIST: {
+    case CecDataPathType::MboxList: {
         CecMBoxListHeader mbox_list_header = {};
         std::memcpy(&mbox_list_header, file_buffer.data(), sizeof(CecMBoxListHeader));
 
@@ -875,7 +875,7 @@ void Module::CheckAndUpdateFile(const CecDataPathType path_type, const u32 ncch_
                 /// are activated. The num_of_titles = (total_read_count) - 1, to adjust for
                 /// the MBoxList____ file that is present in the directory as well.
                 FileSys::Path root_path(
-                    GetCecDataPathTypeAsString(CecDataPathType::ROOT_DIR, 0).data());
+                    GetCecDataPathTypeAsString(CecDataPathType::RootDir, 0).data());
 
                 auto dir_result =
                     Service::FS::OpenDirectoryFromArchive(cecd_system_save_data_archive, root_path);
@@ -907,7 +907,7 @@ void Module::CheckAndUpdateFile(const CecDataPathType path_type, const u32 ncch_
         std::memcpy(file_buffer.data(), &mbox_list_header, sizeof(CecMBoxListHeader));
         break;
     }
-    case CecDataPathType::MBOX_INFO: {
+    case CecDataPathType::MboxInfo: {
         CecMBoxInfoHeader mbox_info_header = {};
         std::memcpy(&mbox_info_header, file_buffer.data(), sizeof(CecMBoxInfoHeader));
 
@@ -935,7 +935,7 @@ void Module::CheckAndUpdateFile(const CecDataPathType path_type, const u32 ncch_
         std::memcpy(file_buffer.data(), &mbox_info_header, sizeof(CecMBoxInfoHeader));
         break;
     }
-    case CecDataPathType::INBOX_INFO: {
+    case CecDataPathType::InboxInfo: {
         CecInOutBoxInfoHeader inbox_info_header = {};
         std::memcpy(&inbox_info_header, file_buffer.data(), sizeof(CecInOutBoxInfoHeader));
 
@@ -987,7 +987,7 @@ void Module::CheckAndUpdateFile(const CecDataPathType path_type, const u32 ncch_
         std::memcpy(file_buffer.data(), &inbox_info_header, sizeof(CecInOutBoxInfoHeader));
         break;
     }
-    case CecDataPathType::OUTBOX_INFO: {
+    case CecDataPathType::OutboxInfo: {
         CecInOutBoxInfoHeader outbox_info_header = {};
         std::memcpy(&outbox_info_header, file_buffer.data(), sizeof(CecInOutBoxInfoHeader));
 
@@ -1037,7 +1037,7 @@ void Module::CheckAndUpdateFile(const CecDataPathType path_type, const u32 ncch_
         std::memcpy(file_buffer.data(), &outbox_info_header, sizeof(CecInOutBoxInfoHeader));
         break;
     }
-    case CecDataPathType::OUTBOX_INDEX: {
+    case CecDataPathType::OutboxIndex: {
         CecOBIndexHeader obindex_header = {};
         std::memcpy(&obindex_header, file_buffer.data(), sizeof(CecOBIndexHeader));
 
@@ -1067,18 +1067,18 @@ void Module::CheckAndUpdateFile(const CecDataPathType path_type, const u32 ncch_
         std::memcpy(file_buffer.data(), &obindex_header, sizeof(CecOBIndexHeader));
         break;
     }
-    case CecDataPathType::INBOX_MSG:
+    case CecDataPathType::InboxMsg:
         break;
-    case CecDataPathType::OUTBOX_MSG:
+    case CecDataPathType::OutboxMsg:
         break;
-    case CecDataPathType::ROOT_DIR:
-    case CecDataPathType::MBOX_DIR:
-    case CecDataPathType::INBOX_DIR:
-    case CecDataPathType::OUTBOX_DIR:
+    case CecDataPathType::RootDir:
+    case CecDataPathType::MboxDir:
+    case CecDataPathType::InboxDir:
+    case CecDataPathType::OutboxDir:
         break;
-    case CecDataPathType::MBOX_DATA:
-    case CecDataPathType::MBOX_ICON:
-    case CecDataPathType::MBOX_TITLE:
+    case CecDataPathType::MboxData:
+    case CecDataPathType::MboxIcon:
+    case CecDataPathType::MboxTitle:
     default: {}
     }
 }
@@ -1116,7 +1116,7 @@ Module::Module() {
         /// Now that the archive is formatted, we need to create the root CEC directory,
         /// eventlog.dat, and CEC/MBoxList____
         const FileSys::Path root_dir_path(
-            GetCecDataPathTypeAsString(CecDataPathType::ROOT_DIR, 0).data());
+            GetCecDataPathTypeAsString(CecDataPathType::RootDir, 0).data());
         Service::FS::CreateDirectoryFromArchive(*archive_result, root_dir_path);
 
         FileSys::Mode mode;
@@ -1150,7 +1150,7 @@ Module::Module() {
         /// being the magic number. The rest of the file is filled with zeroes, until the end of
         /// file at offset 0x18b
         FileSys::Path mboxlist_path(
-            GetCecDataPathTypeAsString(CecDataPathType::MBOX_LIST, 0).data());
+            GetCecDataPathTypeAsString(CecDataPathType::MboxList, 0).data());
 
         auto mboxlist_result =
             Service::FS::OpenFileFromArchive(*archive_result, mboxlist_path, mode);

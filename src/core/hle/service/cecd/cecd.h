@@ -19,28 +19,28 @@ public:
     ~Module();
 
     enum class CecCommand : u32 {
-        NONE = 0,
-        START = 1,
-        RESET_START = 2,
-        READYSCAN = 3,
-        READYSCANWAIT = 4,
-        STARTSCAN = 5,
-        RESCAN = 6,
-        NDM_RESUME = 7,
-        NDM_SUSPEND = 8,
-        NDM_SUSPEND_IMMEDIATE = 9,
-        STOPWAIT = 0x0A,
-        STOP = 0x0B,
-        STOP_FORCE = 0x0C,
-        STOP_FORCE_WAIT = 0x0D,
-        RESET_FILTER = 0x0E,
-        DAEMON_STOP = 0x0F,
-        DAEMON_START = 0x10,
-        EXIT = 0x11,
-        OVER_BOSS = 0x12,
-        OVER_BOSS_FORCE = 0x13,
-        OVER_BOSS_FORCE_WAIT = 0x14,
-        END = 0x15,
+        None = 0,
+        Start = 1,
+        ResetStart = 2,
+        ReadyScan = 3,
+        ReadyScanWait = 4,
+        StartScan = 5,
+        Rescan = 6,
+        NdmResume = 7,
+        NdmSuspend = 8,
+        NdmSuspendImmediate = 9,
+        StopWait = 0x0A,
+        Stop = 0x0B,
+        StopForce = 0x0C,
+        StopForceWait = 0x0D,
+        ResetFilter = 0x0E,
+        DaemonStop = 0x0F,
+        DaemonStart = 0x10,
+        Exit = 0x11,
+        OverBoss = 0x12,
+        OverBossForce = 0x13,
+        OverBossForceWait = 0x14,
+        End = 0x15,
     };
 
     /**
@@ -50,52 +50,52 @@ public:
      * data:/CEC/test
      */
     enum class CecDataPathType : u32 {
-        INVALID = 0,
-        MBOX_LIST = 1,         /// data:/CEC/MBoxList____
-        MBOX_INFO = 2,         /// data:/CEC/<id>/MBoxInfo____
-        INBOX_INFO = 3,        /// data:/CEC/<id>/InBox___/BoxInfo_____
-        OUTBOX_INFO = 4,       /// data:/CEC/<id>/OutBox__/BoxInfo_____
-        OUTBOX_INDEX = 5,      /// data:/CEC/<id>/OutBox__/OBIndex_____
-        INBOX_MSG = 6,         /// data:/CEC/<id>/InBox___/_<message_id>
-        OUTBOX_MSG = 7,        /// data:/CEC/<id>/OutBox__/_<message_id>
-        ROOT_DIR = 10,         /// data:/CEC
-        MBOX_DIR = 11,         /// data:/CEC/<id>
-        INBOX_DIR = 12,        /// data:/CEC/<id>/InBox___
-        OUTBOX_DIR = 13,       /// data:/CEC/<id>/OutBox__
-        MBOX_DATA = 100,       /// data:/CEC/<id>/MBoxData.0<i-100>
-        MBOX_ICON = 101,       /// data:/CEC/<id>/MBoxData.001
-        MBOX_TITLE = 110,      /// data:/CEC/<id>/MBoxData.010
-        MBOX_PROGRAM_ID = 150, /// data:/CEC/<id>/MBoxData.050
+        Invalid = 0,
+        MboxList = 1,        /// data:/CEC/MBoxList____
+        MboxInfo = 2,        /// data:/CEC/<id>/MBoxInfo____
+        InboxInfo = 3,       /// data:/CEC/<id>/InBox___/BoxInfo_____
+        OutboxInfo = 4,      /// data:/CEC/<id>/OutBox__/BoxInfo_____
+        OutboxIndex = 5,     /// data:/CEC/<id>/OutBox__/OBIndex_____
+        InboxMsg = 6,        /// data:/CEC/<id>/InBox___/_<message_id>
+        OutboxMsg = 7,       /// data:/CEC/<id>/OutBox__/_<message_id>
+        RootDir = 10,        /// data:/CEC
+        MboxDir = 11,        /// data:/CEC/<id>
+        InboxDir = 12,       /// data:/CEC/<id>/InBox___
+        OutboxDir = 13,      /// data:/CEC/<id>/OutBox__
+        MboxData = 100,      /// data:/CEC/<id>/MBoxData.0<i-100>
+        MboxIcon = 101,      /// data:/CEC/<id>/MBoxData.001
+        MboxTitle = 110,     /// data:/CEC/<id>/MBoxData.010
+        MboxProgramId = 150, /// data:/CEC/<id>/MBoxData.050
     };
 
     enum class CecState : u32 {
-        NONE = 0,
-        INIT = 1,
-        WIRELESS_PARAM_SETUP = 2,
-        WIRELESS_READY = 3,
-        WIRELESS_START_CONFIG = 4,
-        SCAN = 5,
-        SCANNING = 6,
-        CONNECT = 7,
-        CONNECTING = 8,
-        CONNECTED = 9,
-        CONNECT_TCP = 10,
-        CONNECTING_TCP = 11,
-        CONNECTED_TCP = 12,
-        NEGOTIATION = 13,
-        SEND_RECV_START = 14,
-        SEND_RECV_INIT = 15,
-        SEND_READY = 16,
-        RECEIVE_READY = 17,
-        RECEIVE = 18,
-        CONNECTION_FINISH_TCP = 19,
-        CONNECTION_FINISH = 20,
-        SEND_POST = 21,
-        RECEIVE_POST = 22,
-        FINISHING = 23,
-        FINISH = 24,
-        OVER_BOSS = 25,
-        IDLE = 26
+        None = 0,
+        Init = 1,
+        WirelessParamSetup = 2,
+        WirelessReady = 3,
+        WirelessStartConfig = 4,
+        Scan = 5,
+        Scanning = 6,
+        Connect = 7,
+        Connecting = 8,
+        Connected = 9,
+        ConnectTcp = 10,
+        ConnectingTcp = 11,
+        ConnectedTcp = 12,
+        Negotiation = 13,
+        SendRecvStart = 14,
+        SendRecvInit = 15,
+        SendReady = 16,
+        ReceiveReady = 17,
+        Receive = 18,
+        ConnectionFinishTcp = 19,
+        ConnectionFinish = 20,
+        SendPost = 21,
+        ReceivePost = 22,
+        Finishing = 23,
+        Finish = 24,
+        OverBoss = 25,
+        Idle = 26
     };
 
     enum class CecSystemInfoType : u32 { EulaVersion = 1, Eula = 2, ParentControl = 3 };
@@ -202,10 +202,10 @@ public:
     static_assert(sizeof(CecOBIndexHeader) == 0x08, "CecOBIndexHeader struct has incorrect size.");
 
     enum class CecdState : u32 {
-        NDM_STATUS_WORKING = 0,
-        NDM_STATUS_IDLE = 1,
-        NDM_STATUS_SUSPENDING = 2,
-        NDM_STATUS_SUSPENDED = 3,
+        NdmStatusWorking = 0,
+        NdmStatusIdle = 1,
+        NdmStatusSuspending = 2,
+        NdmStatusSuspended = 3,
     };
 
     union CecOpenMode {
