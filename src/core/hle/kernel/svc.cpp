@@ -723,7 +723,7 @@ static ResultCode GetResourceLimitLimitValues(VAddr values, Handle resource_limi
 /// Creates a new thread
 static ResultCode CreateThread(Handle* out_handle, u32 priority, u32 entry_point, u32 arg,
                                u32 stack_top, s32 processor_id) {
-    std::string name = fmt::format("unknown-{:08X}", entry_point);
+    std::string name = fmt::format("thread-{:08X}", entry_point);
 
     if (priority > THREADPRIO_LOWEST) {
         return ERR_OUT_OF_RANGE;
