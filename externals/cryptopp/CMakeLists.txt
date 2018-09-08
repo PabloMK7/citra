@@ -131,6 +131,7 @@ set(cryptopp_SOURCES
         cryptopp/algparam.cpp
         cryptopp/asn.cpp
         cryptopp/authenc.cpp
+        cryptopp/base64.cpp
         cryptopp/basecode.cpp
         cryptopp/ccm.cpp
         cryptopp/crc-simd.cpp

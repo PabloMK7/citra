@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <cryptopp/base64.h>
 #include "common/file_util.h"
 #include "common/logging/log.h"
 #include "common/string_util.h"
@@ -691,30 +692,23 @@ void Module::Interface::OpenAndRead(Kernel::HLERequestContext& ctx) {
               open_mode.check);
 }
 
-std::string Module::EncodeBase64(const std::vector<u8>& in, const std::string& dictionary) const {
+std::string Module::EncodeBase64(const std::vector<u8>& in) const {
+    using namespace CryptoPP;
+    using Name::EncodingLookupArray;
+    using Name::InsertLineBreaks;
+    using Name::Pad;
+
     std::string out;
-    out.reserve((in.size() * 4) / 3);
-    int b;
-    for (int i = 0; i < in.size(); i += 3) {
-        b = (in[i] & 0xFC) >> 2;
-        out += dictionary[b];
-        b = (in[i] & 0x03) << 4;
-        if (i + 1 < in.size()) {
-            b |= (in[i + 1] & 0xF0) >> 4;
-            out += dictionary[b];
-            b = (in[i + 1] & 0x0F) << 2;
-            if (i + 2 < in.size()) {
-                b |= (in[i + 2] & 0xC0) >> 6;
-                out += dictionary[b];
-                b = in[i + 2] & 0x3F;
-                out += dictionary[b];
-            } else {
-                out += dictionary[b];
-            }
-        } else {
-            out += dictionary[b];
-        }
-    }
+    Base64Encoder encoder;
+    AlgorithmParameters params =
+        MakeParameters(EncodingLookupArray(), (const byte*)base64_dict.data())(InsertLineBreaks(),
+                                                                               false)(Pad(), false);
+
+    encoder.IsolatedInitialize(params);
+    encoder.Attach(new StringSink(out));
+    encoder.Put(in.data(), in.size());
+    encoder.MessageEnd();
+
     return out;
 }
 
@@ -732,11 +726,9 @@ std::string Module::GetCecDataPathTypeAsString(const CecDataPathType type, const
     case CecDataPathType::OutboxIndex:
         return fmt::format("/CEC/{:08x}/OutBox__/OBIndex_____", program_id);
     case CecDataPathType::InboxMsg:
-        return fmt::format("/CEC/{:08x}/InBox___/_{}", program_id,
-                           EncodeBase64(msg_id, base64_dict));
+        return fmt::format("/CEC/{:08x}/InBox___/_{}", program_id, EncodeBase64(msg_id));
     case CecDataPathType::OutboxMsg:
-        return fmt::format("/CEC/{:08x}/OutBox__/_{}", program_id,
-                           EncodeBase64(msg_id, base64_dict));
+        return fmt::format("/CEC/{:08x}/OutBox__/_{}", program_id, EncodeBase64(msg_id));
     case CecDataPathType::RootDir:
         return "/CEC";
     case CecDataPathType::MboxDir:
