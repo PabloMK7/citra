@@ -20,6 +20,8 @@ void Init();
 /// Deregisters all built-in input device factories and shuts them down.
 void Shutdown();
 
+void StartJoystickEventHandler();
+
 class Keyboard;
 
 /// Gets the keyboard button device factory.
