@@ -42,13 +42,6 @@ void DspInterface::OutputFrame(StereoFrame16& frame) {
     if (!sink)
         return;
 
-    // Implementation of the hardware volume slider with a dynamic range of 60 dB
-    double volume_scale_factor = std::exp(6.90775 * Settings::values.volume) * 0.001;
-    for (std::size_t i = 0; i < frame.size(); i++) {
-        frame[i][0] = static_cast<s16>(frame[i][0] * volume_scale_factor);
-        frame[i][1] = static_cast<s16>(frame[i][1] * volume_scale_factor);
-    }
-
     fifo.Push(frame.data(), frame.size());
 }
 
@@ -74,6 +67,16 @@ void DspInterface::OutputCallback(s16* buffer, std::size_t num_frames) {
     // Hold last emitted frame; this prevents popping.
     for (std::size_t i = frames_written; i < num_frames; i++) {
         std::memcpy(buffer + 2 * i, &last_frame[0], 2 * sizeof(s16));
+    }
+
+    // Implementation of the hardware volume slider with a dynamic range of 60 dB
+    const float linear_volume = std::clamp(Settings::values.volume, 0.0f, 1.0f);
+    if (linear_volume != 1.0) {
+        const float volume_scale_factor = std::exp(6.90775f * linear_volume) * 0.001f;
+        for (std::size_t i = 0; i < num_frames; i++) {
+            buffer[i * 2 + 0] = static_cast<s16>(buffer[i * 2 + 0] * volume_scale_factor);
+            buffer[i * 2 + 1] = static_cast<s16>(buffer[i * 2 + 1] * volume_scale_factor);
+        }
     }
 }
 
