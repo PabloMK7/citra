@@ -217,7 +217,7 @@ void RoomMember::RoomMemberImpl::HandleRoomInformationPacket(const ENetEvent* ev
     packet.Append(event->packet->data, event->packet->dataLength);
 
     // Ignore the first byte, which is the message id.
-    packet.IgnoreBytes(sizeof(u8)); // Igonore the message type
+    packet.IgnoreBytes(sizeof(u8)); // Ignore the message type
 
     RoomInformation info{};
     packet >> info.name;
@@ -248,7 +248,7 @@ void RoomMember::RoomMemberImpl::HandleJoinPacket(const ENetEvent* event) {
     packet.Append(event->packet->data, event->packet->dataLength);
 
     // Ignore the first byte, which is the message id.
-    packet.IgnoreBytes(sizeof(u8)); // Igonore the message type
+    packet.IgnoreBytes(sizeof(u8)); // Ignore the message type
 
     // Parse the MAC Address from the packet
     packet >> mac_address;
@@ -261,7 +261,7 @@ void RoomMember::RoomMemberImpl::HandleWifiPackets(const ENetEvent* event) {
     packet.Append(event->packet->data, event->packet->dataLength);
 
     // Ignore the first byte, which is the message id.
-    packet.IgnoreBytes(sizeof(u8)); // Igonore the message type
+    packet.IgnoreBytes(sizeof(u8)); // Ignore the message type
 
     // Parse the WifiPacket from the packet
     u8 frame_type;
