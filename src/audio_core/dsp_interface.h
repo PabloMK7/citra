@@ -9,6 +9,7 @@
 #include "audio_core/audio_types.h"
 #include "audio_core/time_stretch.h"
 #include "common/common_types.h"
+#include "common/ring_buffer.h"
 #include "core/memory.h"
 
 namespace Service {
@@ -81,9 +82,12 @@ protected:
 
 private:
     void FlushResidualStretcherAudio();
+    void OutputCallback(s16* buffer, std::size_t num_frames);
 
     std::unique_ptr<Sink> sink;
     bool perform_time_stretching = false;
+    Common::RingBuffer<s16, 0x2000, 2> fifo;
+    std::array<s16, 2> last_frame{};
     TimeStretcher time_stretcher;
 };
 

@@ -12,16 +12,13 @@
 namespace AudioCore {
 
 DspInterface::DspInterface() = default;
-
-DspInterface::~DspInterface() {
-    if (perform_time_stretching) {
-        FlushResidualStretcherAudio();
-    }
-}
+DspInterface::~DspInterface() = default;
 
 void DspInterface::SetSink(const std::string& sink_id, const std::string& audio_device) {
     const SinkDetails& sink_details = GetSinkDetails(sink_id);
     sink = sink_details.factory(audio_device);
+    sink->SetCallback(
+        [this](s16* buffer, std::size_t num_frames) { OutputCallback(buffer, num_frames); });
     time_stretcher.SetOutputSampleRate(sink->GetNativeSampleRate());
 }
 
@@ -51,32 +48,21 @@ void DspInterface::OutputFrame(StereoFrame16& frame) {
         frame[i][1] = static_cast<s16>(frame[i][1] * volume_scale_factor);
     }
 
-    if (perform_time_stretching) {
-        time_stretcher.AddSamples(&frame[0][0], frame.size());
-        std::vector<s16> stretched_samples = time_stretcher.Process(sink->SamplesInQueue());
-        sink->EnqueueSamples(stretched_samples.data(), stretched_samples.size() / 2);
-    } else {
-        constexpr std::size_t maximum_sample_latency = 2048; // about 64 miliseconds
-        if (sink->SamplesInQueue() > maximum_sample_latency) {
-            // This can occur if we're running too fast and samples are starting to back up.
-            // Just drop the samples.
-            return;
-        }
-
-        sink->EnqueueSamples(&frame[0][0], frame.size());
-    }
+    fifo.Push(frame.data(), frame.size());
 }
 
-void DspInterface::FlushResidualStretcherAudio() {
-    if (!sink)
-        return;
+void DspInterface::FlushResidualStretcherAudio() {}
 
-    time_stretcher.Flush();
-    while (true) {
-        std::vector<s16> residual_audio = time_stretcher.Process(sink->SamplesInQueue());
-        if (residual_audio.empty())
-            break;
-        sink->EnqueueSamples(residual_audio.data(), residual_audio.size() / 2);
+void DspInterface::OutputCallback(s16* buffer, size_t num_frames) {
+    const size_t frames_written = fifo.Pop(buffer, num_frames);
+
+    if (frames_written > 0) {
+        std::memcpy(&last_frame[0], buffer + 2 * (frames_written - 1), 2 * sizeof(s16));
+    }
+
+    // Hold last emitted frame; this prevents popping.
+    for (size_t i = frames_written; i < num_frames; i++) {
+        std::memcpy(buffer + 2 * i, &last_frame[0], 2 * sizeof(s16));
     }
 }
 

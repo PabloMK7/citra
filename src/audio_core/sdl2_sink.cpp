@@ -2,8 +2,8 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <list>
-#include <numeric>
+#include <string>
+#include <vector>
 #include <SDL.h>
 #include "audio_core/audio_types.h"
 #include "audio_core/sdl2_sink.h"
@@ -17,7 +17,7 @@ struct SDL2Sink::Impl {
 
     SDL_AudioDeviceID audio_device_id = 0;
 
-    std::list<std::vector<s16>> queue;
+    std::function<void(s16*, std::size_t)> cb;
 
     static void Callback(void* impl_, u8* buffer, int buffer_size_in_bytes);
 };
@@ -74,58 +74,18 @@ unsigned int SDL2Sink::GetNativeSampleRate() const {
     return impl->sample_rate;
 }
 
-void SDL2Sink::EnqueueSamples(const s16* samples, std::size_t sample_count) {
-    if (impl->audio_device_id <= 0)
-        return;
-
-    SDL_LockAudioDevice(impl->audio_device_id);
-    impl->queue.emplace_back(samples, samples + sample_count * 2);
-    SDL_UnlockAudioDevice(impl->audio_device_id);
-}
-
-size_t SDL2Sink::SamplesInQueue() const {
-    if (impl->audio_device_id <= 0)
-        return 0;
-
-    SDL_LockAudioDevice(impl->audio_device_id);
-
-    std::size_t total_size =
-        std::accumulate(impl->queue.begin(), impl->queue.end(), static_cast<std::size_t>(0),
-                        [](std::size_t sum, const auto& buffer) {
-                            // Division by two because each stereo sample is made of
-                            // two s16.
-                            return sum + buffer.size() / 2;
-                        });
-
-    SDL_UnlockAudioDevice(impl->audio_device_id);
-
-    return total_size;
+void SDL2Sink::SetCallback(std::function<void(s16*, std::size_t)> cb) {
+    impl->cb = cb;
 }
 
 void SDL2Sink::Impl::Callback(void* impl_, u8* buffer, int buffer_size_in_bytes) {
     Impl* impl = reinterpret_cast<Impl*>(impl_);
+    if (!impl || !impl->cb)
+        return;
 
-    std::size_t remaining_size = static_cast<std::size_t>(buffer_size_in_bytes) /
-                                 sizeof(s16); // Keep track of size in 16-bit increments.
+    const size_t num_frames = buffer_size_in_bytes / (2 * sizeof(s16));
 
-    while (remaining_size > 0 && !impl->queue.empty()) {
-        if (impl->queue.front().size() <= remaining_size) {
-            memcpy(buffer, impl->queue.front().data(), impl->queue.front().size() * sizeof(s16));
-            buffer += impl->queue.front().size() * sizeof(s16);
-            remaining_size -= impl->queue.front().size();
-            impl->queue.pop_front();
-        } else {
-            memcpy(buffer, impl->queue.front().data(), remaining_size * sizeof(s16));
-            buffer += remaining_size * sizeof(s16);
-            impl->queue.front().erase(impl->queue.front().begin(),
-                                      impl->queue.front().begin() + remaining_size);
-            remaining_size = 0;
-        }
-    }
-
-    if (remaining_size > 0) {
-        memset(buffer, 0, remaining_size * sizeof(s16));
-    }
+    impl->cb(reinterpret_cast<s16*>(buffer), num_frames);
 }
 
 std::vector<std::string> ListSDL2SinkDevices() {

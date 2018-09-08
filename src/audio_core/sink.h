@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include <vector>
+#include <functional>
 #include "common/common_types.h"
 
 namespace AudioCore {
@@ -20,19 +20,16 @@ class Sink {
 public:
     virtual ~Sink() = default;
 
-    /// The native rate of this sink. The sink expects to be fed samples that respect this. (Units:
-    /// samples/sec)
+    /// The native rate of this sink. The sink expects to be fed samples that respect this.
+    /// (Units: samples/sec)
     virtual unsigned int GetNativeSampleRate() const = 0;
 
     /**
-     * Feed stereo samples to sink.
+     * Set callback for samples
      * @param samples Samples in interleaved stereo PCM16 format.
      * @param sample_count Number of samples.
      */
-    virtual void EnqueueSamples(const s16* samples, std::size_t sample_count) = 0;
-
-    /// Samples enqueued that have not been played yet.
-    virtual std::size_t SamplesInQueue() const = 0;
+    virtual void SetCallback(std::function<void(s16*, std::size_t)> cb) = 0;
 };
 
 } // namespace AudioCore
