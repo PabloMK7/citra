@@ -87,7 +87,7 @@ public:
      */
     void HandleJoinPacket(const ENetEvent* event);
     /**
-     * Extracts RoomInformation and MemberInformation from a received RakNet packet.
+     * Extracts RoomInformation and MemberInformation from a received ENet packet.
      * @param event The ENet event that was received.
      */
     void HandleRoomInformationPacket(const ENetEvent* event);
