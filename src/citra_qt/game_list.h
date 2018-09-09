@@ -4,10 +4,10 @@
 
 #pragma once
 
-#include <unordered_map>
 #include <QMenu>
 #include <QString>
 #include <QWidget>
+#include "citra_qt/compatibility_list.h"
 #include "common/common_types.h"
 #include "ui_settings.h"
 
@@ -71,9 +71,8 @@ signals:
     void GameChosen(QString game_path);
     void ShouldCancelWorker();
     void OpenFolderRequested(u64 program_id, GameListOpenTarget target);
-    void NavigateToGamedbEntryRequested(
-        u64 program_id,
-        std::unordered_map<std::string, std::pair<QString, QString>>& compatibility_list);
+    void NavigateToGamedbEntryRequested(u64 program_id,
+                                        const CompatibilityList& compatibility_list);
     void OpenDirectory(QString directory);
     void AddDirectory();
     void ShowList(bool show);
@@ -104,7 +103,7 @@ private:
     QStandardItemModel* item_model = nullptr;
     GameListWorker* current_worker = nullptr;
     QFileSystemWatcher* watcher = nullptr;
-    std::unordered_map<std::string, std::pair<QString, QString>> compatibility_list;
+    CompatibilityList compatibility_list;
 
     friend class GameListSearchField;
 };

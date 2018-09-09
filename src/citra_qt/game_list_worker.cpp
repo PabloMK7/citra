@@ -10,6 +10,7 @@
 #include <QDir>
 #include <QFileInfo>
 
+#include "citra_qt/compatibility_list.h"
 #include "citra_qt/game_list.h"
 #include "citra_qt/game_list_p.h"
 #include "citra_qt/game_list_worker.h"
@@ -27,9 +28,8 @@ bool HasSupportedFileExtension(const std::string& file_name) {
 }
 } // Anonymous namespace
 
-GameListWorker::GameListWorker(
-    QList<UISettings::GameDir>& game_dirs,
-    const std::unordered_map<std::string, std::pair<QString, QString>>& compatibility_list)
+GameListWorker::GameListWorker(QList<UISettings::GameDir>& game_dirs,
+                               const CompatibilityList& compatibility_list)
     : game_dirs(game_dirs), compatibility_list(compatibility_list) {}
 
 GameListWorker::~GameListWorker() = default;

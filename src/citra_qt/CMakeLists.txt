@@ -14,6 +14,8 @@ add_executable(citra-qt
     applets/swkbd.h
     bootmanager.cpp
     bootmanager.h
+    compatibility_list.cpp
+    compatibility_list.h
     camera/camera_util.cpp
     camera/camera_util.h
     camera/still_image_camera.cpp
