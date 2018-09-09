@@ -15,7 +15,6 @@ DspInterface::DspInterface() = default;
 DspInterface::~DspInterface() = default;
 
 void DspInterface::SetSink(const std::string& sink_id, const std::string& audio_device) {
-    sink.reset();
     const SinkDetails& sink_details = GetSinkDetails(sink_id);
     sink = sink_details.factory(audio_device);
     sink->SetCallback(
