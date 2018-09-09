@@ -191,6 +191,7 @@ void EmuWindow_SDL2::PollEvents() {
             break;
         default:
             InputCommon::SDL::HandleGameControllerEvent(event);
+            break;
         }
     }
 }

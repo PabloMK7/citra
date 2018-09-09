@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <algorithm>
 #include <atomic>
 #include <cmath>
 #include <functional>
@@ -30,7 +31,7 @@ class SDLJoystick;
 class SDLButtonFactory;
 class SDLAnalogFactory;
 
-/// Map of GUID of a list of corresponding vurtual Joysticks
+/// Map of GUID of a list of corresponding virtual Joysticks
 static std::unordered_map<std::string, std::vector<std::shared_ptr<SDLJoystick>>> joystick_map;
 static std::mutex joystick_map_mutex;
 
@@ -52,11 +53,9 @@ static std::string GetGUID(SDL_Joystick* joystick) {
 
 class SDLJoystick {
 public:
-    SDLJoystick(const std::string& guid_, int port_, SDL_Joystick* joystick,
+    SDLJoystick(std::string guid_, int port_, SDL_Joystick* joystick,
                 decltype(&SDL_JoystickClose) deleter = &SDL_JoystickClose)
-        : guid{guid_}, port{port_}, sdl_joystick{joystick, deleter} {}
-
-    ~SDLJoystick() = default;
+        : guid{std::move(guid_)}, port{port_}, sdl_joystick{joystick, deleter} {}
 
     void SetButton(int button, bool value) {
         std::lock_guard<std::mutex> lock(mutex);
@@ -134,8 +133,8 @@ private:
         std::unordered_map<int, Sint16> axes;
         std::unordered_map<int, Uint8> hats;
     } state;
-    const std::string guid;
-    const int port;
+    std::string guid;
+    int port;
     std::unique_ptr<SDL_Joystick, decltype(&SDL_JoystickClose)> sdl_joystick;
     mutable std::mutex mutex;
 };
@@ -145,18 +144,17 @@ private:
  */
 static std::shared_ptr<SDLJoystick> GetSDLJoystickByGUID(const std::string& guid, int port) {
     std::lock_guard<std::mutex> lock(joystick_map_mutex);
-    const auto& it = joystick_map.find(guid);
+    const auto it = joystick_map.find(guid);
     if (it != joystick_map.end()) {
         while (it->second.size() <= port) {
             auto joystick = std::make_shared<SDLJoystick>(guid, it->second.size(), nullptr,
                                                           [](SDL_Joystick*) {});
-            it->second.emplace_back(joystick);
+            it->second.emplace_back(std::move(joystick));
         }
         return it->second[port];
     }
     auto joystick = std::make_shared<SDLJoystick>(guid, 0, nullptr, [](SDL_Joystick*) {});
-    joystick_map[guid].emplace_back(joystick);
-    return joystick;
+    return joystick_map[guid].emplace_back(std::move(joystick));
 }
 
 /**
@@ -174,11 +172,11 @@ static std::shared_ptr<SDLJoystick> GetSDLJoystickBySDLID(SDL_JoystickID sdl_id)
                                        return sdl_joystick == joystick->GetSDLJoystick();
                                    });
         if (vec_it != map_it->second.end()) {
-            // This is the common case: There is already an existing SDLJoystick maped to a
+            // This is the common case: There is already an existing SDL_Joystick maped to a
             // SDLJoystick. return the SDLJoystick
             return *vec_it;
         }
-        // Search for a SDLJoystick without a mapped SDLJoystick...
+        // Search for a SDLJoystick without a mapped SDL_Joystick...
         auto nullptr_it = std::find_if(map_it->second.begin(), map_it->second.end(),
                                        [](const std::shared_ptr<SDLJoystick>& joystick) {
                                            return !joystick->GetSDLJoystick();
@@ -188,14 +186,13 @@ static std::shared_ptr<SDLJoystick> GetSDLJoystickBySDLID(SDL_JoystickID sdl_id)
             (*nullptr_it)->SetSDLJoystick(sdl_joystick);
             return *nullptr_it;
         }
-        // There is no SDLJoystick without a mapped SDLJoystick
+        // There is no SDLJoystick without a mapped SDL_Joystick
+        // Create a new SDLJoystick
         auto joystick = std::make_shared<SDLJoystick>(guid, map_it->second.size(), sdl_joystick);
-        map_it->second.emplace_back(joystick);
-        return joystick;
+        return map_it->second.emplace_back(std::move(joystick));
     }
     auto joystick = std::make_shared<SDLJoystick>(guid, 0, sdl_joystick);
-    joystick_map[guid].emplace_back(joystick);
-    return joystick;
+    return joystick_map[guid].emplace_back(std::move(joystick));
 }
 
 void InitJoystick(int joystick_index) {
@@ -208,11 +205,11 @@ void InitJoystick(int joystick_index) {
     std::string guid = GetGUID(sdl_joystick);
     if (joystick_map.find(guid) == joystick_map.end()) {
         auto joystick = std::make_shared<SDLJoystick>(guid, 0, sdl_joystick);
-        joystick_map[guid].emplace_back(joystick);
+        joystick_map[guid].emplace_back(std::move(joystick));
         return;
     }
     auto& joystick_guid_list = joystick_map[guid];
-    const auto& it = std::find_if(
+    const auto it = std::find_if(
         joystick_guid_list.begin(), joystick_guid_list.end(),
         [](const std::shared_ptr<SDLJoystick>& joystick) { return !joystick->GetSDLJoystick(); });
     if (it != joystick_guid_list.end()) {
@@ -220,7 +217,7 @@ void InitJoystick(int joystick_index) {
         return;
     }
     auto joystick = std::make_shared<SDLJoystick>(guid, joystick_guid_list.size(), sdl_joystick);
-    joystick_guid_list.emplace_back(joystick);
+    joystick_guid_list.emplace_back(std::move(joystick));
 }
 
 void CloseJoystick(SDL_Joystick* sdl_joystick) {
@@ -228,13 +225,12 @@ void CloseJoystick(SDL_Joystick* sdl_joystick) {
     std::string guid = GetGUID(sdl_joystick);
     // This call to guid is save since the joystick is guranteed to be in that map
     auto& joystick_guid_list = joystick_map[guid];
-    const auto& joystick_it =
+    const auto joystick_it =
         std::find_if(joystick_guid_list.begin(), joystick_guid_list.end(),
                      [&sdl_joystick](const std::shared_ptr<SDLJoystick>& joystick) {
                          return joystick->GetSDLJoystick() == sdl_joystick;
                      });
     (*joystick_it)->SetSDLJoystick(nullptr, [](SDL_Joystick*) {});
-    return;
 }
 
 void HandleGameControllerEvent(const SDL_Event& event) {
@@ -294,10 +290,10 @@ void PollLoop() {
         // Wait for 10 ms or until an event happens
         if (SDL_WaitEventTimeout(&event, 10)) {
             // Don't handle the event if we are configuring
-            if (!polling) {
-                HandleGameControllerEvent(event);
-            } else {
+            if (polling) {
                 event_queue.Push(event);
+            } else {
+                HandleGameControllerEvent(event);
             }
         }
     }
