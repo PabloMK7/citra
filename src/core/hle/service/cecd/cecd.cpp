@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <cryptopp/base64.h>
+#include <cryptopp/hmac.h>
 #include "common/file_util.h"
 #include "common/logging/log.h"
 #include "common/string_util.h"
@@ -187,6 +188,26 @@ void Module::Interface::ReadMessage(Kernel::HLERequestContext& ctx) {
         write_buffer.Write(buffer.data(), 0, buffer_size);
         message->backend->Close();
 
+        CecMessageHeader msg_header;
+
+        std::memcpy(&msg_header, buffer.data(), sizeof(CecMessageHeader));
+        LOG_DEBUG(Service_CECD,
+                  "magic={:#06x}, message_size={:#010x}, header_size={:#010x}, "
+                  "body_size={:#010x}, title_id={:#010x}, title_id_2={:#010x}, "
+                  "batch_id={:#010x}",
+                  msg_header.magic, msg_header.message_size, msg_header.header_size,
+                  msg_header.body_size, msg_header.title_id, msg_header.title_id2,
+                  msg_header.batch_id);
+        LOG_DEBUG(Service_CECD,
+                  "unknown_id={:#010x}, version={:#010x}, flag={:#04x}, "
+                  "send_method={:#04x}, is_unopen={:#04x}, is_new={:#04x}, "
+                  "sender_id={:#018x}, sender_id2={:#018x}, send_count={:#04x}, "
+                  "forward_count={:#04x}, user_data={:#06x}, ",
+                  msg_header.unknown_id, msg_header.version, msg_header.flag,
+                  msg_header.send_method, msg_header.is_unopen, msg_header.is_new,
+                  msg_header.sender_id, msg_header.sender_id2, msg_header.send_count,
+                  msg_header.forward_count, msg_header.user_data);
+
         rb.Push(RESULT_SUCCESS);
         rb.Push<u32>(bytes_read);
     } else {
@@ -239,6 +260,26 @@ void Module::Interface::ReadMessageWithHMAC(Kernel::HLERequestContext& ctx) {
         write_buffer.Write(buffer.data(), 0, buffer_size);
         message->backend->Close();
 
+        CecMessageHeader msg_header;
+
+        std::memcpy(&msg_header, buffer.data(), sizeof(CecMessageHeader));
+        LOG_DEBUG(Service_CECD,
+                  "magic={:#06x}, message_size={:#010x}, header_size={:#010x}, "
+                  "body_size={:#010x}, title_id={:#010x}, title_id_2={:#010x}, "
+                  "batch_id={:#010x}",
+                  msg_header.magic, msg_header.message_size, msg_header.header_size,
+                  msg_header.body_size, msg_header.title_id, msg_header.title_id2,
+                  msg_header.batch_id);
+        LOG_DEBUG(Service_CECD,
+                  "unknown_id={:#010x}, version={:#010x}, flag={:#04x}, "
+                  "send_method={:#04x}, is_unopen={:#04x}, is_new={:#04x}, "
+                  "sender_id={:#018x}, sender_id2={:#018x}, send_count={:#04x}, "
+                  "forward_count={:#04x}, user_data={:#06x}, ",
+                  msg_header.unknown_id, msg_header.version, msg_header.flag,
+                  msg_header.send_method, msg_header.is_unopen, msg_header.is_new,
+                  msg_header.sender_id, msg_header.sender_id2, msg_header.send_count,
+                  msg_header.forward_count, msg_header.user_data);
+
         rb.Push(RESULT_SUCCESS);
         rb.Push<u32>(bytes_read);
     } else {
@@ -285,13 +326,17 @@ void Module::Interface::Write(Kernel::HLERequestContext& ctx) {
         std::vector<u8> buffer(read_buffer_size);
         read_buffer.Read(buffer.data(), 0, read_buffer_size);
 
+        if (session_data->file->backend->GetSize() != read_buffer_size) {
+            session_data->file->backend->SetSize(read_buffer_size);
+        }
+
         if (session_data->open_mode.check) {
             cecd->CheckAndUpdateFile(session_data->data_path_type, session_data->ncch_program_id,
                                      buffer);
         }
 
         const u32 bytes_written =
-            session_data->file->backend->Write(0, read_buffer_size, true, buffer.data()).Unwrap();
+            session_data->file->backend->Write(0, buffer.size(), true, buffer.data()).Unwrap();
         session_data->file->backend->Close();
 
         rb.Push(RESULT_SUCCESS);
@@ -330,8 +375,27 @@ void Module::Interface::WriteMessage(Kernel::HLERequestContext& ctx) {
     if (message_result.Succeeded()) {
         auto message = message_result.Unwrap();
         std::vector<u8> buffer(buffer_size);
+        CecMessageHeader msg_header;
 
         read_buffer.Read(buffer.data(), 0, buffer_size);
+        std::memcpy(&msg_header, buffer.data(), sizeof(CecMessageHeader));
+        LOG_DEBUG(Service_CECD,
+                  "magic={:#06x}, message_size={:#010x}, header_size={:#010x}, "
+                  "body_size={:#010x}, title_id={:#010x}, title_id_2={:#010x}, "
+                  "batch_id={:#010x}",
+                  msg_header.magic, msg_header.message_size, msg_header.header_size,
+                  msg_header.body_size, msg_header.title_id, msg_header.title_id2,
+                  msg_header.batch_id);
+        LOG_DEBUG(Service_CECD,
+                  "unknown_id={:#010x}, version={:#010x}, flag={:#04x}, "
+                  "send_method={:#04x}, is_unopen={:#04x}, is_new={:#04x}, "
+                  "sender_id={:#018x}, sender_id2={:#018x}, send_count={:#04x}, "
+                  "forward_count={:#04x}, user_data={:#06x}, ",
+                  msg_header.unknown_id, msg_header.version, msg_header.flag,
+                  msg_header.send_method, msg_header.is_unopen, msg_header.is_new,
+                  msg_header.sender_id, msg_header.sender_id2, msg_header.send_count,
+                  msg_header.forward_count, msg_header.user_data);
+
         const u32 bytes_written =
             message->backend->Write(0, buffer_size, true, buffer.data()).Unwrap();
         message->backend->Close();
@@ -383,8 +447,27 @@ void Module::Interface::WriteMessageWithHMAC(Kernel::HLERequestContext& ctx) {
     if (message_result.Succeeded()) {
         auto message = message_result.Unwrap();
         std::vector<u8> buffer(buffer_size);
+        CecMessageHeader msg_header;
 
         read_buffer.Read(buffer.data(), 0, buffer_size);
+        std::memcpy(&msg_header, buffer.data(), sizeof(CecMessageHeader));
+        LOG_DEBUG(Service_CECD,
+                  "magic={:#06x}, message_size={:#010x}, header_size={:#010x}, "
+                  "body_size={:#010x}, title_id={:#010x}, title_id_2={:#010x}, "
+                  "batch_id={:#010x}",
+                  msg_header.magic, msg_header.message_size, msg_header.header_size,
+                  msg_header.body_size, msg_header.title_id, msg_header.title_id2,
+                  msg_header.batch_id);
+        LOG_DEBUG(Service_CECD,
+                  "unknown_id={:#010x}, version={:#010x}, flag={:#04x}, "
+                  "send_method={:#04x}, is_unopen={:#04x}, is_new={:#04x}, "
+                  "sender_id={:#018x}, sender_id2={:#018x}, send_count={:#04x}, "
+                  "forward_count={:#04x}, user_data={:#06x}, ",
+                  msg_header.unknown_id, msg_header.version, msg_header.flag,
+                  msg_header.send_method, msg_header.is_unopen, msg_header.is_new,
+                  msg_header.sender_id, msg_header.sender_id2, msg_header.send_count,
+                  msg_header.forward_count, msg_header.user_data);
+
         const u32 bytes_written =
             message->backend->Write(0, buffer_size, true, buffer.data()).Unwrap();
         message->backend->Close();
@@ -457,26 +540,32 @@ void Module::Interface::SetData(Kernel::HLERequestContext& ctx) {
     const u32 ncch_program_id = rp.Pop<u32>();
     const u32 buffer_size = rp.Pop<u32>();
     const u32 option = rp.Pop<u32>();
-    auto& message_id_buffer = rp.PopMappedBuffer();
+    auto& read_buffer = rp.PopMappedBuffer();
 
-    SessionData* session_data = GetSessionData(ctx.Session());
-    if (session_data->file)
-        LOG_TRACE(
-            Service_CECD,
-            "SessionData: ncch_program_id={:#010x}, data_path_type={:#04x}, "
-            "path={}, open_mode: raw={:#x}, unknown={}, read={}, write={}, create={}, check={}",
-            session_data->ncch_program_id, static_cast<u32>(session_data->data_path_type),
-            session_data->path.AsString(), session_data->open_mode.raw,
-            session_data->open_mode.unknown, session_data->open_mode.read,
-            session_data->open_mode.write, session_data->open_mode.create,
-            session_data->open_mode.check);
+    if (option == 2 && buffer_size > 0) { // update obindex?
+        FileSys::Path path(
+            cecd->GetCecDataPathTypeAsString(CecDataPathType::OutboxIndex, ncch_program_id).data());
+        FileSys::Mode mode;
+        mode.write_flag.Assign(1);
+        mode.create_flag.Assign(1);
 
-    if (session_data->file)
-        session_data->file->backend->Close();
+        auto file_result =
+            Service::FS::OpenFileFromArchive(cecd->cecd_system_save_data_archive, path, mode);
+        if (file_result.Succeeded()) {
+            auto file = file_result.Unwrap();
+            std::vector<u8> buffer(buffer_size);
+            read_buffer.Read(buffer.data(), 0, buffer_size);
+
+            cecd->CheckAndUpdateFile(CecDataPathType::OutboxIndex, ncch_program_id, buffer);
+
+            file->backend->Write(0, buffer.size(), true, buffer.data());
+            file->backend->Close();
+        }
+    }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
     rb.Push(RESULT_SUCCESS);
-    rb.PushMappedBuffer(message_id_buffer);
+    rb.PushMappedBuffer(read_buffer);
 
     LOG_DEBUG(Service_CECD, "called, ncch_program_id={:#010x}, buffer_size={:#x}, option={:#x}",
               ncch_program_id, buffer_size, option);
@@ -612,15 +701,20 @@ void Module::Interface::OpenAndWrite(Kernel::HLERequestContext& ctx) {
             Service::FS::OpenFileFromArchive(cecd->cecd_system_save_data_archive, path, mode);
         if (file_result.Succeeded()) {
             auto file = file_result.Unwrap();
+
             std::vector<u8> buffer(buffer_size);
             read_buffer.Read(buffer.data(), 0, buffer_size);
+
+            if (file->backend->GetSize() != buffer_size) {
+                file->backend->SetSize(buffer_size);
+            }
 
             if (open_mode.check) {
                 cecd->CheckAndUpdateFile(path_type, ncch_program_id, buffer);
             }
 
             const u32 bytes_written =
-                file->backend->Write(0, buffer_size, true, buffer.data()).Unwrap();
+                file->backend->Write(0, buffer.size(), true, buffer.data()).Unwrap();
             file->backend->Close();
 
             rb.Push(RESULT_SUCCESS);
@@ -808,6 +902,9 @@ void Module::CheckAndUpdateFile(const CecDataPathType path_type, const u32 ncch_
         CecMBoxListHeader mbox_list_header = {};
         std::memcpy(&mbox_list_header, file_buffer.data(), sizeof(CecMBoxListHeader));
 
+        LOG_DEBUG(Service_CECD, "CecMBoxList: magic={:#06x}, version={:#06x}, num_boxes={:#06x}",
+                  mbox_list_header.magic, mbox_list_header.version, mbox_list_header.num_boxes);
+
         if (file_size != sizeof(CecMBoxListHeader)) { // 0x18C
             LOG_DEBUG(Service_CECD, "CecMBoxListHeader size is incorrect: {}", file_size);
         }
@@ -845,7 +942,6 @@ void Module::CheckAndUpdateFile(const CecDataPathType path_type, const u32 ncch_
 
                 bool already_activated = false;
                 for (auto i = 0; i < mbox_list_header.num_boxes; i++) {
-                    LOG_DEBUG(Service_CECD, "{}", i);
                     // Box names start at offset 0xC, are 16 char long, first 8 id, last 8 null
                     if (std::memcmp(name_buffer.data(), &mbox_list_header.box_names[i],
                                     valid_name_size) == 0) {
@@ -903,6 +999,12 @@ void Module::CheckAndUpdateFile(const CecDataPathType path_type, const u32 ncch_
         CecMBoxInfoHeader mbox_info_header = {};
         std::memcpy(&mbox_info_header, file_buffer.data(), sizeof(CecMBoxInfoHeader));
 
+        LOG_DEBUG(Service_CECD,
+                  "CecMBoxInfoHeader: magic={:#06x}, program_id={:#010x}, "
+                  "private_id={:#010x}, flag={:#04x}, flag2={:#04x}",
+                  mbox_info_header.magic, mbox_info_header.program_id, mbox_info_header.private_id,
+                  mbox_info_header.flag, mbox_info_header.flag2);
+
         if (file_size != sizeof(CecMBoxInfoHeader)) { // 0x60
             LOG_DEBUG(Service_CECD, "CecMBoxInfoHeader size is incorrect: {}", file_size);
         }
@@ -928,8 +1030,18 @@ void Module::CheckAndUpdateFile(const CecDataPathType path_type, const u32 ncch_
         break;
     }
     case CecDataPathType::InboxInfo: {
-        CecInOutBoxInfoHeader inbox_info_header = {};
-        std::memcpy(&inbox_info_header, file_buffer.data(), sizeof(CecInOutBoxInfoHeader));
+        CecBoxInfoHeader inbox_info_header = {};
+        std::memcpy(&inbox_info_header, file_buffer.data(), sizeof(CecBoxInfoHeader));
+
+        LOG_DEBUG(Service_CECD,
+                  "CecBoxInfoHeader: magic={:#06x}, box_info_size={:#010x}, "
+                  "max_box_size={:#010x}, box_size={:#010x}, "
+                  "max_message_num={:#010x}, message_num={:#010x}, "
+                  "max_batch_size={:#010x}, max_message_size={:#010x}",
+                  inbox_info_header.magic, inbox_info_header.box_info_size,
+                  inbox_info_header.max_box_size, inbox_info_header.box_size,
+                  inbox_info_header.max_message_num, inbox_info_header.message_num,
+                  inbox_info_header.max_batch_size, inbox_info_header.max_message_size);
 
         if (inbox_info_header.magic != 0x6262) { // 'bb'
             if (inbox_info_header.magic == 0)
@@ -946,7 +1058,7 @@ void Module::CheckAndUpdateFile(const CecDataPathType path_type, const u32 ncch_
             else
                 LOG_DEBUG(Service_CECD, "CecInBoxInfoHeader box info size is incorrect:",
                           inbox_info_header.box_info_size);
-            inbox_info_header.box_info_size = sizeof(CecInOutBoxInfoHeader);
+            inbox_info_header.box_info_size = sizeof(CecBoxInfoHeader);
         }
 
         if (inbox_info_header.max_box_size == 0) {
@@ -976,12 +1088,22 @@ void Module::CheckAndUpdateFile(const CecDataPathType path_type, const u32 ncch_
             LOG_DEBUG(Service_CECD, "CecInBoxInfoHeader max batch size != max message number");
         }
 
-        std::memcpy(file_buffer.data(), &inbox_info_header, sizeof(CecInOutBoxInfoHeader));
+        std::memcpy(file_buffer.data(), &inbox_info_header, sizeof(CecBoxInfoHeader));
         break;
     }
     case CecDataPathType::OutboxInfo: {
-        CecInOutBoxInfoHeader outbox_info_header = {};
-        std::memcpy(&outbox_info_header, file_buffer.data(), sizeof(CecInOutBoxInfoHeader));
+        CecBoxInfoHeader outbox_info_header = {};
+        std::memcpy(&outbox_info_header, file_buffer.data(), sizeof(CecBoxInfoHeader));
+
+        LOG_DEBUG(Service_CECD,
+                  "CecBoxInfoHeader: magic={:#06x}, box_info_size={:#010x}, "
+                  "max_box_size={:#010x}, box_size={:#010x}, "
+                  "max_message_num={:#010x}, message_num={:#010x}, "
+                  "max_batch_size={:#010x}, max_message_size={:#010x}",
+                  outbox_info_header.magic, outbox_info_header.box_info_size,
+                  outbox_info_header.max_box_size, outbox_info_header.box_size,
+                  outbox_info_header.max_message_num, outbox_info_header.message_num,
+                  outbox_info_header.max_batch_size, outbox_info_header.max_message_size);
 
         if (outbox_info_header.magic != 0x6262) { // 'bb'
             if (outbox_info_header.magic == 0)
@@ -992,13 +1114,14 @@ void Module::CheckAndUpdateFile(const CecDataPathType path_type, const u32 ncch_
             outbox_info_header.magic = 0x6262;
         }
 
-        if (outbox_info_header.box_info_size != file_size) {
+        if (outbox_info_header.box_info_size != file_buffer.size()) {
             if (outbox_info_header.box_info_size == 0)
                 LOG_DEBUG(Service_CECD, "CecOutBoxInfoHeader box info size is not set");
             else
                 LOG_DEBUG(Service_CECD, "CecOutBoxInfoHeader box info size is incorrect:",
                           outbox_info_header.box_info_size);
-            outbox_info_header.box_info_size = sizeof(CecInOutBoxInfoHeader);
+            outbox_info_header.box_info_size = sizeof(CecBoxInfoHeader);
+            outbox_info_header.message_num = 0;
         }
 
         if (outbox_info_header.max_box_size == 0) {
@@ -1026,7 +1149,71 @@ void Module::CheckAndUpdateFile(const CecDataPathType path_type, const u32 ncch_
             LOG_DEBUG(Service_CECD, "CecOutBoxInfoHeader max batch size != max message number");
         }
 
-        std::memcpy(file_buffer.data(), &outbox_info_header, sizeof(CecInOutBoxInfoHeader));
+        /// We need to read the /CEC/<id>/OutBox directory to find out which messages, if any,
+        /// are present. The num_of_messages = (total_read_count) - 2, to adjust for
+        /// the BoxInfo____ and OBIndex_____files that are present in the directory as well.
+        FileSys::Path outbox_path(
+            GetCecDataPathTypeAsString(CecDataPathType::OutboxDir, ncch_program_id).data());
+
+        auto dir_result =
+            Service::FS::OpenDirectoryFromArchive(cecd_system_save_data_archive, outbox_path);
+
+        auto outbox_dir = dir_result.Unwrap();
+        std::vector<FileSys::Entry> entries(outbox_info_header.max_message_num + 2);
+        const u32 entry_count =
+            outbox_dir->backend->Read(outbox_info_header.max_message_num + 2, entries.data());
+        outbox_dir->backend->Close();
+
+        LOG_DEBUG(Service_CECD, "Number of entries found in /OutBox: {}", entry_count);
+        std::array<CecMessageHeader, 8> message_headers;
+
+        std::string boxinfo_name("BoxInfo_____");
+        std::string obindex_name("OBIndex_____");
+        std::string file_name;
+        std::u16string u16_filename;
+
+        for (auto i = 0; i < entry_count; i++) {
+            u16_filename = std::u16string(entries[i].filename);
+            file_name = Common::UTF16ToUTF8(u16_filename);
+
+            if (boxinfo_name.compare(file_name) != 0 && obindex_name.compare(file_name) != 0) {
+                LOG_DEBUG(Service_CECD, "Adding message to BoxInfo_____: {}", file_name);
+
+                FileSys::Path message_path(
+                    (GetCecDataPathTypeAsString(CecDataPathType::OutboxDir, ncch_program_id) + "/" +
+                     file_name)
+                        .data());
+
+                FileSys::Mode mode;
+                mode.read_flag.Assign(1);
+
+                auto message_result = Service::FS::OpenFileFromArchive(
+                    cecd_system_save_data_archive, message_path, mode);
+
+                auto message = message_result.Unwrap();
+                const u32 message_size = message->backend->GetSize();
+                std::vector<u8> buffer(message_size);
+
+                message->backend->Read(0, message_size, buffer.data()).Unwrap();
+                message->backend->Close();
+
+                std::memcpy(&message_headers[outbox_info_header.message_num++], buffer.data(),
+                            sizeof(CecMessageHeader));
+            }
+        }
+
+        if (outbox_info_header.message_num > 0) {
+            const u32 message_headers_size =
+                outbox_info_header.message_num * sizeof(CecMessageHeader);
+
+            file_buffer.resize(sizeof(CecBoxInfoHeader) + message_headers_size, 0);
+            outbox_info_header.box_info_size += message_headers_size;
+
+            std::memcpy(file_buffer.data() + sizeof(CecBoxInfoHeader), &message_headers,
+                        message_headers_size);
+        }
+
+        std::memcpy(file_buffer.data(), &outbox_info_header, sizeof(CecBoxInfoHeader));
         break;
     }
     case CecDataPathType::OutboxIndex: {
@@ -1054,6 +1241,64 @@ void Module::CheckAndUpdateFile(const CecDataPathType path_type, const u32 ncch_
         } else if (obindex_header.message_num != (file_size % 8) - 1) {
             LOG_DEBUG(Service_CECD, "CecOBIndexHeader message number is incorrect: {}",
                       obindex_header.message_num);
+            obindex_header.message_num = 0;
+        }
+
+        /// We need to read the /CEC/<id>/OutBox directory to find out which messages, if any,
+        /// are present. The num_of_messages = (total_read_count) - 2, to adjust for
+        /// the BoxInfo____ and OBIndex_____files that are present in the directory as well.
+        FileSys::Path outbox_path(
+            GetCecDataPathTypeAsString(CecDataPathType::OutboxDir, ncch_program_id).data());
+
+        auto dir_result =
+            Service::FS::OpenDirectoryFromArchive(cecd_system_save_data_archive, outbox_path);
+
+        auto outbox_dir = dir_result.Unwrap();
+        std::vector<FileSys::Entry> entries(8);
+        const u32 entry_count = outbox_dir->backend->Read(8, entries.data());
+        outbox_dir->backend->Close();
+
+        LOG_DEBUG(Service_CECD, "Number of entries found in /OutBox: {}", entry_count);
+        std::array<std::array<u8, 8>, 8> message_ids;
+
+        std::string boxinfo_name("BoxInfo_____");
+        std::string obindex_name("OBIndex_____");
+        std::string file_name;
+        std::u16string u16_filename;
+
+        for (auto i = 0; i < entry_count; i++) {
+            u16_filename = std::u16string(entries[i].filename);
+            file_name = Common::UTF16ToUTF8(u16_filename);
+
+            if (boxinfo_name.compare(file_name) != 0 && obindex_name.compare(file_name) != 0) {
+                FileSys::Path message_path(
+                    (GetCecDataPathTypeAsString(CecDataPathType::OutboxDir, ncch_program_id) + "/" +
+                     file_name)
+                        .data());
+
+                FileSys::Mode mode;
+                mode.read_flag.Assign(1);
+
+                auto message_result = Service::FS::OpenFileFromArchive(
+                    cecd_system_save_data_archive, message_path, mode);
+
+                auto message = message_result.Unwrap();
+                const u32 message_size = message->backend->GetSize();
+                std::vector<u8> buffer(message_size);
+
+                message->backend->Read(0, message_size, buffer.data()).Unwrap();
+                message->backend->Close();
+
+                // Message id is at offset 0x20, and is 8 bytes
+                std::memcpy(&message_ids[obindex_header.message_num++], buffer.data() + 0x20, 8);
+            }
+        }
+
+        if (obindex_header.message_num > 0) {
+            const u32 message_ids_size = obindex_header.message_num * 8;
+            file_buffer.resize(sizeof(CecOBIndexHeader) + message_ids_size);
+            std::memcpy(file_buffer.data() + sizeof(CecOBIndexHeader), &message_ids,
+                        message_ids_size);
         }
 
         std::memcpy(file_buffer.data(), &obindex_header, sizeof(CecOBIndexHeader));

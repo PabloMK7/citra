@@ -100,7 +100,7 @@ public:
 
     enum class CecSystemInfoType : u32 { EulaVersion = 1, Eula = 2, ParentControl = 3 };
 
-    struct CecInOutBoxInfoHeader {
+    struct CecBoxInfoHeader {
         u16_le magic; // 0x6262 'bb'
         INSERT_PADDING_BYTES(2);
         u32_le box_info_size;
@@ -111,8 +111,7 @@ public:
         u32_le max_batch_size;
         u32_le max_message_size;
     };
-    static_assert(sizeof(CecInOutBoxInfoHeader) == 0x20,
-                  "CecInOutBoxInfoHeader struct has incorrect size.");
+    static_assert(sizeof(CecBoxInfoHeader) == 0x20, "CecBoxInfoHeader struct has incorrect size.");
 
     struct CecMBoxInfoHeader {
         u16_le magic; // 0x6363 'cc'
@@ -163,13 +162,13 @@ public:
         u32_le body_size;
 
         u32_le title_id;
-        u32_le title_id_2;
+        u32_le title_id2;
         u32_le batch_id;
         u32_le unknown_id;
 
         std::array<u8, 8> message_id;
         u32_le version;
-        std::array<u8, 8> message_id_2;
+        std::array<u8, 8> message_id2;
         u8 flag;
         u8 send_method;
         u8 is_unopen;
@@ -188,7 +187,7 @@ public:
             u8 padding;
         } send_time, recv_time, create_time;
         u8 send_count;
-        u8 foward_count;
+        u8 forward_count;
         u16_le user_data;
     };
     static_assert(sizeof(CecMessageHeader) == 0x70, "CecMessageHeader struct has incorrect size.");
