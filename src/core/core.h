@@ -21,6 +21,10 @@ namespace AudioCore {
 class DspInterface;
 }
 
+namespace RPC {
+class RPCServer;
+}
+
 namespace Service {
 namespace SM {
 class ServiceManager;
@@ -201,6 +205,9 @@ private:
 
     /// Frontend applets
     std::shared_ptr<Frontend::SoftwareKeyboard> registered_swkbd;
+
+    /// RPC Server for scripting support
+    std::unique_ptr<RPC::RPCServer> rpc_server;
 
     /// Shared Page
     std::shared_ptr<SharedPage::Handler> shared_page_handler;

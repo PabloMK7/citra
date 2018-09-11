@@ -31,3 +31,5 @@ CMakeSettings.json
 # Windows global filetypes
 Thumbs.db
 
+# Python files
+*.pyc

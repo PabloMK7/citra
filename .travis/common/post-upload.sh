@@ -4,6 +4,9 @@
 cp license.txt "$REV_NAME"
 cp README.md "$REV_NAME"
 
+# Copy cross-platform scripting support
+cp -r dist/scripting "$REV_NAME"
+
 tar $COMPRESSION_FLAGS "$ARCHIVE_NAME" "$REV_NAME"
 
 # Find out what release we are building

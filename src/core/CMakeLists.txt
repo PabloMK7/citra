@@ -410,6 +410,14 @@ add_library(core STATIC
     movie.h
     perf_stats.cpp
     perf_stats.h
+    rpc/packet.cpp
+    rpc/packet.h
+    rpc/rpc_server.cpp
+    rpc/rpc_server.h
+    rpc/server.cpp
+    rpc/server.h
+    rpc/zmq_server.cpp
+    rpc/zmq_server.h
     settings.cpp
     settings.h
     telemetry_session.cpp
@@ -436,3 +444,5 @@ if (ARCHITECTURE_x86_64)
     )
     target_link_libraries(core PRIVATE dynarmic)
 endif()
+
+target_link_libraries(core PUBLIC libzmq-headers cppzmq-headers libzmq)
