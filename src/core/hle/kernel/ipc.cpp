@@ -128,7 +128,11 @@ ResultCode TranslateCommandBuffer(SharedPtr<Thread> src_thread, SharedPtr<Thread
             u32 num_pages =
                 Common::AlignUp(page_offset + size, Memory::PAGE_SIZE) >> Memory::PAGE_BITS;
 
-            ASSERT(num_pages >= 1);
+            // Skip when the size is zero
+            if (size == 0) {
+                i += 1;
+                break;
+            }
 
             if (reply) {
                 // TODO(Subv): Scan the target's command buffer to make sure that there was a
@@ -142,10 +146,20 @@ ResultCode TranslateCommandBuffer(SharedPtr<Thread> src_thread, SharedPtr<Thread
                     ResultCode result = src_process->vm_manager.UnmapRange(
                         page_start, num_pages * Memory::PAGE_SIZE);
                     ASSERT(result == RESULT_SUCCESS);
+                } else {
+                    const auto vma_iter = src_process->vm_manager.vma_map.find(source_address);
+                    const auto& vma = vma_iter->second;
+                    const VAddr dest_address = vma.originating_buffer_address;
+
+                    auto buffer = std::make_shared<std::vector<u8>>(size);
+                    Memory::ReadBlock(*src_process, source_address, buffer->data(), size);
+                    Memory::WriteBlock(*dst_process, dest_address, buffer->data(), size);
+
+                    ResultCode result = src_process->vm_manager.UnmapRange(
+                        page_start, num_pages * Memory::PAGE_SIZE);
+                    ASSERT(result == RESULT_SUCCESS);
                 }
 
-                ASSERT_MSG(permissions == IPC::MappedBufferPermissions::R,
-                           "Unmapping Write MappedBuffers is unimplemented");
                 i += 1;
                 break;
             }
@@ -156,19 +170,13 @@ ResultCode TranslateCommandBuffer(SharedPtr<Thread> src_thread, SharedPtr<Thread
                 return (address & Memory::PAGE_MASK) == 0;
             };
 
-            // TODO(Subv): Support more than 1 page and aligned page mappings
-            ASSERT_MSG(
-                num_pages == 1 &&
-                    (!IsPageAligned(source_address) || !IsPageAligned(source_address + size)),
-                "MappedBuffers of more than one page or aligned transfers are not implemented");
-
             // TODO(Subv): Perform permission checks.
 
-            // TODO(Subv): Leave a page of Reserved memory before the first page and after the last
+            // TODO(Subv): Leave a page of unmapped memory before the first page and after the last
             // page.
 
-            if (!IsPageAligned(source_address) ||
-                (num_pages == 1 && !IsPageAligned(source_address + size))) {
+            if (num_pages == 1 && !IsPageAligned(source_address) &&
+                !IsPageAligned(source_address + size)) {
                 // If the address of the source buffer is not page-aligned or if the buffer doesn't
                 // fill an entire page, then we have to allocate a page of memory in the target
                 // process and copy over the data from the input buffer. This allocated buffer will
@@ -195,7 +203,24 @@ ResultCode TranslateCommandBuffer(SharedPtr<Thread> src_thread, SharedPtr<Thread
                                               buffer, 0, static_cast<u32>(buffer->size()),
                                               Kernel::MemoryState::Shared)
                         .Unwrap();
+            } else {
+                auto buffer = std::make_shared<std::vector<u8>>(num_pages * Memory::PAGE_SIZE);
+                Memory::ReadBlock(*src_process, source_address, buffer->data() + page_offset, size);
+
+                // Map the pages into the target process' address space.
+                target_address =
+                    dst_process->vm_manager
+                        .MapMemoryBlockToBase(Memory::IPC_MAPPING_VADDR + Memory::PAGE_SIZE,
+                                              Memory::IPC_MAPPING_SIZE - Memory::PAGE_SIZE, buffer,
+                                              0, static_cast<u32>(buffer->size()),
+                                              Kernel::MemoryState::Shared)
+                        .Unwrap();
             }
+            // Save the original address we copied the buffer from so that we can copy the modified
+            // buffer back, if needed
+            auto vma_iter = dst_process->vm_manager.vma_map.find(target_address + page_offset);
+            auto& vma = vma_iter->second;
+            vma.originating_buffer_address = source_address;
 
             cmd_buf[i++] = target_address + page_offset;
             break;
