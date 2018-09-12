@@ -82,7 +82,8 @@ u64 RegenerateTelemetryId() {
 
 std::future<bool> VerifyLogin(std::string username, std::string token, std::function<void()> func) {
 #ifdef ENABLE_WEB_SERVICE
-    return WebService::VerifyLogin(username, token, Settings::values.verify_endpoint_url, func);
+    return WebService::VerifyLogin(username, token, Settings::values.web_api_url + "/profile",
+                                   func);
 #else
     return std::async(std::launch::async, [func{std::move(func)}]() {
         func();
@@ -95,7 +96,7 @@ TelemetrySession::TelemetrySession() {
 #ifdef ENABLE_WEB_SERVICE
     if (Settings::values.enable_telemetry) {
         backend = std::make_unique<WebService::TelemetryJson>(
-            Settings::values.telemetry_endpoint_url, Settings::values.citra_username,
+            Settings::values.web_api_url + "/telemetry", Settings::values.citra_username,
             Settings::values.citra_token);
     } else {
         backend = std::make_unique<Telemetry::NullVisitor>();

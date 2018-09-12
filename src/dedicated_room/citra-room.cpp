@@ -42,7 +42,7 @@ static void PrintHelp(const char* argv0) {
                  "--preferred-game-id The preferred game-id for this room\n"
                  "--username          The username used for announce\n"
                  "--token             The token used for announce\n"
-                 "--announce-url      The url to the announce server\n"
+                 "--web-api-url       Citra Web API url\n"
                  "-h, --help          Display this help and exit\n"
                  "-v, --version       Output version information and exit\n";
 }
@@ -65,7 +65,7 @@ int main(int argc, char** argv) {
     std::string preferred_game;
     std::string username;
     std::string token;
-    std::string announce_url;
+    std::string web_api_url;
     u64 preferred_game_id = 0;
     u32 port = Network::DefaultRoomPort;
     u32 max_members = 16;
@@ -79,7 +79,7 @@ int main(int argc, char** argv) {
         {"preferred-game-id", required_argument, 0, 'i'},
         {"username", required_argument, 0, 'u'},
         {"token", required_argument, 0, 't'},
-        {"announce-url", required_argument, 0, 'a'},
+        {"web-api-url", required_argument, 0, 'a'},
         {"help", no_argument, 0, 'h'},
         {"version", no_argument, 0, 'v'},
         {0, 0, 0, 0},
@@ -114,7 +114,7 @@ int main(int argc, char** argv) {
                 token.assign(optarg);
                 break;
             case 'a':
-                announce_url.assign(optarg);
+                web_api_url.assign(optarg);
                 break;
             case 'h':
                 PrintHelp(argv[0]);
@@ -160,13 +160,13 @@ int main(int argc, char** argv) {
         announce = false;
         std::cout << "token is empty: Hosting a private room\n\n";
     }
-    if (announce_url.empty() && announce) {
+    if (web_api_url.empty() && announce) {
         announce = false;
-        std::cout << "announce url is empty: Hosting a private room\n\n";
+        std::cout << "endpoint url is empty: Hosting a private room\n\n";
     }
     if (announce) {
         std::cout << "Hosting a public room\n\n";
-        Settings::values.announce_multiplayer_room_endpoint_url = announce_url;
+        Settings::values.web_api_url = web_api_url;
         Settings::values.citra_username = username;
         Settings::values.citra_token = token;
     }

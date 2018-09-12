@@ -245,12 +245,8 @@ gdbstub_port=24689
 # Whether or not to enable telemetry
 # 0: No, 1 (default): Yes
 enable_telemetry =
-# Endpoint URL for submitting telemetry data
-telemetry_endpoint_url = https://services.citra-emu.org/api/telemetry
-# Endpoint URL to verify the username and token
-verify_endpoint_url = https://services.citra-emu.org/api/profile
-# Endpoint URL for announcing public rooms
-announce_multiplayer_room_endpoint_url = https://services.citra-emu.org/api/multiplayer/rooms
+# URL for Web API
+web_api_url = https://api.citra-emu.org
 # Username and token for Citra Web Service
 # See https://services.citra-emu.org/ for more info
 citra_username =
