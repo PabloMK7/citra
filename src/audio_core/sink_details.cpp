@@ -30,7 +30,7 @@ const std::vector<SinkDetails> g_sink_details = {
                 [] { return std::vector<std::string>{"null"}; }},
 };
 
-const SinkDetails& GetSinkDetails(std::string sink_id) {
+const SinkDetails& GetSinkDetails(std::string_view sink_id) {
     auto iter =
         std::find_if(g_sink_details.begin(), g_sink_details.end(),
                      [sink_id](const auto& sink_detail) { return sink_detail.id == sink_id; });
