@@ -6,7 +6,6 @@
 
 #include <array>
 #include <functional>
-#include <future>
 #include <string>
 #include <vector>
 #include "common/common_types.h"
@@ -90,7 +89,7 @@ public:
      * Send the data to the announce service
      * @result The result of the announce attempt
      */
-    virtual std::future<Common::WebResult> Announce() = 0;
+    virtual Common::WebResult Announce() = 0;
 
     /**
      * Empties the stored players
@@ -99,11 +98,9 @@ public:
 
     /**
      * Get the room information from the announce service
-     * @param func a function that gets exectued when the get finished.
-     * Can be used as a callback
      * @result A list of all rooms the announce service has
      */
-    virtual std::future<RoomList> GetRoomList(std::function<void()> func) = 0;
+    virtual RoomList GetRoomList() = 0;
 
     /**
      * Sends a delete message to the announce service
@@ -124,18 +121,12 @@ public:
                             const u64 /*preferred_game_id*/) override {}
     void AddPlayer(const std::string& /*nickname*/, const MacAddress& /*mac_address*/,
                    const u64 /*game_id*/, const std::string& /*game_name*/) override {}
-    std::future<Common::WebResult> Announce() override {
-        return std::async(std::launch::deferred, []() {
-            return Common::WebResult{Common::WebResult::Code::NoWebservice,
-                                     "WebService is missing"};
-        });
+    Common::WebResult Announce() override {
+        return Common::WebResult{Common::WebResult::Code::NoWebservice, "WebService is missing"};
     }
     void ClearPlayers() override {}
-    std::future<RoomList> GetRoomList(std::function<void()> func) override {
-        return std::async(std::launch::deferred, [func]() {
-            func();
-            return RoomList{};
-        });
+    RoomList GetRoomList() override {
+        return RoomList{};
     }
 
     void Delete() override {}

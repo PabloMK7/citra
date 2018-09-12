@@ -63,7 +63,8 @@ Lobby::Lobby(QWidget* parent, QStandardItemModel* list,
     connect(ui->room_list, &QTreeView::clicked, this, &Lobby::OnExpandRoom);
 
     // Actions
-    connect(this, &Lobby::LobbyRefreshed, this, &Lobby::OnRefreshLobby);
+    connect(&room_list_watcher, &QFutureWatcher<AnnounceMultiplayerRoom::RoomList>::finished, this,
+            &Lobby::OnRefreshLobby);
 
     // manually start a refresh when the window is opening
     // TODO(jroweboy): if this refresh is slow for people with bad internet, then don't do it as
@@ -149,16 +150,17 @@ void Lobby::ResetModel() {
 void Lobby::RefreshLobby() {
     if (auto session = announce_multiplayer_session.lock()) {
         ResetModel();
-        room_list_future = session->GetRoomList([&]() { emit LobbyRefreshed(); });
         ui->refresh_list->setEnabled(false);
         ui->refresh_list->setText(tr("Refreshing"));
+        room_list_watcher.setFuture(
+            QtConcurrent::run([session]() { return session->GetRoomList(); }));
     } else {
         // TODO(jroweboy): Display an error box about announce couldn't be started
     }
 }
 
 void Lobby::OnRefreshLobby() {
-    AnnounceMultiplayerRoom::RoomList new_room_list = room_list_future.get();
+    AnnounceMultiplayerRoom::RoomList new_room_list = room_list_watcher.result();
     for (auto room : new_room_list) {
         // find the icon for the game if this person owns that game.
         QPixmap smdh_icon;

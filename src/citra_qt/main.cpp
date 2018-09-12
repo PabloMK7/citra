@@ -43,6 +43,7 @@
 #include "citra_qt/updater/updater.h"
 #include "citra_qt/util/clickable_label.h"
 #include "common/common_paths.h"
+#include "common/detached_tasks.h"
 #include "common/logging/backend.h"
 #include "common/logging/filter.h"
 #include "common/logging/log.h"
@@ -1660,6 +1661,7 @@ void GMainWindow::SetDiscordEnabled(bool state) {
 #endif
 
 int main(int argc, char* argv[]) {
+    Common::DetachedTasks detached_tasks;
     MicroProfileOnThreadCreate("Frontend");
     SCOPE_EXIT({ MicroProfileShutdown(); });
 
@@ -1685,5 +1687,7 @@ int main(int argc, char* argv[]) {
     Frontend::RegisterSoftwareKeyboard(std::make_shared<QtKeyboard>(main_window));
 
     main_window.show();
-    return app.exec();
+    int result = app.exec();
+    detached_tasks.WaitForAllTasks();
+    return result;
 }
