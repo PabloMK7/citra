@@ -45,7 +45,7 @@ using Kernel::ERR_INVALID_BUFFER_DESCRIPTOR;
 constexpr auto ERR_INVALID_HANDLE = Kernel::ERR_INVALID_HANDLE_OS;
 
 enum DescriptorType : u32 {
-    // Buffer related desciptors types (mask : 0x0F)
+    // Buffer related descriptors types (mask : 0x0F)
     StaticBuffer = 0x02,
     PXIBuffer = 0x04,
     MappedBuffer = 0x08,
