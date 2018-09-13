@@ -47,4 +47,5 @@ private:
     int language_index;
     int sound_index;
     u8 country_code;
+    u16 play_coin;
 };

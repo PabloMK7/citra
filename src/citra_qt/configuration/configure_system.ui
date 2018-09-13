@@ -264,13 +264,27 @@
          </widget>
         </item>
         <item row="7" column="0">
+         <widget class="QLabel" name="label_play_coins">
+          <property name="text">
+           <string>Play Coins:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="7" column="1">
+         <widget class="QSpinBox" name="spinBox_play_coins">
+          <property name="maximum">
+           <number>300</number>
+          </property>
+         </widget>
+        </item>
+        <item row="8" column="0">
          <widget class="QLabel" name="label_console_id">
           <property name="text">
            <string>Console ID:</string>
           </property>
          </widget>
         </item>
-        <item row="7" column="1">
+        <item row="8" column="1">
          <widget class="QPushButton" name="button_regenerate_console_id">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
