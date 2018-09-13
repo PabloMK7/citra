@@ -198,11 +198,12 @@ void ServiceFrameworkBase::HandleSyncRequest(SharedPtr<ServerSession> server_ses
     handler_invoker(this, info->handler_callback, context);
 
     auto thread = Kernel::GetCurrentThread();
-    ASSERT(thread->status == ThreadStatus::Running || thread->status == ThreadStatus::WaitHleEvent);
+    ASSERT(thread->status == Kernel::ThreadStatus::Running ||
+           thread->status == Kernel::ThreadStatus::WaitHleEvent);
     // Only write the response immediately if the thread is still running. If the HLE handler put
     // the thread to sleep then the writing of the command buffer will be deferred to the wakeup
     // callback.
-    if (thread->status == ThreadStatus::Running) {
+    if (thread->status == Kernel::ThreadStatus::Running) {
         context.WriteToOutgoingCommandBuffer(cmd_buf, *Kernel::g_current_process,
                                              Kernel::g_handle_table);
     }
