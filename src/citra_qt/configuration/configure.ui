@@ -2,64 +2,70 @@
 <ui version="4.0">
  <class>ConfigureDialog</class>
  <widget class="QDialog" name="ConfigureDialog">
-  <property name="geometry">
-   <rect>
-    <x>0</x>
-    <y>0</y>
-    <width>461</width>
-    <height>500</height>
-   </rect>
-  </property>
   <property name="windowTitle">
    <string>Citra Configuration</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <widget class="QTabWidget" name="tabWidget">
-     <property name="currentIndex">
-      <number>0</number>
-     </property>
-     <widget class="ConfigureGeneral" name="generalTab">
-      <attribute name="title">
-       <string>General</string>
-      </attribute>
-     </widget>
-     <widget class="ConfigureSystem" name="systemTab">
-      <attribute name="title">
-       <string>System</string>
-      </attribute>
-     </widget>
-     <widget class="ConfigureInput" name="inputTab">
-      <attribute name="title">
-       <string>Input</string>
-      </attribute>
-     </widget>
-     <widget class="ConfigureGraphics" name="graphicsTab">
-      <attribute name="title">
-       <string>Graphics</string>
-      </attribute>
-     </widget>
-     <widget class="ConfigureAudio" name="audioTab">
-      <attribute name="title">
-       <string>Audio</string>
-      </attribute>
-     </widget>
-      <widget class="ConfigureCamera" name="cameraTab">
-      <attribute name="title">
-       <string>Camera</string>
-      </attribute>
-     </widget>
-     <widget class="ConfigureDebug" name="debugTab">
-      <attribute name="title">
-       <string>Debug</string>
-      </attribute>
-     </widget>
-     <widget class="ConfigureWeb" name="webTab">
-      <attribute name="title">
-       <string>Web</string>
-      </attribute>
-     </widget>
-    </widget>
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <widget class="QListWidget" name="selectorList">
+       <property name="minimumWidth">
+        <number>150</number>
+       </property>
+       <property name="maximumWidth">
+        <number>150</number>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QTabWidget" name="tabWidget">
+       <property name="currentIndex">
+        <number>0</number>
+       </property>
+       <widget class="ConfigureGeneral" name="generalTab">
+        <attribute name="title">
+         <string>General</string>
+        </attribute>
+       </widget>
+       <widget class="ConfigureSystem" name="systemTab">
+        <attribute name="title">
+         <string>System</string>
+        </attribute>
+       </widget>
+       <widget class="ConfigureInput" name="inputTab">
+        <attribute name="title">
+         <string>Input</string>
+        </attribute>
+       </widget>
+       <widget class="ConfigureGraphics" name="graphicsTab">
+        <attribute name="title">
+         <string>Graphics</string>
+        </attribute>
+       </widget>
+       <widget class="ConfigureAudio" name="audioTab">
+        <attribute name="title">
+         <string>Audio</string>
+        </attribute>
+       </widget>
+       <widget class="ConfigureCamera" name="cameraTab">
+        <attribute name="title">
+         <string>Camera</string>
+        </attribute>
+       </widget>
+       <widget class="ConfigureDebug" name="debugTab">
+        <attribute name="title">
+         <string>Debug</string>
+        </attribute>
+       </widget>
+       <widget class="ConfigureWeb" name="webTab">
+        <attribute name="title">
+         <string>Web</string>
+        </attribute>
+       </widget>
+      </widget>
+     </item>
+    </layout>
    </item>
    <item>
     <widget class="QDialogButtonBox" name="buttonBox">
@@ -89,7 +95,7 @@
    <header>configuration/configure_audio.h</header>
    <container>1</container>
   </customwidget>
-   <customwidget>
+  <customwidget>
    <class>ConfigureCamera</class>
    <extends>QWidget</extends>
    <header>configuration/configure_camera.h</header>
