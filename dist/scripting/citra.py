@@ -2,12 +2,14 @@ import zmq
 import struct
 import random
 import binascii
+import enum
 
 CURRENT_REQUEST_VERSION = 1
 MAX_REQUEST_DATA_SIZE = 32
 
-REQUEST_TYPE_READ_MEMORY = 1
-REQUEST_TYPE_WRITE_MEMORY = 2
+class RequestType(enum.IntEnum):
+    ReadMemory = 1,
+    WriteMemory = 2
 
 CITRA_PORT = "45987"
 
@@ -42,12 +44,12 @@ class Citra:
         while read_size > 0:
             temp_read_size = min(read_size, MAX_REQUEST_DATA_SIZE)
             request_data = struct.pack("II", read_address, temp_read_size)
-            request, request_id = self._generate_header(REQUEST_TYPE_READ_MEMORY, len(request_data))
+            request, request_id = self._generate_header(RequestType.ReadMemory, len(request_data))
             request += request_data
             self.socket.send(request)
 
             raw_reply = self.socket.recv()
-            reply_data = self._read_and_validate_header(raw_reply, request_id, REQUEST_TYPE_READ_MEMORY)
+            reply_data = self._read_and_validate_header(raw_reply, request_id, RequestType.ReadMemory)
 
             if reply_data:
                 result += reply_data
@@ -74,12 +76,12 @@ class Citra:
             temp_write_size = min(write_size, MAX_REQUEST_DATA_SIZE - 8)
             request_data = struct.pack("II", write_address, temp_write_size)
             request_data += write_contents[:temp_write_size]
-            request, request_id = self._generate_header(REQUEST_TYPE_WRITE_MEMORY, len(request_data))
+            request, request_id = self._generate_header(RequestType.WriteMemory, len(request_data))
             request += request_data
             self.socket.send(request)
 
             raw_reply = self.socket.recv()
-            reply_data = self._read_and_validate_header(raw_reply, request_id, REQUEST_TYPE_WRITE_MEMORY)
+            reply_data = self._read_and_validate_header(raw_reply, request_id, RequestType.WriteMemory)
 
             if None != reply_data:
                 write_address += temp_write_size
