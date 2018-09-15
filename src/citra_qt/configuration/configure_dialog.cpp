@@ -47,7 +47,7 @@ void ConfigureDialog::PopulateSelectionList() {
 
     const std::array<std::pair<QString, QStringList>, 4> items{
         {{tr("General"), {tr("General"), tr("Web"), tr("Debug")}},
-         {tr("System"), {tr("System"), tr("Audio")}},
+         {tr("System"), {tr("System"), tr("Audio"), tr("Camera")}},
          {tr("Graphics"), {tr("Graphics")}},
          {tr("Controls"), {tr("Input")}}}};
 
