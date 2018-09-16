@@ -576,6 +576,23 @@ Loader::ResultStatus NCCHContainer::ReadProgramId(u64_le& program_id) {
     return Loader::ResultStatus::Success;
 }
 
+Loader::ResultStatus NCCHContainer::ReadExtdataId(u64& extdata_id) {
+    Loader::ResultStatus result = Load();
+    if (result != Loader::ResultStatus::Success)
+        return result;
+
+    if (!has_exheader)
+        return Loader::ResultStatus::ErrorNotUsed;
+
+    if (exheader_header.arm11_system_local_caps.storage_info.other_attributes >> 1) {
+        // Extdata id is not present when using extended savedata access
+        return Loader::ResultStatus::ErrorNotUsed;
+    }
+
+    extdata_id = exheader_header.arm11_system_local_caps.storage_info.ext_save_data_id;
+    return Loader::ResultStatus::Success;
+}
+
 bool NCCHContainer::HasExeFS() {
     Loader::ResultStatus result = Load();
     if (result != Loader::ResultStatus::Success)

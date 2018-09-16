@@ -51,6 +51,8 @@ public:
 
     ResultStatus ReadProgramId(u64& out_program_id) override;
 
+    ResultStatus ReadExtdataId(u64& out_extdata_id) override;
+
     ResultStatus ReadRomFS(std::shared_ptr<FileSys::RomFSReader>& romfs_file) override;
 
     ResultStatus ReadUpdateRomFS(std::shared_ptr<FileSys::RomFSReader>& romfs_file) override;

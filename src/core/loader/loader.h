@@ -158,6 +158,15 @@ public:
     }
 
     /**
+     * Get the extdata id for the application
+     * @param out_extdata_id Reference to store extdata id into
+     * @return ResultStatus result of function
+     */
+    virtual ResultStatus ReadExtdataId(u64& out_extdata_id) {
+        return ResultStatus::ErrorNotImplemented;
+    }
+
+    /**
      * Get the RomFS of the application
      * Since the RomFS can be huge, we return a file reference instead of copying to a buffer
      * @param romfs_file The file containing the RomFS

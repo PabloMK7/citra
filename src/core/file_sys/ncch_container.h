@@ -125,7 +125,7 @@ struct ExHeader_SystemInfo {
 };
 
 struct ExHeader_StorageInfo {
-    u8 ext_save_data_id[8];
+    u64_le ext_save_data_id;
     u8 system_save_data_id[8];
     u8 reserved[8];
     u8 access_info[7];
@@ -250,6 +250,12 @@ public:
      * @return ResultStatus result of function
      */
     Loader::ResultStatus ReadProgramId(u64_le& program_id);
+
+    /**
+     * Get the Extdata ID of the NCCH container
+     * @return ResultStatus result of function
+     */
+    Loader::ResultStatus ReadExtdataId(u64& extdata_id);
 
     /**
      * Checks whether the NCCH container contains an ExeFS
