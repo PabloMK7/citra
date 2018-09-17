@@ -13,12 +13,12 @@
 
 namespace WebService {
 
-static constexpr char API_VERSION[]{"1"};
+constexpr char API_VERSION[]{"1"};
 
-constexpr int HTTP_PORT = 80;
-constexpr int HTTPS_PORT = 443;
+constexpr u32 HTTP_PORT = 80;
+constexpr u32 HTTPS_PORT = 443;
 
-constexpr int TIMEOUT_SECONDS = 30;
+constexpr u32 TIMEOUT_SECONDS = 30;
 
 Client::JWTCache Client::jwt_cache{};
 

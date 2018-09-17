@@ -82,7 +82,7 @@ u64 RegenerateTelemetryId() {
     return new_telemetry_id;
 }
 
-bool VerifyLogin(std::string username, std::string token) {
+bool VerifyLogin(const std::string& username, const std::string& token) {
 #ifdef ENABLE_WEB_SERVICE
     return WebService::VerifyLogin(Settings::values.web_api_url, username, token);
 #else

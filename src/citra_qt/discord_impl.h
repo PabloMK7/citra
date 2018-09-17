@@ -11,7 +11,7 @@ namespace DiscordRPC {
 class DiscordImpl : public DiscordInterface {
 public:
     DiscordImpl();
-    ~DiscordImpl();
+    ~DiscordImpl() override;
 
     void Pause() override;
     void Update() override;

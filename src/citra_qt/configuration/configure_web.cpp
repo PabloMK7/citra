@@ -25,7 +25,7 @@ ConfigureWeb::ConfigureWeb(QWidget* parent)
     this->setConfiguration();
 }
 
-ConfigureWeb::~ConfigureWeb() {}
+ConfigureWeb::~ConfigureWeb() = default;
 
 void ConfigureWeb::setConfiguration() {
     ui->web_credentials_disclaimer->setWordWrap(true);

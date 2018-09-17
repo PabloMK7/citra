@@ -92,7 +92,7 @@ void GMainWindow::ShowTelemetryCallout() {
     }
 
     UISettings::values.callout_flags |= static_cast<uint32_t>(CalloutFlag::Telemetry);
-    static const QString telemetry_message =
+    const QString telemetry_message =
         tr("<a href='https://citra-emu.org/entry/telemetry-and-why-thats-a-good-thing/'>Anonymous "
            "data is collected</a> to help improve Citra. "
            "<br/><br/>Would you like to share your usage data with us?");
