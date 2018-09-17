@@ -71,7 +71,7 @@ endif()
 
 # DiscordRPC
 if (USE_DISCORD_PRESENCE)
-    add_subdirectory(discord-rpc)
+    add_subdirectory(discord-rpc EXCLUDE_FROM_ALL)
     target_include_directories(discord-rpc INTERFACE ./discord-rpc/include)
 endif()
 
@@ -79,11 +79,11 @@ if (ENABLE_WEB_SERVICE)
     # LibreSSL
     set(LIBRESSL_SKIP_INSTALL ON CACHE BOOL "")
     add_definitions(-DHAVE_INET_NTOP)
-    add_subdirectory(libressl)
+    add_subdirectory(libressl EXCLUDE_FROM_ALL)
     target_include_directories(ssl INTERFACE ./libressl/include)
 
     # lurlparser
-    add_subdirectory(lurlparser)
+    add_subdirectory(lurlparser EXCLUDE_FROM_ALL)
 
     # httplib
     add_library(httplib INTERFACE)
