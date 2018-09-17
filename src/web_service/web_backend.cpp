@@ -24,6 +24,7 @@ Client::JWTCache Client::jwt_cache{};
 
 Client::Client(const std::string& host, const std::string& username, const std::string& token)
     : host(host), username(username), token(token) {
+    std::lock_guard<std::mutex> lock(jwt_cache.mutex);
     if (username == jwt_cache.username && token == jwt_cache.token) {
         jwt = jwt_cache.jwt;
     }
@@ -116,6 +117,7 @@ void Client::UpdateJWT() {
         if (result.result_code != Common::WebResult::Code::Success) {
             LOG_ERROR(WebService, "UpdateJWT failed");
         } else {
+            std::lock_guard<std::mutex> lock(jwt_cache.mutex);
             jwt_cache.username = username;
             jwt_cache.token = token;
             jwt_cache.jwt = jwt = result.returned_data;

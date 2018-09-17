@@ -5,7 +5,7 @@
 #pragma once
 
 #include <functional>
-#include <future>
+#include <mutex>
 #include <string>
 #include <tuple>
 #include <httplib.h>
@@ -81,6 +81,7 @@ private:
     std::unique_ptr<httplib::Client> cli;
 
     struct JWTCache {
+        std::mutex mutex;
         std::string username;
         std::string token;
         std::string jwt;
