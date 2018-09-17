@@ -6,6 +6,8 @@
 
 #include <functional>
 #include <memory>
+#include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -30,6 +32,6 @@ struct SinkDetails {
 
 extern const std::vector<SinkDetails> g_sink_details;
 
-const SinkDetails& GetSinkDetails(std::string sink_id);
+const SinkDetails& GetSinkDetails(std::string_view sink_id);
 
 } // namespace AudioCore
