@@ -662,6 +662,10 @@ static void Break(u8 break_reason) {
 
 /// Used to output a message on a debug hardware unit - does nothing on a retail unit
 static void OutputDebugString(VAddr address, int len) {
+    if (len <= 0) {
+        return;
+    }
+
     std::string string(len, ' ');
     Memory::ReadBlock(address, string.data(), len);
     LOG_DEBUG(Debug_Emulated, "{}", string);
