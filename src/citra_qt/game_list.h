@@ -5,6 +5,7 @@
 #pragma once
 
 #include <unordered_map>
+#include <QMenu>
 #include <QString>
 #include <QWidget>
 #include "common/common_types.h"

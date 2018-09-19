@@ -4,7 +4,6 @@
 
 #pragma once
 
-#include <atomic>
 #include <map>
 #include <unordered_map>
 #include <utility>
@@ -57,17 +56,6 @@ static QPixmap GetDefaultIcon(bool large) {
     QPixmap icon(size, size);
     icon.fill(Qt::transparent);
     return icon;
-}
-
-static auto FindMatchingCompatibilityEntry(
-    const std::unordered_map<std::string, std::pair<QString, QString>>& compatibility_list,
-    u64 program_id) {
-    return std::find_if(
-        compatibility_list.begin(), compatibility_list.end(),
-        [program_id](const std::pair<std::string, std::pair<QString, QString>>& element) {
-            std::string pid = fmt::format("{:016X}", program_id);
-            return element.first == pid;
-        });
 }
 
 /**
@@ -373,50 +361,16 @@ public:
     }
 };
 
-/**
- * Asynchronous worker object for populating the game list.
- * Communicates with other threads through Qt's signal/slot system.
- */
-class GameListWorker : public QObject, public QRunnable {
-    Q_OBJECT
-
-public:
-    explicit GameListWorker(
-        QList<UISettings::GameDir>& game_dirs,
-        const std::unordered_map<std::string, std::pair<QString, QString>>& compatibility_list)
-        : game_dirs(game_dirs), compatibility_list(compatibility_list) {}
-
-public slots:
-    /// Starts the processing of directory tree information.
-    void run() override;
-    /// Tells the worker that it should no longer continue processing. Thread-safe.
-    void Cancel();
-
-signals:
-    /**
-     * The `EntryReady` signal is emitted once an entry has been prepared and is ready
-     * to be added to the game list.
-     * @param entry_items a list with `QStandardItem`s that make up the columns of the new
-     * entry.
-     */
-    void DirEntryReady(GameListDir* entry_items);
-    void EntryReady(QList<QStandardItem*> entry_items, GameListDir* parent_dir);
-
-    /**
-     * After the worker has traversed the game directory looking for entries, this signal is
-     * emitted with a list of folders that should be watched for changes as well.
-     */
-    void Finished(QStringList watch_list);
-
-private:
-    QStringList watch_list;
-    const std::unordered_map<std::string, std::pair<QString, QString>>& compatibility_list;
-    QList<UISettings::GameDir>& game_dirs;
-    std::atomic_bool stop_processing;
-
-    void AddFstEntriesToGameList(const std::string& dir_path, unsigned int recursion,
-                                 GameListDir* parent_dir);
-};
+inline auto FindMatchingCompatibilityEntry(
+    const std::unordered_map<std::string, std::pair<QString, QString>>& compatibility_list,
+    u64 program_id) {
+    return std::find_if(
+        compatibility_list.begin(), compatibility_list.end(),
+        [program_id](const std::pair<std::string, std::pair<QString, QString>>& element) {
+            std::string pid = fmt::format("{:016X}", program_id);
+            return element.first == pid;
+        });
+}
 
 class GameList;
 class QHBoxLayout;
