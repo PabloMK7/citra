@@ -56,7 +56,7 @@ public:
     }
 
     std::size_t Push(const std::vector<T>& input) {
-        return Push(input.data(), input.size());
+        return Push(input.data(), input.size() / granularity);
     }
 
     /// Pops slots from the ring buffer
