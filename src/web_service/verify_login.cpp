@@ -2,7 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "web_service/json.h"
+#include <json.hpp>
 #include "web_service/verify_login.h"
 #include "web_service/web_backend.h"
 

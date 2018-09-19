@@ -78,9 +78,9 @@ endif()
 if (ENABLE_WEB_SERVICE)
     # LibreSSL
     set(LIBRESSL_SKIP_INSTALL ON CACHE BOOL "")
-    add_definitions(-DHAVE_INET_NTOP)
     add_subdirectory(libressl EXCLUDE_FROM_ALL)
     target_include_directories(ssl INTERFACE ./libressl/include)
+	target_compile_definitions(ssl PRIVATE -DHAVE_INET_NTOP)
 
     # lurlparser
     add_subdirectory(lurlparser EXCLUDE_FROM_ALL)
