@@ -1400,7 +1400,6 @@ void GMainWindow::UpdateStatusBar() {
 }
 
 void GMainWindow::OnCoreError(Core::System::ResultStatus result, std::string details) {
-    QMessageBox::StandardButton answer;
     QString status_message;
 
     QString title, message;
@@ -1435,9 +1434,11 @@ void GMainWindow::OnCoreError(Core::System::ResultStatus result, std::string det
     message_box.setIcon(QMessageBox::Icon::Critical);
     QPushButton* continue_button = message_box.addButton(tr("Continue"), QMessageBox::RejectRole);
     QPushButton* abort_button = message_box.addButton(tr("Abort"), QMessageBox::AcceptRole);
-    message_box.exec();
+    if (result != Core::System::ResultStatus::ShutdownRequested)
+        message_box.exec();
 
-    if (message_box.clickedButton() == abort_button) {
+    if (result == Core::System::ResultStatus::ShutdownRequested ||
+        message_box.clickedButton() == abort_button) {
         if (emu_thread) {
             ShutdownGame();
         }

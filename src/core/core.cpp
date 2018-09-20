@@ -77,6 +77,12 @@ System::ResultStatus System::RunLoop(bool tight_loop) {
     HW::Update();
     Reschedule();
 
+    if (reset_requested.exchange(false)) {
+        Reset();
+    } else if (shutdown_requested.exchange(false)) {
+        return ResultStatus::ShutdownRequested;
+    }
+
     return status;
 }
 
@@ -132,6 +138,8 @@ System::ResultStatus System::Load(EmuWindow& emu_window, const std::string& file
     }
     Memory::SetCurrentPageTable(&Kernel::g_current_process->vm_manager.page_table);
     status = ResultStatus::Success;
+    m_emu_window = &emu_window;
+    m_filepath = filepath;
     return status;
 }
 
@@ -239,6 +247,16 @@ void System::Shutdown() {
     }
 
     LOG_DEBUG(Core, "Shutdown OK");
+}
+
+void System::Reset() {
+    // This is NOT a proper reset, but a temporary workaround by shutting down the system and
+    // reloading.
+    // TODO: Properly implement the reset
+
+    Shutdown();
+    // Reload the system with the same setting
+    Load(*m_emu_window, m_filepath);
 }
 
 } // namespace Core
