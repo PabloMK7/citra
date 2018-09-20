@@ -1,4 +1,4 @@
-// Copyright 2017 Citra Emulator Project
+// Copyright 2018 Citra Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -7,45 +7,38 @@
 #include <memory>
 #include <vector>
 #include "core/frontend/input.h"
+#include "input_common/main.h"
 
 union SDL_Event;
+
 namespace Common {
 class ParamPackage;
-}
-namespace InputCommon {
-namespace Polling {
+} // namespace Common
+
+namespace InputCommon::Polling {
 class DevicePoller;
 enum class DeviceType;
-} // namespace Polling
-} // namespace InputCommon
+} // namespace InputCommon::Polling
 
-namespace InputCommon {
-namespace SDL {
+namespace InputCommon::SDL {
 
-/// Initializes and registers SDL device factories
-void Init();
+class State {
+public:
+    /// Unresisters SDL device factories and shut them down.
+    virtual ~State() = default;
 
-/// Unresisters SDL device factories and shut them down.
-void Shutdown();
+    virtual void GetPollers(
+        InputCommon::Polling::DeviceType type,
+        std::vector<std::unique_ptr<InputCommon::Polling::DevicePoller>>& pollers) = 0;
+};
 
-/// Needs to be called before SDL_QuitSubSystem.
-void CloseSDLJoysticks();
+class NullState : public State {
+public:
+    void GetPollers(
+        InputCommon::Polling::DeviceType type,
+        std::vector<std::unique_ptr<InputCommon::Polling::DevicePoller>>& pollers) override {}
+};
 
-/// Handle SDL_Events for joysticks from SDL_PollEvent
-void HandleGameControllerEvent(const SDL_Event& event);
+std::unique_ptr<State> Init();
 
-/// A Loop that calls HandleGameControllerEvent until Shutdown is called
-void PollLoop();
-
-/// Creates a ParamPackage from an SDL_Event that can directly be used to create a ButtonDevice
-Common::ParamPackage SDLEventToButtonParamPackage(const SDL_Event& event);
-
-namespace Polling {
-
-/// Get all DevicePoller that use the SDL backend for a specific device type
-void GetPollers(InputCommon::Polling::DeviceType type,
-                std::vector<std::unique_ptr<InputCommon::Polling::DevicePoller>>& pollers);
-
-} // namespace Polling
-} // namespace SDL
-} // namespace InputCommon
+} // namespace InputCommon::SDL
