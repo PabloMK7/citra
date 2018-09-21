@@ -19,7 +19,7 @@ namespace Log {
 class Filter {
 public:
     /// Initializes the filter with all classes having `default_level` as the minimum level.
-    Filter(Level default_level = Level::Info);
+    explicit Filter(Level default_level = Level::Info);
 
     /// Resets the filter so that all classes have `level` as the minimum displayed level.
     void ResetAll(Level level);
@@ -46,6 +46,6 @@ public:
     bool CheckMessage(Class log_class, Level level) const;
 
 private:
-    std::array<Level, (std::size_t)Class::Count> class_levels;
+    std::array<Level, static_cast<std::size_t>(Class::Count)> class_levels;
 };
 } // namespace Log
