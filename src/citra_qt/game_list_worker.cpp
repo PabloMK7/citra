@@ -6,10 +6,8 @@
 #include <string>
 #include <utility>
 #include <vector>
-
 #include <QDir>
 #include <QFileInfo>
-
 #include "citra_qt/compatibility_list.h"
 #include "citra_qt/game_list.h"
 #include "citra_qt/game_list_p.h"

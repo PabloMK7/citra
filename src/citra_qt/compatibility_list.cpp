@@ -3,9 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <algorithm>
-
 #include <fmt/format.h>
-
 #include "citra_qt/compatibility_list.h"
 
 CompatibilityList::const_iterator FindMatchingCompatibilityEntry(

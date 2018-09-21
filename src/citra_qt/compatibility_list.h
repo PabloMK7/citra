@@ -6,9 +6,7 @@
 
 #include <string>
 #include <unordered_map>
-
 #include <QString>
-
 #include "common/common_types.h"
 
 using CompatibilityList = std::unordered_map<std::string, std::pair<QString, QString>>;

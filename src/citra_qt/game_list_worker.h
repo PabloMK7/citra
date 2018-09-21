@@ -9,12 +9,10 @@
 #include <memory>
 #include <string>
 #include <unordered_map>
-
 #include <QList>
 #include <QObject>
 #include <QRunnable>
 #include <QString>
-
 #include "citra_qt/compatibility_list.h"
 #include "common/common_types.h"
 
