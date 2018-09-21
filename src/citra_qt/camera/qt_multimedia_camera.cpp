@@ -172,6 +172,9 @@ void QtMultimediaCameraHandler::CreateCamera(const std::string& camera_name) {
     }
     settings.setMinimumFrameRate(30);
     settings.setMaximumFrameRate(30);
+#ifdef __linux__
+    settings.setPixelFormat(QVideoFrame::PixelFormat::Format_RGB565);
+#endif
     camera->setViewfinder(&camera_surface);
     camera->load();
 }
