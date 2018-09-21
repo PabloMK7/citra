@@ -213,16 +213,16 @@ std::vector<std::unique_ptr<WaitTreeItem>> WaitTreeThread::GetChildren() const {
 
     QString processor;
     switch (thread.processor_id) {
-    case Kernel::ThreadProcessorId::THREADPROCESSORID_DEFAULT:
+    case Kernel::ThreadProcessorId::ThreadProcessorIdDefault:
         processor = tr("default");
         break;
-    case Kernel::ThreadProcessorId::THREADPROCESSORID_ALL:
+    case Kernel::ThreadProcessorId::ThreadProcessorIdAll:
         processor = tr("all");
         break;
-    case Kernel::ThreadProcessorId::THREADPROCESSORID_0:
+    case Kernel::ThreadProcessorId::ThreadProcessorId0:
         processor = tr("AppCore");
         break;
-    case Kernel::ThreadProcessorId::THREADPROCESSORID_1:
+    case Kernel::ThreadProcessorId::ThreadProcessorId1:
         processor = tr("SysCore");
         break;
     default:

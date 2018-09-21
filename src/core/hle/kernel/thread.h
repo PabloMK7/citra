@@ -21,21 +21,21 @@ class Mutex;
 class Process;
 
 enum ThreadPriority : u32 {
-    THREADPRIO_HIGHEST = 0,       ///< Highest thread priority
-    THREADPRIO_USERLAND_MAX = 24, ///< Highest thread priority for userland apps
-    THREADPRIO_DEFAULT = 48,      ///< Default thread priority for userland apps
-    THREADPRIO_LOWEST = 63,       ///< Lowest thread priority
+    ThreadPrioHighest = 0,      ///< Highest thread priority
+    ThreadPrioUserlandMax = 24, ///< Highest thread priority for userland apps
+    ThreadPrioDefault = 48,     ///< Default thread priority for userland apps
+    ThreadPrioLowest = 63,      ///< Lowest thread priority
 };
 
 enum ThreadProcessorId : s32 {
-    THREADPROCESSORID_DEFAULT = -2, ///< Run thread on default core specified by exheader
-    THREADPROCESSORID_ALL = -1,     ///< Run thread on either core
-    THREADPROCESSORID_0 = 0,        ///< Run thread on core 0 (AppCore)
-    THREADPROCESSORID_1 = 1,        ///< Run thread on core 1 (SysCore)
-    THREADPROCESSORID_MAX = 2,      ///< Processor ID must be less than this
+    ThreadProcessorIdDefault = -2, ///< Run thread on default core specified by exheader
+    ThreadProcessorIdAll = -1,     ///< Run thread on either core
+    ThreadProcessorId0 = 0,        ///< Run thread on core 0 (AppCore)
+    ThreadProcessorId1 = 1,        ///< Run thread on core 1 (SysCore)
+    ThreadProcessorIdMax = 2,      ///< Processor ID must be less than this
 };
 
-enum ThreadStatus {
+enum class ThreadStatus {
     Running,      ///< Currently running
     Ready,        ///< Ready to run
     WaitArb,      ///< Waiting on an address arbiter

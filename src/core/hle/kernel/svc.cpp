@@ -725,7 +725,7 @@ static ResultCode CreateThread(Handle* out_handle, u32 priority, u32 entry_point
                                u32 stack_top, s32 processor_id) {
     std::string name = fmt::format("thread-{:08X}", entry_point);
 
-    if (priority > THREADPRIO_LOWEST) {
+    if (priority > ThreadPrioLowest) {
         return ERR_OUT_OF_RANGE;
     }
 
@@ -734,20 +734,20 @@ static ResultCode CreateThread(Handle* out_handle, u32 priority, u32 entry_point
         return ERR_NOT_AUTHORIZED;
     }
 
-    if (processor_id == THREADPROCESSORID_DEFAULT) {
+    if (processor_id == ThreadProcessorIdDefault) {
         // Set the target CPU to the one specified in the process' exheader.
         processor_id = g_current_process->ideal_processor;
-        ASSERT(processor_id != THREADPROCESSORID_DEFAULT);
+        ASSERT(processor_id != ThreadProcessorIdDefault);
     }
 
     switch (processor_id) {
-    case THREADPROCESSORID_0:
+    case ThreadProcessorId0:
         break;
-    case THREADPROCESSORID_ALL:
+    case ThreadProcessorIdAll:
         LOG_INFO(Kernel_SVC,
                  "Newly created thread is allowed to be run in any Core, unimplemented.");
         break;
-    case THREADPROCESSORID_1:
+    case ThreadProcessorId1:
         LOG_ERROR(Kernel_SVC,
                   "Newly created thread must run in the SysCore (Core1), unimplemented.");
         break;
@@ -796,7 +796,7 @@ static ResultCode GetThreadPriority(u32* priority, Handle handle) {
 
 /// Sets the priority for the specified thread
 static ResultCode SetThreadPriority(Handle handle, u32 priority) {
-    if (priority > THREADPRIO_LOWEST) {
+    if (priority > ThreadPrioLowest) {
         return ERR_OUT_OF_RANGE;
     }
 

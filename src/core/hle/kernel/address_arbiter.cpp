@@ -41,7 +41,8 @@ SharedPtr<Thread> AddressArbiter::ResumeHighestPriorityThread(VAddr address) {
     // Determine which threads are waiting on this address, those should be considered for wakeup.
     auto matches_start = std::stable_partition(
         waiting_threads.begin(), waiting_threads.end(), [address](const auto& thread) {
-            ASSERT_MSG(thread->status == ThreadStatus::WaitArb, "Inconsistent AddressArbiter state");
+            ASSERT_MSG(thread->status == ThreadStatus::WaitArb,
+                       "Inconsistent AddressArbiter state");
             return thread->wait_address != address;
         });
 

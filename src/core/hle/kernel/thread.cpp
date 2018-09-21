@@ -45,7 +45,7 @@ static Kernel::HandleTable wakeup_callback_handle_table;
 static std::vector<SharedPtr<Thread>> thread_list;
 
 // Lists only ready thread ids.
-static Common::ThreadQueueList<Thread*, THREADPRIO_LOWEST + 1> ready_queue;
+static Common::ThreadQueueList<Thread*, ThreadPrioLowest + 1> ready_queue;
 
 static SharedPtr<Thread> current_thread;
 
@@ -324,12 +324,12 @@ ResultVal<SharedPtr<Thread>> Thread::Create(std::string name, VAddr entry_point,
                                             u32 arg, s32 processor_id, VAddr stack_top,
                                             SharedPtr<Process> owner_process) {
     // Check if priority is in ranged. Lowest priority -> highest priority id.
-    if (priority > THREADPRIO_LOWEST) {
+    if (priority > ThreadPrioLowest) {
         LOG_ERROR(Kernel_SVC, "Invalid thread priority: {}", priority);
         return ERR_OUT_OF_RANGE;
     }
 
-    if (processor_id > THREADPROCESSORID_MAX) {
+    if (processor_id > ThreadProcessorIdMax) {
         LOG_ERROR(Kernel_SVC, "Invalid processor id: {}", processor_id);
         return ERR_OUT_OF_RANGE_KERNEL;
     }
@@ -414,7 +414,7 @@ ResultVal<SharedPtr<Thread>> Thread::Create(std::string name, VAddr entry_point,
 }
 
 void Thread::SetPriority(u32 priority) {
-    ASSERT_MSG(priority <= THREADPRIO_LOWEST && priority >= THREADPRIO_HIGHEST,
+    ASSERT_MSG(priority <= ThreadPrioLowest && priority >= ThreadPrioHighest,
                "Invalid priority value.");
     // If thread was ready, adjust queues
     if (status == ThreadStatus::Ready)
