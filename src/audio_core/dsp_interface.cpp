@@ -12,16 +12,13 @@
 namespace AudioCore {
 
 DspInterface::DspInterface() = default;
-
-DspInterface::~DspInterface() {
-    if (perform_time_stretching) {
-        FlushResidualStretcherAudio();
-    }
-}
+DspInterface::~DspInterface() = default;
 
 void DspInterface::SetSink(const std::string& sink_id, const std::string& audio_device) {
     const SinkDetails& sink_details = GetSinkDetails(sink_id);
     sink = sink_details.factory(audio_device);
+    sink->SetCallback(
+        [this](s16* buffer, std::size_t num_frames) { OutputCallback(buffer, num_frames); });
     time_stretcher.SetOutputSampleRate(sink->GetNativeSampleRate());
 }
 
@@ -35,7 +32,7 @@ void DspInterface::EnableStretching(bool enable) {
         return;
 
     if (!enable) {
-        FlushResidualStretcherAudio();
+        flushing_time_stretcher = true;
     }
     perform_time_stretching = enable;
 }
@@ -44,39 +41,41 @@ void DspInterface::OutputFrame(StereoFrame16& frame) {
     if (!sink)
         return;
 
-    // Implementation of the hardware volume slider with a dynamic range of 60 dB
-    double volume_scale_factor = std::exp(6.90775 * Settings::values.volume) * 0.001;
-    for (std::size_t i = 0; i < frame.size(); i++) {
-        frame[i][0] = static_cast<s16>(frame[i][0] * volume_scale_factor);
-        frame[i][1] = static_cast<s16>(frame[i][1] * volume_scale_factor);
-    }
-
-    if (perform_time_stretching) {
-        time_stretcher.AddSamples(&frame[0][0], frame.size());
-        std::vector<s16> stretched_samples = time_stretcher.Process(sink->SamplesInQueue());
-        sink->EnqueueSamples(stretched_samples.data(), stretched_samples.size() / 2);
-    } else {
-        constexpr std::size_t maximum_sample_latency = 2048; // about 64 miliseconds
-        if (sink->SamplesInQueue() > maximum_sample_latency) {
-            // This can occur if we're running too fast and samples are starting to back up.
-            // Just drop the samples.
-            return;
-        }
-
-        sink->EnqueueSamples(&frame[0][0], frame.size());
-    }
+    fifo.Push(frame.data(), frame.size());
 }
 
-void DspInterface::FlushResidualStretcherAudio() {
-    if (!sink)
-        return;
+void DspInterface::OutputCallback(s16* buffer, std::size_t num_frames) {
+    std::size_t frames_written;
+    if (perform_time_stretching) {
+        const std::vector<s16> in{fifo.Pop()};
+        const std::size_t num_in{in.size() / 2};
+        frames_written = time_stretcher.Process(in.data(), num_in, buffer, num_frames);
+    } else if (flushing_time_stretcher) {
+        time_stretcher.Flush();
+        frames_written = time_stretcher.Process(nullptr, 0, buffer, num_frames);
+        frames_written += fifo.Pop(buffer, num_frames - frames_written);
+        flushing_time_stretcher = false;
+    } else {
+        frames_written = fifo.Pop(buffer, num_frames);
+    }
 
-    time_stretcher.Flush();
-    while (true) {
-        std::vector<s16> residual_audio = time_stretcher.Process(sink->SamplesInQueue());
-        if (residual_audio.empty())
-            break;
-        sink->EnqueueSamples(residual_audio.data(), residual_audio.size() / 2);
+    if (frames_written > 0) {
+        std::memcpy(&last_frame[0], buffer + 2 * (frames_written - 1), 2 * sizeof(s16));
+    }
+
+    // Hold last emitted frame; this prevents popping.
+    for (std::size_t i = frames_written; i < num_frames; i++) {
+        std::memcpy(buffer + 2 * i, &last_frame[0], 2 * sizeof(s16));
+    }
+
+    // Implementation of the hardware volume slider with a dynamic range of 60 dB
+    const float linear_volume = std::clamp(Settings::values.volume, 0.0f, 1.0f);
+    if (linear_volume != 1.0) {
+        const float volume_scale_factor = std::exp(6.90775f * linear_volume) * 0.001f;
+        for (std::size_t i = 0; i < num_frames; i++) {
+            buffer[i * 2 + 0] = static_cast<s16>(buffer[i * 2 + 0] * volume_scale_factor);
+            buffer[i * 2 + 1] = static_cast<s16>(buffer[i * 2 + 1] * volume_scale_factor);
+        }
     }
 }
 

@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <cstdarg>
 #include <mutex>
 #include <vector>
 #include <cubeb/cubeb.h>
@@ -13,17 +14,16 @@ namespace AudioCore {
 
 struct CubebSink::Impl {
     unsigned int sample_rate = 0;
-    std::vector<std::string> device_list;
 
     cubeb* ctx = nullptr;
     cubeb_stream* stream = nullptr;
 
-    std::mutex queue_mutex;
-    std::vector<s16> queue;
+    std::function<void(s16*, std::size_t)> cb;
 
     static long DataCallback(cubeb_stream* stream, void* user_data, const void* input_buffer,
                              void* output_buffer, long num_frames);
     static void StateCallback(cubeb_stream* stream, void* user_data, cubeb_state state);
+    static void LogCallback(char const* fmt, ...);
 };
 
 CubebSink::CubebSink(std::string target_device_name) : impl(std::make_unique<Impl>()) {
@@ -31,21 +31,23 @@ CubebSink::CubebSink(std::string target_device_name) : impl(std::make_unique<Imp
         LOG_CRITICAL(Audio_Sink, "cubeb_init failed");
         return;
     }
-
-    cubeb_devid output_device = nullptr;
-
-    cubeb_stream_params params;
-    params.rate = native_sample_rate;
-    params.channels = 2;
-    params.format = CUBEB_SAMPLE_S16NE;
-    params.layout = CUBEB_LAYOUT_STEREO;
+    cubeb_set_log_callback(CUBEB_LOG_NORMAL, &Impl::LogCallback);
 
     impl->sample_rate = native_sample_rate;
 
-    u32 minimum_latency = 0;
-    if (cubeb_get_min_latency(impl->ctx, &params, &minimum_latency) != CUBEB_OK)
-        LOG_CRITICAL(Audio_Sink, "Error getting minimum latency");
+    cubeb_stream_params params;
+    params.rate = impl->sample_rate;
+    params.channels = 2;
+    params.layout = CUBEB_LAYOUT_STEREO;
+    params.format = CUBEB_SAMPLE_S16NE;
+    params.prefs = CUBEB_STREAM_PREF_NONE;
 
+    u32 minimum_latency = 100 * impl->sample_rate / 1000; // Firefox default
+    if (cubeb_get_min_latency(impl->ctx, &params, &minimum_latency) != CUBEB_OK) {
+        LOG_CRITICAL(Audio_Sink, "Error getting minimum latency");
+    }
+
+    cubeb_devid output_device = nullptr;
     if (target_device_name != auto_device_name && !target_device_name.empty()) {
         cubeb_device_collection collection;
         if (cubeb_enumerate_devices(impl->ctx, CUBEB_DEVICE_TYPE_OUTPUT, &collection) != CUBEB_OK) {
@@ -63,10 +65,22 @@ CubebSink::CubebSink(std::string target_device_name) : impl(std::make_unique<Imp
         }
     }
 
-    if (cubeb_stream_init(impl->ctx, &impl->stream, "Citra Audio Output", nullptr, nullptr,
-                          output_device, &params, std::max(512u, minimum_latency),
-                          &Impl::DataCallback, &Impl::StateCallback, impl.get()) != CUBEB_OK) {
-        LOG_CRITICAL(Audio_Sink, "Error initializing cubeb stream");
+    int stream_err = cubeb_stream_init(impl->ctx, &impl->stream, "CitraAudio", nullptr, nullptr,
+                                       output_device, &params, std::max(512u, minimum_latency),
+                                       &Impl::DataCallback, &Impl::StateCallback, impl.get());
+    if (stream_err != CUBEB_OK) {
+        switch (stream_err) {
+        case CUBEB_ERROR:
+        default:
+            LOG_CRITICAL(Audio_Sink, "Error initializing cubeb stream ({})", stream_err);
+            break;
+        case CUBEB_ERROR_INVALID_FORMAT:
+            LOG_CRITICAL(Audio_Sink, "Invalid format when initializing cubeb stream");
+            break;
+        case CUBEB_ERROR_DEVICE_UNAVAILABLE:
+            LOG_CRITICAL(Audio_Sink, "Device unavailable when initializing cubeb stream");
+            break;
+        }
         return;
     }
 
@@ -77,8 +91,11 @@ CubebSink::CubebSink(std::string target_device_name) : impl(std::make_unique<Imp
 }
 
 CubebSink::~CubebSink() {
-    if (!impl->ctx)
+    if (!impl->ctx) {
         return;
+    }
+
+    impl->cb = nullptr;
 
     if (cubeb_stream_stop(impl->stream) != CUBEB_OK) {
         LOG_CRITICAL(Audio_Sink, "Error stopping cubeb stream");
@@ -95,56 +112,62 @@ unsigned int CubebSink::GetNativeSampleRate() const {
     return impl->sample_rate;
 }
 
-void CubebSink::EnqueueSamples(const s16* samples, std::size_t sample_count) {
-    if (!impl->ctx)
-        return;
-
-    std::lock_guard lock{impl->queue_mutex};
-
-    impl->queue.reserve(impl->queue.size() + sample_count * 2);
-    std::copy(samples, samples + sample_count * 2, std::back_inserter(impl->queue));
-}
-
-size_t CubebSink::SamplesInQueue() const {
-    if (!impl->ctx)
-        return 0;
-
-    std::lock_guard lock{impl->queue_mutex};
-    return impl->queue.size() / 2;
+void CubebSink::SetCallback(std::function<void(s16*, std::size_t)> cb) {
+    impl->cb = cb;
 }
 
 long CubebSink::Impl::DataCallback(cubeb_stream* stream, void* user_data, const void* input_buffer,
                                    void* output_buffer, long num_frames) {
     Impl* impl = static_cast<Impl*>(user_data);
-    u8* buffer = reinterpret_cast<u8*>(output_buffer);
+    s16* buffer = reinterpret_cast<s16*>(output_buffer);
 
-    if (!impl)
-        return 0;
-
-    std::lock_guard lock{impl->queue_mutex};
-
-    std::size_t frames_to_write =
-        std::min(impl->queue.size() / 2, static_cast<std::size_t>(num_frames));
-
-    memcpy(buffer, impl->queue.data(), frames_to_write * sizeof(s16) * 2);
-    impl->queue.erase(impl->queue.begin(), impl->queue.begin() + frames_to_write * 2);
-
-    if (frames_to_write < num_frames) {
-        // Fill the rest of the frames with silence
-        memset(buffer + frames_to_write * sizeof(s16) * 2, 0,
-               (num_frames - frames_to_write) * sizeof(s16) * 2);
+    if (!impl || !impl->cb) {
+        LOG_DEBUG(Audio_Sink, "Emitting zeros");
+        std::memset(output_buffer, 0, num_frames * 2 * sizeof(s16));
+        return num_frames;
     }
+
+    impl->cb(buffer, num_frames);
 
     return num_frames;
 }
 
-void CubebSink::Impl::StateCallback(cubeb_stream* stream, void* user_data, cubeb_state state) {}
+void CubebSink::Impl::StateCallback(cubeb_stream* stream, void* user_data, cubeb_state state) {
+    switch (state) {
+    case CUBEB_STATE_STARTED:
+        LOG_INFO(Audio_Sink, "Cubeb Audio Stream Started");
+        break;
+    case CUBEB_STATE_STOPPED:
+        LOG_INFO(Audio_Sink, "Cubeb Audio Stream Stopped");
+        break;
+    case CUBEB_STATE_DRAINED:
+        LOG_INFO(Audio_Sink, "Cubeb Audio Stream Drained");
+        break;
+    case CUBEB_STATE_ERROR:
+        LOG_CRITICAL(Audio_Sink, "Cubeb Audio Stream Errored");
+        break;
+    }
+}
+
+void CubebSink::Impl::LogCallback(char const* format, ...) {
+    std::array<char, 512> buffer;
+    std::va_list args;
+    va_start(args, format);
+#ifdef _MSC_VER
+    vsprintf_s(buffer.data(), buffer.size(), format, args);
+#else
+    vsnprintf(buffer.data(), buffer.size(), format, args);
+#endif
+    va_end(args);
+    buffer.back() = '\0';
+    LOG_INFO(Audio_Sink, "{}", buffer.data());
+}
 
 std::vector<std::string> ListCubebSinkDevices() {
     std::vector<std::string> device_list;
     cubeb* ctx;
 
-    if (cubeb_init(&ctx, "Citra Device Enumerator", nullptr) != CUBEB_OK) {
+    if (cubeb_init(&ctx, "CitraEnumerator", nullptr) != CUBEB_OK) {
         LOG_CRITICAL(Audio_Sink, "cubeb_init failed");
         return {};
     }

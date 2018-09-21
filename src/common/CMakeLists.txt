@@ -72,6 +72,7 @@ add_library(common STATIC
     param_package.cpp
     param_package.h
     quaternion.h
+    ring_buffer.h
     scm_rev.cpp
     scm_rev.h
     scope_exit.h
