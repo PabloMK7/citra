@@ -236,7 +236,7 @@ private:
     struct SegmentEntry {
         u32_le offset;
         u32_le size;
-        SegmentType type;
+        enum_le<SegmentType> type;
 
         static constexpr HeaderField TABLE_OFFSET_FIELD = SegmentTableOffset;
     };
