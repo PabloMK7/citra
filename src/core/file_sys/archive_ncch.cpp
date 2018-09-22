@@ -20,6 +20,7 @@
 #include "core/hle/service/am/am.h"
 #include "core/hle/service/fs/archive.h"
 #include "core/loader/loader.h"
+#include "country_list.app.romfs.h"
 #include "shared_font.app.romfs.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -125,47 +126,43 @@ ResultVal<std::unique_ptr<FileBackend>> NCCHArchive::OpenFile(const Path& path,
         LOG_DEBUG(Service_FS, "Full Path: {}. Category: 0x{:X}. Path: 0x{:X}.", path.DebugStr(),
                   high, low);
 
-        std::string archive_name;
+        std::vector<u8> archive_data;
         if (high == shared_data_archive) {
-            if (low == mii_data)
-                archive_name = "Mii Data";
-            else if (low == region_manifest)
-                archive_name = "Region manifest";
-            else if (low == shared_font) {
+            if (low == mii_data) {
+                LOG_ERROR(Service_FS, "Failed to get a handle for shared data archive: Mii Data.");
+                Core::System::GetInstance().SetStatus(Core::System::ResultStatus::ErrorSystemFiles,
+                                                      "Mii Data");
+            } else if (low == region_manifest) {
+                LOG_WARNING(
+                    Service_FS,
+                    "Country list file missing. Loading open source replacement from memory");
+                archive_data =
+                    std::vector<u8>(std::begin(COUNTRY_LIST_DATA), std::end(COUNTRY_LIST_DATA));
+            } else if (low == shared_font) {
                 LOG_WARNING(
                     Service_FS,
                     "Shared Font file missing. Loading open source replacement from memory");
-                const std::vector<u8> shared_font_file(std::begin(SHARED_FONT_DATA),
-                                                       std::end(SHARED_FONT_DATA));
-                u64 romfs_offset = 0;
-                u64 romfs_size = shared_font_file.size();
-                std::unique_ptr<DelayGenerator> delay_generator =
-                    std::make_unique<RomFSDelayGenerator>();
-                file = std::make_unique<IVFCFileInMemory>(std::move(shared_font_file), romfs_offset,
-                                                          romfs_size, std::move(delay_generator));
-                return MakeResult<std::unique_ptr<FileBackend>>(std::move(file));
+                archive_data =
+                    std::vector<u8>(std::begin(SHARED_FONT_DATA), std::end(SHARED_FONT_DATA));
             }
         } else if (high == system_data_archive) {
-            if (low == ng_word_list)
+            if (low == ng_word_list) {
                 LOG_WARNING(
                     Service_FS,
                     "Bad Word List file missing. Loading open source replacement from memory");
-            const std::vector<u8> bad_word_list_file(std::begin(BAD_WORD_LIST_DATA),
-                                                     std::end(BAD_WORD_LIST_DATA));
-            u64 romfs_offset = 0;
-            u64 romfs_size = bad_word_list_file.size();
-            std::unique_ptr<DelayGenerator> delay_generator =
-                std::make_unique<RomFSDelayGenerator>();
-            file = std::make_unique<IVFCFileInMemory>(std::move(bad_word_list_file), romfs_offset,
-                                                      romfs_size, std::move(delay_generator));
-            return MakeResult<std::unique_ptr<FileBackend>>(std::move(file));
+                archive_data =
+                    std::vector<u8>(std::begin(BAD_WORD_LIST_DATA), std::end(BAD_WORD_LIST_DATA));
+            }
         }
 
-        if (!archive_name.empty()) {
-            LOG_ERROR(Service_FS, "Failed to get a handle for shared data archive: {}. ",
-                      archive_name);
-            Core::System::GetInstance().SetStatus(Core::System::ResultStatus::ErrorSystemFiles,
-                                                  archive_name.c_str());
+        if (!archive_data.empty()) {
+            u64 romfs_offset = 0;
+            u64 romfs_size = archive_data.size();
+            std::unique_ptr<DelayGenerator> delay_generator =
+                std::make_unique<RomFSDelayGenerator>();
+            file = std::make_unique<IVFCFileInMemory>(std::move(archive_data), romfs_offset,
+                                                      romfs_size, std::move(delay_generator));
+            return MakeResult<std::unique_ptr<FileBackend>>(std::move(file));
         }
         return ERROR_NOT_FOUND;
     }
