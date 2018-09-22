@@ -74,24 +74,6 @@ std::u16string UTF8ToUTF16(const std::string& input);
 std::string UTF16ToUTF8(const std::wstring& input);
 std::wstring UTF8ToUTF16W(const std::string& str);
 
-#ifdef _UNICODE
-inline std::string TStrToUTF8(const std::wstring& str) {
-    return UTF16ToUTF8(str);
-}
-
-inline std::wstring UTF8ToTStr(const std::string& str) {
-    return UTF8ToUTF16W(str);
-}
-#else
-inline std::string TStrToUTF8(const std::string& str) {
-    return str;
-}
-
-inline std::string UTF8ToTStr(const std::string& str) {
-    return str;
-}
-#endif
-
 #endif
 
 /**
