@@ -257,14 +257,6 @@ std::wstring UTF8ToUTF16W(const std::string& input) {
     return CPToUTF16(CP_UTF8, input);
 }
 
-std::string SHIFTJISToUTF8(const std::string& input) {
-    return UTF16ToUTF8(CPToUTF16(932, input));
-}
-
-std::string CP1252ToUTF8(const std::string& input) {
-    return UTF16ToUTF8(CPToUTF16(1252, input));
-}
-
 #else
 
 template <typename T>
@@ -362,17 +354,6 @@ std::u16string UTF8ToUTF16(const std::string& input) {
 
 std::string UTF16ToUTF8(const std::u16string& input) {
     return CodeToUTF8("UTF-16LE", input);
-}
-
-std::string CP1252ToUTF8(const std::string& input) {
-    // return CodeToUTF8("CP1252//TRANSLIT", input);
-    // return CodeToUTF8("CP1252//IGNORE", input);
-    return CodeToUTF8("CP1252", input);
-}
-
-std::string SHIFTJISToUTF8(const std::string& input) {
-    // return CodeToUTF8("CP932", input);
-    return CodeToUTF8("SJIS", input);
 }
 
 #endif
