@@ -7,8 +7,7 @@
 #include "core/hle/ipc_helpers.h"
 #include "core/hle/service/ssl_c.h"
 
-namespace Service {
-namespace SSL {
+namespace Service::SSL {
 
 void SSL_C::Initialize(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x01, 0, 2);
@@ -91,5 +90,4 @@ void InstallInterfaces(SM::ServiceManager& service_manager) {
     std::make_shared<SSL_C>()->InstallAsService(service_manager);
 }
 
-} // namespace SSL
-} // namespace Service
+} // namespace Service::SSL

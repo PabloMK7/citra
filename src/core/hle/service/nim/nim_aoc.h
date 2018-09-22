@@ -6,8 +6,7 @@
 
 #include "core/hle/service/service.h"
 
-namespace Service {
-namespace NIM {
+namespace Service::NIM {
 
 class NIM_AOC final : public ServiceFramework<NIM_AOC> {
 public:
@@ -15,5 +14,4 @@ public:
     ~NIM_AOC();
 };
 
-} // namespace NIM
-} // namespace Service
+} // namespace Service::NIM

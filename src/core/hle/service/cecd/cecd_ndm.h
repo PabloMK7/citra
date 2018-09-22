@@ -6,13 +6,11 @@
 
 #include "core/hle/service/cecd/cecd.h"
 
-namespace Service {
-namespace CECD {
+namespace Service::CECD {
 
 class CECD_NDM final : public Module::Interface {
 public:
     explicit CECD_NDM(std::shared_ptr<Module> cecd);
 };
 
-} // namespace CECD
-} // namespace Service
+} // namespace Service::CECD

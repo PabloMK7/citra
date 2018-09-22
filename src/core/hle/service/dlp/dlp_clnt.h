@@ -6,8 +6,7 @@
 
 #include "core/hle/service/service.h"
 
-namespace Service {
-namespace DLP {
+namespace Service::DLP {
 
 class DLP_CLNT final : public ServiceFramework<DLP_CLNT> {
 public:
@@ -15,5 +14,4 @@ public:
     ~DLP_CLNT() = default;
 };
 
-} // namespace DLP
-} // namespace Service
+} // namespace Service::DLP

@@ -6,13 +6,11 @@
 
 #include "core/hle/service/hid/hid.h"
 
-namespace Service {
-namespace HID {
+namespace Service::HID {
 
 class Spvr final : public Module::Interface {
 public:
     explicit Spvr(std::shared_ptr<Module> hid);
 };
 
-} // namespace HID
-} // namespace Service
+} // namespace Service::HID

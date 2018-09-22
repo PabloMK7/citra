@@ -12,8 +12,7 @@
 #include "core/hle/service/ir/extra_hid.h"
 #include "core/hle/service/ir/ir_user.h"
 
-namespace Service {
-namespace IR {
+namespace Service::IR {
 
 // This is a header that will present in the ir:USER shared memory if it is initialized with
 // InitializeIrNopShared service function. Otherwise the shared memory doesn't have this header if
@@ -439,5 +438,4 @@ void IRDevice::Send(const std::vector<u8>& data) {
     send_func(data);
 }
 
-} // namespace IR
-} // namespace Service
+} // namespace Service::IR

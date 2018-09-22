@@ -6,13 +6,11 @@
 
 #include "core/hle/service/cfg/cfg.h"
 
-namespace Service {
-namespace CFG {
+namespace Service::CFG {
 
 class CFG_I final : public Module::Interface {
 public:
     explicit CFG_I(std::shared_ptr<Module> cfg);
 };
 
-} // namespace CFG
-} // namespace Service
+} // namespace Service::CFG

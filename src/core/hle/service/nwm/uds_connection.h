@@ -10,8 +10,7 @@
 #include "common/swap.h"
 #include "core/hle/service/service.h"
 
-namespace Service {
-namespace NWM {
+namespace Service::NWM {
 
 /// Sequence number of the 802.11 authentication frames.
 enum class AuthenticationSeq : u16 { SEQ1 = 1, SEQ2 = 2 };
@@ -52,5 +51,4 @@ std::vector<u8> GenerateAssocResponseFrame(AssocStatus status, u16 association_i
 /// frame.
 std::tuple<AssocStatus, u16> GetAssociationResult(const std::vector<u8>& body);
 
-} // namespace NWM
-} // namespace Service
+} // namespace Service::NWM

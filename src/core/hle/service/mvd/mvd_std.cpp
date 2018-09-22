@@ -5,8 +5,7 @@
 #include "core/hle/ipc_helpers.h"
 #include "core/hle/service/mvd/mvd_std.h"
 
-namespace Service {
-namespace MVD {
+namespace Service::MVD {
 
 MVD_STD::MVD_STD() : ServiceFramework("mvd:std", 1) {
     static const FunctionInfo functions[] = {
@@ -29,5 +28,4 @@ MVD_STD::MVD_STD() : ServiceFramework("mvd:std", 1) {
     RegisterHandlers(functions);
 };
 
-} // namespace MVD
-} // namespace Service
+} // namespace Service::MVD

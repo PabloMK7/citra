@@ -6,13 +6,11 @@
 
 #include "core/hle/service/service.h"
 
-namespace Service {
-namespace CFG {
+namespace Service::CFG {
 
 class CFG_NOR final : public ServiceFramework<CFG_NOR> {
 public:
     CFG_NOR();
 };
 
-} // namespace CFG
-} // namespace Service
+} // namespace Service::CFG

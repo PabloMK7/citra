@@ -7,8 +7,7 @@
 #include "core/hle/service/ldr_ro/memory_synchronizer.h"
 #include "core/hle/service/service.h"
 
-namespace Service {
-namespace LDR {
+namespace Service::LDR {
 
 struct ClientSlot : public Kernel::SessionRequestHandler::SessionDataBase {
     MemorySynchronizer memory_synchronizer;
@@ -152,5 +151,4 @@ private:
 
 void InstallInterfaces(SM::ServiceManager& service_manager);
 
-} // namespace LDR
-} // namespace Service
+} // namespace Service::LDR

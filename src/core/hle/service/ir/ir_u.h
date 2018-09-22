@@ -6,8 +6,7 @@
 
 #include "core/hle/service/service.h"
 
-namespace Service {
-namespace IR {
+namespace Service::IR {
 
 /// Interface to "ir:u" service
 class IR_U final : public ServiceFramework<IR_U> {
@@ -15,5 +14,4 @@ public:
     IR_U();
 };
 
-} // namespace IR
-} // namespace Service
+} // namespace Service::IR

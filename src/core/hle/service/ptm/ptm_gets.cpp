@@ -4,8 +4,7 @@
 
 #include "core/hle/service/ptm/ptm_gets.h"
 
-namespace Service {
-namespace PTM {
+namespace Service::PTM {
 
 PTM_Gets::PTM_Gets(std::shared_ptr<Module> ptm)
     : Module::Interface(std::move(ptm), "ptm:gets", 26) {
@@ -32,5 +31,4 @@ PTM_Gets::PTM_Gets(std::shared_ptr<Module> ptm)
     RegisterHandlers(functions);
 }
 
-} // namespace PTM
-} // namespace Service
+} // namespace Service::PTM

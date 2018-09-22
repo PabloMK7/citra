@@ -11,8 +11,7 @@ namespace Kernel {
 class Process;
 }
 
-namespace Service {
-namespace LDR {
+namespace Service::LDR {
 
 /**
  * This is a work-around before we implement memory aliasing.
@@ -42,5 +41,4 @@ private:
     auto FindMemoryBlock(VAddr mapping, VAddr original);
 };
 
-} // namespace LDR
-} // namespace Service
+} // namespace Service::LDR

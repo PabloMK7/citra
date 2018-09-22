@@ -7,8 +7,7 @@
 #include "core/hle/kernel/process.h"
 #include "core/hle/service/ldr_ro/memory_synchronizer.h"
 
-namespace Service {
-namespace LDR {
+namespace Service::LDR {
 
 auto MemorySynchronizer::FindMemoryBlock(VAddr mapping, VAddr original) {
     auto block = std::find_if(memory_blocks.begin(), memory_blocks.end(),
@@ -39,5 +38,4 @@ void MemorySynchronizer::SynchronizeOriginalMemory(Kernel::Process& process) {
     }
 }
 
-} // namespace LDR
-} // namespace Service
+} // namespace Service::LDR

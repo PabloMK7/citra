@@ -15,8 +15,7 @@
 #include "core/hle/service/ptm/ptm_u.h"
 #include "core/settings.h"
 
-namespace Service {
-namespace PTM {
+namespace Service::PTM {
 
 /// Values for the default gamecoin.dat file
 static const GameCoin default_game_coin = {0x4F00, 42, 0, 0, 0, 2014, 12, 29};
@@ -181,5 +180,4 @@ void InstallInterfaces(SM::ServiceManager& service_manager) {
     std::make_shared<PTM_U>(ptm)->InstallAsService(service_manager);
 }
 
-} // namespace PTM
-} // namespace Service
+} // namespace Service::PTM

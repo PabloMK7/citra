@@ -12,8 +12,7 @@
 #include "core/hle/kernel/shared_memory.h"
 #include "core/hle/service/service.h"
 
-namespace Service {
-namespace HTTP {
+namespace Service::HTTP {
 
 enum class RequestMethod : u8 {
     None = 0x0,
@@ -222,5 +221,4 @@ private:
 
 void InstallInterfaces(SM::ServiceManager& service_manager);
 
-} // namespace HTTP
-} // namespace Service
+} // namespace Service::HTTP

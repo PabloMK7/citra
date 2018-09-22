@@ -7,8 +7,7 @@
 #include "common/common_types.h"
 #include "core/hle/service/service.h"
 
-namespace Service {
-namespace FS {
+namespace Service::FS {
 
 class FS_USER final : public ServiceFramework<FS_USER> {
 public:
@@ -520,5 +519,4 @@ private:
 
 void InstallInterfaces(SM::ServiceManager& service_manager);
 
-} // namespace FS
-} // namespace Service
+} // namespace Service::FS

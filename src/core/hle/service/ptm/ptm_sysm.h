@@ -7,8 +7,7 @@
 #include <memory>
 #include "core/hle/service/ptm/ptm.h"
 
-namespace Service {
-namespace PTM {
+namespace Service::PTM {
 
 class PTM_S_Common : public Module::Interface {
 public:
@@ -25,5 +24,4 @@ public:
     explicit PTM_Sysm(std::shared_ptr<Module> ptm);
 };
 
-} // namespace PTM
-} // namespace Service
+} // namespace Service::PTM

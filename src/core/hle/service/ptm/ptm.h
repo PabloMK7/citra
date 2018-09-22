@@ -9,8 +9,7 @@
 #include "core/hle/ipc_helpers.h"
 #include "core/hle/service/service.h"
 
-namespace Service {
-namespace PTM {
+namespace Service::PTM {
 
 /// Charge levels used by PTM functions
 enum class ChargeLevels : u32 {
@@ -141,5 +140,4 @@ private:
 
 void InstallInterfaces(SM::ServiceManager& service_manager);
 
-} // namespace PTM
-} // namespace Service
+} // namespace Service::PTM

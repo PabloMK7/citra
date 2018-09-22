@@ -5,8 +5,7 @@
 #include "core/hle/service/cam/cam.h"
 #include "core/hle/service/cam/cam_s.h"
 
-namespace Service {
-namespace CAM {
+namespace Service::CAM {
 
 CAM_S::CAM_S(std::shared_ptr<Module> cam) : Module::Interface(std::move(cam), "cam:s", 1) {
     static const FunctionInfo functions[] = {
@@ -79,5 +78,4 @@ CAM_S::CAM_S(std::shared_ptr<Module> cam) : Module::Interface(std::move(cam), "c
     RegisterHandlers(functions);
 }
 
-} // namespace CAM
-} // namespace Service
+} // namespace Service::CAM

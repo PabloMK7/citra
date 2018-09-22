@@ -5,8 +5,7 @@
 #include "core/hle/ipc_helpers.h"
 #include "core/hle/service/dlp/dlp_fkcl.h"
 
-namespace Service {
-namespace DLP {
+namespace Service::DLP {
 
 DLP_FKCL::DLP_FKCL() : ServiceFramework("dlp:FKCL", 1) {
     static const FunctionInfo functions[] = {
@@ -34,5 +33,4 @@ DLP_FKCL::DLP_FKCL() : ServiceFramework("dlp:FKCL", 1) {
     RegisterHandlers(functions);
 }
 
-} // namespace DLP
-} // namespace Service
+} // namespace Service::DLP

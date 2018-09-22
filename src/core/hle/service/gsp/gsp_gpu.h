@@ -17,8 +17,7 @@ namespace Kernel {
 class SharedMemory;
 } // namespace Kernel
 
-namespace Service {
-namespace GSP {
+namespace Service::GSP {
 
 /// GSP interrupt ID
 enum class InterruptId : u8 {
@@ -411,5 +410,4 @@ private:
 
 ResultCode SetBufferSwap(u32 screen_id, const FrameBufferInfo& info);
 
-} // namespace GSP
-} // namespace Service
+} // namespace Service::GSP

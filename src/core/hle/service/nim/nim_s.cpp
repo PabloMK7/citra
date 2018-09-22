@@ -4,8 +4,7 @@
 
 #include "core/hle/service/nim/nim_s.h"
 
-namespace Service {
-namespace NIM {
+namespace Service::NIM {
 
 NIM_S::NIM_S() : ServiceFramework("nim:s", 1) {
     const FunctionInfo functions[] = {
@@ -20,5 +19,4 @@ NIM_S::NIM_S() : ServiceFramework("nim:s", 1) {
 
 NIM_S::~NIM_S() = default;
 
-} // namespace NIM
-} // namespace Service
+} // namespace Service::NIM

@@ -6,13 +6,11 @@
 
 #include "core/hle/service/boss/boss.h"
 
-namespace Service {
-namespace BOSS {
+namespace Service::BOSS {
 
 class BOSS_P final : public Module::Interface {
 public:
     explicit BOSS_P(std::shared_ptr<Module> boss);
 };
 
-} // namespace BOSS
-} // namespace Service
+} // namespace Service::BOSS

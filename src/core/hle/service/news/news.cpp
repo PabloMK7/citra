@@ -7,14 +7,11 @@
 #include "core/hle/service/news/news_u.h"
 #include "core/hle/service/service.h"
 
-namespace Service {
-namespace NEWS {
+namespace Service::NEWS {
 
 void InstallInterfaces(SM::ServiceManager& service_manager) {
     std::make_shared<NEWS_S>()->InstallAsService(service_manager);
     std::make_shared<NEWS_U>()->InstallAsService(service_manager);
 }
 
-} // namespace NEWS
-
-} // namespace Service
+} // namespace Service::NEWS

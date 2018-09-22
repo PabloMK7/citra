@@ -15,8 +15,7 @@ namespace CoreTiming {
 struct EventType;
 } // namespace CoreTiming
 
-namespace Service {
-namespace IR {
+namespace Service::IR {
 
 struct ExtraHIDResponse {
     union {
@@ -66,5 +65,4 @@ private:
     std::atomic<bool> is_device_reload_pending;
 };
 
-} // namespace IR
-} // namespace Service
+} // namespace Service::IR

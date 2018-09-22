@@ -5,8 +5,7 @@
 #include "core/hle/ipc_helpers.h"
 #include "core/hle/service/ndm/ndm_u.h"
 
-namespace Service {
-namespace NDM {
+namespace Service::NDM {
 
 void NDM_U::EnterExclusiveState(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x01, 1, 2);
@@ -241,5 +240,4 @@ void InstallInterfaces(SM::ServiceManager& service_manager) {
     std::make_shared<NDM_U>()->InstallAsService(service_manager);
 }
 
-} // namespace NDM
-} // namespace Service
+} // namespace Service::NDM

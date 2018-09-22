@@ -4,8 +4,7 @@
 
 #include "core/hle/service/am/am_net.h"
 
-namespace Service {
-namespace AM {
+namespace Service::AM {
 
 AM_NET::AM_NET(std::shared_ptr<Module> am) : Module::Interface(std::move(am), "am:net", 5) {
     static const FunctionInfo functions[] = {
@@ -123,5 +122,4 @@ AM_NET::AM_NET(std::shared_ptr<Module> am) : Module::Interface(std::move(am), "a
     RegisterHandlers(functions);
 }
 
-} // namespace AM
-} // namespace Service
+} // namespace Service::AM

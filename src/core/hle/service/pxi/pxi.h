@@ -6,11 +6,9 @@
 
 #include "core/hle/service/service.h"
 
-namespace Service {
-namespace PXI {
+namespace Service::PXI {
 
 /// Registers all PXI services with the specified service manager.
 void InstallInterfaces(SM::ServiceManager& service_manager);
 
-} // namespace PXI
-} // namespace Service
+} // namespace Service::PXI

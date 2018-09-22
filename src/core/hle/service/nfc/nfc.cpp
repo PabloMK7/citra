@@ -8,8 +8,7 @@
 #include "core/hle/service/nfc/nfc_m.h"
 #include "core/hle/service/nfc/nfc_u.h"
 
-namespace Service {
-namespace NFC {
+namespace Service::NFC {
 
 void Module::Interface::Initialize(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x01, 1, 0);
@@ -155,5 +154,4 @@ void InstallInterfaces(SM::ServiceManager& service_manager) {
     std::make_shared<NFC_U>(nfc)->InstallAsService(service_manager);
 }
 
-} // namespace NFC
-} // namespace Service
+} // namespace Service::NFC

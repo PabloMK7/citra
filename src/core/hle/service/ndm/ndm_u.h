@@ -7,8 +7,7 @@
 #include <array>
 #include "core/hle/service/service.h"
 
-namespace Service {
-namespace NDM {
+namespace Service::NDM {
 
 class NDM_U final : public ServiceFramework<NDM_U> {
 public:
@@ -271,5 +270,4 @@ private:
 
 void InstallInterfaces(SM::ServiceManager& service_manager);
 
-} // namespace NDM
-} // namespace Service
+} // namespace Service::NDM

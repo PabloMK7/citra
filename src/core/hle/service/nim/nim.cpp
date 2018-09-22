@@ -7,8 +7,7 @@
 #include "core/hle/service/nim/nim_s.h"
 #include "core/hle/service/nim/nim_u.h"
 
-namespace Service {
-namespace NIM {
+namespace Service::NIM {
 
 void InstallInterfaces(SM::ServiceManager& service_manager) {
     std::make_shared<NIM_AOC>()->InstallAsService(service_manager);
@@ -16,6 +15,4 @@ void InstallInterfaces(SM::ServiceManager& service_manager) {
     std::make_shared<NIM_U>()->InstallAsService(service_manager);
 }
 
-} // namespace NIM
-
-} // namespace Service
+} // namespace Service::NIM

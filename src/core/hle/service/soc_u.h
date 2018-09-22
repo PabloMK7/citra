@@ -7,8 +7,7 @@
 #include <unordered_map>
 #include "core/hle/service/service.h"
 
-namespace Service {
-namespace SOC {
+namespace Service::SOC {
 
 /// Holds information about a particular socket
 struct SocketHolder {
@@ -51,5 +50,4 @@ private:
 
 void InstallInterfaces(SM::ServiceManager& service_manager);
 
-} // namespace SOC
-} // namespace Service
+} // namespace Service::SOC

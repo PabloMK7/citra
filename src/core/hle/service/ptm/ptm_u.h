@@ -7,13 +7,11 @@
 #include <memory>
 #include "core/hle/service/ptm/ptm.h"
 
-namespace Service {
-namespace PTM {
+namespace Service::PTM {
 
 class PTM_U final : public Module::Interface {
 public:
     explicit PTM_U(std::shared_ptr<Module> ptm);
 };
 
-} // namespace PTM
-} // namespace Service
+} // namespace Service::PTM

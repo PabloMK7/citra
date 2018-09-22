@@ -5,8 +5,7 @@
 #include "core/hle/ipc_helpers.h"
 #include "core/hle/service/pm/pm_app.h"
 
-namespace Service {
-namespace PM {
+namespace Service::PM {
 
 PM_APP::PM_APP() : ServiceFramework("pm:app", 3) {
     static const FunctionInfo functions[] = {
@@ -30,5 +29,4 @@ PM_APP::PM_APP() : ServiceFramework("pm:app", 3) {
     RegisterHandlers(functions);
 }
 
-} // namespace PM
-} // namespace Service
+} // namespace Service::PM

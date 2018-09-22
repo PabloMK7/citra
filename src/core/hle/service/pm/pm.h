@@ -6,11 +6,9 @@
 
 #include "core/hle/service/service.h"
 
-namespace Service {
-namespace PM {
+namespace Service::PM {
 
 /// Initializes the PM services.
 void InstallInterfaces(SM::ServiceManager& service_manager);
 
-} // namespace PM
-} // namespace Service
+} // namespace Service::PM

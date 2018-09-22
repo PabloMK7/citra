@@ -7,8 +7,7 @@
 #include "core/hle/result.h"
 #include "core/hle/service/csnd/csnd_snd.h"
 
-namespace Service {
-namespace CSND {
+namespace Service::CSND {
 
 void CSND_SND::Initialize(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x01, 5, 0);
@@ -198,5 +197,4 @@ void InstallInterfaces(SM::ServiceManager& service_manager) {
     std::make_shared<CSND_SND>()->InstallAsService(service_manager);
 }
 
-} // namespace CSND
-} // namespace Service
+} // namespace Service::CSND

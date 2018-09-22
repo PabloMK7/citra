@@ -4,8 +4,7 @@
 
 #include "core/hle/service/hid/hid_user.h"
 
-namespace Service {
-namespace HID {
+namespace Service::HID {
 
 User::User(std::shared_ptr<Module> hid) : Module::Interface(std::move(hid), "hid:USER", 6) {
     static const FunctionInfo functions[] = {
@@ -26,5 +25,4 @@ User::User(std::shared_ptr<Module> hid) : Module::Interface(std::move(hid), "hid
     RegisterHandlers(functions);
 }
 
-} // namespace HID
-} // namespace Service
+} // namespace Service::HID

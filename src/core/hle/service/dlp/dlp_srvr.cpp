@@ -8,8 +8,7 @@
 #include "core/hle/result.h"
 #include "core/hle/service/dlp/dlp_srvr.h"
 
-namespace Service {
-namespace DLP {
+namespace Service::DLP {
 
 void DLP_SRVR::IsChild(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x0E, 1, 0);
@@ -47,5 +46,4 @@ DLP_SRVR::DLP_SRVR() : ServiceFramework("dlp:SRVR", 1) {
     RegisterHandlers(functions);
 }
 
-} // namespace DLP
-} // namespace Service
+} // namespace Service::DLP

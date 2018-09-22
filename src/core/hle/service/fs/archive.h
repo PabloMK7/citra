@@ -28,8 +28,7 @@ namespace Loader {
 class AppLoader;
 }
 
-namespace Service {
-namespace FS {
+namespace Service::FS {
 
 /// Supported archive types
 enum class ArchiveIdCode : u32 {
@@ -296,5 +295,4 @@ void RegisterArchiveTypes();
 /// Unregister all archive types
 void UnregisterArchiveTypes();
 
-} // namespace FS
-} // namespace Service
+} // namespace Service::FS

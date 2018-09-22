@@ -5,8 +5,7 @@
 #include "core/hle/ipc_helpers.h"
 #include "core/hle/service/dlp/dlp_clnt.h"
 
-namespace Service {
-namespace DLP {
+namespace Service::DLP {
 
 DLP_CLNT::DLP_CLNT() : ServiceFramework("dlp:CLNT", 1) {
     static const FunctionInfo functions[] = {
@@ -37,5 +36,4 @@ DLP_CLNT::DLP_CLNT() : ServiceFramework("dlp:CLNT", 1) {
     RegisterHandlers(functions);
 }
 
-} // namespace DLP
-} // namespace Service
+} // namespace Service::DLP

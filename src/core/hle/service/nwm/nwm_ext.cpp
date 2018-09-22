@@ -4,8 +4,7 @@
 
 #include "core/hle/service/nwm/nwm_ext.h"
 
-namespace Service {
-namespace NWM {
+namespace Service::NWM {
 
 NWM_EXT::NWM_EXT() : ServiceFramework("nwm::EXT") {
     static const FunctionInfo functions[] = {
@@ -14,5 +13,4 @@ NWM_EXT::NWM_EXT() : ServiceFramework("nwm::EXT") {
     RegisterHandlers(functions);
 }
 
-} // namespace NWM
-} // namespace Service
+} // namespace Service::NWM

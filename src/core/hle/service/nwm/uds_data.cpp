@@ -15,8 +15,7 @@
 #include "core/hle/service/nwm/uds_data.h"
 #include "core/hw/aes/key.h"
 
-namespace Service {
-namespace NWM {
+namespace Service::NWM {
 
 using MacAddress = std::array<u8, 6>;
 
@@ -383,5 +382,4 @@ EAPoLLogoffPacket ParseEAPoLLogoffFrame(const std::vector<u8>& frame) {
     return eapol_logoff;
 }
 
-} // namespace NWM
-} // namespace Service
+} // namespace Service::NWM

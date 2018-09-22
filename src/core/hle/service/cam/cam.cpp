@@ -19,8 +19,7 @@
 #include "core/memory.h"
 #include "core/settings.h"
 
-namespace Service {
-namespace CAM {
+namespace Service::CAM {
 
 static std::weak_ptr<Module> current_cam;
 
@@ -1065,6 +1064,4 @@ void InstallInterfaces(SM::ServiceManager& service_manager) {
     std::make_shared<CAM_Q>()->InstallAsService(service_manager);
 }
 
-} // namespace CAM
-
-} // namespace Service
+} // namespace Service::CAM

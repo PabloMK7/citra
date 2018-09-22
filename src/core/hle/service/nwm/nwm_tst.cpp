@@ -4,8 +4,7 @@
 
 #include "core/hle/service/nwm/nwm_tst.h"
 
-namespace Service {
-namespace NWM {
+namespace Service::NWM {
 
 NWM_TST::NWM_TST() : ServiceFramework("nwm::TST") {
     /*
@@ -15,5 +14,4 @@ NWM_TST::NWM_TST() : ServiceFramework("nwm::TST") {
     */
 }
 
-} // namespace NWM
-} // namespace Service
+} // namespace Service::NWM

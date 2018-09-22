@@ -11,8 +11,7 @@
 #include "common/swap.h"
 #include "core/hle/service/service.h"
 
-namespace Service {
-namespace NWM {
+namespace Service::NWM {
 
 using MacAddress = std::array<u8, 6>;
 constexpr std::array<u8, 3> NintendoOUI = {0x00, 0x1F, 0x32};
@@ -136,5 +135,4 @@ void DecryptBeacon(const NetworkInfo& network_info, std::vector<u8>& buffer);
  */
 std::vector<u8> GenerateBeaconFrame(const NetworkInfo& network_info, const NodeList& nodes);
 
-} // namespace NWM
-} // namespace Service
+} // namespace Service::NWM

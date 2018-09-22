@@ -4,8 +4,7 @@
 
 #include "core/hle/service/news/news_u.h"
 
-namespace Service {
-namespace NEWS {
+namespace Service::NEWS {
 
 NEWS_U::NEWS_U() : ServiceFramework("news:u", 1) {
     const FunctionInfo functions[] = {
@@ -14,5 +13,4 @@ NEWS_U::NEWS_U() : ServiceFramework("news:u", 1) {
     RegisterHandlers(functions);
 }
 
-} // namespace NEWS
-} // namespace Service
+} // namespace Service::NEWS

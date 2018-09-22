@@ -7,8 +7,7 @@
 #include <memory>
 #include "core/hle/service/service.h"
 
-namespace Service {
-namespace NEWS {
+namespace Service::NEWS {
 
 class NEWS_S final : public ServiceFramework<NEWS_S> {
 public:
@@ -27,5 +26,4 @@ private:
     void GetTotalNotifications(Kernel::HLERequestContext& ctx);
 };
 
-} // namespace NEWS
-} // namespace Service
+} // namespace Service::NEWS

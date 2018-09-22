@@ -6,11 +6,9 @@
 
 #include "core/hle/service/service.h"
 
-namespace Service {
-namespace QTM {
+namespace Service::QTM {
 
 /// Initializes all QTM services.
 void InstallInterfaces(SM::ServiceManager& service_manager);
 
-} // namespace QTM
-} // namespace Service
+} // namespace Service::QTM

@@ -4,8 +4,7 @@
 
 #include "core/hle/service/ptm/ptm_sysm.h"
 
-namespace Service {
-namespace PTM {
+namespace Service::PTM {
 
 PTM_S_Common::PTM_S_Common(std::shared_ptr<Module> ptm, const char* name)
     : Module::Interface(std::move(ptm), name, 26) {
@@ -66,5 +65,4 @@ PTM_S::PTM_S(std::shared_ptr<Module> ptm) : PTM_S_Common(std::move(ptm), "ptm:s"
 
 PTM_Sysm::PTM_Sysm(std::shared_ptr<Module> ptm) : PTM_S_Common(std::move(ptm), "ptm:sysm") {}
 
-} // namespace PTM
-} // namespace Service
+} // namespace Service::PTM

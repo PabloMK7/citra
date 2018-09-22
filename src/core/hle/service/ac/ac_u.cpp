@@ -4,8 +4,7 @@
 
 #include "core/hle/service/ac/ac_u.h"
 
-namespace Service {
-namespace AC {
+namespace Service::AC {
 
 AC_U::AC_U(std::shared_ptr<Module> ac) : Module::Interface(std::move(ac), "ac:u", 10) {
     static const FunctionInfo functions[] = {
@@ -33,5 +32,4 @@ AC_U::AC_U(std::shared_ptr<Module> ac) : Module::Interface(std::move(ac), "ac:u"
     RegisterHandlers(functions);
 }
 
-} // namespace AC
-} // namespace Service
+} // namespace Service::AC

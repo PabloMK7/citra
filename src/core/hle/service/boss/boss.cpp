@@ -9,8 +9,7 @@
 #include "core/hle/service/boss/boss_p.h"
 #include "core/hle/service/boss/boss_u.h"
 
-namespace Service {
-namespace BOSS {
+namespace Service::BOSS {
 
 void Module::Interface::InitializeSession(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x01, 2, 2);
@@ -915,5 +914,4 @@ void InstallInterfaces(SM::ServiceManager& service_manager) {
     std::make_shared<BOSS_U>(boss)->InstallAsService(service_manager);
 }
 
-} // namespace BOSS
-} // namespace Service
+} // namespace Service::BOSS

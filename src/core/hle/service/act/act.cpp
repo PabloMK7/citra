@@ -6,8 +6,7 @@
 #include "core/hle/service/act/act_a.h"
 #include "core/hle/service/act/act_u.h"
 
-namespace Service {
-namespace ACT {
+namespace Service::ACT {
 
 Module::Interface::Interface(std::shared_ptr<Module> act, const char* name)
     : ServiceFramework(name, 1 /* Placeholder */), act(std::move(act)) {}
@@ -20,5 +19,4 @@ void InstallInterfaces(SM::ServiceManager& service_manager) {
     std::make_shared<ACT_U>(act)->InstallAsService(service_manager);
 }
 
-} // namespace ACT
-} // namespace Service
+} // namespace Service::ACT

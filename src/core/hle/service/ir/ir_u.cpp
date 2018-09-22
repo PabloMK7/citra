@@ -4,8 +4,7 @@
 
 #include "core/hle/service/ir/ir_u.h"
 
-namespace Service {
-namespace IR {
+namespace Service::IR {
 
 IR_U::IR_U() : ServiceFramework("ir:u", 1) {
     static const FunctionInfo functions[] = {
@@ -31,5 +30,4 @@ IR_U::IR_U() : ServiceFramework("ir:u", 1) {
     RegisterHandlers(functions);
 }
 
-} // namespace IR
-} // namespace Service
+} // namespace Service::IR

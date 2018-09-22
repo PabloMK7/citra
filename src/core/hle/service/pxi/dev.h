@@ -7,8 +7,7 @@
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/service/service.h"
 
-namespace Service {
-namespace PXI {
+namespace Service::PXI {
 
 /// Interface to "pxi:dev" service
 class DEV final : public ServiceFramework<DEV> {
@@ -17,5 +16,4 @@ public:
     ~DEV();
 };
 
-} // namespace PXI
-} // namespace Service
+} // namespace Service::PXI

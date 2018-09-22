@@ -6,13 +6,11 @@
 
 #include "core/hle/service/am/am.h"
 
-namespace Service {
-namespace AM {
+namespace Service::AM {
 
 class AM_U final : public Module::Interface {
 public:
     explicit AM_U(std::shared_ptr<Module> am);
 };
 
-} // namespace AM
-} // namespace Service
+} // namespace Service::AM

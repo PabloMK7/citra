@@ -4,8 +4,7 @@
 
 #include "core/hle/service/cam/cam_q.h"
 
-namespace Service {
-namespace CAM {
+namespace Service::CAM {
 
 CAM_Q::CAM_Q() : ServiceFramework("cam:q", 1 /*TODO: find the true value*/) {
     // Empty arrays are illegal -- commented out until an entry is added.
@@ -13,5 +12,4 @@ CAM_Q::CAM_Q() : ServiceFramework("cam:q", 1 /*TODO: find the true value*/) {
     // RegisterHandlers(functions);
 }
 
-} // namespace CAM
-} // namespace Service
+} // namespace Service::CAM

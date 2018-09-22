@@ -11,8 +11,7 @@
 #include "core/hle/kernel/shared_memory.h"
 #include "core/hle/service/mic_u.h"
 
-namespace Service {
-namespace MIC {
+namespace Service::MIC {
 
 enum class Encoding : u8 {
     PCM8 = 0,
@@ -295,5 +294,4 @@ void InstallInterfaces(SM::ServiceManager& service_manager) {
     std::make_shared<MIC_U>()->InstallAsService(service_manager);
 }
 
-} // namespace MIC
-} // namespace Service
+} // namespace Service::MIC

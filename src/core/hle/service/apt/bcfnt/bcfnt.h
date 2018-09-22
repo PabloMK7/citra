@@ -8,9 +8,7 @@
 #include "core/hle/kernel/shared_memory.h"
 #include "core/hle/service/service.h"
 
-namespace Service {
-namespace APT {
-namespace BCFNT { ///< BCFNT Shared Font file structures
+namespace Service::APT::BCFNT { ///< BCFNT Shared Font file structures
 
 struct CFNT {
     u8 magic[4];
@@ -87,6 +85,4 @@ struct CWDH {
  */
 void RelocateSharedFont(Kernel::SharedPtr<Kernel::SharedMemory> shared_font, VAddr new_address);
 
-} // namespace BCFNT
-} // namespace APT
-} // namespace Service
+} // namespace Service::APT::BCFNT

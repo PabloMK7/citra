@@ -50,8 +50,7 @@
 #define closesocket(x) close(x)
 #endif
 
-namespace Service {
-namespace SOC {
+namespace Service::SOC {
 
 const s32 SOCKET_ERROR_VALUE = -1;
 
@@ -914,5 +913,4 @@ void InstallInterfaces(SM::ServiceManager& service_manager) {
     std::make_shared<SOC_U>()->InstallAsService(service_manager);
 }
 
-} // namespace SOC
-} // namespace Service
+} // namespace Service::SOC

@@ -21,8 +21,7 @@
 #include "core/hle/service/cfg/cfg_u.h"
 #include "core/settings.h"
 
-namespace Service {
-namespace CFG {
+namespace Service::CFG {
 
 /// The maximum number of block entries that can exist in the config file
 static const u32 CONFIG_FILE_MAX_BLOCK_ENTRIES = 1479;
@@ -721,5 +720,4 @@ void InstallInterfaces(SM::ServiceManager& service_manager) {
     current_cfg = cfg;
 }
 
-} // namespace CFG
-} // namespace Service
+} // namespace Service::CFG

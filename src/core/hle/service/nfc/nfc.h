@@ -13,8 +13,7 @@ namespace Kernel {
 class Event;
 } // namespace Kernel
 
-namespace Service {
-namespace NFC {
+namespace Service::NFC {
 
 namespace ErrCodes {
 enum {
@@ -177,5 +176,4 @@ private:
 
 void InstallInterfaces(SM::ServiceManager& service_manager);
 
-} // namespace NFC
-} // namespace Service
+} // namespace Service::NFC

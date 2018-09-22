@@ -7,8 +7,7 @@
 #include "core/hle/kernel/event.h"
 #include "core/hle/service/service.h"
 
-namespace Service {
-namespace CECD {
+namespace Service::CECD {
 
 enum class CecStateAbbreviated : u32 {
     CEC_STATE_ABBREV_IDLE = 1,      ///< Corresponds to CEC_STATE_IDLE
@@ -73,5 +72,4 @@ private:
 /// Initialize CECD service(s)
 void InstallInterfaces(SM::ServiceManager& service_manager);
 
-} // namespace CECD
-} // namespace Service
+} // namespace Service::CECD

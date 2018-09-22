@@ -8,8 +8,7 @@
 
 #include "core/hle/service/service.h"
 
-namespace Service {
-namespace MIC {
+namespace Service::MIC {
 
 class MIC_U final : public ServiceFramework<MIC_U> {
 public:
@@ -189,5 +188,4 @@ private:
 
 void InstallInterfaces(SM::ServiceManager& service_manager);
 
-} // namespace MIC
-} // namespace Service
+} // namespace Service::MIC

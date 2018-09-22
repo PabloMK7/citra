@@ -8,9 +8,7 @@
 #include "common/common_types.h"
 #include "core/hle/service/service.h"
 
-namespace Service {
-
-namespace FRD {
+namespace Service::FRD {
 
 struct FriendKey {
     u32 friend_id;
@@ -139,5 +137,4 @@ private:
 
 void InstallInterfaces(SM::ServiceManager& service_manager);
 
-} // namespace FRD
-} // namespace Service
+} // namespace Service::FRD

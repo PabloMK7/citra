@@ -18,8 +18,7 @@ namespace CoreTiming {
 struct EventType;
 };
 
-namespace Service {
-namespace IR {
+namespace Service::IR {
 
 class BufferManager;
 class ExtraHID;
@@ -174,5 +173,4 @@ private:
     std::unique_ptr<ExtraHID> extra_hid;
 };
 
-} // namespace IR
-} // namespace Service
+} // namespace Service::IR

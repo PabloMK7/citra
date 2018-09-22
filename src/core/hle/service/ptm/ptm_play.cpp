@@ -4,8 +4,7 @@
 
 #include "core/hle/service/ptm/ptm_play.h"
 
-namespace Service {
-namespace PTM {
+namespace Service::PTM {
 
 PTM_Play::PTM_Play(std::shared_ptr<Module> ptm)
     : Module::Interface(std::move(ptm), "ptm:play", 26) {
@@ -35,5 +34,4 @@ PTM_Play::PTM_Play(std::shared_ptr<Module> ptm)
     RegisterHandlers(functions);
 }
 
-} // namespace PTM
-} // namespace Service
+} // namespace Service::PTM

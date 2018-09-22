@@ -5,8 +5,7 @@
 #include "core/hle/ipc_helpers.h"
 #include "core/hle/service/qtm/qtm_s.h"
 
-namespace Service {
-namespace QTM {
+namespace Service::QTM {
 
 QTM_S::QTM_S() : ServiceFramework("qtm:s", 2) {
     static const FunctionInfo functions[] = {
@@ -20,5 +19,4 @@ QTM_S::QTM_S() : ServiceFramework("qtm:s", 2) {
     RegisterHandlers(functions);
 }
 
-} // namespace QTM
-} // namespace Service
+} // namespace Service::QTM
