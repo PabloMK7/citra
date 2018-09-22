@@ -4,8 +4,7 @@
 
 #include "core/hle/service/nwm/nwm_soc.h"
 
-namespace Service {
-namespace NWM {
+namespace Service::NWM {
 
 NWM_SOC::NWM_SOC() : ServiceFramework("nwm::SOC") {
     /*
@@ -15,5 +14,4 @@ NWM_SOC::NWM_SOC() : ServiceFramework("nwm::SOC") {
     */
 }
 
-} // namespace NWM
-} // namespace Service
+} // namespace Service::NWM

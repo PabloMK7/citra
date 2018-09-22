@@ -6,13 +6,11 @@
 #include "core/hle/service/pm/pm_app.h"
 #include "core/hle/service/pm/pm_dbg.h"
 
-namespace Service {
-namespace PM {
+namespace Service::PM {
 
 void InstallInterfaces(SM::ServiceManager& service_manager) {
     std::make_shared<PM_APP>()->InstallAsService(service_manager);
     std::make_shared<PM_DBG>()->InstallAsService(service_manager);
 }
 
-} // namespace PM
-} // namespace Service
+} // namespace Service::PM

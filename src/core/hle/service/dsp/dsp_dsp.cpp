@@ -18,8 +18,7 @@ namespace AudioCore {
 enum class DspPipe;
 }
 
-namespace Service {
-namespace DSP {
+namespace Service::DSP {
 
 void DSP_DSP::RecvData(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x01, 1, 0);
@@ -406,5 +405,4 @@ void InstallInterfaces(SM::ServiceManager& service_manager) {
     Core::DSP().SetServiceToInterrupt(std::move(dsp));
 }
 
-} // namespace DSP
-} // namespace Service
+} // namespace Service::DSP

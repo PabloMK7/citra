@@ -4,8 +4,7 @@
 
 #include "core/hle/service/ns/ns_s.h"
 
-namespace Service {
-namespace NS {
+namespace Service::NS {
 
 NS_S::NS_S() : ServiceFramework("ns:s", 2) {
     static const FunctionInfo functions[] = {
@@ -30,5 +29,4 @@ NS_S::NS_S() : ServiceFramework("ns:s", 2) {
 
 NS_S::~NS_S() = default;
 
-} // namespace NS
-} // namespace Service
+} // namespace Service::NS

@@ -9,13 +9,11 @@
 // This service is used for interfacing to physical user controls.
 // Uses include game pad controls, touchscreen, accelerometers, gyroscopes, and debug pad.
 
-namespace Service {
-namespace HID {
+namespace Service::HID {
 
 class User final : public Module::Interface {
 public:
     explicit User(std::shared_ptr<Module> hid);
 };
 
-} // namespace HID
-} // namespace Service
+} // namespace Service::HID

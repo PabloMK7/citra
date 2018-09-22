@@ -4,8 +4,7 @@
 
 #include "core/hle/service/boss/boss_p.h"
 
-namespace Service {
-namespace BOSS {
+namespace Service::BOSS {
 
 BOSS_P::BOSS_P(std::shared_ptr<Module> boss)
     : Module::Interface(std::move(boss), "boss:P", DefaultMaxSessions) {
@@ -84,5 +83,4 @@ BOSS_P::BOSS_P(std::shared_ptr<Module> boss)
     RegisterHandlers(functions);
 }
 
-} // namespace BOSS
-} // namespace Service
+} // namespace Service::BOSS

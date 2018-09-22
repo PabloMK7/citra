@@ -4,8 +4,7 @@
 
 #include "core/hle/service/act/act_a.h"
 
-namespace Service {
-namespace ACT {
+namespace Service::ACT {
 
 ACT_A::ACT_A(std::shared_ptr<Module> act) : Module::Interface(std::move(act), "act:a") {
     const FunctionInfo functions[] = {
@@ -24,5 +23,4 @@ ACT_A::ACT_A(std::shared_ptr<Module> act) : Module::Interface(std::move(act), "a
     RegisterHandlers(functions);
 }
 
-} // namespace ACT
-} // namespace Service
+} // namespace Service::ACT

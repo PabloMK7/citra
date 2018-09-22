@@ -13,8 +13,7 @@
 
 // Local-WLAN service
 
-namespace Service {
-namespace NWM {
+namespace Service::NWM {
 
 const std::size_t ApplicationDataSize = 0xC8;
 const u8 DefaultNetworkChannel = 11;
@@ -343,5 +342,4 @@ private:
     void DecryptBeaconData(Kernel::HLERequestContext& ctx);
 };
 
-} // namespace NWM
-} // namespace Service
+} // namespace Service::NWM

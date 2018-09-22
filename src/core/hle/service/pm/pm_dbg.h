@@ -6,8 +6,7 @@
 
 #include "core/hle/service/service.h"
 
-namespace Service {
-namespace PM {
+namespace Service::PM {
 
 class PM_DBG final : public ServiceFramework<PM_DBG> {
 public:
@@ -15,5 +14,4 @@ public:
     ~PM_DBG() = default;
 };
 
-} // namespace PM
-} // namespace Service
+} // namespace Service::PM

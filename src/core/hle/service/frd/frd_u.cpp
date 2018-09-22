@@ -4,8 +4,7 @@
 
 #include "core/hle/service/frd/frd_u.h"
 
-namespace Service {
-namespace FRD {
+namespace Service::FRD {
 
 FRD_U::FRD_U(std::shared_ptr<Module> frd) : Module::Interface(std::move(frd), "frd:u", 8) {
     static const FunctionInfo functions[] = {
@@ -66,5 +65,4 @@ FRD_U::FRD_U(std::shared_ptr<Module> frd) : Module::Interface(std::move(frd), "f
     RegisterHandlers(functions);
 }
 
-} // namespace FRD
-} // namespace Service
+} // namespace Service::FRD

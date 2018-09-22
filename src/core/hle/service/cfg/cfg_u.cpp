@@ -4,8 +4,7 @@
 
 #include "core/hle/service/cfg/cfg_u.h"
 
-namespace Service {
-namespace CFG {
+namespace Service::CFG {
 
 CFG_U::CFG_U(std::shared_ptr<Module> cfg) : Module::Interface(std::move(cfg), "cfg:u", 23) {
     static const FunctionInfo functions[] = {
@@ -25,5 +24,4 @@ CFG_U::CFG_U(std::shared_ptr<Module> cfg) : Module::Interface(std::move(cfg), "c
     RegisterHandlers(functions);
 }
 
-} // namespace CFG
-} // namespace Service
+} // namespace Service::CFG

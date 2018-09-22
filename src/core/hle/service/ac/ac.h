@@ -13,8 +13,7 @@ namespace Kernel {
 class Event;
 }
 
-namespace Service {
-namespace AC {
+namespace Service::AC {
 class Module final {
 public:
     class Interface : public ServiceFramework<Interface> {
@@ -155,5 +154,4 @@ protected:
 
 void InstallInterfaces(SM::ServiceManager& service_manager);
 
-} // namespace AC
-} // namespace Service
+} // namespace Service::AC

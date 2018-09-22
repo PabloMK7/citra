@@ -16,8 +16,7 @@ class Mutex;
 class SharedMemory;
 } // namespace Kernel
 
-namespace Service {
-namespace APT {
+namespace Service::APT {
 
 class AppletManager;
 
@@ -605,5 +604,4 @@ private:
 
 void InstallInterfaces(SM::ServiceManager& service_manager);
 
-} // namespace APT
-} // namespace Service
+} // namespace Service::APT

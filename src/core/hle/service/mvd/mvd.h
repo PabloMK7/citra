@@ -6,11 +6,9 @@
 
 #include "core/hle/service/service.h"
 
-namespace Service {
-namespace MVD {
+namespace Service::MVD {
 
 /// Initializes all MVD services.
 void InstallInterfaces(SM::ServiceManager& service_manager);
 
-} // namespace MVD
-} // namespace Service
+} // namespace Service::MVD

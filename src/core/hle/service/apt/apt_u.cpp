@@ -4,8 +4,7 @@
 
 #include "core/hle/service/apt/apt_u.h"
 
-namespace Service {
-namespace APT {
+namespace Service::APT {
 
 APT_U::APT_U(std::shared_ptr<Module> apt)
     : Module::Interface(std::move(apt), "APT:U", MaxAPTSessions) {
@@ -102,5 +101,4 @@ APT_U::APT_U(std::shared_ptr<Module> apt)
     RegisterHandlers(functions);
 }
 
-} // namespace APT
-} // namespace Service
+} // namespace Service::APT

@@ -11,8 +11,7 @@
 #include "core/hle/service/nwm/uds_beacon.h"
 #include "core/hle/service/service.h"
 
-namespace Service {
-namespace NWM {
+namespace Service::NWM {
 
 enum class SAP : u8 { SNAPExtensionUsed = 0xAA };
 
@@ -169,5 +168,4 @@ std::vector<u8> GenerateEAPoLLogoffFrame(const MacAddress& mac_address, u16 netw
  */
 EAPoLLogoffPacket ParseEAPoLLogoffFrame(const std::vector<u8>& frame);
 
-} // namespace NWM
-} // namespace Service
+} // namespace Service::NWM

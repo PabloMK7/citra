@@ -40,8 +40,7 @@
 #include "core/hle/service/service.h"
 #include "core/memory.h"
 
-namespace Service {
-namespace FS {
+namespace Service::FS {
 
 // Command to access directory
 enum class DirectoryCommand : u32 {
@@ -701,5 +700,4 @@ void ArchiveShutdown() {
     UnregisterArchiveTypes();
 }
 
-} // namespace FS
-} // namespace Service
+} // namespace Service::FS

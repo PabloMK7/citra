@@ -6,13 +6,11 @@
 
 #include "core/hle/service/frd/frd.h"
 
-namespace Service {
-namespace FRD {
+namespace Service::FRD {
 
 class FRD_A final : public Module::Interface {
 public:
     explicit FRD_A(std::shared_ptr<Module> frd);
 };
 
-} // namespace FRD
-} // namespace Service
+} // namespace Service::FRD

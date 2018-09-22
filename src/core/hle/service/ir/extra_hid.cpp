@@ -9,8 +9,7 @@
 #include "core/movie.h"
 #include "core/settings.h"
 
-namespace Service {
-namespace IR {
+namespace Service::IR {
 
 enum class RequestID : u8 {
     /**
@@ -270,5 +269,4 @@ void ExtraHID::LoadInputDevices() {
         Settings::values.analogs[Settings::NativeAnalog::CStick]);
 }
 
-} // namespace IR
-} // namespace Service
+} // namespace Service::IR

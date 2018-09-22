@@ -15,8 +15,7 @@
 #include "core/hle/service/ac/ac_u.h"
 #include "core/memory.h"
 
-namespace Service {
-namespace AC {
+namespace Service::AC {
 void Module::Interface::CreateDefaultConfig(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x1, 0, 0);
 
@@ -178,5 +177,4 @@ void InstallInterfaces(SM::ServiceManager& service_manager) {
     std::make_shared<AC_U>(ac)->InstallAsService(service_manager);
 }
 
-} // namespace AC
-} // namespace Service
+} // namespace Service::AC

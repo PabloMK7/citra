@@ -6,10 +6,8 @@
 
 #include "core/hle/service/service.h"
 
-namespace Service {
-namespace NIM {
+namespace Service::NIM {
 
 void InstallInterfaces(SM::ServiceManager& service_manager);
 
-} // namespace NIM
-} // namespace Service
+} // namespace Service::NIM

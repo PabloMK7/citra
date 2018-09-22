@@ -30,8 +30,7 @@ using Kernel::ClientSession;
 using Kernel::ServerSession;
 using Kernel::SharedPtr;
 
-namespace Service {
-namespace FS {
+namespace Service::FS {
 
 void FS_USER::Initialize(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x0801, 0, 2);
@@ -857,5 +856,4 @@ FS_USER::FS_USER() : ServiceFramework("fs:USER", 30) {
 void InstallInterfaces(SM::ServiceManager& service_manager) {
     std::make_shared<FS_USER>()->InstallAsService(service_manager);
 }
-} // namespace FS
-} // namespace Service
+} // namespace Service::FS

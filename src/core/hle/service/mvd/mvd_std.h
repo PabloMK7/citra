@@ -6,8 +6,7 @@
 
 #include "core/hle/service/service.h"
 
-namespace Service {
-namespace MVD {
+namespace Service::MVD {
 
 class MVD_STD final : public ServiceFramework<MVD_STD> {
 public:
@@ -15,5 +14,4 @@ public:
     ~MVD_STD() = default;
 };
 
-} // namespace MVD
-} // namespace Service
+} // namespace Service::MVD

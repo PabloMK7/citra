@@ -7,8 +7,7 @@
 #include "core/hle/kernel/shared_memory.h"
 #include "core/hle/service/gsp/gsp.h"
 
-namespace Service {
-namespace GSP {
+namespace Service::GSP {
 
 static std::weak_ptr<GSP_GPU> gsp_gpu;
 
@@ -32,5 +31,4 @@ void InstallInterfaces(SM::ServiceManager& service_manager) {
     std::make_shared<GSP_LCD>()->InstallAsService(service_manager);
 }
 
-} // namespace GSP
-} // namespace Service
+} // namespace Service::GSP

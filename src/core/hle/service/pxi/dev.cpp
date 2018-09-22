@@ -4,8 +4,7 @@
 
 #include "core/hle/service/pxi/dev.h"
 
-namespace Service {
-namespace PXI {
+namespace Service::PXI {
 
 DEV::DEV() : ServiceFramework("pxi:dev", 1) {
     // clang-format off
@@ -32,5 +31,4 @@ DEV::DEV() : ServiceFramework("pxi:dev", 1) {
 
 DEV::~DEV() = default;
 
-} // namespace PXI
-} // namespace Service
+} // namespace Service::PXI

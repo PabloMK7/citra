@@ -4,13 +4,9 @@
 
 #pragma once
 
-namespace Service {
-namespace APT {
-namespace ErrCodes {
+namespace Service::APT::ErrCodes {
 enum {
     ParameterPresent = 2,
     InvalidAppletSlot = 4,
 };
-} // namespace ErrCodes
-} // namespace APT
-} // namespace Service
+} // namespace Service::APT::ErrCodes

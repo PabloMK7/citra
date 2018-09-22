@@ -5,8 +5,7 @@
 #include "core/hle/ipc_helpers.h"
 #include "core/hle/service/ps/ps_ps.h"
 
-namespace Service {
-namespace PS {
+namespace Service::PS {
 
 PS_PS::PS_PS() : ServiceFramework("ps:ps", DefaultMaxSessions) {
     static const FunctionInfo functions[] = {
@@ -37,5 +36,4 @@ void InstallInterfaces(SM::ServiceManager& service_manager) {
     std::make_shared<PS_PS>()->InstallAsService(service_manager);
 }
 
-} // namespace PS
-} // namespace Service
+} // namespace Service::PS

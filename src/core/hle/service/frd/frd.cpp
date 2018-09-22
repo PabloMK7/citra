@@ -13,8 +13,7 @@
 #include "core/hle/service/frd/frd_a.h"
 #include "core/hle/service/frd/frd_u.h"
 
-namespace Service {
-namespace FRD {
+namespace Service::FRD {
 
 Module::Interface::Interface(std::shared_ptr<Module> frd, const char* name, u32 max_session)
     : ServiceFramework(name, max_session), frd(std::move(frd)) {}
@@ -156,6 +155,4 @@ void InstallInterfaces(SM::ServiceManager& service_manager) {
     std::make_shared<FRD_A>(frd)->InstallAsService(service_manager);
 }
 
-} // namespace FRD
-
-} // namespace Service
+} // namespace Service::FRD

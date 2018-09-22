@@ -7,13 +7,11 @@
 #include <memory>
 #include "core/hle/service/service.h"
 
-namespace Service {
-namespace NEWS {
+namespace Service::NEWS {
 
 class NEWS_U final : public ServiceFramework<NEWS_U> {
 public:
     NEWS_U();
 };
 
-} // namespace NEWS
-} // namespace Service
+} // namespace Service::NEWS

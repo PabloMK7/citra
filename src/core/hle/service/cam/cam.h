@@ -25,8 +25,7 @@ namespace Kernel {
 class Process;
 }
 
-namespace Service {
-namespace CAM {
+namespace Service::CAM {
 
 enum CameraIndex {
     OuterRightCamera = 0,
@@ -785,5 +784,4 @@ void ReloadCameraDevices();
 
 void InstallInterfaces(SM::ServiceManager& service_manager);
 
-} // namespace CAM
-} // namespace Service
+} // namespace Service::CAM

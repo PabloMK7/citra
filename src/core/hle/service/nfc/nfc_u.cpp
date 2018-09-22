@@ -4,8 +4,7 @@
 
 #include "core/hle/service/nfc/nfc_u.h"
 
-namespace Service {
-namespace NFC {
+namespace Service::NFC {
 
 NFC_U::NFC_U(std::shared_ptr<Module> nfc) : Module::Interface(std::move(nfc), "nfc:u", 1) {
     static const FunctionInfo functions[] = {
@@ -38,5 +37,4 @@ NFC_U::NFC_U(std::shared_ptr<Module> nfc) : Module::Interface(std::move(nfc), "n
     RegisterHandlers(functions);
 }
 
-} // namespace NFC
-} // namespace Service
+} // namespace Service::NFC

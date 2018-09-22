@@ -4,8 +4,7 @@
 
 #include "core/hle/service/nim/nim_aoc.h"
 
-namespace Service {
-namespace NIM {
+namespace Service::NIM {
 
 NIM_AOC::NIM_AOC() : ServiceFramework("nim:aoc", 2) {
     const FunctionInfo functions[] = {
@@ -23,5 +22,4 @@ NIM_AOC::NIM_AOC() : ServiceFramework("nim:aoc", 2) {
 
 NIM_AOC::~NIM_AOC() = default;
 
-} // namespace NIM
-} // namespace Service
+} // namespace Service::NIM

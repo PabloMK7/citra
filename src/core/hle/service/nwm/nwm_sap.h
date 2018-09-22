@@ -6,13 +6,11 @@
 
 #include "core/hle/service/service.h"
 
-namespace Service {
-namespace NWM {
+namespace Service::NWM {
 
 class NWM_SAP final : public ServiceFramework<NWM_SAP> {
 public:
     NWM_SAP();
 };
 
-} // namespace NWM
-} // namespace Service
+} // namespace Service::NWM

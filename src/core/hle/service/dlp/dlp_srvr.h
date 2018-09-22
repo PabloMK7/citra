@@ -6,8 +6,7 @@
 
 #include "core/hle/service/service.h"
 
-namespace Service {
-namespace DLP {
+namespace Service::DLP {
 
 class DLP_SRVR final : public ServiceFramework<DLP_SRVR> {
 public:
@@ -18,5 +17,4 @@ private:
     void IsChild(Kernel::HLERequestContext& ctx);
 };
 
-} // namespace DLP
-} // namespace Service
+} // namespace Service::DLP

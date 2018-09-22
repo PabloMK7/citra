@@ -11,8 +11,7 @@
 #include "core/hle/result.h"
 #include "core/hle/service/fs/archive.h"
 
-namespace Service {
-namespace APT {
+namespace Service::APT {
 
 /// Signals used by APT functions
 enum class SignalType : u32 {
@@ -185,5 +184,4 @@ private:
     SignalType library_applet_closing_command;
 };
 
-} // namespace APT
-} // namespace Service
+} // namespace Service::APT

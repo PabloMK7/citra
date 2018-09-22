@@ -7,8 +7,7 @@
 #include "core/hle/kernel/event.h"
 #include "core/hle/service/service.h"
 
-namespace Service {
-namespace BOSS {
+namespace Service::BOSS {
 
 class Module final {
 public:
@@ -963,5 +962,4 @@ private:
 
 void InstallInterfaces(SM::ServiceManager& service_manager);
 
-} // namespace BOSS
-} // namespace Service
+} // namespace Service::BOSS

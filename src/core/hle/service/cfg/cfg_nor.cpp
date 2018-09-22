@@ -4,8 +4,7 @@
 
 #include "core/hle/service/cfg/cfg_nor.h"
 
-namespace Service {
-namespace CFG {
+namespace Service::CFG {
 
 CFG_NOR::CFG_NOR() : ServiceFramework("cfg:nor", 23) {
     static const FunctionInfo functions[] = {
@@ -17,5 +16,4 @@ CFG_NOR::CFG_NOR() : ServiceFramework("cfg:nor", 23) {
     RegisterHandlers(functions);
 }
 
-} // namespace CFG
-} // namespace Service
+} // namespace Service::CFG

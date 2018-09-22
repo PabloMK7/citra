@@ -19,8 +19,7 @@
 #include "core/hle/service/sm/sm.h"
 #include "core/hle/service/sm/srv.h"
 
-namespace Service {
-namespace SM {
+namespace Service::SM {
 
 constexpr int MAX_PENDING_NOTIFICATIONS = 16;
 
@@ -266,5 +265,4 @@ SRV::SRV(std::shared_ptr<ServiceManager> service_manager)
 
 SRV::~SRV() = default;
 
-} // namespace SM
-} // namespace Service
+} // namespace Service::SM

@@ -9,8 +9,7 @@
 #include "core/hle/result.h"
 #include "core/hle/service/service.h"
 
-namespace Service {
-namespace DSP {
+namespace Service::DSP {
 
 class DSP_DSP final : public ServiceFramework<DSP_DSP> {
 public:
@@ -253,5 +252,4 @@ private:
 
 void InstallInterfaces(SM::ServiceManager& service_manager);
 
-} // namespace DSP
-} // namespace Service
+} // namespace Service::DSP

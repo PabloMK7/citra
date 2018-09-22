@@ -6,13 +6,11 @@
 
 #include "core/hle/service/apt/apt.h"
 
-namespace Service {
-namespace APT {
+namespace Service::APT {
 
 class APT_A final : public Module::Interface {
 public:
     explicit APT_A(std::shared_ptr<Module> apt);
 };
 
-} // namespace APT
-} // namespace Service
+} // namespace Service::APT

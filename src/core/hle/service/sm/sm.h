@@ -19,8 +19,7 @@ class ServerPort;
 class SessionRequestHandler;
 } // namespace Kernel
 
-namespace Service {
-namespace SM {
+namespace Service::SM {
 
 class SRV;
 
@@ -54,5 +53,4 @@ private:
     std::unordered_map<std::string, Kernel::SharedPtr<Kernel::ClientPort>> registered_services;
 };
 
-} // namespace SM
-} // namespace Service
+} // namespace Service::SM

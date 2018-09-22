@@ -5,8 +5,7 @@
 #include "core/hle/ipc_helpers.h"
 #include "core/hle/service/pm/pm_dbg.h"
 
-namespace Service {
-namespace PM {
+namespace Service::PM {
 
 PM_DBG::PM_DBG() : ServiceFramework("pm:dbg", 3) {
     static const FunctionInfo functions[] = {
@@ -20,5 +19,4 @@ PM_DBG::PM_DBG() : ServiceFramework("pm:dbg", 3) {
     RegisterHandlers(functions);
 }
 
-} // namespace PM
-} // namespace Service
+} // namespace Service::PM

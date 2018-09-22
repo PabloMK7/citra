@@ -6,8 +6,7 @@
 #include "core/hle/kernel/event.h"
 #include "core/hle/service/nim/nim_u.h"
 
-namespace Service {
-namespace NIM {
+namespace Service::NIM {
 
 NIM_U::NIM_U() : ServiceFramework("nim:u", 2) {
     const FunctionInfo functions[] = {
@@ -44,5 +43,4 @@ void NIM_U::CheckSysUpdateAvailable(Kernel::HLERequestContext& ctx) {
     LOG_WARNING(Service_NIM, "(STUBBED) called");
 }
 
-} // namespace NIM
-} // namespace Service
+} // namespace Service::NIM

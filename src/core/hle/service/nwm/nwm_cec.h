@@ -6,13 +6,11 @@
 
 #include "core/hle/service/service.h"
 
-namespace Service {
-namespace NWM {
+namespace Service::NWM {
 
 class NWM_CEC final : public ServiceFramework<NWM_CEC> {
 public:
     NWM_CEC();
 };
 
-} // namespace NWM
-} // namespace Service
+} // namespace Service::NWM

@@ -27,9 +27,7 @@ namespace CoreTiming {
 struct EventType;
 };
 
-namespace Service {
-
-namespace HID {
+namespace Service::HID {
 
 /**
  * Structure of a Pad controller state.
@@ -335,5 +333,4 @@ void InstallInterfaces(SM::ServiceManager& service_manager);
 
 /// Reload input devices. Used when input configuration changed
 void ReloadInputDevices();
-} // namespace HID
-} // namespace Service
+} // namespace Service::HID

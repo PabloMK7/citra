@@ -4,8 +4,7 @@
 
 #include "core/hle/service/ptm/ptm_sets.h"
 
-namespace Service {
-namespace PTM {
+namespace Service::PTM {
 
 PTM_Sets::PTM_Sets(std::shared_ptr<Module> ptm) : Module::Interface(std::move(ptm), "ptm:sets", 1) {
     static const FunctionInfo functions[] = {
@@ -15,5 +14,4 @@ PTM_Sets::PTM_Sets(std::shared_ptr<Module> ptm) : Module::Interface(std::move(pt
     RegisterHandlers(functions);
 }
 
-} // namespace PTM
-} // namespace Service
+} // namespace Service::PTM

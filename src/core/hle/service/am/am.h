@@ -14,14 +14,11 @@
 #include "core/hle/result.h"
 #include "core/hle/service/service.h"
 
-namespace Service {
-namespace FS {
+namespace Service::FS {
 enum class MediaType : u32;
 }
-} // namespace Service
 
-namespace Service {
-namespace AM {
+namespace Service::AM {
 
 namespace ErrCodes {
 enum {
@@ -526,5 +523,4 @@ private:
 
 void InstallInterfaces(SM::ServiceManager& service_manager);
 
-} // namespace AM
-} // namespace Service
+} // namespace Service::AM

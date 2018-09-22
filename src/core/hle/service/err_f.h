@@ -10,8 +10,7 @@ namespace Kernel {
 class HLERequestContext;
 }
 
-namespace Service {
-namespace ERR {
+namespace Service::ERR {
 
 /// Interface to "err:f" service
 class ERR_F final : public ServiceFramework<ERR_F> {
@@ -33,5 +32,4 @@ private:
 
 void InstallInterfaces();
 
-} // namespace ERR
-} // namespace Service
+} // namespace Service::ERR

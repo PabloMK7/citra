@@ -13,8 +13,7 @@
 #include "core/hle/service/http_c.h"
 #include "core/hw/aes/key.h"
 
-namespace Service {
-namespace HTTP {
+namespace Service::HTTP {
 
 namespace ErrCodes {
 enum {
@@ -434,5 +433,4 @@ HTTP_C::HTTP_C() : ServiceFramework("http:C", 32) {
 void InstallInterfaces(SM::ServiceManager& service_manager) {
     std::make_shared<HTTP_C>()->InstallAsService(service_manager);
 }
-} // namespace HTTP
-} // namespace Service
+} // namespace Service::HTTP

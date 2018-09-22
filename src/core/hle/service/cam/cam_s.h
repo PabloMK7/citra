@@ -6,13 +6,11 @@
 
 #include "core/hle/service/cam/cam.h"
 
-namespace Service {
-namespace CAM {
+namespace Service::CAM {
 
 class CAM_S final : public Module::Interface {
 public:
     explicit CAM_S(std::shared_ptr<Module> cam);
 };
 
-} // namespace CAM
-} // namespace Service
+} // namespace Service::CAM

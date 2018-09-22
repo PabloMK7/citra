@@ -4,8 +4,7 @@
 
 #include "core/hle/service/nwm/nwm_cec.h"
 
-namespace Service {
-namespace NWM {
+namespace Service::NWM {
 
 NWM_CEC::NWM_CEC() : ServiceFramework("nwm::CEC") {
     static const FunctionInfo functions[] = {
@@ -14,5 +13,4 @@ NWM_CEC::NWM_CEC() : ServiceFramework("nwm::CEC") {
     RegisterHandlers(functions);
 }
 
-} // namespace NWM
-} // namespace Service
+} // namespace Service::NWM

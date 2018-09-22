@@ -6,13 +6,11 @@
 
 #include "core/hle/service/nfc/nfc.h"
 
-namespace Service {
-namespace NFC {
+namespace Service::NFC {
 
 class NFC_M final : public Module::Interface {
 public:
     explicit NFC_M(std::shared_ptr<Module> nfc);
 };
 
-} // namespace NFC
-} // namespace Service
+} // namespace Service::NFC

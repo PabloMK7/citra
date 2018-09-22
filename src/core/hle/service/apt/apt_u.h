@@ -6,8 +6,7 @@
 
 #include "core/hle/service/apt/apt.h"
 
-namespace Service {
-namespace APT {
+namespace Service::APT {
 
 // Application and title launching service. These services handle signaling for home/power button as
 // well. Only one session for either APT service can be open at a time, normally processes close the
@@ -21,5 +20,4 @@ public:
     explicit APT_U(std::shared_ptr<Module> apt);
 };
 
-} // namespace APT
-} // namespace Service
+} // namespace Service::APT

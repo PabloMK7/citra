@@ -11,8 +11,7 @@
 #include "core/hle/service/y2r_u.h"
 #include "core/hw/y2r.h"
 
-namespace Service {
-namespace Y2R {
+namespace Service::Y2R {
 
 static const CoefficientSet standard_coefficients[4] = {
     {{0x100, 0x166, 0xB6, 0x58, 0x1C5, -0x166F, 0x10EE, -0x1C5B}}, // ITU_Rec601
@@ -691,5 +690,4 @@ void InstallInterfaces(SM::ServiceManager& service_manager) {
     std::make_shared<Y2R_U>()->InstallAsService(service_manager);
 }
 
-} // namespace Y2R
-} // namespace Service
+} // namespace Service::Y2R

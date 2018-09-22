@@ -11,8 +11,7 @@
 #include "core/movie.h"
 #include "core/settings.h"
 
-namespace Service {
-namespace IR {
+namespace Service::IR {
 
 struct PadDataEntry {
     PadState current_state;
@@ -174,5 +173,4 @@ void IR_RST::ReloadInputDevices() {
     is_device_reload_pending.store(true);
 }
 
-} // namespace IR
-} // namespace Service
+} // namespace Service::IR

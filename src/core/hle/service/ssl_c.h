@@ -7,8 +7,7 @@
 #include <random>
 #include "core/hle/service/service.h"
 
-namespace Service {
-namespace SSL {
+namespace Service::SSL {
 
 class SSL_C final : public ServiceFramework<SSL_C> {
 public:
@@ -24,5 +23,4 @@ private:
 
 void InstallInterfaces(SM::ServiceManager& service_manager);
 
-} // namespace SSL
-} // namespace Service
+} // namespace Service::SSL

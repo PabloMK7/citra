@@ -7,13 +7,11 @@
 #include <memory>
 #include "core/hle/service/ac/ac.h"
 
-namespace Service {
-namespace AC {
+namespace Service::AC {
 
 class AC_U final : public Module::Interface {
 public:
     explicit AC_U(std::shared_ptr<Module> ac);
 };
 
-} // namespace AC
-} // namespace Service
+} // namespace Service::AC

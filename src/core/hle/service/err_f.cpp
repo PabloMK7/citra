@@ -15,8 +15,7 @@
 #include "core/hle/result.h"
 #include "core/hle/service/err_f.h"
 
-namespace Service {
-namespace ERR {
+namespace Service::ERR {
 
 enum class FatalErrType : u32 {
     Generic = 0,
@@ -248,5 +247,4 @@ void InstallInterfaces() {
     errf->InstallAsNamedPort();
 }
 
-} // namespace ERR
-} // namespace Service
+} // namespace Service::ERR

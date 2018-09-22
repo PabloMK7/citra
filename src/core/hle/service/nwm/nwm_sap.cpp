@@ -4,8 +4,7 @@
 
 #include "core/hle/service/nwm/nwm_sap.h"
 
-namespace Service {
-namespace NWM {
+namespace Service::NWM {
 
 NWM_SAP::NWM_SAP() : ServiceFramework("nwm::SAP") {
     /*
@@ -15,5 +14,4 @@ NWM_SAP::NWM_SAP() : ServiceFramework("nwm::SAP") {
     */
 }
 
-} // namespace NWM
-} // namespace Service
+} // namespace Service::NWM

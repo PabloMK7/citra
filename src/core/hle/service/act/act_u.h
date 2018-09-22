@@ -6,13 +6,11 @@
 
 #include "core/hle/service/act/act.h"
 
-namespace Service {
-namespace ACT {
+namespace Service::ACT {
 
 class ACT_U final : public Module::Interface {
 public:
     explicit ACT_U(std::shared_ptr<Module> act);
 };
 
-} // namespace ACT
-} // namespace Service
+} // namespace Service::ACT

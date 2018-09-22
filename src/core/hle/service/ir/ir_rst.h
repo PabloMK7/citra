@@ -22,8 +22,7 @@ namespace CoreTiming {
 struct EventType;
 };
 
-namespace Service {
-namespace IR {
+namespace Service::IR {
 
 union PadState {
     u32_le hex{};
@@ -90,5 +89,4 @@ private:
     int update_period{0};
 };
 
-} // namespace IR
-} // namespace Service
+} // namespace Service::IR

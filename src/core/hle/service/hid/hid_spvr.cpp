@@ -4,8 +4,7 @@
 
 #include "core/hle/service/hid/hid_spvr.h"
 
-namespace Service {
-namespace HID {
+namespace Service::HID {
 
 Spvr::Spvr(std::shared_ptr<Module> hid) : Module::Interface(std::move(hid), "hid:SPVR", 6) {
     static const FunctionInfo functions[] = {
@@ -26,5 +25,4 @@ Spvr::Spvr(std::shared_ptr<Module> hid) : Module::Interface(std::move(hid), "hid
     RegisterHandlers(functions);
 }
 
-} // namespace HID
-} // namespace Service
+} // namespace Service::HID

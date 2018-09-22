@@ -19,8 +19,7 @@
 #include "core/movie.h"
 #include "video_core/video_core.h"
 
-namespace Service {
-namespace HID {
+namespace Service::HID {
 
 static std::weak_ptr<Module> current_module;
 
@@ -401,6 +400,4 @@ void InstallInterfaces(SM::ServiceManager& service_manager) {
     current_module = hid;
 }
 
-} // namespace HID
-
-} // namespace Service
+} // namespace Service::HID

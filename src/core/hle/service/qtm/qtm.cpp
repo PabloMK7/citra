@@ -8,8 +8,7 @@
 #include "core/hle/service/qtm/qtm_sp.h"
 #include "core/hle/service/qtm/qtm_u.h"
 
-namespace Service {
-namespace QTM {
+namespace Service::QTM {
 
 void InstallInterfaces(SM::ServiceManager& service_manager) {
     std::make_shared<QTM_C>()->InstallAsService(service_manager);
@@ -18,5 +17,4 @@ void InstallInterfaces(SM::ServiceManager& service_manager) {
     std::make_shared<QTM_U>()->InstallAsService(service_manager);
 }
 
-} // namespace QTM
-} // namespace Service
+} // namespace Service::QTM

@@ -9,8 +9,7 @@
 #include "core/hle/service/ir/ir_user.h"
 #include "core/hle/service/service.h"
 
-namespace Service {
-namespace IR {
+namespace Service::IR {
 
 static std::weak_ptr<IR_RST> current_ir_rst;
 static std::weak_ptr<IR_USER> current_ir_user;
@@ -35,6 +34,4 @@ void InstallInterfaces(SM::ServiceManager& service_manager) {
     current_ir_rst = ir_rst;
 }
 
-} // namespace IR
-
-} // namespace Service
+} // namespace Service::IR

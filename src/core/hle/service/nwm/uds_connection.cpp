@@ -6,8 +6,7 @@
 #include "core/hle/service/nwm/uds_connection.h"
 #include "fmt/format.h"
 
-namespace Service {
-namespace NWM {
+namespace Service::NWM {
 
 // Note: These values were taken from a packet capture of an o3DS XL
 // broadcasting a Super Smash Bros. 4 lobby.
@@ -84,5 +83,4 @@ std::tuple<AssocStatus, u16> GetAssociationResult(const std::vector<u8>& body) {
                            frame.assoc_id & AssociationIdMask);
 }
 
-} // namespace NWM
-} // namespace Service
+} // namespace Service::NWM

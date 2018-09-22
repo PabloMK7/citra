@@ -6,8 +6,7 @@
 
 #include "core/hle/service/service.h"
 
-namespace Service {
-namespace GSP {
+namespace Service::GSP {
 
 class GSP_LCD final : public ServiceFramework<GSP_LCD> {
 public:
@@ -15,5 +14,4 @@ public:
     ~GSP_LCD() = default;
 };
 
-} // namespace GSP
-} // namespace Service
+} // namespace Service::GSP

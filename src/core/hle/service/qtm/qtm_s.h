@@ -6,8 +6,7 @@
 
 #include "core/hle/service/service.h"
 
-namespace Service {
-namespace QTM {
+namespace Service::QTM {
 
 class QTM_S final : public ServiceFramework<QTM_S> {
 public:
@@ -15,5 +14,4 @@ public:
     ~QTM_S() = default;
 };
 
-} // namespace QTM
-} // namespace Service
+} // namespace Service::QTM

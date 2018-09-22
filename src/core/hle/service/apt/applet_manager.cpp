@@ -9,8 +9,7 @@
 #include "core/hle/service/cfg/cfg.h"
 #include "core/hle/service/ns/ns.h"
 
-namespace Service {
-namespace APT {
+namespace Service::APT {
 
 enum class AppletPos { Application = 0, Library = 1, System = 2, SysLibrary = 3, Resident = 4 };
 
@@ -486,5 +485,4 @@ AppletManager::~AppletManager() {
     HLE::Applets::Shutdown();
 }
 
-} // namespace APT
-} // namespace Service
+} // namespace Service::APT

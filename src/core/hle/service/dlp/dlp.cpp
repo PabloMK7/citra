@@ -7,8 +7,7 @@
 #include "core/hle/service/dlp/dlp_fkcl.h"
 #include "core/hle/service/dlp/dlp_srvr.h"
 
-namespace Service {
-namespace DLP {
+namespace Service::DLP {
 
 void InstallInterfaces(SM::ServiceManager& service_manager) {
     std::make_shared<DLP_CLNT>()->InstallAsService(service_manager);
@@ -16,5 +15,4 @@ void InstallInterfaces(SM::ServiceManager& service_manager) {
     std::make_shared<DLP_SRVR>()->InstallAsService(service_manager);
 }
 
-} // namespace DLP
-} // namespace Service
+} // namespace Service::DLP

@@ -4,10 +4,8 @@
 
 #pragma once
 
-namespace Service {
-namespace NEWS {
+namespace Service::NEWS {
 
 void InstallInterfaces(SM::ServiceManager& service_manager);
 
-} // namespace NEWS
-} // namespace Service
+} // namespace Service::NEWS

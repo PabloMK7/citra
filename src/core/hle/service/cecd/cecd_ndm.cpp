@@ -4,8 +4,7 @@
 
 #include "core/hle/service/cecd/cecd_ndm.h"
 
-namespace Service {
-namespace CECD {
+namespace Service::CECD {
 
 CECD_NDM::CECD_NDM(std::shared_ptr<Module> cecd)
     : Module::Interface(std::move(cecd), "cecd:ndm", DefaultMaxSessions) {
@@ -21,5 +20,4 @@ CECD_NDM::CECD_NDM(std::shared_ptr<Module> cecd)
     RegisterHandlers(functions);
 }
 
-} // namespace CECD
-} // namespace Service
+} // namespace Service::CECD

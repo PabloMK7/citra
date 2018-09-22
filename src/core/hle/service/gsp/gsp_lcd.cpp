@@ -5,8 +5,7 @@
 #include "core/hle/ipc_helpers.h"
 #include "core/hle/service/gsp/gsp_lcd.h"
 
-namespace Service {
-namespace GSP {
+namespace Service::GSP {
 
 GSP_LCD::GSP_LCD() : ServiceFramework("gsp::Lcd") {
     static const FunctionInfo functions[] = {
@@ -23,5 +22,4 @@ GSP_LCD::GSP_LCD() : ServiceFramework("gsp::Lcd") {
     RegisterHandlers(functions);
 };
 
-} // namespace GSP
-} // namespace Service
+} // namespace Service::GSP

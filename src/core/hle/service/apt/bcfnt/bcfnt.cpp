@@ -5,9 +5,7 @@
 #include "core/hle/service/apt/bcfnt/bcfnt.h"
 #include "core/hle/service/service.h"
 
-namespace Service {
-namespace APT {
-namespace BCFNT {
+namespace Service::APT::BCFNT {
 
 void RelocateSharedFont(Kernel::SharedPtr<Kernel::SharedMemory> shared_font, VAddr new_address) {
     static const u32 SharedFontStartOffset = 0x80;
@@ -105,6 +103,4 @@ void RelocateSharedFont(Kernel::SharedPtr<Kernel::SharedMemory> shared_font, VAd
     }
 }
 
-} // namespace BCFNT
-} // namespace APT
-} // namespace Service
+} // namespace Service::APT::BCFNT

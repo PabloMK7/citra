@@ -5,12 +5,10 @@
 #include "core/hle/service/pxi/dev.h"
 #include "core/hle/service/pxi/pxi.h"
 
-namespace Service {
-namespace PXI {
+namespace Service::PXI {
 
 void InstallInterfaces(SM::ServiceManager& service_manager) {
     std::make_shared<DEV>()->InstallAsService(service_manager);
 }
 
-} // namespace PXI
-} // namespace Service
+} // namespace Service::PXI

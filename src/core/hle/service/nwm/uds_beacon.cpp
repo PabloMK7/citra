@@ -13,8 +13,7 @@
 #include "core/hle/service/nwm/nwm_uds.h"
 #include "core/hle/service/nwm/uds_beacon.h"
 
-namespace Service {
-namespace NWM {
+namespace Service::NWM {
 
 // 802.11 broadcast MAC address
 constexpr MacAddress BroadcastMac = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
@@ -328,5 +327,4 @@ std::vector<u8> GenerateBeaconFrame(const NetworkInfo& network_info, const NodeL
     return buffer;
 }
 
-} // namespace NWM
-} // namespace Service
+} // namespace Service::NWM

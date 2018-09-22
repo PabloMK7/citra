@@ -8,8 +8,7 @@
 #include "core/hle/service/ns/ns_s.h"
 #include "core/loader/loader.h"
 
-namespace Service {
-namespace NS {
+namespace Service::NS {
 
 Kernel::SharedPtr<Kernel::Process> LaunchTitle(FS::MediaType media_type, u64 title_id) {
     std::string path = AM::GetTitleContentPath(media_type, title_id);
@@ -35,5 +34,4 @@ void InstallInterfaces(SM::ServiceManager& service_manager) {
     std::make_shared<NS_S>()->InstallAsService(service_manager);
 }
 
-} // namespace NS
-} // namespace Service
+} // namespace Service::NS

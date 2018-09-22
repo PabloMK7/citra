@@ -6,8 +6,7 @@
 
 #include "core/hle/service/service.h"
 
-namespace Service {
-namespace NIM {
+namespace Service::NIM {
 
 class NIM_U final : public ServiceFramework<NIM_U> {
 public:
@@ -39,5 +38,4 @@ private:
     Kernel::SharedPtr<Kernel::Event> nim_system_update_event;
 };
 
-} // namespace NIM
-} // namespace Service
+} // namespace Service::NIM

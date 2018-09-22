@@ -6,11 +6,9 @@
 
 #include "core/hle/service/service.h"
 
-namespace Service {
-namespace DLP {
+namespace Service::DLP {
 
 /// Initializes the DLP services.
 void InstallInterfaces(SM::ServiceManager& service_manager);
 
-} // namespace DLP
-} // namespace Service
+} // namespace Service::DLP
