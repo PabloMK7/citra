@@ -11,25 +11,6 @@
 #include <thread>
 #include "common/common_types.h"
 
-// Support for C++11's thread_local keyword was surprisingly spotty in compilers until very
-// recently. Fortunately, thread local variables have been well supported for compilers for a while,
-// but with semantics supporting only POD types, so we can use a few defines to get some amount of
-// backwards compat support.
-// WARNING: This only works correctly with POD types.
-#if defined(__clang__)
-#if !__has_feature(cxx_thread_local)
-#define thread_local __thread
-#endif
-#elif defined(__GNUC__)
-#if __GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 8)
-#define thread_local __thread
-#endif
-#elif defined(_MSC_VER)
-#if _MSC_VER < 1900
-#define thread_local __declspec(thread)
-#endif
-#endif
-
 namespace Common {
 
 int CurrentThreadId();
