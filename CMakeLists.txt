@@ -281,14 +281,6 @@ ELSEIF (CMAKE_SYSTEM_NAME MATCHES "^(Linux|kFreeBSD|GNU|SunOS)$")
     set(PLATFORM_LIBRARIES rt)
 ENDIF (APPLE)
 
-# MINGW: GCC does not support codecvt, so use iconv instead
-if (UNIX OR MINGW)
-    find_library(ICONV_LIBRARY NAMES iconv)
-    if (ICONV_LIBRARY)
-        list(APPEND PLATFORM_LIBRARIES ${ICONV_LIBRARY})
-    endif()
-endif()
-
 # Setup a custom clang-format target (if clang-format can be found) that will run
 # against all the src files. This should be used before making a pull request.
 # =======================================================================
