@@ -341,16 +341,17 @@ Public License instead of this License.
 
 The icons used in this project have the following licenses:
 
-Icon Name         | License       | Origin/Author
----               | ---           | ---
-checked.png       | Free for non-commercial use
-connected.png     | CC BY-ND 3.0  | https://icons8.com
-disconnected.png  | CC BY-ND 3.0  | https://icons8.com
-failed.png        | Free for non-commercial use
-lock.png          | CC BY-ND 3.0  | https://icons8.com
-plus_folder.png   | CC BY-ND 3.0  | https://icons8.com
-bad_folder.png    | CC BY-ND 3.0  | https://icons8.com
-chip.png          | CC BY-ND 3.0  | https://icons8.com
-folder.png        | CC BY-ND 3.0  | https://icons8.com
-plus.png          | CC BY-ND 3.0  | https://icons8.com
-sd_card.png       | CC BY-ND 3.0  | https://icons8.com
+Icon Name                          | License       | Origin/Author
+---                                | ---           | ---
+checked.png                        | Free for non-commercial use
+connected.png                      | CC BY-ND 3.0  | https://icons8.com
+disconnected.png                   | CC BY-ND 3.0  | https://icons8.com
+failed.png                         | Free for non-commercial use
+lock.png                           | CC BY-ND 3.0  | https://icons8.com
+plus_folder.png                    | CC BY-ND 3.0  | https://icons8.com
+bad_folder.png                     | CC BY-ND 3.0  | https://icons8.com
+chip.png                           | CC BY-ND 3.0  | https://icons8.com
+folder.png                         | CC BY-ND 3.0  | https://icons8.com
+plus.png (Default, Dark)           | CC0 1.0       | Designed by BreadFish64 from the Citra team
+plus.png (Colorful, Colorful Dark) | CC BY-ND 3.0  | https://icons8.com
+sd_card.png                        | CC BY-ND 3.0  | https://icons8.com
