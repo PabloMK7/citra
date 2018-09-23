@@ -723,6 +723,11 @@ void GameListWorker::AddFstEntriesToGameList(const std::string& dir_path, unsign
                 return update_smdh;
             }();
 
+            if (!Loader::IsValidSMDH(smdh) && UISettings::values.game_list_hide_no_icon) {
+                // Skip this invalid entry
+                return true;
+            }
+
             auto it = FindMatchingCompatibilityEntry(compatibility_list, program_id);
 
             // The game list uses this as compatibility number for untested games

@@ -1257,6 +1257,7 @@ void GMainWindow::OnConfigure() {
             SetDiscordEnabled(UISettings::values.enable_discord_presence);
         emit UpdateThemedIcons();
         SyncMenuUISettings();
+        game_list->RefreshGameDirectory();
         config->Save();
     }
 }

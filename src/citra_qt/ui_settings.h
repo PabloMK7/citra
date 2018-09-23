@@ -58,6 +58,12 @@ struct Values {
     // Discord RPC
     bool enable_discord_presence;
 
+    // Game List
+    int game_list_icon_size;
+    int game_list_row_1;
+    int game_list_row_2;
+    bool game_list_hide_no_icon;
+
     QString roms_path;
     QString symbols_path;
     QString movie_record_path;

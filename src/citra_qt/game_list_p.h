@@ -145,9 +145,17 @@ public:
         setData(qulonglong(program_id), ProgramIdRole);
         setData(qulonglong(extdata_id), ExtdataIdRole);
 
+        if (!UISettings::values.game_list_icon_size) {
+            // Do not display icons
+            setData(QPixmap(), Qt::DecorationRole);
+        }
+
+        bool large = UISettings::values.game_list_icon_size == 2;
+
         if (!Loader::IsValidSMDH(smdh_data)) {
             // SMDH is not valid, set a default icon
-            setData(GetDefaultIcon(true), Qt::DecorationRole);
+            if (UISettings::values.game_list_icon_size)
+                setData(GetDefaultIcon(large), Qt::DecorationRole);
             return;
         }
 
@@ -155,7 +163,8 @@ public:
         memcpy(&smdh, smdh_data.data(), sizeof(Loader::SMDH));
 
         // Get icon from SMDH
-        setData(GetQPixmapFromSMDH(smdh, true), Qt::DecorationRole);
+        if (UISettings::values.game_list_icon_size)
+            setData(GetQPixmapFromSMDH(smdh, large), Qt::DecorationRole);
 
         // Get title from SMDH
         setData(GetQStringShortTitleFromSMDH(smdh, Loader::SMDH::TitleLanguage::English),
@@ -171,29 +180,23 @@ public:
             std::string path, filename, extension;
             Common::SplitPath(data(FullPathRole).toString().toStdString(), &path, &filename,
                               &extension);
-            QString title = data(TitleRole).toString();
-            QString second_name = QString::fromStdString(filename + extension);
-            static QRegExp installed_pattern(
+
+            const std::array<QString, 4> display_texts{{
+                QString::fromStdString(filename + extension), // file name
+                data(FullPathRole).toString(),                // full path
+                data(TitleRole).toString(),                   // title name
                 QString::fromStdString(
-                    FileUtil::GetUserPath(FileUtil::UserPath::SDMCDir) +
-                    "Nintendo "
-                    "3DS/00000000000000000000000000000000/00000000000000000000000000000000/"
-                    "title/0004000(0|e)/[0-9a-f]{8}/content/")
-                    .replace("\\", "\\\\"));
-            static QRegExp system_pattern(
-                QString::fromStdString(FileUtil::GetUserPath(FileUtil::UserPath::NANDDir) +
-                                       "00000000000000000000000000000000/"
-                                       "title/00040010/[0-9a-f]{8}/content/")
-                    .replace("\\", "\\\\"));
-            if (installed_pattern.exactMatch(QString::fromStdString(path)) ||
-                system_pattern.exactMatch(QString::fromStdString(path))) {
-                // Use a different mechanism for system / installed titles showing program ID
-                second_name = QString("%1-%2")
-                                  .arg(data(ProgramIdRole).toULongLong(), 16, 16, QChar('0'))
-                                  .toUpper()
-                                  .arg(QString::fromStdString(filename));
+                    fmt::format("{:016X}", data(ProgramIdRole).toULongLong())), // title id
+            }};
+
+            const QString& row1 = display_texts.at(UISettings::values.game_list_row_1);
+
+            QString row2;
+            int row_2_id = UISettings::values.game_list_row_2;
+            if (row_2_id != -1) {
+                row2 = (row1.isEmpty() ? "" : "\n     ") + display_texts.at(row_2_id);
             }
-            return title + (title.isEmpty() ? "" : "\n     ") + second_name;
+            return row1 + row2;
         } else {
             return GameListItem::data(role);
         }
@@ -320,18 +323,22 @@ public:
 
         UISettings::GameDir* game_dir = &directory;
         setData(QVariant::fromValue(game_dir), GameDirRole);
+
+        constexpr std::array<int, 3> icon_sizes{{0, 24, 48}};
+
+        int icon_size = icon_sizes[UISettings::values.game_list_icon_size];
         switch (dir_type) {
         case GameListItemType::InstalledDir:
-            setData(QIcon::fromTheme("sd_card").pixmap(48), Qt::DecorationRole);
+            setData(QIcon::fromTheme("sd_card").pixmap(icon_size), Qt::DecorationRole);
             setData("Installed Titles", Qt::DisplayRole);
             break;
         case GameListItemType::SystemDir:
-            setData(QIcon::fromTheme("chip").pixmap(48), Qt::DecorationRole);
+            setData(QIcon::fromTheme("chip").pixmap(icon_size), Qt::DecorationRole);
             setData("System Titles", Qt::DisplayRole);
             break;
         case GameListItemType::CustomDir:
             QString icon_name = QFileInfo::exists(game_dir->path) ? "folder" : "bad_folder";
-            setData(QIcon::fromTheme(icon_name).pixmap(48), Qt::DecorationRole);
+            setData(QIcon::fromTheme(icon_name).pixmap(icon_size), Qt::DecorationRole);
             setData(game_dir->path, Qt::DisplayRole);
             break;
         };
@@ -349,7 +356,10 @@ class GameListAddDir : public GameListItem {
 public:
     explicit GameListAddDir() {
         setData(type(), TypeRole);
-        setData(QIcon::fromTheme("plus").pixmap(48), Qt::DecorationRole);
+
+        constexpr std::array<int, 3> icon_sizes{{0, 24, 48}};
+        int icon_size = icon_sizes[UISettings::values.game_list_icon_size];
+        setData(QIcon::fromTheme("plus").pixmap(icon_size), Qt::DecorationRole);
         setData("Add New Game Directory", Qt::DisplayRole);
     }
 
