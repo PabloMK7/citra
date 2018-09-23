@@ -17,20 +17,19 @@
 #include "common/string_util.h"
 #endif
 
-// User directory indices for GetUserPath
-enum {
-    D_USER_IDX,
-    D_ROOT_IDX,
-    D_CONFIG_IDX,
-    D_CACHE_IDX,
-    D_SDMC_IDX,
-    D_NAND_IDX,
-    D_SYSDATA_IDX,
-    D_LOGS_IDX,
-    NUM_PATH_INDICES
-};
-
 namespace FileUtil {
+
+// User paths for GetUserPath
+enum class UserPath {
+    CacheDir,
+    ConfigDir,
+    LogDir,
+    NANDDir,
+    RootDir,
+    SDMCDir,
+    SysDataDir,
+    UserDir,
+};
 
 // FileSystem tree node/
 struct FSTEntry {
@@ -124,7 +123,7 @@ bool SetCurrentDir(const std::string& directory);
 
 // Returns a pointer to a string with a Citra data dir in the user's home
 // directory. To be used in "multi-user" mode (that is, installed).
-const std::string& GetUserPath(const unsigned int DirIDX, const std::string& newPath = "");
+const std::string& GetUserPath(UserPath path, const std::string& new_path = "");
 
 // Returns the path to where the sys file are
 std::string GetSysDirectory();

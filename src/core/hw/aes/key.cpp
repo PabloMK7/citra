@@ -70,7 +70,7 @@ AESKey HexToKey(const std::string& hex) {
 }
 
 void LoadPresetKeys() {
-    const std::string filepath = FileUtil::GetUserPath(D_SYSDATA_IDX) + AES_KEYS;
+    const std::string filepath = FileUtil::GetUserPath(FileUtil::UserPath::SysDataDir) + AES_KEYS;
     FileUtil::CreateFullPath(filepath); // Create path if not already created
     std::ifstream file;
     OpenFStream(file, filepath, std::ios_base::in);

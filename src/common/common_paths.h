@@ -30,7 +30,7 @@
 #define USA_DIR "USA"
 #define JAP_DIR "JAP"
 
-// Subdirs in the User dir returned by GetUserPath(D_USER_IDX)
+// Subdirs in the User dir returned by GetUserPath(UserPath::UserDir)
 #define CONFIG_DIR "config"
 #define CACHE_DIR "cache"
 #define SDMC_DIR "sdmc"
@@ -39,10 +39,10 @@
 #define LOG_DIR "log"
 
 // Filenames
-// Files in the directory returned by GetUserPath(D_LOGS_IDX)
+// Files in the directory returned by GetUserPath(UserPath::LogDir)
 #define LOG_FILE "citra_log.txt"
 
-// Files in the directory returned by GetUserPath(D_CONFIG_IDX)
+// Files in the directory returned by GetUserPath(UserPath::ConfigDir)
 #define EMU_CONFIG "emu.ini"
 #define DEBUGGER_CONFIG "debugger.ini"
 #define LOGGER_CONFIG "logger.ini"

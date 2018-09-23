@@ -115,6 +115,18 @@ static void OnMessageReceived(const Network::ChatEntry& msg) {
     std::cout << std::endl << msg.nickname << ": " << msg.message << std::endl << std::endl;
 }
 
+static void InitializeLogging() {
+    Log::Filter log_filter(Log::Level::Debug);
+    log_filter.ParseFilterString(Settings::values.log_filter);
+    Log::SetGlobalFilter(log_filter);
+
+    Log::AddBackend(std::make_unique<Log::ColorConsoleBackend>());
+
+    const std::string& log_dir = FileUtil::GetUserPath(FileUtil::UserPath::LogDir);
+    FileUtil::CreateFullPath(log_dir);
+    Log::AddBackend(std::make_unique<Log::FileBackend>(log_dir + LOG_FILE));
+}
+
 /// Application entry point
 int main(int argc, char** argv) {
     Config config;
@@ -124,14 +136,7 @@ int main(int argc, char** argv) {
     std::string movie_record;
     std::string movie_play;
 
-    Log::Filter log_filter;
-    log_filter.ParseFilterString(Settings::values.log_filter);
-    Log::SetGlobalFilter(log_filter);
-
-    Log::AddBackend(std::make_unique<Log::ColorConsoleBackend>());
-    FileUtil::CreateFullPath(FileUtil::GetUserPath(D_LOGS_IDX));
-    Log::AddBackend(
-        std::make_unique<Log::FileBackend>(FileUtil::GetUserPath(D_LOGS_IDX) + LOG_FILE));
+    InitializeLogging();
 
     char* endarg;
 #ifdef _WIN32

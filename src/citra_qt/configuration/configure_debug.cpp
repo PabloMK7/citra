@@ -19,7 +19,7 @@ ConfigureDebug::ConfigureDebug(QWidget* parent) : QWidget(parent), ui(new Ui::Co
     ui->setupUi(this);
     this->setConfiguration();
     connect(ui->open_log_button, &QPushButton::pressed, []() {
-        QString path = QString::fromStdString(FileUtil::GetUserPath(D_LOGS_IDX));
+        QString path = QString::fromStdString(FileUtil::GetUserPath(FileUtil::UserPath::LogDir));
         QDesktopServices::openUrl(QUrl::fromLocalFile(path));
     });
     ui->toggle_cpu_jit->setEnabled(!Core::System::GetInstance().IsPoweredOn());

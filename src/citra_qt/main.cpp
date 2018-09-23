@@ -102,13 +102,18 @@ void GMainWindow::ShowTelemetryCallout() {
 
 const int GMainWindow::max_recent_files_item;
 
-GMainWindow::GMainWindow() : config(new Config()), emu_thread(nullptr) {
+static void InitializeLogging() {
     Log::Filter log_filter;
     log_filter.ParseFilterString(Settings::values.log_filter);
     Log::SetGlobalFilter(log_filter);
-    FileUtil::CreateFullPath(FileUtil::GetUserPath(D_LOGS_IDX));
-    Log::AddBackend(
-        std::make_unique<Log::FileBackend>(FileUtil::GetUserPath(D_LOGS_IDX) + LOG_FILE));
+
+    const std::string& log_dir = FileUtil::GetUserPath(FileUtil::UserPath::LogDir);
+    FileUtil::CreateFullPath(log_dir);
+    Log::AddBackend(std::make_unique<Log::FileBackend>(log_dir + LOG_FILE));
+}
+
+GMainWindow::GMainWindow() : config(new Config()), emu_thread(nullptr) {
+    InitializeLogging();
     Debugger::ToggleConsole();
     Settings::LogSettings();
 
@@ -880,7 +885,7 @@ void GMainWindow::OnGameListOpenFolder(u64 program_id, GameListOpenTarget target
     switch (target) {
     case GameListOpenTarget::SAVE_DATA: {
         open_target = "Save Data";
-        std::string sdmc_dir = FileUtil::GetUserPath(D_SDMC_IDX);
+        std::string sdmc_dir = FileUtil::GetUserPath(FileUtil::UserPath::SDMCDir);
         path = FileSys::ArchiveSource_SDSaveData::GetSaveDataPathFor(sdmc_dir, program_id);
         break;
     }
@@ -931,13 +936,13 @@ void GMainWindow::OnGameListOpenDirectory(QString directory) {
     QString path;
     if (directory == "INSTALLED") {
         path =
-            QString::fromStdString(FileUtil::GetUserPath(D_SDMC_IDX).c_str() +
+            QString::fromStdString(FileUtil::GetUserPath(FileUtil::UserPath::SDMCDir).c_str() +
                                    std::string("Nintendo "
                                                "3DS/00000000000000000000000000000000/"
                                                "00000000000000000000000000000000/title/00040000"));
     } else if (directory == "SYSTEM") {
         path =
-            QString::fromStdString(FileUtil::GetUserPath(D_NAND_IDX).c_str() +
+            QString::fromStdString(FileUtil::GetUserPath(FileUtil::UserPath::NANDDir).c_str() +
                                    std::string("00000000000000000000000000000000/title/00040010"));
     } else {
         path = directory;
