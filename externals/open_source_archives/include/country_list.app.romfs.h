@@ -1,4 +1,4 @@
-// Git Hash: d83117bc802434ba7fae0a8d27d39a70fdb4e7b2
+// Git Hash: bbe60b5477fc8d7f317d9a82a9f2e6a789af931c
 
 unsigned char COUNTRY_LIST_DATA[] = {
   0x28, 0x00, 0x00, 0x00, 0x28, 0x00, 0x00, 0x00, 0x1c, 0x00, 0x00, 0x00,
