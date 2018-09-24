@@ -1,4 +1,4 @@
-set(core_sources
+add_library(core STATIC
     3ds.h
     announce_multiplayer_session.cpp
     announce_multiplayer_session.h
@@ -419,7 +419,7 @@ set(core_sources
     tracer/recorder.h
 )
 if (ENABLE_SCRIPTING)
-    list(APPEND core_sources
+    target_sources(core PRIVATE
         rpc/packet.cpp
         rpc/packet.h
         rpc/rpc_server.cpp
@@ -430,7 +430,6 @@ if (ENABLE_SCRIPTING)
         rpc/zmq_server.h
     )
 endif()
-add_library(core STATIC ${core_sources})
 
 create_target_directory_groups(core)
 
