@@ -28,12 +28,12 @@ public:
     }
 
 private:
-    /// room name can be alphanumeric and " " "_" "." and "-"
-    QRegExp room_name_regex = QRegExp("^[a-zA-Z0-9._- ]+$");
+    /// room name can be alphanumeric and " " "_" "." and "-" and must have a size of 4-20
+    QRegExp room_name_regex = QRegExp("^[a-zA-Z0-9._- ]{4,20}$");
     QRegExpValidator room_name;
 
-    /// nickname can be alphanumeric and " " "_" "." and "-"
-    QRegExp nickname_regex = QRegExp("^[a-zA-Z0-9._- ]+$");
+    /// nickname can be alphanumeric and " " "_" "." and "-" and must have a size of 4-20
+    QRegExp nickname_regex = QRegExp("^[a-zA-Z0-9._- ]{4,20}$");
     QRegExpValidator nickname;
 
     /// ipv4 address only

@@ -21,13 +21,24 @@
 Lobby::Lobby(QWidget* parent, QStandardItemModel* list,
              std::shared_ptr<Core::AnnounceMultiplayerSession> session)
     : QDialog(parent, Qt::WindowTitleHint | Qt::WindowCloseButtonHint | Qt::WindowSystemMenuHint),
-      ui(std::make_unique<Ui::Lobby>()), announce_multiplayer_session(session), game_list(list) {
+      ui(std::make_unique<Ui::Lobby>()), announce_multiplayer_session(session) {
     ui->setupUi(this);
 
     // setup the watcher for background connections
     watcher = new QFutureWatcher<void>;
 
     model = new QStandardItemModel(ui->room_list);
+
+    // Create a proxy to the game list to get the list of games owned
+    game_list = new QStandardItemModel;
+
+    for (int i = 0; i < list->rowCount(); i++) {
+        auto parent = list->item(i, 0);
+        for (int j = 0; j < parent->rowCount(); j++) {
+            game_list->appendRow(parent->child(j)->clone());
+        }
+    }
+
     proxy = new LobbyFilterProxyModel(this, game_list);
     proxy->setSourceModel(model);
     proxy->setDynamicSortFilter(true);
@@ -114,20 +125,21 @@ void Lobby::OnJoinRoom(const QModelIndex& source) {
         return;
     }
 
+    QModelIndex connection_index = proxy->index(index.row(), Column::HOST);
+    const std::string nickname = ui->nickname->text().toStdString();
+    const std::string ip =
+        proxy->data(connection_index, LobbyItemHost::HostIPRole).toString().toStdString();
+    int port = proxy->data(connection_index, LobbyItemHost::HostPortRole).toInt();
+
     // attempt to connect in a different thread
-    QFuture<void> f = QtConcurrent::run([&, password] {
+    QFuture<void> f = QtConcurrent::run([nickname, ip, port, password] {
         if (auto room_member = Network::GetRoomMember().lock()) {
-            QModelIndex connection_index = proxy->index(index.row(), Column::HOST);
-            const std::string nickname = ui->nickname->text().toStdString();
-            const std::string ip =
-                proxy->data(connection_index, LobbyItemHost::HostIPRole).toString().toStdString();
-            int port = proxy->data(connection_index, LobbyItemHost::HostPortRole).toInt();
             room_member->Join(nickname, ip.c_str(), port, 0, Network::NoPreferredMac, password);
         }
     });
     watcher->setFuture(f);
-    // and disable widgets and display a connecting while we wait
-    QModelIndex connection_index = proxy->index(index.row(), Column::HOST);
+
+    // TODO(jroweboy): disable widgets and display a connecting while we wait
 
     // Save settings
     UISettings::values.nickname = ui->nickname->text();
