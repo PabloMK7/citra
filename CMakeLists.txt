@@ -104,6 +104,10 @@ message(STATUS "Target architecture: ${ARCHITECTURE}")
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# set up output paths for executable binaries
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+
+
 if (NOT MSVC)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-attributes")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
@@ -126,8 +130,6 @@ else()
     # Avoid windows.h from including some usually unused libs like winsocks.h, since this might cause some redefinition errors.
     add_definitions(/DWIN32_LEAN_AND_MEAN)
 
-    # set up output paths for executable binaries (.exe-files, and .dll-files on DLL-capable platforms)
-    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
     set(CMAKE_CONFIGURATION_TYPES Debug Release CACHE STRING "" FORCE)
 
     # Tweak optimization settings
