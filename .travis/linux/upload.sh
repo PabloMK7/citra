@@ -8,9 +8,9 @@ COMPRESSION_FLAGS="-cJvf"
 
 mkdir "$REV_NAME"
 
-cp build/src/citra/citra "$REV_NAME"
-cp build/src/dedicated_room/citra-room "$REV_NAME"
-cp build/src/citra_qt/citra-qt "$REV_NAME"
+cp build/bin/citra "$REV_NAME"
+cp build/bin/citra-room "$REV_NAME"
+cp build/bin/citra-qt "$REV_NAME"
 
 # We need icons on Linux for .desktop entries
 mkdir "$REV_NAME/dist"
