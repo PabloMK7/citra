@@ -25,7 +25,9 @@
 #include "core/loader/loader.h"
 #include "core/memory_setup.h"
 #include "core/movie.h"
+#ifdef ENABLE_SCRIPTING
 #include "core/rpc/rpc_server.h"
+#endif
 #include "core/settings.h"
 #include "network/network.h"
 #include "video_core/video_core.h"
@@ -182,7 +184,11 @@ System::ResultStatus System::Init(EmuWindow& emu_window, u32 system_mode) {
     dsp_core->EnableStretching(Settings::values.enable_audio_stretching);
 
     telemetry_session = std::make_unique<Core::TelemetrySession>();
+
+#ifdef ENABLE_SCRIPTING
     rpc_server = std::make_unique<RPC::RPCServer>();
+#endif
+
     service_manager = std::make_shared<Service::SM::ServiceManager>();
     shared_page_handler = std::make_shared<SharedPage::Handler>();
 
@@ -234,7 +240,9 @@ void System::Shutdown() {
     Kernel::Shutdown();
     HW::Shutdown();
     telemetry_session.reset();
+#ifdef ENABLE_SCRIPTING
     rpc_server.reset();
+#endif
     service_manager.reset();
     dsp_core.reset();
     cpu_core.reset();

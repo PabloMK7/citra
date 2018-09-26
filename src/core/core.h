@@ -21,9 +21,11 @@ namespace AudioCore {
 class DspInterface;
 }
 
+#ifdef ENABLE_SCRIPTING
 namespace RPC {
 class RPCServer;
 }
+#endif
 
 namespace Service {
 namespace SM {
@@ -220,8 +222,10 @@ private:
     /// Frontend applets
     std::shared_ptr<Frontend::SoftwareKeyboard> registered_swkbd;
 
+#ifdef ENABLE_SCRIPTING
     /// RPC Server for scripting support
     std::unique_ptr<RPC::RPCServer> rpc_server;
+#endif
 
     /// Shared Page
     std::shared_ptr<SharedPage::Handler> shared_page_handler;
