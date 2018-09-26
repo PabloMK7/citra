@@ -7,6 +7,7 @@
 #include "core/core_timing.h"
 #include "core/hle/service/ptm/ptm.h"
 #include "core/hle/shared_page.h"
+#include "core/movie.h"
 #include "core/settings.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -14,6 +15,12 @@
 namespace SharedPage {
 
 static std::chrono::seconds GetInitTime() {
+    u64 override_init_time = Core::Movie::GetInstance().GetOverrideInitTime();
+    if (override_init_time) {
+        // Override the clock init time with the one in the movie
+        return std::chrono::seconds(override_init_time);
+    }
+
     switch (Settings::values.init_clock) {
     case Settings::InitClock::SystemTime: {
         auto now = std::chrono::system_clock::now();
