@@ -39,7 +39,7 @@ SharedPtr<Event> HLERequestContext::SleepClientThread(SharedPtr<Thread> thread,
     thread->wakeup_callback = [context = *this, callback](ThreadWakeupReason reason,
                                                           SharedPtr<Thread> thread,
                                                           SharedPtr<WaitObject> object) mutable {
-        ASSERT(thread->status == THREADSTATUS_WAIT_HLE_EVENT);
+        ASSERT(thread->status == ThreadStatus::WaitHleEvent);
         callback(thread, context, reason);
 
         auto& process = thread->owner_process;
@@ -56,7 +56,7 @@ SharedPtr<Event> HLERequestContext::SleepClientThread(SharedPtr<Thread> thread,
     };
 
     auto event = Kernel::Event::Create(Kernel::ResetType::OneShot, "HLE Pause Event: " + reason);
-    thread->status = THREADSTATUS_WAIT_HLE_EVENT;
+    thread->status = ThreadStatus::WaitHleEvent;
     thread->wait_objects = {event};
     event->AddWaitingThread(thread);
 

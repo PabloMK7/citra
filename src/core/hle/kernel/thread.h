@@ -15,43 +15,43 @@
 #include "core/hle/kernel/wait_object.h"
 #include "core/hle/result.h"
 
+namespace Kernel {
+
+class Mutex;
+class Process;
+
 enum ThreadPriority : u32 {
-    THREADPRIO_HIGHEST = 0,       ///< Highest thread priority
-    THREADPRIO_USERLAND_MAX = 24, ///< Highest thread priority for userland apps
-    THREADPRIO_DEFAULT = 48,      ///< Default thread priority for userland apps
-    THREADPRIO_LOWEST = 63,       ///< Lowest thread priority
+    ThreadPrioHighest = 0,      ///< Highest thread priority
+    ThreadPrioUserlandMax = 24, ///< Highest thread priority for userland apps
+    ThreadPrioDefault = 48,     ///< Default thread priority for userland apps
+    ThreadPrioLowest = 63,      ///< Lowest thread priority
 };
 
 enum ThreadProcessorId : s32 {
-    THREADPROCESSORID_DEFAULT = -2, ///< Run thread on default core specified by exheader
-    THREADPROCESSORID_ALL = -1,     ///< Run thread on either core
-    THREADPROCESSORID_0 = 0,        ///< Run thread on core 0 (AppCore)
-    THREADPROCESSORID_1 = 1,        ///< Run thread on core 1 (SysCore)
-    THREADPROCESSORID_MAX = 2,      ///< Processor ID must be less than this
+    ThreadProcessorIdDefault = -2, ///< Run thread on default core specified by exheader
+    ThreadProcessorIdAll = -1,     ///< Run thread on either core
+    ThreadProcessorId0 = 0,        ///< Run thread on core 0 (AppCore)
+    ThreadProcessorId1 = 1,        ///< Run thread on core 1 (SysCore)
+    ThreadProcessorIdMax = 2,      ///< Processor ID must be less than this
 };
 
-enum ThreadStatus {
-    THREADSTATUS_RUNNING,        ///< Currently running
-    THREADSTATUS_READY,          ///< Ready to run
-    THREADSTATUS_WAIT_ARB,       ///< Waiting on an address arbiter
-    THREADSTATUS_WAIT_SLEEP,     ///< Waiting due to a SleepThread SVC
-    THREADSTATUS_WAIT_IPC,       ///< Waiting for the reply from an IPC request
-    THREADSTATUS_WAIT_SYNCH_ANY, ///< Waiting due to WaitSynch1 or WaitSynchN with wait_all = false
-    THREADSTATUS_WAIT_SYNCH_ALL, ///< Waiting due to WaitSynchronizationN with wait_all = true
-    THREADSTATUS_WAIT_HLE_EVENT, ///< Waiting due to an HLE handler pausing the thread
-    THREADSTATUS_DORMANT,        ///< Created but not yet made ready
-    THREADSTATUS_DEAD            ///< Run to completion, or forcefully terminated
+enum class ThreadStatus {
+    Running,      ///< Currently running
+    Ready,        ///< Ready to run
+    WaitArb,      ///< Waiting on an address arbiter
+    WaitSleep,    ///< Waiting due to a SleepThread SVC
+    WaitIPC,      ///< Waiting for the reply from an IPC request
+    WaitSynchAny, ///< Waiting due to WaitSynch1 or WaitSynchN with wait_all = false
+    WaitSynchAll, ///< Waiting due to WaitSynchronizationN with wait_all = true
+    WaitHleEvent, ///< Waiting due to an HLE handler pausing the thread
+    Dormant,      ///< Created but not yet made ready
+    Dead          ///< Run to completion, or forcefully terminated
 };
 
 enum class ThreadWakeupReason {
     Signal, // The thread was woken up by WakeupAllWaitingThreads due to an object signal.
     Timeout // The thread was woken up due to a wait timeout.
 };
-
-namespace Kernel {
-
-class Mutex;
-class Process;
 
 class Thread final : public WaitObject {
 public:
@@ -178,16 +178,16 @@ public:
      * with wait_all = true.
      */
     bool IsSleepingOnWaitAll() const {
-        return status == THREADSTATUS_WAIT_SYNCH_ALL;
+        return status == ThreadStatus::WaitSynchAll;
     }
 
     std::unique_ptr<ARM_Interface::ThreadContext> context;
 
     u32 thread_id;
 
-    u32 status;
-    u32 entry_point;
-    u32 stack_top;
+    ThreadStatus status;
+    VAddr entry_point;
+    VAddr stack_top;
 
     u32 nominal_priority; ///< Nominal thread priority, as set by the emulated application
     u32 current_priority; ///< Current thread priority, can be temporarily changed

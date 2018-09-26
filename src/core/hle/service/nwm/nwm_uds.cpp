@@ -1161,7 +1161,7 @@ void NWM_UDS::ConnectToNetwork(Kernel::HLERequestContext& ctx) {
     connection_event = ctx.SleepClientThread(
         Kernel::GetCurrentThread(), "uds::ConnectToNetwork", UDSConnectionTimeout,
         [](Kernel::SharedPtr<Kernel::Thread> thread, Kernel::HLERequestContext& ctx,
-           ThreadWakeupReason reason) {
+           Kernel::ThreadWakeupReason reason) {
             // TODO(B3N30): Add error handling for host full and timeout
             IPC::RequestBuilder rb(ctx, 0x1E, 1, 0);
             rb.Push(RESULT_SUCCESS);
