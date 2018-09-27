@@ -135,12 +135,12 @@ void Module::Interface::CheckNew3DS(Kernel::HLERequestContext& ctx) {
     Service::PTM::CheckNew3DS(rb);
 }
 
-Module::Module() {
-    // Open the SharedExtSaveData archive 0xF000000B and create the gamecoin.dat file if it doesn't
-    // exist
+static void WriteGameCoinData(GameCoin gamecoin_data) {
     FileSys::Path archive_path(ptm_shared_extdata_id);
     auto archive_result =
         Service::FS::OpenArchive(Service::FS::ArchiveIdCode::SharedExtSaveData, archive_path);
+
+    FileSys::Path gamecoin_path("/gamecoin.dat");
     // If the archive didn't exist, create the files inside
     if (archive_result.Code() == FileSys::ERR_NOT_FORMATTED) {
         // Format the archive to create the directories
@@ -149,22 +149,74 @@ Module::Module() {
         // Open it again to get a valid archive now that the folder exists
         archive_result =
             Service::FS::OpenArchive(Service::FS::ArchiveIdCode::SharedExtSaveData, archive_path);
-        ASSERT_MSG(archive_result.Succeeded(), "Could not open the PTM SharedExtSaveData archive!");
-
-        FileSys::Path gamecoin_path("/gamecoin.dat");
+        // Create the game coin file
         Service::FS::CreateFileInArchive(*archive_result, gamecoin_path, sizeof(GameCoin));
-        FileSys::Mode open_mode = {};
-        open_mode.write_flag.Assign(1);
-        // Open the file and write the default gamecoin information
-        auto gamecoin_result =
-            Service::FS::OpenFileFromArchive(*archive_result, gamecoin_path, open_mode);
-        if (gamecoin_result.Succeeded()) {
-            auto gamecoin = std::move(gamecoin_result).Unwrap();
-            gamecoin->backend->Write(0, sizeof(GameCoin), true,
-                                     reinterpret_cast<const u8*>(&default_game_coin));
-            gamecoin->backend->Close();
-        }
+    } else {
+        ASSERT_MSG(archive_result.Succeeded(), "Could not open the PTM SharedExtSaveData archive!");
     }
+
+    FileSys::Mode open_mode = {};
+    open_mode.write_flag.Assign(1);
+    // Open the file and write the default gamecoin information
+    auto gamecoin_result =
+        Service::FS::OpenFileFromArchive(*archive_result, gamecoin_path, open_mode);
+    if (gamecoin_result.Succeeded()) {
+        auto gamecoin = std::move(gamecoin_result).Unwrap();
+        gamecoin->backend->Write(0, sizeof(GameCoin), true,
+                                 reinterpret_cast<const u8*>(&gamecoin_data));
+        gamecoin->backend->Close();
+    }
+}
+
+static GameCoin ReadGameCoinData() {
+    FileSys::Path archive_path(ptm_shared_extdata_id);
+    auto archive_result =
+        Service::FS::OpenArchive(Service::FS::ArchiveIdCode::SharedExtSaveData, archive_path);
+    if (!archive_result.Succeeded()) {
+        LOG_ERROR(Service_PTM, "Could not open the PTM SharedExtSaveData archive!");
+        return default_game_coin;
+    }
+
+    FileSys::Path gamecoin_path("/gamecoin.dat");
+    FileSys::Mode open_mode = {};
+    open_mode.read_flag.Assign(1);
+
+    auto gamecoin_result =
+        Service::FS::OpenFileFromArchive(*archive_result, gamecoin_path, open_mode);
+    if (!gamecoin_result.Succeeded()) {
+        LOG_ERROR(Service_PTM, "Could not open the game coin data file!");
+        return default_game_coin;
+    }
+    u16 result;
+    auto gamecoin = std::move(gamecoin_result).Unwrap();
+    GameCoin gamecoin_data;
+    gamecoin->backend->Read(0, sizeof(GameCoin), reinterpret_cast<u8*>(&gamecoin_data));
+    gamecoin->backend->Close();
+    return gamecoin_data;
+}
+
+Module::Module() {
+    // Open the SharedExtSaveData archive 0xF000000B and create the gamecoin.dat file if it doesn't
+    // exist
+    FileSys::Path archive_path(ptm_shared_extdata_id);
+    auto archive_result =
+        Service::FS::OpenArchive(Service::FS::ArchiveIdCode::SharedExtSaveData, archive_path);
+    // If the archive didn't exist, write the default game coin file
+    if (archive_result.Code() == FileSys::ERR_NOT_FORMATTED) {
+        WriteGameCoinData(default_game_coin);
+    }
+}
+
+u16 Module::GetPlayCoins() {
+    return ReadGameCoinData().total_coins;
+}
+
+void Module::SetPlayCoins(u16 play_coins) {
+    GameCoin game_coin = ReadGameCoinData();
+    game_coin.total_coins = play_coins;
+    // TODO: This may introduce potential race condition if the game is reading the
+    // game coin data at the same time
+    WriteGameCoinData(game_coin);
 }
 
 Module::Interface::Interface(std::shared_ptr<Module> ptm, const char* name, u32 max_session)

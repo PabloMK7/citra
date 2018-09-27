@@ -41,6 +41,8 @@ void CheckNew3DS(IPC::RequestBuilder& rb);
 class Module final {
 public:
     Module();
+    static u16 GetPlayCoins();
+    static void SetPlayCoins(u16 play_coins);
 
     class Interface : public ServiceFramework<Interface> {
     public:
