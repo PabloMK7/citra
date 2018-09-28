@@ -6,6 +6,7 @@
 #include "common/file_util.h"
 #include "common/logging/log.h"
 #include "core/core.h"
+#include "core/file_sys/archive_ncch.h"
 #include "core/file_sys/file_backend.h"
 #include "core/hle/applets/applet.h"
 #include "core/hle/kernel/mutex.h"
@@ -118,27 +119,20 @@ bool Module::LoadSharedFont() {
     }
 
     const u64_le shared_font_archive_id_low = 0x0004009b00014002 | ((font_region_code - 1) << 8);
-    const u64_le shared_font_archive_id_high = 0x00000001ffffff00;
-    std::vector<u8> shared_font_archive_id(16);
-    std::memcpy(&shared_font_archive_id[0], &shared_font_archive_id_low, sizeof(u64));
-    std::memcpy(&shared_font_archive_id[8], &shared_font_archive_id_high, sizeof(u64));
-    FileSys::Path archive_path(shared_font_archive_id);
-    auto archive_result = Service::FS::OpenArchive(Service::FS::ArchiveIdCode::NCCH, archive_path);
-    if (archive_result.Failed())
-        return false;
 
+    FileSys::NCCHArchive archive(shared_font_archive_id_low, Service::FS::MediaType::NAND);
     std::vector<u8> romfs_path(20, 0); // 20-byte all zero path for opening RomFS
     FileSys::Path file_path(romfs_path);
     FileSys::Mode open_mode = {};
     open_mode.read_flag.Assign(1);
-    auto file_result = Service::FS::OpenFileFromArchive(*archive_result, file_path, open_mode);
+    auto file_result = archive.OpenFile(file_path, open_mode);
     if (file_result.Failed())
         return false;
 
     auto romfs = std::move(file_result).Unwrap();
-    std::vector<u8> romfs_buffer(romfs->backend->GetSize());
-    romfs->backend->Read(0, romfs_buffer.size(), romfs_buffer.data());
-    romfs->backend->Close();
+    std::vector<u8> romfs_buffer(romfs->GetSize());
+    romfs->Read(0, romfs_buffer.size(), romfs_buffer.data());
+    romfs->Close();
 
     const char16_t* file_name[4] = {u"cbf_std.bcfnt.lz", u"cbf_zh-Hans-CN.bcfnt.lz",
                                     u"cbf_ko-Hang-KR.bcfnt.lz", u"cbf_zh-Hant-TW.bcfnt.lz"};
