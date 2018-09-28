@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <cryptopp/osrng.h>
 #include <cryptopp/sha.h>
+#include "common/common_paths.h"
 #include "common/file_util.h"
 #include "common/logging/log.h"
 #include "common/string_util.h"
@@ -388,7 +389,7 @@ ResultCode Module::CreateConfigInfoBlk(u32 block_id, u16 size, u16 flags, const 
 
 ResultCode Module::DeleteConfigNANDSaveFile() {
     FileSys::Path path("/config");
-    return Service::FS::DeleteFileFromArchive(cfg_system_save_data_archive, path);
+    return cfg_system_save_data_archive->DeleteFile(path);
 }
 
 ResultCode Module::UpdateConfigNANDSavegame() {
@@ -398,11 +399,11 @@ ResultCode Module::UpdateConfigNANDSavegame() {
 
     FileSys::Path path("/config");
 
-    auto config_result = Service::FS::OpenFileFromArchive(cfg_system_save_data_archive, path, mode);
+    auto config_result = cfg_system_save_data_archive->OpenFile(path, mode);
     ASSERT_MSG(config_result.Succeeded(), "could not open file");
 
     auto config = std::move(config_result).Unwrap();
-    config->backend->Write(0, CONFIG_SAVEFILE_SIZE, 1, cfg_config_file_buffer.data());
+    config->Write(0, CONFIG_SAVEFILE_SIZE, 1, cfg_config_file_buffer.data());
 
     return RESULT_SUCCESS;
 }
@@ -527,36 +528,36 @@ ResultCode Module::FormatConfig() {
 }
 
 ResultCode Module::LoadConfigNANDSaveFile() {
+    std::string nand_directory = FileUtil::GetUserPath(FileUtil::UserPath::NANDDir);
+    FileSys::ArchiveFactory_SystemSaveData systemsavedata_factory(nand_directory);
+
     // Open the SystemSaveData archive 0x00010017
     FileSys::Path archive_path(cfg_system_savedata_id);
-    auto archive_result =
-        Service::FS::OpenArchive(Service::FS::ArchiveIdCode::SystemSaveData, archive_path);
+    auto archive_result = systemsavedata_factory.Open(archive_path);
 
     // If the archive didn't exist, create the files inside
     if (archive_result.Code() == FileSys::ERR_NOT_FORMATTED) {
         // Format the archive to create the directories
-        Service::FS::FormatArchive(Service::FS::ArchiveIdCode::SystemSaveData,
-                                   FileSys::ArchiveFormatInfo(), archive_path);
+        systemsavedata_factory.Format(archive_path, FileSys::ArchiveFormatInfo());
 
         // Open it again to get a valid archive now that the folder exists
-        archive_result =
-            Service::FS::OpenArchive(Service::FS::ArchiveIdCode::SystemSaveData, archive_path);
+        cfg_system_save_data_archive = systemsavedata_factory.Open(archive_path).Unwrap();
+    } else {
+        ASSERT_MSG(archive_result.Succeeded(), "Could not open the CFG SystemSaveData archive!");
+
+        cfg_system_save_data_archive = std::move(archive_result).Unwrap();
     }
-
-    ASSERT_MSG(archive_result.Succeeded(), "Could not open the CFG SystemSaveData archive!");
-
-    cfg_system_save_data_archive = *archive_result;
 
     FileSys::Path config_path("/config");
     FileSys::Mode open_mode = {};
     open_mode.read_flag.Assign(1);
 
-    auto config_result = Service::FS::OpenFileFromArchive(*archive_result, config_path, open_mode);
+    auto config_result = cfg_system_save_data_archive->OpenFile(config_path, open_mode);
 
     // Read the file if it already exists
     if (config_result.Succeeded()) {
         auto config = std::move(config_result).Unwrap();
-        config->backend->Read(0, CONFIG_SAVEFILE_SIZE, cfg_config_file_buffer.data());
+        config->Read(0, CONFIG_SAVEFILE_SIZE, cfg_config_file_buffer.data());
         return RESULT_SUCCESS;
     }
 
