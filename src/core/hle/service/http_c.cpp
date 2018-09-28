@@ -288,29 +288,23 @@ void HTTP_C::AddRequestHeader(Kernel::HLERequestContext& ctx) {
 void HTTP_C::DecryptClCertA() {
     static constexpr u32 iv_length = 16;
 
-    FileSys::Path archive_path =
-        FileSys::MakeNCCHArchivePath(0x0004001b00010002, Service::FS::MediaType::NAND);
-    auto archive_result = Service::FS::OpenArchive(Service::FS::ArchiveIdCode::NCCH, archive_path);
-    if (archive_result.Failed()) {
-        LOG_ERROR(Service_HTTP, "ClCertA archive missing");
-        return;
-    }
+    FileSys::NCCHArchive archive(0x0004001b00010002, Service::FS::MediaType::NAND);
 
     std::array<char, 8> exefs_filepath;
     FileSys::Path file_path = FileSys::MakeNCCHFilePath(
         FileSys::NCCHFileOpenType::NCCHData, 0, FileSys::NCCHFilePathType::RomFS, exefs_filepath);
     FileSys::Mode open_mode = {};
     open_mode.read_flag.Assign(1);
-    auto file_result = Service::FS::OpenFileFromArchive(*archive_result, file_path, open_mode);
+    auto file_result = archive.OpenFile(file_path, open_mode);
     if (file_result.Failed()) {
         LOG_ERROR(Service_HTTP, "ClCertA file missing");
         return;
     }
 
     auto romfs = std::move(file_result).Unwrap();
-    std::vector<u8> romfs_buffer(romfs->backend->GetSize());
-    romfs->backend->Read(0, romfs_buffer.size(), romfs_buffer.data());
-    romfs->backend->Close();
+    std::vector<u8> romfs_buffer(romfs->GetSize());
+    romfs->Read(0, romfs_buffer.size(), romfs_buffer.data());
+    romfs->Close();
 
     if (!HW::AES::IsNormalKeyAvailable(HW::AES::KeySlotID::SSLKey)) {
         LOG_ERROR(Service_HTTP, "NormalKey in KeySlot 0x0D missing");
