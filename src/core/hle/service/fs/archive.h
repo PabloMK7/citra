@@ -9,15 +9,9 @@
 #include <vector>
 #include "common/common_types.h"
 #include "core/file_sys/archive_backend.h"
-#include "core/hle/kernel/hle_ipc.h"
-#include "core/hle/kernel/kernel.h"
 #include "core/hle/result.h"
-#include "core/hle/service/service.h"
-
-namespace FileSys {
-class DirectoryBackend;
-class FileBackend;
-} // namespace FileSys
+#include "core/hle/service/fs/directory.h"
+#include "core/hle/service/fs/file.h"
 
 /// The unique system identifier hash, also known as ID0
 static constexpr char SYSTEM_ID[]{"00000000000000000000000000000000"};
@@ -48,68 +42,6 @@ enum class ArchiveIdCode : u32 {
 enum class MediaType : u32 { NAND = 0, SDMC = 1, GameCard = 2 };
 
 typedef u64 ArchiveHandle;
-
-struct FileSessionSlot : public Kernel::SessionRequestHandler::SessionDataBase {
-    u32 priority; ///< Priority of the file. TODO(Subv): Find out what this means
-    u64 offset;   ///< Offset that this session will start reading from.
-    u64 size;     ///< Max size of the file that this session is allowed to access
-    bool subfile; ///< Whether this file was opened via OpenSubFile or not.
-};
-
-// TODO: File is not a real service, but it can still utilize ServiceFramework::RegisterHandlers.
-// Consider splitting ServiceFramework interface.
-class File final : public ServiceFramework<File, FileSessionSlot> {
-public:
-    File(std::unique_ptr<FileSys::FileBackend>&& backend, const FileSys::Path& path);
-    ~File() = default;
-
-    std::string GetName() const {
-        return "Path: " + path.DebugStr();
-    }
-
-    FileSys::Path path;                            ///< Path of the file
-    std::unique_ptr<FileSys::FileBackend> backend; ///< File backend interface
-
-    /// Creates a new session to this File and returns the ClientSession part of the connection.
-    Kernel::SharedPtr<Kernel::ClientSession> Connect();
-
-    // Returns the start offset of an open file represented by the input session, opened with
-    // OpenSubFile.
-    std::size_t GetSessionFileOffset(Kernel::SharedPtr<Kernel::ServerSession> session);
-
-    // Returns the size of an open file represented by the input session, opened with
-    // OpenSubFile.
-    std::size_t GetSessionFileSize(Kernel::SharedPtr<Kernel::ServerSession> session);
-
-private:
-    void Read(Kernel::HLERequestContext& ctx);
-    void Write(Kernel::HLERequestContext& ctx);
-    void GetSize(Kernel::HLERequestContext& ctx);
-    void SetSize(Kernel::HLERequestContext& ctx);
-    void Close(Kernel::HLERequestContext& ctx);
-    void Flush(Kernel::HLERequestContext& ctx);
-    void SetPriority(Kernel::HLERequestContext& ctx);
-    void GetPriority(Kernel::HLERequestContext& ctx);
-    void OpenLinkFile(Kernel::HLERequestContext& ctx);
-    void OpenSubFile(Kernel::HLERequestContext& ctx);
-};
-
-class Directory final : public ServiceFramework<Directory> {
-public:
-    Directory(std::unique_ptr<FileSys::DirectoryBackend>&& backend, const FileSys::Path& path);
-    ~Directory();
-
-    std::string GetName() const {
-        return "Directory: " + path.DebugStr();
-    }
-
-    FileSys::Path path;                                 ///< Path of the directory
-    std::unique_ptr<FileSys::DirectoryBackend> backend; ///< File backend interface
-
-protected:
-    void Read(Kernel::HLERequestContext& ctx);
-    void Close(Kernel::HLERequestContext& ctx);
-};
 
 /**
  * Opens an archive

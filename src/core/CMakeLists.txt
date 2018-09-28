@@ -247,6 +247,10 @@ add_library(core STATIC
     hle/service/frd/frd_u.h
     hle/service/fs/archive.cpp
     hle/service/fs/archive.h
+    hle/service/fs/directory.cpp
+    hle/service/fs/directory.h
+    hle/service/fs/file.cpp
+    hle/service/fs/file.h
     hle/service/fs/fs_user.cpp
     hle/service/fs/fs_user.h
     hle/service/gsp/gsp.cpp
