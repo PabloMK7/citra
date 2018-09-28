@@ -10,6 +10,11 @@
 #include "core/hle/service/fs/archive.h"
 #include "core/hle/service/service.h"
 
+namespace FileSys {
+class ArchiveBackend;
+class FileBackend;
+} // namespace FileSys
+
 namespace Service::CECD {
 
 class Module final {
@@ -237,7 +242,7 @@ public:
         CecOpenMode open_mode;
         FileSys::Path path;
 
-        std::shared_ptr<Service::FS::File> file;
+        std::unique_ptr<FileSys::FileBackend> file;
     };
 
     class Interface : public ServiceFramework<Interface, SessionData> {
@@ -597,7 +602,7 @@ private:
     void CheckAndUpdateFile(const CecDataPathType path_type, const u32 ncch_program_id,
                             std::vector<u8>& file_buffer);
 
-    Service::FS::ArchiveHandle cecd_system_save_data_archive;
+    std::unique_ptr<FileSys::ArchiveBackend> cecd_system_save_data_archive;
 
     Kernel::SharedPtr<Kernel::Event> cecinfo_event;
     Kernel::SharedPtr<Kernel::Event> change_state_event;
