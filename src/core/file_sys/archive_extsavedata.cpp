@@ -194,15 +194,6 @@ ArchiveFactory_ExtSaveData::ArchiveFactory_ExtSaveData(const std::string& mount_
     LOG_DEBUG(Service_FS, "Directory {} set as base for ExtSaveData.", mount_point);
 }
 
-bool ArchiveFactory_ExtSaveData::Initialize() {
-    if (!FileUtil::CreateFullPath(mount_point)) {
-        LOG_ERROR(Service_FS, "Unable to create ExtSaveData base path.");
-        return false;
-    }
-
-    return true;
-}
-
 Path ArchiveFactory_ExtSaveData::GetCorrectedPath(const Path& path) {
     if (!shared)
         return path;

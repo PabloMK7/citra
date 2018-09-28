@@ -20,12 +20,6 @@ class ArchiveFactory_ExtSaveData final : public ArchiveFactory {
 public:
     ArchiveFactory_ExtSaveData(const std::string& mount_point, bool shared);
 
-    /**
-     * Initialize the archive.
-     * @return true if it initialized successfully
-     */
-    bool Initialize();
-
     std::string GetName() const override {
         return "ExtSaveData";
     }
