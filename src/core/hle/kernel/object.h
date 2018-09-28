@@ -6,7 +6,6 @@
 
 #include <atomic>
 #include <string>
-#include <utility>
 
 #include <boost/smart_ptr/intrusive_ptr.hpp>
 
@@ -99,7 +98,7 @@ using SharedPtr = boost::intrusive_ptr<T>;
 template <typename T>
 inline SharedPtr<T> DynamicObjectCast(SharedPtr<Object> object) {
     if (object != nullptr && object->GetHandleType() == T::HANDLE_TYPE) {
-        return boost::static_pointer_cast<T>(std::move(object));
+        return boost::static_pointer_cast<T>(object);
     }
     return nullptr;
 }
