@@ -13,7 +13,7 @@
 
 namespace WebService {
 
-constexpr char API_VERSION[]{"1"};
+constexpr std::array<const char, 1> API_VERSION{'1'};
 
 constexpr u32 HTTP_PORT = 80;
 constexpr u32 HTTPS_PORT = 443;
@@ -70,7 +70,7 @@ Common::WebResult Client::GenericJson(const std::string& method, const std::stri
         };
     }
 
-    params.emplace(std::string("api-version"), std::string(API_VERSION));
+    params.emplace(std::string("api-version"), std::string(API_VERSION.begin(), API_VERSION.end()));
     if (method != "GET") {
         params.emplace(std::string("Content-Type"), std::string("application/json"));
     };
