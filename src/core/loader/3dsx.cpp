@@ -5,7 +5,7 @@
 #include <algorithm>
 #include <vector>
 #include "common/logging/log.h"
-#include "core/file_sys/archive_selfncch.h"
+#include "core/core.h"
 #include "core/hle/kernel/process.h"
 #include "core/hle/kernel/resource_limit.h"
 #include "core/hle/service/fs/archive.h"
@@ -277,7 +277,7 @@ ResultStatus AppLoader_THREEDSX::Load(Kernel::SharedPtr<Kernel::Process>& proces
 
     process->Run(48, Kernel::DEFAULT_STACK_SIZE);
 
-    Service::FS::RegisterSelfNCCH(*this);
+    Core::System::GetInstance().ArchiveManager().RegisterSelfNCCH(*this);
 
     is_loaded = true;
     return ResultStatus::Success;

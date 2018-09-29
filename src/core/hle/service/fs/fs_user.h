@@ -13,9 +13,11 @@ class System;
 
 namespace Service::FS {
 
+class ArchiveManager;
+
 class FS_USER final : public ServiceFramework<FS_USER> {
 public:
-    FS_USER();
+    explicit FS_USER(ArchiveManager& archives);
 
 private:
     void Initialize(Kernel::HLERequestContext& ctx);
@@ -519,6 +521,8 @@ private:
     void GetSaveDataSecureValue(Kernel::HLERequestContext& ctx);
 
     u32 priority = -1; ///< For SetPriority and GetPriority service functions
+
+    ArchiveManager& archives;
 };
 
 void InstallInterfaces(Core::System& system);
