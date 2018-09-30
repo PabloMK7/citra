@@ -12,13 +12,11 @@ namespace WebService {
 
 /**
  * Checks if username and token is valid
+ * @param host the web API URL
  * @param username Citra username to use for authentication.
  * @param token Citra token to use for authentication.
- * @param endpoint_url URL of the services.citra-emu.org endpoint.
- * @param func A function that gets exectued when the verification is finished
- * @returns Future with bool indicating whether the verification succeeded
+ * @returns a bool indicating whether the verification succeeded
  */
-std::future<bool> VerifyLogin(std::string& username, std::string& token,
-                              const std::string& endpoint_url, std::function<void()> func);
+bool VerifyLogin(const std::string& host, const std::string& username, const std::string& token);
 
 } // namespace WebService

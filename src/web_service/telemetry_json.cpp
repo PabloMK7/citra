@@ -2,7 +2,9 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <thread>
 #include "common/assert.h"
+#include "common/detached_tasks.h"
 #include "web_service/telemetry_json.h"
 #include "web_service/web_backend.h"
 
@@ -81,8 +83,12 @@ void TelemetryJson::Complete() {
     SerializeSection(Telemetry::FieldType::UserConfig, "UserConfig");
     SerializeSection(Telemetry::FieldType::UserSystem, "UserSystem");
 
+    auto content = TopSection().dump();
     // Send the telemetry async but don't handle the errors since they were written to the log
-    future = PostJson(endpoint_url, TopSection().dump(), true);
+    Common::DetachedTasks::AddTask(
+        [host{this->host}, username{this->username}, token{this->token}, content]() {
+            Client{host, username, token}.PostJson("/telemetry", content, true);
+        });
 }
 
 } // namespace WebService

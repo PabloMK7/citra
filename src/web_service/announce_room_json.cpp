@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <future>
+#include "common/detached_tasks.h"
 #include "common/logging/log.h"
 #include "web_service/announce_room_json.h"
 #include "web_service/json.h"
@@ -82,30 +83,31 @@ void RoomJson::AddPlayer(const std::string& nickname,
     room.members.push_back(member);
 }
 
-std::future<Common::WebResult> RoomJson::Announce() {
+Common::WebResult RoomJson::Announce() {
     nlohmann::json json = room;
-    return PostJson(endpoint_url, json.dump(), false);
+    return client.PostJson("/lobby", json.dump(), false);
 }
 
 void RoomJson::ClearPlayers() {
     room.members.clear();
 }
 
-std::future<AnnounceMultiplayerRoom::RoomList> RoomJson::GetRoomList(std::function<void()> func) {
-    auto DeSerialize = [func](const std::string& reply) -> AnnounceMultiplayerRoom::RoomList {
-        nlohmann::json json = nlohmann::json::parse(reply);
-        AnnounceMultiplayerRoom::RoomList room_list =
-            json.at("rooms").get<AnnounceMultiplayerRoom::RoomList>();
-        func();
-        return room_list;
-    };
-    return GetJson<AnnounceMultiplayerRoom::RoomList>(DeSerialize, endpoint_url, true);
+AnnounceMultiplayerRoom::RoomList RoomJson::GetRoomList() {
+    auto reply = client.GetJson("/lobby", true).returned_data;
+    if (reply.empty()) {
+        return {};
+    }
+    return nlohmann::json::parse(reply).at("rooms").get<AnnounceMultiplayerRoom::RoomList>();
 }
 
 void RoomJson::Delete() {
     nlohmann::json json;
     json["id"] = room.UID;
-    DeleteJson(endpoint_url, json.dump());
+    Common::DetachedTasks::AddTask(
+        [host{this->host}, username{this->username}, token{this->token}, content{json.dump()}]() {
+            // create a new client here because the this->client might be destroyed.
+            Client{host, username, token}.DeleteJson("/lobby", content, false);
+        });
 }
 
 } // namespace WebService

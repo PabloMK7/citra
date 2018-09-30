@@ -25,6 +25,7 @@
 #endif
 
 #include "common/common_types.h"
+#include "common/detached_tasks.h"
 #include "common/scm_rev.h"
 #include "core/announce_multiplayer_session.h"
 #include "core/core.h"
@@ -54,6 +55,7 @@ static void PrintVersion() {
 
 /// Application entry point
 int main(int argc, char** argv) {
+    Common::DetachedTasks detached_tasks;
     int option_index = 0;
     char* endarg;
 
@@ -204,5 +206,6 @@ int main(int argc, char** argv) {
         room->Destroy();
     }
     Network::Shutdown();
+    detached_tasks.WaitForAllTasks();
     return 0;
 }

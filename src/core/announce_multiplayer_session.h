@@ -54,7 +54,7 @@ public:
      * @param func A function that gets executed when the async get finished, e.g. a signal
      * @return a list of rooms received from the web service
      */
-    std::future<AnnounceMultiplayerRoom::RoomList> GetRoomList(std::function<void()> func);
+    AnnounceMultiplayerRoom::RoomList GetRoomList();
 
 private:
     Common::Event shutdown_event;

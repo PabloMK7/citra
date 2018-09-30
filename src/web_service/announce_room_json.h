@@ -5,9 +5,9 @@
 #pragma once
 
 #include <functional>
-#include <future>
 #include <string>
 #include "common/announce_multiplayer_room.h"
+#include "web_service/web_backend.h"
 
 namespace WebService {
 
@@ -17,8 +17,8 @@ namespace WebService {
  */
 class RoomJson : public AnnounceMultiplayerRoom::Backend {
 public:
-    RoomJson(const std::string& endpoint_url, const std::string& username, const std::string& token)
-        : endpoint_url(endpoint_url), username(username), token(token) {}
+    RoomJson(const std::string& host, const std::string& username, const std::string& token)
+        : client(host, username, token), host(host), username(username), token(token) {}
     ~RoomJson() = default;
     void SetRoomInformation(const std::string& uid, const std::string& name, const u16 port,
                             const u32 max_player, const u32 net_version, const bool has_password,
@@ -27,14 +27,15 @@ public:
     void AddPlayer(const std::string& nickname,
                    const AnnounceMultiplayerRoom::MacAddress& mac_address, const u64 game_id,
                    const std::string& game_name) override;
-    std::future<Common::WebResult> Announce() override;
+    Common::WebResult Announce() override;
     void ClearPlayers() override;
-    std::future<AnnounceMultiplayerRoom::RoomList> GetRoomList(std::function<void()> func) override;
+    AnnounceMultiplayerRoom::RoomList GetRoomList() override;
     void Delete() override;
 
 private:
     AnnounceMultiplayerRoom::Room room;
-    std::string endpoint_url;
+    Client client;
+    std::string host;
     std::string username;
     std::string token;
 };

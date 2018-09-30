@@ -21,7 +21,7 @@ static constexpr std::chrono::seconds announce_time_interval(15);
 
 AnnounceMultiplayerSession::AnnounceMultiplayerSession() {
 #ifdef ENABLE_WEB_SERVICE
-    backend = std::make_unique<WebService::RoomJson>(Settings::values.web_api_url + "/lobby",
+    backend = std::make_unique<WebService::RoomJson>(Settings::values.web_api_url,
                                                      Settings::values.citra_username,
                                                      Settings::values.citra_token);
 #else
@@ -87,22 +87,18 @@ void AnnounceMultiplayerSession::AnnounceMultiplayerLoop() {
             backend->AddPlayer(member.nickname, member.mac_address, member.game_info.id,
                                member.game_info.name);
         }
-        future = backend->Announce();
-        if (future.valid()) {
-            Common::WebResult result = future.get();
-            if (result.result_code != Common::WebResult::Code::Success) {
-                std::lock_guard<std::mutex> lock(callback_mutex);
-                for (auto callback : error_callbacks) {
-                    (*callback)(result);
-                }
+        Common::WebResult result = backend->Announce();
+        if (result.result_code != Common::WebResult::Code::Success) {
+            std::lock_guard<std::mutex> lock(callback_mutex);
+            for (auto callback : error_callbacks) {
+                (*callback)(result);
             }
         }
     }
 }
 
-std::future<AnnounceMultiplayerRoom::RoomList> AnnounceMultiplayerSession::GetRoomList(
-    std::function<void()> func) {
-    return backend->GetRoomList(func);
+AnnounceMultiplayerRoom::RoomList AnnounceMultiplayerSession::GetRoomList() {
+    return backend->GetRoomList();
 }
 
 } // namespace Core

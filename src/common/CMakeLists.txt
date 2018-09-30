@@ -42,6 +42,8 @@ add_library(common STATIC
     alignment.h
     announce_multiplayer_room.h
     assert.h
+    detached_tasks.cpp
+    detached_tasks.h
     bit_field.h
     bit_set.h
     chunk_file.h

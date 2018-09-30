@@ -4,7 +4,6 @@
 
 #pragma once
 
-#include <future>
 #include <memory>
 #include "common/telemetry.h"
 
@@ -31,6 +30,8 @@ public:
         field_collection.AddField(type, name, std::move(value));
     }
 
+    static void FinalizeAsyncJob();
+
 private:
     Telemetry::FieldCollection field_collection; ///< Tracks all added fields for the session
     std::unique_ptr<Telemetry::VisitorInterface> backend; ///< Backend interface that logs fields
@@ -55,6 +56,6 @@ u64 RegenerateTelemetryId();
  * @param func A function that gets exectued when the verification is finished
  * @returns Future with bool indicating whether the verification succeeded
  */
-std::future<bool> VerifyLogin(std::string username, std::string token, std::function<void()> func);
+bool VerifyLogin(std::string username, std::string token);
 
 } // namespace Core

@@ -26,6 +26,7 @@
 #include "citra/config.h"
 #include "citra/emu_window/emu_window_sdl2.h"
 #include "common/common_paths.h"
+#include "common/detached_tasks.h"
 #include "common/file_util.h"
 #include "common/logging/backend.h"
 #include "common/logging/filter.h"
@@ -129,6 +130,7 @@ static void InitializeLogging() {
 
 /// Application entry point
 int main(int argc, char** argv) {
+    Common::DetachedTasks detached_tasks;
     Config config;
     int option_index = 0;
     bool use_gdbstub = Settings::values.use_gdbstub;
@@ -344,5 +346,6 @@ int main(int argc, char** argv) {
 
     Core::Movie::GetInstance().Shutdown();
 
+    detached_tasks.WaitForAllTasks();
     return 0;
 }
