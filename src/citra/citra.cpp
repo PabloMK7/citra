@@ -339,7 +339,7 @@ int main(int argc, char** argv) {
     }
 
     if (!movie_play.empty()) {
-        Core::Movie::GetInstance().StartPlayback(movie_play, [] {});
+        Core::Movie::GetInstance().StartPlayback(movie_play);
     }
     if (!movie_record.empty()) {
         Core::Movie::GetInstance().StartRecording(movie_record);

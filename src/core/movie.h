@@ -42,7 +42,7 @@ public:
     }
 
     void StartPlayback(const std::string& movie_file,
-                       std::function<void()> completion_callback = {});
+                       std::function<void()> completion_callback = [] {});
     void StartRecording(const std::string& movie_file);
 
     /// Prepare to override the clock before playing back movies
