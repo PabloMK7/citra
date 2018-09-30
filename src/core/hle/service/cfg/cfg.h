@@ -7,6 +7,7 @@
 #include <array>
 #include <memory>
 #include <string>
+#include <vector>
 #include "common/common_types.h"
 #include "core/hle/service/fs/archive.h"
 
@@ -297,12 +298,11 @@ public:
     u32 GetRegionValue();
 
     /**
-     * Set the region code preferred by the game so that CFG will adjust to it when the region
-     * setting
-     * is auto.
-     * @param region_code the preferred region code to set
+     * Set the region codes preferred by the game so that CFG will adjust to it when the region
+     * setting is auto.
+     * @param region_codes the preferred region codes to set
      */
-    void SetPreferredRegionCode(u32 region_code);
+    void SetPreferredRegionCodes(const std::vector<u32>& region_codes);
 
     // Utilities for frontend to set config data.
     // Note: UpdateConfigNANDSavegame should be called after making changes to config data.

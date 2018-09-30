@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <algorithm>
+#include <tuple>
 #include <cryptopp/osrng.h>
 #include <cryptopp/sha.h>
 #include "common/file_util.h"
@@ -570,7 +571,8 @@ Module::Module() {
 Module::~Module() = default;
 
 /// Checks if the language is available in the chosen region, and returns a proper one
-static SystemLanguage AdjustLanguageInfoBlock(u32 region, SystemLanguage language) {
+static std::tuple<u32 /*region*/, SystemLanguage> AdjustLanguageInfoBlock(
+    const std::vector<u32>& region_code, SystemLanguage language) {
     static const std::array<std::vector<SystemLanguage>, 7> region_languages{{
         // JPN
         {LANGUAGE_JP},
@@ -589,21 +591,28 @@ static SystemLanguage AdjustLanguageInfoBlock(u32 region, SystemLanguage languag
         // TWN
         {LANGUAGE_TW},
     }};
-    const auto& available = region_languages[region];
-    if (std::find(available.begin(), available.end(), language) == available.end()) {
-        return available[0];
+    // Check if any available region supports the languages
+    for (u32 region : region_code) {
+        const auto& available = region_languages[region];
+        if (std::find(available.begin(), available.end(), language) != available.end()) {
+            // found a proper region, so return this region - language pair
+            return {region, language};
+        }
     }
-    return language;
+    // The language is not available in any available region, so default to the first region and
+    // language
+    u32 default_region = region_code[0];
+    return {default_region, region_languages[default_region][0]};
 }
 
-void Module::SetPreferredRegionCode(u32 region_code) {
-    preferred_region_code = region_code;
+void Module::SetPreferredRegionCodes(const std::vector<u32>& region_codes) {
+    const SystemLanguage current_language = GetSystemLanguage();
+    auto [region, adjusted_language] = AdjustLanguageInfoBlock(region_codes, current_language);
+
+    preferred_region_code = region;
     LOG_INFO(Service_CFG, "Preferred region code set to {}", preferred_region_code);
 
     if (Settings::values.region_value == Settings::REGION_VALUE_AUTO_SELECT) {
-        const SystemLanguage current_language = GetSystemLanguage();
-        const SystemLanguage adjusted_language =
-            AdjustLanguageInfoBlock(region_code, current_language);
         if (current_language != adjusted_language) {
             LOG_WARNING(Service_CFG, "System language {} does not fit the region. Adjusted to {}",
                         static_cast<int>(current_language), static_cast<int>(adjusted_language));
