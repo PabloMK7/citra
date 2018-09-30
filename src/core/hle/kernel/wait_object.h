@@ -59,7 +59,7 @@ private:
 template <>
 inline SharedPtr<WaitObject> DynamicObjectCast<WaitObject>(SharedPtr<Object> object) {
     if (object != nullptr && object->IsWaitable()) {
-        return boost::static_pointer_cast<WaitObject>(std::move(object));
+        return boost::static_pointer_cast<WaitObject>(object);
     }
     return nullptr;
 }
