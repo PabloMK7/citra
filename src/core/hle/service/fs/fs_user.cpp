@@ -11,6 +11,7 @@
 #include "common/string_util.h"
 #include "core/core.h"
 #include "core/file_sys/errors.h"
+#include "core/file_sys/seed_db.h"
 #include "core/hle/ipc.h"
 #include "core/hle/ipc_helpers.h"
 #include "core/hle/kernel/client_port.h"
@@ -685,14 +686,18 @@ void FS_USER::ObsoletedDeleteExtSaveData(Kernel::HLERequestContext& ctx) {
 }
 
 void FS_USER::GetNumSeeds(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x87D, 0, 0);
-
-    LOG_WARNING(Service_FS, "(STUBBED) called");
-
-    IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
-
+    IPC::RequestBuilder rb{ctx, 0x87D, 2, 0};
     rb.Push(RESULT_SUCCESS);
-    rb.Push<u32>(0);
+    rb.Push<u32>(FileSys::GetSeedCount());
+}
+
+void FS_USER::AddSeed(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp{ctx, 0x87A, 6, 0};
+    u64 title_id{rp.Pop<u64>()};
+    FileSys::Seed::Data seed{rp.PopRaw<FileSys::Seed::Data>()};
+    FileSys::AddSeed({title_id, seed, {}});
+    IPC::RequestBuilder rb{rp.MakeBuilder(1, 0)};
+    rb.Push(RESULT_SUCCESS);
 }
 
 void FS_USER::SetSaveDataSecureValue(Kernel::HLERequestContext& ctx) {
@@ -846,7 +851,7 @@ FS_USER::FS_USER() : ServiceFramework("fs:USER", 30) {
         {0x08680000, nullptr, "GetMediaType"},
         {0x08690000, nullptr, "GetNandEraseCount"},
         {0x086A0082, nullptr, "ReadNandReport"},
-        {0x087A0180, nullptr, "AddSeed"},
+        {0x087A0180, &FS_USER::AddSeed, "AddSeed"},
         {0x087D0000, &FS_USER::GetNumSeeds, "GetNumSeeds"},
         {0x088600C0, nullptr, "CheckUpdatedDat"},
     };

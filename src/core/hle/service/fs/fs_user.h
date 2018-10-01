@@ -486,6 +486,18 @@ private:
     void GetNumSeeds(Kernel::HLERequestContext& ctx);
 
     /**
+     * FS_User::AddSeed service function.
+     *  Inputs:
+     *      0 : 0x087A0180
+     *    1-2 : u64, Title ID
+     *    3-6 : Seed
+     *  Outputs:
+     *      0 : 0x087A0180
+     *      1 : Result of function, 0 on success, otherwise error code
+     */
+    void AddSeed(Kernel::HLERequestContext& ctx);
+
+    /**
      * FS_User::SetSaveDataSecureValue service function.
      *  Inputs:
      *      0 : 0x08650140

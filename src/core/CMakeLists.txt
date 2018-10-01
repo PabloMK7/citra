@@ -69,6 +69,8 @@ add_library(core STATIC
     file_sys/romfs_reader.h
     file_sys/savedata_archive.cpp
     file_sys/savedata_archive.h
+    file_sys/seed_db.cpp
+    file_sys/seed_db.h
     file_sys/ticket.cpp
     file_sys/ticket.h
     file_sys/title_metadata.cpp

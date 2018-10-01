@@ -7,10 +7,12 @@
 #include <memory>
 #include <cryptopp/aes.h>
 #include <cryptopp/modes.h>
+#include <cryptopp/sha.h>
 #include "common/common_types.h"
 #include "common/logging/log.h"
 #include "core/core.h"
 #include "core/file_sys/ncch_container.h"
+#include "core/file_sys/seed_db.h"
 #include "core/hw/aes/key.h"
 #include "core/loader/loader.h"
 
@@ -166,9 +168,19 @@ Loader::ResultStatus NCCHContainer::Load() {
                 if (!ncch_header.seed_crypto) {
                     key_y_secondary = key_y_primary;
                 } else {
-                    // Seed crypto is unimplemented.
-                    LOG_ERROR(Service_FS, "Unsupported seed crypto");
-                    failed_to_decrypt = true;
+                    auto opt{FileSys::GetSeed(ncch_header.program_id)};
+                    if (!opt.has_value()) {
+                        LOG_ERROR(Service_FS, "Seed for program {:016X} not found",
+                                  ncch_header.program_id);
+                        failed_to_decrypt = true;
+                    } else {
+                        auto seed{*opt};
+                        std::array<u8, 32> input;
+                        std::memcpy(input.data(), key_y_primary.data(), key_y_primary.size());
+                        std::memcpy(input.data() + key_y_primary.size(), seed.data(), seed.size());
+                        CryptoPP::SHA256 sha;
+                        sha.CalculateDigest(key_y_secondary.data(), input.data(), input.size());
+                    }
                 }
 
                 SetKeyY(KeySlotID::NCCHSecure1, key_y_primary);
