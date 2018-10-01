@@ -7,7 +7,6 @@
 #include "citra_qt/ui_settings.h"
 #include "core/core.h"
 #include "core/hle/service/cfg/cfg.h"
-#include "core/hle/service/fs/archive.h"
 #include "core/hle/service/ptm/ptm.h"
 #include "core/settings.h"
 #include "ui_configure_system.h"
@@ -252,11 +251,8 @@ void ConfigureSystem::setConfiguration() {
         ui->group_system_settings->setEnabled(false);
     } else {
         // This tab is enabled only when game is not running (i.e. all service are not initialized).
-        // Temporarily register archive types and load the config savegame file to memory.
-        Service::FS::RegisterArchiveTypes();
         cfg = std::make_shared<Service::CFG::Module>();
         ReadSystemSettings();
-        Service::FS::UnregisterArchiveTypes();
 
         ui->label_disable_info->hide();
     }
@@ -348,10 +344,7 @@ void ConfigureSystem::applyConfiguration() {
     // apply play coin
     u16 new_play_coin = static_cast<u16>(ui->spinBox_play_coins->value());
     if (play_coin != new_play_coin) {
-        // archive types must be registered to set play coins
-        Service::FS::RegisterArchiveTypes();
         Service::PTM::Module::SetPlayCoins(new_play_coin);
-        Service::FS::UnregisterArchiveTypes();
     }
 
     // update the config savegame if any item is modified.

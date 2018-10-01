@@ -646,19 +646,11 @@ void RegisterArchiveTypes() {
 
     auto extsavedata_factory =
         std::make_unique<FileSys::ArchiveFactory_ExtSaveData>(sdmc_directory, false);
-    if (extsavedata_factory->Initialize())
-        RegisterArchiveType(std::move(extsavedata_factory), ArchiveIdCode::ExtSaveData);
-    else
-        LOG_ERROR(Service_FS, "Can't instantiate ExtSaveData archive with path {}",
-                  extsavedata_factory->GetMountPoint());
+    RegisterArchiveType(std::move(extsavedata_factory), ArchiveIdCode::ExtSaveData);
 
     auto sharedextsavedata_factory =
         std::make_unique<FileSys::ArchiveFactory_ExtSaveData>(nand_directory, true);
-    if (sharedextsavedata_factory->Initialize())
-        RegisterArchiveType(std::move(sharedextsavedata_factory), ArchiveIdCode::SharedExtSaveData);
-    else
-        LOG_ERROR(Service_FS, "Can't instantiate SharedExtSaveData archive with path {}",
-                  sharedextsavedata_factory->GetMountPoint());
+    RegisterArchiveType(std::move(sharedextsavedata_factory), ArchiveIdCode::SharedExtSaveData);
 
     // Create the NCCH archive, basically a small variation of the RomFS archive
     auto savedatacheck_factory = std::make_unique<FileSys::ArchiveFactory_NCCH>();
