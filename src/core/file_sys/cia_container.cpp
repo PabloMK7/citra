@@ -124,6 +124,11 @@ Loader::ResultStatus CIAContainer::LoadHeader(const std::vector<u8>& header_data
     return Loader::ResultStatus::Success;
 }
 
+Loader::ResultStatus CIAContainer::LoadTicket(const std::vector<u8>& ticket_data,
+                                              std::size_t offset) {
+    return cia_ticket.Load(ticket_data, offset);
+}
+
 Loader::ResultStatus CIAContainer::LoadTitleMetadata(const std::vector<u8>& tmd_data,
                                                      std::size_t offset) {
     return cia_tmd.Load(tmd_data, offset);
@@ -137,6 +142,10 @@ Loader::ResultStatus CIAContainer::LoadMetadata(const std::vector<u8>& meta_data
     std::memcpy(&cia_metadata, meta_data.data(), sizeof(Metadata));
 
     return Loader::ResultStatus::Success;
+}
+
+const Ticket& CIAContainer::GetTicket() const {
+    return cia_ticket;
 }
 
 const TitleMetadata& CIAContainer::GetTitleMetadata() const {
