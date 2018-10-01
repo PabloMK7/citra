@@ -5,6 +5,7 @@
 #include <cryptopp/base64.h>
 #include <cryptopp/hmac.h>
 #include <cryptopp/sha.h>
+#include "common/common_paths.h"
 #include "common/file_util.h"
 #include "common/logging/log.h"
 #include "common/string_util.h"
@@ -53,11 +54,10 @@ void Module::Interface::Open(Kernel::HLERequestContext& ctx) {
     case CecDataPathType::MboxDir:
     case CecDataPathType::InboxDir:
     case CecDataPathType::OutboxDir: {
-        auto dir_result =
-            Service::FS::OpenDirectoryFromArchive(cecd->cecd_system_save_data_archive, path);
+        auto dir_result = cecd->cecd_system_save_data_archive->OpenDirectory(path);
         if (dir_result.Failed()) {
             if (open_mode.create) {
-                Service::FS::CreateDirectoryFromArchive(cecd->cecd_system_save_data_archive, path);
+                cecd->cecd_system_save_data_archive->CreateDirectory(path);
                 rb.Push(RESULT_SUCCESS);
             } else {
                 LOG_DEBUG(Service_CECD, "Failed to open directory: {}", path.AsString());
@@ -67,40 +67,39 @@ void Module::Interface::Open(Kernel::HLERequestContext& ctx) {
             rb.Push<u32>(0); // Zero entries
         } else {
             constexpr u32 max_entries = 32; // reasonable value, just over max boxes 24
-            auto directory = dir_result.Unwrap();
+            auto directory = std::move(dir_result).Unwrap();
 
             // Actual reading into vector seems to be required for entry count
             std::vector<FileSys::Entry> entries(max_entries);
-            const u32 entry_count = directory->backend->Read(max_entries, entries.data());
+            const u32 entry_count = directory->Read(max_entries, entries.data());
 
             LOG_DEBUG(Service_CECD, "Number of entries found: {}", entry_count);
 
             rb.Push(RESULT_SUCCESS);
             rb.Push<u32>(entry_count); // Entry count
-            directory->backend->Close();
+            directory->Close();
         }
         break;
     }
     default: { // If not directory, then it is a file
-        auto file_result =
-            Service::FS::OpenFileFromArchive(cecd->cecd_system_save_data_archive, path, mode);
+        auto file_result = cecd->cecd_system_save_data_archive->OpenFile(path, mode);
         if (file_result.Failed()) {
             LOG_DEBUG(Service_CECD, "Failed to open file: {}", path.AsString());
             rb.Push(ResultCode(ErrorDescription::NoData, ErrorModule::CEC, ErrorSummary::NotFound,
                                ErrorLevel::Status));
             rb.Push<u32>(0); // No file size
         } else {
-            session_data->file = std::move(file_result.Unwrap());
+            session_data->file = std::move(file_result).Unwrap();
             rb.Push(RESULT_SUCCESS);
-            rb.Push<u32>(session_data->file->backend->GetSize()); // Return file size
+            rb.Push<u32>(session_data->file->GetSize()); // Return file size
         }
 
         if (path_type == CecDataPathType::MboxProgramId) {
             std::vector<u8> program_id(8);
             u64_le le_program_id = Kernel::g_current_process->codeset->program_id;
             std::memcpy(program_id.data(), &le_program_id, sizeof(u64));
-            session_data->file->backend->Write(0, sizeof(u64), true, program_id.data());
-            session_data->file->backend->Close();
+            session_data->file->Write(0, sizeof(u64), true, program_id.data());
+            session_data->file->Close();
         }
     }
     }
@@ -141,10 +140,10 @@ void Module::Interface::Read(Kernel::HLERequestContext& ctx) {
     default: // If not directory, then it is a file
         std::vector<u8> buffer(write_buffer_size);
         const u32 bytes_read =
-            session_data->file->backend->Read(0, write_buffer_size, buffer.data()).Unwrap();
+            session_data->file->Read(0, write_buffer_size, buffer.data()).Unwrap();
 
         write_buffer.Write(buffer.data(), 0, write_buffer_size);
-        session_data->file->backend->Close();
+        session_data->file->Close();
 
         rb.Push(RESULT_SUCCESS);
         rb.Push<u32>(bytes_read);
@@ -176,17 +175,16 @@ void Module::Interface::ReadMessage(Kernel::HLERequestContext& ctx) {
                                          ncch_program_id, id_buffer)
             .data();
 
-    auto message_result =
-        Service::FS::OpenFileFromArchive(cecd->cecd_system_save_data_archive, message_path, mode);
+    auto message_result = cecd->cecd_system_save_data_archive->OpenFile(message_path, mode);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 4);
     if (message_result.Succeeded()) {
-        auto message = message_result.Unwrap();
+        auto message = std::move(message_result).Unwrap();
         std::vector<u8> buffer(buffer_size);
 
-        const u32 bytes_read = message->backend->Read(0, buffer_size, buffer.data()).Unwrap();
+        const u32 bytes_read = message->Read(0, buffer_size, buffer.data()).Unwrap();
         write_buffer.Write(buffer.data(), 0, buffer_size);
-        message->backend->Close();
+        message->Close();
 
         CecMessageHeader msg_header;
         std::memcpy(&msg_header, buffer.data(), sizeof(CecMessageHeader));
@@ -246,17 +244,16 @@ void Module::Interface::ReadMessageWithHMAC(Kernel::HLERequestContext& ctx) {
                                          ncch_program_id, id_buffer)
             .data();
 
-    auto message_result =
-        Service::FS::OpenFileFromArchive(cecd->cecd_system_save_data_archive, message_path, mode);
+    auto message_result = cecd->cecd_system_save_data_archive->OpenFile(message_path, mode);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 6);
     if (message_result.Succeeded()) {
-        auto message = message_result.Unwrap();
+        auto message = std::move(message_result).Unwrap();
         std::vector<u8> buffer(buffer_size);
 
-        const u32 bytes_read = message->backend->Read(0, buffer_size, buffer.data()).Unwrap();
+        const u32 bytes_read = message->Read(0, buffer_size, buffer.data()).Unwrap();
         write_buffer.Write(buffer.data(), 0, buffer_size);
-        message->backend->Close();
+        message->Close();
 
         CecMessageHeader msg_header;
         std::memcpy(&msg_header, buffer.data(), sizeof(CecMessageHeader));
@@ -346,8 +343,8 @@ void Module::Interface::Write(Kernel::HLERequestContext& ctx) {
         std::vector<u8> buffer(read_buffer_size);
         read_buffer.Read(buffer.data(), 0, read_buffer_size);
 
-        if (session_data->file->backend->GetSize() != read_buffer_size) {
-            session_data->file->backend->SetSize(read_buffer_size);
+        if (session_data->file->GetSize() != read_buffer_size) {
+            session_data->file->SetSize(read_buffer_size);
         }
 
         if (session_data->open_mode.check) {
@@ -356,8 +353,8 @@ void Module::Interface::Write(Kernel::HLERequestContext& ctx) {
         }
 
         const u32 bytes_written =
-            session_data->file->backend->Write(0, buffer.size(), true, buffer.data()).Unwrap();
-        session_data->file->backend->Close();
+            session_data->file->Write(0, buffer.size(), true, buffer.data()).Unwrap();
+        session_data->file->Close();
 
         rb.Push(RESULT_SUCCESS);
     }
@@ -388,12 +385,11 @@ void Module::Interface::WriteMessage(Kernel::HLERequestContext& ctx) {
                                          ncch_program_id, id_buffer)
             .data();
 
-    auto message_result =
-        Service::FS::OpenFileFromArchive(cecd->cecd_system_save_data_archive, message_path, mode);
+    auto message_result = cecd->cecd_system_save_data_archive->OpenFile(message_path, mode);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 4);
     if (message_result.Succeeded()) {
-        auto message = message_result.Unwrap();
+        auto message = std::move(message_result).Unwrap();
 
         std::vector<u8> buffer(buffer_size);
         read_buffer.Read(buffer.data(), 0, buffer_size);
@@ -418,9 +414,8 @@ void Module::Interface::WriteMessage(Kernel::HLERequestContext& ctx) {
                   msg_header.sender_id, msg_header.sender_id2, msg_header.send_count,
                   msg_header.forward_count, msg_header.user_data);
 
-        const u32 bytes_written =
-            message->backend->Write(0, buffer_size, true, buffer.data()).Unwrap();
-        message->backend->Close();
+        const u32 bytes_written = message->Write(0, buffer_size, true, buffer.data()).Unwrap();
+        message->Close();
 
         rb.Push(RESULT_SUCCESS);
     } else {
@@ -460,12 +455,11 @@ void Module::Interface::WriteMessageWithHMAC(Kernel::HLERequestContext& ctx) {
                                          ncch_program_id, id_buffer)
             .data();
 
-    auto message_result =
-        Service::FS::OpenFileFromArchive(cecd->cecd_system_save_data_archive, message_path, mode);
+    auto message_result = cecd->cecd_system_save_data_archive->OpenFile(message_path, mode);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 6);
     if (message_result.Succeeded()) {
-        auto message = message_result.Unwrap();
+        auto message = std::move(message_result).Unwrap();
 
         std::vector<u8> buffer(buffer_size);
         read_buffer.Read(buffer.data(), 0, buffer_size);
@@ -506,9 +500,8 @@ void Module::Interface::WriteMessageWithHMAC(Kernel::HLERequestContext& ctx) {
         hmac.CalculateDigest(hmac_digest.data(), message_body.data(), msg_header.body_size);
         std::memcpy(buffer.data() + hmac_offset, hmac_digest.data(), hmac_size);
 
-        const u32 bytes_written =
-            message->backend->Write(0, buffer_size, true, buffer.data()).Unwrap();
-        message->backend->Close();
+        const u32 bytes_written = message->Write(0, buffer_size, true, buffer.data()).Unwrap();
+        message->Close();
 
         rb.Push(RESULT_SUCCESS);
     } else {
@@ -544,12 +537,11 @@ void Module::Interface::Delete(Kernel::HLERequestContext& ctx) {
     case CecDataPathType::MboxDir:
     case CecDataPathType::InboxDir:
     case CecDataPathType::OutboxDir:
-        rb.Push(Service::FS::DeleteDirectoryRecursivelyFromArchive(
-            cecd->cecd_system_save_data_archive, path));
+        rb.Push(cecd->cecd_system_save_data_archive->DeleteDirectoryRecursively(path));
         break;
     default: // If not directory, then it is a file
         if (message_id_size == 0) {
-            rb.Push(Service::FS::DeleteFileFromArchive(cecd->cecd_system_save_data_archive, path));
+            rb.Push(cecd->cecd_system_save_data_archive->DeleteFile(path));
         } else {
             std::vector<u8> id_buffer(message_id_size);
             message_id_buffer.Read(id_buffer.data(), 0, message_id_size);
@@ -559,8 +551,7 @@ void Module::Interface::Delete(Kernel::HLERequestContext& ctx) {
                                                            : CecDataPathType::InboxMsg,
                                                  ncch_program_id, id_buffer)
                     .data();
-            rb.Push(Service::FS::DeleteFileFromArchive(cecd->cecd_system_save_data_archive,
-                                                       message_path));
+            rb.Push(cecd->cecd_system_save_data_archive->DeleteFile(message_path));
         }
     }
 
@@ -587,17 +578,16 @@ void Module::Interface::SetData(Kernel::HLERequestContext& ctx) {
         mode.write_flag.Assign(1);
         mode.create_flag.Assign(1);
 
-        auto file_result =
-            Service::FS::OpenFileFromArchive(cecd->cecd_system_save_data_archive, path, mode);
+        auto file_result = cecd->cecd_system_save_data_archive->OpenFile(path, mode);
         if (file_result.Succeeded()) {
-            auto file = file_result.Unwrap();
+            auto file = std::move(file_result).Unwrap();
             std::vector<u8> buffer(buffer_size);
             read_buffer.Read(buffer.data(), 0, buffer_size);
 
             cecd->CheckAndUpdateFile(CecDataPathType::OutboxIndex, ncch_program_id, buffer);
 
-            file->backend->Write(0, buffer.size(), true, buffer.data());
-            file->backend->Close();
+            file->Write(0, buffer.size(), true, buffer.data());
+            file->Close();
         }
     }
 
@@ -735,25 +725,23 @@ void Module::Interface::OpenAndWrite(Kernel::HLERequestContext& ctx) {
                            ErrorSummary::NotFound, ErrorLevel::Status));
         break;
     default: // If not directory, then it is a file
-        auto file_result =
-            Service::FS::OpenFileFromArchive(cecd->cecd_system_save_data_archive, path, mode);
+        auto file_result = cecd->cecd_system_save_data_archive->OpenFile(path, mode);
         if (file_result.Succeeded()) {
-            auto file = file_result.Unwrap();
+            auto file = std::move(file_result).Unwrap();
 
             std::vector<u8> buffer(buffer_size);
             read_buffer.Read(buffer.data(), 0, buffer_size);
 
-            if (file->backend->GetSize() != buffer_size) {
-                file->backend->SetSize(buffer_size);
+            if (file->GetSize() != buffer_size) {
+                file->SetSize(buffer_size);
             }
 
             if (open_mode.check) {
                 cecd->CheckAndUpdateFile(path_type, ncch_program_id, buffer);
             }
 
-            const u32 bytes_written =
-                file->backend->Write(0, buffer.size(), true, buffer.data()).Unwrap();
-            file->backend->Close();
+            const u32 bytes_written = file->Write(0, buffer.size(), true, buffer.data()).Unwrap();
+            file->Close();
 
             rb.Push(RESULT_SUCCESS);
         } else {
@@ -796,15 +784,14 @@ void Module::Interface::OpenAndRead(Kernel::HLERequestContext& ctx) {
         rb.Push<u32>(0); // No entries read
         break;
     default: // If not directory, then it is a file
-        auto file_result =
-            Service::FS::OpenFileFromArchive(cecd->cecd_system_save_data_archive, path, mode);
+        auto file_result = cecd->cecd_system_save_data_archive->OpenFile(path, mode);
         if (file_result.Succeeded()) {
-            auto file = file_result.Unwrap();
+            auto file = std::move(file_result).Unwrap();
             std::vector<u8> buffer(buffer_size);
 
-            const u32 bytes_read = file->backend->Read(0, buffer_size, buffer.data()).Unwrap();
+            const u32 bytes_read = file->Read(0, buffer_size, buffer.data()).Unwrap();
             write_buffer.Write(buffer.data(), 0, buffer_size);
-            file->backend->Close();
+            file->Close();
 
             rb.Push(RESULT_SUCCESS);
             rb.Push<u32>(bytes_read);
@@ -1003,13 +990,12 @@ void Module::CheckAndUpdateFile(const CecDataPathType path_type, const u32 ncch_
                 FileSys::Path root_path(
                     GetCecDataPathTypeAsString(CecDataPathType::RootDir, 0).data());
 
-                auto dir_result =
-                    Service::FS::OpenDirectoryFromArchive(cecd_system_save_data_archive, root_path);
+                auto dir_result = cecd_system_save_data_archive->OpenDirectory(root_path);
 
-                auto root_dir = dir_result.Unwrap();
+                auto root_dir = std::move(dir_result).Unwrap();
                 std::vector<FileSys::Entry> entries(max_num_boxes + 1); // + 1 mboxlist
-                const u32 entry_count = root_dir->backend->Read(max_num_boxes + 1, entries.data());
-                root_dir->backend->Close();
+                const u32 entry_count = root_dir->Read(max_num_boxes + 1, entries.data());
+                root_dir->Close();
 
                 LOG_DEBUG(Service_CECD, "Number of entries found in /CEC: {}", entry_count);
 
@@ -1193,14 +1179,13 @@ void Module::CheckAndUpdateFile(const CecDataPathType path_type, const u32 ncch_
         FileSys::Path outbox_path(
             GetCecDataPathTypeAsString(CecDataPathType::OutboxDir, ncch_program_id).data());
 
-        auto dir_result =
-            Service::FS::OpenDirectoryFromArchive(cecd_system_save_data_archive, outbox_path);
+        auto dir_result = cecd_system_save_data_archive->OpenDirectory(outbox_path);
 
-        auto outbox_dir = dir_result.Unwrap();
+        auto outbox_dir = std::move(dir_result).Unwrap();
         std::vector<FileSys::Entry> entries(outbox_info_header.max_message_num + 2);
         const u32 entry_count =
-            outbox_dir->backend->Read(outbox_info_header.max_message_num + 2, entries.data());
-        outbox_dir->backend->Close();
+            outbox_dir->Read(outbox_info_header.max_message_num + 2, entries.data());
+        outbox_dir->Close();
 
         LOG_DEBUG(Service_CECD, "Number of entries found in /OutBox: {}", entry_count);
         std::array<CecMessageHeader, 8> message_headers;
@@ -1225,15 +1210,14 @@ void Module::CheckAndUpdateFile(const CecDataPathType path_type, const u32 ncch_
                 FileSys::Mode mode;
                 mode.read_flag.Assign(1);
 
-                auto message_result = Service::FS::OpenFileFromArchive(
-                    cecd_system_save_data_archive, message_path, mode);
+                auto message_result = cecd_system_save_data_archive->OpenFile(message_path, mode);
 
-                auto message = message_result.Unwrap();
-                const u32 message_size = message->backend->GetSize();
+                auto message = std::move(message_result).Unwrap();
+                const u32 message_size = message->GetSize();
                 std::vector<u8> buffer(message_size);
 
-                message->backend->Read(0, message_size, buffer.data()).Unwrap();
-                message->backend->Close();
+                message->Read(0, message_size, buffer.data()).Unwrap();
+                message->Close();
 
                 std::memcpy(&message_headers[outbox_info_header.message_num++], buffer.data(),
                             sizeof(CecMessageHeader));
@@ -1288,13 +1272,12 @@ void Module::CheckAndUpdateFile(const CecDataPathType path_type, const u32 ncch_
         FileSys::Path outbox_path(
             GetCecDataPathTypeAsString(CecDataPathType::OutboxDir, ncch_program_id).data());
 
-        auto dir_result =
-            Service::FS::OpenDirectoryFromArchive(cecd_system_save_data_archive, outbox_path);
+        auto dir_result = cecd_system_save_data_archive->OpenDirectory(outbox_path);
 
-        auto outbox_dir = dir_result.Unwrap();
+        auto outbox_dir = std::move(dir_result).Unwrap();
         std::vector<FileSys::Entry> entries(8);
-        const u32 entry_count = outbox_dir->backend->Read(8, entries.data());
-        outbox_dir->backend->Close();
+        const u32 entry_count = outbox_dir->Read(8, entries.data());
+        outbox_dir->Close();
 
         LOG_DEBUG(Service_CECD, "Number of entries found in /OutBox: {}", entry_count);
         std::array<std::array<u8, 8>, 8> message_ids;
@@ -1317,15 +1300,14 @@ void Module::CheckAndUpdateFile(const CecDataPathType path_type, const u32 ncch_
                 FileSys::Mode mode;
                 mode.read_flag.Assign(1);
 
-                auto message_result = Service::FS::OpenFileFromArchive(
-                    cecd_system_save_data_archive, message_path, mode);
+                auto message_result = cecd_system_save_data_archive->OpenFile(message_path, mode);
 
-                auto message = message_result.Unwrap();
-                const u32 message_size = message->backend->GetSize();
+                auto message = std::move(message_result).Unwrap();
+                const u32 message_size = message->GetSize();
                 std::vector<u8> buffer(message_size);
 
-                message->backend->Read(0, message_size, buffer.data()).Unwrap();
-                message->backend->Close();
+                message->Read(0, message_size, buffer.data()).Unwrap();
+                message->Close();
 
                 // Message id is at offset 0x20, and is 8 bytes
                 std::memcpy(&message_ids[obindex_header.message_num++], buffer.data() + 0x20, 8);
@@ -1362,7 +1344,7 @@ Module::SessionData::SessionData() {}
 
 Module::SessionData::~SessionData() {
     if (file)
-        file->backend->Close();
+        file->Close();
 }
 
 Module::Interface::Interface(std::shared_ptr<Module> cecd, const char* name, u32 max_session)
@@ -1373,26 +1355,29 @@ Module::Module() {
     cecinfo_event = Event::Create(Kernel::ResetType::OneShot, "CECD::cecinfo_event");
     change_state_event = Event::Create(Kernel::ResetType::OneShot, "CECD::change_state_event");
 
+    std::string nand_directory = FileUtil::GetUserPath(FileUtil::UserPath::NANDDir);
+    FileSys::ArchiveFactory_SystemSaveData systemsavedata_factory(nand_directory);
+
     // Open the SystemSaveData archive 0x00010026
     FileSys::Path archive_path(cecd_system_savedata_id);
-    auto archive_result =
-        Service::FS::OpenArchive(Service::FS::ArchiveIdCode::SystemSaveData, archive_path);
+    auto archive_result = systemsavedata_factory.Open(archive_path);
 
     // If the archive didn't exist, create the files inside
-    if (archive_result.Code() == FileSys::ERR_NOT_FORMATTED) {
+    if (archive_result.Code() != FileSys::ERR_NOT_FORMATTED) {
+        ASSERT_MSG(archive_result.Succeeded(), "Could not open the CECD SystemSaveData archive!");
+        cecd_system_save_data_archive = std::move(archive_result).Unwrap();
+    } else {
         // Format the archive to create the directories
-        Service::FS::FormatArchive(Service::FS::ArchiveIdCode::SystemSaveData,
-                                   FileSys::ArchiveFormatInfo(), archive_path);
+        systemsavedata_factory.Format(archive_path, FileSys::ArchiveFormatInfo());
 
         // Open it again to get a valid archive now that the folder exists
-        archive_result =
-            Service::FS::OpenArchive(Service::FS::ArchiveIdCode::SystemSaveData, archive_path);
+        cecd_system_save_data_archive = systemsavedata_factory.Open(archive_path).Unwrap();
 
         /// Now that the archive is formatted, we need to create the root CEC directory,
         /// eventlog.dat, and CEC/MBoxList____
         const FileSys::Path root_dir_path(
             GetCecDataPathTypeAsString(CecDataPathType::RootDir, 0).data());
-        Service::FS::CreateDirectoryFromArchive(*archive_result, root_dir_path);
+        cecd_system_save_data_archive->CreateDirectory(root_dir_path);
 
         FileSys::Mode mode;
         mode.write_flag.Assign(1);
@@ -1405,11 +1390,10 @@ Module::Module() {
         /// region yet.
         FileSys::Path eventlog_path("/eventlog.dat");
 
-        auto eventlog_result =
-            Service::FS::OpenFileFromArchive(*archive_result, eventlog_path, mode);
+        auto eventlog_result = cecd_system_save_data_archive->OpenFile(eventlog_path, mode);
 
         constexpr u32 eventlog_size = 0x30d54;
-        auto eventlog = eventlog_result.Unwrap();
+        auto eventlog = std::move(eventlog_result).Unwrap();
         std::vector<u8> eventlog_buffer(eventlog_size);
 
         std::memset(&eventlog_buffer[0], 0, 0x1000);
@@ -1417,8 +1401,8 @@ Module::Module() {
         eventlog_buffer[1] = 0x41;
         eventlog_buffer[2] = 0x12;
 
-        eventlog->backend->Write(0, eventlog_size, true, eventlog_buffer.data());
-        eventlog->backend->Close();
+        eventlog->Write(0, eventlog_size, true, eventlog_buffer.data());
+        eventlog->Close();
 
         /// MBoxList____ resides within the root CEC/ directory.
         /// Initially created, at offset 0x0, are bytes 0x68 0x68 0x00 0x00 0x01, with 0x6868 'hh',
@@ -1427,11 +1411,10 @@ Module::Module() {
         FileSys::Path mboxlist_path(
             GetCecDataPathTypeAsString(CecDataPathType::MboxList, 0).data());
 
-        auto mboxlist_result =
-            Service::FS::OpenFileFromArchive(*archive_result, mboxlist_path, mode);
+        auto mboxlist_result = cecd_system_save_data_archive->OpenFile(mboxlist_path, mode);
 
         constexpr u32 mboxlist_size = 0x18c;
-        auto mboxlist = mboxlist_result.Unwrap();
+        auto mboxlist = std::move(mboxlist_result).Unwrap();
         std::vector<u8> mboxlist_buffer(mboxlist_size);
 
         std::memset(&mboxlist_buffer[0], 0, mboxlist_size);
@@ -1440,18 +1423,12 @@ Module::Module() {
         // mboxlist_buffer[2-3] are already zeroed
         mboxlist_buffer[4] = 0x01;
 
-        mboxlist->backend->Write(0, mboxlist_size, true, mboxlist_buffer.data());
-        mboxlist->backend->Close();
+        mboxlist->Write(0, mboxlist_size, true, mboxlist_buffer.data());
+        mboxlist->Close();
     }
-    ASSERT_MSG(archive_result.Succeeded(), "Could not open the CECD SystemSaveData archive!");
-
-    cecd_system_save_data_archive = *archive_result;
 }
 
-Module::~Module() {
-    if (cecd_system_save_data_archive)
-        Service::FS::CloseArchive(cecd_system_save_data_archive);
-}
+Module::~Module() = default;
 
 void InstallInterfaces(SM::ServiceManager& service_manager) {
     auto cecd = std::make_shared<Module>();
