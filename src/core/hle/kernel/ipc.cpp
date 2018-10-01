@@ -33,6 +33,17 @@ ResultCode TranslateCommandBuffer(SharedPtr<Thread> src_thread, SharedPtr<Thread
     std::array<u32, IPC::COMMAND_BUFFER_LENGTH> cmd_buf;
     Memory::ReadBlock(*src_process, src_address, cmd_buf.data(), command_size * sizeof(u32));
 
+    // Create a copy of the target's command buffer
+    IPC::Header dst_header;
+    Memory::ReadBlock(*dst_process, dst_address, &dst_header.raw, sizeof(dst_header.raw));
+
+    std::size_t dst_untranslated_size = 1u + dst_header.normal_params_size;
+    std::size_t dst_command_size = dst_untranslated_size + dst_header.translate_params_size;
+
+    std::array<u32, IPC::COMMAND_BUFFER_LENGTH> dst_cmd_buf;
+    Memory::ReadBlock(*dst_process, dst_address, dst_cmd_buf.data(),
+                      dst_command_size * sizeof(u32));
+
     std::size_t i = untranslated_size;
     while (i < command_size) {
         u32 descriptor = cmd_buf[i];
@@ -128,36 +139,63 @@ ResultCode TranslateCommandBuffer(SharedPtr<Thread> src_thread, SharedPtr<Thread
             u32 num_pages =
                 Common::AlignUp(page_offset + size, Memory::PAGE_SIZE) >> Memory::PAGE_BITS;
 
-            // Skip when the size is zero
+            // Skip when the size is zero and num_pages == 0
             if (size == 0) {
-                i += 1;
+                cmd_buf[i++] = 0;
                 break;
             }
+            ASSERT(num_pages >= 1);
 
             if (reply) {
-                // TODO(Subv): Scan the target's command buffer to make sure that there was a
-                // MappedBuffer descriptor in the original request. The real kernel panics if you
-                // try to reply with an unsolicited MappedBuffer.
+                // Scan the target's command buffer for the matching mapped buffer
+                std::size_t j = dst_untranslated_size;
+                while (j < dst_command_size) {
+                    u32 desc = dst_cmd_buf[j++];
 
-                // Unmap the buffers. Readonly buffers do not need to be copied over to the target
-                // process again because they were (presumably) not modified. This behavior is
-                // consistent with the real kernel.
-                if (permissions == IPC::MappedBufferPermissions::R) {
-                    ResultCode result = src_process->vm_manager.UnmapRange(
-                        page_start, num_pages * Memory::PAGE_SIZE);
-                    ASSERT(result == RESULT_SUCCESS);
-                } else {
-                    const auto vma_iter = src_process->vm_manager.vma_map.find(source_address);
-                    const auto& vma = vma_iter->second;
-                    const VAddr dest_address = vma.originating_buffer_address;
+                    if (IPC::GetDescriptorType(desc) == IPC::DescriptorType::MappedBuffer) {
+                        IPC::MappedBufferDescInfo dest_descInfo{desc};
+                        VAddr dest_address = dst_cmd_buf[j];
 
-                    auto buffer = std::make_shared<std::vector<u8>>(size);
-                    Memory::ReadBlock(*src_process, source_address, buffer->data(), size);
-                    Memory::WriteBlock(*dst_process, dest_address, buffer->data(), size);
+                        u32 dest_size = static_cast<u32>(dest_descInfo.size);
+                        IPC::MappedBufferPermissions dest_permissions = dest_descInfo.perms;
 
-                    ResultCode result = src_process->vm_manager.UnmapRange(
-                        page_start, num_pages * Memory::PAGE_SIZE);
-                    ASSERT(result == RESULT_SUCCESS);
+                        if (permissions == dest_permissions && size == dest_size) {
+                            // Readonly buffers do not need to be copied over to the target
+                            // process again because they were (presumably) not modified. This
+                            // behavior is consistent with the real kernel.
+                            if (permissions != IPC::MappedBufferPermissions::R) {
+                                // Copy the modified buffer back into the target process
+                                Memory::CopyBlock(*src_process, *dst_process, source_address,
+                                                  dest_address, size);
+                            }
+
+                            // Unmap the Reserved page before the buffer
+                            ResultCode result = src_process->vm_manager.UnmapRange(
+                                page_start - Memory::PAGE_SIZE, Memory::PAGE_SIZE);
+                            ASSERT(result == RESULT_SUCCESS);
+
+                            // Unmap the buffer from the source process
+                            result = src_process->vm_manager.UnmapRange(
+                                page_start, num_pages * Memory::PAGE_SIZE);
+                            ASSERT(result == RESULT_SUCCESS);
+
+                            // Check if this is the last mapped buffer
+                            VAddr next_reserve = page_start + num_pages * Memory::PAGE_SIZE;
+                            auto& vma =
+                                src_process->vm_manager.FindVMA(next_reserve + Memory::PAGE_SIZE)
+                                    ->second;
+                            if (vma.type == VMAType::Free) {
+                                // Unmap the Reserved page after the last buffer
+                                result = src_process->vm_manager.UnmapRange(next_reserve,
+                                                                            Memory::PAGE_SIZE);
+                                ASSERT(result == RESULT_SUCCESS);
+                            }
+
+                            break;
+                        }
+                    }
+
+                    j += 1;
                 }
 
                 i += 1;
@@ -166,63 +204,38 @@ ResultCode TranslateCommandBuffer(SharedPtr<Thread> src_thread, SharedPtr<Thread
 
             VAddr target_address = 0;
 
-            auto IsPageAligned = [](VAddr address) -> bool {
-                return (address & Memory::PAGE_MASK) == 0;
-            };
-
             // TODO(Subv): Perform permission checks.
 
-            // TODO(Subv): Leave a page of unmapped memory before the first page and after the last
-            // page.
+            // Reserve a page of memory before the mapped buffer
+            auto reserve_buffer = std::make_shared<std::vector<u8>>(Memory::PAGE_SIZE);
+            dst_process->vm_manager.MapMemoryBlockToBase(
+                Memory::IPC_MAPPING_VADDR, Memory::IPC_MAPPING_SIZE, reserve_buffer, 0,
+                static_cast<u32>(reserve_buffer->size()), Kernel::MemoryState::Reserved);
 
-            if (num_pages == 1 && !IsPageAligned(source_address) &&
-                !IsPageAligned(source_address + size)) {
-                // If the address of the source buffer is not page-aligned or if the buffer doesn't
-                // fill an entire page, then we have to allocate a page of memory in the target
-                // process and copy over the data from the input buffer. This allocated buffer will
-                // be copied back to the source process and deallocated when the server replies to
-                // the request via ReplyAndReceive.
+            auto buffer = std::make_shared<std::vector<u8>>(num_pages * Memory::PAGE_SIZE);
+            Memory::ReadBlock(*src_process, source_address, buffer->data() + page_offset, size);
 
-                auto buffer = std::make_shared<std::vector<u8>>(Memory::PAGE_SIZE);
-
-                // Number of bytes until the next page.
-                std::size_t difference_to_page =
-                    Common::AlignUp(source_address, Memory::PAGE_SIZE) - source_address;
-                // If the data fits in one page we can just copy the required size instead of the
-                // entire page.
-                std::size_t read_size =
-                    num_pages == 1 ? static_cast<std::size_t>(size) : difference_to_page;
-
-                Memory::ReadBlock(*src_process, source_address, buffer->data() + page_offset,
-                                  read_size);
-
-                // Map the page into the target process' address space.
-                target_address =
-                    dst_process->vm_manager
-                        .MapMemoryBlockToBase(Memory::IPC_MAPPING_VADDR, Memory::IPC_MAPPING_SIZE,
-                                              buffer, 0, static_cast<u32>(buffer->size()),
-                                              Kernel::MemoryState::Shared)
-                        .Unwrap();
-            } else {
-                auto buffer = std::make_shared<std::vector<u8>>(num_pages * Memory::PAGE_SIZE);
-                Memory::ReadBlock(*src_process, source_address, buffer->data() + page_offset, size);
-
-                // Map the pages into the target process' address space.
-                target_address =
-                    dst_process->vm_manager
-                        .MapMemoryBlockToBase(Memory::IPC_MAPPING_VADDR + Memory::PAGE_SIZE,
-                                              Memory::IPC_MAPPING_SIZE - Memory::PAGE_SIZE, buffer,
-                                              0, static_cast<u32>(buffer->size()),
-                                              Kernel::MemoryState::Shared)
-                        .Unwrap();
-            }
-            // Save the original address we copied the buffer from so that we can copy the modified
-            // buffer back, if needed
-            auto vma_iter = dst_process->vm_manager.vma_map.find(target_address + page_offset);
-            auto& vma = vma_iter->second;
-            vma.originating_buffer_address = source_address;
+            // Map the page(s) into the target process' address space.
+            target_address = dst_process->vm_manager
+                                 .MapMemoryBlockToBase(
+                                     Memory::IPC_MAPPING_VADDR, Memory::IPC_MAPPING_SIZE, buffer, 0,
+                                     static_cast<u32>(buffer->size()), Kernel::MemoryState::Shared)
+                                 .Unwrap();
 
             cmd_buf[i++] = target_address + page_offset;
+
+            // Check if this is the last mapped buffer
+            if (i < command_size) {
+                u32 next_descriptor = cmd_buf[i];
+                if (IPC::GetDescriptorType(next_descriptor) == IPC::DescriptorType::MappedBuffer) {
+                    break;
+                }
+            }
+
+            // Reserve a page of memory after the last mapped buffer
+            dst_process->vm_manager.MapMemoryBlockToBase(
+                Memory::IPC_MAPPING_VADDR, Memory::IPC_MAPPING_SIZE, reserve_buffer, 0,
+                static_cast<u32>(reserve_buffer->size()), Kernel::MemoryState::Reserved);
             break;
         }
         default:
