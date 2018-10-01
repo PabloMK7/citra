@@ -112,6 +112,7 @@ GRenderWindow::GRenderWindow(QWidget* parent, EmuThread* emu_thread)
     std::string window_title = fmt::format("Citra {} | {}-{}", Common::g_build_name,
                                            Common::g_scm_branch, Common::g_scm_desc);
     setWindowTitle(QString::fromStdString(window_title));
+    setAttribute(Qt::WA_AcceptTouchEvents);
 
     InputCommon::Init();
 }
@@ -191,9 +192,15 @@ QByteArray GRenderWindow::saveGeometry() {
         return geometry;
 }
 
-qreal GRenderWindow::windowPixelRatio() {
+qreal GRenderWindow::windowPixelRatio() const {
     // windowHandle() might not be accessible until the window is displayed to screen.
     return windowHandle() ? windowHandle()->screen()->devicePixelRatio() : 1.0f;
+}
+
+std::pair<unsigned, unsigned> GRenderWindow::ScaleTouch(const QPointF pos) const {
+    const qreal pixel_ratio = windowPixelRatio();
+    return {static_cast<unsigned>(std::max(std::round(pos.x() * pixel_ratio), qreal{0.0})),
+            static_cast<unsigned>(std::max(std::round(pos.y() * pixel_ratio), qreal{0.0}))};
 }
 
 void GRenderWindow::closeEvent(QCloseEvent* event) {
@@ -210,29 +217,79 @@ void GRenderWindow::keyReleaseEvent(QKeyEvent* event) {
 }
 
 void GRenderWindow::mousePressEvent(QMouseEvent* event) {
+    if (event->source() == Qt::MouseEventSynthesizedBySystem)
+        return; // touch input is handled in TouchBeginEvent
+
     auto pos = event->pos();
     if (event->button() == Qt::LeftButton) {
-        qreal pixelRatio = windowPixelRatio();
-        this->TouchPressed(static_cast<unsigned>(pos.x() * pixelRatio),
-                           static_cast<unsigned>(pos.y() * pixelRatio));
+        const auto [x, y] = ScaleTouch(pos);
+        this->TouchPressed(x, y);
     } else if (event->button() == Qt::RightButton) {
         InputCommon::GetMotionEmu()->BeginTilt(pos.x(), pos.y());
     }
 }
 
 void GRenderWindow::mouseMoveEvent(QMouseEvent* event) {
+    if (event->source() == Qt::MouseEventSynthesizedBySystem)
+        return; // touch input is handled in TouchUpdateEvent
+
     auto pos = event->pos();
-    qreal pixelRatio = windowPixelRatio();
-    this->TouchMoved(std::max(static_cast<unsigned>(pos.x() * pixelRatio), 0u),
-                     std::max(static_cast<unsigned>(pos.y() * pixelRatio), 0u));
+    const auto [x, y] = ScaleTouch(pos);
+    this->TouchMoved(x, y);
     InputCommon::GetMotionEmu()->Tilt(pos.x(), pos.y());
 }
 
 void GRenderWindow::mouseReleaseEvent(QMouseEvent* event) {
+    if (event->source() == Qt::MouseEventSynthesizedBySystem)
+        return; // touch input is handled in TouchEndEvent
+
     if (event->button() == Qt::LeftButton)
         this->TouchReleased();
     else if (event->button() == Qt::RightButton)
         InputCommon::GetMotionEmu()->EndTilt();
+}
+
+void GRenderWindow::TouchBeginEvent(const QTouchEvent* event) {
+    // TouchBegin always has exactly one touch point, so take the .first()
+    const auto [x, y] = ScaleTouch(event->touchPoints().first().pos());
+    this->TouchPressed(x, y);
+}
+
+void GRenderWindow::TouchUpdateEvent(const QTouchEvent* event) {
+    QPointF pos;
+    int active_points = 0;
+
+    // average all active touch points
+    for (const auto tp : event->touchPoints()) {
+        if (tp.state() & (Qt::TouchPointPressed | Qt::TouchPointMoved | Qt::TouchPointStationary)) {
+            active_points++;
+            pos += tp.pos();
+        }
+    }
+
+    pos /= active_points;
+
+    const auto [x, y] = ScaleTouch(pos);
+    this->TouchMoved(x, y);
+}
+
+void GRenderWindow::TouchEndEvent() {
+    this->TouchReleased();
+}
+
+bool GRenderWindow::event(QEvent* event) {
+    if (event->type() == QEvent::TouchBegin) {
+        TouchBeginEvent(static_cast<QTouchEvent*>(event));
+        return true;
+    } else if (event->type() == QEvent::TouchUpdate) {
+        TouchUpdateEvent(static_cast<QTouchEvent*>(event));
+        return true;
+    } else if (event->type() == QEvent::TouchEnd || event->type() == QEvent::TouchCancel) {
+        TouchEndEvent();
+        return true;
+    }
+
+    return QWidget::event(event);
 }
 
 void GRenderWindow::focusOutEvent(QFocusEvent* event) {

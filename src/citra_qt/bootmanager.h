@@ -15,6 +15,7 @@
 
 class QKeyEvent;
 class QScreen;
+class QTouchEvent;
 
 class GGLWidgetInternal;
 class GMainWindow;
@@ -119,7 +120,7 @@ public:
     void restoreGeometry(const QByteArray& geometry); // overridden
     QByteArray saveGeometry();                        // overridden
 
-    qreal windowPixelRatio();
+    qreal windowPixelRatio() const;
 
     void closeEvent(QCloseEvent* event) override;
 
@@ -129,6 +130,8 @@ public:
     void mousePressEvent(QMouseEvent* event) override;
     void mouseMoveEvent(QMouseEvent* event) override;
     void mouseReleaseEvent(QMouseEvent* event) override;
+
+    bool event(QEvent* event) override;
 
     void focusOutEvent(QFocusEvent* event) override;
 
@@ -148,6 +151,11 @@ signals:
     void Closed();
 
 private:
+    std::pair<unsigned, unsigned> ScaleTouch(const QPointF pos) const;
+    void TouchBeginEvent(const QTouchEvent* event);
+    void TouchUpdateEvent(const QTouchEvent* event);
+    void TouchEndEvent();
+
     void OnMinimalClientAreaChangeRequest(
         const std::pair<unsigned, unsigned>& minimal_size) override;
 

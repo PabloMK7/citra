@@ -40,6 +40,18 @@ private:
     /// Called by PollEvents when a mouse button is pressed or released
     void OnMouseButton(u32 button, u8 state, s32 x, s32 y);
 
+    /// Translates pixel position (0..1) to pixel positions
+    std::pair<unsigned, unsigned> TouchToPixelPos(float touch_x, float touch_y) const;
+
+    /// Called by PollEvents when a finger starts touching the touchscreen
+    void OnFingerDown(float x, float y);
+
+    /// Called by PollEvents when a finger moves while touching the touchscreen
+    void OnFingerMotion(float x, float y);
+
+    /// Called by PollEvents when a finger stops touching the touchscreen
+    void OnFingerUp();
+
     /// Called by PollEvents when any event that may cause the window to be resized occurs
     void OnResize();
 
