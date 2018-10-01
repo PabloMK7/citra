@@ -73,6 +73,9 @@ private:
     void loadConfiguration();
     /// Restore all buttons to their default values.
     void restoreDefaults();
+    /// Clear all input configuration
+    void ClearAll();
+
     /// Update UI to reflect current configuration.
     void updateButtonLabels();
 

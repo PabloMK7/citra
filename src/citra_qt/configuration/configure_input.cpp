@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <memory>
 #include <utility>
+#include <QMenu>
 #include <QMessageBox>
 #include <QTimer>
 #include "citra_qt/configuration/config.h"
@@ -124,28 +125,63 @@ ConfigureInput::ConfigureInput(QWidget* parent)
     analog_map_stick = {ui->buttonCircleAnalog, ui->buttonCStickAnalog};
 
     for (int button_id = 0; button_id < Settings::NativeButton::NumButtons; button_id++) {
-        if (button_map[button_id])
-            connect(button_map[button_id], &QPushButton::released, [=]() {
-                handleClick(
-                    button_map[button_id],
-                    [=](const Common::ParamPackage& params) { buttons_param[button_id] = params; },
-                    InputCommon::Polling::DeviceType::Button);
-            });
+        if (!button_map[button_id])
+            continue;
+        button_map[button_id]->setContextMenuPolicy(Qt::CustomContextMenu);
+        connect(button_map[button_id], &QPushButton::released, [=]() {
+            handleClick(
+                button_map[button_id],
+                [=](const Common::ParamPackage& params) { buttons_param[button_id] = params; },
+                InputCommon::Polling::DeviceType::Button);
+        });
+        connect(button_map[button_id], &QPushButton::customContextMenuRequested,
+                [=](const QPoint& menu_location) {
+                    QMenu context_menu;
+                    context_menu.addAction(tr("Clear"), [&] {
+                        buttons_param[button_id].Clear();
+                        button_map[button_id]->setText(tr("[not set]"));
+                    });
+                    context_menu.addAction(tr("Restore Default"), [&] {
+                        buttons_param[button_id] = Common::ParamPackage{
+                            InputCommon::GenerateKeyboardParam(Config::default_buttons[button_id])};
+                        button_map[button_id]->setText(ButtonToText(buttons_param[button_id]));
+                    });
+                    context_menu.exec(button_map[button_id]->mapToGlobal(menu_location));
+                });
     }
 
     for (int analog_id = 0; analog_id < Settings::NativeAnalog::NumAnalogs; analog_id++) {
         for (int sub_button_id = 0; sub_button_id < ANALOG_SUB_BUTTONS_NUM; sub_button_id++) {
-            if (analog_map_buttons[analog_id][sub_button_id] != nullptr) {
-                connect(analog_map_buttons[analog_id][sub_button_id], &QPushButton::released,
-                        [=]() {
-                            handleClick(analog_map_buttons[analog_id][sub_button_id],
-                                        [=](const Common::ParamPackage& params) {
-                                            SetAnalogButton(params, analogs_param[analog_id],
-                                                            analog_sub_buttons[sub_button_id]);
-                                        },
-                                        InputCommon::Polling::DeviceType::Button);
+            if (!analog_map_buttons[analog_id][sub_button_id])
+                continue;
+            analog_map_buttons[analog_id][sub_button_id]->setContextMenuPolicy(
+                Qt::CustomContextMenu);
+            connect(analog_map_buttons[analog_id][sub_button_id], &QPushButton::released, [=]() {
+                handleClick(analog_map_buttons[analog_id][sub_button_id],
+                            [=](const Common::ParamPackage& params) {
+                                SetAnalogButton(params, analogs_param[analog_id],
+                                                analog_sub_buttons[sub_button_id]);
+                            },
+                            InputCommon::Polling::DeviceType::Button);
+            });
+            connect(analog_map_buttons[analog_id][sub_button_id],
+                    &QPushButton::customContextMenuRequested, [=](const QPoint& menu_location) {
+                        QMenu context_menu;
+                        context_menu.addAction(tr("Clear"), [&] {
+                            analogs_param[analog_id].Erase(analog_sub_buttons[sub_button_id]);
+                            analog_map_buttons[analog_id][sub_button_id]->setText(tr("[not set]"));
                         });
-            }
+                        context_menu.addAction(tr("Restore Default"), [&] {
+                            Common::ParamPackage params{InputCommon::GenerateKeyboardParam(
+                                Config::default_analogs[analog_id][sub_button_id])};
+                            SetAnalogButton(params, analogs_param[analog_id],
+                                            analog_sub_buttons[sub_button_id]);
+                            analog_map_buttons[analog_id][sub_button_id]->setText(AnalogToText(
+                                analogs_param[analog_id], analog_sub_buttons[sub_button_id]));
+                        });
+                        context_menu.exec(analog_map_buttons[analog_id][sub_button_id]->mapToGlobal(
+                            menu_location));
+                    });
         }
         connect(analog_map_stick[analog_id], &QPushButton::released, [=]() {
             QMessageBox::information(
@@ -162,6 +198,7 @@ ConfigureInput::ConfigureInput(QWidget* parent)
         QDialog* motion_touch_dialog = new ConfigureMotionTouch(this);
         return motion_touch_dialog->exec();
     });
+    connect(ui->buttonClearAll, &QPushButton::released, [this] { ClearAll(); });
     connect(ui->buttonRestoreDefaults, &QPushButton::released, [this]() { restoreDefaults(); });
 
     timeout_timer->setSingleShot(true);
@@ -215,7 +252,21 @@ void ConfigureInput::restoreDefaults() {
         }
     }
     updateButtonLabels();
-    applyConfiguration();
+}
+
+void ConfigureInput::ClearAll() {
+    for (int button_id = 0; button_id < Settings::NativeButton::NumButtons; button_id++) {
+        if (button_map[button_id] && button_map[button_id]->isEnabled())
+            buttons_param[button_id].Clear();
+    }
+    for (int analog_id = 0; analog_id < Settings::NativeAnalog::NumAnalogs; analog_id++) {
+        for (int sub_button_id = 0; sub_button_id < ANALOG_SUB_BUTTONS_NUM; sub_button_id++) {
+            if (analog_map_buttons[analog_id][sub_button_id] &&
+                analog_map_buttons[analog_id][sub_button_id]->isEnabled())
+                analogs_param[analog_id].Erase(analog_sub_buttons[sub_button_id]);
+        }
+    }
+    updateButtonLabels();
 }
 
 void ConfigureInput::updateButtonLabels() {
