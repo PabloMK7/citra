@@ -4,9 +4,11 @@
 
 #pragma once
 
+#include <atomic>
 #include <chrono>
 #include <mutex>
 #include "common/common_types.h"
+#include "common/thread.h"
 
 namespace Core {
 
@@ -70,6 +72,14 @@ public:
 
     void DoFrameLimiting(std::chrono::microseconds current_system_time_us);
 
+    /**
+     * Sets whether frame advancing is enabled or not.
+     * Note: The frontend must cancel frame advancing before shutting down in order
+     *       to resume the emu_thread.
+     */
+    void SetFrameAdvancing(bool value);
+    void AdvanceFrame();
+
 private:
     /// Emulated system time (in microseconds) at the last limiter invocation
     std::chrono::microseconds previous_system_time_us{0};
@@ -78,6 +88,12 @@ private:
 
     /// Accumulated difference between walltime and emulated time
     std::chrono::microseconds frame_limiting_delta_err{0};
+
+    /// Whether to use frame advancing (i.e. frame by frame)
+    std::atomic_bool frame_advancing_enabled;
+
+    /// Event to advance the frame when frame advancing is enabled
+    Common::Event frame_advance_event;
 };
 
 } // namespace Core
