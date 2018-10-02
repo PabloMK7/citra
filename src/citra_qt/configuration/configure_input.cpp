@@ -148,9 +148,9 @@ ConfigureInput::ConfigureInput(QWidget* parent)
             }
         }
         connect(analog_map_stick[analog_id], &QPushButton::released, [=]() {
-            QMessageBox::information(
-                this, "Information",
-                "After pressing OK, first move your joystick horizontally, and then vertically.");
+            QMessageBox::information(this, tr("Information"),
+                                     tr("After pressing OK, first move your joystick horizontally, "
+                                        "and then vertically."));
             handleClick(
                 analog_map_stick[analog_id],
                 [=](const Common::ParamPackage& params) { analogs_param[analog_id] = params; },
