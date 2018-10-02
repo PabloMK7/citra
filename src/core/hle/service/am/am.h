@@ -12,6 +12,7 @@
 #include "common/common_types.h"
 #include "core/file_sys/cia_container.h"
 #include "core/file_sys/file_backend.h"
+#include "core/hle/kernel/mutex.h"
 #include "core/hle/result.h"
 #include "core/hle/service/service.h"
 
@@ -481,6 +482,17 @@ public:
         void DeleteProgram(Kernel::HLERequestContext& ctx);
 
         /**
+         * AM::GetSystemUpdaterMutex service function
+         *  Inputs:
+         *      0 : Command header (0x04120000)
+         *  Outputs:
+         *      1 : Result, 0 on success, otherwise error code
+         *      2 : Copy handle descriptor
+         *      3 : System updater mutex
+         */
+        void GetSystemUpdaterMutex(Kernel::HLERequestContext& ctx);
+
+        /**
          * AM::GetMetaSizeFromCia service function
          * Returns the size of a given CIA's meta section
          *  Inputs:
@@ -522,6 +534,7 @@ private:
 
     bool cia_installing = false;
     std::array<std::vector<u64_le>, 3> am_title_list;
+    Kernel::SharedPtr<Kernel::Mutex> system_updater_mutex;
 };
 
 void InstallInterfaces(SM::ServiceManager& service_manager);
