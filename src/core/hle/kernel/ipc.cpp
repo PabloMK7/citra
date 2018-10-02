@@ -39,6 +39,7 @@ ResultCode TranslateCommandBuffer(SharedPtr<Thread> src_thread, SharedPtr<Thread
 
     std::size_t dst_untranslated_size = 1u + dst_header.normal_params_size;
     std::size_t dst_command_size = dst_untranslated_size + dst_header.translate_params_size;
+    std::size_t target_index = dst_untranslated_size;
 
     std::array<u32, IPC::COMMAND_BUFFER_LENGTH> dst_cmd_buf;
     Memory::ReadBlock(*dst_process, dst_address, dst_cmd_buf.data(),
@@ -148,54 +149,44 @@ ResultCode TranslateCommandBuffer(SharedPtr<Thread> src_thread, SharedPtr<Thread
 
             if (reply) {
                 // Scan the target's command buffer for the matching mapped buffer
-                std::size_t j = dst_untranslated_size;
-                while (j < dst_command_size) {
-                    u32 desc = dst_cmd_buf[j++];
+                while (target_index < dst_command_size) {
+                    u32 desc = dst_cmd_buf[target_index++];
 
                     if (IPC::GetDescriptorType(desc) == IPC::DescriptorType::MappedBuffer) {
                         IPC::MappedBufferDescInfo dest_descInfo{desc};
-                        VAddr dest_address = dst_cmd_buf[j];
+                        VAddr dest_address = dst_cmd_buf[target_index];
 
                         u32 dest_size = static_cast<u32>(dest_descInfo.size);
                         IPC::MappedBufferPermissions dest_permissions = dest_descInfo.perms;
 
-                        if (permissions == dest_permissions && size == dest_size) {
-                            // Readonly buffers do not need to be copied over to the target
-                            // process again because they were (presumably) not modified. This
-                            // behavior is consistent with the real kernel.
-                            if (permissions != IPC::MappedBufferPermissions::R) {
-                                // Copy the modified buffer back into the target process
-                                Memory::CopyBlock(*src_process, *dst_process, source_address,
-                                                  dest_address, size);
-                            }
-
-                            // Unmap the Reserved page before the buffer
-                            ResultCode result = src_process->vm_manager.UnmapRange(
-                                page_start - Memory::PAGE_SIZE, Memory::PAGE_SIZE);
-                            ASSERT(result == RESULT_SUCCESS);
-
-                            // Unmap the buffer from the source process
-                            result = src_process->vm_manager.UnmapRange(
-                                page_start, num_pages * Memory::PAGE_SIZE);
-                            ASSERT(result == RESULT_SUCCESS);
-
-                            // Check if this is the last mapped buffer
-                            VAddr next_reserve = page_start + num_pages * Memory::PAGE_SIZE;
-                            auto& vma =
-                                src_process->vm_manager.FindVMA(next_reserve + Memory::PAGE_SIZE)
-                                    ->second;
-                            if (vma.type == VMAType::Free) {
-                                // Unmap the Reserved page after the last buffer
-                                result = src_process->vm_manager.UnmapRange(next_reserve,
-                                                                            Memory::PAGE_SIZE);
-                                ASSERT(result == RESULT_SUCCESS);
-                            }
-
-                            break;
+                        ASSERT(permissions == dest_permissions && size == dest_size);
+                        // Readonly buffers do not need to be copied over to the target
+                        // process again because they were (presumably) not modified. This
+                        // behavior is consistent with the real kernel.
+                        if (permissions != IPC::MappedBufferPermissions::R) {
+                            // Copy the modified buffer back into the target process
+                            Memory::CopyBlock(*src_process, *dst_process, source_address,
+                                              dest_address, size);
                         }
+
+                        VAddr prev_reserve = page_start - Memory::PAGE_SIZE;
+                        VAddr next_reserve = page_start + num_pages * Memory::PAGE_SIZE;
+
+                        auto& prev_vma = src_process->vm_manager.FindVMA(prev_reserve)->second;
+                        auto& next_vma = src_process->vm_manager.FindVMA(next_reserve)->second;
+                        ASSERT(prev_vma.meminfo_state == MemoryState::Reserved &&
+                               next_vma.meminfo_state == MemoryState::Reserved);
+
+                        // Unmap the buffer and guard pages from the source process
+                        ResultCode result = src_process->vm_manager.UnmapRange(
+                            page_start - Memory::PAGE_SIZE, (num_pages + 2) * Memory::PAGE_SIZE);
+                        ASSERT(result == RESULT_SUCCESS);
+
+                        target_index += 1;
+                        break;
                     }
 
-                    j += 1;
+                    target_index += 1;
                 }
 
                 i += 1;
@@ -224,15 +215,7 @@ ResultCode TranslateCommandBuffer(SharedPtr<Thread> src_thread, SharedPtr<Thread
 
             cmd_buf[i++] = target_address + page_offset;
 
-            // Check if this is the last mapped buffer
-            if (i < command_size) {
-                u32 next_descriptor = cmd_buf[i];
-                if (IPC::GetDescriptorType(next_descriptor) == IPC::DescriptorType::MappedBuffer) {
-                    break;
-                }
-            }
-
-            // Reserve a page of memory after the last mapped buffer
+            // Reserve a page of memory after the mapped buffer
             dst_process->vm_manager.MapMemoryBlockToBase(
                 Memory::IPC_MAPPING_VADDR, Memory::IPC_MAPPING_SIZE, reserve_buffer, 0,
                 static_cast<u32>(reserve_buffer->size()), Kernel::MemoryState::Reserved);
