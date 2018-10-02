@@ -70,7 +70,7 @@ AM_U::AM_U(std::shared_ptr<Module> am) : Module::Interface(std::move(am), "am:u"
         {0x040F0000, nullptr, "UpdateFirmwareAuto"},
         {0x041000C0, &AM_U::DeleteProgram, "DeleteProgram"},
         {0x04110044, nullptr, "GetTwlProgramListForReboot"},
-        {0x04120000, nullptr, "GetSystemUpdaterMutex"},
+        {0x04120000, &AM_U::GetSystemUpdaterMutex, "GetSystemUpdaterMutex"},
         {0x04130002, &AM_U::GetMetaSizeFromCia, "GetMetaSizeFromCia"},
         {0x04140044, &AM_U::GetMetaDataFromCia, "GetMetaDataFromCia"},
         {0x04150080, nullptr, "CheckDemoLaunchRights"},

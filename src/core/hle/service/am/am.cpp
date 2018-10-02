@@ -1291,6 +1291,14 @@ void Module::Interface::DeleteProgram(Kernel::HLERequestContext& ctx) {
         LOG_ERROR(Service_AM, "FileUtil::DeleteDirRecursively unexpectedly failed");
 }
 
+void Module::Interface::GetSystemUpdaterMutex(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x412, 0, 0); // 0x04120000
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
+    rb.Push(RESULT_SUCCESS);
+    rb.PushCopyObjects(am->system_updater_mutex);
+}
+
 void Module::Interface::GetMetaSizeFromCia(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x0413, 0, 2); // 0x04130002
     auto cia = rp.PopObject<Kernel::ClientSession>();
@@ -1362,6 +1370,7 @@ void Module::Interface::GetMetaDataFromCia(Kernel::HLERequestContext& ctx) {
 
 Module::Module() {
     ScanForAllTitles();
+    system_updater_mutex = Kernel::Mutex::Create(false, "AM::SystemUpdaterMutex");
 }
 
 Module::~Module() = default;
