@@ -19,9 +19,8 @@ ConfigureAudio::ConfigureAudio(QWidget* parent)
         ui->output_sink_combo_box->addItem(sink_detail.id);
     }
 
-    connect(ui->volume_slider, &QSlider::valueChanged, [this] {
-        ui->volume_indicator->setText(tr("%1 %").arg(ui->volume_slider->sliderPosition()));
-    });
+    connect(ui->volume_slider, &QSlider::valueChanged, this,
+            &ConfigureAudio::setVolumeIndicatorText);
 
     this->setConfiguration();
     connect(ui->output_sink_combo_box,
@@ -57,7 +56,11 @@ void ConfigureAudio::setConfiguration() {
     ui->audio_device_combo_box->setCurrentIndex(new_device_index);
 
     ui->volume_slider->setValue(Settings::values.volume * ui->volume_slider->maximum());
-    ui->volume_indicator->setText(tr("%1 %").arg(ui->volume_slider->sliderPosition()));
+    setVolumeIndicatorText(ui->volume_slider->sliderPosition());
+}
+
+void ConfigureAudio::setVolumeIndicatorText(int percentage) {
+    ui->volume_indicator->setText(tr("%1%", "Volume percentage (e.g. 50%)").arg(percentage));
 }
 
 void ConfigureAudio::applyConfiguration() {
