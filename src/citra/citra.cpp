@@ -90,11 +90,11 @@ static void OnStateChanged(const Network::RoomMember::State& state) {
     case Network::RoomMember::State::NameCollision:
         LOG_ERROR(
             Network,
-            "You tried to use the same nickname then another user that is connected to the Room");
+            "You tried to use the same nickname as another user that is connected to the Room");
         exit(1);
         break;
     case Network::RoomMember::State::MacCollision:
-        LOG_ERROR(Network, "You tried to use the same MAC-Address then another user that is "
+        LOG_ERROR(Network, "You tried to use the same MAC-Address as another user that is "
                            "connected to the Room");
         exit(1);
         break;
@@ -104,7 +104,7 @@ static void OnStateChanged(const Network::RoomMember::State& state) {
         break;
     case Network::RoomMember::State::WrongVersion:
         LOG_ERROR(Network,
-                  "You are using a different version then the room you are trying to connect to");
+                  "You are using a different version than the room you are trying to connect to");
         exit(1);
         break;
     default:
