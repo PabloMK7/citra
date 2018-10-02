@@ -79,10 +79,10 @@ void ConfigureAudio::updateAudioDevices(int sink_index) {
     ui->audio_device_combo_box->clear();
     ui->audio_device_combo_box->addItem(AudioCore::auto_device_name);
 
-    std::string sink_id = ui->output_sink_combo_box->itemText(sink_index).toStdString();
-    std::vector<std::string> device_list = AudioCore::GetSinkDetails(sink_id).list_devices();
+    const std::string sink_id = ui->output_sink_combo_box->itemText(sink_index).toStdString();
+    const std::vector<std::string> device_list = AudioCore::GetSinkDetails(sink_id).list_devices();
     for (const auto& device : device_list) {
-        ui->audio_device_combo_box->addItem(device.c_str());
+        ui->audio_device_combo_box->addItem(QString::fromStdString(device));
     }
 }
 
