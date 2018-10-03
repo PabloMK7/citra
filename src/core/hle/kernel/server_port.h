@@ -10,6 +10,7 @@
 #include "common/common_types.h"
 #include "core/hle/kernel/object.h"
 #include "core/hle/kernel/wait_object.h"
+#include "core/hle/result.h"
 
 namespace Kernel {
 

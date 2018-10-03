@@ -6,16 +6,16 @@
 
 #include <memory>
 #include <string>
+#include <type_traits>
 #include <unordered_map>
-
+#include "core/hle/kernel/client_port.h"
 #include "core/hle/kernel/object.h"
+#include "core/hle/kernel/server_port.h"
 #include "core/hle/result.h"
 #include "core/hle/service/service.h"
 
 namespace Kernel {
-class ClientPort;
 class ClientSession;
-class ServerPort;
 class SessionRequestHandler;
 } // namespace Kernel
 
@@ -45,6 +45,22 @@ public:
                                                                      unsigned int max_sessions);
     ResultVal<Kernel::SharedPtr<Kernel::ClientPort>> GetServicePort(const std::string& name);
     ResultVal<Kernel::SharedPtr<Kernel::ClientSession>> ConnectToService(const std::string& name);
+
+    template <typename T>
+    std::shared_ptr<T> GetService(const std::string& service_name) const {
+        static_assert(std::is_base_of_v<Kernel::SessionRequestHandler, T>,
+                      "Not a base of ServiceFrameworkBase");
+        auto service = registered_services.find(service_name);
+        if (service == registered_services.end()) {
+            LOG_DEBUG(Service, "Can't find service: {}", service_name);
+            return nullptr;
+        }
+        auto port = service->second->GetServerPort();
+        if (port == nullptr) {
+            return nullptr;
+        }
+        return std::static_pointer_cast<T>(port->hle_handler);
+    }
 
 private:
     std::weak_ptr<SRV> srv_interface;
