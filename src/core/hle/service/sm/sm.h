@@ -47,7 +47,7 @@ public:
     ResultVal<Kernel::SharedPtr<Kernel::ClientSession>> ConnectToService(const std::string& name);
 
     template <typename T>
-    std::shared_ptr<T> GetService(const std::string& service_name) {
+    std::shared_ptr<T> GetService(const std::string& service_name) const {
         static_assert(std::is_base_of_v<Kernel::SessionRequestHandler, T>,
                       "Not a base of ServiceFrameworkBase");
         auto service = registered_services.find(service_name);
@@ -59,7 +59,7 @@ public:
         if (port == nullptr) {
             return nullptr;
         }
-        return std::dynamic_pointer_cast<T>(port->hle_handler);
+        return std::static_pointer_cast<T>(port->hle_handler);
     }
 
 private:
