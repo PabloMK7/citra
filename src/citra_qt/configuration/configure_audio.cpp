@@ -31,32 +31,44 @@ ConfigureAudio::ConfigureAudio(QWidget* parent)
 ConfigureAudio::~ConfigureAudio() {}
 
 void ConfigureAudio::setConfiguration() {
+    setOutputSinkFromSinkID();
+
+    // The device list cannot be pre-populated (nor listed) until the output sink is known.
+    updateAudioDevices(ui->output_sink_combo_box->currentIndex());
+
+    setAudioDeviceFromDeviceID();
+
+    ui->toggle_audio_stretching->setChecked(Settings::values.enable_audio_stretching);
+    ui->volume_slider->setValue(Settings::values.volume * ui->volume_slider->maximum());
+    setVolumeIndicatorText(ui->volume_slider->sliderPosition());
+}
+
+void ConfigureAudio::setOutputSinkFromSinkID() {
     int new_sink_index = 0;
+
+    const QString sink_id = QString::fromStdString(Settings::values.sink_id);
     for (int index = 0; index < ui->output_sink_combo_box->count(); index++) {
-        if (ui->output_sink_combo_box->itemText(index).toStdString() == Settings::values.sink_id) {
+        if (ui->output_sink_combo_box->itemText(index) == sink_id) {
             new_sink_index = index;
             break;
         }
     }
+
     ui->output_sink_combo_box->setCurrentIndex(new_sink_index);
+}
 
-    ui->toggle_audio_stretching->setChecked(Settings::values.enable_audio_stretching);
-
-    // The device list cannot be pre-populated (nor listed) until the output sink is known.
-    updateAudioDevices(new_sink_index);
-
+void ConfigureAudio::setAudioDeviceFromDeviceID() {
     int new_device_index = -1;
+
+    const QString device_id = QString::fromStdString(Settings::values.audio_device_id);
     for (int index = 0; index < ui->audio_device_combo_box->count(); index++) {
-        if (ui->audio_device_combo_box->itemText(index).toStdString() ==
-            Settings::values.audio_device_id) {
+        if (ui->audio_device_combo_box->itemText(index) == device_id) {
             new_device_index = index;
             break;
         }
     }
-    ui->audio_device_combo_box->setCurrentIndex(new_device_index);
 
-    ui->volume_slider->setValue(Settings::values.volume * ui->volume_slider->maximum());
-    setVolumeIndicatorText(ui->volume_slider->sliderPosition());
+    ui->audio_device_combo_box->setCurrentIndex(new_device_index);
 }
 
 void ConfigureAudio::setVolumeIndicatorText(int percentage) {
