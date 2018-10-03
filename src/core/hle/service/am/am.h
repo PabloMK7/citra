@@ -385,6 +385,17 @@ public:
         void BeginImportProgram(Kernel::HLERequestContext& ctx);
 
         /**
+         * AM::BeginImportProgramTemporarily service function
+         * Begin importing from a CTR Installable Archive into the temporary title database
+         *  Inputs:
+         *      0 : Command header (0x04030000)
+         *  Outputs:
+         *      1 : Result, 0 on success, otherwise error code
+         *      2-3 : CIAFile handle for application to write to
+         */
+        void BeginImportProgramTemporarily(Kernel::HLERequestContext& ctx);
+
+        /**
          * AM::EndImportProgram service function
          * Finish importing from a CTR Installable Archive
          *  Inputs:
@@ -394,6 +405,32 @@ public:
          *      1 : Result, 0 on success, otherwise error code
          */
         void EndImportProgram(Kernel::HLERequestContext& ctx);
+
+        /**
+         * AM::EndImportProgramWithoutCommit service function
+         * Finish importing from a CTR Installable Archive
+         *  Inputs:
+         *      0 : Command header (0x04060002)
+         *      1-2 : CIAFile handle application wrote to
+         *  Outputs:
+         *      1 : Result, 0 on success, otherwise error code
+         */
+        void EndImportProgramWithoutCommit(Kernel::HLERequestContext& ctx);
+
+        /**
+         * AM::CommitImportPrograms service function
+         * Commits changes from the temporary title database to the real title database (title.db).
+         * This is a no-op for us, we don't use title.db
+         *  Inputs:
+         *      0 : Command header (0x040700C2)
+         *      1 : Media type
+         *      2 : Title count
+         *      3 : Database type
+         *    4-5 : Title list buffer
+         *  Outputs:
+         *      1 : Result, 0 on success, otherwise error code
+         */
+        void CommitImportPrograms(Kernel::HLERequestContext& ctx);
 
         /**
          * AM::GetProgramInfoFromCia service function

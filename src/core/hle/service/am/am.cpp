@@ -1038,6 +1038,33 @@ void Module::Interface::BeginImportProgram(Kernel::HLERequestContext& ctx) {
     LOG_WARNING(Service_AM, "(STUBBED) media_type={}", static_cast<u32>(media_type));
 }
 
+void Module::Interface::BeginImportProgramTemporarily(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x0403, 0, 0); // 0x04030000
+
+    if (am->cia_installing) {
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        rb.Push(ResultCode(ErrCodes::CIACurrentlyInstalling, ErrorModule::AM,
+                           ErrorSummary::InvalidState, ErrorLevel::Permanent));
+        return;
+    }
+
+    // Note: This function should register the title in the temp_i.db database, but we can get away
+    // with not doing that because we traverse the file system to detect installed titles.
+    // Create our CIAFile handle for the app to write to, and while the app writes Citra will store
+    // contents out to sdmc/nand
+    const FileSys::Path cia_path = {};
+    auto file = std::make_shared<Service::FS::File>(std::make_unique<CIAFile>(FS::MediaType::NAND),
+                                                    cia_path);
+
+    am->cia_installing = true;
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
+    rb.Push(RESULT_SUCCESS); // No error
+    rb.PushCopyObjects(file->Connect());
+
+    LOG_WARNING(Service_AM, "(STUBBED)");
+}
+
 void Module::Interface::EndImportProgram(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x0405, 0, 2); // 0x04050002
     auto cia = rp.PopObject<Kernel::ClientSession>();
@@ -1047,6 +1074,35 @@ void Module::Interface::EndImportProgram(Kernel::HLERequestContext& ctx) {
     am->cia_installing = false;
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
+}
+
+void Module::Interface::EndImportProgramWithoutCommit(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x0406, 0, 2); // 0x04060002
+    auto cia = rp.PopObject<Kernel::ClientSession>();
+
+    // Note: This function is basically a no-op for us since we don't use title.db or ticket.db
+    // files to keep track of installed titles.
+    am->ScanForAllTitles();
+
+    am->cia_installing = false;
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RESULT_SUCCESS);
+}
+
+void Module::Interface::CommitImportPrograms(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x0407, 3, 2); // 0x040700C2
+    auto media_type = static_cast<Service::FS::MediaType>(rp.Pop<u8>());
+    u32 title_count = rp.Pop<u32>();
+    u8 database = rp.Pop<u8>();
+    auto buffer = rp.PopMappedBuffer();
+
+    // Note: This function is basically a no-op for us since we don't use title.db or ticket.db
+    // files to keep track of installed titles.
+    am->ScanForAllTitles();
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
+    rb.Push(RESULT_SUCCESS);
+    rb.PushMappedBuffer(buffer);
 }
 
 /// Wraps all File operations to allow adding an offset to them.
