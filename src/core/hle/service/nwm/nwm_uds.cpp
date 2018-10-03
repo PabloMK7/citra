@@ -9,6 +9,7 @@
 #include <list>
 #include <map>
 #include <mutex>
+#include <optional>
 #include <unordered_map>
 #include <vector>
 #include <cryptopp/osrng.h>
@@ -103,13 +104,16 @@ static std::mutex beacon_mutex;
 
 // Number of beacons to store before we start dropping the old ones.
 // TODO(Subv): Find a more accurate value for this limit.
-constexpr std::size_t MaxBeaconFrames = 15;
+static constexpr std::size_t MaxBeaconFrames = 15;
 
 // List of the last <MaxBeaconFrames> beacons received from the network.
 static std::list<Network::WifiPacket> received_beacons;
 
 // Network node id used when a SecureData packet is addressed to every connected node.
-constexpr u16 BroadcastNetworkNodeId = 0xFFFF;
+static constexpr u16 BroadcastNetworkNodeId = 0xFFFF;
+
+// The Host has always dest_node_id 1
+static constexpr u16 HostDestNodeId = 1;
 
 /**
  * Returns a list of received 802.11 beacon frames from the specified sender since the last call.
@@ -600,6 +604,26 @@ void OnWifiPacketReceived(const Network::WifiPacket& packet) {
     }
 }
 
+static std::optional<Network::MacAddress> GetNodeMacAddress(u16 dest_node_id, u8 flags) {
+    constexpr u8 BroadcastFlag = 0x2;
+    if ((flags & BroadcastFlag) || dest_node_id == BroadcastNetworkNodeId) {
+        // Broadcast
+        return Network::BroadcastMac;
+    } else if (dest_node_id == HostDestNodeId) {
+        // Destination is host
+        return network_info.host_mac_address;
+    }
+    // Destination is a specific client
+    auto destination =
+        std::find_if(node_map.begin(), node_map.end(), [dest_node_id](const auto& node) {
+            return node.second.node_id == dest_node_id && node.second.connected;
+        });
+    if (destination == node_map.end()) {
+        return {};
+    }
+    return destination->first;
+}
+
 void NWM_UDS::Shutdown(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x03, 0, 0);
 
@@ -1060,31 +1084,15 @@ void NWM_UDS::SendTo(Kernel::HLERequestContext& ctx) {
         return;
     }
 
-    Network::MacAddress dest_address;
-
     if (flags >> 2) {
         LOG_ERROR(Service_NWM, "Unexpected flags 0x{:02X}", flags);
     }
 
-    if ((flags & (0x1 << 1)) || dest_node_id == 0xFFFF) {
-        // Broadcast
-        dest_address = Network::BroadcastMac;
-    } else if (dest_node_id != 1) {
-        // Send to specific client
-        auto destination =
-            std::find_if(node_map.begin(), node_map.end(), [dest_node_id](const auto& node) {
-                return node.second.node_id == dest_node_id && node.second.connected;
-            });
-        if (destination == node_map.end()) {
-            LOG_ERROR(Service_NWM, "tried to send packet to unknown dest id {}", dest_node_id);
-            rb.Push(ResultCode(ErrorDescription::NotFound, ErrorModule::UDS,
-                               ErrorSummary::WrongArgument, ErrorLevel::Status));
-            return;
-        }
-        dest_address = destination->first;
-    } else {
-        // Send message to host
-        dest_address = network_info.host_mac_address;
+    auto dest_address = GetNodeMacAddress(dest_node_id, flags);
+    if (!dest_address) {
+        rb.Push(ResultCode(ErrorDescription::NotFound, ErrorModule::UDS,
+                           ErrorSummary::WrongArgument, ErrorLevel::Status));
+        return;
     }
 
     constexpr std::size_t MaxSize = 0x5C6;
@@ -1100,12 +1108,12 @@ void NWM_UDS::SendTo(Kernel::HLERequestContext& ctx) {
         GenerateDataPayload(input_buffer, data_channel, dest_node_id,
                             connection_status.network_node_id, sequence_number);
 
-    // TODO(B3N30): Retrieve the MAC address of the dest_node_id and our own to encrypt
+    // TODO(B3N30): Use the MAC address of the dest_node_id and our own to encrypt
     // and encapsulate the payload.
 
     Network::WifiPacket packet;
 
-    packet.destination_address = dest_address;
+    packet.destination_address = *dest_address;
     packet.channel = network_channel;
     packet.data = std::move(data_payload);
     packet.type = Network::WifiPacket::PacketType::Data;
