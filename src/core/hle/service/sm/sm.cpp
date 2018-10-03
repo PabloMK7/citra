@@ -4,9 +4,7 @@
 
 #include <tuple>
 #include "common/assert.h"
-#include "core/hle/kernel/client_port.h"
 #include "core/hle/kernel/client_session.h"
-#include "core/hle/kernel/server_port.h"
 #include "core/hle/result.h"
 #include "core/hle/service/sm/sm.h"
 #include "core/hle/service/sm/srv.h"
