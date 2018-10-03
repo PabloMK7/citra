@@ -32,6 +32,12 @@ struct NodeInfo {
     INSERT_PADDING_BYTES(4);
     u16_le network_node_id;
     INSERT_PADDING_BYTES(6);
+
+    void Reset() {
+        friend_code_seed = 0;
+        username.fill(0);
+        network_node_id = 0;
+    }
 };
 
 static_assert(sizeof(NodeInfo) == 40, "NodeInfo has incorrect size.");
