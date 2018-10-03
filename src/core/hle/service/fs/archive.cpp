@@ -307,6 +307,18 @@ Kernel::SharedPtr<Kernel::ClientSession> File::Connect() {
     return std::get<Kernel::SharedPtr<Kernel::ClientSession>>(sessions);
 }
 
+std::size_t File::GetSessionFileOffset(Kernel::SharedPtr<Kernel::ServerSession> session) {
+    const FileSessionSlot* slot = GetSessionData(session);
+    ASSERT(slot);
+    return slot->offset;
+}
+
+std::size_t File::GetSessionFileSize(Kernel::SharedPtr<Kernel::ServerSession> session) {
+    const FileSessionSlot* slot = GetSessionData(session);
+    ASSERT(slot);
+    return slot->size;
+}
+
 Directory::Directory(std::unique_ptr<FileSys::DirectoryBackend>&& backend,
                      const FileSys::Path& path)
     : ServiceFramework("", 1), path(path), backend(std::move(backend)) {

@@ -1049,7 +1049,39 @@ void Module::Interface::EndImportProgram(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
 }
 
-ResultVal<std::shared_ptr<Service::FS::File>> GetFileFromSession(
+/// Wraps all File operations to allow adding an offset to them.
+class AMFileWrapper : public FileSys::FileBackend {
+public:
+    AMFileWrapper(std::shared_ptr<Service::FS::File> file, std::size_t offset, std::size_t size)
+        : file(std::move(file)), file_offset(offset), file_size(size) {}
+
+    ResultVal<std::size_t> Read(u64 offset, std::size_t length, u8* buffer) const override {
+        return file->backend->Read(offset + file_offset, length, buffer);
+    }
+
+    ResultVal<std::size_t> Write(u64 offset, std::size_t length, bool flush,
+                                 const u8* buffer) override {
+        return file->backend->Write(offset + file_offset, length, flush, buffer);
+    }
+
+    u64 GetSize() const override {
+        return file_size;
+    }
+    bool SetSize(u64 size) const override {
+        return false;
+    }
+    bool Close() const override {
+        return false;
+    }
+    void Flush() const override {}
+
+private:
+    std::shared_ptr<Service::FS::File> file;
+    std::size_t file_offset;
+    std::size_t file_size;
+};
+
+ResultVal<std::unique_ptr<AMFileWrapper>> GetFileFromSession(
     Kernel::SharedPtr<Kernel::ClientSession> file_session) {
     // Step up the chain from ClientSession->ServerSession and then
     // cast to File. For AM on 3DS, invalid handles actually hang the system.
@@ -1069,8 +1101,13 @@ ResultVal<std::shared_ptr<Service::FS::File>> GetFileFromSession(
         auto file = std::dynamic_pointer_cast<Service::FS::File>(server->hle_handler);
 
         // TODO(shinyquagsire23): This requires RTTI, use service calls directly instead?
-        if (file != nullptr)
-            return MakeResult<std::shared_ptr<Service::FS::File>>(file);
+        if (file != nullptr) {
+            // Grab the session file offset in case we were given a subfile opened with
+            // File::OpenSubFile
+            std::size_t offset = file->GetSessionFileOffset(server);
+            std::size_t size = file->GetSessionFileSize(server);
+            return MakeResult(std::make_unique<AMFileWrapper>(file, offset, size));
+        }
 
         LOG_ERROR(Service_AM, "Failed to cast handle to FSFile!");
         return Kernel::ERR_INVALID_HANDLE;
@@ -1094,9 +1131,8 @@ void Module::Interface::GetProgramInfoFromCia(Kernel::HLERequestContext& ctx) {
         return;
     }
 
-    auto file = file_res.Unwrap();
     FileSys::CIAContainer container;
-    if (container.Load(*file->backend) != Loader::ResultStatus::Success) {
+    if (container.Load(*file_res.Unwrap()) != Loader::ResultStatus::Success) {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(ResultCode(ErrCodes::InvalidCIAHeader, ErrorModule::AM,
                            ErrorSummary::InvalidArgument, ErrorLevel::Permanent));
@@ -1135,9 +1171,9 @@ void Module::Interface::GetSystemMenuDataFromCia(Kernel::HLERequestContext& ctx)
 
     std::size_t output_buffer_size = std::min(output_buffer.GetSize(), sizeof(Loader::SMDH));
 
-    auto file = file_res.Unwrap();
+    auto file = std::move(file_res.Unwrap());
     FileSys::CIAContainer container;
-    if (container.Load(*file->backend) != Loader::ResultStatus::Success) {
+    if (container.Load(*file) != Loader::ResultStatus::Success) {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
         rb.Push(ResultCode(ErrCodes::InvalidCIAHeader, ErrorModule::AM,
                            ErrorSummary::InvalidArgument, ErrorLevel::Permanent));
@@ -1147,8 +1183,8 @@ void Module::Interface::GetSystemMenuDataFromCia(Kernel::HLERequestContext& ctx)
     std::vector<u8> temp(output_buffer_size);
 
     //  Read from the Meta offset + 0x400 for the 0x36C0-large SMDH
-    auto read_result = file->backend->Read(
-        container.GetMetadataOffset() + FileSys::CIA_METADATA_SIZE, temp.size(), temp.data());
+    auto read_result = file->Read(container.GetMetadataOffset() + FileSys::CIA_METADATA_SIZE,
+                                  temp.size(), temp.data());
     if (read_result.Failed() || *read_result != temp.size()) {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
         rb.Push(ResultCode(ErrCodes::InvalidCIAHeader, ErrorModule::AM,
@@ -1175,9 +1211,8 @@ void Module::Interface::GetDependencyListFromCia(Kernel::HLERequestContext& ctx)
         return;
     }
 
-    auto file = file_res.Unwrap();
     FileSys::CIAContainer container;
-    if (container.Load(*file->backend) != Loader::ResultStatus::Success) {
+    if (container.Load(*file_res.Unwrap()) != Loader::ResultStatus::Success) {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(ResultCode(ErrCodes::InvalidCIAHeader, ErrorModule::AM,
                            ErrorSummary::InvalidArgument, ErrorLevel::Permanent));
@@ -1203,9 +1238,8 @@ void Module::Interface::GetTransferSizeFromCia(Kernel::HLERequestContext& ctx) {
         return;
     }
 
-    auto file = file_res.Unwrap();
     FileSys::CIAContainer container;
-    if (container.Load(*file->backend) != Loader::ResultStatus::Success) {
+    if (container.Load(*file_res.Unwrap()) != Loader::ResultStatus::Success) {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(ResultCode(ErrCodes::InvalidCIAHeader, ErrorModule::AM,
                            ErrorSummary::InvalidArgument, ErrorLevel::Permanent));
@@ -1228,9 +1262,8 @@ void Module::Interface::GetCoreVersionFromCia(Kernel::HLERequestContext& ctx) {
         return;
     }
 
-    auto file = file_res.Unwrap();
     FileSys::CIAContainer container;
-    if (container.Load(*file->backend) != Loader::ResultStatus::Success) {
+    if (container.Load(*file_res.Unwrap()) != Loader::ResultStatus::Success) {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(ResultCode(ErrCodes::InvalidCIAHeader, ErrorModule::AM,
                            ErrorSummary::InvalidArgument, ErrorLevel::Permanent));
@@ -1254,9 +1287,8 @@ void Module::Interface::GetRequiredSizeFromCia(Kernel::HLERequestContext& ctx) {
         return;
     }
 
-    auto file = file_res.Unwrap();
     FileSys::CIAContainer container;
-    if (container.Load(*file->backend) != Loader::ResultStatus::Success) {
+    if (container.Load(*file_res.Unwrap()) != Loader::ResultStatus::Success) {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(ResultCode(ErrCodes::InvalidCIAHeader, ErrorModule::AM,
                            ErrorSummary::InvalidArgument, ErrorLevel::Permanent));
@@ -1310,9 +1342,8 @@ void Module::Interface::GetMetaSizeFromCia(Kernel::HLERequestContext& ctx) {
         return;
     }
 
-    auto file = file_res.Unwrap();
     FileSys::CIAContainer container;
-    if (container.Load(*file->backend) != Loader::ResultStatus::Success) {
+    if (container.Load(*file_res.Unwrap()) != Loader::ResultStatus::Success) {
 
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(ResultCode(ErrCodes::InvalidCIAHeader, ErrorModule::AM,
@@ -1342,9 +1373,9 @@ void Module::Interface::GetMetaDataFromCia(Kernel::HLERequestContext& ctx) {
     // Don't write beyond the actual static buffer size.
     output_size = std::min(static_cast<u32>(output_buffer.GetSize()), output_size);
 
-    auto file = file_res.Unwrap();
+    auto file = std::move(file_res.Unwrap());
     FileSys::CIAContainer container;
-    if (container.Load(*file->backend) != Loader::ResultStatus::Success) {
+    if (container.Load(*file) != Loader::ResultStatus::Success) {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
         rb.Push(ResultCode(ErrCodes::InvalidCIAHeader, ErrorModule::AM,
                            ErrorSummary::InvalidArgument, ErrorLevel::Permanent));
@@ -1354,7 +1385,7 @@ void Module::Interface::GetMetaDataFromCia(Kernel::HLERequestContext& ctx) {
 
     //  Read from the Meta offset for the specified size
     std::vector<u8> temp(output_size);
-    auto read_result = file->backend->Read(container.GetMetadataOffset(), output_size, temp.data());
+    auto read_result = file->Read(container.GetMetadataOffset(), output_size, temp.data());
     if (read_result.Failed() || *read_result != output_size) {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(ResultCode(ErrCodes::InvalidCIAHeader, ErrorModule::AM,

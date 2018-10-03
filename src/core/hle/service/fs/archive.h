@@ -73,6 +73,14 @@ public:
     /// Creates a new session to this File and returns the ClientSession part of the connection.
     Kernel::SharedPtr<Kernel::ClientSession> Connect();
 
+    // Returns the start offset of an open file represented by the input session, opened with
+    // OpenSubFile.
+    std::size_t GetSessionFileOffset(Kernel::SharedPtr<Kernel::ServerSession> session);
+
+    // Returns the size of an open file represented by the input session, opened with
+    // OpenSubFile.
+    std::size_t GetSessionFileSize(Kernel::SharedPtr<Kernel::ServerSession> session);
+
 private:
     void Read(Kernel::HLERequestContext& ctx);
     void Write(Kernel::HLERequestContext& ctx);
