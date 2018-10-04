@@ -9,9 +9,9 @@
 #include <list>
 #include <map>
 #include <mutex>
-#include <optional>
 #include <unordered_map>
 #include <vector>
+#include <boost/optional.hpp>
 #include <cryptopp/osrng.h>
 #include "common/common_types.h"
 #include "common/logging/log.h"
@@ -104,16 +104,16 @@ static std::mutex beacon_mutex;
 
 // Number of beacons to store before we start dropping the old ones.
 // TODO(Subv): Find a more accurate value for this limit.
-static constexpr std::size_t MaxBeaconFrames = 15;
+constexpr std::size_t MaxBeaconFrames = 15;
 
 // List of the last <MaxBeaconFrames> beacons received from the network.
 static std::list<Network::WifiPacket> received_beacons;
 
 // Network node id used when a SecureData packet is addressed to every connected node.
-static constexpr u16 BroadcastNetworkNodeId = 0xFFFF;
+constexpr u16 BroadcastNetworkNodeId = 0xFFFF;
 
 // The Host has always dest_node_id 1
-static constexpr u16 HostDestNodeId = 1;
+constexpr u16 HostDestNodeId = 1;
 
 /**
  * Returns a list of received 802.11 beacon frames from the specified sender since the last call.
@@ -167,11 +167,13 @@ static void BroadcastNodeMap() {
     packet.channel = network_channel;
     packet.type = Network::WifiPacket::PacketType::NodeMap;
     packet.destination_address = Network::BroadcastMac;
-    std::size_t size = node_map.size();
+    std::size_t num_entries = std::count_if(node_map.begin(), node_map.end(),
+                                            [](const auto& node) { return node.second.connected; });
     using node_t = decltype(node_map)::value_type;
-    packet.data.resize(sizeof(size) + (sizeof(node_t::first) + sizeof(node_t::second)) * size);
-    std::memcpy(packet.data.data(), &size, sizeof(size));
-    std::size_t offset = sizeof(size);
+    packet.data.resize(sizeof(num_entries) +
+                       (sizeof(node_t::first) + sizeof(node_t::second.node_id)) * num_entries);
+    std::memcpy(packet.data.data(), &num_entries, sizeof(num_entries));
+    std::size_t offset = sizeof(num_entries);
     for (const auto& node : node_map) {
         if (node.second.connected) {
             std::memcpy(packet.data.data() + offset, node.first.data(), sizeof(node.first));
@@ -542,29 +544,28 @@ void HandleDeauthenticationFrame(const Network::WifiPacket& packet) {
         return;
     }
 
-    s32 node_id = node_map[packet.transmitter_address].node_id;
-    bool connected = node_map[packet.transmitter_address].connected;
+    Node node = node_map[packet.transmitter_address];
     node_map.erase(packet.transmitter_address);
 
-    if (!connected) {
+    if (!node.connected) {
         LOG_DEBUG(Service_NWM, "Received DeauthenticationFrame from a not connected MAC Address");
         return;
     }
 
-    auto node = std::find_if(node_info.begin(), node_info.end(), [&node_id](const NodeInfo& info) {
-        return info.network_node_id == node_id;
+    auto node_it = std::find_if(node_info.begin(), node_info.end(), [&node](const NodeInfo& info) {
+        return info.network_node_id == node.node_id;
     });
-    ASSERT(node != node_info.end());
+    ASSERT(node_it != node_info.end());
 
-    connection_status.node_bitmask &= ~(1 << (node_id - 1));
-    connection_status.changed_nodes |= 1 << (node_id - 1);
+    connection_status.node_bitmask &= ~(1 << (node.node_id - 1));
+    connection_status.changed_nodes |= 1 << (node.node_id - 1);
     connection_status.total_nodes--;
-    connection_status.nodes[node_id - 1] = 0;
+    connection_status.nodes[node.node_id - 1] = 0;
 
     network_info.total_nodes--;
     // TODO(B3N30): broadcast new connection_status to clients
 
-    node->Reset();
+    node_it->Reset();
 
     connection_status_event->Signal();
 }
@@ -604,7 +605,7 @@ void OnWifiPacketReceived(const Network::WifiPacket& packet) {
     }
 }
 
-static std::optional<Network::MacAddress> GetNodeMacAddress(u16 dest_node_id, u8 flags) {
+static boost::optional<Network::MacAddress> GetNodeMacAddress(u16 dest_node_id, u8 flags) {
     constexpr u8 BroadcastFlag = 0x2;
     if ((flags & BroadcastFlag) || dest_node_id == BroadcastNetworkNodeId) {
         // Broadcast
