@@ -16,11 +16,8 @@ namespace UISettings {
 using ContextualShortcut = std::pair<QString, int>;
 using Shortcut = std::pair<QString, ContextualShortcut>;
 
-static const std::array<std::pair<QString, QString>, 4> themes = {
-    {std::make_pair(QString("Default"), QString("default")),
-     std::make_pair(QString("Dark"), QString("qdarkstyle")),
-     std::make_pair(QString("Colorful"), QString("colorful")),
-     std::make_pair(QString("Colorful Dark"), QString("colorful_dark"))}};
+using Themes = std::array<std::pair<const char*, const char*>, 4>;
+extern const Themes themes;
 
 struct GameDir {
     QString path;

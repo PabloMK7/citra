@@ -31,7 +31,7 @@ ConfigureGeneral::ConfigureGeneral(QWidget* parent)
             static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this,
             &ConfigureGeneral::onLanguageChanged);
 
-    for (auto theme : UISettings::themes) {
+    for (const auto& theme : UISettings::themes) {
         ui->theme_combobox->addItem(theme.first, theme.second);
     }
 
