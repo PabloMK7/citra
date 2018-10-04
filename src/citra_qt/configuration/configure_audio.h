@@ -26,6 +26,9 @@ public slots:
 
 private:
     void setConfiguration();
+    void setOutputSinkFromSinkID();
+    void setAudioDeviceFromDeviceID();
+    void setVolumeIndicatorText(int percentage);
 
     std::unique_ptr<Ui::ConfigureAudio> ui;
 };

@@ -19,9 +19,8 @@ ConfigureAudio::ConfigureAudio(QWidget* parent)
         ui->output_sink_combo_box->addItem(sink_detail.id);
     }
 
-    connect(ui->volume_slider, &QSlider::valueChanged, [this] {
-        ui->volume_indicator->setText(tr("%1 %").arg(ui->volume_slider->sliderPosition()));
-    });
+    connect(ui->volume_slider, &QSlider::valueChanged, this,
+            &ConfigureAudio::setVolumeIndicatorText);
 
     this->setConfiguration();
     connect(ui->output_sink_combo_box,
@@ -32,32 +31,48 @@ ConfigureAudio::ConfigureAudio(QWidget* parent)
 ConfigureAudio::~ConfigureAudio() {}
 
 void ConfigureAudio::setConfiguration() {
+    setOutputSinkFromSinkID();
+
+    // The device list cannot be pre-populated (nor listed) until the output sink is known.
+    updateAudioDevices(ui->output_sink_combo_box->currentIndex());
+
+    setAudioDeviceFromDeviceID();
+
+    ui->toggle_audio_stretching->setChecked(Settings::values.enable_audio_stretching);
+    ui->volume_slider->setValue(Settings::values.volume * ui->volume_slider->maximum());
+    setVolumeIndicatorText(ui->volume_slider->sliderPosition());
+}
+
+void ConfigureAudio::setOutputSinkFromSinkID() {
     int new_sink_index = 0;
+
+    const QString sink_id = QString::fromStdString(Settings::values.sink_id);
     for (int index = 0; index < ui->output_sink_combo_box->count(); index++) {
-        if (ui->output_sink_combo_box->itemText(index).toStdString() == Settings::values.sink_id) {
+        if (ui->output_sink_combo_box->itemText(index) == sink_id) {
             new_sink_index = index;
             break;
         }
     }
+
     ui->output_sink_combo_box->setCurrentIndex(new_sink_index);
+}
 
-    ui->toggle_audio_stretching->setChecked(Settings::values.enable_audio_stretching);
-
-    // The device list cannot be pre-populated (nor listed) until the output sink is known.
-    updateAudioDevices(new_sink_index);
-
+void ConfigureAudio::setAudioDeviceFromDeviceID() {
     int new_device_index = -1;
+
+    const QString device_id = QString::fromStdString(Settings::values.audio_device_id);
     for (int index = 0; index < ui->audio_device_combo_box->count(); index++) {
-        if (ui->audio_device_combo_box->itemText(index).toStdString() ==
-            Settings::values.audio_device_id) {
+        if (ui->audio_device_combo_box->itemText(index) == device_id) {
             new_device_index = index;
             break;
         }
     }
-    ui->audio_device_combo_box->setCurrentIndex(new_device_index);
 
-    ui->volume_slider->setValue(Settings::values.volume * ui->volume_slider->maximum());
-    ui->volume_indicator->setText(tr("%1 %").arg(ui->volume_slider->sliderPosition()));
+    ui->audio_device_combo_box->setCurrentIndex(new_device_index);
+}
+
+void ConfigureAudio::setVolumeIndicatorText(int percentage) {
+    ui->volume_indicator->setText(tr("%1%", "Volume percentage (e.g. 50%)").arg(percentage));
 }
 
 void ConfigureAudio::applyConfiguration() {
@@ -76,10 +91,10 @@ void ConfigureAudio::updateAudioDevices(int sink_index) {
     ui->audio_device_combo_box->clear();
     ui->audio_device_combo_box->addItem(AudioCore::auto_device_name);
 
-    std::string sink_id = ui->output_sink_combo_box->itemText(sink_index).toStdString();
-    std::vector<std::string> device_list = AudioCore::GetSinkDetails(sink_id).list_devices();
+    const std::string sink_id = ui->output_sink_combo_box->itemText(sink_index).toStdString();
+    const std::vector<std::string> device_list = AudioCore::GetSinkDetails(sink_id).list_devices();
     for (const auto& device : device_list) {
-        ui->audio_device_combo_box->addItem(device.c_str());
+        ui->audio_device_combo_box->addItem(QString::fromStdString(device));
     }
 }
 
