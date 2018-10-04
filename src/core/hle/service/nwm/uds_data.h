@@ -25,11 +25,11 @@ enum class EtherType : u16 { SecureData = 0x876D, EAPoL = 0x888E };
  * and the OUI is always 0.
  */
 struct LLCHeader {
-    u8 dsap = static_cast<u8>(SAP::SNAPExtensionUsed);
-    u8 ssap = static_cast<u8>(SAP::SNAPExtensionUsed);
-    u8 control = static_cast<u8>(PDUControl::UnnumberedInformation);
+    SAP dsap = SAP::SNAPExtensionUsed;
+    SAP ssap = SAP::SNAPExtensionUsed;
+    PDUControl control = PDUControl::UnnumberedInformation;
     std::array<u8, 3> OUI = {};
-    u16_be protocol;
+    enum_be<EtherType> protocol;
 };
 
 static_assert(sizeof(LLCHeader) == 8, "LLCHeader has the wrong size");

@@ -22,16 +22,16 @@ enum class AuthStatus : u16 { Successful = 0 };
 enum class AssocStatus : u16 { Successful = 0 };
 
 struct AuthenticationFrame {
-    u16_le auth_algorithm = static_cast<u16>(AuthAlgorithm::OpenSystem);
-    u16_le auth_seq;
-    u16_le status_code = static_cast<u16>(AuthStatus::Successful);
+    enum_le<AuthAlgorithm> auth_algorithm = AuthAlgorithm::OpenSystem;
+    enum_le<AuthenticationSeq> auth_seq;
+    enum_le<AuthStatus> status_code = AuthStatus::Successful;
 };
 
 static_assert(sizeof(AuthenticationFrame) == 6, "AuthenticationFrame has wrong size");
 
 struct AssociationResponseFrame {
     u16_le capabilities;
-    u16_le status_code;
+    enum_le<AssocStatus> status_code;
     u16_le assoc_id;
 };
 

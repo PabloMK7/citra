@@ -25,7 +25,7 @@ enum class SelfNCCHFilePathType : u32 {
 };
 
 struct SelfNCCHFilePath {
-    u32_le type;
+    enum_le<SelfNCCHFilePathType> type;
     std::array<char, 8> exefs_filename;
 };
 static_assert(sizeof(SelfNCCHFilePath) == 12, "NCCHFilePath has wrong size!");
@@ -102,7 +102,7 @@ public:
         SelfNCCHFilePath file_path;
         std::memcpy(&file_path, binary.data(), sizeof(SelfNCCHFilePath));
 
-        switch (static_cast<SelfNCCHFilePathType>(file_path.type)) {
+        switch (file_path.type) {
         case SelfNCCHFilePathType::UpdateRomFS:
             return OpenUpdateRomFS();
 

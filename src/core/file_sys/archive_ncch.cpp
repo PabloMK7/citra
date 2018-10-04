@@ -12,6 +12,7 @@
 #include "common/file_util.h"
 #include "common/logging/log.h"
 #include "common/string_util.h"
+#include "common/swap.h"
 #include "core/core.h"
 #include "core/file_sys/archive_ncch.h"
 #include "core/file_sys/errors.h"
@@ -36,9 +37,9 @@ struct NCCHArchivePath {
 static_assert(sizeof(NCCHArchivePath) == 0x10, "NCCHArchivePath has wrong size!");
 
 struct NCCHFilePath {
-    u32_le open_type;
+    enum_le<NCCHFileOpenType> open_type;
     u32_le content_index;
-    u32_le filepath_type;
+    enum_le<NCCHFilePathType> filepath_type;
     std::array<char, 8> exefs_filepath;
 };
 static_assert(sizeof(NCCHFilePath) == 0x14, "NCCHFilePath has wrong size!");
@@ -56,9 +57,9 @@ Path MakeNCCHArchivePath(u64 tid, Service::FS::MediaType media_type) {
 Path MakeNCCHFilePath(NCCHFileOpenType open_type, u32 content_index, NCCHFilePathType filepath_type,
                       std::array<char, 8>& exefs_filepath) {
     NCCHFilePath path;
-    path.open_type = static_cast<u32_le>(open_type);
+    path.open_type = open_type;
     path.content_index = static_cast<u32_le>(content_index);
-    path.filepath_type = static_cast<u32_le>(filepath_type);
+    path.filepath_type = filepath_type;
     path.exefs_filepath = exefs_filepath;
     std::vector<u8> file(sizeof(path));
     std::memcpy(&file[0], &path, sizeof(path));
@@ -89,15 +90,14 @@ ResultVal<std::unique_ptr<FileBackend>> NCCHArchive::OpenFile(const Path& path,
     std::unique_ptr<FileBackend> file;
 
     // NCCH RomFS
-    NCCHFilePathType filepath_type = static_cast<NCCHFilePathType>(openfile_path.filepath_type);
-    if (filepath_type == NCCHFilePathType::RomFS) {
+    if (openfile_path.filepath_type == NCCHFilePathType::RomFS) {
         std::shared_ptr<RomFSReader> romfs_file;
 
         result = ncch_container.ReadRomFS(romfs_file);
         std::unique_ptr<DelayGenerator> delay_generator = std::make_unique<RomFSDelayGenerator>();
         file = std::make_unique<IVFCFile>(std::move(romfs_file), std::move(delay_generator));
-    } else if (filepath_type == NCCHFilePathType::Code ||
-               filepath_type == NCCHFilePathType::ExeFS) {
+    } else if (openfile_path.filepath_type == NCCHFilePathType::Code ||
+               openfile_path.filepath_type == NCCHFilePathType::ExeFS) {
         std::vector<u8> buffer;
 
         // Load NCCH .code or icon/banner/logo
@@ -105,7 +105,8 @@ ResultVal<std::unique_ptr<FileBackend>> NCCHArchive::OpenFile(const Path& path,
         std::unique_ptr<DelayGenerator> delay_generator = std::make_unique<ExeFSDelayGenerator>();
         file = std::make_unique<NCCHFile>(std::move(buffer), std::move(delay_generator));
     } else {
-        LOG_ERROR(Service_FS, "Unknown NCCH archive type {}!", openfile_path.filepath_type);
+        LOG_ERROR(Service_FS, "Unknown NCCH archive type {}!",
+                  static_cast<u32>(openfile_path.filepath_type));
         result = Loader::ResultStatus::Error;
     }
 

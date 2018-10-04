@@ -14,7 +14,7 @@ constexpr u16 DefaultExtraCapabilities = 0x0431;
 
 std::vector<u8> GenerateAuthenticationFrame(AuthenticationSeq seq) {
     AuthenticationFrame frame{};
-    frame.auth_seq = static_cast<u16>(seq);
+    frame.auth_seq = seq;
 
     std::vector<u8> data(sizeof(frame));
     std::memcpy(data.data(), &frame, sizeof(frame));
@@ -26,7 +26,7 @@ AuthenticationSeq GetAuthenticationSeqNumber(const std::vector<u8>& body) {
     AuthenticationFrame frame;
     std::memcpy(&frame, body.data(), sizeof(frame));
 
-    return static_cast<AuthenticationSeq>(frame.auth_seq);
+    return frame.auth_seq;
 }
 
 /**
@@ -57,7 +57,7 @@ static std::vector<u8> GenerateSSIDTag(u32 network_id) {
 std::vector<u8> GenerateAssocResponseFrame(AssocStatus status, u16 association_id, u32 network_id) {
     AssociationResponseFrame frame{};
     frame.capabilities = DefaultExtraCapabilities;
-    frame.status_code = static_cast<u16>(status);
+    frame.status_code = status;
     // The association id is ORed with this magic value (0xC000)
     constexpr u16 AssociationIdMagic = 0xC000;
     frame.assoc_id = association_id | AssociationIdMagic;
@@ -79,8 +79,7 @@ std::tuple<AssocStatus, u16> GetAssociationResult(const std::vector<u8>& body) {
     memcpy(&frame, body.data(), sizeof(frame));
 
     constexpr u16 AssociationIdMask = 0x3FFF;
-    return std::make_tuple(static_cast<AssocStatus>(frame.status_code),
-                           frame.assoc_id & AssociationIdMask);
+    return std::make_tuple(frame.status_code, frame.assoc_id & AssociationIdMask);
 }
 
 } // namespace Service::NWM

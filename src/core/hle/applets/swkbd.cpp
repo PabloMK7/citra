@@ -110,7 +110,7 @@ void SoftwareKeyboard::Update() {
         break;
     default:
         LOG_CRITICAL(Applet_SWKBD, "Unknown button config {}",
-                     static_cast<int>(config.num_buttons_m1));
+                     static_cast<u32>(config.num_buttons_m1));
         UNREACHABLE();
     }
 
@@ -143,8 +143,9 @@ Frontend::KeyboardConfig SoftwareKeyboard::ToFrontendConfig(
     const SoftwareKeyboardConfig& config) const {
     using namespace Frontend;
     KeyboardConfig frontend_config;
-    frontend_config.button_config = static_cast<ButtonConfig>(config.num_buttons_m1);
-    frontend_config.accept_mode = static_cast<AcceptedInput>(config.valid_input);
+    frontend_config.button_config =
+        static_cast<ButtonConfig>(static_cast<u32>(config.num_buttons_m1));
+    frontend_config.accept_mode = static_cast<AcceptedInput>(static_cast<u32>(config.valid_input));
     frontend_config.multiline_mode = config.multiline;
     frontend_config.max_text_length = config.max_text_length;
     frontend_config.max_digits = config.max_digits;

@@ -121,20 +121,20 @@ enum class SoftwareKeyboardResult : s32 {
 };
 
 struct SoftwareKeyboardConfig {
-    SoftwareKeyboardType type;
-    SoftwareKeyboardButtonConfig num_buttons_m1;
-    SoftwareKeyboardValidInput valid_input;
-    SoftwareKeyboardPasswordMode password_mode;
-    s32 is_parental_screen;
-    s32 darken_top_screen;
-    u32 filter_flags;
-    u32 save_state_flags;
-    u16 max_text_length;
-    u16 dict_word_count;
-    u16 max_digits;
-    std::array<std::array<u16, MAX_BUTTON_TEXT_LEN + 1>, MAX_BUTTON> button_text;
-    std::array<u16, 2> numpad_keys;
-    std::array<u16, MAX_HINT_TEXT_LEN + 1>
+    enum_le<SoftwareKeyboardType> type;
+    enum_le<SoftwareKeyboardButtonConfig> num_buttons_m1;
+    enum_le<SoftwareKeyboardValidInput> valid_input;
+    enum_le<SoftwareKeyboardPasswordMode> password_mode;
+    s32_le is_parental_screen;
+    s32_le darken_top_screen;
+    u32_le filter_flags;
+    u32_le save_state_flags;
+    u16_le max_text_length;
+    u16_le dict_word_count;
+    u16_le max_digits;
+    std::array<std::array<u16_le, MAX_BUTTON_TEXT_LEN + 1>, MAX_BUTTON> button_text;
+    std::array<u16_le, 2> numpad_keys;
+    std::array<u16_le, MAX_HINT_TEXT_LEN + 1>
         hint_text; ///< Text to display when asking the user for input
     bool predictive_input;
     bool multiline;
@@ -145,25 +145,25 @@ struct SoftwareKeyboardConfig {
     bool unknown;
     bool default_qwerty;
     std::array<bool, 4> button_submits_text;
-    u16 language;
+    u16_le language;
 
-    u32 initial_text_offset; ///< Offset of the default text in the output SharedMemory
-    u32 dict_offset;
-    u32 initial_status_offset;
-    u32 initial_learning_offset;
-    u32 shared_memory_size; ///< Size of the SharedMemory
-    u32 version;
+    u32_le initial_text_offset; ///< Offset of the default text in the output SharedMemory
+    u32_le dict_offset;
+    u32_le initial_status_offset;
+    u32_le initial_learning_offset;
+    u32_le shared_memory_size; ///< Size of the SharedMemory
+    u32_le version;
 
-    SoftwareKeyboardResult return_code;
+    enum_le<SoftwareKeyboardResult> return_code;
 
-    u32 status_offset;
-    u32 learning_offset;
+    u32_le status_offset;
+    u32_le learning_offset;
 
-    u32 text_offset; ///< Offset in the SharedMemory where the output text starts
-    u16 text_length; ///< Length in characters of the output text
+    u32_le text_offset; ///< Offset in the SharedMemory where the output text starts
+    u16_le text_length; ///< Length in characters of the output text
 
-    int callback_result;
-    std::array<u16, MAX_CALLBACK_MSG_LEN + 1> callback_msg;
+    s32_le callback_result;
+    std::array<u16_le, MAX_CALLBACK_MSG_LEN + 1> callback_msg;
     bool skip_at_check;
     INSERT_PADDING_BYTES(0xAB);
 };

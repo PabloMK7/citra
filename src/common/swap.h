@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include <type_traits>
+
 #if defined(_MSC_VER)
 #include <cstdlib>
 #elif defined(__linux__)
@@ -605,6 +607,44 @@ struct swap_double_t {
     }
 };
 
+template <typename T>
+struct swap_enum_t {
+    static_assert(std::is_enum_v<T>);
+    using base = std::underlying_type_t<T>;
+
+public:
+    swap_enum_t() = default;
+    swap_enum_t(const T& v) : value(swap(v)) {}
+
+    swap_enum_t& operator=(const T& v) {
+        value = swap(v);
+        return *this;
+    }
+
+    operator T() const {
+        return swap(value);
+    }
+
+    explicit operator base() const {
+        return static_cast<base>(swap(value));
+    }
+
+protected:
+    T value{};
+    // clang-format off
+    using swap_t = std::conditional_t<
+        std::is_same_v<base, u16>, swap_16_t<u16>, std::conditional_t<
+        std::is_same_v<base, s16>, swap_16_t<s16>, std::conditional_t<
+        std::is_same_v<base, u32>, swap_32_t<u32>, std::conditional_t<
+        std::is_same_v<base, s32>, swap_32_t<s32>, std::conditional_t<
+        std::is_same_v<base, u64>, swap_64_t<u64>, std::conditional_t<
+        std::is_same_v<base, s64>, swap_64_t<s64>, void>>>>>>;
+    // clang-format on
+    static T swap(T x) {
+        return static_cast<T>(swap_t::swap(static_cast<base>(x)));
+    }
+};
+
 #if COMMON_LITTLE_ENDIAN
 using u16_le = u16;
 using u32_le = u32;
@@ -613,6 +653,9 @@ using u64_le = u64;
 using s16_le = s16;
 using s32_le = s32;
 using s64_le = s64;
+
+template <typename T>
+using enum_le = std::enable_if_t<std::is_enum_v<T>, T>;
 
 using float_le = float;
 using double_le = double;
@@ -625,6 +668,9 @@ using s32_be = swap_struct_t<s32, swap_32_t<s32>>;
 
 using u16_be = swap_struct_t<u16, swap_16_t<u16>>;
 using s16_be = swap_struct_t<s16, swap_16_t<s16>>;
+
+template <typename T>
+using enum_be = swap_enum_t<T>;
 
 using float_be = swap_struct_t<float, swap_float_t<float>>;
 using double_be = swap_struct_t<double, swap_double_t<double>>;
@@ -639,6 +685,9 @@ using s32_le = swap_struct_t<s32, swap_32_t<s32>>;
 using u16_le = swap_struct_t<u16, swap_16_t<u16>>;
 using s16_le = swap_struct_t<s16, swap_16_t<s16>>;
 
+template <typename T>
+using enum_le = swap_enum_t<T>;
+
 using float_le = swap_struct_t<float, swap_float_t<float>>;
 using double_le = swap_struct_t<double, swap_double_t<double>>;
 
@@ -649,6 +698,9 @@ using u64_be = u64;
 using s16_be = s16;
 using s32_be = s32;
 using s64_be = s64;
+
+template <typename T>
+using enum_be = std::enable_if_t<std::is_enum_v<T>, T>;
 
 using float_be = float;
 using double_be = double;
