@@ -1,6 +1,5 @@
 #include <functional>
 
-#include "common/threadsafe_queue.h"
 #include "core/core.h"
 #include "core/rpc/rpc_server.h"
 #include "core/rpc/server.h"
