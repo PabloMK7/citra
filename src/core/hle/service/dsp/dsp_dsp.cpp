@@ -399,7 +399,8 @@ DSP_DSP::~DSP_DSP() {
     pipes = {};
 }
 
-void InstallInterfaces(SM::ServiceManager& service_manager) {
+void InstallInterfaces(Core::System& system) {
+    auto& service_manager = system.ServiceManager();
     auto dsp = std::make_shared<DSP_DSP>();
     dsp->InstallAsService(service_manager);
     Core::DSP().SetServiceToInterrupt(std::move(dsp));

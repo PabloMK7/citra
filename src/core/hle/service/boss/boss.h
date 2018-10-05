@@ -7,6 +7,10 @@
 #include "core/hle/kernel/event.h"
 #include "core/hle/service/service.h"
 
+namespace Core {
+class System;
+}
+
 namespace Service::BOSS {
 
 class Module final {
@@ -960,6 +964,6 @@ private:
     Kernel::SharedPtr<Kernel::Event> task_finish_event;
 };
 
-void InstallInterfaces(SM::ServiceManager& service_manager);
+void InstallInterfaces(Core::System& system);
 
 } // namespace Service::BOSS

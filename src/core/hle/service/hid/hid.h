@@ -18,6 +18,10 @@
 #include "core/hle/service/service.h"
 #include "core/settings.h"
 
+namespace Core {
+class System;
+}
+
 namespace Kernel {
 class Event;
 class SharedMemory;
@@ -198,7 +202,7 @@ DirectionState GetStickDirectionState(s16 circle_pad_x, s16 circle_pad_y);
 
 class Module final {
 public:
-    Module();
+    explicit Module(Core::System& system);
 
     class Interface : public ServiceFramework<Interface> {
     public:
@@ -299,6 +303,8 @@ private:
     void UpdateAccelerometerCallback(u64 userdata, s64 cycles_late);
     void UpdateGyroscopeCallback(u64 userdata, s64 cycles_late);
 
+    Core::System& system;
+
     // Handle to shared memory region designated to HID_User service
     Kernel::SharedPtr<Kernel::SharedMemory> shared_mem;
 
@@ -329,7 +335,7 @@ private:
     std::unique_ptr<Input::TouchDevice> touch_device;
 };
 
-void InstallInterfaces(SM::ServiceManager& service_manager);
+void InstallInterfaces(Core::System& system);
 
 /// Reload input devices. Used when input configuration changed
 void ReloadInputDevices();

@@ -731,7 +731,7 @@ void GSP_GPU::SetLedForceOff(Kernel::HLERequestContext& ctx) {
 
     u8 state = rp.Pop<u8>();
 
-    Core::System::GetInstance().GetSharedPageHandler()->Set3DLed(state);
+    system.GetSharedPageHandler()->Set3DLed(state);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
@@ -749,7 +749,7 @@ SessionData* GSP_GPU::FindRegisteredThreadData(u32 thread_id) {
     return nullptr;
 }
 
-GSP_GPU::GSP_GPU() : ServiceFramework("gsp::Gpu", 2) {
+GSP_GPU::GSP_GPU(Core::System& system) : ServiceFramework("gsp::Gpu", 2), system(system) {
     static const FunctionInfo functions[] = {
         {0x00010082, &GSP_GPU::WriteHWRegs, "WriteHWRegs"},
         {0x00020084, &GSP_GPU::WriteHWRegsWithMask, "WriteHWRegsWithMask"},

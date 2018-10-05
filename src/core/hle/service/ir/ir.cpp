@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <memory>
+#include "core/core.h"
 #include "core/hle/service/ir/ir.h"
 #include "core/hle/service/ir/ir_rst.h"
 #include "core/hle/service/ir/ir_u.h"
@@ -22,7 +23,8 @@ void ReloadInputDevices() {
         ir_rst->ReloadInputDevices();
 }
 
-void InstallInterfaces(SM::ServiceManager& service_manager) {
+void InstallInterfaces(Core::System& system) {
+    auto& service_manager = system.ServiceManager();
     std::make_shared<IR_U>()->InstallAsService(service_manager);
 
     auto ir_user = std::make_shared<IR_USER>();

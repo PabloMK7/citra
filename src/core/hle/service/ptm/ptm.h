@@ -9,6 +9,10 @@
 #include "core/hle/ipc_helpers.h"
 #include "core/hle/service/service.h"
 
+namespace Core {
+class System;
+}
+
 namespace Service::PTM {
 
 /// Charge levels used by PTM functions
@@ -140,6 +144,6 @@ private:
     bool pedometer_is_counting = false;
 };
 
-void InstallInterfaces(SM::ServiceManager& service_manager);
+void InstallInterfaces(Core::System& system);
 
 } // namespace Service::PTM

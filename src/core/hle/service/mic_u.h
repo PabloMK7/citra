@@ -8,6 +8,10 @@
 
 #include "core/hle/service/service.h"
 
+namespace Core {
+class System;
+}
+
 namespace Service::MIC {
 
 class MIC_U final : public ServiceFramework<MIC_U> {
@@ -186,6 +190,6 @@ private:
     std::unique_ptr<Impl> impl;
 };
 
-void InstallInterfaces(SM::ServiceManager& service_manager);
+void InstallInterfaces(Core::System& system);
 
 } // namespace Service::MIC

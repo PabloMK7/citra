@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <vector>
+#include "core/core.h"
 #include "core/hle/kernel/event.h"
 #include "core/hle/kernel/shared_memory.h"
 #include "core/hle/service/gsp/gsp.h"
@@ -23,8 +24,9 @@ void SignalInterrupt(InterruptId interrupt_id) {
     return gpu->SignalInterrupt(interrupt_id);
 }
 
-void InstallInterfaces(SM::ServiceManager& service_manager) {
-    auto gpu = std::make_shared<GSP_GPU>();
+void InstallInterfaces(Core::System& system) {
+    auto& service_manager = system.ServiceManager();
+    auto gpu = std::make_shared<GSP_GPU>(system);
     gpu->InstallAsService(service_manager);
     gsp_gpu = gpu;
 

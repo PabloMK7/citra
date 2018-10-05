@@ -4,6 +4,7 @@
 
 #include <cryptopp/aes.h>
 #include <cryptopp/modes.h>
+#include "core/core.h"
 #include "core/file_sys/archive_ncch.h"
 #include "core/file_sys/file_backend.h"
 #include "core/hle/ipc_helpers.h"
@@ -581,7 +582,8 @@ HTTP_C::HTTP_C() : ServiceFramework("http:C", 32) {
     DecryptClCertA();
 }
 
-void InstallInterfaces(SM::ServiceManager& service_manager) {
+void InstallInterfaces(Core::System& system) {
+    auto& service_manager = system.ServiceManager();
     std::make_shared<HTTP_C>()->InstallAsService(service_manager);
 }
 } // namespace Service::HTTP

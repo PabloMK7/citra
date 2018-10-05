@@ -9,6 +9,10 @@
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/service/service.h"
 
+namespace Core {
+class System;
+}
+
 namespace Kernel {
 class Event;
 }
@@ -152,6 +156,6 @@ protected:
     Kernel::SharedPtr<Kernel::Event> disconnect_event;
 };
 
-void InstallInterfaces(SM::ServiceManager& service_manager);
+void InstallInterfaces(Core::System& system);
 
 } // namespace Service::AC

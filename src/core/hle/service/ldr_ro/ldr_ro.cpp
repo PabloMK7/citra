@@ -586,7 +586,8 @@ RO::RO() : ServiceFramework("ldr:ro", 2) {
     RegisterHandlers(functions);
 }
 
-void InstallInterfaces(SM::ServiceManager& service_manager) {
+void InstallInterfaces(Core::System& system) {
+    auto& service_manager = system.ServiceManager();
     std::make_shared<RO>()->InstallAsService(service_manager);
 }
 

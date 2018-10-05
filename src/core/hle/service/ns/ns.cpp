@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <cinttypes>
+#include "core/core.h"
 #include "core/hle/service/am/am.h"
 #include "core/hle/service/ns/ns.h"
 #include "core/hle/service/ns/ns_s.h"
@@ -30,7 +31,8 @@ Kernel::SharedPtr<Kernel::Process> LaunchTitle(FS::MediaType media_type, u64 tit
     return process;
 }
 
-void InstallInterfaces(SM::ServiceManager& service_manager) {
+void InstallInterfaces(Core::System& system) {
+    auto& service_manager = system.ServiceManager();
     std::make_shared<NS_S>()->InstallAsService(service_manager);
 }
 

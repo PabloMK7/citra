@@ -8,6 +8,10 @@
 #include "core/hle/kernel/shared_memory.h"
 #include "core/hle/service/service.h"
 
+namespace Core {
+class System;
+}
+
 namespace Service::CSND {
 
 class CSND_SND final : public ServiceFramework<CSND_SND> {
@@ -178,6 +182,6 @@ private:
 };
 
 /// Initializes the CSND_SND Service
-void InstallInterfaces(SM::ServiceManager& service_manager);
+void InstallInterfaces(Core::System& system);
 
 } // namespace Service::CSND

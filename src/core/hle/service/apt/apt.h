@@ -11,6 +11,10 @@
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/service/service.h"
 
+namespace Core {
+class System;
+}
+
 namespace Kernel {
 class Mutex;
 class SharedMemory;
@@ -52,7 +56,7 @@ enum class ScreencapPostPermission : u32 {
 
 class Module final {
 public:
-    Module();
+    explicit Module(Core::System& system);
     ~Module();
 
     class Interface : public ServiceFramework<Interface> {
@@ -582,6 +586,8 @@ private:
     bool LoadSharedFont();
     bool LoadLegacySharedFont();
 
+    Core::System& system;
+
     /// Handle to shared memory region designated to for shared system font
     Kernel::SharedPtr<Kernel::SharedMemory> shared_font_mem;
     bool shared_font_loaded = false;
@@ -602,6 +608,6 @@ private:
     std::shared_ptr<AppletManager> applet_manager;
 };
 
-void InstallInterfaces(SM::ServiceManager& service_manager);
+void InstallInterfaces(Core::System& system);
 
 } // namespace Service::APT

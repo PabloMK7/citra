@@ -5,6 +5,7 @@
 #include <cstring>
 #include "common/common_funcs.h"
 #include "common/logging/log.h"
+#include "core/core.h"
 #include "core/hle/ipc_helpers.h"
 #include "core/hle/kernel/event.h"
 #include "core/hle/kernel/process.h"
@@ -686,7 +687,8 @@ Y2R_U::Y2R_U() : ServiceFramework("y2r:u", 1) {
 
 Y2R_U::~Y2R_U() = default;
 
-void InstallInterfaces(SM::ServiceManager& service_manager) {
+void InstallInterfaces(Core::System& system) {
+    auto& service_manager = system.ServiceManager();
     std::make_shared<Y2R_U>()->InstallAsService(service_manager);
 }
 

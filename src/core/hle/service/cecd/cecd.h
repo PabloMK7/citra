@@ -15,6 +15,10 @@ class ArchiveBackend;
 class FileBackend;
 } // namespace FileSys
 
+namespace Core {
+class System;
+}
+
 namespace Service::CECD {
 
 class Module final {
@@ -609,6 +613,6 @@ private:
 };
 
 /// Initialize CECD service(s)
-void InstallInterfaces(SM::ServiceManager& service_manager);
+void InstallInterfaces(Core::System& system);
 
 } // namespace Service::CECD

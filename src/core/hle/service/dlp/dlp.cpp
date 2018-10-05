@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "core/core.h"
 #include "core/hle/service/dlp/dlp.h"
 #include "core/hle/service/dlp/dlp_clnt.h"
 #include "core/hle/service/dlp/dlp_fkcl.h"
@@ -9,7 +10,8 @@
 
 namespace Service::DLP {
 
-void InstallInterfaces(SM::ServiceManager& service_manager) {
+void InstallInterfaces(Core::System& system) {
+    auto& service_manager = system.ServiceManager();
     std::make_shared<DLP_CLNT>()->InstallAsService(service_manager);
     std::make_shared<DLP_FKCL>()->InstallAsService(service_manager);
     std::make_shared<DLP_SRVR>()->InstallAsService(service_manager);

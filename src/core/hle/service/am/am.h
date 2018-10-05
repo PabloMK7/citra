@@ -16,6 +16,10 @@
 #include "core/hle/result.h"
 #include "core/hle/service/service.h"
 
+namespace Core {
+class System;
+}
+
 namespace Service::FS {
 enum class MediaType : u32;
 }
@@ -574,6 +578,6 @@ private:
     Kernel::SharedPtr<Kernel::Mutex> system_updater_mutex;
 };
 
-void InstallInterfaces(SM::ServiceManager& service_manager);
+void InstallInterfaces(Core::System& system);
 
 } // namespace Service::AM

@@ -13,6 +13,10 @@
 #include "core/hle/result.h"
 #include "core/hle/service/service.h"
 
+namespace Core {
+class System;
+}
+
 namespace Kernel {
 class SharedMemory;
 } // namespace Kernel
@@ -192,7 +196,7 @@ struct SessionData : public Kernel::SessionRequestHandler::SessionDataBase {
 
 class GSP_GPU final : public ServiceFramework<GSP_GPU, SessionData> {
 public:
-    GSP_GPU();
+    explicit GSP_GPU(Core::System& system);
     ~GSP_GPU() = default;
 
     void ClientDisconnected(Kernel::SharedPtr<Kernel::ServerSession> server_session) override;
@@ -398,6 +402,8 @@ private:
 
     /// Returns the session data for the specified registered thread id, or nullptr if not found.
     SessionData* FindRegisteredThreadData(u32 thread_id);
+
+    Core::System& system;
 
     /// GSP shared memory
     Kernel::SharedPtr<Kernel::SharedMemory> shared_memory;

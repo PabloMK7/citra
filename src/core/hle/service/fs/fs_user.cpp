@@ -853,7 +853,8 @@ FS_USER::FS_USER() : ServiceFramework("fs:USER", 30) {
     RegisterHandlers(functions);
 }
 
-void InstallInterfaces(SM::ServiceManager& service_manager) {
+void InstallInterfaces(Core::System& system) {
+    auto& service_manager = system.ServiceManager();
     std::make_shared<FS_USER>()->InstallAsService(service_manager);
 }
 } // namespace Service::FS

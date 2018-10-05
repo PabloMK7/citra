@@ -182,7 +182,8 @@ void Module::Interface::GetSharedFont(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
 
     // Log in telemetry if the game uses the shared font
-    Core::Telemetry().AddField(Telemetry::FieldType::Session, "RequiresSharedFont", true);
+    apt->system.TelemetrySession().AddField(Telemetry::FieldType::Session, "RequiresSharedFont",
+                                            true);
 
     if (!apt->shared_font_loaded) {
         // On real 3DS, font loading happens on booting. However, we load it on demand to coordinate
@@ -197,8 +198,7 @@ void Module::Interface::GetSharedFont(Kernel::HLERequestContext& ctx) {
             rb.Push<u32>(-1); // TODO: Find the right error code
             rb.Push<u32>(0);
             rb.PushCopyObjects<Kernel::Object>(nullptr);
-            Core::System::GetInstance().SetStatus(Core::System::ResultStatus::ErrorSystemFiles,
-                                                  "Shared fonts");
+            apt->system.SetStatus(Core::System::ResultStatus::ErrorSystemFiles, "Shared fonts");
             return;
         }
     }
@@ -544,7 +544,7 @@ void Module::Interface::CloseApplication(Kernel::HLERequestContext& ctx) {
 
     LOG_DEBUG(Service_APT, "called");
 
-    Core::System::GetInstance().RequestShutdown();
+    apt->system.RequestShutdown();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
@@ -584,11 +584,11 @@ void Module::Interface::DoApplicationJump(Kernel::HLERequestContext& ctx) {
 
     if (application_reset_prepared) {
         // Reset system
-        Core::System::GetInstance().RequestReset();
+        apt->system.RequestReset();
     } else {
         // After the jump, the application should shutdown
         // TODO: Actually implement the jump
-        Core::System::GetInstance().RequestShutdown();
+        apt->system.RequestShutdown();
     }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
@@ -843,7 +843,7 @@ Module::Interface::Interface(std::shared_ptr<Module> apt, const char* name, u32 
 
 Module::Interface::~Interface() = default;
 
-Module::Module() {
+Module::Module(Core::System& system) : system(system) {
     applet_manager = std::make_shared<AppletManager>();
 
     using Kernel::MemoryPermission;
@@ -857,8 +857,9 @@ Module::Module() {
 
 Module::~Module() {}
 
-void InstallInterfaces(SM::ServiceManager& service_manager) {
-    auto apt = std::make_shared<Module>();
+void InstallInterfaces(Core::System& system) {
+    auto& service_manager = system.ServiceManager();
+    auto apt = std::make_shared<Module>(system);
     std::make_shared<APT_U>(apt)->InstallAsService(service_manager);
     std::make_shared<APT_S>(apt)->InstallAsService(service_manager);
     std::make_shared<APT_A>(apt)->InstallAsService(service_manager);

@@ -9,6 +9,10 @@
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/service/service.h"
 
+namespace Core {
+class System;
+}
+
 namespace Kernel {
 class Event;
 } // namespace Kernel
@@ -174,6 +178,6 @@ private:
     CommunicationStatus nfc_status = CommunicationStatus::NfcInitialized;
 };
 
-void InstallInterfaces(SM::ServiceManager& service_manager);
+void InstallInterfaces(Core::System& system);
 
 } // namespace Service::NFC

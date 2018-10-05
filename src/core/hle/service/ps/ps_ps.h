@@ -6,6 +6,10 @@
 
 #include "core/hle/service/service.h"
 
+namespace Core {
+class System;
+}
+
 namespace Service::PS {
 
 class PS_PS final : public ServiceFramework<PS_PS> {
@@ -224,6 +228,6 @@ private:
 };
 
 /// Initializes the PS_PS Service
-void InstallInterfaces(SM::ServiceManager& service_manager);
+void InstallInterfaces(Core::System& system);
 
 } // namespace Service::PS

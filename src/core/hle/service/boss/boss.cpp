@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include "common/logging/log.h"
+#include "core/core.h"
 #include "core/hle/ipc_helpers.h"
 #include "core/hle/result.h"
 #include "core/hle/service/boss/boss.h"
@@ -908,7 +909,8 @@ Module::Module() {
     task_finish_event = Event::Create(Kernel::ResetType::OneShot, "BOSS::task_finish_event");
 }
 
-void InstallInterfaces(SM::ServiceManager& service_manager) {
+void InstallInterfaces(Core::System& system) {
+    auto& service_manager = system.ServiceManager();
     auto boss = std::make_shared<Module>();
     std::make_shared<BOSS_P>(boss)->InstallAsService(service_manager);
     std::make_shared<BOSS_U>(boss)->InstallAsService(service_manager);

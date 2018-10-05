@@ -5,6 +5,7 @@
 #include <algorithm>
 #include "common/bit_set.h"
 #include "common/logging/log.h"
+#include "core/core.h"
 #include "core/core_timing.h"
 #include "core/frontend/camera/factory.h"
 #include "core/hle/ipc.h"
@@ -1054,7 +1055,8 @@ void ReloadCameraDevices() {
         cam->ReloadCameraDevices();
 }
 
-void InstallInterfaces(SM::ServiceManager& service_manager) {
+void InstallInterfaces(Core::System& system) {
+    auto& service_manager = system.ServiceManager();
     auto cam = std::make_shared<Module>();
     current_cam = cam;
 

@@ -11,6 +11,10 @@
 #include "core/hle/service/gsp/gsp_gpu.h"
 #include "core/hle/service/gsp/gsp_lcd.h"
 
+namespace Core {
+class System;
+}
+
 namespace Service::GSP {
 /**
  * Retrieves the framebuffer info stored in the GSP shared memory for the
@@ -27,5 +31,5 @@ FrameBufferUpdate* GetFrameBufferInfo(u32 thread_id, u32 screen_index);
  */
 void SignalInterrupt(InterruptId interrupt_id);
 
-void InstallInterfaces(SM::ServiceManager& service_manager);
+void InstallInterfaces(Core::System& system);
 } // namespace Service::GSP

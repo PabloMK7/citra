@@ -1283,7 +1283,7 @@ static void BeaconBroadcastCallback(u64 userdata, s64 cycles_late) {
                               beacon_broadcast_event, 0);
 }
 
-NWM_UDS::NWM_UDS() : ServiceFramework("nwm::UDS") {
+NWM_UDS::NWM_UDS(Core::System& system) : ServiceFramework("nwm::UDS") {
     static const FunctionInfo functions[] = {
         {0x000102C2, nullptr, "Initialize (deprecated)"},
         {0x00020000, nullptr, "Scrap"},
@@ -1334,9 +1334,8 @@ NWM_UDS::NWM_UDS() : ServiceFramework("nwm::UDS") {
         }
     }
 
-    Core::System::GetInstance().GetSharedPageHandler()->SetMacAddress(mac);
-    Core::System::GetInstance().GetSharedPageHandler()->SetWifiLinkLevel(
-        SharedPage::WifiLinkLevel::BEST);
+    system.GetSharedPageHandler()->SetMacAddress(mac);
+    system.GetSharedPageHandler()->SetWifiLinkLevel(SharedPage::WifiLinkLevel::BEST);
 }
 
 NWM_UDS::~NWM_UDS() {

@@ -7,6 +7,10 @@
 #include <unordered_map>
 #include "core/hle/service/service.h"
 
+namespace Core {
+class System;
+}
+
 namespace Service::SOC {
 
 /// Holds information about a particular socket
@@ -48,6 +52,6 @@ private:
     std::unordered_map<u32, SocketHolder> open_sockets;
 };
 
-void InstallInterfaces(SM::ServiceManager& service_manager);
+void InstallInterfaces(Core::System& system);
 
 } // namespace Service::SOC

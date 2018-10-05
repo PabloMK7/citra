@@ -194,7 +194,7 @@ System::ResultStatus System::Init(EmuWindow& emu_window, u32 system_mode) {
 
     HW::Init();
     Kernel::Init(system_mode);
-    Service::Init(service_manager);
+    Service::Init(*this, service_manager);
     GDBStub::Init();
 
     ResultStatus result = VideoCore::Init(emu_window);

@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include "common/alignment.h"
+#include "core/core.h"
 #include "core/hle/ipc_helpers.h"
 #include "core/hle/result.h"
 #include "core/hle/service/csnd/csnd_snd.h"
@@ -193,7 +194,8 @@ CSND_SND::CSND_SND() : ServiceFramework("csnd:SND", 4) {
     RegisterHandlers(functions);
 };
 
-void InstallInterfaces(SM::ServiceManager& service_manager) {
+void InstallInterfaces(Core::System& system) {
+    auto& service_manager = system.ServiceManager();
     std::make_shared<CSND_SND>()->InstallAsService(service_manager);
 }
 

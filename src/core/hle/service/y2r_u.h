@@ -12,6 +12,10 @@
 #include "core/hle/result.h"
 #include "core/hle/service/service.h"
 
+namespace Core {
+class System;
+}
+
 namespace Kernel {
 class Event;
 }
@@ -298,6 +302,6 @@ private:
     bool spacial_dithering_enabled = false;
 };
 
-void InstallInterfaces(SM::ServiceManager& service_manager);
+void InstallInterfaces(Core::System& system);
 
 } // namespace Service::Y2R

@@ -11,6 +11,10 @@
 #include "common/swap.h"
 #include "core/hle/service/service.h"
 
+namespace Core {
+class System;
+}
+
 // Local-WLAN service
 
 namespace Service::NWM {
@@ -98,7 +102,7 @@ enum class TagId : u8 {
 
 class NWM_UDS final : public ServiceFramework<NWM_UDS> {
 public:
-    NWM_UDS();
+    explicit NWM_UDS(Core::System& system);
     ~NWM_UDS();
 
 private:

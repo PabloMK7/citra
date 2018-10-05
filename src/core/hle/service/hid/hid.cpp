@@ -219,7 +219,7 @@ void Module::UpdateGyroscopeCallback(u64 userdata, s64 cycles_late) {
 
     Math::Vec3<float> gyro;
     std::tie(std::ignore, gyro) = motion_device->GetStatus();
-    double stretch = Core::System::GetInstance().perf_stats.GetLastFrameTimeScale();
+    double stretch = system.perf_stats.GetLastFrameTimeScale();
     gyro *= gyroscope_coef * static_cast<float>(stretch);
     gyroscope_entry.x = static_cast<s16>(gyro.x);
     gyroscope_entry.y = static_cast<s16>(gyro.y);
@@ -354,7 +354,7 @@ void Module::Interface::GetSoundVolume(Kernel::HLERequestContext& ctx) {
 Module::Interface::Interface(std::shared_ptr<Module> hid, const char* name, u32 max_session)
     : ServiceFramework(name, max_session), hid(std::move(hid)) {}
 
-Module::Module() {
+Module::Module(Core::System& system) : system(system) {
     using namespace Kernel;
 
     shared_mem =
@@ -393,8 +393,9 @@ void ReloadInputDevices() {
         hid->ReloadInputDevices();
 }
 
-void InstallInterfaces(SM::ServiceManager& service_manager) {
-    auto hid = std::make_shared<Module>();
+void InstallInterfaces(Core::System& system) {
+    auto& service_manager = system.ServiceManager();
+    auto hid = std::make_shared<Module>(system);
     std::make_shared<User>(hid)->InstallAsService(service_manager);
     std::make_shared<Spvr>(hid)->InstallAsService(service_manager);
     current_module = hid;
