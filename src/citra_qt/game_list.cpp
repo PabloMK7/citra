@@ -27,6 +27,8 @@
 #include "citra_qt/ui_settings.h"
 #include "common/common_paths.h"
 #include "common/logging/log.h"
+#include "core/file_sys/archive_extsavedata.h"
+#include "core/file_sys/archive_source_sd_savedata.h"
 #include "core/hle/service/fs/archive.h"
 #include "core/loader/loader.h"
 
@@ -417,7 +419,9 @@ void GameList::PopupContextMenu(const QPoint& menu_location) {
     QMenu context_menu;
     switch (selected.data(GameListItem::TypeRole).value<GameListItemType>()) {
     case GameListItemType::Game:
-        AddGamePopup(context_menu, selected.data(GameListItemPath::ProgramIdRole).toULongLong());
+        AddGamePopup(context_menu, selected.data(GameListItemPath::FullPathRole).toString(),
+                     selected.data(GameListItemPath::ProgramIdRole).toULongLong(),
+                     selected.data(GameListItemPath::ExtdataIdRole).toULongLong());
         break;
     case GameListItemType::CustomDir:
         AddPermDirPopup(context_menu, selected);
@@ -431,22 +435,45 @@ void GameList::PopupContextMenu(const QPoint& menu_location) {
     context_menu.exec(tree_view->viewport()->mapToGlobal(menu_location));
 }
 
-void GameList::AddGamePopup(QMenu& context_menu, u64 program_id) {
+void GameList::AddGamePopup(QMenu& context_menu, const QString& path, u64 program_id,
+                            u64 extdata_id) {
     QAction* open_save_location = context_menu.addAction(tr("Open Save Data Location"));
+    QAction* open_extdata_location = context_menu.addAction(tr("Open Extra Data Location"));
     QAction* open_application_location = context_menu.addAction(tr("Open Application Location"));
     QAction* open_update_location = context_menu.addAction(tr("Open Update Data Location"));
     QAction* navigate_to_gamedb_entry = context_menu.addAction(tr("Navigate to GameDB entry"));
 
-    open_save_location->setEnabled(program_id != 0);
-    open_application_location->setVisible(FileUtil::Exists(
-        Service::AM::GetTitleContentPath(Service::FS::MediaType::SDMC, program_id)));
-    open_update_location->setEnabled(0x0004000000000000 <= program_id &&
-                                     program_id <= 0x00040000FFFFFFFF);
+    const bool is_application =
+        0x0004000000000000 <= program_id && program_id <= 0x00040000FFFFFFFF;
+
+    std::string sdmc_dir = FileUtil::GetUserPath(FileUtil::UserPath::SDMCDir);
+    open_save_location->setVisible(
+        is_application && FileUtil::Exists(FileSys::ArchiveSource_SDSaveData::GetSaveDataPathFor(
+                              sdmc_dir, program_id)));
+
+    if (extdata_id) {
+        open_extdata_location->setVisible(
+            is_application &&
+            FileUtil::Exists(FileSys::GetExtDataPathFromId(sdmc_dir, extdata_id)));
+    } else {
+        open_extdata_location->setVisible(false);
+    }
+
+    auto media_type = Service::AM::GetTitleMediaType(program_id);
+    open_application_location->setVisible(path.toStdString() ==
+                                          Service::AM::GetTitleContentPath(media_type, program_id));
+    open_update_location->setVisible(
+        is_application && FileUtil::Exists(Service::AM::GetTitlePath(Service::FS::MediaType::SDMC,
+                                                                     program_id + 0xe00000000) +
+                                           "content/"));
     auto it = FindMatchingCompatibilityEntry(compatibility_list, program_id);
     navigate_to_gamedb_entry->setVisible(it != compatibility_list.end());
 
     connect(open_save_location, &QAction::triggered, [this, program_id] {
         emit OpenFolderRequested(program_id, GameListOpenTarget::SAVE_DATA);
+    });
+    connect(open_extdata_location, &QAction::triggered, [this, extdata_id] {
+        emit OpenFolderRequested(extdata_id, GameListOpenTarget::EXT_DATA);
     });
     connect(open_application_location, &QAction::triggered, [this, program_id] {
         emit OpenFolderRequested(program_id, GameListOpenTarget::APPLICATION);
@@ -659,6 +686,9 @@ void GameListWorker::AddFstEntriesToGameList(const std::string& dir_path, unsign
             u64 program_id = 0;
             loader->ReadProgramId(program_id);
 
+            u64 extdata_id = 0;
+            loader->ReadExtdataId(extdata_id);
+
             std::vector<u8> smdh = [program_id, &loader]() -> std::vector<u8> {
                 std::vector<u8> original_smdh;
                 loader->ReadIcon(original_smdh);
@@ -691,7 +721,8 @@ void GameListWorker::AddFstEntriesToGameList(const std::string& dir_path, unsign
 
             emit EntryReady(
                 {
-                    new GameListItemPath(QString::fromStdString(physical_name), smdh, program_id),
+                    new GameListItemPath(QString::fromStdString(physical_name), smdh, program_id,
+                                         extdata_id),
                     new GameListItemCompat(compatibility),
                     new GameListItemRegion(smdh),
                     new GameListItem(

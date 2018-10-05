@@ -125,9 +125,23 @@ struct ExHeader_SystemInfo {
 };
 
 struct ExHeader_StorageInfo {
-    u8 ext_save_data_id[8];
+    union {
+        u64_le ext_save_data_id;
+        // When using extended savedata access
+        // Prefer the ID specified in the most significant bits
+        BitField<40, 20, u64_le> extdata_id3;
+        BitField<20, 20, u64_le> extdata_id4;
+        BitField<0, 20, u64_le> extdata_id5;
+    };
     u8 system_save_data_id[8];
-    u8 reserved[8];
+    union {
+        u64_le storage_accessible_unique_ids;
+        // When using extended savedata access
+        // Prefer the ID specified in the most significant bits
+        BitField<40, 20, u64_le> extdata_id0;
+        BitField<20, 20, u64_le> extdata_id1;
+        BitField<0, 20, u64_le> extdata_id2;
+    };
     u8 access_info[7];
     u8 other_attributes;
 };
@@ -250,6 +264,12 @@ public:
      * @return ResultStatus result of function
      */
     Loader::ResultStatus ReadProgramId(u64_le& program_id);
+
+    /**
+     * Get the Extdata ID of the NCCH container
+     * @return ResultStatus result of function
+     */
+    Loader::ResultStatus ReadExtdataId(u64& extdata_id);
 
     /**
      * Checks whether the NCCH container contains an ExeFS

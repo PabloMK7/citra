@@ -135,12 +135,15 @@ public:
     static const int TitleRole = SortRole;
     static const int FullPathRole = SortRole + 1;
     static const int ProgramIdRole = SortRole + 2;
+    static const int ExtdataIdRole = SortRole + 3;
 
     GameListItemPath() = default;
-    GameListItemPath(const QString& game_path, const std::vector<u8>& smdh_data, u64 program_id) {
+    GameListItemPath(const QString& game_path, const std::vector<u8>& smdh_data, u64 program_id,
+                     u64 extdata_id) {
         setData(type(), TypeRole);
         setData(game_path, FullPathRole);
         setData(qulonglong(program_id), ProgramIdRole);
+        setData(qulonglong(extdata_id), ExtdataIdRole);
 
         if (!Loader::IsValidSMDH(smdh_data)) {
             // SMDH is not valid, set a default icon

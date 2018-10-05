@@ -576,6 +576,41 @@ Loader::ResultStatus NCCHContainer::ReadProgramId(u64_le& program_id) {
     return Loader::ResultStatus::Success;
 }
 
+Loader::ResultStatus NCCHContainer::ReadExtdataId(u64& extdata_id) {
+    Loader::ResultStatus result = Load();
+    if (result != Loader::ResultStatus::Success)
+        return result;
+
+    if (!has_exheader)
+        return Loader::ResultStatus::ErrorNotUsed;
+
+    if (exheader_header.arm11_system_local_caps.storage_info.other_attributes >> 1) {
+        // Using extended save data access
+        // There would be multiple possible extdata IDs in this case. The best we can do for now is
+        // guessing that the first one would be the main save.
+        const std::array<u64, 6> extdata_ids{{
+            exheader_header.arm11_system_local_caps.storage_info.extdata_id0.Value(),
+            exheader_header.arm11_system_local_caps.storage_info.extdata_id1.Value(),
+            exheader_header.arm11_system_local_caps.storage_info.extdata_id2.Value(),
+            exheader_header.arm11_system_local_caps.storage_info.extdata_id3.Value(),
+            exheader_header.arm11_system_local_caps.storage_info.extdata_id4.Value(),
+            exheader_header.arm11_system_local_caps.storage_info.extdata_id5.Value(),
+        }};
+        for (u64 id : extdata_ids) {
+            if (id) {
+                // Found a non-zero ID, use it
+                extdata_id = id;
+                return Loader::ResultStatus::Success;
+            }
+        }
+
+        return Loader::ResultStatus::ErrorNotUsed;
+    }
+
+    extdata_id = exheader_header.arm11_system_local_caps.storage_info.ext_save_data_id;
+    return Loader::ResultStatus::Success;
+}
+
 bool NCCHContainer::HasExeFS() {
     Loader::ResultStatus result = Load();
     if (result != Loader::ResultStatus::Success)

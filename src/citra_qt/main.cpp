@@ -52,6 +52,7 @@
 #include "common/scm_rev.h"
 #include "common/scope_exit.h"
 #include "core/core.h"
+#include "core/file_sys/archive_extsavedata.h"
 #include "core/file_sys/archive_source_sd_savedata.h"
 #include "core/frontend/applets/default_applets.h"
 #include "core/gdbstub/gdbstub.h"
@@ -879,7 +880,7 @@ void GMainWindow::OnGameListLoadFile(QString game_path) {
     BootGame(game_path);
 }
 
-void GMainWindow::OnGameListOpenFolder(u64 program_id, GameListOpenTarget target) {
+void GMainWindow::OnGameListOpenFolder(u64 data_id, GameListOpenTarget target) {
     std::string path;
     std::string open_target;
 
@@ -887,16 +888,24 @@ void GMainWindow::OnGameListOpenFolder(u64 program_id, GameListOpenTarget target
     case GameListOpenTarget::SAVE_DATA: {
         open_target = "Save Data";
         std::string sdmc_dir = FileUtil::GetUserPath(FileUtil::UserPath::SDMCDir);
-        path = FileSys::ArchiveSource_SDSaveData::GetSaveDataPathFor(sdmc_dir, program_id);
+        path = FileSys::ArchiveSource_SDSaveData::GetSaveDataPathFor(sdmc_dir, data_id);
         break;
     }
-    case GameListOpenTarget::APPLICATION:
-        open_target = "Application";
-        path = Service::AM::GetTitlePath(Service::FS::MediaType::SDMC, program_id) + "content/";
+    case GameListOpenTarget::EXT_DATA: {
+        open_target = "Extra Data";
+        std::string sdmc_dir = FileUtil::GetUserPath(FileUtil::UserPath::SDMCDir);
+        path = FileSys::GetExtDataPathFromId(sdmc_dir, data_id);
         break;
+    }
+    case GameListOpenTarget::APPLICATION: {
+        open_target = "Application";
+        auto media_type = Service::AM::GetTitleMediaType(data_id);
+        path = Service::AM::GetTitlePath(media_type, data_id) + "content/";
+        break;
+    }
     case GameListOpenTarget::UPDATE_DATA:
         open_target = "Update Data";
-        path = Service::AM::GetTitlePath(Service::FS::MediaType::SDMC, program_id + 0xe00000000) +
+        path = Service::AM::GetTitlePath(Service::FS::MediaType::SDMC, data_id + 0xe00000000) +
                "content/";
         break;
     default:
@@ -914,7 +923,7 @@ void GMainWindow::OnGameListOpenFolder(u64 program_id, GameListOpenTarget target
         return;
     }
 
-    LOG_INFO(Frontend, "Opening {} path for program_id={:016x}", open_target, program_id);
+    LOG_INFO(Frontend, "Opening {} path for data_id={:016x}", open_target, data_id);
 
     QDesktopServices::openUrl(QUrl::fromLocalFile(qpath));
 }

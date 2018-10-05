@@ -216,6 +216,14 @@ ResultStatus AppLoader_NCCH::ReadProgramId(u64& out_program_id) {
     return ResultStatus::Success;
 }
 
+ResultStatus AppLoader_NCCH::ReadExtdataId(u64& out_extdata_id) {
+    ResultStatus result = base_ncch.ReadExtdataId(out_extdata_id);
+    if (result != ResultStatus::Success)
+        return result;
+
+    return ResultStatus::Success;
+}
+
 ResultStatus AppLoader_NCCH::ReadRomFS(std::shared_ptr<FileSys::RomFSReader>& romfs_file) {
     return base_ncch.ReadRomFS(romfs_file);
 }
