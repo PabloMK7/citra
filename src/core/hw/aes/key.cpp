@@ -4,8 +4,8 @@
 
 #include <algorithm>
 #include <exception>
+#include <optional>
 #include <sstream>
-#include <boost/optional.hpp>
 #include "common/common_paths.h"
 #include "common/file_util.h"
 #include "common/logging/log.h"
@@ -18,24 +18,24 @@ namespace AES {
 
 namespace {
 
-boost::optional<AESKey> generator_constant;
+std::optional<AESKey> generator_constant;
 
 struct KeySlot {
-    boost::optional<AESKey> x;
-    boost::optional<AESKey> y;
-    boost::optional<AESKey> normal;
+    std::optional<AESKey> x;
+    std::optional<AESKey> y;
+    std::optional<AESKey> normal;
 
-    void SetKeyX(boost::optional<AESKey> key) {
+    void SetKeyX(std::optional<AESKey> key) {
         x = key;
         GenerateNormalKey();
     }
 
-    void SetKeyY(boost::optional<AESKey> key) {
+    void SetKeyY(std::optional<AESKey> key) {
         y = key;
         GenerateNormalKey();
     }
 
-    void SetNormalKey(boost::optional<AESKey> key) {
+    void SetNormalKey(std::optional<AESKey> key) {
         normal = key;
     }
 
@@ -43,7 +43,7 @@ struct KeySlot {
         if (x && y && generator_constant) {
             normal = Lrot128(Add128(Xor128(Lrot128(*x, 2), *y), *generator_constant), 87);
         } else {
-            normal = boost::none;
+            normal = {};
         }
     }
 
@@ -55,7 +55,7 @@ struct KeySlot {
 };
 
 std::array<KeySlot, KeySlotID::MaxKeySlotID> key_slots;
-std::array<boost::optional<AESKey>, 6> common_key_y_slots;
+std::array<std::optional<AESKey>, 6> common_key_y_slots;
 
 AESKey HexToKey(const std::string& hex) {
     if (hex.size() < 32) {
@@ -169,7 +169,7 @@ void SetNormalKey(std::size_t slot_id, const AESKey& key) {
 }
 
 bool IsNormalKeyAvailable(std::size_t slot_id) {
-    return key_slots.at(slot_id).normal.is_initialized();
+    return key_slots.at(slot_id).normal.has_value();
 }
 
 AESKey GetNormalKey(std::size_t slot_id) {

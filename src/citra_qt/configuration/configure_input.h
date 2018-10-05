@@ -1,4 +1,4 @@
-﻿// Copyright 2016 Citra Emulator Project
+// Copyright 2016 Citra Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -7,11 +7,11 @@
 #include <array>
 #include <functional>
 #include <memory>
+#include <optional>
 #include <string>
 #include <unordered_map>
 #include <QKeyEvent>
 #include <QWidget>
-#include <boost/optional.hpp>
 #include "common/param_package.h"
 #include "core/settings.h"
 #include "input_common/main.h"
@@ -42,7 +42,7 @@ private:
     std::unique_ptr<QTimer> poll_timer;
 
     /// This will be the the setting function when an input is awaiting configuration.
-    boost::optional<std::function<void(const Common::ParamPackage&)>> input_setter;
+    std::optional<std::function<void(const Common::ParamPackage&)>> input_setter;
 
     std::array<Common::ParamPackage, Settings::NativeButton::NumButtons> buttons_param;
     std::array<Common::ParamPackage, Settings::NativeAnalog::NumAnalogs> analogs_param;

@@ -49,11 +49,11 @@ FileType AppLoader_NCCH::IdentifyType(FileUtil::IOFile& file) {
     return FileType::Error;
 }
 
-std::pair<boost::optional<u32>, ResultStatus> AppLoader_NCCH::LoadKernelSystemMode() {
+std::pair<std::optional<u32>, ResultStatus> AppLoader_NCCH::LoadKernelSystemMode() {
     if (!is_loaded) {
         ResultStatus res = base_ncch.Load();
         if (res != ResultStatus::Success) {
-            return std::make_pair(boost::none, res);
+            return std::make_pair(std::optional<u32>{}, res);
         }
     }
 

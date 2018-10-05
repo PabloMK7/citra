@@ -5,10 +5,10 @@
 #pragma once
 
 #include <array>
+#include <optional>
 #include <type_traits>
 #include <vector>
 #include <boost/crc.hpp>
-#include <boost/optional.hpp>
 #include "common/bit_field.h"
 #include "common/swap.h"
 
@@ -218,7 +218,7 @@ static_assert(sizeof(Message<PadData>) == MAX_PACKET_SIZE,
  * @return boost::none if it failed to parse or Type if it succeeded. The client can then safely
  * copy the data into the appropriate struct for that Type
  */
-boost::optional<Type> Validate(u8* data, std::size_t size);
+std::optional<Type> Validate(u8* data, std::size_t size);
 
 } // namespace Response
 

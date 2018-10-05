@@ -39,7 +39,7 @@ public:
      * Loads the Exheader and returns the system mode for this application.
      * @returns A pair with the optional system mode, and and the status.
      */
-    std::pair<boost::optional<u32>, ResultStatus> LoadKernelSystemMode() override;
+    std::pair<std::optional<u32>, ResultStatus> LoadKernelSystemMode() override;
 
     ResultStatus ReadCode(std::vector<u8>& buffer) override;
 

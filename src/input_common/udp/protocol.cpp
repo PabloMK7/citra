@@ -29,24 +29,24 @@ namespace Response {
  * Note: Modifies the buffer to zero out the crc (since thats the easiest way to check without
  * copying the buffer)
  */
-boost::optional<Type> Validate(u8* data, std::size_t size) {
+std::optional<Type> Validate(u8* data, std::size_t size) {
     if (size < sizeof(Header)) {
         LOG_DEBUG(Input, "Invalid UDP packet received");
-        return boost::none;
+        return {};
     }
     Header header;
     std::memcpy(&header, data, sizeof(Header));
     if (header.magic != SERVER_MAGIC) {
         LOG_ERROR(Input, "UDP Packet has an unexpected magic value");
-        return boost::none;
+        return {};
     }
     if (header.protocol_version != PROTOCOL_VERSION) {
         LOG_ERROR(Input, "UDP Packet protocol mismatch");
-        return boost::none;
+        return {};
     }
     if (header.type < Type::Version || header.type > Type::PadData) {
         LOG_ERROR(Input, "UDP Packet is an unknown type");
-        return boost::none;
+        return {};
     }
 
     // Packet size must equal sizeof(Header) + sizeof(Data)
@@ -59,7 +59,7 @@ boost::optional<Type> Validate(u8* data, std::size_t size) {
             Input,
             "UDP Packet payload length doesn't match. Received: {} PayloadLength: {} Expected: {}",
             size, header.payload_length, data_len + sizeof(Type));
-        return boost::none;
+        return {};
     }
 
     const u32 crc32 = header.crc;
@@ -70,7 +70,7 @@ boost::optional<Type> Validate(u8* data, std::size_t size) {
     result.process_bytes(data, data_len + sizeof(Header));
     if (crc32 != result.checksum()) {
         LOG_ERROR(Input, "UDP Packet CRC check failed. Offset: {}", offsetof(Header, crc));
-        return boost::none;
+        return {};
     }
     return header.type;
 }
