@@ -433,7 +433,9 @@ void RasterizerFlushVirtualRegion(VAddr start, u32 size, FlushMode mode) {
         VAddr overlap_start = std::max(start, region_start);
         VAddr overlap_end = std::min(end, region_end);
 
-        PAddr physical_start = *TryVirtualToPhysicalAddress(overlap_start);
+        auto maybe_paddr = TryVirtualToPhysicalAddress(overlap_start);
+        ASSERT(maybe_paddr);
+        PAddr physical_start = *maybe_paddr;
         u32 overlap_size = overlap_end - overlap_start;
 
         auto* rasterizer = VideoCore::g_renderer->Rasterizer();

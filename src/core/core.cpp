@@ -116,6 +116,7 @@ System::ResultStatus System::Load(EmuWindow& emu_window, const std::string& file
         }
     }
 
+    ASSERT(system_mode.first);
     ResultStatus init_result{Init(emu_window, *system_mode.first)};
     if (init_result != ResultStatus::Success) {
         LOG_CRITICAL(Core, "Failed to initialize system (Error {})!",

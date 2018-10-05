@@ -317,7 +317,7 @@ void ConfigureInput::setPollingResult(const Common::ParamPackage& params, bool a
         poller->Stop();
     }
 
-    if (!abort) {
+    if (!abort && input_setter) {
         (*input_setter)(params);
     }
 

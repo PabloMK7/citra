@@ -142,7 +142,6 @@ public:
 
 private:
     /// Parameter data to be returned in the next call to Glance/ReceiveParameter.
-    /// TODO(Subv): Use std::optional once we migrate to C++17.
     std::optional<MessageParameter> next_parameter;
 
     static constexpr std::size_t NumAppletSlot = 4;

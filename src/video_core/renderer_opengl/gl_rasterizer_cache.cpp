@@ -948,6 +948,7 @@ Surface FindMatch(const SurfaceCache& surface_cache, const SurfaceParams& params
                 return std::make_pair(surface->CanSubRect(params), surface->GetInterval());
             });
             IsMatch_Helper(std::integral_constant<MatchFlags, MatchFlags::Copy>{}, [&] {
+                ASSERT(validate_interval);
                 auto copy_interval =
                     params.FromInterval(*validate_interval).GetCopyableInterval(surface);
                 bool matched = boost::icl::length(copy_interval & *validate_interval) != 0 &&

@@ -600,6 +600,7 @@ void JitShader::Compile_BREAKC(Instruction instr) {
     Compile_Assert(looping, "BREAKC must be inside a LOOP");
     if (looping) {
         Compile_EvaluateCondition(instr);
+        ASSERT(loop_break_label);
         jnz(*loop_break_label);
     }
 }
