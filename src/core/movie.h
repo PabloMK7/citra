@@ -42,9 +42,19 @@ public:
     }
 
     void StartPlayback(const std::string& movie_file,
-                       std::function<void()> completion_callback = {});
+                       std::function<void()> completion_callback = [] {});
     void StartRecording(const std::string& movie_file);
+
+    /// Prepare to override the clock before playing back movies
+    void PrepareForPlayback(const std::string& movie_file);
+
+    /// Prepare to override the clock before recording movies
+    void PrepareForRecording();
+
     ValidationResult ValidateMovie(const std::string& movie_file, u64 program_id = 0) const;
+
+    /// Get the init time that would override the one in the settings
+    u64 GetOverrideInitTime() const;
     u64 GetMovieProgramID(const std::string& movie_file) const;
 
     void Shutdown();
@@ -119,6 +129,7 @@ private:
     PlayMode play_mode;
     std::string record_movie_file;
     std::vector<u8> recorded_input;
+    u64 init_time;
     std::function<void()> playback_completion_callback;
     std::size_t current_byte = 0;
 };
