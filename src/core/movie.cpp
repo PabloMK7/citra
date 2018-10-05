@@ -453,7 +453,7 @@ static boost::optional<CTMHeader> ReadHeader(const std::string& movie_file) {
 
 void Movie::PrepareForPlayback(const std::string& movie_file) {
     auto header = ReadHeader(movie_file);
-    if (header != boost::none)
+    if (header == boost::none)
         return;
 
     init_time = header.value().clock_init_time;
@@ -468,7 +468,7 @@ void Movie::PrepareForRecording() {
 Movie::ValidationResult Movie::ValidateMovie(const std::string& movie_file, u64 program_id) const {
     LOG_INFO(Movie, "Validating Movie file '{}'", movie_file);
     auto header = ReadHeader(movie_file);
-    if (header != boost::none)
+    if (header == boost::none)
         return ValidationResult::Invalid;
 
     return ValidateHeader(header.value(), program_id);
@@ -476,7 +476,7 @@ Movie::ValidationResult Movie::ValidateMovie(const std::string& movie_file, u64 
 
 u64 Movie::GetMovieProgramID(const std::string& movie_file) const {
     auto header = ReadHeader(movie_file);
-    if (header != boost::none)
+    if (header == boost::none)
         return 0;
 
     return static_cast<u64>(header.value().program_id);
