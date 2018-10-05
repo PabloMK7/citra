@@ -27,7 +27,6 @@ install:
   - ps: |
         if ($env:BUILD_TYPE -eq 'mingw') {
           $dependencies = "mingw64/mingw-w64-x86_64-qt5"
-          C:\msys64\usr\bin\bash -lc "pacman -Syy"
           # redirect err to null to prevent warnings from becoming errors
           # workaround to prevent pacman from failing due to cyclical dependencies
           C:\msys64\usr\bin\bash -lc "pacman --noconfirm -S mingw64/mingw-w64-x86_64-freetype mingw64/mingw-w64-x86_64-fontconfig" 2> $null
