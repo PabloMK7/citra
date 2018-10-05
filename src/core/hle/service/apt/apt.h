@@ -456,6 +456,20 @@ public:
         void DoApplicationJump(Kernel::HLERequestContext& ctx);
 
         /**
+         * APT::GetProgramIdOnApplicationJump service function
+         *  Inputs:
+         *      0 : Command header [0x00330000]
+         *  Outputs:
+         *      0 : Return header
+         *      1 : Result of function, 0 on success, otherwise error code
+         *    2-3 : Current Application title id
+         *      4 : Current Application media type
+         *    5-6 : Next Application title id to jump to
+         *      7 : Next Application media type
+         */
+        void GetProgramIdOnApplicationJump(Kernel::HLERequestContext& ctx);
+
+        /**
          * APT::CancelLibraryApplet service function
          *  Inputs:
          *      0 : Command header [0x003B0040]

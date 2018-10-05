@@ -11,6 +11,10 @@
 #include "core/hle/result.h"
 #include "core/hle/service/fs/archive.h"
 
+namespace Core {
+class System;
+}
+
 namespace Service::APT {
 
 /// Signals used by APT functions
@@ -97,9 +101,15 @@ union AppletAttributes {
     AppletAttributes(u32 attributes) : raw(attributes) {}
 };
 
+enum class ApplicationJumpFlags : u8 {
+    UseInputParameters = 0,
+    UseStoredParameters = 1,
+    UseCurrentParameters = 2
+};
+
 class AppletManager : public std::enable_shared_from_this<AppletManager> {
 public:
-    AppletManager();
+    explicit AppletManager(Core::System& system);
     ~AppletManager();
 
     /**
@@ -130,6 +140,10 @@ public:
     ResultCode PrepareToCloseLibraryApplet(bool not_pause, bool exiting, bool jump_home);
     ResultCode CloseLibraryApplet(Kernel::SharedPtr<Kernel::Object> object, std::vector<u8> buffer);
 
+    ResultCode PrepareToDoApplicationJump(u64 title_id, FS::MediaType media_type,
+                                          ApplicationJumpFlags flags);
+    ResultCode DoApplicationJump();
+
     struct AppletInfo {
         u64 title_id;
         Service::FS::MediaType media_type;
@@ -139,6 +153,18 @@ public:
     };
 
     ResultVal<AppletInfo> GetAppletInfo(AppletId app_id);
+
+    struct ApplicationJumpParameters {
+        u64 next_title_id;
+        FS::MediaType next_media_type;
+
+        u64 current_title_id;
+        FS::MediaType current_media_type;
+    };
+
+    ApplicationJumpParameters GetApplicationJumpParameters() const {
+        return app_jump_parameters;
+    }
 
 private:
     /// Parameter data to be returned in the next call to Glance/ReceiveParameter.
@@ -160,6 +186,7 @@ private:
     struct AppletSlotData {
         AppletId applet_id;
         AppletSlot slot;
+        u64 title_id;
         bool registered;
         bool loaded;
         AppletAttributes attributes;
@@ -169,9 +196,12 @@ private:
         void Reset() {
             applet_id = AppletId::None;
             registered = false;
+            title_id = 0;
             attributes.raw = 0;
         }
     };
+
+    ApplicationJumpParameters app_jump_parameters{};
 
     // Holds data about the concurrently running applets in the system.
     std::array<AppletSlotData, NumAppletSlot> applet_slots = {};
@@ -180,8 +210,12 @@ private:
     AppletSlotData* GetAppletSlotData(AppletId id);
     AppletSlotData* GetAppletSlotData(AppletAttributes attributes);
 
+    void EnsureHomeMenuLoaded();
+
     // Command that will be sent to the application when a library applet calls CloseLibraryApplet.
     SignalType library_applet_closing_command;
+
+    Core::System& system;
 };
 
 } // namespace Service::APT
