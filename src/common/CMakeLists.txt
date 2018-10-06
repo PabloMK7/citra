@@ -29,7 +29,7 @@ if ($ENV{CI})
       if (BUILD_VERSION)
         # This leaves a trailing space on the last word, but we actually want that
         # because of how it's styled in the title bar.
-        set(BUILD_FULLNAME "${REPO_NAME} #${BUILD_VERSION} ")
+        set(BUILD_FULLNAME "${REPO_NAME} ${BUILD_VERSION} ")
       else()
         set(BUILD_FULLNAME "")
       endif()
