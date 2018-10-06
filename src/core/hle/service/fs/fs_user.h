@@ -492,7 +492,7 @@ private:
      *    1-2 : u64, Title ID
      *    3-6 : Seed
      *  Outputs:
-     *      0 : 0x087A0180
+     *      0 : 0x087A0040
      *      1 : Result of function, 0 on success, otherwise error code
      */
     void AddSeed(Kernel::HLERequestContext& ctx);
