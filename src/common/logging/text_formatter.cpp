@@ -31,7 +31,7 @@ std::string FormatLogMessage(const Entry& entry) {
 }
 
 void PrintMessage(const Entry& entry) {
-    auto str = FormatLogMessage(entry) + '\n';
+    const auto str = FormatLogMessage(entry).append(1, '\n');
     fputs(str.c_str(), stderr);
 }
 
