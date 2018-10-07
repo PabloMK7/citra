@@ -59,7 +59,7 @@ std::size_t TimeStretcher::Process(const s16* in, std::size_t num_in, s16* out,
     stretch_ratio = std::max(stretch_ratio, 0.05);
     sound_touch->setTempo(stretch_ratio);
 
-    LOG_DEBUG(Audio, "{:5}/{:5} ratio:{:0.6f} backlog:{:0.6f}", num_in, num_out, stretch_ratio,
+    LOG_TRACE(Audio, "{:5}/{:5} ratio:{:0.6f} backlog:{:0.6f}", num_in, num_out, stretch_ratio,
               backlog_fullness);
 
     sound_touch->putSamples(in, static_cast<u32>(num_in));
