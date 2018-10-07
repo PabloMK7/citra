@@ -6,5 +6,13 @@
 
 namespace UISettings {
 
+const Themes themes{{
+    {"Default", "default"},
+    {"Dark", "qdarkstyle"},
+    {"Colorful", "colorful"},
+    {"Colorful Dark", "colorful_dark"},
+}};
+
 Values values = {};
-}
+
+} // namespace UISettings
