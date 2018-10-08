@@ -394,6 +394,54 @@ void Module::Interface::CancelParameter(Kernel::HLERequestContext& ctx) {
               static_cast<u32>(receiver_appid));
 }
 
+void Module::Interface::PrepareToDoApplicationJump(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x31, 4, 0); // 0x00310100
+    auto flags = rp.PopEnum<ApplicationJumpFlags>();
+    u64 title_id = rp.Pop<u64>();
+    u8 media_type = rp.Pop<u8>();
+
+    LOG_WARNING(Service_APT, "(STUBBED) called title_id={:016X}, media_type={:#01X}, flags={:#08X}",
+                title_id, media_type, static_cast<u8>(flags));
+
+    ResultCode result = apt->applet_manager->PrepareToDoApplicationJump(
+        title_id, static_cast<FS::MediaType>(media_type), flags);
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(result);
+}
+
+void Module::Interface::DoApplicationJump(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x32, 2, 4); // 0x00320084
+    u32 param_size = rp.Pop<u32>();
+    u32 hmac_size = rp.Pop<u32>();
+
+    auto param = rp.PopStaticBuffer();
+    auto hmac = rp.PopStaticBuffer();
+
+    LOG_WARNING(Service_APT, "(STUBBED) called param_size={:08X}, hmac_size={:08X}", param_size,
+                hmac_size);
+
+    // TODO(Subv): Set the delivery parameters before starting the new application.
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(apt->applet_manager->DoApplicationJump());
+}
+
+void Module::Interface::GetProgramIdOnApplicationJump(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x33, 0, 0); // 0x00330000
+
+    LOG_DEBUG(Service_APT, "called");
+
+    auto parameters = apt->applet_manager->GetApplicationJumpParameters();
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(7, 0);
+    rb.Push(RESULT_SUCCESS);
+    rb.Push<u64>(parameters.current_title_id);
+    rb.Push(static_cast<u8>(parameters.current_media_type));
+    rb.Push<u64>(parameters.next_title_id);
+    rb.Push(static_cast<u8>(parameters.next_media_type));
+}
+
 void Module::Interface::PrepareToStartApplication(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x15, 5, 0); // 0x00150140
     u32 title_info1 = rp.Pop<u32>();
@@ -545,51 +593,6 @@ void Module::Interface::CloseApplication(Kernel::HLERequestContext& ctx) {
     LOG_DEBUG(Service_APT, "called");
 
     apt->system.RequestShutdown();
-
-    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
-}
-
-void Module::Interface::PrepareToDoApplicationJump(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x31, 4, 0);
-    u32 flags = rp.Pop<u8>();
-    u32 program_id_low = rp.Pop<u32>();
-    u32 program_id_high = rp.Pop<u32>();
-    Service::FS::MediaType media_type = static_cast<Service::FS::MediaType>(rp.Pop<u8>());
-
-    LOG_WARNING(Service_APT,
-                "(STUBBED) called, flags={:08X}, program_id_low={:08X}, program_id_high={:08X}, "
-                "media_type={:08X}",
-                flags, program_id_low, program_id_high, static_cast<u8>(media_type));
-
-    if (flags == 0x2) {
-        // It seems that flags 0x2 means jumping to the same application,
-        // and ignore the parameters. This is used in Pokemon main series
-        // to soft reset.
-        application_reset_prepared = true;
-    }
-
-    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
-}
-
-void Module::Interface::DoApplicationJump(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x32, 2, 4);
-    u32 parameter_size = rp.Pop<u32>();
-    u32 hmac_size = rp.Pop<u32>();
-    std::vector<u8> parameter = rp.PopStaticBuffer();
-    std::vector<u8> hmac = rp.PopStaticBuffer();
-
-    LOG_WARNING(Service_APT, "(STUBBED) called");
-
-    if (application_reset_prepared) {
-        // Reset system
-        apt->system.RequestReset();
-    } else {
-        // After the jump, the application should shutdown
-        // TODO: Actually implement the jump
-        apt->system.RequestShutdown();
-    }
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
@@ -844,7 +847,7 @@ Module::Interface::Interface(std::shared_ptr<Module> apt, const char* name, u32 
 Module::Interface::~Interface() = default;
 
 Module::Module(Core::System& system) : system(system) {
-    applet_manager = std::make_shared<AppletManager>();
+    applet_manager = std::make_shared<AppletManager>(system);
 
     using Kernel::MemoryPermission;
     shared_font_mem =
