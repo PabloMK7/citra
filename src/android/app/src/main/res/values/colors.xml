@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <color name="citra_orange">#fec303</color>
+    <color name="citra_orange_dark">#fe8a03</color>
+
+    <color name="dolphin_accent_wii">#9e9e9e</color>
+    <color name="dolphin_accent_wiiware">#2979ff</color>
+    <color name="dolphin_accent_gamecube">#651fff</color>
+
+    <color name="circle_grey">#bdbdbd</color>
+
+    <color name="tv_card_unselected">#444444</color>
+
+</resources>
