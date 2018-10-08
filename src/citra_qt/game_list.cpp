@@ -267,7 +267,8 @@ void GameList::onFilterCloseClicked() {
 
 GameList::GameList(GMainWindow* parent) : QWidget{parent} {
     watcher = new QFileSystemWatcher(this);
-    connect(watcher, &QFileSystemWatcher::directoryChanged, this, &GameList::RefreshGameDirectory);
+    connect(watcher, &QFileSystemWatcher::directoryChanged, this, &GameList::RefreshGameDirectory,
+            Qt::UniqueConnection);
 
     this->main_window = parent;
     layout = new QVBoxLayout;
@@ -323,6 +324,16 @@ void GameList::setFilterFocus() {
 
 void GameList::setFilterVisible(bool visibility) {
     search_field->setVisible(visibility);
+}
+
+void GameList::setDirectoryWatcherEnabled(bool enabled) {
+    if (enabled) {
+        connect(watcher, &QFileSystemWatcher::directoryChanged, this,
+                &GameList::RefreshGameDirectory, Qt::UniqueConnection);
+    } else {
+        disconnect(watcher, &QFileSystemWatcher::directoryChanged, this,
+                   &GameList::RefreshGameDirectory);
+    }
 }
 
 void GameList::clearFilter() {

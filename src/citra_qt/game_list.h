@@ -49,6 +49,7 @@ public:
     void clearFilter();
     void setFilterFocus();
     void setFilterVisible(bool visibility);
+    void setDirectoryWatcherEnabled(bool enabled);
     bool isEmpty();
 
     void LoadCompatibilityList();
