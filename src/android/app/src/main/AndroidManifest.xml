@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="org.citra_emu.citra">
+    <uses-feature
+        android:name="android.hardware.touchscreen"
+        android:required="false"/>
+
+    <uses-feature
+        android:name="android.hardware.gamepad"
+        android:required="false"/>
+
+    <uses-feature android:glEsVersion="0x00030001" />
+
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+
+    <application
+        android:name="org.citra_emu.citra.CitraApplication"
+        android:label="Citra Emulator"
+        android:icon="@drawable/ic_citra"
+        android:allowBackup="true"
+        android:supportsRtl="true"
+        android:isGame="true"
+        android:banner="@drawable/ic_citra">
+
+        <activity
+            android:name=".ui.main.MainActivity"
+            android:theme="@style/CitraBase">
+
+            <!-- This intentfilter marks this Activity as the one that gets launched from Home screen. -->
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <action android:name="android.intent.action.VIEW"/>
+
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
+    </application>
+
+</manifest>
