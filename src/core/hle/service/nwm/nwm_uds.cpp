@@ -871,6 +871,8 @@ void NWM_UDS::Unbind(Kernel::HLERequestContext& ctx) {
         });
 
     if (itr != channel_data.end()) {
+        // TODO(B3N30): Check out what Unbind does if the bind_node_id wasn't in the map
+        itr->second.event->Signal();
         channel_data.erase(itr);
     }
 
