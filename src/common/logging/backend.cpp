@@ -81,7 +81,8 @@ private:
                     backend->Write(e);
                 }
             };
-            while (message_queue.PopWait(entry)) {
+            while (true) {
+                entry = message_queue.PopWait();
                 if (entry.final_entry) {
                     break;
                 }

@@ -106,10 +106,7 @@ void RPCServer::HandleRequestsLoop() {
 
     LOG_INFO(RPC_Server, "Request handler started.");
 
-    while (request_queue.PopWait(request_packet)) {
-        if (!request_packet) {
-            break;
-        }
+    while ((request_packet = request_queue.PopWait())) {
         HandleSingleRequest(std::move(request_packet));
     }
 }
