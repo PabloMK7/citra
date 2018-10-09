@@ -30,8 +30,6 @@ public:
         field_collection.AddField(type, name, std::move(value));
     }
 
-    static void FinalizeAsyncJob();
-
 private:
     Telemetry::FieldCollection field_collection; ///< Tracks all added fields for the session
     std::unique_ptr<Telemetry::VisitorInterface> backend; ///< Backend interface that logs fields
