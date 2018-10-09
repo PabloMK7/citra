@@ -73,6 +73,10 @@ HostRoomWindow::HostRoomWindow(QWidget* parent, QStandardItemModel* list,
 
 HostRoomWindow::~HostRoomWindow() = default;
 
+void HostRoomWindow::RetranslateUi() {
+    ui->retranslateUi(this);
+}
+
 void HostRoomWindow::Host() {
     if (!ui->username->hasAcceptableInput()) {
         NetworkMessage::ShowError(NetworkMessage::USERNAME_NOT_VALID);

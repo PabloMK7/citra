@@ -34,6 +34,8 @@ public:
                             std::shared_ptr<Core::AnnounceMultiplayerSession> session);
     ~HostRoomWindow();
 
+    void RetranslateUi();
+
 private slots:
     /**
      * Handler for connection status changes. Launches the chat window if successful or

@@ -30,6 +30,8 @@ public:
                    std::shared_ptr<Core::AnnounceMultiplayerSession> session);
     ~Lobby() = default;
 
+    void RetranslateUi();
+
 public slots:
     /**
      * Begin the process to pull the latest room list from web services. After the listing is

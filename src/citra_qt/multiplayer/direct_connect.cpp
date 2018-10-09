@@ -49,6 +49,10 @@ DirectConnectWindow::DirectConnectWindow(QWidget* parent)
 
 DirectConnectWindow::~DirectConnectWindow() = default;
 
+void DirectConnectWindow::RetranslateUi() {
+    ui->retranslateUi(this);
+}
+
 void DirectConnectWindow::Connect() {
     if (!ui->nickname->hasAcceptableInput()) {
         NetworkMessage::ShowError(NetworkMessage::USERNAME_NOT_VALID);

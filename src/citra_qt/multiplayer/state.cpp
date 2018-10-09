@@ -75,6 +75,15 @@ void MultiplayerState::retranslateUi() {
     } else {
         status_text->setText(tr("Not Connected"));
     }
+
+    if (lobby)
+        lobby->RetranslateUi();
+    if (host_room)
+        host_room->RetranslateUi();
+    if (client_room)
+        client_room->RetranslateUi();
+    if (direct_connect)
+        direct_connect->RetranslateUi();
 }
 
 void MultiplayerState::OnNetworkStateChanged(const Network::RoomMember::State& state) {
