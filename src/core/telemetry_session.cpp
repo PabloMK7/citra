@@ -7,6 +7,7 @@
 
 #include "common/assert.h"
 #include "common/file_util.h"
+#include "common/logging/log.h"
 #include "common/scm_rev.h"
 #ifdef ARCHITECTURE_x86_64
 #include "common/x64/cpu_detect.h"
