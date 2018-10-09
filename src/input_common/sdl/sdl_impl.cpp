@@ -438,7 +438,7 @@ public:
         const int port = params.Get("port", 0);
         const int axis_x = params.Get("axis_x", 0);
         const int axis_y = params.Get("axis_y", 1);
-        float deadzone = std::clamp(params.Get("deadzone", 0.0f), 0.0f, .099f);
+        float deadzone = std::clamp(params.Get("deadzone", 0.0f), 0.0f, .99f);
 
         auto joystick = state.GetSDLJoystickByGUID(guid, port);
 
