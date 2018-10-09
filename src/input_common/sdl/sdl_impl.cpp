@@ -328,9 +328,7 @@ public:
         : joystick(std::move(joystick_)), axis_x(axis_x_), axis_y(axis_y_), deadzone(deadzone_) {}
 
     std::tuple<float, float> GetStatus() const override {
-        float x;
-        float y;
-        std::tie(x, y) = joystick->GetAnalog(axis_x, axis_y);
+        const auto [x, y] = joystick->GetAnalog(axis_x, axis_y);
         const float r = std::sqrt((x * x) + (y * y));
         if (r > deadzone) {
             return std::make_tuple(x / r * (r - deadzone) / (1 - deadzone),
