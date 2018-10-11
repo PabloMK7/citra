@@ -4,6 +4,7 @@
 
 #include <json.hpp>
 #include "common/detached_tasks.h"
+#include "common/web_result.h"
 #include "web_service/telemetry_json.h"
 #include "web_service/web_backend.h"
 
