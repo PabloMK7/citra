@@ -99,7 +99,7 @@ System::ResultStatus System::Load(EmuWindow& emu_window, const std::string& file
         LOG_CRITICAL(Core, "Failed to obtain loader for {}!", filepath);
         return ResultStatus::ErrorGetLoader;
     }
-    std::pair<boost::optional<u32>, Loader::ResultStatus> system_mode =
+    std::pair<std::optional<u32>, Loader::ResultStatus> system_mode =
         app_loader->LoadKernelSystemMode();
 
     if (system_mode.second != Loader::ResultStatus::Success) {
@@ -116,7 +116,8 @@ System::ResultStatus System::Load(EmuWindow& emu_window, const std::string& file
         }
     }
 
-    ResultStatus init_result{Init(emu_window, system_mode.first.get())};
+    ASSERT(system_mode.first);
+    ResultStatus init_result{Init(emu_window, *system_mode.first)};
     if (init_result != ResultStatus::Success) {
         LOG_CRITICAL(Core, "Failed to initialize system (Error {})!",
                      static_cast<u32>(init_result));

@@ -132,8 +132,7 @@ ResultCode CIAFile::WriteTitleMetadata() {
     auto content_count = container.GetTitleMetadata().GetContentCount();
     content_written.resize(content_count);
 
-    auto title_key = container.GetTicket().GetTitleKey();
-    if (title_key) {
+    if (auto title_key = container.GetTicket().GetTitleKey()) {
         decryption_state->content.resize(content_count);
         for (std::size_t i = 0; i < content_count; ++i) {
             auto ctr = tmd.GetContentCTRByIndex(i);
@@ -340,7 +339,7 @@ InstallStatus InstallCIA(const std::string& path,
         Service::AM::CIAFile installFile(
             Service::AM::GetTitleMediaType(container.GetTitleMetadata().GetTitleID()));
 
-        bool title_key_available = container.GetTicket().GetTitleKey().is_initialized();
+        bool title_key_available = container.GetTicket().GetTitleKey().has_value();
 
         for (std::size_t i = 0; i < container.GetTitleMetadata().GetContentCount(); i++) {
             if ((container.GetTitleMetadata().GetContentTypeByIndex(static_cast<u16>(i)) &

@@ -7,10 +7,10 @@
 #include <algorithm>
 #include <initializer_list>
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 #include <vector>
-#include <boost/optional.hpp>
 #include "common/common_types.h"
 #include "common/file_util.h"
 #include "core/file_sys/romfs_reader.h"
@@ -107,7 +107,7 @@ public:
      * information.
      * @returns A pair with the optional system mode, and and the status.
      */
-    virtual std::pair<boost::optional<u32>, ResultStatus> LoadKernelSystemMode() {
+    virtual std::pair<std::optional<u32>, ResultStatus> LoadKernelSystemMode() {
         // 96MB allocated to the application.
         return std::make_pair(2, ResultStatus::Success);
     }

@@ -208,7 +208,7 @@ ResultVal<MessageParameter> AppletManager::GlanceParameter(AppletId app_id) {
     // Note: The NS module always clears the DSPSleep and DSPWakeup signals even in GlanceParameter.
     if (next_parameter->signal == SignalType::DspSleep ||
         next_parameter->signal == SignalType::DspWakeup)
-        next_parameter = boost::none;
+        next_parameter = {};
 
     return MakeResult<MessageParameter>(parameter);
 }
@@ -217,7 +217,7 @@ ResultVal<MessageParameter> AppletManager::ReceiveParameter(AppletId app_id) {
     auto result = GlanceParameter(app_id);
     if (result.Succeeded()) {
         // Clear the parameter
-        next_parameter = boost::none;
+        next_parameter = {};
     }
     return result;
 }
@@ -237,7 +237,7 @@ bool AppletManager::CancelParameter(bool check_sender, AppletId sender_appid, bo
     }
 
     if (cancellation_success)
-        next_parameter = boost::none;
+        next_parameter = {};
 
     return cancellation_success;
 }

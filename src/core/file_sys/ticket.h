@@ -5,9 +5,9 @@
 #pragma once
 
 #include <array>
+#include <optional>
 #include <string>
 #include <vector>
-#include <boost/optional.hpp>
 #include "common/common_funcs.h"
 #include "common/common_types.h"
 #include "common/swap.h"
@@ -48,7 +48,7 @@ public:
 #pragma pack(pop)
 
     Loader::ResultStatus Load(const std::vector<u8> file_data, std::size_t offset = 0);
-    boost::optional<std::array<u8, 16>> GetTitleKey() const;
+    std::optional<std::array<u8, 16>> GetTitleKey() const;
 
 private:
     Body ticket_body;

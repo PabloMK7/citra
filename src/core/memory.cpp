@@ -333,7 +333,7 @@ void RasterizerMarkRegionCached(PAddr start, u32 size, bool cached) {
     PAddr paddr = start;
 
     for (unsigned i = 0; i < num_pages; ++i, paddr += PAGE_SIZE) {
-        boost::optional<VAddr> maybe_vaddr = PhysicalToVirtualAddress(paddr);
+        std::optional<VAddr> maybe_vaddr = PhysicalToVirtualAddress(paddr);
         // While the physical <-> virtual mapping is 1:1 for the regions supported by the cache,
         // some games (like Pokemon Super Mystery Dungeon) will try to use textures that go beyond
         // the end address of VRAM, causing the Virtual->Physical translation to fail when flushing
@@ -433,7 +433,9 @@ void RasterizerFlushVirtualRegion(VAddr start, u32 size, FlushMode mode) {
         VAddr overlap_start = std::max(start, region_start);
         VAddr overlap_end = std::min(end, region_end);
 
-        PAddr physical_start = TryVirtualToPhysicalAddress(overlap_start).value();
+        auto maybe_paddr = TryVirtualToPhysicalAddress(overlap_start);
+        ASSERT(maybe_paddr);
+        PAddr physical_start = *maybe_paddr;
         u32 overlap_size = overlap_end - overlap_start;
 
         auto* rasterizer = VideoCore::g_renderer->Rasterizer();
@@ -740,7 +742,7 @@ void WriteMMIO<u64>(MMIORegionPointer mmio_handler, VAddr addr, const u64 data) 
     mmio_handler->Write64(addr, data);
 }
 
-boost::optional<PAddr> TryVirtualToPhysicalAddress(const VAddr addr) {
+std::optional<PAddr> TryVirtualToPhysicalAddress(const VAddr addr) {
     if (addr == 0) {
         return 0;
     } else if (addr >= VRAM_VADDR && addr < VRAM_VADDR_END) {
@@ -757,7 +759,7 @@ boost::optional<PAddr> TryVirtualToPhysicalAddress(const VAddr addr) {
         return addr - N3DS_EXTRA_RAM_VADDR + N3DS_EXTRA_RAM_PADDR;
     }
 
-    return boost::none;
+    return {};
 }
 
 PAddr VirtualToPhysicalAddress(const VAddr addr) {
@@ -770,7 +772,7 @@ PAddr VirtualToPhysicalAddress(const VAddr addr) {
     return *paddr;
 }
 
-boost::optional<VAddr> PhysicalToVirtualAddress(const PAddr addr) {
+std::optional<VAddr> PhysicalToVirtualAddress(const PAddr addr) {
     if (addr == 0) {
         return 0;
     } else if (addr >= VRAM_PADDR && addr < VRAM_PADDR_END) {
@@ -785,7 +787,7 @@ boost::optional<VAddr> PhysicalToVirtualAddress(const PAddr addr) {
         return addr - N3DS_EXTRA_RAM_PADDR + N3DS_EXTRA_RAM_VADDR;
     }
 
-    return boost::none;
+    return {};
 }
 
 } // namespace Memory

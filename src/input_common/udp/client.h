@@ -4,13 +4,14 @@
 
 #pragma once
 
+#include <functional>
 #include <memory>
 #include <mutex>
+#include <optional>
 #include <string>
 #include <thread>
 #include <tuple>
 #include <vector>
-#include <boost/optional.hpp>
 #include "common/common_types.h"
 #include "common/thread.h"
 #include "common/vector_math.h"
@@ -40,7 +41,7 @@ struct DeviceStatus {
         u16 max_x;
         u16 max_y;
     };
-    boost::optional<CalibrationData> touch_calibration;
+    std::optional<CalibrationData> touch_calibration;
 };
 
 class Client {

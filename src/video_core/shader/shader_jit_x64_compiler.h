@@ -6,9 +6,9 @@
 
 #include <array>
 #include <cstddef>
+#include <optional>
 #include <utility>
 #include <vector>
-#include <boost/optional.hpp>
 #include <nihstro/shader_bytecode.h>
 #include <xbyak.h>
 #include "common/bit_set.h"
@@ -123,7 +123,7 @@ private:
 
     /// Label pointing to the end of the current LOOP block. Used by the BREAKC instruction to break
     /// out of the loop.
-    boost::optional<Xbyak::Label> loop_break_label;
+    std::optional<Xbyak::Label> loop_break_label;
 
     /// Offsets in code where a return needs to be inserted
     std::vector<unsigned> return_offsets;

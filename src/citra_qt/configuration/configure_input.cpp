@@ -317,12 +317,12 @@ void ConfigureInput::setPollingResult(const Common::ParamPackage& params, bool a
         poller->Stop();
     }
 
-    if (!abort) {
+    if (!abort && input_setter) {
         (*input_setter)(params);
     }
 
     updateButtonLabels();
-    input_setter = boost::none;
+    input_setter.reset();
 }
 
 void ConfigureInput::keyPressEvent(QKeyEvent* event) {

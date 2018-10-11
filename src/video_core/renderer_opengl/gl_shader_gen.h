@@ -7,9 +7,9 @@
 #include <array>
 #include <cstring>
 #include <functional>
+#include <optional>
 #include <string>
 #include <type_traits>
-#include <boost/optional.hpp>
 #include "common/hash.h"
 #include "video_core/regs.h"
 #include "video_core/shader/shader.h"
@@ -228,9 +228,8 @@ std::string GenerateTrivialVertexShader(bool separable_shader);
  * Generates the GLSL vertex shader program source code for the given VS program
  * @returns String of the shader source code; boost::none on failure
  */
-boost::optional<std::string> GenerateVertexShader(const Pica::Shader::ShaderSetup& setup,
-                                                  const PicaVSConfig& config,
-                                                  bool separable_shader);
+std::optional<std::string> GenerateVertexShader(const Pica::Shader::ShaderSetup& setup,
+                                                const PicaVSConfig& config, bool separable_shader);
 
 /*
  * Generates the GLSL fixed geometry shader program source code for non-GS PICA pipeline
@@ -243,9 +242,9 @@ std::string GenerateFixedGeometryShader(const PicaFixedGSConfig& config, bool se
  * configuration
  * @returns String of the shader source code; boost::none on failure
  */
-boost::optional<std::string> GenerateGeometryShader(const Pica::Shader::ShaderSetup& setup,
-                                                    const PicaGSConfig& config,
-                                                    bool separable_shader);
+std::optional<std::string> GenerateGeometryShader(const Pica::Shader::ShaderSetup& setup,
+                                                  const PicaGSConfig& config,
+                                                  bool separable_shader);
 
 /**
  * Generates the GLSL fragment shader program source code for the current Pica state

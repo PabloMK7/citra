@@ -38,13 +38,13 @@ Loader::ResultStatus Ticket::Load(const std::vector<u8> file_data, std::size_t o
     return Loader::ResultStatus::Success;
 }
 
-boost::optional<std::array<u8, 16>> Ticket::GetTitleKey() const {
+std::optional<std::array<u8, 16>> Ticket::GetTitleKey() const {
     HW::AES::InitKeys();
     std::array<u8, 16> ctr{};
     std::memcpy(ctr.data(), &ticket_body.title_id, sizeof(u64));
     HW::AES::SelectCommonKeyIndex(ticket_body.common_key_index);
     if (!HW::AES::IsNormalKeyAvailable(HW::AES::KeySlotID::TicketCommonKey)) {
-        return boost::none;
+        return {};
     }
     auto key = HW::AES::GetNormalKey(HW::AES::KeySlotID::TicketCommonKey);
     auto title_key = ticket_body.title_key;
