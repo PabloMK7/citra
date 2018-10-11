@@ -23,7 +23,7 @@ namespace Service::CECD {
 
 class Module final {
 public:
-    Module();
+    explicit Module(Core::System& system);
     ~Module();
 
     enum class CecCommand : u32 {

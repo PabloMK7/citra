@@ -35,12 +35,6 @@ enum {
     DEFAULT_STACK_SIZE = 0x4000,
 };
 
-enum class ResetType {
-    OneShot,
-    Sticky,
-    Pulse,
-};
-
 class Object : NonCopyable {
 public:
     virtual ~Object();

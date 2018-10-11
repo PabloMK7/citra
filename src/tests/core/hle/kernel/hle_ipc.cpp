@@ -15,7 +15,8 @@
 namespace Kernel {
 
 static SharedPtr<Object> MakeObject() {
-    return Event::Create(ResetType::OneShot);
+    static Kernel::KernelSystem kernel(0);
+    return kernel.CreateEvent(ResetType::OneShot);
 }
 
 TEST_CASE("HLERequestContext::PopulateFromIncomingCommandBuffer", "[core][kernel]") {

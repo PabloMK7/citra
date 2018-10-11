@@ -241,7 +241,7 @@ static_assert(sizeof(PackageParameterWithContextDetail) == 28,
 
 class Module final {
 public:
-    Module();
+    explicit Module(Core::System& system);
     ~Module();
     void ReloadCameraDevices();
 

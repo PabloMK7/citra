@@ -41,7 +41,7 @@ enum class CommunicationStatus : u8 {
 
 class Module final {
 public:
-    Module();
+    explicit Module(Core::System& system);
     ~Module();
 
     class Interface : public ServiceFramework<Interface> {

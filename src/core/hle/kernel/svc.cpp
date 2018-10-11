@@ -942,8 +942,8 @@ static ResultCode QueryMemory(MemoryInfo* memory_info, PageInfo* page_info, u32 
 
 /// Create an event
 static ResultCode CreateEvent(Handle* out_handle, u32 reset_type) {
-    SharedPtr<Event> evt = Event::Create(static_cast<ResetType>(reset_type),
-                                         fmt::format("event-{:08x}", Core::CPU().GetReg(14)));
+    SharedPtr<Event> evt = Core::System::GetInstance().Kernel().CreateEvent(
+        static_cast<ResetType>(reset_type), fmt::format("event-{:08x}", Core::CPU().GetReg(14)));
     CASCADE_RESULT(*out_handle, g_handle_table.Create(std::move(evt)));
 
     LOG_TRACE(Kernel_SVC, "called reset_type=0x{:08X} : created handle=0x{:08X}", reset_type,

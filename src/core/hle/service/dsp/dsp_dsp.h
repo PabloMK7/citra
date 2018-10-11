@@ -17,7 +17,7 @@ namespace Service::DSP {
 
 class DSP_DSP final : public ServiceFramework<DSP_DSP> {
 public:
-    DSP_DSP();
+    explicit DSP_DSP(Core::System& system);
     ~DSP_DSP();
 
     /// There are three types of interrupts

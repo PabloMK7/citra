@@ -140,18 +140,18 @@ Module::Interface::Interface(std::shared_ptr<Module> nfc, const char* name, u32 
 
 Module::Interface::~Interface() = default;
 
-Module::Module() {
+Module::Module(Core::System& system) {
     tag_in_range_event =
-        Kernel::Event::Create(Kernel::ResetType::OneShot, "NFC::tag_in_range_event");
+        system.Kernel().CreateEvent(Kernel::ResetType::OneShot, "NFC::tag_in_range_event");
     tag_out_of_range_event =
-        Kernel::Event::Create(Kernel::ResetType::OneShot, "NFC::tag_out_range_event");
+        system.Kernel().CreateEvent(Kernel::ResetType::OneShot, "NFC::tag_out_range_event");
 }
 
 Module::~Module() = default;
 
 void InstallInterfaces(Core::System& system) {
     auto& service_manager = system.ServiceManager();
-    auto nfc = std::make_shared<Module>();
+    auto nfc = std::make_shared<Module>(system);
     std::make_shared<NFC_M>(nfc)->InstallAsService(service_manager);
     std::make_shared<NFC_U>(nfc)->InstallAsService(service_manager);
 }

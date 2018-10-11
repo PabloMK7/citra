@@ -364,11 +364,11 @@ Module::Module(Core::System& system) : system(system) {
                              0, MemoryRegion::BASE, "HID:SharedMemory");
 
     // Create event handles
-    event_pad_or_touch_1 = Event::Create(ResetType::OneShot, "HID:EventPadOrTouch1");
-    event_pad_or_touch_2 = Event::Create(ResetType::OneShot, "HID:EventPadOrTouch2");
-    event_accelerometer = Event::Create(ResetType::OneShot, "HID:EventAccelerometer");
-    event_gyroscope = Event::Create(ResetType::OneShot, "HID:EventGyroscope");
-    event_debug_pad = Event::Create(ResetType::OneShot, "HID:EventDebugPad");
+    event_pad_or_touch_1 = system.Kernel().CreateEvent(ResetType::OneShot, "HID:EventPadOrTouch1");
+    event_pad_or_touch_2 = system.Kernel().CreateEvent(ResetType::OneShot, "HID:EventPadOrTouch2");
+    event_accelerometer = system.Kernel().CreateEvent(ResetType::OneShot, "HID:EventAccelerometer");
+    event_gyroscope = system.Kernel().CreateEvent(ResetType::OneShot, "HID:EventGyroscope");
+    event_debug_pad = system.Kernel().CreateEvent(ResetType::OneShot, "HID:EventDebugPad");
 
     // Register update callbacks
     pad_update_event =

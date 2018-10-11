@@ -6,6 +6,7 @@
 #include <vector>
 #include "common/assert.h"
 #include "common/common_types.h"
+#include "core/core.h"
 #include "core/hle/kernel/event.h"
 #include "core/hle/kernel/handle_table.h"
 #include "core/hle/kernel/hle_ipc.h"
@@ -55,7 +56,8 @@ SharedPtr<Event> HLERequestContext::SleepClientThread(SharedPtr<Thread> thread,
                            cmd_buff.size() * sizeof(u32));
     };
 
-    auto event = Kernel::Event::Create(Kernel::ResetType::OneShot, "HLE Pause Event: " + reason);
+    auto event = Core::System::GetInstance().Kernel().CreateEvent(Kernel::ResetType::OneShot,
+                                                                  "HLE Pause Event: " + reason);
     thread->status = ThreadStatus::WaitHleEvent;
     thread->wait_objects = {event};
     event->AddWaitingThread(thread);

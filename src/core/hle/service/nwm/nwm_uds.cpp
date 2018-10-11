@@ -839,8 +839,8 @@ void NWM_UDS::Bind(Kernel::HLERequestContext& ctx) {
     }
 
     // Create a new event for this bind node.
-    auto event = Kernel::Event::Create(Kernel::ResetType::OneShot,
-                                       "NWM::BindNodeEvent" + std::to_string(bind_node_id));
+    auto event = system.Kernel().CreateEvent(Kernel::ResetType::OneShot,
+                                             "NWM::BindNodeEvent" + std::to_string(bind_node_id));
     std::lock_guard<std::mutex> lock(connection_status_mutex);
 
     ASSERT(channel_data.find(data_channel) == channel_data.end());
@@ -1355,7 +1355,7 @@ static void BeaconBroadcastCallback(u64 userdata, s64 cycles_late) {
                               beacon_broadcast_event, 0);
 }
 
-NWM_UDS::NWM_UDS(Core::System& system) : ServiceFramework("nwm::UDS") {
+NWM_UDS::NWM_UDS(Core::System& system) : ServiceFramework("nwm::UDS"), system(system) {
     static const FunctionInfo functions[] = {
         {0x000102C2, nullptr, "Initialize (deprecated)"},
         {0x00020000, nullptr, "Scrap"},
@@ -1388,7 +1388,7 @@ NWM_UDS::NWM_UDS(Core::System& system) : ServiceFramework("nwm::UDS") {
         {0x00220402, nullptr, "ScanOnConnection"},
     };
     connection_status_event =
-        Kernel::Event::Create(Kernel::ResetType::OneShot, "NWM::connection_status_event");
+        system.Kernel().CreateEvent(Kernel::ResetType::OneShot, "NWM::connection_status_event");
 
     RegisterHandlers(functions);
 

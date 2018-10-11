@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "core/core.h"
 #include "core/core_timing.h"
 #include "core/hle/ipc_helpers.h"
 #include "core/hle/kernel/event.h"
@@ -144,14 +145,14 @@ void IR_RST::Shutdown(Kernel::HLERequestContext& ctx) {
     LOG_DEBUG(Service_IR, "called");
 }
 
-IR_RST::IR_RST() : ServiceFramework("ir:rst", 1) {
+IR_RST::IR_RST(Core::System& system) : ServiceFramework("ir:rst", 1) {
     using namespace Kernel;
     // Note: these two kernel objects are even available before Initialize service function is
     // called.
     shared_memory =
         SharedMemory::Create(nullptr, 0x1000, MemoryPermission::ReadWrite, MemoryPermission::Read,
                              0, MemoryRegion::BASE, "IRRST:SharedMemory");
-    update_event = Event::Create(ResetType::OneShot, "IRRST:UpdateEvent");
+    update_event = system.Kernel().CreateEvent(ResetType::OneShot, "IRRST:UpdateEvent");
 
     update_callback_id =
         CoreTiming::RegisterEvent("IRRST:UpdateCallBack", [this](u64 userdata, s64 cycles_late) {

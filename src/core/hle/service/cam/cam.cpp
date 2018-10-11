@@ -1019,14 +1019,15 @@ void Module::Interface::DriverFinalize(Kernel::HLERequestContext& ctx) {
     LOG_DEBUG(Service_CAM, "called");
 }
 
-Module::Module() {
+Module::Module(Core::System& system) {
     using namespace Kernel;
     for (PortConfig& port : ports) {
-        port.completion_event = Event::Create(ResetType::Sticky, "CAM::completion_event");
+        port.completion_event =
+            system.Kernel().CreateEvent(ResetType::Sticky, "CAM::completion_event");
         port.buffer_error_interrupt_event =
-            Event::Create(ResetType::OneShot, "CAM::buffer_error_interrupt_event");
+            system.Kernel().CreateEvent(ResetType::OneShot, "CAM::buffer_error_interrupt_event");
         port.vsync_interrupt_event =
-            Event::Create(ResetType::OneShot, "CAM::vsync_interrupt_event");
+            system.Kernel().CreateEvent(ResetType::OneShot, "CAM::vsync_interrupt_event");
     }
     completion_event_callback = CoreTiming::RegisterEvent(
         "CAM::CompletionEventCallBack",
@@ -1061,7 +1062,7 @@ std::shared_ptr<Module> GetModule(Core::System& system) {
 
 void InstallInterfaces(Core::System& system) {
     auto& service_manager = system.ServiceManager();
-    auto cam = std::make_shared<Module>();
+    auto cam = std::make_shared<Module>(system);
 
     std::make_shared<CAM_U>(cam)->InstallAsService(service_manager);
     std::make_shared<CAM_S>(cam)->InstallAsService(service_manager);

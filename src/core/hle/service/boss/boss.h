@@ -15,7 +15,7 @@ namespace Service::BOSS {
 
 class Module final {
 public:
-    Module();
+    explicit Module(Core::System& system);
     ~Module() = default;
 
     class Interface : public ServiceFramework<Interface> {

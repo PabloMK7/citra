@@ -149,7 +149,7 @@ static_assert(sizeof(ConversionParameters) == 12, "ConversionParameters struct h
 
 class Y2R_U final : public ServiceFramework<Y2R_U> {
 public:
-    Y2R_U();
+    explicit Y2R_U(Core::System& system);
     ~Y2R_U() override;
 
 private:
