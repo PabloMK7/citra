@@ -17,7 +17,7 @@ namespace Kernel {
 std::atomic<u32> Object::next_object_id{0};
 
 /// Initialize the kernel
-void Init(u32 system_mode) {
+KernelSystem::KernelSystem(u32 system_mode) {
     ConfigMem::Init();
 
     Kernel::MemoryInit(system_mode);
@@ -33,7 +33,7 @@ void Init(u32 system_mode) {
 }
 
 /// Shutdown the kernel
-void Shutdown() {
+KernelSystem::~KernelSystem() {
     g_handle_table.Clear(); // Free all kernel objects
 
     Kernel::ThreadingShutdown();

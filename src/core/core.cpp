@@ -196,7 +196,7 @@ System::ResultStatus System::Init(EmuWindow& emu_window, u32 system_mode) {
     archive_manager = std::make_unique<Service::FS::ArchiveManager>();
 
     HW::Init();
-    Kernel::Init(system_mode);
+    kernel = std::make_unique<Kernel::KernelSystem>(system_mode);
     Service::Init(*this, service_manager);
     GDBStub::Init();
 
@@ -230,6 +230,14 @@ const Service::FS::ArchiveManager& System::ArchiveManager() const {
     return *archive_manager;
 }
 
+Kernel::KernelSystem& System::Kernel() {
+    return *kernel;
+}
+
+const Kernel::KernelSystem& System::Kernel() const {
+    return *kernel;
+}
+
 void System::RegisterSoftwareKeyboard(std::shared_ptr<Frontend::SoftwareKeyboard> swkbd) {
     registered_swkbd = std::move(swkbd);
 }
@@ -248,7 +256,7 @@ void System::Shutdown() {
     GDBStub::Shutdown();
     VideoCore::Shutdown();
     Service::Shutdown();
-    Kernel::Shutdown();
+    kernel.reset();
     HW::Shutdown();
     telemetry_session.reset();
 #ifdef ENABLE_SCRIPTING

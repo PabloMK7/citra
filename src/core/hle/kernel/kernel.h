@@ -8,10 +8,10 @@
 
 namespace Kernel {
 
-/// Initialize the kernel with the specified system mode.
-void Init(u32 system_mode);
-
-/// Shutdown the kernel
-void Shutdown();
+class KernelSystem {
+public:
+    explicit KernelSystem(u32 system_mode);
+    ~KernelSystem();
+};
 
 } // namespace Kernel
