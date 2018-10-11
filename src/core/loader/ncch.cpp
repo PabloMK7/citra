@@ -14,7 +14,6 @@
 #include "common/string_util.h"
 #include "common/swap.h"
 #include "core/core.h"
-#include "core/file_sys/archive_selfncch.h"
 #include "core/file_sys/ncch_container.h"
 #include "core/file_sys/title_metadata.h"
 #include "core/hle/kernel/process.h"
@@ -185,7 +184,7 @@ ResultStatus AppLoader_NCCH::Load(Kernel::SharedPtr<Kernel::Process>& process) {
     if (ResultStatus::Success != result)
         return result;
 
-    Service::FS::RegisterSelfNCCH(*this);
+    Core::System::GetInstance().ArchiveManager().RegisterSelfNCCH(*this);
 
     ParseRegionLockoutInfo();
 

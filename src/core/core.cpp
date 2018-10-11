@@ -19,6 +19,7 @@
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/process.h"
 #include "core/hle/kernel/thread.h"
+#include "core/hle/service/fs/archive.h"
 #include "core/hle/service/service.h"
 #include "core/hle/service/sm/sm.h"
 #include "core/hw/hw.h"
@@ -192,6 +193,7 @@ System::ResultStatus System::Init(EmuWindow& emu_window, u32 system_mode) {
 
     service_manager = std::make_shared<Service::SM::ServiceManager>();
     shared_page_handler = std::make_shared<SharedPage::Handler>();
+    archive_manager = std::make_unique<Service::FS::ArchiveManager>();
 
     HW::Init();
     Kernel::Init(system_mode);
@@ -218,6 +220,14 @@ Service::SM::ServiceManager& System::ServiceManager() {
 
 const Service::SM::ServiceManager& System::ServiceManager() const {
     return *service_manager;
+}
+
+Service::FS::ArchiveManager& System::ArchiveManager() {
+    return *archive_manager;
+}
+
+const Service::FS::ArchiveManager& System::ArchiveManager() const {
+    return *archive_manager;
 }
 
 void System::RegisterSoftwareKeyboard(std::shared_ptr<Frontend::SoftwareKeyboard> swkbd) {

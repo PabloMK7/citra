@@ -31,6 +31,9 @@ namespace Service {
 namespace SM {
 class ServiceManager;
 }
+namespace FS {
+class ArchiveManager;
+}
 } // namespace Service
 
 namespace Core {
@@ -158,6 +161,12 @@ public:
      */
     const Service::SM::ServiceManager& ServiceManager() const;
 
+    /// Gets a reference to the archive manager
+    Service::FS::ArchiveManager& ArchiveManager();
+
+    /// Gets a const reference to the archive manager
+    const Service::FS::ArchiveManager& ArchiveManager() const;
+
     PerfStats perf_stats;
     FrameLimiter frame_limiter;
 
@@ -229,6 +238,8 @@ private:
 
     /// Shared Page
     std::shared_ptr<SharedPage::Handler> shared_page_handler;
+
+    std::unique_ptr<Service::FS::ArchiveManager> archive_manager;
 
     static System s_instance;
 

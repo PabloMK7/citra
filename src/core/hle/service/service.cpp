@@ -236,7 +236,6 @@ static bool AttemptLLE(const ServiceModuleInfo& service_module) {
 
 /// Initialize ServiceManager
 void Init(Core::System& core, std::shared_ptr<SM::ServiceManager>& sm) {
-    FS::ArchiveInit();
     SM::ServiceManager::InstallInterfaces(sm);
 
     for (const auto& service_module : service_module_map) {
@@ -248,7 +247,6 @@ void Init(Core::System& core, std::shared_ptr<SM::ServiceManager>& sm) {
 
 /// Shutdown ServiceManager
 void Shutdown() {
-    FS::ArchiveShutdown();
 
     g_kernel_named_ports.clear();
     LOG_DEBUG(Service, "shutdown OK");
