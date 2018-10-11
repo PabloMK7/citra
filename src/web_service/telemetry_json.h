@@ -19,7 +19,7 @@ namespace WebService {
  */
 class TelemetryJson : public Telemetry::VisitorInterface {
 public:
-    TelemetryJson(const std::string& host, const std::string& username, const std::string& token);
+    TelemetryJson(std::string host, std::string username, std::string token);
     ~TelemetryJson();
 
     void Visit(const Telemetry::Field<bool>& field) override;

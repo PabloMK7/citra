@@ -8,8 +8,7 @@
 
 namespace WebService {
 
-TelemetryJson::TelemetryJson(const std::string& host, const std::string& username,
-                             const std::string& token)
+TelemetryJson::TelemetryJson(std::string host, std::string username, std::string token)
     : host(std::move(host)), username(std::move(username)), token(std::move(token)) {}
 TelemetryJson::~TelemetryJson() = default;
 
