@@ -7,6 +7,7 @@
 #include "common/logging/log.h"
 #include "core/hle/kernel/address_arbiter.h"
 #include "core/hle/kernel/errors.h"
+#include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/thread.h"
 #include "core/memory.h"
 
@@ -64,11 +65,11 @@ SharedPtr<Thread> AddressArbiter::ResumeHighestPriorityThread(VAddr address) {
     return thread;
 }
 
-AddressArbiter::AddressArbiter() {}
+AddressArbiter::AddressArbiter(KernelSystem& kernel) {}
 AddressArbiter::~AddressArbiter() {}
 
-SharedPtr<AddressArbiter> AddressArbiter::Create(std::string name) {
-    SharedPtr<AddressArbiter> address_arbiter(new AddressArbiter);
+SharedPtr<AddressArbiter> KernelSystem::CreateAddressArbiter(std::string name) {
+    SharedPtr<AddressArbiter> address_arbiter(new AddressArbiter(*this));
 
     address_arbiter->name = std::move(name);
 

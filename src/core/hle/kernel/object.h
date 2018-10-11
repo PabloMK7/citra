@@ -6,10 +6,8 @@
 
 #include <atomic>
 #include <string>
-
-#include <boost/smart_ptr/intrusive_ptr.hpp>
-
 #include "common/common_types.h"
+#include "core/hle/kernel/kernel.h"
 
 namespace Kernel {
 
@@ -87,9 +85,6 @@ inline void intrusive_ptr_release(Object* object) {
         delete object;
     }
 }
-
-template <typename T>
-using SharedPtr = boost::intrusive_ptr<T>;
 
 /**
  * Attempts to downcast the given Object pointer to a pointer to T.
