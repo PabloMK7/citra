@@ -110,6 +110,10 @@ ChatRoom::ChatRoom(QWidget* parent) : QWidget(parent), ui(std::make_unique<Ui::C
 
 ChatRoom::~ChatRoom() = default;
 
+void ChatRoom::RetranslateUi() {
+    ui->retranslateUi(this);
+}
+
 void ChatRoom::Clear() {
     ui->chat_history->clear();
     block_list.clear();

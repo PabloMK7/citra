@@ -84,6 +84,10 @@ Lobby::Lobby(QWidget* parent, QStandardItemModel* list,
     RefreshLobby();
 }
 
+void Lobby::RetranslateUi() {
+    ui->retranslateUi(this);
+}
+
 QString Lobby::PasswordPrompt() {
     bool ok;
     const QString text = QInputDialog::getText(this, tr("Password Required to Join"),

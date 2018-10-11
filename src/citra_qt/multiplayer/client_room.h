@@ -17,6 +17,8 @@ public:
     explicit ClientRoomWindow(QWidget* parent);
     ~ClientRoomWindow();
 
+    void RetranslateUi();
+
 public slots:
     void OnRoomUpdate(const Network::RoomInformation&);
     void OnStateChange(const Network::RoomMember::State&);

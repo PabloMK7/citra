@@ -45,6 +45,11 @@ ClientRoomWindow::ClientRoomWindow(QWidget* parent)
 
 ClientRoomWindow::~ClientRoomWindow() = default;
 
+void ClientRoomWindow::RetranslateUi() {
+    ui->retranslateUi(this);
+    ui->chat->RetranslateUi();
+}
+
 void ClientRoomWindow::OnRoomUpdate(const Network::RoomInformation& info) {
     UpdateView();
 }
