@@ -2,8 +2,6 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <thread>
-#include "common/assert.h"
 #include "common/detached_tasks.h"
 #include "web_service/telemetry_json.h"
 #include "web_service/web_backend.h"
