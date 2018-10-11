@@ -97,6 +97,8 @@ public:
         Interface(std::shared_ptr<Module> cfg, const char* name, u32 max_session);
         ~Interface();
 
+        std::shared_ptr<Module> GetModule() const;
+
         /**
          * CFG::GetCountryCodeString service function
          *  Inputs:
@@ -116,8 +118,6 @@ public:
          *      2 : Country Code ID
          */
         void GetCountryCodeID(Kernel::HLERequestContext& ctx);
-
-        u32 GetRegionValue();
 
         /**
          * CFG::SecureInfoGetRegion service function
@@ -412,6 +412,5 @@ private:
 };
 
 void InstallInterfaces(Core::System& system);
-std::shared_ptr<Module> GetCurrentModule();
 
 } // namespace Service::CFG

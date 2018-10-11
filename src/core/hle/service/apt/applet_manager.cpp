@@ -69,7 +69,7 @@ static constexpr std::array<AppletTitleData, NumApplets> applet_titleids = {{
     // TODO(Subv): Fill in the rest of the titleids
 }};
 
-static u64 GetTitleIdForApplet(AppletId id) {
+static u64 GetTitleIdForApplet(AppletId id, u32 region_value) {
     ASSERT_MSG(id != AppletId::None, "Invalid applet id");
 
     auto itr = std::find_if(applet_titleids.begin(), applet_titleids.end(),
@@ -79,7 +79,7 @@ static u64 GetTitleIdForApplet(AppletId id) {
 
     ASSERT_MSG(itr != applet_titleids.end(), "Unknown applet id 0x{:#05X}", static_cast<u32>(id));
 
-    return itr->title_ids[CFG::GetCurrentModule()->GetRegionValue()];
+    return itr->title_ids[region_value];
 }
 
 AppletManager::AppletSlotData* AppletManager::GetAppletSlotData(AppletId id) {
@@ -327,8 +327,8 @@ ResultCode AppletManager::PrepareToStartLibraryApplet(AppletId applet_id) {
     // There are some problems with LLE applets. The rasterizer cache gets out of sync
     // when the applet is closed. To avoid breaking applications because of the issue,
     // we are going to disable loading LLE applets before further fixes are done.
-    //    auto process = NS::LaunchTitle(FS::MediaType::NAND, GetTitleIdForApplet(applet_id));
-    //    if (process) {
+    //    auto process = NS::LaunchTitle(FS::MediaType::NAND, GetTitleIdForApplet(applet_id,
+    //    region_value)); if (process) {
     //        return RESULT_SUCCESS;
     //    }
 
@@ -354,8 +354,8 @@ ResultCode AppletManager::PreloadLibraryApplet(AppletId applet_id) {
     // There are some problems with LLE applets. The rasterizer cache gets out of sync
     // when the applet is closed. To avoid breaking applications because of the issue,
     // we are going to disable loading LLE applets before further fixes are done.
-    //    auto process = NS::LaunchTitle(FS::MediaType::NAND, GetTitleIdForApplet(applet_id));
-    //    if (process) {
+    //    auto process = NS::LaunchTitle(FS::MediaType::NAND, GetTitleIdForApplet(applet_id,
+    //    region_value)); if (process) {
     //        return RESULT_SUCCESS;
     //    }
 
@@ -465,8 +465,14 @@ ResultVal<AppletManager::AppletInfo> AppletManager::GetAppletInfo(AppletId app_i
                           ErrorLevel::Status);
     }
 
-    return MakeResult<AppletInfo>({GetTitleIdForApplet(app_id), Service::FS::MediaType::NAND,
-                                   slot->registered, slot->loaded, slot->attributes.raw});
+    auto cfg = system.ServiceManager().GetService<Service::CFG::Module::Interface>("cfg:u");
+    ASSERT_MSG(cfg, "cfg:u not started!");
+    auto cfg_module = cfg->GetModule();
+    ASSERT_MSG(cfg_module, "CFG Module missing!");
+    u32 region_value = cfg_module->GetRegionValue();
+    return MakeResult<AppletInfo>({GetTitleIdForApplet(app_id, region_value),
+                                   Service::FS::MediaType::NAND, slot->registered, slot->loaded,
+                                   slot->attributes.raw});
 }
 
 ResultCode AppletManager::PrepareToDoApplicationJump(u64 title_id, FS::MediaType media_type,
@@ -548,7 +554,12 @@ void AppletManager::EnsureHomeMenuLoaded() {
         return;
     }
 
-    u64 menu_title_id = GetTitleIdForApplet(AppletId::HomeMenu);
+    auto cfg = system.ServiceManager().GetService<Service::CFG::Module::Interface>("cfg:u");
+    ASSERT_MSG(cfg, "cfg:u not started!");
+    auto cfg_module = cfg->GetModule();
+    ASSERT_MSG(cfg_module, "CFG Module missing!");
+    u32 region_value = cfg_module->GetRegionValue();
+    u64 menu_title_id = GetTitleIdForApplet(AppletId::HomeMenu, region_value);
     auto process = NS::LaunchTitle(FS::MediaType::NAND, menu_title_id);
     if (!process) {
         LOG_WARNING(Service_APT,

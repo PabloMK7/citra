@@ -246,7 +246,13 @@ void ConfigureSystem::setConfiguration() {
     ui->edit_init_time->setDateTime(date_time);
 
     if (!enabled) {
-        cfg = Service::CFG::GetCurrentModule();
+
+        auto cfg_interface = Core::System::GetInstance()
+                                 .ServiceManager()
+                                 .GetService<Service::CFG::Module::Interface>("cfg:u");
+        ASSERT_MSG(cfg_interface, "cfg:u not started!");
+        cfg = cfg_interface->GetModule();
+        ASSERT_MSG(cfg, "CFG Module missing!");
         ReadSystemSettings();
         ui->group_system_settings->setEnabled(false);
     } else {

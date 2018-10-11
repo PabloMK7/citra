@@ -21,8 +21,6 @@
 
 namespace Service::HID {
 
-static std::weak_ptr<Module> current_module;
-
 // Updating period for each HID device. These empirical values are measured from a 11.2 3DS.
 constexpr u64 pad_update_ticks = BASE_CLOCK_RATE_ARM11 / 234;
 constexpr u64 accelerometer_update_ticks = BASE_CLOCK_RATE_ARM11 / 104;
@@ -354,6 +352,10 @@ void Module::Interface::GetSoundVolume(Kernel::HLERequestContext& ctx) {
 Module::Interface::Interface(std::shared_ptr<Module> hid, const char* name, u32 max_session)
     : ServiceFramework(name, max_session), hid(std::move(hid)) {}
 
+std::shared_ptr<Module> Module::Interface::GetModule() const {
+    return hid;
+}
+
 Module::Module(Core::System& system) : system(system) {
     using namespace Kernel;
 
@@ -388,17 +390,11 @@ void Module::ReloadInputDevices() {
     is_device_reload_pending.store(true);
 }
 
-void ReloadInputDevices() {
-    if (auto hid = current_module.lock())
-        hid->ReloadInputDevices();
-}
-
 void InstallInterfaces(Core::System& system) {
     auto& service_manager = system.ServiceManager();
     auto hid = std::make_shared<Module>(system);
     std::make_shared<User>(hid)->InstallAsService(service_manager);
     std::make_shared<Spvr>(hid)->InstallAsService(service_manager);
-    current_module = hid;
 }
 
 } // namespace Service::HID

@@ -5,6 +5,7 @@
 #include "common/common_paths.h"
 #include "common/file_util.h"
 #include "common/logging/log.h"
+#include "common/string_util.h"
 #include "core/core.h"
 #include "core/file_sys/archive_ncch.h"
 #include "core/file_sys/file_backend.h"
@@ -103,7 +104,14 @@ static u32 DecompressLZ11(const u8* in, u8* out) {
 
 bool Module::LoadSharedFont() {
     u8 font_region_code;
-    switch (CFG::GetCurrentModule()->GetRegionValue()) {
+    auto cfg =
+        Core::System::GetInstance().ServiceManager().GetService<Service::CFG::Module::Interface>(
+            "cfg:u");
+    ASSERT_MSG(cfg, "cfg:u not started!");
+    auto cfg_module = cfg->GetModule();
+    ASSERT_MSG(cfg_module, "CFG Module missing!");
+    std::string username = Common::UTF16ToUTF8(cfg_module->GetUsername());
+    switch (cfg_module->GetRegionValue()) {
     case 4: // CHN
         font_region_code = 2;
         break;
