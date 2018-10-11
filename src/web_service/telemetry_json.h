@@ -4,10 +4,8 @@
 
 #pragma once
 
-#include <array>
 #include <chrono>
 #include <string>
-#include <json.hpp>
 #include "common/announce_multiplayer_room.h"
 #include "common/telemetry.h"
 
@@ -40,20 +38,8 @@ public:
     void Complete() override;
 
 private:
-    nlohmann::json& TopSection() {
-        return sections[static_cast<u8>(Telemetry::FieldType::None)];
-    }
-
-    template <class T>
-    void Serialize(Telemetry::FieldType type, const std::string& name, T value);
-
-    void SerializeSection(Telemetry::FieldType type, const std::string& name);
-
-    nlohmann::json output;
-    std::array<nlohmann::json, 7> sections;
-    std::string host;
-    std::string username;
-    std::string token;
+    struct Impl;
+    std::unique_ptr<Impl> impl;
 };
 
 } // namespace WebService
