@@ -12,6 +12,7 @@ namespace Kernel {
 
 class AddressArbiter;
 class Event;
+class Mutex;
 
 enum class ResetType {
     OneShot,
@@ -41,6 +42,14 @@ public:
      * @param name Optional name of event
      */
     SharedPtr<Event> CreateEvent(ResetType reset_type, std::string name = "Unknown");
+
+    /**
+     * Creates a mutex.
+     * @param initial_locked Specifies if the mutex should be locked initially
+     * @param name Optional name of mutex
+     * @return Pointer to new Mutex object
+     */
+    SharedPtr<Mutex> CreateMutex(bool initial_locked, std::string name = "Unknown");
 };
 
 } // namespace Kernel

@@ -149,7 +149,7 @@ std::string GetMediaTitlePath(Service::FS::MediaType media_type);
 
 class Module final {
 public:
-    Module();
+    explicit Module(Core::System& system);
     ~Module();
 
     class Interface : public ServiceFramework<Interface> {

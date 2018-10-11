@@ -1455,16 +1455,16 @@ void Module::Interface::GetMetaDataFromCia(Kernel::HLERequestContext& ctx) {
     rb.PushMappedBuffer(output_buffer);
 }
 
-Module::Module() {
+Module::Module(Core::System& system) {
     ScanForAllTitles();
-    system_updater_mutex = Kernel::Mutex::Create(false, "AM::SystemUpdaterMutex");
+    system_updater_mutex = system.Kernel().CreateMutex(false, "AM::SystemUpdaterMutex");
 }
 
 Module::~Module() = default;
 
 void InstallInterfaces(Core::System& system) {
     auto& service_manager = system.ServiceManager();
-    auto am = std::make_shared<Module>();
+    auto am = std::make_shared<Module>(system);
     std::make_shared<AM_APP>(am)->InstallAsService(service_manager);
     std::make_shared<AM_NET>(am)->InstallAsService(service_manager);
     std::make_shared<AM_SYS>(am)->InstallAsService(service_manager);

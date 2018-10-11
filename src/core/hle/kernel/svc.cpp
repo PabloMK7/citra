@@ -828,7 +828,7 @@ static ResultCode SetThreadPriority(Handle handle, u32 priority) {
 
 /// Create a mutex
 static ResultCode CreateMutex(Handle* out_handle, u32 initial_locked) {
-    SharedPtr<Mutex> mutex = Mutex::Create(initial_locked != 0);
+    SharedPtr<Mutex> mutex = Core::System::GetInstance().Kernel().CreateMutex(initial_locked != 0);
     mutex->name = fmt::format("mutex-{:08x}", Core::CPU().GetReg(14));
     CASCADE_RESULT(*out_handle, g_handle_table.Create(std::move(mutex)));
 

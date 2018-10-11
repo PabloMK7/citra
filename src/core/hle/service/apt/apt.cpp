@@ -859,7 +859,7 @@ Module::Module(Core::System& system) : system(system) {
                                      MemoryPermission::ReadWrite, MemoryPermission::Read, 0,
                                      Kernel::MemoryRegion::SYSTEM, "APT:SharedFont");
 
-    lock = Kernel::Mutex::Create(false, "APT_U:Lock");
+    lock = system.Kernel().CreateMutex(false, "APT_U:Lock");
 }
 
 Module::~Module() {}

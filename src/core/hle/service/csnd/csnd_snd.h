@@ -16,7 +16,7 @@ namespace Service::CSND {
 
 class CSND_SND final : public ServiceFramework<CSND_SND> {
 public:
-    CSND_SND();
+    explicit CSND_SND(Core::System& system);
     ~CSND_SND() = default;
 
 private:
@@ -173,6 +173,8 @@ private:
         u8 parameters[20];
     };
     static_assert(sizeof(Type0Command) == 0x20, "Type0Command structure size is wrong");
+
+    Core::System& system;
 
     Kernel::SharedPtr<Kernel::Mutex> mutex = nullptr;
     Kernel::SharedPtr<Kernel::SharedMemory> shared_memory = nullptr;
