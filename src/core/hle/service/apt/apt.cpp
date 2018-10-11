@@ -5,7 +5,6 @@
 #include "common/common_paths.h"
 #include "common/file_util.h"
 #include "common/logging/log.h"
-#include "common/string_util.h"
 #include "core/core.h"
 #include "core/file_sys/archive_ncch.h"
 #include "core/file_sys/file_backend.h"
@@ -110,7 +109,6 @@ bool Module::LoadSharedFont() {
     ASSERT_MSG(cfg, "cfg:u not started!");
     auto cfg_module = cfg->GetModule();
     ASSERT_MSG(cfg_module, "CFG Module missing!");
-    std::string username = Common::UTF16ToUTF8(cfg_module->GetUsername());
     switch (cfg_module->GetRegionValue()) {
     case 4: // CHN
         font_region_code = 2;
