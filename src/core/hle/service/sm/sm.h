@@ -45,6 +45,8 @@ class ServiceManager {
 public:
     static void InstallInterfaces(Core::System& system);
 
+    explicit ServiceManager(Core::System& system);
+
     ResultVal<Kernel::SharedPtr<Kernel::ServerPort>> RegisterService(std::string name,
                                                                      unsigned int max_sessions);
     ResultVal<Kernel::SharedPtr<Kernel::ClientPort>> GetServicePort(const std::string& name);
@@ -67,6 +69,7 @@ public:
     }
 
 private:
+    Core::System& system;
     std::weak_ptr<SRV> srv_interface;
 
     /// Map of registered services, retrieved using GetServicePort or ConnectToService.

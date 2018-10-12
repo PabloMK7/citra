@@ -191,7 +191,7 @@ System::ResultStatus System::Init(EmuWindow& emu_window, u32 system_mode) {
     rpc_server = std::make_unique<RPC::RPCServer>();
 #endif
 
-    service_manager = std::make_shared<Service::SM::ServiceManager>();
+    service_manager = std::make_shared<Service::SM::ServiceManager>(*this);
     shared_page_handler = std::make_shared<SharedPage::Handler>();
     archive_manager = std::make_unique<Service::FS::ArchiveManager>();
 

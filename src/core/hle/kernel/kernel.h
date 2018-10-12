@@ -19,6 +19,8 @@ class Process;
 class Thread;
 class Semaphore;
 class Timer;
+class ClientPort;
+class ServerPort;
 
 enum class ResetType {
     OneShot,
@@ -93,6 +95,16 @@ public:
      * @return The created Timer
      */
     SharedPtr<Timer> CreateTimer(ResetType reset_type, std::string name = "Unknown");
+
+    /**
+     * Creates a pair of ServerPort and an associated ClientPort.
+     *
+     * @param max_sessions Maximum number of sessions to the port
+     * @param name Optional name of the ports
+     * @return The created port tuple
+     */
+    std::tuple<SharedPtr<ServerPort>, SharedPtr<ClientPort>> CreatePortPair(
+        u32 max_sessions, std::string name = "UnknownPort");
 };
 
 } // namespace Kernel

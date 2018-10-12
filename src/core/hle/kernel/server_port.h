@@ -20,16 +20,6 @@ class SessionRequestHandler;
 
 class ServerPort final : public WaitObject {
 public:
-    /**
-     * Creates a pair of ServerPort and an associated ClientPort.
-     *
-     * @param max_sessions Maximum number of sessions to the port
-     * @param name Optional name of the ports
-     * @return The created port tuple
-     */
-    static std::tuple<SharedPtr<ServerPort>, SharedPtr<ClientPort>> CreatePortPair(
-        u32 max_sessions, std::string name = "UnknownPort");
-
     std::string GetTypeName() const override {
         return "ServerPort";
     }
@@ -69,8 +59,10 @@ public:
     void Acquire(Thread* thread) override;
 
 private:
-    ServerPort();
+    explicit ServerPort(KernelSystem& kernel);
     ~ServerPort() override;
+
+    friend class KernelSystem;
 };
 
 } // namespace Kernel

@@ -48,13 +48,15 @@ public:
     void ConnectionClosed();
 
 private:
-    ClientPort();
+    explicit ClientPort(KernelSystem& kernel);
     ~ClientPort() override;
 
     SharedPtr<ServerPort> server_port; ///< ServerPort associated with this client port.
     u32 max_sessions = 0;    ///< Maximum number of simultaneous sessions the port can have
     u32 active_sessions = 0; ///< Number of currently open sessions to this port
     std::string name;        ///< Name of client port (optional)
+
+    friend class KernelSystem;
 };
 
 } // namespace Kernel
