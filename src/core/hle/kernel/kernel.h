@@ -18,6 +18,7 @@ class CodeSet;
 class Process;
 class Thread;
 class Semaphore;
+class Timer;
 
 enum class ResetType {
     OneShot,
@@ -84,6 +85,14 @@ public:
      */
     ResultVal<SharedPtr<Semaphore>> CreateSemaphore(s32 initial_count, s32 max_count,
                                                     std::string name = "Unknown");
+
+    /**
+     * Creates a timer
+     * @param reset_type ResetType describing how to create the timer
+     * @param name Optional name of timer
+     * @return The created Timer
+     */
+    SharedPtr<Timer> CreateTimer(ResetType reset_type, std::string name = "Unknown");
 };
 
 } // namespace Kernel
