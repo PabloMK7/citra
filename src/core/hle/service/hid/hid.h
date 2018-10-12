@@ -337,5 +337,7 @@ private:
     std::unique_ptr<Input::TouchDevice> touch_device;
 };
 
+std::shared_ptr<Module> GetModule(Core::System& system);
+
 void InstallInterfaces(Core::System& system);
 } // namespace Service::HID

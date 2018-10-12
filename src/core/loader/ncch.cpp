@@ -144,13 +144,9 @@ void AppLoader_NCCH::ParseRegionLockoutInfo() {
             }
             region_lockout >>= 1;
         }
-        auto cfg = Core::System::GetInstance()
-                       .ServiceManager()
-                       .GetService<Service::CFG::Module::Interface>("cfg:u");
-        ASSERT_MSG(cfg, "cfg:u not started!");
-        auto cfg_module = cfg->GetModule();
-        ASSERT_MSG(cfg_module, "CFG Module missing!");
-        cfg_module->SetPreferredRegionCodes(regions);
+        auto cfg = Service::CFG::GetModule(Core::System::GetInstance());
+        ASSERT_MSG(cfg, "CFG Module missing!");
+        cfg->SetPreferredRegionCodes(regions);
     }
 }
 

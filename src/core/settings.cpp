@@ -38,30 +38,22 @@ void Apply() {
         Core::DSP().SetSink(values.sink_id, values.audio_device_id);
         Core::DSP().EnableStretching(values.enable_audio_stretching);
 
-        auto& sm = system.ServiceManager();
-
-        auto hid = sm.GetService<Service::HID::Module::Interface>("hid:USER");
+        auto hid = Service::HID::GetModule(system);
         if (hid) {
-            auto hid_module = hid->GetModule();
-            if (hid_module) {
-                hid_module->ReloadInputDevices();
-            }
+            hid->ReloadInputDevices();
         }
 
+        auto sm = system.ServiceManager();
         auto ir_user = sm.GetService<Service::IR::IR_USER>("ir:USER");
         if (ir_user)
             ir_user->ReloadInputDevices();
-
         auto ir_rst = sm.GetService<Service::IR::IR_RST>("ir:rst");
         if (ir_rst)
             ir_rst->ReloadInputDevices();
 
-        auto cam = sm.GetService<Service::CAM::Module::Interface>("cam:u");
+        auto cam = Service::CAM::GetModule(system);
         if (cam) {
-            auto cam_module = cam->GetModule();
-            if (cam_module) {
-                cam_module->ReloadCameraDevices();
-            }
+            cam->ReloadCameraDevices();
         }
     }
 }

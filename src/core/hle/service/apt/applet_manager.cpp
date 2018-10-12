@@ -465,11 +465,9 @@ ResultVal<AppletManager::AppletInfo> AppletManager::GetAppletInfo(AppletId app_i
                           ErrorLevel::Status);
     }
 
-    auto cfg = system.ServiceManager().GetService<Service::CFG::Module::Interface>("cfg:u");
-    ASSERT_MSG(cfg, "cfg:u not started!");
-    auto cfg_module = cfg->GetModule();
-    ASSERT_MSG(cfg_module, "CFG Module missing!");
-    u32 region_value = cfg_module->GetRegionValue();
+    auto cfg = Service::CFG::GetModule(system);
+    ASSERT_MSG(cfg, "CFG Module missing!");
+    u32 region_value = cfg->GetRegionValue();
     return MakeResult<AppletInfo>({GetTitleIdForApplet(app_id, region_value),
                                    Service::FS::MediaType::NAND, slot->registered, slot->loaded,
                                    slot->attributes.raw});
@@ -554,11 +552,9 @@ void AppletManager::EnsureHomeMenuLoaded() {
         return;
     }
 
-    auto cfg = system.ServiceManager().GetService<Service::CFG::Module::Interface>("cfg:u");
-    ASSERT_MSG(cfg, "cfg:u not started!");
-    auto cfg_module = cfg->GetModule();
-    ASSERT_MSG(cfg_module, "CFG Module missing!");
-    u32 region_value = cfg_module->GetRegionValue();
+    auto cfg = Service::CFG::GetModule(system);
+    ASSERT_MSG(cfg, "CFG Module missing!");
+    u32 region_value = cfg->GetRegionValue();
     u64 menu_title_id = GetTitleIdForApplet(AppletId::HomeMenu, region_value);
     auto process = NS::LaunchTitle(FS::MediaType::NAND, menu_title_id);
     if (!process) {

@@ -137,7 +137,7 @@ void Module::Interface::GetCountryCodeString(Kernel::HLERequestContext& ctx) {
     rb.Push<u32>(country_codes[country_code_id]);
 }
 
-std::shared_ptr<Module> Module::Interface::GetModule() const {
+std::shared_ptr<Module> Module::Interface::Interface::GetModule() const {
     return cfg;
 }
 
@@ -716,6 +716,13 @@ u64 Module::GetConsoleUniqueId() {
     u64_le console_id_le;
     GetConfigInfoBlock(ConsoleUniqueID2BlockID, sizeof(console_id_le), 0xE, &console_id_le);
     return console_id_le;
+}
+
+std::shared_ptr<Module> GetModule(Core::System& system) {
+    auto cfg = system.ServiceManager().GetService<Service::CFG::Module::Interface>("cfg:u");
+    if (!cfg)
+        return nullptr;
+    return cfg->GetModule();
 }
 
 void InstallInterfaces(Core::System& system) {

@@ -1052,6 +1052,13 @@ void Module::LoadCameraImplementation(CameraConfig& camera, int camera_id) {
     camera.impl->SetResolution(camera.contexts[0].resolution);
 }
 
+std::shared_ptr<Module> GetModule(Core::System& system) {
+    auto cam = system.ServiceManager().GetService<Service::CAM::Module::Interface>("cam:u");
+    if (!cam)
+        return nullptr;
+    return cam->GetModule();
+}
+
 void InstallInterfaces(Core::System& system) {
     auto& service_manager = system.ServiceManager();
     auto cam = std::make_shared<Module>();

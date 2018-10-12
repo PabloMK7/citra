@@ -411,6 +411,8 @@ private:
     u32 preferred_region_code = 0;
 };
 
+std::shared_ptr<Module> GetModule(Core::System& system);
+
 void InstallInterfaces(Core::System& system);
 
 } // namespace Service::CFG

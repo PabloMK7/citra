@@ -785,6 +785,8 @@ private:
     std::atomic<bool> is_camera_reload_pending{false};
 };
 
+std::shared_ptr<Module> GetModule(Core::System& system);
+
 void InstallInterfaces(Core::System& system);
 
 } // namespace Service::CAM
