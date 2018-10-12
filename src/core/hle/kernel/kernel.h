@@ -7,6 +7,7 @@
 #include <string>
 #include <boost/smart_ptr/intrusive_ptr.hpp>
 #include "common/common_types.h"
+#include "core/hle/result.h"
 
 namespace Kernel {
 
@@ -15,6 +16,7 @@ class Event;
 class Mutex;
 class CodeSet;
 class Process;
+class Thread;
 
 enum class ResetType {
     OneShot,
@@ -56,6 +58,21 @@ public:
     SharedPtr<CodeSet> CreateCodeSet(std::string name, u64 program_id);
 
     SharedPtr<Process> CreateProcess(SharedPtr<CodeSet> code_set);
+
+    /**
+     * Creates and returns a new thread. The new thread is immediately scheduled
+     * @param name The friendly name desired for the thread
+     * @param entry_point The address at which the thread should start execution
+     * @param priority The thread's priority
+     * @param arg User data to pass to the thread
+     * @param processor_id The ID(s) of the processors on which the thread is desired to be run
+     * @param stack_top The address of the thread's stack top
+     * @param owner_process The parent process for the thread
+     * @return A shared pointer to the newly created thread
+     */
+    ResultVal<SharedPtr<Thread>> CreateThread(std::string name, VAddr entry_point, u32 priority,
+                                              u32 arg, s32 processor_id, VAddr stack_top,
+                                              SharedPtr<Process> owner_process);
 };
 
 } // namespace Kernel
