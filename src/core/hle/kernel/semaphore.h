@@ -15,16 +15,6 @@ namespace Kernel {
 
 class Semaphore final : public WaitObject {
 public:
-    /**
-     * Creates a semaphore.
-     * @param initial_count Number of slots reserved for other threads
-     * @param max_count Maximum number of slots the semaphore can have
-     * @param name Optional name of semaphore
-     * @return The created semaphore
-     */
-    static ResultVal<SharedPtr<Semaphore>> Create(s32 initial_count, s32 max_count,
-                                                  std::string name = "Unknown");
-
     std::string GetTypeName() const override {
         return "Semaphore";
     }
@@ -52,8 +42,10 @@ public:
     ResultVal<s32> Release(s32 release_count);
 
 private:
-    Semaphore();
+    explicit Semaphore(KernelSystem& kernel);
     ~Semaphore() override;
+
+    friend class KernelSystem;
 };
 
 } // namespace Kernel

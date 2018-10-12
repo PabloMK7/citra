@@ -17,6 +17,7 @@ class Mutex;
 class CodeSet;
 class Process;
 class Thread;
+class Semaphore;
 
 enum class ResetType {
     OneShot,
@@ -73,6 +74,16 @@ public:
     ResultVal<SharedPtr<Thread>> CreateThread(std::string name, VAddr entry_point, u32 priority,
                                               u32 arg, s32 processor_id, VAddr stack_top,
                                               SharedPtr<Process> owner_process);
+
+    /**
+     * Creates a semaphore.
+     * @param initial_count Number of slots reserved for other threads
+     * @param max_count Maximum number of slots the semaphore can have
+     * @param name Optional name of semaphore
+     * @return The created semaphore
+     */
+    ResultVal<SharedPtr<Semaphore>> CreateSemaphore(s32 initial_count, s32 max_count,
+                                                    std::string name = "Unknown");
 };
 
 } // namespace Kernel

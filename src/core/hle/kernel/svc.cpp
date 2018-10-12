@@ -891,7 +891,8 @@ static ResultCode GetThreadId(u32* thread_id, Handle handle) {
 
 /// Creates a semaphore
 static ResultCode CreateSemaphore(Handle* out_handle, s32 initial_count, s32 max_count) {
-    CASCADE_RESULT(SharedPtr<Semaphore> semaphore, Semaphore::Create(initial_count, max_count));
+    CASCADE_RESULT(SharedPtr<Semaphore> semaphore,
+                   Core::System::GetInstance().Kernel().CreateSemaphore(initial_count, max_count));
     semaphore->name = fmt::format("semaphore-{:08x}", Core::CPU().GetReg(14));
     CASCADE_RESULT(*out_handle, g_handle_table.Create(std::move(semaphore)));
 
