@@ -5,6 +5,7 @@
 #include <tuple>
 #include "common/common_types.h"
 #include "common/logging/log.h"
+#include "core/core.h"
 #include "core/hle/ipc.h"
 #include "core/hle/ipc_helpers.h"
 #include "core/hle/kernel/client_port.h"
@@ -103,7 +104,7 @@ void SRV::GetServiceHandle(Kernel::HLERequestContext& ctx) {
                                    Kernel::HLERequestContext& ctx,
                                    Kernel::ThreadWakeupReason reason) {
         LOG_ERROR(Service_SRV, "called service={} wakeup", name);
-        auto client_port = service_manager->GetServicePort(name);
+        auto client_port = system.ServiceManager().GetServicePort(name);
 
         auto session = client_port.Unwrap()->Connect();
         if (session.Succeeded()) {
@@ -122,7 +123,7 @@ void SRV::GetServiceHandle(Kernel::HLERequestContext& ctx) {
         }
     };
 
-    auto client_port = service_manager->GetServicePort(name);
+    auto client_port = system.ServiceManager().GetServicePort(name);
     if (client_port.Failed()) {
         if (wait_until_available && client_port.Code() == ERR_SERVICE_NOT_REGISTERED) {
             LOG_INFO(Service_SRV, "called service={} delayed", name);
@@ -223,7 +224,7 @@ void SRV::RegisterService(Kernel::HLERequestContext& ctx) {
 
     std::string name(name_buf.data(), std::min(name_len, name_buf.size()));
 
-    auto port = service_manager->RegisterService(name, max_sessions);
+    auto port = system.ServiceManager().RegisterService(name, max_sessions);
 
     if (port.Failed()) {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
@@ -243,8 +244,7 @@ void SRV::RegisterService(Kernel::HLERequestContext& ctx) {
     rb.PushMoveObjects(port.Unwrap());
 }
 
-SRV::SRV(std::shared_ptr<ServiceManager> service_manager)
-    : ServiceFramework("srv:", 4), service_manager(std::move(service_manager)) {
+SRV::SRV(Core::System& system) : ServiceFramework("srv:", 4), system(system) {
     static const FunctionInfo functions[] = {
         {0x00010002, &SRV::RegisterClient, "RegisterClient"},
         {0x00020000, &SRV::EnableNotification, "EnableNotification"},

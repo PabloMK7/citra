@@ -14,6 +14,10 @@
 #include "core/hle/result.h"
 #include "core/hle/service/service.h"
 
+namespace Core {
+class System;
+}
+
 namespace Kernel {
 class ClientSession;
 class SessionRequestHandler;
@@ -39,7 +43,7 @@ constexpr ResultCode ERR_ALREADY_REGISTERED(ErrorDescription::AlreadyExists, Err
 
 class ServiceManager {
 public:
-    static void InstallInterfaces(std::shared_ptr<ServiceManager> self);
+    static void InstallInterfaces(Core::System& system);
 
     ResultVal<Kernel::SharedPtr<Kernel::ServerPort>> RegisterService(std::string name,
                                                                      unsigned int max_sessions);

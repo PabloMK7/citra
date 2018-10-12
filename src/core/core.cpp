@@ -197,7 +197,7 @@ System::ResultStatus System::Init(EmuWindow& emu_window, u32 system_mode) {
 
     HW::Init();
     kernel = std::make_unique<Kernel::KernelSystem>(system_mode);
-    Service::Init(*this, service_manager);
+    Service::Init(*this);
     GDBStub::Init();
 
     ResultStatus result = VideoCore::Init(emu_window);

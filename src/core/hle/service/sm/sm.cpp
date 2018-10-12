@@ -4,6 +4,7 @@
 
 #include <tuple>
 #include "common/assert.h"
+#include "core/core.h"
 #include "core/hle/kernel/client_session.h"
 #include "core/hle/result.h"
 #include "core/hle/service/sm/sm.h"
@@ -21,12 +22,12 @@ static ResultCode ValidateServiceName(const std::string& name) {
     return RESULT_SUCCESS;
 }
 
-void ServiceManager::InstallInterfaces(std::shared_ptr<ServiceManager> self) {
-    ASSERT(self->srv_interface.expired());
+void ServiceManager::InstallInterfaces(Core::System& system) {
+    ASSERT(system.ServiceManager().srv_interface.expired());
 
-    auto srv = std::make_shared<SRV>(self);
+    auto srv = std::make_shared<SRV>(system);
     srv->InstallAsNamedPort();
-    self->srv_interface = srv;
+    system.ServiceManager().srv_interface = srv;
 }
 
 ResultVal<Kernel::SharedPtr<Kernel::ServerPort>> ServiceManager::RegisterService(
