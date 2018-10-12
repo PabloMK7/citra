@@ -8,6 +8,7 @@
 #include "common/common_types.h"
 #include "common/file_util.h"
 #include "common/logging/log.h"
+#include "core/core.h"
 #include "core/hle/kernel/process.h"
 #include "core/hle/kernel/resource_limit.h"
 #include "core/loader/elf.h"
@@ -299,7 +300,7 @@ SharedPtr<CodeSet> ElfReader::LoadInto(u32 vaddr) {
     std::vector<u8> program_image(total_image_size);
     std::size_t current_image_position = 0;
 
-    SharedPtr<CodeSet> codeset = CodeSet::Create("", 0);
+    SharedPtr<CodeSet> codeset = Core::System::GetInstance().Kernel().CreateCodeSet("", 0);
 
     for (unsigned int i = 0; i < header->e_phnum; ++i) {
         Elf32_Phdr* p = &segments[i];

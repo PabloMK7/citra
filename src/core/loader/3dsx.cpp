@@ -217,7 +217,7 @@ static THREEDSX_Error Load3DSXFile(FileUtil::IOFile& file, u32 base_addr,
     }
 
     // Create the CodeSet
-    SharedPtr<CodeSet> code_set = CodeSet::Create("", 0);
+    SharedPtr<CodeSet> code_set = Core::System::GetInstance().Kernel().CreateCodeSet("", 0);
 
     code_set->CodeSegment().offset = loadinfo.seg_ptrs[0] - program_image.data();
     code_set->CodeSegment().addr = loadinfo.seg_addrs[0];

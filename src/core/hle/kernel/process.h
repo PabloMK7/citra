@@ -62,8 +62,6 @@ struct CodeSet final : public Object {
         u32 size = 0;
     };
 
-    static SharedPtr<CodeSet> Create(std::string name, u64 program_id);
-
     std::string GetTypeName() const override {
         return "CodeSet";
     }
@@ -111,8 +109,10 @@ struct CodeSet final : public Object {
     u64 program_id;
 
 private:
-    CodeSet();
+    explicit CodeSet(KernelSystem& kernel);
     ~CodeSet() override;
+
+    friend class KernelSystem;
 };
 
 class Process final : public Object {

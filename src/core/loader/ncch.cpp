@@ -75,7 +75,8 @@ ResultStatus AppLoader_NCCH::LoadExec(Kernel::SharedPtr<Kernel::Process>& proces
         std::string process_name = Common::StringFromFixedZeroTerminatedBuffer(
             (const char*)overlay_ncch->exheader_header.codeset_info.name, 8);
 
-        SharedPtr<CodeSet> codeset = CodeSet::Create(process_name, program_id);
+        SharedPtr<CodeSet> codeset =
+            Core::System::GetInstance().Kernel().CreateCodeSet(process_name, program_id);
 
         codeset->CodeSegment().offset = 0;
         codeset->CodeSegment().addr = overlay_ncch->exheader_header.codeset_info.text.address;
