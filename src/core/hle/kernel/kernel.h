@@ -14,6 +14,7 @@ class AddressArbiter;
 class Event;
 class Mutex;
 class CodeSet;
+class Process;
 
 enum class ResetType {
     OneShot,
@@ -53,6 +54,8 @@ public:
     SharedPtr<Mutex> CreateMutex(bool initial_locked, std::string name = "Unknown");
 
     SharedPtr<CodeSet> CreateCodeSet(std::string name, u64 program_id);
+
+    SharedPtr<Process> CreateProcess(SharedPtr<CodeSet> code_set);
 };
 
 } // namespace Kernel

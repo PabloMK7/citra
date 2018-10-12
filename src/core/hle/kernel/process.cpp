@@ -34,8 +34,8 @@ CodeSet::~CodeSet() {}
 
 u32 Process::next_process_id;
 
-SharedPtr<Process> Process::Create(SharedPtr<CodeSet> code_set) {
-    SharedPtr<Process> process(new Process);
+SharedPtr<Process> KernelSystem::CreateProcess(SharedPtr<CodeSet> code_set) {
+    SharedPtr<Process> process(new Process(*this));
 
     process->codeset = std::move(code_set);
     process->flags.raw = 0;
@@ -304,7 +304,7 @@ ResultCode Process::LinearFree(VAddr target, u32 size) {
     return RESULT_SUCCESS;
 }
 
-Kernel::Process::Process() {}
+Kernel::Process::Process(KernelSystem& kernel) : kernel(kernel) {}
 Kernel::Process::~Process() {}
 
 void ClearProcessList() {

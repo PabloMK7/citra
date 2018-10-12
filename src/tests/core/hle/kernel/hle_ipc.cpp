@@ -25,7 +25,7 @@ TEST_CASE("HLERequestContext::PopulateFromIncomingCommandBuffer", "[core][kernel
     auto session = std::get<SharedPtr<ServerSession>>(ServerSession::CreateSessionPair());
     HLERequestContext context(std::move(session));
 
-    auto process = Process::Create(kernel.CreateCodeSet("", 0));
+    auto process = kernel.CreateProcess(kernel.CreateCodeSet("", 0));
     HandleTable handle_table;
 
     SECTION("works with empty cmdbuf") {
@@ -235,7 +235,7 @@ TEST_CASE("HLERequestContext::WriteToOutgoingCommandBuffer", "[core][kernel]") {
     auto session = std::get<SharedPtr<ServerSession>>(ServerSession::CreateSessionPair());
     HLERequestContext context(std::move(session));
 
-    auto process = Process::Create(kernel.CreateCodeSet("", 0));
+    auto process = kernel.CreateProcess(kernel.CreateCodeSet("", 0));
     HandleTable handle_table;
     auto* input = context.CommandBuffer();
     u32_le output[IPC::COMMAND_BUFFER_LENGTH];

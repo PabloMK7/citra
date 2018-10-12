@@ -267,7 +267,7 @@ ResultStatus AppLoader_THREEDSX::Load(Kernel::SharedPtr<Kernel::Process>& proces
         return ResultStatus::Error;
     codeset->name = filename;
 
-    process = Kernel::Process::Create(std::move(codeset));
+    process = Core::System::GetInstance().Kernel().CreateProcess(std::move(codeset));
     process->svc_access_mask.set();
     process->address_mappings = default_address_mappings;
 

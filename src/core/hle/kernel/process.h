@@ -117,8 +117,6 @@ private:
 
 class Process final : public Object {
 public:
-    static SharedPtr<Process> Create(SharedPtr<CodeSet> code_set);
-
     std::string GetTypeName() const override {
         return "Process";
     }
@@ -201,8 +199,11 @@ public:
     ResultCode LinearFree(VAddr target, u32 size);
 
 private:
-    Process();
+    explicit Process(Kernel::KernelSystem& kernel);
     ~Process() override;
+
+    friend class KernelSystem;
+    KernelSystem& kernel;
 };
 
 void ClearProcessList();

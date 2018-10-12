@@ -104,7 +104,7 @@ ResultStatus AppLoader_NCCH::LoadExec(Kernel::SharedPtr<Kernel::Process>& proces
         codeset->entrypoint = codeset->CodeSegment().addr;
         codeset->memory = std::make_shared<std::vector<u8>>(std::move(code));
 
-        process = Kernel::Process::Create(std::move(codeset));
+        process = Core::System::GetInstance().Kernel().CreateProcess(std::move(codeset));
 
         // Attach a resource limit to the process based on the resource limit category
         process->resource_limit =

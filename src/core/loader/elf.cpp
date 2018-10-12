@@ -396,7 +396,7 @@ ResultStatus AppLoader_ELF::Load(Kernel::SharedPtr<Kernel::Process>& process) {
     SharedPtr<CodeSet> codeset = elf_reader.LoadInto(Memory::PROCESS_IMAGE_VADDR);
     codeset->name = filename;
 
-    process = Kernel::Process::Create(std::move(codeset));
+    process = Core::System::GetInstance().Kernel().CreateProcess(std::move(codeset));
     process->svc_access_mask.set();
     process->address_mappings = default_address_mappings;
 
