@@ -124,6 +124,13 @@ public:
     }
 };
 
+/// Game list icon sizes (in px)
+static const std::unordered_map<UISettings::GameListIconSize, int> IconSizes{
+    {UISettings::GameListIconSize::NoIcon, 0},
+    {UISettings::GameListIconSize::SmallIcon, 24},
+    {UISettings::GameListIconSize::LargeIcon, 48},
+};
+
 /**
  * A specialization of GameListItem for path values.
  * This class ensures that for every full path value it holds, a correct string representation
@@ -145,16 +152,17 @@ public:
         setData(qulonglong(program_id), ProgramIdRole);
         setData(qulonglong(extdata_id), ExtdataIdRole);
 
-        if (!UISettings::values.game_list_icon_size) {
+        if (UISettings::values.game_list_icon_size == UISettings::GameListIconSize::NoIcon) {
             // Do not display icons
             setData(QPixmap(), Qt::DecorationRole);
         }
 
-        bool large = UISettings::values.game_list_icon_size == 2;
+        bool large =
+            UISettings::values.game_list_icon_size == UISettings::GameListIconSize::LargeIcon;
 
         if (!Loader::IsValidSMDH(smdh_data)) {
             // SMDH is not valid, set a default icon
-            if (UISettings::values.game_list_icon_size)
+            if (UISettings::values.game_list_icon_size != UISettings::GameListIconSize::NoIcon)
                 setData(GetDefaultIcon(large), Qt::DecorationRole);
             return;
         }
@@ -163,7 +171,7 @@ public:
         memcpy(&smdh, smdh_data.data(), sizeof(Loader::SMDH));
 
         // Get icon from SMDH
-        if (UISettings::values.game_list_icon_size)
+        if (UISettings::values.game_list_icon_size != UISettings::GameListIconSize::NoIcon)
             setData(GetQPixmapFromSMDH(smdh, large), Qt::DecorationRole);
 
         // Get title from SMDH
@@ -181,19 +189,19 @@ public:
             Common::SplitPath(data(FullPathRole).toString().toStdString(), &path, &filename,
                               &extension);
 
-            const std::array<QString, 4> display_texts{{
-                QString::fromStdString(filename + extension), // file name
-                data(FullPathRole).toString(),                // full path
-                data(TitleRole).toString(),                   // title name
-                QString::fromStdString(
-                    fmt::format("{:016X}", data(ProgramIdRole).toULongLong())), // title id
-            }};
+            const std::unordered_map<UISettings::GameListText, QString> display_texts{
+                {UISettings::GameListText::FileName, QString::fromStdString(filename + extension)},
+                {UISettings::GameListText::FullPath, data(FullPathRole).toString()},
+                {UISettings::GameListText::TitleName, data(TitleRole).toString()},
+                {UISettings::GameListText::TitleID,
+                 QString::fromStdString(fmt::format("{:016X}", data(ProgramIdRole).toULongLong()))},
+            };
 
             const QString& row1 = display_texts.at(UISettings::values.game_list_row_1);
 
             QString row2;
-            int row_2_id = UISettings::values.game_list_row_2;
-            if (row_2_id != -1) {
+            auto row_2_id = UISettings::values.game_list_row_2;
+            if (row_2_id != UISettings::GameListText::NoText) {
                 row2 = (row1.isEmpty() ? "" : "\n     ") + display_texts.at(row_2_id);
             }
             return row1 + row2;
@@ -324,9 +332,7 @@ public:
         UISettings::GameDir* game_dir = &directory;
         setData(QVariant::fromValue(game_dir), GameDirRole);
 
-        constexpr std::array<int, 3> icon_sizes{{0, 24, 48}};
-
-        int icon_size = icon_sizes[UISettings::values.game_list_icon_size];
+        int icon_size = IconSizes.at(UISettings::values.game_list_icon_size);
         switch (dir_type) {
         case GameListItemType::InstalledDir:
             setData(QIcon::fromTheme("sd_card").pixmap(icon_size), Qt::DecorationRole);
@@ -357,8 +363,7 @@ public:
     explicit GameListAddDir() {
         setData(type(), TypeRole);
 
-        constexpr std::array<int, 3> icon_sizes{{0, 24, 48}};
-        int icon_size = icon_sizes[UISettings::values.game_list_icon_size];
+        int icon_size = IconSizes.at(UISettings::values.game_list_icon_size);
         setData(QIcon::fromTheme("plus").pixmap(icon_size), Qt::DecorationRole);
         setData("Add New Game Directory", Qt::DisplayRole);
     }

@@ -31,6 +31,20 @@ struct GameDir {
     };
 };
 
+enum class GameListIconSize {
+    NoIcon,    ///< Do not display icons
+    SmallIcon, ///< Display a small (24x24) icon
+    LargeIcon, ///< Display a large (48x48) icon
+};
+
+enum class GameListText {
+    NoText = -1, ///< No text
+    FileName,    ///< Display the file name of the entry
+    FullPath,    ///< Display the full path of the entry
+    TitleName,   ///< Display the name of the title
+    TitleID,     ///< Display the title ID
+};
+
 struct Values {
     QByteArray geometry;
     QByteArray state;
@@ -59,9 +73,9 @@ struct Values {
     bool enable_discord_presence;
 
     // Game List
-    int game_list_icon_size;
-    int game_list_row_1;
-    int game_list_row_2;
+    GameListIconSize game_list_icon_size;
+    GameListText game_list_row_1;
+    GameListText game_list_row_2;
     bool game_list_hide_no_icon;
 
     QString roms_path;

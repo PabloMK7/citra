@@ -220,26 +220,23 @@ void Config::ReadValues() {
     qt_config->endGroup();
 
     qt_config->beginGroup("GameList");
-    UISettings::values.game_list_icon_size = ReadSetting("iconSize", 2).toInt();
-    if (UISettings::values.game_list_icon_size < 0 || UISettings::values.game_list_icon_size > 2) {
-        LOG_ERROR(Config, "Invalid value for game_list_icon_size: {}",
-                  UISettings::values.game_list_icon_size);
-        UISettings::values.game_list_icon_size = 2;
+    int icon_size = ReadSetting("iconSize", 2).toInt();
+    if (icon_size < 0 || icon_size > 2) {
+        icon_size = 2;
     }
+    UISettings::values.game_list_icon_size = UISettings::GameListIconSize{icon_size};
 
-    UISettings::values.game_list_row_1 = ReadSetting("row1", 2).toInt();
-    if (UISettings::values.game_list_row_1 < 0 || UISettings::values.game_list_row_1 > 3) {
-        LOG_ERROR(Config, "Invalid value for game_list_row_1: {}",
-                  UISettings::values.game_list_row_1);
-        UISettings::values.game_list_row_1 = 2;
+    int row_1 = ReadSetting("row1", 2).toInt();
+    if (row_1 < 0 || row_1 > 3) {
+        row_1 = 2;
     }
+    UISettings::values.game_list_row_1 = UISettings::GameListText{row_1};
 
-    UISettings::values.game_list_row_2 = ReadSetting("row2", 0).toInt();
-    if (UISettings::values.game_list_row_2 < -1 || UISettings::values.game_list_row_2 > 3) {
-        LOG_ERROR(Config, "Invalid value for game_list_row_2: {}",
-                  UISettings::values.game_list_row_2);
-        UISettings::values.game_list_row_2 = 0;
+    int row_2 = ReadSetting("row2", 0).toInt();
+    if (row_2 < -1 || row_2 > 3) {
+        row_2 = 0;
     }
+    UISettings::values.game_list_row_2 = UISettings::GameListText{row_2};
 
     UISettings::values.game_list_hide_no_icon = ReadSetting("hideNoIcon", false).toBool();
     qt_config->endGroup();
@@ -474,9 +471,9 @@ void Config::SaveValues() {
     qt_config->endGroup();
 
     qt_config->beginGroup("GameList");
-    WriteSetting("iconSize", UISettings::values.game_list_icon_size, 2);
-    WriteSetting("row1", UISettings::values.game_list_row_1, 2);
-    WriteSetting("row2", UISettings::values.game_list_row_2, 0);
+    WriteSetting("iconSize", static_cast<int>(UISettings::values.game_list_icon_size), 2);
+    WriteSetting("row1", static_cast<int>(UISettings::values.game_list_row_1), 2);
+    WriteSetting("row2", static_cast<int>(UISettings::values.game_list_row_2), 0);
     WriteSetting("hideNoIcon", UISettings::values.game_list_hide_no_icon, false);
     qt_config->endGroup();
 
