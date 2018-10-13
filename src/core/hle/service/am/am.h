@@ -573,6 +573,7 @@ private:
      */
     void ScanForAllTitles();
 
+    Core::System& system;
     bool cia_installing = false;
     std::array<std::vector<u64_le>, 3> am_title_list;
     Kernel::SharedPtr<Kernel::Mutex> system_updater_mutex;

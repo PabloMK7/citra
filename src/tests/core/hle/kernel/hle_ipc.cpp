@@ -22,7 +22,7 @@ static SharedPtr<Object> MakeObject(Kernel::KernelSystem& kernel) {
 TEST_CASE("HLERequestContext::PopulateFromIncomingCommandBuffer", "[core][kernel]") {
     CoreTiming::Init();
     Kernel::KernelSystem kernel(0);
-    auto session = std::get<SharedPtr<ServerSession>>(ServerSession::CreateSessionPair());
+    auto session = std::get<SharedPtr<ServerSession>>(kernel.CreateSessionPair());
     HLERequestContext context(std::move(session));
 
     auto process = kernel.CreateProcess(kernel.CreateCodeSet("", 0));
@@ -232,7 +232,7 @@ TEST_CASE("HLERequestContext::PopulateFromIncomingCommandBuffer", "[core][kernel
 TEST_CASE("HLERequestContext::WriteToOutgoingCommandBuffer", "[core][kernel]") {
     CoreTiming::Init();
     Kernel::KernelSystem kernel(0);
-    auto session = std::get<SharedPtr<ServerSession>>(ServerSession::CreateSessionPair());
+    auto session = std::get<SharedPtr<ServerSession>>(kernel.CreateSessionPair());
     HLERequestContext context(std::move(session));
 
     auto process = kernel.CreateProcess(kernel.CreateCodeSet("", 0));

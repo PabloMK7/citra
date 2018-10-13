@@ -1142,7 +1142,7 @@ static ResultCode CreateSessionToPort(Handle* out_client_session, Handle client_
 }
 
 static ResultCode CreateSession(Handle* server_session, Handle* client_session) {
-    auto sessions = ServerSession::CreateSessionPair();
+    auto sessions = Core::System::GetInstance().Kernel().CreateSessionPair();
 
     auto& server = std::get<SharedPtr<ServerSession>>(sessions);
     CASCADE_RESULT(*server_session, g_handle_table.Create(std::move(server)));

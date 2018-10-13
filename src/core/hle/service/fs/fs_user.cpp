@@ -286,7 +286,7 @@ void FS_USER::OpenDirectory(Kernel::HLERequestContext& ctx) {
     rb.Push(dir_res.Code());
     if (dir_res.Succeeded()) {
         std::shared_ptr<Directory> directory = *dir_res;
-        auto sessions = ServerSession::CreateSessionPair(directory->GetName());
+        auto sessions = system.Kernel().CreateSessionPair(directory->GetName());
         directory->ClientConnected(std::get<SharedPtr<ServerSession>>(sessions));
         rb.PushMoveObjects(std::get<SharedPtr<ClientSession>>(sessions));
     } else {
@@ -741,7 +741,8 @@ void FS_USER::GetSaveDataSecureValue(Kernel::HLERequestContext& ctx) {
     rb.Push<u64>(0);      // the secure value
 }
 
-FS_USER::FS_USER(ArchiveManager& archives) : ServiceFramework("fs:USER", 30), archives(archives) {
+FS_USER::FS_USER(Core::System& system)
+    : ServiceFramework("fs:USER", 30), system(system), archives(system.ArchiveManager()) {
     static const FunctionInfo functions[] = {
         {0x000100C6, nullptr, "Dummy1"},
         {0x040100C4, nullptr, "Control"},
@@ -860,6 +861,6 @@ FS_USER::FS_USER(ArchiveManager& archives) : ServiceFramework("fs:USER", 30), ar
 
 void InstallInterfaces(Core::System& system) {
     auto& service_manager = system.ServiceManager();
-    std::make_shared<FS_USER>(system.ArchiveManager())->InstallAsService(service_manager);
+    std::make_shared<FS_USER>(system)->InstallAsService(service_manager);
 }
 } // namespace Service::FS

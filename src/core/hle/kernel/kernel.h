@@ -21,6 +21,8 @@ class Semaphore;
 class Timer;
 class ClientPort;
 class ServerPort;
+class ClientSession;
+class ServerSession;
 
 enum class ResetType {
     OneShot,
@@ -105,6 +107,15 @@ public:
      */
     std::tuple<SharedPtr<ServerPort>, SharedPtr<ClientPort>> CreatePortPair(
         u32 max_sessions, std::string name = "UnknownPort");
+
+    /**
+     * Creates a pair of ServerSession and an associated ClientSession.
+     * @param name        Optional name of the ports.
+     * @param client_port Optional The ClientPort that spawned this session.
+     * @return The created session tuple
+     */
+    std::tuple<SharedPtr<ServerSession>, SharedPtr<ClientSession>> CreateSessionPair(
+        const std::string& name = "Unknown", SharedPtr<ClientPort> client_port = nullptr);
 };
 
 } // namespace Kernel

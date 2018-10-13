@@ -193,7 +193,7 @@ System::ResultStatus System::Init(EmuWindow& emu_window, u32 system_mode) {
 
     service_manager = std::make_shared<Service::SM::ServiceManager>(*this);
     shared_page_handler = std::make_shared<SharedPage::Handler>();
-    archive_manager = std::make_unique<Service::FS::ArchiveManager>();
+    archive_manager = std::make_unique<Service::FS::ArchiveManager>(*this);
 
     HW::Init();
     kernel = std::make_unique<Kernel::KernelSystem>(system_mode);
