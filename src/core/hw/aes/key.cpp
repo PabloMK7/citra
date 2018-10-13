@@ -11,6 +11,8 @@
 #include "common/file_util.h"
 #include "common/logging/log.h"
 #include "common/string_util.h"
+#include "core/file_sys/archive_ncch.h"
+#include "core/hle/service/fs/archive.h"
 #include "core/hw/aes/arithmetic128.h"
 #include "core/hw/aes/key.h"
 
@@ -85,6 +87,14 @@ AESKey HexToKey(const std::string& hex) {
     return key;
 }
 
+std::string KeyToString(AESKey& key) {
+    std::string s;
+    for (auto pos : key) {
+        s += fmt::format("{:02X}", pos);
+    }
+    return s;
+}
+
 void LoadBootromKeys() {
     constexpr std::array<KeyDesc, 80> keys = {
         {{'X', 0x2C, false}, {'X', 0x2D, true},  {'X', 0x2E, true},  {'X', 0x2F, true},
@@ -137,11 +147,8 @@ void LoadBootromKeys() {
             }
         }
 
-        std::string s;
-        for (auto pos : new_key) {
-            s += fmt::format("{:02X}", pos);
-        }
-        LOG_DEBUG(HW_AES, "Loaded Slot{:#02x} Key{}: {}", key.slot_id, key.key_type, s);
+        LOG_DEBUG(HW_AES, "Loaded Slot{:#02x} Key{}: {}", key.slot_id, key.key_type,
+                  KeyToString(new_key));
 
         switch (key.key_type) {
         case 'X':
@@ -157,6 +164,52 @@ void LoadBootromKeys() {
             LOG_ERROR(HW_AES, "Invalid key type {}", key.key_type);
             break;
         }
+    }
+}
+
+void LoadNativeFirmKeysOld3DS() {
+    // Use the save mode native firm instead of the normal mode since there are only 2 version of it
+    // and thus we can use fixed offsets
+    constexpr u64_le save_mode_native_firm_id_low = 0x0004013800000003;
+
+    FileSys::NCCHArchive archive(save_mode_native_firm_id_low, Service::FS::MediaType::NAND);
+    std::array<char, 8> exefs_filepath = {'.', 'f', 'i', 'r', 'm', 0, 0, 0};
+    FileSys::Path file_path = FileSys::MakeNCCHFilePath(
+        FileSys::NCCHFileOpenType::NCCHData, 0, FileSys::NCCHFilePathType::ExeFS, exefs_filepath);
+    FileSys::Mode open_mode = {};
+    open_mode.read_flag.Assign(1);
+    auto file_result = archive.OpenFile(file_path, open_mode);
+    if (file_result.Failed())
+        return;
+
+    auto firm = std::move(file_result).Unwrap();
+    const std::size_t size = firm->GetSize();
+    if (size != 843776) {
+        LOG_ERROR(HW_AES, "save mode native firm has wrong size {}", size);
+        return;
+    }
+    std::vector<u8> firm_buffer(size);
+    firm->Read(0, firm_buffer.size(), firm_buffer.data());
+    firm->Close();
+
+    AESKey key;
+    constexpr std::size_t SLOT_0x31_KEY_Y_OFFSET = 817672;
+    std::memcpy(key.data(), firm_buffer.data() + SLOT_0x31_KEY_Y_OFFSET, sizeof(key));
+    key_slots.at(0x31).SetKeyY(key);
+    LOG_DEBUG(HW_AES, "Loaded Slot0x31 KeyY: {}", KeyToString(key));
+
+    auto LoadCommonKey = [&firm_buffer](std::size_t key_slot) -> AESKey {
+        constexpr std::size_t START_OFFSET = 836533;
+        constexpr std::size_t OFFSET = 0x14; // 0x10 bytes for key + 4 bytes between keys
+        AESKey key;
+        std::memcpy(key.data(), firm_buffer.data() + START_OFFSET + OFFSET * key_slot, sizeof(key));
+        return key;
+    };
+
+    for (std::size_t key_slot{0}; key_slot < 6; ++key_slot) {
+        AESKey key = LoadCommonKey(key_slot);
+        common_key_y_slots[key_slot] = key;
+        LOG_DEBUG(HW_AES, "Loaded common key{}: {}", key_slot, KeyToString(key));
     }
 }
 
@@ -234,6 +287,8 @@ void InitKeys() {
     if (initialized)
         return;
     LoadBootromKeys();
+    LoadNativeFirmKeysOld3DS();
+    // TODO(B3N30): Load new_3ds save_native_firm
     LoadPresetKeys();
     initialized = true;
 }
