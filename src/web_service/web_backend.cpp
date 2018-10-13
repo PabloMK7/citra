@@ -15,10 +15,10 @@ namespace WebService {
 
 constexpr std::array<const char, 1> API_VERSION{'1'};
 
-constexpr u32 HTTP_PORT = 80;
-constexpr u32 HTTPS_PORT = 443;
+constexpr int HTTP_PORT = 80;
+constexpr int HTTPS_PORT = 443;
 
-constexpr u32 TIMEOUT_SECONDS = 30;
+constexpr std::size_t TIMEOUT_SECONDS = 30;
 
 Client::JWTCache Client::jwt_cache{};
 

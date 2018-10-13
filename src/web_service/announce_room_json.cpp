@@ -3,10 +3,10 @@
 // Refer to the license.txt file included.
 
 #include <future>
+#include <json.hpp>
 #include "common/detached_tasks.h"
 #include "common/logging/log.h"
 #include "web_service/announce_room_json.h"
-#include "web_service/json.h"
 #include "web_service/web_backend.h"
 
 namespace AnnounceMultiplayerRoom {
