@@ -12,7 +12,7 @@
 
 namespace Kernel {
 
-Event::Event(KernelSystem& kernel) {}
+Event::Event(KernelSystem& kernel) : WaitObject(kernel) {}
 Event::~Event() {}
 
 SharedPtr<Event> KernelSystem::CreateEvent(ResetType reset_type, std::string name) {

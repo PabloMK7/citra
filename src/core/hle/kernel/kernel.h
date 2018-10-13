@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <atomic>
 #include <memory>
 #include <string>
 #include <boost/smart_ptr/intrusive_ptr.hpp>
@@ -177,8 +178,11 @@ public:
                                                         MemoryPermission other_permissions,
                                                         std::string name = "Unknown Applet");
 
+    u32 GenerateObjectID();
+
 private:
     std::unique_ptr<ResourceLimitList> resource_limits;
+    std::atomic<u32> next_object_id{0};
 };
 
 } // namespace Kernel

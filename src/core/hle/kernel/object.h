@@ -11,6 +11,8 @@
 
 namespace Kernel {
 
+class KernelSystem;
+
 using Handle = u32;
 
 enum class HandleType : u32 {
@@ -37,6 +39,7 @@ enum {
 
 class Object : NonCopyable {
 public:
+    explicit Object(KernelSystem& kernel);
     virtual ~Object();
 
     /// Returns a unique identifier for the object. For debugging purposes only.
@@ -58,15 +61,12 @@ public:
      */
     bool IsWaitable() const;
 
-public:
-    static std::atomic<u32> next_object_id;
-
 private:
     friend void intrusive_ptr_add_ref(Object*);
     friend void intrusive_ptr_release(Object*);
 
     std::atomic<u32> ref_count{0};
-    std::atomic<u32> object_id{next_object_id++};
+    std::atomic<u32> object_id;
 };
 
 // Special functions used by boost::instrusive_ptr to do automatic ref-counting

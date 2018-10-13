@@ -65,7 +65,7 @@ SharedPtr<Thread> AddressArbiter::ResumeHighestPriorityThread(VAddr address) {
     return thread;
 }
 
-AddressArbiter::AddressArbiter(KernelSystem& kernel) {}
+AddressArbiter::AddressArbiter(KernelSystem& kernel) : Object(kernel) {}
 AddressArbiter::~AddressArbiter() {}
 
 SharedPtr<AddressArbiter> KernelSystem::CreateAddressArbiter(std::string name) {

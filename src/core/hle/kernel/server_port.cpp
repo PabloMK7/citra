@@ -13,7 +13,7 @@
 
 namespace Kernel {
 
-ServerPort::ServerPort(KernelSystem& kernel) {}
+ServerPort::ServerPort(KernelSystem& kernel) : WaitObject(kernel) {}
 ServerPort::~ServerPort() {}
 
 ResultVal<SharedPtr<ServerSession>> ServerPort::Accept() {

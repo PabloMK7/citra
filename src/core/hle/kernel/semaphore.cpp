@@ -10,7 +10,7 @@
 
 namespace Kernel {
 
-Semaphore::Semaphore(KernelSystem& kernel) {}
+Semaphore::Semaphore(KernelSystem& kernel) : WaitObject(kernel) {}
 Semaphore::~Semaphore() {}
 
 ResultVal<SharedPtr<Semaphore>> KernelSystem::CreateSemaphore(s32 initial_count, s32 max_count,

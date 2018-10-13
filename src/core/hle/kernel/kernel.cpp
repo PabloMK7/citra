@@ -14,8 +14,6 @@
 
 namespace Kernel {
 
-std::atomic<u32> Object::next_object_id{0};
-
 /// Initialize the kernel
 KernelSystem::KernelSystem(u32 system_mode) {
     ConfigMem::Init();
@@ -25,8 +23,6 @@ KernelSystem::KernelSystem(u32 system_mode) {
     resource_limits = std::make_unique<ResourceLimitList>(*this);
     Kernel::ThreadingInit();
     Kernel::TimersInit();
-
-    Object::next_object_id = 0;
     // TODO(Subv): Start the process ids from 10 for now, as lower PIDs are
     // reserved for low-level services
     Process::next_process_id = 10;
@@ -49,6 +45,10 @@ ResourceLimitList& KernelSystem::ResourceLimit() {
 
 const ResourceLimitList& KernelSystem::ResourceLimit() const {
     return *resource_limits;
+}
+
+u32 KernelSystem::GenerateObjectID() {
+    return next_object_id++;
 }
 
 } // namespace Kernel

@@ -11,7 +11,7 @@
 
 namespace Kernel {
 
-SharedMemory::SharedMemory(KernelSystem& system) {}
+SharedMemory::SharedMemory(KernelSystem& kernel) : Object(kernel) {}
 SharedMemory::~SharedMemory() {}
 
 SharedPtr<SharedMemory> KernelSystem::CreateSharedMemory(SharedPtr<Process> owner_process, u32 size,

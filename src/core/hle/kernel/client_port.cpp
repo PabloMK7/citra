@@ -13,7 +13,7 @@
 
 namespace Kernel {
 
-ClientPort::ClientPort(KernelSystem& kernel) : kernel(kernel) {}
+ClientPort::ClientPort(KernelSystem& kernel) : kernel(kernel), Object(kernel) {}
 ClientPort::~ClientPort() = default;
 
 ResultVal<SharedPtr<ClientSession>> ClientPort::Connect() {

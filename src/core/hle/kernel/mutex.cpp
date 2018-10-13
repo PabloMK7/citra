@@ -24,7 +24,7 @@ void ReleaseThreadMutexes(Thread* thread) {
     thread->held_mutexes.clear();
 }
 
-Mutex::Mutex(KernelSystem& kernel) {}
+Mutex::Mutex(KernelSystem& kernel) : WaitObject(kernel) {}
 Mutex::~Mutex() {}
 
 SharedPtr<Mutex> KernelSystem::CreateMutex(bool initial_locked, std::string name) {

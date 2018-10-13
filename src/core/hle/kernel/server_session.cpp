@@ -13,7 +13,7 @@
 
 namespace Kernel {
 
-ServerSession::ServerSession(KernelSystem& kernel) {}
+ServerSession::ServerSession(KernelSystem& kernel) : WaitObject(kernel) {}
 ServerSession::~ServerSession() {
     // This destructor will be called automatically when the last ServerSession handle is closed by
     // the emulated application.

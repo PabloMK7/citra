@@ -29,7 +29,7 @@ SharedPtr<CodeSet> KernelSystem::CreateCodeSet(std::string name, u64 program_id)
     return codeset;
 }
 
-CodeSet::CodeSet(KernelSystem& system) {}
+CodeSet::CodeSet(KernelSystem& kernel) : Object(kernel) {}
 CodeSet::~CodeSet() {}
 
 u32 Process::next_process_id;
@@ -304,7 +304,7 @@ ResultCode Process::LinearFree(VAddr target, u32 size) {
     return RESULT_SUCCESS;
 }
 
-Kernel::Process::Process(KernelSystem& kernel) : kernel(kernel) {}
+Kernel::Process::Process(KernelSystem& kernel) : Object(kernel), kernel(kernel) {}
 Kernel::Process::~Process() {}
 
 void ClearProcessList() {

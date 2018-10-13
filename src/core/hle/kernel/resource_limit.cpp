@@ -9,7 +9,7 @@
 
 namespace Kernel {
 
-ResourceLimit::ResourceLimit(KernelSystem& kernel) {}
+ResourceLimit::ResourceLimit(KernelSystem& kernel) : Object(kernel) {}
 ResourceLimit::~ResourceLimit() {}
 
 SharedPtr<ResourceLimit> ResourceLimit::Create(KernelSystem& kernel, std::string name) {
