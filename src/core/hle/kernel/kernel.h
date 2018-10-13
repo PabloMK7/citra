@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <memory>
 #include <string>
 #include <boost/smart_ptr/intrusive_ptr.hpp>
 #include "common/common_types.h"
@@ -23,6 +24,7 @@ class ClientPort;
 class ServerPort;
 class ClientSession;
 class ServerSession;
+class ResourceLimitList;
 
 enum class ResetType {
     OneShot,
@@ -116,6 +118,12 @@ public:
      */
     std::tuple<SharedPtr<ServerSession>, SharedPtr<ClientSession>> CreateSessionPair(
         const std::string& name = "Unknown", SharedPtr<ClientPort> client_port = nullptr);
+
+    ResourceLimitList& ResourceLimit();
+    const ResourceLimitList& ResourceLimit() const;
+
+private:
+    std::unique_ptr<ResourceLimitList> resource_limits;
 };
 
 } // namespace Kernel

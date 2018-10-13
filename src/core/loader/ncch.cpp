@@ -108,8 +108,9 @@ ResultStatus AppLoader_NCCH::LoadExec(Kernel::SharedPtr<Kernel::Process>& proces
 
         // Attach a resource limit to the process based on the resource limit category
         process->resource_limit =
-            Kernel::ResourceLimit::GetForCategory(static_cast<Kernel::ResourceLimitCategory>(
-                overlay_ncch->exheader_header.arm11_system_local_caps.resource_limit_category));
+            Core::System::GetInstance().Kernel().ResourceLimit().GetForCategory(
+                static_cast<Kernel::ResourceLimitCategory>(
+                    overlay_ncch->exheader_header.arm11_system_local_caps.resource_limit_category));
 
         // Set the default CPU core for this process
         process->ideal_processor =

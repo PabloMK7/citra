@@ -401,8 +401,8 @@ ResultStatus AppLoader_ELF::Load(Kernel::SharedPtr<Kernel::Process>& process) {
     process->address_mappings = default_address_mappings;
 
     // Attach the default resource limit (APPLICATION) to the process
-    process->resource_limit =
-        Kernel::ResourceLimit::GetForCategory(Kernel::ResourceLimitCategory::APPLICATION);
+    process->resource_limit = Core::System::GetInstance().Kernel().ResourceLimit().GetForCategory(
+        Kernel::ResourceLimitCategory::APPLICATION);
 
     process->Run(48, Kernel::DEFAULT_STACK_SIZE);
 

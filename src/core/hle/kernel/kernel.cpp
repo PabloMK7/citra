@@ -22,7 +22,7 @@ KernelSystem::KernelSystem(u32 system_mode) {
 
     Kernel::MemoryInit(system_mode);
 
-    Kernel::ResourceLimitsInit();
+    resource_limits = std::make_unique<ResourceLimitList>(*this);
     Kernel::ThreadingInit();
     Kernel::TimersInit();
 
@@ -40,8 +40,15 @@ KernelSystem::~KernelSystem() {
     g_current_process = nullptr;
 
     Kernel::TimersShutdown();
-    Kernel::ResourceLimitsShutdown();
     Kernel::MemoryShutdown();
+}
+
+ResourceLimitList& KernelSystem::ResourceLimit() {
+    return *resource_limits;
+}
+
+const ResourceLimitList& KernelSystem::ResourceLimit() const {
+    return *resource_limits;
 }
 
 } // namespace Kernel
