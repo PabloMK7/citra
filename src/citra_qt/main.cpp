@@ -989,20 +989,20 @@ void GMainWindow::OnGameListShowList(bool show) {
 };
 
 void GMainWindow::OnMenuLoadFile() {
-    QString extensions;
-    for (const auto& piece : game_list->supported_file_extensions)
-        extensions += "*." + piece + " ";
+    const QString extensions =
+        QString("*.").append(GameList::supported_file_extensions.join(" *."));
+    const QString file_filter = tr("3DS Executable (%1);;All Files (*.*)",
+                                   "%1 is an identifier for the 3DS executable file extensions.")
+                                    .arg(extensions);
+    const QString filename = QFileDialog::getOpenFileName(
+        this, tr("Load File"), UISettings::values.roms_path, file_filter);
 
-    QString file_filter = tr("3DS Executable") + " (" + extensions + ")";
-    file_filter += ";;" + tr("All Files (*.*)");
-
-    QString filename = QFileDialog::getOpenFileName(this, tr("Load File"),
-                                                    UISettings::values.roms_path, file_filter);
-    if (!filename.isEmpty()) {
-        UISettings::values.roms_path = QFileInfo(filename).path();
-
-        BootGame(filename);
+    if (filename.isEmpty()) {
+        return;
     }
+
+    UISettings::values.roms_path = QFileInfo(filename).path();
+    BootGame(filename);
 }
 
 void GMainWindow::OnMenuInstallCIA() {
