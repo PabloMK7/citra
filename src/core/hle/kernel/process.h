@@ -26,12 +26,6 @@ struct AddressMapping {
     bool unk_flag;
 };
 
-enum class MemoryRegion : u16 {
-    APPLICATION = 1,
-    SYSTEM = 2,
-    BASE = 3,
-};
-
 union ProcessFlags {
     u16 raw;
 

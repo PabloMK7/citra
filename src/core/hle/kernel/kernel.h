@@ -25,11 +25,31 @@ class ServerPort;
 class ClientSession;
 class ServerSession;
 class ResourceLimitList;
+class SharedMemory;
 
 enum class ResetType {
     OneShot,
     Sticky,
     Pulse,
+};
+
+/// Permissions for mapped shared memory blocks
+enum class MemoryPermission : u32 {
+    None = 0,
+    Read = (1u << 0),
+    Write = (1u << 1),
+    ReadWrite = (Read | Write),
+    Execute = (1u << 2),
+    ReadExecute = (Read | Execute),
+    WriteExecute = (Write | Execute),
+    ReadWriteExecute = (Read | Write | Execute),
+    DontCare = (1u << 28)
+};
+
+enum class MemoryRegion : u16 {
+    APPLICATION = 1,
+    SYSTEM = 2,
+    BASE = 3,
 };
 
 template <typename T>
@@ -121,6 +141,41 @@ public:
 
     ResourceLimitList& ResourceLimit();
     const ResourceLimitList& ResourceLimit() const;
+
+    /**
+     * Creates a shared memory object.
+     * @param owner_process Process that created this shared memory object.
+     * @param size Size of the memory block. Must be page-aligned.
+     * @param permissions Permission restrictions applied to the process which created the block.
+     * @param other_permissions Permission restrictions applied to other processes mapping the
+     * block.
+     * @param address The address from which to map the Shared Memory.
+     * @param region If the address is 0, the shared memory will be allocated in this region of the
+     * linear heap.
+     * @param name Optional object name, used for debugging purposes.
+     */
+    SharedPtr<SharedMemory> CreateSharedMemory(SharedPtr<Process> owner_process, u32 size,
+                                               MemoryPermission permissions,
+                                               MemoryPermission other_permissions,
+                                               VAddr address = 0,
+                                               MemoryRegion region = MemoryRegion::BASE,
+                                               std::string name = "Unknown");
+
+    /**
+     * Creates a shared memory object from a block of memory managed by an HLE applet.
+     * @param heap_block Heap block of the HLE applet.
+     * @param offset The offset into the heap block that the SharedMemory will map.
+     * @param size Size of the memory block. Must be page-aligned.
+     * @param permissions Permission restrictions applied to the process which created the block.
+     * @param other_permissions Permission restrictions applied to other processes mapping the
+     * block.
+     * @param name Optional object name, used for debugging purposes.
+     */
+    SharedPtr<SharedMemory> CreateSharedMemoryForApplet(std::shared_ptr<std::vector<u8>> heap_block,
+                                                        u32 offset, u32 size,
+                                                        MemoryPermission permissions,
+                                                        MemoryPermission other_permissions,
+                                                        std::string name = "Unknown Applet");
 
 private:
     std::unique_ptr<ResourceLimitList> resource_limits;
