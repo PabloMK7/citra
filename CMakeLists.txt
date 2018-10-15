@@ -22,7 +22,7 @@ option(ENABLE_CUBEB "Enables the cubeb audio backend" ON)
 
 option(USE_DISCORD_PRESENCE "Enables Discord Rich Presence" OFF)
 
-option(ENABLE_SCRIPTING "Enables scripting support" ON)
+option(ENABLE_SCRIPTING "Enables scripting support" OFF)
 
 if(NOT EXISTS ${CMAKE_SOURCE_DIR}/.git/hooks/pre-commit)
     message(STATUS "Copying pre-commit hook")
