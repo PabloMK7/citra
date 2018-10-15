@@ -22,6 +22,9 @@ Loader::ResultStatus Ticket::Load(const std::vector<u8> file_data, std::size_t o
 
     // Signature lengths are variable, and the body follows the signature
     u32 signature_size = GetSignatureSize(signature_type);
+    if (signature_size == 0) {
+        return Loader::ResultStatus::Error;
+    }
 
     // The ticket body start position is rounded to the nearest 0x40 after the signature
     std::size_t body_start = Common::AlignUp(signature_size + sizeof(u32), 0x40);

@@ -33,7 +33,7 @@ inline u32 GetSignatureSize(u32 signature_type) {
         return 0x3C;
     }
 
-    UNREACHABLE();
+    LOG_ERROR(Common_Filesystem, "Tried to read ticket with bad signature {}", signature_type);
     return 0;
 }
 
