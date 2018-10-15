@@ -114,6 +114,9 @@
     <addaction name="action_Record_Movie"/>
     <addaction name="action_Play_Movie"/>
     <addaction name="action_Stop_Recording_Playback"/>
+    <addaction name="separator"/>
+    <addaction name="action_Enable_Frame_Advancing"/>
+    <addaction name="action_Advance_Frame"/>
    </widget>
    <widget class="QMenu" name="menu_Multiplayer">
     <property name="enabled">
@@ -274,6 +277,25 @@
    </property>
    <property name="text">
     <string>Stop Recording / Playback</string>
+   </property>
+  </action>
+  <action name="action_Enable_Frame_Advancing">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Enable Frame Advancing</string>
+   </property>
+  </action>
+  <action name="action_Advance_Frame">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Advance Frame</string>
    </property>
   </action>
   <action name="action_View_Lobby">

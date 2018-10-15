@@ -74,6 +74,13 @@ double PerfStats::GetLastFrameTimeScale() {
 }
 
 void FrameLimiter::DoFrameLimiting(microseconds current_system_time_us) {
+    if (frame_advancing_enabled) {
+        // Frame advancing is enabled: wait on event instead of doing framelimiting
+        frame_advance_event.Wait();
+        frame_advance_event.Reset();
+        return;
+    }
+
     if (!Settings::values.use_frame_limit) {
         return;
     }
@@ -102,6 +109,22 @@ void FrameLimiter::DoFrameLimiting(microseconds current_system_time_us) {
 
     previous_system_time_us = current_system_time_us;
     previous_walltime = now;
+}
+
+void FrameLimiter::SetFrameAdvancing(bool value) {
+    const bool was_enabled = frame_advancing_enabled.exchange(value);
+    if (was_enabled && !value) {
+        // Set the event to let emulation continue
+        frame_advance_event.Set();
+    }
+}
+
+void FrameLimiter::AdvanceFrame() {
+    if (!frame_advancing_enabled) {
+        // Start frame advancing
+        frame_advancing_enabled = true;
+    }
+    frame_advance_event.Set();
 }
 
 } // namespace Core
