@@ -1714,7 +1714,7 @@ void GMainWindow::RetranslateStatusBar() {
     multiplayer_state->retranslateUi();
 }
 
-void GMainWindow::SetDiscordEnabled(bool state) {
+void GMainWindow::SetDiscordEnabled([[maybe_unused]] bool state) {
 #ifdef USE_DISCORD_PRESENCE
     if (state) {
         discord_rpc = std::make_unique<DiscordRPC::DiscordImpl>();
