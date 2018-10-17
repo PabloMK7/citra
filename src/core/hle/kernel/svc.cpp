@@ -83,7 +83,7 @@ static ResultCode ControlMemory(u32* out_addr, u32 operation, u32 addr0, u32 add
     }
     VMAPermission vma_permissions = (VMAPermission)permissions;
 
-    auto& process = *g_current_process;
+    auto& process = *Core::System::GetInstance().Kernel().GetCurrentProcess();
 
     switch (operation & MEMOP_OPERATION_MASK) {
     case MEMOP_FREE: {
@@ -145,16 +145,17 @@ static ResultCode ControlMemory(u32* out_addr, u32 operation, u32 addr0, u32 add
 }
 
 static void ExitProcess() {
-    LOG_INFO(Kernel_SVC, "Process {} exiting", g_current_process->process_id);
+    SharedPtr<Process> current_process = Core::System::GetInstance().Kernel().GetCurrentProcess();
+    LOG_INFO(Kernel_SVC, "Process {} exiting", current_process->process_id);
 
-    ASSERT_MSG(g_current_process->status == ProcessStatus::Running, "Process has already exited");
+    ASSERT_MSG(current_process->status == ProcessStatus::Running, "Process has already exited");
 
-    g_current_process->status = ProcessStatus::Exited;
+    current_process->status = ProcessStatus::Exited;
 
     // Stop all the process threads that are currently waiting for objects.
     auto& thread_list = GetThreadList();
     for (auto& thread : thread_list) {
-        if (thread->owner_process != g_current_process)
+        if (thread->owner_process != current_process)
             continue;
 
         if (thread == GetCurrentThread())
@@ -195,7 +196,8 @@ static ResultCode MapMemoryBlock(Handle handle, u32 addr, u32 permissions, u32 o
     case MemoryPermission::WriteExecute:
     case MemoryPermission::ReadWriteExecute:
     case MemoryPermission::DontCare:
-        return shared_memory->Map(g_current_process.get(), addr, permissions_type,
+        return shared_memory->Map(Core::System::GetInstance().Kernel().GetCurrentProcess().get(),
+                                  addr, permissions_type,
                                   static_cast<MemoryPermission>(other_permissions));
     default:
         LOG_ERROR(Kernel_SVC, "unknown permissions=0x{:08X}", permissions);
@@ -213,7 +215,8 @@ static ResultCode UnmapMemoryBlock(Handle handle, u32 addr) {
     if (shared_memory == nullptr)
         return ERR_INVALID_HANDLE;
 
-    return shared_memory->Unmap(g_current_process.get(), addr);
+    return shared_memory->Unmap(Core::System::GetInstance().Kernel().GetCurrentProcess().get(),
+                                addr);
 }
 
 /// Connect to an OS service given the port name, returns the handle to the port to out
@@ -733,14 +736,16 @@ static ResultCode CreateThread(Handle* out_handle, u32 priority, u32 entry_point
         return ERR_OUT_OF_RANGE;
     }
 
-    SharedPtr<ResourceLimit>& resource_limit = g_current_process->resource_limit;
+    SharedPtr<Process> current_process = Core::System::GetInstance().Kernel().GetCurrentProcess();
+
+    SharedPtr<ResourceLimit>& resource_limit = current_process->resource_limit;
     if (resource_limit->GetMaxResourceValue(ResourceTypes::PRIORITY) > priority) {
         return ERR_NOT_AUTHORIZED;
     }
 
     if (processor_id == ThreadProcessorIdDefault) {
         // Set the target CPU to the one specified in the process' exheader.
-        processor_id = g_current_process->ideal_processor;
+        processor_id = current_process->ideal_processor;
         ASSERT(processor_id != ThreadProcessorIdDefault);
     }
 
@@ -761,9 +766,9 @@ static ResultCode CreateThread(Handle* out_handle, u32 priority, u32 entry_point
         break;
     }
 
-    CASCADE_RESULT(SharedPtr<Thread> thread, Core::System::GetInstance().Kernel().CreateThread(
-                                                 name, entry_point, priority, arg, processor_id,
-                                                 stack_top, g_current_process));
+    CASCADE_RESULT(SharedPtr<Thread> thread,
+                   Core::System::GetInstance().Kernel().CreateThread(
+                       name, entry_point, priority, arg, processor_id, stack_top, current_process));
 
     thread->context->SetFpscr(FPSCR_DEFAULT_NAN | FPSCR_FLUSH_TO_ZERO |
                               FPSCR_ROUND_TOZERO); // 0x03C00000
@@ -810,7 +815,8 @@ static ResultCode SetThreadPriority(Handle handle, u32 priority) {
 
     // Note: The kernel uses the current process's resource limit instead of
     // the one from the thread owner's resource limit.
-    SharedPtr<ResourceLimit>& resource_limit = g_current_process->resource_limit;
+    SharedPtr<ResourceLimit>& resource_limit =
+        Core::System::GetInstance().Kernel().GetCurrentProcess()->resource_limit;
     if (resource_limit->GetMaxResourceValue(ResourceTypes::PRIORITY) > priority) {
         return ERR_NOT_AUTHORIZED;
     }
@@ -1097,16 +1103,18 @@ static ResultCode CreateMemoryBlock(Handle* out_handle, u32 addr, u32 size, u32 
         return ERR_INVALID_ADDRESS;
     }
 
+    SharedPtr<Process> current_process = Core::System::GetInstance().Kernel().GetCurrentProcess();
+
     // When trying to create a memory block with address = 0,
     // if the process has the Shared Device Memory flag in the exheader,
     // then we have to allocate from the same region as the caller process instead of the BASE
     // region.
     MemoryRegion region = MemoryRegion::BASE;
-    if (addr == 0 && g_current_process->flags.shared_device_mem)
-        region = g_current_process->flags.memory_region;
+    if (addr == 0 && current_process->flags.shared_device_mem)
+        region = current_process->flags.memory_region;
 
     shared_memory = Core::System::GetInstance().Kernel().CreateSharedMemory(
-        g_current_process, size, static_cast<MemoryPermission>(my_permission),
+        current_process, size, static_cast<MemoryPermission>(my_permission),
         static_cast<MemoryPermission>(other_permission), addr, region);
     CASCADE_RESULT(*out_handle, g_handle_table.Create(std::move(shared_memory)));
 
@@ -1407,8 +1415,9 @@ void CallSVC(u32 immediate) {
     // Lock the global kernel mutex when we enter the kernel HLE.
     std::lock_guard<std::recursive_mutex> lock(HLE::g_hle_lock);
 
-    ASSERT_MSG(g_current_process->status == ProcessStatus::Running,
-               "Running threads from exiting processes is unimplemented");
+    DEBUG_ASSERT_MSG(Core::System::GetInstance().Kernel().GetCurrentProcess()->status ==
+                         ProcessStatus::Running,
+                     "Running threads from exiting processes is unimplemented");
 
     const FunctionDef* info = GetSVCInfo(immediate);
     if (info) {

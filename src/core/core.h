@@ -251,8 +251,11 @@ private:
 
     std::unique_ptr<Service::FS::ArchiveManager> archive_manager;
 
+public: // HACK: this is temporary exposed for tests,
+        // due to WIP kernel refactor causing desync state in memory
     std::unique_ptr<Kernel::KernelSystem> kernel;
 
+private:
     static System s_instance;
 
     ResultStatus status = ResultStatus::Success;

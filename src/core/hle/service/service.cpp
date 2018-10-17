@@ -188,11 +188,13 @@ void ServiceFrameworkBase::HandleSyncRequest(SharedPtr<ServerSession> server_ses
         return ReportUnimplementedFunction(cmd_buf, info);
     }
 
+    Kernel::SharedPtr<Kernel::Process> current_process =
+        Core::System::GetInstance().Kernel().GetCurrentProcess();
+
     // TODO(yuriks): The kernel should be the one handling this as part of translation after
     // everything else is migrated
     Kernel::HLERequestContext context(std::move(server_session));
-    context.PopulateFromIncomingCommandBuffer(cmd_buf, *Kernel::g_current_process,
-                                              Kernel::g_handle_table);
+    context.PopulateFromIncomingCommandBuffer(cmd_buf, *current_process, Kernel::g_handle_table);
 
     LOG_TRACE(Service, "{}", MakeFunctionString(info->name, GetServiceName().c_str(), cmd_buf));
     handler_invoker(this, info->handler_callback, context);
@@ -204,8 +206,7 @@ void ServiceFrameworkBase::HandleSyncRequest(SharedPtr<ServerSession> server_ses
     // the thread to sleep then the writing of the command buffer will be deferred to the wakeup
     // callback.
     if (thread->status == Kernel::ThreadStatus::Running) {
-        context.WriteToOutgoingCommandBuffer(cmd_buf, *Kernel::g_current_process,
-                                             Kernel::g_handle_table);
+        context.WriteToOutgoingCommandBuffer(cmd_buf, *current_process, Kernel::g_handle_table);
     }
 }
 

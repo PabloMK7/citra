@@ -197,6 +197,4 @@ private:
     friend class KernelSystem;
     KernelSystem& kernel;
 };
-
-extern SharedPtr<Process> g_current_process;
 } // namespace Kernel

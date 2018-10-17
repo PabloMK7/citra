@@ -96,7 +96,7 @@ void Thread::Stop() {
     u32 tls_page = (tls_address - Memory::TLS_AREA_VADDR) / Memory::PAGE_SIZE;
     u32 tls_slot =
         ((tls_address - Memory::TLS_AREA_VADDR) % Memory::PAGE_SIZE) / Memory::TLS_ENTRY_SIZE;
-    Kernel::g_current_process->tls_slots[tls_page].reset(tls_slot);
+    owner_process->tls_slots[tls_page].reset(tls_slot);
 }
 
 /**
@@ -127,7 +127,7 @@ static void SwitchContext(Thread* new_thread) {
         // Cancel any outstanding wakeup events for this thread
         CoreTiming::UnscheduleEvent(ThreadWakeupEventType, new_thread->callback_handle);
 
-        auto previous_process = Kernel::g_current_process;
+        auto previous_process = Core::System::GetInstance().Kernel().GetCurrentProcess();
 
         current_thread = new_thread;
 
@@ -135,8 +135,8 @@ static void SwitchContext(Thread* new_thread) {
         new_thread->status = ThreadStatus::Running;
 
         if (previous_process != current_thread->owner_process) {
-            Kernel::g_current_process = current_thread->owner_process;
-            SetCurrentPageTable(&Kernel::g_current_process->vm_manager.page_table);
+            Core::System::GetInstance().Kernel().SetCurrentProcess(current_thread->owner_process);
+            SetCurrentPageTable(&current_thread->owner_process->vm_manager.page_table);
         }
 
         Core::CPU().LoadContext(new_thread->context);

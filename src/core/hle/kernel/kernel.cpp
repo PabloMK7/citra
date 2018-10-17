@@ -30,7 +30,6 @@ KernelSystem::~KernelSystem() {
     g_handle_table.Clear(); // Free all kernel objects
 
     Kernel::ThreadingShutdown();
-    g_current_process = nullptr;
 
     Kernel::TimersShutdown();
     Kernel::MemoryShutdown();
@@ -46,6 +45,14 @@ const ResourceLimitList& KernelSystem::ResourceLimit() const {
 
 u32 KernelSystem::GenerateObjectID() {
     return next_object_id++;
+}
+
+SharedPtr<Process> KernelSystem::GetCurrentProcess() const {
+    return current_process;
+}
+
+void KernelSystem::SetCurrentProcess(SharedPtr<Process> process) {
+    current_process = std::move(process);
 }
 
 } // namespace Kernel

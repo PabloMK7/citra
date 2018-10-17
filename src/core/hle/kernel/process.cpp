@@ -313,6 +313,4 @@ SharedPtr<Process> KernelSystem::GetProcessById(u32 process_id) const {
 
     return *itr;
 }
-
-SharedPtr<Process> g_current_process;
 } // namespace Kernel

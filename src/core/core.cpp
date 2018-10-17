@@ -126,7 +126,9 @@ System::ResultStatus System::Load(EmuWindow& emu_window, const std::string& file
         return init_result;
     }
 
-    const Loader::ResultStatus load_result{app_loader->Load(Kernel::g_current_process)};
+    Kernel::SharedPtr<Kernel::Process> process;
+    const Loader::ResultStatus load_result{app_loader->Load(process)};
+    kernel->SetCurrentProcess(process);
     if (Loader::ResultStatus::Success != load_result) {
         LOG_CRITICAL(Core, "Failed to load ROM (Error {})!", static_cast<u32>(load_result));
         System::Shutdown();
@@ -140,7 +142,7 @@ System::ResultStatus System::Load(EmuWindow& emu_window, const std::string& file
             return ResultStatus::ErrorLoader;
         }
     }
-    Memory::SetCurrentPageTable(&Kernel::g_current_process->vm_manager.page_table);
+    Memory::SetCurrentPageTable(&kernel->GetCurrentProcess()->vm_manager.page_table);
     status = ResultStatus::Success;
     m_emu_window = &emu_window;
     m_filepath = filepath;
