@@ -123,8 +123,6 @@ public:
         return HANDLE_TYPE;
     }
 
-    static u32 next_process_id;
-
     SharedPtr<CodeSet> codeset;
     /// Resource limit descriptor for this process
     SharedPtr<ResourceLimit> resource_limit;
@@ -145,7 +143,7 @@ public:
     ProcessStatus status;
 
     /// The id of this process
-    u32 process_id = next_process_id++;
+    u32 process_id;
 
     /**
      * Parses a list of kernel capability descriptors (as found in the ExHeader) and applies them

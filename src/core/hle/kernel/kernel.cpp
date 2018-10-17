@@ -23,9 +23,6 @@ KernelSystem::KernelSystem(u32 system_mode) {
     resource_limits = std::make_unique<ResourceLimitList>(*this);
     Kernel::ThreadingInit();
     Kernel::TimersInit();
-    // TODO(Subv): Start the process ids from 10 for now, as lower PIDs are
-    // reserved for low-level services
-    Process::next_process_id = 10;
 }
 
 /// Shutdown the kernel

@@ -32,8 +32,6 @@ SharedPtr<CodeSet> KernelSystem::CreateCodeSet(std::string name, u64 program_id)
 CodeSet::CodeSet(KernelSystem& kernel) : Object(kernel) {}
 CodeSet::~CodeSet() {}
 
-u32 Process::next_process_id;
-
 SharedPtr<Process> KernelSystem::CreateProcess(SharedPtr<CodeSet> code_set) {
     SharedPtr<Process> process(new Process(*this));
 
@@ -41,6 +39,7 @@ SharedPtr<Process> KernelSystem::CreateProcess(SharedPtr<CodeSet> code_set) {
     process->flags.raw = 0;
     process->flags.memory_region.Assign(MemoryRegion::APPLICATION);
     process->status = ProcessStatus::Created;
+    process->process_id = ++next_process_id;
 
     process_list.push_back(process);
     return process;

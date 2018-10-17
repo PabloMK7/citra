@@ -183,6 +183,10 @@ public:
 private:
     std::unique_ptr<ResourceLimitList> resource_limits;
     std::atomic<u32> next_object_id{0};
+
+    // TODO(Subv): Start the process ids from 10 for now, as lower PIDs are
+    // reserved for low-level services
+    u32 next_process_id = 10;
 };
 
 } // namespace Kernel
