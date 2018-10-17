@@ -330,17 +330,24 @@ private:
 
 class SDLAnalog final : public Input::AnalogDevice {
 public:
-    SDLAnalog(std::shared_ptr<SDLJoystick> joystick_, int axis_x_, int axis_y_)
-        : joystick(std::move(joystick_)), axis_x(axis_x_), axis_y(axis_y_) {}
+    SDLAnalog(std::shared_ptr<SDLJoystick> joystick_, int axis_x_, int axis_y_, float deadzone_)
+        : joystick(std::move(joystick_)), axis_x(axis_x_), axis_y(axis_y_), deadzone(deadzone_) {}
 
     std::tuple<float, float> GetStatus() const override {
-        return joystick->GetAnalog(axis_x, axis_y);
+        const auto [x, y] = joystick->GetAnalog(axis_x, axis_y);
+        const float r = std::sqrt((x * x) + (y * y));
+        if (r > deadzone) {
+            return std::make_tuple(x / r * (r - deadzone) / (1 - deadzone),
+                                   y / r * (r - deadzone) / (1 - deadzone));
+        }
+        return std::make_tuple<float, float>(0.0f, 0.0f);
     }
 
 private:
     std::shared_ptr<SDLJoystick> joystick;
-    int axis_x;
-    int axis_y;
+    const int axis_x;
+    const int axis_y;
+    const float deadzone;
 };
 
 /// A button device factory that creates button devices from SDL joystick
@@ -435,13 +442,14 @@ public:
         const int port = params.Get("port", 0);
         const int axis_x = params.Get("axis_x", 0);
         const int axis_y = params.Get("axis_y", 1);
+        float deadzone = std::clamp(params.Get("deadzone", 0.0f), 0.0f, .99f);
 
         auto joystick = state.GetSDLJoystickByGUID(guid, port);
 
         // This is necessary so accessing GetAxis with axis_x and axis_y won't crash
         joystick->SetAxis(axis_x, 0);
         joystick->SetAxis(axis_y, 0);
-        return std::make_unique<SDLAnalog>(joystick, axis_x, axis_y);
+        return std::make_unique<SDLAnalog>(joystick, axis_x, axis_y, deadzone);
     }
 
 private:
@@ -458,6 +466,9 @@ SDLState::SDLState() {
     if (start_thread && SDL_Init(SDL_INIT_JOYSTICK) < 0) {
         LOG_CRITICAL(Input, "SDL_Init(SDL_INIT_JOYSTICK) failed with: {}", SDL_GetError());
         return;
+    }
+    if (SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, "1") == SDL_FALSE) {
+        LOG_ERROR(Input, "Failed to set Hint for background events", SDL_GetError());
     }
 
     SDL_AddEventWatch(&SDLEventWatcher, this);
