@@ -198,10 +198,5 @@ private:
     KernelSystem& kernel;
 };
 
-void ClearProcessList();
-
-/// Retrieves a process from the current list of processes.
-SharedPtr<Process> GetProcessById(u32 process_id);
-
 extern SharedPtr<Process> g_current_process;
 } // namespace Kernel

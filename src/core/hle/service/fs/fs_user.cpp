@@ -619,7 +619,7 @@ void FS_USER::GetProgramLaunchInfo(Kernel::HLERequestContext& ctx) {
 
     // TODO(Subv): The real FS service manages its own process list and only checks the processes
     // that were registered with the 'fs:REG' service.
-    auto process = Kernel::GetProcessById(process_id);
+    auto process = system.Kernel().GetProcessById(process_id);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(5, 0);
 
