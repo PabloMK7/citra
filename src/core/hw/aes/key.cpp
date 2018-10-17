@@ -19,7 +19,14 @@ namespace AES {
 
 namespace {
 
-std::optional<AESKey> generator_constant;
+// The generator constant was calculated using the 0x39 KeyX and KeyY retrieved from a 3DS and the
+// normal key dumped from a Wii U solving the equation:
+// NormalKey = (((KeyX ROL 2) XOR KeyY) + constant) ROL 87
+// On a real 3DS the generation for the normal key is hardware based, and thus the constant can't
+// get dumped . generated normal keys are also not accesible on a 3DS. The used formula for
+// calculating the constant is a software implementation of what the hardware generator does.
+constexpr AESKey generator_constant = {{0x1F, 0xF9, 0xE9, 0xAA, 0xC5, 0xFE, 0x04, 0x08, 0x02, 0x45,
+                                        0x91, 0xDC, 0x5D, 0x52, 0x76, 0x8A}};
 
 struct KeyDesc {
     char key_type;
@@ -48,8 +55,8 @@ struct KeySlot {
     }
 
     void GenerateNormalKey() {
-        if (x && y && generator_constant) {
-            normal = Lrot128(Add128(Xor128(Lrot128(*x, 2), *y), *generator_constant), 87);
+        if (x && y) {
+            normal = Lrot128(Add128(Xor128(Lrot128(*x, 2), *y), generator_constant), 87);
         } else {
             normal = {};
         }
@@ -181,11 +188,6 @@ void LoadPresetKeys() {
             continue;
         }
 
-        if (name == "generator") {
-            generator_constant = key;
-            continue;
-        }
-
         std::size_t common_key_index;
         if (std::sscanf(name.c_str(), "common%zd", &common_key_index) == 1) {
             if (common_key_index >= common_key_y_slots.size()) {
@@ -234,10 +236,6 @@ void InitKeys() {
     LoadBootromKeys();
     LoadPresetKeys();
     initialized = true;
-}
-
-void SetGeneratorConstant(const AESKey& key) {
-    generator_constant = key;
 }
 
 void SetKeyX(std::size_t slot_id, const AESKey& key) {
