@@ -112,7 +112,7 @@ struct FIRM_Header {
     std::array<u8, 0x100> signature; // RSA-2048 signature of the FIRM header's hash
 };
 
-struct ARM9_HEADER {
+struct ARM9_Header {
     AESKey enc_key_x;
     AESKey key_y;
     AESKey CTR;
@@ -207,11 +207,11 @@ void LoadNativeFirmKeysOld3DS() {
     // Use the save mode native firm instead of the normal mode since there are only 2 version of it
     // and thus we can use fixed offsets
 
-    constexpr u64_le save_mode_native_firm_id_low = 0x0004013800000003;
+    constexpr u64 save_mode_native_firm_id = 0x00040138'00000003;
 
     // TODO(B3N30): Add the 0x25 KeyX that gets initalized by native_firm
 
-    FileSys::NCCHArchive archive(save_mode_native_firm_id_low, Service::FS::MediaType::NAND);
+    FileSys::NCCHArchive archive(save_mode_native_firm_id, Service::FS::MediaType::NAND);
     std::array<char, 8> exefs_filepath = {'.', 'f', 'i', 'r', 'm', 0, 0, 0};
     FileSys::Path file_path = FileSys::MakeNCCHFilePath(
         FileSys::NCCHFileOpenType::NCCHData, 0, FileSys::NCCHFilePathType::ExeFS, exefs_filepath);
@@ -268,14 +268,14 @@ void LoadNativeFirmKeysNew3DS() {
 
     // Use the save mode native firm instead of the normal mode since there are only 1 version of it
     // and thus we can use fixed offsets
-    constexpr u64_le save_mode_native_firm_id_low = 0x0004013820000003;
+    constexpr u64 save_mode_native_firm_id = 0x00040138'20000003;
 
     // TODO(B3N30): Add the 0x25 KeyX that gets initalized by native_firm
 
     // TODO(B3N30): Add the 0x18 - 0x1F KeyX that gets initalized by native_firm. This probably
     // requires the normal native firm with version > 9.6.0-X
 
-    FileSys::NCCHArchive archive(save_mode_native_firm_id_low, Service::FS::MediaType::NAND);
+    FileSys::NCCHArchive archive(save_mode_native_firm_id, Service::FS::MediaType::NAND);
     std::array<char, 8> exefs_filepath = {'.', 'f', 'i', 'r', 'm', 0, 0, 0};
     FileSys::Path file_path = FileSys::MakeNCCHFilePath(
         FileSys::NCCHFileOpenType::NCCHData, 0, FileSys::NCCHFilePathType::ExeFS, exefs_filepath);
@@ -320,7 +320,7 @@ void LoadNativeFirmKeysNew3DS() {
         return;
     }
 
-    ARM9_HEADER arm9_header;
+    ARM9_Header arm9_header;
     std::memcpy(&arm9_header, firm_buffer.data() + arm9_offset, sizeof(arm9_header));
 
     AESKey keyX_slot0x15;
