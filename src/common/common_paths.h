@@ -51,3 +51,4 @@
 #define SHARED_FONT "shared_font.bin"
 #define AES_KEYS "aes_keys.txt"
 #define BOOTROM9 "boot9.bin"
+#define SECRET_SECTOR "sector0x96.bin"
