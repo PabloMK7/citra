@@ -6,6 +6,7 @@
 #include <exception>
 #include <optional>
 #include <sstream>
+#include <fmt/format.h>
 #include "common/common_paths.h"
 #include "common/file_util.h"
 #include "common/logging/log.h"
@@ -19,6 +20,13 @@ namespace AES {
 namespace {
 
 std::optional<AESKey> generator_constant;
+
+struct KeyDesc {
+    char key_type;
+    std::size_t slot_id;
+    // This key is identical to the key with the same key_type and slot_id -1
+    bool same_as_before;
+};
 
 struct KeySlot {
     std::optional<AESKey> x;
@@ -68,6 +76,81 @@ AESKey HexToKey(const std::string& hex) {
     }
 
     return key;
+}
+
+void LoadBootromKeys() {
+    constexpr std::array<KeyDesc, 80> keys = {
+        {{'X', 0x2C, false}, {'X', 0x2D, true},  {'X', 0x2E, true},  {'X', 0x2F, true},
+         {'X', 0x30, false}, {'X', 0x31, true},  {'X', 0x32, true},  {'X', 0x33, true},
+         {'X', 0x34, false}, {'X', 0x35, true},  {'X', 0x36, true},  {'X', 0x37, true},
+         {'X', 0x38, false}, {'X', 0x39, true},  {'X', 0x3A, true},  {'X', 0x3B, true},
+         {'X', 0x3C, false}, {'X', 0x3D, false}, {'X', 0x3E, false}, {'X', 0x3F, false},
+         {'Y', 0x4, false},  {'Y', 0x5, false},  {'Y', 0x6, false},  {'Y', 0x7, false},
+         {'Y', 0x8, false},  {'Y', 0x9, false},  {'Y', 0xA, false},  {'Y', 0xB, false},
+         {'N', 0xC, false},  {'N', 0xD, true},   {'N', 0xE, true},   {'N', 0xF, true},
+         {'N', 0x10, false}, {'N', 0x11, true},  {'N', 0x12, true},  {'N', 0x13, true},
+         {'N', 0x14, false}, {'N', 0x15, false}, {'N', 0x16, false}, {'N', 0x17, false},
+         {'N', 0x18, false}, {'N', 0x19, true},  {'N', 0x1A, true},  {'N', 0x1B, true},
+         {'N', 0x1C, false}, {'N', 0x1D, true},  {'N', 0x1E, true},  {'N', 0x1F, true},
+         {'N', 0x20, false}, {'N', 0x21, true},  {'N', 0x22, true},  {'N', 0x23, true},
+         {'N', 0x24, false}, {'N', 0x25, true},  {'N', 0x26, true},  {'N', 0x27, true},
+         {'N', 0x28, true},  {'N', 0x29, false}, {'N', 0x2A, false}, {'N', 0x2B, false},
+         {'N', 0x2C, false}, {'N', 0x2D, true},  {'N', 0x2E, true},  {'N', 0x2F, true},
+         {'N', 0x30, false}, {'N', 0x31, true},  {'N', 0x32, true},  {'N', 0x33, true},
+         {'N', 0x34, false}, {'N', 0x35, true},  {'N', 0x36, true},  {'N', 0x37, true},
+         {'N', 0x38, false}, {'N', 0x39, true},  {'N', 0x3A, true},  {'N', 0x3B, true},
+         {'N', 0x3C, true},  {'N', 0x3D, false}, {'N', 0x3E, false}, {'N', 0x3F, false}}};
+
+    // Bootrom sets all these keys when executed, but later some of the normal keys get overwritten
+    // by other applications e.g. process9. These normal keys thus aren't used by any application
+    // and have no value for emulation
+
+    const std::string filepath = FileUtil::GetUserPath(FileUtil::UserPath::SysDataDir) + BOOTROM9;
+    auto file = FileUtil::IOFile(filepath, "rb");
+    if (!file) {
+        return;
+    }
+
+    const std::size_t length = file.GetSize();
+    if (length != 65536) {
+        LOG_ERROR(HW_AES, "Bootrom9 size is wrong: {}", length);
+        return;
+    }
+
+    constexpr std::size_t KEY_SECTION_START = 55760;
+    file.Seek(KEY_SECTION_START, SEEK_SET); // Jump to the key section
+
+    AESKey new_key;
+    for (const auto& key : keys) {
+        if (!key.same_as_before) {
+            file.ReadArray(new_key.data(), new_key.size());
+            if (!file) {
+                LOG_ERROR(HW_AES, "Reading from Bootrom9 failed");
+                return;
+            }
+        }
+
+        std::string s;
+        for (auto pos : new_key) {
+            s += fmt::format("{:02X}", pos);
+        }
+        LOG_DEBUG(HW_AES, "Loaded Slot{:#02x} Key{}: {}", key.slot_id, key.key_type, s);
+
+        switch (key.key_type) {
+        case 'X':
+            key_slots.at(key.slot_id).SetKeyX(new_key);
+            break;
+        case 'Y':
+            key_slots.at(key.slot_id).SetKeyY(new_key);
+            break;
+        case 'N':
+            key_slots.at(key.slot_id).SetNormalKey(new_key);
+            break;
+        default:
+            LOG_ERROR(HW_AES, "Invalid key type {}", key.key_type);
+            break;
+        }
+    }
 }
 
 void LoadPresetKeys() {
@@ -148,6 +231,7 @@ void InitKeys() {
     static bool initialized = false;
     if (initialized)
         return;
+    LoadBootromKeys();
     LoadPresetKeys();
     initialized = true;
 }
