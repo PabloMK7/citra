@@ -16,8 +16,7 @@ ConfigureDialog::ConfigureDialog(QWidget* parent, const HotkeyRegistry& registry
     ui->generalTab->PopulateHotkeyList(registry);
     this->setConfiguration();
     this->PopulateSelectionList();
-    connect(ui->generalTab, &ConfigureGeneral::languageChanged, this,
-            &ConfigureDialog::onLanguageChanged);
+    connect(ui->uiTab, &ConfigureUi::languageChanged, this, &ConfigureDialog::onLanguageChanged);
     connect(ui->selectorList, &QListWidget::itemSelectionChanged, this,
             &ConfigureDialog::UpdateVisibleTabs);
 
@@ -39,6 +38,7 @@ void ConfigureDialog::applyConfiguration() {
     ui->cameraTab->applyConfiguration();
     ui->debugTab->applyConfiguration();
     ui->webTab->applyConfiguration();
+    ui->uiTab->applyConfiguration();
     Settings::Apply();
     Settings::LogSettings();
 }
@@ -46,7 +46,7 @@ void ConfigureDialog::applyConfiguration() {
 void ConfigureDialog::PopulateSelectionList() {
 
     const std::array<std::pair<QString, QStringList>, 4> items{
-        {{tr("General"), {tr("General"), tr("Web"), tr("Debug")}},
+        {{tr("General"), {tr("General"), tr("Web"), tr("Debug"), tr("UI")}},
          {tr("System"), {tr("System"), tr("Audio"), tr("Camera")}},
          {tr("Graphics"), {tr("Graphics")}},
          {tr("Controls"), {tr("Input")}}}};
@@ -70,6 +70,7 @@ void ConfigureDialog::onLanguageChanged(const QString& locale) {
     ui->cameraTab->retranslateUi();
     ui->debugTab->retranslateUi();
     ui->webTab->retranslateUi();
+    ui->uiTab->retranslateUi();
 }
 
 void ConfigureDialog::UpdateVisibleTabs() {
@@ -77,11 +78,15 @@ void ConfigureDialog::UpdateVisibleTabs() {
     if (items.isEmpty())
         return;
 
-    const QHash<QString, QWidget*> widgets = {
-        {tr("General"), ui->generalTab}, {tr("System"), ui->systemTab},
-        {tr("Input"), ui->inputTab},     {tr("Graphics"), ui->graphicsTab},
-        {tr("Audio"), ui->audioTab},     {tr("Camera"), ui->cameraTab},
-        {tr("Debug"), ui->debugTab},     {tr("Web"), ui->webTab}};
+    const QHash<QString, QWidget*> widgets = {{tr("General"), ui->generalTab},
+                                              {tr("System"), ui->systemTab},
+                                              {tr("Input"), ui->inputTab},
+                                              {tr("Graphics"), ui->graphicsTab},
+                                              {tr("Audio"), ui->audioTab},
+                                              {tr("Camera"), ui->cameraTab},
+                                              {tr("Debug"), ui->debugTab},
+                                              {tr("Web"), ui->webTab},
+                                              {tr("UI"), ui->uiTab}};
 
     ui->tabWidget->clear();
 

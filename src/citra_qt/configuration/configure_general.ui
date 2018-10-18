@@ -31,20 +31,6 @@
             </property>
            </widget>
           </item>
-          <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_2">
-            <item>
-             <widget class="QLabel" name="language_label">
-              <property name="text">
-               <string>Interface language</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QComboBox" name="language_combobox"/>
-            </item>
-           </layout>
-          </item>
          </layout>
         </item>
        </layout>
@@ -137,33 +123,6 @@
                </property>
               </item>
              </widget>
-            </item>
-           </layout>
-          </item>
-         </layout>
-        </item>
-       </layout>
-      </widget>
-     </item>
-     <item>
-      <widget class="QGroupBox" name="theme_group_box">
-       <property name="title">
-        <string>Theme</string>
-       </property>
-       <layout class="QHBoxLayout" name="theme_qhbox_layout">
-        <item>
-         <layout class="QVBoxLayout" name="theme_qvbox_layout">
-          <item>
-           <layout class="QHBoxLayout" name="theme_qhbox_layout_2">
-            <item>
-             <widget class="QLabel" name="theme_label">
-              <property name="text">
-               <string>Theme:</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QComboBox" name="theme_combobox"/>
             </item>
            </layout>
           </item>

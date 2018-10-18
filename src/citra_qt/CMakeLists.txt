@@ -43,6 +43,8 @@ add_executable(citra-qt
     configuration/configure_motion_touch.h
     configuration/configure_system.cpp
     configuration/configure_system.h
+    configuration/configure_ui.cpp
+    configuration/configure_ui.h
     configuration/configure_web.cpp
     configuration/configure_web.h
     debugger/console.h
@@ -119,6 +121,7 @@ set(UIS
     configuration/configure_input.ui
     configuration/configure_motion_touch.ui
     configuration/configure_system.ui
+    configuration/configure_ui.ui
     configuration/configure_web.ui
     debugger/registers.ui
     multiplayer/direct_connect.ui
