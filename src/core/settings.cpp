@@ -6,7 +6,8 @@
 #include "core/core.h"
 #include "core/gdbstub/gdbstub.h"
 #include "core/hle/service/hid/hid.h"
-#include "core/hle/service/ir/ir.h"
+#include "core/hle/service/ir/ir_rst.h"
+#include "core/hle/service/ir/ir_user.h"
 #include "core/settings.h"
 #include "video_core/renderer_base.h"
 #include "video_core/video_core.h"
@@ -32,14 +33,29 @@ void Apply() {
 
     VideoCore::g_renderer_bg_color_update_requested = true;
 
-    if (Core::System::GetInstance().IsPoweredOn()) {
+    auto& system = Core::System::GetInstance();
+    if (system.IsPoweredOn()) {
         Core::DSP().SetSink(values.sink_id, values.audio_device_id);
         Core::DSP().EnableStretching(values.enable_audio_stretching);
-    }
 
-    Service::HID::ReloadInputDevices();
-    Service::IR::ReloadInputDevices();
-    Service::CAM::ReloadCameraDevices();
+        auto hid = Service::HID::GetModule(system);
+        if (hid) {
+            hid->ReloadInputDevices();
+        }
+
+        auto sm = system.ServiceManager();
+        auto ir_user = sm.GetService<Service::IR::IR_USER>("ir:USER");
+        if (ir_user)
+            ir_user->ReloadInputDevices();
+        auto ir_rst = sm.GetService<Service::IR::IR_RST>("ir:rst");
+        if (ir_rst)
+            ir_rst->ReloadInputDevices();
+
+        auto cam = Service::CAM::GetModule(system);
+        if (cam) {
+            cam->ReloadCameraDevices();
+        }
+    }
 }
 
 template <typename T>

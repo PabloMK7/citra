@@ -12,28 +12,15 @@
 
 namespace Service::IR {
 
-static std::weak_ptr<IR_RST> current_ir_rst;
-static std::weak_ptr<IR_USER> current_ir_user;
-
-void ReloadInputDevices() {
-    if (auto ir_user = current_ir_user.lock())
-        ir_user->ReloadInputDevices();
-
-    if (auto ir_rst = current_ir_rst.lock())
-        ir_rst->ReloadInputDevices();
-}
-
 void InstallInterfaces(Core::System& system) {
     auto& service_manager = system.ServiceManager();
     std::make_shared<IR_U>()->InstallAsService(service_manager);
 
     auto ir_user = std::make_shared<IR_USER>();
     ir_user->InstallAsService(service_manager);
-    current_ir_user = ir_user;
 
     auto ir_rst = std::make_shared<IR_RST>();
     ir_rst->InstallAsService(service_manager);
-    current_ir_rst = ir_rst;
 }
 
 } // namespace Service::IR

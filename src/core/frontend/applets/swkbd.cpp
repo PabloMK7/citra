@@ -135,7 +135,10 @@ ValidationError SoftwareKeyboard::Finalize(const std::string& text, u8 button) {
 
 void DefaultKeyboard::Setup(const Frontend::KeyboardConfig* config) {
     SoftwareKeyboard::Setup(config);
-    std::string username = Common::UTF16ToUTF8(Service::CFG::GetCurrentModule()->GetUsername());
+
+    auto cfg = Service::CFG::GetModule(Core::System::GetInstance());
+    ASSERT_MSG(cfg, "CFG Module missing!");
+    std::string username = Common::UTF16ToUTF8(cfg->GetUsername());
     switch (this->config.button_config) {
     case ButtonConfig::None:
     case ButtonConfig::Single:

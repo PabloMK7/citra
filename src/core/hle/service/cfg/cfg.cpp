@@ -114,14 +114,6 @@ static const std::vector<u8> cfg_system_savedata_id = {
     0x00, 0x00, 0x00, 0x00, 0x17, 0x00, 0x01, 0x00,
 };
 
-static std::weak_ptr<Module> current_cfg;
-
-std::shared_ptr<Module> GetCurrentModule() {
-    auto cfg = current_cfg.lock();
-    ASSERT_MSG(cfg, "No CFG module running!");
-    return cfg;
-}
-
 Module::Interface::Interface(std::shared_ptr<Module> cfg, const char* name, u32 max_session)
     : ServiceFramework(name, max_session), cfg(std::move(cfg)) {}
 
@@ -143,6 +135,10 @@ void Module::Interface::GetCountryCodeString(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
     // the real CFG service copies only three bytes (including the null-terminator) here
     rb.Push<u32>(country_codes[country_code_id]);
+}
+
+std::shared_ptr<Module> Module::Interface::Interface::GetModule() const {
+    return cfg;
 }
 
 void Module::Interface::GetCountryCodeID(Kernel::HLERequestContext& ctx) {
@@ -722,6 +718,13 @@ u64 Module::GetConsoleUniqueId() {
     return console_id_le;
 }
 
+std::shared_ptr<Module> GetModule(Core::System& system) {
+    auto cfg = system.ServiceManager().GetService<Service::CFG::Module::Interface>("cfg:u");
+    if (!cfg)
+        return nullptr;
+    return cfg->GetModule();
+}
+
 void InstallInterfaces(Core::System& system) {
     auto& service_manager = system.ServiceManager();
     auto cfg = std::make_shared<Module>();
@@ -729,7 +732,6 @@ void InstallInterfaces(Core::System& system) {
     std::make_shared<CFG_S>(cfg)->InstallAsService(service_manager);
     std::make_shared<CFG_U>(cfg)->InstallAsService(service_manager);
     std::make_shared<CFG_NOR>()->InstallAsService(service_manager);
-    current_cfg = cfg;
 }
 
 } // namespace Service::CFG

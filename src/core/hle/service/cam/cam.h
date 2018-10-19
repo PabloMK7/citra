@@ -250,6 +250,8 @@ public:
         Interface(std::shared_ptr<Module> cam, const char* name, u32 max_session);
         ~Interface();
 
+        std::shared_ptr<Module> GetModule() const;
+
     protected:
         /**
          * Starts capturing at the selected port.
@@ -783,8 +785,7 @@ private:
     std::atomic<bool> is_camera_reload_pending{false};
 };
 
-/// Reload camera devices. Used when input configuration changed
-void ReloadCameraDevices();
+std::shared_ptr<Module> GetModule(Core::System& system);
 
 void InstallInterfaces(Core::System& system);
 

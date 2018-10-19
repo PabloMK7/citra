@@ -246,7 +246,8 @@ void ConfigureSystem::setConfiguration() {
     ui->edit_init_time->setDateTime(date_time);
 
     if (!enabled) {
-        cfg = Service::CFG::GetCurrentModule();
+        cfg = Service::CFG::GetModule(Core::System::GetInstance());
+        ASSERT_MSG(cfg, "CFG Module missing!");
         ReadSystemSettings();
         ui->group_system_settings->setEnabled(false);
     } else {

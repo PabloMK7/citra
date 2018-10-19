@@ -208,6 +208,8 @@ public:
     public:
         Interface(std::shared_ptr<Module> hid, const char* name, u32 max_session);
 
+        std::shared_ptr<Module> GetModule() const;
+
     protected:
         /**
          * HID::GetIPCHandles service function
@@ -335,8 +337,7 @@ private:
     std::unique_ptr<Input::TouchDevice> touch_device;
 };
 
-void InstallInterfaces(Core::System& system);
+std::shared_ptr<Module> GetModule(Core::System& system);
 
-/// Reload input devices. Used when input configuration changed
-void ReloadInputDevices();
+void InstallInterfaces(Core::System& system);
 } // namespace Service::HID

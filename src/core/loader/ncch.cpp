@@ -143,7 +143,9 @@ void AppLoader_NCCH::ParseRegionLockoutInfo() {
             }
             region_lockout >>= 1;
         }
-        Service::CFG::GetCurrentModule()->SetPreferredRegionCodes(regions);
+        auto cfg = Service::CFG::GetModule(Core::System::GetInstance());
+        ASSERT_MSG(cfg, "CFG Module missing!");
+        cfg->SetPreferredRegionCodes(regions);
     }
 }
 

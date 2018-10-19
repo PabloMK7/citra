@@ -14,9 +14,6 @@ class ServiceManager;
 
 namespace Service::IR {
 
-/// Reload input devices. Used when input configuration changed
-void ReloadInputDevices();
-
 void InstallInterfaces(Core::System& system);
 
 } // namespace Service::IR
