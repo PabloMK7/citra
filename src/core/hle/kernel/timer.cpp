@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <cinttypes>
+#include <unordered_map>
 #include "common/assert.h"
 #include "common/logging/log.h"
 #include "core/core_timing.h"
@@ -15,12 +16,15 @@ namespace Kernel {
 
 /// The event type of the generic timer callback event
 static CoreTiming::EventType* timer_callback_event_type = nullptr;
-// TODO(yuriks): This can be removed if Timer objects are explicitly pooled in the future, allowing
-//               us to simply use a pool index or similar.
-static Kernel::HandleTable timer_callback_handle_table;
+
+static u64 next_timer_callback_id;
+static std::unordered_map<u64, Timer*> timer_callback_table;
 
 Timer::Timer(KernelSystem& kernel) : WaitObject(kernel) {}
-Timer::~Timer() {}
+Timer::~Timer() {
+    Cancel();
+    timer_callback_table.erase(callback_id);
+}
 
 SharedPtr<Timer> KernelSystem::CreateTimer(ResetType reset_type, std::string name) {
     SharedPtr<Timer> timer(new Timer(*this));
@@ -30,7 +34,8 @@ SharedPtr<Timer> KernelSystem::CreateTimer(ResetType reset_type, std::string nam
     timer->name = std::move(name);
     timer->initial_delay = 0;
     timer->interval_delay = 0;
-    timer->callback_handle = timer_callback_handle_table.Create(timer).Unwrap();
+    timer->callback_id = ++next_timer_callback_id;
+    timer_callback_table[timer->callback_id] = timer.get();
 
     return timer;
 }
@@ -57,12 +62,12 @@ void Timer::Set(s64 initial, s64 interval) {
         // Immediately invoke the callback
         Signal(0);
     } else {
-        CoreTiming::ScheduleEvent(nsToCycles(initial), timer_callback_event_type, callback_handle);
+        CoreTiming::ScheduleEvent(nsToCycles(initial), timer_callback_event_type, callback_id);
     }
 }
 
 void Timer::Cancel() {
-    CoreTiming::UnscheduleEvent(timer_callback_event_type, callback_handle);
+    CoreTiming::UnscheduleEvent(timer_callback_event_type, callback_id);
 }
 
 void Timer::Clear() {
@@ -87,17 +92,16 @@ void Timer::Signal(s64 cycles_late) {
     if (interval_delay != 0) {
         // Reschedule the timer with the interval delay
         CoreTiming::ScheduleEvent(nsToCycles(interval_delay) - cycles_late,
-                                  timer_callback_event_type, callback_handle);
+                                  timer_callback_event_type, callback_id);
     }
 }
 
 /// The timer callback event, called when a timer is fired
-static void TimerCallback(u64 timer_handle, s64 cycles_late) {
-    SharedPtr<Timer> timer =
-        timer_callback_handle_table.Get<Timer>(static_cast<Handle>(timer_handle));
+static void TimerCallback(u64 callback_id, s64 cycles_late) {
+    SharedPtr<Timer> timer = timer_callback_table.at(callback_id);
 
     if (timer == nullptr) {
-        LOG_CRITICAL(Kernel, "Callback fired for invalid timer {:08x}", timer_handle);
+        LOG_CRITICAL(Kernel, "Callback fired for invalid timer {:016x}", callback_id);
         return;
     }
 
@@ -105,7 +109,8 @@ static void TimerCallback(u64 timer_handle, s64 cycles_late) {
 }
 
 void TimersInit() {
-    timer_callback_handle_table.Clear();
+    next_timer_callback_id = 0;
+    timer_callback_table.clear();
     timer_callback_event_type = CoreTiming::RegisterEvent("TimerCallback", TimerCallback);
 }
 
