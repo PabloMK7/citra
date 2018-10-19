@@ -52,7 +52,8 @@ void ZMQServer::WorkerLoop() {
             LOG_WARNING(RPC_Server, "Failed to receive data on ZeroMQ socket");
         }
     }
-
+    std::unique_ptr<Packet> end_packet = nullptr;
+    new_request_callback(std::move(end_packet));
     // Destroying the socket must be done by this thread.
     zmq_socket.reset();
 }

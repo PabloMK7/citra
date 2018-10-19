@@ -9,6 +9,7 @@
 
 #include <algorithm>
 #include <atomic>
+#include <condition_variable>
 #include <cstddef>
 #include <mutex>
 #include "common/common_types.h"
@@ -49,6 +50,7 @@ public:
         write_ptr = new_ptr;
         if (NeedSize)
             size++;
+        cv.notify_one();
     }
 
     void Pop() {
@@ -75,6 +77,16 @@ public:
         tmpptr->next.store(nullptr);
         delete tmpptr;
         return true;
+    }
+
+    T PopWait() {
+        if (Empty()) {
+            std::unique_lock<std::mutex> lock(cv_mutex);
+            cv.wait(lock, [this]() { return !Empty(); });
+        }
+        T t;
+        Pop(t);
+        return t;
     }
 
     // not thread-safe
@@ -104,6 +116,8 @@ private:
     ElementPtr* write_ptr;
     ElementPtr* read_ptr;
     std::atomic<u32> size;
+    std::mutex cv_mutex;
+    std::condition_variable cv;
 };
 
 // a simple thread-safe,
@@ -136,6 +150,10 @@ public:
 
     bool Pop(T& t) {
         return spsc_queue.Pop(t);
+    }
+
+    T PopWait() {
+        return spsc_queue.PopWait();
     }
 
     // not thread-safe

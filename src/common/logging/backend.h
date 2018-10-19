@@ -28,6 +28,7 @@ struct Entry {
     unsigned int line_num;
     std::string function;
     std::string message;
+    bool final_entry = false;
 
     Entry() = default;
     Entry(Entry&& o) = default;

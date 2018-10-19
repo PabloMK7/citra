@@ -38,9 +38,7 @@ public:
     const Impl& operator=(Impl const&) = delete;
 
     void PushEntry(Entry e) {
-        std::lock_guard<std::mutex> lock(message_mutex);
         message_queue.Push(std::move(e));
-        message_cv.notify_one();
     }
 
     void AddBackend(std::unique_ptr<Backend> backend) {
@@ -84,13 +82,13 @@ private:
                 }
             };
             while (true) {
-                std::unique_lock<std::mutex> lock(message_mutex);
-                message_cv.wait(lock, [&] { return !running || message_queue.Pop(entry); });
-                if (!running) {
+                entry = message_queue.PopWait();
+                if (entry.final_entry) {
                     break;
                 }
                 write_logs(entry);
             }
+
             // Drain the logging queue. Only writes out up to MAX_LOGS_TO_WRITE to prevent a case
             // where a system is repeatedly spamming logs even on close.
             constexpr int MAX_LOGS_TO_WRITE = 100;
@@ -102,14 +100,13 @@ private:
     }
 
     ~Impl() {
-        running = false;
-        message_cv.notify_one();
+        Entry entry;
+        entry.final_entry = true;
+        message_queue.Push(entry);
         backend_thread.join();
     }
 
-    std::atomic_bool running{true};
-    std::mutex message_mutex, writing_mutex;
-    std::condition_variable message_cv;
+    std::mutex writing_mutex;
     std::thread backend_thread;
     std::vector<std::unique_ptr<Backend>> backends;
     Common::MPSCQueue<Log::Entry> message_queue;
