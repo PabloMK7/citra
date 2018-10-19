@@ -242,3 +242,9 @@ target_include_directories(cryptopp INTERFACE .)
 
 find_package(Threads)
 target_link_libraries(cryptopp PRIVATE ${CMAKE_THREAD_LIBS_INIT})
+
+if(ANDROID)
+    include(AndroidNdkModules)
+    android_ndk_import_module_cpufeatures()
+    target_link_libraries(cryptopp PRIVATE cpufeatures)
+endif()
