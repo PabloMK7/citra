@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <list>
+#include <unordered_map>
 #include <vector>
 #include "common/assert.h"
 #include "common/common_types.h"
@@ -37,9 +38,8 @@ void Thread::Acquire(Thread* thread) {
     ASSERT_MSG(!ShouldWait(thread), "object unavailable!");
 }
 
-// TODO(yuriks): This can be removed if Thread objects are explicitly pooled in the future, allowing
-//               us to simply use a pool index or similar.
-static Kernel::HandleTable wakeup_callback_handle_table;
+static u64 next_callback_id;
+static std::unordered_map<u64, Thread*> wakeup_callback_table;
 
 // Lists all thread ids that aren't deleted/etc.
 static std::vector<SharedPtr<Thread>> thread_list;
@@ -69,9 +69,8 @@ Thread* GetCurrentThread() {
 
 void Thread::Stop() {
     // Cancel any outstanding wakeup events for this thread
-    CoreTiming::UnscheduleEvent(ThreadWakeupEventType, callback_handle);
-    wakeup_callback_handle_table.Close(callback_handle);
-    callback_handle = 0;
+    CoreTiming::UnscheduleEvent(ThreadWakeupEventType, thread_id);
+    wakeup_callback_table.erase(thread_id);
 
     // Clean up thread from ready queue
     // This is only needed when the thread is termintated forcefully (SVC TerminateProcess)
@@ -125,7 +124,7 @@ static void SwitchContext(Thread* new_thread) {
                    "Thread must be ready to become running.");
 
         // Cancel any outstanding wakeup events for this thread
-        CoreTiming::UnscheduleEvent(ThreadWakeupEventType, new_thread->callback_handle);
+        CoreTiming::UnscheduleEvent(ThreadWakeupEventType, new_thread->thread_id);
 
         auto previous_process = Core::System::GetInstance().Kernel().GetCurrentProcess();
 
@@ -185,13 +184,13 @@ void ExitCurrentThread() {
 
 /**
  * Callback that will wake up the thread it was scheduled for
- * @param thread_handle The handle of the thread that's been awoken
+ * @param thread_id The ID of the thread that's been awoken
  * @param cycles_late The number of CPU cycles that have passed since the desired wakeup time
  */
-static void ThreadWakeupCallback(u64 thread_handle, s64 cycles_late) {
-    SharedPtr<Thread> thread = wakeup_callback_handle_table.Get<Thread>((Handle)thread_handle);
+static void ThreadWakeupCallback(u64 thread_id, s64 cycles_late) {
+    SharedPtr<Thread> thread = wakeup_callback_table.at(thread_id);
     if (thread == nullptr) {
-        LOG_CRITICAL(Kernel, "Callback fired for invalid thread {:08X}", (Handle)thread_handle);
+        LOG_CRITICAL(Kernel, "Callback fired for invalid thread {:08X}", thread_id);
         return;
     }
 
@@ -217,7 +216,7 @@ void Thread::WakeAfterDelay(s64 nanoseconds) {
     if (nanoseconds == -1)
         return;
 
-    CoreTiming::ScheduleEvent(nsToCycles(nanoseconds), ThreadWakeupEventType, callback_handle);
+    CoreTiming::ScheduleEvent(nsToCycles(nanoseconds), ThreadWakeupEventType, thread_id);
 }
 
 void Thread::ResumeFromWait() {
@@ -359,7 +358,7 @@ ResultVal<SharedPtr<Thread>> KernelSystem::CreateThread(std::string name, VAddr 
     thread->wait_objects.clear();
     thread->wait_address = 0;
     thread->name = std::move(name);
-    thread->callback_handle = wakeup_callback_handle_table.Create(thread).Unwrap();
+    wakeup_callback_table[thread->thread_id] = thread.get();
     thread->owner_process = owner_process;
 
     // Find the next available TLS index, and mark it as used

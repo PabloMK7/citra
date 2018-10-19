@@ -199,9 +199,6 @@ public:
 
     std::string name;
 
-    /// Handle used as userdata to reference this object when inserting into the CoreTiming queue.
-    Handle callback_handle;
-
     using WakeupCallback = void(ThreadWakeupReason reason, SharedPtr<Thread> thread,
                                 SharedPtr<WaitObject> object);
     // Callback that will be invoked when the thread is resumed from a waiting state. If the thread
