@@ -56,6 +56,6 @@ u64 RegenerateTelemetryId();
  * @param func A function that gets exectued when the verification is finished
  * @returns Future with bool indicating whether the verification succeeded
  */
-bool VerifyLogin(std::string username, std::string token);
+bool VerifyLogin(const std::string& username, const std::string& token);
 
 } // namespace Core

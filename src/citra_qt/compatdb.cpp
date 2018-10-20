@@ -25,7 +25,11 @@ CompatDB::CompatDB(QWidget* parent)
 
 CompatDB::~CompatDB() = default;
 
-enum class CompatDBPage { Intro = 0, Selection = 1, Final = 2 };
+enum class CompatDBPage {
+    Intro = 0,
+    Selection = 1,
+    Final = 2,
+};
 
 void CompatDB::Submit() {
     QButtonGroup* compatibility = new QButtonGroup(this);
