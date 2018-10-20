@@ -481,6 +481,21 @@ Loader::ResultStatus NCCHContainer::LoadSectionExeFS(const char* name, std::vect
                     dec.ProcessData(&buffer[0], &buffer[0], section.size);
                 }
             }
+
+            std::string override_ips = filepath + ".exefsdir/code.ips";
+
+            if (FileUtil::Exists(override_ips) && strcmp(name, ".code") == 0) {
+                FileUtil::IOFile ips_file(override_ips, "rb");
+                size_t ips_file_size = ips_file.GetSize();
+                std::vector<u8> ips(ips_file_size);
+
+                if (ips_file.IsOpen() &&
+                    ips_file.ReadBytes(&ips[0], ips_file_size) == ips_file_size) {
+                    LOG_WARNING(Service_FS, "File {} patching code.bin", override_ips);
+                    ApplyIPS(ips, buffer);
+                }
+            }
+
             return Loader::ResultStatus::Success;
         }
     }
@@ -517,6 +532,29 @@ Loader::ResultStatus NCCHContainer::LoadOverrideExeFSSection(const char* name,
         }
     }
     return Loader::ResultStatus::ErrorNotUsed;
+}
+
+Loader::ResultStatus NCCHContainer::ApplyIPS(std::vector<u8>& ips, std::vector<u8>& buffer) {
+    u32 cursor = 5;
+    u32 patch_length = ips.size() - 3;
+    std::string ips_header(ips.begin(), ips.begin() + 5);
+
+    if (strcmp(ips_header.c_str(), "PATCH"))
+        return Loader::ResultStatus::Error;
+
+    while (cursor < patch_length) {
+        u32 offset = (ips[cursor]) << 16 | (ips[cursor + 1]) << 8 | (ips[cursor + 2]);
+        u32 length = (ips[cursor + 3]) << 8 | (ips[cursor + 4]);
+        cursor += 5;
+
+        for (int i = 0; i < length; i++) {
+            buffer[offset + i] = ips[cursor + i];
+        }
+
+        cursor += length;
+    }
+
+    return Loader::ResultStatus::Success;
 }
 
 Loader::ResultStatus NCCHContainer::ReadRomFS(std::shared_ptr<RomFSReader>& romfs_file) {

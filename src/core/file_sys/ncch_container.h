@@ -250,6 +250,14 @@ public:
     Loader::ResultStatus ReadRomFS(std::shared_ptr<RomFSReader>& romfs_file);
 
     /**
+     * Attempts to patch a buffer using an IPS
+     * @param ips Vector of the patches to apply
+     * @param buffer Vector to patch data into
+     * @return ResultStatus result of function
+     */
+    Loader::ResultStatus ApplyIPS(std::vector<u8>& ips, std::vector<u8>& buffer);
+
+    /**
      * Get the override RomFS of the NCCH container
      * Since the RomFS can be huge, we return a file reference instead of copying to a buffer
      * @param romfs_file The file containing the RomFS
