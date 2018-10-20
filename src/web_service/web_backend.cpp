@@ -6,19 +6,19 @@
 #include <string>
 #include <thread>
 #include <LUrlParser.h>
+#include <httplib.h>
 #include "common/announce_multiplayer_room.h"
 #include "common/logging/log.h"
-#include "core/settings.h"
 #include "web_service/web_backend.h"
 
 namespace WebService {
 
-static constexpr char API_VERSION[]{"1"};
+constexpr std::array<const char, 1> API_VERSION{'1'};
 
 constexpr int HTTP_PORT = 80;
 constexpr int HTTPS_PORT = 443;
 
-constexpr int TIMEOUT_SECONDS = 30;
+constexpr std::size_t TIMEOUT_SECONDS = 30;
 
 Client::JWTCache Client::jwt_cache{};
 
@@ -29,6 +29,8 @@ Client::Client(const std::string& host, const std::string& username, const std::
         jwt = jwt_cache.jwt;
     }
 }
+
+Client::~Client() = default;
 
 Common::WebResult Client::GenericJson(const std::string& method, const std::string& path,
                                       const std::string& data, const std::string& jwt,
@@ -70,7 +72,7 @@ Common::WebResult Client::GenericJson(const std::string& method, const std::stri
         };
     }
 
-    params.emplace(std::string("api-version"), std::string(API_VERSION));
+    params.emplace(std::string("api-version"), std::string(API_VERSION.begin(), API_VERSION.end()));
     if (method != "GET") {
         params.emplace(std::string("Content-Type"), std::string("application/json"));
     };

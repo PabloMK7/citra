@@ -208,6 +208,10 @@ target_link_libraries(citra-qt PRIVATE audio_core common core input_common netwo
 target_link_libraries(citra-qt PRIVATE Boost::boost glad nihstro-headers Qt5::OpenGL Qt5::Widgets Qt5::Multimedia)
 target_link_libraries(citra-qt PRIVATE ${PLATFORM_LIBRARIES} Threads::Threads)
 
+if (CITRA_ENABLE_COMPATIBILITY_REPORTING)
+    add_definitions(-DCITRA_ENABLE_COMPATIBILITY_REPORTING)
+endif()
+
 if (USE_DISCORD_PRESENCE)
     target_sources(citra-qt PUBLIC
         discord_impl.cpp

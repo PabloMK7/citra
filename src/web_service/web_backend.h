@@ -8,7 +8,6 @@
 #include <mutex>
 #include <string>
 #include <tuple>
-#include <httplib.h>
 #include "common/announce_multiplayer_room.h"
 #include "common/common_types.h"
 
@@ -21,6 +20,7 @@ namespace WebService {
 class Client {
 public:
     Client(const std::string& host, const std::string& username, const std::string& token);
+    ~Client();
 
     /**
      * Posts JSON to the specified path.

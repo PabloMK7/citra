@@ -10,6 +10,11 @@
 
 namespace WebService {
 
+TelemetryJson::TelemetryJson(const std::string& host, const std::string& username,
+                             const std::string& token)
+    : host(std::move(host)), username(std::move(username)), token(std::move(token)) {}
+TelemetryJson::~TelemetryJson() = default;
+
 template <class T>
 void TelemetryJson::Serialize(Telemetry::FieldType type, const std::string& name, T value) {
     sections[static_cast<u8>(type)][name] = value;

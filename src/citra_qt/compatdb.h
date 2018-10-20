@@ -21,7 +21,6 @@ public:
 private:
     std::unique_ptr<Ui::CompatDB> ui;
 
-private slots:
     void Submit();
     void EnableNext();
 };
