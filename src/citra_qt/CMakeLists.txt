@@ -209,7 +209,7 @@ target_link_libraries(citra-qt PRIVATE Boost::boost glad nihstro-headers Qt5::Op
 target_link_libraries(citra-qt PRIVATE ${PLATFORM_LIBRARIES} Threads::Threads)
 
 if (CITRA_ENABLE_COMPATIBILITY_REPORTING)
-    add_definitions(-DCITRA_ENABLE_COMPATIBILITY_REPORTING)
+    target_compile_definitions(citra-qt PRIVATE -DCITRA_ENABLE_COMPATIBILITY_REPORTING)
 endif()
 
 if (USE_DISCORD_PRESENCE)
