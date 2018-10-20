@@ -6,9 +6,9 @@
 #include <string>
 #include <thread>
 #include <LUrlParser.h>
+#include <httplib.h>
 #include "common/announce_multiplayer_room.h"
 #include "common/logging/log.h"
-#include "core/settings.h"
 #include "web_service/web_backend.h"
 
 namespace WebService {
@@ -29,6 +29,8 @@ Client::Client(const std::string& host, const std::string& username, const std::
         jwt = jwt_cache.jwt;
     }
 }
+
+Client::~Client() = default;
 
 Common::WebResult Client::GenericJson(const std::string& method, const std::string& path,
                                       const std::string& data, const std::string& jwt,
