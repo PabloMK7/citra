@@ -27,8 +27,6 @@ KernelSystem::KernelSystem(u32 system_mode) {
 
 /// Shutdown the kernel
 KernelSystem::~KernelSystem() {
-    g_handle_table.Clear(); // Free all kernel objects
-
     Kernel::ThreadingShutdown();
 
     Kernel::TimersShutdown();

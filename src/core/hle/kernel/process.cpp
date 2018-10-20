@@ -300,7 +300,8 @@ ResultCode Process::LinearFree(VAddr target, u32 size) {
     return RESULT_SUCCESS;
 }
 
-Kernel::Process::Process(KernelSystem& kernel) : Object(kernel), kernel(kernel) {}
+Kernel::Process::Process(KernelSystem& kernel)
+    : Object(kernel), handle_table(kernel), kernel(kernel) {}
 Kernel::Process::~Process() {}
 
 SharedPtr<Process> KernelSystem::GetProcessById(u32 process_id) const {

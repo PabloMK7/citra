@@ -13,6 +13,7 @@
 #include <boost/container/static_vector.hpp>
 #include "common/bit_field.h"
 #include "common/common_types.h"
+#include "core/hle/kernel/handle_table.h"
 #include "core/hle/kernel/object.h"
 #include "core/hle/kernel/vm_manager.h"
 
@@ -122,6 +123,8 @@ public:
     HandleType GetHandleType() const override {
         return HANDLE_TYPE;
     }
+
+    HandleTable handle_table;
 
     SharedPtr<CodeSet> codeset;
     /// Resource limit descriptor for this process

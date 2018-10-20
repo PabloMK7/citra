@@ -5,7 +5,6 @@
 #include <utility>
 #include "common/assert.h"
 #include "common/logging/log.h"
-#include "core/core.h" // TODO: for current_process. Remove this later
 #include "core/hle/kernel/errors.h"
 #include "core/hle/kernel/handle_table.h"
 #include "core/hle/kernel/process.h"
@@ -13,9 +12,7 @@
 
 namespace Kernel {
 
-HandleTable g_handle_table;
-
-HandleTable::HandleTable() {
+HandleTable::HandleTable(KernelSystem& kernel) : kernel(kernel) {
     next_generation = 1;
     Clear();
 }
@@ -77,9 +74,7 @@ SharedPtr<Object> HandleTable::GetGeneric(Handle handle) const {
     if (handle == CurrentThread) {
         return GetCurrentThread();
     } else if (handle == CurrentProcess) {
-        // TODO: should this return HandleTable's parent process, or kernel's current process?
-        // Should change this either way
-        return Core::System::GetInstance().Kernel().GetCurrentProcess();
+        return kernel.GetCurrentProcess();
     }
 
     if (!IsValid(handle)) {
