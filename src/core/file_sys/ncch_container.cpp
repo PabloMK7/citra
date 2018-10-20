@@ -539,7 +539,7 @@ Loader::ResultStatus NCCHContainer::ApplyIPS(std::vector<u8>& ips, std::vector<u
     u32 patch_length = ips.size() - 3;
     std::string ips_header(ips.begin(), ips.begin() + 5);
 
-    if (strcmp(ips_header.c_str(), "PATCH"))
+    if (strcmp(ips_header.c_str(), "PATCH") != 0)
         return Loader::ResultStatus::Error;
 
     while (cursor < patch_length) {
