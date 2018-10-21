@@ -543,6 +543,11 @@ void NCCHContainer::ApplyIPS(std::vector<u8>& ips, std::vector<u8>& buffer) {
         return;
 
     while (cursor < patch_length) {
+        std::string eof_check(ips.begin() + cursor, ips.begin() + cursor + 3);
+
+        if (eof_check == "EOF")
+            return;
+
         u32 offset = ips[cursor] << 16 | ips[cursor + 1] << 8 | ips[cursor + 2];
         std::size_t length = ips[cursor + 3] << 8 | ips[cursor + 4];
 
