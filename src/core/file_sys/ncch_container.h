@@ -253,9 +253,9 @@ public:
      * Attempts to patch a buffer using an IPS
      * @param ips Vector of the patches to apply
      * @param buffer Vector to patch data into
-     * @return ResultStatus result of function
+     * @return Void
      */
-    Loader::ResultStatus ApplyIPS(std::vector<u8>& ips, std::vector<u8>& buffer);
+    void ApplyIPS(std::vector<u8>& ips, std::vector<u8>& buffer);
 
     /**
      * Get the override RomFS of the NCCH container

@@ -491,7 +491,7 @@ Loader::ResultStatus NCCHContainer::LoadSectionExeFS(const char* name, std::vect
 
                 if (ips_file.IsOpen() &&
                     ips_file.ReadBytes(&ips[0], ips_file_size) == ips_file_size) {
-                    LOG_WARNING(Service_FS, "File {} patching code.bin", override_ips);
+                    LOG_INFO(Service_FS, "File {} patching code.bin", override_ips);
                     ApplyIPS(ips, buffer);
                 }
             }
@@ -534,13 +534,13 @@ Loader::ResultStatus NCCHContainer::LoadOverrideExeFSSection(const char* name,
     return Loader::ResultStatus::ErrorNotUsed;
 }
 
-Loader::ResultStatus NCCHContainer::ApplyIPS(std::vector<u8>& ips, std::vector<u8>& buffer) {
+void NCCHContainer::ApplyIPS(std::vector<u8>& ips, std::vector<u8>& buffer) {
     u32 cursor = 5;
     u32 patch_length = ips.size() - 3;
     std::string ips_header(ips.begin(), ips.begin() + 5);
 
-    if (strcmp(ips_header.c_str(), "PATCH") != 0)
-        return Loader::ResultStatus::Error;
+    if (ips_header != "PATCH")
+        return;
 
     while (cursor < patch_length) {
         u32 offset = ips[cursor] << 16 | ips[cursor + 1] << 8 | ips[cursor + 2];
@@ -549,8 +549,6 @@ Loader::ResultStatus NCCHContainer::ApplyIPS(std::vector<u8>& ips, std::vector<u
         std::memcpy(&buffer[offset], &ips[cursor + 5], length);
         cursor += length + 5;
     }
-
-    return Loader::ResultStatus::Success;
 }
 
 Loader::ResultStatus NCCHContainer::ReadRomFS(std::shared_ptr<RomFSReader>& romfs_file) {
