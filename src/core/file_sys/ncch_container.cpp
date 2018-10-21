@@ -539,8 +539,10 @@ void NCCHContainer::ApplyIPS(std::vector<u8>& ips, std::vector<u8>& buffer) {
     u32 patch_length = ips.size() - 3;
     std::string ips_header(ips.begin(), ips.begin() + 5);
 
-    if (ips_header != "PATCH")
+    if (ips_header != "PATCH") {
+        LOG_INFO(Service_FS, "Attempted to load invalid IPS");
         return;
+    }
 
     while (cursor < patch_length) {
         std::string eof_check(ips.begin() + cursor, ips.begin() + cursor + 3);
