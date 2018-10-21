@@ -557,6 +557,9 @@ void NCCHContainer::ApplyIPS(std::vector<u8>& ips, std::vector<u8>& buffer) {
         if (length == 0) {
             length = ips[cursor + 5] << 8 | ips[cursor + 6];
 
+            if (buffer.size() < offset + length)
+                return;
+
             for (u32 i = 0; i < length; ++i)
                 buffer[offset + i] = ips[cursor + 7];
 
@@ -564,6 +567,9 @@ void NCCHContainer::ApplyIPS(std::vector<u8>& ips, std::vector<u8>& buffer) {
 
             continue;
         }
+
+        if (buffer.size() < offset + length)
+            return;
 
         std::memcpy(&buffer[offset], &ips[cursor + 5], length);
         cursor += length + 5;
