@@ -553,6 +553,18 @@ void NCCHContainer::ApplyIPS(std::vector<u8>& ips, std::vector<u8>& buffer) {
         u32 offset = ips[cursor] << 16 | ips[cursor + 1] << 8 | ips[cursor + 2];
         std::size_t length = ips[cursor + 3] << 8 | ips[cursor + 4];
 
+        // check for an rle record
+        if (length == 0) {
+            length = ips[cursor + 5] << 8 | ips[cursor + 6];
+
+            for (u32 i = 0; i < length; ++i)
+                buffer[offset + i] = ips[cursor + 7];
+
+            cursor += 8;
+
+            continue;
+        }
+
         std::memcpy(&buffer[offset], &ips[cursor + 5], length);
         cursor += length + 5;
     }
