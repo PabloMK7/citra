@@ -13,7 +13,7 @@
 
 namespace Kernel {
 
-ClientPort::ClientPort() = default;
+ClientPort::ClientPort(KernelSystem& kernel) : kernel(kernel), Object(kernel) {}
 ClientPort::~ClientPort() = default;
 
 ResultVal<SharedPtr<ClientSession>> ClientPort::Connect() {
@@ -26,7 +26,7 @@ ResultVal<SharedPtr<ClientSession>> ClientPort::Connect() {
     active_sessions++;
 
     // Create a new session pair, let the created sessions inherit the parent port's HLE handler.
-    auto sessions = ServerSession::CreateSessionPair(server_port->GetName(), this);
+    auto sessions = kernel.CreateSessionPair(server_port->GetName(), this);
 
     if (server_port->hle_handler)
         server_port->hle_handler->ClientConnected(std::get<SharedPtr<ServerSession>>(sessions));

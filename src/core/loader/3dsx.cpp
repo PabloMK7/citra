@@ -217,7 +217,7 @@ static THREEDSX_Error Load3DSXFile(FileUtil::IOFile& file, u32 base_addr,
     }
 
     // Create the CodeSet
-    SharedPtr<CodeSet> code_set = CodeSet::Create("", 0);
+    SharedPtr<CodeSet> code_set = Core::System::GetInstance().Kernel().CreateCodeSet("", 0);
 
     code_set->CodeSegment().offset = loadinfo.seg_ptrs[0] - program_image.data();
     code_set->CodeSegment().addr = loadinfo.seg_addrs[0];
@@ -267,13 +267,13 @@ ResultStatus AppLoader_THREEDSX::Load(Kernel::SharedPtr<Kernel::Process>& proces
         return ResultStatus::Error;
     codeset->name = filename;
 
-    process = Kernel::Process::Create(std::move(codeset));
+    process = Core::System::GetInstance().Kernel().CreateProcess(std::move(codeset));
     process->svc_access_mask.set();
     process->address_mappings = default_address_mappings;
 
     // Attach the default resource limit (APPLICATION) to the process
-    process->resource_limit =
-        Kernel::ResourceLimit::GetForCategory(Kernel::ResourceLimitCategory::APPLICATION);
+    process->resource_limit = Core::System::GetInstance().Kernel().ResourceLimit().GetForCategory(
+        Kernel::ResourceLimitCategory::APPLICATION);
 
     process->Run(48, Kernel::DEFAULT_STACK_SIZE);
 

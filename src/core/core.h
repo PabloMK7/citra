@@ -36,6 +36,10 @@ class ArchiveManager;
 }
 } // namespace Service
 
+namespace Kernel {
+class KernelSystem;
+}
+
 namespace Core {
 
 class System {
@@ -167,6 +171,12 @@ public:
     /// Gets a const reference to the archive manager
     const Service::FS::ArchiveManager& ArchiveManager() const;
 
+    /// Gets a reference to the kernel
+    Kernel::KernelSystem& Kernel();
+
+    /// Gets a const reference to the kernel
+    const Kernel::KernelSystem& Kernel() const;
+
     PerfStats perf_stats;
     FrameLimiter frame_limiter;
 
@@ -240,6 +250,8 @@ private:
     std::shared_ptr<SharedPage::Handler> shared_page_handler;
 
     std::unique_ptr<Service::FS::ArchiveManager> archive_manager;
+
+    std::unique_ptr<Kernel::KernelSystem> kernel;
 
     static System s_instance;
 

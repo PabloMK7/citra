@@ -20,8 +20,8 @@ namespace Kernel {
 // Lists all processes that exist in the current session.
 static std::vector<SharedPtr<Process>> process_list;
 
-SharedPtr<CodeSet> CodeSet::Create(std::string name, u64 program_id) {
-    SharedPtr<CodeSet> codeset(new CodeSet);
+SharedPtr<CodeSet> KernelSystem::CreateCodeSet(std::string name, u64 program_id) {
+    SharedPtr<CodeSet> codeset(new CodeSet(*this));
 
     codeset->name = std::move(name);
     codeset->program_id = program_id;
@@ -29,13 +29,13 @@ SharedPtr<CodeSet> CodeSet::Create(std::string name, u64 program_id) {
     return codeset;
 }
 
-CodeSet::CodeSet() {}
+CodeSet::CodeSet(KernelSystem& kernel) : Object(kernel) {}
 CodeSet::~CodeSet() {}
 
 u32 Process::next_process_id;
 
-SharedPtr<Process> Process::Create(SharedPtr<CodeSet> code_set) {
-    SharedPtr<Process> process(new Process);
+SharedPtr<Process> KernelSystem::CreateProcess(SharedPtr<CodeSet> code_set) {
+    SharedPtr<Process> process(new Process(*this));
 
     process->codeset = std::move(code_set);
     process->flags.raw = 0;
@@ -155,7 +155,7 @@ void Process::Run(s32 main_thread_priority, u32 stack_size) {
     status = ProcessStatus::Running;
 
     vm_manager.LogLayout(Log::Level::Debug);
-    Kernel::SetupMainThread(codeset->entrypoint, main_thread_priority, this);
+    Kernel::SetupMainThread(kernel, codeset->entrypoint, main_thread_priority, this);
 }
 
 VAddr Process::GetLinearHeapAreaAddress() const {
@@ -304,7 +304,7 @@ ResultCode Process::LinearFree(VAddr target, u32 size) {
     return RESULT_SUCCESS;
 }
 
-Kernel::Process::Process() {}
+Kernel::Process::Process(KernelSystem& kernel) : Object(kernel), kernel(kernel) {}
 Kernel::Process::~Process() {}
 
 void ClearProcessList() {

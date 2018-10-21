@@ -8,6 +8,10 @@
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/service/service.h"
 
+namespace Core {
+class System;
+}
+
 namespace Service::FS {
 
 struct FileSessionSlot : public Kernel::SessionRequestHandler::SessionDataBase {
@@ -21,7 +25,8 @@ struct FileSessionSlot : public Kernel::SessionRequestHandler::SessionDataBase {
 // Consider splitting ServiceFramework interface.
 class File final : public ServiceFramework<File, FileSessionSlot> {
 public:
-    File(std::unique_ptr<FileSys::FileBackend>&& backend, const FileSys::Path& path);
+    File(Core::System& system, std::unique_ptr<FileSys::FileBackend>&& backend,
+         const FileSys::Path& path);
     ~File() = default;
 
     std::string GetName() const {
@@ -53,6 +58,8 @@ private:
     void GetPriority(Kernel::HLERequestContext& ctx);
     void OpenLinkFile(Kernel::HLERequestContext& ctx);
     void OpenSubFile(Kernel::HLERequestContext& ctx);
+
+    Core::System& system;
 };
 
 } // namespace Service::FS

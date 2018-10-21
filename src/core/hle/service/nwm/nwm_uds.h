@@ -112,6 +112,8 @@ public:
     ~NWM_UDS();
 
 private:
+    Core::System& system;
+
     void UpdateNetworkAttribute(Kernel::HLERequestContext& ctx);
 
     /**

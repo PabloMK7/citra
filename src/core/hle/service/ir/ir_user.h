@@ -55,7 +55,7 @@ private:
 /// Interface to "ir:USER" service
 class IR_USER final : public ServiceFramework<IR_USER> {
 public:
-    IR_USER();
+    explicit IR_USER(Core::System& system);
     ~IR_USER();
 
     void ReloadInputDevices();

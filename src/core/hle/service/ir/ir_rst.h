@@ -39,7 +39,7 @@ union PadState {
 /// Interface to "ir:rst" service
 class IR_RST final : public ServiceFramework<IR_RST> {
 public:
-    IR_RST();
+    explicit IR_RST(Core::System& system);
     ~IR_RST();
     void ReloadInputDevices();
 

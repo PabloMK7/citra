@@ -14,34 +14,41 @@
 
 namespace Kernel {
 
-std::atomic<u32> Object::next_object_id{0};
-
 /// Initialize the kernel
-void Init(u32 system_mode) {
+KernelSystem::KernelSystem(u32 system_mode) {
     ConfigMem::Init();
 
     Kernel::MemoryInit(system_mode);
 
-    Kernel::ResourceLimitsInit();
+    resource_limits = std::make_unique<ResourceLimitList>(*this);
     Kernel::ThreadingInit();
     Kernel::TimersInit();
-
-    Object::next_object_id = 0;
     // TODO(Subv): Start the process ids from 10 for now, as lower PIDs are
     // reserved for low-level services
     Process::next_process_id = 10;
 }
 
 /// Shutdown the kernel
-void Shutdown() {
+KernelSystem::~KernelSystem() {
     g_handle_table.Clear(); // Free all kernel objects
 
     Kernel::ThreadingShutdown();
     g_current_process = nullptr;
 
     Kernel::TimersShutdown();
-    Kernel::ResourceLimitsShutdown();
     Kernel::MemoryShutdown();
+}
+
+ResourceLimitList& KernelSystem::ResourceLimit() {
+    return *resource_limits;
+}
+
+const ResourceLimitList& KernelSystem::ResourceLimit() const {
+    return *resource_limits;
+}
+
+u32 KernelSystem::GenerateObjectID() {
+    return next_object_id++;
 }
 
 } // namespace Kernel

@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include "common/logging/log.h"
+#include "core/core.h"
 #include "core/file_sys/errors.h"
 #include "core/file_sys/file_backend.h"
 #include "core/hle/ipc_helpers.h"
@@ -14,8 +15,9 @@
 
 namespace Service::FS {
 
-File::File(std::unique_ptr<FileSys::FileBackend>&& backend, const FileSys::Path& path)
-    : ServiceFramework("", 1), path(path), backend(std::move(backend)) {
+File::File(Core::System& system, std::unique_ptr<FileSys::FileBackend>&& backend,
+           const FileSys::Path& path)
+    : ServiceFramework("", 1), path(path), backend(std::move(backend)), system(system) {
     static const FunctionInfo functions[] = {
         {0x08010100, &File::OpenSubFile, "OpenSubFile"},
         {0x080200C2, &File::Read, "Read"},
@@ -195,7 +197,7 @@ void File::OpenLinkFile(Kernel::HLERequestContext& ctx) {
     using Kernel::SharedPtr;
     IPC::RequestParser rp(ctx, 0x080C, 0, 0);
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
-    auto sessions = ServerSession::CreateSessionPair(GetName());
+    auto sessions = system.Kernel().CreateSessionPair(GetName());
     auto server = std::get<SharedPtr<ServerSession>>(sessions);
     ClientConnected(server);
 
@@ -243,7 +245,7 @@ void File::OpenSubFile(Kernel::HLERequestContext& ctx) {
     using Kernel::ClientSession;
     using Kernel::ServerSession;
     using Kernel::SharedPtr;
-    auto sessions = ServerSession::CreateSessionPair(GetName());
+    auto sessions = system.Kernel().CreateSessionPair(GetName());
     auto server = std::get<SharedPtr<ServerSession>>(sessions);
     ClientConnected(server);
 
@@ -258,7 +260,7 @@ void File::OpenSubFile(Kernel::HLERequestContext& ctx) {
 }
 
 Kernel::SharedPtr<Kernel::ClientSession> File::Connect() {
-    auto sessions = Kernel::ServerSession::CreateSessionPair(GetName());
+    auto sessions = system.Kernel().CreateSessionPair(GetName());
     auto server = std::get<Kernel::SharedPtr<Kernel::ServerSession>>(sessions);
     ClientConnected(server);
 

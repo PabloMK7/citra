@@ -7,6 +7,7 @@
 #include "common/assert.h"
 #include "common/logging/log.h"
 #include "common/string_util.h"
+#include "core/core.h"
 #include "core/hle/applets/mii_selector.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/shared_memory.h"
@@ -37,7 +38,7 @@ ResultCode MiiSelector::ReceiveParameter(const Service::APT::MessageParameter& p
     // Allocate a heap block of the required size for this applet.
     heap_memory = std::make_shared<std::vector<u8>>(capture_info.size);
     // Create a SharedMemory that directly points to this heap block.
-    framebuffer_memory = Kernel::SharedMemory::CreateForApplet(
+    framebuffer_memory = Core::System::GetInstance().Kernel().CreateSharedMemoryForApplet(
         heap_memory, 0, capture_info.size, MemoryPermission::ReadWrite, MemoryPermission::ReadWrite,
         "MiiSelector Memory");
 

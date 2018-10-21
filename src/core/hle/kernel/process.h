@@ -26,12 +26,6 @@ struct AddressMapping {
     bool unk_flag;
 };
 
-enum class MemoryRegion : u16 {
-    APPLICATION = 1,
-    SYSTEM = 2,
-    BASE = 3,
-};
-
 union ProcessFlags {
     u16 raw;
 
@@ -61,8 +55,6 @@ struct CodeSet final : public Object {
         VAddr addr = 0;
         u32 size = 0;
     };
-
-    static SharedPtr<CodeSet> Create(std::string name, u64 program_id);
 
     std::string GetTypeName() const override {
         return "CodeSet";
@@ -111,14 +103,14 @@ struct CodeSet final : public Object {
     u64 program_id;
 
 private:
-    CodeSet();
+    explicit CodeSet(KernelSystem& kernel);
     ~CodeSet() override;
+
+    friend class KernelSystem;
 };
 
 class Process final : public Object {
 public:
-    static SharedPtr<Process> Create(SharedPtr<CodeSet> code_set);
-
     std::string GetTypeName() const override {
         return "Process";
     }
@@ -201,8 +193,11 @@ public:
     ResultCode LinearFree(VAddr target, u32 size);
 
 private:
-    Process();
+    explicit Process(Kernel::KernelSystem& kernel);
     ~Process() override;
+
+    friend class KernelSystem;
+    KernelSystem& kernel;
 };
 
 void ClearProcessList();

@@ -615,7 +615,7 @@ static ResultCode ReplyAndReceive(s32* index, VAddr handles_address, s32 handle_
 
 /// Create an address arbiter (to allocate access to shared resources)
 static ResultCode CreateAddressArbiter(Handle* out_handle) {
-    SharedPtr<AddressArbiter> arbiter = AddressArbiter::Create();
+    SharedPtr<AddressArbiter> arbiter = Core::System::GetInstance().Kernel().CreateAddressArbiter();
     CASCADE_RESULT(*out_handle, g_handle_table.Create(std::move(arbiter)));
     LOG_TRACE(Kernel_SVC, "returned handle=0x{:08X}", *out_handle);
     return RESULT_SUCCESS;
@@ -761,9 +761,9 @@ static ResultCode CreateThread(Handle* out_handle, u32 priority, u32 entry_point
         break;
     }
 
-    CASCADE_RESULT(SharedPtr<Thread> thread,
-                   Thread::Create(name, entry_point, priority, arg, processor_id, stack_top,
-                                  g_current_process));
+    CASCADE_RESULT(SharedPtr<Thread> thread, Core::System::GetInstance().Kernel().CreateThread(
+                                                 name, entry_point, priority, arg, processor_id,
+                                                 stack_top, g_current_process));
 
     thread->context->SetFpscr(FPSCR_DEFAULT_NAN | FPSCR_FLUSH_TO_ZERO |
                               FPSCR_ROUND_TOZERO); // 0x03C00000
@@ -828,7 +828,7 @@ static ResultCode SetThreadPriority(Handle handle, u32 priority) {
 
 /// Create a mutex
 static ResultCode CreateMutex(Handle* out_handle, u32 initial_locked) {
-    SharedPtr<Mutex> mutex = Mutex::Create(initial_locked != 0);
+    SharedPtr<Mutex> mutex = Core::System::GetInstance().Kernel().CreateMutex(initial_locked != 0);
     mutex->name = fmt::format("mutex-{:08x}", Core::CPU().GetReg(14));
     CASCADE_RESULT(*out_handle, g_handle_table.Create(std::move(mutex)));
 
@@ -891,7 +891,8 @@ static ResultCode GetThreadId(u32* thread_id, Handle handle) {
 
 /// Creates a semaphore
 static ResultCode CreateSemaphore(Handle* out_handle, s32 initial_count, s32 max_count) {
-    CASCADE_RESULT(SharedPtr<Semaphore> semaphore, Semaphore::Create(initial_count, max_count));
+    CASCADE_RESULT(SharedPtr<Semaphore> semaphore,
+                   Core::System::GetInstance().Kernel().CreateSemaphore(initial_count, max_count));
     semaphore->name = fmt::format("semaphore-{:08x}", Core::CPU().GetReg(14));
     CASCADE_RESULT(*out_handle, g_handle_table.Create(std::move(semaphore)));
 
@@ -942,8 +943,8 @@ static ResultCode QueryMemory(MemoryInfo* memory_info, PageInfo* page_info, u32 
 
 /// Create an event
 static ResultCode CreateEvent(Handle* out_handle, u32 reset_type) {
-    SharedPtr<Event> evt = Event::Create(static_cast<ResetType>(reset_type),
-                                         fmt::format("event-{:08x}", Core::CPU().GetReg(14)));
+    SharedPtr<Event> evt = Core::System::GetInstance().Kernel().CreateEvent(
+        static_cast<ResetType>(reset_type), fmt::format("event-{:08x}", Core::CPU().GetReg(14)));
     CASCADE_RESULT(*out_handle, g_handle_table.Create(std::move(evt)));
 
     LOG_TRACE(Kernel_SVC, "called reset_type=0x{:08X} : created handle=0x{:08X}", reset_type,
@@ -985,8 +986,8 @@ static ResultCode ClearEvent(Handle handle) {
 
 /// Creates a timer
 static ResultCode CreateTimer(Handle* out_handle, u32 reset_type) {
-    SharedPtr<Timer> timer = Timer::Create(static_cast<ResetType>(reset_type),
-                                           fmt ::format("timer-{:08x}", Core::CPU().GetReg(14)));
+    SharedPtr<Timer> timer = Core::System::GetInstance().Kernel().CreateTimer(
+        static_cast<ResetType>(reset_type), fmt ::format("timer-{:08x}", Core::CPU().GetReg(14)));
     CASCADE_RESULT(*out_handle, g_handle_table.Create(std::move(timer)));
 
     LOG_TRACE(Kernel_SVC, "called reset_type=0x{:08X} : created handle=0x{:08X}", reset_type,
@@ -1104,9 +1105,9 @@ static ResultCode CreateMemoryBlock(Handle* out_handle, u32 addr, u32 size, u32 
     if (addr == 0 && g_current_process->flags.shared_device_mem)
         region = g_current_process->flags.memory_region;
 
-    shared_memory =
-        SharedMemory::Create(g_current_process, size, static_cast<MemoryPermission>(my_permission),
-                             static_cast<MemoryPermission>(other_permission), addr, region);
+    shared_memory = Core::System::GetInstance().Kernel().CreateSharedMemory(
+        g_current_process, size, static_cast<MemoryPermission>(my_permission),
+        static_cast<MemoryPermission>(other_permission), addr, region);
     CASCADE_RESULT(*out_handle, g_handle_table.Create(std::move(shared_memory)));
 
     LOG_WARNING(Kernel_SVC, "called addr=0x{:08X}", addr);
@@ -1118,7 +1119,7 @@ static ResultCode CreatePort(Handle* server_port, Handle* client_port, VAddr nam
     // TODO(Subv): Implement named ports.
     ASSERT_MSG(name_address == 0, "Named ports are currently unimplemented");
 
-    auto ports = ServerPort::CreatePortPair(max_sessions);
+    auto ports = Core::System::GetInstance().Kernel().CreatePortPair(max_sessions);
     CASCADE_RESULT(*client_port,
                    g_handle_table.Create(std::move(std::get<SharedPtr<ClientPort>>(ports))));
     // Note: The 3DS kernel also leaks the client port handle if the server port handle fails to be
@@ -1141,7 +1142,7 @@ static ResultCode CreateSessionToPort(Handle* out_client_session, Handle client_
 }
 
 static ResultCode CreateSession(Handle* server_session, Handle* client_session) {
-    auto sessions = ServerSession::CreateSessionPair();
+    auto sessions = Core::System::GetInstance().Kernel().CreateSessionPair();
 
     auto& server = std::get<SharedPtr<ServerSession>>(sessions);
     CASCADE_RESULT(*server_session, g_handle_table.Create(std::move(server)));

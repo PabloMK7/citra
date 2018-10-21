@@ -75,7 +75,8 @@ ResultStatus AppLoader_NCCH::LoadExec(Kernel::SharedPtr<Kernel::Process>& proces
         std::string process_name = Common::StringFromFixedZeroTerminatedBuffer(
             (const char*)overlay_ncch->exheader_header.codeset_info.name, 8);
 
-        SharedPtr<CodeSet> codeset = CodeSet::Create(process_name, program_id);
+        SharedPtr<CodeSet> codeset =
+            Core::System::GetInstance().Kernel().CreateCodeSet(process_name, program_id);
 
         codeset->CodeSegment().offset = 0;
         codeset->CodeSegment().addr = overlay_ncch->exheader_header.codeset_info.text.address;
@@ -103,12 +104,13 @@ ResultStatus AppLoader_NCCH::LoadExec(Kernel::SharedPtr<Kernel::Process>& proces
         codeset->entrypoint = codeset->CodeSegment().addr;
         codeset->memory = std::make_shared<std::vector<u8>>(std::move(code));
 
-        process = Kernel::Process::Create(std::move(codeset));
+        process = Core::System::GetInstance().Kernel().CreateProcess(std::move(codeset));
 
         // Attach a resource limit to the process based on the resource limit category
         process->resource_limit =
-            Kernel::ResourceLimit::GetForCategory(static_cast<Kernel::ResourceLimitCategory>(
-                overlay_ncch->exheader_header.arm11_system_local_caps.resource_limit_category));
+            Core::System::GetInstance().Kernel().ResourceLimit().GetForCategory(
+                static_cast<Kernel::ResourceLimitCategory>(
+                    overlay_ncch->exheader_header.arm11_system_local_caps.resource_limit_category));
 
         // Set the default CPU core for this process
         process->ideal_processor =

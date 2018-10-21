@@ -1026,8 +1026,8 @@ void Module::Interface::BeginImportProgram(Kernel::HLERequestContext& ctx) {
     // Create our CIAFile handle for the app to write to, and while the app writes
     // Citra will store contents out to sdmc/nand
     const FileSys::Path cia_path = {};
-    auto file =
-        std::make_shared<Service::FS::File>(std::make_unique<CIAFile>(media_type), cia_path);
+    auto file = std::make_shared<Service::FS::File>(
+        am->system, std::make_unique<CIAFile>(media_type), cia_path);
 
     am->cia_installing = true;
 
@@ -1053,8 +1053,8 @@ void Module::Interface::BeginImportProgramTemporarily(Kernel::HLERequestContext&
     // Create our CIAFile handle for the app to write to, and while the app writes Citra will store
     // contents out to sdmc/nand
     const FileSys::Path cia_path = {};
-    auto file = std::make_shared<Service::FS::File>(std::make_unique<CIAFile>(FS::MediaType::NAND),
-                                                    cia_path);
+    auto file = std::make_shared<Service::FS::File>(
+        am->system, std::make_unique<CIAFile>(FS::MediaType::NAND), cia_path);
 
     am->cia_installing = true;
 
@@ -1455,16 +1455,16 @@ void Module::Interface::GetMetaDataFromCia(Kernel::HLERequestContext& ctx) {
     rb.PushMappedBuffer(output_buffer);
 }
 
-Module::Module() {
+Module::Module(Core::System& system) : system(system) {
     ScanForAllTitles();
-    system_updater_mutex = Kernel::Mutex::Create(false, "AM::SystemUpdaterMutex");
+    system_updater_mutex = system.Kernel().CreateMutex(false, "AM::SystemUpdaterMutex");
 }
 
 Module::~Module() = default;
 
 void InstallInterfaces(Core::System& system) {
     auto& service_manager = system.ServiceManager();
-    auto am = std::make_shared<Module>();
+    auto am = std::make_shared<Module>(system);
     std::make_shared<AM_APP>(am)->InstallAsService(service_manager);
     std::make_shared<AM_NET>(am)->InstallAsService(service_manager);
     std::make_shared<AM_SYS>(am)->InstallAsService(service_manager);

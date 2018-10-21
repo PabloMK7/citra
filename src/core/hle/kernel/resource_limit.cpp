@@ -9,19 +9,17 @@
 
 namespace Kernel {
 
-static SharedPtr<ResourceLimit> resource_limits[4];
-
-ResourceLimit::ResourceLimit() {}
+ResourceLimit::ResourceLimit(KernelSystem& kernel) : Object(kernel) {}
 ResourceLimit::~ResourceLimit() {}
 
-SharedPtr<ResourceLimit> ResourceLimit::Create(std::string name) {
-    SharedPtr<ResourceLimit> resource_limit(new ResourceLimit);
+SharedPtr<ResourceLimit> ResourceLimit::Create(KernelSystem& kernel, std::string name) {
+    SharedPtr<ResourceLimit> resource_limit(new ResourceLimit(kernel));
 
     resource_limit->name = std::move(name);
     return resource_limit;
 }
 
-SharedPtr<ResourceLimit> ResourceLimit::GetForCategory(ResourceLimitCategory category) {
+SharedPtr<ResourceLimit> ResourceLimitList::GetForCategory(ResourceLimitCategory category) {
     switch (category) {
     case ResourceLimitCategory::APPLICATION:
     case ResourceLimitCategory::SYS_APPLET:
@@ -90,10 +88,10 @@ u32 ResourceLimit::GetMaxResourceValue(u32 resource) const {
     }
 }
 
-void ResourceLimitsInit() {
+ResourceLimitList::ResourceLimitList(KernelSystem& kernel) {
     // Create the four resource limits that the system uses
     // Create the APPLICATION resource limit
-    SharedPtr<ResourceLimit> resource_limit = ResourceLimit::Create("Applications");
+    SharedPtr<ResourceLimit> resource_limit = ResourceLimit::Create(kernel, "Applications");
     resource_limit->max_priority = 0x18;
     resource_limit->max_commit = 0x4000000;
     resource_limit->max_threads = 0x20;
@@ -107,7 +105,7 @@ void ResourceLimitsInit() {
     resource_limits[static_cast<u8>(ResourceLimitCategory::APPLICATION)] = resource_limit;
 
     // Create the SYS_APPLET resource limit
-    resource_limit = ResourceLimit::Create("System Applets");
+    resource_limit = ResourceLimit::Create(kernel, "System Applets");
     resource_limit->max_priority = 0x4;
     resource_limit->max_commit = 0x5E00000;
     resource_limit->max_threads = 0x1D;
@@ -121,7 +119,7 @@ void ResourceLimitsInit() {
     resource_limits[static_cast<u8>(ResourceLimitCategory::SYS_APPLET)] = resource_limit;
 
     // Create the LIB_APPLET resource limit
-    resource_limit = ResourceLimit::Create("Library Applets");
+    resource_limit = ResourceLimit::Create(kernel, "Library Applets");
     resource_limit->max_priority = 0x4;
     resource_limit->max_commit = 0x600000;
     resource_limit->max_threads = 0xE;
@@ -135,7 +133,7 @@ void ResourceLimitsInit() {
     resource_limits[static_cast<u8>(ResourceLimitCategory::LIB_APPLET)] = resource_limit;
 
     // Create the OTHER resource limit
-    resource_limit = ResourceLimit::Create("Others");
+    resource_limit = ResourceLimit::Create(kernel, "Others");
     resource_limit->max_priority = 0x4;
     resource_limit->max_commit = 0x2180000;
     resource_limit->max_threads = 0xE1;
@@ -149,6 +147,6 @@ void ResourceLimitsInit() {
     resource_limits[static_cast<u8>(ResourceLimitCategory::OTHER)] = resource_limit;
 }
 
-void ResourceLimitsShutdown() {}
+ResourceLimitList::~ResourceLimitList() = default;
 
 } // namespace Kernel

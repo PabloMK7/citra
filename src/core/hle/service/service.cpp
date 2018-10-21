@@ -143,11 +143,11 @@ void ServiceFrameworkBase::InstallAsService(SM::ServiceManager& service_manager)
     port->SetHleHandler(shared_from_this());
 }
 
-void ServiceFrameworkBase::InstallAsNamedPort() {
+void ServiceFrameworkBase::InstallAsNamedPort(Kernel::KernelSystem& kernel) {
     ASSERT(port == nullptr);
     SharedPtr<ServerPort> server_port;
     SharedPtr<ClientPort> client_port;
-    std::tie(server_port, client_port) = ServerPort::CreatePortPair(max_sessions, service_name);
+    std::tie(server_port, client_port) = kernel.CreatePortPair(max_sessions, service_name);
     server_port->SetHleHandler(shared_from_this());
     AddNamedPort(service_name, std::move(client_port));
 }
@@ -235,8 +235,8 @@ static bool AttemptLLE(const ServiceModuleInfo& service_module) {
 }
 
 /// Initialize ServiceManager
-void Init(Core::System& core, std::shared_ptr<SM::ServiceManager>& sm) {
-    SM::ServiceManager::InstallInterfaces(sm);
+void Init(Core::System& core) {
+    SM::ServiceManager::InstallInterfaces(core);
 
     for (const auto& service_module : service_module_map) {
         if (!AttemptLLE(service_module) && service_module.init_function != nullptr)

@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <catch2/catch.hpp>
+#include "core/core_timing.h"
 #include "core/hle/ipc.h"
 #include "core/hle/kernel/client_port.h"
 #include "core/hle/kernel/client_session.h"
@@ -14,15 +15,17 @@
 
 namespace Kernel {
 
-static SharedPtr<Object> MakeObject() {
-    return Event::Create(ResetType::OneShot);
+static SharedPtr<Object> MakeObject(Kernel::KernelSystem& kernel) {
+    return kernel.CreateEvent(ResetType::OneShot);
 }
 
 TEST_CASE("HLERequestContext::PopulateFromIncomingCommandBuffer", "[core][kernel]") {
-    auto session = std::get<SharedPtr<ServerSession>>(ServerSession::CreateSessionPair());
+    CoreTiming::Init();
+    Kernel::KernelSystem kernel(0);
+    auto session = std::get<SharedPtr<ServerSession>>(kernel.CreateSessionPair());
     HLERequestContext context(std::move(session));
 
-    auto process = Process::Create(CodeSet::Create("", 0));
+    auto process = kernel.CreateProcess(kernel.CreateCodeSet("", 0));
     HandleTable handle_table;
 
     SECTION("works with empty cmdbuf") {
@@ -52,7 +55,7 @@ TEST_CASE("HLERequestContext::PopulateFromIncomingCommandBuffer", "[core][kernel
     }
 
     SECTION("translates move handles") {
-        auto a = MakeObject();
+        auto a = MakeObject(kernel);
         Handle a_handle = handle_table.Create(a).Unwrap();
         const u32_le input[]{
             IPC::MakeHeader(0, 0, 2),
@@ -68,7 +71,7 @@ TEST_CASE("HLERequestContext::PopulateFromIncomingCommandBuffer", "[core][kernel
     }
 
     SECTION("translates copy handles") {
-        auto a = MakeObject();
+        auto a = MakeObject(kernel);
         Handle a_handle = handle_table.Create(a).Unwrap();
         const u32_le input[]{
             IPC::MakeHeader(0, 0, 2),
@@ -84,9 +87,9 @@ TEST_CASE("HLERequestContext::PopulateFromIncomingCommandBuffer", "[core][kernel
     }
 
     SECTION("translates multi-handle descriptors") {
-        auto a = MakeObject();
-        auto b = MakeObject();
-        auto c = MakeObject();
+        auto a = MakeObject(kernel);
+        auto b = MakeObject(kernel);
+        auto c = MakeObject(kernel);
         const u32_le input[]{
             IPC::MakeHeader(0, 0, 5),        IPC::MoveHandleDesc(2),
             handle_table.Create(a).Unwrap(), handle_table.Create(b).Unwrap(),
@@ -190,7 +193,7 @@ TEST_CASE("HLERequestContext::PopulateFromIncomingCommandBuffer", "[core][kernel
                                                     buffer_mapped->size(), MemoryState::Private);
         REQUIRE(result.Code() == RESULT_SUCCESS);
 
-        auto a = MakeObject();
+        auto a = MakeObject(kernel);
         const u32_le input[]{
             IPC::MakeHeader(0, 2, 8),
             0x12345678,
@@ -222,13 +225,17 @@ TEST_CASE("HLERequestContext::PopulateFromIncomingCommandBuffer", "[core][kernel
         REQUIRE(process->vm_manager.UnmapRange(target_address_mapped, buffer_mapped->size()) ==
                 RESULT_SUCCESS);
     }
+
+    CoreTiming::Shutdown();
 }
 
 TEST_CASE("HLERequestContext::WriteToOutgoingCommandBuffer", "[core][kernel]") {
-    auto session = std::get<SharedPtr<ServerSession>>(ServerSession::CreateSessionPair());
+    CoreTiming::Init();
+    Kernel::KernelSystem kernel(0);
+    auto session = std::get<SharedPtr<ServerSession>>(kernel.CreateSessionPair());
     HLERequestContext context(std::move(session));
 
-    auto process = Process::Create(CodeSet::Create("", 0));
+    auto process = kernel.CreateProcess(kernel.CreateCodeSet("", 0));
     HandleTable handle_table;
     auto* input = context.CommandBuffer();
     u32_le output[IPC::COMMAND_BUFFER_LENGTH];
@@ -255,8 +262,8 @@ TEST_CASE("HLERequestContext::WriteToOutgoingCommandBuffer", "[core][kernel]") {
     }
 
     SECTION("translates move/copy handles") {
-        auto a = MakeObject();
-        auto b = MakeObject();
+        auto a = MakeObject(kernel);
+        auto b = MakeObject(kernel);
         input[0] = IPC::MakeHeader(0, 0, 4);
         input[1] = IPC::MoveHandleDesc(1);
         input[2] = context.AddOutgoingHandle(a);
@@ -281,9 +288,9 @@ TEST_CASE("HLERequestContext::WriteToOutgoingCommandBuffer", "[core][kernel]") {
     }
 
     SECTION("translates multi-handle descriptors") {
-        auto a = MakeObject();
-        auto b = MakeObject();
-        auto c = MakeObject();
+        auto a = MakeObject(kernel);
+        auto b = MakeObject(kernel);
+        auto c = MakeObject(kernel);
         input[0] = IPC::MakeHeader(0, 0, 5);
         input[1] = IPC::MoveHandleDesc(2);
         input[2] = context.AddOutgoingHandle(a);
@@ -361,6 +368,8 @@ TEST_CASE("HLERequestContext::WriteToOutgoingCommandBuffer", "[core][kernel]") {
         REQUIRE(process->vm_manager.UnmapRange(target_address, output_buffer->size()) ==
                 RESULT_SUCCESS);
     }
+
+    CoreTiming::Shutdown();
 }
 
 } // namespace Kernel

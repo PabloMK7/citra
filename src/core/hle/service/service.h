@@ -20,6 +20,7 @@ class System;
 }
 
 namespace Kernel {
+class KernelSystem;
 class ClientPort;
 class ServerPort;
 class ServerSession;
@@ -59,7 +60,7 @@ public:
     /// Creates a port pair and registers this service with the given ServiceManager.
     void InstallAsService(SM::ServiceManager& service_manager);
     /// Creates a port pair and registers it on the kernel's global port registry.
-    void InstallAsNamedPort();
+    void InstallAsNamedPort(Kernel::KernelSystem& kernel);
 
     void HandleSyncRequest(Kernel::SharedPtr<Kernel::ServerSession> server_session) override;
 
@@ -184,7 +185,7 @@ private:
 };
 
 /// Initialize ServiceManager
-void Init(Core::System& system, std::shared_ptr<SM::ServiceManager>& sm);
+void Init(Core::System& system);
 
 /// Shutdown ServiceManager
 void Shutdown();

@@ -19,11 +19,11 @@ static CoreTiming::EventType* timer_callback_event_type = nullptr;
 //               us to simply use a pool index or similar.
 static Kernel::HandleTable timer_callback_handle_table;
 
-Timer::Timer() {}
+Timer::Timer(KernelSystem& kernel) : WaitObject(kernel) {}
 Timer::~Timer() {}
 
-SharedPtr<Timer> Timer::Create(ResetType reset_type, std::string name) {
-    SharedPtr<Timer> timer(new Timer);
+SharedPtr<Timer> KernelSystem::CreateTimer(ResetType reset_type, std::string name) {
+    SharedPtr<Timer> timer(new Timer(*this));
 
     timer->reset_type = reset_type;
     timer->signaled = false;

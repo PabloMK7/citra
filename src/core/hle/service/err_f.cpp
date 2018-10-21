@@ -244,7 +244,7 @@ ERR_F::~ERR_F() = default;
 
 void InstallInterfaces(Core::System& system) {
     auto errf = std::make_shared<ERR_F>(system);
-    errf->InstallAsNamedPort();
+    errf->InstallAsNamedPort(system.Kernel());
 }
 
 } // namespace Service::ERR

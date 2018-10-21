@@ -87,7 +87,7 @@ ResultVal<std::shared_ptr<File>> ArchiveManager::OpenFileFromArchive(ArchiveHand
     if (backend.Failed())
         return backend.Code();
 
-    auto file = std::shared_ptr<File>(new File(std::move(backend).Unwrap(), path));
+    auto file = std::shared_ptr<File>(new File(system, std::move(backend).Unwrap(), path));
     return MakeResult<std::shared_ptr<File>>(std::move(file));
 }
 
@@ -348,7 +348,7 @@ void ArchiveManager::RegisterSelfNCCH(Loader::AppLoader& app_loader) {
     factory->Register(app_loader);
 }
 
-ArchiveManager::ArchiveManager() {
+ArchiveManager::ArchiveManager(Core::System& system) : system(system) {
     RegisterArchiveTypes();
 }
 

@@ -855,11 +855,11 @@ Module::Module(Core::System& system) : system(system) {
 
     using Kernel::MemoryPermission;
     shared_font_mem =
-        Kernel::SharedMemory::Create(nullptr, 0x332000, // 3272 KB
-                                     MemoryPermission::ReadWrite, MemoryPermission::Read, 0,
-                                     Kernel::MemoryRegion::SYSTEM, "APT:SharedFont");
+        system.Kernel().CreateSharedMemory(nullptr, 0x332000, // 3272 KB
+                                           MemoryPermission::ReadWrite, MemoryPermission::Read, 0,
+                                           Kernel::MemoryRegion::SYSTEM, "APT:SharedFont");
 
-    lock = Kernel::Mutex::Create(false, "APT_U:Lock");
+    lock = system.Kernel().CreateMutex(false, "APT_U:Lock");
 }
 
 Module::~Module() {}

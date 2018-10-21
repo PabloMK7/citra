@@ -60,7 +60,7 @@ inline static u32 const NewThreadId() {
     return next_thread_id++;
 }
 
-Thread::Thread() : context(Core::CPU().NewContext()) {}
+Thread::Thread(KernelSystem& kernel) : WaitObject(kernel), context(Core::CPU().NewContext()) {}
 Thread::~Thread() {}
 
 Thread* GetCurrentThread() {
@@ -320,9 +320,10 @@ static void ResetThreadContext(const std::unique_ptr<ARM_Interface::ThreadContex
     context->SetCpsr(USER32MODE | ((entry_point & 1) << 5)); // Usermode and THUMB mode
 }
 
-ResultVal<SharedPtr<Thread>> Thread::Create(std::string name, VAddr entry_point, u32 priority,
-                                            u32 arg, s32 processor_id, VAddr stack_top,
-                                            SharedPtr<Process> owner_process) {
+ResultVal<SharedPtr<Thread>> KernelSystem::CreateThread(std::string name, VAddr entry_point,
+                                                        u32 priority, u32 arg, s32 processor_id,
+                                                        VAddr stack_top,
+                                                        SharedPtr<Process> owner_process) {
     // Check if priority is in ranged. Lowest priority -> highest priority id.
     if (priority > ThreadPrioLowest) {
         LOG_ERROR(Kernel_SVC, "Invalid thread priority: {}", priority);
@@ -343,7 +344,7 @@ ResultVal<SharedPtr<Thread>> Thread::Create(std::string name, VAddr entry_point,
                           ErrorSummary::InvalidArgument, ErrorLevel::Permanent);
     }
 
-    SharedPtr<Thread> thread(new Thread);
+    SharedPtr<Thread> thread(new Thread(*this));
 
     thread_list.push_back(thread);
     ready_queue.prepare(priority);
@@ -443,11 +444,12 @@ void Thread::BoostPriority(u32 priority) {
     current_priority = priority;
 }
 
-SharedPtr<Thread> SetupMainThread(u32 entry_point, u32 priority, SharedPtr<Process> owner_process) {
+SharedPtr<Thread> SetupMainThread(KernelSystem& kernel, u32 entry_point, u32 priority,
+                                  SharedPtr<Process> owner_process) {
     // Initialize new "main" thread
     auto thread_res =
-        Thread::Create("main", entry_point, priority, 0, owner_process->ideal_processor,
-                       Memory::HEAP_VADDR_END, owner_process);
+        kernel.CreateThread("main", entry_point, priority, 0, owner_process->ideal_processor,
+                            Memory::HEAP_VADDR_END, owner_process);
 
     SharedPtr<Thread> thread = std::move(thread_res).Unwrap();
 

@@ -6,11 +6,15 @@
 
 #include "core/hle/service/service.h"
 
+namespace Core {
+class System;
+}
+
 namespace Service::NIM {
 
 class NIM_U final : public ServiceFramework<NIM_U> {
 public:
-    NIM_U();
+    explicit NIM_U(Core::System& system);
     ~NIM_U();
 
 private:

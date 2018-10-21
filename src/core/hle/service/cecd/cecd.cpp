@@ -1351,10 +1351,11 @@ Module::SessionData::~SessionData() {
 Module::Interface::Interface(std::shared_ptr<Module> cecd, const char* name, u32 max_session)
     : ServiceFramework(name, max_session), cecd(std::move(cecd)) {}
 
-Module::Module() {
+Module::Module(Core::System& system) {
     using namespace Kernel;
-    cecinfo_event = Event::Create(Kernel::ResetType::OneShot, "CECD::cecinfo_event");
-    change_state_event = Event::Create(Kernel::ResetType::OneShot, "CECD::change_state_event");
+    cecinfo_event = system.Kernel().CreateEvent(Kernel::ResetType::OneShot, "CECD::cecinfo_event");
+    change_state_event =
+        system.Kernel().CreateEvent(Kernel::ResetType::OneShot, "CECD::change_state_event");
 
     std::string nand_directory = FileUtil::GetUserPath(FileUtil::UserPath::NANDDir);
     FileSys::ArchiveFactory_SystemSaveData systemsavedata_factory(nand_directory);
@@ -1433,7 +1434,7 @@ Module::~Module() = default;
 
 void InstallInterfaces(Core::System& system) {
     auto& service_manager = system.ServiceManager();
-    auto cecd = std::make_shared<Module>();
+    auto cecd = std::make_shared<Module>(system);
     std::make_shared<CECD_NDM>(cecd)->InstallAsService(service_manager);
     std::make_shared<CECD_S>(cecd)->InstallAsService(service_manager);
     std::make_shared<CECD_U>(cecd)->InstallAsService(service_manager);

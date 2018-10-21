@@ -10,16 +10,16 @@
 
 namespace Kernel {
 
-Semaphore::Semaphore() {}
+Semaphore::Semaphore(KernelSystem& kernel) : WaitObject(kernel) {}
 Semaphore::~Semaphore() {}
 
-ResultVal<SharedPtr<Semaphore>> Semaphore::Create(s32 initial_count, s32 max_count,
-                                                  std::string name) {
+ResultVal<SharedPtr<Semaphore>> KernelSystem::CreateSemaphore(s32 initial_count, s32 max_count,
+                                                              std::string name) {
 
     if (initial_count > max_count)
         return ERR_INVALID_COMBINATION_KERNEL;
 
-    SharedPtr<Semaphore> semaphore(new Semaphore);
+    SharedPtr<Semaphore> semaphore(new Semaphore(*this));
 
     // When the semaphore is created, some slots are reserved for other threads,
     // and the rest is reserved for the caller thread

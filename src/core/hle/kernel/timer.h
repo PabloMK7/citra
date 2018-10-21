@@ -12,14 +12,6 @@ namespace Kernel {
 
 class Timer final : public WaitObject {
 public:
-    /**
-     * Creates a timer
-     * @param reset_type ResetType describing how to create the timer
-     * @param name Optional name of timer
-     * @return The created Timer
-     */
-    static SharedPtr<Timer> Create(ResetType reset_type, std::string name = "Unknown");
-
     std::string GetTypeName() const override {
         return "Timer";
     }
@@ -68,7 +60,7 @@ public:
     void Signal(s64 cycles_late);
 
 private:
-    Timer();
+    explicit Timer(KernelSystem& kernel);
     ~Timer() override;
 
     ResetType reset_type; ///< The ResetType of this timer
@@ -81,6 +73,8 @@ private:
 
     /// Handle used as userdata to reference this object when inserting into the CoreTiming queue.
     Handle callback_handle;
+
+    friend class KernelSystem;
 };
 
 /// Initializes the required variables for timers
