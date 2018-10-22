@@ -923,7 +923,7 @@ static ResultCode QueryProcessMemory(MemoryInfo* memory_info, PageInfo* page_inf
 
     auto vma = process->vm_manager.FindVMA(addr);
 
-    if (vma == g_current_process->vm_manager.vma_map.end())
+    if (vma == process->vm_manager.vma_map.end())
         return ERR_INVALID_ADDRESS;
 
     memory_info->base_address = vma->second.base;
