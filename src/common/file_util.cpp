@@ -14,21 +14,24 @@
 #ifdef _WIN32
 #include <windows.h>
 // windows.h needs to be included before other windows headers
-#include <commdlg.h> // for GetSaveFileName
-#include <direct.h>  // getcwd
+#include <direct.h> // getcwd
 #include <io.h>
 #include <shellapi.h>
 #include <shlobj.h> // for SHGetFolderPath
 #include <tchar.h>
 #include "common/string_util.h"
 
-// 64 bit offsets for windows
+#ifdef _MSC_VER
+// 64 bit offsets for MSVC
 #define fseeko _fseeki64
 #define ftello _ftelli64
-#define atoll _atoi64
+#define fileno _fileno
+#endif
+
+// 64 bit offsets for MSVC and MinGW. MinGW also needs this for using _wstat64
 #define stat _stat64
 #define fstat _fstat64
-#define fileno _fileno
+
 #else
 #ifdef __APPLE__
 #include <sys/param.h>
