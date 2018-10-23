@@ -58,6 +58,7 @@ enum class ThreadWakeupReason {
 class ThreadManager {
 public:
     ThreadManager();
+    ~ThreadManager();
 
     /**
      * Creates a new thread ID
@@ -95,6 +96,11 @@ public:
      */
     void ExitCurrentThread();
 
+    /**
+     * Get a const reference to the thread list for debug use
+     */
+    const std::vector<SharedPtr<Thread>>& GetThreadList();
+
 private:
     /**
      * Switches the CPU's active thread context to that of the specified thread
@@ -122,6 +128,9 @@ private:
 
     /// Event type for the thread wake up event
     CoreTiming::EventType* ThreadWakeupEventType = nullptr;
+
+    // Lists all threadsthat aren't deleted.
+    std::vector<SharedPtr<Thread>> thread_list;
 
     friend class Thread;
     friend class KernelSystem;
@@ -299,15 +308,5 @@ private:
  */
 SharedPtr<Thread> SetupMainThread(KernelSystem& kernel, u32 entry_point, u32 priority,
                                   SharedPtr<Process> owner_process);
-
-/**
- * Shutdown threading
- */
-void ThreadingShutdown();
-
-/**
- * Get a const reference to the thread list for debug use
- */
-const std::vector<SharedPtr<Thread>>& GetThreadList();
 
 } // namespace Kernel

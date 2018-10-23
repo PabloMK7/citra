@@ -27,8 +27,6 @@ KernelSystem::KernelSystem(u32 system_mode) {
 
 /// Shutdown the kernel
 KernelSystem::~KernelSystem() {
-    Kernel::ThreadingShutdown();
-
     Kernel::TimersShutdown();
     Kernel::MemoryShutdown();
 }

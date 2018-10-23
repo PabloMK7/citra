@@ -33,9 +33,6 @@ void Thread::Acquire(Thread* thread) {
     ASSERT_MSG(!ShouldWait(thread), "object unavailable!");
 }
 
-// Lists all thread ids that aren't deleted/etc.
-static std::vector<SharedPtr<Thread>> thread_list;
-
 u32 ThreadManager::NewThreadId() {
     return next_thread_id++;
 }
@@ -311,7 +308,7 @@ ResultVal<SharedPtr<Thread>> KernelSystem::CreateThread(std::string name, VAddr 
 
     SharedPtr<Thread> thread(new Thread(*this));
 
-    thread_list.push_back(thread);
+    thread_manager->thread_list.push_back(thread);
     thread_manager->ready_queue.prepare(priority);
 
     thread->thread_id = thread_manager->NewThreadId();
@@ -464,8 +461,6 @@ VAddr Thread::GetCommandBufferAddress() const {
     return GetTLSAddress() + CommandHeaderOffset;
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
 ThreadManager::ThreadManager() {
     ThreadWakeupEventType =
         CoreTiming::RegisterEvent("ThreadWakeupCallback", [this](u64 thread_id, s64 cycle_late) {
@@ -473,14 +468,13 @@ ThreadManager::ThreadManager() {
         });
 }
 
-void ThreadingShutdown() {
+ThreadManager::~ThreadManager() {
     for (auto& t : thread_list) {
         t->Stop();
     }
-    thread_list.clear();
 }
 
-const std::vector<SharedPtr<Thread>>& GetThreadList() {
+const std::vector<SharedPtr<Thread>>& ThreadManager::GetThreadList() {
     return thread_list;
 }
 
