@@ -6,7 +6,6 @@
 #include <unordered_map>
 #include "common/assert.h"
 #include "common/logging/log.h"
-#include "core/core_timing.h"
 #include "core/hle/kernel/handle_table.h"
 #include "core/hle/kernel/object.h"
 #include "core/hle/kernel/thread.h"
@@ -14,16 +13,10 @@
 
 namespace Kernel {
 
-/// The event type of the generic timer callback event
-static CoreTiming::EventType* timer_callback_event_type = nullptr;
-
-static u64 next_timer_callback_id;
-static std::unordered_map<u64, Timer*> timer_callback_table;
-
-Timer::Timer(KernelSystem& kernel) : WaitObject(kernel) {}
+Timer::Timer(KernelSystem& kernel) : WaitObject(kernel), timer_manager(kernel.GetTimerManager()) {}
 Timer::~Timer() {
     Cancel();
-    timer_callback_table.erase(callback_id);
+    timer_manager.timer_callback_table.erase(callback_id);
 }
 
 SharedPtr<Timer> KernelSystem::CreateTimer(ResetType reset_type, std::string name) {
@@ -34,8 +27,8 @@ SharedPtr<Timer> KernelSystem::CreateTimer(ResetType reset_type, std::string nam
     timer->name = std::move(name);
     timer->initial_delay = 0;
     timer->interval_delay = 0;
-    timer->callback_id = ++next_timer_callback_id;
-    timer_callback_table[timer->callback_id] = timer.get();
+    timer->callback_id = ++timer_manager->next_timer_callback_id;
+    timer_manager->timer_callback_table[timer->callback_id] = timer.get();
 
     return timer;
 }
@@ -62,12 +55,13 @@ void Timer::Set(s64 initial, s64 interval) {
         // Immediately invoke the callback
         Signal(0);
     } else {
-        CoreTiming::ScheduleEvent(nsToCycles(initial), timer_callback_event_type, callback_id);
+        CoreTiming::ScheduleEvent(nsToCycles(initial), timer_manager.timer_callback_event_type,
+                                  callback_id);
     }
 }
 
 void Timer::Cancel() {
-    CoreTiming::UnscheduleEvent(timer_callback_event_type, callback_id);
+    CoreTiming::UnscheduleEvent(timer_manager.timer_callback_event_type, callback_id);
 }
 
 void Timer::Clear() {
@@ -92,12 +86,12 @@ void Timer::Signal(s64 cycles_late) {
     if (interval_delay != 0) {
         // Reschedule the timer with the interval delay
         CoreTiming::ScheduleEvent(nsToCycles(interval_delay) - cycles_late,
-                                  timer_callback_event_type, callback_id);
+                                  timer_manager.timer_callback_event_type, callback_id);
     }
 }
 
 /// The timer callback event, called when a timer is fired
-static void TimerCallback(u64 callback_id, s64 cycles_late) {
+void TimerManager::TimerCallback(u64 callback_id, s64 cycles_late) {
     SharedPtr<Timer> timer = timer_callback_table.at(callback_id);
 
     if (timer == nullptr) {
@@ -108,12 +102,11 @@ static void TimerCallback(u64 callback_id, s64 cycles_late) {
     timer->Signal(cycles_late);
 }
 
-void TimersInit() {
-    next_timer_callback_id = 0;
-    timer_callback_table.clear();
-    timer_callback_event_type = CoreTiming::RegisterEvent("TimerCallback", TimerCallback);
+TimerManager::TimerManager() {
+    timer_callback_event_type =
+        CoreTiming::RegisterEvent("TimerCallback", [this](u64 thread_id, s64 cycle_late) {
+            TimerCallback(thread_id, cycle_late);
+        });
 }
-
-void TimersShutdown() {}
 
 } // namespace Kernel

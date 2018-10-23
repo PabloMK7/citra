@@ -5,10 +5,29 @@
 #pragma once
 
 #include "common/common_types.h"
+#include "core/core_timing.h"
 #include "core/hle/kernel/object.h"
 #include "core/hle/kernel/wait_object.h"
 
 namespace Kernel {
+
+class TimerManager {
+public:
+    TimerManager();
+
+private:
+    /// The timer callback event, called when a timer is fired
+    void TimerCallback(u64 callback_id, s64 cycles_late);
+
+    /// The event type of the generic timer callback event
+    CoreTiming::EventType* timer_callback_event_type = nullptr;
+
+    u64 next_timer_callback_id = 0;
+    std::unordered_map<u64, Timer*> timer_callback_table;
+
+    friend class Timer;
+    friend class KernelSystem;
+};
 
 class Timer final : public WaitObject {
 public:
@@ -74,12 +93,9 @@ private:
     /// ID used as userdata to reference this object when inserting into the CoreTiming queue.
     u64 callback_id;
 
+    TimerManager& timer_manager;
+
     friend class KernelSystem;
 };
-
-/// Initializes the required variables for timers
-void TimersInit();
-/// Tears down the timer variables
-void TimersShutdown();
 
 } // namespace Kernel
