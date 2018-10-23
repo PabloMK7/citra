@@ -13,7 +13,6 @@
 #include "core/arm/arm_interface.h"
 #include "core/arm/skyeye_common/armstate.h"
 #include "core/core.h"
-#include "core/core_timing.h"
 #include "core/hle/kernel/errors.h"
 #include "core/hle/kernel/handle_table.h"
 #include "core/hle/kernel/kernel.h"
@@ -26,9 +25,6 @@
 
 namespace Kernel {
 
-/// Event type for the thread wake up event
-static CoreTiming::EventType* ThreadWakeupEventType = nullptr;
-
 bool Thread::ShouldWait(Thread* thread) const {
     return status != ThreadStatus::Dead;
 }
@@ -36,8 +32,6 @@ bool Thread::ShouldWait(Thread* thread) const {
 void Thread::Acquire(Thread* thread) {
     ASSERT_MSG(!ShouldWait(thread), "object unavailable!");
 }
-
-static std::unordered_map<u64, Thread*> wakeup_callback_table;
 
 // Lists all thread ids that aren't deleted/etc.
 static std::vector<SharedPtr<Thread>> thread_list;
@@ -57,8 +51,8 @@ Thread* ThreadManager::GetCurrentThread() const {
 
 void Thread::Stop() {
     // Cancel any outstanding wakeup events for this thread
-    CoreTiming::UnscheduleEvent(ThreadWakeupEventType, thread_id);
-    wakeup_callback_table.erase(thread_id);
+    CoreTiming::UnscheduleEvent(thread_manager.ThreadWakeupEventType, thread_id);
+    thread_manager.wakeup_callback_table.erase(thread_id);
 
     // Clean up thread from ready queue
     // This is only needed when the thread is termintated forcefully (SVC TerminateProcess)
@@ -162,12 +156,7 @@ void ThreadManager::ExitCurrentThread() {
                       thread_list.end());
 }
 
-/**
- * Callback that will wake up the thread it was scheduled for
- * @param thread_id The ID of the thread that's been awoken
- * @param cycles_late The number of CPU cycles that have passed since the desired wakeup time
- */
-static void ThreadWakeupCallback(u64 thread_id, s64 cycles_late) {
+void ThreadManager::ThreadWakeupCallback(u64 thread_id, s64 cycles_late) {
     SharedPtr<Thread> thread = wakeup_callback_table.at(thread_id);
     if (thread == nullptr) {
         LOG_CRITICAL(Kernel, "Callback fired for invalid thread {:08X}", thread_id);
@@ -196,7 +185,8 @@ void Thread::WakeAfterDelay(s64 nanoseconds) {
     if (nanoseconds == -1)
         return;
 
-    CoreTiming::ScheduleEvent(nsToCycles(nanoseconds), ThreadWakeupEventType, thread_id);
+    CoreTiming::ScheduleEvent(nsToCycles(nanoseconds), thread_manager.ThreadWakeupEventType,
+                              thread_id);
 }
 
 void Thread::ResumeFromWait() {
@@ -334,7 +324,7 @@ ResultVal<SharedPtr<Thread>> KernelSystem::CreateThread(std::string name, VAddr 
     thread->wait_objects.clear();
     thread->wait_address = 0;
     thread->name = std::move(name);
-    wakeup_callback_table[thread->thread_id] = thread.get();
+    thread_manager->wakeup_callback_table[thread->thread_id] = thread.get();
     thread->owner_process = &owner_process;
 
     // Find the next available TLS index, and mark it as used
@@ -476,8 +466,11 @@ VAddr Thread::GetCommandBufferAddress() const {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void ThreadingInit() {
-    ThreadWakeupEventType = CoreTiming::RegisterEvent("ThreadWakeupCallback", ThreadWakeupCallback);
+ThreadManager::ThreadManager() {
+    ThreadWakeupEventType =
+        CoreTiming::RegisterEvent("ThreadWakeupCallback", [this](u64 thread_id, s64 cycle_late) {
+            ThreadWakeupCallback(thread_id, cycle_late);
+        });
 }
 
 void ThreadingShutdown() {
