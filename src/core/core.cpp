@@ -59,7 +59,7 @@ System::ResultStatus System::RunLoop(bool tight_loop) {
 
     // If we don't have a currently active thread then don't execute instructions,
     // instead advance to the next event and try to yield to the next thread
-    if (Kernel::GetCurrentThread() == nullptr) {
+    if (Kernel().GetThreadManager().GetCurrentThread() == nullptr) {
         LOG_TRACE(Core_ARM11, "Idling");
         CoreTiming::Idle();
         CoreTiming::Advance();
@@ -164,7 +164,7 @@ void System::Reschedule() {
     }
 
     reschedule_pending = false;
-    Kernel::Reschedule();
+    kernel->GetThreadManager().Reschedule();
 }
 
 System::ResultStatus System::Init(EmuWindow& emu_window, u32 system_mode) {

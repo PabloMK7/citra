@@ -72,7 +72,7 @@ bool HandleTable::IsValid(Handle handle) const {
 
 SharedPtr<Object> HandleTable::GetGeneric(Handle handle) const {
     if (handle == CurrentThread) {
-        return GetCurrentThread();
+        return kernel.GetThreadManager().GetCurrentThread();
     } else if (handle == CurrentProcess) {
         return kernel.GetCurrentProcess();
     }

@@ -36,7 +36,7 @@ SharedPtr<Mutex> KernelSystem::CreateMutex(bool initial_locked, std::string name
 
     // Acquire mutex with current thread if initialized as locked
     if (initial_locked)
-        mutex->Acquire(GetCurrentThread());
+        mutex->Acquire(thread_manager->GetCurrentThread());
 
     return mutex;
 }
