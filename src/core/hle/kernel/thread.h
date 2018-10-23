@@ -53,6 +53,10 @@ enum class ThreadWakeupReason {
     Timeout // The thread was woken up due to a wait timeout.
 };
 
+class ThreadManager {
+public:
+};
+
 class Thread final : public WaitObject {
 public:
     std::string GetName() const override {
@@ -209,6 +213,8 @@ public:
 private:
     explicit Thread(KernelSystem&);
     ~Thread() override;
+
+    ThreadManager& thread_manager;
 
     friend class KernelSystem;
 };

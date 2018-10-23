@@ -59,7 +59,9 @@ inline static u32 const NewThreadId() {
     return next_thread_id++;
 }
 
-Thread::Thread(KernelSystem& kernel) : WaitObject(kernel), context(Core::CPU().NewContext()) {}
+Thread::Thread(KernelSystem& kernel)
+    : WaitObject(kernel), context(Core::CPU().NewContext()),
+      thread_manager(kernel.GetThreadManager()) {}
 Thread::~Thread() {}
 
 Thread* GetCurrentThread() {

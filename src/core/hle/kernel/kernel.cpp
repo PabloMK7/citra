@@ -21,6 +21,7 @@ KernelSystem::KernelSystem(u32 system_mode) {
     Kernel::MemoryInit(system_mode);
 
     resource_limits = std::make_unique<ResourceLimitList>(*this);
+    thread_manager = std::make_unique<ThreadManager>();
     Kernel::ThreadingInit();
     Kernel::TimersInit();
 }
@@ -51,6 +52,14 @@ SharedPtr<Process> KernelSystem::GetCurrentProcess() const {
 
 void KernelSystem::SetCurrentProcess(SharedPtr<Process> process) {
     current_process = std::move(process);
+}
+
+ThreadManager& KernelSystem::GetThreadManager() {
+    return *thread_manager;
+}
+
+const ThreadManager& KernelSystem::GetThreadManager() const {
+    return *thread_manager;
 }
 
 } // namespace Kernel
