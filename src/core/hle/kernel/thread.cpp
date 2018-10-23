@@ -48,14 +48,7 @@ static Common::ThreadQueueList<Thread*, ThreadPrioLowest + 1> ready_queue;
 
 static SharedPtr<Thread> current_thread;
 
-// The first available thread id at startup
-static u32 next_thread_id;
-
-/**
- * Creates a new thread ID
- * @return The new thread ID
- */
-inline static u32 const NewThreadId() {
+u32 ThreadManager::NewThreadId() {
     return next_thread_id++;
 }
 
@@ -348,7 +341,7 @@ ResultVal<SharedPtr<Thread>> KernelSystem::CreateThread(std::string name, VAddr 
     thread_list.push_back(thread);
     ready_queue.prepare(priority);
 
-    thread->thread_id = NewThreadId();
+    thread->thread_id = thread_manager->NewThreadId();
     thread->status = ThreadStatus::Dormant;
     thread->entry_point = entry_point;
     thread->stack_top = stack_top;
@@ -504,7 +497,6 @@ void ThreadingInit() {
     ThreadWakeupEventType = CoreTiming::RegisterEvent("ThreadWakeupCallback", ThreadWakeupCallback);
 
     current_thread = nullptr;
-    next_thread_id = 1;
 }
 
 void ThreadingShutdown() {

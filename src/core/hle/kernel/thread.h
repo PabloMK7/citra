@@ -55,6 +55,14 @@ enum class ThreadWakeupReason {
 
 class ThreadManager {
 public:
+    /**
+     * Creates a new thread ID
+     * @return The new thread ID
+     */
+    u32 NewThreadId();
+
+private:
+    u32 next_thread_id = 1;
 };
 
 class Thread final : public WaitObject {
