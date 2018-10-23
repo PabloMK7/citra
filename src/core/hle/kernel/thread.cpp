@@ -38,7 +38,6 @@ void Thread::Acquire(Thread* thread) {
     ASSERT_MSG(!ShouldWait(thread), "object unavailable!");
 }
 
-static u64 next_callback_id;
 static std::unordered_map<u64, Thread*> wakeup_callback_table;
 
 // Lists all thread ids that aren't deleted/etc.
