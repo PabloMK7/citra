@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <atomic>
 #include <memory>
 #include "common/common_types.h"
 #include "core/hle/kernel/kernel.h"
@@ -25,6 +26,19 @@ enum {
 };
 } // namespace ErrCodes
 
+// TODO(FearlessTobi): Add more members to this struct
+struct AmiiboData {
+    std::array<u8, 7> uuid;
+    INSERT_PADDING_BYTES(0x4D);
+    u16_le char_id;
+    u8 char_variant;
+    u8 figure_type;
+    u16_be model_number;
+    u8 series;
+    INSERT_PADDING_BYTES(0x1C1);
+};
+static_assert(sizeof(AmiiboData) == 0x21C, "AmiiboData is an invalid size");
+
 enum class TagState : u8 {
     NotInitialized = 0,
     NotScanning = 1,
@@ -32,6 +46,7 @@ enum class TagState : u8 {
     TagInRange = 3,
     TagOutOfRange = 4,
     TagDataLoaded = 5,
+    Unknown6 = 6,
 };
 
 enum class CommunicationStatus : u8 {
@@ -48,6 +63,12 @@ public:
     public:
         Interface(std::shared_ptr<Module> nfc, const char* name, u32 max_session);
         ~Interface();
+
+        std::shared_ptr<Module> GetModule() const;
+
+        void LoadAmiibo(const AmiiboData& amiibo_data);
+
+        void RemoveAmiibo();
 
     protected:
         /**
@@ -167,6 +188,45 @@ public:
          */
         void CommunicationGetStatus(Kernel::HLERequestContext& ctx);
 
+        /**
+         * NFC::GetTagInfo service function
+         *  Inputs:
+         *      0 : Header code [0x00110000]
+         *  Outputs:
+         *      1 : Result of function, 0 on success, otherwise error code
+         *   2-12 : 0x2C-byte struct
+         */
+        void GetTagInfo(Kernel::HLERequestContext& ctx);
+
+        /**
+         * NFC::GetAmiiboConfig service function
+         *  Inputs:
+         *      0 : Header code [0x00180000]
+         *  Outputs:
+         *      1 : Result of function, 0 on success, otherwise error code
+         *   2-17 : 0x40-byte config struct
+         */
+        void GetAmiiboConfig(Kernel::HLERequestContext& ctx);
+
+        /**
+         * NFC::Unknown0x1A service function
+         *  Inputs:
+         *      0 : Header code [0x001A0000]
+         *  Outputs:
+         *      1 : Result of function, 0 on success, otherwise error code
+         */
+        void Unknown0x1A(Kernel::HLERequestContext& ctx);
+
+        /**
+         * NFC::GetIdentificationBlock service function
+         *  Inputs:
+         *      0 : Header code [0x001B0000]
+         *  Outputs:
+         *      1 : Result of function, 0 on success, otherwise error code
+         *   2-31 : 0x36-byte struct
+         */
+        void GetIdentificationBlock(Kernel::HLERequestContext& ctx);
+
     private:
         std::shared_ptr<Module> nfc;
     };
@@ -174,8 +234,10 @@ public:
 private:
     Kernel::SharedPtr<Kernel::Event> tag_in_range_event;
     Kernel::SharedPtr<Kernel::Event> tag_out_of_range_event;
-    TagState nfc_tag_state = TagState::NotInitialized;
+    std::atomic<TagState> nfc_tag_state = TagState::NotInitialized;
     CommunicationStatus nfc_status = CommunicationStatus::NfcInitialized;
+
+    AmiiboData amiibo_data{};
 };
 
 void InstallInterfaces(Core::System& system);

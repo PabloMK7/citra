@@ -45,6 +45,7 @@
 #include "citra_qt/util/clickable_label.h"
 #include "common/common_paths.h"
 #include "common/detached_tasks.h"
+#include "common/file_util.h"
 #include "common/logging/backend.h"
 #include "common/logging/filter.h"
 #include "common/logging/log.h"
@@ -58,6 +59,7 @@
 #include "core/frontend/applets/default_applets.h"
 #include "core/gdbstub/gdbstub.h"
 #include "core/hle/service/fs/archive.h"
+#include "core/hle/service/nfc/nfc.h"
 #include "core/loader/loader.h"
 #include "core/movie.h"
 #include "core/settings.h"
@@ -496,6 +498,8 @@ void GMainWindow::ConnectMenuEvents() {
     connect(ui.action_Load_File, &QAction::triggered, this, &GMainWindow::OnMenuLoadFile);
     connect(ui.action_Install_CIA, &QAction::triggered, this, &GMainWindow::OnMenuInstallCIA);
     connect(ui.action_Exit, &QAction::triggered, this, &QMainWindow::close);
+    connect(ui.action_Load_Amiibo, &QAction::triggered, this, &GMainWindow::OnLoadAmiibo);
+    connect(ui.action_Remove_Amiibo, &QAction::triggered, this, &GMainWindow::OnRemoveAmiibo);
 
     // Emulation
     connect(ui.action_Start, &QAction::triggered, this, &GMainWindow::OnStartGame);
@@ -848,6 +852,8 @@ void GMainWindow::ShutdownGame() {
     ui.action_Pause->setEnabled(false);
     ui.action_Stop->setEnabled(false);
     ui.action_Restart->setEnabled(false);
+    ui.action_Load_Amiibo->setEnabled(false);
+    ui.action_Remove_Amiibo->setEnabled(false);
     ui.action_Report_Compatibility->setEnabled(false);
     ui.action_Enable_Frame_Advancing->setEnabled(false);
     ui.action_Enable_Frame_Advancing->setChecked(false);
@@ -1135,6 +1141,7 @@ void GMainWindow::OnStartGame() {
     ui.action_Pause->setEnabled(true);
     ui.action_Stop->setEnabled(true);
     ui.action_Restart->setEnabled(true);
+    ui.action_Load_Amiibo->setEnabled(true);
     ui.action_Report_Compatibility->setEnabled(true);
     ui.action_Enable_Frame_Advancing->setEnabled(true);
 
@@ -1286,6 +1293,40 @@ void GMainWindow::OnConfigure() {
         SyncMenuUISettings();
         game_list->RefreshGameDirectory();
         config->Save();
+    }
+}
+
+void GMainWindow::OnLoadAmiibo() {
+    const QString extensions{"*.bin"};
+    const QString file_filter = tr("Amiibo File (%1);; All Files (*.*)").arg(extensions);
+    const QString filename = QFileDialog::getOpenFileName(this, tr("Load Amiibo"), "", file_filter);
+
+    if (!filename.isEmpty()) {
+        Core::System& system{Core::System::GetInstance()};
+        Service::SM::ServiceManager& sm = system.ServiceManager();
+        auto nfc = sm.GetService<Service::NFC::Module::Interface>("nfc:u");
+        if (nfc != nullptr) {
+            Service::NFC::AmiiboData amiibo_data{};
+            auto nfc_file = FileUtil::IOFile(filename.toStdString(), "rb");
+            std::size_t read_length =
+                nfc_file.ReadBytes(&amiibo_data, sizeof(Service::NFC::AmiiboData));
+            if (read_length != sizeof(Service::NFC::AmiiboData)) {
+                LOG_ERROR(Frontend, "Amiibo file size is incorrect");
+                return;
+            }
+            nfc->LoadAmiibo(amiibo_data);
+            ui.action_Remove_Amiibo->setEnabled(true);
+        }
+    }
+}
+
+void GMainWindow::OnRemoveAmiibo() {
+    Core::System& system{Core::System::GetInstance()};
+    Service::SM::ServiceManager& sm = system.ServiceManager();
+    auto nfc = sm.GetService<Service::NFC::Module::Interface>("nfc:u");
+    if (nfc != nullptr) {
+        nfc->RemoveAmiibo();
+        ui.action_Remove_Amiibo->setEnabled(false);
     }
 }
 

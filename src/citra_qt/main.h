@@ -166,6 +166,8 @@ private slots:
     void OnCIAInstallFinished();
     void OnMenuRecentFile();
     void OnConfigure();
+    void OnLoadAmiibo();
+    void OnRemoveAmiibo();
     void OnToggleFilterBar();
     void OnDisplayTitleBars(bool);
     void ToggleFullscreen();

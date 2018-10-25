@@ -57,10 +57,19 @@
       <string>Recent Files</string>
      </property>
     </widget>
+    <widget class="QMenu" name="menu_Amiibo">
+     <property name="title">
+      <string>Amiibo</string>
+     </property>
+     <addaction name="action_Load_Amiibo"/>
+     <addaction name="action_Remove_Amiibo"/>
+    </widget>
     <addaction name="action_Load_File"/>
     <addaction name="action_Install_CIA"/>
     <addaction name="separator"/>
     <addaction name="menu_recent_files"/>
+    <addaction name="separator"/>
+    <addaction name="menu_Amiibo"/>
     <addaction name="separator"/>
     <addaction name="action_Exit"/>
    </widget>
@@ -413,6 +422,22 @@
    </property>
    <property name="text">
     <string>Restart</string>
+   </property>
+  </action>
+  <action name="action_Load_Amiibo">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Load...</string>
+   </property>
+  </action>
+  <action name="action_Remove_Amiibo">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Remove</string>
    </property>
   </action>
  </widget>
