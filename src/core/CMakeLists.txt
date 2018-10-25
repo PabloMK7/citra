@@ -103,8 +103,6 @@ add_library(core STATIC
     hle/applets/mint.h
     hle/applets/swkbd.cpp
     hle/applets/swkbd.h
-    hle/config_mem.cpp
-    hle/config_mem.h
     hle/function_wrappers.h
     hle/ipc.h
     hle/ipc_helpers.h
@@ -114,6 +112,8 @@ add_library(core STATIC
     hle/kernel/client_port.h
     hle/kernel/client_session.cpp
     hle/kernel/client_session.h
+    hle/kernel/config_mem.cpp
+    hle/kernel/config_mem.h
     hle/kernel/errors.h
     hle/kernel/event.cpp
     hle/kernel/event.h
