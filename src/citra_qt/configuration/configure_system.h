@@ -33,9 +33,9 @@ private:
     void ReadSystemSettings();
     void ConfigureTime();
 
-    void updateBirthdayComboBox(int birthmonth_index);
-    void updateInitTime(int init_clock);
-    void refreshConsoleID();
+    void UpdateBirthdayComboBox(int birthmonth_index);
+    void UpdateInitTime(int init_clock);
+    void RefreshConsoleID();
 
     std::unique_ptr<Ui::ConfigureSystem> ui;
     bool enabled;
