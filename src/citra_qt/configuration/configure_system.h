@@ -23,7 +23,7 @@ class ConfigureSystem : public QWidget {
 
 public:
     explicit ConfigureSystem(QWidget* parent = nullptr);
-    ~ConfigureSystem();
+    ~ConfigureSystem() override;
 
     void applyConfiguration();
     void setConfiguration();
