@@ -38,13 +38,14 @@ private:
     void RefreshConsoleID();
 
     std::unique_ptr<Ui::ConfigureSystem> ui;
-    bool enabled;
+    bool enabled = false;
 
     std::shared_ptr<Service::CFG::Module> cfg;
     std::u16string username;
-    int birthmonth, birthday;
-    int language_index;
-    int sound_index;
+    int birthmonth = 0;
+    int birthday = 0;
+    int language_index = 0;
+    int sound_index = 0;
     u8 country_code;
     u16 play_coin;
 };
