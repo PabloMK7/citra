@@ -8,9 +8,9 @@
 #include "core/hle/kernel/memory.h"
 #include "core/hle/kernel/process.h"
 #include "core/hle/kernel/resource_limit.h"
+#include "core/hle/kernel/shared_page.h"
 #include "core/hle/kernel/thread.h"
 #include "core/hle/kernel/timer.h"
-#include "core/hle/shared_page.h"
 
 namespace Kernel {
 
@@ -62,6 +62,14 @@ TimerManager& KernelSystem::GetTimerManager() {
 
 const TimerManager& KernelSystem::GetTimerManager() const {
     return *timer_manager;
+}
+
+SharedPage::Handler& KernelSystem::GetSharedPageHandler() {
+    return *shared_page_handler;
+}
+
+const SharedPage::Handler& KernelSystem::GetSharedPageHandler() const {
+    return *shared_page_handler;
 }
 
 } // namespace Kernel

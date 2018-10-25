@@ -16,6 +16,10 @@ namespace ConfigMem {
 class Handler;
 }
 
+namespace SharedPage {
+class Handler;
+}
+
 namespace Kernel {
 
 class AddressArbiter;
@@ -202,6 +206,9 @@ public:
 
     void MapSharedPages(VMManager& address_space);
 
+    SharedPage::Handler& GetSharedPageHandler();
+    const SharedPage::Handler& GetSharedPageHandler() const;
+
 private:
     void MemoryInit(u32 mem_type);
 
@@ -221,6 +228,7 @@ private:
     std::unique_ptr<TimerManager> timer_manager;
 
     std::unique_ptr<ConfigMem::Handler> config_mem_handler;
+    std::unique_ptr<SharedPage::Handler> shared_page_handler;
 };
 
 } // namespace Kernel

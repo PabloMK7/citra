@@ -12,7 +12,6 @@
 #include "core/hle/kernel/resource_limit.h"
 #include "core/hle/kernel/thread.h"
 #include "core/hle/kernel/timer.h"
-#include "core/hle/shared_page.h"
 
 namespace Kernel {
 

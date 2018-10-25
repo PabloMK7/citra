@@ -6,7 +6,7 @@
 #include "core/core_timing.h"
 #include "core/hle/kernel/memory.h"
 #include "core/hle/kernel/process.h"
-#include "core/hle/shared_page.h"
+#include "core/hle/kernel/shared_page.h"
 #include "core/memory.h"
 
 TEST_CASE("Memory::IsValidVirtualAddress", "[core][memory]") {

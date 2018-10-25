@@ -14,6 +14,7 @@
 #include "core/core.h"
 #include "core/hle/kernel/config_mem.h"
 #include "core/hle/kernel/memory.h"
+#include "core/hle/kernel/shared_page.h"
 #include "core/hle/kernel/vm_manager.h"
 #include "core/hle/result.h"
 #include "core/memory.h"
@@ -72,6 +73,8 @@ void KernelSystem::MemoryInit(u32 mem_type) {
     config_mem.app_mem_alloc = memory_region_sizes[mem_type][0];
     config_mem.sys_mem_alloc = memory_regions[1].size;
     config_mem.base_mem_alloc = memory_regions[2].size;
+
+    shared_page_handler = std::make_unique<SharedPage::Handler>();
 }
 
 void MemoryShutdown() {
@@ -164,11 +167,9 @@ void KernelSystem::MapSharedPages(VMManager& address_space) {
 
     auto shared_page_vma =
         address_space
-            .MapBackingMemory(
-                Memory::SHARED_PAGE_VADDR,
-                reinterpret_cast<u8*>(
-                    &Core::System::GetInstance().GetSharedPageHandler()->GetSharedPage()),
-                Memory::SHARED_PAGE_SIZE, MemoryState::Shared)
+            .MapBackingMemory(Memory::SHARED_PAGE_VADDR,
+                              reinterpret_cast<u8*>(&shared_page_handler->GetSharedPage()),
+                              Memory::SHARED_PAGE_SIZE, MemoryState::Shared)
             .Unwrap();
     address_space.Reprotect(shared_page_vma, VMAPermission::Read);
 }

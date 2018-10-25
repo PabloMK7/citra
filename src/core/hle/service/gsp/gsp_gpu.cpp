@@ -11,6 +11,7 @@
 #include "core/hle/ipc_helpers.h"
 #include "core/hle/kernel/handle_table.h"
 #include "core/hle/kernel/shared_memory.h"
+#include "core/hle/kernel/shared_page.h"
 #include "core/hle/result.h"
 #include "core/hle/service/gsp/gsp_gpu.h"
 #include "core/hw/gpu.h"
@@ -731,7 +732,7 @@ void GSP_GPU::SetLedForceOff(Kernel::HLERequestContext& ctx) {
 
     u8 state = rp.Pop<u8>();
 
-    system.GetSharedPageHandler()->Set3DLed(state);
+    system.Kernel().GetSharedPageHandler().Set3DLed(state);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);

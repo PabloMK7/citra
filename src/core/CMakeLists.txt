@@ -144,6 +144,8 @@ add_library(core STATIC
     hle/kernel/session.h
     hle/kernel/shared_memory.cpp
     hle/kernel/shared_memory.h
+    hle/kernel/shared_page.cpp
+    hle/kernel/shared_page.h
     hle/kernel/svc.cpp
     hle/kernel/svc.h
     hle/kernel/thread.cpp
@@ -386,8 +388,6 @@ add_library(core STATIC
     hle/service/ssl_c.h
     hle/service/y2r_u.cpp
     hle/service/y2r_u.h
-    hle/shared_page.cpp
-    hle/shared_page.h
     hw/aes/arithmetic128.cpp
     hw/aes/arithmetic128.h
     hw/aes/ccm.cpp
