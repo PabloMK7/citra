@@ -102,7 +102,7 @@ public:
      */
     ResultVal<SharedPtr<Thread>> CreateThread(std::string name, VAddr entry_point, u32 priority,
                                               u32 arg, s32 processor_id, VAddr stack_top,
-                                              SharedPtr<Process> owner_process);
+                                              Process* owner_process);
 
     /**
      * Creates a semaphore.
@@ -156,7 +156,7 @@ public:
      * linear heap.
      * @param name Optional object name, used for debugging purposes.
      */
-    SharedPtr<SharedMemory> CreateSharedMemory(SharedPtr<Process> owner_process, u32 size,
+    SharedPtr<SharedMemory> CreateSharedMemory(Process* owner_process, u32 size,
                                                MemoryPermission permissions,
                                                MemoryPermission other_permissions,
                                                VAddr address = 0,
