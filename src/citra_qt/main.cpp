@@ -21,6 +21,7 @@
 #include "citra_qt/camera/qt_multimedia_camera.h"
 #include "citra_qt/camera/still_image_camera.h"
 #include "citra_qt/compatdb.h"
+#include "citra_qt/compatibility_list.h"
 #include "citra_qt/configuration/config.h"
 #include "citra_qt/configuration/configure_dialog.h"
 #include "citra_qt/debugger/console.h"
@@ -960,14 +961,11 @@ void GMainWindow::OnGameListOpenFolder(u64 data_id, GameListOpenTarget target) {
     QDesktopServices::openUrl(QUrl::fromLocalFile(qpath));
 }
 
-void GMainWindow::OnGameListNavigateToGamedbEntry(
-    u64 program_id,
-    std::unordered_map<std::string, std::pair<QString, QString>>& compatibility_list) {
-
+void GMainWindow::OnGameListNavigateToGamedbEntry(u64 program_id,
+                                                  const CompatibilityList& compatibility_list) {
     auto it = FindMatchingCompatibilityEntry(compatibility_list, program_id);
 
     QString directory;
-
     if (it != compatibility_list.end())
         directory = it->second.second;
 
