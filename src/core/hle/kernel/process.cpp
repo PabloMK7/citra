@@ -143,7 +143,7 @@ void Process::Run(s32 main_thread_priority, u32 stack_size) {
     memory_region->used += stack_size;
 
     // Map special address mappings
-    MapSharedPages(vm_manager);
+    kernel.MapSharedPages(vm_manager);
     for (const auto& mapping : address_mappings) {
         HandleSpecialMapping(vm_manager, mapping);
     }

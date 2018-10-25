@@ -20,12 +20,10 @@ struct MemoryRegionInfo {
     std::shared_ptr<std::vector<u8>> linear_heap_memory;
 };
 
-void MemoryInit(u32 mem_type);
 void MemoryShutdown();
 MemoryRegionInfo* GetMemoryRegion(MemoryRegion region);
 
 void HandleSpecialMapping(VMManager& address_space, const AddressMapping& mapping);
-void MapSharedPages(VMManager& address_space);
 
 extern MemoryRegionInfo memory_regions[3];
 } // namespace Kernel

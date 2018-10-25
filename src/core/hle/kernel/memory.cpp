@@ -41,7 +41,7 @@ static const u32 memory_region_sizes[8][3] = {
     {0x0B200000, 0x02E00000, 0x02000000}, // 7
 };
 
-void MemoryInit(u32 mem_type) {
+void KernelSystem::MemoryInit(u32 mem_type) {
     // TODO(yuriks): On the n3DS, all o3DS configurations (<=5) are forced to 6 instead.
     ASSERT_MSG(mem_type <= 5, "New 3DS memory configuration aren't supported yet!");
     ASSERT(mem_type != 1);
@@ -64,7 +64,8 @@ void MemoryInit(u32 mem_type) {
     // We must've allocated the entire FCRAM by the end
     ASSERT(base == Memory::FCRAM_SIZE);
 
-    using ConfigMem::config_mem;
+    config_mem_handler = std::make_unique<ConfigMem::Handler>();
+    auto& config_mem = config_mem_handler->GetConfigMem();
     config_mem.app_mem_type = mem_type;
     // app_mem_malloc does not always match the configured size for memory_region[0]: in case the
     // n3DS type override is in effect it reports the size the game expects, not the real one.
@@ -152,12 +153,13 @@ void HandleSpecialMapping(VMManager& address_space, const AddressMapping& mappin
                             mapping.read_only ? VMAPermission::Read : VMAPermission::ReadWrite);
 }
 
-void MapSharedPages(VMManager& address_space) {
-    auto cfg_mem_vma = address_space
-                           .MapBackingMemory(Memory::CONFIG_MEMORY_VADDR,
-                                             reinterpret_cast<u8*>(&ConfigMem::config_mem),
-                                             Memory::CONFIG_MEMORY_SIZE, MemoryState::Shared)
-                           .Unwrap();
+void KernelSystem::MapSharedPages(VMManager& address_space) {
+    auto cfg_mem_vma =
+        address_space
+            .MapBackingMemory(Memory::CONFIG_MEMORY_VADDR,
+                              reinterpret_cast<u8*>(&config_mem_handler->GetConfigMem()),
+                              Memory::CONFIG_MEMORY_SIZE, MemoryState::Shared)
+            .Unwrap();
     address_space.Reprotect(cfg_mem_vma, VMAPermission::Read);
 
     auto shared_page_vma =
