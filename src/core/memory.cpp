@@ -111,7 +111,7 @@ static u8* GetPointerFromVMA(const Kernel::Process& process, VAddr vaddr) {
  * using a VMA from the current process.
  */
 static u8* GetPointerFromVMA(VAddr vaddr) {
-    return GetPointerFromVMA(*Kernel::g_current_process, vaddr);
+    return GetPointerFromVMA(*Core::System::GetInstance().Kernel().GetCurrentProcess(), vaddr);
 }
 
 /**
@@ -128,7 +128,8 @@ static MMIORegionPointer GetMMIOHandler(const PageTable& page_table, VAddr vaddr
 }
 
 static MMIORegionPointer GetMMIOHandler(VAddr vaddr) {
-    const PageTable& page_table = Kernel::g_current_process->vm_manager.page_table;
+    const PageTable& page_table =
+        Core::System::GetInstance().Kernel().GetCurrentProcess()->vm_manager.page_table;
     return GetMMIOHandler(page_table, vaddr);
 }
 
@@ -229,7 +230,7 @@ bool IsValidVirtualAddress(const Kernel::Process& process, const VAddr vaddr) {
 }
 
 bool IsValidVirtualAddress(const VAddr vaddr) {
-    return IsValidVirtualAddress(*Kernel::g_current_process, vaddr);
+    return IsValidVirtualAddress(*Core::System::GetInstance().Kernel().GetCurrentProcess(), vaddr);
 }
 
 bool IsValidPhysicalAddress(const PAddr paddr) {
@@ -524,7 +525,8 @@ void ReadBlock(const Kernel::Process& process, const VAddr src_addr, void* dest_
 }
 
 void ReadBlock(const VAddr src_addr, void* dest_buffer, const std::size_t size) {
-    ReadBlock(*Kernel::g_current_process, src_addr, dest_buffer, size);
+    ReadBlock(*Core::System::GetInstance().Kernel().GetCurrentProcess(), src_addr, dest_buffer,
+              size);
 }
 
 void Write8(const VAddr addr, const u8 data) {
@@ -592,7 +594,8 @@ void WriteBlock(const Kernel::Process& process, const VAddr dest_addr, const voi
 }
 
 void WriteBlock(const VAddr dest_addr, const void* src_buffer, const std::size_t size) {
-    WriteBlock(*Kernel::g_current_process, dest_addr, src_buffer, size);
+    WriteBlock(*Core::System::GetInstance().Kernel().GetCurrentProcess(), dest_addr, src_buffer,
+               size);
 }
 
 void ZeroBlock(const Kernel::Process& process, const VAddr dest_addr, const std::size_t size) {
@@ -644,7 +647,7 @@ void ZeroBlock(const Kernel::Process& process, const VAddr dest_addr, const std:
 }
 
 void ZeroBlock(const VAddr dest_addr, const std::size_t size) {
-    ZeroBlock(*Kernel::g_current_process, dest_addr, size);
+    ZeroBlock(*Core::System::GetInstance().Kernel().GetCurrentProcess(), dest_addr, size);
 }
 
 void CopyBlock(const Kernel::Process& process, VAddr dest_addr, VAddr src_addr,
@@ -699,7 +702,7 @@ void CopyBlock(const Kernel::Process& process, VAddr dest_addr, VAddr src_addr,
 }
 
 void CopyBlock(VAddr dest_addr, VAddr src_addr, const std::size_t size) {
-    CopyBlock(*Kernel::g_current_process, dest_addr, src_addr, size);
+    CopyBlock(*Core::System::GetInstance().Kernel().GetCurrentProcess(), dest_addr, src_addr, size);
 }
 
 template <>
@@ -778,7 +781,8 @@ std::optional<VAddr> PhysicalToVirtualAddress(const PAddr addr) {
     } else if (addr >= VRAM_PADDR && addr < VRAM_PADDR_END) {
         return addr - VRAM_PADDR + VRAM_VADDR;
     } else if (addr >= FCRAM_PADDR && addr < FCRAM_PADDR_END) {
-        return addr - FCRAM_PADDR + Kernel::g_current_process->GetLinearHeapAreaAddress();
+        return addr - FCRAM_PADDR +
+               Core::System::GetInstance().Kernel().GetCurrentProcess()->GetLinearHeapAreaAddress();
     } else if (addr >= DSP_RAM_PADDR && addr < DSP_RAM_PADDR_END) {
         return addr - DSP_RAM_PADDR + DSP_RAM_VADDR;
     } else if (addr >= IO_AREA_PADDR && addr < IO_AREA_PADDR_END) {

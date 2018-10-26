@@ -610,6 +610,8 @@ private:
 
     Kernel::SharedPtr<Kernel::Event> cecinfo_event;
     Kernel::SharedPtr<Kernel::Event> change_state_event;
+
+    Core::System& system;
 };
 
 /// Initialize CECD service(s)

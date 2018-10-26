@@ -13,6 +13,7 @@
 #include <boost/container/static_vector.hpp>
 #include "common/bit_field.h"
 #include "common/common_types.h"
+#include "core/hle/kernel/handle_table.h"
 #include "core/hle/kernel/object.h"
 #include "core/hle/kernel/vm_manager.h"
 
@@ -123,7 +124,7 @@ public:
         return HANDLE_TYPE;
     }
 
-    static u32 next_process_id;
+    HandleTable handle_table;
 
     SharedPtr<CodeSet> codeset;
     /// Resource limit descriptor for this process
@@ -145,7 +146,7 @@ public:
     ProcessStatus status;
 
     /// The id of this process
-    u32 process_id = next_process_id++;
+    u32 process_id;
 
     /**
      * Parses a list of kernel capability descriptors (as found in the ExHeader) and applies them
@@ -199,11 +200,4 @@ private:
     friend class KernelSystem;
     KernelSystem& kernel;
 };
-
-void ClearProcessList();
-
-/// Retrieves a process from the current list of processes.
-SharedPtr<Process> GetProcessById(u32 process_id);
-
-extern SharedPtr<Process> g_current_process;
 } // namespace Kernel

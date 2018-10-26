@@ -58,7 +58,7 @@ public:
     u8* GetPointer(u32 offset = 0);
 
     /// Process that created this shared memory block.
-    SharedPtr<Process> owner_process;
+    Process* owner_process;
     /// Address of shared memory block in the owner process if specified.
     VAddr base_address;
     /// Physical address of the shared memory block in the linear heap if no address was specified

@@ -23,17 +23,11 @@ KernelSystem::KernelSystem(u32 system_mode) {
     resource_limits = std::make_unique<ResourceLimitList>(*this);
     Kernel::ThreadingInit();
     Kernel::TimersInit();
-    // TODO(Subv): Start the process ids from 10 for now, as lower PIDs are
-    // reserved for low-level services
-    Process::next_process_id = 10;
 }
 
 /// Shutdown the kernel
 KernelSystem::~KernelSystem() {
-    g_handle_table.Clear(); // Free all kernel objects
-
     Kernel::ThreadingShutdown();
-    g_current_process = nullptr;
 
     Kernel::TimersShutdown();
     Kernel::MemoryShutdown();
@@ -49,6 +43,14 @@ const ResourceLimitList& KernelSystem::ResourceLimit() const {
 
 u32 KernelSystem::GenerateObjectID() {
     return next_object_id++;
+}
+
+SharedPtr<Process> KernelSystem::GetCurrentProcess() const {
+    return current_process;
+}
+
+void KernelSystem::SetCurrentProcess(SharedPtr<Process> process) {
+    current_process = std::move(process);
 }
 
 } // namespace Kernel

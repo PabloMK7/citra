@@ -17,10 +17,14 @@ TestEnvironment::TestEnvironment(bool mutable_memory_)
     : mutable_memory(mutable_memory_), test_memory(std::make_shared<TestMemory>(this)) {
 
     CoreTiming::Init();
-    kernel = std::make_unique<Kernel::KernelSystem>(0);
+    // HACK: some memory functions are currently referring kernel from the global instance,
+    //       so we need to create the kernel object there.
+    //       Change this when all global states are eliminated.
+    Core::System::GetInstance().kernel = std::make_unique<Kernel::KernelSystem>(0);
+    kernel = Core::System::GetInstance().kernel.get();
 
-    Kernel::g_current_process = kernel->CreateProcess(kernel->CreateCodeSet("", 0));
-    page_table = &Kernel::g_current_process->vm_manager.page_table;
+    kernel->SetCurrentProcess(kernel->CreateProcess(kernel->CreateCodeSet("", 0)));
+    page_table = &kernel->GetCurrentProcess()->vm_manager.page_table;
 
     page_table->pointers.fill(nullptr);
     page_table->attributes.fill(Memory::PageType::Unmapped);

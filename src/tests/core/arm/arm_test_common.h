@@ -80,7 +80,7 @@ private:
     std::shared_ptr<TestMemory> test_memory;
     std::vector<WriteRecord> write_records;
 
-    std::unique_ptr<Kernel::KernelSystem> kernel;
+    Kernel::KernelSystem* kernel;
 };
 
 } // namespace ArmTests

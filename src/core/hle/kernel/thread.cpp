@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <list>
+#include <unordered_map>
 #include <vector>
 #include "common/assert.h"
 #include "common/common_types.h"
@@ -37,9 +38,7 @@ void Thread::Acquire(Thread* thread) {
     ASSERT_MSG(!ShouldWait(thread), "object unavailable!");
 }
 
-// TODO(yuriks): This can be removed if Thread objects are explicitly pooled in the future, allowing
-//               us to simply use a pool index or similar.
-static Kernel::HandleTable wakeup_callback_handle_table;
+static std::unordered_map<u64, Thread*> wakeup_callback_table;
 
 // Lists all thread ids that aren't deleted/etc.
 static std::vector<SharedPtr<Thread>> thread_list;
@@ -69,9 +68,8 @@ Thread* GetCurrentThread() {
 
 void Thread::Stop() {
     // Cancel any outstanding wakeup events for this thread
-    CoreTiming::UnscheduleEvent(ThreadWakeupEventType, callback_handle);
-    wakeup_callback_handle_table.Close(callback_handle);
-    callback_handle = 0;
+    CoreTiming::UnscheduleEvent(ThreadWakeupEventType, thread_id);
+    wakeup_callback_table.erase(thread_id);
 
     // Clean up thread from ready queue
     // This is only needed when the thread is termintated forcefully (SVC TerminateProcess)
@@ -96,7 +94,7 @@ void Thread::Stop() {
     u32 tls_page = (tls_address - Memory::TLS_AREA_VADDR) / Memory::PAGE_SIZE;
     u32 tls_slot =
         ((tls_address - Memory::TLS_AREA_VADDR) % Memory::PAGE_SIZE) / Memory::TLS_ENTRY_SIZE;
-    Kernel::g_current_process->tls_slots[tls_page].reset(tls_slot);
+    owner_process->tls_slots[tls_page].reset(tls_slot);
 }
 
 /**
@@ -125,9 +123,9 @@ static void SwitchContext(Thread* new_thread) {
                    "Thread must be ready to become running.");
 
         // Cancel any outstanding wakeup events for this thread
-        CoreTiming::UnscheduleEvent(ThreadWakeupEventType, new_thread->callback_handle);
+        CoreTiming::UnscheduleEvent(ThreadWakeupEventType, new_thread->thread_id);
 
-        auto previous_process = Kernel::g_current_process;
+        auto previous_process = Core::System::GetInstance().Kernel().GetCurrentProcess();
 
         current_thread = new_thread;
 
@@ -135,8 +133,8 @@ static void SwitchContext(Thread* new_thread) {
         new_thread->status = ThreadStatus::Running;
 
         if (previous_process != current_thread->owner_process) {
-            Kernel::g_current_process = current_thread->owner_process;
-            SetCurrentPageTable(&Kernel::g_current_process->vm_manager.page_table);
+            Core::System::GetInstance().Kernel().SetCurrentProcess(current_thread->owner_process);
+            SetCurrentPageTable(&current_thread->owner_process->vm_manager.page_table);
         }
 
         Core::CPU().LoadContext(new_thread->context);
@@ -185,13 +183,13 @@ void ExitCurrentThread() {
 
 /**
  * Callback that will wake up the thread it was scheduled for
- * @param thread_handle The handle of the thread that's been awoken
+ * @param thread_id The ID of the thread that's been awoken
  * @param cycles_late The number of CPU cycles that have passed since the desired wakeup time
  */
-static void ThreadWakeupCallback(u64 thread_handle, s64 cycles_late) {
-    SharedPtr<Thread> thread = wakeup_callback_handle_table.Get<Thread>((Handle)thread_handle);
+static void ThreadWakeupCallback(u64 thread_id, s64 cycles_late) {
+    SharedPtr<Thread> thread = wakeup_callback_table.at(thread_id);
     if (thread == nullptr) {
-        LOG_CRITICAL(Kernel, "Callback fired for invalid thread {:08X}", (Handle)thread_handle);
+        LOG_CRITICAL(Kernel, "Callback fired for invalid thread {:08X}", thread_id);
         return;
     }
 
@@ -217,7 +215,7 @@ void Thread::WakeAfterDelay(s64 nanoseconds) {
     if (nanoseconds == -1)
         return;
 
-    CoreTiming::ScheduleEvent(nsToCycles(nanoseconds), ThreadWakeupEventType, callback_handle);
+    CoreTiming::ScheduleEvent(nsToCycles(nanoseconds), ThreadWakeupEventType, thread_id);
 }
 
 void Thread::ResumeFromWait() {
@@ -322,8 +320,7 @@ static void ResetThreadContext(const std::unique_ptr<ARM_Interface::ThreadContex
 
 ResultVal<SharedPtr<Thread>> KernelSystem::CreateThread(std::string name, VAddr entry_point,
                                                         u32 priority, u32 arg, s32 processor_id,
-                                                        VAddr stack_top,
-                                                        SharedPtr<Process> owner_process) {
+                                                        VAddr stack_top, Process& owner_process) {
     // Check if priority is in ranged. Lowest priority -> highest priority id.
     if (priority > ThreadPrioLowest) {
         LOG_ERROR(Kernel_SVC, "Invalid thread priority: {}", priority);
@@ -337,7 +334,7 @@ ResultVal<SharedPtr<Thread>> KernelSystem::CreateThread(std::string name, VAddr 
 
     // TODO(yuriks): Other checks, returning 0xD9001BEA
 
-    if (!Memory::IsValidVirtualAddress(*owner_process, entry_point)) {
+    if (!Memory::IsValidVirtualAddress(owner_process, entry_point)) {
         LOG_ERROR(Kernel_SVC, "(name={}): invalid entry {:08x}", name, entry_point);
         // TODO: Verify error
         return ResultCode(ErrorDescription::InvalidAddress, ErrorModule::Kernel,
@@ -359,11 +356,11 @@ ResultVal<SharedPtr<Thread>> KernelSystem::CreateThread(std::string name, VAddr 
     thread->wait_objects.clear();
     thread->wait_address = 0;
     thread->name = std::move(name);
-    thread->callback_handle = wakeup_callback_handle_table.Create(thread).Unwrap();
-    thread->owner_process = owner_process;
+    wakeup_callback_table[thread->thread_id] = thread.get();
+    thread->owner_process = &owner_process;
 
     // Find the next available TLS index, and mark it as used
-    auto& tls_slots = owner_process->tls_slots;
+    auto& tls_slots = owner_process.tls_slots;
 
     auto [available_page, available_slot, needs_allocation] = GetFreeThreadLocalSlot(tls_slots);
 
@@ -384,13 +381,13 @@ ResultVal<SharedPtr<Thread>> KernelSystem::CreateThread(std::string name, VAddr 
         // Allocate some memory from the end of the linear heap for this region.
         linheap_memory->insert(linheap_memory->end(), Memory::PAGE_SIZE, 0);
         memory_region->used += Memory::PAGE_SIZE;
-        owner_process->linear_heap_used += Memory::PAGE_SIZE;
+        owner_process.linear_heap_used += Memory::PAGE_SIZE;
 
         tls_slots.emplace_back(0); // The page is completely available at the start
         available_page = tls_slots.size() - 1;
         available_slot = 0; // Use the first slot in the new page
 
-        auto& vm_manager = owner_process->vm_manager;
+        auto& vm_manager = owner_process.vm_manager;
         vm_manager.RefreshMemoryBlockMappings(linheap_memory.get());
 
         // Map the page to the current process' address space.
@@ -449,7 +446,7 @@ SharedPtr<Thread> SetupMainThread(KernelSystem& kernel, u32 entry_point, u32 pri
     // Initialize new "main" thread
     auto thread_res =
         kernel.CreateThread("main", entry_point, priority, 0, owner_process->ideal_processor,
-                            Memory::HEAP_VADDR_END, owner_process);
+                            Memory::HEAP_VADDR_END, *owner_process);
 
     SharedPtr<Thread> thread = std::move(thread_res).Unwrap();
 
@@ -516,7 +513,6 @@ void ThreadingShutdown() {
     }
     thread_list.clear();
     ready_queue.clear();
-    ClearProcessList();
 }
 
 const std::vector<SharedPtr<Thread>>& GetThreadList() {

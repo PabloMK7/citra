@@ -97,7 +97,7 @@ void Module::Interface::Open(Kernel::HLERequestContext& ctx) {
 
         if (path_type == CecDataPathType::MboxProgramId) {
             std::vector<u8> program_id(8);
-            u64_le le_program_id = Kernel::g_current_process->codeset->program_id;
+            u64_le le_program_id = cecd->system.Kernel().GetCurrentProcess()->codeset->program_id;
             std::memcpy(program_id.data(), &le_program_id, sizeof(u64));
             session_data->file->Write(0, sizeof(u64), true, program_id.data());
             session_data->file->Close();
@@ -1351,7 +1351,7 @@ Module::SessionData::~SessionData() {
 Module::Interface::Interface(std::shared_ptr<Module> cecd, const char* name, u32 max_session)
     : ServiceFramework(name, max_session), cecd(std::move(cecd)) {}
 
-Module::Module(Core::System& system) {
+Module::Module(Core::System& system) : system(system) {
     using namespace Kernel;
     cecinfo_event = system.Kernel().CreateEvent(Kernel::ResetType::OneShot, "CECD::cecinfo_event");
     change_state_event =

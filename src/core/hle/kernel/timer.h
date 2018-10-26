@@ -71,8 +71,8 @@ private:
     bool signaled;    ///< Whether the timer has been signaled or not
     std::string name; ///< Name of timer (optional)
 
-    /// Handle used as userdata to reference this object when inserting into the CoreTiming queue.
-    Handle callback_handle;
+    /// ID used as userdata to reference this object when inserting into the CoreTiming queue.
+    u64 callback_id;
 
     friend class KernelSystem;
 };

@@ -60,9 +60,9 @@ ResultCode TranslateCommandBuffer(SharedPtr<Thread> src_thread, SharedPtr<Thread
                 } else if (handle == CurrentProcess) {
                     object = src_process;
                 } else if (handle != 0) {
-                    object = g_handle_table.GetGeneric(handle);
+                    object = src_process->handle_table.GetGeneric(handle);
                     if (descriptor == IPC::DescriptorType::MoveHandle) {
-                        g_handle_table.Close(handle);
+                        src_process->handle_table.Close(handle);
                     }
                 }
 
@@ -73,7 +73,7 @@ ResultCode TranslateCommandBuffer(SharedPtr<Thread> src_thread, SharedPtr<Thread
                     continue;
                 }
 
-                auto result = g_handle_table.Create(std::move(object));
+                auto result = dst_process->handle_table.Create(std::move(object));
                 cmd_buf[i++] = result.ValueOr(0);
             }
             break;

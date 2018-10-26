@@ -14,7 +14,7 @@ namespace Kernel {
 SharedMemory::SharedMemory(KernelSystem& kernel) : Object(kernel) {}
 SharedMemory::~SharedMemory() {}
 
-SharedPtr<SharedMemory> KernelSystem::CreateSharedMemory(SharedPtr<Process> owner_process, u32 size,
+SharedPtr<SharedMemory> KernelSystem::CreateSharedMemory(Process* owner_process, u32 size,
                                                          MemoryPermission permissions,
                                                          MemoryPermission other_permissions,
                                                          VAddr address, MemoryRegion region,
@@ -52,8 +52,8 @@ SharedPtr<SharedMemory> KernelSystem::CreateSharedMemory(SharedPtr<Process> owne
         }
 
         // Refresh the address mappings for the current process.
-        if (Kernel::g_current_process != nullptr) {
-            Kernel::g_current_process->vm_manager.RefreshMemoryBlockMappings(linheap_memory.get());
+        if (current_process != nullptr) {
+            current_process->vm_manager.RefreshMemoryBlockMappings(linheap_memory.get());
         }
     } else {
         auto& vm_manager = shared_memory->owner_process->vm_manager;

@@ -7,6 +7,7 @@
 #include <atomic>
 #include <memory>
 #include <string>
+#include <vector>
 #include <boost/smart_ptr/intrusive_ptr.hpp>
 #include "common/common_types.h"
 #include "core/hle/result.h"
@@ -101,7 +102,7 @@ public:
      */
     ResultVal<SharedPtr<Thread>> CreateThread(std::string name, VAddr entry_point, u32 priority,
                                               u32 arg, s32 processor_id, VAddr stack_top,
-                                              SharedPtr<Process> owner_process);
+                                              Process& owner_process);
 
     /**
      * Creates a semaphore.
@@ -155,7 +156,7 @@ public:
      * linear heap.
      * @param name Optional object name, used for debugging purposes.
      */
-    SharedPtr<SharedMemory> CreateSharedMemory(SharedPtr<Process> owner_process, u32 size,
+    SharedPtr<SharedMemory> CreateSharedMemory(Process* owner_process, u32 size,
                                                MemoryPermission permissions,
                                                MemoryPermission other_permissions,
                                                VAddr address = 0,
@@ -180,9 +181,24 @@ public:
 
     u32 GenerateObjectID();
 
+    /// Retrieves a process from the current list of processes.
+    SharedPtr<Process> GetProcessById(u32 process_id) const;
+
+    SharedPtr<Process> GetCurrentProcess() const;
+    void SetCurrentProcess(SharedPtr<Process> process);
+
 private:
     std::unique_ptr<ResourceLimitList> resource_limits;
     std::atomic<u32> next_object_id{0};
+
+    // TODO(Subv): Start the process ids from 10 for now, as lower PIDs are
+    // reserved for low-level services
+    u32 next_process_id = 10;
+
+    // Lists all processes that exist in the current session.
+    std::vector<SharedPtr<Process>> process_list;
+
+    SharedPtr<Process> current_process;
 };
 
 } // namespace Kernel

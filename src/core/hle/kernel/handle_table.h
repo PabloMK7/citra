@@ -42,7 +42,7 @@ enum KernelHandle : Handle {
  */
 class HandleTable final : NonCopyable {
 public:
-    HandleTable();
+    explicit HandleTable(KernelSystem& kernel);
 
     /**
      * Allocates a handle for the given object.
@@ -119,8 +119,8 @@ private:
 
     /// Head of the free slots linked list.
     u16 next_free_slot;
-};
 
-extern HandleTable g_handle_table;
+    KernelSystem& kernel;
+};
 
 } // namespace Kernel

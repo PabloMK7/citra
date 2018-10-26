@@ -17,9 +17,6 @@
 
 namespace Kernel {
 
-// Lists all processes that exist in the current session.
-static std::vector<SharedPtr<Process>> process_list;
-
 SharedPtr<CodeSet> KernelSystem::CreateCodeSet(std::string name, u64 program_id) {
     SharedPtr<CodeSet> codeset(new CodeSet(*this));
 
@@ -32,8 +29,6 @@ SharedPtr<CodeSet> KernelSystem::CreateCodeSet(std::string name, u64 program_id)
 CodeSet::CodeSet(KernelSystem& kernel) : Object(kernel) {}
 CodeSet::~CodeSet() {}
 
-u32 Process::next_process_id;
-
 SharedPtr<Process> KernelSystem::CreateProcess(SharedPtr<CodeSet> code_set) {
     SharedPtr<Process> process(new Process(*this));
 
@@ -41,6 +36,7 @@ SharedPtr<Process> KernelSystem::CreateProcess(SharedPtr<CodeSet> code_set) {
     process->flags.raw = 0;
     process->flags.memory_region.Assign(MemoryRegion::APPLICATION);
     process->status = ProcessStatus::Created;
+    process->process_id = ++next_process_id;
 
     process_list.push_back(process);
     return process;
@@ -304,14 +300,11 @@ ResultCode Process::LinearFree(VAddr target, u32 size) {
     return RESULT_SUCCESS;
 }
 
-Kernel::Process::Process(KernelSystem& kernel) : Object(kernel), kernel(kernel) {}
+Kernel::Process::Process(KernelSystem& kernel)
+    : Object(kernel), handle_table(kernel), kernel(kernel) {}
 Kernel::Process::~Process() {}
 
-void ClearProcessList() {
-    process_list.clear();
-}
-
-SharedPtr<Process> GetProcessById(u32 process_id) {
+SharedPtr<Process> KernelSystem::GetProcessById(u32 process_id) const {
     auto itr = std::find_if(
         process_list.begin(), process_list.end(),
         [&](const SharedPtr<Process>& process) { return process->process_id == process_id; });
@@ -321,6 +314,4 @@ SharedPtr<Process> GetProcessById(u32 process_id) {
 
     return *itr;
 }
-
-SharedPtr<Process> g_current_process;
 } // namespace Kernel

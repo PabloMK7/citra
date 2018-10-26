@@ -189,7 +189,7 @@ public:
     /// Mutexes that this thread is currently waiting for.
     boost::container::flat_set<SharedPtr<Mutex>> pending_mutexes;
 
-    SharedPtr<Process> owner_process; ///< Process that owns this thread
+    Process* owner_process; ///< Process that owns this thread
 
     /// Objects that the thread is waiting on, in the same order as they were
     // passed to WaitSynchronization1/N.
@@ -198,9 +198,6 @@ public:
     VAddr wait_address; ///< If waiting on an AddressArbiter, this is the arbitration address
 
     std::string name;
-
-    /// Handle used as userdata to reference this object when inserting into the CoreTiming queue.
-    Handle callback_handle;
 
     using WakeupCallback = void(ThreadWakeupReason reason, SharedPtr<Thread> thread,
                                 SharedPtr<WaitObject> object);

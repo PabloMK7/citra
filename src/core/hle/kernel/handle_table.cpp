@@ -12,9 +12,7 @@
 
 namespace Kernel {
 
-HandleTable g_handle_table;
-
-HandleTable::HandleTable() {
+HandleTable::HandleTable(KernelSystem& kernel) : kernel(kernel) {
     next_generation = 1;
     Clear();
 }
@@ -76,7 +74,7 @@ SharedPtr<Object> HandleTable::GetGeneric(Handle handle) const {
     if (handle == CurrentThread) {
         return GetCurrentThread();
     } else if (handle == CurrentProcess) {
-        return g_current_process;
+        return kernel.GetCurrentProcess();
     }
 
     if (!IsValid(handle)) {
