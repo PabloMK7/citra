@@ -56,7 +56,8 @@ CubebSink::CubebSink(std::string target_device_name) : impl(std::make_unique<Imp
             const auto collection_end{collection.device + collection.count};
             const auto device{
                 std::find_if(collection.device, collection_end, [&](const cubeb_device_info& info) {
-                    return target_device_name == info.friendly_name;
+                    return info.friendly_name != nullptr &&
+                           target_device_name == info.friendly_name;
                 })};
             if (device != collection_end) {
                 output_device = device->devid;
