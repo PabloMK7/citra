@@ -5,6 +5,7 @@
 #pragma once
 
 #include <memory>
+#include <QFutureWatcher>
 #include <QWizard>
 
 namespace Ui {
@@ -19,8 +20,11 @@ public:
     ~CompatDB();
 
 private:
+    QFutureWatcher<bool> testcase_watcher;
+
     std::unique_ptr<Ui::CompatDB> ui;
 
     void Submit();
+    void OnTestcaseSubmitted();
     void EnableNext();
 };

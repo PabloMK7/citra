@@ -203,4 +203,13 @@ TelemetrySession::~TelemetrySession() {
     backend = nullptr;
 }
 
+bool TelemetrySession::SubmitTestcase() {
+#ifdef ENABLE_WEB_SERVICE
+    field_collection.Accept(*backend);
+    return backend->SubmitTestcase();
+#else
+    return false;
+#endif
+}
+
 } // namespace Core

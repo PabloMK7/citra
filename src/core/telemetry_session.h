@@ -31,6 +31,12 @@ public:
         field_collection.AddField(type, name, std::move(value));
     }
 
+    /**
+     * Submits a Testcase.
+     * @returns A bool indicating whether the submission succeeded
+     */
+    bool SubmitTestcase();
+
 private:
     Telemetry::FieldCollection field_collection; ///< Tracks all added fields for the session
     std::unique_ptr<Telemetry::VisitorInterface> backend; ///< Backend interface that logs fields
