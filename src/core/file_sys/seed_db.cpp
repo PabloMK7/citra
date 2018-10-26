@@ -34,7 +34,7 @@ bool SeedDB::Load() {
         LOG_ERROR(Service_FS, "Failed to read seed database count fully");
         return false;
     }
-    if (!file.Seek(file.Tell() + SEEDDB_PADDING_BYTES, SEEK_SET)) {
+    if (!file.Seek(SEEDDB_PADDING_BYTES, SEEK_CUR)) {
         LOG_ERROR(Service_FS, "Failed to skip seed database padding");
         return false;
     }
