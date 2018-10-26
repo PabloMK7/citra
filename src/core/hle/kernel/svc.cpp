@@ -1233,22 +1233,24 @@ static ResultCode AcceptSession(Handle* out_server_session, Handle server_port_h
 static ResultCode GetSystemInfo(s64* out, u32 type, s32 param) {
     LOG_TRACE(Kernel_SVC, "called type={} param={}", type, param);
 
+    KernelSystem& kernel = Core::System::GetInstance().Kernel();
+
     switch ((SystemInfoType)type) {
     case SystemInfoType::REGION_MEMORY_USAGE:
         switch ((SystemInfoMemUsageRegion)param) {
         case SystemInfoMemUsageRegion::ALL:
-            *out = GetMemoryRegion(MemoryRegion::APPLICATION)->used +
-                   GetMemoryRegion(MemoryRegion::SYSTEM)->used +
-                   GetMemoryRegion(MemoryRegion::BASE)->used;
+            *out = kernel.GetMemoryRegion(MemoryRegion::APPLICATION)->used +
+                   kernel.GetMemoryRegion(MemoryRegion::SYSTEM)->used +
+                   kernel.GetMemoryRegion(MemoryRegion::BASE)->used;
             break;
         case SystemInfoMemUsageRegion::APPLICATION:
-            *out = GetMemoryRegion(MemoryRegion::APPLICATION)->used;
+            *out = kernel.GetMemoryRegion(MemoryRegion::APPLICATION)->used;
             break;
         case SystemInfoMemUsageRegion::SYSTEM:
-            *out = GetMemoryRegion(MemoryRegion::SYSTEM)->used;
+            *out = kernel.GetMemoryRegion(MemoryRegion::SYSTEM)->used;
             break;
         case SystemInfoMemUsageRegion::BASE:
-            *out = GetMemoryRegion(MemoryRegion::BASE)->used;
+            *out = kernel.GetMemoryRegion(MemoryRegion::BASE)->used;
             break;
         default:
             LOG_ERROR(Kernel_SVC, "unknown GetSystemInfo type=0 region: param={}", param);

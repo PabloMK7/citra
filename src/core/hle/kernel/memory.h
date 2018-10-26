@@ -5,11 +5,12 @@
 #pragma once
 
 #include <memory>
+#include <vector>
 #include "common/common_types.h"
-#include "core/hle/kernel/process.h"
 
 namespace Kernel {
 
+struct AddressMapping;
 class VMManager;
 
 struct MemoryRegionInfo {
@@ -20,10 +21,6 @@ struct MemoryRegionInfo {
     std::shared_ptr<std::vector<u8>> linear_heap_memory;
 };
 
-void MemoryShutdown();
-MemoryRegionInfo* GetMemoryRegion(MemoryRegion region);
-
 void HandleSpecialMapping(VMManager& address_space, const AddressMapping& mapping);
 
-extern MemoryRegionInfo memory_regions[3];
 } // namespace Kernel

@@ -4,12 +4,14 @@
 
 #pragma once
 
+#include <array>
 #include <atomic>
 #include <memory>
 #include <string>
 #include <vector>
 #include <boost/smart_ptr/intrusive_ptr.hpp>
 #include "common/common_types.h"
+#include "core/hle/kernel/memory.h"
 #include "core/hle/result.h"
 
 namespace ConfigMem {
@@ -208,6 +210,10 @@ public:
 
     SharedPage::Handler& GetSharedPageHandler();
     const SharedPage::Handler& GetSharedPageHandler() const;
+
+    MemoryRegionInfo* GetMemoryRegion(MemoryRegion region);
+
+    std::array<MemoryRegionInfo, 3> memory_regions;
 
 private:
     void MemoryInit(u32 mem_type);

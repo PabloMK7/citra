@@ -24,9 +24,7 @@ KernelSystem::KernelSystem(u32 system_mode) {
 }
 
 /// Shutdown the kernel
-KernelSystem::~KernelSystem() {
-    Kernel::MemoryShutdown();
-}
+KernelSystem::~KernelSystem() = default;
 
 ResourceLimitList& KernelSystem::ResourceLimit() {
     return *resource_limits;

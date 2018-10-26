@@ -305,7 +305,7 @@ u8* GetPhysicalPointer(PAddr address) {
         target_pointer = Core::DSP().GetDspMemory().data() + offset_into_region;
         break;
     case FCRAM_PADDR:
-        for (const auto& region : Kernel::memory_regions) {
+        for (const auto& region : Core::System::GetInstance().Kernel().memory_regions) {
             if (offset_into_region >= region.base &&
                 offset_into_region < region.base + region.size) {
                 target_pointer =

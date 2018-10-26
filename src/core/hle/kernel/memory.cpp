@@ -14,6 +14,7 @@
 #include "core/core.h"
 #include "core/hle/kernel/config_mem.h"
 #include "core/hle/kernel/memory.h"
+#include "core/hle/kernel/process.h"
 #include "core/hle/kernel/shared_page.h"
 #include "core/hle/kernel/vm_manager.h"
 #include "core/hle/result.h"
@@ -23,8 +24,6 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 namespace Kernel {
-
-MemoryRegionInfo memory_regions[3];
 
 /// Size of the APPLICATION, SYSTEM and BASE memory regions (respectively) for each system
 /// memory configuration type.
@@ -77,16 +76,7 @@ void KernelSystem::MemoryInit(u32 mem_type) {
     shared_page_handler = std::make_unique<SharedPage::Handler>();
 }
 
-void MemoryShutdown() {
-    for (auto& region : memory_regions) {
-        region.base = 0;
-        region.size = 0;
-        region.used = 0;
-        region.linear_heap_memory = nullptr;
-    }
-}
-
-MemoryRegionInfo* GetMemoryRegion(MemoryRegion region) {
+MemoryRegionInfo* KernelSystem::GetMemoryRegion(MemoryRegion region) {
     switch (region) {
     case MemoryRegion::APPLICATION:
         return &memory_regions[0];
