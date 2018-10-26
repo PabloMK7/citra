@@ -90,6 +90,7 @@ add_library(common STATIC
     timer.cpp
     timer.h
     vector_math.h
+    web_result.h
 )
 
 if(ARCHITECTURE_x86_64)

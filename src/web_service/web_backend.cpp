@@ -2,14 +2,15 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <array>
 #include <cstdlib>
 #include <mutex>
 #include <string>
 #include <LUrlParser.h>
 #include <httplib.h>
-#include "common/announce_multiplayer_room.h"
 #include "common/common_types.h"
 #include "common/logging/log.h"
+#include "common/web_result.h"
 #include "web_service/web_backend.h"
 
 namespace WebService {
