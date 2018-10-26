@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include "core/hle/kernel/client_port.h"
 #include "core/hle/kernel/config_mem.h"
 #include "core/hle/kernel/handle_table.h"
 #include "core/hle/kernel/kernel.h"
@@ -68,6 +69,10 @@ SharedPage::Handler& KernelSystem::GetSharedPageHandler() {
 
 const SharedPage::Handler& KernelSystem::GetSharedPageHandler() const {
     return *shared_page_handler;
+}
+
+void KernelSystem::AddNamedPort(std::string name, SharedPtr<ClientPort> port) {
+    named_ports.emplace(std::move(name), std::move(port));
 }
 
 } // namespace Kernel

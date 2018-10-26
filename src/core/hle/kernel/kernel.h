@@ -8,6 +8,7 @@
 #include <atomic>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <vector>
 #include <boost/smart_ptr/intrusive_ptr.hpp>
 #include "common/common_types.h"
@@ -214,6 +215,12 @@ public:
     MemoryRegionInfo* GetMemoryRegion(MemoryRegion region);
 
     std::array<MemoryRegionInfo, 3> memory_regions;
+
+    /// Adds a port to the named port table
+    void AddNamedPort(std::string name, SharedPtr<ClientPort> port);
+
+    /// Map of named ports managed by the kernel, which can be retrieved using the ConnectToPort
+    std::unordered_map<std::string, SharedPtr<ClientPort>> named_ports;
 
 private:
     void MemoryInit(u32 mem_type);

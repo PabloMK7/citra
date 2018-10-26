@@ -235,8 +235,10 @@ static ResultCode ConnectToPort(Handle* out_handle, VAddr port_name_address) {
 
     LOG_TRACE(Kernel_SVC, "called port_name={}", port_name);
 
-    auto it = Service::g_kernel_named_ports.find(port_name);
-    if (it == Service::g_kernel_named_ports.end()) {
+    KernelSystem& kernel = Core::System::GetInstance().Kernel();
+
+    auto it = kernel.named_ports.find(port_name);
+    if (it == kernel.named_ports.end()) {
         LOG_WARNING(Kernel_SVC, "tried to connect to unknown port: {}", port_name);
         return ERR_NOT_FOUND;
     }
@@ -247,9 +249,7 @@ static ResultCode ConnectToPort(Handle* out_handle, VAddr port_name_address) {
     CASCADE_RESULT(client_session, client_port->Connect());
 
     // Return the client session
-    CASCADE_RESULT(*out_handle,
-                   Core::System::GetInstance().Kernel().GetCurrentProcess()->handle_table.Create(
-                       client_session));
+    CASCADE_RESULT(*out_handle, kernel.GetCurrentProcess()->handle_table.Create(client_session));
     return RESULT_SUCCESS;
 }
 

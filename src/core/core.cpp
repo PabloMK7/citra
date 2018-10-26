@@ -256,7 +256,6 @@ void System::Shutdown() {
     // Shutdown emulation session
     GDBStub::Shutdown();
     VideoCore::Shutdown();
-    Service::Shutdown();
     kernel.reset();
     HW::Shutdown();
     telemetry_session.reset();

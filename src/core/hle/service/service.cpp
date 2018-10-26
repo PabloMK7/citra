@@ -61,8 +61,6 @@ using Kernel::SharedPtr;
 
 namespace Service {
 
-std::unordered_map<std::string, SharedPtr<ClientPort>> g_kernel_named_ports;
-
 const std::array<ServiceModuleInfo, 40> service_module_map{
     {{"FS", 0x00040130'00001102, FS::InstallInterfaces},
      {"PM", 0x00040130'00001202, PM::InstallInterfaces},
@@ -149,7 +147,7 @@ void ServiceFrameworkBase::InstallAsNamedPort(Kernel::KernelSystem& kernel) {
     SharedPtr<ClientPort> client_port;
     std::tie(server_port, client_port) = kernel.CreatePortPair(max_sessions, service_name);
     server_port->SetHleHandler(shared_from_this());
-    AddNamedPort(service_name, std::move(client_port));
+    kernel.AddNamedPort(service_name, std::move(client_port));
 }
 
 void ServiceFrameworkBase::RegisterHandlersBase(const FunctionInfoBase* functions, std::size_t n) {
@@ -214,11 +212,6 @@ void ServiceFrameworkBase::HandleSyncRequest(SharedPtr<ServerSession> server_ses
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Module interface
 
-// TODO(yuriks): Move to kernel
-void AddNamedPort(std::string name, SharedPtr<ClientPort> port) {
-    g_kernel_named_ports.emplace(std::move(name), std::move(port));
-}
-
 static bool AttemptLLE(const ServiceModuleInfo& service_module) {
     if (!Settings::values.lle_modules.at(service_module.name))
         return false;
@@ -247,10 +240,4 @@ void Init(Core::System& core) {
     LOG_DEBUG(Service, "initialized OK");
 }
 
-/// Shutdown ServiceManager
-void Shutdown() {
-
-    g_kernel_named_ports.clear();
-    LOG_DEBUG(Service, "shutdown OK");
-}
 } // namespace Service
