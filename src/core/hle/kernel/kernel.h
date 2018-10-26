@@ -102,7 +102,7 @@ public:
      */
     ResultVal<SharedPtr<Thread>> CreateThread(std::string name, VAddr entry_point, u32 priority,
                                               u32 arg, s32 processor_id, VAddr stack_top,
-                                              Process* owner_process);
+                                              Process& owner_process);
 
     /**
      * Creates a semaphore.
