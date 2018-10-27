@@ -21,6 +21,7 @@ public:
     ~ConfigureGeneral();
 
     void PopulateHotkeyList(const HotkeyRegistry& registry);
+    void ResetDefaults();
     void applyConfiguration();
     void retranslateUi();
 

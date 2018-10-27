@@ -147,6 +147,13 @@
        </layout>
       </widget>
      </item>
+     <item alignment="Qt::AlignRight">
+      <widget class="QPushButton" name="button_reset_defaults">
+       <property name="text">
+        <string>Reset All Settings</string>
+       </property>
+      </widget>
+     </item>
     </layout>
    </item>
   </layout>
