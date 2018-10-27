@@ -12,22 +12,36 @@
 namespace AnnounceMultiplayerRoom {
 
 void to_json(nlohmann::json& json, const Room::Member& member) {
-    json["name"] = member.name;
+    if (!member.username.empty()) {
+        json["username"] = member.username;
+    }
+    json["nickname"] = member.nickname;
+    if (!member.avatar_url.empty()) {
+        json["avatarUrl"] = member.avatar_url;
+    }
     json["gameName"] = member.game_name;
     json["gameId"] = member.game_id;
 }
 
 void from_json(const nlohmann::json& json, Room::Member& member) {
-    member.name = json.at("name").get<std::string>();
+    member.nickname = json.at("nickname").get<std::string>();
     member.game_name = json.at("gameName").get<std::string>();
     member.game_id = json.at("gameId").get<u64>();
+    try {
+        member.username = json.at("username").get<std::string>();
+        member.avatar_url = json.at("avatarUrl").get<std::string>();
+    } catch (const nlohmann::detail::out_of_range& e) {
+        member.username = member.avatar_url = "";
+        LOG_DEBUG(Network, "Member \'{}\' isn't authenticated", member.nickname);
+    }
 }
 
 void to_json(nlohmann::json& json, const Room& room) {
-    json["id"] = room.UID;
     json["port"] = room.port;
     json["name"] = room.name;
-    json["description"] = room.description;
+    if (!room.description.empty()) {
+        json["description"] = room.description;
+    }
     json["preferredGameName"] = room.preferred_game;
     json["preferredGameId"] = room.preferred_game_id;
     json["maxPlayers"] = room.max_player;
@@ -40,6 +54,7 @@ void to_json(nlohmann::json& json, const Room& room) {
 }
 
 void from_json(const nlohmann::json& json, Room& room) {
+    room.verify_UID = json.at("externalGuid").get<std::string>();
     room.ip = json.at("address").get<std::string>();
     room.name = json.at("name").get<std::string>();
     try {
@@ -66,14 +81,12 @@ void from_json(const nlohmann::json& json, Room& room) {
 
 namespace WebService {
 
-void RoomJson::SetRoomInformation(const std::string& uid, const std::string& name,
-                                  const std::string& description, const u16 port,
-                                  const u32 max_player, const u32 net_version,
+void RoomJson::SetRoomInformation(const std::string& name, const std::string& description,
+                                  const u16 port, const u32 max_player, const u32 net_version,
                                   const bool has_password, const std::string& preferred_game,
                                   const u64 preferred_game_id) {
     room.name = name;
     room.description = description;
-    room.UID = uid;
     room.port = port;
     room.max_player = max_player;
     room.net_version = net_version;
@@ -81,20 +94,39 @@ void RoomJson::SetRoomInformation(const std::string& uid, const std::string& nam
     room.preferred_game = preferred_game;
     room.preferred_game_id = preferred_game_id;
 }
-void RoomJson::AddPlayer(const std::string& nickname,
+void RoomJson::AddPlayer(const std::string& username, const std::string& nickname,
+                         const std::string& avatar_url,
                          const AnnounceMultiplayerRoom::MacAddress& mac_address, const u64 game_id,
                          const std::string& game_name) {
     AnnounceMultiplayerRoom::Room::Member member;
-    member.name = nickname;
+    member.username = username;
+    member.nickname = nickname;
+    member.avatar_url = avatar_url;
     member.mac_address = mac_address;
     member.game_id = game_id;
     member.game_name = game_name;
     room.members.push_back(member);
 }
 
-Common::WebResult RoomJson::Announce() {
+Common::WebResult RoomJson::Update() {
+    if (room_id.empty()) {
+        LOG_ERROR(WebService, "Room must be registered to be updated");
+        return Common::WebResult{Common::WebResult::Code::LibError, "Room is not registered"};
+    }
+    nlohmann::json json{{"players", room.members}};
+    return client.PostJson(fmt::format("/lobby2/{}", room_id), json.dump(), false);
+}
+
+std::string RoomJson::Register() {
     nlohmann::json json = room;
-    return client.PostJson("/lobby", json.dump(), false);
+    auto reply = client.PostJson("/lobby2", json.dump(), false).returned_data;
+    if (reply.empty()) {
+        return "";
+    }
+    auto reply_json = nlohmann::json::parse(reply);
+    room = reply_json.get<AnnounceMultiplayerRoom::Room>();
+    room_id = reply_json.at("id").get<std::string>();
+    return room.verify_UID;
 }
 
 void RoomJson::ClearPlayers() {
@@ -102,7 +134,7 @@ void RoomJson::ClearPlayers() {
 }
 
 AnnounceMultiplayerRoom::RoomList RoomJson::GetRoomList() {
-    auto reply = client.GetJson("/lobby", true).returned_data;
+    auto reply = client.GetJson("/lobby2", true).returned_data;
     if (reply.empty()) {
         return {};
     }
@@ -110,12 +142,14 @@ AnnounceMultiplayerRoom::RoomList RoomJson::GetRoomList() {
 }
 
 void RoomJson::Delete() {
-    nlohmann::json json;
-    json["id"] = room.UID;
+    if (room_id.empty()) {
+        LOG_ERROR(WebService, "Room must be registered to be deleted");
+        return;
+    }
     Common::DetachedTasks::AddTask(
-        [host{this->host}, username{this->username}, token{this->token}, content{json.dump()}]() {
+        [host{this->host}, username{this->username}, token{this->token}, room_id{this->room_id}]() {
             // create a new client here because the this->client might be destroyed.
-            Client{host, username, token}.DeleteJson("/lobby", content, false);
+            Client{host, username, token}.DeleteJson(fmt::format("/lobby2/{}", room_id), "", false);
         });
 }
 

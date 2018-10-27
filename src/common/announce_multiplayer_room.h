@@ -17,14 +17,17 @@ using MacAddress = std::array<u8, 6>;
 
 struct Room {
     struct Member {
-        std::string name;
+        std::string username;
+        std::string nickname;
+        std::string avatar_url;
         MacAddress mac_address;
         std::string game_name;
         u64 game_id;
     };
+    std::string id;
+    std::string verify_UID; ///< UID used for verification
     std::string name;
     std::string description;
-    std::string UID;
     std::string owner;
     std::string ip;
     u16 port;
@@ -57,9 +60,8 @@ public:
      * @param preferred_game The preferred game of the room
      * @param preferred_game_id The title id of the preferred game
      */
-    virtual void SetRoomInformation(const std::string& uid, const std::string& name,
-                                    const std::string& description, const u16 port,
-                                    const u32 max_player, const u32 net_version,
+    virtual void SetRoomInformation(const std::string& name, const std::string& description,
+                                    const u16 port, const u32 max_player, const u32 net_version,
                                     const bool has_password, const std::string& preferred_game,
                                     const u64 preferred_game_id) = 0;
     /**
@@ -69,14 +71,21 @@ public:
      * @param game_id The title id of the game the player plays
      * @param game_name The name of the game the player plays
      */
-    virtual void AddPlayer(const std::string& nickname, const MacAddress& mac_address,
+    virtual void AddPlayer(const std::string& username, const std::string& nickname,
+                           const std::string& avatar_url, const MacAddress& mac_address,
                            const u64 game_id, const std::string& game_name) = 0;
 
     /**
-     * Send the data to the announce service
-     * @result The result of the announce attempt
+     * Updates the data in the announce service. Re-register the room when required.
+     * @result The result of the update attempt
      */
-    virtual Common::WebResult Announce() = 0;
+    virtual Common::WebResult Update() = 0;
+
+    /**
+     * Registers the data in the announce service
+     * @result A global Guid of the room which may be used for verification
+     */
+    virtual std::string Register() = 0;
 
     /**
      * Empties the stored players
@@ -102,15 +111,18 @@ public:
 class NullBackend : public Backend {
 public:
     ~NullBackend() = default;
-    void SetRoomInformation(const std::string& /*uid*/, const std::string& /*name*/,
-                            const std::string& /*description*/, const u16 /*port*/,
-                            const u32 /*max_player*/, const u32 /*net_version*/,
+    void SetRoomInformation(const std::string& /*name*/, const std::string& /*description*/,
+                            const u16 /*port*/, const u32 /*max_player*/, const u32 /*net_version*/,
                             const bool /*has_password*/, const std::string& /*preferred_game*/,
                             const u64 /*preferred_game_id*/) override {}
-    void AddPlayer(const std::string& /*nickname*/, const MacAddress& /*mac_address*/,
+    void AddPlayer(const std::string& /*username*/, const std::string& /*nickname*/,
+                   const std::string& /*avatar_url*/, const MacAddress& /*mac_address*/,
                    const u64 /*game_id*/, const std::string& /*game_name*/) override {}
-    Common::WebResult Announce() override {
+    Common::WebResult Update() override {
         return Common::WebResult{Common::WebResult::Code::NoWebservice, "WebService is missing"};
+    }
+    std::string Register() override {
+        return "";
     }
     void ClearPlayers() override {}
     RoomList GetRoomList() override {
