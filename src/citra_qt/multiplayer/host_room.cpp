@@ -22,6 +22,9 @@
 #include "core/hle/service/cfg/cfg.h"
 #include "core/settings.h"
 #include "ui_host_room.h"
+#ifdef ENABLE_WEB_SERVICE
+#include "web_service/verify_user_jwt.h"
+#endif
 
 HostRoomWindow::HostRoomWindow(QWidget* parent, QStandardItemModel* list,
                                std::shared_ptr<Core::AnnounceMultiplayerSession> session)
@@ -79,6 +82,21 @@ void HostRoomWindow::RetranslateUi() {
     ui->retranslateUi(this);
 }
 
+std::unique_ptr<Network::VerifyUser::Backend> HostRoomWindow::CreateVerifyBackend(
+    bool use_validation) const {
+    std::unique_ptr<Network::VerifyUser::Backend> verify_backend;
+    if (use_validation) {
+#ifdef ENABLE_WEB_SERVICE
+        verify_backend = std::make_unique<WebService::VerifyUserJWT>(Settings::values.web_api_url);
+#else
+        verify_backend = std::make_unique<Network::VerifyUser::NullBackend>();
+#endif
+    } else {
+        verify_backend = std::make_unique<Network::VerifyUser::NullBackend>();
+    }
+    return verify_backend;
+}
+
 void HostRoomWindow::Host() {
     if (!ui->username->hasAcceptableInput()) {
         NetworkMessage::ShowError(NetworkMessage::USERNAME_NOT_VALID);
@@ -108,11 +126,12 @@ void HostRoomWindow::Host() {
         auto game_id = ui->game_list->currentData(GameListItemPath::ProgramIdRole).toLongLong();
         auto port = ui->port->isModified() ? ui->port->text().toInt() : Network::DefaultRoomPort;
         auto password = ui->password->text().toStdString();
+        const bool is_public = ui->host_type->currentIndex() == 0;
         if (auto room = Network::GetRoom().lock()) {
-            bool created =
-                room->Create(ui->room_name->text().toStdString(),
-                             ui->room_description->toPlainText().toStdString(), "", port, password,
-                             ui->max_player->value(), game_name.toStdString(), game_id);
+            bool created = room->Create(ui->room_name->text().toStdString(),
+                                        ui->room_description->toPlainText().toStdString(), "", port,
+                                        password, ui->max_player->value(), game_name.toStdString(),
+                                        game_id, CreateVerifyBackend(is_public));
             if (!created) {
                 NetworkMessage::ShowError(NetworkMessage::COULD_NOT_CREATE_ROOM);
                 LOG_ERROR(Network, "Could not create room!");
@@ -120,9 +139,34 @@ void HostRoomWindow::Host() {
                 return;
             }
         }
+        // Start the announce session if they chose Public
+        if (is_public) {
+            if (auto session = announce_multiplayer_session.lock()) {
+                // Register the room first to ensure verify_UID is present when we connect
+                session->Register();
+                session->Start();
+            } else {
+                LOG_ERROR(Network, "Starting announce session failed");
+            }
+        }
+        std::string token;
+#ifdef ENABLE_WEB_SERVICE
+        if (is_public) {
+            WebService::Client client(Settings::values.web_api_url, Settings::values.citra_username,
+                                      Settings::values.citra_token);
+            if (auto room = Network::GetRoom().lock()) {
+                token = client.GetExternalJWT(room->GetVerifyUID()).returned_data;
+            }
+            if (token.empty()) {
+                LOG_ERROR(WebService, "Could not get external JWT, verification may fail");
+            } else {
+                LOG_INFO(WebService, "Successfully requested external JWT: size={}", token.size());
+            }
+        }
+#endif
         member->Join(ui->username->text().toStdString(),
                      Service::CFG::GetConsoleIdHash(Core::System::GetInstance()), "127.0.0.1", port,
-                     0, Network::NoPreferredMac, password);
+                     0, Network::NoPreferredMac, password, token);
 
         // Store settings
         UISettings::values.room_nickname = ui->username->text();
@@ -137,24 +181,8 @@ void HostRoomWindow::Host() {
                                            : QString::number(Network::DefaultRoomPort);
         UISettings::values.room_description = ui->room_description->toPlainText();
         Settings::Apply();
-        OnConnection();
-    }
-}
-
-void HostRoomWindow::OnConnection() {
-    ui->host->setEnabled(true);
-    if (auto room_member = Network::GetRoomMember().lock()) {
-        if (room_member->GetState() == Network::RoomMember::State::Joining) {
-            // Start the announce session if they chose Public
-            if (ui->host_type->currentIndex() == 0) {
-                if (auto session = announce_multiplayer_session.lock()) {
-                    session->Start();
-                } else {
-                    LOG_ERROR(Network, "Starting announce session failed");
-                }
-            }
-            close();
-        }
+        ui->host->setEnabled(true);
+        close();
     }
 }
 

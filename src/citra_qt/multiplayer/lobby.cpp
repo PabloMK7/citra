@@ -18,6 +18,9 @@
 #include "core/hle/service/cfg/cfg.h"
 #include "core/settings.h"
 #include "network/network.h"
+#ifdef ENABLE_WEB_SERVICE
+#include "web_service/web_backend.h"
+#endif
 
 Lobby::Lobby(QWidget* parent, QStandardItemModel* list,
              std::shared_ptr<Core::AnnounceMultiplayerSession> session)
@@ -136,12 +139,27 @@ void Lobby::OnJoinRoom(const QModelIndex& source) {
     const std::string ip =
         proxy->data(connection_index, LobbyItemHost::HostIPRole).toString().toStdString();
     int port = proxy->data(connection_index, LobbyItemHost::HostPortRole).toInt();
+    const std::string verify_UID =
+        proxy->data(connection_index, LobbyItemHost::HostVerifyUIDRole).toString().toStdString();
 
     // attempt to connect in a different thread
-    QFuture<void> f = QtConcurrent::run([nickname, ip, port, password] {
+    QFuture<void> f = QtConcurrent::run([nickname, ip, port, password, verify_UID] {
+        std::string token;
+#ifdef ENABLE_WEB_SERVICE
+        if (!Settings::values.citra_username.empty() && !Settings::values.citra_token.empty()) {
+            WebService::Client client(Settings::values.web_api_url, Settings::values.citra_username,
+                                      Settings::values.citra_token);
+            token = client.GetExternalJWT(verify_UID).returned_data;
+            if (token.empty()) {
+                LOG_ERROR(WebService, "Could not get external JWT, verification may fail");
+            } else {
+                LOG_INFO(WebService, "Successfully requested external JWT: size={}", token.size());
+            }
+        }
+#endif
         if (auto room_member = Network::GetRoomMember().lock()) {
             room_member->Join(nickname, Service::CFG::GetConsoleIdHash(Core::System::GetInstance()),
-                              ip.c_str(), port, 0, Network::NoPreferredMac, password);
+                              ip.c_str(), port, 0, Network::NoPreferredMac, password, token);
         }
     });
     watcher->setFuture(f);
@@ -193,7 +211,8 @@ void Lobby::OnRefreshLobby() {
         QList<QVariant> members;
         for (auto member : room.members) {
             QVariant var;
-            var.setValue(LobbyMember{QString::fromStdString(member.name), member.game_id,
+            var.setValue(LobbyMember{QString::fromStdString(member.username),
+                                     QString::fromStdString(member.nickname), member.game_id,
                                      QString::fromStdString(member.game_name)});
             members.append(var);
         }
@@ -205,7 +224,7 @@ void Lobby::OnRefreshLobby() {
             new LobbyItemGame(room.preferred_game_id, QString::fromStdString(room.preferred_game),
                               smdh_icon),
             new LobbyItemHost(QString::fromStdString(room.owner), QString::fromStdString(room.ip),
-                              room.port),
+                              room.port, QString::fromStdString(room.verify_UID)),
             new LobbyItemMemberList(members, room.max_player),
         });
         model->appendRow(row);

@@ -15,7 +15,7 @@ static std::string public_key;
 std::string GetPublicKey(const std::string& host) {
     if (public_key.empty()) {
         Client client(host, "", ""); // no need for credentials here
-        public_key = client.GetJson("/jwt/external/key.pem", true).returned_data;
+        public_key = client.GetPlain("/jwt/external/key.pem", true).returned_data;
         if (public_key.empty()) {
             LOG_ERROR(WebService, "Could not fetch external JWT public key, verification may fail");
         } else {

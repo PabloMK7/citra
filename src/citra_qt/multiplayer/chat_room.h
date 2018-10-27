@@ -52,9 +52,12 @@ private:
     static constexpr u32 max_chat_lines = 1000;
     void AppendChatMessage(const QString&);
     bool ValidateMessage(const std::string&);
+    void UpdateIconDisplay();
+
     QStandardItemModel* player_list;
     std::unique_ptr<Ui::ChatRoom> ui;
     std::unordered_set<std::string> block_list;
+    std::unordered_map<std::string, QPixmap> icon_cache;
 };
 
 Q_DECLARE_METATYPE(Network::ChatEntry);

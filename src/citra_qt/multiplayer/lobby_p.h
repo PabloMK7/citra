@@ -120,12 +120,14 @@ public:
     static const int HostUsernameRole = Qt::UserRole + 1;
     static const int HostIPRole = Qt::UserRole + 2;
     static const int HostPortRole = Qt::UserRole + 3;
+    static const int HostVerifyUIDRole = Qt::UserRole + 4;
 
     LobbyItemHost() = default;
-    explicit LobbyItemHost(QString username, QString ip, u16 port) {
+    explicit LobbyItemHost(QString username, QString ip, u16 port, QString verify_UID) {
         setData(username, HostUsernameRole);
         setData(ip, HostIPRole);
         setData(port, HostPortRole);
+        setData(verify_UID, HostVerifyUIDRole);
     }
 
     QVariant data(int role) const override {
@@ -146,12 +148,17 @@ class LobbyMember {
 public:
     LobbyMember() = default;
     LobbyMember(const LobbyMember& other) = default;
-    explicit LobbyMember(QString username, u64 title_id, QString game_name)
-        : username(std::move(username)), title_id(title_id), game_name(std::move(game_name)) {}
+    explicit LobbyMember(QString username, QString nickname, u64 title_id, QString game_name)
+        : username(std::move(username)), nickname(std::move(nickname)), title_id(title_id),
+          game_name(std::move(game_name)) {}
     ~LobbyMember() = default;
 
-    QString GetUsername() const {
-        return username;
+    QString GetName() const {
+        if (username.isEmpty() || username == nickname) {
+            return nickname;
+        } else {
+            return QString("%1 (%2)").arg(nickname, username);
+        }
     }
     u64 GetTitleId() const {
         return title_id;
@@ -162,6 +169,7 @@ public:
 
 private:
     QString username;
+    QString nickname;
     u64 title_id;
     QString game_name;
 };
@@ -220,10 +228,9 @@ public:
                 out += '\n';
             const auto& m = member.value<LobbyMember>();
             if (m.GetGameName().isEmpty()) {
-                out += QString(QObject::tr("%1 is not playing a game")).arg(m.GetUsername());
+                out += QString(QObject::tr("%1 is not playing a game")).arg(m.GetName());
             } else {
-                out +=
-                    QString(QObject::tr("%1 is playing %2")).arg(m.GetUsername(), m.GetGameName());
+                out += QString(QObject::tr("%1 is playing %2")).arg(m.GetName(), m.GetGameName());
             }
             first = false;
         }

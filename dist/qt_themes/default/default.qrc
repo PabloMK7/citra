@@ -18,6 +18,8 @@
 
         <file alias="48x48/folder.png">icons/48x48/folder.png</file>
 
+        <file alias="48x48/no_avatar.png">icons/48x48/no_avatar.png</file>
+
         <file alias="48x48/plus.png">icons/48x48/plus.png</file>
       
         <file alias="48x48/sd_card.png">icons/48x48/sd_card.png</file>
