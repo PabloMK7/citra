@@ -21,8 +21,8 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-namespace CoreTiming {
-struct EventType;
+namespace Core {
+struct TimingEventType;
 }
 
 namespace SharedPage {
@@ -96,7 +96,7 @@ public:
 private:
     u64 GetSystemTime() const;
     void UpdateTimeCallback(u64 userdata, int cycles_late);
-    CoreTiming::EventType* update_time_event;
+    Core::TimingEventType* update_time_event;
     std::chrono::seconds init_time;
 
     SharedPageDef shared_page;

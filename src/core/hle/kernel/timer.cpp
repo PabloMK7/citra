@@ -6,6 +6,7 @@
 #include <unordered_map>
 #include "common/assert.h"
 #include "common/logging/log.h"
+#include "core/core.h"
 #include "core/hle/kernel/handle_table.h"
 #include "core/hle/kernel/object.h"
 #include "core/hle/kernel/thread.h"
@@ -55,13 +56,14 @@ void Timer::Set(s64 initial, s64 interval) {
         // Immediately invoke the callback
         Signal(0);
     } else {
-        CoreTiming::ScheduleEvent(nsToCycles(initial), timer_manager.timer_callback_event_type,
-                                  callback_id);
+        Core::System::GetInstance().CoreTiming().ScheduleEvent(
+            nsToCycles(initial), timer_manager.timer_callback_event_type, callback_id);
     }
 }
 
 void Timer::Cancel() {
-    CoreTiming::UnscheduleEvent(timer_manager.timer_callback_event_type, callback_id);
+    Core::System::GetInstance().CoreTiming().UnscheduleEvent(
+        timer_manager.timer_callback_event_type, callback_id);
 }
 
 void Timer::Clear() {
@@ -85,8 +87,9 @@ void Timer::Signal(s64 cycles_late) {
 
     if (interval_delay != 0) {
         // Reschedule the timer with the interval delay
-        CoreTiming::ScheduleEvent(nsToCycles(interval_delay) - cycles_late,
-                                  timer_manager.timer_callback_event_type, callback_id);
+        Core::System::GetInstance().CoreTiming().ScheduleEvent(
+            nsToCycles(interval_delay) - cycles_late, timer_manager.timer_callback_event_type,
+            callback_id);
     }
 }
 
@@ -103,10 +106,9 @@ void TimerManager::TimerCallback(u64 callback_id, s64 cycles_late) {
 }
 
 TimerManager::TimerManager() {
-    timer_callback_event_type =
-        CoreTiming::RegisterEvent("TimerCallback", [this](u64 thread_id, s64 cycle_late) {
-            TimerCallback(thread_id, cycle_late);
-        });
+    timer_callback_event_type = Core::System::GetInstance().CoreTiming().RegisterEvent(
+        "TimerCallback",
+        [this](u64 thread_id, s64 cycle_late) { TimerCallback(thread_id, cycle_late); });
 }
 
 } // namespace Kernel

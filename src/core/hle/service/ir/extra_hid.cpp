@@ -4,6 +4,7 @@
 
 #include "common/alignment.h"
 #include "common/string_util.h"
+#include "core/core.h"
 #include "core/core_timing.h"
 #include "core/hle/service/ir/extra_hid.h"
 #include "core/movie.h"
@@ -144,11 +145,11 @@ ExtraHID::ExtraHID(SendFunc send_func) : IRDevice(send_func) {
         0x65,
     }};
 
-    hid_polling_callback_id =
-        CoreTiming::RegisterEvent("ExtraHID::SendHIDStatus", [this](u64, s64 cycles_late) {
+    hid_polling_callback_id = Core::System::GetInstance().CoreTiming().RegisterEvent(
+        "ExtraHID::SendHIDStatus", [this](u64, s64 cycles_late) {
             SendHIDStatus();
-            CoreTiming::ScheduleEvent(msToCycles(hid_period) - cycles_late,
-                                      hid_polling_callback_id);
+            Core::System::GetInstance().CoreTiming().ScheduleEvent(
+                msToCycles(hid_period) - cycles_late, hid_polling_callback_id);
         });
 }
 
@@ -159,7 +160,7 @@ ExtraHID::~ExtraHID() {
 void ExtraHID::OnConnect() {}
 
 void ExtraHID::OnDisconnect() {
-    CoreTiming::UnscheduleEvent(hid_polling_callback_id, 0);
+    Core::System::GetInstance().CoreTiming().UnscheduleEvent(hid_polling_callback_id, 0);
 }
 
 void ExtraHID::HandleConfigureHIDPollingRequest(const std::vector<u8>& request) {
@@ -170,9 +171,10 @@ void ExtraHID::HandleConfigureHIDPollingRequest(const std::vector<u8>& request) 
     }
 
     // Change HID input polling interval
-    CoreTiming::UnscheduleEvent(hid_polling_callback_id, 0);
+    Core::System::GetInstance().CoreTiming().UnscheduleEvent(hid_polling_callback_id, 0);
     hid_period = request[1];
-    CoreTiming::ScheduleEvent(msToCycles(hid_period), hid_polling_callback_id);
+    Core::System::GetInstance().CoreTiming().ScheduleEvent(msToCycles(hid_period),
+                                                           hid_polling_callback_id);
 }
 
 void ExtraHID::HandleReadCalibrationDataRequest(const std::vector<u8>& request_buf) {

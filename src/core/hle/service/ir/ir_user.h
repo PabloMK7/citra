@@ -14,10 +14,6 @@ class Event;
 class SharedMemory;
 } // namespace Kernel
 
-namespace CoreTiming {
-struct EventType;
-};
-
 namespace Service::IR {
 
 class BufferManager;

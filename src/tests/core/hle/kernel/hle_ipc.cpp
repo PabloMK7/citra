@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <catch2/catch.hpp>
+#include "core/core.h"
 #include "core/core_timing.h"
 #include "core/hle/ipc.h"
 #include "core/hle/kernel/client_port.h"
@@ -20,7 +21,8 @@ static SharedPtr<Object> MakeObject(Kernel::KernelSystem& kernel) {
 }
 
 TEST_CASE("HLERequestContext::PopulateFromIncomingCommandBuffer", "[core][kernel]") {
-    CoreTiming::Init();
+    // HACK: see comments of member timing
+    Core::System::GetInstance().timing = std::make_unique<Core::Timing>();
     Kernel::KernelSystem kernel(0);
     auto session = std::get<SharedPtr<ServerSession>>(kernel.CreateSessionPair());
     HLERequestContext context(std::move(session));
@@ -227,12 +229,11 @@ TEST_CASE("HLERequestContext::PopulateFromIncomingCommandBuffer", "[core][kernel
         REQUIRE(process->vm_manager.UnmapRange(target_address_mapped, buffer_mapped->size()) ==
                 RESULT_SUCCESS);
     }
-
-    CoreTiming::Shutdown();
 }
 
 TEST_CASE("HLERequestContext::WriteToOutgoingCommandBuffer", "[core][kernel]") {
-    CoreTiming::Init();
+    // HACK: see comments of member timing
+    Core::System::GetInstance().timing = std::make_unique<Core::Timing>();
     Kernel::KernelSystem kernel(0);
     auto session = std::get<SharedPtr<ServerSession>>(kernel.CreateSessionPair());
     HLERequestContext context(std::move(session));
@@ -369,8 +370,6 @@ TEST_CASE("HLERequestContext::WriteToOutgoingCommandBuffer", "[core][kernel]") {
         REQUIRE(process->vm_manager.UnmapRange(target_address, output_buffer->size()) ==
                 RESULT_SUCCESS);
     }
-
-    CoreTiming::Shutdown();
 }
 
 } // namespace Kernel

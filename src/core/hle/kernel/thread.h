@@ -127,7 +127,7 @@ private:
     std::unordered_map<u64, Thread*> wakeup_callback_table;
 
     /// Event type for the thread wake up event
-    CoreTiming::EventType* ThreadWakeupEventType = nullptr;
+    Core::TimingEventType* ThreadWakeupEventType = nullptr;
 
     // Lists all threadsthat aren't deleted.
     std::vector<SharedPtr<Thread>> thread_list;

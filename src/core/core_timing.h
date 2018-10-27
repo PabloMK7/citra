@@ -21,8 +21,11 @@
 #include <functional>
 #include <limits>
 #include <string>
+#include <unordered_map>
+#include <vector>
 #include "common/common_types.h"
 #include "common/logging/log.h"
+#include "common/threadsafe_queue.h"
 
 // The timing we get from the assembly is 268,111,855.956 Hz
 // It is possible that this number isn't just an integer because the compiler could have
@@ -120,73 +123,112 @@ inline u64 cyclesToMs(s64 cycles) {
     return cycles * 1000 / BASE_CLOCK_RATE_ARM11;
 }
 
-namespace CoreTiming {
-
-struct EventType;
+namespace Core {
 
 using TimedCallback = std::function<void(u64 userdata, int cycles_late)>;
 
-/**
- * CoreTiming begins at the boundary of timing slice -1. An initial call to Advance() is
- * required to end slice -1 and start slice 0 before the first cycle of code is executed.
- */
-void Init();
-void Shutdown();
+struct TimingEventType {
+    TimedCallback callback;
+    const std::string* name;
+};
 
-/**
- * This should only be called from the emu thread, if you are calling it any other thread, you are
- * doing something evil
- */
-u64 GetTicks();
-u64 GetIdleTicks();
-void AddTicks(u64 ticks);
+class Timing {
+public:
+    ~Timing();
 
-/**
- * Returns the event_type identifier. if name is not unique, it will assert.
- */
-EventType* RegisterEvent(const std::string& name, TimedCallback callback);
-void UnregisterAllEvents();
+    /**
+     * This should only be called from the emu thread, if you are calling it any other thread, you
+     * are doing something evil
+     */
+    u64 GetTicks() const;
+    u64 GetIdleTicks() const;
+    void AddTicks(u64 ticks);
 
-/**
- * After the first Advance, the slice lengths and the downcount will be reduced whenever an event
- * is scheduled earlier than the current values.
- * Scheduling from a callback will not update the downcount until the Advance() completes.
- */
-void ScheduleEvent(s64 cycles_into_future, const EventType* event_type, u64 userdata = 0);
+    /**
+     * Returns the event_type identifier. if name is not unique, it will assert.
+     */
+    TimingEventType* RegisterEvent(const std::string& name, TimedCallback callback);
 
-/**
- * This is to be called when outside of hle threads, such as the graphics thread, wants to
- * schedule things to be executed on the main thread.
- * Not that this doesn't change slice_length and thus events scheduled by this might be called
- * with a delay of up to MAX_SLICE_LENGTH
- */
-void ScheduleEventThreadsafe(s64 cycles_into_future, const EventType* event_type, u64 userdata);
+    /**
+     * After the first Advance, the slice lengths and the downcount will be reduced whenever an
+     * event is scheduled earlier than the current values. Scheduling from a callback will not
+     * update the downcount until the Advance() completes.
+     */
+    void ScheduleEvent(s64 cycles_into_future, const TimingEventType* event_type, u64 userdata = 0);
 
-void UnscheduleEvent(const EventType* event_type, u64 userdata);
+    /**
+     * This is to be called when outside of hle threads, such as the graphics thread, wants to
+     * schedule things to be executed on the main thread.
+     * Not that this doesn't change slice_length and thus events scheduled by this might be called
+     * with a delay of up to MAX_SLICE_LENGTH
+     */
+    void ScheduleEventThreadsafe(s64 cycles_into_future, const TimingEventType* event_type,
+                                 u64 userdata);
 
-/// We only permit one event of each type in the queue at a time.
-void RemoveEvent(const EventType* event_type);
-void RemoveNormalAndThreadsafeEvent(const EventType* event_type);
+    void UnscheduleEvent(const TimingEventType* event_type, u64 userdata);
 
-/** Advance must be called at the beginning of dispatcher loops, not the end. Advance() ends
- * the previous timing slice and begins the next one, you must Advance from the previous
- * slice to the current one before executing any cycles. CoreTiming starts in slice -1 so an
- * Advance() is required to initialize the slice length before the first cycle of emulated
- * instructions is executed.
- */
-void Advance();
-void MoveEvents();
+    /// We only permit one event of each type in the queue at a time.
+    void RemoveEvent(const TimingEventType* event_type);
+    void RemoveNormalAndThreadsafeEvent(const TimingEventType* event_type);
 
-/// Pretend that the main CPU has executed enough cycles to reach the next event.
-void Idle();
+    /** Advance must be called at the beginning of dispatcher loops, not the end. Advance() ends
+     * the previous timing slice and begins the next one, you must Advance from the previous
+     * slice to the current one before executing any cycles. CoreTiming starts in slice -1 so an
+     * Advance() is required to initialize the slice length before the first cycle of emulated
+     * instructions is executed.
+     */
+    void Advance();
+    void MoveEvents();
 
-/// Clear all pending events. This should ONLY be done on exit.
-void ClearPendingEvents();
+    /// Pretend that the main CPU has executed enough cycles to reach the next event.
+    void Idle();
 
-void ForceExceptionCheck(s64 cycles);
+    void ForceExceptionCheck(s64 cycles);
 
-std::chrono::microseconds GetGlobalTimeUs();
+    std::chrono::microseconds GetGlobalTimeUs() const;
 
-s64 GetDowncount();
+    s64 GetDowncount() const;
 
-} // namespace CoreTiming
+private:
+    struct Event {
+        s64 time;
+        u64 fifo_order;
+        u64 userdata;
+        const TimingEventType* type;
+
+        bool operator>(const Event& right) const;
+        bool operator<(const Event& right) const;
+    };
+
+    static constexpr int MAX_SLICE_LENGTH = 20000;
+
+    s64 global_timer = 0;
+    s64 slice_length = MAX_SLICE_LENGTH;
+    s64 downcount = MAX_SLICE_LENGTH;
+
+    // unordered_map stores each element separately as a linked list node so pointers to
+    // elements remain stable regardless of rehashes/resizing.
+    std::unordered_map<std::string, TimingEventType> event_types;
+
+    // The queue is a min-heap using std::make_heap/push_heap/pop_heap.
+    // We don't use std::priority_queue because we need to be able to serialize, unserialize and
+    // erase arbitrary events (RemoveEvent()) regardless of the queue order. These aren't
+    // accomodated by the standard adaptor class.
+    std::vector<Event> event_queue;
+    u64 event_fifo_id = 0;
+    // the queue for storing the events from other threads threadsafe until they will be added
+    // to the event_queue by the emu thread
+    Common::MPSCQueue<Event, false> ts_queue;
+    s64 idled_cycles = 0;
+
+    // Are we in a function that has been called from Advance()
+    // If events are sheduled from a function that gets called from Advance(),
+    // don't change slice_length and downcount.
+    // The time between CoreTiming being intialized and the first call to Advance() is considered
+    // the slice boundary between slice -1 and slice 0. Dispatcher loops must call Advance() before
+    // executing the first cycle of each slice to prepare the slice length and downcount for
+    // that slice.
+    bool is_global_timer_sane = true;
+};
+
+} // namespace Core

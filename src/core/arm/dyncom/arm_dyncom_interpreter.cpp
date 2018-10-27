@@ -18,6 +18,7 @@
 #include "core/arm/skyeye_common/armstate.h"
 #include "core/arm/skyeye_common/armsupp.h"
 #include "core/arm/skyeye_common/vfp/vfp.h"
+#include "core/core.h"
 #include "core/core_timing.h"
 #include "core/gdbstub/gdbstub.h"
 #include "core/hle/kernel/svc.h"
@@ -3859,7 +3860,7 @@ SUB_INST : {
 SWI_INST : {
     if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
         swi_inst* const inst_cream = (swi_inst*)inst_base->component;
-        CoreTiming::AddTicks(num_instrs);
+        Core::System::GetInstance().CoreTiming().AddTicks(num_instrs);
         cpu->NumInstrsToExecute =
             num_instrs >= cpu->NumInstrsToExecute ? 0 : cpu->NumInstrsToExecute - num_instrs;
         num_instrs = 0;

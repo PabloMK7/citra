@@ -352,6 +352,8 @@ private:
      *      2, 3: output buffer return descriptor & ptr
      */
     void DecryptBeaconData(Kernel::HLERequestContext& ctx);
+
+    void BeaconBroadcastCallback(u64 userdata, s64 cycles_late);
 };
 
 } // namespace Service::NWM
