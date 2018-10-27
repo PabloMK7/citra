@@ -31,6 +31,11 @@
 #include "core/core.h"
 #include "core/settings.h"
 #include "network/network.h"
+#include "network/verify_user.h"
+
+#ifdef ENABLE_WEB_SERVICE
+#include "web_service/verify_user_jwt.h"
+#endif
 
 static void PrintHelp(const char* argv0) {
     std::cout << "Usage: " << argv0
@@ -179,10 +184,23 @@ int main(int argc, char** argv) {
         Settings::values.citra_token = token;
     }
 
+    std::unique_ptr<Network::VerifyUser::Backend> verify_backend;
+    if (announce) {
+#ifdef ENABLE_WEB_SERVICE
+        verify_backend = std::make_unique<WebService::VerifyUserJWT>(Settings::values.web_api_url);
+#else
+        std::cout
+            << "Citra Web Services is not available with this build: validation is disabled.\n\n";
+        verify_backend = std::make_unique<Network::VerifyUser::NullBackend>();
+#endif
+    } else {
+        verify_backend = std::make_unique<Network::VerifyUser::NullBackend>();
+    }
+
     Network::Init();
     if (std::shared_ptr<Network::Room> room = Network::GetRoom().lock()) {
         if (!room->Create(room_name, room_description, "", port, password, max_members,
-                          preferred_game, preferred_game_id)) {
+                          preferred_game, preferred_game_id, std::move(verify_backend))) {
             std::cout << "Failed to create room: \n\n";
             return -1;
         }
