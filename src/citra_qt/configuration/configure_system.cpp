@@ -220,12 +220,12 @@ ConfigureSystem::ConfigureSystem(QWidget* parent) : QWidget(parent), ui(new Ui::
     ui->setupUi(this);
     connect(ui->combo_birthmonth,
             static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this,
-            &ConfigureSystem::updateBirthdayComboBox);
+            &ConfigureSystem::UpdateBirthdayComboBox);
     connect(ui->combo_init_clock,
             static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this,
-            &ConfigureSystem::updateInitTime);
+            &ConfigureSystem::UpdateInitTime);
     connect(ui->button_regenerate_console_id, &QPushButton::clicked, this,
-            &ConfigureSystem::refreshConsoleID);
+            &ConfigureSystem::RefreshConsoleID);
     for (u8 i = 0; i < country_names.size(); i++) {
         if (country_names.at(i) != "") {
             ui->combo_country->addItem(tr(country_names.at(i)), i);
@@ -270,7 +270,7 @@ void ConfigureSystem::ReadSystemSettings() {
     // set birthday
     std::tie(birthmonth, birthday) = cfg->GetBirthday();
     ui->combo_birthmonth->setCurrentIndex(birthmonth - 1);
-    updateBirthdayComboBox(
+    UpdateBirthdayComboBox(
         birthmonth -
         1); // explicitly update it because the signal from setCurrentIndex is not reliable
     ui->combo_birthday->setCurrentIndex(birthday - 1);
@@ -358,7 +358,7 @@ void ConfigureSystem::applyConfiguration() {
     Settings::Apply();
 }
 
-void ConfigureSystem::updateBirthdayComboBox(int birthmonth_index) {
+void ConfigureSystem::UpdateBirthdayComboBox(int birthmonth_index) {
     if (birthmonth_index < 0 || birthmonth_index >= 12)
         return;
 
@@ -391,17 +391,17 @@ void ConfigureSystem::ConfigureTime() {
 
     this->setConfiguration();
 
-    updateInitTime(ui->combo_init_clock->currentIndex());
+    UpdateInitTime(ui->combo_init_clock->currentIndex());
 }
 
-void ConfigureSystem::updateInitTime(int init_clock) {
+void ConfigureSystem::UpdateInitTime(int init_clock) {
     const bool is_fixed_time =
         static_cast<Settings::InitClock>(init_clock) == Settings::InitClock::FixedTime;
     ui->label_init_time->setVisible(is_fixed_time);
     ui->edit_init_time->setVisible(is_fixed_time);
 }
 
-void ConfigureSystem::refreshConsoleID() {
+void ConfigureSystem::RefreshConsoleID() {
     QMessageBox::StandardButton reply;
     QString warning_text = tr("This will replace your current virtual 3DS with a new one. "
                               "Your current virtual 3DS will not be recoverable. "

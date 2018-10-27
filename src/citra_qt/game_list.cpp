@@ -289,11 +289,11 @@ GameList::GameList(GMainWindow* parent) : QWidget{parent} {
     tree_view->setContextMenuPolicy(Qt::CustomContextMenu);
 
     item_model->insertColumns(0, COLUMN_COUNT);
-    item_model->setHeaderData(COLUMN_NAME, Qt::Horizontal, "Name");
-    item_model->setHeaderData(COLUMN_COMPATIBILITY, Qt::Horizontal, "Compatibility");
-    item_model->setHeaderData(COLUMN_REGION, Qt::Horizontal, "Region");
-    item_model->setHeaderData(COLUMN_FILE_TYPE, Qt::Horizontal, "File type");
-    item_model->setHeaderData(COLUMN_SIZE, Qt::Horizontal, "Size");
+    item_model->setHeaderData(COLUMN_NAME, Qt::Horizontal, tr("Name"));
+    item_model->setHeaderData(COLUMN_COMPATIBILITY, Qt::Horizontal, tr("Compatibility"));
+    item_model->setHeaderData(COLUMN_REGION, Qt::Horizontal, tr("Region"));
+    item_model->setHeaderData(COLUMN_FILE_TYPE, Qt::Horizontal, tr("File type"));
+    item_model->setHeaderData(COLUMN_SIZE, Qt::Horizontal, tr("Size"));
     item_model->setSortRole(GameListItemPath::TitleRole);
 
     connect(main_window, &GMainWindow::UpdateThemedIcons, this, &GameList::onUpdateThemedIcons);
