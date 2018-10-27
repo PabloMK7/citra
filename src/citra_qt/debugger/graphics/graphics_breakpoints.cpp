@@ -30,23 +30,8 @@ QVariant BreakPointModel::data(const QModelIndex& index, int role) const {
     switch (role) {
     case Qt::DisplayRole: {
         if (index.column() == 0) {
-            static const std::map<Pica::DebugContext::Event, QString> map = {
-                {Pica::DebugContext::Event::PicaCommandLoaded, tr("Pica command loaded")},
-                {Pica::DebugContext::Event::PicaCommandProcessed, tr("Pica command processed")},
-                {Pica::DebugContext::Event::IncomingPrimitiveBatch, tr("Incoming primitive batch")},
-                {Pica::DebugContext::Event::FinishedPrimitiveBatch, tr("Finished primitive batch")},
-                {Pica::DebugContext::Event::VertexShaderInvocation, tr("Vertex shader invocation")},
-                {Pica::DebugContext::Event::IncomingDisplayTransfer,
-                 tr("Incoming display transfer")},
-                {Pica::DebugContext::Event::GSPCommandProcessed, tr("GSP command processed")},
-                {Pica::DebugContext::Event::BufferSwapped, tr("Buffers swapped")},
-            };
-
-            DEBUG_ASSERT(map.size() ==
-                         static_cast<std::size_t>(Pica::DebugContext::Event::NumEvents));
-            return (map.find(event) != map.end()) ? map.at(event) : QString();
+            return DebugContextEventToString(event);
         }
-
         break;
     }
 
@@ -126,6 +111,30 @@ void BreakPointModel::OnResumed() {
     emit dataChanged(createIndex(static_cast<int>(active_breakpoint), 0),
                      createIndex(static_cast<int>(active_breakpoint), 0));
     active_breakpoint = context->active_breakpoint;
+}
+
+QString BreakPointModel::DebugContextEventToString(Pica::DebugContext::Event event) {
+    switch (event) {
+    case Pica::DebugContext::Event::PicaCommandLoaded:
+        return tr("Pica command loaded");
+    case Pica::DebugContext::Event::PicaCommandProcessed:
+        return tr("Pica command processed");
+    case Pica::DebugContext::Event::IncomingPrimitiveBatch:
+        return tr("Incoming primitive batch");
+    case Pica::DebugContext::Event::FinishedPrimitiveBatch:
+        return tr("Finished primitive batch");
+    case Pica::DebugContext::Event::VertexShaderInvocation:
+        return tr("Vertex shader invocation");
+    case Pica::DebugContext::Event::IncomingDisplayTransfer:
+        return tr("Incoming display transfer");
+    case Pica::DebugContext::Event::GSPCommandProcessed:
+        return tr("GSP command processed");
+    case Pica::DebugContext::Event::BufferSwapped:
+        return tr("Buffers swapped");
+    case Pica::DebugContext::Event::NumEvents:
+        break;
+    }
+    return tr("Unknown debug context event");
 }
 
 GraphicsBreakPointsWidget::GraphicsBreakPointsWidget(

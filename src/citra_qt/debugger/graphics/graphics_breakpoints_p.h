@@ -29,6 +29,8 @@ public:
     void OnResumed();
 
 private:
+    static QString DebugContextEventToString(Pica::DebugContext::Event event);
+
     std::weak_ptr<Pica::DebugContext> context_weak;
     bool at_breakpoint;
     Pica::DebugContext::Event active_breakpoint;
