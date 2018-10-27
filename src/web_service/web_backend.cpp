@@ -7,6 +7,7 @@
 #include <mutex>
 #include <string>
 #include <LUrlParser.h>
+#include <fmt/format.h>
 #include <httplib.h>
 #include "common/common_types.h"
 #include "common/logging/log.h"
@@ -134,7 +135,8 @@ struct Client::Impl {
         }
 
         if (content_type->second.find("application/json") == std::string::npos &&
-            content_type->second.find("text/html; charset=utf-8") == std::string::npos) {
+            content_type->second.find("text/html; charset=utf-8") == std::string::npos &&
+            content_type->second.find("text/plain; charset=utf-8") == std::string::npos) {
             LOG_ERROR(WebService, "{} to {} returned wrong content: {}", method, host + path,
                       content_type->second);
             return Common::WebResult{Common::WebResult::Code::WrongContent, "Wrong content"};
@@ -191,6 +193,10 @@ Common::WebResult Client::GetJson(const std::string& path, bool allow_anonymous)
 Common::WebResult Client::DeleteJson(const std::string& path, const std::string& data,
                                      bool allow_anonymous) {
     return impl->GenericJson("DELETE", path, data, allow_anonymous);
+}
+
+Common::WebResult Client::GetExternalJWT(const std::string& audience) {
+    return PostJson(fmt::format("/jwt/external/{}", audience), "", false);
 }
 
 } // namespace WebService
