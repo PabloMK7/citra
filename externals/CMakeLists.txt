@@ -82,6 +82,10 @@ if (ENABLE_WEB_SERVICE)
     target_include_directories(ssl INTERFACE ./libressl/include)
     target_compile_definitions(ssl PRIVATE -DHAVE_INET_NTOP)
 
+    # JSON
+    add_library(json-headers INTERFACE)
+    target_include_directories(json-headers INTERFACE ./json)
+
     # lurlparser
     add_subdirectory(lurlparser EXCLUDE_FROM_ALL)
 
@@ -89,9 +93,9 @@ if (ENABLE_WEB_SERVICE)
     add_library(httplib INTERFACE)
     target_include_directories(httplib INTERFACE ./httplib)
 
-    # JSON
-    add_library(json-headers INTERFACE)
-    target_include_directories(json-headers INTERFACE ./json)
+    # cpp-jwt
+    add_library(cpp-jwt INTERFACE)
+    target_include_directories(cpp-jwt INTERFACE ./cpp-jwt/include)
 endif()
 
 if (ENABLE_SCRIPTING)

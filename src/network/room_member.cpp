@@ -33,7 +33,11 @@ public:
     void SetState(const State new_state);
     bool IsConnected() const;
 
-    std::string nickname;   ///< The nickname of this member.
+    std::string nickname; ///< The nickname of this member.
+
+    std::string username;              ///< The username of this member.
+    mutable std::mutex username_mutex; ///< Mutex for locking username.
+
     MacAddress mac_address; ///< The mac_address of this member.
 
     std::mutex network_mutex; ///< Mutex that controls access to the `client` variable.
@@ -80,7 +84,7 @@ public:
      */
     void SendJoinRequest(const std::string& nickname, const std::string& console_id_hash,
                          const MacAddress& preferred_mac = NoPreferredMac,
-                         const std::string& password = "");
+                         const std::string& password = "", const std::string& token = "");
 
     /**
      * Extracts a MAC Address from a received ENet packet.
@@ -210,7 +214,8 @@ void RoomMember::RoomMemberImpl::Send(Packet&& packet) {
 void RoomMember::RoomMemberImpl::SendJoinRequest(const std::string& nickname,
                                                  const std::string& console_id_hash,
                                                  const MacAddress& preferred_mac,
-                                                 const std::string& password) {
+                                                 const std::string& password,
+                                                 const std::string& token) {
     Packet packet;
     packet << static_cast<u8>(IdJoinRequest);
     packet << nickname;
@@ -218,6 +223,7 @@ void RoomMember::RoomMemberImpl::SendJoinRequest(const std::string& nickname,
     packet << preferred_mac;
     packet << network_version;
     packet << password;
+    packet << token;
     Send(std::move(packet));
 }
 
@@ -232,7 +238,6 @@ void RoomMember::RoomMemberImpl::HandleRoomInformationPacket(const ENetEvent* ev
     packet >> info.name;
     packet >> info.description;
     packet >> info.member_slots;
-    packet >> info.uid;
     packet >> info.port;
     packet >> info.preferred_game;
     room_information.name = info.name;
@@ -250,6 +255,16 @@ void RoomMember::RoomMemberImpl::HandleRoomInformationPacket(const ENetEvent* ev
         packet >> member.mac_address;
         packet >> member.game_info.name;
         packet >> member.game_info.id;
+        packet >> member.username;
+        packet >> member.display_name;
+        packet >> member.avatar_url;
+
+        {
+            std::lock_guard<std::mutex> lock(username_mutex);
+            if (member.nickname == nickname) {
+                username = member.username;
+            }
+        }
     }
     Invoke(room_information);
 }
@@ -297,6 +312,7 @@ void RoomMember::RoomMemberImpl::HandleChatPacket(const ENetEvent* event) {
 
     ChatEntry chat_entry{};
     packet >> chat_entry.nickname;
+    packet >> chat_entry.username;
     packet >> chat_entry.message;
     Invoke<ChatEntry>(chat_entry);
 }
@@ -391,6 +407,11 @@ const std::string& RoomMember::GetNickname() const {
     return room_member_impl->nickname;
 }
 
+const std::string& RoomMember::GetUsername() const {
+    std::lock_guard<std::mutex> lock(room_member_impl->username_mutex);
+    return room_member_impl->username;
+}
+
 const MacAddress& RoomMember::GetMacAddress() const {
     ASSERT_MSG(IsConnected(), "Tried to get MAC address while not connected");
     return room_member_impl->mac_address;
@@ -402,7 +423,8 @@ RoomInformation RoomMember::GetRoomInformation() const {
 
 void RoomMember::Join(const std::string& nick, const std::string& console_id_hash,
                       const char* server_addr, u16 server_port, u16 client_port,
-                      const MacAddress& preferred_mac, const std::string& password) {
+                      const MacAddress& preferred_mac, const std::string& password,
+                      const std::string& token) {
     // If the member is connected, kill the connection first
     if (room_member_impl->loop_thread && room_member_impl->loop_thread->joinable()) {
         Leave();
@@ -435,7 +457,7 @@ void RoomMember::Join(const std::string& nick, const std::string& console_id_has
     if (net > 0 && event.type == ENET_EVENT_TYPE_CONNECT) {
         room_member_impl->nickname = nick;
         room_member_impl->StartLoop();
-        room_member_impl->SendJoinRequest(nick, console_id_hash, preferred_mac, password);
+        room_member_impl->SendJoinRequest(nick, console_id_hash, preferred_mac, password, token);
         SendGameInfo(room_member_impl->current_game_info);
     } else {
         enet_peer_disconnect(room_member_impl->server, 0);

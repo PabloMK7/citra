@@ -14,6 +14,7 @@
 #include "enet/enet.h"
 #include "network/packet.h"
 #include "network/room.h"
+#include "network/verify_user.h"
 
 namespace Network {
 
@@ -28,6 +29,9 @@ public:
     std::atomic<State> state{State::Closed}; ///< Current state of the room.
     RoomInformation room_information;        ///< Information about this room.
 
+    std::string verify_UID;              ///< A GUID which may be used for verfication.
+    mutable std::mutex verify_UID_mutex; ///< Mutex for verify_UID
+
     std::string password; ///< The password required to connect to this room.
 
     struct Member {
@@ -35,7 +39,9 @@ public:
         std::string console_id_hash; ///< A hash of the console ID of the member.
         GameInfo game_info;          ///< The current game of the member
         MacAddress mac_address;      ///< The assigned mac address of the member.
-        ENetPeer* peer;              ///< The remote peer.
+        /// Data of the user, often including authenticated forum username.
+        VerifyUser::UserData user_data;
+        ENetPeer* peer; ///< The remote peer.
     };
     using MemberList = std::vector<Member>;
     MemberList members;              ///< Information about the members of this room
@@ -47,6 +53,9 @@ public:
 
     /// Thread that receives and dispatches network packets
     std::unique_ptr<std::thread> room_thread;
+
+    /// Verification backend of the room
+    std::unique_ptr<VerifyUser::Backend> verify_backend;
 
     /// Thread function that will receive and dispatch messages until the room is destroyed.
     void ServerLoop();
@@ -165,11 +174,6 @@ public:
      * to all other clients.
      */
     void HandleClientDisconnection(ENetPeer* client);
-
-    /**
-     * Creates a random ID in the form 12345678-1234-1234-1234-123456789012
-     */
-    void CreateUniqueID();
 };
 
 // RoomImpl
@@ -238,6 +242,9 @@ void Room::RoomImpl::HandleJoinRequest(const ENetEvent* event) {
     std::string pass;
     packet >> pass;
 
+    std::string token;
+    packet >> token;
+
     if (pass != password) {
         SendWrongPassword(event->peer);
         return;
@@ -275,6 +282,13 @@ void Room::RoomImpl::HandleJoinRequest(const ENetEvent* event) {
     member.console_id_hash = console_id_hash;
     member.nickname = nickname;
     member.peer = event->peer;
+
+    std::string uid;
+    {
+        std::lock_guard<std::mutex> lock(verify_UID_mutex);
+        uid = verify_UID;
+    }
+    member.user_data = verify_backend->LoadUserData(uid, token);
 
     {
         std::lock_guard<std::mutex> lock(member_mutex);
@@ -407,7 +421,6 @@ void Room::RoomImpl::BroadcastRoomInformation() {
     packet << room_information.name;
     packet << room_information.description;
     packet << room_information.member_slots;
-    packet << room_information.uid;
     packet << room_information.port;
     packet << room_information.preferred_game;
 
@@ -419,6 +432,9 @@ void Room::RoomImpl::BroadcastRoomInformation() {
             packet << member.mac_address;
             packet << member.game_info.name;
             packet << member.game_info.id;
+            packet << member.user_data.username;
+            packet << member.user_data.display_name;
+            packet << member.user_data.avatar_url;
         }
     }
 
@@ -511,6 +527,7 @@ void Room::RoomImpl::HandleChatPacket(const ENetEvent* event) {
     Packet out_packet;
     out_packet << static_cast<u8>(IdChatMessage);
     out_packet << sending_member->nickname;
+    out_packet << sending_member->user_data.username;
     out_packet << message;
 
     ENetPacket* enet_packet = enet_packet_create(out_packet.GetData(), out_packet.GetDataSize(),
@@ -567,20 +584,6 @@ void Room::RoomImpl::HandleClientDisconnection(ENetPeer* client) {
     BroadcastRoomInformation();
 }
 
-void Room::RoomImpl::CreateUniqueID() {
-    std::uniform_int_distribution<> dis(0, 9999);
-    std::ostringstream stream;
-    stream << std::setfill('0') << std::setw(4) << dis(random_gen);
-    stream << std::setfill('0') << std::setw(4) << dis(random_gen) << "-";
-    stream << std::setfill('0') << std::setw(4) << dis(random_gen) << "-";
-    stream << std::setfill('0') << std::setw(4) << dis(random_gen) << "-";
-    stream << std::setfill('0') << std::setw(4) << dis(random_gen) << "-";
-    stream << std::setfill('0') << std::setw(4) << dis(random_gen);
-    stream << std::setfill('0') << std::setw(4) << dis(random_gen);
-    stream << std::setfill('0') << std::setw(4) << dis(random_gen);
-    room_information.uid = stream.str();
-}
-
 // Room
 Room::Room() : room_impl{std::make_unique<RoomImpl>()} {}
 
@@ -589,7 +592,7 @@ Room::~Room() = default;
 bool Room::Create(const std::string& name, const std::string& description,
                   const std::string& server_address, u16 server_port, const std::string& password,
                   const u32 max_connections, const std::string& preferred_game,
-                  u64 preferred_game_id) {
+                  u64 preferred_game_id, std::unique_ptr<VerifyUser::Backend> verify_backend) {
     ENetAddress address;
     address.host = ENET_HOST_ANY;
     if (!server_address.empty()) {
@@ -597,8 +600,8 @@ bool Room::Create(const std::string& name, const std::string& description,
     }
     address.port = server_port;
 
-    // In order to send the room is full message to the connecting client, we need to leave one slot
-    // open so enet won't reject the incoming connection without telling us
+    // In order to send the room is full message to the connecting client, we need to leave one
+    // slot open so enet won't reject the incoming connection without telling us
     room_impl->server = enet_host_create(&address, max_connections + 1, NumChannels, 0, 0);
     if (!room_impl->server) {
         return false;
@@ -612,7 +615,7 @@ bool Room::Create(const std::string& name, const std::string& description,
     room_impl->room_information.preferred_game = preferred_game;
     room_impl->room_information.preferred_game_id = preferred_game_id;
     room_impl->password = password;
-    room_impl->CreateUniqueID();
+    room_impl->verify_backend = std::move(verify_backend);
 
     room_impl->StartLoop();
     return true;
@@ -626,12 +629,20 @@ const RoomInformation& Room::GetRoomInformation() const {
     return room_impl->room_information;
 }
 
+std::string Room::GetVerifyUID() const {
+    std::lock_guard<std::mutex> lock(room_impl->verify_UID_mutex);
+    return room_impl->verify_UID;
+}
+
 std::vector<Room::Member> Room::GetRoomMemberList() const {
     std::vector<Room::Member> member_list;
     std::lock_guard<std::mutex> lock(room_impl->member_mutex);
     for (const auto& member_impl : room_impl->members) {
         Member member;
         member.nickname = member_impl.nickname;
+        member.username = member_impl.user_data.username;
+        member.display_name = member_impl.user_data.display_name;
+        member.avatar_url = member_impl.user_data.avatar_url;
         member.mac_address = member_impl.mac_address;
         member.game_info = member_impl.game_info;
         member_list.push_back(member);
@@ -641,6 +652,11 @@ std::vector<Room::Member> Room::GetRoomMemberList() const {
 
 bool Room::HasPassword() const {
     return !room_impl->password.empty();
+}
+
+void Room::SetVerifyUID(const std::string& uid) {
+    std::lock_guard<std::mutex> lock(room_impl->verify_UID_mutex);
+    room_impl->verify_UID = uid;
 }
 
 void Room::Destroy() {
