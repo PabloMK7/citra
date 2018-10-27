@@ -4,10 +4,14 @@
 
 #pragma once
 
+#include <cstddef>
+#include "common/common_types.h"
+
 namespace FileSys {
 
 class DelayGenerator {
 public:
+    virtual ~DelayGenerator();
     virtual u64 GetReadDelayNs(std::size_t length) = 0;
 
     // TODO (B3N30): Add getter for all other file/directory io operations
@@ -15,15 +19,7 @@ public:
 
 class DefaultDelayGenerator : public DelayGenerator {
 public:
-    u64 GetReadDelayNs(std::size_t length) override {
-        // This is the delay measured for a romfs read.
-        // For now we will take that as a default
-        static constexpr u64 slope(94);
-        static constexpr u64 offset(582778);
-        static constexpr u64 minimum(663124);
-        u64 IPCDelayNanoseconds = std::max<u64>(static_cast<u64>(length) * slope + offset, minimum);
-        return IPCDelayNanoseconds;
-    }
+    u64 GetReadDelayNs(std::size_t length) override;
 };
 
 } // namespace FileSys
