@@ -102,16 +102,27 @@ void TelemetryJson::Complete() {
     impl->SerializeSection(Telemetry::FieldType::App, "App");
     impl->SerializeSection(Telemetry::FieldType::Session, "Session");
     impl->SerializeSection(Telemetry::FieldType::Performance, "Performance");
-    impl->SerializeSection(Telemetry::FieldType::UserFeedback, "UserFeedback");
     impl->SerializeSection(Telemetry::FieldType::UserConfig, "UserConfig");
     impl->SerializeSection(Telemetry::FieldType::UserSystem, "UserSystem");
 
     auto content = impl->TopSection().dump();
     // Send the telemetry async but don't handle the errors since they were written to the log
-    Common::DetachedTasks::AddTask(
-        [host{impl->host}, username{impl->username}, token{impl->token}, content]() {
-            Client{host, username, token}.PostJson("/telemetry", content, true);
-        });
+    Common::DetachedTasks::AddTask([host{impl->host}, content]() {
+        Client{host, "", ""}.PostJson("/telemetry", content, true);
+    });
+}
+
+bool TelemetryJson::SubmitTestcase() {
+    impl->SerializeSection(Telemetry::FieldType::App, "App");
+    impl->SerializeSection(Telemetry::FieldType::Session, "Session");
+    impl->SerializeSection(Telemetry::FieldType::UserFeedback, "UserFeedback");
+    impl->SerializeSection(Telemetry::FieldType::UserSystem, "UserSystem");
+
+    auto content = impl->TopSection().dump();
+    Client client(impl->host, impl->username, impl->token);
+    auto value = client.PostJson("/gamedb/testcase", content, false);
+
+    return value.result_code == Common::WebResult::Code::Success;
 }
 
 } // namespace WebService
