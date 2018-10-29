@@ -14,6 +14,68 @@
 
 namespace Kernel {
 
+void ScanForAndUnmapBuffer(std::array<u32, IPC::COMMAND_BUFFER_LENGTH>& dst_cmd_buf,
+                           const std::size_t dst_command_size, std::size_t& target_index,
+                           SharedPtr<Process> src_process, SharedPtr<Process> dst_process,
+                           const VAddr source_address, const VAddr page_start, const u32 num_pages,
+                           const u32 size, const IPC::MappedBufferPermissions permissions) {
+    while (target_index < dst_command_size) {
+        u32 desc = dst_cmd_buf[target_index++];
+
+        if (IPC::GetDescriptorType(desc) == IPC::DescriptorType::CopyHandle ||
+            IPC::GetDescriptorType(desc) == IPC::DescriptorType::MoveHandle) {
+            u32 num_handles = IPC::HandleNumberFromDesc(desc);
+            for (u32 j = 0; j < num_handles; ++j) {
+                target_index += 1;
+            }
+            continue;
+        }
+
+        if (IPC::GetDescriptorType(desc) == IPC::DescriptorType::CallingPid ||
+            IPC::GetDescriptorType(desc) == IPC::DescriptorType::StaticBuffer) {
+            target_index += 1;
+            continue;
+        }
+
+        if (IPC::GetDescriptorType(desc) == IPC::DescriptorType::MappedBuffer) {
+            VAddr dest_address = dst_cmd_buf[target_index];
+            IPC::MappedBufferDescInfo dest_descInfo{desc};
+            u32 dest_size = static_cast<u32>(dest_descInfo.size);
+            IPC::MappedBufferPermissions dest_permissions = dest_descInfo.perms;
+
+            if (dest_size == 0) {
+                target_index += 1;
+                continue;
+            }
+
+            ASSERT(permissions == dest_permissions && size == dest_size);
+            // Readonly buffers do not need to be copied over to the target
+            // process again because they were (presumably) not modified. This
+            // behavior is consistent with the real kernel.
+            if (permissions != IPC::MappedBufferPermissions::R) {
+                // Copy the modified buffer back into the target process
+                Memory::CopyBlock(*src_process, *dst_process, source_address, dest_address, size);
+            }
+
+            VAddr prev_reserve = page_start - Memory::PAGE_SIZE;
+            VAddr next_reserve = page_start + num_pages * Memory::PAGE_SIZE;
+
+            auto& prev_vma = src_process->vm_manager.FindVMA(prev_reserve)->second;
+            auto& next_vma = src_process->vm_manager.FindVMA(next_reserve)->second;
+            ASSERT(prev_vma.meminfo_state == MemoryState::Reserved &&
+                   next_vma.meminfo_state == MemoryState::Reserved);
+
+            // Unmap the buffer and guard pages from the source process
+            ResultCode result = src_process->vm_manager.UnmapRange(
+                page_start - Memory::PAGE_SIZE, (num_pages + 2) * Memory::PAGE_SIZE);
+            ASSERT(result == RESULT_SUCCESS);
+
+            target_index += 1;
+            break;
+        }
+    }
+}
+
 ResultCode TranslateCommandBuffer(SharedPtr<Thread> src_thread, SharedPtr<Thread> dst_thread,
                                   VAddr src_address, VAddr dst_address, bool reply) {
 
@@ -148,46 +210,11 @@ ResultCode TranslateCommandBuffer(SharedPtr<Thread> src_thread, SharedPtr<Thread
             ASSERT(num_pages >= 1);
 
             if (reply) {
-                // Scan the target's command buffer for the matching mapped buffer
-                while (target_index < dst_command_size) {
-                    u32 desc = dst_cmd_buf[target_index++];
-
-                    if (IPC::GetDescriptorType(desc) == IPC::DescriptorType::MappedBuffer) {
-                        IPC::MappedBufferDescInfo dest_descInfo{desc};
-                        VAddr dest_address = dst_cmd_buf[target_index];
-
-                        u32 dest_size = static_cast<u32>(dest_descInfo.size);
-                        IPC::MappedBufferPermissions dest_permissions = dest_descInfo.perms;
-
-                        ASSERT(permissions == dest_permissions && size == dest_size);
-                        // Readonly buffers do not need to be copied over to the target
-                        // process again because they were (presumably) not modified. This
-                        // behavior is consistent with the real kernel.
-                        if (permissions != IPC::MappedBufferPermissions::R) {
-                            // Copy the modified buffer back into the target process
-                            Memory::CopyBlock(*src_process, *dst_process, source_address,
-                                              dest_address, size);
-                        }
-
-                        VAddr prev_reserve = page_start - Memory::PAGE_SIZE;
-                        VAddr next_reserve = page_start + num_pages * Memory::PAGE_SIZE;
-
-                        auto& prev_vma = src_process->vm_manager.FindVMA(prev_reserve)->second;
-                        auto& next_vma = src_process->vm_manager.FindVMA(next_reserve)->second;
-                        ASSERT(prev_vma.meminfo_state == MemoryState::Reserved &&
-                               next_vma.meminfo_state == MemoryState::Reserved);
-
-                        // Unmap the buffer and guard pages from the source process
-                        ResultCode result = src_process->vm_manager.UnmapRange(
-                            page_start - Memory::PAGE_SIZE, (num_pages + 2) * Memory::PAGE_SIZE);
-                        ASSERT(result == RESULT_SUCCESS);
-
-                        target_index += 1;
-                        break;
-                    }
-
-                    target_index += 1;
-                }
+                // Scan the target's command buffer for the matching mapped buffer.
+                // The real kernel panics if you try to reply with an unsolicited MappedBuffer.
+                ScanForAndUnmapBuffer(dst_cmd_buf, dst_command_size, target_index, src_process,
+                                      dst_process, source_address, page_start, num_pages, size,
+                                      permissions);
 
                 i += 1;
                 break;
