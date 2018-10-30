@@ -28,6 +28,8 @@ class ClientSession;
 class ServerSession;
 class ResourceLimitList;
 class SharedMemory;
+class ThreadManager;
+class TimerManager;
 
 enum class ResetType {
     OneShot,
@@ -187,6 +189,12 @@ public:
     SharedPtr<Process> GetCurrentProcess() const;
     void SetCurrentProcess(SharedPtr<Process> process);
 
+    ThreadManager& GetThreadManager();
+    const ThreadManager& GetThreadManager() const;
+
+    TimerManager& GetTimerManager();
+    const TimerManager& GetTimerManager() const;
+
 private:
     std::unique_ptr<ResourceLimitList> resource_limits;
     std::atomic<u32> next_object_id{0};
@@ -199,6 +207,9 @@ private:
     std::vector<SharedPtr<Process>> process_list;
 
     SharedPtr<Process> current_process;
+
+    std::unique_ptr<ThreadManager> thread_manager;
+    std::unique_ptr<TimerManager> timer_manager;
 };
 
 } // namespace Kernel

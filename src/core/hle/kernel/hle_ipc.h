@@ -124,8 +124,7 @@ private:
 
 /**
  * Class containing information about an in-flight IPC request being handled by an HLE service
- * implementation. Services should avoid using old global APIs (e.g. Kernel::GetCommandBuffer()) and
- * when possible use the APIs in this class to service the request.
+ * implementation.
  *
  * HLE handle protocol
  * ===================

@@ -134,7 +134,8 @@ public:
             if (GDBStub::IsConnected()) {
                 parent.jit->HaltExecution();
                 parent.SetPC(pc);
-                Kernel::Thread* thread = Kernel::GetCurrentThread();
+                Kernel::Thread* thread =
+                    Core::System::GetInstance().Kernel().GetThreadManager().GetCurrentThread();
                 parent.SaveContext(thread->context);
                 GDBStub::Break();
                 GDBStub::SendTrap(thread, 5);

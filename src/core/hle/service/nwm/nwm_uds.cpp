@@ -1231,7 +1231,8 @@ void NWM_UDS::ConnectToNetwork(Kernel::HLERequestContext& ctx) {
     static constexpr std::chrono::nanoseconds UDSConnectionTimeout{300000000};
 
     connection_event = ctx.SleepClientThread(
-        Kernel::GetCurrentThread(), "uds::ConnectToNetwork", UDSConnectionTimeout,
+        system.Kernel().GetThreadManager().GetCurrentThread(), "uds::ConnectToNetwork",
+        UDSConnectionTimeout,
         [](Kernel::SharedPtr<Kernel::Thread> thread, Kernel::HLERequestContext& ctx,
            Kernel::ThreadWakeupReason reason) {
             // TODO(B3N30): Add error handling for host full and timeout
