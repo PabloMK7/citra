@@ -50,7 +50,8 @@ enum class ProcessStatus { Created, Running, Exited };
 class ResourceLimit;
 struct MemoryRegionInfo;
 
-struct CodeSet final : public Object {
+class CodeSet final : public Object {
+public:
     struct Segment {
         std::size_t offset = 0;
         VAddr addr = 0;
