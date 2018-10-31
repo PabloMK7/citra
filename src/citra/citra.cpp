@@ -39,6 +39,7 @@
 #include "core/frontend/applets/default_applets.h"
 #include "core/gdbstub/gdbstub.h"
 #include "core/hle/service/am/am.h"
+#include "core/hle/service/cfg/cfg.h"
 #include "core/loader/loader.h"
 #include "core/movie.h"
 #include "core/settings.h"
@@ -336,7 +337,8 @@ int main(int argc, char** argv) {
             member->BindOnStateChanged(OnStateChanged);
             LOG_DEBUG(Network, "Start connection to {}:{} with nickname {}", address, port,
                       nickname);
-            member->Join(nickname, address.c_str(), port, 0, Network::NoPreferredMac, password);
+            member->Join(nickname, Service::CFG::GetConsoleIdHash(system), address.c_str(), port, 0,
+                         Network::NoPreferredMac, password);
         } else {
             LOG_ERROR(Network, "Could not access RoomMember");
             return 0;

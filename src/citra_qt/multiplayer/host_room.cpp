@@ -19,6 +19,7 @@
 #include "citra_qt/ui_settings.h"
 #include "common/logging/log.h"
 #include "core/announce_multiplayer_session.h"
+#include "core/hle/service/cfg/cfg.h"
 #include "core/settings.h"
 #include "ui_host_room.h"
 
@@ -116,8 +117,9 @@ void HostRoomWindow::Host() {
                 return;
             }
         }
-        member->Join(ui->username->text().toStdString(), "127.0.0.1", port, 0,
-                     Network::NoPreferredMac, password);
+        member->Join(ui->username->text().toStdString(),
+                     Service::CFG::GetConsoleIdHash(Core::System::GetInstance()), "127.0.0.1", port,
+                     0, Network::NoPreferredMac, password);
 
         // Store settings
         UISettings::values.room_nickname = ui->username->text();

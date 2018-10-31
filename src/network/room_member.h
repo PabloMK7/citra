@@ -54,12 +54,13 @@ public:
         LostConnection, ///< Connection closed
 
         // Reasons why connection was rejected
-        NameCollision,   ///< Somebody is already using this name
-        MacCollision,    ///< Somebody is already using that mac-address
-        WrongVersion,    ///< The room version is not the same as for this RoomMember
-        WrongPassword,   ///< The password doesn't match the one from the Room
-        CouldNotConnect, ///< The room is not responding to a connection attempt
-        RoomIsFull       ///< Room is already at the maximum number of players
+        NameCollision,      ///< Somebody is already using this name
+        MacCollision,       ///< Somebody is already using that mac-address
+        ConsoleIdCollision, ///< Somebody in the room has the same Console ID
+        WrongVersion,       ///< The room version is not the same as for this RoomMember
+        WrongPassword,      ///< The password doesn't match the one from the Room
+        CouldNotConnect,    ///< The room is not responding to a connection attempt
+        RoomIsFull          ///< Room is already at the maximum number of players
     };
 
     struct MemberInformation {
@@ -116,11 +117,13 @@ public:
 
     /**
      * Attempts to join a room at the specified address and port, using the specified nickname.
-     * This may fail if the username is already taken.
+     * A console ID hash is passed in to check console ID conflicts.
+     * This may fail if the username or console ID is already taken.
      */
-    void Join(const std::string& nickname, const char* server_addr = "127.0.0.1",
-              const u16 server_port = DefaultRoomPort, const u16 client_port = 0,
-              const MacAddress& preferred_mac = NoPreferredMac, const std::string& password = "");
+    void Join(const std::string& nickname, const std::string& console_id_hash,
+              const char* server_addr = "127.0.0.1", const u16 server_port = DefaultRoomPort,
+              const u16 client_port = 0, const MacAddress& preferred_mac = NoPreferredMac,
+              const std::string& password = "");
 
     /**
      * Sends a WiFi packet to the room.

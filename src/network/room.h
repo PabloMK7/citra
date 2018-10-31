@@ -59,6 +59,7 @@ enum RoomMessageTypes : u8 {
     IdWrongPassword,
     IdCloseRoom,
     IdRoomIsFull,
+    IdConsoleIdCollision,
 };
 
 /// This is what a server [person creating a server] would use.

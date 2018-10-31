@@ -38,6 +38,9 @@ const ConnectionError GENERIC_ERROR(
 const ConnectionError LOST_CONNECTION(QT_TR_NOOP("Connection to room lost. Try to reconnect."));
 const ConnectionError MAC_COLLISION(
     QT_TR_NOOP("MAC address is already in use. Please choose another."));
+const ConnectionError CONSOLE_ID_COLLISION(QT_TR_NOOP(
+    "Your Console ID conflicted with someone else's in the room.\n\nPlease go to Emulation "
+    "> Configure > System to regenerate your Console ID."));
 
 static bool WarnMessage(const std::string& title, const std::string& text) {
     return QMessageBox::Ok == QMessageBox::warning(nullptr, QObject::tr(title.c_str()),

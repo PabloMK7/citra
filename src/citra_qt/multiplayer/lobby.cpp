@@ -15,6 +15,7 @@
 #include "citra_qt/multiplayer/validation.h"
 #include "citra_qt/ui_settings.h"
 #include "common/logging/log.h"
+#include "core/hle/service/cfg/cfg.h"
 #include "core/settings.h"
 #include "network/network.h"
 
@@ -139,7 +140,8 @@ void Lobby::OnJoinRoom(const QModelIndex& source) {
     // attempt to connect in a different thread
     QFuture<void> f = QtConcurrent::run([nickname, ip, port, password] {
         if (auto room_member = Network::GetRoomMember().lock()) {
-            room_member->Join(nickname, ip.c_str(), port, 0, Network::NoPreferredMac, password);
+            room_member->Join(nickname, Service::CFG::GetConsoleIdHash(Core::System::GetInstance()),
+                              ip.c_str(), port, 0, Network::NoPreferredMac, password);
         }
     });
     watcher->setFuture(f);

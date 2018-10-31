@@ -31,10 +31,11 @@ public:
     std::string password; ///< The password required to connect to this room.
 
     struct Member {
-        std::string nickname;   ///< The nickname of the member.
-        GameInfo game_info;     ///< The current game of the member
-        MacAddress mac_address; ///< The assigned mac address of the member.
-        ENetPeer* peer;         ///< The remote peer.
+        std::string nickname;        ///< The nickname of the member.
+        std::string console_id_hash; ///< A hash of the console ID of the member.
+        GameInfo game_info;          ///< The current game of the member
+        MacAddress mac_address;      ///< The assigned mac address of the member.
+        ENetPeer* peer;              ///< The remote peer.
     };
     using MemberList = std::vector<Member>;
     MemberList members;              ///< Information about the members of this room
@@ -70,6 +71,12 @@ public:
     bool IsValidMacAddress(const MacAddress& address) const;
 
     /**
+     * Returns whether the console ID (hash) is valid, ie. isn't already taken by someone else in
+     * the room.
+     */
+    bool IsValidConsoleId(const std::string& console_id_hash) const;
+
+    /**
      * Sends a ID_ROOM_IS_FULL message telling the client that the room is full.
      */
     void SendRoomIsFull(ENetPeer* client);
@@ -83,6 +90,12 @@ public:
      * Sends a ID_ROOM_MAC_COLLISION message telling the client that the MAC is invalid.
      */
     void SendMacCollision(ENetPeer* client);
+
+    /**
+     * Sends a IdConsoleIdCollison message telling the client that another member with the same
+     * console ID exists.
+     */
+    void SendConsoleIdCollision(ENetPeer* client);
 
     /**
      * Sends a ID_ROOM_VERSION_MISMATCH message telling the client that the version is invalid.
@@ -212,6 +225,9 @@ void Room::RoomImpl::HandleJoinRequest(const ENetEvent* event) {
     std::string nickname;
     packet >> nickname;
 
+    std::string console_id_hash;
+    packet >> console_id_hash;
+
     MacAddress preferred_mac;
     packet >> preferred_mac;
 
@@ -242,6 +258,11 @@ void Room::RoomImpl::HandleJoinRequest(const ENetEvent* event) {
         preferred_mac = GenerateMacAddress();
     }
 
+    if (!IsValidConsoleId(console_id_hash)) {
+        SendConsoleIdCollision(event->peer);
+        return;
+    }
+
     if (client_version != network_version) {
         SendVersionMismatch(event->peer);
         return;
@@ -250,6 +271,7 @@ void Room::RoomImpl::HandleJoinRequest(const ENetEvent* event) {
     // At this point the client is ready to be added to the room.
     Member member{};
     member.mac_address = preferred_mac;
+    member.console_id_hash = console_id_hash;
     member.nickname = nickname;
     member.peer = event->peer;
 
@@ -282,6 +304,14 @@ bool Room::RoomImpl::IsValidMacAddress(const MacAddress& address) const {
                        [&address](const auto& member) { return member.mac_address != address; });
 }
 
+bool Room::RoomImpl::IsValidConsoleId(const std::string& console_id_hash) const {
+    // A Console ID is valid if it is not already taken by anybody else in the room.
+    std::lock_guard<std::mutex> lock(member_mutex);
+    return std::all_of(members.begin(), members.end(), [&console_id_hash](const auto& member) {
+        return member.console_id_hash != console_id_hash;
+    });
+}
+
 void Room::RoomImpl::SendNameCollision(ENetPeer* client) {
     Packet packet;
     packet << static_cast<u8>(IdNameCollision);
@@ -295,6 +325,16 @@ void Room::RoomImpl::SendNameCollision(ENetPeer* client) {
 void Room::RoomImpl::SendMacCollision(ENetPeer* client) {
     Packet packet;
     packet << static_cast<u8>(IdMacCollision);
+
+    ENetPacket* enet_packet =
+        enet_packet_create(packet.GetData(), packet.GetDataSize(), ENET_PACKET_FLAG_RELIABLE);
+    enet_peer_send(client, 0, enet_packet);
+    enet_host_flush(server);
+}
+
+void Room::RoomImpl::SendConsoleIdCollision(ENetPeer* client) {
+    Packet packet;
+    packet << static_cast<u8>(IdConsoleIdCollision);
 
     ENetPacket* enet_packet =
         enet_packet_create(packet.GetData(), packet.GetDataSize(), ENET_PACKET_FLAG_RELIABLE);

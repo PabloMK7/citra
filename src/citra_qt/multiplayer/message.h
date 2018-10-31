@@ -37,6 +37,7 @@ extern const ConnectionError WRONG_PASSWORD;
 extern const ConnectionError GENERIC_ERROR;
 extern const ConnectionError LOST_CONNECTION;
 extern const ConnectionError MAC_COLLISION;
+extern const ConnectionError CONSOLE_ID_COLLISION;
 
 /**
  *  Shows a standard QMessageBox with a error message
