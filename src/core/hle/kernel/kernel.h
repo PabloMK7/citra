@@ -4,13 +4,24 @@
 
 #pragma once
 
+#include <array>
 #include <atomic>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <vector>
 #include <boost/smart_ptr/intrusive_ptr.hpp>
 #include "common/common_types.h"
+#include "core/hle/kernel/memory.h"
 #include "core/hle/result.h"
+
+namespace ConfigMem {
+class Handler;
+}
+
+namespace SharedPage {
+class Handler;
+}
 
 namespace Kernel {
 
@@ -30,6 +41,7 @@ class ResourceLimitList;
 class SharedMemory;
 class ThreadManager;
 class TimerManager;
+class VMManager;
 
 enum class ResetType {
     OneShot,
@@ -195,7 +207,24 @@ public:
     TimerManager& GetTimerManager();
     const TimerManager& GetTimerManager() const;
 
+    void MapSharedPages(VMManager& address_space);
+
+    SharedPage::Handler& GetSharedPageHandler();
+    const SharedPage::Handler& GetSharedPageHandler() const;
+
+    MemoryRegionInfo* GetMemoryRegion(MemoryRegion region);
+
+    std::array<MemoryRegionInfo, 3> memory_regions;
+
+    /// Adds a port to the named port table
+    void AddNamedPort(std::string name, SharedPtr<ClientPort> port);
+
+    /// Map of named ports managed by the kernel, which can be retrieved using the ConnectToPort
+    std::unordered_map<std::string, SharedPtr<ClientPort>> named_ports;
+
 private:
+    void MemoryInit(u32 mem_type);
+
     std::unique_ptr<ResourceLimitList> resource_limits;
     std::atomic<u32> next_object_id{0};
 
@@ -210,6 +239,9 @@ private:
 
     std::unique_ptr<ThreadManager> thread_manager;
     std::unique_ptr<TimerManager> timer_manager;
+
+    std::unique_ptr<ConfigMem::Handler> config_mem_handler;
+    std::unique_ptr<SharedPage::Handler> shared_page_handler;
 };
 
 } // namespace Kernel

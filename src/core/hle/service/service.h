@@ -8,7 +8,6 @@
 #include <cstddef>
 #include <functional>
 #include <string>
-#include <unordered_map>
 #include <boost/container/flat_map.hpp>
 #include "common/common_types.h"
 #include "core/hle/kernel/hle_ipc.h"
@@ -187,12 +186,6 @@ private:
 /// Initialize ServiceManager
 void Init(Core::System& system);
 
-/// Shutdown ServiceManager
-void Shutdown();
-
-/// Map of named ports managed by the kernel, which can be retrieved using the ConnectToPort SVC.
-extern std::unordered_map<std::string, Kernel::SharedPtr<Kernel::ClientPort>> g_kernel_named_ports;
-
 struct ServiceModuleInfo {
     std::string name;
     u64 title_id;
@@ -200,8 +193,5 @@ struct ServiceModuleInfo {
 };
 
 extern const std::array<ServiceModuleInfo, 40> service_module_map;
-
-/// Adds a port to the named port table
-void AddNamedPort(std::string name, Kernel::SharedPtr<Kernel::ClientPort> port);
 
 } // namespace Service

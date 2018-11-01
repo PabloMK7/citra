@@ -6,7 +6,7 @@
 #include "core/core_timing.h"
 #include "core/hle/kernel/memory.h"
 #include "core/hle/kernel/process.h"
-#include "core/hle/shared_page.h"
+#include "core/hle/kernel/shared_page.h"
 #include "core/memory.h"
 
 TEST_CASE("Memory::IsValidVirtualAddress", "[core][memory]") {
@@ -25,7 +25,7 @@ TEST_CASE("Memory::IsValidVirtualAddress", "[core][memory]") {
 
     SECTION("CONFIG_MEMORY_VADDR and SHARED_PAGE_VADDR should be valid after mapping them") {
         auto process = kernel.CreateProcess(kernel.CreateCodeSet("", 0));
-        Kernel::MapSharedPages(process->vm_manager);
+        kernel.MapSharedPages(process->vm_manager);
         CHECK(Memory::IsValidVirtualAddress(*process, Memory::CONFIG_MEMORY_VADDR) == true);
         CHECK(Memory::IsValidVirtualAddress(*process, Memory::SHARED_PAGE_VADDR) == true);
     }
@@ -47,7 +47,7 @@ TEST_CASE("Memory::IsValidVirtualAddress", "[core][memory]") {
 
     SECTION("Unmapping a VAddr should make it invalid") {
         auto process = kernel.CreateProcess(kernel.CreateCodeSet("", 0));
-        Kernel::MapSharedPages(process->vm_manager);
+        kernel.MapSharedPages(process->vm_manager);
         process->vm_manager.UnmapRange(Memory::CONFIG_MEMORY_VADDR, Memory::CONFIG_MEMORY_SIZE);
         CHECK(Memory::IsValidVirtualAddress(*process, Memory::CONFIG_MEMORY_VADDR) == false);
     }

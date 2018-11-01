@@ -115,7 +115,7 @@ void Process::ParseKernelCaps(const u32* kernel_caps, std::size_t len) {
 }
 
 void Process::Run(s32 main_thread_priority, u32 stack_size) {
-    memory_region = GetMemoryRegion(flags.memory_region);
+    memory_region = kernel.GetMemoryRegion(flags.memory_region);
 
     auto MapSegment = [&](CodeSet::Segment& segment, VMAPermission permissions,
                           MemoryState memory_state) {
@@ -143,7 +143,7 @@ void Process::Run(s32 main_thread_priority, u32 stack_size) {
     memory_region->used += stack_size;
 
     // Map special address mappings
-    MapSharedPages(vm_manager);
+    kernel.MapSharedPages(vm_manager);
     for (const auto& mapping : address_mappings) {
         HandleSpecialMapping(vm_manager, mapping);
     }

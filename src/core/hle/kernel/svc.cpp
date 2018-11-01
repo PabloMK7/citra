@@ -235,8 +235,10 @@ static ResultCode ConnectToPort(Handle* out_handle, VAddr port_name_address) {
 
     LOG_TRACE(Kernel_SVC, "called port_name={}", port_name);
 
-    auto it = Service::g_kernel_named_ports.find(port_name);
-    if (it == Service::g_kernel_named_ports.end()) {
+    KernelSystem& kernel = Core::System::GetInstance().Kernel();
+
+    auto it = kernel.named_ports.find(port_name);
+    if (it == kernel.named_ports.end()) {
         LOG_WARNING(Kernel_SVC, "tried to connect to unknown port: {}", port_name);
         return ERR_NOT_FOUND;
     }
@@ -247,9 +249,7 @@ static ResultCode ConnectToPort(Handle* out_handle, VAddr port_name_address) {
     CASCADE_RESULT(client_session, client_port->Connect());
 
     // Return the client session
-    CASCADE_RESULT(*out_handle,
-                   Core::System::GetInstance().Kernel().GetCurrentProcess()->handle_table.Create(
-                       client_session));
+    CASCADE_RESULT(*out_handle, kernel.GetCurrentProcess()->handle_table.Create(client_session));
     return RESULT_SUCCESS;
 }
 
@@ -1233,22 +1233,24 @@ static ResultCode AcceptSession(Handle* out_server_session, Handle server_port_h
 static ResultCode GetSystemInfo(s64* out, u32 type, s32 param) {
     LOG_TRACE(Kernel_SVC, "called type={} param={}", type, param);
 
+    KernelSystem& kernel = Core::System::GetInstance().Kernel();
+
     switch ((SystemInfoType)type) {
     case SystemInfoType::REGION_MEMORY_USAGE:
         switch ((SystemInfoMemUsageRegion)param) {
         case SystemInfoMemUsageRegion::ALL:
-            *out = GetMemoryRegion(MemoryRegion::APPLICATION)->used +
-                   GetMemoryRegion(MemoryRegion::SYSTEM)->used +
-                   GetMemoryRegion(MemoryRegion::BASE)->used;
+            *out = kernel.GetMemoryRegion(MemoryRegion::APPLICATION)->used +
+                   kernel.GetMemoryRegion(MemoryRegion::SYSTEM)->used +
+                   kernel.GetMemoryRegion(MemoryRegion::BASE)->used;
             break;
         case SystemInfoMemUsageRegion::APPLICATION:
-            *out = GetMemoryRegion(MemoryRegion::APPLICATION)->used;
+            *out = kernel.GetMemoryRegion(MemoryRegion::APPLICATION)->used;
             break;
         case SystemInfoMemUsageRegion::SYSTEM:
-            *out = GetMemoryRegion(MemoryRegion::SYSTEM)->used;
+            *out = kernel.GetMemoryRegion(MemoryRegion::SYSTEM)->used;
             break;
         case SystemInfoMemUsageRegion::BASE:
-            *out = GetMemoryRegion(MemoryRegion::BASE)->used;
+            *out = kernel.GetMemoryRegion(MemoryRegion::BASE)->used;
             break;
         default:
             LOG_ERROR(Kernel_SVC, "unknown GetSystemInfo type=0 region: param={}", param);

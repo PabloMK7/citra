@@ -5,7 +5,6 @@
 #include <algorithm>
 #include "common/assert.h"
 #include "common/logging/log.h"
-#include "core/hle/config_mem.h"
 #include "core/hle/kernel/errors.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/memory.h"
@@ -13,7 +12,6 @@
 #include "core/hle/kernel/resource_limit.h"
 #include "core/hle/kernel/thread.h"
 #include "core/hle/kernel/timer.h"
-#include "core/hle/shared_page.h"
 
 namespace Kernel {
 

@@ -103,8 +103,6 @@ add_library(core STATIC
     hle/applets/mint.h
     hle/applets/swkbd.cpp
     hle/applets/swkbd.h
-    hle/config_mem.cpp
-    hle/config_mem.h
     hle/function_wrappers.h
     hle/ipc.h
     hle/ipc_helpers.h
@@ -114,6 +112,8 @@ add_library(core STATIC
     hle/kernel/client_port.h
     hle/kernel/client_session.cpp
     hle/kernel/client_session.h
+    hle/kernel/config_mem.cpp
+    hle/kernel/config_mem.h
     hle/kernel/errors.h
     hle/kernel/event.cpp
     hle/kernel/event.h
@@ -144,6 +144,8 @@ add_library(core STATIC
     hle/kernel/session.h
     hle/kernel/shared_memory.cpp
     hle/kernel/shared_memory.h
+    hle/kernel/shared_page.cpp
+    hle/kernel/shared_page.h
     hle/kernel/svc.cpp
     hle/kernel/svc.h
     hle/kernel/thread.cpp
@@ -386,8 +388,6 @@ add_library(core STATIC
     hle/service/ssl_c.h
     hle/service/y2r_u.cpp
     hle/service/y2r_u.h
-    hle/shared_page.cpp
-    hle/shared_page.h
     hw/aes/arithmetic128.cpp
     hw/aes/arithmetic128.h
     hw/aes/ccm.cpp

@@ -194,7 +194,6 @@ System::ResultStatus System::Init(EmuWindow& emu_window, u32 system_mode) {
 #endif
 
     service_manager = std::make_shared<Service::SM::ServiceManager>(*this);
-    shared_page_handler = std::make_shared<SharedPage::Handler>();
     archive_manager = std::make_unique<Service::FS::ArchiveManager>(*this);
 
     HW::Init();
@@ -257,7 +256,6 @@ void System::Shutdown() {
     // Shutdown emulation session
     GDBStub::Shutdown();
     VideoCore::Shutdown();
-    Service::Shutdown();
     kernel.reset();
     HW::Shutdown();
     telemetry_session.reset();
