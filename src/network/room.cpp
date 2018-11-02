@@ -7,6 +7,7 @@
 #include <iomanip>
 #include <mutex>
 #include <random>
+#include <regex>
 #include <sstream>
 #include <thread>
 #include "common/logging/log.h"
@@ -263,8 +264,12 @@ void Room::RoomImpl::HandleJoinRequest(const ENetEvent* event) {
 }
 
 bool Room::RoomImpl::IsValidNickname(const std::string& nickname) const {
-    // A nickname is valid if it is not already taken by anybody else in the room.
-    // TODO(B3N30): Check for empty names, spaces, etc.
+    // A nickname is valid if it matches the regex and is not already taken by anybody else in the
+    // room.
+    const std::regex nickname_regex("^[ a-zA-Z0-9._-]{4,20}$");
+    if (!std::regex_match(nickname, nickname_regex))
+        return false;
+
     std::lock_guard<std::mutex> lock(member_mutex);
     return std::all_of(members.begin(), members.end(),
                        [&nickname](const auto& member) { return member.nickname != nickname; });

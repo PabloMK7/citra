@@ -20,9 +20,11 @@ private:
     std::string err;
 };
 
+/// When the nickname is considered invalid by the client
 extern const ConnectionError USERNAME_NOT_VALID;
 extern const ConnectionError ROOMNAME_NOT_VALID;
-extern const ConnectionError USERNAME_IN_USE;
+/// When the nickname is considered invalid by the room server
+extern const ConnectionError USERNAME_NOT_VALID_SERVER;
 extern const ConnectionError IP_ADDRESS_NOT_VALID;
 extern const ConnectionError PORT_NOT_VALID;
 extern const ConnectionError NO_INTERNET;

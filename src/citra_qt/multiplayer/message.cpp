@@ -12,8 +12,8 @@ const ConnectionError USERNAME_NOT_VALID(
     QT_TR_NOOP("Username is not valid. Must be 4 to 20 alphanumeric characters."));
 const ConnectionError ROOMNAME_NOT_VALID(
     QT_TR_NOOP("Room name is not valid. Must be 4 to 20 alphanumeric characters."));
-const ConnectionError USERNAME_IN_USE(
-    QT_TR_NOOP("Username is already in use. Please choose another."));
+const ConnectionError USERNAME_NOT_VALID_SERVER(
+    QT_TR_NOOP("Username is already in use or not valid. Please choose another."));
 const ConnectionError IP_ADDRESS_NOT_VALID(QT_TR_NOOP("IP is not a valid IPv4 address."));
 const ConnectionError PORT_NOT_VALID(QT_TR_NOOP("Port must be a number between 0 to 65535."));
 const ConnectionError NO_INTERNET(
