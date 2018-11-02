@@ -234,6 +234,8 @@ public:
     /// Registers a new NCCH file with the SelfNCCH archive factory
     void RegisterSelfNCCH(Loader::AppLoader& app_loader);
 
+    ArchiveBackend* GetArchive(ArchiveHandle handle);
+
 private:
     Core::System& system;
 
@@ -247,8 +249,6 @@ private:
 
     /// Register all archive types
     void RegisterArchiveTypes();
-
-    ArchiveBackend* GetArchive(ArchiveHandle handle);
 
     /**
      * Map of registered archives, identified by id code. Once an archive is registered here, it is

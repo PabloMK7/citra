@@ -19,7 +19,9 @@ namespace FileSys {
  */
 class SDMCWriteOnlyArchive : public SDMCArchive {
 public:
-    explicit SDMCWriteOnlyArchive(const std::string& mount_point) : SDMCArchive(mount_point) {}
+    explicit SDMCWriteOnlyArchive(const std::string& mount_point,
+                                  std::unique_ptr<DelayGenerator> delay_generator_)
+        : SDMCArchive(mount_point, std::move(delay_generator_)) {}
 
     std::string GetName() const override {
         return "SDMCWriteOnlyArchive: " + mount_point;

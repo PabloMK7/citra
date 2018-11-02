@@ -59,7 +59,7 @@ private:
 class ExtSaveDataDelayGenerator : public DelayGenerator {
 public:
     u64 GetReadDelayNs(std::size_t length) override {
-        // This is the delay measured for a savedate read,
+        // This is the delay measured for a savedata read,
         // not for extsaveData
         // For now we will take that
         static constexpr u64 slope(183);
@@ -68,6 +68,14 @@ public:
         u64 ipc_delay_nanoseconds =
             std::max<u64>(static_cast<u64>(length) * slope + offset, minimum);
         return ipc_delay_nanoseconds;
+    }
+
+    u64 GetOpenDelayNs() override {
+        // This is the delay measured for a savedata open,
+        // not for extsaveData
+        // For now we will take that
+        static constexpr u64 IPCDelayNanoseconds(269082);
+        return IPCDelayNanoseconds;
     }
 };
 
@@ -80,7 +88,11 @@ public:
  */
 class ExtSaveDataArchive : public SaveDataArchive {
 public:
-    explicit ExtSaveDataArchive(const std::string& mount_point) : SaveDataArchive(mount_point) {}
+    explicit ExtSaveDataArchive(const std::string& mount_point,
+                                std::unique_ptr<DelayGenerator> delay_generator_)
+        : SaveDataArchive(mount_point) {
+        delay_generator = std::move(delay_generator_);
+    }
 
     std::string GetName() const override {
         return "ExtSaveDataArchive: " + mount_point;
@@ -232,7 +244,8 @@ ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_ExtSaveData::Open(cons
             return ERR_NOT_FORMATTED;
         }
     }
-    auto archive = std::make_unique<ExtSaveDataArchive>(fullpath);
+    std::unique_ptr<DelayGenerator> delay_generator = std::make_unique<ExtSaveDataDelayGenerator>();
+    auto archive = std::make_unique<ExtSaveDataArchive>(fullpath, std::move(delay_generator));
     return MakeResult<std::unique_ptr<ArchiveBackend>>(std::move(archive));
 }
 

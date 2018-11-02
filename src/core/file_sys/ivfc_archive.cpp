@@ -14,7 +14,11 @@
 
 namespace FileSys {
 
-IVFCArchive::IVFCArchive(std::shared_ptr<RomFSReader> file) : romfs_file(std::move(file)) {}
+IVFCArchive::IVFCArchive(std::shared_ptr<RomFSReader> file,
+                         std::unique_ptr<DelayGenerator> delay_generator_)
+    : romfs_file(std::move(file)) {
+    delay_generator = std::move(delay_generator_);
+}
 
 std::string IVFCArchive::GetName() const {
     return "IVFC";
