@@ -422,5 +422,4 @@ void ConfigureSystem::RefreshConsoleID() {
 
 void ConfigureSystem::retranslateUi() {
     ui->retranslateUi(this);
-    ReadSystemSettings();
 }

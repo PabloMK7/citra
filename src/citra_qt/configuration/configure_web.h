@@ -21,6 +21,7 @@ public:
 
     void applyConfiguration();
     void retranslateUi();
+    void setConfiguration();
 
 public slots:
     void RefreshTelemetryID();
@@ -29,8 +30,6 @@ public slots:
     void OnLoginVerified();
 
 private:
-    void setConfiguration();
-
     bool user_verified = true;
     QFutureWatcher<bool> verify_watcher;
 

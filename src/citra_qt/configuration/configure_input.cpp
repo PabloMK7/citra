@@ -343,5 +343,4 @@ void ConfigureInput::keyPressEvent(QKeyEvent* event) {
 
 void ConfigureInput::retranslateUi() {
     ui->retranslateUi(this);
-    updateButtonLabels();
 }

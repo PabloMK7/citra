@@ -24,9 +24,8 @@ public:
     void ResetDefaults();
     void applyConfiguration();
     void retranslateUi();
-
-private:
     void setConfiguration();
 
+private:
     std::unique_ptr<Ui::ConfigureGeneral> ui;
 };

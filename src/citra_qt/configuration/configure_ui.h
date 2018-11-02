@@ -20,6 +20,7 @@ public:
 
     void applyConfiguration();
     void retranslateUi();
+    void setConfiguration();
 
 private slots:
     void onLanguageChanged(int index);
@@ -28,7 +29,5 @@ signals:
     void languageChanged(const QString& locale);
 
 private:
-    void setConfiguration();
-
     std::unique_ptr<Ui::ConfigureUi> ui;
 };
