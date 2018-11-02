@@ -147,6 +147,8 @@
     <property name="title">
      <string>&amp;Help</string>
     </property>
+    <addaction name="action_Open_Citra_Folder"/>
+    <addaction name="separator"/>
     <addaction name="action_Check_For_Updates"/>
     <addaction name="action_Open_Maintenance_Tool"/>
     <addaction name="separator"/>
@@ -438,6 +440,11 @@
    </property>
    <property name="text">
     <string>Remove</string>
+   </property>
+  </action>
+  <action name="action_Open_Citra_Folder">
+   <property name="text">
+    <string>Open Citra Folder</string>
    </property>
   </action>
  </widget>
