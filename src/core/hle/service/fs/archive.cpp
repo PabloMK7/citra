@@ -77,19 +77,21 @@ ResultCode ArchiveManager::RegisterArchiveType(std::unique_ptr<FileSys::ArchiveF
     return RESULT_SUCCESS;
 }
 
-ResultVal<std::shared_ptr<File>> ArchiveManager::OpenFileFromArchive(ArchiveHandle archive_handle,
-                                                                     const FileSys::Path& path,
-                                                                     const FileSys::Mode mode) {
+std::tuple<ResultVal<std::shared_ptr<File>>, std::chrono::nanoseconds>
+ArchiveManager::OpenFileFromArchive(ArchiveHandle archive_handle, const FileSys::Path& path,
+                                    const FileSys::Mode mode) {
     ArchiveBackend* archive = GetArchive(archive_handle);
     if (archive == nullptr)
-        return FileSys::ERR_INVALID_ARCHIVE_HANDLE;
+        return std::make_tuple(FileSys::ERR_INVALID_ARCHIVE_HANDLE,
+                               static_cast<std::chrono::nanoseconds>(0));
 
+    std::chrono::nanoseconds open_timeout_ns{archive->GetOpenDelayNs()};
     auto backend = archive->OpenFile(path, mode);
     if (backend.Failed())
-        return backend.Code();
+        return std::make_tuple(backend.Code(), open_timeout_ns);
 
     auto file = std::shared_ptr<File>(new File(system, std::move(backend).Unwrap(), path));
-    return MakeResult<std::shared_ptr<File>>(std::move(file));
+    return std::make_tuple(MakeResult<std::shared_ptr<File>>(std::move(file)), open_timeout_ns);
 }
 
 ResultCode ArchiveManager::DeleteFileFromArchive(ArchiveHandle archive_handle,

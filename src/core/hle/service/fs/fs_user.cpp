@@ -60,7 +60,7 @@ void FS_USER::OpenFile(Kernel::HLERequestContext& ctx) {
 
     LOG_DEBUG(Service_FS, "path={}, mode={} attrs={}", file_path.DebugStr(), mode.hex, attributes);
 
-    ResultVal<std::shared_ptr<File>> file_res =
+    const auto [file_res, open_timeout_ns] =
         archives.OpenFileFromArchive(archive_handle, file_path, mode);
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
     rb.Push(file_res.Code());
@@ -72,17 +72,12 @@ void FS_USER::OpenFile(Kernel::HLERequestContext& ctx) {
         LOG_ERROR(Service_FS, "failed to get a handle for file {}", file_path.DebugStr());
     }
 
-    auto archive = archives.GetArchive(archive_handle);
-    if (archive == nullptr)
-        return;
-
-    std::chrono::nanoseconds open_timeout_ns{archive->GetOpenDelayNs()};
-    ctx.SleepClientThread(system.Kernel().GetThreadManager().GetCurrentThread(), "fs_user::open",
-                          open_timeout_ns,
-                          [](Kernel::SharedPtr<Kernel::Thread> thread,
-                             Kernel::HLERequestContext& ctx, Kernel::ThreadWakeupReason reason) {
-                              // Nothing to do here
-                          });
+    ctx.SleepClientThread(
+        system.Kernel().GetThreadManager().GetCurrentThread(), "fs_user::open", open_timeout_ns,
+        [](Kernel::SharedPtr<Kernel::Thread> /*thread*/, Kernel::HLERequestContext& /*ctx*/,
+           Kernel::ThreadWakeupReason /*reason*/) {
+            // Nothing to do here
+        });
 }
 
 void FS_USER::OpenFileDirectly(Kernel::HLERequestContext& ctx) {
@@ -123,7 +118,7 @@ void FS_USER::OpenFileDirectly(Kernel::HLERequestContext& ctx) {
     }
     SCOPE_EXIT({ archives.CloseArchive(*archive_handle); });
 
-    ResultVal<std::shared_ptr<File>> file_res =
+    const auto [file_res, open_timeout_ns] =
         archives.OpenFileFromArchive(*archive_handle, file_path, mode);
     rb.Push(file_res.Code());
     if (file_res.Succeeded()) {
@@ -134,6 +129,14 @@ void FS_USER::OpenFileDirectly(Kernel::HLERequestContext& ctx) {
         LOG_ERROR(Service_FS, "failed to get a handle for file {} mode={} attributes={}",
                   file_path.DebugStr(), mode.hex, attributes);
     }
+
+    ctx.SleepClientThread(system.Kernel().GetThreadManager().GetCurrentThread(),
+                          "fs_user::open_directly", open_timeout_ns,
+                          [](Kernel::SharedPtr<Kernel::Thread> /*thread*/,
+                             Kernel::HLERequestContext& /*ctx*/,
+                             Kernel::ThreadWakeupReason /*reason*/) {
+                              // Nothing to do here
+                          });
 }
 
 void FS_USER::DeleteFile(Kernel::HLERequestContext& ctx) {
