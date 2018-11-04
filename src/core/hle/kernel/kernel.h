@@ -228,7 +228,13 @@ private:
     std::unique_ptr<ResourceLimitList> resource_limits;
     std::atomic<u32> next_object_id{0};
 
-    std::unique_ptr<ThreadManager> thread_manager;
+    // Note: keep the member order below in order to perform correct destruction.
+    // Thread manager is destructed before process list in order to Stop threads and clear thread
+    // info from their parent processes first. Timer manager is destructed after process list
+    // because timers are destructed along with process list and they need to clear info from the
+    // timer manager.
+    // TODO (wwylele): refactor the cleanup sequence to make this less complicated and sensitive.
+
     std::unique_ptr<TimerManager> timer_manager;
 
     // TODO(Subv): Start the process ids from 10 for now, as lower PIDs are
@@ -239,6 +245,8 @@ private:
     std::vector<SharedPtr<Process>> process_list;
 
     SharedPtr<Process> current_process;
+
+    std::unique_ptr<ThreadManager> thread_manager;
 
     std::unique_ptr<ConfigMem::Handler> config_mem_handler;
     std::unique_ptr<SharedPage::Handler> shared_page_handler;
