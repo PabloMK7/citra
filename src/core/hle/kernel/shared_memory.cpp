@@ -142,7 +142,10 @@ ResultCode SharedMemory::Map(Process* target_process, VAddr address, MemoryPermi
 
     if (base_address == 0 && target_address == 0) {
         // Calculate the address at which to map the memory block.
-        target_address = linear_heap_phys_offset + target_process->GetLinearHeapAreaAddress();
+        // Note: even on new firmware versions, the target address is still in the old linear heap
+        // region. This exception is made to keep the shared font compatibility. See
+        // APT:GetSharedFont for detail.
+        target_address = linear_heap_phys_offset + Memory::LINEAR_HEAP_VADDR;
     }
 
     auto vma = target_process->vm_manager.FindVMA(target_address);
