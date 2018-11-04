@@ -229,11 +229,6 @@ std::optional<PAddr> TryVirtualToPhysicalAddress(VAddr addr);
 PAddr VirtualToPhysicalAddress(VAddr addr);
 
 /**
- * Undoes a mapping performed by VirtualToPhysicalAddress().
- */
-std::optional<VAddr> PhysicalToVirtualAddress(PAddr paddr);
-
-/**
  * Gets a pointer to the memory region beginning at the specified physical address.
  */
 u8* GetPhysicalPointer(PAddr address);
