@@ -228,6 +228,9 @@ private:
     std::unique_ptr<ResourceLimitList> resource_limits;
     std::atomic<u32> next_object_id{0};
 
+    std::unique_ptr<ThreadManager> thread_manager;
+    std::unique_ptr<TimerManager> timer_manager;
+
     // TODO(Subv): Start the process ids from 10 for now, as lower PIDs are
     // reserved for low-level services
     u32 next_process_id = 10;
@@ -236,9 +239,6 @@ private:
     std::vector<SharedPtr<Process>> process_list;
 
     SharedPtr<Process> current_process;
-
-    std::unique_ptr<ThreadManager> thread_manager;
-    std::unique_ptr<TimerManager> timer_manager;
 
     std::unique_ptr<ConfigMem::Handler> config_mem_handler;
     std::unique_ptr<SharedPage::Handler> shared_page_handler;
