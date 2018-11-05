@@ -72,7 +72,7 @@ private:
 class DynarmicUserCallbacks final : public Dynarmic::A32::UserCallbacks {
 public:
     explicit DynarmicUserCallbacks(ARM_Dynarmic& parent)
-        : parent(parent), timing(parent.system.CoreTiming()) {}
+        : parent(parent), timing(parent.system.CoreTiming()), svc_context(parent.system) {}
     ~DynarmicUserCallbacks() = default;
 
     std::uint8_t MemoryRead8(VAddr vaddr) override {
@@ -123,7 +123,7 @@ public:
     }
 
     void CallSVC(std::uint32_t swi) override {
-        Kernel::CallSVC(swi);
+        svc_context.CallSVC(swi);
     }
 
     void ExceptionRaised(VAddr pc, Dynarmic::A32::Exception exception) override {
@@ -158,6 +158,7 @@ public:
 
     ARM_Dynarmic& parent;
     Core::Timing& timing;
+    Kernel::SVC svc_context;
 };
 
 ARM_Dynarmic::ARM_Dynarmic(Core::System& system, PrivilegeMode initial_mode)

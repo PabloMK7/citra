@@ -172,6 +172,8 @@ System::ResultStatus System::Init(EmuWindow& emu_window, u32 system_mode) {
 
     timing = std::make_unique<Timing>();
 
+    kernel = std::make_unique<Kernel::KernelSystem>(system_mode);
+
     if (Settings::values.use_cpu_jit) {
 #ifdef ARCHITECTURE_x86_64
         cpu_core = std::make_unique<ARM_Dynarmic>(*this, USER32MODE);
@@ -197,7 +199,6 @@ System::ResultStatus System::Init(EmuWindow& emu_window, u32 system_mode) {
     archive_manager = std::make_unique<Service::FS::ArchiveManager>(*this);
 
     HW::Init();
-    kernel = std::make_unique<Kernel::KernelSystem>(system_mode);
     Service::Init(*this);
     GDBStub::Init();
 
