@@ -594,8 +594,11 @@ SurfaceInterval SurfaceParams::GetCopyableInterval(const Surface& src_surface) c
     return result;
 }
 
+MICROPROFILE_DEFINE(OpenGL_CopySurface, "OpenGL", "CopySurface", MP_RGB(128, 192, 64));
 void RasterizerCacheOpenGL::CopySurface(const Surface& src_surface, const Surface& dst_surface,
                                         SurfaceInterval copy_interval) {
+    MICROPROFILE_SCOPE(OpenGL_CopySurface);
+
     SurfaceParams subrect_params = dst_surface->FromInterval(copy_interval);
     ASSERT(subrect_params.GetInterval() == copy_interval);
 
@@ -625,7 +628,7 @@ void RasterizerCacheOpenGL::CopySurface(const Surface& src_surface, const Surfac
     UNREACHABLE();
 }
 
-MICROPROFILE_DEFINE(OpenGL_SurfaceLoad, "OpenGL", "Surface Load", MP_RGB(128, 64, 192));
+MICROPROFILE_DEFINE(OpenGL_SurfaceLoad, "OpenGL", "Surface Load", MP_RGB(128, 192, 64));
 void CachedSurface::LoadGLBuffer(PAddr load_start, PAddr load_end) {
     ASSERT(type != SurfaceType::Fill);
 
@@ -727,7 +730,7 @@ void CachedSurface::FlushGLBuffer(PAddr flush_start, PAddr flush_end) {
     }
 }
 
-MICROPROFILE_DEFINE(OpenGL_TextureUL, "OpenGL", "Texture Upload", MP_RGB(128, 64, 192));
+MICROPROFILE_DEFINE(OpenGL_TextureUL, "OpenGL", "Texture Upload", MP_RGB(128, 192, 64));
 void CachedSurface::UploadGLTexture(const MathUtil::Rectangle<u32>& rect, GLuint read_fb_handle,
                                     GLuint draw_fb_handle) {
     if (type == SurfaceType::Fill)
@@ -1025,10 +1028,13 @@ RasterizerCacheOpenGL::~RasterizerCacheOpenGL() {
         UnregisterSurface(*surface_cache.begin()->second.begin());
 }
 
+MICROPROFILE_DEFINE(OpenGL_BlitSurface, "OpenGL", "BlitSurface", MP_RGB(128, 192, 64));
 bool RasterizerCacheOpenGL::BlitSurfaces(const Surface& src_surface,
                                          const MathUtil::Rectangle<u32>& src_rect,
                                          const Surface& dst_surface,
                                          const MathUtil::Rectangle<u32>& dst_rect) {
+    MICROPROFILE_SCOPE(OpenGL_BlitSurface);
+
     if (!SurfaceParams::CheckFormatsBlittable(src_surface->pixel_format, dst_surface->pixel_format))
         return false;
 
