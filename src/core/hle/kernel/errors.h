@@ -67,6 +67,10 @@ constexpr ResultCode ERR_MISALIGNED_SIZE(ErrorDescription::MisalignedSize, Error
 constexpr ResultCode ERR_OUT_OF_MEMORY(ErrorDescription::OutOfMemory, ErrorModule::Kernel,
                                        ErrorSummary::OutOfResource,
                                        ErrorLevel::Permanent); // 0xD86007F3
+/// Returned when out of heap or linear heap memory when allocating
+constexpr ResultCode ERR_OUT_OF_HEAP_MEMORY(ErrorDescription::OutOfMemory, ErrorModule::OS,
+                                            ErrorSummary::OutOfResource,
+                                            ErrorLevel::Status); // 0xC860180A
 constexpr ResultCode ERR_NOT_IMPLEMENTED(ErrorDescription::NotImplemented, ErrorModule::OS,
                                          ErrorSummary::InvalidArgument,
                                          ErrorLevel::Usage); // 0xE0E01BF4

@@ -333,38 +333,35 @@ ResultVal<SharedPtr<Thread>> KernelSystem::CreateThread(std::string name, VAddr 
         // There are no already-allocated pages with free slots, lets allocate a new one.
         // TLS pages are allocated from the BASE region in the linear heap.
         MemoryRegionInfo* memory_region = GetMemoryRegion(MemoryRegion::BASE);
-        auto& linheap_memory = memory_region->linear_heap_memory;
 
-        if (linheap_memory->size() + Memory::PAGE_SIZE > memory_region->size) {
+        // Allocate some memory from the end of the linear heap for this region.
+        auto offset = memory_region->LinearAllocate(Memory::PAGE_SIZE);
+        if (!offset) {
             LOG_ERROR(Kernel_SVC,
                       "Not enough space in region to allocate a new TLS page for thread");
             return ERR_OUT_OF_MEMORY;
         }
-
-        std::size_t offset = linheap_memory->size();
-
-        // Allocate some memory from the end of the linear heap for this region.
-        linheap_memory->insert(linheap_memory->end(), Memory::PAGE_SIZE, 0);
-        memory_region->used += Memory::PAGE_SIZE;
-        owner_process.linear_heap_used += Memory::PAGE_SIZE;
+        owner_process.memory_used += Memory::PAGE_SIZE;
 
         tls_slots.emplace_back(0); // The page is completely available at the start
         available_page = tls_slots.size() - 1;
         available_slot = 0; // Use the first slot in the new page
 
         auto& vm_manager = owner_process.vm_manager;
-        vm_manager.RefreshMemoryBlockMappings(linheap_memory.get());
 
         // Map the page to the current process' address space.
         // TODO(Subv): Find the correct MemoryState for this region.
-        vm_manager.MapMemoryBlock(Memory::TLS_AREA_VADDR + available_page * Memory::PAGE_SIZE,
-                                  linheap_memory, offset, Memory::PAGE_SIZE, MemoryState::Private);
+        vm_manager.MapBackingMemory(Memory::TLS_AREA_VADDR + available_page * Memory::PAGE_SIZE,
+                                    Memory::fcram.data() + *offset, Memory::PAGE_SIZE,
+                                    MemoryState::Private);
     }
 
     // Mark the slot as used
     tls_slots[available_page].set(available_slot);
     thread->tls_address = Memory::TLS_AREA_VADDR + available_page * Memory::PAGE_SIZE +
                           available_slot * Memory::TLS_ENTRY_SIZE;
+
+    Memory::ZeroBlock(owner_process, thread->tls_address, Memory::TLS_ENTRY_SIZE);
 
     // TODO(peachum): move to ScheduleThread() when scheduler is added so selected core is used
     // to initialize the context

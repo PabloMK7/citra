@@ -114,16 +114,12 @@ static ResultCode ControlMemory(u32* out_addr, u32 operation, u32 addr0, u32 add
     }
 
     case MEMOP_MAP: {
-        // TODO: This is just a hack to avoid regressions until memory aliasing is implemented
-        CASCADE_RESULT(*out_addr, process.HeapAllocate(addr0, size, vma_permissions));
+        CASCADE_CODE(process.Map(addr0, addr1, size, vma_permissions));
         break;
     }
 
     case MEMOP_UNMAP: {
-        // TODO: This is just a hack to avoid regressions until memory aliasing is implemented
-        ResultCode result = process.HeapFree(addr0, size);
-        if (result.IsError())
-            return result;
+        CASCADE_CODE(process.Unmap(addr0, addr1, size, vma_permissions));
         break;
     }
 
@@ -1289,7 +1285,7 @@ static ResultCode GetProcessInfo(s64* out, Handle process_handle, u32 type) {
     case 2:
         // TODO(yuriks): Type 0 returns a slightly higher number than type 2, but I'm not sure
         // what's the difference between them.
-        *out = process->heap_used + process->linear_heap_used + process->misc_memory_used;
+        *out = process->memory_used;
         if (*out % Memory::PAGE_SIZE != 0) {
             LOG_ERROR(Kernel_SVC, "called, memory size not page-aligned");
             return ERR_MISALIGNED_SIZE;

@@ -50,13 +50,7 @@ void KernelSystem::MemoryInit(u32 mem_type) {
     // the sizes specified in the memory_region_sizes table.
     VAddr base = 0;
     for (int i = 0; i < 3; ++i) {
-        memory_regions[i].base = base;
-        memory_regions[i].size = memory_region_sizes[mem_type][i];
-        memory_regions[i].used = 0;
-        memory_regions[i].linear_heap_memory = std::make_shared<std::vector<u8>>();
-        // Reserve enough space for this region of FCRAM.
-        // We do not want this block of memory to be relocated when allocating from it.
-        memory_regions[i].linear_heap_memory->reserve(memory_regions[i].size);
+        memory_regions[i].Reset(base, memory_region_sizes[mem_type][i]);
 
         base += memory_regions[i].size;
     }
@@ -162,6 +156,77 @@ void KernelSystem::MapSharedPages(VMManager& address_space) {
                               Memory::SHARED_PAGE_SIZE, MemoryState::Shared)
             .Unwrap();
     address_space.Reprotect(shared_page_vma, VMAPermission::Read);
+}
+
+void MemoryRegionInfo::Reset(u32 base, u32 size) {
+    this->base = base;
+    this->size = size;
+    used = 0;
+    free_blocks.clear();
+
+    // mark the entire region as free
+    free_blocks.insert(Interval::right_open(base, base + size));
+}
+
+MemoryRegionInfo::IntervalSet MemoryRegionInfo::HeapAllocate(u32 size) {
+    IntervalSet result;
+    u32 rest = size;
+
+    // Try allocating from the higher address
+    for (auto iter = free_blocks.rbegin(); iter != free_blocks.rend(); ++iter) {
+        ASSERT(iter->bounds() == boost::icl::interval_bounds::right_open());
+        if (iter->upper() - iter->lower() >= rest) {
+            // Requested size is fulfilled with this block
+            result += Interval(iter->upper() - rest, iter->upper());
+            rest = 0;
+            break;
+        }
+        result += *iter;
+        rest -= iter->upper() - iter->lower();
+    }
+
+    if (rest != 0) {
+        // There is no enough free space
+        return {};
+    }
+
+    free_blocks -= result;
+    used += size;
+    return result;
+}
+
+bool MemoryRegionInfo::LinearAllocate(u32 offset, u32 size) {
+    Interval interval(offset, offset + size);
+    if (!boost::icl::contains(free_blocks, interval)) {
+        // The requested range is already allocated
+        return false;
+    }
+    free_blocks -= interval;
+    used += size;
+    return true;
+}
+
+std::optional<u32> MemoryRegionInfo::LinearAllocate(u32 size) {
+    // Find the first sufficient continuous block from the lower address
+    for (const auto& interval : free_blocks) {
+        ASSERT(interval.bounds() == boost::icl::interval_bounds::right_open());
+        if (interval.upper() - interval.lower() >= size) {
+            Interval allocated(interval.lower(), interval.lower() + size);
+            free_blocks -= allocated;
+            used += size;
+            return allocated.lower();
+        }
+    }
+
+    // No sufficient block found
+    return {};
+}
+
+void MemoryRegionInfo::Free(u32 offset, u32 size) {
+    Interval interval(offset, offset + size);
+    ASSERT(!boost::icl::intersects(free_blocks, interval)); // must be allocated blocks
+    free_blocks += interval;
+    used -= size;
 }
 
 } // namespace Kernel

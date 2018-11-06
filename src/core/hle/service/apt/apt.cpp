@@ -207,8 +207,8 @@ void Module::Interface::GetSharedFont(Kernel::HLERequestContext& ctx) {
 
     // The shared font has to be relocated to the new address before being passed to the
     // application.
-    auto maybe_vaddr =
-        Memory::PhysicalToVirtualAddress(apt->shared_font_mem->linear_heap_phys_address);
+    auto maybe_vaddr = Memory::PhysicalToVirtualAddress(
+        apt->shared_font_mem->linear_heap_phys_offset + Memory::FCRAM_PADDR);
     ASSERT(maybe_vaddr);
     VAddr target_address = *maybe_vaddr;
     if (!apt->shared_font_relocated) {

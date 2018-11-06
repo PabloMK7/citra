@@ -6,6 +6,7 @@
 
 #include <map>
 #include <memory>
+#include <utility>
 #include <vector>
 #include "common/common_types.h"
 #include "core/hle/result.h"
@@ -212,6 +213,9 @@ public:
 
     /// Dumps the address space layout to the log, for debugging
     void LogLayout(Log::Level log_level) const;
+
+    /// Gets a list of backing memory blocks for the specified range
+    ResultVal<std::vector<std::pair<u8*, u32>>> GetBackingBlocksForRange(VAddr address, u32 size);
 
     /// Each VMManager has its own page table, which is set as the main one when the owning process
     /// is scheduled.

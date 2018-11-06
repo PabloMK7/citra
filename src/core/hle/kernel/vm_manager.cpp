@@ -408,4 +408,25 @@ void VMManager::UpdatePageTableForVMA(const VirtualMemoryArea& vma) {
         break;
     }
 }
+
+ResultVal<std::vector<std::pair<u8*, u32>>> VMManager::GetBackingBlocksForRange(VAddr address,
+                                                                                u32 size) {
+    std::vector<std::pair<u8*, u32>> backing_blocks;
+    VAddr interval_target = address;
+    while (interval_target != address + size) {
+        auto vma = FindVMA(interval_target);
+        if (vma->second.type != VMAType::BackingMemory) {
+            LOG_ERROR(Kernel, "Trying to use already freed memory");
+            return ERR_INVALID_ADDRESS_STATE;
+        }
+
+        VAddr interval_end = std::min(address + size, vma->second.base + vma->second.size);
+        u32 interval_size = interval_end - interval_target;
+        u8* backing_memory = vma->second.backing_memory + (interval_target - vma->second.base);
+        backing_blocks.push_back({backing_memory, interval_size});
+
+        interval_target += interval_size;
+    }
+    return MakeResult(backing_blocks);
+}
 } // namespace Kernel

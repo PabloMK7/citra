@@ -23,6 +23,7 @@ namespace Memory {
 
 static std::array<u8, Memory::VRAM_SIZE> vram;
 static std::array<u8, Memory::N3DS_EXTRA_RAM_SIZE> n3ds_extra_ram;
+std::array<u8, Memory::FCRAM_N3DS_SIZE> fcram;
 
 static PageTable* current_page_table = nullptr;
 
@@ -305,15 +306,7 @@ u8* GetPhysicalPointer(PAddr address) {
         target_pointer = Core::DSP().GetDspMemory().data() + offset_into_region;
         break;
     case FCRAM_PADDR:
-        for (const auto& region : Core::System::GetInstance().Kernel().memory_regions) {
-            if (offset_into_region >= region.base &&
-                offset_into_region < region.base + region.size) {
-                target_pointer =
-                    region.linear_heap_memory->data() + offset_into_region - region.base;
-                break;
-            }
-        }
-        ASSERT_MSG(target_pointer != nullptr, "Invalid FCRAM address");
+        target_pointer = fcram.data() + offset_into_region;
         break;
     case N3DS_EXTRA_RAM_PADDR:
         target_pointer = n3ds_extra_ram.data() + offset_into_region;
@@ -844,6 +837,11 @@ std::optional<VAddr> PhysicalToVirtualAddress(const PAddr addr) {
     }
 
     return {};
+}
+
+u32 GetFCRAMOffset(u8* pointer) {
+    ASSERT(pointer >= fcram.data() && pointer < fcram.data() + fcram.size());
+    return pointer - fcram.data();
 }
 
 } // namespace Memory

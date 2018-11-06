@@ -119,13 +119,9 @@ void Process::Run(s32 main_thread_priority, u32 stack_size) {
 
     auto MapSegment = [&](CodeSet::Segment& segment, VMAPermission permissions,
                           MemoryState memory_state) {
-        auto vma = vm_manager
-                       .MapMemoryBlock(segment.addr, codeset->memory, segment.offset, segment.size,
-                                       memory_state)
-                       .Unwrap();
-        vm_manager.Reprotect(vma, permissions);
-        misc_memory_used += segment.size;
-        memory_region->used += segment.size;
+        HeapAllocate(segment.addr, segment.size, permissions, memory_state, true);
+        Memory::WriteBlock(*this, segment.addr, codeset->memory->data() + segment.offset,
+                           segment.size);
     };
 
     // Map CodeSet segments
@@ -134,13 +130,8 @@ void Process::Run(s32 main_thread_priority, u32 stack_size) {
     MapSegment(codeset->DataSegment(), VMAPermission::ReadWrite, MemoryState::Private);
 
     // Allocate and map stack
-    vm_manager
-        .MapMemoryBlock(Memory::HEAP_VADDR_END - stack_size,
-                        std::make_shared<std::vector<u8>>(stack_size, 0), 0, stack_size,
-                        MemoryState::Locked)
-        .Unwrap();
-    misc_memory_used += stack_size;
-    memory_region->used += stack_size;
+    HeapAllocate(Memory::HEAP_VADDR_END - stack_size, stack_size, VMAPermission::ReadWrite,
+                 MemoryState::Locked, true);
 
     // Map special address mappings
     kernel.MapSharedPages(vm_manager);
@@ -168,44 +159,55 @@ VAddr Process::GetLinearHeapLimit() const {
     return GetLinearHeapBase() + memory_region->size;
 }
 
-ResultVal<VAddr> Process::HeapAllocate(VAddr target, u32 size, VMAPermission perms) {
+ResultVal<VAddr> Process::HeapAllocate(VAddr target, u32 size, VMAPermission perms,
+                                       MemoryState memory_state, bool skip_range_check) {
+    LOG_DEBUG(Kernel, "Allocate heap target={:08X}, size={:08X}", target, size);
     if (target < Memory::HEAP_VADDR || target + size > Memory::HEAP_VADDR_END ||
         target + size < target) {
-        return ERR_INVALID_ADDRESS;
+        if (!skip_range_check) {
+            LOG_ERROR(Kernel, "Invalid heap address");
+            return ERR_INVALID_ADDRESS;
+        }
     }
 
-    if (heap_memory == nullptr) {
-        // Initialize heap
-        heap_memory = std::make_shared<std::vector<u8>>();
-        heap_start = heap_end = target;
+    auto vma = vm_manager.FindVMA(target);
+    if (vma->second.type != VMAType::Free || vma->second.base + vma->second.size < target + size) {
+        LOG_ERROR(Kernel, "Trying to allocate already allocated memory");
+        return ERR_INVALID_ADDRESS_STATE;
     }
 
-    // If necessary, expand backing vector to cover new heap extents.
-    if (target < heap_start) {
-        heap_memory->insert(begin(*heap_memory), heap_start - target, 0);
-        heap_start = target;
-        vm_manager.RefreshMemoryBlockMappings(heap_memory.get());
+    auto allocated_fcram = memory_region->HeapAllocate(size);
+    if (allocated_fcram.empty()) {
+        LOG_ERROR(Kernel, "Not enough space");
+        return ERR_OUT_OF_HEAP_MEMORY;
     }
-    if (target + size > heap_end) {
-        heap_memory->insert(end(*heap_memory), (target + size) - heap_end, 0);
-        heap_end = target + size;
-        vm_manager.RefreshMemoryBlockMappings(heap_memory.get());
+
+    // Maps heap block by block
+    VAddr interval_target = target;
+    for (const auto& interval : allocated_fcram) {
+        u32 interval_size = interval.upper() - interval.lower();
+        LOG_DEBUG(Kernel, "Allocated FCRAM region lower={:08X}, upper={:08X}", interval.lower(),
+                  interval.upper());
+        std::fill(Memory::fcram.begin() + interval.lower(),
+                  Memory::fcram.begin() + interval.upper(), 0);
+        auto vma = vm_manager.MapBackingMemory(
+            interval_target, Memory::fcram.data() + interval.lower(), interval_size, memory_state);
+        ASSERT(vma.Succeeded());
+        vm_manager.Reprotect(vma.Unwrap(), perms);
+        interval_target += interval_size;
     }
-    ASSERT(heap_end - heap_start == heap_memory->size());
 
-    CASCADE_RESULT(auto vma, vm_manager.MapMemoryBlock(target, heap_memory, target - heap_start,
-                                                       size, MemoryState::Private));
-    vm_manager.Reprotect(vma, perms);
+    memory_used += size;
+    resource_limit->current_commit += size;
 
-    heap_used += size;
-    memory_region->used += size;
-
-    return MakeResult<VAddr>(heap_end - size);
+    return MakeResult<VAddr>(target);
 }
 
 ResultCode Process::HeapFree(VAddr target, u32 size) {
+    LOG_DEBUG(Kernel, "Free heap target={:08X}, size={:08X}", target, size);
     if (target < Memory::HEAP_VADDR || target + size > Memory::HEAP_VADDR_END ||
         target + size < target) {
+        LOG_ERROR(Kernel, "Invalid heap address");
         return ERR_INVALID_ADDRESS;
     }
 
@@ -213,59 +215,72 @@ ResultCode Process::HeapFree(VAddr target, u32 size) {
         return RESULT_SUCCESS;
     }
 
-    ResultCode result = vm_manager.UnmapRange(target, size);
-    if (result.IsError())
-        return result;
+    // Free heaps block by block
+    CASCADE_RESULT(auto backing_blocks, vm_manager.GetBackingBlocksForRange(target, size));
+    for (const auto [backing_memory, block_size] : backing_blocks) {
+        memory_region->Free(Memory::GetFCRAMOffset(backing_memory), block_size);
+    }
 
-    heap_used -= size;
-    memory_region->used -= size;
+    ResultCode result = vm_manager.UnmapRange(target, size);
+    ASSERT(result.IsSuccess());
+
+    memory_used -= size;
+    resource_limit->current_commit -= size;
 
     return RESULT_SUCCESS;
 }
 
 ResultVal<VAddr> Process::LinearAllocate(VAddr target, u32 size, VMAPermission perms) {
-    auto& linheap_memory = memory_region->linear_heap_memory;
-
-    VAddr heap_end = GetLinearHeapBase() + (u32)linheap_memory->size();
-    // Games and homebrew only ever seem to pass 0 here (which lets the kernel decide the address),
-    // but explicit addresses are also accepted and respected.
+    LOG_DEBUG(Kernel, "Allocate linear heap target={:08X}, size={:08X}", target, size);
+    u32 physical_offset;
     if (target == 0) {
-        target = heap_end;
+        auto offset = memory_region->LinearAllocate(size);
+        if (!offset) {
+            LOG_ERROR(Kernel, "Not enough space");
+            return ERR_OUT_OF_HEAP_MEMORY;
+        }
+        physical_offset = *offset;
+        target = physical_offset + GetLinearHeapAreaAddress();
+    } else {
+        if (target < GetLinearHeapBase() || target + size > GetLinearHeapLimit() ||
+            target + size < target) {
+            LOG_ERROR(Kernel, "Invalid linear heap address");
+            return ERR_INVALID_ADDRESS;
+        }
+
+        // Kernel would crash/return error when target doesn't meet some requirement.
+        // It seems that target is required to follow immediately after the allocated linear heap,
+        // or cover the entire hole if there is any.
+        // Right now we just ignore these checks because they are still unclear. Further more,
+        // games and homebrew only ever seem to pass target = 0 here (which lets the kernel decide
+        // the address), so this not important.
+
+        physical_offset = target - GetLinearHeapAreaAddress(); // relative to FCRAM
+        if (!memory_region->LinearAllocate(physical_offset, size)) {
+            LOG_ERROR(Kernel, "Trying to allocate already allocated memory");
+            return ERR_INVALID_ADDRESS_STATE;
+        }
     }
 
-    if (target < GetLinearHeapBase() || target + size > GetLinearHeapLimit() || target > heap_end ||
-        target + size < target) {
+    u8* backing_memory = Memory::fcram.data() + physical_offset;
 
-        return ERR_INVALID_ADDRESS;
-    }
+    std::fill(backing_memory, backing_memory + size, 0);
+    auto vma = vm_manager.MapBackingMemory(target, backing_memory, size, MemoryState::Continuous);
+    ASSERT(vma.Succeeded());
+    vm_manager.Reprotect(vma.Unwrap(), perms);
 
-    // Expansion of the linear heap is only allowed if you do an allocation immediately at its
-    // end. It's possible to free gaps in the middle of the heap and then reallocate them later,
-    // but expansions are only allowed at the end.
-    if (target == heap_end) {
-        linheap_memory->insert(linheap_memory->end(), size, 0);
-        vm_manager.RefreshMemoryBlockMappings(linheap_memory.get());
-    }
+    memory_used += size;
+    resource_limit->current_commit += size;
 
-    // TODO(yuriks): As is, this lets processes map memory allocated by other processes from the
-    // same region. It is unknown if or how the 3DS kernel checks against this.
-    std::size_t offset = target - GetLinearHeapBase();
-    CASCADE_RESULT(auto vma, vm_manager.MapMemoryBlock(target, linheap_memory, offset, size,
-                                                       MemoryState::Continuous));
-    vm_manager.Reprotect(vma, perms);
-
-    linear_heap_used += size;
-    memory_region->used += size;
-
+    LOG_DEBUG(Kernel, "Allocated at target={:08X}", target);
     return MakeResult<VAddr>(target);
 }
 
 ResultCode Process::LinearFree(VAddr target, u32 size) {
-    auto& linheap_memory = memory_region->linear_heap_memory;
-
+    LOG_DEBUG(Kernel, "Free linear heap target={:08X}, size={:08X}", target, size);
     if (target < GetLinearHeapBase() || target + size > GetLinearHeapLimit() ||
         target + size < target) {
-
+        LOG_ERROR(Kernel, "Invalid linear heap address");
         return ERR_INVALID_ADDRESS;
     }
 
@@ -273,29 +288,72 @@ ResultCode Process::LinearFree(VAddr target, u32 size) {
         return RESULT_SUCCESS;
     }
 
-    VAddr heap_end = GetLinearHeapBase() + (u32)linheap_memory->size();
-    if (target + size > heap_end) {
+    ResultCode result = vm_manager.UnmapRange(target, size);
+    if (result.IsError()) {
+        LOG_ERROR(Kernel, "Trying to free already freed memory");
+        return result;
+    }
+
+    memory_used -= size;
+    resource_limit->current_commit -= size;
+
+    u32 physical_offset = target - GetLinearHeapAreaAddress(); // relative to FCRAM
+    memory_region->Free(physical_offset, size);
+
+    return RESULT_SUCCESS;
+}
+
+ResultCode Process::Map(VAddr target, VAddr source, u32 size, VMAPermission perms) {
+    LOG_DEBUG(Kernel, "Map memory target={:08X}, source={:08X}, size={:08X}, perms={:08X}", target,
+              source, size, static_cast<u8>(perms));
+    if (source < Memory::HEAP_VADDR || source + size > Memory::HEAP_VADDR_END ||
+        source + size < source) {
+        LOG_ERROR(Kernel, "Invalid source address");
+        return ERR_INVALID_ADDRESS;
+    }
+
+    // TODO(wwylele): check target address range. Is it also restricted to heap region?
+
+    auto vma = vm_manager.FindVMA(target);
+    if (vma->second.type != VMAType::Free || vma->second.base + vma->second.size < target + size) {
+        LOG_ERROR(Kernel, "Trying to map to already allocated memory");
         return ERR_INVALID_ADDRESS_STATE;
     }
 
-    ResultCode result = vm_manager.UnmapRange(target, size);
-    if (result.IsError())
-        return result;
+    // Mark source region as Aliased
+    CASCADE_CODE(vm_manager.ChangeMemoryState(source, size, MemoryState::Private,
+                                              VMAPermission::ReadWrite, MemoryState::Aliased,
+                                              VMAPermission::ReadWrite));
 
-    linear_heap_used -= size;
-    memory_region->used -= size;
-
-    if (target + size == heap_end) {
-        // End of linear heap has been freed, so check what's the last allocated block in it and
-        // reduce the size.
-        auto vma = vm_manager.FindVMA(target);
-        ASSERT(vma != vm_manager.vma_map.end());
-        ASSERT(vma->second.type == VMAType::Free);
-        VAddr new_end = vma->second.base;
-        if (new_end >= GetLinearHeapBase()) {
-            linheap_memory->resize(new_end - GetLinearHeapBase());
-        }
+    CASCADE_RESULT(auto backing_blocks, vm_manager.GetBackingBlocksForRange(source, size));
+    VAddr interval_target = target;
+    for (const auto [backing_memory, block_size] : backing_blocks) {
+        auto target_vma = vm_manager.MapBackingMemory(interval_target, backing_memory, block_size,
+                                                      MemoryState::Alias);
+        interval_target += block_size;
     }
+
+    return RESULT_SUCCESS;
+}
+ResultCode Process::Unmap(VAddr target, VAddr source, u32 size, VMAPermission perms) {
+    LOG_DEBUG(Kernel, "Unmap memory target={:08X}, source={:08X}, size={:08X}, perms={:08X}",
+              target, source, size, static_cast<u8>(perms));
+    if (source < Memory::HEAP_VADDR || source + size > Memory::HEAP_VADDR_END ||
+        source + size < source) {
+        LOG_ERROR(Kernel, "Invalid source address");
+        return ERR_INVALID_ADDRESS;
+    }
+
+    // TODO(wwylele): check target address range. Is it also restricted to heap region?
+
+    // TODO(wwylele): check that the source and the target are actually a pair created by Map
+    // Should return error 0xD8E007F5 in this case
+
+    CASCADE_CODE(vm_manager.UnmapRange(target, size));
+
+    // Change back source region state. Note that the permission is reprotected according to param
+    CASCADE_CODE(vm_manager.ChangeMemoryState(source, size, MemoryState::Aliased,
+                                              VMAPermission::None, MemoryState::Private, perms));
 
     return RESULT_SUCCESS;
 }

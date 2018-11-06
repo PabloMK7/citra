@@ -165,15 +165,7 @@ public:
 
     VMManager vm_manager;
 
-    // Memory used to back the allocations in the regular heap. A single vector is used to cover
-    // the entire virtual address space extents that bound the allocations, including any holes.
-    // This makes deallocation and reallocation of holes fast and keeps process memory contiguous
-    // in the emulator address space, allowing Memory::GetPointer to be reasonably safe.
-    std::shared_ptr<std::vector<u8>> heap_memory;
-    // The left/right bounds of the address space covered by heap_memory.
-    VAddr heap_start = 0, heap_end = 0;
-
-    u32 heap_used = 0, linear_heap_used = 0, misc_memory_used = 0;
+    u32 memory_used = 0;
 
     MemoryRegionInfo* memory_region = nullptr;
 
@@ -188,11 +180,16 @@ public:
     VAddr GetLinearHeapBase() const;
     VAddr GetLinearHeapLimit() const;
 
-    ResultVal<VAddr> HeapAllocate(VAddr target, u32 size, VMAPermission perms);
+    ResultVal<VAddr> HeapAllocate(VAddr target, u32 size, VMAPermission perms,
+                                  MemoryState memory_state = MemoryState::Private,
+                                  bool skip_range_check = false);
     ResultCode HeapFree(VAddr target, u32 size);
 
     ResultVal<VAddr> LinearAllocate(VAddr target, u32 size, VMAPermission perms);
     ResultCode LinearFree(VAddr target, u32 size);
+
+    ResultCode Map(VAddr target, VAddr source, u32 size, VMAPermission perms);
+    ResultCode Unmap(VAddr target, VAddr source, u32 size, VMAPermission perms);
 
 private:
     explicit Process(Kernel::KernelSystem& kernel);

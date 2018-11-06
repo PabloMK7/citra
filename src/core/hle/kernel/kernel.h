@@ -179,7 +179,6 @@ public:
 
     /**
      * Creates a shared memory object from a block of memory managed by an HLE applet.
-     * @param heap_block Heap block of the HLE applet.
      * @param offset The offset into the heap block that the SharedMemory will map.
      * @param size Size of the memory block. Must be page-aligned.
      * @param permissions Permission restrictions applied to the process which created the block.
@@ -187,8 +186,7 @@ public:
      * block.
      * @param name Optional object name, used for debugging purposes.
      */
-    SharedPtr<SharedMemory> CreateSharedMemoryForApplet(std::shared_ptr<std::vector<u8>> heap_block,
-                                                        u32 offset, u32 size,
+    SharedPtr<SharedMemory> CreateSharedMemoryForApplet(u32 offset, u32 size,
                                                         MemoryPermission permissions,
                                                         MemoryPermission other_permissions,
                                                         std::string name = "Unknown Applet");
