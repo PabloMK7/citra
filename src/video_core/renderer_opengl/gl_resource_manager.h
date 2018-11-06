@@ -9,7 +9,6 @@
 #include <glad/glad.h>
 #include "common/common_types.h"
 #include "video_core/renderer_opengl/gl_shader_util.h"
-#include "video_core/renderer_opengl/gl_state.h"
 
 namespace OpenGL {
 
@@ -30,20 +29,10 @@ public:
     }
 
     /// Creates a new internal OpenGL resource and stores the handle
-    void Create() {
-        if (handle != 0)
-            return;
-        glGenTextures(1, &handle);
-    }
+    void Create();
 
     /// Deletes the internal OpenGL resource
-    void Release() {
-        if (handle == 0)
-            return;
-        glDeleteTextures(1, &handle);
-        OpenGLState::GetCurState().ResetTexture(handle).Apply();
-        handle = 0;
-    }
+    void Release();
 
     GLuint handle = 0;
 };
@@ -65,20 +54,10 @@ public:
     }
 
     /// Creates a new internal OpenGL resource and stores the handle
-    void Create() {
-        if (handle != 0)
-            return;
-        glGenSamplers(1, &handle);
-    }
+    void Create();
 
     /// Deletes the internal OpenGL resource
-    void Release() {
-        if (handle == 0)
-            return;
-        glDeleteSamplers(1, &handle);
-        OpenGLState::GetCurState().ResetSampler(handle).Apply();
-        handle = 0;
-    }
+    void Release();
 
     GLuint handle = 0;
 };
@@ -99,20 +78,9 @@ public:
         return *this;
     }
 
-    void Create(const char* source, GLenum type) {
-        if (handle != 0)
-            return;
-        if (source == nullptr)
-            return;
-        handle = LoadShader(source, type);
-    }
+    void Create(const char* source, GLenum type);
 
-    void Release() {
-        if (handle == 0)
-            return;
-        glDeleteShader(handle);
-        handle = 0;
-    }
+    void Release();
 
     GLuint handle = 0;
 };
@@ -134,28 +102,13 @@ public:
     }
 
     /// Creates a new program from given shader objects
-    void Create(bool separable_program, const std::vector<GLuint>& shaders) {
-        if (handle != 0)
-            return;
-        handle = LoadProgram(separable_program, shaders);
-    }
+    void Create(bool separable_program, const std::vector<GLuint>& shaders);
 
     /// Creates a new program from given shader soruce code
-    void Create(const char* vert_shader, const char* frag_shader) {
-        OGLShader vert, frag;
-        vert.Create(vert_shader, GL_VERTEX_SHADER);
-        frag.Create(frag_shader, GL_FRAGMENT_SHADER);
-        Create(false, {vert.handle, frag.handle});
-    }
+    void Create(const char* vert_shader, const char* frag_shader);
 
     /// Deletes the internal OpenGL resource
-    void Release() {
-        if (handle == 0)
-            return;
-        glDeleteProgram(handle);
-        OpenGLState::GetCurState().ResetProgram(handle).Apply();
-        handle = 0;
-    }
+    void Release();
 
     GLuint handle = 0;
 };
@@ -175,19 +128,11 @@ public:
         return *this;
     }
 
-    void Create() {
-        if (handle != 0)
-            return;
-        glGenProgramPipelines(1, &handle);
-    }
+    /// Creates a new internal OpenGL resource and stores the handle
+    void Create();
 
-    void Release() {
-        if (handle == 0)
-            return;
-        glDeleteProgramPipelines(1, &handle);
-        OpenGLState::GetCurState().ResetPipeline(handle).Apply();
-        handle = 0;
-    }
+    /// Deletes the internal OpenGL resource
+    void Release();
 
     GLuint handle = 0;
 };
@@ -209,20 +154,10 @@ public:
     }
 
     /// Creates a new internal OpenGL resource and stores the handle
-    void Create() {
-        if (handle != 0)
-            return;
-        glGenBuffers(1, &handle);
-    }
+    void Create();
 
     /// Deletes the internal OpenGL resource
-    void Release() {
-        if (handle == 0)
-            return;
-        glDeleteBuffers(1, &handle);
-        OpenGLState::GetCurState().ResetBuffer(handle).Apply();
-        handle = 0;
-    }
+    void Release();
 
     GLuint handle = 0;
 };
@@ -244,20 +179,10 @@ public:
     }
 
     /// Creates a new internal OpenGL resource and stores the handle
-    void Create() {
-        if (handle != 0)
-            return;
-        glGenVertexArrays(1, &handle);
-    }
+    void Create();
 
     /// Deletes the internal OpenGL resource
-    void Release() {
-        if (handle == 0)
-            return;
-        glDeleteVertexArrays(1, &handle);
-        OpenGLState::GetCurState().ResetVertexArray(handle).Apply();
-        handle = 0;
-    }
+    void Release();
 
     GLuint handle = 0;
 };
@@ -279,20 +204,10 @@ public:
     }
 
     /// Creates a new internal OpenGL resource and stores the handle
-    void Create() {
-        if (handle != 0)
-            return;
-        glGenFramebuffers(1, &handle);
-    }
+    void Create();
 
     /// Deletes the internal OpenGL resource
-    void Release() {
-        if (handle == 0)
-            return;
-        glDeleteFramebuffers(1, &handle);
-        OpenGLState::GetCurState().ResetFramebuffer(handle).Apply();
-        handle = 0;
-    }
+    void Release();
 
     GLuint handle = 0;
 };
