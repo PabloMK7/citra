@@ -216,10 +216,7 @@ union ResultCode {
         : raw(description.FormatValue(description_) | module.FormatValue(module_) |
               summary.FormatValue(summary_) | level.FormatValue(level_)) {}
 
-    constexpr ResultCode& operator=(const ResultCode& o) {
-        raw = o.raw;
-        return *this;
-    }
+    constexpr ResultCode& operator=(const ResultCode& o) = default;
 
     constexpr bool IsSuccess() const {
         return is_error.ExtractValue(raw) == 0;
