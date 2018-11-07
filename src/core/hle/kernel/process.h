@@ -188,8 +188,10 @@ public:
     ResultVal<VAddr> LinearAllocate(VAddr target, u32 size, VMAPermission perms);
     ResultCode LinearFree(VAddr target, u32 size);
 
-    ResultCode Map(VAddr target, VAddr source, u32 size, VMAPermission perms);
-    ResultCode Unmap(VAddr target, VAddr source, u32 size, VMAPermission perms);
+    ResultCode Map(VAddr target, VAddr source, u32 size, VMAPermission perms,
+                   bool privileged = false);
+    ResultCode Unmap(VAddr target, VAddr source, u32 size, VMAPermission perms,
+                     bool privileged = false);
 
 private:
     explicit Process(Kernel::KernelSystem& kernel);
