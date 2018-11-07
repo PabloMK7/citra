@@ -33,6 +33,8 @@ ClientRoomWindow::ClientRoomWindow(QWidget* parent)
         connect(this, &ClientRoomWindow::RoomInformationChanged, this,
                 &ClientRoomWindow::OnRoomUpdate);
         connect(this, &ClientRoomWindow::StateChanged, this, &::ClientRoomWindow::OnStateChange);
+        // Update the state
+        OnStateChange(member->GetState());
     } else {
         // TODO (jroweboy) network was not initialized?
     }
