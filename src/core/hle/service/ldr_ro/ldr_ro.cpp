@@ -353,9 +353,7 @@ void RO::LoadCRO(Kernel::HLERequestContext& ctx, bool link_on_load_bug_fix) {
         slot->memory_synchronizer.ResizeMemoryBlock(cro_address, cro_buffer_ptr, fix_size);
     }
 
-    VAddr exe_begin;
-    u32 exe_size;
-    std::tie(exe_begin, exe_size) = cro.GetExecutablePages();
+    auto [exe_begin, exe_size] = cro.GetExecutablePages();
     if (exe_begin) {
         result = process->vm_manager.ReprotectRange(exe_begin, exe_size,
                                                     Kernel::VMAPermission::ReadExecute);
