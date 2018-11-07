@@ -18,8 +18,8 @@ class Event;
 class SharedMemory;
 } // namespace Kernel
 
-namespace CoreTiming {
-struct EventType;
+namespace Core {
+struct TimingEventType;
 };
 
 namespace Service::IR {
@@ -77,10 +77,11 @@ private:
     void UnloadInputDevices();
     void UpdateCallback(u64 userdata, s64 cycles_late);
 
+    Core::System& system;
     Kernel::SharedPtr<Kernel::Event> update_event;
     Kernel::SharedPtr<Kernel::SharedMemory> shared_memory;
     u32 next_pad_index{0};
-    CoreTiming::EventType* update_callback_id;
+    Core::TimingEventType* update_callback_id;
     std::unique_ptr<Input::ButtonDevice> zl_button;
     std::unique_ptr<Input::ButtonDevice> zr_button;
     std::unique_ptr<Input::AnalogDevice> c_stick;

@@ -15,11 +15,15 @@ namespace Memory {
 struct PageTable;
 } // namespace Memory
 
+namespace Core {
+struct System;
+}
+
 class DynarmicUserCallbacks;
 
 class ARM_Dynarmic final : public ARM_Interface {
 public:
-    explicit ARM_Dynarmic(PrivilegeMode initial_mode);
+    ARM_Dynarmic(Core::System& system, PrivilegeMode initial_mode);
     ~ARM_Dynarmic();
 
     void Run() override;
@@ -50,6 +54,7 @@ public:
 
 private:
     friend class DynarmicUserCallbacks;
+    Core::System& system;
     std::unique_ptr<DynarmicUserCallbacks> cb;
     std::unique_ptr<Dynarmic::A32::Jit> MakeJit();
 

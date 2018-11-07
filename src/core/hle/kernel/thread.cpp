@@ -48,7 +48,8 @@ Thread* ThreadManager::GetCurrentThread() const {
 
 void Thread::Stop() {
     // Cancel any outstanding wakeup events for this thread
-    CoreTiming::UnscheduleEvent(thread_manager.ThreadWakeupEventType, thread_id);
+    Core::System::GetInstance().CoreTiming().UnscheduleEvent(thread_manager.ThreadWakeupEventType,
+                                                             thread_id);
     thread_manager.wakeup_callback_table.erase(thread_id);
 
     // Clean up thread from ready queue
@@ -80,9 +81,11 @@ void Thread::Stop() {
 void ThreadManager::SwitchContext(Thread* new_thread) {
     Thread* previous_thread = GetCurrentThread();
 
+    Core::Timing& timing = Core::System::GetInstance().CoreTiming();
+
     // Save context for previous thread
     if (previous_thread) {
-        previous_thread->last_running_ticks = CoreTiming::GetTicks();
+        previous_thread->last_running_ticks = timing.GetTicks();
         Core::CPU().SaveContext(previous_thread->context);
 
         if (previous_thread->status == ThreadStatus::Running) {
@@ -99,7 +102,7 @@ void ThreadManager::SwitchContext(Thread* new_thread) {
                    "Thread must be ready to become running.");
 
         // Cancel any outstanding wakeup events for this thread
-        CoreTiming::UnscheduleEvent(ThreadWakeupEventType, new_thread->thread_id);
+        timing.UnscheduleEvent(ThreadWakeupEventType, new_thread->thread_id);
 
         auto previous_process = Core::System::GetInstance().Kernel().GetCurrentProcess();
 
@@ -182,8 +185,8 @@ void Thread::WakeAfterDelay(s64 nanoseconds) {
     if (nanoseconds == -1)
         return;
 
-    CoreTiming::ScheduleEvent(nsToCycles(nanoseconds), thread_manager.ThreadWakeupEventType,
-                              thread_id);
+    Core::System::GetInstance().CoreTiming().ScheduleEvent(
+        nsToCycles(nanoseconds), thread_manager.ThreadWakeupEventType, thread_id);
 }
 
 void Thread::ResumeFromWait() {
@@ -316,7 +319,7 @@ ResultVal<SharedPtr<Thread>> KernelSystem::CreateThread(std::string name, VAddr 
     thread->entry_point = entry_point;
     thread->stack_top = stack_top;
     thread->nominal_priority = thread->current_priority = priority;
-    thread->last_running_ticks = CoreTiming::GetTicks();
+    thread->last_running_ticks = Core::System::GetInstance().CoreTiming().GetTicks();
     thread->processor_id = processor_id;
     thread->wait_objects.clear();
     thread->wait_address = 0;
@@ -459,10 +462,9 @@ VAddr Thread::GetCommandBufferAddress() const {
 }
 
 ThreadManager::ThreadManager() {
-    ThreadWakeupEventType =
-        CoreTiming::RegisterEvent("ThreadWakeupCallback", [this](u64 thread_id, s64 cycle_late) {
-            ThreadWakeupCallback(thread_id, cycle_late);
-        });
+    ThreadWakeupEventType = Core::System::GetInstance().CoreTiming().RegisterEvent(
+        "ThreadWakeupCallback",
+        [this](u64 thread_id, s64 cycle_late) { ThreadWakeupCallback(thread_id, cycle_late); });
 }
 
 ThreadManager::~ThreadManager() {

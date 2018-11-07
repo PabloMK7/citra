@@ -21,8 +21,8 @@ namespace Camera {
 class CameraInterface;
 }
 
-namespace CoreTiming {
-struct EventType;
+namespace Core {
+struct TimingEventType;
 }
 
 namespace Kernel {
@@ -779,9 +779,10 @@ private:
 
     void LoadCameraImplementation(CameraConfig& camera, int camera_id);
 
+    Core::System& system;
     std::array<CameraConfig, NumCameras> cameras;
     std::array<PortConfig, 2> ports;
-    CoreTiming::EventType* completion_event_callback;
+    Core::TimingEventType* completion_event_callback;
     std::atomic<bool> is_camera_reload_pending{false};
 };
 

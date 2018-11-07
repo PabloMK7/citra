@@ -146,7 +146,8 @@ void RendererOpenGL::SwapBuffers() {
     render_window.PollEvents();
     render_window.SwapBuffers();
 
-    Core::System::GetInstance().frame_limiter.DoFrameLimiting(CoreTiming::GetGlobalTimeUs());
+    Core::System::GetInstance().frame_limiter.DoFrameLimiting(
+        Core::System::GetInstance().CoreTiming().GetGlobalTimeUs());
     Core::System::GetInstance().perf_stats.BeginSystemFrame();
 
     prev_state.Apply();

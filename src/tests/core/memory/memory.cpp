@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <catch2/catch.hpp>
+#include "core/core.h"
 #include "core/core_timing.h"
 #include "core/hle/kernel/memory.h"
 #include "core/hle/kernel/process.h"
@@ -10,7 +11,8 @@
 #include "core/memory.h"
 
 TEST_CASE("Memory::IsValidVirtualAddress", "[core][memory]") {
-    CoreTiming::Init();
+    // HACK: see comments of member timing
+    Core::System::GetInstance().timing = std::make_unique<Core::Timing>();
     Kernel::KernelSystem kernel(0);
     SECTION("these regions should not be mapped on an empty process") {
         auto process = kernel.CreateProcess(kernel.CreateCodeSet("", 0));
@@ -51,6 +53,4 @@ TEST_CASE("Memory::IsValidVirtualAddress", "[core][memory]") {
         process->vm_manager.UnmapRange(Memory::CONFIG_MEMORY_VADDR, Memory::CONFIG_MEMORY_SIZE);
         CHECK(Memory::IsValidVirtualAddress(*process, Memory::CONFIG_MEMORY_VADDR) == false);
     }
-
-    CoreTiming::Shutdown();
 }

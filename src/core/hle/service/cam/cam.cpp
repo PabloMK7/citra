@@ -151,7 +151,7 @@ void Module::StartReceiving(int port_id) {
 
     // schedules a completion event according to the frame rate. The event will block on the
     // capture task if it is not finished within the expected time
-    CoreTiming::ScheduleEvent(
+    system.CoreTiming().ScheduleEvent(
         msToCycles(LATENCY_BY_FRAME_RATE[static_cast<int>(camera.frame_rate)]),
         completion_event_callback, port_id);
 }
@@ -160,7 +160,7 @@ void Module::CancelReceiving(int port_id) {
     if (!ports[port_id].is_receiving)
         return;
     LOG_WARNING(Service_CAM, "tries to cancel an ongoing receiving process.");
-    CoreTiming::UnscheduleEvent(completion_event_callback, port_id);
+    system.CoreTiming().UnscheduleEvent(completion_event_callback, port_id);
     ports[port_id].capture_result.wait();
     ports[port_id].is_receiving = false;
 }
@@ -1019,7 +1019,7 @@ void Module::Interface::DriverFinalize(Kernel::HLERequestContext& ctx) {
     LOG_DEBUG(Service_CAM, "called");
 }
 
-Module::Module(Core::System& system) {
+Module::Module(Core::System& system) : system(system) {
     using namespace Kernel;
     for (PortConfig& port : ports) {
         port.completion_event =
@@ -1029,7 +1029,7 @@ Module::Module(Core::System& system) {
         port.vsync_interrupt_event =
             system.Kernel().CreateEvent(ResetType::OneShot, "CAM::vsync_interrupt_event");
     }
-    completion_event_callback = CoreTiming::RegisterEvent(
+    completion_event_callback = system.CoreTiming().RegisterEvent(
         "CAM::CompletionEventCallBack",
         [this](u64 userdata, s64 cycles_late) { CompletionEventCallBack(userdata, cycles_late); });
 }

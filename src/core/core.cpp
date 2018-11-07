@@ -61,11 +61,11 @@ System::ResultStatus System::RunLoop(bool tight_loop) {
     // instead advance to the next event and try to yield to the next thread
     if (kernel->GetThreadManager().GetCurrentThread() == nullptr) {
         LOG_TRACE(Core_ARM11, "Idling");
-        CoreTiming::Idle();
-        CoreTiming::Advance();
+        timing->Idle();
+        timing->Advance();
         PrepareReschedule();
     } else {
-        CoreTiming::Advance();
+        timing->Advance();
         if (tight_loop) {
             cpu_core->Run();
         } else {
@@ -155,7 +155,7 @@ void System::PrepareReschedule() {
 }
 
 PerfStats::Results System::GetAndResetPerfStats() {
-    return perf_stats.GetAndResetStats(CoreTiming::GetGlobalTimeUs());
+    return perf_stats.GetAndResetStats(timing->GetGlobalTimeUs());
 }
 
 void System::Reschedule() {
@@ -170,11 +170,11 @@ void System::Reschedule() {
 System::ResultStatus System::Init(EmuWindow& emu_window, u32 system_mode) {
     LOG_DEBUG(HW_Memory, "initialized OK");
 
-    CoreTiming::Init();
+    timing = std::make_unique<Timing>();
 
     if (Settings::values.use_cpu_jit) {
 #ifdef ARCHITECTURE_x86_64
-        cpu_core = std::make_unique<ARM_Dynarmic>(USER32MODE);
+        cpu_core = std::make_unique<ARM_Dynarmic>(*this, USER32MODE);
 #else
         cpu_core = std::make_unique<ARM_DynCom>(USER32MODE);
         LOG_WARNING(Core, "CPU JIT requested, but Dynarmic not available");
@@ -239,6 +239,14 @@ const Kernel::KernelSystem& System::Kernel() const {
     return *kernel;
 }
 
+Timing& System::CoreTiming() {
+    return *timing;
+}
+
+const Timing& System::CoreTiming() const {
+    return *timing;
+}
+
 void System::RegisterSoftwareKeyboard(std::shared_ptr<Frontend::SoftwareKeyboard> swkbd) {
     registered_swkbd = std::move(swkbd);
 }
@@ -265,7 +273,7 @@ void System::Shutdown() {
     service_manager.reset();
     dsp_core.reset();
     cpu_core.reset();
-    CoreTiming::Shutdown();
+    timing.reset();
     app_loader.reset();
 
     if (auto room_member = Network::GetRoomMember().lock()) {

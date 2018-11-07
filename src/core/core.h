@@ -41,6 +41,8 @@ class KernelSystem;
 
 namespace Core {
 
+class Timing;
+
 class System {
 public:
     /**
@@ -176,6 +178,12 @@ public:
     /// Gets a const reference to the kernel
     const Kernel::KernelSystem& Kernel() const;
 
+    /// Gets a reference to the timing system
+    Timing& CoreTiming();
+
+    /// Gets a const reference to the timing system
+    const Timing& CoreTiming() const;
+
     PerfStats perf_stats;
     FrameLimiter frame_limiter;
 
@@ -246,6 +254,7 @@ private:
 public: // HACK: this is temporary exposed for tests,
         // due to WIP kernel refactor causing desync state in memory
     std::unique_ptr<Kernel::KernelSystem> kernel;
+    std::unique_ptr<Timing> timing;
 
 private:
     static System s_instance;

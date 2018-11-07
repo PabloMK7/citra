@@ -20,7 +20,7 @@ private:
     void TimerCallback(u64 callback_id, s64 cycles_late);
 
     /// The event type of the generic timer callback event
-    CoreTiming::EventType* timer_callback_event_type = nullptr;
+    Core::TimingEventType* timer_callback_event_type = nullptr;
 
     u64 next_timer_callback_id = 0;
     std::unordered_map<u64, Timer*> timer_callback_table;
