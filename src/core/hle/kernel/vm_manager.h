@@ -150,15 +150,13 @@ public:
      *
      * @param base The base address to start the mapping at.
      * @param region_size The max size of the region from where we'll try to find an address.
-     * @param block The block to be mapped.
-     * @param offset Offset into `block` to map from.
+     * @param memory The memory to be mapped.
      * @param size Size of the mapping.
      * @param state MemoryState tag to attach to the VMA.
      * @returns The address at which the memory was mapped.
      */
-    ResultVal<VAddr> MapMemoryBlockToBase(VAddr base, u32 region_size,
-                                          std::shared_ptr<std::vector<u8>> block,
-                                          std::size_t offset, u32 size, MemoryState state);
+    ResultVal<VAddr> MapBackingMemoryToBase(VAddr base, u32 region_size, u8* memory, u32 size,
+                                            MemoryState state);
     /**
      * Maps an unmanaged host memory pointer at a given address.
      *
