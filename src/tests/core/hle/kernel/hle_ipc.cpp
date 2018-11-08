@@ -139,8 +139,8 @@ TEST_CASE("HLERequestContext::PopulateFromIncomingCommandBuffer", "[core][kernel
         std::fill(buffer->begin(), buffer->end(), 0xAB);
 
         VAddr target_address = 0x10000000;
-        auto result = process->vm_manager.MapMemoryBlock(target_address, buffer, 0, buffer->size(),
-                                                         MemoryState::Private);
+        auto result = process->vm_manager.MapBackingMemory(target_address, buffer->data(),
+                                                           buffer->size(), MemoryState::Private);
         REQUIRE(result.Code() == RESULT_SUCCESS);
 
         const u32_le input[]{
@@ -161,8 +161,8 @@ TEST_CASE("HLERequestContext::PopulateFromIncomingCommandBuffer", "[core][kernel
         std::fill(buffer->begin(), buffer->end(), 0xCD);
 
         VAddr target_address = 0x10000000;
-        auto result = process->vm_manager.MapMemoryBlock(target_address, buffer, 0, buffer->size(),
-                                                         MemoryState::Private);
+        auto result = process->vm_manager.MapBackingMemory(target_address, buffer->data(),
+                                                           buffer->size(), MemoryState::Private);
 
         const u32_le input[]{
             IPC::MakeHeader(0, 0, 2),
@@ -188,13 +188,14 @@ TEST_CASE("HLERequestContext::PopulateFromIncomingCommandBuffer", "[core][kernel
         std::fill(buffer_mapped->begin(), buffer_mapped->end(), 0xDF);
 
         VAddr target_address_static = 0x10000000;
-        auto result = process->vm_manager.MapMemoryBlock(
-            target_address_static, buffer_static, 0, buffer_static->size(), MemoryState::Private);
+        auto result =
+            process->vm_manager.MapBackingMemory(target_address_static, buffer_static->data(),
+                                                 buffer_static->size(), MemoryState::Private);
         REQUIRE(result.Code() == RESULT_SUCCESS);
 
         VAddr target_address_mapped = 0x20000000;
-        result = process->vm_manager.MapMemoryBlock(target_address_mapped, buffer_mapped, 0,
-                                                    buffer_mapped->size(), MemoryState::Private);
+        result = process->vm_manager.MapBackingMemory(target_address_mapped, buffer_mapped->data(),
+                                                      buffer_mapped->size(), MemoryState::Private);
         REQUIRE(result.Code() == RESULT_SUCCESS);
 
         auto a = MakeObject(kernel);
@@ -315,8 +316,8 @@ TEST_CASE("HLERequestContext::WriteToOutgoingCommandBuffer", "[core][kernel]") {
 
         auto output_buffer = std::make_shared<std::vector<u8>>(Memory::PAGE_SIZE);
         VAddr target_address = 0x10000000;
-        auto result = process->vm_manager.MapMemoryBlock(
-            target_address, output_buffer, 0, output_buffer->size(), MemoryState::Private);
+        auto result = process->vm_manager.MapBackingMemory(
+            target_address, output_buffer->data(), output_buffer->size(), MemoryState::Private);
         REQUIRE(result.Code() == RESULT_SUCCESS);
 
         input[0] = IPC::MakeHeader(0, 0, 2);
@@ -344,8 +345,8 @@ TEST_CASE("HLERequestContext::WriteToOutgoingCommandBuffer", "[core][kernel]") {
 
         auto output_buffer = std::make_shared<std::vector<u8>>(Memory::PAGE_SIZE);
         VAddr target_address = 0x10000000;
-        auto result = process->vm_manager.MapMemoryBlock(
-            target_address, output_buffer, 0, output_buffer->size(), MemoryState::Private);
+        auto result = process->vm_manager.MapBackingMemory(
+            target_address, output_buffer->data(), output_buffer->size(), MemoryState::Private);
         REQUIRE(result.Code() == RESULT_SUCCESS);
 
         const u32_le input_cmdbuff[]{
