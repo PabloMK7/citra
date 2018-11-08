@@ -8,6 +8,7 @@
 #include <string>
 #include "common/assert.h"
 #include "common/common_types.h"
+#include "core/hle/kernel/ipc.h"
 #include "core/hle/kernel/object.h"
 #include "core/hle/kernel/wait_object.h"
 #include "core/hle/result.h"
@@ -82,6 +83,9 @@ public:
     /// response is sent via svcReplyAndReceive.
     /// TODO(Subv): Find a better name for this.
     SharedPtr<Thread> currently_handling;
+
+    /// A temporary list holding mapped buffer info from IPC request, used for during IPC reply
+    std::vector<MappedBufferContext> mapped_buffer_context;
 
 private:
     explicit ServerSession(KernelSystem& kernel);

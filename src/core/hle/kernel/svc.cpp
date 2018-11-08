@@ -600,8 +600,9 @@ static ResultCode ReceiveIPCRequest(SharedPtr<ServerSession> server_session,
     VAddr target_address = thread->GetCommandBufferAddress();
     VAddr source_address = server_session->currently_handling->GetCommandBufferAddress();
 
-    ResultCode translation_result = TranslateCommandBuffer(
-        server_session->currently_handling, thread, source_address, target_address, false);
+    ResultCode translation_result =
+        TranslateCommandBuffer(server_session->currently_handling, thread, source_address,
+                               target_address, server_session->mapped_buffer_context, false);
 
     // If a translation error occurred, immediately resume the client thread.
     if (translation_result.IsError()) {
@@ -667,7 +668,8 @@ ResultCode SVC::ReplyAndReceive(s32* index, VAddr handles_address, s32 handle_co
         VAddr target_address = request_thread->GetCommandBufferAddress();
 
         ResultCode translation_result =
-            TranslateCommandBuffer(thread, request_thread, source_address, target_address, true);
+            TranslateCommandBuffer(thread, request_thread, source_address, target_address,
+                                   session->mapped_buffer_context, true);
 
         // Note: The real kernel seems to always panic if the Server->Client buffer translation
         // fails for whatever reason.
