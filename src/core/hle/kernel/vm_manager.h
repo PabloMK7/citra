@@ -18,13 +18,10 @@ namespace Kernel {
 enum class VMAType : u8 {
     /// VMA represents an unmapped region of the address space.
     Free,
-    /// VMA is backed by a ref-counted allocate memory block.
-    AllocatedMemoryBlock,
     /// VMA is backed by a raw, unmanaged pointer.
     BackingMemory,
     /// VMA is mapped to MMIO registers at a fixed PAddr.
     MMIO,
-    // TODO(yuriks): Implement MemoryAlias to support MAP/UNMAP
 };
 
 /// Permissions for mapped memory blocks
@@ -71,12 +68,6 @@ struct VirtualMemoryArea {
     VMAPermission permissions = VMAPermission::None;
     /// Tag returned by svcQueryMemory. Not otherwise used.
     MemoryState meminfo_state = MemoryState::Free;
-
-    // Settings for type = AllocatedMemoryBlock
-    /// Memory block backing this VMA.
-    std::shared_ptr<std::vector<u8>> backing_block = nullptr;
-    /// Offset into the backing_memory the mapping starts from.
-    std::size_t offset = 0;
 
     // Settings for type = BackingMemory
     /// Pointer backing this VMA. It will not be destroyed or freed when the VMA is removed.
@@ -132,18 +123,6 @@ public:
     VMAHandle FindVMA(VAddr target) const;
 
     // TODO(yuriks): Should these functions actually return the handle?
-
-    /**
-     * Maps part of a ref-counted block of memory at a given address.
-     *
-     * @param target The guest address to start the mapping at.
-     * @param block The block to be mapped.
-     * @param offset Offset into `block` to map from.
-     * @param size Size of the mapping.
-     * @param state MemoryState tag to attach to the VMA.
-     */
-    ResultVal<VMAHandle> MapMemoryBlock(VAddr target, std::shared_ptr<std::vector<u8>> block,
-                                        std::size_t offset, u32 size, MemoryState state);
 
     /**
      * Maps part of a ref-counted block of memory at the first free address after the given base.
@@ -202,12 +181,6 @@ public:
 
     /// Changes the permissions of a range of addresses, splitting VMAs as necessary.
     ResultCode ReprotectRange(VAddr target, u32 size, VMAPermission new_perms);
-
-    /**
-     * Scans all VMAs and updates the page table range of any that use the given vector as backing
-     * memory. This should be called after any operation that causes reallocation of the vector.
-     */
-    void RefreshMemoryBlockMappings(const std::vector<u8>* block);
 
     /// Dumps the address space layout to the log, for debugging
     void LogLayout(Log::Level log_level) const;

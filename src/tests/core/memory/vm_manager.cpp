@@ -39,7 +39,7 @@ TEST_CASE("Memory Basics", "[kernel][memory]") {
         auto vma = manager->FindVMA(Memory::HEAP_VADDR);
         CHECK(vma != manager->vma_map.end());
         CHECK(vma->second.type == Kernel::VMAType::Free);
-        CHECK(vma->second.backing_block == nullptr);
+        CHECK(vma->second.backing_memory == nullptr);
     }
 
     SECTION("changing memory permissions") {
