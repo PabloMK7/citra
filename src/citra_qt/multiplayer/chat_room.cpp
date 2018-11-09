@@ -70,12 +70,11 @@ public:
     }
 
     QString GetSystemChatMessage() const {
-        return QString("[%1] <font color='%2'><i>%3</i></font>")
-            .arg(timestamp, system_color, message);
+        return QString("[%1] <font color='%2'>* %3</font>").arg(timestamp, system_color, message);
     }
 
 private:
-    static constexpr const char system_color[] = "#888888";
+    static constexpr const char system_color[] = "#FF8C00";
     QString timestamp;
     QString message;
 };
@@ -133,6 +132,7 @@ ChatRoom::ChatRoom(QWidget* parent) : QWidget(parent), ui(std::make_unique<Ui::C
 
     // register the network structs to use in slots and signals
     qRegisterMetaType<Network::ChatEntry>();
+    qRegisterMetaType<Network::StatusMessageEntry>();
     qRegisterMetaType<Network::RoomInformation>();
     qRegisterMetaType<Network::RoomMember::State>();
 
@@ -140,7 +140,12 @@ ChatRoom::ChatRoom(QWidget* parent) : QWidget(parent), ui(std::make_unique<Ui::C
     if (auto member = Network::GetRoomMember().lock()) {
         member->BindOnChatMessageRecieved(
             [this](const Network::ChatEntry& chat) { emit ChatReceived(chat); });
+        member->BindOnStatusMessageReceived(
+            [this](const Network::StatusMessageEntry& status_message) {
+                emit StatusMessageReceived(status_message);
+            });
         connect(this, &ChatRoom::ChatReceived, this, &ChatRoom::OnChatReceive);
+        connect(this, &ChatRoom::StatusMessageReceived, this, &ChatRoom::OnStatusMessageReceive);
     } else {
         // TODO (jroweboy) network was not initialized?
     }
@@ -218,6 +223,27 @@ void ChatRoom::OnChatReceive(const Network::ChatEntry& chat) {
         ChatMessage m(chat);
         AppendChatMessage(m.GetPlayerChatMessage(player));
     }
+}
+
+void ChatRoom::OnStatusMessageReceive(const Network::StatusMessageEntry& status_message) {
+    QString name;
+    if (status_message.username.empty() || status_message.username == status_message.nickname) {
+        name = QString::fromStdString(status_message.nickname);
+    } else {
+        name = QString("%1 (%2)").arg(QString::fromStdString(status_message.nickname),
+                                      QString::fromStdString(status_message.username));
+    }
+    QString message;
+    switch (status_message.type) {
+    case Network::IdMemberJoin:
+        message = tr("%1 has joined").arg(name);
+        break;
+    case Network::IdMemberLeave:
+        message = tr("%1 has left").arg(name);
+        break;
+    }
+    if (!message.isEmpty())
+        AppendStatusMessage(message);
 }
 
 void ChatRoom::OnSendChat() {

@@ -61,6 +61,13 @@ enum RoomMessageTypes : u8 {
     IdCloseRoom,
     IdRoomIsFull,
     IdConsoleIdCollision,
+    IdStatusMessage,
+};
+
+/// Types of system status messages
+enum StatusMessageTypes : u8 {
+    IdMemberJoin = 1, ///< Member joining
+    IdMemberLeave,    ///< Member leaving
 };
 
 /// This is what a server [person creating a server] would use.

@@ -39,6 +39,7 @@ public:
 public slots:
     void OnRoomUpdate(const Network::RoomInformation& info);
     void OnChatReceive(const Network::ChatEntry&);
+    void OnStatusMessageReceive(const Network::StatusMessageEntry&);
     void OnSendChat();
     void OnChatTextChanged();
     void PopupContextMenu(const QPoint& menu_location);
@@ -47,6 +48,7 @@ public slots:
 
 signals:
     void ChatReceived(const Network::ChatEntry&);
+    void StatusMessageReceived(const Network::StatusMessageEntry&);
 
 private:
     static constexpr u32 max_chat_lines = 1000;
@@ -61,5 +63,6 @@ private:
 };
 
 Q_DECLARE_METATYPE(Network::ChatEntry);
+Q_DECLARE_METATYPE(Network::StatusMessageEntry);
 Q_DECLARE_METATYPE(Network::RoomInformation);
 Q_DECLARE_METATYPE(Network::RoomMember::State);

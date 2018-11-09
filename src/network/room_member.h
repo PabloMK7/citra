@@ -40,6 +40,14 @@ struct ChatEntry {
     std::string message; ///< Body of the message.
 };
 
+/// Represents a system status message.
+struct StatusMessageEntry {
+    StatusMessageTypes type; ///< Type of the message
+    /// Subject of the message. i.e. the user who is joining/leaving/being banned, etc.
+    std::string nickname;
+    std::string username;
+};
+
 /**
  * This is what a client [person joining a server] would use.
  * It also has to be used if you host a game yourself (You'd create both, a Room and a
@@ -191,6 +199,16 @@ public:
      */
     CallbackHandle<ChatEntry> BindOnChatMessageRecieved(
         std::function<void(const ChatEntry&)> callback);
+
+    /**
+     * Binds a function to an event that will be triggered every time a StatusMessage is
+     * received. The function will be called every time the event is triggered. The callback
+     * function must not bind or unbind a function. Doing so will cause a deadlock
+     * @param callback The function to call
+     * @return A handle used for removing the function from the registered list
+     */
+    CallbackHandle<StatusMessageEntry> BindOnStatusMessageReceived(
+        std::function<void(const StatusMessageEntry&)> callback);
 
     /**
      * Leaves the current room.

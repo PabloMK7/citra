@@ -58,6 +58,7 @@ public:
     private:
         CallbackSet<WifiPacket> callback_set_wifi_packet;
         CallbackSet<ChatEntry> callback_set_chat_messages;
+        CallbackSet<StatusMessageEntry> callback_set_status_messages;
         CallbackSet<RoomInformation> callback_set_room_information;
         CallbackSet<State> callback_set_state;
     };
@@ -110,6 +111,13 @@ public:
     void HandleChatPacket(const ENetEvent* event);
 
     /**
+     * Extracts a system message entry from a received ENet packet and adds it to the system message
+     * queue.
+     * @param event The ENet event that was received.
+     */
+    void HandleStatusMessagePacket(const ENetEvent* event);
+
+    /**
      * Disconnects the RoomMember from the Room
      */
     void Disconnect();
@@ -147,6 +155,9 @@ void RoomMember::RoomMemberImpl::MemberLoop() {
                     break;
                 case IdChatMessage:
                     HandleChatPacket(&event);
+                    break;
+                case IdStatusMessage:
+                    HandleStatusMessagePacket(&event);
                     break;
                 case IdRoomInformation:
                     HandleRoomInformationPacket(&event);
@@ -317,6 +328,22 @@ void RoomMember::RoomMemberImpl::HandleChatPacket(const ENetEvent* event) {
     Invoke<ChatEntry>(chat_entry);
 }
 
+void RoomMember::RoomMemberImpl::HandleStatusMessagePacket(const ENetEvent* event) {
+    Packet packet;
+    packet.Append(event->packet->data, event->packet->dataLength);
+
+    // Ignore the first byte, which is the message id.
+    packet.IgnoreBytes(sizeof(u8));
+
+    StatusMessageEntry status_message_entry{};
+    u8 type{};
+    packet >> type;
+    status_message_entry.type = static_cast<StatusMessageTypes>(type);
+    packet >> status_message_entry.nickname;
+    packet >> status_message_entry.username;
+    Invoke<StatusMessageEntry>(status_message_entry);
+}
+
 void RoomMember::RoomMemberImpl::Disconnect() {
     member_information.clear();
     room_information.member_slots = 0;
@@ -365,6 +392,12 @@ RoomMember::RoomMemberImpl::Callbacks::Get() {
 template <>
 RoomMember::RoomMemberImpl::CallbackSet<ChatEntry>& RoomMember::RoomMemberImpl::Callbacks::Get() {
     return callback_set_chat_messages;
+}
+
+template <>
+RoomMember::RoomMemberImpl::CallbackSet<StatusMessageEntry>&
+RoomMember::RoomMemberImpl::Callbacks::Get() {
+    return callback_set_status_messages;
 }
 
 template <typename T>
@@ -519,6 +552,11 @@ RoomMember::CallbackHandle<ChatEntry> RoomMember::BindOnChatMessageRecieved(
     return room_member_impl->Bind(callback);
 }
 
+RoomMember::CallbackHandle<StatusMessageEntry> RoomMember::BindOnStatusMessageReceived(
+    std::function<void(const StatusMessageEntry&)> callback) {
+    return room_member_impl->Bind(callback);
+}
+
 template <typename T>
 void RoomMember::Unbind(CallbackHandle<T> handle) {
     std::lock_guard<std::mutex> lock(room_member_impl->callback_mutex);
@@ -538,5 +576,6 @@ template void RoomMember::Unbind(CallbackHandle<WifiPacket>);
 template void RoomMember::Unbind(CallbackHandle<RoomMember::State>);
 template void RoomMember::Unbind(CallbackHandle<RoomInformation>);
 template void RoomMember::Unbind(CallbackHandle<ChatEntry>);
+template void RoomMember::Unbind(CallbackHandle<StatusMessageEntry>);
 
 } // namespace Network

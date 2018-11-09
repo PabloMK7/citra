@@ -128,6 +128,12 @@ public:
     void SendCloseMessage();
 
     /**
+     * Sends a system message to all the connected clients.
+     */
+    void SendStatusMessage(StatusMessageTypes type, const std::string& nickname,
+                           const std::string& username);
+
+    /**
      * Sends the information about the room, along with the list of members
      * to every connected client in the room.
      * The packet has the structure:
@@ -290,6 +296,9 @@ void Room::RoomImpl::HandleJoinRequest(const ENetEvent* event) {
     }
     member.user_data = verify_backend->LoadUserData(uid, token);
 
+    // Notify everyone that the user has joined.
+    SendStatusMessage(IdMemberJoin, member.nickname, member.user_data.username);
+
     {
         std::lock_guard<std::mutex> lock(member_mutex);
         members.push_back(std::move(member));
@@ -413,6 +422,24 @@ void Room::RoomImpl::SendCloseMessage() {
     for (auto& member : members) {
         enet_peer_disconnect(member.peer, 0);
     }
+}
+
+void Room::RoomImpl::SendStatusMessage(StatusMessageTypes type, const std::string& nickname,
+                                       const std::string& username) {
+    Packet packet;
+    packet << static_cast<u8>(IdStatusMessage);
+    packet << static_cast<u8>(type);
+    packet << nickname;
+    packet << username;
+    std::lock_guard<std::mutex> lock(member_mutex);
+    if (!members.empty()) {
+        ENetPacket* enet_packet =
+            enet_packet_create(packet.GetData(), packet.GetDataSize(), ENET_PACKET_FLAG_RELIABLE);
+        for (auto& member : members) {
+            enet_peer_send(member.peer, 0, enet_packet);
+        }
+    }
+    enet_host_flush(server);
 }
 
 void Room::RoomImpl::BroadcastRoomInformation() {
@@ -571,16 +598,23 @@ void Room::RoomImpl::HandleGameNamePacket(const ENetEvent* event) {
 
 void Room::RoomImpl::HandleClientDisconnection(ENetPeer* client) {
     // Remove the client from the members list.
+    std::string nickname, username;
     {
         std::lock_guard<std::mutex> lock(member_mutex);
-        members.erase(
-            std::remove_if(members.begin(), members.end(),
-                           [client](const Member& member) { return member.peer == client; }),
-            members.end());
+        auto member = std::find_if(members.begin(), members.end(), [client](const Member& member) {
+            return member.peer == client;
+        });
+        if (member != members.end()) {
+            nickname = member->nickname;
+            username = member->user_data.username;
+            members.erase(member);
+        }
     }
 
     // Announce the change to all clients.
     enet_peer_disconnect(client, 0);
+    if (!nickname.empty())
+        SendStatusMessage(IdMemberLeave, nickname, username);
     BroadcastRoomInformation();
 }
 
