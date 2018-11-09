@@ -322,16 +322,19 @@ u8* GetPhysicalPointer(PAddr address) {
 static std::vector<VAddr> PhysicalToVirtualAddressForRasterizer(PAddr addr) {
     if (addr >= VRAM_PADDR && addr < VRAM_PADDR_END) {
         return {addr - VRAM_PADDR + VRAM_VADDR};
-    } else if (addr >= FCRAM_PADDR && addr < FCRAM_PADDR_END) {
-        return {addr - FCRAM_PADDR + LINEAR_HEAP_VADDR, addr - FCRAM_PADDR + NEW_LINEAR_HEAP_VADDR};
-    } else {
-        // While the physical <-> virtual mapping is 1:1 for the regions supported by the cache,
-        // some games (like Pokemon Super Mystery Dungeon) will try to use textures that go beyond
-        // the end address of VRAM, causing the Virtual->Physical translation to fail when flushing
-        // parts of the texture.
-        LOG_ERROR(HW_Memory, "Trying to use invalid physical address for rasterizer: {:08X}", addr);
-        return {};
     }
+    if (addr >= FCRAM_PADDR && addr < FCRAM_PADDR_END) {
+        return {addr - FCRAM_PADDR + LINEAR_HEAP_VADDR, addr - FCRAM_PADDR + NEW_LINEAR_HEAP_VADDR};
+    }
+    if (addr >= FCRAM_PADDR_END && addr < FCRAM_N3DS_PADDR_END) {
+        return {addr - FCRAM_PADDR + NEW_LINEAR_HEAP_VADDR};
+    }
+    // While the physical <-> virtual mapping is 1:1 for the regions supported by the cache,
+    // some games (like Pokemon Super Mystery Dungeon) will try to use textures that go beyond
+    // the end address of VRAM, causing the Virtual->Physical translation to fail when flushing
+    // parts of the texture.
+    LOG_ERROR(HW_Memory, "Trying to use invalid physical address for rasterizer: {:08X}", addr);
+    return {};
 }
 
 void RasterizerMarkRegionCached(PAddr start, u32 size, bool cached) {
