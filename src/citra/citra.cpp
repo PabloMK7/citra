@@ -99,6 +99,10 @@ static void OnStateChanged(const Network::RoomMember::State& state) {
                            "connected to the Room");
         exit(1);
         break;
+    case Network::RoomMember::State::ConsoleIdCollision:
+        LOG_ERROR(Network, "Your Console ID conflicted with someone else in the Room");
+        exit(1);
+        break;
     case Network::RoomMember::State::WrongPassword:
         LOG_ERROR(Network, "Room replied with: Wrong password");
         exit(1);
@@ -108,6 +112,10 @@ static void OnStateChanged(const Network::RoomMember::State& state) {
                   "You are using a different version than the room you are trying to connect to");
         exit(1);
         break;
+    case Network::RoomMember::State::RoomIsFull:
+        LOG_ERROR(Network, "The room is full");
+        exit(1);
+        break;
     default:
         break;
     }
@@ -115,6 +123,20 @@ static void OnStateChanged(const Network::RoomMember::State& state) {
 
 static void OnMessageReceived(const Network::ChatEntry& msg) {
     std::cout << std::endl << msg.nickname << ": " << msg.message << std::endl << std::endl;
+}
+
+static void OnStatusMessageReceived(const Network::StatusMessageEntry& msg) {
+    std::string message;
+    switch (msg.type) {
+    case Network::IdMemberJoin:
+        message = fmt::format("{} has joined", msg.nickname);
+        break;
+    case Network::IdMemberLeave:
+        message = fmt::format("{} has left", msg.nickname);
+        break;
+    }
+    if (!message.empty())
+        std::cout << std::endl << "* " << message << std::endl << std::endl;
 }
 
 static void InitializeLogging() {
@@ -334,6 +356,7 @@ int main(int argc, char** argv) {
     if (use_multiplayer) {
         if (auto member = Network::GetRoomMember().lock()) {
             member->BindOnChatMessageRecieved(OnMessageReceived);
+            member->BindOnStatusMessageReceived(OnStatusMessageReceived);
             member->BindOnStateChanged(OnStateChanged);
             LOG_DEBUG(Network, "Start connection to {}:{} with nickname {}", address, port,
                       nickname);
