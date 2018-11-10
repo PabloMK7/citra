@@ -361,9 +361,11 @@ std::shared_ptr<Module> Module::Interface::GetModule() const {
 Module::Module(Core::System& system) : system(system) {
     using namespace Kernel;
 
-    shared_mem = system.Kernel().CreateSharedMemory(nullptr, 0x1000, MemoryPermission::ReadWrite,
-                                                    MemoryPermission::Read, 0, MemoryRegion::BASE,
-                                                    "HID:SharedMemory");
+    shared_mem =
+        system.Kernel()
+            .CreateSharedMemory(nullptr, 0x1000, MemoryPermission::ReadWrite,
+                                MemoryPermission::Read, 0, MemoryRegion::BASE, "HID:SharedMemory")
+            .Unwrap();
 
     // Create event handles
     event_pad_or_touch_1 = system.Kernel().CreateEvent(ResetType::OneShot, "HID:EventPadOrTouch1");

@@ -787,9 +787,11 @@ GSP_GPU::GSP_GPU(Core::System& system) : ServiceFramework("gsp::Gpu", 2), system
     RegisterHandlers(functions);
 
     using Kernel::MemoryPermission;
-    shared_memory = system.Kernel().CreateSharedMemory(
-        nullptr, 0x1000, MemoryPermission::ReadWrite, MemoryPermission::ReadWrite, 0,
-        Kernel::MemoryRegion::BASE, "GSP:SharedMemory");
+    shared_memory = system.Kernel()
+                        .CreateSharedMemory(nullptr, 0x1000, MemoryPermission::ReadWrite,
+                                            MemoryPermission::ReadWrite, 0,
+                                            Kernel::MemoryRegion::BASE, "GSP:SharedMemory")
+                        .Unwrap();
 
     first_initialization = true;
 };
