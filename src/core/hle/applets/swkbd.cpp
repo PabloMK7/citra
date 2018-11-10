@@ -136,6 +136,7 @@ void SoftwareKeyboard::Finalize() {
     SendParameter(message);
 
     is_running = false;
+    text_memory = nullptr;
 }
 
 Frontend::KeyboardConfig SoftwareKeyboard::ToFrontendConfig(

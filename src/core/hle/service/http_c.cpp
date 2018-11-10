@@ -443,6 +443,17 @@ void HTTP_C::CloseClientCertContext(Kernel::HLERequestContext& ctx) {
     LOG_DEBUG(Service_HTTP, "called, cert_handle={}", cert_handle);
 }
 
+void HTTP_C::Finalize(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x39, 0, 0);
+
+    shared_memory = nullptr;
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RESULT_SUCCESS);
+
+    LOG_WARNING(Service_HTTP, "(STUBBED) called");
+}
+
 void HTTP_C::DecryptClCertA() {
     static constexpr u32 iv_length = 16;
 
@@ -575,7 +586,7 @@ HTTP_C::HTTP_C() : ServiceFramework("http:C", 32) {
         {0x00360000, nullptr, "ClearDNSCache"},
         {0x00370080, nullptr, "SetKeepAlive"},
         {0x003800C0, nullptr, "SetPostDataTypeSize"},
-        {0x00390000, nullptr, "Finalize"},
+        {0x00390000, &HTTP_C::Finalize, "Finalize"},
     };
     RegisterHandlers(functions);
 
