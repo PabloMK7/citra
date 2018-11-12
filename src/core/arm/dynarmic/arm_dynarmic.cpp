@@ -158,7 +158,7 @@ public:
 
     ARM_Dynarmic& parent;
     Core::Timing& timing;
-    Kernel::SVC svc_context;
+    Kernel::SVCContext svc_context;
 };
 
 ARM_Dynarmic::ARM_Dynarmic(Core::System& system, PrivilegeMode initial_mode)

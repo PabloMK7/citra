@@ -3864,7 +3864,7 @@ SWI_INST : {
         cpu->NumInstrsToExecute =
             num_instrs >= cpu->NumInstrsToExecute ? 0 : cpu->NumInstrsToExecute - num_instrs;
         num_instrs = 0;
-        Kernel::SVC{Core::System::GetInstance()}.CallSVC(inst_cream->num & 0xFFFF);
+        Kernel::SVCContext{Core::System::GetInstance()}.CallSVC(inst_cream->num & 0xFFFF);
         // The kernel would call ERET to get here, which clears exclusive memory state.
         cpu->UnsetExclusiveMemoryAddress();
     }
