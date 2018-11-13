@@ -75,7 +75,7 @@ struct PageTable {
 enum : PAddr {
     /// IO register area
     IO_AREA_PADDR = 0x10100000,
-    IO_AREA_SIZE = 0x01000000, ///< IO area size (16MB)
+    IO_AREA_SIZE = 0x00400000, ///< IO area size (4MB)
     IO_AREA_PADDR_END = IO_AREA_PADDR + IO_AREA_SIZE,
 
     /// MPCore internal memory region
