@@ -4,11 +4,11 @@
 
 #include <algorithm>
 #include <cctype>
-#include <cerrno>
 #include <codecvt>
-#include <cstdio>
 #include <cstdlib>
-#include <cstring>
+#include <iomanip>
+#include <locale>
+#include <sstream>
 #include "common/common_paths.h"
 #include "common/logging/log.h"
 #include "common/string_util.h"
@@ -69,40 +69,6 @@ std::string StripQuotes(const std::string& s) {
         return s.substr(1, s.size() - 2);
     else
         return s;
-}
-
-bool TryParse(const std::string& str, u32* const output) {
-    char* endptr = nullptr;
-
-    // Reset errno to a value other than ERANGE
-    errno = 0;
-
-    unsigned long value = strtoul(str.c_str(), &endptr, 0);
-
-    if (!endptr || *endptr)
-        return false;
-
-    if (errno == ERANGE)
-        return false;
-
-#if ULONG_MAX > UINT_MAX
-    if (value >= 0x100000000ull && value <= 0xFFFFFFFF00000000ull)
-        return false;
-#endif
-
-    *output = static_cast<u32>(value);
-    return true;
-}
-
-bool TryParse(const std::string& str, bool* const output) {
-    if ("1" == str || "true" == ToLower(str))
-        *output = true;
-    else if ("0" == str || "false" == ToLower(str))
-        *output = false;
-    else
-        return false;
-
-    return true;
 }
 
 std::string StringFromBool(bool value) {

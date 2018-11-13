@@ -5,8 +5,6 @@
 #pragma once
 
 #include <cstddef>
-#include <iomanip>
-#include <sstream>
 #include <string>
 #include <vector>
 #include "common/common_types.h"
@@ -25,21 +23,6 @@ std::string StripSpaces(const std::string& s);
 std::string StripQuotes(const std::string& s);
 
 std::string StringFromBool(bool value);
-
-bool TryParse(const std::string& str, bool* output);
-bool TryParse(const std::string& str, u32* output);
-
-template <typename N>
-static bool TryParse(const std::string& str, N* const output) {
-    std::istringstream iss(str);
-
-    N tmp = 0;
-    if (iss >> tmp) {
-        *output = tmp;
-        return true;
-    } else
-        return false;
-}
 
 std::string TabsToSpaces(int tab_size, std::string in);
 
