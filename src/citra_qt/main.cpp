@@ -344,8 +344,9 @@ void GMainWindow::InitializeHotkeys() {
     hotkey_registry.RegisterHotkey("Main Window", "Start Emulation");
     hotkey_registry.RegisterHotkey("Main Window", "Continue/Pause", QKeySequence(Qt::Key_F4));
     hotkey_registry.RegisterHotkey("Main Window", "Restart", QKeySequence(Qt::Key_F5));
-    hotkey_registry.RegisterHotkey("Main Window", "Swap Screens", QKeySequence(tr("F9")));
-    hotkey_registry.RegisterHotkey("Main Window", "Toggle Screen Layout", QKeySequence(tr("F10")));
+    hotkey_registry.RegisterHotkey("Main Window", "Swap Screens", QKeySequence(Qt::Key_F9));
+    hotkey_registry.RegisterHotkey("Main Window", "Toggle Screen Layout",
+                                   QKeySequence(Qt::Key_F10));
     hotkey_registry.RegisterHotkey("Main Window", "Fullscreen", QKeySequence::FullScreen);
     hotkey_registry.RegisterHotkey("Main Window", "Exit Fullscreen", QKeySequence(Qt::Key_Escape),
                                    Qt::ApplicationShortcut);
@@ -359,6 +360,11 @@ void GMainWindow::InitializeHotkeys() {
                                    Qt::ApplicationShortcut);
     hotkey_registry.RegisterHotkey("Main Window", "Advance Frame", QKeySequence(Qt::Key_Backslash),
                                    Qt::ApplicationShortcut);
+    hotkey_registry.RegisterHotkey("Main Window", "Load Amiibo", QKeySequence(Qt::Key_F2),
+                                   Qt::ApplicationShortcut);
+    hotkey_registry.RegisterHotkey("Main Window", "Remove Amiibo", QKeySequence(Qt::Key_F3),
+                                   Qt::ApplicationShortcut);
+
     hotkey_registry.LoadHotkeys();
 
     connect(hotkey_registry.GetHotkey("Main Window", "Load File", this), &QShortcut::activated,
@@ -420,6 +426,18 @@ void GMainWindow::InitializeHotkeys() {
             &QShortcut::activated, ui.action_Enable_Frame_Advancing, &QAction::trigger);
     connect(hotkey_registry.GetHotkey("Main Window", "Advance Frame", this), &QShortcut::activated,
             ui.action_Advance_Frame, &QAction::trigger);
+    connect(hotkey_registry.GetHotkey("Main Window", "Load Amiibo", this), &QShortcut::activated,
+            this, [&] {
+                if (ui.action_Load_Amiibo->isEnabled()) {
+                    OnLoadAmiibo();
+                }
+            });
+    connect(hotkey_registry.GetHotkey("Main Window", "Remove Amiibo", this), &QShortcut::activated,
+            this, [&] {
+                if (ui.action_Remove_Amiibo->isEnabled()) {
+                    OnRemoveAmiibo();
+                }
+            });
 }
 
 void GMainWindow::ShowUpdaterWidgets() {
@@ -1301,33 +1319,50 @@ void GMainWindow::OnLoadAmiibo() {
     const QString file_filter = tr("Amiibo File (%1);; All Files (*.*)").arg(extensions);
     const QString filename = QFileDialog::getOpenFileName(this, tr("Load Amiibo"), "", file_filter);
 
-    if (!filename.isEmpty()) {
-        Core::System& system{Core::System::GetInstance()};
-        Service::SM::ServiceManager& sm = system.ServiceManager();
-        auto nfc = sm.GetService<Service::NFC::Module::Interface>("nfc:u");
-        if (nfc != nullptr) {
-            Service::NFC::AmiiboData amiibo_data{};
-            auto nfc_file = FileUtil::IOFile(filename.toStdString(), "rb");
-            std::size_t read_length =
-                nfc_file.ReadBytes(&amiibo_data, sizeof(Service::NFC::AmiiboData));
-            if (read_length != sizeof(Service::NFC::AmiiboData)) {
-                LOG_ERROR(Frontend, "Amiibo file size is incorrect");
-                return;
-            }
-            nfc->LoadAmiibo(amiibo_data);
-            ui.action_Remove_Amiibo->setEnabled(true);
-        }
+    if (filename.isEmpty()) {
+        return;
     }
+
+    Core::System& system{Core::System::GetInstance()};
+    Service::SM::ServiceManager& sm = system.ServiceManager();
+    auto nfc = sm.GetService<Service::NFC::Module::Interface>("nfc:u");
+    if (nfc == nullptr) {
+        return;
+    }
+
+    QFile nfc_file{filename};
+    if (!nfc_file.open(QIODevice::ReadOnly)) {
+        QMessageBox::warning(this, tr("Error opening Amiibo data file"),
+                             tr("Unable to open Amiibo file \"%1\" for reading.").arg(filename));
+        return;
+    }
+
+    Service::NFC::AmiiboData amiibo_data{};
+    const u64 read_size =
+        nfc_file.read(reinterpret_cast<char*>(&amiibo_data), sizeof(Service::NFC::AmiiboData));
+    if (read_size != sizeof(Service::NFC::AmiiboData)) {
+        QMessageBox::warning(this, tr("Error reading Amiibo data file"),
+                             tr("Unable to fully read Amiibo data. Expected to read %1 bytes, but "
+                                "was only able to read %2 bytes.")
+                                 .arg(sizeof(Service::NFC::AmiiboData))
+                                 .arg(read_size));
+        return;
+    }
+
+    nfc->LoadAmiibo(amiibo_data);
+    ui.action_Remove_Amiibo->setEnabled(true);
 }
 
 void GMainWindow::OnRemoveAmiibo() {
     Core::System& system{Core::System::GetInstance()};
     Service::SM::ServiceManager& sm = system.ServiceManager();
     auto nfc = sm.GetService<Service::NFC::Module::Interface>("nfc:u");
-    if (nfc != nullptr) {
-        nfc->RemoveAmiibo();
-        ui.action_Remove_Amiibo->setEnabled(false);
+    if (nfc == nullptr) {
+        return;
     }
+
+    nfc->RemoveAmiibo();
+    ui.action_Remove_Amiibo->setEnabled(false);
 }
 
 void GMainWindow::OnToggleFilterBar() {
