@@ -294,12 +294,6 @@ public:
     ExHeader_Header exheader_header;
 
 private:
-    /**
-     * Attempts to patch a buffer using an IPS
-     * @param ips Vector of the patches to apply
-     * @param buffer Vector to patch data into
-     */
-    static void ApplyIPS(std::vector<u8>& ips, std::vector<u8>& buffer);
     bool has_header = false;
     bool has_exheader = false;
     bool has_exefs = false;
