@@ -7,16 +7,16 @@
 #include <vector>
 #include "common/assert.h"
 #include "core/hle/kernel/event.h"
-#include "core/hle/kernel/object.h"
+#include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/thread.h"
 
 namespace Kernel {
 
-Event::Event() {}
+Event::Event(KernelSystem& kernel) : WaitObject(kernel) {}
 Event::~Event() {}
 
-SharedPtr<Event> Event::Create(ResetType reset_type, std::string name) {
-    SharedPtr<Event> evt(new Event);
+SharedPtr<Event> KernelSystem::CreateEvent(ResetType reset_type, std::string name) {
+    SharedPtr<Event> evt(new Event(*this));
 
     evt->signaled = false;
     evt->reset_type = reset_type;

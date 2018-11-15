@@ -258,7 +258,7 @@ ResultVal<AppletManager::InitializeResult> AppletManager::Initialize(AppletId ap
     slot_data->applet_id = static_cast<AppletId>(app_id);
     // Note: In the real console the title id of a given applet slot is set by the APT module when
     // calling StartApplication.
-    slot_data->title_id = Kernel::g_current_process->codeset->program_id;
+    slot_data->title_id = system.Kernel().GetCurrentProcess()->codeset->program_id;
     slot_data->attributes.raw = attributes.raw;
 
     if (slot_data->applet_id == AppletId::Application ||
@@ -572,9 +572,9 @@ AppletManager::AppletManager(Core::System& system) : system(system) {
         slot_data.registered = false;
         slot_data.loaded = false;
         slot_data.notification_event =
-            Kernel::Event::Create(Kernel::ResetType::OneShot, "APT:Notification");
+            system.Kernel().CreateEvent(Kernel::ResetType::OneShot, "APT:Notification");
         slot_data.parameter_event =
-            Kernel::Event::Create(Kernel::ResetType::OneShot, "APT:Parameter");
+            system.Kernel().CreateEvent(Kernel::ResetType::OneShot, "APT:Parameter");
     }
     HLE::Applets::Init();
 }

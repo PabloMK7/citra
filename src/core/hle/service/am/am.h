@@ -149,7 +149,7 @@ std::string GetMediaTitlePath(Service::FS::MediaType media_type);
 
 class Module final {
 public:
-    Module();
+    explicit Module(Core::System& system);
     ~Module();
 
     class Interface : public ServiceFramework<Interface> {
@@ -573,6 +573,7 @@ private:
      */
     void ScanForAllTitles();
 
+    Core::System& system;
     bool cia_installing = false;
     std::array<std::vector<u64_le>, 3> am_title_list;
     Kernel::SharedPtr<Kernel::Mutex> system_updater_mutex;

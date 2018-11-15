@@ -23,15 +23,17 @@ NFC_U::NFC_U(std::shared_ptr<Module> nfc) : Module::Interface(std::move(nfc), "n
         {0x000D0000, &NFC_U::GetTagState, "GetTagState"},
         {0x000F0000, &NFC_U::CommunicationGetStatus, "CommunicationGetStatus"},
         {0x00100000, nullptr, "GetTagInfo2"},
-        {0x00110000, nullptr, "GetTagInfo"},
+        {0x00110000, &NFC_U::GetTagInfo, "GetTagInfo"},
         {0x00120000, nullptr, "CommunicationGetResult"},
         {0x00130040, nullptr, "OpenAppData"},
         {0x00140384, nullptr, "InitializeWriteAppData"},
         {0x00150040, nullptr, "ReadAppData"},
         {0x00160242, nullptr, "WriteAppData"},
         {0x00170000, nullptr, "GetAmiiboSettings"},
-        {0x00180000, nullptr, "GetAmiiboConfig"},
+        {0x00180000, &NFC_U::GetAmiiboConfig, "GetAmiiboConfig"},
         {0x00190000, nullptr, "GetAppDataInitStruct"},
+        {0x001A0000, &NFC_U::Unknown0x1A, "Unknown0x1A"},
+        {0x001B0000, &NFC_U::GetIdentificationBlock, "GetIdentificationBlock"},
         // clang-format on
     };
     RegisterHandlers(functions);

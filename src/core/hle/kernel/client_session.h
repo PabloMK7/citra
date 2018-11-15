@@ -12,13 +12,12 @@
 
 namespace Kernel {
 
-class ServerSession;
 class Session;
 class Thread;
 
 class ClientSession final : public Object {
 public:
-    friend class ServerSession;
+    friend class KernelSystem;
 
     std::string GetTypeName() const override {
         return "ClientSession";
@@ -46,7 +45,7 @@ public:
     std::shared_ptr<Session> parent;
 
 private:
-    ClientSession();
+    explicit ClientSession(KernelSystem& kernel);
     ~ClientSession() override;
 };
 

@@ -16,14 +16,6 @@ class Thread;
 
 class Mutex final : public WaitObject {
 public:
-    /**
-     * Creates a mutex.
-     * @param initial_locked Specifies if the mutex should be locked initially
-     * @param name Optional name of mutex
-     * @return Pointer to new Mutex object
-     */
-    static SharedPtr<Mutex> Create(bool initial_locked, std::string name = "Unknown");
-
     std::string GetTypeName() const override {
         return "Mutex";
     }
@@ -61,8 +53,10 @@ public:
     ResultCode Release(Thread* thread);
 
 private:
-    Mutex();
+    explicit Mutex(KernelSystem& kernel);
     ~Mutex() override;
+
+    friend class KernelSystem;
 };
 
 /**

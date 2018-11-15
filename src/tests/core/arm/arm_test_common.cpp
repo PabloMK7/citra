@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include "core/core.h"
+#include "core/core_timing.h"
 #include "core/hle/kernel/process.h"
 #include "core/memory.h"
 #include "core/memory_setup.h"
@@ -15,8 +16,15 @@ static Memory::PageTable* page_table = nullptr;
 TestEnvironment::TestEnvironment(bool mutable_memory_)
     : mutable_memory(mutable_memory_), test_memory(std::make_shared<TestMemory>(this)) {
 
-    Kernel::g_current_process = Kernel::Process::Create(Kernel::CodeSet::Create("", 0));
-    page_table = &Kernel::g_current_process->vm_manager.page_table;
+    // HACK: some memory functions are currently referring kernel from the global instance,
+    //       so we need to create the kernel object there.
+    //       Change this when all global states are eliminated.
+    Core::System::GetInstance().timing = std::make_unique<Core::Timing>();
+    Core::System::GetInstance().kernel = std::make_unique<Kernel::KernelSystem>(0);
+    kernel = Core::System::GetInstance().kernel.get();
+
+    kernel->SetCurrentProcess(kernel->CreateProcess(kernel->CreateCodeSet("", 0)));
+    page_table = &kernel->GetCurrentProcess()->vm_manager.page_table;
 
     page_table->pointers.fill(nullptr);
     page_table->attributes.fill(Memory::PageType::Unmapped);

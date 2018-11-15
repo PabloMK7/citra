@@ -27,8 +27,8 @@ class Event;
 class SharedMemory;
 } // namespace Kernel
 
-namespace CoreTiming {
-struct EventType;
+namespace Core {
+struct TimingEventType;
 };
 
 namespace Service::HID {
@@ -325,9 +325,9 @@ private:
     int enable_accelerometer_count = 0; // positive means enabled
     int enable_gyroscope_count = 0;     // positive means enabled
 
-    CoreTiming::EventType* pad_update_event;
-    CoreTiming::EventType* accelerometer_update_event;
-    CoreTiming::EventType* gyroscope_update_event;
+    Core::TimingEventType* pad_update_event;
+    Core::TimingEventType* accelerometer_update_event;
+    Core::TimingEventType* gyroscope_update_event;
 
     std::atomic<bool> is_device_reload_pending{true};
     std::array<std::unique_ptr<Input::ButtonDevice>, Settings::NativeButton::NUM_BUTTONS_HID>

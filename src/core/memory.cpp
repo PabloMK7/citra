@@ -23,6 +23,7 @@ namespace Memory {
 
 static std::array<u8, Memory::VRAM_SIZE> vram;
 static std::array<u8, Memory::N3DS_EXTRA_RAM_SIZE> n3ds_extra_ram;
+std::array<u8, Memory::FCRAM_N3DS_SIZE> fcram;
 
 static PageTable* current_page_table = nullptr;
 
@@ -111,7 +112,7 @@ static u8* GetPointerFromVMA(const Kernel::Process& process, VAddr vaddr) {
  * using a VMA from the current process.
  */
 static u8* GetPointerFromVMA(VAddr vaddr) {
-    return GetPointerFromVMA(*Kernel::g_current_process, vaddr);
+    return GetPointerFromVMA(*Core::System::GetInstance().Kernel().GetCurrentProcess(), vaddr);
 }
 
 /**
@@ -128,7 +129,8 @@ static MMIORegionPointer GetMMIOHandler(const PageTable& page_table, VAddr vaddr
 }
 
 static MMIORegionPointer GetMMIOHandler(VAddr vaddr) {
-    const PageTable& page_table = Kernel::g_current_process->vm_manager.page_table;
+    const PageTable& page_table =
+        Core::System::GetInstance().Kernel().GetCurrentProcess()->vm_manager.page_table;
     return GetMMIOHandler(page_table, vaddr);
 }
 
@@ -229,7 +231,7 @@ bool IsValidVirtualAddress(const Kernel::Process& process, const VAddr vaddr) {
 }
 
 bool IsValidVirtualAddress(const VAddr vaddr) {
-    return IsValidVirtualAddress(*Kernel::g_current_process, vaddr);
+    return IsValidVirtualAddress(*Core::System::GetInstance().Kernel().GetCurrentProcess(), vaddr);
 }
 
 bool IsValidPhysicalAddress(const PAddr paddr) {
@@ -304,15 +306,7 @@ u8* GetPhysicalPointer(PAddr address) {
         target_pointer = Core::DSP().GetDspMemory().data() + offset_into_region;
         break;
     case FCRAM_PADDR:
-        for (const auto& region : Kernel::memory_regions) {
-            if (offset_into_region >= region.base &&
-                offset_into_region < region.base + region.size) {
-                target_pointer =
-                    region.linear_heap_memory->data() + offset_into_region - region.base;
-                break;
-            }
-        }
-        ASSERT_MSG(target_pointer != nullptr, "Invalid FCRAM address");
+        target_pointer = fcram.data() + offset_into_region;
         break;
     case N3DS_EXTRA_RAM_PADDR:
         target_pointer = n3ds_extra_ram.data() + offset_into_region;
@@ -324,6 +318,25 @@ u8* GetPhysicalPointer(PAddr address) {
     return target_pointer;
 }
 
+/// For a rasterizer-accessible PAddr, gets a list of all possible VAddr
+static std::vector<VAddr> PhysicalToVirtualAddressForRasterizer(PAddr addr) {
+    if (addr >= VRAM_PADDR && addr < VRAM_PADDR_END) {
+        return {addr - VRAM_PADDR + VRAM_VADDR};
+    }
+    if (addr >= FCRAM_PADDR && addr < FCRAM_PADDR_END) {
+        return {addr - FCRAM_PADDR + LINEAR_HEAP_VADDR, addr - FCRAM_PADDR + NEW_LINEAR_HEAP_VADDR};
+    }
+    if (addr >= FCRAM_PADDR_END && addr < FCRAM_N3DS_PADDR_END) {
+        return {addr - FCRAM_PADDR + NEW_LINEAR_HEAP_VADDR};
+    }
+    // While the physical <-> virtual mapping is 1:1 for the regions supported by the cache,
+    // some games (like Pokemon Super Mystery Dungeon) will try to use textures that go beyond
+    // the end address of VRAM, causing the Virtual->Physical translation to fail when flushing
+    // parts of the texture.
+    LOG_ERROR(HW_Memory, "Trying to use invalid physical address for rasterizer: {:08X}", addr);
+    return {};
+}
+
 void RasterizerMarkRegionCached(PAddr start, u32 size, bool cached) {
     if (start == 0) {
         return;
@@ -333,57 +346,46 @@ void RasterizerMarkRegionCached(PAddr start, u32 size, bool cached) {
     PAddr paddr = start;
 
     for (unsigned i = 0; i < num_pages; ++i, paddr += PAGE_SIZE) {
-        std::optional<VAddr> maybe_vaddr = PhysicalToVirtualAddress(paddr);
-        // While the physical <-> virtual mapping is 1:1 for the regions supported by the cache,
-        // some games (like Pokemon Super Mystery Dungeon) will try to use textures that go beyond
-        // the end address of VRAM, causing the Virtual->Physical translation to fail when flushing
-        // parts of the texture.
-        if (!maybe_vaddr) {
-            LOG_ERROR(HW_Memory,
-                      "Trying to flush a cached region to an invalid physical address {:08X}",
-                      paddr);
-            continue;
-        }
-        VAddr vaddr = *maybe_vaddr;
+        for (VAddr vaddr : PhysicalToVirtualAddressForRasterizer(paddr)) {
+            PageType& page_type = current_page_table->attributes[vaddr >> PAGE_BITS];
 
-        PageType& page_type = current_page_table->attributes[vaddr >> PAGE_BITS];
-
-        if (cached) {
-            // Switch page type to cached if now cached
-            switch (page_type) {
-            case PageType::Unmapped:
-                // It is not necessary for a process to have this region mapped into its address
-                // space, for example, a system module need not have a VRAM mapping.
-                break;
-            case PageType::Memory:
-                page_type = PageType::RasterizerCachedMemory;
-                current_page_table->pointers[vaddr >> PAGE_BITS] = nullptr;
-                break;
-            default:
-                UNREACHABLE();
-            }
-        } else {
-            // Switch page type to uncached if now uncached
-            switch (page_type) {
-            case PageType::Unmapped:
-                // It is not necessary for a process to have this region mapped into its address
-                // space, for example, a system module need not have a VRAM mapping.
-                break;
-            case PageType::RasterizerCachedMemory: {
-                u8* pointer = GetPointerFromVMA(vaddr & ~PAGE_MASK);
-                if (pointer == nullptr) {
-                    // It's possible that this function has been called while updating the pagetable
-                    // after unmapping a VMA. In that case the underlying VMA will no longer exist,
-                    // and we should just leave the pagetable entry blank.
-                    page_type = PageType::Unmapped;
-                } else {
-                    page_type = PageType::Memory;
-                    current_page_table->pointers[vaddr >> PAGE_BITS] = pointer;
+            if (cached) {
+                // Switch page type to cached if now cached
+                switch (page_type) {
+                case PageType::Unmapped:
+                    // It is not necessary for a process to have this region mapped into its address
+                    // space, for example, a system module need not have a VRAM mapping.
+                    break;
+                case PageType::Memory:
+                    page_type = PageType::RasterizerCachedMemory;
+                    current_page_table->pointers[vaddr >> PAGE_BITS] = nullptr;
+                    break;
+                default:
+                    UNREACHABLE();
                 }
-                break;
-            }
-            default:
-                UNREACHABLE();
+            } else {
+                // Switch page type to uncached if now uncached
+                switch (page_type) {
+                case PageType::Unmapped:
+                    // It is not necessary for a process to have this region mapped into its address
+                    // space, for example, a system module need not have a VRAM mapping.
+                    break;
+                case PageType::RasterizerCachedMemory: {
+                    u8* pointer = GetPointerFromVMA(vaddr & ~PAGE_MASK);
+                    if (pointer == nullptr) {
+                        // It's possible that this function has been called while updating the
+                        // pagetable after unmapping a VMA. In that case the underlying VMA will no
+                        // longer exist, and we should just leave the pagetable entry blank.
+                        page_type = PageType::Unmapped;
+                    } else {
+                        page_type = PageType::Memory;
+                        current_page_table->pointers[vaddr >> PAGE_BITS] = pointer;
+                    }
+                    break;
+                }
+                default:
+                    UNREACHABLE();
+                }
             }
         }
     }
@@ -524,7 +526,8 @@ void ReadBlock(const Kernel::Process& process, const VAddr src_addr, void* dest_
 }
 
 void ReadBlock(const VAddr src_addr, void* dest_buffer, const std::size_t size) {
-    ReadBlock(*Kernel::g_current_process, src_addr, dest_buffer, size);
+    ReadBlock(*Core::System::GetInstance().Kernel().GetCurrentProcess(), src_addr, dest_buffer,
+              size);
 }
 
 void Write8(const VAddr addr, const u8 data) {
@@ -592,7 +595,8 @@ void WriteBlock(const Kernel::Process& process, const VAddr dest_addr, const voi
 }
 
 void WriteBlock(const VAddr dest_addr, const void* src_buffer, const std::size_t size) {
-    WriteBlock(*Kernel::g_current_process, dest_addr, src_buffer, size);
+    WriteBlock(*Core::System::GetInstance().Kernel().GetCurrentProcess(), dest_addr, src_buffer,
+               size);
 }
 
 void ZeroBlock(const Kernel::Process& process, const VAddr dest_addr, const std::size_t size) {
@@ -644,7 +648,7 @@ void ZeroBlock(const Kernel::Process& process, const VAddr dest_addr, const std:
 }
 
 void ZeroBlock(const VAddr dest_addr, const std::size_t size) {
-    ZeroBlock(*Kernel::g_current_process, dest_addr, size);
+    ZeroBlock(*Core::System::GetInstance().Kernel().GetCurrentProcess(), dest_addr, size);
 }
 
 void CopyBlock(const Kernel::Process& process, VAddr dest_addr, VAddr src_addr,
@@ -699,7 +703,59 @@ void CopyBlock(const Kernel::Process& process, VAddr dest_addr, VAddr src_addr,
 }
 
 void CopyBlock(VAddr dest_addr, VAddr src_addr, const std::size_t size) {
-    CopyBlock(*Kernel::g_current_process, dest_addr, src_addr, size);
+    CopyBlock(*Core::System::GetInstance().Kernel().GetCurrentProcess(), dest_addr, src_addr, size);
+}
+
+void CopyBlock(const Kernel::Process& src_process, const Kernel::Process& dest_process,
+               VAddr src_addr, VAddr dest_addr, std::size_t size) {
+    auto& page_table = src_process.vm_manager.page_table;
+    std::size_t remaining_size = size;
+    std::size_t page_index = src_addr >> PAGE_BITS;
+    std::size_t page_offset = src_addr & PAGE_MASK;
+
+    while (remaining_size > 0) {
+        const std::size_t copy_amount = std::min(PAGE_SIZE - page_offset, remaining_size);
+        const VAddr current_vaddr = static_cast<VAddr>((page_index << PAGE_BITS) + page_offset);
+
+        switch (page_table.attributes[page_index]) {
+        case PageType::Unmapped: {
+            LOG_ERROR(HW_Memory,
+                      "unmapped CopyBlock @ 0x{:08X} (start address = 0x{:08X}, size = {})",
+                      current_vaddr, src_addr, size);
+            ZeroBlock(dest_process, dest_addr, copy_amount);
+            break;
+        }
+        case PageType::Memory: {
+            DEBUG_ASSERT(page_table.pointers[page_index]);
+            const u8* src_ptr = page_table.pointers[page_index] + page_offset;
+            WriteBlock(dest_process, dest_addr, src_ptr, copy_amount);
+            break;
+        }
+        case PageType::Special: {
+            MMIORegionPointer handler = GetMMIOHandler(page_table, current_vaddr);
+            DEBUG_ASSERT(handler);
+            std::vector<u8> buffer(copy_amount);
+            handler->ReadBlock(current_vaddr, buffer.data(), buffer.size());
+            WriteBlock(dest_process, dest_addr, buffer.data(), buffer.size());
+            break;
+        }
+        case PageType::RasterizerCachedMemory: {
+            RasterizerFlushVirtualRegion(current_vaddr, static_cast<u32>(copy_amount),
+                                         FlushMode::Flush);
+            WriteBlock(dest_process, dest_addr, GetPointerFromVMA(src_process, current_vaddr),
+                       copy_amount);
+            break;
+        }
+        default:
+            UNREACHABLE();
+        }
+
+        page_index++;
+        page_offset = 0;
+        dest_addr += static_cast<VAddr>(copy_amount);
+        src_addr += static_cast<VAddr>(copy_amount);
+        remaining_size -= copy_amount;
+    }
 }
 
 template <>
@@ -772,22 +828,9 @@ PAddr VirtualToPhysicalAddress(const VAddr addr) {
     return *paddr;
 }
 
-std::optional<VAddr> PhysicalToVirtualAddress(const PAddr addr) {
-    if (addr == 0) {
-        return 0;
-    } else if (addr >= VRAM_PADDR && addr < VRAM_PADDR_END) {
-        return addr - VRAM_PADDR + VRAM_VADDR;
-    } else if (addr >= FCRAM_PADDR && addr < FCRAM_PADDR_END) {
-        return addr - FCRAM_PADDR + Kernel::g_current_process->GetLinearHeapAreaAddress();
-    } else if (addr >= DSP_RAM_PADDR && addr < DSP_RAM_PADDR_END) {
-        return addr - DSP_RAM_PADDR + DSP_RAM_VADDR;
-    } else if (addr >= IO_AREA_PADDR && addr < IO_AREA_PADDR_END) {
-        return addr - IO_AREA_PADDR + IO_AREA_VADDR;
-    } else if (addr >= N3DS_EXTRA_RAM_PADDR && addr < N3DS_EXTRA_RAM_PADDR_END) {
-        return addr - N3DS_EXTRA_RAM_PADDR + N3DS_EXTRA_RAM_VADDR;
-    }
-
-    return {};
+u32 GetFCRAMOffset(u8* pointer) {
+    ASSERT(pointer >= fcram.data() && pointer < fcram.data() + fcram.size());
+    return pointer - fcram.data();
 }
 
 } // namespace Memory

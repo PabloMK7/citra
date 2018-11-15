@@ -17,7 +17,7 @@ class ArchiveManager;
 
 class FS_USER final : public ServiceFramework<FS_USER> {
 public:
-    explicit FS_USER(ArchiveManager& archives);
+    explicit FS_USER(Core::System& system);
 
 private:
     void Initialize(Kernel::HLERequestContext& ctx);
@@ -534,6 +534,7 @@ private:
 
     u32 priority = -1; ///< For SetPriority and GetPriority service functions
 
+    Core::System& system;
     ArchiveManager& archives;
 };
 

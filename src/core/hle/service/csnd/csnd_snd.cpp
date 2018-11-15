@@ -19,10 +19,10 @@ void CSND_SND::Initialize(Kernel::HLERequestContext& ctx) {
     const u32 offset3 = rp.Pop<u32>();
 
     using Kernel::MemoryPermission;
-    mutex = Kernel::Mutex::Create(false, "CSND:mutex");
-    shared_memory = Kernel::SharedMemory::Create(nullptr, size, MemoryPermission::ReadWrite,
-                                                 MemoryPermission::ReadWrite, 0,
-                                                 Kernel::MemoryRegion::BASE, "CSND:SharedMemory");
+    mutex = system.Kernel().CreateMutex(false, "CSND:mutex");
+    shared_memory = system.Kernel().CreateSharedMemory(
+        nullptr, size, MemoryPermission::ReadWrite, MemoryPermission::ReadWrite, 0,
+        Kernel::MemoryRegion::BASE, "CSND:SharedMemory");
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 3);
     rb.Push(RESULT_SUCCESS);
@@ -173,7 +173,7 @@ void CSND_SND::Reset(Kernel::HLERequestContext& ctx) {
     LOG_WARNING(Service_CSND, "(STUBBED) called");
 }
 
-CSND_SND::CSND_SND() : ServiceFramework("csnd:SND", 4) {
+CSND_SND::CSND_SND(Core::System& system) : ServiceFramework("csnd:SND", 4), system(system) {
     static const FunctionInfo functions[] = {
         // clang-format off
         {0x00010140, &CSND_SND::Initialize, "Initialize"},
@@ -196,7 +196,7 @@ CSND_SND::CSND_SND() : ServiceFramework("csnd:SND", 4) {
 
 void InstallInterfaces(Core::System& system) {
     auto& service_manager = system.ServiceManager();
-    std::make_shared<CSND_SND>()->InstallAsService(service_manager);
+    std::make_shared<CSND_SND>(system)->InstallAsService(service_manager);
 }
 
 } // namespace Service::CSND

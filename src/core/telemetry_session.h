@@ -5,6 +5,7 @@
 #pragma once
 
 #include <memory>
+#include <string>
 #include "common/telemetry.h"
 
 namespace Core {
@@ -30,7 +31,11 @@ public:
         field_collection.AddField(type, name, std::move(value));
     }
 
-    static void FinalizeAsyncJob();
+    /**
+     * Submits a Testcase.
+     * @returns A bool indicating whether the submission succeeded
+     */
+    bool SubmitTestcase();
 
 private:
     Telemetry::FieldCollection field_collection; ///< Tracks all added fields for the session
@@ -53,7 +58,6 @@ u64 RegenerateTelemetryId();
  * Verifies the username and token.
  * @param username Citra username to use for authentication.
  * @param token Citra token to use for authentication.
- * @param func A function that gets exectued when the verification is finished
  * @returns Future with bool indicating whether the verification succeeded
  */
 bool VerifyLogin(const std::string& username, const std::string& token);

@@ -71,7 +71,8 @@ private:
 
 class DynarmicUserCallbacks final : public Dynarmic::A32::UserCallbacks {
 public:
-    explicit DynarmicUserCallbacks(ARM_Dynarmic& parent) : parent(parent) {}
+    explicit DynarmicUserCallbacks(ARM_Dynarmic& parent)
+        : parent(parent), timing(parent.system.CoreTiming()) {}
     ~DynarmicUserCallbacks() = default;
 
     std::uint8_t MemoryRead8(VAddr vaddr) override {
@@ -134,7 +135,8 @@ public:
             if (GDBStub::IsConnected()) {
                 parent.jit->HaltExecution();
                 parent.SetPC(pc);
-                Kernel::Thread* thread = Kernel::GetCurrentThread();
+                Kernel::Thread* thread =
+                    Core::System::GetInstance().Kernel().GetThreadManager().GetCurrentThread();
                 parent.SaveContext(thread->context);
                 GDBStub::Break();
                 GDBStub::SendTrap(thread, 5);
@@ -147,18 +149,19 @@ public:
     }
 
     void AddTicks(std::uint64_t ticks) override {
-        CoreTiming::AddTicks(ticks);
+        timing.AddTicks(ticks);
     }
     std::uint64_t GetTicksRemaining() override {
-        s64 ticks = CoreTiming::GetDowncount();
+        s64 ticks = timing.GetDowncount();
         return static_cast<u64>(ticks <= 0 ? 0 : ticks);
     }
 
     ARM_Dynarmic& parent;
+    Core::Timing& timing;
 };
 
-ARM_Dynarmic::ARM_Dynarmic(PrivilegeMode initial_mode)
-    : cb(std::make_unique<DynarmicUserCallbacks>(*this)) {
+ARM_Dynarmic::ARM_Dynarmic(Core::System& system, PrivilegeMode initial_mode)
+    : system(system), cb(std::make_unique<DynarmicUserCallbacks>(*this)) {
     interpreter_state = std::make_shared<ARMul_State>(initial_mode);
     PageTableChanged();
 }

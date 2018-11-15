@@ -28,100 +28,90 @@ void CallbackTemplate(u64 userdata, s64 cycles_late) {
     REQUIRE(lateness == cycles_late);
 }
 
-class ScopeInit final {
-public:
-    ScopeInit() {
-        CoreTiming::Init();
-    }
-    ~ScopeInit() {
-        CoreTiming::Shutdown();
-    }
-};
-
-static void AdvanceAndCheck(u32 idx, int downcount, int expected_lateness = 0,
+static void AdvanceAndCheck(Core::Timing& timing, u32 idx, int downcount, int expected_lateness = 0,
                             int cpu_downcount = 0) {
     callbacks_ran_flags = 0;
     expected_callback = CB_IDS[idx];
     lateness = expected_lateness;
 
-    CoreTiming::AddTicks(CoreTiming::GetDowncount() -
-                         cpu_downcount); // Pretend we executed X cycles of instructions.
-    CoreTiming::Advance();
+    timing.AddTicks(timing.GetDowncount() -
+                    cpu_downcount); // Pretend we executed X cycles of instructions.
+    timing.Advance();
 
     REQUIRE(decltype(callbacks_ran_flags)().set(idx) == callbacks_ran_flags);
-    REQUIRE(downcount == CoreTiming::GetDowncount());
+    REQUIRE(downcount == timing.GetDowncount());
 }
 
 TEST_CASE("CoreTiming[BasicOrder]", "[core]") {
-    ScopeInit guard;
+    Core::Timing timing;
 
-    CoreTiming::EventType* cb_a = CoreTiming::RegisterEvent("callbackA", CallbackTemplate<0>);
-    CoreTiming::EventType* cb_b = CoreTiming::RegisterEvent("callbackB", CallbackTemplate<1>);
-    CoreTiming::EventType* cb_c = CoreTiming::RegisterEvent("callbackC", CallbackTemplate<2>);
-    CoreTiming::EventType* cb_d = CoreTiming::RegisterEvent("callbackD", CallbackTemplate<3>);
-    CoreTiming::EventType* cb_e = CoreTiming::RegisterEvent("callbackE", CallbackTemplate<4>);
+    Core::TimingEventType* cb_a = timing.RegisterEvent("callbackA", CallbackTemplate<0>);
+    Core::TimingEventType* cb_b = timing.RegisterEvent("callbackB", CallbackTemplate<1>);
+    Core::TimingEventType* cb_c = timing.RegisterEvent("callbackC", CallbackTemplate<2>);
+    Core::TimingEventType* cb_d = timing.RegisterEvent("callbackD", CallbackTemplate<3>);
+    Core::TimingEventType* cb_e = timing.RegisterEvent("callbackE", CallbackTemplate<4>);
 
     // Enter slice 0
-    CoreTiming::Advance();
+    timing.Advance();
 
     // D -> B -> C -> A -> E
-    CoreTiming::ScheduleEvent(1000, cb_a, CB_IDS[0]);
-    REQUIRE(1000 == CoreTiming::GetDowncount());
-    CoreTiming::ScheduleEvent(500, cb_b, CB_IDS[1]);
-    REQUIRE(500 == CoreTiming::GetDowncount());
-    CoreTiming::ScheduleEvent(800, cb_c, CB_IDS[2]);
-    REQUIRE(500 == CoreTiming::GetDowncount());
-    CoreTiming::ScheduleEvent(100, cb_d, CB_IDS[3]);
-    REQUIRE(100 == CoreTiming::GetDowncount());
-    CoreTiming::ScheduleEvent(1200, cb_e, CB_IDS[4]);
-    REQUIRE(100 == CoreTiming::GetDowncount());
+    timing.ScheduleEvent(1000, cb_a, CB_IDS[0]);
+    REQUIRE(1000 == timing.GetDowncount());
+    timing.ScheduleEvent(500, cb_b, CB_IDS[1]);
+    REQUIRE(500 == timing.GetDowncount());
+    timing.ScheduleEvent(800, cb_c, CB_IDS[2]);
+    REQUIRE(500 == timing.GetDowncount());
+    timing.ScheduleEvent(100, cb_d, CB_IDS[3]);
+    REQUIRE(100 == timing.GetDowncount());
+    timing.ScheduleEvent(1200, cb_e, CB_IDS[4]);
+    REQUIRE(100 == timing.GetDowncount());
 
-    AdvanceAndCheck(3, 400);
-    AdvanceAndCheck(1, 300);
-    AdvanceAndCheck(2, 200);
-    AdvanceAndCheck(0, 200);
-    AdvanceAndCheck(4, MAX_SLICE_LENGTH);
+    AdvanceAndCheck(timing, 3, 400);
+    AdvanceAndCheck(timing, 1, 300);
+    AdvanceAndCheck(timing, 2, 200);
+    AdvanceAndCheck(timing, 0, 200);
+    AdvanceAndCheck(timing, 4, MAX_SLICE_LENGTH);
 }
 
 TEST_CASE("CoreTiming[Threadsave]", "[core]") {
-    ScopeInit guard;
+    Core::Timing timing;
 
-    CoreTiming::EventType* cb_a = CoreTiming::RegisterEvent("callbackA", CallbackTemplate<0>);
-    CoreTiming::EventType* cb_b = CoreTiming::RegisterEvent("callbackB", CallbackTemplate<1>);
-    CoreTiming::EventType* cb_c = CoreTiming::RegisterEvent("callbackC", CallbackTemplate<2>);
-    CoreTiming::EventType* cb_d = CoreTiming::RegisterEvent("callbackD", CallbackTemplate<3>);
-    CoreTiming::EventType* cb_e = CoreTiming::RegisterEvent("callbackE", CallbackTemplate<4>);
+    Core::TimingEventType* cb_a = timing.RegisterEvent("callbackA", CallbackTemplate<0>);
+    Core::TimingEventType* cb_b = timing.RegisterEvent("callbackB", CallbackTemplate<1>);
+    Core::TimingEventType* cb_c = timing.RegisterEvent("callbackC", CallbackTemplate<2>);
+    Core::TimingEventType* cb_d = timing.RegisterEvent("callbackD", CallbackTemplate<3>);
+    Core::TimingEventType* cb_e = timing.RegisterEvent("callbackE", CallbackTemplate<4>);
 
     // Enter slice 0
-    CoreTiming::Advance();
+    timing.Advance();
 
     // D -> B -> C -> A -> E
-    CoreTiming::ScheduleEventThreadsafe(1000, cb_a, CB_IDS[0]);
+    timing.ScheduleEventThreadsafe(1000, cb_a, CB_IDS[0]);
     // Manually force since ScheduleEventThreadsafe doesn't call it
-    CoreTiming::ForceExceptionCheck(1000);
-    REQUIRE(1000 == CoreTiming::GetDowncount());
-    CoreTiming::ScheduleEventThreadsafe(500, cb_b, CB_IDS[1]);
+    timing.ForceExceptionCheck(1000);
+    REQUIRE(1000 == timing.GetDowncount());
+    timing.ScheduleEventThreadsafe(500, cb_b, CB_IDS[1]);
     // Manually force since ScheduleEventThreadsafe doesn't call it
-    CoreTiming::ForceExceptionCheck(500);
-    REQUIRE(500 == CoreTiming::GetDowncount());
-    CoreTiming::ScheduleEventThreadsafe(800, cb_c, CB_IDS[2]);
+    timing.ForceExceptionCheck(500);
+    REQUIRE(500 == timing.GetDowncount());
+    timing.ScheduleEventThreadsafe(800, cb_c, CB_IDS[2]);
     // Manually force since ScheduleEventThreadsafe doesn't call it
-    CoreTiming::ForceExceptionCheck(800);
-    REQUIRE(500 == CoreTiming::GetDowncount());
-    CoreTiming::ScheduleEventThreadsafe(100, cb_d, CB_IDS[3]);
+    timing.ForceExceptionCheck(800);
+    REQUIRE(500 == timing.GetDowncount());
+    timing.ScheduleEventThreadsafe(100, cb_d, CB_IDS[3]);
     // Manually force since ScheduleEventThreadsafe doesn't call it
-    CoreTiming::ForceExceptionCheck(100);
-    REQUIRE(100 == CoreTiming::GetDowncount());
-    CoreTiming::ScheduleEventThreadsafe(1200, cb_e, CB_IDS[4]);
+    timing.ForceExceptionCheck(100);
+    REQUIRE(100 == timing.GetDowncount());
+    timing.ScheduleEventThreadsafe(1200, cb_e, CB_IDS[4]);
     // Manually force since ScheduleEventThreadsafe doesn't call it
-    CoreTiming::ForceExceptionCheck(1200);
-    REQUIRE(100 == CoreTiming::GetDowncount());
+    timing.ForceExceptionCheck(1200);
+    REQUIRE(100 == timing.GetDowncount());
 
-    AdvanceAndCheck(3, 400);
-    AdvanceAndCheck(1, 300);
-    AdvanceAndCheck(2, 200);
-    AdvanceAndCheck(0, 200);
-    AdvanceAndCheck(4, MAX_SLICE_LENGTH);
+    AdvanceAndCheck(timing, 3, 400);
+    AdvanceAndCheck(timing, 1, 300);
+    AdvanceAndCheck(timing, 2, 200);
+    AdvanceAndCheck(timing, 0, 200);
+    AdvanceAndCheck(timing, 4, MAX_SLICE_LENGTH);
 }
 
 namespace SharedSlotTest {
@@ -141,97 +131,98 @@ void FifoCallback(u64 userdata, s64 cycles_late) {
 TEST_CASE("CoreTiming[SharedSlot]", "[core]") {
     using namespace SharedSlotTest;
 
-    ScopeInit guard;
+    Core::Timing timing;
 
-    CoreTiming::EventType* cb_a = CoreTiming::RegisterEvent("callbackA", FifoCallback<0>);
-    CoreTiming::EventType* cb_b = CoreTiming::RegisterEvent("callbackB", FifoCallback<1>);
-    CoreTiming::EventType* cb_c = CoreTiming::RegisterEvent("callbackC", FifoCallback<2>);
-    CoreTiming::EventType* cb_d = CoreTiming::RegisterEvent("callbackD", FifoCallback<3>);
-    CoreTiming::EventType* cb_e = CoreTiming::RegisterEvent("callbackE", FifoCallback<4>);
+    Core::TimingEventType* cb_a = timing.RegisterEvent("callbackA", FifoCallback<0>);
+    Core::TimingEventType* cb_b = timing.RegisterEvent("callbackB", FifoCallback<1>);
+    Core::TimingEventType* cb_c = timing.RegisterEvent("callbackC", FifoCallback<2>);
+    Core::TimingEventType* cb_d = timing.RegisterEvent("callbackD", FifoCallback<3>);
+    Core::TimingEventType* cb_e = timing.RegisterEvent("callbackE", FifoCallback<4>);
 
-    CoreTiming::ScheduleEvent(1000, cb_a, CB_IDS[0]);
-    CoreTiming::ScheduleEvent(1000, cb_b, CB_IDS[1]);
-    CoreTiming::ScheduleEvent(1000, cb_c, CB_IDS[2]);
-    CoreTiming::ScheduleEvent(1000, cb_d, CB_IDS[3]);
-    CoreTiming::ScheduleEvent(1000, cb_e, CB_IDS[4]);
+    timing.ScheduleEvent(1000, cb_a, CB_IDS[0]);
+    timing.ScheduleEvent(1000, cb_b, CB_IDS[1]);
+    timing.ScheduleEvent(1000, cb_c, CB_IDS[2]);
+    timing.ScheduleEvent(1000, cb_d, CB_IDS[3]);
+    timing.ScheduleEvent(1000, cb_e, CB_IDS[4]);
 
     // Enter slice 0
-    CoreTiming::Advance();
-    REQUIRE(1000 == CoreTiming::GetDowncount());
+    timing.Advance();
+    REQUIRE(1000 == timing.GetDowncount());
 
     callbacks_ran_flags = 0;
     counter = 0;
     lateness = 0;
-    CoreTiming::AddTicks(CoreTiming::GetDowncount());
-    CoreTiming::Advance();
-    REQUIRE(MAX_SLICE_LENGTH == CoreTiming::GetDowncount());
+    timing.AddTicks(timing.GetDowncount());
+    timing.Advance();
+    REQUIRE(MAX_SLICE_LENGTH == timing.GetDowncount());
     REQUIRE(0x1FULL == callbacks_ran_flags.to_ullong());
 }
 
 TEST_CASE("CoreTiming[PredictableLateness]", "[core]") {
-    ScopeInit guard;
+    Core::Timing timing;
 
-    CoreTiming::EventType* cb_a = CoreTiming::RegisterEvent("callbackA", CallbackTemplate<0>);
-    CoreTiming::EventType* cb_b = CoreTiming::RegisterEvent("callbackB", CallbackTemplate<1>);
+    Core::TimingEventType* cb_a = timing.RegisterEvent("callbackA", CallbackTemplate<0>);
+    Core::TimingEventType* cb_b = timing.RegisterEvent("callbackB", CallbackTemplate<1>);
 
     // Enter slice 0
-    CoreTiming::Advance();
+    timing.Advance();
 
-    CoreTiming::ScheduleEvent(100, cb_a, CB_IDS[0]);
-    CoreTiming::ScheduleEvent(200, cb_b, CB_IDS[1]);
+    timing.ScheduleEvent(100, cb_a, CB_IDS[0]);
+    timing.ScheduleEvent(200, cb_b, CB_IDS[1]);
 
-    AdvanceAndCheck(0, 90, 10, -10); // (100 - 10)
-    AdvanceAndCheck(1, MAX_SLICE_LENGTH, 50, -50);
+    AdvanceAndCheck(timing, 0, 90, 10, -10); // (100 - 10)
+    AdvanceAndCheck(timing, 1, MAX_SLICE_LENGTH, 50, -50);
 }
 
 namespace ChainSchedulingTest {
 static int reschedules = 0;
 
-static void RescheduleCallback(u64 userdata, s64 cycles_late) {
+static void RescheduleCallback(Core::Timing& timing, u64 userdata, s64 cycles_late) {
     --reschedules;
     REQUIRE(reschedules >= 0);
     REQUIRE(lateness == cycles_late);
 
     if (reschedules > 0)
-        CoreTiming::ScheduleEvent(1000, reinterpret_cast<CoreTiming::EventType*>(userdata),
-                                  userdata);
+        timing.ScheduleEvent(1000, reinterpret_cast<Core::TimingEventType*>(userdata), userdata);
 }
 } // namespace ChainSchedulingTest
 
 TEST_CASE("CoreTiming[ChainScheduling]", "[core]") {
     using namespace ChainSchedulingTest;
 
-    ScopeInit guard;
+    Core::Timing timing;
 
-    CoreTiming::EventType* cb_a = CoreTiming::RegisterEvent("callbackA", CallbackTemplate<0>);
-    CoreTiming::EventType* cb_b = CoreTiming::RegisterEvent("callbackB", CallbackTemplate<1>);
-    CoreTiming::EventType* cb_c = CoreTiming::RegisterEvent("callbackC", CallbackTemplate<2>);
-    CoreTiming::EventType* cb_rs =
-        CoreTiming::RegisterEvent("callbackReschedule", RescheduleCallback);
+    Core::TimingEventType* cb_a = timing.RegisterEvent("callbackA", CallbackTemplate<0>);
+    Core::TimingEventType* cb_b = timing.RegisterEvent("callbackB", CallbackTemplate<1>);
+    Core::TimingEventType* cb_c = timing.RegisterEvent("callbackC", CallbackTemplate<2>);
+    Core::TimingEventType* cb_rs =
+        timing.RegisterEvent("callbackReschedule", [&timing](u64 userdata, s64 cycles_late) {
+            RescheduleCallback(timing, userdata, cycles_late);
+        });
 
     // Enter slice 0
-    CoreTiming::Advance();
+    timing.Advance();
 
-    CoreTiming::ScheduleEvent(800, cb_a, CB_IDS[0]);
-    CoreTiming::ScheduleEvent(1000, cb_b, CB_IDS[1]);
-    CoreTiming::ScheduleEvent(2200, cb_c, CB_IDS[2]);
-    CoreTiming::ScheduleEvent(1000, cb_rs, reinterpret_cast<u64>(cb_rs));
-    REQUIRE(800 == CoreTiming::GetDowncount());
+    timing.ScheduleEvent(800, cb_a, CB_IDS[0]);
+    timing.ScheduleEvent(1000, cb_b, CB_IDS[1]);
+    timing.ScheduleEvent(2200, cb_c, CB_IDS[2]);
+    timing.ScheduleEvent(1000, cb_rs, reinterpret_cast<u64>(cb_rs));
+    REQUIRE(800 == timing.GetDowncount());
 
     reschedules = 3;
-    AdvanceAndCheck(0, 200);  // cb_a
-    AdvanceAndCheck(1, 1000); // cb_b, cb_rs
+    AdvanceAndCheck(timing, 0, 200);  // cb_a
+    AdvanceAndCheck(timing, 1, 1000); // cb_b, cb_rs
     REQUIRE(2 == reschedules);
 
-    CoreTiming::AddTicks(CoreTiming::GetDowncount());
-    CoreTiming::Advance(); // cb_rs
+    timing.AddTicks(timing.GetDowncount());
+    timing.Advance(); // cb_rs
     REQUIRE(1 == reschedules);
-    REQUIRE(200 == CoreTiming::GetDowncount());
+    REQUIRE(200 == timing.GetDowncount());
 
-    AdvanceAndCheck(2, 800); // cb_c
+    AdvanceAndCheck(timing, 2, 800); // cb_c
 
-    CoreTiming::AddTicks(CoreTiming::GetDowncount());
-    CoreTiming::Advance(); // cb_rs
+    timing.AddTicks(timing.GetDowncount());
+    timing.Advance(); // cb_rs
     REQUIRE(0 == reschedules);
-    REQUIRE(MAX_SLICE_LENGTH == CoreTiming::GetDowncount());
+    REQUIRE(MAX_SLICE_LENGTH == timing.GetDowncount());
 }

@@ -75,7 +75,7 @@ ARM_DynCom::ARM_DynCom(PrivilegeMode initial_mode) {
 ARM_DynCom::~ARM_DynCom() {}
 
 void ARM_DynCom::Run() {
-    ExecuteInstructions(std::max<s64>(CoreTiming::GetDowncount(), 0));
+    ExecuteInstructions(std::max<s64>(Core::System::GetInstance().CoreTiming().GetDowncount(), 0));
 }
 
 void ARM_DynCom::Step() {
@@ -146,7 +146,7 @@ void ARM_DynCom::SetCP15Register(CP15Register reg, u32 value) {
 void ARM_DynCom::ExecuteInstructions(u64 num_instructions) {
     state->NumInstrsToExecute = num_instructions;
     unsigned ticks_executed = InterpreterMainLoop(state.get());
-    CoreTiming::AddTicks(ticks_executed);
+    Core::System::GetInstance().CoreTiming().AddTicks(ticks_executed);
     state->ServeBreak();
 }
 

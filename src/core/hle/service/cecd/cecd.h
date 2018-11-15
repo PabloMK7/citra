@@ -23,7 +23,7 @@ namespace Service::CECD {
 
 class Module final {
 public:
-    Module();
+    explicit Module(Core::System& system);
     ~Module();
 
     enum class CecCommand : u32 {
@@ -610,6 +610,8 @@ private:
 
     Kernel::SharedPtr<Kernel::Event> cecinfo_event;
     Kernel::SharedPtr<Kernel::Event> change_state_event;
+
+    Core::System& system;
 };
 
 /// Initialize CECD service(s)

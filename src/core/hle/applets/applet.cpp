@@ -8,6 +8,7 @@
 #include <unordered_map>
 #include "common/assert.h"
 #include "common/common_types.h"
+#include "core/core.h"
 #include "core/core_timing.h"
 #include "core/hle/applets/applet.h"
 #include "core/hle/applets/erreula.h"
@@ -38,7 +39,7 @@ namespace Applets {
 
 static std::unordered_map<Service::APT::AppletId, std::shared_ptr<Applet>> applets;
 /// The CoreTiming event identifier for the Applet update callback.
-static CoreTiming::EventType* applet_update_event = nullptr;
+static Core::TimingEventType* applet_update_event = nullptr;
 /// The interval at which the Applet update callback will be called, 16.6ms
 static const u64 applet_update_interval_us = 16666;
 
@@ -88,8 +89,8 @@ static void AppletUpdateEvent(u64 applet_id, s64 cycles_late) {
 
     // If the applet is still running after the last update, reschedule the event
     if (applet->IsRunning()) {
-        CoreTiming::ScheduleEvent(usToCycles(applet_update_interval_us) - cycles_late,
-                                  applet_update_event, applet_id);
+        Core::System::GetInstance().CoreTiming().ScheduleEvent(
+            usToCycles(applet_update_interval_us) - cycles_late, applet_update_event, applet_id);
     } else {
         // Otherwise the applet has terminated, in which case we should clean it up
         applets[id] = nullptr;
@@ -101,8 +102,8 @@ ResultCode Applet::Start(const Service::APT::AppletStartupParameter& parameter) 
     if (result.IsError())
         return result;
     // Schedule the update event
-    CoreTiming::ScheduleEvent(usToCycles(applet_update_interval_us), applet_update_event,
-                              static_cast<u64>(id));
+    Core::System::GetInstance().CoreTiming().ScheduleEvent(
+        usToCycles(applet_update_interval_us), applet_update_event, static_cast<u64>(id));
     return result;
 }
 
@@ -128,11 +129,12 @@ bool IsLibraryAppletRunning() {
 
 void Init() {
     // Register the applet update callback
-    applet_update_event = CoreTiming::RegisterEvent("HLE Applet Update Event", AppletUpdateEvent);
+    applet_update_event = Core::System::GetInstance().CoreTiming().RegisterEvent(
+        "HLE Applet Update Event", AppletUpdateEvent);
 }
 
 void Shutdown() {
-    CoreTiming::RemoveEvent(applet_update_event);
+    Core::System::GetInstance().CoreTiming().RemoveEvent(applet_update_event);
 }
 } // namespace Applets
 } // namespace HLE

@@ -8,6 +8,7 @@
 #include "common/assert.h"
 #include "common/logging/log.h"
 #include "common/string_util.h"
+#include "core/core.h"
 #include "core/hle/applets/swkbd.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/shared_memory.h"
@@ -38,11 +39,9 @@ ResultCode SoftwareKeyboard::ReceiveParameter(Service::APT::MessageParameter con
     memcpy(&capture_info, parameter.buffer.data(), sizeof(capture_info));
 
     using Kernel::MemoryPermission;
-    // Allocate a heap block of the required size for this applet.
-    heap_memory = std::make_shared<std::vector<u8>>(capture_info.size);
     // Create a SharedMemory that directly points to this heap block.
-    framebuffer_memory = Kernel::SharedMemory::CreateForApplet(
-        heap_memory, 0, capture_info.size, MemoryPermission::ReadWrite, MemoryPermission::ReadWrite,
+    framebuffer_memory = Core::System::GetInstance().Kernel().CreateSharedMemoryForApplet(
+        0, capture_info.size, MemoryPermission::ReadWrite, MemoryPermission::ReadWrite,
         "SoftwareKeyboard Memory");
 
     // Send the response message with the newly created SharedMemory

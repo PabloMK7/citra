@@ -24,6 +24,10 @@ namespace Loader {
 class AppLoader;
 }
 
+namespace Core {
+class System;
+}
+
 namespace Service::FS {
 
 /// Supported archive types
@@ -50,7 +54,8 @@ using FileSys::ArchiveFactory;
 
 class ArchiveManager {
 public:
-    ArchiveManager();
+    explicit ArchiveManager(Core::System& system);
+
     /**
      * Opens an archive
      * @param id_code IdCode of the archive to open
@@ -224,6 +229,8 @@ public:
     void RegisterSelfNCCH(Loader::AppLoader& app_loader);
 
 private:
+    Core::System& system;
+
     /**
      * Registers an Archive type, instances of which can later be opened using its IdCode.
      * @param factory File system backend interface to the archive

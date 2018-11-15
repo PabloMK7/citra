@@ -7,6 +7,7 @@
 
 #include "common/assert.h"
 #include "common/file_util.h"
+#include "common/logging/log.h"
 #include "common/scm_rev.h"
 #ifdef ARCHITECTURE_x86_64
 #include "common/x64/cpu_detect.h"
@@ -200,6 +201,15 @@ TelemetrySession::~TelemetrySession() {
     field_collection.Accept(*backend);
     backend->Complete();
     backend = nullptr;
+}
+
+bool TelemetrySession::SubmitTestcase() {
+#ifdef ENABLE_WEB_SERVICE
+    field_collection.Accept(*backend);
+    return backend->SubmitTestcase();
+#else
+    return false;
+#endif
 }
 
 } // namespace Core

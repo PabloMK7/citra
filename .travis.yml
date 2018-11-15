@@ -61,6 +61,18 @@ matrix:
       script: "./.travis/linux-mingw/build.sh"
       after_success: "./.travis/linux-mingw/upload.sh"
       cache: ccache
+    - if: repo =~ ^.*\/(citra-canary|citra-nightly)$ AND tag IS present
+      git:
+        depth: false
+      os: linux
+      env: NAME="flatpak build"
+      sudo: required
+      dist: trusty
+      services: docker
+      cache: ccache
+      install: "./.travis/linux-flatpak/deps.sh"
+      script: "./.travis/linux-flatpak/build.sh"
+      after_script: "./.travis/linux-flatpak/finish.sh"
 
 deploy:
   provider: releases

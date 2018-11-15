@@ -5,6 +5,7 @@
 #include <QButtonGroup>
 #include <QMessageBox>
 #include <QPushButton>
+#include <QtConcurrent/qtconcurrentrun.h>
 #include "citra_qt/compatdb.h"
 #include "common/telemetry.h"
 #include "core/core.h"
@@ -21,6 +22,8 @@ CompatDB::CompatDB(QWidget* parent)
     connect(ui->radioButton_IntroMenu, &QRadioButton::clicked, this, &CompatDB::EnableNext);
     connect(ui->radioButton_WontBoot, &QRadioButton::clicked, this, &CompatDB::EnableNext);
     connect(button(NextButton), &QPushButton::clicked, this, &CompatDB::Submit);
+    connect(&testcase_watcher, &QFutureWatcher<bool>::finished, this,
+            &CompatDB::OnTestcaseSubmitted);
 }
 
 CompatDB::~CompatDB() = default;
@@ -46,15 +49,35 @@ void CompatDB::Submit() {
         }
         break;
     case CompatDBPage::Final:
+        back();
         LOG_DEBUG(Frontend, "Compatibility Rating: {}", compatibility->checkedId());
         Core::Telemetry().AddField(Telemetry::FieldType::UserFeedback, "Compatibility",
                                    compatibility->checkedId());
-        // older versions of QT don't support the "NoCancelButtonOnLastPage" option, this is a
-        // workaround
+
+        button(NextButton)->setEnabled(false);
+        button(NextButton)->setText(tr("Submitting"));
         button(QWizard::CancelButton)->setVisible(false);
+
+        testcase_watcher.setFuture(QtConcurrent::run(
+            [this]() { return Core::System::GetInstance().TelemetrySession().SubmitTestcase(); }));
         break;
     default:
         LOG_ERROR(Frontend, "Unexpected page: {}", currentId());
+    }
+}
+
+void CompatDB::OnTestcaseSubmitted() {
+    if (!testcase_watcher.result()) {
+        QMessageBox::critical(this, tr("Communication error"),
+                              tr("An error occured while sending the Testcase"));
+        button(NextButton)->setEnabled(true);
+        button(NextButton)->setText(tr("Next"));
+        button(QWizard::CancelButton)->setVisible(true);
+    } else {
+        next();
+        // older versions of QT don't support the "NoCancelButtonOnLastPage" option, this is a
+        // workaround
+        button(QWizard::CancelButton)->setVisible(false);
     }
 }
 

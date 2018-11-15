@@ -12,8 +12,10 @@
 #include "common/common_types.h"
 #include "common/logging/log.h"
 #include "core/core.h"
-#include "core/hle/config_mem.h"
+#include "core/hle/kernel/config_mem.h"
 #include "core/hle/kernel/memory.h"
+#include "core/hle/kernel/process.h"
+#include "core/hle/kernel/shared_page.h"
 #include "core/hle/kernel/vm_manager.h"
 #include "core/hle/result.h"
 #include "core/memory.h"
@@ -22,8 +24,6 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 namespace Kernel {
-
-MemoryRegionInfo memory_regions[3];
 
 /// Size of the APPLICATION, SYSTEM and BASE memory regions (respectively) for each system
 /// memory configuration type.
@@ -41,7 +41,7 @@ static const u32 memory_region_sizes[8][3] = {
     {0x0B200000, 0x02E00000, 0x02000000}, // 7
 };
 
-void MemoryInit(u32 mem_type) {
+void KernelSystem::MemoryInit(u32 mem_type) {
     // TODO(yuriks): On the n3DS, all o3DS configurations (<=5) are forced to 6 instead.
     ASSERT_MSG(mem_type <= 5, "New 3DS memory configuration aren't supported yet!");
     ASSERT(mem_type != 1);
@@ -50,13 +50,7 @@ void MemoryInit(u32 mem_type) {
     // the sizes specified in the memory_region_sizes table.
     VAddr base = 0;
     for (int i = 0; i < 3; ++i) {
-        memory_regions[i].base = base;
-        memory_regions[i].size = memory_region_sizes[mem_type][i];
-        memory_regions[i].used = 0;
-        memory_regions[i].linear_heap_memory = std::make_shared<std::vector<u8>>();
-        // Reserve enough space for this region of FCRAM.
-        // We do not want this block of memory to be relocated when allocating from it.
-        memory_regions[i].linear_heap_memory->reserve(memory_regions[i].size);
+        memory_regions[i].Reset(base, memory_region_sizes[mem_type][i]);
 
         base += memory_regions[i].size;
     }
@@ -64,25 +58,19 @@ void MemoryInit(u32 mem_type) {
     // We must've allocated the entire FCRAM by the end
     ASSERT(base == Memory::FCRAM_SIZE);
 
-    using ConfigMem::config_mem;
+    config_mem_handler = std::make_unique<ConfigMem::Handler>();
+    auto& config_mem = config_mem_handler->GetConfigMem();
     config_mem.app_mem_type = mem_type;
     // app_mem_malloc does not always match the configured size for memory_region[0]: in case the
     // n3DS type override is in effect it reports the size the game expects, not the real one.
     config_mem.app_mem_alloc = memory_region_sizes[mem_type][0];
     config_mem.sys_mem_alloc = memory_regions[1].size;
     config_mem.base_mem_alloc = memory_regions[2].size;
+
+    shared_page_handler = std::make_unique<SharedPage::Handler>();
 }
 
-void MemoryShutdown() {
-    for (auto& region : memory_regions) {
-        region.base = 0;
-        region.size = 0;
-        region.used = 0;
-        region.linear_heap_memory = nullptr;
-    }
-}
-
-MemoryRegionInfo* GetMemoryRegion(MemoryRegion region) {
+MemoryRegionInfo* KernelSystem::GetMemoryRegion(MemoryRegion region) {
     switch (region) {
     case MemoryRegion::APPLICATION:
         return &memory_regions[0];
@@ -152,23 +140,93 @@ void HandleSpecialMapping(VMManager& address_space, const AddressMapping& mappin
                             mapping.read_only ? VMAPermission::Read : VMAPermission::ReadWrite);
 }
 
-void MapSharedPages(VMManager& address_space) {
-    auto cfg_mem_vma = address_space
-                           .MapBackingMemory(Memory::CONFIG_MEMORY_VADDR,
-                                             reinterpret_cast<u8*>(&ConfigMem::config_mem),
-                                             Memory::CONFIG_MEMORY_SIZE, MemoryState::Shared)
-                           .Unwrap();
+void KernelSystem::MapSharedPages(VMManager& address_space) {
+    auto cfg_mem_vma =
+        address_space
+            .MapBackingMemory(Memory::CONFIG_MEMORY_VADDR,
+                              reinterpret_cast<u8*>(&config_mem_handler->GetConfigMem()),
+                              Memory::CONFIG_MEMORY_SIZE, MemoryState::Shared)
+            .Unwrap();
     address_space.Reprotect(cfg_mem_vma, VMAPermission::Read);
 
     auto shared_page_vma =
         address_space
-            .MapBackingMemory(
-                Memory::SHARED_PAGE_VADDR,
-                reinterpret_cast<u8*>(
-                    &Core::System::GetInstance().GetSharedPageHandler()->GetSharedPage()),
-                Memory::SHARED_PAGE_SIZE, MemoryState::Shared)
+            .MapBackingMemory(Memory::SHARED_PAGE_VADDR,
+                              reinterpret_cast<u8*>(&shared_page_handler->GetSharedPage()),
+                              Memory::SHARED_PAGE_SIZE, MemoryState::Shared)
             .Unwrap();
     address_space.Reprotect(shared_page_vma, VMAPermission::Read);
+}
+
+void MemoryRegionInfo::Reset(u32 base, u32 size) {
+    this->base = base;
+    this->size = size;
+    used = 0;
+    free_blocks.clear();
+
+    // mark the entire region as free
+    free_blocks.insert(Interval::right_open(base, base + size));
+}
+
+MemoryRegionInfo::IntervalSet MemoryRegionInfo::HeapAllocate(u32 size) {
+    IntervalSet result;
+    u32 rest = size;
+
+    // Try allocating from the higher address
+    for (auto iter = free_blocks.rbegin(); iter != free_blocks.rend(); ++iter) {
+        ASSERT(iter->bounds() == boost::icl::interval_bounds::right_open());
+        if (iter->upper() - iter->lower() >= rest) {
+            // Requested size is fulfilled with this block
+            result += Interval(iter->upper() - rest, iter->upper());
+            rest = 0;
+            break;
+        }
+        result += *iter;
+        rest -= iter->upper() - iter->lower();
+    }
+
+    if (rest != 0) {
+        // There is no enough free space
+        return {};
+    }
+
+    free_blocks -= result;
+    used += size;
+    return result;
+}
+
+bool MemoryRegionInfo::LinearAllocate(u32 offset, u32 size) {
+    Interval interval(offset, offset + size);
+    if (!boost::icl::contains(free_blocks, interval)) {
+        // The requested range is already allocated
+        return false;
+    }
+    free_blocks -= interval;
+    used += size;
+    return true;
+}
+
+std::optional<u32> MemoryRegionInfo::LinearAllocate(u32 size) {
+    // Find the first sufficient continuous block from the lower address
+    for (const auto& interval : free_blocks) {
+        ASSERT(interval.bounds() == boost::icl::interval_bounds::right_open());
+        if (interval.upper() - interval.lower() >= size) {
+            Interval allocated(interval.lower(), interval.lower() + size);
+            free_blocks -= allocated;
+            used += size;
+            return allocated.lower();
+        }
+    }
+
+    // No sufficient block found
+    return {};
+}
+
+void MemoryRegionInfo::Free(u32 offset, u32 size) {
+    Interval interval(offset, offset + size);
+    ASSERT(!boost::icl::intersects(free_blocks, interval)); // must be allocated blocks
+    free_blocks += interval;
+    used -= size;
 }
 
 } // namespace Kernel

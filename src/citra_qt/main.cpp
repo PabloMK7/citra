@@ -21,6 +21,7 @@
 #include "citra_qt/camera/qt_multimedia_camera.h"
 #include "citra_qt/camera/still_image_camera.h"
 #include "citra_qt/compatdb.h"
+#include "citra_qt/compatibility_list.h"
 #include "citra_qt/configuration/config.h"
 #include "citra_qt/configuration/configure_dialog.h"
 #include "citra_qt/debugger/console.h"
@@ -44,6 +45,7 @@
 #include "citra_qt/util/clickable_label.h"
 #include "common/common_paths.h"
 #include "common/detached_tasks.h"
+#include "common/file_util.h"
 #include "common/logging/backend.h"
 #include "common/logging/filter.h"
 #include "common/logging/log.h"
@@ -57,6 +59,7 @@
 #include "core/frontend/applets/default_applets.h"
 #include "core/gdbstub/gdbstub.h"
 #include "core/hle/service/fs/archive.h"
+#include "core/hle/service/nfc/nfc.h"
 #include "core/loader/loader.h"
 #include "core/movie.h"
 #include "core/settings.h"
@@ -341,8 +344,9 @@ void GMainWindow::InitializeHotkeys() {
     hotkey_registry.RegisterHotkey("Main Window", "Start Emulation");
     hotkey_registry.RegisterHotkey("Main Window", "Continue/Pause", QKeySequence(Qt::Key_F4));
     hotkey_registry.RegisterHotkey("Main Window", "Restart", QKeySequence(Qt::Key_F5));
-    hotkey_registry.RegisterHotkey("Main Window", "Swap Screens", QKeySequence(tr("F9")));
-    hotkey_registry.RegisterHotkey("Main Window", "Toggle Screen Layout", QKeySequence(tr("F10")));
+    hotkey_registry.RegisterHotkey("Main Window", "Swap Screens", QKeySequence(Qt::Key_F9));
+    hotkey_registry.RegisterHotkey("Main Window", "Toggle Screen Layout",
+                                   QKeySequence(Qt::Key_F10));
     hotkey_registry.RegisterHotkey("Main Window", "Fullscreen", QKeySequence::FullScreen);
     hotkey_registry.RegisterHotkey("Main Window", "Exit Fullscreen", QKeySequence(Qt::Key_Escape),
                                    Qt::ApplicationShortcut);
@@ -356,6 +360,11 @@ void GMainWindow::InitializeHotkeys() {
                                    Qt::ApplicationShortcut);
     hotkey_registry.RegisterHotkey("Main Window", "Advance Frame", QKeySequence(Qt::Key_Backslash),
                                    Qt::ApplicationShortcut);
+    hotkey_registry.RegisterHotkey("Main Window", "Load Amiibo", QKeySequence(Qt::Key_F2),
+                                   Qt::ApplicationShortcut);
+    hotkey_registry.RegisterHotkey("Main Window", "Remove Amiibo", QKeySequence(Qt::Key_F3),
+                                   Qt::ApplicationShortcut);
+
     hotkey_registry.LoadHotkeys();
 
     connect(hotkey_registry.GetHotkey("Main Window", "Load File", this), &QShortcut::activated,
@@ -417,6 +426,18 @@ void GMainWindow::InitializeHotkeys() {
             &QShortcut::activated, ui.action_Enable_Frame_Advancing, &QAction::trigger);
     connect(hotkey_registry.GetHotkey("Main Window", "Advance Frame", this), &QShortcut::activated,
             ui.action_Advance_Frame, &QAction::trigger);
+    connect(hotkey_registry.GetHotkey("Main Window", "Load Amiibo", this), &QShortcut::activated,
+            this, [&] {
+                if (ui.action_Load_Amiibo->isEnabled()) {
+                    OnLoadAmiibo();
+                }
+            });
+    connect(hotkey_registry.GetHotkey("Main Window", "Remove Amiibo", this), &QShortcut::activated,
+            this, [&] {
+                if (ui.action_Remove_Amiibo->isEnabled()) {
+                    OnRemoveAmiibo();
+                }
+            });
 }
 
 void GMainWindow::ShowUpdaterWidgets() {
@@ -495,6 +516,8 @@ void GMainWindow::ConnectMenuEvents() {
     connect(ui.action_Load_File, &QAction::triggered, this, &GMainWindow::OnMenuLoadFile);
     connect(ui.action_Install_CIA, &QAction::triggered, this, &GMainWindow::OnMenuInstallCIA);
     connect(ui.action_Exit, &QAction::triggered, this, &QMainWindow::close);
+    connect(ui.action_Load_Amiibo, &QAction::triggered, this, &GMainWindow::OnLoadAmiibo);
+    connect(ui.action_Remove_Amiibo, &QAction::triggered, this, &GMainWindow::OnRemoveAmiibo);
 
     // Emulation
     connect(ui.action_Start, &QAction::triggered, this, &GMainWindow::OnStartGame);
@@ -667,12 +690,12 @@ bool GMainWindow::LoadROM(const QString& filename) {
     render_window->InitRenderTarget();
     render_window->MakeCurrent();
 
-    const char* below_gl33_title = "OpenGL 3.3 Unsupported";
-    const char* below_gl33_message = "Your GPU may not support OpenGL 3.3, or you do not "
-                                     "have the latest graphics driver.";
+    const QString below_gl33_title = tr("OpenGL 3.3 Unsupported");
+    const QString below_gl33_message = tr("Your GPU may not support OpenGL 3.3, or you do not "
+                                          "have the latest graphics driver.");
 
     if (!gladLoadGL()) {
-        QMessageBox::critical(this, tr(below_gl33_title), tr(below_gl33_message));
+        QMessageBox::critical(this, below_gl33_title, below_gl33_message);
         return false;
     }
 
@@ -743,7 +766,7 @@ bool GMainWindow::LoadROM(const QString& filename) {
             break;
 
         case Core::System::ResultStatus::ErrorVideoCore_ErrorBelowGL33:
-            QMessageBox::critical(this, tr(below_gl33_title), tr(below_gl33_message));
+            QMessageBox::critical(this, below_gl33_title, below_gl33_message);
             break;
 
         default:
@@ -847,6 +870,8 @@ void GMainWindow::ShutdownGame() {
     ui.action_Pause->setEnabled(false);
     ui.action_Stop->setEnabled(false);
     ui.action_Restart->setEnabled(false);
+    ui.action_Load_Amiibo->setEnabled(false);
+    ui.action_Remove_Amiibo->setEnabled(false);
     ui.action_Report_Compatibility->setEnabled(false);
     ui.action_Enable_Frame_Advancing->setEnabled(false);
     ui.action_Enable_Frame_Advancing->setChecked(false);
@@ -960,14 +985,11 @@ void GMainWindow::OnGameListOpenFolder(u64 data_id, GameListOpenTarget target) {
     QDesktopServices::openUrl(QUrl::fromLocalFile(qpath));
 }
 
-void GMainWindow::OnGameListNavigateToGamedbEntry(
-    u64 program_id,
-    std::unordered_map<std::string, std::pair<QString, QString>>& compatibility_list) {
-
+void GMainWindow::OnGameListNavigateToGamedbEntry(u64 program_id,
+                                                  const CompatibilityList& compatibility_list) {
     auto it = FindMatchingCompatibilityEntry(compatibility_list, program_id);
 
     QString directory;
-
     if (it != compatibility_list.end())
         directory = it->second.second;
 
@@ -1137,6 +1159,7 @@ void GMainWindow::OnStartGame() {
     ui.action_Pause->setEnabled(true);
     ui.action_Stop->setEnabled(true);
     ui.action_Restart->setEnabled(true);
+    ui.action_Load_Amiibo->setEnabled(true);
     ui.action_Report_Compatibility->setEnabled(true);
     ui.action_Enable_Frame_Advancing->setEnabled(true);
 
@@ -1289,6 +1312,57 @@ void GMainWindow::OnConfigure() {
         game_list->RefreshGameDirectory();
         config->Save();
     }
+}
+
+void GMainWindow::OnLoadAmiibo() {
+    const QString extensions{"*.bin"};
+    const QString file_filter = tr("Amiibo File (%1);; All Files (*.*)").arg(extensions);
+    const QString filename = QFileDialog::getOpenFileName(this, tr("Load Amiibo"), "", file_filter);
+
+    if (filename.isEmpty()) {
+        return;
+    }
+
+    Core::System& system{Core::System::GetInstance()};
+    Service::SM::ServiceManager& sm = system.ServiceManager();
+    auto nfc = sm.GetService<Service::NFC::Module::Interface>("nfc:u");
+    if (nfc == nullptr) {
+        return;
+    }
+
+    QFile nfc_file{filename};
+    if (!nfc_file.open(QIODevice::ReadOnly)) {
+        QMessageBox::warning(this, tr("Error opening Amiibo data file"),
+                             tr("Unable to open Amiibo file \"%1\" for reading.").arg(filename));
+        return;
+    }
+
+    Service::NFC::AmiiboData amiibo_data{};
+    const u64 read_size =
+        nfc_file.read(reinterpret_cast<char*>(&amiibo_data), sizeof(Service::NFC::AmiiboData));
+    if (read_size != sizeof(Service::NFC::AmiiboData)) {
+        QMessageBox::warning(this, tr("Error reading Amiibo data file"),
+                             tr("Unable to fully read Amiibo data. Expected to read %1 bytes, but "
+                                "was only able to read %2 bytes.")
+                                 .arg(sizeof(Service::NFC::AmiiboData))
+                                 .arg(read_size));
+        return;
+    }
+
+    nfc->LoadAmiibo(amiibo_data);
+    ui.action_Remove_Amiibo->setEnabled(true);
+}
+
+void GMainWindow::OnRemoveAmiibo() {
+    Core::System& system{Core::System::GetInstance()};
+    Service::SM::ServiceManager& sm = system.ServiceManager();
+    auto nfc = sm.GetService<Service::NFC::Module::Interface>("nfc:u");
+    if (nfc == nullptr) {
+        return;
+    }
+
+    nfc->RemoveAmiibo();
+    ui.action_Remove_Amiibo->setEnabled(false);
 }
 
 void GMainWindow::OnToggleFilterBar() {

@@ -31,14 +31,6 @@ enum class ArbitrationType : u32 {
 
 class AddressArbiter final : public Object {
 public:
-    /**
-     * Creates an address arbiter.
-     *
-     * @param name Optional name used for debugging.
-     * @returns The created AddressArbiter.
-     */
-    static SharedPtr<AddressArbiter> Create(std::string name = "Unknown");
-
     std::string GetTypeName() const override {
         return "Arbiter";
     }
@@ -57,7 +49,7 @@ public:
                                 s32 value, u64 nanoseconds);
 
 private:
-    AddressArbiter();
+    explicit AddressArbiter(KernelSystem& kernel);
     ~AddressArbiter() override;
 
     /// Puts the thread to wait on the specified arbitration address under this address arbiter.
@@ -72,6 +64,8 @@ private:
 
     /// Threads waiting for the address arbiter to be signaled.
     std::vector<SharedPtr<Thread>> waiting_threads;
+
+    friend class KernelSystem;
 };
 
 } // namespace Kernel

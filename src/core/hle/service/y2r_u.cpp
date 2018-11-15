@@ -632,7 +632,7 @@ void Y2R_U::GetPackageParameter(Kernel::HLERequestContext& ctx) {
     LOG_DEBUG(Service_Y2R, "called");
 }
 
-Y2R_U::Y2R_U() : ServiceFramework("y2r:u", 1) {
+Y2R_U::Y2R_U(Core::System& system) : ServiceFramework("y2r:u", 1) {
     static const FunctionInfo functions[] = {
         {0x00010040, &Y2R_U::SetInputFormat, "SetInputFormat"},
         {0x00020000, &Y2R_U::GetInputFormat, "GetInputFormat"},
@@ -682,14 +682,14 @@ Y2R_U::Y2R_U() : ServiceFramework("y2r:u", 1) {
     };
     RegisterHandlers(functions);
 
-    completion_event = Kernel::Event::Create(Kernel::ResetType::OneShot, "Y2R:Completed");
+    completion_event = system.Kernel().CreateEvent(Kernel::ResetType::OneShot, "Y2R:Completed");
 }
 
 Y2R_U::~Y2R_U() = default;
 
 void InstallInterfaces(Core::System& system) {
     auto& service_manager = system.ServiceManager();
-    std::make_shared<Y2R_U>()->InstallAsService(service_manager);
+    std::make_shared<Y2R_U>(system)->InstallAsService(service_manager);
 }
 
 } // namespace Service::Y2R

@@ -8,7 +8,6 @@
 #include <cstddef>
 #include <functional>
 #include <string>
-#include <unordered_map>
 #include <boost/container/flat_map.hpp>
 #include "common/common_types.h"
 #include "core/hle/kernel/hle_ipc.h"
@@ -20,6 +19,7 @@ class System;
 }
 
 namespace Kernel {
+class KernelSystem;
 class ClientPort;
 class ServerPort;
 class ServerSession;
@@ -59,7 +59,7 @@ public:
     /// Creates a port pair and registers this service with the given ServiceManager.
     void InstallAsService(SM::ServiceManager& service_manager);
     /// Creates a port pair and registers it on the kernel's global port registry.
-    void InstallAsNamedPort();
+    void InstallAsNamedPort(Kernel::KernelSystem& kernel);
 
     void HandleSyncRequest(Kernel::SharedPtr<Kernel::ServerSession> server_session) override;
 
@@ -184,13 +184,7 @@ private:
 };
 
 /// Initialize ServiceManager
-void Init(Core::System& system, std::shared_ptr<SM::ServiceManager>& sm);
-
-/// Shutdown ServiceManager
-void Shutdown();
-
-/// Map of named ports managed by the kernel, which can be retrieved using the ConnectToPort SVC.
-extern std::unordered_map<std::string, Kernel::SharedPtr<Kernel::ClientPort>> g_kernel_named_ports;
+void Init(Core::System& system);
 
 struct ServiceModuleInfo {
     std::string name;
@@ -199,8 +193,5 @@ struct ServiceModuleInfo {
 };
 
 extern const std::array<ServiceModuleInfo, 40> service_module_map;
-
-/// Adds a port to the named port table
-void AddNamedPort(std::string name, Kernel::SharedPtr<Kernel::ClientPort> port);
 
 } // namespace Service

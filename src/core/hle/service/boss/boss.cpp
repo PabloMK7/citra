@@ -903,15 +903,16 @@ void Module::Interface::GetNsDataNewFlagPrivileged(Kernel::HLERequestContext& ct
 Module::Interface::Interface(std::shared_ptr<Module> boss, const char* name, u32 max_session)
     : ServiceFramework(name, max_session), boss(std::move(boss)) {}
 
-Module::Module() {
+Module::Module(Core::System& system) {
     using namespace Kernel;
     // TODO: verify ResetType
-    task_finish_event = Event::Create(Kernel::ResetType::OneShot, "BOSS::task_finish_event");
+    task_finish_event =
+        system.Kernel().CreateEvent(Kernel::ResetType::OneShot, "BOSS::task_finish_event");
 }
 
 void InstallInterfaces(Core::System& system) {
     auto& service_manager = system.ServiceManager();
-    auto boss = std::make_shared<Module>();
+    auto boss = std::make_shared<Module>(system);
     std::make_shared<BOSS_P>(boss)->InstallAsService(service_manager);
     std::make_shared<BOSS_U>(boss)->InstallAsService(service_manager);
 }

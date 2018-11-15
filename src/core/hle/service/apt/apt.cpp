@@ -207,10 +207,17 @@ void Module::Interface::GetSharedFont(Kernel::HLERequestContext& ctx) {
 
     // The shared font has to be relocated to the new address before being passed to the
     // application.
-    auto maybe_vaddr =
-        Memory::PhysicalToVirtualAddress(apt->shared_font_mem->linear_heap_phys_address);
-    ASSERT(maybe_vaddr);
-    VAddr target_address = *maybe_vaddr;
+
+    // Note: the target address is still in the old linear heap region even on new firmware
+    // versions. This exception is made for shared font to resolve the following compatibility
+    // issue:
+    // The linear heap region changes depending on the kernel version marked in application's
+    // exheader (not the actual version the application is running on). If an application with old
+    // kernel version and an applet with new kernel version run at the same time, and they both use
+    // shared font, different linear heap region would have required shared font to relocate
+    // according to two different addresses at the same time, which is impossible.
+    VAddr target_address =
+        apt->shared_font_mem->linear_heap_phys_offset + Memory::LINEAR_HEAP_VADDR;
     if (!apt->shared_font_relocated) {
         BCFNT::RelocateSharedFont(apt->shared_font_mem, target_address);
         apt->shared_font_relocated = true;
@@ -855,11 +862,11 @@ Module::Module(Core::System& system) : system(system) {
 
     using Kernel::MemoryPermission;
     shared_font_mem =
-        Kernel::SharedMemory::Create(nullptr, 0x332000, // 3272 KB
-                                     MemoryPermission::ReadWrite, MemoryPermission::Read, 0,
-                                     Kernel::MemoryRegion::SYSTEM, "APT:SharedFont");
+        system.Kernel().CreateSharedMemory(nullptr, 0x332000, // 3272 KB
+                                           MemoryPermission::ReadWrite, MemoryPermission::Read, 0,
+                                           Kernel::MemoryRegion::SYSTEM, "APT:SharedFont");
 
-    lock = Kernel::Mutex::Create(false, "APT_U:Lock");
+    lock = system.Kernel().CreateMutex(false, "APT_U:Lock");
 }
 
 Module::~Module() {}

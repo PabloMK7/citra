@@ -20,6 +20,7 @@
 #include "core/hle/ipc_helpers.h"
 #include "core/hle/kernel/event.h"
 #include "core/hle/kernel/shared_memory.h"
+#include "core/hle/kernel/shared_page.h"
 #include "core/hle/lock.h"
 #include "core/hle/result.h"
 #include "core/hle/service/nwm/nwm_uds.h"
@@ -87,7 +88,7 @@ struct Node {
 static std::map<MacAddress, Node> node_map;
 
 // Event that will generate and send the 802.11 beacon frames.
-static CoreTiming::EventType* beacon_broadcast_event;
+static Core::TimingEventType* beacon_broadcast_event;
 
 // Callback identifier for the OnWifiPacketReceived event.
 static Network::RoomMember::CallbackHandle<Network::WifiPacket> wifi_packet_received;
@@ -839,8 +840,8 @@ void NWM_UDS::Bind(Kernel::HLERequestContext& ctx) {
     }
 
     // Create a new event for this bind node.
-    auto event = Kernel::Event::Create(Kernel::ResetType::OneShot,
-                                       "NWM::BindNodeEvent" + std::to_string(bind_node_id));
+    auto event = system.Kernel().CreateEvent(Kernel::ResetType::OneShot,
+                                             "NWM::BindNodeEvent" + std::to_string(bind_node_id));
     std::lock_guard<std::mutex> lock(connection_status_mutex);
 
     ASSERT(channel_data.find(data_channel) == channel_data.end());
@@ -954,8 +955,8 @@ void NWM_UDS::BeginHostingNetwork(Kernel::HLERequestContext& ctx) {
     connection_status_event->Signal();
 
     // Start broadcasting the network, send a beacon frame every 102.4ms.
-    CoreTiming::ScheduleEvent(msToCycles(DefaultBeaconInterval * MillisecondsPerTU),
-                              beacon_broadcast_event, 0);
+    system.CoreTiming().ScheduleEvent(msToCycles(DefaultBeaconInterval * MillisecondsPerTU),
+                                      beacon_broadcast_event, 0);
 
     LOG_DEBUG(Service_NWM, "An UDS network has been created.");
 
@@ -975,7 +976,7 @@ void NWM_UDS::DestroyNetwork(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x08, 0, 0);
 
     // Unschedule the beacon broadcast event.
-    CoreTiming::UnscheduleEvent(beacon_broadcast_event, 0);
+    system.CoreTiming().UnscheduleEvent(beacon_broadcast_event, 0);
 
     // Only a host can destroy
     std::lock_guard<std::mutex> lock(connection_status_mutex);
@@ -1231,7 +1232,8 @@ void NWM_UDS::ConnectToNetwork(Kernel::HLERequestContext& ctx) {
     static constexpr std::chrono::nanoseconds UDSConnectionTimeout{300000000};
 
     connection_event = ctx.SleepClientThread(
-        Kernel::GetCurrentThread(), "uds::ConnectToNetwork", UDSConnectionTimeout,
+        system.Kernel().GetThreadManager().GetCurrentThread(), "uds::ConnectToNetwork",
+        UDSConnectionTimeout,
         [](Kernel::SharedPtr<Kernel::Thread> thread, Kernel::HLERequestContext& ctx,
            Kernel::ThreadWakeupReason reason) {
             // TODO(B3N30): Add error handling for host full and timeout
@@ -1334,7 +1336,7 @@ void NWM_UDS::DecryptBeaconData(Kernel::HLERequestContext& ctx) {
 }
 
 // Sends a 802.11 beacon frame with information about the current network.
-static void BeaconBroadcastCallback(u64 userdata, s64 cycles_late) {
+void NWM_UDS::BeaconBroadcastCallback(u64 userdata, s64 cycles_late) {
     // Don't do anything if we're not actually hosting a network
     if (connection_status.status != static_cast<u32>(NetworkStatus::ConnectedAsHost))
         return;
@@ -1351,11 +1353,12 @@ static void BeaconBroadcastCallback(u64 userdata, s64 cycles_late) {
     SendPacket(packet);
 
     // Start broadcasting the network, send a beacon frame every 102.4ms.
-    CoreTiming::ScheduleEvent(msToCycles(DefaultBeaconInterval * MillisecondsPerTU) - cycles_late,
-                              beacon_broadcast_event, 0);
+    system.CoreTiming().ScheduleEvent(msToCycles(DefaultBeaconInterval * MillisecondsPerTU) -
+                                          cycles_late,
+                                      beacon_broadcast_event, 0);
 }
 
-NWM_UDS::NWM_UDS(Core::System& system) : ServiceFramework("nwm::UDS") {
+NWM_UDS::NWM_UDS(Core::System& system) : ServiceFramework("nwm::UDS"), system(system) {
     static const FunctionInfo functions[] = {
         {0x000102C2, nullptr, "Initialize (deprecated)"},
         {0x00020000, nullptr, "Scrap"},
@@ -1388,12 +1391,13 @@ NWM_UDS::NWM_UDS(Core::System& system) : ServiceFramework("nwm::UDS") {
         {0x00220402, nullptr, "ScanOnConnection"},
     };
     connection_status_event =
-        Kernel::Event::Create(Kernel::ResetType::OneShot, "NWM::connection_status_event");
+        system.Kernel().CreateEvent(Kernel::ResetType::OneShot, "NWM::connection_status_event");
 
     RegisterHandlers(functions);
 
-    beacon_broadcast_event =
-        CoreTiming::RegisterEvent("UDS::BeaconBroadcastCallback", BeaconBroadcastCallback);
+    beacon_broadcast_event = system.CoreTiming().RegisterEvent(
+        "UDS::BeaconBroadcastCallback",
+        [this](u64 userdata, s64 cycles_late) { BeaconBroadcastCallback(userdata, cycles_late); });
 
     CryptoPP::AutoSeededRandomPool rng;
     auto mac = SharedPage::DefaultMac;
@@ -1406,8 +1410,8 @@ NWM_UDS::NWM_UDS(Core::System& system) : ServiceFramework("nwm::UDS") {
         }
     }
 
-    system.GetSharedPageHandler()->SetMacAddress(mac);
-    system.GetSharedPageHandler()->SetWifiLinkLevel(SharedPage::WifiLinkLevel::BEST);
+    system.Kernel().GetSharedPageHandler().SetMacAddress(mac);
+    system.Kernel().GetSharedPageHandler().SetWifiLinkLevel(SharedPage::WifiLinkLevel::BEST);
 }
 
 NWM_UDS::~NWM_UDS() {
@@ -1426,7 +1430,7 @@ NWM_UDS::~NWM_UDS() {
     if (auto room_member = Network::GetRoomMember().lock())
         room_member->Unbind(wifi_packet_received);
 
-    CoreTiming::UnscheduleEvent(beacon_broadcast_event, 0);
+    system.CoreTiming().UnscheduleEvent(beacon_broadcast_event, 0);
 }
 
 } // namespace Service::NWM

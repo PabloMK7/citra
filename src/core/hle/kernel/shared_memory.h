@@ -12,55 +12,8 @@
 
 namespace Kernel {
 
-/// Permissions for mapped shared memory blocks
-enum class MemoryPermission : u32 {
-    None = 0,
-    Read = (1u << 0),
-    Write = (1u << 1),
-    ReadWrite = (Read | Write),
-    Execute = (1u << 2),
-    ReadExecute = (Read | Execute),
-    WriteExecute = (Write | Execute),
-    ReadWriteExecute = (Read | Write | Execute),
-    DontCare = (1u << 28)
-};
-
 class SharedMemory final : public Object {
 public:
-    /**
-     * Creates a shared memory object.
-     * @param owner_process Process that created this shared memory object.
-     * @param size Size of the memory block. Must be page-aligned.
-     * @param permissions Permission restrictions applied to the process which created the block.
-     * @param other_permissions Permission restrictions applied to other processes mapping the
-     * block.
-     * @param address The address from which to map the Shared Memory.
-     * @param region If the address is 0, the shared memory will be allocated in this region of the
-     * linear heap.
-     * @param name Optional object name, used for debugging purposes.
-     */
-    static SharedPtr<SharedMemory> Create(SharedPtr<Process> owner_process, u32 size,
-                                          MemoryPermission permissions,
-                                          MemoryPermission other_permissions, VAddr address = 0,
-                                          MemoryRegion region = MemoryRegion::BASE,
-                                          std::string name = "Unknown");
-
-    /**
-     * Creates a shared memory object from a block of memory managed by an HLE applet.
-     * @param heap_block Heap block of the HLE applet.
-     * @param offset The offset into the heap block that the SharedMemory will map.
-     * @param size Size of the memory block. Must be page-aligned.
-     * @param permissions Permission restrictions applied to the process which created the block.
-     * @param other_permissions Permission restrictions applied to other processes mapping the
-     * block.
-     * @param name Optional object name, used for debugging purposes.
-     */
-    static SharedPtr<SharedMemory> CreateForApplet(std::shared_ptr<std::vector<u8>> heap_block,
-                                                   u32 offset, u32 size,
-                                                   MemoryPermission permissions,
-                                                   MemoryPermission other_permissions,
-                                                   std::string name = "Unknown Applet");
-
     std::string GetTypeName() const override {
         return "SharedMemory";
     }
@@ -105,16 +58,14 @@ public:
     u8* GetPointer(u32 offset = 0);
 
     /// Process that created this shared memory block.
-    SharedPtr<Process> owner_process;
+    Process* owner_process;
     /// Address of shared memory block in the owner process if specified.
     VAddr base_address;
-    /// Physical address of the shared memory block in the linear heap if no address was specified
+    /// Offset in FCRAM of the shared memory block in the linear heap if no address was specified
     /// during creation.
-    PAddr linear_heap_phys_address;
+    PAddr linear_heap_phys_offset;
     /// Backing memory for this shared memory block.
-    std::shared_ptr<std::vector<u8>> backing_block;
-    /// Offset into the backing block for this shared memory.
-    std::size_t backing_block_offset;
+    std::vector<std::pair<u8*, u32>> backing_blocks;
     /// Size of the memory block. Page-aligned.
     u32 size;
     /// Permission restrictions applied to the process which created the block.
@@ -124,9 +75,14 @@ public:
     /// Name of shared memory object.
     std::string name;
 
+    MemoryRegionInfo::IntervalSet holding_memory;
+
 private:
-    SharedMemory();
+    explicit SharedMemory(KernelSystem& kernel);
     ~SharedMemory() override;
+
+    friend class KernelSystem;
+    KernelSystem& kernel;
 };
 
 } // namespace Kernel

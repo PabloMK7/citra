@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <array>
 #include "common/common_types.h"
 #include "core/hle/kernel/object.h"
 
@@ -34,14 +35,7 @@ public:
     /**
      * Creates a resource limit object.
      */
-    static SharedPtr<ResourceLimit> Create(std::string name = "Unknown");
-
-    /**
-     * Retrieves the resource limit associated with the specified resource limit category.
-     * @param category The resource limit category
-     * @returns The resource limit associated with the category
-     */
-    static SharedPtr<ResourceLimit> GetForCategory(ResourceLimitCategory category);
+    static SharedPtr<ResourceLimit> Create(KernelSystem& kernel, std::string name = "Unknown");
 
     std::string GetTypeName() const override {
         return "ResourceLimit";
@@ -113,14 +107,24 @@ public:
     s32 current_cpu_time = 0;
 
 private:
-    ResourceLimit();
+    explicit ResourceLimit(KernelSystem& kernel);
     ~ResourceLimit() override;
 };
 
-/// Initializes the resource limits
-void ResourceLimitsInit();
+class ResourceLimitList {
+public:
+    explicit ResourceLimitList(KernelSystem& kernel);
+    ~ResourceLimitList();
 
-// Destroys the resource limits
-void ResourceLimitsShutdown();
+    /**
+     * Retrieves the resource limit associated with the specified resource limit category.
+     * @param category The resource limit category
+     * @returns The resource limit associated with the category
+     */
+    SharedPtr<ResourceLimit> GetForCategory(ResourceLimitCategory category);
+
+private:
+    std::array<SharedPtr<ResourceLimit>, 4> resource_limits;
+};
 
 } // namespace Kernel

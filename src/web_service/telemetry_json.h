@@ -4,9 +4,8 @@
 
 #pragma once
 
-#include <array>
+#include <chrono>
 #include <string>
-#include <json.hpp>
 #include "common/announce_multiplayer_room.h"
 #include "common/telemetry.h"
 
@@ -18,8 +17,8 @@ namespace WebService {
  */
 class TelemetryJson : public Telemetry::VisitorInterface {
 public:
-    TelemetryJson(const std::string& host, const std::string& username, const std::string& token);
-    ~TelemetryJson();
+    TelemetryJson(std::string host, std::string username, std::string token);
+    ~TelemetryJson() override;
 
     void Visit(const Telemetry::Field<bool>& field) override;
     void Visit(const Telemetry::Field<double>& field) override;
@@ -37,22 +36,11 @@ public:
     void Visit(const Telemetry::Field<std::chrono::microseconds>& field) override;
 
     void Complete() override;
+    bool SubmitTestcase() override;
 
 private:
-    nlohmann::json& TopSection() {
-        return sections[static_cast<u8>(Telemetry::FieldType::None)];
-    }
-
-    template <class T>
-    void Serialize(Telemetry::FieldType type, const std::string& name, T value);
-
-    void SerializeSection(Telemetry::FieldType type, const std::string& name);
-
-    nlohmann::json output;
-    std::array<nlohmann::json, 7> sections;
-    std::string host;
-    std::string username;
-    std::string token;
+    struct Impl;
+    std::unique_ptr<Impl> impl;
 };
 
 } // namespace WebService

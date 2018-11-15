@@ -160,7 +160,7 @@ BreakpointMap breakpoints_write;
 } // Anonymous namespace
 
 static Kernel::Thread* FindThreadById(int id) {
-    const auto& threads = Kernel::GetThreadList();
+    const auto& threads = Core::System::GetInstance().Kernel().GetThreadManager().GetThreadList();
     for (auto& thread : threads) {
         if (thread->GetThreadId() == static_cast<u32>(id)) {
             return thread.get();
@@ -535,7 +535,8 @@ static void HandleQuery() {
         SendReply(target_xml);
     } else if (strncmp(query, "fThreadInfo", strlen("fThreadInfo")) == 0) {
         std::string val = "m";
-        const auto& threads = Kernel::GetThreadList();
+        const auto& threads =
+            Core::System::GetInstance().Kernel().GetThreadManager().GetThreadList();
         for (const auto& thread : threads) {
             val += fmt::format("{:x},", thread->GetThreadId());
         }
@@ -547,7 +548,8 @@ static void HandleQuery() {
         std::string buffer;
         buffer += "l<?xml version=\"1.0\"?>";
         buffer += "<threads>";
-        const auto& threads = Kernel::GetThreadList();
+        const auto& threads =
+            Core::System::GetInstance().Kernel().GetThreadManager().GetThreadList();
         for (const auto& thread : threads) {
             buffer += fmt::format(R"*(<thread id="{:x}" name="Thread {:x}"></thread>)*",
                                   thread->GetThreadId(), thread->GetThreadId());

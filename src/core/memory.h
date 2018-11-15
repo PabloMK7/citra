@@ -75,7 +75,7 @@ struct PageTable {
 enum : PAddr {
     /// IO register area
     IO_AREA_PADDR = 0x10100000,
-    IO_AREA_SIZE = 0x01000000, ///< IO area size (16MB)
+    IO_AREA_SIZE = 0x00400000, ///< IO area size (4MB)
     IO_AREA_PADDR_END = IO_AREA_PADDR + IO_AREA_SIZE,
 
     /// MPCore internal memory region
@@ -176,6 +176,8 @@ enum : VAddr {
     NEW_LINEAR_HEAP_VADDR_END = NEW_LINEAR_HEAP_VADDR + NEW_LINEAR_HEAP_SIZE,
 };
 
+extern std::array<u8, Memory::FCRAM_N3DS_SIZE> fcram;
+
 /// Currently active page table
 void SetCurrentPageTable(PageTable* page_table);
 PageTable* GetCurrentPageTable();
@@ -205,6 +207,8 @@ void ZeroBlock(const Kernel::Process& process, VAddr dest_addr, const std::size_
 void ZeroBlock(VAddr dest_addr, const std::size_t size);
 void CopyBlock(const Kernel::Process& process, VAddr dest_addr, VAddr src_addr, std::size_t size);
 void CopyBlock(VAddr dest_addr, VAddr src_addr, std::size_t size);
+void CopyBlock(const Kernel::Process& src_process, const Kernel::Process& dest_process,
+               VAddr src_addr, VAddr dest_addr, std::size_t size);
 
 u8* GetPointer(VAddr vaddr);
 
@@ -223,11 +227,6 @@ std::optional<PAddr> TryVirtualToPhysicalAddress(VAddr addr);
  * @deprecated Use TryVirtualToPhysicalAddress(), which reports failure.
  */
 PAddr VirtualToPhysicalAddress(VAddr addr);
-
-/**
- * Undoes a mapping performed by VirtualToPhysicalAddress().
- */
-std::optional<VAddr> PhysicalToVirtualAddress(PAddr paddr);
 
 /**
  * Gets a pointer to the memory region beginning at the specified physical address.
@@ -268,5 +267,8 @@ enum class FlushMode {
  * address region.
  */
 void RasterizerFlushVirtualRegion(VAddr start, u32 size, FlushMode mode);
+
+/// Gets offset in FCRAM from a pointer inside FCRAM range
+u32 GetFCRAMOffset(u8* pointer);
 
 } // namespace Memory

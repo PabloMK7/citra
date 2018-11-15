@@ -3,6 +3,8 @@
 // Refer to the license.txt file included.
 
 #include <catch2/catch.hpp>
+#include "core/core.h"
+#include "core/core_timing.h"
 #include "core/hle/ipc.h"
 #include "core/hle/kernel/client_port.h"
 #include "core/hle/kernel/client_session.h"
@@ -14,23 +16,25 @@
 
 namespace Kernel {
 
-static SharedPtr<Object> MakeObject() {
-    return Event::Create(ResetType::OneShot);
+static SharedPtr<Object> MakeObject(Kernel::KernelSystem& kernel) {
+    return kernel.CreateEvent(ResetType::OneShot);
 }
 
 TEST_CASE("HLERequestContext::PopulateFromIncomingCommandBuffer", "[core][kernel]") {
-    auto session = std::get<SharedPtr<ServerSession>>(ServerSession::CreateSessionPair());
+    // HACK: see comments of member timing
+    Core::System::GetInstance().timing = std::make_unique<Core::Timing>();
+    Kernel::KernelSystem kernel(0);
+    auto session = std::get<SharedPtr<ServerSession>>(kernel.CreateSessionPair());
     HLERequestContext context(std::move(session));
 
-    auto process = Process::Create(CodeSet::Create("", 0));
-    HandleTable handle_table;
+    auto process = kernel.CreateProcess(kernel.CreateCodeSet("", 0));
 
     SECTION("works with empty cmdbuf") {
         const u32_le input[]{
             IPC::MakeHeader(0x1234, 0, 0),
         };
 
-        context.PopulateFromIncomingCommandBuffer(input, *process, handle_table);
+        context.PopulateFromIncomingCommandBuffer(input, *process);
 
         REQUIRE(context.CommandBuffer()[0] == 0x12340000);
     }
@@ -43,7 +47,7 @@ TEST_CASE("HLERequestContext::PopulateFromIncomingCommandBuffer", "[core][kernel
             0xAABBCCDD,
         };
 
-        context.PopulateFromIncomingCommandBuffer(input, *process, handle_table);
+        context.PopulateFromIncomingCommandBuffer(input, *process);
 
         auto* output = context.CommandBuffer();
         REQUIRE(output[1] == 0x12345678);
@@ -52,48 +56,51 @@ TEST_CASE("HLERequestContext::PopulateFromIncomingCommandBuffer", "[core][kernel
     }
 
     SECTION("translates move handles") {
-        auto a = MakeObject();
-        Handle a_handle = handle_table.Create(a).Unwrap();
+        auto a = MakeObject(kernel);
+        Handle a_handle = process->handle_table.Create(a).Unwrap();
         const u32_le input[]{
             IPC::MakeHeader(0, 0, 2),
             IPC::MoveHandleDesc(1),
             a_handle,
         };
 
-        context.PopulateFromIncomingCommandBuffer(input, *process, handle_table);
+        context.PopulateFromIncomingCommandBuffer(input, *process);
 
         auto* output = context.CommandBuffer();
         REQUIRE(context.GetIncomingHandle(output[2]) == a);
-        REQUIRE(handle_table.GetGeneric(a_handle) == nullptr);
+        REQUIRE(process->handle_table.GetGeneric(a_handle) == nullptr);
     }
 
     SECTION("translates copy handles") {
-        auto a = MakeObject();
-        Handle a_handle = handle_table.Create(a).Unwrap();
+        auto a = MakeObject(kernel);
+        Handle a_handle = process->handle_table.Create(a).Unwrap();
         const u32_le input[]{
             IPC::MakeHeader(0, 0, 2),
             IPC::CopyHandleDesc(1),
             a_handle,
         };
 
-        context.PopulateFromIncomingCommandBuffer(input, *process, handle_table);
+        context.PopulateFromIncomingCommandBuffer(input, *process);
 
         auto* output = context.CommandBuffer();
         REQUIRE(context.GetIncomingHandle(output[2]) == a);
-        REQUIRE(handle_table.GetGeneric(a_handle) == a);
+        REQUIRE(process->handle_table.GetGeneric(a_handle) == a);
     }
 
     SECTION("translates multi-handle descriptors") {
-        auto a = MakeObject();
-        auto b = MakeObject();
-        auto c = MakeObject();
+        auto a = MakeObject(kernel);
+        auto b = MakeObject(kernel);
+        auto c = MakeObject(kernel);
         const u32_le input[]{
-            IPC::MakeHeader(0, 0, 5),        IPC::MoveHandleDesc(2),
-            handle_table.Create(a).Unwrap(), handle_table.Create(b).Unwrap(),
-            IPC::MoveHandleDesc(1),          handle_table.Create(c).Unwrap(),
+            IPC::MakeHeader(0, 0, 5),
+            IPC::MoveHandleDesc(2),
+            process->handle_table.Create(a).Unwrap(),
+            process->handle_table.Create(b).Unwrap(),
+            IPC::MoveHandleDesc(1),
+            process->handle_table.Create(c).Unwrap(),
         };
 
-        context.PopulateFromIncomingCommandBuffer(input, *process, handle_table);
+        context.PopulateFromIncomingCommandBuffer(input, *process);
 
         auto* output = context.CommandBuffer();
         REQUIRE(context.GetIncomingHandle(output[2]) == a);
@@ -108,7 +115,7 @@ TEST_CASE("HLERequestContext::PopulateFromIncomingCommandBuffer", "[core][kernel
             0,
         };
 
-        auto result = context.PopulateFromIncomingCommandBuffer(input, *process, handle_table);
+        auto result = context.PopulateFromIncomingCommandBuffer(input, *process);
 
         REQUIRE(result == RESULT_SUCCESS);
         auto* output = context.CommandBuffer();
@@ -122,7 +129,7 @@ TEST_CASE("HLERequestContext::PopulateFromIncomingCommandBuffer", "[core][kernel
             0x98989898,
         };
 
-        context.PopulateFromIncomingCommandBuffer(input, *process, handle_table);
+        context.PopulateFromIncomingCommandBuffer(input, *process);
 
         REQUIRE(context.CommandBuffer()[2] == process->process_id);
     }
@@ -142,7 +149,7 @@ TEST_CASE("HLERequestContext::PopulateFromIncomingCommandBuffer", "[core][kernel
             target_address,
         };
 
-        context.PopulateFromIncomingCommandBuffer(input, *process, handle_table);
+        context.PopulateFromIncomingCommandBuffer(input, *process);
 
         CHECK(context.GetStaticBuffer(0) == *buffer);
 
@@ -163,7 +170,7 @@ TEST_CASE("HLERequestContext::PopulateFromIncomingCommandBuffer", "[core][kernel
             target_address,
         };
 
-        context.PopulateFromIncomingCommandBuffer(input, *process, handle_table);
+        context.PopulateFromIncomingCommandBuffer(input, *process);
 
         std::vector<u8> other_buffer(buffer->size());
         context.GetMappedBuffer(0).Read(other_buffer.data(), 0, buffer->size());
@@ -190,13 +197,13 @@ TEST_CASE("HLERequestContext::PopulateFromIncomingCommandBuffer", "[core][kernel
                                                     buffer_mapped->size(), MemoryState::Private);
         REQUIRE(result.Code() == RESULT_SUCCESS);
 
-        auto a = MakeObject();
+        auto a = MakeObject(kernel);
         const u32_le input[]{
             IPC::MakeHeader(0, 2, 8),
             0x12345678,
             0xABCDEF00,
             IPC::MoveHandleDesc(1),
-            handle_table.Create(a).Unwrap(),
+            process->handle_table.Create(a).Unwrap(),
             IPC::CallingPidDesc(),
             0,
             IPC::StaticBufferDesc(buffer_static->size(), 0),
@@ -205,7 +212,7 @@ TEST_CASE("HLERequestContext::PopulateFromIncomingCommandBuffer", "[core][kernel
             target_address_mapped,
         };
 
-        context.PopulateFromIncomingCommandBuffer(input, *process, handle_table);
+        context.PopulateFromIncomingCommandBuffer(input, *process);
 
         auto* output = context.CommandBuffer();
         CHECK(output[1] == 0x12345678);
@@ -225,18 +232,20 @@ TEST_CASE("HLERequestContext::PopulateFromIncomingCommandBuffer", "[core][kernel
 }
 
 TEST_CASE("HLERequestContext::WriteToOutgoingCommandBuffer", "[core][kernel]") {
-    auto session = std::get<SharedPtr<ServerSession>>(ServerSession::CreateSessionPair());
+    // HACK: see comments of member timing
+    Core::System::GetInstance().timing = std::make_unique<Core::Timing>();
+    Kernel::KernelSystem kernel(0);
+    auto session = std::get<SharedPtr<ServerSession>>(kernel.CreateSessionPair());
     HLERequestContext context(std::move(session));
 
-    auto process = Process::Create(CodeSet::Create("", 0));
-    HandleTable handle_table;
+    auto process = kernel.CreateProcess(kernel.CreateCodeSet("", 0));
     auto* input = context.CommandBuffer();
     u32_le output[IPC::COMMAND_BUFFER_LENGTH];
 
     SECTION("works with empty cmdbuf") {
         input[0] = IPC::MakeHeader(0x1234, 0, 0);
 
-        context.WriteToOutgoingCommandBuffer(output, *process, handle_table);
+        context.WriteToOutgoingCommandBuffer(output, *process);
 
         REQUIRE(output[0] == 0x12340000);
     }
@@ -247,7 +256,7 @@ TEST_CASE("HLERequestContext::WriteToOutgoingCommandBuffer", "[core][kernel]") {
         input[2] = 0x21122112;
         input[3] = 0xAABBCCDD;
 
-        context.WriteToOutgoingCommandBuffer(output, *process, handle_table);
+        context.WriteToOutgoingCommandBuffer(output, *process);
 
         REQUIRE(output[1] == 0x12345678);
         REQUIRE(output[2] == 0x21122112);
@@ -255,18 +264,18 @@ TEST_CASE("HLERequestContext::WriteToOutgoingCommandBuffer", "[core][kernel]") {
     }
 
     SECTION("translates move/copy handles") {
-        auto a = MakeObject();
-        auto b = MakeObject();
+        auto a = MakeObject(kernel);
+        auto b = MakeObject(kernel);
         input[0] = IPC::MakeHeader(0, 0, 4);
         input[1] = IPC::MoveHandleDesc(1);
         input[2] = context.AddOutgoingHandle(a);
         input[3] = IPC::CopyHandleDesc(1);
         input[4] = context.AddOutgoingHandle(b);
 
-        context.WriteToOutgoingCommandBuffer(output, *process, handle_table);
+        context.WriteToOutgoingCommandBuffer(output, *process);
 
-        REQUIRE(handle_table.GetGeneric(output[2]) == a);
-        REQUIRE(handle_table.GetGeneric(output[4]) == b);
+        REQUIRE(process->handle_table.GetGeneric(output[2]) == a);
+        REQUIRE(process->handle_table.GetGeneric(output[4]) == b);
     }
 
     SECTION("translates null handles") {
@@ -274,16 +283,16 @@ TEST_CASE("HLERequestContext::WriteToOutgoingCommandBuffer", "[core][kernel]") {
         input[1] = IPC::MoveHandleDesc(1);
         input[2] = context.AddOutgoingHandle(nullptr);
 
-        auto result = context.WriteToOutgoingCommandBuffer(output, *process, handle_table);
+        auto result = context.WriteToOutgoingCommandBuffer(output, *process);
 
         REQUIRE(result == RESULT_SUCCESS);
         REQUIRE(output[2] == 0);
     }
 
     SECTION("translates multi-handle descriptors") {
-        auto a = MakeObject();
-        auto b = MakeObject();
-        auto c = MakeObject();
+        auto a = MakeObject(kernel);
+        auto b = MakeObject(kernel);
+        auto c = MakeObject(kernel);
         input[0] = IPC::MakeHeader(0, 0, 5);
         input[1] = IPC::MoveHandleDesc(2);
         input[2] = context.AddOutgoingHandle(a);
@@ -291,11 +300,11 @@ TEST_CASE("HLERequestContext::WriteToOutgoingCommandBuffer", "[core][kernel]") {
         input[4] = IPC::CopyHandleDesc(1);
         input[5] = context.AddOutgoingHandle(c);
 
-        context.WriteToOutgoingCommandBuffer(output, *process, handle_table);
+        context.WriteToOutgoingCommandBuffer(output, *process);
 
-        REQUIRE(handle_table.GetGeneric(output[2]) == a);
-        REQUIRE(handle_table.GetGeneric(output[3]) == b);
-        REQUIRE(handle_table.GetGeneric(output[5]) == c);
+        REQUIRE(process->handle_table.GetGeneric(output[2]) == a);
+        REQUIRE(process->handle_table.GetGeneric(output[3]) == b);
+        REQUIRE(process->handle_table.GetGeneric(output[5]) == c);
     }
 
     SECTION("translates StaticBuffer descriptors") {
@@ -322,7 +331,7 @@ TEST_CASE("HLERequestContext::WriteToOutgoingCommandBuffer", "[core][kernel]") {
             IPC::StaticBufferDesc(output_buffer->size(), 0);
         output_cmdbuff[IPC::COMMAND_BUFFER_LENGTH + 1] = target_address;
 
-        context.WriteToOutgoingCommandBuffer(output_cmdbuff.data(), *process, handle_table);
+        context.WriteToOutgoingCommandBuffer(output_cmdbuff.data(), *process);
 
         CHECK(*output_buffer == input_buffer);
         REQUIRE(process->vm_manager.UnmapRange(target_address, output_buffer->size()) ==
@@ -345,7 +354,7 @@ TEST_CASE("HLERequestContext::WriteToOutgoingCommandBuffer", "[core][kernel]") {
             target_address,
         };
 
-        context.PopulateFromIncomingCommandBuffer(input_cmdbuff, *process, handle_table);
+        context.PopulateFromIncomingCommandBuffer(input_cmdbuff, *process);
 
         context.GetMappedBuffer(0).Write(input_buffer.data(), 0, input_buffer.size());
 
@@ -353,7 +362,7 @@ TEST_CASE("HLERequestContext::WriteToOutgoingCommandBuffer", "[core][kernel]") {
         input[1] = IPC::MappedBufferDesc(output_buffer->size(), IPC::W);
         input[2] = 0;
 
-        context.WriteToOutgoingCommandBuffer(output, *process, handle_table);
+        context.WriteToOutgoingCommandBuffer(output, *process);
 
         CHECK(output[1] == IPC::MappedBufferDesc(output_buffer->size(), IPC::W));
         CHECK(output[2] == target_address);

@@ -6,6 +6,7 @@
 #include <vector>
 #include "common/assert.h"
 #include "common/common_types.h"
+#include "core/core.h"
 #include "core/hle/kernel/event.h"
 #include "core/hle/kernel/handle_table.h"
 #include "core/hle/kernel/hle_ipc.h"
@@ -49,13 +50,14 @@ SharedPtr<Event> HLERequestContext::SleepClientThread(SharedPtr<Thread> thread,
         std::array<u32_le, IPC::COMMAND_BUFFER_LENGTH + 2 * IPC::MAX_STATIC_BUFFERS> cmd_buff;
         Memory::ReadBlock(*process, thread->GetCommandBufferAddress(), cmd_buff.data(),
                           cmd_buff.size() * sizeof(u32));
-        context.WriteToOutgoingCommandBuffer(cmd_buff.data(), *process, Kernel::g_handle_table);
+        context.WriteToOutgoingCommandBuffer(cmd_buff.data(), *process);
         // Copy the translated command buffer back into the thread's command buffer area.
         Memory::WriteBlock(*process, thread->GetCommandBufferAddress(), cmd_buff.data(),
                            cmd_buff.size() * sizeof(u32));
     };
 
-    auto event = Kernel::Event::Create(Kernel::ResetType::OneShot, "HLE Pause Event: " + reason);
+    auto event = Core::System::GetInstance().Kernel().CreateEvent(Kernel::ResetType::OneShot,
+                                                                  "HLE Pause Event: " + reason);
     thread->status = ThreadStatus::WaitHleEvent;
     thread->wait_objects = {event};
     event->AddWaitingThread(thread);
@@ -96,8 +98,7 @@ void HLERequestContext::AddStaticBuffer(u8 buffer_id, std::vector<u8> data) {
 }
 
 ResultCode HLERequestContext::PopulateFromIncomingCommandBuffer(const u32_le* src_cmdbuf,
-                                                                Process& src_process,
-                                                                HandleTable& src_table) {
+                                                                Process& src_process) {
     IPC::Header header{src_cmdbuf[0]};
 
     std::size_t untranslated_size = 1u + header.normal_params_size;
@@ -120,10 +121,10 @@ ResultCode HLERequestContext::PopulateFromIncomingCommandBuffer(const u32_le* sr
                 Handle handle = src_cmdbuf[i];
                 SharedPtr<Object> object = nullptr;
                 if (handle != 0) {
-                    object = src_table.GetGeneric(handle);
+                    object = src_process.handle_table.GetGeneric(handle);
                     ASSERT(object != nullptr); // TODO(yuriks): Return error
                     if (descriptor == IPC::DescriptorType::MoveHandle) {
-                        src_table.Close(handle);
+                        src_process.handle_table.Close(handle);
                     }
                 }
 
@@ -161,8 +162,8 @@ ResultCode HLERequestContext::PopulateFromIncomingCommandBuffer(const u32_le* sr
     return RESULT_SUCCESS;
 }
 
-ResultCode HLERequestContext::WriteToOutgoingCommandBuffer(u32_le* dst_cmdbuf, Process& dst_process,
-                                                           HandleTable& dst_table) const {
+ResultCode HLERequestContext::WriteToOutgoingCommandBuffer(u32_le* dst_cmdbuf,
+                                                           Process& dst_process) const {
     IPC::Header header{cmd_buf[0]};
 
     std::size_t untranslated_size = 1u + header.normal_params_size;
@@ -187,7 +188,7 @@ ResultCode HLERequestContext::WriteToOutgoingCommandBuffer(u32_le* dst_cmdbuf, P
                 Handle handle = 0;
                 if (object != nullptr) {
                     // TODO(yuriks): Figure out the proper error handling for if this fails
-                    handle = dst_table.Create(object).Unwrap();
+                    handle = dst_process.handle_table.Create(object).Unwrap();
                 }
                 dst_cmdbuf[i++] = handle;
             }

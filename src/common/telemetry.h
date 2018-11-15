@@ -153,6 +153,7 @@ struct VisitorInterface : NonCopyable {
 
     /// Completion method, called once all fields have been visited
     virtual void Complete() = 0;
+    virtual bool SubmitTestcase() = 0;
 };
 
 /**
@@ -178,6 +179,9 @@ struct NullVisitor : public VisitorInterface {
     void Visit(const Field<std::chrono::microseconds>& /*field*/) override {}
 
     void Complete() override {}
+    bool SubmitTestcase() override {
+        return false;
+    }
 };
 
 } // namespace Telemetry

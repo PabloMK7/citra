@@ -8,7 +8,6 @@
 #include <string>
 #include "common/common_types.h"
 #include "core/frontend/applets/swkbd.h"
-#include "core/hle/shared_page.h"
 #include "core/loader/loader.h"
 #include "core/memory.h"
 #include "core/perf_stats.h"
@@ -36,7 +35,13 @@ class ArchiveManager;
 }
 } // namespace Service
 
+namespace Kernel {
+class KernelSystem;
+}
+
 namespace Core {
+
+class Timing;
 
 class System {
 public:
@@ -167,6 +172,18 @@ public:
     /// Gets a const reference to the archive manager
     const Service::FS::ArchiveManager& ArchiveManager() const;
 
+    /// Gets a reference to the kernel
+    Kernel::KernelSystem& Kernel();
+
+    /// Gets a const reference to the kernel
+    const Kernel::KernelSystem& Kernel() const;
+
+    /// Gets a reference to the timing system
+    Timing& CoreTiming();
+
+    /// Gets a const reference to the timing system
+    const Timing& CoreTiming() const;
+
     PerfStats perf_stats;
     FrameLimiter frame_limiter;
 
@@ -191,10 +208,6 @@ public:
 
     std::shared_ptr<Frontend::SoftwareKeyboard> GetSoftwareKeyboard() const {
         return registered_swkbd;
-    }
-
-    std::shared_ptr<SharedPage::Handler> GetSharedPageHandler() const {
-        return shared_page_handler;
     }
 
 private:
@@ -236,11 +249,14 @@ private:
     std::unique_ptr<RPC::RPCServer> rpc_server;
 #endif
 
-    /// Shared Page
-    std::shared_ptr<SharedPage::Handler> shared_page_handler;
-
     std::unique_ptr<Service::FS::ArchiveManager> archive_manager;
 
+public: // HACK: this is temporary exposed for tests,
+        // due to WIP kernel refactor causing desync state in memory
+    std::unique_ptr<Kernel::KernelSystem> kernel;
+    std::unique_ptr<Timing> timing;
+
+private:
     static System s_instance;
 
     ResultStatus status = ResultStatus::Success;

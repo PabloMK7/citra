@@ -5,21 +5,32 @@
 #pragma once
 
 #include "common/common_types.h"
+#include "core/core_timing.h"
 #include "core/hle/kernel/object.h"
 #include "core/hle/kernel/wait_object.h"
 
 namespace Kernel {
 
+class TimerManager {
+public:
+    TimerManager();
+
+private:
+    /// The timer callback event, called when a timer is fired
+    void TimerCallback(u64 callback_id, s64 cycles_late);
+
+    /// The event type of the generic timer callback event
+    Core::TimingEventType* timer_callback_event_type = nullptr;
+
+    u64 next_timer_callback_id = 0;
+    std::unordered_map<u64, Timer*> timer_callback_table;
+
+    friend class Timer;
+    friend class KernelSystem;
+};
+
 class Timer final : public WaitObject {
 public:
-    /**
-     * Creates a timer
-     * @param reset_type ResetType describing how to create the timer
-     * @param name Optional name of timer
-     * @return The created Timer
-     */
-    static SharedPtr<Timer> Create(ResetType reset_type, std::string name = "Unknown");
-
     std::string GetTypeName() const override {
         return "Timer";
     }
@@ -68,7 +79,7 @@ public:
     void Signal(s64 cycles_late);
 
 private:
-    Timer();
+    explicit Timer(KernelSystem& kernel);
     ~Timer() override;
 
     ResetType reset_type; ///< The ResetType of this timer
@@ -79,13 +90,12 @@ private:
     bool signaled;    ///< Whether the timer has been signaled or not
     std::string name; ///< Name of timer (optional)
 
-    /// Handle used as userdata to reference this object when inserting into the CoreTiming queue.
-    Handle callback_handle;
-};
+    /// ID used as userdata to reference this object when inserting into the CoreTiming queue.
+    u64 callback_id;
 
-/// Initializes the required variables for timers
-void TimersInit();
-/// Tears down the timer variables
-void TimersShutdown();
+    TimerManager& timer_manager;
+
+    friend class KernelSystem;
+};
 
 } // namespace Kernel

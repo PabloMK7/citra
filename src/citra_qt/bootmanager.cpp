@@ -109,9 +109,8 @@ private:
 GRenderWindow::GRenderWindow(QWidget* parent, EmuThread* emu_thread)
     : QWidget(parent), child(nullptr), emu_thread(emu_thread) {
 
-    std::string window_title = fmt::format("Citra {} | {}-{}", Common::g_build_name,
-                                           Common::g_scm_branch, Common::g_scm_desc);
-    setWindowTitle(QString::fromStdString(window_title));
+    setWindowTitle(QStringLiteral("Citra %1 | %2-%3")
+                       .arg(Common::g_build_name, Common::g_scm_branch, Common::g_scm_desc));
     setAttribute(Qt::WA_AcceptTouchEvents);
 
     InputCommon::Init();

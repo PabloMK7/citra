@@ -604,7 +604,8 @@ void ARMul_State::ServeBreak() {
     if (last_bkpt_hit) {
         Reg[15] = last_bkpt.address;
     }
-    Kernel::Thread* thread = Kernel::GetCurrentThread();
+    Kernel::Thread* thread =
+        Core::System::GetInstance().Kernel().GetThreadManager().GetCurrentThread();
     Core::CPU().SaveContext(thread->context);
     if (last_bkpt_hit || GDBStub::GetCpuStepFlag()) {
         last_bkpt_hit = false;

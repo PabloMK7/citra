@@ -59,13 +59,13 @@ System::ResultStatus System::RunLoop(bool tight_loop) {
 
     // If we don't have a currently active thread then don't execute instructions,
     // instead advance to the next event and try to yield to the next thread
-    if (Kernel::GetCurrentThread() == nullptr) {
+    if (kernel->GetThreadManager().GetCurrentThread() == nullptr) {
         LOG_TRACE(Core_ARM11, "Idling");
-        CoreTiming::Idle();
-        CoreTiming::Advance();
+        timing->Idle();
+        timing->Advance();
         PrepareReschedule();
     } else {
-        CoreTiming::Advance();
+        timing->Advance();
         if (tight_loop) {
             cpu_core->Run();
         } else {
@@ -126,7 +126,9 @@ System::ResultStatus System::Load(EmuWindow& emu_window, const std::string& file
         return init_result;
     }
 
-    const Loader::ResultStatus load_result{app_loader->Load(Kernel::g_current_process)};
+    Kernel::SharedPtr<Kernel::Process> process;
+    const Loader::ResultStatus load_result{app_loader->Load(process)};
+    kernel->SetCurrentProcess(process);
     if (Loader::ResultStatus::Success != load_result) {
         LOG_CRITICAL(Core, "Failed to load ROM (Error {})!", static_cast<u32>(load_result));
         System::Shutdown();
@@ -140,7 +142,7 @@ System::ResultStatus System::Load(EmuWindow& emu_window, const std::string& file
             return ResultStatus::ErrorLoader;
         }
     }
-    Memory::SetCurrentPageTable(&Kernel::g_current_process->vm_manager.page_table);
+    Memory::SetCurrentPageTable(&kernel->GetCurrentProcess()->vm_manager.page_table);
     status = ResultStatus::Success;
     m_emu_window = &emu_window;
     m_filepath = filepath;
@@ -153,7 +155,7 @@ void System::PrepareReschedule() {
 }
 
 PerfStats::Results System::GetAndResetPerfStats() {
-    return perf_stats.GetAndResetStats(CoreTiming::GetGlobalTimeUs());
+    return perf_stats.GetAndResetStats(timing->GetGlobalTimeUs());
 }
 
 void System::Reschedule() {
@@ -162,17 +164,17 @@ void System::Reschedule() {
     }
 
     reschedule_pending = false;
-    Kernel::Reschedule();
+    kernel->GetThreadManager().Reschedule();
 }
 
 System::ResultStatus System::Init(EmuWindow& emu_window, u32 system_mode) {
     LOG_DEBUG(HW_Memory, "initialized OK");
 
-    CoreTiming::Init();
+    timing = std::make_unique<Timing>();
 
     if (Settings::values.use_cpu_jit) {
 #ifdef ARCHITECTURE_x86_64
-        cpu_core = std::make_unique<ARM_Dynarmic>(USER32MODE);
+        cpu_core = std::make_unique<ARM_Dynarmic>(*this, USER32MODE);
 #else
         cpu_core = std::make_unique<ARM_DynCom>(USER32MODE);
         LOG_WARNING(Core, "CPU JIT requested, but Dynarmic not available");
@@ -191,13 +193,12 @@ System::ResultStatus System::Init(EmuWindow& emu_window, u32 system_mode) {
     rpc_server = std::make_unique<RPC::RPCServer>();
 #endif
 
-    service_manager = std::make_shared<Service::SM::ServiceManager>();
-    shared_page_handler = std::make_shared<SharedPage::Handler>();
-    archive_manager = std::make_unique<Service::FS::ArchiveManager>();
+    service_manager = std::make_shared<Service::SM::ServiceManager>(*this);
+    archive_manager = std::make_unique<Service::FS::ArchiveManager>(*this);
 
     HW::Init();
-    Kernel::Init(system_mode);
-    Service::Init(*this, service_manager);
+    kernel = std::make_unique<Kernel::KernelSystem>(system_mode);
+    Service::Init(*this);
     GDBStub::Init();
 
     ResultStatus result = VideoCore::Init(emu_window);
@@ -230,6 +231,22 @@ const Service::FS::ArchiveManager& System::ArchiveManager() const {
     return *archive_manager;
 }
 
+Kernel::KernelSystem& System::Kernel() {
+    return *kernel;
+}
+
+const Kernel::KernelSystem& System::Kernel() const {
+    return *kernel;
+}
+
+Timing& System::CoreTiming() {
+    return *timing;
+}
+
+const Timing& System::CoreTiming() const {
+    return *timing;
+}
+
 void System::RegisterSoftwareKeyboard(std::shared_ptr<Frontend::SoftwareKeyboard> swkbd) {
     registered_swkbd = std::move(swkbd);
 }
@@ -247,8 +264,7 @@ void System::Shutdown() {
     // Shutdown emulation session
     GDBStub::Shutdown();
     VideoCore::Shutdown();
-    Service::Shutdown();
-    Kernel::Shutdown();
+    kernel.reset();
     HW::Shutdown();
     telemetry_session.reset();
 #ifdef ENABLE_SCRIPTING
@@ -257,7 +273,7 @@ void System::Shutdown() {
     service_manager.reset();
     dsp_core.reset();
     cpu_core.reset();
-    CoreTiming::Shutdown();
+    timing.reset();
     app_loader.reset();
 
     if (auto room_member = Network::GetRoomMember().lock()) {

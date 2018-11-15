@@ -3,9 +3,12 @@
 // Refer to the license.txt file included.
 
 #include "common/assert.h"
+#include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/object.h"
 
 namespace Kernel {
+
+Object::Object(KernelSystem& kernel) : object_id{kernel.GenerateObjectID()} {}
 
 Object::~Object() = default;
 

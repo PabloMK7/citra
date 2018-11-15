@@ -5,8 +5,8 @@
 #include <tuple>
 #include <unordered_map>
 #include <vector>
-
 #include "common/common_types.h"
+#include "core/hle/kernel/kernel.h"
 #include "core/mmio.h"
 
 namespace ArmTests {
@@ -79,6 +79,8 @@ private:
     bool mutable_memory;
     std::shared_ptr<TestMemory> test_memory;
     std::vector<WriteRecord> write_records;
+
+    Kernel::KernelSystem* kernel;
 };
 
 } // namespace ArmTests
