@@ -80,7 +80,11 @@ private:
 
     std::vector<std::unique_ptr<InputCommon::Polling::DevicePoller>> device_pollers;
 
-    /// Keys currently registered as hotkeys
+    /**
+     * List of keys currently registered to hotkeys.
+     * These can't be bound to any input key.
+     * Synchronised with ConfigureHotkeys via signal-slot.
+     */
     QList<QKeySequence> hotkey_list;
 
     /// A flag to indicate if keyboard keys are okay when configuring an input. If this is false,

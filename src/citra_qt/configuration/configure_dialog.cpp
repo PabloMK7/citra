@@ -22,6 +22,7 @@ ConfigureDialog::ConfigureDialog(QWidget* parent, const HotkeyRegistry& registry
     adjustSize();
     ui->selectorList->setCurrentRow(0);
 
+    // Set up used key list synchronisation
     connect(ui->inputTab, &ConfigureInput::InputKeysChanged, ui->hotkeysTab,
             &ConfigureHotkeys::OnInputKeysChanged);
     connect(ui->hotkeysTab, &ConfigureHotkeys::HotkeysChanged, ui->inputTab,

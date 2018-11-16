@@ -28,6 +28,11 @@ public:
 
     void EmitHotkeysChanged();
 
+    /**
+     * Populates the hotkey list widget using data from the provided registry.
+     * Called everytime the Configure dialog is opened.
+     * @param registry The HotkeyRegistry whose data is used to populate the list.
+     */
     void Populate(const HotkeyRegistry& registry);
 
 public slots:
@@ -43,6 +48,12 @@ private:
 
     std::unique_ptr<Ui::ConfigureHotkeys> ui;
 
+    /**
+     * List of keyboard keys currently registered to any of the 3DS inputs.
+     * These can't be bound to any hotkey.
+     * Synchronised with ConfigureInput via signal-slot.
+     */
     QList<QKeySequence> input_keys_list;
+
     QStandardItemModel* model;
 };

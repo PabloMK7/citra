@@ -23,6 +23,7 @@ SequenceDialog::SequenceDialog(QWidget* parent) : QDialog(parent) {
 SequenceDialog::~SequenceDialog() = default;
 
 QKeySequence SequenceDialog::GetSequence() {
+    // Only the first key is returned. The other 3, if present, are ignored.
     return QKeySequence(key_sequence->keySequence()[0]);
 }
 
