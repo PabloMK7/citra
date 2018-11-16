@@ -103,7 +103,6 @@ add_library(core STATIC
     hle/applets/mint.h
     hle/applets/swkbd.cpp
     hle/applets/swkbd.h
-    hle/function_wrappers.h
     hle/ipc.h
     hle/ipc_helpers.h
     hle/kernel/address_arbiter.cpp
@@ -148,6 +147,7 @@ add_library(core STATIC
     hle/kernel/shared_page.h
     hle/kernel/svc.cpp
     hle/kernel/svc.h
+    hle/kernel/svc_wrapper.h
     hle/kernel/thread.cpp
     hle/kernel/thread.h
     hle/kernel/timer.cpp
