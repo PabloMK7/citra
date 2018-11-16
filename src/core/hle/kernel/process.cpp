@@ -303,7 +303,8 @@ ResultCode Process::LinearFree(VAddr target, u32 size) {
     return RESULT_SUCCESS;
 }
 
-ResultCode Process::Map(VAddr target, VAddr source, u32 size, VMAPermission perms) {
+ResultCode Process::Map(VAddr target, VAddr source, u32 size, VMAPermission perms,
+                        bool privileged) {
     LOG_DEBUG(Kernel, "Map memory target={:08X}, source={:08X}, size={:08X}, perms={:08X}", target,
               source, size, static_cast<u8>(perms));
     if (source < Memory::HEAP_VADDR || source + size > Memory::HEAP_VADDR_END ||
@@ -320,22 +321,45 @@ ResultCode Process::Map(VAddr target, VAddr source, u32 size, VMAPermission perm
         return ERR_INVALID_ADDRESS_STATE;
     }
 
+    // Check range overlapping
+    if (source - target < size || target - source < size) {
+        if (privileged) {
+            if (source == target) {
+                // privileged Map allows identical source and target address, which simply changes
+                // the state and the permission of the memory
+                return vm_manager.ChangeMemoryState(source, size, MemoryState::Private,
+                                                    VMAPermission::ReadWrite,
+                                                    MemoryState::AliasCode, perms);
+            } else {
+                return ERR_INVALID_ADDRESS;
+            }
+        } else {
+            return ERR_INVALID_ADDRESS_STATE;
+        }
+    }
+
+    MemoryState source_state = privileged ? MemoryState::Locked : MemoryState::Aliased;
+    MemoryState target_state = privileged ? MemoryState::AliasCode : MemoryState::Alias;
+    VMAPermission source_perm = privileged ? VMAPermission::None : VMAPermission::ReadWrite;
+
     // Mark source region as Aliased
     CASCADE_CODE(vm_manager.ChangeMemoryState(source, size, MemoryState::Private,
-                                              VMAPermission::ReadWrite, MemoryState::Aliased,
-                                              VMAPermission::ReadWrite));
+                                              VMAPermission::ReadWrite, source_state, source_perm));
 
     CASCADE_RESULT(auto backing_blocks, vm_manager.GetBackingBlocksForRange(source, size));
     VAddr interval_target = target;
     for (const auto [backing_memory, block_size] : backing_blocks) {
-        auto target_vma = vm_manager.MapBackingMemory(interval_target, backing_memory, block_size,
-                                                      MemoryState::Alias);
+        auto target_vma =
+            vm_manager.MapBackingMemory(interval_target, backing_memory, block_size, target_state);
+        ASSERT(target_vma.Succeeded());
+        vm_manager.Reprotect(target_vma.Unwrap(), perms);
         interval_target += block_size;
     }
 
     return RESULT_SUCCESS;
 }
-ResultCode Process::Unmap(VAddr target, VAddr source, u32 size, VMAPermission perms) {
+ResultCode Process::Unmap(VAddr target, VAddr source, u32 size, VMAPermission perms,
+                          bool privileged) {
     LOG_DEBUG(Kernel, "Unmap memory target={:08X}, source={:08X}, size={:08X}, perms={:08X}",
               target, source, size, static_cast<u8>(perms));
     if (source < Memory::HEAP_VADDR || source + size > Memory::HEAP_VADDR_END ||
@@ -349,11 +373,29 @@ ResultCode Process::Unmap(VAddr target, VAddr source, u32 size, VMAPermission pe
     // TODO(wwylele): check that the source and the target are actually a pair created by Map
     // Should return error 0xD8E007F5 in this case
 
+    if (source - target < size || target - source < size) {
+        if (privileged) {
+            if (source == target) {
+                // privileged Unmap allows identical source and target address, which simply changes
+                // the state and the permission of the memory
+                return vm_manager.ChangeMemoryState(source, size, MemoryState::AliasCode,
+                                                    VMAPermission::None, MemoryState::Private,
+                                                    perms);
+            } else {
+                return ERR_INVALID_ADDRESS;
+            }
+        } else {
+            return ERR_INVALID_ADDRESS_STATE;
+        }
+    }
+
+    MemoryState source_state = privileged ? MemoryState::Locked : MemoryState::Aliased;
+
     CASCADE_CODE(vm_manager.UnmapRange(target, size));
 
     // Change back source region state. Note that the permission is reprotected according to param
-    CASCADE_CODE(vm_manager.ChangeMemoryState(source, size, MemoryState::Aliased,
-                                              VMAPermission::None, MemoryState::Private, perms));
+    CASCADE_CODE(vm_manager.ChangeMemoryState(source, size, source_state, VMAPermission::None,
+                                              MemoryState::Private, perms));
 
     return RESULT_SUCCESS;
 }

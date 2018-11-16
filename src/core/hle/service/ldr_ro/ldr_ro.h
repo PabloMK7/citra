@@ -4,7 +4,6 @@
 
 #pragma once
 
-#include "core/hle/service/ldr_ro/memory_synchronizer.h"
 #include "core/hle/service/service.h"
 
 namespace Core {
@@ -14,7 +13,6 @@ class System;
 namespace Service::LDR {
 
 struct ClientSlot : public Kernel::SessionRequestHandler::SessionDataBase {
-    MemorySynchronizer memory_synchronizer;
     VAddr loaded_crs = 0; ///< the virtual address of the static module
 };
 
