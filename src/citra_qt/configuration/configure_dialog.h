@@ -29,7 +29,6 @@ private slots:
 
 signals:
     void languageChanged(const QString& locale);
-    void UpdateHotkeys();
 
 private:
     void setConfiguration();

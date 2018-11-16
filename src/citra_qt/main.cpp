@@ -1319,8 +1319,6 @@ void GMainWindow::OnConfigure() {
     ConfigureDialog configureDialog(this, hotkey_registry);
     connect(&configureDialog, &ConfigureDialog::languageChanged, this,
             &GMainWindow::OnLanguageChanged);
-    connect(&configureDialog, &ConfigureDialog::UpdateHotkeys, this,
-            [this]() { InitializeHotkeys(); });
     auto old_theme = UISettings::values.theme;
     const int old_input_profile_index = Settings::values.current_input_profile_index;
     const auto old_input_profiles = Settings::values.input_profiles;
@@ -1328,6 +1326,7 @@ void GMainWindow::OnConfigure() {
     auto result = configureDialog.exec();
     if (result == QDialog::Accepted) {
         configureDialog.applyConfiguration(hotkey_registry);
+        InitializeHotkeys();
         if (UISettings::values.theme != old_theme)
             UpdateUITheme();
         if (UISettings::values.enable_discord_presence != old_discord_presence)

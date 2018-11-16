@@ -26,8 +26,6 @@ ConfigureDialog::ConfigureDialog(QWidget* parent, const HotkeyRegistry& registry
             &ConfigureHotkeys::OnInputKeysChanged);
     connect(ui->hotkeysTab, &ConfigureHotkeys::HotkeysChanged, ui->inputTab,
             &ConfigureInput::OnHotkeysChanged);
-    connect(ui->hotkeysTab, &ConfigureHotkeys::HotkeysChanged, this,
-            [this]() { emit UpdateHotkeys(); });
 
     // Synchronise lists upon initialisation
     ui->inputTab->EmitInputKeysChanged();
