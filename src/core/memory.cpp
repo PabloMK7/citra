@@ -274,7 +274,6 @@ u8* GetPhysicalPointer(PAddr address) {
 
     static constexpr MemoryArea memory_areas[] = {
         {VRAM_PADDR, VRAM_SIZE},
-        {IO_AREA_PADDR, IO_AREA_SIZE},
         {DSP_RAM_PADDR, DSP_RAM_SIZE},
         {FCRAM_PADDR, FCRAM_N3DS_SIZE},
         {N3DS_EXTRA_RAM_PADDR, N3DS_EXTRA_RAM_SIZE},
@@ -282,16 +281,13 @@ u8* GetPhysicalPointer(PAddr address) {
 
     const auto area =
         std::find_if(std::begin(memory_areas), std::end(memory_areas), [&](const auto& area) {
-            return address >= area.paddr_base && address < area.paddr_base + area.size;
+            // Note: the region end check is inclusive because the user can pass in an address that
+            // represents an open right bound
+            return address >= area.paddr_base && address <= area.paddr_base + area.size;
         });
 
     if (area == std::end(memory_areas)) {
         LOG_ERROR(HW_Memory, "unknown GetPhysicalPointer @ 0x{:08X}", address);
-        return nullptr;
-    }
-
-    if (area->paddr_base == IO_AREA_PADDR) {
-        LOG_ERROR(HW_Memory, "MMIO mappings are not supported yet. phys_addr=0x{:08X}", address);
         return nullptr;
     }
 
