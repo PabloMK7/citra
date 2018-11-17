@@ -212,10 +212,6 @@ bool IsValidVirtualAddress(const Kernel::Process& process, const VAddr vaddr) {
     return false;
 }
 
-bool IsValidVirtualAddress(const VAddr vaddr) {
-    return IsValidVirtualAddress(*Core::System::GetInstance().Kernel().GetCurrentProcess(), vaddr);
-}
-
 bool IsValidPhysicalAddress(const PAddr paddr) {
     return GetPhysicalPointer(paddr) != nullptr;
 }

@@ -183,7 +183,6 @@ PageTable* GetCurrentPageTable();
 
 /// Determines if the given VAddr is valid for the specified process.
 bool IsValidVirtualAddress(const Kernel::Process& process, VAddr vaddr);
-bool IsValidVirtualAddress(VAddr vaddr);
 
 bool IsValidPhysicalAddress(PAddr paddr);
 
