@@ -110,12 +110,6 @@ static MMIORegionPointer GetMMIOHandler(const PageTable& page_table, VAddr vaddr
     return nullptr; // Should never happen
 }
 
-static MMIORegionPointer GetMMIOHandler(VAddr vaddr) {
-    const PageTable& page_table =
-        Core::System::GetInstance().Kernel().GetCurrentProcess()->vm_manager.page_table;
-    return GetMMIOHandler(page_table, vaddr);
-}
-
 template <typename T>
 T ReadMMIO(MMIORegionPointer mmio_handler, VAddr addr);
 
@@ -148,7 +142,7 @@ T Read(const VAddr vaddr) {
         return value;
     }
     case PageType::Special:
-        return ReadMMIO<T>(GetMMIOHandler(vaddr), vaddr);
+        return ReadMMIO<T>(GetMMIOHandler(*current_page_table, vaddr), vaddr);
     default:
         UNREACHABLE();
     }
@@ -184,7 +178,7 @@ void Write(const VAddr vaddr, const T data) {
         break;
     }
     case PageType::Special:
-        WriteMMIO<T>(GetMMIOHandler(vaddr), vaddr, data);
+        WriteMMIO<T>(GetMMIOHandler(*current_page_table, vaddr), vaddr, data);
         break;
     default:
         UNREACHABLE();
