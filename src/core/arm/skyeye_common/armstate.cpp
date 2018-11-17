@@ -468,8 +468,7 @@ void ARMul_State::WriteCP15Register(u32 value, u32 crn, u32 opcode_1, u32 crm, u
             if (crm == 0 && opcode_2 == 4) {
                 CP15[CP15_WAIT_FOR_INTERRUPT] = value;
             } else if (crm == 4 && opcode_2 == 0) {
-                // NOTE: Not entirely accurate. This should do permission checks.
-                CP15[CP15_PHYS_ADDRESS] = Memory::VirtualToPhysicalAddress(value);
+                LOG_ERROR(Core_ARM11, "Unimplemented virtual to physical address");
             } else if (crm == 5) {
                 if (opcode_2 == 0)
                     CP15[CP15_INVALIDATE_INSTR_CACHE] = value;

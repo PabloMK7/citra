@@ -6,7 +6,6 @@
 
 #include <array>
 #include <cstddef>
-#include <optional>
 #include <string>
 #include <vector>
 #include "common/common_types.h"
@@ -213,20 +212,6 @@ void CopyBlock(const Kernel::Process& src_process, const Kernel::Process& dest_p
 u8* GetPointer(VAddr vaddr);
 
 std::string ReadCString(VAddr vaddr, std::size_t max_length);
-
-/**
- * Converts a virtual address inside a region with 1:1 mapping to physical memory to a physical
- * address. This should be used by services to translate addresses for use by the hardware.
- */
-std::optional<PAddr> TryVirtualToPhysicalAddress(VAddr addr);
-
-/**
- * Converts a virtual address inside a region with 1:1 mapping to physical memory to a physical
- * address. This should be used by services to translate addresses for use by the hardware.
- *
- * @deprecated Use TryVirtualToPhysicalAddress(), which reports failure.
- */
-PAddr VirtualToPhysicalAddress(VAddr addr);
 
 /**
  * Gets a pointer to the memory region beginning at the specified physical address.

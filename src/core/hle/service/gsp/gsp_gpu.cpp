@@ -56,6 +56,29 @@ constexpr u32 MaxGSPThreads = 4;
 /// Thread ids currently in use by the sessions connected to the GSPGPU service.
 static std::array<bool, MaxGSPThreads> used_thread_ids = {false, false, false, false};
 
+static PAddr VirtualToPhysicalAddress(VAddr addr) {
+    if (addr == 0) {
+        return 0;
+    }
+
+    // Note: the region end check is inclusive because the game can pass in an address that
+    // represents an open right boundary
+    if (addr >= Memory::VRAM_VADDR && addr <= Memory::VRAM_VADDR_END) {
+        return addr - Memory::VRAM_VADDR + Memory::VRAM_PADDR;
+    }
+    if (addr >= Memory::LINEAR_HEAP_VADDR && addr <= Memory::LINEAR_HEAP_VADDR_END) {
+        return addr - Memory::LINEAR_HEAP_VADDR + Memory::FCRAM_PADDR;
+    }
+    if (addr >= Memory::NEW_LINEAR_HEAP_VADDR && addr <= Memory::NEW_LINEAR_HEAP_VADDR_END) {
+        return addr - Memory::NEW_LINEAR_HEAP_VADDR + Memory::FCRAM_PADDR;
+    }
+
+    LOG_ERROR(HW_Memory, "Unknown virtual address @ 0x{:08X}", addr);
+    // To help with debugging, set bit on address so that it's obviously invalid.
+    // TODO: find the correct way to handle this error
+    return addr | 0x80000000;
+}
+
 static u32 GetUnusedThreadId() {
     for (u32 id = 0; id < MaxGSPThreads; ++id) {
         if (!used_thread_ids[id])
@@ -258,8 +281,8 @@ void GSP_GPU::ReadHWRegs(Kernel::HLERequestContext& ctx) {
 
 ResultCode SetBufferSwap(u32 screen_id, const FrameBufferInfo& info) {
     u32 base_address = 0x400000;
-    PAddr phys_address_left = Memory::VirtualToPhysicalAddress(info.address_left);
-    PAddr phys_address_right = Memory::VirtualToPhysicalAddress(info.address_right);
+    PAddr phys_address_left = VirtualToPhysicalAddress(info.address_left);
+    PAddr phys_address_right = VirtualToPhysicalAddress(info.address_right);
     if (info.active_fb == 0) {
         WriteSingleHWReg(base_address + 4 * static_cast<u32>(GPU_REG_INDEX(
                                                 framebuffer_config[screen_id].address_left1)),
@@ -495,7 +518,7 @@ static void ExecuteCommand(const Command& command, u32 thread_id) {
         }
 
         WriteGPURegister(static_cast<u32>(GPU_REG_INDEX(command_processor_config.address)),
-                         Memory::VirtualToPhysicalAddress(params.address) >> 3);
+                         VirtualToPhysicalAddress(params.address) >> 3);
         WriteGPURegister(static_cast<u32>(GPU_REG_INDEX(command_processor_config.size)),
                          params.size);
 
@@ -515,9 +538,9 @@ static void ExecuteCommand(const Command& command, u32 thread_id) {
 
         if (params.start1 != 0) {
             WriteGPURegister(static_cast<u32>(GPU_REG_INDEX(memory_fill_config[0].address_start)),
-                             Memory::VirtualToPhysicalAddress(params.start1) >> 3);
+                             VirtualToPhysicalAddress(params.start1) >> 3);
             WriteGPURegister(static_cast<u32>(GPU_REG_INDEX(memory_fill_config[0].address_end)),
-                             Memory::VirtualToPhysicalAddress(params.end1) >> 3);
+                             VirtualToPhysicalAddress(params.end1) >> 3);
             WriteGPURegister(static_cast<u32>(GPU_REG_INDEX(memory_fill_config[0].value_32bit)),
                              params.value1);
             WriteGPURegister(static_cast<u32>(GPU_REG_INDEX(memory_fill_config[0].control)),
@@ -526,9 +549,9 @@ static void ExecuteCommand(const Command& command, u32 thread_id) {
 
         if (params.start2 != 0) {
             WriteGPURegister(static_cast<u32>(GPU_REG_INDEX(memory_fill_config[1].address_start)),
-                             Memory::VirtualToPhysicalAddress(params.start2) >> 3);
+                             VirtualToPhysicalAddress(params.start2) >> 3);
             WriteGPURegister(static_cast<u32>(GPU_REG_INDEX(memory_fill_config[1].address_end)),
-                             Memory::VirtualToPhysicalAddress(params.end2) >> 3);
+                             VirtualToPhysicalAddress(params.end2) >> 3);
             WriteGPURegister(static_cast<u32>(GPU_REG_INDEX(memory_fill_config[1].value_32bit)),
                              params.value2);
             WriteGPURegister(static_cast<u32>(GPU_REG_INDEX(memory_fill_config[1].control)),
@@ -540,9 +563,9 @@ static void ExecuteCommand(const Command& command, u32 thread_id) {
     case CommandId::SET_DISPLAY_TRANSFER: {
         auto& params = command.display_transfer;
         WriteGPURegister(static_cast<u32>(GPU_REG_INDEX(display_transfer_config.input_address)),
-                         Memory::VirtualToPhysicalAddress(params.in_buffer_address) >> 3);
+                         VirtualToPhysicalAddress(params.in_buffer_address) >> 3);
         WriteGPURegister(static_cast<u32>(GPU_REG_INDEX(display_transfer_config.output_address)),
-                         Memory::VirtualToPhysicalAddress(params.out_buffer_address) >> 3);
+                         VirtualToPhysicalAddress(params.out_buffer_address) >> 3);
         WriteGPURegister(static_cast<u32>(GPU_REG_INDEX(display_transfer_config.input_size)),
                          params.in_buffer_size);
         WriteGPURegister(static_cast<u32>(GPU_REG_INDEX(display_transfer_config.output_size)),
@@ -556,9 +579,9 @@ static void ExecuteCommand(const Command& command, u32 thread_id) {
     case CommandId::SET_TEXTURE_COPY: {
         auto& params = command.texture_copy;
         WriteGPURegister((u32)GPU_REG_INDEX(display_transfer_config.input_address),
-                         Memory::VirtualToPhysicalAddress(params.in_buffer_address) >> 3);
+                         VirtualToPhysicalAddress(params.in_buffer_address) >> 3);
         WriteGPURegister((u32)GPU_REG_INDEX(display_transfer_config.output_address),
-                         Memory::VirtualToPhysicalAddress(params.out_buffer_address) >> 3);
+                         VirtualToPhysicalAddress(params.out_buffer_address) >> 3);
         WriteGPURegister((u32)GPU_REG_INDEX(display_transfer_config.texture_copy.size),
                          params.size);
         WriteGPURegister((u32)GPU_REG_INDEX(display_transfer_config.texture_copy.input_size),

@@ -426,7 +426,7 @@ void RasterizerFlushVirtualRegion(VAddr start, u32 size, FlushMode mode) {
 
     VAddr end = start + size;
 
-    auto CheckRegion = [&](VAddr region_start, VAddr region_end) {
+    auto CheckRegion = [&](VAddr region_start, VAddr region_end, PAddr paddr_region_start) {
         if (start >= region_end || end <= region_start) {
             // No overlap with region
             return;
@@ -434,10 +434,7 @@ void RasterizerFlushVirtualRegion(VAddr start, u32 size, FlushMode mode) {
 
         VAddr overlap_start = std::max(start, region_start);
         VAddr overlap_end = std::min(end, region_end);
-
-        auto maybe_paddr = TryVirtualToPhysicalAddress(overlap_start);
-        ASSERT(maybe_paddr);
-        PAddr physical_start = *maybe_paddr;
+        PAddr physical_start = paddr_region_start + (overlap_start - region_start);
         u32 overlap_size = overlap_end - overlap_start;
 
         auto* rasterizer = VideoCore::g_renderer->Rasterizer();
@@ -454,9 +451,9 @@ void RasterizerFlushVirtualRegion(VAddr start, u32 size, FlushMode mode) {
         }
     };
 
-    CheckRegion(LINEAR_HEAP_VADDR, LINEAR_HEAP_VADDR_END);
-    CheckRegion(NEW_LINEAR_HEAP_VADDR, NEW_LINEAR_HEAP_VADDR_END);
-    CheckRegion(VRAM_VADDR, VRAM_VADDR_END);
+    CheckRegion(LINEAR_HEAP_VADDR, LINEAR_HEAP_VADDR_END, FCRAM_PADDR);
+    CheckRegion(NEW_LINEAR_HEAP_VADDR, NEW_LINEAR_HEAP_VADDR_END, FCRAM_PADDR);
+    CheckRegion(VRAM_VADDR, VRAM_VADDR_END, VRAM_PADDR);
 }
 
 u8 Read8(const VAddr addr) {
@@ -796,36 +793,6 @@ void WriteMMIO<u32>(MMIORegionPointer mmio_handler, VAddr addr, const u32 data) 
 template <>
 void WriteMMIO<u64>(MMIORegionPointer mmio_handler, VAddr addr, const u64 data) {
     mmio_handler->Write64(addr, data);
-}
-
-std::optional<PAddr> TryVirtualToPhysicalAddress(const VAddr addr) {
-    if (addr == 0) {
-        return 0;
-    } else if (addr >= VRAM_VADDR && addr < VRAM_VADDR_END) {
-        return addr - VRAM_VADDR + VRAM_PADDR;
-    } else if (addr >= LINEAR_HEAP_VADDR && addr < LINEAR_HEAP_VADDR_END) {
-        return addr - LINEAR_HEAP_VADDR + FCRAM_PADDR;
-    } else if (addr >= NEW_LINEAR_HEAP_VADDR && addr < NEW_LINEAR_HEAP_VADDR_END) {
-        return addr - NEW_LINEAR_HEAP_VADDR + FCRAM_PADDR;
-    } else if (addr >= DSP_RAM_VADDR && addr < DSP_RAM_VADDR_END) {
-        return addr - DSP_RAM_VADDR + DSP_RAM_PADDR;
-    } else if (addr >= IO_AREA_VADDR && addr < IO_AREA_VADDR_END) {
-        return addr - IO_AREA_VADDR + IO_AREA_PADDR;
-    } else if (addr >= N3DS_EXTRA_RAM_VADDR && addr < N3DS_EXTRA_RAM_VADDR_END) {
-        return addr - N3DS_EXTRA_RAM_VADDR + N3DS_EXTRA_RAM_PADDR;
-    }
-
-    return {};
-}
-
-PAddr VirtualToPhysicalAddress(const VAddr addr) {
-    auto paddr = TryVirtualToPhysicalAddress(addr);
-    if (!paddr) {
-        LOG_ERROR(HW_Memory, "Unknown virtual address @ 0x{:08X}", addr);
-        // To help with debugging, set bit on address so that it's obviously invalid.
-        return addr | 0x80000000;
-    }
-    return *paddr;
 }
 
 u32 GetFCRAMOffset(u8* pointer) {
