@@ -14,7 +14,7 @@
 #include "video_core/regs.h"
 #include "video_core/shader/shader.h"
 
-namespace GLShader {
+namespace OpenGL {
 
 enum Attributes {
     ATTRIBUTE_POSITION,
@@ -255,33 +255,33 @@ std::optional<std::string> GenerateGeometryShader(const Pica::Shader::ShaderSetu
  */
 std::string GenerateFragmentShader(const PicaFSConfig& config, bool separable_shader);
 
-} // namespace GLShader
+} // namespace OpenGL
 
 namespace std {
 template <>
-struct hash<GLShader::PicaFSConfig> {
-    std::size_t operator()(const GLShader::PicaFSConfig& k) const {
+struct hash<OpenGL::PicaFSConfig> {
+    std::size_t operator()(const OpenGL::PicaFSConfig& k) const {
         return k.Hash();
     }
 };
 
 template <>
-struct hash<GLShader::PicaVSConfig> {
-    std::size_t operator()(const GLShader::PicaVSConfig& k) const {
+struct hash<OpenGL::PicaVSConfig> {
+    std::size_t operator()(const OpenGL::PicaVSConfig& k) const {
         return k.Hash();
     }
 };
 
 template <>
-struct hash<GLShader::PicaFixedGSConfig> {
-    std::size_t operator()(const GLShader::PicaFixedGSConfig& k) const {
+struct hash<OpenGL::PicaFixedGSConfig> {
+    std::size_t operator()(const OpenGL::PicaFixedGSConfig& k) const {
         return k.Hash();
     }
 };
 
 template <>
-struct hash<GLShader::PicaGSConfig> {
-    std::size_t operator()(const GLShader::PicaGSConfig& k) const {
+struct hash<OpenGL::PicaGSConfig> {
+    std::size_t operator()(const OpenGL::PicaGSConfig& k) const {
         return k.Hash();
     }
 };

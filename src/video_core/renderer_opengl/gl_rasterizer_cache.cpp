@@ -32,6 +32,8 @@
 #include "video_core/utils.h"
 #include "video_core/video_core.h"
 
+namespace OpenGL {
+
 using SurfaceType = SurfaceParams::SurfaceType;
 using PixelFormat = SurfaceParams::PixelFormat;
 
@@ -1727,3 +1729,5 @@ void RasterizerCacheOpenGL::UpdatePagesCachedCount(PAddr addr, u32 size, int del
     if (delta < 0)
         cached_pages.add({pages_interval, delta});
 }
+
+} // namespace OpenGL

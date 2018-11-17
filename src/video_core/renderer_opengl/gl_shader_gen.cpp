@@ -27,7 +27,7 @@ using Pica::TexturingRegs;
 using TevStageConfig = TexturingRegs::TevStageConfig;
 using VSOutputAttributes = RasterizerRegs::VSOutputAttributes;
 
-namespace GLShader {
+namespace OpenGL {
 
 static const std::string UniformBlockDef = R"(
 #define NUM_TEV_STAGES 6
@@ -118,7 +118,7 @@ PicaFSConfig PicaFSConfig::BuildFromRegs(const Pica::Regs& regs) {
 
     state.alpha_test_func = regs.framebuffer.output_merger.alpha_test.enable
                                 ? regs.framebuffer.output_merger.alpha_test.func.Value()
-                                : Pica::FramebufferRegs::CompareFunc::Always;
+                                : FramebufferRegs::CompareFunc::Always;
 
     state.texture0_type = regs.texturing.texture0.type;
 
@@ -237,7 +237,7 @@ PicaFSConfig PicaFSConfig::BuildFromRegs(const Pica::Regs& regs) {
     }
 
     state.shadow_rendering = regs.framebuffer.output_merger.fragment_operation_mode ==
-                             Pica::FramebufferRegs::FragmentOperationMode::Shadow;
+                             FramebufferRegs::FragmentOperationMode::Shadow;
 
     state.shadow_texture_orthographic = regs.texturing.shadow.orthographic != 0;
     state.shadow_texture_bias = regs.texturing.shadow.bias << 1;
@@ -1641,7 +1641,7 @@ std::optional<std::string> GenerateVertexShader(const Pica::Shader::ShaderSetup&
         out += "#extension GL_ARB_separate_shader_objects : enable\n";
     }
 
-    out += Pica::Shader::Decompiler::GetCommonDeclarations();
+    out += ShaderDecompiler::GetCommonDeclarations();
 
     std::array<bool, 16> used_regs{};
     auto get_input_reg = [&](u32 reg) -> std::string {
@@ -1658,7 +1658,7 @@ std::optional<std::string> GenerateVertexShader(const Pica::Shader::ShaderSetup&
         return "";
     };
 
-    auto program_source_opt = Pica::Shader::Decompiler::DecompileProgram(
+    auto program_source_opt = ShaderDecompiler::DecompileProgram(
         setup.program_code, setup.swizzle_data, config.state.main_offset, get_input_reg,
         get_output_reg, config.state.sanitize_mul, false);
 
@@ -1703,7 +1703,7 @@ layout (std140) uniform vs_config {
 static std::string GetGSCommonSource(const PicaGSConfigCommonRaw& config, bool separable_shader) {
     std::string out = GetVertexInterfaceDeclaration(true, separable_shader);
     out += UniformBlockDef;
-    out += Pica::Shader::Decompiler::GetCommonDeclarations();
+    out += ShaderDecompiler::GetCommonDeclarations();
 
     out += '\n';
     for (u32 i = 0; i < config.vs_output_attributes; ++i) {
@@ -1873,7 +1873,7 @@ std::optional<std::string> GenerateGeometryShader(const Pica::Shader::ShaderSetu
         return "";
     };
 
-    auto program_source_opt = Pica::Shader::Decompiler::DecompileProgram(
+    auto program_source_opt = ShaderDecompiler::DecompileProgram(
         setup.program_code, setup.swizzle_data, config.state.main_offset, get_input_reg,
         get_output_reg, config.state.sanitize_mul, true);
 
@@ -1932,4 +1932,4 @@ void emit() {
     return out;
 }
 
-} // namespace GLShader
+} // namespace OpenGL

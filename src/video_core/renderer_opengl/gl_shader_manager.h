@@ -11,6 +11,8 @@
 #include "video_core/renderer_opengl/gl_shader_gen.h"
 #include "video_core/renderer_opengl/pica_to_gl.h"
 
+namespace OpenGL {
+
 enum class UniformBindings : GLuint { Common, VS, GS };
 
 struct LightSrc {
@@ -102,19 +104,19 @@ public:
     ShaderProgramManager(bool separable, bool is_amd);
     ~ShaderProgramManager();
 
-    bool UseProgrammableVertexShader(const GLShader::PicaVSConfig& config,
+    bool UseProgrammableVertexShader(const PicaVSConfig& config,
                                      const Pica::Shader::ShaderSetup setup);
 
     void UseTrivialVertexShader();
 
-    bool UseProgrammableGeometryShader(const GLShader::PicaGSConfig& config,
+    bool UseProgrammableGeometryShader(const PicaGSConfig& config,
                                        const Pica::Shader::ShaderSetup setup);
 
-    void UseFixedGeometryShader(const GLShader::PicaFixedGSConfig& config);
+    void UseFixedGeometryShader(const PicaFixedGSConfig& config);
 
     void UseTrivialGeometryShader();
 
-    void UseFragmentShader(const GLShader::PicaFSConfig& config);
+    void UseFragmentShader(const PicaFSConfig& config);
 
     void ApplyTo(OpenGLState& state);
 
@@ -122,3 +124,4 @@ private:
     class Impl;
     std::unique_ptr<Impl> impl;
 };
+} // namespace OpenGL

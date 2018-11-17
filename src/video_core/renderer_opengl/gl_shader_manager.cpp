@@ -8,9 +8,11 @@
 #include <boost/variant.hpp>
 #include "video_core/renderer_opengl/gl_shader_manager.h"
 
+namespace OpenGL {
+
 static void SetShaderUniformBlockBinding(GLuint shader, const char* name, UniformBindings binding,
                                          std::size_t expected_size) {
-    GLuint ub_index = glGetUniformBlockIndex(shader, name);
+    const GLuint ub_index = glGetUniformBlockIndex(shader, name);
     if (ub_index == GL_INVALID_INDEX) {
         return;
     }
@@ -127,7 +129,7 @@ private:
 class TrivialVertexShader {
 public:
     explicit TrivialVertexShader(bool separable) : program(separable) {
-        program.Create(GLShader::GenerateTrivialVertexShader(separable).c_str(), GL_VERTEX_SHADER);
+        program.Create(GenerateTrivialVertexShader(separable).c_str(), GL_VERTEX_SHADER);
     }
     GLuint Get() const {
         return program.GetHandle();
@@ -201,18 +203,15 @@ private:
 };
 
 using ProgrammableVertexShaders =
-    ShaderDoubleCache<GLShader::PicaVSConfig, &GLShader::GenerateVertexShader, GL_VERTEX_SHADER>;
+    ShaderDoubleCache<PicaVSConfig, &GenerateVertexShader, GL_VERTEX_SHADER>;
 
 using ProgrammableGeometryShaders =
-    ShaderDoubleCache<GLShader::PicaGSConfig, &GLShader::GenerateGeometryShader,
-                      GL_GEOMETRY_SHADER>;
+    ShaderDoubleCache<PicaGSConfig, &GenerateGeometryShader, GL_GEOMETRY_SHADER>;
 
 using FixedGeometryShaders =
-    ShaderCache<GLShader::PicaFixedGSConfig, &GLShader::GenerateFixedGeometryShader,
-                GL_GEOMETRY_SHADER>;
+    ShaderCache<PicaFixedGSConfig, &GenerateFixedGeometryShader, GL_GEOMETRY_SHADER>;
 
-using FragmentShaders =
-    ShaderCache<GLShader::PicaFSConfig, &GLShader::GenerateFragmentShader, GL_FRAGMENT_SHADER>;
+using FragmentShaders = ShaderCache<PicaFSConfig, &GenerateFragmentShader, GL_FRAGMENT_SHADER>;
 
 class ShaderProgramManager::Impl {
 public:
@@ -270,7 +269,7 @@ ShaderProgramManager::ShaderProgramManager(bool separable, bool is_amd)
 
 ShaderProgramManager::~ShaderProgramManager() = default;
 
-bool ShaderProgramManager::UseProgrammableVertexShader(const GLShader::PicaVSConfig& config,
+bool ShaderProgramManager::UseProgrammableVertexShader(const PicaVSConfig& config,
                                                        const Pica::Shader::ShaderSetup setup) {
     GLuint handle = impl->programmable_vertex_shaders.Get(config, setup);
     if (handle == 0)
@@ -283,7 +282,7 @@ void ShaderProgramManager::UseTrivialVertexShader() {
     impl->current.vs = impl->trivial_vertex_shader.Get();
 }
 
-bool ShaderProgramManager::UseProgrammableGeometryShader(const GLShader::PicaGSConfig& config,
+bool ShaderProgramManager::UseProgrammableGeometryShader(const PicaGSConfig& config,
                                                          const Pica::Shader::ShaderSetup setup) {
     GLuint handle = impl->programmable_geometry_shaders.Get(config, setup);
     if (handle == 0)
@@ -292,7 +291,7 @@ bool ShaderProgramManager::UseProgrammableGeometryShader(const GLShader::PicaGSC
     return true;
 }
 
-void ShaderProgramManager::UseFixedGeometryShader(const GLShader::PicaFixedGSConfig& config) {
+void ShaderProgramManager::UseFixedGeometryShader(const PicaFixedGSConfig& config) {
     impl->current.gs = impl->fixed_geometry_shaders.Get(config);
 }
 
@@ -300,7 +299,7 @@ void ShaderProgramManager::UseTrivialGeometryShader() {
     impl->current.gs = 0;
 }
 
-void ShaderProgramManager::UseFragmentShader(const GLShader::PicaFSConfig& config) {
+void ShaderProgramManager::UseFragmentShader(const PicaFSConfig& config) {
     impl->current.fs = impl->fragment_shaders.Get(config);
 }
 
@@ -331,3 +330,4 @@ void ShaderProgramManager::ApplyTo(OpenGLState& state) {
         state.draw.shader_program = cached_program.handle;
     }
 }
+} // namespace OpenGL

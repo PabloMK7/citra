@@ -30,8 +30,9 @@
 #include "video_core/shader/shader.h"
 
 class EmuWindow;
-struct ScreenInfo;
 class ShaderProgramManager;
+
+namespace OpenGL {
 
 class RasterizerOpenGL : public VideoCore::RasterizerInterface {
 public:
@@ -307,3 +308,5 @@ private:
 
     bool allow_shadow;
 };
+
+} // namespace OpenGL

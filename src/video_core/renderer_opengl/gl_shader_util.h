@@ -7,7 +7,7 @@
 #include <vector>
 #include <glad/glad.h>
 
-namespace GLShader {
+namespace OpenGL {
 
 /**
  * Utility function to create and compile an OpenGL GLSL shader
@@ -24,4 +24,4 @@ GLuint LoadShader(const char* source, GLenum type);
  */
 GLuint LoadProgram(bool separable_program, const std::vector<GLuint>& shaders);
 
-} // namespace GLShader
+} // namespace OpenGL

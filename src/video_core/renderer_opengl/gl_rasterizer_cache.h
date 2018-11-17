@@ -31,6 +31,50 @@
 #include "video_core/renderer_opengl/gl_resource_manager.h"
 #include "video_core/texture/texture_decode.h"
 
+namespace OpenGL {
+
+struct TextureCubeConfig {
+    PAddr px;
+    PAddr nx;
+    PAddr py;
+    PAddr ny;
+    PAddr pz;
+    PAddr nz;
+    u32 width;
+    Pica::TexturingRegs::TextureFormat format;
+
+    bool operator==(const TextureCubeConfig& rhs) const {
+        return std::tie(px, nx, py, ny, pz, nz, width, format) ==
+               std::tie(rhs.px, rhs.nx, rhs.py, rhs.ny, rhs.pz, rhs.nz, rhs.width, rhs.format);
+    }
+
+    bool operator!=(const TextureCubeConfig& rhs) const {
+        return !(*this == rhs);
+    }
+};
+
+} // namespace OpenGL
+
+namespace std {
+template <>
+struct hash<OpenGL::TextureCubeConfig> {
+    std::size_t operator()(const OpenGL::TextureCubeConfig& config) const {
+        std::size_t hash = 0;
+        boost::hash_combine(hash, config.px);
+        boost::hash_combine(hash, config.nx);
+        boost::hash_combine(hash, config.py);
+        boost::hash_combine(hash, config.ny);
+        boost::hash_combine(hash, config.pz);
+        boost::hash_combine(hash, config.nz);
+        boost::hash_combine(hash, config.width);
+        boost::hash_combine(hash, static_cast<u32>(config.format));
+        return hash;
+    }
+};
+} // namespace std
+
+namespace OpenGL {
+
 struct CachedSurface;
 using Surface = std::shared_ptr<CachedSurface>;
 using SurfaceSet = std::set<Surface>;
@@ -351,44 +395,6 @@ private:
     std::list<std::weak_ptr<SurfaceWatcher>> watchers;
 };
 
-struct TextureCubeConfig {
-    PAddr px;
-    PAddr nx;
-    PAddr py;
-    PAddr ny;
-    PAddr pz;
-    PAddr nz;
-    u32 width;
-    Pica::TexturingRegs::TextureFormat format;
-
-    bool operator==(const TextureCubeConfig& rhs) const {
-        return std::tie(px, nx, py, ny, pz, nz, width, format) ==
-               std::tie(rhs.px, rhs.nx, rhs.py, rhs.ny, rhs.pz, rhs.nz, rhs.width, rhs.format);
-    }
-
-    bool operator!=(const TextureCubeConfig& rhs) const {
-        return !(*this == rhs);
-    }
-};
-
-namespace std {
-template <>
-struct hash<TextureCubeConfig> {
-    std::size_t operator()(const TextureCubeConfig& config) const {
-        std::size_t hash = 0;
-        boost::hash_combine(hash, config.px);
-        boost::hash_combine(hash, config.nx);
-        boost::hash_combine(hash, config.py);
-        boost::hash_combine(hash, config.ny);
-        boost::hash_combine(hash, config.pz);
-        boost::hash_combine(hash, config.nz);
-        boost::hash_combine(hash, config.width);
-        boost::hash_combine(hash, static_cast<u32>(config.format));
-        return hash;
-    }
-};
-} // namespace std
-
 struct CachedTextureCube {
     OGLTexture texture;
     u16 res_scale = 1;
@@ -486,3 +492,4 @@ private:
 
     std::unordered_map<TextureCubeConfig, CachedTextureCube> texture_cube_cache;
 };
+} // namespace OpenGL

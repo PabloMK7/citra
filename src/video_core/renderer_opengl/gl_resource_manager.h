@@ -11,6 +11,8 @@
 #include "video_core/renderer_opengl/gl_shader_util.h"
 #include "video_core/renderer_opengl/gl_state.h"
 
+namespace OpenGL {
+
 class OGLTexture : private NonCopyable {
 public:
     OGLTexture() = default;
@@ -102,7 +104,7 @@ public:
             return;
         if (source == nullptr)
             return;
-        handle = GLShader::LoadShader(source, type);
+        handle = LoadShader(source, type);
     }
 
     void Release() {
@@ -135,7 +137,7 @@ public:
     void Create(bool separable_program, const std::vector<GLuint>& shaders) {
         if (handle != 0)
             return;
-        handle = GLShader::LoadProgram(separable_program, shaders);
+        handle = LoadProgram(separable_program, shaders);
     }
 
     /// Creates a new program from given shader soruce code
@@ -294,3 +296,5 @@ public:
 
     GLuint handle = 0;
 };
+
+} // namespace OpenGL

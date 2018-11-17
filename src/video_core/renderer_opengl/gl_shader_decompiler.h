@@ -9,12 +9,10 @@
 #include "common/common_types.h"
 #include "video_core/shader/shader.h"
 
-namespace Pica {
-namespace Shader {
-namespace Decompiler {
+namespace OpenGL::ShaderDecompiler {
 
-using ProgramCode = std::array<u32, MAX_PROGRAM_CODE_LENGTH>;
-using SwizzleData = std::array<u32, MAX_SWIZZLE_DATA_LENGTH>;
+using ProgramCode = std::array<u32, Pica::Shader::MAX_PROGRAM_CODE_LENGTH>;
+using SwizzleData = std::array<u32, Pica::Shader::MAX_SWIZZLE_DATA_LENGTH>;
 using RegGetter = std::function<std::string(u32)>;
 
 std::string GetCommonDeclarations();
@@ -25,6 +23,4 @@ std::optional<std::string> DecompileProgram(const ProgramCode& program_code,
                                             const RegGetter& outputreg_getter, bool sanitize_mul,
                                             bool is_gs);
 
-} // namespace Decompiler
-} // namespace Shader
-} // namespace Pica
+} // namespace OpenGL::ShaderDecompiler

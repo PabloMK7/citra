@@ -25,6 +25,8 @@
 #include "video_core/renderer_opengl/pica_to_gl.h"
 #include "video_core/renderer_opengl/renderer_opengl.h"
 
+namespace OpenGL {
+
 using PixelFormat = SurfaceParams::PixelFormat;
 using SurfaceType = SurfaceParams::SurfaceType;
 
@@ -102,35 +104,35 @@ RasterizerOpenGL::RasterizerOpenGL(EmuWindow& window)
     state.draw.vertex_buffer = vertex_buffer.GetHandle();
     state.Apply();
 
-    glVertexAttribPointer(GLShader::ATTRIBUTE_POSITION, 4, GL_FLOAT, GL_FALSE,
-                          sizeof(HardwareVertex), (GLvoid*)offsetof(HardwareVertex, position));
-    glEnableVertexAttribArray(GLShader::ATTRIBUTE_POSITION);
+    glVertexAttribPointer(ATTRIBUTE_POSITION, 4, GL_FLOAT, GL_FALSE, sizeof(HardwareVertex),
+                          (GLvoid*)offsetof(HardwareVertex, position));
+    glEnableVertexAttribArray(ATTRIBUTE_POSITION);
 
-    glVertexAttribPointer(GLShader::ATTRIBUTE_COLOR, 4, GL_FLOAT, GL_FALSE, sizeof(HardwareVertex),
+    glVertexAttribPointer(ATTRIBUTE_COLOR, 4, GL_FLOAT, GL_FALSE, sizeof(HardwareVertex),
                           (GLvoid*)offsetof(HardwareVertex, color));
-    glEnableVertexAttribArray(GLShader::ATTRIBUTE_COLOR);
+    glEnableVertexAttribArray(ATTRIBUTE_COLOR);
 
-    glVertexAttribPointer(GLShader::ATTRIBUTE_TEXCOORD0, 2, GL_FLOAT, GL_FALSE,
-                          sizeof(HardwareVertex), (GLvoid*)offsetof(HardwareVertex, tex_coord0));
-    glVertexAttribPointer(GLShader::ATTRIBUTE_TEXCOORD1, 2, GL_FLOAT, GL_FALSE,
-                          sizeof(HardwareVertex), (GLvoid*)offsetof(HardwareVertex, tex_coord1));
-    glVertexAttribPointer(GLShader::ATTRIBUTE_TEXCOORD2, 2, GL_FLOAT, GL_FALSE,
-                          sizeof(HardwareVertex), (GLvoid*)offsetof(HardwareVertex, tex_coord2));
-    glEnableVertexAttribArray(GLShader::ATTRIBUTE_TEXCOORD0);
-    glEnableVertexAttribArray(GLShader::ATTRIBUTE_TEXCOORD1);
-    glEnableVertexAttribArray(GLShader::ATTRIBUTE_TEXCOORD2);
+    glVertexAttribPointer(ATTRIBUTE_TEXCOORD0, 2, GL_FLOAT, GL_FALSE, sizeof(HardwareVertex),
+                          (GLvoid*)offsetof(HardwareVertex, tex_coord0));
+    glVertexAttribPointer(ATTRIBUTE_TEXCOORD1, 2, GL_FLOAT, GL_FALSE, sizeof(HardwareVertex),
+                          (GLvoid*)offsetof(HardwareVertex, tex_coord1));
+    glVertexAttribPointer(ATTRIBUTE_TEXCOORD2, 2, GL_FLOAT, GL_FALSE, sizeof(HardwareVertex),
+                          (GLvoid*)offsetof(HardwareVertex, tex_coord2));
+    glEnableVertexAttribArray(ATTRIBUTE_TEXCOORD0);
+    glEnableVertexAttribArray(ATTRIBUTE_TEXCOORD1);
+    glEnableVertexAttribArray(ATTRIBUTE_TEXCOORD2);
 
-    glVertexAttribPointer(GLShader::ATTRIBUTE_TEXCOORD0_W, 1, GL_FLOAT, GL_FALSE,
-                          sizeof(HardwareVertex), (GLvoid*)offsetof(HardwareVertex, tex_coord0_w));
-    glEnableVertexAttribArray(GLShader::ATTRIBUTE_TEXCOORD0_W);
+    glVertexAttribPointer(ATTRIBUTE_TEXCOORD0_W, 1, GL_FLOAT, GL_FALSE, sizeof(HardwareVertex),
+                          (GLvoid*)offsetof(HardwareVertex, tex_coord0_w));
+    glEnableVertexAttribArray(ATTRIBUTE_TEXCOORD0_W);
 
-    glVertexAttribPointer(GLShader::ATTRIBUTE_NORMQUAT, 4, GL_FLOAT, GL_FALSE,
-                          sizeof(HardwareVertex), (GLvoid*)offsetof(HardwareVertex, normquat));
-    glEnableVertexAttribArray(GLShader::ATTRIBUTE_NORMQUAT);
+    glVertexAttribPointer(ATTRIBUTE_NORMQUAT, 4, GL_FLOAT, GL_FALSE, sizeof(HardwareVertex),
+                          (GLvoid*)offsetof(HardwareVertex, normquat));
+    glEnableVertexAttribArray(ATTRIBUTE_NORMQUAT);
 
-    glVertexAttribPointer(GLShader::ATTRIBUTE_VIEW, 3, GL_FLOAT, GL_FALSE, sizeof(HardwareVertex),
+    glVertexAttribPointer(ATTRIBUTE_VIEW, 3, GL_FLOAT, GL_FALSE, sizeof(HardwareVertex),
                           (GLvoid*)offsetof(HardwareVertex, view));
-    glEnableVertexAttribArray(GLShader::ATTRIBUTE_VIEW);
+    glEnableVertexAttribArray(ATTRIBUTE_VIEW);
 
     // Create render framebuffer
     framebuffer.Create();
@@ -367,7 +369,7 @@ void RasterizerOpenGL::SetupVertexArray(u8* array_ptr, GLintptr buffer_offset,
 
 bool RasterizerOpenGL::SetupVertexShader() {
     MICROPROFILE_SCOPE(OpenGL_VS);
-    GLShader::PicaVSConfig vs_config(Pica::g_state.regs, Pica::g_state.vs);
+    PicaVSConfig vs_config(Pica::g_state.regs, Pica::g_state.vs);
     return shader_program_manager->UseProgrammableVertexShader(vs_config, Pica::g_state.vs);
 }
 
@@ -375,11 +377,11 @@ bool RasterizerOpenGL::SetupGeometryShader() {
     MICROPROFILE_SCOPE(OpenGL_GS);
     const auto& regs = Pica::g_state.regs;
     if (regs.pipeline.use_gs == Pica::PipelineRegs::UseGS::No) {
-        GLShader::PicaFixedGSConfig gs_config(regs);
+        PicaFixedGSConfig gs_config(regs);
         shader_program_manager->UseFixedGeometryShader(gs_config);
         return true;
     } else {
-        GLShader::PicaGSConfig gs_config(regs, Pica::g_state.gs);
+        PicaGSConfig gs_config(regs, Pica::g_state.gs);
         return shader_program_manager->UseProgrammableGeometryShader(gs_config, Pica::g_state.gs);
     }
 }
@@ -1588,7 +1590,7 @@ void RasterizerOpenGL::SamplerInfo::SyncWithConfig(
 }
 
 void RasterizerOpenGL::SetShader() {
-    auto config = GLShader::PicaFSConfig::BuildFromRegs(Pica::g_state.regs);
+    auto config = PicaFSConfig::BuildFromRegs(Pica::g_state.regs);
     shader_program_manager->UseFragmentShader(config);
 }
 
@@ -2105,3 +2107,5 @@ void RasterizerOpenGL::UploadUniforms(bool accelerate_draw, bool use_gs) {
 
     uniform_buffer.Unmap(used_bytes);
 }
+
+} // namespace OpenGL

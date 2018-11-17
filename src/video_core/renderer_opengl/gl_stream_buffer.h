@@ -9,6 +9,8 @@
 #include "common/common_types.h"
 #include "video_core/renderer_opengl/gl_resource_manager.h"
 
+namespace OpenGL {
+
 class OGLStreamBuffer : private NonCopyable {
 public:
     explicit OGLStreamBuffer(GLenum target, GLsizeiptr size, bool array_buffer_for_amd,
@@ -43,3 +45,5 @@ private:
     GLsizeiptr mapped_size = 0;
     u8* mapped_ptr = nullptr;
 };
+
+} // namespace OpenGL

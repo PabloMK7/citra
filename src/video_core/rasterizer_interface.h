@@ -7,7 +7,9 @@
 #include "common/common_types.h"
 #include "core/hw/gpu.h"
 
+namespace OpenGL {
 struct ScreenInfo;
+}
 
 namespace Pica {
 namespace Shader {
@@ -63,7 +65,7 @@ public:
     /// Attempt to use a faster method to display the framebuffer to screen
     virtual bool AccelerateDisplay(const GPU::Regs::FramebufferConfig& config,
                                    PAddr framebuffer_addr, u32 pixel_stride,
-                                   ScreenInfo& screen_info) {
+                                   OpenGL::ScreenInfo& screen_info) {
         return false;
     }
 

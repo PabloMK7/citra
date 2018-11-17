@@ -7,6 +7,8 @@
 #include <array>
 #include <glad/glad.h>
 
+namespace OpenGL {
+
 namespace TextureUnits {
 
 struct TextureUnit {
@@ -164,3 +166,5 @@ public:
 private:
     static OpenGLState cur_state;
 };
+
+} // namespace OpenGL

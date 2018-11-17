@@ -27,7 +27,7 @@ std::atomic<bool> g_renderer_bg_color_update_requested;
 Core::System::ResultStatus Init(EmuWindow& emu_window) {
     Pica::Init();
 
-    g_renderer = std::make_unique<RendererOpenGL>(emu_window);
+    g_renderer = std::make_unique<OpenGL::RendererOpenGL>(emu_window);
     Core::System::ResultStatus result = g_renderer->Init();
 
     if (result != Core::System::ResultStatus::Success) {

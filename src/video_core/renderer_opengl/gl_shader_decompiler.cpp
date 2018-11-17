@@ -13,9 +13,7 @@
 #include "common/common_types.h"
 #include "video_core/renderer_opengl/gl_shader_decompiler.h"
 
-namespace Pica {
-namespace Shader {
-namespace Decompiler {
+namespace OpenGL::ShaderDecompiler {
 
 using nihstro::Instruction;
 using nihstro::OpCode;
@@ -23,7 +21,7 @@ using nihstro::RegisterType;
 using nihstro::SourceRegister;
 using nihstro::SwizzlePattern;
 
-constexpr u32 PROGRAM_END = MAX_PROGRAM_CODE_LENGTH;
+constexpr u32 PROGRAM_END = Pica::Shader::MAX_PROGRAM_CODE_LENGTH;
 
 class DecompileFail : public std::runtime_error {
 public:
@@ -927,6 +925,4 @@ std::optional<std::string> DecompileProgram(const ProgramCode& program_code,
     }
 }
 
-} // namespace Decompiler
-} // namespace Shader
-} // namespace Pica
+} // namespace OpenGL::ShaderDecompiler

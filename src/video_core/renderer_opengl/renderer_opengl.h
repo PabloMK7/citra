@@ -13,7 +13,7 @@
 #include "video_core/renderer_opengl/gl_resource_manager.h"
 #include "video_core/renderer_opengl/gl_state.h"
 
-class EmuWindow;
+namespace OpenGL {
 
 /// Structure used for storing information about the textures for each 3DS screen
 struct TextureInfo {
@@ -78,3 +78,5 @@ private:
     GLuint attrib_position;
     GLuint attrib_tex_coord;
 };
+
+} // namespace OpenGL
