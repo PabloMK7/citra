@@ -200,7 +200,6 @@ void ReadBlock(const Kernel::Process& process, VAddr src_addr, void* dest_buffer
 void WriteBlock(const Kernel::Process& process, VAddr dest_addr, const void* src_buffer,
                 std::size_t size);
 void ZeroBlock(const Kernel::Process& process, VAddr dest_addr, const std::size_t size);
-void ZeroBlock(VAddr dest_addr, const std::size_t size);
 void CopyBlock(const Kernel::Process& process, VAddr dest_addr, VAddr src_addr, std::size_t size);
 void CopyBlock(VAddr dest_addr, VAddr src_addr, std::size_t size);
 void CopyBlock(const Kernel::Process& src_process, const Kernel::Process& dest_process,

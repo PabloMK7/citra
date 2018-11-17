@@ -595,10 +595,6 @@ void ZeroBlock(const Kernel::Process& process, const VAddr dest_addr, const std:
     }
 }
 
-void ZeroBlock(const VAddr dest_addr, const std::size_t size) {
-    ZeroBlock(*Core::System::GetInstance().Kernel().GetCurrentProcess(), dest_addr, size);
-}
-
 void CopyBlock(const Kernel::Process& process, VAddr dest_addr, VAddr src_addr,
                const std::size_t size) {
     auto& page_table = process.vm_manager.page_table;
