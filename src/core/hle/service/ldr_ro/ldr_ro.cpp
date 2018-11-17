@@ -115,7 +115,7 @@ void RO::Initialize(Kernel::HLERequestContext& ctx) {
         return;
     }
 
-    CROHelper crs(crs_address);
+    CROHelper crs(crs_address, *process);
     crs.InitCRS();
 
     result = crs.Rebase(0, crs_size, 0, 0, 0, 0, true);
@@ -249,7 +249,7 @@ void RO::LoadCRO(Kernel::HLERequestContext& ctx, bool link_on_load_bug_fix) {
         return;
     }
 
-    CROHelper cro(cro_address);
+    CROHelper cro(cro_address, *process);
 
     result = cro.VerifyHash(cro_size, crr_address);
     if (result.IsError()) {
@@ -331,7 +331,7 @@ void RO::UnloadCRO(Kernel::HLERequestContext& ctx) {
     LOG_DEBUG(Service_LDR, "called, cro_address=0x{:08X}, zero={}, cro_buffer_ptr=0x{:08X}",
               cro_address, zero, cro_buffer_ptr);
 
-    CROHelper cro(cro_address);
+    CROHelper cro(cro_address, *process);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
 
@@ -398,7 +398,7 @@ void RO::LinkCRO(Kernel::HLERequestContext& ctx) {
 
     LOG_DEBUG(Service_LDR, "called, cro_address=0x{:08X}", cro_address);
 
-    CROHelper cro(cro_address);
+    CROHelper cro(cro_address, *process);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
 
@@ -438,7 +438,7 @@ void RO::UnlinkCRO(Kernel::HLERequestContext& ctx) {
 
     LOG_DEBUG(Service_LDR, "called, cro_address=0x{:08X}", cro_address);
 
-    CROHelper cro(cro_address);
+    CROHelper cro(cro_address, *process);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
 
@@ -487,7 +487,7 @@ void RO::Shutdown(Kernel::HLERequestContext& ctx) {
         return;
     }
 
-    CROHelper crs(slot->loaded_crs);
+    CROHelper crs(slot->loaded_crs, *process);
     crs.Unrebase(true);
 
     ResultCode result = RESULT_SUCCESS;

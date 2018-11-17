@@ -11,6 +11,10 @@
 #include "core/hle/result.h"
 #include "core/memory.h"
 
+namespace Kernel {
+class Process;
+}
+
 namespace Service::LDR {
 
 // GCC versions < 5.0 do not implement std::is_trivially_copyable.
@@ -36,7 +40,8 @@ static constexpr u32 CRO_HASH_SIZE = 0x80;
 class CROHelper final {
 public:
     // TODO (wwylele): pass in the process handle for memory access
-    explicit CROHelper(VAddr cro_address) : module_address(cro_address) {}
+    explicit CROHelper(VAddr cro_address, Kernel::Process& process)
+        : module_address(cro_address), process(process) {}
 
     std::string ModuleName() const {
         return Memory::ReadCString(GetField(ModuleNameOffset), GetField(ModuleNameSize));
@@ -144,6 +149,7 @@ public:
 
 private:
     const VAddr module_address; ///< the virtual address of this module
+    Kernel::Process& process;   ///< the owner process of this module
 
     /**
      * Each item in this enum represents a u32 field in the header begin from address+0x80,
@@ -311,14 +317,18 @@ private:
 
         static constexpr HeaderField TABLE_OFFSET_FIELD = ImportModuleTableOffset;
 
-        void GetImportIndexedSymbolEntry(u32 index, ImportIndexedSymbolEntry& entry) {
-            Memory::ReadBlock(import_indexed_symbol_table_offset +
+        void GetImportIndexedSymbolEntry(Kernel::Process& process, u32 index,
+                                         ImportIndexedSymbolEntry& entry) {
+            Memory::ReadBlock(process,
+                              import_indexed_symbol_table_offset +
                                   index * sizeof(ImportIndexedSymbolEntry),
                               &entry, sizeof(ImportIndexedSymbolEntry));
         }
 
-        void GetImportAnonymousSymbolEntry(u32 index, ImportAnonymousSymbolEntry& entry) {
-            Memory::ReadBlock(import_anonymous_symbol_table_offset +
+        void GetImportAnonymousSymbolEntry(Kernel::Process& process, u32 index,
+                                           ImportAnonymousSymbolEntry& entry) {
+            Memory::ReadBlock(process,
+                              import_anonymous_symbol_table_offset +
                                   index * sizeof(ImportAnonymousSymbolEntry),
                               &entry, sizeof(ImportAnonymousSymbolEntry));
         }
@@ -413,7 +423,8 @@ private:
      */
     template <typename T>
     void GetEntry(std::size_t index, T& data) const {
-        Memory::ReadBlock(GetField(T::TABLE_OFFSET_FIELD) + static_cast<u32>(index * sizeof(T)),
+        Memory::ReadBlock(process,
+                          GetField(T::TABLE_OFFSET_FIELD) + static_cast<u32>(index * sizeof(T)),
                           &data, sizeof(T));
     }
 
@@ -466,10 +477,11 @@ private:
      *         otherwise error code of the last iteration.
      */
     template <typename FunctionObject>
-    static ResultCode ForEachAutoLinkCRO(VAddr crs_address, FunctionObject func) {
+    static ResultCode ForEachAutoLinkCRO(Kernel::Process& process, VAddr crs_address,
+                                         FunctionObject func) {
         VAddr current = crs_address;
         while (current != 0) {
-            CROHelper cro(current);
+            CROHelper cro(current, process);
             CASCADE_RESULT(bool next, func(cro));
             if (!next)
                 break;
