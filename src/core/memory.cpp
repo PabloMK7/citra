@@ -547,11 +547,6 @@ void WriteBlock(const Kernel::Process& process, const VAddr dest_addr, const voi
     }
 }
 
-void WriteBlock(const VAddr dest_addr, const void* src_buffer, const std::size_t size) {
-    WriteBlock(*Core::System::GetInstance().Kernel().GetCurrentProcess(), dest_addr, src_buffer,
-               size);
-}
-
 void ZeroBlock(const Kernel::Process& process, const VAddr dest_addr, const std::size_t size) {
     auto& page_table = process.vm_manager.page_table;
     std::size_t remaining_size = size;

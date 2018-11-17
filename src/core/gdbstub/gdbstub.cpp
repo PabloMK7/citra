@@ -409,7 +409,8 @@ static void RemoveBreakpoint(BreakpointType type, VAddr addr) {
 
     LOG_DEBUG(Debug_GDBStub, "gdb: removed a breakpoint: {:08x} bytes at {:08x} of type {}",
               bp->second.len, bp->second.addr, static_cast<int>(type));
-    Memory::WriteBlock(bp->second.addr, bp->second.inst.data(), bp->second.inst.size());
+    Memory::WriteBlock(*Core::System::GetInstance().Kernel().GetCurrentProcess(), bp->second.addr,
+                       bp->second.inst.data(), bp->second.inst.size());
     Core::CPU().ClearInstructionCache();
     p.erase(addr);
 }
@@ -862,7 +863,8 @@ static void WriteMemory() {
     std::vector<u8> data(len);
 
     GdbHexToMem(data.data(), len_pos + 1, len);
-    Memory::WriteBlock(addr, data.data(), len);
+    Memory::WriteBlock(*Core::System::GetInstance().Kernel().GetCurrentProcess(), addr, data.data(),
+                       len);
     Core::CPU().ClearInstructionCache();
     SendReply("OK");
 }
@@ -918,7 +920,8 @@ static bool CommitBreakpoint(BreakpointType type, VAddr addr, u32 len) {
     Memory::ReadBlock(*Core::System::GetInstance().Kernel().GetCurrentProcess(), addr,
                       breakpoint.inst.data(), breakpoint.inst.size());
     static constexpr std::array<u8, 4> btrap{0x70, 0x00, 0x20, 0xe1};
-    Memory::WriteBlock(addr, btrap.data(), btrap.size());
+    Memory::WriteBlock(*Core::System::GetInstance().Kernel().GetCurrentProcess(), addr,
+                       btrap.data(), btrap.size());
     Core::CPU().ClearInstructionCache();
     p.insert({addr, breakpoint});
 

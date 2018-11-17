@@ -437,7 +437,8 @@ private:
      */
     template <typename T>
     void SetEntry(std::size_t index, const T& data) {
-        Memory::WriteBlock(GetField(T::TABLE_OFFSET_FIELD) + static_cast<u32>(index * sizeof(T)),
+        Memory::WriteBlock(process,
+                           GetField(T::TABLE_OFFSET_FIELD) + static_cast<u32>(index * sizeof(T)),
                            &data, sizeof(T));
     }
 

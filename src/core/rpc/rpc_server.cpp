@@ -41,7 +41,8 @@ void RPCServer::HandleWriteMemory(Packet& packet, u32 address, const u8* data, u
         (address >= Memory::HEAP_VADDR && address <= Memory::HEAP_VADDR_END) ||
         (address >= Memory::N3DS_EXTRA_RAM_VADDR && address <= Memory::N3DS_EXTRA_RAM_VADDR_END)) {
         // Note: Memory write occurs asynchronously from the state of the emulator
-        Memory::WriteBlock(address, data, data_size);
+        Memory::WriteBlock(*Core::System::GetInstance().Kernel().GetCurrentProcess(), address, data,
+                           data_size);
         // If the memory happens to be executable code, make sure the changes become visible
         Core::CPU().InvalidateCacheRange(address, data_size);
     }
