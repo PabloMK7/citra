@@ -590,6 +590,8 @@ void GMainWindow::ConnectMenuEvents() {
     });
 
     // Help
+    connect(ui.action_Open_Citra_Folder, &QAction::triggered, this,
+            &GMainWindow::OnOpenCitraFolder);
     connect(ui.action_FAQ, &QAction::triggered,
             []() { QDesktopServices::openUrl(QUrl("https://citra-emu.org/wiki/faq/")); });
     connect(ui.action_About, &QAction::triggered, this, &GMainWindow::OnMenuAboutCitra);
@@ -1373,6 +1375,11 @@ void GMainWindow::OnRemoveAmiibo() {
 
     nfc->RemoveAmiibo();
     ui.action_Remove_Amiibo->setEnabled(false);
+}
+
+void GMainWindow::OnOpenCitraFolder() {
+    QDesktopServices::openUrl(QUrl::fromLocalFile(
+        QString::fromStdString(FileUtil::GetUserPath(FileUtil::UserPath::UserDir))));
 }
 
 void GMainWindow::OnToggleFilterBar() {

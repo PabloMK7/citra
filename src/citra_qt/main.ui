@@ -71,6 +71,8 @@
     <addaction name="separator"/>
     <addaction name="menu_Amiibo"/>
     <addaction name="separator"/>
+    <addaction name="action_Open_Citra_Folder"/>
+    <addaction name="separator"/>
     <addaction name="action_Exit"/>
    </widget>
    <widget class="QMenu" name="menu_Emulation">
@@ -444,6 +446,11 @@
    </property>
    <property name="text">
     <string>Remove</string>
+   </property>
+  </action>
+  <action name="action_Open_Citra_Folder">
+   <property name="text">
+    <string>Open Citra Folder</string>
    </property>
   </action>
  </widget>

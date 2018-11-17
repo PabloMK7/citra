@@ -168,6 +168,7 @@ private slots:
     void OnConfigure();
     void OnLoadAmiibo();
     void OnRemoveAmiibo();
+    void OnOpenCitraFolder();
     void OnToggleFilterBar();
     void OnDisplayTitleBars(bool);
     void ToggleFullscreen();
