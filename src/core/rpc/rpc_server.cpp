@@ -1,6 +1,7 @@
 #include "common/logging/log.h"
 #include "core/arm/arm_interface.h"
 #include "core/core.h"
+#include "core/hle/kernel/process.h"
 #include "core/memory.h"
 #include "core/rpc/packet.h"
 #include "core/rpc/rpc_server.h"
