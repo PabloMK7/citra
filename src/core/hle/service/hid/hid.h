@@ -299,6 +299,8 @@ public:
 
     void ReloadInputDevices();
 
+    const PadState& GetState() const;
+
 private:
     void LoadInputDevices();
     void UpdatePadCallback(u64 userdata, s64 cycles_late);
@@ -316,6 +318,10 @@ private:
     Kernel::SharedPtr<Kernel::Event> event_accelerometer;
     Kernel::SharedPtr<Kernel::Event> event_gyroscope;
     Kernel::SharedPtr<Kernel::Event> event_debug_pad;
+
+    // The HID module of a 3DS does not store the PadState.
+    // Storing this here was necessary for emulation specific tasks like cheats or scripting.
+    PadState state;
 
     u32 next_pad_index = 0;
     u32 next_touch_index = 0;

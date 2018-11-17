@@ -39,6 +39,10 @@ namespace Kernel {
 class KernelSystem;
 }
 
+namespace Cheats {
+class CheatEngine;
+}
+
 namespace Core {
 
 class Timing;
@@ -184,6 +188,12 @@ public:
     /// Gets a const reference to the timing system
     const Timing& CoreTiming() const;
 
+    /// Gets a reference to the cheat engine
+    Cheats::CheatEngine& CheatEngine();
+
+    /// Gets a const reference to the cheat engine
+    const Cheats::CheatEngine& CheatEngine() const;
+
     PerfStats perf_stats;
     FrameLimiter frame_limiter;
 
@@ -243,6 +253,9 @@ private:
 
     /// Frontend applets
     std::shared_ptr<Frontend::SoftwareKeyboard> registered_swkbd;
+
+    /// Cheats manager
+    std::unique_ptr<Cheats::CheatEngine> cheat_engine;
 
 #ifdef ENABLE_SCRIPTING
     /// RPC Server for scripting support

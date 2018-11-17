@@ -85,6 +85,7 @@
     <addaction name="action_Report_Compatibility"/>
     <addaction name="separator"/>
     <addaction name="action_Configure"/>
+    <addaction name="action_Cheats"/>
    </widget>
    <widget class="QMenu" name="menu_View">
     <property name="title">
@@ -225,6 +226,11 @@
   <action name="action_Configure">
    <property name="text">
     <string>Configure...</string>
+   </property>
+  </action>
+  <action name="action_Cheats">
+   <property name="text">
+    <string>Cheats...</string>
    </property>
   </action>
   <action name="action_Display_Dock_Widget_Headers">

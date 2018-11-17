@@ -74,7 +74,6 @@ void Module::UpdatePadCallback(u64 userdata, s64 cycles_late) {
     if (is_device_reload_pending.exchange(false))
         LoadInputDevices();
 
-    PadState state;
     using namespace Settings::NativeButton;
     state.a.Assign(buttons[A - BUTTON_HID_BEGIN]->GetStatus());
     state.b.Assign(buttons[B - BUTTON_HID_BEGIN]->GetStatus());
@@ -392,6 +391,10 @@ Module::Module(Core::System& system) : system(system) {
 
 void Module::ReloadInputDevices() {
     is_device_reload_pending.store(true);
+}
+
+const PadState& Module::GetState() const {
+    return state;
 }
 
 std::shared_ptr<Module> GetModule(Core::System& system) {

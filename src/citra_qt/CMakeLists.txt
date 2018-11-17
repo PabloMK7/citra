@@ -24,6 +24,8 @@ add_executable(citra-qt
     camera/qt_camera_base.h
     camera/qt_multimedia_camera.cpp
     camera/qt_multimedia_camera.h
+    cheats.cpp
+    cheats.h
     citra-qt.rc
     configuration/config.cpp
     configuration/config.h
@@ -134,6 +136,7 @@ set(UIS
     multiplayer/client_room.ui
     multiplayer/host_room.ui
     aboutdialog.ui
+    cheats.ui
     hotkeys.ui
     main.ui
     compatdb.ui

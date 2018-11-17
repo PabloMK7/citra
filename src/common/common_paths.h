@@ -37,6 +37,7 @@
 #define NAND_DIR "nand"
 #define SYSDATA_DIR "sysdata"
 #define LOG_DIR "log"
+#define CHEATS_DIR "cheats"
 
 // Filenames
 // Files in the directory returned by GetUserPath(UserPath::LogDir)
