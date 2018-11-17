@@ -204,8 +204,9 @@ ResultCode TranslateCommandBuffer(SharedPtr<Thread> src_thread, SharedPtr<Thread
                 Memory::IPC_MAPPING_VADDR, Memory::IPC_MAPPING_SIZE, reserve_buffer.get(),
                 Memory::PAGE_SIZE, Kernel::MemoryState::Reserved);
 
-            mapped_buffer_context.push_back({permissions, size, source_address, target_address,
-                                             std::move(buffer), std::move(reserve_buffer)});
+            mapped_buffer_context.push_back({permissions, size, source_address,
+                                             target_address + page_offset, std::move(buffer),
+                                             std::move(reserve_buffer)});
 
             break;
         }
