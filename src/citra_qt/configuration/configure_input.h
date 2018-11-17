@@ -35,6 +35,9 @@ public:
     void applyConfiguration();
     void retranslateUi();
 
+    /// Load configuration settings.
+    void loadConfiguration();
+
 private:
     std::unique_ptr<Ui::ConfigureInput> ui;
 
@@ -69,8 +72,6 @@ private:
     /// keyboard events are ignored.
     bool want_keyboard_keys = false;
 
-    /// Load configuration settings.
-    void loadConfiguration();
     /// Restore all buttons to their default values.
     void restoreDefaults();
     /// Clear all input configuration

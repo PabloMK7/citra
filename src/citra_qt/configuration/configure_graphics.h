@@ -20,8 +20,6 @@ public:
 
     void applyConfiguration();
     void retranslateUi();
-
-private:
     void setConfiguration();
 
 private:
