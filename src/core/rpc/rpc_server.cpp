@@ -29,7 +29,8 @@ void RPCServer::HandleReadMemory(Packet& packet, u32 address, u32 data_size) {
     }
 
     // Note: Memory read occurs asynchronously from the state of the emulator
-    Memory::ReadBlock(address, packet.GetPacketData().data(), data_size);
+    Memory::ReadBlock(*Core::System::GetInstance().Kernel().GetCurrentProcess(), address,
+                      packet.GetPacketData().data(), data_size);
     packet.SetPacketDataSize(data_size);
     packet.SendReply();
 }

@@ -483,11 +483,6 @@ void ReadBlock(const Kernel::Process& process, const VAddr src_addr, void* dest_
     }
 }
 
-void ReadBlock(const VAddr src_addr, void* dest_buffer, const std::size_t size) {
-    ReadBlock(*Core::System::GetInstance().Kernel().GetCurrentProcess(), src_addr, dest_buffer,
-              size);
-}
-
 void Write8(const VAddr addr, const u8 data) {
     Write<u8>(addr, data);
 }

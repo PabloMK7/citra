@@ -836,7 +836,8 @@ static void ReadMemory() {
     }
 
     std::vector<u8> data(len);
-    Memory::ReadBlock(addr, data.data(), len);
+    Memory::ReadBlock(*Core::System::GetInstance().Kernel().GetCurrentProcess(), addr, data.data(),
+                      len);
 
     MemToGdbHex(reply, data.data(), len);
     reply[len * 2] = '\0';
@@ -914,7 +915,8 @@ static bool CommitBreakpoint(BreakpointType type, VAddr addr, u32 len) {
     breakpoint.active = true;
     breakpoint.addr = addr;
     breakpoint.len = len;
-    Memory::ReadBlock(addr, breakpoint.inst.data(), breakpoint.inst.size());
+    Memory::ReadBlock(*Core::System::GetInstance().Kernel().GetCurrentProcess(), addr,
+                      breakpoint.inst.data(), breakpoint.inst.size());
     static constexpr std::array<u8, 4> btrap{0x70, 0x00, 0x20, 0xe1};
     Memory::WriteBlock(addr, btrap.data(), btrap.size());
     Core::CPU().ClearInstructionCache();
