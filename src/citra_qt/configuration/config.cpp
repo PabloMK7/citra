@@ -320,7 +320,7 @@ void Config::ReadValues() {
     qt_config->endGroup();
 
     qt_config->beginGroup("Shortcuts");
-    const std::array<UISettings::Shortcut, 14> default_hotkeys{
+    const std::array<UISettings::Shortcut, 19> default_hotkeys{
         {{"Load File", "Main Window",
           UISettings::ContextualShortcut(QKeySequence(QKeySequence::Open).toString(),
                                          Qt::WindowShortcut)},
@@ -349,7 +349,17 @@ void Config::ReadValues() {
          {"Increase Speed Limit", "Main Window",
           UISettings::ContextualShortcut("+", Qt::ApplicationShortcut)},
          {"Decrease Speed Limit", "Main Window",
-          UISettings::ContextualShortcut("-", Qt::ApplicationShortcut)}}};
+          UISettings::ContextualShortcut("-", Qt::ApplicationShortcut)},
+         {"Advance Frame", "Main Window",
+          UISettings::ContextualShortcut("\\", Qt::ApplicationShortcut)},
+         {"Toggle Frame Advancing", "Main Window",
+          UISettings::ContextualShortcut("Ctrl+A", Qt::ApplicationShortcut)},
+         {"Load Amiibo", "Main Window",
+          UISettings::ContextualShortcut("F2", Qt::ApplicationShortcut)},
+         {"Remove Amiibo", "Main Window",
+          UISettings::ContextualShortcut("F3", Qt::ApplicationShortcut)},
+         {"Capture Screenshot", "Main Window",
+          UISettings::ContextualShortcut("Ctrl+P", Qt::ApplicationShortcut)}}};
 
     for (int i = 0; i < default_hotkeys.size(); i++) {
         qt_config->beginGroup(default_hotkeys[i].group);

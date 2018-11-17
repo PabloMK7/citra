@@ -22,7 +22,7 @@ public:
 
     void UpdateVisibleTabs();
     void PopulateSelectionList();
-    void applyConfiguration(HotkeyRegistry& registry);
+    void applyConfiguration();
 
 private slots:
     void onLanguageChanged(const QString& locale);
@@ -35,4 +35,5 @@ private:
     void retranslateUi();
 
     std::unique_ptr<Ui::ConfigureDialog> ui;
+    HotkeyRegistry& registry;
 };

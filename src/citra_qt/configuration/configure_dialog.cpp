@@ -10,8 +10,8 @@
 #include "core/settings.h"
 #include "ui_configure.h"
 
-ConfigureDialog::ConfigureDialog(QWidget* parent, const HotkeyRegistry& registry)
-    : QDialog(parent), ui(new Ui::ConfigureDialog) {
+ConfigureDialog::ConfigureDialog(QWidget* parent, HotkeyRegistry& registry)
+    : QDialog(parent), registry(registry), ui(new Ui::ConfigureDialog) {
     ui->setupUi(this);
     ui->hotkeysTab->Populate(registry);
 
@@ -47,7 +47,7 @@ void ConfigureDialog::setConfiguration() {
     ui->uiTab->setConfiguration();
 }
 
-void ConfigureDialog::applyConfiguration(HotkeyRegistry& registry) {
+void ConfigureDialog::applyConfiguration() {
     ui->generalTab->applyConfiguration();
     ui->systemTab->applyConfiguration();
     ui->inputTab->applyConfiguration();
