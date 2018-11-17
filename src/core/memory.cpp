@@ -647,10 +647,6 @@ void CopyBlock(const Kernel::Process& process, VAddr dest_addr, VAddr src_addr,
     }
 }
 
-void CopyBlock(VAddr dest_addr, VAddr src_addr, const std::size_t size) {
-    CopyBlock(*Core::System::GetInstance().Kernel().GetCurrentProcess(), dest_addr, src_addr, size);
-}
-
 void CopyBlock(const Kernel::Process& src_process, const Kernel::Process& dest_process,
                VAddr src_addr, VAddr dest_addr, std::size_t size) {
     auto& page_table = src_process.vm_manager.page_table;
