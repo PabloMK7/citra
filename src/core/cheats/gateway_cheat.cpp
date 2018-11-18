@@ -280,25 +280,25 @@ void GatewayCheat::Execute(Core::System& system) {
         case CheatType::GreaterThan16WithMask:
             // 7XXXXXXX ZZZZYYYY - Execute next block IF YYYY > ((not ZZZZ) AND half[XXXXXXX])
             CompOp<u16>(line, state, &Memory::Read16, [&line](u16 val) -> bool {
-                return static_cast<u16>(line.value) > ~(static_cast<u16>(~line.value >> 16) & val);
+                return static_cast<u16>(line.value) > (static_cast<u16>(~line.value >> 16) & val);
             });
             break;
         case CheatType::LessThan16WithMask:
             // 8XXXXXXX ZZZZYYYY - Execute next block IF YYYY < ((not ZZZZ) AND half[XXXXXXX])
             CompOp<u16>(line, state, &Memory::Read16, [&line](u16 val) -> bool {
-                return static_cast<u16>(line.value) < ~(static_cast<u16>(~line.value >> 16) & val);
+                return static_cast<u16>(line.value) < (static_cast<u16>(~line.value >> 16) & val);
             });
             break;
         case CheatType::EqualTo16WithMask:
             // 9XXXXXXX ZZZZYYYY - Execute next block IF YYYY = ((not ZZZZ) AND half[XXXXXXX])
             CompOp<u16>(line, state, &Memory::Read16, [&line](u16 val) -> bool {
-                return static_cast<u16>(line.value) == ~(static_cast<u16>(~line.value >> 16) & val);
+                return static_cast<u16>(line.value) == (static_cast<u16>(~line.value >> 16) & val);
             });
             break;
         case CheatType::NotEqualTo16WithMask:
             // AXXXXXXX ZZZZYYYY - Execute next block IF YYYY <> ((not ZZZZ) AND half[XXXXXXX])
             CompOp<u16>(line, state, &Memory::Read16, [&line](u16 val) -> bool {
-                return static_cast<u16>(line.value) != ~(static_cast<u16>(~line.value >> 16) & val);
+                return static_cast<u16>(line.value) != (static_cast<u16>(~line.value >> 16) & val);
             });
             break;
         case CheatType::LoadOffset:
