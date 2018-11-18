@@ -20,9 +20,11 @@ void CSND_SND::Initialize(Kernel::HLERequestContext& ctx) {
 
     using Kernel::MemoryPermission;
     mutex = system.Kernel().CreateMutex(false, "CSND:mutex");
-    shared_memory = system.Kernel().CreateSharedMemory(
-        nullptr, size, MemoryPermission::ReadWrite, MemoryPermission::ReadWrite, 0,
-        Kernel::MemoryRegion::BASE, "CSND:SharedMemory");
+    shared_memory = system.Kernel()
+                        .CreateSharedMemory(nullptr, size, MemoryPermission::ReadWrite,
+                                            MemoryPermission::ReadWrite, 0,
+                                            Kernel::MemoryRegion::BASE, "CSND:SharedMemory")
+                        .Unwrap();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 3);
     rb.Push(RESULT_SUCCESS);

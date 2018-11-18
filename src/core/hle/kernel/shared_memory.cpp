@@ -17,13 +17,16 @@ SharedMemory::~SharedMemory() {
         kernel.GetMemoryRegion(MemoryRegion::SYSTEM)
             ->Free(interval.lower(), interval.upper() - interval.lower());
     }
+    if (base_address != 0 && owner_process != nullptr) {
+        owner_process->vm_manager.ChangeMemoryState(base_address, size, MemoryState::Locked,
+                                                    VMAPermission::None, MemoryState::Private,
+                                                    VMAPermission::ReadWrite);
+    }
 }
 
-SharedPtr<SharedMemory> KernelSystem::CreateSharedMemory(Process* owner_process, u32 size,
-                                                         MemoryPermission permissions,
-                                                         MemoryPermission other_permissions,
-                                                         VAddr address, MemoryRegion region,
-                                                         std::string name) {
+ResultVal<SharedPtr<SharedMemory>> KernelSystem::CreateSharedMemory(
+    Process* owner_process, u32 size, MemoryPermission permissions,
+    MemoryPermission other_permissions, VAddr address, MemoryRegion region, std::string name) {
     SharedPtr<SharedMemory> shared_memory(new SharedMemory(*this));
 
     shared_memory->owner_process = owner_process;
@@ -53,13 +56,17 @@ SharedPtr<SharedMemory> KernelSystem::CreateSharedMemory(Process* owner_process,
         auto& vm_manager = shared_memory->owner_process->vm_manager;
         // The memory is already available and mapped in the owner process.
 
+        CASCADE_CODE(vm_manager.ChangeMemoryState(address, size, MemoryState::Private,
+                                                  VMAPermission::ReadWrite, MemoryState::Locked,
+                                                  SharedMemory::ConvertPermissions(permissions)));
+
         auto backing_blocks = vm_manager.GetBackingBlocksForRange(address, size);
-        ASSERT_MSG(backing_blocks.Succeeded(), "Trying to share freed memory");
+        ASSERT(backing_blocks.Succeeded()); // should success after verifying memory state above
         shared_memory->backing_blocks = std::move(backing_blocks).Unwrap();
     }
 
     shared_memory->base_address = address;
-    return shared_memory;
+    return MakeResult(shared_memory);
 }
 
 SharedPtr<SharedMemory> KernelSystem::CreateSharedMemoryForApplet(

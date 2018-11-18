@@ -861,10 +861,11 @@ Module::Module(Core::System& system) : system(system) {
     applet_manager = std::make_shared<AppletManager>(system);
 
     using Kernel::MemoryPermission;
-    shared_font_mem =
-        system.Kernel().CreateSharedMemory(nullptr, 0x332000, // 3272 KB
-                                           MemoryPermission::ReadWrite, MemoryPermission::Read, 0,
-                                           Kernel::MemoryRegion::SYSTEM, "APT:SharedFont");
+    shared_font_mem = system.Kernel()
+                          .CreateSharedMemory(nullptr, 0x332000, // 3272 KB
+                                              MemoryPermission::ReadWrite, MemoryPermission::Read,
+                                              0, Kernel::MemoryRegion::SYSTEM, "APT:SharedFont")
+                          .Unwrap();
 
     lock = system.Kernel().CreateMutex(false, "APT_U:Lock");
 }

@@ -170,12 +170,12 @@ public:
      * linear heap.
      * @param name Optional object name, used for debugging purposes.
      */
-    SharedPtr<SharedMemory> CreateSharedMemory(Process* owner_process, u32 size,
-                                               MemoryPermission permissions,
-                                               MemoryPermission other_permissions,
-                                               VAddr address = 0,
-                                               MemoryRegion region = MemoryRegion::BASE,
-                                               std::string name = "Unknown");
+    ResultVal<SharedPtr<SharedMemory>> CreateSharedMemory(Process* owner_process, u32 size,
+                                                          MemoryPermission permissions,
+                                                          MemoryPermission other_permissions,
+                                                          VAddr address = 0,
+                                                          MemoryRegion region = MemoryRegion::BASE,
+                                                          std::string name = "Unknown");
 
     /**
      * Creates a shared memory object from a block of memory managed by an HLE applet.

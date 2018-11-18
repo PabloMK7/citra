@@ -240,6 +240,13 @@ private:
      */
     void CloseClientCertContext(Kernel::HLERequestContext& ctx);
 
+    /**
+     * HTTP_C::Finalize service function
+     *  Outputs:
+     *      1 : Result of function, 0 on success, otherwise error code
+     */
+    void Finalize(Kernel::HLERequestContext& ctx);
+
     void DecryptClCertA();
 
     Kernel::SharedPtr<Kernel::SharedMemory> shared_memory = nullptr;

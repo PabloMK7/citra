@@ -1250,9 +1250,10 @@ ResultCode SVC::CreateMemoryBlock(Handle* out_handle, u32 addr, u32 size, u32 my
     if (addr == 0 && current_process->flags.shared_device_mem)
         region = current_process->flags.memory_region;
 
-    shared_memory = kernel.CreateSharedMemory(
-        current_process.get(), size, static_cast<MemoryPermission>(my_permission),
-        static_cast<MemoryPermission>(other_permission), addr, region);
+    CASCADE_RESULT(shared_memory,
+                   kernel.CreateSharedMemory(
+                       current_process.get(), size, static_cast<MemoryPermission>(my_permission),
+                       static_cast<MemoryPermission>(other_permission), addr, region));
     CASCADE_RESULT(*out_handle, current_process->handle_table.Create(std::move(shared_memory)));
 
     LOG_WARNING(Kernel_SVC, "called addr=0x{:08X}", addr);

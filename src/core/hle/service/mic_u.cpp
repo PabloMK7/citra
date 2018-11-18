@@ -52,6 +52,7 @@ struct MIC_U::Impl {
     void UnmapSharedMem(Kernel::HLERequestContext& ctx) {
         IPC::RequestParser rp{ctx, 0x02, 0, 0};
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        shared_memory = nullptr;
         rb.Push(RESULT_SUCCESS);
         LOG_WARNING(Service_MIC, "called");
     }
