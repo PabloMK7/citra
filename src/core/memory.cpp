@@ -92,9 +92,6 @@ static u8* GetPointerFromVMA(const Kernel::Process& process, VAddr vaddr) {
 
     auto& vma = it->second;
     switch (vma.type) {
-    case Kernel::VMAType::AllocatedMemoryBlock:
-        direct_pointer = vma.backing_block->data() + vma.offset;
-        break;
     case Kernel::VMAType::BackingMemory:
         direct_pointer = vma.backing_memory;
         break;
