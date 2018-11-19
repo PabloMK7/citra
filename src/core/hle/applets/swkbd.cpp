@@ -65,7 +65,7 @@ ResultCode SoftwareKeyboard::StartImpl(Service::APT::AppletStartupParameter cons
         boost::static_pointer_cast<Kernel::SharedMemory, Kernel::Object>(parameter.object);
 
     // TODO(Subv): Verify if this is the correct behavior
-    memset(text_memory->GetPointer(), 0, text_memory->size);
+    memset(text_memory->GetPointer(), 0, text_memory->GetSize());
 
     DrawScreenKeyboard();
 

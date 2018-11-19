@@ -20,10 +20,23 @@ public:
     std::string GetName() const override {
         return name;
     }
+    void SetName(std::string name) {
+        this->name = name;
+    }
 
     static const HandleType HANDLE_TYPE = HandleType::SharedMemory;
     HandleType GetHandleType() const override {
         return HANDLE_TYPE;
+    }
+
+    /// Gets the size of the underlying memory block in bytes.
+    u64 GetSize() const {
+        return size;
+    }
+
+    /// Gets the linear heap physical offset
+    u64 GetLinearHeapPhysicalOffset() const {
+        return linear_heap_phys_offset;
     }
 
     /**
@@ -57,29 +70,29 @@ public:
      */
     u8* GetPointer(u32 offset = 0);
 
-    /// Process that created this shared memory block.
-    Process* owner_process;
-    /// Address of shared memory block in the owner process if specified.
-    VAddr base_address;
+private:
+    explicit SharedMemory(KernelSystem& kernel);
+    ~SharedMemory() override;
+
     /// Offset in FCRAM of the shared memory block in the linear heap if no address was specified
     /// during creation.
-    PAddr linear_heap_phys_offset;
+    PAddr linear_heap_phys_offset = 0;
     /// Backing memory for this shared memory block.
     std::vector<std::pair<u8*, u32>> backing_blocks;
     /// Size of the memory block. Page-aligned.
-    u32 size;
+    u32 size = 0;
     /// Permission restrictions applied to the process which created the block.
-    MemoryPermission permissions;
+    MemoryPermission permissions{};
     /// Permission restrictions applied to other processes mapping the block.
-    MemoryPermission other_permissions;
+    MemoryPermission other_permissions{};
+    /// Process that created this shared memory block.
+    SharedPtr<Process> owner_process;
+    /// Address of shared memory block in the owner process if specified.
+    VAddr base_address = 0;
     /// Name of shared memory object.
     std::string name;
 
     MemoryRegionInfo::IntervalSet holding_memory;
-
-private:
-    explicit SharedMemory(KernelSystem& kernel);
-    ~SharedMemory() override;
 
     friend class KernelSystem;
     KernelSystem& kernel;
