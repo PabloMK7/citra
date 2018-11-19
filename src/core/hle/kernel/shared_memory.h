@@ -66,9 +66,16 @@ public:
     /**
      * Gets a pointer to the shared memory block
      * @param offset Offset from the start of the shared memory block to get pointer
-     * @return Pointer to the shared memory block from the specified offset
+     * @return A pointer to the shared memory block from the specified offset
      */
     u8* GetPointer(u32 offset = 0);
+
+    /**
+     * Gets a constant pointer to the shared memory block
+     * @param offset Offset from the start of the shared memory block to get pointer
+     * @return A constant pointer to the shared memory block from the specified offset
+     */
+    const u8* GetPointer(u32 offset = 0) const;
 
 private:
     explicit SharedMemory(KernelSystem& kernel);

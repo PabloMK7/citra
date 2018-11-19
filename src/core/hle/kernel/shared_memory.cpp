@@ -196,4 +196,11 @@ u8* SharedMemory::GetPointer(u32 offset) {
     return backing_blocks[0].first + offset;
 }
 
+const u8* SharedMemory::GetPointer(u32 offset) const {
+    if (backing_blocks.size() != 1) {
+        LOG_WARNING(Kernel, "Unsafe GetPointer on discontinuous SharedMemory");
+    }
+    return backing_blocks[0].first + offset;
+}
+
 } // namespace Kernel
