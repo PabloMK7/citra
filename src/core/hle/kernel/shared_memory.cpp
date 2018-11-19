@@ -95,11 +95,11 @@ SharedPtr<SharedMemory> KernelSystem::CreateSharedMemoryForApplet(
     return shared_memory;
 }
 
-ResultCode SharedMemory::Map(Process* target_process, VAddr address, MemoryPermission permissions,
+ResultCode SharedMemory::Map(Process& target_process, VAddr address, MemoryPermission permissions,
                              MemoryPermission other_permissions) {
 
     MemoryPermission own_other_permissions =
-        target_process == owner_process ? this->permissions : this->other_permissions;
+        &target_process == owner_process ? this->permissions : this->other_permissions;
 
     // Automatically allocated memory blocks can only be mapped with other_permissions = DontCare
     if (base_address == 0 && other_permissions != MemoryPermission::DontCare) {
@@ -155,7 +155,7 @@ ResultCode SharedMemory::Map(Process* target_process, VAddr address, MemoryPermi
         target_address = linear_heap_phys_offset + Memory::LINEAR_HEAP_VADDR;
     }
 
-    auto vma = target_process->vm_manager.FindVMA(target_address);
+    auto vma = target_process.vm_manager.FindVMA(target_address);
     if (vma->second.type != VMAType::Free ||
         vma->second.base + vma->second.size < target_address + size) {
         LOG_ERROR(Kernel,
@@ -167,20 +167,20 @@ ResultCode SharedMemory::Map(Process* target_process, VAddr address, MemoryPermi
     // Map the memory block into the target process
     VAddr interval_target = target_address;
     for (const auto& interval : backing_blocks) {
-        auto vma = target_process->vm_manager.MapBackingMemory(
-            interval_target, interval.first, interval.second, MemoryState::Shared);
+        auto vma = target_process.vm_manager.MapBackingMemory(interval_target, interval.first,
+                                                              interval.second, MemoryState::Shared);
         ASSERT(vma.Succeeded());
-        target_process->vm_manager.Reprotect(vma.Unwrap(), ConvertPermissions(permissions));
+        target_process.vm_manager.Reprotect(vma.Unwrap(), ConvertPermissions(permissions));
         interval_target += interval.second;
     }
 
     return RESULT_SUCCESS;
 }
 
-ResultCode SharedMemory::Unmap(Process* target_process, VAddr address) {
+ResultCode SharedMemory::Unmap(Process& target_process, VAddr address) {
     // TODO(Subv): Verify what happens if the application tries to unmap an address that is not
     // mapped to a SharedMemory.
-    return target_process->vm_manager.UnmapRange(address, size);
+    return target_process.vm_manager.UnmapRange(address, size);
 }
 
 VMAPermission SharedMemory::ConvertPermissions(MemoryPermission permission) {
