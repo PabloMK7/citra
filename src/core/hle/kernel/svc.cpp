@@ -1066,10 +1066,27 @@ ResultCode SVC::QueryProcessMemory(MemoryInfo* memory_info, PageInfo* page_info,
     if (vma == process->vm_manager.vma_map.end())
         return ERR_INVALID_ADDRESS;
 
-    memory_info->base_address = vma->second.base;
-    memory_info->permission = static_cast<u32>(vma->second.permissions);
-    memory_info->size = vma->second.size;
-    memory_info->state = static_cast<u32>(vma->second.meminfo_state);
+    auto permissions = vma->second.permissions;
+    auto state = vma->second.meminfo_state;
+
+    // Query(Process)Memory merges vma with neighbours when they share the same state and
+    // permissions, regardless of their physical mapping.
+
+    auto mismatch = [permissions, state](const std::pair<VAddr, Kernel::VirtualMemoryArea>& v) {
+        return v.second.permissions != permissions || v.second.meminfo_state != state;
+    };
+
+    std::reverse_iterator rvma(vma);
+
+    auto lower = std::find_if(rvma, process->vm_manager.vma_map.crend(), mismatch);
+    --lower;
+    auto upper = std::find_if(vma, process->vm_manager.vma_map.cend(), mismatch);
+    --upper;
+
+    memory_info->base_address = lower->second.base;
+    memory_info->permission = static_cast<u32>(permissions);
+    memory_info->size = upper->second.base + upper->second.size - lower->second.base;
+    memory_info->state = static_cast<u32>(state);
 
     page_info->flags = 0;
     LOG_TRACE(Kernel_SVC, "called process=0x{:08X} addr=0x{:08X}", process_handle, addr);
