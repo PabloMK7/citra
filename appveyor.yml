@@ -119,17 +119,6 @@ after_build:
           Copy-Item -path "$CMAKE_SOURCE_DIR/license.txt" -destination $RELEASE_DIST
           Copy-Item -path "$CMAKE_SOURCE_DIR/README.md" -destination $RELEASE_DIST
 
-          # copy all the dll dependencies to the release folder
-          . "./.appveyor/FindDependencies.ps1"
-          $DLLSearchPath = "C:\msys64\mingw64\bin;$env:PATH"
-          $MingwDLLs = RecursivelyGetDeps $DLLSearchPath "$RELEASE_DIST\citra.exe"
-          $MingwDLLs += RecursivelyGetDeps $DLLSearchPath  "$RELEASE_DIST\citra-qt.exe"
-          Write-Host "Detected the following dependencies:"
-          Write-Host $MingwDLLs
-          foreach ($file in $MingwDLLs) {
-            Copy-Item -path "$file" -force -destination "$RELEASE_DIST"
-          }
-
           # copy the qt windows plugin dll to platforms
           Copy-Item -path "C:/msys64/mingw64/share/qt5/plugins/platforms/qwindows.dll" -force -destination "$RELEASE_DIST/platforms"
 
@@ -141,6 +130,18 @@ after_build:
 
           # copy the qt imageformats plugin dlls to imageformats
           Get-ChildItem "C:/msys64/mingw64/share/qt5/plugins/imageformats" -Exclude "*d.dll" | Copy-Item -force -destination "$RELEASE_DIST/imageformats"
+
+          # copy all the dll dependencies to the release folder
+          . "./.appveyor/FindDependencies.ps1"
+          $DLLSearchPath = "C:\msys64\mingw64\bin;$env:PATH"
+          $MingwDLLs = RecursivelyGetDeps $DLLSearchPath "$RELEASE_DIST\citra.exe"
+          $MingwDLLs += RecursivelyGetDeps $DLLSearchPath  "$RELEASE_DIST\citra-qt.exe"
+          $MingwDLLs += RecursivelyGetDeps $DLLSearchPath  "$RELEASE_DIST\imageformats\qjpeg.dll"
+          Write-Host "Detected the following dependencies:"
+          Write-Host $MingwDLLs
+          foreach ($file in $MingwDLLs) {
+            Copy-Item -path "$file" -force -destination "$RELEASE_DIST"
+          }
 
           # process PDBs
           . "./.appveyor/ProcessPdb.ps1"
