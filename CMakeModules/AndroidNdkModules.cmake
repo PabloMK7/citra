@@ -47,12 +47,12 @@ macro(android_ndk_import_module_ndk_helper)
     if(ANDROID)
         android_ndk_import_module_cpufeatures()
         android_ndk_import_module_native_app_glue()
-        
+
         include_directories(${ANDROID_NDK}/sources/android/ndk_helper)
         file(GLOB _NDK_HELPER_SRCS ${ANDROID_NDK}/sources/android/ndk_helper/*.cpp ${ANDROID_NDK}/sources/android/ndk_helper/gl3stub.c)
         add_library(ndk_helper ${_NDK_HELPER_SRCS})
         target_link_libraries(ndk_helper log android EGL GLESv2 cpufeatures native_app_glue)
-        
+
         unset(_NDK_HELPER_SRCS)
     endif()
 endmacro()

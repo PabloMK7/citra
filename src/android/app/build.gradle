@@ -56,21 +56,20 @@ android {
     externalNativeBuild {
         cmake {
             version getCmakeVersion()
-            path "CMakeLists.txt"
+            path "../../../CMakeLists.txt"
         }
     }
 
     defaultConfig {
         externalNativeBuild {
             cmake {
-                cppFlags "-std=c++17"
                 arguments "-DENABLE_QT=0", // Don't use QT
                         "-DENABLE_SDL2=0", // Don't use SDL
                         "-DANDROID_ARM_NEON=true", // cryptopp requires Neon to work
-                        "-DENABLE_CUBEB=0"
+                        "-DENABLE_CUBEB=0",
                         "-DANDROID_STL=c++_shared"
 
-                abiFilters "arm64-v8a", "x86_64"
+                abiFilters "arm64-v8a"
             }
         }
     }
