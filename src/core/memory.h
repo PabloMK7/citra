@@ -17,6 +17,9 @@ class Process;
 
 namespace Memory {
 
+// Are defined in a system header
+#undef PAGE_SIZE
+#undef PAGE_MASK
 /**
  * Page size used by the ARM architecture. This is the smallest granularity with which memory can
  * be mapped.

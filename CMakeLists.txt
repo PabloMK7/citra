@@ -187,6 +187,7 @@ if (NOT Boost_FOUND)
     message(STATUS "Boost 1.66.0 or newer not found, falling back to externals")
 
     set(BOOST_ROOT "${PROJECT_SOURCE_DIR}/externals/boost")
+    set(Boost_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/externals/boost")
     set(Boost_NO_SYSTEM_PATHS OFF)
     find_package(Boost QUIET REQUIRED)
 endif()
