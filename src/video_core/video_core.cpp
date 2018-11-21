@@ -29,8 +29,11 @@ void* g_screenshot_bits;
 std::function<void()> g_screenshot_complete_callback;
 Layout::FramebufferLayout g_screenshot_framebuffer_layout;
 
+Memory::MemorySystem* g_memory;
+
 /// Initialize the video core
-Core::System::ResultStatus Init(EmuWindow& emu_window) {
+Core::System::ResultStatus Init(EmuWindow& emu_window, Memory::MemorySystem& memory) {
+    g_memory = &memory;
     Pica::Init();
 
     g_renderer = std::make_unique<OpenGL::RendererOpenGL>(emu_window);
