@@ -71,11 +71,11 @@ ResultCode CROHelper::ApplyRelocation(VAddr target_address, RelocationType reloc
         break;
     case RelocationType::AbsoluteAddress:
     case RelocationType::AbsoluteAddress2:
-        Memory::Write32(target_address, symbol_address + addend);
+        memory.Write32(target_address, symbol_address + addend);
         Core::CPU().InvalidateCacheRange(target_address, sizeof(u32));
         break;
     case RelocationType::RelativeAddress:
-        Memory::Write32(target_address, symbol_address + addend - target_future_address);
+        memory.Write32(target_address, symbol_address + addend - target_future_address);
         Core::CPU().InvalidateCacheRange(target_address, sizeof(u32));
         break;
     case RelocationType::ThumbBranch:
@@ -98,7 +98,7 @@ ResultCode CROHelper::ClearRelocation(VAddr target_address, RelocationType reloc
     case RelocationType::AbsoluteAddress:
     case RelocationType::AbsoluteAddress2:
     case RelocationType::RelativeAddress:
-        Memory::Write32(target_address, 0);
+        memory.Write32(target_address, 0);
         Core::CPU().InvalidateCacheRange(target_address, sizeof(u32));
         break;
     case RelocationType::ThumbBranch:
@@ -188,7 +188,7 @@ VAddr CROHelper::FindExportNamedSymbol(const std::string& name) const {
     ExportNamedSymbolEntry symbol_entry;
     GetEntry(found_id, symbol_entry);
 
-    if (Memory::ReadCString(symbol_entry.name_offset, export_strings_size) != name)
+    if (memory.ReadCString(symbol_entry.name_offset, export_strings_size) != name)
         return 0;
 
     return SegmentTagToAddress(symbol_entry.symbol_position);
@@ -761,7 +761,7 @@ ResultCode CROHelper::ApplyImportNamedSymbol(VAddr crs_address) {
             ResultCode result = ForEachAutoLinkCRO(
                 process, memory, crs_address, [&](CROHelper source) -> ResultVal<bool> {
                     std::string symbol_name =
-                        Memory::ReadCString(entry.name_offset, import_strings_size);
+                        memory.ReadCString(entry.name_offset, import_strings_size);
                     u32 symbol_address = source.FindExportNamedSymbol(symbol_name);
 
                     if (symbol_address != 0) {
@@ -858,7 +858,7 @@ ResultCode CROHelper::ApplyModuleImport(VAddr crs_address) {
     for (u32 i = 0; i < import_module_num; ++i) {
         ImportModuleEntry entry;
         GetEntry(i, entry);
-        std::string want_cro_name = Memory::ReadCString(entry.name_offset, import_strings_size);
+        std::string want_cro_name = memory.ReadCString(entry.name_offset, import_strings_size);
 
         ResultCode result = ForEachAutoLinkCRO(
             process, memory, crs_address, [&](CROHelper source) -> ResultVal<bool> {
@@ -921,7 +921,7 @@ ResultCode CROHelper::ApplyExportNamedSymbol(CROHelper target) {
 
         if (!relocation_entry.is_batch_resolved) {
             std::string symbol_name =
-                Memory::ReadCString(entry.name_offset, target_import_strings_size);
+                memory.ReadCString(entry.name_offset, target_import_strings_size);
             u32 symbol_address = FindExportNamedSymbol(symbol_name);
             if (symbol_address != 0) {
                 LOG_TRACE(Service_LDR, "    exports symbol \"{}\"", symbol_name);
@@ -952,7 +952,7 @@ ResultCode CROHelper::ResetExportNamedSymbol(CROHelper target) {
 
         if (relocation_entry.is_batch_resolved) {
             std::string symbol_name =
-                Memory::ReadCString(entry.name_offset, target_import_strings_size);
+                memory.ReadCString(entry.name_offset, target_import_strings_size);
             u32 symbol_address = FindExportNamedSymbol(symbol_name);
             if (symbol_address != 0) {
                 LOG_TRACE(Service_LDR, "    unexports symbol \"{}\"", symbol_name);
@@ -976,7 +976,7 @@ ResultCode CROHelper::ApplyModuleExport(CROHelper target) {
         ImportModuleEntry entry;
         target.GetEntry(i, entry);
 
-        if (Memory::ReadCString(entry.name_offset, target_import_string_size) != module_name)
+        if (memory.ReadCString(entry.name_offset, target_import_string_size) != module_name)
             continue;
 
         LOG_INFO(Service_LDR, "CRO \"{}\" exports {} indexed symbols to \"{}\"", module_name,
@@ -1025,7 +1025,7 @@ ResultCode CROHelper::ResetModuleExport(CROHelper target) {
         ImportModuleEntry entry;
         target.GetEntry(i, entry);
 
-        if (Memory::ReadCString(entry.name_offset, target_import_string_size) != module_name)
+        if (memory.ReadCString(entry.name_offset, target_import_string_size) != module_name)
             continue;
 
         LOG_DEBUG(Service_LDR, "CRO \"{}\" unexports indexed symbols to \"{}\"", module_name,
@@ -1069,7 +1069,7 @@ ResultCode CROHelper::ApplyExitRelocations(VAddr crs_address) {
         Memory::ReadBlock(process, relocation_addr, &relocation_entry,
                           sizeof(ExternalRelocationEntry));
 
-        if (Memory::ReadCString(entry.name_offset, import_strings_size) == "__aeabi_atexit") {
+        if (memory.ReadCString(entry.name_offset, import_strings_size) == "__aeabi_atexit") {
             ResultCode result = ForEachAutoLinkCRO(
                 process, memory, crs_address, [&](CROHelper source) -> ResultVal<bool> {
                     u32 symbol_address = source.FindExportNamedSymbol("nnroAeabiAtexit_");
@@ -1108,9 +1108,9 @@ ResultCode CROHelper::ApplyExitRelocations(VAddr crs_address) {
  * @param size the size of the string (table), including the terminating 0
  * @returns ResultCode RESULT_SUCCESS if the size matches, otherwise error code.
  */
-static ResultCode VerifyStringTableLength(VAddr address, u32 size) {
+static ResultCode VerifyStringTableLength(Memory::MemorySystem& memory, VAddr address, u32 size) {
     if (size != 0) {
-        if (Memory::Read8(address + size - 1) != 0)
+        if (memory.Read8(address + size - 1) != 0)
             return CROFormatError(0x0B);
     }
     return RESULT_SUCCESS;
@@ -1126,7 +1126,7 @@ ResultCode CROHelper::Rebase(VAddr crs_address, u32 cro_size, VAddr data_segment
         return result;
     }
 
-    result = VerifyStringTableLength(GetField(ModuleNameOffset), GetField(ModuleNameSize));
+    result = VerifyStringTableLength(memory, GetField(ModuleNameOffset), GetField(ModuleNameSize));
     if (result.IsError()) {
         LOG_ERROR(Service_LDR, "Error verifying module name {:08X}", result.raw);
         return result;
@@ -1155,7 +1155,8 @@ ResultCode CROHelper::Rebase(VAddr crs_address, u32 cro_size, VAddr data_segment
         return result;
     }
 
-    result = VerifyStringTableLength(GetField(ExportStringsOffset), GetField(ExportStringsSize));
+    result =
+        VerifyStringTableLength(memory, GetField(ExportStringsOffset), GetField(ExportStringsSize));
     if (result.IsError()) {
         LOG_ERROR(Service_LDR, "Error verifying export strings {:08X}", result.raw);
         return result;
@@ -1191,7 +1192,8 @@ ResultCode CROHelper::Rebase(VAddr crs_address, u32 cro_size, VAddr data_segment
         return result;
     }
 
-    result = VerifyStringTableLength(GetField(ImportStringsOffset), GetField(ImportStringsSize));
+    result =
+        VerifyStringTableLength(memory, GetField(ImportStringsOffset), GetField(ImportStringsSize));
     if (result.IsError()) {
         LOG_ERROR(Service_LDR, "Error verifying import strings {:08X}", result.raw);
         return result;

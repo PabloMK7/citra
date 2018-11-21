@@ -811,7 +811,7 @@ MICROPROFILE_DEFINE(DynCom_Decode, "DynCom", "Decode", MP_RGB(255, 64, 64));
 static unsigned int InterpreterTranslateInstruction(const ARMul_State* cpu, const u32 phys_addr,
                                                     ARM_INST_PTR& inst_base) {
     u32 inst_size = 4;
-    u32 inst = Memory::Read32(phys_addr & 0xFFFFFFFC);
+    u32 inst = Core::System::GetInstance().Memory().Read32(phys_addr & 0xFFFFFFFC);
 
     // If we are in Thumb mode, we'll translate one Thumb instruction to the corresponding ARM
     // instruction

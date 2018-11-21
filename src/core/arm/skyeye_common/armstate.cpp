@@ -191,13 +191,13 @@ static void CheckMemoryBreakpoint(u32 address, GDBStub::BreakpointType type) {
 u8 ARMul_State::ReadMemory8(u32 address) const {
     CheckMemoryBreakpoint(address, GDBStub::BreakpointType::Read);
 
-    return Memory::Read8(address);
+    return Core::System::GetInstance().Memory().Read8(address);
 }
 
 u16 ARMul_State::ReadMemory16(u32 address) const {
     CheckMemoryBreakpoint(address, GDBStub::BreakpointType::Read);
 
-    u16 data = Memory::Read16(address);
+    u16 data = Core::System::GetInstance().Memory().Read16(address);
 
     if (InBigEndianMode())
         data = Common::swap16(data);
@@ -208,7 +208,7 @@ u16 ARMul_State::ReadMemory16(u32 address) const {
 u32 ARMul_State::ReadMemory32(u32 address) const {
     CheckMemoryBreakpoint(address, GDBStub::BreakpointType::Read);
 
-    u32 data = Memory::Read32(address);
+    u32 data = Core::System::GetInstance().Memory().Read32(address);
 
     if (InBigEndianMode())
         data = Common::swap32(data);
@@ -219,7 +219,7 @@ u32 ARMul_State::ReadMemory32(u32 address) const {
 u64 ARMul_State::ReadMemory64(u32 address) const {
     CheckMemoryBreakpoint(address, GDBStub::BreakpointType::Read);
 
-    u64 data = Memory::Read64(address);
+    u64 data = Core::System::GetInstance().Memory().Read64(address);
 
     if (InBigEndianMode())
         data = Common::swap64(data);
@@ -230,7 +230,7 @@ u64 ARMul_State::ReadMemory64(u32 address) const {
 void ARMul_State::WriteMemory8(u32 address, u8 data) {
     CheckMemoryBreakpoint(address, GDBStub::BreakpointType::Write);
 
-    Memory::Write8(address, data);
+    Core::System::GetInstance().Memory().Write8(address, data);
 }
 
 void ARMul_State::WriteMemory16(u32 address, u16 data) {
@@ -239,7 +239,7 @@ void ARMul_State::WriteMemory16(u32 address, u16 data) {
     if (InBigEndianMode())
         data = Common::swap16(data);
 
-    Memory::Write16(address, data);
+    Core::System::GetInstance().Memory().Write16(address, data);
 }
 
 void ARMul_State::WriteMemory32(u32 address, u32 data) {
@@ -248,7 +248,7 @@ void ARMul_State::WriteMemory32(u32 address, u32 data) {
     if (InBigEndianMode())
         data = Common::swap32(data);
 
-    Memory::Write32(address, data);
+    Core::System::GetInstance().Memory().Write32(address, data);
 }
 
 void ARMul_State::WriteMemory64(u32 address, u64 data) {
@@ -257,7 +257,7 @@ void ARMul_State::WriteMemory64(u32 address, u64 data) {
     if (InBigEndianMode())
         data = Common::swap64(data);
 
-    Memory::Write64(address, data);
+    Core::System::GetInstance().Memory().Write64(address, data);
 }
 
 // Reads from the CP15 registers. Used with implementation of the MRC instruction.

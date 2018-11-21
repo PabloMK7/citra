@@ -72,33 +72,34 @@ private:
 class DynarmicUserCallbacks final : public Dynarmic::A32::UserCallbacks {
 public:
     explicit DynarmicUserCallbacks(ARM_Dynarmic& parent)
-        : parent(parent), timing(parent.system.CoreTiming()), svc_context(parent.system) {}
+        : parent(parent), timing(parent.system.CoreTiming()), svc_context(parent.system),
+          memory(parent.system.Memory()) {}
     ~DynarmicUserCallbacks() = default;
 
     std::uint8_t MemoryRead8(VAddr vaddr) override {
-        return Memory::Read8(vaddr);
+        return memory.Read8(vaddr);
     }
     std::uint16_t MemoryRead16(VAddr vaddr) override {
-        return Memory::Read16(vaddr);
+        return memory.Read16(vaddr);
     }
     std::uint32_t MemoryRead32(VAddr vaddr) override {
-        return Memory::Read32(vaddr);
+        return memory.Read32(vaddr);
     }
     std::uint64_t MemoryRead64(VAddr vaddr) override {
-        return Memory::Read64(vaddr);
+        return memory.Read64(vaddr);
     }
 
     void MemoryWrite8(VAddr vaddr, std::uint8_t value) override {
-        Memory::Write8(vaddr, value);
+        memory.Write8(vaddr, value);
     }
     void MemoryWrite16(VAddr vaddr, std::uint16_t value) override {
-        Memory::Write16(vaddr, value);
+        memory.Write16(vaddr, value);
     }
     void MemoryWrite32(VAddr vaddr, std::uint32_t value) override {
-        Memory::Write32(vaddr, value);
+        memory.Write32(vaddr, value);
     }
     void MemoryWrite64(VAddr vaddr, std::uint64_t value) override {
-        Memory::Write64(vaddr, value);
+        memory.Write64(vaddr, value);
     }
 
     void InterpreterFallback(VAddr pc, std::size_t num_instructions) override {
@@ -159,6 +160,7 @@ public:
     ARM_Dynarmic& parent;
     Core::Timing& timing;
     Kernel::SVCContext svc_context;
+    Memory::MemorySystem& memory;
 };
 
 ARM_Dynarmic::ARM_Dynarmic(Core::System& system, PrivilegeMode initial_mode)

@@ -44,7 +44,7 @@ public:
         : module_address(cro_address), process(process), memory(memory) {}
 
     std::string ModuleName() const {
-        return Memory::ReadCString(GetField(ModuleNameOffset), GetField(ModuleNameSize));
+        return memory.ReadCString(GetField(ModuleNameOffset), GetField(ModuleNameSize));
     }
 
     u32 GetFileSize() const {
@@ -408,11 +408,11 @@ private:
     }
 
     u32 GetField(HeaderField field) const {
-        return Memory::Read32(Field(field));
+        return memory.Read32(Field(field));
     }
 
     void SetField(HeaderField field, u32 value) {
-        Memory::Write32(Field(field), value);
+        memory.Write32(Field(field), value);
     }
 
     /**

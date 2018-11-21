@@ -352,7 +352,7 @@ ResultCode SVC::ConnectToPort(Handle* out_handle, VAddr port_name_address) {
 
     static constexpr std::size_t PortNameMaxLength = 11;
     // Read 1 char beyond the max allowed port name to detect names that are too long.
-    std::string port_name = Memory::ReadCString(port_name_address, PortNameMaxLength + 1);
+    std::string port_name = memory.ReadCString(port_name_address, PortNameMaxLength + 1);
     if (port_name.size() > PortNameMaxLength)
         return ERR_PORT_NAME_TOO_LONG;
 
@@ -467,7 +467,7 @@ ResultCode SVC::WaitSynchronizationN(s32* out, VAddr handles_address, s32 handle
     std::vector<ObjectPtr> objects(handle_count);
 
     for (int i = 0; i < handle_count; ++i) {
-        Handle handle = Memory::Read32(handles_address + i * sizeof(Handle));
+        Handle handle = memory.Read32(handles_address + i * sizeof(Handle));
         auto object = kernel.GetCurrentProcess()->handle_table.Get<WaitObject>(handle);
         if (object == nullptr)
             return ERR_INVALID_HANDLE;
@@ -636,7 +636,7 @@ ResultCode SVC::ReplyAndReceive(s32* index, VAddr handles_address, s32 handle_co
     SharedPtr<Process> current_process = kernel.GetCurrentProcess();
 
     for (int i = 0; i < handle_count; ++i) {
-        Handle handle = Memory::Read32(handles_address + i * sizeof(Handle));
+        Handle handle = memory.Read32(handles_address + i * sizeof(Handle));
         auto object = current_process->handle_table.Get<WaitObject>(handle);
         if (object == nullptr)
             return ERR_INVALID_HANDLE;
@@ -646,7 +646,7 @@ ResultCode SVC::ReplyAndReceive(s32* index, VAddr handles_address, s32 handle_co
     // We are also sending a command reply.
     // Do not send a reply if the command id in the command buffer is 0xFFFF.
     Thread* thread = kernel.GetThreadManager().GetCurrentThread();
-    u32 cmd_buff_header = Memory::Read32(thread->GetCommandBufferAddress());
+    u32 cmd_buff_header = memory.Read32(thread->GetCommandBufferAddress());
     IPC::Header header{cmd_buff_header};
     if (reply_target != 0 && header.command_id != 0xFFFF) {
         auto session = current_process->handle_table.Get<ServerSession>(reply_target);
@@ -832,9 +832,9 @@ ResultCode SVC::GetResourceLimitCurrentValues(VAddr values, Handle resource_limi
         return ERR_INVALID_HANDLE;
 
     for (unsigned int i = 0; i < name_count; ++i) {
-        u32 name = Memory::Read32(names + i * sizeof(u32));
+        u32 name = memory.Read32(names + i * sizeof(u32));
         s64 value = resource_limit->GetCurrentResourceValue(name);
-        Memory::Write64(values + i * sizeof(u64), value);
+        memory.Write64(values + i * sizeof(u64), value);
     }
 
     return RESULT_SUCCESS;
@@ -852,9 +852,9 @@ ResultCode SVC::GetResourceLimitLimitValues(VAddr values, Handle resource_limit_
         return ERR_INVALID_HANDLE;
 
     for (unsigned int i = 0; i < name_count; ++i) {
-        u32 name = Memory::Read32(names + i * sizeof(u32));
+        u32 name = memory.Read32(names + i * sizeof(u32));
         s64 value = resource_limit->GetMaxResourceValue(name);
-        Memory::Write64(values + i * sizeof(u64), value);
+        memory.Write64(values + i * sizeof(u64), value);
     }
 
     return RESULT_SUCCESS;

@@ -180,16 +180,6 @@ enum : VAddr {
 
 extern std::array<u8, Memory::FCRAM_N3DS_SIZE> fcram;
 
-u8 Read8(VAddr addr);
-u16 Read16(VAddr addr);
-u32 Read32(VAddr addr);
-u64 Read64(VAddr addr);
-
-void Write8(VAddr addr, u8 data);
-void Write16(VAddr addr, u16 data);
-void Write32(VAddr addr, u32 data);
-void Write64(VAddr addr, u64 data);
-
 void ReadBlock(const Kernel::Process& process, VAddr src_addr, void* dest_buffer, std::size_t size);
 void WriteBlock(const Kernel::Process& process, VAddr dest_addr, const void* src_buffer,
                 std::size_t size);
@@ -197,8 +187,6 @@ void ZeroBlock(const Kernel::Process& process, VAddr dest_addr, const std::size_
 void CopyBlock(const Kernel::Process& process, VAddr dest_addr, VAddr src_addr, std::size_t size);
 void CopyBlock(const Kernel::Process& src_process, const Kernel::Process& dest_process,
                VAddr src_addr, VAddr dest_addr, std::size_t size);
-
-std::string ReadCString(VAddr vaddr, std::size_t max_length);
 
 /**
  * Mark each page touching the region as cached.
@@ -241,6 +229,18 @@ public:
     void SetCurrentPageTable(PageTable* page_table);
     PageTable* GetCurrentPageTable();
 
+    u8 Read8(VAddr addr);
+    u16 Read16(VAddr addr);
+    u32 Read32(VAddr addr);
+    u64 Read64(VAddr addr);
+
+    void Write8(VAddr addr, u8 data);
+    void Write16(VAddr addr, u16 data);
+    void Write32(VAddr addr, u32 data);
+    void Write64(VAddr addr, u64 data);
+
+    std::string ReadCString(VAddr vaddr, std::size_t max_length);
+
     /// Determines if the given VAddr is valid for the specified process.
     bool IsValidVirtualAddress(const Kernel::Process& process, VAddr vaddr);
 
@@ -255,6 +255,13 @@ public:
 
     /// Gets offset in FCRAM from a pointer inside FCRAM range
     u32 GetFCRAMOffset(u8* pointer);
+
+private:
+    template <typename T>
+    T Read(const VAddr vaddr);
+
+    template <typename T>
+    void Write(const VAddr vaddr, const T data);
 };
 
 } // namespace Memory

@@ -114,7 +114,7 @@ template <typename T>
 T ReadMMIO(MMIORegionPointer mmio_handler, VAddr addr);
 
 template <typename T>
-T Read(const VAddr vaddr) {
+T MemorySystem::Read(const VAddr vaddr) {
     const u8* page_pointer = current_page_table->pointers[vaddr >> PAGE_BITS];
     if (page_pointer) {
         // NOTE: Avoid adding any extra logic to this fast-path block
@@ -152,7 +152,7 @@ template <typename T>
 void WriteMMIO(MMIORegionPointer mmio_handler, VAddr addr, const T data);
 
 template <typename T>
-void Write(const VAddr vaddr, const T data) {
+void MemorySystem::Write(const VAddr vaddr, const T data) {
     u8* page_pointer = current_page_table->pointers[vaddr >> PAGE_BITS];
     if (page_pointer) {
         // NOTE: Avoid adding any extra logic to this fast-path block
@@ -224,7 +224,7 @@ u8* MemorySystem::GetPointer(const VAddr vaddr) {
     return nullptr;
 }
 
-std::string ReadCString(VAddr vaddr, std::size_t max_length) {
+std::string MemorySystem::ReadCString(VAddr vaddr, std::size_t max_length) {
     std::string string;
     string.reserve(max_length);
     for (std::size_t i = 0; i < max_length; ++i) {
@@ -417,19 +417,19 @@ void RasterizerFlushVirtualRegion(VAddr start, u32 size, FlushMode mode) {
     CheckRegion(VRAM_VADDR, VRAM_VADDR_END, VRAM_PADDR);
 }
 
-u8 Read8(const VAddr addr) {
+u8 MemorySystem::Read8(const VAddr addr) {
     return Read<u8>(addr);
 }
 
-u16 Read16(const VAddr addr) {
+u16 MemorySystem::Read16(const VAddr addr) {
     return Read<u16_le>(addr);
 }
 
-u32 Read32(const VAddr addr) {
+u32 MemorySystem::Read32(const VAddr addr) {
     return Read<u32_le>(addr);
 }
 
-u64 Read64(const VAddr addr) {
+u64 MemorySystem::Read64(const VAddr addr) {
     return Read<u64_le>(addr);
 }
 
@@ -483,19 +483,19 @@ void ReadBlock(const Kernel::Process& process, const VAddr src_addr, void* dest_
     }
 }
 
-void Write8(const VAddr addr, const u8 data) {
+void MemorySystem::Write8(const VAddr addr, const u8 data) {
     Write<u8>(addr, data);
 }
 
-void Write16(const VAddr addr, const u16 data) {
+void MemorySystem::Write16(const VAddr addr, const u16 data) {
     Write<u16_le>(addr, data);
 }
 
-void Write32(const VAddr addr, const u32 data) {
+void MemorySystem::Write32(const VAddr addr, const u32 data) {
     Write<u32_le>(addr, data);
 }
 
-void Write64(const VAddr addr, const u64 data) {
+void MemorySystem::Write64(const VAddr addr, const u64 data) {
     Write<u64_le>(addr, data);
 }
 
