@@ -23,6 +23,10 @@ namespace SharedPage {
 class Handler;
 }
 
+namespace Memory {
+class MemorySystem;
+}
+
 namespace Kernel {
 
 class AddressArbiter;
@@ -73,7 +77,7 @@ using SharedPtr = boost::intrusive_ptr<T>;
 
 class KernelSystem {
 public:
-    explicit KernelSystem(u32 system_mode);
+    explicit KernelSystem(Memory::MemorySystem& memory, u32 system_mode);
     ~KernelSystem();
 
     /**
@@ -219,6 +223,8 @@ public:
 
     /// Map of named ports managed by the kernel, which can be retrieved using the ConnectToPort
     std::unordered_map<std::string, SharedPtr<ClientPort>> named_ports;
+
+    Memory::MemorySystem& memory;
 
 private:
     void MemoryInit(u32 mem_type);

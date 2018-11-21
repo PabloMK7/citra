@@ -20,7 +20,8 @@ TestEnvironment::TestEnvironment(bool mutable_memory_)
     //       so we need to create the kernel object there.
     //       Change this when all global states are eliminated.
     Core::System::GetInstance().timing = std::make_unique<Core::Timing>();
-    Core::System::GetInstance().kernel = std::make_unique<Kernel::KernelSystem>(0);
+    Memory::MemorySystem memory;
+    Core::System::GetInstance().kernel = std::make_unique<Kernel::KernelSystem>(memory, 0);
     kernel = Core::System::GetInstance().kernel.get();
 
     kernel->SetCurrentProcess(kernel->CreateProcess(kernel->CreateCodeSet("", 0)));
