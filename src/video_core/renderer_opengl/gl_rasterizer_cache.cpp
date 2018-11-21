@@ -134,7 +134,7 @@ static void MortonCopy(u32 stride, u32 height, u8* gl_buffer, PAddr base, PAddr 
         }
     };
 
-    u8* tile_buffer = Memory::GetPhysicalPointer(start);
+    u8* tile_buffer = VideoCore::g_memory->GetPhysicalPointer(start);
 
     if (start < aligned_start && !morton_to_gl) {
         std::array<u8, tile_size> tmp_buf;
@@ -625,7 +625,7 @@ MICROPROFILE_DEFINE(OpenGL_SurfaceLoad, "OpenGL", "Surface Load", MP_RGB(128, 19
 void CachedSurface::LoadGLBuffer(PAddr load_start, PAddr load_end) {
     ASSERT(type != SurfaceType::Fill);
 
-    const u8* const texture_src_data = Memory::GetPhysicalPointer(addr);
+    const u8* const texture_src_data = VideoCore::g_memory->GetPhysicalPointer(addr);
     if (texture_src_data == nullptr)
         return;
 
@@ -680,7 +680,7 @@ void CachedSurface::LoadGLBuffer(PAddr load_start, PAddr load_end) {
 
 MICROPROFILE_DEFINE(OpenGL_SurfaceFlush, "OpenGL", "Surface Flush", MP_RGB(128, 192, 64));
 void CachedSurface::FlushGLBuffer(PAddr flush_start, PAddr flush_end) {
-    u8* const dst_buffer = Memory::GetPhysicalPointer(addr);
+    u8* const dst_buffer = VideoCore::g_memory->GetPhysicalPointer(addr);
     if (dst_buffer == nullptr)
         return;
 

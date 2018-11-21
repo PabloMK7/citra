@@ -24,6 +24,7 @@
 #include "video_core/renderer_opengl/gl_shader_gen.h"
 #include "video_core/renderer_opengl/pica_to_gl.h"
 #include "video_core/renderer_opengl/renderer_opengl.h"
+#include "video_core/video_core.h"
 
 namespace OpenGL {
 
@@ -259,7 +260,7 @@ RasterizerOpenGL::VertexArrayInfo RasterizerOpenGL::AnalyzeVertexArray(bool is_i
     if (is_indexed) {
         const auto& index_info = regs.pipeline.index_array;
         PAddr address = vertex_attributes.GetPhysicalBaseAddress() + index_info.offset;
-        const u8* index_address_8 = Memory::GetPhysicalPointer(address);
+        const u8* index_address_8 = VideoCore::g_memory->GetPhysicalPointer(address);
         const u16* index_address_16 = reinterpret_cast<const u16*>(index_address_8);
         bool index_u16 = index_info.format != 0;
 
@@ -340,7 +341,7 @@ void RasterizerOpenGL::SetupVertexArray(u8* array_ptr, GLintptr buffer_offset,
         u32 data_size = loader.byte_count * vertex_num;
 
         res_cache.FlushRegion(data_addr, data_size, nullptr);
-        std::memcpy(array_ptr, Memory::GetPhysicalPointer(data_addr), data_size);
+        std::memcpy(array_ptr, VideoCore::g_memory->GetPhysicalPointer(data_addr), data_size);
 
         array_ptr += data_size;
         buffer_offset += data_size;
@@ -471,9 +472,9 @@ bool RasterizerOpenGL::AccelerateDrawBatchInternal(bool is_indexed, bool use_gs)
             return false;
         }
 
-        const u8* index_data =
-            Memory::GetPhysicalPointer(regs.pipeline.vertex_attributes.GetPhysicalBaseAddress() +
-                                       regs.pipeline.index_array.offset);
+        const u8* index_data = VideoCore::g_memory->GetPhysicalPointer(
+            regs.pipeline.vertex_attributes.GetPhysicalBaseAddress() +
+            regs.pipeline.index_array.offset);
         std::tie(buffer_ptr, buffer_offset, std::ignore) = index_buffer.Map(index_buffer_size, 4);
         std::memcpy(buffer_ptr, index_data, index_buffer_size);
         index_buffer.Unmap(index_buffer_size);

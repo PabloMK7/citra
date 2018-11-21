@@ -62,6 +62,4 @@ struct MemoryRegionInfo {
     void Free(u32 offset, u32 size);
 };
 
-void HandleSpecialMapping(VMManager& address_space, const AddressMapping& mapping);
-
 } // namespace Kernel

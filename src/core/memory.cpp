@@ -206,7 +206,7 @@ bool IsValidVirtualAddress(const Kernel::Process& process, const VAddr vaddr) {
     return false;
 }
 
-bool IsValidPhysicalAddress(const PAddr paddr) {
+bool MemorySystem::IsValidPhysicalAddress(const PAddr paddr) {
     return GetPhysicalPointer(paddr) != nullptr;
 }
 
@@ -238,7 +238,7 @@ std::string ReadCString(VAddr vaddr, std::size_t max_length) {
     return string;
 }
 
-u8* GetPhysicalPointer(PAddr address) {
+u8* MemorySystem::GetPhysicalPointer(PAddr address) {
     struct MemoryArea {
         PAddr paddr_base;
         u32 size;

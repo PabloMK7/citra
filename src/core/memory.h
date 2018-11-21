@@ -183,8 +183,6 @@ extern std::array<u8, Memory::FCRAM_N3DS_SIZE> fcram;
 /// Determines if the given VAddr is valid for the specified process.
 bool IsValidVirtualAddress(const Kernel::Process& process, VAddr vaddr);
 
-bool IsValidPhysicalAddress(PAddr paddr);
-
 u8 Read8(VAddr addr);
 u16 Read16(VAddr addr);
 u32 Read32(VAddr addr);
@@ -206,11 +204,6 @@ void CopyBlock(const Kernel::Process& src_process, const Kernel::Process& dest_p
 u8* GetPointer(VAddr vaddr);
 
 std::string ReadCString(VAddr vaddr, std::size_t max_length);
-
-/**
- * Gets a pointer to the memory region beginning at the specified physical address.
- */
-u8* GetPhysicalPointer(PAddr address);
 
 /**
  * Mark each page touching the region as cached.
@@ -252,6 +245,13 @@ public:
     /// Currently active page table
     void SetCurrentPageTable(PageTable* page_table);
     PageTable* GetCurrentPageTable();
+
+    /**
+     * Gets a pointer to the memory region beginning at the specified physical address.
+     */
+    u8* GetPhysicalPointer(PAddr address);
+
+    bool IsValidPhysicalAddress(PAddr paddr);
 
     /// Gets offset in FCRAM from a pointer inside FCRAM range
     u32 GetFCRAMOffset(u8* pointer);

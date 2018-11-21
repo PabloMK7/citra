@@ -30,6 +30,7 @@
 #include "video_core/swrasterizer/texturing.h"
 #include "video_core/texture/texture_decode.h"
 #include "video_core/utils.h"
+#include "video_core/video_core.h"
 
 namespace Pica {
 namespace Rasterizer {
@@ -402,7 +403,8 @@ static void ProcessTriangleInternal(const Vertex& v0, const Vertex& v1, const Ve
                     t = texture.config.height - 1 -
                         GetWrappedTexCoord(texture.config.wrap_t, t, texture.config.height);
 
-                    const u8* texture_data = Memory::GetPhysicalPointer(texture_address);
+                    const u8* texture_data =
+                        VideoCore::g_memory->GetPhysicalPointer(texture_address);
                     auto info =
                         Texture::TextureInfo::FromPicaRegister(texture.config, texture.format);
 

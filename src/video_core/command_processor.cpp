@@ -269,7 +269,7 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
     case PICA_REG_INDEX_WORKAROUND(pipeline.command_buffer.trigger[1], 0x23d): {
         unsigned index =
             static_cast<unsigned>(id - PICA_REG_INDEX(pipeline.command_buffer.trigger[0]));
-        u32* head_ptr = (u32*)Memory::GetPhysicalPointer(
+        u32* head_ptr = (u32*)VideoCore::g_memory->GetPhysicalPointer(
             regs.pipeline.command_buffer.GetPhysicalAddress(index));
         g_state.cmd_list.head_ptr = g_state.cmd_list.current_ptr = head_ptr;
         g_state.cmd_list.length = regs.pipeline.command_buffer.GetSize(index) / sizeof(u32);
@@ -328,7 +328,8 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
 
         // Load vertices
         const auto& index_info = regs.pipeline.index_array;
-        const u8* index_address_8 = Memory::GetPhysicalPointer(base_address + index_info.offset);
+        const u8* index_address_8 =
+            VideoCore::g_memory->GetPhysicalPointer(base_address + index_info.offset);
         const u16* index_address_16 = reinterpret_cast<const u16*>(index_address_8);
         bool index_u16 = index_info.format != 0;
 
@@ -338,7 +339,8 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
                 if (!texture.enabled)
                     continue;
 
-                u8* texture_data = Memory::GetPhysicalPointer(texture.config.GetPhysicalAddress());
+                u8* texture_data =
+                    VideoCore::g_memory->GetPhysicalPointer(texture.config.GetPhysicalAddress());
                 g_debug_context->recorder->MemoryAccessed(
                     texture_data,
                     Pica::TexturingRegs::NibblesPerPixel(texture.format) * texture.config.width /
@@ -424,8 +426,8 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
         }
 
         for (auto& range : memory_accesses.ranges) {
-            g_debug_context->recorder->MemoryAccessed(Memory::GetPhysicalPointer(range.first),
-                                                      range.second, range.first);
+            g_debug_context->recorder->MemoryAccessed(
+                VideoCore::g_memory->GetPhysicalPointer(range.first), range.second, range.first);
         }
 
         VideoCore::g_renderer->Rasterizer()->DrawTriangles();

@@ -14,6 +14,7 @@
 #include "citra_qt/debugger/graphics/graphics_surface.h"
 #include "citra_qt/util/spinbox.h"
 #include "common/color.h"
+#include "core/core.h"
 #include "core/hw/gpu.h"
 #include "core/memory.h"
 #include "video_core/pica_state.h"
@@ -283,7 +284,7 @@ void GraphicsSurfaceWidget::Pick(int x, int y) {
         return;
     }
 
-    u8* buffer = Memory::GetPhysicalPointer(surface_address);
+    u8* buffer = Core::System::GetInstance().Memory().GetPhysicalPointer(surface_address);
     if (buffer == nullptr) {
         surface_info_label->setText(tr("(unable to access pixel data)"));
         surface_info_label->setAlignment(Qt::AlignCenter);
@@ -549,7 +550,7 @@ void GraphicsSurfaceWidget::OnUpdate() {
     // TODO: Implement a good way to visualize alpha components!
 
     QImage decoded_image(surface_width, surface_height, QImage::Format_ARGB32);
-    u8* buffer = Memory::GetPhysicalPointer(surface_address);
+    u8* buffer = Core::System::GetInstance().Memory().GetPhysicalPointer(surface_address);
 
     if (buffer == nullptr) {
         surface_picture_label->hide();
@@ -679,7 +680,7 @@ void GraphicsSurfaceWidget::SaveSurface() {
         if (pixmap)
             pixmap->save(&file, "PNG");
     } else if (selectedFilter == bin_filter) {
-        const u8* buffer = Memory::GetPhysicalPointer(surface_address);
+        const u8* buffer = Core::System::GetInstance().Memory().GetPhysicalPointer(surface_address);
         ASSERT_MSG(buffer != nullptr, "Memory not accessible");
 
         QFile file(filename);

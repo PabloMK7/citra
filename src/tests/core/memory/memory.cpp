@@ -36,13 +36,13 @@ TEST_CASE("Memory::IsValidVirtualAddress", "[core][memory]") {
     SECTION("special regions should be valid after mapping them") {
         auto process = kernel.CreateProcess(kernel.CreateCodeSet("", 0));
         SECTION("VRAM") {
-            Kernel::HandleSpecialMapping(process->vm_manager,
-                                         {Memory::VRAM_VADDR, Memory::VRAM_SIZE, false, false});
+            kernel.HandleSpecialMapping(process->vm_manager,
+                                        {Memory::VRAM_VADDR, Memory::VRAM_SIZE, false, false});
             CHECK(Memory::IsValidVirtualAddress(*process, Memory::VRAM_VADDR) == true);
         }
 
         SECTION("IO (Not yet implemented)") {
-            Kernel::HandleSpecialMapping(
+            kernel.HandleSpecialMapping(
                 process->vm_manager, {Memory::IO_AREA_VADDR, Memory::IO_AREA_SIZE, false, false});
             CHECK_FALSE(Memory::IsValidVirtualAddress(*process, Memory::IO_AREA_VADDR) == true);
         }

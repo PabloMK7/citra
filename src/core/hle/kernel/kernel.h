@@ -46,6 +46,7 @@ class SharedMemory;
 class ThreadManager;
 class TimerManager;
 class VMManager;
+struct AddressMapping;
 
 enum class ResetType {
     OneShot,
@@ -215,6 +216,8 @@ public:
     const SharedPage::Handler& GetSharedPageHandler() const;
 
     MemoryRegionInfo* GetMemoryRegion(MemoryRegion region);
+
+    void HandleSpecialMapping(VMManager& address_space, const AddressMapping& mapping);
 
     std::array<MemoryRegionInfo, 3> memory_regions;
 
