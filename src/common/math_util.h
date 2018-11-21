@@ -24,10 +24,10 @@ struct Rectangle {
         : left(left), top(top), right(right), bottom(bottom) {}
 
     T GetWidth() const {
-        return std::abs(static_cast<typename std::make_signed<T>::type>(right - left));
+        return std::abs(static_cast<std::make_signed_t<T>>(right - left));
     }
     T GetHeight() const {
-        return std::abs(static_cast<typename std::make_signed<T>::type>(bottom - top));
+        return std::abs(static_cast<std::make_signed_t<T>>(bottom - top));
     }
     Rectangle<T> TranslateX(const T x) const {
         return Rectangle{left + x, top, right + x, bottom};
