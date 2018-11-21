@@ -11,6 +11,15 @@
 #include "core/hle/kernel/thread.h"
 
 namespace Kernel {
+namespace {
+constexpr u16 GetSlot(Handle handle) {
+    return handle >> 15;
+}
+
+constexpr u16 GetGeneration(Handle handle) {
+    return handle & 0x7FFF;
+}
+} // Anonymous namespace
 
 HandleTable::HandleTable(KernelSystem& kernel) : kernel(kernel) {
     next_generation = 1;
