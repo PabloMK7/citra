@@ -18,9 +18,9 @@ struct Rectangle {
     T right{};
     T bottom{};
 
-    Rectangle() = default;
+    constexpr Rectangle() = default;
 
-    Rectangle(T left, T top, T right, T bottom)
+    constexpr Rectangle(T left, T top, T right, T bottom)
         : left(left), top(top), right(right), bottom(bottom) {}
 
     T GetWidth() const {
