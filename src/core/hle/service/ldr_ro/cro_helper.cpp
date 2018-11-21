@@ -548,7 +548,7 @@ ResultCode CROHelper::ApplyStaticAnonymousSymbolToCRS(VAddr crs_address) {
         static_relocation_table_offset +
         GetField(StaticRelocationNum) * sizeof(StaticRelocationEntry);
 
-    CROHelper crs(crs_address, process);
+    CROHelper crs(crs_address, process, memory);
     u32 offset_export_num = GetField(StaticAnonymousSymbolNum);
     LOG_INFO(Service_LDR, "CRO \"{}\" exports {} static anonymous symbols", ModuleName(),
              offset_export_num);
@@ -758,8 +758,8 @@ ResultCode CROHelper::ApplyImportNamedSymbol(VAddr crs_address) {
                           sizeof(ExternalRelocationEntry));
 
         if (!relocation_entry.is_batch_resolved) {
-            ResultCode result =
-                ForEachAutoLinkCRO(process, crs_address, [&](CROHelper source) -> ResultVal<bool> {
+            ResultCode result = ForEachAutoLinkCRO(
+                process, memory, crs_address, [&](CROHelper source) -> ResultVal<bool> {
                     std::string symbol_name =
                         Memory::ReadCString(entry.name_offset, import_strings_size);
                     u32 symbol_address = source.FindExportNamedSymbol(symbol_name);
@@ -860,8 +860,8 @@ ResultCode CROHelper::ApplyModuleImport(VAddr crs_address) {
         GetEntry(i, entry);
         std::string want_cro_name = Memory::ReadCString(entry.name_offset, import_strings_size);
 
-        ResultCode result =
-            ForEachAutoLinkCRO(process, crs_address, [&](CROHelper source) -> ResultVal<bool> {
+        ResultCode result = ForEachAutoLinkCRO(
+            process, memory, crs_address, [&](CROHelper source) -> ResultVal<bool> {
                 if (want_cro_name == source.ModuleName()) {
                     LOG_INFO(Service_LDR, "CRO \"{}\" imports {} indexed symbols from \"{}\"",
                              ModuleName(), entry.import_indexed_symbol_num, source.ModuleName());
@@ -1070,8 +1070,8 @@ ResultCode CROHelper::ApplyExitRelocations(VAddr crs_address) {
                           sizeof(ExternalRelocationEntry));
 
         if (Memory::ReadCString(entry.name_offset, import_strings_size) == "__aeabi_atexit") {
-            ResultCode result =
-                ForEachAutoLinkCRO(process, crs_address, [&](CROHelper source) -> ResultVal<bool> {
+            ResultCode result = ForEachAutoLinkCRO(
+                process, memory, crs_address, [&](CROHelper source) -> ResultVal<bool> {
                     u32 symbol_address = source.FindExportNamedSymbol("nnroAeabiAtexit_");
 
                     if (symbol_address != 0) {
@@ -1299,17 +1299,18 @@ ResultCode CROHelper::Link(VAddr crs_address, bool link_on_load_bug_fix) {
     }
 
     // Exports symbols to other modules
-    result = ForEachAutoLinkCRO(process, crs_address, [this](CROHelper target) -> ResultVal<bool> {
-        ResultCode result = ApplyExportNamedSymbol(target);
-        if (result.IsError())
-            return result;
+    result = ForEachAutoLinkCRO(process, memory, crs_address,
+                                [this](CROHelper target) -> ResultVal<bool> {
+                                    ResultCode result = ApplyExportNamedSymbol(target);
+                                    if (result.IsError())
+                                        return result;
 
-        result = ApplyModuleExport(target);
-        if (result.IsError())
-            return result;
+                                    result = ApplyModuleExport(target);
+                                    if (result.IsError())
+                                        return result;
 
-        return MakeResult<bool>(true);
-    });
+                                    return MakeResult<bool>(true);
+                                });
     if (result.IsError()) {
         LOG_ERROR(Service_LDR, "Error applying export {:08X}", result.raw);
         return result;
@@ -1343,17 +1344,18 @@ ResultCode CROHelper::Unlink(VAddr crs_address) {
 
     // Resets all symbols in other modules imported from this module
     // Note: the RO service seems only searching in auto-link modules
-    result = ForEachAutoLinkCRO(process, crs_address, [this](CROHelper target) -> ResultVal<bool> {
-        ResultCode result = ResetExportNamedSymbol(target);
-        if (result.IsError())
-            return result;
+    result = ForEachAutoLinkCRO(process, memory, crs_address,
+                                [this](CROHelper target) -> ResultVal<bool> {
+                                    ResultCode result = ResetExportNamedSymbol(target);
+                                    if (result.IsError())
+                                        return result;
 
-        result = ResetModuleExport(target);
-        if (result.IsError())
-            return result;
+                                    result = ResetModuleExport(target);
+                                    if (result.IsError())
+                                        return result;
 
-        return MakeResult<bool>(true);
-    });
+                                    return MakeResult<bool>(true);
+                                });
     if (result.IsError()) {
         LOG_ERROR(Service_LDR, "Error resetting export {:08X}", result.raw);
         return result;
@@ -1383,13 +1385,13 @@ void CROHelper::InitCRS() {
 }
 
 void CROHelper::Register(VAddr crs_address, bool auto_link) {
-    CROHelper crs(crs_address, process);
-    CROHelper head(auto_link ? crs.NextModule() : crs.PreviousModule(), process);
+    CROHelper crs(crs_address, process, memory);
+    CROHelper head(auto_link ? crs.NextModule() : crs.PreviousModule(), process, memory);
 
     if (head.module_address) {
         // there are already CROs registered
         // register as the new tail
-        CROHelper tail(head.PreviousModule(), process);
+        CROHelper tail(head.PreviousModule(), process, memory);
 
         // link with the old tail
         ASSERT(tail.NextModule() == 0);
@@ -1415,9 +1417,10 @@ void CROHelper::Register(VAddr crs_address, bool auto_link) {
 }
 
 void CROHelper::Unregister(VAddr crs_address) {
-    CROHelper crs(crs_address, process);
-    CROHelper next_head(crs.NextModule(), process), previous_head(crs.PreviousModule(), process);
-    CROHelper next(NextModule(), process), previous(PreviousModule(), process);
+    CROHelper crs(crs_address, process, memory);
+    CROHelper next_head(crs.NextModule(), process, memory),
+        previous_head(crs.PreviousModule(), process, memory);
+    CROHelper next(NextModule(), process, memory), previous(PreviousModule(), process, memory);
 
     if (module_address == next_head.module_address ||
         module_address == previous_head.module_address) {

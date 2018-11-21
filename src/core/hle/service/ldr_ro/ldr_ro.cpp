@@ -115,7 +115,7 @@ void RO::Initialize(Kernel::HLERequestContext& ctx) {
         return;
     }
 
-    CROHelper crs(crs_address, *process);
+    CROHelper crs(crs_address, *process, system.Memory());
     crs.InitCRS();
 
     result = crs.Rebase(0, crs_size, 0, 0, 0, 0, true);
@@ -249,7 +249,7 @@ void RO::LoadCRO(Kernel::HLERequestContext& ctx, bool link_on_load_bug_fix) {
         return;
     }
 
-    CROHelper cro(cro_address, *process);
+    CROHelper cro(cro_address, *process, system.Memory());
 
     result = cro.VerifyHash(cro_size, crr_address);
     if (result.IsError()) {
@@ -331,7 +331,7 @@ void RO::UnloadCRO(Kernel::HLERequestContext& ctx) {
     LOG_DEBUG(Service_LDR, "called, cro_address=0x{:08X}, zero={}, cro_buffer_ptr=0x{:08X}",
               cro_address, zero, cro_buffer_ptr);
 
-    CROHelper cro(cro_address, *process);
+    CROHelper cro(cro_address, *process, system.Memory());
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
 
@@ -398,7 +398,7 @@ void RO::LinkCRO(Kernel::HLERequestContext& ctx) {
 
     LOG_DEBUG(Service_LDR, "called, cro_address=0x{:08X}", cro_address);
 
-    CROHelper cro(cro_address, *process);
+    CROHelper cro(cro_address, *process, system.Memory());
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
 
@@ -438,7 +438,7 @@ void RO::UnlinkCRO(Kernel::HLERequestContext& ctx) {
 
     LOG_DEBUG(Service_LDR, "called, cro_address=0x{:08X}", cro_address);
 
-    CROHelper cro(cro_address, *process);
+    CROHelper cro(cro_address, *process, system.Memory());
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
 
@@ -487,7 +487,7 @@ void RO::Shutdown(Kernel::HLERequestContext& ctx) {
         return;
     }
 
-    CROHelper crs(slot->loaded_crs, *process);
+    CROHelper crs(slot->loaded_crs, *process, system.Memory());
     crs.Unrebase(true);
 
     ResultCode result = RESULT_SUCCESS;
@@ -502,7 +502,7 @@ void RO::Shutdown(Kernel::HLERequestContext& ctx) {
     rb.Push(result);
 }
 
-RO::RO() : ServiceFramework("ldr:ro", 2) {
+RO::RO(Core::System& system) : ServiceFramework("ldr:ro", 2), system(system) {
     static const FunctionInfo functions[] = {
         {0x000100C2, &RO::Initialize, "Initialize"},
         {0x00020082, &RO::LoadCRR, "LoadCRR"},
@@ -519,7 +519,7 @@ RO::RO() : ServiceFramework("ldr:ro", 2) {
 
 void InstallInterfaces(Core::System& system) {
     auto& service_manager = system.ServiceManager();
-    std::make_shared<RO>()->InstallAsService(service_manager);
+    std::make_shared<RO>(system)->InstallAsService(service_manager);
 }
 
 } // namespace Service::LDR

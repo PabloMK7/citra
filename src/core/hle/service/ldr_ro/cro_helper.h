@@ -40,8 +40,8 @@ static constexpr u32 CRO_HASH_SIZE = 0x80;
 class CROHelper final {
 public:
     // TODO (wwylele): pass in the process handle for memory access
-    explicit CROHelper(VAddr cro_address, Kernel::Process& process)
-        : module_address(cro_address), process(process) {}
+    explicit CROHelper(VAddr cro_address, Kernel::Process& process, Memory::MemorySystem& memory)
+        : module_address(cro_address), process(process), memory(memory) {}
 
     std::string ModuleName() const {
         return Memory::ReadCString(GetField(ModuleNameOffset), GetField(ModuleNameSize));
@@ -150,6 +150,7 @@ public:
 private:
     const VAddr module_address; ///< the virtual address of this module
     Kernel::Process& process;   ///< the owner process of this module
+    Memory::MemorySystem& memory;
 
     /**
      * Each item in this enum represents a u32 field in the header begin from address+0x80,
@@ -478,11 +479,11 @@ private:
      *         otherwise error code of the last iteration.
      */
     template <typename FunctionObject>
-    static ResultCode ForEachAutoLinkCRO(Kernel::Process& process, VAddr crs_address,
-                                         FunctionObject func) {
+    static ResultCode ForEachAutoLinkCRO(Kernel::Process& process, Memory::MemorySystem& memory,
+                                         VAddr crs_address, FunctionObject func) {
         VAddr current = crs_address;
         while (current != 0) {
-            CROHelper cro(current, process);
+            CROHelper cro(current, process, memory);
             CASCADE_RESULT(bool next, func(cro));
             if (!next)
                 break;

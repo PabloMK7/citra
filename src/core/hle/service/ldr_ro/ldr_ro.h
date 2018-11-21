@@ -18,7 +18,7 @@ struct ClientSlot : public Kernel::SessionRequestHandler::SessionDataBase {
 
 class RO final : public ServiceFramework<RO, ClientSlot> {
 public:
-    RO();
+    explicit RO(Core::System& system);
 
 private:
     /**
@@ -149,6 +149,8 @@ private:
      *      1 : Result of function, 0 on success, otherwise error code
      */
     void Shutdown(Kernel::HLERequestContext& self);
+
+    Core::System& system;
 };
 
 void InstallInterfaces(Core::System& system);
