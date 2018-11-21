@@ -6,6 +6,10 @@
 
 #include "common/common_types.h"
 
+namespace Memory {
+class MemorySystem;
+}
+
 namespace HW {
 
 /// Beginnings of IO register regions, in the user VA space.
@@ -42,7 +46,7 @@ void Write(u32 addr, const T data);
 void Update();
 
 /// Initialize hardware
-void Init();
+void Init(Memory::MemorySystem& memory);
 
 /// Shutdown hardware
 void Shutdown();

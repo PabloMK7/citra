@@ -27,6 +27,7 @@
 namespace GPU {
 
 Regs g_regs;
+Memory::MemorySystem* g_memory;
 
 /// 268MHz CPU clocks / 60Hz frames per second
 const u64 frame_ticks = static_cast<u64>(BASE_CLOCK_RATE_ARM11 / SCREEN_REFRESH_RATE);
@@ -526,7 +527,8 @@ static void VBlankCallback(u64 userdata, s64 cycles_late) {
 }
 
 /// Initialize hardware
-void Init() {
+void Init(Memory::MemorySystem& memory) {
+    g_memory = &memory;
     memset(&g_regs, 0, sizeof(g_regs));
 
     auto& framebuffer_top = g_regs.framebuffer_config[0];

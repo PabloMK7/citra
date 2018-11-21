@@ -86,9 +86,9 @@ template void Write<u8>(u32 addr, const u8 data);
 void Update() {}
 
 /// Initialize hardware
-void Init() {
+void Init(Memory::MemorySystem& memory) {
     AES::InitKeys();
-    GPU::Init();
+    GPU::Init(memory);
     LCD::Init();
     LOG_DEBUG(HW, "initialized OK");
 }
