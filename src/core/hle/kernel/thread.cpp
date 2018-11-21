@@ -355,7 +355,7 @@ ResultVal<SharedPtr<Thread>> KernelSystem::CreateThread(std::string name, VAddr 
 
         // Map the page to the current process' address space.
         vm_manager.MapBackingMemory(Memory::TLS_AREA_VADDR + available_page * Memory::PAGE_SIZE,
-                                    Memory::fcram.data() + *offset, Memory::PAGE_SIZE,
+                                    memory.fcram.data() + *offset, Memory::PAGE_SIZE,
                                     MemoryState::Locked);
     }
 

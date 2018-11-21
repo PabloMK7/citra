@@ -21,12 +21,6 @@
 
 namespace Memory {
 
-static std::array<u8, Memory::VRAM_SIZE> vram;
-static std::array<u8, Memory::N3DS_EXTRA_RAM_SIZE> n3ds_extra_ram;
-std::array<u8, Memory::FCRAM_N3DS_SIZE> fcram;
-
-static PageTable* current_page_table = nullptr;
-
 void MemorySystem::SetCurrentPageTable(PageTable* page_table) {
     current_page_table = page_table;
     if (Core::System::GetInstance().IsPoweredOn()) {
@@ -78,13 +72,7 @@ void UnmapRegion(PageTable& page_table, VAddr base, u32 size) {
     MapPages(page_table, base / PAGE_SIZE, size / PAGE_SIZE, nullptr, PageType::Unmapped);
 }
 
-/**
- * Gets the pointer for virtual memory where the page is marked as RasterizerCachedMemory.
- * This is used to access the memory where the page pointer is nullptr due to rasterizer cache.
- * Since the cache only happens on linear heap or VRAM, we know the exact physical address and
- * pointer of such virtual address
- */
-static u8* GetPointerForRasterizerCache(VAddr addr) {
+u8* MemorySystem::GetPointerForRasterizerCache(VAddr addr) {
     if (addr >= LINEAR_HEAP_VADDR && addr < LINEAR_HEAP_VADDR_END) {
         return fcram.data() + (addr - LINEAR_HEAP_VADDR);
     }

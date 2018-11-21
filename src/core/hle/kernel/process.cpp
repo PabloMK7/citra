@@ -188,10 +188,11 @@ ResultVal<VAddr> Process::HeapAllocate(VAddr target, u32 size, VMAPermission per
         u32 interval_size = interval.upper() - interval.lower();
         LOG_DEBUG(Kernel, "Allocated FCRAM region lower={:08X}, upper={:08X}", interval.lower(),
                   interval.upper());
-        std::fill(Memory::fcram.begin() + interval.lower(),
-                  Memory::fcram.begin() + interval.upper(), 0);
-        auto vma = vm_manager.MapBackingMemory(
-            interval_target, Memory::fcram.data() + interval.lower(), interval_size, memory_state);
+        std::fill(kernel.memory.fcram.begin() + interval.lower(),
+                  kernel.memory.fcram.begin() + interval.upper(), 0);
+        auto vma = vm_manager.MapBackingMemory(interval_target,
+                                               kernel.memory.fcram.data() + interval.lower(),
+                                               interval_size, memory_state);
         ASSERT(vma.Succeeded());
         vm_manager.Reprotect(vma.Unwrap(), perms);
         interval_target += interval_size;
@@ -262,7 +263,7 @@ ResultVal<VAddr> Process::LinearAllocate(VAddr target, u32 size, VMAPermission p
         }
     }
 
-    u8* backing_memory = Memory::fcram.data() + physical_offset;
+    u8* backing_memory = kernel.memory.fcram.data() + physical_offset;
 
     std::fill(backing_memory, backing_memory + size, 0);
     auto vma = vm_manager.MapBackingMemory(target, backing_memory, size, MemoryState::Continuous);

@@ -178,8 +178,6 @@ enum : VAddr {
     NEW_LINEAR_HEAP_VADDR_END = NEW_LINEAR_HEAP_VADDR + NEW_LINEAR_HEAP_SIZE,
 };
 
-extern std::array<u8, Memory::FCRAM_N3DS_SIZE> fcram;
-
 /**
  * Flushes any externally cached rasterizer resources touching the given region.
  */
@@ -258,12 +256,27 @@ public:
      */
     void RasterizerMarkRegionCached(PAddr start, u32 size, bool cached);
 
+    std::array<u8, Memory::FCRAM_N3DS_SIZE> fcram{};
+
 private:
     template <typename T>
     T Read(const VAddr vaddr);
 
     template <typename T>
     void Write(const VAddr vaddr, const T data);
+
+    /**
+     * Gets the pointer for virtual memory where the page is marked as RasterizerCachedMemory.
+     * This is used to access the memory where the page pointer is nullptr due to rasterizer cache.
+     * Since the cache only happens on linear heap or VRAM, we know the exact physical address and
+     * pointer of such virtual address
+     */
+    u8* GetPointerForRasterizerCache(VAddr addr);
+
+    std::array<u8, Memory::VRAM_SIZE> vram{};
+    std::array<u8, Memory::N3DS_EXTRA_RAM_SIZE> n3ds_extra_ram{};
+
+    PageTable* current_page_table = nullptr;
 };
 
 } // namespace Memory
