@@ -14,6 +14,10 @@
 #include "audio_core/interpolate.h"
 #include "common/common_types.h"
 
+namespace Memory {
+class MemorySystem;
+}
+
 namespace AudioCore {
 namespace HLE {
 
@@ -34,6 +38,9 @@ public:
 
     /// Resets internal state.
     void Reset();
+
+    /// Sets the memory system to read data from
+    void SetMemory(Memory::MemorySystem& memory);
 
     /**
      * This is called once every audio frame. This performs per-source processing every frame.
@@ -56,6 +63,7 @@ public:
 
 private:
     const std::size_t source_id;
+    Memory::MemorySystem* memory_system;
     StereoFrame16 current_frame;
 
     using Format = SourceConfiguration::Configuration::Format;

@@ -45,6 +45,10 @@ void Source::Reset() {
     state = {};
 }
 
+void Source::SetMemory(Memory::MemorySystem& memory) {
+    memory_system = &memory;
+}
+
 void Source::ParseConfig(SourceConfiguration::Configuration& config,
                          const s16_le (&adpcm_coeffs)[16]) {
     if (!config.dirty_raw) {

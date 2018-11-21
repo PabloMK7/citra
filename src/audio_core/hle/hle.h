@@ -13,11 +13,15 @@
 #include "core/hle/service/dsp/dsp_dsp.h"
 #include "core/memory.h"
 
+namespace Memory {
+class MemorySystem;
+}
+
 namespace AudioCore {
 
 class DspHle final : public DspInterface {
 public:
-    DspHle();
+    explicit DspHle(Memory::MemorySystem& memory);
     ~DspHle();
 
     DspState GetDspState() const override;

@@ -24,7 +24,7 @@ static constexpr u64 audio_frame_ticks = 1310252ull; ///< Units: ARM11 cycles
 
 struct DspHle::Impl final {
 public:
-    explicit Impl(DspHle& parent);
+    explicit Impl(DspHle& parent, Memory::MemorySystem& memory);
     ~Impl();
 
     DspState GetDspState() const;
@@ -69,8 +69,12 @@ private:
     std::weak_ptr<DSP_DSP> dsp_dsp;
 };
 
-DspHle::Impl::Impl(DspHle& parent_) : parent(parent_) {
+DspHle::Impl::Impl(DspHle& parent_, Memory::MemorySystem& memory) : parent(parent_) {
     dsp_memory.raw_memory.fill(0);
+
+    for (auto& source : sources) {
+        source.SetMemory(memory);
+    }
 
     Core::Timing& timing = Core::System::GetInstance().CoreTiming();
     tick_event =
@@ -335,7 +339,7 @@ void DspHle::Impl::AudioTickCallback(s64 cycles_late) {
     timing.ScheduleEvent(audio_frame_ticks - cycles_late, tick_event);
 }
 
-DspHle::DspHle() : impl(std::make_unique<Impl>(*this)) {}
+DspHle::DspHle(Memory::MemorySystem& memory) : impl(std::make_unique<Impl>(*this, memory)) {}
 DspHle::~DspHle() = default;
 
 DspState DspHle::GetDspState() const {
