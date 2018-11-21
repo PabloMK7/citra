@@ -10,27 +10,27 @@
 #include "core/hle/kernel/shared_page.h"
 #include "core/memory.h"
 
-TEST_CASE("MemorySystem::IsValidVirtualAddress", "[core][memory]") {
+TEST_CASE("Memory::IsValidVirtualAddress", "[core][memory]") {
     // HACK: see comments of member timing
     Core::System::GetInstance().timing = std::make_unique<Core::Timing>();
     Memory::MemorySystem memory;
     Kernel::KernelSystem kernel(memory, 0);
     SECTION("these regions should not be mapped on an empty process") {
         auto process = kernel.CreateProcess(kernel.CreateCodeSet("", 0));
-        CHECK(memory.IsValidVirtualAddress(*process, Memory::PROCESS_IMAGE_VADDR) == false);
-        CHECK(memory.IsValidVirtualAddress(*process, Memory::HEAP_VADDR) == false);
-        CHECK(memory.IsValidVirtualAddress(*process, Memory::LINEAR_HEAP_VADDR) == false);
-        CHECK(memory.IsValidVirtualAddress(*process, Memory::VRAM_VADDR) == false);
-        CHECK(memory.IsValidVirtualAddress(*process, Memory::CONFIG_MEMORY_VADDR) == false);
-        CHECK(memory.IsValidVirtualAddress(*process, Memory::SHARED_PAGE_VADDR) == false);
-        CHECK(memory.IsValidVirtualAddress(*process, Memory::TLS_AREA_VADDR) == false);
+        CHECK(Memory::IsValidVirtualAddress(*process, Memory::PROCESS_IMAGE_VADDR) == false);
+        CHECK(Memory::IsValidVirtualAddress(*process, Memory::HEAP_VADDR) == false);
+        CHECK(Memory::IsValidVirtualAddress(*process, Memory::LINEAR_HEAP_VADDR) == false);
+        CHECK(Memory::IsValidVirtualAddress(*process, Memory::VRAM_VADDR) == false);
+        CHECK(Memory::IsValidVirtualAddress(*process, Memory::CONFIG_MEMORY_VADDR) == false);
+        CHECK(Memory::IsValidVirtualAddress(*process, Memory::SHARED_PAGE_VADDR) == false);
+        CHECK(Memory::IsValidVirtualAddress(*process, Memory::TLS_AREA_VADDR) == false);
     }
 
     SECTION("CONFIG_MEMORY_VADDR and SHARED_PAGE_VADDR should be valid after mapping them") {
         auto process = kernel.CreateProcess(kernel.CreateCodeSet("", 0));
         kernel.MapSharedPages(process->vm_manager);
-        CHECK(memory.IsValidVirtualAddress(*process, Memory::CONFIG_MEMORY_VADDR) == true);
-        CHECK(memory.IsValidVirtualAddress(*process, Memory::SHARED_PAGE_VADDR) == true);
+        CHECK(Memory::IsValidVirtualAddress(*process, Memory::CONFIG_MEMORY_VADDR) == true);
+        CHECK(Memory::IsValidVirtualAddress(*process, Memory::SHARED_PAGE_VADDR) == true);
     }
 
     SECTION("special regions should be valid after mapping them") {
@@ -38,13 +38,13 @@ TEST_CASE("MemorySystem::IsValidVirtualAddress", "[core][memory]") {
         SECTION("VRAM") {
             kernel.HandleSpecialMapping(process->vm_manager,
                                         {Memory::VRAM_VADDR, Memory::VRAM_SIZE, false, false});
-            CHECK(memory.IsValidVirtualAddress(*process, Memory::VRAM_VADDR) == true);
+            CHECK(Memory::IsValidVirtualAddress(*process, Memory::VRAM_VADDR) == true);
         }
 
         SECTION("IO (Not yet implemented)") {
             kernel.HandleSpecialMapping(
                 process->vm_manager, {Memory::IO_AREA_VADDR, Memory::IO_AREA_SIZE, false, false});
-            CHECK_FALSE(memory.IsValidVirtualAddress(*process, Memory::IO_AREA_VADDR) == true);
+            CHECK_FALSE(Memory::IsValidVirtualAddress(*process, Memory::IO_AREA_VADDR) == true);
         }
     }
 
@@ -52,6 +52,6 @@ TEST_CASE("MemorySystem::IsValidVirtualAddress", "[core][memory]") {
         auto process = kernel.CreateProcess(kernel.CreateCodeSet("", 0));
         kernel.MapSharedPages(process->vm_manager);
         process->vm_manager.UnmapRange(Memory::CONFIG_MEMORY_VADDR, Memory::CONFIG_MEMORY_SIZE);
-        CHECK(memory.IsValidVirtualAddress(*process, Memory::CONFIG_MEMORY_VADDR) == false);
+        CHECK(Memory::IsValidVirtualAddress(*process, Memory::CONFIG_MEMORY_VADDR) == false);
     }
 }

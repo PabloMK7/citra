@@ -212,7 +212,7 @@ class MemorySystem {
 public:
     /// Currently active page table
     void SetCurrentPageTable(PageTable* page_table);
-    PageTable* GetCurrentPageTable();
+    PageTable* GetCurrentPageTable() const;
 
     u8 Read8(VAddr addr);
     u16 Read16(VAddr addr);
@@ -235,9 +235,6 @@ public:
                    VAddr src_addr, VAddr dest_addr, std::size_t size);
 
     std::string ReadCString(VAddr vaddr, std::size_t max_length);
-
-    /// Determines if the given VAddr is valid for the specified process.
-    bool IsValidVirtualAddress(const Kernel::Process& process, VAddr vaddr);
 
     /**
      * Gets a pointer to the memory region beginning at the specified physical address.
@@ -278,5 +275,8 @@ private:
 
     PageTable* current_page_table = nullptr;
 };
+
+/// Determines if the given VAddr is valid for the specified process.
+bool IsValidVirtualAddress(const Kernel::Process& process, VAddr vaddr);
 
 } // namespace Memory

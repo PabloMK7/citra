@@ -28,7 +28,7 @@ void MemorySystem::SetCurrentPageTable(PageTable* page_table) {
     }
 }
 
-PageTable* MemorySystem::GetCurrentPageTable() {
+PageTable* MemorySystem::GetCurrentPageTable() const {
     return current_page_table;
 }
 
@@ -173,7 +173,7 @@ void MemorySystem::Write(const VAddr vaddr, const T data) {
     }
 }
 
-bool MemorySystem::IsValidVirtualAddress(const Kernel::Process& process, const VAddr vaddr) {
+bool IsValidVirtualAddress(const Kernel::Process& process, const VAddr vaddr) {
     auto& page_table = process.vm_manager.page_table;
 
     const u8* page_pointer = page_table.pointers[vaddr >> PAGE_BITS];

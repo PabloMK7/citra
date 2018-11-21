@@ -347,7 +347,7 @@ ResultCode SVC::UnmapMemoryBlock(Handle handle, u32 addr) {
 
 /// Connect to an OS service given the port name, returns the handle to the port to out
 ResultCode SVC::ConnectToPort(Handle* out_handle, VAddr port_name_address) {
-    if (!memory.IsValidVirtualAddress(*kernel.GetCurrentProcess(), port_name_address))
+    if (!Memory::IsValidVirtualAddress(*kernel.GetCurrentProcess(), port_name_address))
         return ERR_NOT_FOUND;
 
     static constexpr std::size_t PortNameMaxLength = 11;
@@ -452,7 +452,7 @@ ResultCode SVC::WaitSynchronizationN(s32* out, VAddr handles_address, s32 handle
                                      bool wait_all, s64 nano_seconds) {
     Thread* thread = kernel.GetThreadManager().GetCurrentThread();
 
-    if (!memory.IsValidVirtualAddress(*kernel.GetCurrentProcess(), handles_address))
+    if (!Memory::IsValidVirtualAddress(*kernel.GetCurrentProcess(), handles_address))
         return ERR_INVALID_POINTER;
 
     // NOTE: on real hardware, there is no nullptr check for 'out' (tested with firmware 4.4). If
@@ -623,7 +623,7 @@ static ResultCode ReceiveIPCRequest(SharedPtr<ServerSession> server_session,
 /// In a single operation, sends a IPC reply and waits for a new request.
 ResultCode SVC::ReplyAndReceive(s32* index, VAddr handles_address, s32 handle_count,
                                 Handle reply_target) {
-    if (!memory.IsValidVirtualAddress(*kernel.GetCurrentProcess(), handles_address))
+    if (!Memory::IsValidVirtualAddress(*kernel.GetCurrentProcess(), handles_address))
         return ERR_INVALID_POINTER;
 
     // Check if 'handle_count' is invalid
