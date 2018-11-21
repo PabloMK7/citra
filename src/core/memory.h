@@ -198,8 +198,6 @@ void CopyBlock(const Kernel::Process& process, VAddr dest_addr, VAddr src_addr, 
 void CopyBlock(const Kernel::Process& src_process, const Kernel::Process& dest_process,
                VAddr src_addr, VAddr dest_addr, std::size_t size);
 
-u8* GetPointer(VAddr vaddr);
-
 std::string ReadCString(VAddr vaddr, std::size_t max_length);
 
 /**
@@ -250,6 +248,8 @@ public:
      * Gets a pointer to the memory region beginning at the specified physical address.
      */
     u8* GetPhysicalPointer(PAddr address);
+
+    u8* GetPointer(VAddr vaddr);
 
     bool IsValidPhysicalAddress(PAddr paddr);
 

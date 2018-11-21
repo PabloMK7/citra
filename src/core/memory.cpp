@@ -210,7 +210,7 @@ bool MemorySystem::IsValidPhysicalAddress(const PAddr paddr) {
     return GetPhysicalPointer(paddr) != nullptr;
 }
 
-u8* GetPointer(const VAddr vaddr) {
+u8* MemorySystem::GetPointer(const VAddr vaddr) {
     u8* page_pointer = current_page_table->pointers[vaddr >> PAGE_BITS];
     if (page_pointer) {
         return page_pointer + (vaddr & PAGE_MASK);
