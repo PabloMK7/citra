@@ -16,6 +16,10 @@
 class EmuWindow;
 class ARM_Interface;
 
+namespace Memory {
+class MemorySystem;
+}
+
 namespace AudioCore {
 class DspInterface;
 }
@@ -188,6 +192,12 @@ public:
     /// Gets a const reference to the timing system
     const Timing& CoreTiming() const;
 
+    /// Gets a reference to the memory system
+    Memory::MemorySystem& Memory();
+
+    /// Gets a const reference to the memory system
+    const Memory::MemorySystem& Memory() const;
+
     /// Gets a reference to the cheat engine
     Cheats::CheatEngine& CheatEngine();
 
@@ -235,6 +245,9 @@ private:
 
     /// AppLoader used to load the current executing application
     std::unique_ptr<Loader::AppLoader> app_loader;
+
+    /// Memory system
+    std::unique_ptr<Memory::MemorySystem> memory;
 
     /// ARM11 CPU core
     std::unique_ptr<ARM_Interface> cpu_core;

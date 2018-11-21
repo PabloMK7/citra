@@ -172,6 +172,8 @@ void System::Reschedule() {
 System::ResultStatus System::Init(EmuWindow& emu_window, u32 system_mode) {
     LOG_DEBUG(HW_Memory, "initialized OK");
 
+    memory = std::make_unique<Memory::MemorySystem>();
+
     timing = std::make_unique<Timing>();
 
     kernel = std::make_unique<Kernel::KernelSystem>(system_mode);
@@ -248,6 +250,14 @@ Timing& System::CoreTiming() {
 
 const Timing& System::CoreTiming() const {
     return *timing;
+}
+
+Memory::MemorySystem& System::Memory() {
+    return *memory;
+}
+
+const Memory::MemorySystem& System::Memory() const {
+    return *memory;
 }
 
 Cheats::CheatEngine& System::CheatEngine() {
