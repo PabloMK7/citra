@@ -364,7 +364,7 @@ ResultVal<SharedPtr<Thread>> KernelSystem::CreateThread(std::string name, VAddr 
     thread->tls_address = Memory::TLS_AREA_VADDR + available_page * Memory::PAGE_SIZE +
                           available_slot * Memory::TLS_ENTRY_SIZE;
 
-    Memory::ZeroBlock(owner_process, thread->tls_address, Memory::TLS_ENTRY_SIZE);
+    memory.ZeroBlock(owner_process, thread->tls_address, Memory::TLS_ENTRY_SIZE);
 
     // TODO(peachum): move to ScheduleThread() when scheduler is added so selected core is used
     // to initialize the context

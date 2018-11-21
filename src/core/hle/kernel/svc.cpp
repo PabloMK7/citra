@@ -802,7 +802,7 @@ void SVC::OutputDebugString(VAddr address, s32 len) {
     }
 
     std::string string(len, ' ');
-    Memory::ReadBlock(*kernel.GetCurrentProcess(), address, string.data(), len);
+    memory.ReadBlock(*kernel.GetCurrentProcess(), address, string.data(), len);
     LOG_DEBUG(Debug_Emulated, "{}", string);
 }
 

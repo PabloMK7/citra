@@ -180,14 +180,6 @@ enum : VAddr {
 
 extern std::array<u8, Memory::FCRAM_N3DS_SIZE> fcram;
 
-void ReadBlock(const Kernel::Process& process, VAddr src_addr, void* dest_buffer, std::size_t size);
-void WriteBlock(const Kernel::Process& process, VAddr dest_addr, const void* src_buffer,
-                std::size_t size);
-void ZeroBlock(const Kernel::Process& process, VAddr dest_addr, const std::size_t size);
-void CopyBlock(const Kernel::Process& process, VAddr dest_addr, VAddr src_addr, std::size_t size);
-void CopyBlock(const Kernel::Process& src_process, const Kernel::Process& dest_process,
-               VAddr src_addr, VAddr dest_addr, std::size_t size);
-
 /**
  * Mark each page touching the region as cached.
  */
@@ -238,6 +230,16 @@ public:
     void Write16(VAddr addr, u16 data);
     void Write32(VAddr addr, u32 data);
     void Write64(VAddr addr, u64 data);
+
+    void ReadBlock(const Kernel::Process& process, VAddr src_addr, void* dest_buffer,
+                   std::size_t size);
+    void WriteBlock(const Kernel::Process& process, VAddr dest_addr, const void* src_buffer,
+                    std::size_t size);
+    void ZeroBlock(const Kernel::Process& process, VAddr dest_addr, const std::size_t size);
+    void CopyBlock(const Kernel::Process& process, VAddr dest_addr, VAddr src_addr,
+                   std::size_t size);
+    void CopyBlock(const Kernel::Process& src_process, const Kernel::Process& dest_process,
+                   VAddr src_addr, VAddr dest_addr, std::size_t size);
 
     std::string ReadCString(VAddr vaddr, std::size_t max_length);
 

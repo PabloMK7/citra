@@ -433,8 +433,8 @@ u64 MemorySystem::Read64(const VAddr addr) {
     return Read<u64_le>(addr);
 }
 
-void ReadBlock(const Kernel::Process& process, const VAddr src_addr, void* dest_buffer,
-               const std::size_t size) {
+void MemorySystem::ReadBlock(const Kernel::Process& process, const VAddr src_addr,
+                             void* dest_buffer, const std::size_t size) {
     auto& page_table = process.vm_manager.page_table;
 
     std::size_t remaining_size = size;
@@ -499,8 +499,8 @@ void MemorySystem::Write64(const VAddr addr, const u64 data) {
     Write<u64_le>(addr, data);
 }
 
-void WriteBlock(const Kernel::Process& process, const VAddr dest_addr, const void* src_buffer,
-                const std::size_t size) {
+void MemorySystem::WriteBlock(const Kernel::Process& process, const VAddr dest_addr,
+                              const void* src_buffer, const std::size_t size) {
     auto& page_table = process.vm_manager.page_table;
     std::size_t remaining_size = size;
     std::size_t page_index = dest_addr >> PAGE_BITS;
@@ -547,7 +547,8 @@ void WriteBlock(const Kernel::Process& process, const VAddr dest_addr, const voi
     }
 }
 
-void ZeroBlock(const Kernel::Process& process, const VAddr dest_addr, const std::size_t size) {
+void MemorySystem::ZeroBlock(const Kernel::Process& process, const VAddr dest_addr,
+                             const std::size_t size) {
     auto& page_table = process.vm_manager.page_table;
     std::size_t remaining_size = size;
     std::size_t page_index = dest_addr >> PAGE_BITS;
@@ -595,8 +596,8 @@ void ZeroBlock(const Kernel::Process& process, const VAddr dest_addr, const std:
     }
 }
 
-void CopyBlock(const Kernel::Process& process, VAddr dest_addr, VAddr src_addr,
-               const std::size_t size) {
+void MemorySystem::CopyBlock(const Kernel::Process& process, VAddr dest_addr, VAddr src_addr,
+                             const std::size_t size) {
     auto& page_table = process.vm_manager.page_table;
     std::size_t remaining_size = size;
     std::size_t page_index = src_addr >> PAGE_BITS;
@@ -647,8 +648,9 @@ void CopyBlock(const Kernel::Process& process, VAddr dest_addr, VAddr src_addr,
     }
 }
 
-void CopyBlock(const Kernel::Process& src_process, const Kernel::Process& dest_process,
-               VAddr src_addr, VAddr dest_addr, std::size_t size) {
+void MemorySystem::CopyBlock(const Kernel::Process& src_process,
+                             const Kernel::Process& dest_process, VAddr src_addr, VAddr dest_addr,
+                             std::size_t size) {
     auto& page_table = src_process.vm_manager.page_table;
     std::size_t remaining_size = size;
     std::size_t page_index = src_addr >> PAGE_BITS;

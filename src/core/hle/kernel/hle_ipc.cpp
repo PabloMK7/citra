@@ -48,12 +48,13 @@ SharedPtr<Event> HLERequestContext::SleepClientThread(SharedPtr<Thread> thread,
         // the translation might need to read from it in order to retrieve the StaticBuffer
         // target addresses.
         std::array<u32_le, IPC::COMMAND_BUFFER_LENGTH + 2 * IPC::MAX_STATIC_BUFFERS> cmd_buff;
-        Memory::ReadBlock(*process, thread->GetCommandBufferAddress(), cmd_buff.data(),
-                          cmd_buff.size() * sizeof(u32));
+        Memory::MemorySystem& memory = Core::System::GetInstance().Memory();
+        memory.ReadBlock(*process, thread->GetCommandBufferAddress(), cmd_buff.data(),
+                         cmd_buff.size() * sizeof(u32));
         context.WriteToOutgoingCommandBuffer(cmd_buff.data(), *process);
         // Copy the translated command buffer back into the thread's command buffer area.
-        Memory::WriteBlock(*process, thread->GetCommandBufferAddress(), cmd_buff.data(),
-                           cmd_buff.size() * sizeof(u32));
+        memory.WriteBlock(*process, thread->GetCommandBufferAddress(), cmd_buff.data(),
+                          cmd_buff.size() * sizeof(u32));
     };
 
     auto event = Core::System::GetInstance().Kernel().CreateEvent(Kernel::ResetType::OneShot,
@@ -142,7 +143,8 @@ ResultCode HLERequestContext::PopulateFromIncomingCommandBuffer(const u32_le* sr
 
             // Copy the input buffer into our own vector and store it.
             std::vector<u8> data(buffer_info.size);
-            Memory::ReadBlock(src_process, source_address, data.data(), data.size());
+            Core::System::GetInstance().Memory().ReadBlock(src_process, source_address, data.data(),
+                                                           data.size());
 
             AddStaticBuffer(buffer_info.buffer_id, std::move(data));
             cmd_buf[i++] = source_address;
@@ -209,7 +211,8 @@ ResultCode HLERequestContext::WriteToOutgoingCommandBuffer(u32_le* dst_cmdbuf,
 
             ASSERT_MSG(target_descriptor.size >= data.size(), "Static buffer data is too big");
 
-            Memory::WriteBlock(dst_process, target_address, data.data(), data.size());
+            Core::System::GetInstance().Memory().WriteBlock(dst_process, target_address,
+                                                            data.data(), data.size());
 
             dst_cmdbuf[i++] = target_address;
             break;
@@ -242,13 +245,15 @@ MappedBuffer::MappedBuffer(const Process& process, u32 descriptor, VAddr address
 void MappedBuffer::Read(void* dest_buffer, std::size_t offset, std::size_t size) {
     ASSERT(perms & IPC::R);
     ASSERT(offset + size <= this->size);
-    Memory::ReadBlock(*process, address + static_cast<VAddr>(offset), dest_buffer, size);
+    Core::System::GetInstance().Memory().ReadBlock(*process, address + static_cast<VAddr>(offset),
+                                                   dest_buffer, size);
 }
 
 void MappedBuffer::Write(const void* src_buffer, std::size_t offset, std::size_t size) {
     ASSERT(perms & IPC::W);
     ASSERT(offset + size <= this->size);
-    Memory::WriteBlock(*process, address + static_cast<VAddr>(offset), src_buffer, size);
+    Core::System::GetInstance().Memory().WriteBlock(*process, address + static_cast<VAddr>(offset),
+                                                    src_buffer, size);
 }
 
 } // namespace Kernel

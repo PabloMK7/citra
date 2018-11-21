@@ -318,20 +318,20 @@ private:
 
         static constexpr HeaderField TABLE_OFFSET_FIELD = ImportModuleTableOffset;
 
-        void GetImportIndexedSymbolEntry(Kernel::Process& process, u32 index,
-                                         ImportIndexedSymbolEntry& entry) {
-            Memory::ReadBlock(process,
-                              import_indexed_symbol_table_offset +
-                                  index * sizeof(ImportIndexedSymbolEntry),
-                              &entry, sizeof(ImportIndexedSymbolEntry));
+        void GetImportIndexedSymbolEntry(Kernel::Process& process, Memory::MemorySystem& memory,
+                                         u32 index, ImportIndexedSymbolEntry& entry) {
+            memory.ReadBlock(process,
+                             import_indexed_symbol_table_offset +
+                                 index * sizeof(ImportIndexedSymbolEntry),
+                             &entry, sizeof(ImportIndexedSymbolEntry));
         }
 
-        void GetImportAnonymousSymbolEntry(Kernel::Process& process, u32 index,
-                                           ImportAnonymousSymbolEntry& entry) {
-            Memory::ReadBlock(process,
-                              import_anonymous_symbol_table_offset +
-                                  index * sizeof(ImportAnonymousSymbolEntry),
-                              &entry, sizeof(ImportAnonymousSymbolEntry));
+        void GetImportAnonymousSymbolEntry(Kernel::Process& process, Memory::MemorySystem& memory,
+                                           u32 index, ImportAnonymousSymbolEntry& entry) {
+            memory.ReadBlock(process,
+                             import_anonymous_symbol_table_offset +
+                                 index * sizeof(ImportAnonymousSymbolEntry),
+                             &entry, sizeof(ImportAnonymousSymbolEntry));
         }
     };
     ASSERT_CRO_STRUCT(ImportModuleEntry, 20);
@@ -423,10 +423,10 @@ private:
      *       indicating which table the entry is in.
      */
     template <typename T>
-    void GetEntry(std::size_t index, T& data) const {
-        Memory::ReadBlock(process,
-                          GetField(T::TABLE_OFFSET_FIELD) + static_cast<u32>(index * sizeof(T)),
-                          &data, sizeof(T));
+    void GetEntry(Memory::MemorySystem& memory, std::size_t index, T& data) const {
+        memory.ReadBlock(process,
+                         GetField(T::TABLE_OFFSET_FIELD) + static_cast<u32>(index * sizeof(T)),
+                         &data, sizeof(T));
     }
 
     /**
@@ -437,10 +437,10 @@ private:
      *       indicating which table the entry is in.
      */
     template <typename T>
-    void SetEntry(std::size_t index, const T& data) {
-        Memory::WriteBlock(process,
-                           GetField(T::TABLE_OFFSET_FIELD) + static_cast<u32>(index * sizeof(T)),
-                           &data, sizeof(T));
+    void SetEntry(Memory::MemorySystem& memory, std::size_t index, const T& data) {
+        memory.WriteBlock(process,
+                          GetField(T::TABLE_OFFSET_FIELD) + static_cast<u32>(index * sizeof(T)),
+                          &data, sizeof(T));
     }
 
     /**
