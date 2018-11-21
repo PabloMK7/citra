@@ -180,10 +180,6 @@ enum : VAddr {
 
 extern std::array<u8, Memory::FCRAM_N3DS_SIZE> fcram;
 
-/// Currently active page table
-void SetCurrentPageTable(PageTable* page_table);
-PageTable* GetCurrentPageTable();
-
 /// Determines if the given VAddr is valid for the specified process.
 bool IsValidVirtualAddress(const Kernel::Process& process, VAddr vaddr);
 
@@ -253,6 +249,10 @@ void RasterizerFlushVirtualRegion(VAddr start, u32 size, FlushMode mode);
 
 class MemorySystem {
 public:
+    /// Currently active page table
+    void SetCurrentPageTable(PageTable* page_table);
+    PageTable* GetCurrentPageTable();
+
     /// Gets offset in FCRAM from a pointer inside FCRAM range
     u32 GetFCRAMOffset(u8* pointer);
 };

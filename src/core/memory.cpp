@@ -27,14 +27,14 @@ std::array<u8, Memory::FCRAM_N3DS_SIZE> fcram;
 
 static PageTable* current_page_table = nullptr;
 
-void SetCurrentPageTable(PageTable* page_table) {
+void MemorySystem::SetCurrentPageTable(PageTable* page_table) {
     current_page_table = page_table;
     if (Core::System::GetInstance().IsPoweredOn()) {
         Core::CPU().PageTableChanged();
     }
 }
 
-PageTable* GetCurrentPageTable() {
+PageTable* MemorySystem::GetCurrentPageTable() {
     return current_page_table;
 }
 

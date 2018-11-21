@@ -143,7 +143,7 @@ System::ResultStatus System::Load(EmuWindow& emu_window, const std::string& file
             return ResultStatus::ErrorLoader;
         }
     }
-    Memory::SetCurrentPageTable(&kernel->GetCurrentProcess()->vm_manager.page_table);
+    memory->SetCurrentPageTable(&kernel->GetCurrentProcess()->vm_manager.page_table);
     cheat_engine = std::make_unique<Cheats::CheatEngine>(*this);
     status = ResultStatus::Success;
     m_emu_window = &emu_window;

@@ -104,7 +104,7 @@ void ThreadManager::SwitchContext(Thread* new_thread) {
         // Cancel any outstanding wakeup events for this thread
         timing.UnscheduleEvent(ThreadWakeupEventType, new_thread->thread_id);
 
-        auto previous_process = Core::System::GetInstance().Kernel().GetCurrentProcess();
+        auto previous_process = kernel.GetCurrentProcess();
 
         current_thread = new_thread;
 
@@ -112,8 +112,9 @@ void ThreadManager::SwitchContext(Thread* new_thread) {
         new_thread->status = ThreadStatus::Running;
 
         if (previous_process != current_thread->owner_process) {
-            Core::System::GetInstance().Kernel().SetCurrentProcess(current_thread->owner_process);
-            SetCurrentPageTable(&current_thread->owner_process->vm_manager.page_table);
+            kernel.SetCurrentProcess(current_thread->owner_process);
+            kernel.memory.SetCurrentPageTable(
+                &current_thread->owner_process->vm_manager.page_table);
         }
 
         Core::CPU().LoadContext(new_thread->context);
@@ -460,7 +461,7 @@ VAddr Thread::GetCommandBufferAddress() const {
     return GetTLSAddress() + CommandHeaderOffset;
 }
 
-ThreadManager::ThreadManager() {
+ThreadManager::ThreadManager(Kernel::KernelSystem& kernel) : kernel(kernel) {
     ThreadWakeupEventType = Core::System::GetInstance().CoreTiming().RegisterEvent(
         "ThreadWakeupCallback",
         [this](u64 thread_id, s64 cycle_late) { ThreadWakeupCallback(thread_id, cycle_late); });

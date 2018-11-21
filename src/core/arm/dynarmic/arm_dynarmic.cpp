@@ -172,7 +172,7 @@ ARM_Dynarmic::~ARM_Dynarmic() = default;
 MICROPROFILE_DEFINE(ARM_Jit, "ARM JIT", "ARM JIT", MP_RGB(255, 64, 64));
 
 void ARM_Dynarmic::Run() {
-    ASSERT(Memory::GetCurrentPageTable() == current_page_table);
+    ASSERT(system.Memory().GetCurrentPageTable() == current_page_table);
     MICROPROFILE_SCOPE(ARM_Jit);
 
     jit->Run();
@@ -279,7 +279,7 @@ void ARM_Dynarmic::InvalidateCacheRange(u32 start_address, std::size_t length) {
 }
 
 void ARM_Dynarmic::PageTableChanged() {
-    current_page_table = Memory::GetCurrentPageTable();
+    current_page_table = system.Memory().GetCurrentPageTable();
 
     auto iter = jits.find(current_page_table);
     if (iter != jits.end()) {
