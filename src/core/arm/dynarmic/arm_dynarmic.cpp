@@ -137,7 +137,7 @@ public:
                 parent.jit->HaltExecution();
                 parent.SetPC(pc);
                 Kernel::Thread* thread =
-                    Core::System::GetInstance().Kernel().GetThreadManager().GetCurrentThread();
+                    parent.system.Kernel().GetThreadManager().GetCurrentThread();
                 parent.SaveContext(thread->context);
                 GDBStub::Break();
                 GDBStub::SendTrap(thread, 5);
@@ -165,7 +165,7 @@ public:
 
 ARM_Dynarmic::ARM_Dynarmic(Core::System& system, PrivilegeMode initial_mode)
     : system(system), cb(std::make_unique<DynarmicUserCallbacks>(*this)) {
-    interpreter_state = std::make_shared<ARMul_State>(initial_mode);
+    interpreter_state = std::make_shared<ARMul_State>(system, initial_mode);
     PageTableChanged();
 }
 

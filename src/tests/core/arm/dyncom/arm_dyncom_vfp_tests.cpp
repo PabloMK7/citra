@@ -3,8 +3,8 @@
 // Refer to the license.txt file included.
 
 #include <catch2/catch.hpp>
-
 #include "core/arm/dyncom/arm_dyncom.h"
+#include "core/core.h"
 #include "core/core_timing.h"
 #include "tests/core/arm/arm_test_common.h"
 
@@ -23,7 +23,7 @@ TEST_CASE("ARM_DynCom (vfp): vadd", "[arm_dyncom]") {
     test_env.SetMemory32(0, 0xEE321A03); // vadd.f32 s2, s4, s6
     test_env.SetMemory32(4, 0xEAFFFFFE); // b +#0
 
-    ARM_DynCom dyncom(USER32MODE);
+    ARM_DynCom dyncom(Core::System::GetInstance(), USER32MODE);
 
     std::vector<VfpTestCase> test_cases{{
 #include "vfp_vadd_f32.inc"

@@ -182,11 +182,11 @@ System::ResultStatus System::Init(EmuWindow& emu_window, u32 system_mode) {
 #ifdef ARCHITECTURE_x86_64
         cpu_core = std::make_unique<ARM_Dynarmic>(*this, USER32MODE);
 #else
-        cpu_core = std::make_unique<ARM_DynCom>(USER32MODE);
+        cpu_core = std::make_unique<ARM_DynCom>(*this, USER32MODE);
         LOG_WARNING(Core, "CPU JIT requested, but Dynarmic not available");
 #endif
     } else {
-        cpu_core = std::make_unique<ARM_DynCom>(USER32MODE);
+        cpu_core = std::make_unique<ARM_DynCom>(*this, USER32MODE);
     }
 
     dsp_core = std::make_unique<AudioCore::DspHle>(*memory);

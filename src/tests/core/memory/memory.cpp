@@ -13,8 +13,8 @@
 TEST_CASE("Memory::IsValidVirtualAddress", "[core][memory]") {
     // HACK: see comments of member timing
     Core::System::GetInstance().timing = std::make_unique<Core::Timing>();
-    Memory::MemorySystem memory;
-    Kernel::KernelSystem kernel(memory, 0);
+    Core::System::GetInstance().memory = std::make_unique<Memory::MemorySystem>();
+    Kernel::KernelSystem kernel(*Core::System::GetInstance().memory, 0);
     SECTION("these regions should not be mapped on an empty process") {
         auto process = kernel.CreateProcess(kernel.CreateCodeSet("", 0));
         CHECK(Memory::IsValidVirtualAddress(*process, Memory::PROCESS_IMAGE_VADDR) == false);

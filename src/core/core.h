@@ -246,9 +246,6 @@ private:
     /// AppLoader used to load the current executing application
     std::unique_ptr<Loader::AppLoader> app_loader;
 
-    /// Memory system
-    std::unique_ptr<Memory::MemorySystem> memory;
-
     /// ARM11 CPU core
     std::unique_ptr<ARM_Interface> cpu_core;
 
@@ -281,6 +278,8 @@ public: // HACK: this is temporary exposed for tests,
         // due to WIP kernel refactor causing desync state in memory
     std::unique_ptr<Kernel::KernelSystem> kernel;
     std::unique_ptr<Timing> timing;
+    /// Memory system
+    std::unique_ptr<Memory::MemorySystem> memory;
 
 private:
     static System s_instance;
