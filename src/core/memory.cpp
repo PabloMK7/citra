@@ -185,7 +185,7 @@ void Write(const VAddr vaddr, const T data) {
     }
 }
 
-bool IsValidVirtualAddress(const Kernel::Process& process, const VAddr vaddr) {
+bool MemorySystem::IsValidVirtualAddress(const Kernel::Process& process, const VAddr vaddr) {
     auto& page_table = process.vm_manager.page_table;
 
     const u8* page_pointer = page_table.pointers[vaddr >> PAGE_BITS];

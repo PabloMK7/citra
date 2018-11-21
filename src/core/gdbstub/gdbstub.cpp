@@ -831,8 +831,8 @@ static void ReadMemory() {
         SendReply("E01");
     }
 
-    if (!Memory::IsValidVirtualAddress(*Core::System::GetInstance().Kernel().GetCurrentProcess(),
-                                       addr)) {
+    if (!Core::System::GetInstance().Memory().IsValidVirtualAddress(
+            *Core::System::GetInstance().Kernel().GetCurrentProcess(), addr)) {
         return SendReply("E00");
     }
 
@@ -855,8 +855,8 @@ static void WriteMemory() {
     auto len_pos = std::find(start_offset, command_buffer + command_length, ':');
     u32 len = HexToInt(start_offset, static_cast<u32>(len_pos - start_offset));
 
-    if (!Memory::IsValidVirtualAddress(*Core::System::GetInstance().Kernel().GetCurrentProcess(),
-                                       addr)) {
+    if (!Core::System::GetInstance().Memory().IsValidVirtualAddress(
+            *Core::System::GetInstance().Kernel().GetCurrentProcess(), addr)) {
         return SendReply("E00");
     }
 

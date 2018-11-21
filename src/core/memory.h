@@ -180,9 +180,6 @@ enum : VAddr {
 
 extern std::array<u8, Memory::FCRAM_N3DS_SIZE> fcram;
 
-/// Determines if the given VAddr is valid for the specified process.
-bool IsValidVirtualAddress(const Kernel::Process& process, VAddr vaddr);
-
 u8 Read8(VAddr addr);
 u16 Read16(VAddr addr);
 u32 Read32(VAddr addr);
@@ -245,6 +242,9 @@ public:
     /// Currently active page table
     void SetCurrentPageTable(PageTable* page_table);
     PageTable* GetCurrentPageTable();
+
+    /// Determines if the given VAddr is valid for the specified process.
+    bool IsValidVirtualAddress(const Kernel::Process& process, VAddr vaddr);
 
     /**
      * Gets a pointer to the memory region beginning at the specified physical address.
