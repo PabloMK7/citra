@@ -218,7 +218,7 @@ ResultCode Process::HeapFree(VAddr target, u32 size) {
     // Free heaps block by block
     CASCADE_RESULT(auto backing_blocks, vm_manager.GetBackingBlocksForRange(target, size));
     for (const auto [backing_memory, block_size] : backing_blocks) {
-        memory_region->Free(Memory::GetFCRAMOffset(backing_memory), block_size);
+        memory_region->Free(kernel.memory.GetFCRAMOffset(backing_memory), block_size);
     }
 
     ResultCode result = vm_manager.UnmapRange(target, size);

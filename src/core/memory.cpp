@@ -739,7 +739,7 @@ void WriteMMIO<u64>(MMIORegionPointer mmio_handler, VAddr addr, const u64 data) 
     mmio_handler->Write64(addr, data);
 }
 
-u32 GetFCRAMOffset(u8* pointer) {
+u32 MemorySystem::GetFCRAMOffset(u8* pointer) {
     ASSERT(pointer >= fcram.data() && pointer < fcram.data() + fcram.size());
     return pointer - fcram.data();
 }

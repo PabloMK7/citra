@@ -251,11 +251,10 @@ enum class FlushMode {
  */
 void RasterizerFlushVirtualRegion(VAddr start, u32 size, FlushMode mode);
 
-/// Gets offset in FCRAM from a pointer inside FCRAM range
-u32 GetFCRAMOffset(u8* pointer);
-
 class MemorySystem {
-
+public:
+    /// Gets offset in FCRAM from a pointer inside FCRAM range
+    u32 GetFCRAMOffset(u8* pointer);
 };
 
 } // namespace Memory
