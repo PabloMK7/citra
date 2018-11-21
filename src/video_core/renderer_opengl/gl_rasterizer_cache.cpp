@@ -1718,9 +1718,11 @@ void RasterizerCacheOpenGL::UpdatePagesCachedCount(PAddr addr, u32 size, int del
         const u32 interval_size = interval_end_addr - interval_start_addr;
 
         if (delta > 0 && count == delta)
-            Memory::RasterizerMarkRegionCached(interval_start_addr, interval_size, true);
+            VideoCore::g_memory->RasterizerMarkRegionCached(interval_start_addr, interval_size,
+                                                            true);
         else if (delta < 0 && count == -delta)
-            Memory::RasterizerMarkRegionCached(interval_start_addr, interval_size, false);
+            VideoCore::g_memory->RasterizerMarkRegionCached(interval_start_addr, interval_size,
+                                                            false);
         else
             ASSERT(count >= 0);
     }

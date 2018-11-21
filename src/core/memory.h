@@ -181,11 +181,6 @@ enum : VAddr {
 extern std::array<u8, Memory::FCRAM_N3DS_SIZE> fcram;
 
 /**
- * Mark each page touching the region as cached.
- */
-void RasterizerMarkRegionCached(PAddr start, u32 size, bool cached);
-
-/**
  * Flushes any externally cached rasterizer resources touching the given region.
  */
 void RasterizerFlushRegion(PAddr start, u32 size);
@@ -257,6 +252,11 @@ public:
 
     /// Gets offset in FCRAM from a pointer inside FCRAM range
     u32 GetFCRAMOffset(u8* pointer);
+
+    /**
+     * Mark each page touching the region as cached.
+     */
+    void RasterizerMarkRegionCached(PAddr start, u32 size, bool cached);
 
 private:
     template <typename T>

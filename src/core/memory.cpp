@@ -305,7 +305,7 @@ static std::vector<VAddr> PhysicalToVirtualAddressForRasterizer(PAddr addr) {
     return {};
 }
 
-void RasterizerMarkRegionCached(PAddr start, u32 size, bool cached) {
+void MemorySystem::RasterizerMarkRegionCached(PAddr start, u32 size, bool cached) {
     if (start == 0) {
         return;
     }
