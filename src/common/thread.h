@@ -13,9 +13,6 @@
 
 namespace Common {
 
-void SetThreadAffinity(std::thread::native_handle_type thread, u32 mask);
-void SetCurrentThreadAffinity(u32 mask);
-
 class Event {
 public:
     Event() : is_set(false) {}
@@ -92,6 +89,8 @@ private:
     std::size_t generation; // Incremented once each time the barrier is used
 };
 
+void SetThreadAffinity(std::thread::native_handle_type thread, u32 mask);
+void SetCurrentThreadAffinity(u32 mask);
 void SwitchCurrentThread(); // On Linux, this is equal to sleep 1ms
 void SetCurrentThreadName(const char* name);
 
