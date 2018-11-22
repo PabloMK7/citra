@@ -25,16 +25,6 @@
 
 namespace Common {
 
-int CurrentThreadId() {
-#ifdef _MSC_VER
-    return GetCurrentThreadId();
-#elif defined __APPLE__
-    return mach_thread_self();
-#else
-    return 0;
-#endif
-}
-
 #ifdef _WIN32
 // Supporting functions
 void SleepCurrentThread(int ms) {
