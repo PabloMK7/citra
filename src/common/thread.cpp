@@ -45,7 +45,7 @@ void SwitchCurrentThread() {
 
 // This is implemented much nicer in upcoming msvc++, see:
 // http://msdn.microsoft.com/en-us/library/xcb2z8hs(VS.100).aspx
-void SetCurrentThreadName(const char* szThreadName) {
+void SetCurrentThreadName(const char* name) {
     static const DWORD MS_VC_EXCEPTION = 0x406D1388;
 
 #pragma pack(push, 8)
@@ -58,7 +58,7 @@ void SetCurrentThreadName(const char* szThreadName) {
 #pragma pack(pop)
 
     info.dwType = 0x1000;
-    info.szName = szThreadName;
+    info.szName = name;
     info.dwThreadID = -1; // dwThreadID;
     info.dwFlags = 0;
 
@@ -97,15 +97,15 @@ void SwitchCurrentThread() {
 
 // MinGW with the POSIX threading model does not support pthread_setname_np
 #if !defined(_WIN32) || defined(_MSC_VER)
-void SetCurrentThreadName(const char* szThreadName) {
+void SetCurrentThreadName(const char* name) {
 #ifdef __APPLE__
-    pthread_setname_np(szThreadName);
+    pthread_setname_np(name);
 #elif defined(__Bitrig__) || defined(__DragonFly__) || defined(__FreeBSD__) || defined(__OpenBSD__)
-    pthread_set_name_np(pthread_self(), szThreadName);
+    pthread_set_name_np(pthread_self(), name);
 #elif defined(__NetBSD__)
-    pthread_setname_np(pthread_self(), "%s", (void*)szThreadName);
+    pthread_setname_np(pthread_self(), "%s", (void*)name);
 #else
-    pthread_setname_np(pthread_self(), szThreadName);
+    pthread_setname_np(pthread_self(), name);
 #endif
 }
 #endif
