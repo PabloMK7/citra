@@ -25,13 +25,6 @@
 
 namespace Common {
 
-#ifdef _WIN32
-// Supporting functions
-void SleepCurrentThread(int ms) {
-    Sleep(ms);
-}
-#endif
-
 #ifdef _MSC_VER
 
 void SetThreadAffinity(std::thread::native_handle_type thread, u32 mask) {
@@ -97,10 +90,6 @@ void SetCurrentThreadAffinity(u32 mask) {
 }
 
 #ifndef _WIN32
-void SleepCurrentThread(int ms) {
-    usleep(1000 * ms);
-}
-
 void SwitchCurrentThread() {
     usleep(1000 * 1);
 }

@@ -92,7 +92,6 @@ private:
     std::size_t generation; // Incremented once each time the barrier is used
 };
 
-void SleepCurrentThread(int ms);
 void SwitchCurrentThread(); // On Linux, this is equal to sleep 1ms
 void SetCurrentThreadName(const char* name);
 
