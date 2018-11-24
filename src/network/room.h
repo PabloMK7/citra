@@ -31,6 +31,7 @@ struct RoomInformation {
     u16 port;                   ///< The port of this room
     std::string preferred_game; ///< Game to advertise that you want to play
     u64 preferred_game_id;      ///< Title ID for the advertised game
+    std::string host_username;  ///< Forum username of the host
 };
 
 struct GameInfo {
@@ -62,12 +63,26 @@ enum RoomMessageTypes : u8 {
     IdRoomIsFull,
     IdConsoleIdCollision,
     IdStatusMessage,
+    IdHostKicked,
+    IdHostBanned,
+    /// Moderation requests
+    IdModKick,
+    IdModBan,
+    IdModUnban,
+    IdModGetBanList,
+    // Moderation responses
+    IdModBanListResponse,
+    IdModPermissionDenied,
+    IdModNoSuchUser,
 };
 
 /// Types of system status messages
 enum StatusMessageTypes : u8 {
-    IdMemberJoin = 1, ///< Member joining
-    IdMemberLeave,    ///< Member leaving
+    IdMemberJoin = 1,  ///< Member joining
+    IdMemberLeave,     ///< Member leaving
+    IdMemberKicked,    ///< A member is kicked from the room
+    IdMemberBanned,    ///< A member is banned from the room
+    IdAddressUnbanned, ///< A username / ip address is unbanned from the room
 };
 
 /// This is what a server [person creating a server] would use.
@@ -115,6 +130,11 @@ public:
      */
     bool HasPassword() const;
 
+    using UsernameBanList = std::vector<std::string>;
+    using IPBanList = std::vector<std::string>;
+
+    using BanList = std::pair<UsernameBanList, IPBanList>;
+
     /**
      * Creates the socket for this room. Will bind to default address if
      * server is empty string.
@@ -123,13 +143,20 @@ public:
                 const std::string& server = "", u16 server_port = DefaultRoomPort,
                 const std::string& password = "",
                 const u32 max_connections = MaxConcurrentConnections,
-                const std::string& preferred_game = "", u64 preferred_game_id = 0,
-                std::unique_ptr<VerifyUser::Backend> verify_backend = nullptr);
+                const std::string& host_username = "", const std::string& preferred_game = "",
+                u64 preferred_game_id = 0,
+                std::unique_ptr<VerifyUser::Backend> verify_backend = nullptr,
+                const BanList& ban_list = {});
 
     /**
      * Sets the verification GUID of the room.
      */
     void SetVerifyUID(const std::string& uid);
+
+    /**
+     * Gets the ban list (including banned forum usernames and IPs) of the room.
+     */
+    BanList GetBanList() const;
 
     /**
      * Destroys the socket
