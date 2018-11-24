@@ -81,42 +81,53 @@ static void OnStateChanged(const Network::RoomMember::State& state) {
     case Network::RoomMember::State::Joined:
         LOG_DEBUG(Network, "Successfully joined to the room");
         break;
-    case Network::RoomMember::State::LostConnection:
+    default:
+        break;
+    }
+}
+
+static void OnNetworkError(const Network::RoomMember::Error& error) {
+    switch (error) {
+    case Network::RoomMember::Error::LostConnection:
         LOG_DEBUG(Network, "Lost connection to the room");
         break;
-    case Network::RoomMember::State::CouldNotConnect:
-        LOG_ERROR(Network, "State: CouldNotConnect");
+    case Network::RoomMember::Error::CouldNotConnect:
+        LOG_ERROR(Network, "Error: Could not connect");
         exit(1);
         break;
-    case Network::RoomMember::State::NameCollision:
+    case Network::RoomMember::Error::NameCollision:
         LOG_ERROR(
             Network,
             "You tried to use the same nickname as another user that is connected to the Room");
         exit(1);
         break;
-    case Network::RoomMember::State::MacCollision:
+    case Network::RoomMember::Error::MacCollision:
         LOG_ERROR(Network, "You tried to use the same MAC-Address as another user that is "
                            "connected to the Room");
         exit(1);
         break;
-    case Network::RoomMember::State::ConsoleIdCollision:
+    case Network::RoomMember::Error::ConsoleIdCollision:
         LOG_ERROR(Network, "Your Console ID conflicted with someone else in the Room");
         exit(1);
         break;
-    case Network::RoomMember::State::WrongPassword:
+    case Network::RoomMember::Error::WrongPassword:
         LOG_ERROR(Network, "Room replied with: Wrong password");
         exit(1);
         break;
-    case Network::RoomMember::State::WrongVersion:
+    case Network::RoomMember::Error::WrongVersion:
         LOG_ERROR(Network,
                   "You are using a different version than the room you are trying to connect to");
         exit(1);
         break;
-    case Network::RoomMember::State::RoomIsFull:
+    case Network::RoomMember::Error::RoomIsFull:
         LOG_ERROR(Network, "The room is full");
         exit(1);
         break;
-    default:
+    case Network::RoomMember::Error::HostKicked:
+        LOG_ERROR(Network, "You have been kicked by the host");
+        break;
+    case Network::RoomMember::Error::HostBanned:
+        LOG_ERROR(Network, "You have been banned by the host");
         break;
     }
 }
@@ -133,6 +144,15 @@ static void OnStatusMessageReceived(const Network::StatusMessageEntry& msg) {
         break;
     case Network::IdMemberLeave:
         message = fmt::format("{} has left", msg.nickname);
+        break;
+    case Network::IdMemberKicked:
+        message = fmt::format("{} has been kicked", msg.nickname);
+        break;
+    case Network::IdMemberBanned:
+        message = fmt::format("{} has been banned", msg.nickname);
+        break;
+    case Network::IdAddressUnbanned:
+        message = fmt::format("{} has been unbanned", msg.nickname);
         break;
     }
     if (!message.empty())
@@ -358,6 +378,7 @@ int main(int argc, char** argv) {
             member->BindOnChatMessageRecieved(OnMessageReceived);
             member->BindOnStatusMessageReceived(OnStatusMessageReceived);
             member->BindOnStateChanged(OnStateChanged);
+            member->BindOnError(OnNetworkError);
             LOG_DEBUG(Network, "Start connection to {}:{} with nickname {}", address, port,
                       nickname);
             member->Join(nickname, Service::CFG::GetConsoleIdHash(system), address.c_str(), port, 0,
