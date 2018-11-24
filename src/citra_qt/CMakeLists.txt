@@ -99,6 +99,8 @@ add_executable(citra-qt
     multiplayer/lobby.cpp
     multiplayer/message.h
     multiplayer/message.cpp
+    multiplayer/moderation_dialog.cpp
+    multiplayer/moderation_dialog.h
     multiplayer/state.cpp
     multiplayer/state.h
     multiplayer/validation.h
@@ -135,6 +137,7 @@ set(UIS
     multiplayer/chat_room.ui
     multiplayer/client_room.ui
     multiplayer/host_room.ui
+    multiplayer/moderation_dialog.ui
     aboutdialog.ui
     cheats.ui
     hotkeys.ui

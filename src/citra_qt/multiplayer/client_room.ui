@@ -42,6 +42,16 @@
         </spacer>
        </item>
        <item>
+        <widget class="QPushButton" name="moderation">
+         <property name="text">
+          <string>Moderation...</string>
+         </property>
+         <property name="visible">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QPushButton" name="disconnect">
          <property name="text">
           <string>Leave Room</string>

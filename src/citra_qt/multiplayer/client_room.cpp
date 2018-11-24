@@ -13,6 +13,7 @@
 #include "citra_qt/game_list_p.h"
 #include "citra_qt/multiplayer/client_room.h"
 #include "citra_qt/multiplayer/message.h"
+#include "citra_qt/multiplayer/moderation_dialog.h"
 #include "citra_qt/multiplayer/state.h"
 #include "common/logging/log.h"
 #include "core/announce_multiplayer_session.h"
@@ -42,10 +43,22 @@ ClientRoomWindow::ClientRoomWindow(QWidget* parent)
     connect(ui->disconnect, &QPushButton::pressed, [this] { Disconnect(); });
     ui->disconnect->setDefault(false);
     ui->disconnect->setAutoDefault(false);
+    connect(ui->moderation, &QPushButton::clicked, [this] {
+        ModerationDialog dialog(this);
+        dialog.exec();
+    });
+    ui->moderation->setDefault(false);
+    ui->moderation->setAutoDefault(false);
     UpdateView();
 }
 
 ClientRoomWindow::~ClientRoomWindow() = default;
+
+void ClientRoomWindow::SetModPerms(bool is_mod) {
+    ui->moderation->setVisible(is_mod);
+    ui->moderation->setDefault(false);
+    ui->moderation->setAutoDefault(false);
+}
 
 void ClientRoomWindow::RetranslateUi() {
     ui->retranslateUi(this);

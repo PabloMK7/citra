@@ -226,6 +226,12 @@ void MultiplayerState::OnOpenNetworkRoom() {
             if (client_room == nullptr) {
                 client_room = new ClientRoomWindow(this);
             }
+            const std::string host_username = member->GetRoomInformation().host_username;
+            if (host_username.empty()) {
+                client_room->SetModPerms(false);
+            } else {
+                client_room->SetModPerms(member->GetUsername() == host_username);
+            }
             BringWidgetToFront(client_room);
             return;
         }

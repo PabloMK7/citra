@@ -18,6 +18,7 @@ public:
     ~ClientRoomWindow();
 
     void RetranslateUi();
+    void SetModPerms(bool is_mod);
 
 public slots:
     void OnRoomUpdate(const Network::RoomInformation&);
