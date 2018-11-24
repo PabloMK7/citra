@@ -4,18 +4,12 @@
 
 #pragma once
 
-#include <algorithm>
 #include <cstdlib>
 #include <type_traits>
 
 namespace MathUtil {
 
-static constexpr float PI = 3.14159265f;
-
-inline bool IntervalsIntersect(unsigned start0, unsigned length0, unsigned start1,
-                               unsigned length1) {
-    return (std::max(start0, start1) < std::min(start0 + length0, start1 + length1));
-}
+constexpr float PI = 3.14159265f;
 
 template <class T>
 struct Rectangle {
@@ -24,16 +18,16 @@ struct Rectangle {
     T right{};
     T bottom{};
 
-    Rectangle() = default;
+    constexpr Rectangle() = default;
 
-    Rectangle(T left, T top, T right, T bottom)
+    constexpr Rectangle(T left, T top, T right, T bottom)
         : left(left), top(top), right(right), bottom(bottom) {}
 
     T GetWidth() const {
-        return std::abs(static_cast<typename std::make_signed<T>::type>(right - left));
+        return std::abs(static_cast<std::make_signed_t<T>>(right - left));
     }
     T GetHeight() const {
-        return std::abs(static_cast<typename std::make_signed<T>::type>(bottom - top));
+        return std::abs(static_cast<std::make_signed_t<T>>(bottom - top));
     }
     Rectangle<T> TranslateX(const T x) const {
         return Rectangle{left + x, top, right + x, bottom};
