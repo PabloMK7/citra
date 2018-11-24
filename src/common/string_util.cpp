@@ -4,11 +4,10 @@
 
 #include <algorithm>
 #include <cctype>
-#include <cerrno>
 #include <codecvt>
-#include <cstdio>
 #include <cstdlib>
-#include <cstring>
+#include <locale>
+#include <sstream>
 #include "common/common_paths.h"
 #include "common/logging/log.h"
 #include "common/string_util.h"
@@ -33,24 +32,6 @@ std::string ToUpper(std::string str) {
     return str;
 }
 
-// For Debugging. Read out an u8 array.
-std::string ArrayToString(const u8* data, std::size_t size, int line_len, bool spaces) {
-    std::ostringstream oss;
-    oss << std::setfill('0') << std::hex;
-
-    for (int line = 0; size; ++data, --size) {
-        oss << std::setw(2) << (int)*data;
-
-        if (line_len == ++line) {
-            oss << '\n';
-            line = 0;
-        } else if (spaces)
-            oss << ' ';
-    }
-
-    return oss.str();
-}
-
 // Turns "  hej " into "hej". Also handles tabs.
 std::string StripSpaces(const std::string& str) {
     const std::size_t s = str.find_first_not_of(" \t\r\n");
@@ -69,40 +50,6 @@ std::string StripQuotes(const std::string& s) {
         return s.substr(1, s.size() - 2);
     else
         return s;
-}
-
-bool TryParse(const std::string& str, u32* const output) {
-    char* endptr = nullptr;
-
-    // Reset errno to a value other than ERANGE
-    errno = 0;
-
-    unsigned long value = strtoul(str.c_str(), &endptr, 0);
-
-    if (!endptr || *endptr)
-        return false;
-
-    if (errno == ERANGE)
-        return false;
-
-#if ULONG_MAX > UINT_MAX
-    if (value >= 0x100000000ull && value <= 0xFFFFFFFF00000000ull)
-        return false;
-#endif
-
-    *output = static_cast<u32>(value);
-    return true;
-}
-
-bool TryParse(const std::string& str, bool* const output) {
-    if ("1" == str || "true" == ToLower(str))
-        *output = true;
-    else if ("0" == str || "false" == ToLower(str))
-        *output = false;
-    else
-        return false;
-
-    return true;
 }
 
 std::string StringFromBool(bool value) {
