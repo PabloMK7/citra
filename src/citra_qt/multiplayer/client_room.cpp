@@ -55,6 +55,7 @@ ClientRoomWindow::ClientRoomWindow(QWidget* parent)
 ClientRoomWindow::~ClientRoomWindow() = default;
 
 void ClientRoomWindow::SetModPerms(bool is_mod) {
+    ui->chat->SetModPerms(is_mod);
     ui->moderation->setVisible(is_mod);
     ui->moderation->setDefault(false);
     ui->moderation->setAutoDefault(false);

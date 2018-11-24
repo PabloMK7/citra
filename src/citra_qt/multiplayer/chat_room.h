@@ -36,6 +36,8 @@ public:
     void AppendStatusMessage(const QString& msg);
     ~ChatRoom();
 
+    void SetModPerms(bool is_mod);
+
 public slots:
     void OnRoomUpdate(const Network::RoomInformation& info);
     void OnChatReceive(const Network::ChatEntry&);
@@ -54,8 +56,10 @@ private:
     static constexpr u32 max_chat_lines = 1000;
     void AppendChatMessage(const QString&);
     bool ValidateMessage(const std::string&);
+    void SendModerationRequest(Network::RoomMessageTypes type, const std::string& nickname);
     void UpdateIconDisplay();
 
+    bool has_mod_perms = false;
     QStandardItemModel* player_list;
     std::unique_ptr<Ui::ChatRoom> ui;
     std::unordered_set<std::string> block_list;
@@ -66,3 +70,4 @@ Q_DECLARE_METATYPE(Network::ChatEntry);
 Q_DECLARE_METATYPE(Network::StatusMessageEntry);
 Q_DECLARE_METATYPE(Network::RoomInformation);
 Q_DECLARE_METATYPE(Network::RoomMember::State);
+Q_DECLARE_METATYPE(Network::RoomMember::Error);

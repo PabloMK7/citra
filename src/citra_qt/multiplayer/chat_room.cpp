@@ -160,6 +160,10 @@ ChatRoom::ChatRoom(QWidget* parent) : QWidget(parent), ui(std::make_unique<Ui::C
 
 ChatRoom::~ChatRoom() = default;
 
+void ChatRoom::SetModPerms(bool is_mod) {
+    has_mod_perms = is_mod;
+}
+
 void ChatRoom::RetranslateUi() {
     ui->retranslateUi(this);
 }
@@ -175,6 +179,21 @@ void ChatRoom::AppendStatusMessage(const QString& msg) {
 
 void ChatRoom::AppendChatMessage(const QString& msg) {
     ui->chat_history->append(msg);
+}
+
+void ChatRoom::SendModerationRequest(Network::RoomMessageTypes type, const std::string& nickname) {
+    if (auto room = Network::GetRoomMember().lock()) {
+        auto members = room->GetMemberInformation();
+        auto it = std::find_if(members.begin(), members.end(),
+                               [&nickname](const Network::RoomMember::MemberInformation& member) {
+                                   return member.nickname == nickname;
+                               });
+        if (it == members.end()) {
+            NetworkMessage::ShowError(NetworkMessage::NO_SUCH_USER);
+            return;
+        }
+        room->SendModerationRequest(type, nickname);
+    }
 }
 
 bool ChatRoom::ValidateMessage(const std::string& msg) {
@@ -240,6 +259,15 @@ void ChatRoom::OnStatusMessageReceive(const Network::StatusMessageEntry& status_
         break;
     case Network::IdMemberLeave:
         message = tr("%1 has left").arg(name);
+        break;
+    case Network::IdMemberKicked:
+        message = tr("%1 has been kicked").arg(name);
+        break;
+    case Network::IdMemberBanned:
+        message = tr("%1 has been banned").arg(name);
+        break;
+    case Network::IdAddressUnbanned:
+        message = tr("%1 has been unbanned").arg(name);
         break;
     }
     if (!message.isEmpty())
@@ -351,7 +379,7 @@ void ChatRoom::PopupContextMenu(const QPoint& menu_location) {
     std::string nickname =
         player_list->item(item.row())->data(PlayerListItem::NicknameRole).toString().toStdString();
     if (auto room = Network::GetRoomMember().lock()) {
-        // You can't block yourself
+        // You can't block, kick or ban yourself
         if (nickname == room->GetNickname())
             return;
     }
@@ -376,6 +404,33 @@ void ChatRoom::PopupContextMenu(const QPoint& menu_location) {
                 block_list.emplace(nickname);
         }
     });
+
+    if (has_mod_perms) {
+        context_menu.addSeparator();
+
+        QAction* kick_action = context_menu.addAction(tr("Kick"));
+        QAction* ban_action = context_menu.addAction(tr("Ban"));
+
+        connect(kick_action, &QAction::triggered, [this, nickname] {
+            QMessageBox::StandardButton result =
+                QMessageBox::question(this, tr("Kick Player"),
+                                      tr("Are you sure you would like to <b>kick</b> %1?")
+                                          .arg(QString::fromStdString(nickname)),
+                                      QMessageBox::Yes | QMessageBox::No);
+            if (result == QMessageBox::Yes)
+                SendModerationRequest(Network::IdModKick, nickname);
+        });
+        connect(ban_action, &QAction::triggered, [this, nickname] {
+            QMessageBox::StandardButton result = QMessageBox::question(
+                this, tr("Ban Player"),
+                tr("Are you sure you would like to <b>kick and ban</b> %1?\n\nThis would "
+                   "ban both their forum username and their IP address.")
+                    .arg(QString::fromStdString(nickname)),
+                QMessageBox::Yes | QMessageBox::No);
+            if (result == QMessageBox::Yes)
+                SendModerationRequest(Network::IdModBan, nickname);
+        });
+    }
 
     context_menu.exec(ui->player_view->viewport()->mapToGlobal(menu_location));
 }
