@@ -330,6 +330,21 @@ void Config::ReadValues() {
     UISettings::values.max_player = ReadSetting("max_player", 8).toUInt();
     UISettings::values.game_id = ReadSetting("game_id", 0).toULongLong();
     UISettings::values.room_description = ReadSetting("room_description", "").toString();
+    // Read ban list back
+    size = qt_config->beginReadArray("username_ban_list");
+    UISettings::values.ban_list.first.resize(size);
+    for (int i = 0; i < size; ++i) {
+        qt_config->setArrayIndex(i);
+        UISettings::values.ban_list.first[i] = ReadSetting("username").toString().toStdString();
+    }
+    qt_config->endArray();
+    size = qt_config->beginReadArray("ip_ban_list");
+    UISettings::values.ban_list.second.resize(size);
+    for (int i = 0; i < size; ++i) {
+        qt_config->setArrayIndex(i);
+        UISettings::values.ban_list.second[i] = ReadSetting("ip").toString().toStdString();
+    }
+    qt_config->endArray();
     qt_config->endGroup();
 
     qt_config->endGroup();
@@ -535,6 +550,19 @@ void Config::SaveValues() {
     WriteSetting("max_player", UISettings::values.max_player, 8);
     WriteSetting("game_id", UISettings::values.game_id, 0);
     WriteSetting("room_description", UISettings::values.room_description, "");
+    // Write ban list
+    qt_config->beginWriteArray("username_ban_list");
+    for (std::size_t i = 0; i < UISettings::values.ban_list.first.size(); ++i) {
+        qt_config->setArrayIndex(i);
+        WriteSetting("username", QString::fromStdString(UISettings::values.ban_list.first[i]));
+    }
+    qt_config->endArray();
+    qt_config->beginWriteArray("ip_ban_list");
+    for (std::size_t i = 0; i < UISettings::values.ban_list.second.size(); ++i) {
+        qt_config->setArrayIndex(i);
+        WriteSetting("ip", QString::fromStdString(UISettings::values.ban_list.second[i]));
+    }
+    qt_config->endArray();
     qt_config->endGroup();
 
     qt_config->endGroup();

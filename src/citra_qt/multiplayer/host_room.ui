@@ -146,6 +146,20 @@
     </layout>
    </item>
    <item>
+    <layout class="QHBoxLayout">
+     <item>
+      <widget class="QCheckBox" name="load_ban_list">
+       <property name="text">
+        <string>Load Previous Ban List</string>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
      <property name="rightMargin">
       <number>0</number>

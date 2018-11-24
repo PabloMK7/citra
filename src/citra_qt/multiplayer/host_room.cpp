@@ -127,11 +127,16 @@ void HostRoomWindow::Host() {
         auto port = ui->port->isModified() ? ui->port->text().toInt() : Network::DefaultRoomPort;
         auto password = ui->password->text().toStdString();
         const bool is_public = ui->host_type->currentIndex() == 0;
+        Network::Room::BanList ban_list{};
+        if (ui->load_ban_list->isChecked()) {
+            ban_list = UISettings::values.ban_list;
+        }
         if (auto room = Network::GetRoom().lock()) {
             bool created = room->Create(ui->room_name->text().toStdString(),
                                         ui->room_description->toPlainText().toStdString(), "", port,
-                                        password, ui->max_player->value(), game_name.toStdString(),
-                                        game_id, CreateVerifyBackend(is_public));
+                                        password, ui->max_player->value(),
+                                        Settings::values.citra_username, game_name.toStdString(),
+                                        game_id, CreateVerifyBackend(is_public), ban_list);
             if (!created) {
                 NetworkMessage::ShowError(NetworkMessage::COULD_NOT_CREATE_ROOM);
                 LOG_ERROR(Network, "Could not create room!");
