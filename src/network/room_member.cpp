@@ -31,6 +31,7 @@ public:
 
     std::atomic<State> state{State::Idle}; ///< Current state of the RoomMember.
     void SetState(const State new_state);
+    void SetError(const Error new_error);
     bool IsConnected() const;
 
     std::string nickname; ///< The nickname of this member.
@@ -61,6 +62,8 @@ public:
         CallbackSet<StatusMessageEntry> callback_set_status_messages;
         CallbackSet<RoomInformation> callback_set_room_information;
         CallbackSet<State> callback_set_state;
+        CallbackSet<Error> callback_set_error;
+        CallbackSet<Room::BanList> callback_set_ban_list;
     };
     Callbacks callbacks; ///< All CallbackSets to all events
 
@@ -118,6 +121,12 @@ public:
     void HandleStatusMessagePacket(const ENetEvent* event);
 
     /**
+     * Extracts a ban list request response from a received ENet packet.
+     * @param event The ENet event that was received.
+     */
+    void HandleModBanListResponsePacket(const ENetEvent* event);
+
+    /**
      * Disconnects the RoomMember from the Room
      */
     void Disconnect();
@@ -135,6 +144,10 @@ void RoomMember::RoomMemberImpl::SetState(const State new_state) {
         state = new_state;
         Invoke<State>(state);
     }
+}
+
+void RoomMember::RoomMemberImpl::SetError(const Error new_error) {
+    Invoke<Error>(new_error);
 }
 
 bool RoomMember::RoomMemberImpl::IsConnected() const {
@@ -170,32 +183,59 @@ void RoomMember::RoomMemberImpl::MemberLoop() {
                     HandleJoinPacket(&event); // Get the MAC Address for the client
                     SetState(State::Joined);
                     break;
+                case IdModBanListResponse:
+                    HandleModBanListResponsePacket(&event);
+                    break;
                 case IdRoomIsFull:
-                    SetState(State::RoomIsFull);
+                    SetState(State::Idle);
+                    SetError(Error::RoomIsFull);
                     break;
                 case IdNameCollision:
-                    SetState(State::NameCollision);
+                    SetState(State::Idle);
+                    SetError(Error::NameCollision);
                     break;
                 case IdMacCollision:
-                    SetState(State::MacCollision);
+                    SetState(State::Idle);
+                    SetError(Error::MacCollision);
                     break;
                 case IdConsoleIdCollision:
-                    SetState(State::ConsoleIdCollision);
+                    SetState(State::Idle);
+                    SetError(Error::ConsoleIdCollision);
                     break;
                 case IdVersionMismatch:
-                    SetState(State::WrongVersion);
+                    SetState(State::Idle);
+                    SetError(Error::WrongVersion);
                     break;
                 case IdWrongPassword:
-                    SetState(State::WrongPassword);
+                    SetState(State::Idle);
+                    SetError(Error::WrongPassword);
                     break;
                 case IdCloseRoom:
-                    SetState(State::LostConnection);
+                    SetState(State::Idle);
+                    SetError(Error::LostConnection);
+                    break;
+                case IdHostKicked:
+                    SetState(State::Idle);
+                    SetError(Error::HostKicked);
+                    break;
+                case IdHostBanned:
+                    SetState(State::Idle);
+                    SetError(Error::HostBanned);
+                    break;
+                case IdModPermissionDenied:
+                    SetError(Error::PermissionDenied);
+                    break;
+                case IdModNoSuchUser:
+                    SetError(Error::NoSuchUser);
                     break;
                 }
                 enet_packet_destroy(event.packet);
                 break;
             case ENET_EVENT_TYPE_DISCONNECT:
-                SetState(State::LostConnection);
+                if (state == State::Joined) {
+                    SetState(State::Idle);
+                    SetError(Error::LostConnection);
+                }
                 break;
             }
         }
@@ -251,11 +291,13 @@ void RoomMember::RoomMemberImpl::HandleRoomInformationPacket(const ENetEvent* ev
     packet >> info.member_slots;
     packet >> info.port;
     packet >> info.preferred_game;
+    packet >> info.host_username;
     room_information.name = info.name;
     room_information.description = info.description;
     room_information.member_slots = info.member_slots;
     room_information.port = info.port;
     room_information.preferred_game = info.preferred_game;
+    room_information.host_username = info.host_username;
 
     u32 num_members;
     packet >> num_members;
@@ -344,6 +386,19 @@ void RoomMember::RoomMemberImpl::HandleStatusMessagePacket(const ENetEvent* even
     Invoke<StatusMessageEntry>(status_message_entry);
 }
 
+void RoomMember::RoomMemberImpl::HandleModBanListResponsePacket(const ENetEvent* event) {
+    Packet packet;
+    packet.Append(event->packet->data, event->packet->dataLength);
+
+    // Ignore the first byte, which is the message id.
+    packet.IgnoreBytes(sizeof(u8));
+
+    Room::BanList ban_list = {};
+    packet >> ban_list.first;
+    packet >> ban_list.second;
+    Invoke<Room::BanList>(ban_list);
+}
+
 void RoomMember::RoomMemberImpl::Disconnect() {
     member_information.clear();
     room_information.member_slots = 0;
@@ -384,6 +439,12 @@ RoomMember::RoomMemberImpl::Callbacks::Get() {
 }
 
 template <>
+RoomMember::RoomMemberImpl::CallbackSet<RoomMember::Error>&
+RoomMember::RoomMemberImpl::Callbacks::Get() {
+    return callback_set_error;
+}
+
+template <>
 RoomMember::RoomMemberImpl::CallbackSet<RoomInformation>&
 RoomMember::RoomMemberImpl::Callbacks::Get() {
     return callback_set_room_information;
@@ -398,6 +459,12 @@ template <>
 RoomMember::RoomMemberImpl::CallbackSet<StatusMessageEntry>&
 RoomMember::RoomMemberImpl::Callbacks::Get() {
     return callback_set_status_messages;
+}
+
+template <>
+RoomMember::RoomMemberImpl::CallbackSet<Room::BanList>&
+RoomMember::RoomMemberImpl::Callbacks::Get() {
+    return callback_set_ban_list;
 }
 
 template <typename T>
@@ -481,7 +548,8 @@ void RoomMember::Join(const std::string& nick, const std::string& console_id_has
         enet_host_connect(room_member_impl->client, &address, NumChannels, 0);
 
     if (!room_member_impl->server) {
-        room_member_impl->SetState(State::Error);
+        room_member_impl->SetState(State::Idle);
+        room_member_impl->SetError(Error::UnknownError);
         return;
     }
 
@@ -494,7 +562,8 @@ void RoomMember::Join(const std::string& nick, const std::string& console_id_has
         SendGameInfo(room_member_impl->current_game_info);
     } else {
         enet_peer_disconnect(room_member_impl->server, 0);
-        room_member_impl->SetState(State::CouldNotConnect);
+        room_member_impl->SetState(State::Idle);
+        room_member_impl->SetError(Error::CouldNotConnect);
     }
 }
 
@@ -532,8 +601,34 @@ void RoomMember::SendGameInfo(const GameInfo& game_info) {
     room_member_impl->Send(std::move(packet));
 }
 
+void RoomMember::SendModerationRequest(RoomMessageTypes type, const std::string& nickname) {
+    ASSERT_MSG(type == IdModKick || type == IdModBan || type == IdModUnban,
+               "type is not a moderation request");
+    if (!IsConnected())
+        return;
+
+    Packet packet;
+    packet << static_cast<u8>(type);
+    packet << nickname;
+    room_member_impl->Send(std::move(packet));
+}
+
+void RoomMember::RequestBanList() {
+    if (!IsConnected())
+        return;
+
+    Packet packet;
+    packet << static_cast<u8>(IdModGetBanList);
+    room_member_impl->Send(std::move(packet));
+}
+
 RoomMember::CallbackHandle<RoomMember::State> RoomMember::BindOnStateChanged(
     std::function<void(const RoomMember::State&)> callback) {
+    return room_member_impl->Bind(callback);
+}
+
+RoomMember::CallbackHandle<RoomMember::Error> RoomMember::BindOnError(
+    std::function<void(const RoomMember::Error&)> callback) {
     return room_member_impl->Bind(callback);
 }
 
@@ -557,6 +652,11 @@ RoomMember::CallbackHandle<StatusMessageEntry> RoomMember::BindOnStatusMessageRe
     return room_member_impl->Bind(callback);
 }
 
+RoomMember::CallbackHandle<Room::BanList> RoomMember::BindOnBanListReceived(
+    std::function<void(const Room::BanList&)> callback) {
+    return room_member_impl->Bind(callback);
+}
+
 template <typename T>
 void RoomMember::Unbind(CallbackHandle<T> handle) {
     std::lock_guard<std::mutex> lock(room_member_impl->callback_mutex);
@@ -574,8 +674,10 @@ void RoomMember::Leave() {
 
 template void RoomMember::Unbind(CallbackHandle<WifiPacket>);
 template void RoomMember::Unbind(CallbackHandle<RoomMember::State>);
+template void RoomMember::Unbind(CallbackHandle<RoomMember::Error>);
 template void RoomMember::Unbind(CallbackHandle<RoomInformation>);
 template void RoomMember::Unbind(CallbackHandle<ChatEntry>);
 template void RoomMember::Unbind(CallbackHandle<StatusMessageEntry>);
+template void RoomMember::Unbind(CallbackHandle<Room::BanList>);
 
 } // namespace Network

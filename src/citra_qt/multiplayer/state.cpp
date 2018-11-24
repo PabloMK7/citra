@@ -27,9 +27,13 @@ MultiplayerState::MultiplayerState(QWidget* parent, QStandardItemModel* game_lis
             [this](const Network::RoomMember::State& state) { emit NetworkStateChanged(state); });
         connect(this, &MultiplayerState::NetworkStateChanged, this,
                 &MultiplayerState::OnNetworkStateChanged);
+        error_callback_handle = member->BindOnError(
+            [this](const Network::RoomMember::Error& error) { emit NetworkError(error); });
+        connect(this, &MultiplayerState::NetworkError, this, &MultiplayerState::OnNetworkError);
     }
 
     qRegisterMetaType<Network::RoomMember::State>();
+    qRegisterMetaType<Network::RoomMember::Error>();
     qRegisterMetaType<Common::WebResult>();
     announce_multiplayer_session = std::make_shared<Core::AnnounceMultiplayerSession>();
     announce_multiplayer_session->BindErrorCallback(
@@ -50,6 +54,12 @@ MultiplayerState::~MultiplayerState() {
     if (state_callback_handle) {
         if (auto member = Network::GetRoomMember().lock()) {
             member->Unbind(state_callback_handle);
+        }
+    }
+
+    if (error_callback_handle) {
+        if (auto member = Network::GetRoomMember().lock()) {
+            member->Unbind(error_callback_handle);
         }
     }
 }
@@ -88,41 +98,8 @@ void MultiplayerState::retranslateUi() {
 
 void MultiplayerState::OnNetworkStateChanged(const Network::RoomMember::State& state) {
     LOG_DEBUG(Frontend, "Network State: {}", Network::GetStateStr(state));
-    bool is_connected = false;
-    switch (state) {
-    case Network::RoomMember::State::LostConnection:
-        NetworkMessage::ShowError(NetworkMessage::LOST_CONNECTION);
-        break;
-    case Network::RoomMember::State::CouldNotConnect:
-        NetworkMessage::ShowError(NetworkMessage::UNABLE_TO_CONNECT);
-        break;
-    case Network::RoomMember::State::NameCollision:
-        NetworkMessage::ShowError(NetworkMessage::USERNAME_NOT_VALID_SERVER);
-        break;
-    case Network::RoomMember::State::MacCollision:
-        NetworkMessage::ShowError(NetworkMessage::MAC_COLLISION);
-        break;
-    case Network::RoomMember::State::ConsoleIdCollision:
-        NetworkMessage::ShowError(NetworkMessage::CONSOLE_ID_COLLISION);
-        break;
-    case Network::RoomMember::State::RoomIsFull:
-        NetworkMessage::ShowError(NetworkMessage::ROOM_IS_FULL);
-        break;
-    case Network::RoomMember::State::WrongPassword:
-        NetworkMessage::ShowError(NetworkMessage::WRONG_PASSWORD);
-        break;
-    case Network::RoomMember::State::WrongVersion:
-        NetworkMessage::ShowError(NetworkMessage::WRONG_VERSION);
-        break;
-    case Network::RoomMember::State::Error:
-        NetworkMessage::ShowError(NetworkMessage::UNABLE_TO_CONNECT);
-        break;
-    case Network::RoomMember::State::Joined:
-        is_connected = true;
+    if (state == Network::RoomMember::State::Joined) {
         OnOpenNetworkRoom();
-        break;
-    }
-    if (is_connected) {
         status_icon->setPixmap(QIcon::fromTheme("connected").pixmap(16));
         status_text->setText(tr("Connected"));
         leave_room->setEnabled(true);
@@ -135,6 +112,51 @@ void MultiplayerState::OnNetworkStateChanged(const Network::RoomMember::State& s
     }
 
     current_state = state;
+}
+
+void MultiplayerState::OnNetworkError(const Network::RoomMember::Error& error) {
+    LOG_DEBUG(Frontend, "Network Error: {}", Network::GetErrorStr(error));
+    switch (error) {
+    case Network::RoomMember::Error::LostConnection:
+        NetworkMessage::ShowError(NetworkMessage::LOST_CONNECTION);
+        break;
+    case Network::RoomMember::Error::HostKicked:
+        NetworkMessage::ShowError(NetworkMessage::HOST_KICKED);
+        break;
+    case Network::RoomMember::Error::CouldNotConnect:
+        NetworkMessage::ShowError(NetworkMessage::UNABLE_TO_CONNECT);
+        break;
+    case Network::RoomMember::Error::NameCollision:
+        NetworkMessage::ShowError(NetworkMessage::USERNAME_NOT_VALID_SERVER);
+        break;
+    case Network::RoomMember::Error::MacCollision:
+        NetworkMessage::ShowError(NetworkMessage::MAC_COLLISION);
+        break;
+    case Network::RoomMember::Error::ConsoleIdCollision:
+        NetworkMessage::ShowError(NetworkMessage::CONSOLE_ID_COLLISION);
+        break;
+    case Network::RoomMember::Error::RoomIsFull:
+        NetworkMessage::ShowError(NetworkMessage::ROOM_IS_FULL);
+        break;
+    case Network::RoomMember::Error::WrongPassword:
+        NetworkMessage::ShowError(NetworkMessage::WRONG_PASSWORD);
+        break;
+    case Network::RoomMember::Error::WrongVersion:
+        NetworkMessage::ShowError(NetworkMessage::WRONG_VERSION);
+        break;
+    case Network::RoomMember::Error::HostBanned:
+        NetworkMessage::ShowError(NetworkMessage::HOST_BANNED);
+        break;
+    case Network::RoomMember::Error::UnknownError:
+        NetworkMessage::ShowError(NetworkMessage::UNABLE_TO_CONNECT);
+        break;
+    case Network::RoomMember::Error::PermissionDenied:
+        NetworkMessage::ShowError(NetworkMessage::PERMISSION_DENIED);
+        break;
+    case Network::RoomMember::Error::NoSuchUser:
+        NetworkMessage::ShowError(NetworkMessage::NO_SUCH_USER);
+        break;
+    }
 }
 
 void MultiplayerState::OnAnnounceFailed(const Common::WebResult& result) {

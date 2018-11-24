@@ -36,8 +36,11 @@ extern const ConnectionError WRONG_VERSION;
 extern const ConnectionError WRONG_PASSWORD;
 extern const ConnectionError GENERIC_ERROR;
 extern const ConnectionError LOST_CONNECTION;
+extern const ConnectionError HOST_KICKED;
 extern const ConnectionError MAC_COLLISION;
 extern const ConnectionError CONSOLE_ID_COLLISION;
+extern const ConnectionError PERMISSION_DENIED;
+extern const ConnectionError NO_SUCH_USER;
 
 /**
  *  Shows a standard QMessageBox with a error message
