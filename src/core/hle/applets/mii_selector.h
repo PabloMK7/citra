@@ -40,15 +40,40 @@ ASSERT_REG_POSITION(initially_selected_mii_index, 0x90);
 ASSERT_REG_POSITION(guest_mii_whitelist, 0x94);
 #undef ASSERT_REG_POSITION
 
+#pragma pack(push, 1)
+struct MiiData {
+    u32_be mii_id;
+    u64_be system_id;
+    u32_be specialness_and_creation_date;
+    std::array<u8, 0x6> creator_mac;
+    u16_be padding;
+    u16_be mii_information;
+    std::array<u16_le, 0xA> mii_name;
+    u16_be width_height;
+    u8 appearance_bits1;
+    u8 appearance_bits2;
+    u8 hair_style;
+    u8 appearance_bits3;
+    u32_be unknown1;
+    u8 appearance_bits4;
+    u8 appearance_bits5;
+    u16_be appearance_bits6;
+    u32_be unknown2;
+    u8 allow_copying;
+    std::array<u8, 0x7> unknown3;
+    std::array<u16_le, 0xA> author_name;
+};
+static_assert(sizeof(MiiData) == 0x5C, "MiiData structure has incorrect size");
+#pragma pack(pop)
+
 struct MiiResult {
-    u32 return_code;
-    u32 is_guest_mii_selected;
-    u32 selected_guest_mii_index;
-    // TODO(mailwl): expand to Mii Format structure: https://www.3dbrew.org/wiki/Mii
-    u8 selected_mii_data[0x5C];
-    INSERT_PADDING_BYTES(2);
-    u16 mii_data_checksum;
-    u16 guest_mii_name[0xC];
+    u32_be return_code;
+    u32_be is_guest_mii_selected;
+    u32_be selected_guest_mii_index;
+    MiiData selected_mii_data;
+    u16_be unknown1;
+    u16_be mii_data_checksum;
+    std::array<u16_le, 0xC> guest_mii_name;
 };
 static_assert(sizeof(MiiResult) == 0x84, "MiiResult structure has incorrect size");
 #define ASSERT_REG_POSITION(field_name, position)                                                  \
