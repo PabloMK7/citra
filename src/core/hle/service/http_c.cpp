@@ -50,7 +50,7 @@ void HTTP_C::Initialize(Kernel::HLERequestContext& ctx) {
     u32 pid = rp.PopPID();
     shared_memory = rp.PopObject<Kernel::SharedMemory>();
     if (shared_memory) {
-        shared_memory->name = "HTTP_C:shared_memory";
+        shared_memory->SetName("HTTP_C:shared_memory");
     }
 
     LOG_WARNING(Service_HTTP, "(STUBBED) called, shared memory size: {} pid: {}", shmem_size, pid);

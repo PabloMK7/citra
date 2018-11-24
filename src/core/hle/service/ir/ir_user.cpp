@@ -240,7 +240,7 @@ void IR_USER::InitializeIrNopShared(Kernel::HLERequestContext& ctx) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
 
-    shared_memory->name = "IR_USER: shared memory";
+    shared_memory->SetName("IR_USER: shared memory");
 
     receive_buffer = std::make_unique<BufferManager>(shared_memory, 0x10, 0x20,
                                                      recv_buff_packet_count, recv_buff_size);

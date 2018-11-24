@@ -724,7 +724,7 @@ void NWM_UDS::InitializeWithVersion(Kernel::HLERequestContext& ctx) {
 
     initialized = true;
 
-    ASSERT_MSG(recv_buffer_memory->size == sharedmem_size, "Invalid shared memory size.");
+    ASSERT_MSG(recv_buffer_memory->GetSize() == sharedmem_size, "Invalid shared memory size.");
 
     if (auto room_member = Network::GetRoomMember().lock()) {
         wifi_packet_received = room_member->BindOnWifiPacketReceived(OnWifiPacketReceived);

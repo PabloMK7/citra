@@ -217,7 +217,7 @@ void Module::Interface::GetSharedFont(Kernel::HLERequestContext& ctx) {
     // shared font, different linear heap region would have required shared font to relocate
     // according to two different addresses at the same time, which is impossible.
     VAddr target_address =
-        apt->shared_font_mem->linear_heap_phys_offset + Memory::LINEAR_HEAP_VADDR;
+        apt->shared_font_mem->GetLinearHeapPhysicalOffset() + Memory::LINEAR_HEAP_VADDR;
     if (!apt->shared_font_relocated) {
         BCFNT::RelocateSharedFont(apt->shared_font_mem, target_address);
         apt->shared_font_relocated = true;

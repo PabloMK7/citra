@@ -40,7 +40,7 @@ struct MIC_U::Impl {
         shared_memory = rp.PopObject<Kernel::SharedMemory>();
 
         if (shared_memory) {
-            shared_memory->name = "MIC_U:shared_memory";
+            shared_memory->SetName("MIC_U:shared_memory");
         }
 
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
