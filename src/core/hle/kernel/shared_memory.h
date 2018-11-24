@@ -5,6 +5,7 @@
 #pragma once
 
 #include <string>
+#include <utility>
 #include "common/common_types.h"
 #include "core/hle/kernel/object.h"
 #include "core/hle/kernel/process.h"
@@ -21,7 +22,7 @@ public:
         return name;
     }
     void SetName(std::string name) {
-        this->name = name;
+        this->name = std::move(name);
     }
 
     static const HandleType HANDLE_TYPE = HandleType::SharedMemory;
