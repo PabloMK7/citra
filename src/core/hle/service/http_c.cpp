@@ -623,7 +623,7 @@ HTTP_C::HTTP_C() : ServiceFramework("http:C", 32) {
         {0x000F00C4, nullptr, "SetBasicAuthorization"},
         {0x00100080, nullptr, "SetSocketBufferSize"},
         {0x001100C4, &HTTP_C::AddRequestHeader, "AddRequestHeader"},
-        {0x001200C4, nullptr, "AddPostDataAscii"},
+        {0x001200C4, &HTTP_C::AddPostDataAscii, "AddPostDataAscii"},
         {0x001300C4, nullptr, "AddPostDataBinary"},
         {0x00140082, nullptr, "AddPostDataRaw"},
         {0x00150080, nullptr, "SetPostDataType"},
