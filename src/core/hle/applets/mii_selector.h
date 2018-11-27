@@ -50,13 +50,39 @@ struct MiiData {
     u16_be mii_information;
     std::array<u16_le, 0xA> mii_name;
     u16_be width_height;
-    u8 appearance_bits1;
-    u8 appearance_bits2;
+    union {
+        u8 raw;
+
+        BitField<0, 1, u8> disable_sharing;
+        BitField<1, 4, u8> face_shape;
+        BitField<5, 3, u8> skin_color;
+    } appearance_bits1;
+    union {
+        u8 raw;
+
+        BitField<0, 4, u8> wrinkles;
+        BitField<4, 4, u8> makeup;
+    } appearance_bits2;
     u8 hair_style;
-    u8 appearance_bits3;
+    union {
+        u8 raw;
+
+        BitField<0, 3, u8> hair_color;
+        BitField<3, 1, u8> flip_hair;
+    } appearance_bits3;
     u32_be unknown1;
-    u8 appearance_bits4;
-    u8 appearance_bits5;
+    union {
+        u8 raw;
+
+        BitField<0, 5, u8> eyebrow_style;
+        BitField<5, 3, u8> eyebrow_color;
+    } appearance_bits4;
+    union {
+        u8 raw;
+
+        BitField<0, 4, u8> eyebrow_scale;
+        BitField<4, 3, u8> eyebrow_yscale;
+    } appearance_bits5;
     u16_be appearance_bits6;
     u32_be unknown2;
     u8 allow_copying;
