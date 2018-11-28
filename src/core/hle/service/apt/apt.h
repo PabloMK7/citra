@@ -8,8 +8,8 @@
 #include <vector>
 #include "common/common_funcs.h"
 #include "common/common_types.h"
-#include "core/hle/service/fs/archive.h"
 #include "common/swap.h"
+#include "core/hle/kernel/kernel.h"
 #include "core/hle/service/service.h"
 
 namespace Core {
@@ -60,10 +60,24 @@ public:
     explicit Module(Core::System& system);
     ~Module();
 
-    class Interface : public ServiceFramework<Interface> {
+    class BaseInterface {
     public:
-        Interface(std::shared_ptr<Module> apt, const char* name, u32 max_session);
-        ~Interface();
+        explicit BaseInterface(std::shared_ptr<Module> apt) : apt(apt) {}
+
+    protected:
+        std::shared_ptr<Module> apt;
+    };
+
+    class NSInterface : public ServiceFramework<NSInterface>, public BaseInterface {
+    public:
+        NSInterface(std::shared_ptr<Module> apt, const char* name, u32 max_session);
+        ~NSInterface();
+    };
+
+    class APTInterface : public ServiceFramework<APTInterface>, public BaseInterface {
+    public:
+        APTInterface(std::shared_ptr<Module> apt, const char* name, u32 max_session);
+        ~APTInterface();
 
     protected:
         /**
@@ -593,7 +607,6 @@ public:
         void CheckNew3DS(Kernel::HLERequestContext& ctx);
 
     private:
-        std::shared_ptr<Module> apt;
         bool application_reset_prepared{};
     };
 

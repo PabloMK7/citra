@@ -11,7 +11,7 @@
 namespace Service::NS {
 
 /// Interface to "ns:s" service
-class NS_S final : public Service::APT::Module::Interface {
+class NS_S final : public Service::APT::Module::NSInterface {
 public:
     explicit NS_S(std::shared_ptr<Service::APT::Module> apt);
 };

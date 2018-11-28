@@ -7,7 +7,7 @@
 namespace Service::APT {
 
 APT_S::APT_S(std::shared_ptr<Module> apt)
-    : Module::Interface(std::move(apt), "APT:S", MaxAPTSessions) {
+    : Module::APTInterface(std::move(apt), "APT:S", MaxAPTSessions) {
     static const FunctionInfo functions[] = {
         {0x00010040, &APT_S::GetLockHandle, "GetLockHandle"},
         {0x00020080, &APT_S::Initialize, "Initialize"},
