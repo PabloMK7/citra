@@ -13,15 +13,8 @@
 
 namespace Common {
 
-int CurrentThreadId();
-
-void SetThreadAffinity(std::thread::native_handle_type thread, u32 mask);
-void SetCurrentThreadAffinity(u32 mask);
-
 class Event {
 public:
-    Event() : is_set(false) {}
-
     void Set() {
         std::lock_guard<std::mutex> lk(mutex);
         if (!is_set) {
@@ -62,14 +55,14 @@ public:
     }
 
 private:
-    bool is_set;
+    bool is_set = false;
     std::condition_variable condvar;
     std::mutex mutex;
 };
 
 class Barrier {
 public:
-    explicit Barrier(std::size_t count_) : count(count_), waiting(0), generation(0) {}
+    explicit Barrier(std::size_t count_) : count(count_) {}
 
     /// Blocks until all "count" threads have called Sync()
     void Sync() {
@@ -89,12 +82,13 @@ public:
 private:
     std::condition_variable condvar;
     std::mutex mutex;
-    const std::size_t count;
-    std::size_t waiting;
-    std::size_t generation; // Incremented once each time the barrier is used
+    std::size_t count;
+    std::size_t waiting = 0;
+    std::size_t generation = 0; // Incremented once each time the barrier is used
 };
 
-void SleepCurrentThread(int ms);
+void SetThreadAffinity(std::thread::native_handle_type thread, u32 mask);
+void SetCurrentThreadAffinity(u32 mask);
 void SwitchCurrentThread(); // On Linux, this is equal to sleep 1ms
 void SetCurrentThreadName(const char* name);
 
