@@ -1,6 +1,7 @@
 #include "common/logging/log.h"
 #include "core/arm/arm_interface.h"
 #include "core/core.h"
+#include "core/hle/kernel/process.h"
 #include "core/memory.h"
 #include "core/rpc/packet.h"
 #include "core/rpc/rpc_server.h"
@@ -29,7 +30,8 @@ void RPCServer::HandleReadMemory(Packet& packet, u32 address, u32 data_size) {
     }
 
     // Note: Memory read occurs asynchronously from the state of the emulator
-    Memory::ReadBlock(address, packet.GetPacketData().data(), data_size);
+    Memory::ReadBlock(*Core::System::GetInstance().Kernel().GetCurrentProcess(), address,
+                      packet.GetPacketData().data(), data_size);
     packet.SetPacketDataSize(data_size);
     packet.SendReply();
 }
@@ -40,7 +42,8 @@ void RPCServer::HandleWriteMemory(Packet& packet, u32 address, const u8* data, u
         (address >= Memory::HEAP_VADDR && address <= Memory::HEAP_VADDR_END) ||
         (address >= Memory::N3DS_EXTRA_RAM_VADDR && address <= Memory::N3DS_EXTRA_RAM_VADDR_END)) {
         // Note: Memory write occurs asynchronously from the state of the emulator
-        Memory::WriteBlock(address, data, data_size);
+        Memory::WriteBlock(*Core::System::GetInstance().Kernel().GetCurrentProcess(), address, data,
+                           data_size);
         // If the memory happens to be executable code, make sure the changes become visible
         Core::CPU().InvalidateCacheRange(address, data_size);
     }
