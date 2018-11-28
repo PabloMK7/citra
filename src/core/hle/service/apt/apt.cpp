@@ -12,12 +12,14 @@
 #include "core/hle/kernel/mutex.h"
 #include "core/hle/kernel/shared_memory.h"
 #include "core/hle/romfs.h"
+#include "core/hle/service/am/am.h"
 #include "core/hle/service/apt/applet_manager.h"
 #include "core/hle/service/apt/apt.h"
 #include "core/hle/service/apt/apt_a.h"
 #include "core/hle/service/apt/apt_s.h"
 #include "core/hle/service/apt/apt_u.h"
 #include "core/hle/service/apt/bcfnt/bcfnt.h"
+#include "core/hle/service/apt/ns_s.h"
 #include "core/hle/service/cfg/cfg.h"
 #include "core/hle/service/fs/archive.h"
 #include "core/hle/service/ptm/ptm.h"
@@ -878,6 +880,31 @@ void InstallInterfaces(Core::System& system) {
     std::make_shared<APT_U>(apt)->InstallAsService(service_manager);
     std::make_shared<APT_S>(apt)->InstallAsService(service_manager);
     std::make_shared<APT_A>(apt)->InstallAsService(service_manager);
+    std::make_shared<Service::NS::NS_S>(apt)->InstallAsService(service_manager);
 }
 
 } // namespace Service::APT
+
+namespace Service::NS {
+
+Kernel::SharedPtr<Kernel::Process> LaunchTitle(FS::MediaType media_type, u64 title_id) {
+    std::string path = AM::GetTitleContentPath(media_type, title_id);
+    auto loader = Loader::GetLoader(path);
+
+    if (!loader) {
+        LOG_WARNING(Service_NS, "Could not find .app for title 0x{:016x}", title_id);
+        return nullptr;
+    }
+
+    Kernel::SharedPtr<Kernel::Process> process;
+    Loader::ResultStatus result = loader->Load(process);
+
+    if (result != Loader::ResultStatus::Success) {
+        LOG_WARNING(Service_NS, "Error loading .app for title 0x{:016x}", title_id);
+        return nullptr;
+    }
+
+    return process;
+}
+
+} // namespace Service::NS

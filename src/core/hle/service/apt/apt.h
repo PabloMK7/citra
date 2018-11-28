@@ -8,6 +8,7 @@
 #include <vector>
 #include "common/common_funcs.h"
 #include "common/common_types.h"
+#include "core/hle/service/fs/archive.h"
 #include "common/swap.h"
 #include "core/hle/service/service.h"
 
@@ -625,3 +626,8 @@ private:
 void InstallInterfaces(Core::System& system);
 
 } // namespace Service::APT
+
+namespace Service::NS {
+/// Loads and launches the title identified by title_id in the specified media type.
+Kernel::SharedPtr<Kernel::Process> LaunchTitle(FS::MediaType media_type, u64 title_id);
+} // namespace Service::NS
