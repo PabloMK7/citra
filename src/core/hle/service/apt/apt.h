@@ -60,21 +60,16 @@ public:
     explicit Module(Core::System& system);
     ~Module();
 
-    class BaseInterface {
-    public:
-        explicit BaseInterface(std::shared_ptr<Module> apt) : apt(apt) {}
-
-    protected:
-        std::shared_ptr<Module> apt;
-    };
-
-    class NSInterface : public ServiceFramework<NSInterface>, public BaseInterface {
+    class NSInterface : public ServiceFramework<NSInterface> {
     public:
         NSInterface(std::shared_ptr<Module> apt, const char* name, u32 max_session);
         ~NSInterface();
+
+    private:
+        std::shared_ptr<Module> apt;
     };
 
-    class APTInterface : public ServiceFramework<APTInterface>, public BaseInterface {
+    class APTInterface : public ServiceFramework<APTInterface> {
     public:
         APTInterface(std::shared_ptr<Module> apt, const char* name, u32 max_session);
         ~APTInterface();
@@ -608,6 +603,7 @@ public:
 
     private:
         bool application_reset_prepared{};
+        std::shared_ptr<Module> apt;
     };
 
 private:
@@ -639,8 +635,3 @@ private:
 void InstallInterfaces(Core::System& system);
 
 } // namespace Service::APT
-
-namespace Service::NS {
-/// Loads and launches the title identified by title_id in the specified media type.
-Kernel::SharedPtr<Kernel::Process> LaunchTitle(FS::MediaType media_type, u64 title_id);
-} // namespace Service::NS

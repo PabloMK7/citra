@@ -30,7 +30,7 @@
 namespace Service::APT {
 
 Module::NSInterface::NSInterface(std::shared_ptr<Module> apt, const char* name, u32 max_session)
-    : ServiceFramework(name, max_session), BaseInterface(std::move(apt)) {}
+    : ServiceFramework(name, max_session), apt(std::move(apt)) {}
 
 Module::NSInterface::~NSInterface() = default;
 
@@ -860,7 +860,7 @@ void Module::APTInterface::CheckNew3DS(Kernel::HLERequestContext& ctx) {
 }
 
 Module::APTInterface::APTInterface(std::shared_ptr<Module> apt, const char* name, u32 max_session)
-    : ServiceFramework(name, max_session), BaseInterface(std::move(apt)) {}
+    : ServiceFramework(name, max_session), apt(std::move(apt)) {}
 
 Module::APTInterface::~APTInterface() = default;
 
@@ -889,27 +889,3 @@ void InstallInterfaces(Core::System& system) {
 }
 
 } // namespace Service::APT
-
-namespace Service::NS {
-
-Kernel::SharedPtr<Kernel::Process> LaunchTitle(FS::MediaType media_type, u64 title_id) {
-    std::string path = AM::GetTitleContentPath(media_type, title_id);
-    auto loader = Loader::GetLoader(path);
-
-    if (!loader) {
-        LOG_WARNING(Service_NS, "Could not find .app for title 0x{:016x}", title_id);
-        return nullptr;
-    }
-
-    Kernel::SharedPtr<Kernel::Process> process;
-    Loader::ResultStatus result = loader->Load(process);
-
-    if (result != Loader::ResultStatus::Success) {
-        LOG_WARNING(Service_NS, "Error loading .app for title 0x{:016x}", title_id);
-        return nullptr;
-    }
-
-    return process;
-}
-
-} // namespace Service::NS

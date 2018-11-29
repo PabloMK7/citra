@@ -7,8 +7,8 @@
 #include "core/hle/applets/applet.h"
 #include "core/hle/service/apt/applet_manager.h"
 #include "core/hle/service/apt/errors.h"
+#include "core/hle/service/apt/ns.h"
 #include "core/hle/service/cfg/cfg.h"
-#include "core/hle/service/ns/ns.h"
 
 namespace Service::APT {
 
