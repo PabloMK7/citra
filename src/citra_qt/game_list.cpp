@@ -287,6 +287,7 @@ GameList::GameList(GMainWindow* parent) : QWidget{parent} {
     tree_view->setEditTriggers(QHeaderView::NoEditTriggers);
     tree_view->setUniformRowHeights(true);
     tree_view->setContextMenuPolicy(Qt::CustomContextMenu);
+    tree_view->setStyleSheet("QTreeView{ border: none; }");
 
     item_model->insertColumns(0, COLUMN_COUNT);
     item_model->setHeaderData(COLUMN_NAME, Qt::Horizontal, tr("Name"));
