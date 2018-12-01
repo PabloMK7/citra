@@ -12,7 +12,7 @@
 class EmuWindow;
 class RendererBase;
 
-namespace Memory{
+namespace Memory {
 class MemorySystem;
 }
 

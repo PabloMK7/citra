@@ -6,6 +6,7 @@
 
 #include <array>
 #include <cstddef>
+#include <memory>
 #include <string>
 #include <vector>
 #include "common/common_types.h"
@@ -210,6 +211,9 @@ void RasterizerFlushVirtualRegion(VAddr start, u32 size, FlushMode mode);
 
 class MemorySystem {
 public:
+    MemorySystem();
+    ~MemorySystem();
+
     /// Currently active page table
     void SetCurrentPageTable(PageTable* page_table);
     PageTable* GetCurrentPageTable() const;
@@ -248,12 +252,13 @@ public:
     /// Gets offset in FCRAM from a pointer inside FCRAM range
     u32 GetFCRAMOffset(u8* pointer);
 
+    /// Gets pointer in FCRAM with given offset
+    u8* GetFCRAMPointer(u32 offset);
+
     /**
      * Mark each page touching the region as cached.
      */
     void RasterizerMarkRegionCached(PAddr start, u32 size, bool cached);
-
-    std::array<u8, Memory::FCRAM_N3DS_SIZE> fcram{};
 
 private:
     template <typename T>
@@ -270,10 +275,9 @@ private:
      */
     u8* GetPointerForRasterizerCache(VAddr addr);
 
-    std::array<u8, Memory::VRAM_SIZE> vram{};
-    std::array<u8, Memory::N3DS_EXTRA_RAM_SIZE> n3ds_extra_ram{};
+    class Impl;
 
-    PageTable* current_page_table = nullptr;
+    std::unique_ptr<Impl> impl;
 };
 
 /// Determines if the given VAddr is valid for the specified process.

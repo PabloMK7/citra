@@ -21,15 +21,34 @@
 
 namespace Memory {
 
+class MemorySystem::Impl {
+public:
+    Impl() {
+        std::fill(fcram.get(), fcram.get() + Memory::FCRAM_N3DS_SIZE, 0);
+        std::fill(vram.get(), vram.get() + Memory::VRAM_SIZE, 0);
+        std::fill(n3ds_extra_ram.get(), n3ds_extra_ram.get() + Memory::N3DS_EXTRA_RAM_SIZE, 0);
+    }
+
+    // Visual Studio would try to allocate these on compile time if they are std::array, which would exceed the memory limit.
+    std::unique_ptr<u8[]> fcram = std::make_unique<u8[]>(Memory::FCRAM_N3DS_SIZE);
+    std::unique_ptr<u8[]> vram = std::make_unique<u8[]>(Memory::VRAM_SIZE);
+    std::unique_ptr<u8[]> n3ds_extra_ram = std::make_unique<u8[]>(Memory::N3DS_EXTRA_RAM_SIZE);
+
+    PageTable* current_page_table = nullptr;
+};
+
+MemorySystem::MemorySystem() : impl(std::make_unique<Impl>()) {}
+MemorySystem::~MemorySystem() = default;
+
 void MemorySystem::SetCurrentPageTable(PageTable* page_table) {
-    current_page_table = page_table;
+    impl->current_page_table = page_table;
     if (Core::System::GetInstance().IsPoweredOn()) {
         Core::CPU().PageTableChanged();
     }
 }
 
 PageTable* MemorySystem::GetCurrentPageTable() const {
-    return current_page_table;
+    return impl->current_page_table;
 }
 
 static void MapPages(PageTable& page_table, u32 base, u32 size, u8* memory, PageType type) {
@@ -74,13 +93,13 @@ void UnmapRegion(PageTable& page_table, VAddr base, u32 size) {
 
 u8* MemorySystem::GetPointerForRasterizerCache(VAddr addr) {
     if (addr >= LINEAR_HEAP_VADDR && addr < LINEAR_HEAP_VADDR_END) {
-        return fcram.data() + (addr - LINEAR_HEAP_VADDR);
+        return impl->fcram.get() + (addr - LINEAR_HEAP_VADDR);
     }
     if (addr >= NEW_LINEAR_HEAP_VADDR && addr < NEW_LINEAR_HEAP_VADDR_END) {
-        return fcram.data() + (addr - NEW_LINEAR_HEAP_VADDR);
+        return impl->fcram.get() + (addr - NEW_LINEAR_HEAP_VADDR);
     }
     if (addr >= VRAM_VADDR && addr < VRAM_VADDR_END) {
-        return vram.data() + (addr - VRAM_VADDR);
+        return impl->vram.get() + (addr - VRAM_VADDR);
     }
     UNREACHABLE();
 }
@@ -103,7 +122,7 @@ T ReadMMIO(MMIORegionPointer mmio_handler, VAddr addr);
 
 template <typename T>
 T MemorySystem::Read(const VAddr vaddr) {
-    const u8* page_pointer = current_page_table->pointers[vaddr >> PAGE_BITS];
+    const u8* page_pointer = impl->current_page_table->pointers[vaddr >> PAGE_BITS];
     if (page_pointer) {
         // NOTE: Avoid adding any extra logic to this fast-path block
         T value;
@@ -114,7 +133,7 @@ T MemorySystem::Read(const VAddr vaddr) {
     // The memory access might do an MMIO or cached access, so we have to lock the HLE kernel state
     std::lock_guard<std::recursive_mutex> lock(HLE::g_hle_lock);
 
-    PageType type = current_page_table->attributes[vaddr >> PAGE_BITS];
+    PageType type = impl->current_page_table->attributes[vaddr >> PAGE_BITS];
     switch (type) {
     case PageType::Unmapped:
         LOG_ERROR(HW_Memory, "unmapped Read{} @ 0x{:08X}", sizeof(T) * 8, vaddr);
@@ -130,7 +149,7 @@ T MemorySystem::Read(const VAddr vaddr) {
         return value;
     }
     case PageType::Special:
-        return ReadMMIO<T>(GetMMIOHandler(*current_page_table, vaddr), vaddr);
+        return ReadMMIO<T>(GetMMIOHandler(*impl->current_page_table, vaddr), vaddr);
     default:
         UNREACHABLE();
     }
@@ -141,7 +160,7 @@ void WriteMMIO(MMIORegionPointer mmio_handler, VAddr addr, const T data);
 
 template <typename T>
 void MemorySystem::Write(const VAddr vaddr, const T data) {
-    u8* page_pointer = current_page_table->pointers[vaddr >> PAGE_BITS];
+    u8* page_pointer = impl->current_page_table->pointers[vaddr >> PAGE_BITS];
     if (page_pointer) {
         // NOTE: Avoid adding any extra logic to this fast-path block
         std::memcpy(&page_pointer[vaddr & PAGE_MASK], &data, sizeof(T));
@@ -151,7 +170,7 @@ void MemorySystem::Write(const VAddr vaddr, const T data) {
     // The memory access might do an MMIO or cached access, so we have to lock the HLE kernel state
     std::lock_guard<std::recursive_mutex> lock(HLE::g_hle_lock);
 
-    PageType type = current_page_table->attributes[vaddr >> PAGE_BITS];
+    PageType type = impl->current_page_table->attributes[vaddr >> PAGE_BITS];
     switch (type) {
     case PageType::Unmapped:
         LOG_ERROR(HW_Memory, "unmapped Write{} 0x{:08X} @ 0x{:08X}", sizeof(data) * 8, (u32)data,
@@ -166,7 +185,7 @@ void MemorySystem::Write(const VAddr vaddr, const T data) {
         break;
     }
     case PageType::Special:
-        WriteMMIO<T>(GetMMIOHandler(*current_page_table, vaddr), vaddr, data);
+        WriteMMIO<T>(GetMMIOHandler(*impl->current_page_table, vaddr), vaddr, data);
         break;
     default:
         UNREACHABLE();
@@ -199,12 +218,12 @@ bool MemorySystem::IsValidPhysicalAddress(const PAddr paddr) {
 }
 
 u8* MemorySystem::GetPointer(const VAddr vaddr) {
-    u8* page_pointer = current_page_table->pointers[vaddr >> PAGE_BITS];
+    u8* page_pointer = impl->current_page_table->pointers[vaddr >> PAGE_BITS];
     if (page_pointer) {
         return page_pointer + (vaddr & PAGE_MASK);
     }
 
-    if (current_page_table->attributes[vaddr >> PAGE_BITS] == PageType::RasterizerCachedMemory) {
+    if (impl->current_page_table->attributes[vaddr >> PAGE_BITS] == PageType::RasterizerCachedMemory) {
         return GetPointerForRasterizerCache(vaddr);
     }
 
@@ -256,16 +275,16 @@ u8* MemorySystem::GetPhysicalPointer(PAddr address) {
     u8* target_pointer = nullptr;
     switch (area->paddr_base) {
     case VRAM_PADDR:
-        target_pointer = vram.data() + offset_into_region;
+        target_pointer = impl->vram.get() + offset_into_region;
         break;
     case DSP_RAM_PADDR:
         target_pointer = Core::DSP().GetDspMemory().data() + offset_into_region;
         break;
     case FCRAM_PADDR:
-        target_pointer = fcram.data() + offset_into_region;
+        target_pointer = impl->fcram.get() + offset_into_region;
         break;
     case N3DS_EXTRA_RAM_PADDR:
-        target_pointer = n3ds_extra_ram.data() + offset_into_region;
+        target_pointer = impl->n3ds_extra_ram.get() + offset_into_region;
         break;
     default:
         UNREACHABLE();
@@ -303,7 +322,7 @@ void MemorySystem::RasterizerMarkRegionCached(PAddr start, u32 size, bool cached
 
     for (unsigned i = 0; i < num_pages; ++i, paddr += PAGE_SIZE) {
         for (VAddr vaddr : PhysicalToVirtualAddressForRasterizer(paddr)) {
-            PageType& page_type = current_page_table->attributes[vaddr >> PAGE_BITS];
+            PageType& page_type = impl->current_page_table->attributes[vaddr >> PAGE_BITS];
 
             if (cached) {
                 // Switch page type to cached if now cached
@@ -314,7 +333,7 @@ void MemorySystem::RasterizerMarkRegionCached(PAddr start, u32 size, bool cached
                     break;
                 case PageType::Memory:
                     page_type = PageType::RasterizerCachedMemory;
-                    current_page_table->pointers[vaddr >> PAGE_BITS] = nullptr;
+                    impl->current_page_table->pointers[vaddr >> PAGE_BITS] = nullptr;
                     break;
                 default:
                     UNREACHABLE();
@@ -328,7 +347,7 @@ void MemorySystem::RasterizerMarkRegionCached(PAddr start, u32 size, bool cached
                     break;
                 case PageType::RasterizerCachedMemory: {
                     page_type = PageType::Memory;
-                    current_page_table->pointers[vaddr >> PAGE_BITS] =
+                    impl->current_page_table->pointers[vaddr >> PAGE_BITS] =
                         GetPointerForRasterizerCache(vaddr & ~PAGE_MASK);
                     break;
                 }
@@ -730,8 +749,13 @@ void WriteMMIO<u64>(MMIORegionPointer mmio_handler, VAddr addr, const u64 data) 
 }
 
 u32 MemorySystem::GetFCRAMOffset(u8* pointer) {
-    ASSERT(pointer >= fcram.data() && pointer < fcram.data() + fcram.size());
-    return pointer - fcram.data();
+    ASSERT(pointer >= impl->fcram.get() && pointer <= impl->fcram.get() + Memory::FCRAM_N3DS_SIZE);
+    return pointer - impl->fcram.get();
+}
+
+u8* MemorySystem::GetFCRAMPointer(u32 offset) {
+    ASSERT(offset <= Memory::FCRAM_N3DS_SIZE);
+    return impl->fcram.get() + offset;
 }
 
 } // namespace Memory
