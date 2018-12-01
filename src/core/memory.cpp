@@ -29,7 +29,8 @@ public:
         std::fill(n3ds_extra_ram.get(), n3ds_extra_ram.get() + Memory::N3DS_EXTRA_RAM_SIZE, 0);
     }
 
-    // Visual Studio would try to allocate these on compile time if they are std::array, which would exceed the memory limit.
+    // Visual Studio would try to allocate these on compile time if they are std::array, which would
+    // exceed the memory limit.
     std::unique_ptr<u8[]> fcram = std::make_unique<u8[]>(Memory::FCRAM_N3DS_SIZE);
     std::unique_ptr<u8[]> vram = std::make_unique<u8[]>(Memory::VRAM_SIZE);
     std::unique_ptr<u8[]> n3ds_extra_ram = std::make_unique<u8[]>(Memory::N3DS_EXTRA_RAM_SIZE);
@@ -223,7 +224,8 @@ u8* MemorySystem::GetPointer(const VAddr vaddr) {
         return page_pointer + (vaddr & PAGE_MASK);
     }
 
-    if (impl->current_page_table->attributes[vaddr >> PAGE_BITS] == PageType::RasterizerCachedMemory) {
+    if (impl->current_page_table->attributes[vaddr >> PAGE_BITS] ==
+        PageType::RasterizerCachedMemory) {
         return GetPointerForRasterizerCache(vaddr);
     }
 

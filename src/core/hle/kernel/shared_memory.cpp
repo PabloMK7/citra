@@ -87,8 +87,8 @@ SharedPtr<SharedMemory> KernelSystem::CreateSharedMemoryForApplet(
     for (const auto& interval : backing_blocks) {
         shared_memory->backing_blocks.push_back(
             {memory.GetFCRAMPointer(interval.lower()), interval.upper() - interval.lower()});
-        std::fill(memory.GetFCRAMPointer(interval.lower()), memory.GetFCRAMPointer(interval.upper()),
-                  0);
+        std::fill(memory.GetFCRAMPointer(interval.lower()),
+                  memory.GetFCRAMPointer(interval.upper()), 0);
     }
     shared_memory->base_address = Memory::HEAP_VADDR + offset;
 
