@@ -49,6 +49,7 @@ ClientRoomWindow::ClientRoomWindow(QWidget* parent)
     });
     ui->moderation->setDefault(false);
     ui->moderation->setAutoDefault(false);
+    connect(ui->chat, &ChatRoom::UserPinged, this, &ClientRoomWindow::ShowNotification);
     UpdateView();
 }
 

@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <QAction>
+#include <QApplication>
 #include <QIcon>
 #include <QMessageBox>
 #include <QStandardItemModel>
@@ -49,6 +50,13 @@ MultiplayerState::MultiplayerState(QWidget* parent, QStandardItemModel* game_lis
 
     connect(status_text, &ClickableLabel::clicked, this, &MultiplayerState::OnOpenNetworkRoom);
     connect(status_icon, &ClickableLabel::clicked, this, &MultiplayerState::OnOpenNetworkRoom);
+
+    connect(static_cast<QApplication*>(QApplication::instance()), &QApplication::focusChanged, this,
+            [this](QWidget* /*old*/, QWidget* now) {
+                if (client_room && client_room->isAncestorOf(now)) {
+                    HideNotification();
+                }
+            });
 }
 
 MultiplayerState::~MultiplayerState() {
@@ -173,7 +181,9 @@ void MultiplayerState::OnAnnounceFailed(const Common::WebResult& result) {
 }
 
 void MultiplayerState::UpdateThemedIcons() {
-    if (current_state == Network::RoomMember::State::Joined) {
+    if (show_notification) {
+        status_icon->setPixmap(QIcon::fromTheme("connected_notification").pixmap(16));
+    } else if (current_state == Network::RoomMember::State::Joined) {
         status_icon->setPixmap(QIcon::fromTheme("connected").pixmap(16));
     } else {
         status_icon->setPixmap(QIcon::fromTheme("disconnected").pixmap(16));
@@ -225,11 +235,28 @@ bool MultiplayerState::OnCloseRoom() {
     return true;
 }
 
+void MultiplayerState::ShowNotification() {
+    if (client_room && client_room->isAncestorOf(QApplication::focusWidget()))
+        return; // Do not show notification if the chat window currently has focus
+    show_notification = true;
+    QApplication::alert(nullptr);
+    status_icon->setPixmap(QIcon::fromTheme("connected_notification").pixmap(16));
+    status_text->setText(tr("New Messages Received"));
+}
+
+void MultiplayerState::HideNotification() {
+    show_notification = false;
+    status_icon->setPixmap(QIcon::fromTheme("connected").pixmap(16));
+    status_text->setText(tr("Connected"));
+}
+
 void MultiplayerState::OnOpenNetworkRoom() {
     if (auto member = Network::GetRoomMember().lock()) {
         if (member->IsConnected()) {
             if (client_room == nullptr) {
                 client_room = new ClientRoomWindow(this);
+                connect(client_room, &ClientRoomWindow::ShowNotification, this,
+                        &MultiplayerState::ShowNotification);
             }
             const std::string host_username = member->GetRoomInformation().host_username;
             if (host_username.empty()) {

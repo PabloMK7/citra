@@ -34,6 +34,24 @@ public:
         nickname = QString::fromStdString(chat.nickname);
         username = QString::fromStdString(chat.username);
         message = QString::fromStdString(chat.message);
+
+        // Check for user pings
+        QString cur_nickname, cur_username;
+        if (auto room = Network::GetRoomMember().lock()) {
+            cur_nickname = QString::fromStdString(room->GetNickname());
+            cur_username = QString::fromStdString(room->GetUsername());
+        }
+        if (message.contains(QString("@").append(cur_nickname)) ||
+            (!cur_username.isEmpty() && message.contains(QString("@").append(cur_username)))) {
+
+            contains_ping = true;
+        } else {
+            contains_ping = false;
+        }
+    }
+
+    bool ContainsPing() const {
+        return contains_ping;
     }
 
     /// Format the message using the players color
@@ -45,19 +63,28 @@ public:
         } else {
             name = QString("%1 (%2)").arg(nickname, username);
         }
-        return QString("[%1] <font color='%2'>&lt;%3&gt;</font> %4")
-            .arg(timestamp, color, name.toHtmlEscaped(), message.toHtmlEscaped());
+
+        QString style;
+        if (ContainsPing()) {
+            // Add a background color to these messages
+            style = QString("background-color: %1").arg(ping_color);
+        }
+
+        return QString("[%1] <font color='%2'>&lt;%3&gt;</font> <font style='%4'>%5</font>")
+            .arg(timestamp, color, name.toHtmlEscaped(), style, message.toHtmlEscaped());
     }
 
 private:
     static constexpr std::array<const char*, 16> player_color = {
         {"#0000FF", "#FF0000", "#8A2BE2", "#FF69B4", "#1E90FF", "#008000", "#00FF7F", "#B22222",
          "#DAA520", "#FF4500", "#2E8B57", "#5F9EA0", "#D2691E", "#9ACD32", "#FF7F50", "FFFF00"}};
+    static constexpr char ping_color[] = "#FFFF00";
 
     QString timestamp;
     QString nickname;
     QString username;
     QString message;
+    bool contains_ping;
 };
 
 class StatusMessage {
@@ -240,6 +267,9 @@ void ChatRoom::OnChatReceive(const Network::ChatEntry& chat) {
         }
         auto player = std::distance(members.begin(), it);
         ChatMessage m(chat);
+        if (m.ContainsPing()) {
+            emit UserPinged();
+        }
         AppendChatMessage(m.GetPlayerChatMessage(player));
     }
 }

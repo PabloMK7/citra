@@ -27,6 +27,7 @@ public slots:
 signals:
     void RoomInformationChanged(const Network::RoomInformation&);
     void StateChanged(const Network::RoomMember::State&);
+    void ShowNotification();
 
 private:
     void Disconnect();

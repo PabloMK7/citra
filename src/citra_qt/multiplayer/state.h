@@ -48,6 +48,8 @@ public slots:
     void OnDirectConnectToRoom();
     void OnAnnounceFailed(const Common::WebResult&);
     void UpdateThemedIcons();
+    void ShowNotification();
+    void HideNotification();
 
 signals:
     void NetworkStateChanged(const Network::RoomMember::State&);
@@ -69,6 +71,8 @@ private:
     bool has_mod_perms = false;
     Network::RoomMember::CallbackHandle<Network::RoomMember::State> state_callback_handle;
     Network::RoomMember::CallbackHandle<Network::RoomMember::Error> error_callback_handle;
+
+    bool show_notification = false;
 };
 
 Q_DECLARE_METATYPE(Common::WebResult);

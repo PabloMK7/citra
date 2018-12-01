@@ -51,6 +51,7 @@ public slots:
 signals:
     void ChatReceived(const Network::ChatEntry&);
     void StatusMessageReceived(const Network::StatusMessageEntry&);
+    void UserPinged();
 
 private:
     static constexpr u32 max_chat_lines = 1000;
