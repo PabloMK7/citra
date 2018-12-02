@@ -22,6 +22,5 @@ public:
     void retranslateUi();
     void setConfiguration();
 
-private:
     std::unique_ptr<Ui::ConfigureDebug> ui;
 };

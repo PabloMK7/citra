@@ -22,10 +22,9 @@ public:
     void retranslateUi();
     void setConfiguration();
 
-public slots:
+private:
     void updateAudioDevices(int sink_index);
 
-private:
     void setOutputSinkFromSinkID();
     void setAudioDeviceFromDeviceID();
     void setVolumeIndicatorText(int percentage);

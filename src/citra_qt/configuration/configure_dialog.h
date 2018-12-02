@@ -34,6 +34,5 @@ private:
     void setConfiguration();
     void retranslateUi();
 
-private:
     std::unique_ptr<Ui::ConfigureDialog> ui;
 };

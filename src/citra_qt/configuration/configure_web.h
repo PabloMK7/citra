@@ -23,13 +23,12 @@ public:
     void retranslateUi();
     void setConfiguration();
 
-public slots:
+private:
     void RefreshTelemetryID();
     void OnLoginChanged();
     void VerifyLogin();
     void OnLoginVerified();
 
-private:
     bool user_verified = true;
     QFutureWatcher<bool> verify_watcher;
 

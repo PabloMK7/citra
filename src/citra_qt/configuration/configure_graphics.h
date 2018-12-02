@@ -22,7 +22,6 @@ public:
     void retranslateUi();
     void setConfiguration();
 
-private:
     std::unique_ptr<Ui::ConfigureGraphics> ui;
     QColor bg_color;
 };
