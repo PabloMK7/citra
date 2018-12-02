@@ -121,17 +121,6 @@
     <addaction name="separator"/>
     <addaction name="menu_View_Debugging"/>
    </widget>
-   <widget class="QMenu" name="menu_Movie">
-    <property name="title">
-     <string>Movie</string>
-    </property>
-    <addaction name="action_Record_Movie"/>
-    <addaction name="action_Play_Movie"/>
-    <addaction name="action_Stop_Recording_Playback"/>
-    <addaction name="separator"/>
-    <addaction name="action_Enable_Frame_Advancing"/>
-    <addaction name="action_Advance_Frame"/>
-   </widget>
    <widget class="QMenu" name="menu_Multiplayer">
     <property name="enabled">
      <bool>true</bool>
@@ -146,6 +135,30 @@
     <addaction name="action_Show_Room"/>
     <addaction name="action_Leave_Room"/>
    </widget>
+   <widget class="QMenu" name="menu_Tools">
+    <property name="title">
+     <string>Tools</string>
+    </property>
+    <widget class="QMenu" name="menu_Movie">
+     <property name="title">
+      <string>Movie</string>
+     </property>
+     <addaction name="action_Record_Movie"/>
+     <addaction name="action_Play_Movie"/>
+     <addaction name="action_Stop_Recording_Playback"/>
+    </widget>
+    <widget class="QMenu" name="menu_Frame_Advance">
+     <property name="title">
+      <string>Frame Advance</string>
+     </property>
+     <addaction name="action_Enable_Frame_Advancing"/>
+     <addaction name="action_Advance_Frame"/>
+    </widget>
+    <addaction name="menu_Movie"/>
+    <addaction name="menu_Frame_Advance"/>
+    <addaction name="separator"/>
+    <addaction name="action_Capture_Screenshot"/>
+   </widget>
    <widget class="QMenu" name="menu_Help">
     <property name="title">
      <string>&amp;Help</string>
@@ -159,8 +172,8 @@
    <addaction name="menu_File"/>
    <addaction name="menu_Emulation"/>
    <addaction name="menu_View"/>
-   <addaction name="menu_Movie"/>
    <addaction name="menu_Multiplayer"/>
+   <addaction name="menu_Tools"/>
    <addaction name="menu_Help"/>
   </widget>
   <action name="action_Load_File">
@@ -313,6 +326,14 @@
    </property>
    <property name="text">
     <string>Advance Frame</string>
+   </property>
+  </action>
+  <action name="action_Capture_Screenshot">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Capture Screenshot</string>
    </property>
   </action>
   <action name="action_View_Lobby">

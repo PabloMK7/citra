@@ -10,6 +10,7 @@
 #include <QMetaType>
 #include <QString>
 #include <QStringList>
+#include "common/common_types.h"
 
 namespace UISettings {
 
@@ -78,10 +79,13 @@ struct Values {
     GameListText game_list_row_2;
     bool game_list_hide_no_icon;
 
+    u16 screenshot_resolution_factor;
+
     QString roms_path;
     QString symbols_path;
     QString movie_record_path;
     QString movie_playback_path;
+    QString screenshot_path;
     QString game_dir_deprecated;
     bool game_dir_deprecated_deepscan;
     QList<UISettings::GameDir> game_dirs;

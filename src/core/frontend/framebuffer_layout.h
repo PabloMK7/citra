@@ -72,4 +72,11 @@ FramebufferLayout SideFrameLayout(unsigned width, unsigned height, bool is_swapp
  */
 FramebufferLayout CustomFrameLayout(unsigned width, unsigned height);
 
+/**
+ * Convenience method to get frame layout by resolution scale
+ * Read from the current settings to determine which layout to use.
+ * @param res_scale resolution scale factor
+ */
+FramebufferLayout FrameLayoutFromResolutionScale(u16 res_scale);
+
 } // namespace Layout
