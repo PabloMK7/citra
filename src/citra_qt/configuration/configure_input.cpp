@@ -221,6 +221,8 @@ ConfigureInput::ConfigureInput(QWidget* parent)
     ui->buttonHome->setEnabled(false);
 }
 
+ConfigureInput::~ConfigureInput() = default;
+
 void ConfigureInput::applyConfiguration() {
     std::transform(buttons_param.begin(), buttons_param.end(), Settings::values.buttons.begin(),
                    [](const Common::ParamPackage& param) { return param.Serialize(); });
