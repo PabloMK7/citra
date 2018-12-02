@@ -33,6 +33,4 @@ for i in package/*.exe; do
   x86_64-w64-mingw32-strip "${i}"
 done
 
-pip3 install pefile
-python3 .travis/linux-mingw/scan_dll.py package/*.exe "package/"
-python3 .travis/linux-mingw/scan_dll.py package/imageformats/*.dll "package/"
+python3 .travis/linux-mingw/scan_dll.py package/*.exe package/imageformats/*.dll "package/"
