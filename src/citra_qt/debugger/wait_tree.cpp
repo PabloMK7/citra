@@ -61,7 +61,8 @@ std::vector<std::unique_ptr<WaitTreeThread>> WaitTreeItem::MakeThreadItemList() 
     return item_list;
 }
 
-WaitTreeText::WaitTreeText(const QString& t) : text(t) {}
+WaitTreeText::WaitTreeText(QString t) : text(std::move(t)) {}
+WaitTreeText::~WaitTreeText() = default;
 
 QString WaitTreeText::GetText() const {
     return text;
