@@ -551,7 +551,7 @@ Core::System::ResultStatus RendererOpenGL::Init() {
     Core::Telemetry().AddField(Telemetry::FieldType::UserSystem, "GPU_Model", gpu_model);
     Core::Telemetry().AddField(Telemetry::FieldType::UserSystem, "GPU_OpenGL_Version", gl_version);
 
-    if (gpu_vendor == "GDI Generic") {
+    if (!strcmp(gpu_vendor, "GDI Generic")) {
         return Core::System::ResultStatus::ErrorVideoCore_ErrorGenericDrivers;
     }
 
