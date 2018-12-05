@@ -7,7 +7,7 @@
 namespace Service::NS {
 
 NS_S::NS_S(std::shared_ptr<Service::APT::Module> apt)
-    : Service::APT::Module::NSInterface(std::move(apt), "NS:S", Service::APT::MaxAPTSessions) {
+    : Service::APT::Module::NSInterface(std::move(apt), "ns:s", 2) {
     static const FunctionInfo functions[] = {
         {0x000100C0, nullptr, "LaunchFIRM"},
         {0x000200C0, nullptr, "LaunchTitle"},
