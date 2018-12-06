@@ -54,11 +54,6 @@
 #include "core/hle/service/ssl_c.h"
 #include "core/hle/service/y2r_u.h"
 
-using Kernel::ClientPort;
-using Kernel::ServerPort;
-using Kernel::ServerSession;
-using Kernel::SharedPtr;
-
 namespace Service {
 
 const std::array<ServiceModuleInfo, 40> service_module_map{
@@ -174,7 +169,8 @@ void ServiceFrameworkBase::ReportUnimplementedFunction(u32* cmd_buf, const Funct
     cmd_buf[1] = 0;
 }
 
-void ServiceFrameworkBase::HandleSyncRequest(SharedPtr<ServerSession> server_session) {
+void ServiceFrameworkBase::HandleSyncRequest(
+    Kernel::SharedPtr<Kernel::ServerSession> server_session) {
     Kernel::KernelSystem& kernel = Core::System::GetInstance().Kernel();
     auto thread = kernel.GetThreadManager().GetCurrentThread();
     // TODO(wwylele): avoid GetPointer
@@ -222,7 +218,7 @@ static bool AttemptLLE(const ServiceModuleInfo& service_module) {
                   service_module.name);
         return false;
     }
-    SharedPtr<Kernel::Process> process;
+    Kernel::SharedPtr<Kernel::Process> process;
     loader->Load(process);
     LOG_DEBUG(Service, "Service module \"{}\" has been successfully loaded.", service_module.name);
     return true;
