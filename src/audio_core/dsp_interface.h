@@ -41,6 +41,13 @@ public:
     virtual u16 RecvData(u32 register_number) = 0;
 
     /**
+     * Checks whether data is ready in one of three DSP registers
+     * @param register_number the index of the register to check
+     * @returns true if data is ready
+     */
+    virtual bool RecvDataIsReady(u32 register_number) const = 0;
+
+    /**
      * Reads `length` bytes from the DSP pipe identified with `pipe_number`.
      * @note Can read up to the maximum value of a u16 in bytes (65,535).
      * @note IF an error is encoutered with either an invalid `pipe_number` or `length` value, an

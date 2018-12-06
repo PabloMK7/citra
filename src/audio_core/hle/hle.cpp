@@ -30,6 +30,7 @@ public:
     DspState GetDspState() const;
 
     u16 RecvData(u32 register_number);
+    bool RecvDataIsReady(u32 register_number) const;
     std::vector<u8> PipeRead(DspPipe pipe_number, u32 length);
     std::size_t GetPipeReadableSize(DspPipe pipe_number) const;
     void PipeWrite(DspPipe pipe_number, const std::vector<u8>& buffer);
@@ -110,6 +111,11 @@ u16 DspHle::Impl::RecvData(u32 register_number) {
         UNREACHABLE();
         break;
     }
+}
+
+bool DspHle::Impl::RecvDataIsReady(u32 register_number) const {
+    ASSERT_MSG(register_number == 0, "Unknown register_number {}", register_number);
+    return true;
 }
 
 std::vector<u8> DspHle::Impl::PipeRead(DspPipe pipe_number, u32 length) {
@@ -363,6 +369,10 @@ DspHle::~DspHle() = default;
 
 u16 DspHle::RecvData(u32 register_number) {
     return impl->RecvData(register_number);
+}
+
+bool DspHle::RecvDataIsReady(u32 register_number) const {
+    return impl->RecvDataIsReady(register_number);
 }
 
 std::vector<u8> DspHle::PipeRead(DspPipe pipe_number, u32 length) {
