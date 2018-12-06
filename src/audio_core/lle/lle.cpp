@@ -349,6 +349,9 @@ void DspLle::SetServiceToInterrupt(std::weak_ptr<Service::DSP::DSP_DSP> dsp) {
     });
 
     auto ProcessPipeEvent = [this, dsp](bool event_from_data) {
+        if (!impl->loaded)
+            return;
+
         auto& teakra = impl->teakra;
         if (event_from_data) {
             impl->data_signaled = true;
