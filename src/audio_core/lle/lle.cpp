@@ -2,13 +2,79 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <array>
 #include "audio_core/lle/lle.h"
 #include "common/assert.h"
+#include "common/bit_field.h"
 #include "common/swap.h"
+#include "core/core.h"
+#include "core/core_timing.h"
 #include "core/hle/service/dsp/dsp_dsp.h"
 #include "teakra/teakra.h"
 
 namespace AudioCore {
+
+enum class SegmentType : u8 {
+    ProgramA = 0,
+    ProgramB = 1,
+    Data = 2,
+};
+
+class Dsp1 {
+public:
+    Dsp1(const std::vector<u8>& raw);
+
+    struct Header {
+        std::array<u8, 0x100> signature;
+        std::array<u8, 4> magic;
+        u32_le binary_size;
+        u16_le memory_layout;
+        INSERT_PADDING_BYTES(3);
+        SegmentType special_segment_type;
+        u8 num_segments;
+        union {
+            BitField<0, 1, u8> recv_data_on_start;
+            BitField<1, 1, u8> load_special_segment;
+        };
+        u32_le special_segment_address;
+        u32_le special_segment_size;
+        u64_le zero;
+        struct Segment {
+            u32_le offset;
+            u32_le address;
+            u32_le size;
+            INSERT_PADDING_BYTES(3);
+            SegmentType memory_type;
+            std::array<u8, 0x20> sha256;
+        };
+        std::array<Segment, 10> segments;
+    };
+    static_assert(sizeof(Header) == 0x300);
+
+    struct Segment {
+        std::vector<u8> data;
+        SegmentType memory_type;
+        u32 target;
+    };
+
+    std::vector<Segment> segments;
+    bool recv_data_on_start;
+};
+
+Dsp1::Dsp1(const std::vector<u8>& raw) {
+    Header header;
+    std::memcpy(&header, raw.data(), sizeof(header));
+    recv_data_on_start = header.recv_data_on_start != 0;
+    for (u32 i = 0; i < header.num_segments; ++i) {
+        Segment segment;
+        segment.data =
+            std::vector<u8>(raw.begin() + header.segments[i].offset,
+                            raw.begin() + header.segments[i].offset + header.segments[i].size);
+        segment.memory_type = header.segments[i].memory_type;
+        segment.target = header.segments[i].address;
+        segments.push_back(segment);
+    }
+}
 
 struct PipeStatus {
     u16_le waddress;
@@ -31,15 +97,32 @@ static u8 PipeIndexToSlotIndex(u8 pipe_index, PipeDirection direction) {
 }
 
 struct DspLle::Impl final {
+    Impl() {
+        teakra_slice_event = Core::System::GetInstance().CoreTiming().RegisterEvent(
+            "DSP slice", [this](u64, int late) { TeakraSliceEvent(static_cast<u64>(late)); });
+    }
+
     Teakra::Teakra teakra;
     u16 pipe_base_waddr = 0;
 
     bool semaphore_signaled = false;
     bool data_signaled = false;
 
+    Core::TimingEventType* teakra_slice_event;
+
     static constexpr unsigned TeakraSlice = 20000;
     void RunTeakraSlice() {
         teakra.Run(TeakraSlice);
+    }
+
+    void TeakraSliceEvent(u64 late) {
+        RunTeakraSlice();
+        u64 next = TeakraSlice * 2; // DSP runs at clock rate half of the CPU rate
+        if (next < late)
+            next = 0;
+        else
+            next -= late;
+        Core::System::GetInstance().CoreTiming().ScheduleEvent(next, teakra_slice_event, 0);
     }
 
     u8* GetDspDataPointer(u32 baddr) {
@@ -153,6 +236,40 @@ struct DspLle::Impl final {
         }
         return size & 0x7FFF;
     }
+
+    void LoadComponent(const std::vector<u8>& buffer) {
+        Dsp1 dsp(buffer);
+        auto& dsp_memory = teakra.GetDspMemory();
+        u8* program = dsp_memory.data();
+        u8* data = dsp_memory.data() + 0x40000;
+        dsp_memory.fill(0);
+        for (const auto& segment : dsp.segments) {
+            if (segment.memory_type == SegmentType::ProgramA ||
+                segment.memory_type == SegmentType::ProgramB) {
+                std::memcpy(program + segment.target * 2, segment.data.data(), segment.data.size());
+            } else if (segment.memory_type == SegmentType::Data) {
+                std::memcpy(data + segment.target * 2, segment.data.data(), segment.data.size());
+            }
+        }
+
+        // TODO: load special segment
+
+        Core::System::GetInstance().CoreTiming().ScheduleEvent(TeakraSlice, teakra_slice_event, 0);
+
+        // Wait for initialization
+        if (dsp.recv_data_on_start) {
+            for (unsigned i = 0; i < 3; ++i) {
+                while (!teakra.RecvDataIsReady(i))
+                    RunTeakraSlice();
+                ASSERT(teakra.RecvData(i) == 1);
+            }
+        }
+
+        // Get pipe base address
+        while (!teakra.RecvDataIsReady(2))
+            RunTeakraSlice();
+        pipe_base_waddr = teakra.RecvData(2);
+    }
 };
 
 u16 DspLle::RecvData(u32 register_number) {
@@ -231,6 +348,10 @@ void DspLle::SetServiceToInterrupt(std::weak_ptr<Service::DSP::DSP_DSP> dsp) {
 
     impl->teakra.SetRecvDataHandler(2, [ProcessPipeEvent]() { ProcessPipeEvent(true); });
     impl->teakra.SetSemaphoreHandler([ProcessPipeEvent]() { ProcessPipeEvent(false); });
+}
+
+void DspLle::LoadComponent(const std::vector<u8>& buffer) {
+    impl->LoadComponent(buffer);
 }
 
 DspLle::DspLle() : impl(std::make_unique<Impl>()) {}
