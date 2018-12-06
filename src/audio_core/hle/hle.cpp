@@ -29,6 +29,7 @@ public:
 
     DspState GetDspState() const;
 
+    u16 RecvData(u32 register_number);
     std::vector<u8> PipeRead(DspPipe pipe_number, u32 length);
     std::size_t GetPipeReadableSize(DspPipe pipe_number) const;
     void PipeWrite(DspPipe pipe_number, const std::vector<u8>& buffer);
@@ -91,6 +92,24 @@ DspHle::Impl::~Impl() {
 
 DspState DspHle::Impl::GetDspState() const {
     return dsp_state;
+}
+
+u16 DspHle::Impl::RecvData(u32 register_number) {
+    ASSERT_MSG(register_number == 0, "Unknown register_number {}", register_number);
+
+    // Application reads this after requesting DSP shutdown, to verify the DSP has indeed shutdown
+    // or slept.
+
+    switch (GetDspState()) {
+    case AudioCore::DspState::On:
+        return 0;
+    case AudioCore::DspState::Off:
+    case AudioCore::DspState::Sleeping:
+        return 1;
+    default:
+        UNREACHABLE();
+        break;
+    }
 }
 
 std::vector<u8> DspHle::Impl::PipeRead(DspPipe pipe_number, u32 length) {
@@ -342,8 +361,8 @@ void DspHle::Impl::AudioTickCallback(s64 cycles_late) {
 DspHle::DspHle(Memory::MemorySystem& memory) : impl(std::make_unique<Impl>(*this, memory)) {}
 DspHle::~DspHle() = default;
 
-DspState DspHle::GetDspState() const {
-    return impl->GetDspState();
+u16 DspHle::RecvData(u32 register_number) {
+    return impl->RecvData(register_number);
 }
 
 std::vector<u8> DspHle::PipeRead(DspPipe pipe_number, u32 length) {

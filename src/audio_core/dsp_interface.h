@@ -32,8 +32,13 @@ public:
     DspInterface& operator=(const DspInterface&) = delete;
     DspInterface& operator=(DspInterface&&) = delete;
 
-    /// Get the state of the DSP
-    virtual DspState GetDspState() const = 0;
+    /**
+     * Reads data from one of three DSP registers
+     * @note this function blocks until the data is available
+     * @param register_number the index of the register to read
+     * @returns the value of the register
+     */
+    virtual u16 RecvData(u32 register_number) = 0;
 
     /**
      * Reads `length` bytes from the DSP pipe identified with `pipe_number`.

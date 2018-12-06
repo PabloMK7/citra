@@ -24,8 +24,7 @@ public:
     explicit DspHle(Memory::MemorySystem& memory);
     ~DspHle();
 
-    DspState GetDspState() const override;
-
+    u16 RecvData(u32 register_number) override;
     std::vector<u8> PipeRead(DspPipe pipe_number, u32 length) override;
     std::size_t GetPipeReadableSize(DspPipe pipe_number) const override;
     void PipeWrite(DspPipe pipe_number, const std::vector<u8>& buffer) override;

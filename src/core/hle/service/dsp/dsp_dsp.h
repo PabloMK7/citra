@@ -245,6 +245,8 @@ private:
     /// Checks if we are trying to register more than 6 events
     bool HasTooManyEventsRegistered() const;
 
+    Core::System& system;
+
     Kernel::SharedPtr<Kernel::Event> semaphore_event;
 
     Kernel::SharedPtr<Kernel::Event> interrupt_zero = nullptr; /// Currently unknown purpose

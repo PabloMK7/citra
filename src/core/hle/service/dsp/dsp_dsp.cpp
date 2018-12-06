@@ -24,26 +24,9 @@ void DSP_DSP::RecvData(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x01, 1, 0);
     const u32 register_number = rp.Pop<u32>();
 
-    ASSERT_MSG(register_number == 0, "Unknown register_number {}", register_number);
-
-    // Application reads this after requesting DSP shutdown, to verify the DSP has indeed shutdown
-    // or slept.
-
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
-
-    switch (Core::DSP().GetDspState()) {
-    case AudioCore::DspState::On:
-        rb.Push<u32>(0);
-        break;
-    case AudioCore::DspState::Off:
-    case AudioCore::DspState::Sleeping:
-        rb.Push<u32>(1);
-        break;
-    default:
-        UNREACHABLE();
-        break;
-    }
+    rb.Push(system.DSP().RecvData(register_number));
 
     LOG_DEBUG(Service_DSP, "register_number={}", register_number);
 }
@@ -350,7 +333,8 @@ bool DSP_DSP::HasTooManyEventsRegistered() const {
     return number >= max_number_of_interrupt_events;
 }
 
-DSP_DSP::DSP_DSP(Core::System& system) : ServiceFramework("dsp::DSP", DefaultMaxSessions) {
+DSP_DSP::DSP_DSP(Core::System& system)
+    : ServiceFramework("dsp::DSP", DefaultMaxSessions), system(system) {
     static const FunctionInfo functions[] = {
         // clang-format off
         {0x00010040, &DSP_DSP::RecvData, "RecvData"},
