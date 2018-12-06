@@ -9,7 +9,19 @@ namespace AudioCore {
 
 struct DspLle::Impl final {
     Teakra::Teakra teakra;
+
+    static constexpr unsigned TeakraSlice = 20000;
+    void RunTeakraSlice() {
+        teakra.Run(TeakraSlice);
+    }
 };
+
+u16 DspLle::RecvData(u32 register_number) {
+    while (!impl->teakra.RecvDataIsReady(register_number)) {
+        impl->RunTeakraSlice();
+    }
+    return impl->teakra.RecvData(static_cast<u8>(register_number));
+}
 
 DspLle::DspLle() : impl(std::make_unique<Impl>()) {}
 DspLle::~DspLle() = default;
