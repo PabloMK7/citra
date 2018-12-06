@@ -109,6 +109,7 @@ struct DspLle::Impl final {
     bool data_signaled = false;
 
     Core::TimingEventType* teakra_slice_event;
+    bool loaded = false;
 
     static constexpr unsigned TeakraSlice = 20000;
     void RunTeakraSlice() {
@@ -238,11 +239,17 @@ struct DspLle::Impl final {
     }
 
     void LoadComponent(const std::vector<u8>& buffer) {
+        if (loaded) {
+            LOG_ERROR(Audio_DSP, "Component already loaded!");
+            return;
+        }
+
+        teakra.Reset();
+
         Dsp1 dsp(buffer);
         auto& dsp_memory = teakra.GetDspMemory();
         u8* program = dsp_memory.data();
         u8* data = dsp_memory.data() + 0x40000;
-        dsp_memory.fill(0);
         for (const auto& segment : dsp.segments) {
             if (segment.memory_type == SegmentType::ProgramA ||
                 segment.memory_type == SegmentType::ProgramB) {
@@ -269,6 +276,30 @@ struct DspLle::Impl final {
         while (!teakra.RecvDataIsReady(2))
             RunTeakraSlice();
         pipe_base_waddr = teakra.RecvData(2);
+
+        loaded = true;
+    }
+
+    void UnloadComponent() {
+        if (!loaded) {
+            LOG_ERROR(Audio_DSP, "Component not loaded!");
+            return;
+        }
+
+        // Send finalization signal
+        while (!teakra.SendDataIsEmpty(2))
+            RunTeakraSlice();
+
+        teakra.SendData(2, 0x8000);
+
+        // Wait for completion
+        while (!teakra.RecvDataIsReady(2))
+            RunTeakraSlice();
+
+        teakra.RecvData(2); // discard the value
+
+        Core::System::GetInstance().CoreTiming().UnscheduleEvent(teakra_slice_event, 0);
+        loaded = false;
     }
 };
 
@@ -352,6 +383,10 @@ void DspLle::SetServiceToInterrupt(std::weak_ptr<Service::DSP::DSP_DSP> dsp) {
 
 void DspLle::LoadComponent(const std::vector<u8>& buffer) {
     impl->LoadComponent(buffer);
+}
+
+void DspLle::UnloadComponent() {
+    impl->UnloadComponent();
 }
 
 DspLle::DspLle() : impl(std::make_unique<Impl>()) {}

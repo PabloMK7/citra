@@ -184,6 +184,17 @@ void DSP_DSP::LoadComponent(Kernel::HLERequestContext& ctx) {
              size, prog_mask, data_mask);
 }
 
+void DSP_DSP::UnloadComponent(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x12, 0, 0);
+
+    system.DSP().UnloadComponent();
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RESULT_SUCCESS);
+
+    LOG_INFO(Service_DSP, "(STUBBED)");
+}
+
 void DSP_DSP::FlushDataCache(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x13, 2, 2);
     const VAddr address = rp.Pop<u32>();

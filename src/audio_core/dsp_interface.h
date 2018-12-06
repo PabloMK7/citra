@@ -91,6 +91,9 @@ public:
     /// Loads the DSP program
     virtual void LoadComponent(const std::vector<u8>& buffer) = 0;
 
+    /// Unloads the DSP program
+    virtual void UnloadComponent() = 0;
+
     /// Select the sink to use based on sink id.
     void SetSink(const std::string& sink_id, const std::string& audio_device);
     /// Get the current sink
