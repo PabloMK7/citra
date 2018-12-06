@@ -1420,9 +1420,10 @@ void CROHelper::Register(VAddr crs_address, bool auto_link) {
 
 void CROHelper::Unregister(VAddr crs_address) {
     CROHelper crs(crs_address, process, memory);
-    CROHelper next_head(crs.NextModule(), process, memory),
-        previous_head(crs.PreviousModule(), process, memory);
-    CROHelper next(NextModule(), process, memory), previous(PreviousModule(), process, memory);
+    CROHelper next_head(crs.NextModule(), process, memory);
+    CROHelper previous_head(crs.PreviousModule(), process, memory);
+    CROHelper next(NextModule(), process, memory);
+    CROHelper previous(PreviousModule(), process, memory);
 
     if (module_address == next_head.module_address ||
         module_address == previous_head.module_address) {
