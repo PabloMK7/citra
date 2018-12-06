@@ -88,6 +88,9 @@ public:
     /// Sets the dsp class that we trigger interrupts for
     virtual void SetServiceToInterrupt(std::weak_ptr<Service::DSP::DSP_DSP> dsp) = 0;
 
+    /// Loads the DSP program
+    virtual void LoadComponent(const std::vector<u8>& buffer) = 0;
+
     /// Select the sink to use based on sink id.
     void SetSink(const std::string& sink_id, const std::string& audio_device);
     /// Get the current sink

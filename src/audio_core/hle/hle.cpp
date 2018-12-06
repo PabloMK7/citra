@@ -11,6 +11,7 @@
 #include "audio_core/sink.h"
 #include "common/assert.h"
 #include "common/common_types.h"
+#include "common/hash.h"
 #include "common/logging/log.h"
 #include "core/core.h"
 #include "core/core_timing.h"
@@ -397,6 +398,17 @@ std::array<u8, Memory::DSP_RAM_SIZE>& DspHle::GetDspMemory() {
 
 void DspHle::SetServiceToInterrupt(std::weak_ptr<DSP_DSP> dsp) {
     impl->SetServiceToInterrupt(std::move(dsp));
+}
+
+void DspHle::LoadComponent(const std::vector<u8>& component_data) {
+    // HLE doesn't need DSP program. Only log some info here
+    LOG_INFO(Service_DSP, "Firmware hash: {:#018x}",
+             Common::ComputeHash64(component_data.data(), component_data.size()));
+    // Some versions of the firmware have the location of DSP structures listed here.
+    if (component_data.size() > 0x37C) {
+        LOG_INFO(Service_DSP, "Structures hash: {:#018x}",
+                 Common::ComputeHash64(component_data.data() + 0x340, 60));
+    }
 }
 
 } // namespace AudioCore
