@@ -6,6 +6,7 @@
 #include "audio_core/sink.h"
 #include "audio_core/sink_details.h"
 #include "citra_qt/configuration/configure_audio.h"
+#include "core/core.h"
 #include "core/settings.h"
 #include "ui_configure_audio.h"
 
@@ -18,6 +19,10 @@ ConfigureAudio::ConfigureAudio(QWidget* parent)
     for (const auto& sink_detail : AudioCore::g_sink_details) {
         ui->output_sink_combo_box->addItem(sink_detail.id);
     }
+
+    ui->emulation_combo_box->addItem(tr("HLE (fast)"));
+    ui->emulation_combo_box->addItem(tr("LLE (accurate)"));
+    ui->emulation_combo_box->setEnabled(!Core::System::GetInstance().IsPoweredOn());
 
     connect(ui->volume_slider, &QSlider::valueChanged, this,
             &ConfigureAudio::setVolumeIndicatorText);
@@ -41,6 +46,8 @@ void ConfigureAudio::setConfiguration() {
     ui->toggle_audio_stretching->setChecked(Settings::values.enable_audio_stretching);
     ui->volume_slider->setValue(Settings::values.volume * ui->volume_slider->maximum());
     setVolumeIndicatorText(ui->volume_slider->sliderPosition());
+
+    ui->emulation_combo_box->setCurrentIndex(Settings::values.enable_dsp_lle ? 1 : 0);
 }
 
 void ConfigureAudio::setOutputSinkFromSinkID() {
@@ -85,6 +92,7 @@ void ConfigureAudio::applyConfiguration() {
             .toStdString();
     Settings::values.volume =
         static_cast<float>(ui->volume_slider->sliderPosition()) / ui->volume_slider->maximum();
+    Settings::values.enable_dsp_lle = ui->emulation_combo_box->currentIndex() == 1;
 }
 
 void ConfigureAudio::updateAudioDevices(int sink_index) {

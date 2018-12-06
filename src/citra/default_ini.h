@@ -167,6 +167,11 @@ custom_bottom_bottom =
 swap_screen =
 
 [Audio]
+
+# Whether or not to enable DSP LLE
+# 0 (default): No, 1: Yes
+enable_dsp_lle =
+
 # Which audio output engine to use.
 # auto (default): Auto-select, null: No audio output, sdl2: SDL2 (if available)
 output_engine =

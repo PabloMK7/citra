@@ -136,6 +136,7 @@ void Config::ReadValues() {
     qt_config->endGroup();
 
     qt_config->beginGroup("Audio");
+    Settings::values.enable_dsp_lle = ReadSetting("enable_dsp_lle", false).toBool();
     Settings::values.sink_id = ReadSetting("output_engine", "auto").toString().toStdString();
     Settings::values.enable_audio_stretching =
         ReadSetting("enable_audio_stretching", true).toBool();
@@ -415,6 +416,7 @@ void Config::SaveValues() {
     qt_config->endGroup();
 
     qt_config->beginGroup("Audio");
+    WriteSetting("enable_dsp_lle", Settings::values.enable_dsp_lle, false);
     WriteSetting("output_engine", QString::fromStdString(Settings::values.sink_id), "auto");
     WriteSetting("enable_audio_stretching", Settings::values.enable_audio_stretching, true);
     WriteSetting("output_device", QString::fromStdString(Settings::values.audio_device_id), "auto");

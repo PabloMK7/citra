@@ -147,6 +147,7 @@ struct Values {
     u8 factor_3d;
 
     // Audio
+    bool enable_dsp_lle;
     std::string sink_id;
     bool enable_audio_stretching;
     std::string audio_device_id;

@@ -155,6 +155,7 @@ void Config::ReadValues() {
         static_cast<u16>(sdl2_config->GetInteger("Layout", "custom_bottom_bottom", 480));
 
     // Audio
+    Settings::values.enable_dsp_lle = sdl2_config->GetBoolean("Audio", "enable_dsp_lle", false);
     Settings::values.sink_id = sdl2_config->GetString("Audio", "output_engine", "auto");
     Settings::values.enable_audio_stretching =
         sdl2_config->GetBoolean("Audio", "enable_audio_stretching", true);

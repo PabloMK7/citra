@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>188</width>
+    <width>240</width>
     <height>246</height>
    </rect>
   </property>
@@ -17,6 +17,23 @@
       <string>Audio</string>
      </property>
      <layout class="QVBoxLayout">
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_emulation">
+        <property name="bottomMargin">
+         <number>0</number>
+        </property>
+        <item>
+         <widget class="QLabel" name="label_emulation">
+          <property name="text">
+           <string>Emulation:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QComboBox" name="emulation_combo_box"/>
+        </item>
+       </layout>
+      </item>
       <item>
        <layout class="QHBoxLayout">
         <item>
