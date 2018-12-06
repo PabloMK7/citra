@@ -48,6 +48,12 @@ public:
     virtual bool RecvDataIsReady(u32 register_number) const = 0;
 
     /**
+     * Sets the DSP semaphore register
+     * @param semaphore_value the value set to the semaphore register
+     */
+    virtual void SetSemaphore(u16 semaphore_value) = 0;
+
+    /**
      * Reads `length` bytes from the DSP pipe identified with `pipe_number`.
      * @note Can read up to the maximum value of a u16 in bytes (65,535).
      * @note IF an error is encoutered with either an invalid `pipe_number` or `length` value, an

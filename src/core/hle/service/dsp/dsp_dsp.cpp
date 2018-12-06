@@ -46,6 +46,8 @@ void DSP_DSP::SetSemaphore(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x07, 1, 0);
     const u16 semaphore_value = rp.Pop<u16>();
 
+    system.DSP().SetSemaphore(semaphore_value);
+
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
 

@@ -375,6 +375,10 @@ bool DspHle::RecvDataIsReady(u32 register_number) const {
     return impl->RecvDataIsReady(register_number);
 }
 
+void DspHle::SetSemaphore(u16 semaphore_value) {
+    // Do nothing in HLE
+}
+
 std::vector<u8> DspHle::PipeRead(DspPipe pipe_number, u32 length) {
     return impl->PipeRead(pipe_number, length);
 }

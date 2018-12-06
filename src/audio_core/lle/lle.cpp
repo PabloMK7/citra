@@ -27,6 +27,10 @@ bool DspLle::RecvDataIsReady(u32 register_number) const {
     return impl->teakra.RecvDataIsReady(register_number);
 }
 
+void DspLle::SetSemaphore(u16 semaphore_value) {
+    impl->teakra.SetSemaphore(semaphore_value);
+}
+
 DspLle::DspLle() : impl(std::make_unique<Impl>()) {}
 DspLle::~DspLle() = default;
 

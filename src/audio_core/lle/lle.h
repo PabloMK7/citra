@@ -15,6 +15,7 @@ public:
 
     u16 RecvData(u32 register_number) override;
     bool RecvDataIsReady(u32 register_number) const override;
+    void SetSemaphore(u16 semaphore_value) override;
 
 private:
     struct Impl;
