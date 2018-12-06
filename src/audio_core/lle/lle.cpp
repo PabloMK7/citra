@@ -5,6 +5,7 @@
 #include "audio_core/lle/lle.h"
 #include "common/assert.h"
 #include "common/swap.h"
+#include "core/hle/service/dsp/dsp_dsp.h"
 #include "teakra/teakra.h"
 
 namespace AudioCore {
@@ -32,6 +33,9 @@ static u8 PipeIndexToSlotIndex(u8 pipe_index, PipeDirection direction) {
 struct DspLle::Impl final {
     Teakra::Teakra teakra;
     u16 pipe_base_waddr = 0;
+
+    bool semaphore_signaled = false;
+    bool data_signaled = false;
 
     static constexpr unsigned TeakraSlice = 20000;
     void RunTeakraSlice() {
@@ -176,6 +180,57 @@ std::size_t DspLle::GetPipeReadableSize(DspPipe pipe_number) const {
 
 void DspLle::PipeWrite(DspPipe pipe_number, const std::vector<u8>& buffer) {
     impl->WritePipe(static_cast<u8>(pipe_number), buffer);
+}
+
+std::array<u8, Memory::DSP_RAM_SIZE>& DspLle::GetDspMemory() {
+    return impl->teakra.GetDspMemory();
+}
+
+void DspLle::SetServiceToInterrupt(std::weak_ptr<Service::DSP::DSP_DSP> dsp) {
+    impl->teakra.SetRecvDataHandler(0, [dsp]() {
+        if (auto locked = dsp.lock()) {
+            locked->SignalInterrupt(Service::DSP::DSP_DSP::InterruptType::Zero,
+                                    static_cast<DspPipe>(0));
+        }
+    });
+    impl->teakra.SetRecvDataHandler(1, [dsp]() {
+        if (auto locked = dsp.lock()) {
+            locked->SignalInterrupt(Service::DSP::DSP_DSP::InterruptType::One,
+                                    static_cast<DspPipe>(0));
+        }
+    });
+
+    auto ProcessPipeEvent = [this, dsp](bool event_from_data) {
+        auto& teakra = impl->teakra;
+        if (event_from_data) {
+            impl->data_signaled = true;
+        } else {
+            if ((teakra.GetSemaphore() & 0x8000) == 0)
+                return;
+            impl->semaphore_signaled = true;
+        }
+        if (impl->semaphore_signaled && impl->data_signaled) {
+            impl->semaphore_signaled = impl->data_signaled = false;
+            u16 slot = teakra.RecvData(2);
+            u16 side = slot % 2;
+            u16 pipe = slot / 2;
+            ASSERT(pipe < 16);
+            if (side != static_cast<u16>(PipeDirection::DSPtoCPU))
+                return;
+            if (pipe == 0) {
+                // pipe 0 is for debug. 3DS automatically drains this pipe and discards the data
+                impl->ReadPipe(pipe, impl->GetPipeReadableSize(pipe));
+            } else {
+                if (auto locked = dsp.lock()) {
+                    locked->SignalInterrupt(Service::DSP::DSP_DSP::InterruptType::Pipe,
+                                            static_cast<DspPipe>(pipe));
+                }
+            }
+        }
+    };
+
+    impl->teakra.SetRecvDataHandler(2, [ProcessPipeEvent]() { ProcessPipeEvent(true); });
+    impl->teakra.SetSemaphoreHandler([ProcessPipeEvent]() { ProcessPipeEvent(false); });
 }
 
 DspLle::DspLle() : impl(std::make_unique<Impl>()) {}

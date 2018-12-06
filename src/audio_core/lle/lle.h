@@ -20,6 +20,10 @@ public:
     std::size_t GetPipeReadableSize(DspPipe pipe_number) const override;
     void PipeWrite(DspPipe pipe_number, const std::vector<u8>& buffer) override;
 
+    std::array<u8, Memory::DSP_RAM_SIZE>& GetDspMemory() override;
+
+    void SetServiceToInterrupt(std::weak_ptr<Service::DSP::DSP_DSP> dsp) override;
+
 private:
     struct Impl;
     friend struct Impl;
