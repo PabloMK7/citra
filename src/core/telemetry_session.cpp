@@ -93,13 +93,9 @@ bool VerifyLogin(const std::string& username, const std::string& token) {
 
 TelemetrySession::TelemetrySession() {
 #ifdef ENABLE_WEB_SERVICE
-    if (Settings::values.enable_telemetry) {
-        backend = std::make_unique<WebService::TelemetryJson>(Settings::values.web_api_url,
-                                                              Settings::values.citra_username,
-                                                              Settings::values.citra_token);
-    } else {
-        backend = std::make_unique<Telemetry::NullVisitor>();
-    }
+    backend = std::make_unique<WebService::TelemetryJson>(Settings::values.web_api_url,
+                                                          Settings::values.citra_username,
+                                                          Settings::values.citra_token);
 #else
     backend = std::make_unique<Telemetry::NullVisitor>();
 #endif
@@ -199,7 +195,8 @@ TelemetrySession::~TelemetrySession() {
     // This is just a placeholder to wrap up the session once the core completes and this is
     // destroyed. This will be moved elsewhere once we are actually doing real I/O with the service.
     field_collection.Accept(*backend);
-    backend->Complete();
+    if (Settings::values.enable_telemetry)
+        backend->Complete();
     backend = nullptr;
 }
 
