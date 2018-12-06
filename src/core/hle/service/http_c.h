@@ -101,6 +101,7 @@ public:
 
     struct PostData {
         // TODO(Subv): Support Binary and Raw POST elements.
+        PostData(std::string name, std::string value) : name(name), value(value){};
         std::string name;
         std::string value;
     };
@@ -206,6 +207,21 @@ private:
      *      1 : Result of function, 0 on success, otherwise error code
      */
     void AddRequestHeader(Kernel::HLERequestContext& ctx);
+
+    /**
+     * HTTP_C::AddPostDataAscii service function
+     *  Inputs:
+     * 1 : Context handle
+     * 2 : Form name buffer size, including null-terminator.
+     * 3 : Form value buffer size, including null-terminator.
+     * 4 : (FormNameSize<<14) | 0xC02
+     * 5 : Form name data pointer
+     * 6 : (FormValueSize<<4) | 10
+     * 7 : Form value data pointer
+     *  Outputs:
+     *      1 : Result of function, 0 on success, otherwise error code
+     */
+    void AddPostDataAscii(Kernel::HLERequestContext& ctx);
 
     /**
      * HTTP_C::OpenClientCertContext service function

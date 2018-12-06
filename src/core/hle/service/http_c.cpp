@@ -299,6 +299,81 @@ void HTTP_C::AddRequestHeader(Kernel::HLERequestContext& ctx) {
               context_handle);
 }
 
+void HTTP_C::AddPostDataAscii(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x12, 3, 4);
+    const u32 context_handle = rp.Pop<u32>();
+    const u32 name_size = rp.Pop<u32>();
+    const u32 value_size = rp.Pop<u32>();
+    const std::vector<u8> name_buffer = rp.PopStaticBuffer();
+    Kernel::MappedBuffer& value_buffer = rp.PopMappedBuffer();
+
+    // Copy the name_buffer into a string without the \0 at the end
+    const std::string name(name_buffer.begin(), name_buffer.end() - 1);
+
+    // Copy the value_buffer into a string without the \0 at the end
+    std::string value(value_size - 1, '\0');
+    value_buffer.Read(&value[0], 0, value_size - 1);
+
+    auto* session_data = GetSessionData(ctx.Session());
+    ASSERT(session_data);
+
+    if (!session_data->initialized) {
+        LOG_ERROR(Service_HTTP, "Tried to add post data on an uninitialized session");
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
+        rb.Push(ERROR_STATE_ERROR);
+        rb.PushMappedBuffer(value_buffer);
+        return;
+    }
+
+    // This command can only be called with a bound context
+    if (!session_data->current_http_context) {
+        LOG_ERROR(Service_HTTP, "Command called without a bound context");
+
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
+        rb.Push(ResultCode(ErrorDescription::NotImplemented, ErrorModule::HTTP,
+                           ErrorSummary::Internal, ErrorLevel::Permanent));
+        rb.PushMappedBuffer(value_buffer);
+        return;
+    }
+
+    if (session_data->current_http_context != context_handle) {
+        LOG_ERROR(Service_HTTP,
+                  "Tried to add post data on a mismatched session input context={} session "
+                  "context={}",
+                  context_handle, *session_data->current_http_context);
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
+        rb.Push(ERROR_STATE_ERROR);
+        rb.PushMappedBuffer(value_buffer);
+        return;
+    }
+
+    auto itr = contexts.find(context_handle);
+    ASSERT(itr != contexts.end());
+
+    if (itr->second.state != RequestState::NotStarted) {
+        LOG_ERROR(Service_HTTP,
+                  "Tried to add post data on a context that has already been started.");
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
+        rb.Push(ResultCode(ErrCodes::InvalidRequestState, ErrorModule::HTTP,
+                           ErrorSummary::InvalidState, ErrorLevel::Permanent));
+        rb.PushMappedBuffer(value_buffer);
+        return;
+    }
+
+    ASSERT(std::find_if(itr->second.post_data.begin(), itr->second.post_data.end(),
+                        [&name](const Context::PostData& m) -> bool { return m.name == name; }) ==
+           itr->second.post_data.end());
+
+    itr->second.post_data.emplace_back(name, value);
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
+    rb.Push(RESULT_SUCCESS);
+    rb.PushMappedBuffer(value_buffer);
+
+    LOG_DEBUG(Service_HTTP, "called, name={}, value={}, context_handle={}", name, value,
+              context_handle);
+}
+
 void HTTP_C::OpenClientCertContext(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x32, 2, 4);
     u32 cert_size = rp.Pop<u32>();
@@ -548,7 +623,7 @@ HTTP_C::HTTP_C() : ServiceFramework("http:C", 32) {
         {0x000F00C4, nullptr, "SetBasicAuthorization"},
         {0x00100080, nullptr, "SetSocketBufferSize"},
         {0x001100C4, &HTTP_C::AddRequestHeader, "AddRequestHeader"},
-        {0x001200C4, nullptr, "AddPostDataAscii"},
+        {0x001200C4, &HTTP_C::AddPostDataAscii, "AddPostDataAscii"},
         {0x001300C4, nullptr, "AddPostDataBinary"},
         {0x00140082, nullptr, "AddPostDataRaw"},
         {0x00150080, nullptr, "SetPostDataType"},
