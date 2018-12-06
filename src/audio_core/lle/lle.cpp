@@ -23,6 +23,10 @@ u16 DspLle::RecvData(u32 register_number) {
     return impl->teakra.RecvData(static_cast<u8>(register_number));
 }
 
+bool DspLle::RecvDataIsReady(u32 register_number) const {
+    return impl->teakra.RecvDataIsReady(register_number);
+}
+
 DspLle::DspLle() : impl(std::make_unique<Impl>()) {}
 DspLle::~DspLle() = default;
 

@@ -14,6 +14,7 @@ public:
     ~DspLle();
 
     u16 RecvData(u32 register_number) override;
+    bool RecvDataIsReady(u32 register_number) const override;
 
 private:
     struct Impl;
