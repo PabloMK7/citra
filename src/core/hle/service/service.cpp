@@ -143,9 +143,7 @@ void ServiceFrameworkBase::InstallAsService(SM::ServiceManager& service_manager)
 
 void ServiceFrameworkBase::InstallAsNamedPort(Kernel::KernelSystem& kernel) {
     ASSERT(port == nullptr);
-    SharedPtr<ServerPort> server_port;
-    SharedPtr<ClientPort> client_port;
-    std::tie(server_port, client_port) = kernel.CreatePortPair(max_sessions, service_name);
+    auto [server_port, client_port] = kernel.CreatePortPair(max_sessions, service_name);
     server_port->SetHleHandler(shared_from_this());
     kernel.AddNamedPort(service_name, std::move(client_port));
 }
