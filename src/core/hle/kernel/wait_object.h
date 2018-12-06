@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <functional>
 #include <vector>
 #include <boost/smart_ptr/intrusive_ptr.hpp>
 #include "common/common_types.h"
@@ -52,9 +53,15 @@ public:
     /// Get a const reference to the waiting threads list for debug use
     const std::vector<SharedPtr<Thread>>& GetWaitingThreads() const;
 
+    /// Sets a callback which is called when the object becomes available
+    void SetHLENotifier(std::function<void()> callback);
+
 private:
     /// Threads waiting for this object to become available
     std::vector<SharedPtr<Thread>> waiting_threads;
+
+    /// Function to call when this object becomes available
+    std::function<void()> hle_notifier;
 };
 
 // Specialization of DynamicObjectCast for WaitObjects

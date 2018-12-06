@@ -268,12 +268,12 @@ void DSP_DSP::GetSemaphoreEventHandle(Kernel::HLERequestContext& ctx) {
 
 void DSP_DSP::SetSemaphoreMask(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x17, 1, 0);
-    const u32 mask = rp.Pop<u32>();
+    preset_semaphore = rp.Pop<u16>();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
 
-    LOG_WARNING(Service_DSP, "(STUBBED) called mask=0x{:08X}", mask);
+    LOG_WARNING(Service_DSP, "(STUBBED) called mask=0x{:04X}", preset_semaphore);
 }
 
 void DSP_DSP::GetHeadphoneStatus(Kernel::HLERequestContext& ctx) {
@@ -380,6 +380,9 @@ DSP_DSP::DSP_DSP(Core::System& system)
 
     semaphore_event =
         system.Kernel().CreateEvent(Kernel::ResetType::OneShot, "DSP_DSP::semaphore_event");
+
+    semaphore_event->SetHLENotifier(
+        [this]() { this->system.DSP().SetSemaphore(preset_semaphore); });
 }
 
 DSP_DSP::~DSP_DSP() {

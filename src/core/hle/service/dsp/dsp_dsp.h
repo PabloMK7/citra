@@ -257,6 +257,7 @@ private:
     Core::System& system;
 
     Kernel::SharedPtr<Kernel::Event> semaphore_event;
+    u16 preset_semaphore = 0;
 
     Kernel::SharedPtr<Kernel::Event> interrupt_zero = nullptr; /// Currently unknown purpose
     Kernel::SharedPtr<Kernel::Event> interrupt_one = nullptr;  /// Currently unknown purpose
