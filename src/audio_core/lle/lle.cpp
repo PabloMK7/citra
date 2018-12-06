@@ -102,6 +102,53 @@ struct DspLle::Impl final {
             teakra.SendData(2, pipe_status.slot_index);
         }
     }
+
+    std::vector<u8> ReadPipe(u8 pipe_index, u16 bsize) {
+        PipeStatus pipe_status = GetPipeStatus(pipe_index, PipeDirection::DSPtoCPU);
+        bool need_update = false;
+        std::vector<u8> data(bsize);
+        u8* buffer_ptr = data.data();
+        while (bsize != 0) {
+            u16 x = pipe_status.read_bptr ^ pipe_status.write_bptr;
+            ASSERT_MSG(x != 0, "Pipe is empty");
+            u16 read_bend;
+            if (x >= 0x8000) {
+                read_bend = pipe_status.bsize;
+            } else {
+                read_bend = pipe_status.write_bptr & 0x7FFF;
+            }
+            u16 read_bbegin = pipe_status.read_bptr & 0x7FFF;
+            ASSERT(read_bend > read_bbegin);
+            u16 read_bsize = std::min<u16>(bsize, read_bend - read_bbegin);
+            std::memcpy(buffer_ptr, GetDspDataPointer(pipe_status.waddress * 2 + read_bbegin),
+                        read_bsize);
+            buffer_ptr += read_bsize;
+            pipe_status.read_bptr += read_bsize;
+            bsize -= read_bsize;
+            ASSERT_MSG((pipe_status.read_bptr & 0x7FFF) <= pipe_status.bsize,
+                       "Pipe is in inconsistent state: read > size");
+            if ((pipe_status.read_bptr & 0x7FFF) == pipe_status.bsize) {
+                pipe_status.read_bptr &= 0x8000;
+                pipe_status.read_bptr ^= 0x8000;
+            }
+            need_update = true;
+        }
+        if (need_update) {
+            UpdatePipeStatus(pipe_status);
+            while (!teakra.SendDataIsEmpty(2))
+                RunTeakraSlice();
+            teakra.SendData(2, pipe_status.slot_index);
+        }
+        return data;
+    }
+    u16 GetPipeReadableSize(u8 pipe_index) {
+        PipeStatus pipe_status = GetPipeStatus(pipe_index, PipeDirection::DSPtoCPU);
+        u16 size = pipe_status.write_bptr - pipe_status.read_bptr;
+        if ((pipe_status.read_bptr ^ pipe_status.write_bptr) >= 0x8000) {
+            size += pipe_status.bsize;
+        }
+        return size & 0x7FFF;
+    }
 };
 
 u16 DspLle::RecvData(u32 register_number) {
@@ -117,6 +164,14 @@ bool DspLle::RecvDataIsReady(u32 register_number) const {
 
 void DspLle::SetSemaphore(u16 semaphore_value) {
     impl->teakra.SetSemaphore(semaphore_value);
+}
+
+std::vector<u8> DspLle::PipeRead(DspPipe pipe_number, u32 length) {
+    return impl->ReadPipe(static_cast<u8>(pipe_number), static_cast<u16>(length));
+}
+
+std::size_t DspLle::GetPipeReadableSize(DspPipe pipe_number) const {
+    return impl->GetPipeReadableSize(static_cast<u8>(pipe_number));
 }
 
 void DspLle::PipeWrite(DspPipe pipe_number, const std::vector<u8>& buffer) {
