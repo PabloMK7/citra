@@ -94,7 +94,7 @@ void DSP_DSP::WriteProcessPipe(Kernel::HLERequestContext& ctx) {
         break;
     }
 
-    Core::DSP().PipeWrite(pipe, buffer);
+    system.DSP().PipeWrite(pipe, buffer);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
