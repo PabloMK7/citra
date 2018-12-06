@@ -190,7 +190,7 @@ System::ResultStatus System::Init(EmuWindow& emu_window, u32 system_mode) {
     }
 
     if (Settings::values.enable_dsp_lle) {
-        dsp_core = std::make_unique<AudioCore::DspLle>();
+        dsp_core = std::make_unique<AudioCore::DspLle>(*memory);
     } else {
         dsp_core = std::make_unique<AudioCore::DspHle>(*memory);
     }

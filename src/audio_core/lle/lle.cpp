@@ -392,7 +392,17 @@ void DspLle::UnloadComponent() {
     impl->UnloadComponent();
 }
 
-DspLle::DspLle() : impl(std::make_unique<Impl>()) {}
+DspLle::DspLle(Memory::MemorySystem& memory) : impl(std::make_unique<Impl>()) {
+    Teakra::AHBMCallback ahbm;
+    ahbm.read8 = [&memory](u32 address) -> u8 {
+        return *memory.GetFCRAMPointer(address - Memory::FCRAM_PADDR);
+    };
+    ahbm.write8 = [&memory](u32 address, u8 value) {
+        *memory.GetFCRAMPointer(address - Memory::FCRAM_PADDR) = value;
+    };
+    impl->teakra.SetAHBMCallback(ahbm);
+    impl->teakra.SetAudioCallback([this](std::array<s16, 2> sample) { OutputSample(sample); });
+}
 DspLle::~DspLle() = default;
 
 } // namespace AudioCore

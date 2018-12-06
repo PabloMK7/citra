@@ -103,6 +103,7 @@ public:
 
 protected:
     void OutputFrame(StereoFrame16& frame);
+    void OutputSample(std::array<s16, 2> sample);
 
 private:
     void FlushResidualStretcherAudio();

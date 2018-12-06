@@ -10,7 +10,7 @@ namespace AudioCore {
 
 class DspLle final : public DspInterface {
 public:
-    DspLle();
+    explicit DspLle(Memory::MemorySystem& memory);
     ~DspLle();
 
     u16 RecvData(u32 register_number) override;
