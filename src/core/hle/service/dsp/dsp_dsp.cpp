@@ -110,11 +110,11 @@ void DSP_DSP::ReadPipe(Kernel::HLERequestContext& ctx) {
     const u16 size = rp.Pop<u16>();
 
     const DspPipe pipe = static_cast<DspPipe>(channel);
-    const u16 pipe_readable_size = static_cast<u16>(Core::DSP().GetPipeReadableSize(pipe));
+    const u16 pipe_readable_size = static_cast<u16>(system.DSP().GetPipeReadableSize(pipe));
 
     std::vector<u8> pipe_buffer;
     if (pipe_readable_size >= size)
-        pipe_buffer = Core::DSP().PipeRead(pipe, size);
+        pipe_buffer = system.DSP().PipeRead(pipe, size);
     else
         UNREACHABLE(); // No more data is in pipe. Hardware hangs in this case; Should never happen.
 
@@ -132,7 +132,7 @@ void DSP_DSP::GetPipeReadableSize(Kernel::HLERequestContext& ctx) {
     const u32 peer = rp.Pop<u32>();
 
     const DspPipe pipe = static_cast<DspPipe>(channel);
-    const u16 pipe_readable_size = static_cast<u16>(Core::DSP().GetPipeReadableSize(pipe));
+    const u16 pipe_readable_size = static_cast<u16>(system.DSP().GetPipeReadableSize(pipe));
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
@@ -149,11 +149,11 @@ void DSP_DSP::ReadPipeIfPossible(Kernel::HLERequestContext& ctx) {
     const u16 size = rp.Pop<u16>();
 
     const DspPipe pipe = static_cast<DspPipe>(channel);
-    const u16 pipe_readable_size = static_cast<u16>(Core::DSP().GetPipeReadableSize(pipe));
+    const u16 pipe_readable_size = static_cast<u16>(system.DSP().GetPipeReadableSize(pipe));
 
     std::vector<u8> pipe_buffer;
     if (pipe_readable_size >= size)
-        pipe_buffer = Core::DSP().PipeRead(pipe, size);
+        pipe_buffer = system.DSP().PipeRead(pipe, size);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
     rb.Push(RESULT_SUCCESS);
