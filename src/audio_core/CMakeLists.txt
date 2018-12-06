@@ -14,6 +14,8 @@ add_library(audio_core STATIC
     hle/shared_memory.h
     hle/source.cpp
     hle/source.h
+    lle/lle.cpp
+    lle/lle.h
     interpolate.cpp
     interpolate.h
     null_sink.h
@@ -30,7 +32,7 @@ add_library(audio_core STATIC
 create_target_directory_groups(audio_core)
 
 target_link_libraries(audio_core PUBLIC common core)
-target_link_libraries(audio_core PRIVATE SoundTouch)
+target_link_libraries(audio_core PRIVATE SoundTouch teakra)
 
 if(SDL2_FOUND)
     target_link_libraries(audio_core PRIVATE SDL2)
@@ -41,4 +43,3 @@ if(ENABLE_CUBEB)
     target_link_libraries(audio_core PRIVATE cubeb)
     add_definitions(-DHAVE_CUBEB=1)
 endif()
-
