@@ -113,7 +113,7 @@ void Module::CompletionEventCallBack(u64 port_id, s64) {
             if (copy_length <= 0) {
                 break;
             }
-            Memory::WriteBlock(*port.dest_process, dest_ptr, src_ptr, copy_length);
+            system.Memory().WriteBlock(*port.dest_process, dest_ptr, src_ptr, copy_length);
             dest_ptr += copy_length;
             dest_size_left -= copy_length;
             src_ptr += original_width;
@@ -125,8 +125,8 @@ void Module::CompletionEventCallBack(u64 port_id, s64) {
             LOG_ERROR(Service_CAM, "The destination size ({}) doesn't match the source ({})!",
                       port.dest_size, buffer_size);
         }
-        Memory::WriteBlock(*port.dest_process, port.dest, buffer.data(),
-                           std::min<std::size_t>(port.dest_size, buffer_size));
+        system.Memory().WriteBlock(*port.dest_process, port.dest, buffer.data(),
+                                   std::min<std::size_t>(port.dest_size, buffer_size));
     }
 
     port.is_receiving = false;

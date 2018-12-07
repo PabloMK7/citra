@@ -57,7 +57,7 @@ enum class ThreadWakeupReason {
 
 class ThreadManager {
 public:
-    ThreadManager();
+    explicit ThreadManager(Kernel::KernelSystem& kernel);
     ~ThreadManager();
 
     /**
@@ -120,6 +120,8 @@ private:
      * @param cycles_late The number of CPU cycles that have passed since the desired wakeup time
      */
     void ThreadWakeupCallback(u64 thread_id, s64 cycles_late);
+
+    Kernel::KernelSystem& kernel;
 
     u32 next_thread_id = 1;
     SharedPtr<Thread> current_thread;

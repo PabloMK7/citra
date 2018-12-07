@@ -11,6 +11,10 @@
 #include "common/common_funcs.h"
 #include "common/common_types.h"
 
+namespace Memory {
+class MemorySystem;
+}
+
 namespace GPU {
 
 constexpr float SCREEN_REFRESH_RATE = 60;
@@ -326,7 +330,7 @@ template <typename T>
 void Write(u32 addr, const T data);
 
 /// Initialize hardware
-void Init();
+void Init(Memory::MemorySystem& memory);
 
 /// Shutdown hardware
 void Shutdown();

@@ -120,8 +120,8 @@ void Process::Run(s32 main_thread_priority, u32 stack_size) {
     auto MapSegment = [&](CodeSet::Segment& segment, VMAPermission permissions,
                           MemoryState memory_state) {
         HeapAllocate(segment.addr, segment.size, permissions, memory_state, true);
-        Memory::WriteBlock(*this, segment.addr, codeset->memory->data() + segment.offset,
-                           segment.size);
+        kernel.memory.WriteBlock(*this, segment.addr, codeset->memory->data() + segment.offset,
+                                 segment.size);
     };
 
     // Map CodeSet segments
@@ -136,7 +136,7 @@ void Process::Run(s32 main_thread_priority, u32 stack_size) {
     // Map special address mappings
     kernel.MapSharedPages(vm_manager);
     for (const auto& mapping : address_mappings) {
-        HandleSpecialMapping(vm_manager, mapping);
+        kernel.HandleSpecialMapping(vm_manager, mapping);
     }
 
     status = ProcessStatus::Running;
@@ -188,10 +188,11 @@ ResultVal<VAddr> Process::HeapAllocate(VAddr target, u32 size, VMAPermission per
         u32 interval_size = interval.upper() - interval.lower();
         LOG_DEBUG(Kernel, "Allocated FCRAM region lower={:08X}, upper={:08X}", interval.lower(),
                   interval.upper());
-        std::fill(Memory::fcram.begin() + interval.lower(),
-                  Memory::fcram.begin() + interval.upper(), 0);
-        auto vma = vm_manager.MapBackingMemory(
-            interval_target, Memory::fcram.data() + interval.lower(), interval_size, memory_state);
+        std::fill(kernel.memory.GetFCRAMPointer(interval.lower()),
+                  kernel.memory.GetFCRAMPointer(interval.upper()), 0);
+        auto vma = vm_manager.MapBackingMemory(interval_target,
+                                               kernel.memory.GetFCRAMPointer(interval.lower()),
+                                               interval_size, memory_state);
         ASSERT(vma.Succeeded());
         vm_manager.Reprotect(vma.Unwrap(), perms);
         interval_target += interval_size;
@@ -218,7 +219,7 @@ ResultCode Process::HeapFree(VAddr target, u32 size) {
     // Free heaps block by block
     CASCADE_RESULT(auto backing_blocks, vm_manager.GetBackingBlocksForRange(target, size));
     for (const auto [backing_memory, block_size] : backing_blocks) {
-        memory_region->Free(Memory::GetFCRAMOffset(backing_memory), block_size);
+        memory_region->Free(kernel.memory.GetFCRAMOffset(backing_memory), block_size);
     }
 
     ResultCode result = vm_manager.UnmapRange(target, size);
@@ -262,7 +263,7 @@ ResultVal<VAddr> Process::LinearAllocate(VAddr target, u32 size, VMAPermission p
         }
     }
 
-    u8* backing_memory = Memory::fcram.data() + physical_offset;
+    u8* backing_memory = kernel.memory.GetFCRAMPointer(physical_offset);
 
     std::fill(backing_memory, backing_memory + size, 0);
     auto vma = vm_manager.MapBackingMemory(target, backing_memory, size, MemoryState::Continuous);

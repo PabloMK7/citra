@@ -23,6 +23,10 @@ namespace SharedPage {
 class Handler;
 }
 
+namespace Memory {
+class MemorySystem;
+}
+
 namespace Kernel {
 
 class AddressArbiter;
@@ -42,6 +46,7 @@ class SharedMemory;
 class ThreadManager;
 class TimerManager;
 class VMManager;
+struct AddressMapping;
 
 enum class ResetType {
     OneShot,
@@ -73,7 +78,7 @@ using SharedPtr = boost::intrusive_ptr<T>;
 
 class KernelSystem {
 public:
-    explicit KernelSystem(u32 system_mode);
+    explicit KernelSystem(Memory::MemorySystem& memory, u32 system_mode);
     ~KernelSystem();
 
     /**
@@ -212,6 +217,8 @@ public:
 
     MemoryRegionInfo* GetMemoryRegion(MemoryRegion region);
 
+    void HandleSpecialMapping(VMManager& address_space, const AddressMapping& mapping);
+
     std::array<MemoryRegionInfo, 3> memory_regions;
 
     /// Adds a port to the named port table
@@ -219,6 +226,8 @@ public:
 
     /// Map of named ports managed by the kernel, which can be retrieved using the ConnectToPort
     std::unordered_map<std::string, SharedPtr<ClientPort>> named_ports;
+
+    Memory::MemorySystem& memory;
 
 private:
     void MemoryInit(u32 mem_type);

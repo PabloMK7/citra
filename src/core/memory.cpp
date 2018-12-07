@@ -21,21 +21,35 @@
 
 namespace Memory {
 
-static std::array<u8, Memory::VRAM_SIZE> vram;
-static std::array<u8, Memory::N3DS_EXTRA_RAM_SIZE> n3ds_extra_ram;
-std::array<u8, Memory::FCRAM_N3DS_SIZE> fcram;
+class MemorySystem::Impl {
+public:
+    Impl() {
+        std::fill(fcram.get(), fcram.get() + Memory::FCRAM_N3DS_SIZE, 0);
+        std::fill(vram.get(), vram.get() + Memory::VRAM_SIZE, 0);
+        std::fill(n3ds_extra_ram.get(), n3ds_extra_ram.get() + Memory::N3DS_EXTRA_RAM_SIZE, 0);
+    }
 
-static PageTable* current_page_table = nullptr;
+    // Visual Studio would try to allocate these on compile time if they are std::array, which would
+    // exceed the memory limit.
+    std::unique_ptr<u8[]> fcram = std::make_unique<u8[]>(Memory::FCRAM_N3DS_SIZE);
+    std::unique_ptr<u8[]> vram = std::make_unique<u8[]>(Memory::VRAM_SIZE);
+    std::unique_ptr<u8[]> n3ds_extra_ram = std::make_unique<u8[]>(Memory::N3DS_EXTRA_RAM_SIZE);
 
-void SetCurrentPageTable(PageTable* page_table) {
-    current_page_table = page_table;
+    PageTable* current_page_table = nullptr;
+};
+
+MemorySystem::MemorySystem() : impl(std::make_unique<Impl>()) {}
+MemorySystem::~MemorySystem() = default;
+
+void MemorySystem::SetCurrentPageTable(PageTable* page_table) {
+    impl->current_page_table = page_table;
     if (Core::System::GetInstance().IsPoweredOn()) {
         Core::CPU().PageTableChanged();
     }
 }
 
-PageTable* GetCurrentPageTable() {
-    return current_page_table;
+PageTable* MemorySystem::GetCurrentPageTable() const {
+    return impl->current_page_table;
 }
 
 static void MapPages(PageTable& page_table, u32 base, u32 size, u8* memory, PageType type) {
@@ -78,21 +92,15 @@ void UnmapRegion(PageTable& page_table, VAddr base, u32 size) {
     MapPages(page_table, base / PAGE_SIZE, size / PAGE_SIZE, nullptr, PageType::Unmapped);
 }
 
-/**
- * Gets the pointer for virtual memory where the page is marked as RasterizerCachedMemory.
- * This is used to access the memory where the page pointer is nullptr due to rasterizer cache.
- * Since the cache only happens on linear heap or VRAM, we know the exact physical address and
- * pointer of such virtual address
- */
-static u8* GetPointerForRasterizerCache(VAddr addr) {
+u8* MemorySystem::GetPointerForRasterizerCache(VAddr addr) {
     if (addr >= LINEAR_HEAP_VADDR && addr < LINEAR_HEAP_VADDR_END) {
-        return fcram.data() + (addr - LINEAR_HEAP_VADDR);
+        return impl->fcram.get() + (addr - LINEAR_HEAP_VADDR);
     }
     if (addr >= NEW_LINEAR_HEAP_VADDR && addr < NEW_LINEAR_HEAP_VADDR_END) {
-        return fcram.data() + (addr - NEW_LINEAR_HEAP_VADDR);
+        return impl->fcram.get() + (addr - NEW_LINEAR_HEAP_VADDR);
     }
     if (addr >= VRAM_VADDR && addr < VRAM_VADDR_END) {
-        return vram.data() + (addr - VRAM_VADDR);
+        return impl->vram.get() + (addr - VRAM_VADDR);
     }
     UNREACHABLE();
 }
@@ -114,8 +122,8 @@ template <typename T>
 T ReadMMIO(MMIORegionPointer mmio_handler, VAddr addr);
 
 template <typename T>
-T Read(const VAddr vaddr) {
-    const u8* page_pointer = current_page_table->pointers[vaddr >> PAGE_BITS];
+T MemorySystem::Read(const VAddr vaddr) {
+    const u8* page_pointer = impl->current_page_table->pointers[vaddr >> PAGE_BITS];
     if (page_pointer) {
         // NOTE: Avoid adding any extra logic to this fast-path block
         T value;
@@ -126,7 +134,7 @@ T Read(const VAddr vaddr) {
     // The memory access might do an MMIO or cached access, so we have to lock the HLE kernel state
     std::lock_guard<std::recursive_mutex> lock(HLE::g_hle_lock);
 
-    PageType type = current_page_table->attributes[vaddr >> PAGE_BITS];
+    PageType type = impl->current_page_table->attributes[vaddr >> PAGE_BITS];
     switch (type) {
     case PageType::Unmapped:
         LOG_ERROR(HW_Memory, "unmapped Read{} @ 0x{:08X}", sizeof(T) * 8, vaddr);
@@ -142,7 +150,7 @@ T Read(const VAddr vaddr) {
         return value;
     }
     case PageType::Special:
-        return ReadMMIO<T>(GetMMIOHandler(*current_page_table, vaddr), vaddr);
+        return ReadMMIO<T>(GetMMIOHandler(*impl->current_page_table, vaddr), vaddr);
     default:
         UNREACHABLE();
     }
@@ -152,8 +160,8 @@ template <typename T>
 void WriteMMIO(MMIORegionPointer mmio_handler, VAddr addr, const T data);
 
 template <typename T>
-void Write(const VAddr vaddr, const T data) {
-    u8* page_pointer = current_page_table->pointers[vaddr >> PAGE_BITS];
+void MemorySystem::Write(const VAddr vaddr, const T data) {
+    u8* page_pointer = impl->current_page_table->pointers[vaddr >> PAGE_BITS];
     if (page_pointer) {
         // NOTE: Avoid adding any extra logic to this fast-path block
         std::memcpy(&page_pointer[vaddr & PAGE_MASK], &data, sizeof(T));
@@ -163,7 +171,7 @@ void Write(const VAddr vaddr, const T data) {
     // The memory access might do an MMIO or cached access, so we have to lock the HLE kernel state
     std::lock_guard<std::recursive_mutex> lock(HLE::g_hle_lock);
 
-    PageType type = current_page_table->attributes[vaddr >> PAGE_BITS];
+    PageType type = impl->current_page_table->attributes[vaddr >> PAGE_BITS];
     switch (type) {
     case PageType::Unmapped:
         LOG_ERROR(HW_Memory, "unmapped Write{} 0x{:08X} @ 0x{:08X}", sizeof(data) * 8, (u32)data,
@@ -178,7 +186,7 @@ void Write(const VAddr vaddr, const T data) {
         break;
     }
     case PageType::Special:
-        WriteMMIO<T>(GetMMIOHandler(*current_page_table, vaddr), vaddr, data);
+        WriteMMIO<T>(GetMMIOHandler(*impl->current_page_table, vaddr), vaddr, data);
         break;
     default:
         UNREACHABLE();
@@ -206,17 +214,18 @@ bool IsValidVirtualAddress(const Kernel::Process& process, const VAddr vaddr) {
     return false;
 }
 
-bool IsValidPhysicalAddress(const PAddr paddr) {
+bool MemorySystem::IsValidPhysicalAddress(const PAddr paddr) {
     return GetPhysicalPointer(paddr) != nullptr;
 }
 
-u8* GetPointer(const VAddr vaddr) {
-    u8* page_pointer = current_page_table->pointers[vaddr >> PAGE_BITS];
+u8* MemorySystem::GetPointer(const VAddr vaddr) {
+    u8* page_pointer = impl->current_page_table->pointers[vaddr >> PAGE_BITS];
     if (page_pointer) {
         return page_pointer + (vaddr & PAGE_MASK);
     }
 
-    if (current_page_table->attributes[vaddr >> PAGE_BITS] == PageType::RasterizerCachedMemory) {
+    if (impl->current_page_table->attributes[vaddr >> PAGE_BITS] ==
+        PageType::RasterizerCachedMemory) {
         return GetPointerForRasterizerCache(vaddr);
     }
 
@@ -224,7 +233,7 @@ u8* GetPointer(const VAddr vaddr) {
     return nullptr;
 }
 
-std::string ReadCString(VAddr vaddr, std::size_t max_length) {
+std::string MemorySystem::ReadCString(VAddr vaddr, std::size_t max_length) {
     std::string string;
     string.reserve(max_length);
     for (std::size_t i = 0; i < max_length; ++i) {
@@ -238,7 +247,7 @@ std::string ReadCString(VAddr vaddr, std::size_t max_length) {
     return string;
 }
 
-u8* GetPhysicalPointer(PAddr address) {
+u8* MemorySystem::GetPhysicalPointer(PAddr address) {
     struct MemoryArea {
         PAddr paddr_base;
         u32 size;
@@ -268,16 +277,16 @@ u8* GetPhysicalPointer(PAddr address) {
     u8* target_pointer = nullptr;
     switch (area->paddr_base) {
     case VRAM_PADDR:
-        target_pointer = vram.data() + offset_into_region;
+        target_pointer = impl->vram.get() + offset_into_region;
         break;
     case DSP_RAM_PADDR:
         target_pointer = Core::DSP().GetDspMemory().data() + offset_into_region;
         break;
     case FCRAM_PADDR:
-        target_pointer = fcram.data() + offset_into_region;
+        target_pointer = impl->fcram.get() + offset_into_region;
         break;
     case N3DS_EXTRA_RAM_PADDR:
-        target_pointer = n3ds_extra_ram.data() + offset_into_region;
+        target_pointer = impl->n3ds_extra_ram.get() + offset_into_region;
         break;
     default:
         UNREACHABLE();
@@ -305,7 +314,7 @@ static std::vector<VAddr> PhysicalToVirtualAddressForRasterizer(PAddr addr) {
     return {};
 }
 
-void RasterizerMarkRegionCached(PAddr start, u32 size, bool cached) {
+void MemorySystem::RasterizerMarkRegionCached(PAddr start, u32 size, bool cached) {
     if (start == 0) {
         return;
     }
@@ -315,7 +324,7 @@ void RasterizerMarkRegionCached(PAddr start, u32 size, bool cached) {
 
     for (unsigned i = 0; i < num_pages; ++i, paddr += PAGE_SIZE) {
         for (VAddr vaddr : PhysicalToVirtualAddressForRasterizer(paddr)) {
-            PageType& page_type = current_page_table->attributes[vaddr >> PAGE_BITS];
+            PageType& page_type = impl->current_page_table->attributes[vaddr >> PAGE_BITS];
 
             if (cached) {
                 // Switch page type to cached if now cached
@@ -326,7 +335,7 @@ void RasterizerMarkRegionCached(PAddr start, u32 size, bool cached) {
                     break;
                 case PageType::Memory:
                     page_type = PageType::RasterizerCachedMemory;
-                    current_page_table->pointers[vaddr >> PAGE_BITS] = nullptr;
+                    impl->current_page_table->pointers[vaddr >> PAGE_BITS] = nullptr;
                     break;
                 default:
                     UNREACHABLE();
@@ -340,7 +349,7 @@ void RasterizerMarkRegionCached(PAddr start, u32 size, bool cached) {
                     break;
                 case PageType::RasterizerCachedMemory: {
                     page_type = PageType::Memory;
-                    current_page_table->pointers[vaddr >> PAGE_BITS] =
+                    impl->current_page_table->pointers[vaddr >> PAGE_BITS] =
                         GetPointerForRasterizerCache(vaddr & ~PAGE_MASK);
                     break;
                 }
@@ -417,24 +426,24 @@ void RasterizerFlushVirtualRegion(VAddr start, u32 size, FlushMode mode) {
     CheckRegion(VRAM_VADDR, VRAM_VADDR_END, VRAM_PADDR);
 }
 
-u8 Read8(const VAddr addr) {
+u8 MemorySystem::Read8(const VAddr addr) {
     return Read<u8>(addr);
 }
 
-u16 Read16(const VAddr addr) {
+u16 MemorySystem::Read16(const VAddr addr) {
     return Read<u16_le>(addr);
 }
 
-u32 Read32(const VAddr addr) {
+u32 MemorySystem::Read32(const VAddr addr) {
     return Read<u32_le>(addr);
 }
 
-u64 Read64(const VAddr addr) {
+u64 MemorySystem::Read64(const VAddr addr) {
     return Read<u64_le>(addr);
 }
 
-void ReadBlock(const Kernel::Process& process, const VAddr src_addr, void* dest_buffer,
-               const std::size_t size) {
+void MemorySystem::ReadBlock(const Kernel::Process& process, const VAddr src_addr,
+                             void* dest_buffer, const std::size_t size) {
     auto& page_table = process.vm_manager.page_table;
 
     std::size_t remaining_size = size;
@@ -483,24 +492,24 @@ void ReadBlock(const Kernel::Process& process, const VAddr src_addr, void* dest_
     }
 }
 
-void Write8(const VAddr addr, const u8 data) {
+void MemorySystem::Write8(const VAddr addr, const u8 data) {
     Write<u8>(addr, data);
 }
 
-void Write16(const VAddr addr, const u16 data) {
+void MemorySystem::Write16(const VAddr addr, const u16 data) {
     Write<u16_le>(addr, data);
 }
 
-void Write32(const VAddr addr, const u32 data) {
+void MemorySystem::Write32(const VAddr addr, const u32 data) {
     Write<u32_le>(addr, data);
 }
 
-void Write64(const VAddr addr, const u64 data) {
+void MemorySystem::Write64(const VAddr addr, const u64 data) {
     Write<u64_le>(addr, data);
 }
 
-void WriteBlock(const Kernel::Process& process, const VAddr dest_addr, const void* src_buffer,
-                const std::size_t size) {
+void MemorySystem::WriteBlock(const Kernel::Process& process, const VAddr dest_addr,
+                              const void* src_buffer, const std::size_t size) {
     auto& page_table = process.vm_manager.page_table;
     std::size_t remaining_size = size;
     std::size_t page_index = dest_addr >> PAGE_BITS;
@@ -547,7 +556,8 @@ void WriteBlock(const Kernel::Process& process, const VAddr dest_addr, const voi
     }
 }
 
-void ZeroBlock(const Kernel::Process& process, const VAddr dest_addr, const std::size_t size) {
+void MemorySystem::ZeroBlock(const Kernel::Process& process, const VAddr dest_addr,
+                             const std::size_t size) {
     auto& page_table = process.vm_manager.page_table;
     std::size_t remaining_size = size;
     std::size_t page_index = dest_addr >> PAGE_BITS;
@@ -595,8 +605,8 @@ void ZeroBlock(const Kernel::Process& process, const VAddr dest_addr, const std:
     }
 }
 
-void CopyBlock(const Kernel::Process& process, VAddr dest_addr, VAddr src_addr,
-               const std::size_t size) {
+void MemorySystem::CopyBlock(const Kernel::Process& process, VAddr dest_addr, VAddr src_addr,
+                             const std::size_t size) {
     auto& page_table = process.vm_manager.page_table;
     std::size_t remaining_size = size;
     std::size_t page_index = src_addr >> PAGE_BITS;
@@ -647,8 +657,9 @@ void CopyBlock(const Kernel::Process& process, VAddr dest_addr, VAddr src_addr,
     }
 }
 
-void CopyBlock(const Kernel::Process& src_process, const Kernel::Process& dest_process,
-               VAddr src_addr, VAddr dest_addr, std::size_t size) {
+void MemorySystem::CopyBlock(const Kernel::Process& src_process,
+                             const Kernel::Process& dest_process, VAddr src_addr, VAddr dest_addr,
+                             std::size_t size) {
     auto& page_table = src_process.vm_manager.page_table;
     std::size_t remaining_size = size;
     std::size_t page_index = src_addr >> PAGE_BITS;
@@ -739,9 +750,14 @@ void WriteMMIO<u64>(MMIORegionPointer mmio_handler, VAddr addr, const u64 data) 
     mmio_handler->Write64(addr, data);
 }
 
-u32 GetFCRAMOffset(u8* pointer) {
-    ASSERT(pointer >= fcram.data() && pointer < fcram.data() + fcram.size());
-    return pointer - fcram.data();
+u32 MemorySystem::GetFCRAMOffset(u8* pointer) {
+    ASSERT(pointer >= impl->fcram.get() && pointer <= impl->fcram.get() + Memory::FCRAM_N3DS_SIZE);
+    return pointer - impl->fcram.get();
+}
+
+u8* MemorySystem::GetFCRAMPointer(u32 offset) {
+    ASSERT(offset <= Memory::FCRAM_N3DS_SIZE);
+    return impl->fcram.get() + offset;
 }
 
 } // namespace Memory

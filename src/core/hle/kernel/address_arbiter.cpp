@@ -65,7 +65,7 @@ SharedPtr<Thread> AddressArbiter::ResumeHighestPriorityThread(VAddr address) {
     return thread;
 }
 
-AddressArbiter::AddressArbiter(KernelSystem& kernel) : Object(kernel) {}
+AddressArbiter::AddressArbiter(KernelSystem& kernel) : Object(kernel), kernel(kernel) {}
 AddressArbiter::~AddressArbiter() {}
 
 SharedPtr<AddressArbiter> KernelSystem::CreateAddressArbiter(std::string name) {
@@ -103,31 +103,31 @@ ResultCode AddressArbiter::ArbitrateAddress(SharedPtr<Thread> thread, Arbitratio
 
     // Wait current thread (acquire the arbiter)...
     case ArbitrationType::WaitIfLessThan:
-        if ((s32)Memory::Read32(address) < value) {
+        if ((s32)kernel.memory.Read32(address) < value) {
             WaitThread(std::move(thread), address);
         }
         break;
     case ArbitrationType::WaitIfLessThanWithTimeout:
-        if ((s32)Memory::Read32(address) < value) {
+        if ((s32)kernel.memory.Read32(address) < value) {
             thread->wakeup_callback = timeout_callback;
             thread->WakeAfterDelay(nanoseconds);
             WaitThread(std::move(thread), address);
         }
         break;
     case ArbitrationType::DecrementAndWaitIfLessThan: {
-        s32 memory_value = Memory::Read32(address);
+        s32 memory_value = kernel.memory.Read32(address);
         if (memory_value < value) {
             // Only change the memory value if the thread should wait
-            Memory::Write32(address, (s32)memory_value - 1);
+            kernel.memory.Write32(address, (s32)memory_value - 1);
             WaitThread(std::move(thread), address);
         }
         break;
     }
     case ArbitrationType::DecrementAndWaitIfLessThanWithTimeout: {
-        s32 memory_value = Memory::Read32(address);
+        s32 memory_value = kernel.memory.Read32(address);
         if (memory_value < value) {
             // Only change the memory value if the thread should wait
-            Memory::Write32(address, (s32)memory_value - 1);
+            kernel.memory.Write32(address, (s32)memory_value - 1);
             thread->wakeup_callback = timeout_callback;
             thread->WakeAfterDelay(nanoseconds);
             WaitThread(std::move(thread), address);

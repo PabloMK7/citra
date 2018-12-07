@@ -27,6 +27,7 @@
 namespace GPU {
 
 Regs g_regs;
+Memory::MemorySystem* g_memory;
 
 /// 268MHz CPU clocks / 60Hz frames per second
 const u64 frame_ticks = static_cast<u64>(BASE_CLOCK_RATE_ARM11 / SCREEN_REFRESH_RATE);
@@ -78,12 +79,12 @@ static void MemoryFill(const Regs::MemoryFillConfig& config) {
     const PAddr end_addr = config.GetEndAddress();
 
     // TODO: do hwtest with these cases
-    if (!Memory::IsValidPhysicalAddress(start_addr)) {
+    if (!g_memory->IsValidPhysicalAddress(start_addr)) {
         LOG_CRITICAL(HW_GPU, "invalid start address {:#010X}", start_addr);
         return;
     }
 
-    if (!Memory::IsValidPhysicalAddress(end_addr)) {
+    if (!g_memory->IsValidPhysicalAddress(end_addr)) {
         LOG_CRITICAL(HW_GPU, "invalid end address {:#010X}", end_addr);
         return;
     }
@@ -94,8 +95,8 @@ static void MemoryFill(const Regs::MemoryFillConfig& config) {
         return;
     }
 
-    u8* start = Memory::GetPhysicalPointer(start_addr);
-    u8* end = Memory::GetPhysicalPointer(end_addr);
+    u8* start = g_memory->GetPhysicalPointer(start_addr);
+    u8* end = g_memory->GetPhysicalPointer(end_addr);
 
     if (VideoCore::g_renderer->Rasterizer()->AccelerateFill(config))
         return;
@@ -131,12 +132,12 @@ static void DisplayTransfer(const Regs::DisplayTransferConfig& config) {
     const PAddr dst_addr = config.GetPhysicalOutputAddress();
 
     // TODO: do hwtest with these cases
-    if (!Memory::IsValidPhysicalAddress(src_addr)) {
+    if (!g_memory->IsValidPhysicalAddress(src_addr)) {
         LOG_CRITICAL(HW_GPU, "invalid input address {:#010X}", src_addr);
         return;
     }
 
-    if (!Memory::IsValidPhysicalAddress(dst_addr)) {
+    if (!g_memory->IsValidPhysicalAddress(dst_addr)) {
         LOG_CRITICAL(HW_GPU, "invalid output address {:#010X}", dst_addr);
         return;
     }
@@ -164,8 +165,8 @@ static void DisplayTransfer(const Regs::DisplayTransferConfig& config) {
     if (VideoCore::g_renderer->Rasterizer()->AccelerateDisplayTransfer(config))
         return;
 
-    u8* src_pointer = Memory::GetPhysicalPointer(src_addr);
-    u8* dst_pointer = Memory::GetPhysicalPointer(dst_addr);
+    u8* src_pointer = g_memory->GetPhysicalPointer(src_addr);
+    u8* dst_pointer = g_memory->GetPhysicalPointer(dst_addr);
 
     if (config.scaling > config.ScaleXY) {
         LOG_CRITICAL(HW_GPU, "Unimplemented display transfer scaling mode {}",
@@ -307,12 +308,12 @@ static void TextureCopy(const Regs::DisplayTransferConfig& config) {
     const PAddr dst_addr = config.GetPhysicalOutputAddress();
 
     // TODO: do hwtest with invalid addresses
-    if (!Memory::IsValidPhysicalAddress(src_addr)) {
+    if (!g_memory->IsValidPhysicalAddress(src_addr)) {
         LOG_CRITICAL(HW_GPU, "invalid input address {:#010X}", src_addr);
         return;
     }
 
-    if (!Memory::IsValidPhysicalAddress(dst_addr)) {
+    if (!g_memory->IsValidPhysicalAddress(dst_addr)) {
         LOG_CRITICAL(HW_GPU, "invalid output address {:#010X}", dst_addr);
         return;
     }
@@ -320,8 +321,8 @@ static void TextureCopy(const Regs::DisplayTransferConfig& config) {
     if (VideoCore::g_renderer->Rasterizer()->AccelerateTextureCopy(config))
         return;
 
-    u8* src_pointer = Memory::GetPhysicalPointer(src_addr);
-    u8* dst_pointer = Memory::GetPhysicalPointer(dst_addr);
+    u8* src_pointer = g_memory->GetPhysicalPointer(src_addr);
+    u8* dst_pointer = g_memory->GetPhysicalPointer(dst_addr);
 
     u32 remaining_size = Common::AlignDown(config.texture_copy.size, 16);
 
@@ -470,7 +471,7 @@ inline void Write(u32 addr, const T data) {
         if (config.trigger & 1) {
             MICROPROFILE_SCOPE(GPU_CmdlistProcessing);
 
-            u32* buffer = (u32*)Memory::GetPhysicalPointer(config.GetPhysicalAddress());
+            u32* buffer = (u32*)g_memory->GetPhysicalPointer(config.GetPhysicalAddress());
 
             if (Pica::g_debug_context && Pica::g_debug_context->recorder) {
                 Pica::g_debug_context->recorder->MemoryAccessed((u8*)buffer, config.size,
@@ -526,7 +527,8 @@ static void VBlankCallback(u64 userdata, s64 cycles_late) {
 }
 
 /// Initialize hardware
-void Init() {
+void Init(Memory::MemorySystem& memory) {
+    g_memory = &memory;
     memset(&g_regs, 0, sizeof(g_regs));
 
     auto& framebuffer_top = g_regs.framebuffer_config[0];

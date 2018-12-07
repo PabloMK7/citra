@@ -16,6 +16,10 @@
 class EmuWindow;
 class ARM_Interface;
 
+namespace Memory {
+class MemorySystem;
+}
+
 namespace AudioCore {
 class DspInterface;
 }
@@ -188,6 +192,12 @@ public:
     /// Gets a const reference to the timing system
     const Timing& CoreTiming() const;
 
+    /// Gets a reference to the memory system
+    Memory::MemorySystem& Memory();
+
+    /// Gets a const reference to the memory system
+    const Memory::MemorySystem& Memory() const;
+
     /// Gets a reference to the cheat engine
     Cheats::CheatEngine& CheatEngine();
 
@@ -268,6 +278,9 @@ public: // HACK: this is temporary exposed for tests,
         // due to WIP kernel refactor causing desync state in memory
     std::unique_ptr<Kernel::KernelSystem> kernel;
     std::unique_ptr<Timing> timing;
+
+    /// Memory system
+    std::unique_ptr<Memory::MemorySystem> memory;
 
 private:
     static System s_instance;

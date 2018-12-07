@@ -180,7 +180,8 @@ void ServiceFrameworkBase::HandleSyncRequest(SharedPtr<ServerSession> server_ses
     Kernel::KernelSystem& kernel = Core::System::GetInstance().Kernel();
     auto thread = kernel.GetThreadManager().GetCurrentThread();
     // TODO(wwylele): avoid GetPointer
-    u32* cmd_buf = reinterpret_cast<u32*>(Memory::GetPointer(thread->GetCommandBufferAddress()));
+    u32* cmd_buf = reinterpret_cast<u32*>(
+        Core::System::GetInstance().Memory().GetPointer(thread->GetCommandBufferAddress()));
 
     u32 header_code = cmd_buf[0];
     auto itr = handlers.find(header_code);

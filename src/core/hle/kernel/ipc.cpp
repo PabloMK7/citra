@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include "common/alignment.h"
+#include "core/core.h"
 #include "core/hle/ipc.h"
 #include "core/hle/kernel/handle_table.h"
 #include "core/hle/kernel/ipc.h"
@@ -19,13 +20,13 @@ ResultCode TranslateCommandBuffer(SharedPtr<Thread> src_thread, SharedPtr<Thread
                                   VAddr src_address, VAddr dst_address,
                                   std::vector<MappedBufferContext>& mapped_buffer_context,
                                   bool reply) {
-
+    Memory::MemorySystem& memory = Core::System::GetInstance().Memory();
     auto& src_process = src_thread->owner_process;
     auto& dst_process = dst_thread->owner_process;
 
     IPC::Header header;
     // TODO(Subv): Replace by Memory::Read32 when possible.
-    Memory::ReadBlock(*src_process, src_address, &header.raw, sizeof(header.raw));
+    memory.ReadBlock(*src_process, src_address, &header.raw, sizeof(header.raw));
 
     std::size_t untranslated_size = 1u + header.normal_params_size;
     std::size_t command_size = untranslated_size + header.translate_params_size;
@@ -34,7 +35,7 @@ ResultCode TranslateCommandBuffer(SharedPtr<Thread> src_thread, SharedPtr<Thread
     ASSERT(command_size <= IPC::COMMAND_BUFFER_LENGTH);
 
     std::array<u32, IPC::COMMAND_BUFFER_LENGTH> cmd_buf;
-    Memory::ReadBlock(*src_process, src_address, cmd_buf.data(), command_size * sizeof(u32));
+    memory.ReadBlock(*src_process, src_address, cmd_buf.data(), command_size * sizeof(u32));
 
     std::size_t i = untranslated_size;
     while (i < command_size) {
@@ -90,7 +91,7 @@ ResultCode TranslateCommandBuffer(SharedPtr<Thread> src_thread, SharedPtr<Thread
             VAddr static_buffer_src_address = cmd_buf[i];
 
             std::vector<u8> data(bufferInfo.size);
-            Memory::ReadBlock(*src_process, static_buffer_src_address, data.data(), data.size());
+            memory.ReadBlock(*src_process, static_buffer_src_address, data.data(), data.size());
 
             // Grab the address that the target thread set up to receive the response static buffer
             // and write our data there. The static buffers area is located right after the command
@@ -106,15 +107,15 @@ ResultCode TranslateCommandBuffer(SharedPtr<Thread> src_thread, SharedPtr<Thread
 
             u32 static_buffer_offset = IPC::COMMAND_BUFFER_LENGTH * sizeof(u32) +
                                        sizeof(StaticBuffer) * bufferInfo.buffer_id;
-            Memory::ReadBlock(*dst_process, dst_address + static_buffer_offset, &target_buffer,
-                              sizeof(target_buffer));
+            memory.ReadBlock(*dst_process, dst_address + static_buffer_offset, &target_buffer,
+                             sizeof(target_buffer));
 
             // Note: The real kernel doesn't seem to have any error recovery mechanisms for this
             // case.
             ASSERT_MSG(target_buffer.descriptor.size >= data.size(),
                        "Static buffer data is too big");
 
-            Memory::WriteBlock(*dst_process, target_buffer.address, data.data(), data.size());
+            memory.WriteBlock(*dst_process, target_buffer.address, data.data(), data.size());
 
             cmd_buf[i++] = target_buffer.address;
             break;
@@ -153,8 +154,8 @@ ResultCode TranslateCommandBuffer(SharedPtr<Thread> src_thread, SharedPtr<Thread
 
                 if (permissions != IPC::MappedBufferPermissions::R) {
                     // Copy the modified buffer back into the target process
-                    Memory::CopyBlock(*src_process, *dst_process, found->target_address,
-                                      found->source_address, size);
+                    memory.CopyBlock(*src_process, *dst_process, found->target_address,
+                                     found->source_address, size);
                 }
 
                 VAddr prev_reserve = page_start - Memory::PAGE_SIZE;
@@ -187,7 +188,7 @@ ResultCode TranslateCommandBuffer(SharedPtr<Thread> src_thread, SharedPtr<Thread
                 Memory::PAGE_SIZE, Kernel::MemoryState::Reserved);
 
             auto buffer = std::make_unique<u8[]>(num_pages * Memory::PAGE_SIZE);
-            Memory::ReadBlock(*src_process, source_address, buffer.get() + page_offset, size);
+            memory.ReadBlock(*src_process, source_address, buffer.get() + page_offset, size);
 
             // Map the page(s) into the target process' address space.
             target_address =
@@ -215,7 +216,7 @@ ResultCode TranslateCommandBuffer(SharedPtr<Thread> src_thread, SharedPtr<Thread
         }
     }
 
-    Memory::WriteBlock(*dst_process, dst_address, cmd_buf.data(), command_size * sizeof(u32));
+    memory.WriteBlock(*dst_process, dst_address, cmd_buf.data(), command_size * sizeof(u32));
 
     return RESULT_SUCCESS;
 }

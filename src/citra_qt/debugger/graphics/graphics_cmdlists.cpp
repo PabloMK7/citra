@@ -17,6 +17,7 @@
 #include "citra_qt/util/spinbox.h"
 #include "citra_qt/util/util.h"
 #include "common/vector_math.h"
+#include "core/core.h"
 #include "core/memory.h"
 #include "video_core/debug_utils/debug_utils.h"
 #include "video_core/pica_state.h"
@@ -166,7 +167,8 @@ void GPUCommandListWidget::SetCommandInfo(const QModelIndex& index) {
         const auto format = texture.format;
 
         const auto info = Pica::Texture::TextureInfo::FromPicaRegister(config, format);
-        const u8* src = Memory::GetPhysicalPointer(config.GetPhysicalAddress());
+        const u8* src =
+            Core::System::GetInstance().Memory().GetPhysicalPointer(config.GetPhysicalAddress());
         new_info_widget = new TextureInfoWidget(src, info);
     }
     if (command_info_widget) {

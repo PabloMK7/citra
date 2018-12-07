@@ -6,6 +6,7 @@
 
 #include <array>
 #include <cstddef>
+#include <memory>
 #include <string>
 #include <vector>
 #include "common/common_types.h"
@@ -178,49 +179,6 @@ enum : VAddr {
     NEW_LINEAR_HEAP_VADDR_END = NEW_LINEAR_HEAP_VADDR + NEW_LINEAR_HEAP_SIZE,
 };
 
-extern std::array<u8, Memory::FCRAM_N3DS_SIZE> fcram;
-
-/// Currently active page table
-void SetCurrentPageTable(PageTable* page_table);
-PageTable* GetCurrentPageTable();
-
-/// Determines if the given VAddr is valid for the specified process.
-bool IsValidVirtualAddress(const Kernel::Process& process, VAddr vaddr);
-
-bool IsValidPhysicalAddress(PAddr paddr);
-
-u8 Read8(VAddr addr);
-u16 Read16(VAddr addr);
-u32 Read32(VAddr addr);
-u64 Read64(VAddr addr);
-
-void Write8(VAddr addr, u8 data);
-void Write16(VAddr addr, u16 data);
-void Write32(VAddr addr, u32 data);
-void Write64(VAddr addr, u64 data);
-
-void ReadBlock(const Kernel::Process& process, VAddr src_addr, void* dest_buffer, std::size_t size);
-void WriteBlock(const Kernel::Process& process, VAddr dest_addr, const void* src_buffer,
-                std::size_t size);
-void ZeroBlock(const Kernel::Process& process, VAddr dest_addr, const std::size_t size);
-void CopyBlock(const Kernel::Process& process, VAddr dest_addr, VAddr src_addr, std::size_t size);
-void CopyBlock(const Kernel::Process& src_process, const Kernel::Process& dest_process,
-               VAddr src_addr, VAddr dest_addr, std::size_t size);
-
-u8* GetPointer(VAddr vaddr);
-
-std::string ReadCString(VAddr vaddr, std::size_t max_length);
-
-/**
- * Gets a pointer to the memory region beginning at the specified physical address.
- */
-u8* GetPhysicalPointer(PAddr address);
-
-/**
- * Mark each page touching the region as cached.
- */
-void RasterizerMarkRegionCached(PAddr start, u32 size, bool cached);
-
 /**
  * Flushes any externally cached rasterizer resources touching the given region.
  */
@@ -251,7 +209,78 @@ enum class FlushMode {
  */
 void RasterizerFlushVirtualRegion(VAddr start, u32 size, FlushMode mode);
 
-/// Gets offset in FCRAM from a pointer inside FCRAM range
-u32 GetFCRAMOffset(u8* pointer);
+class MemorySystem {
+public:
+    MemorySystem();
+    ~MemorySystem();
+
+    /// Currently active page table
+    void SetCurrentPageTable(PageTable* page_table);
+    PageTable* GetCurrentPageTable() const;
+
+    u8 Read8(VAddr addr);
+    u16 Read16(VAddr addr);
+    u32 Read32(VAddr addr);
+    u64 Read64(VAddr addr);
+
+    void Write8(VAddr addr, u8 data);
+    void Write16(VAddr addr, u16 data);
+    void Write32(VAddr addr, u32 data);
+    void Write64(VAddr addr, u64 data);
+
+    void ReadBlock(const Kernel::Process& process, VAddr src_addr, void* dest_buffer,
+                   std::size_t size);
+    void WriteBlock(const Kernel::Process& process, VAddr dest_addr, const void* src_buffer,
+                    std::size_t size);
+    void ZeroBlock(const Kernel::Process& process, VAddr dest_addr, const std::size_t size);
+    void CopyBlock(const Kernel::Process& process, VAddr dest_addr, VAddr src_addr,
+                   std::size_t size);
+    void CopyBlock(const Kernel::Process& src_process, const Kernel::Process& dest_process,
+                   VAddr src_addr, VAddr dest_addr, std::size_t size);
+
+    std::string ReadCString(VAddr vaddr, std::size_t max_length);
+
+    /**
+     * Gets a pointer to the memory region beginning at the specified physical address.
+     */
+    u8* GetPhysicalPointer(PAddr address);
+
+    u8* GetPointer(VAddr vaddr);
+
+    bool IsValidPhysicalAddress(PAddr paddr);
+
+    /// Gets offset in FCRAM from a pointer inside FCRAM range
+    u32 GetFCRAMOffset(u8* pointer);
+
+    /// Gets pointer in FCRAM with given offset
+    u8* GetFCRAMPointer(u32 offset);
+
+    /**
+     * Mark each page touching the region as cached.
+     */
+    void RasterizerMarkRegionCached(PAddr start, u32 size, bool cached);
+
+private:
+    template <typename T>
+    T Read(const VAddr vaddr);
+
+    template <typename T>
+    void Write(const VAddr vaddr, const T data);
+
+    /**
+     * Gets the pointer for virtual memory where the page is marked as RasterizerCachedMemory.
+     * This is used to access the memory where the page pointer is nullptr due to rasterizer cache.
+     * Since the cache only happens on linear heap or VRAM, we know the exact physical address and
+     * pointer of such virtual address
+     */
+    u8* GetPointerForRasterizerCache(VAddr addr);
+
+    class Impl;
+
+    std::unique_ptr<Impl> impl;
+};
+
+/// Determines if the given VAddr is valid for the specified process.
+bool IsValidVirtualAddress(const Kernel::Process& process, VAddr vaddr);
 
 } // namespace Memory

@@ -12,6 +12,10 @@
 class EmuWindow;
 class RendererBase;
 
+namespace Memory {
+class MemorySystem;
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Video Core namespace
 
@@ -33,8 +37,10 @@ extern void* g_screenshot_bits;
 extern std::function<void()> g_screenshot_complete_callback;
 extern Layout::FramebufferLayout g_screenshot_framebuffer_layout;
 
+extern Memory::MemorySystem* g_memory;
+
 /// Initialize the video core
-Core::System::ResultStatus Init(EmuWindow& emu_window);
+Core::System::ResultStatus Init(EmuWindow& emu_window, Memory::MemorySystem& memory);
 
 /// Shutdown the video core
 void Shutdown();

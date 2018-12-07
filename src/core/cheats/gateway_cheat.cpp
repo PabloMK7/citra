@@ -49,9 +49,10 @@ static inline std::enable_if_t<std::is_integral_v<T>> CompOp(const GatewayCheat:
     }
 }
 
-static inline void LoadOffsetOp(const GatewayCheat::CheatLine& line, State& state) {
+static inline void LoadOffsetOp(Memory::MemorySystem& memory, const GatewayCheat::CheatLine& line,
+                                State& state) {
     u32 addr = line.address + state.offset;
-    state.offset = Memory::Read32(addr);
+    state.offset = memory.Read32(addr);
 }
 
 static inline void LoopOp(const GatewayCheat::CheatLine& line, State& state) {
@@ -154,7 +155,7 @@ static inline void PatchOp(const GatewayCheat::CheatLine& line, State& state, Co
             state.current_line_nr++;
         }
         first = !first;
-        Memory::Write32(addr, tmp);
+        system.Memory().Write32(addr, tmp);
         addr += 4;
         num_bytes -= 4;
     }
@@ -162,7 +163,7 @@ static inline void PatchOp(const GatewayCheat::CheatLine& line, State& state, Co
         u32 tmp = (first ? cheat_lines[state.current_line_nr].first
                          : cheat_lines[state.current_line_nr].value) >>
                   bit_offset;
-        Memory::Write8(addr, tmp);
+        system.Memory().Write8(addr, tmp);
         addr += 1;
         num_bytes -= 1;
         bit_offset += 8;
@@ -204,6 +205,14 @@ GatewayCheat::~GatewayCheat() = default;
 
 void GatewayCheat::Execute(Core::System& system) {
     State state;
+
+    Memory::MemorySystem& memory = system.Memory();
+    auto Read8 = [&memory](VAddr addr) { return memory.Read8(addr); };
+    auto Read16 = [&memory](VAddr addr) { return memory.Read16(addr); };
+    auto Read32 = [&memory](VAddr addr) { return memory.Read32(addr); };
+    auto Write8 = [&memory](VAddr addr, u8 value) { memory.Write8(addr, value); };
+    auto Write16 = [&memory](VAddr addr, u16 value) { memory.Write16(addr, value); };
+    auto Write32 = [&memory](VAddr addr, u32 value) { memory.Write32(addr, value); };
 
     for (state.current_line_nr = 0; state.current_line_nr < cheat_lines.size();
          state.current_line_nr++) {
@@ -247,63 +256,61 @@ void GatewayCheat::Execute(Core::System& system) {
             break;
         case CheatType::Write32:
             // 0XXXXXXX YYYYYYYY - word[XXXXXXX+offset] = YYYYYYYY
-            WriteOp<u32>(line, state, &Memory::Write32, system);
+            WriteOp<u32>(line, state, Write32, system);
             break;
         case CheatType::Write16:
             // 1XXXXXXX 0000YYYY - half[XXXXXXX+offset] = YYYY
-            WriteOp<u16>(line, state, &Memory::Write16, system);
+            WriteOp<u16>(line, state, Write16, system);
             break;
         case CheatType::Write8:
             // 2XXXXXXX 000000YY - byte[XXXXXXX+offset] = YY
-            WriteOp<u8>(line, state, &Memory::Write8, system);
+            WriteOp<u8>(line, state, Write8, system);
             break;
         case CheatType::GreaterThan32:
             // 3XXXXXXX YYYYYYYY - Execute next block IF YYYYYYYY > word[XXXXXXX]   ;unsigned
-            CompOp<u32>(line, state, &Memory::Read32,
-                        [&line](u32 val) -> bool { return line.value > val; });
+            CompOp<u32>(line, state, Read32, [&line](u32 val) -> bool { return line.value > val; });
             break;
         case CheatType::LessThan32:
             // 4XXXXXXX YYYYYYYY - Execute next block IF YYYYYYYY < word[XXXXXXX]   ;unsigned
-            CompOp<u32>(line, state, &Memory::Read32,
-                        [&line](u32 val) -> bool { return line.value < val; });
+            CompOp<u32>(line, state, Read32, [&line](u32 val) -> bool { return line.value < val; });
             break;
         case CheatType::EqualTo32:
             // 5XXXXXXX YYYYYYYY - Execute next block IF YYYYYYYY == word[XXXXXXX]   ;unsigned
-            CompOp<u32>(line, state, &Memory::Read32,
+            CompOp<u32>(line, state, Read32,
                         [&line](u32 val) -> bool { return line.value == val; });
             break;
         case CheatType::NotEqualTo32:
             // 6XXXXXXX YYYYYYYY - Execute next block IF YYYYYYYY != word[XXXXXXX]   ;unsigned
-            CompOp<u32>(line, state, &Memory::Read32,
+            CompOp<u32>(line, state, Read32,
                         [&line](u32 val) -> bool { return line.value != val; });
             break;
         case CheatType::GreaterThan16WithMask:
             // 7XXXXXXX ZZZZYYYY - Execute next block IF YYYY > ((not ZZZZ) AND half[XXXXXXX])
-            CompOp<u16>(line, state, &Memory::Read16, [&line](u16 val) -> bool {
+            CompOp<u16>(line, state, Read16, [&line](u16 val) -> bool {
                 return static_cast<u16>(line.value) > (static_cast<u16>(~line.value >> 16) & val);
             });
             break;
         case CheatType::LessThan16WithMask:
             // 8XXXXXXX ZZZZYYYY - Execute next block IF YYYY < ((not ZZZZ) AND half[XXXXXXX])
-            CompOp<u16>(line, state, &Memory::Read16, [&line](u16 val) -> bool {
+            CompOp<u16>(line, state, Read16, [&line](u16 val) -> bool {
                 return static_cast<u16>(line.value) < (static_cast<u16>(~line.value >> 16) & val);
             });
             break;
         case CheatType::EqualTo16WithMask:
             // 9XXXXXXX ZZZZYYYY - Execute next block IF YYYY = ((not ZZZZ) AND half[XXXXXXX])
-            CompOp<u16>(line, state, &Memory::Read16, [&line](u16 val) -> bool {
+            CompOp<u16>(line, state, Read16, [&line](u16 val) -> bool {
                 return static_cast<u16>(line.value) == (static_cast<u16>(~line.value >> 16) & val);
             });
             break;
         case CheatType::NotEqualTo16WithMask:
             // AXXXXXXX ZZZZYYYY - Execute next block IF YYYY <> ((not ZZZZ) AND half[XXXXXXX])
-            CompOp<u16>(line, state, &Memory::Read16, [&line](u16 val) -> bool {
+            CompOp<u16>(line, state, Read16, [&line](u16 val) -> bool {
                 return static_cast<u16>(line.value) != (static_cast<u16>(~line.value >> 16) & val);
             });
             break;
         case CheatType::LoadOffset:
             // BXXXXXXX 00000000 - offset = word[XXXXXXX+offset]
-            LoadOffsetOp(line, state);
+            LoadOffsetOp(system.Memory(), line, state);
             break;
         case CheatType::Loop: {
             // C0000000 YYYYYYYY - LOOP next block YYYYYYYY times
@@ -343,32 +350,32 @@ void GatewayCheat::Execute(Core::System& system) {
         }
         case CheatType::IncrementiveWrite32: {
             // D6000000 XXXXXXXX – (32bit) [XXXXXXXX+offset] = reg ; offset += 4
-            IncrementiveWriteOp<u32>(line, state, &Memory::Write32, system);
+            IncrementiveWriteOp<u32>(line, state, Write32, system);
             break;
         }
         case CheatType::IncrementiveWrite16: {
             // D7000000 XXXXXXXX – (16bit) [XXXXXXXX+offset] = reg & 0xffff ; offset += 2
-            IncrementiveWriteOp<u16>(line, state, &Memory::Write16, system);
+            IncrementiveWriteOp<u16>(line, state, Write16, system);
             break;
         }
         case CheatType::IncrementiveWrite8: {
             // D8000000 XXXXXXXX – (16bit) [XXXXXXXX+offset] = reg & 0xff ; offset++
-            IncrementiveWriteOp<u8>(line, state, &Memory::Write8, system);
+            IncrementiveWriteOp<u8>(line, state, Write8, system);
             break;
         }
         case CheatType::Load32: {
             // D9000000 XXXXXXXX – reg = [XXXXXXXX+offset]
-            LoadOp<u32>(line, state, &Memory::Read32);
+            LoadOp<u32>(line, state, Read32);
             break;
         }
         case CheatType::Load16: {
             // DA000000 XXXXXXXX – reg = [XXXXXXXX+offset] & 0xFFFF
-            LoadOp<u16>(line, state, &Memory::Read16);
+            LoadOp<u16>(line, state, Read16);
             break;
         }
         case CheatType::Load8: {
             // DB000000 XXXXXXXX – reg = [XXXXXXXX+offset] & 0xFF
-            LoadOp<u8>(line, state, &Memory::Read8);
+            LoadOp<u8>(line, state, Read8);
             break;
         }
         case CheatType::AddOffset: {

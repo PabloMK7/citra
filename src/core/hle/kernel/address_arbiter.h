@@ -52,6 +52,8 @@ private:
     explicit AddressArbiter(KernelSystem& kernel);
     ~AddressArbiter() override;
 
+    KernelSystem& kernel;
+
     /// Puts the thread to wait on the specified arbitration address under this address arbiter.
     void WaitThread(SharedPtr<Thread> thread, VAddr wait_address);
 

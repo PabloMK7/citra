@@ -13,7 +13,8 @@
 TEST_CASE("Memory::IsValidVirtualAddress", "[core][memory]") {
     // HACK: see comments of member timing
     Core::System::GetInstance().timing = std::make_unique<Core::Timing>();
-    Kernel::KernelSystem kernel(0);
+    Core::System::GetInstance().memory = std::make_unique<Memory::MemorySystem>();
+    Kernel::KernelSystem kernel(*Core::System::GetInstance().memory, 0);
     SECTION("these regions should not be mapped on an empty process") {
         auto process = kernel.CreateProcess(kernel.CreateCodeSet("", 0));
         CHECK(Memory::IsValidVirtualAddress(*process, Memory::PROCESS_IMAGE_VADDR) == false);
@@ -35,13 +36,13 @@ TEST_CASE("Memory::IsValidVirtualAddress", "[core][memory]") {
     SECTION("special regions should be valid after mapping them") {
         auto process = kernel.CreateProcess(kernel.CreateCodeSet("", 0));
         SECTION("VRAM") {
-            Kernel::HandleSpecialMapping(process->vm_manager,
-                                         {Memory::VRAM_VADDR, Memory::VRAM_SIZE, false, false});
+            kernel.HandleSpecialMapping(process->vm_manager,
+                                        {Memory::VRAM_VADDR, Memory::VRAM_SIZE, false, false});
             CHECK(Memory::IsValidVirtualAddress(*process, Memory::VRAM_VADDR) == true);
         }
 
         SECTION("IO (Not yet implemented)") {
-            Kernel::HandleSpecialMapping(
+            kernel.HandleSpecialMapping(
                 process->vm_manager, {Memory::IO_AREA_VADDR, Memory::IO_AREA_SIZE, false, false});
             CHECK_FALSE(Memory::IsValidVirtualAddress(*process, Memory::IO_AREA_VADDR) == true);
         }

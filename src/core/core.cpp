@@ -143,7 +143,7 @@ System::ResultStatus System::Load(EmuWindow& emu_window, const std::string& file
             return ResultStatus::ErrorLoader;
         }
     }
-    Memory::SetCurrentPageTable(&kernel->GetCurrentProcess()->vm_manager.page_table);
+    memory->SetCurrentPageTable(&kernel->GetCurrentProcess()->vm_manager.page_table);
     cheat_engine = std::make_unique<Cheats::CheatEngine>(*this);
     status = ResultStatus::Success;
     m_emu_window = &emu_window;
@@ -172,22 +172,24 @@ void System::Reschedule() {
 System::ResultStatus System::Init(EmuWindow& emu_window, u32 system_mode) {
     LOG_DEBUG(HW_Memory, "initialized OK");
 
+    memory = std::make_unique<Memory::MemorySystem>();
+
     timing = std::make_unique<Timing>();
 
-    kernel = std::make_unique<Kernel::KernelSystem>(system_mode);
+    kernel = std::make_unique<Kernel::KernelSystem>(*memory, system_mode);
 
     if (Settings::values.use_cpu_jit) {
 #ifdef ARCHITECTURE_x86_64
         cpu_core = std::make_unique<ARM_Dynarmic>(*this, USER32MODE);
 #else
-        cpu_core = std::make_unique<ARM_DynCom>(USER32MODE);
+        cpu_core = std::make_unique<ARM_DynCom>(*this, USER32MODE);
         LOG_WARNING(Core, "CPU JIT requested, but Dynarmic not available");
 #endif
     } else {
-        cpu_core = std::make_unique<ARM_DynCom>(USER32MODE);
+        cpu_core = std::make_unique<ARM_DynCom>(*this, USER32MODE);
     }
 
-    dsp_core = std::make_unique<AudioCore::DspHle>();
+    dsp_core = std::make_unique<AudioCore::DspHle>(*memory);
     dsp_core->SetSink(Settings::values.sink_id, Settings::values.audio_device_id);
     dsp_core->EnableStretching(Settings::values.enable_audio_stretching);
 
@@ -200,11 +202,11 @@ System::ResultStatus System::Init(EmuWindow& emu_window, u32 system_mode) {
     service_manager = std::make_shared<Service::SM::ServiceManager>(*this);
     archive_manager = std::make_unique<Service::FS::ArchiveManager>(*this);
 
-    HW::Init();
+    HW::Init(*memory);
     Service::Init(*this);
     GDBStub::Init();
 
-    ResultStatus result = VideoCore::Init(emu_window);
+    ResultStatus result = VideoCore::Init(emu_window, *memory);
     if (result != ResultStatus::Success) {
         return result;
     }
@@ -248,6 +250,14 @@ Timing& System::CoreTiming() {
 
 const Timing& System::CoreTiming() const {
     return *timing;
+}
+
+Memory::MemorySystem& System::Memory() {
+    return *memory;
+}
+
+const Memory::MemorySystem& System::Memory() const {
+    return *memory;
 }
 
 Cheats::CheatEngine& System::CheatEngine() {
