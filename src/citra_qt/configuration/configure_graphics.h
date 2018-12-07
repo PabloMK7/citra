@@ -16,7 +16,7 @@ class ConfigureGraphics : public QWidget {
 
 public:
     explicit ConfigureGraphics(QWidget* parent = nullptr);
-    ~ConfigureGraphics();
+    ~ConfigureGraphics() override;
 
     void applyConfiguration();
     void retranslateUi();

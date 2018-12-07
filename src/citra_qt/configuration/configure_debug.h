@@ -16,7 +16,7 @@ class ConfigureDebug : public QWidget {
 
 public:
     explicit ConfigureDebug(QWidget* parent = nullptr);
-    ~ConfigureDebug();
+    ~ConfigureDebug() override;
 
     void applyConfiguration();
     void retranslateUi();

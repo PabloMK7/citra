@@ -16,7 +16,7 @@ class ConfigureAudio : public QWidget {
 
 public:
     explicit ConfigureAudio(QWidget* parent = nullptr);
-    ~ConfigureAudio();
+    ~ConfigureAudio() override;
 
     void applyConfiguration();
     void retranslateUi();

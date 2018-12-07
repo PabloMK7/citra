@@ -18,7 +18,7 @@ class ConfigureGeneral : public QWidget {
 
 public:
     explicit ConfigureGeneral(QWidget* parent = nullptr);
-    ~ConfigureGeneral();
+    ~ConfigureGeneral() override;
 
     void PopulateHotkeyList(const HotkeyRegistry& registry);
     void ResetDefaults();

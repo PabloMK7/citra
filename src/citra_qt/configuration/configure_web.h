@@ -17,7 +17,7 @@ class ConfigureWeb : public QWidget {
 
 public:
     explicit ConfigureWeb(QWidget* parent = nullptr);
-    ~ConfigureWeb();
+    ~ConfigureWeb() override;
 
     void applyConfiguration();
     void retranslateUi();
