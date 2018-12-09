@@ -116,11 +116,11 @@ void ConfigureDialog::UpdateVisibleTabs() {
         return;
 
     const QHash<QString, QWidget*> widgets = {
-        {tr("General"), ui->generalTab},   {tr("System"), ui->systemTab},
-        {tr("Input"), ui->inputTab},       {tr("Hotkeys"), ui->hotkeysTab},
-        {tr("Graphics"), ui->graphicsTab}, {tr("Audio"), ui->audioTab},
-        {tr("Camera"), ui->cameraTab},     {tr("Debug"), ui->debugTab},
-        {tr("Web"), ui->webTab},           {tr("UI"), ui->uiTab}};
+        {"General", ui->generalTab},   {"System", ui->systemTab},
+        {"Input", ui->inputTab},       {"Hotkeys", ui->hotkeysTab},
+        {"Graphics", ui->graphicsTab}, {"Audio", ui->audioTab},
+        {"Camera", ui->cameraTab},     {"Debug", ui->debugTab},
+        {"Web", ui->webTab},           {"UI", ui->uiTab}};
 
     ui->tabWidget->clear();
 
