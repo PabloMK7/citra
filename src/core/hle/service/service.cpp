@@ -54,11 +54,6 @@
 #include "core/hle/service/ssl_c.h"
 #include "core/hle/service/y2r_u.h"
 
-using Kernel::ClientPort;
-using Kernel::ServerPort;
-using Kernel::ServerSession;
-using Kernel::SharedPtr;
-
 namespace Service {
 
 const std::array<ServiceModuleInfo, 40> service_module_map{
@@ -143,9 +138,7 @@ void ServiceFrameworkBase::InstallAsService(SM::ServiceManager& service_manager)
 
 void ServiceFrameworkBase::InstallAsNamedPort(Kernel::KernelSystem& kernel) {
     ASSERT(port == nullptr);
-    SharedPtr<ServerPort> server_port;
-    SharedPtr<ClientPort> client_port;
-    std::tie(server_port, client_port) = kernel.CreatePortPair(max_sessions, service_name);
+    auto [server_port, client_port] = kernel.CreatePortPair(max_sessions, service_name);
     server_port->SetHleHandler(shared_from_this());
     kernel.AddNamedPort(service_name, std::move(client_port));
 }
@@ -176,7 +169,8 @@ void ServiceFrameworkBase::ReportUnimplementedFunction(u32* cmd_buf, const Funct
     cmd_buf[1] = 0;
 }
 
-void ServiceFrameworkBase::HandleSyncRequest(SharedPtr<ServerSession> server_session) {
+void ServiceFrameworkBase::HandleSyncRequest(
+    Kernel::SharedPtr<Kernel::ServerSession> server_session) {
     Kernel::KernelSystem& kernel = Core::System::GetInstance().Kernel();
     auto thread = kernel.GetThreadManager().GetCurrentThread();
     // TODO(wwylele): avoid GetPointer
@@ -224,7 +218,7 @@ static bool AttemptLLE(const ServiceModuleInfo& service_module) {
                   service_module.name);
         return false;
     }
-    SharedPtr<Kernel::Process> process;
+    Kernel::SharedPtr<Kernel::Process> process;
     loader->Load(process);
     LOG_DEBUG(Service, "Service module \"{}\" has been successfully loaded.", service_module.name);
     return true;
