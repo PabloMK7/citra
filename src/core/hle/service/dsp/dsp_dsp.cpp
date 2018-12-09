@@ -50,7 +50,7 @@ void DSP_DSP::SetSemaphore(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
 
-    LOG_WARNING(Service_DSP, "(STUBBED) called, semaphore_value={:04X}", semaphore_value);
+    LOG_INFO(Service_DSP, "called, semaphore_value={:04X}", semaphore_value);
 }
 
 void DSP_DSP::ConvertProcessAddressFromDspDram(Kernel::HLERequestContext& ctx) {
@@ -180,8 +180,8 @@ void DSP_DSP::LoadComponent(Kernel::HLERequestContext& ctx) {
 
     system.DSP().LoadComponent(component_data);
 
-    LOG_INFO(Service_DSP, "(STUBBED) called size=0x{:X}, prog_mask=0x{:08X}, data_mask=0x{:08X}",
-             size, prog_mask, data_mask);
+    LOG_INFO(Service_DSP, "called size=0x{:X}, prog_mask=0x{:08X}, data_mask=0x{:08X}", size,
+             prog_mask, data_mask);
 }
 
 void DSP_DSP::UnloadComponent(Kernel::HLERequestContext& ctx) {
@@ -357,7 +357,7 @@ DSP_DSP::DSP_DSP(Core::System& system)
         {0x000F0080, &DSP_DSP::GetPipeReadableSize, "GetPipeReadableSize"},
         {0x001000C0, &DSP_DSP::ReadPipeIfPossible, "ReadPipeIfPossible"},
         {0x001100C2, &DSP_DSP::LoadComponent, "LoadComponent"},
-        {0x00120000, nullptr, "UnloadComponent"},
+        {0x00120000, &DSP_DSP::UnloadComponent, "UnloadComponent"},
         {0x00130082, &DSP_DSP::FlushDataCache, "FlushDataCache"},
         {0x00140082, &DSP_DSP::InvalidateDataCache, "InvalidateDCache"},
         {0x00150082, &DSP_DSP::RegisterInterruptEvents, "RegisterInterruptEvents"},

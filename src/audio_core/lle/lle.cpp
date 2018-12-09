@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <array>
+#include <teakra/teakra.h>
 #include "audio_core/lle/lle.h"
 #include "common/assert.h"
 #include "common/bit_field.h"
@@ -10,7 +11,6 @@
 #include "core/core.h"
 #include "core/core_timing.h"
 #include "core/hle/service/dsp/dsp_dsp.h"
-#include "teakra/teakra.h"
 
 namespace AudioCore {
 
@@ -22,11 +22,11 @@ enum class SegmentType : u8 {
 
 class Dsp1 {
 public:
-    Dsp1(const std::vector<u8>& raw);
+    explicit Dsp1(const std::vector<u8>& raw);
 
     struct Header {
         std::array<u8, 0x100> signature;
-        std::array<u8, 4> magic;
+        std::array<u8, 0x4> magic;
         u32_le binary_size;
         u16_le memory_layout;
         INSERT_PADDING_BYTES(3);
@@ -72,7 +72,7 @@ Dsp1::Dsp1(const std::vector<u8>& raw) {
                             raw.begin() + header.segments[i].offset + header.segments[i].size);
         segment.memory_type = header.segments[i].memory_type;
         segment.target = header.segments[i].address;
-        segments.push_back(segment);
+        segments.push_back(std::move(segment));
     }
 }
 
@@ -83,6 +83,26 @@ struct PipeStatus {
     u16_le write_bptr;
     u8 slot_index;
     u8 flags;
+
+    static constexpr u16 WrapBit = 0x8000;
+    static constexpr u16 PtrMask = 0x7FFF;
+
+    bool IsFull() const {
+        return (read_bptr ^ write_bptr) == WrapBit;
+    }
+
+    bool IsEmpty() const {
+        return (read_bptr ^ write_bptr) == 0;
+    }
+
+    /*
+     * IsWrapped: Are read and write pointers not in the same pass.
+     * false:  ----[xxxx]----
+     * true:   xxxx]----[xxxx (data is wrapping around the end)
+     */
+    bool IsWrapped() const {
+        return (read_bptr ^ write_bptr) >= WrapBit;
+    }
 };
 
 static_assert(sizeof(PipeStatus) == 10);
@@ -93,7 +113,7 @@ enum class PipeDirection : u8 {
 };
 
 static u8 PipeIndexToSlotIndex(u8 pipe_index, PipeDirection direction) {
-    return (pipe_index << 1) + (u8)direction;
+    return (pipe_index << 1) + static_cast<u8>(direction);
 }
 
 struct DspLle::Impl final {
@@ -111,7 +131,9 @@ struct DspLle::Impl final {
     Core::TimingEventType* teakra_slice_event;
     bool loaded = false;
 
-    static constexpr unsigned TeakraSlice = 20000;
+    static constexpr u32 DspDataOffset = 0x40000;
+    static constexpr u32 TeakraSlice = 20000;
+
     void RunTeakraSlice() {
         teakra.Run(TeakraSlice);
     }
@@ -128,7 +150,7 @@ struct DspLle::Impl final {
 
     u8* GetDspDataPointer(u32 baddr) {
         auto& memory = teakra.GetDspMemory();
-        return &memory[0x40000 + baddr];
+        return &memory[DspDataOffset + baddr];
     }
 
     PipeStatus GetPipeStatus(u8 pipe_index, PipeDirection direction) {
@@ -156,16 +178,15 @@ struct DspLle::Impl final {
         PipeStatus pipe_status = GetPipeStatus(pipe_index, PipeDirection::CPUtoDSP);
         bool need_update = false;
         const u8* buffer_ptr = data.data();
-        u16 bsize = (u16)data.size();
+        u16 bsize = static_cast<u16>(data.size());
         while (bsize != 0) {
-            u16 x = pipe_status.read_bptr ^ pipe_status.write_bptr;
-            ASSERT_MSG(x != 0x8000, "Pipe is Full");
+            ASSERT_MSG(!pipe_status.IsFull(), "Pipe is Full");
             u16 write_bend;
-            if (x > 0x8000)
-                write_bend = pipe_status.read_bptr & 0x7FFF;
+            if (pipe_status.IsWrapped())
+                write_bend = pipe_status.read_bptr & PipeStatus::PtrMask;
             else
                 write_bend = pipe_status.bsize;
-            u16 write_bbegin = pipe_status.write_bptr & 0x7FFF;
+            u16 write_bbegin = pipe_status.write_bptr & PipeStatus::PtrMask;
             ASSERT_MSG(write_bend > write_bbegin,
                        "Pipe is in inconsistent state: end {:04X} <= begin {:04X}, size {:04X}",
                        write_bend, write_bbegin, pipe_status.bsize);
@@ -175,11 +196,11 @@ struct DspLle::Impl final {
             buffer_ptr += write_bsize;
             pipe_status.write_bptr += write_bsize;
             bsize -= write_bsize;
-            ASSERT_MSG((pipe_status.write_bptr & 0x7FFF) <= pipe_status.bsize,
+            ASSERT_MSG((pipe_status.write_bptr & PipeStatus::PtrMask) <= pipe_status.bsize,
                        "Pipe is in inconsistent state: write > size");
-            if ((pipe_status.write_bptr & 0x7FFF) == pipe_status.bsize) {
-                pipe_status.write_bptr &= 0x8000;
-                pipe_status.write_bptr ^= 0x8000;
+            if ((pipe_status.write_bptr & PipeStatus::PtrMask) == pipe_status.bsize) {
+                pipe_status.write_bptr &= PipeStatus::WrapBit;
+                pipe_status.write_bptr ^= PipeStatus::WrapBit;
             }
             need_update = true;
         }
@@ -197,15 +218,14 @@ struct DspLle::Impl final {
         std::vector<u8> data(bsize);
         u8* buffer_ptr = data.data();
         while (bsize != 0) {
-            u16 x = pipe_status.read_bptr ^ pipe_status.write_bptr;
-            ASSERT_MSG(x != 0, "Pipe is empty");
+            ASSERT_MSG(!pipe_status.IsEmpty(), "Pipe is empty");
             u16 read_bend;
-            if (x >= 0x8000) {
+            if (pipe_status.IsWrapped()) {
                 read_bend = pipe_status.bsize;
             } else {
-                read_bend = pipe_status.write_bptr & 0x7FFF;
+                read_bend = pipe_status.write_bptr & PipeStatus::PtrMask;
             }
-            u16 read_bbegin = pipe_status.read_bptr & 0x7FFF;
+            u16 read_bbegin = pipe_status.read_bptr & PipeStatus::PtrMask;
             ASSERT(read_bend > read_bbegin);
             u16 read_bsize = std::min<u16>(bsize, read_bend - read_bbegin);
             std::memcpy(buffer_ptr, GetDspDataPointer(pipe_status.waddress * 2 + read_bbegin),
@@ -213,11 +233,11 @@ struct DspLle::Impl final {
             buffer_ptr += read_bsize;
             pipe_status.read_bptr += read_bsize;
             bsize -= read_bsize;
-            ASSERT_MSG((pipe_status.read_bptr & 0x7FFF) <= pipe_status.bsize,
+            ASSERT_MSG((pipe_status.read_bptr & PipeStatus::PtrMask) <= pipe_status.bsize,
                        "Pipe is in inconsistent state: read > size");
-            if ((pipe_status.read_bptr & 0x7FFF) == pipe_status.bsize) {
-                pipe_status.read_bptr &= 0x8000;
-                pipe_status.read_bptr ^= 0x8000;
+            if ((pipe_status.read_bptr & PipeStatus::PtrMask) == pipe_status.bsize) {
+                pipe_status.read_bptr &= PipeStatus::WrapBit;
+                pipe_status.read_bptr ^= PipeStatus::WrapBit;
             }
             need_update = true;
         }
@@ -232,10 +252,10 @@ struct DspLle::Impl final {
     u16 GetPipeReadableSize(u8 pipe_index) {
         PipeStatus pipe_status = GetPipeStatus(pipe_index, PipeDirection::DSPtoCPU);
         u16 size = pipe_status.write_bptr - pipe_status.read_bptr;
-        if ((pipe_status.read_bptr ^ pipe_status.write_bptr) >= 0x8000) {
+        if (pipe_status.IsWrapped()) {
             size += pipe_status.bsize;
         }
-        return size & 0x7FFF;
+        return size & PipeStatus::PtrMask;
     }
 
     void LoadComponent(const std::vector<u8>& buffer) {
@@ -249,7 +269,7 @@ struct DspLle::Impl final {
         Dsp1 dsp(buffer);
         auto& dsp_memory = teakra.GetDspMemory();
         u8* program = dsp_memory.data();
-        u8* data = dsp_memory.data() + 0x40000;
+        u8* data = dsp_memory.data() + DspDataOffset;
         for (const auto& segment : dsp.segments) {
             if (segment.memory_type == SegmentType::ProgramA ||
                 segment.memory_type == SegmentType::ProgramB) {
@@ -265,10 +285,11 @@ struct DspLle::Impl final {
 
         // Wait for initialization
         if (dsp.recv_data_on_start) {
-            for (unsigned i = 0; i < 3; ++i) {
-                while (!teakra.RecvDataIsReady(i))
-                    RunTeakraSlice();
-                ASSERT(teakra.RecvData(i) == 1);
+            for (u8 i = 0; i < 3; ++i) {
+                do {
+                    while (!teakra.RecvDataIsReady(i))
+                        RunTeakraSlice();
+                } while (teakra.RecvData(i) != 1);
             }
         }
 
@@ -287,10 +308,11 @@ struct DspLle::Impl final {
         }
 
         // Send finalization signal
+        constexpr u16 FinalizeSignal = 0x8000;
         while (!teakra.SendDataIsEmpty(2))
             RunTeakraSlice();
 
-        teakra.SendData(2, 0x8000);
+        teakra.SendData(2, FinalizeSignal);
 
         // Wait for completion
         while (!teakra.RecvDataIsReady(2))

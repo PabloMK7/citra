@@ -11,7 +11,7 @@ namespace AudioCore {
 class DspLle final : public DspInterface {
 public:
     explicit DspLle(Memory::MemorySystem& memory);
-    ~DspLle();
+    ~DspLle() override;
 
     u16 RecvData(u32 register_number) override;
     bool RecvDataIsReady(u32 register_number) const override;
@@ -29,7 +29,6 @@ public:
 
 private:
     struct Impl;
-    friend struct Impl;
     std::unique_ptr<Impl> impl;
 };
 
