@@ -147,9 +147,18 @@ static void MortonCopy(u32 stride, u32 height, u8* gl_buffer, PAddr base, PAddr 
     }
 
     const u8* const buffer_end = tile_buffer + aligned_end - aligned_start;
+    PAddr current_paddr = aligned_start;
     while (tile_buffer < buffer_end) {
+        // Pokemon Super Mystery Dungeon will try to use textures that go beyond
+        // the end address of VRAM. Stop reading if reaches invalid address
+        if (!VideoCore::g_memory->IsValidPhysicalAddress(current_paddr) ||
+            !VideoCore::g_memory->IsValidPhysicalAddress(current_paddr + tile_size)) {
+            LOG_ERROR(Render_OpenGL, "Out of bound texture");
+            break;
+        }
         MortonCopyTile<morton_to_gl, format>(stride, tile_buffer, gl_buffer);
         tile_buffer += tile_size;
+        current_paddr += tile_size;
         glbuf_next_tile();
     }
 
