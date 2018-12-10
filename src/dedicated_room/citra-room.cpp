@@ -142,7 +142,7 @@ int main(int argc, char** argv) {
         std::cout << "preferred-game-id not set!\nThis should get set to allow users to find your "
                      "room.\nSet with --preferred-game-id id\n\n";
     }
-    if (max_members >= Network::MaxConcurrentConnections || max_members < 2) {
+    if (max_members > Network::MaxConcurrentConnections || max_members < 2) {
         std::cout << "max_members needs to be in the range 2 - "
                   << Network::MaxConcurrentConnections << "!\n\n";
         PrintHelp(argv[0]);
