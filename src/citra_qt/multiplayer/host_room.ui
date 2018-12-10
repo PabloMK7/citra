@@ -65,7 +65,7 @@
         <item row="2" column="1">
          <widget class="QSpinBox" name="max_player">
           <property name="minimum">
-           <number>1</number>
+           <number>2</number>
           </property>
           <property name="maximum">
            <number>16</number>
