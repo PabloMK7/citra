@@ -40,6 +40,7 @@ TestEnvironment::~TestEnvironment() {
     Memory::MemorySystem& memory = *Core::System::GetInstance().memory;
     memory.UnmapRegion(*page_table, 0x80000000, 0x80000000);
     memory.UnmapRegion(*page_table, 0x00000000, 0x80000000);
+    Core::System::GetInstance().kernel.reset();
 }
 
 void TestEnvironment::SetMemory64(VAddr vaddr, u64 value) {

@@ -276,11 +276,9 @@ private:
 
 public: // HACK: this is temporary exposed for tests,
         // due to WIP kernel refactor causing desync state in memory
+    std::unique_ptr<Memory::MemorySystem> memory;
     std::unique_ptr<Kernel::KernelSystem> kernel;
     std::unique_ptr<Timing> timing;
-
-    /// Memory system
-    std::unique_ptr<Memory::MemorySystem> memory;
 
 private:
     static System s_instance;
