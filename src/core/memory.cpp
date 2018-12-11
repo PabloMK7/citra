@@ -21,6 +21,40 @@
 
 namespace Memory {
 
+class RasterizerCacheMarker {
+public:
+    void Mark(VAddr addr, bool cached) {
+        bool* p = At(addr);
+        if (p)
+            *p = cached;
+    }
+
+    bool IsCached(VAddr addr) {
+        bool* p = At(addr);
+        if (p)
+            return *p;
+        return false;
+    }
+
+private:
+    bool* At(VAddr addr) {
+        if (addr >= VRAM_VADDR && addr < VRAM_VADDR_END) {
+            return &vram[(addr - VRAM_VADDR) / PAGE_SIZE];
+        }
+        if (addr >= LINEAR_HEAP_VADDR && addr < LINEAR_HEAP_VADDR_END) {
+            return &linear_heap[(addr - LINEAR_HEAP_VADDR) / PAGE_SIZE];
+        }
+        if (addr >= NEW_LINEAR_HEAP_VADDR && addr < NEW_LINEAR_HEAP_VADDR_END) {
+            return &new_linear_heap[(addr - NEW_LINEAR_HEAP_VADDR) / PAGE_SIZE];
+        }
+        return nullptr;
+    }
+
+    std::array<bool, VRAM_SIZE / PAGE_SIZE> vram{};
+    std::array<bool, LINEAR_HEAP_SIZE / PAGE_SIZE> linear_heap{};
+    std::array<bool, NEW_LINEAR_HEAP_SIZE / PAGE_SIZE> new_linear_heap{};
+};
+
 class MemorySystem::Impl {
 public:
     Impl() {
@@ -36,6 +70,7 @@ public:
     std::unique_ptr<u8[]> n3ds_extra_ram = std::make_unique<u8[]>(Memory::N3DS_EXTRA_RAM_SIZE);
 
     PageTable* current_page_table = nullptr;
+    RasterizerCacheMarker cache_marker;
 };
 
 MemorySystem::MemorySystem() : impl(std::make_unique<Impl>()) {}
