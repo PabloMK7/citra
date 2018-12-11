@@ -281,6 +281,12 @@ public:
      */
     void RasterizerMarkRegionCached(PAddr start, u32 size, bool cached);
 
+    /// Registers page table for rasterizer cache marking
+    void RegisterPageTable(PageTable* page_table);
+
+    /// Unregisters page table for rasterizer cache marking
+    void UnregisterPageTable(PageTable* page_table);
+
 private:
     template <typename T>
     T Read(const VAddr vaddr);

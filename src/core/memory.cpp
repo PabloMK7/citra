@@ -70,6 +70,7 @@ public:
 
     PageTable* current_page_table = nullptr;
     RasterizerCacheMarker cache_marker;
+    std::vector<PageTable*> page_table_list;
 };
 
 MemorySystem::MemorySystem() : impl(std::make_unique<Impl>()) {}
@@ -144,6 +145,15 @@ u8* MemorySystem::GetPointerForRasterizerCache(VAddr addr) {
         return impl->vram.get() + (addr - VRAM_VADDR);
     }
     UNREACHABLE();
+}
+
+void MemorySystem::RegisterPageTable(PageTable* page_table) {
+    impl->page_table_list.push_back(page_table);
+}
+
+void MemorySystem::UnregisterPageTable(PageTable* page_table) {
+    impl->page_table_list.erase(
+        std::find(impl->page_table_list.begin(), impl->page_table_list.end(), page_table));
 }
 
 /**
