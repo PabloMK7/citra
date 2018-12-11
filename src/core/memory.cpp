@@ -375,37 +375,40 @@ void MemorySystem::RasterizerMarkRegionCached(PAddr start, u32 size, bool cached
 
     for (unsigned i = 0; i < num_pages; ++i, paddr += PAGE_SIZE) {
         for (VAddr vaddr : PhysicalToVirtualAddressForRasterizer(paddr)) {
-            PageType& page_type = impl->current_page_table->attributes[vaddr >> PAGE_BITS];
+            impl->cache_marker.Mark(vaddr, cached);
+            for (PageTable* page_table : impl->page_table_list) {
+                PageType& page_type = page_table->attributes[vaddr >> PAGE_BITS];
 
-            if (cached) {
-                // Switch page type to cached if now cached
-                switch (page_type) {
-                case PageType::Unmapped:
-                    // It is not necessary for a process to have this region mapped into its address
-                    // space, for example, a system module need not have a VRAM mapping.
-                    break;
-                case PageType::Memory:
-                    page_type = PageType::RasterizerCachedMemory;
-                    impl->current_page_table->pointers[vaddr >> PAGE_BITS] = nullptr;
-                    break;
-                default:
-                    UNREACHABLE();
-                }
-            } else {
-                // Switch page type to uncached if now uncached
-                switch (page_type) {
-                case PageType::Unmapped:
-                    // It is not necessary for a process to have this region mapped into its address
-                    // space, for example, a system module need not have a VRAM mapping.
-                    break;
-                case PageType::RasterizerCachedMemory: {
-                    page_type = PageType::Memory;
-                    impl->current_page_table->pointers[vaddr >> PAGE_BITS] =
-                        GetPointerForRasterizerCache(vaddr & ~PAGE_MASK);
-                    break;
-                }
-                default:
-                    UNREACHABLE();
+                if (cached) {
+                    // Switch page type to cached if now cached
+                    switch (page_type) {
+                    case PageType::Unmapped:
+                        // It is not necessary for a process to have this region mapped into its
+                        // address space, for example, a system module need not have a VRAM mapping.
+                        break;
+                    case PageType::Memory:
+                        page_type = PageType::RasterizerCachedMemory;
+                        page_table->pointers[vaddr >> PAGE_BITS] = nullptr;
+                        break;
+                    default:
+                        UNREACHABLE();
+                    }
+                } else {
+                    // Switch page type to uncached if now uncached
+                    switch (page_type) {
+                    case PageType::Unmapped:
+                        // It is not necessary for a process to have this region mapped into its
+                        // address space, for example, a system module need not have a VRAM mapping.
+                        break;
+                    case PageType::RasterizerCachedMemory: {
+                        page_type = PageType::Memory;
+                        page_table->pointers[vaddr >> PAGE_BITS] =
+                            GetPointerForRasterizerCache(vaddr & ~PAGE_MASK);
+                        break;
+                    }
+                    default:
+                        UNREACHABLE();
+                    }
                 }
             }
         }
