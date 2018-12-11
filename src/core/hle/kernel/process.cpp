@@ -402,7 +402,7 @@ ResultCode Process::Unmap(VAddr target, VAddr source, u32 size, VMAPermission pe
 }
 
 Kernel::Process::Process(KernelSystem& kernel)
-    : Object(kernel), handle_table(kernel), kernel(kernel) {}
+    : Object(kernel), handle_table(kernel), kernel(kernel), vm_manager(kernel.memory) {}
 Kernel::Process::~Process() {}
 
 SharedPtr<Process> KernelSystem::GetProcessById(u32 process_id) const {

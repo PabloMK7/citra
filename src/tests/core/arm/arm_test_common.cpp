@@ -6,7 +6,6 @@
 #include "core/core_timing.h"
 #include "core/hle/kernel/process.h"
 #include "core/memory.h"
-#include "core/memory_setup.h"
 #include "tests/core/arm/arm_test_common.h"
 
 namespace ArmTests {
@@ -31,15 +30,16 @@ TestEnvironment::TestEnvironment(bool mutable_memory_)
     page_table->pointers.fill(nullptr);
     page_table->attributes.fill(Memory::PageType::Unmapped);
 
-    Memory::MapIoRegion(*page_table, 0x00000000, 0x80000000, test_memory);
-    Memory::MapIoRegion(*page_table, 0x80000000, 0x80000000, test_memory);
+    memory.MapIoRegion(*page_table, 0x00000000, 0x80000000, test_memory);
+    memory.MapIoRegion(*page_table, 0x80000000, 0x80000000, test_memory);
 
     memory.SetCurrentPageTable(page_table);
 }
 
 TestEnvironment::~TestEnvironment() {
-    Memory::UnmapRegion(*page_table, 0x80000000, 0x80000000);
-    Memory::UnmapRegion(*page_table, 0x00000000, 0x80000000);
+    Memory::MemorySystem& memory = *Core::System::GetInstance().memory;
+    memory.UnmapRegion(*page_table, 0x80000000, 0x80000000);
+    memory.UnmapRegion(*page_table, 0x00000000, 0x80000000);
 }
 
 void TestEnvironment::SetMemory64(VAddr vaddr, u64 value) {

@@ -8,7 +8,6 @@
 #include "core/hle/kernel/errors.h"
 #include "core/hle/kernel/vm_manager.h"
 #include "core/memory.h"
-#include "core/memory_setup.h"
 #include "core/mmio.h"
 
 namespace Kernel {
@@ -37,7 +36,7 @@ bool VirtualMemoryArea::CanBeMergedWith(const VirtualMemoryArea& next) const {
     return true;
 }
 
-VMManager::VMManager() {
+VMManager::VMManager(Memory::MemorySystem& memory) : memory(memory) {
     Reset();
 }
 
@@ -351,13 +350,13 @@ VMManager::VMAIter VMManager::MergeAdjacent(VMAIter iter) {
 void VMManager::UpdatePageTableForVMA(const VirtualMemoryArea& vma) {
     switch (vma.type) {
     case VMAType::Free:
-        Memory::UnmapRegion(page_table, vma.base, vma.size);
+        memory.UnmapRegion(page_table, vma.base, vma.size);
         break;
     case VMAType::BackingMemory:
-        Memory::MapMemoryRegion(page_table, vma.base, vma.size, vma.backing_memory);
+        memory.MapMemoryRegion(page_table, vma.base, vma.size, vma.backing_memory);
         break;
     case VMAType::MMIO:
-        Memory::MapIoRegion(page_table, vma.base, vma.size, vma.mmio_handler);
+        memory.MapIoRegion(page_table, vma.base, vma.size, vma.mmio_handler);
         break;
     }
 }

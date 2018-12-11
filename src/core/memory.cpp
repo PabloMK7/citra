@@ -15,7 +15,6 @@
 #include "core/hle/kernel/process.h"
 #include "core/hle/lock.h"
 #include "core/memory.h"
-#include "core/memory_setup.h"
 #include "video_core/renderer_base.h"
 #include "video_core/video_core.h"
 
@@ -87,7 +86,7 @@ PageTable* MemorySystem::GetCurrentPageTable() const {
     return impl->current_page_table;
 }
 
-static void MapPages(PageTable& page_table, u32 base, u32 size, u8* memory, PageType type) {
+void MemorySystem::MapPages(PageTable& page_table, u32 base, u32 size, u8* memory, PageType type) {
     LOG_DEBUG(HW_Memory, "Mapping {} onto {:08X}-{:08X}", (void*)memory, base * PAGE_SIZE,
               (base + size) * PAGE_SIZE);
 
@@ -107,13 +106,14 @@ static void MapPages(PageTable& page_table, u32 base, u32 size, u8* memory, Page
     }
 }
 
-void MapMemoryRegion(PageTable& page_table, VAddr base, u32 size, u8* target) {
+void MemorySystem::MapMemoryRegion(PageTable& page_table, VAddr base, u32 size, u8* target) {
     ASSERT_MSG((size & PAGE_MASK) == 0, "non-page aligned size: {:08X}", size);
     ASSERT_MSG((base & PAGE_MASK) == 0, "non-page aligned base: {:08X}", base);
     MapPages(page_table, base / PAGE_SIZE, size / PAGE_SIZE, target, PageType::Memory);
 }
 
-void MapIoRegion(PageTable& page_table, VAddr base, u32 size, MMIORegionPointer mmio_handler) {
+void MemorySystem::MapIoRegion(PageTable& page_table, VAddr base, u32 size,
+                               MMIORegionPointer mmio_handler) {
     ASSERT_MSG((size & PAGE_MASK) == 0, "non-page aligned size: {:08X}", size);
     ASSERT_MSG((base & PAGE_MASK) == 0, "non-page aligned base: {:08X}", base);
     MapPages(page_table, base / PAGE_SIZE, size / PAGE_SIZE, nullptr, PageType::Special);
@@ -121,7 +121,7 @@ void MapIoRegion(PageTable& page_table, VAddr base, u32 size, MMIORegionPointer 
     page_table.special_regions.emplace_back(SpecialRegion{base, size, mmio_handler});
 }
 
-void UnmapRegion(PageTable& page_table, VAddr base, u32 size) {
+void MemorySystem::UnmapRegion(PageTable& page_table, VAddr base, u32 size) {
     ASSERT_MSG((size & PAGE_MASK) == 0, "non-page aligned size: {:08X}", size);
     ASSERT_MSG((base & PAGE_MASK) == 0, "non-page aligned base: {:08X}", base);
     MapPages(page_table, base / PAGE_SIZE, size / PAGE_SIZE, nullptr, PageType::Unmapped);

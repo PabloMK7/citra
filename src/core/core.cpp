@@ -25,7 +25,6 @@
 #include "core/hle/service/sm/sm.h"
 #include "core/hw/hw.h"
 #include "core/loader/loader.h"
-#include "core/memory_setup.h"
 #include "core/movie.h"
 #ifdef ENABLE_SCRIPTING
 #include "core/rpc/rpc_server.h"
