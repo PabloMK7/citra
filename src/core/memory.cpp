@@ -100,6 +100,12 @@ void MemorySystem::MapPages(PageTable& page_table, u32 base, u32 size, u8* memor
         page_table.attributes[base] = type;
         page_table.pointers[base] = memory;
 
+        // If the memory to map is already rasterizer-cached, mark the page
+        if (type == PageType::Memory && impl->cache_marker.IsCached(base * PAGE_SIZE)) {
+            page_table.attributes[base] = PageType::RasterizerCachedMemory;
+            page_table.pointers[base] = nullptr;
+        }
+
         base += 1;
         if (memory != nullptr)
             memory += PAGE_SIZE;
