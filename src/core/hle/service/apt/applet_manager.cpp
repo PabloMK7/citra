@@ -327,10 +327,13 @@ ResultCode AppletManager::PrepareToStartLibraryApplet(AppletId applet_id) {
     // There are some problems with LLE applets. The rasterizer cache gets out of sync
     // when the applet is closed. To avoid breaking applications because of the issue,
     // we are going to disable loading LLE applets before further fixes are done.
-    //    auto process = NS::LaunchTitle(FS::MediaType::NAND, GetTitleIdForApplet(applet_id,
-    //    region_value)); if (process) {
-    //        return RESULT_SUCCESS;
-    //    }
+    auto cfg = Service::CFG::GetModule(system);
+    u32 region_value = cfg->GetRegionValue();
+    auto process =
+        NS::LaunchTitle(FS::MediaType::NAND, GetTitleIdForApplet(applet_id, region_value));
+    if (process) {
+        return RESULT_SUCCESS;
+    }
 
     // If we weren't able to load the native applet title, try to fallback to an HLE implementation.
     auto applet = HLE::Applets::Applet::Get(applet_id);
@@ -354,10 +357,13 @@ ResultCode AppletManager::PreloadLibraryApplet(AppletId applet_id) {
     // There are some problems with LLE applets. The rasterizer cache gets out of sync
     // when the applet is closed. To avoid breaking applications because of the issue,
     // we are going to disable loading LLE applets before further fixes are done.
-    //    auto process = NS::LaunchTitle(FS::MediaType::NAND, GetTitleIdForApplet(applet_id,
-    //    region_value)); if (process) {
-    //        return RESULT_SUCCESS;
-    //    }
+    auto cfg = Service::CFG::GetModule(system);
+    u32 region_value = cfg->GetRegionValue();
+    auto process =
+        NS::LaunchTitle(FS::MediaType::NAND, GetTitleIdForApplet(applet_id, region_value));
+    if (process) {
+        return RESULT_SUCCESS;
+    }
 
     // If we weren't able to load the native applet title, try to fallback to an HLE implementation.
     auto applet = HLE::Applets::Applet::Get(applet_id);
