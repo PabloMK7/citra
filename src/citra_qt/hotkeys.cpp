@@ -32,8 +32,10 @@ void HotkeyRegistry::LoadHotkeys() {
             hk.keyseq = QKeySequence::fromString(shortcut.shortcut.first, QKeySequence::NativeText);
             hk.context = (Qt::ShortcutContext)shortcut.shortcut.second;
         }
-        if (hk.shortcut)
+        if (hk.shortcut) {
+            hk.shortcut->disconnect();
             hk.shortcut->setKey(hk.keyseq);
+        }
     }
 }
 

@@ -107,15 +107,13 @@ void ConfigureHotkeys::applyConfiguration(HotkeyRegistry& registry) {
         for (int key_column_id = 0; key_column_id < parent->rowCount(); key_column_id++) {
             QStandardItem* action = parent->child(key_column_id, 0);
             QStandardItem* keyseq = parent->child(key_column_id, 1);
-            for (auto key_iterator = registry.hotkey_groups.begin();
-                 key_iterator != registry.hotkey_groups.end(); ++key_iterator) {
-                if (key_iterator->first == parent->text()) {
-                    for (auto it2 = key_iterator->second.begin(); it2 != key_iterator->second.end();
-                         ++it2) {
-                        if (it2->first == action->text()) {
-                            it2->second.keyseq = QKeySequence(keyseq->text());
-                        }
-                    }
+            for (auto& [group, sub_actions] : registry.hotkey_groups) {
+                if (group != parent->text())
+                    continue;
+                for (auto& [action_name, hotkey] : sub_actions) {
+                    if (action_name != action->text())
+                        continue;
+                    hotkey.keyseq = QKeySequence(keyseq->text());
                 }
             }
         }
