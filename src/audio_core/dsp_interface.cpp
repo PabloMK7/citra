@@ -15,8 +15,7 @@ DspInterface::DspInterface() = default;
 DspInterface::~DspInterface() = default;
 
 void DspInterface::SetSink(const std::string& sink_id, const std::string& audio_device) {
-    const SinkDetails& sink_details = GetSinkDetails(sink_id);
-    sink = sink_details.factory(audio_device);
+    sink = CreateSinkFromID(Settings::values.sink_id, Settings::values.audio_device_id);
     sink->SetCallback(
         [this](s16* buffer, std::size_t num_frames) { OutputCallback(buffer, num_frames); });
     time_stretcher.SetOutputSampleRate(sink->GetNativeSampleRate());
