@@ -54,6 +54,7 @@ static void PrintHelp(const char* argv0) {
                  "--token             The token used for announce\n"
                  "--web-api-url       Citra Web API url\n"
                  "--ban-list-file     The file for storing the room ban list\n"
+                 "--enable-citra-mods Allow Citra Community Moderators to moderate on your room\n"
                  "-h, --help          Display this help and exit\n"
                  "-v, --version       Output version information and exit\n";
 }
@@ -148,6 +149,7 @@ int main(int argc, char** argv) {
     u64 preferred_game_id = 0;
     u32 port = Network::DefaultRoomPort;
     u32 max_members = 16;
+    bool enable_citra_mods = false;
 
     static struct option long_options[] = {
         {"room-name", required_argument, 0, 'n'},
@@ -161,6 +163,7 @@ int main(int argc, char** argv) {
         {"token", required_argument, 0, 't'},
         {"web-api-url", required_argument, 0, 'a'},
         {"ban-list-file", required_argument, 0, 'b'},
+        {"enable-citra-mods", no_argument, 0, 'e'},
         {"help", no_argument, 0, 'h'},
         {"version", no_argument, 0, 'v'},
         {0, 0, 0, 0},
@@ -202,6 +205,9 @@ int main(int argc, char** argv) {
                 break;
             case 'b':
                 ban_list_file.assign(optarg);
+                break;
+            case 'e':
+                enable_citra_mods = true;
                 break;
             case 'h':
                 PrintHelp(argv[0]);
@@ -261,6 +267,10 @@ int main(int argc, char** argv) {
         Settings::values.citra_username = username;
         Settings::values.citra_token = token;
     }
+    if (!announce && enable_citra_mods) {
+        enable_citra_mods = false;
+        std::cout << "Can not enable Citra Moderators for private rooms\n\n";
+    }
 
     // Load the ban list
     Network::Room::BanList ban_list;
@@ -284,7 +294,8 @@ int main(int argc, char** argv) {
     Network::Init();
     if (std::shared_ptr<Network::Room> room = Network::GetRoom().lock()) {
         if (!room->Create(room_name, room_description, "", port, password, max_members, username,
-                          preferred_game, preferred_game_id, std::move(verify_backend), ban_list)) {
+                          preferred_game, preferred_game_id, std::move(verify_backend), ban_list,
+                          enable_citra_mods)) {
             std::cout << "Failed to create room: \n\n";
             return -1;
         }
