@@ -153,7 +153,12 @@ struct DspLle::Impl final {
         return &memory[DspDataOffset + baddr];
     }
 
-    PipeStatus GetPipeStatus(u8 pipe_index, PipeDirection direction) {
+    const u8* GetDspDataPointer(u32 baddr) const {
+        auto& memory = teakra.GetDspMemory();
+        return &memory[DspDataOffset + baddr];
+    }
+
+    PipeStatus GetPipeStatus(u8 pipe_index, PipeDirection direction) const {
         u8 slot_index = PipeIndexToSlotIndex(pipe_index, direction);
         PipeStatus pipe_status;
         std::memcpy(&pipe_status,
@@ -249,7 +254,7 @@ struct DspLle::Impl final {
         }
         return data;
     }
-    u16 GetPipeReadableSize(u8 pipe_index) {
+    u16 GetPipeReadableSize(u8 pipe_index) const {
         PipeStatus pipe_status = GetPipeStatus(pipe_index, PipeDirection::DSPtoCPU);
         u16 size = pipe_status.write_bptr - pipe_status.read_bptr;
         if (pipe_status.IsWrapped()) {
@@ -307,7 +312,7 @@ struct DspLle::Impl final {
             return;
         }
 
-        // Send finalization signal
+        // Send finalization signal via command/reply register 2
         constexpr u16 FinalizeSignal = 0x8000;
         while (!teakra.SendDataIsEmpty(2))
             RunTeakraSlice();
