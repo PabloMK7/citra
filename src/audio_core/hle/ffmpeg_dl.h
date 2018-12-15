@@ -6,7 +6,7 @@
 
 #ifdef _WIN32
 #include <windows.h>
-#endif
+#endif  // _WIN32
 
 #include "common/logging/log.h"
 
@@ -71,7 +71,7 @@ bool InitFFmpegDL() {
 
         // Free the buffer.
         LocalFree(messageBuffer);
-        LOG_ERROR(Audio_DSP, "Could not load avcodec-58.dll: {}", message);
+        LOG_ERROR(Audio_DSP, "Could not load avutil-56.dll: {}", message);
         return false;
     }
 
