@@ -50,6 +50,10 @@ Network::VerifyUser::UserData VerifyUserJWT::LoadUserData(const std::string& ver
     if (decoded.payload().has_claim("avatarUrl")) {
         user_data.avatar_url = decoded.payload().get_claim_value<std::string>("avatarUrl");
     }
+    if (decoded.payload().has_claim("roles")) {
+        auto roles = decoded.payload().get_claim_value<std::vector<std::string>>("roles");
+        user_data.moderator = std::find(roles.begin(), roles.end(), "moderator") != roles.end();
+    }
     return user_data;
 }
 

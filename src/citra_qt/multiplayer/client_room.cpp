@@ -72,9 +72,12 @@ void ClientRoomWindow::OnRoomUpdate(const Network::RoomInformation& info) {
 }
 
 void ClientRoomWindow::OnStateChange(const Network::RoomMember::State& state) {
-    if (state == Network::RoomMember::State::Joined) {
+    if (state == Network::RoomMember::State::Joined ||
+        state == Network::RoomMember::State::Moderator) {
+
         ui->chat->Clear();
         ui->chat->AppendStatusMessage(tr("Connected"));
+        SetModPerms(state == Network::RoomMember::State::Moderator);
     }
     UpdateView();
 }

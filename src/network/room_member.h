@@ -59,7 +59,8 @@ public:
         Uninitialized, ///< Not initialized
         Idle,          ///< Default state (i.e. not connected)
         Joining,       ///< The client is attempting to join a room.
-        Joined, ///< The client is connected to the room and is ready to send/receive packets.
+        Joined,    ///< The client is connected to the room and is ready to send/receive packets.
+        Moderator, ///< The client is connnected to the room and is granted mod permissions.
     };
 
     enum class Error : u8 {
@@ -270,6 +271,8 @@ static const char* GetStateStr(const RoomMember::State& s) {
         return "Joining";
     case RoomMember::State::Joined:
         return "Joined";
+    case RoomMember::State::Moderator:
+        return "Moderator";
     }
     return "Unknown";
 }

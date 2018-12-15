@@ -18,7 +18,6 @@ public:
     ~ClientRoomWindow();
 
     void RetranslateUi();
-    void SetModPerms(bool is_mod);
 
 public slots:
     void OnRoomUpdate(const Network::RoomInformation&);
@@ -32,6 +31,7 @@ signals:
 private:
     void Disconnect();
     void UpdateView();
+    void SetModPerms(bool is_mod);
 
     QStandardItemModel* player_list;
     std::unique_ptr<Ui::ClientRoom> ui;

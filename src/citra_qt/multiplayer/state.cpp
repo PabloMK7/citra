@@ -89,7 +89,9 @@ void MultiplayerState::retranslateUi() {
 
     if (current_state == Network::RoomMember::State::Uninitialized) {
         status_text->setText(tr("Not Connected. Click here to find a room!"));
-    } else if (current_state == Network::RoomMember::State::Joined) {
+    } else if (current_state == Network::RoomMember::State::Joined ||
+               current_state == Network::RoomMember::State::Moderator) {
+
         status_text->setText(tr("Connected"));
     } else {
         status_text->setText(tr("Not Connected"));
@@ -107,7 +109,9 @@ void MultiplayerState::retranslateUi() {
 
 void MultiplayerState::OnNetworkStateChanged(const Network::RoomMember::State& state) {
     LOG_DEBUG(Frontend, "Network State: {}", Network::GetStateStr(state));
-    if (state == Network::RoomMember::State::Joined) {
+    if (state == Network::RoomMember::State::Joined ||
+        state == Network::RoomMember::State::Moderator) {
+
         OnOpenNetworkRoom();
         status_icon->setPixmap(QIcon::fromTheme("connected").pixmap(16));
         status_text->setText(tr("Connected"));
@@ -183,7 +187,9 @@ void MultiplayerState::OnAnnounceFailed(const Common::WebResult& result) {
 void MultiplayerState::UpdateThemedIcons() {
     if (show_notification) {
         status_icon->setPixmap(QIcon::fromTheme("connected_notification").pixmap(16));
-    } else if (current_state == Network::RoomMember::State::Joined) {
+    } else if (current_state == Network::RoomMember::State::Joined ||
+               current_state == Network::RoomMember::State::Moderator) {
+
         status_icon->setPixmap(QIcon::fromTheme("connected").pixmap(16));
     } else {
         status_icon->setPixmap(QIcon::fromTheme("disconnected").pixmap(16));
@@ -257,12 +263,6 @@ void MultiplayerState::OnOpenNetworkRoom() {
                 client_room = new ClientRoomWindow(this);
                 connect(client_room, &ClientRoomWindow::ShowNotification, this,
                         &MultiplayerState::ShowNotification);
-            }
-            const std::string host_username = member->GetRoomInformation().host_username;
-            if (host_username.empty()) {
-                client_room->SetModPerms(false);
-            } else {
-                client_room->SetModPerms(member->GetUsername() == host_username);
             }
             BringWidgetToFront(client_room);
             return;

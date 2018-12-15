@@ -151,7 +151,7 @@ void RoomMember::RoomMemberImpl::SetError(const Error new_error) {
 }
 
 bool RoomMember::RoomMemberImpl::IsConnected() const {
-    return state == State::Joining || state == State::Joined;
+    return state == State::Joining || state == State::Joined || state == State::Moderator;
 }
 
 void RoomMember::RoomMemberImpl::MemberLoop() {
@@ -176,12 +176,17 @@ void RoomMember::RoomMemberImpl::MemberLoop() {
                     HandleRoomInformationPacket(&event);
                     break;
                 case IdJoinSuccess:
+                case IdJoinSuccessAsMod:
                     // The join request was successful, we are now in the room.
                     // If we joined successfully, there must be at least one client in the room: us.
                     ASSERT_MSG(member_information.size() > 0,
                                "We have not yet received member information.");
                     HandleJoinPacket(&event); // Get the MAC Address for the client
-                    SetState(State::Joined);
+                    if (event.packet->data[0] == IdJoinSuccessAsMod) {
+                        SetState(State::Moderator);
+                    } else {
+                        SetState(State::Joined);
+                    }
                     break;
                 case IdModBanListResponse:
                     HandleModBanListResponsePacket(&event);
@@ -232,7 +237,7 @@ void RoomMember::RoomMemberImpl::MemberLoop() {
                 enet_packet_destroy(event.packet);
                 break;
             case ENET_EVENT_TYPE_DISCONNECT:
-                if (state == State::Joined) {
+                if (state == State::Joined || state == State::Moderator) {
                     SetState(State::Idle);
                     SetError(Error::LostConnection);
                 }
@@ -331,7 +336,6 @@ void RoomMember::RoomMemberImpl::HandleJoinPacket(const ENetEvent* event) {
 
     // Parse the MAC Address from the packet
     packet >> mac_address;
-    SetState(State::Joined);
 }
 
 void RoomMember::RoomMemberImpl::HandleWifiPackets(const ENetEvent* event) {

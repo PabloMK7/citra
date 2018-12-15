@@ -306,7 +306,9 @@ void ChatRoom::OnStatusMessageReceive(const Network::StatusMessageEntry& status_
 
 void ChatRoom::OnSendChat() {
     if (auto room = Network::GetRoomMember().lock()) {
-        if (room->GetState() != Network::RoomMember::State::Joined) {
+        if (room->GetState() != Network::RoomMember::State::Joined &&
+            room->GetState() != Network::RoomMember::State::Moderator) {
+
             return;
         }
         auto message = ui->chat_message->text().toStdString();

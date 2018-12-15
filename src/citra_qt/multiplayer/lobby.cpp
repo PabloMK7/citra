@@ -109,7 +109,7 @@ void Lobby::OnJoinRoom(const QModelIndex& source) {
         // Prevent the user from trying to join a room while they are already joining.
         if (member->GetState() == Network::RoomMember::State::Joining) {
             return;
-        } else if (member->GetState() == Network::RoomMember::State::Joined) {
+        } else if (member->IsConnected()) {
             // And ask if they want to leave the room if they are already in one.
             if (!NetworkMessage::WarnDisconnect()) {
                 return;

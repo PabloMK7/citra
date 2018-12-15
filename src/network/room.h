@@ -74,6 +74,7 @@ enum RoomMessageTypes : u8 {
     IdModBanListResponse,
     IdModPermissionDenied,
     IdModNoSuchUser,
+    IdJoinSuccessAsMod,
 };
 
 /// Types of system status messages

@@ -81,6 +81,9 @@ static void OnStateChanged(const Network::RoomMember::State& state) {
     case Network::RoomMember::State::Joined:
         LOG_DEBUG(Network, "Successfully joined to the room");
         break;
+    case Network::RoomMember::State::Moderator:
+        LOG_DEBUG(Network, "Successfully joined the room as a moderator");
+        break;
     default:
         break;
     }

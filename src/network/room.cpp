@@ -156,6 +156,12 @@ public:
     void SendJoinSuccess(ENetPeer* client, MacAddress mac_address);
 
     /**
+     * Notifies the member that its connection attempt was successful,
+     * and it is now part of the room, and it has been granted mod permissions.
+     */
+    void SendJoinSuccessAsMod(ENetPeer* client, MacAddress mac_address);
+
+    /**
      * Sends a IdHostKicked message telling the client that they have been kicked.
      */
     void SendUserKicked(ENetPeer* client);
@@ -401,7 +407,11 @@ void Room::RoomImpl::HandleJoinRequest(const ENetEvent* event) {
 
     // Notify everyone that the room information has changed.
     BroadcastRoomInformation();
-    SendJoinSuccess(event->peer, preferred_mac);
+    if (HasModPermission(event->peer)) {
+        SendJoinSuccessAsMod(event->peer, preferred_mac);
+    } else {
+        SendJoinSuccess(event->peer, preferred_mac);
+    }
 }
 
 void Room::RoomImpl::HandleModKickPacket(const ENetEvent* event) {
@@ -588,10 +598,11 @@ bool Room::RoomImpl::HasModPermission(const ENetPeer* client) const {
     if (sending_member == members.end()) {
         return false;
     }
-    if (sending_member->user_data.username != room_information.host_username) {
-        return false;
-    }
-    return true;
+    if (sending_member->user_data.moderator) // Community moderator
+        return true;
+    if (sending_member->user_data.username == room_information.host_username) // Room host
+        return true;
+    return false;
 }
 
 void Room::RoomImpl::SendNameCollision(ENetPeer* client) {
@@ -658,6 +669,16 @@ void Room::RoomImpl::SendVersionMismatch(ENetPeer* client) {
 void Room::RoomImpl::SendJoinSuccess(ENetPeer* client, MacAddress mac_address) {
     Packet packet;
     packet << static_cast<u8>(IdJoinSuccess);
+    packet << mac_address;
+    ENetPacket* enet_packet =
+        enet_packet_create(packet.GetData(), packet.GetDataSize(), ENET_PACKET_FLAG_RELIABLE);
+    enet_peer_send(client, 0, enet_packet);
+    enet_host_flush(server);
+}
+
+void Room::RoomImpl::SendJoinSuccessAsMod(ENetPeer* client, MacAddress mac_address) {
+    Packet packet;
+    packet << static_cast<u8>(IdJoinSuccessAsMod);
     packet << mac_address;
     ENetPacket* enet_packet =
         enet_packet_create(packet.GetData(), packet.GetDataSize(), ENET_PACKET_FLAG_RELIABLE);
