@@ -24,6 +24,7 @@ enum class UserPath {
     CacheDir,
     CheatsDir,
     ConfigDir,
+    DLLDir,
     LogDir,
     NANDDir,
     RootDir,

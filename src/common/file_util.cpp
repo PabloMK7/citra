@@ -711,6 +711,7 @@ const std::string& GetUserPath(UserPath path, const std::string& new_path) {
         // TODO: Put the logs in a better location for each OS
         paths.emplace(UserPath::LogDir, user_path + LOG_DIR DIR_SEP);
         paths.emplace(UserPath::CheatsDir, user_path + CHEATS_DIR DIR_SEP);
+        paths.emplace(UserPath::DLLDir, user_path + DLL_DIR DIR_SEP);
     }
 
     if (!new_path.empty()) {

@@ -6,8 +6,9 @@
 
 #ifdef _WIN32
 #include <windows.h>
-#endif  // _WIN32
+#endif // _WIN32
 
+#include "common/file_util.h"
 #include "common/logging/log.h"
 
 extern "C" {
@@ -20,9 +21,8 @@ template <typename T>
 struct FuncDL {
     FuncDL() = default;
     FuncDL(HMODULE dll, const char* name) {
-        ptr_function = nullptr;
         if (dll) {
-            *(void**)&ptr_function = (void*)GetProcAddress(dll, name);
+            ptr_function = reinterpret_cast<T*>(GetProcAddress(dll, name));
         }
     }
 
@@ -35,7 +35,6 @@ struct FuncDL {
     }
 
     T* ptr_function = nullptr;
-    ;
 };
 
 FuncDL<int(AVSampleFormat)> av_get_bytes_per_sample_dl;
@@ -56,6 +55,10 @@ FuncDL<int(AVCodecParserContext*, AVCodecContext*, uint8_t**, int*, const uint8_
 FuncDL<void(AVCodecParserContext*)> av_parser_close_dl;
 
 bool InitFFmpegDL() {
+
+    FileUtil::CreateDir(FileUtil::GetUserPath(FileUtil::UserPath::DLLDir));
+    SetDllDirectoryA(FileUtil::GetUserPath(FileUtil::UserPath::DLLDir).c_str());
+
     HMODULE dll_util = nullptr;
     dll_util = LoadLibrary("avutil-56.dll");
     if (!dll_util) {

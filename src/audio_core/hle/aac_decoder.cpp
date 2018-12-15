@@ -9,7 +9,7 @@ namespace AudioCore::HLE {
 
 class AACDecoder::Impl {
 public:
-    Impl(Memory::MemorySystem& memory);
+    explicit Impl(Memory::MemorySystem& memory);
     ~Impl();
     std::optional<BinaryResponse> ProcessRequest(const BinaryRequest& request);
 
@@ -77,8 +77,12 @@ std::optional<BinaryResponse> AACDecoder::Impl::Initalize(const BinaryRequest& r
         Clear();
     }
 
+    BinaryResponse response;
+    std::memcpy(&response, &request, sizeof(response));
+    response.unknown1 = 0x0;
+
     if (!have_ffmpeg_dl) {
-        return {};
+        return response;
     }
 
     av_packet = av_packet_alloc_dl();
@@ -86,31 +90,27 @@ std::optional<BinaryResponse> AACDecoder::Impl::Initalize(const BinaryRequest& r
     codec = avcodec_find_decoder_dl(AV_CODEC_ID_AAC);
     if (!codec) {
         LOG_ERROR(Audio_DSP, "Codec not found\n");
-        return {};
+        return response;
     }
 
     parser = av_parser_init_dl(codec->id);
     if (!parser) {
         LOG_ERROR(Audio_DSP, "Parser not found\n");
-        return {};
+        return response;
     }
 
     av_context = avcodec_alloc_context3_dl(codec);
     if (!av_context) {
         LOG_ERROR(Audio_DSP, "Could not allocate audio codec context\n");
-        return {};
+        return response;
     }
 
     if (avcodec_open2_dl(av_context, codec, NULL) < 0) {
         LOG_ERROR(Audio_DSP, "Could not open codec\n");
-        return {};
+        return response;
     }
 
     initalized = true;
-
-    BinaryResponse response;
-    std::memcpy(&response, &request, sizeof(response));
-    response.unknown1 = 0x0;
     return response;
 }
 
@@ -139,7 +139,8 @@ std::optional<BinaryResponse> AACDecoder::Impl::Decode(const BinaryRequest& requ
         return response;
     }
 
-    if (request.src_addr < Memory::FCRAM_PADDR) {
+    if (request.src_addr < Memory::FCRAM_PADDR ||
+        request.src_addr + request.size > Memory::FCRAM_PADDR + Memory::FCRAM_SIZE) {
         LOG_ERROR(Audio_DSP, "Got out of bounds src_addr {:08x}", request.src_addr);
         return {};
     }
@@ -190,7 +191,7 @@ std::optional<BinaryResponse> AACDecoder::Impl::Decode(const BinaryRequest& requ
 
                 std::size_t size = bytes_per_sample * (decoded_frame->nb_samples);
 
-                // FFmpeg converts to 32 signed floating point PCM, we need s32 PCM so we need to
+                // FFmpeg converts to 32 signed floating point PCM, we need s16 PCM so we need to
                 // convert it
                 f32 val_float;
                 for (std::size_t current_pos(0); current_pos < size;) {
@@ -207,14 +208,16 @@ std::optional<BinaryResponse> AACDecoder::Impl::Decode(const BinaryRequest& requ
         }
     }
 
-    if (request.dst_addr_ch0 < Memory::FCRAM_PADDR) {
+    if (request.dst_addr_ch0 < Memory::FCRAM_PADDR ||
+        request.dst_addr_ch0 + out_streams[0].size() > Memory::FCRAM_PADDR + Memory::FCRAM_SIZE) {
         LOG_ERROR(Audio_DSP, "Got out of bounds dst_addr_ch0 {:08x}", request.dst_addr_ch0);
         return {};
     }
     std::memcpy(memory.GetFCRAMPointer(request.dst_addr_ch0 - Memory::FCRAM_PADDR),
                 out_streams[0].data(), out_streams[0].size());
 
-    if (request.dst_addr_ch1 < Memory::FCRAM_PADDR) {
+    if (request.dst_addr_ch1 < Memory::FCRAM_PADDR ||
+        request.dst_addr_ch1 + out_streams[1].size() > Memory::FCRAM_PADDR + Memory::FCRAM_SIZE) {
         LOG_ERROR(Audio_DSP, "Got out of bounds dst_addr_ch1 {:08x}", request.dst_addr_ch1);
         return {};
     }
