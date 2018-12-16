@@ -70,7 +70,8 @@ public:
             style = QString("background-color: %1").arg(ping_color);
         }
 
-        return QString("[%1] <font color='%2'>&lt;%3&gt;</font> <font style='%4'>%5</font>")
+        return QString("[%1] <font color='%2'>&lt;%3&gt;</font> <font style='%4' "
+                       "color='#000000'>%5</font>")
             .arg(timestamp, color, name.toHtmlEscaped(), style, message.toHtmlEscaped());
     }
 
