@@ -270,7 +270,7 @@ if (ENABLE_FFMPEG)
 
         if (DEFINED FFmpeg_VER)
             download_bundled_external("ffmpeg/" ${FFmpeg_VER} FFmpeg_PREFIX)
-            set(FFMPEG_DIR "${FFmpeg_PREFIX}")
+            set(FFMPEG_DIR "${FFmpeg_PREFIX}/../")
             set(FFMPEG_FOUND YES)
         endif()
     else()

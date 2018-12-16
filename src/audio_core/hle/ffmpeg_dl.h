@@ -9,7 +9,7 @@
 #endif // _WIN32
 
 extern "C" {
-#include "libavcodec/avcodec.h"
+#include <libavcodec/avcodec.h>
 }
 
 #ifdef _WIN32
