@@ -114,12 +114,12 @@ Common::WebResult RoomJson::Update() {
         return Common::WebResult{Common::WebResult::Code::LibError, "Room is not registered"};
     }
     nlohmann::json json{{"players", room.members}};
-    return client.PostJson(fmt::format("/lobby2/{}", room_id), json.dump(), false);
+    return client.PostJson(fmt::format("/lobby/{}", room_id), json.dump(), false);
 }
 
 std::string RoomJson::Register() {
     nlohmann::json json = room;
-    auto reply = client.PostJson("/lobby2", json.dump(), false).returned_data;
+    auto reply = client.PostJson("/lobby", json.dump(), false).returned_data;
     if (reply.empty()) {
         return "";
     }
@@ -134,7 +134,7 @@ void RoomJson::ClearPlayers() {
 }
 
 AnnounceMultiplayerRoom::RoomList RoomJson::GetRoomList() {
-    auto reply = client.GetJson("/lobby2", true).returned_data;
+    auto reply = client.GetJson("/lobby", true).returned_data;
     if (reply.empty()) {
         return {};
     }
@@ -149,7 +149,7 @@ void RoomJson::Delete() {
     Common::DetachedTasks::AddTask(
         [host{this->host}, username{this->username}, token{this->token}, room_id{this->room_id}]() {
             // create a new client here because the this->client might be destroyed.
-            Client{host, username, token}.DeleteJson(fmt::format("/lobby2/{}", room_id), "", false);
+            Client{host, username, token}.DeleteJson(fmt::format("/lobby/{}", room_id), "", false);
         });
 }
 
