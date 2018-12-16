@@ -29,7 +29,7 @@ add_library(audio_core STATIC
 
     $<$<BOOL:${SDL2_FOUND}>:sdl2_sink.cpp sdl2_sink.h>
     $<$<BOOL:${ENABLE_CUBEB}>:cubeb_sink.cpp cubeb_sink.h>
-    $<$<BOOL:${FFMPEG_FOUND}>:hle/aac_decoder.cpp hle/aac_decoder.h hle/ffmpeg_dl.h>
+    $<$<BOOL:${FFMPEG_FOUND}>:hle/aac_decoder.cpp hle/aac_decoder.h hle/ffmpeg_dl.cpp hle/ffmpeg_dl.h>
 )
 
 create_target_directory_groups(audio_core)

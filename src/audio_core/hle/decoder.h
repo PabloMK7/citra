@@ -54,7 +54,7 @@ static_assert(sizeof(BinaryResponse) == 32, "Unexpected struct size for BinaryRe
 
 class DecoderBase {
 public:
-    virtual ~DecoderBase(){};
+    virtual ~DecoderBase();
     virtual std::optional<BinaryResponse> ProcessRequest(const BinaryRequest& request) = 0;
 };
 

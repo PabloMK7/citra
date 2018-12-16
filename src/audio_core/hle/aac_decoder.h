@@ -10,7 +10,7 @@ namespace AudioCore::HLE {
 
 class AACDecoder final : public DecoderBase {
 public:
-    AACDecoder(Memory::MemorySystem& memory);
+    explicit AACDecoder(Memory::MemorySystem& memory);
     ~AACDecoder() override;
     std::optional<BinaryResponse> ProcessRequest(const BinaryRequest& request) override;
 

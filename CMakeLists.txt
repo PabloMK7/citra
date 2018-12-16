@@ -20,7 +20,7 @@ option(ENABLE_WEB_SERVICE "Enable web services (telemetry, etc.)" ON)
 
 option(ENABLE_CUBEB "Enables the cubeb audio backend" ON)
 
-option(ENABLE_FFMPEG "Enable FFmpeg decoder/encoder" ON)
+option(ENABLE_FFMPEG "Enable FFmpeg decoder/encoder" OFF)
 
 option(USE_DISCORD_PRESENCE "Enables Discord Rich Presence" OFF)
 

@@ -20,28 +20,47 @@ private:
 
     std::optional<BinaryResponse> Decode(const BinaryRequest& request);
 
-    bool initalized;
+    struct AVPacketDeleter {
+        void operator()(AVPacket* packet) const {
+            av_packet_free_dl(&packet);
+        }
+    };
+
+    struct AVCodecContextDeleter {
+        void operator()(AVCodecContext* context) const {
+            avcodec_free_context_dl(&context);
+        }
+    };
+
+    struct AVCodecParserContextDeleter {
+        void operator()(AVCodecParserContext* parser) const {
+            av_parser_close_dl(parser);
+        }
+    };
+
+    struct AVFrameDeleter {
+        void operator()(AVFrame* frame) const {
+            av_frame_free_dl(&frame);
+        }
+    };
+
+    bool initalized = false;
     bool have_ffmpeg_dl;
 
     Memory::MemorySystem& memory;
 
     AVCodec* codec;
-    AVCodecContext* av_context = nullptr;
-    AVCodecParserContext* parser = nullptr;
-    AVPacket* av_packet;
-    AVFrame* decoded_frame = nullptr;
+    std::unique_ptr<AVCodecContext, AVCodecContextDeleter> av_context;
+    std::unique_ptr<AVCodecParserContext, AVCodecParserContextDeleter> parser;
+    std::unique_ptr<AVPacket, AVPacketDeleter> av_packet;
+    std::unique_ptr<AVFrame, AVFrameDeleter> decoded_frame;
 };
 
 AACDecoder::Impl::Impl(Memory::MemorySystem& memory) : memory(memory) {
-    initalized = false;
-
     have_ffmpeg_dl = InitFFmpegDL();
 }
 
-AACDecoder::Impl::~Impl() {
-    if (initalized)
-        Clear();
-}
+AACDecoder::Impl::~Impl() = default;
 
 std::optional<BinaryResponse> AACDecoder::Impl::ProcessRequest(const BinaryRequest& request) {
     if (request.codec != DecoderCodec::AAC) {
@@ -52,23 +71,19 @@ std::optional<BinaryResponse> AACDecoder::Impl::ProcessRequest(const BinaryReque
     switch (request.cmd) {
     case DecoderCommand::Init: {
         return Initalize(request);
-        break;
     }
     case DecoderCommand::Decode: {
         return Decode(request);
-        break;
     }
     case DecoderCommand::Unknown: {
         BinaryResponse response;
         std::memcpy(&response, &request, sizeof(response));
         response.unknown1 = 0x0;
         return response;
-        break;
     }
     default:
         LOG_ERROR(Audio_DSP, "Got unknown binary request: {}", static_cast<u16>(request.cmd));
         return {};
-        break;
     }
 }
 
@@ -85,7 +100,7 @@ std::optional<BinaryResponse> AACDecoder::Impl::Initalize(const BinaryRequest& r
         return response;
     }
 
-    av_packet = av_packet_alloc_dl();
+    av_packet.reset(av_packet_alloc_dl());
 
     codec = avcodec_find_decoder_dl(AV_CODEC_ID_AAC);
     if (!codec) {
@@ -93,19 +108,19 @@ std::optional<BinaryResponse> AACDecoder::Impl::Initalize(const BinaryRequest& r
         return response;
     }
 
-    parser = av_parser_init_dl(codec->id);
+    parser.reset(av_parser_init_dl(codec->id));
     if (!parser) {
         LOG_ERROR(Audio_DSP, "Parser not found\n");
         return response;
     }
 
-    av_context = avcodec_alloc_context3_dl(codec);
+    av_context.reset(avcodec_alloc_context3_dl(codec));
     if (!av_context) {
         LOG_ERROR(Audio_DSP, "Could not allocate audio codec context\n");
         return response;
     }
 
-    if (avcodec_open2_dl(av_context, codec, NULL) < 0) {
+    if (avcodec_open2_dl(av_context.get(), codec, nullptr) < 0) {
         LOG_ERROR(Audio_DSP, "Could not open codec\n");
         return response;
     }
@@ -119,23 +134,23 @@ void AACDecoder::Impl::Clear() {
         return;
     }
 
-    avcodec_free_context_dl(&av_context);
-    av_parser_close_dl(parser);
-    av_frame_free_dl(&decoded_frame);
-    av_packet_free_dl(&av_packet);
+    av_context.reset();
+    parser.reset();
+    decoded_frame.reset();
+    av_packet.reset();
 }
 
 std::optional<BinaryResponse> AACDecoder::Impl::Decode(const BinaryRequest& request) {
+    BinaryResponse response;
+    response.codec = request.codec;
+    response.cmd = request.cmd;
+    response.size = request.size;
+
     if (!initalized) {
         LOG_DEBUG(Audio_DSP, "Decoder not initalized");
-
         // This is a hack to continue games that are not compiled with the aac codec
-        BinaryResponse response;
-        response.codec = request.codec;
-        response.cmd = request.cmd;
         response.num_channels = 2;
         response.num_samples = 1024;
-        response.size = request.size;
         return response;
     }
 
@@ -151,14 +166,16 @@ std::optional<BinaryResponse> AACDecoder::Impl::Decode(const BinaryRequest& requ
     std::size_t data_size = request.size;
     while (data_size > 0) {
         if (!decoded_frame) {
-            if (!(decoded_frame = av_frame_alloc_dl())) {
+            decoded_frame.reset(av_frame_alloc_dl());
+            if (!decoded_frame) {
                 LOG_ERROR(Audio_DSP, "Could not allocate audio frame");
                 return {};
             }
         }
 
-        int ret = av_parser_parse2_dl(parser, av_context, &av_packet->data, &av_packet->size, data,
-                                      data_size, AV_NOPTS_VALUE, AV_NOPTS_VALUE, 0);
+        int ret =
+            av_parser_parse2_dl(parser.get(), av_context.get(), &av_packet->data, &av_packet->size,
+                                data, data_size, AV_NOPTS_VALUE, AV_NOPTS_VALUE, 0);
         if (ret < 0) {
             LOG_ERROR(Audio_DSP, "Error while parsing");
             return {};
@@ -166,7 +183,7 @@ std::optional<BinaryResponse> AACDecoder::Impl::Decode(const BinaryRequest& requ
         data += ret;
         data_size -= ret;
 
-        ret = avcodec_send_packet_dl(av_context, av_packet);
+        ret = avcodec_send_packet_dl(av_context.get(), av_packet.get());
         if (ret < 0) {
             LOG_ERROR(Audio_DSP, "Error submitting the packet to the decoder");
             return {};
@@ -174,7 +191,7 @@ std::optional<BinaryResponse> AACDecoder::Impl::Decode(const BinaryRequest& requ
 
         if (av_packet->size) {
             while (ret >= 0) {
-                ret = avcodec_receive_frame_dl(av_context, decoded_frame);
+                ret = avcodec_receive_frame_dl(av_context.get(), decoded_frame.get());
                 if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF)
                     break;
                 else if (ret < 0) {
@@ -187,16 +204,19 @@ std::optional<BinaryResponse> AACDecoder::Impl::Decode(const BinaryRequest& requ
                     return {};
                 }
 
-                ASSERT(decoded_frame->channels == out_streams.size());
+                ASSERT(decoded_frame->channels <= out_streams.size());
 
                 std::size_t size = bytes_per_sample * (decoded_frame->nb_samples);
+
+                response.num_channels = decoded_frame->channels;
+                response.num_samples += decoded_frame->nb_samples;
 
                 // FFmpeg converts to 32 signed floating point PCM, we need s16 PCM so we need to
                 // convert it
                 f32 val_float;
                 for (std::size_t current_pos(0); current_pos < size;) {
-                    for (std::size_t channel(0); channel < out_streams.size(); channel++) {
-                        std::memcpy(&val_float, decoded_frame->data[0] + current_pos,
+                    for (std::size_t channel(0); channel < decoded_frame->channels; channel++) {
+                        std::memcpy(&val_float, decoded_frame->data[channel] + current_pos,
                                     sizeof(val_float));
                         s16 val = static_cast<s16>(0x7FFF * val_float);
                         out_streams[channel].push_back(val & 0xFF);
@@ -208,28 +228,27 @@ std::optional<BinaryResponse> AACDecoder::Impl::Decode(const BinaryRequest& requ
         }
     }
 
-    if (request.dst_addr_ch0 < Memory::FCRAM_PADDR ||
-        request.dst_addr_ch0 + out_streams[0].size() > Memory::FCRAM_PADDR + Memory::FCRAM_SIZE) {
-        LOG_ERROR(Audio_DSP, "Got out of bounds dst_addr_ch0 {:08x}", request.dst_addr_ch0);
-        return {};
+    if (out_streams[0].size() != 0) {
+        if (request.dst_addr_ch0 < Memory::FCRAM_PADDR ||
+            request.dst_addr_ch0 + out_streams[0].size() >
+                Memory::FCRAM_PADDR + Memory::FCRAM_SIZE) {
+            LOG_ERROR(Audio_DSP, "Got out of bounds dst_addr_ch0 {:08x}", request.dst_addr_ch0);
+            return {};
+        }
+        std::memcpy(memory.GetFCRAMPointer(request.dst_addr_ch0 - Memory::FCRAM_PADDR),
+                    out_streams[0].data(), out_streams[0].size());
     }
-    std::memcpy(memory.GetFCRAMPointer(request.dst_addr_ch0 - Memory::FCRAM_PADDR),
-                out_streams[0].data(), out_streams[0].size());
 
-    if (request.dst_addr_ch1 < Memory::FCRAM_PADDR ||
-        request.dst_addr_ch1 + out_streams[1].size() > Memory::FCRAM_PADDR + Memory::FCRAM_SIZE) {
-        LOG_ERROR(Audio_DSP, "Got out of bounds dst_addr_ch1 {:08x}", request.dst_addr_ch1);
-        return {};
+    if (out_streams[1].size() != 0) {
+        if (request.dst_addr_ch1 < Memory::FCRAM_PADDR ||
+            request.dst_addr_ch1 + out_streams[1].size() >
+                Memory::FCRAM_PADDR + Memory::FCRAM_SIZE) {
+            LOG_ERROR(Audio_DSP, "Got out of bounds dst_addr_ch1 {:08x}", request.dst_addr_ch1);
+            return {};
+        }
+        std::memcpy(memory.GetFCRAMPointer(request.dst_addr_ch1 - Memory::FCRAM_PADDR),
+                    out_streams[1].data(), out_streams[1].size());
     }
-    std::memcpy(memory.GetFCRAMPointer(request.dst_addr_ch1 - Memory::FCRAM_PADDR),
-                out_streams[1].data(), out_streams[1].size());
-
-    BinaryResponse response;
-    response.codec = request.codec;
-    response.cmd = request.cmd;
-    response.num_channels = 2;
-    response.num_samples = decoded_frame->nb_samples;
-    response.size = request.size;
     return response;
 }
 
