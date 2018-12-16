@@ -20,7 +20,7 @@
       <item>
        <layout class="QHBoxLayout">
         <item>
-         <widget class="QLabel" name="label">
+         <widget class="QLabel" name="label1">
           <property name="text">
            <string>Output Engine:</string>
           </property>
@@ -44,7 +44,7 @@
       <item>
        <layout class="QHBoxLayout">
         <item>
-         <widget class="QLabel" name="label">
+         <widget class="QLabel" name="label2">
           <property name="text">
            <string>Audio Device:</string>
           </property>
