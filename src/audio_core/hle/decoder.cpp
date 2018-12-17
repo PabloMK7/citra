@@ -20,7 +20,6 @@ std::optional<BinaryResponse> NullDecoder::ProcessRequest(const BinaryRequest& r
         std::memcpy(&response, &request, sizeof(response));
         response.unknown1 = 0x0;
         return response;
-        break;
     case DecoderCommand::Decode:
         response.codec = request.codec;
         response.cmd = DecoderCommand::Decode;
@@ -28,11 +27,9 @@ std::optional<BinaryResponse> NullDecoder::ProcessRequest(const BinaryRequest& r
         response.size = request.size;
         response.num_samples = 1024; // Just assume 1024 here
         return response;
-        break;
     default:
         LOG_ERROR(Audio_DSP, "Got unknown binary request: {}", static_cast<u16>(request.cmd));
         return {};
-        break;
     }
 };
 } // namespace AudioCore::HLE

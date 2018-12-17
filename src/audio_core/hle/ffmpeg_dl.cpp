@@ -8,10 +8,13 @@
 #include "audio_core/hle/ffmpeg_dl.h"
 #include "common/file_util.h"
 #include "common/logging/log.h"
+#include "common/string_util.h"
+
+namespace {
 
 struct LibraryDeleter {
-    typedef HMODULE pointer;
-    void operator()(HMODULE h) {
+    using pointer = HMODULE;
+    void operator()(HMODULE h) const {
         if (h != nullptr)
             FreeLibrary(h);
     }
@@ -19,6 +22,8 @@ struct LibraryDeleter {
 
 std::unique_ptr<HMODULE, LibraryDeleter> dll_util{nullptr};
 std::unique_ptr<HMODULE, LibraryDeleter> dll_codec{nullptr};
+
+} // namespace
 
 FuncDL<int(AVSampleFormat)> av_get_bytes_per_sample_dl;
 FuncDL<AVFrame*(void)> av_frame_alloc_dl;
@@ -40,7 +45,7 @@ FuncDL<void(AVCodecParserContext*)> av_parser_close_dl;
 bool InitFFmpegDL() {
     std::string dll_path = FileUtil::GetUserPath(FileUtil::UserPath::DLLDir);
     FileUtil::CreateDir(dll_path);
-    std::wstring w_dll_path = std::wstring(dll_path.begin(), dll_path.end());
+    std::wstring w_dll_path = Common::UTF8ToUTF16W(dll_path);
     SetDllDirectoryW(w_dll_path.c_str());
 
     dll_util.reset(LoadLibrary("avutil-56.dll"));
