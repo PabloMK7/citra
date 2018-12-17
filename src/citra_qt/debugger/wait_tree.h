@@ -50,7 +50,9 @@ private:
 class WaitTreeText : public WaitTreeItem {
     Q_OBJECT
 public:
-    explicit WaitTreeText(const QString& text);
+    explicit WaitTreeText(QString text);
+    ~WaitTreeText() override;
+
     QString GetText() const override;
 
 private:
