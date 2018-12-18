@@ -5,6 +5,7 @@
 #include <array>
 #include <future>
 #include <QColor>
+#include <QDesktopServices>
 #include <QFutureWatcher>
 #include <QImage>
 #include <QList>
@@ -70,7 +71,8 @@ public:
             style = QString("background-color: %1").arg(ping_color);
         }
 
-        return QString("[%1] <font color='%2'>&lt;%3&gt;</font> <font style='%4'>%5</font>")
+        return QString("[%1] <font color='%2'>&lt;%3&gt;</font> <font style='%4' "
+                       "color='#000000'>%5</font>")
             .arg(timestamp, color, name.toHtmlEscaped(), style, message.toHtmlEscaped());
     }
 
@@ -410,34 +412,46 @@ void ChatRoom::PopupContextMenu(const QPoint& menu_location) {
 
     std::string nickname =
         player_list->item(item.row())->data(PlayerListItem::NicknameRole).toString().toStdString();
-    if (auto room = Network::GetRoomMember().lock()) {
-        // You can't block, kick or ban yourself
-        if (nickname == room->GetNickname())
-            return;
-    }
 
     QMenu context_menu;
-    QAction* block_action = context_menu.addAction(tr("Block Player"));
 
-    block_action->setCheckable(true);
-    block_action->setChecked(block_list.count(nickname) > 0);
+    QString username = player_list->item(item.row())->data(PlayerListItem::UsernameRole).toString();
+    if (!username.isEmpty()) {
+        QAction* view_profile_action = context_menu.addAction(tr("View Profile"));
+        connect(view_profile_action, &QAction::triggered, [username] {
+            QDesktopServices::openUrl(
+                QString("https://community.citra-emu.org/u/%1").arg(username));
+        });
+    }
 
-    connect(block_action, &QAction::triggered, [this, nickname] {
-        if (block_list.count(nickname)) {
-            block_list.erase(nickname);
-        } else {
-            QMessageBox::StandardButton result = QMessageBox::question(
-                this, tr("Block Player"),
-                tr("When you block a player, you will no longer receive chat messages from "
-                   "them.<br><br>Are you sure you would like to block %1?")
-                    .arg(QString::fromStdString(nickname)),
-                QMessageBox::Yes | QMessageBox::No);
-            if (result == QMessageBox::Yes)
-                block_list.emplace(nickname);
-        }
-    });
+    std::string cur_nickname;
+    if (auto room = Network::GetRoomMember().lock()) {
+        cur_nickname = room->GetNickname();
+    }
 
-    if (has_mod_perms) {
+    if (nickname != cur_nickname) { // You can't block yourself
+        QAction* block_action = context_menu.addAction(tr("Block Player"));
+
+        block_action->setCheckable(true);
+        block_action->setChecked(block_list.count(nickname) > 0);
+
+        connect(block_action, &QAction::triggered, [this, nickname] {
+            if (block_list.count(nickname)) {
+                block_list.erase(nickname);
+            } else {
+                QMessageBox::StandardButton result = QMessageBox::question(
+                    this, tr("Block Player"),
+                    tr("When you block a player, you will no longer receive chat messages from "
+                       "them.<br><br>Are you sure you would like to block %1?")
+                        .arg(QString::fromStdString(nickname)),
+                    QMessageBox::Yes | QMessageBox::No);
+                if (result == QMessageBox::Yes)
+                    block_list.emplace(nickname);
+            }
+        });
+    }
+
+    if (has_mod_perms && nickname != cur_nickname) { // You can't kick or ban yourself
         context_menu.addSeparator();
 
         QAction* kick_action = context_menu.addAction(tr("Kick"));
