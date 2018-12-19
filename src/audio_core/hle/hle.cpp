@@ -3,8 +3,8 @@
 // Refer to the license.txt file included.
 
 #include "audio_core/audio_types.h"
-#ifdef HAVE_FFMPEG
-#include "audio_core/hle/aac_decoder.h"
+#ifdef HAVE_MF
+#include "audio_core/hle/wmf_decoder.h"
 #endif
 #include "audio_core/hle/common.h"
 #include "audio_core/hle/decoder.h"
@@ -85,12 +85,12 @@ DspHle::Impl::Impl(DspHle& parent_, Memory::MemorySystem& memory) : parent(paren
         source.SetMemory(memory);
     }
 
-#ifdef HAVE_FFMPEG
-    decoder = std::make_unique<HLE::AACDecoder>(memory);
+#ifdef HAVE_MF
+    decoder = std::make_unique<HLE::WMFDecoder>(memory);
 #else
     LOG_WARNING(Audio_DSP, "FFmpeg missing, this could lead to missing audio");
     decoder = std::make_unique<HLE::NullDecoder>();
-#endif // HAVE_FFMPEG
+#endif // HAVE_MF
 
     Core::Timing& timing = Core::System::GetInstance().CoreTiming();
     tick_event =

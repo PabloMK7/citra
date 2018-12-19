@@ -24,13 +24,8 @@ option(ENABLE_FFMPEG "Enable FFmpeg decoder/encoder" OFF)
 
 option(USE_DISCORD_PRESENCE "Enables Discord Rich Presence" OFF)
 
-<<<<<<< HEAD
-=======
-option(ENABLE_SCRIPTING "Enables scripting support" OFF)
+CMAKE_DEPENDENT_OPTION(ENABLE_MF "Use Media Foundation decoder" ON "WIN32;NOT ENABLE_FFMPEG" OFF)
 
-CMAKE_DEPENDENT_OPTION(CITRA_USE_BUNDLED_FFMPEG "Download bundled FFmpeg binaries" ON "MSVC" OFF)
-
->>>>>>> CoreAudio::HLE: Add FFmpeg aac decoder
 if(NOT EXISTS ${PROJECT_SOURCE_DIR}/.git/hooks/pre-commit)
     message(STATUS "Copying pre-commit hook")
     file(COPY hooks/pre-commit
