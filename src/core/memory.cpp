@@ -15,11 +15,44 @@
 #include "core/hle/kernel/process.h"
 #include "core/hle/lock.h"
 #include "core/memory.h"
-#include "core/memory_setup.h"
 #include "video_core/renderer_base.h"
 #include "video_core/video_core.h"
 
 namespace Memory {
+
+class RasterizerCacheMarker {
+public:
+    void Mark(VAddr addr, bool cached) {
+        bool* p = At(addr);
+        if (p)
+            *p = cached;
+    }
+
+    bool IsCached(VAddr addr) {
+        bool* p = At(addr);
+        if (p)
+            return *p;
+        return false;
+    }
+
+private:
+    bool* At(VAddr addr) {
+        if (addr >= VRAM_VADDR && addr < VRAM_VADDR_END) {
+            return &vram[(addr - VRAM_VADDR) / PAGE_SIZE];
+        }
+        if (addr >= LINEAR_HEAP_VADDR && addr < LINEAR_HEAP_VADDR_END) {
+            return &linear_heap[(addr - LINEAR_HEAP_VADDR) / PAGE_SIZE];
+        }
+        if (addr >= NEW_LINEAR_HEAP_VADDR && addr < NEW_LINEAR_HEAP_VADDR_END) {
+            return &new_linear_heap[(addr - NEW_LINEAR_HEAP_VADDR) / PAGE_SIZE];
+        }
+        return nullptr;
+    }
+
+    std::array<bool, VRAM_SIZE / PAGE_SIZE> vram{};
+    std::array<bool, LINEAR_HEAP_SIZE / PAGE_SIZE> linear_heap{};
+    std::array<bool, NEW_LINEAR_HEAP_SIZE / PAGE_SIZE> new_linear_heap{};
+};
 
 class MemorySystem::Impl {
 public:
@@ -36,6 +69,8 @@ public:
     std::unique_ptr<u8[]> n3ds_extra_ram = std::make_unique<u8[]>(Memory::N3DS_EXTRA_RAM_SIZE);
 
     PageTable* current_page_table = nullptr;
+    RasterizerCacheMarker cache_marker;
+    std::vector<PageTable*> page_table_list;
 };
 
 MemorySystem::MemorySystem() : impl(std::make_unique<Impl>()) {}
@@ -52,7 +87,7 @@ PageTable* MemorySystem::GetCurrentPageTable() const {
     return impl->current_page_table;
 }
 
-static void MapPages(PageTable& page_table, u32 base, u32 size, u8* memory, PageType type) {
+void MemorySystem::MapPages(PageTable& page_table, u32 base, u32 size, u8* memory, PageType type) {
     LOG_DEBUG(HW_Memory, "Mapping {} onto {:08X}-{:08X}", (void*)memory, base * PAGE_SIZE,
               (base + size) * PAGE_SIZE);
 
@@ -66,19 +101,26 @@ static void MapPages(PageTable& page_table, u32 base, u32 size, u8* memory, Page
         page_table.attributes[base] = type;
         page_table.pointers[base] = memory;
 
+        // If the memory to map is already rasterizer-cached, mark the page
+        if (type == PageType::Memory && impl->cache_marker.IsCached(base * PAGE_SIZE)) {
+            page_table.attributes[base] = PageType::RasterizerCachedMemory;
+            page_table.pointers[base] = nullptr;
+        }
+
         base += 1;
         if (memory != nullptr)
             memory += PAGE_SIZE;
     }
 }
 
-void MapMemoryRegion(PageTable& page_table, VAddr base, u32 size, u8* target) {
+void MemorySystem::MapMemoryRegion(PageTable& page_table, VAddr base, u32 size, u8* target) {
     ASSERT_MSG((size & PAGE_MASK) == 0, "non-page aligned size: {:08X}", size);
     ASSERT_MSG((base & PAGE_MASK) == 0, "non-page aligned base: {:08X}", base);
     MapPages(page_table, base / PAGE_SIZE, size / PAGE_SIZE, target, PageType::Memory);
 }
 
-void MapIoRegion(PageTable& page_table, VAddr base, u32 size, MMIORegionPointer mmio_handler) {
+void MemorySystem::MapIoRegion(PageTable& page_table, VAddr base, u32 size,
+                               MMIORegionPointer mmio_handler) {
     ASSERT_MSG((size & PAGE_MASK) == 0, "non-page aligned size: {:08X}", size);
     ASSERT_MSG((base & PAGE_MASK) == 0, "non-page aligned base: {:08X}", base);
     MapPages(page_table, base / PAGE_SIZE, size / PAGE_SIZE, nullptr, PageType::Special);
@@ -86,7 +128,7 @@ void MapIoRegion(PageTable& page_table, VAddr base, u32 size, MMIORegionPointer 
     page_table.special_regions.emplace_back(SpecialRegion{base, size, mmio_handler});
 }
 
-void UnmapRegion(PageTable& page_table, VAddr base, u32 size) {
+void MemorySystem::UnmapRegion(PageTable& page_table, VAddr base, u32 size) {
     ASSERT_MSG((size & PAGE_MASK) == 0, "non-page aligned size: {:08X}", size);
     ASSERT_MSG((base & PAGE_MASK) == 0, "non-page aligned base: {:08X}", base);
     MapPages(page_table, base / PAGE_SIZE, size / PAGE_SIZE, nullptr, PageType::Unmapped);
@@ -103,6 +145,15 @@ u8* MemorySystem::GetPointerForRasterizerCache(VAddr addr) {
         return impl->vram.get() + (addr - VRAM_VADDR);
     }
     UNREACHABLE();
+}
+
+void MemorySystem::RegisterPageTable(PageTable* page_table) {
+    impl->page_table_list.push_back(page_table);
+}
+
+void MemorySystem::UnregisterPageTable(PageTable* page_table) {
+    impl->page_table_list.erase(
+        std::find(impl->page_table_list.begin(), impl->page_table_list.end(), page_table));
 }
 
 /**
@@ -324,37 +375,40 @@ void MemorySystem::RasterizerMarkRegionCached(PAddr start, u32 size, bool cached
 
     for (unsigned i = 0; i < num_pages; ++i, paddr += PAGE_SIZE) {
         for (VAddr vaddr : PhysicalToVirtualAddressForRasterizer(paddr)) {
-            PageType& page_type = impl->current_page_table->attributes[vaddr >> PAGE_BITS];
+            impl->cache_marker.Mark(vaddr, cached);
+            for (PageTable* page_table : impl->page_table_list) {
+                PageType& page_type = page_table->attributes[vaddr >> PAGE_BITS];
 
-            if (cached) {
-                // Switch page type to cached if now cached
-                switch (page_type) {
-                case PageType::Unmapped:
-                    // It is not necessary for a process to have this region mapped into its address
-                    // space, for example, a system module need not have a VRAM mapping.
-                    break;
-                case PageType::Memory:
-                    page_type = PageType::RasterizerCachedMemory;
-                    impl->current_page_table->pointers[vaddr >> PAGE_BITS] = nullptr;
-                    break;
-                default:
-                    UNREACHABLE();
-                }
-            } else {
-                // Switch page type to uncached if now uncached
-                switch (page_type) {
-                case PageType::Unmapped:
-                    // It is not necessary for a process to have this region mapped into its address
-                    // space, for example, a system module need not have a VRAM mapping.
-                    break;
-                case PageType::RasterizerCachedMemory: {
-                    page_type = PageType::Memory;
-                    impl->current_page_table->pointers[vaddr >> PAGE_BITS] =
-                        GetPointerForRasterizerCache(vaddr & ~PAGE_MASK);
-                    break;
-                }
-                default:
-                    UNREACHABLE();
+                if (cached) {
+                    // Switch page type to cached if now cached
+                    switch (page_type) {
+                    case PageType::Unmapped:
+                        // It is not necessary for a process to have this region mapped into its
+                        // address space, for example, a system module need not have a VRAM mapping.
+                        break;
+                    case PageType::Memory:
+                        page_type = PageType::RasterizerCachedMemory;
+                        page_table->pointers[vaddr >> PAGE_BITS] = nullptr;
+                        break;
+                    default:
+                        UNREACHABLE();
+                    }
+                } else {
+                    // Switch page type to uncached if now uncached
+                    switch (page_type) {
+                    case PageType::Unmapped:
+                        // It is not necessary for a process to have this region mapped into its
+                        // address space, for example, a system module need not have a VRAM mapping.
+                        break;
+                    case PageType::RasterizerCachedMemory: {
+                        page_type = PageType::Memory;
+                        page_table->pointers[vaddr >> PAGE_BITS] =
+                            GetPointerForRasterizerCache(vaddr & ~PAGE_MASK);
+                        break;
+                    }
+                    default:
+                        UNREACHABLE();
+                    }
                 }
             }
         }

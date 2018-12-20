@@ -214,6 +214,27 @@ public:
     MemorySystem();
     ~MemorySystem();
 
+    /**
+     * Maps an allocated buffer onto a region of the emulated process address space.
+     *
+     * @param page_table The page table of the emulated process.
+     * @param base The address to start mapping at. Must be page-aligned.
+     * @param size The amount of bytes to map. Must be page-aligned.
+     * @param target Buffer with the memory backing the mapping. Must be of length at least `size`.
+     */
+    void MapMemoryRegion(PageTable& page_table, VAddr base, u32 size, u8* target);
+
+    /**
+     * Maps a region of the emulated process address space as a IO region.
+     * @param page_table The page table of the emulated process.
+     * @param base The address to start mapping at. Must be page-aligned.
+     * @param size The amount of bytes to map. Must be page-aligned.
+     * @param mmio_handler The handler that backs the mapping.
+     */
+    void MapIoRegion(PageTable& page_table, VAddr base, u32 size, MMIORegionPointer mmio_handler);
+
+    void UnmapRegion(PageTable& page_table, VAddr base, u32 size);
+
     /// Currently active page table
     void SetCurrentPageTable(PageTable* page_table);
     PageTable* GetCurrentPageTable() const;
@@ -260,6 +281,12 @@ public:
      */
     void RasterizerMarkRegionCached(PAddr start, u32 size, bool cached);
 
+    /// Registers page table for rasterizer cache marking
+    void RegisterPageTable(PageTable* page_table);
+
+    /// Unregisters page table for rasterizer cache marking
+    void UnregisterPageTable(PageTable* page_table);
+
 private:
     template <typename T>
     T Read(const VAddr vaddr);
@@ -274,6 +301,8 @@ private:
      * pointer of such virtual address
      */
     u8* GetPointerForRasterizerCache(VAddr addr);
+
+    void MapPages(PageTable& page_table, u32 base, u32 size, u8* memory, PageType type);
 
     class Impl;
 

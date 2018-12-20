@@ -11,9 +11,10 @@
 
 TEST_CASE("Memory Basics", "[kernel][memory]") {
     auto block = std::make_shared<std::vector<u8>>(Memory::PAGE_SIZE);
+    Memory::MemorySystem memory;
     SECTION("mapping memory") {
         // Because of the PageTable, Kernel::VMManager is too big to be created on the stack.
-        auto manager = std::make_unique<Kernel::VMManager>();
+        auto manager = std::make_unique<Kernel::VMManager>(memory);
         auto result = manager->MapBackingMemory(Memory::HEAP_VADDR, block->data(), block->size(),
                                                 Kernel::MemoryState::Private);
         REQUIRE(result.Code() == RESULT_SUCCESS);
@@ -28,7 +29,7 @@ TEST_CASE("Memory Basics", "[kernel][memory]") {
 
     SECTION("unmapping memory") {
         // Because of the PageTable, Kernel::VMManager is too big to be created on the stack.
-        auto manager = std::make_unique<Kernel::VMManager>();
+        auto manager = std::make_unique<Kernel::VMManager>(memory);
         auto result = manager->MapBackingMemory(Memory::HEAP_VADDR, block->data(), block->size(),
                                                 Kernel::MemoryState::Private);
         REQUIRE(result.Code() == RESULT_SUCCESS);
@@ -44,7 +45,7 @@ TEST_CASE("Memory Basics", "[kernel][memory]") {
 
     SECTION("changing memory permissions") {
         // Because of the PageTable, Kernel::VMManager is too big to be created on the stack.
-        auto manager = std::make_unique<Kernel::VMManager>();
+        auto manager = std::make_unique<Kernel::VMManager>(memory);
         auto result = manager->MapBackingMemory(Memory::HEAP_VADDR, block->data(), block->size(),
                                                 Kernel::MemoryState::Private);
         REQUIRE(result.Code() == RESULT_SUCCESS);
@@ -63,7 +64,7 @@ TEST_CASE("Memory Basics", "[kernel][memory]") {
 
     SECTION("changing memory state") {
         // Because of the PageTable, Kernel::VMManager is too big to be created on the stack.
-        auto manager = std::make_unique<Kernel::VMManager>();
+        auto manager = std::make_unique<Kernel::VMManager>(memory);
         auto result = manager->MapBackingMemory(Memory::HEAP_VADDR, block->data(), block->size(),
                                                 Kernel::MemoryState::Private);
         REQUIRE(result.Code() == RESULT_SUCCESS);

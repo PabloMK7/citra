@@ -402,8 +402,13 @@ ResultCode Process::Unmap(VAddr target, VAddr source, u32 size, VMAPermission pe
 }
 
 Kernel::Process::Process(KernelSystem& kernel)
-    : Object(kernel), handle_table(kernel), kernel(kernel) {}
-Kernel::Process::~Process() {}
+    : Object(kernel), handle_table(kernel), kernel(kernel), vm_manager(kernel.memory) {
+
+    kernel.memory.RegisterPageTable(&vm_manager.page_table);
+}
+Kernel::Process::~Process() {
+    kernel.memory.UnregisterPageTable(&vm_manager.page_table);
+}
 
 SharedPtr<Process> KernelSystem::GetProcessById(u32 process_id) const {
     auto itr = std::find_if(
