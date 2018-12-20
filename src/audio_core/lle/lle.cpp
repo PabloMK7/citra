@@ -3,13 +3,17 @@
 // Refer to the license.txt file included.
 
 #include <array>
+#include <atomic>
+#include <thread>
 #include <teakra/teakra.h>
 #include "audio_core/lle/lle.h"
 #include "common/assert.h"
 #include "common/bit_field.h"
 #include "common/swap.h"
+#include "common/thread.h"
 #include "core/core.h"
 #include "core/core_timing.h"
+#include "core/hle/lock.h"
 #include "core/hle/service/dsp/dsp_dsp.h"
 
 namespace AudioCore {
@@ -117,9 +121,13 @@ static u8 PipeIndexToSlotIndex(u8 pipe_index, PipeDirection direction) {
 }
 
 struct DspLle::Impl final {
-    Impl() {
+    Impl(bool multithread) : multithread(multithread) {
         teakra_slice_event = Core::System::GetInstance().CoreTiming().RegisterEvent(
             "DSP slice", [this](u64, int late) { TeakraSliceEvent(static_cast<u64>(late)); });
+    }
+
+    ~Impl() {
+        StopTeakraThread();
     }
 
     Teakra::Teakra teakra;
@@ -129,13 +137,44 @@ struct DspLle::Impl final {
     bool data_signaled = false;
 
     Core::TimingEventType* teakra_slice_event;
-    bool loaded = false;
+    std::atomic<bool> loaded = false;
+
+    const bool multithread;
+    std::thread teakra_thread;
+    Common::Barrier teakra_slice_barrier{2};
+    std::atomic<bool> stop_signal = false;
+    std::size_t stop_generation;
 
     static constexpr u32 DspDataOffset = 0x40000;
     static constexpr u32 TeakraSlice = 20000;
 
+    void TeakraThread() {
+        while (true) {
+            teakra.Run(TeakraSlice);
+            teakra_slice_barrier.Sync();
+            if (stop_signal) {
+                if (stop_generation == teakra_slice_barrier.Generation())
+                    break;
+            }
+        }
+        stop_signal = false;
+    }
+
+    void StopTeakraThread() {
+        if (teakra_thread.joinable()) {
+            stop_generation = teakra_slice_barrier.Generation() + 1;
+            stop_signal = true;
+            teakra_slice_barrier.Sync();
+            teakra_thread.join();
+        }
+    }
+
     void RunTeakraSlice() {
-        teakra.Run(TeakraSlice);
+        if (multithread) {
+            teakra_slice_barrier.Sync();
+        } else {
+            teakra.Run(TeakraSlice);
+        }
     }
 
     void TeakraSliceEvent(u64 late) {
@@ -288,6 +327,10 @@ struct DspLle::Impl final {
 
         Core::System::GetInstance().CoreTiming().ScheduleEvent(TeakraSlice, teakra_slice_event, 0);
 
+        if (multithread) {
+            teakra_thread = std::thread(&Impl::TeakraThread, this);
+        }
+
         // Wait for initialization
         if (dsp.recv_data_on_start) {
             for (u8 i = 0; i < 3; ++i) {
@@ -312,6 +355,8 @@ struct DspLle::Impl final {
             return;
         }
 
+        loaded = false;
+
         // Send finalization signal via command/reply register 2
         constexpr u16 FinalizeSignal = 0x8000;
         while (!teakra.SendDataIsEmpty(2))
@@ -326,7 +371,7 @@ struct DspLle::Impl final {
         teakra.RecvData(2); // discard the value
 
         Core::System::GetInstance().CoreTiming().UnscheduleEvent(teakra_slice_event, 0);
-        loaded = false;
+        StopTeakraThread();
     }
 };
 
@@ -362,13 +407,21 @@ std::array<u8, Memory::DSP_RAM_SIZE>& DspLle::GetDspMemory() {
 }
 
 void DspLle::SetServiceToInterrupt(std::weak_ptr<Service::DSP::DSP_DSP> dsp) {
-    impl->teakra.SetRecvDataHandler(0, [dsp]() {
+    impl->teakra.SetRecvDataHandler(0, [this, dsp]() {
+        if (!impl->loaded)
+            return;
+
+        std::lock_guard lock(HLE::g_hle_lock);
         if (auto locked = dsp.lock()) {
             locked->SignalInterrupt(Service::DSP::DSP_DSP::InterruptType::Zero,
                                     static_cast<DspPipe>(0));
         }
     });
-    impl->teakra.SetRecvDataHandler(1, [dsp]() {
+    impl->teakra.SetRecvDataHandler(1, [this, dsp]() {
+        if (!impl->loaded)
+            return;
+
+        std::lock_guard lock(HLE::g_hle_lock);
         if (auto locked = dsp.lock()) {
             locked->SignalInterrupt(Service::DSP::DSP_DSP::InterruptType::One,
                                     static_cast<DspPipe>(0));
@@ -399,6 +452,7 @@ void DspLle::SetServiceToInterrupt(std::weak_ptr<Service::DSP::DSP_DSP> dsp) {
                 // pipe 0 is for debug. 3DS automatically drains this pipe and discards the data
                 impl->ReadPipe(pipe, impl->GetPipeReadableSize(pipe));
             } else {
+                std::lock_guard lock(HLE::g_hle_lock);
                 if (auto locked = dsp.lock()) {
                     locked->SignalInterrupt(Service::DSP::DSP_DSP::InterruptType::Pipe,
                                             static_cast<DspPipe>(pipe));
@@ -419,7 +473,8 @@ void DspLle::UnloadComponent() {
     impl->UnloadComponent();
 }
 
-DspLle::DspLle(Memory::MemorySystem& memory) : impl(std::make_unique<Impl>()) {
+DspLle::DspLle(Memory::MemorySystem& memory, bool multithread)
+    : impl(std::make_unique<Impl>(multithread)) {
     Teakra::AHBMCallback ahbm;
     ahbm.read8 = [&memory](u32 address) -> u8 {
         return *memory.GetFCRAMPointer(address - Memory::FCRAM_PADDR);

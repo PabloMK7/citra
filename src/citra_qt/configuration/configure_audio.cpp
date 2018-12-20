@@ -22,6 +22,7 @@ ConfigureAudio::ConfigureAudio(QWidget* parent)
 
     ui->emulation_combo_box->addItem(tr("HLE (fast)"));
     ui->emulation_combo_box->addItem(tr("LLE (accurate)"));
+    ui->emulation_combo_box->addItem(tr("LLE multi-core"));
     ui->emulation_combo_box->setEnabled(!Core::System::GetInstance().IsPoweredOn());
 
     connect(ui->volume_slider, &QSlider::valueChanged, this,
@@ -47,7 +48,17 @@ void ConfigureAudio::setConfiguration() {
     ui->volume_slider->setValue(Settings::values.volume * ui->volume_slider->maximum());
     setVolumeIndicatorText(ui->volume_slider->sliderPosition());
 
-    ui->emulation_combo_box->setCurrentIndex(Settings::values.enable_dsp_lle ? 1 : 0);
+    int selection;
+    if (Settings::values.enable_dsp_lle) {
+        if (Settings::values.enable_dsp_lle_multithread) {
+            selection = 2;
+        } else {
+            selection = 1;
+        }
+    } else {
+        selection = 0;
+    }
+    ui->emulation_combo_box->setCurrentIndex(selection);
 }
 
 void ConfigureAudio::setOutputSinkFromSinkID() {
@@ -92,7 +103,8 @@ void ConfigureAudio::applyConfiguration() {
             .toStdString();
     Settings::values.volume =
         static_cast<float>(ui->volume_slider->sliderPosition()) / ui->volume_slider->maximum();
-    Settings::values.enable_dsp_lle = ui->emulation_combo_box->currentIndex() == 1;
+    Settings::values.enable_dsp_lle = ui->emulation_combo_box->currentIndex() != 0;
+    Settings::values.enable_dsp_lle_multithread = ui->emulation_combo_box->currentIndex() == 2;
 }
 
 void ConfigureAudio::updateAudioDevices(int sink_index) {

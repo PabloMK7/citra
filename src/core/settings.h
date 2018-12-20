@@ -148,6 +148,7 @@ struct Values {
 
     // Audio
     bool enable_dsp_lle;
+    bool enable_dsp_lle_multithread;
     std::string sink_id;
     bool enable_audio_stretching;
     std::string audio_device_id;

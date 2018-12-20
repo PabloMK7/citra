@@ -171,6 +171,11 @@ swap_screen =
 # 0 (default): No, 1: Yes
 enable_dsp_lle =
 
+# Whether or not to run DSP LLE on a different thread
+# 0 (default): No, 1: Yes
+enable_dsp_lle_thread =
+
+
 # Which audio output engine to use.
 # auto (default): Auto-select, null: No audio output, sdl2: SDL2 (if available)
 output_engine =
