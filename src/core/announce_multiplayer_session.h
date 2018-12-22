@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <atomic>
 #include <functional>
 #include <memory>
 #include <mutex>
@@ -12,6 +13,10 @@
 #include "common/announce_multiplayer_room.h"
 #include "common/common_types.h"
 #include "common/thread.h"
+
+namespace Network {
+class Room;
+}
 
 namespace Core {
 
@@ -39,6 +44,9 @@ public:
      */
     void UnbindErrorCallback(CallbackHandle handle);
 
+    /// Registers a room to web services
+    void Register();
+
     /**
      * Starts the announce of a room to web services
      */
@@ -65,6 +73,9 @@ private:
     /// Backend interface that logs fields
     std::unique_ptr<AnnounceMultiplayerRoom::Backend> backend;
 
+    std::atomic_bool registered = false; ///< Whether the room has been registered
+
+    void UpdateBackendData(std::shared_ptr<Network::Room> room);
     void AnnounceMultiplayerLoop();
 };
 

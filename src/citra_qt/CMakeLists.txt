@@ -99,6 +99,8 @@ add_executable(citra-qt
     multiplayer/lobby.cpp
     multiplayer/message.h
     multiplayer/message.cpp
+    multiplayer/moderation_dialog.cpp
+    multiplayer/moderation_dialog.h
     multiplayer/state.cpp
     multiplayer/state.h
     multiplayer/validation.h
@@ -135,6 +137,7 @@ set(UIS
     multiplayer/chat_room.ui
     multiplayer/client_room.ui
     multiplayer/host_room.ui
+    multiplayer/moderation_dialog.ui
     aboutdialog.ui
     cheats.ui
     hotkeys.ui
@@ -226,6 +229,10 @@ if (USE_DISCORD_PRESENCE)
     )
     target_link_libraries(citra-qt PRIVATE discord-rpc)
     target_compile_definitions(citra-qt PRIVATE -DUSE_DISCORD_PRESENCE)
+endif()
+
+if (ENABLE_WEB_SERVICE)
+    target_compile_definitions(citra-qt PRIVATE -DENABLE_WEB_SERVICE)
 endif()
 
 if(UNIX AND NOT APPLE)

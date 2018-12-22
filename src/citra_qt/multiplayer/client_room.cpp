@@ -13,6 +13,7 @@
 #include "citra_qt/game_list_p.h"
 #include "citra_qt/multiplayer/client_room.h"
 #include "citra_qt/multiplayer/message.h"
+#include "citra_qt/multiplayer/moderation_dialog.h"
 #include "citra_qt/multiplayer/state.h"
 #include "common/logging/log.h"
 #include "core/announce_multiplayer_session.h"
@@ -33,6 +34,8 @@ ClientRoomWindow::ClientRoomWindow(QWidget* parent)
         connect(this, &ClientRoomWindow::RoomInformationChanged, this,
                 &ClientRoomWindow::OnRoomUpdate);
         connect(this, &ClientRoomWindow::StateChanged, this, &::ClientRoomWindow::OnStateChange);
+        // Update the state
+        OnStateChange(member->GetState());
     } else {
         // TODO (jroweboy) network was not initialized?
     }
@@ -40,10 +43,24 @@ ClientRoomWindow::ClientRoomWindow(QWidget* parent)
     connect(ui->disconnect, &QPushButton::pressed, [this] { Disconnect(); });
     ui->disconnect->setDefault(false);
     ui->disconnect->setAutoDefault(false);
+    connect(ui->moderation, &QPushButton::clicked, [this] {
+        ModerationDialog dialog(this);
+        dialog.exec();
+    });
+    ui->moderation->setDefault(false);
+    ui->moderation->setAutoDefault(false);
+    connect(ui->chat, &ChatRoom::UserPinged, this, &ClientRoomWindow::ShowNotification);
     UpdateView();
 }
 
 ClientRoomWindow::~ClientRoomWindow() = default;
+
+void ClientRoomWindow::SetModPerms(bool is_mod) {
+    ui->chat->SetModPerms(is_mod);
+    ui->moderation->setVisible(is_mod);
+    ui->moderation->setDefault(false);
+    ui->moderation->setAutoDefault(false);
+}
 
 void ClientRoomWindow::RetranslateUi() {
     ui->retranslateUi(this);
@@ -55,9 +72,12 @@ void ClientRoomWindow::OnRoomUpdate(const Network::RoomInformation& info) {
 }
 
 void ClientRoomWindow::OnStateChange(const Network::RoomMember::State& state) {
-    if (state == Network::RoomMember::State::Joined) {
+    if (state == Network::RoomMember::State::Joined ||
+        state == Network::RoomMember::State::Moderator) {
+
         ui->chat->Clear();
         ui->chat->AppendStatusMessage(tr("Connected"));
+        SetModPerms(state == Network::RoomMember::State::Moderator);
     }
     UpdateView();
 }
@@ -82,6 +102,7 @@ void ClientRoomWindow::UpdateView() {
                                .arg(QString::fromStdString(information.name))
                                .arg(memberlist.size())
                                .arg(information.member_slots));
+            ui->description->setText(QString::fromStdString(information.description));
             return;
         }
     }

@@ -26,6 +26,10 @@ class ComboBoxProxyModel;
 
 class ChatMessage;
 
+namespace Network::VerifyUser {
+class Backend;
+};
+
 class HostRoomWindow : public QDialog {
     Q_OBJECT
 
@@ -36,15 +40,9 @@ public:
 
     void RetranslateUi();
 
-private slots:
-    /**
-     * Handler for connection status changes. Launches the chat window if successful or
-     * displays an error
-     */
-    void OnConnection();
-
 private:
     void Host();
+    std::unique_ptr<Network::VerifyUser::Backend> CreateVerifyBackend(bool use_validation) const;
 
     std::weak_ptr<Core::AnnounceMultiplayerSession> announce_multiplayer_session;
     QStandardItemModel* game_list;

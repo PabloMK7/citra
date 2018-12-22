@@ -15,6 +15,7 @@
 #include "citra_qt/multiplayer/state.h"
 #include "citra_qt/multiplayer/validation.h"
 #include "citra_qt/ui_settings.h"
+#include "core/hle/service/cfg/cfg.h"
 #include "core/settings.h"
 #include "network/network.h"
 #include "ui_direct_connect.h"
@@ -62,7 +63,7 @@ void DirectConnectWindow::Connect() {
         // Prevent the user from trying to join a room while they are already joining.
         if (member->GetState() == Network::RoomMember::State::Joining) {
             return;
-        } else if (member->GetState() == Network::RoomMember::State::Joined) {
+        } else if (member->IsConnected()) {
             // And ask if they want to leave the room if they are already in one.
             if (!NetworkMessage::WarnDisconnect()) {
                 return;
@@ -97,6 +98,7 @@ void DirectConnectWindow::Connect() {
         if (auto room_member = Network::GetRoomMember().lock()) {
             auto port = UISettings::values.port.toUInt();
             room_member->Join(ui->nickname->text().toStdString(),
+                              Service::CFG::GetConsoleIdHash(Core::System::GetInstance()),
                               ui->ip->text().toStdString().c_str(), port, 0,
                               Network::NoPreferredMac, ui->password->text().toStdString().c_str());
         }
@@ -120,7 +122,9 @@ void DirectConnectWindow::OnConnection() {
     EndConnecting();
 
     if (auto room_member = Network::GetRoomMember().lock()) {
-        if (room_member->GetState() == Network::RoomMember::State::Joined) {
+        if (room_member->GetState() == Network::RoomMember::State::Joined ||
+            room_member->GetState() == Network::RoomMember::State::Moderator) {
+
             close();
         }
     }

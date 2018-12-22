@@ -9,10 +9,11 @@
 #include <string>
 #include <vector>
 #include "common/common_types.h"
+#include "network/verify_user.h"
 
 namespace Network {
 
-constexpr u32 network_version = 3; ///< The version of this Room and RoomMember
+constexpr u32 network_version = 4; ///< The version of this Room and RoomMember
 
 constexpr u16 DefaultRoomPort = 24872;
 
@@ -25,11 +26,13 @@ constexpr std::size_t NumChannels = 1; // Number of channels used for the connec
 
 struct RoomInformation {
     std::string name;           ///< Name of the server
+    std::string description;    ///< Server description
     u32 member_slots;           ///< Maximum number of members in this room
-    std::string uid;            ///< The unique ID of the room
     u16 port;                   ///< The port of this room
     std::string preferred_game; ///< Game to advertise that you want to play
     u64 preferred_game_id;      ///< Title ID for the advertised game
+    std::string host_username;  ///< Forum username of the host
+    bool enable_citra_mods;     ///< Allow Citra Moderators to moderate on this room
 };
 
 struct GameInfo {
@@ -57,7 +60,31 @@ enum RoomMessageTypes : u8 {
     IdMacCollision,
     IdVersionMismatch,
     IdWrongPassword,
-    IdCloseRoom
+    IdCloseRoom,
+    IdRoomIsFull,
+    IdConsoleIdCollision,
+    IdStatusMessage,
+    IdHostKicked,
+    IdHostBanned,
+    /// Moderation requests
+    IdModKick,
+    IdModBan,
+    IdModUnban,
+    IdModGetBanList,
+    // Moderation responses
+    IdModBanListResponse,
+    IdModPermissionDenied,
+    IdModNoSuchUser,
+    IdJoinSuccessAsMod,
+};
+
+/// Types of system status messages
+enum StatusMessageTypes : u8 {
+    IdMemberJoin = 1,  ///< Member joining
+    IdMemberLeave,     ///< Member leaving
+    IdMemberKicked,    ///< A member is kicked from the room
+    IdMemberBanned,    ///< A member is banned from the room
+    IdAddressUnbanned, ///< A username / ip address is unbanned from the room
 };
 
 /// This is what a server [person creating a server] would use.
@@ -69,9 +96,12 @@ public:
     };
 
     struct Member {
-        std::string nickname;   ///< The nickname of the member.
-        GameInfo game_info;     ///< The current game of the member
-        MacAddress mac_address; ///< The assigned mac address of the member.
+        std::string nickname;     ///< The nickname of the member.
+        std::string username;     ///< The web services username of the member. Can be empty.
+        std::string display_name; ///< The web services display name of the member. Can be empty.
+        std::string avatar_url;   ///< Url to the member's avatar. Can be empty.
+        GameInfo game_info;       ///< The current game of the member
+        MacAddress mac_address;   ///< The assigned mac address of the member.
     };
 
     Room();
@@ -88,6 +118,11 @@ public:
     const RoomInformation& GetRoomInformation() const;
 
     /**
+     * Gets the verify UID of this room.
+     */
+    std::string GetVerifyUID() const;
+
+    /**
      * Gets a list of the mbmers connected to the room.
      */
     std::vector<Member> GetRoomMemberList() const;
@@ -97,14 +132,33 @@ public:
      */
     bool HasPassword() const;
 
+    using UsernameBanList = std::vector<std::string>;
+    using IPBanList = std::vector<std::string>;
+
+    using BanList = std::pair<UsernameBanList, IPBanList>;
+
     /**
      * Creates the socket for this room. Will bind to default address if
      * server is empty string.
      */
-    bool Create(const std::string& name, const std::string& server = "",
-                u16 server_port = DefaultRoomPort, const std::string& password = "",
+    bool Create(const std::string& name, const std::string& description = "",
+                const std::string& server = "", u16 server_port = DefaultRoomPort,
+                const std::string& password = "",
                 const u32 max_connections = MaxConcurrentConnections,
-                const std::string& preferred_game = "", u64 preferred_game_id = 0);
+                const std::string& host_username = "", const std::string& preferred_game = "",
+                u64 preferred_game_id = 0,
+                std::unique_ptr<VerifyUser::Backend> verify_backend = nullptr,
+                const BanList& ban_list = {}, bool enable_citra_mods = false);
+
+    /**
+     * Sets the verification GUID of the room.
+     */
+    void SetVerifyUID(const std::string& uid);
+
+    /**
+     * Gets the ban list (including banned forum usernames and IPs) of the room.
+     */
+    BanList GetBanList() const;
 
     /**
      * Destroys the socket

@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <QAction>
+#include <QApplication>
 #include <QIcon>
 #include <QMessageBox>
 #include <QStandardItemModel>
@@ -13,6 +14,7 @@
 #include "citra_qt/multiplayer/lobby.h"
 #include "citra_qt/multiplayer/message.h"
 #include "citra_qt/multiplayer/state.h"
+#include "citra_qt/ui_settings.h"
 #include "citra_qt/util/clickable_label.h"
 #include "common/announce_multiplayer_room.h"
 #include "common/logging/log.h"
@@ -27,9 +29,13 @@ MultiplayerState::MultiplayerState(QWidget* parent, QStandardItemModel* game_lis
             [this](const Network::RoomMember::State& state) { emit NetworkStateChanged(state); });
         connect(this, &MultiplayerState::NetworkStateChanged, this,
                 &MultiplayerState::OnNetworkStateChanged);
+        error_callback_handle = member->BindOnError(
+            [this](const Network::RoomMember::Error& error) { emit NetworkError(error); });
+        connect(this, &MultiplayerState::NetworkError, this, &MultiplayerState::OnNetworkError);
     }
 
     qRegisterMetaType<Network::RoomMember::State>();
+    qRegisterMetaType<Network::RoomMember::Error>();
     qRegisterMetaType<Common::WebResult>();
     announce_multiplayer_session = std::make_shared<Core::AnnounceMultiplayerSession>();
     announce_multiplayer_session->BindErrorCallback(
@@ -44,12 +50,25 @@ MultiplayerState::MultiplayerState(QWidget* parent, QStandardItemModel* game_lis
 
     connect(status_text, &ClickableLabel::clicked, this, &MultiplayerState::OnOpenNetworkRoom);
     connect(status_icon, &ClickableLabel::clicked, this, &MultiplayerState::OnOpenNetworkRoom);
+
+    connect(static_cast<QApplication*>(QApplication::instance()), &QApplication::focusChanged, this,
+            [this](QWidget* /*old*/, QWidget* now) {
+                if (client_room && client_room->isAncestorOf(now)) {
+                    HideNotification();
+                }
+            });
 }
 
 MultiplayerState::~MultiplayerState() {
     if (state_callback_handle) {
         if (auto member = Network::GetRoomMember().lock()) {
             member->Unbind(state_callback_handle);
+        }
+    }
+
+    if (error_callback_handle) {
+        if (auto member = Network::GetRoomMember().lock()) {
+            member->Unbind(error_callback_handle);
         }
     }
 }
@@ -70,7 +89,9 @@ void MultiplayerState::retranslateUi() {
 
     if (current_state == Network::RoomMember::State::Uninitialized) {
         status_text->setText(tr("Not Connected. Click here to find a room!"));
-    } else if (current_state == Network::RoomMember::State::Joined) {
+    } else if (current_state == Network::RoomMember::State::Joined ||
+               current_state == Network::RoomMember::State::Moderator) {
+
         status_text->setText(tr("Connected"));
     } else {
         status_text->setText(tr("Not Connected"));
@@ -88,35 +109,10 @@ void MultiplayerState::retranslateUi() {
 
 void MultiplayerState::OnNetworkStateChanged(const Network::RoomMember::State& state) {
     LOG_DEBUG(Frontend, "Network State: {}", Network::GetStateStr(state));
-    bool is_connected = false;
-    switch (state) {
-    case Network::RoomMember::State::LostConnection:
-        NetworkMessage::ShowError(NetworkMessage::LOST_CONNECTION);
-        break;
-    case Network::RoomMember::State::CouldNotConnect:
-        NetworkMessage::ShowError(NetworkMessage::UNABLE_TO_CONNECT);
-        break;
-    case Network::RoomMember::State::NameCollision:
-        NetworkMessage::ShowError(NetworkMessage::USERNAME_IN_USE);
-        break;
-    case Network::RoomMember::State::MacCollision:
-        NetworkMessage::ShowError(NetworkMessage::MAC_COLLISION);
-        break;
-    case Network::RoomMember::State::WrongPassword:
-        NetworkMessage::ShowError(NetworkMessage::WRONG_PASSWORD);
-        break;
-    case Network::RoomMember::State::WrongVersion:
-        NetworkMessage::ShowError(NetworkMessage::WRONG_VERSION);
-        break;
-    case Network::RoomMember::State::Error:
-        NetworkMessage::ShowError(NetworkMessage::UNABLE_TO_CONNECT);
-        break;
-    case Network::RoomMember::State::Joined:
-        is_connected = true;
+    if (state == Network::RoomMember::State::Joined ||
+        state == Network::RoomMember::State::Moderator) {
+
         OnOpenNetworkRoom();
-        break;
-    }
-    if (is_connected) {
         status_icon->setPixmap(QIcon::fromTheme("connected").pixmap(16));
         status_text->setText(tr("Connected"));
         leave_room->setEnabled(true);
@@ -129,6 +125,51 @@ void MultiplayerState::OnNetworkStateChanged(const Network::RoomMember::State& s
     }
 
     current_state = state;
+}
+
+void MultiplayerState::OnNetworkError(const Network::RoomMember::Error& error) {
+    LOG_DEBUG(Frontend, "Network Error: {}", Network::GetErrorStr(error));
+    switch (error) {
+    case Network::RoomMember::Error::LostConnection:
+        NetworkMessage::ShowError(NetworkMessage::LOST_CONNECTION);
+        break;
+    case Network::RoomMember::Error::HostKicked:
+        NetworkMessage::ShowError(NetworkMessage::HOST_KICKED);
+        break;
+    case Network::RoomMember::Error::CouldNotConnect:
+        NetworkMessage::ShowError(NetworkMessage::UNABLE_TO_CONNECT);
+        break;
+    case Network::RoomMember::Error::NameCollision:
+        NetworkMessage::ShowError(NetworkMessage::USERNAME_NOT_VALID_SERVER);
+        break;
+    case Network::RoomMember::Error::MacCollision:
+        NetworkMessage::ShowError(NetworkMessage::MAC_COLLISION);
+        break;
+    case Network::RoomMember::Error::ConsoleIdCollision:
+        NetworkMessage::ShowError(NetworkMessage::CONSOLE_ID_COLLISION);
+        break;
+    case Network::RoomMember::Error::RoomIsFull:
+        NetworkMessage::ShowError(NetworkMessage::ROOM_IS_FULL);
+        break;
+    case Network::RoomMember::Error::WrongPassword:
+        NetworkMessage::ShowError(NetworkMessage::WRONG_PASSWORD);
+        break;
+    case Network::RoomMember::Error::WrongVersion:
+        NetworkMessage::ShowError(NetworkMessage::WRONG_VERSION);
+        break;
+    case Network::RoomMember::Error::HostBanned:
+        NetworkMessage::ShowError(NetworkMessage::HOST_BANNED);
+        break;
+    case Network::RoomMember::Error::UnknownError:
+        NetworkMessage::ShowError(NetworkMessage::UNABLE_TO_CONNECT);
+        break;
+    case Network::RoomMember::Error::PermissionDenied:
+        NetworkMessage::ShowError(NetworkMessage::PERMISSION_DENIED);
+        break;
+    case Network::RoomMember::Error::NoSuchUser:
+        NetworkMessage::ShowError(NetworkMessage::NO_SUCH_USER);
+        break;
+    }
 }
 
 void MultiplayerState::OnAnnounceFailed(const Common::WebResult& result) {
@@ -144,7 +185,11 @@ void MultiplayerState::OnAnnounceFailed(const Common::WebResult& result) {
 }
 
 void MultiplayerState::UpdateThemedIcons() {
-    if (current_state == Network::RoomMember::State::Joined) {
+    if (show_notification) {
+        status_icon->setPixmap(QIcon::fromTheme("connected_notification").pixmap(16));
+    } else if (current_state == Network::RoomMember::State::Joined ||
+               current_state == Network::RoomMember::State::Moderator) {
+
         status_icon->setPixmap(QIcon::fromTheme("connected").pixmap(16));
     } else {
         status_icon->setPixmap(QIcon::fromTheme("disconnected").pixmap(16));
@@ -185,6 +230,10 @@ bool MultiplayerState::OnCloseRoom() {
         if (room->GetState() != Network::Room::State::Open) {
             return true;
         }
+        // Save ban list
+        if (auto room = Network::GetRoom().lock()) {
+            UISettings::values.ban_list = std::move(room->GetBanList());
+        }
         room->Destroy();
         announce_multiplayer_session->Stop();
         LOG_DEBUG(Frontend, "Closed the room (as a server)");
@@ -192,11 +241,28 @@ bool MultiplayerState::OnCloseRoom() {
     return true;
 }
 
+void MultiplayerState::ShowNotification() {
+    if (client_room && client_room->isAncestorOf(QApplication::focusWidget()))
+        return; // Do not show notification if the chat window currently has focus
+    show_notification = true;
+    QApplication::alert(nullptr);
+    status_icon->setPixmap(QIcon::fromTheme("connected_notification").pixmap(16));
+    status_text->setText(tr("New Messages Received"));
+}
+
+void MultiplayerState::HideNotification() {
+    show_notification = false;
+    status_icon->setPixmap(QIcon::fromTheme("connected").pixmap(16));
+    status_text->setText(tr("Connected"));
+}
+
 void MultiplayerState::OnOpenNetworkRoom() {
     if (auto member = Network::GetRoomMember().lock()) {
         if (member->IsConnected()) {
             if (client_room == nullptr) {
                 client_room = new ClientRoomWindow(this);
+                connect(client_room, &ClientRoomWindow::ShowNotification, this,
+                        &MultiplayerState::ShowNotification);
             }
             BringWidgetToFront(client_room);
             return;

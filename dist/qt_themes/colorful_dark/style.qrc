@@ -2,11 +2,13 @@
     <qresource prefix="icons/colorful_dark">
         <file alias="index.theme">icons/index.theme</file>
         <file alias="16x16/connected.png">../colorful/icons/16x16/connected.png</file>
+        <file alias="16x16/connected_notification.png">../colorful/icons/16x16/connected_notification.png</file>
         <file alias="16x16/disconnected.png">../colorful/icons/16x16/disconnected.png</file>
         <file alias="16x16/lock.png">icons/16x16/lock.png</file>
         <file alias="48x48/bad_folder.png">../colorful/icons/48x48/bad_folder.png</file>
         <file alias="48x48/chip.png">../colorful/icons/48x48/chip.png</file>
         <file alias="48x48/folder.png">../colorful/icons/48x48/folder.png</file>
+        <file alias="48x48/no_avatar.png">../qdarkstyle/icons/48x48/no_avatar.png</file>
         <file alias="48x48/plus.png">../colorful/icons/48x48/plus.png</file>
         <file alias="48x48/sd_card.png">../colorful/icons/48x48/sd_card.png</file>
         <file alias="256x256/plus_folder.png">../colorful/icons/256x256/plus_folder.png</file>

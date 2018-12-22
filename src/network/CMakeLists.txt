@@ -7,8 +7,10 @@ add_library(network STATIC
     room.h
     room_member.cpp
     room_member.h
+    verify_user.cpp
+    verify_user.h
 )
 
 create_target_directory_groups(network)
 
-target_link_libraries(network PRIVATE common enet)
+target_link_libraries(network PRIVATE common cpp-jwt enet)

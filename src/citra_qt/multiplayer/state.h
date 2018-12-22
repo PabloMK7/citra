@@ -40,6 +40,7 @@ public:
 
 public slots:
     void OnNetworkStateChanged(const Network::RoomMember::State& state);
+    void OnNetworkError(const Network::RoomMember::Error& error);
     void OnViewLobby();
     void OnCreateRoom();
     bool OnCloseRoom();
@@ -47,9 +48,12 @@ public slots:
     void OnDirectConnectToRoom();
     void OnAnnounceFailed(const Common::WebResult&);
     void UpdateThemedIcons();
+    void ShowNotification();
+    void HideNotification();
 
 signals:
     void NetworkStateChanged(const Network::RoomMember::State&);
+    void NetworkError(const Network::RoomMember::Error&);
     void AnnounceFailed(const Common::WebResult&);
 
 private:
@@ -64,7 +68,11 @@ private:
     QAction* show_room;
     std::shared_ptr<Core::AnnounceMultiplayerSession> announce_multiplayer_session;
     Network::RoomMember::State current_state = Network::RoomMember::State::Uninitialized;
+    bool has_mod_perms = false;
     Network::RoomMember::CallbackHandle<Network::RoomMember::State> state_callback_handle;
+    Network::RoomMember::CallbackHandle<Network::RoomMember::Error> error_callback_handle;
+
+    bool show_notification = false;
 };
 
 Q_DECLARE_METATYPE(Common::WebResult);

@@ -5,6 +5,8 @@ add_library(web_service STATIC
     telemetry_json.h
     verify_login.cpp
     verify_login.h
+    verify_user_jwt.cpp
+    verify_user_jwt.h
     web_backend.cpp
     web_backend.h
 )
@@ -15,4 +17,4 @@ get_directory_property(OPENSSL_LIBS
         DIRECTORY ${PROJECT_SOURCE_DIR}/externals/libressl
         DEFINITION OPENSSL_LIBS)
 target_compile_definitions(web_service PRIVATE -DCPPHTTPLIB_OPENSSL_SUPPORT)
-target_link_libraries(web_service PRIVATE common json-headers ${OPENSSL_LIBS} httplib lurlparser)
+target_link_libraries(web_service PRIVATE common network json-headers ${OPENSSL_LIBS} httplib lurlparser cpp-jwt)

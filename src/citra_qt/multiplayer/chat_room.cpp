@@ -5,6 +5,8 @@
 #include <array>
 #include <future>
 #include <QColor>
+#include <QDesktopServices>
+#include <QFutureWatcher>
 #include <QImage>
 #include <QList>
 #include <QLocale>
@@ -12,6 +14,7 @@
 #include <QMessageBox>
 #include <QMetaType>
 #include <QTime>
+#include <QUrl>
 #include <QtConcurrent/QtConcurrentRun>
 #include "citra_qt/game_list_p.h"
 #include "citra_qt/multiplayer/chat_room.h"
@@ -19,6 +22,9 @@
 #include "common/logging/log.h"
 #include "core/announce_multiplayer_session.h"
 #include "ui_chat_room.h"
+#ifdef ENABLE_WEB_SERVICE
+#include "web_service/web_backend.h"
+#endif
 
 class ChatMessage {
 public:
@@ -27,24 +33,60 @@ public:
         QLocale locale;
         timestamp = locale.toString(ts.isValid() ? ts : QTime::currentTime(), QLocale::ShortFormat);
         nickname = QString::fromStdString(chat.nickname);
+        username = QString::fromStdString(chat.username);
         message = QString::fromStdString(chat.message);
+
+        // Check for user pings
+        QString cur_nickname, cur_username;
+        if (auto room = Network::GetRoomMember().lock()) {
+            cur_nickname = QString::fromStdString(room->GetNickname());
+            cur_username = QString::fromStdString(room->GetUsername());
+        }
+        if (message.contains(QString("@").append(cur_nickname)) ||
+            (!cur_username.isEmpty() && message.contains(QString("@").append(cur_username)))) {
+
+            contains_ping = true;
+        } else {
+            contains_ping = false;
+        }
+    }
+
+    bool ContainsPing() const {
+        return contains_ping;
     }
 
     /// Format the message using the players color
     QString GetPlayerChatMessage(u16 player) const {
         auto color = player_color[player % 16];
-        return QString("[%1] <font color='%2'>&lt;%3&gt;</font> %4")
-            .arg(timestamp, color, nickname.toHtmlEscaped(), message.toHtmlEscaped());
+        QString name;
+        if (username.isEmpty() || username == nickname) {
+            name = nickname;
+        } else {
+            name = QString("%1 (%2)").arg(nickname, username);
+        }
+
+        QString style;
+        if (ContainsPing()) {
+            // Add a background color to these messages
+            style = QString("background-color: %1").arg(ping_color);
+        }
+
+        return QString("[%1] <font color='%2'>&lt;%3&gt;</font> <font style='%4' "
+                       "color='#000000'>%5</font>")
+            .arg(timestamp, color, name.toHtmlEscaped(), style, message.toHtmlEscaped());
     }
 
 private:
     static constexpr std::array<const char*, 16> player_color = {
         {"#0000FF", "#FF0000", "#8A2BE2", "#FF69B4", "#1E90FF", "#008000", "#00FF7F", "#B22222",
          "#DAA520", "#FF4500", "#2E8B57", "#5F9EA0", "#D2691E", "#9ACD32", "#FF7F50", "FFFF00"}};
+    static constexpr char ping_color[] = "#FFFF00";
 
     QString timestamp;
     QString nickname;
+    QString username;
     QString message;
+    bool contains_ping;
 };
 
 class StatusMessage {
@@ -57,37 +99,69 @@ public:
     }
 
     QString GetSystemChatMessage() const {
-        return QString("[%1] <font color='%2'><i>%3</i></font>")
-            .arg(timestamp, system_color, message);
+        return QString("[%1] <font color='%2'>* %3</font>").arg(timestamp, system_color, message);
     }
 
 private:
-    static constexpr const char system_color[] = "#888888";
+    static constexpr const char system_color[] = "#FF8C00";
     QString timestamp;
     QString message;
+};
+
+class PlayerListItem : public QStandardItem {
+public:
+    static const int NicknameRole = Qt::UserRole + 1;
+    static const int UsernameRole = Qt::UserRole + 2;
+    static const int AvatarUrlRole = Qt::UserRole + 3;
+    static const int GameNameRole = Qt::UserRole + 4;
+
+    PlayerListItem() = default;
+    explicit PlayerListItem(const std::string& nickname, const std::string& username,
+                            const std::string& avatar_url, const std::string& game_name) {
+        setEditable(false);
+        setData(QString::fromStdString(nickname), NicknameRole);
+        setData(QString::fromStdString(username), UsernameRole);
+        setData(QString::fromStdString(avatar_url), AvatarUrlRole);
+        if (game_name.empty()) {
+            setData(QObject::tr("Not playing a game"), GameNameRole);
+        } else {
+            setData(QString::fromStdString(game_name), GameNameRole);
+        }
+    }
+
+    QVariant data(int role) const override {
+        if (role != Qt::DisplayRole) {
+            return QStandardItem::data(role);
+        }
+        QString name;
+        const QString nickname = data(NicknameRole).toString();
+        const QString username = data(UsernameRole).toString();
+        if (username.isEmpty() || username == nickname) {
+            name = nickname;
+        } else {
+            name = QString("%1 (%2)").arg(nickname, username);
+        }
+        return QString("%1\n      %2").arg(name, data(GameNameRole).toString());
+    }
 };
 
 ChatRoom::ChatRoom(QWidget* parent) : QWidget(parent), ui(std::make_unique<Ui::ChatRoom>()) {
     ui->setupUi(this);
 
     // set the item_model for player_view
-    enum {
-        COLUMN_NAME,
-        COLUMN_GAME,
-        COLUMN_COUNT, // Number of columns
-    };
 
     player_list = new QStandardItemModel(ui->player_view);
     ui->player_view->setModel(player_list);
     ui->player_view->setContextMenuPolicy(Qt::CustomContextMenu);
-    player_list->insertColumns(0, COLUMN_COUNT);
-    player_list->setHeaderData(COLUMN_NAME, Qt::Horizontal, tr("Name"));
-    player_list->setHeaderData(COLUMN_GAME, Qt::Horizontal, tr("Game"));
+    // set a header to make it look better though there is only one column
+    player_list->insertColumns(0, 1);
+    player_list->setHeaderData(0, Qt::Horizontal, tr("Members"));
 
     ui->chat_history->document()->setMaximumBlockCount(max_chat_lines);
 
     // register the network structs to use in slots and signals
     qRegisterMetaType<Network::ChatEntry>();
+    qRegisterMetaType<Network::StatusMessageEntry>();
     qRegisterMetaType<Network::RoomInformation>();
     qRegisterMetaType<Network::RoomMember::State>();
 
@@ -95,7 +169,12 @@ ChatRoom::ChatRoom(QWidget* parent) : QWidget(parent), ui(std::make_unique<Ui::C
     if (auto member = Network::GetRoomMember().lock()) {
         member->BindOnChatMessageRecieved(
             [this](const Network::ChatEntry& chat) { emit ChatReceived(chat); });
+        member->BindOnStatusMessageReceived(
+            [this](const Network::StatusMessageEntry& status_message) {
+                emit StatusMessageReceived(status_message);
+            });
         connect(this, &ChatRoom::ChatReceived, this, &ChatRoom::OnChatReceive);
+        connect(this, &ChatRoom::StatusMessageReceived, this, &ChatRoom::OnStatusMessageReceive);
     } else {
         // TODO (jroweboy) network was not initialized?
     }
@@ -109,6 +188,10 @@ ChatRoom::ChatRoom(QWidget* parent) : QWidget(parent), ui(std::make_unique<Ui::C
 }
 
 ChatRoom::~ChatRoom() = default;
+
+void ChatRoom::SetModPerms(bool is_mod) {
+    has_mod_perms = is_mod;
+}
 
 void ChatRoom::RetranslateUi() {
     ui->retranslateUi(this);
@@ -125,6 +208,21 @@ void ChatRoom::AppendStatusMessage(const QString& msg) {
 
 void ChatRoom::AppendChatMessage(const QString& msg) {
     ui->chat_history->append(msg);
+}
+
+void ChatRoom::SendModerationRequest(Network::RoomMessageTypes type, const std::string& nickname) {
+    if (auto room = Network::GetRoomMember().lock()) {
+        auto members = room->GetMemberInformation();
+        auto it = std::find_if(members.begin(), members.end(),
+                               [&nickname](const Network::RoomMember::MemberInformation& member) {
+                                   return member.nickname == nickname;
+                               });
+        if (it == members.end()) {
+            NetworkMessage::ShowError(NetworkMessage::NO_SUCH_USER);
+            return;
+        }
+        room->SendModerationRequest(type, nickname);
+    }
 }
 
 bool ChatRoom::ValidateMessage(const std::string& msg) {
@@ -157,7 +255,8 @@ void ChatRoom::OnChatReceive(const Network::ChatEntry& chat) {
         auto members = room->GetMemberInformation();
         auto it = std::find_if(members.begin(), members.end(),
                                [&chat](const Network::RoomMember::MemberInformation& member) {
-                                   return member.nickname == chat.nickname;
+                                   return member.nickname == chat.nickname &&
+                                          member.username == chat.username;
                                });
         if (it == members.end()) {
             LOG_INFO(Network, "Chat message received from unknown player. Ignoring it.");
@@ -170,13 +269,48 @@ void ChatRoom::OnChatReceive(const Network::ChatEntry& chat) {
         }
         auto player = std::distance(members.begin(), it);
         ChatMessage m(chat);
+        if (m.ContainsPing()) {
+            emit UserPinged();
+        }
         AppendChatMessage(m.GetPlayerChatMessage(player));
     }
 }
 
+void ChatRoom::OnStatusMessageReceive(const Network::StatusMessageEntry& status_message) {
+    QString name;
+    if (status_message.username.empty() || status_message.username == status_message.nickname) {
+        name = QString::fromStdString(status_message.nickname);
+    } else {
+        name = QString("%1 (%2)").arg(QString::fromStdString(status_message.nickname),
+                                      QString::fromStdString(status_message.username));
+    }
+    QString message;
+    switch (status_message.type) {
+    case Network::IdMemberJoin:
+        message = tr("%1 has joined").arg(name);
+        break;
+    case Network::IdMemberLeave:
+        message = tr("%1 has left").arg(name);
+        break;
+    case Network::IdMemberKicked:
+        message = tr("%1 has been kicked").arg(name);
+        break;
+    case Network::IdMemberBanned:
+        message = tr("%1 has been banned").arg(name);
+        break;
+    case Network::IdAddressUnbanned:
+        message = tr("%1 has been unbanned").arg(name);
+        break;
+    }
+    if (!message.isEmpty())
+        AppendStatusMessage(message);
+}
+
 void ChatRoom::OnSendChat() {
     if (auto room = Network::GetRoomMember().lock()) {
-        if (room->GetState() != Network::RoomMember::State::Joined) {
+        if (room->GetState() != Network::RoomMember::State::Joined &&
+            room->GetState() != Network::RoomMember::State::Moderator) {
+
             return;
         }
         auto message = ui->chat_message->text().toStdString();
@@ -184,12 +318,14 @@ void ChatRoom::OnSendChat() {
             return;
         }
         auto nick = room->GetNickname();
-        Network::ChatEntry chat{nick, message};
+        auto username = room->GetUsername();
+        Network::ChatEntry chat{nick, username, message};
 
         auto members = room->GetMemberInformation();
         auto it = std::find_if(members.begin(), members.end(),
                                [&chat](const Network::RoomMember::MemberInformation& member) {
-                                   return member.nickname == chat.nickname;
+                                   return member.nickname == chat.nickname &&
+                                          member.username == chat.username;
                                });
         if (it == members.end()) {
             LOG_INFO(Network, "Cannot find self in the player list when sending a message.");
@@ -202,20 +338,64 @@ void ChatRoom::OnSendChat() {
     }
 }
 
+void ChatRoom::UpdateIconDisplay() {
+    for (int row = 0; row < player_list->invisibleRootItem()->rowCount(); ++row) {
+        QStandardItem* item = player_list->invisibleRootItem()->child(row);
+        const std::string avatar_url =
+            item->data(PlayerListItem::AvatarUrlRole).toString().toStdString();
+        if (icon_cache.count(avatar_url)) {
+            item->setData(icon_cache.at(avatar_url), Qt::DecorationRole);
+        }
+    }
+}
+
 void ChatRoom::SetPlayerList(const Network::RoomMember::MemberList& member_list) {
     // TODO(B3N30): Remember which row is selected
     player_list->removeRows(0, player_list->rowCount());
     for (const auto& member : member_list) {
         if (member.nickname.empty())
             continue;
-        QList<QStandardItem*> l;
-        std::vector<std::string> elements = {member.nickname, member.game_info.name};
-        for (const auto& item : elements) {
-            QStandardItem* child = new QStandardItem(QString::fromStdString(item));
-            child->setEditable(false);
-            l.append(child);
+        QStandardItem* name_item = new PlayerListItem(member.nickname, member.username,
+                                                      member.avatar_url, member.game_info.name);
+
+        if (!icon_cache.count(member.avatar_url)) {
+            // Emplace a default question mark icon as avatar
+            icon_cache.emplace(member.avatar_url, QIcon::fromTheme("no_avatar").pixmap(48));
+            if (!member.avatar_url.empty()) {
+#ifdef ENABLE_WEB_SERVICE
+                // Start a request to get the member's avatar
+                const QUrl url(QString::fromStdString(member.avatar_url));
+                QFuture<std::string> future = QtConcurrent::run([url] {
+                    WebService::Client client(
+                        QString("%1://%2").arg(url.scheme(), url.host()).toStdString(), "", "");
+                    auto result = client.GetImage(url.path().toStdString(), true);
+                    if (result.returned_data.empty()) {
+                        LOG_ERROR(WebService, "Failed to get avatar");
+                    }
+                    return result.returned_data;
+                });
+                auto* future_watcher = new QFutureWatcher<std::string>(this);
+                connect(future_watcher, &QFutureWatcher<std::string>::finished, this,
+                        [this, future_watcher, avatar_url = member.avatar_url] {
+                            const std::string result = future_watcher->result();
+                            if (result.empty())
+                                return;
+                            QPixmap pixmap;
+                            if (!pixmap.loadFromData(reinterpret_cast<const u8*>(result.data()),
+                                                     result.size()))
+                                return;
+                            icon_cache[avatar_url] = pixmap.scaled(48, 48, Qt::IgnoreAspectRatio,
+                                                                   Qt::SmoothTransformation);
+                            // Update all the displayed icons with the new icon_cache
+                            UpdateIconDisplay();
+                        });
+                future_watcher->setFuture(future);
+#endif
+            }
         }
-        player_list->invisibleRootItem()->appendRow(l);
+        name_item->setData(icon_cache.at(member.avatar_url), Qt::DecorationRole);
+
+        player_list->invisibleRootItem()->appendRow(name_item);
     }
     // TODO(B3N30): Restore row selection
 }
@@ -230,33 +410,73 @@ void ChatRoom::PopupContextMenu(const QPoint& menu_location) {
     if (!item.isValid())
         return;
 
-    std::string nickname = player_list->item(item.row())->text().toStdString();
-    if (auto room = Network::GetRoomMember().lock()) {
-        // You can't block yourself
-        if (nickname == room->GetNickname())
-            return;
-    }
+    std::string nickname =
+        player_list->item(item.row())->data(PlayerListItem::NicknameRole).toString().toStdString();
 
     QMenu context_menu;
-    QAction* block_action = context_menu.addAction(tr("Block Player"));
 
-    block_action->setCheckable(true);
-    block_action->setChecked(block_list.count(nickname) > 0);
+    QString username = player_list->item(item.row())->data(PlayerListItem::UsernameRole).toString();
+    if (!username.isEmpty()) {
+        QAction* view_profile_action = context_menu.addAction(tr("View Profile"));
+        connect(view_profile_action, &QAction::triggered, [username] {
+            QDesktopServices::openUrl(
+                QString("https://community.citra-emu.org/u/%1").arg(username));
+        });
+    }
 
-    connect(block_action, &QAction::triggered, [this, nickname] {
-        if (block_list.count(nickname)) {
-            block_list.erase(nickname);
-        } else {
+    std::string cur_nickname;
+    if (auto room = Network::GetRoomMember().lock()) {
+        cur_nickname = room->GetNickname();
+    }
+
+    if (nickname != cur_nickname) { // You can't block yourself
+        QAction* block_action = context_menu.addAction(tr("Block Player"));
+
+        block_action->setCheckable(true);
+        block_action->setChecked(block_list.count(nickname) > 0);
+
+        connect(block_action, &QAction::triggered, [this, nickname] {
+            if (block_list.count(nickname)) {
+                block_list.erase(nickname);
+            } else {
+                QMessageBox::StandardButton result = QMessageBox::question(
+                    this, tr("Block Player"),
+                    tr("When you block a player, you will no longer receive chat messages from "
+                       "them.<br><br>Are you sure you would like to block %1?")
+                        .arg(QString::fromStdString(nickname)),
+                    QMessageBox::Yes | QMessageBox::No);
+                if (result == QMessageBox::Yes)
+                    block_list.emplace(nickname);
+            }
+        });
+    }
+
+    if (has_mod_perms && nickname != cur_nickname) { // You can't kick or ban yourself
+        context_menu.addSeparator();
+
+        QAction* kick_action = context_menu.addAction(tr("Kick"));
+        QAction* ban_action = context_menu.addAction(tr("Ban"));
+
+        connect(kick_action, &QAction::triggered, [this, nickname] {
+            QMessageBox::StandardButton result =
+                QMessageBox::question(this, tr("Kick Player"),
+                                      tr("Are you sure you would like to <b>kick</b> %1?")
+                                          .arg(QString::fromStdString(nickname)),
+                                      QMessageBox::Yes | QMessageBox::No);
+            if (result == QMessageBox::Yes)
+                SendModerationRequest(Network::IdModKick, nickname);
+        });
+        connect(ban_action, &QAction::triggered, [this, nickname] {
             QMessageBox::StandardButton result = QMessageBox::question(
-                this, tr("Block Player"),
-                tr("When you block a player, you will no longer receive chat messages from "
-                   "them.<br><br>Are you sure you would like to block %1?")
+                this, tr("Ban Player"),
+                tr("Are you sure you would like to <b>kick and ban</b> %1?\n\nThis would "
+                   "ban both their forum username and their IP address.")
                     .arg(QString::fromStdString(nickname)),
                 QMessageBox::Yes | QMessageBox::No);
             if (result == QMessageBox::Yes)
-                block_list.emplace(nickname);
-        }
-    });
+                SendModerationRequest(Network::IdModBan, nickname);
+        });
+    }
 
     context_menu.exec(ui->player_view->viewport()->mapToGlobal(menu_location));
 }

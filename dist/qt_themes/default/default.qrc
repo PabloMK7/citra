@@ -10,6 +10,8 @@
 
         <file alias="16x16/disconnected.png">icons/16x16/disconnected.png</file>
 
+        <file alias="16x16/connected_notification.png">icons/16x16/connected_notification.png</file>
+
         <file alias="16x16/lock.png">icons/16x16/lock.png</file>
 
         <file alias="48x48/bad_folder.png">icons/48x48/bad_folder.png</file>
@@ -17,6 +19,8 @@
         <file alias="48x48/chip.png">icons/48x48/chip.png</file>
 
         <file alias="48x48/folder.png">icons/48x48/folder.png</file>
+
+        <file alias="48x48/no_avatar.png">icons/48x48/no_avatar.png</file>
 
         <file alias="48x48/plus.png">icons/48x48/plus.png</file>
       

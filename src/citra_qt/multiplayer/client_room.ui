@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>607</width>
+    <width>807</width>
     <height>432</height>
    </rect>
   </property>
@@ -22,6 +22,13 @@
         <number>0</number>
        </property>
        <item>
+        <widget class="QLabel" name="description">
+         <property name="text">
+          <string>Room Description</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <spacer name="horizontalSpacer">
          <property name="orientation">
           <enum>Qt::Horizontal</enum>
@@ -33,6 +40,16 @@
           </size>
          </property>
         </spacer>
+       </item>
+       <item>
+        <widget class="QPushButton" name="moderation">
+         <property name="text">
+          <string>Moderation...</string>
+         </property>
+         <property name="visible">
+          <bool>false</bool>
+         </property>
+        </widget>
        </item>
        <item>
         <widget class="QPushButton" name="disconnect">
