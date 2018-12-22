@@ -16,7 +16,7 @@ class ConfigureUi : public QWidget {
 
 public:
     explicit ConfigureUi(QWidget* parent = nullptr);
-    ~ConfigureUi();
+    ~ConfigureUi() override;
 
     void applyConfiguration();
     void retranslateUi();

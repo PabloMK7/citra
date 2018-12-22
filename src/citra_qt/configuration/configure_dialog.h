@@ -18,7 +18,7 @@ class ConfigureDialog : public QDialog {
 
 public:
     explicit ConfigureDialog(QWidget* parent, const HotkeyRegistry& registry);
-    ~ConfigureDialog();
+    ~ConfigureDialog() override;
 
     void applyConfiguration();
     void UpdateVisibleTabs();
@@ -34,6 +34,5 @@ private:
     void setConfiguration();
     void retranslateUi();
 
-private:
     std::unique_ptr<Ui::ConfigureDialog> ui;
 };

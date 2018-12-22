@@ -17,19 +17,18 @@ class ConfigureWeb : public QWidget {
 
 public:
     explicit ConfigureWeb(QWidget* parent = nullptr);
-    ~ConfigureWeb();
+    ~ConfigureWeb() override;
 
     void applyConfiguration();
     void retranslateUi();
     void setConfiguration();
 
-public slots:
+private:
     void RefreshTelemetryID();
     void OnLoginChanged();
     void VerifyLogin();
     void OnLoginVerified();
 
-private:
     bool user_verified = true;
     QFutureWatcher<bool> verify_watcher;
 

@@ -46,7 +46,7 @@ class ConfigureMotionTouch : public QDialog {
 
 public:
     explicit ConfigureMotionTouch(QWidget* parent = nullptr);
-    ~ConfigureMotionTouch();
+    ~ConfigureMotionTouch() override;
 
 public slots:
     void applyConfiguration();

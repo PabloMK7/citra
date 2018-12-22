@@ -37,12 +37,13 @@ void GameListWorker::AddFstEntriesToGameList(const std::string& dir_path, unsign
     const auto callback = [this, recursion, parent_dir](u64* num_entries_out,
                                                         const std::string& directory,
                                                         const std::string& virtual_name) -> bool {
-        std::string physical_name = directory + DIR_SEP + virtual_name;
+        if (stop_processing) {
+            // Breaks the callback loop.
+            return false;
+        }
 
-        if (stop_processing)
-            return false; // Breaks the callback loop.
-
-        bool is_dir = FileUtil::IsDirectory(physical_name);
+        const std::string physical_name = directory + DIR_SEP + virtual_name;
+        const bool is_dir = FileUtil::IsDirectory(physical_name);
         if (!is_dir && HasSupportedFileExtension(physical_name)) {
             std::unique_ptr<Loader::AppLoader> loader = Loader::GetLoader(physical_name);
             if (!loader)

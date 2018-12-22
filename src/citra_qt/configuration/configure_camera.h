@@ -16,7 +16,7 @@ class ConfigureCamera : public QWidget {
 
 public:
     explicit ConfigureCamera(QWidget* parent = nullptr);
-    ~ConfigureCamera();
+    ~ConfigureCamera() override;
 
     void applyConfiguration();
     void retranslateUi();
