@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.8)
 
 add_library(citra-android STATIC
-            src/main/cpp/dummy.cpp
+            dummy.cpp
             )
 
 # find Android's log library
