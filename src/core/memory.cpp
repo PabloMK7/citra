@@ -56,12 +56,6 @@ private:
 
 class MemorySystem::Impl {
 public:
-    Impl() {
-        std::fill(fcram.get(), fcram.get() + Memory::FCRAM_N3DS_SIZE, 0);
-        std::fill(vram.get(), vram.get() + Memory::VRAM_SIZE, 0);
-        std::fill(n3ds_extra_ram.get(), n3ds_extra_ram.get() + Memory::N3DS_EXTRA_RAM_SIZE, 0);
-    }
-
     // Visual Studio would try to allocate these on compile time if they are std::array, which would
     // exceed the memory limit.
     std::unique_ptr<u8[]> fcram = std::make_unique<u8[]>(Memory::FCRAM_N3DS_SIZE);
