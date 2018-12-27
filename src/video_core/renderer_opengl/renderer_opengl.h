@@ -14,7 +14,7 @@
 #include "video_core/renderer_opengl/gl_state.h"
 
 namespace Layout {
-class FramebufferLayout;
+struct FramebufferLayout;
 }
 
 namespace OpenGL {
