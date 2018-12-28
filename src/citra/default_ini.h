@@ -38,6 +38,7 @@ button_l=
 button_r=
 button_start=
 button_select=
+button_dbg=
 button_zl=
 button_zr=
 button_home=

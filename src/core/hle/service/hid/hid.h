@@ -52,6 +52,7 @@ struct PadState {
         BitField<9, 1, u32> l;
         BitField<10, 1, u32> x;
         BitField<11, 1, u32> y;
+        BitField<12, 1, u32> dbg;
 
         BitField<28, 1, u32> circle_right;
         BitField<29, 1, u32> circle_left;
