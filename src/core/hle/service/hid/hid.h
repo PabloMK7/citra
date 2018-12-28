@@ -53,6 +53,7 @@ struct PadState {
         BitField<10, 1, u32> x;
         BitField<11, 1, u32> y;
         BitField<12, 1, u32> debug;
+        BitField<13, 1, u32> gpio14;
 
         BitField<28, 1, u32> circle_right;
         BitField<29, 1, u32> circle_left;

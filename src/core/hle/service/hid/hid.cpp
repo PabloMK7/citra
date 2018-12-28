@@ -88,6 +88,7 @@ void Module::UpdatePadCallback(u64 userdata, s64 cycles_late) {
     state.start.Assign(buttons[Start - BUTTON_HID_BEGIN]->GetStatus());
     state.select.Assign(buttons[Select - BUTTON_HID_BEGIN]->GetStatus());
     state.debug.Assign(buttons[Debug - BUTTON_HID_BEGIN]->GetStatus());
+    state.gpio14.Assign(buttons[Gpio14 - BUTTON_HID_BEGIN]->GetStatus());
 
     // Get current circle pad position and update circle pad direction
     float circle_pad_x_f, circle_pad_y_f;

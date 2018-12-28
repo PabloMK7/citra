@@ -103,7 +103,8 @@ ConfigureInput::ConfigureInput(QWidget* parent)
         ui->buttonA,      ui->buttonB,        ui->buttonX,        ui->buttonY,
         ui->buttonDpadUp, ui->buttonDpadDown, ui->buttonDpadLeft, ui->buttonDpadRight,
         ui->buttonL,      ui->buttonR,        ui->buttonStart,    ui->buttonSelect,
-        nullptr,          ui->buttonZL,       ui->buttonZR,       ui->buttonHome,
+        ui->buttonDebug,  ui->buttonGpio14,   ui->buttonZL,       ui->buttonZR,
+        ui->buttonHome,
     };
 
     analog_map_buttons = {{
