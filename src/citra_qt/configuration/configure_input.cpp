@@ -96,9 +96,6 @@ static QString AnalogToText(const Common::ParamPackage& param, const std::string
 ConfigureInput::ConfigureInput(QWidget* parent)
     : QWidget(parent), ui(std::make_unique<Ui::ConfigureInput>()),
       timeout_timer(std::make_unique<QTimer>()), poll_timer(std::make_unique<QTimer>()) {
-
-    // If the user closes the dialog, the changes are reverted in `GMainWindow::OnConfigure()`
-
     ui->setupUi(this);
     setFocusPolicy(Qt::ClickFocus);
 
@@ -141,6 +138,8 @@ ConfigureInput::ConfigureInput(QWidget* parent)
             handleClick(button_map[button_id],
                         [=](const Common::ParamPackage& params) {
                             buttons_param[button_id] = params;
+                            // If the user closes the dialog, the changes are reverted in
+                            // `GMainWindow::OnConfigure()`
                             applyConfiguration();
                             Settings::SaveProfile(ui->profile->currentIndex());
                         },
