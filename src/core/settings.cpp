@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <utility>
 #include "audio_core/dsp_interface.h"
 #include "core/core.h"
 #include "core/gdbstub/gdbstub.h"
@@ -97,6 +98,53 @@ void LogSettings() {
     LogSetting("System_RegionValue", Settings::values.region_value);
     LogSetting("Debugging_UseGdbstub", Settings::values.use_gdbstub);
     LogSetting("Debugging_GdbstubPort", Settings::values.gdbstub_port);
+}
+
+void LoadProfile(int index) {
+    const auto& profile = values.profiles[index];
+    values.profile = index;
+    values.analogs = profile.analogs;
+    values.buttons = profile.buttons;
+    values.motion_device = profile.motion_device;
+    values.touch_device = profile.touch_device;
+    values.udp_input_address = profile.udp_input_address;
+    values.udp_input_port = profile.udp_input_port;
+    values.udp_pad_index = profile.udp_pad_index;
+}
+
+void SaveProfile(int index) {
+    auto& profile = values.profiles[index];
+    profile.analogs = values.analogs;
+    profile.buttons = values.buttons;
+    profile.motion_device = values.motion_device;
+    profile.touch_device = values.touch_device;
+    profile.udp_input_address = values.udp_input_address;
+    profile.udp_input_port = values.udp_input_port;
+    profile.udp_pad_index = values.udp_pad_index;
+}
+
+void CreateProfile(std::string name) {
+    InputProfile profile;
+    profile.name = std::move(name);
+    profile.analogs = values.analogs;
+    profile.buttons = values.buttons;
+    profile.motion_device = values.motion_device;
+    profile.touch_device = values.touch_device;
+    profile.udp_input_address = values.udp_input_address;
+    profile.udp_input_port = values.udp_input_port;
+    profile.udp_pad_index = values.udp_pad_index;
+    values.profiles.push_back(profile);
+    values.profile = static_cast<int>(values.profiles.size()) - 1;
+    LoadProfile(values.profile);
+}
+
+void DeleteProfile(int index) {
+    values.profiles.erase(values.profiles.begin() + index);
+    LoadProfile(0);
+}
+
+void RenameCurrentProfile(std::string new_name) {
+    values.profiles[values.profile].name = std::move(new_name);
 }
 
 } // namespace Settings

@@ -71,6 +71,7 @@ static const std::array<std::array<int, 5>, Settings::NativeAnalog::NumAnalogs> 
 
 void Config::ReadValues() {
     // Controls
+    // TODO: add multiple input profile support
     for (int i = 0; i < Settings::NativeButton::NumButtons; ++i) {
         std::string default_param = InputCommon::GenerateKeyboardParam(default_buttons[i]);
         Settings::values.buttons[i] =

@@ -270,6 +270,7 @@ void ConfigureMotionTouch::applyConfiguration() {
     Settings::values.udp_input_address = ui->udp_server->text().toStdString();
     Settings::values.udp_input_port = static_cast<u16>(ui->udp_port->text().toInt());
     Settings::values.udp_pad_index = static_cast<u8>(ui->udp_pad_index->currentIndex());
+    Settings::SaveProfile(Settings::values.profile);
     InputCommon::ReloadInputDevices();
 
     accept();
