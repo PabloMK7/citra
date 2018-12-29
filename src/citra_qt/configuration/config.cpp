@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <algorithm>
 #include <unordered_map>
 #include <QSettings>
 #include "citra_qt/configuration/config.h"
@@ -102,14 +103,14 @@ void Config::ReadValues() {
 
     qt_config->endArray();
 
-    if (Settings::values.current_input_profile_index <= num_input_profiles) {
-        Settings::values.current_input_profile_index = 0;
-    }
-
     // create a input profile if no input profiles exist, with the default or old settings
     if (num_input_profiles == 0) {
         append_profile();
     }
+
+    // ensure that the current input profile index is valid.
+    Settings::values.current_input_profile_index =
+        std::clamp(Settings::values.current_input_profile_index, 0, num_input_profiles - 1);
 
     Settings::LoadProfile(Settings::values.current_input_profile_index);
 
