@@ -379,9 +379,9 @@ void Config::SaveValues() {
     qt_config->beginGroup("Controls");
     WriteSetting("profile", Settings::values.current_input_profile, 0);
     qt_config->beginWriteArray("profiles");
-    for (std::size_t p = 0; p < Settings::values.inprofiles.size(); ++p) {
+    for (std::size_t p = 0; p < Settings::values.input_profiles.size(); ++p) {
         qt_config->setArrayIndex(static_cast<int>(p));
-        const auto& profile = Settings::values.profiles[p];
+        const auto& profile = Settings::values.input_profiles[p];
         for (int i = 0; i < Settings::NativeButton::NumButtons; ++i) {
             std::string default_param = InputCommon::GenerateKeyboardParam(default_buttons[i]);
             WriteSetting(QString::fromStdString(Settings::NativeButton::mapping[i]),
