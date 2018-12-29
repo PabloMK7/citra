@@ -113,7 +113,7 @@ void Config::ReadValues() {
 
     Settings::LoadProfile(Settings::values.current_input_profile_index);
 
-    qt_config->endArray();
+    qt_config->endGroup();
 
     qt_config->beginGroup("Core");
     Settings::values.use_cpu_jit = ReadSetting("use_cpu_jit", true).toBool();

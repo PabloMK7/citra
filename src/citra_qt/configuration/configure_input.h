@@ -40,7 +40,7 @@ public:
     void loadConfiguration();
 
     // Save the current input profile index
-    void applyProfile();
+    void ApplyProfile();
 
 private:
     std::unique_ptr<Ui::ConfigureInput> ui;
@@ -96,7 +96,7 @@ private:
     void keyPressEvent(QKeyEvent* event) override;
 
     /// input profiles
-    void newProfile();
-    void deleteProfile();
-    void renameProfile();
+    void NewProfile();
+    void DeleteProfile();
+    void RenameProfile();
 };

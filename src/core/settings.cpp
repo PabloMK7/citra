@@ -101,29 +101,31 @@ void LogSettings() {
 }
 
 void LoadProfile(int index) {
-    values.current_input_profile = values.input_profiles[index];
-    values.current_input_profile_index = index;
+    Settings::values.current_input_profile = Settings::values.input_profiles[index];
+    Settings::values.current_input_profile_index = index;
 }
 
 void SaveProfile(int index) {
-    values.input_profiles[index] = values.current_input_profile;
+    Settings::values.input_profiles[index] = Settings::values.current_input_profile;
 }
 
 void CreateProfile(std::string name) {
-    InputProfile profile = values.current_input_profile;
+    Settings::InputProfile profile = values.current_input_profile;
     profile.name = std::move(name);
-    values.input_profiles.push_back(std::move(profile));
-    values.current_input_profile_index = static_cast<int>(values.input_profiles.size()) - 1;
-    LoadProfile(values.current_input_profile_index);
+    Settings::values.input_profiles.push_back(std::move(profile));
+    Settings::values.current_input_profile_index =
+        static_cast<int>(Settings::values.input_profiles.size()) - 1;
+    Settings::LoadProfile(Settings::values.current_input_profile_index);
 }
 
 void DeleteProfile(int index) {
-    values.input_profiles.erase(values.input_profiles.begin() + index);
-    LoadProfile(0);
+    Settings::values.input_profiles.erase(Settings::values.input_profiles.begin() + index);
+    Settings::LoadProfile(0);
 }
 
 void RenameCurrentProfile(std::string new_name) {
-    values.input_profiles[values.current_input_profile_index].name = std::move(new_name);
+    Settings::values.input_profiles[Settings::values.current_input_profile_index].name =
+        std::move(new_name);
 }
 
 } // namespace Settings

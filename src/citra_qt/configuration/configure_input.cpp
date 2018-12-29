@@ -224,11 +224,14 @@ ConfigureInput::ConfigureInput(QWidget* parent)
         QDialog* motion_touch_dialog = new ConfigureMotionTouch(this);
         return motion_touch_dialog->exec();
     });
+
+    ui->buttonDelete->setEnabled(ui->profile->count() > 1);
+
     connect(ui->buttonClearAll, &QPushButton::released, [this] { ClearAll(); });
     connect(ui->buttonRestoreDefaults, &QPushButton::released, [this]() { restoreDefaults(); });
-    connect(ui->buttonNew, &QPushButton::released, [this] { newProfile(); });
-    connect(ui->buttonDelete, &QPushButton::released, [this] { deleteProfile(); });
-    connect(ui->buttonRename, &QPushButton::released, [this] { renameProfile(); });
+    connect(ui->buttonNew, &QPushButton::released, [this] { NewProfile(); });
+    connect(ui->buttonDelete, &QPushButton::released, [this] { DeleteProfile(); });
+    connect(ui->buttonRename, &QPushButton::released, [this] { RenameProfile(); });
 
     connect(ui->profile, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
             [this](int i) {
@@ -269,7 +272,7 @@ void ConfigureInput::applyConfiguration() {
                    [](const Common::ParamPackage& param) { return param.Serialize(); });
 }
 
-void ConfigureInput::applyProfile() {
+void ConfigureInput::ApplyProfile() {
     Settings::values.current_input_profile_index = ui->profile->currentIndex();
 }
 
@@ -390,7 +393,7 @@ void ConfigureInput::retranslateUi() {
     ui->retranslateUi(this);
 }
 
-void ConfigureInput::newProfile() {
+void ConfigureInput::NewProfile() {
     const QString name =
         QInputDialog::getText(this, tr("New Profile"), tr("Enter the name for the new profile."));
     if (name.isEmpty()) {
@@ -402,13 +405,10 @@ void ConfigureInput::newProfile() {
     ui->profile->addItem(name);
     ui->profile->setCurrentIndex(Settings::values.current_input_profile_index);
     loadConfiguration();
+    ui->buttonDelete->setEnabled(ui->profile->count() > 1);
 }
 
-void ConfigureInput::deleteProfile() {
-    if (ui->profile->count() == 1) {
-        QMessageBox::critical(this, tr("Citra"), tr("You need to have 1 profile at least"));
-        return;
-    }
+void ConfigureInput::DeleteProfile() {
     const auto answer = QMessageBox::question(
         this, tr("Delete Profile"), tr("Delete profile %1?").arg(ui->profile->currentText()));
     if (answer != QMessageBox::Yes) {
@@ -419,9 +419,10 @@ void ConfigureInput::deleteProfile() {
     ui->profile->setCurrentIndex(0);
     Settings::DeleteProfile(index);
     loadConfiguration();
+    ui->buttonDelete->setEnabled(ui->profile->count() > 1);
 }
 
-void ConfigureInput::renameProfile() {
+void ConfigureInput::RenameProfile() {
     const QString new_name = QInputDialog::getText(this, tr("Rename Profile"), tr("New name:"));
     if (new_name.isEmpty()) {
         return;
