@@ -139,7 +139,7 @@ void CreateProfile(std::string name) {
 }
 
 void DeleteProfile(int index) {
-    values.input_profiles(values.input_profiles.begin() + index);
+    values.input_profiles.erase(values.input_profiles.begin() + index);
     LoadProfile(0);
 }
 
