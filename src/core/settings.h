@@ -108,16 +108,9 @@ struct Values {
     // CheckNew3DS
     bool is_new_3ds;
 
-    // Current controls
-    std::array<std::string, NativeButton::NumButtons> buttons;
-    std::array<std::string, NativeAnalog::NumAnalogs> analogs;
-    std::string motion_device;
-    std::string touch_device;
-    std::string udp_input_address;
-    u16 udp_input_port;
-    u8 udp_pad_index;
-
-    int current_input_profile;                ///< The current input profile index
+    // Controls
+    InputProfile current_input_profile;       ///< The current input profile
+    int current_input_profile_index;          ///< The current input profile index
     std::vector<InputProfile> input_profiles; ///< The list of input profiles
 
     // Core

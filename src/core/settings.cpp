@@ -101,41 +101,20 @@ void LogSettings() {
 }
 
 void LoadProfile(int index) {
-    const auto& profile = values.input_profiles[index];
-    values.current_input_profile = index;
-    values.analogs = profile.analogs;
-    values.buttons = profile.buttons;
-    values.motion_device = profile.motion_device;
-    values.touch_device = profile.touch_device;
-    values.udp_input_address = profile.udp_input_address;
-    values.udp_input_port = profile.udp_input_port;
-    values.udp_pad_index = profile.udp_pad_index;
+    values.current_input_profile = values.input_profiles[index];
+    values.current_input_profile_index = index;
 }
 
 void SaveProfile(int index) {
-    auto& profile = values.input_profiles[index];
-    profile.analogs = values.analogs;
-    profile.buttons = values.buttons;
-    profile.motion_device = values.motion_device;
-    profile.touch_device = values.touch_device;
-    profile.udp_input_address = values.udp_input_address;
-    profile.udp_input_port = values.udp_input_port;
-    profile.udp_pad_index = values.udp_pad_index;
+    values.input_profiles[index] = values.current_input_profile;
 }
 
 void CreateProfile(std::string name) {
-    InputProfile profile;
+    InputProfile profile = values.current_input_profile;
     profile.name = std::move(name);
-    profile.analogs = values.analogs;
-    profile.buttons = values.buttons;
-    profile.motion_device = values.motion_device;
-    profile.touch_device = values.touch_device;
-    profile.udp_input_address = values.udp_input_address;
-    profile.udp_input_port = values.udp_input_port;
-    profile.udp_pad_index = values.udp_pad_index;
     values.input_profiles.push_back(std::move(profile));
-    values.current_input_profile = static_cast<int>(values.input_profiles.size()) - 1;
-    LoadProfile(values.current_input_profile);
+    values.current_input_profile_index = static_cast<int>(values.input_profiles.size()) - 1;
+    LoadProfile(values.current_input_profile_index);
 }
 
 void DeleteProfile(int index) {
@@ -144,7 +123,7 @@ void DeleteProfile(int index) {
 }
 
 void RenameCurrentProfile(std::string new_name) {
-    values.input_profiles[values.current_input_profile].name = std::move(new_name);
+    values.input_profiles[values.current_input_profile_index].name = std::move(new_name);
 }
 
 } // namespace Settings

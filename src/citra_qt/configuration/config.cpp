@@ -51,7 +51,7 @@ const std::array<std::array<int, 5>, Settings::NativeAnalog::NumAnalogs> Config:
 void Config::ReadValues() {
     qt_config->beginGroup("Controls");
 
-    Settings::values.current_input_profile = ReadSetting("profile", 0).toInt();
+    Settings::values.current_input_profile_index = ReadSetting("profile", 0).toInt();
 
     const auto append_profile = [this] {
         Settings::InputProfile profile;
@@ -102,8 +102,8 @@ void Config::ReadValues() {
 
     qt_config->endArray();
 
-    if (Settings::values.current_input_profile <= num_input_profiles) {
-        Settings::values.current_input_profile = 0;
+    if (Settings::values.current_input_profile_index <= num_input_profiles) {
+        Settings::values.current_input_profile_index = 0;
     }
 
     // create a input profile if no input profiles exist, with the default or old settings
@@ -111,7 +111,7 @@ void Config::ReadValues() {
         append_profile();
     }
 
-    Settings::LoadProfile(Settings::values.current_input_profile);
+    Settings::LoadProfile(Settings::values.current_input_profile_index);
 
     qt_config->endArray();
 
@@ -377,7 +377,7 @@ void Config::ReadValues() {
 
 void Config::SaveValues() {
     qt_config->beginGroup("Controls");
-    WriteSetting("profile", Settings::values.current_input_profile, 0);
+    WriteSetting("profile", Settings::values.current_input_profile_index, 0);
     qt_config->beginWriteArray("profiles");
     for (std::size_t p = 0; p < Settings::values.input_profiles.size(); ++p) {
         qt_config->setArrayIndex(static_cast<int>(p));

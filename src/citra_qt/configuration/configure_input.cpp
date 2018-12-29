@@ -104,7 +104,7 @@ ConfigureInput::ConfigureInput(QWidget* parent)
         ui->profile->addItem(QString::fromStdString(profile.name));
     }
 
-    ui->profile->setCurrentIndex(Settings::values.current_input_profile);
+    ui->profile->setCurrentIndex(Settings::values.current_input_profile_index);
 
     button_map = {
         ui->buttonA,        ui->buttonB,        ui->buttonX,         ui->buttonY,  ui->buttonDpadUp,
@@ -233,7 +233,7 @@ ConfigureInput::ConfigureInput(QWidget* parent)
     connect(ui->profile, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
             [this](int i) {
                 applyConfiguration();
-                Settings::SaveProfile(Settings::values.current_input_profile);
+                Settings::SaveProfile(Settings::values.current_input_profile_index);
                 Settings::LoadProfile(i);
                 loadConfiguration();
             });
@@ -261,22 +261,24 @@ ConfigureInput::ConfigureInput(QWidget* parent)
 ConfigureInput::~ConfigureInput() = default;
 
 void ConfigureInput::applyConfiguration() {
-    std::transform(buttons_param.begin(), buttons_param.end(), Settings::values.buttons.begin(),
+    std::transform(buttons_param.begin(), buttons_param.end(),
+                   Settings::values.current_input_profile.buttons.begin(),
                    [](const Common::ParamPackage& param) { return param.Serialize(); });
-    std::transform(analogs_param.begin(), analogs_param.end(), Settings::values.analogs.begin(),
+    std::transform(analogs_param.begin(), analogs_param.end(),
+                   Settings::values.current_input_profile.analogs.begin(),
                    [](const Common::ParamPackage& param) { return param.Serialize(); });
 }
 
 void ConfigureInput::applyProfile() {
-    Settings::values.current_input_profile = ui->profile->currentIndex();
+    Settings::values.current_input_profile_index = ui->profile->currentIndex();
 }
 
 void ConfigureInput::loadConfiguration() {
-    std::transform(Settings::values.buttons.begin(), Settings::values.buttons.end(),
-                   buttons_param.begin(),
+    std::transform(Settings::values.current_input_profile.buttons.begin(),
+                   Settings::values.current_input_profile.buttons.end(), buttons_param.begin(),
                    [](const std::string& str) { return Common::ParamPackage(str); });
-    std::transform(Settings::values.analogs.begin(), Settings::values.analogs.end(),
-                   analogs_param.begin(),
+    std::transform(Settings::values.current_input_profile.analogs.begin(),
+                   Settings::values.current_input_profile.analogs.end(), analogs_param.begin(),
                    [](const std::string& str) { return Common::ParamPackage(str); });
     updateButtonLabels();
 }
@@ -398,7 +400,7 @@ void ConfigureInput::newProfile() {
     Settings::SaveProfile(ui->profile->currentIndex());
     Settings::CreateProfile(name.toStdString());
     ui->profile->addItem(name);
-    ui->profile->setCurrentIndex(Settings::values.current_input_profile);
+    ui->profile->setCurrentIndex(Settings::values.current_input_profile_index);
     loadConfiguration();
 }
 

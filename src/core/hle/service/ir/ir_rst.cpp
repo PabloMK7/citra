@@ -35,11 +35,11 @@ static_assert(sizeof(SharedMem) == 0x98, "SharedMem has wrong size!");
 
 void IR_RST::LoadInputDevices() {
     zl_button = Input::CreateDevice<Input::ButtonDevice>(
-        Settings::values.buttons[Settings::NativeButton::ZL]);
+        Settings::values.current_input_profile.buttons[Settings::NativeButton::ZL]);
     zr_button = Input::CreateDevice<Input::ButtonDevice>(
-        Settings::values.buttons[Settings::NativeButton::ZR]);
+        Settings::values.current_input_profile.buttons[Settings::NativeButton::ZR]);
     c_stick = Input::CreateDevice<Input::AnalogDevice>(
-        Settings::values.analogs[Settings::NativeAnalog::CStick]);
+        Settings::values.current_input_profile.analogs[Settings::NativeAnalog::CStick]);
 }
 
 void IR_RST::UnloadInputDevices() {
