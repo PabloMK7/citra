@@ -93,7 +93,7 @@ void Config::ReadValues() {
         Settings::values.profiles.emplace_back(std::move(profile));
     };
 
-    int size = qt_config->beginReadArray("profiles");
+    const int num_input_profiles = qt_config->beginReadArray("profiles");
 
     for (int i = 0; i < size; ++i) {
         qt_config->setArrayIndex(i);

@@ -117,8 +117,8 @@ struct Values {
     u16 udp_input_port;
     u8 udp_pad_index;
 
-    int profile;                        ///< The current input profile index
-    std::vector<InputProfile> profiles; ///< The list of input profiles
+    int current_input_profile;                        ///< The current input profile index
+    std::vector<InputProfile> input_profiles; ///< The list of input profiles
 
     // Core
     bool use_cpu_jit;

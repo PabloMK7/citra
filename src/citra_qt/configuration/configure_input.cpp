@@ -100,7 +100,9 @@ ConfigureInput::ConfigureInput(QWidget* parent)
     ui->setupUi(this);
     setFocusPolicy(Qt::ClickFocus);
 
-    for (int i = 0; i < Settings::values.profiles.size(); ++i) {
+    for (const auto& profile : Settings::values::profiles) {
+        ui->profile->addItem(QString::fromStdString(profile.name));
+    }
         ui->profile->addItem(QString::fromStdString(Settings::values.profiles[i].name));
     }
 
@@ -389,7 +391,7 @@ void ConfigureInput::retranslateUi() {
 }
 
 void ConfigureInput::newProfile() {
-    QString name =
+    const QString name =
         QInputDialog::getText(this, tr("New Profile"), tr("Enter the name for the new profile."));
     if (name.isEmpty()) {
         return;
@@ -407,12 +409,12 @@ void ConfigureInput::deleteProfile() {
         QMessageBox::critical(this, tr("Citra"), tr("You need to have 1 profile at least"));
         return;
     }
-    QMessageBox::StandardButton answer = QMessageBox::question(
+    const auto answer = QMessageBox::question(
         this, tr("Delete Profile"), tr("Delete profile %1?").arg(ui->profile->currentText()));
     if (answer != QMessageBox::Yes) {
         return;
     }
-    int index = ui->profile->currentIndex();
+    const int index = ui->profile->currentIndex();
     ui->profile->removeItem(index);
     ui->profile->setCurrentIndex(0);
     Settings::DeleteProfile(index);
@@ -420,7 +422,7 @@ void ConfigureInput::deleteProfile() {
 }
 
 void ConfigureInput::renameProfile() {
-    QString new_name = QInputDialog::getText(this, tr("Rename Profile"), tr("New name:"));
+    const QString new_name = QInputDialog::getText(this, tr("Rename Profile"), tr("New name:"));
     if (new_name.isEmpty()) {
         return;
     }

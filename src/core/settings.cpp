@@ -133,7 +133,7 @@ void CreateProfile(std::string name) {
     profile.udp_input_address = values.udp_input_address;
     profile.udp_input_port = values.udp_input_port;
     profile.udp_pad_index = values.udp_pad_index;
-    values.profiles.push_back(profile);
+    values.profiles.push_back(std::move(profile));
     values.profile = static_cast<int>(values.profiles.size()) - 1;
     LoadProfile(values.profile);
 }
