@@ -102,7 +102,7 @@ void LogSettings() {
 
 void LoadProfile(int index) {
     const auto& profile = values.profiles[index];
-    values.profile = index;
+    values.current_input_profile = index;
     values.analogs = profile.analogs;
     values.buttons = profile.buttons;
     values.motion_device = profile.motion_device;
@@ -134,8 +134,8 @@ void CreateProfile(std::string name) {
     profile.udp_input_port = values.udp_input_port;
     profile.udp_pad_index = values.udp_pad_index;
     values.profiles.push_back(std::move(profile));
-    values.profile = static_cast<int>(values.profiles.size()) - 1;
-    LoadProfile(values.profile);
+    values.current_input_profile = static_cast<int>(values.profiles.size()) - 1;
+    LoadProfile(values.current_input_profile);
 }
 
 void DeleteProfile(int index) {
@@ -144,7 +144,7 @@ void DeleteProfile(int index) {
 }
 
 void RenameCurrentProfile(std::string new_name) {
-    values.profiles[values.profile].name = std::move(new_name);
+    values.profiles[values.current_input_profile].name = std::move(new_name);
 }
 
 } // namespace Settings

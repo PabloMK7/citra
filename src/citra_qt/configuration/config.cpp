@@ -51,7 +51,7 @@ const std::array<std::array<int, 5>, Settings::NativeAnalog::NumAnalogs> Config:
 void Config::ReadValues() {
     qt_config->beginGroup("Controls");
 
-    Settings::values.profile = ReadSetting("profile", 0).toInt();
+    Settings::values.current_input_profile = ReadSetting("profile", 0).toInt();
 
     const auto append_profile = [this] {
         Settings::InputProfile profile;
@@ -95,22 +95,23 @@ void Config::ReadValues() {
 
     const int num_input_profiles = qt_config->beginReadArray("profiles");
 
-    for (int i = 0; i < size; ++i) {
+    for (int i = 0; i < num_input_profiles; ++i) {
         qt_config->setArrayIndex(i);
         append_profile();
     }
 
     qt_config->endArray();
 
-    if (Settings::values.profile <= size) {
-        Settings::values.profile = 0;
+    if (Settings::values.current_input_profile <= num_input_profiles) {
+        Settings::values.current_input_profile = 0;
     }
 
-    if (size == 0) {
+    // create a input profile if no input profiles exist, with the default or old settings
+    if (num_input_profiles == 0) {
         append_profile();
     }
 
-    Settings::LoadProfile(Settings::values.profile);
+    Settings::LoadProfile(Settings::values.current_input_profile);
 
     qt_config->endArray();
 
@@ -281,7 +282,7 @@ void Config::ReadValues() {
     UISettings::values.game_dir_deprecated = ReadSetting("gameListRootDir", ".").toString();
     UISettings::values.game_dir_deprecated_deepscan =
         ReadSetting("gameListDeepScan", false).toBool();
-    size = qt_config->beginReadArray("gamedirs");
+    int size = qt_config->beginReadArray("gamedirs");
     for (int i = 0; i < size; ++i) {
         qt_config->setArrayIndex(i);
         UISettings::GameDir game_dir;
@@ -376,10 +377,10 @@ void Config::ReadValues() {
 
 void Config::SaveValues() {
     qt_config->beginGroup("Controls");
-    WriteSetting("profile", Settings::values.profile, 0);
+    WriteSetting("profile", Settings::values.current_input_profile, 0);
     qt_config->beginWriteArray("profiles");
-    for (int p = 0; p < Settings::values.profiles.size(); ++p) {
-        qt_config->setArrayIndex(p);
+    for (std::size_t p = 0; p < Settings::values.inprofiles.size(); ++p) {
+        qt_config->setArrayIndex(static_cast<int>(p));
         const auto& profile = Settings::values.profiles[p];
         for (int i = 0; i < Settings::NativeButton::NumButtons; ++i) {
             std::string default_param = InputCommon::GenerateKeyboardParam(default_buttons[i]);

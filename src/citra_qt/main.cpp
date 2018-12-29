@@ -1326,8 +1326,8 @@ void GMainWindow::OnConfigure() {
     connect(&configureDialog, &ConfigureDialog::languageChanged, this,
             &GMainWindow::OnLanguageChanged);
     auto old_theme = UISettings::values.theme;
-    const int old_profile = Settings::values.profile;
-    const auto old_profiles = Settings::values.profiles;
+    const int old_input_profile = Settings::values.current_input_profile;
+    const auto old_input_profiles = Settings::values.input_profiles;
     const bool old_discord_presence = UISettings::values.enable_discord_presence;
     auto result = configureDialog.exec();
     if (result == QDialog::Accepted) {
@@ -1341,8 +1341,8 @@ void GMainWindow::OnConfigure() {
         game_list->RefreshGameDirectory();
         config->Save();
     } else {
-        Settings::values.profiles = old_profiles;
-        Settings::LoadProfile(old_profile);
+        Settings::values.input_profiles = old_input_profiles;
+        Settings::LoadProfile(old_input_profile);
     }
 }
 
