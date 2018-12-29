@@ -90,7 +90,7 @@ void Config::ReadValues() {
         profile.udp_input_port = static_cast<u16>(
             ReadSetting("udp_input_port", InputCommon::CemuhookUDP::DEFAULT_PORT).toInt());
         profile.udp_pad_index = static_cast<u8>(ReadSetting("udp_pad_index", 0).toUInt());
-        Settings::values.profiles.emplace_back(std::move(profile));
+        Settings::values.input_profiles.emplace_back(std::move(profile));
     };
 
     const int num_input_profiles = qt_config->beginReadArray("profiles");
