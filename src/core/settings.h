@@ -185,7 +185,7 @@ static constexpr int REGION_VALUE_AUTO_SELECT = -1;
 void Apply();
 void LogSettings();
 
-// input profiles
+// Input profiles
 void LoadProfile(int index);
 void SaveProfile(int index);
 void CreateProfile(std::string name);
