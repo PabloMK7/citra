@@ -62,7 +62,7 @@ void Config::ReadValues() {
                                              QString::fromStdString(default_param))
                                      .toString()
                                      .toStdString();
-            if (profile.buttons.empty())
+            if (profile.buttons[i].empty())
                 profile.buttons[i] = default_param;
         }
         for (int i = 0; i < Settings::NativeAnalog::NumAnalogs; ++i) {
