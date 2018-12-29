@@ -94,7 +94,7 @@ void Config::ReadValues() {
         Settings::values.input_profiles.emplace_back(std::move(profile));
     };
 
-    const int num_input_profiles = qt_config->beginReadArray("profiles");
+    int num_input_profiles = qt_config->beginReadArray("profiles");
 
     for (int i = 0; i < num_input_profiles; ++i) {
         qt_config->setArrayIndex(i);
@@ -106,6 +106,7 @@ void Config::ReadValues() {
     // create a input profile if no input profiles exist, with the default or old settings
     if (num_input_profiles == 0) {
         append_profile();
+        num_input_profiles = 1;
     }
 
     // ensure that the current input profile index is valid.
