@@ -101,7 +101,7 @@ void LogSettings() {
 }
 
 void LoadProfile(int index) {
-    const auto& profile = values.profiles[index];
+    const auto& profile = values.input_profiles[index];
     values.current_input_profile = index;
     values.analogs = profile.analogs;
     values.buttons = profile.buttons;
@@ -113,7 +113,7 @@ void LoadProfile(int index) {
 }
 
 void SaveProfile(int index) {
-    auto& profile = values.profiles[index];
+    auto& profile = values.input_profiles[index];
     profile.analogs = values.analogs;
     profile.buttons = values.buttons;
     profile.motion_device = values.motion_device;
@@ -133,18 +133,18 @@ void CreateProfile(std::string name) {
     profile.udp_input_address = values.udp_input_address;
     profile.udp_input_port = values.udp_input_port;
     profile.udp_pad_index = values.udp_pad_index;
-    values.profiles.push_back(std::move(profile));
-    values.current_input_profile = static_cast<int>(values.profiles.size()) - 1;
+    values.input_profiles.push_back(std::move(profile));
+    values.current_input_profile = static_cast<int>(values.input_profiles.size()) - 1;
     LoadProfile(values.current_input_profile);
 }
 
 void DeleteProfile(int index) {
-    values.profiles.erase(values.profiles.begin() + index);
+    values.input_profiles(values.input_profiles.begin() + index);
     LoadProfile(0);
 }
 
 void RenameCurrentProfile(std::string new_name) {
-    values.profiles[values.current_input_profile].name = std::move(new_name);
+    values.input_profiles[values.current_input_profile].name = std::move(new_name);
 }
 
 } // namespace Settings
