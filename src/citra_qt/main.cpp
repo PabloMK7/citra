@@ -1326,7 +1326,7 @@ void GMainWindow::OnConfigure() {
     connect(&configureDialog, &ConfigureDialog::languageChanged, this,
             &GMainWindow::OnLanguageChanged);
     auto old_theme = UISettings::values.theme;
-    const int old_input_profile = Settings::values.current_input_profile_index;
+    const int old_input_profile_index = Settings::values.current_input_profile_index;
     const auto old_input_profiles = Settings::values.input_profiles;
     const bool old_discord_presence = UISettings::values.enable_discord_presence;
     auto result = configureDialog.exec();
@@ -1342,7 +1342,7 @@ void GMainWindow::OnConfigure() {
         config->Save();
     } else {
         Settings::values.input_profiles = old_input_profiles;
-        Settings::LoadProfile(old_input_profile);
+        Settings::LoadProfile(old_input_profile_index);
     }
 }
 
