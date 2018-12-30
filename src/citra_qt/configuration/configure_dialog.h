@@ -20,9 +20,9 @@ public:
     explicit ConfigureDialog(QWidget* parent, HotkeyRegistry& registry);
     ~ConfigureDialog() override;
 
+    void applyConfiguration();
     void UpdateVisibleTabs();
     void PopulateSelectionList();
-    void applyConfiguration();
 
 private slots:
     void onLanguageChanged(const QString& locale);

@@ -48,7 +48,7 @@ public:
     QShortcut* GetHotkey(const QString& group, const QString& action, QWidget* widget);
 
     /**
-     * Returns a QKeySequence object who signal can be connected to QAction->SetShortcut.
+     * Returns a QKeySequence object whose signal can be connected to QAction::setShortcut.
      *
      * @param group  General group this hotkey belongs to (e.g. "Main Window", "Debugger").
      * @param action Name of the action (e.g. "Start Emulation", "Load Image").
@@ -57,9 +57,10 @@ public:
 
     /**
      * Returns a Qt::ShortcutContext object who can be connected to other
-     * QAction->SetShortcutContext.
+     * QAction::setShortcutContext.
      *
-     * @param group  General group this shortcutcontext belongs to (e.g. "Main Window", "Debugger").
+     * @param group  General group this shortcut context belongs to (e.g. "Main Window",
+     * "Debugger").
      * @param action Name of the action (e.g. "Start Emulation", "Load Image").
      */
     Qt::ShortcutContext GetShortcutContext(const QString& group, const QString& action);

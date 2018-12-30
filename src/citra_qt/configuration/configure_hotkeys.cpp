@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <QMessageBox>
+#include <QStandardItemModel>
 #include "citra_qt/configuration/configure_hotkeys.h"
 #include "citra_qt/hotkeys.h"
 #include "citra_qt/util/sequence_dialog/sequence_dialog.h"
@@ -18,7 +19,6 @@ ConfigureHotkeys::ConfigureHotkeys(QWidget* parent)
     model->setColumnCount(3);
     model->setHorizontalHeaderLabels({tr("Action"), tr("Hotkey"), tr("Context")});
 
-    ui->hotkey_list->setSelectionMode(QTreeView::SingleSelection);
     connect(ui->hotkey_list, &QTreeView::doubleClicked, this, &ConfigureHotkeys::Configure);
     ui->hotkey_list->setModel(model);
 
@@ -27,10 +27,9 @@ ConfigureHotkeys::ConfigureHotkeys(QWidget* parent)
 
     ui->hotkey_list->setColumnWidth(0, 200);
     ui->hotkey_list->resizeColumnToContents(1);
-    ui->hotkey_list->setEditTriggers(QTreeView::NoEditTriggers);
 }
 
-ConfigureHotkeys::~ConfigureHotkeys() {}
+ConfigureHotkeys::~ConfigureHotkeys() = default;
 
 void ConfigureHotkeys::EmitHotkeysChanged() {
     emit HotkeysChanged(GetUsedKeyList());
@@ -86,9 +85,7 @@ void ConfigureHotkeys::Configure(QModelIndex index) {
     if (return_code == QDialog::Rejected || key_sequence.isEmpty())
         return;
 
-    if (IsUsedKey(key_sequence) &&
-        key_sequence != QKeySequence(previous_key.toString(), QKeySequence::NativeText)) {
-        model->setData(index, previous_key);
+    if (IsUsedKey(key_sequence) && key_sequence != QKeySequence(previous_key.toString())) {
         QMessageBox::critical(this, tr("Error in inputted key"),
                               tr("You're using a key that's already bound."));
     } else {

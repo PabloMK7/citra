@@ -5,9 +5,7 @@
 #pragma once
 
 #include <memory>
-#include <QStandardItemModel>
 #include <QWidget>
-#include "common/param_package.h"
 #include "core/settings.h"
 
 namespace Ui {
@@ -15,6 +13,7 @@ class ConfigureHotkeys;
 }
 
 class HotkeyRegistry;
+class QStandardItemModel;
 
 class ConfigureHotkeys : public QWidget {
     Q_OBJECT

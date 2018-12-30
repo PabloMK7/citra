@@ -41,14 +41,13 @@ public:
     void loadConfiguration();
     void EmitInputKeysChanged();
 
+    /// Save the current input profile index
+    void ApplyProfile();
 public slots:
     void OnHotkeysChanged(QList<QKeySequence> new_key_list);
 
 signals:
     void InputKeysChanged(QList<QKeySequence> new_key_list);
-
-    // Save the current input profile index
-    void ApplyProfile();
 
 private:
     std::unique_ptr<Ui::ConfigureInput> ui;

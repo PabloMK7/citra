@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <QDialogButtonBox>
+#include <QKeySequenceEdit>
 #include <QVBoxLayout>
 #include "citra_qt/util/sequence_dialog/sequence_dialog.h"
 

@@ -6,7 +6,8 @@
 
 #include <memory>
 #include <QDialog>
-#include <QKeySequenceEdit>
+
+class QKeySequenceEdit;
 
 class SequenceDialog : public QDialog {
     Q_OBJECT

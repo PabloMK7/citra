@@ -30,7 +30,7 @@ void HotkeyRegistry::LoadHotkeys() {
         Hotkey& hk = hotkey_groups[shortcut.group][shortcut.name];
         if (!shortcut.shortcut.first.isEmpty()) {
             hk.keyseq = QKeySequence::fromString(shortcut.shortcut.first, QKeySequence::NativeText);
-            hk.context = (Qt::ShortcutContext)shortcut.shortcut.second;
+            hk.context = static_cast<Qt::ShortcutContext>(shortcut.shortcut.second);
         }
         if (hk.shortcut) {
             hk.shortcut->disconnect();

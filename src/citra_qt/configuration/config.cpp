@@ -8,7 +8,6 @@
 #include <QKeySequence>
 #include <QSettings>
 #include "citra_qt/configuration/config.h"
-#include "citra_qt/ui_settings.h"
 #include "common/file_util.h"
 #include "core/hle/service/service.h"
 #include "input_common/main.h"
@@ -21,7 +20,6 @@ Config::Config() {
     FileUtil::CreateFullPath(qt_config_loc);
     qt_config =
         std::make_unique<QSettings>(QString::fromStdString(qt_config_loc), QSettings::IniFormat);
-
     Reload();
 }
 
@@ -51,6 +49,31 @@ const std::array<std::array<int, 5>, Settings::NativeAnalog::NumAnalogs> Config:
         Qt::Key_D,
     },
 }};
+
+// This shouldn't have anything except static initializers (no functions). So
+// QKeySequnce(...).toString() is NOT ALLOWED HERE.
+// This must be in alphabetical order according to action name as it must have the same order as
+// UISetting::values.shortcuts, which is alphabetically ordered.
+const std::array<UISettings::Shortcut, 19> Config::default_hotkeys{
+    {{"Advance Frame", "Main Window", {"\\", Qt::ApplicationShortcut}},
+     {"Capture Screenshot", "Main Window", {"Ctrl+P", Qt::ApplicationShortcut}},
+     {"Continue/Pause Emulation", "Main Window", {"F4", Qt::WindowShortcut}},
+     {"Decrease Speed Limit", "Main Window", {"-", Qt::ApplicationShortcut}},
+     {"Exit Citra", "Main Window", {"Ctrl+Q", Qt::WindowShortcut}},
+     {"Exit Fullscreen", "Main Window", {"Esc", Qt::WindowShortcut}},
+     {"Fullscreen", "Main Window", {"F11", Qt::WindowShortcut}},
+     {"Increase Speed Limit", "Main Window", {"+", Qt::ApplicationShortcut}},
+     {"Load Amiibo", "Main Window", {"F2", Qt::ApplicationShortcut}},
+     {"Load File", "Main Window", {"Ctrl+O", Qt::WindowShortcut}},
+     {"Remove Amiibo", "Main Window", {"F3", Qt::ApplicationShortcut}},
+     {"Restart Emulation", "Main Window", {"F6", Qt::WindowShortcut}},
+     {"Stop Emulation", "Main Window", {"F5", Qt::WindowShortcut}},
+     {"Swap Screens", "Main Window", {"F9", Qt::WindowShortcut}},
+     {"Toggle Filter Bar", "Main Window", {"Ctrl+F", Qt::WindowShortcut}},
+     {"Toggle Frame Advancing", "Main Window", {"Ctrl+A", Qt::ApplicationShortcut}},
+     {"Toggle Screen Layout", "Main Window", {"F10", Qt::WindowShortcut}},
+     {"Toggle Speed Limit", "Main Window", {"Ctrl+Z", Qt::ApplicationShortcut}},
+     {"Toggle Status Bar", "Main Window", {"Ctrl+S", Qt::WindowShortcut}}}};
 
 void Config::ReadValues() {
     qt_config->beginGroup("Controls");
@@ -320,55 +343,14 @@ void Config::ReadValues() {
     qt_config->endGroup();
 
     qt_config->beginGroup("Shortcuts");
-    const std::array<UISettings::Shortcut, 19> default_hotkeys{
-        {{"Load File", "Main Window",
-          UISettings::ContextualShortcut(QKeySequence(QKeySequence::Open).toString(),
-                                         Qt::WindowShortcut)},
-         {"Exit Citra", "Main Window",
-          UISettings::ContextualShortcut("Ctrl+Q", Qt::WindowShortcut)},
-         {"Continue/Pause Emulation", "Main Window",
-          UISettings::ContextualShortcut("F4", Qt::WindowShortcut)},
-         {"Stop Emulation", "Main Window",
-          UISettings::ContextualShortcut("F5", Qt::WindowShortcut)},
-         {"Restart Emulation", "Main Window",
-          UISettings::ContextualShortcut("F6", Qt::WindowShortcut)},
-         {"Swap Screens", "Main Window", UISettings::ContextualShortcut("F9", Qt::WindowShortcut)},
-         {"Toggle Screen Layout", "Main Window",
-          UISettings::ContextualShortcut("F10", Qt::WindowShortcut)},
-         {"Toggle Filter Bar", "Main Window",
-          UISettings::ContextualShortcut("Ctrl+F", Qt::WindowShortcut)},
-         {"Toggle Status Bar", "Main Window",
-          UISettings::ContextualShortcut("Ctrl+S", Qt::WindowShortcut)},
-         {"Fullscreen", "Main Window",
-          UISettings::ContextualShortcut(QKeySequence(QKeySequence::FullScreen).toString(),
-                                         Qt::WindowShortcut)},
-         {"Exit Fullscreen", "Main Window",
-          UISettings::ContextualShortcut("Escape", Qt::WindowShortcut)},
-         {"Toggle Speed Limit", "Main Window",
-          UISettings::ContextualShortcut("Ctrl+Z", Qt::ApplicationShortcut)},
-         {"Increase Speed Limit", "Main Window",
-          UISettings::ContextualShortcut("+", Qt::ApplicationShortcut)},
-         {"Decrease Speed Limit", "Main Window",
-          UISettings::ContextualShortcut("-", Qt::ApplicationShortcut)},
-         {"Advance Frame", "Main Window",
-          UISettings::ContextualShortcut("\\", Qt::ApplicationShortcut)},
-         {"Toggle Frame Advancing", "Main Window",
-          UISettings::ContextualShortcut("Ctrl+A", Qt::ApplicationShortcut)},
-         {"Load Amiibo", "Main Window",
-          UISettings::ContextualShortcut("F2", Qt::ApplicationShortcut)},
-         {"Remove Amiibo", "Main Window",
-          UISettings::ContextualShortcut("F3", Qt::ApplicationShortcut)},
-         {"Capture Screenshot", "Main Window",
-          UISettings::ContextualShortcut("Ctrl+P", Qt::ApplicationShortcut)}}};
-
-    for (int i = 0; i < default_hotkeys.size(); i++) {
-        qt_config->beginGroup(default_hotkeys[i].group);
-        qt_config->beginGroup(default_hotkeys[i].name);
+    for (auto [name, group, shortcut] : default_hotkeys) {
+        auto [keyseq, context] = shortcut;
+        qt_config->beginGroup(group);
+        qt_config->beginGroup(name);
         UISettings::values.shortcuts.push_back(
-            {default_hotkeys[i].name, default_hotkeys[i].group,
-             UISettings::ContextualShortcut(
-                 qt_config->value("KeySeq", default_hotkeys[i].shortcut.first).toString(),
-                 qt_config->value("Context", default_hotkeys[i].shortcut.second).toInt())});
+            {name,
+             group,
+             {ReadSetting("KeySeq", keyseq).toString(), ReadSetting("Context", context).toInt()}});
         qt_config->endGroup();
         qt_config->endGroup();
     }
@@ -601,11 +583,14 @@ void Config::SaveValues() {
     qt_config->endGroup();
 
     qt_config->beginGroup("Shortcuts");
-    for (auto shortcut : UISettings::values.shortcuts) {
-        qt_config->beginGroup(shortcut.group);
-        qt_config->beginGroup(shortcut.name);
-        WriteSetting("KeySeq", shortcut.shortcut.first);
-        WriteSetting("Context", shortcut.shortcut.second);
+    // Lengths of UISettings::values.shortcuts & default_hotkeys are same.
+    // However, their ordering must also be the same.
+    for (std::size_t i = 0; i < default_hotkeys.size(); i++) {
+        auto [name, group, shortcut] = UISettings::values.shortcuts[i];
+        qt_config->beginGroup(group);
+        qt_config->beginGroup(name);
+        WriteSetting("KeySeq", shortcut.first, default_hotkeys[i].shortcut.first);
+        WriteSetting("Context", shortcut.second, default_hotkeys[i].shortcut.second);
         qt_config->endGroup();
         qt_config->endGroup();
     }

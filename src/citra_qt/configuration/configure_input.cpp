@@ -295,7 +295,7 @@ QList<QKeySequence> ConfigureInput::GetUsedKeyboardKeys() {
     }
 
     // TODO(adityaruplaha): Add home button to list when we finally emulate it
-    // Button ID of home button is 14: Reffered from citra_qt/configuration/config.cpp
+    // Button ID of home button is 14: Referred from citra_qt/configuration/config.cpp
     list.removeOne(list.indexOf(QKeySequence(buttons_param[14].Get("code", 0))));
     return list;
 }
