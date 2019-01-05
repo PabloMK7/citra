@@ -5,6 +5,8 @@
 #include "audio_core/audio_types.h"
 #ifdef HAVE_MF
 #include "audio_core/hle/wmf_decoder.h"
+#elif HAVE_FFMPEG
+#include "audio_core/hle/ffmpeg_decoder.h"
 #endif
 #include "audio_core/hle/common.h"
 #include "audio_core/hle/decoder.h"
@@ -87,8 +89,10 @@ DspHle::Impl::Impl(DspHle& parent_, Memory::MemorySystem& memory) : parent(paren
 
 #ifdef HAVE_MF
     decoder = std::make_unique<HLE::WMFDecoder>(memory);
+#elif HAVE_FFMPEG
+    decoder = std::make_unique<HLE::FFMPEGDecoder>(memory);
 #else
-    LOG_WARNING(Audio_DSP, "FFmpeg missing, this could lead to missing audio");
+    LOG_WARNING(Audio_DSP, "No decoder found, this could lead to missing audio");
     decoder = std::make_unique<HLE::NullDecoder>();
 #endif // HAVE_MF
 

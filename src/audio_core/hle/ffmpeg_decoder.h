@@ -8,10 +8,10 @@
 
 namespace AudioCore::HLE {
 
-class AACDecoder final : public DecoderBase {
+class FFMPEGDecoder final : public DecoderBase {
 public:
-    explicit AACDecoder(Memory::MemorySystem& memory);
-    ~AACDecoder() override;
+    explicit FFMPEGDecoder(Memory::MemorySystem& memory);
+    ~FFMPEGDecoder() override;
     std::optional<BinaryResponse> ProcessRequest(const BinaryRequest& request) override;
 
 private:

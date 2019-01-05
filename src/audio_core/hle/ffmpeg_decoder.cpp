@@ -2,12 +2,12 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include "audio_core/hle/aac_decoder.h"
+#include "audio_core/hle/ffmpeg_decoder.h"
 #include "audio_core/hle/ffmpeg_dl.h"
 
 namespace AudioCore::HLE {
 
-class AACDecoder::Impl {
+class FFMPEGDecoder::Impl {
 public:
     explicit Impl(Memory::MemorySystem& memory);
     ~Impl();
@@ -56,13 +56,13 @@ private:
     std::unique_ptr<AVFrame, AVFrameDeleter> decoded_frame;
 };
 
-AACDecoder::Impl::Impl(Memory::MemorySystem& memory) : memory(memory) {
+FFMPEGDecoder::Impl::Impl(Memory::MemorySystem& memory) : memory(memory) {
     have_ffmpeg_dl = InitFFmpegDL();
 }
 
-AACDecoder::Impl::~Impl() = default;
+FFMPEGDecoder::Impl::~Impl() = default;
 
-std::optional<BinaryResponse> AACDecoder::Impl::ProcessRequest(const BinaryRequest& request) {
+std::optional<BinaryResponse> FFMPEGDecoder::Impl::ProcessRequest(const BinaryRequest& request) {
     if (request.codec != DecoderCodec::AAC) {
         LOG_ERROR(Audio_DSP, "Got wrong codec {}", static_cast<u16>(request.codec));
         return {};
@@ -87,7 +87,7 @@ std::optional<BinaryResponse> AACDecoder::Impl::ProcessRequest(const BinaryReque
     }
 }
 
-std::optional<BinaryResponse> AACDecoder::Impl::Initalize(const BinaryRequest& request) {
+std::optional<BinaryResponse> FFMPEGDecoder::Impl::Initalize(const BinaryRequest& request) {
     if (initalized) {
         Clear();
     }
@@ -129,7 +129,7 @@ std::optional<BinaryResponse> AACDecoder::Impl::Initalize(const BinaryRequest& r
     return response;
 }
 
-void AACDecoder::Impl::Clear() {
+void FFMPEGDecoder::Impl::Clear() {
     if (!have_ffmpeg_dl) {
         return;
     }
@@ -140,7 +140,7 @@ void AACDecoder::Impl::Clear() {
     av_packet.reset();
 }
 
-std::optional<BinaryResponse> AACDecoder::Impl::Decode(const BinaryRequest& request) {
+std::optional<BinaryResponse> FFMPEGDecoder::Impl::Decode(const BinaryRequest& request) {
     BinaryResponse response;
     response.codec = request.codec;
     response.cmd = request.cmd;
@@ -252,11 +252,11 @@ std::optional<BinaryResponse> AACDecoder::Impl::Decode(const BinaryRequest& requ
     return response;
 }
 
-AACDecoder::AACDecoder(Memory::MemorySystem& memory) : impl(std::make_unique<Impl>(memory)) {}
+FFMPEGDecoder::FFMPEGDecoder(Memory::MemorySystem& memory) : impl(std::make_unique<Impl>(memory)) {}
 
-AACDecoder::~AACDecoder() = default;
+FFMPEGDecoder::~FFMPEGDecoder() = default;
 
-std::optional<BinaryResponse> AACDecoder::ProcessRequest(const BinaryRequest& request) {
+std::optional<BinaryResponse> FFMPEGDecoder::ProcessRequest(const BinaryRequest& request) {
     return impl->ProcessRequest(request);
 }
 
