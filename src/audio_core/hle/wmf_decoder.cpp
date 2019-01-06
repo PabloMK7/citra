@@ -146,7 +146,9 @@ int WMFDecoder::Impl::DecodingLoop(ADTSData adts_header,
         if (output_status == HAVE_MORE_DATA)
             continue;
 
-        LOG_ERROR(Audio_DSP, "Errors occurred when receiving output: {}", output_status);
+        if (output_status == NEED_MORE_INPUT) // according to MS document, this is not an error (?!)
+            return 1;
+
         return -1; // return on other status
     }
 
@@ -214,6 +216,7 @@ std::optional<BinaryResponse> WMFDecoder::Impl::Decode(const BinaryRequest& requ
                 continue;
             }
 
+            LOG_ERROR(Audio_DSP, "Errors occurred when receiving output");
             return response;
         }
 
