@@ -1,3 +1,6 @@
+// Copyright 2019 Citra Emulator Project
+// Licensed under GPLv2 or any later version
+// Refer to the license.txt file included.
 #include "common/logging/log.h"
 #include "wmf_decoder_utils.h"
 
@@ -9,17 +12,17 @@ void ReportError(std::string msg, HRESULT hr) {
     LPSTR err;
     FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER |
                       FORMAT_MESSAGE_IGNORE_INSERTS,
-                  NULL, hr,
+                  nullptr, hr,
                   // hardcode to use en_US because if any user had problems with this
                   // we can help them w/o translating anything
-                  MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), (LPSTR)&err, 0, NULL);
-    if (err != NULL) {
+                  MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), (LPSTR)&err, 0, nullptr);
+    if (err != nullptr) {
         LOG_CRITICAL(Audio_DSP, "{}: {}", msg, err);
     }
     LOG_CRITICAL(Audio_DSP, "{}: {:08x}", msg, hr);
 }
 
-int mf_coinit() {
+int MFCoInit() {
     HRESULT hr = S_OK;
 
     // lite startup is faster and all what we need is included
@@ -35,7 +38,7 @@ int mf_coinit() {
     return 0;
 }
 
-int mf_decoder_init(IMFTransform** transform, GUID audio_format) {
+int MFDecoderInit(IMFTransform** transform, GUID audio_format) {
     HRESULT hr = S_OK;
     MFT_REGISTER_TYPE_INFO reg = {0};
     GUID category = MFT_CATEGORY_AUDIO_DECODER;
@@ -47,7 +50,7 @@ int mf_decoder_init(IMFTransform** transform, GUID audio_format) {
 
     hr = MFTEnumEx(category,
                    MFT_ENUM_FLAG_SYNCMFT | MFT_ENUM_FLAG_LOCALMFT | MFT_ENUM_FLAG_SORTANDFILTER,
-                   &reg, NULL, &activate, &num_activate);
+                   &reg, nullptr, &activate, &num_activate);
     if (FAILED(hr) || num_activate < 1) {
         ReportError("Failed to enumerate decoders", hr);
         CoTaskMemFree(activate);
@@ -57,10 +60,10 @@ int mf_decoder_init(IMFTransform** transform, GUID audio_format) {
     for (unsigned int n = 0; n < num_activate; n++) {
         hr = activate[n]->ActivateObject(IID_IMFTransform, (void**)transform);
         if (FAILED(hr))
-            *transform = NULL;
+            *transform = nullptr;
         activate[n]->Release();
     }
-    if (*transform == NULL) {
+    if (*transform == nullptr) {
         ReportError("Failed to initialize MFT", hr);
         CoTaskMemFree(activate);
         return -1;
@@ -69,37 +72,37 @@ int mf_decoder_init(IMFTransform** transform, GUID audio_format) {
     return 0;
 }
 
-void mf_deinit(IMFTransform** transform) {
+void MFDeInit(IMFTransform** transform) {
     MFShutdownObject(*transform);
     SafeRelease(transform);
     CoUninitialize();
 }
 
-IMFSample* create_sample(void* data, DWORD len, DWORD alignment, LONGLONG duration) {
+IMFSample* CreateSample(void* data, DWORD len, DWORD alignment, LONGLONG duration) {
     HRESULT hr = S_OK;
-    IMFMediaBuffer* buf = NULL;
-    IMFSample* sample = NULL;
+    IMFMediaBuffer* buf = nullptr;
+    IMFSample* sample = nullptr;
 
     hr = MFCreateSample(&sample);
     if (FAILED(hr)) {
         ReportError("Unable to allocate a sample", hr);
-        return NULL;
+        return nullptr;
     }
     // Yes, the argument for alignment is the actual alignment - 1
     hr = MFCreateAlignedMemoryBuffer(len, alignment - 1, &buf);
     if (FAILED(hr)) {
         ReportError("Unable to allocate a memory buffer for sample", hr);
-        return NULL;
+        return nullptr;
     }
     if (data) {
         BYTE* buffer;
         // lock the MediaBuffer
         // this is actually not a thread-safe lock
-        hr = buf->Lock(&buffer, NULL, NULL);
+        hr = buf->Lock(&buffer, nullptr, nullptr);
         if (FAILED(hr)) {
             SafeRelease(&sample);
             SafeRelease(&buf);
-            return NULL;
+            return nullptr;
         }
 
         memcpy(buffer, data, len);
@@ -114,7 +117,7 @@ IMFSample* create_sample(void* data, DWORD len, DWORD alignment, LONGLONG durati
     return sample;
 }
 
-int select_input_mediatype(IMFTransform* transform, int in_stream_id, ADTSData adts,
+bool SelectInputMediaType(IMFTransform* transform, int in_stream_id, ADTSData adts,
                            UINT8* user_data, UINT32 user_data_len, GUID audio_format) {
     HRESULT hr = S_OK;
     IMFMediaType* t;
@@ -124,7 +127,7 @@ int select_input_mediatype(IMFTransform* transform, int in_stream_id, ADTSData a
     hr = MFCreateMediaType(&t);
     if (FAILED(hr)) {
         ReportError("Unable to create an empty MediaType", hr);
-        return -1;
+        return false;
     }
 
     // basic definition
@@ -149,13 +152,13 @@ int select_input_mediatype(IMFTransform* transform, int in_stream_id, ADTSData a
     hr = transform->SetInputType(in_stream_id, t, 0);
     if (FAILED(hr)) {
         ReportError("failed to select input types for MFT", hr);
-        return -1;
+        return false;
     }
 
-    return 0;
+    return true;
 }
 
-int select_output_mediatype(IMFTransform* transform, int out_stream_id, GUID audio_format) {
+bool SelectOutputMediaType(IMFTransform* transform, int out_stream_id, GUID audio_format) {
     HRESULT hr = S_OK;
     UINT32 tmp;
     IMFMediaType* t;
@@ -166,11 +169,11 @@ int select_output_mediatype(IMFTransform* transform, int out_stream_id, GUID aud
     for (DWORD i = 0;; i++) {
         hr = transform->GetOutputAvailableType(out_stream_id, i, &t);
         if (hr == MF_E_NO_MORE_TYPES || hr == E_NOTIMPL) {
-            return 0;
+            return true;
         }
         if (FAILED(hr)) {
             ReportError("failed to get output types for MFT", hr);
-            return -1;
+            return false;
         }
 
         hr = t->GetUINT32(MF_MT_AUDIO_BITS_PER_SAMPLE, &tmp);
@@ -183,26 +186,26 @@ int select_output_mediatype(IMFTransform* transform, int out_stream_id, GUID aud
             if (FAILED(hr)) {
                 ReportError("failed to set MF_MT_AUDIO_BLOCK_ALIGNMENT for MFT on output stream",
                             hr);
-                return -1;
+                return false;
             }
             hr = transform->SetOutputType(out_stream_id, t, 0);
             if (FAILED(hr)) {
                 ReportError("failed to select output types for MFT", hr);
-                return -1;
+                return false;
             }
-            return 0;
+            return true;
         } else {
             continue;
         }
 
-        return -1;
+        return false;
     }
 
     ReportError("MFT: Unable to find preferred output format", E_NOTIMPL);
-    return -1;
+    return false;
 }
 
-int detect_mediatype(char* buffer, size_t len, ADTSData* output, char** aac_tag) {
+int DetectMediaType(char* buffer, size_t len, ADTSData* output, char** aac_tag) {
     if (len < 7) {
         return -1;
     }
@@ -224,7 +227,7 @@ int detect_mediatype(char* buffer, size_t len, ADTSData* output, char** aac_tag)
     return 0;
 }
 
-int mf_flush(IMFTransform** transform) {
+void MFFlush(IMFTransform** transform) {
     HRESULT hr = (*transform)->ProcessMessage(MFT_MESSAGE_COMMAND_FLUSH, 0);
     if (FAILED(hr)) {
         ReportError("MFT: Flush command failed", hr);
@@ -233,11 +236,9 @@ int mf_flush(IMFTransform** transform) {
     if (FAILED(hr)) {
         ReportError("Failed to end streaming for MFT", hr);
     }
-
-    return 0;
 }
 
-int send_sample(IMFTransform* transform, DWORD in_stream_id, IMFSample* in_sample) {
+int SendSample(IMFTransform* transform, DWORD in_stream_id, IMFSample* in_sample) {
     HRESULT hr = S_OK;
 
     if (in_sample) {
@@ -261,16 +262,16 @@ int send_sample(IMFTransform* transform, DWORD in_stream_id, IMFSample* in_sampl
 }
 
 // return: 0: okay; 1: needs more sample; 2: needs reconfiguring; 3: more data available
-int receive_sample(IMFTransform* transform, DWORD out_stream_id, IMFSample** out_sample) {
+int ReceiveSample(IMFTransform* transform, DWORD out_stream_id, IMFSample** out_sample) {
     HRESULT hr;
     MFT_OUTPUT_DATA_BUFFER out_buffers;
-    IMFSample* sample = NULL;
+    IMFSample* sample = nullptr;
     MFT_OUTPUT_STREAM_INFO out_info;
     DWORD status = 0;
     bool mft_create_sample = false;
 
     if (!out_sample) {
-        ReportError("NULL pointer passed to receive_sample()", MF_E_SAMPLE_NOT_WRITABLE);
+        ReportError("nullptr pointer passed to receive_sample()", MF_E_SAMPLE_NOT_WRITABLE);
         return -1;
     }
 
@@ -284,12 +285,12 @@ int receive_sample(IMFTransform* transform, DWORD out_stream_id, IMFSample** out
                         (out_info.dwFlags & MFT_OUTPUT_STREAM_CAN_PROVIDE_SAMPLES);
 
     while (true) {
-        sample = NULL;
-        *out_sample = NULL;
+        sample = nullptr;
+        *out_sample = nullptr;
         status = 0;
 
         if (!mft_create_sample) {
-            sample = create_sample(NULL, out_info.cbSize, out_info.cbAlignment);
+            sample = CreateSample(nullptr, out_info.cbSize, out_info.cbAlignment);
             if (!sample) {
                 ReportError("MFT: Unable to allocate memory for samples", hr);
                 return -1;
@@ -307,7 +308,7 @@ int receive_sample(IMFTransform* transform, DWORD out_stream_id, IMFSample** out
         }
 
         if (hr == MF_E_TRANSFORM_NEED_MORE_INPUT) {
-            // TODO: better handling try again and EOF cases using drain value
+            // Most likely reasons: data corrupted; your actions not expected by MFT
             return 1;
         }
 
@@ -320,11 +321,11 @@ int receive_sample(IMFTransform* transform, DWORD out_stream_id, IMFSample** out
     }
 
     if (out_buffers.dwStatus & MFT_OUTPUT_DATA_BUFFER_INCOMPLETE) {
+        // this status is also unreliable but whatever
         return 3;
     }
 
-    // TODO: better handling try again and EOF cases using drain value
-    if (*out_sample == NULL) {
+    if (*out_sample == nullptr) {
         ReportError("MFT: decoding failure", hr);
         return -1;
     }
@@ -332,7 +333,7 @@ int receive_sample(IMFTransform* transform, DWORD out_stream_id, IMFSample** out
     return 0;
 }
 
-int copy_sample_to_buffer(IMFSample* sample, void** output, DWORD* len) {
+int CopySampleToBuffer(IMFSample* sample, void** output, DWORD* len) {
     IMFMediaBuffer* buffer;
     HRESULT hr = S_OK;
     BYTE* data;
@@ -349,7 +350,7 @@ int copy_sample_to_buffer(IMFSample* sample, void** output, DWORD* len) {
         return -1;
     }
 
-    hr = buffer->Lock(&data, NULL, NULL);
+    hr = buffer->Lock(&data, nullptr, nullptr);
     if (FAILED(hr)) {
         ReportError("Failed to lock the buffer", hr);
         SafeRelease(&buffer);

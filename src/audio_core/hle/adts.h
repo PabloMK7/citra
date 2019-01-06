@@ -1,20 +1,20 @@
+// Copyright 2019 Citra Emulator Project
+// Licensed under GPLv2 or any later version
+// Refer to the license.txt file included.
 #pragma once
-#ifndef ADTS_ADT
-#define ADTS_ADT
 
-#include <stdbool.h>
-#include <stdint.h>
-#include <string.h>
+#include <array>
+#include "common/common_types.h"
 
 struct ADTSData {
     bool MPEG2;
-    uint8_t profile;
-    uint8_t channels;
-    uint8_t channel_idx;
-    uint8_t framecount;
-    uint8_t samplerate_idx;
-    uint32_t length;
-    uint32_t samplerate;
+    u8 profile;
+    u8 channels;
+    u8 channel_idx;
+    u8 framecount;
+    u8 samplerate_idx;
+    u32 length;
+    u32 samplerate;
 };
 
 typedef struct ADTSData ADTSData;
@@ -22,10 +22,9 @@ typedef struct ADTSData ADTSData;
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus
-uint32_t parse_adts(char* buffer, struct ADTSData* out);
+u32 parse_adts(char* buffer, struct ADTSData* out);
 // last two bytes of MF AAC decoder user data
-uint16_t mf_get_aac_tag(struct ADTSData input);
+u16 mf_get_aac_tag(struct ADTSData input);
 #ifdef __cplusplus
 }
 #endif // __cplusplus
-#endif // ADTS_ADT

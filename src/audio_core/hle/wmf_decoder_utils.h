@@ -1,8 +1,9 @@
+// Copyright 2019 Citra Emulator Project
+// Licensed under GPLv2 or any later version
+// Refer to the license.txt file included.
 #pragma once
 
-#ifndef MF_DECODER
-#define MF_DECODER
-
+// AAC decoder related APIs are only available with WIN7+
 #define WINVER _WIN32_WINNT_WIN7
 
 #include <assert.h>
@@ -23,26 +24,24 @@ template <class T>
 void SafeRelease(T** ppT) {
     if (*ppT) {
         (*ppT)->Release();
-        *ppT = NULL;
+        *ppT = nullptr;
     }
 }
 
 void ReportError(std::string msg, HRESULT hr);
 
 // exported functions
-int mf_coinit();
-int mf_decoder_init(IMFTransform** transform, GUID audio_format = MFAudioFormat_AAC);
-void mf_deinit(IMFTransform** transform);
-IMFSample* create_sample(void* data, DWORD len, DWORD alignment = 1, LONGLONG duration = 0);
-int select_input_mediatype(IMFTransform* transform, int in_stream_id, ADTSData adts,
+int MFCoInit();
+int MFDecoderInit(IMFTransform** transform, GUID audio_format = MFAudioFormat_AAC);
+void MFDeInit(IMFTransform** transform);
+IMFSample* CreateSample(void* data, DWORD len, DWORD alignment = 1, LONGLONG duration = 0);
+bool SelectInputMediaType(IMFTransform* transform, int in_stream_id, ADTSData adts,
                            UINT8* user_data, UINT32 user_data_len,
                            GUID audio_format = MFAudioFormat_AAC);
-int detect_mediatype(char* buffer, size_t len, ADTSData* output, char** aac_tag);
-int select_output_mediatype(IMFTransform* transform, int out_stream_id,
+int DetectMediaType(char* buffer, size_t len, ADTSData* output, char** aac_tag);
+bool SelectOutputMediaType(IMFTransform* transform, int out_stream_id,
                             GUID audio_format = MFAudioFormat_PCM);
-int mf_flush(IMFTransform** transform);
-int send_sample(IMFTransform* transform, DWORD in_stream_id, IMFSample* in_sample);
-int receive_sample(IMFTransform* transform, DWORD out_stream_id, IMFSample** out_sample);
-int copy_sample_to_buffer(IMFSample* sample, void** output, DWORD* len);
-
-#endif // MF_DECODER
+void MFFlush(IMFTransform** transform);
+int SendSample(IMFTransform* transform, DWORD in_stream_id, IMFSample* in_sample);
+int ReceiveSample(IMFTransform* transform, DWORD out_stream_id, IMFSample** out_sample);
+int CopySampleToBuffer(IMFSample* sample, void** output, DWORD* len);

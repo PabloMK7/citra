@@ -27,13 +27,13 @@ private:
 
     Memory::MemorySystem& memory;
 
-    IMFTransform* transform = NULL;
+    IMFTransform* transform = nullptr;
     DWORD in_stream_id = 0;
     DWORD out_stream_id = 0;
 };
 
 WMFDecoder::Impl::Impl(Memory::MemorySystem& memory) : memory(memory) {
-    mf_coinit();
+    MFCoInit();
 }
 
 WMFDecoder::Impl::~Impl() = default;
@@ -46,7 +46,7 @@ std::optional<BinaryResponse> WMFDecoder::Impl::ProcessRequest(const BinaryReque
 
     switch (request.cmd) {
     case DecoderCommand::Init: {
-        LOG_INFO(Audio_DSP, "AACDecoder initializing");
+        LOG_INFO(Audio_DSP, "WMFDecoder initializing");
         return Initalize(request);
     }
     case DecoderCommand::Decode: {
@@ -73,7 +73,7 @@ std::optional<BinaryResponse> WMFDecoder::Impl::Initalize(const BinaryRequest& r
     std::memcpy(&response, &request, sizeof(response));
     response.unknown1 = 0x0;
 
-    if (mf_decoder_init(&transform) != 0) {
+    if (MFDecoderInit(&transform) != 0) {
         LOG_CRITICAL(Audio_DSP, "Can't init decoder");
         return response;
     }
@@ -95,8 +95,8 @@ std::optional<BinaryResponse> WMFDecoder::Impl::Initalize(const BinaryRequest& r
 
 void WMFDecoder::Impl::Clear() {
     if (initalized) {
-        mf_flush(&transform);
-        mf_deinit(&transform);
+        MFFlush(&transform);
+        MFDeInit(&transform);
     }
     initalized = false;
     selected = false;
@@ -105,16 +105,16 @@ void WMFDecoder::Impl::Clear() {
 int WMFDecoder::Impl::DecodingLoop(ADTSData adts_header,
                                    std::array<std::vector<u8>, 2>& out_streams) {
     int output_status = 0;
-    char* output_buffer = NULL;
+    char* output_buffer = nullptr;
     DWORD output_len = 0;
-    IMFSample* output = NULL;
+    IMFSample* output = nullptr;
 
     while (true) {
-        output_status = receive_sample(transform, out_stream_id, &output);
+        output_status = ReceiveSample(transform, out_stream_id, &output);
 
         // 0 -> okay; 3 -> okay but more data available (buffer too small)
         if (output_status == 0 || output_status == 3) {
-            copy_sample_to_buffer(output, (void**)&output_buffer, &output_len);
+            CopySampleToBuffer(output, (void**)&output_buffer, &output_len);
 
             // the following was taken from ffmpeg version of the decoder
             f32 val_f32;
@@ -174,12 +174,12 @@ std::optional<BinaryResponse> WMFDecoder::Impl::Decode(const BinaryRequest& requ
     u8* data = memory.GetFCRAMPointer(request.src_addr - Memory::FCRAM_PADDR);
 
     std::array<std::vector<u8>, 2> out_streams;
-    IMFSample* sample = NULL;
+    IMFSample* sample = nullptr;
     ADTSData adts_header;
     char* aac_tag = (char*)calloc(1, 14);
     int input_status = 0;
 
-    if (detect_mediatype((char*)data, request.size, &adts_header, &aac_tag) != 0) {
+    if (DetectMediaType((char*)data, request.size, &adts_header, &aac_tag) != 0) {
         LOG_ERROR(Audio_DSP, "Unable to deduce decoding parameters from ADTS stream");
         return response;
     }
@@ -187,23 +187,23 @@ std::optional<BinaryResponse> WMFDecoder::Impl::Decode(const BinaryRequest& requ
     if (!selected) {
         LOG_DEBUG(Audio_DSP, "New ADTS stream: channels = {}, sample rate = {}",
                   adts_header.channels, adts_header.samplerate);
-        select_input_mediatype(transform, in_stream_id, adts_header, (UINT8*)aac_tag, 14);
-        select_output_mediatype(transform, out_stream_id);
-        send_sample(transform, in_stream_id, NULL);
+        SelectInputMediaType(transform, in_stream_id, adts_header, (UINT8*)aac_tag, 14);
+        SelectOutputMediaType(transform, out_stream_id);
+        SendSample(transform, in_stream_id, nullptr);
         // cache the result from detect_mediatype and call select_*_mediatype only once
         // This could increase performance very slightly
         transform->ProcessMessage(MFT_MESSAGE_NOTIFY_BEGIN_STREAMING, 0);
         selected = true;
     }
 
-    sample = create_sample((void*)data, request.size, 1, 0);
+    sample = CreateSample((void*)data, request.size, 1, 0);
     sample->SetUINT32(MFSampleExtension_CleanPoint, 1);
 
     while (true) {
-        input_status = send_sample(transform, in_stream_id, sample);
+        input_status = SendSample(transform, in_stream_id, sample);
 
         if (DecodingLoop(adts_header, out_streams) < 0) {
-            // if the decode issues is caused by MFT not accepting new samples, try again
+            // if the decode issues are caused by MFT not accepting new samples, try again
             // NOTICE: you are required to check the output even if you already knew/guessed
             // MFT didn't accept the input sample
             if (input_status == 1) {

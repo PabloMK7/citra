@@ -1,12 +1,14 @@
-
+// Copyright 2019 Citra Emulator Project
+// Licensed under GPLv2 or any later version
+// Refer to the license.txt file included.
 #include "adts.h"
 
-const uint32_t freq_table[16] = {96000, 88200, 64000, 48000, 44100, 32000, 24000, 22050,
+constexpr std::array<u32, 16> freq_table = {96000, 88200, 64000, 48000, 44100, 32000, 24000, 22050,
                                  16000, 12000, 11025, 8000,  7350,  0,     0,     0};
-const short channel_table[8] = {0, 1, 2, 3, 4, 5, 6, 8};
+constexpr std::array<u8, 8> channel_table = {0, 1, 2, 3, 4, 5, 6, 8};
 
-uint32_t parse_adts(char* buffer, struct ADTSData* out) {
-    uint32_t tmp = 0;
+u32 parse_adts(char* buffer, struct ADTSData* out) {
+    u32 tmp = 0;
 
     // sync word 0xfff
     tmp = (buffer[0] << 8) | (buffer[1] & 0xf0);
@@ -38,8 +40,8 @@ uint32_t parse_adts(char* buffer, struct ADTSData* out) {
 }
 
 // last two bytes of MF AAC decoder user data
-uint16_t mf_get_aac_tag(struct ADTSData input) {
-    uint16_t tag = 0;
+u16 mf_get_aac_tag(struct ADTSData input) {
+    u16 tag = 0;
 
     tag |= input.profile << 11;
     tag |= input.samplerate_idx << 7;
