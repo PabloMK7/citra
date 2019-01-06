@@ -9,6 +9,7 @@ add_executable(tests
     core/hle/kernel/hle_ipc.cpp
     core/memory/memory.cpp
     core/memory/vm_manager.cpp
+    audio_core/audio_fixures.h
     audio_core/decoder_tests.cpp
     tests.cpp
 )

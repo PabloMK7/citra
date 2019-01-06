@@ -185,6 +185,8 @@ std::optional<BinaryResponse> WMFDecoder::Impl::Decode(const BinaryRequest& requ
         return response;
     }
 
+    response.num_channels = adts_header.channels;
+
     if (!selected) {
         LOG_DEBUG(Audio_DSP, "New ADTS stream: channels = {}, sample rate = {}",
                   adts_header.channels, adts_header.samplerate);
@@ -240,7 +242,6 @@ std::optional<BinaryResponse> WMFDecoder::Impl::Decode(const BinaryRequest& requ
                     out_streams[1].data(), out_streams[1].size());
     }
 
-    response.num_channels = adts_header.channels;
     return response;
 }
 
