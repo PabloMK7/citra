@@ -22,7 +22,7 @@ void ReportError(std::string msg, HRESULT hr) {
     LOG_CRITICAL(Audio_DSP, "{}: {:08x}", msg, hr);
 }
 
-int MFCoInit() {
+bool MFCoInit() {
     HRESULT hr = S_OK;
 
     // lite startup is faster and all what we need is included
@@ -30,15 +30,15 @@ int MFCoInit() {
     if (hr != S_OK) {
         // Do you know you can't initialize MF in test mode or safe mode?
         ReportError("Failed to initialize Media Foundation", hr);
-        return -1;
+        return false;
     }
 
     LOG_INFO(Audio_DSP, "Media Foundation activated");
 
-    return 0;
+    return true;
 }
 
-int MFDecoderInit(IMFTransform** transform, GUID audio_format) {
+bool MFDecoderInit(IMFTransform** transform, GUID audio_format) {
     HRESULT hr = S_OK;
     MFT_REGISTER_TYPE_INFO reg = {0};
     GUID category = MFT_CATEGORY_AUDIO_DECODER;
@@ -54,7 +54,7 @@ int MFDecoderInit(IMFTransform** transform, GUID audio_format) {
     if (FAILED(hr) || num_activate < 1) {
         ReportError("Failed to enumerate decoders", hr);
         CoTaskMemFree(activate);
-        return -1;
+        return false;
     }
     LOG_INFO(Audio_DSP, "Windows(R) Media Foundation found {} suitable decoder(s)", num_activate);
     for (unsigned int n = 0; n < num_activate; n++) {
@@ -66,10 +66,10 @@ int MFDecoderInit(IMFTransform** transform, GUID audio_format) {
     if (*transform == nullptr) {
         ReportError("Failed to initialize MFT", hr);
         CoTaskMemFree(activate);
-        return -1;
+        return false;
     }
     CoTaskMemFree(activate);
-    return 0;
+    return true;
 }
 
 void MFDeInit(IMFTransform** transform) {
@@ -117,8 +117,8 @@ IMFSample* CreateSample(void* data, DWORD len, DWORD alignment, LONGLONG duratio
     return sample;
 }
 
-bool SelectInputMediaType(IMFTransform* transform, int in_stream_id, ADTSData adts,
-                           UINT8* user_data, UINT32 user_data_len, GUID audio_format) {
+bool SelectInputMediaType(IMFTransform* transform, int in_stream_id, const ADTSData& adts,
+                          UINT8* user_data, UINT32 user_data_len, GUID audio_format) {
     HRESULT hr = S_OK;
     IMFMediaType* t;
 
@@ -261,8 +261,7 @@ int SendSample(IMFTransform* transform, DWORD in_stream_id, IMFSample* in_sample
     return 0;
 }
 
-// return: 0: okay; 1: needs more sample; 2: needs reconfiguring; 3: more data available
-int ReceiveSample(IMFTransform* transform, DWORD out_stream_id, IMFSample** out_sample) {
+MFOutputState ReceiveSample(IMFTransform* transform, DWORD out_stream_id, IMFSample** out_sample) {
     HRESULT hr;
     MFT_OUTPUT_DATA_BUFFER out_buffers;
     IMFSample* sample = nullptr;
@@ -272,14 +271,14 @@ int ReceiveSample(IMFTransform* transform, DWORD out_stream_id, IMFSample** out_
 
     if (!out_sample) {
         ReportError("nullptr pointer passed to receive_sample()", MF_E_SAMPLE_NOT_WRITABLE);
-        return -1;
+        return FATAL_ERROR;
     }
 
     hr = transform->GetOutputStreamInfo(out_stream_id, &out_info);
 
     if (FAILED(hr)) {
         ReportError("MFT: Failed to get stream info", hr);
-        return -1;
+        return FATAL_ERROR;
     }
     mft_create_sample = (out_info.dwFlags & MFT_OUTPUT_STREAM_PROVIDES_SAMPLES) ||
                         (out_info.dwFlags & MFT_OUTPUT_STREAM_CAN_PROVIDE_SAMPLES);
@@ -293,7 +292,7 @@ int ReceiveSample(IMFTransform* transform, DWORD out_stream_id, IMFSample** out_
             sample = CreateSample(nullptr, out_info.cbSize, out_info.cbAlignment);
             if (!sample) {
                 ReportError("MFT: Unable to allocate memory for samples", hr);
-                return -1;
+                return FATAL_ERROR;
             }
         }
 
@@ -309,12 +308,12 @@ int ReceiveSample(IMFTransform* transform, DWORD out_stream_id, IMFSample** out_
 
         if (hr == MF_E_TRANSFORM_NEED_MORE_INPUT) {
             // Most likely reasons: data corrupted; your actions not expected by MFT
-            return 1;
+            return NEED_MORE_INPUT;
         }
 
         if (hr == MF_E_TRANSFORM_STREAM_CHANGE) {
             ReportError("MFT: stream format changed, re-configuration required", hr);
-            return 2;
+            return NEED_RECONFIG;
         }
 
         break;
@@ -322,15 +321,15 @@ int ReceiveSample(IMFTransform* transform, DWORD out_stream_id, IMFSample** out_
 
     if (out_buffers.dwStatus & MFT_OUTPUT_DATA_BUFFER_INCOMPLETE) {
         // this status is also unreliable but whatever
-        return 3;
+        return HAVE_MORE_DATA;
     }
 
     if (*out_sample == nullptr) {
         ReportError("MFT: decoding failure", hr);
-        return -1;
+        return FATAL_ERROR;
     }
 
-    return 0;
+    return OK;
 }
 
 int CopySampleToBuffer(IMFSample* sample, void** output, DWORD* len) {

@@ -4,7 +4,7 @@
 #include "adts.h"
 
 constexpr std::array<u32, 16> freq_table = {96000, 88200, 64000, 48000, 44100, 32000, 24000, 22050,
-                                 16000, 12000, 11025, 8000,  7350,  0,     0,     0};
+                                            16000, 12000, 11025, 8000,  7350,  0,     0,     0};
 constexpr std::array<u8, 8> channel_table = {0, 1, 2, 3, 4, 5, 6, 8};
 
 u32 parse_adts(char* buffer, struct ADTSData* out) {

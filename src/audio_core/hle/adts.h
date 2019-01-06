@@ -17,14 +17,6 @@ struct ADTSData {
     u32 samplerate;
 };
 
-typedef struct ADTSData ADTSData;
-
-#ifdef __cplusplus
-extern "C" {
-#endif // __cplusplus
 u32 parse_adts(char* buffer, struct ADTSData* out);
 // last two bytes of MF AAC decoder user data
 u16 mf_get_aac_tag(struct ADTSData input);
-#ifdef __cplusplus
-}
-#endif // __cplusplus

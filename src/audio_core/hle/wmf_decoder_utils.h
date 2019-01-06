@@ -19,6 +19,8 @@
 
 #include "adts.h"
 
+enum MFOutputState { FATAL_ERROR = -1, OK = 0, NEED_MORE_INPUT, NEED_RECONFIG, HAVE_MORE_DATA };
+
 // utility functions
 template <class T>
 void SafeRelease(T** ppT) {
@@ -31,17 +33,17 @@ void SafeRelease(T** ppT) {
 void ReportError(std::string msg, HRESULT hr);
 
 // exported functions
-int MFCoInit();
-int MFDecoderInit(IMFTransform** transform, GUID audio_format = MFAudioFormat_AAC);
+bool MFCoInit();
+bool MFDecoderInit(IMFTransform** transform, GUID audio_format = MFAudioFormat_AAC);
 void MFDeInit(IMFTransform** transform);
 IMFSample* CreateSample(void* data, DWORD len, DWORD alignment = 1, LONGLONG duration = 0);
-bool SelectInputMediaType(IMFTransform* transform, int in_stream_id, ADTSData adts,
-                           UINT8* user_data, UINT32 user_data_len,
-                           GUID audio_format = MFAudioFormat_AAC);
+bool SelectInputMediaType(IMFTransform* transform, int in_stream_id, const ADTSData& adts,
+                          UINT8* user_data, UINT32 user_data_len,
+                          GUID audio_format = MFAudioFormat_AAC);
 int DetectMediaType(char* buffer, size_t len, ADTSData* output, char** aac_tag);
 bool SelectOutputMediaType(IMFTransform* transform, int out_stream_id,
-                            GUID audio_format = MFAudioFormat_PCM);
+                           GUID audio_format = MFAudioFormat_PCM);
 void MFFlush(IMFTransform** transform);
 int SendSample(IMFTransform* transform, DWORD in_stream_id, IMFSample* in_sample);
-int ReceiveSample(IMFTransform* transform, DWORD out_stream_id, IMFSample** out_sample);
+MFOutputState ReceiveSample(IMFTransform* transform, DWORD out_stream_id, IMFSample** out_sample);
 int CopySampleToBuffer(IMFSample* sample, void** output, DWORD* len);

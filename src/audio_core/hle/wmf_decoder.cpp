@@ -73,7 +73,7 @@ std::optional<BinaryResponse> WMFDecoder::Impl::Initalize(const BinaryRequest& r
     std::memcpy(&response, &request, sizeof(response));
     response.unknown1 = 0x0;
 
-    if (MFDecoderInit(&transform) != 0) {
+    if (!MFDecoderInit(&transform)) {
         LOG_CRITICAL(Audio_DSP, "Can't init decoder");
         return response;
     }
@@ -104,7 +104,7 @@ void WMFDecoder::Impl::Clear() {
 
 int WMFDecoder::Impl::DecodingLoop(ADTSData adts_header,
                                    std::array<std::vector<u8>, 2>& out_streams) {
-    int output_status = 0;
+    MFOutputState output_status = OK;
     char* output_buffer = nullptr;
     DWORD output_len = 0;
     IMFSample* output = nullptr;
@@ -113,7 +113,7 @@ int WMFDecoder::Impl::DecodingLoop(ADTSData adts_header,
         output_status = ReceiveSample(transform, out_stream_id, &output);
 
         // 0 -> okay; 3 -> okay but more data available (buffer too small)
-        if (output_status == 0 || output_status == 3) {
+        if (output_status == OK || output_status == HAVE_MORE_DATA) {
             CopySampleToBuffer(output, (void**)&output_buffer, &output_len);
 
             // the following was taken from ffmpeg version of the decoder
@@ -133,20 +133,21 @@ int WMFDecoder::Impl::DecodingLoop(ADTSData adts_header,
         }
 
         // in case of "ok" only, just return quickly
-        if (output_status == 0)
+        if (output_status == OK)
             return 0;
 
         // for status = 2, reset MF
-        if (output_status == 2) {
+        if (output_status == NEED_RECONFIG) {
             Clear();
             return -1;
         }
 
         // for status = 3, try again with new buffer
-        if (output_status == 3)
+        if (output_status == HAVE_MORE_DATA)
             continue;
 
-        return output_status; // return on other status
+        LOG_ERROR(Audio_DSP, "Errors occurred when receiving output: {}", output_status);
+        return -1; // return on other status
     }
 
     return -1;
