@@ -26,7 +26,7 @@ struct CubebSink::Impl {
     static void LogCallback(char const* fmt, ...);
 };
 
-CubebSink::CubebSink(std::string target_device_name) : impl(std::make_unique<Impl>()) {
+CubebSink::CubebSink(std::string_view target_device_name) : impl(std::make_unique<Impl>()) {
     if (cubeb_init(&impl->ctx, "Citra", nullptr) != CUBEB_OK) {
         LOG_CRITICAL(Audio_Sink, "cubeb_init failed");
         return;

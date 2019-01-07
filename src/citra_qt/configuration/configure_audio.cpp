@@ -15,8 +15,8 @@ ConfigureAudio::ConfigureAudio(QWidget* parent)
 
     ui->output_sink_combo_box->clear();
     ui->output_sink_combo_box->addItem("auto");
-    for (const auto& sink_detail : AudioCore::g_sink_details) {
-        ui->output_sink_combo_box->addItem(sink_detail.id);
+    for (const char* id : AudioCore::GetSinkIDs()) {
+        ui->output_sink_combo_box->addItem(id);
     }
 
     connect(ui->volume_slider, &QSlider::valueChanged, this,
@@ -92,8 +92,7 @@ void ConfigureAudio::updateAudioDevices(int sink_index) {
     ui->audio_device_combo_box->addItem(AudioCore::auto_device_name);
 
     const std::string sink_id = ui->output_sink_combo_box->itemText(sink_index).toStdString();
-    const std::vector<std::string> device_list = AudioCore::GetSinkDetails(sink_id).list_devices();
-    for (const auto& device : device_list) {
+    for (const auto& device : AudioCore::GetDeviceListForSink(sink_id)) {
         ui->audio_device_combo_box->addItem(QString::fromStdString(device));
     }
 }

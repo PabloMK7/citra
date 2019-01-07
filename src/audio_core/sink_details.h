@@ -4,34 +4,21 @@
 
 #pragma once
 
-#include <functional>
-#include <memory>
 #include <string>
 #include <string_view>
-#include <utility>
 #include <vector>
 
 namespace AudioCore {
 
 class Sink;
 
-struct SinkDetails {
-    using FactoryFn = std::function<std::unique_ptr<Sink>(std::string)>;
-    using ListDevicesFn = std::function<std::vector<std::string>()>;
+/// Retrieves the IDs for all available audio sinks.
+std::vector<const char*> GetSinkIDs();
 
-    SinkDetails(const char* id_, FactoryFn factory_, ListDevicesFn list_devices_)
-        : id(id_), factory(std::move(factory_)), list_devices(std::move(list_devices_)) {}
+/// Gets the list of devices for a particular sink identified by the given ID.
+std::vector<std::string> GetDeviceListForSink(std::string_view sink_id);
 
-    /// Name for this sink.
-    const char* id;
-    /// A method to call to construct an instance of this type of sink.
-    FactoryFn factory;
-    /// A method to call to list available devices.
-    ListDevicesFn list_devices;
-};
-
-extern const std::vector<SinkDetails> g_sink_details;
-
-const SinkDetails& GetSinkDetails(std::string_view sink_id);
+/// Creates an audio sink identified by the given device ID.
+std::unique_ptr<Sink> CreateSinkFromID(std::string_view sink_id, std::string_view device_id);
 
 } // namespace AudioCore

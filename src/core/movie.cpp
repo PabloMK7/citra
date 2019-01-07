@@ -57,7 +57,9 @@ struct ControllerState {
                 BitField<9, 1, u16_le> l;
                 BitField<10, 1, u16_le> x;
                 BitField<11, 1, u16_le> y;
-                // Bits 12-15 are currently unused
+                BitField<12, 1, u16_le> debug;
+                BitField<13, 1, u16_le> gpio14;
+                // Bits 14-15 are currently unused
             };
             s16_le circle_pad_x;
             s16_le circle_pad_y;
@@ -161,6 +163,8 @@ void Movie::Play(Service::HID::PadState& pad_state, s16& circle_pad_x, s16& circ
     pad_state.l.Assign(s.pad_and_circle.l);
     pad_state.x.Assign(s.pad_and_circle.x);
     pad_state.y.Assign(s.pad_and_circle.y);
+    pad_state.debug.Assign(s.pad_and_circle.debug);
+    pad_state.gpio14.Assign(s.pad_and_circle.gpio14);
 
     circle_pad_x = s.pad_and_circle.circle_pad_x;
     circle_pad_y = s.pad_and_circle.circle_pad_y;
@@ -281,6 +285,8 @@ void Movie::Record(const Service::HID::PadState& pad_state, const s16& circle_pa
     s.pad_and_circle.l.Assign(static_cast<u16>(pad_state.l));
     s.pad_and_circle.x.Assign(static_cast<u16>(pad_state.x));
     s.pad_and_circle.y.Assign(static_cast<u16>(pad_state.y));
+    s.pad_and_circle.debug.Assign(static_cast<u16>(pad_state.debug));
+    s.pad_and_circle.gpio14.Assign(static_cast<u16>(pad_state.gpio14));
 
     s.pad_and_circle.circle_pad_x = circle_pad_x;
     s.pad_and_circle.circle_pad_y = circle_pad_y;
