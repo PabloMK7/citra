@@ -72,9 +72,8 @@ bool MFDecoderInit(IMFTransform** transform, GUID audio_format) {
     return true;
 }
 
-void MFDeInit(IMFTransform** transform) {
-    MFShutdownObject(*transform);
-    SafeRelease(transform);
+void MFDeInit(IMFTransform* transform) {
+    MFShutdownObject(transform);
     CoUninitialize();
 }
 
@@ -227,12 +226,12 @@ int DetectMediaType(char* buffer, size_t len, ADTSData* output, char** aac_tag) 
     return 0;
 }
 
-void MFFlush(IMFTransform** transform) {
-    HRESULT hr = (*transform)->ProcessMessage(MFT_MESSAGE_COMMAND_FLUSH, 0);
+void MFFlush(IMFTransform* transform) {
+    HRESULT hr = (transform)->ProcessMessage(MFT_MESSAGE_COMMAND_FLUSH, 0);
     if (FAILED(hr)) {
         ReportError("MFT: Flush command failed", hr);
     }
-    hr = (*transform)->ProcessMessage(MFT_MESSAGE_NOTIFY_END_OF_STREAM, 0);
+    hr = (transform)->ProcessMessage(MFT_MESSAGE_NOTIFY_END_OF_STREAM, 0);
     if (FAILED(hr)) {
         ReportError("Failed to end streaming for MFT", hr);
     }
@@ -333,7 +332,8 @@ MFOutputState ReceiveSample(IMFTransform* transform, DWORD out_stream_id, IMFSam
 }
 
 int CopySampleToBuffer(IMFSample* sample, void** output, DWORD* len) {
-    IMFMediaBuffer* buffer;
+    std::unique_ptr<IMFMediaBuffer, MFRelease<IMFMediaBuffer>> buffer;
+    IMFMediaBuffer* tmp;
     HRESULT hr = S_OK;
     BYTE* data;
 
@@ -343,16 +343,16 @@ int CopySampleToBuffer(IMFSample* sample, void** output, DWORD* len) {
         return -1;
     }
 
-    sample->ConvertToContiguousBuffer(&buffer);
+    sample->ConvertToContiguousBuffer(&tmp);
     if (FAILED(hr)) {
         ReportError("Failed to get sample buffer", hr);
         return -1;
     }
+    buffer.reset(tmp);
 
     hr = buffer->Lock(&data, nullptr, nullptr);
     if (FAILED(hr)) {
         ReportError("Failed to lock the buffer", hr);
-        SafeRelease(&buffer);
         return -1;
     }
 
@@ -361,6 +361,5 @@ int CopySampleToBuffer(IMFSample* sample, void** output, DWORD* len) {
 
     // if buffer unlock fails, then... whatever, we have already got data
     buffer->Unlock();
-    SafeRelease(&buffer);
     return 0;
 }

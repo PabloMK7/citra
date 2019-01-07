@@ -27,7 +27,7 @@ private:
 
     Memory::MemorySystem& memory;
 
-    IMFTransform* transform = nullptr;
+    std::unique_ptr<IMFTransform, MFRelease<IMFTransform>> transform;
     DWORD in_stream_id = 0;
     DWORD out_stream_id = 0;
 };
@@ -70,13 +70,15 @@ std::optional<BinaryResponse> WMFDecoder::Impl::Initalize(const BinaryRequest& r
     }
 
     BinaryResponse response;
+    IMFTransform* tmp = nullptr;
     std::memcpy(&response, &request, sizeof(response));
     response.unknown1 = 0x0;
 
-    if (!MFDecoderInit(&transform)) {
+    if (!MFDecoderInit(&tmp)) {
         LOG_CRITICAL(Audio_DSP, "Can't init decoder");
         return response;
     }
+    transform.reset(tmp);
 
     HRESULT hr = transform->GetStreamIDs(1, &in_stream_id, 1, &out_stream_id);
     if (hr == E_NOTIMPL) {
@@ -85,7 +87,6 @@ std::optional<BinaryResponse> WMFDecoder::Impl::Initalize(const BinaryRequest& r
         out_stream_id = 0;
     } else if (FAILED(hr)) {
         ReportError("Decoder failed to initialize the stream ID", hr);
-        SafeRelease(&transform);
         return response;
     }
 
@@ -95,8 +96,8 @@ std::optional<BinaryResponse> WMFDecoder::Impl::Initalize(const BinaryRequest& r
 
 void WMFDecoder::Impl::Clear() {
     if (initalized) {
-        MFFlush(&transform);
-        MFDeInit(&transform);
+        MFFlush(transform.get());
+        MFDeInit(transform.get());
     }
     initalized = false;
     selected = false;
@@ -110,7 +111,7 @@ int WMFDecoder::Impl::DecodingLoop(ADTSData adts_header,
     IMFSample* output = nullptr;
 
     while (true) {
-        output_status = ReceiveSample(transform, out_stream_id, &output);
+        output_status = ReceiveSample(transform.get(), out_stream_id, &output);
 
         // 0 -> okay; 3 -> okay but more data available (buffer too small)
         if (output_status == OK || output_status == HAVE_MORE_DATA) {
@@ -192,9 +193,9 @@ std::optional<BinaryResponse> WMFDecoder::Impl::Decode(const BinaryRequest& requ
     if (!selected) {
         LOG_DEBUG(Audio_DSP, "New ADTS stream: channels = {}, sample rate = {}",
                   adts_header.channels, adts_header.samplerate);
-        SelectInputMediaType(transform, in_stream_id, adts_header, (UINT8*)aac_tag, 14);
-        SelectOutputMediaType(transform, out_stream_id);
-        SendSample(transform, in_stream_id, nullptr);
+        SelectInputMediaType(transform.get(), in_stream_id, adts_header, (UINT8*)aac_tag, 14);
+        SelectOutputMediaType(transform.get(), out_stream_id);
+        SendSample(transform.get(), in_stream_id, nullptr);
         // cache the result from detect_mediatype and call select_*_mediatype only once
         // This could increase performance very slightly
         transform->ProcessMessage(MFT_MESSAGE_NOTIFY_BEGIN_STREAMING, 0);
@@ -205,7 +206,7 @@ std::optional<BinaryResponse> WMFDecoder::Impl::Decode(const BinaryRequest& requ
     sample->SetUINT32(MFSampleExtension_CleanPoint, 1);
 
     while (true) {
-        input_status = SendSample(transform, in_stream_id, sample);
+        input_status = SendSample(transform.get(), in_stream_id, sample);
 
         if (DecodingLoop(adts_header, out_streams) < 0) {
             // if the decode issues are caused by MFT not accepting new samples, try again
