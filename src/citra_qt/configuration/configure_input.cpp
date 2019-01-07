@@ -100,9 +100,11 @@ ConfigureInput::ConfigureInput(QWidget* parent)
     setFocusPolicy(Qt::ClickFocus);
 
     button_map = {
-        ui->buttonA,        ui->buttonB,        ui->buttonX,         ui->buttonY,  ui->buttonDpadUp,
-        ui->buttonDpadDown, ui->buttonDpadLeft, ui->buttonDpadRight, ui->buttonL,  ui->buttonR,
-        ui->buttonStart,    ui->buttonSelect,   ui->buttonZL,        ui->buttonZR, ui->buttonHome,
+        ui->buttonA,      ui->buttonB,        ui->buttonX,        ui->buttonY,
+        ui->buttonDpadUp, ui->buttonDpadDown, ui->buttonDpadLeft, ui->buttonDpadRight,
+        ui->buttonL,      ui->buttonR,        ui->buttonStart,    ui->buttonSelect,
+        ui->buttonDebug,  ui->buttonGpio14,   ui->buttonZL,       ui->buttonZR,
+        ui->buttonHome,
     };
 
     analog_map_buttons = {{
@@ -273,7 +275,8 @@ void ConfigureInput::ClearAll() {
 
 void ConfigureInput::updateButtonLabels() {
     for (int button = 0; button < Settings::NativeButton::NumButtons; button++) {
-        button_map[button]->setText(ButtonToText(buttons_param[button]));
+        if (button_map[button])
+            button_map[button]->setText(ButtonToText(buttons_param[button]));
     }
 
     for (int analog_id = 0; analog_id < Settings::NativeAnalog::NumAnalogs; analog_id++) {
