@@ -4,7 +4,6 @@
 
 #include "audio_core/audio_types.h"
 #include "common/assert.h"
-#include "common/hash.h"
 #include "common/logging/log.h"
 #include "core/core.h"
 #include "core/hle/ipc_helpers.h"
@@ -24,26 +23,9 @@ void DSP_DSP::RecvData(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x01, 1, 0);
     const u32 register_number = rp.Pop<u32>();
 
-    ASSERT_MSG(register_number == 0, "Unknown register_number {}", register_number);
-
-    // Application reads this after requesting DSP shutdown, to verify the DSP has indeed shutdown
-    // or slept.
-
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
-
-    switch (Core::DSP().GetDspState()) {
-    case AudioCore::DspState::On:
-        rb.Push<u32>(0);
-        break;
-    case AudioCore::DspState::Off:
-    case AudioCore::DspState::Sleeping:
-        rb.Push<u32>(1);
-        break;
-    default:
-        UNREACHABLE();
-        break;
-    }
+    rb.Push(system.DSP().RecvData(register_number));
 
     LOG_DEBUG(Service_DSP, "register_number={}", register_number);
 }
@@ -52,11 +34,9 @@ void DSP_DSP::RecvDataIsReady(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x02, 1, 0);
     const u32 register_number = rp.Pop<u32>();
 
-    ASSERT_MSG(register_number == 0, "Unknown register_number {}", register_number);
-
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
-    rb.Push(true); /// 0 = not ready, 1 = ready to read
+    rb.Push(system.DSP().RecvDataIsReady(register_number));
 
     LOG_DEBUG(Service_DSP, "register_number={}", register_number);
 }
@@ -65,10 +45,12 @@ void DSP_DSP::SetSemaphore(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x07, 1, 0);
     const u16 semaphore_value = rp.Pop<u16>();
 
+    system.DSP().SetSemaphore(semaphore_value);
+
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
 
-    LOG_WARNING(Service_DSP, "(STUBBED) called, semaphore_value={:04X}", semaphore_value);
+    LOG_INFO(Service_DSP, "called, semaphore_value={:04X}", semaphore_value);
 }
 
 void DSP_DSP::ConvertProcessAddressFromDspDram(Kernel::HLERequestContext& ctx) {
@@ -111,7 +93,7 @@ void DSP_DSP::WriteProcessPipe(Kernel::HLERequestContext& ctx) {
         break;
     }
 
-    Core::DSP().PipeWrite(pipe, buffer);
+    system.DSP().PipeWrite(pipe, buffer);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
@@ -127,11 +109,11 @@ void DSP_DSP::ReadPipe(Kernel::HLERequestContext& ctx) {
     const u16 size = rp.Pop<u16>();
 
     const DspPipe pipe = static_cast<DspPipe>(channel);
-    const u16 pipe_readable_size = static_cast<u16>(Core::DSP().GetPipeReadableSize(pipe));
+    const u16 pipe_readable_size = static_cast<u16>(system.DSP().GetPipeReadableSize(pipe));
 
     std::vector<u8> pipe_buffer;
     if (pipe_readable_size >= size)
-        pipe_buffer = Core::DSP().PipeRead(pipe, size);
+        pipe_buffer = system.DSP().PipeRead(pipe, size);
     else
         UNREACHABLE(); // No more data is in pipe. Hardware hangs in this case; Should never happen.
 
@@ -149,7 +131,7 @@ void DSP_DSP::GetPipeReadableSize(Kernel::HLERequestContext& ctx) {
     const u32 peer = rp.Pop<u32>();
 
     const DspPipe pipe = static_cast<DspPipe>(channel);
-    const u16 pipe_readable_size = static_cast<u16>(Core::DSP().GetPipeReadableSize(pipe));
+    const u16 pipe_readable_size = static_cast<u16>(system.DSP().GetPipeReadableSize(pipe));
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
     rb.Push(RESULT_SUCCESS);
@@ -166,11 +148,11 @@ void DSP_DSP::ReadPipeIfPossible(Kernel::HLERequestContext& ctx) {
     const u16 size = rp.Pop<u16>();
 
     const DspPipe pipe = static_cast<DspPipe>(channel);
-    const u16 pipe_readable_size = static_cast<u16>(Core::DSP().GetPipeReadableSize(pipe));
+    const u16 pipe_readable_size = static_cast<u16>(system.DSP().GetPipeReadableSize(pipe));
 
     std::vector<u8> pipe_buffer;
     if (pipe_readable_size >= size)
-        pipe_buffer = Core::DSP().PipeRead(pipe, size);
+        pipe_buffer = system.DSP().PipeRead(pipe, size);
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
     rb.Push(RESULT_SUCCESS);
@@ -190,23 +172,27 @@ void DSP_DSP::LoadComponent(Kernel::HLERequestContext& ctx) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 2);
     rb.Push(RESULT_SUCCESS);
-    rb.Push(true); /// Pretend that we actually loaded the DSP firmware
+    rb.Push(true);
     rb.PushMappedBuffer(buffer);
-
-    // TODO(bunnei): Implement real DSP firmware loading
 
     std::vector<u8> component_data(size);
     buffer.Read(component_data.data(), 0, size);
 
-    LOG_INFO(Service_DSP, "Firmware hash: {:#018x}",
-             Common::ComputeHash64(component_data.data(), component_data.size()));
-    // Some versions of the firmware have the location of DSP structures listed here.
-    if (size > 0x37C) {
-        LOG_INFO(Service_DSP, "Structures hash: {:#018x}",
-                 Common::ComputeHash64(component_data.data() + 0x340, 60));
-    }
-    LOG_WARNING(Service_DSP, "(STUBBED) called size=0x{:X}, prog_mask=0x{:08X}, data_mask=0x{:08X}",
-                size, prog_mask, data_mask);
+    system.DSP().LoadComponent(component_data);
+
+    LOG_INFO(Service_DSP, "called size=0x{:X}, prog_mask=0x{:08X}, data_mask=0x{:08X}", size,
+             prog_mask, data_mask);
+}
+
+void DSP_DSP::UnloadComponent(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x12, 0, 0);
+
+    system.DSP().UnloadComponent();
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(RESULT_SUCCESS);
+
+    LOG_INFO(Service_DSP, "(STUBBED)");
 }
 
 void DSP_DSP::FlushDataCache(Kernel::HLERequestContext& ctx) {
@@ -282,12 +268,12 @@ void DSP_DSP::GetSemaphoreEventHandle(Kernel::HLERequestContext& ctx) {
 
 void DSP_DSP::SetSemaphoreMask(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x17, 1, 0);
-    const u32 mask = rp.Pop<u32>();
+    preset_semaphore = rp.Pop<u16>();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
 
-    LOG_WARNING(Service_DSP, "(STUBBED) called mask=0x{:08X}", mask);
+    LOG_WARNING(Service_DSP, "(STUBBED) called mask=0x{:04X}", preset_semaphore);
 }
 
 void DSP_DSP::GetHeadphoneStatus(Kernel::HLERequestContext& ctx) {
@@ -350,7 +336,8 @@ bool DSP_DSP::HasTooManyEventsRegistered() const {
     return number >= max_number_of_interrupt_events;
 }
 
-DSP_DSP::DSP_DSP(Core::System& system) : ServiceFramework("dsp::DSP", DefaultMaxSessions) {
+DSP_DSP::DSP_DSP(Core::System& system)
+    : ServiceFramework("dsp::DSP", DefaultMaxSessions), system(system) {
     static const FunctionInfo functions[] = {
         // clang-format off
         {0x00010040, &DSP_DSP::RecvData, "RecvData"},
@@ -370,7 +357,7 @@ DSP_DSP::DSP_DSP(Core::System& system) : ServiceFramework("dsp::DSP", DefaultMax
         {0x000F0080, &DSP_DSP::GetPipeReadableSize, "GetPipeReadableSize"},
         {0x001000C0, &DSP_DSP::ReadPipeIfPossible, "ReadPipeIfPossible"},
         {0x001100C2, &DSP_DSP::LoadComponent, "LoadComponent"},
-        {0x00120000, nullptr, "UnloadComponent"},
+        {0x00120000, &DSP_DSP::UnloadComponent, "UnloadComponent"},
         {0x00130082, &DSP_DSP::FlushDataCache, "FlushDataCache"},
         {0x00140082, &DSP_DSP::InvalidateDataCache, "InvalidateDCache"},
         {0x00150082, &DSP_DSP::RegisterInterruptEvents, "RegisterInterruptEvents"},
@@ -393,6 +380,9 @@ DSP_DSP::DSP_DSP(Core::System& system) : ServiceFramework("dsp::DSP", DefaultMax
 
     semaphore_event =
         system.Kernel().CreateEvent(Kernel::ResetType::OneShot, "DSP_DSP::semaphore_event");
+
+    semaphore_event->SetHLENotifier(
+        [this]() { this->system.DSP().SetSemaphore(preset_semaphore); });
 }
 
 DSP_DSP::~DSP_DSP() {

@@ -79,9 +79,14 @@ public:
         }
     }
 
+    std::size_t Generation() const {
+        std::unique_lock<std::mutex> lk(mutex);
+        return generation;
+    }
+
 private:
     std::condition_variable condvar;
-    std::mutex mutex;
+    mutable std::mutex mutex;
     std::size_t count;
     std::size_t waiting = 0;
     std::size_t generation = 0; // Incremented once each time the barrier is used

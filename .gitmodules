@@ -38,11 +38,14 @@
     path = externals/discord-rpc
     url = https://github.com/discordapp/discord-rpc.git
 [submodule "externals/libzmq"]
-	path = externals/libzmq
-	url = https://github.com/zeromq/libzmq
+    path = externals/libzmq
+    url = https://github.com/zeromq/libzmq
 [submodule "externals/cppzmq"]
-	path = externals/cppzmq
-	url = https://github.com/zeromq/cppzmq
+    path = externals/cppzmq
+    url = https://github.com/zeromq/cppzmq
 [submodule "cpp-jwt"]
-	path = externals/cpp-jwt
-	url = https://github.com/arun11299/cpp-jwt.git
+    path = externals/cpp-jwt
+    url = https://github.com/arun11299/cpp-jwt.git
+[submodule "teakra"]
+    path = externals/teakra
+    url = https://github.com/wwylele/teakra.git

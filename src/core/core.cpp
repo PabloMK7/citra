@@ -6,6 +6,7 @@
 #include <utility>
 #include "audio_core/dsp_interface.h"
 #include "audio_core/hle/hle.h"
+#include "audio_core/lle/lle.h"
 #include "common/logging/log.h"
 #include "core/arm/arm_interface.h"
 #ifdef ARCHITECTURE_x86_64
@@ -188,7 +189,13 @@ System::ResultStatus System::Init(EmuWindow& emu_window, u32 system_mode) {
         cpu_core = std::make_unique<ARM_DynCom>(*this, USER32MODE);
     }
 
-    dsp_core = std::make_unique<AudioCore::DspHle>(*memory);
+    if (Settings::values.enable_dsp_lle) {
+        dsp_core = std::make_unique<AudioCore::DspLle>(*memory,
+                                                       Settings::values.enable_dsp_lle_multithread);
+    } else {
+        dsp_core = std::make_unique<AudioCore::DspHle>(*memory);
+    }
+
     dsp_core->SetSink(Settings::values.sink_id, Settings::values.audio_device_id);
     dsp_core->EnableStretching(Settings::values.enable_audio_stretching);
 

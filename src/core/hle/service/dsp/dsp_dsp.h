@@ -154,6 +154,15 @@ private:
     void LoadComponent(Kernel::HLERequestContext& ctx);
 
     /**
+     * DSP_DSP::UnloadComponent service function
+     *  Inputs:
+     *      0 : Header Code[0x00120000]
+     *  Outputs:
+     *      1 : Result of function, 0 on success, otherwise error code
+     */
+    void UnloadComponent(Kernel::HLERequestContext& ctx);
+
+    /**
      * DSP_DSP::FlushDataCache service function
      *
      * This Function is a no-op, We aren't emulating the CPU cache any time soon.
@@ -245,7 +254,10 @@ private:
     /// Checks if we are trying to register more than 6 events
     bool HasTooManyEventsRegistered() const;
 
+    Core::System& system;
+
     Kernel::SharedPtr<Kernel::Event> semaphore_event;
+    u16 preset_semaphore = 0;
 
     Kernel::SharedPtr<Kernel::Event> interrupt_zero = nullptr; /// Currently unknown purpose
     Kernel::SharedPtr<Kernel::Event> interrupt_one = nullptr;  /// Currently unknown purpose

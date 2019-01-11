@@ -11,6 +11,7 @@
 #include "audio_core/sink.h"
 #include "common/assert.h"
 #include "common/common_types.h"
+#include "common/hash.h"
 #include "common/logging/log.h"
 #include "core/core.h"
 #include "core/core_timing.h"
@@ -29,6 +30,8 @@ public:
 
     DspState GetDspState() const;
 
+    u16 RecvData(u32 register_number);
+    bool RecvDataIsReady(u32 register_number) const;
     std::vector<u8> PipeRead(DspPipe pipe_number, u32 length);
     std::size_t GetPipeReadableSize(DspPipe pipe_number) const;
     void PipeWrite(DspPipe pipe_number, const std::vector<u8>& buffer);
@@ -91,6 +94,29 @@ DspHle::Impl::~Impl() {
 
 DspState DspHle::Impl::GetDspState() const {
     return dsp_state;
+}
+
+u16 DspHle::Impl::RecvData(u32 register_number) {
+    ASSERT_MSG(register_number == 0, "Unknown register_number {}", register_number);
+
+    // Application reads this after requesting DSP shutdown, to verify the DSP has indeed shutdown
+    // or slept.
+
+    switch (GetDspState()) {
+    case AudioCore::DspState::On:
+        return 0;
+    case AudioCore::DspState::Off:
+    case AudioCore::DspState::Sleeping:
+        return 1;
+    default:
+        UNREACHABLE();
+        break;
+    }
+}
+
+bool DspHle::Impl::RecvDataIsReady(u32 register_number) const {
+    ASSERT_MSG(register_number == 0, "Unknown register_number {}", register_number);
+    return true;
 }
 
 std::vector<u8> DspHle::Impl::PipeRead(DspPipe pipe_number, u32 length) {
@@ -342,8 +368,16 @@ void DspHle::Impl::AudioTickCallback(s64 cycles_late) {
 DspHle::DspHle(Memory::MemorySystem& memory) : impl(std::make_unique<Impl>(*this, memory)) {}
 DspHle::~DspHle() = default;
 
-DspState DspHle::GetDspState() const {
-    return impl->GetDspState();
+u16 DspHle::RecvData(u32 register_number) {
+    return impl->RecvData(register_number);
+}
+
+bool DspHle::RecvDataIsReady(u32 register_number) const {
+    return impl->RecvDataIsReady(register_number);
+}
+
+void DspHle::SetSemaphore(u16 semaphore_value) {
+    // Do nothing in HLE
 }
 
 std::vector<u8> DspHle::PipeRead(DspPipe pipe_number, u32 length) {
@@ -364,6 +398,21 @@ std::array<u8, Memory::DSP_RAM_SIZE>& DspHle::GetDspMemory() {
 
 void DspHle::SetServiceToInterrupt(std::weak_ptr<DSP_DSP> dsp) {
     impl->SetServiceToInterrupt(std::move(dsp));
+}
+
+void DspHle::LoadComponent(const std::vector<u8>& component_data) {
+    // HLE doesn't need DSP program. Only log some info here
+    LOG_INFO(Service_DSP, "Firmware hash: {:#018x}",
+             Common::ComputeHash64(component_data.data(), component_data.size()));
+    // Some versions of the firmware have the location of DSP structures listed here.
+    if (component_data.size() > 0x37C) {
+        LOG_INFO(Service_DSP, "Structures hash: {:#018x}",
+                 Common::ComputeHash64(component_data.data() + 0x340, 60));
+    }
+}
+
+void DspHle::UnloadComponent() {
+    // Do nothing
 }
 
 } // namespace AudioCore

@@ -43,6 +43,13 @@ void DspInterface::OutputFrame(StereoFrame16& frame) {
     fifo.Push(frame.data(), frame.size());
 }
 
+void DspInterface::OutputSample(std::array<s16, 2> sample) {
+    if (!sink)
+        return;
+
+    fifo.Push(&sample, 1);
+}
+
 void DspInterface::OutputCallback(s16* buffer, std::size_t num_frames) {
     std::size_t frames_written;
     if (perform_time_stretching) {

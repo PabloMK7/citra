@@ -32,8 +32,26 @@ public:
     DspInterface& operator=(const DspInterface&) = delete;
     DspInterface& operator=(DspInterface&&) = delete;
 
-    /// Get the state of the DSP
-    virtual DspState GetDspState() const = 0;
+    /**
+     * Reads data from one of three DSP registers
+     * @note this function blocks until the data is available
+     * @param register_number the index of the register to read
+     * @returns the value of the register
+     */
+    virtual u16 RecvData(u32 register_number) = 0;
+
+    /**
+     * Checks whether data is ready in one of three DSP registers
+     * @param register_number the index of the register to check
+     * @returns true if data is ready
+     */
+    virtual bool RecvDataIsReady(u32 register_number) const = 0;
+
+    /**
+     * Sets the DSP semaphore register
+     * @param semaphore_value the value set to the semaphore register
+     */
+    virtual void SetSemaphore(u16 semaphore_value) = 0;
 
     /**
      * Reads `length` bytes from the DSP pipe identified with `pipe_number`.
@@ -70,6 +88,12 @@ public:
     /// Sets the dsp class that we trigger interrupts for
     virtual void SetServiceToInterrupt(std::weak_ptr<Service::DSP::DSP_DSP> dsp) = 0;
 
+    /// Loads the DSP program
+    virtual void LoadComponent(const std::vector<u8>& buffer) = 0;
+
+    /// Unloads the DSP program
+    virtual void UnloadComponent() = 0;
+
     /// Select the sink to use based on sink id.
     void SetSink(const std::string& sink_id, const std::string& audio_device);
     /// Get the current sink
@@ -79,6 +103,7 @@ public:
 
 protected:
     void OutputFrame(StereoFrame16& frame);
+    void OutputSample(std::array<s16, 2> sample);
 
 private:
     void FlushResidualStretcherAudio();

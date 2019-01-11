@@ -3,6 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <algorithm>
+#include <utility>
 #include "common/assert.h"
 #include "common/logging/log.h"
 #include "core/hle/kernel/errors.h"
@@ -86,10 +87,17 @@ void WaitObject::WakeupAllWaitingThreads() {
 
         thread->ResumeFromWait();
     }
+
+    if (hle_notifier)
+        hle_notifier();
 }
 
 const std::vector<SharedPtr<Thread>>& WaitObject::GetWaitingThreads() const {
     return waiting_threads;
+}
+
+void WaitObject::SetHLENotifier(std::function<void()> callback) {
+    hle_notifier = std::move(callback);
 }
 
 } // namespace Kernel

@@ -18,6 +18,23 @@
      </property>
      <layout class="QVBoxLayout">
       <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_emulation">
+        <property name="bottomMargin">
+         <number>0</number>
+        </property>
+        <item>
+         <widget class="QLabel" name="label_emulation">
+          <property name="text">
+           <string>Emulation:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QComboBox" name="emulation_combo_box"/>
+        </item>
+       </layout>
+      </item>
+      <item>
        <layout class="QHBoxLayout">
         <item>
          <widget class="QLabel" name="label1">

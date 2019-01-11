@@ -51,6 +51,9 @@ add_subdirectory(soundtouch)
 # The SoundTouch target doesn't export the necessary include paths as properties by default
 target_include_directories(SoundTouch INTERFACE ./soundtouch/include)
 
+# Teakra
+add_subdirectory(teakra)
+
 # Xbyak
 if (ARCHITECTURE_x86_64)
     # Defined before "dynarmic" above
