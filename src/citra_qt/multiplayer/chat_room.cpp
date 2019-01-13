@@ -42,8 +42,12 @@ public:
             cur_nickname = QString::fromStdString(room->GetNickname());
             cur_username = QString::fromStdString(room->GetUsername());
         }
-        if (message.contains(QString("@").append(cur_nickname)) ||
-            (!cur_username.isEmpty() && message.contains(QString("@").append(cur_username)))) {
+
+        // Handle pings at the beginning and end of message
+        QString fixed_message = QString(" %1 ").arg(message);
+        if (fixed_message.contains(QString(" @%1 ").arg(cur_nickname)) ||
+            (!cur_username.isEmpty() &&
+             fixed_message.contains(QString(" @%1 ").arg(cur_username)))) {
 
             contains_ping = true;
         } else {
@@ -65,15 +69,18 @@ public:
             name = QString("%1 (%2)").arg(nickname, username);
         }
 
-        QString style;
+        QString style, text_color;
         if (ContainsPing()) {
             // Add a background color to these messages
             style = QString("background-color: %1").arg(ping_color);
+            // Add a font color
+            text_color = "color='#000000'";
         }
 
         return QString("[%1] <font color='%2'>&lt;%3&gt;</font> <font style='%4' "
-                       "color='#000000'>%5</font>")
-            .arg(timestamp, color, name.toHtmlEscaped(), style, message.toHtmlEscaped());
+                       "%5>%6</font>")
+            .arg(timestamp, color, name.toHtmlEscaped(), style, text_color,
+                 message.toHtmlEscaped());
     }
 
 private:
