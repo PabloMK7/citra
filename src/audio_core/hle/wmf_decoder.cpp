@@ -27,7 +27,7 @@ private:
 
     Memory::MemorySystem& memory;
 
-    std::unique_ptr<IMFTransform, MFRelease<IMFTransform>> transform;
+    unique_mfptr<IMFTransform> transform;
     DWORD in_stream_id = 0;
     DWORD out_stream_id = 0;
 };
@@ -108,14 +108,17 @@ int WMFDecoder::Impl::DecodingLoop(ADTSData adts_header,
     MFOutputState output_status = OK;
     char* output_buffer = nullptr;
     DWORD output_len = 0;
-    IMFSample* output = nullptr;
+    DWORD tmp = 0;
+    // IMFSample* output_tmp = nullptr;
+    IMFMediaBuffer* mdbuf = nullptr;
+    unique_mfptr<IMFSample> output;
 
     while (true) {
-        output_status = ReceiveSample(transform.get(), out_stream_id, &output);
+        auto [output_status, output] = ReceiveSample(transform.get(), out_stream_id);
 
         // 0 -> okay; 3 -> okay but more data available (buffer too small)
         if (output_status == OK || output_status == HAVE_MORE_DATA) {
-            CopySampleToBuffer(output, (void**)&output_buffer, &output_len);
+            CopySampleToBuffer(output.get(), (void**)&output_buffer, &output_len);
 
             // the following was taken from ffmpeg version of the decoder
             f32 val_f32;
@@ -178,7 +181,7 @@ std::optional<BinaryResponse> WMFDecoder::Impl::Decode(const BinaryRequest& requ
     u8* data = memory.GetFCRAMPointer(request.src_addr - Memory::FCRAM_PADDR);
 
     std::array<std::vector<u8>, 2> out_streams;
-    IMFSample* sample = nullptr;
+    unique_mfptr<IMFSample> sample;
     ADTSData adts_header;
     char* aac_tag = (char*)calloc(1, 14);
     int input_status = 0;
@@ -202,11 +205,11 @@ std::optional<BinaryResponse> WMFDecoder::Impl::Decode(const BinaryRequest& requ
         selected = true;
     }
 
-    sample = CreateSample((void*)data, request.size, 1, 0);
+    sample.reset(CreateSample((void*)data, request.size, 1, 0));
     sample->SetUINT32(MFSampleExtension_CleanPoint, 1);
 
     while (true) {
-        input_status = SendSample(transform.get(), in_stream_id, sample);
+        input_status = SendSample(transform.get(), in_stream_id, sample.get());
 
         if (DecodingLoop(adts_header, out_streams) < 0) {
             // if the decode issues are caused by MFT not accepting new samples, try again
