@@ -6,4 +6,8 @@ package org.citra_emu.citra;
 
 import android.app.Application;
 
-public class CitraApplication extends Application {}
+public class CitraApplication extends Application {
+    static {
+        System.loadLibrary("citra-android");
+    }
+}
