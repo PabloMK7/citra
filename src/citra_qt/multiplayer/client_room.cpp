@@ -109,3 +109,7 @@ void ClientRoomWindow::UpdateView() {
     // TODO(B3N30): can't get RoomMember*, show error and close window
     close();
 }
+
+void ClientRoomWindow::UpdateIconDisplay() {
+    ui->chat->UpdateIconDisplay();
+}
