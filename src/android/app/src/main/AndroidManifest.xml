@@ -15,12 +15,12 @@
 
     <application
         android:name="org.citra_emu.citra.CitraApplication"
-        android:label="Citra Emulator"
-        android:icon="@drawable/ic_citra"
+        android:label="Citra"
+        android:icon="@mipmap/ic_citra"
         android:allowBackup="true"
         android:supportsRtl="true"
         android:isGame="true"
-        android:banner="@drawable/ic_citra">
+        android:banner="@mipmap/ic_citra">
 
         <activity
             android:name=".ui.main.MainActivity"
