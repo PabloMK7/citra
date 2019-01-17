@@ -194,6 +194,7 @@ void MultiplayerState::UpdateThemedIcons() {
     } else {
         status_icon->setPixmap(QIcon::fromTheme("disconnected").pixmap(16));
     }
+    client_room->UpdateIconDisplay();
 }
 
 static void BringWidgetToFront(QWidget* widget) {

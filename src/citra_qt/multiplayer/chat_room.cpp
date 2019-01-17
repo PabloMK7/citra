@@ -42,8 +42,12 @@ public:
             cur_nickname = QString::fromStdString(room->GetNickname());
             cur_username = QString::fromStdString(room->GetUsername());
         }
-        if (message.contains(QString("@").append(cur_nickname)) ||
-            (!cur_username.isEmpty() && message.contains(QString("@").append(cur_username)))) {
+
+        // Handle pings at the beginning and end of message
+        QString fixed_message = QString(" %1 ").arg(message);
+        if (fixed_message.contains(QString(" @%1 ").arg(cur_nickname)) ||
+            (!cur_username.isEmpty() &&
+             fixed_message.contains(QString(" @%1 ").arg(cur_username)))) {
 
             contains_ping = true;
         } else {
@@ -65,15 +69,18 @@ public:
             name = QString("%1 (%2)").arg(nickname, username);
         }
 
-        QString style;
+        QString style, text_color;
         if (ContainsPing()) {
             // Add a background color to these messages
             style = QString("background-color: %1").arg(ping_color);
+            // Add a font color
+            text_color = "color='#000000'";
         }
 
         return QString("[%1] <font color='%2'>&lt;%3&gt;</font> <font style='%4' "
-                       "color='#000000'>%5</font>")
-            .arg(timestamp, color, name.toHtmlEscaped(), style, message.toHtmlEscaped());
+                       "%5>%6</font>")
+            .arg(timestamp, color, name.toHtmlEscaped(), style, text_color,
+                 message.toHtmlEscaped());
     }
 
 private:
@@ -345,6 +352,8 @@ void ChatRoom::UpdateIconDisplay() {
             item->data(PlayerListItem::AvatarUrlRole).toString().toStdString();
         if (icon_cache.count(avatar_url)) {
             item->setData(icon_cache.at(avatar_url), Qt::DecorationRole);
+        } else {
+            item->setData(QIcon::fromTheme("no_avatar").pixmap(48), Qt::DecorationRole);
         }
     }
 }
@@ -358,45 +367,41 @@ void ChatRoom::SetPlayerList(const Network::RoomMember::MemberList& member_list)
         QStandardItem* name_item = new PlayerListItem(member.nickname, member.username,
                                                       member.avatar_url, member.game_info.name);
 
-        if (!icon_cache.count(member.avatar_url)) {
-            // Emplace a default question mark icon as avatar
-            icon_cache.emplace(member.avatar_url, QIcon::fromTheme("no_avatar").pixmap(48));
-            if (!member.avatar_url.empty()) {
 #ifdef ENABLE_WEB_SERVICE
-                // Start a request to get the member's avatar
-                const QUrl url(QString::fromStdString(member.avatar_url));
-                QFuture<std::string> future = QtConcurrent::run([url] {
-                    WebService::Client client(
-                        QString("%1://%2").arg(url.scheme(), url.host()).toStdString(), "", "");
-                    auto result = client.GetImage(url.path().toStdString(), true);
-                    if (result.returned_data.empty()) {
-                        LOG_ERROR(WebService, "Failed to get avatar");
-                    }
-                    return result.returned_data;
-                });
-                auto* future_watcher = new QFutureWatcher<std::string>(this);
-                connect(future_watcher, &QFutureWatcher<std::string>::finished, this,
-                        [this, future_watcher, avatar_url = member.avatar_url] {
-                            const std::string result = future_watcher->result();
-                            if (result.empty())
-                                return;
-                            QPixmap pixmap;
-                            if (!pixmap.loadFromData(reinterpret_cast<const u8*>(result.data()),
-                                                     result.size()))
-                                return;
-                            icon_cache[avatar_url] = pixmap.scaled(48, 48, Qt::IgnoreAspectRatio,
-                                                                   Qt::SmoothTransformation);
-                            // Update all the displayed icons with the new icon_cache
-                            UpdateIconDisplay();
-                        });
-                future_watcher->setFuture(future);
-#endif
-            }
+        if (!icon_cache.count(member.avatar_url) && !member.avatar_url.empty()) {
+            // Start a request to get the member's avatar
+            const QUrl url(QString::fromStdString(member.avatar_url));
+            QFuture<std::string> future = QtConcurrent::run([url] {
+                WebService::Client client(
+                    QString("%1://%2").arg(url.scheme(), url.host()).toStdString(), "", "");
+                auto result = client.GetImage(url.path().toStdString(), true);
+                if (result.returned_data.empty()) {
+                    LOG_ERROR(WebService, "Failed to get avatar");
+                }
+                return result.returned_data;
+            });
+            auto* future_watcher = new QFutureWatcher<std::string>(this);
+            connect(future_watcher, &QFutureWatcher<std::string>::finished, this,
+                    [this, future_watcher, avatar_url = member.avatar_url] {
+                        const std::string result = future_watcher->result();
+                        if (result.empty())
+                            return;
+                        QPixmap pixmap;
+                        if (!pixmap.loadFromData(reinterpret_cast<const u8*>(result.data()),
+                                                 result.size()))
+                            return;
+                        icon_cache[avatar_url] =
+                            pixmap.scaled(48, 48, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+                        // Update all the displayed icons with the new icon_cache
+                        UpdateIconDisplay();
+                    });
+            future_watcher->setFuture(future);
         }
-        name_item->setData(icon_cache.at(member.avatar_url), Qt::DecorationRole);
+#endif
 
         player_list->invisibleRootItem()->appendRow(name_item);
     }
+    UpdateIconDisplay();
     // TODO(B3N30): Restore row selection
 }
 

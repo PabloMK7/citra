@@ -18,6 +18,7 @@ public:
     ~ClientRoomWindow();
 
     void RetranslateUi();
+    void UpdateIconDisplay();
 
 public slots:
     void OnRoomUpdate(const Network::RoomInformation&);

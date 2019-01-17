@@ -37,6 +37,7 @@ public:
     ~ChatRoom();
 
     void SetModPerms(bool is_mod);
+    void UpdateIconDisplay();
 
 public slots:
     void OnRoomUpdate(const Network::RoomInformation& info);
@@ -58,7 +59,6 @@ private:
     void AppendChatMessage(const QString&);
     bool ValidateMessage(const std::string&);
     void SendModerationRequest(Network::RoomMessageTypes type, const std::string& nickname);
-    void UpdateIconDisplay();
 
     bool has_mod_perms = false;
     QStandardItemModel* player_list;
