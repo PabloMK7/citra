@@ -91,7 +91,7 @@ void ConfigureWeb::OnLoginChanged() {
 
 void ConfigureWeb::VerifyLogin() {
     ui->button_verify_login->setDisabled(true);
-    ui->button_verify_login->setText(tr("Verifying"));
+    ui->button_verify_login->setText(tr("Verifying..."));
     verify_watcher.setFuture(
         QtConcurrent::run([this, username = ui->edit_username->text().toStdString(),
                            token = ui->edit_token->text().toStdString()]() {
