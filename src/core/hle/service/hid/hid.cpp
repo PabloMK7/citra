@@ -12,6 +12,7 @@
 #include "core/hle/kernel/event.h"
 #include "core/hle/kernel/handle_table.h"
 #include "core/hle/kernel/shared_memory.h"
+#include "core/hle/kernel/shared_page.h"
 #include "core/hle/service/hid/hid.h"
 #include "core/hle/service/hid/hid_spvr.h"
 #include "core/hle/service/hid/hid_user.h"
@@ -159,6 +160,12 @@ void Module::UpdatePadCallback(u64 userdata, s64 cycles_late) {
     // Signal both handles when there's an update to Pad or touch
     event_pad_or_touch_1->Signal();
     event_pad_or_touch_2->Signal();
+
+    // TODO(xperia64): How the 3D Slider is updated by the HID module needs to be RE'd
+    // and possibly moved to its own Core::Timing event.
+    system.Kernel().GetSharedPageHandler().Set3DSlider(
+        Settings::values.toggle_3d ? static_cast<float_le>(Settings::values.factor_3d) / 100
+                                   : 0.0f);
 
     // Reschedule recurrent event
     system.CoreTiming().ScheduleEvent(pad_update_ticks - cycles_late, pad_update_event);
