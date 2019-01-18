@@ -39,6 +39,9 @@ public:
     /// Load configuration settings.
     void loadConfiguration();
 
+    // Save the current input profile index
+    void ApplyProfile();
+
 private:
     std::unique_ptr<Ui::ConfigureInput> ui;
 
@@ -91,4 +94,9 @@ private:
 
     /// Handle key press events.
     void keyPressEvent(QKeyEvent* event) override;
+
+    /// input profiles
+    void NewProfile();
+    void DeleteProfile();
+    void RenameProfile();
 };

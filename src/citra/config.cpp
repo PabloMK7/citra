@@ -71,33 +71,35 @@ static const std::array<std::array<int, 5>, Settings::NativeAnalog::NumAnalogs> 
 
 void Config::ReadValues() {
     // Controls
+    // TODO: add multiple input profile support
     for (int i = 0; i < Settings::NativeButton::NumButtons; ++i) {
         std::string default_param = InputCommon::GenerateKeyboardParam(default_buttons[i]);
-        Settings::values.buttons[i] =
+        Settings::values.current_input_profile.buttons[i] =
             sdl2_config->GetString("Controls", Settings::NativeButton::mapping[i], default_param);
-        if (Settings::values.buttons[i].empty())
-            Settings::values.buttons[i] = default_param;
+        if (Settings::values.current_input_profile.buttons[i].empty())
+            Settings::values.current_input_profile.buttons[i] = default_param;
     }
 
     for (int i = 0; i < Settings::NativeAnalog::NumAnalogs; ++i) {
         std::string default_param = InputCommon::GenerateAnalogParamFromKeys(
             default_analogs[i][0], default_analogs[i][1], default_analogs[i][2],
             default_analogs[i][3], default_analogs[i][4], 0.5f);
-        Settings::values.analogs[i] =
+        Settings::values.current_input_profile.analogs[i] =
             sdl2_config->GetString("Controls", Settings::NativeAnalog::mapping[i], default_param);
-        if (Settings::values.analogs[i].empty())
-            Settings::values.analogs[i] = default_param;
+        if (Settings::values.current_input_profile.analogs[i].empty())
+            Settings::values.current_input_profile.analogs[i] = default_param;
     }
 
-    Settings::values.motion_device = sdl2_config->GetString(
+    Settings::values.current_input_profile.motion_device = sdl2_config->GetString(
         "Controls", "motion_device",
         "engine:motion_emu,update_period:100,sensitivity:0.01,tilt_clamp:90.0");
-    Settings::values.touch_device =
+    Settings::values.current_input_profile.touch_device =
         sdl2_config->GetString("Controls", "touch_device", "engine:emu_window");
-    Settings::values.udp_input_address = sdl2_config->GetString(
+    Settings::values.current_input_profile.udp_input_address = sdl2_config->GetString(
         "Controls", "udp_input_address", InputCommon::CemuhookUDP::DEFAULT_ADDR);
-    Settings::values.udp_input_port = static_cast<u16>(sdl2_config->GetInteger(
-        "Controls", "udp_input_port", InputCommon::CemuhookUDP::DEFAULT_PORT));
+    Settings::values.current_input_profile.udp_input_port =
+        static_cast<u16>(sdl2_config->GetInteger("Controls", "udp_input_port",
+                                                 InputCommon::CemuhookUDP::DEFAULT_PORT));
 
     // Core
     Settings::values.use_cpu_jit = sdl2_config->GetBoolean("Core", "use_cpu_jit", true);

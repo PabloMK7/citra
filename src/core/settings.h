@@ -7,6 +7,7 @@
 #include <array>
 #include <string>
 #include <unordered_map>
+#include <vector>
 #include "common/common_types.h"
 #include "core/hle/service/cam/cam.h"
 
@@ -96,11 +97,8 @@ static const std::array<const char*, NumAnalogs> mapping = {{
 }};
 } // namespace NativeAnalog
 
-struct Values {
-    // CheckNew3DS
-    bool is_new_3ds;
-
-    // Controls
+struct InputProfile {
+    std::string name;
     std::array<std::string, NativeButton::NumButtons> buttons;
     std::array<std::string, NativeAnalog::NumAnalogs> analogs;
     std::string motion_device;
@@ -108,6 +106,16 @@ struct Values {
     std::string udp_input_address;
     u16 udp_input_port;
     u8 udp_pad_index;
+};
+
+struct Values {
+    // CheckNew3DS
+    bool is_new_3ds;
+
+    // Controls
+    InputProfile current_input_profile;       ///< The current input profile
+    int current_input_profile_index;          ///< The current input profile index
+    std::vector<InputProfile> input_profiles; ///< The list of input profiles
 
     // Core
     bool use_cpu_jit;
@@ -182,4 +190,11 @@ static constexpr int REGION_VALUE_AUTO_SELECT = -1;
 
 void Apply();
 void LogSettings();
+
+// Input profiles
+void LoadProfile(int index);
+void SaveProfile(int index);
+void CreateProfile(std::string name);
+void DeleteProfile(int index);
+void RenameCurrentProfile(std::string new_name);
 } // namespace Settings

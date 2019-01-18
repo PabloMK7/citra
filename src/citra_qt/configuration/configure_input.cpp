@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <memory>
 #include <utility>
+#include <QInputDialog>
 #include <QMenu>
 #include <QMessageBox>
 #include <QTimer>
@@ -95,9 +96,14 @@ static QString AnalogToText(const Common::ParamPackage& param, const std::string
 ConfigureInput::ConfigureInput(QWidget* parent)
     : QWidget(parent), ui(std::make_unique<Ui::ConfigureInput>()),
       timeout_timer(std::make_unique<QTimer>()), poll_timer(std::make_unique<QTimer>()) {
-
     ui->setupUi(this);
     setFocusPolicy(Qt::ClickFocus);
+
+    for (const auto& profile : Settings::values.input_profiles) {
+        ui->profile->addItem(QString::fromStdString(profile.name));
+    }
+
+    ui->profile->setCurrentIndex(Settings::values.current_input_profile_index);
 
     button_map = {
         ui->buttonA,      ui->buttonB,        ui->buttonX,        ui->buttonY,
@@ -131,10 +137,15 @@ ConfigureInput::ConfigureInput(QWidget* parent)
             continue;
         button_map[button_id]->setContextMenuPolicy(Qt::CustomContextMenu);
         connect(button_map[button_id], &QPushButton::released, [=]() {
-            handleClick(
-                button_map[button_id],
-                [=](const Common::ParamPackage& params) { buttons_param[button_id] = params; },
-                InputCommon::Polling::DeviceType::Button);
+            handleClick(button_map[button_id],
+                        [=](const Common::ParamPackage& params) {
+                            buttons_param[button_id] = params;
+                            // If the user closes the dialog, the changes are reverted in
+                            // `GMainWindow::OnConfigure()`
+                            applyConfiguration();
+                            Settings::SaveProfile(ui->profile->currentIndex());
+                        },
+                        InputCommon::Polling::DeviceType::Button);
         });
         connect(button_map[button_id], &QPushButton::customContextMenuRequested,
                 [=](const QPoint& menu_location) {
@@ -142,11 +153,15 @@ ConfigureInput::ConfigureInput(QWidget* parent)
                     context_menu.addAction(tr("Clear"), [&] {
                         buttons_param[button_id].Clear();
                         button_map[button_id]->setText(tr("[not set]"));
+                        applyConfiguration();
+                        Settings::SaveProfile(ui->profile->currentIndex());
                     });
                     context_menu.addAction(tr("Restore Default"), [&] {
                         buttons_param[button_id] = Common::ParamPackage{
                             InputCommon::GenerateKeyboardParam(Config::default_buttons[button_id])};
                         button_map[button_id]->setText(ButtonToText(buttons_param[button_id]));
+                        applyConfiguration();
+                        Settings::SaveProfile(ui->profile->currentIndex());
                     });
                     context_menu.exec(button_map[button_id]->mapToGlobal(menu_location));
                 });
@@ -163,6 +178,8 @@ ConfigureInput::ConfigureInput(QWidget* parent)
                             [=](const Common::ParamPackage& params) {
                                 SetAnalogButton(params, analogs_param[analog_id],
                                                 analog_sub_buttons[sub_button_id]);
+                                applyConfiguration();
+                                Settings::SaveProfile(ui->profile->currentIndex());
                             },
                             InputCommon::Polling::DeviceType::Button);
             });
@@ -172,6 +189,8 @@ ConfigureInput::ConfigureInput(QWidget* parent)
                         context_menu.addAction(tr("Clear"), [&] {
                             analogs_param[analog_id].Erase(analog_sub_buttons[sub_button_id]);
                             analog_map_buttons[analog_id][sub_button_id]->setText(tr("[not set]"));
+                            applyConfiguration();
+                            Settings::SaveProfile(ui->profile->currentIndex());
                         });
                         context_menu.addAction(tr("Restore Default"), [&] {
                             Common::ParamPackage params{InputCommon::GenerateKeyboardParam(
@@ -180,6 +199,8 @@ ConfigureInput::ConfigureInput(QWidget* parent)
                                             analog_sub_buttons[sub_button_id]);
                             analog_map_buttons[analog_id][sub_button_id]->setText(AnalogToText(
                                 analogs_param[analog_id], analog_sub_buttons[sub_button_id]));
+                            applyConfiguration();
+                            Settings::SaveProfile(ui->profile->currentIndex());
                         });
                         context_menu.exec(analog_map_buttons[analog_id][sub_button_id]->mapToGlobal(
                             menu_location));
@@ -189,10 +210,13 @@ ConfigureInput::ConfigureInput(QWidget* parent)
             QMessageBox::information(this, tr("Information"),
                                      tr("After pressing OK, first move your joystick horizontally, "
                                         "and then vertically."));
-            handleClick(
-                analog_map_stick[analog_id],
-                [=](const Common::ParamPackage& params) { analogs_param[analog_id] = params; },
-                InputCommon::Polling::DeviceType::Analog);
+            handleClick(analog_map_stick[analog_id],
+                        [=](const Common::ParamPackage& params) {
+                            analogs_param[analog_id] = params;
+                            applyConfiguration();
+                            Settings::SaveProfile(ui->profile->currentIndex());
+                        },
+                        InputCommon::Polling::DeviceType::Analog);
         });
     }
 
@@ -200,8 +224,22 @@ ConfigureInput::ConfigureInput(QWidget* parent)
         QDialog* motion_touch_dialog = new ConfigureMotionTouch(this);
         return motion_touch_dialog->exec();
     });
+
+    ui->buttonDelete->setEnabled(ui->profile->count() > 1);
+
     connect(ui->buttonClearAll, &QPushButton::released, [this] { ClearAll(); });
     connect(ui->buttonRestoreDefaults, &QPushButton::released, [this]() { restoreDefaults(); });
+    connect(ui->buttonNew, &QPushButton::released, [this] { NewProfile(); });
+    connect(ui->buttonDelete, &QPushButton::released, [this] { DeleteProfile(); });
+    connect(ui->buttonRename, &QPushButton::released, [this] { RenameProfile(); });
+
+    connect(ui->profile, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
+            [this](int i) {
+                applyConfiguration();
+                Settings::SaveProfile(Settings::values.current_input_profile_index);
+                Settings::LoadProfile(i);
+                loadConfiguration();
+            });
 
     timeout_timer->setSingleShot(true);
     connect(timeout_timer.get(), &QTimer::timeout, [this]() { setPollingResult({}, true); });
@@ -226,18 +264,24 @@ ConfigureInput::ConfigureInput(QWidget* parent)
 ConfigureInput::~ConfigureInput() = default;
 
 void ConfigureInput::applyConfiguration() {
-    std::transform(buttons_param.begin(), buttons_param.end(), Settings::values.buttons.begin(),
+    std::transform(buttons_param.begin(), buttons_param.end(),
+                   Settings::values.current_input_profile.buttons.begin(),
                    [](const Common::ParamPackage& param) { return param.Serialize(); });
-    std::transform(analogs_param.begin(), analogs_param.end(), Settings::values.analogs.begin(),
+    std::transform(analogs_param.begin(), analogs_param.end(),
+                   Settings::values.current_input_profile.analogs.begin(),
                    [](const Common::ParamPackage& param) { return param.Serialize(); });
 }
 
+void ConfigureInput::ApplyProfile() {
+    Settings::values.current_input_profile_index = ui->profile->currentIndex();
+}
+
 void ConfigureInput::loadConfiguration() {
-    std::transform(Settings::values.buttons.begin(), Settings::values.buttons.end(),
-                   buttons_param.begin(),
+    std::transform(Settings::values.current_input_profile.buttons.begin(),
+                   Settings::values.current_input_profile.buttons.end(), buttons_param.begin(),
                    [](const std::string& str) { return Common::ParamPackage(str); });
-    std::transform(Settings::values.analogs.begin(), Settings::values.analogs.end(),
-                   analogs_param.begin(),
+    std::transform(Settings::values.current_input_profile.analogs.begin(),
+                   Settings::values.current_input_profile.analogs.end(), analogs_param.begin(),
                    [](const std::string& str) { return Common::ParamPackage(str); });
     updateButtonLabels();
 }
@@ -348,4 +392,42 @@ void ConfigureInput::keyPressEvent(QKeyEvent* event) {
 
 void ConfigureInput::retranslateUi() {
     ui->retranslateUi(this);
+}
+
+void ConfigureInput::NewProfile() {
+    const QString name =
+        QInputDialog::getText(this, tr("New Profile"), tr("Enter the name for the new profile."));
+    if (name.isEmpty()) {
+        return;
+    }
+    applyConfiguration();
+    Settings::SaveProfile(ui->profile->currentIndex());
+    Settings::CreateProfile(name.toStdString());
+    ui->profile->addItem(name);
+    ui->profile->setCurrentIndex(Settings::values.current_input_profile_index);
+    loadConfiguration();
+    ui->buttonDelete->setEnabled(ui->profile->count() > 1);
+}
+
+void ConfigureInput::DeleteProfile() {
+    const auto answer = QMessageBox::question(
+        this, tr("Delete Profile"), tr("Delete profile %1?").arg(ui->profile->currentText()));
+    if (answer != QMessageBox::Yes) {
+        return;
+    }
+    const int index = ui->profile->currentIndex();
+    ui->profile->removeItem(index);
+    ui->profile->setCurrentIndex(0);
+    Settings::DeleteProfile(index);
+    loadConfiguration();
+    ui->buttonDelete->setEnabled(ui->profile->count() > 1);
+}
+
+void ConfigureInput::RenameProfile() {
+    const QString new_name = QInputDialog::getText(this, tr("Rename Profile"), tr("New name:"));
+    if (new_name.isEmpty()) {
+        return;
+    }
+    ui->profile->setItemText(ui->profile->currentIndex(), new_name);
+    Settings::RenameCurrentProfile(new_name.toStdString());
 }

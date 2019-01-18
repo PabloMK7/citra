@@ -263,11 +263,11 @@ void ExtraHID::RequestInputDevicesReload() {
 
 void ExtraHID::LoadInputDevices() {
     zl = Input::CreateDevice<Input::ButtonDevice>(
-        Settings::values.buttons[Settings::NativeButton::ZL]);
+        Settings::values.current_input_profile.buttons[Settings::NativeButton::ZL]);
     zr = Input::CreateDevice<Input::ButtonDevice>(
-        Settings::values.buttons[Settings::NativeButton::ZR]);
+        Settings::values.current_input_profile.buttons[Settings::NativeButton::ZR]);
     c_stick = Input::CreateDevice<Input::AnalogDevice>(
-        Settings::values.analogs[Settings::NativeAnalog::CStick]);
+        Settings::values.current_input_profile.analogs[Settings::NativeAnalog::CStick]);
 }
 
 } // namespace Service::IR

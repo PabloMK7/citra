@@ -102,8 +102,8 @@ ConfigureMotionTouch::ConfigureMotionTouch(QWidget* parent)
 ConfigureMotionTouch::~ConfigureMotionTouch() = default;
 
 void ConfigureMotionTouch::setConfiguration() {
-    Common::ParamPackage motion_param(Settings::values.motion_device);
-    Common::ParamPackage touch_param(Settings::values.touch_device);
+    Common::ParamPackage motion_param(Settings::values.current_input_profile.motion_device);
+    Common::ParamPackage touch_param(Settings::values.current_input_profile.touch_device);
     std::string motion_engine = motion_param.Get("engine", "motion_emu");
     std::string touch_engine = touch_param.Get("engine", "emu_window");
 
@@ -118,9 +118,10 @@ void ConfigureMotionTouch::setConfiguration() {
     max_x = touch_param.Get("max_x", 1800);
     max_y = touch_param.Get("max_y", 850);
 
-    ui->udp_server->setText(QString::fromStdString(Settings::values.udp_input_address));
-    ui->udp_port->setText(QString::number(Settings::values.udp_input_port));
-    ui->udp_pad_index->setCurrentIndex(Settings::values.udp_pad_index);
+    ui->udp_server->setText(
+        QString::fromStdString(Settings::values.current_input_profile.udp_input_address));
+    ui->udp_port->setText(QString::number(Settings::values.current_input_profile.udp_input_port));
+    ui->udp_pad_index->setCurrentIndex(Settings::values.current_input_profile.udp_pad_index);
 }
 
 void ConfigureMotionTouch::updateUiDisplay() {
@@ -265,11 +266,14 @@ void ConfigureMotionTouch::applyConfiguration() {
         touch_param.Set("max_y", max_y);
     }
 
-    Settings::values.motion_device = motion_param.Serialize();
-    Settings::values.touch_device = touch_param.Serialize();
-    Settings::values.udp_input_address = ui->udp_server->text().toStdString();
-    Settings::values.udp_input_port = static_cast<u16>(ui->udp_port->text().toInt());
-    Settings::values.udp_pad_index = static_cast<u8>(ui->udp_pad_index->currentIndex());
+    Settings::values.current_input_profile.motion_device = motion_param.Serialize();
+    Settings::values.current_input_profile.touch_device = touch_param.Serialize();
+    Settings::values.current_input_profile.udp_input_address = ui->udp_server->text().toStdString();
+    Settings::values.current_input_profile.udp_input_port =
+        static_cast<u16>(ui->udp_port->text().toInt());
+    Settings::values.current_input_profile.udp_pad_index =
+        static_cast<u8>(ui->udp_pad_index->currentIndex());
+    Settings::SaveProfile(Settings::values.current_input_profile_index);
     InputCommon::ReloadInputDevices();
 
     accept();

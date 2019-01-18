@@ -59,13 +59,17 @@ DirectionState GetStickDirectionState(s16 circle_pad_x, s16 circle_pad_y) {
 }
 
 void Module::LoadInputDevices() {
-    std::transform(Settings::values.buttons.begin() + Settings::NativeButton::BUTTON_HID_BEGIN,
-                   Settings::values.buttons.begin() + Settings::NativeButton::BUTTON_HID_END,
+    std::transform(Settings::values.current_input_profile.buttons.begin() +
+                       Settings::NativeButton::BUTTON_HID_BEGIN,
+                   Settings::values.current_input_profile.buttons.begin() +
+                       Settings::NativeButton::BUTTON_HID_END,
                    buttons.begin(), Input::CreateDevice<Input::ButtonDevice>);
     circle_pad = Input::CreateDevice<Input::AnalogDevice>(
-        Settings::values.analogs[Settings::NativeAnalog::CirclePad]);
-    motion_device = Input::CreateDevice<Input::MotionDevice>(Settings::values.motion_device);
-    touch_device = Input::CreateDevice<Input::TouchDevice>(Settings::values.touch_device);
+        Settings::values.current_input_profile.analogs[Settings::NativeAnalog::CirclePad]);
+    motion_device = Input::CreateDevice<Input::MotionDevice>(
+        Settings::values.current_input_profile.motion_device);
+    touch_device = Input::CreateDevice<Input::TouchDevice>(
+        Settings::values.current_input_profile.touch_device);
 }
 
 void Module::UpdatePadCallback(u64 userdata, s64 cycles_late) {
