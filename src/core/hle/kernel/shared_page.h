@@ -89,7 +89,7 @@ public:
 
     void SetWifiLinkLevel(WifiLinkLevel);
 
-    void Set3DSlider(float_le);
+    void Set3DSlider(float);
 
     void Set3DLed(u8);
 
