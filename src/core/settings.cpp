@@ -5,6 +5,7 @@
 #include "audio_core/dsp_interface.h"
 #include "core/core.h"
 #include "core/gdbstub/gdbstub.h"
+#include "core/hle/kernel/shared_page.h"
 #include "core/hle/service/hid/hid.h"
 #include "core/hle/service/ir/ir_rst.h"
 #include "core/hle/service/ir/ir_user.h"
@@ -55,6 +56,11 @@ void Apply() {
         if (cam) {
             cam->ReloadCameraDevices();
         }
+
+        system.Kernel().GetSharedPageHandler().Set3DSlider(
+            (Settings::values.render_3d != Settings::StereoRenderOption::Off)
+                ? (float_le)Settings::values.factor_3d / 100
+                : 0.0f);
     }
 }
 

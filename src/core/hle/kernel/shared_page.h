@@ -91,6 +91,8 @@ public:
 
     void Set3DLed(u8);
 
+    void Set3DSlider(float);
+
     SharedPageDef& GetSharedPage();
 
 private:
