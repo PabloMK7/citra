@@ -163,8 +163,7 @@ void Module::UpdatePadCallback(u64 userdata, s64 cycles_late) {
 
     // TODO(xperia64): How the 3D Slider is updated by the HID module needs to be RE'd
     // and possibly moved to its own Core::Timing event.
-    system.Kernel().GetSharedPageHandler().Set3DSlider(
-        Settings::values.toggle_3d ? Settings::values.factor_3d / 100.0f : 0.0f);
+    system.Kernel().GetSharedPageHandler().Set3DSlider(Settings::values.factor_3d / 100.0f);
 
     // Reschedule recurrent event
     system.CoreTiming().ScheduleEvent(pad_update_ticks - cycles_late, pad_update_event);

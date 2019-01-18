@@ -5,6 +5,7 @@
 #pragma once
 
 #include <array>
+#include <atomic>
 #include <string>
 #include <unordered_map>
 #include "common/common_types.h"
@@ -148,7 +149,7 @@ struct Values {
     float bg_blue;
 
     bool toggle_3d;
-    u8 factor_3d;
+    std::atomic<u8> factor_3d;
 
     // Audio
     bool enable_dsp_lle;

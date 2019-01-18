@@ -404,7 +404,7 @@ void Config::SaveValues() {
 
     qt_config->beginGroup("Layout");
     WriteSetting("toggle_3d", Settings::values.toggle_3d, false);
-    WriteSetting("factor_3d", Settings::values.factor_3d, 0);
+    WriteSetting("factor_3d", Settings::values.factor_3d.load(), 0);
     WriteSetting("layout_option", static_cast<int>(Settings::values.layout_option));
     WriteSetting("swap_screen", Settings::values.swap_screen, false);
     WriteSetting("custom_layout", Settings::values.custom_layout, false);
