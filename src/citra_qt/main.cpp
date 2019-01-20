@@ -1565,12 +1565,12 @@ void GMainWindow::OnCaptureScreenshot() {
                            tr("PNG Image (*.png)"));
     png_dialog.setAcceptMode(QFileDialog::AcceptSave);
     png_dialog.setDefaultSuffix("png");
-    png_dialog.exec();
-
-    const QString path = png_dialog.selectedFiles().first();
-    if (!path.isEmpty()) {
-        UISettings::values.screenshot_path = QFileInfo(path).path();
-        render_window->CaptureScreenshot(UISettings::values.screenshot_resolution_factor, path);
+    if (png_dialog.exec()) {
+        const QString path = png_dialog.selectedFiles().first();
+        if (!path.isEmpty()) {
+            UISettings::values.screenshot_path = QFileInfo(path).path();
+            render_window->CaptureScreenshot(UISettings::values.screenshot_resolution_factor, path);
+        }
     }
     OnStartGame();
 }
