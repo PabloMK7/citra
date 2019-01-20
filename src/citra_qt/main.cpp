@@ -1561,9 +1561,13 @@ void GMainWindow::OnStopRecordingPlayback() {
 
 void GMainWindow::OnCaptureScreenshot() {
     OnPauseGame();
-    const QString path =
-        QFileDialog::getSaveFileName(this, tr("Capture Screenshot"),
-                                     UISettings::values.screenshot_path, tr("PNG Image (*.png)"));
+    QFileDialog png_dialog(this, tr("Capture Screenshot"), UISettings::values.screenshot_path,
+                           tr("PNG Image (*.png)"));
+    png_dialog.setAcceptMode(QFileDialog::AcceptSave);
+    png_dialog.setDefaultSuffix("png");
+    png_dialog.exec();
+
+    const QString path = png_dialog.selectedFiles().first();
     if (!path.isEmpty()) {
         UISettings::values.screenshot_path = QFileInfo(path).path();
         render_window->CaptureScreenshot(UISettings::values.screenshot_resolution_factor, path);
