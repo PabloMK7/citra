@@ -315,7 +315,7 @@ void GRenderWindow::InitRenderTarget() {
     QGLFormat fmt;
     fmt.setVersion(3, 3);
     fmt.setProfile(QGLFormat::CoreProfile);
-    fmt.setSwapInterval(Settings::values.use_vsync);
+    fmt.setSwapInterval(Settings::values.vsync_enabled);
 
     // Requests a forward-compatible context, which is required to get a 3.2+ context on OS X
     fmt.setOption(QGL::NoDeprecatedFunctions);
