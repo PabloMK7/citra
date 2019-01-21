@@ -54,8 +54,8 @@ std::size_t TimeStretcher::Process(const s16* in, std::size_t num_in, s16* out,
     const double lpf_gain = 1.0 - std::exp(-time_delta / lpf_time_scale);
     stretch_ratio += lpf_gain * (current_ratio - stretch_ratio);
 
-    // Place a lower limit of 5% speed.  When a game boots up, there will be
-    // many silence samples.  These do not need to be timestretched.
+    // Place a lower limit of 5% speed. When a game boots up, there will be
+    // many silence samples. These do not need to be timestretched.
     stretch_ratio = std::max(stretch_ratio, 0.05);
     sound_touch->setTempo(stretch_ratio);
 

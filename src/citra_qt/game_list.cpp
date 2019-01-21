@@ -585,7 +585,7 @@ void GameList::LoadCompatibilityList() {
     QJsonDocument json = QJsonDocument::fromJson(string_content.toUtf8());
     QJsonArray arr = json.array();
 
-    for (const QJsonValueRef& value : arr) {
+    for (const QJsonValueRef value : arr) {
         QJsonObject game = value.toObject();
 
         if (game.contains("compatibility") && game["compatibility"].isDouble()) {
@@ -593,7 +593,7 @@ void GameList::LoadCompatibilityList() {
             QString directory = game["directory"].toString();
             QJsonArray ids = game["releases"].toArray();
 
-            for (const QJsonValueRef& id_ref : ids) {
+            for (const QJsonValueRef id_ref : ids) {
                 QJsonObject id_object = id_ref.toObject();
                 QString id = id_object["id"].toString();
                 compatibility_list.emplace(
