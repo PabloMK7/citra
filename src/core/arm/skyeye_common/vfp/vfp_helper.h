@@ -265,7 +265,8 @@ inline int vfp_single_type(const vfp_single* s) {
 // aligned to bit 30.
 inline u32 vfp_single_unpack(vfp_single* s, s32 val, u32 fpscr) {
     u32 exceptions = 0;
-    s->sign = vfp_single_packed_sign(val) >> 16, s->exponent = vfp_single_packed_exponent(val);
+    s->sign = vfp_single_packed_sign(val) >> 16;
+    s->exponent = vfp_single_packed_exponent(val);
 
     u32 significand = ((u32)val << (32 - VFP_SINGLE_MANTISSA_BITS)) >> 2;
     if (s->exponent && s->exponent != 255)
