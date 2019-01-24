@@ -46,8 +46,10 @@ ConfigureGraphics::ConfigureGraphics(QWidget* parent)
         if (!new_bg_color.isValid())
             return;
         bg_color = new_bg_color;
-        ui->bg_button->setStyleSheet(
-            QString("QPushButton { background-color: %1 }").arg(bg_color.name()));
+        QPixmap pixmap(ui->bg_button->size());
+        pixmap.fill(bg_color);
+        const QIcon color_icon(pixmap);
+        ui->bg_button->setIcon(color_icon);
     });
 }
 
@@ -68,8 +70,10 @@ void ConfigureGraphics::setConfiguration() {
     ui->swap_screen->setChecked(Settings::values.swap_screen);
     bg_color = QColor::fromRgbF(Settings::values.bg_red, Settings::values.bg_green,
                                 Settings::values.bg_blue);
-    ui->bg_button->setStyleSheet(
-        QString("QPushButton { background-color: %1 }").arg(bg_color.name()));
+    QPixmap pixmap(ui->bg_button->size());
+    pixmap.fill(bg_color);
+    const QIcon color_icon(pixmap);
+    ui->bg_button->setIcon(color_icon);
 }
 
 void ConfigureGraphics::applyConfiguration() {
