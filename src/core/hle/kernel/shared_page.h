@@ -89,6 +89,8 @@ public:
 
     void SetWifiLinkLevel(WifiLinkLevel);
 
+    void Set3DSlider(float);
+
     void Set3DLed(u8);
 
     SharedPageDef& GetSharedPage();

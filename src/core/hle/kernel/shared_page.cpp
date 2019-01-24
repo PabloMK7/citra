@@ -121,6 +121,10 @@ void Handler::Set3DLed(u8 state) {
     shared_page.ledstate_3d = state;
 }
 
+void Handler::Set3DSlider(float slidestate) {
+    shared_page.sliderstate_3d = static_cast<float_le>(slidestate);
+}
+
 SharedPageDef& Handler::GetSharedPage() {
     return shared_page;
 }
