@@ -645,64 +645,116 @@ protected:
     }
 };
 
+struct SwapTag {}; // Use the different endianness from the system
+struct KeepTag {}; // Use the same endianness as the system
+
+template <typename T, typename Tag>
+struct AddEndian;
+
+// KeepTag specializations
+
+template <typename T>
+struct AddEndian<T, KeepTag> {
+    using type = T;
+};
+
+// SwapTag specializations
+
+template <>
+struct AddEndian<u8, SwapTag> {
+    using type = u8;
+};
+
+template <>
+struct AddEndian<u16, SwapTag> {
+    using type = swap_struct_t<u16, swap_16_t<u16>>;
+};
+
+template <>
+struct AddEndian<u32, SwapTag> {
+    using type = swap_struct_t<u32, swap_32_t<u32>>;
+};
+
+template <>
+struct AddEndian<u64, SwapTag> {
+    using type = swap_struct_t<u64, swap_64_t<u64>>;
+};
+
+template <>
+struct AddEndian<s8, SwapTag> {
+    using type = s8;
+};
+
+template <>
+struct AddEndian<s16, SwapTag> {
+    using type = swap_struct_t<s16, swap_16_t<s16>>;
+};
+
+template <>
+struct AddEndian<s32, SwapTag> {
+    using type = swap_struct_t<s32, swap_32_t<s32>>;
+};
+
+template <>
+struct AddEndian<s64, SwapTag> {
+    using type = swap_struct_t<s64, swap_64_t<s64>>;
+};
+
+template <>
+struct AddEndian<float, SwapTag> {
+    using type = swap_struct_t<float, swap_float_t<float>>;
+};
+
+template <>
+struct AddEndian<double, SwapTag> {
+    using type = swap_struct_t<double, swap_double_t<double>>;
+};
+
+template <typename T>
+struct AddEndian<T, SwapTag> {
+    static_assert(std::is_enum_v<T>);
+    using type = swap_enum_t<T>;
+};
+
+// Alias LETag/BETag as KeepTag/SwapTag depending on the system
 #if COMMON_LITTLE_ENDIAN
-using u16_le = u16;
-using u32_le = u32;
-using u64_le = u64;
 
-using s16_le = s16;
-using s32_le = s32;
-using s64_le = s64;
+using LETag = KeepTag;
+using BETag = SwapTag;
 
-template <typename T>
-using enum_le = std::enable_if_t<std::is_enum_v<T>, T>;
-
-using float_le = float;
-using double_le = double;
-
-using u64_be = swap_struct_t<u64, swap_64_t<u64>>;
-using s64_be = swap_struct_t<s64, swap_64_t<s64>>;
-
-using u32_be = swap_struct_t<u32, swap_32_t<u32>>;
-using s32_be = swap_struct_t<s32, swap_32_t<s32>>;
-
-using u16_be = swap_struct_t<u16, swap_16_t<u16>>;
-using s16_be = swap_struct_t<s16, swap_16_t<s16>>;
-
-template <typename T>
-using enum_be = swap_enum_t<T>;
-
-using float_be = swap_struct_t<float, swap_float_t<float>>;
-using double_be = swap_struct_t<double, swap_double_t<double>>;
 #else
 
-using u64_le = swap_struct_t<u64, swap_64_t<u64>>;
-using s64_le = swap_struct_t<s64, swap_64_t<s64>>;
-
-using u32_le = swap_struct_t<u32, swap_32_t<u32>>;
-using s32_le = swap_struct_t<s32, swap_32_t<s32>>;
-
-using u16_le = swap_struct_t<u16, swap_16_t<u16>>;
-using s16_le = swap_struct_t<s16, swap_16_t<s16>>;
-
-template <typename T>
-using enum_le = swap_enum_t<T>;
-
-using float_le = swap_struct_t<float, swap_float_t<float>>;
-using double_le = swap_struct_t<double, swap_double_t<double>>;
-
-using u16_be = u16;
-using u32_be = u32;
-using u64_be = u64;
-
-using s16_be = s16;
-using s32_be = s32;
-using s64_be = s64;
-
-template <typename T>
-using enum_be = std::enable_if_t<std::is_enum_v<T>, T>;
-
-using float_be = float;
-using double_be = double;
+using BETag = KeepTag;
+using LETag = SwapTag;
 
 #endif
+
+// Aliases for LE types
+using u16_le = AddEndian<u16, LETag>::type;
+using u32_le = AddEndian<u32, LETag>::type;
+using u64_le = AddEndian<u64, LETag>::type;
+
+using s16_le = AddEndian<s16, LETag>::type;
+using s32_le = AddEndian<s32, LETag>::type;
+using s64_le = AddEndian<s64, LETag>::type;
+
+template <typename T>
+using enum_le = std::enable_if_t<std::is_enum_v<T>, typename AddEndian<T, LETag>::type>;
+
+using float_le = AddEndian<float, LETag>::type;
+using double_le = AddEndian<double, LETag>::type;
+
+// Aliases for BE types
+using u16_be = AddEndian<u16, BETag>::type;
+using u32_be = AddEndian<u32, BETag>::type;
+using u64_be = AddEndian<u64, BETag>::type;
+
+using s16_be = AddEndian<s16, BETag>::type;
+using s32_be = AddEndian<s32, BETag>::type;
+using s64_be = AddEndian<s64, BETag>::type;
+
+template <typename T>
+using enum_be = std::enable_if_t<std::is_enum_v<T>, typename AddEndian<T, BETag>::type>;
+
+using float_be = AddEndian<float, BETag>::type;
+using double_be = AddEndian<double, BETag>::type;
