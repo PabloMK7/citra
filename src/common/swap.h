@@ -172,7 +172,7 @@ struct swap_struct_t {
     using swapped_t = swap_struct_t;
 
 protected:
-    T value = T();
+    T value;
 
     static T swap(T v) {
         return F::swap(v);
