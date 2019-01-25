@@ -129,18 +129,18 @@ struct ExHeader_StorageInfo {
         u64_le ext_save_data_id;
         // When using extended savedata access
         // Prefer the ID specified in the most significant bits
-        BitField<40, 20, u64_le> extdata_id3;
-        BitField<20, 20, u64_le> extdata_id4;
-        BitField<0, 20, u64_le> extdata_id5;
+        BitField<40, 20, u64> extdata_id3;
+        BitField<20, 20, u64> extdata_id4;
+        BitField<0, 20, u64> extdata_id5;
     };
     u8 system_save_data_id[8];
     union {
         u64_le storage_accessible_unique_ids;
         // When using extended savedata access
         // Prefer the ID specified in the most significant bits
-        BitField<40, 20, u64_le> extdata_id0;
-        BitField<20, 20, u64_le> extdata_id1;
-        BitField<0, 20, u64_le> extdata_id2;
+        BitField<40, 20, u64> extdata_id0;
+        BitField<20, 20, u64> extdata_id1;
+        BitField<0, 20, u64> extdata_id2;
     };
     u8 access_info[7];
     u8 other_attributes;

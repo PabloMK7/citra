@@ -45,20 +45,20 @@ struct ControllerState {
             union {
                 u16_le hex;
 
-                BitField<0, 1, u16_le> a;
-                BitField<1, 1, u16_le> b;
-                BitField<2, 1, u16_le> select;
-                BitField<3, 1, u16_le> start;
-                BitField<4, 1, u16_le> right;
-                BitField<5, 1, u16_le> left;
-                BitField<6, 1, u16_le> up;
-                BitField<7, 1, u16_le> down;
-                BitField<8, 1, u16_le> r;
-                BitField<9, 1, u16_le> l;
-                BitField<10, 1, u16_le> x;
-                BitField<11, 1, u16_le> y;
-                BitField<12, 1, u16_le> debug;
-                BitField<13, 1, u16_le> gpio14;
+                BitField<0, 1, u16> a;
+                BitField<1, 1, u16> b;
+                BitField<2, 1, u16> select;
+                BitField<3, 1, u16> start;
+                BitField<4, 1, u16> right;
+                BitField<5, 1, u16> left;
+                BitField<6, 1, u16> up;
+                BitField<7, 1, u16> down;
+                BitField<8, 1, u16> r;
+                BitField<9, 1, u16> l;
+                BitField<10, 1, u16> x;
+                BitField<11, 1, u16> y;
+                BitField<12, 1, u16> debug;
+                BitField<13, 1, u16> gpio14;
                 // Bits 14-15 are currently unused
             };
             s16_le circle_pad_x;
@@ -96,12 +96,12 @@ struct ControllerState {
             union {
                 u32_le hex;
 
-                BitField<0, 5, u32_le> battery_level;
-                BitField<5, 1, u32_le> zl_not_held;
-                BitField<6, 1, u32_le> zr_not_held;
-                BitField<7, 1, u32_le> r_not_held;
-                BitField<8, 12, u32_le> c_stick_x;
-                BitField<20, 12, u32_le> c_stick_y;
+                BitField<0, 5, u32> battery_level;
+                BitField<5, 1, u32> zl_not_held;
+                BitField<6, 1, u32> zr_not_held;
+                BitField<7, 1, u32> r_not_held;
+                BitField<8, 12, u32> c_stick_x;
+                BitField<20, 12, u32> c_stick_y;
             };
         } extra_hid_response;
     };
