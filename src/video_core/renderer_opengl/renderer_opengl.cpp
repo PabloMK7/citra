@@ -12,7 +12,9 @@
 #include "common/logging/log.h"
 #include "core/core.h"
 #include "core/core_timing.h"
+#include "core/dumping/backend.h"
 #include "core/frontend/emu_window.h"
+#include "core/frontend/framebuffer_layout.h"
 #include "core/hw/gpu.h"
 #include "core/hw/hw.h"
 #include "core/hw/lcd.h"
@@ -204,7 +206,38 @@ void RendererOpenGL::SwapBuffers() {
         VideoCore::g_renderer_screenshot_requested = false;
     }
 
+    if (cleanup_video_dumping.exchange(false)) {
+        ReleaseVideoDumpingGLObjects();
+    }
+
+    if (Core::System::GetInstance().VideoDumper().IsDumping()) {
+        if (prepare_video_dumping.exchange(false)) {
+            InitVideoDumpingGLObjects();
+        }
+
+        const auto& layout = Core::System::GetInstance().VideoDumper().GetLayout();
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, frame_dumping_framebuffer.handle);
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, frame_dumping_framebuffer.handle);
+        DrawScreens(layout);
+
+        glBindBuffer(GL_PIXEL_PACK_BUFFER, frame_dumping_pbos[current_pbo].handle);
+        glReadPixels(0, 0, layout.width, layout.height, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, 0);
+        glBindBuffer(GL_PIXEL_PACK_BUFFER, frame_dumping_pbos[next_pbo].handle);
+
+        GLubyte* pixels = static_cast<GLubyte*>(glMapBuffer(GL_PIXEL_PACK_BUFFER, GL_READ_ONLY));
+        VideoDumper::VideoFrame frame_data{layout.width, layout.height, pixels};
+        Core::System::GetInstance().VideoDumper().AddVideoFrame(frame_data);
+
+        glUnmapBuffer(GL_PIXEL_PACK_BUFFER);
+        glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+        current_pbo = (current_pbo + 1) % 2;
+        next_pbo = (current_pbo + 1) % 2;
+    }
+
     DrawScreens(render_window.GetFramebufferLayout());
+    m_current_frame++;
 
     Core::System::GetInstance().perf_stats.EndSystemFrame();
 
@@ -634,12 +667,48 @@ void RendererOpenGL::DrawScreens(const Layout::FramebufferLayout& layout) {
                                             (float)bottom_screen.GetHeight());
         }
     }
-
-    m_current_frame++;
 }
 
 /// Updates the framerate
 void RendererOpenGL::UpdateFramerate() {}
+
+void RendererOpenGL::PrepareVideoDumping() {
+    prepare_video_dumping = true;
+}
+
+void RendererOpenGL::CleanupVideoDumping() {
+    cleanup_video_dumping = true;
+}
+
+void RendererOpenGL::InitVideoDumpingGLObjects() {
+    const auto& layout = Core::System::GetInstance().VideoDumper().GetLayout();
+
+    frame_dumping_framebuffer.Create();
+    glGenRenderbuffers(1, &frame_dumping_renderbuffer);
+    glBindRenderbuffer(GL_RENDERBUFFER, frame_dumping_renderbuffer);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_RGB8, layout.width, layout.height);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, frame_dumping_framebuffer.handle);
+    glFramebufferRenderbuffer(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER,
+                              frame_dumping_renderbuffer);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+
+    for (auto& buffer : frame_dumping_pbos) {
+        buffer.Create();
+        glBindBuffer(GL_PIXEL_PACK_BUFFER, buffer.handle);
+        glBufferData(GL_PIXEL_PACK_BUFFER, layout.width * layout.height * 4, nullptr,
+                     GL_STREAM_READ);
+        glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
+    }
+}
+
+void RendererOpenGL::ReleaseVideoDumpingGLObjects() {
+    frame_dumping_framebuffer.Release();
+    glDeleteRenderbuffers(1, &frame_dumping_renderbuffer);
+
+    for (auto& buffer : frame_dumping_pbos) {
+        buffer.Release();
+    }
+}
 
 static const char* GetSource(GLenum source) {
 #define RET(s)                                                                                     \
