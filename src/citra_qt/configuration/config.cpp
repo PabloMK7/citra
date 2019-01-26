@@ -326,6 +326,7 @@ void Config::ReadValues() {
     UISettings::values.movie_record_path = ReadSetting("movieRecordPath").toString();
     UISettings::values.movie_playback_path = ReadSetting("moviePlaybackPath").toString();
     UISettings::values.screenshot_path = ReadSetting("screenshotPath").toString();
+    UISettings::values.video_dumping_path = ReadSetting("videoDumpingPath").toString();
     UISettings::values.game_dir_deprecated = ReadSetting("gameListRootDir", ".").toString();
     UISettings::values.game_dir_deprecated_deepscan =
         ReadSetting("gameListDeepScan", false).toBool();
@@ -594,6 +595,7 @@ void Config::SaveValues() {
     WriteSetting("movieRecordPath", UISettings::values.movie_record_path);
     WriteSetting("moviePlaybackPath", UISettings::values.movie_playback_path);
     WriteSetting("screenshotPath", UISettings::values.screenshot_path);
+    WriteSetting("videoDumpingPath", UISettings::values.video_dumping_path);
     qt_config->beginWriteArray("gamedirs");
     for (int i = 0; i < UISettings::values.game_dirs.size(); ++i) {
         qt_config->setArrayIndex(i);
