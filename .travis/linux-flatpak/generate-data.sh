@@ -43,22 +43,17 @@ cat > /tmp/org.citra.$REPO_NAME.json <<EOF
 {
     "app-id": "org.citra.$REPO_NAME",
     "runtime": "org.kde.Platform",
-    "runtime-version": "5.11",
+    "runtime-version": "5.12",
     "sdk": "org.kde.Sdk",
     "command": "citra-qt",
     "rename-desktop-file": "citra.desktop",
     "rename-icon": "citra",
     "rename-appdata-file": "org.citra.$REPO_NAME.appdata.xml",
-    "sdk-extensions": [
-        "org.freedesktop.Sdk.Extension.gcc7"
-    ],
     "build-options": {
         "build-args": [
             "--share=network"
         ],
         "env": {
-            "CC": "/usr/lib/sdk/gcc7/bin/gcc",
-            "CXX": "/usr/lib/sdk/gcc7/bin/g++",
             "CI": "$CI",
             "TRAVIS": "$TRAVIS",
             "CONTINUOUS_INTEGRATION": "$CONTINUOUS_INTEGRATION",
@@ -84,18 +79,6 @@ cat > /tmp/org.citra.$REPO_NAME.json <<EOF
     ],
     "modules": [
         {
-            "name": "cmake",
-            "buildsystem": "cmake-ninja",
-            "cleanup": ["*"],
-            "sources": [
-                {
-                    "type": "archive",
-                    "url": "https://cmake.org/files/v3.12/cmake-3.12.3.tar.gz",
-                    "sha256": "acbf13af31a741794106b76e5d22448b004a66485fc99f6d7df4d22e99da164a"
-                }
-            ]
-        },
-        {
             "name": "citra",
             "buildsystem": "cmake-ninja",
             "builddir": true,
@@ -118,8 +101,7 @@ cat > /tmp/org.citra.$REPO_NAME.json <<EOF
                 "install -Dm644 ../dist/citra.svg /app/share/icons/hicolor/scalable/apps/citra.svg",
                 "install -Dm644 ../dist/icon.png /app/share/icons/hicolor/512x512/apps/citra.png",
                 "mv /app/share/mime/packages/citra.xml /app/share/mime/packages/org.citra.$REPO_NAME.xml",
-                "sed 's/citra/org.citra.citra-nightly/g' -i /app/share/mime/packages/org.citra.$REPO_NAME.xml",
-                "install -m644 --target-directory=/app/lib /usr/lib/sdk/gcc7/lib/libstdc++.so*"
+                "sed 's/citra/org.citra.citra-nightly/g' -i /app/share/mime/packages/org.citra.$REPO_NAME.xml"
             ],
             "sources": [
                 {
