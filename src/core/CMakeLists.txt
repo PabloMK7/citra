@@ -36,6 +36,8 @@ add_library(core STATIC
     core.h
     core_timing.cpp
     core_timing.h
+    dumping/backend.cpp
+    dumping/backend.h
     file_sys/archive_backend.cpp
     file_sys/archive_backend.h
     file_sys/archive_extsavedata.cpp
