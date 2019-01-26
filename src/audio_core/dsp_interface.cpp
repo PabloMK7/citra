@@ -7,6 +7,8 @@
 #include "audio_core/sink.h"
 #include "audio_core/sink_details.h"
 #include "common/assert.h"
+#include "core/core.h"
+#include "core/dumping/backend.h"
 #include "core/settings.h"
 
 namespace AudioCore {
@@ -41,6 +43,10 @@ void DspInterface::OutputFrame(StereoFrame16& frame) {
         return;
 
     fifo.Push(frame.data(), frame.size());
+
+    if (Core::System::GetInstance().VideoDumper().IsDumping()) {
+        Core::System::GetInstance().VideoDumper().AddAudioFrame(frame);
+    }
 }
 
 void DspInterface::OutputSample(std::array<s16, 2> sample) {
@@ -48,6 +54,10 @@ void DspInterface::OutputSample(std::array<s16, 2> sample) {
         return;
 
     fifo.Push(&sample, 1);
+
+    if (Core::System::GetInstance().VideoDumper().IsDumping()) {
+        Core::System::GetInstance().VideoDumper().AddAudioSample(sample);
+    }
 }
 
 void DspInterface::OutputCallback(s16* buffer, std::size_t num_frames) {
