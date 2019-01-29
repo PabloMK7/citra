@@ -3,7 +3,6 @@
 // Refer to the license.txt file included.
 #pragma once
 
-#include <array>
 #include "common/common_types.h"
 
 struct ADTSData {

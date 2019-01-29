@@ -1,6 +1,7 @@
 // Copyright 2019 Citra Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
+#include <array>
 #include "adts.h"
 
 constexpr std::array<u32, 16> freq_table = {96000, 88200, 64000, 48000, 44100, 32000, 24000, 22050,

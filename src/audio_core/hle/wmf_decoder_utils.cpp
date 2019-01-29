@@ -77,17 +77,19 @@ void MFDeInit(IMFTransform* transform) {
     CoUninitialize();
 }
 
-IMFSample* CreateSample(void* data, DWORD len, DWORD alignment, LONGLONG duration) {
+unique_mfptr<IMFSample> CreateSample(void* data, DWORD len, DWORD alignment, LONGLONG duration) {
     HRESULT hr = S_OK;
     IMFMediaBuffer* buf_tmp = nullptr;
     unique_mfptr<IMFMediaBuffer> buf;
-    IMFSample* sample = nullptr;
+    IMFSample* sample_tmp = nullptr;
+    unique_mfptr<IMFSample> sample;
 
-    hr = MFCreateSample(&sample);
+    hr = MFCreateSample(&sample_tmp);
     if (FAILED(hr)) {
         ReportError("Unable to allocate a sample", hr);
         return nullptr;
     }
+    sample.reset(sample_tmp);
     // Yes, the argument for alignment is the actual alignment - 1
     hr = MFCreateAlignedMemoryBuffer(len, alignment - 1, &buf_tmp);
     if (FAILED(hr)) {
@@ -101,12 +103,11 @@ IMFSample* CreateSample(void* data, DWORD len, DWORD alignment, LONGLONG duratio
         // this is actually not a thread-safe lock
         hr = buf->Lock(&buffer, nullptr, nullptr);
         if (FAILED(hr)) {
-            SafeRelease(&sample);
-            buf.reset();
+            ReportError("Unable to lock down MediaBuffer", hr);
             return nullptr;
         }
 
-        memcpy(buffer, data, len);
+        std::memcpy(buffer, data, len);
 
         buf->SetCurrentLength(len);
         buf->Unlock();
@@ -114,7 +115,11 @@ IMFSample* CreateSample(void* data, DWORD len, DWORD alignment, LONGLONG duratio
 
     sample->AddBuffer(buf.get());
     hr = sample->SetSampleDuration(duration);
-    return sample;
+    if (FAILED(hr)) {
+        ReportError("Unable to set sample duration, but continuing anyway", hr);
+    }
+
+    return std::move(sample);
 }
 
 bool SelectInputMediaType(IMFTransform* transform, int in_stream_id, const ADTSData& adts,
@@ -153,13 +158,15 @@ bool SelectInputMediaType(IMFTransform* transform, int in_stream_id, const ADTSD
 bool SelectOutputMediaType(IMFTransform* transform, int out_stream_id, GUID audio_format) {
     HRESULT hr = S_OK;
     UINT32 tmp;
-    IMFMediaType* t;
+    IMFMediaType* type;
+    unique_mfptr<IMFMediaType> t;
 
     // If you know what you need and what you are doing, you can specify the condition instead of
     // searching but it's better to use search since MFT may or may not support your output
     // parameters
     for (DWORD i = 0;; i++) {
-        hr = transform->GetOutputAvailableType(out_stream_id, i, &t);
+        hr = transform->GetOutputAvailableType(out_stream_id, i, &type);
+        t.reset(type);
         if (hr == MF_E_NO_MORE_TYPES || hr == E_NOTIMPL) {
             return true;
         }
@@ -180,7 +187,7 @@ bool SelectOutputMediaType(IMFTransform* transform, int out_stream_id, GUID audi
                             hr);
                 return false;
             }
-            hr = transform->SetOutputType(out_stream_id, t, 0);
+            hr = transform->SetOutputType(out_stream_id, t.get(), 0);
             if (FAILED(hr)) {
                 ReportError("failed to select output types for MFT", hr);
                 return false;
@@ -221,8 +228,8 @@ int DetectMediaType(char* buffer, size_t len, ADTSData* output, char** aac_tag) 
     tag = MFGetAACTag(tmp);
     aac_tmp[12] |= (tag & 0xff00) >> 8;
     aac_tmp[13] |= (tag & 0x00ff);
-    memcpy(*aac_tag, aac_tmp, 14);
-    memcpy(output, &tmp, sizeof(ADTSData));
+    std::memcpy(*aac_tag, aac_tmp, 14);
+    std::memcpy(output, &tmp, sizeof(ADTSData));
     return 0;
 }
 
@@ -250,8 +257,6 @@ int SendSample(IMFTransform* transform, DWORD in_stream_id, IMFSample* in_sample
         } // FAILED(hr)
     } else {
         hr = transform->ProcessMessage(MFT_MESSAGE_COMMAND_DRAIN, 0);
-        // ffmpeg: Some MFTs (AC3) will send a frame after each drain command (???), so
-        // ffmpeg: this is required to make draining actually terminate.
         if (FAILED(hr)) {
             ReportError("MFT: Failed to drain when processing input", hr);
         }
@@ -264,7 +269,6 @@ std::tuple<MFOutputState, unique_mfptr<IMFSample>> ReceiveSample(IMFTransform* t
                                                                  DWORD out_stream_id) {
     HRESULT hr;
     MFT_OUTPUT_DATA_BUFFER out_buffers;
-    IMFSample* sample_tmp = nullptr;
     MFT_OUTPUT_STREAM_INFO out_info;
     DWORD status = 0;
     unique_mfptr<IMFSample> sample;
@@ -280,16 +284,14 @@ std::tuple<MFOutputState, unique_mfptr<IMFSample>> ReceiveSample(IMFTransform* t
                         (out_info.dwFlags & MFT_OUTPUT_STREAM_CAN_PROVIDE_SAMPLES);
 
     while (true) {
-        sample = nullptr;
         status = 0;
 
         if (!mft_create_sample) {
-            sample_tmp = CreateSample(nullptr, out_info.cbSize, out_info.cbAlignment);
-            if (!sample_tmp) {
+            sample = CreateSample(nullptr, out_info.cbSize, out_info.cbAlignment);
+            if (!sample.get()) {
                 ReportError("MFT: Unable to allocate memory for samples", hr);
                 return std::make_tuple(FATAL_ERROR, std::move(sample));
             }
-            sample.reset(sample_tmp);
         }
 
         out_buffers.dwStreamID = out_stream_id;
@@ -353,7 +355,7 @@ int CopySampleToBuffer(IMFSample* sample, void** output, DWORD* len) {
     }
 
     *output = malloc(*len);
-    memcpy(*output, data, *len);
+    std::memcpy(*output, data, *len);
 
     // if buffer unlock fails, then... whatever, we have already got data
     buffer->Unlock();

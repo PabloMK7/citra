@@ -21,14 +21,6 @@ enum MFOutputState { FATAL_ERROR = -1, OK = 0, NEED_MORE_INPUT, NEED_RECONFIG, H
 
 // utility functions
 template <class T>
-void SafeRelease(T** ppT) {
-    if (*ppT) {
-        (*ppT)->Release();
-        *ppT = nullptr;
-    }
-}
-
-template <class T>
 struct MFRelease {
     void operator()(T* pointer) const {
         pointer->Release();
@@ -44,7 +36,7 @@ void ReportError(std::string msg, HRESULT hr);
 bool MFCoInit();
 bool MFDecoderInit(IMFTransform** transform, GUID audio_format = MFAudioFormat_AAC);
 void MFDeInit(IMFTransform* transform);
-IMFSample* CreateSample(void* data, DWORD len, DWORD alignment = 1, LONGLONG duration = 0);
+unique_mfptr<IMFSample> CreateSample(void* data, DWORD len, DWORD alignment = 1, LONGLONG duration = 0);
 bool SelectInputMediaType(IMFTransform* transform, int in_stream_id, const ADTSData& adts,
                           UINT8* user_data, UINT32 user_data_len,
                           GUID audio_format = MFAudioFormat_AAC);

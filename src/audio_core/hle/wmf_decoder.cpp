@@ -20,7 +20,7 @@ private:
 
     std::optional<BinaryResponse> Decode(const BinaryRequest& request);
 
-    int DecodingLoop(ADTSData adts_header, std::array<std::vector<u8>, 2>& out_streams);
+    MFOutputState DecodingLoop(ADTSData adts_header, std::array<std::vector<u8>, 2>& out_streams);
 
     bool initalized = false;
     bool selected = false;
@@ -103,7 +103,7 @@ void WMFDecoder::Impl::Clear() {
     selected = false;
 }
 
-int WMFDecoder::Impl::DecodingLoop(ADTSData adts_header,
+MFOutputState WMFDecoder::Impl::DecodingLoop(ADTSData adts_header,
                                    std::array<std::vector<u8>, 2>& out_streams) {
     MFOutputState output_status = OK;
     char* output_buffer = nullptr;
@@ -138,12 +138,12 @@ int WMFDecoder::Impl::DecodingLoop(ADTSData adts_header,
 
         // in case of "ok" only, just return quickly
         if (output_status == OK)
-            return 0;
+            return OK;
 
         // for status = 2, reset MF
         if (output_status == NEED_RECONFIG) {
             Clear();
-            return -1;
+            return FATAL_ERROR;
         }
 
         // for status = 3, try again with new buffer
@@ -151,12 +151,12 @@ int WMFDecoder::Impl::DecodingLoop(ADTSData adts_header,
             continue;
 
         if (output_status == NEED_MORE_INPUT) // according to MS document, this is not an error (?!)
-            return 1;
+            return NEED_MORE_INPUT;
 
-        return -1; // return on other status
+        return FATAL_ERROR; // return on other status
     }
 
-    return -1;
+    return FATAL_ERROR;
 }
 
 std::optional<BinaryResponse> WMFDecoder::Impl::Decode(const BinaryRequest& request) {
@@ -205,13 +205,13 @@ std::optional<BinaryResponse> WMFDecoder::Impl::Decode(const BinaryRequest& requ
         selected = true;
     }
 
-    sample.reset(CreateSample((void*)data, request.size, 1, 0));
+    sample = CreateSample((void*)data, request.size, 1, 0);
     sample->SetUINT32(MFSampleExtension_CleanPoint, 1);
 
     while (true) {
         input_status = SendSample(transform.get(), in_stream_id, sample.get());
 
-        if (DecodingLoop(adts_header, out_streams) < 0) {
+        if (DecodingLoop(adts_header, out_streams) == FATAL_ERROR) {
             // if the decode issues are caused by MFT not accepting new samples, try again
             // NOTICE: you are required to check the output even if you already knew/guessed
             // MFT didn't accept the input sample
