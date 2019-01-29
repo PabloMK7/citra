@@ -407,6 +407,12 @@ Kernel::Process::Process(KernelSystem& kernel)
     kernel.memory.RegisterPageTable(&vm_manager.page_table);
 }
 Kernel::Process::~Process() {
+    // Release all objects this process owns first so that their potential destructor can do clean
+    // up with this process before further destruction.
+    // TODO(wwylele): explicitly destroy or invalidate objects this process owns (threads, shared
+    // memory etc.) even if they are still referenced by other processes.
+    handle_table.Clear();
+
     kernel.memory.UnregisterPageTable(&vm_manager.page_table);
 }
 
