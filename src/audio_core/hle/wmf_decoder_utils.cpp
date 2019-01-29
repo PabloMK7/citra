@@ -134,14 +134,6 @@ bool SelectInputMediaType(IMFTransform* transform, int in_stream_id, const ADTSD
     t->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Audio);
     t->SetGUID(MF_MT_SUBTYPE, audio_format);
 
-    // see https://docs.microsoft.com/en-us/windows/desktop/medfound/aac-decoder#example-media-types
-    // and https://docs.microsoft.com/zh-cn/windows/desktop/api/mmreg/ns-mmreg-heaacwaveinfo_tag
-    // for the meaning of the byte array below
-
-    // for integrate into a larger project, it is recommended to wrap the parameters into a struct
-    // and pass that struct into the function
-    // const UINT8 aac_data[] = { 0x01, 0x00, 0xfe, 00, 00, 00, 00, 00, 00, 00, 00, 00, 0x11, 0x90
-    // }; 0: raw aac 1: adts 2: adif 3: latm/laos
     t->SetUINT32(MF_MT_AAC_PAYLOAD_TYPE, 1);
     t->SetUINT32(MF_MT_AUDIO_NUM_CHANNELS, adts.channels);
     t->SetUINT32(MF_MT_AUDIO_SAMPLES_PER_SECOND, adts.samplerate);
@@ -211,6 +203,13 @@ int DetectMediaType(char* buffer, size_t len, ADTSData* output, char** aac_tag) 
     }
 
     ADTSData tmp;
+    // see https://docs.microsoft.com/en-us/windows/desktop/api/mmreg/ns-mmreg-heaacwaveinfo_tag
+    // for the meaning of the byte array below
+
+    // it might be a good idea to wrap the parameters into a struct
+    // and pass that struct into the function but this will lead to messier code
+    // const UINT8 aac_data[] = { 0x01, 0x00, 0xfe, 00, 00, 00, 00, 00, 00, 00, 00, 00, 0x11, 0x90
+    // }; first byte: 0: raw aac 1: adts 2: adif 3: latm/laos
     UINT8 aac_tmp[] = {0x01, 0x00, 0xfe, 00, 00, 00, 00, 00, 00, 00, 00, 00, 0x00, 0x00};
     uint16_t tag = 0;
 

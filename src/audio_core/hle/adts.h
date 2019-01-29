@@ -17,6 +17,8 @@ struct ADTSData {
     u32 samplerate;
 };
 
-u32 ParseADTS(char* buffer, struct ADTSData* out);
+u32 ParseADTS(char* buffer, ADTSData* out);
+
 // last two bytes of MF AAC decoder user data
-u16 MFGetAACTag(struct ADTSData input);
+// see https://docs.microsoft.com/en-us/windows/desktop/medfound/aac-decoder#example-media-types
+u16 MFGetAACTag(ADTSData input);
