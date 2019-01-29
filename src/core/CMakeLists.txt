@@ -423,6 +423,14 @@ add_library(core STATIC
     movie.h
     perf_stats.cpp
     perf_stats.h
+    rpc/packet.cpp
+    rpc/packet.h
+    rpc/rpc_server.cpp
+    rpc/rpc_server.h
+    rpc/server.cpp
+    rpc/server.h
+    rpc/udp_server.cpp
+    rpc/udp_server.h
     settings.cpp
     settings.h
     telemetry_session.cpp
@@ -431,18 +439,6 @@ add_library(core STATIC
     tracer/recorder.cpp
     tracer/recorder.h
 )
-if (ENABLE_SCRIPTING)
-    target_sources(core PRIVATE
-        rpc/packet.cpp
-        rpc/packet.h
-        rpc/rpc_server.cpp
-        rpc/rpc_server.h
-        rpc/server.cpp
-        rpc/server.h
-        rpc/udp_server.cpp
-        rpc/udp_server.h
-    )
-endif()
 
 create_target_directory_groups(core)
 

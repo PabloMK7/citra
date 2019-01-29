@@ -27,9 +27,7 @@
 #include "core/hw/hw.h"
 #include "core/loader/loader.h"
 #include "core/movie.h"
-#ifdef ENABLE_SCRIPTING
 #include "core/rpc/rpc_server.h"
-#endif
 #include "core/settings.h"
 #include "network/network.h"
 #include "video_core/video_core.h"
@@ -201,9 +199,7 @@ System::ResultStatus System::Init(EmuWindow& emu_window, u32 system_mode) {
 
     telemetry_session = std::make_unique<Core::TelemetrySession>();
 
-#ifdef ENABLE_SCRIPTING
     rpc_server = std::make_unique<RPC::RPCServer>();
-#endif
 
     service_manager = std::make_shared<Service::SM::ServiceManager>(*this);
     archive_manager = std::make_unique<Service::FS::ArchiveManager>(*this);
@@ -294,9 +290,7 @@ void System::Shutdown() {
     kernel.reset();
     HW::Shutdown();
     telemetry_session.reset();
-#ifdef ENABLE_SCRIPTING
     rpc_server.reset();
-#endif
     cheat_engine.reset();
     service_manager.reset();
     dsp_core.reset();
