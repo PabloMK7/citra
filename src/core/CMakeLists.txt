@@ -462,7 +462,3 @@ if (ARCHITECTURE_x86_64)
     )
     target_link_libraries(core PRIVATE dynarmic)
 endif()
-
-if (ENABLE_SCRIPTING)
-    target_link_libraries(core PUBLIC libzmq-headers cppzmq-headers libzmq)
-endif()
