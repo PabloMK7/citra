@@ -18,7 +18,7 @@
 #include "adts.h"
 
 enum MFOutputState { FATAL_ERROR, OK, NEED_MORE_INPUT, NEED_RECONFIG, HAVE_MORE_DATA };
-enum MFInputState { INPUT_ERROR, INPUT_OK, TRY_AGAIN };
+enum MFInputState { INPUT_ERROR, INPUT_OK, NOT_ACCEPTED };
 
 // utility functions
 template <class T>

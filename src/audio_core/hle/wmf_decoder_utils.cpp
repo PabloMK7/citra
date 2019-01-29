@@ -250,7 +250,7 @@ MFInputState SendSample(IMFTransform* transform, DWORD in_stream_id, IMFSample* 
     if (in_sample) {
         hr = transform->ProcessInput(in_stream_id, in_sample, 0);
         if (hr == MF_E_NOTACCEPTING) {
-            return TRY_AGAIN; // try again
+            return NOT_ACCEPTED; // try again
         } else if (FAILED(hr)) {
             ReportError("MFT: Failed to process input", hr);
             return INPUT_ERROR;

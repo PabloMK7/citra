@@ -215,7 +215,7 @@ std::optional<BinaryResponse> WMFDecoder::Impl::Decode(const BinaryRequest& requ
             // if the decode issues are caused by MFT not accepting new samples, try again
             // NOTICE: you are required to check the output even if you already knew/guessed
             // MFT didn't accept the input sample
-            if (input_status == TRY_AGAIN) {
+            if (input_status == NOT_ACCEPTED) {
                 // try again
                 continue;
             }
