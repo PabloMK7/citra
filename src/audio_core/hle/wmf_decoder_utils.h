@@ -6,17 +6,14 @@
 // AAC decoder related APIs are only available with WIN7+
 #define WINVER _WIN32_WINNT_WIN7
 
-#include <assert.h>
+#include <iostream>
+#include <string>
+#include <tuple>
 #include <comdef.h>
 #include <mfapi.h>
 #include <mferror.h>
 #include <mfidl.h>
 #include <mftransform.h>
-#include <stdio.h>
-
-#include <iostream>
-#include <string>
-#include <tuple>
 
 #include "adts.h"
 
