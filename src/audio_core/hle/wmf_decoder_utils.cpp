@@ -214,12 +214,12 @@ int DetectMediaType(char* buffer, size_t len, ADTSData* output, char** aac_tag) 
     UINT8 aac_tmp[] = {0x01, 0x00, 0xfe, 00, 00, 00, 00, 00, 00, 00, 00, 00, 0x00, 0x00};
     uint16_t tag = 0;
 
-    uint32_t result = parse_adts(buffer, &tmp);
+    uint32_t result = ParseADTS(buffer, &tmp);
     if (result == 0) {
         return -1;
     }
 
-    tag = mf_get_aac_tag(tmp);
+    tag = MFGetAACTag(tmp);
     aac_tmp[12] |= (tag & 0xff00) >> 8;
     aac_tmp[13] |= (tag & 0x00ff);
     memcpy(*aac_tag, aac_tmp, 14);

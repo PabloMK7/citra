@@ -7,7 +7,7 @@ constexpr std::array<u32, 16> freq_table = {96000, 88200, 64000, 48000, 44100, 3
                                             16000, 12000, 11025, 8000,  7350,  0,     0,     0};
 constexpr std::array<u8, 8> channel_table = {0, 1, 2, 3, 4, 5, 6, 8};
 
-u32 parse_adts(char* buffer, struct ADTSData* out) {
+u32 ParseADTS(char* buffer, struct ADTSData* out) {
     u32 tmp = 0;
 
     // sync word 0xfff
@@ -40,7 +40,7 @@ u32 parse_adts(char* buffer, struct ADTSData* out) {
 }
 
 // last two bytes of MF AAC decoder user data
-u16 mf_get_aac_tag(struct ADTSData input) {
+u16 MFGetAACTag(struct ADTSData input) {
     u16 tag = 0;
 
     tag |= input.profile << 11;
