@@ -439,8 +439,8 @@ if (ENABLE_SCRIPTING)
         rpc/rpc_server.h
         rpc/server.cpp
         rpc/server.h
-        rpc/zmq_server.cpp
-        rpc/zmq_server.h
+        rpc/udp_server.cpp
+        rpc/udp_server.h
     )
 endif()
 

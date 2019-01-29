@@ -13,6 +13,9 @@
 
 namespace RPC {
 
+class Packet;
+struct PacketHeader;
+
 class RPCServer {
 public:
     RPCServer();
