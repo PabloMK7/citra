@@ -104,7 +104,7 @@ void WMFDecoder::Impl::Clear() {
 }
 
 MFOutputState WMFDecoder::Impl::DecodingLoop(ADTSData adts_header,
-                                   std::array<std::vector<u8>, 2>& out_streams) {
+                                             std::array<std::vector<u8>, 2>& out_streams) {
     MFOutputState output_status = OK;
     char* output_buffer = nullptr;
     DWORD output_len = 0;
@@ -184,7 +184,7 @@ std::optional<BinaryResponse> WMFDecoder::Impl::Decode(const BinaryRequest& requ
     unique_mfptr<IMFSample> sample;
     ADTSData adts_header;
     char* aac_tag = (char*)calloc(1, 14);
-    int input_status = 0;
+    MFInputState input_status = INPUT_OK;
 
     if (DetectMediaType((char*)data, request.size, &adts_header, &aac_tag) != 0) {
         LOG_ERROR(Audio_DSP, "Unable to deduce decoding parameters from ADTS stream");
@@ -215,7 +215,7 @@ std::optional<BinaryResponse> WMFDecoder::Impl::Decode(const BinaryRequest& requ
             // if the decode issues are caused by MFT not accepting new samples, try again
             // NOTICE: you are required to check the output even if you already knew/guessed
             // MFT didn't accept the input sample
-            if (input_status == 1) {
+            if (input_status == TRY_AGAIN) {
                 // try again
                 continue;
             }

@@ -234,26 +234,26 @@ int DetectMediaType(char* buffer, size_t len, ADTSData* output, char** aac_tag) 
 }
 
 void MFFlush(IMFTransform* transform) {
-    HRESULT hr = (transform)->ProcessMessage(MFT_MESSAGE_COMMAND_FLUSH, 0);
+    HRESULT hr = transform->ProcessMessage(MFT_MESSAGE_COMMAND_FLUSH, 0);
     if (FAILED(hr)) {
         ReportError("MFT: Flush command failed", hr);
     }
-    hr = (transform)->ProcessMessage(MFT_MESSAGE_NOTIFY_END_OF_STREAM, 0);
+    hr = transform->ProcessMessage(MFT_MESSAGE_NOTIFY_END_OF_STREAM, 0);
     if (FAILED(hr)) {
         ReportError("Failed to end streaming for MFT", hr);
     }
 }
 
-int SendSample(IMFTransform* transform, DWORD in_stream_id, IMFSample* in_sample) {
+MFInputState SendSample(IMFTransform* transform, DWORD in_stream_id, IMFSample* in_sample) {
     HRESULT hr = S_OK;
 
     if (in_sample) {
         hr = transform->ProcessInput(in_stream_id, in_sample, 0);
         if (hr == MF_E_NOTACCEPTING) {
-            return 1; // try again
+            return TRY_AGAIN; // try again
         } else if (FAILED(hr)) {
             ReportError("MFT: Failed to process input", hr);
-            return -1;
+            return INPUT_ERROR;
         } // FAILED(hr)
     } else {
         hr = transform->ProcessMessage(MFT_MESSAGE_COMMAND_DRAIN, 0);
@@ -262,7 +262,7 @@ int SendSample(IMFTransform* transform, DWORD in_stream_id, IMFSample* in_sample
         }
     }
 
-    return 0;
+    return INPUT_OK;
 }
 
 std::tuple<MFOutputState, unique_mfptr<IMFSample>> ReceiveSample(IMFTransform* transform,
