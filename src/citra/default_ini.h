@@ -92,6 +92,10 @@ udp_pad_index=
 use_cpu_jit =
 
 [Renderer]
+# Whether to render using GLES or OpenGL
+# 0 (default): OpenGL, 1: GLES
+use_gles =
+
 # Whether to use software or hardware rendering.
 # 0: Software, 1 (default): Hardware
 use_hw_renderer =
