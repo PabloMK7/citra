@@ -176,6 +176,7 @@ GatewayCheat::CheatLine::CheatLine(const std::string& line) {
         type = CheatType::Null;
         cheat_line = line;
         LOG_ERROR(Core_Cheats, "Cheat contains invalid line: {}", line);
+        valid = false;
         return;
     }
     try {
@@ -193,6 +194,7 @@ GatewayCheat::CheatLine::CheatLine(const std::string& line) {
         type = CheatType::Null;
         cheat_line = line;
         LOG_ERROR(Core_Cheats, "Cheat contains invalid line: {}", line);
+        valid = false;
     }
 }
 
@@ -201,9 +203,23 @@ GatewayCheat::GatewayCheat(std::string name_, std::vector<CheatLine> cheat_lines
     : name(std::move(name_)), cheat_lines(std::move(cheat_lines_)), comments(std::move(comments_)) {
 }
 
+GatewayCheat::GatewayCheat(std::string name_, std::string code, std::string comments_)
+    : name(std::move(name_)), comments(std::move(comments_)) {
+
+    std::vector<std::string> code_lines;
+    Common::SplitString(code, '\n', code_lines);
+
+    std::vector<CheatLine> temp_cheat_lines;
+    for (std::size_t i = 0; i < code_lines.size(); ++i) {
+        if (!code_lines[i].empty())
+            temp_cheat_lines.emplace_back(code_lines[i]);
+    }
+    cheat_lines = std::move(temp_cheat_lines);
+}
+
 GatewayCheat::~GatewayCheat() = default;
 
-void GatewayCheat::Execute(Core::System& system) {
+void GatewayCheat::Execute(Core::System& system) const {
     State state;
 
     Memory::MemorySystem& memory = system.Memory();
@@ -421,13 +437,28 @@ std::string GatewayCheat::GetType() const {
     return "Gateway";
 }
 
+std::string GatewayCheat::GetCode() const {
+    std::string result;
+    for (const auto& line : cheat_lines)
+        result += line.cheat_line + '\n';
+    return result;
+}
+
+/// A special marker used to keep track of enabled cheats
+static constexpr char EnabledText[] = "*citra_enabled";
+
 std::string GatewayCheat::ToString() const {
     std::string result;
     result += '[' + name + "]\n";
-    result += comments + '\n';
-    for (const auto& line : cheat_lines)
-        result += line.cheat_line + '\n';
-    result += '\n';
+    if (enabled) {
+        result += EnabledText;
+        result += '\n';
+    }
+    std::vector<std::string> comment_lines;
+    Common::SplitString(comments, '\n', comment_lines);
+    for (const auto& comment_line : comment_lines)
+        result += "*" + comment_line + '\n';
+    result += GetCode() + '\n';
     return result;
 }
 
@@ -443,6 +474,7 @@ std::vector<std::unique_ptr<CheatBase>> GatewayCheat::LoadFile(const std::string
     std::string comments;
     std::vector<CheatLine> cheat_lines;
     std::string name;
+    bool enabled = false;
 
     while (!file.eof()) {
         std::string line;
@@ -452,18 +484,25 @@ std::vector<std::unique_ptr<CheatBase>> GatewayCheat::LoadFile(const std::string
         if (line.length() >= 2 && line.front() == '[') {
             if (!cheat_lines.empty()) {
                 cheats.push_back(std::make_unique<GatewayCheat>(name, cheat_lines, comments));
+                cheats.back()->SetEnabled(enabled);
+                enabled = false;
             }
             name = line.substr(1, line.length() - 2);
             cheat_lines.clear();
             comments.erase();
         } else if (!line.empty() && line.front() == '*') {
-            comments += line.substr(1, line.length() - 1) + '\n';
+            if (line == EnabledText) {
+                enabled = true;
+            } else {
+                comments += line.substr(1, line.length() - 1) + '\n';
+            }
         } else if (!line.empty()) {
             cheat_lines.emplace_back(std::move(line));
         }
     }
     if (!cheat_lines.empty()) {
         cheats.push_back(std::make_unique<GatewayCheat>(name, cheat_lines, comments));
+        cheats.back()->SetEnabled(enabled);
     }
     return cheats;
 }
