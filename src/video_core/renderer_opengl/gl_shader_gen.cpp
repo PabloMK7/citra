@@ -18,6 +18,7 @@
 #include "video_core/renderer_opengl/gl_shader_decompiler.h"
 #include "video_core/renderer_opengl/gl_shader_gen.h"
 #include "video_core/renderer_opengl/gl_shader_util.h"
+#include "video_core/renderer_opengl/gl_vars.h"
 #include "video_core/video_core.h"
 
 using Pica::FramebufferRegs;
@@ -1250,7 +1251,6 @@ std::string GenerateFragmentShader(const PicaFSConfig& config, bool separable_sh
     const auto& state = config.state;
 
     std::string out = R"(
-#version 330 core
 #extension GL_ARB_shader_image_load_store : enable
 #extension GL_ARB_shader_image_size : enable
 #define ALLOW_SHADOW (defined(GL_ARB_shader_image_load_store) && defined(GL_ARB_shader_image_size))
@@ -1260,10 +1260,16 @@ std::string GenerateFragmentShader(const PicaFSConfig& config, bool separable_sh
         out += "#extension GL_ARB_separate_shader_objects : enable\n";
     }
 
+    if (GLES) {
+        out += fragment_shader_precision_OES;
+    }
+
     out += GetVertexInterfaceDeclaration(false, separable_shader);
 
     out += R"(
+#ifndef CITRA_GLES
 in vec4 gl_FragCoord;
+#endif // CITRA_GLES
 
 out vec4 color;
 
@@ -1300,13 +1306,13 @@ float LookupLightingLUT(int lut_index, int index, float delta) {
 
 float LookupLightingLUTUnsigned(int lut_index, float pos) {
     int index = clamp(int(pos * 256.0), 0, 255);
-    float delta = pos * 256.0 - index;
+    float delta = pos * 256.0 - float(index);
     return LookupLightingLUT(lut_index, index, delta);
 }
 
 float LookupLightingLUTSigned(int lut_index, float pos) {
     int index = clamp(int(pos * 128.0), -128, 127);
-    float delta = pos * 128.0 - index;
+    float delta = pos * 128.0 - float(index);
     if (index < 0) index += 256;
     return LookupLightingLUT(lut_index, index, delta);
 }
@@ -1494,10 +1500,10 @@ vec4 secondary_fragment_color = vec4(0.0);
         // Negate the condition if we have to keep only the pixels outside the scissor box
         if (state.scissor_test_mode == RasterizerRegs::ScissorMode::Include)
             out += "!";
-        out += "(gl_FragCoord.x >= scissor_x1 && "
-               "gl_FragCoord.y >= scissor_y1 && "
-               "gl_FragCoord.x < scissor_x2 && "
-               "gl_FragCoord.y < scissor_y2)) discard;\n";
+        out += "(gl_FragCoord.x >= float(scissor_x1) && "
+               "gl_FragCoord.y >= float(scissor_y1) && "
+               "gl_FragCoord.x < float(scissor_x2) && "
+               "gl_FragCoord.y < float(scissor_y2))) discard;\n";
     }
 
     // After perspective divide, OpenGL transform z_over_w from [-1, 1] to [near, far]. Here we use
@@ -1529,7 +1535,7 @@ vec4 secondary_fragment_color = vec4(0.0);
     if (state.fog_mode == TexturingRegs::FogMode::Fog) {
         // Get index into fog LUT
         if (state.fog_flip) {
-            out += "float fog_index = (1.0 - depth) * 128.0;\n";
+            out += "float fog_index = (1.0 - float(depth)) * 128.0;\n";
         } else {
             out += "float fog_index = depth * 128.0;\n";
         }
@@ -1591,7 +1597,7 @@ do {
 }
 
 std::string GenerateTrivialVertexShader(bool separable_shader) {
-    std::string out = "#version 330 core\n";
+    std::string out = "";
     if (separable_shader) {
         out += "#extension GL_ARB_separate_shader_objects : enable\n";
     }
@@ -1626,8 +1632,10 @@ void main() {
     normquat = vert_normquat;
     view = vert_view;
     gl_Position = vert_position;
+#if !defined(CITRA_GLES) || defined(GL_EXT_clip_cull_distance)
     gl_ClipDistance[0] = -vert_position.z; // fixed PICA clipping plane z <= 0
     gl_ClipDistance[1] = dot(clip_coef, vert_position);
+#endif // !defined(CITRA_GLES) || defined(GL_EXT_clip_cull_distance)
 }
 )";
 
@@ -1636,7 +1644,7 @@ void main() {
 
 std::optional<std::string> GenerateVertexShader(const Pica::Shader::ShaderSetup& setup,
                                                 const PicaVSConfig& config, bool separable_shader) {
-    std::string out = "#version 330 core\n";
+    std::string out = "";
     if (separable_shader) {
         out += "#extension GL_ARB_separate_shader_objects : enable\n";
     }
@@ -1744,9 +1752,12 @@ struct Vertex {
            semantic(VSOutputAttributes::POSITION_Y) + ", " +
            semantic(VSOutputAttributes::POSITION_Z) + ", " +
            semantic(VSOutputAttributes::POSITION_W) + ");\n";
+    semantic(VSOutputAttributes::POSITION_W) + ");\n";
     out += "    gl_Position = vtx_pos;\n";
+    out += "#if !defined(CITRA_GLES) || defined(GL_EXT_clip_cull_distance)\n";
     out += "    gl_ClipDistance[0] = -vtx_pos.z;\n"; // fixed PICA clipping plane z <= 0
-    out += "    gl_ClipDistance[1] = dot(clip_coef, vtx_pos);\n\n";
+    out += "    gl_ClipDistance[1] = dot(clip_coef, vtx_pos);\n";
+    out += "#endif // !defined(CITRA_GLES) || defined(GL_EXT_clip_cull_distance)\n\n";
 
     out += "    vec4 vtx_quat = GetVertexQuaternion(vtx);\n";
     out += "    normquat = mix(vtx_quat, -vtx_quat, bvec4(quats_opposite));\n\n";
@@ -1789,7 +1800,7 @@ void EmitPrim(Vertex vtx0, Vertex vtx1, Vertex vtx2) {
 };
 
 std::string GenerateFixedGeometryShader(const PicaFixedGSConfig& config, bool separable_shader) {
-    std::string out = "#version 330 core\n";
+    std::string out = "";
     if (separable_shader) {
         out += "#extension GL_ARB_separate_shader_objects : enable\n\n";
     }
@@ -1824,7 +1835,7 @@ void main() {
 std::optional<std::string> GenerateGeometryShader(const Pica::Shader::ShaderSetup& setup,
                                                   const PicaGSConfig& config,
                                                   bool separable_shader) {
-    std::string out = "#version 330 core\n";
+    std::string out = "";
     if (separable_shader) {
         out += "#extension GL_ARB_separate_shader_objects : enable\n";
     }

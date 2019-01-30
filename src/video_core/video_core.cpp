@@ -7,6 +7,7 @@
 #include "core/settings.h"
 #include "video_core/pica.h"
 #include "video_core/renderer_base.h"
+#include "video_core/renderer_opengl/gl_vars.h"
 #include "video_core/renderer_opengl/renderer_opengl.h"
 #include "video_core/video_core.h"
 
@@ -35,6 +36,8 @@ Memory::MemorySystem* g_memory;
 Core::System::ResultStatus Init(EmuWindow& emu_window, Memory::MemorySystem& memory) {
     g_memory = &memory;
     Pica::Init();
+
+    OpenGL::GLES = Settings::values.use_gles;
 
     g_renderer = std::make_unique<OpenGL::RendererOpenGL>(emu_window);
     Core::System::ResultStatus result = g_renderer->Init();
