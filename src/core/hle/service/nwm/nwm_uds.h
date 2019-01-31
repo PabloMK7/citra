@@ -5,19 +5,35 @@
 #pragma once
 
 #include <array>
+#include <atomic>
 #include <cstddef>
+#include <deque>
+#include <list>
+#include <map>
+#include <mutex>
+#include <unordered_map>
 #include <vector>
+#include <boost/optional.hpp>
 #include "common/common_types.h"
 #include "common/swap.h"
+#include "core/hle/kernel/kernel.h"
 #include "core/hle/service/service.h"
+#include "network/network.h"
 
 namespace Core {
 class System;
 }
 
+namespace Kernel {
+class Event;
+class SharedMemory;
+} // namespace Kernel
+
 // Local-WLAN service
 
 namespace Service::NWM {
+
+using MacAddress = std::array<u8, 6>;
 
 const std::size_t ApplicationDataSize = 0xC8;
 const u8 DefaultNetworkChannel = 11;
@@ -354,6 +370,121 @@ private:
     void DecryptBeaconData(Kernel::HLERequestContext& ctx);
 
     void BeaconBroadcastCallback(u64 userdata, s64 cycles_late);
+
+    /**
+     * Returns a list of received 802.11 beacon frames from the specified sender since the last
+     * call.
+     */
+    std::list<Network::WifiPacket> GetReceivedBeacons(const MacAddress& sender);
+
+    /*
+     * Returns an available index in the nodes array for the
+     * currently-hosted UDS network.
+     */
+    u16 GetNextAvailableNodeId();
+
+    void BroadcastNodeMap();
+    void HandleNodeMapPacket(const Network::WifiPacket& packet);
+    void HandleBeaconFrame(const Network::WifiPacket& packet);
+    void HandleAssociationResponseFrame(const Network::WifiPacket& packet);
+    void HandleEAPoLPacket(const Network::WifiPacket& packet);
+    void HandleSecureDataPacket(const Network::WifiPacket& packet);
+
+    /*
+     * Start a connection sequence with an UDS server. The sequence starts by sending an 802.11
+     * authentication frame with SEQ1.
+     */
+    void StartConnectionSequence(const MacAddress& server);
+
+    /// Sends an Association Response frame to the specified mac address
+    void SendAssociationResponseFrame(const MacAddress& address);
+
+    /*
+     * Handles the authentication request frame and sends the authentication response and
+     * association response frames. Once an Authentication frame with SEQ1 is received by the
+     * server, it responds with an Authentication frame containing SEQ2, and immediately sends an
+     * Association response frame containing the details of the access point and the assigned
+     * association id for the new client.
+     */
+    void HandleAuthenticationFrame(const Network::WifiPacket& packet);
+
+    /// Handles the deauthentication frames sent from clients to hosts, when they leave a session
+    void HandleDeauthenticationFrame(const Network::WifiPacket& packet);
+
+    void HandleDataFrame(const Network::WifiPacket& packet);
+
+    /// Callback to parse and handle a received wifi packet.
+    void OnWifiPacketReceived(const Network::WifiPacket& packet);
+
+    boost::optional<Network::MacAddress> GetNodeMacAddress(u16 dest_node_id, u8 flags);
+
+    // Event that is signaled every time the connection status changes.
+    Kernel::SharedPtr<Kernel::Event> connection_status_event;
+
+    // Shared memory provided by the application to store the receive buffer.
+    // This is not currently used.
+    Kernel::SharedPtr<Kernel::SharedMemory> recv_buffer_memory;
+
+    // Connection status of this 3DS.
+    ConnectionStatus connection_status{};
+
+    std::atomic<bool> initialized{false};
+
+    /* Node information about the current network.
+     * The amount of elements in this vector is always the maximum number
+     * of nodes specified in the network configuration.
+     * The first node is always the host.
+     */
+    NodeList node_info;
+
+    // Node information about our own system.
+    NodeInfo current_node;
+
+    struct BindNodeData {
+        u32 bind_node_id;    ///< Id of the bind node associated with this data.
+        u8 channel;          ///< Channel that this bind node was bound to.
+        u16 network_node_id; ///< Node id this bind node is associated with, only packets from this
+                             /// network node will be received.
+        Kernel::SharedPtr<Kernel::Event> event;       ///< Receive event for this bind node.
+        std::deque<std::vector<u8>> received_packets; ///< List of packets received on this channel.
+    };
+
+    // Mapping of data channels to their internal data.
+    std::unordered_map<u32, BindNodeData> channel_data;
+
+    // The WiFi network channel that the network is currently on.
+    // Since we're not actually interacting with physical radio waves, this is just a dummy value.
+    u8 network_channel = DefaultNetworkChannel;
+
+    // Information about the network that we're currently connected to.
+    NetworkInfo network_info;
+
+    // Mapping of mac addresses to their respective node_ids.
+    struct Node {
+        bool connected;
+        u16 node_id;
+    };
+
+    std::map<MacAddress, Node> node_map;
+
+    // Event that will generate and send the 802.11 beacon frames.
+    Core::TimingEventType* beacon_broadcast_event;
+
+    // Callback identifier for the OnWifiPacketReceived event.
+    Network::RoomMember::CallbackHandle<Network::WifiPacket> wifi_packet_received;
+
+    // Mutex to synchronize access to the connection status between the emulation thread and the
+    // network thread.
+    std::mutex connection_status_mutex;
+
+    Kernel::SharedPtr<Kernel::Event> connection_event;
+
+    // Mutex to synchronize access to the list of received beacons between the emulation thread and
+    // the network thread.
+    std::mutex beacon_mutex;
+
+    // List of the last <MaxBeaconFrames> beacons received from the network.
+    std::list<Network::WifiPacket> received_beacons;
 };
 
 } // namespace Service::NWM
