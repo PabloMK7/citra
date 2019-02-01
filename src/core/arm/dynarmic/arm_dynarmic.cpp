@@ -73,7 +73,7 @@ class DynarmicUserCallbacks final : public Dynarmic::A32::UserCallbacks {
 public:
     explicit DynarmicUserCallbacks(ARM_Dynarmic& parent)
         : parent(parent), timing(parent.system.CoreTiming()), svc_context(parent.system),
-          memory(parent.system.Memory()) {}
+          memory(parent.memory) {}
     ~DynarmicUserCallbacks() = default;
 
     std::uint8_t MemoryRead8(VAddr vaddr) override {
@@ -163,9 +163,10 @@ public:
     Memory::MemorySystem& memory;
 };
 
-ARM_Dynarmic::ARM_Dynarmic(Core::System& system, PrivilegeMode initial_mode)
-    : system(system), cb(std::make_unique<DynarmicUserCallbacks>(*this)) {
-    interpreter_state = std::make_shared<ARMul_State>(system, initial_mode);
+ARM_Dynarmic::ARM_Dynarmic(Core::System* system, Memory::MemorySystem& memory,
+                           PrivilegeMode initial_mode)
+    : system(*system), memory(memory), cb(std::make_unique<DynarmicUserCallbacks>(*this)) {
+    interpreter_state = std::make_shared<ARMul_State>(system, memory, initial_mode);
     PageTableChanged();
 }
 
@@ -174,7 +175,7 @@ ARM_Dynarmic::~ARM_Dynarmic() = default;
 MICROPROFILE_DEFINE(ARM_Jit, "ARM JIT", "ARM JIT", MP_RGB(255, 64, 64));
 
 void ARM_Dynarmic::Run() {
-    ASSERT(system.Memory().GetCurrentPageTable() == current_page_table);
+    ASSERT(memory.GetCurrentPageTable() == current_page_table);
     MICROPROFILE_SCOPE(ARM_Jit);
 
     jit->Run();
@@ -281,7 +282,7 @@ void ARM_Dynarmic::InvalidateCacheRange(u32 start_address, std::size_t length) {
 }
 
 void ARM_Dynarmic::PageTableChanged() {
-    current_page_table = system.Memory().GetCurrentPageTable();
+    current_page_table = memory.GetCurrentPageTable();
 
     auto iter = jits.find(current_page_table);
     if (iter != jits.end()) {

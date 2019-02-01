@@ -68,14 +68,17 @@ private:
     u32 fpexc;
 };
 
-ARM_DynCom::ARM_DynCom(Core::System& system, PrivilegeMode initial_mode) : system(system) {
-    state = std::make_unique<ARMul_State>(system, initial_mode);
+ARM_DynCom::ARM_DynCom(Core::System* system, Memory::MemorySystem& memory,
+                       PrivilegeMode initial_mode)
+    : system(system) {
+    state = std::make_unique<ARMul_State>(system, memory, initial_mode);
 }
 
 ARM_DynCom::~ARM_DynCom() {}
 
 void ARM_DynCom::Run() {
-    ExecuteInstructions(std::max<s64>(system.CoreTiming().GetDowncount(), 0));
+    DEBUG_ASSERT(system != nullptr);
+    ExecuteInstructions(std::max<s64>(system->CoreTiming().GetDowncount(), 0));
 }
 
 void ARM_DynCom::Step() {
@@ -146,7 +149,9 @@ void ARM_DynCom::SetCP15Register(CP15Register reg, u32 value) {
 void ARM_DynCom::ExecuteInstructions(u64 num_instructions) {
     state->NumInstrsToExecute = num_instructions;
     unsigned ticks_executed = InterpreterMainLoop(state.get());
-    system.CoreTiming().AddTicks(ticks_executed);
+    if (system != nullptr) {
+        system->CoreTiming().AddTicks(ticks_executed);
+    }
     state->ServeBreak();
 }
 

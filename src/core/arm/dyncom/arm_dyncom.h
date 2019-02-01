@@ -14,9 +14,14 @@ namespace Core {
 struct System;
 }
 
+namespace Memory {
+class MemorySystem;
+}
+
 class ARM_DynCom final : public ARM_Interface {
 public:
-    explicit ARM_DynCom(Core::System& system, PrivilegeMode initial_mode);
+    explicit ARM_DynCom(Core::System* system, Memory::MemorySystem& memory,
+                        PrivilegeMode initial_mode);
     ~ARM_DynCom();
 
     void Run() override;
@@ -48,6 +53,6 @@ public:
 private:
     void ExecuteInstructions(u64 num_instructions);
 
-    Core::System& system;
+    Core::System* system;
     std::unique_ptr<ARMul_State> state;
 };

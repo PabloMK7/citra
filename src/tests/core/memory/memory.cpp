@@ -11,11 +11,9 @@
 #include "core/memory.h"
 
 TEST_CASE("Memory::IsValidVirtualAddress", "[core][memory]") {
-    // HACK: see comments of member timing
-    Core::System::GetInstance().timing = std::make_unique<Core::Timing>();
-    Core::System::GetInstance().memory = std::make_unique<Memory::MemorySystem>();
-    Kernel::KernelSystem kernel(*Core::System::GetInstance().memory,
-                                *Core::System::GetInstance().timing, [] {}, 0);
+    Core::Timing timing;
+    Memory::MemorySystem memory;
+    Kernel::KernelSystem kernel(memory, timing, [] {}, 0);
     SECTION("these regions should not be mapped on an empty process") {
         auto process = kernel.CreateProcess(kernel.CreateCodeSet("", 0));
         CHECK(Memory::IsValidVirtualAddress(*process, Memory::PROCESS_IMAGE_VADDR) == false);
