@@ -189,6 +189,7 @@ System::ResultStatus System::Init(EmuWindow& emu_window, u32 system_mode) {
     }
 
     kernel->GetThreadManager().SetCPU(*cpu_core);
+    memory->SetCPU(*cpu_core);
 
     if (Settings::values.enable_dsp_lle) {
         dsp_core = std::make_unique<AudioCore::DspLle>(*memory,

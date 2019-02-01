@@ -65,15 +65,21 @@ public:
     PageTable* current_page_table = nullptr;
     RasterizerCacheMarker cache_marker;
     std::vector<PageTable*> page_table_list;
+
+    ARM_Interface* cpu = nullptr;
 };
 
 MemorySystem::MemorySystem() : impl(std::make_unique<Impl>()) {}
 MemorySystem::~MemorySystem() = default;
 
+void MemorySystem::SetCPU(ARM_Interface& cpu) {
+    impl->cpu = &cpu;
+}
+
 void MemorySystem::SetCurrentPageTable(PageTable* page_table) {
     impl->current_page_table = page_table;
-    if (Core::System::GetInstance().IsPoweredOn()) {
-        Core::CPU().PageTableChanged();
+    if (impl->cpu != nullptr) {
+        impl->cpu->PageTableChanged();
     }
 }
 

@@ -12,6 +12,8 @@
 #include "common/common_types.h"
 #include "core/mmio.h"
 
+class ARM_Interface;
+
 namespace Kernel {
 class Process;
 }
@@ -213,6 +215,9 @@ class MemorySystem {
 public:
     MemorySystem();
     ~MemorySystem();
+
+    /// Sets CPU to notify page table change
+    void SetCPU(ARM_Interface& cpu);
 
     /**
      * Maps an allocated buffer onto a region of the emulated process address space.
