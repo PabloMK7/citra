@@ -38,7 +38,7 @@ u32 ThreadManager::NewThreadId() {
 }
 
 Thread::Thread(KernelSystem& kernel)
-    : WaitObject(kernel), context(Core::CPU().NewContext()),
+    : WaitObject(kernel), context(kernel.GetThreadManager().NewContext()),
       thread_manager(kernel.GetThreadManager()) {}
 Thread::~Thread() {}
 
@@ -86,7 +86,7 @@ void ThreadManager::SwitchContext(Thread* new_thread) {
     // Save context for previous thread
     if (previous_thread) {
         previous_thread->last_running_ticks = timing.GetTicks();
-        Core::CPU().SaveContext(previous_thread->context);
+        cpu->SaveContext(previous_thread->context);
 
         if (previous_thread->status == ThreadStatus::Running) {
             // This is only the case when a reschedule is triggered without the current thread
@@ -117,8 +117,8 @@ void ThreadManager::SwitchContext(Thread* new_thread) {
                 &current_thread->owner_process->vm_manager.page_table);
         }
 
-        Core::CPU().LoadContext(new_thread->context);
-        Core::CPU().SetCP15Register(CP15_THREAD_URO, new_thread->GetTLSAddress());
+        cpu->LoadContext(new_thread->context);
+        cpu->SetCP15Register(CP15_THREAD_URO, new_thread->GetTLSAddress());
     } else {
         current_thread = nullptr;
         // Note: We do not reset the current process and current page table when idling because
