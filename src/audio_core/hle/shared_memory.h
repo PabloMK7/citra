@@ -126,29 +126,29 @@ struct SourceConfiguration {
         union {
             u32_le dirty_raw;
 
-            BitField<0, 1, u32_le> format_dirty;
-            BitField<1, 1, u32_le> mono_or_stereo_dirty;
-            BitField<2, 1, u32_le> adpcm_coefficients_dirty;
+            BitField<0, 1, u32> format_dirty;
+            BitField<1, 1, u32> mono_or_stereo_dirty;
+            BitField<2, 1, u32> adpcm_coefficients_dirty;
             /// Tends to be set when a looped buffer is queued.
-            BitField<3, 1, u32_le> partial_embedded_buffer_dirty;
-            BitField<4, 1, u32_le> partial_reset_flag;
+            BitField<3, 1, u32> partial_embedded_buffer_dirty;
+            BitField<4, 1, u32> partial_reset_flag;
 
-            BitField<16, 1, u32_le> enable_dirty;
-            BitField<17, 1, u32_le> interpolation_dirty;
-            BitField<18, 1, u32_le> rate_multiplier_dirty;
-            BitField<19, 1, u32_le> buffer_queue_dirty;
-            BitField<20, 1, u32_le> loop_related_dirty;
+            BitField<16, 1, u32> enable_dirty;
+            BitField<17, 1, u32> interpolation_dirty;
+            BitField<18, 1, u32> rate_multiplier_dirty;
+            BitField<19, 1, u32> buffer_queue_dirty;
+            BitField<20, 1, u32> loop_related_dirty;
             /// Tends to also be set when embedded buffer is updated.
-            BitField<21, 1, u32_le> play_position_dirty;
-            BitField<22, 1, u32_le> filters_enabled_dirty;
-            BitField<23, 1, u32_le> simple_filter_dirty;
-            BitField<24, 1, u32_le> biquad_filter_dirty;
-            BitField<25, 1, u32_le> gain_0_dirty;
-            BitField<26, 1, u32_le> gain_1_dirty;
-            BitField<27, 1, u32_le> gain_2_dirty;
-            BitField<28, 1, u32_le> sync_dirty;
-            BitField<29, 1, u32_le> reset_flag;
-            BitField<30, 1, u32_le> embedded_buffer_dirty;
+            BitField<21, 1, u32> play_position_dirty;
+            BitField<22, 1, u32> filters_enabled_dirty;
+            BitField<23, 1, u32> simple_filter_dirty;
+            BitField<24, 1, u32> biquad_filter_dirty;
+            BitField<25, 1, u32> gain_0_dirty;
+            BitField<26, 1, u32> gain_1_dirty;
+            BitField<27, 1, u32> gain_2_dirty;
+            BitField<28, 1, u32> sync_dirty;
+            BitField<29, 1, u32> reset_flag;
+            BitField<30, 1, u32> embedded_buffer_dirty;
         };
 
         // Gain control
@@ -206,8 +206,8 @@ struct SourceConfiguration {
 
         union {
             u16_le filters_enabled;
-            BitField<0, 1, u16_le> simple_filter_enabled;
-            BitField<1, 1, u16_le> biquad_filter_enabled;
+            BitField<0, 1, u16> simple_filter_enabled;
+            BitField<1, 1, u16> biquad_filter_enabled;
         };
 
         SimpleFilter simple_filter;
@@ -227,8 +227,8 @@ struct SourceConfiguration {
             /// ADPCM Predictor (4 bits) and Scale (4 bits)
             union {
                 u16_le adpcm_ps;
-                BitField<0, 4, u16_le> adpcm_scale;
-                BitField<4, 4, u16_le> adpcm_predictor;
+                BitField<0, 4, u16> adpcm_scale;
+                BitField<4, 4, u16> adpcm_predictor;
             };
 
             /// ADPCM Historical Samples (y[n-1] and y[n-2])
@@ -285,14 +285,14 @@ struct SourceConfiguration {
             u16_le flags1_raw;
             BitField<0, 2, MonoOrStereo> mono_or_stereo;
             BitField<2, 2, Format> format;
-            BitField<5, 1, u16_le> fade_in;
+            BitField<5, 1, u16> fade_in;
         };
 
         /// ADPCM Predictor (4 bit) and Scale (4 bit)
         union {
             u16_le adpcm_ps;
-            BitField<0, 4, u16_le> adpcm_scale;
-            BitField<4, 4, u16_le> adpcm_predictor;
+            BitField<0, 4, u16> adpcm_scale;
+            BitField<4, 4, u16> adpcm_predictor;
         };
 
         /// ADPCM Historical Samples (y[n-1] and y[n-2])
@@ -300,8 +300,8 @@ struct SourceConfiguration {
 
         union {
             u16_le flags2_raw;
-            BitField<0, 1, u16_le> adpcm_dirty; ///< Has the ADPCM info above been changed?
-            BitField<1, 1, u16_le> is_looping;  ///< Is this a looping buffer?
+            BitField<0, 1, u16> adpcm_dirty; ///< Has the ADPCM info above been changed?
+            BitField<1, 1, u16> is_looping;  ///< Is this a looping buffer?
         };
 
         /// Buffer id of embedded buffer (used as a buffer id in SourceStatus to reference this
@@ -334,20 +334,20 @@ struct DspConfiguration {
     union {
         u32_le dirty_raw;
 
-        BitField<8, 1, u32_le> mixer1_enabled_dirty;
-        BitField<9, 1, u32_le> mixer2_enabled_dirty;
-        BitField<10, 1, u32_le> delay_effect_0_dirty;
-        BitField<11, 1, u32_le> delay_effect_1_dirty;
-        BitField<12, 1, u32_le> reverb_effect_0_dirty;
-        BitField<13, 1, u32_le> reverb_effect_1_dirty;
+        BitField<8, 1, u32> mixer1_enabled_dirty;
+        BitField<9, 1, u32> mixer2_enabled_dirty;
+        BitField<10, 1, u32> delay_effect_0_dirty;
+        BitField<11, 1, u32> delay_effect_1_dirty;
+        BitField<12, 1, u32> reverb_effect_0_dirty;
+        BitField<13, 1, u32> reverb_effect_1_dirty;
 
-        BitField<16, 1, u32_le> volume_0_dirty;
+        BitField<16, 1, u32> volume_0_dirty;
 
-        BitField<24, 1, u32_le> volume_1_dirty;
-        BitField<25, 1, u32_le> volume_2_dirty;
-        BitField<26, 1, u32_le> output_format_dirty;
-        BitField<27, 1, u32_le> limiter_enabled_dirty;
-        BitField<28, 1, u32_le> headphones_connected_dirty;
+        BitField<24, 1, u32> volume_1_dirty;
+        BitField<25, 1, u32> volume_2_dirty;
+        BitField<26, 1, u32> output_format_dirty;
+        BitField<27, 1, u32> limiter_enabled_dirty;
+        BitField<28, 1, u32> headphones_connected_dirty;
     };
 
     /// The DSP has three intermediate audio mixers. This controls the volume level (0.0-1.0) for
@@ -384,9 +384,9 @@ struct DspConfiguration {
         /// The DSP clears these each audio frame.
         union {
             u16_le dirty_raw;
-            BitField<0, 1, u16_le> enable_dirty;
-            BitField<1, 1, u16_le> work_buffer_address_dirty;
-            BitField<2, 1, u16_le> other_dirty; ///< Set when anything else has been changed
+            BitField<0, 1, u16> enable_dirty;
+            BitField<1, 1, u16> work_buffer_address_dirty;
+            BitField<2, 1, u16> other_dirty; ///< Set when anything else has been changed
         };
 
         u16_le enable;

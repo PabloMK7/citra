@@ -27,13 +27,13 @@ namespace Service::IR {
 union PadState {
     u32_le hex{};
 
-    BitField<14, 1, u32_le> zl;
-    BitField<15, 1, u32_le> zr;
+    BitField<14, 1, u32> zl;
+    BitField<15, 1, u32> zr;
 
-    BitField<24, 1, u32_le> c_stick_right;
-    BitField<25, 1, u32_le> c_stick_left;
-    BitField<26, 1, u32_le> c_stick_up;
-    BitField<27, 1, u32_le> c_stick_down;
+    BitField<24, 1, u32> c_stick_right;
+    BitField<25, 1, u32> c_stick_left;
+    BitField<26, 1, u32> c_stick_up;
+    BitField<27, 1, u32> c_stick_down;
 };
 
 /// Interface to "ir:rst" service

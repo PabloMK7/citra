@@ -231,8 +231,8 @@ private:
      */
     union SegmentTag {
         u32_le raw;
-        BitField<0, 4, u32_le> segment_index;
-        BitField<4, 28, u32_le> offset_into_segment;
+        BitField<0, 4, u32> segment_index;
+        BitField<4, 28, u32> offset_into_segment;
 
         SegmentTag() = default;
         explicit SegmentTag(u32 raw_) : raw(raw_) {}
@@ -270,8 +270,8 @@ private:
         u16_le test_bit; // bit address into the name to test
         union Child {
             u16_le raw;
-            BitField<0, 15, u16_le> next_index;
-            BitField<15, 1, u16_le> is_end;
+            BitField<0, 15, u16> next_index;
+            BitField<15, 1, u16> is_end;
         } left, right;
         u16_le export_table_index; // index of an ExportNamedSymbolEntry
 

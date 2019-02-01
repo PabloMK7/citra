@@ -19,9 +19,9 @@ namespace Service::IR {
 
 struct ExtraHIDResponse {
     union {
-        BitField<0, 8, u32_le> header;
-        BitField<8, 12, u32_le> c_stick_x;
-        BitField<20, 12, u32_le> c_stick_y;
+        BitField<0, 8, u32> header;
+        BitField<8, 12, u32> c_stick_x;
+        BitField<20, 12, u32> c_stick_y;
     } c_stick;
     union {
         BitField<0, 5, u8> battery_level;
