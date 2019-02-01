@@ -27,6 +27,10 @@ namespace Memory {
 class MemorySystem;
 }
 
+namespace Core {
+class Timing;
+}
+
 namespace Kernel {
 
 class AddressArbiter;
@@ -78,7 +82,7 @@ using SharedPtr = boost::intrusive_ptr<T>;
 
 class KernelSystem {
 public:
-    explicit KernelSystem(Memory::MemorySystem& memory, u32 system_mode);
+    explicit KernelSystem(Memory::MemorySystem& memory, Core::Timing& timing, u32 system_mode);
     ~KernelSystem();
 
     /**
@@ -228,6 +232,8 @@ public:
     std::unordered_map<std::string, SharedPtr<ClientPort>> named_ports;
 
     Memory::MemorySystem& memory;
+
+    Core::Timing& timing;
 
 private:
     void MemoryInit(u32 mem_type);

@@ -48,8 +48,7 @@ Thread* ThreadManager::GetCurrentThread() const {
 
 void Thread::Stop() {
     // Cancel any outstanding wakeup events for this thread
-    Core::System::GetInstance().CoreTiming().UnscheduleEvent(thread_manager.ThreadWakeupEventType,
-                                                             thread_id);
+    thread_manager.kernel.timing.UnscheduleEvent(thread_manager.ThreadWakeupEventType, thread_id);
     thread_manager.wakeup_callback_table.erase(thread_id);
 
     // Clean up thread from ready queue
@@ -81,7 +80,7 @@ void Thread::Stop() {
 void ThreadManager::SwitchContext(Thread* new_thread) {
     Thread* previous_thread = GetCurrentThread();
 
-    Core::Timing& timing = Core::System::GetInstance().CoreTiming();
+    Core::Timing& timing = kernel.timing;
 
     // Save context for previous thread
     if (previous_thread) {
@@ -186,8 +185,8 @@ void Thread::WakeAfterDelay(s64 nanoseconds) {
     if (nanoseconds == -1)
         return;
 
-    Core::System::GetInstance().CoreTiming().ScheduleEvent(
-        nsToCycles(nanoseconds), thread_manager.ThreadWakeupEventType, thread_id);
+    thread_manager.kernel.timing.ScheduleEvent(nsToCycles(nanoseconds),
+                                               thread_manager.ThreadWakeupEventType, thread_id);
 }
 
 void Thread::ResumeFromWait() {
@@ -320,7 +319,7 @@ ResultVal<SharedPtr<Thread>> KernelSystem::CreateThread(std::string name, VAddr 
     thread->entry_point = entry_point;
     thread->stack_top = stack_top;
     thread->nominal_priority = thread->current_priority = priority;
-    thread->last_running_ticks = Core::System::GetInstance().CoreTiming().GetTicks();
+    thread->last_running_ticks = timing.GetTicks();
     thread->processor_id = processor_id;
     thread->wait_objects.clear();
     thread->wait_address = 0;
@@ -462,9 +461,10 @@ VAddr Thread::GetCommandBufferAddress() const {
 }
 
 ThreadManager::ThreadManager(Kernel::KernelSystem& kernel) : kernel(kernel) {
-    ThreadWakeupEventType = Core::System::GetInstance().CoreTiming().RegisterEvent(
-        "ThreadWakeupCallback",
-        [this](u64 thread_id, s64 cycle_late) { ThreadWakeupCallback(thread_id, cycle_late); });
+    ThreadWakeupEventType =
+        kernel.timing.RegisterEvent("ThreadWakeupCallback", [this](u64 thread_id, s64 cycle_late) {
+            ThreadWakeupCallback(thread_id, cycle_late);
+        });
 }
 
 ThreadManager::~ThreadManager() {

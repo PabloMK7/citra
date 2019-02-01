@@ -23,7 +23,8 @@
 
 namespace Core {
 struct TimingEventType;
-}
+class Timing;
+} // namespace Core
 
 namespace SharedPage {
 
@@ -83,7 +84,7 @@ static_assert(sizeof(SharedPageDef) == Memory::SHARED_PAGE_SIZE,
 
 class Handler {
 public:
-    Handler();
+    Handler(Core::Timing& timing);
 
     void SetMacAddress(const MacAddress&);
 
@@ -98,6 +99,7 @@ public:
 private:
     u64 GetSystemTime() const;
     void UpdateTimeCallback(u64 userdata, int cycles_late);
+    Core::Timing& timing;
     Core::TimingEventType* update_time_event;
     std::chrono::seconds init_time;
 
