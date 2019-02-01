@@ -21,8 +21,8 @@ TestEnvironment::TestEnvironment(bool mutable_memory_)
     Core::System::GetInstance().timing = std::make_unique<Core::Timing>();
     Core::System::GetInstance().memory = std::make_unique<Memory::MemorySystem>();
     Memory::MemorySystem& memory = *Core::System::GetInstance().memory;
-    Core::System::GetInstance().kernel =
-        std::make_unique<Kernel::KernelSystem>(memory, *Core::System::GetInstance().timing, 0);
+    Core::System::GetInstance().kernel = std::make_unique<Kernel::KernelSystem>(
+        memory, *Core::System::GetInstance().timing, [] {}, 0);
     kernel = Core::System::GetInstance().kernel.get();
 
     kernel->SetCurrentProcess(kernel->CreateProcess(kernel->CreateCodeSet("", 0)));

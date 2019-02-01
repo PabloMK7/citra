@@ -6,6 +6,7 @@
 
 #include <array>
 #include <atomic>
+#include <functional>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -82,7 +83,8 @@ using SharedPtr = boost::intrusive_ptr<T>;
 
 class KernelSystem {
 public:
-    explicit KernelSystem(Memory::MemorySystem& memory, Core::Timing& timing, u32 system_mode);
+    explicit KernelSystem(Memory::MemorySystem& memory, Core::Timing& timing,
+                          std::function<void()> prepare_reschedule_callback, u32 system_mode);
     ~KernelSystem();
 
     /**
@@ -228,6 +230,10 @@ public:
     /// Adds a port to the named port table
     void AddNamedPort(std::string name, SharedPtr<ClientPort> port);
 
+    void PrepareReschedule() {
+        prepare_reschedule_callback();
+    }
+
     /// Map of named ports managed by the kernel, which can be retrieved using the ConnectToPort
     std::unordered_map<std::string, SharedPtr<ClientPort>> named_ports;
 
@@ -237,6 +243,8 @@ public:
 
 private:
     void MemoryInit(u32 mem_type);
+
+    std::function<void()> prepare_reschedule_callback;
 
     std::unique_ptr<ResourceLimitList> resource_limits;
     std::atomic<u32> next_object_id{0};

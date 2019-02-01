@@ -224,7 +224,7 @@ void Thread::ResumeFromWait() {
 
     thread_manager.ready_queue.push_back(current_priority, this);
     status = ThreadStatus::Ready;
-    Core::System::GetInstance().PrepareReschedule();
+    thread_manager.kernel.PrepareReschedule();
 }
 
 void ThreadManager::DebugThreadQueue() {

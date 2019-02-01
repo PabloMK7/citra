@@ -16,8 +16,10 @@
 namespace Kernel {
 
 /// Initialize the kernel
-KernelSystem::KernelSystem(Memory::MemorySystem& memory, Core::Timing& timing, u32 system_mode)
-    : memory(memory), timing(timing) {
+KernelSystem::KernelSystem(Memory::MemorySystem& memory, Core::Timing& timing,
+                           std::function<void()> prepare_reschedule_callback, u32 system_mode)
+    : memory(memory), timing(timing),
+      prepare_reschedule_callback(std::move(prepare_reschedule_callback)) {
     MemoryInit(system_mode);
 
     resource_limits = std::make_unique<ResourceLimitList>(*this);
