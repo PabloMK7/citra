@@ -21,6 +21,10 @@ namespace Service {
 class ServiceFrameworkBase;
 }
 
+namespace Memory {
+class MemorySystem;
+}
+
 namespace Kernel {
 
 class HandleTable;
@@ -28,6 +32,7 @@ class Process;
 class Thread;
 class Event;
 class HLERequestContext;
+class KernelSystem;
 
 /**
  * Interface implemented by HLE Session handlers.
@@ -93,7 +98,8 @@ protected:
 
 class MappedBuffer {
 public:
-    MappedBuffer(const Process& process, u32 descriptor, VAddr address, u32 id);
+    MappedBuffer(Memory::MemorySystem& memory, const Process& process, u32 descriptor,
+                 VAddr address, u32 id);
 
     // interface for service
     void Read(void* dest_buffer, std::size_t offset, std::size_t size);
@@ -113,6 +119,7 @@ public:
 
 private:
     friend class HLERequestContext;
+    Memory::MemorySystem* memory;
     u32 id;
     VAddr address;
     const Process* process;
@@ -151,7 +158,7 @@ private:
  */
 class HLERequestContext {
 public:
-    HLERequestContext(SharedPtr<ServerSession> session);
+    HLERequestContext(KernelSystem& kernel, SharedPtr<ServerSession> session);
     ~HLERequestContext();
 
     /// Returns a pointer to the IPC command buffer for this request.
@@ -228,6 +235,7 @@ public:
     ResultCode WriteToOutgoingCommandBuffer(u32_le* dst_cmdbuf, Process& dst_process) const;
 
 private:
+    KernelSystem& kernel;
     std::array<u32, IPC::COMMAND_BUFFER_LENGTH> cmd_buf;
     SharedPtr<ServerSession> session;
     // TODO(yuriks): Check common usage of this and optimize size accordingly

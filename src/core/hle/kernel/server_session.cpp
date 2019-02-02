@@ -71,7 +71,7 @@ ResultCode ServerSession::HandleSyncRequest(SharedPtr<Thread> thread) {
         kernel.memory.ReadBlock(*current_process, thread->GetCommandBufferAddress(), cmd_buf.data(),
                                 cmd_buf.size() * sizeof(u32));
 
-        Kernel::HLERequestContext context(this);
+        Kernel::HLERequestContext context(kernel, this);
         context.PopulateFromIncomingCommandBuffer(cmd_buf.data(), *current_process);
 
         hle_handler->HandleSyncRequest(context);

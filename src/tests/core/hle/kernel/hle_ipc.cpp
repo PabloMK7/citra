@@ -26,7 +26,7 @@ TEST_CASE("HLERequestContext::PopulateFromIncomingCommandBuffer", "[core][kernel
     auto memory = std::make_unique<Memory::MemorySystem>();
     Kernel::KernelSystem kernel(*memory, 0);
     auto session = std::get<SharedPtr<ServerSession>>(kernel.CreateSessionPair());
-    HLERequestContext context(std::move(session));
+    HLERequestContext context(kernel, std::move(session));
 
     auto process = kernel.CreateProcess(kernel.CreateCodeSet("", 0));
 
@@ -239,7 +239,7 @@ TEST_CASE("HLERequestContext::WriteToOutgoingCommandBuffer", "[core][kernel]") {
     auto memory = std::make_unique<Memory::MemorySystem>();
     Kernel::KernelSystem kernel(*memory, 0);
     auto session = std::get<SharedPtr<ServerSession>>(kernel.CreateSessionPair());
-    HLERequestContext context(std::move(session));
+    HLERequestContext context(kernel, std::move(session));
 
     auto process = kernel.CreateProcess(kernel.CreateCodeSet("", 0));
     auto* input = context.CommandBuffer();
