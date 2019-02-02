@@ -66,14 +66,13 @@ ResultCode ServerSession::HandleSyncRequest(SharedPtr<Thread> thread) {
 
     // If this ServerSession has an associated HLE handler, forward the request to it.
     if (hle_handler != nullptr) {
-        // TODO(wwylele): avoid GetPointer
-        u32* cmd_buf =
-            reinterpret_cast<u32*>(kernel.memory.GetPointer(thread->GetCommandBufferAddress()));
-
+        std::array<u32_le, IPC::COMMAND_BUFFER_LENGTH + 2 * IPC::MAX_STATIC_BUFFERS> cmd_buf;
         Kernel::Process* current_process = thread->owner_process;
+        kernel.memory.ReadBlock(*current_process, thread->GetCommandBufferAddress(), cmd_buf.data(),
+                                cmd_buf.size() * sizeof(u32));
 
         Kernel::HLERequestContext context(this);
-        context.PopulateFromIncomingCommandBuffer(cmd_buf, *current_process);
+        context.PopulateFromIncomingCommandBuffer(cmd_buf.data(), *current_process);
 
         hle_handler->HandleSyncRequest(context);
 
@@ -83,7 +82,9 @@ ResultCode ServerSession::HandleSyncRequest(SharedPtr<Thread> thread) {
         // put the thread to sleep then the writing of the command buffer will be deferred to the
         // wakeup callback.
         if (thread->status == Kernel::ThreadStatus::Running) {
-            context.WriteToOutgoingCommandBuffer(cmd_buf, *current_process);
+            context.WriteToOutgoingCommandBuffer(cmd_buf.data(), *current_process);
+            kernel.memory.WriteBlock(*current_process, thread->GetCommandBufferAddress(),
+                                     cmd_buf.data(), cmd_buf.size() * sizeof(u32));
         }
     }
 
