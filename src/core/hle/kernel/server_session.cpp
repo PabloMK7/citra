@@ -13,7 +13,7 @@
 
 namespace Kernel {
 
-ServerSession::ServerSession(KernelSystem& kernel) : WaitObject(kernel) {}
+ServerSession::ServerSession(KernelSystem& kernel) : WaitObject(kernel), kernel(kernel) {}
 ServerSession::~ServerSession() {
     // This destructor will be called automatically when the last ServerSession handle is closed by
     // the emulated application.
@@ -66,7 +66,25 @@ ResultCode ServerSession::HandleSyncRequest(SharedPtr<Thread> thread) {
 
     // If this ServerSession has an associated HLE handler, forward the request to it.
     if (hle_handler != nullptr) {
-        hle_handler->HandleSyncRequest(SharedPtr<ServerSession>(this));
+        // TODO(wwylele): avoid GetPointer
+        u32* cmd_buf =
+            reinterpret_cast<u32*>(kernel.memory.GetPointer(thread->GetCommandBufferAddress()));
+
+        Kernel::Process* current_process = thread->owner_process;
+
+        Kernel::HLERequestContext context(this);
+        context.PopulateFromIncomingCommandBuffer(cmd_buf, *current_process);
+
+        hle_handler->HandleSyncRequest(context);
+
+        ASSERT(thread->status == Kernel::ThreadStatus::Running ||
+               thread->status == Kernel::ThreadStatus::WaitHleEvent);
+        // Only write the response immediately if the thread is still running. If the HLE handler
+        // put the thread to sleep then the writing of the command buffer will be deferred to the
+        // wakeup callback.
+        if (thread->status == Kernel::ThreadStatus::Running) {
+            context.WriteToOutgoingCommandBuffer(cmd_buf, *current_process);
+        }
     }
 
     if (thread->status == ThreadStatus::Running) {

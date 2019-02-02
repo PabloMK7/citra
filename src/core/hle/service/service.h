@@ -61,7 +61,7 @@ public:
     /// Creates a port pair and registers it on the kernel's global port registry.
     void InstallAsNamedPort(Kernel::KernelSystem& kernel);
 
-    void HandleSyncRequest(Kernel::SharedPtr<Kernel::ServerSession> server_session) override;
+    void HandleSyncRequest(Kernel::HLERequestContext& context) override;
 
 protected:
     /// Member-function pointer type of SyncRequest handlers.

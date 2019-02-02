@@ -27,6 +27,7 @@ class HandleTable;
 class Process;
 class Thread;
 class Event;
+class HLERequestContext;
 
 /**
  * Interface implemented by HLE Session handlers.
@@ -39,13 +40,10 @@ public:
 
     /**
      * Handles a sync request from the emulated application.
-     * @param server_session The ServerSession that was triggered for this sync request,
-     * it should be used to differentiate which client (As in ClientSession) we're answering to.
-     * TODO(Subv): Use a wrapper structure to hold all the information relevant to
-     * this request (ServerSession, Originator thread, Translated command buffer, etc).
-     * @returns ResultCode the result code of the translate operation.
+     * @param context holds all the information relevant to his request (ServerSession, Translated
+     * command buffer, etc).
      */
-    virtual void HandleSyncRequest(SharedPtr<ServerSession> server_session) = 0;
+    virtual void HandleSyncRequest(Kernel::HLERequestContext& context) = 0;
 
     /**
      * Signals that a client has just connected to this HLE handler and keeps the

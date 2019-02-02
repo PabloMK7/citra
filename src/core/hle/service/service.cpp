@@ -169,39 +169,17 @@ void ServiceFrameworkBase::ReportUnimplementedFunction(u32* cmd_buf, const Funct
     cmd_buf[1] = 0;
 }
 
-void ServiceFrameworkBase::HandleSyncRequest(
-    Kernel::SharedPtr<Kernel::ServerSession> server_session) {
-    Kernel::KernelSystem& kernel = Core::System::GetInstance().Kernel();
-    auto thread = kernel.GetThreadManager().GetCurrentThread();
-    // TODO(wwylele): avoid GetPointer
-    u32* cmd_buf = reinterpret_cast<u32*>(
-        Core::System::GetInstance().Memory().GetPointer(thread->GetCommandBufferAddress()));
-
-    u32 header_code = cmd_buf[0];
+void ServiceFrameworkBase::HandleSyncRequest(Kernel::HLERequestContext& context) {
+    u32 header_code = context.CommandBuffer()[0];
     auto itr = handlers.find(header_code);
     const FunctionInfoBase* info = itr == handlers.end() ? nullptr : &itr->second;
     if (info == nullptr || info->handler_callback == nullptr) {
-        return ReportUnimplementedFunction(cmd_buf, info);
+        return ReportUnimplementedFunction(context.CommandBuffer(), info);
     }
 
-    Kernel::SharedPtr<Kernel::Process> current_process = kernel.GetCurrentProcess();
-
-    // TODO(yuriks): The kernel should be the one handling this as part of translation after
-    // everything else is migrated
-    Kernel::HLERequestContext context(std::move(server_session));
-    context.PopulateFromIncomingCommandBuffer(cmd_buf, *current_process);
-
-    LOG_TRACE(Service, "{}", MakeFunctionString(info->name, GetServiceName().c_str(), cmd_buf));
+    LOG_TRACE(Service, "{}",
+              MakeFunctionString(info->name, GetServiceName().c_str(), context.CommandBuffer()));
     handler_invoker(this, info->handler_callback, context);
-
-    ASSERT(thread->status == Kernel::ThreadStatus::Running ||
-           thread->status == Kernel::ThreadStatus::WaitHleEvent);
-    // Only write the response immediately if the thread is still running. If the HLE handler put
-    // the thread to sleep then the writing of the command buffer will be deferred to the wakeup
-    // callback.
-    if (thread->status == Kernel::ThreadStatus::Running) {
-        context.WriteToOutgoingCommandBuffer(cmd_buf, *current_process);
-    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
