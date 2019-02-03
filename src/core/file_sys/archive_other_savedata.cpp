@@ -64,7 +64,7 @@ ArchiveFactory_OtherSaveDataPermitted::ArchiveFactory_OtherSaveDataPermitted(
     : sd_savedata_source(std::move(sd_savedata)) {}
 
 ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_OtherSaveDataPermitted::Open(
-    const Path& path) {
+    const Path& path, u64 /*client_program_id*/) {
     MediaType media_type;
     u64 program_id;
     CASCADE_RESULT(std::tie(media_type, program_id), ParsePathPermitted(path));
@@ -78,13 +78,13 @@ ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_OtherSaveDataPermitted
 }
 
 ResultCode ArchiveFactory_OtherSaveDataPermitted::Format(
-    const Path& path, const FileSys::ArchiveFormatInfo& format_info) {
+    const Path& path, const FileSys::ArchiveFormatInfo& format_info, u64 program_id) {
     LOG_ERROR(Service_FS, "Attempted to format a OtherSaveDataPermitted archive.");
     return ERROR_INVALID_PATH;
 }
 
 ResultVal<ArchiveFormatInfo> ArchiveFactory_OtherSaveDataPermitted::GetFormatInfo(
-    const Path& path) const {
+    const Path& path, u64 /*client_program_id*/) const {
     MediaType media_type;
     u64 program_id;
     CASCADE_RESULT(std::tie(media_type, program_id), ParsePathPermitted(path));
@@ -102,7 +102,7 @@ ArchiveFactory_OtherSaveDataGeneral::ArchiveFactory_OtherSaveDataGeneral(
     : sd_savedata_source(std::move(sd_savedata)) {}
 
 ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_OtherSaveDataGeneral::Open(
-    const Path& path) {
+    const Path& path, u64 /*client_program_id*/) {
     MediaType media_type;
     u64 program_id;
     CASCADE_RESULT(std::tie(media_type, program_id), ParsePathGeneral(path));
@@ -116,7 +116,7 @@ ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_OtherSaveDataGeneral::
 }
 
 ResultCode ArchiveFactory_OtherSaveDataGeneral::Format(
-    const Path& path, const FileSys::ArchiveFormatInfo& format_info) {
+    const Path& path, const FileSys::ArchiveFormatInfo& format_info, u64 /*client_program_id*/) {
     MediaType media_type;
     u64 program_id;
     CASCADE_RESULT(std::tie(media_type, program_id), ParsePathGeneral(path));
@@ -130,7 +130,7 @@ ResultCode ArchiveFactory_OtherSaveDataGeneral::Format(
 }
 
 ResultVal<ArchiveFormatInfo> ArchiveFactory_OtherSaveDataGeneral::GetFormatInfo(
-    const Path& path) const {
+    const Path& path, u64 /*client_program_id*/) const {
     MediaType media_type;
     u64 program_id;
     CASCADE_RESULT(std::tie(media_type, program_id), ParsePathGeneral(path));

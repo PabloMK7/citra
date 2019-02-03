@@ -376,18 +376,21 @@ bool ArchiveFactory_SDMC::Initialize() {
     return true;
 }
 
-ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_SDMC::Open(const Path& path) {
+ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_SDMC::Open(const Path& path,
+                                                                     u64 program_id) {
     auto archive = std::make_unique<SDMCArchive>(sdmc_directory);
     return MakeResult<std::unique_ptr<ArchiveBackend>>(std::move(archive));
 }
 
 ResultCode ArchiveFactory_SDMC::Format(const Path& path,
-                                       const FileSys::ArchiveFormatInfo& format_info) {
+                                       const FileSys::ArchiveFormatInfo& format_info,
+                                       u64 program_id) {
     // This is kind of an undesirable operation, so let's just ignore it. :)
     return RESULT_SUCCESS;
 }
 
-ResultVal<ArchiveFormatInfo> ArchiveFactory_SDMC::GetFormatInfo(const Path& path) const {
+ResultVal<ArchiveFormatInfo> ArchiveFactory_SDMC::GetFormatInfo(const Path& path,
+                                                                u64 program_id) const {
     // TODO(Subv): Implement
     LOG_ERROR(Service_FS, "Unimplemented GetFormatInfo archive {}", GetName());
     return ResultCode(-1);

@@ -55,9 +55,10 @@ public:
         return "SDMC";
     }
 
-    ResultVal<std::unique_ptr<ArchiveBackend>> Open(const Path& path) override;
-    ResultCode Format(const Path& path, const FileSys::ArchiveFormatInfo& format_info) override;
-    ResultVal<ArchiveFormatInfo> GetFormatInfo(const Path& path) const override;
+    ResultVal<std::unique_ptr<ArchiveBackend>> Open(const Path& path, u64 program_id) override;
+    ResultCode Format(const Path& path, const FileSys::ArchiveFormatInfo& format_info,
+                      u64 program_id) override;
+    ResultVal<ArchiveFormatInfo> GetFormatInfo(const Path& path, u64 program_id) const override;
 
 private:
     std::string sdmc_directory;

@@ -52,7 +52,8 @@ Path ConstructSystemSaveDataBinaryPath(u32 high, u32 low) {
 ArchiveFactory_SystemSaveData::ArchiveFactory_SystemSaveData(const std::string& nand_path)
     : base_path(GetSystemSaveDataContainerPath(nand_path)) {}
 
-ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_SystemSaveData::Open(const Path& path) {
+ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_SystemSaveData::Open(const Path& path,
+                                                                               u64 program_id) {
     std::string fullpath = GetSystemSaveDataPath(base_path, path);
     if (!FileUtil::Exists(fullpath)) {
         // TODO(Subv): Check error code, this one is probably wrong
@@ -63,14 +64,16 @@ ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_SystemSaveData::Open(c
 }
 
 ResultCode ArchiveFactory_SystemSaveData::Format(const Path& path,
-                                                 const FileSys::ArchiveFormatInfo& format_info) {
+                                                 const FileSys::ArchiveFormatInfo& format_info,
+                                                 u64 program_id) {
     std::string fullpath = GetSystemSaveDataPath(base_path, path);
     FileUtil::DeleteDirRecursively(fullpath);
     FileUtil::CreateFullPath(fullpath);
     return RESULT_SUCCESS;
 }
 
-ResultVal<ArchiveFormatInfo> ArchiveFactory_SystemSaveData::GetFormatInfo(const Path& path) const {
+ResultVal<ArchiveFormatInfo> ArchiveFactory_SystemSaveData::GetFormatInfo(const Path& path,
+                                                                          u64 program_id) const {
     // TODO(Subv): Implement
     LOG_ERROR(Service_FS, "Unimplemented GetFormatInfo archive {}", GetName());
     return ResultCode(-1);

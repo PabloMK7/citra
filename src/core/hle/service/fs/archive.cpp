@@ -36,7 +36,7 @@ ArchiveBackend* ArchiveManager::GetArchive(ArchiveHandle handle) {
 }
 
 ResultVal<ArchiveHandle> ArchiveManager::OpenArchive(ArchiveIdCode id_code,
-                                                     FileSys::Path& archive_path) {
+                                                     FileSys::Path& archive_path, u64 program_id) {
     LOG_TRACE(Service_FS, "Opening archive with id code 0x{:08X}", static_cast<u32>(id_code));
 
     auto itr = id_code_map.find(id_code);
@@ -44,7 +44,8 @@ ResultVal<ArchiveHandle> ArchiveManager::OpenArchive(ArchiveIdCode id_code,
         return FileSys::ERROR_NOT_FOUND;
     }
 
-    CASCADE_RESULT(std::unique_ptr<ArchiveBackend> res, itr->second->Open(archive_path));
+    CASCADE_RESULT(std::unique_ptr<ArchiveBackend> res,
+                   itr->second->Open(archive_path, program_id));
 
     // This should never even happen in the first place with 64-bit handles,
     while (handle_map.count(next_handle) != 0) {
@@ -193,28 +194,29 @@ ResultVal<u64> ArchiveManager::GetFreeBytesInArchive(ArchiveHandle archive_handl
 
 ResultCode ArchiveManager::FormatArchive(ArchiveIdCode id_code,
                                          const FileSys::ArchiveFormatInfo& format_info,
-                                         const FileSys::Path& path) {
+                                         const FileSys::Path& path, u64 program_id) {
     auto archive_itr = id_code_map.find(id_code);
     if (archive_itr == id_code_map.end()) {
         return UnimplementedFunction(ErrorModule::FS); // TODO(Subv): Find the right error
     }
 
-    return archive_itr->second->Format(path, format_info);
+    return archive_itr->second->Format(path, format_info, program_id);
 }
 
 ResultVal<FileSys::ArchiveFormatInfo> ArchiveManager::GetArchiveFormatInfo(
-    ArchiveIdCode id_code, FileSys::Path& archive_path) {
+    ArchiveIdCode id_code, FileSys::Path& archive_path, u64 program_id) {
     auto archive = id_code_map.find(id_code);
     if (archive == id_code_map.end()) {
         return UnimplementedFunction(ErrorModule::FS); // TODO(Subv): Find the right error
     }
 
-    return archive->second->GetFormatInfo(archive_path);
+    return archive->second->GetFormatInfo(archive_path, program_id);
 }
 
 ResultCode ArchiveManager::CreateExtSaveData(MediaType media_type, u32 high, u32 low,
                                              const std::vector<u8>& smdh_icon,
-                                             const FileSys::ArchiveFormatInfo& format_info) {
+                                             const FileSys::ArchiveFormatInfo& format_info,
+                                             u64 program_id) {
     // Construct the binary path to the archive first
     FileSys::Path path =
         FileSys::ConstructExtDataBinaryPath(static_cast<u32>(media_type), high, low);
@@ -228,7 +230,7 @@ ResultCode ArchiveManager::CreateExtSaveData(MediaType media_type, u32 high, u32
 
     auto ext_savedata = static_cast<FileSys::ArchiveFactory_ExtSaveData*>(archive->second.get());
 
-    ResultCode result = ext_savedata->Format(path, format_info);
+    ResultCode result = ext_savedata->Format(path, format_info, program_id);
     if (result.IsError())
         return result;
 

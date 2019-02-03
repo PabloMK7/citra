@@ -15,7 +15,16 @@ namespace Service::FS {
 
 class ArchiveManager;
 
-class FS_USER final : public ServiceFramework<FS_USER> {
+struct ClientSlot : public Kernel::SessionRequestHandler::SessionDataBase {
+    // We retrieves program ID for client process on FS::Initialize(WithSDKVersion)
+    // Real 3DS matches program ID and process ID based on data registered by loader via fs:REG, so
+    // theoretically the program ID for FS client and for process codeset can mismatch if the loader
+    // behaviour is modified. Since we don't emulate fs:REG mechanism, we assume the program ID is
+    // the same as codeset ID and fetch from there directly.
+    u64 program_id = 0;
+};
+
+class FS_USER final : public ServiceFramework<FS_USER, ClientSlot> {
 public:
     explicit FS_USER(Core::System& system);
 

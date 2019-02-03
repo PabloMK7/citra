@@ -220,7 +220,8 @@ Path ArchiveFactory_ExtSaveData::GetCorrectedPath(const Path& path) {
     return {binary_data};
 }
 
-ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_ExtSaveData::Open(const Path& path) {
+ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_ExtSaveData::Open(const Path& path,
+                                                                            u64 program_id) {
     std::string fullpath = GetExtSaveDataPath(mount_point, GetCorrectedPath(path)) + "user/";
     if (!FileUtil::Exists(fullpath)) {
         // TODO(Subv): Verify the archive behavior of SharedExtSaveData compared to ExtSaveData.
@@ -236,7 +237,8 @@ ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_ExtSaveData::Open(cons
 }
 
 ResultCode ArchiveFactory_ExtSaveData::Format(const Path& path,
-                                              const FileSys::ArchiveFormatInfo& format_info) {
+                                              const FileSys::ArchiveFormatInfo& format_info,
+                                              u64 program_id) {
     auto corrected_path = GetCorrectedPath(path);
 
     // These folders are always created with the ExtSaveData
@@ -258,7 +260,8 @@ ResultCode ArchiveFactory_ExtSaveData::Format(const Path& path,
     return RESULT_SUCCESS;
 }
 
-ResultVal<ArchiveFormatInfo> ArchiveFactory_ExtSaveData::GetFormatInfo(const Path& path) const {
+ResultVal<ArchiveFormatInfo> ArchiveFactory_ExtSaveData::GetFormatInfo(const Path& path,
+                                                                       u64 program_id) const {
     std::string metadata_path = GetExtSaveDataPath(mount_point, path) + "metadata";
     FileUtil::IOFile file(metadata_path, "rb");
 

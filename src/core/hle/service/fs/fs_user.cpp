@@ -35,7 +35,10 @@ namespace Service::FS {
 
 void FS_USER::Initialize(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x0801, 0, 2);
-    rp.PopPID();
+    u32 pid = rp.PopPID();
+
+    ClientSlot* slot = GetSessionData(ctx.Session());
+    slot->program_id = system.Kernel().GetProcessById(pid)->codeset->program_id;
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);
@@ -93,7 +96,10 @@ void FS_USER::OpenFileDirectly(Kernel::HLERequestContext& ctx) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
 
-    ResultVal<ArchiveHandle> archive_handle = archives.OpenArchive(archive_id, archive_path);
+    ClientSlot* slot = GetSessionData(ctx.Session());
+
+    ResultVal<ArchiveHandle> archive_handle =
+        archives.OpenArchive(archive_id, archive_path, slot->program_id);
     if (archive_handle.Failed()) {
         LOG_ERROR(Service_FS,
                   "Failed to get a handle for archive archive_id=0x{:08X} archive_path={}",
@@ -309,7 +315,9 @@ void FS_USER::OpenArchive(Kernel::HLERequestContext& ctx) {
               archive_path.DebugStr());
 
     IPC::RequestBuilder rb = rp.MakeBuilder(3, 0);
-    ResultVal<ArchiveHandle> handle = archives.OpenArchive(archive_id, archive_path);
+    ClientSlot* slot = GetSessionData(ctx.Session());
+    ResultVal<ArchiveHandle> handle =
+        archives.OpenArchive(archive_id, archive_path, slot->program_id);
     rb.Push(handle.Code());
     if (handle.Succeeded()) {
         rb.PushRaw(*handle);
@@ -385,7 +393,9 @@ void FS_USER::FormatSaveData(Kernel::HLERequestContext& ctx) {
     format_info.number_files = number_files;
     format_info.total_size = block_size * 512;
 
-    rb.Push(archives.FormatArchive(ArchiveIdCode::SaveData, format_info));
+    ClientSlot* slot = GetSessionData(ctx.Session());
+    rb.Push(archives.FormatArchive(ArchiveIdCode::SaveData, format_info, archive_path,
+                                   slot->program_id));
 }
 
 void FS_USER::FormatThisUserSaveData(Kernel::HLERequestContext& ctx) {
@@ -404,7 +414,9 @@ void FS_USER::FormatThisUserSaveData(Kernel::HLERequestContext& ctx) {
     format_info.total_size = block_size * 512;
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(archives.FormatArchive(ArchiveIdCode::SaveData, format_info));
+    ClientSlot* slot = GetSessionData(ctx.Session());
+    rb.Push(archives.FormatArchive(ArchiveIdCode::SaveData, format_info, FileSys::Path(),
+                                   slot->program_id));
 
     LOG_TRACE(Service_FS, "called");
 }
@@ -446,7 +458,9 @@ void FS_USER::CreateExtSaveData(Kernel::HLERequestContext& ctx) {
     format_info.total_size = 0;
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
-    rb.Push(archives.CreateExtSaveData(media_type, save_high, save_low, icon, format_info));
+    ClientSlot* slot = GetSessionData(ctx.Session());
+    rb.Push(archives.CreateExtSaveData(media_type, save_high, save_low, icon, format_info,
+                                       slot->program_id));
     rb.PushMappedBuffer(icon_buffer);
 
     LOG_DEBUG(Service_FS,
@@ -535,7 +549,10 @@ void FS_USER::CreateLegacySystemSaveData(Kernel::HLERequestContext& ctx) {
 void FS_USER::InitializeWithSdkVersion(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x861, 1, 2);
     const u32 version = rp.Pop<u32>();
-    rp.PopPID();
+    u32 pid = rp.PopPID();
+
+    ClientSlot* slot = GetSessionData(ctx.Session());
+    slot->program_id = system.Kernel().GetProcessById(pid)->codeset->program_id;
 
     LOG_WARNING(Service_FS, "(STUBBED) called, version: 0x{:08X}", version);
 
@@ -595,8 +612,8 @@ void FS_USER::GetFormatInfo(Kernel::HLERequestContext& ctx) {
     LOG_DEBUG(Service_FS, "archive_path={}", archive_path.DebugStr());
 
     IPC::RequestBuilder rb = rp.MakeBuilder(5, 0);
-
-    auto format_info = archives.GetArchiveFormatInfo(archive_id, archive_path);
+    ClientSlot* slot = GetSessionData(ctx.Session());
+    auto format_info = archives.GetArchiveFormatInfo(archive_id, archive_path, slot->program_id);
     rb.Push(format_info.Code());
     if (format_info.Failed()) {
         LOG_ERROR(Service_FS, "Failed to retrieve the format info");
@@ -664,7 +681,9 @@ void FS_USER::ObsoletedCreateExtSaveData(Kernel::HLERequestContext& ctx) {
     format_info.total_size = 0;
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
-    rb.Push(archives.CreateExtSaveData(media_type, save_high, save_low, icon, format_info));
+    ClientSlot* slot = GetSessionData(ctx.Session());
+    rb.Push(archives.CreateExtSaveData(media_type, save_high, save_low, icon, format_info,
+                                       slot->program_id));
     rb.PushMappedBuffer(icon_buffer);
 
     LOG_DEBUG(Service_FS,

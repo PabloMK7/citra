@@ -167,24 +167,28 @@ public:
     /**
      * Tries to open the archive of this type with the specified path
      * @param path Path to the archive
+     * @param program_id the program ID of the client that requests the operation
      * @return An ArchiveBackend corresponding operating specified archive path.
      */
-    virtual ResultVal<std::unique_ptr<ArchiveBackend>> Open(const Path& path) = 0;
+    virtual ResultVal<std::unique_ptr<ArchiveBackend>> Open(const Path& path, u64 program_id) = 0;
 
     /**
      * Deletes the archive contents and then re-creates the base folder
      * @param path Path to the archive
      * @param format_info Format information for the new archive
+     * @param program_id the program ID of the client that requests the operation
      * @return ResultCode of the operation, 0 on success
      */
-    virtual ResultCode Format(const Path& path, const FileSys::ArchiveFormatInfo& format_info) = 0;
+    virtual ResultCode Format(const Path& path, const FileSys::ArchiveFormatInfo& format_info,
+                              u64 program_id) = 0;
 
     /**
      * Retrieves the format info about the archive with the specified path
      * @param path Path to the archive
+     * @param program_id the program ID of the client that requests the operation
      * @return Format information about the archive or error code
      */
-    virtual ResultVal<ArchiveFormatInfo> GetFormatInfo(const Path& path) const = 0;
+    virtual ResultVal<ArchiveFormatInfo> GetFormatInfo(const Path& path, u64 program_id) const = 0;
 };
 
 } // namespace FileSys

@@ -60,9 +60,11 @@ public:
      * Opens an archive
      * @param id_code IdCode of the archive to open
      * @param archive_path Path to the archive, used with Binary paths
+     * @param program_id the program ID of the client that requests the operation
      * @return Handle to the opened archive
      */
-    ResultVal<ArchiveHandle> OpenArchive(ArchiveIdCode id_code, FileSys::Path& archive_path);
+    ResultVal<ArchiveHandle> OpenArchive(ArchiveIdCode id_code, FileSys::Path& archive_path,
+                                         u64 program_id);
 
     /**
      * Closes an archive
@@ -172,20 +174,23 @@ public:
      * @param id_code The id of the archive to format
      * @param format_info Format information about the new archive
      * @param path The path to the archive, if relevant.
+     * @param program_id the program ID of the client that requests the operation
      * @return ResultCode 0 on success or the corresponding code on error
      */
     ResultCode FormatArchive(ArchiveIdCode id_code, const FileSys::ArchiveFormatInfo& format_info,
-                             const FileSys::Path& path = FileSys::Path());
+                             const FileSys::Path& path, u64 program_id);
 
     /**
      * Retrieves the format info about the archive of the specified type and path.
      * The format info is supplied by the client code when creating archives.
      * @param id_code The id of the archive
      * @param archive_path The path of the archive, if relevant
+     * @param program_id the program ID of the client that requests the operation
      * @return The format info of the archive, or the corresponding error code if failed.
      */
     ResultVal<FileSys::ArchiveFormatInfo> GetArchiveFormatInfo(ArchiveIdCode id_code,
-                                                               FileSys::Path& archive_path);
+                                                               FileSys::Path& archive_path,
+                                                               u64 program_id);
 
     /**
      * Creates a blank SharedExtSaveData archive for the specified extdata ID
@@ -194,11 +199,12 @@ public:
      * @param low The low word of the extdata id to create
      * @param smdh_icon the SMDH icon for this ExtSaveData
      * @param format_info Format information about the new archive
+     * @param program_id the program ID of the client that requests the operation
      * @return ResultCode 0 on success or the corresponding code on error
      */
     ResultCode CreateExtSaveData(MediaType media_type, u32 high, u32 low,
                                  const std::vector<u8>& smdh_icon,
-                                 const FileSys::ArchiveFormatInfo& format_info);
+                                 const FileSys::ArchiveFormatInfo& format_info, u64 program_id);
 
     /**
      * Deletes the SharedExtSaveData archive for the specified extdata ID
