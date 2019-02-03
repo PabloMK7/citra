@@ -118,7 +118,6 @@ struct PicaFSConfigState {
 
     bool shadow_rendering;
     bool shadow_texture_orthographic;
-    u32 shadow_texture_bias;
 };
 
 /**
