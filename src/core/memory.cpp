@@ -67,6 +67,7 @@ public:
     std::vector<PageTable*> page_table_list;
 
     ARM_Interface* cpu = nullptr;
+    AudioCore::DspInterface* dsp = nullptr;
 };
 
 MemorySystem::MemorySystem() : impl(std::make_unique<Impl>()) {}
@@ -325,7 +326,7 @@ u8* MemorySystem::GetPhysicalPointer(PAddr address) {
         target_pointer = impl->vram.get() + offset_into_region;
         break;
     case DSP_RAM_PADDR:
-        target_pointer = Core::DSP().GetDspMemory().data() + offset_into_region;
+        target_pointer = impl->dsp->GetDspMemory().data() + offset_into_region;
         break;
     case FCRAM_PADDR:
         target_pointer = impl->fcram.get() + offset_into_region;
@@ -806,6 +807,10 @@ u32 MemorySystem::GetFCRAMOffset(u8* pointer) {
 u8* MemorySystem::GetFCRAMPointer(u32 offset) {
     ASSERT(offset <= Memory::FCRAM_N3DS_SIZE);
     return impl->fcram.get() + offset;
+}
+
+void MemorySystem::SetDSP(AudioCore::DspInterface& dsp) {
+    impl->dsp = &dsp;
 }
 
 } // namespace Memory
