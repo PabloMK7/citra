@@ -31,6 +31,29 @@ struct MFRelease {
 template <typename T>
 using unique_mfptr = std::unique_ptr<T, MFRelease<T>>;
 
+template <typename SmartPtr, typename RawPtr>
+class AmpImpl {
+public:
+    AmpImpl(SmartPtr& smart_ptr) : smart_ptr(smart_ptr) {}
+    ~AmpImpl() {
+        smart_ptr.reset(raw_ptr);
+    }
+
+    operator RawPtr*() {
+        return &raw_ptr;
+    }
+
+private:
+    SmartPtr& smart_ptr;
+    RawPtr raw_ptr;
+};
+
+template <typename SmartPtr>
+auto Amp(SmartPtr& smart_ptr) {
+    return AmpImpl<SmartPtr, decltype(smart_ptr.get())>(smart_ptr);
+}
+
+// convient function for formatting error messages
 void ReportError(std::string msg, HRESULT hr);
 
 // exported functions

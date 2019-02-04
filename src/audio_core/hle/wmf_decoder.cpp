@@ -70,15 +70,13 @@ std::optional<BinaryResponse> WMFDecoder::Impl::Initalize(const BinaryRequest& r
     }
 
     BinaryResponse response;
-    IMFTransform* tmp = nullptr;
     std::memcpy(&response, &request, sizeof(response));
     response.unknown1 = 0x0;
 
-    if (!MFDecoderInit(&tmp)) {
+    if (!MFDecoderInit(Amp(transform))) {
         LOG_CRITICAL(Audio_DSP, "Can't init decoder");
         return response;
     }
-    transform.reset(tmp);
 
     HRESULT hr = transform->GetStreamIDs(1, &in_stream_id, 1, &out_stream_id);
     if (hr == E_NOTIMPL) {
@@ -108,9 +106,6 @@ MFOutputState WMFDecoder::Impl::DecodingLoop(ADTSData adts_header,
     MFOutputState output_status = MFOutputState::OK;
     char* output_buffer = nullptr;
     DWORD output_len = 0;
-    DWORD tmp = 0;
-    // IMFSample* output_tmp = nullptr;
-    IMFMediaBuffer* mdbuf = nullptr;
     unique_mfptr<IMFSample> output;
 
     while (true) {
@@ -150,7 +145,8 @@ MFOutputState WMFDecoder::Impl::DecodingLoop(ADTSData adts_header,
         if (output_status == MFOutputState::HaveMoreData)
             continue;
 
-        if (output_status == MFOutputState::NeedMoreInput) // according to MS document, this is not an error (?!)
+        // according to MS document, this is not an error (?!)
+        if (output_status == MFOutputState::NeedMoreInput)
             return MFOutputState::NeedMoreInput;
 
         return MFOutputState::FatalError; // return on other status
