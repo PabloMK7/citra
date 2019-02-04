@@ -250,10 +250,10 @@ MFInputState SendSample(IMFTransform* transform, DWORD in_stream_id, IMFSample* 
     if (in_sample) {
         hr = transform->ProcessInput(in_stream_id, in_sample, 0);
         if (hr == MF_E_NOTACCEPTING) {
-            return NOT_ACCEPTED; // try again
+            return MFInputState::NotAccepted; // try again
         } else if (FAILED(hr)) {
             ReportError("MFT: Failed to process input", hr);
-            return INPUT_ERROR;
+            return MFInputState::FatalError;
         } // FAILED(hr)
     } else {
         hr = transform->ProcessMessage(MFT_MESSAGE_COMMAND_DRAIN, 0);
@@ -262,7 +262,7 @@ MFInputState SendSample(IMFTransform* transform, DWORD in_stream_id, IMFSample* 
         }
     }
 
-    return INPUT_OK;
+    return MFInputState::OK;
 }
 
 std::tuple<MFOutputState, unique_mfptr<IMFSample>> ReceiveSample(IMFTransform* transform,
@@ -278,7 +278,7 @@ std::tuple<MFOutputState, unique_mfptr<IMFSample>> ReceiveSample(IMFTransform* t
 
     if (FAILED(hr)) {
         ReportError("MFT: Failed to get stream info", hr);
-        return std::make_tuple(FATAL_ERROR, std::move(sample));
+        return std::make_tuple(MFOutputState::FatalError, std::move(sample));
     }
     mft_create_sample = (out_info.dwFlags & MFT_OUTPUT_STREAM_PROVIDES_SAMPLES) ||
                         (out_info.dwFlags & MFT_OUTPUT_STREAM_CAN_PROVIDE_SAMPLES);
@@ -290,7 +290,7 @@ std::tuple<MFOutputState, unique_mfptr<IMFSample>> ReceiveSample(IMFTransform* t
             sample = CreateSample(nullptr, out_info.cbSize, out_info.cbAlignment);
             if (!sample.get()) {
                 ReportError("MFT: Unable to allocate memory for samples", hr);
-                return std::make_tuple(FATAL_ERROR, std::move(sample));
+                return std::make_tuple(MFOutputState::FatalError, std::move(sample));
             }
         }
 
@@ -305,12 +305,12 @@ std::tuple<MFOutputState, unique_mfptr<IMFSample>> ReceiveSample(IMFTransform* t
 
         if (hr == MF_E_TRANSFORM_NEED_MORE_INPUT) {
             // Most likely reasons: data corrupted; your actions not expected by MFT
-            return std::make_tuple(NEED_MORE_INPUT, std::move(sample));
+            return std::make_tuple(MFOutputState::NeedMoreInput, std::move(sample));
         }
 
         if (hr == MF_E_TRANSFORM_STREAM_CHANGE) {
             ReportError("MFT: stream format changed, re-configuration required", hr);
-            return std::make_tuple(NEED_RECONFIG, std::move(sample));
+            return std::make_tuple(MFOutputState::NeedReconfig, std::move(sample));
         }
 
         break;
@@ -318,15 +318,15 @@ std::tuple<MFOutputState, unique_mfptr<IMFSample>> ReceiveSample(IMFTransform* t
 
     if (out_buffers.dwStatus & MFT_OUTPUT_DATA_BUFFER_INCOMPLETE) {
         // this status is also unreliable but whatever
-        return std::make_tuple(HAVE_MORE_DATA, std::move(sample));
+        return std::make_tuple(MFOutputState::HaveMoreData, std::move(sample));
     }
 
     if (out_buffers.pSample == nullptr) {
         ReportError("MFT: decoding failure", hr);
-        return std::make_tuple(FATAL_ERROR, std::move(sample));
+        return std::make_tuple(MFOutputState::FatalError, std::move(sample));
     }
 
-    return std::make_tuple(OK, std::move(sample));
+    return std::make_tuple(MFOutputState::OK, std::move(sample));
 }
 
 int CopySampleToBuffer(IMFSample* sample, void** output, DWORD* len) {

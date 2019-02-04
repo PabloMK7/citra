@@ -6,7 +6,6 @@
 // AAC decoder related APIs are only available with WIN7+
 #define WINVER _WIN32_WINNT_WIN7
 
-#include <iostream>
 #include <string>
 #include <tuple>
 #include <comdef.h>
@@ -17,10 +16,10 @@
 
 #include "adts.h"
 
-enum MFOutputState { FATAL_ERROR, OK, NEED_MORE_INPUT, NEED_RECONFIG, HAVE_MORE_DATA };
-enum MFInputState { INPUT_ERROR, INPUT_OK, NOT_ACCEPTED };
+enum class MFOutputState { FatalError, OK, NeedMoreInput, NeedReconfig, HaveMoreData };
+enum class MFInputState { FatalError, OK, NotAccepted };
 
-// utility functions
+// utility functions / templates
 template <class T>
 struct MFRelease {
     void operator()(T* pointer) const {
@@ -28,6 +27,7 @@ struct MFRelease {
     };
 };
 
+// wrapper facilities for dealing with pointers
 template <typename T>
 using unique_mfptr = std::unique_ptr<T, MFRelease<T>>;
 

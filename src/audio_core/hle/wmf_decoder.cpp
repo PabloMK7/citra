@@ -105,7 +105,7 @@ void WMFDecoder::Impl::Clear() {
 
 MFOutputState WMFDecoder::Impl::DecodingLoop(ADTSData adts_header,
                                              std::array<std::vector<u8>, 2>& out_streams) {
-    MFOutputState output_status = OK;
+    MFOutputState output_status = MFOutputState::OK;
     char* output_buffer = nullptr;
     DWORD output_len = 0;
     DWORD tmp = 0;
@@ -117,7 +117,7 @@ MFOutputState WMFDecoder::Impl::DecodingLoop(ADTSData adts_header,
         auto [output_status, output] = ReceiveSample(transform.get(), out_stream_id);
 
         // 0 -> okay; 3 -> okay but more data available (buffer too small)
-        if (output_status == OK || output_status == HAVE_MORE_DATA) {
+        if (output_status == MFOutputState::OK || output_status == MFOutputState::HaveMoreData) {
             CopySampleToBuffer(output.get(), (void**)&output_buffer, &output_len);
 
             // the following was taken from ffmpeg version of the decoder
@@ -137,26 +137,26 @@ MFOutputState WMFDecoder::Impl::DecodingLoop(ADTSData adts_header,
         }
 
         // in case of "ok" only, just return quickly
-        if (output_status == OK)
-            return OK;
+        if (output_status == MFOutputState::OK)
+            return MFOutputState::OK;
 
         // for status = 2, reset MF
-        if (output_status == NEED_RECONFIG) {
+        if (output_status == MFOutputState::NeedReconfig) {
             Clear();
-            return FATAL_ERROR;
+            return MFOutputState::FatalError;
         }
 
         // for status = 3, try again with new buffer
-        if (output_status == HAVE_MORE_DATA)
+        if (output_status == MFOutputState::HaveMoreData)
             continue;
 
-        if (output_status == NEED_MORE_INPUT) // according to MS document, this is not an error (?!)
-            return NEED_MORE_INPUT;
+        if (output_status == MFOutputState::NeedMoreInput) // according to MS document, this is not an error (?!)
+            return MFOutputState::NeedMoreInput;
 
-        return FATAL_ERROR; // return on other status
+        return MFOutputState::FatalError; // return on other status
     }
 
-    return FATAL_ERROR;
+    return MFOutputState::FatalError;
 }
 
 std::optional<BinaryResponse> WMFDecoder::Impl::Decode(const BinaryRequest& request) {
@@ -184,7 +184,7 @@ std::optional<BinaryResponse> WMFDecoder::Impl::Decode(const BinaryRequest& requ
     unique_mfptr<IMFSample> sample;
     ADTSData adts_header;
     char* aac_tag = (char*)calloc(1, 14);
-    MFInputState input_status = INPUT_OK;
+    MFInputState input_status = MFInputState::OK;
 
     if (DetectMediaType((char*)data, request.size, &adts_header, &aac_tag) != 0) {
         LOG_ERROR(Audio_DSP, "Unable to deduce decoding parameters from ADTS stream");
@@ -211,11 +211,11 @@ std::optional<BinaryResponse> WMFDecoder::Impl::Decode(const BinaryRequest& requ
     while (true) {
         input_status = SendSample(transform.get(), in_stream_id, sample.get());
 
-        if (DecodingLoop(adts_header, out_streams) == FATAL_ERROR) {
+        if (DecodingLoop(adts_header, out_streams) == MFOutputState::FatalError) {
             // if the decode issues are caused by MFT not accepting new samples, try again
             // NOTICE: you are required to check the output even if you already knew/guessed
             // MFT didn't accept the input sample
-            if (input_status == NOT_ACCEPTED) {
+            if (input_status == MFInputState::NotAccepted) {
                 // try again
                 continue;
             }
