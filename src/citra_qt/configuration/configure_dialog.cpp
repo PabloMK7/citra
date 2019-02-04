@@ -10,18 +10,27 @@
 #include "core/settings.h"
 #include "ui_configure.h"
 
-ConfigureDialog::ConfigureDialog(QWidget* parent, const HotkeyRegistry& registry)
-    : QDialog(parent), ui(new Ui::ConfigureDialog) {
+ConfigureDialog::ConfigureDialog(QWidget* parent, HotkeyRegistry& registry)
+    : QDialog(parent), registry(registry), ui(new Ui::ConfigureDialog) {
     ui->setupUi(this);
-    ui->generalTab->PopulateHotkeyList(registry);
+    ui->hotkeysTab->Populate(registry);
+
     this->PopulateSelectionList();
     connect(ui->uiTab, &ConfigureUi::languageChanged, this, &ConfigureDialog::onLanguageChanged);
     connect(ui->selectorList, &QListWidget::itemSelectionChanged, this,
             &ConfigureDialog::UpdateVisibleTabs);
-
     adjustSize();
-
     ui->selectorList->setCurrentRow(0);
+
+    // Set up used key list synchronisation
+    connect(ui->inputTab, &ConfigureInput::InputKeysChanged, ui->hotkeysTab,
+            &ConfigureHotkeys::OnInputKeysChanged);
+    connect(ui->hotkeysTab, &ConfigureHotkeys::HotkeysChanged, ui->inputTab,
+            &ConfigureInput::OnHotkeysChanged);
+
+    // Synchronise lists upon initialisation
+    ui->inputTab->EmitInputKeysChanged();
+    ui->hotkeysTab->EmitHotkeysChanged();
 }
 
 ConfigureDialog::~ConfigureDialog() = default;
@@ -43,6 +52,7 @@ void ConfigureDialog::applyConfiguration() {
     ui->systemTab->applyConfiguration();
     ui->inputTab->applyConfiguration();
     ui->inputTab->ApplyProfile();
+    ui->hotkeysTab->applyConfiguration(registry);
     ui->graphicsTab->applyConfiguration();
     ui->audioTab->applyConfiguration();
     ui->cameraTab->applyConfiguration();
@@ -61,7 +71,7 @@ void ConfigureDialog::PopulateSelectionList() {
           {QT_TR_NOOP("General"), QT_TR_NOOP("Web"), QT_TR_NOOP("Debug"), QT_TR_NOOP("UI")}},
          {tr("System"), {QT_TR_NOOP("System"), QT_TR_NOOP("Audio"), QT_TR_NOOP("Camera")}},
          {tr("Graphics"), {QT_TR_NOOP("Graphics")}},
-         {tr("Controls"), {QT_TR_NOOP("Input")}}}};
+         {tr("Controls"), {QT_TR_NOOP("Input"), QT_TR_NOOP("Hotkeys")}}}};
 
     for (const auto& entry : items) {
         auto* item = new QListWidgetItem(entry.first);
@@ -91,6 +101,7 @@ void ConfigureDialog::retranslateUi() {
     ui->generalTab->retranslateUi();
     ui->systemTab->retranslateUi();
     ui->inputTab->retranslateUi();
+    ui->hotkeysTab->retranslateUi();
     ui->graphicsTab->retranslateUi();
     ui->audioTab->retranslateUi();
     ui->cameraTab->retranslateUi();
@@ -105,9 +116,11 @@ void ConfigureDialog::UpdateVisibleTabs() {
         return;
 
     const QHash<QString, QWidget*> widgets = {
-        {"General", ui->generalTab},   {"System", ui->systemTab}, {"Input", ui->inputTab},
-        {"Graphics", ui->graphicsTab}, {"Audio", ui->audioTab},   {"Camera", ui->cameraTab},
-        {"Debug", ui->debugTab},       {"Web", ui->webTab},       {"UI", ui->uiTab}};
+        {"General", ui->generalTab},   {"System", ui->systemTab},
+        {"Input", ui->inputTab},       {"Hotkeys", ui->hotkeysTab},
+        {"Graphics", ui->graphicsTab}, {"Audio", ui->audioTab},
+        {"Camera", ui->cameraTab},     {"Debug", ui->debugTab},
+        {"Web", ui->webTab},           {"UI", ui->uiTab}};
 
     ui->tabWidget->clear();
 

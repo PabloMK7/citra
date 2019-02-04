@@ -17,7 +17,7 @@ class ConfigureDialog : public QDialog {
     Q_OBJECT
 
 public:
-    explicit ConfigureDialog(QWidget* parent, const HotkeyRegistry& registry);
+    explicit ConfigureDialog(QWidget* parent, HotkeyRegistry& registry);
     ~ConfigureDialog() override;
 
     void applyConfiguration();
@@ -35,4 +35,5 @@ private:
     void retranslateUi();
 
     std::unique_ptr<Ui::ConfigureDialog> ui;
+    HotkeyRegistry& registry;
 };

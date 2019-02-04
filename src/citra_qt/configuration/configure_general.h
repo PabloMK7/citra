@@ -20,7 +20,6 @@ public:
     explicit ConfigureGeneral(QWidget* parent = nullptr);
     ~ConfigureGeneral() override;
 
-    void PopulateHotkeyList(const HotkeyRegistry& registry);
     void ResetDefaults();
     void applyConfiguration();
     void retranslateUi();

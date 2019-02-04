@@ -14,5 +14,4 @@ const Themes themes{{
 }};
 
 Values values = {};
-
 } // namespace UISettings

@@ -38,6 +38,11 @@
          <string>Input</string>
         </attribute>
        </widget>
+       <widget class="ConfigureHotkeys" name="hotkeysTab">
+        <attribute name="title">
+         <string>Hotkeys</string>
+        </attribute>
+       </widget>
        <widget class="ConfigureGraphics" name="graphicsTab">
         <attribute name="title">
          <string>Graphics</string>
@@ -116,6 +121,12 @@
    <class>ConfigureInput</class>
    <extends>QWidget</extends>
    <header>configuration/configure_input.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>ConfigureHotkeys</class>
+   <extends>QWidget</extends>
+   <header>configuration/configure_hotkeys.h</header>
    <container>1</container>
   </customwidget>
   <customwidget>

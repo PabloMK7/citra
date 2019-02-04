@@ -344,40 +344,35 @@ void GMainWindow::InitializeRecentFileMenuActions() {
 }
 
 void GMainWindow::InitializeHotkeys() {
-    hotkey_registry.RegisterHotkey("Main Window", "Load File", QKeySequence::Open);
-    hotkey_registry.RegisterHotkey("Main Window", "Start Emulation");
-    hotkey_registry.RegisterHotkey("Main Window", "Continue/Pause", QKeySequence(Qt::Key_F4));
-    hotkey_registry.RegisterHotkey("Main Window", "Restart", QKeySequence(Qt::Key_F5));
-    hotkey_registry.RegisterHotkey("Main Window", "Swap Screens", QKeySequence(Qt::Key_F9));
-    hotkey_registry.RegisterHotkey("Main Window", "Toggle Screen Layout",
-                                   QKeySequence(Qt::Key_F10));
-    hotkey_registry.RegisterHotkey("Main Window", "Fullscreen", QKeySequence::FullScreen);
-    hotkey_registry.RegisterHotkey("Main Window", "Exit Fullscreen", QKeySequence(Qt::Key_Escape),
-                                   Qt::ApplicationShortcut);
-    hotkey_registry.RegisterHotkey("Main Window", "Toggle Speed Limit", QKeySequence("CTRL+Z"),
-                                   Qt::ApplicationShortcut);
-    hotkey_registry.RegisterHotkey("Main Window", "Increase Speed Limit", QKeySequence("+"),
-                                   Qt::ApplicationShortcut);
-    hotkey_registry.RegisterHotkey("Main Window", "Decrease Speed Limit", QKeySequence("-"),
-                                   Qt::ApplicationShortcut);
-    hotkey_registry.RegisterHotkey("Main Window", "Toggle Frame Advancing", QKeySequence("CTRL+A"),
-                                   Qt::ApplicationShortcut);
-    hotkey_registry.RegisterHotkey("Main Window", "Advance Frame", QKeySequence(Qt::Key_Backslash),
-                                   Qt::ApplicationShortcut);
-    hotkey_registry.RegisterHotkey("Main Window", "Load Amiibo", QKeySequence(Qt::Key_F2),
-                                   Qt::ApplicationShortcut);
-    hotkey_registry.RegisterHotkey("Main Window", "Remove Amiibo", QKeySequence(Qt::Key_F3),
-                                   Qt::ApplicationShortcut);
-    hotkey_registry.RegisterHotkey("Main Window", "Capture Screenshot", QKeySequence(tr("CTRL+P")));
-
     hotkey_registry.LoadHotkeys();
+
+    ui.action_Load_File->setShortcut(hotkey_registry.GetKeySequence("Main Window", "Load File"));
+    ui.action_Load_File->setShortcutContext(
+        hotkey_registry.GetShortcutContext("Main Window", "Load File"));
+
+    ui.action_Exit->setShortcut(hotkey_registry.GetKeySequence("Main Window", "Exit Citra"));
+    ui.action_Exit->setShortcutContext(
+        hotkey_registry.GetShortcutContext("Main Window", "Exit Citra"));
+
+    ui.action_Stop->setShortcut(hotkey_registry.GetKeySequence("Main Window", "Stop Emulation"));
+    ui.action_Stop->setShortcutContext(
+        hotkey_registry.GetShortcutContext("Main Window", "Stop Emulation"));
+
+    ui.action_Show_Filter_Bar->setShortcut(
+        hotkey_registry.GetKeySequence("Main Window", "Toggle Filter Bar"));
+    ui.action_Show_Filter_Bar->setShortcutContext(
+        hotkey_registry.GetShortcutContext("Main Window", "Toggle Filter Bar"));
+
+    ui.action_Show_Status_Bar->setShortcut(
+        hotkey_registry.GetKeySequence("Main Window", "Toggle Status Bar"));
+    ui.action_Show_Status_Bar->setShortcutContext(
+        hotkey_registry.GetShortcutContext("Main Window", "Toggle Status Bar"));
 
     connect(hotkey_registry.GetHotkey("Main Window", "Load File", this), &QShortcut::activated,
             this, &GMainWindow::OnMenuLoadFile);
-    connect(hotkey_registry.GetHotkey("Main Window", "Start Emulation", this),
-            &QShortcut::activated, this, &GMainWindow::OnStartGame);
-    connect(hotkey_registry.GetHotkey("Main Window", "Continue/Pause", this), &QShortcut::activated,
-            this, [&] {
+
+    connect(hotkey_registry.GetHotkey("Main Window", "Continue/Pause Emulation", this),
+            &QShortcut::activated, this, [&] {
                 if (emulation_running) {
                     if (emu_thread->IsRunning()) {
                         OnPauseGame();
@@ -386,8 +381,8 @@ void GMainWindow::InitializeHotkeys() {
                     }
                 }
             });
-    connect(hotkey_registry.GetHotkey("Main Window", "Restart", this), &QShortcut::activated, this,
-            [this] {
+    connect(hotkey_registry.GetHotkey("Main Window", "Restart Emulation", this),
+            &QShortcut::activated, this, [this] {
                 if (!Core::System::GetInstance().IsPoweredOn())
                     return;
                 BootGame(QString(game_path));
@@ -546,7 +541,6 @@ void GMainWindow::ConnectMenuEvents() {
             &GMainWindow::ToggleWindowMode);
     connect(ui.action_Display_Dock_Widget_Headers, &QAction::triggered, this,
             &GMainWindow::OnDisplayTitleBars);
-    ui.action_Show_Filter_Bar->setShortcut(tr("CTRL+F"));
     connect(ui.action_Show_Filter_Bar, &QAction::triggered, this, &GMainWindow::OnToggleFilterBar);
     connect(ui.action_Show_Status_Bar, &QAction::triggered, statusBar(), &QStatusBar::setVisible);
 
@@ -1332,6 +1326,7 @@ void GMainWindow::OnConfigure() {
     auto result = configureDialog.exec();
     if (result == QDialog::Accepted) {
         configureDialog.applyConfiguration();
+        InitializeHotkeys();
         if (UISettings::values.theme != old_theme)
             UpdateUITheme();
         if (UISettings::values.enable_discord_presence != old_discord_presence)

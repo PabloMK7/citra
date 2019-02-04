@@ -8,6 +8,7 @@
 #include <memory>
 #include <string>
 #include <QVariant>
+#include "citra_qt/ui_settings.h"
 #include "core/settings.h"
 
 class QSettings;
@@ -30,6 +31,8 @@ private:
     QVariant ReadSetting(const QString& name, const QVariant& default_value);
     void WriteSetting(const QString& name, const QVariant& value);
     void WriteSetting(const QString& name, const QVariant& value, const QVariant& default_value);
+
+    static const std::array<UISettings::Shortcut, 19> default_hotkeys;
 
     std::unique_ptr<QSettings> qt_config;
     std::string qt_config_loc;
