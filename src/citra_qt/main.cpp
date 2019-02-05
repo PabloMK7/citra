@@ -801,6 +801,18 @@ bool GMainWindow::LoadROM(const QString& filename) {
 }
 
 void GMainWindow::BootGame(const QString& filename) {
+    if (filename.endsWith(".cia")) {
+        const auto answer = QMessageBox::question(
+            this, tr("CIA must be installed before usage"),
+            tr("Before using this CIA, you must install it. Do you want to install it now?"),
+            QMessageBox::Yes | QMessageBox::No);
+
+        if (answer == QMessageBox::Yes)
+            InstallCIA(QStringList(filename));
+
+        return;
+    }
+
     LOG_INFO(Frontend, "Citra starting...");
     StoreRecentFile(filename); // Put the filename on top of the list
 
@@ -1075,6 +1087,10 @@ void GMainWindow::OnMenuInstallCIA() {
     if (filepaths.isEmpty())
         return;
 
+    InstallCIA(filepaths);
+}
+
+void GMainWindow::InstallCIA(QStringList filepaths) {
     ui.action_Install_CIA->setEnabled(false);
     game_list->setDirectoryWatcherEnabled(false);
     progress_bar->show();
