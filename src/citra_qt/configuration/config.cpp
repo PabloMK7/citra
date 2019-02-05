@@ -635,11 +635,11 @@ void Config::SaveValues() {
     qt_config->endGroup();
 }
 
-QVariant Config::ReadSetting(const QString& name) {
+QVariant Config::ReadSetting(const QString& name) const {
     return qt_config->value(name);
 }
 
-QVariant Config::ReadSetting(const QString& name, const QVariant& default_value) {
+QVariant Config::ReadSetting(const QString& name, const QVariant& default_value) const {
     QVariant result;
     if (qt_config->value(name + "/default", false).toBool()) {
         result = default_value;

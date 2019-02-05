@@ -27,8 +27,8 @@ public:
 private:
     void ReadValues();
     void SaveValues();
-    QVariant ReadSetting(const QString& name);
-    QVariant ReadSetting(const QString& name, const QVariant& default_value);
+    QVariant ReadSetting(const QString& name) const;
+    QVariant ReadSetting(const QString& name, const QVariant& default_value) const;
     void WriteSetting(const QString& name, const QVariant& value);
     void WriteSetting(const QString& name, const QVariant& value, const QVariant& default_value);
 
