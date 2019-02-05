@@ -294,6 +294,8 @@ private:
     void DriverFinalize(Kernel::HLERequestContext& ctx);
     void GetPackageParameter(Kernel::HLERequestContext& ctx);
 
+    Core::System& system;
+
     Kernel::SharedPtr<Kernel::Event> completion_event;
     ConversionConfiguration conversion{};
     DitheringWeightParams dithering_weight_params{};
