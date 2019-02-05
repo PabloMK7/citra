@@ -2,7 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
-#include <QHash>
+#include <map>
 #include <QListWidgetItem>
 #include "citra_qt/configuration/config.h"
 #include "citra_qt/configuration/configure_dialog.h"
@@ -74,7 +74,7 @@ void ConfigureDialog::PopulateSelectionList() {
          {tr("Controls"), {QT_TR_NOOP("Input"), QT_TR_NOOP("Hotkeys")}}}};
 
     for (const auto& entry : items) {
-        auto* item = new QListWidgetItem(entry.first);
+        auto* const item = new QListWidgetItem(entry.first);
         item->setData(Qt::UserRole, entry.second);
 
         ui->selectorList->addItem(item);
@@ -111,11 +111,11 @@ void ConfigureDialog::retranslateUi() {
 }
 
 void ConfigureDialog::UpdateVisibleTabs() {
-    auto items = ui->selectorList->selectedItems();
+    const auto items = ui->selectorList->selectedItems();
     if (items.isEmpty())
         return;
 
-    const QHash<QString, QWidget*> widgets = {
+    const std::map<QString, QWidget*> widgets = {
         {"General", ui->generalTab},   {"System", ui->systemTab},
         {"Input", ui->inputTab},       {"Hotkeys", ui->hotkeysTab},
         {"Graphics", ui->graphicsTab}, {"Audio", ui->audioTab},
@@ -124,8 +124,8 @@ void ConfigureDialog::UpdateVisibleTabs() {
 
     ui->tabWidget->clear();
 
-    QStringList tabs = items[0]->data(Qt::UserRole).toStringList();
+    const QStringList tabs = items[0]->data(Qt::UserRole).toStringList();
 
     for (const auto& tab : tabs)
-        ui->tabWidget->addTab(widgets[tab], tr(qPrintable(tab)));
+        ui->tabWidget->addTab(widgets.at(tab), tr(qPrintable(tab)));
 }
