@@ -104,8 +104,7 @@ void WMFDecoder::Impl::Clear() {
 MFOutputState WMFDecoder::Impl::DecodingLoop(ADTSData adts_header,
                                              std::array<std::vector<u8>, 2>& out_streams) {
     MFOutputState output_status = MFOutputState::OK;
-    char* output_buffer = nullptr;
-    DWORD output_len = 0;
+    std::optional<std::vector<f32>> output_buffer;
     unique_mfptr<IMFSample> output;
 
     while (true) {
@@ -113,22 +112,18 @@ MFOutputState WMFDecoder::Impl::DecodingLoop(ADTSData adts_header,
 
         // 0 -> okay; 3 -> okay but more data available (buffer too small)
         if (output_status == MFOutputState::OK || output_status == MFOutputState::HaveMoreData) {
-            CopySampleToBuffer(output.get(), (void**)&output_buffer, &output_len);
+            output_buffer = CopySampleToBuffer(output.get());
 
             // the following was taken from ffmpeg version of the decoder
             f32 val_f32;
-            for (size_t i = 0; i < output_len;) {
+            for (size_t i = 0; i < output_buffer->size(); i++) {
                 for (std::size_t channel = 0; channel < adts_header.channels; channel++) {
-                    std::memcpy(&val_f32, output_buffer + i, sizeof(val_f32));
+                    val_f32 = output_buffer->at(i);
                     s16 val = static_cast<s16>(0x7FFF * val_f32);
                     out_streams[channel].push_back(val & 0xFF);
                     out_streams[channel].push_back(val >> 8);
-                    i += sizeof(val_f32);
                 }
             }
-
-            if (output_buffer)
-                free(output_buffer);
         }
 
         // in case of "ok" only, just return quickly

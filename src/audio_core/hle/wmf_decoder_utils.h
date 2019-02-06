@@ -6,8 +6,10 @@
 // AAC decoder related APIs are only available with WIN7+
 #define WINVER _WIN32_WINNT_WIN7
 
+#include <optional>
 #include <string>
 #include <tuple>
+#include <vector>
 #include <comdef.h>
 #include <mfapi.h>
 #include <mferror.h>
@@ -45,7 +47,7 @@ public:
 
 private:
     SmartPtr& smart_ptr;
-    RawPtr raw_ptr;
+    RawPtr raw_ptr = nullptr;
 };
 
 template <typename SmartPtr>
@@ -72,4 +74,4 @@ void MFFlush(IMFTransform* transform);
 MFInputState SendSample(IMFTransform* transform, DWORD in_stream_id, IMFSample* in_sample);
 std::tuple<MFOutputState, unique_mfptr<IMFSample>> ReceiveSample(IMFTransform* transform,
                                                                  DWORD out_stream_id);
-int CopySampleToBuffer(IMFSample* sample, void** output, DWORD* len);
+std::optional<std::vector<f32>> CopySampleToBuffer(IMFSample* sample);

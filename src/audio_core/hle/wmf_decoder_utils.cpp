@@ -25,6 +25,12 @@ void ReportError(std::string msg, HRESULT hr) {
 
 bool MFCoInit() {
     HRESULT hr = S_OK;
+    hr = CoInitialize(NULL);
+    // S_FALSE will be returned when COM has already been initialized
+    if (hr != S_OK && hr != S_FALSE) {
+        ReportError("Failed to start COM components", hr);
+        return false;
+    }
 
     // lite startup is faster and all what we need is included
     hr = MFStartup(MF_VERSION, MFSTARTUP_LITE);
@@ -216,8 +222,8 @@ int DetectMediaType(char* buffer, size_t len, ADTSData* output, char** aac_tag) 
     UINT8 aac_tmp[] = {0x01, 0x00, 0xfe, 00, 00, 00, 00, 00, 00, 00, 00, 00, 0x00, 0x00};
     uint16_t tag = 0;
 
-    uint32_t result = ParseADTS(buffer, &tmp);
-    if (result == 0) {
+    tmp = ParseADTS(buffer);
+    if (tmp.length == 0) {
         return -1;
     }
 
@@ -325,33 +331,37 @@ std::tuple<MFOutputState, unique_mfptr<IMFSample>> ReceiveSample(IMFTransform* t
     return std::make_tuple(MFOutputState::OK, std::move(sample));
 }
 
-int CopySampleToBuffer(IMFSample* sample, void** output, DWORD* len) {
+std::optional<std::vector<f32>> CopySampleToBuffer(IMFSample* sample) {
     unique_mfptr<IMFMediaBuffer> buffer;
     HRESULT hr = S_OK;
+    std::optional<std::vector<f32>> output;
+    std::vector<f32> output_buffer;
     BYTE* data;
+    DWORD len = 0;
 
-    hr = sample->GetTotalLength(len);
+    hr = sample->GetTotalLength(&len);
     if (FAILED(hr)) {
         ReportError("Failed to get the length of sample buffer", hr);
-        return -1;
+        return std::nullopt;
     }
 
     hr = sample->ConvertToContiguousBuffer(Amp(buffer));
     if (FAILED(hr)) {
         ReportError("Failed to get sample buffer", hr);
-        return -1;
+        return std::nullopt;
     }
 
     hr = buffer->Lock(&data, nullptr, nullptr);
     if (FAILED(hr)) {
         ReportError("Failed to lock the buffer", hr);
-        return -1;
+        return std::nullopt;
     }
 
-    *output = malloc(*len);
-    std::memcpy(*output, data, *len);
+    output_buffer.resize(len / sizeof(f32));
+    std::memcpy(output_buffer.data(), data, len);
+    output = output_buffer;
 
     // if buffer unlock fails, then... whatever, we have already got data
     buffer->Unlock();
-    return 0;
+    return output;
 }
