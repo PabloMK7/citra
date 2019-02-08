@@ -203,6 +203,7 @@ void RasterizerOpenGL::SyncEntireState() {
     SyncProcTexNoise();
     SyncProcTexBias();
     SyncShadowBias();
+    SyncShadowTextureBias();
 }
 
 /**
@@ -901,6 +902,11 @@ void RasterizerOpenGL::NotifyPicaRegisterChanged(u32 id) {
         break;
     case PICA_REG_INDEX(framebuffer.output_merger.blend_const):
         SyncBlendColor();
+        break;
+
+    // Shadow texture
+    case PICA_REG_INDEX(texturing.shadow):
+        SyncShadowTextureBias();
         break;
 
     // Fog state
@@ -1902,6 +1908,14 @@ void RasterizerOpenGL::SyncShadowBias() {
         linear != uniform_block_data.data.shadow_bias_linear) {
         uniform_block_data.data.shadow_bias_constant = constant;
         uniform_block_data.data.shadow_bias_linear = linear;
+        uniform_block_data.dirty = true;
+    }
+}
+
+void RasterizerOpenGL::SyncShadowTextureBias() {
+    GLint bias = Pica::g_state.regs.texturing.shadow.bias << 1;
+    if (bias != uniform_block_data.data.shadow_texture_bias) {
+        uniform_block_data.data.shadow_texture_bias = bias;
         uniform_block_data.dirty = true;
     }
 }

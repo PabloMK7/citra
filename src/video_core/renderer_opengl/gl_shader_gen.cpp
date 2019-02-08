@@ -63,6 +63,7 @@ layout (std140) uniform shader_data {
     int proctex_lut_offset;
     int proctex_diff_lut_offset;
     float proctex_bias;
+    int shadow_texture_bias;
     ivec4 lighting_lut_offset[NUM_LIGHTING_SAMPLERS / 4];
     vec3 fog_color;
     vec2 proctex_noise_f;
@@ -240,7 +241,6 @@ PicaFSConfig PicaFSConfig::BuildFromRegs(const Pica::Regs& regs) {
                              FramebufferRegs::FragmentOperationMode::Shadow;
 
     state.shadow_texture_orthographic = regs.texturing.shadow.orthographic != 0;
-    state.shadow_texture_bias = regs.texturing.shadow.bias << 1;
 
     return res;
 }
@@ -1358,8 +1358,7 @@ vec4 shadowTexture(vec2 uv, float w) {
     if (!config.state.shadow_texture_orthographic) {
         out += "uv /= w;";
     }
-    out += "uint z = uint(max(0, int(min(abs(w), 1.0) * 0xFFFFFF) - " +
-           std::to_string(state.shadow_texture_bias) + "));";
+    out += "uint z = uint(max(0, int(min(abs(w), 1.0) * 0xFFFFFF) - shadow_texture_bias));";
     out += R"(
     vec2 coord = vec2(imageSize(shadow_texture_px)) * uv - vec2(0.5);
     vec2 coord_floor = floor(coord);
@@ -1391,8 +1390,7 @@ vec4 shadowTextureCube(vec2 uv, float w) {
         if (c.z > 0.0) uv.x = -uv.x;
     }
 )";
-    out += "uint z = uint(max(0, int(min(w, 1.0) * 0xFFFFFF) - " +
-           std::to_string(state.shadow_texture_bias) + "));";
+    out += "uint z = uint(max(0, int(min(w, 1.0) * 0xFFFFFF) - shadow_texture_bias));";
     out += R"(
     vec2 coord = vec2(size) * (uv / w * vec2(0.5) + vec2(0.5)) - vec2(0.5);
     vec2 coord_floor = floor(coord);

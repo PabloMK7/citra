@@ -214,6 +214,9 @@ private:
     /// Syncs the shadow rendering bias to match the PICA register
     void SyncShadowBias();
 
+    /// Syncs the shadow texture bias to match the PICA register
+    void SyncShadowTextureBias();
+
     /// Syncs and uploads the lighting, fog and proctex LUTs
     void SyncAndUploadLUTs();
 
