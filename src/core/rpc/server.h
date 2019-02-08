@@ -4,24 +4,25 @@
 
 #pragma once
 
-#include "core/rpc/packet.h"
-#include "core/rpc/zmq_server.h"
+#include <memory>
 
 namespace RPC {
 
 class RPCServer;
-class ZMQServer;
+class UDPServer;
+class Packet;
 
 class Server {
 public:
     Server(RPCServer& rpc_server);
+    ~Server();
     void Start();
     void Stop();
-    void NewRequestCallback(std::unique_ptr<RPC::Packet> new_request);
+    void NewRequestCallback(std::unique_ptr<Packet> new_request);
 
 private:
     RPCServer& rpc_server;
-    std::unique_ptr<ZMQServer> zmq_server;
+    std::unique_ptr<UDPServer> udp_server;
 };
 
 } // namespace RPC

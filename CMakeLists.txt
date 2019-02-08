@@ -22,8 +22,6 @@ option(ENABLE_CUBEB "Enables the cubeb audio backend" ON)
 
 option(USE_DISCORD_PRESENCE "Enables Discord Rich Presence" OFF)
 
-option(ENABLE_SCRIPTING "Enables scripting support" OFF)
-
 if(NOT EXISTS ${PROJECT_SOURCE_DIR}/.git/hooks/pre-commit)
     message(STATUS "Copying pre-commit hook")
     file(COPY hooks/pre-commit
@@ -251,10 +249,6 @@ if (ENABLE_QT)
     if (ENABLE_QT_TRANSLATION)
         find_package(Qt5 REQUIRED COMPONENTS LinguistTools ${QT_PREFIX_HINT})
     endif()
-endif()
-
-if (ENABLE_SCRIPTING)
-    add_definitions(-DENABLE_SCRIPTING)
 endif()
 
 # Platform-specific library requirements

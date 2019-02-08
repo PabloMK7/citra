@@ -1,22 +1,22 @@
-import zmq
 import struct
 import random
 import enum
+import socket
 
 CURRENT_REQUEST_VERSION = 1
 MAX_REQUEST_DATA_SIZE = 32
+MAX_PACKET_SIZE = 48
 
 class RequestType(enum.IntEnum):
     ReadMemory = 1,
     WriteMemory = 2
 
-CITRA_PORT = "45987"
+CITRA_PORT = 45987
 
 class Citra:
     def __init__(self, address="127.0.0.1", port=CITRA_PORT):
-        self.context = zmq.Context()
-        self.socket = self.context.socket(zmq.REQ)
-        self.socket.connect("tcp://" + address + ":" + port)
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.address = address
 
     def is_connected(self):
         return self.socket is not None
@@ -45,9 +45,9 @@ class Citra:
             request_data = struct.pack("II", read_address, temp_read_size)
             request, request_id = self._generate_header(RequestType.ReadMemory, len(request_data))
             request += request_data
-            self.socket.send(request)
+            self.socket.sendto(request, (self.address, CITRA_PORT))
 
-            raw_reply = self.socket.recv()
+            raw_reply = self.socket.recv(MAX_PACKET_SIZE)
             reply_data = self._read_and_validate_header(raw_reply, request_id, RequestType.ReadMemory)
 
             if reply_data:
@@ -77,9 +77,9 @@ class Citra:
             request_data += write_contents[:temp_write_size]
             request, request_id = self._generate_header(RequestType.WriteMemory, len(request_data))
             request += request_data
-            self.socket.send(request)
+            self.socket.sendto(request, (self.address, CITRA_PORT))
 
-            raw_reply = self.socket.recv()
+            raw_reply = self.socket.recv(MAX_PACKET_SIZE)
             reply_data = self._read_and_validate_header(raw_reply, request_id, RequestType.WriteMemory)
 
             if None != reply_data:
