@@ -51,6 +51,14 @@
 #define closesocket(x) close(x)
 #endif
 
+// Some platforms seem to have these defined, they conflict with our function names
+#ifdef GetAddrInfo
+#undef GetAddrInfo
+#endif
+#ifdef GetNameInfo
+#undef GetNameInfo
+#endif
+
 namespace Service::SOC {
 
 const s32 SOCKET_ERROR_VALUE = -1;
@@ -319,6 +327,36 @@ union CTRSockAddr {
         return result;
     }
 };
+
+struct CTRAddrInfo {
+    s32 ai_flags;
+    s32 ai_family;
+    s32 ai_socktype;
+    s32 ai_protocol;
+    s32 ai_addrlen;
+    char ai_canonname[256];
+    CTRSockAddr ai_addr;
+
+    /// Converts a platform-specific addrinfo to a 3ds addrinfo.
+    static CTRAddrInfo FromPlatform(const addrinfo& addr) {
+        CTRAddrInfo ctr_addr;
+        std::memset(&ctr_addr, 0, sizeof(ctr_addr));
+
+        ctr_addr.ai_flags = addr.ai_flags;
+        ctr_addr.ai_family = addr.ai_family;
+        ctr_addr.ai_socktype = addr.ai_socktype;
+        ctr_addr.ai_protocol = addr.ai_protocol;
+        if (addr.ai_canonname)
+            std::strncpy(ctr_addr.ai_canonname, addr.ai_canonname, sizeof(ctr_addr.ai_canonname));
+
+        ctr_addr.ai_addr = CTRSockAddr::FromPlatform(*addr.ai_addr);
+        ctr_addr.ai_addrlen = ctr_addr.ai_addr.raw.len;
+
+        return ctr_addr;
+    }
+};
+
+static_assert(sizeof(CTRAddrInfo) == 0x130, "Size of CTRAddrInfo is not correct");
 
 void SOC_U::CleanupSockets() {
     for (auto sock : open_sockets)
@@ -858,6 +896,95 @@ void SOC_U::SetSockOpt(Kernel::HLERequestContext& ctx) {
     rb.Push(err);
 }
 
+void SOC_U::GetAddrInfo(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x0F, 4, 6);
+    u32 node_length = rp.Pop<u32>();
+    u32 service_length = rp.Pop<u32>();
+    u32 hints_size = rp.Pop<u32>();
+    u32 out_size = rp.Pop<u32>();
+    auto node = rp.PopStaticBuffer();
+    auto service = rp.PopStaticBuffer();
+    auto hints_buff = rp.PopStaticBuffer();
+
+    const char* node_data = node_length > 0 ? reinterpret_cast<const char*>(node.data()) : nullptr;
+    const char* service_data =
+        service_length > 0 ? reinterpret_cast<const char*>(service.data()) : nullptr;
+
+    s32 ret = -1;
+    addrinfo* out = nullptr;
+    if (hints_size > 0) {
+        CTRAddrInfo ctr_hints;
+        std::memcpy(&ctr_hints, hints_buff.data(), hints_size);
+        // Only certain fields are meaningful in hints, copy them manually
+        addrinfo hints = {};
+        hints.ai_flags = ctr_hints.ai_flags;
+        hints.ai_family = ctr_hints.ai_family;
+        hints.ai_socktype = ctr_hints.ai_socktype;
+        hints.ai_protocol = ctr_hints.ai_protocol;
+        ret = getaddrinfo(node_data, service_data, &hints, &out);
+    } else {
+        ret = getaddrinfo(node_data, service_data, nullptr, &out);
+    }
+
+    std::vector<u8> out_buff(out_size);
+    u32 count = 0;
+
+    if (ret == SOCKET_ERROR_VALUE) {
+        ret = TranslateError(GET_ERRNO);
+        out_buff.resize(0);
+    } else {
+        std::size_t pos = 0;
+        addrinfo* cur = out;
+        while (cur != nullptr) {
+            if (pos <= out_size - sizeof(CTRAddrInfo)) {
+                // According to 3dbrew, this function fills whatever it can and does not error even
+                // if the buffer is not big enough. However the count returned is always correct.
+                CTRAddrInfo ctr_addr = CTRAddrInfo::FromPlatform(*cur);
+                std::memcpy(out_buff.data() + pos, &ctr_addr, sizeof(ctr_addr));
+            }
+            cur = cur->ai_next;
+            count++;
+        }
+        if (out != nullptr)
+            freeaddrinfo(out);
+    }
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(3, 2);
+    rb.Push(RESULT_SUCCESS);
+    rb.Push(ret);
+    rb.Push(count);
+    rb.PushStaticBuffer(out_buff, 0);
+}
+
+void SOC_U::GetNameInfo(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x10, 4, 2);
+    u32 socklen = rp.Pop<u32>();
+    u32 hostlen = rp.Pop<u32>();
+    u32 servlen = rp.Pop<u32>();
+    int flags = static_cast<int>(rp.Pop<u32>());
+    auto sa_buff = rp.PopStaticBuffer();
+
+    CTRSockAddr ctr_sa;
+    std::memcpy(&ctr_sa, sa_buff.data(), socklen);
+    sockaddr sa = CTRSockAddr::ToPlatform(ctr_sa);
+
+    std::vector<u8> host(hostlen);
+    std::vector<u8> serv(servlen);
+    char* host_data = hostlen > 0 ? reinterpret_cast<char*>(host.data()) : nullptr;
+    char* serv_data = servlen > 0 ? reinterpret_cast<char*>(serv.data()) : nullptr;
+
+    s32 ret = getnameinfo(&sa, sizeof(sa), host_data, hostlen, serv_data, servlen, flags);
+    if (ret == SOCKET_ERROR_VALUE) {
+        ret = TranslateError(GET_ERRNO);
+    }
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(2, 4);
+    rb.Push(RESULT_SUCCESS);
+    rb.Push(ret);
+    rb.PushStaticBuffer(host, 0);
+    rb.PushStaticBuffer(serv, 1);
+}
+
 SOC_U::SOC_U() : ServiceFramework("soc:U") {
     static const FunctionInfo functions[] = {
         {0x00010044, &SOC_U::InitializeSockets, "InitializeSockets"},
@@ -874,8 +1001,8 @@ SOC_U::SOC_U() : ServiceFramework("soc:U") {
         {0x000C0082, &SOC_U::Shutdown, "Shutdown"},
         {0x000D0082, nullptr, "GetHostByName"},
         {0x000E00C2, nullptr, "GetHostByAddr"},
-        {0x000F0106, nullptr, "GetAddrInfo"},
-        {0x00100102, nullptr, "GetNameInfo"},
+        {0x000F0106, &SOC_U::GetAddrInfo, "GetAddrInfo"},
+        {0x00100102, &SOC_U::GetNameInfo, "GetNameInfo"},
         {0x00110102, &SOC_U::GetSockOpt, "GetSockOpt"},
         {0x00120104, &SOC_U::SetSockOpt, "SetSockOpt"},
         {0x001300C2, &SOC_U::Fcntl, "Fcntl"},

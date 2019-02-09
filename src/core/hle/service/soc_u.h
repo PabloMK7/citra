@@ -44,6 +44,8 @@ private:
     void ShutdownSockets(Kernel::HLERequestContext& ctx);
     void GetSockOpt(Kernel::HLERequestContext& ctx);
     void SetSockOpt(Kernel::HLERequestContext& ctx);
+    void GetAddrInfo(Kernel::HLERequestContext& ctx);
+    void GetNameInfo(Kernel::HLERequestContext& ctx);
 
     /// Close all open sockets
     void CleanupSockets();
