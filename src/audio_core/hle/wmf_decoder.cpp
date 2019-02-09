@@ -163,7 +163,7 @@ std::optional<BinaryResponse> WMFDecoder::Impl::Decode(const BinaryRequest& requ
 
     if (!initalized) {
         LOG_DEBUG(Audio_DSP, "Decoder not initalized");
-        // This is a hack to continue games that are not compiled with the aac codec
+        // This is a hack to continue games when decoder failed to initialize
         return response;
     }
 
@@ -176,21 +176,21 @@ std::optional<BinaryResponse> WMFDecoder::Impl::Decode(const BinaryRequest& requ
 
     std::array<std::vector<u8>, 2> out_streams;
     unique_mfptr<IMFSample> sample;
-    ADTSData adts_header;
-    char* aac_tag = (char*)calloc(1, 14);
     MFInputState input_status = MFInputState::OK;
+    std::optional<ADTSMeta> adts_meta = DetectMediaType((char*)data, request.size);
 
-    if (DetectMediaType((char*)data, request.size, &adts_header, &aac_tag) != 0) {
+    if (!adts_meta) {
         LOG_ERROR(Audio_DSP, "Unable to deduce decoding parameters from ADTS stream");
         return response;
     }
 
-    response.num_channels = adts_header.channels;
+    response.num_channels = adts_meta->ADTSHeader.channels;
 
     if (!selected) {
         LOG_DEBUG(Audio_DSP, "New ADTS stream: channels = {}, sample rate = {}",
-                  adts_header.channels, adts_header.samplerate);
-        SelectInputMediaType(transform.get(), in_stream_id, adts_header, (UINT8*)aac_tag, 14);
+                  adts_meta->ADTSHeader.channels, adts_meta->ADTSHeader.samplerate);
+        SelectInputMediaType(transform.get(), in_stream_id, adts_meta->ADTSHeader,
+                             adts_meta->AACTag, 14);
         SelectOutputMediaType(transform.get(), out_stream_id);
         SendSample(transform.get(), in_stream_id, nullptr);
         // cache the result from detect_mediatype and call select_*_mediatype only once
@@ -205,7 +205,7 @@ std::optional<BinaryResponse> WMFDecoder::Impl::Decode(const BinaryRequest& requ
     while (true) {
         input_status = SendSample(transform.get(), in_stream_id, sample.get());
 
-        if (DecodingLoop(adts_header, out_streams) == MFOutputState::FatalError) {
+        if (DecodingLoop(adts_meta->ADTSHeader, out_streams) == MFOutputState::FatalError) {
             // if the decode issues are caused by MFT not accepting new samples, try again
             // NOTICE: you are required to check the output even if you already knew/guessed
             // MFT didn't accept the input sample

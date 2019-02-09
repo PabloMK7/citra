@@ -209,17 +209,18 @@ bool SelectOutputMediaType(IMFTransform* transform, int out_stream_id, GUID audi
     return false;
 }
 
-int DetectMediaType(char* buffer, size_t len, ADTSData* output, char** aac_tag) {
+std::optional<ADTSMeta> DetectMediaType(char* buffer, size_t len) {
     if (len < 7) {
-        return -1;
+        return std::nullopt;
     }
 
     ADTSData tmp;
+    ADTSMeta result;
     // see https://docs.microsoft.com/en-us/windows/desktop/api/mmreg/ns-mmreg-heaacwaveinfo_tag
     // for the meaning of the byte array below
 
     // it might be a good idea to wrap the parameters into a struct
-    // and pass that struct into the function but this will lead to messier code
+    // and pass that struct into the function but doing that will lead to messier code
     // const UINT8 aac_data[] = { 0x01, 0x00, 0xfe, 00, 00, 00, 00, 00, 00, 00, 00, 00, 0x11, 0x90
     // }; first byte: 0: raw aac 1: adts 2: adif 3: latm/laos
     UINT8 aac_tmp[] = {0x01, 0x00, 0xfe, 00, 00, 00, 00, 00, 00, 00, 00, 00, 0x00, 0x00};
@@ -227,15 +228,15 @@ int DetectMediaType(char* buffer, size_t len, ADTSData* output, char** aac_tag) 
 
     tmp = ParseADTS(buffer);
     if (tmp.length == 0) {
-        return -1;
+        return std::nullopt;
     }
 
     tag = MFGetAACTag(tmp);
     aac_tmp[12] |= (tag & 0xff00) >> 8;
     aac_tmp[13] |= (tag & 0x00ff);
-    std::memcpy(*aac_tag, aac_tmp, 14);
-    std::memcpy(output, &tmp, sizeof(ADTSData));
-    return 0;
+    std::memcpy(&(result.ADTSHeader), &tmp, sizeof(ADTSData));
+    std::memcpy(&(result.AACTag), aac_tmp, 14);
+    return result;
 }
 
 void MFFlush(IMFTransform* transform) {
