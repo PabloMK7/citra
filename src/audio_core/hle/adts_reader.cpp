@@ -8,7 +8,7 @@ constexpr std::array<u32, 16> freq_table = {96000, 88200, 64000, 48000, 44100, 3
                                             16000, 12000, 11025, 8000,  7350,  0,     0,     0};
 constexpr std::array<u8, 8> channel_table = {0, 1, 2, 3, 4, 5, 6, 8};
 
-ADTSData ParseADTS(char* buffer) {
+ADTSData ParseADTS(const char* buffer) {
     u32 tmp = 0;
     ADTSData out;
 
@@ -50,7 +50,7 @@ ADTSData ParseADTS(char* buffer) {
 // Frame length flag (1 bit)
 // Depends on core coder (1 bit)
 // Extension flag (1 bit)
-u16 MFGetAACTag(ADTSData input) {
+u16 MFGetAACTag(const ADTSData input) {
     u16 tag = 0;
 
     tag |= input.profile << 11;

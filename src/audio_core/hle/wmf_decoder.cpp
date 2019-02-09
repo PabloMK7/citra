@@ -116,12 +116,14 @@ MFOutputState WMFDecoder::Impl::DecodingLoop(ADTSData adts_header,
 
             // the following was taken from ffmpeg version of the decoder
             f32 val_f32;
-            for (size_t i = 0; i < output_buffer->size(); i++) {
+            for (size_t i = 0; i < output_buffer->size(); ) {
                 for (std::size_t channel = 0; channel < adts_header.channels; channel++) {
                     val_f32 = output_buffer->at(i);
                     s16 val = static_cast<s16>(0x7FFF * val_f32);
                     out_streams[channel].push_back(val & 0xFF);
                     out_streams[channel].push_back(val >> 8);
+                    // i is incremented on per channel basis
+                    i++;
                 }
             }
         }
