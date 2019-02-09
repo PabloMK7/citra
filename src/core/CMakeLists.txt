@@ -84,6 +84,8 @@ add_library(core STATIC
     file_sys/title_metadata.h
     frontend/applets/default_applets.cpp
     frontend/applets/default_applets.h
+    frontend/applets/mii_selector.cpp
+    frontend/applets/mii_selector.h
     frontend/applets/swkbd.cpp
     frontend/applets/swkbd.h
     frontend/camera/blank_camera.cpp

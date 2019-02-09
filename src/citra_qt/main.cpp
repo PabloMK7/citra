@@ -16,6 +16,7 @@
 #include <QtWidgets>
 #include <fmt/format.h>
 #include "citra_qt/aboutdialog.h"
+#include "citra_qt/applets/mii_selector.h"
 #include "citra_qt/applets/swkbd.h"
 #include "citra_qt/bootmanager.h"
 #include "citra_qt/camera/qt_multimedia_camera.h"
@@ -1896,6 +1897,7 @@ int main(int argc, char* argv[]) {
 
     // Register frontend applets
     Frontend::RegisterDefaultApplets();
+    Frontend::RegisterMiiSelector(std::make_shared<QtMiiSelector>(main_window));
     Frontend::RegisterSoftwareKeyboard(std::make_shared<QtKeyboard>(main_window));
 
     main_window.show();

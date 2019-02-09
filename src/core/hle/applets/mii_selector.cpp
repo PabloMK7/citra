@@ -4,10 +4,12 @@
 
 #include <cstring>
 #include <string>
+#include <boost/crc.hpp>
 #include "common/assert.h"
 #include "common/logging/log.h"
 #include "common/string_util.h"
 #include "core/core.h"
+#include "core/frontend/applets/mii_selector.h"
 #include "core/hle/applets/mii_selector.h"
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/shared_memory.h"
@@ -52,12 +54,51 @@ ResultCode MiiSelector::ReceiveParameter(const Service::APT::MessageParameter& p
 }
 
 ResultCode MiiSelector::StartImpl(const Service::APT::AppletStartupParameter& parameter) {
-    is_running = true;
-
-    // TODO(Subv): Reverse the parameter format for the Mii Selector
+    ASSERT_MSG(parameter.buffer.size() == sizeof(config),
+               "The size of the parameter (MiiConfig) is wrong");
 
     memcpy(&config, parameter.buffer.data(), parameter.buffer.size());
 
+    using namespace Frontend;
+    frontend_applet = GetRegisteredMiiSelector();
+    if (frontend_applet) {
+        MiiSelectorConfig frontend_config = ToFrontendConfig(config);
+        frontend_applet->Setup(&frontend_config);
+    }
+
+    is_running = true;
+    return RESULT_SUCCESS;
+}
+
+void MiiSelector::Update() {
+    using namespace Frontend;
+    const MiiSelectorData* data = frontend_applet->ReceiveData();
+    result.return_code = data->return_code;
+    result.selected_mii_data = data->mii;
+    // Calculate the checksum of the selected Mii, see https://www.3dbrew.org/wiki/Mii#Checksum
+    result.mii_data_checksum = boost::crc<16, 0x1021, 0, 0, false, false>(
+        &result.selected_mii_data, sizeof(HLE::Applets::MiiData) + sizeof(result.unknown1));
+    result.selected_guest_mii_index = 0xFFFFFFFF;
+
+    // TODO(Subv): We're finalizing the applet immediately after it's started,
+    // but we should defer this call until after all the input has been collected.
+    Finalize();
+}
+
+void MiiSelector::Finalize() {
+    // Let the application know that we're closing
+    Service::APT::MessageParameter message;
+    message.buffer.resize(sizeof(MiiResult));
+    std::memcpy(message.buffer.data(), &result, message.buffer.size());
+    message.signal = Service::APT::SignalType::WakeupByExit;
+    message.destination_id = Service::APT::AppletId::Application;
+    message.sender_id = id;
+    SendParameter(message);
+
+    is_running = false;
+}
+
+MiiResult MiiSelector::GetStandardMiiResult() {
     // This data was obtained by writing the returned buffer in AppletManager::GlanceParameter of
     // the LLEd Mii picker of version system version 11.8.0 to a file and then matching the values
     // to the members of the MiiResult struct
@@ -95,18 +136,14 @@ ResultCode MiiSelector::StartImpl(const Service::APT::AppletStartupParameter& pa
     result.mii_data_checksum = 0x056C;
     result.guest_mii_name.fill(0x0);
 
-    // Let the application know that we're closing
-    Service::APT::MessageParameter message;
-    message.buffer.resize(sizeof(MiiResult));
-    std::memcpy(message.buffer.data(), &result, message.buffer.size());
-    message.signal = Service::APT::SignalType::WakeupByExit;
-    message.destination_id = Service::APT::AppletId::Application;
-    message.sender_id = id;
-    SendParameter(message);
-
-    is_running = false;
-    return RESULT_SUCCESS;
+    return result;
 }
 
-void MiiSelector::Update() {}
+Frontend::MiiSelectorConfig MiiSelector::ToFrontendConfig(const MiiConfig& config) const {
+    Frontend::MiiSelectorConfig frontend_config;
+    frontend_config.enable_cancel_button = config.enable_cancel_button == 1;
+    frontend_config.title = reinterpret_cast<const char16_t*>(config.title.data());
+    frontend_config.initially_selected_mii_index = config.initially_selected_mii_index;
+    return frontend_config;
+}
 } // namespace HLE::Applets

@@ -276,6 +276,10 @@ const Cheats::CheatEngine& System::CheatEngine() const {
     return *cheat_engine;
 }
 
+void System::RegisterMiiSelector(std::shared_ptr<Frontend::MiiSelector> mii_selector) {
+    registered_mii_selector = std::move(mii_selector);
+}
+
 void System::RegisterSoftwareKeyboard(std::shared_ptr<Frontend::SoftwareKeyboard> swkbd) {
     registered_swkbd = std::move(swkbd);
 }
