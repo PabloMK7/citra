@@ -60,7 +60,7 @@ void ReportError(std::string msg, HRESULT hr);
 
 // exported functions
 bool MFCoInit();
-bool MFDecoderInit(IMFTransform** transform, GUID audio_format = MFAudioFormat_AAC);
+unique_mfptr<IMFTransform> MFDecoderInit(GUID audio_format = MFAudioFormat_AAC);
 void MFDeInit(IMFTransform* transform);
 unique_mfptr<IMFSample> CreateSample(void* data, DWORD len, DWORD alignment = 1,
                                      LONGLONG duration = 0);

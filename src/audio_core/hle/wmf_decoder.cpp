@@ -72,8 +72,9 @@ std::optional<BinaryResponse> WMFDecoder::Impl::Initalize(const BinaryRequest& r
     BinaryResponse response;
     std::memcpy(&response, &request, sizeof(response));
     response.unknown1 = 0x0;
+    transform = MFDecoderInit();
 
-    if (!MFDecoderInit(Amp(transform))) {
+    if (transform == nullptr) {
         LOG_CRITICAL(Audio_DSP, "Can't init decoder");
         return response;
     }
@@ -116,7 +117,7 @@ MFOutputState WMFDecoder::Impl::DecodingLoop(ADTSData adts_header,
 
             // the following was taken from ffmpeg version of the decoder
             f32 val_f32;
-            for (size_t i = 0; i < output_buffer->size(); ) {
+            for (size_t i = 0; i < output_buffer->size();) {
                 for (std::size_t channel = 0; channel < adts_header.channels; channel++) {
                     val_f32 = output_buffer->at(i);
                     s16 val = static_cast<s16>(0x7FFF * val_f32);

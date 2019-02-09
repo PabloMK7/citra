@@ -45,11 +45,12 @@ bool MFCoInit() {
     return true;
 }
 
-bool MFDecoderInit(IMFTransform** transform, GUID audio_format) {
+unique_mfptr<IMFTransform> MFDecoderInit(GUID audio_format) {
     HRESULT hr = S_OK;
     MFT_REGISTER_TYPE_INFO reg = {0};
     GUID category = MFT_CATEGORY_AUDIO_DECODER;
     IMFActivate** activate;
+    unique_mfptr<IMFTransform> transform;
     UINT32 num_activate;
 
     reg.guidMajorType = MFMediaType_Audio;
@@ -61,22 +62,24 @@ bool MFDecoderInit(IMFTransform** transform, GUID audio_format) {
     if (FAILED(hr) || num_activate < 1) {
         ReportError("Failed to enumerate decoders", hr);
         CoTaskMemFree(activate);
-        return false;
+        return nullptr;
     }
     LOG_INFO(Audio_DSP, "Windows(R) Media Foundation found {} suitable decoder(s)", num_activate);
     for (unsigned int n = 0; n < num_activate; n++) {
-        hr = activate[n]->ActivateObject(IID_IMFTransform, (void**)transform);
+        hr = activate[n]->ActivateObject(
+            IID_IMFTransform,
+            reinterpret_cast<void**>(static_cast<IMFTransform**>(Amp(transform))));
         if (FAILED(hr))
-            *transform = nullptr;
+            transform = nullptr;
         activate[n]->Release();
     }
-    if (*transform == nullptr) {
+    if (transform == nullptr) {
         ReportError("Failed to initialize MFT", hr);
         CoTaskMemFree(activate);
-        return false;
+        return nullptr;
     }
     CoTaskMemFree(activate);
-    return true;
+    return std::move(transform);
 }
 
 void MFDeInit(IMFTransform* transform) {
