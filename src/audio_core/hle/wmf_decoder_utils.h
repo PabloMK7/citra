@@ -29,6 +29,14 @@ struct MFRelease {
     };
 };
 
+template <>
+struct MFRelease<IMFTransform> {
+    void operator()(IMFTransform* pointer) const {
+        MFShutdownObject(pointer);
+        pointer->Release();
+    };
+};
+
 // wrapper facilities for dealing with pointers
 template <typename T>
 using unique_mfptr = std::unique_ptr<T, MFRelease<T>>;
@@ -67,13 +75,13 @@ struct ADTSMeta {
 // exported functions
 bool MFCoInit();
 unique_mfptr<IMFTransform> MFDecoderInit(GUID audio_format = MFAudioFormat_AAC);
-void MFDeInit(IMFTransform* transform);
+void MFDestroy();
 unique_mfptr<IMFSample> CreateSample(void* data, DWORD len, DWORD alignment = 1,
                                      LONGLONG duration = 0);
 bool SelectInputMediaType(IMFTransform* transform, int in_stream_id, const ADTSData& adts,
-                          UINT8* user_data, UINT32 user_data_len,
+                          const UINT8* user_data, UINT32 user_data_len,
                           GUID audio_format = MFAudioFormat_AAC);
-std::optional<ADTSMeta> DetectMediaType(char* buffer, size_t len);
+std::optional<ADTSMeta> DetectMediaType(char* buffer, std::size_t len);
 bool SelectOutputMediaType(IMFTransform* transform, int out_stream_id,
                            GUID audio_format = MFAudioFormat_PCM);
 void MFFlush(IMFTransform* transform);

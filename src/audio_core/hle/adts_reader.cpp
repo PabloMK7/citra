@@ -50,7 +50,7 @@ ADTSData ParseADTS(const char* buffer) {
 // Frame length flag (1 bit)
 // Depends on core coder (1 bit)
 // Extension flag (1 bit)
-u16 MFGetAACTag(const ADTSData input) {
+u16 MFGetAACTag(const ADTSData& input) {
     u16 tag = 0;
 
     tag |= input.profile << 11;

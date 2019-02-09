@@ -22,7 +22,7 @@ private:
 
     MFOutputState DecodingLoop(ADTSData adts_header, std::array<std::vector<u8>, 2>& out_streams);
 
-    bool initalized = false;
+    bool initialized = false;
     bool selected = false;
 
     Memory::MemorySystem& memory;
@@ -36,7 +36,9 @@ WMFDecoder::Impl::Impl(Memory::MemorySystem& memory) : memory(memory) {
     MFCoInit();
 }
 
-WMFDecoder::Impl::~Impl() = default;
+WMFDecoder::Impl::~Impl() {
+    Clear();
+}
 
 std::optional<BinaryResponse> WMFDecoder::Impl::ProcessRequest(const BinaryRequest& request) {
     if (request.codec != DecoderCodec::AAC) {
@@ -65,7 +67,7 @@ std::optional<BinaryResponse> WMFDecoder::Impl::ProcessRequest(const BinaryReque
 }
 
 std::optional<BinaryResponse> WMFDecoder::Impl::Initalize(const BinaryRequest& request) {
-    if (initalized) {
+    if (initialized) {
         Clear();
     }
 
@@ -89,16 +91,16 @@ std::optional<BinaryResponse> WMFDecoder::Impl::Initalize(const BinaryRequest& r
         return response;
     }
 
-    initalized = true;
+    initialized = true;
     return response;
 }
 
 void WMFDecoder::Impl::Clear() {
-    if (initalized) {
+    if (initialized) {
         MFFlush(transform.get());
-        MFDeInit(transform.get());
+        MFDestroy();
     }
-    initalized = false;
+    initialized = false;
     selected = false;
 }
 
@@ -117,7 +119,7 @@ MFOutputState WMFDecoder::Impl::DecodingLoop(ADTSData adts_header,
 
             // the following was taken from ffmpeg version of the decoder
             f32 val_f32;
-            for (size_t i = 0; i < output_buffer->size();) {
+            for (std::size_t i = 0; i < output_buffer->size();) {
                 for (std::size_t channel = 0; channel < adts_header.channels; channel++) {
                     val_f32 = output_buffer->at(i);
                     s16 val = static_cast<s16>(0x7FFF * val_f32);
@@ -161,8 +163,8 @@ std::optional<BinaryResponse> WMFDecoder::Impl::Decode(const BinaryRequest& requ
     response.num_channels = 2;
     response.num_samples = 1024;
 
-    if (!initalized) {
-        LOG_DEBUG(Audio_DSP, "Decoder not initalized");
+    if (!initialized) {
+        LOG_DEBUG(Audio_DSP, "Decoder not initialized");
         // This is a hack to continue games when decoder failed to initialize
         return response;
     }
