@@ -32,9 +32,7 @@ private:
     DWORD out_stream_id = 0;
 };
 
-WMFDecoder::Impl::Impl(Memory::MemorySystem& memory) : memory(memory) {
-    MFCoInit();
-}
+WMFDecoder::Impl::Impl(Memory::MemorySystem& memory) : memory(memory) {}
 
 WMFDecoder::Impl::~Impl() {
     Clear();
@@ -67,8 +65,8 @@ std::optional<BinaryResponse> WMFDecoder::Impl::ProcessRequest(const BinaryReque
 }
 
 std::optional<BinaryResponse> WMFDecoder::Impl::Initalize(const BinaryRequest& request) {
-    if (initialized) {
-        Clear();
+    if (!initialized) {
+        MFCoInit();
     }
 
     BinaryResponse response;
@@ -141,7 +139,7 @@ MFOutputState WMFDecoder::Impl::DecodingLoop(ADTSData adts_header,
         // for status = 2, reset MF
         if (output_status == MFOutputState::NeedReconfig) {
             Clear();
-            return MFOutputState::FatalError;
+            return MFOutputState::NeedReconfig;
         }
 
         // for status = 3, try again with new buffer
@@ -182,6 +180,7 @@ std::optional<BinaryResponse> WMFDecoder::Impl::Decode(const BinaryRequest& requ
     std::array<std::vector<u8>, 2> out_streams;
     unique_mfptr<IMFSample> sample;
     MFInputState input_status = MFInputState::OK;
+    MFOutputState output_status = MFOutputState::OK;
     std::optional<ADTSMeta> adts_meta = DetectMediaType((char*)data, request.size);
 
     if (!adts_meta) {
@@ -209,8 +208,9 @@ std::optional<BinaryResponse> WMFDecoder::Impl::Decode(const BinaryRequest& requ
 
     while (true) {
         input_status = SendSample(transform.get(), in_stream_id, sample.get());
+        output_status = DecodingLoop(adts_meta->ADTSHeader, out_streams);
 
-        if (DecodingLoop(adts_meta->ADTSHeader, out_streams) == MFOutputState::FatalError) {
+        if (output_status == MFOutputState::FatalError) {
             // if the decode issues are caused by MFT not accepting new samples, try again
             // NOTICE: you are required to check the output even if you already knew/guessed
             // MFT didn't accept the input sample
@@ -221,6 +221,11 @@ std::optional<BinaryResponse> WMFDecoder::Impl::Decode(const BinaryRequest& requ
 
             LOG_ERROR(Audio_DSP, "Errors occurred when receiving output");
             return response;
+        } else if (output_status == MFOutputState::NeedReconfig) {
+            // re-initialize the whole thing to adapt to new parameters
+            this->Initalize(request);
+            // decode again
+            return this->Decode(request);
         }
 
         break; // jump out of the loop if at least we don't have obvious issues
