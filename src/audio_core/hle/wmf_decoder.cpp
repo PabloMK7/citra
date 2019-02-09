@@ -98,6 +98,9 @@ std::optional<BinaryResponse> WMFDecoder::Impl::Initalize(const BinaryRequest& r
 void WMFDecoder::Impl::Clear() {
     if (initialized) {
         MFFlush(transform.get());
+        // delete the transform object before shutting down MF
+        // otherwise access violation will occur
+        transform.reset();
         MFDestroy();
     }
     initialized = false;
