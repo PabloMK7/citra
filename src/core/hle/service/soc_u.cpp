@@ -10,6 +10,7 @@
 #include "common/common_types.h"
 #include "common/logging/log.h"
 #include "common/scope_exit.h"
+#include "common/swap.h"
 #include "core/core.h"
 #include "core/hle/ipc_helpers.h"
 #include "core/hle/kernel/shared_memory.h"
@@ -49,14 +50,6 @@
 #define ERRNO(x) x
 #define GET_ERRNO errno
 #define closesocket(x) close(x)
-#endif
-
-// Some platforms seem to have these defined, they conflict with our function names
-#ifdef GetAddrInfo
-#undef GetAddrInfo
-#endif
-#ifdef GetNameInfo
-#undef GetNameInfo
 #endif
 
 namespace Service::SOC {
@@ -329,18 +322,17 @@ union CTRSockAddr {
 };
 
 struct CTRAddrInfo {
-    s32 ai_flags;
-    s32 ai_family;
-    s32 ai_socktype;
-    s32 ai_protocol;
-    s32 ai_addrlen;
+    s32_le ai_flags;
+    s32_le ai_family;
+    s32_le ai_socktype;
+    s32_le ai_protocol;
+    s32_le ai_addrlen;
     char ai_canonname[256];
     CTRSockAddr ai_addr;
 
     /// Converts a platform-specific addrinfo to a 3ds addrinfo.
     static CTRAddrInfo FromPlatform(const addrinfo& addr) {
-        CTRAddrInfo ctr_addr;
-        std::memset(&ctr_addr, 0, sizeof(ctr_addr));
+        CTRAddrInfo ctr_addr{};
 
         ctr_addr.ai_flags = addr.ai_flags;
         ctr_addr.ai_family = addr.ai_family;
@@ -896,7 +888,7 @@ void SOC_U::SetSockOpt(Kernel::HLERequestContext& ctx) {
     rb.Push(err);
 }
 
-void SOC_U::GetAddrInfo(Kernel::HLERequestContext& ctx) {
+void SOC_U::GetAddrInfoImpl(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x0F, 4, 6);
     u32 node_length = rp.Pop<u32>();
     u32 service_length = rp.Pop<u32>();
@@ -956,12 +948,12 @@ void SOC_U::GetAddrInfo(Kernel::HLERequestContext& ctx) {
     rb.PushStaticBuffer(out_buff, 0);
 }
 
-void SOC_U::GetNameInfo(Kernel::HLERequestContext& ctx) {
+void SOC_U::GetNameInfoImpl(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x10, 4, 2);
     u32 socklen = rp.Pop<u32>();
     u32 hostlen = rp.Pop<u32>();
     u32 servlen = rp.Pop<u32>();
-    int flags = static_cast<int>(rp.Pop<u32>());
+    s32 flags = rp.Pop<s32>();
     auto sa_buff = rp.PopStaticBuffer();
 
     CTRSockAddr ctr_sa;
@@ -1001,8 +993,8 @@ SOC_U::SOC_U() : ServiceFramework("soc:U") {
         {0x000C0082, &SOC_U::Shutdown, "Shutdown"},
         {0x000D0082, nullptr, "GetHostByName"},
         {0x000E00C2, nullptr, "GetHostByAddr"},
-        {0x000F0106, &SOC_U::GetAddrInfo, "GetAddrInfo"},
-        {0x00100102, &SOC_U::GetNameInfo, "GetNameInfo"},
+        {0x000F0106, &SOC_U::GetAddrInfoImpl, "GetAddrInfo"},
+        {0x00100102, &SOC_U::GetNameInfoImpl, "GetNameInfo"},
         {0x00110102, &SOC_U::GetSockOpt, "GetSockOpt"},
         {0x00120104, &SOC_U::SetSockOpt, "SetSockOpt"},
         {0x001300C2, &SOC_U::Fcntl, "Fcntl"},
