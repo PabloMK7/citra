@@ -46,6 +46,24 @@ WMFDecoder::Impl::Impl(Memory::MemorySystem& memory) : memory(memory) {
     }
 
     LOG_INFO(Audio_DSP, "Media Foundation activated");
+
+    // initialize transform
+    transform = MFDecoderInit();
+    if (transform == nullptr) {
+        LOG_CRITICAL(Audio_DSP, "Can't initialize decoder");
+        return;
+    }
+
+    hr = transform->GetStreamIDs(1, &in_stream_id, 1, &out_stream_id);
+    if (hr == E_NOTIMPL) {
+        // if not implemented, it means this MFT does not assign stream ID for you
+        in_stream_id = 0;
+        out_stream_id = 0;
+    } else if (FAILED(hr)) {
+        ReportError("Decoder failed to initialize the stream ID", hr);
+        return;
+    }
+    transform_initialized = true;
 }
 
 WMFDecoder::Impl::~Impl() {
@@ -54,11 +72,9 @@ WMFDecoder::Impl::~Impl() {
         // delete the transform object before shutting down MF
         // otherwise access violation will occur
         transform.reset();
-        MFShutdown();
-        CoUninitialize();
     }
-    transform_initialized = false;
-    format_selected = false;
+    MFShutdown();
+    CoUninitialize();
 }
 
 std::optional<BinaryResponse> WMFDecoder::Impl::ProcessRequest(const BinaryRequest& request) {
@@ -91,25 +107,8 @@ std::optional<BinaryResponse> WMFDecoder::Impl::Initalize(const BinaryRequest& r
     BinaryResponse response;
     std::memcpy(&response, &request, sizeof(response));
     response.unknown1 = 0x0;
-    transform = MFDecoderInit();
 
-    if (transform == nullptr) {
-        LOG_CRITICAL(Audio_DSP, "Can't initialize decoder");
-        return response;
-    }
-
-    HRESULT hr = transform->GetStreamIDs(1, &in_stream_id, 1, &out_stream_id);
-    if (hr == E_NOTIMPL) {
-        // if not implemented, it means this MFT does not assign stream ID for you
-        in_stream_id = 0;
-        out_stream_id = 0;
-    } else if (FAILED(hr)) {
-        ReportError("Decoder failed to initialize the stream ID", hr);
-        return response;
-    }
-
-    transform_initialized = true;
-    format_selected = false;  // select format again if application request initialize the DSP
+    format_selected = false; // select format again if application request initialize the DSP
     return response;
 }
 
