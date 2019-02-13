@@ -16,14 +16,12 @@ public:
 private:
     std::optional<BinaryResponse> Initalize(const BinaryRequest& request);
 
-    void Clear();
-
     std::optional<BinaryResponse> Decode(const BinaryRequest& request);
 
     MFOutputState DecodingLoop(ADTSData adts_header, std::array<std::vector<u8>, 2>& out_streams);
 
-    bool initialized = false;
-    bool selected = false;
+    bool transform_initialized = false;
+    bool format_selected = false;
 
     Memory::MemorySystem& memory;
 
@@ -32,10 +30,35 @@ private:
     DWORD out_stream_id = 0;
 };
 
-WMFDecoder::Impl::Impl(Memory::MemorySystem& memory) : memory(memory) {}
+WMFDecoder::Impl::Impl(Memory::MemorySystem& memory) : memory(memory) {
+    HRESULT hr = S_OK;
+    hr = CoInitialize(NULL);
+    // S_FALSE will be returned when COM has already been initialized
+    if (hr != S_OK && hr != S_FALSE) {
+        ReportError("Failed to start COM components", hr);
+    }
+
+    // lite startup is faster and all what we need is included
+    hr = MFStartup(MF_VERSION, MFSTARTUP_LITE);
+    if (hr != S_OK) {
+        // Do you know you can't initialize MF in test mode or safe mode?
+        ReportError("Failed to initialize Media Foundation", hr);
+    }
+
+    LOG_INFO(Audio_DSP, "Media Foundation activated");
+}
 
 WMFDecoder::Impl::~Impl() {
-    Clear();
+    if (transform_initialized) {
+        MFFlush(transform.get());
+        // delete the transform object before shutting down MF
+        // otherwise access violation will occur
+        transform.reset();
+        MFShutdown();
+        CoUninitialize();
+    }
+    transform_initialized = false;
+    format_selected = false;
 }
 
 std::optional<BinaryResponse> WMFDecoder::Impl::ProcessRequest(const BinaryRequest& request) {
@@ -65,17 +88,13 @@ std::optional<BinaryResponse> WMFDecoder::Impl::ProcessRequest(const BinaryReque
 }
 
 std::optional<BinaryResponse> WMFDecoder::Impl::Initalize(const BinaryRequest& request) {
-    if (!initialized) {
-        MFCoInit();
-    }
-
     BinaryResponse response;
     std::memcpy(&response, &request, sizeof(response));
     response.unknown1 = 0x0;
     transform = MFDecoderInit();
 
     if (transform == nullptr) {
-        LOG_CRITICAL(Audio_DSP, "Can't init decoder");
+        LOG_CRITICAL(Audio_DSP, "Can't initialize decoder");
         return response;
     }
 
@@ -89,20 +108,9 @@ std::optional<BinaryResponse> WMFDecoder::Impl::Initalize(const BinaryRequest& r
         return response;
     }
 
-    initialized = true;
+    transform_initialized = true;
+    format_selected = false;  // select format again if application request initialize the DSP
     return response;
-}
-
-void WMFDecoder::Impl::Clear() {
-    if (initialized) {
-        MFFlush(transform.get());
-        // delete the transform object before shutting down MF
-        // otherwise access violation will occur
-        transform.reset();
-        MFDestroy();
-    }
-    initialized = false;
-    selected = false;
 }
 
 MFOutputState WMFDecoder::Impl::DecodingLoop(ADTSData adts_header,
@@ -138,7 +146,7 @@ MFOutputState WMFDecoder::Impl::DecodingLoop(ADTSData adts_header,
 
         // for status = 2, reset MF
         if (output_status == MFOutputState::NeedReconfig) {
-            Clear();
+            format_selected = false;
             return MFOutputState::NeedReconfig;
         }
 
@@ -164,7 +172,7 @@ std::optional<BinaryResponse> WMFDecoder::Impl::Decode(const BinaryRequest& requ
     response.num_channels = 2;
     response.num_samples = 1024;
 
-    if (!initialized) {
+    if (!transform_initialized) {
         LOG_DEBUG(Audio_DSP, "Decoder not initialized");
         // This is a hack to continue games when decoder failed to initialize
         return response;
@@ -190,7 +198,7 @@ std::optional<BinaryResponse> WMFDecoder::Impl::Decode(const BinaryRequest& requ
 
     response.num_channels = adts_meta->ADTSHeader.channels;
 
-    if (!selected) {
+    if (!format_selected) {
         LOG_DEBUG(Audio_DSP, "New ADTS stream: channels = {}, sample rate = {}",
                   adts_meta->ADTSHeader.channels, adts_meta->ADTSHeader.samplerate);
         SelectInputMediaType(transform.get(), in_stream_id, adts_meta->ADTSHeader,
@@ -200,7 +208,7 @@ std::optional<BinaryResponse> WMFDecoder::Impl::Decode(const BinaryRequest& requ
         // cache the result from detect_mediatype and call select_*_mediatype only once
         // This could increase performance very slightly
         transform->ProcessMessage(MFT_MESSAGE_NOTIFY_BEGIN_STREAMING, 0);
-        selected = true;
+        format_selected = true;
     }
 
     sample = CreateSample((void*)data, request.size, 1, 0);
@@ -222,8 +230,8 @@ std::optional<BinaryResponse> WMFDecoder::Impl::Decode(const BinaryRequest& requ
             LOG_ERROR(Audio_DSP, "Errors occurred when receiving output");
             return response;
         } else if (output_status == MFOutputState::NeedReconfig) {
-            // re-initialize the whole thing to adapt to new parameters
-            this->Initalize(request);
+            // flush the transform
+            MFFlush(transform.get());
             // decode again
             return this->Decode(request);
         }

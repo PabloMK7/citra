@@ -25,28 +25,6 @@ void ReportError(std::string msg, HRESULT hr) {
     LOG_CRITICAL(Audio_DSP, "{}: {:08x}", msg, hr);
 }
 
-bool MFCoInit() {
-    HRESULT hr = S_OK;
-    hr = CoInitialize(NULL);
-    // S_FALSE will be returned when COM has already been initialized
-    if (hr != S_OK && hr != S_FALSE) {
-        ReportError("Failed to start COM components", hr);
-        return false;
-    }
-
-    // lite startup is faster and all what we need is included
-    hr = MFStartup(MF_VERSION, MFSTARTUP_LITE);
-    if (hr != S_OK) {
-        // Do you know you can't initialize MF in test mode or safe mode?
-        ReportError("Failed to initialize Media Foundation", hr);
-        return false;
-    }
-
-    LOG_INFO(Audio_DSP, "Media Foundation activated");
-
-    return true;
-}
-
 unique_mfptr<IMFTransform> MFDecoderInit(GUID audio_format) {
     HRESULT hr = S_OK;
     MFT_REGISTER_TYPE_INFO reg = {0};
@@ -82,11 +60,6 @@ unique_mfptr<IMFTransform> MFDecoderInit(GUID audio_format) {
     }
     CoTaskMemFree(activate);
     return std::move(transform);
-}
-
-void MFDestroy() {
-    MFShutdown();
-    CoUninitialize();
 }
 
 unique_mfptr<IMFSample> CreateSample(void* data, DWORD len, DWORD alignment, LONGLONG duration) {
