@@ -52,6 +52,8 @@ unique_mfptr<IMFTransform> MFDecoderInit(GUID audio_format) {
         if (FAILED(hr))
             transform = nullptr;
         activate[n]->Release();
+        if (SUCCEEDED(hr))
+            break;
     }
     if (transform == nullptr) {
         ReportError("Failed to initialize MFT", hr);
@@ -59,10 +61,11 @@ unique_mfptr<IMFTransform> MFDecoderInit(GUID audio_format) {
         return nullptr;
     }
     CoTaskMemFree(activate);
-    return std::move(transform);
+    return transform;
 }
 
-unique_mfptr<IMFSample> CreateSample(void* data, DWORD len, DWORD alignment, LONGLONG duration) {
+unique_mfptr<IMFSample> CreateSample(const void* data, DWORD len, DWORD alignment,
+                                     LONGLONG duration) {
     HRESULT hr = S_OK;
     unique_mfptr<IMFMediaBuffer> buf;
     unique_mfptr<IMFSample> sample;

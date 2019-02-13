@@ -74,7 +74,7 @@ struct ADTSMeta {
 
 // exported functions
 unique_mfptr<IMFTransform> MFDecoderInit(GUID audio_format = MFAudioFormat_AAC);
-unique_mfptr<IMFSample> CreateSample(void* data, DWORD len, DWORD alignment = 1,
+unique_mfptr<IMFSample> CreateSample(const void* data, DWORD len, DWORD alignment = 1,
                                      LONGLONG duration = 0);
 bool SelectInputMediaType(IMFTransform* transform, int in_stream_id, const ADTSData& adts,
                           const UINT8* user_data, UINT32 user_data_len,
