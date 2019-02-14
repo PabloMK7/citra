@@ -3,7 +3,13 @@
 // Refer to the license.txt file included.
 
 #include "audio_core/audio_types.h"
+#ifdef HAVE_MF
+#include "audio_core/hle/wmf_decoder.h"
+#elif HAVE_FFMPEG
+#include "audio_core/hle/ffmpeg_decoder.h"
+#endif
 #include "audio_core/hle/common.h"
+#include "audio_core/hle/decoder.h"
 #include "audio_core/hle/hle.h"
 #include "audio_core/hle/mixers.h"
 #include "audio_core/hle/shared_memory.h"
@@ -69,6 +75,8 @@ private:
     DspHle& parent;
     Core::TimingEventType* tick_event;
 
+    std::unique_ptr<HLE::DecoderBase> decoder;
+
     std::weak_ptr<DSP_DSP> dsp_dsp;
 };
 
@@ -78,6 +86,15 @@ DspHle::Impl::Impl(DspHle& parent_, Memory::MemorySystem& memory) : parent(paren
     for (auto& source : sources) {
         source.SetMemory(memory);
     }
+
+#ifdef HAVE_MF
+    decoder = std::make_unique<HLE::WMFDecoder>(memory);
+#elif HAVE_FFMPEG
+    decoder = std::make_unique<HLE::FFMPEGDecoder>(memory);
+#else
+    LOG_WARNING(Audio_DSP, "No decoder found, this could lead to missing audio");
+    decoder = std::make_unique<HLE::NullDecoder>();
+#endif // HAVE_MF
 
     Core::Timing& timing = Core::System::GetInstance().CoreTiming();
     tick_event =
@@ -214,6 +231,28 @@ void DspHle::Impl::PipeWrite(DspPipe pipe_number, const std::vector<u8>& buffer)
         }
 
         return;
+    }
+    case DspPipe::Binary: {
+        // TODO(B3N30): Make this async, and signal the interrupt
+        HLE::BinaryRequest request;
+        if (sizeof(request) != buffer.size()) {
+            LOG_CRITICAL(Audio_DSP, "got binary pipe with wrong size {}", buffer.size());
+            UNIMPLEMENTED();
+            return;
+        }
+        std::memcpy(&request, buffer.data(), buffer.size());
+        if (request.codec != HLE::DecoderCodec::AAC) {
+            LOG_CRITICAL(Audio_DSP, "got unknown codec {}", static_cast<u16>(request.codec));
+            UNIMPLEMENTED();
+            return;
+        }
+        std::optional<HLE::BinaryResponse> response = decoder->ProcessRequest(request);
+        if (response) {
+            const HLE::BinaryResponse& value = *response;
+            pipe_data[static_cast<u32>(pipe_number)].resize(sizeof(value));
+            std::memcpy(pipe_data[static_cast<u32>(pipe_number)].data(), &value, sizeof(value));
+        }
+        break;
     }
     default:
         LOG_CRITICAL(Audio_DSP, "pipe_number = {} unimplemented",
