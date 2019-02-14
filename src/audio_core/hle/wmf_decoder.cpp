@@ -16,14 +16,12 @@ public:
 private:
     std::optional<BinaryResponse> Initalize(const BinaryRequest& request);
 
-    void Clear();
-
     std::optional<BinaryResponse> Decode(const BinaryRequest& request);
 
     MFOutputState DecodingLoop(ADTSData adts_header, std::array<std::vector<u8>, 2>& out_streams);
 
-    bool initalized = false;
-    bool selected = false;
+    bool transform_initialized = false;
+    bool format_selected = false;
 
     Memory::MemorySystem& memory;
 
@@ -33,10 +31,51 @@ private:
 };
 
 WMFDecoder::Impl::Impl(Memory::MemorySystem& memory) : memory(memory) {
-    MFCoInit();
+    HRESULT hr = S_OK;
+    hr = CoInitialize(NULL);
+    // S_FALSE will be returned when COM has already been initialized
+    if (hr != S_OK && hr != S_FALSE) {
+        ReportError("Failed to start COM components", hr);
+    }
+
+    // lite startup is faster and all what we need is included
+    hr = MFStartup(MF_VERSION, MFSTARTUP_LITE);
+    if (hr != S_OK) {
+        // Do you know you can't initialize MF in test mode or safe mode?
+        ReportError("Failed to initialize Media Foundation", hr);
+    }
+
+    LOG_INFO(Audio_DSP, "Media Foundation activated");
+
+    // initialize transform
+    transform = MFDecoderInit();
+    if (transform == nullptr) {
+        LOG_CRITICAL(Audio_DSP, "Can't initialize decoder");
+        return;
+    }
+
+    hr = transform->GetStreamIDs(1, &in_stream_id, 1, &out_stream_id);
+    if (hr == E_NOTIMPL) {
+        // if not implemented, it means this MFT does not assign stream ID for you
+        in_stream_id = 0;
+        out_stream_id = 0;
+    } else if (FAILED(hr)) {
+        ReportError("Decoder failed to initialize the stream ID", hr);
+        return;
+    }
+    transform_initialized = true;
 }
 
-WMFDecoder::Impl::~Impl() = default;
+WMFDecoder::Impl::~Impl() {
+    if (transform_initialized) {
+        MFFlush(transform.get());
+        // delete the transform object before shutting down MF
+        // otherwise access violation will occur
+        transform.reset();
+    }
+    MFShutdown();
+    CoUninitialize();
+}
 
 std::optional<BinaryResponse> WMFDecoder::Impl::ProcessRequest(const BinaryRequest& request) {
     if (request.codec != DecoderCodec::AAC) {
@@ -65,41 +104,12 @@ std::optional<BinaryResponse> WMFDecoder::Impl::ProcessRequest(const BinaryReque
 }
 
 std::optional<BinaryResponse> WMFDecoder::Impl::Initalize(const BinaryRequest& request) {
-    if (initalized) {
-        Clear();
-    }
-
     BinaryResponse response;
     std::memcpy(&response, &request, sizeof(response));
     response.unknown1 = 0x0;
-    transform = MFDecoderInit();
 
-    if (transform == nullptr) {
-        LOG_CRITICAL(Audio_DSP, "Can't init decoder");
-        return response;
-    }
-
-    HRESULT hr = transform->GetStreamIDs(1, &in_stream_id, 1, &out_stream_id);
-    if (hr == E_NOTIMPL) {
-        // if not implemented, it means this MFT does not assign stream ID for you
-        in_stream_id = 0;
-        out_stream_id = 0;
-    } else if (FAILED(hr)) {
-        ReportError("Decoder failed to initialize the stream ID", hr);
-        return response;
-    }
-
-    initalized = true;
+    format_selected = false; // select format again if application request initialize the DSP
     return response;
-}
-
-void WMFDecoder::Impl::Clear() {
-    if (initalized) {
-        MFFlush(transform.get());
-        MFDeInit(transform.get());
-    }
-    initalized = false;
-    selected = false;
 }
 
 MFOutputState WMFDecoder::Impl::DecodingLoop(ADTSData adts_header,
@@ -117,7 +127,7 @@ MFOutputState WMFDecoder::Impl::DecodingLoop(ADTSData adts_header,
 
             // the following was taken from ffmpeg version of the decoder
             f32 val_f32;
-            for (size_t i = 0; i < output_buffer->size();) {
+            for (std::size_t i = 0; i < output_buffer->size();) {
                 for (std::size_t channel = 0; channel < adts_header.channels; channel++) {
                     val_f32 = output_buffer->at(i);
                     s16 val = static_cast<s16>(0x7FFF * val_f32);
@@ -135,8 +145,8 @@ MFOutputState WMFDecoder::Impl::DecodingLoop(ADTSData adts_header,
 
         // for status = 2, reset MF
         if (output_status == MFOutputState::NeedReconfig) {
-            Clear();
-            return MFOutputState::FatalError;
+            format_selected = false;
+            return MFOutputState::NeedReconfig;
         }
 
         // for status = 3, try again with new buffer
@@ -161,8 +171,8 @@ std::optional<BinaryResponse> WMFDecoder::Impl::Decode(const BinaryRequest& requ
     response.num_channels = 2;
     response.num_samples = 1024;
 
-    if (!initalized) {
-        LOG_DEBUG(Audio_DSP, "Decoder not initalized");
+    if (!transform_initialized) {
+        LOG_DEBUG(Audio_DSP, "Decoder not initialized");
         // This is a hack to continue games when decoder failed to initialize
         return response;
     }
@@ -177,6 +187,7 @@ std::optional<BinaryResponse> WMFDecoder::Impl::Decode(const BinaryRequest& requ
     std::array<std::vector<u8>, 2> out_streams;
     unique_mfptr<IMFSample> sample;
     MFInputState input_status = MFInputState::OK;
+    MFOutputState output_status = MFOutputState::OK;
     std::optional<ADTSMeta> adts_meta = DetectMediaType((char*)data, request.size);
 
     if (!adts_meta) {
@@ -186,7 +197,7 @@ std::optional<BinaryResponse> WMFDecoder::Impl::Decode(const BinaryRequest& requ
 
     response.num_channels = adts_meta->ADTSHeader.channels;
 
-    if (!selected) {
+    if (!format_selected) {
         LOG_DEBUG(Audio_DSP, "New ADTS stream: channels = {}, sample rate = {}",
                   adts_meta->ADTSHeader.channels, adts_meta->ADTSHeader.samplerate);
         SelectInputMediaType(transform.get(), in_stream_id, adts_meta->ADTSHeader,
@@ -196,7 +207,7 @@ std::optional<BinaryResponse> WMFDecoder::Impl::Decode(const BinaryRequest& requ
         // cache the result from detect_mediatype and call select_*_mediatype only once
         // This could increase performance very slightly
         transform->ProcessMessage(MFT_MESSAGE_NOTIFY_BEGIN_STREAMING, 0);
-        selected = true;
+        format_selected = true;
     }
 
     sample = CreateSample((void*)data, request.size, 1, 0);
@@ -204,8 +215,9 @@ std::optional<BinaryResponse> WMFDecoder::Impl::Decode(const BinaryRequest& requ
 
     while (true) {
         input_status = SendSample(transform.get(), in_stream_id, sample.get());
+        output_status = DecodingLoop(adts_meta->ADTSHeader, out_streams);
 
-        if (DecodingLoop(adts_meta->ADTSHeader, out_streams) == MFOutputState::FatalError) {
+        if (output_status == MFOutputState::FatalError) {
             // if the decode issues are caused by MFT not accepting new samples, try again
             // NOTICE: you are required to check the output even if you already knew/guessed
             // MFT didn't accept the input sample
@@ -216,6 +228,11 @@ std::optional<BinaryResponse> WMFDecoder::Impl::Decode(const BinaryRequest& requ
 
             LOG_ERROR(Audio_DSP, "Errors occurred when receiving output");
             return response;
+        } else if (output_status == MFOutputState::NeedReconfig) {
+            // flush the transform
+            MFFlush(transform.get());
+            // decode again
+            return this->Decode(request);
         }
 
         break; // jump out of the loop if at least we don't have obvious issues

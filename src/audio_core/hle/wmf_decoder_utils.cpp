@@ -2,6 +2,7 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 #include "common/logging/log.h"
+#include "common/string_util.h"
 #include "wmf_decoder_utils.h"
 
 // utility functions
@@ -9,40 +10,19 @@ void ReportError(std::string msg, HRESULT hr) {
     if (SUCCEEDED(hr)) {
         return;
     }
-    LPSTR err;
-    FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER |
-                      FORMAT_MESSAGE_IGNORE_INSERTS,
-                  nullptr, hr,
-                  // hardcode to use en_US because if any user had problems with this
-                  // we can help them w/o translating anything
-                  // default is to use the language currently active on the operating system
-                  MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), (LPSTR)&err, 0, nullptr);
+    LPWSTR err;
+    FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER |
+                       FORMAT_MESSAGE_IGNORE_INSERTS,
+                   nullptr, hr,
+                   // hardcode to use en_US because if any user had problems with this
+                   // we can help them w/o translating anything
+                   // default is to use the language currently active on the operating system
+                   MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), (LPWSTR)&err, 0, nullptr);
     if (err != nullptr) {
-        LOG_CRITICAL(Audio_DSP, "{}: {}", msg, err);
+        LOG_CRITICAL(Audio_DSP, "{}: {}", msg, Common::UTF16ToUTF8(err));
+        LocalFree(err);
     }
     LOG_CRITICAL(Audio_DSP, "{}: {:08x}", msg, hr);
-}
-
-bool MFCoInit() {
-    HRESULT hr = S_OK;
-    hr = CoInitialize(NULL);
-    // S_FALSE will be returned when COM has already been initialized
-    if (hr != S_OK && hr != S_FALSE) {
-        ReportError("Failed to start COM components", hr);
-        return false;
-    }
-
-    // lite startup is faster and all what we need is included
-    hr = MFStartup(MF_VERSION, MFSTARTUP_LITE);
-    if (hr != S_OK) {
-        // Do you know you can't initialize MF in test mode or safe mode?
-        ReportError("Failed to initialize Media Foundation", hr);
-        return false;
-    }
-
-    LOG_INFO(Audio_DSP, "Media Foundation activated");
-
-    return true;
 }
 
 unique_mfptr<IMFTransform> MFDecoderInit(GUID audio_format) {
@@ -72,6 +52,8 @@ unique_mfptr<IMFTransform> MFDecoderInit(GUID audio_format) {
         if (FAILED(hr))
             transform = nullptr;
         activate[n]->Release();
+        if (SUCCEEDED(hr))
+            break;
     }
     if (transform == nullptr) {
         ReportError("Failed to initialize MFT", hr);
@@ -79,15 +61,11 @@ unique_mfptr<IMFTransform> MFDecoderInit(GUID audio_format) {
         return nullptr;
     }
     CoTaskMemFree(activate);
-    return std::move(transform);
+    return transform;
 }
 
-void MFDeInit(IMFTransform* transform) {
-    MFShutdownObject(transform);
-    CoUninitialize();
-}
-
-unique_mfptr<IMFSample> CreateSample(void* data, DWORD len, DWORD alignment, LONGLONG duration) {
+unique_mfptr<IMFSample> CreateSample(const void* data, DWORD len, DWORD alignment,
+                                     LONGLONG duration) {
     HRESULT hr = S_OK;
     unique_mfptr<IMFMediaBuffer> buf;
     unique_mfptr<IMFSample> sample;
@@ -126,11 +104,11 @@ unique_mfptr<IMFSample> CreateSample(void* data, DWORD len, DWORD alignment, LON
         ReportError("Unable to set sample duration, but continuing anyway", hr);
     }
 
-    return std::move(sample);
+    return sample;
 }
 
 bool SelectInputMediaType(IMFTransform* transform, int in_stream_id, const ADTSData& adts,
-                          UINT8* user_data, UINT32 user_data_len, GUID audio_format) {
+                          const UINT8* user_data, UINT32 user_data_len, GUID audio_format) {
     HRESULT hr = S_OK;
     unique_mfptr<IMFMediaType> t;
 
@@ -209,7 +187,7 @@ bool SelectOutputMediaType(IMFTransform* transform, int out_stream_id, GUID audi
     return false;
 }
 
-std::optional<ADTSMeta> DetectMediaType(char* buffer, size_t len) {
+std::optional<ADTSMeta> DetectMediaType(char* buffer, std::size_t len) {
     if (len < 7) {
         return std::nullopt;
     }
