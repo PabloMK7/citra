@@ -344,7 +344,8 @@ struct CachedSurface : SurfaceParams, std::enable_shared_from_this<CachedSurface
     }
 
     bool IsSurfaceFullyInvalid() const {
-        return (invalid_regions & GetInterval()) == SurfaceRegions(GetInterval());
+        auto interval = GetInterval();
+        return *invalid_regions.equal_range(interval).first == interval;
     }
 
     bool registered = false;
