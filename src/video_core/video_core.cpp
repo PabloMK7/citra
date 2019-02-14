@@ -71,9 +71,9 @@ void RequestScreenshot(void* data, std::function<void()> callback,
 
 u16 GetResolutionScaleFactor() {
     if (g_hw_renderer_enabled) {
-        return !Settings::values.resolution_factor
-                   ? g_renderer->GetRenderWindow().GetFramebufferLayout().GetScalingRatio()
-                   : Settings::values.resolution_factor;
+        return Settings::values.resolution_factor
+                   ? Settings::values.resolution_factor
+                   : g_renderer->GetRenderWindow().GetFramebufferLayout().GetScalingRatio();
     } else {
         // Software renderer always render at native resolution
         return 1;

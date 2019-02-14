@@ -46,7 +46,11 @@ public:
         return rasterizer.get();
     }
 
-    EmuWindow& GetRenderWindow() const {
+    EmuWindow& GetRenderWindow() {
+        return render_window;
+    }
+
+    const EmuWindow& GetRenderWindow() const {
         return render_window;
     }
 
