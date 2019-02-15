@@ -68,11 +68,11 @@ ResultCode SoftwareKeyboard::StartImpl(Service::APT::AppletStartupParameter cons
     DrawScreenKeyboard();
 
     using namespace Frontend;
-    frontend_applet = GetRegisteredSoftwareKeyboard();
-    if (frontend_applet) {
-        KeyboardConfig frontend_config = ToFrontendConfig(config);
-        frontend_applet->Setup(&frontend_config);
-    }
+    frontend_applet = Core::System::GetInstance().GetSoftwareKeyboard();
+    ASSERT(frontend_applet);
+
+    KeyboardConfig frontend_config = ToFrontendConfig(config);
+    frontend_applet->Setup(frontend_config);
 
     is_running = true;
     return RESULT_SUCCESS;
@@ -80,7 +80,7 @@ ResultCode SoftwareKeyboard::StartImpl(Service::APT::AppletStartupParameter cons
 
 void SoftwareKeyboard::Update() {
     using namespace Frontend;
-    KeyboardData data(*frontend_applet->ReceiveData());
+    KeyboardData data(frontend_applet->ReceiveData());
     std::u16string text = Common::UTF8ToUTF16(data.text);
     memcpy(text_memory->GetPointer(), text.c_str(), text.length() * sizeof(char16_t));
     switch (config.num_buttons_m1) {

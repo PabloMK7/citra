@@ -4,12 +4,15 @@
 
 #pragma once
 
-#include <array>
 #include <memory>
 #include <string>
 #include "core/hle/applets/mii_selector.h"
 
 namespace Frontend {
+
+/// Default English button text mappings. Frontends may need to copy this to internationalize it.
+constexpr char MII_BUTTON_OKAY[] = "Ok";
+constexpr char MII_BUTTON_CANCEL[] = "Cancel";
 
 /// Configuration that's relevant to frontend implementation of applet. Anything missing that we
 /// later learn is needed can be added here and filled in by the backend HLE applet
@@ -26,11 +29,12 @@ struct MiiSelectorData {
 
 class MiiSelector {
 public:
-    virtual void Setup(const MiiSelectorConfig* config) {
-        this->config = MiiSelectorConfig(*config);
+    virtual void Setup(const MiiSelectorConfig& config) {
+        this->config = MiiSelectorConfig(config);
     }
-    const MiiSelectorData* ReceiveData() {
-        return &data;
+
+    const MiiSelectorData& ReceiveData() const {
+        return data;
     }
 
     /**
@@ -46,11 +50,7 @@ protected:
 
 class DefaultMiiSelector final : public MiiSelector {
 public:
-    void Setup(const MiiSelectorConfig* config) override;
+    void Setup(const MiiSelectorConfig& config) override;
 };
-
-void RegisterMiiSelector(std::shared_ptr<MiiSelector> applet);
-
-std::shared_ptr<MiiSelector> GetRegisteredMiiSelector();
 
 } // namespace Frontend

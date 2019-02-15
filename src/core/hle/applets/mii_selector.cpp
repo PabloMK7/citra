@@ -60,11 +60,11 @@ ResultCode MiiSelector::StartImpl(const Service::APT::AppletStartupParameter& pa
     memcpy(&config, parameter.buffer.data(), parameter.buffer.size());
 
     using namespace Frontend;
-    frontend_applet = GetRegisteredMiiSelector();
-    if (frontend_applet) {
-        MiiSelectorConfig frontend_config = ToFrontendConfig(config);
-        frontend_applet->Setup(&frontend_config);
-    }
+    frontend_applet = Core::System::GetInstance().GetMiiSelector();
+    ASSERT(frontend_applet);
+
+    MiiSelectorConfig frontend_config = ToFrontendConfig(config);
+    frontend_applet->Setup(frontend_config);
 
     is_running = true;
     return RESULT_SUCCESS;
@@ -72,9 +72,9 @@ ResultCode MiiSelector::StartImpl(const Service::APT::AppletStartupParameter& pa
 
 void MiiSelector::Update() {
     using namespace Frontend;
-    const MiiSelectorData* data = frontend_applet->ReceiveData();
-    result.return_code = data->return_code;
-    result.selected_mii_data = data->mii;
+    const MiiSelectorData& data = frontend_applet->ReceiveData();
+    result.return_code = data.return_code;
+    result.selected_mii_data = data.mii;
     // Calculate the checksum of the selected Mii, see https://www.3dbrew.org/wiki/Mii#Checksum
     result.mii_data_checksum = boost::crc<16, 0x1021, 0, 0, false, false>(
         &result.selected_mii_data, sizeof(HLE::Applets::MiiData) + sizeof(result.unknown1));

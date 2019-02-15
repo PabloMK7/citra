@@ -30,9 +30,9 @@ enum class ButtonConfig {
 };
 
 /// Default English button text mappings. Frontends may need to copy this to internationalize it.
-constexpr char BUTTON_OKAY[] = "Ok";
-constexpr char BUTTON_CANCEL[] = "Cancel";
-constexpr char BUTTON_FORGOT[] = "I Forgot";
+constexpr char SWKBD_BUTTON_OKAY[] = "Ok";
+constexpr char SWKBD_BUTTON_CANCEL[] = "Cancel";
+constexpr char SWKBD_BUTTON_FORGOT[] = "I Forgot";
 
 /// Configuration thats relevent to frontend implementation of applets. Anything missing that we
 /// later learn is needed can be added here and filled in by the backend HLE applet
@@ -82,11 +82,12 @@ enum class ValidationError {
 
 class SoftwareKeyboard {
 public:
-    virtual void Setup(const KeyboardConfig* config) {
-        this->config = KeyboardConfig(*config);
+    virtual void Setup(const KeyboardConfig& config) {
+        this->config = KeyboardConfig(config);
     }
-    const KeyboardData* ReceiveData() {
-        return &data;
+
+    const KeyboardData& ReceiveData() const {
+        return data;
     }
 
     /**
@@ -121,11 +122,7 @@ protected:
 
 class DefaultKeyboard final : public SoftwareKeyboard {
 public:
-    void Setup(const KeyboardConfig* config) override;
+    void Setup(const KeyboardConfig& config) override;
 };
-
-void RegisterSoftwareKeyboard(std::shared_ptr<SoftwareKeyboard> applet);
-
-std::shared_ptr<SoftwareKeyboard> GetRegisteredSoftwareKeyboard();
 
 } // namespace Frontend

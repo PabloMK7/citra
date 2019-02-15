@@ -8,8 +8,8 @@
 #include <QDialog>
 #include "core/frontend/applets/mii_selector.h"
 
-class QDialogButtonBox;
 class QComboBox;
+class QDialogButtonBox;
 class QVBoxLayout;
 class QtMiiSelector;
 
@@ -20,14 +20,12 @@ public:
     QtMiiSelectorDialog(QWidget* parent, QtMiiSelector* mii_selector_);
 
 private:
-    void ShowNoMiis();
-
     QDialogButtonBox* buttons;
     QComboBox* combobox;
     QVBoxLayout* layout;
     QtMiiSelector* mii_selector;
     u32 return_code = 0;
-    std::unordered_map<int, HLE::Applets::MiiData> miis;
+    std::vector<HLE::Applets::MiiData> miis;
 
     friend class QtMiiSelector;
 };
@@ -37,7 +35,7 @@ class QtMiiSelector final : public QObject, public Frontend::MiiSelector {
 
 public:
     explicit QtMiiSelector(QWidget& parent);
-    void Setup(const Frontend::MiiSelectorConfig* config) override;
+    void Setup(const Frontend::MiiSelectorConfig& config) override;
 
 private:
     Q_INVOKABLE void OpenDialog();

@@ -25,7 +25,7 @@ QtKeyboardValidator::State QtKeyboardValidator::validate(QString& input, int& po
 QtKeyboardDialog::QtKeyboardDialog(QWidget* parent, QtKeyboard* keyboard_)
     : QDialog(parent), keyboard(keyboard_) {
     using namespace Frontend;
-    KeyboardConfig config = keyboard->config;
+    const auto config = keyboard->config;
     layout = new QVBoxLayout;
     label = new QLabel(QString::fromStdString(config.hint_text));
     line_edit = new QLineEdit;
@@ -36,31 +36,31 @@ QtKeyboardDialog::QtKeyboardDialog(QWidget* parent, QtKeyboard* keyboard_)
     case ButtonConfig::Triple:
         buttons->addButton(config.has_custom_button_text
                                ? QString::fromStdString(config.button_text[2])
-                               : tr(BUTTON_OKAY),
+                               : tr(SWKBD_BUTTON_OKAY),
                            QDialogButtonBox::ButtonRole::AcceptRole);
         buttons->addButton(config.has_custom_button_text
                                ? QString::fromStdString(config.button_text[1])
-                               : tr(BUTTON_FORGOT),
+                               : tr(SWKBD_BUTTON_FORGOT),
                            QDialogButtonBox::ButtonRole::HelpRole);
         buttons->addButton(config.has_custom_button_text
                                ? QString::fromStdString(config.button_text[0])
-                               : tr(BUTTON_CANCEL),
+                               : tr(SWKBD_BUTTON_CANCEL),
                            QDialogButtonBox::ButtonRole::RejectRole);
         break;
     case ButtonConfig::Dual:
         buttons->addButton(config.has_custom_button_text
                                ? QString::fromStdString(config.button_text[1])
-                               : tr(BUTTON_OKAY),
+                               : tr(SWKBD_BUTTON_OKAY),
                            QDialogButtonBox::ButtonRole::AcceptRole);
         buttons->addButton(config.has_custom_button_text
                                ? QString::fromStdString(config.button_text[0])
-                               : tr(BUTTON_CANCEL),
+                               : tr(SWKBD_BUTTON_CANCEL),
                            QDialogButtonBox::ButtonRole::RejectRole);
         break;
     case ButtonConfig::Single:
         buttons->addButton(config.has_custom_button_text
                                ? QString::fromStdString(config.button_text[0])
-                               : tr(BUTTON_OKAY),
+                               : tr(SWKBD_BUTTON_OKAY),
                            QDialogButtonBox::ButtonRole::AcceptRole);
         break;
     case ButtonConfig::None:
@@ -109,7 +109,7 @@ void QtKeyboardDialog::HandleValidationError(Frontend::ValidationError error) {
 
 QtKeyboard::QtKeyboard(QWidget& parent_) : parent(parent_) {}
 
-void QtKeyboard::Setup(const Frontend::KeyboardConfig* config) {
+void QtKeyboard::Setup(const Frontend::KeyboardConfig& config) {
     SoftwareKeyboard::Setup(config);
     if (this->config.button_config != Frontend::ButtonConfig::None) {
         ok_id = static_cast<u8>(this->config.button_config);

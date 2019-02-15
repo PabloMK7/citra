@@ -1897,8 +1897,8 @@ int main(int argc, char* argv[]) {
 
     // Register frontend applets
     Frontend::RegisterDefaultApplets();
-    Frontend::RegisterMiiSelector(std::make_shared<QtMiiSelector>(main_window));
-    Frontend::RegisterSoftwareKeyboard(std::make_shared<QtKeyboard>(main_window));
+    Core::System::GetInstance().RegisterMiiSelector(std::make_shared<QtMiiSelector>(main_window));
+    Core::System::GetInstance().RegisterSoftwareKeyboard(std::make_shared<QtKeyboard>(main_window));
 
     main_window.show();
     int result = app.exec();
