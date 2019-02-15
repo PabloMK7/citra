@@ -166,6 +166,9 @@ void ServiceFrameworkBase::ReportUnimplementedFunction(u32* cmd_buf, const Funct
 
     LOG_ERROR(Service, "unknown / unimplemented {}", fmt::to_string(buf));
     // TODO(bunnei): Hack - ignore error
+    header.normal_params_size.Assign(1);
+    header.translate_params_size.Assign(0);
+    cmd_buf[0] = header.raw;
     cmd_buf[1] = 0;
 }
 
