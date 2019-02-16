@@ -407,7 +407,9 @@ void GMainWindow::InitializeHotkeys() {
                 Settings::values.use_frame_limit = !Settings::values.use_frame_limit;
                 UpdateStatusBar();
             });
-    constexpr u16 SPEED_LIMIT_STEP = 5;
+    // We use "static" here in order to avoid capturing by lambda due to a MSVC bug, which makes the
+    // variable hold a garbage value after this function exits
+    static constexpr u16 SPEED_LIMIT_STEP = 5;
     connect(hotkey_registry.GetHotkey("Main Window", "Increase Speed Limit", this),
             &QShortcut::activated, this, [&] {
                 if (Settings::values.frame_limit < 9999 - SPEED_LIMIT_STEP) {
