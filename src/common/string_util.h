@@ -69,11 +69,11 @@ std::string StringFromFixedZeroTerminatedBuffer(const char* buffer, std::size_t 
  * intended to be used to strip a system-specific build directory from the `__FILE__` macro,
  * leaving only the path relative to the sources root.
  *
- * @param path The input file path as a null-terminated string
- * @param root The name of the root source directory as a null-terminated string. Path up to and
- *             including the last occurrence of this name will be stripped
- * @return A pointer to the same string passed as `path`, but starting at the trimmed portion
+ * @param path The input file path as a string
+ * @param roots The name of the root source directorys as a vector of strings. Path up to and
+ *             including the last occurrence of these names will be stripped
+ * @return The trimmed path as a string
  */
-const char* TrimSourcePath(const char* path, const char* root = "src");
+std::string TrimSourcePath(const std::string& file_path, const std::vector<std::string>& roots);
 
 } // namespace Common

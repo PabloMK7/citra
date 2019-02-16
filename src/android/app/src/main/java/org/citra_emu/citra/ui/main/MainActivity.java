@@ -18,7 +18,7 @@ import org.citra_emu.citra.utils.PermissionUtil;
 public final class MainActivity extends AppCompatActivity {
 
     // Java enums suck
-    private interface PermissionCodes { int INIT_USER_PATH = 0; }
+    private interface PermissionCodes { int INITIALIZE = 0; }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -26,16 +26,17 @@ public final class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         PermissionUtil.verifyPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                                        PermissionCodes.INIT_USER_PATH);
+                                        PermissionCodes.INITIALIZE);
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
         switch (requestCode) {
-        case PermissionCodes.INIT_USER_PATH:
+        case PermissionCodes.INITIALIZE:
             if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 initUserPath(FileUtil.getUserPath().toString());
+                initLogging();
             } else {
                 AlertDialog.Builder dialog =
                     new AlertDialog.Builder(this)
@@ -45,7 +46,7 @@ public final class MainActivity extends AppCompatActivity {
                         .setPositiveButton("OK", (dialogInterface, which) -> {
                             PermissionUtil.verifyPermission(
                                 MainActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                                PermissionCodes.INIT_USER_PATH);
+                                PermissionCodes.INITIALIZE);
                         });
                 dialog.show();
             }
@@ -53,4 +54,5 @@ public final class MainActivity extends AppCompatActivity {
     }
 
     private static native void initUserPath(String path);
+    private static native void initLogging();
 }

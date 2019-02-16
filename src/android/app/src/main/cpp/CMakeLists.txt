@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.8)
 
 add_library(citra-android SHARED
+            logging/log.cpp
+            logging/logcat_backend.cpp
+            logging/logcat_backend.h
             native_interface.cpp
             native_interface.h
             ui/main/main_activity.cpp
