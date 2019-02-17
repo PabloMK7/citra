@@ -9,6 +9,17 @@
 
 namespace OpenGL {
 
+// High precision may or may not supported in GLES3. If it isn't, use medium precision instead.
+static constexpr char fragment_shader_precision_OES[] = R"(
+#ifdef GL_FRAGMENT_PRECISION_HIGH
+    precision highp float;
+precision highp samplerBuffer;
+#else
+    precision mediump float;
+precision mediump samplerBuffer;
+#endif // GL_FRAGMENT_PRECISION_HIGH
+)";
+
 /**
  * Utility function to create and compile an OpenGL GLSL shader
  * @param source String of the GLSL shader program

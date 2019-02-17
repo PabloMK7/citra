@@ -6,6 +6,7 @@
 #include "common/common_funcs.h"
 #include "common/logging/log.h"
 #include "video_core/renderer_opengl/gl_state.h"
+#include "video_core/renderer_opengl/gl_vars.h"
 
 namespace OpenGL {
 
@@ -193,8 +194,13 @@ void OpenGLState::Apply() const {
         glBlendEquationSeparate(blend.rgb_equation, blend.a_equation);
     }
 
-    if (logic_op != cur_state.logic_op) {
-        glLogicOp(logic_op);
+    // GLES3 does not support glLogicOp
+    if (!GLES) {
+        if (logic_op != cur_state.logic_op) {
+            glLogicOp(logic_op);
+        }
+    } else {
+        LOG_TRACE(Render_OpenGL, "glLogicOps are unimplemented...");
     }
 
     // Textures
@@ -319,12 +325,14 @@ void OpenGLState::Apply() const {
     }
 
     // Clip distance
-    for (std::size_t i = 0; i < clip_distance.size(); ++i) {
-        if (clip_distance[i] != cur_state.clip_distance[i]) {
-            if (clip_distance[i]) {
-                glEnable(GL_CLIP_DISTANCE0 + static_cast<GLenum>(i));
-            } else {
-                glDisable(GL_CLIP_DISTANCE0 + static_cast<GLenum>(i));
+    if (!GLES || GLAD_GL_EXT_clip_cull_distance) {
+        for (size_t i = 0; i < clip_distance.size(); ++i) {
+            if (clip_distance[i] != cur_state.clip_distance[i]) {
+                if (clip_distance[i]) {
+                    glEnable(GL_CLIP_DISTANCE0 + static_cast<GLenum>(i));
+                } else {
+                    glDisable(GL_CLIP_DISTANCE0 + static_cast<GLenum>(i));
+                }
             }
         }
     }

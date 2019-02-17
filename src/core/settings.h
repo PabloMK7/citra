@@ -130,6 +130,7 @@ struct Values {
     u64 init_time;
 
     // Renderer
+    bool use_gles;
     bool use_hw_renderer;
     bool use_hw_shader;
     bool shaders_accurate_gs;

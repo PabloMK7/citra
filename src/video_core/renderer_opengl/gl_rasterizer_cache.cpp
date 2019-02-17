@@ -28,6 +28,7 @@
 #include "video_core/renderer_base.h"
 #include "video_core/renderer_opengl/gl_rasterizer_cache.h"
 #include "video_core/renderer_opengl/gl_state.h"
+#include "video_core/renderer_opengl/gl_vars.h"
 #include "video_core/utils.h"
 #include "video_core/video_core.h"
 
@@ -50,6 +51,17 @@ static constexpr std::array<FormatTuple, 5> fb_format_tuples = {{
     {GL_RGBA4, GL_RGBA, GL_UNSIGNED_SHORT_4_4_4_4},   // RGBA4
 }};
 
+// Same as above, with minor changes for OpenGL ES. Replaced
+// GL_UNSIGNED_INT_8_8_8_8 with GL_UNSIGNED_BYTE and
+// GL_BGR with GL_RGB
+static constexpr std::array<FormatTuple, 5> fb_format_tuples_oes = {{
+    {GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE},            // RGBA8
+    {GL_RGB8, GL_RGB, GL_UNSIGNED_BYTE},              // RGB8
+    {GL_RGB5_A1, GL_RGBA, GL_UNSIGNED_SHORT_5_5_5_1}, // RGB5A1
+    {GL_RGB565, GL_RGB, GL_UNSIGNED_SHORT_5_6_5},     // RGB565
+    {GL_RGBA4, GL_RGBA, GL_UNSIGNED_SHORT_4_4_4_4},   // RGBA4
+}};
+
 static constexpr std::array<FormatTuple, 4> depth_format_tuples = {{
     {GL_DEPTH_COMPONENT16, GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT}, // D16
     {},
@@ -63,6 +75,9 @@ static const FormatTuple& GetFormatTuple(PixelFormat pixel_format) {
     const SurfaceType type = SurfaceParams::GetFormatType(pixel_format);
     if (type == SurfaceType::Color) {
         ASSERT(static_cast<std::size_t>(pixel_format) < fb_format_tuples.size());
+        if (GLES) {
+            return fb_format_tuples_oes[static_cast<unsigned int>(pixel_format)];
+        }
         return fb_format_tuples[static_cast<unsigned int>(pixel_format)];
     } else if (type == SurfaceType::Depth || type == SurfaceType::DepthStencil) {
         std::size_t tuple_idx = static_cast<std::size_t>(pixel_format) - 14;
@@ -70,6 +85,77 @@ static const FormatTuple& GetFormatTuple(PixelFormat pixel_format) {
         return depth_format_tuples[tuple_idx];
     }
     return tex_tuple;
+}
+
+/**
+ * OpenGL ES does not support glGetTexImage. Obtain the pixels by attaching the
+ * texture to a framebuffer.
+ * Originally from https://github.com/apitrace/apitrace/blob/master/retrace/glstate_images.cpp
+ */
+static inline void GetTexImageOES(GLenum target, GLint level, GLenum format, GLenum type,
+                                  GLint height, GLint width, GLint depth, GLubyte* pixels) {
+
+    memset(pixels, 0x80, height * width * 4);
+
+    GLenum texture_binding = GL_NONE;
+    switch (target) {
+    case GL_TEXTURE_2D:
+        texture_binding = GL_TEXTURE_BINDING_2D;
+        break;
+    case GL_TEXTURE_CUBE_MAP_POSITIVE_X:
+    case GL_TEXTURE_CUBE_MAP_NEGATIVE_X:
+    case GL_TEXTURE_CUBE_MAP_POSITIVE_Y:
+    case GL_TEXTURE_CUBE_MAP_NEGATIVE_Y:
+    case GL_TEXTURE_CUBE_MAP_POSITIVE_Z:
+    case GL_TEXTURE_CUBE_MAP_NEGATIVE_Z:
+        texture_binding = GL_TEXTURE_BINDING_CUBE_MAP;
+        break;
+    case GL_TEXTURE_3D_OES:
+        texture_binding = GL_TEXTURE_BINDING_3D_OES;
+    default:
+        return;
+    }
+
+    GLint texture = 0;
+    glGetIntegerv(texture_binding, &texture);
+    if (!texture) {
+        return;
+    }
+
+    GLint prev_fbo = 0;
+    GLuint fbo = 0;
+    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &prev_fbo);
+    glGenFramebuffers(1, &fbo);
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+
+    switch (target) {
+    case GL_TEXTURE_2D:
+    case GL_TEXTURE_CUBE_MAP_POSITIVE_X:
+    case GL_TEXTURE_CUBE_MAP_NEGATIVE_X:
+    case GL_TEXTURE_CUBE_MAP_POSITIVE_Y:
+    case GL_TEXTURE_CUBE_MAP_NEGATIVE_Y:
+    case GL_TEXTURE_CUBE_MAP_POSITIVE_Z:
+    case GL_TEXTURE_CUBE_MAP_NEGATIVE_Z: {
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, level);
+        GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+        if (status != GL_FRAMEBUFFER_COMPLETE) {
+            LOG_DEBUG(Render_OpenGL, "Framebuffer is incomplete, status: {:X}", status);
+        }
+        glReadPixels(0, 0, width, height, format, type, pixels);
+        break;
+    }
+    case GL_TEXTURE_3D_OES:
+        for (int i = 0; i < depth; i++) {
+            glFramebufferTexture3D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_3D, texture,
+                                   level, i);
+            glReadPixels(0, 0, width, height, format, type, pixels + 4 * i * width * height);
+        }
+        break;
+    }
+
+    glBindFramebuffer(GL_FRAMEBUFFER, prev_fbo);
+
+    glDeleteFramebuffers(1, &fbo);
 }
 
 template <typename Map, typename Interval>
@@ -841,7 +927,12 @@ void CachedSurface::DownloadGLTexture(const MathUtil::Rectangle<u32>& rect, GLui
         state.Apply();
 
         glActiveTexture(GL_TEXTURE0);
-        glGetTexImage(GL_TEXTURE_2D, 0, tuple.format, tuple.type, &gl_buffer[buffer_offset]);
+        if (GLES) {
+            GetTexImageOES(GL_TEXTURE_2D, 0, tuple.format, tuple.type, height, width, 0,
+                           &gl_buffer[buffer_offset]);
+        } else {
+            glGetTexImage(GL_TEXTURE_2D, 0, tuple.format, tuple.type, &gl_buffer[buffer_offset]);
+        }
     } else {
         state.ResetTexture(texture.handle);
         state.draw.read_framebuffer = read_fb_handle;
@@ -982,16 +1073,15 @@ RasterizerCacheOpenGL::RasterizerCacheOpenGL() {
     d24s8_abgr_buffer.Create();
     d24s8_abgr_buffer_size = 0;
 
-    const char* vs_source = R"(
-#version 330 core
+    std::string vs_source = R"(
 const vec2 vertices[4] = vec2[4](vec2(-1.0, -1.0), vec2(1.0, -1.0), vec2(-1.0, 1.0), vec2(1.0, 1.0));
 void main() {
     gl_Position = vec4(vertices[gl_VertexID], 0.0, 1.0);
 }
 )";
-    const char* fs_source = R"(
-#version 330 core
 
+    std::string fs_source = GLES ? fragment_shader_precision_OES : "";
+    fs_source += R"(
 uniform samplerBuffer tbo;
 uniform vec2 tbo_size;
 uniform vec4 viewport;
@@ -1004,7 +1094,7 @@ void main() {
     color = texelFetch(tbo, tbo_offset).rabg;
 }
 )";
-    d24s8_abgr_shader.Create(vs_source, fs_source);
+    d24s8_abgr_shader.Create(vs_source.c_str(), fs_source.c_str());
 
     OpenGLState state = OpenGLState::GetCurState();
     GLuint old_program = state.draw.shader_program;

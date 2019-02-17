@@ -105,6 +105,7 @@ void Config::ReadValues() {
     Settings::values.use_cpu_jit = sdl2_config->GetBoolean("Core", "use_cpu_jit", true);
 
     // Renderer
+    Settings::values.use_gles = sdl2_config->GetBoolean("Renderer", "use_gles", false);
     Settings::values.use_hw_renderer = sdl2_config->GetBoolean("Renderer", "use_hw_renderer", true);
 #ifdef __APPLE__
     // Hardware shader is broken on macos thanks to poor drivers.
