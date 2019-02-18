@@ -8,8 +8,7 @@
 #include "audio_core/audio_types.h"
 #include "common/common_types.h"
 
-namespace AudioCore {
-namespace Codec {
+namespace AudioCore::Codec {
 
 /// See: Codec::DecodeADPCM
 struct ADPCMState {
@@ -46,5 +45,4 @@ StereoBuffer16 DecodePCM8(const unsigned num_channels, const u8* const data,
  */
 StereoBuffer16 DecodePCM16(const unsigned num_channels, const u8* const data,
                            const std::size_t sample_count);
-} // namespace Codec
-} // namespace AudioCore
+} // namespace AudioCore::Codec

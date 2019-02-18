@@ -8,8 +8,7 @@
 #include "common/assert.h"
 #include "common/logging/log.h"
 
-namespace AudioCore {
-namespace HLE {
+namespace AudioCore::HLE {
 
 void Mixers::Reset() {
     current_frame.fill({});
@@ -203,5 +202,4 @@ DspStatus Mixers::GetCurrentStatus() const {
     return status;
 }
 
-} // namespace HLE
-} // namespace AudioCore
+} // namespace AudioCore::HLE

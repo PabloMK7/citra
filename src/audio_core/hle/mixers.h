@@ -8,8 +8,7 @@
 #include "audio_core/audio_types.h"
 #include "audio_core/hle/shared_memory.h"
 
-namespace AudioCore {
-namespace HLE {
+namespace AudioCore::HLE {
 
 class Mixers final {
 public:
@@ -57,5 +56,4 @@ private:
     DspStatus GetCurrentStatus() const;
 };
 
-} // namespace HLE
-} // namespace AudioCore
+} // namespace AudioCore::HLE

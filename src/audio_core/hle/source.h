@@ -18,8 +18,7 @@ namespace Memory {
 class MemorySystem;
 }
 
-namespace AudioCore {
-namespace HLE {
+namespace AudioCore::HLE {
 
 /**
  * This module performs:
@@ -153,5 +152,4 @@ private:
     SourceStatus::Status GetCurrentStatus();
 };
 
-} // namespace HLE
-} // namespace AudioCore
+} // namespace AudioCore::HLE

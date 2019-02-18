@@ -7,8 +7,7 @@
 #include <algorithm>
 #include <cstddef>
 
-namespace AudioCore {
-namespace HLE {
+namespace AudioCore::HLE {
 
 constexpr std::size_t num_sources = 24;
 
@@ -22,5 +21,4 @@ void FilterFrame(FrameT& frame, FilterT& filter) {
                    [&filter](const auto& sample) { return filter.ProcessSample(sample); });
 }
 
-} // namespace HLE
-} // namespace AudioCore
+} // namespace AudioCore::HLE

@@ -9,8 +9,7 @@
 #include "audio_core/hle/shared_memory.h"
 #include "common/common_types.h"
 
-namespace AudioCore {
-namespace HLE {
+namespace AudioCore::HLE {
 
 /// Preprocessing filters. There is an independent set of filters for each Source.
 class SourceFilters final {
@@ -113,5 +112,4 @@ private:
     } biquad_filter;
 };
 
-} // namespace HLE
-} // namespace AudioCore
+} // namespace AudioCore::HLE
