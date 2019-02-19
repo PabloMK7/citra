@@ -4,14 +4,10 @@
 
 #pragma once
 
-namespace Service {
-namespace Y2R {
+namespace Service::Y2R {
 struct ConversionConfiguration;
-}
-} // namespace Service
+} // namespace Service::Y2R
 
-namespace HW {
-namespace Y2R {
+namespace HW::Y2R {
 void PerformConversion(Service::Y2R::ConversionConfiguration& cvt);
-}
-} // namespace HW
+} // namespace HW::Y2R

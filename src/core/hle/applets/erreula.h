@@ -7,8 +7,7 @@
 #include "core/hle/applets/applet.h"
 #include "core/hle/kernel/shared_memory.h"
 
-namespace HLE {
-namespace Applets {
+namespace HLE::Applets {
 
 class ErrEula final : public Applet {
 public:
@@ -26,5 +25,4 @@ private:
     Kernel::SharedPtr<Kernel::SharedMemory> framebuffer_memory;
 };
 
-} // namespace Applets
-} // namespace HLE
+} // namespace HLE::Applets

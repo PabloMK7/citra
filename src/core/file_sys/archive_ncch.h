@@ -14,11 +14,9 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // FileSys namespace
 
-namespace Service {
-namespace FS {
+namespace Service::FS {
 enum class MediaType : u32;
-}
-} // namespace Service
+} // namespace Service::FS
 
 namespace FileSys {
 

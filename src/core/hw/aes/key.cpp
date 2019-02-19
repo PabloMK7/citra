@@ -18,8 +18,7 @@
 #include "core/hw/aes/arithmetic128.h"
 #include "core/hw/aes/key.h"
 
-namespace HW {
-namespace AES {
+namespace HW::AES {
 
 namespace {
 
@@ -475,5 +474,4 @@ void SelectCommonKeyIndex(u8 index) {
     key_slots[KeySlotID::TicketCommonKey].SetKeyY(common_key_y_slots.at(index));
 }
 
-} // namespace AES
-} // namespace HW
+} // namespace HW::AES

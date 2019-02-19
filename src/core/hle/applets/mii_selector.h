@@ -12,8 +12,7 @@
 #include "core/hle/result.h"
 #include "core/hle/service/apt/apt.h"
 
-namespace HLE {
-namespace Applets {
+namespace HLE::Applets {
 
 struct MiiConfig {
     u8 enable_cancel_button;
@@ -126,5 +125,4 @@ private:
 
     MiiConfig config;
 };
-} // namespace Applets
-} // namespace HLE
+} // namespace HLE::Applets

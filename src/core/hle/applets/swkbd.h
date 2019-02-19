@@ -13,8 +13,7 @@
 #include "core/hle/result.h"
 #include "core/hle/service/apt/apt.h"
 
-namespace HLE {
-namespace Applets {
+namespace HLE::Applets {
 
 /// Maximum number of buttons that can be in the keyboard.
 constexpr int MAX_BUTTON = 3;
@@ -210,5 +209,4 @@ private:
 
     std::shared_ptr<Frontend::SoftwareKeyboard> frontend_applet;
 };
-} // namespace Applets
-} // namespace HLE
+} // namespace HLE::Applets
