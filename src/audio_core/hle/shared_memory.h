@@ -58,9 +58,7 @@ private:
     }
     u32_le storage;
 };
-#if (__GNUC__ >= 5) || defined(__clang__) || defined(_MSC_VER)
 static_assert(std::is_trivially_copyable<u32_dsp>::value, "u32_dsp isn't trivially copyable");
-#endif
 
 // There are 15 structures in each memory region. A table of them in the order they appear in memory
 // is presented below:
@@ -103,21 +101,12 @@ static_assert(std::is_trivially_copyable<u32_dsp>::value, "u32_dsp isn't trivial
 
 #define INSERT_PADDING_DSPWORDS(num_words) INSERT_PADDING_BYTES(2 * (num_words))
 
-// GCC versions < 5.0 do not implement std::is_trivially_copyable.
-// Excluding MSVC because it has weird behaviour for std::is_trivially_copyable.
-#if (__GNUC__ >= 5) || defined(__clang__)
 #define ASSERT_DSP_STRUCT(name, size)                                                              \
     static_assert(std::is_standard_layout<name>::value,                                            \
                   "DSP structure " #name " doesn't use standard layout");                          \
     static_assert(std::is_trivially_copyable<name>::value,                                         \
                   "DSP structure " #name " isn't trivially copyable");                             \
     static_assert(sizeof(name) == (size), "Unexpected struct size for DSP structure " #name)
-#else
-#define ASSERT_DSP_STRUCT(name, size)                                                              \
-    static_assert(std::is_standard_layout<name>::value,                                            \
-                  "DSP structure " #name " doesn't use standard layout");                          \
-    static_assert(sizeof(name) == (size), "Unexpected struct size for DSP structure " #name)
-#endif
 
 struct SourceConfiguration {
     struct Configuration {
