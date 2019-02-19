@@ -7,11 +7,9 @@
 #include "common/common_types.h"
 #include "video_core/rasterizer_interface.h"
 
-namespace Pica {
-namespace Shader {
+namespace Pica::Shader {
 struct OutputVertex;
-}
-} // namespace Pica
+} // namespace Pica::Shader
 
 namespace VideoCore {
 

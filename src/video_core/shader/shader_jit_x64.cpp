@@ -7,8 +7,7 @@
 #include "video_core/shader/shader_jit_x64.h"
 #include "video_core/shader/shader_jit_x64_compiler.h"
 
-namespace Pica {
-namespace Shader {
+namespace Pica::Shader {
 
 JitX64Engine::JitX64Engine() = default;
 JitX64Engine::~JitX64Engine() = default;
@@ -43,5 +42,4 @@ void JitX64Engine::Run(const ShaderSetup& setup, UnitState& state) const {
     shader->Run(setup, state, setup.engine_data.entry_point);
 }
 
-} // namespace Shader
-} // namespace Pica
+} // namespace Pica::Shader

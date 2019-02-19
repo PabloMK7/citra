@@ -8,8 +8,7 @@
 #include "common/vector_math.h"
 #include "video_core/regs_texturing.h"
 
-namespace Pica {
-namespace Rasterizer {
+namespace Pica::Rasterizer {
 
 int GetWrappedTexCoord(TexturingRegs::TextureConfig::WrapMode mode, int val, unsigned size);
 
@@ -24,5 +23,4 @@ Math::Vec3<u8> ColorCombine(TexturingRegs::TevStageConfig::Operation op,
 
 u8 AlphaCombine(TexturingRegs::TevStageConfig::Operation op, const std::array<u8, 3>& input);
 
-} // namespace Rasterizer
-} // namespace Pica
+} // namespace Pica::Rasterizer

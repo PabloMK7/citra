@@ -7,8 +7,7 @@
 #include "common/math_util.h"
 #include "video_core/swrasterizer/proctex.h"
 
-namespace Pica {
-namespace Rasterizer {
+namespace Pica::Rasterizer {
 
 using ProcTexClamp = TexturingRegs::ProcTexClamp;
 using ProcTexShift = TexturingRegs::ProcTexShift;
@@ -219,5 +218,4 @@ Math::Vec4<u8> ProcTex(float u, float v, TexturingRegs regs, State::ProcTex stat
     }
 }
 
-} // namespace Rasterizer
-} // namespace Pica
+} // namespace Pica::Rasterizer

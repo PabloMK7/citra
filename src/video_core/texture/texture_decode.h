@@ -8,8 +8,7 @@
 #include "common/vector_math.h"
 #include "video_core/regs_texturing.h"
 
-namespace Pica {
-namespace Texture {
+namespace Pica::Texture {
 
 /// Returns the byte size of a 8*8 tile of the specified texture format.
 size_t CalculateTileSize(TexturingRegs::TextureFormat format);
@@ -56,5 +55,4 @@ Math::Vec4<u8> LookupTexture(const u8* source, unsigned int x, unsigned int y,
 Math::Vec4<u8> LookupTexelInTile(const u8* source, unsigned int x, unsigned int y,
                                  const TextureInfo& info, bool disable_alpha);
 
-} // namespace Texture
-} // namespace Pica
+} // namespace Pica::Texture

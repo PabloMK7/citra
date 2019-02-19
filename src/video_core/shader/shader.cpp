@@ -17,9 +17,7 @@
 #endif // ARCHITECTURE_x86_64
 #include "video_core/video_core.h"
 
-namespace Pica {
-
-namespace Shader {
+namespace Pica::Shader {
 
 void OutputVertex::ValidateSemantics(const RasterizerRegs& regs) {
     unsigned int num_attributes = regs.vs_output_total;
@@ -161,6 +159,4 @@ void Shutdown() {
 #endif // ARCHITECTURE_x86_64
 }
 
-} // namespace Shader
-
-} // namespace Pica
+} // namespace Pica::Shader

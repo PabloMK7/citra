@@ -10,8 +10,7 @@
 #include "common/vector_math.h"
 #include "video_core/texture/etc1.h"
 
-namespace Pica {
-namespace Texture {
+namespace Pica::Texture {
 
 namespace {
 
@@ -125,5 +124,4 @@ Math::Vec3<u8> SampleETC1Subtile(u64 value, unsigned int x, unsigned int y) {
     return tile.GetRGB(x, y);
 }
 
-} // namespace Texture
-} // namespace Pica
+} // namespace Pica::Texture

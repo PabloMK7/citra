@@ -9,8 +9,7 @@
 #include "common/vector_math.h"
 #include "video_core/pica_types.h"
 
-namespace Pica {
-namespace Shader {
+namespace Pica::Shader {
 
 /// Helper structure used to keep track of data useful for inspection of shader emulation
 template <bool full_debugging>
@@ -182,5 +181,4 @@ inline void Record(DebugData<true>& debug_data, u32 offset, ValueType value) {
     debug_data.records[offset].mask |= type;
 }
 
-} // namespace Shader
-} // namespace Pica
+} // namespace Pica::Shader

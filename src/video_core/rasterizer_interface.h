@@ -11,11 +11,9 @@ namespace OpenGL {
 struct ScreenInfo;
 }
 
-namespace Pica {
-namespace Shader {
+namespace Pica::Shader {
 struct OutputVertex;
-}
-} // namespace Pica
+} // namespace Pica::Shader
 
 namespace VideoCore {
 

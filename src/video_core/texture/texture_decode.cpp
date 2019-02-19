@@ -15,8 +15,7 @@
 
 using TextureFormat = Pica::TexturingRegs::TextureFormat;
 
-namespace Pica {
-namespace Texture {
+namespace Pica::Texture {
 
 constexpr std::size_t TILE_SIZE = 8 * 8;
 constexpr std::size_t ETC1_SUBTILES = 2 * 2;
@@ -223,5 +222,4 @@ TextureInfo TextureInfo::FromPicaRegister(const TexturingRegs::TextureConfig& co
     return info;
 }
 
-} // namespace Texture
-} // namespace Pica
+} // namespace Pica::Texture

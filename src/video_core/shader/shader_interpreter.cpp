@@ -25,9 +25,7 @@ using nihstro::RegisterType;
 using nihstro::SourceRegister;
 using nihstro::SwizzlePattern;
 
-namespace Pica {
-
-namespace Shader {
+namespace Pica::Shader {
 
 struct CallStackElement {
     u32 final_address;  // Address upon which we jump to return_address
@@ -696,6 +694,4 @@ DebugData<true> InterpreterEngine::ProduceDebugInfo(const ShaderSetup& setup,
     return debug_data;
 }
 
-} // namespace Shader
-
-} // namespace Pica
+} // namespace Pica::Shader

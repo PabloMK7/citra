@@ -19,9 +19,7 @@ using nihstro::Instruction;
 using nihstro::OpCode;
 using nihstro::SwizzlePattern;
 
-namespace Pica {
-
-namespace Shader {
+namespace Pica::Shader {
 
 /// Memory allocated for each compiled shader
 constexpr std::size_t MAX_SHADER_SIZE = MAX_PROGRAM_CODE_LENGTH * 64;
@@ -138,6 +136,4 @@ private:
     Xbyak::Label exp2_subroutine;
 };
 
-} // namespace Shader
-
-} // namespace Pica
+} // namespace Pica::Shader

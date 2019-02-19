@@ -6,11 +6,9 @@
 #include "common/vector_math.h"
 #include "video_core/pica_state.h"
 
-namespace Pica {
-namespace Rasterizer {
+namespace Pica::Rasterizer {
 
 /// Generates procedural texture color for the given coordinates
 Math::Vec4<u8> ProcTex(float u, float v, TexturingRegs regs, State::ProcTex state);
 
-} // namespace Rasterizer
-} // namespace Pica
+} // namespace Pica::Rasterizer

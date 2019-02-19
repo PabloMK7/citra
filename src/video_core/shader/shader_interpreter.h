@@ -7,9 +7,7 @@
 #include "video_core/shader/debug_data.h"
 #include "video_core/shader/shader.h"
 
-namespace Pica {
-
-namespace Shader {
+namespace Pica::Shader {
 
 class InterpreterEngine final : public ShaderEngine {
 public:
@@ -27,6 +25,4 @@ public:
                                      const ShaderRegs& config) const;
 };
 
-} // namespace Shader
-
-} // namespace Pica
+} // namespace Pica::Shader
