@@ -7,10 +7,8 @@
 #include "common/common_types.h"
 #include "common/vector_math.h"
 
-namespace Pica {
-namespace Texture {
+namespace Pica::Texture {
 
 Math::Vec3<u8> SampleETC1Subtile(u64 value, unsigned int x, unsigned int y);
 
-} // namespace Texture
-} // namespace Pica
+} // namespace Pica::Texture

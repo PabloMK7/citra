@@ -22,9 +22,7 @@ using nihstro::DestRegister;
 using nihstro::RegisterType;
 using nihstro::SourceRegister;
 
-namespace Pica {
-
-namespace Shader {
+namespace Pica::Shader {
 
 constexpr unsigned MAX_PROGRAM_CODE_LENGTH = 4096;
 constexpr unsigned MAX_SWIZZLE_DATA_LENGTH = 4096;
@@ -262,6 +260,4 @@ public:
 ShaderEngine* GetEngine();
 void Shutdown();
 
-} // namespace Shader
-
-} // namespace Pica
+} // namespace Pica::Shader

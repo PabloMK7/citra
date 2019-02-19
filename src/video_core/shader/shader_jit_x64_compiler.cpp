@@ -26,9 +26,7 @@ using Xbyak::Reg32;
 using Xbyak::Reg64;
 using Xbyak::Xmm;
 
-namespace Pica {
-
-namespace Shader {
+namespace Pica::Shader {
 
 typedef void (JitShader::*JitFunction)(Instruction instr);
 
@@ -1123,6 +1121,4 @@ Xbyak::Label JitShader::CompilePrelude_Exp2() {
     return subroutine;
 }
 
-} // namespace Shader
-
-} // namespace Pica
+} // namespace Pica::Shader

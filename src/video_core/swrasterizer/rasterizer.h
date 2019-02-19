@@ -6,8 +6,7 @@
 
 #include "video_core/shader/shader.h"
 
-namespace Pica {
-namespace Rasterizer {
+namespace Pica::Rasterizer {
 
 struct Vertex : Shader::OutputVertex {
     Vertex(const OutputVertex& v) : OutputVertex(v) {}
@@ -42,5 +41,4 @@ struct Vertex : Shader::OutputVertex {
 
 void ProcessTriangle(const Vertex& v0, const Vertex& v1, const Vertex& v2);
 
-} // namespace Rasterizer
-} // namespace Pica
+} // namespace Pica::Rasterizer

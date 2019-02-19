@@ -16,8 +16,7 @@
 #include "video_core/utils.h"
 #include "video_core/video_core.h"
 
-namespace Pica {
-namespace Rasterizer {
+namespace Pica::Rasterizer {
 
 void DrawPixel(int x, int y, const Math::Vec4<u8>& color) {
     const auto& framebuffer = g_state.regs.framebuffer.framebuffer;
@@ -407,5 +406,4 @@ void DrawShadowMapPixel(int x, int y, u32 depth, u8 stencil) {
     }
 }
 
-} // namespace Rasterizer
-} // namespace Pica
+} // namespace Pica::Rasterizer

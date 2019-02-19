@@ -9,8 +9,7 @@
 #include "video_core/regs_texturing.h"
 #include "video_core/swrasterizer/texturing.h"
 
-namespace Pica {
-namespace Rasterizer {
+namespace Pica::Rasterizer {
 
 using TevStageConfig = TexturingRegs::TevStageConfig;
 
@@ -238,5 +237,4 @@ u8 AlphaCombine(TevStageConfig::Operation op, const std::array<u8, 3>& input) {
     }
 };
 
-} // namespace Rasterizer
-} // namespace Pica
+} // namespace Pica::Rasterizer

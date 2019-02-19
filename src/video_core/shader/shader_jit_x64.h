@@ -9,8 +9,7 @@
 #include "common/common_types.h"
 #include "video_core/shader/shader.h"
 
-namespace Pica {
-namespace Shader {
+namespace Pica::Shader {
 
 class JitShader;
 
@@ -26,5 +25,4 @@ private:
     std::unordered_map<u64, std::unique_ptr<JitShader>> cache;
 };
 
-} // namespace Shader
-} // namespace Pica
+} // namespace Pica::Shader

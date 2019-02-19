@@ -8,8 +8,7 @@
 #include "common/vector_math.h"
 #include "video_core/regs_framebuffer.h"
 
-namespace Pica {
-namespace Rasterizer {
+namespace Pica::Rasterizer {
 
 void DrawPixel(int x, int y, const Math::Vec4<u8>& color);
 const Math::Vec4<u8> GetPixel(int x, int y);
@@ -27,5 +26,4 @@ u8 LogicOp(u8 src, u8 dest, FramebufferRegs::LogicOp op);
 
 void DrawShadowMapPixel(int x, int y, u32 depth, u8 stencil);
 
-} // namespace Rasterizer
-} // namespace Pica
+} // namespace Pica::Rasterizer

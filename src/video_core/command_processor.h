@@ -8,9 +8,7 @@
 #include "common/bit_field.h"
 #include "common/common_types.h"
 
-namespace Pica {
-
-namespace CommandProcessor {
+namespace Pica::CommandProcessor {
 
 union CommandHeader {
     u32 hex;
@@ -36,6 +34,4 @@ static_assert(sizeof(CommandHeader) == sizeof(u32), "CommandHeader has incorrect
 
 void ProcessCommandList(const u32* list, u32 size);
 
-} // namespace CommandProcessor
-
-} // namespace Pica
+} // namespace Pica::CommandProcessor
