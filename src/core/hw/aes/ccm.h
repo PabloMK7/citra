@@ -9,8 +9,7 @@
 #include <vector>
 #include "common/common_types.h"
 
-namespace HW {
-namespace AES {
+namespace HW::AES {
 
 constexpr std::size_t CCM_NONCE_SIZE = 12;
 constexpr std::size_t CCM_MAC_SIZE = 16;
@@ -37,5 +36,4 @@ std::vector<u8> EncryptSignCCM(const std::vector<u8>& pdata, const CCMNonce& non
 std::vector<u8> DecryptVerifyCCM(const std::vector<u8>& cipher, const CCMNonce& nonce,
                                  std::size_t slot_id);
 
-} // namespace AES
-} // namespace HW
+} // namespace HW::AES

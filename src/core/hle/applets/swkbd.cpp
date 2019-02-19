@@ -19,8 +19,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-namespace HLE {
-namespace Applets {
+namespace HLE::Applets {
 
 ResultCode SoftwareKeyboard::ReceiveParameter(Service::APT::MessageParameter const& parameter) {
     if (parameter.signal != Service::APT::SignalType::Request) {
@@ -188,5 +187,4 @@ Frontend::KeyboardConfig SoftwareKeyboard::ToFrontendConfig(
         static_cast<bool>(config.filter_flags & SoftwareKeyboardFilter::Callback);
     return frontend_config;
 }
-} // namespace Applets
-} // namespace HLE
+} // namespace HLE::Applets

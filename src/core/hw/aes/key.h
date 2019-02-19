@@ -8,8 +8,7 @@
 #include <cstddef>
 #include "common/common_types.h"
 
-namespace HW {
-namespace AES {
+namespace HW::AES {
 
 enum KeySlotID : std::size_t {
 
@@ -50,5 +49,4 @@ AESKey GetNormalKey(std::size_t slot_id);
 
 void SelectCommonKeyIndex(u8 index);
 
-} // namespace AES
-} // namespace HW
+} // namespace HW::AES

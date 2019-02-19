@@ -7,8 +7,7 @@
 #include "core/hle/applets/mint.h"
 #include "core/hle/service/apt/apt.h"
 
-namespace HLE {
-namespace Applets {
+namespace HLE::Applets {
 
 ResultCode Mint::ReceiveParameter(const Service::APT::MessageParameter& parameter) {
     if (parameter.signal != Service::APT::SignalType::Request) {
@@ -67,5 +66,4 @@ ResultCode Mint::StartImpl(const Service::APT::AppletStartupParameter& parameter
 
 void Mint::Update() {}
 
-} // namespace Applets
-} // namespace HLE
+} // namespace HLE::Applets

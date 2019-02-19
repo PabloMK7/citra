@@ -8,8 +8,7 @@
 #include "core/hle/result.h"
 #include "core/hle/service/apt/applet_manager.h"
 
-namespace HLE {
-namespace Applets {
+namespace HLE::Applets {
 
 class Applet {
 public:
@@ -86,5 +85,4 @@ void Init();
 
 /// Shuts down the HLE applets
 void Shutdown();
-} // namespace Applets
-} // namespace HLE
+} // namespace HLE::Applets

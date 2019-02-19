@@ -12,8 +12,7 @@
 #include "core/hw/aes/ccm.h"
 #include "core/hw/aes/key.h"
 
-namespace HW {
-namespace AES {
+namespace HW::AES {
 
 namespace {
 
@@ -91,5 +90,4 @@ std::vector<u8> DecryptVerifyCCM(const std::vector<u8>& cipher, const CCMNonce& 
     return pdata;
 }
 
-} // namespace AES
-} // namespace HW
+} // namespace HW::AES
