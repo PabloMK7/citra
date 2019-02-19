@@ -9,8 +9,7 @@
 #include "audio_core/audio_types.h"
 #include "common/common_types.h"
 
-namespace AudioCore {
-namespace AudioInterp {
+namespace AudioCore::AudioInterp {
 
 /// A variable length buffer of signed PCM16 stereo samples.
 using StereoBuffer16 = std::deque<std::array<s16, 2>>;
@@ -47,5 +46,4 @@ void None(State& state, StereoBuffer16& input, float rate, StereoFrame16& output
 void Linear(State& state, StereoBuffer16& input, float rate, StereoFrame16& output,
             std::size_t& outputi);
 
-} // namespace AudioInterp
-} // namespace AudioCore
+} // namespace AudioCore::AudioInterp

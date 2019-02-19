@@ -12,11 +12,9 @@
 #include "common/ring_buffer.h"
 #include "core/memory.h"
 
-namespace Service {
-namespace DSP {
+namespace Service::DSP {
 class DSP_DSP;
-} // namespace DSP
-} // namespace Service
+} // namespace Service::DSP
 
 namespace AudioCore {
 

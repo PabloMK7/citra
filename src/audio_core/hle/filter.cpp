@@ -10,8 +10,7 @@
 #include "audio_core/hle/shared_memory.h"
 #include "common/common_types.h"
 
-namespace AudioCore {
-namespace HLE {
+namespace AudioCore::HLE {
 
 void SourceFilters::Reset() {
     Enable(false, false);
@@ -113,5 +112,4 @@ std::array<s16, 2> SourceFilters::BiquadFilter::ProcessSample(const std::array<s
     return y0;
 }
 
-} // namespace HLE
-} // namespace AudioCore
+} // namespace AudioCore::HLE

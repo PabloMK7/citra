@@ -15,8 +15,7 @@
 #include "common/common_types.h"
 #include "common/swap.h"
 
-namespace AudioCore {
-namespace HLE {
+namespace AudioCore::HLE {
 
 // The application-accessible region of DSP memory consists of two parts. Both are marked as IO and
 // have Read/Write permissions.
@@ -559,5 +558,4 @@ static_assert(offsetof(SharedMemory, unknown14) % 2 == 0,
 #undef INSERT_PADDING_DSPWORDS
 #undef ASSERT_DSP_STRUCT
 
-} // namespace HLE
-} // namespace AudioCore
+} // namespace AudioCore::HLE

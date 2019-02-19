@@ -12,8 +12,7 @@
 #include "common/logging/log.h"
 #include "core/memory.h"
 
-namespace AudioCore {
-namespace HLE {
+namespace AudioCore::HLE {
 
 SourceStatus::Status Source::Tick(SourceConfiguration::Configuration& config,
                                   const s16_le (&adpcm_coeffs)[16]) {
@@ -349,5 +348,4 @@ SourceStatus::Status Source::GetCurrentStatus() {
     return ret;
 }
 
-} // namespace HLE
-} // namespace AudioCore
+} // namespace AudioCore::HLE

@@ -6,8 +6,7 @@
 #include "audio_core/interpolate.h"
 #include "common/assert.h"
 
-namespace AudioCore {
-namespace AudioInterp {
+namespace AudioCore::AudioInterp {
 
 // Calculations are done in fixed point with 24 fractional bits.
 // (This is not verified. This was chosen for minimal error.)
@@ -74,5 +73,4 @@ void Linear(State& state, StereoBuffer16& input, float rate, StereoFrame16& outp
                     });
 }
 
-} // namespace AudioInterp
-} // namespace AudioCore
+} // namespace AudioCore::AudioInterp
