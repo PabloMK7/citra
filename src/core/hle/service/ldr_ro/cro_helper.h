@@ -17,21 +17,12 @@ class Process;
 
 namespace Service::LDR {
 
-// GCC versions < 5.0 do not implement std::is_trivially_copyable.
-// Excluding MSVC because it has weird behaviour for std::is_trivially_copyable.
-#if (__GNUC__ >= 5) || defined(__clang__)
 #define ASSERT_CRO_STRUCT(name, size)                                                              \
     static_assert(std::is_standard_layout<name>::value,                                            \
                   "CRO structure " #name " doesn't use standard layout");                          \
     static_assert(std::is_trivially_copyable<name>::value,                                         \
                   "CRO structure " #name " isn't trivially copyable");                             \
     static_assert(sizeof(name) == (size), "Unexpected struct size for CRO structure " #name)
-#else
-#define ASSERT_CRO_STRUCT(name, size)                                                              \
-    static_assert(std::is_standard_layout<name>::value,                                            \
-                  "CRO structure " #name " doesn't use standard layout");                          \
-    static_assert(sizeof(name) == (size), "Unexpected struct size for CRO structure " #name)
-#endif
 
 static constexpr u32 CRO_HEADER_SIZE = 0x138;
 static constexpr u32 CRO_HASH_SIZE = 0x80;

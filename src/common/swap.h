@@ -30,8 +30,8 @@
 #include <cstring>
 #include "common/common_types.h"
 
-// GCC 4.6+
-#if __GNUC__ >= 5 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 6)
+// GCC
+#ifdef __GNUC__
 
 #if __BYTE_ORDER__ && (__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__) && !defined(COMMON_LITTLE_ENDIAN)
 #define COMMON_LITTLE_ENDIAN 1
@@ -40,7 +40,7 @@
 #endif
 
 // LLVM/clang
-#elif __clang__
+#elif defined(__clang__)
 
 #if __LITTLE_ENDIAN__ && !defined(COMMON_LITTLE_ENDIAN)
 #define COMMON_LITTLE_ENDIAN 1
