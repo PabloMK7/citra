@@ -63,8 +63,10 @@ static bool IsWithinTouchscreen(const Layout::FramebufferLayout& layout, unsigne
     if (Settings::values.toggle_3d) {
         return (framebuffer_y >= layout.bottom_screen.top &&
                 framebuffer_y < layout.bottom_screen.bottom &&
-                framebuffer_x >= layout.bottom_screen.left / 2 &&
-                framebuffer_x < layout.bottom_screen.right / 2);
+                ((framebuffer_x >= layout.bottom_screen.left / 2 &&
+                  framebuffer_x < layout.bottom_screen.right / 2) ||
+                 (framebuffer_x >= (layout.bottom_screen.left / 2) + (layout.width / 2) &&
+                  framebuffer_x < (layout.bottom_screen.right / 2) + (layout.width / 2))));
     } else {
         return (framebuffer_y >= layout.bottom_screen.top &&
                 framebuffer_y < layout.bottom_screen.bottom &&
@@ -74,8 +76,15 @@ static bool IsWithinTouchscreen(const Layout::FramebufferLayout& layout, unsigne
 }
 
 std::tuple<unsigned, unsigned> EmuWindow::ClipToTouchScreen(unsigned new_x, unsigned new_y) {
-    new_x = std::max(new_x, framebuffer_layout.bottom_screen.left);
-    new_x = std::min(new_x, framebuffer_layout.bottom_screen.right - 1);
+    if (Settings::values.toggle_3d) {
+        if (new_x >= framebuffer_layout.width / 2)
+            new_x -= framebuffer_layout.width / 2;
+        new_x = std::max(new_x, framebuffer_layout.bottom_screen.left / 2);
+        new_x = std::min(new_x, framebuffer_layout.bottom_screen.right / 2 - 1);
+    } else {
+        new_x = std::max(new_x, framebuffer_layout.bottom_screen.left);
+        new_x = std::min(new_x, framebuffer_layout.bottom_screen.right - 1);
+    }
 
     new_y = std::max(new_y, framebuffer_layout.bottom_screen.top);
     new_y = std::min(new_y, framebuffer_layout.bottom_screen.bottom - 1);
@@ -87,6 +96,8 @@ void EmuWindow::TouchPressed(unsigned framebuffer_x, unsigned framebuffer_y) {
     if (!IsWithinTouchscreen(framebuffer_layout, framebuffer_x, framebuffer_y))
         return;
 
+    if (Settings::values.toggle_3d && framebuffer_x >= framebuffer_layout.width / 2)
+        framebuffer_x -= framebuffer_layout.width / 2;
     std::lock_guard<std::mutex> guard(touch_state->mutex);
     if (Settings::values.toggle_3d) {
         touch_state->touch_x =
