@@ -13,7 +13,7 @@
 
 namespace Kernel {
 
-ServerSession::ServerSession(KernelSystem& kernel) : WaitObject(kernel) {}
+ServerSession::ServerSession(KernelSystem& kernel) : WaitObject(kernel), kernel(kernel) {}
 ServerSession::~ServerSession() {
     // This destructor will be called automatically when the last ServerSession handle is closed by
     // the emulated application.
@@ -66,7 +66,26 @@ ResultCode ServerSession::HandleSyncRequest(SharedPtr<Thread> thread) {
 
     // If this ServerSession has an associated HLE handler, forward the request to it.
     if (hle_handler != nullptr) {
-        hle_handler->HandleSyncRequest(SharedPtr<ServerSession>(this));
+        std::array<u32_le, IPC::COMMAND_BUFFER_LENGTH + 2 * IPC::MAX_STATIC_BUFFERS> cmd_buf;
+        Kernel::Process* current_process = thread->owner_process;
+        kernel.memory.ReadBlock(*current_process, thread->GetCommandBufferAddress(), cmd_buf.data(),
+                                cmd_buf.size() * sizeof(u32));
+
+        Kernel::HLERequestContext context(kernel, this);
+        context.PopulateFromIncomingCommandBuffer(cmd_buf.data(), *current_process);
+
+        hle_handler->HandleSyncRequest(context);
+
+        ASSERT(thread->status == Kernel::ThreadStatus::Running ||
+               thread->status == Kernel::ThreadStatus::WaitHleEvent);
+        // Only write the response immediately if the thread is still running. If the HLE handler
+        // put the thread to sleep then the writing of the command buffer will be deferred to the
+        // wakeup callback.
+        if (thread->status == Kernel::ThreadStatus::Running) {
+            context.WriteToOutgoingCommandBuffer(cmd_buf.data(), *current_process);
+            kernel.memory.WriteBlock(*current_process, thread->GetCommandBufferAddress(),
+                                     cmd_buf.data(), cmd_buf.size() * sizeof(u32));
+        }
     }
 
     if (thread->status == ThreadStatus::Running) {

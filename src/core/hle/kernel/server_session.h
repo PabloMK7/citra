@@ -102,6 +102,7 @@ private:
                                                       std::string name = "Unknown");
 
     friend class KernelSystem;
+    KernelSystem& kernel;
 };
 
 } // namespace Kernel
