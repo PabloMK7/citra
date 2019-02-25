@@ -218,7 +218,7 @@ private:
     u64 event_fifo_id = 0;
     // the queue for storing the events from other threads threadsafe until they will be added
     // to the event_queue by the emu thread
-    Common::MPSCQueue<Event, false> ts_queue;
+    Common::MPSCQueue<Event> ts_queue;
     s64 idled_cycles = 0;
 
     // Are we in a function that has been called from Advance()
