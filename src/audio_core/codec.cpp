@@ -72,8 +72,8 @@ StereoBuffer16 DecodeADPCM(const u8* const data, const std::size_t sample_count,
         }
     }
 
-    state.yn1 = yn1;
-    state.yn2 = yn2;
+    state.yn1 = static_cast<s16>(yn1);
+    state.yn2 = static_cast<s16>(yn2);
 
     return ret;
 }
