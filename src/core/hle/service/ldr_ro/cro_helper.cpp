@@ -72,11 +72,11 @@ ResultCode CROHelper::ApplyRelocation(VAddr target_address, RelocationType reloc
     case RelocationType::AbsoluteAddress:
     case RelocationType::AbsoluteAddress2:
         memory.Write32(target_address, symbol_address + addend);
-        Core::CPU().InvalidateCacheRange(target_address, sizeof(u32));
+        cpu.InvalidateCacheRange(target_address, sizeof(u32));
         break;
     case RelocationType::RelativeAddress:
         memory.Write32(target_address, symbol_address + addend - target_future_address);
-        Core::CPU().InvalidateCacheRange(target_address, sizeof(u32));
+        cpu.InvalidateCacheRange(target_address, sizeof(u32));
         break;
     case RelocationType::ThumbBranch:
     case RelocationType::ArmBranch:
@@ -99,7 +99,7 @@ ResultCode CROHelper::ClearRelocation(VAddr target_address, RelocationType reloc
     case RelocationType::AbsoluteAddress2:
     case RelocationType::RelativeAddress:
         memory.Write32(target_address, 0);
-        Core::CPU().InvalidateCacheRange(target_address, sizeof(u32));
+        cpu.InvalidateCacheRange(target_address, sizeof(u32));
         break;
     case RelocationType::ThumbBranch:
     case RelocationType::ArmBranch:
@@ -548,7 +548,7 @@ ResultCode CROHelper::ApplyStaticAnonymousSymbolToCRS(VAddr crs_address) {
         static_relocation_table_offset +
         GetField(StaticRelocationNum) * sizeof(StaticRelocationEntry);
 
-    CROHelper crs(crs_address, process, memory);
+    CROHelper crs(crs_address, process, memory, cpu);
     u32 offset_export_num = GetField(StaticAnonymousSymbolNum);
     LOG_INFO(Service_LDR, "CRO \"{}\" exports {} static anonymous symbols", ModuleName(),
              offset_export_num);
@@ -759,7 +759,7 @@ ResultCode CROHelper::ApplyImportNamedSymbol(VAddr crs_address) {
 
         if (!relocation_entry.is_batch_resolved) {
             ResultCode result = ForEachAutoLinkCRO(
-                process, memory, crs_address, [&](CROHelper source) -> ResultVal<bool> {
+                process, memory, cpu, crs_address, [&](CROHelper source) -> ResultVal<bool> {
                     std::string symbol_name =
                         memory.ReadCString(entry.name_offset, import_strings_size);
                     u32 symbol_address = source.FindExportNamedSymbol(symbol_name);
@@ -861,7 +861,7 @@ ResultCode CROHelper::ApplyModuleImport(VAddr crs_address) {
         std::string want_cro_name = memory.ReadCString(entry.name_offset, import_strings_size);
 
         ResultCode result = ForEachAutoLinkCRO(
-            process, memory, crs_address, [&](CROHelper source) -> ResultVal<bool> {
+            process, memory, cpu, crs_address, [&](CROHelper source) -> ResultVal<bool> {
                 if (want_cro_name == source.ModuleName()) {
                     LOG_INFO(Service_LDR, "CRO \"{}\" imports {} indexed symbols from \"{}\"",
                              ModuleName(), entry.import_indexed_symbol_num, source.ModuleName());
@@ -1071,7 +1071,7 @@ ResultCode CROHelper::ApplyExitRelocations(VAddr crs_address) {
 
         if (memory.ReadCString(entry.name_offset, import_strings_size) == "__aeabi_atexit") {
             ResultCode result = ForEachAutoLinkCRO(
-                process, memory, crs_address, [&](CROHelper source) -> ResultVal<bool> {
+                process, memory, cpu, crs_address, [&](CROHelper source) -> ResultVal<bool> {
                     u32 symbol_address = source.FindExportNamedSymbol("nnroAeabiAtexit_");
 
                     if (symbol_address != 0) {
@@ -1301,7 +1301,7 @@ ResultCode CROHelper::Link(VAddr crs_address, bool link_on_load_bug_fix) {
     }
 
     // Exports symbols to other modules
-    result = ForEachAutoLinkCRO(process, memory, crs_address,
+    result = ForEachAutoLinkCRO(process, memory, cpu, crs_address,
                                 [this](CROHelper target) -> ResultVal<bool> {
                                     ResultCode result = ApplyExportNamedSymbol(target);
                                     if (result.IsError())
@@ -1346,7 +1346,7 @@ ResultCode CROHelper::Unlink(VAddr crs_address) {
 
     // Resets all symbols in other modules imported from this module
     // Note: the RO service seems only searching in auto-link modules
-    result = ForEachAutoLinkCRO(process, memory, crs_address,
+    result = ForEachAutoLinkCRO(process, memory, cpu, crs_address,
                                 [this](CROHelper target) -> ResultVal<bool> {
                                     ResultCode result = ResetExportNamedSymbol(target);
                                     if (result.IsError())
@@ -1387,13 +1387,13 @@ void CROHelper::InitCRS() {
 }
 
 void CROHelper::Register(VAddr crs_address, bool auto_link) {
-    CROHelper crs(crs_address, process, memory);
-    CROHelper head(auto_link ? crs.NextModule() : crs.PreviousModule(), process, memory);
+    CROHelper crs(crs_address, process, memory, cpu);
+    CROHelper head(auto_link ? crs.NextModule() : crs.PreviousModule(), process, memory, cpu);
 
     if (head.module_address) {
         // there are already CROs registered
         // register as the new tail
-        CROHelper tail(head.PreviousModule(), process, memory);
+        CROHelper tail(head.PreviousModule(), process, memory, cpu);
 
         // link with the old tail
         ASSERT(tail.NextModule() == 0);
@@ -1419,11 +1419,11 @@ void CROHelper::Register(VAddr crs_address, bool auto_link) {
 }
 
 void CROHelper::Unregister(VAddr crs_address) {
-    CROHelper crs(crs_address, process, memory);
-    CROHelper next_head(crs.NextModule(), process, memory);
-    CROHelper previous_head(crs.PreviousModule(), process, memory);
-    CROHelper next(NextModule(), process, memory);
-    CROHelper previous(PreviousModule(), process, memory);
+    CROHelper crs(crs_address, process, memory, cpu);
+    CROHelper next_head(crs.NextModule(), process, memory, cpu);
+    CROHelper previous_head(crs.PreviousModule(), process, memory, cpu);
+    CROHelper next(NextModule(), process, memory, cpu);
+    CROHelper previous(PreviousModule(), process, memory, cpu);
 
     if (module_address == next_head.module_address ||
         module_address == previous_head.module_address) {

@@ -14,7 +14,8 @@
 
 namespace Kernel {
 
-Timer::Timer(KernelSystem& kernel) : WaitObject(kernel), timer_manager(kernel.GetTimerManager()) {}
+Timer::Timer(KernelSystem& kernel)
+    : WaitObject(kernel), kernel(kernel), timer_manager(kernel.GetTimerManager()) {}
 Timer::~Timer() {
     Cancel();
     timer_manager.timer_callback_table.erase(callback_id);
@@ -56,14 +57,13 @@ void Timer::Set(s64 initial, s64 interval) {
         // Immediately invoke the callback
         Signal(0);
     } else {
-        Core::System::GetInstance().CoreTiming().ScheduleEvent(
-            nsToCycles(initial), timer_manager.timer_callback_event_type, callback_id);
+        kernel.timing.ScheduleEvent(nsToCycles(initial), timer_manager.timer_callback_event_type,
+                                    callback_id);
     }
 }
 
 void Timer::Cancel() {
-    Core::System::GetInstance().CoreTiming().UnscheduleEvent(
-        timer_manager.timer_callback_event_type, callback_id);
+    kernel.timing.UnscheduleEvent(timer_manager.timer_callback_event_type, callback_id);
 }
 
 void Timer::Clear() {
@@ -87,9 +87,8 @@ void Timer::Signal(s64 cycles_late) {
 
     if (interval_delay != 0) {
         // Reschedule the timer with the interval delay
-        Core::System::GetInstance().CoreTiming().ScheduleEvent(
-            nsToCycles(interval_delay) - cycles_late, timer_manager.timer_callback_event_type,
-            callback_id);
+        kernel.timing.ScheduleEvent(nsToCycles(interval_delay) - cycles_late,
+                                    timer_manager.timer_callback_event_type, callback_id);
     }
 }
 
@@ -105,10 +104,11 @@ void TimerManager::TimerCallback(u64 callback_id, s64 cycles_late) {
     timer->Signal(cycles_late);
 }
 
-TimerManager::TimerManager() {
-    timer_callback_event_type = Core::System::GetInstance().CoreTiming().RegisterEvent(
-        "TimerCallback",
-        [this](u64 thread_id, s64 cycle_late) { TimerCallback(thread_id, cycle_late); });
+TimerManager::TimerManager(Core::Timing& timing) : timing(timing) {
+    timer_callback_event_type =
+        timing.RegisterEvent("TimerCallback", [this](u64 thread_id, s64 cycle_late) {
+            TimerCallback(thread_id, cycle_late);
+        });
 }
 
 } // namespace Kernel

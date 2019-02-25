@@ -24,7 +24,7 @@ void ReleaseThreadMutexes(Thread* thread) {
     thread->held_mutexes.clear();
 }
 
-Mutex::Mutex(KernelSystem& kernel) : WaitObject(kernel) {}
+Mutex::Mutex(KernelSystem& kernel) : WaitObject(kernel), kernel(kernel) {}
 Mutex::~Mutex() {}
 
 SharedPtr<Mutex> KernelSystem::CreateMutex(bool initial_locked, std::string name) {
@@ -54,7 +54,7 @@ void Mutex::Acquire(Thread* thread) {
         thread->held_mutexes.insert(this);
         holding_thread = thread;
         thread->UpdatePriority();
-        Core::System::GetInstance().PrepareReschedule();
+        kernel.PrepareReschedule();
     }
 
     lock_count++;
@@ -87,7 +87,7 @@ ResultCode Mutex::Release(Thread* thread) {
         holding_thread->UpdatePriority();
         holding_thread = nullptr;
         WakeupAllWaitingThreads();
-        Core::System::GetInstance().PrepareReschedule();
+        kernel.PrepareReschedule();
     }
 
     return RESULT_SUCCESS;

@@ -66,7 +66,7 @@ void KernelSystem::MemoryInit(u32 mem_type) {
     config_mem.sys_mem_alloc = memory_regions[1].size;
     config_mem.base_mem_alloc = memory_regions[2].size;
 
-    shared_page_handler = std::make_unique<SharedPage::Handler>();
+    shared_page_handler = std::make_unique<SharedPage::Handler>(timing);
 }
 
 MemoryRegionInfo* KernelSystem::GetMemoryRegion(MemoryRegion region) {

@@ -101,6 +101,14 @@ public:
      */
     const std::vector<SharedPtr<Thread>>& GetThreadList();
 
+    void SetCPU(ARM_Interface& cpu) {
+        this->cpu = &cpu;
+    }
+
+    std::unique_ptr<ARM_Interface::ThreadContext> NewContext() {
+        return cpu->NewContext();
+    }
+
 private:
     /**
      * Switches the CPU's active thread context to that of the specified thread
@@ -122,6 +130,7 @@ private:
     void ThreadWakeupCallback(u64 thread_id, s64 cycles_late);
 
     Kernel::KernelSystem& kernel;
+    ARM_Interface* cpu;
 
     u32 next_thread_id = 1;
     SharedPtr<Thread> current_thread;

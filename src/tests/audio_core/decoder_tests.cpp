@@ -20,17 +20,13 @@
 #include "audio_fixures.h"
 
 TEST_CASE("DSP HLE Audio Decoder", "[audio_core]") {
-    // HACK: see comments of member timing
-    Core::System::GetInstance().timing = std::make_unique<Core::Timing>();
-    Core::System::GetInstance().memory = std::make_unique<Memory::MemorySystem>();
-    Kernel::KernelSystem kernel(*Core::System::GetInstance().memory, 0);
+    Memory::MemorySystem memory;
     SECTION("decoder should produce correct samples") {
-        auto process = kernel.CreateProcess(kernel.CreateCodeSet("", 0));
         auto decoder =
 #ifdef HAVE_MF
-            std::make_unique<AudioCore::HLE::WMFDecoder>(*Core::System::GetInstance().memory);
+            std::make_unique<AudioCore::HLE::WMFDecoder>(memory);
 #elif HAVE_FFMPEG
-            std::make_unique<AudioCore::HLE::FFMPEGDecoder>(*Core::System::GetInstance().memory);
+            std::make_unique<AudioCore::HLE::FFMPEGDecoder>(memory);
 #endif
         AudioCore::HLE::BinaryRequest request;
 
@@ -40,7 +36,7 @@ TEST_CASE("DSP HLE Audio Decoder", "[audio_core]") {
         std::optional<AudioCore::HLE::BinaryResponse> response = decoder->ProcessRequest(request);
 
         request.cmd = AudioCore::HLE::DecoderCommand::Decode;
-        u8* fcram = Core::System::GetInstance().memory->GetFCRAMPointer(0);
+        u8* fcram = memory.GetFCRAMPointer(0);
 
         memcpy(fcram, fixure_buffer, fixure_buffer_size);
         request.src_addr = Memory::FCRAM_PADDR;

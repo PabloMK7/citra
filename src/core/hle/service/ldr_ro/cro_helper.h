@@ -15,6 +15,8 @@ namespace Kernel {
 class Process;
 }
 
+class ARM_Interface;
+
 namespace Service::LDR {
 
 #define ASSERT_CRO_STRUCT(name, size)                                                              \
@@ -31,8 +33,9 @@ static constexpr u32 CRO_HASH_SIZE = 0x80;
 class CROHelper final {
 public:
     // TODO (wwylele): pass in the process handle for memory access
-    explicit CROHelper(VAddr cro_address, Kernel::Process& process, Memory::MemorySystem& memory)
-        : module_address(cro_address), process(process), memory(memory) {}
+    explicit CROHelper(VAddr cro_address, Kernel::Process& process, Memory::MemorySystem& memory,
+                       ARM_Interface& cpu)
+        : module_address(cro_address), process(process), memory(memory), cpu(cpu) {}
 
     std::string ModuleName() const {
         return memory.ReadCString(GetField(ModuleNameOffset), GetField(ModuleNameSize));
@@ -142,6 +145,7 @@ private:
     const VAddr module_address; ///< the virtual address of this module
     Kernel::Process& process;   ///< the owner process of this module
     Memory::MemorySystem& memory;
+    ARM_Interface& cpu;
 
     /**
      * Each item in this enum represents a u32 field in the header begin from address+0x80,
@@ -471,10 +475,11 @@ private:
      */
     template <typename FunctionObject>
     static ResultCode ForEachAutoLinkCRO(Kernel::Process& process, Memory::MemorySystem& memory,
-                                         VAddr crs_address, FunctionObject func) {
+                                         ARM_Interface& cpu, VAddr crs_address,
+                                         FunctionObject func) {
         VAddr current = crs_address;
         while (current != 0) {
-            CROHelper cro(current, process, memory);
+            CROHelper cro(current, process, memory, cpu);
             CASCADE_RESULT(bool next, func(cro));
             if (!next)
                 break;

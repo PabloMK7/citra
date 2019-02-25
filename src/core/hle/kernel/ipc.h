@@ -10,6 +10,10 @@
 #include "core/hle/ipc.h"
 #include "core/hle/kernel/thread.h"
 
+namespace Memory {
+class MemorySystem;
+}
+
 namespace Kernel {
 
 struct MappedBufferContext {
@@ -23,8 +27,9 @@ struct MappedBufferContext {
 };
 
 /// Performs IPC command buffer translation from one process to another.
-ResultCode TranslateCommandBuffer(SharedPtr<Thread> src_thread, SharedPtr<Thread> dst_thread,
-                                  VAddr src_address, VAddr dst_address,
+ResultCode TranslateCommandBuffer(Memory::MemorySystem& memory, SharedPtr<Thread> src_thread,
+                                  SharedPtr<Thread> dst_thread, VAddr src_address,
+                                  VAddr dst_address,
                                   std::vector<MappedBufferContext>& mapped_buffer_context,
                                   bool reply);
 } // namespace Kernel

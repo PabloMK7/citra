@@ -10,7 +10,9 @@
 #include "core/core.h"
 #include "core/memory.h"
 
-ARMul_State::ARMul_State(Core::System& system, PrivilegeMode initial_mode) : system(system) {
+ARMul_State::ARMul_State(Core::System* system, Memory::MemorySystem& memory,
+                         PrivilegeMode initial_mode)
+    : system(system), memory(memory) {
     Reset();
     ChangePrivilegeMode(initial_mode);
 }
@@ -191,13 +193,13 @@ static void CheckMemoryBreakpoint(u32 address, GDBStub::BreakpointType type) {
 u8 ARMul_State::ReadMemory8(u32 address) const {
     CheckMemoryBreakpoint(address, GDBStub::BreakpointType::Read);
 
-    return system.Memory().Read8(address);
+    return memory.Read8(address);
 }
 
 u16 ARMul_State::ReadMemory16(u32 address) const {
     CheckMemoryBreakpoint(address, GDBStub::BreakpointType::Read);
 
-    u16 data = system.Memory().Read16(address);
+    u16 data = memory.Read16(address);
 
     if (InBigEndianMode())
         data = Common::swap16(data);
@@ -208,7 +210,7 @@ u16 ARMul_State::ReadMemory16(u32 address) const {
 u32 ARMul_State::ReadMemory32(u32 address) const {
     CheckMemoryBreakpoint(address, GDBStub::BreakpointType::Read);
 
-    u32 data = system.Memory().Read32(address);
+    u32 data = memory.Read32(address);
 
     if (InBigEndianMode())
         data = Common::swap32(data);
@@ -219,7 +221,7 @@ u32 ARMul_State::ReadMemory32(u32 address) const {
 u64 ARMul_State::ReadMemory64(u32 address) const {
     CheckMemoryBreakpoint(address, GDBStub::BreakpointType::Read);
 
-    u64 data = system.Memory().Read64(address);
+    u64 data = memory.Read64(address);
 
     if (InBigEndianMode())
         data = Common::swap64(data);
@@ -230,7 +232,7 @@ u64 ARMul_State::ReadMemory64(u32 address) const {
 void ARMul_State::WriteMemory8(u32 address, u8 data) {
     CheckMemoryBreakpoint(address, GDBStub::BreakpointType::Write);
 
-    system.Memory().Write8(address, data);
+    memory.Write8(address, data);
 }
 
 void ARMul_State::WriteMemory16(u32 address, u16 data) {
@@ -239,7 +241,7 @@ void ARMul_State::WriteMemory16(u32 address, u16 data) {
     if (InBigEndianMode())
         data = Common::swap16(data);
 
-    system.Memory().Write16(address, data);
+    memory.Write16(address, data);
 }
 
 void ARMul_State::WriteMemory32(u32 address, u32 data) {
@@ -248,7 +250,7 @@ void ARMul_State::WriteMemory32(u32 address, u32 data) {
     if (InBigEndianMode())
         data = Common::swap32(data);
 
-    system.Memory().Write32(address, data);
+    memory.Write32(address, data);
 }
 
 void ARMul_State::WriteMemory64(u32 address, u64 data) {
@@ -257,7 +259,7 @@ void ARMul_State::WriteMemory64(u32 address, u64 data) {
     if (InBigEndianMode())
         data = Common::swap64(data);
 
-    system.Memory().Write64(address, data);
+    memory.Write64(address, data);
 }
 
 // Reads from the CP15 registers. Used with implementation of the MRC instruction.
@@ -603,8 +605,9 @@ void ARMul_State::ServeBreak() {
     if (last_bkpt_hit) {
         Reg[15] = last_bkpt.address;
     }
-    Kernel::Thread* thread = system.Kernel().GetThreadManager().GetCurrentThread();
-    system.CPU().SaveContext(thread->context);
+    DEBUG_ASSERT(system != nullptr);
+    Kernel::Thread* thread = system->Kernel().GetThreadManager().GetCurrentThread();
+    system->CPU().SaveContext(thread->context);
     if (last_bkpt_hit || GDBStub::GetCpuStepFlag()) {
         last_bkpt_hit = false;
         GDBStub::Break();

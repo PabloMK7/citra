@@ -57,6 +57,7 @@ private:
     ~Mutex() override;
 
     friend class KernelSystem;
+    KernelSystem& kernel;
 };
 
 /**

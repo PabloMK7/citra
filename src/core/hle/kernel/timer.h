@@ -9,15 +9,21 @@
 #include "core/hle/kernel/object.h"
 #include "core/hle/kernel/wait_object.h"
 
+namespace Core {
+class Timing;
+}
+
 namespace Kernel {
 
 class TimerManager {
 public:
-    TimerManager();
+    TimerManager(Core::Timing& timing);
 
 private:
     /// The timer callback event, called when a timer is fired
     void TimerCallback(u64 callback_id, s64 cycles_late);
+
+    Core::Timing& timing;
 
     /// The event type of the generic timer callback event
     Core::TimingEventType* timer_callback_event_type = nullptr;
@@ -93,6 +99,7 @@ private:
     /// ID used as userdata to reference this object when inserting into the CoreTiming queue.
     u64 callback_id;
 
+    KernelSystem& kernel;
     TimerManager& timer_manager;
 
     friend class KernelSystem;

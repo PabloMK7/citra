@@ -15,14 +15,9 @@ static Memory::PageTable* page_table = nullptr;
 TestEnvironment::TestEnvironment(bool mutable_memory_)
     : mutable_memory(mutable_memory_), test_memory(std::make_shared<TestMemory>(this)) {
 
-    // HACK: some memory functions are currently referring kernel from the global instance,
-    //       so we need to create the kernel object there.
-    //       Change this when all global states are eliminated.
-    Core::System::GetInstance().timing = std::make_unique<Core::Timing>();
-    Core::System::GetInstance().memory = std::make_unique<Memory::MemorySystem>();
-    Memory::MemorySystem& memory = *Core::System::GetInstance().memory;
-    Core::System::GetInstance().kernel = std::make_unique<Kernel::KernelSystem>(memory, 0);
-    kernel = Core::System::GetInstance().kernel.get();
+    timing = std::make_unique<Core::Timing>();
+    memory = std::make_unique<Memory::MemorySystem>();
+    kernel = std::make_unique<Kernel::KernelSystem>(*memory, *timing, [] {}, 0);
 
     kernel->SetCurrentProcess(kernel->CreateProcess(kernel->CreateCodeSet("", 0)));
     page_table = &kernel->GetCurrentProcess()->vm_manager.page_table;
@@ -30,17 +25,15 @@ TestEnvironment::TestEnvironment(bool mutable_memory_)
     page_table->pointers.fill(nullptr);
     page_table->attributes.fill(Memory::PageType::Unmapped);
 
-    memory.MapIoRegion(*page_table, 0x00000000, 0x80000000, test_memory);
-    memory.MapIoRegion(*page_table, 0x80000000, 0x80000000, test_memory);
+    memory->MapIoRegion(*page_table, 0x00000000, 0x80000000, test_memory);
+    memory->MapIoRegion(*page_table, 0x80000000, 0x80000000, test_memory);
 
-    memory.SetCurrentPageTable(page_table);
+    memory->SetCurrentPageTable(page_table);
 }
 
 TestEnvironment::~TestEnvironment() {
-    Memory::MemorySystem& memory = *Core::System::GetInstance().memory;
-    memory.UnmapRegion(*page_table, 0x80000000, 0x80000000);
-    memory.UnmapRegion(*page_table, 0x00000000, 0x80000000);
-    Core::System::GetInstance().kernel.reset();
+    memory->UnmapRegion(*page_table, 0x80000000, 0x80000000);
+    memory->UnmapRegion(*page_table, 0x00000000, 0x80000000);
 }
 
 void TestEnvironment::SetMemory64(VAddr vaddr, u64 value) {

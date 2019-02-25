@@ -16,11 +16,11 @@
 
 namespace Kernel {
 
-ResultCode TranslateCommandBuffer(SharedPtr<Thread> src_thread, SharedPtr<Thread> dst_thread,
-                                  VAddr src_address, VAddr dst_address,
+ResultCode TranslateCommandBuffer(Memory::MemorySystem& memory, SharedPtr<Thread> src_thread,
+                                  SharedPtr<Thread> dst_thread, VAddr src_address,
+                                  VAddr dst_address,
                                   std::vector<MappedBufferContext>& mapped_buffer_context,
                                   bool reply) {
-    Memory::MemorySystem& memory = Core::System::GetInstance().Memory();
     auto& src_process = src_thread->owner_process;
     auto& dst_process = dst_thread->owner_process;
 

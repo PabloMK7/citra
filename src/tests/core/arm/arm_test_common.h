@@ -49,6 +49,10 @@ public:
     /// Empties the internal write-record store.
     void ClearWriteRecords();
 
+    Memory::MemorySystem& GetMemory() {
+        return *memory;
+    }
+
 private:
     friend struct TestMemory;
     struct TestMemory final : Memory::MMIORegion {
@@ -80,7 +84,9 @@ private:
     std::shared_ptr<TestMemory> test_memory;
     std::vector<WriteRecord> write_records;
 
-    Kernel::KernelSystem* kernel;
+    std::unique_ptr<Core::Timing> timing;
+    std::unique_ptr<Memory::MemorySystem> memory;
+    std::unique_ptr<Kernel::KernelSystem> kernel;
 };
 
 } // namespace ArmTests
