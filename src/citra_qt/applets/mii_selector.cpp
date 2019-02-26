@@ -26,8 +26,9 @@ QtMiiSelectorDialog::QtMiiSelectorDialog(QWidget* parent, QtMiiSelector* mii_sel
         buttons->addButton(tr(MII_BUTTON_CANCEL), QDialogButtonBox::ButtonRole::RejectRole);
     }
 
-    setWindowTitle(config.title.empty() ? tr("Mii Selector")
-                                        : QString::fromStdU16String(config.title));
+    setWindowTitle(config.title.empty() || config.title.at(0) == '\x0000'
+                       ? tr("Mii Selector")
+                       : QString::fromStdU16String(config.title));
 
     miis.push_back(HLE::Applets::MiiSelector::GetStandardMiiResult().selected_mii_data);
     combobox->addItem(tr("Standard Mii"));
@@ -35,7 +36,7 @@ QtMiiSelectorDialog::QtMiiSelectorDialog(QWidget* parent, QtMiiSelector* mii_sel
     std::string nand_directory{FileUtil::GetUserPath(FileUtil::UserPath::NANDDir)};
     FileSys::ArchiveFactory_ExtSaveData extdata_archive_factory(nand_directory, true);
 
-    auto archive_result = extdata_archive_factory.Open(Service::PTM::ptm_shared_extdata_id);
+    auto archive_result = extdata_archive_factory.Open(Service::PTM::ptm_shared_extdata_id, 0);
     if (archive_result.Succeeded()) {
         auto archive = std::move(archive_result).Unwrap();
 

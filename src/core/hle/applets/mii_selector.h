@@ -24,7 +24,7 @@ struct MiiConfig {
     u8 enable_guest_mii;
     u8 show_on_top_screen;
     INSERT_PADDING_BYTES(5);
-    std::array<u16, 0x40> title;
+    std::array<u16_le, 0x40> title;
     INSERT_PADDING_BYTES(4);
     u8 show_guest_miis;
     INSERT_PADDING_BYTES(3);

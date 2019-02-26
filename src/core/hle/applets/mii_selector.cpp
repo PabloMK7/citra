@@ -142,7 +142,10 @@ MiiResult MiiSelector::GetStandardMiiResult() {
 Frontend::MiiSelectorConfig MiiSelector::ToFrontendConfig(const MiiConfig& config) const {
     Frontend::MiiSelectorConfig frontend_config;
     frontend_config.enable_cancel_button = config.enable_cancel_button == 1;
-    frontend_config.title = reinterpret_cast<const char16_t*>(config.title.data());
+    std::transform(config.title.begin(), config.title.end(),
+                   std::back_inserter(frontend_config.title), [](u16_le character) -> char16_t {
+                       return static_cast<char16_t>(static_cast<u16>(character));
+                   });
     frontend_config.initially_selected_mii_index = config.initially_selected_mii_index;
     return frontend_config;
 }
