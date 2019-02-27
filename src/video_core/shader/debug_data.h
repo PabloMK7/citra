@@ -152,7 +152,8 @@ inline void SetField<DebugDataRecord::COND_CMP_IN>(DebugDataRecord& record, bool
 }
 
 template <>
-inline void SetField<DebugDataRecord::LOOP_INT_IN>(DebugDataRecord& record, Common::Vec4<u8> value) {
+inline void SetField<DebugDataRecord::LOOP_INT_IN>(DebugDataRecord& record,
+                                                   Common::Vec4<u8> value) {
     record.loop_int = value;
 }
 

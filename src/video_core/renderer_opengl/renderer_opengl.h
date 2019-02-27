@@ -32,7 +32,7 @@ struct TextureInfo {
 /// Structure used for storing information about the display target for each 3DS screen
 struct ScreenInfo {
     GLuint display_texture;
-    MathUtil::Rectangle<float> display_texcoords;
+    Common::Rectangle<float> display_texcoords;
     TextureInfo texture;
 };
 
