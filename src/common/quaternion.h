@@ -6,7 +6,7 @@
 
 #include "common/vector_math.h"
 
-namespace Math {
+namespace Common {
 
 template <typename T>
 class Quaternion {
@@ -46,4 +46,4 @@ inline Quaternion<float> MakeQuaternion(const Math::Vec3<float>& axis, float ang
     return {axis * std::sin(angle / 2), std::cos(angle / 2)};
 }
 
-} // namespace Math
+} // namespace Common
