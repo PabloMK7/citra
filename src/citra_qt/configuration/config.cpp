@@ -198,6 +198,9 @@ void Config::ReadValues() {
     Settings::values.audio_device_id =
         ReadSetting("output_device", "auto").toString().toStdString();
     Settings::values.volume = ReadSetting("volume", 1).toFloat();
+    Settings::values.mic_input_type = ReadSetting("mic_input_type", 0).toInt();
+    Settings::values.mic_input_device =
+        ReadSetting("mic_input_device", "Default").toString().toStdString();
     qt_config->endGroup();
 
     using namespace Service::CAM;
@@ -480,6 +483,8 @@ void Config::SaveValues() {
     WriteSetting("enable_audio_stretching", Settings::values.enable_audio_stretching, true);
     WriteSetting("output_device", QString::fromStdString(Settings::values.audio_device_id), "auto");
     WriteSetting("volume", Settings::values.volume, 1.0f);
+    WriteSetting("mic_input_device", QString::fromStdString(Settings::values.mic_input_device), 0);
+    WriteSetting("mic_input_type", Settings::values.mic_input_type, "Default");
     qt_config->endGroup();
 
     using namespace Service::CAM;

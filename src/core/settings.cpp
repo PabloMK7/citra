@@ -3,8 +3,11 @@
 // Refer to the license.txt file included.
 
 #include <utility>
+#include "audio_core/cubeb_input.h"
 #include "audio_core/dsp_interface.h"
 #include "core/core.h"
+#include "core/frontend/emu_window.h"
+#include "core/frontend/mic.h"
 #include "core/gdbstub/gdbstub.h"
 #include "core/hle/service/hid/hid.h"
 #include "core/hle/service/ir/ir_rst.h"
@@ -56,6 +59,15 @@ void Apply() {
         if (cam) {
             cam->ReloadCameraDevices();
         }
+    }
+    // TODO support mic hotswapping by creating the new impl, and copying any parameters to it.
+    switch (Settings::values.mic_input_type) {
+    case 0:
+        Frontend::RegisterMic(std::make_shared<Frontend::Mic::NullMic>());
+        break;
+    case 1:
+        Frontend::RegisterMic(std::make_shared<AudioCore::CubebInput>());
+        break;
     }
 }
 

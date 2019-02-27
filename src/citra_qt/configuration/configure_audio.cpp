@@ -3,6 +3,9 @@
 // Refer to the license.txt file included.
 
 #include <memory>
+#include <QAudioDeviceInfo>
+#include <QtGlobal>
+#include "audio_core/cubeb_input.h"
 #include "audio_core/sink.h"
 #include "audio_core/sink_details.h"
 #include "citra_qt/configuration/configure_audio.h"
@@ -28,10 +31,21 @@ ConfigureAudio::ConfigureAudio(QWidget* parent)
     connect(ui->volume_slider, &QSlider::valueChanged, this,
             &ConfigureAudio::setVolumeIndicatorText);
 
+    ui->input_device_combo_box->clear();
+    ui->input_device_combo_box->addItem(tr("Default"));
+    for (const auto& device : AudioCore::ListCubebInputDevices()) {
+        ui->input_device_combo_box->addItem(QString::fromStdString(device));
+    }
+
+    connect(ui->input_type_combo_box, QOverload<int>::of(&QComboBox::currentIndexChanged), this,
+            &ConfigureAudio::updateAudioInputDevices);
+
+    ui->input_type_combo_box->setEnabled(!Core::System::GetInstance().IsPoweredOn());
+    ui->input_device_combo_box->setEnabled(!Core::System::GetInstance().IsPoweredOn());
+
     this->setConfiguration();
-    connect(ui->output_sink_combo_box,
-            static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this,
-            &ConfigureAudio::updateAudioDevices);
+    connect(ui->output_sink_combo_box, QOverload<int>::of(&QComboBox::currentIndexChanged), this,
+            &ConfigureAudio::updateAudioOutputDevices);
 }
 
 ConfigureAudio::~ConfigureAudio() {}
@@ -40,7 +54,7 @@ void ConfigureAudio::setConfiguration() {
     setOutputSinkFromSinkID();
 
     // The device list cannot be pre-populated (nor listed) until the output sink is known.
-    updateAudioDevices(ui->output_sink_combo_box->currentIndex());
+    updateAudioOutputDevices(ui->output_sink_combo_box->currentIndex());
 
     setAudioDeviceFromDeviceID();
 
@@ -59,6 +73,11 @@ void ConfigureAudio::setConfiguration() {
         selection = 0;
     }
     ui->emulation_combo_box->setCurrentIndex(selection);
+
+    ui->input_type_combo_box->setCurrentIndex(Settings::values.mic_input_type);
+    ui->input_device_combo_box->setCurrentText(
+        QString::fromStdString(Settings::values.mic_input_device));
+    updateAudioInputDevices(Settings::values.mic_input_type);
 }
 
 void ConfigureAudio::setOutputSinkFromSinkID() {
@@ -105,9 +124,11 @@ void ConfigureAudio::applyConfiguration() {
         static_cast<float>(ui->volume_slider->sliderPosition()) / ui->volume_slider->maximum();
     Settings::values.enable_dsp_lle = ui->emulation_combo_box->currentIndex() != 0;
     Settings::values.enable_dsp_lle_multithread = ui->emulation_combo_box->currentIndex() == 2;
+    Settings::values.mic_input_type = ui->input_type_combo_box->currentIndex();
+    Settings::values.mic_input_device = ui->input_device_combo_box->currentText().toStdString();
 }
 
-void ConfigureAudio::updateAudioDevices(int sink_index) {
+void ConfigureAudio::updateAudioOutputDevices(int sink_index) {
     ui->audio_device_combo_box->clear();
     ui->audio_device_combo_box->addItem(AudioCore::auto_device_name);
 
@@ -115,6 +136,13 @@ void ConfigureAudio::updateAudioDevices(int sink_index) {
     for (const auto& device : AudioCore::GetDeviceListForSink(sink_id)) {
         ui->audio_device_combo_box->addItem(QString::fromStdString(device));
     }
+}
+
+void ConfigureAudio::updateAudioInputDevices(int index) {
+    // TODO: Don't hardcode this to the index for "Real Device" without making it a constant
+    // somewhere
+    ui->input_device_combo_box->setEnabled(index == 1 &&
+                                           !Core::System::GetInstance().IsPoweredOn());
 }
 
 void ConfigureAudio::retranslateUi() {

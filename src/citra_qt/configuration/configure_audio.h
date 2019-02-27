@@ -23,7 +23,8 @@ public:
     void setConfiguration();
 
 private:
-    void updateAudioDevices(int sink_index);
+    void updateAudioOutputDevices(int sink_index);
+    void updateAudioInputDevices(int index);
 
     void setOutputSinkFromSinkID();
     void setAudioDeviceFromDeviceID();

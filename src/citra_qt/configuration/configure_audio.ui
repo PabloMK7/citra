@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>188</width>
-    <height>246</height>
+    <width>329</width>
+    <height>332</height>
    </rect>
   </property>
   <layout class="QVBoxLayout">
@@ -39,7 +39,7 @@
         <item>
          <widget class="QLabel" name="label1">
           <property name="text">
-           <string>Output Engine:</string>
+           <string>Output Engine</string>
           </property>
          </widget>
         </item>
@@ -63,7 +63,7 @@
         <item>
          <widget class="QLabel" name="label2">
           <property name="text">
-           <string>Audio Device:</string>
+           <string>Audio Device</string>
           </property>
          </widget>
         </item>
@@ -131,6 +131,54 @@
            <set>Qt::AlignCenter</set>
           </property>
          </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="groupBox_2">
+     <property name="title">
+      <string>Microphone</string>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout">
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout">
+        <item>
+         <widget class="QLabel" name="label_2">
+          <property name="text">
+           <string>Input Type</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QComboBox" name="input_type_combo_box">
+          <item>
+           <property name="text">
+            <string>None</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Real Device</string>
+           </property>
+          </item>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_3">
+        <item>
+         <widget class="QLabel" name="label_3">
+          <property name="text">
+           <string>Input Device</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QComboBox" name="input_device_combo_box"/>
         </item>
        </layout>
       </item>
