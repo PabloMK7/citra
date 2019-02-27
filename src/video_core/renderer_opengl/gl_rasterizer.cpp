@@ -224,11 +224,11 @@ void RasterizerOpenGL::SyncEntireState() {
  * Fortunately however, the 3DS hardware happens to also use this exact same logic to work around
  * these issues, making this basic implementation actually more accurate to the hardware.
  */
-static bool AreQuaternionsOpposite(Math::Vec4<Pica::float24> qa, Math::Vec4<Pica::float24> qb) {
-    Math::Vec4f a{qa.x.ToFloat32(), qa.y.ToFloat32(), qa.z.ToFloat32(), qa.w.ToFloat32()};
-    Math::Vec4f b{qb.x.ToFloat32(), qb.y.ToFloat32(), qb.z.ToFloat32(), qb.w.ToFloat32()};
+static bool AreQuaternionsOpposite(Common::Vec4<Pica::float24> qa, Common::Vec4<Pica::float24> qb) {
+    Common::Vec4f a{qa.x.ToFloat32(), qa.y.ToFloat32(), qa.z.ToFloat32(), qa.w.ToFloat32()};
+    Common::Vec4f b{qb.x.ToFloat32(), qb.y.ToFloat32(), qb.z.ToFloat32(), qb.w.ToFloat32()};
 
-    return (Math::Dot(a, b) < 0.f);
+    return (Common::Dot(a, b) < 0.f);
 }
 
 void RasterizerOpenGL::AddTriangle(const Pica::Shader::OutputVertex& v0,

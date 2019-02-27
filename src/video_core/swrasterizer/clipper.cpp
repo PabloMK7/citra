@@ -23,13 +23,15 @@ namespace Pica::Clipper {
 
 struct ClippingEdge {
 public:
-    ClippingEdge(Math::Vec4<float24> coeffs, Math::Vec4<float24> bias = Math::Vec4<float24>(
-                                                 float24::FromFloat32(0), float24::FromFloat32(0),
-                                                 float24::FromFloat32(0), float24::FromFloat32(0)))
+    ClippingEdge(Common::Vec4<float24> coeffs,
+                 Common::Vec4<float24> bias = Common::Vec4<float24>(float24::FromFloat32(0),
+                                                                    float24::FromFloat32(0),
+                                                                    float24::FromFloat32(0),
+                                                                    float24::FromFloat32(0)))
         : coeffs(coeffs), bias(bias) {}
 
     bool IsInside(const Vertex& vertex) const {
-        return Math::Dot(vertex.pos + bias, coeffs) >= float24::FromFloat32(0);
+        return Common::Dot(vertex.pos + bias, coeffs) >= float24::FromFloat32(0);
     }
 
     bool IsOutSide(const Vertex& vertex) const {
@@ -37,8 +39,8 @@ public:
     }
 
     Vertex GetIntersection(const Vertex& v0, const Vertex& v1) const {
-        float24 dp = Math::Dot(v0.pos + bias, coeffs);
-        float24 dp_prev = Math::Dot(v1.pos + bias, coeffs);
+        float24 dp = Common::Dot(v0.pos + bias, coeffs);
+        float24 dp_prev = Common::Dot(v1.pos + bias, coeffs);
         float24 factor = dp_prev / (dp_prev - dp);
 
         return Vertex::Lerp(factor, v0, v1);
@@ -46,8 +48,8 @@ public:
 
 private:
     float24 pos;
-    Math::Vec4<float24> coeffs;
-    Math::Vec4<float24> bias;
+    Common::Vec4<float24> coeffs;
+    Common::Vec4<float24> bias;
 };
 
 static void InitScreenCoordinates(Vertex& vtx) {
@@ -95,7 +97,7 @@ void ProcessTriangle(const OutputVertex& v0, const OutputVertex& v1, const Outpu
     static_vector<Vertex, MAX_VERTICES> buffer_b;
 
     auto FlipQuaternionIfOpposite = [](auto& a, const auto& b) {
-        if (Math::Dot(a, b) < float24::Zero())
+        if (Common::Dot(a, b) < float24::Zero())
             a = a * float24::FromFloat32(-1.0f);
     };
 
@@ -114,13 +116,14 @@ void ProcessTriangle(const OutputVertex& v0, const OutputVertex& v1, const Outpu
     static const float24 f0 = float24::FromFloat32(0.0);
     static const float24 f1 = float24::FromFloat32(1.0);
     static const std::array<ClippingEdge, 7> clipping_edges = {{
-        {Math::MakeVec(-f1, f0, f0, f1)},                                          // x = +w
-        {Math::MakeVec(f1, f0, f0, f1)},                                           // x = -w
-        {Math::MakeVec(f0, -f1, f0, f1)},                                          // y = +w
-        {Math::MakeVec(f0, f1, f0, f1)},                                           // y = -w
-        {Math::MakeVec(f0, f0, -f1, f0)},                                          // z =  0
-        {Math::MakeVec(f0, f0, f1, f1)},                                           // z = -w
-        {Math::MakeVec(f0, f0, f0, f1), Math::Vec4<float24>(f0, f0, f0, EPSILON)}, // w = EPSILON
+        {Common::MakeVec(-f1, f0, f0, f1)}, // x = +w
+        {Common::MakeVec(f1, f0, f0, f1)},  // x = -w
+        {Common::MakeVec(f0, -f1, f0, f1)}, // y = +w
+        {Common::MakeVec(f0, f1, f0, f1)},  // y = -w
+        {Common::MakeVec(f0, f0, -f1, f0)}, // z =  0
+        {Common::MakeVec(f0, f0, f1, f1)},  // z = -w
+        {Common::MakeVec(f0, f0, f0, f1),
+         Common::Vec4<float24>(f0, f0, f0, EPSILON)}, // w = EPSILON
     }};
 
     // Simple implementation of the Sutherland-Hodgman clipping algorithm.

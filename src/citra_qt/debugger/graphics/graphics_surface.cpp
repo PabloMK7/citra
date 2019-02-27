@@ -585,7 +585,7 @@ void GraphicsSurfaceWidget::OnUpdate() {
 
         for (unsigned int y = 0; y < surface_height; ++y) {
             for (unsigned int x = 0; x < surface_width; ++x) {
-                Math::Vec4<u8> color = Pica::Texture::LookupTexture(buffer, x, y, info, true);
+                Common::Vec4<u8> color = Pica::Texture::LookupTexture(buffer, x, y, info, true);
                 decoded_image.setPixel(x, y, qRgba(color.r(), color.g(), color.b(), color.a()));
             }
         }
@@ -605,7 +605,7 @@ void GraphicsSurfaceWidget::OnUpdate() {
                 const u32 coarse_y = y & ~7;
                 u32 offset = VideoCore::GetMortonOffset(x, y, bytes_per_pixel) + coarse_y * stride;
                 const u8* pixel = buffer + offset;
-                Math::Vec4<u8> color = {0, 0, 0, 0};
+                Common::Vec4<u8> color = {0, 0, 0, 0};
 
                 switch (surface_format) {
                 case Format::D16: {
@@ -622,14 +622,14 @@ void GraphicsSurfaceWidget::OnUpdate() {
                     break;
                 }
                 case Format::D24X8: {
-                    Math::Vec2<u32> data = Color::DecodeD24S8(pixel);
+                    Common::Vec2<u32> data = Color::DecodeD24S8(pixel);
                     color.r() = data.x & 0xFF;
                     color.g() = (data.x >> 8) & 0xFF;
                     color.b() = (data.x >> 16) & 0xFF;
                     break;
                 }
                 case Format::X24S8: {
-                    Math::Vec2<u32> data = Color::DecodeD24S8(pixel);
+                    Common::Vec2<u32> data = Color::DecodeD24S8(pixel);
                     color.r() = color.g() = color.b() = data.y;
                     break;
                 }

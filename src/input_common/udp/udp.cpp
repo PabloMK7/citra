@@ -26,7 +26,7 @@ private:
 class UDPMotionDevice final : public Input::MotionDevice {
 public:
     explicit UDPMotionDevice(std::shared_ptr<DeviceStatus> status_) : status(std::move(status_)) {}
-    std::tuple<Math::Vec3<float>, Math::Vec3<float>> GetStatus() const {
+    std::tuple<Common::Vec3<float>, Common::Vec3<float>> GetStatus() const {
         std::lock_guard<std::mutex> guard(status->update_mutex);
         return status->motion_status;
     }

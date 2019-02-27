@@ -63,7 +63,7 @@ static void WriteUniformBoolReg(Shader::ShaderSetup& setup, u32 value) {
 }
 
 static void WriteUniformIntReg(Shader::ShaderSetup& setup, unsigned index,
-                               const Math::Vec4<u8>& values) {
+                               const Common::Vec4<u8>& values) {
     ASSERT(index < setup.uniforms.i.size());
     setup.uniforms.i[index] = values;
     LOG_TRACE(HW_GPU, "Set {} integer uniform {} to {:02x} {:02x} {:02x} {:02x}",
@@ -186,7 +186,7 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
                 break;
             }
 
-            Math::Vec4<float24> attribute;
+            Common::Vec4<float24> attribute;
 
             // NOTE: The destination component order indeed is "backwards"
             attribute.w = float24::FromRaw(default_attr_write_buffer[0] >> 8);
@@ -447,7 +447,7 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
         unsigned index = (id - PICA_REG_INDEX_WORKAROUND(gs.int_uniforms[0], 0x281));
         auto values = regs.gs.int_uniforms[index];
         WriteUniformIntReg(g_state.gs, index,
-                           Math::Vec4<u8>(values.x, values.y, values.z, values.w));
+                           Common::Vec4<u8>(values.x, values.y, values.z, values.w));
         break;
     }
 
@@ -515,7 +515,7 @@ static void WritePicaReg(u32 id, u32 value, u32 mask) {
         unsigned index = (id - PICA_REG_INDEX_WORKAROUND(vs.int_uniforms[0], 0x2b1));
         auto values = regs.vs.int_uniforms[index];
         WriteUniformIntReg(g_state.vs, index,
-                           Math::Vec4<u8>(values.x, values.y, values.z, values.w));
+                           Common::Vec4<u8>(values.x, values.y, values.z, values.w));
         break;
     }
 

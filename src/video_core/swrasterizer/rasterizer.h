@@ -13,7 +13,7 @@ struct Vertex : Shader::OutputVertex {
 
     // Attributes used to store intermediate results
     // position after perspective divide
-    Math::Vec3<float24> screenpos;
+    Common::Vec3<float24> screenpos;
 
     // Linear interpolation
     // factor: 0=this, 1=vtx

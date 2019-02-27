@@ -162,8 +162,8 @@ void Client::OnPadData(Response::PadData data) {
     // Due to differences between the 3ds and cemuhookudp motion directions, we need to invert
     // accel.x and accel.z and also invert pitch and yaw. See
     // https://github.com/citra-emu/citra/pull/4049 for more details on gyro/accel
-    Math::Vec3f accel = Math::MakeVec<float>(-data.accel.x, data.accel.y, -data.accel.z);
-    Math::Vec3f gyro = Math::MakeVec<float>(-data.gyro.pitch, -data.gyro.yaw, data.gyro.roll);
+    Common::Vec3f accel = Common::MakeVec<float>(-data.accel.x, data.accel.y, -data.accel.z);
+    Common::Vec3f gyro = Common::MakeVec<float>(-data.gyro.pitch, -data.gyro.yaw, data.gyro.roll);
     {
         std::lock_guard<std::mutex> guard(status->update_mutex);
 
@@ -217,8 +217,7 @@ void TestCommunication(const std::string& host, u16 port, u8 pad_index, u32 clie
             success_callback();
         else
             failure_callback();
-    })
-        .detach();
+    }).detach();
 }
 
 CalibrationConfigurationJob::CalibrationConfigurationJob(
@@ -269,8 +268,7 @@ CalibrationConfigurationJob::CalibrationConfigurationJob(
         complete_event.Wait();
         socket.Stop();
         worker_thread.join();
-    })
-        .detach();
+    }).detach();
 }
 
 CalibrationConfigurationJob::~CalibrationConfigurationJob() {

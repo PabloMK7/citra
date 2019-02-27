@@ -18,7 +18,7 @@
 
 namespace Pica::Rasterizer {
 
-void DrawPixel(int x, int y, const Math::Vec4<u8>& color) {
+void DrawPixel(int x, int y, const Common::Vec4<u8>& color) {
     const auto& framebuffer = g_state.regs.framebuffer.framebuffer;
     const PAddr addr = framebuffer.GetColorBufferPhysicalAddress();
 
@@ -61,7 +61,7 @@ void DrawPixel(int x, int y, const Math::Vec4<u8>& color) {
     }
 }
 
-const Math::Vec4<u8> GetPixel(int x, int y) {
+const Common::Vec4<u8> GetPixel(int x, int y) {
     const auto& framebuffer = g_state.regs.framebuffer.framebuffer;
     const PAddr addr = framebuffer.GetColorBufferPhysicalAddress();
 
@@ -257,10 +257,12 @@ u8 PerformStencilAction(FramebufferRegs::StencilAction action, u8 old_stencil, u
     }
 }
 
-Math::Vec4<u8> EvaluateBlendEquation(const Math::Vec4<u8>& src, const Math::Vec4<u8>& srcfactor,
-                                     const Math::Vec4<u8>& dest, const Math::Vec4<u8>& destfactor,
-                                     FramebufferRegs::BlendEquation equation) {
-    Math::Vec4<int> result;
+Common::Vec4<u8> EvaluateBlendEquation(const Common::Vec4<u8>& src,
+                                       const Common::Vec4<u8>& srcfactor,
+                                       const Common::Vec4<u8>& dest,
+                                       const Common::Vec4<u8>& destfactor,
+                                       FramebufferRegs::BlendEquation equation) {
+    Common::Vec4<int> result;
 
     auto src_result = (src * srcfactor).Cast<int>();
     auto dst_result = (dest * destfactor).Cast<int>();
@@ -299,8 +301,8 @@ Math::Vec4<u8> EvaluateBlendEquation(const Math::Vec4<u8>& src, const Math::Vec4
         UNIMPLEMENTED();
     }
 
-    return Math::Vec4<u8>(std::clamp(result.r(), 0, 255), std::clamp(result.g(), 0, 255),
-                          std::clamp(result.b(), 0, 255), std::clamp(result.a(), 0, 255));
+    return Common::Vec4<u8>(std::clamp(result.r(), 0, 255), std::clamp(result.g(), 0, 255),
+                            std::clamp(result.b(), 0, 255), std::clamp(result.a(), 0, 255));
 };
 
 u8 LogicOp(u8 src, u8 dest, FramebufferRegs::LogicOp op) {
@@ -359,7 +361,7 @@ u8 LogicOp(u8 src, u8 dest, FramebufferRegs::LogicOp op) {
 
 // Decode/Encode for shadow map format. It is similar to D24S8 format, but the depth field is in
 // big-endian
-static const Math::Vec2<u32> DecodeD24S8Shadow(const u8* bytes) {
+static const Common::Vec2<u32> DecodeD24S8Shadow(const u8* bytes) {
     return {static_cast<u32>((bytes[0] << 16) | (bytes[1] << 8) | bytes[2]), bytes[3]};
 }
 

@@ -28,7 +28,7 @@ constexpr unsigned MAX_PROGRAM_CODE_LENGTH = 4096;
 constexpr unsigned MAX_SWIZZLE_DATA_LENGTH = 4096;
 
 struct AttributeBuffer {
-    alignas(16) Math::Vec4<float24> attr[16];
+    alignas(16) Common::Vec4<float24> attr[16];
 };
 
 /// Handler type for receiving vertex outputs from vertex shader or geometry shader
@@ -38,16 +38,16 @@ using VertexHandler = std::function<void(const AttributeBuffer&)>;
 using WindingSetter = std::function<void()>;
 
 struct OutputVertex {
-    Math::Vec4<float24> pos;
-    Math::Vec4<float24> quat;
-    Math::Vec4<float24> color;
-    Math::Vec2<float24> tc0;
-    Math::Vec2<float24> tc1;
+    Common::Vec4<float24> pos;
+    Common::Vec4<float24> quat;
+    Common::Vec4<float24> color;
+    Common::Vec2<float24> tc0;
+    Common::Vec2<float24> tc1;
     float24 tc0_w;
     INSERT_PADDING_WORDS(1);
-    Math::Vec3<float24> view;
+    Common::Vec3<float24> view;
     INSERT_PADDING_WORDS(1);
-    Math::Vec2<float24> tc2;
+    Common::Vec2<float24> tc2;
 
     static void ValidateSemantics(const RasterizerRegs& regs);
     static OutputVertex FromAttributeBuffer(const RasterizerRegs& regs,
@@ -87,7 +87,7 @@ struct GSEmitter {
 
     GSEmitter();
     ~GSEmitter();
-    void Emit(Math::Vec4<float24> (&output_regs)[16]);
+    void Emit(Common::Vec4<float24> (&output_regs)[16]);
 };
 static_assert(std::is_standard_layout<GSEmitter>::value, "GSEmitter is not standard layout type");
 
@@ -102,9 +102,9 @@ struct UnitState {
     struct Registers {
         // The registers are accessed by the shader JIT using SSE instructions, and are therefore
         // required to be 16-byte aligned.
-        alignas(16) Math::Vec4<float24> input[16];
-        alignas(16) Math::Vec4<float24> temporary[16];
-        alignas(16) Math::Vec4<float24> output[16];
+        alignas(16) Common::Vec4<float24> input[16];
+        alignas(16) Common::Vec4<float24> temporary[16];
+        alignas(16) Common::Vec4<float24> output[16];
     } registers;
     static_assert(std::is_pod<Registers>::value, "Structure is not POD");
 
@@ -120,11 +120,11 @@ struct UnitState {
         switch (reg.GetRegisterType()) {
         case RegisterType::Input:
             return offsetof(UnitState, registers.input) +
-                   reg.GetIndex() * sizeof(Math::Vec4<float24>);
+                   reg.GetIndex() * sizeof(Common::Vec4<float24>);
 
         case RegisterType::Temporary:
             return offsetof(UnitState, registers.temporary) +
-                   reg.GetIndex() * sizeof(Math::Vec4<float24>);
+                   reg.GetIndex() * sizeof(Common::Vec4<float24>);
 
         default:
             UNREACHABLE();
@@ -136,11 +136,11 @@ struct UnitState {
         switch (reg.GetRegisterType()) {
         case RegisterType::Output:
             return offsetof(UnitState, registers.output) +
-                   reg.GetIndex() * sizeof(Math::Vec4<float24>);
+                   reg.GetIndex() * sizeof(Common::Vec4<float24>);
 
         case RegisterType::Temporary:
             return offsetof(UnitState, registers.temporary) +
-                   reg.GetIndex() * sizeof(Math::Vec4<float24>);
+                   reg.GetIndex() * sizeof(Common::Vec4<float24>);
 
         default:
             UNREACHABLE();
@@ -175,13 +175,13 @@ struct GSUnitState : public UnitState {
 struct Uniforms {
     // The float uniforms are accessed by the shader JIT using SSE instructions, and are
     // therefore required to be 16-byte aligned.
-    alignas(16) Math::Vec4<float24> f[96];
+    alignas(16) Common::Vec4<float24> f[96];
 
     std::array<bool, 16> b;
-    std::array<Math::Vec4<u8>, 4> i;
+    std::array<Common::Vec4<u8>, 4> i;
 
     static std::size_t GetFloatUniformOffset(unsigned index) {
-        return offsetof(Uniforms, f) + index * sizeof(Math::Vec4<float24>);
+        return offsetof(Uniforms, f) + index * sizeof(Common::Vec4<float24>);
     }
 
     static std::size_t GetBoolUniformOffset(unsigned index) {
@@ -189,7 +189,7 @@ struct Uniforms {
     }
 
     static std::size_t GetIntUniformOffset(unsigned index) {
-        return offsetof(Uniforms, i) + index * sizeof(Math::Vec4<u8>);
+        return offsetof(Uniforms, i) + index * sizeof(Common::Vec4<u8>);
     }
 };
 

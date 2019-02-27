@@ -431,7 +431,7 @@ static bool FillSurface(const Surface& surface, const u8* fill_data,
 
         Pica::Texture::TextureInfo tex_info{};
         tex_info.format = static_cast<Pica::TexturingRegs::TextureFormat>(surface->pixel_format);
-        Math::Vec4<u8> color = Pica::Texture::LookupTexture(fill_data, 0, 0, tex_info);
+        Common::Vec4<u8> color = Pica::Texture::LookupTexture(fill_data, 0, 0, tex_info);
 
         std::array<GLfloat, 4> color_values = {color.x / 255.f, color.y / 255.f, color.z / 255.f,
                                                color.w / 255.f};

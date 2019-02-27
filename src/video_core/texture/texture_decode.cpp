@@ -56,8 +56,8 @@ size_t CalculateTileSize(TextureFormat format) {
     }
 }
 
-Math::Vec4<u8> LookupTexture(const u8* source, unsigned int x, unsigned int y,
-                             const TextureInfo& info, bool disable_alpha) {
+Common::Vec4<u8> LookupTexture(const u8* source, unsigned int x, unsigned int y,
+                               const TextureInfo& info, bool disable_alpha) {
     // Coordinate in tiles
     const unsigned int coarse_x = x / 8;
     const unsigned int coarse_y = y / 8;
@@ -71,8 +71,8 @@ Math::Vec4<u8> LookupTexture(const u8* source, unsigned int x, unsigned int y,
     return LookupTexelInTile(tile, fine_x, fine_y, info, disable_alpha);
 }
 
-Math::Vec4<u8> LookupTexelInTile(const u8* source, unsigned int x, unsigned int y,
-                                 const TextureInfo& info, bool disable_alpha) {
+Common::Vec4<u8> LookupTexelInTile(const u8* source, unsigned int x, unsigned int y,
+                                   const TextureInfo& info, bool disable_alpha) {
     DEBUG_ASSERT(x < 8);
     DEBUG_ASSERT(y < 8);
 
@@ -200,8 +200,8 @@ Math::Vec4<u8> LookupTexelInTile(const u8* source, unsigned int x, unsigned int 
         u64_le subtile_data;
         memcpy(&subtile_data, subtile_ptr, sizeof(u64));
 
-        return Math::MakeVec(SampleETC1Subtile(subtile_data, x, y),
-                             disable_alpha ? (u8)255 : alpha);
+        return Common::MakeVec(SampleETC1Subtile(subtile_data, x, y),
+                               disable_alpha ? (u8)255 : alpha);
     }
 
     default:
