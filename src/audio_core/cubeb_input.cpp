@@ -23,6 +23,8 @@ struct CubebInput::Impl {
     u32 offset;
     u32 audio_buffer_size;
 
+    void UpdateOffset(int new_offset, Impl* impl);
+    void ProcessSample(const u8* data, int current_sample_index, Impl* impl);
     static long DataCallback(cubeb_stream* stream, void* user_data, const void* input_buffer,
                              void* output_buffer, long num_frames);
     static void StateCallback(cubeb_stream* stream, void* user_data, cubeb_state state);
@@ -97,6 +99,25 @@ void CubebInput::AdjustSampleRate(u32 sample_rate) {
     LOG_ERROR(Audio, "AdjustSampleRate unimplemented!");
 }
 
+void CubebInput::Impl::UpdateOffset(int new_offset, Impl* impl) {
+    impl->offset = new_offset;
+    std::memcpy(impl->buffer + impl->audio_buffer_size, reinterpret_cast<u8*>(&impl->offset),
+                sizeof(u32));
+}
+
+void CubebInput::Impl::ProcessSample(const u8* data, int current_sample_index, Impl* impl) {
+    if (impl->offset >= impl->audio_buffer_size) {
+        if (impl->looped_buffer)
+            UpdateOffset(impl->initial_offset, impl);
+        else
+            return;
+    }
+
+    std::memcpy(impl->buffer + impl->offset, data + current_sample_index * sizeof(u16),
+                sizeof(u16));
+    UpdateOffset(impl->offset + sizeof(u16), impl);
+}
+
 long CubebInput::Impl::DataCallback(cubeb_stream* stream, void* user_data, const void* input_buffer,
                                     void* output_buffer, long num_frames) {
     Impl* impl = static_cast<Impl*>(user_data);
@@ -110,31 +131,15 @@ long CubebInput::Impl::DataCallback(cubeb_stream* stream, void* user_data, const
         return 0;
     }
 
-    u64 total_written = 0;
-    u64 to_write = num_frames;
-    u64 remaining_space = impl->audio_buffer_size - impl->offset;
-    if (to_write > remaining_space) {
-        to_write = remaining_space;
+    for (int i = 0; i < num_frames; i++) {
+        impl->ProcessSample(data, i, impl);
     }
-    std::memcpy(impl->buffer + impl->offset, data, to_write);
-    impl->offset += to_write;
-    total_written += to_write;
-
-    if (impl->looped_buffer && num_frames > total_written) {
-        impl->offset = impl->initial_offset;
-        to_write = num_frames - to_write;
-        std::memcpy(impl->buffer + impl->offset, data, to_write);
-        impl->offset += to_write;
-        total_written += to_write;
-    }
-    // The last 4 bytes of the shared memory contains the latest offset
-    // so update that as well https://www.3dbrew.org/wiki/MIC_Shared_Memory
-    std::memcpy(impl->buffer + (impl->buffer_size - sizeof(u32)),
-                reinterpret_cast<u8*>(&impl->offset), sizeof(u32));
 
     // returning less than num_frames here signals cubeb to stop sampling
-    return total_written;
-}
+    // return total_written;
+    // TODO:: Correct this
+    return num_frames;
+} // namespace AudioCore
 
 void CubebInput::Impl::StateCallback(cubeb_stream* stream, void* user_data, cubeb_state state) {}
 
