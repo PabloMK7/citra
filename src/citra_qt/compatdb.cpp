@@ -51,8 +51,8 @@ void CompatDB::Submit() {
     case CompatDBPage::Final:
         back();
         LOG_DEBUG(Frontend, "Compatibility Rating: {}", compatibility->checkedId());
-        Core::Telemetry().AddField(Telemetry::FieldType::UserFeedback, "Compatibility",
-                                   compatibility->checkedId());
+        Core::System::GetInstance().TelemetrySession().AddField(
+            Telemetry::FieldType::UserFeedback, "Compatibility", compatibility->checkedId());
 
         button(NextButton)->setEnabled(false);
         button(NextButton)->setText(tr("Submitting"));
