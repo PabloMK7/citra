@@ -280,13 +280,13 @@ void System::RegisterSoftwareKeyboard(std::shared_ptr<Frontend::SoftwareKeyboard
 
 void System::Shutdown() {
     // Log last frame performance stats
-    auto perf_results = GetAndResetPerfStats();
-    Telemetry().AddField(Telemetry::FieldType::Performance, "Shutdown_EmulationSpeed",
-                         perf_results.emulation_speed * 100.0);
-    Telemetry().AddField(Telemetry::FieldType::Performance, "Shutdown_Framerate",
-                         perf_results.game_fps);
-    Telemetry().AddField(Telemetry::FieldType::Performance, "Shutdown_Frametime",
-                         perf_results.frametime * 1000.0);
+    const auto perf_results = GetAndResetPerfStats();
+    telemetry_session->AddField(Telemetry::FieldType::Performance, "Shutdown_EmulationSpeed",
+                                perf_results.emulation_speed * 100.0);
+    telemetry_session->AddField(Telemetry::FieldType::Performance, "Shutdown_Framerate",
+                                perf_results.game_fps);
+    telemetry_session->AddField(Telemetry::FieldType::Performance, "Shutdown_Frametime",
+                                perf_results.frametime * 1000.0);
 
     // Shutdown emulation session
     GDBStub::Shutdown();
