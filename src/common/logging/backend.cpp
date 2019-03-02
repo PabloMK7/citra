@@ -117,7 +117,6 @@ private:
 
         // matches from the beginning up to the last '../' or 'src/'
         static const std::regex trim_source_path(R"(.*([\/\\]|^)((\.\.)|(src))[\/\\])");
-        static steady_clock::time_point time_origin = steady_clock::now();
 
         Entry entry;
         entry.timestamp =
@@ -137,6 +136,7 @@ private:
     std::vector<std::unique_ptr<Backend>> backends;
     Common::MPSCQueue<Log::Entry> message_queue;
     Filter filter;
+    std::chrono::steady_clock::time_point time_origin{std::chrono::steady_clock::now()};
 };
 
 void ConsoleBackend::Write(const Entry& entry) {
