@@ -4,8 +4,6 @@
 
 #pragma once
 
-#include <functional>
-#include <future>
 #include <string>
 
 namespace WebService {
