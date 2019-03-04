@@ -143,16 +143,16 @@ static void WriteGameCoinData(GameCoin gamecoin_data) {
     FileSys::ArchiveFactory_ExtSaveData extdata_archive_factory(nand_directory, true);
 
     FileSys::Path archive_path(ptm_shared_extdata_id);
-    auto archive_result = extdata_archive_factory.Open(archive_path);
+    auto archive_result = extdata_archive_factory.Open(archive_path, 0);
     std::unique_ptr<FileSys::ArchiveBackend> archive;
 
     FileSys::Path gamecoin_path("/gamecoin.dat");
     // If the archive didn't exist, create the files inside
     if (archive_result.Code() == FileSys::ERR_NOT_FORMATTED) {
         // Format the archive to create the directories
-        extdata_archive_factory.Format(archive_path, FileSys::ArchiveFormatInfo());
+        extdata_archive_factory.Format(archive_path, FileSys::ArchiveFormatInfo(), 0);
         // Open it again to get a valid archive now that the folder exists
-        archive = extdata_archive_factory.Open(archive_path).Unwrap();
+        archive = extdata_archive_factory.Open(archive_path, 0).Unwrap();
         // Create the game coin file
         archive->CreateFile(gamecoin_path, sizeof(GameCoin));
     } else {
@@ -176,7 +176,7 @@ static GameCoin ReadGameCoinData() {
     FileSys::ArchiveFactory_ExtSaveData extdata_archive_factory(nand_directory, true);
 
     FileSys::Path archive_path(ptm_shared_extdata_id);
-    auto archive_result = extdata_archive_factory.Open(archive_path);
+    auto archive_result = extdata_archive_factory.Open(archive_path, 0);
     if (!archive_result.Succeeded()) {
         LOG_ERROR(Service_PTM, "Could not open the PTM SharedExtSaveData archive!");
         return default_game_coin;
@@ -205,7 +205,7 @@ Module::Module() {
     std::string nand_directory = FileUtil::GetUserPath(FileUtil::UserPath::NANDDir);
     FileSys::ArchiveFactory_ExtSaveData extdata_archive_factory(nand_directory, true);
     FileSys::Path archive_path(ptm_shared_extdata_id);
-    auto archive_result = extdata_archive_factory.Open(archive_path);
+    auto archive_result = extdata_archive_factory.Open(archive_path, 0);
     // If the archive didn't exist, write the default game coin file
     if (archive_result.Code() == FileSys::ERR_NOT_FORMATTED) {
         WriteGameCoinData(default_game_coin);

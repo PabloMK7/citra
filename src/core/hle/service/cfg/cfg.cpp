@@ -531,15 +531,15 @@ ResultCode Module::LoadConfigNANDSaveFile() {
 
     // Open the SystemSaveData archive 0x00010017
     FileSys::Path archive_path(cfg_system_savedata_id);
-    auto archive_result = systemsavedata_factory.Open(archive_path);
+    auto archive_result = systemsavedata_factory.Open(archive_path, 0);
 
     // If the archive didn't exist, create the files inside
     if (archive_result.Code() == FileSys::ERR_NOT_FORMATTED) {
         // Format the archive to create the directories
-        systemsavedata_factory.Format(archive_path, FileSys::ArchiveFormatInfo());
+        systemsavedata_factory.Format(archive_path, FileSys::ArchiveFormatInfo(), 0);
 
         // Open it again to get a valid archive now that the folder exists
-        cfg_system_save_data_archive = systemsavedata_factory.Open(archive_path).Unwrap();
+        cfg_system_save_data_archive = systemsavedata_factory.Open(archive_path, 0).Unwrap();
     } else {
         ASSERT_MSG(archive_result.Succeeded(), "Could not open the CFG SystemSaveData archive!");
 

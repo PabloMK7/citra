@@ -278,18 +278,20 @@ void ArchiveFactory_SelfNCCH::Register(Loader::AppLoader& app_loader) {
         data.banner = std::make_shared<std::vector<u8>>(std::move(buffer));
 }
 
-ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_SelfNCCH::Open(const Path& path) {
-    auto archive = std::make_unique<SelfNCCHArchive>(
-        ncch_data[Core::System::GetInstance().Kernel().GetCurrentProcess()->codeset->program_id]);
+ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_SelfNCCH::Open(const Path& path,
+                                                                         u64 program_id) {
+    auto archive = std::make_unique<SelfNCCHArchive>(ncch_data[program_id]);
     return MakeResult<std::unique_ptr<ArchiveBackend>>(std::move(archive));
 }
 
-ResultCode ArchiveFactory_SelfNCCH::Format(const Path&, const FileSys::ArchiveFormatInfo&) {
+ResultCode ArchiveFactory_SelfNCCH::Format(const Path&, const FileSys::ArchiveFormatInfo&,
+                                           u64 program_id) {
     LOG_ERROR(Service_FS, "Attempted to format a SelfNCCH archive.");
     return ERROR_INVALID_PATH;
 }
 
-ResultVal<ArchiveFormatInfo> ArchiveFactory_SelfNCCH::GetFormatInfo(const Path&) const {
+ResultVal<ArchiveFormatInfo> ArchiveFactory_SelfNCCH::GetFormatInfo(const Path&,
+                                                                    u64 program_id) const {
     LOG_ERROR(Service_FS, "Attempted to get format info of a SelfNCCH archive");
     return ERROR_INVALID_PATH;
 }

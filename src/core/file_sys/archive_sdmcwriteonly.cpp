@@ -49,19 +49,22 @@ bool ArchiveFactory_SDMCWriteOnly::Initialize() {
     return true;
 }
 
-ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_SDMCWriteOnly::Open(const Path& path) {
+ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_SDMCWriteOnly::Open(const Path& path,
+                                                                              u64 program_id) {
     auto archive = std::make_unique<SDMCWriteOnlyArchive>(sdmc_directory);
     return MakeResult<std::unique_ptr<ArchiveBackend>>(std::move(archive));
 }
 
 ResultCode ArchiveFactory_SDMCWriteOnly::Format(const Path& path,
-                                                const FileSys::ArchiveFormatInfo& format_info) {
+                                                const FileSys::ArchiveFormatInfo& format_info,
+                                                u64 program_id) {
     // TODO(wwylele): hwtest this
     LOG_ERROR(Service_FS, "Attempted to format a SDMC write-only archive.");
     return ResultCode(-1);
 }
 
-ResultVal<ArchiveFormatInfo> ArchiveFactory_SDMCWriteOnly::GetFormatInfo(const Path& path) const {
+ResultVal<ArchiveFormatInfo> ArchiveFactory_SDMCWriteOnly::GetFormatInfo(const Path& path,
+                                                                         u64 program_id) const {
     // TODO(Subv): Implement
     LOG_ERROR(Service_FS, "Unimplemented GetFormatInfo archive {}", GetName());
     return ResultCode(-1);

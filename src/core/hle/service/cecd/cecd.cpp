@@ -1362,7 +1362,7 @@ Module::Module(Core::System& system) : system(system) {
 
     // Open the SystemSaveData archive 0x00010026
     FileSys::Path archive_path(cecd_system_savedata_id);
-    auto archive_result = systemsavedata_factory.Open(archive_path);
+    auto archive_result = systemsavedata_factory.Open(archive_path, 0);
 
     // If the archive didn't exist, create the files inside
     if (archive_result.Code() != FileSys::ERR_NOT_FORMATTED) {
@@ -1370,10 +1370,10 @@ Module::Module(Core::System& system) : system(system) {
         cecd_system_save_data_archive = std::move(archive_result).Unwrap();
     } else {
         // Format the archive to create the directories
-        systemsavedata_factory.Format(archive_path, FileSys::ArchiveFormatInfo());
+        systemsavedata_factory.Format(archive_path, FileSys::ArchiveFormatInfo(), 0);
 
         // Open it again to get a valid archive now that the folder exists
-        cecd_system_save_data_archive = systemsavedata_factory.Open(archive_path).Unwrap();
+        cecd_system_save_data_archive = systemsavedata_factory.Open(archive_path, 0).Unwrap();
 
         /// Now that the archive is formatted, we need to create the root CEC directory,
         /// eventlog.dat, and CEC/MBoxList____
