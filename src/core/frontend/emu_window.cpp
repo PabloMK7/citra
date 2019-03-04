@@ -75,7 +75,7 @@ static bool IsWithinTouchscreen(const Layout::FramebufferLayout& layout, unsigne
     }
 }
 
-std::tuple<unsigned, unsigned> EmuWindow::ClipToTouchScreen(unsigned new_x, unsigned new_y) {
+std::tuple<unsigned, unsigned> EmuWindow::ClipToTouchScreen(unsigned new_x, unsigned new_y) const {
     if (Settings::values.toggle_3d) {
         if (new_x >= framebuffer_layout.width / 2)
             new_x -= framebuffer_layout.width / 2;
