@@ -20,10 +20,7 @@ public:
           new_request_callback(std::move(new_request_callback)) {
 
         StartReceive();
-        worker_thread = std::thread([this] {
-            io_context.run();
-            this->new_request_callback(nullptr);
-        });
+        worker_thread = std::thread([this] { io_context.run(); });
     }
 
     ~Impl() {

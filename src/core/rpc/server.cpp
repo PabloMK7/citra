@@ -25,6 +25,7 @@ void Server::Start() {
 
 void Server::Stop() {
     udp_server.reset();
+    NewRequestCallback(nullptr); // Notify the RPC server to end
 }
 
 void Server::NewRequestCallback(std::unique_ptr<RPC::Packet> new_request) {
