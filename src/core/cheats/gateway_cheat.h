@@ -50,12 +50,14 @@ public:
         u32 value;
         u32 first;
         std::string cheat_line;
+        bool valid = true;
     };
 
     GatewayCheat(std::string name, std::vector<CheatLine> cheat_lines, std::string comments);
+    GatewayCheat(std::string name, std::string code, std::string comments);
     ~GatewayCheat();
 
-    void Execute(Core::System& system) override;
+    void Execute(Core::System& system) const override;
 
     bool IsEnabled() const override;
     void SetEnabled(bool enabled) override;
@@ -63,6 +65,7 @@ public:
     std::string GetComments() const override;
     std::string GetName() const override;
     std::string GetType() const override;
+    std::string GetCode() const override;
     std::string ToString() const override;
 
     /// Gateway cheats look like:
@@ -77,7 +80,7 @@ public:
 private:
     std::atomic<bool> enabled = false;
     const std::string name;
-    const std::vector<CheatLine> cheat_lines;
+    std::vector<CheatLine> cheat_lines;
     const std::string comments;
 };
 } // namespace Cheats

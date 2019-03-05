@@ -5,6 +5,7 @@
 #pragma once
 
 #include <memory>
+#include <shared_mutex>
 #include <vector>
 #include "common/common_types.h"
 
@@ -25,12 +26,17 @@ class CheatEngine {
 public:
     explicit CheatEngine(Core::System& system);
     ~CheatEngine();
-    const std::vector<std::unique_ptr<CheatBase>>& GetCheats() const;
+    std::vector<std::shared_ptr<CheatBase>> GetCheats() const;
+    void AddCheat(const std::shared_ptr<CheatBase>& cheat);
+    void RemoveCheat(int index);
+    void UpdateCheat(int index, const std::shared_ptr<CheatBase>& new_cheat);
+    void SaveCheatFile() const;
 
 private:
     void LoadCheatFile();
     void RunCallback(u64 userdata, int cycles_late);
-    std::vector<std::unique_ptr<CheatBase>> cheats_list;
+    std::vector<std::shared_ptr<CheatBase>> cheats_list;
+    mutable std::shared_mutex cheats_list_mutex;
     Core::TimingEventType* event;
     Core::System& system;
 };

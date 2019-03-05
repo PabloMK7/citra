@@ -14,7 +14,7 @@ namespace Cheats {
 class CheatBase {
 public:
     virtual ~CheatBase();
-    virtual void Execute(Core::System& system) = 0;
+    virtual void Execute(Core::System& system) const = 0;
 
     virtual bool IsEnabled() const = 0;
     virtual void SetEnabled(bool enabled) = 0;
@@ -22,6 +22,7 @@ public:
     virtual std::string GetComments() const = 0;
     virtual std::string GetName() const = 0;
     virtual std::string GetType() const = 0;
+    virtual std::string GetCode() const = 0;
 
     virtual std::string ToString() const = 0;
 };
