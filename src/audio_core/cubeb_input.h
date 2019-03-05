@@ -13,13 +13,15 @@ namespace AudioCore {
 class CubebInput final : public Frontend::Mic::Interface {
 public:
     CubebInput();
-    ~CubebInput();
+    ~CubebInput() override;
 
     void StartSampling(Frontend::Mic::Parameters params) override;
 
     void StopSampling() override;
 
     void AdjustSampleRate(u32 sample_rate) override;
+
+    Frontend::Mic::Samples Read() override;
 
 private:
     struct Impl;

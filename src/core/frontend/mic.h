@@ -4,18 +4,20 @@
 
 #pragma once
 
-#include <array>
 #include <memory>
+#include <vector>
 #include "common/swap.h"
+#include "common/threadsafe_queue.h"
 
-namespace Frontend {
-
-namespace Mic {
+namespace Frontend::Mic {
 
 enum class Signedness : u8 {
     Signed,
     Unsigned,
 };
+
+using Samples = std::vector<u8>;
+using SampleQueue = Common::SPSCQueue<Samples>;
 
 struct Parameters {
     Signedness sign;
@@ -28,23 +30,20 @@ struct Parameters {
 
 class Interface {
 public:
+    Interface() = default;
+
+    virtual ~Interface() = default;
+
     /// Starts the microphone. Called by Core
     virtual void StartSampling(Parameters params) = 0;
 
     /// Stops the microphone. Called by Core
     virtual void StopSampling() = 0;
 
-    Interface() = default;
-
-    Interface(const Interface& other)
-        : gain(other.gain), powered(other.powered), backing_memory(other.backing_memory),
-          backing_memory_size(other.backing_memory_size), parameters(other.parameters) {}
-
-    /// Sets the backing memory that the mic should write raw samples into. Called by Core
-    void SetBackingMemory(u8* pointer, u32 size) {
-        backing_memory = pointer;
-        backing_memory_size = size;
-    }
+    /// Called from the actual event timing read back. The frontend impl is responsible for wrapping
+    /// up any data and returning them to the core so the core can write them to the sharedmem. If
+    /// theres nothing to return just return an empty vector
+    virtual Samples Read() = 0;
 
     /// Adjusts the Parameters. Implementations should update the parameters field in addition to
     /// changing the mic to sample according to the new parameters. Called by Core
@@ -76,9 +75,6 @@ public:
     }
 
 protected:
-    u8* backing_memory;
-    u32 backing_memory_size;
-
     Parameters parameters;
     u8 gain = 0;
     bool is_sampling = false;
@@ -99,12 +95,32 @@ public:
     void AdjustSampleRate(u32 sample_rate) override {
         parameters.sample_rate = sample_rate;
     }
+
+    Samples Read() override {
+        return {};
+    }
 };
 
-} // namespace Mic
+class StaticMic final : public Interface {
+public:
+    StaticMic();
+    ~StaticMic() override;
+
+    void StartSampling(Parameters params) override;
+    void StopSampling() override;
+    void AdjustSampleRate(u32 sample_rate) override;
+
+    Samples Read() override;
+
+private:
+    u16 sample_rate = 0;
+    u8 sample_size = 0;
+    std::vector<u8> CACHE_8_BIT;
+    std::vector<u8> CACHE_16_BIT;
+};
 
 void RegisterMic(std::shared_ptr<Mic::Interface> mic);
 
 std::shared_ptr<Mic::Interface> GetCurrentMic();
 
-} // namespace Frontend
+} // namespace Frontend::Mic

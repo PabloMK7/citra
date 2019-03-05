@@ -46,10 +46,75 @@ constexpr u32 GetSampleRateInHz(SampleRate sample_rate) {
     }
 }
 
+// The following buffer write rates were found by hardware test on o3ds and n3ds.
+// The 3ds writes to the sharedmem roughly every 15 samples
+constexpr u64 BufferUpdateRate8180 = BASE_CLOCK_RATE_ARM11 / 511;
+constexpr u64 BufferUpdateRate10910 = BASE_CLOCK_RATE_ARM11 / 681;
+constexpr u64 BufferUpdateRate16360 = BASE_CLOCK_RATE_ARM11 / 1022;
+constexpr u64 BufferUpdateRate32730 = BASE_CLOCK_RATE_ARM11 / 2045;
+
+constexpr u64 GetBufferUpdateRate(SampleRate sample_rate) {
+    switch (sample_rate) {
+    case SampleRate::Rate8180:
+        return BufferUpdateRate8180;
+    case SampleRate::Rate10910:
+        return BufferUpdateRate10910;
+    case SampleRate::Rate16360:
+        return BufferUpdateRate16360;
+    case SampleRate::Rate32730:
+        return BufferUpdateRate32730;
+    default:
+        UNREACHABLE();
+    }
+}
+
+// Variables holding the current mic buffer writing state
+struct State {
+    u8* sharedmem_buffer = nullptr;
+    u32 sharedmem_size = 0;
+    size_t size = 0;
+    u32 offset = 0;
+    u32 initial_offset = 0;
+    bool looped_buffer = false;
+    u8 sample_size = 0;
+    SampleRate sample_rate = SampleRate::Rate16360;
+
+    void UpdateOffset() {
+        // The last 4 bytes of the shared memory contains the latest offset
+        // so update that as well https://www.3dbrew.org/wiki/MIC_Shared_Memory
+        std::memcpy(sharedmem_buffer + (sharedmem_size - sizeof(u32)),
+                    reinterpret_cast<u8*>(&offset), sizeof(u32));
+    }
+
+    void WriteSamples(const std::vector<u8>& samples) {
+        u32 bytes_total_written = 0;
+        const size_t remaining_space = size - offset;
+        size_t bytes_to_write = std::min(samples.size(), remaining_space);
+
+        // Write as many samples as we can to the buffer.
+        // TODO if the sample size is 16bit, this could theoretically cut a sample
+        std::memcpy(sharedmem_buffer + offset, samples.data(), bytes_to_write);
+        offset += static_cast<u32>(bytes_to_write);
+        bytes_total_written += static_cast<u32>(bytes_to_write);
+
+        // If theres any samples left to write after we looped, go ahead and write them now
+        if (looped_buffer && samples.size() > bytes_total_written) {
+            offset = initial_offset;
+            bytes_to_write = std::min(samples.size() - bytes_total_written, size);
+            std::memcpy(sharedmem_buffer + offset, samples.data() + bytes_total_written,
+                        bytes_to_write);
+            offset += static_cast<u32>(bytes_to_write);
+        }
+    }
+};
+
 struct MIC_U::Impl {
-    explicit Impl(Core::System& system) {
+    explicit Impl(Core::System& system) : timing(system.CoreTiming()) {
         buffer_full_event =
             system.Kernel().CreateEvent(Kernel::ResetType::OneShot, "MIC_U::buffer_full_event");
+        buffer_write_event = timing.RegisterEvent(
+            "MIC_U::UpdateBuffer", std::bind(&Impl::UpdateSharedMemBuffer, this,
+                                             std::placeholders::_1, std::placeholders::_2));
     }
 
     void MapSharedMem(Kernel::HLERequestContext& ctx) {
@@ -59,9 +124,9 @@ struct MIC_U::Impl {
 
         if (shared_memory) {
             shared_memory->SetName("MIC_U:shared_memory");
+            state.sharedmem_buffer = shared_memory->GetPointer();
+            state.sharedmem_size = size;
         }
-
-        mic->SetBackingMemory(shared_memory->GetPointer(), size);
 
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(RESULT_SUCCESS);
@@ -77,6 +142,25 @@ struct MIC_U::Impl {
         LOG_TRACE(Service_MIC, "MIC:U UnmapSharedMem called");
     }
 
+    void UpdateSharedMemBuffer(u64 userdata, s64 cycles_late) {
+        // If the event was scheduled before the application requested the mic to stop sampling
+        if (!mic->IsSampling()) {
+            return;
+        }
+
+        Frontend::Mic::Samples samples = mic->Read();
+        if (!samples.empty()) {
+            // write the samples to sharedmem page
+            state.WriteSamples(samples);
+            // write the new offset to the last 4 bytes of the buffer
+            state.UpdateOffset();
+        }
+
+        // schedule next run
+        timing.ScheduleEvent(GetBufferUpdateRate(state.sample_rate) - cycles_late,
+                             buffer_write_event);
+    }
+
     void StartSampling(Kernel::HLERequestContext& ctx) {
         IPC::RequestParser rp{ctx, 0x03, 5, 0};
 
@@ -86,13 +170,26 @@ struct MIC_U::Impl {
         u32 audio_buffer_size = rp.Pop<u32>();
         bool audio_buffer_loop = rp.Pop<bool>();
 
+        if (mic->IsSampling()) {
+            LOG_CRITICAL(Service_MIC,
+                         "Application started sampling again before stopping sampling");
+            mic->StopSampling();
+        }
+
         auto sign = encoding == Encoding::PCM8Signed || encoding == Encoding::PCM16Signed
                         ? Frontend::Mic::Signedness::Signed
                         : Frontend::Mic::Signedness::Unsigned;
         u8 sample_size = encoding == Encoding::PCM8Signed || encoding == Encoding::PCM8 ? 8 : 16;
+        state.offset = state.initial_offset = audio_buffer_offset;
+        state.sample_rate = sample_rate;
+        state.sample_size = sample_size;
+        state.looped_buffer = audio_buffer_loop;
+        state.size = audio_buffer_size;
 
         mic->StartSampling({sign, sample_size, audio_buffer_loop, GetSampleRateInHz(sample_rate),
                             audio_buffer_offset, audio_buffer_size});
+
+        timing.ScheduleEvent(GetBufferUpdateRate(state.sample_rate), buffer_write_event);
 
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(RESULT_SUCCESS);
@@ -229,14 +326,16 @@ struct MIC_U::Impl {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(RESULT_SUCCESS);
     }
-    Kernel::SharedPtr<Kernel::Event> buffer_full_event =
-        Core::System::GetInstance().Kernel().CreateEvent(Kernel::ResetType::OneShot,
-                                                         "MIC_U::buffer_full_event");
+
+    Kernel::SharedPtr<Kernel::Event> buffer_full_event;
+    Core::TimingEventType* buffer_write_event = nullptr;
     Kernel::SharedPtr<Kernel::SharedMemory> shared_memory;
     u32 client_version = 0;
     bool allow_shell_closed = false;
     bool clamp = false;
     std::shared_ptr<Frontend::Mic::Interface> mic;
+    Core::Timing& timing;
+    State state{};
 };
 
 void MIC_U::MapSharedMem(Kernel::HLERequestContext& ctx) {
@@ -324,7 +423,7 @@ MIC_U::MIC_U(Core::System& system)
         {0x00100040, &MIC_U::SetClientVersion, "SetClientVersion"},
     };
 
-    impl->mic = Frontend::GetCurrentMic();
+    impl->mic = Frontend::Mic::GetCurrentMic();
     RegisterHandlers(functions);
 }
 

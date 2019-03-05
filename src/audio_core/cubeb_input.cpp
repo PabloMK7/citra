@@ -10,21 +10,12 @@
 namespace AudioCore {
 
 struct CubebInput::Impl {
-    // unsigned int sample_rate = 0;
-    // std::vector<std::string> device_list;
-
     cubeb* ctx = nullptr;
     cubeb_stream* stream = nullptr;
 
-    bool looped_buffer;
-    u8* buffer;
-    u32 buffer_size;
-    u32 initial_offset;
-    u32 offset;
-    u32 audio_buffer_size;
+    std::unique_ptr<Frontend::Mic::SampleQueue> sample_queue{};
+    u8 sample_size_in_bytes = 0;
 
-    void UpdateOffset(int new_offset, Impl* impl);
-    void ProcessSample(const u8* data, int current_sample_index, Impl* impl);
     static long DataCallback(cubeb_stream* stream, void* user_data, const void* input_buffer,
                              void* output_buffer, long num_frames);
     static void StateCallback(cubeb_stream* stream, void* user_data, cubeb_state state);
@@ -35,6 +26,7 @@ CubebInput::CubebInput() : impl(std::make_unique<Impl>()) {
         LOG_ERROR(Audio, "cubeb_init failed! Mic will not work properly");
         return;
     }
+    impl->sample_queue = std::make_unique<Frontend::Mic::SampleQueue>();
 }
 
 CubebInput::~CubebInput() {
@@ -60,11 +52,10 @@ void CubebInput::StartSampling(Frontend::Mic::Parameters params) {
                   "Application requested unsupported 8 bit pcm format. Falling back to 16 bits");
     }
 
-    impl->buffer = backing_memory;
-    impl->buffer_size = backing_memory_size;
-    impl->audio_buffer_size = params.buffer_size;
-    impl->offset = params.buffer_offset;
-    impl->looped_buffer = params.buffer_loop;
+    parameters = params;
+    is_sampling = true;
+
+    impl->sample_size_in_bytes = 2;
 
     cubeb_devid input_device = nullptr;
     cubeb_stream_params input_params;
@@ -92,6 +83,7 @@ void CubebInput::StopSampling() {
     if (impl->stream) {
         cubeb_stream_stop(impl->stream);
     }
+    is_sampling = false;
 }
 
 void CubebInput::AdjustSampleRate(u32 sample_rate) {
@@ -99,47 +91,29 @@ void CubebInput::AdjustSampleRate(u32 sample_rate) {
     LOG_ERROR(Audio, "AdjustSampleRate unimplemented!");
 }
 
-void CubebInput::Impl::UpdateOffset(int new_offset, Impl* impl) {
-    impl->offset = new_offset;
-    std::memcpy(impl->buffer + impl->audio_buffer_size, reinterpret_cast<u8*>(&impl->offset),
-                sizeof(u32));
-}
-
-void CubebInput::Impl::ProcessSample(const u8* data, int current_sample_index, Impl* impl) {
-    if (impl->offset >= impl->audio_buffer_size) {
-        if (impl->looped_buffer)
-            UpdateOffset(impl->initial_offset, impl);
-        else
-            return;
+Frontend::Mic::Samples CubebInput::Read() {
+    Frontend::Mic::Samples samples{};
+    Frontend::Mic::Samples queue;
+    while (impl->sample_queue->Pop(queue)) {
+        samples.insert(samples.end(), queue.begin(), queue.end());
     }
-
-    std::memcpy(impl->buffer + impl->offset, data + current_sample_index * sizeof(u16),
-                sizeof(u16));
-    UpdateOffset(impl->offset + sizeof(u16), impl);
+    return samples;
 }
 
 long CubebInput::Impl::DataCallback(cubeb_stream* stream, void* user_data, const void* input_buffer,
                                     void* output_buffer, long num_frames) {
     Impl* impl = static_cast<Impl*>(user_data);
-    const u8* data = reinterpret_cast<const u8*>(input_buffer);
+    u8 const* data = reinterpret_cast<u8 const*>(input_buffer);
 
     if (!impl) {
         return 0;
     }
 
-    if (!impl->buffer) {
-        return 0;
-    }
-
-    for (int i = 0; i < num_frames; i++) {
-        impl->ProcessSample(data, i, impl);
-    }
+    impl->sample_queue->Push(std::vector(data, data + num_frames * impl->sample_size_in_bytes));
 
     // returning less than num_frames here signals cubeb to stop sampling
-    // return total_written;
-    // TODO:: Correct this
     return num_frames;
-} // namespace AudioCore
+}
 
 void CubebInput::Impl::StateCallback(cubeb_stream* stream, void* user_data, cubeb_state state) {}
 
