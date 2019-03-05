@@ -52,8 +52,10 @@ ValidationError SoftwareKeyboard::ValidateInput(const std::string& input) const 
         return error;
     }
 
-    // TODO(jroweboy): Is max_text_length inclusive or exclusive?
-    if (input.size() > config.max_text_length) {
+    // 3DS uses UTF-16 string to test string size
+    std::u16string u16input = Common::UTF8ToUTF16(input);
+
+    if (u16input.size() > config.max_text_length) {
         return ValidationError::MaxLengthExceeded;
     }
 
@@ -62,7 +64,7 @@ ValidationError SoftwareKeyboard::ValidateInput(const std::string& input) const 
     bool is_empty = input.empty();
     switch (config.accept_mode) {
     case AcceptedInput::FixedLength:
-        if (input.size() != config.max_text_length) {
+        if (u16input.size() != config.max_text_length) {
             return ValidationError::FixedLengthRequired;
         }
         break;
