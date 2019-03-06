@@ -114,7 +114,8 @@ long CubebInput::Impl::DataCallback(cubeb_stream* stream, void* user_data, const
     }
 
     u8 const* data = reinterpret_cast<u8 const*>(input_buffer);
-    impl->sample_queue->Push(std::vector(data, data + num_frames * impl->sample_size_in_bytes));
+    std::vector<u8> samples{data, data + num_frames * impl->sample_size_in_bytes};
+    impl->sample_queue->Push(samples);
 
     // returning less than num_frames here signals cubeb to stop sampling
     return num_frames;
