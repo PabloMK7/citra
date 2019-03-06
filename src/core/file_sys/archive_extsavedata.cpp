@@ -71,10 +71,10 @@ public:
     }
 
     u64 GetOpenDelayNs() override {
-        // This is the delay measured for a savedata open,
-        // not for extsaveData
-        // For now we will take that
-        static constexpr u64 IPCDelayNanoseconds(269082);
+        // This is the delay measured on N3DS with
+        // https://gist.github.com/FearlessTobi/929b68489f4abb2c6cf81d56970a20b4
+        // from the results the average of each length was taken.
+        static constexpr u64 IPCDelayNanoseconds(3085068);
         return IPCDelayNanoseconds;
     }
 };
