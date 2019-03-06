@@ -9,11 +9,13 @@
 
 namespace AudioCore {
 
+using SampleQueue = Common::SPSCQueue<Frontend::Mic::Samples>;
+
 struct CubebInput::Impl {
     cubeb* ctx = nullptr;
     cubeb_stream* stream = nullptr;
 
-    std::unique_ptr<Frontend::Mic::SampleQueue> sample_queue{};
+    std::unique_ptr<SampleQueue> sample_queue{};
     u8 sample_size_in_bytes = 0;
 
     static long DataCallback(cubeb_stream* stream, void* user_data, const void* input_buffer,
@@ -26,7 +28,7 @@ CubebInput::CubebInput() : impl(std::make_unique<Impl>()) {
         LOG_ERROR(Audio, "cubeb_init failed! Mic will not work properly");
         return;
     }
-    impl->sample_queue = std::make_unique<Frontend::Mic::SampleQueue>();
+    impl->sample_queue = std::make_unique<SampleQueue>();
 }
 
 CubebInput::~CubebInput() {
@@ -40,7 +42,7 @@ CubebInput::~CubebInput() {
     cubeb_destroy(impl->ctx);
 }
 
-void CubebInput::StartSampling(Frontend::Mic::Parameters params) {
+void CubebInput::StartSampling(const Frontend::Mic::Parameters& params) {
     // Cubeb apparently only supports signed 16 bit PCM (and float32 which the 3ds doesn't support)
     // TODO resample the input stream
     if (params.sign == Frontend::Mic::Signedness::Unsigned) {
@@ -103,12 +105,11 @@ Frontend::Mic::Samples CubebInput::Read() {
 long CubebInput::Impl::DataCallback(cubeb_stream* stream, void* user_data, const void* input_buffer,
                                     void* output_buffer, long num_frames) {
     Impl* impl = static_cast<Impl*>(user_data);
-    u8 const* data = reinterpret_cast<u8 const*>(input_buffer);
-
     if (!impl) {
         return 0;
     }
 
+    u8 const* data = reinterpret_cast<u8 const*>(input_buffer);
     impl->sample_queue->Push(std::vector(data, data + num_frames * impl->sample_size_in_bytes));
 
     // returning less than num_frames here signals cubeb to stop sampling
@@ -130,7 +131,7 @@ std::vector<std::string> ListCubebInputDevices() {
     if (cubeb_enumerate_devices(ctx, CUBEB_DEVICE_TYPE_INPUT, &collection) != CUBEB_OK) {
         LOG_WARNING(Audio_Sink, "Audio input device enumeration not supported");
     } else {
-        for (size_t i = 0; i < collection.count; i++) {
+        for (std::size_t i = 0; i < collection.count; i++) {
             const cubeb_device_info& device = collection.device[i];
             if (device.state == CUBEB_DEVICE_STATE_ENABLED && device.friendly_name) {
                 device_list.emplace_back(device.friendly_name);

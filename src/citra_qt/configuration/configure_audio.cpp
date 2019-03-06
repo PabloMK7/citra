@@ -3,7 +3,6 @@
 // Refer to the license.txt file included.
 
 #include <memory>
-#include <QAudioDeviceInfo>
 #include <QtGlobal>
 #include "audio_core/cubeb_input.h"
 #include "audio_core/sink.h"
@@ -37,14 +36,14 @@ ConfigureAudio::ConfigureAudio(QWidget* parent)
         ui->input_device_combo_box->addItem(QString::fromStdString(device));
     }
 
-    connect(ui->input_type_combo_box, QOverload<int>::of(&QComboBox::currentIndexChanged), this,
+    connect(ui->input_type_combo_box, qOverload<int>(&QComboBox::currentIndexChanged), this,
             &ConfigureAudio::updateAudioInputDevices);
 
     ui->input_type_combo_box->setEnabled(!Core::System::GetInstance().IsPoweredOn());
     ui->input_device_combo_box->setEnabled(!Core::System::GetInstance().IsPoweredOn());
 
     this->setConfiguration();
-    connect(ui->output_sink_combo_box, QOverload<int>::of(&QComboBox::currentIndexChanged), this,
+    connect(ui->output_sink_combo_box, qOverload<int>(&QComboBox::currentIndexChanged), this,
             &ConfigureAudio::updateAudioOutputDevices);
 }
 
@@ -74,10 +73,11 @@ void ConfigureAudio::setConfiguration() {
     }
     ui->emulation_combo_box->setCurrentIndex(selection);
 
-    ui->input_type_combo_box->setCurrentIndex(Settings::values.mic_input_type);
+    int index = static_cast<int>(Settings::values.mic_input_type);
+    ui->input_type_combo_box->setCurrentIndex(index);
     ui->input_device_combo_box->setCurrentText(
         QString::fromStdString(Settings::values.mic_input_device));
-    updateAudioInputDevices(Settings::values.mic_input_type);
+    updateAudioInputDevices(index);
 }
 
 void ConfigureAudio::setOutputSinkFromSinkID() {
@@ -124,7 +124,8 @@ void ConfigureAudio::applyConfiguration() {
         static_cast<float>(ui->volume_slider->sliderPosition()) / ui->volume_slider->maximum();
     Settings::values.enable_dsp_lle = ui->emulation_combo_box->currentIndex() != 0;
     Settings::values.enable_dsp_lle_multithread = ui->emulation_combo_box->currentIndex() == 2;
-    Settings::values.mic_input_type = ui->input_type_combo_box->currentIndex();
+    Settings::values.mic_input_type =
+        static_cast<Settings::MicInputType>(ui->input_type_combo_box->currentIndex());
     Settings::values.mic_input_device = ui->input_device_combo_box->currentText().toStdString();
 }
 

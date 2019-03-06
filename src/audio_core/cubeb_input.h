@@ -15,7 +15,7 @@ public:
     CubebInput();
     ~CubebInput() override;
 
-    void StartSampling(Frontend::Mic::Parameters params) override;
+    void StartSampling(const Frontend::Mic::Parameters& params) override;
 
     void StopSampling() override;
 

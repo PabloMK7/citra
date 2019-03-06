@@ -62,13 +62,13 @@ void Apply() {
     }
     // TODO support mic hotswapping by creating the new impl, and copying any parameters to it.
     switch (Settings::values.mic_input_type) {
-    case 0:
+    case Settings::MicInputType::None:
         Frontend::Mic::RegisterMic(std::make_shared<Frontend::Mic::NullMic>());
         break;
-    case 1:
+    case Settings::MicInputType::Real:
         Frontend::Mic::RegisterMic(std::make_shared<AudioCore::CubebInput>());
         break;
-    case 2:
+    case Settings::MicInputType::Static:
         Frontend::Mic::RegisterMic(std::make_shared<Frontend::Mic::StaticMic>());
         break;
     }

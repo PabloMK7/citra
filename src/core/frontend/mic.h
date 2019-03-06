@@ -1,4 +1,4 @@
-// Copyright 2018 Citra Emulator Project
+// Copyright 2019 Citra Emulator Project
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
@@ -17,7 +17,6 @@ enum class Signedness : u8 {
 };
 
 using Samples = std::vector<u8>;
-using SampleQueue = Common::SPSCQueue<Samples>;
 
 struct Parameters {
     Signedness sign;
@@ -32,17 +31,19 @@ class Interface {
 public:
     Interface() = default;
 
-    virtual ~Interface() = default;
+    virtual ~Interface();
 
     /// Starts the microphone. Called by Core
-    virtual void StartSampling(Parameters params) = 0;
+    virtual void StartSampling(const Parameters& params) = 0;
 
     /// Stops the microphone. Called by Core
     virtual void StopSampling() = 0;
 
-    /// Called from the actual event timing read back. The frontend impl is responsible for wrapping
-    /// up any data and returning them to the core so the core can write them to the sharedmem. If
-    /// theres nothing to return just return an empty vector
+    /**
+     * Called from the actual event timing at a constant period under a given sample rate.
+     * When sampling is enabled this function is expected to return a buffer of 16 samples in ideal
+     * conditions, but can be lax if the data is coming in from another source like a real mic.
+     */
     virtual Samples Read() = 0;
 
     /// Adjusts the Parameters. Implementations should update the parameters field in addition to
@@ -70,7 +71,7 @@ public:
         return is_sampling;
     }
 
-    Parameters GetParameters() const {
+    const Parameters& GetParameters() const {
         return parameters;
     }
 
@@ -83,22 +84,13 @@ protected:
 
 class NullMic final : public Interface {
 public:
-    void StartSampling(Parameters params) override {
-        parameters = params;
-        is_sampling = true;
-    }
+    void StartSampling(const Parameters& params) override;
 
-    void StopSampling() override {
-        is_sampling = false;
-    }
+    void StopSampling() override;
 
-    void AdjustSampleRate(u32 sample_rate) override {
-        parameters.sample_rate = sample_rate;
-    }
+    void AdjustSampleRate(u32 sample_rate) override;
 
-    Samples Read() override {
-        return {};
-    }
+    Samples Read() override;
 };
 
 class StaticMic final : public Interface {
@@ -106,7 +98,7 @@ public:
     StaticMic();
     ~StaticMic() override;
 
-    void StartSampling(Parameters params) override;
+    void StartSampling(const Parameters& params) override;
     void StopSampling() override;
     void AdjustSampleRate(u32 sample_rate) override;
 

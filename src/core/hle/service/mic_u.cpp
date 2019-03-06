@@ -23,7 +23,8 @@ enum class Encoding : u8 {
     PCM16Signed = 3, ///< Signed 16-bit PCM.
 };
 
-/// Microphone audio sampling rates.
+/// Microphone audio sampling rates. The actual accurate sampling rate can be calculated using
+/// (16756991 / 512) / (SampleRate + 1) where SampleRate is one of the above values.
 enum class SampleRate : u8 {
     Rate32730 = 0, ///< 32728.498 Hz
     Rate16360 = 1, ///< 16364.479 Hz
@@ -34,13 +35,13 @@ enum class SampleRate : u8 {
 constexpr u32 GetSampleRateInHz(SampleRate sample_rate) {
     switch (sample_rate) {
     case SampleRate::Rate8180:
-        return 8180;
+        return 8182;
     case SampleRate::Rate10910:
-        return 10910;
+        return 10909;
     case SampleRate::Rate16360:
-        return 16360;
+        return 16364;
     case SampleRate::Rate32730:
-        return 32730;
+        return 32728;
     default:
         UNREACHABLE();
     }
@@ -54,45 +55,28 @@ constexpr u64 BufferUpdateRate16360 = BASE_CLOCK_RATE_ARM11 / 1022;
 constexpr u64 BufferUpdateRate32730 = BASE_CLOCK_RATE_ARM11 / 2045;
 
 constexpr u64 GetBufferUpdateRate(SampleRate sample_rate) {
-    switch (sample_rate) {
-    case SampleRate::Rate8180:
-        return BufferUpdateRate8180;
-    case SampleRate::Rate10910:
-        return BufferUpdateRate10910;
-    case SampleRate::Rate16360:
-        return BufferUpdateRate16360;
-    case SampleRate::Rate32730:
-        return BufferUpdateRate32730;
-    default:
-        UNREACHABLE();
-    }
+    return GetSampleRateInHz(sample_rate) / 16;
 }
 
 // Variables holding the current mic buffer writing state
 struct State {
     u8* sharedmem_buffer = nullptr;
     u32 sharedmem_size = 0;
-    size_t size = 0;
+    std::size_t size = 0;
     u32 offset = 0;
     u32 initial_offset = 0;
     bool looped_buffer = false;
     u8 sample_size = 0;
     SampleRate sample_rate = SampleRate::Rate16360;
 
-    void UpdateOffset() {
-        // The last 4 bytes of the shared memory contains the latest offset
-        // so update that as well https://www.3dbrew.org/wiki/MIC_Shared_Memory
-        std::memcpy(sharedmem_buffer + (sharedmem_size - sizeof(u32)),
-                    reinterpret_cast<u8*>(&offset), sizeof(u32));
-    }
-
     void WriteSamples(const std::vector<u8>& samples) {
         u32 bytes_total_written = 0;
-        const size_t remaining_space = size - offset;
-        size_t bytes_to_write = std::min(samples.size(), remaining_space);
+        const std::size_t remaining_space = size - offset;
+        std::size_t bytes_to_write = std::min(samples.size(), remaining_space);
 
         // Write as many samples as we can to the buffer.
-        // TODO if the sample size is 16bit, this could theoretically cut a sample
+        // TODO if the sample size is 16bit, this could theoretically cut a sample in the case where
+        // the application configures an odd size
         std::memcpy(sharedmem_buffer + offset, samples.data(), bytes_to_write);
         offset += static_cast<u32>(bytes_to_write);
         bytes_total_written += static_cast<u32>(bytes_to_write);
@@ -105,6 +89,12 @@ struct State {
                         bytes_to_write);
             offset += static_cast<u32>(bytes_to_write);
         }
+
+        // The last 4 bytes of the shared memory contains the latest offset
+        // so update that as well https://www.3dbrew.org/wiki/MIC_Shared_Memory
+        u32_le off = offset;
+        std::memcpy(sharedmem_buffer + (sharedmem_size - sizeof(u32)), reinterpret_cast<u8*>(&off),
+                    sizeof(u32));
     }
 };
 
@@ -112,9 +102,10 @@ struct MIC_U::Impl {
     explicit Impl(Core::System& system) : timing(system.CoreTiming()) {
         buffer_full_event =
             system.Kernel().CreateEvent(Kernel::ResetType::OneShot, "MIC_U::buffer_full_event");
-        buffer_write_event = timing.RegisterEvent(
-            "MIC_U::UpdateBuffer", std::bind(&Impl::UpdateSharedMemBuffer, this,
-                                             std::placeholders::_1, std::placeholders::_2));
+        buffer_write_event =
+            timing.RegisterEvent("MIC_U::UpdateBuffer", [this](u64 userdata, s64 cycles_late) {
+                UpdateSharedMemBuffer(userdata, cycles_late);
+            });
     }
 
     void MapSharedMem(Kernel::HLERequestContext& ctx) {
@@ -131,7 +122,7 @@ struct MIC_U::Impl {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(RESULT_SUCCESS);
 
-        LOG_TRACE(Service_MIC, "MIC:U MapSharedMem called, size=0x{:X}", size);
+        LOG_TRACE(Service_MIC, "MapSharedMem called, size=0x{:X}", size);
     }
 
     void UnmapSharedMem(Kernel::HLERequestContext& ctx) {
@@ -139,7 +130,7 @@ struct MIC_U::Impl {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         shared_memory = nullptr;
         rb.Push(RESULT_SUCCESS);
-        LOG_TRACE(Service_MIC, "MIC:U UnmapSharedMem called");
+        LOG_TRACE(Service_MIC, "UnmapSharedMem called");
     }
 
     void UpdateSharedMemBuffer(u64 userdata, s64 cycles_late) {
@@ -152,8 +143,6 @@ struct MIC_U::Impl {
         if (!samples.empty()) {
             // write the samples to sharedmem page
             state.WriteSamples(samples);
-            // write the new offset to the last 4 bytes of the buffer
-            state.UpdateOffset();
         }
 
         // schedule next run
@@ -194,7 +183,7 @@ struct MIC_U::Impl {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(RESULT_SUCCESS);
         LOG_TRACE(Service_MIC,
-                  "MIC:U StartSampling called, encoding={}, sample_rate={}, "
+                  "StartSampling called, encoding={}, sample_rate={}, "
                   "audio_buffer_offset={}, audio_buffer_size={}, audio_buffer_loop={}",
                   static_cast<u32>(encoding), static_cast<u32>(sample_rate), audio_buffer_offset,
                   audio_buffer_size, audio_buffer_loop);
@@ -207,8 +196,7 @@ struct MIC_U::Impl {
 
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(RESULT_SUCCESS);
-        LOG_TRACE(Service_MIC, "MIC:U AdjustSampling sample_rate={}",
-                  static_cast<u32>(sample_rate));
+        LOG_TRACE(Service_MIC, "AdjustSampling sample_rate={}", static_cast<u32>(sample_rate));
     }
 
     void StopSampling(Kernel::HLERequestContext& ctx) {
@@ -217,7 +205,8 @@ struct MIC_U::Impl {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(RESULT_SUCCESS);
         mic->StopSampling();
-        LOG_TRACE(Service_MIC, "MIC:U StopSampling called");
+        timing.RemoveEvent(buffer_write_event);
+        LOG_TRACE(Service_MIC, "StopSampling called");
     }
 
     void IsSampling(Kernel::HLERequestContext& ctx) {
@@ -227,7 +216,7 @@ struct MIC_U::Impl {
         rb.Push(RESULT_SUCCESS);
         bool is_sampling = mic->IsSampling();
         rb.Push<bool>(is_sampling);
-        LOG_TRACE(Service_MIC, "MIC:U IsSampling: {}", is_sampling);
+        LOG_TRACE(Service_MIC, "IsSampling: {}", is_sampling);
     }
 
     void GetBufferFullEvent(Kernel::HLERequestContext& ctx) {
@@ -246,7 +235,7 @@ struct MIC_U::Impl {
 
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(RESULT_SUCCESS);
-        LOG_TRACE(Service_MIC, "MIC:U SetGain gain={}", gain);
+        LOG_TRACE(Service_MIC, "SetGain gain={}", gain);
     }
 
     void GetGain(Kernel::HLERequestContext& ctx) {
@@ -256,7 +245,7 @@ struct MIC_U::Impl {
         rb.Push(RESULT_SUCCESS);
         u8 gain = mic->GetGain();
         rb.Push<u8>(gain);
-        LOG_TRACE(Service_MIC, "MIC:U GetGain gain={}", gain);
+        LOG_TRACE(Service_MIC, "GetGain gain={}", gain);
     }
 
     void SetPower(Kernel::HLERequestContext& ctx) {
@@ -266,7 +255,7 @@ struct MIC_U::Impl {
 
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(RESULT_SUCCESS);
-        LOG_TRACE(Service_MIC, "MIC:U SetPower mic_power={}", power);
+        LOG_TRACE(Service_MIC, "SetPower mic_power={}", power);
     }
 
     void GetPower(Kernel::HLERequestContext& ctx) {
@@ -276,7 +265,7 @@ struct MIC_U::Impl {
         rb.Push(RESULT_SUCCESS);
         bool mic_power = mic->GetPower();
         rb.Push<u8>(mic_power);
-        LOG_TRACE(Service_MIC, "MIC:U GetPower called");
+        LOG_TRACE(Service_MIC, "GetPower called");
     }
 
     void SetIirFilterMic(Kernel::HLERequestContext& ctx) {
@@ -437,3 +426,19 @@ void InstallInterfaces(Core::System& system) {
 }
 
 } // namespace Service::MIC
+
+namespace Frontend::Mic {
+static std::shared_ptr<Mic::Interface> current_mic;
+
+void RegisterMic(std::shared_ptr<Mic::Interface> mic) {
+    current_mic = mic;
+}
+
+std::shared_ptr<Mic::Interface> GetCurrentMic() {
+    if (!current_mic) {
+        current_mic = std::make_shared<Mic::NullMic>();
+    }
+    return current_mic;
+}
+
+} // namespace Frontend::Mic
