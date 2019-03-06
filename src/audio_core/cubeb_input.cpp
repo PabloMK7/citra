@@ -79,6 +79,10 @@ void CubebInput::StartSampling(const Frontend::Mic::Parameters& params) {
     }
 
     cubeb_stream_start(impl->stream);
+    int ret = cubeb_stream_set_volume(impl->stream, 1.0);
+    if (ret == CUBEB_ERROR_NOT_SUPPORTED) {
+        LOG_WARNING(Audio, "Unabled to set volume for cubeb input");
+    }
 }
 
 void CubebInput::StopSampling() {
