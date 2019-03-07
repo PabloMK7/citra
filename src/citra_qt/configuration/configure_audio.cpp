@@ -4,7 +4,9 @@
 
 #include <memory>
 #include <QtGlobal>
+#ifdef HAVE_CUBEB
 #include "audio_core/cubeb_input.h"
+#endif
 #include "audio_core/sink.h"
 #include "audio_core/sink_details.h"
 #include "citra_qt/configuration/configure_audio.h"
@@ -32,10 +34,11 @@ ConfigureAudio::ConfigureAudio(QWidget* parent)
 
     ui->input_device_combo_box->clear();
     ui->input_device_combo_box->addItem(tr("Default"));
+#ifdef HAVE_CUBEB
     for (const auto& device : AudioCore::ListCubebInputDevices()) {
         ui->input_device_combo_box->addItem(QString::fromStdString(device));
     }
-
+#endif
     connect(ui->input_type_combo_box, qOverload<int>(&QComboBox::currentIndexChanged), this,
             &ConfigureAudio::updateAudioInputDevices);
 

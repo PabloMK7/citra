@@ -3,7 +3,9 @@
 // Refer to the license.txt file included.
 
 #include <utility>
+#if HAVE_CUBEB
 #include "audio_core/cubeb_input.h"
+#endif
 #include "audio_core/dsp_interface.h"
 #include "core/core.h"
 #include "core/frontend/emu_window.h"
@@ -66,7 +68,9 @@ void Apply() {
         Frontend::Mic::RegisterMic(std::make_shared<Frontend::Mic::NullMic>());
         break;
     case Settings::MicInputType::Real:
+#if HAVE_CUBEB
         Frontend::Mic::RegisterMic(std::make_shared<AudioCore::CubebInput>());
+#endif
         break;
     case Settings::MicInputType::Static:
         Frontend::Mic::RegisterMic(std::make_shared<Frontend::Mic::StaticMic>());

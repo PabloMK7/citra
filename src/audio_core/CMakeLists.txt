@@ -2,10 +2,6 @@ add_library(audio_core STATIC
     audio_types.h
     codec.cpp
     codec.h
-    cubeb_input.cpp
-    cubeb_input.h
-    cubeb_sink.cpp
-    cubeb_sink.h
     dsp_interface.cpp
     dsp_interface.h
     hle/adts.h
@@ -34,7 +30,7 @@ add_library(audio_core STATIC
     time_stretch.h
 
     $<$<BOOL:${SDL2_FOUND}>:sdl2_sink.cpp sdl2_sink.h>
-    $<$<BOOL:${ENABLE_CUBEB}>:cubeb_sink.cpp cubeb_sink.h>
+    $<$<BOOL:${ENABLE_CUBEB}>:cubeb_sink.cpp cubeb_sink.h cubeb_input.cpp cubeb_input.h>
     $<$<BOOL:${FFMPEG_FOUND}>:hle/ffmpeg_decoder.cpp hle/ffmpeg_decoder.h hle/ffmpeg_dl.cpp hle/ffmpeg_dl.h>
     $<$<BOOL:${ENABLE_MF}>:hle/wmf_decoder.cpp hle/wmf_decoder.h hle/wmf_decoder_utils.cpp hle/wmf_decoder_utils.h>
 )
@@ -65,6 +61,6 @@ endif()
 
 if(ENABLE_CUBEB)
     target_link_libraries(audio_core PRIVATE cubeb)
-    add_definitions(-DHAVE_CUBEB=1)
+    target_compile_definitions(audio_core PUBLIC HAVE_CUBEB)
 endif()
 

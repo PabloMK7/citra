@@ -47,13 +47,8 @@ constexpr u32 GetSampleRateInHz(SampleRate sample_rate) {
     }
 }
 
-// The following buffer write rates were found by hardware test on o3ds and n3ds.
-// The 3ds writes to the sharedmem roughly every 15 samples
-constexpr u64 BufferUpdateRate8180 = BASE_CLOCK_RATE_ARM11 / 511;
-constexpr u64 BufferUpdateRate10910 = BASE_CLOCK_RATE_ARM11 / 681;
-constexpr u64 BufferUpdateRate16360 = BASE_CLOCK_RATE_ARM11 / 1022;
-constexpr u64 BufferUpdateRate32730 = BASE_CLOCK_RATE_ARM11 / 2045;
-
+// The 3ds hardware was tested to write to the sharedmem every 15 samples regardless of sample_rate.
+// So we can just divide the sample rate by 16 and that'll give the correct timing for the event
 constexpr u64 GetBufferUpdateRate(SampleRate sample_rate) {
     return GetSampleRateInHz(sample_rate) / 16;
 }
@@ -183,7 +178,7 @@ struct MIC_U::Impl {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(RESULT_SUCCESS);
         LOG_TRACE(Service_MIC,
-                  "StartSampling called, encoding={}, sample_rate={}, "
+                  "called, encoding={}, sample_rate={}, "
                   "audio_buffer_offset={}, audio_buffer_size={}, audio_buffer_loop={}",
                   static_cast<u32>(encoding), static_cast<u32>(sample_rate), audio_buffer_offset,
                   audio_buffer_size, audio_buffer_loop);
@@ -196,7 +191,7 @@ struct MIC_U::Impl {
 
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(RESULT_SUCCESS);
-        LOG_TRACE(Service_MIC, "AdjustSampling sample_rate={}", static_cast<u32>(sample_rate));
+        LOG_TRACE(Service_MIC, "sample_rate={}", static_cast<u32>(sample_rate));
     }
 
     void StopSampling(Kernel::HLERequestContext& ctx) {
@@ -206,7 +201,7 @@ struct MIC_U::Impl {
         rb.Push(RESULT_SUCCESS);
         mic->StopSampling();
         timing.RemoveEvent(buffer_write_event);
-        LOG_TRACE(Service_MIC, "StopSampling called");
+        LOG_TRACE(Service_MIC, "called");
     }
 
     void IsSampling(Kernel::HLERequestContext& ctx) {
@@ -265,7 +260,7 @@ struct MIC_U::Impl {
         rb.Push(RESULT_SUCCESS);
         bool mic_power = mic->GetPower();
         rb.Push<u8>(mic_power);
-        LOG_TRACE(Service_MIC, "GetPower called");
+        LOG_TRACE(Service_MIC, "called");
     }
 
     void SetIirFilterMic(Kernel::HLERequestContext& ctx) {
