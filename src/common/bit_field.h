@@ -125,8 +125,6 @@ private:
     using StorageTypeWithEndian = typename AddEndian<StorageType, EndianTag>::type;
 
 public:
-    constexpr BitField& operator=(const BitField&) = default;
-
     /// Constants to allow limited introspection of fields if needed
     static constexpr std::size_t position = Position;
     static constexpr std::size_t bits = Bits;
@@ -162,9 +160,13 @@ public:
     BitField(T val) = delete;
     BitField& operator=(T val) = delete;
 
-    // Force default constructor to be created
-    // so that we can use this within unions
-    constexpr BitField() = default;
+    constexpr BitField() noexcept = default;
+
+    constexpr BitField(const BitField&) noexcept = default;
+    constexpr BitField& operator=(const BitField&) noexcept = default;
+
+    constexpr BitField(BitField&&) noexcept = default;
+    constexpr BitField& operator=(BitField&&) noexcept = default;
 
     constexpr operator T() const {
         return Value();
