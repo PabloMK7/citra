@@ -2,6 +2,9 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#ifdef HAVE_CUBEB
+#include "audio_core/cubeb_input.h"
+#endif
 #include "common/logging/log.h"
 #include "core/core.h"
 #include "core/frontend/mic.h"
@@ -12,6 +15,7 @@
 #include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/shared_memory.h"
 #include "core/hle/service/mic_u.h"
+#include "core/settings.h"
 
 namespace Service::MIC {
 
@@ -129,6 +133,9 @@ struct MIC_U::Impl {
     }
 
     void UpdateSharedMemBuffer(u64 userdata, s64 cycles_late) {
+        if (change_mic_impl_requested.exchange(false)) {
+            CreateMic();
+        }
         // If the event was scheduled before the application requested the mic to stop sampling
         if (!mic->IsSampling()) {
             return;
@@ -311,13 +318,49 @@ struct MIC_U::Impl {
         rb.Push(RESULT_SUCCESS);
     }
 
+    void CreateMic() {
+        std::unique_ptr<Frontend::Mic::Interface> new_mic;
+        switch (Settings::values.mic_input_type) {
+        case Settings::MicInputType::None:
+            new_mic = std::make_unique<Frontend::Mic::NullMic>();
+            break;
+        case Settings::MicInputType::Real:
+#if HAVE_CUBEB
+            new_mic = std::make_unique<AudioCore::CubebInput>();
+#else
+            new_mic = std::make_unique<Frontend::Mic::NullMic>();
+#endif
+            break;
+        case Settings::MicInputType::Static:
+            new_mic = std::make_unique<Frontend::Mic::StaticMic>();
+            break;
+        default:
+            LOG_CRITICAL(Audio, "Mic type not found. Defaulting to null mic");
+            new_mic = std::make_unique<Frontend::Mic::NullMic>();
+        }
+        // If theres already a mic, copy over any data to the new mic impl
+        if (mic) {
+            new_mic->SetGain(mic->GetGain());
+            new_mic->SetPower(mic->GetPower());
+            auto params = mic->GetParameters();
+            if (mic->IsSampling()) {
+                mic->StopSampling();
+                new_mic->StartSampling(params);
+            }
+        }
+
+        mic = std::move(new_mic);
+        change_mic_impl_requested.store(false);
+    }
+
+    std::atomic<bool> change_mic_impl_requested = false;
     Kernel::SharedPtr<Kernel::Event> buffer_full_event;
     Core::TimingEventType* buffer_write_event = nullptr;
     Kernel::SharedPtr<Kernel::SharedMemory> shared_memory;
     u32 client_version = 0;
     bool allow_shell_closed = false;
     bool clamp = false;
-    std::shared_ptr<Frontend::Mic::Interface> mic;
+    std::unique_ptr<Frontend::Mic::Interface> mic;
     Core::Timing& timing;
     State state{};
 };
@@ -407,12 +450,23 @@ MIC_U::MIC_U(Core::System& system)
         {0x00100040, &MIC_U::SetClientVersion, "SetClientVersion"},
     };
 
-    impl->mic = Frontend::Mic::GetCurrentMic();
+    impl->CreateMic();
     RegisterHandlers(functions);
 }
 
 MIC_U::~MIC_U() {
     impl->mic->StopSampling();
+}
+
+void MIC_U::ReloadMic() {
+    impl->change_mic_impl_requested.store(true);
+}
+
+void ReloadMic(Core::System& system) {
+    auto micu = system.ServiceManager().GetService<Service::MIC::MIC_U>("mic:u");
+    if (!micu)
+        return;
+    micu->ReloadMic();
 }
 
 void InstallInterfaces(Core::System& system) {
@@ -421,19 +475,3 @@ void InstallInterfaces(Core::System& system) {
 }
 
 } // namespace Service::MIC
-
-namespace Frontend::Mic {
-static std::shared_ptr<Mic::Interface> current_mic;
-
-void RegisterMic(std::shared_ptr<Mic::Interface> mic) {
-    current_mic = mic;
-}
-
-std::shared_ptr<Mic::Interface> GetCurrentMic() {
-    if (!current_mic) {
-        current_mic = std::make_shared<Mic::NullMic>();
-    }
-    return current_mic;
-}
-
-} // namespace Frontend::Mic

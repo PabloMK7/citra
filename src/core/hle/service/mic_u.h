@@ -19,6 +19,8 @@ public:
     explicit MIC_U(Core::System& system);
     ~MIC_U();
 
+    void ReloadMic();
+
 private:
     /**
      * MIC::MapSharedMem service function
@@ -189,6 +191,8 @@ private:
     struct Impl;
     std::unique_ptr<Impl> impl;
 };
+
+void ReloadMic(Core::System& system);
 
 void InstallInterfaces(Core::System& system);
 

@@ -3,17 +3,14 @@
 // Refer to the license.txt file included.
 
 #include <utility>
-#if HAVE_CUBEB
-#include "audio_core/cubeb_input.h"
-#endif
 #include "audio_core/dsp_interface.h"
 #include "core/core.h"
 #include "core/frontend/emu_window.h"
-#include "core/frontend/mic.h"
 #include "core/gdbstub/gdbstub.h"
 #include "core/hle/service/hid/hid.h"
 #include "core/hle/service/ir/ir_rst.h"
 #include "core/hle/service/ir/ir_user.h"
+#include "core/hle/service/mic_u.h"
 #include "core/settings.h"
 #include "video_core/renderer_base.h"
 #include "video_core/video_core.h"
@@ -61,20 +58,8 @@ void Apply() {
         if (cam) {
             cam->ReloadCameraDevices();
         }
-    }
-    // TODO support mic hotswapping by creating the new impl, and copying any parameters to it.
-    switch (Settings::values.mic_input_type) {
-    case Settings::MicInputType::None:
-        Frontend::Mic::RegisterMic(std::make_shared<Frontend::Mic::NullMic>());
-        break;
-    case Settings::MicInputType::Real:
-#if HAVE_CUBEB
-        Frontend::Mic::RegisterMic(std::make_shared<AudioCore::CubebInput>());
-#endif
-        break;
-    case Settings::MicInputType::Static:
-        Frontend::Mic::RegisterMic(std::make_shared<Frontend::Mic::StaticMic>());
-        break;
+
+        Service::MIC::ReloadMic(system);
     }
 }
 
@@ -105,6 +90,8 @@ void LogSettings() {
     LogSetting("Audio_OutputEngine", Settings::values.sink_id);
     LogSetting("Audio_EnableAudioStretching", Settings::values.enable_audio_stretching);
     LogSetting("Audio_OutputDevice", Settings::values.audio_device_id);
+    LogSetting("Audio_InputDeviceType", static_cast<int>(Settings::values.mic_input_type));
+    LogSetting("Audio_InputDevice", Settings::values.mic_input_device);
     using namespace Service::CAM;
     LogSetting("Camera_OuterRightName", Settings::values.camera_name[OuterRightCamera]);
     LogSetting("Camera_OuterRightConfig", Settings::values.camera_config[OuterRightCamera]);

@@ -42,9 +42,6 @@ ConfigureAudio::ConfigureAudio(QWidget* parent)
     connect(ui->input_type_combo_box, qOverload<int>(&QComboBox::currentIndexChanged), this,
             &ConfigureAudio::updateAudioInputDevices);
 
-    ui->input_type_combo_box->setEnabled(!Core::System::GetInstance().IsPoweredOn());
-    ui->input_device_combo_box->setEnabled(!Core::System::GetInstance().IsPoweredOn());
-
     this->setConfiguration();
     connect(ui->output_sink_combo_box, qOverload<int>(&QComboBox::currentIndexChanged), this,
             &ConfigureAudio::updateAudioOutputDevices);
@@ -142,12 +139,7 @@ void ConfigureAudio::updateAudioOutputDevices(int sink_index) {
     }
 }
 
-void ConfigureAudio::updateAudioInputDevices(int index) {
-    // TODO: Don't hardcode this to the index for "Real Device" without making it a constant
-    // somewhere
-    ui->input_device_combo_box->setEnabled(index == 1 &&
-                                           !Core::System::GetInstance().IsPoweredOn());
-}
+void ConfigureAudio::updateAudioInputDevices(int index) {}
 
 void ConfigureAudio::retranslateUi() {
     ui->retranslateUi(this);

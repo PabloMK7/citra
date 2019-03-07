@@ -113,7 +113,7 @@ long CubebInput::Impl::DataCallback(cubeb_stream* stream, void* user_data, const
         return 0;
     }
 
-    u8 const* data = reinterpret_cast<u8 const*>(input_buffer);
+    const u8* data = reinterpret_cast<const u8*>(input_buffer);
     std::vector<u8> samples{data, data + num_frames * impl->sample_size_in_bytes};
     impl->sample_queue->Push(samples);
 

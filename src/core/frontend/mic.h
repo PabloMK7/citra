@@ -46,8 +46,10 @@ public:
      */
     virtual Samples Read() = 0;
 
-    /// Adjusts the Parameters. Implementations should update the parameters field in addition to
-    /// changing the mic to sample according to the new parameters. Called by Core
+    /**
+     * Adjusts the Parameters. Implementations should update the parameters field in addition to
+     * changing the mic to sample according to the new parameters. Called by Core
+     */
     virtual void AdjustSampleRate(u32 sample_rate) = 0;
 
     /// Value from 0 - 100 to adjust the mic gain setting. Called by Core
@@ -110,9 +112,5 @@ private:
     std::vector<u8> CACHE_8_BIT;
     std::vector<u8> CACHE_16_BIT;
 };
-
-void RegisterMic(std::shared_ptr<Mic::Interface> mic);
-
-std::shared_ptr<Mic::Interface> GetCurrentMic();
 
 } // namespace Frontend::Mic
