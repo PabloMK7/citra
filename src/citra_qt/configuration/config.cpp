@@ -484,7 +484,8 @@ void Config::SaveValues() {
     WriteSetting("enable_audio_stretching", Settings::values.enable_audio_stretching, true);
     WriteSetting("output_device", QString::fromStdString(Settings::values.audio_device_id), "auto");
     WriteSetting("volume", Settings::values.volume, 1.0f);
-    WriteSetting("mic_input_device", QString::fromStdString(Settings::values.mic_input_device), "Default");
+    WriteSetting("mic_input_device", QString::fromStdString(Settings::values.mic_input_device),
+                 "Default");
     WriteSetting("mic_input_type", static_cast<int>(Settings::values.mic_input_type), 0);
     qt_config->endGroup();
 
