@@ -892,7 +892,7 @@ static void Step() {
 }
 
 bool IsMemoryBreak() {
-    if (IsConnected()) {
+    if (!IsConnected()) {
         return false;
     }
 

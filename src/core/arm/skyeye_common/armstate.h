@@ -268,5 +268,5 @@ private:
     bool exclusive_state;
 
     GDBStub::BreakpointAddress last_bkpt{};
-    bool last_bkpt_hit;
+    bool last_bkpt_hit = false;
 };

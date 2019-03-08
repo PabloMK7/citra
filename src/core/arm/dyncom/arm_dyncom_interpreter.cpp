@@ -923,7 +923,9 @@ MICROPROFILE_DEFINE(DynCom_Execute, "DynCom", "Execute", MP_RGB(255, 0, 0));
 unsigned InterpreterMainLoop(ARMul_State* cpu) {
     MICROPROFILE_SCOPE(DynCom_Execute);
 
+    /// Nearest upcoming GDB code execution breakpoint, relative to the last dispatch's address.
     GDBStub::BreakpointAddress breakpoint_data;
+    breakpoint_data.type = GDBStub::BreakpointType::None;
 
 #undef RM
 #undef RS
@@ -955,8 +957,10 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
     cpu->Cpsr &= ~(1 << 5);                                                                        \
     cpu->Cpsr |= cpu->TFlag << 5;                                                                  \
     if (GDBStub::IsServerEnabled()) {                                                              \
-        if (GDBStub::IsMemoryBreak() || (breakpoint_data.type != GDBStub::BreakpointType::None &&  \
-                                         PC == breakpoint_data.address)) {                         \
+        if (GDBStub::IsMemoryBreak()) {                                                            \
+            goto END;                                                                              \
+        } else if (breakpoint_data.type != GDBStub::BreakpointType::None &&                        \
+                   PC == breakpoint_data.address) {                                                \
             cpu->RecordBreak(breakpoint_data);                                                     \
             goto END;                                                                              \
         }                                                                                          \
