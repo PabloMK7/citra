@@ -199,6 +199,7 @@ private:
     void LoadTranslation();
     void SetupUIStrings();
     void RetranslateStatusBar();
+    void InstallCIA(QStringList filepaths);
 
     Ui::MainWindow ui;
 
