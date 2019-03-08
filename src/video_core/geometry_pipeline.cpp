@@ -76,8 +76,8 @@ private:
     const Regs& regs;
     Shader::GSUnitState& unit;
     Shader::AttributeBuffer attribute_buffer;
-    Math::Vec4<float24>* buffer_cur;
-    Math::Vec4<float24>* buffer_end;
+    Common::Vec4<float24>* buffer_cur;
+    Common::Vec4<float24>* buffer_end;
     unsigned int vs_output_num;
 };
 
@@ -106,7 +106,7 @@ public:
 
         // The number of vertex input is put to the uniform register
         float24 vertex_num = float24::FromFloat32(static_cast<float>(val));
-        setup.uniforms.f[0] = Math::MakeVec(vertex_num, vertex_num, vertex_num, vertex_num);
+        setup.uniforms.f[0] = Common::MakeVec(vertex_num, vertex_num, vertex_num, vertex_num);
 
         // The second uniform register and so on are used for receiving input vertices
         buffer_cur = setup.uniforms.f + 1;
@@ -142,7 +142,7 @@ private:
     Shader::ShaderSetup& setup;
     unsigned int main_vertex_num;
     unsigned int total_vertex_num;
-    Math::Vec4<float24>* buffer_cur;
+    Common::Vec4<float24>* buffer_cur;
     unsigned int vs_output_num;
 };
 
@@ -186,9 +186,9 @@ public:
 private:
     const Regs& regs;
     Shader::ShaderSetup& setup;
-    Math::Vec4<float24>* buffer_begin;
-    Math::Vec4<float24>* buffer_cur;
-    Math::Vec4<float24>* buffer_end;
+    Common::Vec4<float24>* buffer_begin;
+    Common::Vec4<float24>* buffer_cur;
+    Common::Vec4<float24>* buffer_end;
     unsigned int vs_output_num;
 };
 

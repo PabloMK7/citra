@@ -90,10 +90,10 @@ struct LightingRegs {
         BitField<10, 10, u32> g;
         BitField<20, 10, u32> r;
 
-        Math::Vec3f ToVec3f() const {
+        Common::Vec3f ToVec3f() const {
             // These fields are 10 bits wide, however 255 corresponds to 1.0f for each color
             // component
-            return Math::MakeVec((f32)r / 255.f, (f32)g / 255.f, (f32)b / 255.f);
+            return Common::MakeVec((f32)r / 255.f, (f32)g / 255.f, (f32)b / 255.f);
         }
     };
 

@@ -88,8 +88,8 @@ static_assert(std::is_same<SurfaceRegions::interval_type, SurfaceCache::interval
                   std::is_same<SurfaceMap::interval_type, SurfaceCache::interval_type>(),
               "incorrect interval types");
 
-using SurfaceRect_Tuple = std::tuple<Surface, MathUtil::Rectangle<u32>>;
-using SurfaceSurfaceRect_Tuple = std::tuple<Surface, Surface, MathUtil::Rectangle<u32>>;
+using SurfaceRect_Tuple = std::tuple<Surface, Common::Rectangle<u32>>;
+using SurfaceSurfaceRect_Tuple = std::tuple<Surface, Surface, Common::Rectangle<u32>>;
 
 using PageMap = boost::icl::interval_map<u32, int>;
 
@@ -250,7 +250,7 @@ struct SurfaceParams {
     // Returns the outer rectangle containing "interval"
     SurfaceParams FromInterval(SurfaceInterval interval) const;
 
-    SurfaceInterval GetSubRectInterval(MathUtil::Rectangle<u32> unscaled_rect) const;
+    SurfaceInterval GetSubRectInterval(Common::Rectangle<u32> unscaled_rect) const;
 
     // Returns the region of the biggest valid rectange within interval
     SurfaceInterval GetCopyableInterval(const Surface& src_surface) const;
@@ -263,11 +263,11 @@ struct SurfaceParams {
         return height * res_scale;
     }
 
-    MathUtil::Rectangle<u32> GetRect() const {
+    Common::Rectangle<u32> GetRect() const {
         return {0, height, width, 0};
     }
 
-    MathUtil::Rectangle<u32> GetScaledRect() const {
+    Common::Rectangle<u32> GetScaledRect() const {
         return {0, GetScaledHeight(), GetScaledWidth(), 0};
     }
 
@@ -284,8 +284,8 @@ struct SurfaceParams {
     bool CanExpand(const SurfaceParams& expanded_surface) const;
     bool CanTexCopy(const SurfaceParams& texcopy_params) const;
 
-    MathUtil::Rectangle<u32> GetSubRect(const SurfaceParams& sub_surface) const;
-    MathUtil::Rectangle<u32> GetScaledSubRect(const SurfaceParams& sub_surface) const;
+    Common::Rectangle<u32> GetSubRect(const SurfaceParams& sub_surface) const;
+    Common::Rectangle<u32> GetScaledSubRect(const SurfaceParams& sub_surface) const;
 
     PAddr addr = 0;
     PAddr end = 0;
@@ -373,9 +373,9 @@ struct CachedSurface : SurfaceParams, std::enable_shared_from_this<CachedSurface
     void FlushGLBuffer(PAddr flush_start, PAddr flush_end);
 
     // Upload/Download data in gl_buffer in/to this surface's texture
-    void UploadGLTexture(const MathUtil::Rectangle<u32>& rect, GLuint read_fb_handle,
+    void UploadGLTexture(const Common::Rectangle<u32>& rect, GLuint read_fb_handle,
                          GLuint draw_fb_handle);
-    void DownloadGLTexture(const MathUtil::Rectangle<u32>& rect, GLuint read_fb_handle,
+    void DownloadGLTexture(const Common::Rectangle<u32>& rect, GLuint read_fb_handle,
                            GLuint draw_fb_handle);
 
     std::shared_ptr<SurfaceWatcher> CreateWatcher() {
@@ -413,11 +413,11 @@ public:
     ~RasterizerCacheOpenGL();
 
     /// Blit one surface's texture to another
-    bool BlitSurfaces(const Surface& src_surface, const MathUtil::Rectangle<u32>& src_rect,
-                      const Surface& dst_surface, const MathUtil::Rectangle<u32>& dst_rect);
+    bool BlitSurfaces(const Surface& src_surface, const Common::Rectangle<u32>& src_rect,
+                      const Surface& dst_surface, const Common::Rectangle<u32>& dst_rect);
 
-    void ConvertD24S8toABGR(GLuint src_tex, const MathUtil::Rectangle<u32>& src_rect,
-                            GLuint dst_tex, const MathUtil::Rectangle<u32>& dst_rect);
+    void ConvertD24S8toABGR(GLuint src_tex, const Common::Rectangle<u32>& src_rect, GLuint dst_tex,
+                            const Common::Rectangle<u32>& dst_rect);
 
     /// Copy one surface's region to another
     void CopySurface(const Surface& src_surface, const Surface& dst_surface,
@@ -441,7 +441,7 @@ public:
 
     /// Get the color and depth surfaces based on the framebuffer configuration
     SurfaceSurfaceRect_Tuple GetFramebufferSurfaces(bool using_color_fb, bool using_depth_fb,
-                                                    const MathUtil::Rectangle<s32>& viewport_rect);
+                                                    const Common::Rectangle<s32>& viewport_rect);
 
     /// Get a surface that matches the fill config
     Surface GetFillSurface(const GPU::Regs::MemoryFillConfig& config);

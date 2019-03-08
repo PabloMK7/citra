@@ -6,13 +6,13 @@
 
 #include "common/vector_math.h"
 
-namespace Math {
+namespace Common {
 
 template <typename T>
 class Quaternion {
 public:
-    Math::Vec3<T> xyz;
-    T w;
+    Vec3<T> xyz;
+    T w{};
 
     Quaternion<decltype(-T{})> Inverse() const {
         return {-xyz, w};
@@ -38,12 +38,12 @@ public:
 };
 
 template <typename T>
-auto QuaternionRotate(const Quaternion<T>& q, const Math::Vec3<T>& v) {
+auto QuaternionRotate(const Quaternion<T>& q, const Vec3<T>& v) {
     return v + 2 * Cross(q.xyz, Cross(q.xyz, v) + v * q.w);
 }
 
-inline Quaternion<float> MakeQuaternion(const Math::Vec3<float>& axis, float angle) {
+inline Quaternion<float> MakeQuaternion(const Vec3<float>& axis, float angle) {
     return {axis * std::sin(angle / 2), std::cos(angle / 2)};
 }
 
-} // namespace Math
+} // namespace Common

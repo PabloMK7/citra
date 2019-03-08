@@ -622,10 +622,10 @@ static void RunInterpreter(const ShaderSetup& setup, UnitState& state, DebugData
             }
 
             case OpCode::Id::LOOP: {
-                Math::Vec4<u8> loop_param(uniforms.i[instr.flow_control.int_uniform_id].x,
-                                          uniforms.i[instr.flow_control.int_uniform_id].y,
-                                          uniforms.i[instr.flow_control.int_uniform_id].z,
-                                          uniforms.i[instr.flow_control.int_uniform_id].w);
+                Common::Vec4<u8> loop_param(uniforms.i[instr.flow_control.int_uniform_id].x,
+                                            uniforms.i[instr.flow_control.int_uniform_id].y,
+                                            uniforms.i[instr.flow_control.int_uniform_id].z,
+                                            uniforms.i[instr.flow_control.int_uniform_id].w);
                 state.address_registers[2] = loop_param.y;
 
                 Record<DebugDataRecord::LOOP_INT_IN>(debug_data, iteration, loop_param);
@@ -688,7 +688,7 @@ DebugData<true> InterpreterEngine::ProduceDebugInfo(const ShaderSetup& setup,
     DebugData<true> debug_data;
 
     // Setup input register table
-    boost::fill(state.registers.input, Math::Vec4<float24>::AssignToAll(float24::Zero()));
+    boost::fill(state.registers.input, Common::Vec4<float24>::AssignToAll(float24::Zero()));
     state.LoadInput(config, input);
     RunInterpreter(setup, state, debug_data, setup.engine_data.entry_point);
     return debug_data;

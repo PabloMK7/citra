@@ -48,7 +48,7 @@ inline void Read(T& var, const u32 raw_addr) {
     var = g_regs[addr / 4];
 }
 
-static Math::Vec4<u8> DecodePixel(Regs::PixelFormat input_format, const u8* src_pixel) {
+static Common::Vec4<u8> DecodePixel(Regs::PixelFormat input_format, const u8* src_pixel) {
     switch (input_format) {
     case Regs::PixelFormat::RGBA8:
         return Color::DecodeRGBA8(src_pixel);
@@ -196,7 +196,7 @@ static void DisplayTransfer(const Regs::DisplayTransferConfig& config) {
 
     for (u32 y = 0; y < output_height; ++y) {
         for (u32 x = 0; x < output_width; ++x) {
-            Math::Vec4<u8> src_color;
+            Common::Vec4<u8> src_color;
 
             // Calculate the [x,y] position of the input image
             // based on the current output position and the scale
@@ -259,15 +259,15 @@ static void DisplayTransfer(const Regs::DisplayTransferConfig& config) {
             const u8* src_pixel = src_pointer + src_offset;
             src_color = DecodePixel(config.input_format, src_pixel);
             if (config.scaling == config.ScaleX) {
-                Math::Vec4<u8> pixel =
+                Common::Vec4<u8> pixel =
                     DecodePixel(config.input_format, src_pixel + src_bytes_per_pixel);
                 src_color = ((src_color + pixel) / 2).Cast<u8>();
             } else if (config.scaling == config.ScaleXY) {
-                Math::Vec4<u8> pixel1 =
+                Common::Vec4<u8> pixel1 =
                     DecodePixel(config.input_format, src_pixel + 1 * src_bytes_per_pixel);
-                Math::Vec4<u8> pixel2 =
+                Common::Vec4<u8> pixel2 =
                     DecodePixel(config.input_format, src_pixel + 2 * src_bytes_per_pixel);
-                Math::Vec4<u8> pixel3 =
+                Common::Vec4<u8> pixel3 =
                     DecodePixel(config.input_format, src_pixel + 3 * src_bytes_per_pixel);
                 src_color = (((src_color + pixel1) + (pixel2 + pixel3)) / 4).Cast<u8>();
             }

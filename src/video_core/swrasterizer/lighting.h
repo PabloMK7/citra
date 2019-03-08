@@ -11,9 +11,9 @@
 
 namespace Pica {
 
-std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(
+std::tuple<Common::Vec4<u8>, Common::Vec4<u8>> ComputeFragmentsColors(
     const Pica::LightingRegs& lighting, const Pica::State::Lighting& lighting_state,
-    const Math::Quaternion<float>& normquat, const Math::Vec3<float>& view,
-    const Math::Vec4<u8> (&texture_color)[4]);
+    const Common::Quaternion<float>& normquat, const Common::Vec3<float>& view,
+    const Common::Vec4<u8> (&texture_color)[4]);
 
 } // namespace Pica

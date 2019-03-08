@@ -9,6 +9,6 @@
 
 namespace Pica::Texture {
 
-Math::Vec3<u8> SampleETC1Subtile(u64 value, unsigned int x, unsigned int y);
+Common::Vec3<u8> SampleETC1Subtile(u64 value, unsigned int x, unsigned int y);
 
 } // namespace Pica::Texture

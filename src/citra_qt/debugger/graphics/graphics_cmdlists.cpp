@@ -29,7 +29,7 @@ QImage LoadTexture(const u8* src, const Pica::Texture::TextureInfo& info) {
     QImage decoded_image(info.width, info.height, QImage::Format_ARGB32);
     for (u32 y = 0; y < info.height; ++y) {
         for (u32 x = 0; x < info.width; ++x) {
-            Math::Vec4<u8> color = Pica::Texture::LookupTexture(src, x, y, info, true);
+            Common::Vec4<u8> color = Pica::Texture::LookupTexture(src, x, y, info, true);
             decoded_image.setPixel(x, y, qRgba(color.r(), color.g(), color.b(), color.a()));
         }
     }

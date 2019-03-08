@@ -124,7 +124,7 @@ using AnalogDevice = InputDevice<std::tuple<float, float>>;
  *   Orientation is determined by right-hand rule.
  *   Units: deg/sec
  */
-using MotionDevice = InputDevice<std::tuple<Math::Vec3<float>, Math::Vec3<float>>>;
+using MotionDevice = InputDevice<std::tuple<Common::Vec3<float>, Common::Vec3<float>>>;
 
 /**
  * A touch device is an input device that returns a tuple of two floats and a bool. The floats are

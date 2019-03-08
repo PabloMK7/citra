@@ -20,63 +20,63 @@ static float LookupLightingLut(const Pica::State::Lighting& lighting, std::size_
     return lut_value + lut_diff * delta;
 }
 
-std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(
+std::tuple<Common::Vec4<u8>, Common::Vec4<u8>> ComputeFragmentsColors(
     const Pica::LightingRegs& lighting, const Pica::State::Lighting& lighting_state,
-    const Math::Quaternion<float>& normquat, const Math::Vec3<float>& view,
-    const Math::Vec4<u8> (&texture_color)[4]) {
+    const Common::Quaternion<float>& normquat, const Common::Vec3<float>& view,
+    const Common::Vec4<u8> (&texture_color)[4]) {
 
-    Math::Vec4<float> shadow;
+    Common::Vec4<float> shadow;
     if (lighting.config0.enable_shadow) {
         shadow = texture_color[lighting.config0.shadow_selector].Cast<float>() / 255.0f;
         if (lighting.config0.shadow_invert) {
-            shadow = Math::MakeVec(1.0f, 1.0f, 1.0f, 1.0f) - shadow;
+            shadow = Common::MakeVec(1.0f, 1.0f, 1.0f, 1.0f) - shadow;
         }
     } else {
-        shadow = Math::MakeVec(1.0f, 1.0f, 1.0f, 1.0f);
+        shadow = Common::MakeVec(1.0f, 1.0f, 1.0f, 1.0f);
     }
 
-    Math::Vec3<float> surface_normal;
-    Math::Vec3<float> surface_tangent;
+    Common::Vec3<float> surface_normal;
+    Common::Vec3<float> surface_tangent;
 
     if (lighting.config0.bump_mode != LightingRegs::LightingBumpMode::None) {
-        Math::Vec3<float> perturbation =
+        Common::Vec3<float> perturbation =
             texture_color[lighting.config0.bump_selector].xyz().Cast<float>() / 127.5f -
-            Math::MakeVec(1.0f, 1.0f, 1.0f);
+            Common::MakeVec(1.0f, 1.0f, 1.0f);
         if (lighting.config0.bump_mode == LightingRegs::LightingBumpMode::NormalMap) {
             if (!lighting.config0.disable_bump_renorm) {
                 const float z_square = 1 - perturbation.xy().Length2();
                 perturbation.z = std::sqrt(std::max(z_square, 0.0f));
             }
             surface_normal = perturbation;
-            surface_tangent = Math::MakeVec(1.0f, 0.0f, 0.0f);
+            surface_tangent = Common::MakeVec(1.0f, 0.0f, 0.0f);
         } else if (lighting.config0.bump_mode == LightingRegs::LightingBumpMode::TangentMap) {
-            surface_normal = Math::MakeVec(0.0f, 0.0f, 1.0f);
+            surface_normal = Common::MakeVec(0.0f, 0.0f, 1.0f);
             surface_tangent = perturbation;
         } else {
             LOG_ERROR(HW_GPU, "Unknown bump mode {}",
                       static_cast<u32>(lighting.config0.bump_mode.Value()));
         }
     } else {
-        surface_normal = Math::MakeVec(0.0f, 0.0f, 1.0f);
-        surface_tangent = Math::MakeVec(1.0f, 0.0f, 0.0f);
+        surface_normal = Common::MakeVec(0.0f, 0.0f, 1.0f);
+        surface_tangent = Common::MakeVec(1.0f, 0.0f, 0.0f);
     }
 
     // Use the normalized the quaternion when performing the rotation
-    auto normal = Math::QuaternionRotate(normquat, surface_normal);
-    auto tangent = Math::QuaternionRotate(normquat, surface_tangent);
+    auto normal = Common::QuaternionRotate(normquat, surface_normal);
+    auto tangent = Common::QuaternionRotate(normquat, surface_tangent);
 
-    Math::Vec4<float> diffuse_sum = {0.0f, 0.0f, 0.0f, 1.0f};
-    Math::Vec4<float> specular_sum = {0.0f, 0.0f, 0.0f, 1.0f};
+    Common::Vec4<float> diffuse_sum = {0.0f, 0.0f, 0.0f, 1.0f};
+    Common::Vec4<float> specular_sum = {0.0f, 0.0f, 0.0f, 1.0f};
 
     for (unsigned light_index = 0; light_index <= lighting.max_light_index; ++light_index) {
         unsigned num = lighting.light_enable.GetNum(light_index);
         const auto& light_config = lighting.light[num];
 
-        Math::Vec3<float> refl_value = {};
-        Math::Vec3<float> position = {float16::FromRaw(light_config.x).ToFloat32(),
-                                      float16::FromRaw(light_config.y).ToFloat32(),
-                                      float16::FromRaw(light_config.z).ToFloat32()};
-        Math::Vec3<float> light_vector;
+        Common::Vec3<float> refl_value = {};
+        Common::Vec3<float> position = {float16::FromRaw(light_config.x).ToFloat32(),
+                                        float16::FromRaw(light_config.y).ToFloat32(),
+                                        float16::FromRaw(light_config.z).ToFloat32()};
+        Common::Vec3<float> light_vector;
 
         if (light_config.config.directional)
             light_vector = position;
@@ -85,8 +85,8 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(
 
         light_vector.Normalize();
 
-        Math::Vec3<float> norm_view = view.Normalized();
-        Math::Vec3<float> half_vector = norm_view + light_vector;
+        Common::Vec3<float> norm_view = view.Normalized();
+        Common::Vec3<float> half_vector = norm_view + light_vector;
 
         float dist_atten = 1.0f;
         if (!lighting.IsDistAttenDisabled(num)) {
@@ -111,33 +111,33 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(
 
             switch (input) {
             case LightingRegs::LightingLutInput::NH:
-                result = Math::Dot(normal, half_vector.Normalized());
+                result = Common::Dot(normal, half_vector.Normalized());
                 break;
 
             case LightingRegs::LightingLutInput::VH:
-                result = Math::Dot(norm_view, half_vector.Normalized());
+                result = Common::Dot(norm_view, half_vector.Normalized());
                 break;
 
             case LightingRegs::LightingLutInput::NV:
-                result = Math::Dot(normal, norm_view);
+                result = Common::Dot(normal, norm_view);
                 break;
 
             case LightingRegs::LightingLutInput::LN:
-                result = Math::Dot(light_vector, normal);
+                result = Common::Dot(light_vector, normal);
                 break;
 
             case LightingRegs::LightingLutInput::SP: {
-                Math::Vec3<s32> spot_dir{light_config.spot_x.Value(), light_config.spot_y.Value(),
-                                         light_config.spot_z.Value()};
-                result = Math::Dot(light_vector, spot_dir.Cast<float>() / 2047.0f);
+                Common::Vec3<s32> spot_dir{light_config.spot_x.Value(), light_config.spot_y.Value(),
+                                           light_config.spot_z.Value()};
+                result = Common::Dot(light_vector, spot_dir.Cast<float>() / 2047.0f);
                 break;
             }
             case LightingRegs::LightingLutInput::CP:
                 if (lighting.config0.config == LightingRegs::LightingConfig::Config7) {
-                    const Math::Vec3<float> norm_half_vector = half_vector.Normalized();
-                    const Math::Vec3<float> half_vector_proj =
-                        norm_half_vector - normal * Math::Dot(normal, norm_half_vector);
-                    result = Math::Dot(half_vector_proj, tangent);
+                    const Common::Vec3<float> norm_half_vector = half_vector.Normalized();
+                    const Common::Vec3<float> half_vector_proj =
+                        norm_half_vector - normal * Common::Dot(normal, norm_half_vector);
+                    result = Common::Dot(half_vector_proj, tangent);
                 } else {
                     result = 0.0f;
                 }
@@ -192,7 +192,7 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(
                             lighting.lut_scale.d0, LightingRegs::LightingSampler::Distribution0);
         }
 
-        Math::Vec3<float> specular_0 = d0_lut_value * light_config.specular_0.ToVec3f();
+        Common::Vec3<float> specular_0 = d0_lut_value * light_config.specular_0.ToVec3f();
 
         // If enabled, lookup ReflectRed value, otherwise, 1.0 is used
         if (lighting.config1.disable_lut_rr == 0 &&
@@ -237,7 +237,7 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(
                             lighting.lut_scale.d1, LightingRegs::LightingSampler::Distribution1);
         }
 
-        Math::Vec3<float> specular_1 =
+        Common::Vec3<float> specular_1 =
             d1_lut_value * refl_value * light_config.specular_1.ToVec3f();
 
         // Fresnel
@@ -261,7 +261,7 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(
             }
         }
 
-        auto dot_product = Math::Dot(light_vector, normal);
+        auto dot_product = Common::Dot(light_vector, normal);
         if (light_config.config.two_sided_diffuse)
             dot_product = std::abs(dot_product);
         else
@@ -297,8 +297,8 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(
             }
         }
 
-        diffuse_sum += Math::MakeVec(diffuse, 0.0f);
-        specular_sum += Math::MakeVec(specular, 0.0f);
+        diffuse_sum += Common::MakeVec(diffuse, 0.0f);
+        specular_sum += Common::MakeVec(specular, 0.0f);
     }
 
     if (lighting.config0.shadow_alpha) {
@@ -314,17 +314,17 @@ std::tuple<Math::Vec4<u8>, Math::Vec4<u8>> ComputeFragmentsColors(
         }
     }
 
-    diffuse_sum += Math::MakeVec(lighting.global_ambient.ToVec3f(), 0.0f);
+    diffuse_sum += Common::MakeVec(lighting.global_ambient.ToVec3f(), 0.0f);
 
-    auto diffuse = Math::MakeVec<float>(std::clamp(diffuse_sum.x, 0.0f, 1.0f) * 255,
-                                        std::clamp(diffuse_sum.y, 0.0f, 1.0f) * 255,
-                                        std::clamp(diffuse_sum.z, 0.0f, 1.0f) * 255,
-                                        std::clamp(diffuse_sum.w, 0.0f, 1.0f) * 255)
+    auto diffuse = Common::MakeVec<float>(std::clamp(diffuse_sum.x, 0.0f, 1.0f) * 255,
+                                          std::clamp(diffuse_sum.y, 0.0f, 1.0f) * 255,
+                                          std::clamp(diffuse_sum.z, 0.0f, 1.0f) * 255,
+                                          std::clamp(diffuse_sum.w, 0.0f, 1.0f) * 255)
                        .Cast<u8>();
-    auto specular = Math::MakeVec<float>(std::clamp(specular_sum.x, 0.0f, 1.0f) * 255,
-                                         std::clamp(specular_sum.y, 0.0f, 1.0f) * 255,
-                                         std::clamp(specular_sum.z, 0.0f, 1.0f) * 255,
-                                         std::clamp(specular_sum.w, 0.0f, 1.0f) * 255)
+    auto specular = Common::MakeVec<float>(std::clamp(specular_sum.x, 0.0f, 1.0f) * 255,
+                                           std::clamp(specular_sum.y, 0.0f, 1.0f) * 255,
+                                           std::clamp(specular_sum.z, 0.0f, 1.0f) * 255,
+                                           std::clamp(specular_sum.w, 0.0f, 1.0f) * 255)
                         .Cast<u8>();
     return std::make_tuple(diffuse, specular);
 }

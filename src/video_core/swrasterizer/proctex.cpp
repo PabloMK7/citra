@@ -63,7 +63,7 @@ static float NoiseCoef(float u, float v, TexturingRegs regs, State::ProcTex stat
     const float g3 = NoiseRand2D(x_int + 1, y_int + 1) * (x_frac + y_frac - 2);
     const float x_noise = LookupLUT(state.noise_table, x_frac);
     const float y_noise = LookupLUT(state.noise_table, y_frac);
-    return Math::BilinearInterp(g0, g1, g2, g3, x_noise, y_noise);
+    return Common::BilinearInterp(g0, g1, g2, g3, x_noise, y_noise);
 }
 
 static float GetShiftOffset(float v, ProcTexShift mode, ProcTexClamp clamp_mode) {
@@ -154,7 +154,7 @@ float CombineAndMap(float u, float v, ProcTexCombiner combiner,
     return LookupLUT(map_table, f);
 }
 
-Math::Vec4<u8> ProcTex(float u, float v, TexturingRegs regs, State::ProcTex state) {
+Common::Vec4<u8> ProcTex(float u, float v, TexturingRegs regs, State::ProcTex state) {
     u = std::abs(u);
     v = std::abs(v);
 
@@ -187,7 +187,7 @@ Math::Vec4<u8> ProcTex(float u, float v, TexturingRegs regs, State::ProcTex stat
     const u32 offset = regs.proctex_lut_offset.level0;
     const u32 width = regs.proctex_lut.width;
     const float index = offset + (lut_coord * (width - 1));
-    Math::Vec4<u8> final_color;
+    Common::Vec4<u8> final_color;
     // TODO(wwylele): implement mipmap
     switch (regs.proctex_lut.filter) {
     case ProcTexFilter::Linear:
@@ -212,7 +212,7 @@ Math::Vec4<u8> ProcTex(float u, float v, TexturingRegs regs, State::ProcTex stat
         // uses the output of CombineAndMap directly instead.
         const float final_alpha =
             CombineAndMap(u, v, regs.proctex.alpha_combiner, state.alpha_map_table);
-        return Math::MakeVec<u8>(final_color.rgb(), static_cast<u8>(final_alpha * 255));
+        return Common::MakeVec<u8>(final_color.rgb(), static_cast<u8>(final_alpha * 255));
     } else {
         return final_color;
     }

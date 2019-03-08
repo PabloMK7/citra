@@ -56,7 +56,7 @@ struct State {
             BitField<16, 8, u32> b;
             BitField<24, 8, u32> a;
 
-            Math::Vec4<u8> ToVector() const {
+            Common::Vec4<u8> ToVector() const {
                 return {static_cast<u8>(r), static_cast<u8>(g), static_cast<u8>(b),
                         static_cast<u8>(a)};
             }
@@ -69,8 +69,8 @@ struct State {
             BitField<16, 8, s32> b;
             BitField<24, 8, s32> a;
 
-            Math::Vec4<s32> ToVector() const {
-                return Math::Vec4<s32>{r, g, b, a} * 2;
+            Common::Vec4<s32> ToVector() const {
+                return Common::Vec4<s32>{r, g, b, a} * 2;
             }
         };
 

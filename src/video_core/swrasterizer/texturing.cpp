@@ -51,8 +51,8 @@ int GetWrappedTexCoord(TexturingRegs::TextureConfig::WrapMode mode, int val, uns
     }
 };
 
-Math::Vec3<u8> GetColorModifier(TevStageConfig::ColorModifier factor,
-                                const Math::Vec4<u8>& values) {
+Common::Vec3<u8> GetColorModifier(TevStageConfig::ColorModifier factor,
+                                  const Common::Vec4<u8>& values) {
     using ColorModifier = TevStageConfig::ColorModifier;
 
     switch (factor) {
@@ -60,37 +60,37 @@ Math::Vec3<u8> GetColorModifier(TevStageConfig::ColorModifier factor,
         return values.rgb();
 
     case ColorModifier::OneMinusSourceColor:
-        return (Math::Vec3<u8>(255, 255, 255) - values.rgb()).Cast<u8>();
+        return (Common::Vec3<u8>(255, 255, 255) - values.rgb()).Cast<u8>();
 
     case ColorModifier::SourceAlpha:
         return values.aaa();
 
     case ColorModifier::OneMinusSourceAlpha:
-        return (Math::Vec3<u8>(255, 255, 255) - values.aaa()).Cast<u8>();
+        return (Common::Vec3<u8>(255, 255, 255) - values.aaa()).Cast<u8>();
 
     case ColorModifier::SourceRed:
         return values.rrr();
 
     case ColorModifier::OneMinusSourceRed:
-        return (Math::Vec3<u8>(255, 255, 255) - values.rrr()).Cast<u8>();
+        return (Common::Vec3<u8>(255, 255, 255) - values.rrr()).Cast<u8>();
 
     case ColorModifier::SourceGreen:
         return values.ggg();
 
     case ColorModifier::OneMinusSourceGreen:
-        return (Math::Vec3<u8>(255, 255, 255) - values.ggg()).Cast<u8>();
+        return (Common::Vec3<u8>(255, 255, 255) - values.ggg()).Cast<u8>();
 
     case ColorModifier::SourceBlue:
         return values.bbb();
 
     case ColorModifier::OneMinusSourceBlue:
-        return (Math::Vec3<u8>(255, 255, 255) - values.bbb()).Cast<u8>();
+        return (Common::Vec3<u8>(255, 255, 255) - values.bbb()).Cast<u8>();
     }
 
     UNREACHABLE();
 };
 
-u8 GetAlphaModifier(TevStageConfig::AlphaModifier factor, const Math::Vec4<u8>& values) {
+u8 GetAlphaModifier(TevStageConfig::AlphaModifier factor, const Common::Vec4<u8>& values) {
     using AlphaModifier = TevStageConfig::AlphaModifier;
 
     switch (factor) {
@@ -122,7 +122,7 @@ u8 GetAlphaModifier(TevStageConfig::AlphaModifier factor, const Math::Vec4<u8>& 
     UNREACHABLE();
 };
 
-Math::Vec3<u8> ColorCombine(TevStageConfig::Operation op, const Math::Vec3<u8> input[3]) {
+Common::Vec3<u8> ColorCombine(TevStageConfig::Operation op, const Common::Vec3<u8> input[3]) {
     using Operation = TevStageConfig::Operation;
 
     switch (op) {
@@ -144,7 +144,7 @@ Math::Vec3<u8> ColorCombine(TevStageConfig::Operation op, const Math::Vec3<u8> i
         // TODO(bunnei): Verify that the color conversion from (float) 0.5f to
         // (byte) 128 is correct
         auto result =
-            input[0].Cast<int>() + input[1].Cast<int>() - Math::MakeVec<int>(128, 128, 128);
+            input[0].Cast<int>() + input[1].Cast<int>() - Common::MakeVec<int>(128, 128, 128);
         result.r() = std::clamp<int>(result.r(), 0, 255);
         result.g() = std::clamp<int>(result.g(), 0, 255);
         result.b() = std::clamp<int>(result.b(), 0, 255);
@@ -153,7 +153,7 @@ Math::Vec3<u8> ColorCombine(TevStageConfig::Operation op, const Math::Vec3<u8> i
 
     case Operation::Lerp:
         return ((input[0] * input[2] +
-                 input[1] * (Math::MakeVec<u8>(255, 255, 255) - input[2]).Cast<u8>()) /
+                 input[1] * (Common::MakeVec<u8>(255, 255, 255) - input[2]).Cast<u8>()) /
                 255)
             .Cast<u8>();
 

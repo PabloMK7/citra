@@ -36,7 +36,7 @@ struct RasterizerRegs {
     BitField<0, 1, u32> clip_enable;
     BitField<0, 24, u32> clip_coef[4]; // float24
 
-    Math::Vec4<float24> GetClipCoef() const {
+    Common::Vec4<float24> GetClipCoef() const {
         return {float24::FromRaw(clip_coef[0]), float24::FromRaw(clip_coef[1]),
                 float24::FromRaw(clip_coef[2]), float24::FromRaw(clip_coef[3])};
     }

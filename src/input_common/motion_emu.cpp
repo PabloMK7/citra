@@ -33,12 +33,12 @@ public:
     }
 
     void BeginTilt(int x, int y) {
-        mouse_origin = Math::MakeVec(x, y);
+        mouse_origin = Common::MakeVec(x, y);
         is_tilting = true;
     }
 
     void Tilt(int x, int y) {
-        auto mouse_move = Math::MakeVec(x, y) - mouse_origin;
+        auto mouse_move = Common::MakeVec(x, y) - mouse_origin;
         if (is_tilting) {
             std::lock_guard<std::mutex> guard(tilt_mutex);
             if (mouse_move.x == 0 && mouse_move.y == 0) {
@@ -46,7 +46,7 @@ public:
             } else {
                 tilt_direction = mouse_move.Cast<float>();
                 tilt_angle = std::clamp(tilt_direction.Normalize() * sensitivity, 0.0f,
-                                        MathUtil::PI * this->tilt_clamp / 180.0f);
+                                        Common::PI * this->tilt_clamp / 180.0f);
             }
         }
     }
@@ -57,7 +57,7 @@ public:
         is_tilting = false;
     }
 
-    std::tuple<Math::Vec3<float>, Math::Vec3<float>> GetStatus() {
+    std::tuple<Common::Vec3<float>, Common::Vec3<float>> GetStatus() {
         std::lock_guard<std::mutex> guard(status_mutex);
         return status;
     }
@@ -67,10 +67,10 @@ private:
     const std::chrono::steady_clock::duration update_duration;
     const float sensitivity;
 
-    Math::Vec2<int> mouse_origin;
+    Common::Vec2<int> mouse_origin;
 
     std::mutex tilt_mutex;
-    Math::Vec2<float> tilt_direction;
+    Common::Vec2<float> tilt_direction;
     float tilt_angle = 0;
     float tilt_clamp = 90;
 
@@ -78,7 +78,7 @@ private:
 
     Common::Event shutdown_event;
 
-    std::tuple<Math::Vec3<float>, Math::Vec3<float>> status;
+    std::tuple<Common::Vec3<float>, Common::Vec3<float>> status;
     std::mutex status_mutex;
 
     // Note: always keep the thread declaration at the end so that other objects are initialized
@@ -87,8 +87,8 @@ private:
 
     void MotionEmuThread() {
         auto update_time = std::chrono::steady_clock::now();
-        Math::Quaternion<float> q = MakeQuaternion(Math::Vec3<float>(), 0);
-        Math::Quaternion<float> old_q;
+        Common::Quaternion<float> q = Common::MakeQuaternion(Common::Vec3<float>(), 0);
+        Common::Quaternion<float> old_q;
 
         while (!shutdown_event.WaitUntil(update_time)) {
             update_time += update_duration;
@@ -98,18 +98,18 @@ private:
                 std::lock_guard<std::mutex> guard(tilt_mutex);
 
                 // Find the quaternion describing current 3DS tilting
-                q = MakeQuaternion(Math::MakeVec(-tilt_direction.y, 0.0f, tilt_direction.x),
-                                   tilt_angle);
+                q = Common::MakeQuaternion(
+                    Common::MakeVec(-tilt_direction.y, 0.0f, tilt_direction.x), tilt_angle);
             }
 
             auto inv_q = q.Inverse();
 
             // Set the gravity vector in world space
-            auto gravity = Math::MakeVec(0.0f, -1.0f, 0.0f);
+            auto gravity = Common::MakeVec(0.0f, -1.0f, 0.0f);
 
             // Find the angular rate vector in world space
             auto angular_rate = ((q - old_q) * inv_q).xyz * 2;
-            angular_rate *= 1000 / update_millisecond / MathUtil::PI * 180;
+            angular_rate *= 1000 / update_millisecond / Common::PI * 180;
 
             // Transform the two vectors from world space to 3DS space
             gravity = QuaternionRotate(inv_q, gravity);
@@ -133,7 +133,7 @@ public:
         device = std::make_shared<MotionEmuDevice>(update_millisecond, sensitivity, tilt_clamp);
     }
 
-    std::tuple<Math::Vec3<float>, Math::Vec3<float>> GetStatus() const override {
+    std::tuple<Common::Vec3<float>, Common::Vec3<float>> GetStatus() const override {
         return device->GetStatus();
     }
 

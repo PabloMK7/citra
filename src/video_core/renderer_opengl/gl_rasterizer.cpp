@@ -224,11 +224,11 @@ void RasterizerOpenGL::SyncEntireState() {
  * Fortunately however, the 3DS hardware happens to also use this exact same logic to work around
  * these issues, making this basic implementation actually more accurate to the hardware.
  */
-static bool AreQuaternionsOpposite(Math::Vec4<Pica::float24> qa, Math::Vec4<Pica::float24> qb) {
-    Math::Vec4f a{qa.x.ToFloat32(), qa.y.ToFloat32(), qa.z.ToFloat32(), qa.w.ToFloat32()};
-    Math::Vec4f b{qb.x.ToFloat32(), qb.y.ToFloat32(), qb.z.ToFloat32(), qb.w.ToFloat32()};
+static bool AreQuaternionsOpposite(Common::Vec4<Pica::float24> qa, Common::Vec4<Pica::float24> qb) {
+    Common::Vec4f a{qa.x.ToFloat32(), qa.y.ToFloat32(), qa.z.ToFloat32(), qa.w.ToFloat32()};
+    Common::Vec4f b{qb.x.ToFloat32(), qb.y.ToFloat32(), qb.z.ToFloat32(), qb.w.ToFloat32()};
 
-    return (Math::Dot(a, b) < 0.f);
+    return (Common::Dot(a, b) < 0.f);
 }
 
 void RasterizerOpenGL::AddTriangle(const Pica::Shader::OutputVertex& v0,
@@ -522,7 +522,7 @@ bool RasterizerOpenGL::Draw(bool accelerate, bool is_indexed) {
         (write_depth_fb || regs.framebuffer.output_merger.depth_test_enable != 0 ||
          (has_stencil && state.stencil.test_enabled));
 
-    MathUtil::Rectangle<s32> viewport_rect_unscaled{
+    Common::Rectangle<s32> viewport_rect_unscaled{
         // These registers hold half-width and half-height, so must be multiplied by 2
         regs.rasterizer.viewport_corner.x,  // left
         regs.rasterizer.viewport_corner.y + // top
@@ -536,7 +536,7 @@ bool RasterizerOpenGL::Draw(bool accelerate, bool is_indexed) {
 
     Surface color_surface;
     Surface depth_surface;
-    MathUtil::Rectangle<u32> surfaces_rect;
+    Common::Rectangle<u32> surfaces_rect;
     std::tie(color_surface, depth_surface, surfaces_rect) =
         res_cache.GetFramebufferSurfaces(using_color_fb, using_depth_fb, viewport_rect_unscaled);
 
@@ -544,7 +544,7 @@ bool RasterizerOpenGL::Draw(bool accelerate, bool is_indexed) {
                               ? color_surface->res_scale
                               : (depth_surface == nullptr ? 1u : depth_surface->res_scale);
 
-    MathUtil::Rectangle<u32> draw_rect{
+    Common::Rectangle<u32> draw_rect{
         static_cast<u32>(std::clamp<s32>(static_cast<s32>(surfaces_rect.left) +
                                              viewport_rect_unscaled.left * res_scale,
                                          surfaces_rect.left, surfaces_rect.right)), // Left
@@ -841,9 +841,9 @@ bool RasterizerOpenGL::Draw(bool accelerate, bool is_indexed) {
     }
 
     // Mark framebuffer surfaces as dirty
-    MathUtil::Rectangle<u32> draw_rect_unscaled{
-        draw_rect.left / res_scale, draw_rect.top / res_scale, draw_rect.right / res_scale,
-        draw_rect.bottom / res_scale};
+    Common::Rectangle<u32> draw_rect_unscaled{draw_rect.left / res_scale, draw_rect.top / res_scale,
+                                              draw_rect.right / res_scale,
+                                              draw_rect.bottom / res_scale};
 
     if (color_surface != nullptr && write_color_fb) {
         auto interval = color_surface->GetSubRectInterval(draw_rect_unscaled);
@@ -1392,7 +1392,7 @@ bool RasterizerOpenGL::AccelerateDisplayTransfer(const GPU::Regs::DisplayTransfe
     dst_params.pixel_format = SurfaceParams::PixelFormatFromGPUPixelFormat(config.output_format);
     dst_params.UpdateParams();
 
-    MathUtil::Rectangle<u32> src_rect;
+    Common::Rectangle<u32> src_rect;
     Surface src_surface;
     std::tie(src_surface, src_rect) =
         res_cache.GetSurfaceSubRect(src_params, ScaleMatch::Ignore, true);
@@ -1401,7 +1401,7 @@ bool RasterizerOpenGL::AccelerateDisplayTransfer(const GPU::Regs::DisplayTransfe
 
     dst_params.res_scale = src_surface->res_scale;
 
-    MathUtil::Rectangle<u32> dst_rect;
+    Common::Rectangle<u32> dst_rect;
     Surface dst_surface;
     std::tie(dst_surface, dst_rect) =
         res_cache.GetSurfaceSubRect(dst_params, ScaleMatch::Upscale, false);
@@ -1461,7 +1461,7 @@ bool RasterizerOpenGL::AccelerateTextureCopy(const GPU::Regs::DisplayTransferCon
     src_params.size = ((src_params.height - 1) * src_params.stride) + src_params.width;
     src_params.end = src_params.addr + src_params.size;
 
-    MathUtil::Rectangle<u32> src_rect;
+    Common::Rectangle<u32> src_rect;
     Surface src_surface;
     std::tie(src_surface, src_rect) = res_cache.GetTexCopySurface(src_params);
     if (src_surface == nullptr) {
@@ -1486,7 +1486,7 @@ bool RasterizerOpenGL::AccelerateTextureCopy(const GPU::Regs::DisplayTransferCon
 
     // Since we are going to invalidate the gap if there is one, we will have to load it first
     const bool load_gap = output_gap != 0;
-    MathUtil::Rectangle<u32> dst_rect;
+    Common::Rectangle<u32> dst_rect;
     Surface dst_surface;
     std::tie(dst_surface, dst_rect) =
         res_cache.GetSurfaceSubRect(dst_params, ScaleMatch::Upscale, load_gap);
@@ -1532,7 +1532,7 @@ bool RasterizerOpenGL::AccelerateDisplay(const GPU::Regs::FramebufferConfig& con
     src_params.pixel_format = SurfaceParams::PixelFormatFromGPUPixelFormat(config.color_format);
     src_params.UpdateParams();
 
-    MathUtil::Rectangle<u32> src_rect;
+    Common::Rectangle<u32> src_rect;
     Surface src_surface;
     std::tie(src_surface, src_rect) =
         res_cache.GetSurfaceSubRect(src_params, ScaleMatch::Ignore, true);
@@ -1544,7 +1544,7 @@ bool RasterizerOpenGL::AccelerateDisplay(const GPU::Regs::FramebufferConfig& con
     u32 scaled_width = src_surface->GetScaledWidth();
     u32 scaled_height = src_surface->GetScaledHeight();
 
-    screen_info.display_texcoords = MathUtil::Rectangle<float>(
+    screen_info.display_texcoords = Common::Rectangle<float>(
         (float)src_rect.bottom / (float)scaled_height, (float)src_rect.left / (float)scaled_width,
         (float)src_rect.top / (float)scaled_height, (float)src_rect.right / (float)scaled_width);
 

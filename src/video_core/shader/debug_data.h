@@ -54,18 +54,18 @@ struct DebugData<true> {
             LOOP_INT_IN = 0x800,
         };
 
-        Math::Vec4<float24> src1;
-        Math::Vec4<float24> src2;
-        Math::Vec4<float24> src3;
+        Common::Vec4<float24> src1;
+        Common::Vec4<float24> src2;
+        Common::Vec4<float24> src3;
 
-        Math::Vec4<float24> dest_in;
-        Math::Vec4<float24> dest_out;
+        Common::Vec4<float24> dest_in;
+        Common::Vec4<float24> dest_out;
 
         s32 address_registers[2];
         bool conditional_code[2];
         bool cond_bool;
         bool cond_cmp[2];
-        Math::Vec4<u8> loop_int;
+        Common::Vec4<u8> loop_int;
 
         u32 instruction_offset;
         u32 next_instruction;
@@ -152,7 +152,8 @@ inline void SetField<DebugDataRecord::COND_CMP_IN>(DebugDataRecord& record, bool
 }
 
 template <>
-inline void SetField<DebugDataRecord::LOOP_INT_IN>(DebugDataRecord& record, Math::Vec4<u8> value) {
+inline void SetField<DebugDataRecord::LOOP_INT_IN>(DebugDataRecord& record,
+                                                   Common::Vec4<u8> value) {
     record.loop_int = value;
 }
 

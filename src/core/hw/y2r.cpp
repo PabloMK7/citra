@@ -110,7 +110,7 @@ static void SendData(const u32* input, ConversionBuffer& buf, int amount_of_data
         u8* unit_end = output + buf.transfer_unit;
         while (output < unit_end) {
             u32 color = *input++;
-            Math::Vec4<u8> col_vec{(u8)(color >> 24), (u8)(color >> 16), (u8)(color >> 8), alpha};
+            Common::Vec4<u8> col_vec{(u8)(color >> 24), (u8)(color >> 16), (u8)(color >> 8), alpha};
 
             switch (output_format) {
             case OutputFormat::RGBA8:
