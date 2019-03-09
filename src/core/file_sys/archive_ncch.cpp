@@ -22,6 +22,7 @@
 #include "core/hle/service/fs/archive.h"
 #include "core/loader/loader.h"
 #include "country_list.app.romfs.h"
+#include "mii.app.romfs.h"
 #include "shared_font.app.romfs.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -130,9 +131,9 @@ ResultVal<std::unique_ptr<FileBackend>> NCCHArchive::OpenFile(const Path& path,
         std::vector<u8> archive_data;
         if (high == shared_data_archive) {
             if (low == mii_data) {
-                LOG_ERROR(Service_FS, "Failed to get a handle for shared data archive: Mii Data.");
-                Core::System::GetInstance().SetStatus(Core::System::ResultStatus::ErrorSystemFiles,
-                                                      "Mii Data");
+                LOG_WARNING(Service_FS,
+                            "Mii data file missing. Loading open source replacement from memory");
+                archive_data = std::vector<u8>(std::begin(MII_DATA), std::end(MII_DATA));
             } else if (low == region_manifest) {
                 LOG_WARNING(
                     Service_FS,
