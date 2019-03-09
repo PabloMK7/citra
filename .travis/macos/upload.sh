@@ -13,21 +13,12 @@ cp -r build/bin/citra-qt.app "$REV_NAME"
 cp build/bin/citra-room "$REV_NAME"
 
 # move libs into folder for deployment
-dylibbundler -b -x "${REV_NAME}/citra-qt.app/Contents/MacOS/citra-qt" -cd -d "${REV_NAME}/citra-qt.app/Contents/Frameworks/" -p "@executable_path/../Frameworks/" -of
+macpack "${REV_NAME}/citra-qt.app/Contents/MacOS/citra-qt" -d "../Frameworks"
 # move qt frameworks into app bundle for deployment
 $(brew --prefix)/opt/qt5/bin/macdeployqt "${REV_NAME}/citra-qt.app" -executable="${REV_NAME}/citra-qt.app/Contents/MacOS/citra-qt"
 
 # move libs into folder for deployment
-dylibbundler -b -x "${REV_NAME}/citra" -cd -d "${REV_NAME}/libs" -p "@executable_path/libs/"
-
-# TODO(merry): Figure out why these libraries are not automatically processed
-FFMPEG_PATH="$(find $(brew --cellar ffmpeg) -type d -depth 1)"
-LIBVORBIS_PATH="$(find $(brew --cellar libvorbis) -type d -depth 1)"
-install_name_tool -change "${FFMPEG_PATH}/lib/libavutil.56.dylib" @executable_path/../Frameworks/libavutil.56.dylib "${REV_NAME}/citra-qt.app/Contents/Frameworks/libavcodec.58.dylib"
-install_name_tool -change "${FFMPEG_PATH}/lib/libavutil.56.dylib" @executable_path/../Frameworks/libavutil.56.dylib "${REV_NAME}/citra-qt.app/Contents/Frameworks/libswresample.3.dylib"
-install_name_tool -change "${FFMPEG_PATH}/lib/libavutil.56.dylib" @executable_path/libs/libavutil.56.dylib "${REV_NAME}/libs/libavcodec.58.dylib"
-install_name_tool -change "${FFMPEG_PATH}/lib/libavutil.56.dylib" @executable_path/libs/libavutil.56.dylib "${REV_NAME}/libs/libswresample.3.dylib"
-install_name_tool -change "${LIBVORBIS_PATH}/lib/libvorbis.0.dylib" @executable_path/libs/libavutil.56.dylib "${REV_NAME}/libs/libvorbisenc.2.dylib"
+macpack "${REV_NAME}/citra" -d "libs"
 
 # Make the citra-qt.app application launch a debugging terminal.
 # Store away the actual binary
