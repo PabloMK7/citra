@@ -543,11 +543,12 @@ std::string GetCurrentDir() {
 // Get the current working directory (getcwd uses malloc)
 #ifdef _WIN32
     wchar_t* dir;
-    if (!(dir = _wgetcwd(nullptr, 0))) {
+    if (!(dir = _wgetcwd(nullptr, 0)))
 #else
     char* dir;
-    if (!(dir = getcwd(nullptr, 0))) {
+    if (!(dir = getcwd(nullptr, 0)))
 #endif
+    {
         LOG_ERROR(Common_Filesystem, "GetCurrentDirectory failed: {}", GetLastErrorMsg());
         return nullptr;
     }
