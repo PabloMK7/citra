@@ -1332,6 +1332,10 @@ Surface RasterizerCacheOpenGL::GetTextureSurface(
 
 Surface RasterizerCacheOpenGL::GetTextureSurface(const Pica::Texture::TextureInfo& info,
                                                  u32 max_level) {
+    if (info.physical_address == 0) {
+        return nullptr;
+    }
+
     SurfaceParams params;
     params.addr = info.physical_address;
     params.width = info.width;
