@@ -8,6 +8,7 @@
 #include <condition_variable>
 #include <memory>
 #include <mutex>
+#include <regex>
 #include <thread>
 #include <vector>
 #ifdef _WIN32
@@ -253,13 +254,15 @@ Entry CreateEntry(Class log_class, Level log_level, const char* filename, unsign
     using std::chrono::duration_cast;
     using std::chrono::steady_clock;
 
+    // matches from the beginning up to the last '../' or 'src/'
+    static const std::regex trim_source_path(R"(.*([\/\\]|^)((\.\.)|(src))[\/\\])");
     static steady_clock::time_point time_origin = steady_clock::now();
 
     Entry entry;
     entry.timestamp = duration_cast<std::chrono::microseconds>(steady_clock::now() - time_origin);
     entry.log_class = log_class;
     entry.log_level = log_level;
-    entry.filename = Common::TrimSourcePath(filename, {R"(\.\.)", "src"}).data();
+    entry.filename = std::regex_replace(filename, trim_source_path, "");
     entry.line_num = line_nr;
     entry.function = function;
     entry.message = std::move(message);

@@ -64,16 +64,4 @@ bool ComparePartialString(InIt begin, InIt end, const char* other) {
  */
 std::string StringFromFixedZeroTerminatedBuffer(const char* buffer, std::size_t max_len);
 
-/**
- * Attempts to trim an arbitrary prefix from `path`, leaving only the part starting at `root`. It's
- * intended to be used to strip a system-specific build directory from the `__FILE__` macro,
- * leaving only the path relative to the sources root.
- *
- * @param path The input file path as a string
- * @param roots The name of the root source directorys as a vector of strings. Path up to and
- *             including the last occurrence of these names will be stripped
- * @return The trimmed path as a string
- */
-std::string TrimSourcePath(const std::string& file_path, const std::vector<std::string>& roots);
-
 } // namespace Common

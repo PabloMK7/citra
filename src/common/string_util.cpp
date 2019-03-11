@@ -7,7 +7,6 @@
 #include <codecvt>
 #include <cstdlib>
 #include <locale>
-#include <regex>
 #include <sstream>
 #include "common/common_paths.h"
 #include "common/logging/log.h"
@@ -209,19 +208,5 @@ std::string StringFromFixedZeroTerminatedBuffer(const char* buffer, std::size_t 
         ++len;
 
     return std::string(buffer, len);
-}
-
-std::string TrimSourcePath(const std::string& file_path, const std::vector<std::string>& roots) {
-    // match from beginning of path to dir sep
-    std::string regex_src = R"(.*([\/\\]|^)()";
-    // plus the last occurrence of any root
-    for (auto root = roots.begin(); root < roots.end() - 1; ++root) {
-        regex_src += '(' + *root + ")|";
-    }
-    regex_src += '(' + roots.back() + ')';
-    // plus dir sep
-    regex_src += R"()[\/\\])";
-    std::regex regex(regex_src);
-    return std::regex_replace(file_path, regex, "");
 }
 } // namespace Common
