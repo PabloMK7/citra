@@ -131,13 +131,11 @@ ServiceFrameworkBase::ServiceFrameworkBase(const char* service_name, u32 max_ses
 ServiceFrameworkBase::~ServiceFrameworkBase() = default;
 
 void ServiceFrameworkBase::InstallAsService(SM::ServiceManager& service_manager) {
-    ASSERT(port == nullptr);
-    port = service_manager.RegisterService(service_name, max_sessions).Unwrap();
+    auto port = service_manager.RegisterService(service_name, max_sessions).Unwrap();
     port->SetHleHandler(shared_from_this());
 }
 
 void ServiceFrameworkBase::InstallAsNamedPort(Kernel::KernelSystem& kernel) {
-    ASSERT(port == nullptr);
     auto [server_port, client_port] = kernel.CreatePortPair(max_sessions, service_name);
     server_port->SetHleHandler(shared_from_this());
     kernel.AddNamedPort(service_name, std::move(client_port));
