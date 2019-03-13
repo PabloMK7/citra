@@ -188,7 +188,6 @@ static void MortonCopyTile(u32 stride, u8* tile_buffer, u8* gl_buffer) {
                     gl_ptr[0] = tile_ptr[2];
                     gl_ptr[1] = tile_ptr[1];
                     gl_ptr[2] = tile_ptr[0];
-                    gl_ptr[3] = tile_ptr[3];
                 } else {
                     std::memcpy(gl_ptr, tile_ptr, bytes_per_pixel);
                 }
@@ -733,7 +732,6 @@ void RasterizerCacheOpenGL::CopySurface(const Surface& src_surface, const Surfac
 MICROPROFILE_DEFINE(OpenGL_SurfaceLoad, "OpenGL", "Surface Load", MP_RGB(128, 192, 64));
 void CachedSurface::LoadGLBuffer(PAddr load_start, PAddr load_end) {
     ASSERT(type != SurfaceType::Fill);
-    // FIXME(liushuyu): not endianness-aware, assumed little-endian
     bool need_swap =
         GLES && (pixel_format == PixelFormat::RGBA8 || pixel_format == PixelFormat::RGB8);
 
@@ -771,11 +769,10 @@ void CachedSurface::LoadGLBuffer(PAddr load_start, PAddr load_end) {
                     gl_buffer[i + 3] = *(texture_src_data + start_offset + i);
                 }
             } else if (pixel_format == PixelFormat::RGB8) {
-                for (size_t i = start_offset; i < load_end - addr; i += 4) {
+                for (size_t i = start_offset; i < load_end - addr; i += 3) {
                     gl_buffer[i] = *(texture_src_data + start_offset + i + 2);
                     gl_buffer[i + 1] = *(texture_src_data + start_offset + i + 1);
                     gl_buffer[i + 2] = *(texture_src_data + start_offset + i);
-                    gl_buffer[i + 3] = *(texture_src_data + start_offset + i + 3);
                 }
             }
         } else {
@@ -801,7 +798,6 @@ void CachedSurface::LoadGLBuffer(PAddr load_start, PAddr load_end) {
                         Pica::Texture::LookupTexture(texture_src_data, x, height - 1 - y, tex_info);
                     const std::size_t offset = (x + (width * y)) * 4;
                     std::memcpy(&gl_buffer[offset], vec4.AsArray(), 4);
-                    // TODO(liushuyu): byteswap textures
                 }
             }
         } else {
