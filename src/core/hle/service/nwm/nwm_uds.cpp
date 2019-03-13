@@ -664,6 +664,22 @@ void NWM_UDS::InitializeWithVersion(Kernel::HLERequestContext& ctx) {
               version);
 }
 
+void NWM_UDS::InitializeDeprecated(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x01, 11, 2);
+    u32 sharedmem_size = rp.Pop<u32>();
+    auto node = rp.PopRaw<NodeInfo>();
+    auto sharedmem = rp.PopObject<Kernel::SharedMemory>();
+
+    // The deprecated version uses fixed 0x100 as the version
+    auto result = Initialize(sharedmem_size, node, 0x100, std::move(sharedmem));
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
+    rb.Push(result.Code());
+    rb.PushCopyObjects(result.ValueOr(nullptr));
+
+    LOG_DEBUG(Service_NWM, "called sharedmem_size=0x{:08X}", sharedmem_size);
+}
+
 void NWM_UDS::GetConnectionStatus(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0xB, 0, 0);
     IPC::RequestBuilder rb = rp.MakeBuilder(13, 0);
@@ -1272,7 +1288,7 @@ void NWM_UDS::BeaconBroadcastCallback(u64 userdata, s64 cycles_late) {
 
 NWM_UDS::NWM_UDS(Core::System& system) : ServiceFramework("nwm::UDS"), system(system) {
     static const FunctionInfo functions[] = {
-        {0x000102C2, nullptr, "Initialize (deprecated)"},
+        {0x000102C2, &NWM_UDS::InitializeDeprecated, "Initialize (deprecated)"},
         {0x00020000, nullptr, "Scrap"},
         {0x00030000, &NWM_UDS::Shutdown, "Shutdown"},
         {0x00040402, nullptr, "CreateNetwork (deprecated)"},

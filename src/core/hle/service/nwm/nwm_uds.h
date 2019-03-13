@@ -321,6 +321,21 @@ private:
     void InitializeWithVersion(Kernel::HLERequestContext& ctx);
 
     /**
+     * NWM_UDS::InitializeDeprecated service function
+     *  Inputs:
+     *      1 : Shared memory size
+     *   2-11 : Input NodeInfo Structure
+     *     13 : Value 0
+     *     14 : Shared memory handle
+     *  Outputs:
+     *      0 : Return header
+     *      1 : Result of function, 0 on success, otherwise error code
+     *      2 : Value 0
+     *      3 : Output event handle
+     */
+    void InitializeDeprecated(Kernel::HLERequestContext& ctx);
+
+    /**
      * NWM_UDS::BeginHostingNetwork service function.
      * Creates a network and starts broadcasting its presence.
      *  Inputs:
