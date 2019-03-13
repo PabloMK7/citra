@@ -899,6 +899,25 @@ void NWM_UDS::BeginHostingNetwork(Kernel::HLERequestContext& ctx) {
     rb.Push(result);
 }
 
+void NWM_UDS::BeginHostingNetworkDeprecated(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x04, 0x10, 2);
+    // Real NWM module reads 0x108 bytes from the command buffer into the network info, where the
+    // last 0xCC bytes (application_data and size) are undefined values. Here we just read the first
+    // 0x3C defined bytes and zero application_data in BeginHostingNetwork.
+    const auto network_info_buffer = rp.PopRaw<std::array<u8, 0x3C>>();
+    const u32 passphrase_size = rp.Pop<u32>();
+    std::vector<u8> passphrase = rp.PopStaticBuffer();
+    ASSERT(passphrase.size() == passphrase_size);
+
+    LOG_DEBUG(Service_NWM, "called");
+    auto result = BeginHostingNetwork(network_info_buffer.data(), network_info_buffer.size(),
+                                      std::move(passphrase));
+    LOG_DEBUG(Service_NWM, "An UDS network has been created.");
+
+    IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+    rb.Push(result);
+}
+
 void NWM_UDS::UpdateNetworkAttribute(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x07, 2, 0);
     rp.Skip(2, false);
@@ -1298,7 +1317,7 @@ NWM_UDS::NWM_UDS(Core::System& system) : ServiceFramework("nwm::UDS"), system(sy
         {0x000102C2, &NWM_UDS::InitializeDeprecated, "Initialize (deprecated)"},
         {0x00020000, nullptr, "Scrap"},
         {0x00030000, &NWM_UDS::Shutdown, "Shutdown"},
-        {0x00040402, nullptr, "CreateNetwork (deprecated)"},
+        {0x00040402, &NWM_UDS::BeginHostingNetworkDeprecated, "BeginHostingNetwork (deprecated)"},
         {0x00050040, nullptr, "EjectClient"},
         {0x00060000, nullptr, "EjectSpectator"},
         {0x00070080, &NWM_UDS::UpdateNetworkAttribute, "UpdateNetworkAttribute"},

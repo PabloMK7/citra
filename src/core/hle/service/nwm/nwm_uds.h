@@ -349,6 +349,19 @@ private:
     void BeginHostingNetwork(Kernel::HLERequestContext& ctx);
 
     /**
+     * NWM_UDS::BeginHostingNetworkDeprecated service function.
+     * Creates a network and starts broadcasting its presence.
+     *  Inputs:
+     *      1 - 15 : the NetworkInfo structure, excluding application data
+     *      16 : passphrase size
+     *      18 : VAddr of the passphrase.
+     *  Outputs:
+     *      0 : Return header
+     *      1 : Result of function, 0 on success, otherwise error code
+     */
+    void BeginHostingNetworkDeprecated(Kernel::HLERequestContext& ctx);
+
+    /**
      * NWM_UDS::ConnectToNetwork service function.
      * This connects to the specified network
      *  Inputs:
