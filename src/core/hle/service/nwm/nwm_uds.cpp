@@ -1249,8 +1249,8 @@ void NWM_UDS::SetApplicationData(Kernel::HLERequestContext& ctx) {
     rb.Push(RESULT_SUCCESS);
 }
 
-void NWM_UDS::DecryptBeaconData(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x1F, 0, 6);
+void NWM_UDS::DecryptBeaconData(Kernel::HLERequestContext& ctx, u16 command_id) {
+    IPC::RequestParser rp(ctx, command_id, 0, 6);
 
     const std::vector<u8> network_struct_buffer = rp.PopStaticBuffer();
     ASSERT(network_struct_buffer.size() == sizeof(NetworkInfo));
@@ -1315,6 +1315,11 @@ void NWM_UDS::DecryptBeaconData(Kernel::HLERequestContext& ctx) {
     rb.PushStaticBuffer(output_buffer, 0);
 }
 
+template <u16 command_id>
+void NWM_UDS::DecryptBeaconData(Kernel::HLERequestContext& ctx) {
+    DecryptBeaconData(ctx, command_id);
+}
+
 // Sends a 802.11 beacon frame with information about the current network.
 void NWM_UDS::BeaconBroadcastCallback(u64 userdata, s64 cycles_late) {
     // Don't do anything if we're not actually hosting a network
@@ -1352,7 +1357,7 @@ NWM_UDS::NWM_UDS(Core::System& system) : ServiceFramework("nwm::UDS"), system(sy
         {0x000A0000, &NWM_UDS::DisconnectNetwork, "DisconnectNetwork"},
         {0x000B0000, &NWM_UDS::GetConnectionStatus, "GetConnectionStatus"},
         {0x000D0040, &NWM_UDS::GetNodeInformation, "GetNodeInformation"},
-        {0x000E0006, nullptr, "DecryptBeaconData (deprecated)"},
+        {0x000E0006, &NWM_UDS::DecryptBeaconData<0x0E>, "DecryptBeaconData (deprecated)"},
         {0x000F0404, &NWM_UDS::RecvBeaconBroadcastData, "RecvBeaconBroadcastData"},
         {0x00100042, &NWM_UDS::SetApplicationData, "SetApplicationData"},
         {0x00110040, nullptr, "GetApplicationData"},
@@ -1365,7 +1370,7 @@ NWM_UDS::NWM_UDS(Core::System& system) : ServiceFramework("nwm::UDS"), system(sy
         {0x001B0302, &NWM_UDS::InitializeWithVersion, "InitializeWithVersion"},
         {0x001D0044, &NWM_UDS::BeginHostingNetwork, "BeginHostingNetwork"},
         {0x001E0084, &NWM_UDS::ConnectToNetwork, "ConnectToNetwork"},
-        {0x001F0006, &NWM_UDS::DecryptBeaconData, "DecryptBeaconData"},
+        {0x001F0006, &NWM_UDS::DecryptBeaconData<0x1F>, "DecryptBeaconData"},
         {0x00200040, nullptr, "Flush"},
         {0x00210080, nullptr, "SetProbeResponseParam"},
         {0x00220402, nullptr, "ScanOnConnection"},

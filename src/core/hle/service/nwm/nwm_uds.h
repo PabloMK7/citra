@@ -411,6 +411,9 @@ private:
      *      1 : Result of function, 0 on success, otherwise error code
      *      2, 3: output buffer return descriptor & ptr
      */
+    void DecryptBeaconData(Kernel::HLERequestContext& ctx, u16 command_id);
+
+    template <u16 command_id>
     void DecryptBeaconData(Kernel::HLERequestContext& ctx);
 
     ResultVal<Kernel::SharedPtr<Kernel::Event>> Initialize(
