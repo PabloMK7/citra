@@ -1207,6 +1207,24 @@ void NWM_UDS::ConnectToNetwork(Kernel::HLERequestContext& ctx) {
     LOG_DEBUG(Service_NWM, "called");
 }
 
+void NWM_UDS::ConnectToNetworkDeprecated(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x09, 0x11, 2);
+
+    // Similar to BeginHostingNetworkDeprecated, we only read the first 0x3C bytes into the network
+    // info
+    const auto network_info_buffer = rp.PopRaw<std::array<u8, 0x3C>>();
+
+    u8 connection_type = rp.Pop<u8>();
+    u32 passphrase_size = rp.Pop<u32>();
+
+    std::vector<u8> passphrase = rp.PopStaticBuffer();
+
+    ConnectToNetwork(ctx, network_info_buffer.data(), network_info_buffer.size(), connection_type,
+                     std::move(passphrase));
+
+    LOG_DEBUG(Service_NWM, "called");
+}
+
 void NWM_UDS::SetApplicationData(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x10, 1, 2);
 
@@ -1330,7 +1348,7 @@ NWM_UDS::NWM_UDS(Core::System& system) : ServiceFramework("nwm::UDS"), system(sy
         {0x00060000, nullptr, "EjectSpectator"},
         {0x00070080, &NWM_UDS::UpdateNetworkAttribute, "UpdateNetworkAttribute"},
         {0x00080000, &NWM_UDS::DestroyNetwork, "DestroyNetwork"},
-        {0x00090442, nullptr, "ConnectNetwork (deprecated)"},
+        {0x00090442, &NWM_UDS::ConnectToNetworkDeprecated, "ConnectToNetwork (deprecated)"},
         {0x000A0000, &NWM_UDS::DisconnectNetwork, "DisconnectNetwork"},
         {0x000B0000, &NWM_UDS::GetConnectionStatus, "GetConnectionStatus"},
         {0x000D0040, &NWM_UDS::GetNodeInformation, "GetNodeInformation"},

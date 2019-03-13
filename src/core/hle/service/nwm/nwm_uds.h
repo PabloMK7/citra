@@ -379,6 +379,22 @@ private:
     void ConnectToNetwork(Kernel::HLERequestContext& ctx);
 
     /**
+     * NWM_UDS::ConnectToNetwork Deprecatedservice function.
+     * This connects to the specified network
+     *  Inputs:
+     *      0 : Command header
+     *      1 - 15 : the NetworkInfo structure, excluding application data
+     *      16 : Connection type: 0x1 = Client, 0x2 = Spectator.
+     *      17 : Passphrase buffer size
+     *      18 : (PassphraseSize<<12) | 2
+     *      19 : Input passphrase buffer ptr
+     *  Outputs:
+     *      0 : Return header
+     *      1 : Result of function, 0 on success, otherwise error code
+     */
+    void ConnectToNetworkDeprecated(Kernel::HLERequestContext& ctx);
+
+    /**
      * NWM_UDS::DecryptBeaconData service function.
      * Decrypts the encrypted data tags contained in the 802.11 beacons.
      *  Inputs:
