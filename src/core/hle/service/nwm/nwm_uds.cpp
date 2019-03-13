@@ -1165,18 +1165,11 @@ void NWM_UDS::GetChannel(Kernel::HLERequestContext& ctx) {
     LOG_DEBUG(Service_NWM, "called");
 }
 
-void NWM_UDS::ConnectToNetwork(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x1E, 2, 4);
-
-    u8 connection_type = rp.Pop<u8>();
-    u32 passphrase_size = rp.Pop<u32>();
-
-    const std::vector<u8> network_struct_buffer = rp.PopStaticBuffer();
-    ASSERT(network_struct_buffer.size() == sizeof(NetworkInfo));
-
-    const std::vector<u8> passphrase = rp.PopStaticBuffer();
-
-    std::memcpy(&network_info, network_struct_buffer.data(), sizeof(network_info));
+void NWM_UDS::ConnectToNetwork(Kernel::HLERequestContext& ctx, const u8* network_info_buffer,
+                               std::size_t network_info_size, u8 connection_type,
+                               std::vector<u8> passphrase) {
+    network_info = {};
+    std::memcpy(&network_info, network_info_buffer, network_info_size);
 
     // Start the connection sequence
     StartConnectionSequence(network_info.host_mac_address);
@@ -1195,6 +1188,21 @@ void NWM_UDS::ConnectToNetwork(Kernel::HLERequestContext& ctx) {
             rb.Push(RESULT_SUCCESS);
             LOG_DEBUG(Service_NWM, "connection sequence finished");
         });
+}
+
+void NWM_UDS::ConnectToNetwork(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x1E, 2, 4);
+
+    u8 connection_type = rp.Pop<u8>();
+    u32 passphrase_size = rp.Pop<u32>();
+
+    const std::vector<u8> network_info_buffer = rp.PopStaticBuffer();
+    ASSERT(network_info_buffer.size() == sizeof(NetworkInfo));
+
+    std::vector<u8> passphrase = rp.PopStaticBuffer();
+
+    ConnectToNetwork(ctx, network_info_buffer.data(), network_info_buffer.size(), connection_type,
+                     std::move(passphrase));
 
     LOG_DEBUG(Service_NWM, "called");
 }
