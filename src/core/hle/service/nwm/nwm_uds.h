@@ -388,6 +388,9 @@ private:
         u32 sharedmem_size, const NodeInfo& node, u16 version,
         Kernel::SharedPtr<Kernel::SharedMemory> sharedmem);
 
+    ResultCode BeginHostingNetwork(const u8* network_info_buffer, std::size_t network_info_size,
+                                   std::vector<u8> passphrase);
+
     void BeaconBroadcastCallback(u64 userdata, s64 cycles_late);
 
     /**

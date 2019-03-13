@@ -814,23 +814,14 @@ void NWM_UDS::Unbind(Kernel::HLERequestContext& ctx) {
     rb.Push<u32>(0);
 }
 
-void NWM_UDS::BeginHostingNetwork(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x1D, 1, 4);
-
-    const u32 passphrase_size = rp.Pop<u32>();
-
-    const std::vector<u8> network_info_buffer = rp.PopStaticBuffer();
-    ASSERT(network_info_buffer.size() == sizeof(NetworkInfo));
-    const std::vector<u8> passphrase = rp.PopStaticBuffer();
-    ASSERT(passphrase.size() == passphrase_size);
-
+ResultCode NWM_UDS::BeginHostingNetwork(const u8* network_info_buffer,
+                                        std::size_t network_info_size, std::vector<u8> passphrase) {
     // TODO(Subv): Store the passphrase and verify it when attempting a connection.
-
-    LOG_DEBUG(Service_NWM, "called");
 
     {
         std::lock_guard<std::mutex> lock(connection_status_mutex);
-        std::memcpy(&network_info, network_info_buffer.data(), sizeof(NetworkInfo));
+        network_info = {};
+        std::memcpy(&network_info, network_info_buffer, network_info_size);
 
         // The real UDS module throws a fatal error if this assert fails.
         ASSERT_MSG(network_info.max_nodes > 1, "Trying to host a network of only one member.");
@@ -886,10 +877,26 @@ void NWM_UDS::BeginHostingNetwork(Kernel::HLERequestContext& ctx) {
     system.CoreTiming().ScheduleEvent(msToCycles(DefaultBeaconInterval * MillisecondsPerTU),
                                       beacon_broadcast_event, 0);
 
+    return RESULT_SUCCESS;
+}
+
+void NWM_UDS::BeginHostingNetwork(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x1D, 1, 4);
+
+    const u32 passphrase_size = rp.Pop<u32>();
+
+    const std::vector<u8> network_info_buffer = rp.PopStaticBuffer();
+    ASSERT(network_info_buffer.size() == sizeof(NetworkInfo));
+    std::vector<u8> passphrase = rp.PopStaticBuffer();
+    ASSERT(passphrase.size() == passphrase_size);
+
+    LOG_DEBUG(Service_NWM, "called");
+    auto result = BeginHostingNetwork(network_info_buffer.data(), network_info_buffer.size(),
+                                      std::move(passphrase));
     LOG_DEBUG(Service_NWM, "An UDS network has been created.");
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
-    rb.Push(RESULT_SUCCESS);
+    rb.Push(result);
 }
 
 void NWM_UDS::UpdateNetworkAttribute(Kernel::HLERequestContext& ctx) {
