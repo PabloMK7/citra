@@ -615,20 +615,14 @@ void NWM_UDS::RecvBeaconBroadcastData(Kernel::HLERequestContext& ctx) {
               out_buffer_size, wlan_comm_id, id, unk1, unk2, cur_buffer_size);
 }
 
-void NWM_UDS::InitializeWithVersion(Kernel::HLERequestContext& ctx) {
-    IPC::RequestParser rp(ctx, 0x1B, 12, 2);
+ResultVal<Kernel::SharedPtr<Kernel::Event>> NWM_UDS::Initialize(
+    u32 sharedmem_size, const NodeInfo& node, u16 version,
+    Kernel::SharedPtr<Kernel::SharedMemory> sharedmem) {
 
-    u32 sharedmem_size = rp.Pop<u32>();
-
-    // Update the node information with the data the game gave us.
-    rp.PopRaw(current_node);
-
-    u16 version = rp.Pop<u16>();
-
-    recv_buffer_memory = rp.PopObject<Kernel::SharedMemory>();
-
+    current_node = node;
     initialized = true;
 
+    recv_buffer_memory = std::move(sharedmem);
     ASSERT_MSG(recv_buffer_memory->GetSize() == sharedmem_size, "Invalid shared memory size.");
 
     if (auto room_member = Network::GetRoomMember().lock()) {
@@ -650,9 +644,21 @@ void NWM_UDS::InitializeWithVersion(Kernel::HLERequestContext& ctx) {
         channel_data.clear();
     }
 
+    return MakeResult(connection_status_event);
+}
+
+void NWM_UDS::InitializeWithVersion(Kernel::HLERequestContext& ctx) {
+    IPC::RequestParser rp(ctx, 0x1B, 12, 2);
+    u32 sharedmem_size = rp.Pop<u32>();
+    auto node = rp.PopRaw<NodeInfo>();
+    u16 version = rp.Pop<u16>();
+    auto sharedmem = rp.PopObject<Kernel::SharedMemory>();
+
+    auto result = Initialize(sharedmem_size, node, version, std::move(sharedmem));
+
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
-    rb.Push(RESULT_SUCCESS);
-    rb.PushCopyObjects(connection_status_event);
+    rb.Push(result.Code());
+    rb.PushCopyObjects(result.ValueOr(nullptr));
 
     LOG_DEBUG(Service_NWM, "called sharedmem_size=0x{:08X}, version=0x{:08X}", sharedmem_size,
               version);

@@ -369,6 +369,10 @@ private:
      */
     void DecryptBeaconData(Kernel::HLERequestContext& ctx);
 
+    ResultVal<Kernel::SharedPtr<Kernel::Event>> Initialize(
+        u32 sharedmem_size, const NodeInfo& node, u16 version,
+        Kernel::SharedPtr<Kernel::SharedMemory> sharedmem);
+
     void BeaconBroadcastCallback(u64 userdata, s64 cycles_late);
 
     /**
