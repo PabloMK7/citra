@@ -423,9 +423,9 @@ private:
     ResultCode BeginHostingNetwork(const u8* network_info_buffer, std::size_t network_info_size,
                                    std::vector<u8> passphrase);
 
-    void ConnectToNetwork(Kernel::HLERequestContext& ctx, const u8* network_info_buffer,
-                          std::size_t network_info_size, u8 connection_type,
-                          std::vector<u8> passphrase);
+    void ConnectToNetwork(Kernel::HLERequestContext& ctx, u16 command_id,
+                          const u8* network_info_buffer, std::size_t network_info_size,
+                          u8 connection_type, std::vector<u8> passphrase);
 
     void BeaconBroadcastCallback(u64 userdata, s64 cycles_late);
 

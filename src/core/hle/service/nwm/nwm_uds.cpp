@@ -1165,9 +1165,9 @@ void NWM_UDS::GetChannel(Kernel::HLERequestContext& ctx) {
     LOG_DEBUG(Service_NWM, "called");
 }
 
-void NWM_UDS::ConnectToNetwork(Kernel::HLERequestContext& ctx, const u8* network_info_buffer,
-                               std::size_t network_info_size, u8 connection_type,
-                               std::vector<u8> passphrase) {
+void NWM_UDS::ConnectToNetwork(Kernel::HLERequestContext& ctx, u16 command_id,
+                               const u8* network_info_buffer, std::size_t network_info_size,
+                               u8 connection_type, std::vector<u8> passphrase) {
     network_info = {};
     std::memcpy(&network_info, network_info_buffer, network_info_size);
 
@@ -1181,10 +1181,10 @@ void NWM_UDS::ConnectToNetwork(Kernel::HLERequestContext& ctx, const u8* network
     connection_event = ctx.SleepClientThread(
         system.Kernel().GetThreadManager().GetCurrentThread(), "uds::ConnectToNetwork",
         UDSConnectionTimeout,
-        [](Kernel::SharedPtr<Kernel::Thread> thread, Kernel::HLERequestContext& ctx,
-           Kernel::ThreadWakeupReason reason) {
+        [command_id](Kernel::SharedPtr<Kernel::Thread> thread, Kernel::HLERequestContext& ctx,
+                     Kernel::ThreadWakeupReason reason) {
             // TODO(B3N30): Add error handling for host full and timeout
-            IPC::RequestBuilder rb(ctx, 0x1E, 1, 0);
+            IPC::RequestBuilder rb(ctx, command_id, 1, 0);
             rb.Push(RESULT_SUCCESS);
             LOG_DEBUG(Service_NWM, "connection sequence finished");
         });
@@ -1201,8 +1201,8 @@ void NWM_UDS::ConnectToNetwork(Kernel::HLERequestContext& ctx) {
 
     std::vector<u8> passphrase = rp.PopStaticBuffer();
 
-    ConnectToNetwork(ctx, network_info_buffer.data(), network_info_buffer.size(), connection_type,
-                     std::move(passphrase));
+    ConnectToNetwork(ctx, 0x1E, network_info_buffer.data(), network_info_buffer.size(),
+                     connection_type, std::move(passphrase));
 
     LOG_DEBUG(Service_NWM, "called");
 }
@@ -1219,8 +1219,8 @@ void NWM_UDS::ConnectToNetworkDeprecated(Kernel::HLERequestContext& ctx) {
 
     std::vector<u8> passphrase = rp.PopStaticBuffer();
 
-    ConnectToNetwork(ctx, network_info_buffer.data(), network_info_buffer.size(), connection_type,
-                     std::move(passphrase));
+    ConnectToNetwork(ctx, 0x11, network_info_buffer.data(), network_info_buffer.size(),
+                     connection_type, std::move(passphrase));
 
     LOG_DEBUG(Service_NWM, "called");
 }
