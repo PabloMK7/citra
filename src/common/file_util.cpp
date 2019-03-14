@@ -543,11 +543,12 @@ std::string GetCurrentDir() {
 // Get the current working directory (getcwd uses malloc)
 #ifdef _WIN32
     wchar_t* dir;
-    if (!(dir = _wgetcwd(nullptr, 0))) {
+    if (!(dir = _wgetcwd(nullptr, 0)))
 #else
     char* dir;
-    if (!(dir = getcwd(nullptr, 0))) {
+    if (!(dir = getcwd(nullptr, 0)))
 #endif
+    {
         LOG_ERROR(Common_Filesystem, "GetCurrentDirectory failed: {}", GetLastErrorMsg());
         return nullptr;
     }
@@ -695,6 +696,8 @@ void SetUserPath(const std::string& path) {
 
         g_paths.emplace(UserPath::ConfigDir, user_path + CONFIG_DIR DIR_SEP);
         g_paths.emplace(UserPath::CacheDir, user_path + CACHE_DIR DIR_SEP);
+#elif ANDROID
+        ASSERT_MSG(false, "Specified path {} is not valid", path);
 #else
         if (FileUtil::Exists(ROOT_DIR DIR_SEP USERDATA_DIR)) {
             user_path = ROOT_DIR DIR_SEP USERDATA_DIR DIR_SEP;
