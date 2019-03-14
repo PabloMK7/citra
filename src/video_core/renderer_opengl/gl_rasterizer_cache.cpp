@@ -176,15 +176,13 @@ static void MortonCopyTile(u32 stride, u8* tile_buffer, u8* gl_buffer) {
                     gl_ptr[0] = tile_ptr[3];
                     std::memcpy(gl_ptr + 1, tile_ptr, 3);
                 } else if (format == PixelFormat::RGBA8 && GLES) {
-                    // because GLES does not have BGR format
+                    // because GLES does not have ABGR format
                     // so we will do byteswapping here
                     gl_ptr[0] = tile_ptr[3];
                     gl_ptr[1] = tile_ptr[2];
                     gl_ptr[2] = tile_ptr[1];
                     gl_ptr[3] = tile_ptr[0];
                 } else if (format == PixelFormat::RGB8 && GLES) {
-                    // the last channel Alpha should keep the same
-                    // position as the original
                     gl_ptr[0] = tile_ptr[2];
                     gl_ptr[1] = tile_ptr[1];
                     gl_ptr[2] = tile_ptr[0];
@@ -763,16 +761,16 @@ void CachedSurface::LoadGLBuffer(PAddr load_start, PAddr load_end) {
             // cannot fully test this
             if (pixel_format == PixelFormat::RGBA8) {
                 for (size_t i = start_offset; i < load_end - addr; i += 4) {
-                    gl_buffer[i] = *(texture_src_data + start_offset + i + 3);
-                    gl_buffer[i + 1] = *(texture_src_data + start_offset + i + 2);
-                    gl_buffer[i + 2] = *(texture_src_data + start_offset + i + 1);
-                    gl_buffer[i + 3] = *(texture_src_data + start_offset + i);
+                    gl_buffer[i] = *(texture_src_data + i + 3);
+                    gl_buffer[i + 1] = *(texture_src_data + i + 2);
+                    gl_buffer[i + 2] = *(texture_src_data + i + 1);
+                    gl_buffer[i + 3] = *(texture_src_data + i);
                 }
             } else if (pixel_format == PixelFormat::RGB8) {
                 for (size_t i = start_offset; i < load_end - addr; i += 3) {
-                    gl_buffer[i] = *(texture_src_data + start_offset + i + 2);
-                    gl_buffer[i + 1] = *(texture_src_data + start_offset + i + 1);
-                    gl_buffer[i + 2] = *(texture_src_data + start_offset + i);
+                    gl_buffer[i] = *(texture_src_data + i + 2);
+                    gl_buffer[i + 1] = *(texture_src_data + i + 1);
+                    gl_buffer[i + 2] = *(texture_src_data + i);
                 }
             }
         } else {
