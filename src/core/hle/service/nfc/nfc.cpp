@@ -27,6 +27,7 @@ struct AmiiboConfig {
     u8 lastwritedate_day;
     u16_le write_counter;
     std::array<u8, 3> characterID;
+    u8 series;
     u16_le amiiboID;
     u8 type;
     u8 pagex4_byte3;
@@ -141,7 +142,14 @@ void Module::Interface::GetAmiiboConfig(Kernel::HLERequestContext& ctx) {
     amiibo_config.lastwritedate_year = 2017;
     amiibo_config.lastwritedate_month = 10;
     amiibo_config.lastwritedate_day = 10;
-    // TODO(FearlessTobi): Find the right values for the struct
+    amiibo_config.write_counter = 0x0;
+    std::memcpy(amiibo_config.characterID.data(), &nfc->amiibo_data.char_id,
+                sizeof(nfc->amiibo_data.char_id));
+    amiibo_config.series = nfc->amiibo_data.series;
+    amiibo_config.amiiboID = nfc->amiibo_data.model_number;
+    amiibo_config.type = nfc->amiibo_data.figure_type;
+    amiibo_config.pagex4_byte3 = 0x0;
+    amiibo_config.appdata_size = 0xD8;
 
     IPC::RequestBuilder rb = rp.MakeBuilder(17, 0);
     rb.Push(RESULT_SUCCESS);
