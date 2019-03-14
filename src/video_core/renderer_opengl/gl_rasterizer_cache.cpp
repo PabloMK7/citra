@@ -730,7 +730,7 @@ void RasterizerCacheOpenGL::CopySurface(const Surface& src_surface, const Surfac
 MICROPROFILE_DEFINE(OpenGL_SurfaceLoad, "OpenGL", "Surface Load", MP_RGB(128, 192, 64));
 void CachedSurface::LoadGLBuffer(PAddr load_start, PAddr load_end) {
     ASSERT(type != SurfaceType::Fill);
-    bool need_swap =
+    const bool need_swap =
         GLES && (pixel_format == PixelFormat::RGBA8 || pixel_format == PixelFormat::RGB8);
 
     const u8* const texture_src_data = VideoCore::g_memory->GetPhysicalPointer(addr);
@@ -760,17 +760,17 @@ void CachedSurface::LoadGLBuffer(PAddr load_start, PAddr load_end) {
             // TODO(liushuyu): check if the byteswap here is 100% correct
             // cannot fully test this
             if (pixel_format == PixelFormat::RGBA8) {
-                for (size_t i = start_offset; i < load_end - addr; i += 4) {
-                    gl_buffer[i] = *(texture_src_data + i + 3);
-                    gl_buffer[i + 1] = *(texture_src_data + i + 2);
-                    gl_buffer[i + 2] = *(texture_src_data + i + 1);
-                    gl_buffer[i + 3] = *(texture_src_data + i);
+                for (std::size_t i = start_offset; i < load_end - addr; i += 4) {
+                    gl_buffer[i] = texture_src_data[i + 3];
+                    gl_buffer[i + 1] = texture_src_data[i + 2];
+                    gl_buffer[i + 2] = texture_src_data[i + 1];
+                    gl_buffer[i + 3] = texture_src_data[i];
                 }
             } else if (pixel_format == PixelFormat::RGB8) {
-                for (size_t i = start_offset; i < load_end - addr; i += 3) {
-                    gl_buffer[i] = *(texture_src_data + i + 2);
-                    gl_buffer[i + 1] = *(texture_src_data + i + 1);
-                    gl_buffer[i + 2] = *(texture_src_data + i);
+                for (std::size_t i = start_offset; i < load_end - addr; i += 3) {
+                    gl_buffer[i] = texture_src_data[i + 2];
+                    gl_buffer[i + 1] = texture_src_data[i + 1];
+                    gl_buffer[i + 2] = texture_src_data[i];
                 }
             }
         } else {
