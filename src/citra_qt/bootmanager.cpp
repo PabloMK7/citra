@@ -24,8 +24,6 @@ void EmuThread::run() {
 
     MicroProfileOnThreadCreate("EmuThread");
 
-    stop_run = false;
-
     // Holds whether the cpu was running during the last iteration,
     // so that the DebugModeLeft signal can be emitted before the
     // next execution step.
