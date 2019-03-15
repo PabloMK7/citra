@@ -1219,7 +1219,7 @@ void NWM_UDS::ConnectToNetworkDeprecated(Kernel::HLERequestContext& ctx) {
 
     std::vector<u8> passphrase = rp.PopStaticBuffer();
 
-    ConnectToNetwork(ctx, 0x11, network_info_buffer.data(), network_info_buffer.size(),
+    ConnectToNetwork(ctx, 0x09, network_info_buffer.data(), network_info_buffer.size(),
                      connection_type, std::move(passphrase));
 
     LOG_DEBUG(Service_NWM, "called");
