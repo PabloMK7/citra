@@ -221,9 +221,9 @@ int main(int argc, char** argv) {
     };
 
     while (optind < argc) {
-        char arg = getopt_long(argc, argv, "g:i:m:r:p:fhv", long_options, &option_index);
+        int arg = getopt_long(argc, argv, "g:i:m:r:p:fhv", long_options, &option_index);
         if (arg != -1) {
-            switch (arg) {
+            switch (static_cast<char>(arg)) {
             case 'g':
                 errno = 0;
                 gdb_port = strtoul(optarg, &endarg, 0);

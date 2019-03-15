@@ -170,9 +170,9 @@ int main(int argc, char** argv) {
     };
 
     while (optind < argc) {
-        char arg = getopt_long(argc, argv, "n:d:p:m:w:g:u:t:a:i:hv", long_options, &option_index);
+        int arg = getopt_long(argc, argv, "n:d:p:m:w:g:u:t:a:i:hv", long_options, &option_index);
         if (arg != -1) {
-            switch (arg) {
+            switch (static_cast<char>(arg)) {
             case 'n':
                 room_name.assign(optarg);
                 break;
