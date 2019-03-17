@@ -475,7 +475,7 @@ SDLState::SDLState() {
 
     initialized = true;
     if (start_thread) {
-        poll_thread = std::thread([&] {
+        poll_thread = std::thread([this] {
             using namespace std::chrono_literals;
             while (initialized) {
                 SDL_PumpEvents();
