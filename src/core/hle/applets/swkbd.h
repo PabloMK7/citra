@@ -161,7 +161,7 @@ struct SoftwareKeyboardConfig {
     u32_le text_offset; ///< Offset in the SharedMemory where the output text starts
     u16_le text_length; ///< Length in characters of the output text
 
-    s32_le callback_result;
+    enum_le<SoftwareKeyboardCallbackResult> callback_result;
     std::array<u16_le, MAX_CALLBACK_MSG_LEN + 1> callback_msg;
     bool skip_at_check;
     INSERT_PADDING_BYTES(0xAB);

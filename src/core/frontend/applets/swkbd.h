@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <atomic>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -82,13 +83,27 @@ enum class ValidationError {
 
 class SoftwareKeyboard {
 public:
-    virtual void Setup(const KeyboardConfig& config) {
-        this->config = KeyboardConfig(config);
+    /**
+     * Executes the software keyboard, configured with the given parameters.
+     */
+    virtual void Execute(const KeyboardConfig& config) {
+        this->config = config;
     }
 
-    const KeyboardData& ReceiveData() const {
-        return data;
-    }
+    /**
+     * Whether the result data is ready to be received.
+     */
+    bool DataReady();
+
+    /**
+     * Receives the current result data stored in the applet, and clears the ready state.
+     */
+    const KeyboardData& ReceiveData();
+
+    /**
+     * Shows an error text returned by the callback.
+     */
+    virtual void ShowError(const std::string& error) = 0;
 
     /**
      * Validates if the provided string breaks any of the filter rules. This is meant to be called
@@ -118,11 +133,14 @@ public:
 protected:
     KeyboardConfig config;
     KeyboardData data;
+
+    std::atomic_bool data_ready = false;
 };
 
 class DefaultKeyboard final : public SoftwareKeyboard {
 public:
-    void Setup(const KeyboardConfig& config) override;
+    void Execute(const KeyboardConfig& config) override;
+    void ShowError(const std::string& error) override;
 };
 
 } // namespace Frontend

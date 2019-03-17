@@ -21,38 +21,89 @@
 
 namespace HLE::Applets {
 
+/**
+ * Converts a UTF-16 text in a container to a UTF-8 std::string.
+ */
+template <typename T>
+inline std::string TextFromBuffer(const T& text) {
+    std::size_t text_size = text.size();
+    const auto text_end = std::find(text.begin(), text.end(), u'\0');
+    if (text_end != text.end())
+        text_size = std::distance(text.begin(), text_end);
+    std::u16string buffer(text_size, 0);
+    std::memcpy(buffer.data(), text.data(), text_size * sizeof(u16));
+    return Common::UTF16ToUTF8(buffer);
+}
+
 ResultCode SoftwareKeyboard::ReceiveParameter(Service::APT::MessageParameter const& parameter) {
-    if (parameter.signal != Service::APT::SignalType::Request) {
+    switch (parameter.signal) {
+    case Service::APT::SignalType::Request: {
+        // The LibAppJustStarted message contains a buffer with the size of the framebuffer shared
+        // memory.
+        // Create the SharedMemory that will hold the framebuffer data
+        Service::APT::CaptureBufferInfo capture_info;
+        ASSERT(sizeof(capture_info) == parameter.buffer.size());
+
+        memcpy(&capture_info, parameter.buffer.data(), sizeof(capture_info));
+
+        using Kernel::MemoryPermission;
+        // Create a SharedMemory that directly points to this heap block.
+        framebuffer_memory = Core::System::GetInstance().Kernel().CreateSharedMemoryForApplet(
+            0, capture_info.size, MemoryPermission::ReadWrite, MemoryPermission::ReadWrite,
+            "SoftwareKeyboard Memory");
+
+        // Send the response message with the newly created SharedMemory
+        Service::APT::MessageParameter result;
+        result.signal = Service::APT::SignalType::Response;
+        result.buffer.clear();
+        result.destination_id = Service::APT::AppletId::Application;
+        result.sender_id = id;
+        result.object = framebuffer_memory;
+
+        SendParameter(result);
+        return RESULT_SUCCESS;
+    }
+
+    case Service::APT::SignalType::Message: {
+        // Callback result
+        ASSERT_MSG(parameter.buffer.size() == sizeof(config),
+                   "The size of the parameter (SoftwareKeyboardConfig) is wrong");
+
+        memcpy(&config, parameter.buffer.data(), parameter.buffer.size());
+
+        switch (config.callback_result) {
+        case SoftwareKeyboardCallbackResult::OK:
+            // Finish execution
+            Finalize();
+            return RESULT_SUCCESS;
+
+        case SoftwareKeyboardCallbackResult::Close:
+            // Let the frontend display error and quit
+            frontend_applet->ShowError(TextFromBuffer(config.callback_msg));
+            config.return_code = SoftwareKeyboardResult::BannedInput;
+            config.text_offset = config.text_length = 0;
+            Finalize();
+            return RESULT_SUCCESS;
+
+        case SoftwareKeyboardCallbackResult::Continue:
+            // Let the frontend display error and get input again
+            // The input will be sent for validation again on next Update().
+            frontend_applet->ShowError(TextFromBuffer(config.callback_msg));
+            frontend_applet->Execute(ToFrontendConfig(config));
+            return RESULT_SUCCESS;
+
+        default:
+            UNREACHABLE();
+        }
+    }
+
+    default: {
         LOG_ERROR(Service_APT, "unsupported signal {}", static_cast<u32>(parameter.signal));
         UNIMPLEMENTED();
         // TODO(Subv): Find the right error code
         return ResultCode(-1);
     }
-
-    // The LibAppJustStarted message contains a buffer with the size of the framebuffer shared
-    // memory.
-    // Create the SharedMemory that will hold the framebuffer data
-    Service::APT::CaptureBufferInfo capture_info;
-    ASSERT(sizeof(capture_info) == parameter.buffer.size());
-
-    memcpy(&capture_info, parameter.buffer.data(), sizeof(capture_info));
-
-    using Kernel::MemoryPermission;
-    // Create a SharedMemory that directly points to this heap block.
-    framebuffer_memory = Core::System::GetInstance().Kernel().CreateSharedMemoryForApplet(
-        0, capture_info.size, MemoryPermission::ReadWrite, MemoryPermission::ReadWrite,
-        "SoftwareKeyboard Memory");
-
-    // Send the response message with the newly created SharedMemory
-    Service::APT::MessageParameter result;
-    result.signal = Service::APT::SignalType::Response;
-    result.buffer.clear();
-    result.destination_id = Service::APT::AppletId::Application;
-    result.sender_id = id;
-    result.object = framebuffer_memory;
-
-    SendParameter(result);
-    return RESULT_SUCCESS;
+    }
 }
 
 ResultCode SoftwareKeyboard::StartImpl(Service::APT::AppletStartupParameter const& parameter) {
@@ -71,16 +122,18 @@ ResultCode SoftwareKeyboard::StartImpl(Service::APT::AppletStartupParameter cons
     frontend_applet = Core::System::GetInstance().GetSoftwareKeyboard();
     ASSERT(frontend_applet);
 
-    KeyboardConfig frontend_config = ToFrontendConfig(config);
-    frontend_applet->Setup(frontend_config);
+    frontend_applet->Execute(ToFrontendConfig(config));
 
     is_running = true;
     return RESULT_SUCCESS;
 }
 
 void SoftwareKeyboard::Update() {
+    if (!frontend_applet->DataReady())
+        return;
+
     using namespace Frontend;
-    KeyboardData data(frontend_applet->ReceiveData());
+    const KeyboardData& data = frontend_applet->ReceiveData();
     std::u16string text = Common::UTF8ToUTF16(data.text);
     memcpy(text_memory->GetPointer(), text.c_str(), text.length() * sizeof(char16_t));
     switch (config.num_buttons_m1) {
@@ -114,9 +167,20 @@ void SoftwareKeyboard::Update() {
     config.text_length = static_cast<u16>(text.size());
     config.text_offset = 0;
 
-    // TODO(Subv): We're finalizing the applet immediately after it's started,
-    // but we should defer this call until after all the input has been collected.
-    Finalize();
+    if (config.filter_flags & HLE::Applets::SoftwareKeyboardFilter::Callback) {
+        // Send the message to invoke callback
+        Service::APT::MessageParameter message;
+        message.buffer.resize(sizeof(SoftwareKeyboardConfig));
+        std::memcpy(message.buffer.data(), &config, message.buffer.size());
+        message.signal = Service::APT::SignalType::Message;
+        message.destination_id = Service::APT::AppletId::Application;
+        message.sender_id = id;
+        SendParameter(message);
+    } else {
+        // TODO(Subv): We're finalizing the applet immediately after it's started,
+        // but we should defer this call until after all the input has been collected.
+        Finalize();
+    }
 }
 
 void SoftwareKeyboard::DrawScreenKeyboard() {
@@ -147,14 +211,7 @@ Frontend::KeyboardConfig SoftwareKeyboard::ToFrontendConfig(
     frontend_config.multiline_mode = config.multiline;
     frontend_config.max_text_length = config.max_text_length;
     frontend_config.max_digits = config.max_digits;
-
-    std::size_t text_size = config.hint_text.size();
-    const auto text_end = std::find(config.hint_text.begin(), config.hint_text.end(), u'\0');
-    if (text_end != config.hint_text.end())
-        text_size = std::distance(config.hint_text.begin(), text_end);
-    std::u16string buffer(text_size, 0);
-    std::memcpy(buffer.data(), config.hint_text.data(), text_size * sizeof(u16));
-    frontend_config.hint_text = Common::UTF16ToUTF8(buffer);
+    frontend_config.hint_text = TextFromBuffer(config.hint_text);
     frontend_config.has_custom_button_text =
         !std::all_of(config.button_text.begin(), config.button_text.end(),
                      [](std::array<u16, HLE::Applets::MAX_BUTTON_TEXT_LEN + 1> x) {
@@ -162,14 +219,7 @@ Frontend::KeyboardConfig SoftwareKeyboard::ToFrontendConfig(
                      });
     if (frontend_config.has_custom_button_text) {
         for (const auto& text : config.button_text) {
-            text_size = text.size();
-            const auto text_end = std::find(text.begin(), text.end(), u'\0');
-            if (text_end != text.end())
-                text_size = std::distance(text.begin(), text_end);
-
-            buffer.resize(text_size);
-            std::memcpy(buffer.data(), text.data(), text_size * sizeof(u16));
-            frontend_config.button_text.push_back(Common::UTF16ToUTF8(buffer));
+            frontend_config.button_text.push_back(TextFromBuffer(text));
         }
     }
     frontend_config.filters.prevent_digit =
