@@ -4,7 +4,6 @@
 
 #include <array>
 #include "core/frontend/mic.h"
-#include "core/hle/service/mic_u.h"
 
 namespace Frontend::Mic {
 

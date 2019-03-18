@@ -49,15 +49,11 @@ void CubebInput::StartSampling(const Frontend::Mic::Parameters& params) {
         LOG_ERROR(Audio,
                   "Application requested unsupported unsigned pcm format. Falling back to signed");
     }
-    if (params.sample_size != 16) {
-        LOG_ERROR(Audio,
-                  "Application requested unsupported 8 bit pcm format. Falling back to 16 bits");
-    }
+
+    impl->sample_size_in_bytes = params.sample_size / 8;
 
     parameters = params;
     is_sampling = true;
-
-    impl->sample_size_in_bytes = 2;
 
     cubeb_devid input_device = nullptr;
     cubeb_stream_params input_params;
@@ -76,12 +72,14 @@ void CubebInput::StartSampling(const Frontend::Mic::Parameters& params) {
                           nullptr, nullptr, latency_frames, Impl::DataCallback, Impl::StateCallback,
                           impl.get()) != CUBEB_OK) {
         LOG_CRITICAL(Audio, "Error creating cubeb input stream");
+        is_sampling = false;
+        return;
     }
 
-    cubeb_stream_start(impl->stream);
-    int ret = cubeb_stream_set_volume(impl->stream, 1.0);
-    if (ret == CUBEB_ERROR_NOT_SUPPORTED) {
-        LOG_WARNING(Audio, "Unabled to set volume for cubeb input");
+    if (cubeb_stream_start(impl->stream) != CUBEB_OK) {
+        LOG_CRITICAL(Audio, "Error starting cubeb input stream");
+        is_sampling = false;
+        return;
     }
 }
 
@@ -113,8 +111,18 @@ long CubebInput::Impl::DataCallback(cubeb_stream* stream, void* user_data, const
         return 0;
     }
 
-    const u8* data = reinterpret_cast<const u8*>(input_buffer);
-    std::vector<u8> samples{data, data + num_frames * impl->sample_size_in_bytes};
+    std::vector<u8> samples{};
+    samples.reserve(num_frames * impl->sample_size_in_bytes);
+    if (impl->sample_size_in_bytes == 1) {
+        // If the sample format is 8bit, then resample back to 8bit before passing back to core
+        const s16* data = reinterpret_cast<const s16*>(input_buffer);
+        std::transform(data, data + num_frames, std::back_inserter(samples),
+                       [](s16 sample) { return static_cast<u8>(static_cast<u16>(sample) >> 8); });
+    } else {
+        // Otherwise copy all of the samples to the buffer (which will be treated as s16 by core)
+        const u8* data = reinterpret_cast<const u8*>(input_buffer);
+        samples.insert(samples.begin(), data, data + num_frames * impl->sample_size_in_bytes);
+    }
     impl->sample_queue->Push(samples);
 
     // returning less than num_frames here signals cubeb to stop sampling

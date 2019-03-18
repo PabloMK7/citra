@@ -121,7 +121,7 @@ struct MIC_U::Impl {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(RESULT_SUCCESS);
 
-        LOG_TRACE(Service_MIC, "MapSharedMem called, size=0x{:X}", size);
+        LOG_TRACE(Service_MIC, "called, size=0x{:X}", size);
     }
 
     void UnmapSharedMem(Kernel::HLERequestContext& ctx) {
@@ -129,7 +129,7 @@ struct MIC_U::Impl {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         shared_memory = nullptr;
         rb.Push(RESULT_SUCCESS);
-        LOG_TRACE(Service_MIC, "UnmapSharedMem called");
+        LOG_TRACE(Service_MIC, "called");
     }
 
     void UpdateSharedMemBuffer(u64 userdata, s64 cycles_late) {
@@ -237,7 +237,7 @@ struct MIC_U::Impl {
 
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(RESULT_SUCCESS);
-        LOG_TRACE(Service_MIC, "SetGain gain={}", gain);
+        LOG_TRACE(Service_MIC, "gain={}", gain);
     }
 
     void GetGain(Kernel::HLERequestContext& ctx) {
@@ -247,7 +247,7 @@ struct MIC_U::Impl {
         rb.Push(RESULT_SUCCESS);
         u8 gain = mic->GetGain();
         rb.Push<u8>(gain);
-        LOG_TRACE(Service_MIC, "GetGain gain={}", gain);
+        LOG_TRACE(Service_MIC, "gain={}", gain);
     }
 
     void SetPower(Kernel::HLERequestContext& ctx) {
@@ -257,7 +257,7 @@ struct MIC_U::Impl {
 
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(RESULT_SUCCESS);
-        LOG_TRACE(Service_MIC, "SetPower mic_power={}", power);
+        LOG_TRACE(Service_MIC, "mic_power={}", power);
     }
 
     void GetPower(Kernel::HLERequestContext& ctx) {
