@@ -132,7 +132,7 @@ ValidationError SoftwareKeyboard::Finalize(const std::string& text, u8 button) {
     return ValidationError::None;
 }
 
-bool SoftwareKeyboard::DataReady() {
+bool SoftwareKeyboard::DataReady() const {
     return data_ready;
 }
 

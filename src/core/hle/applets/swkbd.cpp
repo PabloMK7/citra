@@ -26,12 +26,12 @@ namespace HLE::Applets {
  */
 template <typename T>
 inline std::string TextFromBuffer(const T& text) {
-    std::size_t text_size = text.size();
     const auto text_end = std::find(text.begin(), text.end(), u'\0');
-    if (text_end != text.end())
-        text_size = std::distance(text.begin(), text_end);
+    const std::size_t text_size = std::distance(text.begin(), text_end);
     std::u16string buffer(text_size, 0);
-    std::memcpy(buffer.data(), text.data(), text_size * sizeof(u16));
+    std::transform(text.begin(), text_end, buffer.begin(), [](u16_le character) {
+        return static_cast<char16_t>(static_cast<u16>(character));
+    });
     return Common::UTF16ToUTF8(buffer);
 }
 
@@ -44,7 +44,7 @@ ResultCode SoftwareKeyboard::ReceiveParameter(Service::APT::MessageParameter con
         Service::APT::CaptureBufferInfo capture_info;
         ASSERT(sizeof(capture_info) == parameter.buffer.size());
 
-        memcpy(&capture_info, parameter.buffer.data(), sizeof(capture_info));
+        std::memcpy(&capture_info, parameter.buffer.data(), sizeof(capture_info));
 
         using Kernel::MemoryPermission;
         // Create a SharedMemory that directly points to this heap block.
@@ -69,7 +69,7 @@ ResultCode SoftwareKeyboard::ReceiveParameter(Service::APT::MessageParameter con
         ASSERT_MSG(parameter.buffer.size() == sizeof(config),
                    "The size of the parameter (SoftwareKeyboardConfig) is wrong");
 
-        memcpy(&config, parameter.buffer.data(), parameter.buffer.size());
+        std::memcpy(&config, parameter.buffer.data(), parameter.buffer.size());
 
         switch (config.callback_result) {
         case SoftwareKeyboardCallbackResult::OK:
@@ -177,8 +177,6 @@ void SoftwareKeyboard::Update() {
         message.sender_id = id;
         SendParameter(message);
     } else {
-        // TODO(Subv): We're finalizing the applet immediately after it's started,
-        // but we should defer this call until after all the input has been collected.
         Finalize();
     }
 }

@@ -93,7 +93,7 @@ public:
     /**
      * Whether the result data is ready to be received.
      */
-    bool DataReady();
+    bool DataReady() const;
 
     /**
      * Receives the current result data stored in the applet, and clears the ready state.
