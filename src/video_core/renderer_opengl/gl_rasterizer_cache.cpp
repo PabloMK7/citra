@@ -175,6 +175,17 @@ static void MortonCopyTile(u32 stride, u8* tile_buffer, u8* gl_buffer) {
                 if (format == PixelFormat::D24S8) {
                     gl_ptr[0] = tile_ptr[3];
                     std::memcpy(gl_ptr + 1, tile_ptr, 3);
+                } else if (format == PixelFormat::RGBA8 && GLES) {
+                    // because GLES does not have ABGR format
+                    // so we will do byteswapping here
+                    gl_ptr[0] = tile_ptr[3];
+                    gl_ptr[1] = tile_ptr[2];
+                    gl_ptr[2] = tile_ptr[1];
+                    gl_ptr[3] = tile_ptr[0];
+                } else if (format == PixelFormat::RGB8 && GLES) {
+                    gl_ptr[0] = tile_ptr[2];
+                    gl_ptr[1] = tile_ptr[1];
+                    gl_ptr[2] = tile_ptr[0];
                 } else {
                     std::memcpy(gl_ptr, tile_ptr, bytes_per_pixel);
                 }
@@ -719,6 +730,8 @@ void RasterizerCacheOpenGL::CopySurface(const Surface& src_surface, const Surfac
 MICROPROFILE_DEFINE(OpenGL_SurfaceLoad, "OpenGL", "Surface Load", MP_RGB(128, 192, 64));
 void CachedSurface::LoadGLBuffer(PAddr load_start, PAddr load_end) {
     ASSERT(type != SurfaceType::Fill);
+    const bool need_swap =
+        GLES && (pixel_format == PixelFormat::RGBA8 || pixel_format == PixelFormat::RGB8);
 
     const u8* const texture_src_data = VideoCore::g_memory->GetPhysicalPointer(addr);
     if (texture_src_data == nullptr)
@@ -743,8 +756,27 @@ void CachedSurface::LoadGLBuffer(PAddr load_start, PAddr load_end) {
 
     if (!is_tiled) {
         ASSERT(type == SurfaceType::Color);
-        std::memcpy(&gl_buffer[start_offset], texture_src_data + start_offset,
-                    load_end - load_start);
+        if (need_swap) {
+            // TODO(liushuyu): check if the byteswap here is 100% correct
+            // cannot fully test this
+            if (pixel_format == PixelFormat::RGBA8) {
+                for (std::size_t i = start_offset; i < load_end - addr; i += 4) {
+                    gl_buffer[i] = texture_src_data[i + 3];
+                    gl_buffer[i + 1] = texture_src_data[i + 2];
+                    gl_buffer[i + 2] = texture_src_data[i + 1];
+                    gl_buffer[i + 3] = texture_src_data[i];
+                }
+            } else if (pixel_format == PixelFormat::RGB8) {
+                for (std::size_t i = start_offset; i < load_end - addr; i += 3) {
+                    gl_buffer[i] = texture_src_data[i + 2];
+                    gl_buffer[i + 1] = texture_src_data[i + 1];
+                    gl_buffer[i + 2] = texture_src_data[i];
+                }
+            }
+        } else {
+            std::memcpy(&gl_buffer[start_offset], texture_src_data + start_offset,
+                        load_end - load_start);
+        }
     } else {
         if (type == SurfaceType::Texture) {
             Pica::Texture::TextureInfo tex_info{};
