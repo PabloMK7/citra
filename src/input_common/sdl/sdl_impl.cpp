@@ -475,12 +475,11 @@ SDLState::SDLState() {
 
     initialized = true;
     if (start_thread) {
-        poll_thread = std::thread([&] {
+        poll_thread = std::thread([this] {
             using namespace std::chrono_literals;
-            SDL_Event event;
             while (initialized) {
                 SDL_PumpEvents();
-                std::this_thread::sleep_for(std::chrono::duration(10ms));
+                std::this_thread::sleep_for(10ms);
             }
         });
     }
