@@ -97,6 +97,8 @@ add_library(core STATIC
     frontend/framebuffer_layout.cpp
     frontend/framebuffer_layout.h
     frontend/input.h
+    frontend/mic.h
+    frontend/mic.cpp
     gdbstub/gdbstub.cpp
     gdbstub/gdbstub.h
     hle/applets/applet.cpp

@@ -9,6 +9,7 @@
 #include "core/hle/service/hid/hid.h"
 #include "core/hle/service/ir/ir_rst.h"
 #include "core/hle/service/ir/ir_user.h"
+#include "core/hle/service/mic_u.h"
 #include "core/settings.h"
 #include "video_core/renderer_base.h"
 #include "video_core/video_core.h"
@@ -56,6 +57,8 @@ void Apply() {
         if (cam) {
             cam->ReloadCameraDevices();
         }
+
+        Service::MIC::ReloadMic(system);
     }
 }
 
@@ -86,6 +89,8 @@ void LogSettings() {
     LogSetting("Audio_OutputEngine", Settings::values.sink_id);
     LogSetting("Audio_EnableAudioStretching", Settings::values.enable_audio_stretching);
     LogSetting("Audio_OutputDevice", Settings::values.audio_device_id);
+    LogSetting("Audio_InputDeviceType", static_cast<int>(Settings::values.mic_input_type));
+    LogSetting("Audio_InputDevice", Settings::values.mic_input_device);
     using namespace Service::CAM;
     LogSetting("Camera_OuterRightName", Settings::values.camera_name[OuterRightCamera]);
     LogSetting("Camera_OuterRightConfig", Settings::values.camera_config[OuterRightCamera]);

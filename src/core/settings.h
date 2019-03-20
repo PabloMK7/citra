@@ -26,6 +26,12 @@ enum class LayoutOption {
     SideScreen,
 };
 
+enum class MicInputType {
+    None,
+    Real,
+    Static,
+};
+
 namespace NativeButton {
 enum Values {
     A,
@@ -167,6 +173,8 @@ struct Values {
     bool enable_audio_stretching;
     std::string audio_device_id;
     float volume;
+    MicInputType mic_input_type;
+    std::string mic_input_device;
 
     // Camera
     std::array<std::string, Service::CAM::NumCameras> camera_name;

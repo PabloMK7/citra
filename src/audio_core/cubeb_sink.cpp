@@ -27,7 +27,7 @@ struct CubebSink::Impl {
 };
 
 CubebSink::CubebSink(std::string_view target_device_name) : impl(std::make_unique<Impl>()) {
-    if (cubeb_init(&impl->ctx, "Citra", nullptr) != CUBEB_OK) {
+    if (cubeb_init(&impl->ctx, "Citra Output", nullptr) != CUBEB_OK) {
         LOG_CRITICAL(Audio_Sink, "cubeb_init failed");
         return;
     }
@@ -179,7 +179,7 @@ std::vector<std::string> ListCubebSinkDevices() {
     } else {
         for (std::size_t i = 0; i < collection.count; i++) {
             const cubeb_device_info& device = collection.device[i];
-            if (device.friendly_name) {
+            if (device.state == CUBEB_DEVICE_STATE_ENABLED && device.friendly_name) {
                 device_list.emplace_back(device.friendly_name);
             }
         }

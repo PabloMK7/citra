@@ -166,6 +166,10 @@ void Config::ReadValues() {
         sdl2_config->GetBoolean("Audio", "enable_audio_stretching", true);
     Settings::values.audio_device_id = sdl2_config->GetString("Audio", "output_device", "auto");
     Settings::values.volume = sdl2_config->GetReal("Audio", "volume", 1);
+    Settings::values.mic_input_device =
+        sdl2_config->GetString("Audio", "mic_input_device", "Default");
+    Settings::values.mic_input_type =
+        static_cast<Settings::MicInputType>(sdl2_config->GetInteger("Audio", "mic_input_type", 0));
 
     // Data Storage
     Settings::values.use_virtual_sd =
