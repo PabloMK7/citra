@@ -111,13 +111,19 @@ long CubebInput::Impl::DataCallback(cubeb_stream* stream, void* user_data, const
         return 0;
     }
 
+    constexpr auto resample_s16_s8 = [](s16 sample) {
+        return static_cast<u8>(static_cast<u16>(sample) >> 8);
+    };
+
     std::vector<u8> samples{};
     samples.reserve(num_frames * impl->sample_size_in_bytes);
     if (impl->sample_size_in_bytes == 1) {
         // If the sample format is 8bit, then resample back to 8bit before passing back to core
-        const s16* data = reinterpret_cast<const s16*>(input_buffer);
-        std::transform(data, data + num_frames, std::back_inserter(samples),
-                       [](s16 sample) { return static_cast<u8>(static_cast<u16>(sample) >> 8); });
+        for (std::size_t i; i < num_frames; i++) {
+            s16 data;
+            std::memcpy(&data, static_cast<const u8*>(input_buffer) + i * 2, 2);
+            samples.push_back(resample_s16_s8(data));
+        }
     } else {
         // Otherwise copy all of the samples to the buffer (which will be treated as s16 by core)
         const u8* data = reinterpret_cast<const u8*>(input_buffer);
