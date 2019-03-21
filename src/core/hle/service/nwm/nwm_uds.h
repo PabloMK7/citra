@@ -321,6 +321,21 @@ private:
     void InitializeWithVersion(Kernel::HLERequestContext& ctx);
 
     /**
+     * NWM_UDS::InitializeDeprecated service function
+     *  Inputs:
+     *      1 : Shared memory size
+     *   2-11 : Input NodeInfo Structure
+     *     13 : Value 0
+     *     14 : Shared memory handle
+     *  Outputs:
+     *      0 : Return header
+     *      1 : Result of function, 0 on success, otherwise error code
+     *      2 : Value 0
+     *      3 : Output event handle
+     */
+    void InitializeDeprecated(Kernel::HLERequestContext& ctx);
+
+    /**
      * NWM_UDS::BeginHostingNetwork service function.
      * Creates a network and starts broadcasting its presence.
      *  Inputs:
@@ -332,6 +347,19 @@ private:
      *      1 : Result of function, 0 on success, otherwise error code
      */
     void BeginHostingNetwork(Kernel::HLERequestContext& ctx);
+
+    /**
+     * NWM_UDS::BeginHostingNetworkDeprecated service function.
+     * Creates a network and starts broadcasting its presence.
+     *  Inputs:
+     *      1 - 15 : the NetworkInfo structure, excluding application data
+     *      16 : passphrase size
+     *      18 : VAddr of the passphrase.
+     *  Outputs:
+     *      0 : Return header
+     *      1 : Result of function, 0 on success, otherwise error code
+     */
+    void BeginHostingNetworkDeprecated(Kernel::HLERequestContext& ctx);
 
     /**
      * NWM_UDS::ConnectToNetwork service function.
@@ -351,6 +379,22 @@ private:
     void ConnectToNetwork(Kernel::HLERequestContext& ctx);
 
     /**
+     * NWM_UDS::ConnectToNetwork Deprecatedservice function.
+     * This connects to the specified network
+     *  Inputs:
+     *      0 : Command header
+     *      1 - 15 : the NetworkInfo structure, excluding application data
+     *      16 : Connection type: 0x1 = Client, 0x2 = Spectator.
+     *      17 : Passphrase buffer size
+     *      18 : (PassphraseSize<<12) | 2
+     *      19 : Input passphrase buffer ptr
+     *  Outputs:
+     *      0 : Return header
+     *      1 : Result of function, 0 on success, otherwise error code
+     */
+    void ConnectToNetworkDeprecated(Kernel::HLERequestContext& ctx);
+
+    /**
      * NWM_UDS::DecryptBeaconData service function.
      * Decrypts the encrypted data tags contained in the 802.11 beacons.
      *  Inputs:
@@ -367,7 +411,21 @@ private:
      *      1 : Result of function, 0 on success, otherwise error code
      *      2, 3: output buffer return descriptor & ptr
      */
+    void DecryptBeaconData(Kernel::HLERequestContext& ctx, u16 command_id);
+
+    template <u16 command_id>
     void DecryptBeaconData(Kernel::HLERequestContext& ctx);
+
+    ResultVal<Kernel::SharedPtr<Kernel::Event>> Initialize(
+        u32 sharedmem_size, const NodeInfo& node, u16 version,
+        Kernel::SharedPtr<Kernel::SharedMemory> sharedmem);
+
+    ResultCode BeginHostingNetwork(const u8* network_info_buffer, std::size_t network_info_size,
+                                   std::vector<u8> passphrase);
+
+    void ConnectToNetwork(Kernel::HLERequestContext& ctx, u16 command_id,
+                          const u8* network_info_buffer, std::size_t network_info_size,
+                          u8 connection_type, std::vector<u8> passphrase);
 
     void BeaconBroadcastCallback(u64 userdata, s64 cycles_late);
 
