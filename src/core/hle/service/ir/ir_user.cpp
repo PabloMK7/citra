@@ -418,8 +418,8 @@ IR_USER::IR_USER(Core::System& system) : ServiceFramework("ir:USER", 1) {
     send_event = system.Kernel().CreateEvent(ResetType::OneShot, "IR:SendEvent");
     receive_event = system.Kernel().CreateEvent(ResetType::OneShot, "IR:ReceiveEvent");
 
-    extra_hid =
-        std::make_unique<ExtraHID>([this](const std::vector<u8>& data) { PutToReceive(data); });
+    extra_hid = std::make_unique<ExtraHID>(
+        [this](const std::vector<u8>& data) { PutToReceive(data); }, system.CoreTiming());
 }
 
 IR_USER::~IR_USER() {

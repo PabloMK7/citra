@@ -103,7 +103,7 @@ static u32 DecompressLZ11(const u8* in, u8* out) {
 
 bool Module::LoadSharedFont() {
     u8 font_region_code;
-    auto cfg = Service::CFG::GetModule(Core::System::GetInstance());
+    auto cfg = Service::CFG::GetModule(system);
     ASSERT_MSG(cfg, "CFG Module missing!");
     switch (cfg->GetRegionValue()) {
     case 4: // CHN

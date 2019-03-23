@@ -198,6 +198,8 @@ System::ResultStatus System::Init(EmuWindow& emu_window, u32 system_mode) {
         dsp_core = std::make_unique<AudioCore::DspHle>(*memory);
     }
 
+    memory->SetDSP(*dsp_core);
+
     dsp_core->SetSink(Settings::values.sink_id, Settings::values.audio_device_id);
     dsp_core->EnableStretching(Settings::values.enable_audio_stretching);
 

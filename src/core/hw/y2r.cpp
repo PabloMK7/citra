@@ -79,8 +79,9 @@ static void ConvertYUVToRGB(InputFormat input_format, const u8* input_Y, const u
 /// Simulates an incoming CDMA transfer. The N parameter is used to automatically convert 16-bit
 /// formats to 8-bit.
 template <std::size_t N>
-static void ReceiveData(u8* output, ConversionBuffer& buf, std::size_t amount_of_data) {
-    const u8* input = Core::System::GetInstance().Memory().GetPointer(buf.address);
+static void ReceiveData(Memory::MemorySystem& memory, u8* output, ConversionBuffer& buf,
+                        std::size_t amount_of_data) {
+    const u8* input = memory.GetPointer(buf.address);
 
     std::size_t output_unit = buf.transfer_unit / N;
     ASSERT(amount_of_data % output_unit == 0);
@@ -101,10 +102,10 @@ static void ReceiveData(u8* output, ConversionBuffer& buf, std::size_t amount_of
 
 /// Convert intermediate RGB32 format to the final output format while simulating an outgoing CDMA
 /// transfer.
-static void SendData(const u32* input, ConversionBuffer& buf, int amount_of_data,
-                     OutputFormat output_format, u8 alpha) {
+static void SendData(Memory::MemorySystem& memory, const u32* input, ConversionBuffer& buf,
+                     int amount_of_data, OutputFormat output_format, u8 alpha) {
 
-    u8* output = Core::System::GetInstance().Memory().GetPointer(buf.address);
+    u8* output = memory.GetPointer(buf.address);
 
     while (amount_of_data > 0) {
         u8* unit_end = output + buf.transfer_unit;
@@ -259,7 +260,7 @@ static void WriteTileToOutput(u32* output, const ImageTile& tile, int height, in
  * Hardware behaves strangely (doesn't fire the completion interrupt, for example) in these cases,
  * so they are believed to be invalid configurations anyway.
  */
-void PerformConversion(ConversionConfiguration& cvt) {
+void PerformConversion(Memory::MemorySystem& memory, ConversionConfiguration& cvt) {
     ASSERT(cvt.input_line_width % 8 == 0);
     ASSERT(cvt.block_alignment != BlockAlignment::Block8x8 || cvt.input_lines % 8 == 0);
     // Tiles per row
@@ -296,29 +297,29 @@ void PerformConversion(ConversionConfiguration& cvt) {
 
         switch (cvt.input_format) {
         case InputFormat::YUV422_Indiv8:
-            ReceiveData<1>(input_Y, cvt.src_Y, row_data_size);
-            ReceiveData<1>(input_U, cvt.src_U, row_data_size / 2);
-            ReceiveData<1>(input_V, cvt.src_V, row_data_size / 2);
+            ReceiveData<1>(memory, input_Y, cvt.src_Y, row_data_size);
+            ReceiveData<1>(memory, input_U, cvt.src_U, row_data_size / 2);
+            ReceiveData<1>(memory, input_V, cvt.src_V, row_data_size / 2);
             break;
         case InputFormat::YUV420_Indiv8:
-            ReceiveData<1>(input_Y, cvt.src_Y, row_data_size);
-            ReceiveData<1>(input_U, cvt.src_U, row_data_size / 4);
-            ReceiveData<1>(input_V, cvt.src_V, row_data_size / 4);
+            ReceiveData<1>(memory, input_Y, cvt.src_Y, row_data_size);
+            ReceiveData<1>(memory, input_U, cvt.src_U, row_data_size / 4);
+            ReceiveData<1>(memory, input_V, cvt.src_V, row_data_size / 4);
             break;
         case InputFormat::YUV422_Indiv16:
-            ReceiveData<2>(input_Y, cvt.src_Y, row_data_size);
-            ReceiveData<2>(input_U, cvt.src_U, row_data_size / 2);
-            ReceiveData<2>(input_V, cvt.src_V, row_data_size / 2);
+            ReceiveData<2>(memory, input_Y, cvt.src_Y, row_data_size);
+            ReceiveData<2>(memory, input_U, cvt.src_U, row_data_size / 2);
+            ReceiveData<2>(memory, input_V, cvt.src_V, row_data_size / 2);
             break;
         case InputFormat::YUV420_Indiv16:
-            ReceiveData<2>(input_Y, cvt.src_Y, row_data_size);
-            ReceiveData<2>(input_U, cvt.src_U, row_data_size / 4);
-            ReceiveData<2>(input_V, cvt.src_V, row_data_size / 4);
+            ReceiveData<2>(memory, input_Y, cvt.src_Y, row_data_size);
+            ReceiveData<2>(memory, input_U, cvt.src_U, row_data_size / 4);
+            ReceiveData<2>(memory, input_V, cvt.src_V, row_data_size / 4);
             break;
         case InputFormat::YUYV422_Interleaved:
             input_U = nullptr;
             input_V = nullptr;
-            ReceiveData<1>(input_Y, cvt.src_YUYV, row_data_size * 2);
+            ReceiveData<1>(memory, input_Y, cvt.src_YUYV, row_data_size * 2);
             break;
         }
 
@@ -372,7 +373,7 @@ void PerformConversion(ConversionConfiguration& cvt) {
 
         // Note(yuriks): If additional optimization is required, output_format can be moved to a
         // template parameter, so that its dispatch can be moved to outside the inner loop.
-        SendData(reinterpret_cast<u32*>(data_buffer.get()), cvt.dst, (int)row_data_size,
+        SendData(memory, reinterpret_cast<u32*>(data_buffer.get()), cvt.dst, (int)row_data_size,
                  cvt.output_format, (u8)cvt.alpha);
     }
 }

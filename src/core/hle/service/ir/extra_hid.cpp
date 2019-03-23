@@ -64,7 +64,7 @@ enum class ResponseID : u8 {
     ReadCalibrationData = 0x11,
 };
 
-ExtraHID::ExtraHID(SendFunc send_func) : IRDevice(send_func) {
+ExtraHID::ExtraHID(SendFunc send_func, Core::Timing& timing) : IRDevice(send_func), timing(timing) {
     LoadInputDevices();
 
     // The data below was retrieved from a New 3DS
@@ -145,11 +145,11 @@ ExtraHID::ExtraHID(SendFunc send_func) : IRDevice(send_func) {
         0x65,
     }};
 
-    hid_polling_callback_id = Core::System::GetInstance().CoreTiming().RegisterEvent(
-        "ExtraHID::SendHIDStatus", [this](u64, s64 cycles_late) {
+    hid_polling_callback_id =
+        timing.RegisterEvent("ExtraHID::SendHIDStatus", [this](u64, s64 cycles_late) {
             SendHIDStatus();
-            Core::System::GetInstance().CoreTiming().ScheduleEvent(
-                msToCycles(hid_period) - cycles_late, hid_polling_callback_id);
+            this->timing.ScheduleEvent(msToCycles(hid_period) - cycles_late,
+                                       hid_polling_callback_id);
         });
 }
 
@@ -160,7 +160,7 @@ ExtraHID::~ExtraHID() {
 void ExtraHID::OnConnect() {}
 
 void ExtraHID::OnDisconnect() {
-    Core::System::GetInstance().CoreTiming().UnscheduleEvent(hid_polling_callback_id, 0);
+    timing.UnscheduleEvent(hid_polling_callback_id, 0);
 }
 
 void ExtraHID::HandleConfigureHIDPollingRequest(const std::vector<u8>& request) {
@@ -171,10 +171,9 @@ void ExtraHID::HandleConfigureHIDPollingRequest(const std::vector<u8>& request) 
     }
 
     // Change HID input polling interval
-    Core::System::GetInstance().CoreTiming().UnscheduleEvent(hid_polling_callback_id, 0);
+    timing.UnscheduleEvent(hid_polling_callback_id, 0);
     hid_period = request[1];
-    Core::System::GetInstance().CoreTiming().ScheduleEvent(msToCycles(hid_period),
-                                                           hid_polling_callback_id);
+    timing.ScheduleEvent(msToCycles(hid_period), hid_polling_callback_id);
 }
 
 void ExtraHID::HandleReadCalibrationDataRequest(const std::vector<u8>& request_buf) {

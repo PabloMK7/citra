@@ -394,7 +394,7 @@ void InstallInterfaces(Core::System& system) {
     auto& service_manager = system.ServiceManager();
     auto dsp = std::make_shared<DSP_DSP>(system);
     dsp->InstallAsService(service_manager);
-    Core::DSP().SetServiceToInterrupt(std::move(dsp));
+    system.DSP().SetServiceToInterrupt(std::move(dsp));
 }
 
 } // namespace Service::DSP

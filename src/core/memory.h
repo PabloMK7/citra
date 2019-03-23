@@ -18,6 +18,10 @@ namespace Kernel {
 class Process;
 }
 
+namespace AudioCore {
+class DspInterface;
+}
+
 namespace Memory {
 
 // Are defined in a system header
@@ -291,6 +295,8 @@ public:
 
     /// Unregisters page table for rasterizer cache marking
     void UnregisterPageTable(PageTable* page_table);
+
+    void SetDSP(AudioCore::DspInterface& dsp);
 
 private:
     template <typename T>
