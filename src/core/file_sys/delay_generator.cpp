@@ -19,4 +19,11 @@ u64 DefaultDelayGenerator::GetReadDelayNs(std::size_t length) {
     return IPCDelayNanoseconds;
 }
 
+u64 DefaultDelayGenerator::GetOpenDelayNs() {
+    // This is the delay measured for a romfs open.
+    // For now we will take that as a default
+    static constexpr u64 IPCDelayNanoseconds(9438006);
+    return IPCDelayNanoseconds;
+}
+
 } // namespace FileSys

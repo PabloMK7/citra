@@ -29,6 +29,14 @@ public:
         u64 IPCDelayNanoseconds = std::max<u64>(static_cast<u64>(length) * slope + offset, minimum);
         return IPCDelayNanoseconds;
     }
+
+    u64 GetOpenDelayNs() override {
+        // This is the delay measured on O3DS and O2DS with
+        // https://gist.github.com/FearlessTobi/c37e143c314789251f98f2c45cd706d2
+        // from the results the average of each length was taken.
+        static constexpr u64 IPCDelayNanoseconds(269082);
+        return IPCDelayNanoseconds;
+    }
 };
 
 ResultVal<std::unique_ptr<FileBackend>> SDMCArchive::OpenFile(const Path& path,
@@ -378,7 +386,8 @@ bool ArchiveFactory_SDMC::Initialize() {
 
 ResultVal<std::unique_ptr<ArchiveBackend>> ArchiveFactory_SDMC::Open(const Path& path,
                                                                      u64 program_id) {
-    auto archive = std::make_unique<SDMCArchive>(sdmc_directory);
+    std::unique_ptr<DelayGenerator> delay_generator = std::make_unique<SDMCDelayGenerator>();
+    auto archive = std::make_unique<SDMCArchive>(sdmc_directory, std::move(delay_generator));
     return MakeResult<std::unique_ptr<ArchiveBackend>>(std::move(archive));
 }
 

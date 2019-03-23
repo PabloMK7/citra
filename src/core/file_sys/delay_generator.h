@@ -13,6 +13,7 @@ class DelayGenerator {
 public:
     virtual ~DelayGenerator();
     virtual u64 GetReadDelayNs(std::size_t length) = 0;
+    virtual u64 GetOpenDelayNs() = 0;
 
     // TODO (B3N30): Add getter for all other file/directory io operations
 };
@@ -20,6 +21,7 @@ public:
 class DefaultDelayGenerator : public DelayGenerator {
 public:
     u64 GetReadDelayNs(std::size_t length) override;
+    u64 GetOpenDelayNs() override;
 };
 
 } // namespace FileSys

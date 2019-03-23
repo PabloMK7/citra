@@ -11,6 +11,7 @@
 #include "common/bit_field.h"
 #include "common/common_types.h"
 #include "common/swap.h"
+#include "core/file_sys/delay_generator.h"
 #include "core/hle/result.h"
 
 namespace FileSys {
@@ -153,6 +154,18 @@ public:
      * @return The number of free bytes in the archive
      */
     virtual u64 GetFreeBytes() const = 0;
+
+    u64 GetOpenDelayNs() {
+        if (delay_generator != nullptr) {
+            return delay_generator->GetOpenDelayNs();
+        }
+        LOG_ERROR(Service_FS, "Delay generator was not initalized. Using default");
+        delay_generator = std::make_unique<DefaultDelayGenerator>();
+        return delay_generator->GetOpenDelayNs();
+    }
+
+protected:
+    std::unique_ptr<DelayGenerator> delay_generator;
 };
 
 class ArchiveFactory : NonCopyable {

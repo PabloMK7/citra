@@ -25,6 +25,14 @@ public:
         u64 IPCDelayNanoseconds = std::max<u64>(static_cast<u64>(length) * slope + offset, minimum);
         return IPCDelayNanoseconds;
     }
+
+    u64 GetOpenDelayNs() override {
+        // This is the delay measured on O3DS and O2DS with
+        // https://gist.github.com/FearlessTobi/c37e143c314789251f98f2c45cd706d2
+        // from the results the average of each length was taken.
+        static constexpr u64 IPCDelayNanoseconds(269082);
+        return IPCDelayNanoseconds;
+    }
 };
 
 ResultVal<std::unique_ptr<FileBackend>> SaveDataArchive::OpenFile(const Path& path,
