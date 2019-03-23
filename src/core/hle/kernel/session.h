@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <memory>
 #include "core/hle/kernel/object.h"
 
 namespace Kernel {

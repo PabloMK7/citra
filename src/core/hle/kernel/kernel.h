@@ -11,7 +11,6 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include <boost/smart_ptr/intrusive_ptr.hpp>
 #include "common/common_types.h"
 #include "core/hle/kernel/memory.h"
 #include "core/hle/result.h"

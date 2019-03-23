@@ -4,8 +4,8 @@
 
 #pragma once
 
+#include <memory>
 #include <unordered_map>
-#include "core/hle/kernel/kernel.h"
 #include "core/hle/service/service.h"
 
 namespace Core {

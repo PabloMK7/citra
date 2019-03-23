@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <memory>
 #include "core/hle/kernel/process.h"
 #include "core/hle/service/fs/archive.h"
 #include "core/hle/service/service.h"

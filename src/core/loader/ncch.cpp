@@ -63,7 +63,6 @@ std::pair<std::optional<u32>, ResultStatus> AppLoader_NCCH::LoadKernelSystemMode
 
 ResultStatus AppLoader_NCCH::LoadExec(std::shared_ptr<Kernel::Process>& process) {
     using Kernel::CodeSet;
-    using std::shared_ptr;
 
     if (!is_loaded)
         return ResultStatus::ErrorNotLoaded;

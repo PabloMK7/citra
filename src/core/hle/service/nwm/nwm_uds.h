@@ -10,13 +10,13 @@
 #include <deque>
 #include <list>
 #include <map>
+#include <memory>
 #include <mutex>
 #include <unordered_map>
 #include <vector>
 #include <boost/optional.hpp>
 #include "common/common_types.h"
 #include "common/swap.h"
-#include "core/hle/kernel/kernel.h"
 #include "core/hle/service/service.h"
 #include "network/network.h"
 

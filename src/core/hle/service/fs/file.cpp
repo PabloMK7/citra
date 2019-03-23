@@ -196,7 +196,6 @@ void File::OpenLinkFile(Kernel::HLERequestContext& ctx) {
     LOG_WARNING(Service_FS, "(STUBBED) File command OpenLinkFile {}", GetName());
     using Kernel::ClientSession;
     using Kernel::ServerSession;
-    using std::shared_ptr;
     IPC::RequestParser rp(ctx, 0x080C, 0, 0);
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 2);
     auto sessions = system.Kernel().CreateSessionPair(GetName());
@@ -246,7 +245,6 @@ void File::OpenSubFile(Kernel::HLERequestContext& ctx) {
 
     using Kernel::ClientSession;
     using Kernel::ServerSession;
-    using std::shared_ptr;
     auto sessions = system.Kernel().CreateSessionPair(GetName());
     auto server = std::get<std::shared_ptr<ServerSession>>(sessions);
     ClientConnected(server);

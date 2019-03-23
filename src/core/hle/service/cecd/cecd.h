@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <memory>
 #include "common/bit_field.h"
 #include "common/common_funcs.h"
 #include "core/hle/kernel/event.h"

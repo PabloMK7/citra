@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <memory>
 #include "core/hle/kernel/event.h"
 #include "core/hle/service/service.h"
 

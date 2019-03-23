@@ -30,7 +30,6 @@
 
 using Kernel::ClientSession;
 using Kernel::ServerSession;
-using std::shared_ptr;
 
 namespace Service::FS {
 

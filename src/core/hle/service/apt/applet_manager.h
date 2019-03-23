@@ -5,6 +5,7 @@
 #pragma once
 
 #include <array>
+#include <memory>
 #include <optional>
 #include <vector>
 #include "core/hle/kernel/event.h"

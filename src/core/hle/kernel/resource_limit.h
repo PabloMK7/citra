@@ -5,6 +5,7 @@
 #pragma once
 
 #include <array>
+#include <memory>
 #include "common/common_types.h"
 #include "core/hle/kernel/object.h"
 

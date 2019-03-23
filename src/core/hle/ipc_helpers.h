@@ -5,13 +5,13 @@
 #pragma once
 
 #include <array>
+#include <memory>
 #include <tuple>
 #include <type_traits>
 #include <utility>
 #include <vector>
 #include "core/hle/ipc.h"
 #include "core/hle/kernel/hle_ipc.h"
-#include "core/hle/kernel/kernel.h"
 
 namespace IPC {
 

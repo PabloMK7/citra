@@ -6,7 +6,6 @@
 
 #include <array>
 #include <memory>
-#include "core/hle/kernel/kernel.h"
 #include "core/hle/service/service.h"
 
 namespace Core {

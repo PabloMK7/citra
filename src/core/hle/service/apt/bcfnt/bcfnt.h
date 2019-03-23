@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <memory>
 #include "common/swap.h"
 #include "core/hle/kernel/shared_memory.h"
 #include "core/hle/service/service.h"

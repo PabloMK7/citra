@@ -7,7 +7,6 @@
 #include <atomic>
 #include <memory>
 #include "common/common_types.h"
-#include "core/hle/kernel/kernel.h"
 #include "core/hle/service/service.h"
 
 namespace Core {

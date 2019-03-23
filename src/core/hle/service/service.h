@@ -7,6 +7,7 @@
 #include <array>
 #include <cstddef>
 #include <functional>
+#include <memory>
 #include <string>
 #include <boost/container/flat_map.hpp>
 #include "common/common_types.h"

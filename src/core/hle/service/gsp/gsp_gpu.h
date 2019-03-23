@@ -5,6 +5,7 @@
 #pragma once
 
 #include <cstddef>
+#include <memory>
 #include <string>
 #include "common/bit_field.h"
 #include "common/common_types.h"

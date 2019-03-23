@@ -92,7 +92,6 @@ static u32 TranslateAddr(u32 addr, const THREEloadinfo* loadinfo, u32* offsets) 
 }
 
 using Kernel::CodeSet;
-using std::shared_ptr;
 
 static THREEDSX_Error Load3DSXFile(FileUtil::IOFile& file, u32 base_addr,
                                    std::shared_ptr<CodeSet>* out_codeset) {

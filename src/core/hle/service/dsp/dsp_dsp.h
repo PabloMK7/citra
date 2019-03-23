@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <memory>
 #include "audio_core/dsp_interface.h"
 #include "core/hle/kernel/event.h"
 #include "core/hle/result.h"
