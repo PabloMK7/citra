@@ -6,7 +6,6 @@
 
 #include <array>
 #include <deque>
-#include <boost/range/algorithm_ext/erase.hpp>
 
 namespace Common {
 
@@ -95,8 +94,9 @@ struct ThreadQueueList {
     }
 
     void remove(Priority priority, const T& thread_id) {
-        Queue* cur = &queues[priority];
-        boost::remove_erase(cur->data, thread_id);
+        Queue* const cur = &queues[priority];
+        const auto iter = std::remove(cur->data.begin(), cur->data.end(), thread_id);
+        cur->data.erase(iter, cur->data.end());
     }
 
     void rotate(Priority priority) {
