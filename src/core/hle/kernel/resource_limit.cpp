@@ -12,14 +12,14 @@ namespace Kernel {
 ResourceLimit::ResourceLimit(KernelSystem& kernel) : Object(kernel) {}
 ResourceLimit::~ResourceLimit() {}
 
-SharedPtr<ResourceLimit> ResourceLimit::Create(KernelSystem& kernel, std::string name) {
-    SharedPtr<ResourceLimit> resource_limit(new ResourceLimit(kernel));
+std::shared_ptr<ResourceLimit> ResourceLimit::Create(KernelSystem& kernel, std::string name) {
+    auto resource_limit{std::make_shared<ResourceLimit>(kernel)};
 
     resource_limit->name = std::move(name);
     return resource_limit;
 }
 
-SharedPtr<ResourceLimit> ResourceLimitList::GetForCategory(ResourceLimitCategory category) {
+std::shared_ptr<ResourceLimit> ResourceLimitList::GetForCategory(ResourceLimitCategory category) {
     switch (category) {
     case ResourceLimitCategory::APPLICATION:
     case ResourceLimitCategory::SYS_APPLET:
@@ -91,7 +91,7 @@ u32 ResourceLimit::GetMaxResourceValue(u32 resource) const {
 ResourceLimitList::ResourceLimitList(KernelSystem& kernel) {
     // Create the four resource limits that the system uses
     // Create the APPLICATION resource limit
-    SharedPtr<ResourceLimit> resource_limit = ResourceLimit::Create(kernel, "Applications");
+    std::shared_ptr<ResourceLimit> resource_limit = ResourceLimit::Create(kernel, "Applications");
     resource_limit->max_priority = 0x18;
     resource_limit->max_commit = 0x4000000;
     resource_limit->max_threads = 0x20;

@@ -282,7 +282,7 @@ void Module::Interface::SendProperty(Kernel::HLERequestContext& ctx) {
 void Module::Interface::SendPropertyHandle(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x15, 1, 2);
     const u16 property_id = rp.Pop<u16>();
-    const Kernel::SharedPtr<Kernel::Object> object = rp.PopGenericObject();
+    const std::shared_ptr<Kernel::Object> object = rp.PopGenericObject();
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
     rb.Push(RESULT_SUCCESS);

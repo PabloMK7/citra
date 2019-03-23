@@ -296,7 +296,7 @@ private:
 
     Core::System& system;
 
-    Kernel::SharedPtr<Kernel::Event> completion_event;
+    std::shared_ptr<Kernel::Event> completion_event;
     ConversionConfiguration conversion{};
     DitheringWeightParams dithering_weight_params{};
     bool temporal_dithering_enabled = false;

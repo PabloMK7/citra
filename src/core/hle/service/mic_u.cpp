@@ -354,9 +354,9 @@ struct MIC_U::Impl {
     }
 
     std::atomic<bool> change_mic_impl_requested = false;
-    Kernel::SharedPtr<Kernel::Event> buffer_full_event;
+    std::shared_ptr<Kernel::Event> buffer_full_event;
     Core::TimingEventType* buffer_write_event = nullptr;
-    Kernel::SharedPtr<Kernel::SharedMemory> shared_memory;
+    std::shared_ptr<Kernel::SharedMemory> shared_memory;
     u32 client_version = 0;
     bool allow_shell_closed = false;
     bool clamp = false;

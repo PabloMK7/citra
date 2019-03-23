@@ -16,7 +16,7 @@ namespace Kernel {
 ClientPort::ClientPort(KernelSystem& kernel) : kernel(kernel), Object(kernel) {}
 ClientPort::~ClientPort() = default;
 
-ResultVal<SharedPtr<ClientSession>> ClientPort::Connect() {
+ResultVal<std::shared_ptr<ClientSession>> ClientPort::Connect() {
     // Note: Threads do not wait for the server endpoint to call
     // AcceptSession before returning from this call.
 
@@ -26,17 +26,18 @@ ResultVal<SharedPtr<ClientSession>> ClientPort::Connect() {
     active_sessions++;
 
     // Create a new session pair, let the created sessions inherit the parent port's HLE handler.
-    auto sessions = kernel.CreateSessionPair(server_port->GetName(), this);
+    auto sessions = kernel.CreateSessionPair(server_port->GetName(), SharedFrom(this));
 
     if (server_port->hle_handler)
-        server_port->hle_handler->ClientConnected(std::get<SharedPtr<ServerSession>>(sessions));
+        server_port->hle_handler->ClientConnected(
+            std::get<std::shared_ptr<ServerSession>>(sessions));
     else
-        server_port->pending_sessions.push_back(std::get<SharedPtr<ServerSession>>(sessions));
+        server_port->pending_sessions.push_back(std::get<std::shared_ptr<ServerSession>>(sessions));
 
     // Wake the threads waiting on the ServerPort
     server_port->WakeupAllWaitingThreads();
 
-    return MakeResult(std::get<SharedPtr<ClientSession>>(sessions));
+    return MakeResult(std::get<std::shared_ptr<ClientSession>>(sessions));
 }
 
 void ClientPort::ConnectionClosed() {

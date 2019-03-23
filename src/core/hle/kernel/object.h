@@ -5,6 +5,7 @@
 #pragma once
 
 #include <atomic>
+#include <memory>
 #include <string>
 #include "common/common_types.h"
 #include "core/hle/kernel/kernel.h"
@@ -37,7 +38,7 @@ enum {
     DEFAULT_STACK_SIZE = 0x4000,
 };
 
-class Object : NonCopyable {
+class Object : NonCopyable, public std::enable_shared_from_this<Object> {
 public:
     explicit Object(KernelSystem& kernel);
     virtual ~Object();
@@ -62,22 +63,15 @@ public:
     bool IsWaitable() const;
 
 private:
-    friend void intrusive_ptr_add_ref(Object*);
-    friend void intrusive_ptr_release(Object*);
-
-    std::atomic<u32> ref_count{0};
     std::atomic<u32> object_id;
 };
 
-// Special functions used by boost::instrusive_ptr to do automatic ref-counting
-inline void intrusive_ptr_add_ref(Object* object) {
-    object->ref_count.fetch_add(1, std::memory_order_relaxed);
-}
+template <typename T>
+std::shared_ptr<T> SharedFrom(T* raw) {
+    if (raw == nullptr)
+        return nullptr;
 
-inline void intrusive_ptr_release(Object* object) {
-    if (object->ref_count.fetch_sub(1, std::memory_order_acq_rel) == 1) {
-        delete object;
-    }
+    return std::static_pointer_cast<T>(raw->shared_from_this());
 }
 
 /**
@@ -85,9 +79,9 @@ inline void intrusive_ptr_release(Object* object) {
  * @return Derived pointer to the object, or `nullptr` if `object` isn't of type T.
  */
 template <typename T>
-inline SharedPtr<T> DynamicObjectCast(SharedPtr<Object> object) {
+inline std::shared_ptr<T> DynamicObjectCast(std::shared_ptr<Object> object) {
     if (object != nullptr && object->GetHandleType() == T::HANDLE_TYPE) {
-        return boost::static_pointer_cast<T>(object);
+        return std::static_pointer_cast<T>(object);
     }
     return nullptr;
 }

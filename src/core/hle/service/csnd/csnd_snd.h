@@ -176,8 +176,8 @@ private:
 
     Core::System& system;
 
-    Kernel::SharedPtr<Kernel::Mutex> mutex = nullptr;
-    Kernel::SharedPtr<Kernel::SharedMemory> shared_memory = nullptr;
+    std::shared_ptr<Kernel::Mutex> mutex = nullptr;
+    std::shared_ptr<Kernel::SharedMemory> shared_memory = nullptr;
 
     static constexpr u32 MaxCaptureUnits = 2;
     std::array<bool, MaxCaptureUnits> capture_units = {false, false};

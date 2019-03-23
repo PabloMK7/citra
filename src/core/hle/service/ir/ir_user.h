@@ -162,8 +162,8 @@ private:
 
     void PutToReceive(const std::vector<u8>& payload);
 
-    Kernel::SharedPtr<Kernel::Event> conn_status_event, send_event, receive_event;
-    Kernel::SharedPtr<Kernel::SharedMemory> shared_memory;
+    std::shared_ptr<Kernel::Event> conn_status_event, send_event, receive_event;
+    std::shared_ptr<Kernel::SharedMemory> shared_memory;
     IRDevice* connected_device{nullptr};
     std::unique_ptr<BufferManager> receive_buffer;
     std::unique_ptr<ExtraHID> extra_hid;

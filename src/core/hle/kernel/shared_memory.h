@@ -15,6 +15,9 @@ namespace Kernel {
 
 class SharedMemory final : public Object {
 public:
+    explicit SharedMemory(KernelSystem& kernel);
+    ~SharedMemory() override;
+
     std::string GetTypeName() const override {
         return "SharedMemory";
     }
@@ -79,9 +82,6 @@ public:
     const u8* GetPointer(u32 offset = 0) const;
 
 private:
-    explicit SharedMemory(KernelSystem& kernel);
-    ~SharedMemory() override;
-
     /// Offset in FCRAM of the shared memory block in the linear heap if no address was specified
     /// during creation.
     PAddr linear_heap_phys_offset = 0;

@@ -603,11 +603,11 @@ private:
     Core::System& system;
 
     /// Handle to shared memory region designated to for shared system font
-    Kernel::SharedPtr<Kernel::SharedMemory> shared_font_mem;
+    std::shared_ptr<Kernel::SharedMemory> shared_font_mem;
     bool shared_font_loaded = false;
     bool shared_font_relocated = false;
 
-    Kernel::SharedPtr<Kernel::Mutex> lock;
+    std::shared_ptr<Kernel::Mutex> lock;
 
     u32 cpu_percent = 0; ///< CPU time available to the running application
 

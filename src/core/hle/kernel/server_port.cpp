@@ -16,7 +16,7 @@ namespace Kernel {
 ServerPort::ServerPort(KernelSystem& kernel) : WaitObject(kernel) {}
 ServerPort::~ServerPort() {}
 
-ResultVal<SharedPtr<ServerSession>> ServerPort::Accept() {
+ResultVal<std::shared_ptr<ServerSession>> ServerPort::Accept() {
     if (pending_sessions.empty()) {
         return ERR_NO_PENDING_SESSIONS;
     }
@@ -35,11 +35,11 @@ void ServerPort::Acquire(Thread* thread) {
     ASSERT_MSG(!ShouldWait(thread), "object unavailable!");
 }
 
-std::tuple<SharedPtr<ServerPort>, SharedPtr<ClientPort>> KernelSystem::CreatePortPair(
+std::tuple<std::shared_ptr<ServerPort>, std::shared_ptr<ClientPort>> KernelSystem::CreatePortPair(
     u32 max_sessions, std::string name) {
 
-    SharedPtr<ServerPort> server_port(new ServerPort(*this));
-    SharedPtr<ClientPort> client_port(new ClientPort(*this));
+    auto server_port{std::make_shared<ServerPort>(*this)};
+    auto client_port{std::make_shared<ClientPort>(*this)};
 
     server_port->name = name + "_Server";
     client_port->name = name + "_Client";

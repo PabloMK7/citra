@@ -312,14 +312,14 @@ private:
     Core::System& system;
 
     // Handle to shared memory region designated to HID_User service
-    Kernel::SharedPtr<Kernel::SharedMemory> shared_mem;
+    std::shared_ptr<Kernel::SharedMemory> shared_mem;
 
     // Event handles
-    Kernel::SharedPtr<Kernel::Event> event_pad_or_touch_1;
-    Kernel::SharedPtr<Kernel::Event> event_pad_or_touch_2;
-    Kernel::SharedPtr<Kernel::Event> event_accelerometer;
-    Kernel::SharedPtr<Kernel::Event> event_gyroscope;
-    Kernel::SharedPtr<Kernel::Event> event_debug_pad;
+    std::shared_ptr<Kernel::Event> event_pad_or_touch_1;
+    std::shared_ptr<Kernel::Event> event_pad_or_touch_2;
+    std::shared_ptr<Kernel::Event> event_accelerometer;
+    std::shared_ptr<Kernel::Event> event_gyroscope;
+    std::shared_ptr<Kernel::Event> event_debug_pad;
 
     // The HID module of a 3DS does not store the PadState.
     // Storing this here was necessary for emulation specific tasks like cheats or scripting.

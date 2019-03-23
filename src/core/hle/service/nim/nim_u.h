@@ -39,7 +39,7 @@ private:
      */
     void CheckSysUpdateAvailable(Kernel::HLERequestContext& ctx);
 
-    Kernel::SharedPtr<Kernel::Event> nim_system_update_event;
+    std::shared_ptr<Kernel::Event> nim_system_update_event;
 };
 
 } // namespace Service::NIM

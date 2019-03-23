@@ -37,6 +37,9 @@ private:
 
 class Timer final : public WaitObject {
 public:
+    explicit Timer(KernelSystem& kernel);
+    ~Timer() override;
+
     std::string GetTypeName() const override {
         return "Timer";
     }
@@ -85,9 +88,6 @@ public:
     void Signal(s64 cycles_late);
 
 private:
-    explicit Timer(KernelSystem& kernel);
-    ~Timer() override;
-
     ResetType reset_type; ///< The ResetType of this timer
 
     u64 initial_delay;  ///< The delay until the timer fires for the first time

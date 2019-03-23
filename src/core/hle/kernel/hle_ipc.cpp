@@ -15,16 +15,16 @@
 
 namespace Kernel {
 
-SessionRequestHandler::SessionInfo::SessionInfo(SharedPtr<ServerSession> session,
+SessionRequestHandler::SessionInfo::SessionInfo(std::shared_ptr<ServerSession> session,
                                                 std::unique_ptr<SessionDataBase> data)
     : session(std::move(session)), data(std::move(data)) {}
 
-void SessionRequestHandler::ClientConnected(SharedPtr<ServerSession> server_session) {
+void SessionRequestHandler::ClientConnected(std::shared_ptr<ServerSession> server_session) {
     server_session->SetHleHandler(shared_from_this());
     connected_sessions.emplace_back(std::move(server_session), MakeSessionData());
 }
 
-void SessionRequestHandler::ClientDisconnected(SharedPtr<ServerSession> server_session) {
+void SessionRequestHandler::ClientDisconnected(std::shared_ptr<ServerSession> server_session) {
     server_session->SetHleHandler(nullptr);
     connected_sessions.erase(
         std::remove_if(connected_sessions.begin(), connected_sessions.end(),
@@ -32,14 +32,14 @@ void SessionRequestHandler::ClientDisconnected(SharedPtr<ServerSession> server_s
         connected_sessions.end());
 }
 
-SharedPtr<Event> HLERequestContext::SleepClientThread(SharedPtr<Thread> thread,
-                                                      const std::string& reason,
-                                                      std::chrono::nanoseconds timeout,
-                                                      WakeupCallback&& callback) {
+std::shared_ptr<Event> HLERequestContext::SleepClientThread(std::shared_ptr<Thread> thread,
+                                                            const std::string& reason,
+                                                            std::chrono::nanoseconds timeout,
+                                                            WakeupCallback&& callback) {
     // Put the client thread to sleep until the wait event is signaled or the timeout expires.
-    thread->wakeup_callback = [context = *this, callback](ThreadWakeupReason reason,
-                                                          SharedPtr<Thread> thread,
-                                                          SharedPtr<WaitObject> object) mutable {
+    thread->wakeup_callback = [context = *this,
+                               callback](ThreadWakeupReason reason, std::shared_ptr<Thread> thread,
+                                         std::shared_ptr<WaitObject> object) mutable {
         ASSERT(thread->status == ThreadStatus::WaitHleEvent);
         callback(thread, context, reason);
 
@@ -68,19 +68,19 @@ SharedPtr<Event> HLERequestContext::SleepClientThread(SharedPtr<Thread> thread,
     return event;
 }
 
-HLERequestContext::HLERequestContext(KernelSystem& kernel, SharedPtr<ServerSession> session)
+HLERequestContext::HLERequestContext(KernelSystem& kernel, std::shared_ptr<ServerSession> session)
     : kernel(kernel), session(std::move(session)) {
     cmd_buf[0] = 0;
 }
 
 HLERequestContext::~HLERequestContext() = default;
 
-SharedPtr<Object> HLERequestContext::GetIncomingHandle(u32 id_from_cmdbuf) const {
+std::shared_ptr<Object> HLERequestContext::GetIncomingHandle(u32 id_from_cmdbuf) const {
     ASSERT(id_from_cmdbuf < request_handles.size());
     return request_handles[id_from_cmdbuf];
 }
 
-u32 HLERequestContext::AddOutgoingHandle(SharedPtr<Object> object) {
+u32 HLERequestContext::AddOutgoingHandle(std::shared_ptr<Object> object) {
     request_handles.push_back(std::move(object));
     return static_cast<u32>(request_handles.size() - 1);
 }
@@ -119,7 +119,7 @@ ResultCode HLERequestContext::PopulateFromIncomingCommandBuffer(const u32_le* sr
             ASSERT(i + num_handles <= command_size); // TODO(yuriks): Return error
             for (u32 j = 0; j < num_handles; ++j) {
                 Handle handle = src_cmdbuf[i];
-                SharedPtr<Object> object = nullptr;
+                std::shared_ptr<Object> object = nullptr;
                 if (handle != 0) {
                     object = src_process.handle_table.GetGeneric(handle);
                     ASSERT(object != nullptr); // TODO(yuriks): Return error
@@ -185,7 +185,7 @@ ResultCode HLERequestContext::WriteToOutgoingCommandBuffer(u32_le* dst_cmdbuf,
             u32 num_handles = IPC::HandleNumberFromDesc(descriptor);
             ASSERT(i + num_handles <= command_size);
             for (u32 j = 0; j < num_handles; ++j) {
-                SharedPtr<Object> object = GetIncomingHandle(cmd_buf[i]);
+                std::shared_ptr<Object> object = GetIncomingHandle(cmd_buf[i]);
                 Handle handle = 0;
                 if (object != nullptr) {
                     // TODO(yuriks): Figure out the proper error handling for if this fails

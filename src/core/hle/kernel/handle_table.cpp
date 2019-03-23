@@ -28,7 +28,7 @@ HandleTable::HandleTable(KernelSystem& kernel) : kernel(kernel) {
 
 HandleTable::~HandleTable() = default;
 
-ResultVal<Handle> HandleTable::Create(SharedPtr<Object> obj) {
+ResultVal<Handle> HandleTable::Create(std::shared_ptr<Object> obj) {
     DEBUG_ASSERT(obj != nullptr);
 
     u16 slot = next_free_slot;
@@ -53,7 +53,7 @@ ResultVal<Handle> HandleTable::Create(SharedPtr<Object> obj) {
 }
 
 ResultVal<Handle> HandleTable::Duplicate(Handle handle) {
-    SharedPtr<Object> object = GetGeneric(handle);
+    std::shared_ptr<Object> object = GetGeneric(handle);
     if (object == nullptr) {
         LOG_ERROR(Kernel, "Tried to duplicate invalid handle: {:08X}", handle);
         return ERR_INVALID_HANDLE;
@@ -81,9 +81,9 @@ bool HandleTable::IsValid(Handle handle) const {
     return slot < MAX_COUNT && objects[slot] != nullptr && generations[slot] == generation;
 }
 
-SharedPtr<Object> HandleTable::GetGeneric(Handle handle) const {
+std::shared_ptr<Object> HandleTable::GetGeneric(Handle handle) const {
     if (handle == CurrentThread) {
-        return kernel.GetThreadManager().GetCurrentThread();
+        return SharedFrom(kernel.GetThreadManager().GetCurrentThread());
     } else if (handle == CurrentProcess) {
         return kernel.GetCurrentProcess();
     }

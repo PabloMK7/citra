@@ -16,6 +16,9 @@ class ClientSession;
 
 class ClientPort final : public Object {
 public:
+    explicit ClientPort(KernelSystem& kernel);
+    ~ClientPort() override;
+
     friend class ServerPort;
     std::string GetTypeName() const override {
         return "ClientPort";
@@ -29,7 +32,7 @@ public:
         return HANDLE_TYPE;
     }
 
-    SharedPtr<ServerPort> GetServerPort() const {
+    std::shared_ptr<ServerPort> GetServerPort() const {
         return server_port;
     }
 
@@ -39,7 +42,7 @@ public:
      * waiting on it to awake.
      * @returns ClientSession The client endpoint of the created Session pair, or error code.
      */
-    ResultVal<SharedPtr<ClientSession>> Connect();
+    ResultVal<std::shared_ptr<ClientSession>> Connect();
 
     /**
      * Signifies that a previously active connection has been closed,
@@ -48,11 +51,8 @@ public:
     void ConnectionClosed();
 
 private:
-    explicit ClientPort(KernelSystem& kernel);
-    ~ClientPort() override;
-
     KernelSystem& kernel;
-    SharedPtr<ServerPort> server_port; ///< ServerPort associated with this client port.
+    std::shared_ptr<ServerPort> server_port; ///< ServerPort associated with this client port.
     u32 max_sessions = 0;    ///< Maximum number of simultaneous sessions the port can have
     u32 active_sessions = 0; ///< Number of currently open sessions to this port
     std::string name;        ///< Name of client port (optional)

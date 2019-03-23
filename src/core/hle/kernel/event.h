@@ -12,6 +12,9 @@ namespace Kernel {
 
 class Event final : public WaitObject {
 public:
+    explicit Event(KernelSystem& kernel);
+    ~Event() override;
+
     std::string GetTypeName() const override {
         return "Event";
     }
@@ -40,9 +43,6 @@ public:
     void Clear();
 
 private:
-    explicit Event(KernelSystem& kernel);
-    ~Event() override;
-
     ResetType reset_type; ///< Current ResetType
 
     bool signaled;    ///< Whether the event has already been signaled

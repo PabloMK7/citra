@@ -16,14 +16,15 @@
 
 namespace Kernel {
 
-void WaitObject::AddWaitingThread(SharedPtr<Thread> thread) {
+void WaitObject::AddWaitingThread(std::shared_ptr<Thread> thread) {
     auto itr = std::find(waiting_threads.begin(), waiting_threads.end(), thread);
     if (itr == waiting_threads.end())
         waiting_threads.push_back(std::move(thread));
 }
 
 void WaitObject::RemoveWaitingThread(Thread* thread) {
-    auto itr = std::find(waiting_threads.begin(), waiting_threads.end(), thread);
+    auto itr = std::find_if(waiting_threads.begin(), waiting_threads.end(),
+                            [thread](const auto& p) { return p.get() == thread; });
     // If a thread passed multiple handles to the same object,
     // the kernel might attempt to remove the thread from the object's
     // waiting threads list multiple times.
@@ -31,7 +32,7 @@ void WaitObject::RemoveWaitingThread(Thread* thread) {
         waiting_threads.erase(itr);
 }
 
-SharedPtr<Thread> WaitObject::GetHighestPriorityReadyThread() {
+std::shared_ptr<Thread> WaitObject::GetHighestPriorityReadyThread() {
     Thread* candidate = nullptr;
     u32 candidate_priority = ThreadPrioLowest + 1;
 
@@ -53,7 +54,7 @@ SharedPtr<Thread> WaitObject::GetHighestPriorityReadyThread() {
         bool ready_to_run = true;
         if (thread->status == ThreadStatus::WaitSynchAll) {
             ready_to_run = std::none_of(thread->wait_objects.begin(), thread->wait_objects.end(),
-                                        [&thread](const SharedPtr<WaitObject>& object) {
+                                        [&thread](const std::shared_ptr<WaitObject>& object) {
                                             return object->ShouldWait(thread.get());
                                         });
         }
@@ -64,7 +65,7 @@ SharedPtr<Thread> WaitObject::GetHighestPriorityReadyThread() {
         }
     }
 
-    return candidate;
+    return SharedFrom(candidate);
 }
 
 void WaitObject::WakeupAllWaitingThreads() {
@@ -79,7 +80,7 @@ void WaitObject::WakeupAllWaitingThreads() {
 
         // Invoke the wakeup callback before clearing the wait objects
         if (thread->wakeup_callback)
-            thread->wakeup_callback(ThreadWakeupReason::Signal, thread, this);
+            thread->wakeup_callback(ThreadWakeupReason::Signal, thread, SharedFrom(this));
 
         for (auto& object : thread->wait_objects)
             object->RemoveWaitingThread(thread.get());
@@ -92,7 +93,7 @@ void WaitObject::WakeupAllWaitingThreads() {
         hle_notifier();
 }
 
-const std::vector<SharedPtr<Thread>>& WaitObject::GetWaitingThreads() const {
+const std::vector<std::shared_ptr<Thread>>& WaitObject::GetWaitingThreads() const {
     return waiting_threads;
 }
 

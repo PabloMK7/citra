@@ -187,7 +187,7 @@ struct SessionData : public Kernel::SessionRequestHandler::SessionDataBase {
     ~SessionData();
 
     /// Event triggered when GSP interrupt has been signalled
-    Kernel::SharedPtr<Kernel::Event> interrupt_event;
+    std::shared_ptr<Kernel::Event> interrupt_event;
     /// Thread index into interrupt relay queue
     u32 thread_id;
     /// Whether RegisterInterruptRelayQueue was called for this session
@@ -199,7 +199,7 @@ public:
     explicit GSP_GPU(Core::System& system);
     ~GSP_GPU() = default;
 
-    void ClientDisconnected(Kernel::SharedPtr<Kernel::ServerSession> server_session) override;
+    void ClientDisconnected(std::shared_ptr<Kernel::ServerSession> server_session) override;
 
     /**
      * Signals that the specified interrupt type has occurred to userland code
@@ -406,7 +406,7 @@ private:
     Core::System& system;
 
     /// GSP shared memory
-    Kernel::SharedPtr<Kernel::SharedMemory> shared_memory;
+    std::shared_ptr<Kernel::SharedMemory> shared_memory;
 
     /// Thread id that currently has GPU rights or -1 if none.
     int active_thread_id = -1;

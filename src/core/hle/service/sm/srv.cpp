@@ -100,7 +100,7 @@ void SRV::GetServiceHandle(Kernel::HLERequestContext& ctx) {
 
     // TODO(yuriks): Permission checks go here
 
-    auto get_handle = [name, this](Kernel::SharedPtr<Kernel::Thread> thread,
+    auto get_handle = [name, this](std::shared_ptr<Kernel::Thread> thread,
                                    Kernel::HLERequestContext& ctx,
                                    Kernel::ThreadWakeupReason reason) {
         LOG_ERROR(Service_SRV, "called service={} wakeup", name);
@@ -127,9 +127,9 @@ void SRV::GetServiceHandle(Kernel::HLERequestContext& ctx) {
     if (client_port.Failed()) {
         if (wait_until_available && client_port.Code() == ERR_SERVICE_NOT_REGISTERED) {
             LOG_INFO(Service_SRV, "called service={} delayed", name);
-            Kernel::SharedPtr<Kernel::Event> get_service_handle_event =
-                ctx.SleepClientThread(system.Kernel().GetThreadManager().GetCurrentThread(),
-                                      "GetServiceHandle", std::chrono::nanoseconds(-1), get_handle);
+            std::shared_ptr<Kernel::Event> get_service_handle_event = ctx.SleepClientThread(
+                Kernel::SharedFrom(system.Kernel().GetThreadManager().GetCurrentThread()),
+                "GetServiceHandle", std::chrono::nanoseconds(-1), get_handle);
             get_service_handle_delayed_map[name] = std::move(get_service_handle_event);
             return;
         } else {

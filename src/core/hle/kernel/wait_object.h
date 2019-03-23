@@ -33,7 +33,7 @@ public:
      * Add a thread to wait on this object
      * @param thread Pointer to thread to add
      */
-    virtual void AddWaitingThread(SharedPtr<Thread> thread);
+    virtual void AddWaitingThread(std::shared_ptr<Thread> thread);
 
     /**
      * Removes a thread from waiting on this object (e.g. if it was resumed already)
@@ -48,17 +48,17 @@ public:
     virtual void WakeupAllWaitingThreads();
 
     /// Obtains the highest priority thread that is ready to run from this object's waiting list.
-    SharedPtr<Thread> GetHighestPriorityReadyThread();
+    std::shared_ptr<Thread> GetHighestPriorityReadyThread();
 
     /// Get a const reference to the waiting threads list for debug use
-    const std::vector<SharedPtr<Thread>>& GetWaitingThreads() const;
+    const std::vector<std::shared_ptr<Thread>>& GetWaitingThreads() const;
 
     /// Sets a callback which is called when the object becomes available
     void SetHLENotifier(std::function<void()> callback);
 
 private:
     /// Threads waiting for this object to become available
-    std::vector<SharedPtr<Thread>> waiting_threads;
+    std::vector<std::shared_ptr<Thread>> waiting_threads;
 
     /// Function to call when this object becomes available
     std::function<void()> hle_notifier;
@@ -66,9 +66,9 @@ private:
 
 // Specialization of DynamicObjectCast for WaitObjects
 template <>
-inline SharedPtr<WaitObject> DynamicObjectCast<WaitObject>(SharedPtr<Object> object) {
+inline std::shared_ptr<WaitObject> DynamicObjectCast<WaitObject>(std::shared_ptr<Object> object) {
     if (object != nullptr && object->IsWaitable()) {
-        return boost::static_pointer_cast<WaitObject>(object);
+        return std::static_pointer_cast<WaitObject>(object);
     }
     return nullptr;
 }

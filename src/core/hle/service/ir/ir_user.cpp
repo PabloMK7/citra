@@ -66,7 +66,7 @@ static_assert(sizeof(SharedMemoryHeader) == 16, "SharedMemoryHeader has wrong si
  */
 class BufferManager {
 public:
-    BufferManager(Kernel::SharedPtr<Kernel::SharedMemory> shared_memory_, u32 info_offset_,
+    BufferManager(std::shared_ptr<Kernel::SharedMemory> shared_memory_, u32 info_offset_,
                   u32 buffer_offset_, u32 max_packet_count_, u32 buffer_size)
         : shared_memory(shared_memory_), info_offset(info_offset_), buffer_offset(buffer_offset_),
           max_packet_count(max_packet_count_),
@@ -174,7 +174,7 @@ private:
     }
 
     BufferInfo info{0, 0, 0, 0};
-    Kernel::SharedPtr<Kernel::SharedMemory> shared_memory;
+    std::shared_ptr<Kernel::SharedMemory> shared_memory;
     u32 info_offset;
     u32 buffer_offset;
     u32 max_packet_count;

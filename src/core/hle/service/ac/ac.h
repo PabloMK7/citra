@@ -151,9 +151,9 @@ protected:
 
     bool ac_connected = false;
 
-    Kernel::SharedPtr<Kernel::Event> close_event;
-    Kernel::SharedPtr<Kernel::Event> connect_event;
-    Kernel::SharedPtr<Kernel::Event> disconnect_event;
+    std::shared_ptr<Kernel::Event> close_event;
+    std::shared_ptr<Kernel::Event> connect_event;
+    std::shared_ptr<Kernel::Event> disconnect_event;
 };
 
 void InstallInterfaces(Core::System& system);

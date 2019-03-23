@@ -416,9 +416,9 @@ private:
     template <u16 command_id>
     void DecryptBeaconData(Kernel::HLERequestContext& ctx);
 
-    ResultVal<Kernel::SharedPtr<Kernel::Event>> Initialize(
+    ResultVal<std::shared_ptr<Kernel::Event>> Initialize(
         u32 sharedmem_size, const NodeInfo& node, u16 version,
-        Kernel::SharedPtr<Kernel::SharedMemory> sharedmem);
+        std::shared_ptr<Kernel::SharedMemory> sharedmem);
 
     ResultCode BeginHostingNetwork(const u8* network_info_buffer, std::size_t network_info_size,
                                    std::vector<u8> passphrase);
@@ -477,11 +477,11 @@ private:
     boost::optional<Network::MacAddress> GetNodeMacAddress(u16 dest_node_id, u8 flags);
 
     // Event that is signaled every time the connection status changes.
-    Kernel::SharedPtr<Kernel::Event> connection_status_event;
+    std::shared_ptr<Kernel::Event> connection_status_event;
 
     // Shared memory provided by the application to store the receive buffer.
     // This is not currently used.
-    Kernel::SharedPtr<Kernel::SharedMemory> recv_buffer_memory;
+    std::shared_ptr<Kernel::SharedMemory> recv_buffer_memory;
 
     // Connection status of this 3DS.
     ConnectionStatus connection_status{};
@@ -503,7 +503,7 @@ private:
         u8 channel;          ///< Channel that this bind node was bound to.
         u16 network_node_id; ///< Node id this bind node is associated with, only packets from this
                              /// network node will be received.
-        Kernel::SharedPtr<Kernel::Event> event;       ///< Receive event for this bind node.
+        std::shared_ptr<Kernel::Event> event;         ///< Receive event for this bind node.
         std::deque<std::vector<u8>> received_packets; ///< List of packets received on this channel.
     };
 
@@ -535,7 +535,7 @@ private:
     // network thread.
     std::mutex connection_status_mutex;
 
-    Kernel::SharedPtr<Kernel::Event> connection_event;
+    std::shared_ptr<Kernel::Event> connection_event;
 
     // Mutex to synchronize access to the list of received beacons between the emulation thread and
     // the network thread.

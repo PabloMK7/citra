@@ -1138,7 +1138,7 @@ private:
 };
 
 ResultVal<std::unique_ptr<AMFileWrapper>> GetFileFromSession(
-    Kernel::SharedPtr<Kernel::ClientSession> file_session) {
+    std::shared_ptr<Kernel::ClientSession> file_session) {
     // Step up the chain from ClientSession->ServerSession and then
     // cast to File. For AM on 3DS, invalid handles actually hang the system.
 
@@ -1147,7 +1147,8 @@ ResultVal<std::unique_ptr<AMFileWrapper>> GetFileFromSession(
         return Kernel::ERR_INVALID_HANDLE;
     }
 
-    Kernel::SharedPtr<Kernel::ServerSession> server = file_session->parent->server;
+    std::shared_ptr<Kernel::ServerSession> server =
+        Kernel::SharedFrom(file_session->parent->server);
     if (server == nullptr) {
         LOG_WARNING(Service_AM, "File handle ServerSession disconnected!");
         return Kernel::ERR_SESSION_CLOSED_BY_REMOTE;

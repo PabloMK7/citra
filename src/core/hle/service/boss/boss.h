@@ -961,7 +961,7 @@ public:
     };
 
 private:
-    Kernel::SharedPtr<Kernel::Event> task_finish_event;
+    std::shared_ptr<Kernel::Event> task_finish_event;
 };
 
 void InstallInterfaces(Core::System& system);

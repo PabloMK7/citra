@@ -82,13 +82,12 @@ protected:
 class WaitTreeObjectList : public WaitTreeExpandableItem {
     Q_OBJECT
 public:
-    WaitTreeObjectList(const std::vector<Kernel::SharedPtr<Kernel::WaitObject>>& list,
-                       bool wait_all);
+    WaitTreeObjectList(const std::vector<std::shared_ptr<Kernel::WaitObject>>& list, bool wait_all);
     QString GetText() const override;
     std::vector<std::unique_ptr<WaitTreeItem>> GetChildren() const override;
 
 private:
-    const std::vector<Kernel::SharedPtr<Kernel::WaitObject>>& object_list;
+    const std::vector<std::shared_ptr<Kernel::WaitObject>>& object_list;
     bool wait_all;
 };
 
@@ -133,24 +132,24 @@ class WaitTreeMutexList : public WaitTreeExpandableItem {
     Q_OBJECT
 public:
     explicit WaitTreeMutexList(
-        const boost::container::flat_set<Kernel::SharedPtr<Kernel::Mutex>>& list);
+        const boost::container::flat_set<std::shared_ptr<Kernel::Mutex>>& list);
 
     QString GetText() const override;
     std::vector<std::unique_ptr<WaitTreeItem>> GetChildren() const override;
 
 private:
-    const boost::container::flat_set<Kernel::SharedPtr<Kernel::Mutex>>& mutex_list;
+    const boost::container::flat_set<std::shared_ptr<Kernel::Mutex>>& mutex_list;
 };
 
 class WaitTreeThreadList : public WaitTreeExpandableItem {
     Q_OBJECT
 public:
-    explicit WaitTreeThreadList(const std::vector<Kernel::SharedPtr<Kernel::Thread>>& list);
+    explicit WaitTreeThreadList(const std::vector<std::shared_ptr<Kernel::Thread>>& list);
     QString GetText() const override;
     std::vector<std::unique_ptr<WaitTreeItem>> GetChildren() const override;
 
 private:
-    const std::vector<Kernel::SharedPtr<Kernel::Thread>>& thread_list;
+    const std::vector<std::shared_ptr<Kernel::Thread>>& thread_list;
 };
 
 class WaitTreeModel : public QAbstractItemModel {

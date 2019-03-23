@@ -20,6 +20,9 @@ class SessionRequestHandler;
 
 class ServerPort final : public WaitObject {
 public:
+    explicit ServerPort(KernelSystem& kernel);
+    ~ServerPort() override;
+
     std::string GetTypeName() const override {
         return "ServerPort";
     }
@@ -36,7 +39,7 @@ public:
      * Accepts a pending incoming connection on this port. If there are no pending sessions, will
      * return ERR_NO_PENDING_SESSIONS.
      */
-    ResultVal<SharedPtr<ServerSession>> Accept();
+    ResultVal<std::shared_ptr<ServerSession>> Accept();
 
     /**
      * Sets the HLE handler template for the port. ServerSessions crated by connecting to this port
@@ -49,7 +52,7 @@ public:
     std::string name; ///< Name of port (optional)
 
     /// ServerSessions waiting to be accepted by the port
-    std::vector<SharedPtr<ServerSession>> pending_sessions;
+    std::vector<std::shared_ptr<ServerSession>> pending_sessions;
 
     /// This session's HLE request handler template (optional)
     /// ServerSessions created from this port inherit a reference to this handler.
@@ -57,12 +60,6 @@ public:
 
     bool ShouldWait(Thread* thread) const override;
     void Acquire(Thread* thread) override;
-
-private:
-    explicit ServerPort(KernelSystem& kernel);
-    ~ServerPort() override;
-
-    friend class KernelSystem;
 };
 
 } // namespace Kernel

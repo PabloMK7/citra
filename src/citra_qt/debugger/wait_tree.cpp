@@ -123,8 +123,8 @@ QString WaitTreeWaitObject::GetResetTypeQString(Kernel::ResetType reset_type) {
     return {};
 }
 
-WaitTreeObjectList::WaitTreeObjectList(
-    const std::vector<Kernel::SharedPtr<Kernel::WaitObject>>& list, bool w_all)
+WaitTreeObjectList::WaitTreeObjectList(const std::vector<std::shared_ptr<Kernel::WaitObject>>& list,
+                                       bool w_all)
     : object_list(list), wait_all(w_all) {}
 
 QString WaitTreeObjectList::GetText() const {
@@ -311,7 +311,7 @@ std::vector<std::unique_ptr<WaitTreeItem>> WaitTreeTimer::GetChildren() const {
 }
 
 WaitTreeMutexList::WaitTreeMutexList(
-    const boost::container::flat_set<Kernel::SharedPtr<Kernel::Mutex>>& list)
+    const boost::container::flat_set<std::shared_ptr<Kernel::Mutex>>& list)
     : mutex_list(list) {}
 
 QString WaitTreeMutexList::GetText() const {
@@ -325,7 +325,7 @@ std::vector<std::unique_ptr<WaitTreeItem>> WaitTreeMutexList::GetChildren() cons
     return list;
 }
 
-WaitTreeThreadList::WaitTreeThreadList(const std::vector<Kernel::SharedPtr<Kernel::Thread>>& list)
+WaitTreeThreadList::WaitTreeThreadList(const std::vector<std::shared_ptr<Kernel::Thread>>& list)
     : thread_list(list) {}
 
 QString WaitTreeThreadList::GetText() const {

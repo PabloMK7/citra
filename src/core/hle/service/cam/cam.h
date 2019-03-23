@@ -765,9 +765,9 @@ private:
 
         u16 transfer_bytes;
 
-        Kernel::SharedPtr<Kernel::Event> completion_event;
-        Kernel::SharedPtr<Kernel::Event> buffer_error_interrupt_event;
-        Kernel::SharedPtr<Kernel::Event> vsync_interrupt_event;
+        std::shared_ptr<Kernel::Event> completion_event;
+        std::shared_ptr<Kernel::Event> buffer_error_interrupt_event;
+        std::shared_ptr<Kernel::Event> vsync_interrupt_event;
 
         std::future<std::vector<u16>> capture_result; // will hold the received frame.
         Kernel::Process* dest_process;

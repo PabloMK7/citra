@@ -17,8 +17,8 @@
 
 namespace Kernel {
 
-SharedPtr<CodeSet> KernelSystem::CreateCodeSet(std::string name, u64 program_id) {
-    SharedPtr<CodeSet> codeset(new CodeSet(*this));
+std::shared_ptr<CodeSet> KernelSystem::CreateCodeSet(std::string name, u64 program_id) {
+    auto codeset{std::make_shared<CodeSet>(*this)};
 
     codeset->name = std::move(name);
     codeset->program_id = program_id;
@@ -29,8 +29,8 @@ SharedPtr<CodeSet> KernelSystem::CreateCodeSet(std::string name, u64 program_id)
 CodeSet::CodeSet(KernelSystem& kernel) : Object(kernel) {}
 CodeSet::~CodeSet() {}
 
-SharedPtr<Process> KernelSystem::CreateProcess(SharedPtr<CodeSet> code_set) {
-    SharedPtr<Process> process(new Process(*this));
+std::shared_ptr<Process> KernelSystem::CreateProcess(std::shared_ptr<CodeSet> code_set) {
+    auto process{std::make_shared<Process>(*this)};
 
     process->codeset = std::move(code_set);
     process->flags.raw = 0;
@@ -142,7 +142,7 @@ void Process::Run(s32 main_thread_priority, u32 stack_size) {
     status = ProcessStatus::Running;
 
     vm_manager.LogLayout(Log::Level::Debug);
-    Kernel::SetupMainThread(kernel, codeset->entrypoint, main_thread_priority, this);
+    Kernel::SetupMainThread(kernel, codeset->entrypoint, main_thread_priority, SharedFrom(this));
 }
 
 VAddr Process::GetLinearHeapAreaAddress() const {
@@ -416,10 +416,10 @@ Kernel::Process::~Process() {
     kernel.memory.UnregisterPageTable(&vm_manager.page_table);
 }
 
-SharedPtr<Process> KernelSystem::GetProcessById(u32 process_id) const {
+std::shared_ptr<Process> KernelSystem::GetProcessById(u32 process_id) const {
     auto itr = std::find_if(
         process_list.begin(), process_list.end(),
-        [&](const SharedPtr<Process>& process) { return process->process_id == process_id; });
+        [&](const std::shared_ptr<Process>& process) { return process->process_id == process_id; });
 
     if (itr == process_list.end())
         return nullptr;

@@ -105,13 +105,13 @@ void ThreadManager::SwitchContext(Thread* new_thread) {
 
         auto previous_process = kernel.GetCurrentProcess();
 
-        current_thread = new_thread;
+        current_thread = SharedFrom(new_thread);
 
         ready_queue.remove(new_thread->current_priority, new_thread);
         new_thread->status = ThreadStatus::Running;
 
-        if (previous_process != current_thread->owner_process) {
-            kernel.SetCurrentProcess(current_thread->owner_process);
+        if (previous_process.get() != current_thread->owner_process) {
+            kernel.SetCurrentProcess(SharedFrom(current_thread->owner_process));
             kernel.memory.SetCurrentPageTable(
                 &current_thread->owner_process->vm_manager.page_table);
         }
@@ -152,12 +152,13 @@ void ThreadManager::WaitCurrentThread_Sleep() {
 void ThreadManager::ExitCurrentThread() {
     Thread* thread = GetCurrentThread();
     thread->Stop();
-    thread_list.erase(std::remove(thread_list.begin(), thread_list.end(), thread),
+    thread_list.erase(std::remove_if(thread_list.begin(), thread_list.end(),
+                                     [thread](const auto& p) { return p.get() == thread; }),
                       thread_list.end());
 }
 
 void ThreadManager::ThreadWakeupCallback(u64 thread_id, s64 cycles_late) {
-    SharedPtr<Thread> thread = wakeup_callback_table.at(thread_id);
+    std::shared_ptr<Thread> thread = SharedFrom(wakeup_callback_table.at(thread_id));
     if (thread == nullptr) {
         LOG_CRITICAL(Kernel, "Callback fired for invalid thread {:08X}", thread_id);
         return;
@@ -286,9 +287,10 @@ static void ResetThreadContext(const std::unique_ptr<ARM_Interface::ThreadContex
     context->SetCpsr(USER32MODE | ((entry_point & 1) << 5)); // Usermode and THUMB mode
 }
 
-ResultVal<SharedPtr<Thread>> KernelSystem::CreateThread(std::string name, VAddr entry_point,
-                                                        u32 priority, u32 arg, s32 processor_id,
-                                                        VAddr stack_top, Process& owner_process) {
+ResultVal<std::shared_ptr<Thread>> KernelSystem::CreateThread(std::string name, VAddr entry_point,
+                                                              u32 priority, u32 arg,
+                                                              s32 processor_id, VAddr stack_top,
+                                                              Process& owner_process) {
     // Check if priority is in ranged. Lowest priority -> highest priority id.
     if (priority > ThreadPrioLowest) {
         LOG_ERROR(Kernel_SVC, "Invalid thread priority: {}", priority);
@@ -309,7 +311,7 @@ ResultVal<SharedPtr<Thread>> KernelSystem::CreateThread(std::string name, VAddr 
                           ErrorSummary::InvalidArgument, ErrorLevel::Permanent);
     }
 
-    SharedPtr<Thread> thread(new Thread(*this));
+    auto thread{std::make_shared<Thread>(*this)};
 
     thread_manager->thread_list.push_back(thread);
     thread_manager->ready_queue.prepare(priority);
@@ -372,7 +374,7 @@ ResultVal<SharedPtr<Thread>> KernelSystem::CreateThread(std::string name, VAddr 
     thread_manager->ready_queue.push_back(thread->current_priority, thread.get());
     thread->status = ThreadStatus::Ready;
 
-    return MakeResult<SharedPtr<Thread>>(std::move(thread));
+    return MakeResult<std::shared_ptr<Thread>>(std::move(thread));
 }
 
 void Thread::SetPriority(u32 priority) {
@@ -405,14 +407,14 @@ void Thread::BoostPriority(u32 priority) {
     current_priority = priority;
 }
 
-SharedPtr<Thread> SetupMainThread(KernelSystem& kernel, u32 entry_point, u32 priority,
-                                  SharedPtr<Process> owner_process) {
+std::shared_ptr<Thread> SetupMainThread(KernelSystem& kernel, u32 entry_point, u32 priority,
+                                        std::shared_ptr<Process> owner_process) {
     // Initialize new "main" thread
     auto thread_res =
         kernel.CreateThread("main", entry_point, priority, 0, owner_process->ideal_processor,
                             Memory::HEAP_VADDR_END, *owner_process);
 
-    SharedPtr<Thread> thread = std::move(thread_res).Unwrap();
+    std::shared_ptr<Thread> thread = std::move(thread_res).Unwrap();
 
     thread->context->SetFpscr(FPSCR_DEFAULT_NAN | FPSCR_FLUSH_TO_ZERO | FPSCR_ROUND_TOZERO |
                               FPSCR_IXC); // 0x03C00010
@@ -450,7 +452,8 @@ void Thread::SetWaitSynchronizationOutput(s32 output) {
 
 s32 Thread::GetWaitObjectIndex(WaitObject* object) const {
     ASSERT_MSG(!wait_objects.empty(), "Thread is not waiting for anything");
-    auto match = std::find(wait_objects.rbegin(), wait_objects.rend(), object);
+    auto match = std::find_if(wait_objects.rbegin(), wait_objects.rend(),
+                              [object](const auto& p) { return p.get() == object; });
     return static_cast<s32>(std::distance(match, wait_objects.rend()) - 1);
 }
 
@@ -473,7 +476,7 @@ ThreadManager::~ThreadManager() {
     }
 }
 
-const std::vector<SharedPtr<Thread>>& ThreadManager::GetThreadList() {
+const std::vector<std::shared_ptr<Thread>>& ThreadManager::GetThreadList() {
     return thread_list;
 }
 

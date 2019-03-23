@@ -42,11 +42,11 @@ u32 KernelSystem::GenerateObjectID() {
     return next_object_id++;
 }
 
-SharedPtr<Process> KernelSystem::GetCurrentProcess() const {
+std::shared_ptr<Process> KernelSystem::GetCurrentProcess() const {
     return current_process;
 }
 
-void KernelSystem::SetCurrentProcess(SharedPtr<Process> process) {
+void KernelSystem::SetCurrentProcess(std::shared_ptr<Process> process) {
     current_process = std::move(process);
 }
 
@@ -74,7 +74,7 @@ const SharedPage::Handler& KernelSystem::GetSharedPageHandler() const {
     return *shared_page_handler;
 }
 
-void KernelSystem::AddNamedPort(std::string name, SharedPtr<ClientPort> port) {
+void KernelSystem::AddNamedPort(std::string name, std::shared_ptr<ClientPort> port) {
     named_ports.emplace(std::move(name), std::move(port));
 }
 

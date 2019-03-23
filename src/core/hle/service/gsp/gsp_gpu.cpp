@@ -88,7 +88,7 @@ static u32 GetUnusedThreadId() {
 }
 
 /// Gets a pointer to a thread command buffer in GSP shared memory
-static inline u8* GetCommandBuffer(Kernel::SharedPtr<Kernel::SharedMemory> shared_memory,
+static inline u8* GetCommandBuffer(std::shared_ptr<Kernel::SharedMemory> shared_memory,
                                    u32 thread_id) {
     return shared_memory->GetPointer(0x800 + (thread_id * sizeof(CommandBuffer)));
 }
@@ -104,12 +104,12 @@ FrameBufferUpdate* GSP_GPU::GetFrameBufferInfo(u32 thread_id, u32 screen_index) 
 
 /// Gets a pointer to the interrupt relay queue for a given thread index
 static inline InterruptRelayQueue* GetInterruptRelayQueue(
-    Kernel::SharedPtr<Kernel::SharedMemory> shared_memory, u32 thread_id) {
+    std::shared_ptr<Kernel::SharedMemory> shared_memory, u32 thread_id) {
     u8* ptr = shared_memory->GetPointer(sizeof(InterruptRelayQueue) * thread_id);
     return reinterpret_cast<InterruptRelayQueue*>(ptr);
 }
 
-void GSP_GPU::ClientDisconnected(Kernel::SharedPtr<Kernel::ServerSession> server_session) {
+void GSP_GPU::ClientDisconnected(std::shared_ptr<Kernel::ServerSession> server_session) {
     SessionData* session_data = GetSessionData(server_session);
     if (active_thread_id == session_data->thread_id)
         ReleaseRight(session_data);

@@ -78,9 +78,6 @@ enum class MemoryRegion : u16 {
     BASE = 3,
 };
 
-template <typename T>
-using SharedPtr = boost::intrusive_ptr<T>;
-
 class KernelSystem {
 public:
     explicit KernelSystem(Memory::MemorySystem& memory, Core::Timing& timing,
@@ -93,14 +90,14 @@ public:
      * @param name Optional name used for debugging.
      * @returns The created AddressArbiter.
      */
-    SharedPtr<AddressArbiter> CreateAddressArbiter(std::string name = "Unknown");
+    std::shared_ptr<AddressArbiter> CreateAddressArbiter(std::string name = "Unknown");
 
     /**
      * Creates an event
      * @param reset_type ResetType describing how to create event
      * @param name Optional name of event
      */
-    SharedPtr<Event> CreateEvent(ResetType reset_type, std::string name = "Unknown");
+    std::shared_ptr<Event> CreateEvent(ResetType reset_type, std::string name = "Unknown");
 
     /**
      * Creates a mutex.
@@ -108,11 +105,11 @@ public:
      * @param name Optional name of mutex
      * @return Pointer to new Mutex object
      */
-    SharedPtr<Mutex> CreateMutex(bool initial_locked, std::string name = "Unknown");
+    std::shared_ptr<Mutex> CreateMutex(bool initial_locked, std::string name = "Unknown");
 
-    SharedPtr<CodeSet> CreateCodeSet(std::string name, u64 program_id);
+    std::shared_ptr<CodeSet> CreateCodeSet(std::string name, u64 program_id);
 
-    SharedPtr<Process> CreateProcess(SharedPtr<CodeSet> code_set);
+    std::shared_ptr<Process> CreateProcess(std::shared_ptr<CodeSet> code_set);
 
     /**
      * Creates and returns a new thread. The new thread is immediately scheduled
@@ -125,9 +122,9 @@ public:
      * @param owner_process The parent process for the thread
      * @return A shared pointer to the newly created thread
      */
-    ResultVal<SharedPtr<Thread>> CreateThread(std::string name, VAddr entry_point, u32 priority,
-                                              u32 arg, s32 processor_id, VAddr stack_top,
-                                              Process& owner_process);
+    ResultVal<std::shared_ptr<Thread>> CreateThread(std::string name, VAddr entry_point,
+                                                    u32 priority, u32 arg, s32 processor_id,
+                                                    VAddr stack_top, Process& owner_process);
 
     /**
      * Creates a semaphore.
@@ -136,8 +133,8 @@ public:
      * @param name Optional name of semaphore
      * @return The created semaphore
      */
-    ResultVal<SharedPtr<Semaphore>> CreateSemaphore(s32 initial_count, s32 max_count,
-                                                    std::string name = "Unknown");
+    ResultVal<std::shared_ptr<Semaphore>> CreateSemaphore(s32 initial_count, s32 max_count,
+                                                          std::string name = "Unknown");
 
     /**
      * Creates a timer
@@ -145,7 +142,7 @@ public:
      * @param name Optional name of timer
      * @return The created Timer
      */
-    SharedPtr<Timer> CreateTimer(ResetType reset_type, std::string name = "Unknown");
+    std::shared_ptr<Timer> CreateTimer(ResetType reset_type, std::string name = "Unknown");
 
     /**
      * Creates a pair of ServerPort and an associated ClientPort.
@@ -154,7 +151,7 @@ public:
      * @param name Optional name of the ports
      * @return The created port tuple
      */
-    std::tuple<SharedPtr<ServerPort>, SharedPtr<ClientPort>> CreatePortPair(
+    std::tuple<std::shared_ptr<ServerPort>, std::shared_ptr<ClientPort>> CreatePortPair(
         u32 max_sessions, std::string name = "UnknownPort");
 
     /**
@@ -163,8 +160,8 @@ public:
      * @param client_port Optional The ClientPort that spawned this session.
      * @return The created session tuple
      */
-    std::tuple<SharedPtr<ServerSession>, SharedPtr<ClientSession>> CreateSessionPair(
-        const std::string& name = "Unknown", SharedPtr<ClientPort> client_port = nullptr);
+    std::tuple<std::shared_ptr<ServerSession>, std::shared_ptr<ClientSession>> CreateSessionPair(
+        const std::string& name = "Unknown", std::shared_ptr<ClientPort> client_port = nullptr);
 
     ResourceLimitList& ResourceLimit();
     const ResourceLimitList& ResourceLimit() const;
@@ -181,12 +178,10 @@ public:
      * linear heap.
      * @param name Optional object name, used for debugging purposes.
      */
-    ResultVal<SharedPtr<SharedMemory>> CreateSharedMemory(Process* owner_process, u32 size,
-                                                          MemoryPermission permissions,
-                                                          MemoryPermission other_permissions,
-                                                          VAddr address = 0,
-                                                          MemoryRegion region = MemoryRegion::BASE,
-                                                          std::string name = "Unknown");
+    ResultVal<std::shared_ptr<SharedMemory>> CreateSharedMemory(
+        Process* owner_process, u32 size, MemoryPermission permissions,
+        MemoryPermission other_permissions, VAddr address = 0,
+        MemoryRegion region = MemoryRegion::BASE, std::string name = "Unknown");
 
     /**
      * Creates a shared memory object from a block of memory managed by an HLE applet.
@@ -197,18 +192,18 @@ public:
      * block.
      * @param name Optional object name, used for debugging purposes.
      */
-    SharedPtr<SharedMemory> CreateSharedMemoryForApplet(u32 offset, u32 size,
-                                                        MemoryPermission permissions,
-                                                        MemoryPermission other_permissions,
-                                                        std::string name = "Unknown Applet");
+    std::shared_ptr<SharedMemory> CreateSharedMemoryForApplet(u32 offset, u32 size,
+                                                              MemoryPermission permissions,
+                                                              MemoryPermission other_permissions,
+                                                              std::string name = "Unknown Applet");
 
     u32 GenerateObjectID();
 
     /// Retrieves a process from the current list of processes.
-    SharedPtr<Process> GetProcessById(u32 process_id) const;
+    std::shared_ptr<Process> GetProcessById(u32 process_id) const;
 
-    SharedPtr<Process> GetCurrentProcess() const;
-    void SetCurrentProcess(SharedPtr<Process> process);
+    std::shared_ptr<Process> GetCurrentProcess() const;
+    void SetCurrentProcess(std::shared_ptr<Process> process);
 
     ThreadManager& GetThreadManager();
     const ThreadManager& GetThreadManager() const;
@@ -228,14 +223,14 @@ public:
     std::array<MemoryRegionInfo, 3> memory_regions;
 
     /// Adds a port to the named port table
-    void AddNamedPort(std::string name, SharedPtr<ClientPort> port);
+    void AddNamedPort(std::string name, std::shared_ptr<ClientPort> port);
 
     void PrepareReschedule() {
         prepare_reschedule_callback();
     }
 
     /// Map of named ports managed by the kernel, which can be retrieved using the ConnectToPort
-    std::unordered_map<std::string, SharedPtr<ClientPort>> named_ports;
+    std::unordered_map<std::string, std::shared_ptr<ClientPort>> named_ports;
 
     Memory::MemorySystem& memory;
 
@@ -263,9 +258,9 @@ private:
     u32 next_process_id = 10;
 
     // Lists all processes that exist in the current session.
-    std::vector<SharedPtr<Process>> process_list;
+    std::vector<std::shared_ptr<Process>> process_list;
 
-    SharedPtr<Process> current_process;
+    std::shared_ptr<Process> current_process;
 
     std::unique_ptr<ThreadManager> thread_manager;
 

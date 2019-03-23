@@ -308,7 +308,7 @@ void Module::Interface::SendParameter(Kernel::HLERequestContext& ctx) {
     AppletId dst_app_id = rp.PopEnum<AppletId>();
     SignalType signal_type = rp.PopEnum<SignalType>();
     u32 buffer_size = rp.Pop<u32>();
-    Kernel::SharedPtr<Kernel::Object> object = rp.PopGenericObject();
+    std::shared_ptr<Kernel::Object> object = rp.PopGenericObject();
     std::vector<u8> buffer = rp.PopStaticBuffer();
 
     LOG_DEBUG(Service_APT,
@@ -586,7 +586,7 @@ void Module::Interface::StartLibraryApplet(Kernel::HLERequestContext& ctx) {
     AppletId applet_id = rp.PopEnum<AppletId>();
 
     std::size_t buffer_size = rp.Pop<u32>();
-    Kernel::SharedPtr<Kernel::Object> object = rp.PopGenericObject();
+    std::shared_ptr<Kernel::Object> object = rp.PopGenericObject();
     std::vector<u8> buffer = rp.PopStaticBuffer();
 
     LOG_DEBUG(Service_APT, "called, applet_id={:08X}", static_cast<u32>(applet_id));
@@ -598,7 +598,7 @@ void Module::Interface::StartLibraryApplet(Kernel::HLERequestContext& ctx) {
 void Module::Interface::CloseApplication(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x27, 1, 4);
     u32 parameters_size = rp.Pop<u32>();
-    Kernel::SharedPtr<Kernel::Object> object = rp.PopGenericObject();
+    std::shared_ptr<Kernel::Object> object = rp.PopGenericObject();
     std::vector<u8> buffer = rp.PopStaticBuffer();
 
     LOG_DEBUG(Service_APT, "called");

@@ -83,6 +83,6 @@ struct CWDH {
  * @param shared_font SharedMemory object that contains the Shared Font
  * @param new_address New base for the offsets in the structure.
  */
-void RelocateSharedFont(Kernel::SharedPtr<Kernel::SharedMemory> shared_font, VAddr new_address);
+void RelocateSharedFont(std::shared_ptr<Kernel::SharedMemory> shared_font, VAddr new_address);
 
 } // namespace Service::APT::BCFNT

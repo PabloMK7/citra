@@ -15,6 +15,9 @@ namespace Kernel {
 
 class Semaphore final : public WaitObject {
 public:
+    explicit Semaphore(KernelSystem& kernel);
+    ~Semaphore() override;
+
     std::string GetTypeName() const override {
         return "Semaphore";
     }
@@ -40,12 +43,6 @@ public:
      * @return The number of free slots the semaphore had before this call
      */
     ResultVal<s32> Release(s32 release_count);
-
-private:
-    explicit Semaphore(KernelSystem& kernel);
-    ~Semaphore() override;
-
-    friend class KernelSystem;
 };
 
 } // namespace Kernel

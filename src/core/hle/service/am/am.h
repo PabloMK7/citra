@@ -576,7 +576,7 @@ private:
     Core::System& system;
     bool cia_installing = false;
     std::array<std::vector<u64_le>, 3> am_title_list;
-    Kernel::SharedPtr<Kernel::Mutex> system_updater_mutex;
+    std::shared_ptr<Kernel::Mutex> system_updater_mutex;
 };
 
 void InstallInterfaces(Core::System& system);

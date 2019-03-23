@@ -608,8 +608,8 @@ private:
 
     std::unique_ptr<FileSys::ArchiveBackend> cecd_system_save_data_archive;
 
-    Kernel::SharedPtr<Kernel::Event> cecinfo_event;
-    Kernel::SharedPtr<Kernel::Event> change_state_event;
+    std::shared_ptr<Kernel::Event> cecinfo_event;
+    std::shared_ptr<Kernel::Event> change_state_event;
 
     Core::System& system;
 };

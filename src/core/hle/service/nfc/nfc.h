@@ -232,8 +232,8 @@ public:
     };
 
 private:
-    Kernel::SharedPtr<Kernel::Event> tag_in_range_event;
-    Kernel::SharedPtr<Kernel::Event> tag_out_of_range_event;
+    std::shared_ptr<Kernel::Event> tag_in_range_event;
+    std::shared_ptr<Kernel::Event> tag_out_of_range_event;
     std::atomic<TagState> nfc_tag_state = TagState::NotInitialized;
     CommunicationStatus nfc_status = CommunicationStatus::NfcInitialized;
 
