@@ -92,12 +92,6 @@ private:
     /// Maximum number of concurrent sessions that this service can handle.
     u32 max_sessions;
 
-    /**
-     * Port where incoming connections will be received. Only created when InstallAsService() or
-     * InstallAsNamedPort() are called.
-     */
-    Kernel::SharedPtr<Kernel::ServerPort> port;
-
     /// Function used to safely up-cast pointers to the derived class before invoking a handler.
     InvokerFn* handler_invoker;
     boost::container::flat_map<u32, FunctionInfoBase> handlers;

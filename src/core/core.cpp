@@ -293,7 +293,6 @@ void System::Shutdown() {
     // Shutdown emulation session
     GDBStub::Shutdown();
     VideoCore::Shutdown();
-    kernel.reset();
     HW::Shutdown();
     telemetry_session.reset();
     rpc_server.reset();
@@ -301,6 +300,7 @@ void System::Shutdown() {
     service_manager.reset();
     dsp_core.reset();
     cpu_core.reset();
+    kernel.reset();
     timing.reset();
     app_loader.reset();
 
