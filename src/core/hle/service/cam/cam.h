@@ -734,45 +734,49 @@ private:
     ResultCode SetPackageParameter(const PackageParameterType& package);
 
     struct ContextConfig {
-        Flip flip;
-        Effect effect;
-        OutputFormat format;
-        Resolution resolution;
+        Flip flip{Flip::None};
+        Effect effect{Effect::None};
+        OutputFormat format{OutputFormat::YUV422};
+        Resolution resolution = {0, 0, 0, 0, 0, 0};
     };
 
     struct CameraConfig {
         std::unique_ptr<Camera::CameraInterface> impl;
         std::array<ContextConfig, 2> contexts;
-        int current_context;
-        FrameRate frame_rate;
+        int current_context{0};
+        FrameRate frame_rate{FrameRate::Rate_5};
     };
 
     struct PortConfig {
-        int camera_id;
+        int camera_id{0};
 
-        bool is_active;            // set when the port is activated by an Activate call.
-        bool is_pending_receiving; // set if SetReceiving is called when is_busy = false. When
-        // StartCapture is called then, this will trigger a receiving
-        // process and reset itself.
-        bool is_busy;      // set when StartCapture is called and reset when StopCapture is called.
-        bool is_receiving; // set when there is an ongoing receiving process.
+        bool is_active{false}; // set when the port is activated by an Activate call.
 
-        bool is_trimming;
-        u16 x0; // x-coordinate of starting position for trimming
-        u16 y0; // y-coordinate of starting position for trimming
-        u16 x1; // x-coordinate of ending position for trimming
-        u16 y1; // y-coordinate of ending position for trimming
+        // set if SetReceiving is called when is_busy = false. When StartCapture is called then,
+        // this will trigger a receiving process and reset itself.
+        bool is_pending_receiving{false};
 
-        u16 transfer_bytes;
+        // set when StartCapture is called and reset when StopCapture is called.
+        bool is_busy{false};
+
+        bool is_receiving{false}; // set when there is an ongoing receiving process.
+
+        bool is_trimming{false};
+        u16 x0{0}; // x-coordinate of starting position for trimming
+        u16 y0{0}; // y-coordinate of starting position for trimming
+        u16 x1{0}; // x-coordinate of ending position for trimming
+        u16 y1{0}; // y-coordinate of ending position for trimming
+
+        u16 transfer_bytes{256};
 
         Kernel::SharedPtr<Kernel::Event> completion_event;
         Kernel::SharedPtr<Kernel::Event> buffer_error_interrupt_event;
         Kernel::SharedPtr<Kernel::Event> vsync_interrupt_event;
 
         std::future<std::vector<u16>> capture_result; // will hold the received frame.
-        Kernel::Process* dest_process;
-        VAddr dest;    // the destination address of the receiving process
-        u32 dest_size; // the destination size of the receiving process
+        Kernel::Process* dest_process{nullptr};
+        VAddr dest{0};    // the destination address of the receiving process
+        u32 dest_size{0}; // the destination size of the receiving process
 
         void Clear();
     };
