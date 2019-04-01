@@ -18,13 +18,13 @@ using std::chrono::microseconds;
 namespace Core {
 
 void PerfStats::BeginSystemFrame() {
-    std::lock_guard<std::mutex> lock(object_mutex);
+    std::lock_guard lock{object_mutex};
 
     frame_begin = Clock::now();
 }
 
 void PerfStats::EndSystemFrame() {
-    std::lock_guard<std::mutex> lock(object_mutex);
+    std::lock_guard lock{object_mutex};
 
     auto frame_end = Clock::now();
     accumulated_frametime += frame_end - frame_begin;
@@ -35,13 +35,13 @@ void PerfStats::EndSystemFrame() {
 }
 
 void PerfStats::EndGameFrame() {
-    std::lock_guard<std::mutex> lock(object_mutex);
+    std::lock_guard lock{object_mutex};
 
     game_frames += 1;
 }
 
 PerfStats::Results PerfStats::GetAndResetStats(microseconds current_system_time_us) {
-    std::lock_guard<std::mutex> lock(object_mutex);
+    std::lock_guard lock(object_mutex);
 
     const auto now = Clock::now();
     // Walltime elapsed since stats were reset
@@ -67,7 +67,7 @@ PerfStats::Results PerfStats::GetAndResetStats(microseconds current_system_time_
 }
 
 double PerfStats::GetLastFrameTimeScale() {
-    std::lock_guard<std::mutex> lock(object_mutex);
+    std::lock_guard lock{object_mutex};
 
     constexpr double FRAME_LENGTH = 1.0 / GPU::SCREEN_REFRESH_RATE;
     return duration_cast<DoubleSecs>(previous_frame_length).count() / FRAME_LENGTH;

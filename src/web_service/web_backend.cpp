@@ -26,7 +26,7 @@ constexpr std::size_t TIMEOUT_SECONDS = 30;
 struct Client::Impl {
     Impl(std::string host, std::string username, std::string token)
         : host{std::move(host)}, username{std::move(username)}, token{std::move(token)} {
-        std::lock_guard<std::mutex> lock(jwt_cache.mutex);
+        std::lock_guard lock{jwt_cache.mutex};
         if (this->username == jwt_cache.username && this->token == jwt_cache.token) {
             jwt = jwt_cache.jwt;
         }
@@ -154,7 +154,7 @@ struct Client::Impl {
         if (result.result_code != Common::WebResult::Code::Success) {
             LOG_ERROR(WebService, "UpdateJWT failed");
         } else {
-            std::lock_guard<std::mutex> lock(jwt_cache.mutex);
+            std::lock_guard lock{jwt_cache.mutex};
             jwt_cache.username = username;
             jwt_cache.token = token;
             jwt_cache.jwt = jwt = result.returned_data;

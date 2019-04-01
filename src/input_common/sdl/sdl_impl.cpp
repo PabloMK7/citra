@@ -55,22 +55,22 @@ public:
         : guid{std::move(guid_)}, port{port_}, sdl_joystick{joystick, deleter} {}
 
     void SetButton(int button, bool value) {
-        std::lock_guard<std::mutex> lock(mutex);
+        std::lock_guard lock{mutex};
         state.buttons[button] = value;
     }
 
     bool GetButton(int button) const {
-        std::lock_guard<std::mutex> lock(mutex);
+        std::lock_guard lock{mutex};
         return state.buttons.at(button);
     }
 
     void SetAxis(int axis, Sint16 value) {
-        std::lock_guard<std::mutex> lock(mutex);
+        std::lock_guard lock{mutex};
         state.axes[axis] = value;
     }
 
     float GetAxis(int axis) const {
-        std::lock_guard<std::mutex> lock(mutex);
+        std::lock_guard lock{mutex};
         return state.axes.at(axis) / 32767.0f;
     }
 
@@ -92,12 +92,12 @@ public:
     }
 
     void SetHat(int hat, Uint8 direction) {
-        std::lock_guard<std::mutex> lock(mutex);
+        std::lock_guard lock{mutex};
         state.hats[hat] = direction;
     }
 
     bool GetHatDirection(int hat, Uint8 direction) const {
-        std::lock_guard<std::mutex> lock(mutex);
+        std::lock_guard lock{mutex};
         return (state.hats.at(hat) & direction) != 0;
     }
     /**
@@ -140,7 +140,7 @@ private:
  * Get the nth joystick with the corresponding GUID
  */
 std::shared_ptr<SDLJoystick> SDLState::GetSDLJoystickByGUID(const std::string& guid, int port) {
-    std::lock_guard<std::mutex> lock(joystick_map_mutex);
+    std::lock_guard lock{joystick_map_mutex};
     const auto it = joystick_map.find(guid);
     if (it != joystick_map.end()) {
         while (it->second.size() <= port) {
@@ -161,7 +161,8 @@ std::shared_ptr<SDLJoystick> SDLState::GetSDLJoystickByGUID(const std::string& g
 std::shared_ptr<SDLJoystick> SDLState::GetSDLJoystickBySDLID(SDL_JoystickID sdl_id) {
     auto sdl_joystick = SDL_JoystickFromInstanceID(sdl_id);
     const std::string guid = GetGUID(sdl_joystick);
-    std::lock_guard<std::mutex> lock(joystick_map_mutex);
+
+    std::lock_guard lock{joystick_map_mutex};
     auto map_it = joystick_map.find(guid);
     if (map_it != joystick_map.end()) {
         auto vec_it = std::find_if(map_it->second.begin(), map_it->second.end(),
@@ -198,8 +199,9 @@ void SDLState::InitJoystick(int joystick_index) {
         LOG_ERROR(Input, "failed to open joystick {}", joystick_index);
         return;
     }
-    std::string guid = GetGUID(sdl_joystick);
-    std::lock_guard<std::mutex> lock(joystick_map_mutex);
+    const std::string guid = GetGUID(sdl_joystick);
+
+    std::lock_guard lock{joystick_map_mutex};
     if (joystick_map.find(guid) == joystick_map.end()) {
         auto joystick = std::make_shared<SDLJoystick>(guid, 0, sdl_joystick);
         joystick_map[guid].emplace_back(std::move(joystick));
@@ -221,7 +223,7 @@ void SDLState::CloseJoystick(SDL_Joystick* sdl_joystick) {
     std::string guid = GetGUID(sdl_joystick);
     std::shared_ptr<SDLJoystick> joystick;
     {
-        std::lock_guard<std::mutex> lock(joystick_map_mutex);
+        std::lock_guard lock{joystick_map_mutex};
         // This call to guid is safe since the joystick is guaranteed to be in the map
         auto& joystick_guid_list = joystick_map[guid];
         const auto joystick_it =
@@ -274,7 +276,7 @@ void SDLState::HandleGameControllerEvent(const SDL_Event& event) {
 }
 
 void SDLState::CloseJoysticks() {
-    std::lock_guard<std::mutex> lock(joystick_map_mutex);
+    std::lock_guard lock{joystick_map_mutex};
     joystick_map.clear();
 }
 

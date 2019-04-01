@@ -36,18 +36,18 @@ struct KeyButtonPair {
 class KeyButtonList {
 public:
     void AddKeyButton(int key_code, KeyButton* key_button) {
-        std::lock_guard<std::mutex> guard(mutex);
+        std::lock_guard guard{mutex};
         list.push_back(KeyButtonPair{key_code, key_button});
     }
 
     void RemoveKeyButton(const KeyButton* key_button) {
-        std::lock_guard<std::mutex> guard(mutex);
+        std::lock_guard guard{mutex};
         list.remove_if(
             [key_button](const KeyButtonPair& pair) { return pair.key_button == key_button; });
     }
 
     void ChangeKeyStatus(int key_code, bool pressed) {
-        std::lock_guard<std::mutex> guard(mutex);
+        std::lock_guard guard{mutex};
         for (const KeyButtonPair& pair : list) {
             if (pair.key_code == key_code)
                 pair.key_button->status.store(pressed);
@@ -55,7 +55,7 @@ public:
     }
 
     void ChangeAllKeyStatus(bool pressed) {
-        std::lock_guard<std::mutex> guard(mutex);
+        std::lock_guard guard{mutex};
         for (const KeyButtonPair& pair : list) {
             pair.key_button->status.store(pressed);
         }

@@ -41,7 +41,7 @@ constexpr u16 BroadcastNetworkNodeId = 0xFFFF;
 constexpr u16 HostDestNodeId = 1;
 
 std::list<Network::WifiPacket> NWM_UDS::GetReceivedBeacons(const MacAddress& sender) {
-    std::lock_guard<std::mutex> lock(beacon_mutex);
+    std::lock_guard lock(beacon_mutex);
     if (sender != Network::BroadcastMac) {
         std::list<Network::WifiPacket> filtered_list;
         const auto beacon = std::find_if(received_beacons.begin(), received_beacons.end(),
@@ -107,7 +107,7 @@ void NWM_UDS::BroadcastNodeMap() {
 }
 
 void NWM_UDS::HandleNodeMapPacket(const Network::WifiPacket& packet) {
-    std::lock_guard<std::mutex> lock(connection_status_mutex);
+    std::lock_guard lock(connection_status_mutex);
     if (connection_status.status == static_cast<u32>(NetworkStatus::ConnectedAsHost)) {
         LOG_DEBUG(Service_NWM, "Ignored NodeMapPacket since connection_status is host");
         return;
@@ -129,7 +129,7 @@ void NWM_UDS::HandleNodeMapPacket(const Network::WifiPacket& packet) {
 }
 
 void NWM_UDS::HandleBeaconFrame(const Network::WifiPacket& packet) {
-    std::lock_guard<std::mutex> lock(beacon_mutex);
+    std::lock_guard lock(beacon_mutex);
     const auto unique_beacon =
         std::find_if(received_beacons.begin(), received_beacons.end(),
                      [&packet](const Network::WifiPacket& new_packet) {
@@ -153,7 +153,7 @@ void NWM_UDS::HandleAssociationResponseFrame(const Network::WifiPacket& packet) 
     ASSERT_MSG(std::get<AssocStatus>(assoc_result) == AssocStatus::Successful,
                "Could not join network");
     {
-        std::lock_guard<std::mutex> lock(connection_status_mutex);
+        std::lock_guard lock(connection_status_mutex);
         if (connection_status.status != static_cast<u32>(NetworkStatus::Connecting)) {
             LOG_DEBUG(Service_NWM,
                       "Ignored AssociationResponseFrame because connection status is {}",
@@ -175,8 +175,8 @@ void NWM_UDS::HandleAssociationResponseFrame(const Network::WifiPacket& packet) 
 }
 
 void NWM_UDS::HandleEAPoLPacket(const Network::WifiPacket& packet) {
-    std::unique_lock<std::recursive_mutex> hle_lock(HLE::g_hle_lock, std::defer_lock);
-    std::unique_lock<std::mutex> lock(connection_status_mutex, std::defer_lock);
+    std::unique_lock hle_lock(HLE::g_hle_lock, std::defer_lock);
+    std::unique_lock lock(connection_status_mutex, std::defer_lock);
     std::lock(hle_lock, lock);
 
     if (GetEAPoLFrameType(packet.data) == EAPoLStartMagic) {
@@ -295,8 +295,8 @@ void NWM_UDS::HandleEAPoLPacket(const Network::WifiPacket& packet) {
 
 void NWM_UDS::HandleSecureDataPacket(const Network::WifiPacket& packet) {
     auto secure_data = ParseSecureDataHeader(packet.data);
-    std::unique_lock<std::recursive_mutex> hle_lock(HLE::g_hle_lock, std::defer_lock);
-    std::unique_lock<std::mutex> lock(connection_status_mutex, std::defer_lock);
+    std::unique_lock hle_lock(HLE::g_hle_lock, std::defer_lock);
+    std::unique_lock lock(connection_status_mutex, std::defer_lock);
     std::lock(hle_lock, lock);
 
     if (connection_status.status != static_cast<u32>(NetworkStatus::ConnectedAsHost) &&
@@ -358,7 +358,7 @@ void NWM_UDS::StartConnectionSequence(const MacAddress& server) {
     using Network::WifiPacket;
     WifiPacket auth_request;
     {
-        std::lock_guard<std::mutex> lock(connection_status_mutex);
+        std::lock_guard lock(connection_status_mutex);
         connection_status.status = static_cast<u32>(NetworkStatus::Connecting);
 
         // TODO(Subv): Handle timeout.
@@ -378,7 +378,7 @@ void NWM_UDS::SendAssociationResponseFrame(const MacAddress& address) {
     WifiPacket assoc_response;
 
     {
-        std::lock_guard<std::mutex> lock(connection_status_mutex);
+        std::lock_guard lock(connection_status_mutex);
         if (connection_status.status != static_cast<u32>(NetworkStatus::ConnectedAsHost)) {
             LOG_ERROR(Service_NWM, "Connection sequence aborted, because connection status is {}",
                       connection_status.status);
@@ -404,7 +404,7 @@ void NWM_UDS::HandleAuthenticationFrame(const Network::WifiPacket& packet) {
         using Network::WifiPacket;
         WifiPacket auth_request;
         {
-            std::lock_guard<std::mutex> lock(connection_status_mutex);
+            std::lock_guard lock(connection_status_mutex);
             if (connection_status.status != static_cast<u32>(NetworkStatus::ConnectedAsHost)) {
                 LOG_ERROR(Service_NWM,
                           "Connection sequence aborted, because connection status is {}",
@@ -438,8 +438,8 @@ void NWM_UDS::HandleAuthenticationFrame(const Network::WifiPacket& packet) {
 
 void NWM_UDS::HandleDeauthenticationFrame(const Network::WifiPacket& packet) {
     LOG_DEBUG(Service_NWM, "called");
-    std::unique_lock<std::recursive_mutex> hle_lock(HLE::g_hle_lock, std::defer_lock);
-    std::unique_lock<std::mutex> lock(connection_status_mutex, std::defer_lock);
+    std::unique_lock hle_lock(HLE::g_hle_lock, std::defer_lock);
+    std::unique_lock lock(connection_status_mutex, std::defer_lock);
     std::lock(hle_lock, lock);
     if (connection_status.status != static_cast<u32>(NetworkStatus::ConnectedAsHost)) {
         LOG_ERROR(Service_NWM, "Got deauthentication frame but we are not the host");
@@ -633,7 +633,7 @@ ResultVal<std::shared_ptr<Kernel::Event>> NWM_UDS::Initialize(
     }
 
     {
-        std::lock_guard<std::mutex> lock(connection_status_mutex);
+        std::lock_guard lock(connection_status_mutex);
 
         // Reset the connection status, it contains all zeros after initialization,
         // except for the actual status value.
@@ -686,7 +686,7 @@ void NWM_UDS::GetConnectionStatus(Kernel::HLERequestContext& ctx) {
 
     rb.Push(RESULT_SUCCESS);
     {
-        std::lock_guard<std::mutex> lock(connection_status_mutex);
+        std::lock_guard lock(connection_status_mutex);
         rb.PushRaw(connection_status);
 
         // Reset the bitmask of changed nodes after each call to this
@@ -711,7 +711,7 @@ void NWM_UDS::GetNodeInformation(Kernel::HLERequestContext& ctx) {
     }
 
     {
-        std::lock_guard<std::mutex> lock(connection_status_mutex);
+        std::lock_guard lock(connection_status_mutex);
         auto itr = std::find_if(node_info.begin(), node_info.end(),
                                 [network_node_id](const NodeInfo& node) {
                                     return node.network_node_id == network_node_id;
@@ -770,7 +770,7 @@ void NWM_UDS::Bind(Kernel::HLERequestContext& ctx) {
     // Create a new event for this bind node.
     auto event = system.Kernel().CreateEvent(Kernel::ResetType::OneShot,
                                              "NWM::BindNodeEvent" + std::to_string(bind_node_id));
-    std::lock_guard<std::mutex> lock(connection_status_mutex);
+    std::lock_guard lock(connection_status_mutex);
 
     ASSERT(channel_data.find(data_channel) == channel_data.end());
     // TODO(B3N30): Support more than one bind node per channel.
@@ -792,7 +792,7 @@ void NWM_UDS::Unbind(Kernel::HLERequestContext& ctx) {
         return;
     }
 
-    std::lock_guard<std::mutex> lock(connection_status_mutex);
+    std::lock_guard lock(connection_status_mutex);
 
     auto itr =
         std::find_if(channel_data.begin(), channel_data.end(), [bind_node_id](const auto& data) {
@@ -819,7 +819,7 @@ ResultCode NWM_UDS::BeginHostingNetwork(const u8* network_info_buffer,
     // TODO(Subv): Store the passphrase and verify it when attempting a connection.
 
     {
-        std::lock_guard<std::mutex> lock(connection_status_mutex);
+        std::lock_guard lock(connection_status_mutex);
         network_info = {};
         std::memcpy(&network_info, network_info_buffer, network_info_size);
 
@@ -933,7 +933,7 @@ void NWM_UDS::DestroyNetwork(Kernel::HLERequestContext& ctx) {
     system.CoreTiming().UnscheduleEvent(beacon_broadcast_event, 0);
 
     // Only a host can destroy
-    std::lock_guard<std::mutex> lock(connection_status_mutex);
+    std::lock_guard lock(connection_status_mutex);
     if (connection_status.status != static_cast<u8>(NetworkStatus::ConnectedAsHost)) {
         IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
         rb.Push(ResultCode(ErrCodes::WrongStatus, ErrorModule::UDS, ErrorSummary::InvalidState,
@@ -970,7 +970,7 @@ void NWM_UDS::DisconnectNetwork(Kernel::HLERequestContext& ctx) {
     using Network::WifiPacket;
     WifiPacket deauth;
     {
-        std::lock_guard<std::mutex> lock(connection_status_mutex);
+        std::lock_guard lock(connection_status_mutex);
         if (connection_status.status == static_cast<u32>(NetworkStatus::ConnectedAsHost)) {
             // A real 3ds makes strange things here. We do the same
             u16_le tmp_node_id = connection_status.network_node_id;
@@ -1027,7 +1027,7 @@ void NWM_UDS::SendTo(Kernel::HLERequestContext& ctx) {
 
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
 
-    std::lock_guard<std::mutex> lock(connection_status_mutex);
+    std::lock_guard lock(connection_status_mutex);
     if (connection_status.status != static_cast<u32>(NetworkStatus::ConnectedAsClient) &&
         connection_status.status != static_cast<u32>(NetworkStatus::ConnectedAsHost)) {
         rb.Push(ResultCode(ErrorDescription::NotAuthorized, ErrorModule::UDS,
@@ -1091,7 +1091,7 @@ void NWM_UDS::PullPacket(Kernel::HLERequestContext& ctx) {
     // This size is hard coded into the uds module. We don't know the meaning yet.
     u32 buff_size = std::min<u32>(max_out_buff_size_aligned, 0x172) << 2;
 
-    std::lock_guard<std::mutex> lock(connection_status_mutex);
+    std::lock_guard lock(connection_status_mutex);
     if (connection_status.status != static_cast<u32>(NetworkStatus::ConnectedAsHost) &&
         connection_status.status != static_cast<u32>(NetworkStatus::ConnectedAsClient) &&
         connection_status.status != static_cast<u32>(NetworkStatus::ConnectedAsSpectator)) {
@@ -1154,7 +1154,7 @@ void NWM_UDS::GetChannel(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x1A, 0, 0);
     IPC::RequestBuilder rb = rp.MakeBuilder(2, 0);
 
-    std::lock_guard<std::mutex> lock(connection_status_mutex);
+    std::lock_guard lock(connection_status_mutex);
     bool is_connected = connection_status.status != static_cast<u32>(NetworkStatus::NotConnected);
 
     u8 channel = is_connected ? network_channel : 0;
