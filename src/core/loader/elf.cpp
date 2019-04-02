@@ -15,7 +15,6 @@
 #include "core/memory.h"
 
 using Kernel::CodeSet;
-using Kernel::SharedPtr;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // ELF Header Constants
@@ -209,7 +208,7 @@ public:
     u32 GetFlags() const {
         return (u32)(header->e_flags);
     }
-    SharedPtr<CodeSet> LoadInto(u32 vaddr);
+    std::shared_ptr<CodeSet> LoadInto(u32 vaddr);
 
     int GetNumSegments() const {
         return (int)(header->e_phnum);
@@ -272,7 +271,7 @@ const char* ElfReader::GetSectionName(int section) const {
     return nullptr;
 }
 
-SharedPtr<CodeSet> ElfReader::LoadInto(u32 vaddr) {
+std::shared_ptr<CodeSet> ElfReader::LoadInto(u32 vaddr) {
     LOG_DEBUG(Loader, "String section: {}", header->e_shstrndx);
 
     // Should we relocate?
@@ -300,7 +299,7 @@ SharedPtr<CodeSet> ElfReader::LoadInto(u32 vaddr) {
     std::vector<u8> program_image(total_image_size);
     std::size_t current_image_position = 0;
 
-    SharedPtr<CodeSet> codeset = Core::System::GetInstance().Kernel().CreateCodeSet("", 0);
+    std::shared_ptr<CodeSet> codeset = Core::System::GetInstance().Kernel().CreateCodeSet("", 0);
 
     for (unsigned int i = 0; i < header->e_phnum; ++i) {
         Elf32_Phdr* p = &segments[i];
@@ -377,7 +376,7 @@ FileType AppLoader_ELF::IdentifyType(FileUtil::IOFile& file) {
     return FileType::Error;
 }
 
-ResultStatus AppLoader_ELF::Load(Kernel::SharedPtr<Kernel::Process>& process) {
+ResultStatus AppLoader_ELF::Load(std::shared_ptr<Kernel::Process>& process) {
     if (is_loaded)
         return ResultStatus::ErrorAlreadyLoaded;
 
@@ -393,7 +392,7 @@ ResultStatus AppLoader_ELF::Load(Kernel::SharedPtr<Kernel::Process>& process) {
         return ResultStatus::Error;
 
     ElfReader elf_reader(&buffer[0]);
-    SharedPtr<CodeSet> codeset = elf_reader.LoadInto(Memory::PROCESS_IMAGE_VADDR);
+    std::shared_ptr<CodeSet> codeset = elf_reader.LoadInto(Memory::PROCESS_IMAGE_VADDR);
     codeset->name = filename;
 
     process = Core::System::GetInstance().Kernel().CreateProcess(std::move(codeset));

@@ -5,6 +5,7 @@
 #pragma once
 
 #include <array>
+#include <memory>
 #include "common/common_types.h"
 #include "core/hle/kernel/object.h"
 
@@ -32,10 +33,14 @@ enum ResourceTypes {
 
 class ResourceLimit final : public Object {
 public:
+    explicit ResourceLimit(KernelSystem& kernel);
+    ~ResourceLimit() override;
+
     /**
      * Creates a resource limit object.
      */
-    static SharedPtr<ResourceLimit> Create(KernelSystem& kernel, std::string name = "Unknown");
+    static std::shared_ptr<ResourceLimit> Create(KernelSystem& kernel,
+                                                 std::string name = "Unknown");
 
     std::string GetTypeName() const override {
         return "ResourceLimit";
@@ -105,10 +110,6 @@ public:
 
     /// Current CPU time that the processes in this category are utilizing
     s32 current_cpu_time = 0;
-
-private:
-    explicit ResourceLimit(KernelSystem& kernel);
-    ~ResourceLimit() override;
 };
 
 class ResourceLimitList {
@@ -121,10 +122,10 @@ public:
      * @param category The resource limit category
      * @returns The resource limit associated with the category
      */
-    SharedPtr<ResourceLimit> GetForCategory(ResourceLimitCategory category);
+    std::shared_ptr<ResourceLimit> GetForCategory(ResourceLimitCategory category);
 
 private:
-    std::array<SharedPtr<ResourceLimit>, 4> resource_limits;
+    std::array<std::shared_ptr<ResourceLimit>, 4> resource_limits;
 };
 
 } // namespace Kernel

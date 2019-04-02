@@ -308,7 +308,7 @@ void DSP_DSP::SignalInterrupt(InterruptType type, DspPipe pipe) {
         event->Signal();
 }
 
-Kernel::SharedPtr<Kernel::Event>& DSP_DSP::GetInterruptEvent(InterruptType type, DspPipe pipe) {
+std::shared_ptr<Kernel::Event>& DSP_DSP::GetInterruptEvent(InterruptType type, DspPipe pipe) {
     switch (type) {
     case InterruptType::Zero:
         return interrupt_zero;

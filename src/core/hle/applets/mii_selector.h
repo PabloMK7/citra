@@ -4,10 +4,10 @@
 
 #pragma once
 
+#include <memory>
 #include "common/common_funcs.h"
 #include "common/common_types.h"
 #include "core/hle/applets/applet.h"
-#include "core/hle/kernel/kernel.h"
 #include "core/hle/kernel/shared_memory.h"
 #include "core/hle/result.h"
 #include "core/hle/service/apt/apt.h"
@@ -121,7 +121,7 @@ private:
     /// This SharedMemory will be created when we receive the LibAppJustStarted message.
     /// It holds the framebuffer info retrieved by the application with
     /// GSPGPU::ImportDisplayCaptureInfo
-    Kernel::SharedPtr<Kernel::SharedMemory> framebuffer_memory;
+    std::shared_ptr<Kernel::SharedMemory> framebuffer_memory;
 
     MiiConfig config;
 };

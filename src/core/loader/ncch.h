@@ -33,7 +33,7 @@ public:
         return IdentifyType(file);
     }
 
-    ResultStatus Load(Kernel::SharedPtr<Kernel::Process>& process) override;
+    ResultStatus Load(std::shared_ptr<Kernel::Process>& process) override;
 
     /**
      * Loads the Exheader and returns the system mode for this application.
@@ -65,7 +65,7 @@ private:
      * @param process The newly created process
      * @return ResultStatus result of function
      */
-    ResultStatus LoadExec(Kernel::SharedPtr<Kernel::Process>& process);
+    ResultStatus LoadExec(std::shared_ptr<Kernel::Process>& process);
 
     /// Reads the region lockout info in the SMDH and send it to CFG service
     void ParseRegionLockoutInfo();

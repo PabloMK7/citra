@@ -4,8 +4,8 @@
 
 #pragma once
 
+#include <memory>
 #include <unordered_map>
-#include "core/hle/kernel/kernel.h"
 #include "core/hle/service/service.h"
 
 namespace Core {
@@ -35,9 +35,8 @@ private:
     void RegisterService(Kernel::HLERequestContext& ctx);
 
     Core::System& system;
-    Kernel::SharedPtr<Kernel::Semaphore> notification_semaphore;
-    std::unordered_map<std::string, Kernel::SharedPtr<Kernel::Event>>
-        get_service_handle_delayed_map;
+    std::shared_ptr<Kernel::Semaphore> notification_semaphore;
+    std::unordered_map<std::string, std::shared_ptr<Kernel::Event>> get_service_handle_delayed_map;
 };
 
 } // namespace Service::SM

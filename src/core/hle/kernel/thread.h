@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <memory>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -99,7 +100,7 @@ public:
     /**
      * Get a const reference to the thread list for debug use
      */
-    const std::vector<SharedPtr<Thread>>& GetThreadList();
+    const std::vector<std::shared_ptr<Thread>>& GetThreadList();
 
     void SetCPU(ARM_Interface& cpu) {
         this->cpu = &cpu;
@@ -133,7 +134,7 @@ private:
     ARM_Interface* cpu;
 
     u32 next_thread_id = 1;
-    SharedPtr<Thread> current_thread;
+    std::shared_ptr<Thread> current_thread;
     Common::ThreadQueueList<Thread*, ThreadPrioLowest + 1> ready_queue;
     std::unordered_map<u64, Thread*> wakeup_callback_table;
 
@@ -141,7 +142,7 @@ private:
     Core::TimingEventType* ThreadWakeupEventType = nullptr;
 
     // Lists all threadsthat aren't deleted.
-    std::vector<SharedPtr<Thread>> thread_list;
+    std::vector<std::shared_ptr<Thread>> thread_list;
 
     friend class Thread;
     friend class KernelSystem;
@@ -149,6 +150,9 @@ private:
 
 class Thread final : public WaitObject {
 public:
+    explicit Thread(KernelSystem&);
+    ~Thread() override;
+
     std::string GetName() const override {
         return name;
     }
@@ -278,35 +282,30 @@ public:
     VAddr tls_address; ///< Virtual address of the Thread Local Storage of the thread
 
     /// Mutexes currently held by this thread, which will be released when it exits.
-    boost::container::flat_set<SharedPtr<Mutex>> held_mutexes;
+    boost::container::flat_set<std::shared_ptr<Mutex>> held_mutexes;
 
     /// Mutexes that this thread is currently waiting for.
-    boost::container::flat_set<SharedPtr<Mutex>> pending_mutexes;
+    boost::container::flat_set<std::shared_ptr<Mutex>> pending_mutexes;
 
     Process* owner_process; ///< Process that owns this thread
 
     /// Objects that the thread is waiting on, in the same order as they were
     // passed to WaitSynchronization1/N.
-    std::vector<SharedPtr<WaitObject>> wait_objects;
+    std::vector<std::shared_ptr<WaitObject>> wait_objects;
 
     VAddr wait_address; ///< If waiting on an AddressArbiter, this is the arbitration address
 
     std::string name;
 
-    using WakeupCallback = void(ThreadWakeupReason reason, SharedPtr<Thread> thread,
-                                SharedPtr<WaitObject> object);
+    using WakeupCallback = void(ThreadWakeupReason reason, std::shared_ptr<Thread> thread,
+                                std::shared_ptr<WaitObject> object);
     // Callback that will be invoked when the thread is resumed from a waiting state. If the thread
     // was waiting via WaitSynchronizationN then the object will be the last object that became
     // available. In case of a timeout, the object will be nullptr.
     std::function<WakeupCallback> wakeup_callback;
 
 private:
-    explicit Thread(KernelSystem&);
-    ~Thread() override;
-
     ThreadManager& thread_manager;
-
-    friend class KernelSystem;
 };
 
 /**
@@ -317,7 +316,7 @@ private:
  * @param owner_process The parent process for the main thread
  * @return A shared pointer to the main thread
  */
-SharedPtr<Thread> SetupMainThread(KernelSystem& kernel, u32 entry_point, u32 priority,
-                                  SharedPtr<Process> owner_process);
+std::shared_ptr<Thread> SetupMainThread(KernelSystem& kernel, u32 entry_point, u32 priority,
+                                        std::shared_ptr<Process> owner_process);
 
 } // namespace Kernel

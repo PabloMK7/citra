@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <memory>
 #include "audio_core/dsp_interface.h"
 #include "core/hle/kernel/event.h"
 #include "core/hle/result.h"
@@ -249,21 +250,20 @@ private:
     void ForceHeadphoneOut(Kernel::HLERequestContext& ctx);
 
     /// Returns the Interrupt Event for a given pipe
-    Kernel::SharedPtr<Kernel::Event>& GetInterruptEvent(InterruptType type,
-                                                        AudioCore::DspPipe pipe);
+    std::shared_ptr<Kernel::Event>& GetInterruptEvent(InterruptType type, AudioCore::DspPipe pipe);
     /// Checks if we are trying to register more than 6 events
     bool HasTooManyEventsRegistered() const;
 
     Core::System& system;
 
-    Kernel::SharedPtr<Kernel::Event> semaphore_event;
+    std::shared_ptr<Kernel::Event> semaphore_event;
     u16 preset_semaphore = 0;
 
-    Kernel::SharedPtr<Kernel::Event> interrupt_zero = nullptr; /// Currently unknown purpose
-    Kernel::SharedPtr<Kernel::Event> interrupt_one = nullptr;  /// Currently unknown purpose
+    std::shared_ptr<Kernel::Event> interrupt_zero = nullptr; /// Currently unknown purpose
+    std::shared_ptr<Kernel::Event> interrupt_one = nullptr;  /// Currently unknown purpose
 
     /// Each DSP pipe has an associated interrupt
-    std::array<Kernel::SharedPtr<Kernel::Event>, AudioCore::num_dsp_pipe> pipes = {{}};
+    std::array<std::shared_ptr<Kernel::Event>, AudioCore::num_dsp_pipe> pipes = {{}};
 };
 
 void InstallInterfaces(Core::System& system);

@@ -4,8 +4,8 @@
 
 #pragma once
 
+#include <memory>
 #include "core/file_sys/archive_backend.h"
-#include "core/hle/kernel/kernel.h"
 #include "core/hle/service/service.h"
 
 namespace Core {
@@ -37,15 +37,15 @@ public:
     std::unique_ptr<FileSys::FileBackend> backend; ///< File backend interface
 
     /// Creates a new session to this File and returns the ClientSession part of the connection.
-    Kernel::SharedPtr<Kernel::ClientSession> Connect();
+    std::shared_ptr<Kernel::ClientSession> Connect();
 
     // Returns the start offset of an open file represented by the input session, opened with
     // OpenSubFile.
-    std::size_t GetSessionFileOffset(Kernel::SharedPtr<Kernel::ServerSession> session);
+    std::size_t GetSessionFileOffset(std::shared_ptr<Kernel::ServerSession> session);
 
     // Returns the size of an open file represented by the input session, opened with
     // OpenSubFile.
-    std::size_t GetSessionFileSize(Kernel::SharedPtr<Kernel::ServerSession> session);
+    std::size_t GetSessionFileSize(std::shared_ptr<Kernel::ServerSession> session);
 
 private:
     void Read(Kernel::HLERequestContext& ctx);

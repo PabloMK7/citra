@@ -22,7 +22,7 @@ private:
     /// This SharedMemory will be created when we receive the LibAppJustStarted message.
     /// It holds the framebuffer info retrieved by the application with
     /// GSPGPU::ImportDisplayCaptureInfo
-    Kernel::SharedPtr<Kernel::SharedMemory> framebuffer_memory;
+    std::shared_ptr<Kernel::SharedMemory> framebuffer_memory;
 };
 
 } // namespace HLE::Applets

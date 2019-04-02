@@ -7,6 +7,7 @@
 #include <array>
 #include <cstddef>
 #include <functional>
+#include <memory>
 #include <string>
 #include <boost/container/flat_map.hpp>
 #include "common/common_types.h"
@@ -159,7 +160,7 @@ protected:
         return std::make_unique<SessionData>();
     }
 
-    SessionData* GetSessionData(Kernel::SharedPtr<Kernel::ServerSession> server_session) {
+    SessionData* GetSessionData(std::shared_ptr<Kernel::ServerSession> server_session) {
         return ServiceFrameworkBase::GetSessionData<SessionData>(server_session);
     }
 

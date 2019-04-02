@@ -21,8 +21,8 @@ Timer::~Timer() {
     timer_manager.timer_callback_table.erase(callback_id);
 }
 
-SharedPtr<Timer> KernelSystem::CreateTimer(ResetType reset_type, std::string name) {
-    SharedPtr<Timer> timer(new Timer(*this));
+std::shared_ptr<Timer> KernelSystem::CreateTimer(ResetType reset_type, std::string name) {
+    auto timer{std::make_shared<Timer>(*this)};
 
     timer->reset_type = reset_type;
     timer->signaled = false;
@@ -94,7 +94,7 @@ void Timer::Signal(s64 cycles_late) {
 
 /// The timer callback event, called when a timer is fired
 void TimerManager::TimerCallback(u64 callback_id, s64 cycles_late) {
-    SharedPtr<Timer> timer = timer_callback_table.at(callback_id);
+    std::shared_ptr<Timer> timer = SharedFrom(timer_callback_table.at(callback_id));
 
     if (timer == nullptr) {
         LOG_CRITICAL(Kernel, "Callback fired for invalid timer {:016x}", callback_id);

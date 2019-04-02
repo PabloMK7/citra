@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <memory>
 #include <string>
 #include "common/common_types.h"
 #include "core/loader/loader.h"
@@ -30,7 +31,7 @@ public:
         return IdentifyType(file);
     }
 
-    ResultStatus Load(Kernel::SharedPtr<Kernel::Process>& process) override;
+    ResultStatus Load(std::shared_ptr<Kernel::Process>& process) override;
 
 private:
     std::string filename;

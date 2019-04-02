@@ -384,7 +384,7 @@ ResultCode AppletManager::FinishPreloadingLibraryApplet(AppletId applet_id) {
 }
 
 ResultCode AppletManager::StartLibraryApplet(AppletId applet_id,
-                                             Kernel::SharedPtr<Kernel::Object> object,
+                                             std::shared_ptr<Kernel::Object> object,
                                              const std::vector<u8>& buffer) {
     MessageParameter param;
     param.destination_id = applet_id;
@@ -424,7 +424,7 @@ ResultCode AppletManager::PrepareToCloseLibraryApplet(bool not_pause, bool exiti
     return RESULT_SUCCESS;
 }
 
-ResultCode AppletManager::CloseLibraryApplet(Kernel::SharedPtr<Kernel::Object> object,
+ResultCode AppletManager::CloseLibraryApplet(std::shared_ptr<Kernel::Object> object,
                                              std::vector<u8> buffer) {
     auto& slot = applet_slots[static_cast<std::size_t>(AppletSlot::LibraryApplet)];
 

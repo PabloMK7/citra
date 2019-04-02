@@ -16,8 +16,8 @@
 
 namespace Kernel {
 
-ResultCode TranslateCommandBuffer(Memory::MemorySystem& memory, SharedPtr<Thread> src_thread,
-                                  SharedPtr<Thread> dst_thread, VAddr src_address,
+ResultCode TranslateCommandBuffer(Memory::MemorySystem& memory, std::shared_ptr<Thread> src_thread,
+                                  std::shared_ptr<Thread> dst_thread, VAddr src_address,
                                   VAddr dst_address,
                                   std::vector<MappedBufferContext>& mapped_buffer_context,
                                   bool reply) {
@@ -55,14 +55,14 @@ ResultCode TranslateCommandBuffer(Memory::MemorySystem& memory, SharedPtr<Thread
 
             for (u32 j = 0; j < num_handles; ++j) {
                 Handle handle = cmd_buf[i];
-                SharedPtr<Object> object = nullptr;
+                std::shared_ptr<Object> object = nullptr;
                 // Perform pseudo-handle detection here because by the time this function is called,
                 // the current thread and process are no longer the ones which created this IPC
                 // request, but the ones that are handling it.
                 if (handle == CurrentThread) {
                     object = src_thread;
                 } else if (handle == CurrentProcess) {
-                    object = src_process;
+                    object = SharedFrom(src_process);
                 } else if (handle != 0) {
                     object = src_process->handle_table.GetGeneric(handle);
                     if (descriptor == IPC::DescriptorType::MoveHandle) {

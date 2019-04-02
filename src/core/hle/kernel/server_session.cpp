@@ -28,8 +28,9 @@ ServerSession::~ServerSession() {
     parent->server = nullptr;
 }
 
-ResultVal<SharedPtr<ServerSession>> ServerSession::Create(KernelSystem& kernel, std::string name) {
-    SharedPtr<ServerSession> server_session(new ServerSession(kernel));
+ResultVal<std::shared_ptr<ServerSession>> ServerSession::Create(KernelSystem& kernel,
+                                                                std::string name) {
+    auto server_session{std::make_shared<ServerSession>(kernel)};
 
     server_session->name = std::move(name);
     server_session->parent = nullptr;
@@ -59,7 +60,7 @@ void ServerSession::Acquire(Thread* thread) {
     pending_requesting_threads.pop_back();
 }
 
-ResultCode ServerSession::HandleSyncRequest(SharedPtr<Thread> thread) {
+ResultCode ServerSession::HandleSyncRequest(std::shared_ptr<Thread> thread) {
     // The ServerSession received a sync request, this means that there's new data available
     // from its ClientSession, so wake up any threads that may be waiting on a svcReplyAndReceive or
     // similar.
@@ -71,7 +72,7 @@ ResultCode ServerSession::HandleSyncRequest(SharedPtr<Thread> thread) {
         kernel.memory.ReadBlock(*current_process, thread->GetCommandBufferAddress(), cmd_buf.data(),
                                 cmd_buf.size() * sizeof(u32));
 
-        Kernel::HLERequestContext context(kernel, this);
+        Kernel::HLERequestContext context(kernel, SharedFrom(this));
         context.PopulateFromIncomingCommandBuffer(cmd_buf.data(), *current_process);
 
         hle_handler->HandleSyncRequest(context);
@@ -119,10 +120,10 @@ ResultCode ServerSession::HandleSyncRequest(SharedPtr<Thread> thread) {
     return RESULT_SUCCESS;
 }
 
-std::tuple<SharedPtr<ServerSession>, SharedPtr<ClientSession>> KernelSystem::CreateSessionPair(
-    const std::string& name, SharedPtr<ClientPort> port) {
+std::tuple<std::shared_ptr<ServerSession>, std::shared_ptr<ClientSession>>
+KernelSystem::CreateSessionPair(const std::string& name, std::shared_ptr<ClientPort> port) {
     auto server_session = ServerSession::Create(*this, name + "_Server").Unwrap();
-    SharedPtr<ClientSession> client_session(new ClientSession(*this));
+    auto client_session{std::make_shared<ClientSession>(*this)};
     client_session->name = name + "_Client";
 
     std::shared_ptr<Session> parent(new Session);

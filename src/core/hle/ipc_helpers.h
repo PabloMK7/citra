@@ -5,13 +5,13 @@
 #pragma once
 
 #include <array>
+#include <memory>
 #include <tuple>
 #include <type_traits>
 #include <utility>
 #include <vector>
 #include "core/hle/ipc.h"
 #include "core/hle/kernel/hle_ipc.h"
-#include "core/hle/kernel/kernel.h"
 
 namespace IPC {
 
@@ -88,10 +88,10 @@ public:
 
     // TODO : ensure that translate params are added after all regular params
     template <typename... O>
-    void PushCopyObjects(Kernel::SharedPtr<O>... pointers);
+    void PushCopyObjects(std::shared_ptr<O>... pointers);
 
     template <typename... O>
-    void PushMoveObjects(Kernel::SharedPtr<O>... pointers);
+    void PushMoveObjects(std::shared_ptr<O>... pointers);
 
     void PushStaticBuffer(const std::vector<u8>& buffer, u8 buffer_id);
 
@@ -170,12 +170,12 @@ inline void RequestBuilder::PushMoveHLEHandles(H... handles) {
 }
 
 template <typename... O>
-inline void RequestBuilder::PushCopyObjects(Kernel::SharedPtr<O>... pointers) {
+inline void RequestBuilder::PushCopyObjects(std::shared_ptr<O>... pointers) {
     PushCopyHLEHandles(context->AddOutgoingHandle(std::move(pointers))...);
 }
 
 template <typename... O>
-inline void RequestBuilder::PushMoveObjects(Kernel::SharedPtr<O>... pointers) {
+inline void RequestBuilder::PushMoveObjects(std::shared_ptr<O>... pointers) {
     PushMoveHLEHandles(context->AddOutgoingHandle(std::move(pointers))...);
 }
 
@@ -233,11 +233,11 @@ public:
     }
 
     /// Equivalent to calling `PopGenericObjects<1>()[0]`.
-    Kernel::SharedPtr<Kernel::Object> PopGenericObject();
+    std::shared_ptr<Kernel::Object> PopGenericObject();
 
     /// Equivalent to calling `std::get<0>(PopObjects<T>())`.
     template <typename T>
-    Kernel::SharedPtr<T> PopObject();
+    std::shared_ptr<T> PopObject();
 
     /**
      * Pop a descriptor containing `N` handles and resolves them to Kernel::Object pointers. If a
@@ -247,7 +247,7 @@ public:
      * call to read 2 single-handle descriptors.
      */
     template <unsigned int N>
-    std::array<Kernel::SharedPtr<Kernel::Object>, N> PopGenericObjects();
+    std::array<std::shared_ptr<Kernel::Object>, N> PopGenericObjects();
 
     /**
      * Resolves handles to Kernel::Objects as in PopGenericsObjects(), but then also casts them to
@@ -255,11 +255,11 @@ public:
      * not match, null is returned instead.
      */
     template <typename... T>
-    std::tuple<Kernel::SharedPtr<T>...> PopObjects();
+    std::tuple<std::shared_ptr<T>...> PopObjects();
 
     /// Convenience wrapper around PopObjects() which assigns the handles to the passed references.
     template <typename... T>
-    void PopObjects(Kernel::SharedPtr<T>&... pointers) {
+    void PopObjects(std::shared_ptr<T>&... pointers) {
         std::tie(pointers...) = PopObjects<T...>();
     }
 
@@ -377,20 +377,20 @@ std::array<u32, N> RequestParser::PopHLEHandles() {
     return handles;
 }
 
-inline Kernel::SharedPtr<Kernel::Object> RequestParser::PopGenericObject() {
+inline std::shared_ptr<Kernel::Object> RequestParser::PopGenericObject() {
     auto [handle] = PopHLEHandles<1>();
     return context->GetIncomingHandle(handle);
 }
 
 template <typename T>
-Kernel::SharedPtr<T> RequestParser::PopObject() {
+std::shared_ptr<T> RequestParser::PopObject() {
     return Kernel::DynamicObjectCast<T>(PopGenericObject());
 }
 
 template <unsigned int N>
-inline std::array<Kernel::SharedPtr<Kernel::Object>, N> RequestParser::PopGenericObjects() {
+inline std::array<std::shared_ptr<Kernel::Object>, N> RequestParser::PopGenericObjects() {
     std::array<u32, N> handles = PopHLEHandles<N>();
-    std::array<Kernel::SharedPtr<Kernel::Object>, N> pointers;
+    std::array<std::shared_ptr<Kernel::Object>, N> pointers;
     for (int i = 0; i < N; ++i) {
         pointers[i] = context->GetIncomingHandle(handles[i]);
     }
@@ -399,15 +399,15 @@ inline std::array<Kernel::SharedPtr<Kernel::Object>, N> RequestParser::PopGeneri
 
 namespace detail {
 template <typename... T, std::size_t... I>
-std::tuple<Kernel::SharedPtr<T>...> PopObjectsHelper(
-    std::array<Kernel::SharedPtr<Kernel::Object>, sizeof...(T)>&& pointers,
+std::tuple<std::shared_ptr<T>...> PopObjectsHelper(
+    std::array<std::shared_ptr<Kernel::Object>, sizeof...(T)>&& pointers,
     std::index_sequence<I...>) {
     return std::make_tuple(Kernel::DynamicObjectCast<T>(std::move(pointers[I]))...);
 }
 } // namespace detail
 
 template <typename... T>
-inline std::tuple<Kernel::SharedPtr<T>...> RequestParser::PopObjects() {
+inline std::tuple<std::shared_ptr<T>...> RequestParser::PopObjects() {
     return detail::PopObjectsHelper<T...>(PopGenericObjects<sizeof...(T)>(),
                                           std::index_sequence_for<T...>{});
 }

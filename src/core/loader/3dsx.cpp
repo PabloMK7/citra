@@ -92,10 +92,9 @@ static u32 TranslateAddr(u32 addr, const THREEloadinfo* loadinfo, u32* offsets) 
 }
 
 using Kernel::CodeSet;
-using Kernel::SharedPtr;
 
 static THREEDSX_Error Load3DSXFile(FileUtil::IOFile& file, u32 base_addr,
-                                   SharedPtr<CodeSet>* out_codeset) {
+                                   std::shared_ptr<CodeSet>* out_codeset) {
     if (!file.IsOpen())
         return ERROR_FILE;
 
@@ -217,7 +216,7 @@ static THREEDSX_Error Load3DSXFile(FileUtil::IOFile& file, u32 base_addr,
     }
 
     // Create the CodeSet
-    SharedPtr<CodeSet> code_set = Core::System::GetInstance().Kernel().CreateCodeSet("", 0);
+    std::shared_ptr<CodeSet> code_set = Core::System::GetInstance().Kernel().CreateCodeSet("", 0);
 
     code_set->CodeSegment().offset = loadinfo.seg_ptrs[0] - program_image.data();
     code_set->CodeSegment().addr = loadinfo.seg_addrs[0];
@@ -255,14 +254,14 @@ FileType AppLoader_THREEDSX::IdentifyType(FileUtil::IOFile& file) {
     return FileType::Error;
 }
 
-ResultStatus AppLoader_THREEDSX::Load(Kernel::SharedPtr<Kernel::Process>& process) {
+ResultStatus AppLoader_THREEDSX::Load(std::shared_ptr<Kernel::Process>& process) {
     if (is_loaded)
         return ResultStatus::ErrorAlreadyLoaded;
 
     if (!file.IsOpen())
         return ResultStatus::Error;
 
-    SharedPtr<CodeSet> codeset;
+    std::shared_ptr<CodeSet> codeset;
     if (Load3DSXFile(file, Memory::PROCESS_IMAGE_VADDR, &codeset) != ERROR_NONE)
         return ResultStatus::Error;
     codeset->name = filename;

@@ -27,8 +27,8 @@ void ReleaseThreadMutexes(Thread* thread) {
 Mutex::Mutex(KernelSystem& kernel) : WaitObject(kernel), kernel(kernel) {}
 Mutex::~Mutex() {}
 
-SharedPtr<Mutex> KernelSystem::CreateMutex(bool initial_locked, std::string name) {
-    SharedPtr<Mutex> mutex(new Mutex(*this));
+std::shared_ptr<Mutex> KernelSystem::CreateMutex(bool initial_locked, std::string name) {
+    auto mutex{std::make_shared<Mutex>(*this)};
 
     mutex->lock_count = 0;
     mutex->name = std::move(name);
@@ -42,7 +42,7 @@ SharedPtr<Mutex> KernelSystem::CreateMutex(bool initial_locked, std::string name
 }
 
 bool Mutex::ShouldWait(Thread* thread) const {
-    return lock_count > 0 && thread != holding_thread;
+    return lock_count > 0 && thread != holding_thread.get();
 }
 
 void Mutex::Acquire(Thread* thread) {
@@ -51,8 +51,8 @@ void Mutex::Acquire(Thread* thread) {
     // Actually "acquire" the mutex only if we don't already have it
     if (lock_count == 0) {
         priority = thread->current_priority;
-        thread->held_mutexes.insert(this);
-        holding_thread = thread;
+        thread->held_mutexes.insert(SharedFrom(this));
+        holding_thread = SharedFrom(thread);
         thread->UpdatePriority();
         kernel.PrepareReschedule();
     }
@@ -62,7 +62,7 @@ void Mutex::Acquire(Thread* thread) {
 
 ResultCode Mutex::Release(Thread* thread) {
     // We can only release the mutex if it's held by the calling thread.
-    if (thread != holding_thread) {
+    if (thread != holding_thread.get()) {
         if (holding_thread) {
             LOG_ERROR(
                 Kernel,
@@ -83,7 +83,7 @@ ResultCode Mutex::Release(Thread* thread) {
 
     // Yield to the next thread only if we've fully released the mutex
     if (lock_count == 0) {
-        holding_thread->held_mutexes.erase(this);
+        holding_thread->held_mutexes.erase(SharedFrom(this));
         holding_thread->UpdatePriority();
         holding_thread = nullptr;
         WakeupAllWaitingThreads();
@@ -93,15 +93,15 @@ ResultCode Mutex::Release(Thread* thread) {
     return RESULT_SUCCESS;
 }
 
-void Mutex::AddWaitingThread(SharedPtr<Thread> thread) {
+void Mutex::AddWaitingThread(std::shared_ptr<Thread> thread) {
     WaitObject::AddWaitingThread(thread);
-    thread->pending_mutexes.insert(this);
+    thread->pending_mutexes.insert(SharedFrom(this));
     UpdatePriority();
 }
 
 void Mutex::RemoveWaitingThread(Thread* thread) {
     WaitObject::RemoveWaitingThread(thread);
-    thread->pending_mutexes.erase(this);
+    thread->pending_mutexes.erase(SharedFrom(this));
     UpdatePriority();
 }
 

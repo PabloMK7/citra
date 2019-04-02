@@ -20,7 +20,7 @@ ClientSession::~ClientSession() {
 
     // Local references to ServerSession and SessionRequestHandler are necessary to guarantee they
     // will be kept alive until after ClientDisconnected() returns.
-    SharedPtr<ServerSession> server = parent->server;
+    std::shared_ptr<ServerSession> server = SharedFrom(parent->server);
     if (server) {
         std::shared_ptr<SessionRequestHandler> hle_handler = server->hle_handler;
         if (hle_handler)
@@ -42,9 +42,9 @@ ClientSession::~ClientSession() {
     }
 }
 
-ResultCode ClientSession::SendSyncRequest(SharedPtr<Thread> thread) {
+ResultCode ClientSession::SendSyncRequest(std::shared_ptr<Thread> thread) {
     // Keep ServerSession alive until we're done working with it.
-    SharedPtr<ServerSession> server = parent->server;
+    std::shared_ptr<ServerSession> server = SharedFrom(parent->server);
     if (server == nullptr)
         return ERR_SESSION_CLOSED_BY_REMOTE;
 

@@ -60,8 +60,7 @@ ResultCode SoftwareKeyboard::StartImpl(Service::APT::AppletStartupParameter cons
                "The size of the parameter (SoftwareKeyboardConfig) is wrong");
 
     memcpy(&config, parameter.buffer.data(), parameter.buffer.size());
-    text_memory =
-        boost::static_pointer_cast<Kernel::SharedMemory, Kernel::Object>(parameter.object);
+    text_memory = std::static_pointer_cast<Kernel::SharedMemory, Kernel::Object>(parameter.object);
 
     // TODO(Subv): Verify if this is the correct behavior
     memset(text_memory->GetPointer(), 0, text_memory->GetSize());

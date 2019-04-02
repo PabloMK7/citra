@@ -24,10 +24,10 @@ SharedMemory::~SharedMemory() {
     }
 }
 
-ResultVal<SharedPtr<SharedMemory>> KernelSystem::CreateSharedMemory(
+ResultVal<std::shared_ptr<SharedMemory>> KernelSystem::CreateSharedMemory(
     Process* owner_process, u32 size, MemoryPermission permissions,
     MemoryPermission other_permissions, VAddr address, MemoryRegion region, std::string name) {
-    SharedPtr<SharedMemory> shared_memory(new SharedMemory(*this));
+    auto shared_memory{std::make_shared<SharedMemory>(*this)};
 
     shared_memory->owner_process = owner_process;
     shared_memory->name = std::move(name);
@@ -69,10 +69,10 @@ ResultVal<SharedPtr<SharedMemory>> KernelSystem::CreateSharedMemory(
     return MakeResult(shared_memory);
 }
 
-SharedPtr<SharedMemory> KernelSystem::CreateSharedMemoryForApplet(
+std::shared_ptr<SharedMemory> KernelSystem::CreateSharedMemoryForApplet(
     u32 offset, u32 size, MemoryPermission permissions, MemoryPermission other_permissions,
     std::string name) {
-    SharedPtr<SharedMemory> shared_memory(new SharedMemory(*this));
+    auto shared_memory{std::make_shared<SharedMemory>(*this)};
 
     // Allocate memory in heap
     MemoryRegionInfo* memory_region = GetMemoryRegion(MemoryRegion::SYSTEM);

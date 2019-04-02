@@ -16,7 +16,7 @@
 
 namespace Kernel {
 
-void AddressArbiter::WaitThread(SharedPtr<Thread> thread, VAddr wait_address) {
+void AddressArbiter::WaitThread(std::shared_ptr<Thread> thread, VAddr wait_address) {
     thread->wait_address = wait_address;
     thread->status = ThreadStatus::WaitArb;
     waiting_threads.emplace_back(std::move(thread));
@@ -38,7 +38,7 @@ void AddressArbiter::ResumeAllThreads(VAddr address) {
     waiting_threads.erase(itr, waiting_threads.end());
 }
 
-SharedPtr<Thread> AddressArbiter::ResumeHighestPriorityThread(VAddr address) {
+std::shared_ptr<Thread> AddressArbiter::ResumeHighestPriorityThread(VAddr address) {
     // Determine which threads are waiting on this address, those should be considered for wakeup.
     auto matches_start = std::stable_partition(
         waiting_threads.begin(), waiting_threads.end(), [address](const auto& thread) {
@@ -68,19 +68,19 @@ SharedPtr<Thread> AddressArbiter::ResumeHighestPriorityThread(VAddr address) {
 AddressArbiter::AddressArbiter(KernelSystem& kernel) : Object(kernel), kernel(kernel) {}
 AddressArbiter::~AddressArbiter() {}
 
-SharedPtr<AddressArbiter> KernelSystem::CreateAddressArbiter(std::string name) {
-    SharedPtr<AddressArbiter> address_arbiter(new AddressArbiter(*this));
+std::shared_ptr<AddressArbiter> KernelSystem::CreateAddressArbiter(std::string name) {
+    auto address_arbiter{std::make_shared<AddressArbiter>(*this)};
 
     address_arbiter->name = std::move(name);
 
     return address_arbiter;
 }
 
-ResultCode AddressArbiter::ArbitrateAddress(SharedPtr<Thread> thread, ArbitrationType type,
+ResultCode AddressArbiter::ArbitrateAddress(std::shared_ptr<Thread> thread, ArbitrationType type,
                                             VAddr address, s32 value, u64 nanoseconds) {
 
-    auto timeout_callback = [this](ThreadWakeupReason reason, SharedPtr<Thread> thread,
-                                   SharedPtr<WaitObject> object) {
+    auto timeout_callback = [this](ThreadWakeupReason reason, std::shared_ptr<Thread> thread,
+                                   std::shared_ptr<WaitObject> object) {
         ASSERT(reason == ThreadWakeupReason::Timeout);
         // Remove the newly-awakened thread from the Arbiter's waiting list.
         waiting_threads.erase(std::remove(waiting_threads.begin(), waiting_threads.end(), thread),

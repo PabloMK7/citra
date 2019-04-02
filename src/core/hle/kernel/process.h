@@ -52,6 +52,9 @@ struct MemoryRegionInfo;
 
 class CodeSet final : public Object {
 public:
+    explicit CodeSet(KernelSystem& kernel);
+    ~CodeSet() override;
+
     struct Segment {
         std::size_t offset = 0;
         VAddr addr = 0;
@@ -103,16 +106,13 @@ public:
     std::string name;
     /// Title ID corresponding to the process
     u64 program_id;
-
-private:
-    explicit CodeSet(KernelSystem& kernel);
-    ~CodeSet() override;
-
-    friend class KernelSystem;
 };
 
 class Process final : public Object {
 public:
+    explicit Process(Kernel::KernelSystem& kernel);
+    ~Process() override;
+
     std::string GetTypeName() const override {
         return "Process";
     }
@@ -127,9 +127,9 @@ public:
 
     HandleTable handle_table;
 
-    SharedPtr<CodeSet> codeset;
+    std::shared_ptr<CodeSet> codeset;
     /// Resource limit descriptor for this process
-    SharedPtr<ResourceLimit> resource_limit;
+    std::shared_ptr<ResourceLimit> resource_limit;
 
     /// The process may only call SVCs which have the corresponding bit set.
     std::bitset<0x80> svc_access_mask;
@@ -194,10 +194,6 @@ public:
                      bool privileged = false);
 
 private:
-    explicit Process(Kernel::KernelSystem& kernel);
-    ~Process() override;
-
-    friend class KernelSystem;
     KernelSystem& kernel;
 };
 } // namespace Kernel

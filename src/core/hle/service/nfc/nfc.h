@@ -7,7 +7,6 @@
 #include <atomic>
 #include <memory>
 #include "common/common_types.h"
-#include "core/hle/kernel/kernel.h"
 #include "core/hle/service/service.h"
 
 namespace Core {
@@ -232,8 +231,8 @@ public:
     };
 
 private:
-    Kernel::SharedPtr<Kernel::Event> tag_in_range_event;
-    Kernel::SharedPtr<Kernel::Event> tag_out_of_range_event;
+    std::shared_ptr<Kernel::Event> tag_in_range_event;
+    std::shared_ptr<Kernel::Event> tag_out_of_range_event;
     std::atomic<TagState> nfc_tag_state = TagState::NotInitialized;
     CommunicationStatus nfc_status = CommunicationStatus::NfcInitialized;
 

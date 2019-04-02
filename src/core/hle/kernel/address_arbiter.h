@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <memory>
 #include <vector>
 #include "common/common_types.h"
 #include "core/hle/kernel/object.h"
@@ -31,6 +32,9 @@ enum class ArbitrationType : u32 {
 
 class AddressArbiter final : public Object {
 public:
+    explicit AddressArbiter(KernelSystem& kernel);
+    ~AddressArbiter() override;
+
     std::string GetTypeName() const override {
         return "Arbiter";
     }
@@ -45,29 +49,24 @@ public:
 
     std::string name; ///< Name of address arbiter object (optional)
 
-    ResultCode ArbitrateAddress(SharedPtr<Thread> thread, ArbitrationType type, VAddr address,
+    ResultCode ArbitrateAddress(std::shared_ptr<Thread> thread, ArbitrationType type, VAddr address,
                                 s32 value, u64 nanoseconds);
 
 private:
-    explicit AddressArbiter(KernelSystem& kernel);
-    ~AddressArbiter() override;
-
     KernelSystem& kernel;
 
     /// Puts the thread to wait on the specified arbitration address under this address arbiter.
-    void WaitThread(SharedPtr<Thread> thread, VAddr wait_address);
+    void WaitThread(std::shared_ptr<Thread> thread, VAddr wait_address);
 
     /// Resume all threads found to be waiting on the address under this address arbiter
     void ResumeAllThreads(VAddr address);
 
     /// Resume one thread found to be waiting on the address under this address arbiter and return
     /// the resumed thread.
-    SharedPtr<Thread> ResumeHighestPriorityThread(VAddr address);
+    std::shared_ptr<Thread> ResumeHighestPriorityThread(VAddr address);
 
     /// Threads waiting for the address arbiter to be signaled.
-    std::vector<SharedPtr<Thread>> waiting_threads;
-
-    friend class KernelSystem;
+    std::vector<std::shared_ptr<Thread>> waiting_threads;
 };
 
 } // namespace Kernel

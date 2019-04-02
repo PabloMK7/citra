@@ -568,7 +568,7 @@ void NWM_UDS::RecvBeaconBroadcastData(Kernel::HLERequestContext& ctx) {
     // 'Official user processes create a new event handle which is then passed to this command.
     // However, those user processes don't save that handle anywhere afterwards.'
     // So we don't save/use that event too.
-    Kernel::SharedPtr<Kernel::Event> input_event = rp.PopObject<Kernel::Event>();
+    std::shared_ptr<Kernel::Event> input_event = rp.PopObject<Kernel::Event>();
 
     Kernel::MappedBuffer out_buffer = rp.PopMappedBuffer();
     ASSERT(out_buffer.GetSize() == out_buffer_size);
@@ -615,9 +615,9 @@ void NWM_UDS::RecvBeaconBroadcastData(Kernel::HLERequestContext& ctx) {
               out_buffer_size, wlan_comm_id, id, unk1, unk2, cur_buffer_size);
 }
 
-ResultVal<Kernel::SharedPtr<Kernel::Event>> NWM_UDS::Initialize(
+ResultVal<std::shared_ptr<Kernel::Event>> NWM_UDS::Initialize(
     u32 sharedmem_size, const NodeInfo& node, u16 version,
-    Kernel::SharedPtr<Kernel::SharedMemory> sharedmem) {
+    std::shared_ptr<Kernel::SharedMemory> sharedmem) {
 
     current_node = node;
     initialized = true;
@@ -1179,9 +1179,9 @@ void NWM_UDS::ConnectToNetwork(Kernel::HLERequestContext& ctx, u16 command_id,
     static constexpr std::chrono::nanoseconds UDSConnectionTimeout{300000000};
 
     connection_event = ctx.SleepClientThread(
-        system.Kernel().GetThreadManager().GetCurrentThread(), "uds::ConnectToNetwork",
-        UDSConnectionTimeout,
-        [command_id](Kernel::SharedPtr<Kernel::Thread> thread, Kernel::HLERequestContext& ctx,
+        Kernel::SharedFrom(system.Kernel().GetThreadManager().GetCurrentThread()),
+        "uds::ConnectToNetwork", UDSConnectionTimeout,
+        [command_id](std::shared_ptr<Kernel::Thread> thread, Kernel::HLERequestContext& ctx,
                      Kernel::ThreadWakeupReason reason) {
             // TODO(B3N30): Add error handling for host full and timeout
             IPC::RequestBuilder rb(ctx, command_id, 1, 0);

@@ -265,7 +265,7 @@ private:
 
     void DecryptClCertA();
 
-    Kernel::SharedPtr<Kernel::SharedMemory> shared_memory = nullptr;
+    std::shared_ptr<Kernel::SharedMemory> shared_memory = nullptr;
 
     /// The next number to use when a new HTTP session is initalized.
     u32 session_counter = 0;

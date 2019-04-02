@@ -16,7 +16,7 @@
 
 namespace Kernel {
 
-static SharedPtr<Object> MakeObject(Kernel::KernelSystem& kernel) {
+static std::shared_ptr<Object> MakeObject(Kernel::KernelSystem& kernel) {
     return kernel.CreateEvent(ResetType::OneShot);
 }
 
@@ -24,7 +24,7 @@ TEST_CASE("HLERequestContext::PopulateFromIncomingCommandBuffer", "[core][kernel
     Core::Timing timing;
     Memory::MemorySystem memory;
     Kernel::KernelSystem kernel(memory, timing, [] {}, 0);
-    auto session = std::get<SharedPtr<ServerSession>>(kernel.CreateSessionPair());
+    auto session = std::get<std::shared_ptr<ServerSession>>(kernel.CreateSessionPair());
     HLERequestContext context(kernel, std::move(session));
 
     auto process = kernel.CreateProcess(kernel.CreateCodeSet("", 0));
@@ -236,7 +236,7 @@ TEST_CASE("HLERequestContext::WriteToOutgoingCommandBuffer", "[core][kernel]") {
     Core::Timing timing;
     Memory::MemorySystem memory;
     Kernel::KernelSystem kernel(memory, timing, [] {}, 0);
-    auto session = std::get<SharedPtr<ServerSession>>(kernel.CreateSessionPair());
+    auto session = std::get<std::shared_ptr<ServerSession>>(kernel.CreateSessionPair());
     HLERequestContext context(kernel, std::move(session));
 
     auto process = kernel.CreateProcess(kernel.CreateCodeSet("", 0));

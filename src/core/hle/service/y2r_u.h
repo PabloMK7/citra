@@ -8,7 +8,6 @@
 #include <memory>
 #include <string>
 #include "common/common_types.h"
-#include "core/hle/kernel/kernel.h"
 #include "core/hle/result.h"
 #include "core/hle/service/service.h"
 
@@ -296,7 +295,7 @@ private:
 
     Core::System& system;
 
-    Kernel::SharedPtr<Kernel::Event> completion_event;
+    std::shared_ptr<Kernel::Event> completion_event;
     ConversionConfiguration conversion{};
     DitheringWeightParams dithering_weight_params{};
     bool temporal_dithering_enabled = false;

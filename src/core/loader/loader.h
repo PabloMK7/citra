@@ -99,7 +99,7 @@ public:
      * @param process The newly created process.
      * @return The status result of the operation.
      */
-    virtual ResultStatus Load(Kernel::SharedPtr<Kernel::Process>& process) = 0;
+    virtual ResultStatus Load(std::shared_ptr<Kernel::Process>& process) = 0;
 
     /**
      * Loads the system mode that this application needs.

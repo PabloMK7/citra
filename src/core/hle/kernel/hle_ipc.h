@@ -55,14 +55,14 @@ public:
      * associated ServerSession alive for the duration of the connection.
      * @param server_session Owning pointer to the ServerSession associated with the connection.
      */
-    virtual void ClientConnected(SharedPtr<ServerSession> server_session);
+    virtual void ClientConnected(std::shared_ptr<ServerSession> server_session);
 
     /**
      * Signals that a client has just disconnected from this HLE handler and releases the
      * associated ServerSession.
      * @param server_session ServerSession associated with the connection.
      */
-    virtual void ClientDisconnected(SharedPtr<ServerSession> server_session);
+    virtual void ClientDisconnected(std::shared_ptr<ServerSession> server_session);
 
     /// Empty placeholder structure for services with no per-session data. The session data classes
     /// in each service must inherit from this.
@@ -76,7 +76,7 @@ protected:
 
     /// Returns the session data associated with the server session.
     template <typename T>
-    T* GetSessionData(SharedPtr<ServerSession> session) {
+    T* GetSessionData(std::shared_ptr<ServerSession> session) {
         static_assert(std::is_base_of<SessionDataBase, T>(),
                       "T is not a subclass of SessionDataBase");
         auto itr = std::find_if(connected_sessions.begin(), connected_sessions.end(),
@@ -86,9 +86,9 @@ protected:
     }
 
     struct SessionInfo {
-        SessionInfo(SharedPtr<ServerSession> session, std::unique_ptr<SessionDataBase> data);
+        SessionInfo(std::shared_ptr<ServerSession> session, std::unique_ptr<SessionDataBase> data);
 
-        SharedPtr<ServerSession> session;
+        std::shared_ptr<ServerSession> session;
         std::unique_ptr<SessionDataBase> data;
     };
     /// List of sessions that are connected to this handler. A ServerSession whose server endpoint
@@ -158,7 +158,7 @@ private:
  */
 class HLERequestContext {
 public:
-    HLERequestContext(KernelSystem& kernel, SharedPtr<ServerSession> session);
+    HLERequestContext(KernelSystem& kernel, std::shared_ptr<ServerSession> session);
     ~HLERequestContext();
 
     /// Returns a pointer to the IPC command buffer for this request.
@@ -170,12 +170,12 @@ public:
      * Returns the session through which this request was made. This can be used as a map key to
      * access per-client data on services.
      */
-    SharedPtr<ServerSession> Session() const {
+    std::shared_ptr<ServerSession> Session() const {
         return session;
     }
 
-    using WakeupCallback = std::function<void(SharedPtr<Thread> thread, HLERequestContext& context,
-                                              ThreadWakeupReason reason)>;
+    using WakeupCallback = std::function<void(
+        std::shared_ptr<Thread> thread, HLERequestContext& context, ThreadWakeupReason reason)>;
 
     /**
      * Puts the specified guest thread to sleep until the returned event is signaled or until the
@@ -189,20 +189,22 @@ public:
      * was called.
      * @returns Event that when signaled will resume the thread and call the callback function.
      */
-    SharedPtr<Event> SleepClientThread(SharedPtr<Thread> thread, const std::string& reason,
-                                       std::chrono::nanoseconds timeout, WakeupCallback&& callback);
+    std::shared_ptr<Event> SleepClientThread(std::shared_ptr<Thread> thread,
+                                             const std::string& reason,
+                                             std::chrono::nanoseconds timeout,
+                                             WakeupCallback&& callback);
 
     /**
      * Resolves a object id from the request command buffer into a pointer to an object. See the
      * "HLE handle protocol" section in the class documentation for more details.
      */
-    SharedPtr<Object> GetIncomingHandle(u32 id_from_cmdbuf) const;
+    std::shared_ptr<Object> GetIncomingHandle(u32 id_from_cmdbuf) const;
 
     /**
      * Adds an outgoing object to the response, returning the id which should be used to reference
      * it. See the "HLE handle protocol" section in the class documentation for more details.
      */
-    u32 AddOutgoingHandle(SharedPtr<Object> object);
+    u32 AddOutgoingHandle(std::shared_ptr<Object> object);
 
     /**
      * Discards all Objects from the context, invalidating all ids. This may be called after reading
@@ -237,9 +239,9 @@ public:
 private:
     KernelSystem& kernel;
     std::array<u32, IPC::COMMAND_BUFFER_LENGTH> cmd_buf;
-    SharedPtr<ServerSession> session;
+    std::shared_ptr<ServerSession> session;
     // TODO(yuriks): Check common usage of this and optimize size accordingly
-    boost::container::small_vector<SharedPtr<Object>, 8> request_handles;
+    boost::container::small_vector<std::shared_ptr<Object>, 8> request_handles;
     // The static buffers will be created when the IPC request is translated.
     std::array<std::vector<u8>, IPC::MAX_STATIC_BUFFERS> static_buffers;
     // The mapped buffers will be created when the IPC request is translated

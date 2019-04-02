@@ -125,7 +125,7 @@ System::ResultStatus System::Load(EmuWindow& emu_window, const std::string& file
         return init_result;
     }
 
-    Kernel::SharedPtr<Kernel::Process> process;
+    std::shared_ptr<Kernel::Process> process;
     const Loader::ResultStatus load_result{app_loader->Load(process)};
     kernel->SetCurrentProcess(process);
     if (Loader::ResultStatus::Success != load_result) {

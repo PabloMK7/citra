@@ -5,6 +5,7 @@
 #pragma once
 
 #include <array>
+#include <memory>
 #include <optional>
 #include <vector>
 #include "core/hle/kernel/event.h"
@@ -81,13 +82,13 @@ struct MessageParameter {
     AppletId sender_id = AppletId::None;
     AppletId destination_id = AppletId::None;
     SignalType signal = SignalType::None;
-    Kernel::SharedPtr<Kernel::Object> object = nullptr;
+    std::shared_ptr<Kernel::Object> object = nullptr;
     std::vector<u8> buffer;
 };
 
 /// Holds information about the parameters used in StartLibraryApplet
 struct AppletStartupParameter {
-    Kernel::SharedPtr<Kernel::Object> object = nullptr;
+    std::shared_ptr<Kernel::Object> object = nullptr;
     std::vector<u8> buffer;
 };
 
@@ -125,8 +126,8 @@ public:
                          AppletId receiver_appid);
 
     struct InitializeResult {
-        Kernel::SharedPtr<Kernel::Event> notification_event;
-        Kernel::SharedPtr<Kernel::Event> parameter_event;
+        std::shared_ptr<Kernel::Event> notification_event;
+        std::shared_ptr<Kernel::Event> parameter_event;
     };
 
     ResultVal<InitializeResult> Initialize(AppletId app_id, AppletAttributes attributes);
@@ -135,10 +136,10 @@ public:
     ResultCode PrepareToStartLibraryApplet(AppletId applet_id);
     ResultCode PreloadLibraryApplet(AppletId applet_id);
     ResultCode FinishPreloadingLibraryApplet(AppletId applet_id);
-    ResultCode StartLibraryApplet(AppletId applet_id, Kernel::SharedPtr<Kernel::Object> object,
+    ResultCode StartLibraryApplet(AppletId applet_id, std::shared_ptr<Kernel::Object> object,
                                   const std::vector<u8>& buffer);
     ResultCode PrepareToCloseLibraryApplet(bool not_pause, bool exiting, bool jump_home);
-    ResultCode CloseLibraryApplet(Kernel::SharedPtr<Kernel::Object> object, std::vector<u8> buffer);
+    ResultCode CloseLibraryApplet(std::shared_ptr<Kernel::Object> object, std::vector<u8> buffer);
 
     ResultCode PrepareToDoApplicationJump(u64 title_id, FS::MediaType media_type,
                                           ApplicationJumpFlags flags);
@@ -189,8 +190,8 @@ private:
         bool registered;
         bool loaded;
         AppletAttributes attributes;
-        Kernel::SharedPtr<Kernel::Event> notification_event;
-        Kernel::SharedPtr<Kernel::Event> parameter_event;
+        std::shared_ptr<Kernel::Event> notification_event;
+        std::shared_ptr<Kernel::Event> parameter_event;
 
         void Reset() {
             applet_id = AppletId::None;

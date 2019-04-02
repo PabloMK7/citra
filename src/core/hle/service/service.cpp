@@ -197,7 +197,7 @@ static bool AttemptLLE(const ServiceModuleInfo& service_module) {
                   service_module.name);
         return false;
     }
-    Kernel::SharedPtr<Kernel::Process> process;
+    std::shared_ptr<Kernel::Process> process;
     loader->Load(process);
     LOG_DEBUG(Service, "Service module \"{}\" has been successfully loaded.", service_module.name);
     return true;
