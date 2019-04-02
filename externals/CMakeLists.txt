@@ -100,3 +100,6 @@ if (ENABLE_WEB_SERVICE)
     add_library(cpp-jwt INTERFACE)
     target_include_directories(cpp-jwt INTERFACE ./cpp-jwt/include)
 endif()
+
+# lodepng
+add_subdirectory(lodepng)
