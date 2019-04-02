@@ -158,7 +158,7 @@ private:
  */
 class HLERequestContext {
 public:
-    HLERequestContext(KernelSystem& kernel, std::shared_ptr<ServerSession> session);
+    HLERequestContext(KernelSystem& kernel, std::shared_ptr<ServerSession> session, Thread* thread);
     ~HLERequestContext();
 
     /// Returns a pointer to the IPC command buffer for this request.
@@ -180,7 +180,6 @@ public:
     /**
      * Puts the specified guest thread to sleep until the returned event is signaled or until the
      * specified timeout expires.
-     * @param thread Thread to be put to sleep.
      * @param reason Reason for pausing the thread, to be used for debugging purposes.
      * @param timeout Timeout in nanoseconds after which the thread will be awoken and the callback
      * invoked with a Timeout reason.
@@ -189,8 +188,7 @@ public:
      * was called.
      * @returns Event that when signaled will resume the thread and call the callback function.
      */
-    std::shared_ptr<Event> SleepClientThread(std::shared_ptr<Thread> thread,
-                                             const std::string& reason,
+    std::shared_ptr<Event> SleepClientThread(const std::string& reason,
                                              std::chrono::nanoseconds timeout,
                                              WakeupCallback&& callback);
 
@@ -240,6 +238,7 @@ private:
     KernelSystem& kernel;
     std::array<u32, IPC::COMMAND_BUFFER_LENGTH> cmd_buf;
     std::shared_ptr<ServerSession> session;
+    Thread* thread;
     // TODO(yuriks): Check common usage of this and optimize size accordingly
     boost::container::small_vector<std::shared_ptr<Object>, 8> request_handles;
     // The static buffers will be created when the IPC request is translated.
