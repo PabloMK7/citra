@@ -162,6 +162,9 @@ void Config::ReadValues() {
     Settings::values.custom_bottom_bottom =
         static_cast<u16>(sdl2_config->GetInteger("Layout", "custom_bottom_bottom", 480));
 
+    // Utility
+    Settings::values.dump_textures = sdl2_config->GetBoolean("Utility", "dump_textures", false);
+
     // Audio
     Settings::values.enable_dsp_lle = sdl2_config->GetBoolean("Audio", "enable_dsp_lle", false);
     Settings::values.enable_dsp_lle_multithread =

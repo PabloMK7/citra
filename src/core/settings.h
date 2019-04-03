@@ -170,6 +170,8 @@ struct Values {
     bool filter_mode;
     std::string pp_shader_name;
 
+    bool dump_textures;
+
     // Audio
     bool enable_dsp_lle;
     bool enable_dsp_lle_multithread;

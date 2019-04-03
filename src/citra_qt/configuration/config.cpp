@@ -230,6 +230,13 @@ void Config::ReadControlValues() {
     qt_config->endGroup();
 }
 
+void Config::ReadUtilityValues() {
+
+    qt_config->beginGroup("Utility");
+    Settings::values.dump_textures = ReadSetting("dump_textures", false).toBool();
+    qt_config->endGroup();
+}
+
 void Config::ReadCoreValues() {
     qt_config->beginGroup(QStringLiteral("Core"));
 
@@ -689,6 +696,14 @@ void Config::SaveControlValues() {
         WriteSetting(QStringLiteral("udp_pad_index"), profile.udp_pad_index, 0);
     }
     qt_config->endArray();
+
+    qt_config->endGroup();
+}
+
+void Config::SaveUtilityValues() {
+    qt_config->beginGroup("Utility");
+
+    WriteSetting("dump_textures", Settings::values.dump_textures, false);
 
     qt_config->endGroup();
 }

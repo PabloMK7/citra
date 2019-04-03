@@ -178,6 +178,10 @@ custom_bottom_bottom =
 # 0 (default): Top Screen is prominent, 1: Bottom Screen is prominent
 swap_screen =
 
+# Dumps textures as PNG to dump/textures/[Title ID]/.
+# 0 (default): Off, 1: On
+dump_textures =
+
 [Audio]
 # Whether or not to enable DSP LLE
 # 0 (default): No, 1: Yes
