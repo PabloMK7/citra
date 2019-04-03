@@ -336,7 +336,7 @@ if (CLANG_FORMAT)
     set(CCOMMENT "Running clang format against all the .h and .cpp files in src/")
     if (WIN32)
         add_custom_target(clang-format
-            COMMAND powershell.exe -Command "Get-ChildItem ${SRCS}/* -Include *.cpp,*.h -Recurse | Foreach {${CLANG_FORMAT} -i $_.fullname}"
+            COMMAND powershell.exe -Command "Get-ChildItem '${SRCS}/*' -Include *.cpp,*.h -Recurse | Foreach {&'${CLANG_FORMAT}' -i $_.fullname}"
             COMMENT ${CCOMMENT})
     elseif(MINGW)
         add_custom_target(clang-format
