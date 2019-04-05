@@ -287,16 +287,16 @@ void ConfigureInput::OnHotkeysChanged(QList<QKeySequence> new_key_list) {
 QList<QKeySequence> ConfigureInput::GetUsedKeyboardKeys() {
     QList<QKeySequence> list;
     for (int button = 0; button < Settings::NativeButton::NumButtons; button++) {
-        auto button_param = buttons_param[button];
+        // TODO(adityaruplaha): Add home button to list when we finally emulate it
+        if (button == Settings::NativeButton::Home) {
+            continue;
+        }
 
+        auto button_param = buttons_param[button];
         if (button_param.Get("engine", "") == "keyboard") {
             list << QKeySequence(button_param.Get("code", 0));
         }
     }
-
-    // TODO(adityaruplaha): Add home button to list when we finally emulate it
-    // Button ID of home button is 14: Referred from citra_qt/configuration/config.cpp
-    list.removeOne(list.indexOf(QKeySequence(buttons_param[14].Get("code", 0))));
     return list;
 }
 
