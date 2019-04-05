@@ -96,8 +96,6 @@ CubebSink::~CubebSink() {
         return;
     }
 
-    impl->cb = nullptr;
-
     if (cubeb_stream_stop(impl->stream) != CUBEB_OK) {
         LOG_CRITICAL(Audio_Sink, "Error stopping cubeb stream");
     }
