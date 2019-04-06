@@ -83,6 +83,8 @@ public:
                           std::function<void()> prepare_reschedule_callback, u32 system_mode);
     ~KernelSystem();
 
+    using PortPair = std::tuple<std::shared_ptr<ServerPort>, std::shared_ptr<ClientPort>>;
+
     /**
      * Creates an address arbiter.
      *
@@ -150,8 +152,7 @@ public:
      * @param name Optional name of the ports
      * @return The created port tuple
      */
-    std::tuple<std::shared_ptr<ServerPort>, std::shared_ptr<ClientPort>> CreatePortPair(
-        u32 max_sessions, std::string name = "UnknownPort");
+    PortPair CreatePortPair(u32 max_sessions, std::string name = "UnknownPort");
 
     /**
      * Creates a pair of ServerSession and an associated ClientSession.
