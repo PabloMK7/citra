@@ -306,9 +306,9 @@ void FS_USER::OpenDirectory(Kernel::HLERequestContext& ctx) {
     rb.Push(dir_res.Code());
     if (dir_res.Succeeded()) {
         std::shared_ptr<Directory> directory = *dir_res;
-        auto sessions = system.Kernel().CreateSessionPair(directory->GetName());
-        directory->ClientConnected(std::get<std::shared_ptr<ServerSession>>(sessions));
-        rb.PushMoveObjects(std::get<std::shared_ptr<ClientSession>>(sessions));
+        auto [server, client] = system.Kernel().CreateSessionPair(directory->GetName());
+        directory->ClientConnected(server);
+        rb.PushMoveObjects(client);
     } else {
         LOG_ERROR(Service_FS, "failed to get a handle for directory type={} size={} data={}",
                   static_cast<u32>(dirname_type), dirname_size, dir_path.DebugStr());
