@@ -12,6 +12,11 @@
 #include "core/hle/result.h"
 #include "core/hle/service/apt/apt.h"
 
+namespace Frontend {
+class MiiSelector;
+struct MiiSelectorConfig;
+} // namespace Frontend
+
 namespace HLE::Applets {
 
 struct MiiConfig {
@@ -19,13 +24,13 @@ struct MiiConfig {
     u8 enable_guest_mii;
     u8 show_on_top_screen;
     INSERT_PADDING_BYTES(5);
-    u16 title[0x40];
+    std::array<u16_le, 0x40> title;
     INSERT_PADDING_BYTES(4);
     u8 show_guest_miis;
     INSERT_PADDING_BYTES(3);
     u32 initially_selected_mii_index;
-    u8 guest_mii_whitelist[6];
-    u8 user_mii_whitelist[0x64];
+    std::array<u8, 0x6> guest_mii_whitelist;
+    std::array<u8, 0x64> user_mii_whitelist;
     INSERT_PADDING_BYTES(2);
     u32 magic_value;
 };
@@ -117,12 +122,26 @@ public:
     ResultCode StartImpl(const Service::APT::AppletStartupParameter& parameter) override;
     void Update() override;
 
+    /**
+     * Sends the LibAppletClosing signal to the application,
+     * along with the relevant data buffers.
+     */
+    void Finalize();
+
+    static MiiResult GetStandardMiiResult();
+
 private:
+    Frontend::MiiSelectorConfig ToFrontendConfig(const MiiConfig& config) const;
+
     /// This SharedMemory will be created when we receive the LibAppJustStarted message.
     /// It holds the framebuffer info retrieved by the application with
     /// GSPGPU::ImportDisplayCaptureInfo
     std::shared_ptr<Kernel::SharedMemory> framebuffer_memory;
 
     MiiConfig config;
+
+    MiiResult result{};
+
+    std::shared_ptr<Frontend::MiiSelector> frontend_applet;
 };
 } // namespace HLE::Applets

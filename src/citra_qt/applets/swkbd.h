@@ -48,7 +48,7 @@ class QtKeyboard final : public QObject, public Frontend::SoftwareKeyboard {
 
 public:
     explicit QtKeyboard(QWidget& parent);
-    void Setup(const Frontend::KeyboardConfig* config) override;
+    void Setup(const Frontend::KeyboardConfig& config) override;
 
 private:
     Q_INVOKABLE void OpenInputDialog();

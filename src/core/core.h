@@ -7,6 +7,7 @@
 #include <memory>
 #include <string>
 #include "common/common_types.h"
+#include "core/frontend/applets/mii_selector.h"
 #include "core/frontend/applets/swkbd.h"
 #include "core/loader/loader.h"
 #include "core/memory.h"
@@ -222,7 +223,13 @@ public:
 
     /// Frontend Applets
 
+    void RegisterMiiSelector(std::shared_ptr<Frontend::MiiSelector> mii_selector);
+
     void RegisterSoftwareKeyboard(std::shared_ptr<Frontend::SoftwareKeyboard> swkbd);
+
+    std::shared_ptr<Frontend::MiiSelector> GetMiiSelector() const {
+        return registered_mii_selector;
+    }
 
     std::shared_ptr<Frontend::SoftwareKeyboard> GetSoftwareKeyboard() const {
         return registered_swkbd;
@@ -260,6 +267,7 @@ private:
     std::shared_ptr<Service::SM::ServiceManager> service_manager;
 
     /// Frontend applets
+    std::shared_ptr<Frontend::MiiSelector> registered_mii_selector;
     std::shared_ptr<Frontend::SoftwareKeyboard> registered_swkbd;
 
     /// Cheats manager

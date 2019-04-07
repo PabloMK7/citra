@@ -15,6 +15,9 @@ class System;
 
 namespace Service::PTM {
 
+/// Id of the SharedExtData archive used by the PTM process
+constexpr std::array<u8, 12> ptm_shared_extdata_id = {0, 0, 0, 0, 0x0B, 0, 0, 0xF0, 0, 0, 0, 0};
+
 /// Charge levels used by PTM functions
 enum class ChargeLevels : u32 {
     CriticalBattery = 1,

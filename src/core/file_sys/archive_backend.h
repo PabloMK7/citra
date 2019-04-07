@@ -40,6 +40,9 @@ public:
     Path() : type(LowPathType::Invalid) {}
     Path(const char* path) : type(LowPathType::Char), string(path) {}
     Path(std::vector<u8> binary_data) : type(LowPathType::Binary), binary(std::move(binary_data)) {}
+    template <std::size_t size>
+    Path(const std::array<u8, size>& binary_data)
+        : type(LowPathType::Binary), binary(binary_data.begin(), binary_data.end()) {}
     Path(LowPathType type, const std::vector<u8>& data);
 
     LowPathType GetType() const {

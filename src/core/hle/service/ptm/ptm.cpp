@@ -23,9 +23,6 @@ namespace Service::PTM {
 /// Values for the default gamecoin.dat file
 static const GameCoin default_game_coin = {0x4F00, 42, 0, 0, 0, 2014, 12, 29};
 
-/// Id of the SharedExtData archive used by the PTM process
-static const std::vector<u8> ptm_shared_extdata_id = {0, 0, 0, 0, 0x0B, 0, 0, 0xF0, 0, 0, 0, 0};
-
 void Module::Interface::GetAdapterState(Kernel::HLERequestContext& ctx) {
     IPC::RequestParser rp(ctx, 0x5, 0, 0);
 

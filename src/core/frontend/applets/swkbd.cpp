@@ -135,7 +135,7 @@ ValidationError SoftwareKeyboard::Finalize(const std::string& text, u8 button) {
     return ValidationError::None;
 }
 
-void DefaultKeyboard::Setup(const Frontend::KeyboardConfig* config) {
+void DefaultKeyboard::Setup(const Frontend::KeyboardConfig& config) {
     SoftwareKeyboard::Setup(config);
 
     auto cfg = Service::CFG::GetModule(Core::System::GetInstance());
@@ -155,14 +155,6 @@ void DefaultKeyboard::Setup(const Frontend::KeyboardConfig* config) {
     default:
         UNREACHABLE();
     }
-}
-
-void RegisterSoftwareKeyboard(std::shared_ptr<SoftwareKeyboard> applet) {
-    Core::System::GetInstance().RegisterSoftwareKeyboard(applet);
-}
-
-std::shared_ptr<SoftwareKeyboard> GetRegisteredSoftwareKeyboard() {
-    return Core::System::GetInstance().GetSoftwareKeyboard();
 }
 
 } // namespace Frontend

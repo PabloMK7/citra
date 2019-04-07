@@ -10,6 +10,8 @@ add_executable(citra-qt
     Info.plist
     aboutdialog.cpp
     aboutdialog.h
+    applets/mii_selector.cpp
+    applets/mii_selector.h
     applets/swkbd.cpp
     applets/swkbd.h
     bootmanager.cpp
