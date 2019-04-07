@@ -18,7 +18,7 @@ constexpr char MII_BUTTON_CANCEL[] = "Cancel";
 /// later learn is needed can be added here and filled in by the backend HLE applet
 struct MiiSelectorConfig {
     bool enable_cancel_button;
-    std::u16string title;
+    std::string title;
     u32 initially_selected_mii_index;
 };
 

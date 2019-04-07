@@ -9,9 +9,24 @@
 #include <QVBoxLayout>
 #include "citra_qt/applets/mii_selector.h"
 #include "common/file_util.h"
+#include "common/string_util.h"
 #include "core/file_sys/archive_extsavedata.h"
 #include "core/file_sys/file_backend.h"
 #include "core/hle/service/ptm/ptm.h"
+
+/**
+ * Converts a UTF-16 text in a container to a UTF-8 std::string.
+ */
+template <typename T>
+std::string TextFromBuffer(const T& text) {
+    const auto text_end = std::find(text.begin(), text.end(), u'\0');
+    const std::size_t text_size = std::distance(text.begin(), text_end);
+    std::u16string buffer(text_size, 0);
+    std::transform(text.begin(), text_end, buffer.begin(), [](u16_le character) {
+        return static_cast<char16_t>(static_cast<u16>(character));
+    });
+    return Common::UTF16ToUTF8(buffer);
+}
 
 QtMiiSelectorDialog::QtMiiSelectorDialog(QWidget* parent, QtMiiSelector* mii_selector_)
     : QDialog(parent), mii_selector(mii_selector_) {
@@ -28,7 +43,7 @@ QtMiiSelectorDialog::QtMiiSelectorDialog(QWidget* parent, QtMiiSelector* mii_sel
 
     setWindowTitle(config.title.empty() || config.title.at(0) == '\x0000'
                        ? tr("Mii Selector")
-                       : QString::fromStdU16String(config.title));
+                       : QString::fromStdString(config.title));
 
     miis.push_back(HLE::Applets::MiiSelector::GetStandardMiiResult().selected_mii_data);
     combobox->addItem(tr("Standard Mii"));
@@ -56,10 +71,9 @@ QtMiiSelectorDialog::QtMiiSelectorDialog(QWidget* parent, QtMiiSelector* mii_sel
                 file->Read(saved_miis_offset, sizeof(mii), mii_raw.data());
                 std::memcpy(&mii, mii_raw.data(), sizeof(mii));
                 if (mii.mii_id != 0) {
-                    std::u16string name(sizeof(mii.mii_name), '\0');
-                    std::memcpy(name.data(), mii.mii_name.data(), sizeof(mii.mii_name));
+                    std::string name = TextFromBuffer(mii.mii_name);
                     miis.push_back(mii);
-                    combobox->addItem(QString::fromStdU16String(name));
+                    combobox->addItem(QString::fromStdString(name));
                 }
                 saved_miis_offset += sizeof(mii);
             }
