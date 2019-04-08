@@ -14,20 +14,6 @@
 #include "core/file_sys/file_backend.h"
 #include "core/hle/service/ptm/ptm.h"
 
-/**
- * Converts a UTF-16 text in a container to a UTF-8 std::string.
- */
-template <typename T>
-std::string TextFromBuffer(const T& text) {
-    const auto text_end = std::find(text.begin(), text.end(), u'\0');
-    const std::size_t text_size = std::distance(text.begin(), text_end);
-    std::u16string buffer(text_size, 0);
-    std::transform(text.begin(), text_end, buffer.begin(), [](u16_le character) {
-        return static_cast<char16_t>(static_cast<u16>(character));
-    });
-    return Common::UTF16ToUTF8(buffer);
-}
-
 QtMiiSelectorDialog::QtMiiSelectorDialog(QWidget* parent, QtMiiSelector* mii_selector_)
     : QDialog(parent), mii_selector(mii_selector_) {
     using namespace Frontend;
@@ -71,7 +57,7 @@ QtMiiSelectorDialog::QtMiiSelectorDialog(QWidget* parent, QtMiiSelector* mii_sel
                 file->Read(saved_miis_offset, sizeof(mii), mii_raw.data());
                 std::memcpy(&mii, mii_raw.data(), sizeof(mii));
                 if (mii.mii_id != 0) {
-                    std::string name = TextFromBuffer(mii.mii_name);
+                    std::string name = Common::UTF16BufferToUTF8(mii.mii_name);
                     miis.push_back(mii);
                     combobox->addItem(QString::fromStdString(name));
                 }

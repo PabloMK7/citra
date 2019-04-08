@@ -21,20 +21,6 @@
 
 namespace HLE::Applets {
 
-/**
- * Converts a UTF-16 text in a container to a UTF-8 std::string.
- */
-template <typename T>
-inline std::string TextFromBuffer(const T& text) {
-    const auto text_end = std::find(text.begin(), text.end(), u'\0');
-    const std::size_t text_size = std::distance(text.begin(), text_end);
-    std::u16string buffer(text_size, 0);
-    std::transform(text.begin(), text_end, buffer.begin(), [](u16_le character) {
-        return static_cast<char16_t>(static_cast<u16>(character));
-    });
-    return Common::UTF16ToUTF8(buffer);
-}
-
 ResultCode SoftwareKeyboard::ReceiveParameter(Service::APT::MessageParameter const& parameter) {
     switch (parameter.signal) {
     case Service::APT::SignalType::Request: {
@@ -79,7 +65,7 @@ ResultCode SoftwareKeyboard::ReceiveParameter(Service::APT::MessageParameter con
 
         case SoftwareKeyboardCallbackResult::Close:
             // Let the frontend display error and quit
-            frontend_applet->ShowError(TextFromBuffer(config.callback_msg));
+            frontend_applet->ShowError(Common::UTF16BufferToUTF8(config.callback_msg));
             config.return_code = SoftwareKeyboardResult::BannedInput;
             config.text_offset = config.text_length = 0;
             Finalize();
@@ -88,7 +74,7 @@ ResultCode SoftwareKeyboard::ReceiveParameter(Service::APT::MessageParameter con
         case SoftwareKeyboardCallbackResult::Continue:
             // Let the frontend display error and get input again
             // The input will be sent for validation again on next Update().
-            frontend_applet->ShowError(TextFromBuffer(config.callback_msg));
+            frontend_applet->ShowError(Common::UTF16BufferToUTF8(config.callback_msg));
             frontend_applet->Execute(ToFrontendConfig(config));
             return RESULT_SUCCESS;
 
@@ -209,7 +195,7 @@ Frontend::KeyboardConfig SoftwareKeyboard::ToFrontendConfig(
     frontend_config.multiline_mode = config.multiline;
     frontend_config.max_text_length = config.max_text_length;
     frontend_config.max_digits = config.max_digits;
-    frontend_config.hint_text = TextFromBuffer(config.hint_text);
+    frontend_config.hint_text = Common::UTF16BufferToUTF8(config.hint_text);
     frontend_config.has_custom_button_text =
         !std::all_of(config.button_text.begin(), config.button_text.end(),
                      [](std::array<u16, HLE::Applets::MAX_BUTTON_TEXT_LEN + 1> x) {
@@ -217,7 +203,7 @@ Frontend::KeyboardConfig SoftwareKeyboard::ToFrontendConfig(
                      });
     if (frontend_config.has_custom_button_text) {
         for (const auto& text : config.button_text) {
-            frontend_config.button_text.push_back(TextFromBuffer(text));
+            frontend_config.button_text.push_back(Common::UTF16BufferToUTF8(text));
         }
     }
     frontend_config.filters.prevent_digit =

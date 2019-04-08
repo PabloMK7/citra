@@ -4,10 +4,12 @@
 
 #pragma once
 
+#include <algorithm>
 #include <cstddef>
 #include <string>
 #include <vector>
 #include "common/common_types.h"
+#include "common/swap.h"
 
 namespace Common {
 
@@ -56,6 +58,20 @@ bool ComparePartialString(InIt begin, InIt end, const char* other) {
     }
     // Only return true if both strings finished at the same point
     return (begin == end) == (*other == '\0');
+}
+
+/**
+ * Converts a UTF-16 text in a container to a UTF-8 std::string.
+ */
+template <typename T>
+std::string UTF16BufferToUTF8(const T& text) {
+    const auto text_end = std::find(text.begin(), text.end(), u'\0');
+    const std::size_t text_size = std::distance(text.begin(), text_end);
+    std::u16string buffer(text_size, 0);
+    std::transform(text.begin(), text_end, buffer.begin(), [](u16_le character) {
+        return static_cast<char16_t>(static_cast<u16>(character));
+    });
+    return UTF16ToUTF8(buffer);
 }
 
 /**
