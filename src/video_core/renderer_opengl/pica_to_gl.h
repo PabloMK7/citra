@@ -83,9 +83,9 @@ inline GLenum WrapMode(Pica::TexturingRegs::TextureConfig::WrapMode mode) {
     }
 
     if (index > 3) {
-        Core::Telemetry().AddField(Telemetry::FieldType::Session,
-                                   "VideoCore_Pica_UnsupportedTextureWrapMode",
-                                   static_cast<u32>(index));
+        Core::System::GetInstance().TelemetrySession().AddField(
+            Telemetry::FieldType::Session, "VideoCore_Pica_UnsupportedTextureWrapMode",
+            static_cast<u32>(index));
         LOG_WARNING(Render_OpenGL, "Using texture wrap mode {}", index);
     }
 

@@ -39,8 +39,10 @@ public:
     Impl(Impl const&) = delete;
     const Impl& operator=(Impl const&) = delete;
 
-    void PushEntry(Entry e) {
-        message_queue.Push(std::move(e));
+    void PushEntry(Class log_class, Level log_level, const char* filename, unsigned int line_num,
+                   const char* function, std::string message) {
+        message_queue.Push(
+            CreateEntry(log_class, log_level, filename, line_num, function, std::move(message)));
     }
 
     void AddBackend(std::unique_ptr<Backend> backend) {
@@ -108,11 +110,33 @@ private:
         backend_thread.join();
     }
 
+    Entry CreateEntry(Class log_class, Level log_level, const char* filename, unsigned int line_nr,
+                      const char* function, std::string message) const {
+        using std::chrono::duration_cast;
+        using std::chrono::steady_clock;
+
+        // matches from the beginning up to the last '../' or 'src/'
+        static const std::regex trim_source_path(R"(.*([\/\\]|^)((\.\.)|(src))[\/\\])");
+
+        Entry entry;
+        entry.timestamp =
+            duration_cast<std::chrono::microseconds>(steady_clock::now() - time_origin);
+        entry.log_class = log_class;
+        entry.log_level = log_level;
+        entry.filename = std::regex_replace(filename, trim_source_path, "");
+        entry.line_num = line_nr;
+        entry.function = function;
+        entry.message = std::move(message);
+
+        return entry;
+    }
+
     std::mutex writing_mutex;
     std::thread backend_thread;
     std::vector<std::unique_ptr<Backend>> backends;
     Common::MPSCQueue<Log::Entry> message_queue;
     Filter filter;
+    std::chrono::steady_clock::time_point time_origin{std::chrono::steady_clock::now()};
 };
 
 void ConsoleBackend::Write(const Entry& entry) {
@@ -249,27 +273,6 @@ const char* GetLevelName(Level log_level) {
 #undef LVL
 }
 
-Entry CreateEntry(Class log_class, Level log_level, const char* filename, unsigned int line_nr,
-                  const char* function, std::string message) {
-    using std::chrono::duration_cast;
-    using std::chrono::steady_clock;
-
-    // matches from the beginning up to the last '../' or 'src/'
-    static const std::regex trim_source_path(R"(.*([\/\\]|^)((\.\.)|(src))[\/\\])");
-    static steady_clock::time_point time_origin = steady_clock::now();
-
-    Entry entry;
-    entry.timestamp = duration_cast<std::chrono::microseconds>(steady_clock::now() - time_origin);
-    entry.log_class = log_class;
-    entry.log_level = log_level;
-    entry.filename = std::regex_replace(filename, trim_source_path, "");
-    entry.line_num = line_nr;
-    entry.function = function;
-    entry.message = std::move(message);
-
-    return entry;
-}
-
 void SetGlobalFilter(const Filter& filter) {
     Impl::Instance().SetGlobalFilter(filter);
 }
@@ -294,9 +297,7 @@ void FmtLogMessageImpl(Class log_class, Level log_level, const char* filename,
     if (!filter.CheckMessage(log_class, log_level))
         return;
 
-    Entry entry =
-        CreateEntry(log_class, log_level, filename, line_num, function, fmt::vformat(format, args));
-
-    instance.PushEntry(std::move(entry));
+    instance.PushEntry(log_class, log_level, filename, line_num, function,
+                       fmt::vformat(format, args));
 }
 } // namespace Log

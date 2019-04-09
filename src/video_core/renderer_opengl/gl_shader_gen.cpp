@@ -1549,8 +1549,8 @@ vec4 secondary_fragment_color = vec4(0.0);
         // Blend the fog
         out += "last_tex_env_out.rgb = mix(fog_color.rgb, last_tex_env_out.rgb, fog_factor);\n";
     } else if (state.fog_mode == TexturingRegs::FogMode::Gas) {
-        Core::Telemetry().AddField(Telemetry::FieldType::Session, "VideoCore_Pica_UseGasMode",
-                                   true);
+        Core::System::GetInstance().TelemetrySession().AddField(Telemetry::FieldType::Session,
+                                                                "VideoCore_Pica_UseGasMode", true);
         LOG_CRITICAL(Render_OpenGL, "Unimplemented gas mode");
         out += "discard; }";
         return out;
