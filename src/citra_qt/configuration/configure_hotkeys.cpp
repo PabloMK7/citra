@@ -78,10 +78,10 @@ void ConfigureHotkeys::Configure(QModelIndex index) {
     auto* const model = ui->hotkey_list->model();
     const auto previous_key = model->data(index);
 
-    auto* const hotkey_dialog = new SequenceDialog;
+    SequenceDialog hotkey_dialog;
 
-    const int return_code = hotkey_dialog->exec();
-    const auto key_sequence = hotkey_dialog->GetSequence();
+    const int return_code = hotkey_dialog.exec();
+    const auto key_sequence = hotkey_dialog.GetSequence();
     if (return_code == QDialog::Rejected || key_sequence.isEmpty()) {
         return;
     }
