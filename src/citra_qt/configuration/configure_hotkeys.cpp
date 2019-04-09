@@ -75,16 +75,16 @@ void ConfigureHotkeys::Configure(QModelIndex index) {
     }
 
     index = index.sibling(index.row(), 1);
-    auto* model = ui->hotkey_list->model();
-    auto previous_key = model->data(index);
+    auto* const model = ui->hotkey_list->model();
+    const auto previous_key = model->data(index);
 
-    auto* hotkey_dialog = new SequenceDialog;
-    int return_code = hotkey_dialog->exec();
+    auto* const hotkey_dialog = new SequenceDialog;
 
-    auto key_sequence = hotkey_dialog->GetSequence();
-
-    if (return_code == QDialog::Rejected || key_sequence.isEmpty())
+    const int return_code = hotkey_dialog->exec();
+    const auto key_sequence = hotkey_dialog->GetSequence();
+    if (return_code == QDialog::Rejected || key_sequence.isEmpty()) {
         return;
+    }
 
     if (IsUsedKey(key_sequence) && key_sequence != QKeySequence(previous_key.toString())) {
         QMessageBox::critical(this, tr("Error in inputted key"),
