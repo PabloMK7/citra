@@ -6,7 +6,6 @@
 
 #include <memory>
 #include <QWidget>
-#include "core/settings.h"
 
 namespace Ui {
 class ConfigureHotkeys;
