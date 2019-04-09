@@ -70,8 +70,9 @@ void ConfigureHotkeys::OnInputKeysChanged(QList<QKeySequence> new_key_list) {
 }
 
 void ConfigureHotkeys::Configure(QModelIndex index) {
-    if (index.parent() == QModelIndex())
+    if (!index.parent().isValid()) {
         return;
+    }
 
     index = index.sibling(index.row(), 1);
     auto* model = ui->hotkey_list->model();
