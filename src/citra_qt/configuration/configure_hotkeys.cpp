@@ -35,7 +35,7 @@ void ConfigureHotkeys::EmitHotkeysChanged() {
     emit HotkeysChanged(GetUsedKeyList());
 }
 
-QList<QKeySequence> ConfigureHotkeys::GetUsedKeyList() {
+QList<QKeySequence> ConfigureHotkeys::GetUsedKeyList() const {
     QList<QKeySequence> list;
     for (int r = 0; r < model->rowCount(); r++) {
         QStandardItem* parent = model->item(r, 0);
@@ -94,7 +94,7 @@ void ConfigureHotkeys::Configure(QModelIndex index) {
     }
 }
 
-bool ConfigureHotkeys::IsUsedKey(QKeySequence key_sequence) {
+bool ConfigureHotkeys::IsUsedKey(QKeySequence key_sequence) const {
     return input_keys_list.contains(key_sequence) || GetUsedKeyList().contains(key_sequence);
 }
 
