@@ -78,7 +78,7 @@ void ConfigureHotkeys::Configure(QModelIndex index) {
     auto* const model = ui->hotkey_list->model();
     const auto previous_key = model->data(index);
 
-    SequenceDialog hotkey_dialog;
+    SequenceDialog hotkey_dialog{this};
 
     const int return_code = hotkey_dialog.exec();
     const auto key_sequence = hotkey_dialog.GetSequence();
