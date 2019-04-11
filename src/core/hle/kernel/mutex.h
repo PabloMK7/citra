@@ -27,7 +27,7 @@ public:
         return name;
     }
 
-    static const HandleType HANDLE_TYPE = HandleType::Mutex;
+    static constexpr HandleType HANDLE_TYPE = HandleType::Mutex;
     HandleType GetHandleType() const override {
         return HANDLE_TYPE;
     }
