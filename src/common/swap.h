@@ -57,13 +57,13 @@
 namespace Common {
 
 #ifdef _MSC_VER
-inline u16 swap16(u16 data) {
+[[nodiscard]] inline u16 swap16(u16 data) noexcept {
     return _byteswap_ushort(data);
 }
-inline u32 swap32(u32 data) {
+[[nodiscard]] inline u32 swap32(u32 data) noexcept {
     return _byteswap_ulong(data);
 }
-inline u64 swap64(u64 data) {
+[[nodiscard]] inline u64 swap64(u64 data) noexcept {
     return _byteswap_uint64(data);
 }
 #elif defined(__clang__) || defined(__GNUC__)
@@ -73,29 +73,29 @@ inline u64 swap64(u64 data) {
 #undef swap32
 #undef swap64
 #endif
-inline u16 swap16(u16 data) {
+[[nodiscard]] inline u16 swap16(u16 data) noexcept {
     return __builtin_bswap16(data);
 }
-inline u32 swap32(u32 data) {
+[[nodiscard]] inline u32 swap32(u32 data) noexcept {
     return __builtin_bswap32(data);
 }
-inline u64 swap64(u64 data) {
+[[nodiscard]] inline u64 swap64(u64 data) noexcept {
     return __builtin_bswap64(data);
 }
 #else
 // Slow generic implementation.
-inline u16 swap16(u16 data) {
+[[nodiscard]] inline u16 swap16(u16 data) noexcept {
     return (data >> 8) | (data << 8);
 }
-inline u32 swap32(u32 data) {
+[[nodiscard]] inline u32 swap32(u32 data) noexcept {
     return (swap16(data) << 16) | swap16(data >> 16);
 }
-inline u64 swap64(u64 data) {
+[[nodiscard]] inline u64 swap64(u64 data) noexcept {
     return ((u64)swap32(data) << 32) | swap32(data >> 32);
 }
 #endif
 
-inline float swapf(float f) {
+[[nodiscard]] inline float swapf(float f) noexcept {
     static_assert(sizeof(u32) == sizeof(float), "float must be the same size as uint32_t.");
 
     u32 value;
@@ -107,7 +107,7 @@ inline float swapf(float f) {
     return f;
 }
 
-inline double swapd(double f) {
+[[nodiscard]] inline double swapd(double f) noexcept {
     static_assert(sizeof(u64) == sizeof(double), "double must be the same size as uint64_t.");
 
     u64 value;
