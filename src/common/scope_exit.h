@@ -20,7 +20,7 @@ struct ScopeExitHelper {
 
 template <typename Func>
 ScopeExitHelper<Func> ScopeExit(Func&& func) {
-    return ScopeExitHelper<Func>(std::move(func));
+    return ScopeExitHelper<Func>(std::forward<Func>(func));
 }
 } // namespace detail
 
