@@ -21,11 +21,6 @@
 
 #if defined(_MSC_VER)
 #include <cstdlib>
-#elif defined(__linux__)
-#include <byteswap.h>
-#elif defined(__Bitrig__) || defined(__DragonFly__) || defined(__FreeBSD__) ||                     \
-    defined(__NetBSD__) || defined(__OpenBSD__)
-#include <sys/endian.h>
 #endif
 #include <cstring>
 #include "common/common_types.h"
@@ -62,58 +57,30 @@
 namespace Common {
 
 #ifdef _MSC_VER
-inline u16 swap16(u16 _data) {
-    return _byteswap_ushort(_data);
+inline u16 swap16(u16 data) {
+    return _byteswap_ushort(data);
 }
-inline u32 swap32(u32 _data) {
-    return _byteswap_ulong(_data);
+inline u32 swap32(u32 data) {
+    return _byteswap_ulong(data);
 }
-inline u64 swap64(u64 _data) {
-    return _byteswap_uint64(_data);
+inline u64 swap64(u64 data) {
+    return _byteswap_uint64(data);
 }
-#elif __linux__
-inline u16 swap16(u16 _data) {
-    return bswap_16(_data);
-}
-inline u32 swap32(u32 _data) {
-    return bswap_32(_data);
-}
-inline u64 swap64(u64 _data) {
-    return bswap_64(_data);
-}
-#elif __APPLE__
-inline __attribute__((always_inline)) u16 swap16(u16 _data) {
-    return (_data >> 8) | (_data << 8);
-}
-inline __attribute__((always_inline)) u32 swap32(u32 _data) {
-    return __builtin_bswap32(_data);
-}
-inline __attribute__((always_inline)) u64 swap64(u64 _data) {
-    return __builtin_bswap64(_data);
-}
-#elif defined(__Bitrig__) || defined(__OpenBSD__)
+#elif defined(__clang__) || defined(__GNUC__)
+#if defined(__Bitrig__) || defined(__OpenBSD__)
 // redefine swap16, swap32, swap64 as inline functions
 #undef swap16
 #undef swap32
 #undef swap64
-inline u16 swap16(u16 _data) {
-    return __swap16(_data);
+#endif
+inline u16 swap16(u16 data) {
+    return __builtin_bswap16(data);
 }
-inline u32 swap32(u32 _data) {
-    return __swap32(_data);
+inline u32 swap32(u32 data) {
+    return __builtin_bswap32(data);
 }
-inline u64 swap64(u64 _data) {
-    return __swap64(_data);
-}
-#elif defined(__DragonFly__) || defined(__FreeBSD__) || defined(__NetBSD__)
-inline u16 swap16(u16 _data) {
-    return bswap16(_data);
-}
-inline u32 swap32(u32 _data) {
-    return bswap32(_data);
-}
-inline u64 swap64(u64 _data) {
-    return bswap64(_data);
+inline u64 swap64(u64 data) {
+    return __builtin_bswap64(data);
 }
 #else
 // Slow generic implementation.
