@@ -83,15 +83,19 @@ namespace Common {
     return __builtin_bswap64(data);
 }
 #else
-// Slow generic implementation.
+// Generic implementation.
 [[nodiscard]] inline u16 swap16(u16 data) noexcept {
     return (data >> 8) | (data << 8);
 }
 [[nodiscard]] inline u32 swap32(u32 data) noexcept {
-    return (swap16(data) << 16) | swap16(data >> 16);
+    return ((data & 0xFF000000U) >> 24) | ((data & 0x00FF0000U) >> 8) |
+           ((data & 0x0000FF00U) << 8) | ((data & 0x000000FFU) << 24);
 }
 [[nodiscard]] inline u64 swap64(u64 data) noexcept {
-    return ((u64)swap32(data) << 32) | swap32(data >> 32);
+    return ((data & 0xFF00000000000000ULL) >> 56) | ((data & 0x00FF000000000000ULL) >> 40) |
+           ((data & 0x0000FF0000000000ULL) >> 24) | ((data & 0x000000FF00000000ULL) >> 8) |
+           ((data & 0x00000000FF000000ULL) << 8) | ((data & 0x0000000000FF0000ULL) << 24) |
+           ((data & 0x000000000000FF00ULL) << 40) | ((data & 0x00000000000000FFULL) << 56);
 }
 #endif
 
