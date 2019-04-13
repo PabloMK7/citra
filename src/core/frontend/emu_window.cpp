@@ -28,7 +28,7 @@ private:
         explicit Device(std::weak_ptr<TouchState>&& touch_state) : touch_state(touch_state) {}
         std::tuple<float, float, bool> GetStatus() const override {
             if (auto state = touch_state.lock()) {
-                std::lock_guard<std::mutex> guard(state->mutex);
+                std::lock_guard guard{state->mutex};
                 return std::make_tuple(state->touch_x, state->touch_y, state->touch_pressed);
             }
             return std::make_tuple(0.0f, 0.0f, false);
@@ -98,7 +98,7 @@ void EmuWindow::TouchPressed(unsigned framebuffer_x, unsigned framebuffer_y) {
 
     if (Settings::values.toggle_3d && framebuffer_x >= framebuffer_layout.width / 2)
         framebuffer_x -= framebuffer_layout.width / 2;
-    std::lock_guard<std::mutex> guard(touch_state->mutex);
+    std::lock_guard guard(touch_state->mutex);
     if (Settings::values.toggle_3d) {
         touch_state->touch_x =
             static_cast<float>(framebuffer_x - framebuffer_layout.bottom_screen.left / 2) /
@@ -117,7 +117,7 @@ void EmuWindow::TouchPressed(unsigned framebuffer_x, unsigned framebuffer_y) {
 }
 
 void EmuWindow::TouchReleased() {
-    std::lock_guard<std::mutex> guard(touch_state->mutex);
+    std::lock_guard guard{touch_state->mutex};
     touch_state->touch_pressed = false;
     touch_state->touch_x = 0;
     touch_state->touch_y = 0;

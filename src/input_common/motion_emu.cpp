@@ -40,7 +40,7 @@ public:
     void Tilt(int x, int y) {
         auto mouse_move = Common::MakeVec(x, y) - mouse_origin;
         if (is_tilting) {
-            std::lock_guard<std::mutex> guard(tilt_mutex);
+            std::lock_guard guard{tilt_mutex};
             if (mouse_move.x == 0 && mouse_move.y == 0) {
                 tilt_angle = 0;
             } else {
@@ -52,13 +52,13 @@ public:
     }
 
     void EndTilt() {
-        std::lock_guard<std::mutex> guard(tilt_mutex);
+        std::lock_guard guard{tilt_mutex};
         tilt_angle = 0;
         is_tilting = false;
     }
 
     std::tuple<Common::Vec3<float>, Common::Vec3<float>> GetStatus() {
-        std::lock_guard<std::mutex> guard(status_mutex);
+        std::lock_guard guard{status_mutex};
         return status;
     }
 
@@ -95,7 +95,7 @@ private:
             old_q = q;
 
             {
-                std::lock_guard<std::mutex> guard(tilt_mutex);
+                std::lock_guard guard{tilt_mutex};
 
                 // Find the quaternion describing current 3DS tilting
                 q = Common::MakeQuaternion(
@@ -117,7 +117,7 @@ private:
 
             // Update the sensor state
             {
-                std::lock_guard<std::mutex> guard(status_mutex);
+                std::lock_guard guard{status_mutex};
                 status = std::make_tuple(gravity, angular_rate);
             }
         }

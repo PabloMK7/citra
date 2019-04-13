@@ -165,7 +165,7 @@ void Client::OnPadData(Response::PadData data) {
     Common::Vec3f accel = Common::MakeVec<float>(-data.accel.x, data.accel.y, -data.accel.z);
     Common::Vec3f gyro = Common::MakeVec<float>(-data.gyro.pitch, -data.gyro.yaw, data.gyro.roll);
     {
-        std::lock_guard<std::mutex> guard(status->update_mutex);
+        std::lock_guard guard(status->update_mutex);
 
         status->motion_status = {accel, gyro};
 

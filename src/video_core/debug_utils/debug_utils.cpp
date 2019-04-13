@@ -43,7 +43,7 @@ namespace Pica {
 
 void DebugContext::DoOnEvent(Event event, void* data) {
     {
-        std::unique_lock<std::mutex> lock(breakpoint_mutex);
+        std::unique_lock lock{breakpoint_mutex};
 
         // Commit the rasterizer's caches so framebuffers, render targets, etc. will show on debug
         // widgets
@@ -66,7 +66,7 @@ void DebugContext::DoOnEvent(Event event, void* data) {
 
 void DebugContext::Resume() {
     {
-        std::lock_guard<std::mutex> lock(breakpoint_mutex);
+        std::lock_guard lock{breakpoint_mutex};
 
         // Tell all observers that we are about to resume
         for (auto& breakpoint_observer : breakpoint_observers) {
@@ -282,14 +282,14 @@ void StartPicaTracing() {
         return;
     }
 
-    std::lock_guard<std::mutex> lock(pica_trace_mutex);
+    std::lock_guard lock(pica_trace_mutex);
     pica_trace = std::make_unique<PicaTrace>();
 
     g_is_pica_tracing = true;
 }
 
 void OnPicaRegWrite(PicaTrace::Write write) {
-    std::lock_guard<std::mutex> lock(pica_trace_mutex);
+    std::lock_guard lock(pica_trace_mutex);
 
     if (!g_is_pica_tracing)
         return;
@@ -307,7 +307,7 @@ std::unique_ptr<PicaTrace> FinishPicaTracing() {
     g_is_pica_tracing = false;
 
     // Wait until running tracing is finished
-    std::lock_guard<std::mutex> lock(pica_trace_mutex);
+    std::lock_guard lock(pica_trace_mutex);
     std::unique_ptr<PicaTrace> ret(std::move(pica_trace));
 
     return ret;

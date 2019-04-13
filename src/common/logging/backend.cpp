@@ -46,12 +46,12 @@ public:
     }
 
     void AddBackend(std::unique_ptr<Backend> backend) {
-        std::lock_guard<std::mutex> lock(writing_mutex);
+        std::lock_guard lock{writing_mutex};
         backends.push_back(std::move(backend));
     }
 
     void RemoveBackend(std::string_view backend_name) {
-        std::lock_guard<std::mutex> lock(writing_mutex);
+        std::lock_guard lock{writing_mutex};
         const auto it =
             std::remove_if(backends.begin(), backends.end(),
                            [&backend_name](const auto& i) { return backend_name == i->GetName(); });
@@ -80,7 +80,7 @@ private:
         backend_thread = std::thread([&] {
             Entry entry;
             auto write_logs = [&](Entry& e) {
-                std::lock_guard<std::mutex> lock(writing_mutex);
+                std::lock_guard lock{writing_mutex};
                 for (const auto& backend : backends) {
                     backend->Write(e);
                 }

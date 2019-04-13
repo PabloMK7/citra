@@ -78,7 +78,7 @@ public:
 
     T PopWait() {
         if (Empty()) {
-            std::unique_lock<std::mutex> lock(cv_mutex);
+            std::unique_lock lock{cv_mutex};
             cv.wait(lock, [this]() { return !Empty(); });
         }
         T t;
@@ -137,7 +137,7 @@ public:
 
     template <typename Arg>
     void Push(Arg&& t) {
-        std::lock_guard<std::mutex> lock(write_lock);
+        std::lock_guard lock{write_lock};
         spsc_queue.Push(t);
     }
 
