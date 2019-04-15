@@ -11,13 +11,6 @@
 #include <thread>
 #include <glad/glad.h>
 
-#ifdef _MSC_VER
-#include <getopt.h>
-#else
-#include <getopt.h>
-#include <unistd.h>
-#endif
-
 #ifdef _WIN32
 // windows.h needs to be included before shellapi.h
 #include <windows.h>
@@ -38,6 +31,12 @@
 
 #ifdef ENABLE_WEB_SERVICE
 #include "web_service/verify_user_jwt.h"
+#endif
+
+#undef _UNICODE
+#include <getopt.h>
+#ifndef _MSC_VER
+#include <unistd.h>
 #endif
 
 static void PrintHelp(const char* argv0) {
