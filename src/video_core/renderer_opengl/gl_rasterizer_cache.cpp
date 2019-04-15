@@ -1412,6 +1412,9 @@ Surface RasterizerCacheOpenGL::GetTextureSurface(const Pica::Texture::TextureInf
 
             if (watcher && !watcher->IsValid()) {
                 auto level_surface = watcher->Get();
+                if (!level_surface->invalid_regions.empty()) {
+                    ValidateSurface(level_surface, level_surface->addr, level_surface->size);
+                }
                 state.ResetTexture(level_surface->texture.handle);
                 state.Apply();
                 glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
@@ -1504,6 +1507,9 @@ const CachedTextureCube& RasterizerCacheOpenGL::GetTextureCube(const TextureCube
     for (const Face& face : faces) {
         if (face.watcher && !face.watcher->IsValid()) {
             auto surface = face.watcher->Get();
+            if (!surface->invalid_regions.empty()) {
+                ValidateSurface(surface, surface->addr, surface->size);
+            }
             state.ResetTexture(surface->texture.handle);
             state.Apply();
             glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
