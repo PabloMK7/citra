@@ -36,6 +36,20 @@ AESKey Add128(const AESKey& a, const AESKey& b) {
     return out;
 }
 
+AESKey Add128(const AESKey& a, u64 b) {
+    AESKey out = a;
+    u32 carry = 0;
+    u32 sum = 0;
+
+    for (int i = 15; i >= 8; i--) {
+        sum = a[i] + static_cast<u8>((b >> ((15 - i) * 8)) & 0xff) + carry;
+        carry = sum >> 8;
+        out[i] = static_cast<u8>(sum & 0xff);
+    }
+
+    return out;
+}
+
 AESKey Xor128(const AESKey& a, const AESKey& b) {
     AESKey out;
     std::transform(a.cbegin(), a.cend(), b.cbegin(), out.begin(), std::bit_xor<>());

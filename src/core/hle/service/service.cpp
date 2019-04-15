@@ -98,6 +98,7 @@ const std::array<ServiceModuleInfo, 40> service_module_map{
      {"HTTP", 0x00040130'00002902, HTTP::InstallInterfaces},
      {"SOC", 0x00040130'00002E02, SOC::InstallInterfaces},
      {"SSL", 0x00040130'00002F02, SSL::InstallInterfaces},
+     {"PS", 0x00040130'00003102, PS::InstallInterfaces},
      // no HLE implementation
      {"CDC", 0x00040130'00001802, nullptr},
      {"GPIO", 0x00040130'00001B02, nullptr},
@@ -105,7 +106,6 @@ const std::array<ServiceModuleInfo, 40> service_module_map{
      {"MCU", 0x00040130'00001F02, nullptr},
      {"MP", 0x00040130'00002A02, nullptr},
      {"PDN", 0x00040130'00002102, nullptr},
-     {"PS", 0x00040130'00003102, nullptr},
      {"SPI", 0x00040130'00002302, nullptr}}};
 
 /**
