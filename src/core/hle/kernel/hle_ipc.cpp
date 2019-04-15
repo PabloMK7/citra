@@ -32,8 +32,7 @@ void SessionRequestHandler::ClientDisconnected(std::shared_ptr<ServerSession> se
         connected_sessions.end());
 }
 
-std::shared_ptr<Event> HLERequestContext::SleepClientThread(std::shared_ptr<Thread> thread,
-                                                            const std::string& reason,
+std::shared_ptr<Event> HLERequestContext::SleepClientThread(const std::string& reason,
                                                             std::chrono::nanoseconds timeout,
                                                             WakeupCallback&& callback) {
     // Put the client thread to sleep until the wait event is signaled or the timeout expires.
@@ -60,7 +59,7 @@ std::shared_ptr<Event> HLERequestContext::SleepClientThread(std::shared_ptr<Thre
     auto event = kernel.CreateEvent(Kernel::ResetType::OneShot, "HLE Pause Event: " + reason);
     thread->status = ThreadStatus::WaitHleEvent;
     thread->wait_objects = {event};
-    event->AddWaitingThread(thread);
+    event->AddWaitingThread(SharedFrom(thread));
 
     if (timeout.count() > 0)
         thread->WakeAfterDelay(timeout.count());
@@ -68,8 +67,9 @@ std::shared_ptr<Event> HLERequestContext::SleepClientThread(std::shared_ptr<Thre
     return event;
 }
 
-HLERequestContext::HLERequestContext(KernelSystem& kernel, std::shared_ptr<ServerSession> session)
-    : kernel(kernel), session(std::move(session)) {
+HLERequestContext::HLERequestContext(KernelSystem& kernel, std::shared_ptr<ServerSession> session,
+                                     Thread* thread)
+    : kernel(kernel), session(std::move(session)), thread(thread) {
     cmd_buf[0] = 0;
 }
 

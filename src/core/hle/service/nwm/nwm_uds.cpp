@@ -1179,7 +1179,6 @@ void NWM_UDS::ConnectToNetwork(Kernel::HLERequestContext& ctx, u16 command_id,
     static constexpr std::chrono::nanoseconds UDSConnectionTimeout{300000000};
 
     connection_event = ctx.SleepClientThread(
-        Kernel::SharedFrom(system.Kernel().GetThreadManager().GetCurrentThread()),
         "uds::ConnectToNetwork", UDSConnectionTimeout,
         [command_id](std::shared_ptr<Kernel::Thread> thread, Kernel::HLERequestContext& ctx,
                      Kernel::ThreadWakeupReason reason) {
