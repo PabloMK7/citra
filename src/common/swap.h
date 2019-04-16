@@ -21,11 +21,6 @@
 
 #if defined(_MSC_VER)
 #include <cstdlib>
-#elif defined(__linux__)
-#include <byteswap.h>
-#elif defined(__Bitrig__) || defined(__DragonFly__) || defined(__FreeBSD__) ||                     \
-    defined(__NetBSD__) || defined(__OpenBSD__)
-#include <sys/endian.h>
 #endif
 #include <cstring>
 #include "common/common_types.h"
@@ -62,86 +57,49 @@
 namespace Common {
 
 #ifdef _MSC_VER
-inline u16 swap16(u16 _data) {
-    return _byteswap_ushort(_data);
+[[nodiscard]] inline u16 swap16(u16 data) noexcept {
+    return _byteswap_ushort(data);
 }
-inline u32 swap32(u32 _data) {
-    return _byteswap_ulong(_data);
+[[nodiscard]] inline u32 swap32(u32 data) noexcept {
+    return _byteswap_ulong(data);
 }
-inline u64 swap64(u64 _data) {
-    return _byteswap_uint64(_data);
+[[nodiscard]] inline u64 swap64(u64 data) noexcept {
+    return _byteswap_uint64(data);
 }
-#elif defined(ARCHITECTURE_ARM) && (__ARM_ARCH >= 6)
-inline u16 swap16(u16 _data) {
-    u32 data = _data;
-    __asm__("rev16 %0, %1\n" : "=l"(data) : "l"(data));
-    return (u16)data;
-}
-inline u32 swap32(u32 _data) {
-    __asm__("rev %0, %1\n" : "=l"(_data) : "l"(_data));
-    return _data;
-}
-inline u64 swap64(u64 _data) {
-    return ((u64)swap32(_data) << 32) | swap32(_data >> 32);
-}
-#elif __linux__
-inline u16 swap16(u16 _data) {
-    return bswap_16(_data);
-}
-inline u32 swap32(u32 _data) {
-    return bswap_32(_data);
-}
-inline u64 swap64(u64 _data) {
-    return bswap_64(_data);
-}
-#elif __APPLE__
-inline __attribute__((always_inline)) u16 swap16(u16 _data) {
-    return (_data >> 8) | (_data << 8);
-}
-inline __attribute__((always_inline)) u32 swap32(u32 _data) {
-    return __builtin_bswap32(_data);
-}
-inline __attribute__((always_inline)) u64 swap64(u64 _data) {
-    return __builtin_bswap64(_data);
-}
-#elif defined(__Bitrig__) || defined(__OpenBSD__)
+#elif defined(__clang__) || defined(__GNUC__)
+#if defined(__Bitrig__) || defined(__OpenBSD__)
 // redefine swap16, swap32, swap64 as inline functions
 #undef swap16
 #undef swap32
 #undef swap64
-inline u16 swap16(u16 _data) {
-    return __swap16(_data);
+#endif
+[[nodiscard]] inline u16 swap16(u16 data) noexcept {
+    return __builtin_bswap16(data);
 }
-inline u32 swap32(u32 _data) {
-    return __swap32(_data);
+[[nodiscard]] inline u32 swap32(u32 data) noexcept {
+    return __builtin_bswap32(data);
 }
-inline u64 swap64(u64 _data) {
-    return __swap64(_data);
-}
-#elif defined(__DragonFly__) || defined(__FreeBSD__) || defined(__NetBSD__)
-inline u16 swap16(u16 _data) {
-    return bswap16(_data);
-}
-inline u32 swap32(u32 _data) {
-    return bswap32(_data);
-}
-inline u64 swap64(u64 _data) {
-    return bswap64(_data);
+[[nodiscard]] inline u64 swap64(u64 data) noexcept {
+    return __builtin_bswap64(data);
 }
 #else
-// Slow generic implementation.
-inline u16 swap16(u16 data) {
+// Generic implementation.
+[[nodiscard]] inline u16 swap16(u16 data) noexcept {
     return (data >> 8) | (data << 8);
 }
-inline u32 swap32(u32 data) {
-    return (swap16(data) << 16) | swap16(data >> 16);
+[[nodiscard]] inline u32 swap32(u32 data) noexcept {
+    return ((data & 0xFF000000U) >> 24) | ((data & 0x00FF0000U) >> 8) |
+           ((data & 0x0000FF00U) << 8) | ((data & 0x000000FFU) << 24);
 }
-inline u64 swap64(u64 data) {
-    return ((u64)swap32(data) << 32) | swap32(data >> 32);
+[[nodiscard]] inline u64 swap64(u64 data) noexcept {
+    return ((data & 0xFF00000000000000ULL) >> 56) | ((data & 0x00FF000000000000ULL) >> 40) |
+           ((data & 0x0000FF0000000000ULL) >> 24) | ((data & 0x000000FF00000000ULL) >> 8) |
+           ((data & 0x00000000FF000000ULL) << 8) | ((data & 0x0000000000FF0000ULL) << 24) |
+           ((data & 0x000000000000FF00ULL) << 40) | ((data & 0x00000000000000FFULL) << 56);
 }
 #endif
 
-inline float swapf(float f) {
+[[nodiscard]] inline float swapf(float f) noexcept {
     static_assert(sizeof(u32) == sizeof(float), "float must be the same size as uint32_t.");
 
     u32 value;
@@ -153,7 +111,7 @@ inline float swapf(float f) {
     return f;
 }
 
-inline double swapd(double f) {
+[[nodiscard]] inline double swapd(double f) noexcept {
     static_assert(sizeof(u64) == sizeof(double), "double must be the same size as uint64_t.");
 
     u64 value;
