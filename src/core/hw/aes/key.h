@@ -24,6 +24,21 @@ enum KeySlotID : std::size_t {
     // AES Keyslot used to generate the UDS data frame CCMP key.
     UDSDataKey = 0x2D,
 
+    // AES Keyslot used to encrypt the BOSS container data.
+    BOSSDataKey = 0x38,
+
+    // AES Keyslot used to calculate DLP data frame checksum.
+    DLPDataKey = 0x39,
+
+    // AES Keyslot used to generate the StreetPass CCMP key.
+    CECDDataKey = 0x2E,
+
+    // AES Keyslot used by the friends module.
+    FRDKey = 0x36,
+
+    // AES Keyslot used by the NFC module.
+    NFCKey = 0x39,
+
     // AES keyslot used for APT:Wrap/Unwrap functions
     APTWrap = 0x31,
 

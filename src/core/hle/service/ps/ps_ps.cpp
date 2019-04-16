@@ -23,16 +23,18 @@ enum class AlgorithmType : u8 {
 };
 
 constexpr std::array<u8, 10> KeyTypes{{
-    0x0D,
-    0x2D,
-    0x31,
-    0x38,
-    0x32,
-    0x39,
-    0x2E,
-    0, /* invalid */
-    0x36,
-    0x39,
+    HW::AES::SSLKey,
+    HW::AES::UDSDataKey,
+    HW::AES::APTWrap,
+    HW::AES::BOSSDataKey,
+    0x32, // unknown
+    HW::AES::DLPDataKey,
+    HW::AES::CECDDataKey,
+    0, // invalid
+    HW::AES::FRDKey,
+    // Note: According to 3dbrew the KeyY is overridden by Process9 when using this key type.
+    // TODO: implement this behaviour?
+    HW::AES::NFCKey,
 }};
 
 void PS_PS::EncryptDecryptAes(Kernel::HLERequestContext& ctx) {
@@ -65,9 +67,11 @@ void PS_PS::EncryptDecryptAes(Kernel::HLERequestContext& ctx) {
 
     if (algorithm == AlgorithmType::CCM_Encrypt || algorithm == AlgorithmType::CCM_Decrypt) {
         // AES-CCM is not supported with this function
-        IPC::RequestBuilder rb = rp.MakeBuilder(1, 0);
+        IPC::RequestBuilder rb = rp.MakeBuilder(1, 4);
         rb.Push(ResultCode(ErrorDescription::InvalidSection, ErrorModule::PS,
                            ErrorSummary::WrongArgument, ErrorLevel::Status));
+        rb.PushMappedBuffer(source);
+        rb.PushMappedBuffer(destination);
         return;
     }
 
@@ -120,8 +124,8 @@ void PS_PS::EncryptDecryptAes(Kernel::HLERequestContext& ctx) {
     std::array<u8, AES::BLOCKSIZE> new_iv;
     if (algorithm == AlgorithmType::CTR_Encrypt || algorithm == AlgorithmType::CTR_Decrypt) {
         new_iv = HW::AES::Add128(iv, src_size / 16);
-    } else if (algorithm == AlgorithmType::CBC_Encrypt) { // For AES-CBC, The new IV is the last
-                                                          // block of ciphertext
+    } else if (algorithm == AlgorithmType::CBC_Encrypt) {
+        // For AES-CBC, The new IV is the last block of ciphertext
         std::copy_n(dst_buffer.end() - new_iv.size(), new_iv.size(), new_iv.begin());
     } else {
         std::copy_n(src_buffer.end() - new_iv.size(), new_iv.size(), new_iv.begin());
