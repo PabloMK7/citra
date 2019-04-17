@@ -1555,13 +1555,16 @@ bool RasterizerOpenGL::AccelerateDisplay(const GPU::Regs::FramebufferConfig& con
 
 void RasterizerOpenGL::SamplerInfo::Create() {
     sampler.Create();
-    mag_filter = min_filter = TextureConfig::Linear;
+    mag_filter = min_filter = mip_filter = TextureConfig::Linear;
     wrap_s = wrap_t = TextureConfig::Repeat;
     border_color = 0;
+    lod_min = lod_max = 0;
+    lod_bias = 0;
 
-    // default is GL_LINEAR_MIPMAP_LINEAR
-    glSamplerParameteri(sampler.handle, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    // default is 1000 and -1000
     // Other attributes have correct defaults
+    glSamplerParameterf(sampler.handle, GL_TEXTURE_MAX_LOD, lod_max);
+    glSamplerParameterf(sampler.handle, GL_TEXTURE_MIN_LOD, lod_min);
 }
 
 void RasterizerOpenGL::SamplerInfo::SyncWithConfig(
@@ -1571,11 +1574,28 @@ void RasterizerOpenGL::SamplerInfo::SyncWithConfig(
 
     if (mag_filter != config.mag_filter) {
         mag_filter = config.mag_filter;
-        glSamplerParameteri(s, GL_TEXTURE_MAG_FILTER, PicaToGL::TextureFilterMode(mag_filter));
+        glSamplerParameteri(s, GL_TEXTURE_MAG_FILTER, PicaToGL::TextureMagFilterMode(mag_filter));
     }
-    if (min_filter != config.min_filter) {
+    if (min_filter != config.min_filter || mip_filter != config.mip_filter) {
         min_filter = config.min_filter;
-        glSamplerParameteri(s, GL_TEXTURE_MIN_FILTER, PicaToGL::TextureFilterMode(min_filter));
+        mip_filter = config.mip_filter;
+        glSamplerParameteri(s, GL_TEXTURE_MIN_FILTER,
+                            PicaToGL::TextureMinFilterMode(min_filter, mip_filter));
+    }
+
+    // TODO(wwylele): remove this block once mipmap for cube is implemented
+    bool new_supress_mipmap_for_cube =
+        config.type == Pica::TexturingRegs::TextureConfig::TextureCube;
+    if (supress_mipmap_for_cube != new_supress_mipmap_for_cube) {
+        supress_mipmap_for_cube = new_supress_mipmap_for_cube;
+        if (new_supress_mipmap_for_cube) {
+            // HACK: use mag filter converter for min filter because they are the same anyway
+            glSamplerParameteri(s, GL_TEXTURE_MIN_FILTER,
+                                PicaToGL::TextureMagFilterMode(min_filter));
+        } else {
+            glSamplerParameteri(s, GL_TEXTURE_MIN_FILTER,
+                                PicaToGL::TextureMinFilterMode(min_filter, mip_filter));
+        }
     }
 
     if (wrap_s != config.wrap_s) {
@@ -1593,6 +1613,21 @@ void RasterizerOpenGL::SamplerInfo::SyncWithConfig(
             auto gl_color = PicaToGL::ColorRGBA8(border_color);
             glSamplerParameterfv(s, GL_TEXTURE_BORDER_COLOR, gl_color.data());
         }
+    }
+
+    if (lod_min != config.lod.min_level) {
+        lod_min = config.lod.min_level;
+        glSamplerParameterf(s, GL_TEXTURE_MIN_LOD, lod_min);
+    }
+
+    if (lod_max != config.lod.max_level) {
+        lod_max = config.lod.max_level;
+        glSamplerParameterf(s, GL_TEXTURE_MAX_LOD, lod_max);
+    }
+
+    if (lod_bias != config.lod.bias) {
+        lod_bias = config.lod.bias;
+        glSamplerParameterf(s, GL_TEXTURE_LOD_BIAS, lod_bias / 256.0f);
     }
 }
 

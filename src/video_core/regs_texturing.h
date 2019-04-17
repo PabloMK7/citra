@@ -59,11 +59,16 @@ struct TexturingRegs {
             BitField<2, 1, TextureFilter> min_filter;
             BitField<8, 3, WrapMode> wrap_t;
             BitField<12, 3, WrapMode> wrap_s;
+            BitField<24, 1, TextureFilter> mip_filter;
             /// @note Only valid for texture 0 according to 3DBrew.
             BitField<28, 3, TextureType> type;
         };
 
-        INSERT_PADDING_WORDS(0x1);
+        union {
+            BitField<0, 13, s32> bias; // fixed1.4.8
+            BitField<16, 4, u32> max_level;
+            BitField<24, 4, u32> min_level;
+        } lod;
 
         BitField<0, 28, u32> address;
 

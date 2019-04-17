@@ -356,6 +356,11 @@ struct CachedSurface : SurfaceParams, std::enable_shared_from_this<CachedSurface
 
     OGLTexture texture;
 
+    /// max mipmap level that has been attached to the texture
+    u32 max_level = 0;
+    /// level_watchers[i] watches the (i+1)-th level mipmap source surface
+    std::array<std::shared_ptr<SurfaceWatcher>, 7> level_watchers;
+
     static constexpr unsigned int GetGLBytesPerPixel(PixelFormat format) {
         // OpenGL needs 4 bpp alignment for D24 since using GL_UNSIGNED_INT as type
         return format == PixelFormat::Invalid
@@ -390,6 +395,16 @@ struct CachedSurface : SurfaceParams, std::enable_shared_from_this<CachedSurface
                 locked->valid = false;
             }
         }
+    }
+
+    void UnlinkAllWatcher() {
+        for (const auto& watcher : watchers) {
+            if (auto locked = watcher.lock()) {
+                locked->valid = false;
+                locked->surface.reset();
+            }
+        }
+        watchers.clear();
     }
 
 private:
@@ -434,7 +449,7 @@ public:
 
     /// Get a surface based on the texture configuration
     Surface GetTextureSurface(const Pica::TexturingRegs::FullTextureConfig& config);
-    Surface GetTextureSurface(const Pica::Texture::TextureInfo& info);
+    Surface GetTextureSurface(const Pica::Texture::TextureInfo& info, u32 max_level = 0);
 
     /// Get a texture cube based on the texture configuration
     const CachedTextureCube& GetTextureCube(const TextureCubeConfig& config);

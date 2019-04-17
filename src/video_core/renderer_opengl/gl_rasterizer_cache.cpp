@@ -1332,6 +1332,7 @@ SurfaceRect_Tuple RasterizerCacheOpenGL::GetSurfaceSubRect(const SurfaceParams& 
 
             // Delete the expanded surface, this can't be done safely yet
             // because it may still be in use
+            surface->UnlinkAllWatcher(); // unlink watchers as if this surface is already deleted
             remove_surfaces.emplace(surface);
 
             surface = new_surface;
@@ -1358,10 +1359,15 @@ Surface RasterizerCacheOpenGL::GetTextureSurface(
     const Pica::TexturingRegs::FullTextureConfig& config) {
     Pica::Texture::TextureInfo info =
         Pica::Texture::TextureInfo::FromPicaRegister(config.config, config.format);
-    return GetTextureSurface(info);
+    return GetTextureSurface(info, config.config.lod.max_level);
 }
 
-Surface RasterizerCacheOpenGL::GetTextureSurface(const Pica::Texture::TextureInfo& info) {
+Surface RasterizerCacheOpenGL::GetTextureSurface(const Pica::Texture::TextureInfo& info,
+                                                 u32 max_level) {
+    if (info.physical_address == 0) {
+        return nullptr;
+    }
+
     SurfaceParams params;
     params.addr = info.physical_address;
     params.width = info.width;
@@ -1370,23 +1376,100 @@ Surface RasterizerCacheOpenGL::GetTextureSurface(const Pica::Texture::TextureInf
     params.pixel_format = SurfaceParams::PixelFormatFromTextureFormat(info.format);
     params.UpdateParams();
 
-    if (info.width % 8 != 0 || info.height % 8 != 0) {
-        Surface src_surface;
-        Common::Rectangle<u32> rect;
-        std::tie(src_surface, rect) = GetSurfaceSubRect(params, ScaleMatch::Ignore, true);
-
-        params.res_scale = src_surface->res_scale;
-        Surface tmp_surface = CreateSurface(params);
-        BlitTextures(src_surface->texture.handle, rect, tmp_surface->texture.handle,
-                     tmp_surface->GetScaledRect(),
-                     SurfaceParams::GetFormatType(params.pixel_format), read_framebuffer.handle,
-                     draw_framebuffer.handle);
-
-        remove_surfaces.emplace(tmp_surface);
-        return tmp_surface;
+    u32 min_width = info.width >> max_level;
+    u32 min_height = info.height >> max_level;
+    if (min_width % 8 != 0 || min_height % 8 != 0) {
+        LOG_CRITICAL(Render_OpenGL, "Texture size ({}x{}) is not multiple of 8", min_width,
+                     min_height);
+        return nullptr;
+    }
+    if (info.width != (min_width << max_level) || info.height != (min_height << max_level)) {
+        LOG_CRITICAL(Render_OpenGL,
+                     "Texture size ({}x{}) does not support required mipmap level ({})",
+                     params.width, params.height, max_level);
+        return nullptr;
     }
 
-    return GetSurface(params, ScaleMatch::Ignore, true);
+    auto surface = GetSurface(params, ScaleMatch::Ignore, true);
+
+    // Update mipmap if necessary
+    if (max_level != 0) {
+        if (max_level >= 8) {
+            // since PICA only supports texture size between 8 and 1024, there are at most eight
+            // possible mipmap levels including the base.
+            LOG_CRITICAL(Render_OpenGL, "Unsupported mipmap level {}", max_level);
+            return nullptr;
+        }
+        OpenGLState prev_state = OpenGLState::GetCurState();
+        OpenGLState state;
+        SCOPE_EXIT({ prev_state.Apply(); });
+        auto format_tuple = GetFormatTuple(params.pixel_format);
+
+        // Allocate more mipmap level if necessary
+        if (surface->max_level < max_level) {
+            state.texture_units[0].texture_2d = surface->texture.handle;
+            state.Apply();
+            glActiveTexture(GL_TEXTURE0);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, max_level);
+            u32 width = surface->width * surface->res_scale;
+            u32 height = surface->height * surface->res_scale;
+            for (u32 level = surface->max_level + 1; level <= max_level; ++level) {
+                glTexImage2D(GL_TEXTURE_2D, level, format_tuple.internal_format, width >> level,
+                             height >> level, 0, format_tuple.format, format_tuple.type, nullptr);
+            }
+            surface->max_level = max_level;
+        }
+
+        // Blit mipmaps that have been invalidated
+        state.draw.read_framebuffer = read_framebuffer.handle;
+        state.draw.draw_framebuffer = draw_framebuffer.handle;
+        state.ResetTexture(surface->texture.handle);
+        SurfaceParams params = *surface;
+        for (u32 level = 1; level <= max_level; ++level) {
+            // In PICA all mipmap levels are stored next to each other
+            params.addr += params.width * params.height * params.GetFormatBpp() / 8;
+            params.width /= 2;
+            params.height /= 2;
+            params.stride = 0; // reset stride and let UpdateParams re-initialize it
+            params.UpdateParams();
+            auto& watcher = surface->level_watchers[level - 1];
+            if (!watcher || !watcher->Get()) {
+                auto level_surface = GetSurface(params, ScaleMatch::Ignore, true);
+                if (level_surface) {
+                    watcher = level_surface->CreateWatcher();
+                } else {
+                    watcher = nullptr;
+                }
+            }
+
+            if (watcher && !watcher->IsValid()) {
+                auto level_surface = watcher->Get();
+                if (!level_surface->invalid_regions.empty()) {
+                    ValidateSurface(level_surface, level_surface->addr, level_surface->size);
+                }
+                state.ResetTexture(level_surface->texture.handle);
+                state.Apply();
+                glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
+                                       level_surface->texture.handle, 0);
+                glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT,
+                                       GL_TEXTURE_2D, 0, 0);
+
+                glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
+                                       surface->texture.handle, level);
+                glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT,
+                                       GL_TEXTURE_2D, 0, 0);
+
+                auto src_rect = level_surface->GetScaledRect();
+                auto dst_rect = params.GetScaledRect();
+                glBlitFramebuffer(src_rect.left, src_rect.bottom, src_rect.right, src_rect.top,
+                                  dst_rect.left, dst_rect.bottom, dst_rect.right, dst_rect.top,
+                                  GL_COLOR_BUFFER_BIT, GL_LINEAR);
+                watcher->Validate();
+            }
+        }
+    }
+
+    return surface;
 }
 
 const CachedTextureCube& RasterizerCacheOpenGL::GetTextureCube(const TextureCubeConfig& config) {
@@ -1456,6 +1539,9 @@ const CachedTextureCube& RasterizerCacheOpenGL::GetTextureCube(const TextureCube
     for (const Face& face : faces) {
         if (face.watcher && !face.watcher->IsValid()) {
             auto surface = face.watcher->Get();
+            if (!surface->invalid_regions.empty()) {
+                ValidateSurface(surface, surface->addr, surface->size);
+            }
             state.ResetTexture(surface->texture.handle);
             state.Apply();
             glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
@@ -1764,6 +1850,7 @@ void RasterizerCacheOpenGL::InvalidateRegion(PAddr addr, u32 size, const Surface
 
             const auto interval = cached_surface->GetInterval() & invalid_interval;
             cached_surface->invalid_regions.insert(interval);
+            cached_surface->InvalidateAllWatcher();
 
             // Remove only "empty" fill surfaces to avoid destroying and recreating OGL textures
             if (cached_surface->type == SurfaceType::Fill &&
