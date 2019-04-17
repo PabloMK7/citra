@@ -49,7 +49,7 @@ public:
     virtual void WakeupAllWaitingThreads();
 
     /// Obtains the highest priority thread that is ready to run from this object's waiting list.
-    std::shared_ptr<Thread> GetHighestPriorityReadyThread();
+    std::shared_ptr<Thread> GetHighestPriorityReadyThread() const;
 
     /// Get a const reference to the waiting threads list for debug use
     const std::vector<std::shared_ptr<Thread>>& GetWaitingThreads() const;
