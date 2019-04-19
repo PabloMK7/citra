@@ -111,6 +111,10 @@ void HostRoomWindow::Host() {
         NetworkMessage::ShowError(NetworkMessage::PORT_NOT_VALID);
         return;
     }
+    if (ui->game_list->currentIndex() == -1) {
+        NetworkMessage::ShowError(NetworkMessage::GAME_NOT_SELECTED);
+        return;
+    }
     if (auto member = Network::GetRoomMember().lock()) {
         if (member->GetState() == Network::RoomMember::State::Joining) {
             return;

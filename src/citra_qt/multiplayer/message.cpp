@@ -16,6 +16,9 @@ const ConnectionError USERNAME_NOT_VALID_SERVER(
     QT_TR_NOOP("Username is already in use or not valid. Please choose another."));
 const ConnectionError IP_ADDRESS_NOT_VALID(QT_TR_NOOP("IP is not a valid IPv4 address."));
 const ConnectionError PORT_NOT_VALID(QT_TR_NOOP("Port must be a number between 0 to 65535."));
+const ConnectionError GAME_NOT_SELECTED(QT_TR_NOOP(
+    "You must choose a Preferred Game to host a room. If you do not have any games in your game "
+    "list yet, add a game folder by clicking on the plus icon in the game list."));
 const ConnectionError NO_INTERNET(
     QT_TR_NOOP("Unable to find an internet connection. Check your internet settings."));
 const ConnectionError UNABLE_TO_CONNECT(
