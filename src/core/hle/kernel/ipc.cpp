@@ -154,8 +154,10 @@ ResultCode TranslateCommandBuffer(Memory::MemorySystem& memory, std::shared_ptr<
 
                 if (permissions != IPC::MappedBufferPermissions::R) {
                     // Copy the modified buffer back into the target process
-                    memory.CopyBlock(*src_process, *dst_process, found->target_address,
-                                     found->source_address, size);
+                    // NOTE: As this is a reply the "source" is the destination and the
+                    //       "target" is the source.
+                    memory.CopyBlock(*dst_process, *src_process, found->source_address,
+                                     found->target_address, size);
                 }
 
                 VAddr prev_reserve = page_start - Memory::PAGE_SIZE;
