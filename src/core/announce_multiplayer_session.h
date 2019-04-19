@@ -44,8 +44,11 @@ public:
      */
     void UnbindErrorCallback(CallbackHandle handle);
 
-    /// Registers a room to web services
-    void Register();
+    /**
+     * Registers a room to web services
+     * @return The result of the registration attempt.
+     */
+    Common::WebResult Register();
 
     /**
      * Starts the announce of a room to web services

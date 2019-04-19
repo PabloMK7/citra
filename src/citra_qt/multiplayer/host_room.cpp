@@ -7,6 +7,7 @@
 #include <QImage>
 #include <QList>
 #include <QLocale>
+#include <QMessageBox>
 #include <QMetaType>
 #include <QTime>
 #include <QtConcurrent/QtConcurrentRun>
@@ -148,7 +149,22 @@ void HostRoomWindow::Host() {
         if (is_public) {
             if (auto session = announce_multiplayer_session.lock()) {
                 // Register the room first to ensure verify_UID is present when we connect
-                session->Register();
+                Common::WebResult result = session->Register();
+                if (result.result_code != Common::WebResult::Code::Success) {
+                    QMessageBox::warning(
+                        this, tr("Error"),
+                        tr("Failed to announce the room to the public lobby. In order to host a "
+                           "room publicly, you must have a valid Citra account configured in "
+                           "Emulation -> Configure -> Web. If you do not want to publish a room in "
+                           "the public lobby, then select Unlisted instead.\nDebug Message: ") +
+                            QString::fromStdString(result.result_string),
+                        QMessageBox::Ok);
+                    ui->host->setEnabled(true);
+                    if (auto room = Network::GetRoom().lock()) {
+                        room->Destroy();
+                    }
+                    return;
+                }
                 session->Start();
             } else {
                 LOG_ERROR(Network, "Starting announce session failed");

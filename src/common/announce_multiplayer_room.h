@@ -83,9 +83,10 @@ public:
 
     /**
      * Registers the data in the announce service
-     * @result A global Guid of the room which may be used for verification
+     * @result The result of the register attempt. When the result code is Success, A global Guid of
+     * the room which may be used for verification will be in the result's returned_data.
      */
-    virtual std::string Register() = 0;
+    virtual Common::WebResult Register() = 0;
 
     /**
      * Empties the stored players
@@ -121,8 +122,8 @@ public:
     Common::WebResult Update() override {
         return Common::WebResult{Common::WebResult::Code::NoWebservice, "WebService is missing"};
     }
-    std::string Register() override {
-        return "";
+    Common::WebResult Register() override {
+        return Common::WebResult{Common::WebResult::Code::NoWebservice, "WebService is missing"};
     }
     void ClearPlayers() override {}
     RoomList GetRoomList() override {
