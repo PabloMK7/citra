@@ -146,4 +146,18 @@ AnnounceMultiplayerRoom::RoomList AnnounceMultiplayerSession::GetRoomList() {
     return backend->GetRoomList();
 }
 
+bool AnnounceMultiplayerSession::IsRunning() const {
+    return announce_multiplayer_thread != nullptr;
+}
+
+void AnnounceMultiplayerSession::UpdateCredentials() {
+    ASSERT_MSG(!IsRunning(), "Credentials can only be updated when session is not running");
+
+#ifdef ENABLE_WEB_SERVICE
+    backend = std::make_unique<WebService::RoomJson>(Settings::values.web_api_url,
+                                                     Settings::values.citra_username,
+                                                     Settings::values.citra_token);
+#endif
+}
+
 } // namespace Core

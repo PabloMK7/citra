@@ -1335,7 +1335,8 @@ void GMainWindow::OnCheats() {
 }
 
 void GMainWindow::OnConfigure() {
-    ConfigureDialog configureDialog(this, hotkey_registry);
+    ConfigureDialog configureDialog(this, hotkey_registry,
+                                    !multiplayer_state->IsHostingPublicRoom());
     connect(&configureDialog, &ConfigureDialog::languageChanged, this,
             &GMainWindow::OnLanguageChanged);
     auto old_theme = UISettings::values.theme;
@@ -1350,6 +1351,8 @@ void GMainWindow::OnConfigure() {
             UpdateUITheme();
         if (UISettings::values.enable_discord_presence != old_discord_presence)
             SetDiscordEnabled(UISettings::values.enable_discord_presence);
+        if (!multiplayer_state->IsHostingPublicRoom())
+            multiplayer_state->UpdateCredentials();
         emit UpdateThemedIcons();
         SyncMenuUISettings();
         game_list->RefreshGameDirectory();

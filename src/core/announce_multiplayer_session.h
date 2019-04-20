@@ -67,6 +67,17 @@ public:
      */
     AnnounceMultiplayerRoom::RoomList GetRoomList();
 
+    /**
+     * Whether the announce session is still running
+     */
+    bool IsRunning() const;
+
+    /**
+     * Recreates the backend, updating the credentials.
+     * This can only be used when the announce session is not running.
+     */
+    void UpdateCredentials();
+
 private:
     Common::Event shutdown_event;
     std::mutex callback_mutex;

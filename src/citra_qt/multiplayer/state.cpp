@@ -278,3 +278,11 @@ void MultiplayerState::OnDirectConnectToRoom() {
     }
     BringWidgetToFront(direct_connect);
 }
+
+bool MultiplayerState::IsHostingPublicRoom() const {
+    return announce_multiplayer_session->IsRunning();
+}
+
+void MultiplayerState::UpdateCredentials() {
+    announce_multiplayer_session->UpdateCredentials();
+}

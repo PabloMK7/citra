@@ -119,6 +119,16 @@
       </widget>
      </item>
      <item>
+      <widget class="QLabel" name="label_disable_info">
+       <property name="text">
+        <string>Web Service configuration can only be changed when a public room isn't being hosted.</string>
+       </property>
+       <property name="wordWrap">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QGroupBox" name="groupBox">
        <property name="title">
         <string>Telemetry</string>

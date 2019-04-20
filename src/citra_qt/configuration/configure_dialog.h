@@ -17,7 +17,8 @@ class ConfigureDialog : public QDialog {
     Q_OBJECT
 
 public:
-    explicit ConfigureDialog(QWidget* parent, HotkeyRegistry& registry);
+    explicit ConfigureDialog(QWidget* parent, HotkeyRegistry& registry,
+                             bool enable_web_config = true);
     ~ConfigureDialog() override;
 
     void applyConfiguration();
