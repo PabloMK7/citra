@@ -76,6 +76,7 @@ signals:
     void OpenDirectory(QString directory);
     void AddDirectory();
     void ShowList(bool show);
+    void PopulatingCompleted();
 
 private slots:
     void onItemExpanded(const QModelIndex& item);

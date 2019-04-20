@@ -41,13 +41,7 @@ HostRoomWindow::HostRoomWindow(QWidget* parent, QStandardItemModel* list,
 
     // Create a proxy to the game list to display the list of preferred games
     game_list = new QStandardItemModel;
-
-    for (int i = 0; i < list->rowCount(); i++) {
-        auto parent = list->item(i, 0);
-        for (int j = 0; j < parent->rowCount(); j++) {
-            game_list->appendRow(parent->child(j)->clone());
-        }
-    }
+    UpdateGameList(list);
 
     proxy = new ComboBoxProxyModel;
     proxy->setSourceModel(game_list);
@@ -78,6 +72,16 @@ HostRoomWindow::HostRoomWindow(QWidget* parent, QStandardItemModel* list,
 }
 
 HostRoomWindow::~HostRoomWindow() = default;
+
+void HostRoomWindow::UpdateGameList(QStandardItemModel* list) {
+    game_list->clear();
+    for (int i = 0; i < list->rowCount(); i++) {
+        auto parent = list->item(i, 0);
+        for (int j = 0; j < parent->rowCount(); j++) {
+            game_list->appendRow(parent->child(j)->clone());
+        }
+    }
+}
 
 void HostRoomWindow::RetranslateUi() {
     ui->retranslateUi(this);

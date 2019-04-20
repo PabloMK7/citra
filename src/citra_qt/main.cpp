@@ -506,6 +506,8 @@ void GMainWindow::ConnectWidgetEvents() {
     connect(game_list_placeholder, &GameListPlaceholder::AddDirectory, this,
             &GMainWindow::OnGameListAddDirectory);
     connect(game_list, &GameList::ShowList, this, &GMainWindow::OnGameListShowList);
+    connect(game_list, &GameList::PopulatingCompleted,
+            [this] { multiplayer_state->UpdateGameList(game_list->GetModel()); });
 
     connect(this, &GMainWindow::EmulationStarting, render_window,
             &GRenderWindow::OnEmulationStarting);

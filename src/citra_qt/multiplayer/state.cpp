@@ -286,3 +286,13 @@ bool MultiplayerState::IsHostingPublicRoom() const {
 void MultiplayerState::UpdateCredentials() {
     announce_multiplayer_session->UpdateCredentials();
 }
+
+void MultiplayerState::UpdateGameList(QStandardItemModel* game_list) {
+    game_list_model = game_list;
+    if (lobby) {
+        lobby->UpdateGameList(game_list);
+    }
+    if (host_room) {
+        host_room->UpdateGameList(game_list);
+    }
+}

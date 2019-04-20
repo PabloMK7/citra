@@ -46,6 +46,12 @@ public:
 
     void UpdateCredentials();
 
+    /**
+     * Updates the multiplayer dialogs with a new game list model.
+     * This model should be the original model of the game list.
+     */
+    void UpdateGameList(QStandardItemModel* game_list);
+
 public slots:
     void OnNetworkStateChanged(const Network::RoomMember::State& state);
     void OnNetworkError(const Network::RoomMember::Error& error);

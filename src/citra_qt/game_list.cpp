@@ -421,6 +421,8 @@ void GameList::DonePopulating(QStringList watch_list) {
     if (childrenTotal > 0) {
         search_field->setFocus();
     }
+
+    emit PopulatingCompleted();
 }
 
 void GameList::PopupContextMenu(const QPoint& menu_location) {
