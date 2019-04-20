@@ -19,20 +19,6 @@
 
 namespace HLE::Applets {
 
-/**
- * Converts a UTF-16 text in a container to a UTF-8 std::string.
- */
-template <typename T>
-std::string TextFromBuffer(const T& text) {
-    const auto text_end = std::find(text.begin(), text.end(), u'\0');
-    const std::size_t text_size = std::distance(text.begin(), text_end);
-    std::u16string buffer(text_size, 0);
-    std::transform(text.begin(), text_end, buffer.begin(), [](u16_le character) {
-        return static_cast<char16_t>(static_cast<u16>(character));
-    });
-    return Common::UTF16ToUTF8(buffer);
-}
-
 ResultCode MiiSelector::ReceiveParameter(const Service::APT::MessageParameter& parameter) {
     if (parameter.signal != Service::APT::SignalType::Request) {
         LOG_ERROR(Service_APT, "unsupported signal {}", static_cast<u32>(parameter.signal));
@@ -156,7 +142,7 @@ MiiResult MiiSelector::GetStandardMiiResult() {
 Frontend::MiiSelectorConfig MiiSelector::ToFrontendConfig(const MiiConfig& config) const {
     Frontend::MiiSelectorConfig frontend_config;
     frontend_config.enable_cancel_button = config.enable_cancel_button == 1;
-    frontend_config.title = TextFromBuffer(config.title);
+    frontend_config.title = Common::UTF16BufferToUTF8(config.title);
     frontend_config.initially_selected_mii_index = config.initially_selected_mii_index;
     return frontend_config;
 }

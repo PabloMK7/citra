@@ -39,10 +39,6 @@ ValidationError SoftwareKeyboard::ValidateFilters(const std::string& input) cons
         // TODO: check the profanity filter
         LOG_INFO(Frontend, "App requested swkbd profanity filter, but its not implemented.");
     }
-    if (config.filters.enable_callback) {
-        // TODO: check the callback
-        LOG_INFO(Frontend, "App requested a swkbd callback, but its not implemented.");
-    }
     return ValidationError::None;
 }
 
@@ -132,11 +128,21 @@ ValidationError SoftwareKeyboard::Finalize(const std::string& text, u8 button) {
         return error;
     }
     data = {text, button};
+    data_ready = true;
     return ValidationError::None;
 }
 
-void DefaultKeyboard::Setup(const Frontend::KeyboardConfig& config) {
-    SoftwareKeyboard::Setup(config);
+bool SoftwareKeyboard::DataReady() const {
+    return data_ready;
+}
+
+const KeyboardData& SoftwareKeyboard::ReceiveData() {
+    data_ready = false;
+    return data;
+}
+
+void DefaultKeyboard::Execute(const Frontend::KeyboardConfig& config) {
+    SoftwareKeyboard::Execute(config);
 
     auto cfg = Service::CFG::GetModule(Core::System::GetInstance());
     ASSERT_MSG(cfg, "CFG Module missing!");
@@ -155,6 +161,10 @@ void DefaultKeyboard::Setup(const Frontend::KeyboardConfig& config) {
     default:
         UNREACHABLE();
     }
+}
+
+void DefaultKeyboard::ShowError(const std::string& error) {
+    LOG_ERROR(Applet_SWKBD, "Default keyboard text is unaccepted! error: {}", error);
 }
 
 } // namespace Frontend

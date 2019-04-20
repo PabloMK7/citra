@@ -109,12 +109,18 @@ void QtKeyboardDialog::HandleValidationError(Frontend::ValidationError error) {
 
 QtKeyboard::QtKeyboard(QWidget& parent_) : parent(parent_) {}
 
-void QtKeyboard::Setup(const Frontend::KeyboardConfig& config) {
-    SoftwareKeyboard::Setup(config);
+void QtKeyboard::Execute(const Frontend::KeyboardConfig& config) {
+    SoftwareKeyboard::Execute(config);
     if (this->config.button_config != Frontend::ButtonConfig::None) {
         ok_id = static_cast<u8>(this->config.button_config);
     }
     QMetaObject::invokeMethod(this, "OpenInputDialog", Qt::BlockingQueuedConnection);
+}
+
+void QtKeyboard::ShowError(const std::string& error) {
+    QString message = QString::fromStdString(error);
+    QMetaObject::invokeMethod(this, "ShowErrorDialog", Qt::BlockingQueuedConnection,
+                              Q_ARG(QString, message));
 }
 
 void QtKeyboard::OpenInputDialog() {
@@ -126,4 +132,8 @@ void QtKeyboard::OpenInputDialog() {
     LOG_INFO(Frontend, "SWKBD input dialog finished, text={}, button={}", dialog.text.toStdString(),
              dialog.button);
     Finalize(dialog.text.toStdString(), dialog.button);
+}
+
+void QtKeyboard::ShowErrorDialog(QString message) {
+    QMessageBox::critical(&parent, tr("Software Keyboard"), message);
 }
