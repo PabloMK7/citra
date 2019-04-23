@@ -21,6 +21,7 @@
 #include "core/hle/service/cecd/cecd_ndm.h"
 #include "core/hle/service/cecd/cecd_s.h"
 #include "core/hle/service/cecd/cecd_u.h"
+#include "core/hle/service/cfg/cfg.h"
 #include "fmt/format.h"
 
 namespace Service::CECD {
@@ -612,10 +613,12 @@ void Module::Interface::ReadData(Kernel::HLERequestContext& ctx) {
     IPC::RequestBuilder rb = rp.MakeBuilder(1, 4);
     std::vector<u8> buffer;
     switch (info_type) {
-    case CecSystemInfoType::EulaVersion: // TODO: Read config Eula version
-        buffer = {0xFF, 0xFF};
-        dest_buffer.Write(buffer.data(), 0, buffer.size());
+    case CecSystemInfoType::EulaVersion: {
+        auto cfg = Service::CFG::GetModule(cecd->system);
+        Service::CFG::EULAVersion version = cfg->GetEULAVersion();
+        dest_buffer.Write(&version, 0, sizeof(version));
         break;
+    }
     case CecSystemInfoType::Eula:
         buffer = {0x01}; // Eula agreed
         dest_buffer.Write(buffer.data(), 0, buffer.size());

@@ -89,6 +89,7 @@ struct ConsoleCountryInfo {
 static_assert(sizeof(ConsoleCountryInfo) == 4, "ConsoleCountryInfo must be exactly 4 bytes");
 } // namespace
 
+static const EULAVersion MAX_EULA_VERSION = {0x7F, 0x7F};
 static const ConsoleModelInfo CONSOLE_MODEL = {NINTENDO_3DS_XL, {0, 0, 0}};
 static const u8 CONSOLE_LANGUAGE = LANGUAGE_EN;
 static const UsernameBlock CONSOLE_USERNAME_BLOCK = {u"CITRA", 0, 0};
@@ -505,7 +506,8 @@ ResultCode Module::FormatConfig() {
         return res;
 
     // 0x000D0000 - Accepted EULA version
-    res = CreateConfigInfoBlk(EULAVersionBlockID, 0x4, 0xE, zero_buffer);
+    u32_le data = MAX_EULA_VERSION.minor + (MAX_EULA_VERSION.major << 8);
+    res = CreateConfigInfoBlk(EULAVersionBlockID, sizeof(data), 0xE, &data);
     if (!res.IsSuccess())
         return res;
 
@@ -564,6 +566,15 @@ ResultCode Module::LoadConfigNANDSaveFile() {
 
 Module::Module() {
     LoadConfigNANDSaveFile();
+    // Check the config savegame EULA Version and update it to 0x7F7F if necessary
+    // so users will never get a promt to accept EULA
+    EULAVersion version = GetEULAVersion();
+    if (version.major != MAX_EULA_VERSION.major || version.minor != MAX_EULA_VERSION.minor) {
+        LOG_INFO(Service_CFG, "Updating accepted EULA version to {}.{}", MAX_EULA_VERSION.major,
+                 MAX_EULA_VERSION.minor);
+        SetEULAVersion(Service::CFG::MAX_EULA_VERSION);
+        UpdateConfigNANDSavegame();
+    }
 }
 
 Module::~Module() = default;
@@ -716,6 +727,20 @@ u64 Module::GetConsoleUniqueId() {
     u64_le console_id_le;
     GetConfigInfoBlock(ConsoleUniqueID2BlockID, sizeof(console_id_le), 0xE, &console_id_le);
     return console_id_le;
+}
+
+EULAVersion Module::GetEULAVersion() {
+    u32_le data;
+    GetConfigInfoBlock(EULAVersionBlockID, sizeof(data), 0xE, &data);
+    EULAVersion version;
+    version.minor = data & 0xFF;
+    version.major = (data >> 8) & 0xFF;
+    return version;
+}
+
+void Module::SetEULAVersion(const EULAVersion& version) {
+    u32_le data = version.minor + (version.major << 8);
+    SetConfigInfoBlock(EULAVersionBlockID, sizeof(data), 0xE, &data);
 }
 
 std::shared_ptr<Module> GetModule(Core::System& system) {
