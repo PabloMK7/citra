@@ -30,6 +30,12 @@ gpg2 --import "$GPG_KEY"
 mkdir -p "$REPO_DIR"
 sshfs "$FLATPAK_SSH_USER@$FLATPAK_SSH_HOSTNAME:$SSH_DIR" "$REPO_DIR" -C -p "$FLATPAK_SSH_PORT" -o IdentityFile="$SSH_KEY"
 
+# setup ccache location
+wget 'https://liushuyu.b-cdn.net/citra-ccache-flatpak.tar.xz'
+tar xf citra-ccache-flatpak.tar.xz -C /root/.ccache --strip-components=1
+mkdir -p "$STATE_DIR"
+ln -sv /root/.ccache "$STATE_DIR/ccache"
+
 # Build the citra flatpak
 flatpak-builder -v --jobs=4 --ccache --force-clean --state-dir="$STATE_DIR" --gpg-sign="$FLATPAK_GPG_PUBLIC_KEY" --repo="$REPO_DIR" "$BUILD_DIR" "/tmp/org.citra.$REPO_NAME.json"
 flatpak build-update-repo "$REPO_DIR" -v --generate-static-deltas --gpg-sign="$FLATPAK_GPG_PUBLIC_KEY"
