@@ -194,6 +194,24 @@ private:
     void InitializeConnectionSession(Kernel::HLERequestContext& ctx);
 
     /**
+     * HTTP_C::BeginRequest service function
+     *  Inputs:
+     * 1 : Context handle
+     *  Outputs:
+     *      1 : Result of function, 0 on success, otherwise error code
+     */
+    void BeginRequest(Kernel::HLERequestContext& ctx);
+
+    /**
+     * HTTP_C::BeginRequestAsync service function
+     *  Inputs:
+     * 1 : Context handle
+     *  Outputs:
+     *      1 : Result of function, 0 on success, otherwise error code
+     */
+    void BeginRequestAsync(Kernel::HLERequestContext& ctx);
+
+    /**
      * HTTP_C::AddRequestHeader service function
      *  Inputs:
      * 1 : Context handle
@@ -222,6 +240,27 @@ private:
      *      1 : Result of function, 0 on success, otherwise error code
      */
     void AddPostDataAscii(Kernel::HLERequestContext& ctx);
+
+    /**
+     * HTTP_C::SetClientCertContext service function
+     *  Inputs:
+     * 1 : Context handle
+     * 2 : Cert context handle
+     *  Outputs:
+     *      1 : Result of function, 0 on success, otherwise error code
+     */
+    void SetClientCertContext(Kernel::HLERequestContext& ctx);
+
+    /**
+     * HTTP_C::GetSSLError service function
+     *  Inputs:
+     * 1 : Context handle
+     * 2 : Unknown
+     *  Outputs:
+     *      1 : Result of function, 0 on success, otherwise error code
+     *      2 : SSL Error code
+     */
+    void GetSSLError(Kernel::HLERequestContext& ctx);
 
     /**
      * HTTP_C::OpenClientCertContext service function
@@ -280,7 +319,7 @@ private:
     std::unordered_map<Context::Handle, Context> contexts;
 
     /// Global list of  ClientCert contexts currently opened.
-    std::unordered_map<ClientCertContext::Handle, ClientCertContext> client_certs;
+    std::unordered_map<ClientCertContext::Handle, std::shared_ptr<ClientCertContext>> client_certs;
 
     struct {
         std::vector<u8> certificate;
