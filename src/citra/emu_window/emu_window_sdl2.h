@@ -10,7 +10,7 @@
 
 struct SDL_Window;
 
-class EmuWindow_SDL2 : public EmuWindow {
+class EmuWindow_SDL2 : public Frontend::EmuWindow {
 public:
     explicit EmuWindow_SDL2(bool fullscreen);
     ~EmuWindow_SDL2();

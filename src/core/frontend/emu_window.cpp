@@ -8,6 +8,8 @@
 #include "core/frontend/input.h"
 #include "core/settings.h"
 
+namespace Frontend {
+
 class EmuWindow::TouchState : public Input::Factory<Input::TouchDevice>,
                               public std::enable_shared_from_this<TouchState> {
 public:
@@ -156,3 +158,5 @@ void EmuWindow::UpdateCurrentFramebufferLayout(unsigned width, unsigned height) 
     }
     NotifyFramebufferLayoutChanged(layout);
 }
+
+} // namespace Frontend

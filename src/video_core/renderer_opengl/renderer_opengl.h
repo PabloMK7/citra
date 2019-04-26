@@ -38,7 +38,7 @@ struct ScreenInfo {
 
 class RendererOpenGL : public RendererBase {
 public:
-    explicit RendererOpenGL(EmuWindow& window);
+    explicit RendererOpenGL(Frontend::EmuWindow& window);
     ~RendererOpenGL() override;
 
     /// Swap buffers (render frame)

@@ -92,7 +92,7 @@ System::ResultStatus System::SingleStep() {
     return RunLoop(false);
 }
 
-System::ResultStatus System::Load(EmuWindow& emu_window, const std::string& filepath) {
+System::ResultStatus System::Load(Frontend::EmuWindow& emu_window, const std::string& filepath) {
     app_loader = Loader::GetLoader(filepath);
 
     if (!app_loader) {
@@ -167,7 +167,7 @@ void System::Reschedule() {
     kernel->GetThreadManager().Reschedule();
 }
 
-System::ResultStatus System::Init(EmuWindow& emu_window, u32 system_mode) {
+System::ResultStatus System::Init(Frontend::EmuWindow& emu_window, u32 system_mode) {
     LOG_DEBUG(HW_Memory, "initialized OK");
 
     memory = std::make_unique<Memory::MemorySystem>();

@@ -9,7 +9,7 @@
 #include "video_core/swrasterizer/swrasterizer.h"
 #include "video_core/video_core.h"
 
-RendererBase::RendererBase(EmuWindow& window) : render_window{window} {}
+RendererBase::RendererBase(Frontend::EmuWindow& window) : render_window{window} {}
 RendererBase::~RendererBase() = default;
 void RendererBase::UpdateCurrentFramebufferLayout() {
     const Layout::FramebufferLayout& layout = render_window.GetFramebufferLayout();

@@ -29,14 +29,17 @@
 #include "video_core/renderer_opengl/pica_to_gl.h"
 #include "video_core/shader/shader.h"
 
+namespace Frontend {
 class EmuWindow;
+}
+
 class ShaderProgramManager;
 
 namespace OpenGL {
 
 class RasterizerOpenGL : public VideoCore::RasterizerInterface {
 public:
-    explicit RasterizerOpenGL(EmuWindow& renderer);
+    explicit RasterizerOpenGL(Frontend::EmuWindow& renderer);
     ~RasterizerOpenGL() override;
 
     void AddTriangle(const Pica::Shader::OutputVertex& v0, const Pica::Shader::OutputVertex& v1,
@@ -261,7 +264,7 @@ private:
 
     RasterizerCacheOpenGL res_cache;
 
-    EmuWindow& emu_window;
+    Frontend::EmuWindow& emu_window;
 
     std::vector<HardwareVertex> vertex_batch;
 

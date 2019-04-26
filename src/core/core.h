@@ -14,8 +14,11 @@
 #include "core/perf_stats.h"
 #include "core/telemetry_session.h"
 
-class EmuWindow;
 class ARM_Interface;
+
+namespace Frontend {
+class EmuWindow;
+}
 
 namespace Memory {
 class MemorySystem;
@@ -121,7 +124,7 @@ public:
      * @param filepath String path to the executable application to load on the host file system.
      * @returns ResultStatus code, indicating if the operation succeeded.
      */
-    ResultStatus Load(EmuWindow& emu_window, const std::string& filepath);
+    ResultStatus Load(Frontend::EmuWindow& emu_window, const std::string& filepath);
 
     /**
      * Indicates if the emulated system is powered on (all subsystems initialized and able to run an
@@ -243,7 +246,7 @@ private:
      * @param system_mode The system mode.
      * @return ResultStatus code, indicating if the operation succeeded.
      */
-    ResultStatus Init(EmuWindow& emu_window, u32 system_mode);
+    ResultStatus Init(Frontend::EmuWindow& emu_window, u32 system_mode);
 
     /// Reschedule the core emulation
     void Reschedule();
@@ -288,7 +291,7 @@ private:
     ResultStatus status = ResultStatus::Success;
     std::string status_details = "";
     /// Saved variables for reset
-    EmuWindow* m_emu_window;
+    Frontend::EmuWindow* m_emu_window;
     std::string m_filepath;
 
     std::atomic<bool> reset_requested;

@@ -9,14 +9,16 @@
 #include "core/core.h"
 #include "video_core/rasterizer_interface.h"
 
+namespace Frontend {
 class EmuWindow;
+}
 
 class RendererBase : NonCopyable {
 public:
     /// Used to reference a framebuffer
     enum kFramebuffer { kFramebuffer_VirtualXFB = 0, kFramebuffer_EFB, kFramebuffer_Texture };
 
-    explicit RendererBase(EmuWindow& window);
+    explicit RendererBase(Frontend::EmuWindow& window);
     virtual ~RendererBase();
 
     /// Swap buffers (render frame)
@@ -46,18 +48,18 @@ public:
         return rasterizer.get();
     }
 
-    EmuWindow& GetRenderWindow() {
+    Frontend::EmuWindow& GetRenderWindow() {
         return render_window;
     }
 
-    const EmuWindow& GetRenderWindow() const {
+    const Frontend::EmuWindow& GetRenderWindow() const {
         return render_window;
     }
 
     void RefreshRasterizerSetting();
 
 protected:
-    EmuWindow& render_window; ///< Reference to the render window handle.
+    Frontend::EmuWindow& render_window; ///< Reference to the render window handle.
     std::unique_ptr<VideoCore::RasterizerInterface> rasterizer;
     f32 m_current_fps = 0.0f; ///< Current framerate, should be set by the renderer
     int m_current_frame = 0;  ///< Current frame, should be set by the renderer

@@ -10,6 +10,8 @@
 #include "common/common_types.h"
 #include "core/frontend/framebuffer_layout.h"
 
+namespace Frontend {
+
 /**
  * Abstraction class used to provide an interface between emulation code and the frontend
  * (e.g. SDL, QGLWidget, GLFW, etc...).
@@ -166,3 +168,5 @@ private:
      */
     std::tuple<unsigned, unsigned> ClipToTouchScreen(unsigned new_x, unsigned new_y) const;
 };
+
+} // namespace Frontend

@@ -103,7 +103,7 @@ signals:
     void ErrorThrown(Core::System::ResultStatus, std::string);
 };
 
-class GRenderWindow : public QWidget, public EmuWindow {
+class GRenderWindow : public QWidget, public Frontend::EmuWindow {
     Q_OBJECT
 
 public:
