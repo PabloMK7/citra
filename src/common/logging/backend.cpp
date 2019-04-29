@@ -220,6 +220,7 @@ void DebuggerBackend::Write(const Entry& entry) {
     SUB(Service, SOC)                                                                              \
     SUB(Service, IR)                                                                               \
     SUB(Service, Y2R)                                                                              \
+    SUB(Service, PS)                                                                               \
     CLS(HW)                                                                                        \
     SUB(HW, Memory)                                                                                \
     SUB(HW, LCD)                                                                                   \

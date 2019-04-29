@@ -82,6 +82,7 @@ enum class Class : ClassType {
     Service_SOC,       ///< The SOC (Socket) service
     Service_IR,        ///< The IR service
     Service_Y2R,       ///< The Y2R (YUV to RGB conversion) service
+    Service_PS,        ///< The PS (Process) service
     HW,                ///< Low-level hardware emulation
     HW_Memory,         ///< Memory-map and address translation
     HW_LCD,            ///< LCD register emulation

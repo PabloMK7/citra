@@ -10,6 +10,7 @@
 namespace HW::AES {
 AESKey Lrot128(const AESKey& in, u32 rot);
 AESKey Add128(const AESKey& a, const AESKey& b);
+AESKey Add128(const AESKey& a, u64 b);
 AESKey Xor128(const AESKey& a, const AESKey& b);
 
 } // namespace HW::AES
